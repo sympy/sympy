@@ -15,6 +15,7 @@ def strip_file(filename, write, report):
         lines = f.readlines()
     hit = False
     cr = False
+    extra = 0
     for index, line in enumerate(lines):
         if line.endswith(" \n"):
             if report:
@@ -37,6 +38,16 @@ def strip_file(filename, write, report):
             print "%s, no newline at eof" % filename
         if write:
             hit = True
+
+    # correct multiple newlines at eof
+    while len(lines) > 1 and lines[-1] == "\n" and lines[-2].endswith("\n"):
+        if write:
+            hit = True
+        lines.pop()
+        extra += 1
+
+    if extra > 0 and report:
+        print "%s, %d extra newlines at eof" % (filename, extra)
 
     if write and hit:
         # without "b" the lines may be written in sys-dep format

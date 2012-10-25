@@ -4,6 +4,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 
+
 def _free_symbols(function, limits):
     """Helper function to return the symbols that appear in a sum-like object
     once it is evaluated.
@@ -18,8 +19,11 @@ def _free_symbols(function, limits):
             isyms.update(i.free_symbols)
     return isyms
 
+
 class Sum(Expr):
     """Represents unevaluated summation."""
+
+    __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.integrals.integrals import _process_limits
@@ -46,6 +50,7 @@ class Sum(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
+        obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
 
@@ -172,7 +177,7 @@ class Sum(Expr):
 
         limit = limits.pop(-1)
 
-        if limits: # f is the argument to a Sum
+        if limits:  # f is the argument to a Sum
             f = Sum(f, *limits)
 
         if len(limit) == 3:
@@ -238,7 +243,7 @@ class Sum(Expr):
         s = S.Zero
         if m:
             for k in range(m):
-                term = f.subs(i, a+k)
+                term = f.subs(i, a + k)
                 if (eps and term and abs(term.evalf(3)) < eps):
                     return s, abs(term)
                 s += term
@@ -248,6 +253,7 @@ class Sum(Expr):
         if eval_integral:
             I = I.doit()
         s += I
+
         def fpoint(expr):
             if b is S.Infinity:
                 return expr.subs(i, a), 0
@@ -255,18 +261,19 @@ class Sum(Expr):
         fa, fb = fpoint(f)
         iterm = (fa + fb)/2
         g = f.diff(i)
-        for k in xrange(1, n+2):
+        for k in xrange(1, n + 2):
             ga, gb = fpoint(g)
-            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb-ga)
+            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb - ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
             g = g.diff(i, 2)
         return s + iterm, abs(term)
 
-    def _eval_subs(self, old, new): # XXX this should be the same as Integral's
+    def _eval_subs(self, old, new):  # XXX this should be the same as Integral's
         if any(old == v for v in self.variables):
             return self
+
 
 def summation(f, *symbols, **kwargs):
     r"""
@@ -308,6 +315,7 @@ def summation(f, *symbols, **kwargs):
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
 
+
 def telescopic_direct(L, R, n, limits):
     """Returns the direct summation of the terms of a telescopic sum
 
@@ -326,8 +334,9 @@ def telescopic_direct(L, R, n, limits):
     (i, a, b) = limits
     s = 0
     for m in xrange(n):
-        s += L.subs(i,a+m) + R.subs(i,b-m)
+        s += L.subs(i, a + m) + R.subs(i, b - m)
     return s
+
 
 def telescopic(L, R, limits):
     '''Tries to perform the summation using the telescopic property
@@ -347,7 +356,7 @@ def telescopic(L, R, limits):
     s = None
     if sol and k in sol:
         s = sol[k]
-        if not (s.is_Integer and L.subs(i,i + s) == -R):
+        if not (s.is_Integer and L.subs(i, i + s) == -R):
             #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
             s = None
 
@@ -361,7 +370,7 @@ def telescopic(L, R, limits):
         except NotImplementedError:
             return None
         sol = [si for si in sol if si.is_Integer and
-                                   (L.subs(i,i + si) + R).expand().is_zero]
+               (L.subs(i, i + si) + R).expand().is_zero]
         if len(sol) != 1:
             return None
         s = sol[0]
@@ -370,6 +379,7 @@ def telescopic(L, R, limits):
         return telescopic_direct(R, L, abs(s), (i, a, b))
     elif s > 0:
         return telescopic_direct(L, R, s, (i, a, b))
+
 
 def eval_sum(f, limits):
     (i, a, b) = limits
@@ -395,16 +405,18 @@ def eval_sum(f, limits):
     if definite:
         return eval_sum_direct(f, (i, a, b))
 
+
 def eval_sum_direct(expr, limits):
     (i, a, b) = limits
 
     dif = b - a
     return Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
 
+
 def eval_sum_symbolic(f, limits):
     (i, a, b) = limits
     if not f.has(i):
-        return f*(b-a+1)
+        return f*(b - a + 1)
 
     # Linearity
     if f.is_Mul:
@@ -412,14 +424,16 @@ def eval_sum_symbolic(f, limits):
 
         if not L.has(i):
             sR = eval_sum_symbolic(R, (i, a, b))
-            if sR: return L*sR
+            if sR:
+                return L*sR
 
         if not R.has(i):
             sL = eval_sum_symbolic(L, (i, a, b))
-            if sL: return R*sL
+            if sL:
+                return R*sL
 
         try:
-            f = apart(f, i) # see if it becomes an Add
+            f = apart(f, i)  # see if it becomes an Add
         except PolynomialError:
             pass
 
@@ -445,7 +459,7 @@ def eval_sum_symbolic(f, limits):
 
         if n.is_Integer:
             if n >= 0:
-                return ((C.bernoulli(n+1, b+1) - C.bernoulli(n+1, a))/(n+1)).expand()
+                return ((C.bernoulli(n + 1, b + 1) - C.bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
                     return C.harmonic(b) - C.harmonic(a - 1)
@@ -457,7 +471,7 @@ def eval_sum_symbolic(f, limits):
     c2 = C.Wild('c2', exclude=[i])
     c3 = C.Wild('c3', exclude=[i])
 
-    e = f.match(c1**(c2*i+c3))
+    e = f.match(c1**(c2*i + c3))
 
     if e is not None:
         c1 = c1.subs(e)
@@ -465,9 +479,9 @@ def eval_sum_symbolic(f, limits):
         c3 = c3.subs(e)
 
         # TODO: more general limit handling
-        return c1**c3 * (c1**(a*c2) - c1**(c2+b*c2)) / (1 - c1**c2)
+        return c1**c3 * (c1**(a*c2) - c1**(c2 + b*c2)) / (1 - c1**c2)
 
-    if not (a.has(S.Infinity, S.NegativeInfinity) or \
+    if not (a.has(S.Infinity, S.NegativeInfinity) or
             b.has(S.Infinity, S.NegativeInfinity)):
         r = gosper_sum(f, (i, a, b))
 
@@ -476,16 +490,19 @@ def eval_sum_symbolic(f, limits):
 
     return eval_sum_hyper(f, (i, a, b))
 
+
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
     from sympy.functions import hyper
-    from sympy.simplify import hyperexpand, hypersimp, fraction
+    from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
     from sympy.polys.polytools import Poly, factor
 
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
 
     if f.subs(i, 0) == 0:
+        if simplify(f.subs(i, Dummy('i', integer=True, positive=True))) == 0:
+            return S(0), True
         return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
 
     hs = hypersimp(f, i)
@@ -517,10 +534,11 @@ def _eval_sum_hyper(f, i, a):
     # hypergeometric series.
     ap = params[0] + [1]
     bq = params[1]
-    x  = ab[0]/ab[1]
+    x = ab[0]/ab[1]
     h = hyper(ap, bq, x)
 
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
+
 
 def eval_sum_hyper(f, (i, a, b)):
     from sympy.functions import Piecewise
@@ -532,7 +550,15 @@ def eval_sum_hyper(f, (i, a, b)):
             if res is not None:
                 return Piecewise(res, (Sum(f, (i, a, b)), True))
         else:
-            return None
+            res1 = _eval_sum_hyper(f, i, a)
+            res2 = _eval_sum_hyper(f, i, b + 1)
+            if res1 is None or res2 is None:
+                return None
+            (res1, cond1), (res2, cond2) = res1, res2
+            cond = And(cond1, cond2)
+            if cond is False:
+                return None
+        return Piecewise((res1 - res2, cond), (Sum(f, (i, a, b)), True))
 
     if a == -oo:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)

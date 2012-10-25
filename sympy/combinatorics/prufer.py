@@ -1,9 +1,9 @@
 from sympy.core import Basic
-from sympy.core.compatibility import iterable
+from sympy.core.compatibility import iterable, as_int
 from sympy.utilities.iterables import flatten
-from sympy.ntheory.residue_ntheory import int_tested
 
 from collections import defaultdict
+
 
 class Prufer(Basic):
     """
@@ -215,7 +215,7 @@ class Prufer(Basic):
         tree = []
         last = []
         n = len(prufer) + 2
-        d = defaultdict(lambda : 1)
+        d = defaultdict(lambda: 1)
         for p in prufer:
             d[p] += 1
         for i in prufer:
@@ -260,7 +260,7 @@ class Prufer(Basic):
         e = set()
         nmin = runs[0][0]
         for r in runs:
-            for i in range(len(r)-1):
+            for i in range(len(r) - 1):
                 a, b = r[i: i + 2]
                 if b < a:
                     a, b = b, a
@@ -272,16 +272,16 @@ class Prufer(Basic):
             ei = e.pop()
             for i in ei:
                 got.add(i)
-            nmin = min(ei[0], nmin) if nmin != None else ei[0]
-            nmax = max(ei[1], nmax) if nmax != None else ei[1]
+            nmin = min(ei[0], nmin) if nmin is not None else ei[0]
+            nmax = max(ei[1], nmax) if nmax is not None else ei[1]
             rv.append(list(ei))
         missing = set(range(nmin, nmax + 1)) - got
         if missing:
-            missing = [i + nmin for i in sorted(missing)]
+            missing = [i + nmin for i in missing]
             if len(missing) == 1:
-                msg = 'Node %s is missing.' % missing[0]
+                msg = 'Node %s is missing.' % missing.pop()
             else:
-                msg = 'Nodes %s are missing.' % missing
+                msg = 'Nodes %s are missing.' % list(sorted(missing))
             raise ValueError(msg)
         if nmin != 0:
             for i, ei in enumerate(rv):
@@ -325,7 +325,7 @@ class Prufer(Basic):
         Prufer([0, 0])
 
         """
-        n, rank = int_tested(n, rank)
+        n, rank = as_int(n), as_int(rank)
         L = defaultdict(int)
         for i in xrange(n - 3, -1, -1):
             L[i] = rank % n
@@ -364,18 +364,19 @@ class Prufer(Basic):
         args = [list(args[0])]
         if args[0] and iterable(args[0][0]):
             if not args[0][0]:
-                raise ValueError('Prufer expects at least one edge in the tree.')
+                raise ValueError(
+                    'Prufer expects at least one edge in the tree.')
             if len(args) > 1:
                 nnodes = args[1]
             else:
                 nodes = set(flatten(args[0]))
                 nnodes = max(nodes) + 1
                 if nnodes != len(nodes):
-                    missing = sorted(set(range(nnodes)) - nodes)
+                    missing = set(range(nnodes)) - nodes
                     if len(missing) == 1:
-                        msg = 'Node %s is missing.' % missing[0]
+                        msg = 'Node %s is missing.' % missing.pop()
                     else:
-                        msg = 'Nodes %s are missing.' % missing
+                        msg = 'Nodes %s are missing.' % list(sorted(missing))
                     raise ValueError(msg)
             ret_obj._tree_repr = [list(i) for i in args[0]]
             ret_obj._nodes = nnodes

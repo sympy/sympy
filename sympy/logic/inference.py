@@ -4,6 +4,7 @@ from sympy.logic.boolalg import And, Or, Not, Implies, Equivalent, \
 from sympy.core.basic import C
 from sympy.core.sympify import sympify
 
+
 def literal_symbol(literal):
     """
     The symbol in this literal (without the negation).
@@ -24,6 +25,7 @@ def literal_symbol(literal):
         return literal.args[0]
     else:
         return literal
+
 
 def satisfiable(expr, algorithm="dpll2"):
     """
@@ -48,6 +50,7 @@ def satisfiable(expr, algorithm="dpll2"):
         from sympy.logic.algorithms.dpll2 import dpll_satisfiable
         return dpll_satisfiable(expr)
     raise NotImplementedError
+
 
 def pl_true(expr, model={}):
     """
@@ -81,21 +84,27 @@ def pl_true(expr, model={}):
 
     if func is Not:
         p = pl_true(args[0], model)
-        if p is None: return None
-        else: return not p
+        if p is None:
+            return None
+        else:
+            return not p
     elif func is Or:
         result = False
         for arg in args:
             p = pl_true(arg, model)
-            if p == True: return True
-            if p == None: result = None
+            if p is True:
+                return True
+            if p is None:
+                result = None
         return result
     elif func is And:
         result = True
         for arg in args:
             p = pl_true(arg, model)
-            if p == False: return False
-            if p == None: result = None
+            if p is False:
+                return False
+            if p is None:
+                result = None
         return result
 
     elif func is Implies:
@@ -105,10 +114,10 @@ def pl_true(expr, model={}):
     elif func is Equivalent:
         p, q = args
         pt = pl_true(p, model)
-        if pt == None:
+        if pt is None:
             return None
         qt = pl_true(q, model)
-        if qt == None:
+        if qt is None:
             return None
         return pt == qt
     else:
@@ -156,7 +165,8 @@ class PropKB(KB):
         [Or(x, y), y]
         """
         for c in conjuncts(to_cnf(sentence)):
-            if not c in self.clauses: self.clauses.append(c)
+            if not c in self.clauses:
+                self.clauses.append(c)
 
     def ask(self, query):
         """Checks if the query is true given the set of clauses.
@@ -173,7 +183,8 @@ class PropKB(KB):
         >>> l.ask(y)
         False
         """
-        if len(self.clauses) == 0: return False
+        if len(self.clauses) == 0:
+            return False
         from sympy.logic.algorithms.dpll import dpll
         query_conjuncts = self.clauses[:]
         query_conjuncts.extend(conjuncts(to_cnf(query)))

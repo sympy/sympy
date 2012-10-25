@@ -1,7 +1,7 @@
 """Tools for managing evaluation contexts. """
 
 from sympy.utilities.iterables import dict_merge
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 
 __known_options__ = set(['frac', 'gens', 'wrt', 'sort', 'order', 'domain',
     'modulus', 'gaussian', 'extension', 'field', 'greedy', 'symmetric'])
@@ -15,6 +15,7 @@ def %(option)s(_%(option)s):
 
 for option in __known_options__:
     exec __template__ % { 'option': option }
+
 
 class Context(PicklableWithSlots):
 
@@ -50,6 +51,7 @@ class Context(PicklableWithSlots):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         raise NotImplementedError('global context')
+
 
 def register_context(func):
     def wrapper(self, *args, **kwargs):

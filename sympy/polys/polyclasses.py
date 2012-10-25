@@ -1,6 +1,8 @@
 """OO layer for several polynomial representations. """
 
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
+from sympy.polys.polyerrors import CoercionFailed, NotReversible
+
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -129,15 +131,17 @@ from sympy.polys.polyerrors import (
     UnificationFailed,
     PolynomialError)
 
+
 def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)
+
 
 class DMP(PicklableWithSlots):
     """Dense Multivariate Polynomials over `K`. """
 
-    __slots__ = ['rep', 'lev', 'dom']
+    __slots__ = ['rep', 'lev', 'dom', 'ring']
 
-    def __init__(self, rep, dom, lev=None):
+    def __init__(self, rep, dom, lev=None, ring=None):
         if lev is not None:
             if type(rep) is dict:
                 rep = dmp_from_dict(rep, lev, dom)
@@ -149,24 +153,29 @@ class DMP(PicklableWithSlots):
         self.rep = rep
         self.lev = lev
         self.dom = dom
+        self.ring = ring
 
     def __repr__(f):
-        return "%s(%s, %s)" % (f.__class__.__name__, f.rep, f.dom)
+        return "%s(%s, %s, %s)" % (f.__class__.__name__, f.rep, f.dom, f.ring)
 
     def __hash__(f):
-        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom))
+        return hash((f.__class__.__name__, f.to_tuple(), f.lev, f.dom, f.ring))
 
     def unify(f, g):
         """Unify representations of two multivariate polynomials. """
-        return f.lev, f.dom, f.per, f.rep, g.rep
-
         if not isinstance(g, DMP) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return f.lev, f.dom, f.per, f.rep, g.rep
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = dmp_convert(f.rep, lev, f.dom, dom)
             G = dmp_convert(g.rep, lev, g.dom, dom)
@@ -178,11 +187,11 @@ class DMP(PicklableWithSlots):
                     else:
                         lev -= 1
 
-                return DMP(rep, dom, lev)
+                return DMP(rep, dom, lev, ring)
 
             return lev, dom, per, F, G
 
-    def per(f, rep, dom=None, kill=False):
+    def per(f, rep, dom=None, kill=False, ring=None):
         """Create a DMP out of the given representation. """
         lev = f.lev
 
@@ -195,32 +204,35 @@ class DMP(PicklableWithSlots):
         if dom is None:
             dom = f.dom
 
-        return DMP(rep, dom, lev)
+        if ring is None:
+            ring = f.ring
+
+        return DMP(rep, dom, lev, ring)
 
     @classmethod
-    def zero(cls, lev, dom):
-        return DMP(0, dom, lev)
+    def zero(cls, lev, dom, ring=None):
+        return DMP(0, dom, lev, ring)
 
     @classmethod
-    def one(cls, lev, dom):
-        return DMP(1, dom, lev)
+    def one(cls, lev, dom, ring=None):
+        return DMP(1, dom, lev, ring)
 
     @classmethod
     def from_list(cls, rep, lev, dom):
-        """Create an instance of `cls` given a list of native coefficients. """
+        """Create an instance of ``cls`` given a list of native coefficients. """
         return cls(dmp_convert(rep, lev, None, dom), dom, lev)
 
     @classmethod
     def from_sympy_list(cls, rep, lev, dom):
-        """Create an instance of `cls` given a list of SymPy coefficients. """
+        """Create an instance of ``cls`` given a list of SymPy coefficients. """
         return cls(dmp_from_sympy(rep, lev, dom), dom, lev)
 
     def to_dict(f, zero=False):
-        """Convert `f` to a dict representation with native coefficients. """
+        """Convert ``f`` to a dict representation with native coefficients. """
         return dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
     def to_sympy_dict(f, zero=False):
-        """Convert `f` to a dict representation with SymPy coefficients. """
+        """Convert ``f`` to a dict representation with SymPy coefficients. """
         rep = dmp_to_dict(f.rep, f.lev, f.dom, zero=zero)
 
         for k, v in rep.iteritems():
@@ -230,7 +242,7 @@ class DMP(PicklableWithSlots):
 
     def to_tuple(f):
         """
-        Convert `f` to a tuple representation with native coefficients.
+        Convert ``f`` to a tuple representation with native coefficients.
 
         This is needed for hashing.
         """
@@ -242,8 +254,8 @@ class DMP(PicklableWithSlots):
         return cls(dmp_from_dict(rep, lev, dom), dom, lev)
 
     @classmethod
-    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom):
-        return DMP(dict(zip(monoms, coeffs)), dom, lev)
+    def from_monoms_coeffs(cls, monoms, coeffs, lev, dom, ring=None):
+        return DMP(dict(zip(monoms, coeffs)), dom, lev, ring)
 
     def to_ring(f):
         """Make the ground domain a field. """
@@ -258,30 +270,30 @@ class DMP(PicklableWithSlots):
         return f.convert(f.dom.get_exact())
 
     def convert(f, dom):
-        """Convert the ground domain of `f`. """
+        """Convert the ground domain of ``f``. """
         if f.dom == dom:
             return f
         else:
             return DMP(dmp_convert(f.rep, f.lev, f.dom, dom), dom, f.lev)
 
     def slice(f, m, n, j=0):
-        """Take a continuous subsequence of terms of `f`. """
+        """Take a continuous subsequence of terms of ``f``. """
         return f.per(dmp_slice_in(f.rep, m, n, j, f.lev, f.dom))
 
     def coeffs(f, order=None):
-        """Returns all non-zero coefficients from `f` in lex order. """
+        """Returns all non-zero coefficients from ``f`` in lex order. """
         return [ c for _, c in dmp_list_terms(f.rep, f.lev, f.dom, order=order) ]
 
     def monoms(f, order=None):
-        """Returns all non-zero monomials from `f` in lex order. """
+        """Returns all non-zero monomials from ``f`` in lex order. """
         return [ m for m, _ in dmp_list_terms(f.rep, f.lev, f.dom, order=order) ]
 
     def terms(f, order=None):
-        """Returns all non-zero terms from `f` in lex order. """
+        """Returns all non-zero terms from ``f`` in lex order. """
         return dmp_list_terms(f.rep, f.lev, f.dom, order=order)
 
     def all_coeffs(f):
-        """Returns all coefficients from `f`. """
+        """Returns all coefficients from ``f``. """
         if not f.lev:
             if not f:
                 return [f.dom.zero]
@@ -291,26 +303,26 @@ class DMP(PicklableWithSlots):
             raise PolynomialError('multivariate polynomials not supported')
 
     def all_monoms(f):
-        """Returns all monomials from `f`. """
+        """Returns all monomials from ``f``. """
         if not f.lev:
             n = dup_degree(f.rep)
 
             if n < 0:
                 return [(0,)]
             else:
-                return [ (n-i,) for i, c in enumerate(f.rep) ]
+                return [ (n - i,) for i, c in enumerate(f.rep) ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 
     def all_terms(f):
-        """Returns all terms from a `f`. """
+        """Returns all terms from a ``f``. """
         if not f.lev:
             n = dup_degree(f.rep)
 
             if n < 0:
                 return [((0,), f.dom.zero)]
             else:
-                return [ ((n-i,), c) for i, c in enumerate(f.rep) ]
+                return [ ((n - i,), c) for i, c in enumerate(f.rep) ]
         else:
             raise PolynomialError('multivariate polynomials not supported')
 
@@ -319,7 +331,7 @@ class DMP(PicklableWithSlots):
         return f.per(dmp_lift(f.rep, f.lev, f.dom), dom=f.dom.dom)
 
     def deflate(f):
-        """Reduce degree of `f` by mapping `x_i**m` to `y_i`. """
+        """Reduce degree of `f` by mapping `x_i^m` to `y_i`. """
         J, F = dmp_deflate(f.rep, f.lev, f.dom)
         return J, f.per(F)
 
@@ -346,7 +358,7 @@ class DMP(PicklableWithSlots):
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(1)]], [[ZZ(1)], [ZZ(2)]]], ZZ).exclude()
-        ([2], DMP([[1], [1, 2]], ZZ))
+        ([2], DMP([[1], [1, 2]], ZZ, None))
 
         """
         J, F, u = dmp_exclude(f.rep, f.lev, f.dom)
@@ -354,7 +366,7 @@ class DMP(PicklableWithSlots):
 
     def permute(f, P):
         r"""
-        Returns a polynomial in ``K[x_{P(1)}, ..., x_{P(n)}]``.
+        Returns a polynomial in `K[x_{P(1)}, ..., x_{P(n)}]`.
 
         Examples
         ========
@@ -363,16 +375,16 @@ class DMP(PicklableWithSlots):
         >>> from sympy.polys.domains import ZZ
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 0, 2])
-        DMP([[[2], []], [[1, 0], []]], ZZ)
+        DMP([[[2], []], [[1, 0], []]], ZZ, None)
 
         >>> DMP([[[ZZ(2)], [ZZ(1), ZZ(0)]], [[]]], ZZ).permute([1, 2, 0])
-        DMP([[[1], []], [[2, 0], []]], ZZ)
+        DMP([[[1], []], [[2, 0], []]], ZZ, None)
 
         """
         return f.per(dmp_permute(f.rep, P, f.lev, f.dom))
 
     def terms_gcd(f):
-        """Remove GCD of terms from the polynomial `f`. """
+        """Remove GCD of terms from the polynomial ``f``. """
         J, F = dmp_terms_gcd(f.rep, f.lev, f.dom)
         return J, f.per(F)
 
@@ -397,80 +409,84 @@ class DMP(PicklableWithSlots):
         return f.per(dmp_exquo_ground(f.rep, f.dom.convert(c), f.lev, f.dom))
 
     def abs(f):
-        """Make all coefficients in `f` positive. """
+        """Make all coefficients in ``f`` positive. """
         return f.per(dmp_abs(f.rep, f.lev, f.dom))
 
     def neg(f):
-        """Negate all cefficients in `f`. """
+        """Negate all cefficients in ``f``. """
         return f.per(dmp_neg(f.rep, f.lev, f.dom))
 
     def add(f, g):
-        """Add two multivariate polynomials `f` and `g`. """
+        """Add two multivariate polynomials ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_add(F, G, lev, dom))
 
     def sub(f, g):
-        """Subtract two multivariate polynomials `f` and `g`. """
+        """Subtract two multivariate polynomials ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_sub(F, G, lev, dom))
 
     def mul(f, g):
-        """Multiply two multivariate polynomials `f` and `g`. """
+        """Multiply two multivariate polynomials ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_mul(F, G, lev, dom))
 
     def sqr(f):
-        """Square a multivariate polynomial `f`. """
+        """Square a multivariate polynomial ``f``. """
         return f.per(dmp_sqr(f.rep, f.lev, f.dom))
 
     def pow(f, n):
-        """Raise `f` to a non-negative power `n`. """
+        """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
             return f.per(dmp_pow(f.rep, n, f.lev, f.dom))
         else:
             raise TypeError("`int` expected, got %s" % type(n))
 
     def pdiv(f, g):
-        """Polynomial pseudo-division of `f` and `g`. """
+        """Polynomial pseudo-division of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         q, r = dmp_pdiv(F, G, lev, dom)
         return per(q), per(r)
 
     def prem(f, g):
-        """Polynomial pseudo-remainder of `f` and `g`. """
+        """Polynomial pseudo-remainder of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_prem(F, G, lev, dom))
 
     def pquo(f, g):
-        """Polynomial pseudo-quotient of `f` and `g`. """
+        """Polynomial pseudo-quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_pquo(F, G, lev, dom))
 
     def pexquo(f, g):
-        """Polynomial exact pseudo-quotient of `f` and `g`. """
+        """Polynomial exact pseudo-quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_pexquo(F, G, lev, dom))
 
     def div(f, g):
-        """Polynomial division with remainder of `f` and `g`. """
+        """Polynomial division with remainder of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         q, r = dmp_div(F, G, lev, dom)
         return per(q), per(r)
 
     def rem(f, g):
-        """Computes polynomial remainder of `f` and `g`. """
+        """Computes polynomial remainder of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_rem(F, G, lev, dom))
 
     def quo(f, g):
-        """Computes polynomial quotient of `f` and `g`. """
+        """Computes polynomial quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_quo(F, G, lev, dom))
 
     def exquo(f, g):
-        """Computes polynomial exact quotient of `f` and `g`. """
+        """Computes polynomial exact quotient of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
-        return per(dmp_exquo(F, G, lev, dom))
+        res = per(dmp_exquo(F, G, lev, dom))
+        if f.ring and res not in f.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(f, g, f.ring)
+        return res
 
     def degree(f, j=0):
         """Returns the leading degree of `f` in `x_j`. """
@@ -480,15 +496,15 @@ class DMP(PicklableWithSlots):
             raise TypeError("`int` expected, got %s" % type(j))
 
     def degree_list(f):
-        """Returns a list of degrees of `f`. """
+        """Returns a list of degrees of ``f``. """
         return dmp_degree_list(f.rep, f.lev)
 
     def total_degree(f):
-        """Returns the total degree of `f`. """
+        """Returns the total degree of ``f``. """
         return max([sum(m) for m in f.monoms()])
 
     def homogeneous_order(f):
-        """Returns the homogeneous order of `f`. """
+        """Returns the homogeneous order of ``f``. """
         if f.is_zero:
             return -1
 
@@ -504,26 +520,26 @@ class DMP(PicklableWithSlots):
         return tdeg
 
     def LC(f):
-        """Returns the leading coefficent of `f`. """
+        """Returns the leading coefficient of ``f``. """
         return dmp_ground_LC(f.rep, f.lev, f.dom)
 
     def TC(f):
-        """Returns the trailing coefficent of `f`. """
+        """Returns the trailing coefficient of ``f``. """
         return dmp_ground_TC(f.rep, f.lev, f.dom)
 
     def nth(f, *N):
-        """Returns the `n`-th coefficient of `f`. """
+        """Returns the ``n``-th coefficient of ``f``. """
         if all(isinstance(n, int) for n in N):
             return dmp_ground_nth(f.rep, N, f.lev, f.dom)
         else:
             raise TypeError("a sequence of integers expected")
 
     def max_norm(f):
-        """Returns maximum norm of `f`. """
+        """Returns maximum norm of ``f``. """
         return dmp_max_norm(f.rep, f.lev, f.dom)
 
     def l1_norm(f):
-        """Returns l1 norm of `f`. """
+        """Returns l1 norm of ``f``. """
         return dmp_l1_norm(f.rep, f.lev, f.dom)
 
     def clear_denoms(f):
@@ -532,7 +548,7 @@ class DMP(PicklableWithSlots):
         return coeff, f.per(F)
 
     def integrate(f, m=1, j=0):
-        """Computes indefinite integral of `f`. """
+        """Computes indefinite integral of ``f``. """
         if not isinstance(m, int):
             raise TypeError("`int` expected, got %s" % type(m))
 
@@ -580,7 +596,7 @@ class DMP(PicklableWithSlots):
             raise ValueError('univariate polynomial expected')
 
     def invert(f, g):
-        """Invert `f` modulo `g`, if possible. """
+        """Invert ``f`` modulo ``g``, if possible. """
         lev, dom, per, F, G = f.unify(g)
 
         if not lev:
@@ -589,40 +605,40 @@ class DMP(PicklableWithSlots):
             raise ValueError('univariate polynomial expected')
 
     def revert(f, n):
-        """Compute `f**(-1)` mod `x**n`. """
+        """Compute ``f**(-1)`` mod ``x**n``. """
         if not f.lev:
             return f.per(dup_revert(f.rep, n, f.dom))
         else:
             raise ValueError('univariate polynomial expected')
 
     def subresultants(f, g):
-        """Computes subresultant PRS sequence of `f` and `g`. """
+        """Computes subresultant PRS sequence of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         R = dmp_subresultants(F, G, lev, dom)
         return map(per, R)
 
     def resultant(f, g):
-        """Computes resultant of `f` and `g` via PRS. """
+        """Computes resultant of ``f`` and ``g`` via PRS. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_resultant(F, G, lev, dom), kill=True)
 
     def discriminant(f):
-        """Computes discriminant of `f`. """
+        """Computes discriminant of ``f``. """
         return f.per(dmp_discriminant(f.rep, f.lev, f.dom), kill=True)
 
     def cofactors(f, g):
-        """Returns GCD of `f` and `g` and their cofactors. """
+        """Returns GCD of ``f`` and ``g`` and their cofactors. """
         lev, dom, per, F, G = f.unify(g)
         h, cff, cfg = dmp_inner_gcd(F, G, lev, dom)
         return per(h), per(cff), per(cfg)
 
     def gcd(f, g):
-        """Returns polynomial GCD of `f` and `g`. """
+        """Returns polynomial GCD of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_gcd(F, G, lev, dom))
 
     def lcm(f, g):
-        """Returns polynomial LCM of `f` and `g`. """
+        """Returns polynomial LCM of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_lcm(F, G, lev, dom))
 
@@ -631,7 +647,7 @@ class DMP(PicklableWithSlots):
         lev, dom, per, F, G = f.unify(g)
 
         if include:
-                    F, G = dmp_cancel(F, G, lev, dom, include=True)
+            F, G = dmp_cancel(F, G, lev, dom, include=True)
         else:
             cF, cG, F, G = dmp_cancel(F, G, lev, dom, include=False)
 
@@ -643,7 +659,7 @@ class DMP(PicklableWithSlots):
             return cF, cG, F, G
 
     def trunc(f, p):
-        """Reduce `f` modulo a constant `p`. """
+        """Reduce ``f`` modulo a constant ``p``. """
         return f.per(dmp_ground_trunc(f.rep, f.dom.convert(p), f.lev, f.dom))
 
     def monic(f):
@@ -655,17 +671,17 @@ class DMP(PicklableWithSlots):
         return dmp_ground_content(f.rep, f.lev, f.dom)
 
     def primitive(f):
-        """Returns content and a primitive form of `f`. """
+        """Returns content and a primitive form of ``f``. """
         cont, F = dmp_ground_primitive(f.rep, f.lev, f.dom)
         return cont, f.per(F)
 
     def compose(f, g):
-        """Computes functional composition of `f` and `g`. """
+        """Computes functional composition of ``f`` and ``g``. """
         lev, dom, per, F, G = f.unify(g)
         return per(dmp_compose(F, G, lev, dom))
 
     def decompose(f):
-        """Computes functional decomposition of `f`. """
+        """Computes functional decomposition of ``f``. """
         if not f.lev:
             return map(f.per, dup_decompose(f.rep, f.dom))
         else:
@@ -679,50 +695,50 @@ class DMP(PicklableWithSlots):
             raise ValueError('univariate polynomial expected')
 
     def sturm(f):
-        """Computes the Sturm sequence of `f`. """
+        """Computes the Sturm sequence of ``f``. """
         if not f.lev:
             return map(f.per, dup_sturm(f.rep, f.dom))
         else:
             raise ValueError('univariate polynomial expected')
 
     def gff_list(f):
-        """Computes greatest factorial factorization of `f`. """
+        """Computes greatest factorial factorization of ``f``. """
         if not f.lev:
             return [ (f.per(g), k) for g, k in dup_gff_list(f.rep, f.dom) ]
         else:
             raise ValueError('univariate polynomial expected')
 
     def sqf_norm(f):
-        """Computes square-free norm of `f`. """
+        """Computes square-free norm of ``f``. """
         s, g, r = dmp_sqf_norm(f.rep, f.lev, f.dom)
         return s, f.per(g), f.per(r, dom=f.dom.dom)
 
     def sqf_part(f):
-        """Computes square-free part of `f`. """
+        """Computes square-free part of ``f``. """
         return f.per(dmp_sqf_part(f.rep, f.lev, f.dom))
 
     def sqf_list(f, all=False):
-        """Returns a list of square-free factors of `f`. """
+        """Returns a list of square-free factors of ``f``. """
         coeff, factors = dmp_sqf_list(f.rep, f.lev, f.dom, all)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
     def sqf_list_include(f, all=False):
-        """Returns a list of square-free factors of `f`. """
+        """Returns a list of square-free factors of ``f``. """
         factors = dmp_sqf_list_include(f.rep, f.lev, f.dom, all)
         return [ (f.per(g), k) for g, k in factors ]
 
     def factor_list(f):
-        """Returns a list of irreducible factors of `f`. """
+        """Returns a list of irreducible factors of ``f``. """
         coeff, factors = dmp_factor_list(f.rep, f.lev, f.dom)
         return coeff, [ (f.per(g), k) for g, k in factors ]
 
     def factor_list_include(f):
-        """Returns a list of irreducible factors of `f`. """
+        """Returns a list of irreducible factors of ``f``. """
         factors = dmp_factor_list_include(f.rep, f.lev, f.dom)
         return [ (f.per(g), k) for g, k in factors ]
 
     def intervals(f, all=False, eps=None, inf=None, sup=None, fast=False, sqf=False):
-        """Compute isolating intervals for roots of `f`. """
+        """Compute isolating intervals for roots of ``f``. """
         if not f.lev:
             if not all:
                 if not sqf:
@@ -735,14 +751,16 @@ class DMP(PicklableWithSlots):
                 else:
                     return dup_isolate_all_roots_sqf(f.rep, f.dom, eps=eps, inf=inf, sup=sup, fast=fast)
         else:
-            raise PolynomialError("can't isolate roots of a multivariate polynomial")
+            raise PolynomialError(
+                "can't isolate roots of a multivariate polynomial")
 
     def refine_root(f, s, t, eps=None, steps=None, fast=False):
         """Refine an isolating interval to the given precision. """
         if not f.lev:
             return dup_refine_real_root(f.rep, s, t, f.dom, eps=eps, steps=steps, fast=fast)
         else:
-            raise PolynomialError("can't refine a root of a multivariate polynomial")
+            raise PolynomialError(
+                "can't refine a root of a multivariate polynomial")
 
     def count_real_roots(f, inf=None, sup=None):
         """Return the number of real roots of ``f`` in ``[inf, sup]``. """
@@ -754,47 +772,47 @@ class DMP(PicklableWithSlots):
 
     @property
     def is_zero(f):
-        """Returns `True` if `f` is a zero polynomial. """
+        """Returns ``True`` if ``f`` is a zero polynomial. """
         return dmp_zero_p(f.rep, f.lev)
 
     @property
     def is_one(f):
-        """Returns `True` if `f` is a unit polynomial. """
+        """Returns ``True`` if ``f`` is a unit polynomial. """
         return dmp_one_p(f.rep, f.lev, f.dom)
 
     @property
     def is_ground(f):
-        """Returns `True` if `f` is an element of the ground domain. """
+        """Returns ``True`` if ``f`` is an element of the ground domain. """
         return dmp_ground_p(f.rep, None, f.lev)
 
     @property
     def is_sqf(f):
-        """Returns `True` if `f` is a square-free polynomial. """
+        """Returns ``True`` if ``f`` is a square-free polynomial. """
         return dmp_sqf_p(f.rep, f.lev, f.dom)
 
     @property
     def is_monic(f):
-        """Returns `True` if the leading coefficient of `f` is one. """
+        """Returns ``True`` if the leading coefficient of ``f`` is one. """
         return f.dom.is_one(dmp_ground_LC(f.rep, f.lev, f.dom))
 
     @property
     def is_primitive(f):
-        """Returns `True` if GCD of coefficients of `f` is one. """
+        """Returns ``True`` if GCD of coefficients of ``f`` is one. """
         return f.dom.is_one(dmp_ground_content(f.rep, f.lev, f.dom))
 
     @property
     def is_linear(f):
-        """Returns `True` if `f` is linear in all its variables. """
+        """Returns ``True`` if ``f`` is linear in all its variables. """
         return all(sum(monom) <= 1 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
 
     @property
     def is_quadratic(f):
-        """Returns `True` if `f` is quadratic in all its variables. """
+        """Returns ``True`` if ``f`` is quadratic in all its variables. """
         return all(sum(monom) <= 2 for monom in dmp_to_dict(f.rep, f.lev, f.dom).keys())
 
     @property
     def is_monomial(f):
-        """Returns `True` if `f` is zero or has only one term. """
+        """Returns ``True`` if ``f`` is zero or has only one term. """
         return len(f.to_dict()) <= 1
 
     @property
@@ -827,6 +845,12 @@ class DMP(PicklableWithSlots):
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
             except TypeError:
                 return NotImplemented
+            except (CoercionFailed, NotImplementedError):
+                if f.ring is not None:
+                    try:
+                        g = f.ring.convert(g)
+                    except (CoercionFailed, NotImplementedError):
+                        return NotImplemented
 
         return f.add(g)
 
@@ -839,6 +863,12 @@ class DMP(PicklableWithSlots):
                 g = f.per(dmp_ground(f.dom.convert(g), f.lev))
             except TypeError:
                 return NotImplemented
+            except (CoercionFailed, NotImplementedError):
+                if f.ring is not None:
+                    try:
+                        g = f.ring.convert(g)
+                    except (CoercionFailed, NotImplementedError):
+                        return NotImplemented
 
         return f.sub(g)
 
@@ -853,6 +883,42 @@ class DMP(PicklableWithSlots):
                 return f.mul_ground(g)
             except TypeError:
                 return NotImplemented
+            except (CoercionFailed, NotImplementedError):
+                if f.ring is not None:
+                    try:
+                        return f.mul(f.ring.convert(g))
+                    except (CoercionFailed, NotImplementedError):
+                        pass
+                return NotImplemented
+
+    def __div__(f, g):
+        if isinstance(g, DMP):
+            return f.exquo(g)
+        else:
+            try:
+                return f.mul_ground(g)
+            except TypeError:
+                return NotImplemented
+            except (CoercionFailed, NotImplementedError):
+                if f.ring is not None:
+                    try:
+                        return f.exquo(f.ring.convert(g))
+                    except (CoercionFailed, NotImplementedError):
+                        pass
+                return NotImplemented
+
+    def __rdiv__(f, g):
+        if isinstance(g, DMP):
+            return g.exquo(f)
+        elif f.ring is not None:
+            try:
+                return f.ring.convert(g).exquo(f)
+            except (CoercionFailed, NotImplementedError):
+                pass
+        return NotImplemented
+
+    __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def __rmul__(f, g):
         return f.__mul__(g)
@@ -900,8 +966,8 @@ class DMP(PicklableWithSlots):
 
     def _strict_eq(f, g):
         return isinstance(g, f.__class__) and f.lev == g.lev \
-                                          and f.dom == g.dom \
-                                          and f.rep == g.rep
+            and f.dom == g.dom \
+            and f.rep == g.rep
 
     def __lt__(f, g):
         _, _, _, F, G = f.unify(g)
@@ -922,16 +988,18 @@ class DMP(PicklableWithSlots):
     def __nonzero__(f):
         return not dmp_zero_p(f.rep, f.lev)
 
+
 def init_normal_DMF(num, den, lev, dom):
     return DMF(dmp_normal(num, lev, dom),
                dmp_normal(den, lev, dom), dom, lev)
 
+
 class DMF(PicklableWithSlots):
     """Dense Multivariate Fractions over `K`. """
 
-    __slots__ = ['num', 'den', 'lev', 'dom']
+    __slots__ = ['num', 'den', 'lev', 'dom', 'ring']
 
-    def __init__(self, rep, dom, lev=None):
+    def __init__(self, rep, dom, lev=None, ring=None):
         num, den, lev = self._parse(rep, dom, lev)
         num, den = dmp_cancel(num, den, lev, dom)
 
@@ -939,9 +1007,10 @@ class DMF(PicklableWithSlots):
         self.den = den
         self.lev = lev
         self.dom = dom
+        self.ring = ring
 
     @classmethod
-    def new(cls, rep, dom, lev=None):
+    def new(cls, rep, dom, lev=None, ring=None):
         num, den, lev = cls._parse(rep, dom, lev)
 
         obj = object.__new__(cls)
@@ -950,6 +1019,7 @@ class DMF(PicklableWithSlots):
         obj.den = den
         obj.lev = lev
         obj.dom = dom
+        obj.ring = ring
 
         return obj
 
@@ -998,28 +1068,35 @@ class DMF(PicklableWithSlots):
         return num, den, lev
 
     def __repr__(f):
-        return "%s((%s, %s), %s)" % (f.__class__.__name__, f.num, f.den, f.dom)
+        return "%s((%s, %s), %s, %s)" % (f.__class__.__name__, f.num, f.den,
+                                         f.dom, f.ring)
 
     def __hash__(f):
         return hash((f.__class__.__name__, dmp_to_tuple(f.num, f.lev),
-            dmp_to_tuple(f.den, f.lev), f.lev, f.dom))
+            dmp_to_tuple(f.den, f.lev), f.lev, f.dom, f.ring))
 
     def poly_unify(f, g):
         """Unify a multivariate fraction and a polynomial. """
         if not isinstance(g, DMP) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den), g.rep)
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
 
             G = dmp_convert(g.rep, lev, g.dom, dom)
 
-            def per(num, den, cancel=True, kill=False):
+            def per(num, den, cancel=True, kill=False, lev=lev):
                 if kill:
                     if not lev:
                         return num/den
@@ -1029,7 +1106,7 @@ class DMF(PicklableWithSlots):
                 if cancel:
                     num, den = dmp_cancel(num, den, lev, dom)
 
-                return f.__class__.new((num, den), dom, lev)
+                return f.__class__.new((num, den), dom, lev, ring=ring)
 
             return lev, dom, per, F, G
 
@@ -1038,11 +1115,17 @@ class DMF(PicklableWithSlots):
         if not isinstance(g, DMF) or f.lev != g.lev:
             raise UnificationFailed("can't unify %s with %s" % (f, g))
 
-        if f.dom == g.dom:
+        if f.dom == g.dom and f.ring == g.ring:
             return (f.lev, f.dom, f.per, (f.num, f.den),
                                          (g.num, g.den))
         else:
             lev, dom = f.lev, f.dom.unify(g.dom)
+            ring = f.ring
+            if g.ring is not None:
+                if ring is not None:
+                    ring = ring.unify(g.ring)
+                else:
+                    ring = g.ring
 
             F = (dmp_convert(f.num, lev, f.dom, dom),
                  dmp_convert(f.den, lev, f.dom, dom))
@@ -1050,7 +1133,7 @@ class DMF(PicklableWithSlots):
             G = (dmp_convert(g.num, lev, g.dom, dom),
                  dmp_convert(g.den, lev, g.dom, dom))
 
-            def per(num, den, cancel=True, kill=False):
+            def per(num, den, cancel=True, kill=False, lev=lev):
                 if kill:
                     if not lev:
                         return num/den
@@ -1060,11 +1143,11 @@ class DMF(PicklableWithSlots):
                 if cancel:
                     num, den = dmp_cancel(num, den, lev, dom)
 
-                return f.__class__.new((num, den), dom, lev)
+                return f.__class__.new((num, den), dom, lev, ring=ring)
 
             return lev, dom, per, F, G
 
-    def per(f, num, den, cancel=True, kill=False):
+    def per(f, num, den, cancel=True, kill=False, ring=None):
         """Create a DMF out of the given representation. """
         lev, dom = f.lev, f.dom
 
@@ -1077,7 +1160,10 @@ class DMF(PicklableWithSlots):
         if cancel:
             num, den = dmp_cancel(num, den, lev, dom)
 
-        return f.__class__.new((num, den), dom, lev)
+        if ring is None:
+            ring = f.ring
+
+        return f.__class__.new((num, den), dom, lev, ring=ring)
 
     def half_per(f, rep, kill=False):
         """Create a DMP out of the given representation. """
@@ -1092,31 +1178,31 @@ class DMF(PicklableWithSlots):
         return DMP(rep, f.dom, lev)
 
     @classmethod
-    def zero(cls, lev, dom):
-        return cls.new(0, dom, lev)
+    def zero(cls, lev, dom, ring=None):
+        return cls.new(0, dom, lev, ring=ring)
 
     @classmethod
-    def one(cls, lev, dom):
-        return cls.new(1, dom, lev)
+    def one(cls, lev, dom, ring=None):
+        return cls.new(1, dom, lev, ring=ring)
 
     def numer(f):
-        """Returns numerator of `f`. """
+        """Returns numerator of ``f``. """
         return f.half_per(f.num)
 
     def denom(f):
-        """Returns denominator of `f`. """
+        """Returns denominator of ``f``. """
         return f.half_per(f.den)
 
     def cancel(f):
-        """Remove common factors from `f.num` and `f.den`. """
+        """Remove common factors from ``f.num`` and ``f.den``. """
         return f.per(f.num, f.den)
 
     def neg(f):
-        """Negate all cefficients in `f`. """
+        """Negate all cefficients in ``f``. """
         return f.per(dmp_neg(f.num, f.lev, f.dom), f.den, cancel=False)
 
     def add(f, g):
-        """Add two multivariate fractions `f` and `g`. """
+        """Add two multivariate fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_add_mul(F_num, F_den, G, lev, dom), F_den
@@ -1131,7 +1217,7 @@ class DMF(PicklableWithSlots):
         return per(num, den)
 
     def sub(f, g):
-        """Subtract two multivariate fractions `f` and `g`. """
+        """Subtract two multivariate fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_sub_mul(F_num, F_den, G, lev, dom), F_den
@@ -1146,7 +1232,7 @@ class DMF(PicklableWithSlots):
         return per(num, den)
 
     def mul(f, g):
-        """Multiply two multivariate fractions `f` and `g`. """
+        """Multiply two multivariate fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = dmp_mul(F_num, G, lev, dom), F_den
@@ -1160,7 +1246,7 @@ class DMF(PicklableWithSlots):
         return per(num, den)
 
     def pow(f, n):
-        """Raise `f` to a non-negative power `n`. """
+        """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
             return f.per(dmp_pow(f.num, n, f.lev, f.dom),
                          dmp_pow(f.den, n, f.lev, f.dom), cancel=False)
@@ -1168,7 +1254,7 @@ class DMF(PicklableWithSlots):
             raise TypeError("`int` expected, got %s" % type(n))
 
     def quo(f, g):
-        """Computes quotient of fractions `f` and `g`. """
+        """Computes quotient of fractions ``f`` and ``g``. """
         if isinstance(g, DMP):
             lev, dom, per, (F_num, F_den), G = f.poly_unify(g)
             num, den = F_num, dmp_mul(F_den, G, lev, dom)
@@ -1179,24 +1265,31 @@ class DMF(PicklableWithSlots):
             num = dmp_mul(F_num, G_den, lev, dom)
             den = dmp_mul(F_den, G_num, lev, dom)
 
-        return per(num, den)
+        res = per(num, den)
+        if f.ring is not None and res not in f.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(f, g, f.ring)
+        return res
 
     exquo = quo
 
-    def invert(f):
-        """Computes inverse of a fraction `f`. """
-        return f.per(f.den, f.num, cancel=False)
+    def invert(f, check=True):
+        """Computes inverse of a fraction ``f``. """
+        if check and f.ring is not None and not f.ring.is_unit(f):
+            raise NotReversible(f, f.ring)
+        res = f.per(f.den, f.num, cancel=False)
+        return res
 
     @property
     def is_zero(f):
-        """Returns `True` if `f` is a zero fraction. """
+        """Returns ``True`` if ``f`` is a zero fraction. """
         return dmp_zero_p(f.num, f.lev)
 
     @property
     def is_one(f):
-        """Returns `True` if `f` is a unit fraction. """
+        """Returns ``True`` if ``f`` is a unit fraction. """
         return dmp_one_p(f.num, f.lev, f.dom) and \
-               dmp_one_p(f.den, f.lev, f.dom)
+            dmp_one_p(f.den, f.lev, f.dom)
 
     def __neg__(f):
         return f.neg()
@@ -1208,6 +1301,13 @@ class DMF(PicklableWithSlots):
         try:
             return f.add(f.half_per(g))
         except TypeError:
+            return NotImplemented
+        except (CoercionFailed, NotImplementedError):
+            if f.ring is not None:
+                try:
+                    return f.add(f.ring.convert(g))
+                except (CoercionFailed, NotImplementedError):
+                    pass
             return NotImplemented
 
     def __radd__(f, g):
@@ -1221,6 +1321,13 @@ class DMF(PicklableWithSlots):
             return f.sub(f.half_per(g))
         except TypeError:
             return NotImplemented
+        except (CoercionFailed, NotImplementedError):
+            if f.ring is not None:
+                try:
+                    return f.sub(f.ring.convert(g))
+                except (CoercionFailed, NotImplementedError):
+                    pass
+            return NotImplemented
 
     def __rsub__(f, g):
         return (-f).__add__(g)
@@ -1232,6 +1339,13 @@ class DMF(PicklableWithSlots):
         try:
             return f.mul(f.half_per(g))
         except TypeError:
+            return NotImplemented
+        except (CoercionFailed, NotImplementedError):
+            if f.ring is not None:
+                try:
+                    return f.mul(f.ring.convert(g))
+                except (CoercionFailed, NotImplementedError):
+                    pass
             return NotImplemented
 
     def __rmul__(f, g):
@@ -1248,8 +1362,23 @@ class DMF(PicklableWithSlots):
             return f.quo(f.half_per(g))
         except TypeError:
             return NotImplemented
+        except (CoercionFailed, NotImplementedError):
+            if f.ring is not None:
+                try:
+                    return f.quo(f.ring.convert(g))
+                except (CoercionFailed, NotImplementedError):
+                    pass
+            return NotImplemented
+
+    def __rdiv__(self, g):
+        r = self.invert(check=False)*g
+        if self.ring and r not in self.ring:
+            from sympy.polys.polyerrors import ExactQuotientFailed
+            raise ExactQuotientFailed(g, self, self.ring)
+        return r
 
     __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
     def __eq__(f, g):
         try:
@@ -1304,9 +1433,11 @@ class DMF(PicklableWithSlots):
     def __nonzero__(f):
         return not dmp_zero_p(f.num, f.lev)
 
+
 def init_normal_ANP(rep, mod, dom):
     return ANP(dup_normal(rep, dom),
                dup_normal(mod, dom), dom)
+
 
 class ANP(PicklableWithSlots):
     """Dense Algebraic Number Polynomials over a field. """
@@ -1375,11 +1506,11 @@ class ANP(PicklableWithSlots):
         return ANP(1, mod, dom)
 
     def to_dict(f):
-        """Convert `f` to a dict representation with native coefficients. """
+        """Convert ``f`` to a dict representation with native coefficients. """
         return dmp_to_dict(f.rep, 0, f.dom)
 
     def to_sympy_dict(f):
-        """Convert `f` to a dict representation with SymPy coefficients. """
+        """Convert ``f`` to a dict representation with SymPy coefficients. """
         rep = dmp_to_dict(f.rep, 0, f.dom)
 
         for k, v in rep.iteritems():
@@ -1388,16 +1519,16 @@ class ANP(PicklableWithSlots):
         return rep
 
     def to_list(f):
-        """Convert `f` to a list representation with native coefficients. """
+        """Convert ``f`` to a list representation with native coefficients. """
         return f.rep
 
     def to_sympy_list(f):
-        """Convert `f` to a list representation with SymPy coefficients. """
+        """Convert ``f`` to a list representation with SymPy coefficients. """
         return [ f.dom.to_sympy(c) for c in f.rep ]
 
     def to_tuple(f):
         """
-        Convert `f` to a tuple representation with native coefficients.
+        Convert ``f`` to a tuple representation with native coefficients.
 
         This is needed for hashing.
         """
@@ -1423,7 +1554,7 @@ class ANP(PicklableWithSlots):
         return per(dup_rem(dup_mul(F, G, dom), mod, dom))
 
     def pow(f, n):
-        """Raise `f` to a non-negative power `n`. """
+        """Raise ``f`` to a non-negative power ``n``. """
         if isinstance(n, int):
             if n < 0:
                 F, n = dup_invert(f.rep, f.mod, f.dom), -n
@@ -1449,26 +1580,26 @@ class ANP(PicklableWithSlots):
     exquo = quo
 
     def LC(f):
-        """Returns the leading coefficent of `f`. """
+        """Returns the leading coefficient of ``f``. """
         return dup_LC(f.rep, f.dom)
 
     def TC(f):
-        """Returns the trailing coefficent of `f`. """
+        """Returns the trailing coefficient of ``f``. """
         return dup_TC(f.rep, f.dom)
 
     @property
     def is_zero(f):
-        """Returns `True` if `f` is a zero algebraic number. """
+        """Returns ``True`` if ``f`` is a zero algebraic number. """
         return not f
 
     @property
     def is_one(f):
-        """Returns `True` if `f` is a unit algebraic number. """
+        """Returns ``True`` if ``f`` is a unit algebraic number. """
         return f.rep == [f.dom.one]
 
     @property
     def is_ground(f):
-        """Returns `True` if `f` is an element of the ground domain. """
+        """Returns ``True`` if ``f`` is an element of the ground domain. """
         return not f.rep or len(f.rep) == 1
 
     def __neg__(f):

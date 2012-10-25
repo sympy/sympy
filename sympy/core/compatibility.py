@@ -1,19 +1,16 @@
 """
 Reimplementations of constructs introduced in later versions of Python than
-we support.
+we support. Also some functions that are needed SymPy-wide and are located
+here for easy import.
 """
 
-class SymPyDeprecationWarning(DeprecationWarning):
-    def __init__(self, value):
-        self.parameter = value
-
-    def __str__(self):
-        return repr(self.parameter)
+from collections import defaultdict
 
 # These are in here because telling if something is an iterable just by calling
 # hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
 # particular, hasattr(str, "__iter__") is False in Python 2 and True in Python 3.
 # I think putting them here also makes it easier to use them in the core.
+
 
 def iterable(i, exclude=(basestring, dict)):
     """
@@ -58,6 +55,7 @@ def iterable(i, exclude=(basestring, dict)):
     if exclude:
         return not isinstance(i, exclude)
     return True
+
 
 def is_sequence(i, include=None):
     """
@@ -107,6 +105,7 @@ try:
     callable = callable
 except NameError:
     import collections
+
     def callable(obj):
         return isinstance(obj, collections.Callable)
 
@@ -114,6 +113,7 @@ try:
     from functools import reduce
 except ImportError:
     reduce = reduce
+
 
 def cmp_to_key(mycmp):
     """
@@ -124,16 +124,22 @@ def cmp_to_key(mycmp):
     class K(object):
         def __init__(self, obj, *args):
             self.obj = obj
+
         def __lt__(self, other):
             return mycmp(self.obj, other.obj) < 0
+
         def __gt__(self, other):
             return mycmp(self.obj, other.obj) > 0
+
         def __eq__(self, other):
             return mycmp(self.obj, other.obj) == 0
+
         def __le__(self, other):
             return mycmp(self.obj, other.obj) <= 0
+
         def __ge__(self, other):
             return mycmp(self.obj, other.obj) >= 0
+
         def __ne__(self, other):
             return mycmp(self.obj, other.obj) != 0
     return K
@@ -142,12 +148,12 @@ try:
     import __builtin__
     cmp = __builtin__.cmp
 except AttributeError:
-    def cmp(a,b):
+    def cmp(a, b):
         return (a > b) - (a < b)
 
 try:
     from itertools import product
-except ImportError: # Python 2.5
+except ImportError:  # Python 2.5
     def product(*args, **kwds):
         """
         Cartesian product of input iterables.
@@ -176,13 +182,13 @@ except ImportError: # Python 2.5
         pools = map(tuple, args) * kwds.get('repeat', 1)
         result = [[]]
         for pool in pools:
-            result = [x+[y] for x in result for y in pool]
+            result = [x + [y] for x in result for y in pool]
         for prod in result:
             yield tuple(prod)
 
 try:
     from itertools import permutations
-except ImportError: # Python 2.5
+except ImportError:  # Python 2.5
     def permutations(iterable, r=None):
         """
         Return successive r length permutations of elements in the iterable.
@@ -212,13 +218,13 @@ except ImportError: # Python 2.5
         if r > n:
             return
         indices = range(n)
-        cycles = range(n, n-r, -1)
+        cycles = range(n, n - r, -1)
         yield tuple(pool[i] for i in indices[:r])
         while n:
             for i in reversed(range(r)):
                 cycles[i] -= 1
                 if cycles[i] == 0:
-                    indices[i:] = indices[i+1:] + indices[i:i+1]
+                    indices[i:] = indices[i + 1:] + indices[i:i + 1]
                     cycles[i] = n - i
                 else:
                     j = cycles[i]
@@ -230,7 +236,7 @@ except ImportError: # Python 2.5
 
 try:
     from itertools import combinations, combinations_with_replacement
-except ImportError: # < python 2.6
+except ImportError:  # < python 2.6
     def combinations(iterable, r):
         """
         Return r length subsequences of elements from the input iterable.
@@ -243,7 +249,7 @@ except ImportError: # < python 2.6
         value. So if the input elements are unique, there will be no repeat
         values in each combination.
 
-        See also: combinations_with_replacements
+        See also: combinations_with_replacement
 
         Examples
         ========
@@ -267,8 +273,8 @@ except ImportError: # < python 2.6
             else:
                 return
             indices[i] += 1
-            for j in range(i+1, r):
-                indices[j] = indices[j-1] + 1
+            for j in range(i + 1, r):
+                indices[j] = indices[j - 1] + 1
             yield tuple(pool[i] for i in indices)
 
     def combinations_with_replacement(iterable, r):
@@ -307,10 +313,14 @@ except ImportError: # < python 2.6
             indices[i:] = [indices[i] + 1] * (r - i)
             yield tuple(pool[i] for i in indices)
 
+
 def set_intersection(*sets):
     """Return the intersection of all the given sets.
 
-    As of Python 2.6 you can write set.intersection(*sets).
+    As of Python 2.6 you can write ``set.intersection(*sets)``.
+
+    Examples
+    ========
 
     >>> from sympy.core.compatibility import set_intersection
     >>> set_intersection(set([1, 2]), set([2, 3]))
@@ -325,10 +335,11 @@ def set_intersection(*sets):
         rv &= s
     return rv
 
+
 def set_union(*sets):
     """Return the union of all the given sets.
 
-    As of Python 2.6 you can write set.union(*sets).
+    As of Python 2.6 you can write ``set.union(*sets)``.
 
     >>> from sympy.core.compatibility import set_union
     >>> set_union(set([1, 2]), set([2, 3]))
@@ -343,18 +354,140 @@ def set_union(*sets):
 
 try:
     bin = bin
-except NameError: # Python 2.5
+except NameError:  # Python 2.5
     def bin(x):
         """
         bin(number) -> string
 
         Stringifies an int or long in base 2.
         """
-        if x < 0: return '-' + bin(-x)
+        if x < 0:
+            return '-' + bin(-x)
         out = []
-        if x == 0: out.append('0')
+        if x == 0:
+            out.append('0')
         while x > 0:
             out.append('01'[x & 1])
             x >>= 1
             pass
         return '0b' + ''.join(reversed(out))
+
+try:
+    next = next
+except NameError:  # Python 2.5
+    def next(*args):
+        """
+        next(iterator[, default])
+
+        Return the next item from the iterator. If default is given and the
+        iterator is exhausted, it is returned instead of raising StopIteration.
+        """
+        if len(args) == 1:
+            return args[0].next()
+        elif len(args) == 2:
+            try:
+                return args[0].next()
+            except StopIteration:
+                return args[1]
+        else:
+            raise TypeError('Expected 1 or 2 arguments, got %s' % len(args))
+
+try:
+    from __builtin__ import bin
+except ImportError:  # Python 2.5
+    _hexDict = {
+        '0': '0000', '1': '0001', '2': '0010', '3': '0011', '4': '0100', '5': '0101',
+        '6': '0110', '7': '0111', '8': '1000', '9': '1001', 'a': '1010', 'b': '1011',
+        'c': '1100', 'd': '1101', 'e': '1110', 'f': '1111', 'L': ''}
+
+    def bin(n):
+        """Return the equivalent to Python 2.6's bin function.
+
+        Examples
+        ========
+
+        >>> from sympy.core.compatibility import bin
+        >>> bin(-123)
+        '-0b1111011'
+        >>> bin(0) # this is the only time a 0 will be to the right of 'b'
+        '0b0'
+
+        See Also
+        ========
+        sympy.physics.quantum.shor.arr
+
+        Modified from http://code.activestate.com/recipes/576847/
+        """
+        # =========================================================
+        # create hex of int, remove '0x'. now for each hex char,
+        # look up binary string, append in list and join at the end.
+        # =========================================================
+        if n < 0:
+            return '-%s' % bin(-n)
+        return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
+            ]).lstrip('0') or '0')
+
+
+def as_int(n):
+    """
+    Convert the argument to a builtin integer.
+
+    The return value is guaranteed to be equal to the input. ValueError is
+    raised if the input has a non-integral value.
+
+    Examples
+    ========
+
+    >>> from sympy.core.compatibility import as_int
+    >>> from sympy import sqrt
+    >>> 3.0
+    3.0
+    >>> as_int(3.0) # convert to int and test for equality
+    3
+    >>> int(sqrt(10))
+    3
+    >>> as_int(sqrt(10))
+    Traceback (most recent call last):
+    ...
+    ValueError: ... is not an integer
+
+    """
+    result = int(n)
+    if result != n:
+        raise ValueError('%s is not an integer' % n)
+    return result
+
+
+def quick_sort(seq, quick=True):
+    """Sort by hash and break ties with default_sort_key (default)
+    or entirely by default_sort_key if ``quick`` is False.
+
+    When sorting for consistency between systems, ``quick`` should be
+    False; if sorting is just needed to give consistent orderings during
+    a given session ``quick`` can be True.
+
+    >>> from sympy.core.compatibility import quick_sort
+    >>> from sympy.abc import x
+
+    For PYTHONHASHSEED=3923375334 the x came first; for
+    PYTHONHASHSEED=158315900 the x came last (on a 32-bit system).
+
+    >>> quick_sort([x, 1, 3]) in [(1, 3, x), (x, 1, 3)]
+    True
+    """
+    from sympy.utilities.iterables import default_sort_key
+
+    if not quick:
+        seq = list(seq)
+        seq.sort(key=default_sort_key)
+    else:
+        d = defaultdict(list)
+        for a in seq:
+            d[hash(a)].append(a)
+        seq = []
+        for k in sorted(d.keys()):
+            if len(d[k]) > 1:
+                seq.extend(sorted(d[k], key=default_sort_key))
+            else:
+                seq.extend(d[k])
+    return tuple(seq)

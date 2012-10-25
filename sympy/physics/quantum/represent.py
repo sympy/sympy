@@ -1,6 +1,7 @@
 """Logic for representing operators in state in various bases.
 
 TODO:
+
 * Get represent working with continuous hilbert spaces.
 * Document default basis functionality.
 """
@@ -30,6 +31,7 @@ __all__ = [
 #-----------------------------------------------------------------------------
 # Represent
 #-----------------------------------------------------------------------------
+
 
 def _sympy_to_scalar(e):
     """Convert from a sympy scalar to a Python scalar."""
@@ -181,7 +183,7 @@ def represent(expr, **options):
         B = represent(expr.args[1], **options)
         return A*B + B*A
     elif isinstance(expr, InnerProduct):
-        return represent(Mul(expr.bra,expr.ket), **options)
+        return represent(Mul(expr.bra, expr.ket), **options)
     elif not (isinstance(expr, Mul) or isinstance(expr, OuterProduct)):
         # For numpy and scipy.sparse, we can only handle numerical prefactors.
         if format == 'numpy' or format == 'scipy.sparse':
@@ -223,6 +225,7 @@ def represent(expr, **options):
     result = integrate_result(expr, result, **options)
 
     return result
+
 
 def rep_innerproduct(expr, **options):
     """
@@ -267,9 +270,10 @@ def rep_innerproduct(expr, **options):
 
     if isinstance(expr, BraBase):
         bra = expr
-        ket =  (basis_kets[1] if basis_kets[0].dual == expr else basis_kets[0])
+        ket = (basis_kets[1] if basis_kets[0].dual == expr else basis_kets[0])
     else:
-        bra = (basis_kets[1].dual if basis_kets[0] == expr else basis_kets[0].dual)
+        bra = (basis_kets[1].dual if basis_kets[0]
+               == expr else basis_kets[0].dual)
         ket = expr
 
     prod = InnerProduct(bra, ket)
@@ -277,6 +281,7 @@ def rep_innerproduct(expr, **options):
 
     format = options.get('format', 'sympy')
     return expr._format_represent(result, format)
+
 
 def rep_expectation(expr, **options):
     """
@@ -320,6 +325,7 @@ def rep_expectation(expr, **options):
 
     return qapply(bra*expr*ket)
 
+
 def integrate_result(orig_expr, result, **options):
     """
     Returns the result of integrating over any unities ``(|x><x|)`` in
@@ -356,7 +362,8 @@ def integrate_result(orig_expr, result, **options):
     >>> x, x_1, x_2 = symbols('x, x_1, x_2')
     >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2))
     x*DiracDelta(x - x_1)*DiracDelta(x_1 - x_2)
-    >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2), unities=[1])
+    >>> integrate_result(X_op*x_ket, x*DiracDelta(x-x_1)*DiracDelta(x_1-x_2),
+    ...     unities=[1])
     x*DiracDelta(x - x_2)
 
     """
@@ -393,25 +400,26 @@ def integrate_result(orig_expr, result, **options):
 
     return result
 
+
 def get_basis(expr, **options):
     """
-    Returns a basis state instance corresponding to the basis
-    specified in options=s. If no basis is specified, the function
-    tries to form a default basis state of the given expression.
+    Returns a basis state instance corresponding to the basis specified in
+    options=s. If no basis is specified, the function tries to form a default
+    basis state of the given expression.
 
     There are three behaviors:
 
-    1) The basis specified in options is already an instance of
-    StateBase. If this is the case, it is simply returned. If the
-    class is specified but not an instance, a default instance is returned.
+    1. The basis specified in options is already an instance of StateBase. If
+       this is the case, it is simply returned. If the class is specified but
+       not an instance, a default instance is returned.
 
-    2) The basis specified is an operator or set of operators. If this
-    is the case, the operator_to_state mapping method is used.
+    2. The basis specified is an operator or set of operators. If this
+       is the case, the operator_to_state mapping method is used.
 
-    3) No basis is specified. If expr is a state, then a default
-    instance of its class is returned.
-    If expr is an operator, then it is mapped to the corresponding state.
-    If it is neither, then we cannot obtain the basis state.
+    3. No basis is specified. If expr is a state, then a default instance of
+       its class is returned.  If expr is an operator, then it is mapped to the
+       corresponding state.  If it is neither, then we cannot obtain the basis
+       state.
 
     If the basis cannot be mapped, then it is not changed.
 
@@ -460,7 +468,7 @@ def get_basis(expr, **options):
             return (state_inst if state_inst is not None else None)
         else:
             return None
-    elif (isinstance(basis, Operator) or \
+    elif (isinstance(basis, Operator) or
           (not isinstance(basis, StateBase) and issubclass(basis, Operator))):
         state = operators_to_state(basis)
         if state is None:
@@ -476,6 +484,7 @@ def get_basis(expr, **options):
     else:
         return None
 
+
 def _make_default(expr):
     try:
         expr = expr()
@@ -484,19 +493,19 @@ def _make_default(expr):
 
     return expr
 
+
 def enumerate_states(*args, **options):
     """
     Returns instances of the given state with dummy indices appended
 
     Operates in two different modes:
 
-    1) Two arguments are passed to it. The first is the base state
-    which is to be indexed, and the second argument is a list of
-    indices to append.
+    1. Two arguments are passed to it. The first is the base state which is to
+       be indexed, and the second argument is a list of indices to append.
 
-    2) Three arguments are passed. The first is again the base state
-    to be indexed. The second is the start index for counting.
-    The final argument is the number of kets you wish to receive.
+    2. Three arguments are passed. The first is again the base state to be
+       indexed. The second is the start index for counting.  The final argument
+       is the number of kets you wish to receive.
 
     Tries to call state._enumerate_state. If this fails, returns an empty list
 

@@ -4,7 +4,7 @@
 from sympy import Expr, conjugate
 from sympy.printing.pretty.stringpict import prettyForm
 from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.state import KetBase, BraBase, _lbracket
+from sympy.physics.quantum.state import KetBase, BraBase
 
 __all__ = [
     'InnerProduct'
@@ -19,7 +19,7 @@ __all__ = [
 # which simplifies the design of everything.
 
 class InnerProduct(Expr):
-    """An unevaluated inner product between a Bra and a Ket.
+    """An unevaluated inner product between a Bra and a Ket [1].
 
     Parameters
     ==========
@@ -69,15 +69,16 @@ class InnerProduct(Expr):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Inner_product
+    .. [1] http://en.wikipedia.org/wiki/Inner_product
     """
+    is_complex = True
 
-    def __new__(cls, bra, ket, **old_assumptions):
+    def __new__(cls, bra, ket):
         if not isinstance(ket, KetBase):
             raise TypeError('KetBase subclass expected, got: %r' % ket)
         if not isinstance(bra, BraBase):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
-        obj = Expr.__new__(cls, *(bra, ket), **{'commutative':True})
+        obj = Expr.__new__(cls, bra, ket)
         return obj
 
     @property
@@ -88,11 +89,8 @@ class InnerProduct(Expr):
     def ket(self):
         return self.args[1]
 
-    def _eval_dagger(self):
-        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
-
     def _eval_conjugate(self):
-        return self._eval_dagger()
+        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,
@@ -104,12 +102,23 @@ class InnerProduct(Expr):
         return '%s|%s' % (sbra[:-1], sket[1:])
 
     def _pretty(self, printer, *args):
-        pform = prettyForm(_lbracket)
-        pform = prettyForm(*pform.right(self.bra._print_label_pretty(printer, *args)))
-        return prettyForm(*pform.right(self.ket._pretty(printer, *args)))
+        # Print state contents
+        bra = self.bra._print_contents_pretty(printer, *args)
+        ket = self.ket._print_contents_pretty(printer, *args)
+        # Print brackets
+        height = max(bra.height(), ket.height())
+        use_unicode = printer._use_unicode
+        lbracket, _ = self.bra._pretty_brackets(height, use_unicode)
+        cbracket, rbracket = self.ket._pretty_brackets(height, use_unicode)
+        # Build innerproduct
+        pform = prettyForm(*bra.left(lbracket))
+        pform = prettyForm(*pform.right(cbracket))
+        pform = prettyForm(*pform.right(ket))
+        pform = prettyForm(*pform.right(rbracket))
+        return pform
 
     def _latex(self, printer, *args):
-        bra_label = self.bra._print_label_latex(printer, *args)
+        bra_label = self.bra._print_contents_latex(printer, *args)
         ket = printer._print(self.ket, *args)
         return r'\left\langle %s \right. %s' % (bra_label, ket)
 

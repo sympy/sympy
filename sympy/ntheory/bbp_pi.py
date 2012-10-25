@@ -46,25 +46,28 @@ array (perhaps just a matter of preference).
 
 '''
 import math
+
+
 def _series(j, n):
 
     # Left sum from the bbp algorithm
     s = 0
     D = _dn(n)
-    for k in range(0, n+1):
-        r = 8*k+j
-        s = (s + (pow(16,n-k,r)<<4*(D))//r)
+    for k in range(0, n + 1):
+        r = 8*k + j
+        s = (s + (pow(16, n - k, r) << 4*(D))//r)
 
     # Right sum. should iterate to infinty, but now just iterates to the point where
     # one iterations change is beyond the resolution of the data type used
 
     t = 0
-    for k in range(n+1, n+15):
-        xp = int(16**(n-k) * (16**(D))  )
-        t = t + xp // (8*k+j)
-    total = s+t
+    for k in range(n + 1, n + 15):
+        xp = int(16**(n - k) * (16**(D))  )
+        t = t + xp // (8*k + j)
+    total = s + t
 
     return total
+
 
 def pi_hex_digits(n):
     """Returns a string containing 14 digits after the nth value of pi in hex
@@ -83,23 +86,24 @@ def pi_hex_digits(n):
 
     # main of implementation arrays holding formulae coefficients
     n -= 1
-    a=  [4,2,1,1]
-    j = [1,4,5,6]
+    a = [4, 2, 1, 1]
+    j = [1, 4, 5, 6]
 
     #formulae
-    x =  + (a[0]*_series(j[0], n)
+    x = + (a[0]*_series(j[0], n)
          - a[1]*_series(j[1], n)
          - a[2]*_series(j[2], n)
-         - a[3]*_series(j[3], n)) & (16**(_dn(n)) -1)
+         - a[3]*_series(j[3], n)) & (16**(_dn(n)) - 1)
 
-    s=("%014x" % x)
+    s = ("%014x" % x)
     #s is constrained between 0 and 14
     return s[:14]
+
 
 def _dn(n):
     # controller for n dependence on precision
     if (n < 1000):
-        f=16
+        f = 16
     else:
-        f = int((math.log10(n//1000))+18)
+        f = int((math.log10(n//1000)) + 18)
     return f

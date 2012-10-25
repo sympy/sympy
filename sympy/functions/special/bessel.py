@@ -17,6 +17,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 # o More rewriting.
 # o Add solvers to ode.py (or rather add solvers for the hypergeometric equation).
 
+
 class BesselBase(Function):
     """
     Abstract base class for bessel-type functions.
@@ -28,8 +29,8 @@ class BesselBase(Function):
 
     Here "bessel-type functions" are assumed to have one complex parameter.
 
-    To use this base class, define class attributes _a and _b such that
-        2F_n' = -_a*F_{n+1} b*F_{n-1}.
+    To use this base class, define class attributes ``_a`` and ``_b`` such that
+    ``2*F_n' = -_a*F_{n+1} b*F_{n-1}``.
     """
 
     nargs = 2
@@ -48,7 +49,9 @@ class BesselBase(Function):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)
         return self._b/2 * self.__class__(self.order - 1, self.argument) \
-             - self._a/2 * self.__class__(self.order + 1, self.argument) \
+            - self._a/2 * self.__class__(self.order + 1, self.argument) \
+
+
 
 class besselj(BesselBase):
     r"""
@@ -118,8 +121,11 @@ class besselj(BesselBase):
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_jn(self, nu, z):
-        return sqrt(2*z/pi) * jn(nu - S('1/2'), self.argument)
+    def _eval_rewrite_as_jn(self, nu, z, expand=False):
+        jn_part = jn(nu - S('1/2'), self.argument)
+        if expand:
+            jn_part = jn_part._eval_expand_func()
+        return sqrt(2*z/pi) * jn_part
 
     @classmethod
     def eval(cls, nu, z):
@@ -129,7 +135,7 @@ class besselj(BesselBase):
             if z.could_extract_minus_sign():
                 return S(-1)**nu*besselj(nu, -z)
             newz = z.extract_multiplicatively(I)
-            if newz: # NOTE we don't want to change the function if z==0
+            if newz:  # NOTE we don't want to change the function if z==0
                 return I**(nu)*besseli(nu, newz)
 
         # branch handling:
@@ -146,14 +152,15 @@ class besselj(BesselBase):
         if nu != nnu:
             return besselj(nnu, z)
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self.rewrite(jn)._eval_expand_func(deep, **hints)
+            return self._eval_rewrite_as_jn(*self.args, **{'expand': True})
         return self
 
     def _eval_rewrite_as_besseli(self, nu, z):
         from sympy import polar_lift, exp
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
+
 
 class bessely(BesselBase):
     r"""
@@ -191,8 +198,11 @@ class bessely(BesselBase):
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_yn(self, nu, z):
-        return sqrt(2*z/pi) * yn(nu - S('1/2'), self.argument)
+    def _eval_rewrite_as_yn(self, nu, z, expand=False):
+        yn_part = yn(nu - S('1/2'), self.argument)
+        if expand:
+            yn_part = yn_part._eval_expand_func()
+        return sqrt(2*z/pi) * yn_part
 
     @classmethod
     def eval(cls, nu, z):
@@ -200,10 +210,11 @@ class bessely(BesselBase):
             if nu < 0:
                 return S(-1)**nu*bessely(-nu, z)
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         if self.order.is_Rational and self.order.q == 2:
-            return self.rewrite(yn)._eval_expand_func(deep, **hints)
+            return self._eval_rewrite_as_yn(*self.args, **{'expand': True})
         return self
+
 
 class besseli(BesselBase):
     r"""
@@ -244,7 +255,7 @@ class besseli(BesselBase):
     def eval(cls, nu, z):
         if nu.is_Integer:
             newz = z.extract_multiplicatively(I)
-            if newz: # NOTE we don't want to change the function if z==0
+            if newz:  # NOTE we don't want to change the function if z==0
                 return I**(-nu)*besselj(nu, -newz)
 
         # branch handling:
@@ -264,6 +275,7 @@ class besseli(BesselBase):
     def _eval_rewrite_as_besselj(self, nu, z):
         from sympy import polar_lift, exp
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
+
 
 class besselk(BesselBase):
     r"""
@@ -298,6 +310,7 @@ class besselk(BesselBase):
     _a = S.One
     _b = -S.One
 
+
 class hankel1(BesselBase):
     r"""
     Hankel function of the first kind.
@@ -329,6 +342,7 @@ class hankel1(BesselBase):
 
     _a = S.One
     _b = S.One
+
 
 class hankel2(BesselBase):
     r"""
@@ -365,6 +379,7 @@ class hankel2(BesselBase):
 
 from sympy.polys.orthopolys import spherical_bessel_fn as fn
 
+
 class SphericalBesselBase(BesselBase):
     """
     Base class for spherical bessel functions.
@@ -376,7 +391,7 @@ class SphericalBesselBase(BesselBase):
     To use this class, define the _rewrite and _expand methods.
     """
 
-    def _expand(self):
+    def _expand(self, **hints):
         """ Expand self into a polynomial. Nu is guaranteed to be Integer. """
         raise NotImplementedError('expansion')
 
@@ -384,9 +399,9 @@ class SphericalBesselBase(BesselBase):
         """ Rewrite self in terms of ordinary bessel functions. """
         raise NotImplementedError('rewriting')
 
-    def _eval_expand_func(self, deep=False, **hints):
+    def _eval_expand_func(self, **hints):
         if self.order.is_Integer:
-            return self._expand()
+            return self._expand(**hints)
         else:
             return self
 
@@ -397,7 +412,7 @@ class SphericalBesselBase(BesselBase):
         if argindex != 2:
             raise ArgumentIndexError(self, argindex)
         return self.__class__(self.order - 1, self.argument) - \
-               self * (self.order + 1)/self.argument
+            self * (self.order + 1)/self.argument
 
 
 class jn(SphericalBesselBase):
@@ -450,10 +465,11 @@ class jn(SphericalBesselBase):
     def _eval_rewrite_as_besselj(self, nu, z):
         return sqrt(pi/(2*z)) * besselj(nu + S('1/2'), z)
 
-    def _expand(self):
+    def _expand(self, **hints):
         n = self.order
         z = self.argument
-        return fn(n, z) * sin(z) + (-1)**(n+1) * fn(-n-1, z) * cos(z)
+        return fn(n, z) * sin(z) + (-1)**(n + 1) * fn(-n - 1, z) * cos(z)
+
 
 class yn(SphericalBesselBase):
     r"""
@@ -494,11 +510,11 @@ class yn(SphericalBesselBase):
     def _eval_rewrite_as_bessely(self, nu, z):
         return sqrt(pi/(2*z)) * bessely(nu + S('1/2'), z)
 
-    def _expand(self):
+    def _expand(self, **hints):
         n = self.order
         z = self.argument
-        return (-1)**(n+1) * \
-               (fn(-n-1, z) * sin(z) + (-1)**(-n) * fn(n, z) * cos(z))
+        return (-1)**(n + 1) * \
+               (fn(-n - 1, z) * sin(z) + (-1)**(-n) * fn(n, z) * cos(z))
 
 
 def jn_zeros(n, k, method="sympy", dps=15):
@@ -535,14 +551,15 @@ def jn_zeros(n, k, method="sympy", dps=15):
         from sympy import Expr
         prec = dps_to_prec(dps)
         return [Expr._from_mpmath(besseljzero(S(n + 0.5)._to_mpmath(prec),
-                                              int(k)), prec) \
+                                              int(k)), prec)
                 for k in xrange(1, k + 1)]
     elif method == "scipy":
         from scipy.special import sph_jn
         from scipy.optimize import newton
-        f  = lambda x: sph_jn(n, x)[0][-1]
+        f = lambda x: sph_jn(n, x)[0][-1]
     else:
         raise NotImplementedError("Unknown method.")
+
     def solver(f, x):
         if method == "scipy":
             root = newton(f, x)
@@ -551,12 +568,12 @@ def jn_zeros(n, k, method="sympy", dps=15):
         return root
 
     # we need to approximate the position of the first root:
-    root = n+pi
+    root = n + pi
     # determine the first root exactly:
     root = solver(f, root)
     roots = [root]
-    for i in range(k-1):
+    for i in range(k - 1):
         # estimate the position of the next root using the last root + pi:
-        root = solver(f, root+pi)
+        root = solver(f, root + pi)
         roots.append(root)
     return roots

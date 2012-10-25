@@ -36,19 +36,21 @@ import os
 import sympy
 
 # Make sure I have the right Python version.
-if sys.version_info[:2] < (2,5):
-    print "SymPy requires Python 2.5 or newer. Python %d.%d detected" % \
-          sys.version_info[:2]
+if sys.version_info[:2] < (2, 5):
+    print("SymPy requires Python 2.5 or newer. Python %d.%d detected" %
+          sys.version_info[:2])
     sys.exit(-1)
 
 # Check that this list is uptodate against the result of the command:
-# $ for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" `; do echo "'${i//\//.}',"; done | sort
+# for i in `find sympy -name __init__.py | rev | cut -f 2- -d '/' | rev | egrep -v "^sympy$" | egrep -v "tests$" `; do echo "'${i//\//.}',"; done | sort
 modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
+    'sympy.categories',
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
+    'sympy.diffgeom',
     'sympy.external',
     'sympy.functions',
     'sympy.functions.combinatorial',
@@ -68,18 +70,22 @@ modules = [
     'sympy.mpmath.functions',
     'sympy.mpmath.libmp',
     'sympy.mpmath.matrices',
-    'sympy.mpmath.tests',
     'sympy.ntheory',
     'sympy.parsing',
     'sympy.physics',
     'sympy.physics.mechanics',
     'sympy.physics.quantum',
     'sympy.plotting',
+    'sympy.plotting.intervalmath',
+    'sympy.plotting.pygletplot',
     'sympy.polys',
+    'sympy.polys.agca',
     'sympy.polys.domains',
     'sympy.printing',
     'sympy.printing.pretty',
+    'sympy.rules',
     'sympy.series',
+    'sympy.sets',
     'sympy.simplify',
     'sympy.solvers',
     'sympy.statistics',
@@ -87,7 +93,7 @@ modules = [
     'sympy.tensor',
     'sympy.utilities',
     'sympy.utilities.mathml',
-  ]
+]
 
 class audit(Command):
     """Audits SymPy's source code for following issues:
@@ -109,12 +115,12 @@ class audit(Command):
         try:
             import pyflakes.scripts.pyflakes as flakes
         except ImportError:
-            print """In order to run the audit, you need to have PyFlakes installed."""
+            print("In order to run the audit, you need to have PyFlakes installed.")
             sys.exit(-1)
         # We don't want to audit external dependencies
         ext = ('mpmath',)
-        dirs = (os.path.join(*d) for d in \
-                        (m.split('.') for m in modules) if d[1] not in ext)
+        dirs = (os.path.join(*d) for d in
+               (m.split('.') for m in modules) if d[1] not in ext)
         warns = 0
         for dir in dirs:
             for filename in os.listdir(dir):
@@ -129,7 +135,7 @@ class clean(Command):
     """
 
     description = "remove build files"
-    user_options = [("all","a","the same")]
+    user_options = [("all", "a", "the same")]
 
     def initialize_options(self):
         self.all = None
@@ -165,40 +171,7 @@ class test_sympy(Command):
         pass
 
     def run(self):
-        tests_successful = True
-
-        try:
-            if not sympy.test():
-                # some regular test fails, so set the tests_successful
-                # flag to false and continue running the doctests
-                tests_successful = False
-
-            if not sympy.doctest():
-                tests_successful = False
-
-            print
-            sys.path.append("examples")
-            from all import run_examples # examples/all.py
-            if not run_examples(quiet=True):
-                tests_successful = False
-
-            if not (sys.platform == "win32" or sys.version_info[0] == 3):
-                # run Sage tests; Sage currently doesn't support Windows or Python 3
-                dev_null = open(os.devnull, 'w')
-                if subprocess.call("sage -v", shell = True, stdout = dev_null, stderr = dev_null) == 0:
-                    if subprocess.call("sage -python bin/test sympy/external/tests/test_sage.py", shell = True) != 0:
-                        tests_successful = False
-
-            if tests_successful:
-                return
-            else:
-                # Return nonzero exit code
-                sys.exit(1)
-        except KeyboardInterrupt:
-            print
-            print("DO *NOT* COMMIT!")
-            sys.exit(1)
-
+        sympy.utilities.runtests.run_all_tests()
 
 class run_benchmarks(Command):
     """Runs all SymPy benchmarks"""
@@ -232,9 +205,11 @@ class run_benchmarks(Command):
 # $ python bin/generate_test_list.py
 tests = [
     'sympy.assumptions.tests',
+    'sympy.categories.tests',
     'sympy.combinatorics.tests',
     'sympy.concrete.tests',
     'sympy.core.tests',
+    'sympy.diffgeom.tests',
     'sympy.external.tests',
     'sympy.functions.combinatorial.tests',
     'sympy.functions.elementary.tests',
@@ -242,25 +217,32 @@ tests = [
     'sympy.galgebra.tests',
     'sympy.geometry.tests',
     'sympy.integrals.tests',
+    'sympy.interactive.tests',
     'sympy.logic.tests',
     'sympy.matrices.expressions.tests',
     'sympy.matrices.tests',
     'sympy.mpmath.tests',
     'sympy.ntheory.tests',
     'sympy.parsing.tests',
+    'sympy.physics.mechanics.tests',
     'sympy.physics.quantum.tests',
     'sympy.physics.tests',
+    'sympy.plotting.intervalmath.tests',
+    'sympy.plotting.pygletplot.tests',
     'sympy.plotting.tests',
+    'sympy.polys.agca.tests',
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
     'sympy.series.tests',
+    'sympy.sets.tests',
     'sympy.simplify.tests',
     'sympy.solvers.tests',
     'sympy.statistics.tests',
+    'sympy.stats.tests',
     'sympy.tensor.tests',
     'sympy.utilities.tests',
-    ]
+]
 
 classifiers = [
     'License :: OSI Approved :: BSD License',
@@ -275,7 +257,7 @@ classifiers = [
     'Programming Language :: Python :: 2.7',
     'Programming Language :: Python :: 3',
     'Programming Language :: Python :: 3.2',
-    ]
+]
 
 long_description = '''SymPy is a Python library for symbolic mathematics. It aims
 to become a full-featured computer algebra system (CAS) while keeping the code
@@ -283,24 +265,24 @@ as simple as possible in order to be comprehensible and easily extensible.
 SymPy is written entirely in Python and does not require any external libraries.'''
 
 setup(
-      name = 'sympy',
-      version = sympy.__version__,
-      description = 'Computer algebra system (CAS) in Python',
-      long_description = long_description,
-      author = 'SymPy development team',
-      author_email = 'sympy@googlegroups.com',
-      license = 'BSD',
-      keywords = "Math CAS",
-      url = 'http://code.google.com/p/sympy',
-      packages = ['sympy'] + modules + tests,
-      scripts = ['bin/isympy'],
-      ext_modules = [],
-      package_data = { 'sympy.utilities.mathml' : ['data/*.xsl'] },
-      data_files = [('share/man/man1', ['doc/man/isympy.1'])],
-      cmdclass    = {'test': test_sympy,
-                     'bench': run_benchmarks,
-                     'clean': clean,
-                     'audit' : audit,
+    name='sympy',
+    version=sympy.__version__,
+    description='Computer algebra system (CAS) in Python',
+    long_description=long_description,
+    author='SymPy development team',
+    author_email='sympy@googlegroups.com',
+    license='BSD',
+    keywords="Math CAS",
+    url='http://code.google.com/p/sympy',
+    packages=['sympy'] + modules + tests,
+    scripts=['bin/isympy'],
+    ext_modules=[],
+    package_data={ 'sympy.utilities.mathml': ['data/*.xsl'] },
+    data_files=[('share/man/man1', ['doc/man/isympy.1'])],
+    cmdclass={'test': test_sympy,
+              'bench': run_benchmarks,
+              'clean': clean,
+              'audit': audit,
                      },
-      classifiers = classifiers,
-      )
+    classifiers=classifiers,
+)

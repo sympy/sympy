@@ -1,33 +1,36 @@
 from re import match
 from sympy import sympify
 
-def mathematica (s):
+
+def mathematica(s):
     return sympify(parse(s))
 
-def parse (s):
+
+def parse(s):
     s = s.strip()
 
     #Begin rules
     rules = (
-    (r"\A(\w+)\[([^\]]+[^\[]*)\]\Z", #Function call
-        lambda m: translateFunction(m.group(1)) + "(" + parse(m.group(2)) + ")" ),
+        (r"\A(\w+)\[([^\]]+[^\[]*)\]\Z",  # Function call
+        lambda m: translateFunction(
+            m.group(1)) + "(" + parse(m.group(2)) + ")" ),
 
-    (r"\((.+)\)\((.+)\)", #Parenthesized implied multiplication
+        (r"\((.+)\)\((.+)\)",  # Parenthesized implied multiplication
         lambda m: "(" + parse(m.group(1)) + ")*(" + parse(m.group(2)) + ")" ),
 
-    (r"\A\((.+)\)\Z", #Parenthesized expression
+        (r"\A\((.+)\)\Z",  # Parenthesized expression
         lambda m: "(" + parse(m.group(1)) + ")" ),
 
-    (r"\A(.*[\w\.])\((.+)\)\Z", #Implied multiplication - a(b)
+        (r"\A(.*[\w\.])\((.+)\)\Z",  # Implied multiplication - a(b)
         lambda m: parse(m.group(1)) + "*(" + parse(m.group(2)) + ")" ),
 
-    (r"\A\((.+)\)([\w\.].*)\Z", #Implied multiplication - (a)b
+        (r"\A\((.+)\)([\w\.].*)\Z",  # Implied multiplication - (a)b
         lambda m: "(" + parse(m.group(1)) + ")*" + parse(m.group(2)) ),
 
-    (r"\A([\d\.]+)([a-zA-Z].*)\Z", #Implied multiplicatin - 2a
+        (r"\A([\d\.]+)([a-zA-Z].*)\Z",  # Implied multiplicatin - 2a
         lambda m: parse(m.group(1)) + "*" + parse(m.group(2)) ),
 
-    (r"\A([^=]+)([\^\-\*/\+=]=?)(.+)\Z", #Infix operator
+        (r"\A([^=]+)([\^\-\*/\+=]=?)(.+)\Z",  # Infix operator
         lambda m: parse(m.group(1)) + translateOperator(m.group(2)) + parse(m.group(3)) ))
     #End rules
 
@@ -38,13 +41,15 @@ def parse (s):
 
     return s
 
-def translateFunction (s):
+
+def translateFunction(s):
     if s.startswith("Arc"):
         return "a" + s[3:]
     return s.lower()
 
-def translateOperator (s):
-    dictionary = {'^':'**'}
+
+def translateOperator(s):
+    dictionary = {'^': '**'}
     if s in dictionary:
         return dictionary[s]
     return s

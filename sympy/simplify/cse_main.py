@@ -3,8 +3,14 @@
 import bisect
 import difflib
 
-from sympy import Basic, Mul, Add
-from sympy.utilities.iterables import preorder_traversal, numbered_symbols
+from sympy.core import Basic, Mul, Add, Tuple, sympify
+from sympy.core.basic import preorder_traversal
+from sympy.functions.elementary.complexes import sign
+from sympy.core.function import _coeff_isneg
+from sympy.core.compatibility import iterable
+from sympy.utilities.iterables import numbered_symbols, \
+    sift, topological_sort
+from sympy.utilities.misc import default_sort_key
 
 import cse_opts
 
@@ -21,6 +27,62 @@ import cse_opts
 # postprocessor.
 
 cse_optimizations = list(cse_opts.default_optimizations)
+
+# sometimes we want the output in a different format; non-trivial
+# transformations can be put here for users
+# ===============================================================
+
+
+def reps_toposort(r):
+    """Sort replacements `r` so (k1, v1) appears before (k2, v2)
+    if k2 is in v1's free symbols. This orders items in the
+    way that cse returns its results (hence, in order to use the
+    replacements in a substitution option it would make sense
+    to reverse the order).
+
+    Examples
+    ========
+    >>> from sympy.simplify.cse_main import reps_toposort
+    >>> from sympy.abc import x, y
+    >>> from sympy import Eq
+    >>> for l, r in reps_toposort([(x, y + 1), (y, 2)]):
+    ...     print Eq(l, r)
+    ...
+    y == 2
+    x == y + 1
+
+    """
+    r = sympify(r)
+    E = []
+    for c1, (k1, v1) in enumerate(r):
+        for c2, (k2, v2) in enumerate(r):
+            if k1 in v2.free_symbols:
+                E.append((c1, c2))
+    return [r[i] for i in topological_sort((range(len(r)), E))]
+
+
+def cse_separate(r, e):
+    """Move expressions that are in the form (symbol, expr) out of the
+    expressions and sort them into the replacements using the reps_toposort.
+
+    Examples
+    ========
+    >>> from sympy.simplify.cse_main import cse_separate
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import cos, exp, cse, Eq
+    >>> eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
+    >>> cse([eq, Eq(x, z + 1), z - 2], postprocess=cse_separate)
+    [[(x0, y + 1), (x, z + 1), (x1, x + 1)],
+     [x1 + exp(x1/x0) + cos(x0), z - 2]]
+    """
+    syms = set([k for k, v in r])
+    d = sift(
+        e, lambda w: w.is_Equality and not bool(w.free_symbols & set(syms)))
+    r, e = [r + [w.args for w in d[True]], d[False]]
+    return [reps_toposort(r), e]
+
+# ====end of cse postprocess idioms===========================
+
 
 def preprocess_for_cse(expr, optimizations):
     """ Preprocess an expression to optimize for common subexpression
@@ -42,6 +104,7 @@ def preprocess_for_cse(expr, optimizations):
         if pre is not None:
             expr = pre(expr)
     return expr
+
 
 def postprocess_for_cse(expr, optimizations):
     """ Postprocess an expression after common subexpression elimination to
@@ -68,7 +131,8 @@ def postprocess_for_cse(expr, optimizations):
             expr = post(expr)
     return expr
 
-def cse(exprs, symbols=None, optimizations=None):
+
+def cse(exprs, symbols=None, optimizations=None, postprocess=None):
     """ Perform common subexpression elimination on an expression.
 
     Parameters
@@ -78,12 +142,16 @@ def cse(exprs, symbols=None, optimizations=None):
         The expressions to reduce.
     symbols : infinite iterator yielding unique Symbols
         The symbols used to label the common subexpressions which are pulled
-        out. The ``numbered_symbols`` generator is useful. The default is a stream
-        of symbols of the form "x0", "x1", etc. This must be an infinite
+        out. The ``numbered_symbols`` generator is useful. The default is a
+        stream of symbols of the form "x0", "x1", etc. This must be an infinite
         iterator.
     optimizations : list of (callable, callable) pairs, optional
         The (preprocessor, postprocessor) pairs. If not provided,
         ``sympy.simplify.cse.cse_optimizations`` is used.
+    postprocess : a function which accepts the two return values of cse and
+        returns the desired form of output from cse, e.g. if you want the
+        replacements reversed the function might be the following lambda:
+        lambda r, e: return reversed(r), e
 
     Returns
     =======
@@ -95,6 +163,7 @@ def cse(exprs, symbols=None, optimizations=None):
         The reduced expressions with all of the replacements above.
     """
     from sympy.matrices import Matrix
+    from sympy.simplify.simplify import fraction
 
     if symbols is None:
         symbols = numbered_symbols()
@@ -120,43 +189,57 @@ def cse(exprs, symbols=None, optimizations=None):
     # Preprocess the expressions to give us better optimization opportunities.
     reduced_exprs = [preprocess_for_cse(e, optimizations) for e in exprs]
     # Find all of the repeated subexpressions.
+
     def insert(subtree):
         '''This helper will insert the subtree into to_eliminate while
         maintaining the ordering by op count and will skip the insertion
         if subtree is already present.'''
-        ops_count = (subtree.count_ops(), subtree.is_Mul) # prefer non-Mul to Mul
+        ops_count = (
+            subtree.count_ops(), subtree.is_Mul)  # prefer non-Mul to Mul
         index_to_insert = bisect.bisect(to_eliminate_ops_count, ops_count)
         # all i up to this index have op count <= the current op count
         # so check that subtree is not yet present from this index down
         # (if necessary) to zero.
         for i in xrange(index_to_insert - 1, -1, -1):
             if to_eliminate_ops_count[i] == ops_count and \
-               subtree == to_eliminate[i]:
-                return # already have it
+                    subtree == to_eliminate[i]:
+                return  # already have it
         to_eliminate_ops_count.insert(index_to_insert, ops_count)
         to_eliminate.insert(index_to_insert, subtree)
 
     for expr in reduced_exprs:
         if not isinstance(expr, Basic):
             continue
-        for e in expr.as_numer_denom() if not expr.is_Add else [expr]:
-            pt = preorder_traversal(e)
-            for subtree in pt:
-                if subtree.is_Atom:
-                    # Exclude atoms, since there is no point in renaming them.
-                    continue
+        pt = preorder_traversal(expr, key=default_sort_key)
+        for subtree in pt:
 
-                if subtree in seen_subexp:
-                    insert(subtree)
-                    pt.skip()
-                    continue
+            inv = 1/subtree if subtree.is_Pow else None
 
-                if subtree.is_Mul:
-                    muls.add(subtree)
-                elif subtree.is_Add:
-                    adds.add(subtree)
+            if subtree.is_Atom or iterable(subtree) or inv and inv.is_Atom:
+                # Exclude atoms, since there is no point in renaming them.
+                continue
 
-                seen_subexp.add(subtree)
+            if subtree in seen_subexp:
+                if inv and _coeff_isneg(subtree.exp):
+                    # save the form with positive exponent
+                    subtree = inv
+                insert(subtree)
+                pt.skip()
+                continue
+
+            if inv and inv in seen_subexp:
+                if _coeff_isneg(subtree.exp):
+                    # save the form with positive exponent
+                    subtree = inv
+                insert(subtree)
+                pt.skip()
+                continue
+            elif subtree.is_Mul:
+                muls.add(subtree)
+            elif subtree.is_Add:
+                adds.add(subtree)
+
+            seen_subexp.add(subtree)
 
     # process adds - any adds that weren't repeated might contain
     # subpatterns that are repeated, e.g. x+y+z and x+y have x+y in common
@@ -230,7 +313,7 @@ def cse(exprs, symbols=None, optimizations=None):
             sym = symbols.next()
         hit = False
         if subtree.is_Pow and subtree.exp.is_Rational:
-            update = lambda x: x.xreplace({subtree: sym})
+            update = lambda x: x.xreplace({subtree: sym, 1/subtree: 1/sym})
         else:
             update = lambda x: x.subs(subtree, sym)
         # Make the substitution in all of the target expressions.
@@ -239,7 +322,7 @@ def cse(exprs, symbols=None, optimizations=None):
             reduced_exprs[j] = update(expr)
             hit = hit or (old != reduced_exprs[j])
         # Make the substitution in all of the subsequent substitutions.
-        for j in range(i+1, len(to_eliminate)):
+        for j in range(i + 1, len(to_eliminate)):
             old = to_eliminate[j]
             to_eliminate[j] = update(to_eliminate[j])
             hit = hit or (old != to_eliminate[j])
@@ -250,8 +333,11 @@ def cse(exprs, symbols=None, optimizations=None):
     for i, (sym, subtree) in enumerate(replacements):
         subtree = postprocess_for_cse(subtree, optimizations)
         replacements[i] = (sym, subtree)
-    reduced_exprs = [postprocess_for_cse(e, optimizations) for e in reduced_exprs]
+    reduced_exprs = [postprocess_for_cse(e, optimizations)
+        for e in reduced_exprs]
 
     if isinstance(exprs, Matrix):
         reduced_exprs = [Matrix(exprs.rows, exprs.cols, reduced_exprs)]
-    return replacements, reduced_exprs
+    if postprocess is None:
+        return replacements, reduced_exprs
+    return postprocess(replacements, reduced_exprs)

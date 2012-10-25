@@ -5,12 +5,14 @@ from math import sqrt as _sqrt
 
 from sympy.core.compatibility import reduce
 
+
 class CombinatorialFunction(Function):
     """Base class for combinatorial functions. """
 
 ###############################################################################
 ######################## FACTORIAL and MULTI-FACTORIAL ########################
 ###############################################################################
+
 
 class factorial(CombinatorialFunction):
     """Implementation of factorial function over nonnegative integers.
@@ -68,9 +70,9 @@ class factorial(CombinatorialFunction):
             raise ArgumentIndexError(self, argindex)
 
     _small_swing = [
-        1,1,1,3,3,15,5,35,35,315,63,693,231,3003,429,6435,6435,109395,
-        12155,230945,46189,969969,88179,2028117,676039,16900975,1300075,
-        35102025,5014575,145422675,9694845,300540195,300540195
+        1, 1, 1, 3, 3, 15, 5, 35, 35, 315, 63, 693, 231, 3003, 429, 6435, 6435, 109395,
+        12155, 230945, 46189, 969969, 88179, 2028117, 676039, 16900975, 1300075,
+        35102025, 5014575, 145422675, 9694845, 300540195, 300540195
     ]
 
     @classmethod
@@ -80,7 +82,7 @@ class factorial(CombinatorialFunction):
         else:
             N, primes = int(_sqrt(n)), []
 
-            for prime in sieve.primerange(3, N+1):
+            for prime in sieve.primerange(3, N + 1):
                 p, q = 1, n
 
                 while True:
@@ -95,13 +97,13 @@ class factorial(CombinatorialFunction):
                 if p > 1:
                     primes.append(p)
 
-            for prime in sieve.primerange(N+1, n//3 + 1):
+            for prime in sieve.primerange(N + 1, n//3 + 1):
                 if (n // prime) & 1 == 1:
                     primes.append(prime)
 
             L_product = R_product = 1
 
-            for prime in sieve.primerange(n//2 + 1, n+1):
+            for prime in sieve.primerange(n//2 + 1, n + 1):
                 L_product *= prime
 
             for prime in primes:
@@ -130,7 +132,7 @@ class factorial(CombinatorialFunction):
                     n, result = n.p, 1
 
                     if n < 20:
-                        for i in range(2, n+1):
+                        for i in range(2, n + 1):
                             result *= i
                     else:
                         N, bits = n, 0
@@ -141,7 +143,7 @@ class factorial(CombinatorialFunction):
 
                             N = N >> 1
 
-                        result = cls._recursive(n)*2**(n-bits)
+                        result = cls._recursive(n)*2**(n - bits)
 
                     return C.Integer(result)
 
@@ -154,8 +156,10 @@ class factorial(CombinatorialFunction):
     def _eval_is_integer(self):
         return self.args[0].is_integer
 
+
 class MultiFactorial(CombinatorialFunction):
     pass
+
 
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
@@ -204,6 +208,7 @@ class factorial2(CombinatorialFunction):
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################
 ###############################################################################
+
 
 class RisingFactorial(CombinatorialFunction):
     """Rising factorial (also called Pochhammer symbol) is a double valued
@@ -263,17 +268,18 @@ class RisingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x+i), xrange(0, int(k)), 1)
+                        return reduce(lambda r, i: r*(x + i), xrange(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x-i), xrange(1, abs(int(k))+1), 1)
+                        return 1/reduce(lambda r, i: r*(x - i), xrange(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         return C.gamma(x + k) / C.gamma(x)
+
 
 class FallingFactorial(CombinatorialFunction):
     """Falling factorial (related to rising factorial) is a double valued
@@ -328,15 +334,14 @@ class FallingFactorial(CombinatorialFunction):
                         else:
                             return S.Infinity
                     else:
-                        return reduce(lambda r, i: r*(x-i), xrange(0, int(k)), 1)
+                        return reduce(lambda r, i: r*(x - i), xrange(0, int(k)), 1)
                 else:
                     if x is S.Infinity:
                         return S.Infinity
                     elif x is S.NegativeInfinity:
                         return S.Infinity
                     else:
-                        return 1/reduce(lambda r, i: r*(x+i), xrange(1, abs(int(k))+1), 1)
-
+                        return 1/reduce(lambda r, i: r*(x + i), xrange(1, abs(int(k)) + 1), 1)
 
     def _eval_rewrite_as_gamma(self, x, k):
         return (-1)**k * C.gamma(-x + k) / C.gamma(-x)
@@ -347,6 +352,7 @@ ff = FallingFactorial
 ###############################################################################
 ########################### BINOMIAL COEFFICIENTS #############################
 ###############################################################################
+
 
 class binomial(CombinatorialFunction):
     """Implementation of the binomial coefficient. It can be defined
@@ -432,7 +438,7 @@ class binomial(CombinatorialFunction):
 
                     M, result = int(_sqrt(n)), 1
 
-                    for prime in sieve.primerange(2, n+1):
+                    for prime in sieve.primerange(2, n + 1):
                         if prime > n - k:
                             result *= prime
                         elif prime > n // 2:
@@ -456,12 +462,14 @@ class binomial(CombinatorialFunction):
                 else:
                     result = n - k + 1
 
-                    for i in xrange(2, k+1):
-                        result *= n-k+i
+                    for i in xrange(2, k + 1):
+                        result *= n - k + i
                         result /= i
 
                     return result
         elif k.is_negative:
+            return S.Zero
+        elif (n - k).simplify().is_negative:
             return S.Zero
         else:
             d = n - k

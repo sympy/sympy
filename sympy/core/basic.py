@@ -1,80 +1,15 @@
 """Base class for all the objects in SymPy"""
-
-from assumptions import WithAssumptions
-from cache import cacheit
-from core import BasicType, C
-from sympify import _sympify, sympify, SympifyError
-from compatibility import callable, reduce, cmp, iterable
+from copy import copy
+from sympy.core.assumptions import ManagedProperties
+from sympy.core.cache import cacheit
+from sympy.core.core import BasicType, C
+from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.core.compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
-class PicklableWithSlots(object):
-    """
-    Mixin class that allows to pickle objects with ``__slots__``.
 
-    Examples
-    --------
-
-    First define a class that mixes :class:`PicklableWithSlots` in::
-
-        >>> from sympy.core.basic import PicklableWithSlots
-
-        >>> class Some(PicklableWithSlots):
-        ...     __slots__ = ['foo', 'bar']
-        ...
-        ...     def __init__(self, foo, bar):
-        ...         self.foo = foo
-        ...         self.bar = bar
-
-    To make :mod:`pickle` happy in doctest we have to use this hack::
-
-        >>> import __builtin__ as builtin
-        >>> builtin.Some = Some
-
-    Next lets see if we can create an instance, pickle it and unpickle::
-
-        >>> some = Some('abc', 10)
-        >>> some.foo, some.bar
-        ('abc', 10)
-
-        >>> from pickle import dumps, loads
-        >>> some2 = loads(dumps(some))
-
-        >>> some2.foo, some2.bar
-        ('abc', 10)
-
-    """
-
-    __slots__ = []
-
-    def __getstate__(self, cls=None):
-        if cls is None:
-            # This is the case for the instance that gets pickled
-            cls = self.__class__
-
-        d = {}
-
-        # Get all data that should be stored from super classes
-        for c in cls.__bases__:
-            if hasattr(c, "__getstate__"):
-                d.update(c.__getstate__(self, c))
-
-        # Get all information that should be stored from cls and return the dict
-        for name in cls.__slots__:
-            if hasattr(self, name):
-                d[name] = getattr(self, name)
-
-        return d
-
-    def __setstate__(self, d):
-        # All values that were pickled are now assigned to a fresh instance
-        for name, value in d.iteritems():
-            try:
-                setattr(self, name, value)
-            except AttributeError:    # This is needed in cases like Rational :> Half
-                pass
-
-class Basic(PicklableWithSlots):
+class Basic(object):
     """
     Base class for all objects in sympy.
 
@@ -104,9 +39,10 @@ class Basic(PicklableWithSlots):
         (x,)
 
     """
-    __metaclass__ = WithAssumptions
+    __metaclass__ = ManagedProperties
     __slots__ = ['_mhash',              # hash value
                  '_args',               # arguments
+                 '_assumptions'
                 ]
 
     # To be overridden with True in the appropriate subclasses
@@ -135,57 +71,86 @@ class Basic(PicklableWithSlots):
     is_Matrix = False
 
     @property
-    @deprecated
+    @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
     def is_Real(self):  # pragma: no cover
         """Deprecated alias for ``is_Float``"""
         # When this is removed, remove the piece of code disabling the warning
         # from test_pickling.py
         return self.is_Float
 
-    def __new__(cls, *args, **assumptions):
+    def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._init_assumptions(assumptions)
+        obj._assumptions = cls.default_assumptions
+        obj._mhash = None  # will be set by __hash__ method.
 
-        obj._mhash = None # will be set by __hash__ method.
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+    def copy(self):
+        return self.func(*self.args)
+
+    def __reduce_ex__(self, proto):
+        """ Pickling support."""
+        return type(self), self.__getnewargs__(), self.__getstate__()
 
     def __getnewargs__(self):
-        """ Pickling support.
-        """
-        return tuple(self.args)
+        return self.args
+
+    def __getstate__(self):
+        return {}
+
+    def __setstate__(self, state):
+        for k, v in state.iteritems():
+            setattr(self, k, v)
 
     def __hash__(self):
         # hash cannot be cached using cache_it because infinite recurrence
         # occurs as hash is needed for setting cache dictionary keys
         h = self._mhash
         if h is None:
-            h = (type(self).__name__,) + self._hashable_content()
-
-            if self._assume_type_keys is not None:
-                a = []
-                kv= self._assumptions
-                for k in sorted(self._assume_type_keys):
-                    a.append( (k, kv[k]) )
-
-                h = hash( h + tuple(a) )
-
-            else:
-                h = hash( h )
-
-
+            h = hash((type(self).__name__,) + self._hashable_content())
             self._mhash = h
-            return h
-
-        else:
-            return h
+        return h
 
     def _hashable_content(self):
-        # If class defines additional attributes, like name in Symbol,
-        # then this method should be updated accordingly to return
-        # relevant attributes as tuple.
+        """Return a tuple of information about self that can be used to
+        compute the hash. If a class defines additional attributes,
+        like ``name`` in Symbol, then this method should be updated
+        accordingly to return such relevent attributes.
+
+        Defining more than _hashable_content is necessary if __eq__ has
+        been defined by a class. See note about this in Basic.__eq__."""
         return self._args
+
+    @property
+    def assumptions0(self):
+        """
+        Return object `type` assumptions.
+
+        For example:
+
+          Symbol('x', real=True)
+          Symbol('x', integer=True)
+
+        are different objects. In other words, besides Python type (Symbol in
+        this case), the initial assumptions are also forming their typeinfo.
+
+        Examples
+        ========
+
+        >>> from sympy import Symbol
+        >>> from sympy.abc import x
+        >>> x.assumptions0
+        {'commutative': True}
+        >>> x = Symbol("x", positive=True)
+        >>> x.assumptions0
+        {'commutative': True, 'complex': True, 'hermitian': True,
+        'imaginary': False, 'negative': False, 'nonnegative': True,
+        'nonpositive': False, 'nonzero': True, 'positive': True, 'real': True,
+        'zero': False}
+
+        """
+        return {}
 
     def compare(self, other):
         """
@@ -254,13 +219,15 @@ class Basic(PicklableWithSlots):
                     if c != 0:
                         return c
 
-        return Basic.compare(a,b)
+        return Basic.compare(a, b)
 
     @staticmethod
-    @deprecated
+    @deprecated(useinstead="default_sort_key", issue=1491, deprecated_since_version="0.7.2")
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?
+
+        THIS FUNCTION IS DEPRECATED.  Use ``default_sort_key`` instead.
 
         ::
 
@@ -305,7 +272,7 @@ class Basic(PicklableWithSlots):
 
         # both objects are non-SymPy
         if (not isinstance(a, Basic)) and (not isinstance(b, Basic)):
-            return cmp(a,b)
+            return cmp(a, b)
 
         if not isinstance(a, Basic):
             return -1   # other < sympy
@@ -363,21 +330,34 @@ class Basic(PicklableWithSlots):
         # XXX: remove this when issue #2070 is fixed
         def inner_key(arg):
             if isinstance(arg, Basic):
-                return arg.sort_key()
+                return arg.sort_key(order)
             else:
                 return arg
 
-        args = len(self.args), tuple([ inner_key(arg) for arg in self.args ])
+        args = self._sorted_args
+        args = len(args), tuple([ inner_key(arg) for arg in args ])
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
-        """a == b  -> Compare two symbolic trees and see whether they are equal
+        """Return a boolean indicating whether a == b on the basis of
+        their symbolic trees.
 
-           this is the same as:
+        This is the same as a.compare(b) == 0 but faster.
 
-             a.compare(b) == 0
+        Notes
+        =====
 
-           but faster
+        If a class that overrides __eq__() needs to retain the
+        implementation of __hash__() from a parent class, the
+        interpreter must be told this explicitly by setting __hash__ =
+        <ParentClass>.__hash__. Otherwise the inheritance of __hash__()
+        will be blocked, just as if __hash__ had been explicitly set to
+        None.
+
+        References
+        ==========
+
+        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
         if type(self) is not type(other):
@@ -394,11 +374,7 @@ class Basic(PicklableWithSlots):
             if type(self) is not type(other):
                 return False
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
-
-        return st == ot and self._assume_type_keys == other._assume_type_keys
+        return self._hashable_content() == other._hashable_content()
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
@@ -419,11 +395,7 @@ class Basic(PicklableWithSlots):
             if type(self) is not type(other):
                 return True
 
-        # type(self) == type(other)
-        st = self._hashable_content()
-        ot = other._hashable_content()
-
-        return (st != ot) or self._assume_type_keys != other._assume_type_keys
+        return self._hashable_content() != other._hashable_content()
 
     def dummy_eq(self, other, symbol=None):
         """
@@ -455,7 +427,8 @@ class Basic(PicklableWithSlots):
         elif len(dummy_symbols) == 1:
             dummy = dummy_symbols.pop()
         else:
-            raise ValueError("only one dummy symbol allowed on the left-hand side")
+            raise ValueError(
+                "only one dummy symbol allowed on the left-hand side")
 
         if symbol is None:
             symbols = other.free_symbols
@@ -553,40 +526,16 @@ class Basic(PicklableWithSlots):
            set([I*pi, 2*sin(y + I*pi)])
 
         """
-
-        def _atoms(expr, typ):
-            """Helper function for recursively denesting atoms"""
-
-            result = set()
-            if isinstance(expr, Basic):
-                if expr.is_Atom and len(typ) == 0: # if we haven't specified types
-                    return set([expr])
-                else:
-                    try:
-                        if isinstance(expr, typ):
-                            result.add(expr)
-                    except TypeError:
-                        #one or more types is in implicit form
-                        for t in typ:
-                            if isinstance(t, type):
-                                if isinstance(expr, t):
-                                    result.add(expr)
-                            else:
-                                if isinstance(expr, type(t)):
-                                    result.add(expr)
-
-                iter = expr.iter_basic_args()
-            elif iterable(expr):
-                iter = expr.__iter__()
-            else:
-                iter = []
-
-            for obj in iter:
-                result.update(_atoms(obj, typ))
-
-            return result
-
-        return _atoms(self, typ=types)
+        if types:
+            types = tuple(
+                [t if isinstance(t, type) else type(t) for t in types])
+        else:
+            types = (Atom,)
+        result = set()
+        for expr in preorder_traversal(self):
+            if isinstance(expr, types):
+                result.add(expr)
+        return result
 
     @property
     def free_symbols(self):
@@ -706,9 +655,18 @@ class Basic(PicklableWithSlots):
         """
         return self._args
 
+    @property
+    def _sorted_args(self):
+        """
+        The same as ``args``.  Derived classes which don't fix an
+        order on their arguments should override this method to
+        produce the sorted representation.
+        """
+        return self.args
+
     def iter_basic_args(self):
         """
-        Iterates arguments of 'self'.
+        Iterates arguments of ``self``.
 
         Examples
         ========
@@ -846,11 +804,8 @@ class Basic(PicklableWithSlots):
                   using matching rules
 
         """
-        from sympy.core.expr import Expr
         from sympy.core.containers import Dict
-        from sympy.utilities import default_sort_key, sift
-        from sympy.core.function import Function, Derivative
-        from sympy.core.symbol import Symbol
+        from sympy.utilities import default_sort_key
 
         unordered = False
         if len(args) == 1:
@@ -864,7 +819,8 @@ class Basic(PicklableWithSlots):
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent("""
                    When a single argument is passed to subs
-                   it should be an iterable of (old, new) tuples."""))
+                   it should be a dictionary of old: new pairs or an iterable
+                   of (old, new) tuples."""))
         elif len(args) == 2:
             sequence = [args]
         else:
@@ -895,14 +851,15 @@ class Basic(PicklableWithSlots):
                     d.setdefault(ops, []).append((o, n))
                 newseq = []
                 for k in sorted(d.keys(), reverse=True):
-                    newseq.extend(sorted([v[0] for v in d[k]], key=default_sort_key))
+                    newseq.extend(
+                        sorted([v[0] for v in d[k]], key=default_sort_key))
                 sequence = [(k, sequence[k]) for k in newseq]
                 del newseq, d
             else:
                 sequence = sorted([(k, v) for (k, v) in sequence.iteritems()],
                                   key=default_sort_key)
 
-        if kwargs.pop('simultaneous', False): # XXX should this be the default for dict subs?
+        if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
             for old, new in sequence:
@@ -1092,7 +1049,7 @@ class Basic(PicklableWithSlots):
                 return self.func(*args)
         return self
 
-    @deprecated
+    @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -1130,68 +1087,29 @@ class Basic(PicklableWithSlots):
         False
 
         """
-        def _ncsplit(expr):
-            if expr.is_Add or expr.is_Mul:
-                cpart, ncpart = [], []
+        return any(self._has(pattern) for pattern in patterns)
 
-                for arg in expr.args:
-                    if arg.is_commutative:
-                        cpart.append(arg)
-                    else:
-                        ncpart.append(arg)
-            elif expr.is_commutative:
-                cpart, ncpart = [expr], []
-            else:
-                cpart, ncpart = [], [expr]
+    def _has(self, pattern):
+        """Helper for .has()"""
+        from sympy.core.function import UndefinedFunction, Function
+        if isinstance(pattern, UndefinedFunction):
+            return any(f.func == pattern or f == pattern
+            for f in self.atoms(Function, UndefinedFunction))
 
-            return set(cpart), ncpart
+        pattern = sympify(pattern)
+        if isinstance(pattern, BasicType):
+            return any(isinstance(arg, pattern)
+            for arg in preorder_traversal(self))
 
-        def _contains(expr, subexpr, iterative, c, nc):
-            if expr == subexpr:
-                return True
-            elif not isinstance(expr, Basic):
-                return False
-            elif iterative and (expr.is_Add or expr.is_Mul):
-                _c, _nc = _ncsplit(expr)
+        try:
+            match = pattern._has_matcher()
+            return any(match(arg) for arg in preorder_traversal(self))
+        except AttributeError:
+            return any(arg == pattern for arg in preorder_traversal(self))
 
-                if (c & _c) == c:
-                    if not nc:
-                        return True
-                    elif len(nc) <= len(_nc):
-                        for i in xrange(len(_nc) - len(nc)):
-                            if _nc[i:i+len(nc)] == nc:
-                                return True
-
-            return False
-
-        def _match(pattern):
-            pattern = sympify(pattern)
-
-            if isinstance(pattern, BasicType):
-                return lambda expr: (isinstance(expr, pattern) or
-                    (isinstance(expr, BasicType) and expr == pattern))
-            else:
-                if pattern.is_Add or pattern.is_Mul:
-                    iterative, (c, nc) = True, _ncsplit(pattern)
-                else:
-                    iterative, (c, nc) = False, (None, None)
-
-                return lambda expr: _contains(expr, pattern, iterative, c, nc)
-
-        def _search(expr, match):
-            if match(expr):
-                return True
-
-            if isinstance(expr, Basic):
-                args = expr.args
-            elif iterable(expr):
-                args = expr
-            else:
-                return False
-
-            return any(_search(arg, match) for arg in args)
-
-        return any(_search(self, _match(pattern)) for pattern in patterns)
+    def _has_matcher(self):
+        """Helper for .has()"""
+        return self.__eq__
 
     def replace(self, query, value, map=False):
         """
@@ -1208,6 +1126,9 @@ class Basic(PicklableWithSlots):
 
         Examples
         ========
+
+        Initial setup
+
             >>> from sympy import log, sin, cos, tan, Wild
             >>> from sympy.abc import x, y
             >>> f = log(sin(x)) + tan(sin(x**2))
@@ -1271,7 +1192,8 @@ class Basic(PicklableWithSlots):
             if isinstance(value, Basic):
                 _value = lambda expr, result: value.subs(result)
             elif callable(value):
-                _value = lambda expr, result: value(**dict([ (str(key)[:-1], val) for key, val in result.iteritems() ]))
+                _value = lambda expr, result: value(**dict([ (
+                    str(key)[:-1], val) for key, val in result.iteritems() ]))
             else:
                 raise TypeError("given an expression, replace() expects another expression or a callable")
         elif callable(query):
@@ -1280,7 +1202,8 @@ class Basic(PicklableWithSlots):
             if callable(value):
                 _value = lambda expr, result: value(expr)
             else:
-                raise TypeError("given a callable, replace() expects another callable")
+                raise TypeError(
+                    "given a callable, replace() expects another callable")
         else:
             raise TypeError("first argument to replace() must be a type, an expression or a callable")
 
@@ -1326,26 +1249,8 @@ class Basic(PicklableWithSlots):
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
-        if not callable(query):
-            query = sympify(query)
-        if isinstance(query, type):
-            _query = lambda expr: isinstance(expr, query)
-        elif isinstance(query, Basic):
-            _query = lambda expr: expr.match(query)
-        else:
-            _query = query
-
-        results = []
-
-        def rec_find(expr):
-            q = _query(expr)
-            if q or q == {}:
-                results.append(expr)
-
-            for arg in expr.args:
-                rec_find(arg)
-
-        rec_find(self)
+        query = _make_find_query(query)
+        results = filter(query, preorder_traversal(self))
 
         if not group:
             return set(results)
@@ -1362,7 +1267,8 @@ class Basic(PicklableWithSlots):
 
     def count(self, query):
         """Count the number of matching subexpressions. """
-        return sum(self.find(query, group=True).values())
+        query = _make_find_query(query)
+        return sum(bool(query(sub)) for sub in preorder_traversal(self))
 
     def matches(self, expr, repl_dict={}):
         """
@@ -1513,6 +1419,7 @@ class Basic(PicklableWithSlots):
                 else:
                     return self
 
+
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
@@ -1538,10 +1445,6 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
-    @deprecated
-    def __contains__(self, obj):
-        return (self == obj)
-
     @classmethod
     def class_key(cls):
         return 2, 0, cls.__name__
@@ -1550,6 +1453,16 @@ class Atom(Basic):
     def sort_key(self, order=None):
         from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+
+    @property
+    def _sorted_args(self):
+        # this is here as a safeguard against accidentally using _sorted_args
+        # on Atoms -- they cannot be rebuilt as atom.func(*atom._sorted_args)
+        # since there are no args. So the calling routine should be checking
+        # to see that this property is not called for Atoms.
+        raise AttributeError('Atoms have no args. It might be necessary'
+        ' to make a check for Atoms in the calling code.')
+
 
 def _aresame(a, b):
     """Return True if a and b are structurally the same, else False.
@@ -1563,41 +1476,22 @@ def _aresame(a, b):
     >>> 2.0 == S(2)
     True
 
-    The Basic.compare method will indicate that these are not the same, but
-    the same method allows symbols with different assumptions to compare the
-    same:
-
-    >>> S(2).compare(2.0)
-    -1
-    >>> Symbol('x').compare(Symbol('x', positive=True))
-    0
-
-    The Basic.compare method will not work with instances of FunctionClass:
-
-    >>> sin.compare(cos)
-    Traceback (most recent call last):
-     File "<stdin>", line 1, in <module>
-    TypeError: unbound method compare() must be called with sin instance as first ar
-    gument (got FunctionClass instance instead)
-
     Since a simple 'same or not' result is sometimes useful, this routine was
-    written to provide that query.
+    written to provide that query:
+
+    >>> from sympy.core.basic import _aresame
+    >>> _aresame(S(2.0), S(2))
+    False
 
     """
-    from sympy.utilities.iterables import preorder_traversal
     from itertools import izip
 
-    try:
-        if a.compare(b) == 0 and a.is_Symbol and b.is_Symbol:
-            return a.assumptions0 == b.assumptions0
-    except (TypeError, AttributeError):
-        pass
-
     for i, j in izip(preorder_traversal(a), preorder_traversal(b)):
-        if i == j and type(i) == type(j):
-            continue
-        return False
-    return True
+        if i != j or type(i) != type(j):
+            return False
+    else:
+        return True
+
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is
@@ -1620,7 +1514,6 @@ def _atomic(e):
 
     """
     from sympy import Derivative, Function, Symbol
-    from sympy.utilities.iterables import preorder_traversal
     pot = preorder_traversal(e)
     seen = set()
     try:
@@ -1639,3 +1532,107 @@ def _atomic(e):
             pot.skip()
             atoms.add(p)
     return atoms
+
+
+class preorder_traversal(object):
+    """
+    Do a pre-order traversal of a tree.
+
+    This iterator recursively yields nodes that it has visited in a pre-order
+    fashion. That is, it yields the current node then descends through the
+    tree breadth-first to yield all of a node's children's pre-order
+    traversal.
+
+
+    For an expression, the order of the traversal depends on the order of
+    .args, which in many cases can be arbitrary.
+
+    Parameters
+    ==========
+    node : sympy expression
+        The expression to traverse.
+    key : (default None) sort key
+        The key used to sort args of Basic objects. When None, args of Basic
+        objects are processed in arbitrary order.
+
+    Yields
+    ======
+    subtree : sympy expression
+        All of the subtrees in the tree.
+
+    Examples
+    ========
+    >>> from sympy import symbols
+    >>> from sympy import symbols, default_sort_key
+    >>> from sympy.core.basic import preorder_traversal
+    >>> x, y, z = symbols('x y z')
+
+    The nodes are returned in the order that they are encountered unless key
+    is given.
+
+    >>> list(preorder_traversal((x + y)*z, key=None)) # doctest: +SKIP
+    [z*(x + y), z, x + y, y, x]
+    >>> list(preorder_traversal((x + y)*z, key=default_sort_key))
+    [z*(x + y), z, x + y, x, y]
+
+    """
+    def __init__(self, node, key=None):
+        self._skip_flag = False
+        self._pt = self._preorder_traversal(node, key)
+
+    def _preorder_traversal(self, node, key):
+        yield node
+        if self._skip_flag:
+            self._skip_flag = False
+            return
+        if isinstance(node, Basic):
+            args = node.args
+            if key:
+                args = list(args)
+                args.sort(key=key)
+            for arg in args:
+                for subtree in self._preorder_traversal(arg, key):
+                    yield subtree
+        elif iterable(node):
+            for item in node:
+                for subtree in self._preorder_traversal(item, key):
+                    yield subtree
+
+    def skip(self):
+        """
+        Skip yielding current node's (last yielded node's) subtrees.
+
+        Examples
+        --------
+        >>> from sympy.core import symbols
+        >>> from sympy.core.basic import preorder_traversal
+        >>> x, y, z = symbols('x y z')
+        >>> pt = preorder_traversal((x+y*z)*z)
+        >>> for i in pt:
+        ...     print i
+        ...     if i == x+y*z:
+        ...             pt.skip()
+        z*(x + y*z)
+        z
+        x + y*z
+        """
+        self._skip_flag = True
+
+    def next(self):
+        return self._pt.next()
+
+    def __iter__(self):
+        return self
+
+
+def _make_find_query(query):
+    """Convert the argument of Basic.find() into a callable"""
+    try:
+        query = sympify(query)
+    except SympifyError:
+        pass
+    if isinstance(query, type):
+        return lambda expr: isinstance(expr, query)
+    elif isinstance(query, Basic):
+        return lambda expr: expr.match(query) is not None
+    return query

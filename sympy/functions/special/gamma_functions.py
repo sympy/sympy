@@ -2,7 +2,7 @@ from sympy.core import Add, S, C, sympify, oo, pi
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from error_functions import erf
-from sympy.core import Dummy,Rational
+from sympy.core import Dummy, Rational
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -12,6 +12,7 @@ from sympy.functions.combinatorial.factorials import rf
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
 ###############################################################################
+
 
 class gamma(Function):
     """The gamma function returns a function which passes through the integral
@@ -40,7 +41,7 @@ class gamma(Function):
                 return S.Infinity
             elif arg.is_Integer:
                 if arg.is_positive:
-                    return C.factorial(arg-1)
+                    return C.factorial(arg - 1)
                 else:
                     return S.ComplexInfinity
             elif arg.is_Rational:
@@ -65,18 +66,14 @@ class gamma(Function):
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
 
-
-    def _eval_expand_func(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep, **hints)
-        else:
-            arg = self.args[0]
+    def _eval_expand_func(self, **hints):
+        arg = self.args[0]
         if arg.is_Rational:
             if abs(arg.p) > arg.q:
                 x = Dummy('x')
                 n = arg.p // arg.q
                 p = arg.p - n*arg.q
-                return  gamma(x + n).expand(func=True).subs(x, Rational(p, arg.q))
+                return gamma(x + n)._eval_expand_func().subs(x, Rational(p, arg.q))
 
         if arg.is_Add:
             coeff, tail = arg.as_coeff_add()
@@ -119,7 +116,7 @@ class lowergamma(Function):
     This can be shown to be the same as
 
     .. math ::
-        \gamma(s, x) = \frac{x^s}{s} {}_1F_1\left.\left({s \atop s+1} \right| -x\right),
+        \gamma(s, x) = \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
@@ -157,11 +154,11 @@ class lowergamma(Function):
         from sympy import meijerg, unpolarify
         if argindex == 2:
             a, z = self.args
-            return C.exp(-unpolarify(z))*z**(a-1)
+            return C.exp(-unpolarify(z))*z**(a - 1)
         elif argindex == 1:
             a, z = self.args
             return gamma(a)*digamma(a) - log(z)*uppergamma(a, z) \
-                   + meijerg([], [1, 1], [0, 0, a], [], z)
+                + meijerg([], [1, 1], [0, 0, a], [], z)
 
         else:
             raise ArgumentIndexError(self, argindex)
@@ -230,6 +227,7 @@ class lowergamma(Function):
             return self
         return self.rewrite(uppergamma).rewrite(expint)
 
+
 class uppergamma(Function):
     r"""
     Upper incomplete gamma function
@@ -244,7 +242,7 @@ class uppergamma(Function):
 
     .. math ::
         \Gamma(s, x) = \Gamma(s)
-                - \frac{x^s}{s} {}_1F_1\left.\left({s \atop s+1} \right| -x\right),
+                - \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
@@ -287,7 +285,7 @@ class uppergamma(Function):
         from sympy import meijerg, unpolarify
         if argindex == 2:
             a, z = self.args
-            return -C.exp(-unpolarify(z))*z**(a-1)
+            return -C.exp(-unpolarify(z))*z**(a - 1)
         elif argindex == 1:
             a, z = self.args
             return uppergamma(a, z)*log(z) + meijerg([], [1, 1], [0, 0, a], [], z)
@@ -334,7 +332,7 @@ class uppergamma(Function):
             if a is S.One:
                 return C.exp(-z)
             elif a is S.Half:
-                return sqrt(pi)*(1 - erf(sqrt(z))) # TODO could use erfc...
+                return sqrt(pi)*(1 - erf(sqrt(z)))  # TODO could use erfc...
             elif a.is_Integer or (2*a).is_Integer:
                 b = a - 1
                 if b.is_positive:
@@ -345,7 +343,6 @@ class uppergamma(Function):
                 if not a.is_Integer:
                     return (cls(a + 1, z) - z**a * C.exp(-z))/a
 
-
     def _eval_rewrite_as_lowergamma(self, s, x):
         return gamma(s) - lowergamma(s, x)
 
@@ -354,11 +351,9 @@ class uppergamma(Function):
         return expint(1 - s, x)*x**s
 
 
-
 ###############################################################################
 ########################### GAMMA RELATED FUNCTIONS ###########################
 ###############################################################################
-
 class polygamma(Function):
     """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
 
@@ -376,7 +371,7 @@ class polygamma(Function):
     def fdiff(self, argindex=2):
         if argindex == 2:
             n, z = self.args[:2]
-            return polygamma(n+1, z)
+            return polygamma(n + 1, z)
         else:
             raise ArgumentIndexError(self, argindex)
 
@@ -393,7 +388,7 @@ class polygamma(Function):
 
     def _eval_aseries(self, n, args0, x, logx):
         if args0[1] != oo or not \
-           (self.args[0].is_Integer and self.args[0].is_nonnegative):
+                (self.args[0].is_Integer and self.args[0].is_nonnegative):
             return super(polygamma, self)._eval_aseries(n, args0, x, logx)
         z = self.args[1]
         N = self.args[0]
@@ -406,7 +401,7 @@ class polygamma(Function):
             if n < 2:
                 o = C.Order(1/z, x)
             else:
-                m = C.ceiling((n+1)//2)
+                m = C.ceiling((n + 1)//2)
                 l = [bernoulli(2*k) / (2*k*z**(2*k)) for k in range(1, m)]
                 r -= Add(*l)
                 o = C.Order(1/z**(2*m), x)
@@ -419,9 +414,9 @@ class polygamma(Function):
             #    quite a long time!
             fac = gamma(N)
             e0 = fac + N*fac/(2*z)
-            m = C.ceiling((n+1)//2)
+            m = C.ceiling((n + 1)//2)
             for k in range(1, m):
-                fac = fac*(2*k+N-1)*(2*k+N-2) / ((2*k)*(2*k-1))
+                fac = fac*(2*k + N - 1)*(2*k + N - 2) / ((2*k)*(2*k - 1))
                 e0 += bernoulli(2*k)*fac/z**(2*k)
             o = C.Order(1/z**(2*m), x)
             if n == 0:
@@ -459,9 +454,9 @@ class polygamma(Function):
                             return S.ComplexInfinity
                         else:
                             if n is S.Zero:
-                                return -S.EulerGamma + C.harmonic(z-1, 1)
+                                return -S.EulerGamma + C.harmonic(z - 1, 1)
                             elif n.is_odd:
-                                return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z)
+                                return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z)
 
         if n == 0 and z.is_Rational:
             # TODO actually *any* n/m can be done, but that is messy
@@ -483,14 +478,8 @@ class polygamma(Function):
 
         # TODO n == 1 also can do some rational z
 
-
-    def _eval_expand_func(self, deep=True, **hints):
-        if deep:
-            hints['func'] = False
-            n = self.args[0].expand(deep, **hints)
-            z = self.args[1].expand(deep, **hints)
-        else:
-            n, z = self.args[0], self.args[1].expand(deep, func=True)
+    def _eval_expand_func(self, **hints):
+        n, z = self.args
 
         if n.is_Integer and n.is_nonnegative:
             if z.is_Add:
@@ -498,25 +487,29 @@ class polygamma(Function):
                 if coeff.is_Integer:
                     e = -(n + 1)
                     if coeff > 0:
-                        tail = Add(*[C.Pow(z - i, e)  for i in xrange(1, int(coeff) + 1)])
+                        tail = Add(*[C.Pow(
+                            z - i, e) for i in xrange(1, int(coeff) + 1)])
                     else:
-                        tail = -Add(*[C.Pow(z + i, e)  for i in xrange(0, int(-coeff))])
+                        tail = -Add(*[C.Pow(
+                            z + i, e) for i in xrange(0, int(-coeff))])
                     return polygamma(n, z - coeff) + (-1)**n*C.factorial(n)*tail
 
             elif z.is_Mul:
                 coeff, z = z.as_two_terms()
                 if coeff.is_Integer and coeff.is_positive:
-                    tail = [ polygamma(n, z + C.Rational(i, coeff)) for i in xrange(0, int(coeff)) ]
+                    tail = [ polygamma(n, z + C.Rational(
+                        i, coeff)) for i in xrange(0, int(coeff)) ]
                     if n == 0:
                         return Add(*tail)/coeff + log(coeff)
                     else:
-                        return Add(*tail)/coeff**(n+1)
+                        return Add(*tail)/coeff**(n + 1)
                 z *= coeff
 
         return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
-        return (-1)**(n+1)*C.factorial(n)*zeta(n+1, z-1)
+        return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z - 1)
+
 
 class loggamma(Function):
     """
@@ -535,14 +528,14 @@ class loggamma(Function):
         if args0[0] != oo:
             return super(loggamma, self)._eval_aseries(n, args0, x, logx)
         z = self.args[0]
-        m = min(n, C.ceiling((n+S(1))/2))
-        r = log(z)*(z-S(1)/2) - z + log(2*pi)/2
-        l = [bernoulli(2*k) / (2*k*(2*k-1)*z**(2*k-1)) for k in range(1, m)]
+        m = min(n, C.ceiling((n + S(1))/2))
+        r = log(z)*(z - S(1)/2) - z + log(2*pi)/2
+        l = [bernoulli(2*k) / (2*k*(2*k - 1)*z**(2*k - 1)) for k in range(1, m)]
         o = None
         if m == 0:
             o = C.Order(1, x)
         else:
-            o = C.Order(1/z**(2*m-1), x)
+            o = C.Order(1/z**(2*m - 1), x)
         # It is very inefficient to first add the order and then do the nseries
         return (r + Add(*l))._eval_nseries(x, n, logx) + o
 
@@ -557,6 +550,7 @@ class loggamma(Function):
             return polygamma(0, self.args[0])
         else:
             raise ArgumentIndexError(self, argindex)
+
 
 def digamma(x):
     """
@@ -573,6 +567,7 @@ def digamma(x):
     """
     return polygamma(0, x)
 
+
 def trigamma(x):
     """
     The trigamma function is the second of the polygamma functions.
@@ -587,6 +582,7 @@ def trigamma(x):
     """
     return polygamma(1, x)
 
+
 def beta(x, y):
     """
     Euler Beta function
@@ -594,5 +590,4 @@ def beta(x, y):
     ``beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)``
 
     """
-    return gamma(x)*gamma(y) / gamma(x+y)
-
+    return gamma(x)*gamma(y) / gamma(x + y)

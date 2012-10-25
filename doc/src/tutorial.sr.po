@@ -1,0 +1,751 @@
+# Serbian translation of the SymPy tutorial.
+# Copyright (C) 2008, 2009, 2010, 2011, 2012 SymPy Development Team
+# This file is distributed under the same license as the SymPy package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: SymPy 0.7.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-08-14 15:40\n"
+"PO-Revision-Date: 2012-08-15 11:00\n"
+"Last-Translator: Ljubiša Moćić <3rdslasher@gmail.com>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: Serbian\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# ef368fde650b4d37bfab62d3da9a35e8
+#: ../../src/tutorial.rst:5
+msgid "Tutorial"
+msgstr "Туторијал"
+
+# abf8aaaf520c4b8b93deeb2edb6c9be9
+#: ../../src/tutorial.rst:10
+msgid "Introduction"
+msgstr "Увод"
+
+# ed94f47f56be4b81a87025aa073e6979
+#: ../../src/tutorial.rst:12
+msgid ""
+"SymPy is a Python library for symbolic mathematics. It aims to become a full-"
+"featured computer algebra system (CAS) while keeping the code as simple as "
+"possible in order to be comprehensible and easily extensible.  SymPy is "
+"written entirely in Python and does not require any external libraries."
+msgstr ""
+"SymPy je Python библиотека за симболичку математику. Циља да постане потпуно "
+"садржани алгебарски систем (енглески CAS: \"Computer Algebra System\"), "
+"чувајући код једноставнијим колико је могуће да би била разумљива и лакше "
+"проширива. SymPy је комплетно написан у програмском језику Python и не "
+"захтева никакве екстерне библиотеке."
+
+# 349f4bf85f73457ba3b5f50386fa738d
+#: ../../src/tutorial.rst:17
+msgid ""
+"This tutorial gives an overview and introduction to SymPy. Read this to have "
+"an idea what SymPy can do for you (and how) and if you want to know more, "
+"read the :ref:`SymPy User's Guide <guide>`, :ref:`SymPy Modules Reference "
+"<module-docs>`. or the `sources <https://github.com/sympy/sympy/>`_ directly."
+msgstr ""
+"Овај туторијал даје вам преглед и увод у SymPy. Прочитајте га да бисте имали "
+"идеју шта SymPy можете урадити (и како) а ако хоћете да сазнате више, "
+"прочитајте :ref:`SymPy кориснички водич <guide>`, :ref:`SymPy референтни "
+"модул <module-docs>`. или `изворни код <https://github.com/sympy/sympy/>`_ "
+"директно."
+
+# ae4b11d97f904aa58d5d35b5d0645e05
+#: ../../src/tutorial.rst:26
+msgid "First Steps with SymPy"
+msgstr "Први кораци"
+
+# 176f8c58fbec4c2b914e0749d52615d3
+#: ../../src/tutorial.rst:28
+msgid ""
+"The easiest way to download it is to go to http://code.google.com/p/sympy/ "
+"and download the latest tarball from the Featured Downloads:"
+msgstr ""
+"Најлакши начин да се преузме је да одете на http://code.google.com/p/sympy/ "
+"и преузмeте последњу архиву из истакнутих преузимања:"
+
+# 2a33709912af465e81983babe696a30c
+#: ../../src/tutorial.rst:34
+msgid "Unpack it:"
+msgstr "Отпакујте:"
+
+# 442649bf41ab4420b2a5e64c88d75044
+#: ../../src/tutorial.rst:40
+msgid "and try it from a Python interpreter:"
+msgstr "и покушајте из Python интерпретера:"
+
+# c45e274c1d85470cacc0e0aa68e15690
+#: ../../src/tutorial.rst:54
+msgid ""
+"You can use SymPy as shown above and this is indeed the recommended way if "
+"you use it in your program. You can also install it using ``./setup.py "
+"install`` as any other Python module, or just install a package in your "
+"favourite Linux distribution, e.g.:"
+msgstr ""
+"Можете да користите SymPy како је указано горе и то је препоручен начин ако "
+"се користи у вашем програму. Такође га можете инсталирати користећи ``./"
+"setup.py install`` као и сваки други Python модул, или само инсталирати "
+"пакет ваше Линукс дистрибуције:"
+
+# e68c77c85d0e44e1836cf9df82297260
+#: ../../src/tutorial.rst:80
+msgid ""
+"For other means how to install SymPy, consult the  Downloads_ tab on the "
+"SymPy's webpage."
+msgstr ""
+"За остале начине инсталирања SymPy констултујте Downloads_ таб на SymPy "
+"страници."
+
+# c729f14f734c4b0b86fe217c7f5c6b47
+#: ../../src/tutorial.rst:87
+msgid "isympy Console"
+msgstr "isympy конзола"
+
+# 9b778d6328054122a27a53a785f65c38
+#: ../../src/tutorial.rst:89
+#, fuzzy
+msgid ""
+"For experimenting with new features, or when figuring out how to do things, "
+"you can use our special wrapper around IPython called ``isympy`` (located in "
+"``bin/isympy`` if you are running from the source directory) which is just a "
+"standard Python shell that has already imported the relevant SymPy modules "
+"and defined the symbols x, y, z and some other things:"
+msgstr ""
+"За експериментисање са новим могућностима или када схватате како да радите "
+"неке радње, можете користити специјални омот око IPython , звани ``isympy`` "
+"(лоциран у ``bin/isympy`` ако покрећете из изворног фолдера) који је само "
+"стандардна Python љуска коју су већ увежени SymPy модули, симболи x, y, z и "
+"друго:"
+
+# e8f2cde6e17b484eadbfd07c4826d90f
+#: ../../src/tutorial.rst:119
+msgid ""
+"Commands entered by you are bold. Thus what we did in 3 lines in a regular "
+"Python interpreter can be done in 1 line in isympy."
+msgstr ""
+"Команде су подебљане. То што смо урадили са 3 линије у регуларном Python "
+"интерпретеру може бити урађено у једној линији у isympy."
+
+# 2570341f10c543189018686201145ef6
+#: ../../src/tutorial.rst:124
+msgid "Using SymPy as a calculator"
+msgstr "SymPy као дигитрон"
+
+# 977c6cd08d0b441198d527f971aed7d4
+#: ../../src/tutorial.rst:126
+#, fuzzy
+msgid "SymPy has three built-in numeric types: Float, Rational and Integer."
+msgstr "SymPy има три уграђена типа бројева: променљиви, рационални и цели."
+
+# f537bd938fb149979432e80e9e96d387
+#: ../../src/tutorial.rst:128
+msgid ""
+"The Rational class represents a rational number as a pair of two Integers: "
+"the numerator and the denominator. So Rational(1,2) represents 1/2, Rational"
+"(5,2) represents 5/2, and so on."
+msgstr ""
+"Класа \"Rational\" представља рацоинални број као пар од два цела, именилац "
+"и садржилац, тако да рационални број Rational(1,2) представаља 1/2, Rational"
+"(5,2) представља 5/2 и тако даље."
+
+# 468725a85a9f46929611f57d46ec8e31
+#: ../../src/tutorial.rst:147
+msgid ""
+"Proceed with caution while working with Python int's and floating point "
+"numbers, especially in division, since you may create a Python number, not a "
+"SymPy number. A ratio of two Python ints may create a float -- the \"true "
+"division\" standard of Python 3 and the default behavior of ``isympy`` which "
+"imports division from __future__::"
+msgstr ""
+"Наставите са пажњом док радите са целим и променљивим бројевима, посебно у "
+"дељењу, јер можете направити Python број, а не SymPy број. Однос два цела "
+"броја у Python може направити променљливи -- истинито дељење(true divison) "
+"стандардно за Python 3 у подразумевано понашање ``isympy`` који увози дељење "
+"из __future__::"
+
+# 017eabe36b2641ec80ffce69386d44d3
+#: ../../src/tutorial.rst:157
+msgid ""
+"But in earlier Python versions where division has not been imported, a "
+"truncated int will result::"
+msgstr ""
+"Али у ранијим Python верзијама где дељење није увежено, скраћени цели број "
+"ће бити резултат::"
+
+# 66bb1bc4b7614abb860cab7b50279651
+#: ../../src/tutorial.rst:163
+msgid ""
+"In both cases, however, you are not dealing with a SymPy Number because "
+"Python created its own number. Most of the time you will probably be working "
+"with Rational numbers, so make sure to use Rational to get the SymPy result. "
+"One might find it convenient to equate ``R`` and Rational::"
+msgstr ""
+"У оба случаја, ипак, не радите са SymPy бројевима јер је Python креирао "
+"своје посебне бројеве. Већину времена ћете вероватно радити са рационалним "
+"бројевима, тако да будите сигурни да користите рационалне бројеве да бисте "
+"добили SymPy резултат. Могло би бити згодно изједначити ``R`` и Rational::"
+
+# 2d90325df6cd4f7d8e6018724e1babc5
+#: ../../src/tutorial.rst:175
+msgid ""
+"We also have some special constants, like e and pi, that are treated as "
+"symbols (1+pi won't evaluate to something numeric, rather it will remain as "
+"1+pi), and have arbitrary precision::"
+msgstr ""
+"Такође имамо неке специјалне константе као e и pi, који се третирају као "
+"симболи (1+pi неће прерачунати у нумерчку форму, већ ће остати као 1+pi), "
+"могу имати произвољну прецизност:"
+
+# 8312d3db71524eb5b904bed1ef60c1e3
+#: ../../src/tutorial.rst:189
+msgid "as you see, evalf evaluates the expression to a floating-point number"
+msgstr "као што видите, evalf рачуна израз у реалан број"
+
+# 2a8ac4d6b45e474aacae7e2fd30e3da5
+#: ../../src/tutorial.rst:191
+msgid "The symbol ``oo`` is used for a class defining mathematical infinity::"
+msgstr "Симбол ``oo`` представља бесконачно::"
+
+# 4f134a47136245948240fa2f27a68cde
+#: ../../src/tutorial.rst:200
+msgid "Symbols"
+msgstr "Симболи"
+
+# b1be7141bb114ff3a795d72f259efc7f
+#: ../../src/tutorial.rst:202
+msgid ""
+"In contrast to other Computer Algebra Systems, in SymPy you have to declare "
+"symbolic variables explicitly::"
+msgstr ""
+"За разлику од осталих компјутерских алгебарских система, у SymPy ви морате "
+"да декларишете симболичке променљиве експлицитно:"
+
+# 78654a1a0f1a4bfc93cdb3e2d1d89aa0
+#: ../../src/tutorial.rst:209
+#, fuzzy
+msgid ""
+"On the left is the normal Python variable which has been assigned to the "
+"SymPy Symbol class. Predefined symbols (including those for symbols with "
+"Greek names) are available for import from abc:"
+msgstr ""
+"На левој страни је нормална Python променљива која је додељена SymPy Symbol "
+"класи. Инстанце класе Symbol се \"добро слажу\" и чине основу израза::"
+
+# beba4c07583f424c8077b432b138c274
+#: ../../src/tutorial.rst:215
+msgid ""
+"Symbols can also be created with the ``symbols`` or ``var`` functions, the "
+"latter automatically adding the created symbols to the namespace, and both "
+"accepting a range notation:"
+msgstr ""
+
+# 78654a1a0f1a4bfc93cdb3e2d1d89aa0
+#: ../../src/tutorial.rst:227
+#, fuzzy
+msgid ""
+"Instances of the Symbol class \"play well together\" and are the building "
+"blocks of expresions::"
+msgstr ""
+"На левој страни је нормална Python променљива која је додељена SymPy Symbol "
+"класи. Инстанце класе Symbol се \"добро слажу\" и чине основу израза::"
+
+# aa854af4fdf048408383d25184b199d8
+#: ../../src/tutorial.rst:239
+msgid ""
+"They can be substituted with other numbers, symbols or expressions using "
+"``subs(old, new)``::"
+msgstr ""
+"Они могу бити замењени са другим бројевима, симболима или изразима користећи "
+"команду ``subs(old, new)``::"
+
+# bdc4ccb6112f46079db51bcf3b0f2543
+#: ../../src/tutorial.rst:250
+msgid "For the remainder of the tutorial, we assume that we have run::"
+msgstr "За остатак овог туторијала, претпостављамо да смо извршили::"
+
+# 279b65465b8b49c692d7a48a5862a558
+#: ../../src/tutorial.rst:255
+msgid ""
+"This will make things look better when printed. See the :ref:`printing-"
+"tutorial` section below. If you have a unicode font installed, you can pass "
+"use_unicode=True for a slightly nicer output."
+msgstr ""
+"Ово ће лепше штампати резултате. Погледајте :ref:`printing-tutorial` "
+"секцију. Ако имате неки уникод фонт инсталиран, можете користити "
+"use_unicode=True за много лепше резултате."
+
+# aca0bd45e35443bb857b0838a96899fd
+#: ../../src/tutorial.rst:260
+msgid "Algebra"
+msgstr "Алгебра"
+
+# d3a8b50893a74c5ebdfc871aa33d0aa2
+#: ../../src/tutorial.rst:262
+msgid "For partial fraction decomposition, use ``apart(expr, x)``::"
+msgstr "За делимични разломак, користите ``apart(expr, x)``::"
+
+# a91644272134460497b718335c6a1512
+#: ../../src/tutorial.rst:287
+msgid "To combine things back together, use ``together(expr, x)``::"
+msgstr "Да бисте комбиновали ствари заједно, користите ``together(expr, x)``::"
+
+# 1e334f50cf2f4d238c9383bfe434377e
+#: ../../src/tutorial.rst:309
+msgid "Calculus"
+msgstr "Математичка анализа"
+
+# b67918161aee4eae8b41e423ffdc5cbb
+#: ../../src/tutorial.rst:314
+msgid "Limits"
+msgstr "Лимити"
+
+# 20a623fd96054cacb6c0106c4a876074
+#: ../../src/tutorial.rst:316
+#, fuzzy
+msgid ""
+"Limits are easy to use in SymPy, they follow the syntax ``limit(function, "
+"variable, point)``, so to compute the limit of f(x) as x -> 0, you would "
+"issue ``limit(f, x, 0)``::"
+msgstr ""
+"Лимити се лако употребљавају, користе синтаксу ``limit(function,variable, "
+"point)``, тако да би израчунали лимит од f(x) када x тежи нули, ви би издали "
+"``limit(f, x, 0)``::"
+
+# 76bae0be9d9946c8b45aea3d51446b8f
+#: ../../src/tutorial.rst:325
+msgid "you can also calculate the limit at infinity::"
+msgstr "Можете такође израчунати у бесконачности::"
+
+# fc0a8b34929b4d4397091cfc70c4c086
+#: ../../src/tutorial.rst:336
+msgid ""
+"for some non-trivial examples on limits, you can read the test file "
+"`test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/"
+"tests/test_demidovich.py>`_"
+msgstr ""
+"За неке не-тривијалне примере са лимитима, можете прочитати тест датотеку "
+"`test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/"
+"tests/test_demidovich.py>`_"
+
+# 61e8d3621dc447718851bb474cccbde0
+#: ../../src/tutorial.rst:343
+msgid "Differentiation"
+msgstr "Изводи"
+
+# ffe2631df29547c58f739f6c6b40f842
+#: ../../src/tutorial.rst:345
+msgid ""
+"You can differentiate any SymPy expression using ``diff(func, var)``. "
+"Examples::"
+msgstr ""
+"Можете израчунати извод сваког израза користећи ``diff(func, var)``. "
+"Примери::"
+
+# 31c914e4e1d24d339b2d297e91144d99
+#: ../../src/tutorial.rst:358
+msgid "You can check, that it is correct by::"
+msgstr "можете проверити да ли је то тачно са::"
+
+# 7a41e20394b14882addbc11d398a5152
+#: ../../src/tutorial.rst:366
+msgid ""
+"Higher derivatives can be calculated using the ``diff(func, var, n)`` "
+"method::"
+msgstr ""
+"Виши изводи се могу израчунати користећи метод ``diff(func, var, n)``::"
+
+# 7c36b1afe47e4414bbbf477856b93f2f
+#: ../../src/tutorial.rst:383
+msgid "Series expansion"
+msgstr "Развој редова"
+
+# 4f03d2633af941ba8802336c80c2df18
+#: ../../src/tutorial.rst:385
+msgid "Use ``.series(var, point, order)``::"
+msgstr "Користите ``.series(var, point, order)``::"
+
+# 86ce06e6462b41449cc09592dfc434b0
+#: ../../src/tutorial.rst:400
+msgid "Another simple example::"
+msgstr "Још један једноставан пример::"
+
+# 588350b07e8946c3990190b5e03eeb79
+#: ../../src/tutorial.rst:424
+msgid "Summation"
+msgstr ""
+
+# c8e0a258ce834d868419e0aed64142e9
+#: ../../src/tutorial.rst:426
+msgid ""
+"Compute the summation of f with respect to the given summation variable over "
+"the given limits."
+msgstr ""
+
+# 8399e19ad841458d9a517e24cd647081
+#: ../../src/tutorial.rst:428
+msgid ""
+"summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, "
+"i.e., ::"
+msgstr ""
+
+# 2257b464c29d4d7f8fad17e106053f41
+#: ../../src/tutorial.rst:439
+msgid ""
+"If it cannot compute the sum, it prints the corresponding summation formula. "
+"Repeated sums can be computed by introducing additional limits::"
+msgstr ""
+
+# 4542d494b86c4fa99ce66c6290ecae99
+#: ../../src/tutorial.rst:473
+msgid "Integration"
+msgstr "Интеграција"
+
+# d92d3c04d91b4b63983e1d141228f06d
+#: ../../src/tutorial.rst:475
+msgid ""
+"SymPy has support for indefinite and definite integration of transcendental "
+"elementary and special functions via ``integrate()`` facility, which uses "
+"powerful extended Risch-Norman algorithm and some heuristics and pattern "
+"matching::"
+msgstr ""
+"SymPy има подршку за одређену и неодређену интеграцију трансцендентних, "
+"елементарних и специјалних функција преко методе ``integrate()`` које "
+"користи моћни проширени Risch-Norman алгоритам и неке хеуристике и обрасце "
+"поклапања::"
+
+# 0859295f6e274d33bdfa6443f56ab293
+#: ../../src/tutorial.rst:483
+msgid "You can integrate elementary functions::"
+msgstr "Можете интегрирати елементарне функције::"
+
+# d804281ea3a44c55a9cc6cf37ca6777e
+#: ../../src/tutorial.rst:496
+msgid "Also special functions are handled easily::"
+msgstr "Можете користити и разне специјалне функције::"
+
+# b403c8bac8634fab984faabd11282d09
+#: ../../src/tutorial.rst:504
+#, fuzzy
+msgid "It is possible to compute definite integrals::"
+msgstr "Могуће је израчунати одређени интеграл::"
+
+# 41b911ff4564469aa4801d0a22af54b5
+#: ../../src/tutorial.rst:513
+#, fuzzy
+msgid "Also, improper integrals are supported as well::"
+msgstr "Такође су подржани неправилни интеграли::"
+
+# 7fee892c967b41a9851fa0048a40ede7
+#: ../../src/tutorial.rst:525
+msgid "Complex numbers"
+msgstr "Комплексни бројеви"
+
+# a1aeb9f0079544e5bf8b2dd8e56f1115
+#: ../../src/tutorial.rst:527
+msgid ""
+"Besides the imaginary unit, I, which is imaginary, symbols can be created "
+"with attributes (e.g. real, positive, complex, etc...) and this will affect "
+"how they behave::"
+msgstr ""
+
+# 2d2cfa46a8a8437daf67166b7d21e739
+#: ../../src/tutorial.rst:544
+msgid "Functions"
+msgstr "Функције"
+
+# a5c83d7868bd483ebe9da35a50b93295
+#: ../../src/tutorial.rst:546
+msgid "**trigonometric**::"
+msgstr "**тригонометријске**::"
+
+# 7ddac9e1abd9465b8820620d71dddf2c
+#: ../../src/tutorial.rst:595
+msgid "**spherical harmonics**::"
+msgstr "**сферне хармонике**::"
+
+# d697dd4f00d3476b97cfbeae88a3b1db
+#: ../../src/tutorial.rst:621
+msgid "**factorials and gamma function**::"
+msgstr "**Факторијали и гама функције**::"
+
+# 1aa2da311a3b474daa25ce1ee6451ee9
+#: ../../src/tutorial.rst:639
+msgid "**zeta function**::"
+msgstr "**Зета функције**::"
+
+# 40f77901a1414910ae5fd917371e9029
+#: ../../src/tutorial.rst:664
+msgid "**polynomials**::"
+msgstr "**Полиноми**::"
+
+# a500ab13e2ad48e79e315e64498601fc
+#: ../../src/tutorial.rst:703
+msgid "Differential Equations"
+msgstr "Диференцијални рачун"
+
+# 8977e1a0f5a64f869fd9c5940e6eec0b
+# 18717d4795ca44fbb4603eb1c65ac069
+#: ../../src/tutorial.rst:705 ../../src/tutorial.rst:725
+msgid "In ``isympy``::"
+msgstr "Користећи ``isympy``::"
+
+# 902a2850cb6849cc832e9ce0af5dfad1
+#: ../../src/tutorial.rst:723
+msgid "Algebraic equations"
+msgstr "Алгебарска рачун"
+
+# 161eae9902d44cacbc715e4f88f9eec1
+#: ../../src/tutorial.rst:738
+msgid "Linear Algebra"
+msgstr "Линеарна алгебра"
+
+# 251181b49ed2424d9a83b481dbbb1192
+#: ../../src/tutorial.rst:743
+msgid "Matrices"
+msgstr "Матрице"
+
+# 2398f781625140588d06c38fe77407b4
+#: ../../src/tutorial.rst:745
+msgid "Matrices are created as instances from the Matrix class::"
+msgstr "Матрице се праве као инстанце класе Matrix::"
+
+# 69fa45ebce294c6386716a0090a48ce4
+#: ../../src/tutorial.rst:753
+#, fuzzy
+msgid "They can also contain symbols::"
+msgstr "можете такође ставити симболе::"
+
+# 203197367b344cc3a137d2d8b4e59417
+#: ../../src/tutorial.rst:768
+#, fuzzy
+msgid "For more about Matrices, see the Linear Algebra tutorial."
+msgstr ""
+"За више информација и примера са матрицама, погледајте LinearAlgebraTutorial."
+
+# dec03cbf93fe4b4f8d3bcb9d55e4b4f3
+#: ../../src/tutorial.rst:773
+msgid "Pattern matching"
+msgstr "Поклапање образаца"
+
+# 507b066dfb884397b1ea2ec88cce6b52
+#: ../../src/tutorial.rst:775
+msgid ""
+"Use the ``.match()`` method, along with the ``Wild`` class, to perform "
+"pattern matching on expressions. The method will return a dictionary with "
+"the required substitutions, as follows::"
+msgstr ""
+"Користите метод ``.match()`` са класом ``Wild``, да би извршили образац "
+"одговарајуће на изразе. Овај метод ће вратити речник (dictionary) са "
+"потребним изменама, као::"
+
+# 78ee6cfe25414349a32f7dd4687c12aa
+#: ../../src/tutorial.rst:789
+msgid "If the match is unsuccessful, it returns ``None``::"
+msgstr "Ако је претрага неуспешна, метода враћа ``None``::"
+
+# dd920a1228b0490f980d4bd279ea738b
+#: ../../src/tutorial.rst:794
+msgid ""
+"One can also use the exclude parameter of the ``Wild`` class to ensure that "
+"certain things do not show up in the result::"
+msgstr ""
+"Можете користити параметар exclude класе ``Wild`` да би били сигурни да се "
+"одређене ствари неће приказати у реѕултату::"
+
+# 0605f8d8c8024f379c2b8e899741fdfa
+#: ../../src/tutorial.rst:808
+msgid "Printing"
+msgstr "Штампање"
+
+# 48e9db5b7bf54be585ad546091c74ee4
+#: ../../src/tutorial.rst:810
+#, fuzzy
+msgid "There are many ways to print expressions."
+msgstr "Постоји више начина како изрази могу бити одштампани."
+
+# a09097b4e7a74229a371941755140507
+#: ../../src/tutorial.rst:812
+msgid "**Standard**"
+msgstr "**Стандардно**"
+
+# 2ce6dbe6a79947489b06106ba712b796
+#: ../../src/tutorial.rst:814
+msgid "This is what ``str(expression)`` returns and it looks like this:"
+msgstr "Ово је резултат методе ``str(expression)`` и изгледа као:"
+
+# 9f5d40c04bda4b82ac85645b7a24d675
+#: ../../src/tutorial.rst:825
+msgid "**Pretty printing**"
+msgstr "**Лепше штампање**"
+
+# dfa02b1fa94e43fd8a8f2386c4f2b1bf
+#: ../../src/tutorial.rst:827
+#, fuzzy
+msgid "Nice ascii-art printing is produced by the ``pprint`` function:"
+msgstr "Ово је лепше ascii штампање направљено са функцијом ``pprint``:"
+
+# 41b2c797a817417f9fc14b8229aae679
+#: ../../src/tutorial.rst:846
+#, fuzzy
+msgid ""
+"If you have a unicode font installed, the ``pprint`` function will use it by "
+"default. You can override this using the ``use_unicode`` option.:"
+msgstr ""
+"Ако имате неки уникод фонт инсталиран, лепше штампање би се требало "
+"подразумевано користити. Можете прескочити та подешавања користећи опцију "
+"``use_unicode`` :"
+
+# 79fc29f0c47c4d5fa8a3c2b9012d2037
+#: ../../src/tutorial.rst:856
+msgid ""
+"See also the wiki `Pretty Printing <https://github.com/sympy/sympy/wiki/"
+"Pretty-Printing>`_ for more examples of a nice unicode printing."
+msgstr ""
+"Погледајте и вики `Pretty Printing <https://github.com/sympy/sympy/wiki/"
+"Pretty-Printing>`_ за више примера лепог уникодног штампања."
+
+# 7f872c2470f04fff99a919413b91ca9b
+#: ../../src/tutorial.rst:860
+#, fuzzy
+msgid ""
+"Tip: To make pretty printing the default in the Python interpreter, use::"
+msgstr ""
+"Савет: Да бисте направили лепо штампање подразумеваним у Python интерпретеру "
+"користите::"
+
+# 69c732f302704f6c9fc8fe1b72671799
+#: ../../src/tutorial.rst:883
+msgid "**Python printing**"
+msgstr "**Python штампање**"
+
+# 4719cc79e4a64895a01f73999d66eb79
+#: ../../src/tutorial.rst:899
+msgid "**LaTeX printing**"
+msgstr "**LaTeX штампање**"
+
+# 5684f424fdca4ab28a1cfddc35d677cd
+#: ../../src/tutorial.rst:916
+msgid "**MathML**"
+msgstr "**MathML**"
+
+# 4f6686ebad314fdfb7538e18459d70da
+#: ../../src/tutorial.rst:928
+msgid "**Pyglet**"
+msgstr "**Pyglet**"
+
+# 140ace33a61c44098b4e8f45ceebd41c
+#: ../../src/tutorial.rst:934
+#, fuzzy
+msgid ""
+"If pyglet is installed, a pyglet window will open containing the LaTeX "
+"rendered expression:"
+msgstr "И отвориће се pyglet прозор са даним изразом у формату LaTeX:"
+
+# 332d3050ee6647b982caffe51722baef
+#: ../../src/tutorial.rst:940
+msgid "Notes"
+msgstr "Белешке"
+
+# 0abe6d6f7fc64f8fa5ce10bd16a99c0b
+#: ../../src/tutorial.rst:942
+msgid ""
+"``isympy`` calls ``pprint`` automatically, so that's why you see pretty "
+"printing by default."
+msgstr ""
+"``isympy`` позива ``pprint`` аутоматски , зато видите лепо штампање као "
+"подразумевано."
+
+# d3af37494c0245ed84c60314c438b827
+#: ../../src/tutorial.rst:945
+msgid ""
+"Note that there is also a printing module available, ``sympy.printing``.  "
+"Other printing methods available through this module are:"
+msgstr ""
+"Такође постоји модул за штампање, ``sympy.printing``. Остали доступни методи "
+"штампања су:"
+
+# 89f50850bac24c3fa3fe9e68572dc933
+#: ../../src/tutorial.rst:948
+msgid ""
+"``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, "
+"respectively, a pretty representation of ``expr``. This is the same as the "
+"second level of representation described above."
+msgstr ""
+"``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Враћа или "
+"штампа, лепо представљање од ``expr``. Ово је исто као и други ново "
+"представљања опсаног изнад."
+
+# 96e4352823004e70b048f9c6a69c9fed
+#: ../../src/tutorial.rst:950
+msgid ""
+"``latex(expr)``, ``print_latex(expr)``: Return or print, respectively, a "
+"`LaTeX <http://www.latex-project.org/>`_  representation of ``expr``"
+msgstr ""
+"``latex(expr)``, ``print_latex(expr)``: Враћа или штампа `LaTeX <http://www."
+"latex-project.org/>`_ представљање од ``expr``"
+
+# 540cdbff4df64170a7af5324afa3c4e8
+#: ../../src/tutorial.rst:952
+msgid ""
+"``mathml(expr)``, ``print_mathml(expr)``: Return or print, respectively, a "
+"`MathML <http://www.w3.org/Math/>`_ representation of ``expr``."
+msgstr ""
+"``mathml(expr)``, ``print_mathml(expr)``: Враћа или штампа `MathML <http://"
+"www.w3.org/Math/>`_ представљање од ``expr``."
+
+# 33a9a6817dc74e818bffdff09b3199cf
+#: ../../src/tutorial.rst:954
+msgid ""
+"``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/"
+"mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview "
+"<http://helm.cs.unibo.it/mml-widget/>`_ program is required."
+msgstr ""
+"``print_gtk(expr)``: Штампа ``expr`` у `Gtkmathview <http://helm.cs.unibo.it/"
+"mml-widget/>`_, и GTK додатак који приказује MathML код. `Gtkmathview "
+"<http://helm.cs.unibo.it/mml-widget/>`_ програм је потребан."
+
+# 3f91aff42bc7460f87e688120753204d
+#: ../../src/tutorial.rst:957
+msgid "Further documentation"
+msgstr "Додатна документација"
+
+# 03c2cab50c5b48088d5952bcc31a3258
+#: ../../src/tutorial.rst:959
+msgid ""
+"Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
+"Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
+msgstr ""
+"Сада можете учити даље. Погледајте: :ref:`SymPy User's Guide <guide>` и :ref:"
+"`SymPy Modules Reference <module-docs>`. Напомена: Остатак документације је "
+"доступан само на енглеском језику."
+
+# fa19b5393f05490bac4274b097994dbc
+#: ../../src/tutorial.rst:963
+#, fuzzy
+msgid ""
+"Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/"
+">`_, that contains a lot of useful examples, tutorials, cookbooks that we "
+"and our users contributed, and feel free to edit it."
+msgstr ""
+"Претражите и наш јавни `wiki.sympy.org <http://wiki.sympy.org/>`_, који "
+"садрже доста корисних примера, туторијала, који су наши корисници донирали и "
+"ми вас охрабрујемо да их уредите."
+
+# d6c1908345d1415296e33daaeaa1ee21
+#: ../../src/tutorial.rst:968
+msgid "Translations"
+msgstr ""
+
+# 1c1b1120057c4cd880583fc0d619b4eb
+#: ../../src/tutorial.rst:970
+msgid "This tutorial is also available in other languages:"
+msgstr ""
+
+# 623cc4a0271f4835adb70ab66b0756a4
+#~ msgid "That should print the following after the execution::"
+#~ msgstr "То би требало да одштампа следеће после покретања::"

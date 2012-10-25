@@ -88,7 +88,6 @@ from sympy.printing.fcode import fcode, FCodePrinter
 from sympy.tensor import Idx, Indexed, IndexedBase
 
 
-
 __all__ = [
     # description of routines
     "Routine", "DataType", "default_datatypes", "get_default_datatype",
@@ -163,18 +162,21 @@ class Routine(object):
                 out_arg = expr.lhs
                 expr = expr.rhs
                 if isinstance(out_arg, Indexed):
-                    dims = tuple([ (S.Zero, dim-1) for dim in out_arg.shape])
+                    dims = tuple([ (S.Zero, dim - 1) for dim in out_arg.shape])
                     symbol = out_arg.base.label
                 elif isinstance(out_arg, Symbol):
                     dims = []
                     symbol = out_arg
                 else:
-                    raise CodeGenError("Only Indexed or Symbol can define output arguments")
+                    raise CodeGenError(
+                        "Only Indexed or Symbol can define output arguments")
 
                 if expr.has(symbol):
-                    output_args.append(InOutArgument(symbol, out_arg, expr, dimensions=dims))
+                    output_args.append(
+                        InOutArgument(symbol, out_arg, expr, dimensions=dims))
                 else:
-                    output_args.append(OutputArgument(symbol, out_arg, expr, dimensions=dims))
+                    output_args.append(OutputArgument(
+                        symbol, out_arg, expr, dimensions=dims))
 
                 # avoid duplicate arguments
                 symbols.remove(symbol)
@@ -198,7 +200,7 @@ class Routine(object):
 
             arg_list.append(InputArgument(symbol, **metadata))
 
-        output_args.sort(key=lambda x:str(x.name))
+        output_args.sort(key=lambda x: str(x.name))
         arg_list.extend(output_args)
 
         if argument_sequence is not None:
@@ -211,7 +213,8 @@ class Routine(object):
                     new_sequence.append(arg)
             argument_sequence = new_sequence
 
-            missing = filter(lambda x: x.name not in argument_sequence, arg_list)
+            missing = filter(
+                lambda x: x.name not in argument_sequence, arg_list)
             if missing:
                 raise CodeGenArgumentListError("Argument list didn't specify: %s" %
                         ", ".join([str(m.name) for m in missing]), missing)
@@ -251,9 +254,11 @@ class Routine(object):
 
         If return values are present, they are at the end ot the list.
         """
-        args = [arg for arg in self.arguments if isinstance(arg, (OutputArgument, InOutArgument))]
+        args = [arg for arg in self.arguments if isinstance(
+            arg, (OutputArgument, InOutArgument))]
         args.extend(self.results)
         return args
+
 
 class DataType(object):
     """Holds strings for a certain datatype in different programming languages."""
@@ -276,6 +281,7 @@ def get_default_datatype(expr):
     else:
         return default_datatypes["float"]
 
+
 class Variable(object):
     """Represents a typed variable."""
 
@@ -297,14 +303,15 @@ class Variable(object):
         elif not isinstance(datatype, DataType):
             raise TypeError("The (optional) `datatype' argument must be an instance of the DataType class.")
         if dimensions and not isinstance(dimensions, (tuple, list)):
-            raise TypeError("The dimension argument must be a sequence of tuples")
+            raise TypeError(
+                "The dimension argument must be a sequence of tuples")
 
         self._name = name
         self._datatype = {
-                'C': datatype.cname,
-                'FORTRAN': datatype.fname,
-                'PYTHON': datatype.pyname
-                }
+            'C': datatype.cname,
+            'FORTRAN': datatype.fname,
+            'PYTHON': datatype.pyname
+        }
         self.dimensions = dimensions
         self.precision = precision
 
@@ -329,6 +336,7 @@ class Variable(object):
             raise CodeGenError("Has datatypes for languages: %s" %
                     ", ".join(self._datatype))
 
+
 class Argument(Variable):
     """An abstract Argument data structure: a name and a data type.
 
@@ -341,8 +349,10 @@ class Argument(Variable):
 
         Variable.__init__(self, name, datatype, dimensions, precision)
 
+
 class InputArgument(Argument):
     pass
+
 
 class ResultBase(object):
     """Base class for all ``outgoing'' information from a routine
@@ -355,6 +365,7 @@ class ResultBase(object):
         self.expr = expr
         self.result_var = result_var
 
+
 class OutputArgument(Argument, ResultBase):
     """OutputArgument are always initialized in the routine
     """
@@ -363,6 +374,7 @@ class OutputArgument(Argument, ResultBase):
         """
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
+
 
 class InOutArgument(Argument, ResultBase):
     """InOutArgument are never initialized in the routine
@@ -373,6 +385,7 @@ class InOutArgument(Argument, ResultBase):
         """
         Argument.__init__(self, name, datatype, dimensions, precision)
         ResultBase.__init__(self, expr, result_var)
+
 
 class Result(ResultBase):
     """An expression for a scalar return value.
@@ -391,7 +404,7 @@ class Result(ResultBase):
         if not isinstance(expr, Expr):
             raise TypeError("The first argument must be a sympy expression.")
 
-        temp_var = Variable(Symbol('result_%s'%hash(expr)),
+        temp_var = Variable(Symbol('result_%s' % hash(expr)),
                 datatype=datatype, dimensions=None, precision=precision)
         ResultBase.__init__(self, expr, temp_var.name)
         self._temp_variable = temp_var
@@ -478,16 +491,19 @@ class CodeGen(object):
             [DEFAULT=True]
         """
 
-        code_lines = self._preprosessor_statements(prefix)
+        code_lines = self._preprocessor_statements(prefix)
 
         for routine in routines:
-            if empty: code_lines.append("\n")
+            if empty:
+                code_lines.append("\n")
             code_lines.extend(self._get_routine_opening(routine))
             code_lines.extend(self._declare_arguments(routine))
             code_lines.extend(self._declare_locals(routine))
-            if empty: code_lines.append("\n")
+            if empty:
+                code_lines.append("\n")
             code_lines.extend(self._call_printer(routine))
-            if empty: code_lines.append("\n")
+            if empty:
+                code_lines.append("\n")
             code_lines.extend(self._get_routine_ending(routine))
 
         code_lines = self._indent_code(''.join(code_lines))
@@ -498,8 +514,10 @@ class CodeGen(object):
         if code_lines:
             f.write(code_lines)
 
+
 class CodeGenError(Exception):
     pass
+
 
 class CodeGenArgumentListError(Exception):
     @property
@@ -530,7 +548,8 @@ class CCodeGen(CodeGen):
         """Writes a common header for the generated files."""
         code_lines = []
         code_lines.append("/" + "*"*78 + '\n')
-        tmp = header_comment % {"version": sympy_version, "project": self.project}
+        tmp = header_comment % {"version": sympy_version,
+            "project": self.project}
         for line in tmp.splitlines():
             code_lines.append(" *%s*\n" % line.center(76))
         code_lines.append(" " + "*"*78 + "/\n")
@@ -563,7 +582,7 @@ class CCodeGen(CodeGen):
         arguments = ", ".join([ "%s %s" % t for t in type_args])
         return "%s %s(%s)" % (ctype, routine.name, arguments)
 
-    def _preprosessor_statements(self, prefix):
+    def _preprocessor_statements(self, prefix):
         code_lines = []
         code_lines.append("#include \"%s.h\"\n" % os.path.basename(prefix))
         code_lines.append("#include <math.h>\n")
@@ -590,11 +609,14 @@ class CCodeGen(CodeGen):
                 assign_to = result.result_var
 
             try:
-                constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
+                constants, not_c, c_expr = ccode(
+                    result.expr, assign_to=assign_to, human=False)
             except AssignmentError:
                 assign_to = result.result_var
-                code_lines.append("%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
-                constants, not_c, c_expr = ccode(result.expr, assign_to=assign_to, human=False)
+                code_lines.append(
+                    "%s %s;\n" % (result.get_datatype('c'), str(assign_to)))
+                constants, not_c, c_expr = ccode(
+                    result.expr, assign_to=assign_to, human=False)
 
             for name, value in sorted(constants, key=str):
                 code_lines.append("double const %s = %s;\n" % (name, value))
@@ -641,25 +663,31 @@ class CCodeGen(CodeGen):
         """
         if header:
             print >> f, ''.join(self._get_header())
-        guard_name = "%s__%s__H" % (self.project.replace(" ", "_").upper(), prefix.replace("/", "_").upper())
+        guard_name = "%s__%s__H" % (self.project.replace(
+            " ", "_").upper(), prefix.replace("/", "_").upper())
         # include guards
-        if empty: print >> f
+        if empty:
+            print >> f
         print >> f, "#ifndef %s" % guard_name
         print >> f, "#define %s" % guard_name
-        if empty: print >> f
+        if empty:
+            print >> f
         # declaration of the function prototypes
         for routine in routines:
             prototype = self.get_prototype(routine)
             print >> f, "%s;" % prototype
         # end if include guards
-        if empty: print >> f
+        if empty:
+            print >> f
         print >> f, "#endif"
-        if empty: print >> f
+        if empty:
+            print >> f
     dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
     # functions it has to call.
     dump_fns = [dump_c, dump_h]
+
 
 class FCodeGen(CodeGen):
     """
@@ -683,13 +711,14 @@ class FCodeGen(CodeGen):
         """Writes a common header for the generated files."""
         code_lines = []
         code_lines.append("!" + "*"*78 + '\n')
-        tmp = header_comment % {"version": sympy_version, "project": self.project}
+        tmp = header_comment % {"version": sympy_version,
+            "project": self.project}
         for line in tmp.splitlines():
             code_lines.append("!*%s*\n" % line.center(76))
         code_lines.append("!" + "*"*78 + '\n')
         return code_lines
 
-    def _preprosessor_statements(self, prefix):
+    def _preprocessor_statements(self, prefix):
         return []
 
     def _get_routine_opening(self, routine):
@@ -698,7 +727,8 @@ class FCodeGen(CodeGen):
         """
         code_list = []
         if len(routine.results) > 1:
-            raise CodeGenError("Fortran only supports a single or no return value.")
+            raise CodeGenError(
+                "Fortran only supports a single or no return value.")
         elif len(routine.results) == 1:
             result = routine.results[0]
             code_list.append(result.get_datatype('fortran'))
@@ -730,14 +760,14 @@ class FCodeGen(CodeGen):
             elif isinstance(arg, OutputArgument):
                 typeinfo = "%s, intent(out)" % arg.get_datatype('fortran')
             else:
-                raise CodeGenError("Unkown Argument type: %s"%type(arg))
+                raise CodeGenError("Unkown Argument type: %s" % type(arg))
 
             fprint = self._get_symbol
 
             if arg.dimensions:
                 # fortran arrays start at 1
-                dimstr = ", ".join(["%s:%s"%(
-                    fprint(dim[0]+1), fprint(dim[1]+1))
+                dimstr = ", ".join(["%s:%s" % (
+                    fprint(dim[0] + 1), fprint(dim[1] + 1))
                     for dim in arg.dimensions])
                 typeinfo += ", dimension(%s)" % dimstr
                 array_list.append("%s :: %s\n" % (typeinfo, fprint(arg.name)))
@@ -799,7 +829,8 @@ class FCodeGen(CodeGen):
 
             for obj, v in sorted(constants, key=str):
                 t = get_default_datatype(obj)
-                declarations.append("%s, parameter :: %s = %s\n" % (t.fname, obj, v))
+                declarations.append(
+                    "%s, parameter :: %s = %s\n" % (t.fname, obj, v))
             for obj in sorted(not_fortran, key=str):
                 t = get_default_datatype(obj)
                 if isinstance(obj, Function):
@@ -821,12 +852,11 @@ class FCodeGen(CodeGen):
             lowercase = set(map(lambda x: str(x).lower(), r.variables))
             orig_case = set(map(lambda x: str(x), r.variables))
             if len(lowercase) < len(orig_case):
-                raise CodeGenError("Fortran ignores case. Got symbols: %s"%
+                raise CodeGenError("Fortran ignores case. Got symbols: %s" %
                         (", ".join([str(var) for var in r.variables])))
         self.dump_code(routines, f, prefix, header, empty)
     dump_f95.extension = code_extension
     dump_f95.__doc__ = CodeGen.dump_code.__doc__
-
 
     def dump_h(self, routines, f, prefix, header=True, empty=True):
         """Writes the interface to a header file.
@@ -853,12 +883,14 @@ class FCodeGen(CodeGen):
         """
         if header:
             print >> f, ''.join(self._get_header())
-        if empty: print >> f
+        if empty:
+            print >> f
         # declaration of the function prototypes
         for routine in routines:
-            prototype  = self.get_interface(routine)
+            prototype = self.get_interface(routine)
             f.write(prototype)
-        if empty: print >> f
+        if empty:
+            print >> f
     dump_h.extension = interface_extension
 
     # This list of dump functions is used by CodeGen.write to know which dump
@@ -878,7 +910,8 @@ def get_code_generator(language, project):
 #
 
 
-def codegen(name_expr, language, prefix, project="project", to_files=False, header=True, empty=True,
+def codegen(
+    name_expr, language, prefix, project="project", to_files=False, header=True, empty=True,
         argument_sequence=None):
     """Write source code for the given expressions in the given language.
 
@@ -921,8 +954,8 @@ def codegen(name_expr, language, prefix, project="project", to_files=False, head
     >>> from sympy import symbols
     >>> from sympy.utilities.codegen import codegen
     >>> from sympy.abc import x, y, z
-    >>> [(c_name, c_code), (h_name, c_header)] = \\
-    ...     codegen(("f", x+y*z), "C", "test", header=False, empty=False)
+    >>> [(c_name, c_code), (h_name, c_header)] = codegen(
+    ...     ("f", x+y*z), "C", "test", header=False, empty=False)
     >>> print c_name
     test.c
     >>> print c_code,

@@ -11,11 +11,12 @@ sympy.stats.frv
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
-from sympy import (S, Interval, symbols, Dummy, FiniteSet, Mul, Tuple,
+from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
         Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda)
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy.polys.polyerrors import PolynomialError
 import random
+
 
 class ContinuousDomain(RandomDomain):
     """
@@ -27,6 +28,7 @@ class ContinuousDomain(RandomDomain):
 
     def as_boolean(self):
         raise NotImplementedError("Not Implemented for generic Domains")
+
 
 class SingleContinuousDomain(ContinuousDomain, SingleDomain):
     """
@@ -73,6 +75,7 @@ class ProductContinuousDomain(ProductDomain, ContinuousDomain):
     def as_boolean(self):
         return And(*[domain.as_boolean() for domain in self.domains])
 
+
 class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     """
     A domain with continuous support that has been further restricted by a
@@ -100,19 +103,20 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
             elif cond.is_Relational:
                 if cond.is_Equality:
                     # Add the appropriate Delta to the integrand
-                    integrand *= DiracDelta(cond.lhs-cond.rhs)
+                    integrand *= DiracDelta(cond.lhs - cond.rhs)
                 else:
                     symbols = cond.free_symbols & set(self.symbols)
-                    if len(symbols)!=1: # Can't handle x > y
+                    if len(symbols) != 1:  # Can't handle x > y
                         raise NotImplementedError(
                             "Multivariate Inequalities not yet implemented")
                     # Can handle x > 0
                     symbol = symbols.pop()
                     # Find the limit with x, such as (x, -oo, oo)
                     for i, limit in enumerate(limits):
-                        if limit[0]==symbol:
+                        if limit[0] == symbol:
                             # Make condition into an Interval like [0, oo]
-                            cintvl = reduce_poly_inequalities_wrap(cond, symbol)
+                            cintvl = reduce_poly_inequalities_wrap(
+                                cond, symbol)
                             # Make limit into an Interval like [-oo, oo]
                             lintvl = Interval(limit[1], limit[2])
                             # Intersect them to get [0, oo]
@@ -121,7 +125,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                             limits[i] = (symbol, intvl.left, intvl.right)
             else:
                 raise TypeError(
-                        "Condition %s is not a relational or Boolean"%cond)
+                    "Condition %s is not a relational or Boolean" % cond)
 
         evaluate = kwargs.pop('evaluate', True)
         if evaluate:
@@ -138,7 +142,8 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 self.condition, tuple(self.symbols)[0]))
         else:
             raise NotImplementedError(
-                    "Set of Conditional Domain not Implemented")
+                "Set of Conditional Domain not Implemented")
+
 
 class ContinuousPSpace(PSpace):
     """
@@ -152,7 +157,7 @@ class ContinuousPSpace(PSpace):
     is_Continuous = True
 
     def integrate(self, expr, rvs=None, **kwargs):
-        if rvs == None:
+        if rvs is None:
             rvs = self.values
         else:
             rvs = frozenset(rvs)
@@ -169,15 +174,17 @@ class ContinuousPSpace(PSpace):
         if expr in self.values:
             # Marginalize all other random symbols out of the density
             density = self.domain.integrate(self.density, set(rs.symbol
-                for rs in self.values - frozenset((expr,))),  **kwargs)
+                for rs in self.values - frozenset((expr,))), **kwargs)
             return Lambda(expr.symbol, density)
 
         z = Dummy('z', real=True, bounded=True)
         return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
 
+    @cacheit
     def compute_cdf(self, expr, **kwargs):
         if not self.domain.set.is_Interval:
-            raise ValueError("CDF not well defined on multivariate expressions")
+            raise ValueError(
+                "CDF not well defined on multivariate expressions")
 
         d = self.compute_density(expr, **kwargs)
         x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
@@ -186,11 +193,10 @@ class ContinuousPSpace(PSpace):
         # CDF is integral of PDF from left bound to z
         cdf = integrate(d(x), (x, left_bound, z), **kwargs)
         # CDF Ensure that CDF left of left_bound is zero
-        cdf = Piecewise((0, z<left_bound), (cdf, True))
+        cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
-    def P(self, condition, **kwargs):
-        evaluate = kwargs.get("evaluate", True)
+    def probability(self, condition, **kwargs):
         z = Dummy('z', real=True, bounded=True)
         # Univariate case can be handled by where
         try:
@@ -199,6 +205,7 @@ class ContinuousPSpace(PSpace):
             # Integrate out all other random variables
             pdf = self.compute_density(rv, **kwargs)
             # Integrate out the last variable over the special domain
+            evaluate = kwargs.pop("evaluate", True)
             if evaluate:
                 return integrate(pdf(z), (z, domain.set), **kwargs)
             else:
@@ -211,14 +218,13 @@ class ContinuousPSpace(PSpace):
             density = self.compute_density(expr, **kwargs)
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, density(z))
-            return space.P(condition.__class__(space.value, 0))
-
+            return space.probability(condition.__class__(space.value, 0))
 
     def where(self, condition):
         rvs = frozenset(random_symbols(condition))
-        if not (len(rvs)==1 and rvs.issubset(self.values)):
+        if not (len(rvs) == 1 and rvs.issubset(self.values)):
             raise NotImplementedError(
-                    "Multiple continuous random variables not supported")
+                "Multiple continuous random variables not supported")
         rv = tuple(rvs)[0]
         interval = reduce_poly_inequalities_wrap(condition, rv)
         interval = interval.intersect(self.domain.set)
@@ -226,7 +232,7 @@ class ContinuousPSpace(PSpace):
 
     def conditional_space(self, condition, normalize=True, **kwargs):
 
-        condition = condition.subs(dict((rv,rv.symbol) for rv in self.values))
+        condition = condition.subs(dict((rv, rv.symbol) for rv in self.values))
 
         domain = ConditionalContinuousDomain(self.domain, condition)
         density = self.density
@@ -235,6 +241,7 @@ class ContinuousPSpace(PSpace):
 
         return ContinuousPSpace(domain, density)
 
+
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     """
     A continuous probability space over a single univariate domain
@@ -242,11 +249,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     This class is commonly implemented by the various ContinuousRV types
     such as Normal, Exponential, Uniform, etc....
     """
-    _count = 0
-    _name = 'x'
     def __new__(cls, symbol, density, set=Interval(-oo, oo)):
-        assert symbol.is_Symbol
-        domain = SingleContinuousDomain(symbol, set)
+        domain = SingleContinuousDomain(sympify(symbol), set)
         obj = ContinuousPSpace.__new__(cls, domain, density)
         obj._cdf = None
         return obj
@@ -265,10 +269,10 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
         try:
-            inverse_cdf = solve(d(x)-z, x)
+            inverse_cdf = solve(d(x) - z, x)
         except NotImplementedError:
-            raise NotImplementedError("Could not invert CDF")
-        if len(inverse_cdf) != 1:
+            inverse_cdf = None
+        if not inverse_cdf or len(inverse_cdf) != 1:
             raise NotImplementedError("Could not invert CDF")
 
         return Lambda(z, inverse_cdf[0])
@@ -280,7 +284,8 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         Returns dictionary mapping RandomSymbol to realization value.
         """
         icdf = self._inverse_cdf_expression()
-        return {self.value: icdf(random.uniform(0,1))}
+        return {self.value: icdf(random.uniform(0, 1))}
+
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """
@@ -290,11 +295,13 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     def density(self):
         return Mul(*[space.density for space in self.spaces])
 
+
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
         return reduce_poly_inequalities(conditions, var, **kwargs)
     except PolynomialError:
-        raise ValueError("Reduction of condition failed %s\n"%conditions[0])
+        raise ValueError("Reduction of condition failed %s\n" % conditions[0])
+
 
 def reduce_poly_inequalities_wrap(condition, var):
     if condition.is_Relational:

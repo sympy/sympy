@@ -22,7 +22,9 @@ import sphinx
 if sphinx.__version__ < '1.0.1':
     raise RuntimeError("Sphinx 1.0.1 or newer is required")
 
-import os, re, pydoc
+import os
+import re
+import pydoc
 from docscrape_sphinx import get_doc_object, SphinxDocString
 from sphinx.util.compat import Directive
 import inspect
@@ -36,14 +38,14 @@ def mangle_docstrings(app, what, name, obj, options, lines,
     if what == 'module':
         # Strip top title
         title_re = re.compile(ur'^\s*[#*=]{4,}\n[a-z0-9 -]+\n[#*=]{4,}\s*',
-                              re.I|re.S)
+                              re.I | re.S)
         lines[:] = title_re.sub(u'', u"\n".join(lines)).split(u"\n")
     else:
         doc = get_doc_object(obj, what, u"\n".join(lines), config=cfg)
         lines[:] = unicode(doc).split(u"\n")
 
     if app.config.numpydoc_edit_link and hasattr(obj, '__name__') and \
-           obj.__name__:
+            obj.__name__:
         if hasattr(obj, '__module__'):
             v = dict(full_name=u"%s.%s" % (obj.__module__, obj.__name__))
         else:
@@ -80,11 +82,13 @@ def mangle_signature(app, what, name, obj, options, sig, retann):
     # Do not try to inspect classes that don't define `__init__`
     if (inspect.isclass(obj) and
         (not hasattr(obj, '__init__') or
-        'initializes x; see ' in pydoc.getdoc(obj.__init__))):
+         'initializes x; see ' in pydoc.getdoc(obj.__init__))):
         return '', ''
 
-    if not (callable(obj) or hasattr(obj, '__argspec_is_invalid_')): return
-    if not hasattr(obj, '__doc__'): return
+    if not (callable(obj) or hasattr(obj, '__argspec_is_invalid_')):
+        return
+    if not hasattr(obj, '__doc__'):
+        return
 
     doc = SphinxDocString(pydoc.getdoc(obj))
     if doc['Signature']:
@@ -167,4 +171,3 @@ def wrap_mangling_directive(base_directive, objtype):
             return base_directive.run(self)
 
     return directive
-

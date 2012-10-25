@@ -1,6 +1,7 @@
 from matexpr import MatrixExpr
 from sympy import Basic
 
+
 class Transpose(MatrixExpr):
     """Matrix Transpose
 
@@ -19,24 +20,12 @@ class Transpose(MatrixExpr):
     B'*A'
     """
     is_Transpose = True
+
     def __new__(cls, mat):
-
-        if not mat.is_Matrix:
-            return mat
-
-        if isinstance(mat, Transpose):
-            return mat.arg
-
-        if hasattr(mat, 'transpose'):
+        try:
             return mat.transpose()
-
-        if mat.is_Mul:
-            return MatMul(*[Transpose(arg) for arg in mat.args[::-1]])
-
-        if mat.is_Add:
-            return MatAdd(*[Transpose(arg) for arg in mat.args])
-
-        return Basic.__new__(cls, mat)
+        except (AttributeError, NotImplementedError):
+            return Basic.__new__(cls, mat)
 
     @property
     def arg(self):
@@ -49,5 +38,9 @@ class Transpose(MatrixExpr):
     def _entry(self, i, j):
         return self.arg._entry(j, i)
 
-from matmul import MatMul
-from matadd import MatAdd
+    def _eval_transpose(self):
+        return self.arg
+
+    def _eval_trace(self):
+        from trace import Trace
+        return Trace(self.arg)  # Trace(X.T) => Trace(X)

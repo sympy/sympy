@@ -40,14 +40,13 @@ for module in compiled_modules:
     )
 
 setup(
-    name        = "SymPy",
-    packages    = [
+    name="SymPy",
+    packages=[
         "sympy",
         "sympy.polys",
     ],
-    cmdclass    = {
+    cmdclass={
         "build_ext": build_ext
     },
-    ext_modules = extensions
+    ext_modules=extensions
 )
-

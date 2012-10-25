@@ -127,6 +127,7 @@ from sympy.core.compatibility import reduce
 
 O = Order
 
+
 def debug(func):
     """Only for debugging purposes: prints a tree
 
@@ -149,18 +150,19 @@ def debug(func):
 from sympy.utilities.timeutils import timethis
 timeit = timethis('gruntz')
 
+
 def tree(subtrees):
-    "Only debugging purposes: prints a tree"
+    """Only debugging purposes: prints a tree"""
     def indent(s, type=1):
         x = s.split("\n")
-        r = "+-%s\n"%x[0]
+        r = "+-%s\n" % x[0]
         for a in x[1:]:
             if a == "":
                 continue
             if type == 1:
-                r += "| %s\n"%a
+                r += "| %s\n" % a
             else:
-                r += "  %s\n"%a
+                r += "  %s\n" % a
         return r
     if len(subtrees) == 0:
         return ""
@@ -172,8 +174,10 @@ def tree(subtrees):
 
 tmp = []
 iter = 0
+
+
 def maketree(f, *args, **kw):
-    "Only debugging purposes: prints a tree"
+    """Only debugging purposes: prints a tree"""
     global tmp
     global iter
     oldtmp = tmp
@@ -198,6 +202,7 @@ def maketree(f, *args, **kw):
         tmp = []
     return r
 
+
 def compare(a, b, x):
     """Returns "<" if a<b, "=" for a == b, ">" for a>b"""
     # log(exp(...)) must always be simplified here for termination
@@ -214,6 +219,7 @@ def compare(a, b, x):
         return ">"
     else:
         return "="
+
 
 class SubsSet(dict):
     """
@@ -285,7 +291,8 @@ class SubsSet(dict):
         tr = {}
         for expr, var in s2.iteritems():
             if expr in self:
-                if exps: exps = exps.subs(var, res[expr])
+                if exps:
+                    exps = exps.subs(var, res[expr])
                 tr[var] = res[expr]
             else:
                 res[expr] = var
@@ -300,6 +307,7 @@ class SubsSet(dict):
             r[expr] = var
         return r
 
+
 @debug
 def mrv(e, x):
     """Returns a SubsSet of most rapidly varying (mrv) subexpressions of 'e',
@@ -312,7 +320,7 @@ def mrv(e, x):
         s = SubsSet()
         return s, s[x]
     elif e.is_Mul or e.is_Add:
-        i, d = e.as_independent(x) # throw away x-independent terms
+        i, d = e.as_independent(x)  # throw away x-independent terms
         if d.func != e.func:
             s, expr = mrv(d, x)
             return s, e.func(i, expr)
@@ -359,7 +367,9 @@ def mrv(e, x):
         raise NotImplementedError("MRV set computation for derviatives"
                                   " not implemented yet.")
         return mrv(e.args[0], x)
-    raise NotImplementedError("Don't know how to calculate the mrv of '%s'" % e)
+    raise NotImplementedError(
+        "Don't know how to calculate the mrv of '%s'" % e)
+
 
 def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
     """Computes the maximum of two sets of expressions f and g, which
@@ -386,6 +396,7 @@ def mrv_max3(f, expsf, g, expsg, union, expsboth, x):
         assert c == "="
         return union, expsboth
 
+
 def mrv_max1(f, g, exps, x):
     """Computes the maximum of two sets of expressions f and g, which
     are in the same comparability class, i.e. mrv_max1() compares (two elements of)
@@ -396,6 +407,7 @@ def mrv_max1(f, g, exps, x):
     u, b = f.union(g, exps)
     return mrv_max3(f, g.do_subs(exps), g, f.do_subs(exps),
                     u, b, x)
+
 
 @debug
 @cacheit
@@ -446,11 +458,12 @@ def sign(e, x):
         if e.exp.is_Integer:
             return s**e.exp
     elif e.func is log:
-        return sign(e.args[0] -1, x)
+        return sign(e.args[0] - 1, x)
 
     # if all else fails, do it the hard way
     c0, e0 = mrv_leadterm(e, x)
     return sign(c0, x)
+
 
 @debug
 @timeit
@@ -461,7 +474,7 @@ def limitinf(e, x):
     e = e.rewrite('tractable', deep=True)
 
     if not e.has(x):
-        return e #e is a constant
+        return e  # e is a constant
     if not x.is_positive:
         # We make sure that x.is_positive is True so we
         # get all the correct mathematical bechavior from the expression.
@@ -472,8 +485,8 @@ def limitinf(e, x):
     c0, e0 = mrv_leadterm(e, x)
     sig = sign(e0, x)
     if sig == 1:
-        return S.Zero # e0>0: lim f = 0
-    elif sig == -1: #e0<0: lim f = +-oo (the sign depends on the sign of c0)
+        return S.Zero  # e0>0: lim f = 0
+    elif sig == -1:  # e0<0: lim f = +-oo (the sign depends on the sign of c0)
         if c0.match(I*Wild("a", exclude=[I])):
             return c0*oo
         s = sign(c0, x)
@@ -481,7 +494,8 @@ def limitinf(e, x):
         assert s != 0
         return s*oo
     elif sig == 0:
-        return limitinf(c0, x) #e0=0: lim f = lim c0
+        return limitinf(c0, x)  # e0=0: lim f = lim c0
+
 
 def moveup2(s, x):
     r = SubsSet()
@@ -490,6 +504,7 @@ def moveup2(s, x):
     for var, expr in s.rewrites.iteritems():
         r.rewrites[var] = s.rewrites[var].subs(x, exp(x))
     return r
+
 
 def moveup(l, x):
     return [e.subs(x, exp(x)) for e in l]
@@ -502,21 +517,18 @@ def calculate_series(e, x, skip_abs=False, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-
-    f = e
-    for n in [1, 2, 4, 6, 8, 16]:
-        series = f.nseries(x, n=n, logx=logx)
+    n = 1
+    while 1:
+        series = e.nseries(x, n=n, logx=logx)
         if not series.has(O):
             # The series expansion is locally exact.
             return series
 
         series = series.removeO()
-        if series:
-            if (not skip_abs) or series.has(x):
-                break
-    else:
-        raise ValueError('(%s).series(%s, n=16) gave no terms.' % (f, x))
-    return series
+        if series and ((not skip_abs) or series.has(x)):
+            return series
+        n *= 2
+
 
 @debug
 @timeit
@@ -553,8 +565,9 @@ def mrv_leadterm(e, x):
     w = Dummy("w", real=True, positive=True, bounded=True)
     f, logw = rewrite(exps, Omega, x, w)
     series = calculate_series(f, w, logx=logw)
-    series = series.subs(log(w), logw) # this should not be necessary
+    series = series.subs(log(w), logw)  # this should not be necessary
     return series.leadterm(w)
+
 
 def build_expression_tree(Omega, rewrites):
     r""" Helper function for rewrite.
@@ -592,6 +605,7 @@ def build_expression_tree(Omega, rewrites):
 
     return nodes
 
+
 @debug
 @timeit
 def rewrite(e, Omega, x, wsym):
@@ -614,10 +628,11 @@ def rewrite(e, Omega, x, wsym):
     nodes = build_expression_tree(Omega, rewrites)
     Omega.sort(key=lambda x: nodes[x[1]].ht(), reverse=True)
 
-    g, _ = Omega[-1] #g is going to be the "w" - the simplest one in the mrv set
+    g, _ = Omega[-1]
+        # g is going to be the "w" - the simplest one in the mrv set
     sig = sign(g.args[0], x)
     if sig == 1:
-        wsym = 1/wsym #if g goes to oo, substitute 1/w
+        wsym = 1/wsym  # if g goes to oo, substitute 1/w
     elif sig != -1:
         raise NotImplementedError('Result depends on the sign of %s' % sig)
     #O2 is a list, which results by rewriting each item in Omega using "w"
@@ -649,7 +664,7 @@ def rewrite(e, Omega, x, wsym):
     #finally compute the logarithm of w (logw).
     logw = g.args[0]
     if sig == 1:
-        logw = -logw     #log(w)->log(1/w)=-log(w)
+        logw = -logw  # log(w)->log(1/w)=-log(w)
 
     # Some parts of sympy have difficulty computing series expansions with
     # non-integral exponents. The following heuristic improves the situation:
@@ -658,6 +673,7 @@ def rewrite(e, Omega, x, wsym):
     logw /= exponent
 
     return f, logw
+
 
 def gruntz(e, z, z0, dir="+"):
     """

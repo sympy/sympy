@@ -59,6 +59,7 @@ It is described in great(er) detail in the Sphinx documentation.
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
 from sympy.core.mod import Mod
 from sympy.functions.special.hyper import hyper
+from sympy.utilities.misc import default_sort_key
 from sympy import SYMPY_DEBUG
 
 from sympy.utilities.timeutils import timethis
@@ -81,9 +82,11 @@ def add_formulae(formulae):
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
 
-    from sympy import (exp, sqrt, cosh, log, asin, atan, I, lowergamma, cos,
-                       atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
-                       EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix)
+    from sympy import (
+        exp, sqrt, root, cosh, log, asin, atan, I, lowergamma, cos,
+        atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
+        EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix,
+        fresnels, fresnelc)
     from sympy.functions.special.hyper import (HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -101,7 +104,7 @@ def add_formulae(formulae):
          Matrix([HyperRep_power2(a, z),
                  HyperRep_power2(a + S(1)/2, z)/2]),
          Matrix([[1, 0]]),
-         Matrix([[(a-S.Half)*z/(1 - z), (S.Half - a)*z/(1 - z)],
+         Matrix([[(a - S.Half)*z/(1 - z), (S.Half - a)*z/(1 - z)],
                  [a/(1 - z), a*(z - 2)/(1 - z)]]))
     addb((1, 1), (2, ),
          Matrix([HyperRep_log1(z), 1]), Matrix([[-1/z, 0]]),
@@ -162,6 +165,27 @@ def add_formulae(formulae):
     # This one is redundant.
     add([-S.Half], [S.Half], exp(z) - sqrt(pi*z)*(-I)*erf(I*sqrt(z)))
 
+    # Added to get nice results for Laplace transform of Fresnel functions
+    # http://functions.wolfram.com/07.22.03.6437.01
+    # Basic rule
+    #add([1], [S(3)/4, S(5)/4],
+    #    sqrt(pi) * (cos(2*sqrt(polar_lift(-1)*z))*fresnelc(2*root(polar_lift(-1)*z,4)/sqrt(pi)) +
+    #                sin(2*sqrt(polar_lift(-1)*z))*fresnels(2*root(polar_lift(-1)*z,4)/sqrt(pi)))
+    #    / (2*root(polar_lift(-1)*z,4)))
+    # Manually tuned rule
+    addb([1], [S(3)/4, S(5)/4],
+         Matrix([ sqrt(pi)*(I*sinh(2*sqrt(z))*fresnels(2*root(z, 4)*exp(I*pi/4)/sqrt(pi))
+                            + cosh(2*sqrt(z))*fresnelc(2*root(z, 4)*exp(I*pi/4)/sqrt(pi)))
+                  * exp(-I*pi/4)/(2*root(z, 4)),
+                  sqrt(pi)*root(z, 4)*(sinh(2*sqrt(z))*fresnelc(2*root(z, 4)*exp(I*pi/4)/sqrt(pi))
+                                      + I*cosh(2*sqrt(z))*fresnels(2*root(z, 4)*exp(I*pi/4)/sqrt(pi)))
+                  *exp(-I*pi/4)/2,
+                  1 ]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S(1)/4, 1,      S(1)/4],
+                 [ z,      S(1)/4, 0     ],
+                 [ 0,      0,      0     ]]))
+
     # 2F2
     addb([S.Half, a], [S(3)/2, a + 1],
          Matrix([a/(2*a - 1)*(-I)*sqrt(pi/z)*erf(I*sqrt(z)),
@@ -199,7 +223,7 @@ def add_formulae(formulae):
     addb([], [S.Half, a, a + S.Half],
          Matrix([fp(2*a - 1, z), fm(2*a, z)*z**(S(1)/4),
                  fm(2*a - 1, z)*sqrt(z), fp(2*a, z)*z**(S(3)/4)])
-           * 2**(-2*a)*gamma(2*a)*z**((1 - 2*a)/4),
+         * 2**(-2*a)*gamma(2*a)*z**((1 - 2*a)/4),
          Matrix([[1, 0, 0, 0]]),
          Matrix([[0, 1, 0, 0],
                  [0, S(1)/2 - a, 1, 0],
@@ -224,8 +248,8 @@ def add_formulae(formulae):
     addb([a], [a - S.Half, 2*a],
          Matrix([z**(S.Half - a)*besseli(a - S.Half, sqrt(z))**2,
                  z**(1 - a)*besseli(a - S.Half, sqrt(z))
-                         *besseli(a - S(3)/2, sqrt(z)),
-                 z**(S(3)/2 - a)*besseli(a-S(3)/2, sqrt(z))**2]),
+                 *besseli(a - S(3)/2, sqrt(z)),
+                 z**(S(3)/2 - a)*besseli(a - S(3)/2, sqrt(z))**2]),
          Matrix([[-gamma(a + S.Half)**2/4**(S.Half - a),
                  2*gamma(a - S.Half)*gamma(a + S.Half)/4**(1 - a),
                  0]]),
@@ -237,7 +261,7 @@ def add_formulae(formulae):
                           + besseli(1 - b, sqrt(z))*besseli(b, sqrt(z))),
                  besseli(-b, sqrt(z))*besseli(b, sqrt(z))]),
          Matrix([[1, 0, 0]]),
-         Matrix([[b-1, S(1)/2, 0],
+         Matrix([[b - 1, S(1)/2, 0],
                  [z, 0, z],
                  [0, S(1)/2, -b]]))
     addb([S(1)/2], [S(3)/2, S(3)/2],
@@ -245,6 +269,42 @@ def add_formulae(formulae):
                  cosh(2*sqrt(z))]),
          Matrix([[1, 0, 0]]),
          Matrix([[-S.Half, S.Half, 0], [0, -S.Half, S.Half], [0, 2*z, 0]]))
+
+    # FresnelS
+    # Basic rule
+    #add([S(3)/4], [S(3)/2,S(7)/4], 6*fresnels( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( pi * (exp(pi*I/4)*root(z,4)*2/sqrt(pi))**3 ) )
+    # Manually tuned rule
+    addb([S(3)/4], [S(3)/2, S(7)/4],
+         Matrix(
+             [ fresnels(
+                 exp(
+                     pi*I/4)*root(
+                         z, 4)*2/sqrt(
+                             pi) ) / (
+                                 pi * (exp(pi*I/4)*root(z, 4)*2/sqrt(pi))**3 ),
+               sinh(2*sqrt(z))/sqrt(z),
+               cosh(2*sqrt(z)) ]),
+         Matrix([[6, 0, 0]]),
+         Matrix([[-S(3)/4,  S(1)/16, 0],
+                 [ 0,      -S(1)/2,  1],
+                 [ 0,       z,       0]]))
+
+    # FresnelC
+    # Basic rule
+    #add([S(1)/4], [S(1)/2,S(5)/4], fresnelc( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) / ( exp(pi*I/4)*root(z,4)*2/sqrt(pi) ) )
+    # Manually tuned rule
+    addb([S(1)/4], [S(1)/2, S(5)/4],
+         Matrix(
+             [ sqrt(
+                 pi)*exp(
+                     -I*pi/4)*fresnelc(
+                         2*root(z, 4)*exp(I*pi/4)/sqrt(pi))/(2*root(z, 4)),
+               cosh(2*sqrt(z)),
+               sinh(2*sqrt(z))*sqrt(z) ]),
+         Matrix([[1, 0, 0]]),
+         Matrix([[-S(1)/4,  S(1)/4, 0     ],
+                 [ 0,       0,      1     ],
+                 [ 0,       z,      S(1)/2]]))
 
     # 2F3
     # XXX with this five-parameter formula is pretty slow with the current
@@ -274,7 +334,7 @@ def add_formulae(formulae):
 
 
 def add_meijerg_formulae(formulae):
-    from sympy import Matrix, gamma, uppergamma, exp
+    from sympy import Matrix, gamma, uppergamma, exp, Si, Ci, sin, cos, sqrt, pi
 
     a, b, c, z = map(Dummy, 'abcz')
     rho = Dummy('rho')
@@ -301,8 +361,45 @@ def add_meijerg_formulae(formulae):
         Matrix([gamma(1 - a)*z**rho*exp(z)*uppergamma(a, z),
                 gamma(1 - a)*z**(a + rho)]),
         Matrix([[1, 0]]),
-        Matrix([[rho+z, -1], [0, a+rho]]),
+        Matrix([[rho + z, -1], [0, a + rho]]),
         detect_uppergamma)
+
+    def detect_3113(iq):
+        """http://functions.wolfram.com/07.34.03.0984.01"""
+        x = iq.an[0]
+        u, v, w = iq.bm
+        if Mod((u - v).simplify(), 1) == 0:
+            if Mod((v - w).simplify(), 1) == 0:
+                return
+            sig = (S(1)/2, S(1)/2, S(0))
+            x1, x2, y = u, v, w
+        else:
+            if Mod((x - u).simplify(), 1) == 0:
+                sig = (S(1)/2, S(0), S(1)/2)
+                x1, y, x2 = u, v, w
+            else:
+                sig = (S(0), S(1)/2, S(1)/2)
+                y, x1, x2 = u, v, w
+
+        if (Mod((x - x1).simplify(), 1) != 0 or
+            Mod((x - x2).simplify(), 1) != 0 or
+            Mod((x - y).simplify(), 1) != S(1)/2 or
+                x > x1 or x > x2):
+            return
+
+        return {a: x}, IndexQuadruple([x], [], [x - S(1)/2 + t for t in sig], [])
+
+    s = sin(2*sqrt(z))
+    c_ = cos(2*sqrt(z))
+    S_ = Si(2*sqrt(z)) - pi/2
+    C = Ci(2*sqrt(z))
+    add([a], [], [a, a, a - S(1)/2], [],
+        Matrix([sqrt(pi)*z**(a - S(1)/2)*(c_*S_ - s*C),
+                sqrt(pi)*z**a*(s*S_ + c_*C),
+                sqrt(pi)*z**a]),
+        Matrix([[-2, 0, 0]]),
+        Matrix([[a - S(1)/2, -1, 0], [z, a, S(1)/2], [0, 0, a]]),
+        detect_3113)
 
 
 def make_simp(z):
@@ -426,15 +523,15 @@ class IndexPair(object):
 
         gt0 = lambda x: (x > 0) is True
         if S(0) in abuckets and (not S(0) in oabuckets or
-             len(filter(gt0, abuckets[S(0)])) != \
-             len(filter(gt0, oabuckets[S(0)]))):
+            len(filter(gt0, abuckets[S(0)])) !=
+                len(filter(gt0, oabuckets[S(0)]))):
             return -1
 
         diff = 0
         for bucket, obucket in [(abuckets, oabuckets), (bbuckets, obbuckets)]:
             for mod in set(bucket.keys() + obucket.keys()):
                 if (not mod in bucket) or (not mod in obucket) \
-                   or len(bucket[mod]) != len(obucket[mod]):
+                        or len(bucket[mod]) != len(obucket[mod]):
                     return -1
                 l1 = list(bucket[mod])
                 l2 = list(obucket[mod])
@@ -478,7 +575,7 @@ class IndexQuadruple(object):
         """
         from collections import defaultdict
         dicts = pan, pap, pbm, pbq = defaultdict(list), defaultdict(list), \
-                                     defaultdict(list), defaultdict(list)
+            defaultdict(list), defaultdict(list)
         for dic, lis in zip(dicts, (self.an, self.ap, self.bm, self.bq)):
             for x in lis:
                 dic[Mod(x, 1)].append(x)
@@ -734,23 +831,23 @@ class FormulaCollection(object):
     """ A collection of formulae to use as origins. """
 
     def __init__(self):
-            """ Doing this globally at module init time is a pain ... """
-            self.symbolic_formulae = {}
-            self.concrete_formulae = {}
-            self.formulae = []
+        """ Doing this globally at module init time is a pain ... """
+        self.symbolic_formulae = {}
+        self.concrete_formulae = {}
+        self.formulae = []
 
-            add_formulae(self.formulae)
+        add_formulae(self.formulae)
 
-            # Now process the formulae into a helpful form.
-            # These dicts are indexed by (p, q).
+        # Now process the formulae into a helpful form.
+        # These dicts are indexed by (p, q).
 
-            for f in self.formulae:
-                sizes = f.indices.sizes
-                if len(f.symbols) > 0:
-                    self.symbolic_formulae.setdefault(sizes, []).append(f)
-                else:
-                    inv = f.indices.build_invariants()
-                    self.concrete_formulae.setdefault(sizes, {})[inv] = f
+        for f in self.formulae:
+            sizes = f.indices.sizes
+            if len(f.symbols) > 0:
+                self.symbolic_formulae.setdefault(sizes, []).append(f)
+            else:
+                inv = f.indices.build_invariants()
+                self.concrete_formulae.setdefault(sizes, {})[inv] = f
 
     def lookup_origin(self, ip):
         """
@@ -772,12 +869,12 @@ class FormulaCollection(object):
         inv = ip.build_invariants()
         sizes = ip.sizes
         if sizes in self.concrete_formulae and \
-           inv in self.concrete_formulae[sizes]:
+                inv in self.concrete_formulae[sizes]:
             return self.concrete_formulae[sizes][inv]
 
         # We don't have a concrete formula. Try to instantiate.
         if not sizes in self.symbolic_formulae:
-            return None # Too bad...
+            return None  # Too bad...
 
         possible = []
         for f in self.symbolic_formulae[sizes]:
@@ -974,8 +1071,8 @@ class UnShiftA(Operator):
 
         b0 = -n.nth(0)
         if b0 == 0:
-            raise ValueError('Cannot decrement upper index: ' \
-                               'cancels with lower')
+            raise ValueError('Cannot decrement upper index: '
+                             'cancels with lower')
         #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, _x/ai + 1), _x)
@@ -1005,13 +1102,13 @@ class UnShiftB(Operator):
         if bi == 0:
             raise ValueError('Cannot increment -1 lower index.')
 
-        m = Poly(_x*(bi-1), _x)
+        m = Poly(_x*(bi - 1), _x)
         for b in bq:
             m *= Poly(_x + b - 1, _x)
         #print m
 
         B = Dummy('B')
-        D = Poly((bi-1)*B - bi + 1, B)
+        D = Poly((bi - 1)*B - bi + 1, B)
         n = Poly(z, B)
         for a in ap:
             n *= (D + a)
@@ -1020,15 +1117,14 @@ class UnShiftB(Operator):
         b0 = n.nth(0)
         #print b0
         if b0 == 0:
-            raise ValueError('Cannot increment index: ' \
-                               'cancels with upper')
+            raise ValueError('Cannot increment index: cancels with upper')
         #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
-            B, _x/(bi-1) + 1), _x)
+            B, _x/(bi - 1) + 1), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Increment lower index #%s of %s, %s.>' % (self._i,
@@ -1123,7 +1219,7 @@ class MeijerUnShiftA(Operator):
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, bi - _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Decrement upper b index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1175,7 +1271,7 @@ class MeijerUnShiftB(Operator):
             B, 1 - ai + _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Increment upper a index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1231,7 +1327,7 @@ class MeijerUnShiftC(Operator):
         n = Poly(Poly(n.all_coeffs()[:-1], C).as_expr().subs(C, _x - bi), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Decrement lower b index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1266,7 +1362,7 @@ class MeijerUnShiftD(Operator):
             m *= Poly(a - 1 - _x, _x)
         #print m
 
-        B = Dummy('B') # - this is the shift operator `D_I`
+        B = Dummy('B')  # - this is the shift operator `D_I`
         D = Poly(ai - 1 - B, B)
         n = Poly(1, B)
         for b in bm:
@@ -1285,7 +1381,7 @@ class MeijerUnShiftD(Operator):
             B, ai - 1 - _x), _x)
         #print n
 
-        self._poly = Poly((m-n)/b0, _x)
+        self._poly = Poly((m - n)/b0, _x)
 
     def __str__(self):
         return '<Increment lower a index #%s of %s, %s, %s, %s.>' % (self._i,
@@ -1354,7 +1450,7 @@ class ReduceOrder(Operator):
 
     def __str__(self):
         return '<Reduce order by cancelling upper %s with lower %s.>' % \
-                  (self._a, self._b)
+            (self._a, self._b)
 
 
 def _reduce_order(ap, bq, gen, key):
@@ -1437,7 +1533,7 @@ def reduce_order_meijer(iq):
                                    lambda x: x)
 
     return IndexQuadruple(*[Tuple(*w) for w in [nan, nap, nbm, nbq]]), \
-           ops1 + ops2
+        ops1 + ops2
 
 
 def make_derivative_operator(M, z):
@@ -1490,9 +1586,9 @@ def devise_plan(ip, nip, z):
 
     >>> from sympy import S
     >>> devise_plan(IndexPair((1, S.Half), ()),
-    ...             IndexPair((2, S('3/2')), ()), z)
-    [<Decrement upper index #0 of [2, 1/2], [].>,
-    <Decrement upper index #0 of [3/2, 2], [].>]
+    ...             IndexPair((2, S('3/2')), ()), z) #doctest: +NORMALIZE_WHITESPACE
+    [<Decrement upper index #0 of [3/2, 1], [].>,
+    <Decrement upper index #0 of [2, 3/2], [].>]
 
     A slightly more complicated plan:
 
@@ -1510,7 +1606,7 @@ def devise_plan(ip, nip, z):
     nabuckets, nbbuckets = nip.compute_buckets(abuckets, bbuckets)
 
     if len(abuckets.keys()) != len(nabuckets.keys()) or \
-       len(bbuckets.keys()) != len(nbbuckets.keys()):
+            len(bbuckets.keys()) != len(nbbuckets.keys()):
         raise ValueError('%s not reachable from %s' % (ip, nip))
 
     ops = []
@@ -1542,7 +1638,7 @@ def devise_plan(ip, nip, z):
                          lambda p, i: UnShiftB(nal + aother, p + bother, i, z),
                          lambda p, i: ShiftB(p[i]))
 
-    for r in set(abuckets.keys() + bbuckets.keys()):
+    for r in sorted(abuckets.keys() + bbuckets.keys(), key=default_sort_key):
         al = ()
         nal = ()
         bk = ()
@@ -1557,7 +1653,8 @@ def devise_plan(ip, nip, z):
             raise ValueError('%s not reachable from %s' % (
                              (ip.ap, ip.bq), (nip.ap, nip.bq)))
 
-        al, nal, bk, nbk = [sorted(list(w)) for w in [al, nal, bk, nbk]]
+        al, nal, bk, nbk = [sorted(list(w), key=default_sort_key)
+            for w in [al, nal, bk, nbk]]
 
         def others(dic, key):
             l = []
@@ -1761,7 +1858,7 @@ def try_lerchphi(nip):
             monomials += [(a/denom, b)]
             continue
         if numer.has(t):
-            raise NotImplementedError('Need partial fraction decomposition' \
+            raise NotImplementedError('Need partial fraction decomposition'
                                       ' with linear denominators')
         indep, [dep] = denom.as_coeff_mul(t)
         n = 1
@@ -1793,7 +1890,7 @@ def try_lerchphi(nip):
     coeffs = {}
     z = Dummy('z')
     monomials.sort(key=lambda x: x[1])
-    mon = {0: 1/(1-z)}
+    mon = {0: 1/(1 - z)}
     if monomials:
         for k in range(monomials[-1][1]):
             mon[k + 1] = z*mon[k].diff(z)
@@ -1805,7 +1902,7 @@ def try_lerchphi(nip):
         l.sort(key=lambda x: x[1])
         for k in range(2, l[-1][1] + 1):
             deriv[lerchphi(z, k, a)] = [(-a, lerchphi(z, k, a)),
-                                        (1, lerchphi(z, k-1, a))]
+                                        (1, lerchphi(z, k - 1, a))]
         deriv[lerchphi(z, 1, a)] = [(-a, lerchphi(z, 1, a)),
                                     (1/(1 - z), S(1))]
     trans = {}
@@ -1859,7 +1956,7 @@ def build_hypergeometric_formula(nip):
             for r, d in enumerate(C*derivs[k]):
                 res[r] += c*d
         for k, c in enumerate(res):
-            M[n-1, k] = -c/derivs[n-1][0, n-1]/poly.all_coeffs()[0]
+            M[n - 1, k] = -c/derivs[n - 1][0, n - 1]/poly.all_coeffs()[0]
         return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
     else:
         # Since there are no `ap`, none of the `bq` can be non-positive
@@ -1892,7 +1989,7 @@ def hyperexpand_special(ap, bq, z):
     # This code is very ad-hoc. There are many clever algorithms
     # (notably Zeilberger's) related to this problem.
     # For now we just want a few simple cases to work.
-    from sympy import gamma, simplify, cos, unpolarify
+    from sympy import gamma, simplify, cos, unpolarify, pi
     p, q = len(ap), len(bq)
     z_ = z
     z = unpolarify(z)
@@ -1910,10 +2007,10 @@ def hyperexpand_special(ap, bq, z):
             # Kummer
             if b.is_integer and b < 0:
                 return 2*cos(pi*b/2)*gamma(-b)*gamma(b - a + 1) \
-                       /gamma(-b/2)/gamma(b/2 - a + 1)
+                    /gamma(-b/2)/gamma(b/2 - a + 1)
             else:
                 return gamma(b/2 + 1)*gamma(b - a + 1) \
-                       /gamma(b + 1)/gamma(b/2 - a + 1)
+                    /gamma(b + 1)/gamma(b/2 - a + 1)
     # TODO tons of more formulae
     #      investigate what algorithms exist
     return hyper(ap, bq, z_)
@@ -1932,7 +2029,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
-    from sympy.simplify import powdenest, simplify, polarify
+    from sympy.simplify import powdenest, simplify, polarify, unpolarify
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
@@ -1977,12 +2074,12 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
         debug('  Recognised polynomial.')
         p = apply_operators(res, ops, lambda f: z0*f.diff(z0))
         p = apply_operators(p*premult, ops0, lambda f: z0*f.diff(z0))
-        return simplify(p).subs(z0, z)
+        return unpolarify(simplify(p).subs(z0, z))
 
     # Try to recognise a shifted sum.
     p = S(0)
     res = try_shifted_sum(nip, z0)
-    if res != None:
+    if res is not None:
         nip, nops, p = res
         debug('  Recognised shifted sum, reducerd order to', nip)
         ops += nops
@@ -1993,7 +2090,6 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     p = simplify(p).subs(z0, z)
 
     # Try special expansions early.
-    from sympy import unpolarify
     if unpolarify(z) in [1, -1] and (len(nip.ap), len(nip.bq)) == (2, 1):
         f = build_hypergeometric_formula(nip)
         r = carryout_plan(f, ops).replace(hyper, hyperexpand_special)
@@ -2009,7 +2105,7 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
     if f is None:
         debug('  Could not find an origin.',
-              'Will return answer in terms of '+
+              'Will return answer in terms of ' +
               'simpler hypergeometric functions.')
         f = build_hypergeometric_formula(nip)
 
@@ -2088,7 +2184,7 @@ def devise_plan_meijer(fro, to, z):
         for idx, (a, b) in enumerate(zip(f, t)):
             if (
                 (a - b).is_integer and (b - a)/diff > 0 and
-                all(a != x for x in counter)):
+                    all(a != x for x in counter)):
                 sh = shifter(idx)
                 f[idx] += diff
                 return sh
@@ -2149,7 +2245,7 @@ def devise_plan_meijer(fro, to, z):
             change = True
             continue
     if fan != list(to.an) or fap != list(to.ap) or fbm != list(to.bm) or \
-       fbq != list(to.bq):
+            fbq != list(to.bq):
         raise NotImplementedError('Could not devise plan.')
     ops.reverse()
     return ops
@@ -2223,7 +2319,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
 
     def do_slater(an, bm, ap, bq, z, zfinal):
         from sympy import gamma, residue, factorial, rf, expand_func, \
-                          polar_lift
+            polar_lift
         # zfinal is the value that will eventually be substituted for z.
         # We pass it to _hyperexpand to improve performance.
         iq = IndexQuadruple(an, bm, ap, bq)
@@ -2267,7 +2363,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
                 b_ = pbm[m][0]
                 ki = [bi - b_ for bi in pbm[m][1:]]
                 u = len(ki)
-                li = [ai - b_ for ai in pap[m][:u+1]]
+                li = [ai - b_ for ai in pap[m][:u + 1]]
                 bo = list(bm)
                 for b in pbm[m]:
                     bo.remove(b)
@@ -2342,8 +2438,8 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
 
     m = meijerg(iq.an, iq.ap, iq.bm, iq.bq, z)
     if m.delta > 0 or \
-       (m.delta == 0 and len(m.ap) == len(m.bq) and \
-        (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
+        (m.delta == 0 and len(m.ap) == len(m.bq) and
+            (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
         # The condition delta > 0 means that the convergence region is
         # connected. Any expression we find can be continued analytically
         # to the entire convergence region.
@@ -2398,9 +2494,9 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     # TODO it would be helpful to give conditions under which the integral
     #      is known to diverge.
     r = Piecewise((slater1, cond1), (slater2, cond2),
-                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
+                  (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
     if r.has(hyper) and not allow_hyper:
-        debug('  Could express using hypergeometric functions, '+
+        debug('  Could express using hypergeometric functions, ' +
               'but not allowed.')
     if not r.has(hyper) or allow_hyper:
         return r

@@ -2,6 +2,7 @@
 
 from sympy import Matrix, I
 
+
 def msigma(i):
     """Returns a Pauli matrix sigma_i. i=1,2,3
 
@@ -18,24 +19,25 @@ def msigma(i):
     [0, 1]
     [1, 0]
     """
-    if i==1:
-        mat=( (
+    if i == 1:
+        mat = ( (
             (0, 1),
             (1, 0)
-            ) )
-    elif i==2:
-        mat=( (
+        ) )
+    elif i == 2:
+        mat = ( (
             (0, -I),
             (I, 0)
-            ) )
-    elif i==3:
-        mat=( (
+        ) )
+    elif i == 3:
+        mat = ( (
             (1, 0),
             (0, -1)
-            ) )
+        ) )
     else:
         raise IndexError("Invalid Pauli index")
     return Matrix(mat)
+
 
 def pat_matrix(m, dx, dy, dz):
     """Returns the Parallel Axis Theorem matrix to translate the inertia
@@ -57,14 +59,19 @@ def pat_matrix(m, dx, dy, dz):
     [-2,  4, -2]
     [-2, -2,  4]
     """
-    dxdy = -dx*dy ; dydz = -dy*dz ; dzdx = -dz*dx
-    dxdx =  dx**2 ; dydy =  dy**2 ; dzdz =  dz**2
+    dxdy = -dx*dy
+    dydz = -dy*dz
+    dzdx = -dz*dx
+    dxdx = dx**2
+    dydy = dy**2
+    dzdz = dz**2
     mat = ((dydy + dzdz, dxdy, dzdx),
            (dxdy, dxdx + dzdz, dydz),
            (dzdx, dydz, dydy + dxdx))
     return m*Matrix(mat)
 
-def mgamma(mu,lower=False):
+
+def mgamma(mu, lower=False):
     """Returns a Dirac gamma matrix gamma^mu in the standard
     (Dirac) representation.
 
@@ -90,54 +97,54 @@ def mgamma(mu,lower=False):
     [ 0, -1, 0, 0]
     [-1,  0, 0, 0]
     """
-    if not mu in [0,1,2,3,5]:
+    if not mu in [0, 1, 2, 3, 5]:
         raise IndexError("Invalid Dirac index")
     if mu == 0:
         mat = (
-                (1,0,0,0),
-                (0,1,0,0),
-                (0,0,-1,0),
-                (0,0,0,-1)
-                )
+            (1, 0, 0, 0),
+            (0, 1, 0, 0),
+            (0, 0, -1, 0),
+            (0, 0, 0, -1)
+        )
     elif mu == 1:
         mat = (
-                (0,0,0,1),
-                (0,0,1,0),
-                (0,-1,0,0),
-                (-1,0,0,0)
-                )
+            (0, 0, 0, 1),
+            (0, 0, 1, 0),
+            (0, -1, 0, 0),
+            (-1, 0, 0, 0)
+        )
     elif mu == 2:
         mat = (
-                (0,0,0,-I),
-                (0,0,I,0),
-                (0,I,0,0),
-                (-I,0,0,0)
-                )
+            (0, 0, 0, -I),
+            (0, 0, I, 0),
+            (0, I, 0, 0),
+            (-I, 0, 0, 0)
+        )
     elif mu == 3:
         mat = (
-                (0,0,1,0),
-                (0,0,0,-1),
-                (-1,0,0,0),
-                (0,1,0,0)
-                )
+            (0, 0, 1, 0),
+            (0, 0, 0, -1),
+            (-1, 0, 0, 0),
+            (0, 1, 0, 0)
+        )
     elif mu == 5:
         mat = (
-                (0,0,1,0),
-                (0,0,0,1),
-                (1,0,0,0),
-                (0,1,0,0)
-                )
-    m= Matrix(mat)
+            (0, 0, 1, 0),
+            (0, 0, 0, 1),
+            (1, 0, 0, 0),
+            (0, 1, 0, 0)
+        )
+    m = Matrix(mat)
     if lower:
-        if mu in [1,2,3,5]:
-            m = - m
+        if mu in [1, 2, 3, 5]:
+            m = -m
     return m
 
 #Minkowski tensor using the convention (+,-,-,-) used in the Quantum Field
 #Theory
 minkowski_tensor = Matrix( (
-    (1,0,0,0),
-    (0,-1,0,0),
-    (0,0,-1,0),
-    (0,0,0,-1)
-    ))
+    (1, 0, 0, 0),
+    (0, -1, 0, 0),
+    (0, 0, -1, 0),
+    (0, 0, 0, -1)
+))

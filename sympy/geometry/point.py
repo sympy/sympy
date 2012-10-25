@@ -13,6 +13,9 @@ from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
+from sympy.matrices import Matrix
+from sympy.core.numbers import Float
+from sympy.simplify.simplify import nsimplify
 
 
 class Point(GeometryEntity):
@@ -61,6 +64,14 @@ class Point(GeometryEntity):
     >>> Point(0, x)
     Point(0, x)
 
+    Floats are automatically converted to Rational unless the
+    evaluate flag is False:
+
+    >>> Point(0.5, 0.25)
+    Point(1/2, 1/4)
+    >>> Point(0.5, 0.25, evaluate=False)
+    Point(0.5, 0.25)
+
     """
 
     def __new__(cls, *args, **kwargs):
@@ -72,7 +83,10 @@ class Point(GeometryEntity):
             coords = Tuple(*args)
 
         if len(coords) != 2:
-            raise NotImplementedError("Only two dimensional points currently supported")
+            raise NotImplementedError(
+                "Only two dimensional points currently supported")
+        if kwargs.get('evaluate', True):
+            coords = [nsimplify(c) for c in coords]
 
         return GeometryEntity.__new__(cls, *coords)
 
@@ -191,11 +205,10 @@ class Point(GeometryEntity):
         False
 
         """
-
         if len(points) == 0:
             return False
         if len(points) <= 2:
-            return True # two points always form a line
+            return True  # two points always form a line
         points = [Point(a) for a in points]
 
         # XXX Cross product is used now, but that only extends to three
@@ -205,12 +218,15 @@ class Point(GeometryEntity):
         p2 = points[1]
         v1 = p2 - p1
         x1, y1 = v1.args
+        rv = True
         for p3 in points[2:]:
             x2, y2 = (p3 - p1).args
-            test = simplify(x1*y2 - y1*x2)
-            if test != 0:
+            test = simplify(x1*y2 - y1*x2).equals(0)
+            if test is False:
                 return False
-        return True
+            if rv and not test:
+                rv = test
+        return rv
 
     def is_concyclic(*points):
         """Is a sequence of points concyclic?
@@ -390,9 +406,10 @@ class Point(GeometryEntity):
 
         """
         if prec is None:
-            return Point(*[x.evalf(**options) for x in self.args])
+            coords = [x.evalf(**options) for x in self.args]
         else:
-            return Point(*[x.evalf(prec, **options) for x in self.args])
+            coords = [x.evalf(prec, **options) for x in self.args]
+        return Point(*coords, **dict(evaluate=False))
 
     n = evalf
 
@@ -433,6 +450,103 @@ class Point(GeometryEntity):
 
         return o.intersection(self)
 
+    def rotate(self, angle, pt=None):
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
+
+        See Also
+        ========
+
+        rotate, scale
+
+        Examples
+        ========
+
+        >>> from sympy import Point, pi
+        >>> t = Point(1, 0)
+        >>> t.rotate(pi/2)
+        Point(0, 1)
+        >>> t.rotate(pi/2, (2, 0))
+        Point(2, -1)
+
+        """
+        from sympy import cos, sin, Point
+
+        c = cos(angle)
+        s = sin(angle)
+
+        rv = self
+        if pt is not None:
+            pt = Point(pt)
+            rv -= pt
+        x, y = rv.args
+        rv = Point(c*x - s*y, s*x + c*y)
+        if pt is not None:
+            rv += pt
+        return rv
+
+    def scale(self, x=1, y=1, pt=None):
+        """Scale the coordinates of the Point by multiplying by
+        ``x`` and ``y`` after subtracting ``pt`` -- default is (0, 0) --
+        and then adding ``pt`` back again (i.e. ``pt`` is the point of
+        reference for the scaling).
+
+        See Also
+        ========
+
+        rotate, translate
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> t = Point(1, 1)
+        >>> t.scale(2)
+        Point(2, 1)
+        >>> t.scale(2, 2)
+        Point(2, 2)
+
+        """
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
+        return Point(self.x*x, self.y*y)
+
+    def translate(self, x=0, y=0):
+        """Shift the Point by adding x and y to the coordinates of the Point.
+
+        See Also
+        ========
+
+        rotate, scale
+
+        Examples
+        ========
+
+        >>> from sympy import Point
+        >>> t = Point(0, 1)
+        >>> t.translate(2)
+        Point(2, 1)
+        >>> t.translate(2, 2)
+        Point(2, 3)
+        >>> t + Point(2, 2)
+        Point(2, 3)
+
+        """
+        return Point(self.x + x, self.y + y)
+
+    def transform(self, matrix):
+        """Return the point after applying the transformation described
+        by the 3x3 Matrix, ``matrix``.
+
+        See Also
+        ========
+        geometry.entity.rotate
+        geometry.entity.scale
+        geometry.entity.translate
+        """
+        x, y = self.args
+        return Point(*(Matrix(1, 3, [x, y, 1])*matrix).tolist()[0][:2])
+
     def dot(self, p2):
         """Return dot product of self with another Point."""
         p2 = Point(p2)
@@ -455,7 +569,8 @@ class Point(GeometryEntity):
                 return Point(*[simplify(a + b) for a, b in
                                zip(self.args, other.args)])
             else:
-                raise TypeError("Points must have the same number of dimensions")
+                raise TypeError(
+                    "Points must have the same number of dimensions")
         else:
             raise ValueError('Cannot add non-Point, %s, to a Point' % other)
 

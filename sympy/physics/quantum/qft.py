@@ -16,7 +16,7 @@ from sympy.functions import sqrt
 
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qexpr import QuantumError, QExpr
-from sympy.matrices.matrices import eye
+from sympy.matrices import eye
 from sympy.physics.quantum.tensorproduct import matrix_tensor_product
 
 from sympy.physics.quantum.gate import (
@@ -37,11 +37,10 @@ __all__ = [
 
 class RkGate(OneQubitGate):
     """This is the R_k gate of the QTF."""
-
     gate_name = u'Rk'
     gate_name_latex = u'R'
 
-    def __new__(cls, *args, **old_assumptions):
+    def __new__(cls, *args):
         if len(args) != 2:
             raise QuantumError(
                 'Rk gates only take two arguments, got: %r' % args
@@ -58,7 +57,7 @@ class RkGate(OneQubitGate):
         elif k == 3:
             return TGate(target)
         args = cls._eval_args(args)
-        inst = Expr.__new__(cls, *args, **{'commutative':False})
+        inst = Expr.__new__(cls, *args)
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
 
@@ -82,8 +81,9 @@ class RkGate(OneQubitGate):
 
     def get_target_matrix(self, format='sympy'):
         if format == 'sympy':
-            return Matrix([[1,0],[0,exp(Integer(2)*pi*I/(Integer(2)**self.k))]])
-        raise NotImplementedError('Invalid format for the R_k gate: %r' % format)
+            return Matrix([[1, 0], [0, exp(Integer(2)*pi*I/(Integer(2)**self.k))]])
+        raise NotImplementedError(
+            'Invalid format for the R_k gate: %r' % format)
 
 
 Rk = RkGate
@@ -109,9 +109,10 @@ class Fourier(Gate):
         """
             Represents the (I)QFT In the Z Basis
         """
-        nqubits = options.get('nqubits',0)
+        nqubits = options.get('nqubits', 0)
         if nqubits == 0:
-            raise QuantumError('The number of qubits must be given as nqubits.')
+            raise QuantumError(
+                'The number of qubits must be given as nqubits.')
         if nqubits < self.min_qubits:
             raise QuantumError(
                 'The number of qubits %r is too small for the gate.' % nqubits
@@ -120,20 +121,22 @@ class Fourier(Gate):
         omega = self.omega
 
         #Make a matrix that has the basic Fourier Transform Matrix
-        arrayFT = [[omega**(i*j%size)/sqrt(size) for i in range(size)] for j in range(size)]
+        arrayFT = [[omega**(
+            i*j % size)/sqrt(size) for i in range(size)] for j in range(size)]
         matrixFT = Matrix(arrayFT)
 
         #Embed the FT Matrix in a higher space, if necessary
         if self.label[0] != 0:
             matrixFT = matrix_tensor_product(eye(2**self.label[0]), matrixFT)
         if self.min_qubits < nqubits:
-            matrixFT = matrix_tensor_product(matrixFT, eye(2**(nqubits-self.min_qubits)))
+            matrixFT = matrix_tensor_product(
+                matrixFT, eye(2**(nqubits - self.min_qubits)))
 
         return matrixFT
 
     @property
     def targets(self):
-        return range(self.label[0],self.label[1])
+        return range(self.label[0], self.label[1])
 
     @property
     def min_qubits(self):
@@ -142,7 +145,7 @@ class Fourier(Gate):
     @property
     def size(self):
         """Size is the size of the QFT matrix"""
-        return 2**(self.label[1]-self.label[0])
+        return 2**(self.label[1] - self.label[0])
 
     @property
     def omega(self):
@@ -162,10 +165,10 @@ class QFT(Fourier):
         circuit = 1
         for level in reversed(range(start, finish)):
             circuit = HadamardGate(level)*circuit
-            for i in range(level-start):
-                circuit = CGate(level-i-1, RkGate(level, i+2))*circuit
-        for i in range((finish-start)//2):
-            circuit = SwapGate(i+start, finish-i-1)*circuit
+            for i in range(level - start):
+                circuit = CGate(level - i - 1, RkGate(level, i + 2))*circuit
+        for i in range((finish - start)//2):
+            circuit = SwapGate(i + start, finish - i - 1)*circuit
         return circuit
 
     def _apply_operator_Qubit(self, qubits, **options):
@@ -190,11 +193,11 @@ class IQFT(Fourier):
         start = self.args[0]
         finish = self.args[1]
         circuit = 1
-        for i in range((finish-start)//2):
-            circuit = SwapGate(i+start, finish-i-1)*circuit
+        for i in range((finish - start)//2):
+            circuit = SwapGate(i + start, finish - i - 1)*circuit
         for level in range(start, finish):
-            for i in reversed(range(level-start)):
-                circuit = CGate(level-i-1, RkGate(level, -i-2))*circuit
+            for i in reversed(range(level - start)):
+                circuit = CGate(level - i - 1, RkGate(level, -i - 2))*circuit
             circuit = HadamardGate(level)*circuit
         return circuit
 
@@ -204,4 +207,3 @@ class IQFT(Fourier):
     @property
     def omega(self):
         return exp(-2*pi*I/self.size)
-

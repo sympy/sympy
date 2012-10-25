@@ -1,8 +1,10 @@
-People with a * next to their names are not found in the metadata of the git history.
-
 All people who contributed to SymPy by sending at least a patch or more (in
 the order of the date of their first contribution), except those who
-explicitly didn't want to be mentioned:
+explicitly didn't want to be mentioned.  You can find missing people from this
+file by using git log --reverse --format="%aN <%aE>" | awk ' !x[$0]++' (the
+order from that command will be a little different, but close to the order
+here).  People with a * next to their names are not found in the metadata of
+the git history.
 
 Ondřej Čertík <ondrej@certik.cz>
 Fabian Pedregosa <fabian@fseoane.net>
@@ -84,7 +86,7 @@ Kevin Goodsell <kevin-opensource@omegacrash.net>
 Jorn Baayen <jorn.baayen@gmail.com>
 Eh Tan <tan2tan2@gmail.com>
 Renato Coutinho <renato.coutinho@gmail.com>
-Oscar Benjamin
+Oscar Benjamin <oscar.j.benjamin@gmail.com>
 Øyvind Jensen <jensen.oyvind@gmail.com>
 Julio Idichekop Filho <idichekop@yahoo.com.br>
 Łukasz Pankowski <lukpank@o2.pl>
@@ -126,7 +128,7 @@ Gregory Ksionda <ksiondag846@gmail.com>
 Tomáš Bambas <tomas.bambas@gmail.com>
 Jeremias Yehdegho <j.yehdegho@gmail.com>
 Jack McCaffery <jpmccaffery@gmail.com>
-Raymond Wong
+Raymond Wong <rayman_407@yahoo.com>
 Luca Weihs <astronomicalcuriosity@gmail.com>
 Shai 'Deshe' Wyborski <shaide@cs.huji.ac.il>
 Thomas Wiecki <thomas.wiecki@gmail.com>
@@ -165,7 +167,7 @@ tsmars15 <ts_borisova@abv.bg>
 Chancellor Arkantos <Chancellor_Arkantos@hotmail.co.uk>
 Stepan Simsa <simsa.st@gmail.com>
 Tobias Lenz <t_lenz94@web.de>
-Siddhu <siddhanathan@gmail.com>
+Siddhanathan Shanmugam <siddhanathan@gmail.com>
 Tiffany Zhu <bubble.wubble.303@gmail.com>
 Alexey Subach <alexey.subach@gmail.com>
 Joan Creus <joan.creus.c@gmail.com>
@@ -190,8 +192,33 @@ Christian Bühler <christian@cbuehler.de>
 Carsten Knoll <CarstenKnoll@gmx.de>
 M R Bharath <catchmrbharath@gmail.com>
 Matthias Toews <mat.toews@googlemail.com>
+Sergiu Ivanov <unlimitedscolobb@gmail.com>
 Jorge E. Cardona <jorgeecardona@gmail.com>
 Sanket Agarwal <sanket@sanketagarwal.com>
 Manoj Babu K. <manoj.babu2378@gmail.com>
 Sai Nikhil <tsnlegend@gmail.com>
 Aleksandar Makelov <amakelov@college.harvard.edu>
+Raphael Michel <webmaster@raphaelmichel.de>
+Sachin Irukula <sachin.irukula@gmail.com>
+Ashwini Oruganti <ashwini.oruganti@gmail.com>
+Andreas Kloeckner <inform@tiker.net>
+Prateek Papriwal <papriwalprateek@gmail.com>
+Arpit Goyal <agmps18@gmail.com>
+Angadh Nanjangud <angadh.n@gmail.com>
+Comer Duncan <comer.duncan@gmail.com>
+Jens H. Nielsen <jenshnielsen@gmail.com>
+Joseph Dougherty <Github@JWDougherty.com>
+marshall2389 <marshall2389@gmail.com>
+Guru Devanla <grdvnl@gmail.com>
+George Waksman <waksman@gwax.com>
+Angus Griffith <16sn6uv@gmail.com>
+Timothy Reluga <treluga@math.psu.edu>
+Brian Stephanik <xoedusk@gmail.com>
+Ljubiša Moćić <3rdslasher@gmail.com>
+Piotr Korgul <p.korgul@gmail.com>
+Rom le Clair <jacen.guardian@gmail.com>
+Alexandr Popov <alexandr.s.popov@gmail.com>
+Saurabh Jha <saurabh.jhaa@gmail.com>
+Tarun Gaba <tarun.gaba7@gmail.com>
+Takafumi Arakaki <aka.tkf@gmail.com>
+Alexander Eberspächer <alex.eberspaecher@googlemail.com>

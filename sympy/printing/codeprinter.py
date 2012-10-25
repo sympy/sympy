@@ -2,11 +2,13 @@ from sympy.core import C, Add
 from sympy.printing.str import StrPrinter
 from sympy.tensor import get_indices, get_contraction_structure
 
+
 class AssignmentError(Exception):
     """
     Raised if an assignment variable for a loop is missing.
     """
     pass
+
 
 class CodePrinter(StrPrinter):
     """
@@ -47,7 +49,8 @@ class CodePrinter(StrPrinter):
             # then terms with summations
             if isinstance(dummies, tuple):
                 indices = self._sort_optimized(dummies, expr)
-                openloop_d, closeloop_d = self._get_loop_opening_ending(indices)
+                openloop_d, closeloop_d = self._get_loop_opening_ending(
+                    indices)
 
                 for term in d[dummies]:
                     if term in d and not ([f.keys() for f in d[term]]
@@ -56,7 +59,7 @@ class CodePrinter(StrPrinter):
                         # contractions, those must be computed first.
                         # (temporary variables?)
                         raise NotImplementedError(
-                                "FIXME: no support for contractions in factor yet")
+                            "FIXME: no support for contractions in factor yet")
                     else:
 
                         # We need the lhs expression as an accumulator for
@@ -71,14 +74,16 @@ class CodePrinter(StrPrinter):
                         # syntax is currently undefined.  FIXME: What would be
                         # a good interpretation?
                         if assign_to is None:
-                            raise AssignmentError("need assignment variable for loops")
+                            raise AssignmentError(
+                                "need assignment variable for loops")
                         if term.has(assign_to):
                             raise(ValueError("FIXME: lhs present in rhs,\
                                 this is undefined in CCodePrinter"))
 
                         lines.extend(openloop)
                         lines.extend(openloop_d)
-                        text = "%s = %s" % (lhs_printed, CodePrinter.doprint(self, assign_to + term))
+                        text = "%s = %s" % (lhs_printed, CodePrinter.doprint(
+                            self, assign_to + term))
                         lines.append(self._get_statement(text))
                         lines.extend(closeloop_d)
                         lines.extend(closeloop)
@@ -128,7 +133,7 @@ class CodePrinter(StrPrinter):
 
     def _print_Dummy(self, expr):
         # dummies must be printed as unique symbols
-        return "%s_%i" %(expr.name, expr.dummy_index)  # Dummy
+        return "%s_%i" % (expr.name, expr.dummy_index)  # Dummy
 
     _print_Catalan = _print_NumberSymbol
     _print_EulerGamma = _print_NumberSymbol
@@ -137,7 +142,6 @@ class CodePrinter(StrPrinter):
     def _print_not_supported(self, expr):
         self._not_supported.add(expr)
         return self.emptyPrinter(expr)
-
 
     # The following can not be simply translated into C or Fortran
     _print_Basic = _print_not_supported

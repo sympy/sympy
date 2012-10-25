@@ -49,9 +49,29 @@ http://en.wikipedia.org/wiki/List_of_rules_of_inference
 """
 from collections import defaultdict
 
-from logic import fuzzy_not, name_not, Logic, And, Not
+from logic import Logic, And, Or, Not
+
+
+def _base_fact(atom):
+    """Return the literal fact of an atom.
+
+    Effectively, this merely strips the Not around a fact.
+    """
+    if isinstance(atom, Not):
+        return atom.arg
+    else:
+        return atom
+
+
+def _as_pair(atom):
+    if isinstance(atom, Not):
+        return (atom.arg, False)
+    else:
+        return (atom, True)
 
 # XXX this prepares forward-chaining rules for alpha-network
+
+
 def deduce_alpha_implications(implications):
     """deduce all implications
 
@@ -92,9 +112,10 @@ def deduce_alpha_implications(implications):
     # Clean up tautologies and check consistency
     for a, impl in res.iteritems():
         impl.discard(a)
-        na = name_not(a)
+        na = Not(a)
         if na in impl:
-            raise ValueError('implications are inconsistent: %s -> %s %s' % (a, na, impl))
+            raise ValueError(
+                'implications are inconsistent: %s -> %s %s' % (a, na, impl))
 
     return res
 
@@ -135,40 +156,19 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                 continue
             x_impl[bk] = (set(), [])
 
-    # we do it in 2 phases:
-    #
-    # 1st phase -- only do static extensions to alpha rules
-    # 2nd phase -- attach beta-nodes which can be possibly triggered by an
-    #              alpha-chain
-    phase=1
-    while True:
-        seen_static_extension=False
+    # static extensions to alpha rules:
+    # A: x -> a,b   B: &(a,b) -> c  ==>  A: x -> a,b,c
+    seen_static_extension = True
+    while seen_static_extension:
+        seen_static_extension = False
 
-        for bidx, (bcond,bimpl) in enumerate(beta_rules):
+        for bcond, bimpl in beta_rules:
             assert isinstance(bcond, And)
+            bargs = set(bcond.args)
             for x, (ximpls, bb) in x_impl.iteritems():
-                # A: x -> a     B: &(...) -> x      (non-informative)
-                if x == bimpl:
-                    continue
-                # A: ... -> a   B: &(...) -> a      (non-informative)
-                if bimpl in ximpls:
-                    continue
-                # A: x -> a     B: &(a,!x) -> ...   (will never trigger)
-                if Not(x) in bcond.args:
-                    continue
-                # A: x -> a...  B: &(!a,...) -> ... (will never trigger)
-                # A: x -> a...  B: &(...) -> !a     (will never trigger)
-                if any(Not(xi) in bcond.args or Not(xi) == bimpl for xi in ximpls):
-                    continue
-
-                # A: x -> a,b   B: &(a,b) -> c      (static extension)
-                #                                       |
-                # A: x -> a,b,c <-----------------------+
-                for barg in bcond.args:
-                    if not ( (barg == x) or (barg in ximpls) ):
-                        break
-                else:
-                    assert phase==1
+                x_all = ximpls | set([x])
+                # A: ... -> a   B: &(...) -> a  is non-informative
+                if bimpl not in x_all and bargs.issubset(x_all):
                     ximpls.add(bimpl)
 
                     # we introduced new implication - now we have to restore
@@ -176,24 +176,23 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                     bimpl_impl = x_impl.get(bimpl)
                     if bimpl_impl is not None:
                         ximpls |= bimpl_impl[0]
-                    seen_static_extension=True
-                    continue
+                    seen_static_extension = True
 
-                # does this beta-rule even has a chance to be triggered ?
-                if phase == 2:
-                    for barg in bcond.args:
-                        if (barg == x) or (barg in ximpls):
-                            bb.append( bidx )
-                            break
+    # attach beta-nodes which can be possibly triggered by an alpha-chain
+    for bidx, (bcond, bimpl) in enumerate(beta_rules):
+        bargs = set(bcond.args)
+        for x, (ximpls, bb) in x_impl.iteritems():
+            x_all = ximpls | set([x])
+            # A: ... -> a   B: &(...) -> a      (non-informative)
+            if bimpl in x_all:
+                continue
+            # A: x -> a...  B: &(!a,...) -> ... (will never trigger)
+            # A: x -> a...  B: &(...) -> !a     (will never trigger)
+            if any(Not(xi) in bargs or Not(xi) == bimpl for xi in x_all):
+                continue
 
-        # no static extensions was seen at this pass -- lets move to phase2
-        if phase==1 and (not seen_static_extension):
-            phase = 2
-            continue
-
-        # let's finish at the end of phase2
-        if phase==2:
-            break
+            if bargs & x_all:
+                bb.append(bidx)
 
     return x_impl
 
@@ -222,63 +221,15 @@ def rules_2prereq(rules):
        is a. That's because a=T -> b=T, and b=F -> a=F, but a=F -> b=?
     """
     prereq = defaultdict(set)
-    for a, impl in rules.iteritems():
-        for i in impl:
+    for (a, _), impl in rules.iteritems():
+        for (i, _) in impl:
             prereq[i].add(a)
     return prereq
-
-def split_rules_tt_tf_ft_ff(rules):
-    """split alpha-rules into T->T & T->F & F->T & F->F chains
-
-       and also rewrite them to be free of not-names
-
-       Examples
-       -------
-
-       'a' -> ['b', '!c']
-
-       will be split into
-
-       'a' -> ['b'] # tt: a -> b
-       'a' -> ['c'] # tf: a -> !c
-
-       and
-       '!a' -> ['b']
-
-       will become
-
-       'b' -> ['a'] # ft: !b -> a
-    """
-    tt = defaultdict(set)
-    tf = defaultdict(set)
-    ft = defaultdict(set)
-    for k, impl in rules.iteritems():
-        if k[:1] != '!':
-            for i in impl:
-                if i[:1] != '!':
-                    tt[k].add(i)
-                else:
-                    tf[k].add(i[1:])
-        else:
-            k = k[1:]
-            for i in impl:
-                if i[:1] != '!':
-                    ft[i].add(k)
-                else:
-                    tt[i[1:]].add(k)
-
-    # FF is related to TT
-    ff = defaultdict(set)
-    for k, impl in tt.iteritems():
-        for i in impl:
-            ff[i].add(k)
-
-    return tt, tf, ft, ff
-
 
 ################
 # RULES PROVER #
 ################
+
 
 class TautologyDetected(Exception):
     """(internal) Prover uses it for reporting detected tautology"""
@@ -316,17 +267,17 @@ class Prover(object):
 
     def __init__(self):
         self.proved_rules = []
-        self._rules_seen  = set()
+        self._rules_seen = set()
 
     def split_alpha_beta(self):
         """split proved rules into alpha and beta chains"""
         rules_alpha = []    # a      -> b
-        rules_beta  = []    # &(...) -> b
-        for a,b in self.proved_rules:
+        rules_beta = []     # &(...) -> b
+        for a, b in self.proved_rules:
             if isinstance(a, And):
-                rules_beta.append((a,b))
+                rules_beta.append((a, b))
             else:
-                rules_alpha.append((a,b) )
+                rules_alpha.append((a, b) )
         return rules_alpha, rules_beta
 
     @property
@@ -343,10 +294,10 @@ class Prover(object):
             return
         if isinstance(a, bool):
             return
-        if (a,b) in self._rules_seen:
+        if (a, b) in self._rules_seen:
             return
         else:
-            self._rules_seen.add((a,b))
+            self._rules_seen.add((a, b))
 
         # this is the core of processing
         try:
@@ -356,60 +307,52 @@ class Prover(object):
 
     def _process_rule(self, a, b):
         # right part first
-        if isinstance(b, Logic):
-            # a -> b & c    -->  a -> b  ;  a -> c
-            # (?) FIXME this is only correct when b & c != null !
-            if b.op == '&':
-                for barg in b.args:
-                    self.process_rule(a, barg)
 
-            # a -> b | c    -->  !b & !c -> !a
-            #               -->   a & !b -> c & !b
-            #               -->   a & !c -> b & !c
-            #
-            # NB: the last two rewrites add 1 term, so the rule *grows* in size.
-            # NB: without catching terminating conditions this could continue infinitely
-            elif b.op == '|':
-                # detect tautology first
-                if not isinstance(a, Logic):    # Atom
-                    # tautology:  a -> a|c|...
-                    if a in b.args:
-                        raise TautologyDetected(a,b, 'a -> a|c|...')
-                self.process_rule(And(*[Not(barg) for barg in b.args]), Not(a))
+        # a -> b & c    -->  a -> b  ;  a -> c
+        # (?) FIXME this is only correct when b & c != null !
+        if isinstance(b, And):
+            for barg in b.args:
+                self.process_rule(a, barg)
 
-                for bidx in range(len(b.args)):
-                    barg = b.args[bidx]
-                    brest= b.args[:bidx] + b.args[bidx+1:]
-                    self.process_rule(And(a, Not(barg)),
-                                        And(b.__class__(*brest), Not(barg)))
-            else:
-                raise ValueError('unknown b.op %r' % b.op)
+        # a -> b | c    -->  !b & !c -> !a
+        #               -->   a & !b -> c
+        #               -->   a & !c -> b
+        elif isinstance(b, Or):
+            # detect tautology first
+            if not isinstance(a, Logic):    # Atom
+                # tautology:  a -> a|c|...
+                if a in b.args:
+                    raise TautologyDetected(a, b, 'a -> a|c|...')
+            self.process_rule(And(*[Not(barg) for barg in b.args]), Not(a))
+
+            for bidx in range(len(b.args)):
+                barg = b.args[bidx]
+                brest = b.args[:bidx] + b.args[bidx + 1:]
+                self.process_rule(And(a, Not(barg)), Or(*brest))
 
         # left part
-        elif isinstance(a, Logic):
-            # a & b -> c    -->  IRREDUCIBLE CASE -- WE STORE IT AS IS
-            #                    (this will be the basis of beta-network)
-            if a.op == '&':
-                assert not isinstance(b, Logic)
-                if b in a.args:
-                    raise TautologyDetected(a,b, 'a & b -> a')
-                self.proved_rules.append((a,b))
-                # XXX NOTE at present we ignore  !c -> !a | !b
 
-            elif a.op == '|':
-                if b in a.args:
-                    raise TautologyDetected(a,b, 'a | b -> a')
-                for aarg in a.args:
-                    self.process_rule(aarg, b)
-            else:
-                raise ValueError('unknown a.op %r' % a.op)
+        # a & b -> c    -->  IRREDUCIBLE CASE -- WE STORE IT AS IS
+        #                    (this will be the basis of beta-network)
+        elif isinstance(a, And):
+            if b in a.args:
+                raise TautologyDetected(a, b, 'a & b -> a')
+            self.proved_rules.append((a, b))
+            # XXX NOTE at present we ignore  !c -> !a | !b
+
+        elif isinstance(a, Or):
+            if b in a.args:
+                raise TautologyDetected(a, b, 'a | b -> a')
+            for aarg in a.args:
+                self.process_rule(aarg, b)
+
         else:
             # both `a` and `b` are atoms
-            na, nb = name_not(a), name_not(b)
-            self.proved_rules.append((a,b))     # a  -> b
-            self.proved_rules.append((nb,na))   # !b -> !a
+            self.proved_rules.append((a, b))             # a  -> b
+            self.proved_rules.append((Not(b), Not(a)))   # !b -> !a
 
 ########################################
+
 
 class FactRules(object):
     """Rules that describe how to deduce facts in logic space
@@ -435,17 +378,8 @@ class FactRules(object):
        Internals
        ---------
 
-       {} k -> [] of implications:
-
-         .rel_tt      k=T -> k2=T
-         .rel_tf      k=T -> k2=F
-         .rel_ff      k=F -> k2=F
-         .rel_ft      k=F -> k2=T
-
-       .rel_tbeta     k=T -> [] of possibly triggering # of beta-rules
-       .rel_fbeta     k=F -> ------------------//---------------------
-
-       .rels    -- {} k -> tt, tf, ff, ft   (list of implications for k)
+       .full_implications[k, v]: all the implications of fact k=v
+       .beta_triggers[k, v]: beta rules that might be triggered when k=v
        .prereq  -- {} k <- [] of k's prerequisites
 
        .defined_facts -- set of defined fact names
@@ -476,6 +410,10 @@ class FactRules(object):
                 raise ValueError('unknown op %r' % op)
 
         # --- build deduction networks ---
+        self.beta_rules = []
+        for bcond, bimpl in P.rules_beta:
+            self.beta_rules.append(
+                (set(_as_pair(a) for a in bcond.args), _as_pair(bimpl)))
 
         # deduce alpha implications
         impl_a = deduce_alpha_implications(P.rules_alpha)
@@ -486,179 +424,89 @@ class FactRules(object):
         impl_ab = apply_beta_to_alpha_route(impl_a, P.rules_beta)
 
         # extract defined fact names
-        self.defined_facts = set()
-
-        for k in impl_ab.keys():
-            if k[:1] == '!':
-                k = k[1:]
-            self.defined_facts.add(k)
-
-        # now split each rule into four logic chains
-        # (removing betaidxs from impl_ab view) (XXX is this needed?)
-        impl_ab_ = dict( (k,impl)  for k, (impl,betaidxs) in impl_ab.iteritems())
-        rel_tt, rel_tf, rel_ft, rel_ff = split_rules_tt_tf_ft_ff(impl_ab_)
-        rel_tbeta = {}
-        rel_fbeta = {}
-        for k, (impl,betaidxs) in impl_ab.iteritems():
-            if k[:1] == '!':
-                rel_xbeta = rel_fbeta
-                k = name_not(k)
-            else:
-                rel_xbeta = rel_tbeta
-            rel_xbeta[k] = betaidxs
-
-        self.rel_tt = rel_tt
-        self.rel_tf = rel_tf
-        self.rel_tbeta  = rel_tbeta
-        self.rel_ff = rel_ff
-        self.rel_ft = rel_ft
-        self.rel_fbeta  = rel_fbeta
-
-        self.beta_rules = P.rules_beta
+        self.defined_facts = set(_base_fact(k) for k in impl_ab.keys())
 
         # build rels (forward chains)
-        K = set (rel_tt.keys())
-        K.update(rel_tf.keys())
-        K.update(rel_ff.keys())
-        K.update(rel_ft.keys())
+        full_implications = defaultdict(set)
+        beta_triggers = defaultdict(set)
+        for k, (impl, betaidxs) in impl_ab.iteritems():
+            full_implications[_as_pair(k)] = set(_as_pair(i) for i in impl)
+            beta_triggers[_as_pair(k)] = betaidxs
 
-        rels = {}
-        empty= ()
-        for k in K:
-            tt = rel_tt[k]
-            tf = rel_tf[k]
-            ft = rel_ft[k]
-            ff = rel_ff[k]
-
-            tbeta = rel_tbeta.get(k,empty)
-            fbeta = rel_fbeta.get(k,empty)
-
-            rels[k] = tt, tf, tbeta,  ft, ff, fbeta
-
-        self.rels = rels
+        self.full_implications = full_implications
+        self.beta_triggers = beta_triggers
 
         # build prereq (backward chains)
         prereq = defaultdict(set)
-        for rel in [rel_tt, rel_tf, rel_ff, rel_ft]:
-            rel_prereq = rules_2prereq(rel)
-            for k, pitems in rel_prereq.iteritems():
-                prereq[k] |= pitems
+        rel_prereq = rules_2prereq(full_implications)
+        for k, pitems in rel_prereq.iteritems():
+            prereq[k] |= pitems
         self.prereq = prereq
 
-    # --- DEDUCTION ENGINE: RUNTIME CORE ---
 
-    def deduce_all_facts(self, facts, base=None):
-        """Deduce all facts from known facts ({} or [] of (k,v))
+class InconsistentAssumptions(ValueError):
+    def __str__(self):
+        kb, fact, value = self.args
+        return "%s, %s=%s" % (kb, fact, value)
 
-           *********************************************
-           * This is the workhorse, so keep it *fast*. *
-           *********************************************
 
-           base  --  previously known facts (must be: fully deduced set)
-                     attention: base is modified *in place*  /optional/
+class FactKB(dict):
+    """
+    A simple propositional knowledge base relying on compiled inference rules.
+    """
+    def __init__(self, rules):
+        self.rules = rules
 
-           providing `base` could be needed for performance reasons -- we don't
-           want to spend most of the time just re-deducing base from base
-           (e.g. #base=50, #facts=2)
+    def _tell(self, k, v):
+        """Add fact k=v to the knowledge base.
+
+        Returns True if the KB has actually been updated, False otherwise.
+        """
+        if k in self and self[k] is not None:
+            if self[k] == v:
+                return False
+            else:
+                raise InconsistentAssumptions(self, k, v)
+        else:
+            self[k] = v
+            return True
+
+    # *********************************************
+    # * This is the workhorse, so keep it *fast*. *
+    # *********************************************
+    def deduce_all_facts(self, facts):
+        """
+        Update the KB with all the implications of a list of facts.
+
+        Facts can be specified as a dictionary or as a list of (key, value)
+        pairs.
         """
         # keep frequently used attributes locally, so we'll avoid extra
         # attribute access overhead
-        rels = self.rels
-        beta_rules = self.beta_rules
-        if base is None:
-            new_facts = {}
-        else:
-            new_facts = base
+        full_implications = self.rules.full_implications
+        beta_triggers = self.rules.beta_triggers
+        beta_rules = self.rules.beta_rules
 
-        def x_new_facts(keys, v):
-            for k in keys:
-                if k in new_facts and new_facts[k] is not None:
-                    assert new_facts[k] == v, \
-                            ('inconsistency between facts', new_facts, k, v)
-                    continue
-                else:
-                    new_facts[k] = v
+        if isinstance(facts, dict):
+            facts = facts.iteritems()
 
-        if type(facts) is dict:
-            fseq = facts.iteritems()
-        else:
-            fseq = facts
-
-        while True:
+        while facts:
             beta_maytrigger = set()
 
             # --- alpha chains ---
-            for k,v in fseq:
-                # first, convert name to be not a not-name
-                if k[:1] == '!':
-                    k = name_not(k)
-                    v = fuzzy_not(v)
-
-                #new_fact(k, v)
-                if k in new_facts:
-                    assert new_facts[k] is None or new_facts[k] == v, \
-                            ('inconsistency between facts', new_facts, k, v)
-                    # performance-wise it is important not to fire implied rules
-                    # for already-seen fact -- we already did them all.
+            for k, v in facts:
+                if not self._tell(k, v) or v is None:
                     continue
-                else:
-                    new_facts[k] = v
 
-                # some known fact -- let's follow its implications
-                if v is not None:
-                    # lookup routing tables
-                    try:
-                        tt, tf, tbeta,  ft, ff, fbeta = rels[k]
-                    except KeyError:
-                        pass
-                    else:
-                        # Now we have routing tables with *all* the needed
-                        # implications for this k. This means we do not have to
-                        # process each implications recursively!
-                        # XXX this ^^^ is true only for alpha chains
+                # lookup routing tables
+                for key, value in full_implications[k, v]:
+                    self._tell(key, value)
 
-                        # k=T
-                        if v:
-                            x_new_facts(tt, True)   # k -> i
-                            x_new_facts(tf, False)  # k -> !i
-
-                            beta_maytrigger.update(tbeta)
-
-                        # k=F
-                        else:
-                            x_new_facts(ft, True)   # !k -> i
-                            x_new_facts(ff, False)  # !k -> !i
-
-                            beta_maytrigger.update(fbeta)
-
+                beta_maytrigger.update(beta_triggers[k, v])
 
             # --- beta chains ---
-
-            # if no beta-rules may trigger -- it's an end-of-story
-            if not beta_maytrigger:
-                break
-            fseq = []
-            # let's see which beta-rules to trigger
+            facts = []
             for bidx in beta_maytrigger:
-                bcond,bimpl = beta_rules[bidx]
-                # let's see whether bcond is satisfied
-                for bk in bcond.args:
-                    try:
-                        if bk[:1] == '!':
-                            bv = fuzzy_not(new_facts[bk[1:]])
-                        else:
-                            bv = new_facts[bk]
-                    except KeyError:
-                        break   # fact not found -- bcond not satisfied
-                    # one of bcond's condition does not hold
-                    if not bv:
-                        break
-                else:
-                    # all of bcond's condition hold -- let's fire this beta rule
-                    if bimpl[:1] == '!':
-                        bimpl = bimpl[1:]
-                        v = False
-                    else:
-                        v = True
-                    fseq.append( (bimpl,v) )
-        return new_facts
+                bcond, bimpl = beta_rules[bidx]
+                if all(self.get(k) is v for k, v in bcond):
+                    facts.append(bimpl)

@@ -1,9 +1,10 @@
 """Rational number type based on Python integers. """
 
 from sympy.core.numbers import igcd
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 
 import operator
+
 
 class PythonRationalType(PicklableWithSlots):
     """
@@ -166,7 +167,7 @@ class PythonRationalType(PicklableWithSlots):
         return self.__class__(0)
 
     def __divmod__(self, other):
-        return (self//other, self%other)
+        return (self//other, self % other)
 
     def __pow__(self, exp):
         p, q = self.p, self.q

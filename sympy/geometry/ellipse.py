@@ -18,6 +18,9 @@ from point import Point
 from line import LinearEntity, Line
 from util import _symbol, idiff
 
+import random
+
+
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
 
@@ -99,8 +102,9 @@ class Ellipse(GeometryEntity):
 
     """
 
-    def __new__(cls, center=None, hradius=None, vradius=None, eccentricity=None,
-                **kwargs):
+    def __new__(
+        cls, center=None, hradius=None, vradius=None, eccentricity=None,
+            **kwargs):
         hradius = sympify(hradius)
         vradius = sympify(vradius)
 
@@ -112,7 +116,7 @@ class Ellipse(GeometryEntity):
             center = Point(center)
 
         if len(filter(None, (hradius, vradius, eccentricity))) != 2:
-            raise ValueError('Exactly two arguments of "hradius", '\
+            raise ValueError('Exactly two arguments of "hradius", '
                 '"vradius", and "eccentricity" must not be None."')
 
         if eccentricity is not None:
@@ -286,7 +290,6 @@ class Ellipse(GeometryEntity):
             return self.hradius
         return rv
 
-
     @property
     def area(self):
         """The area of the ellipse.
@@ -326,9 +329,8 @@ class Ellipse(GeometryEntity):
             return 2*pi*self.hradius
         else:
             x = C.Dummy('x', real=True)
-            return 4*self.major*\
-                   C.Integral(sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)),
-                              (x, 0, 1))
+            return 4*self.major*C.Integral(
+                sqrt((1 - (self.eccentricity*x)**2)/(1 - x**2)), (x, 0, 1))
 
     @property
     def eccentricity(self):
@@ -470,7 +472,6 @@ class Ellipse(GeometryEntity):
         if hr == vr:
             return (c, c)
 
-
         # calculate focus distance manually, since focus_distance calls this routine
         fd = sqrt(self.major**2 - self.minor**2)
         if hr == self.minor:
@@ -479,6 +480,43 @@ class Ellipse(GeometryEntity):
         elif hr == self.major:
             # foci on the x-axis
             return (c + Point(-fd, 0), c + Point(fd, 0))
+
+    def rotate(self, angle=0, pt=None):
+        """Rotate ``angle`` radians counterclockwise about Point ``pt``.
+
+        Note: since the general ellipse is not supported, the axes of
+        the ellipse will not be rotated. Only the center is rotated to
+        a new position.
+
+        Examples
+        ========
+
+        >>> from sympy import Ellipse, pi
+        >>> Ellipse((1, 0), 2, 1).rotate(pi/2)
+        Ellipse(Point(0, 1), 2, 1)
+        """
+        return super(Ellipse, self).rotate(angle, pt)
+
+    def scale(self, x=1, y=1, pt=None):
+        """Override GeometryEntity.scale since it is the major and minor
+        axes which must be scaled and they are not GeometryEntities.
+
+        Examples
+        ========
+
+        >>> from sympy import Ellipse
+        >>> Ellipse((0, 0), 2, 1).scale(2, 4)
+        Circle(Point(0, 0), 4)
+        >>> Ellipse((0, 0), 2, 1).scale(2)
+        Ellipse(Point(0, 0), 4, 1)
+        """
+        c = self.center
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
+        h = self.hradius
+        v = self.vradius
+        return self.func(c.scale(x, y), hradius=h*x, vradius=v*y)
 
     def encloses_point(self, p):
         """
@@ -610,7 +648,8 @@ class Ellipse(GeometryEntity):
 
             # handle horizontal and vertical tangent lines
             if len(tangent_points) == 1:
-                assert tangent_points[0][0] == p.x or tangent_points[0][1] == p.y
+                assert tangent_points[0][
+                    0] == p.x or tangent_points[0][1] == p.y
                 return [Line(p, p + Point(1, 0)), Line(p, p + Point(0, 1))]
 
             # others
@@ -742,7 +781,7 @@ class Ellipse(GeometryEntity):
         t = _symbol(parameter)
         return [t, -S.Pi, S.Pi]
 
-    def random_point(self):
+    def random_point(self, seed=None):
         """A random point on the ellipse.
 
         Returns
@@ -768,23 +807,58 @@ class Ellipse(GeometryEntity):
         Examples
         ========
 
-        >>> from sympy import Point, Ellipse
+        >>> from sympy import Point, Ellipse, Segment
         >>> e1 = Ellipse(Point(0, 0), 3, 2)
-        >>> p1 = e1.random_point()
-        >>> # a random point may not appear to be on the ellipse because of
-        >>> # floating point rounding error
-        >>> p1 in e1 # doctest: +SKIP
-        True
-        >>> p1 # doctest +ELLIPSIS
+        >>> e1.random_point() # gives some random point
         Point(...)
+        >>> p1 = e1.random_point(seed=0); p1.n(2)
+        Point(2.1, 1.4)
+
+        The random_point method assures that the point will test as being
+        in the ellipse:
+
+        >>> p1 in e1
+        True
+
+        Notes
+        =====
+
+        An arbitrary_point with a random value of t substituted into it may
+        not test as being on the ellipse because the expression tested that
+        a point is on the ellipse doesn't simplify to zero and doesn't evaluate
+        exactly to zero:
+
+        >>> from sympy.abc import t
+        >>> e1.arbitrary_point(t)
+        Point(3*cos(t), 2*sin(t))
+        >>> p2 = _.subs(t, 0.1)
+        >>> p2 in e1
+        False
+
+        Note that arbitrary_point routine does not take this approach. A value for
+        cos(t) and sin(t) (not t) is substituted into the arbitrary point. There is
+        a small chance that this will give a point that will not test as being
+        in the ellipse, so the process is repeated (up to 10 times) until a
+        valid point is obtained.
 
         """
-        from random import random
+        from sympy import nsimplify, sin, cos
         t = _symbol('t')
         x, y = self.arbitrary_point(t).args
-        # get a random value in [-pi, pi)
-        subs_val = float(S.Pi)*(2*random() - 1)
-        return Point(x.subs(t, subs_val), y.subs(t, subs_val))
+        # get a random value in [-1, 1) corresponding to cos(t)
+        # and confirm that it will test as being in the ellipse
+        if seed is not None:
+            rng = random.Random(seed)
+        else:
+            rng = random
+        for i in range(10):  # should be enough?
+            c = nsimplify(2*rng.random() - 1)
+            s = sqrt(1 - c**2)
+            p1 = Point(x.subs(cos(t), c), y.subs(sin(t), s))
+            if p1 in self:
+                return p1
+        raise GeometryError(
+            'Having problems generating a point in the ellipse.')
 
     def equation(self, x='x', y='y'):
         """The equation of the ellipse.
@@ -843,7 +917,7 @@ class Ellipse(GeometryEntity):
         a = ldir.dot(mdir)
         b = ldir.dot(mdiff)
         c = diff.dot(mdiff) - 1
-        det = simplify(b*b - a*c);
+        det = simplify(b*b - a*c)
 
         result = []
         if det == 0:
@@ -853,7 +927,7 @@ class Ellipse(GeometryEntity):
             is_good = True
             try:
                 is_good = (det > 0)
-            except NotImplementedError: #symbolic, allow
+            except NotImplementedError:  # symbolic, allow
                 is_good = True
 
             if is_good:
@@ -1051,7 +1125,8 @@ class Circle(Ellipse):
         if len(args) == 3:
             args = [Point(a) for a in args]
             if Point.is_collinear(*args):
-                raise GeometryError("Cannot construct a circle from three collinear points")
+                raise GeometryError(
+                    "Cannot construct a circle from three collinear points")
             from polygon import Triangle
             t = Triangle(*args)
             c = t.circumcenter
@@ -1221,5 +1296,29 @@ class Circle(Ellipse):
             return ret
 
         return Ellipse.intersection(self, o)
+
+    def scale(self, x=1, y=1, pt=None):
+        """Override GeometryEntity.scale since the radius
+        is not a GeometryEntity.
+
+        Examples
+        ========
+
+        >>> from sympy import Circle
+        >>> Circle((0, 0), 1).scale(2, 2)
+        Circle(Point(0, 0), 2)
+        >>> Circle((0, 0), 1).scale(2, 4)
+        Ellipse(Point(0, 0), 2, 4)
+        """
+        c = self.center
+        if pt:
+            pt = Point(pt)
+            return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
+        c = c.scale(x, y)
+        if x == y:
+            return self.func(c, x*self.radius)
+        h = v = self.radius
+        return Ellipse(c, hradius=h*x, vradius=v*y)
+
 
 from polygon import Polygon

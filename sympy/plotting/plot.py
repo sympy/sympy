@@ -1,451 +1,1662 @@
-from sympy import Integer
-from sympy.core.compatibility import is_sequence
+"""Plotting module for Sympy.
 
-from threading import RLock
+A plot is represented by the ``Plot`` class that contains a reference to the
+backend and a list of the data series to be plotted. The data series are
+instances of classes meant to simplify getting points and meshes from sympy
+expressions. ``plot_backends`` is a dictionary with all the backends.
 
-# it is sufficient to import "pyglet" here once
-try:
-    from pyglet.gl import *
-except ImportError:
-    raise ImportError("pyglet is required for plotting.\n "
-                      "visit http://www.pyglet.org/")
+This module gives only the essential. For all the fancy stuff use directly
+the backend. You can get the backend wrapper for every plot from the
+``_backend`` attribute. Moreover the data series classes have various useful
+methods like ``get_points``, ``get_segments``, ``get_meshes``, etc, that may
+be useful if you wish to use another plotting library.
 
-from plot_object import PlotObject
-from plot_axes import PlotAxes
-from plot_window import PlotWindow
-from plot_mode import PlotMode
-import plot_modes
+Especially if you need publication ready graphs and this module is not enough
+for you - just get the ``_backend`` attribute and add whatever you want
+directly to it. In the case of matplotlib (the common way to graph data in
+python) just copy ``_backend.fig`` which is the figure and ``_backend.ax``
+which is the axis and work on them as you would on any other matplotlib object.
 
-from time import sleep
-from os import getcwd, listdir
-from util import parse_option_string
+Simplicity of code takes much greater importance than performance. Don't use it
+if you care at all about performance. A new backend instance is initialized
+every time you call ``show()`` and the old one is left to the garbage collector.
+"""
 
-from sympy.geometry.entity import GeometryEntity
+from inspect import getargspec
+from itertools import chain
+from sympy import sympify, Expr, Tuple, Dummy
+from sympy.external import import_module
+from sympy.core.compatibility import set_union
+import warnings
+from experimental_lambdify import (vectorized_lambdify, lambdify)
+
+#TODO probably all of the imports after this line can be put inside function to
+# speed up the `from sympy import *` command.
+np = import_module('numpy')
+
+# Backend specific imports - matplotlib
+matplotlib = import_module('matplotlib',
+    __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
+    min_module_version='1.0.0', catch=(RuntimeError,))
+if matplotlib:
+    plt = matplotlib.pyplot
+    cm = matplotlib.cm
+    LineCollection = matplotlib.collections.LineCollection
+    mpl_toolkits = import_module('mpl_toolkits',
+            __import__kwargs={'fromlist': ['mplot3d']})
+    Axes3D = mpl_toolkits.mplot3d.Axes3D
+    art3d = mpl_toolkits.mplot3d.art3d
+    ListedColormap = matplotlib.colors.ListedColormap
+
+# Backend specific imports - textplot
+from sympy.plotting.textplot import textplot
+
+# Global variable
+# Set to False when running tests / doctests so that the plots don't
+# show.
+_show = True
+
+
+def unset_show():
+    global _show
+    _show = False
+
+##############################################################################
+# The public interface
+##############################################################################
+
 
 class Plot(object):
-    """
-    Plot Examples
-    =============
+    """The central class of the plotting module.
 
-    See examples/plotting.py for many more examples.
+    For interactive work the function ``plot`` is better suited.
 
+    This class permits the plotting of sympy expressions using numerous
+    backends (matplotlib, textplot, the old pyglet module for sympy, Google
+    charts api, etc).
 
-    >>> from sympy import Plot
-    >>> from sympy.abc import x, y, z
+    The figure can contain an arbitrary number of plots of sympy expressions,
+    lists of coordinates of points, etc. Plot has a private attribute _series that
+    contains all data series to be plotted (expressions for lines or surfaces,
+    lists of points, etc (all subclasses of BaseSeries)). Those data series are
+    instances of classes not imported by ``from sympy import *``.
 
-    >>> Plot(x*y**3-y*x**3)
+    The customization of the figure is on two levels. Global options that
+    concern the figure as a whole (eg title, xlabel, scale, etc) and
+    per-data series options (eg name) and aesthetics (eg. color, point shape,
+    line type, etc.).
 
-    >>> p = Plot()
-    >>> p[1] = x*y
-    >>> p[1].color = z, (0.4,0.4,0.9), (0.9,0.4,0.4)
+    The difference between options and aesthetics is that an aesthetic can be
+    a function of the coordinates (or parameters in a parametric plot). The
+    supported values for an aesthetic are:
+    - None (the backend uses default values)
+    - a constant
+    - a function of one variable (the first coordinate or parameter)
+    - a function of two variables (the first and second coordinate or
+    parameters)
+    - a function of three variables (only in nonparametric 3D plots)
+    Their implementation depends on the backend so they may not work in some
+    backends.
 
-    >>> p = Plot()
-    >>> p[1] =  x**2+y**2
-    >>> p[2] = -x**2-y**2
+    If the plot is parametric and the arity of the aesthetic function permits
+    it the aesthetic is calculated over parameters and not over coordinates.
+    If the arity does not permit calculation over parameters the calculation is
+    done over coordinates.
 
+    Only cartesian coordinates are supported for the moment, but you can use
+    the parametric plots to plot in polar, spherical and cylindrical
+    coordinates.
 
-    Variable Intervals
-    ==================
+    The arguments for the constructor Plot must be subclasses of BaseSeries.
 
-    The basic format is [var, min, max, steps], but the
-    syntax is flexible and arguments left out are taken
-    from the defaults for the current coordinate mode:
+    Any global option can be specified as a keyword argument.
 
-    >>> Plot(x**2) # implies [x,-5,5,100]
-    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40]
-    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100]
-    >>> Plot(x**2, [x,-13,13,100])
-    >>> Plot(x**2, [-13,13]) # [x,-13,13,100]
-    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,100]
-    >>> Plot(1*x, [], [x], mode='cylindrical')
-    ... # [unbound_theta,0,2*Pi,40], [x,-1,1,20]
+    The global options for a figure are:
 
+    - title : str
+    - xlabel : str
+    - ylabel : str
+    - legend : bool
+    - xscale : {'linear', 'log'}
+    - yscale : {'linear', 'log'}
+    - axis : bool
+    - axis_center : tuple of two floats or {'center', 'auto'}
+    - xlim : tuple of two floats
+    - ylim : tuple of two floats
+    - aspect_ratio : tuple of two floats or {'auto'}
+    - autoscale : bool
+    - margin : float in [0, 1]
 
-    Coordinate Modes
-    ================
+    The per data series options and aesthetics are:
+    There are none in the base series. See below for options for subclasses.
 
-    Plot supports several curvilinear coordinate modes, and
-    they independent for each plotted function. You can specify
-    a coordinate mode explicitly with the 'mode' named argument,
-    but it can be automatically determined for Cartesian or
-    parametric plots, and therefore must only be specified for
-    polar, cylindrical, and spherical modes.
+    Some data series support additional aesthetics or options:
 
-    Specifically, Plot(function arguments) and Plot[n] =
-    (function arguments) will interpret your arguments as a
-    Cartesian plot if you provide one function and a parametric
-    plot if you provide two or three functions. Similarly, the
-    arguments will be interpreted as a curve is one variable is
-    used, and a surface if two are used.
+    ListSeries, LineOver1DRangeSeries, Parametric2DLineSeries,
+    Parametric3DLineSeries support the following:
 
-    Supported mode names by number of variables:
+    Aesthetics:
 
-    1: parametric, cartesian, polar
-    2: parametric, cartesian, cylindrical = polar, spherical
+    - line_color : function which returns a float.
 
-    >>> Plot(1, mode='spherical')
+    options:
 
+    - label : str
+    - steps : bool
+    - integers_only : bool
 
-    Calculator-like Interface
-    =========================
+    SurfaceOver2DRangeSeries, ParametricSurfaceSeries support the following:
 
-    >>> p = Plot(visible=False)
-    >>> f = x**2
-    >>> p[1] = f
-    >>> p[2] = f.diff(x)
-    >>> p[3] = f.diff(x).diff(x)
-    >>> p
-    [1]: x**2, 'mode=cartesian'
-    [2]: 2*x, 'mode=cartesian'
-    [3]: 2, 'mode=cartesian'
-    >>> p.show()
-    >>> p.clear()
-    >>> p
-    <blank plot>
-    >>> p[1] =  x**2+y**2
-    >>> p[1].style = 'solid'
-    >>> p[2] = -x**2-y**2
-    >>> p[2].style = 'wireframe'
-    >>> p[1].color = z, (0.4,0.4,0.9), (0.9,0.4,0.4)
-    >>> p[1].style = 'both'
-    >>> p[2].style = 'both'
-    >>> p.close()
+    aesthetics:
 
-
-    Plot Window Keyboard Controls
-    =============================
-
-    Screen Rotation:
-        X,Y axis      Arrow Keys, A,S,D,W, Numpad 4,6,8,2
-        Z axis        Q,E, Numpad 7,9
-
-    Model Rotation:
-        Z axis        Z,C, Numpad 1,3
-
-    Zoom:             R,F, PgUp,PgDn, Numpad +,-
-
-    Reset Camera:     X, Numpad 5
-
-    Camera Presets:
-        XY            F1
-        XZ            F2
-        YZ            F3
-        Perspective   F4
-
-    Sensitivity Modifier: SHIFT
-
-    Axes Toggle:
-        Visible       F5
-        Colors        F6
-
-    Close Window:     ESCAPE
-
-    =============================
-
+    - surface_color : function which returns a float.
     """
 
-    def __init__(self, *fargs, **win_args):
-        """
-        Positional Arguments
-        ====================
+    def __init__(self, *args, **kwargs):
+        super(Plot, self).__init__()
 
-        Any given positional arguments are used to
-        initialize a plot function at index 1. In
-        other words...
+        #  Options for the graph as a whole.
+        #  The possible values for each option are described in the docstring of
+        # Plot. They are based purely on convention, no checking is done.
+        self.title = None
+        self.xlabel = None
+        self.ylabel = None
+        self.aspect_ratio = 'auto'
+        self.xlim = None
+        self.ylim = None
+        self.axis_center = 'auto'
+        self.axis = True
+        self.xscale = 'linear'
+        self.yscale = 'linear'
+        self.legend = False
+        self.autoscale = True
+        self.margin = 0
 
-        >>> from sympy.core import Symbol
-        >>> from sympy.abc import x
-        >>> p = Plot(x**2, visible=False)
+        # Contains the data objects to be plotted. The backend should be smart
+        # enough to iterate over this list.
+        self._series = []
+        self._series.extend(args)
 
-        ...is equivalent to...
+        # The backend type. On every show() a new backend instance is created
+        # in self._backend which is tightly coupled to the Plot instance
+        # (thanks to the parent attribute of the backend).
+        self.backend = DefaultBackend
 
-        >>> p = Plot(visible=False)
-        >>> p[1] = x**2
-
-        Note that in earlier versions of the plotting
-        module, you were able to specify multiple
-        functions in the initializer. This functionality
-        has been dropped in favor of better automatic
-        plot plot_mode detection.
-
-
-        Named Arguments
-        ===============
-
-        axes
-            An option string of the form
-            "key1=value1; key2 = value2" which
-            can use the following options:
-
-            style = ordinate
-                none OR frame OR box OR ordinate
-
-            stride = 0.25
-                val OR (val_x, val_y, val_z)
-
-            overlay = True (draw on top of plot)
-                True OR False
-
-            colored = False (False uses Black,
-                             True uses colors
-                             R,G,B = X,Y,Z)
-                True OR False
-
-            label_axes = False (display axis names
-                                at endpoints)
-                True OR False
-
-        visible = True (show immediately
-            True OR False
-
-
-        The following named arguments are passed as
-        arguments to window initialization:
-
-        antialiasing = True
-            True OR False
-
-        ortho = False
-            True OR False
-
-        invert_mouse_zoom = False
-            True OR False
-
-        """
-        self._win_args = win_args
-        self._window = None
-
-        self._render_lock = RLock()
-
-        self._functions = {}
-        self._pobjects = []
-        self._screenshot = ScreenShot(self)
-
-        axe_options = parse_option_string(win_args.pop('axes', ''))
-        self.axes = PlotAxes(**axe_options)
-        self._pobjects.append(self.axes)
-
-        self[0] = fargs
-        if win_args.get('visible', True):
-            self.show()
-
-    ## Window Interfaces
+        # The keyword arguments should only contain options for the plot.
+        for key, val in kwargs.iteritems():
+            if hasattr(self, key):
+                setattr(self, key, val)
 
     def show(self):
-        """
-        Creates and displays a plot window, or activates it
-        (gives it focus) if it has already been created.
-        """
-        if self._window and not self._window.has_exit:
-            self._window.activate()
-        else:
-            self._win_args['visible'] = True
-            self.axes.reset_resources()
-            self._window = PlotWindow(self, **self._win_args)
+        # TODO move this to the backend (also for save)
+        if hasattr(self, '_backend'):
+            self._backend.close()
+        self._backend = self.backend(self)
+        self._backend.show()
 
-    def close(self):
-        """
-        Closes the plot window.
-        """
-        if self._window:
-            self._window.close()
-
-    def saveimage(self, outfile=None, format='', size=(600, 500)):
-        """
-        Saves a screen capture of the plot window to an
-        image file.
-
-        If outfile is given, it can either be a path
-        or a file object. Otherwise a png image will
-        be saved to the current working directory.
-        If the format is omitted, it is determined from
-        the filename extension.
-        """
-        self._screenshot.save(outfile, format, size)
-
-    ## Function List Interfaces
-
-    def clear(self):
-        """
-        Clears the function list of this plot.
-        """
-        self._render_lock.acquire()
-        self._functions = {}
-        self.adjust_all_bounds()
-        self._render_lock.release()
-
-    def __getitem__(self, i):
-        """
-        Returns the function at position i in the
-        function list.
-        """
-        return self._functions[i]
-
-    def __setitem__(self, i, args):
-        """
-        Parses and adds a PlotMode to the function
-        list.
-        """
-        if not (isinstance(i, (int, Integer)) and i >= 0):
-            raise ValueError("Function index must "
-                             "be an integer >= 0.")
-
-        if isinstance(args, PlotObject):
-            f = args
-        else:
-            if (not is_sequence(args)) or isinstance(args, GeometryEntity):
-                args = [args]
-            if len(args) == 0:
-                return # no arguments given
-            kwargs = dict(bounds_callback=self.adjust_all_bounds)
-            f = PlotMode(*args, **kwargs)
-
-        if f:
-            self._render_lock.acquire()
-            self._functions[i] = f
-            self._render_lock.release()
-        else:
-            raise ValueError("Failed to parse '%s'."
-                    % ', '.join(str(a) for a in args))
-
-    def __delitem__(self, i):
-        """
-        Removes the function in the function list at
-        position i.
-        """
-        self._render_lock.acquire()
-        del self._functions[i]
-        self.adjust_all_bounds()
-        self._render_lock.release()
-
-    def firstavailableindex(self):
-        """
-        Returns the first unused index in the function list.
-        """
-        i = 0
-        self._render_lock.acquire()
-        while i in self._functions:
-            i += 1
-        self._render_lock.release()
-        return i
-
-    def append(self, *args):
-        """
-        Parses and adds a PlotMode to the function
-        list at the first available index.
-        """
-        self.__setitem__(self.firstavailableindex(), args)
-
-    def __len__(self):
-        """
-        Returns the number of functions in the function list.
-        """
-        return len(self._functions)
-
-    def __iter__(self):
-        """
-        Allows iteration of the function list.
-        """
-        return self._functions.itervalues()
-
-    def __repr__(self):
-        return str(self)
+    def save(self, path):
+        if hasattr(self, '_backend'):
+            self._backend.close()
+        self._backend = self.backend(self)
+        self._backend.save(path)
 
     def __str__(self):
-        """
-        Returns a string containing a new-line separated
-        list of the functions in the function list.
-        """
-        s = ""
-        if len(self._functions) == 0:
-            s += "<blank plot>"
+        series_strs = [('[%d]: ' % i) + str(s)
+                       for i, s in enumerate(self._series)]
+        return 'Plot object containing:\n' + '\n'.join(series_strs)
+
+    def __getitem__(self, index):
+        return self._series[index]
+
+    def __setitem__(self, index, *args):
+        if len(args) == 1 and isinstance(args[0], BaseSeries):
+            self._series[index] = args
+
+    def __delitem__(self, index):
+        del self._series[index]
+
+    def append(self, *args):
+        """Adds one more graph to the figure."""
+        if len(args) == 1 and isinstance(args[0], BaseSeries):
+            self._series.append(*args)
         else:
-            self._render_lock.acquire()
-            s += "\n".join(["%s[%i]: %s" % ("", i, str(self._functions[i]))
-                              for i in self._functions])
-            self._render_lock.release()
-        return s
+            self._series.append(Series(*args))
 
-    def adjust_all_bounds(self):
-        self._render_lock.acquire()
-        self.axes.reset_bounding_box()
-        for f in self._functions:
-            self.axes.adjust_bounds(self._functions[f].bounds)
-        self._render_lock.release()
-
-    def wait_for_calculations(self):
-        sleep(0)
-        self._render_lock.acquire()
-        for f in self._functions:
-            a = self._functions[f]._get_calculating_verts
-            b = self._functions[f]._get_calculating_cverts
-            while a() or b():
-                sleep(0)
-        self._render_lock.release()
+    def extend(self, arg):
+        """Adds the series from another plot or a list of series."""
+        if isinstance(arg, Plot):
+            self._series.extend(arg._series)
+        else:
+            self._series.extend(arg)
 
 
-class ScreenShot:
-    def __init__(self, plot):
-        self._plot = plot
-        self.screenshot_requested = False
-        self.outfile = None
-        self.format = ''
-        self.invisibleMode = False
-        self.flag = 0
+##############################################################################
+# Data Series
+##############################################################################
+#TODO more general way to calculate aesthetics (see get_color_array)
 
-    def __nonzero__(self):
-        if self.screenshot_requested:
-            return 1
-        return 0
+### The base class for all series
+class BaseSeries(object):
+    """Base class for the data objects containing stuff to be plotted.
 
-    def _execute_saving(self):
-        if self.flag <3:
-            self.flag += 1
-            return
+    The backend should check if it supports the data series that it's given.
+    (eg TextBackend supports only LineOver1DRange).
+    It's the backend responsibility to know how to use the class of
+    data series that it's given.
 
-        size_x, size_y = self._plot._window.get_size()
-        size = size_x*size_y*4*sizeof(c_ubyte)
-        image = create_string_buffer(size)
-        glReadPixels(0, 0, size_x, size_y, GL_RGBA, GL_UNSIGNED_BYTE, image)
-        from PIL import Image
-        im = Image.frombuffer('RGBA', (size_x, size_y),
-                              image.raw, 'raw', 'RGBA', 0, 1)
-        im.transpose(Image.FLIP_TOP_BOTTOM).save(self.outfile, self.format)
+    Some data series classes are grouped (using a class attribute like is_2Dline)
+    according to the api they present (based only on convention). The backend is
+    not obliged to use that api (eg. The LineOver1DRange belongs to the
+    is_2Dline group and presents the get_points method, but the
+    TextBackend does not use the get_points method).
+    """
 
-        self.flag = 0
-        self.screenshot_requested = False
-        if self.invisibleMode:
-            self._plot._window.close()
+    # Some flags follow. The rationale for using flags instead of checking base
+    # classes is that setting multiple flags is simpler than multiple
+    # inheritance.
+
+    is_2Dline = False
+    # Some of the backends expect:
+    #  - get_points returning 1D np.arrays list_x, list_y
+    #  - get_segments returning np.array (done in Line2DBaseSeries)
+    #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
+    # with the colors calculated at the points from get_points
+
+    is_3Dline = False
+    # Some of the backends expect:
+    #  - get_points returning 1D np.arrays list_x, list_y, list_y
+    #  - get_segments returning np.array (done in Line2DBaseSeries)
+    #  - get_color_array returning 1D np.array (done in Line2DBaseSeries)
+    # with the colors calculated at the points from get_points
+
+    is_3Dsurface = False
+    # Some of the backends expect:
+    #   - get_meshes returning mesh_x, mesh_y, mesh_z (2D np.arrays)
+    #   - get_points an alias for get_meshes
+
+    is_contour = False
+    # Some of the backends expect:
+    #   - get_meshes returning mesh_x, mesh_y, mesh_z (2D np.arrays)
+    #   - get_points an alias for get_meshes
+
+    is_implicit = False
+    # Some of the backends expect:
+    #   - get_meshes returning mesh_x (1D array), mesh_y(1D array,
+    #     mesh_z (2D np.arrays)
+    #   - get_points an alias for get_meshes
+    #Different from is_contour as the colormap in backend will be
+    #different
+
+    is_parametric = False
+    # The calculation of aesthetics expects:
+    #   - get_parameter_points returning one or two np.arrays (1D or 2D)
+    # used for calculation aesthetics
+
+    def __init__(self):
+        super(BaseSeries, self).__init__()
+
+    @property
+    def is_3D(self):
+        flags3D = [
+            self.is_3Dline,
+            self.is_3Dsurface
+        ]
+        return any(flags3D)
+
+    @property
+    def is_line(self):
+        flagslines = [
+            self.is_2Dline,
+            self.is_3Dline
+        ]
+        return any(flagslines)
 
 
-    def save(self, outfile=None, format='', size=(600, 500)):
-        self.outfile = outfile
-        self.format = format
-        self.size = size
-        self.screenshot_requested = True
+### 2D lines
+class Line2DBaseSeries(BaseSeries):
+    """A base class for 2D lines.
 
-        if not self._plot._window or self._plot._window.has_exit:
-            self._plot._win_args['visible'] = False
+    - adding the label, steps and only_integers options
+    - making is_2Dline true
+    - defining get_segments and get_color_array
+    """
 
-            self._plot._win_args['width'] = size[0]
-            self._plot._win_args['height'] = size[1]
+    is_2Dline = True
 
-            self._plot.axes.reset_resources()
-            self._plot._window = PlotWindow(self._plot, **self._plot._win_args)
-            self.invisibleMode = True
+    _dim = 2
 
-        if self.outfile is None:
-            self.outfile = self._create_unique_path()
-            print self.outfile
+    def __init__(self):
+        super(Line2DBaseSeries, self).__init__()
+        self.label = None
+        self.steps = False
+        self.only_integers = False
+        self.line_color = None
 
-    def _create_unique_path(self):
-        cwd = getcwd()
-        l = listdir(cwd)
-        path = ''
-        i = 0
-        while True:
-            if not 'plot_%s.png' % i in l:
-                path = cwd + '/plot_%s.png' % i
+    def get_segments(self):
+        points = self.get_points()
+        if self.steps is True:
+            x = np.array((points[0], points[0])).T.flatten()[1:]
+            y = np.array((points[1], points[1])).T.flatten()[:-1]
+            points = (x, y)
+        points = np.ma.array(points).T.reshape(-1, 1, self._dim)
+        return np.ma.concatenate([points[:-1], points[1:]], axis=1)
+
+    def get_color_array(self):
+        c = self.line_color
+        if hasattr(c, '__call__'):
+            f = np.vectorize(c)
+            arity = len(getargspec(c)[0])
+            if arity == 1 and self.is_parametric:
+                x = self.get_parameter_points()
+                return f(centers_of_segments(x))
+            else:
+                variables = map(centers_of_segments, self.get_points())
+                if arity == 1:
+                    return f(variables[0])
+                elif arity == 2:
+                    return f(*variables[:2])
+                else:  # only if the line is 3D (otherwise raises an error)
+                    return f(*variables)
+        else:
+            return c*np.ones(self.nb_of_points)
+
+
+class List2DSeries(Line2DBaseSeries):
+    """Representation for a line consisting of list of points."""
+
+    def __init__(self, list_x, list_y):
+        super(List2DSeries, self).__init__()
+        self.list_x = np.array(list_x)
+        self.list_y = np.array(list_y)
+        self.label = 'list'
+
+    def __str__(self):
+        return 'list plot'
+
+    def get_points(self):
+        return (self.list_x, self.list_y)
+
+
+class LineOver1DRangeSeries(Line2DBaseSeries):
+    """Representation for a line consisting of a sympy expression over a range."""
+
+    def __init__(self, expr, var_start_end, **kwargs):
+        super(LineOver1DRangeSeries, self).__init__()
+        self.expr = sympify(expr)
+        self.label = str(self.expr)
+        self.var = sympify(var_start_end[0])
+        self.start = float(var_start_end[1])
+        self.end = float(var_start_end[2])
+        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.adaptive = kwargs.get('adaptive', True)
+        self.depth = kwargs.get('depth', 12)
+        self.line_color = kwargs.get('line_color', None)
+
+    def __str__(self):
+        return 'cartesian line: %s for %s over %s' % (
+            str(self.expr), str(self.var), str((self.start, self.end)))
+
+    def get_segments(self):
+        """
+        Adaptively gets segments for plotting.
+
+        The adaptive sampling is done by recursively checking if three
+        points are almost collinear. If they are not collinear, then more
+        points are added between those points.
+
+        References
+        ==========
+        [1] Adaptive polygonal approximation of parametric curves,
+            Luiz Henrique de Figueiredo.
+
+        """
+        if self.only_integers or not self.adaptive:
+            return super(LineOver1DRangeSeries, self).get_segments()
+        else:
+            f = lambdify([self.var], self.expr)
+            list_segments = []
+
+            def sample(p, q, depth):
+                """ Samples recursively if three points are almost collinear.
+                For depth < 6, points are added irrespective of whether they
+                satisfy the collinearity condition or not. The maximum depth
+                allowed is 12.
+                """
+                #Randomly sample to avoid aliasing.
+                random = 0.45 + np.random.rand() * 0.1
+                xnew = p[0] + random * (q[0] - p[0])
+                ynew = f(xnew)
+                new_point = np.array([xnew, ynew])
+
+                #Maximum depth
+                if depth > self.depth:
+                    list_segments.append([p, q])
+
+                #Sample irrespective of whether the line is flat till the
+                #depth of 6. We are not using linspace to avoid aliasing.
+                elif depth < 6:
+                    sample(p, new_point, depth + 1)
+                    sample(new_point, q, depth + 1)
+
+                #Sample ten points if complex values are encountered
+                #at both ends. If there is a real value in between, then
+                #sample those points further.
+                elif p[1] is None and q[1] is None:
+                    xarray = np.linspace(p[0], q[0], 10)
+                    yarray = map(f, xarray)
+                    if any(y is not None for y in yarray):
+                        for i in len(yarray) - 1:
+                            if yarray[i] is None or yarray[i + 1] is None:
+                                sample([xarray[i], yarray[i]],
+                                    [xarray[i + 1], yarray[i + 1]], depth + 1)
+
+                #Sample further if one of the end points in None( i.e. a complex
+                #value) or the three points are not almost collinear.
+                elif p[1] is None or q[1] is None or not flat(p, new_point, q):
+                    sample(p, new_point, depth + 1)
+                    sample(new_point, q, depth + 1)
+                else:
+                    list_segments.append([p, q])
+
+            f_start = f(self.start)
+            f_end = f(self.end)
+            sample([self.start, f_start], [self.end, f_end], 0)
+            return list_segments
+
+    def get_points(self):
+        if self.only_integers is True:
+            list_x = np.linspace(int(self.start), int(self.end),
+                    num=int(self.end) - int(self.start) + 1)
+        else:
+            list_x = np.linspace(self.start, self.end, num=self.nb_of_points)
+        f = vectorized_lambdify([self.var], self.expr)
+        list_y = f(list_x)
+        return (list_x, list_y)
+
+
+class Parametric2DLineSeries(Line2DBaseSeries):
+    """Representation for a line consisting of two parametric sympy expressions
+    over a range."""
+
+    is_parametric = True
+
+    def __init__(self, expr_x, expr_y, var_start_end, **kwargs):
+        super(Parametric2DLineSeries, self).__init__()
+        self.expr_x = sympify(expr_x)
+        self.expr_y = sympify(expr_y)
+        self.label = "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+        self.var = sympify(var_start_end[0])
+        self.start = float(var_start_end[1])
+        self.end = float(var_start_end[2])
+        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.adaptive = kwargs.get('adaptive', True)
+        self.depth = kwargs.get('depth', 12)
+        self.line_color = kwargs.get('line_color', None)
+
+    def __str__(self):
+        return 'parametric cartesian line: (%s, %s) for %s over %s' % (
+            str(self.expr_x), str(self.expr_y), str(self.var),
+            str((self.start, self.end)))
+
+    def get_parameter_points(self):
+        return np.linspace(self.start, self.end, num=self.nb_of_points)
+
+    def get_points(self):
+        param = self.get_parameter_points()
+        fx = vectorized_lambdify([self.var], self.expr_x)
+        fy = vectorized_lambdify([self.var], self.expr_y)
+        list_x = fx(param)
+        list_y = fy(param)
+        return (list_x, list_y)
+
+    def get_segments(self):
+        """
+        Adaptively gets segments for plotting.
+
+        The adaptive sampling is done by recursively checking if three
+        points are almost collinear. If they are not collinear, then more
+        points are added between those points.
+
+        References
+        ==========
+        [1] Adaptive polygonal approximation of parametric curves,
+            Luiz Henrique de Figueiredo.
+
+        """
+        if not self.adaptive:
+            return super(Parametric2DLineSeries, self).get_segments()
+
+        f_x = lambdify([self.var], self.expr_x)
+        f_y = lambdify([self.var], self.expr_y)
+        list_segments = []
+
+        def sample(param_p, param_q, p, q, depth):
+            """ Samples recursively if three points are almost collinear.
+            For depth < 6, points are added irrespective of whether they
+            satisfy the collinearity condition or not. The maximum depth
+            allowed is 12.
+            """
+            #Randomly sample to avoid aliasing.
+            random = 0.45 + np.random.rand() * 0.1
+            param_new = param_p + random * (param_q - param_p)
+            xnew = f_x(param_new)
+            ynew = f_y(param_new)
+            new_point = np.array([xnew, ynew])
+
+            #Maximum depth
+            if depth > self.depth:
+                list_segments.append([p, q])
+
+            #Sample irrespective of whether the line is flat till the
+            #depth of 6. We are not using linspace to avoid aliasing.
+            elif depth < 6:
+                sample(param_p, param_new, p, new_point, depth + 1)
+                sample(param_new, param_q, new_point, q, depth + 1)
+
+            #Sample ten points if complex values are encountered
+            #at both ends. If there is a real value in between, then
+            #sample those points further.
+            elif ((p[0] is None and q[1] is None) or
+                    (p[1] is None and q[1] is None)):
+                param_array = np.linspace(param_p, param_q, 10)
+                x_array = map(f_x, param_array)
+                y_array = map(f_y, param_array)
+                if any(x is not None and y is not None
+                        for x, y in zip(x_array, y_array)):
+                    for i in len(y_array) - 1:
+                        if ((x_array[i] is not None and y_array[i] is not None) or
+                                (x_array[i + 1] is not None and y_array[i] is not None)):
+                            point_a = [x_array[i], y_array[i]]
+                            point_b = [x_array[i + 1], y_array[i + 1]]
+                            sample(param_array[i], param_array[i], point_a,
+                                   point_b, depth + 1)
+
+            #Sample further if one of the end points in None( ie a complex
+            #value) or the three points are not almost collinear.
+            elif (p[0] is None or p[1] is None
+                    or q[1] is None or q[0] is None
+                    or not flat(p, new_point, q)):
+                sample(param_p, param_new, p, new_point, depth + 1)
+                sample(param_new, param_q, new_point, q, depth + 1)
+            else:
+                list_segments.append([p, q])
+
+        f_start_x = f_x(self.start)
+        f_start_y = f_y(self.start)
+        start = [f_start_x, f_start_y]
+        f_end_x = f_x(self.end)
+        f_end_y = f_y(self.end)
+        end = [f_end_x, f_end_y]
+        sample(self.start, self.end, start, end, 0)
+        return list_segments
+
+
+### 3D lines
+class Line3DBaseSeries(Line2DBaseSeries):
+    """A base class for 3D lines.
+
+    Most of the stuff is derived from Line2DBaseSeries."""
+
+    is_2Dline = False
+    is_3Dline = True
+    _dim = 3
+
+    def __init__(self):
+        super(Line3DBaseSeries, self).__init__()
+
+
+class Parametric3DLineSeries(Line3DBaseSeries):
+    """Representation for a 3D line consisting of two parametric sympy
+    expressions and a range."""
+
+    def __init__(self, expr_x, expr_y, expr_z, var_start_end, **kwargs):
+        super(Parametric3DLineSeries, self).__init__()
+        self.expr_x = sympify(expr_x)
+        self.expr_y = sympify(expr_y)
+        self.expr_z = sympify(expr_z)
+        self.label = "(%s, %s)" % (str(self.expr_x), str(self.expr_y))
+        self.var = sympify(var_start_end[0])
+        self.start = float(var_start_end[1])
+        self.end = float(var_start_end[2])
+        self.nb_of_points = kwargs.get('nb_of_points', 300)
+        self.line_color = kwargs.get('line_color', None)
+
+    def __str__(self):
+        return '3D parametric cartesian line: (%s, %s, %s) for %s over %s' % (
+            str(self.expr_x), str(self.expr_y), str(self.expr_z),
+            str(self.var), str((self.start, self.end)))
+
+    def get_parameter_points(self):
+        return np.linspace(self.start, self.end, num=self.nb_of_points)
+
+    def get_points(self):
+        param = self.get_parameter_points()
+        fx = vectorized_lambdify([self.var], self.expr_x)
+        fy = vectorized_lambdify([self.var], self.expr_y)
+        fz = vectorized_lambdify([self.var], self.expr_z)
+        list_x = fx(param)
+        list_y = fy(param)
+        list_z = fz(param)
+        return (list_x, list_y, list_z)
+
+
+### Surfaces
+class SurfaceBaseSeries(BaseSeries):
+    """A base class for 3D surfaces."""
+
+    is_3Dsurface = True
+
+    def __init__(self):
+        super(SurfaceBaseSeries, self).__init__()
+        self.surface_color = None
+
+    def get_color_array(self):
+        c = self.surface_color
+        if callable(c):
+            f = np.vectorize(c)
+            arity = len(getargspec(c)[0])
+            if self.is_parametric:
+                variables = map(centers_of_faces, self.get_parameter_meshes())
+                if arity == 1:
+                    return f(variables[0])
+                elif arity == 2:
+                    return f(*variables)
+            variables = map(centers_of_faces, self.get_meshes())
+            if arity == 1:
+                return f(variables[0])
+            elif arity == 2:
+                return f(*variables[:2])
+            else:
+                return f(*variables)
+        else:
+            return c*np.ones(self.nb_of_points)
+
+
+class SurfaceOver2DRangeSeries(SurfaceBaseSeries):
+    """Representation for a 3D surface consisting of a sympy expression and 2D
+    range."""
+    def __init__(self, expr, var_start_end_x, var_start_end_y, **kwargs):
+        super(SurfaceOver2DRangeSeries, self).__init__()
+        self.expr = sympify(expr)
+        self.var_x = sympify(var_start_end_x[0])
+        self.start_x = float(var_start_end_x[1])
+        self.end_x = float(var_start_end_x[2])
+        self.var_y = sympify(var_start_end_y[0])
+        self.start_y = float(var_start_end_y[1])
+        self.end_y = float(var_start_end_y[2])
+        self.nb_of_points_x = kwargs.get('nb_of_points_x', 50)
+        self.nb_of_points_y = kwargs.get('nb_of_points_y', 50)
+        self.surface_color = kwargs.get('surface_color', None)
+
+    def __str__(self):
+        return ('cartesian surface: %s for'
+                ' %s over %s and %s over %s') % (
+                    str(self.expr),
+                    str(self.var_x),
+                    str((self.start_x, self.end_x)),
+                    str(self.var_y),
+                    str((self.start_y, self.end_y)))
+
+    def get_meshes(self):
+        mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
+                                                 num=self.nb_of_points_x),
+                                     np.linspace(self.start_y, self.end_y,
+                                                 num=self.nb_of_points_y))
+        f = vectorized_lambdify((self.var_x, self.var_y), self.expr)
+        return (mesh_x, mesh_y, f(mesh_x, mesh_y))
+
+
+class ParametricSurfaceSeries(SurfaceBaseSeries):
+    """Representation for a 3D surface consisting of three parametric sympy
+    expressions and a range."""
+
+    is_parametric = True
+
+    def __init__(
+        self, expr_x, expr_y, expr_z, var_start_end_u, var_start_end_v,
+            **kwargs):
+        super(ParametricSurfaceSeries, self).__init__()
+        self.expr_x = sympify(expr_x)
+        self.expr_y = sympify(expr_y)
+        self.expr_z = sympify(expr_z)
+        self.var_u = sympify(var_start_end_u[0])
+        self.start_u = float(var_start_end_u[1])
+        self.end_u = float(var_start_end_u[2])
+        self.var_v = sympify(var_start_end_v[0])
+        self.start_v = float(var_start_end_v[1])
+        self.end_v = float(var_start_end_v[2])
+        self.nb_of_points_u = kwargs.get('nb_of_points_u', 50)
+        self.nb_of_points_v = kwargs.get('nb_of_points_v', 50)
+        self.surface_color = kwargs.get('surface_color', None)
+
+    def __str__(self):
+        return ('parametric cartesian surface: (%s, %s, %s) for'
+                ' %s over %s and %s over %s') % (
+                    str(self.expr_x),
+                    str(self.expr_y),
+                    str(self.expr_z),
+                    str(self.var_u),
+                    str((self.start_u, self.end_u)),
+                    str(self.var_v),
+                    str((self.start_v, self.end_v)))
+
+    def get_parameter_meshes(self):
+        return np.meshgrid(np.linspace(self.start_u, self.end_u,
+                                       num=self.nb_of_points_u),
+                           np.linspace(self.start_v, self.end_v,
+                                       num=self.nb_of_points_v))
+
+    def get_meshes(self):
+        mesh_u, mesh_v = self.get_parameter_meshes()
+        fx = vectorized_lambdify((self.var_u, self.var_v), self.expr_x)
+        fy = vectorized_lambdify((self.var_u, self.var_v), self.expr_y)
+        fz = vectorized_lambdify((self.var_u, self.var_v), self.expr_z)
+        return (fx(mesh_u, mesh_v), fy(mesh_u, mesh_v), fz(mesh_u, mesh_v))
+
+
+### Contours
+class ContourSeries(BaseSeries):
+    """Representation for a contour plot."""
+    #The code is mostly repetition of SurfaceOver2DRange.
+    #XXX: Presently not used in any of those functions.
+    #XXX: Add contour plot and use this seties.
+
+    is_contour = True
+
+    def __init__(self, expr, var_start_end_x, var_start_end_y):
+        super(ContourSeries, self).__init__()
+        self.nb_of_points_x = 50
+        self.nb_of_points_y = 50
+        self.expr = sympify(expr)
+        self.var_x = sympify(var_start_end_x[0])
+        self.start_x = float(var_start_end_x[1])
+        self.end_x = float(var_start_end_x[2])
+        self.var_y = sympify(var_start_end_y[0])
+        self.start_y = float(var_start_end_y[1])
+        self.end_y = float(var_start_end_y[2])
+
+        self.get_points = self.get_meshes
+
+    def __str__(self):
+        return ('contour: %s for '
+                '%s over %s and %s over %s') % (
+                    str(self.expr),
+                    str(self.var_x),
+                    str((self.start_x, self.end_x)),
+                    str(self.var_y),
+                    str((self.start_y, self.end_y)))
+
+    def get_meshes(self):
+        mesh_x, mesh_y = np.meshgrid(np.linspace(self.start_x, self.end_x,
+                                                 num=self.nb_of_points_x),
+                                     np.linspace(self.start_y, self.end_y,
+                                                 num=self.nb_of_points_y))
+        f = vectorized_lambdify((self.var_x, self.var_y), self.expr)
+        return (mesh_x, mesh_y, f(mesh_x, mesh_y))
+
+
+##############################################################################
+# Backends
+##############################################################################
+
+class BaseBackend(object):
+    def __init__(self, parent):
+        super(BaseBackend, self).__init__()
+        self.parent = parent
+
+
+class MatplotlibBackend(BaseBackend):
+    def __init__(self, parent):
+        super(MatplotlibBackend, self).__init__(parent)
+        are_3D = [s.is_3D for s in self.parent._series]
+        if any(are_3D) and not all(are_3D):
+            raise ValueError('The matplotlib backend can not mix 2D and 3D.')
+        elif not any(are_3D):
+            self.fig = plt.figure()
+            self.ax = self.fig.add_subplot(111)
+            self.ax.spines['left'].set_position('zero')
+            self.ax.spines['right'].set_color('none')
+            self.ax.spines['bottom'].set_position('zero')
+            self.ax.spines['top'].set_color('none')
+            self.ax.spines['left'].set_smart_bounds(True)
+            self.ax.spines['bottom'].set_smart_bounds(True)
+            self.ax.xaxis.set_ticks_position('bottom')
+            self.ax.yaxis.set_ticks_position('left')
+        elif all(are_3D):
+            self.fig = plt.figure()
+            self.ax = self.fig.add_subplot(111, projection='3d')
+
+    def process_series(self):
+        parent = self.parent
+
+        for s in self.parent._series:
+            # Create the collections
+            if s.is_2Dline:
+                collection = LineCollection(s.get_segments())
+                self.ax.add_collection(collection)
+            elif s.is_contour:
+                self.ax.contour(*s.get_meshes())
+            elif s.is_3Dline:
+                # TODO too complicated, I blame matplotlib
+                collection = art3d.Line3DCollection(s.get_segments())
+                self.ax.add_collection(collection)
+                x, y, z = s.get_points()
+                self.ax.set_xlim((min(x), max(x)))
+                self.ax.set_ylim((min(y), max(y)))
+                self.ax.set_zlim((min(z), max(z)))
+            elif s.is_3Dsurface:
+                x, y, z = s.get_meshes()
+                collection = self.ax.plot_surface(x, y, z, cmap=cm.jet,
+                                                  rstride=1, cstride=1,
+                                                  linewidth=0.1)
+            elif s.is_implicit:
+                #Smart bounds have to be set to False for implicit plots.
+                self.ax.spines['left'].set_smart_bounds(False)
+                self.ax.spines['bottom'].set_smart_bounds(False)
+                points = s.get_raster()
+                if len(points) == 2:
+                    #interval math plotting
+                    x, y = _matplotlib_list(points[0])
+                    self.ax.fill(x, y, facecolor='b', edgecolor='None' )
+                else:
+                    # use contourf or contour depending on whether it is
+                    # an inequality or equality.
+                    #XXX: ``contour`` plots multiple lines. Should be fixed.
+                    colormap = ListedColormap(["white", "blue"])
+                    xarray, yarray, zarray, plot_type = points
+                    if plot_type == 'contour':
+                        self.ax.contour(xarray, yarray, zarray,
+                                contours=(0, 0), fill=False, cmap=colormap)
+                    else:
+                        self.ax.contourf(xarray, yarray, zarray, cmap=colormap)
+            else:
+                raise ValueError('The matplotlib backend supports only '
+                                 'is_2Dline, is_3Dline, is_3Dsurface and '
+                                 'is_contour objects.')
+
+            # Customise the collections with the corresponding per-series
+            # options.
+            if hasattr(s, 'label'):
+                collection.set_label(s.label)
+            if s.is_line and s.line_color:
+                if isinstance(s.line_color, (float, int)) or callable(s.line_color):
+                    color_array = s.get_color_array()
+                    collection.set_array(color_array)
+                else:
+                    collection.set_color(s.line_color)
+            if s.is_3Dsurface and s.surface_color:
+                if matplotlib.__version__ < "1.2.0":  # TODO in the distant future remove this check
+                    warnings.warn('The version of matplotlib is too old to use surface coloring.')
+                elif isinstance(s.surface_color, (float, int)) or callable(s.surface_color):
+                    color_array = s.get_color_array()
+                    color_array = color_array.reshape(color_array.size)
+                    collection.set_array(color_array)
+                else:
+                    collection.set_color(s.surface_color)
+
+        # Set global options.
+        # TODO The 3D stuff
+        # XXX The order of those is important.
+        if parent.xscale and not isinstance(self.ax, Axes3D):
+            self.ax.set_xscale(parent.xscale)
+        if parent.yscale and not isinstance(self.ax, Axes3D):
+            self.ax.set_yscale(parent.yscale)
+        if parent.xlim:
+            self.ax.set_xlim(parent.xlim)
+        if parent.ylim:
+            self.ax.set_ylim(parent.ylim)
+        if not isinstance(self.ax, Axes3D) or matplotlib.__version__ >= '1.2.0':  # XXX in the distant future remove this check
+            self.ax.set_autoscale_on(parent.autoscale)
+        if parent.axis_center:
+            val = parent.axis_center
+            if isinstance(self.ax, Axes3D):
+                pass
+            elif val == 'center':
+                self.ax.spines['left'].set_position('center')
+                self.ax.spines['bottom'].set_position('center')
+            elif val == 'auto':
+                xl, xh = self.ax.get_xlim()
+                yl, yh = self.ax.get_ylim()
+                pos_left = ('data', 0) if xl*xh <= 0 else 'center'
+                pos_bottom = ('data', 0) if yl*yh <= 0 else 'center'
+                self.ax.spines['left'].set_position(pos_left)
+                self.ax.spines['bottom'].set_position(pos_bottom)
+            else:
+                self.ax.spines['left'].set_position(('data', val[0]))
+                self.ax.spines['bottom'].set_position(('data', val[1]))
+        if not parent.axis:
+            self.ax.set_axis_off()
+        if parent.legend:
+            self.ax.legend()
+            self.ax.legend_.set_visible(parent.legend)
+        if parent.margin:
+            self.ax.set_xmargin(parent.margin)
+            self.ax.set_ymargin(parent.margin)
+        if parent.title:
+            self.ax.set_title(parent.title)
+        if parent.xlabel:
+            self.ax.set_xlabel(parent.xlabel, position=(1, 0))
+        if parent.ylabel:
+            self.ax.set_ylabel(parent.ylabel, position=(0, 1))
+
+    def show(self):
+        self.process_series()
+        #TODO after fixing https://github.com/ipython/ipython/issues/1255
+        # you can uncomment the next line and remove the pyplot.show() call
+        #self.fig.show()
+        if _show:
+            plt.show()
+
+    def save(self, path):
+        self.process_series()
+        self.fig.savefig(path)
+
+    def close(self):
+        plt.close(self.fig)
+
+
+class TextBackend(BaseBackend):
+    def __init__(self, parent):
+        super(TextBackend, self).__init__(parent)
+
+    def show(self):
+        if len(self.parent._series) != 1:
+            raise ValueError(
+                'The TextBackend supports only one graph per Plot.')
+        elif not isinstance(self.parent._series[0], LineOver1DRangeSeries):
+            raise ValueError(
+                'The TextBackend supports only expressions over a 1D range')
+        else:
+            ser = self.parent._series[0]
+            textplot(ser.expr, ser.start, ser.end)
+
+    def close(self):
+        pass
+
+
+class DefaultBackend(BaseBackend):
+    def __new__(cls, parent):
+        if matplotlib:
+            return MatplotlibBackend(parent)
+        else:
+            return TextBackend(parent)
+
+
+plot_backends = {
+    'matplotlib': MatplotlibBackend,
+    'text': TextBackend,
+    'default': DefaultBackend
+}
+
+
+##############################################################################
+# Finding the centers of line segments or mesh faces
+##############################################################################
+
+def centers_of_segments(array):
+    return np.average(np.vstack((array[:-1], array[1:])), 0)
+
+
+def centers_of_faces(array):
+    return np.average(np.dstack((array[:-1, :-1],
+                                 array[1:, :-1],
+                                 array[:-1, 1: ],
+                                 array[:-1, :-1],
+                                 )), 2)
+
+
+def flat(x, y, z, eps=1e-3):
+    """Checks whether three points are almost collinear"""
+    vector_a = x - y
+    vector_b = z - y
+    dot_product = np.dot(vector_a, vector_b)
+    vector_a_norm = np.linalg.norm(vector_a)
+    vector_b_norm = np.linalg.norm(vector_b)
+    cos_theta = dot_product / (vector_a_norm * vector_b_norm)
+    return abs(cos_theta + 1) < eps
+
+
+def _matplotlib_list(interval_list):
+    """
+    Returns lists for matplotlib ``fill`` command from a list of bounding
+    rectangular intervals
+    """
+    xlist = []
+    ylist = []
+    if len(interval_list):
+        for intervals in interval_list:
+            intervalx = intervals[0]
+            intervaly = intervals[1]
+            xlist.extend([intervalx.start, intervalx.start,
+                          intervalx.end, intervalx.end, None])
+            ylist.extend([intervaly.start, intervaly.end,
+                          intervaly.end, intervaly.start, None])
+    else:
+        #XXX Ugly hack. Matplotlib does not accept empty lists for ``fill``
+        xlist.extend([None, None, None, None])
+        ylist.extend([None, None, None, None])
+    return xlist, ylist
+
+
+####New API for plotting module ####
+
+# TODO: Add color arrays for plots.
+# TODO: Add more plotting options for 3d plots.
+# TODO: Adaptive sampling for 3D plots.
+
+def plot(*args, **kwargs):
+    """
+    Plots a function of a single variable.
+
+    The plotting uses an adaptive algorithm which samples recursively to
+    accurately plot the plot. The adaptive algorithm uses a random point near
+    the midpoint of two points that has to be further sampled. Hence the same
+    plots can appear slightly different.
+
+    Usage
+    =====
+
+    Single Plot
+
+    ``plot(expr, range, **kwargs)``
+
+    If the range is not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots with same range.
+
+    ``plot(expr1, expr2, ..., range, **kwargs)``
+
+    If the range is not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots with different ranges.
+
+    ``plot((expr1, range), (expr2, range), ..., **kwargs)``
+
+    Range has to be specified for every expression.
+
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
+
+    Arguments
+    =========
+
+    ``expr`` : Expression representing the function of single variable
+
+    ``range``: (x, 0, 5), A 3-tuple denoting the range of the free variable.
+
+    Keyword Arguments
+    =================
+
+    Arguments for ``LineOver1DRangeSeries`` class:
+
+    ``adaptive``: Boolean. The default value is set to True. Set adaptive to False and
+    specify ``nb_of_points`` if uniform sampling is required.
+
+    ``depth``: int Recursion depth of the adaptive algorithm. A depth of value ``n``
+    samples a maximum of `2^{n}` points.
+
+    ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The function
+    is uniformly sampled at ``nb_of_points`` number of points.
+
+    Aesthetics options:
+
+    ``line_color``: float. Specifies the color for the plot.
+    See ``Plot`` to see how to set color for the plots.
+
+    If there are multiple plots, then the same series series are applied to
+    all the plots. If you want to set these options separately, you can index
+    the ``Plot`` object returned and set it.
+
+    Arguments for ``Plot`` class:
+
+    ``title`` : str. Title of the plot. It is set to the latex representation of
+    the expression, if the plot has only one expression.
+
+    ``xlabel`` : str. Label for the x - axis.
+
+    ``ylabel`` : str. Label for the y - axis.
+
+    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
+
+    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
+
+    ``axis_center``: tuple of two floats denoting the coordinates of the center or
+    {'center', 'auto'}
+
+    ``xlim`` : tuple of two floats, denoting the x - axis limits.
+
+    ``ylim`` : tuple of two floats, denoting the y - axis limits.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.plotting import plot
+    >>> x = symbols('x')
+
+    Single Plot
+
+    >>> plot(x**2, (x, -5, 5))# doctest: +SKIP
+
+    Multiple plots with single range.
+
+    >>> plot(x, x**2, x**3, (x, -5, 5))# doctest: +SKIP
+
+    Multiple plots with different ranges.
+
+    >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))# doctest: +SKIP
+
+    No adaptive sampling.
+
+    >>> plot(x**2, adaptive=False, nb_of_points=400)# doctest: +SKIP
+
+    See Also
+    ========
+
+    Plot, LineOver1DRangeSeries.
+
+    """
+    args = sympify([arg for arg in args])
+    show = kwargs.pop('show', True)
+    series = []
+    plot_expr = check_arguments(args, 1, 1)
+    series = [LineOver1DRangeSeries(*arg, **kwargs) for arg in plot_expr]
+
+    plots = Plot(*series, **kwargs)
+    if show:
+        plots.show()
+    return plots
+
+
+def plot_parametric(*args, **kwargs):
+    """
+    Plots a 2D parametric plot.
+
+    The plotting uses an adaptive algorithm which samples recursively to
+    accurately plot the plot. The adaptive algorithm uses a random point near
+    the midpoint of two points that has to be further sampled. Hence the same
+    plots can appear slightly different.
+
+    Usage
+    =====
+
+    Single plot.
+
+    ``plot_parametric(expr_x, expr_y, range, **kwargs)``
+
+    If the range is not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots with same range.
+
+    ``plot_parametric((expr1_x, expr1_y), (expr2_x, expr2_y), range, **kwargs)``
+
+    If the range is not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots with different ranges.
+
+    ``plot_parametric((expr_x, expr_y, range), ..., **kwargs)``
+
+    Range has to be specified for every expression.
+
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
+
+    Arguments
+    =========
+
+    ``expr_x`` : Expression representing the function along x.
+
+    ``expr_y`` : Expression representing the function along y.
+
+    ``range``: (u, 0, 5), A 3-tuple denoting the range of the parameter
+    variable.
+
+    Keyword Arguments
+    =================
+
+    Arguments for ``Parametric2DLineSeries`` class:
+
+    ``adaptive``: Boolean. The default value is set to True. Set adaptive to
+    False and specify ``nb_of_points`` if uniform sampling is required.
+
+    ``depth``: int Recursion depth of the adaptive algorithm. A depth of
+    value ``n`` samples a maximum of `2^{n}` points.
+
+    ``nb_of_points``: int. Used when the ``adaptive`` is set to False. The
+    function is uniformly sampled at ``nb_of_points`` number of points.
+
+    Aesthetics
+    ----------
+
+    ``line_color``: function which returns a float. Specifies the color for the
+    plot. See ``sympy.plotting.Plot`` for more details.
+
+    If there are multiple plots, then the same Series arguments are applied to
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
+    Arguments for ``Plot`` class:
+
+    ``xlabel`` : str. Label for the x - axis.
+
+    ``ylabel`` : str. Label for the y - axis.
+
+    ``xscale``: {'linear', 'log'} Sets the scaling of the x - axis.
+
+    ``yscale``: {'linear', 'log'} Sets the scaling if the y - axis.
+
+    ``axis_center``: tuple of two floats denoting the coordinates of the center
+    or {'center', 'auto'}
+
+    ``xlim`` : tuple of two floats, denoting the x - axis limits.
+
+    ``ylim`` : tuple of two floats, denoting the y - axis limits.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, cos, sin
+    >>> from sympy.plotting import plot_parametric
+    >>> u = symbols('u')
+
+    Single Parametric plot
+
+    >>> plot_parametric(cos(u), sin(u), (u, -5, 5))# doctest: +SKIP
+
+    Multiple parametric plot with single range.
+
+    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))  # doctest: +SKIP
+
+    Multiple parametric plots.
+
+    >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
+    ...     (cos(u), u, (u, -5, 5)))  # doctest: +SKIP
+
+    See Also
+    ========
+    Plot, Parametric2DLineSeries
+
+    """
+    args = sympify([arg for arg in args])
+    show = kwargs.pop('show', True)
+    series = []
+    plot_expr = check_arguments(args, 2, 1)
+    series = [Parametric2DLineSeries(*arg) for arg in plot_expr]
+    plots = Plot(*series, **kwargs)
+    if show:
+        plots.show()
+    return plots
+
+
+def plot3d_parametric_line(*args, **kwargs):
+    """
+    Plots a 3D parametric line plot.
+
+    Usage
+    =====
+
+    Single plot:
+
+    ``plot3d_parametric_line(expr_x, expr_y, expr_z, range, **kwargs)``
+
+    If the range is not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots.
+
+    ``plot3d_parametric_line((expr_x, expr_y, expr_z, range), ..., **kwargs)``
+
+    Ranges have to be specified for every expression.
+
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
+
+    Arguments
+    =========
+
+    ``expr_x`` : Expression representing the function along x.
+
+    ``expr_y`` : Expression representing the function along y.
+
+    ``expr_z`` : Expression representing the function along z.
+
+    ``range``: ``(u, 0, 5)``, A 3-tuple denoting the range of the parameter
+    variable.
+
+    Keyword Arguments
+    =================
+
+    Arguments for ``Parametric3DLineSeries`` class.
+
+    ``nb_of_points``: The range is uniformly sampled at ``nb_of_points``
+    number of points.
+
+    Aesthetics:
+
+    ``line_color``: function which returns a float. Specifies the color for the
+    plot. See ``sympy.plotting.Plot`` for more details.
+
+    If there are multiple plots, then the same series arguments are applied to
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
+    Arguments for ``Plot`` class.
+
+    ``title`` : str. Title of the plot.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, cos, sin
+    >>> from sympy.plotting import plot3d_parametric_line
+    >>> u = symbols('u')
+
+    Single plot.
+
+    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))  # doctest: +SKIP
+
+    Multiple plots.
+
+    >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
+    ...     (sin(u), u**2, u, (u, -5, 5)))  # doctest: +SKIP
+
+    See Also
+    ========
+
+    Plot, Parametric3DLineSeries
+
+    """
+    args = sympify([arg for arg in args])
+    show = kwargs.pop('show', True)
+    series = []
+    plot_expr = check_arguments(args, 3, 1)
+    series = [Parametric3DLineSeries(*arg) for arg in plot_expr]
+    plots = Plot(*series, **kwargs)
+    if show:
+        plots.show()
+    return plots
+
+
+def plot3d(*args, **kwargs):
+    """
+    Plots a 3D surface plot.
+
+    Usage
+    =====
+
+    Single plot
+
+    ``plot3d(expr, range_x, range_y, **kwargs)``
+
+    If the ranges are not specified, then a default range of (-10, 10) is used.
+
+    Multiple plot with the same range.
+
+    ``plot3d(expr1, expr2, range_x, range_y, **kwargs)``
+
+    If the ranges are not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots with different ranges.
+
+    ``plot3d((expr1, range_x, range_y), (expr2, range_x, range_y), ..., **kwargs)``
+
+    Ranges have to be specified for every expression.
+
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
+
+    Arguments
+    =========
+
+    ``expr`` : Expression representing the function along x.
+
+    ``range_x``: (x, 0, 5), A 3-tuple denoting the range of the x
+    variable.
+
+    ``range_y``: (y, 0, 5), A 3-tuple denoting the range of the y
+     variable.
+
+    Keyword Arguments
+    =================
+
+    Arguments for ``SurfaceOver2DRangeSeries`` class:
+
+    ``nb_of_points_x``: int. The x range is sampled uniformly at
+    ``nb_of_points_x`` of points.
+
+    ``nb_of_points_y``: int. The y range is sampled uniformly at
+    ``nb_of_points_y`` of points.
+
+    Aesthetics:
+
+    ``surface_color``: Function which returns a float. Specifies the color for
+    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
+
+    If there are multiple plots, then the same series arguments are applied to
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
+    Arguments for ``Plot`` class:
+
+    ``title`` : str. Title of the plot.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols
+    >>> from sympy.plotting import plot3d
+    >>> x, y = symbols('x y')
+
+    Single plot
+
+    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))  # doctest: +SKIP
+
+    Multiple plots with same range
+
+    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))  # doctest: +SKIP
+
+    Multiple plots with different ranges.
+
+    >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
+    ...     (x*y, (x, -3, 3), (y, -3, 3)))  # doctest: +SKIP
+
+    See Also
+    ========
+    Plot, SurfaceOver2DRangeSeries
+
+    """
+
+    args = sympify([arg for arg in args])
+    show = kwargs.pop('show', True)
+    series = []
+    plot_expr = check_arguments(args, 1, 2)
+    series = [SurfaceOver2DRangeSeries(*arg) for arg in plot_expr]
+    plots = Plot(*series, **kwargs)
+    if show:
+        plots.show()
+    return plots
+
+
+def plot3d_parametric_surface(*args, **kwargs):
+    """
+    Plots a 3D parametric surface plot.
+
+    Usage
+    =====
+
+    Single plot.
+
+    ``plot3d_parametric_surface(expr_x, expr_y, expr_z, range_u, range_v, **kwargs)``
+
+    If the ranges is not specified, then a default range of (-10, 10) is used.
+
+    Multiple plots.
+
+    ``plot3d_parametric_surface((expr_x, expr_y, expr_z, range_u, range_v), ..., **kwargs)``
+
+    Ranges have to be specified for every expression.
+
+    Default range may change in the future if a more advanced default range
+    detection algorithm is implemented.
+
+    Arguments
+    =========
+
+    ``expr_x``: Expression representing the function along ``x``.
+
+    ``expr_y``: Expression representing the function along ``y``.
+
+    ``expr_z``: Expression representing the function along ``z``.
+
+    ``range_u``: ``(u, 0, 5)``,  A 3-tuple denoting the range of the ``u``
+    variable.
+
+    ``range_v``: ``(v, 0, 5)``,  A 3-tuple denoting the range of the v
+    variable.
+
+    Keyword Arguments
+    =================
+
+    Arguments for ``ParametricSurfaceSeries`` class:
+
+    ``nb_of_points_u``: int. The ``u`` range is sampled uniformly at
+    ``nb_of_points_v`` of points
+
+    ``nb_of_points_y``: int. The ``v`` range is sampled uniformly at
+    ``nb_of_points_y`` of points
+
+    Aesthetics:
+
+    ``surface_color``: Function which returns a float. Specifies the color for
+    the surface of the plot. See ``sympy.plotting.Plot`` for more details.
+
+    If there are multiple plots, then the same series arguments are applied for
+    all the plots. If you want to set these options separately, you can index
+    the returned ``Plot`` object and set it.
+
+
+    Arguments for ``Plot`` class:
+
+    ``title`` : str. Title of the plot.
+
+    Examples
+    ========
+
+    >>> from sympy import symbols, cos, sin
+    >>> from sympy.plotting import plot3d_parametric_surface
+    >>> u, v = symbols('u v')
+
+    Single plot.
+
+    >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
+    ...     (u, -5, 5), (v, -5, 5))  # doctest: +SKIP
+
+    See Also
+    ========
+    Plot, ParametricSurfaceSeries
+
+    """
+
+    args = sympify([arg for arg in args])
+    show = kwargs.pop('show', True)
+    series = []
+    plot_expr = check_arguments(args, 3, 2)
+    series = [ParametricSurfaceSeries(*arg) for arg in plot_expr]
+    plots = Plot(*series, **kwargs)
+    if show:
+        plots.show()
+    return plots
+
+
+def check_arguments(args, expr_len, nb_of_free_symbols):
+    """
+    Checks the arguments and converts into tuples of the
+    form (exprs, ranges)
+
+    >>> from sympy import plot, cos, sin, symbols
+    >>> from sympy.plotting.plot import check_arguments
+    >>> x,y,u,v = symbols('x y u v')
+    >>> check_arguments([cos(x), sin(x)], 2, 1)
+        [(cos(x), sin(x), (x, -10, 10))]
+
+    >>> check_arguments([x, x**2], 1, 1)
+        [(x, (x, -10, 10)), (x**2, (x, -10, 10))]
+    """
+    if expr_len > 1 and isinstance(args[0], Expr):
+        # Multiple expressions same range.
+        # The arguments are tuples when the expression length is
+        # greater than 1.
+        assert len(args) >= expr_len
+        for i in range(len(args)):
+            if isinstance(args[i], Tuple):
                 break
-            i += 1
-        return path
+        else:
+            i = len(args) + 1
+
+        exprs = Tuple(*args[:i])
+        free_symbols = list(set_union(*[e.free_symbols for e in exprs]))
+        if len(args) == expr_len + nb_of_free_symbols:
+            #Ranges given
+            plots = [exprs + Tuple(*args[expr_len:])]
+        else:
+            default_range = Tuple(-10, 10)
+            ranges = []
+            for symbol in free_symbols:
+                ranges.append(Tuple(symbol) + default_range)
+
+            for i in range(len(free_symbols) - nb_of_free_symbols):
+                ranges.append(Tuple(Dummy()) + default_range)
+            plots = [exprs + Tuple(*ranges)]
+        return plots
+
+    if isinstance(args[0], Expr) or (isinstance(args[0], Tuple) and
+                                     len(args[0]) == expr_len and
+                                     expr_len != 3):
+        # Cannot handle expressions with number of expression = 3. It is
+        # not possible to differentiate between expressions and ranges.
+        #Series of plots with same range
+        for i in range(len(args)):
+            if isinstance(args[i], Tuple) and len(args[i]) != expr_len:
+                break
+            if not isinstance(args[i], Tuple):
+                args[i] = Tuple(args[i])
+        else:
+            i = len(args) + 1
+
+        exprs = args[:i]
+        assert all(isinstance(e, Expr) for expr in exprs for e in expr)
+        free_symbols = list(set_union(*[e.free_symbols for expr in exprs
+                                        for e in expr]))
+
+        if len(free_symbols) > nb_of_free_symbols:
+            raise ValueError("The number of free_symbols in the expression"
+                             "is greater than %d" % nb_of_free_symbols)
+        if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
+            ranges = Tuple(*[range_expr for range_expr in args[
+                           i:i + nb_of_free_symbols]])
+            plots = [expr + ranges for expr in exprs]
+            return plots
+        else:
+            #Use default ranges.
+            default_range = Tuple(-10, 10)
+            ranges = []
+            for symbol in free_symbols:
+                ranges.append(Tuple(symbol) + default_range)
+
+            for i in range(len(free_symbols) - nb_of_free_symbols):
+                ranges.append(Tuple(Dummy()) + default_range)
+            ranges = Tuple(*ranges)
+            plots = [expr + ranges for expr in exprs]
+            return plots
+
+    elif isinstance(args[0], Tuple) and len(args[0]) == expr_len + nb_of_free_symbols:
+        #Multiple plots with different ranges.
+        for arg in args:
+            for i in range(expr_len):
+                if not isinstance(arg[i], Expr):
+                    raise ValueError("Expected an expression, given %s" %
+                                     str(arg[i]))
+            for i in range(nb_of_free_symbols):
+                if not len(arg[i + expr_len]) == 3:
+                    raise ValueError("The ranges should be a tuple of"
+                                     "length 3, got %s" % str(arg[i + expr_len]))
+        return args

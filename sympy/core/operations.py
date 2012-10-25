@@ -1,12 +1,15 @@
-from core import C
-from expr import Expr
-from sympify import _sympify, sympify
-from cache import cacheit
-from compatibility import cmp
+from sympy.core.core import C
+from sympy.core.expr import Expr
+from sympy.core.sympify import _sympify, sympify
+from sympy.core.basic import Basic
+from sympy.core.cache import cacheit
+from sympy.core.compatibility import cmp, quick_sort
+from sympy.core.logic import fuzzy_and
 
 # from add import Add /cyclic/
 # from mul import Mul /cyclic/
 # from function import Lambda, WildFunction /cyclic/
+
 
 class AssocOp(Expr):
     """ Associative operations, can separate noncommutative and
@@ -38,7 +41,8 @@ class AssocOp(Expr):
             return args[0]
 
         c_part, nc_part, order_symbols = cls.flatten(args)
-        obj = cls._from_args(c_part + nc_part, not nc_part)
+        is_commutative = not nc_part
+        obj = cls._from_args(c_part + nc_part, is_commutative)
 
         if order_symbols is not None:
             return C.Order(obj, *order_symbols)
@@ -54,7 +58,7 @@ class AssocOp(Expr):
 
         obj = Expr.__new__(cls, *args)
         if is_commutative is None:
-            is_commutative = all(a.is_commutative for a in args)
+            is_commutative = fuzzy_and(a.is_commutative for a in args)
         obj.is_commutative = is_commutative
         return obj
 
@@ -115,7 +119,7 @@ class AssocOp(Expr):
         new_seq = []
         while seq:
             o = seq.pop()
-            if o.__class__ is cls: # classes must match exactly
+            if o.__class__ is cls:  # classes must match exactly
                 seq.extend(o.args)
             else:
                 new_seq.append(o)
@@ -187,11 +191,7 @@ class AssocOp(Expr):
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        if expr.is_Add:
-            i, d = expr.as_independent(C.Symbol)
-            expr_list = (i,) + self.make_args(expr)
-        else:
-            expr_list = self.make_args(expr)
+        expr_list = (self.identity,) + self.make_args(expr)
         for last_op in reversed(expr_list):
             for w in reversed(wild_part):
                 d1 = w.matches(last_op, repl_dict)
@@ -201,6 +201,40 @@ class AssocOp(Expr):
                         return d2
 
         return
+
+    def _has_matcher(self):
+        """Helper for .has()"""
+        def _ncsplit(expr):
+            # this is not the same as args_cnc because here
+            # we don't assume expr is a Mul -- hence deal with args --
+            # and always return a set.
+            cpart, ncpart = [], []
+            for arg in expr.args:
+                if arg.is_commutative:
+                    cpart.append(arg)
+                else:
+                    ncpart.append(arg)
+            return set(cpart), ncpart
+
+        c, nc = _ncsplit(self)
+        cls = self.__class__
+
+        def is_in(expr):
+            if expr == self:
+                return True
+            elif not isinstance(expr, Basic):
+                return False
+            elif isinstance(expr, cls):
+                _c, _nc = _ncsplit(expr)
+                if (c & _c) == c:
+                    if not nc:
+                        return True
+                    elif len(nc) <= len(_nc):
+                        for i in xrange(len(_nc) - len(nc)):
+                            if _nc[i:i + len(nc)] == nc:
+                                return True
+            return False
+        return is_in
 
     def _eval_template_is_attr(self, is_attr, when_multiple=False):
         # return True if all elements have the property;
@@ -245,8 +279,10 @@ class AssocOp(Expr):
         else:
             return (expr,)
 
+
 class ShortCircuit(Exception):
     pass
+
 
 class LatticeOp(AssocOp):
     """
@@ -333,8 +369,9 @@ class LatticeOp(AssocOp):
             return frozenset([expr])
 
     @property
+    @cacheit
     def args(self):
-        return tuple(self._argset)
+        return quick_sort(self._argset)
 
     @staticmethod
     def _compare_pretty(a, b):

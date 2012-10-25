@@ -1,6 +1,0 @@
-====
-Shor
-====
-
-.. automodule:: sympy.physics.quantum.shor
-   :members:
