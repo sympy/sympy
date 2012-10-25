@@ -12,13 +12,13 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
     sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart, sqrtdenest,
-    factorial2, powdenest, Mul, S)
+    factorial2, powdenest, Mul, S, mpmath)
 
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
-from sympy import mpmath
+from sympy.physics.quantum import Commutator
 
 R = Rational
 x, y, z = symbols('x, y, z')
@@ -251,7 +251,7 @@ def test_H2():
 
 @XFAIL
 def test_H3():
-    assert (-1) ** (n*(n+1)) == 1
+    assert (-1)**(n*(n+1)) == 1
 
 def test_H4():
     expr = factor(6*x - 10)
@@ -327,7 +327,7 @@ def test_H16():
         - x**2 + 1)*(x**20 - x**15 + x**10 - x**5 + 1)*(x**20 + x**15 + x**10
         + x**5 + 1)*(x**40 - x**30 + x**20 - x**10 + 1))
 
-# Fails only due to a difference in sign factoring: -(-p1*p2)
+@slow
 def test_H17():
     assert simplify(factor(expand(p1 * p2)) - p1*p2) == 0
 
@@ -365,14 +365,17 @@ def test_H23():
 def test_H24():
     raise NotImplementedError("factor x**4 - 3*x**2 + 1, GoldenRatio")
 
+@slow
 def test_H25():
     e = (x - 2*y**2 + 3*z**3) ** 20
     assert factor(expand(e)) == e
 
+@slow
 def test_H26():
     g = expand((sin(x) - 2*cos(y)**2 + 3*tan(z)**3)**20)
     assert factor(g, expand=False) == (-sin(x) + 2*cos(y)**2 - 3*tan(z)**3)**20
 
+@slow
 def test_H27():
     f=24*x*y**19*z**8 - 47*x**17*y**5*z**8 + 6*x**15*y**9*z**2 - 3*x**22 + 5
     g=34*x**5*y**8*z**13 + 20*x**7*y**7*z**7 + 12*x**9*y**16*z**4 + 80*y**14*z
@@ -388,12 +391,12 @@ def test_H28():
 
 @XFAIL
 def test_H29():
-    raise NotImplementedError("factor 4*x**2 - 21*x*y + 20*y**2 mod 3")
+    assert factor(4*x**2 - 21*x*y + 20*y**2, modulus=3) == (x+y)*(x-y)
 
-@XFAIL
 def test_H30():
-    assert factor(x**3 + y**3, extension = sqrt(-3)) == (x + y) \
-        * (x - y * (1/2 + I*sqrt(3)/2)) * (x - y * (1/2 - I*sqrt(3)/2))
+    test = factor(x**3 + y**3, extension = sqrt(-3))
+    answer = (x + y)*(x + y*(-R(1,2) - sqrt(3)/2*I))*(x + y*(-R(1,2) + sqrt(3)/2*I))
+    assert answer == test
 
 def test_H31():
     f = (x**2 + 2*x + 3)/(x**3 + 4*x**2 + 5*x + 2)
@@ -404,11 +407,12 @@ def test_H31():
 def test_H32():
     raise NotImplementedError("[A*B*C - (A*B*C)**(-1)]*A*C*B (noncommuting)")
 
-@XFAIL
 def test_H33():
-    raise NotImplementedError("[A,B,C] + [B,C,A] + [C,A,B] = 0")
+    A, B, C = symbols('A, B, C', commutatative = False)
+    assert (Commutator(A, Commutator(B, C)) \
+        + Commutator(B, Commutator(C, A)) \
+        + Commutator(C, Commutator(A, B))).doit().expand() == 0
 
-# ... I'm bored with XFAILs. Goes up to H33.
 
 # I. Trigonometry
 
@@ -482,7 +486,6 @@ def test_J3():
 def test_J4():
     assert gamma(R(-1,2)) == -2*sqrt(pi)
 
-@XFAIL
 def test_J5():
     assert polygamma(0, R(1,3)) == -EulerGamma - pi/2*sqrt(R(1,3)) - R(3,2)*log(3)
 
@@ -501,7 +504,6 @@ def test_J8():
 def test_J9():
     raise NotImplementedError("diff(j0(z), z) == -j1(z)")
 
-@XFAIL
 def test_J10():
     mu, nu = symbols('mu, nu', integer=True)
     assert assoc_legendre(nu, mu, 0) == 2**mu*sqrt(pi)/gamma((nu-mu)/2+1)/gamma((-nu-mu+1)/2)
@@ -509,10 +511,10 @@ def test_J10():
 def test_J11():
     assert simplify(assoc_legendre(3,1,x)) == simplify(-R(3,2)*sqrt(1-x**2)*(5*x**2 - 1))
 
+@slow
 def test_J12():
     assert simplify(chebyshevt(1008,x) - 2*x*chebyshevt(1007,x) + chebyshevt(1006,x)) == 0
 
-@XFAIL
 def test_J13():
     a = symbols('a', integer=True, negative=False)
     assert chebyshevt(a, -1) == (-1)**a
@@ -562,12 +564,9 @@ def test_K5():
     assert tan(x+I*y).expand(complex=True) == sin(x)*cos(x) / (cos(x)**2 +
     sinh(y)**2) + I*sinh(y)*cosh(y) / (cos(x)**2 + sinh(y)**2)
 
-@XFAIL
 def test_K6():
-    expr = sqrt(x*y*abs(z)**2)/(sqrt(x)*abs(z))
-    sexpr = simplify(expr)
-    assert sexpr == sqrt(x*y)/sqrt(x)
-    assert sexpr != sqrt(y)
+    assert sqrt(x*y*abs(z)**2)/(sqrt(x)*abs(z)) == sqrt(x*y)/sqrt(x)
+    assert sqrt(x*y*abs(z)**2)/(sqrt(x)*abs(z)) != sqrt(y)
 
 def test_K7():
     y = symbols('y', real=True, negative=False)
@@ -598,7 +597,6 @@ def test_K10():
 def test_L1():
     assert sqrt(997)-(997**3)**R(1,6) == 0
 
-@XFAIL
 def test_L2():
     assert sqrt(999983)-(999983**3)**R(1,6) == 0
 
@@ -677,8 +675,8 @@ def test_M8():
 
 @XFAIL
 def test_M9():
-    assert solve(exp(2-x**2)-exp(-x),x) == [-1, 2]
-    # There are also complex solutions
+    x = symbols('x', complex=True)
+    raise NotImplementedError("solve(exp(2-x**2)-exp(-x),x) has complex solutions.")
 
 def test_M10():
     assert solve(exp(x)-x,x) == [-LambertW(-1)]
@@ -718,7 +716,5 @@ def test_M18():
 def test_M19():
     raise NotImplementedError("solve((x-2)/x**(1/3),x)")
 
-@XFAIL
 def test_M20():
     assert solve(sqrt(x**2+1)-x+2,x) == []
-    # This equation has no solutions
