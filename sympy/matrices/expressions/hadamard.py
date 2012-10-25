@@ -9,8 +9,8 @@ class Hadamard(MatrixExpr):
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
     >>> C = MatrixSymbol('C', 5, 5)
-    >>> MatAdd(A, B, C)
-    A .* B .* C
+    >>> Hadamard(A, B, C)
+    A.*B.*C
     """
     is_Hadamard = True
 
