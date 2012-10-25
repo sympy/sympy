@@ -146,13 +146,15 @@ def test_simplification():
         [1, 1, 1, 1]]
     dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     assert Equivalent(SOPform(['x', 'y', 'z'], set1)) == Equivalent(
-        Not(SOPform(['x', 'y', 'z'], set2)))
+        Not(SOPform('xyz', set2)))
     assert Equivalent(SOPform(['w', 'x', 'y', 'z'], minterms, dontcares)) == Equivalent(POSform(['w', 'x', 'y', 'z'], minterms, dontcares))
     assert Equivalent(simplify_logic(
         'A & (B | C)')) == Equivalent(simplify_logic('(A & B) | (A & C)'))
+    assert POSform('xyz', set1 + set2) == True
+    assert SOPform('xyz', set1 + set2) == True
     ans = SOPform('xy', [[1, 0]])
     assert SOPform([x, y], [[1, 0]]) == ans
-    assert Equivalent(POSform(['x', 'y'], [[1, 0]])) == Equivalent(ans)
+    assert POSform(['x', 'y'], [[1, 0]]) == ans
 
 
 def test_bool_symbol():
