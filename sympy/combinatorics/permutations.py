@@ -162,6 +162,49 @@ def _af_invert(a):
         inv_form[ai] = i
     return inv_form
 
+def _af_pow(a, n):
+    """
+    Routine for finding powers of a permutation.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.permutations import Permutation, _af_pow
+    >>> Permutation.print_cyclic = False
+    >>> p = Permutation([2,0,3,1])
+    >>> p.order()
+    4
+    >>> _af_pow(p._array_form, 4)
+    [0, 1, 2, 3]
+    """
+    if n == 0:
+        return range(len(a))
+    if n < 0:
+        return _af_pow(_af_invert(a), -n)
+    if n == 1:
+        return a[:]
+    elif n == 2:
+        b = [a[i] for i in a]
+    elif n == 3:
+        b = [a[a[i]] for i in a]
+    elif n == 4:
+        b = [a[a[a[i]]] for i in a]
+    else:
+        # use binary multiplication
+        b = range(len(a))
+        while 1:
+            if n & 1:
+                b = [b[i] for i in a]
+                n -= 1
+                if not n:
+                    break
+            if n % 4 == 0:
+                a = [a[a[a[i]]] for i in a]
+                n = n // 4
+            elif n % 2 == 0:
+                a = [a[i] for i in a]
+                n = n // 2
+    return b
 
 def _af_commutes_with(a, b):
     """
@@ -382,7 +425,6 @@ class Cycle(dict):
 
     def copy(self):
         return Cycle(self)
-
 
 class Permutation(Basic):
     """
@@ -780,9 +822,9 @@ class Permutation(Basic):
         #g) (Permutation) = adjust size or return copy
         ok = True
         if not args:  # a
-            return Perm._af_new(range(size or 0))
+            return _af_new(range(size or 0))
         elif len(args) > 1:  # c
-            return Perm._af_new(Cycle(*args).list(size))
+            return _af_new(Cycle(*args).list(size))
         if len(args) == 1:
             a = args[0]
             if isinstance(a, Perm):  # g
@@ -790,9 +832,9 @@ class Permutation(Basic):
                     return a
                 return Perm(a.array_form, size=size)
             if isinstance(a, Cycle):  # f
-                return Perm._af_new(a.list(size))
+                return _af_new(a.list(size))
             if not is_sequence(a):  # b
-                return Perm._af_new(range(a + 1))
+                return _af_new(range(a + 1))
             if has_variety(is_sequence(ai) for ai in a):
                 ok = False
         else:
@@ -800,6 +842,7 @@ class Permutation(Basic):
         if not ok:
             raise ValueError("Permutation argument must be a list of ints, "
                              "a list of lists, Permutation or Cycle.")
+
 
         # safe to assume args are valid; this also makes a copy
         # of the args
@@ -909,14 +952,14 @@ class Permutation(Basic):
         # watch that given list doesn't shadow the argument:
         # store a copy; return a copy
         if self._array_form is not None:
-            return list(self._array_form)
+            return self._array_form[:]
         cycles = self.args[0]
         perm = range(self.size)
         for c in cycles:
             for i in range(len(c) - 1):
                 perm[c[i]] = c[i + 1]
             perm[c[-1]] = c[0]
-        self._array_form = perm[:]
+        self._array_form = perm
         return self.array_form
 
     def list(self, size=None):
@@ -1053,7 +1096,7 @@ class Permutation(Basic):
         [0, 1, 2, 3]
         """
         a = self.array_form
-        return [i for i, e in enumerate(self.array_form) if a[i] != i]
+        return [i for i, e in enumerate(a) if a[i] != i]
 
     def __add__(self, other):
         """Return permutation that is other higher in rank than self.
@@ -1098,6 +1141,8 @@ class Permutation(Basic):
         Return product of Permutations [a, b, c, ...] as the Permutation whose
         ith value is a(b(c(i))).
 
+        a, b, c, ... can be Permutation objects or tuples.
+
         Examples
         ========
 
@@ -1135,6 +1180,24 @@ class Permutation(Basic):
         for i in range(1, len(args)):
             rv = args[i]*rv
         return rv
+
+    @staticmethod
+    def rmul_with_af(*args):
+        """
+        same as rmul, but the elements of args are Permutation objects
+        which have _array_form
+        """
+        a = [x._array_form for x in args]
+        rv = _af_new(_af_rmuln(*a))
+        return rv
+
+    def mul_inv(self, other):
+        """
+        other*~self, self and other have _array_form
+        """
+        a = _af_invert(self._array_form)
+        b = other._array_form
+        return _af_new(_af_rmul(a, b))
 
     def __rmul__(self, other):
         """This is needed to coerse other to Permutation in rmul."""
@@ -1199,7 +1262,7 @@ class Permutation(Basic):
         else:
             b.extend(range(len(b), len(a)))
             perm = [b[i] for i in a] + b[len(a):]
-        return Perm._af_new(perm)
+        return _af_new(perm)
 
     def commutes_with(self, other):
         """
@@ -1240,35 +1303,7 @@ class Permutation(Basic):
             raise NotImplementedError(
                 'p**p is not defined; do you mean p^p (conjugate)?')
         n = int(n)
-        if n == 0:
-            return Perm._af_new(range(self.size))
-        if n < 0:
-            return pow(~self, -n)
-        a = self.array_form
-        if n == 1:
-            return Perm._af_new(a)  # XXX is `return self` ok?
-        elif n == 2:
-            b = [a[i] for i in a]
-        elif n == 3:
-            b = [a[a[i]] for i in a]
-        elif n == 4:
-            b = [a[a[a[i]]] for i in a]
-        else:
-            # use binary multiplication
-            b = range(len(a))
-            while 1:
-                if n & 1:
-                    b = [b[i] for i in a]
-                    n -= 1
-                    if not n:
-                        break
-                if n % 4 == 0:
-                    a = [a[a[a[i]]] for i in a]
-                    n = n // 4
-                elif n % 2 == 0:
-                    a = [a[i] for i in a]
-                    n = n // 2
-        return Perm._af_new(b)
+        return _af_new(_af_pow(self.array_form, n))
 
     def __rxor__(self, i):
         """Return self(i) when ``i`` is an int.
@@ -1357,12 +1392,12 @@ class Permutation(Basic):
 
         if self.size != h.size:
             raise ValueError("The permutations must be of equal size.")
-        invh = [None]*self.size
+        a = [None]*self.size
         h = h.array_form
         p = self.array_form
         for i in range(self.size):
-            invh[h[i]] = i
-        return Perm._af_new([h[p[i]] for i in invh])
+            a[h[i]] = h[p[i]]
+        return _af_new(a)
 
     def transpositions(self):
         """
@@ -1445,7 +1480,7 @@ class Permutation(Basic):
         >>> p*~p == ~p*p == Permutation([0, 1, 2, 3])
         True
         """
-        return Perm._af_new(_af_invert(self.array_form))
+        return _af_new(_af_invert(self.array_form))
 
     def __iter__(self):
         """Yield elements from array form.
@@ -1564,7 +1599,7 @@ class Permutation(Basic):
                 perm[j], perm[i] = perm[i], perm[j]
                 i += 1
                 j -= 1
-        return Perm._af_new(perm)
+        return _af_new(perm)
 
     @classmethod
     def unrank_nonlex(self, n, r):
@@ -1596,7 +1631,7 @@ class Permutation(Basic):
         n = int(n)
         r = r % ifac(n)
         _unrank1(n, r, id_perm)
-        return Perm._af_new(id_perm)
+        return _af_new(id_perm)
 
     def rank_nonlex(self, inv_perm=None):
         """
@@ -2064,7 +2099,7 @@ class Permutation(Basic):
         invb = [None]*n
         for i in range(n):
             invb[b[i]] = i
-        return Perm._af_new([a[b[inva[i]]] for i in invb])
+        return _af_new([a[b[inva[i]]] for i in invb])
 
     def signature(self):
         """
@@ -2358,7 +2393,7 @@ class Permutation(Basic):
                     perm[i] = perm[i - 1]
                 perm[k] = j - 1
             r2 = r1
-        return Perm._af_new(perm)
+        return _af_new(perm)
 
     def next_trotterjohnson(self):
         """
@@ -2389,7 +2424,7 @@ class Permutation(Basic):
         st = 0
         rho = pi[:]
         done = False
-        m = n - 1
+        m = n-1
         while m > 0 and not done:
             d = rho.index(m)
             for i in range(d, m):
@@ -2410,7 +2445,7 @@ class Permutation(Basic):
                     done = True
         if m == 0:
             return None
-        return Perm._af_new(pi)
+        return _af_new(pi)
 
     def get_precedence_matrix(self):
         """
@@ -2665,7 +2700,7 @@ class Permutation(Basic):
         except IndexError:
             raise ValueError("The inversion vector is not valid.")
         perm.extend(N)
-        return Perm._af_new(perm)
+        return _af_new(perm)
 
     @classmethod
     def random(self, n):
@@ -2684,7 +2719,7 @@ class Permutation(Basic):
         """
         perm_array = range(n)
         random.shuffle(perm_array)
-        return Perm._af_new(perm_array)
+        return _af_new(perm_array)
 
     @classmethod
     def unrank_lex(self, size, rank):
@@ -2718,7 +2753,7 @@ class Permutation(Basic):
                 if perm_array[j] > d - 1:
                     perm_array[j] += 1
             psize = new_psize
-        return Perm._af_new(perm_array)
+        return _af_new(perm_array)
 
     # global flag to control how permutations are printed
     # when True, Permutation([0, 2, 1, 3]) -> Cycle(1, 2)
@@ -2745,7 +2780,7 @@ def _merge(arr, temp, left, mid, right):
             temp[k] = arr[j]
             k += 1
             j += 1
-            inv_count += (mid - i)
+            inv_count += (mid -i)
     while i < mid:
         temp[k] = arr[i]
         k += 1
@@ -2759,3 +2794,4 @@ def _merge(arr, temp, left, mid, right):
     return inv_count
 
 Perm = Permutation
+_af_new = Perm._af_new
