@@ -195,23 +195,33 @@ def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
     assumptions system.
     """
-    fact_string = "from sympy.logic.boolalg import And, Not, Or\n"
-    fact_string += "from sympy.assumptions.ask import Q\n\n"
+    from textwrap import dedent, wrap
 
+    fact_string = dedent('''\
+    from sympy.logic.boolalg import And, Not, Or
+    from sympy.assumptions.ask import Q
+
+    # -{ Known facts in CNF }-
+    known_facts_cnf = And(
+        %s
+    )
+
+    # -{ Known facts in compressed sets }-
+    known_facts_dict = {
+        %s
+    }''')
     # Compute the known facts in CNF form for logical inference
+    LINE = ",\n    "
+    HANG = ' '*8
     cnf = to_cnf(known_facts)
-    fact_string += "# -{ Known facts in CNF }-\n"
-    fact_string += "known_facts_cnf = And(\n    "
-    fact_string += ",\n    ".join(map(str, cnf.args))
-    fact_string += "\n)\n"
-
+    c = LINE.join([str(a) for a in cnf.args])
     mapping = single_fact_lookup(known_facts_keys, cnf)
-    fact_string += "\n# -{ Known facts in compressed sets }-\n"
-    fact_string += "known_facts_dict = {\n    "
-    fact_string += ",\n    ".join(
-        ["%s: %s" % item for item in mapping.items()])
-    fact_string += "\n}\n"
-    return fact_string
+    m = LINE.join(['\n'.join(
+        wrap("%s: %s" % item,
+            subsequent_indent=HANG,
+            break_long_words=False))
+        for item in mapping.items()])
+    return fact_string % (c, m)
 
 # handlers_dict tells us what ask handler we should use
 # for a particular key
