@@ -227,6 +227,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tarun Gaba: Implemented some trigonometric integrals
 #. Takafumi Arakaki: Add info target to the doc Makefile
 #. Alexander Eberspächer: correct typo in aboutus.rst
+#. Sachin Joglekar: Simplification of logic expressions to SOP and POS forms
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
