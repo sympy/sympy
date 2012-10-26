@@ -21,4 +21,7 @@ def test_adjoint():
     assert Adjoint(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 3], [2, 4]])
 
     assert Adjoint(Trace(Sq)) == conjugate(Trace(Sq))
+    assert Trace(Adjoint(Sq)) == conjugate(Trace(Sq))
+
+    assert Adjoint(Sq)[0, 1] == conjugate(Sq[1, 0])
 

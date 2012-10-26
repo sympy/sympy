@@ -1,6 +1,6 @@
 from matexpr import MatrixExpr
 from sympy import Basic
-
+from sympy.functions.elementary.complexes import conjugate
 
 class Adjoint(MatrixExpr):
     """Matrix Adjoint
