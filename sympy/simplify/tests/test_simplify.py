@@ -5,7 +5,7 @@ from sympy import (
     Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I, Integer,
     Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O, oo, pi,
     Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
-    Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, S,
+    Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
     symbols, sympify, tan, tanh, trigsimp, Wild, Basic)
 from sympy.core.mul import _keep_coeff
@@ -439,7 +439,6 @@ def test_powsimp():
     x, y, z, n = symbols('x,y,z,n')
     f = Function('f')
     assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
-    assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
 
     assert powsimp(
         f(4**x * 2**(-x) * 2**(-x)) ) == f(4**x * 2**(-x) * 2**(-x))
@@ -1422,6 +1421,7 @@ def test_Piecewise():
     assert simplify(Piecewise((e1, x < e2), (e3, True))) == \
         Piecewise((s1, x < s2), (s3, True))
 
+
 def test_polymorphism():
     class A(Basic):
         def _eval_simplify(x, **kwargs):
@@ -1429,3 +1429,13 @@ def test_polymorphism():
 
     a = A(5, 2)
     assert simplify(a) == 1
+
+
+def test_issue_from_PR1599():
+    n1, n2, n3, n4 = symbols('n1 n2 n3 n4', negative=True)
+    assert simplify(I*sqrt(n1)) == I*sqrt(n1)
+    assert (powsimp(sqrt(n1)*sqrt(n2)*sqrt(n3)) ==
+        -I*sqrt(-n1)*sqrt(-n2)*sqrt(-n3))
+    assert (powsimp(root(n1, 3)*root(n2, 3)*root(n3, 3)*root(n4, 3)) ==
+        -(-1)**(S(1)/3)*
+        (-n1)**(S(1)/3)*(-n2)**(S(1)/3)*(-n3)**(S(1)/3)*(-n4)**(S(1)/3))
