@@ -128,6 +128,14 @@ class Product(Expr):
         else:
             return powsimp(f)
 
+    def _eval_adjoint(self):
+        if self.is_commutative:
+            return Product(self.function.adjoint(), *self.limits)
+        return None
+
+    def _eval_conjugate(self):
+        return Product(self.function.conjugate(), *self.limits)
+
     def _eval_product(self, term, limits):
         from sympy import summation
 
@@ -205,6 +213,11 @@ class Product(Expr):
                 return Product(evaluated, limits)
             else:
                 return f
+
+    def _eval_transpose(self):
+        if self.is_commutative:
+            return Product(self.function.transpose(), *self.limits)
+        return None
 
 
 def product(*args, **kwargs):

@@ -63,6 +63,9 @@ class LeviCivita(Function):
     Eijk
 
     """
+
+    is_integer = True
+
     @classmethod
     def eval(cls, *args):
         if all(isinstance(a, (int, Integer)) for a in args):
@@ -124,7 +127,7 @@ class KroneckerDelta(Function):
     """
 
     nargs = 2
-    is_commutative = True
+
     is_integer = True
 
     @classmethod
@@ -425,12 +428,3 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
-
-    def _sympyrepr(self, printer, *args):
-        return "%s(%s, %s)" % (self.__class__.__name__, self.args[0],
-        self.args[1])
-
-    def _latex(self, printer, *args):
-        i = printer._print(self.args[0], *args)
-        j = printer._print(self.args[1], *args)
-        return '\\delta_{%s %s}' % (i, j)

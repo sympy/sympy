@@ -1,8 +1,11 @@
-from sympy import symbols, Symbol, Eijk, LeviCivita, KroneckerDelta, Dummy
+from sympy import (
+    adjoint, conjugate, Dummy, Eijk, KroneckerDelta, LeviCivita, Symbol,
+    symbols, transpose,
+)
 from sympy.physics.secondquant import evaluate_deltas, F
 from sympy.utilities.pytest import XFAIL
 
-x, y = symbols('x,y')
+x, y = symbols('x y')
 
 
 def test_levicivita():
@@ -19,9 +22,15 @@ def test_levicivita():
     assert LeviCivita(4, 5, 1, 2, 3) == 1
     assert LeviCivita(4, 5, 2, 1, 3) == -1
 
+    assert LeviCivita(i, j, k).is_integer is True
+
+    assert adjoint(LeviCivita(i, j, k)) == LeviCivita(i, j, k)
+    assert conjugate(LeviCivita(i, j, k)) == LeviCivita(i, j, k)
+    assert transpose(LeviCivita(i, j, k)) == LeviCivita(i, j, k)
+
 
 def test_kronecker_delta():
-    i, j = symbols('i,j')
+    i, j = symbols('i j')
     k = Symbol('k', nonzero=True)
     assert KroneckerDelta(1, 1) == 1
     assert KroneckerDelta(1, 2) == 0
@@ -31,10 +40,17 @@ def test_kronecker_delta():
     assert KroneckerDelta(i, i + 1) == 0
     assert KroneckerDelta(0, 0) == 1
     assert KroneckerDelta(0, 1) == 0
+    assert KroneckerDelta(i + k, i) == KroneckerDelta(0, k)
     assert KroneckerDelta(i + k, i + k) == 1
     assert KroneckerDelta(i + k, i + 1 + k) == 0
     assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0
     assert KroneckerDelta(i, j).subs(dict(i=3, j=3)) == 1
+
+    assert KroneckerDelta(i, j).is_integer is True
+
+    assert adjoint(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
+    assert conjugate(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
+    assert transpose(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
 
 
 def test_kronecker_delta_secondquant():
@@ -105,8 +121,3 @@ def test_kronecker_delta_secondquant():
     assert EV(D(p, j)*D(p, i)*F(i)) == F(j)
     assert EV(D(p, j)*D(p, i)*F(j)) == F(i)
     assert EV(D(p, q)*D(p, i))*F(i) == D(q, i)*F(i)
-
-
-@XFAIL
-def test_kronecker_delta_failing():
-    assert D(i, i + k) == D(0, k)

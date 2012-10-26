@@ -177,9 +177,11 @@ class Piecewise(Function):
             if c is True or c.subs(x, 0) is True:
                 return e.as_leading_term(x)
 
+    def _eval_adjoint(self):
+        return Piecewise(*[(e.adjoint(), c) for e, c in self.args])
+
     def _eval_conjugate(self):
-        from sympy.functions.elementary.complexes import conjugate
-        return Piecewise(*[(conjugate(e), c) for e, c in self.args])
+        return Piecewise(*[(e.conjugate(), c) for e, c in self.args])
 
     def _eval_derivative(self, x):
         return Piecewise(*[(diff(e, x), c) for e, c in self.args])
@@ -395,6 +397,11 @@ class Piecewise(Function):
 
         return int_expr
 
+    def _eval_nseries(self, x, n, logx):
+        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond),
+                   self.args)
+        return self.func(*args)
+
     def _eval_power(self, s):
         return Piecewise(*[(e**s, c) for e, c in self.args])
 
@@ -415,10 +422,8 @@ class Piecewise(Function):
 
         return Piecewise(*args)
 
-    def _eval_nseries(self, x, n, logx):
-        args = map(lambda ec: (ec.expr._eval_nseries(x, n, logx), ec.cond),
-                   self.args)
-        return self.func(*args)
+    def _eval_transpose(self):
+        return Piecewise(*[(e.transpose(), c) for e, c in self.args])
 
     def _eval_template_is_attr(self, is_attr, when_multiple=None):
         b = None
