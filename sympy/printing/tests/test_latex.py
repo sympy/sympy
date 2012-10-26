@@ -1,5 +1,5 @@
 from sympy import (
-    Abs, Chi, Ci, CosineTransform, Dict, Ei, FallingFactorial, FiniteSet,
+    Abs, Chi, Ci, CosineTransform, Dict, Ei, Eq, FallingFactorial, FiniteSet,
     Float, FourierTransform, Function, Integral, Interval,
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
@@ -17,7 +17,7 @@ from sympy import (
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.functions import DiracDelta
+from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
 from sympy.core.trace import Tr
 
@@ -426,10 +426,33 @@ def test_latex_inverse():
 
 
 def test_latex_DiracDelta():
-    assert latex(DiracDelta(x)) == "\\delta\\left(x\\right)"
-    assert latex(DiracDelta(x, 0)) == "\\delta\\left(x\\right)"
-    assert latex(
-        DiracDelta(x, 5)) == "\\delta^{\\left( 5 \\right)}\\left( x \\right)"
+    assert latex(DiracDelta(x)) == r"\delta\left(x\right)"
+    assert latex(DiracDelta(x)**2) == r"\left(\delta\left(x\right)\right)^{2}"
+    assert latex(DiracDelta(x, 0)) == r"\delta\left(x\right)"
+    assert latex(DiracDelta(x, 5)) == \
+        r"\delta^{\left( 5 \right)}\left( x \right)"
+    assert latex(DiracDelta(x, 5)**2) == \
+        r"\left(\delta^{\left( 5 \right)}\left( x \right)\right)^{2}"
+
+
+def test_latex_Heaviside():
+    assert latex(Heaviside(x)) == r"\theta\left(x\right)"
+    assert latex(Heaviside(x)**2) == r"\left(\theta\left(x\right)\right)^{2}"
+
+
+def test_latex_KroneckerDelta():
+    assert latex(KroneckerDelta(x, y)) == r"\delta_{x y}"
+    assert latex(KroneckerDelta(x, y)**2) == r"\left(\delta_{x y}\right)^{2}"
+    assert latex(KroneckerDelta(x, y + 1)) == r"\delta_{x, y + 1}"
+    assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{x + 1, y}"
+
+
+def test_latex_LeviCivita():
+    assert latex(LeviCivita(x, y, z)) == r"\varepsilon_{x y z}"
+    assert latex(LeviCivita(x, y, z)**2) == r"\left(\varepsilon_{x y z}\right)^{2}"
+    assert latex(LeviCivita(x, y, z + 1)) == r"\varepsilon_{x, y, z + 1}"
+    assert latex(LeviCivita(x, y + 1, z)) == r"\varepsilon_{x, y + 1, z}"
+    assert latex(LeviCivita(x + 1, y, z)) == r"\varepsilon_{x + 1, y, z}"
 
 
 def test_mode():
@@ -452,6 +475,12 @@ def test_latex_Piecewise():
     p = Piecewise((x, x < 0), (0, x >= 0))
     assert latex(p) == "\\begin{cases} x & \\text{for}\\: x < 0 \\\\0 &" \
                        " \\text{for}\\: x \\geq 0 \\end{cases}"
+    A, B = symbols("A B", commutative=False)
+    p = Piecewise((A**2, Eq(A, B)), (A*B, True))
+    s = r"\begin{cases} A^{2} & \text{for}\: A = B \\A B & \text{otherwise} \end{cases}"
+    assert latex(p) == s
+    assert latex(A*p) == r"A %s" % s
+    assert latex(p*A) == r"\left(%s\right) A" % s
 
 
 def test_latex_Matrix():

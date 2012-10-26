@@ -1,5 +1,5 @@
 from sympy.utilities.pytest import raises
-from sympy import S, symbols, Symbol, Tuple, Mul, Lambda
+from sympy import S, symbols, Symbol, Tuple, Mul, Lambda, simplify, sin, cos
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
         ZeroMatrix, MatAdd, MatPow, ImmutableMatrix, Trace,
@@ -322,3 +322,14 @@ def test_free_symbols():
 
 def test_zero_matmul():
     assert isinstance(S.Zero * MatrixSymbol('X', 2, 2), MatrixExpr)
+
+x = Symbol('x')
+def test_matadd_simplify():
+    A = MatrixSymbol('A', 1, 1)
+    assert simplify(MatAdd(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) ==\
+                    MatAdd(A, ImmutableMatrix([[1]]))
+
+def test_matmul_simplify():
+    A = MatrixSymbol('A', 1, 1)
+    assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) ==\
+                    MatMul(A, ImmutableMatrix([[1]]))

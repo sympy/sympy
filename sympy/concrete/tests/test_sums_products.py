@@ -1,7 +1,7 @@
 from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
                    factorial, Function, harmonic, Integral, log, nan, oo, pi,
                    Product, product, Rational, S, sqrt, Sum, summation, Symbol,
-                   sympify, zeta, oo)
+                   symbols, sympify, zeta, oo)
 from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -385,6 +385,14 @@ def test_free_symbols():
         assert func(x, (y, 1, y), (y, 1, z)).free_symbols == set([x, z])
     assert Sum(1, (x, 1, y)).free_symbols == set([y])
     assert Product(1, (x, 1, y)).free_symbols == set()
+
+
+def test_conjugate_transpose():
+    A, B = symbols("A B", commutative=False)
+    p = Sum(A*B**n, (n, 1, 3))
+    assert p.adjoint().doit() == p.doit().adjoint()
+    assert p.conjugate().doit() == p.doit().conjugate()
+    assert p.transpose().doit() == p.doit().transpose()
 
 
 @XFAIL
