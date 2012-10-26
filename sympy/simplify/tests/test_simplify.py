@@ -315,7 +315,8 @@ def test_simplify():
     solutions = solve([f_1, f_2, f_3], x, y, z, simplify=False)
 
     assert simplify(solutions[y]) == \
-        (a*i + c*d + f*g - a*f - c*g - d*i)/(a*e*i + b*f*g + c*d*h - a*f*h - b*d*i - c*e*g)
+        (a*i + c*d + f*g - a*f - c*g - d*i)/(a*e*i + b*f*g + c*d*
+         h - a*f*h - b*d*i - c*e*g)
 
     f = -x + y/(z + t) + z*x/(z + t) + z*a/(z + t) + t*x/(z + t)
 
@@ -448,7 +449,8 @@ def test_powsimp():
     assert exp(x)*exp(y) == exp(x)*exp(y)
     assert powsimp(exp(x)*exp(y)) == exp(x + y)
     assert powsimp(exp(x)*exp(y)*2**x*2**y) == (2*E)**(x + y)
-    assert powsimp(exp(x)*exp(y)*2**x*2**y, combine='exp') == exp(x + y)*2**(x + y)
+    assert powsimp(
+        exp(x)*exp(y)*2**x*2**y, combine='exp') == exp(x + y)*2**(x + y)
     assert powsimp(exp(x)*exp(y)*exp(2)*sin(x) + sin(y) + 2**x*2**y) == \
         exp(2 + x + y)*sin(x) + sin(y) + 2**(x + y)
     assert powsimp(sin(exp(x)*exp(y))) == sin(exp(x)*exp(y))
@@ -942,7 +944,8 @@ def test_logcombine_complex_coeff():
     # these hold.
     assert logcombine(Integral((sin(x**2) + cos(x**3))/x, x), force=True) == \
         Integral((sin(x**2) + cos(x**3))/x, x)
-    assert logcombine(Integral((sin(x**2) + cos(x**3))/x, x) + (2 + 3*I)*log(x),
+    assert logcombine(
+        Integral((sin(x**2) + cos(x**3))/x, x) + (2 + 3*I)*log(x),
         force=True) == log(x**2) + 3*I*log(x) + \
         Integral((sin(x**2) + cos(x**3))/x, x)
 
@@ -1285,14 +1288,16 @@ def test_combsimp_gamma():
     assert combsimp(gamma(x + y)*(x + y)) == gamma(x + y + 1)
     assert combsimp(x/gamma(x + 1)) == 1/gamma(x)
     assert combsimp((x + 1)**2/gamma(x + 2)) == (x + 1)/gamma(x + 1)
-    assert combsimp(x*gamma(x) + gamma(x + 3)/(x + 2)) == gamma(x + 1) + gamma(x + 2)
+    assert combsimp(
+        x*gamma(x) + gamma(x + 3)/(x + 2)) == gamma(x + 1) + gamma(x + 2)
 
     assert combsimp(gamma(2*x)*x) == gamma(2*x + 1)/2
     assert combsimp(gamma(2*x)/(x - S(1)/2)) == 2*gamma(2*x - 1)
 
     assert combsimp(gamma(x)*gamma(1 - x)) == pi/sin(pi*x)
     assert combsimp(gamma(x)*gamma(-x)) == -pi/(x*sin(pi*x))
-    assert combsimp(1/gamma(x + 3)/gamma(1 - x)) == sin(pi*x)/(pi*x*(x + 1)*(x + 2))
+    assert combsimp(
+        1/gamma(x + 3)/gamma(1 - x)) == sin(pi*x)/(pi*x*(x + 1)*(x + 2))
 
     assert simplify(combsimp(
         gamma(x)*gamma(x + S(1)/2)*gamma(y)/gamma(x + y))) == \

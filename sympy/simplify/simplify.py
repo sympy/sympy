@@ -3310,7 +3310,8 @@ def _logcombine(expr, force=False):
                     argslist *= _logcombine(i.args[0], force)
                 else:
                     notlogs += i
-            elif i.is_Mul and any(map(lambda t: getattr(t, 'func', False) == log,
+            elif i.is_Mul and any(
+                map(lambda t: getattr(t, 'func', False) == log,
             i.args)):
                 largs = _getlogargs(i)
                 assert len(largs) != 0
