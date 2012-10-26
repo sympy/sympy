@@ -1221,16 +1221,19 @@ def test_hermitian():
     assert ask(Q.antihermitian(x + I), Q.real(x)) is False
 
     assert ask(
-        Q.antihermitian(x + y), Q.antihermitian(x) & Q.antihermitian(y)) is True
+        Q.antihermitian(x + y), Q.antihermitian(x) & Q.antihermitian(y)
+    ) is True
     assert ask(
         Q.antihermitian(x + y), Q.antihermitian(x) & Q.complex(y)) is None
     assert ask(
         Q.antihermitian(x + y), Q.antihermitian(x) & Q.hermitian(y)) is False
     assert ask(
         Q.antihermitian(x + y), Q.antihermitian(x) & Q.imaginary(y)) is True
-    assert ask(Q.antihermitian(x + y), Q.antihermitian(x) & Q.real(y)) is False
+    assert ask(Q.antihermitian(x + y), Q.antihermitian(x) & Q.real(y)
+        ) is False
     assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.complex(y)) is None
-    assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.hermitian(y)) is None
+    assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.hermitian(y)
+        ) is None
     assert ask(
         Q.antihermitian(x + y), Q.hermitian(x) & Q.imaginary(y)) is False
     assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.real(y)) is None

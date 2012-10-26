@@ -53,7 +53,8 @@ class AskInvertibleHandler(CommonHandler):
         factor, mmul = expr.as_coeff_mmul()
         if all(ask(Q.invertible(arg), assumptions) for arg in mmul.args):
             return True
-        if any(ask(Q.invertible(arg), assumptions) is False for arg in mmul.args):
+        if any(ask(Q.invertible(arg), assumptions) is False
+               for arg in mmul.args):
             return False
 
     @staticmethod
@@ -132,8 +133,8 @@ class AskPositiveDefiniteHandler(CommonHandler):
     @staticmethod
     def MatMul(expr, assumptions):
         factor, mmul = expr.as_coeff_mmul()
-        if (all(ask(Q.positive_definite(arg), assumptions) for arg in mmul.args)
-                and factor > 0):
+        if (all(ask(Q.positive_definite(arg), assumptions)
+                for arg in mmul.args) and factor > 0):
             return True
         if len(mmul.args) >= 2 and mmul.args[0] == mmul.args[-1].T:
             return ask(Q.positive_definite(
@@ -141,7 +142,8 @@ class AskPositiveDefiniteHandler(CommonHandler):
 
     @staticmethod
     def MatAdd(expr, assumptions):
-        if all(ask(Q.positive_definite(arg), assumptions) for arg in expr.args):
+        if all(ask(Q.positive_definite(arg), assumptions)
+                for arg in expr.args):
             return True
 
     @staticmethod
