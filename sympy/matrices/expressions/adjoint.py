@@ -10,10 +10,8 @@ class Adjoint(MatrixExpr):
     >>> from sympy import MatrixSymbol, Adjoint
     >>> A = MatrixSymbol('A', 3, 5)
     >>> B = MatrixSymbol('B', 5, 3)
-    >>> Adjoint(A)
-    A'
     >>> Adjoint(A*B)
-    B'*A'
+    Adjoint(B)*Adjoint(A)
     """
     is_Adjoint = True
 
