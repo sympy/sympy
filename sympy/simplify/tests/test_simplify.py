@@ -350,11 +350,13 @@ def test_simplify_other():
     # issue 3271
     assert simplify(2**(2 + x)/4) == 2**x
 
+
 def test_simplify_complex():
     cosAsExp = cos(x)._eval_rewrite_as_exp(x)
     tanAsExp = tan(x)._eval_rewrite_as_exp(x)
     assert simplify(cosAsExp*tanAsExp).expand() == (
         sin(x))._eval_rewrite_as_exp(x).expand()  # issue 1242
+
 
 def test_simplify_ratio():
     # roots of x**3-3*x+5
