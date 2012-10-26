@@ -89,7 +89,7 @@ class AskOrthogonalHandler(CommonHandler):
     def MatMul(expr, assumptions):
         factor, mmul = expr.as_coeff_mmul()
         if (all(ask(Q.orthogonal(arg), assumptions) for arg in mmul.args) and
-            factor == 1):
+                factor == 1):
             return True
         if any(ask(Q.invertible(arg), assumptions) == False
                 for arg in mmul.args):
