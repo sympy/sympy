@@ -404,7 +404,7 @@ def test_H31():
     assert apart(f) == g
 
 @XFAIL
-def test_H32():
+def test_H32(): # issue 3459
     raise NotImplementedError("[A*B*C - (A*B*C)**(-1)]*A*C*B (noncommuting)")
 
 def test_H33():
