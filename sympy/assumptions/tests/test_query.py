@@ -2,11 +2,11 @@ from sympy.abc import t, w, x, y, z
 from sympy.assumptions import (ask, AssumptionsContext, global_assumptions, Q,
                                register_handler, remove_handler)
 from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
-                                   known_facts_dict)
+                                   known_facts_dict, single_fact_lookup)
 from sympy.assumptions.handlers import AskHandler
 from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
 from sympy.functions import Abs, cos, exp, im, log, re, sign, sin, sqrt
-from sympy.logic import Equivalent, Implies, Xor
+from sympy.logic import Equivalent, Implies, Xor, And, to_cnf
 from sympy.utilities.pytest import raises, XFAIL, slow
 
 
@@ -1637,11 +1637,30 @@ def test_type_extensibility():
     register_handler(Q.prime, MyAskHandler)
     assert ask(Q.prime(a)) is True
 
+def test_single_fact_lookup():
+    known_facts = And(Implies(Q.integer, Q.rational),
+                      Implies(Q.rational, Q.real),
+                      Implies(Q.real, Q.complex))
+    known_facts_keys = set([Q.integer, Q.rational, Q.real, Q.complex])
+
+    known_facts_cnf = to_cnf(known_facts)
+    mapping = single_fact_lookup(known_facts_keys, known_facts_cnf)
+
+    assert mapping[Q.rational] == set([Q.real, Q.rational, Q.complex])
 
 def test_compute_known_facts():
+    known_facts = And(Implies(Q.integer, Q.rational),
+                      Implies(Q.rational, Q.real),
+                      Implies(Q.real, Q.complex))
+    known_facts_keys = set([Q.integer, Q.rational, Q.real, Q.complex])
+
+    s = compute_known_facts(known_facts, known_facts_keys)
+
+def test_known_facts_consistent():
+    from sympy.assumptions.ask import known_facts, known_facts_keys
     ns = {}
     exec 'from sympy.logic.boolalg import And, Or, Not' in globals(), ns
-    exec compute_known_facts() in globals(), ns
+    exec compute_known_facts(known_facts, known_facts_keys) in globals(), ns
     assert ns['known_facts_cnf'] == known_facts_cnf
     assert ns['known_facts_dict'] == known_facts_dict
 
