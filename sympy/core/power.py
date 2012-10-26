@@ -696,7 +696,7 @@ class Pow(Expr):
         if sb.is_Symbol and se.is_Integer and expr:
             if e.is_rational:
                 return sb.matches(b**(e/se), repl_dict)
-            return expr**(1/se)
+            return sb.matches(expr**(1/se), repl_dict)
 
         d = repl_dict.copy()
         d = self.base.matches(b, d)
