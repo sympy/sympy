@@ -85,4 +85,4 @@ def test_immutable_evaluation():
     assert isinstance(X * A, ImmutableMatrix)
     assert isinstance(X * 2, ImmutableMatrix)
     assert isinstance(2 * X, ImmutableMatrix)
-    assert isinstance(A**2,  ImmutableMatrix)
+    assert isinstance(A**2, ImmutableMatrix)

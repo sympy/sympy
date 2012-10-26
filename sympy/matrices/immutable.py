@@ -82,6 +82,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     __div__ = MatrixBase.__div__
     __truediv__ = MatrixBase.__truediv__
 
+
 class ImmutableSparseMatrix(Basic, SparseMatrix):
     """Create an immutable version of a sparse matrix.
 
