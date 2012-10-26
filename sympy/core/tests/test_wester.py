@@ -405,7 +405,8 @@ def test_H31():
 
 @XFAIL
 def test_H32(): # issue 3459
-    raise NotImplementedError("[A*B*C - (A*B*C)**(-1)]*A*C*B (noncommuting)")
+    raise NotImplementedError("[A*B*C - (A*B*C)**(-1)]*A*C*B (product \
+                              of a non-commuting product and its inverse)")
 
 def test_H33():
     A, B, C = symbols('A, B, C', commutatative = False)
