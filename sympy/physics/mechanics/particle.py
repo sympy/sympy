@@ -16,11 +16,11 @@ class Particle(object):
     ==========
     name : str
         Name of particle
-    mass : sympifyable
-        A SymPy expression representing the Particle's mass
     point : Point
         A physics/mechanics Point which represents the position, velocity, and
         acceleration of this Particle
+    mass : sympifyable
+        A SymPy expression representing the Particle's mass
 
     Examples
     ========
