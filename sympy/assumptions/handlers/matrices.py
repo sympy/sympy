@@ -53,7 +53,7 @@ class AskInvertibleHandler(CommonHandler):
         factor, mmul = expr.as_coeff_mmul()
         if all(ask(Q.invertible(arg), assumptions) for arg in mmul.args):
             return True
-        if any(ask(Q.invertible(arg), assumptions)==False for arg in mmul.args):
+        if any(ask(Q.invertible(arg), assumptions) is False for arg in mmul.args):
             return False
 
     @staticmethod
@@ -94,7 +94,7 @@ class AskOrthogonalHandler(CommonHandler):
         if (all(ask(Q.orthogonal(arg), assumptions) for arg in mmul.args) and
                 factor == 1):
             return True
-        if any(ask(Q.invertible(arg), assumptions) == False
+        if any(ask(Q.invertible(arg), assumptions) is False
                 for arg in mmul.args):
             return False
 
