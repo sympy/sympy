@@ -1,5 +1,7 @@
 """ Rewrite Rules
 
+DISCLAIMER: This module is experimental. The interface is subject to change.
+
 A rule is a function that transforms one expression into another
 
     Rule :: Expr -> Expr
