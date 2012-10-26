@@ -689,13 +689,14 @@ class Pow(Expr):
             if d is not None:
                 return d
 
-        # special case number
-        if expr.is_number:
-            sb, se = self.as_base_exp()
-            if sb.is_Symbol and se.is_Integer and expr:
-                return sb.matches(expr**(1/se), repl_dict)
-
         b, e = expr.as_base_exp()
+
+        # special case number
+        sb, se = self.as_base_exp()
+        if sb.is_Symbol and se.is_Integer and expr:
+            if e.is_rational:
+                return sb.matches(b**(e/se), repl_dict)
+            return expr**(1/se)
 
         d = repl_dict.copy()
         d = self.base.matches(b, d)

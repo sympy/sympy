@@ -520,13 +520,19 @@ def test_issue_1460():
 
     # these could be allowed to fail
 
-    assert (x/3).match(w/y) is None
-    assert (3*x).match(w/y) is None
+    assert (x/3).match(w/y) == {w: S(1)/3, y: 1/x}
+    assert (3*x).match(w/y) == {w: 3, y: 1/x}
     assert (3/x).match(w*y) == {w: 3, y: 1/x}
 
     # since (x**i = y) -> x = y**(1/i) where i is an integer
     # the following should also be valid as long as x is not
-    # zero when i is negative
+    # zero when i is negative. Note that solve will give
+    # multiple roots but match only gives one:
+    # 
+    # >>> solve(x**r-y**2,y)
+    # [-x**(r/2), x**(r/2)]
+    r = Symbol('r', rational=True)
+    assert (x**r).match(y**2) == {y: x**(r/2)}
 
     a = Wild('a')
 
