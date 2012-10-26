@@ -1,4 +1,6 @@
-"""rename as test_assumptions.py when the old assumptions system is deleted"""
+"""
+rename this to test_assumptions.py when the old assumptions system is deleted
+"""
 from sympy.abc import x, y
 from sympy.assumptions import global_assumptions, Predicate
 from sympy.assumptions.ask import _extract_facts, Q
