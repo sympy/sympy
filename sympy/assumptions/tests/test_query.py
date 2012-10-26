@@ -1637,6 +1637,7 @@ def test_type_extensibility():
     register_handler(Q.prime, MyAskHandler)
     assert ask(Q.prime(a)) is True
 
+
 def test_single_fact_lookup():
     known_facts = And(Implies(Q.integer, Q.rational),
                       Implies(Q.rational, Q.real),
@@ -1648,6 +1649,7 @@ def test_single_fact_lookup():
 
     assert mapping[Q.rational] == set([Q.real, Q.rational, Q.complex])
 
+
 def test_compute_known_facts():
     known_facts = And(Implies(Q.integer, Q.rational),
                       Implies(Q.rational, Q.real),
@@ -1655,6 +1657,7 @@ def test_compute_known_facts():
     known_facts_keys = set([Q.integer, Q.rational, Q.real, Q.complex])
 
     s = compute_known_facts(known_facts, known_facts_keys)
+
 
 def test_known_facts_consistent():
     from sympy.assumptions.ask import known_facts, known_facts_keys

@@ -7,6 +7,7 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.matrices.expressions import MatMul
 
+
 class AskSymmetricHandler(CommonHandler):
     """
     Handler for key 'symmetric'
@@ -40,6 +41,7 @@ class AskSymmetricHandler(CommonHandler):
     def Transpose(expr, assumptions):
         return ask(Q.symmetric(expr.arg), assumptions)
     Inverse = Transpose
+
 
 class AskInvertibleHandler(CommonHandler):
     """
@@ -80,6 +82,7 @@ class AskInvertibleHandler(CommonHandler):
     @staticmethod
     def Inverse(expr, assumptions):
         return True
+
 
 class AskOrthogonalHandler(CommonHandler):
     """
@@ -161,6 +164,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
         return ask(Q.positive_definite(expr.arg), assumptions)
     Inverse = Transpose
 
+
 class AskUpperTriangularHandler(CommonHandler):
     """
     Handler for key 'upper_triangular'
@@ -194,6 +198,7 @@ class AskUpperTriangularHandler(CommonHandler):
     def Inverse(expr, assumptions):
         return ask(Q.upper_triangular(expr.arg), assumptions)
 
+
 class AskLowerTriangularHandler(CommonHandler):
     """
     Handler for key 'lower_triangular'
@@ -226,6 +231,7 @@ class AskLowerTriangularHandler(CommonHandler):
     @staticmethod
     def Inverse(expr, assumptions):
         return ask(Q.lower_triangular(expr.arg), assumptions)
+
 
 class AskDiagonalHandler(CommonHandler):
     """

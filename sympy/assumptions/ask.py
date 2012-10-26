@@ -5,6 +5,7 @@ from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 
+
 class Q:
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
@@ -35,6 +36,7 @@ class Q:
     upper_triangular = Predicate('upper_triangular')
     lower_triangular = Predicate('lower_triangular')
     diagonal = Predicate('diagonal')
+
 
 def _extract_facts(expr, symbol):
     """
@@ -187,6 +189,7 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
                 if ask_full_inference(other_key, key, known_facts_cnf):
                     mapping[key].add(other_key)
     return mapping
+
 
 def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
