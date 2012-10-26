@@ -418,7 +418,8 @@ atoms_table = {
     'Integers':         U('DOUBLE-STRUCK CAPITAL Z'),
     'Reals':            U('DOUBLE-STRUCK CAPITAL R'),
     'Union':            U('UNION'),
-    'Intersection':     U('INTERSECTION')
+    'Intersection':     U('INTERSECTION'),
+    'Ring':             U('RING OPERATOR')
 }
 
 
