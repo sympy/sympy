@@ -1175,7 +1175,8 @@ def test_hermitian():
     assert ask(
         Q.hermitian(x + y), Q.antihermitian(x) & Q.antihermitian(y)) is None
     assert ask(Q.hermitian(x + y), Q.antihermitian(x) & Q.complex(y)) is None
-    assert ask(Q.hermitian(x + y), Q.antihermitian(x) & Q.hermitian(y)) is False
+    assert ask(
+        Q.hermitian(x + y), Q.antihermitian(x) & Q.hermitian(y)) is False
     assert ask(Q.hermitian(x + y), Q.antihermitian(x) & Q.imaginary(y)) is None
     assert ask(Q.hermitian(x + y), Q.antihermitian(x) & Q.real(y)) is False
     assert ask(Q.hermitian(x + y), Q.hermitian(x) & Q.complex(y)) is None
@@ -1195,7 +1196,8 @@ def test_hermitian():
     assert ask(Q.hermitian(I*x), Q.real(x)) is False
     assert ask(Q.hermitian(x*y), Q.hermitian(x) & Q.real(y)) is True
 
-    assert ask(Q.hermitian(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is True
+    assert ask(
+        Q.hermitian(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is True
     assert ask(Q.hermitian(x + y + z),
         Q.real(x) & Q.real(y) & Q.imaginary(z)) is False
     assert ask(Q.hermitian(x + y + z),
@@ -1220,7 +1222,8 @@ def test_hermitian():
 
     assert ask(
         Q.antihermitian(x + y), Q.antihermitian(x) & Q.antihermitian(y)) is True
-    assert ask(Q.antihermitian(x + y), Q.antihermitian(x) & Q.complex(y)) is None
+    assert ask(
+        Q.antihermitian(x + y), Q.antihermitian(x) & Q.complex(y)) is None
     assert ask(
         Q.antihermitian(x + y), Q.antihermitian(x) & Q.hermitian(y)) is False
     assert ask(
@@ -1228,7 +1231,8 @@ def test_hermitian():
     assert ask(Q.antihermitian(x + y), Q.antihermitian(x) & Q.real(y)) is False
     assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.complex(y)) is None
     assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.hermitian(y)) is None
-    assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.imaginary(y)) is False
+    assert ask(
+        Q.antihermitian(x + y), Q.hermitian(x) & Q.imaginary(y)) is False
     assert ask(Q.antihermitian(x + y), Q.hermitian(x) & Q.real(y)) is None
     assert ask(Q.antihermitian(x + y), Q.imaginary(x) & Q.complex(y)) is None
     assert ask(Q.antihermitian(x + y), Q.imaginary(x) & Q.imaginary(y)) is True
@@ -1270,7 +1274,8 @@ def test_imaginary():
     assert ask(Q.imaginary(I*x), Q.complex(x)) is None
     assert ask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
 
-    assert ask(Q.imaginary(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is False
+    assert ask(
+        Q.imaginary(x + y + z), Q.real(x) & Q.real(y) & Q.real(z)) is False
     assert ask(Q.imaginary(x + y + z),
         Q.real(x) & Q.real(y) & Q.imaginary(z)) is None
     assert ask(Q.imaginary(x + y + z),
