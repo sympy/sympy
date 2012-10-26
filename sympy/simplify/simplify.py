@@ -2248,6 +2248,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             bases = c_exp[e]
 
             # calculate the new base for e
+
             if len(bases) == 1:
                 new_base = bases[0]
             elif e.is_integer or force:
@@ -2272,10 +2273,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     nonneg.extend(unk + neg)
                     unk = neg = []
                 elif neg:
-                    # their negative signs cancel in pairs
-                    neg = [-w for w in neg]
-                    if len(neg) % 2:
-                        unk.append(S.NegativeOne)
+                    # their negative signs cancel in groups of 2*q if we know
+                    # that e = p/q else we have to treat them as unknown
+                    if e.is_Rational:
+                        neg = [-w for w in neg]
+                        unk.extend([S.NegativeOne]*(len(neg) % (2*e.q)))
+                    else:
+                        unk.extend(neg)
+                        neg = []
 
                 # these shouldn't be joined
                 for b in unk:
@@ -3305,7 +3310,8 @@ def _logcombine(expr, force=False):
                     argslist *= _logcombine(i.args[0], force)
                 else:
                     notlogs += i
-            elif i.is_Mul and any(map(lambda t: getattr(t, 'func', False) == log,
+            elif i.is_Mul and any(
+                map(lambda t: getattr(t, 'func', False) == log,
             i.args)):
                 largs = _getlogargs(i)
                 assert len(largs) != 0
