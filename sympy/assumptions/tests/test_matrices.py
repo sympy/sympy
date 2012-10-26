@@ -66,6 +66,6 @@ def test_triangular():
 
 def test_diagonal():
     assert ask(Q.diagonal(X+Z.T+Identity(2)), Q.diagonal(X) &
-                                              Q.diagonal(Z)) is True
+               Q.diagonal(Z)) is True
     assert ask(Q.diagonal(ZeroMatrix(3, 3)))
     assert ask(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X))
