@@ -4,6 +4,7 @@ X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)
 Z = MatrixSymbol('Z', 2, 2)
 
+
 def test_invertible():
     assert ask(Q.invertible(X), Q.invertible(X))
     assert ask(Q.invertible(Y)) is False
@@ -16,6 +17,7 @@ def test_invertible():
     assert ask(Q.invertible(Identity(3))) is True
     assert ask(Q.invertible(ZeroMatrix(3, 3))) is False
 
+
 def test_symmetric():
     assert ask(Q.symmetric(X), Q.symmetric(X))
     assert ask(Q.symmetric(X*Z), Q.symmetric(X)) is None
@@ -26,6 +28,7 @@ def test_symmetric():
     assert ask(Q.symmetric(Y.T*X*Y)) is None
     assert ask(Q.symmetric(Y.T*X*Y), Q.symmetric(X)) is True
     assert ask(Q.symmetric(X*X*X*X*X*X*X*X*X*X), Q.symmetric(X)) is True
+
 
 def test_orthogonal():
     assert ask(Q.orthogonal(X), Q.orthogonal(X))
@@ -38,6 +41,7 @@ def test_orthogonal():
     assert ask(Q.orthogonal(ZeroMatrix(3, 3))) is False
     assert ask(Q.invertible(X), Q.orthogonal(X))
     assert not ask(Q.orthogonal(X+Z), Q.orthogonal(X) & Q.orthogonal(Z))
+
 
 def test_positive_definite():
     assert ask(Q.positive_definite(X), Q.positive_definite(X))
@@ -56,6 +60,7 @@ def test_positive_definite():
             Q.positive_definite(Z)) is True
     assert not ask(Q.positive_definite(-X), Q.positive_definite(X))
 
+
 def test_triangular():
     assert ask(Q.upper_triangular(X+Z.T+Identity(2)), Q.upper_triangular(X) &
             Q.lower_triangular(Z)) is True
@@ -64,8 +69,9 @@ def test_triangular():
     assert ask(Q.lower_triangular(Identity(3))) is True
     assert ask(Q.lower_triangular(ZeroMatrix(3, 3))) is True
 
+
 def test_diagonal():
     assert ask(Q.diagonal(X+Z.T+Identity(2)), Q.diagonal(X) &
-                                              Q.diagonal(Z)) is True
+               Q.diagonal(Z)) is True
     assert ask(Q.diagonal(ZeroMatrix(3, 3)))
     assert ask(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X))
