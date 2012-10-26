@@ -316,7 +316,7 @@ def test_simplify():
 
     assert simplify(solutions[y]) == \
         (a*i + c*d + f*g - a*f - c*g - d*i)/ \
-        (a*e*i + b*f*g + c*d*h - a*f*h - b*d*i - c*e*g))
+        (a*e*i + b*f*g + c*d*h - a*f*h - b*d*i - c*e*g)
 
     f = -x + y/(z + t) + z*x/(z + t) + z*a/(z + t) + t*x/(z + t)
 
@@ -442,6 +442,7 @@ def test_powsimp():
     x, y, z, n = symbols('x,y,z,n')
     f = Function('f')
     assert powsimp( 4**x * 2**(-x) * 2**(-x) ) == 1
+    assert powsimp( (-4)**x * (-2)**(-x) * 2**(-x) ) == 1
 
     assert powsimp(
         f(4**x * 2**(-x) * 2**(-x)) ) == f(4**x * 2**(-x) * 2**(-x))
