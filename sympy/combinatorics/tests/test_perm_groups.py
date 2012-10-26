@@ -301,7 +301,6 @@ def test_rubik1():
     G = RubikGroup(2)
     assert G.order() == 3674160
 
-
 @XFAIL
 def test_rubik():
     skip('takes too much time')
@@ -355,7 +354,7 @@ def test_random_pr():
     _random_prec_n[1] = {'s': 5, 't': 5, 'x': 1, 'e': -1}
     _random_prec_n[2] = {'s': 3, 't': 4, 'x': 2, 'e': 1}
     D._random_pr_init(r, n, _random_prec_n=_random_prec_n)
-    assert D._random_gens[11] == Permutation([0, 1, 2, 3, 4, 5])
+    assert D._random_gens[11] == [0, 1, 2, 3, 4, 5]
     _random_prec = {'s': 2, 't': 9, 'x': 1, 'e': -1}
     assert D.random_pr(_random_prec=_random_prec) == \
         Permutation([0, 5, 4, 3, 2, 1])

@@ -160,24 +160,20 @@ def _distribute_gens_by_base(base, gens):
 
     """
     base_len = len(base)
-    stabs = []
     degree = gens[0].size
-    for i in xrange(base_len):
-        stabs.append([])
-    num_gens = len(gens)
+    stabs = [[] for _ in xrange(base_len)]
     max_stab_index = 0
-    for i in xrange(num_gens):
+    for gen in gens:
         j = 0
-        while j < base_len - 1 and gens[i](base[j]) == base[j]:
+        while j < base_len - 1 and gen._array_form[base[j]] == base[j]:
             j += 1
         if j > max_stab_index:
             max_stab_index = j
         for k in xrange(j + 1):
-            stabs[k].append(gens[i])
+            stabs[k].append(gen)
     for i in range(max_stab_index + 1, base_len):
         stabs[i].append(_af_new(range(degree)))
     return stabs
-
 
 def _handle_precomputed_bsgs(base, strong_gens, transversals=None,
                              basic_orbits=None, strong_gens_distr=None):
@@ -290,14 +286,15 @@ def _orbits_transversals_from_bsgs(base, strong_gens_distr,
     _distribute_gens_by_base, _handle_precomputed_bsgs
 
     """
-    from sympy.combinatorics.perm_groups import PermutationGroup
+    from sympy.combinatorics.perm_groups import _orbit_transversal
     base_len = len(base)
+    degree = strong_gens_distr[0][0].size
     transversals = [None]*base_len
     if transversals_only is False:
         basic_orbits = [None]*base_len
     for i in xrange(base_len):
-        group = PermutationGroup(strong_gens_distr[i])
-        transversals[i] = dict(group.orbit_transversal(base[i], pairs=True))
+        transversals[i] = dict(_orbit_transversal(degree, strong_gens_distr[i],
+                                 base[i], pairs=True))
         if transversals_only is False:
             basic_orbits[i] = transversals[i].keys()
     if transversals_only:
@@ -354,15 +351,16 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
     "Handbook of computational group theory"
 
     """
-    from sympy.combinatorics.perm_groups import PermutationGroup
+    from sympy.combinatorics.perm_groups import PermutationGroup, _orbit
     base_len = len(base)
+    degree = strong_gens[0].size
     if strong_gens_distr is None:
         strong_gens_distr = _distribute_gens_by_base(base, strong_gens)
+    temp = strong_gens_distr[:]
     if basic_orbits is None:
         basic_orbits = []
         for i in range(base_len):
-            stab = PermutationGroup(strong_gens_distr[i])
-            basic_orbit = stab.orbit(base[i])
+            basic_orbit = _orbit(degree, strong_gens_distr[i], base[i])
             basic_orbits.append(basic_orbit)
     strong_gens_distr.append([])
     res = strong_gens[:]
@@ -374,13 +372,11 @@ def _remove_gens(base, strong_gens, basic_orbits=None, strong_gens_distr=None):
                 temp_gens.remove(gen)
                 if temp_gens == []:
                     continue
-                temp_group = PermutationGroup(temp_gens)
-                temp_orbit = temp_group.orbit(base[i])
+                temp_orbit = _orbit(degree, temp_gens, base[i])
                 if temp_orbit == basic_orbits[i]:
                     gens_copy.remove(gen)
                     res.remove(gen)
     return res
-
 
 def _strip(g, base, orbits, transversals):
     """
@@ -447,7 +443,7 @@ def _strip(g, base, orbits, transversals):
     sympy.combinatorics.perm_groups.PermutationGroup.schreier_sims_random
 
     """
-    h = g.array_form
+    h = g._array_form
     base_len = len(base)
     for i in range(base_len):
         beta = h[base[i]]
@@ -455,10 +451,29 @@ def _strip(g, base, orbits, transversals):
             continue
         if beta not in orbits[i]:
             return _af_new(h), i + 1
-        u = transversals[i][beta].array_form
+        u = transversals[i][beta]._array_form
         h = _af_rmul(_af_invert(u), h)
     return _af_new(h), base_len + 1
 
+def _strip_af(h, base, orbits, transversals, j):
+    """
+    optimized _strip, with h, transversals and result in array form
+    if the stripped elements is the identity, it returns False, base_len + 1
+
+    j    h[base[i]] == base[i] for i <= j
+    """
+    base_len = len(base)
+    for i in range(j+1, base_len):
+        beta = h[base[i]]
+        if beta == base[i]:
+            continue
+        if beta not in orbits[i]:
+            return h, i + 1
+        u = transversals[i][beta]
+        if h == u:
+            return False, base_len + 1
+        h = _af_rmul(_af_invert(u), h)
+    return h, base_len + 1
 
 def _strong_gens_from_distr(strong_gens_distr):
     """
