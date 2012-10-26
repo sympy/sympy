@@ -192,7 +192,7 @@ def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
     assumptions system.
     """
-    fact_string  = "from sympy.logic.boolalg import And, Not, Or\n"
+    fact_string = "from sympy.logic.boolalg import And, Not, Or\n"
     fact_string += "from sympy.assumptions.ask import Q\n\n"
 
     # Compute the known facts in CNF form for logical inference
