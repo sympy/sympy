@@ -66,6 +66,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     _eval_transpose = DenseMatrix._eval_transpose
     _eval_conjugate = DenseMatrix._eval_conjugate
     _eval_inverse = DenseMatrix._eval_inverse
+    _eval_simplify = DenseMatrix._eval_simplify
 
     equals = DenseMatrix.equals
     is_Identity = DenseMatrix.is_Identity
