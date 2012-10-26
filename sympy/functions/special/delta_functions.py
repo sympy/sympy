@@ -40,6 +40,8 @@ class DiracDelta(Function):
 
     nargs = (1, 2)
 
+    is_real = True
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             #I didn't know if there is a better way to handle default arguments
@@ -154,9 +156,6 @@ class DiracDelta(Function):
             return p.degree() == 1
         return False
 
-    def _eval_conjugate(self):
-        return self
-
 ###############################################################################
 ############################## HEAVISIDE FUNCTION #############################
 ###############################################################################
@@ -208,6 +207,8 @@ class Heaviside(Function):
 
     """
     nargs = 1
+
+    is_real = True
 
     def fdiff(self, argindex=1):
         if argindex == 1:

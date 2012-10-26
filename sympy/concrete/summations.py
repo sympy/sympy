@@ -152,8 +152,11 @@ class Sum(Expr):
         else:
             return f
 
-    def _eval_summation(self, f, x):
-        return
+    def _eval_adjoint(self):
+        return Sum(self.function.adjoint(), *self.limits)
+
+    def _eval_conjugate(self):
+        return Sum(self.function.conjugate(), *self.limits)
 
     def _eval_derivative(self, x):
         """
@@ -191,6 +194,12 @@ class Sum(Expr):
             return rv
         else:
             return NotImplementedError('Lower and upper bound expected.')
+
+    def _eval_summation(self, f, x):
+        return None
+
+    def _eval_transpose(self):
+        return Sum(self.function.transpose(), *self.limits)
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """

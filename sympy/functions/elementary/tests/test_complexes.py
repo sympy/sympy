@@ -1,6 +1,8 @@
-from sympy import (symbols, Symbol, sqrt, oo, re, nan, im, sign, I, E, log,
-        pi, arg, conjugate, expand, exp, sin, cos, Function, Abs, zoo, atan2,
-        S, DiracDelta, Rational, Heaviside)
+from sympy import (
+    Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
+    Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
+    sign, sin, sqrt, Symbol, symbols, transpose, zoo,
+)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.utilities.randtest import comp
@@ -137,6 +139,11 @@ def test_sign():
     assert sign(nan) == nan
 
     x = Symbol('x')
+    assert sign(x).is_bounded is True
+    assert sign(x).is_complex is True
+    assert sign(x).is_imaginary is None
+    assert sign(x).is_integer is None
+    assert sign(x).is_real is None
     assert sign(x).is_zero is None
     assert sign(x).doit() == sign(x)
     assert sign(1.2*x) == sign(x)
@@ -153,36 +160,55 @@ def test_sign():
     assert sign(n*m*x) == sign(x)
 
     x = Symbol('x', imaginary=True)
+    assert sign(x).is_imaginary is True
+    assert sign(x).is_integer is False
+    assert sign(x).is_real is False
     assert sign(x).is_zero is False
     assert sign(x).diff(x) == 2*DiracDelta(-I*x)
     assert sign(x).doit() == x / Abs(x)
     assert conjugate(sign(x)) == -sign(x)
 
     x = Symbol('x', real=True)
+    assert sign(x).is_imaginary is False
+    assert sign(x).is_integer is True
+    assert sign(x).is_real is True
     assert sign(x).is_zero is None
     assert sign(x).diff(x) == 2*DiracDelta(x)
     assert sign(x).doit() == sign(x)
     assert conjugate(sign(x)) == sign(x)
 
     x = Symbol('x', nonzero=True)
+    assert sign(x).is_imaginary is None
+    assert sign(x).is_integer is None
+    assert sign(x).is_real is None
     assert sign(x).is_zero is False
     assert sign(x).doit() == x / Abs(x)
     assert sign(Abs(x)) == 1
     assert Abs(sign(x)) == 1
 
     x = Symbol('x', positive=True)
+    assert sign(x).is_imaginary is False
+    assert sign(x).is_integer is True
+    assert sign(x).is_real is True
     assert sign(x).is_zero is False
     assert sign(x).doit() == x / Abs(x)
     assert sign(Abs(x)) == 1
     assert Abs(sign(x)) == 1
 
     x = 0
+    assert sign(x).is_imaginary is False
+    assert sign(x).is_integer is True
+    assert sign(x).is_real is True
     assert sign(x).is_zero is True
     assert sign(x).doit() == 0
     assert sign(Abs(x)) == 0
     assert Abs(sign(x)) == 0
 
     nz = Symbol('nz', nonzero=True, integer=True)
+    assert sign(nz).is_imaginary is False
+    assert sign(nz).is_integer is True
+    assert sign(nz).is_real is True
+    assert sign(nz).is_zero is False
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
@@ -335,18 +361,94 @@ def test_arg():
     assert conjugate(arg(x)) == arg(x)
 
 
+def test_adjoint():
+    a = Symbol('a', antihermitian=True)
+    b = Symbol('b', hermitian=True)
+    assert adjoint(a) == -a
+    assert adjoint(I*a) == I*a
+    assert adjoint(b) == b
+    assert adjoint(I*b) == -I*b
+    assert adjoint(a*b) == -b*a
+    assert adjoint(I*a*b) == I*b*a
+
+    x, y = symbols('x y')
+    assert adjoint(adjoint(x)) == x
+    assert adjoint(x + y) == adjoint(x) + adjoint(y)
+    assert adjoint(x - y) == adjoint(x) - adjoint(y)
+    assert adjoint(x * y) == adjoint(x) * adjoint(y)
+    assert adjoint(x / y) == adjoint(x) / adjoint(y)
+    assert adjoint(-x) == -adjoint(x)
+
+    x, y = symbols('x y', commutative=False)
+    assert adjoint(adjoint(x)) == x
+    assert adjoint(x + y) == adjoint(x) + adjoint(y)
+    assert adjoint(x - y) == adjoint(x) - adjoint(y)
+    assert adjoint(x * y) == adjoint(y) * adjoint(x)
+    assert adjoint(x / y) == 1 / adjoint(y) * adjoint(x)
+    assert adjoint(-x) == -adjoint(x)
+
+
 def test_conjugate():
     a = Symbol('a', real=True)
+    b = Symbol('b', imaginary=True)
     assert conjugate(a) == a
     assert conjugate(I*a) == -I*a
+    assert conjugate(b) == -b
+    assert conjugate(I*b) == I*b
+    assert conjugate(a*b) == -a*b
+    assert conjugate(I*a*b) == I*a*b
 
-    x, y = symbols('x,y')
+    x, y = symbols('x y')
     assert conjugate(conjugate(x)) == x
     assert conjugate(x + y) == conjugate(x) + conjugate(y)
     assert conjugate(x - y) == conjugate(x) - conjugate(y)
     assert conjugate(x * y) == conjugate(x) * conjugate(y)
     assert conjugate(x / y) == conjugate(x) / conjugate(y)
     assert conjugate(-x) == -conjugate(x)
+
+
+def test_conjugate_transpose():
+    x = Symbol('x')
+    assert conjugate(transpose(x)) == adjoint(x)
+    assert transpose(conjugate(x)) == adjoint(x)
+    assert adjoint(transpose(x)) == conjugate(x)
+    assert transpose(adjoint(x)) == conjugate(x)
+    assert adjoint(conjugate(x)) == transpose(x)
+    assert conjugate(adjoint(x)) == transpose(x)
+
+    class Symmetric(Expr):
+        def _eval_adjoint(self):
+            return None
+        def _eval_conjugate(self):
+            return None
+        def _eval_transpose(self):
+            return self
+    x = Symmetric()
+    assert conjugate(x) == adjoint(x)
+    assert transpose(x) == x
+
+
+
+def test_transpose():
+    a = Symbol('a', complex=True)
+    assert transpose(a) == a
+    assert transpose(I*a) == I*a
+
+    x, y = symbols('x y')
+    assert transpose(transpose(x)) == x
+    assert transpose(x + y) == transpose(x) + transpose(y)
+    assert transpose(x - y) == transpose(x) - transpose(y)
+    assert transpose(x * y) == transpose(x) * transpose(y)
+    assert transpose(x / y) == transpose(x) / transpose(y)
+    assert transpose(-x) == -transpose(x)
+
+    x, y = symbols('x y', commutative=False)
+    assert transpose(transpose(x)) == x
+    assert transpose(x + y) == transpose(x) + transpose(y)
+    assert transpose(x - y) == transpose(x) - transpose(y)
+    assert transpose(x * y) == transpose(y) * transpose(x)
+    assert transpose(x / y) == 1 / transpose(y) * transpose(x)
+    assert transpose(-x) == -transpose(x)
 
 
 def test_issue936():
