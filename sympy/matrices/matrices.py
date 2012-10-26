@@ -1058,6 +1058,7 @@ class MatrixBase(object):
         [x]
         """
         return self.applyfunc(lambda x: x.simplify(ratio, measure))
+    _eval_simplify = simplify
 
     def print_nonzero(self, symb="X"):
         """Shows location of non-zero entries for fast shape lookup.

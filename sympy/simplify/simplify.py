@@ -2970,6 +2970,12 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     function, we get a completely different result that is still different
     from the input expression by doing this.
     """
+
+    try:
+        return expr._eval_simplify(ratio=ratio, measure=measure)
+    except AttributeError:
+        pass
+
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
 
