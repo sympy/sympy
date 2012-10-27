@@ -554,7 +554,8 @@ class AskAlgebraicHandler(CommonHandler):
 
     @staticmethod
     def Pow(expr, assumptions):
-        return expr.exp.is_Rational and ask(Q.algebraic(expr.base), assumptions)
+        return expr.exp.is_Rational and ask(
+            Q.algebraic(expr.base), assumptions)
 
     @staticmethod
     def Number(expr, assumptions):

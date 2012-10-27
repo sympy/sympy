@@ -5,6 +5,7 @@ from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 
+
 class Q:
     """Supported ask keys."""
     antihermitian = Predicate('antihermitian')
@@ -35,6 +36,7 @@ class Q:
     upper_triangular = Predicate('upper_triangular')
     lower_triangular = Predicate('lower_triangular')
     diagonal = Predicate('diagonal')
+
 
 def _extract_facts(expr, symbol):
     """
@@ -188,62 +190,75 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
                     mapping[key].add(other_key)
     return mapping
 
+
 def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
     assumptions system.
     """
-    fact_string  = "from sympy.logic.boolalg import And, Not, Or\n"
-    fact_string += "from sympy.assumptions.ask import Q\n\n"
+    from textwrap import dedent, wrap
 
+    fact_string = dedent('''\
+    from sympy.logic.boolalg import And, Not, Or
+    from sympy.assumptions.ask import Q
+
+    # -{ Known facts in CNF }-
+    known_facts_cnf = And(
+        %s
+    )
+
+    # -{ Known facts in compressed sets }-
+    known_facts_dict = {
+        %s
+    }''')
     # Compute the known facts in CNF form for logical inference
+    LINE = ",\n    "
+    HANG = ' '*8
     cnf = to_cnf(known_facts)
-    fact_string += "# -{ Known facts in CNF }-\n"
-    fact_string += "known_facts_cnf = And(\n    "
-    fact_string += ",\n    ".join(map(str, cnf.args))
-    fact_string += "\n)\n"
-
+    c = LINE.join([str(a) for a in cnf.args])
     mapping = single_fact_lookup(known_facts_keys, cnf)
-    fact_string += "\n# -{ Known facts in compressed sets }-\n"
-    fact_string += "known_facts_dict = {\n    "
-    fact_string += ",\n    ".join(
-        ["%s: %s" % item for item in mapping.items()])
-    fact_string += "\n}\n"
-    return fact_string
+    m = LINE.join(['\n'.join(
+        wrap("%s: %s" % item,
+            subsequent_indent=HANG,
+            break_long_words=False))
+        for item in mapping.items()])
+    return fact_string % (c, m)
 
 # handlers_dict tells us what ask handler we should use
 # for a particular key
-_handlers_dict = {
-    'antihermitian':   ['sympy.assumptions.handlers.sets.AskAntiHermitianHandler'],
-    'bounded':         ['sympy.assumptions.handlers.calculus.AskBoundedHandler'],
-    'commutative':     ['sympy.assumptions.handlers.AskCommutativeHandler'],
-    'complex':         ['sympy.assumptions.handlers.sets.AskComplexHandler'],
-    'composite':       ['sympy.assumptions.handlers.ntheory.AskCompositeHandler'],
-    'even':            ['sympy.assumptions.handlers.ntheory.AskEvenHandler'],
-    'extended_real':   ['sympy.assumptions.handlers.sets.AskExtendedRealHandler'],
-    'hermitian':       ['sympy.assumptions.handlers.sets.AskHermitianHandler'],
-    'imaginary':       ['sympy.assumptions.handlers.sets.AskImaginaryHandler'],
-    'infinitesimal':   ['sympy.assumptions.handlers.calculus.AskInfinitesimalHandler'],
-    'integer':         ['sympy.assumptions.handlers.sets.AskIntegerHandler'],
-    'irrational':      ['sympy.assumptions.handlers.sets.AskIrrationalHandler'],
-    'rational':        ['sympy.assumptions.handlers.sets.AskRationalHandler'],
-    'negative':        ['sympy.assumptions.handlers.order.AskNegativeHandler'],
-    'nonzero':         ['sympy.assumptions.handlers.order.AskNonZeroHandler'],
-    'positive':        ['sympy.assumptions.handlers.order.AskPositiveHandler'],
-    'prime':           ['sympy.assumptions.handlers.ntheory.AskPrimeHandler'],
-    'real':            ['sympy.assumptions.handlers.sets.AskRealHandler'],
-    'odd':             ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
-    'algebraic':       ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
-    'is_true':         ['sympy.assumptions.handlers.TautologicalHandler'],
-    'symmetric':       ['sympy.assumptions.handlers.matrices.AskSymmetricHandler'],
-    'invertible':      ['sympy.assumptions.handlers.matrices.AskInvertibleHandler'],
-    'orthogonal':      ['sympy.assumptions.handlers.matrices.AskOrthogonalHandler'],
-    'positive_definite':       ['sympy.assumptions.handlers.matrices.AskPositiveDefiniteHandler'],
-    'upper_triangular':      ['sympy.assumptions.handlers.matrices.AskUpperTriangularHandler'],
-    'lower_triangular':      ['sympy.assumptions.handlers.matrices.AskLowerTriangularHandler'],
-    'diagonal':      ['sympy.assumptions.handlers.matrices.AskDiagonalHandler'],
-}
-for name, value in _handlers_dict.iteritems():
-    register_handler(name, value[0])
+_val_template = 'sympy.assumptions.handlers.%s'
+_handlers = [
+    ("antihermitian",     "sets.AskAntiHermitianHandler"),
+    ("bounded",           "calculus.AskBoundedHandler"),
+    ("commutative",       "AskCommutativeHandler"),
+    ("complex",           "sets.AskComplexHandler"),
+    ("composite",         "ntheory.AskCompositeHandler"),
+    ("even",              "ntheory.AskEvenHandler"),
+    ("extended_real",     "sets.AskExtendedRealHandler"),
+    ("hermitian",         "sets.AskHermitianHandler"),
+    ("imaginary",         "sets.AskImaginaryHandler"),
+    ("infinitesimal",     "calculus.AskInfinitesimalHandler"),
+    ("integer",           "sets.AskIntegerHandler"),
+    ("irrational",        "sets.AskIrrationalHandler"),
+    ("rational",          "sets.AskRationalHandler"),
+    ("negative",          "order.AskNegativeHandler"),
+    ("nonzero",           "order.AskNonZeroHandler"),
+    ("positive",          "order.AskPositiveHandler"),
+    ("prime",             "ntheory.AskPrimeHandler"),
+    ("real",              "sets.AskRealHandler"),
+    ("odd",               "ntheory.AskOddHandler"),
+    ("algebraic",         "sets.AskAlgebraicHandler"),
+    ("is_true",           "TautologicalHandler"),
+    ("symmetric",         "matrices.AskSymmetricHandler"),
+    ("invertible",        "matrices.AskInvertibleHandler"),
+    ("orthogonal",        "matrices.AskOrthogonalHandler"),
+    ("positive_definite", "matrices.AskPositiveDefiniteHandler"),
+    ("upper_triangular",  "matrices.AskUpperTriangularHandler"),
+    ("lower_triangular",  "matrices.AskLowerTriangularHandler"),
+    ("diagonal",          "matrices.AskDiagonalHandler"),
+]
+for name, value in _handlers:
+    register_handler(name, _val_template % value)
+
 
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
