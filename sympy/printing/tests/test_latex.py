@@ -768,4 +768,6 @@ def test_Adjoint():
     from sympy.matrices import MatrixSymbol, Adjoint
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    assert latex(Adjoint(X+Y)) == r'\left(X + Y\right)^\dag'
+    # Either of these would be fine
+    assert latex(Adjoint(X+Y)) in \
+            [r'\left(X + Y\right)^\dag', r'X^\dag + Y^\dag']
