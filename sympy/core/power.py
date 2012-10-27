@@ -681,7 +681,6 @@ class Pow(Expr):
 
     def matches(self, expr, repl_dict={}):
         expr = _sympify(expr)
-        b, e = expr.as_base_exp()
 
         # special case, pattern = 1 and expr.exp can match to 0
         if expr is S.One:
@@ -689,6 +688,15 @@ class Pow(Expr):
             d = self.exp.matches(S.Zero, d)
             if d is not None:
                 return d
+
+        b, e = expr.as_base_exp()
+
+        # special case number
+        sb, se = self.as_base_exp()
+        if sb.is_Symbol and se.is_Integer and expr:
+            if e.is_rational:
+                return sb.matches(b**(e/se), repl_dict)
+            return sb.matches(expr**(1/se), repl_dict)
 
         d = repl_dict.copy()
         d = self.base.matches(b, d)

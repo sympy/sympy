@@ -1,6 +1,6 @@
 from sympy import (abc, Add, cos, Derivative, diff, exp, Float, Function,
     I, Integer, log, Mul, oo, Poly, Rational, S, sin, sqrt, Symbol, symbols,
-    var, Wild
+    Wild, pi
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -187,6 +187,13 @@ def test_functions():
 
 @XFAIL
 def test_functions_X1():
+    from sympy.core.function import WildFunction
+    x = Symbol('x')
+    g = WildFunction('g')
+    p = Wild('p')
+    q = Wild('q')
+
+    f = cos(5*x)
     assert f.match(p*g(q*x)) == {p: 1, g: cos, q: 5}
 
 
@@ -401,7 +408,7 @@ def test_match_wild_wild():
 
 
 def test_combine_inverse():
-    x, y = var("x y")
+    x, y = symbols("x y")
     assert Mul._combine_inverse(x*I*y, x*I) == y
     assert Mul._combine_inverse(x*I*y, y*I) == x
     assert Mul._combine_inverse(oo*I*y, y*I) == oo
@@ -411,6 +418,7 @@ def test_combine_inverse():
 
 
 def test_issue_674():
+    x = symbols('x')
     z, phi, r = symbols('z phi r')
     c, A, B, N = symbols('c A B N', cls=Wild)
     l = Wild('l', exclude=(0,))
@@ -432,7 +440,7 @@ def test_issue_674():
 
 
 def test_issue_784():
-    from sympy.abc import gamma, mu, pi, x
+    from sympy.abc import gamma, mu, x
     f = (-gamma * (x - mu)**2 - log(gamma) + log(2*pi))/2
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
@@ -443,7 +451,7 @@ def test_issue_784():
 
 
 def test_issue_1319():
-    x = symbols('x')
+    x = Symbol('x')
     a, b, c = symbols('a b c', cls=Wild, exclude=(x,))
     f, g = symbols('f g', cls=Function)
 
@@ -457,7 +465,7 @@ def test_issue_1319():
 
 def test_issue_1601():
     f = Function('f')
-    x = symbols('x')
+    x = Symbol('x')
     a, b = symbols('a b', cls=Wild, exclude=(f(x),))
 
     p = a*f(x) + b
@@ -474,7 +482,7 @@ def test_issue_1601():
 
 def test_issue_2069():
     a, b, c = symbols('a b c', cls=Wild)
-    x = symbols('x')
+    x = Symbol('x')
     f = Function('f')
 
     assert x.match(a) == {a: x}
@@ -496,3 +504,53 @@ def test_issue_2069():
     assert (-2*x).match(a*f(x)**c) == {a: -2*x, c: 0}
     assert (-2*x).match(a*b) == {a: -2, b: x}
     assert (-2*x).match(a*b*f(x)**c) == {a: -2, b: x, c: 0}
+
+
+def test_issue_1460():
+    x = Symbol('x')
+    e = Symbol('e')
+    w = Wild('w', exclude=[x])
+    y = Wild('y')
+
+    # this is as it should be
+
+    assert (3/x).match(w/y) == {w: 3, y: x}
+    assert (3*x).match(w*y) == {w: 3, y: x}
+    assert (x/3).match(y/w) == {w: 3, y: x}
+    assert (3*x).match(y/w) == {w: S(1)/3, y: x}
+
+    # these could be allowed to fail
+
+    assert (x/3).match(w/y) == {w: S(1)/3, y: 1/x}
+    assert (3*x).match(w/y) == {w: 3, y: 1/x}
+    assert (3/x).match(w*y) == {w: 3, y: 1/x}
+
+    # Note that solve will give
+    # multiple roots but match only gives one:
+    # 
+    # >>> solve(x**r-y**2,y)
+    # [-x**(r/2), x**(r/2)]
+
+    r = Symbol('r', rational=True)
+    assert (x**r).match(y**2) == {y: x**(r/2)}
+    assert (x**e).match(y**2) == {y: sqrt(x**e)}
+
+    # since (x**i = y) -> x = y**(1/i) where i is an integer
+    # the following should also be valid as long as y is not
+    # zero when i is negative.
+
+    a = Wild('a')
+
+    e = S(0)
+    assert e.match(a) == {a: e}
+    assert e.match(1/a) is None
+    assert e.match(a**.3) is None
+
+    e = S(3)
+    assert e.match(1/a) == {a: 1/e}
+    assert e.match(1/a**2) == {a: 1/sqrt(e)}
+    e = pi
+    assert e.match(1/a) == {a: 1/e}
+    assert e.match(1/a**2) == {a: 1/sqrt(e)}
+    assert (-e).match(sqrt(a)) is None
+    assert (-e).match(a**2) == {a: I*sqrt(pi)}
