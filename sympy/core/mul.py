@@ -1154,6 +1154,9 @@ class Mul(AssocOp):
         if not old.is_Mul:
             return None
 
+        if old.args[0] == -1:
+            return self._subs(-old, -new)
+
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
             # a -1 base (see issue 3322); all we want here are the
@@ -1198,7 +1201,6 @@ class Mul(AssocOp):
             but not vice versa, and 2/5 does not divide 1/3) then return
             the integer number of times it divides, else return 0.
             """
-
             if not b.q % a.q or not a.q % b.q:
                 return int(a/b)
             return 0
