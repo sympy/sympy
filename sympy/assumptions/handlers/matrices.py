@@ -7,6 +7,7 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.matrices.expressions import MatMul
 
+
 class AskSymmetricHandler(CommonHandler):
     """
     Handler for key 'symmetric'
@@ -41,6 +42,7 @@ class AskSymmetricHandler(CommonHandler):
         return ask(Q.symmetric(expr.arg), assumptions)
     Inverse = Transpose
 
+
 class AskInvertibleHandler(CommonHandler):
     """
     Handler for key 'invertible'
@@ -51,7 +53,8 @@ class AskInvertibleHandler(CommonHandler):
         factor, mmul = expr.as_coeff_mmul()
         if all(ask(Q.invertible(arg), assumptions) for arg in mmul.args):
             return True
-        if any(ask(Q.invertible(arg), assumptions)==False for arg in mmul.args):
+        if any(ask(Q.invertible(arg), assumptions) is False
+               for arg in mmul.args):
             return False
 
     @staticmethod
@@ -81,6 +84,7 @@ class AskInvertibleHandler(CommonHandler):
     def Inverse(expr, assumptions):
         return True
 
+
 class AskOrthogonalHandler(CommonHandler):
     """
     Handler for key 'orthogonal'
@@ -89,9 +93,9 @@ class AskOrthogonalHandler(CommonHandler):
     def MatMul(expr, assumptions):
         factor, mmul = expr.as_coeff_mmul()
         if (all(ask(Q.orthogonal(arg), assumptions) for arg in mmul.args) and
-            factor == 1):
+                factor == 1):
             return True
-        if any(ask(Q.invertible(arg), assumptions) == False
+        if any(ask(Q.invertible(arg), assumptions) is False
                 for arg in mmul.args):
             return False
 
@@ -129,16 +133,17 @@ class AskPositiveDefiniteHandler(CommonHandler):
     @staticmethod
     def MatMul(expr, assumptions):
         factor, mmul = expr.as_coeff_mmul()
-        if (all(ask(Q.positive_definite(arg), assumptions) for arg in mmul.args)
-                and factor > 0):
+        if (all(ask(Q.positive_definite(arg), assumptions)
+                for arg in mmul.args) and factor > 0):
             return True
         if len(mmul.args) >= 2 and mmul.args[0] == mmul.args[-1].T:
             return ask(Q.positive_definite(
-                                MatMul(*mmul.args[1:-1])), assumptions)
+                MatMul(*mmul.args[1:-1])), assumptions)
 
     @staticmethod
     def MatAdd(expr, assumptions):
-        if all(ask(Q.positive_definite(arg), assumptions) for arg in expr.args):
+        if all(ask(Q.positive_definite(arg), assumptions)
+                for arg in expr.args):
             return True
 
     @staticmethod
@@ -160,6 +165,7 @@ class AskPositiveDefiniteHandler(CommonHandler):
     def Transpose(expr, assumptions):
         return ask(Q.positive_definite(expr.arg), assumptions)
     Inverse = Transpose
+
 
 class AskUpperTriangularHandler(CommonHandler):
     """
@@ -194,6 +200,7 @@ class AskUpperTriangularHandler(CommonHandler):
     def Inverse(expr, assumptions):
         return ask(Q.upper_triangular(expr.arg), assumptions)
 
+
 class AskLowerTriangularHandler(CommonHandler):
     """
     Handler for key 'lower_triangular'
@@ -226,6 +233,7 @@ class AskLowerTriangularHandler(CommonHandler):
     @staticmethod
     def Inverse(expr, assumptions):
         return ask(Q.lower_triangular(expr.arg), assumptions)
+
 
 class AskDiagonalHandler(CommonHandler):
     """
