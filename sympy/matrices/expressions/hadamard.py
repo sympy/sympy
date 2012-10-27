@@ -1,5 +1,5 @@
 from matexpr import MatrixExpr, ShapeError
-from sympy import Mul, Basic
+from sympy import Mul, Basic, sympify
 from sympy.rules import (unpack, flatten, sort, condition, exhaust, do_one)
 
 class HadamardProduct(MatrixExpr):
@@ -15,6 +15,7 @@ class HadamardProduct(MatrixExpr):
     is_HadamardProduct = True
 
     def __new__(cls, *args, **kwargs):
+        args = map(sympify, args)
         evaluate = kwargs.get('evaluate', True)
         check    = kwargs.get('check'   , True)
 

@@ -14,14 +14,15 @@ def test_HadamardProduct():
     assert HadamardProduct(A, B, A).shape == A.shape
 
     raises(ShapeError, lambda: HadamardProduct(A, B.T))
-    raises(TypeError,  lambda: A + 1)
-    raises(TypeError,  lambda: 5 + A)
-    raises(TypeError,  lambda: 5 - A)
+    raises(TypeError,  lambda: HadamardProduct(A, n))
+    raises(TypeError,  lambda: HadamardProduct(A, 1))
 
     assert HadamardProduct(A, 2*B, -A)[1, 1] == -2 * A[1, 1]**2 * B[1, 1]
 
     mix = HadamardProduct(Z*A, B)*C
     assert mix.shape == (n, k)
+
+    assert HadamardProduct(A, B, A).T == HadamardProduct(A.T, B.T, A.T)
 
 def test_mixed_indexing():
     X = MatrixSymbol('X', 2, 2)
