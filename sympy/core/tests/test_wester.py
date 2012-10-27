@@ -12,7 +12,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
     sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart, sqrtdenest,
-    factorial2, powdenest, Mul, S, mpmath)
+    factorial2, powdenest, Mul, S, mpmath, ZZ, Poly)
 
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
@@ -60,12 +60,10 @@ def test_C6():
 def test_C7():
     assert log(32768, 8) == 5
 
-@XFAIL
 def test_C8():
-    raise NotImplementedError("modular arithmetic:\n"
-        "  5 ** -1 mod 7 == 3\n"
-        "  5 ** -1 mod 6 == 5"
-    )
+    # Modular multiplicative inverse. Would be nice if divmod could do this.
+    assert ZZ.invert(5, 7) == 3
+    assert ZZ.invert(5, 6) == 5
 
 def test_C9():
     assert igcd(igcd(1776, 1554), 5698) == 74
@@ -164,6 +162,9 @@ def test_D7():
 
 @XFAIL
 def test_D8():
+    # One way is to cheat by converting the sum to a string,
+    # and replacing the '[' and ']' with ''.
+    # E.g., horner(S(str(_).replace('[','').replace(']','')))
     raise NotImplementedError("apply Horner's rule to sum(a[i]*x**i, (i,1,5))")
 
 @XFAIL
@@ -176,6 +177,7 @@ def test_D10():
 
 @XFAIL
 def test_D11():
+    #Is there a way to use count_ops?
     raise NotImplementedError("flops(sum(product(f[i][k], (i,1,k)), (k,1,n)))")
 
 @XFAIL
@@ -338,11 +340,10 @@ def test_H18():
     good = (2*x + 3*I)*(2*x - 3*I)*(x + 1 - 4*I) (x + 1 + 4*I)
     assert test == good
 
-@XFAIL
 def test_H19():
-    raise NotImplementedError("let a**2==2; 1/(a-1) == a+1")
-    # The idea here is no NOT explicitly solve for a. One solution
-    # should be produced.
+    a = symbols('a')
+    # The idea is to let a**2 == 2, then solve 1/(a-1). Answer is a+1")
+    assert Poly(a - 1).invert(Poly(a**2 - 2)) == a + 1
 
 @XFAIL
 def test_H20():
@@ -351,7 +352,8 @@ def test_H20():
 
 @XFAIL
 def test_H21():
-    raise NotImplementedError("let b**3==2, c**2==3; evaluate (b+c)**4")
+    raise NotImplementedError("evaluate (b+c)**4 assuming b**3==2, c**2==3. \
+                              Answer is 2*b + 8*c + 18*b**2 + 12*b*c + 9")
 
 def test_H22():
     assert factor(x**4 - 3*x**2 + 1, modulus = 5) == (x - 2)**2 * (x + 2)**2
@@ -387,7 +389,7 @@ def test_H27():
 @XFAIL
 def test_H28():
     raise NotImplementedError("expand ((1 - c**2)**5 * (1 - s**2)**5 * " \
-        + "(c**2 + s**2)**10) with c**2 + s**2 = 1")
+        + "(c**2 + s**2)**10) with c**2 + s**2 = 1. Answer is c**10*s**10.")
 
 @XFAIL
 def test_H29():
@@ -586,7 +588,6 @@ def test_K9():
     z = symbols('z', real=True, positive=True)
     assert simplify(sqrt(1/z) - 1/sqrt(z)) == 0
 
-@XFAIL
 def test_K10():
     z = symbols('z', real=True, negative=True)
     assert simplify(sqrt(1/z) + 1/sqrt(z)) == 0
@@ -712,10 +713,10 @@ def test_M17():
 @XFAIL
 def test_M18():
     raise NotImplementedError("solve(acos(x)-atan(x),x)")
+    #assert solve(acos(x) - atan(x), x) == [sqrt((sqrt(5) - 1)/2)]
 
-@XFAIL
 def test_M19():
-    raise NotImplementedError("solve((x-2)/x**(1/3),x)")
+    assert solve((x - 2)/x**R(1,3), x) == [2]
 
 def test_M20():
     assert solve(sqrt(x**2+1)-x+2,x) == []
