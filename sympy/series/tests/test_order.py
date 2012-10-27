@@ -1,5 +1,5 @@
-from sympy import (Symbol, Rational, Order, C, exp, ln, log, O, var, nan, pi,
-    S, Integral, sin, conjugate, expand, transpose)
+from sympy import (Symbol, Rational, Order, exp, ln, log, O, nan, pi,
+    S, Integral, sin, conjugate, expand, transpose, symbols, Function)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import w, x, y, z
 
@@ -9,7 +9,7 @@ def test_caching_bug():
     #cache it
     e = O(w)
     #and test that this won't raise an exception
-    f = O(w**(-1/x/log(3)*log(5)), w)
+    O(w**(-1/x/log(3)*log(5)), w)
 
 
 def test_simple_1():
@@ -259,7 +259,6 @@ def test_leading_term():
 
 def test_eval():
     y = Symbol('y')
-    from sympy import Basic
     assert Order(x).subs(Order(x), 1) == 1
     assert Order(x).subs(x, y) == Order(y)
     assert Order(x).subs(y, x) == Order(x)
@@ -281,7 +280,6 @@ def test_issue_1180():
 def test_issue_1756():
     x = Symbol('x')
     f = Function('f')
-    g = Function('g')
     assert 1/O(1) != O(1)
     assert 1/O(x) != O(1/x)
     assert 1/O(f(x)) != O(1/x)
