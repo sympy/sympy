@@ -14,11 +14,11 @@ from collections import defaultdict
 
 def iterable(i, exclude=(basestring, dict)):
     """
-    Return a boolean indicating whether i is an iterable in the sympy sense.
+    Return a boolean indicating whether ``i`` is SymPy iterable.
 
-    When sympy is working with iterables, it is almost always assuming
+    When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
-    by default. If you want a pure python definition, make exclude=None. To
+    by default. If you want a pure Python definition, make exclude=None. To
     exclude multiple items, pass them as a tuple.
 
     See also: is_sequence
@@ -59,7 +59,7 @@ def iterable(i, exclude=(basestring, dict)):
 
 def is_sequence(i, include=None):
     """
-    Return a boolean indicating whether i is a sequence in the sympy
+    Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
     being a sequence for your application, set 'include' to that object's
     type; multiple types should be passed as a tuple of types.
