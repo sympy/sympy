@@ -1185,7 +1185,9 @@ class Basic(object):
             elif callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
-                raise TypeError("given a type, replace() expects another type or a callable")
+                raise TypeError(
+                    "given a type, replace() expects another "
+                    "type or a callable")
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
 
@@ -1195,7 +1197,9 @@ class Basic(object):
                 _value = lambda expr, result: value(**dict([ (
                     str(key)[:-1], val) for key, val in result.iteritems() ]))
             else:
-                raise TypeError("given an expression, replace() expects another expression or a callable")
+                raise TypeError(
+                    "given an expression, replace() expects "
+                    "another expression or a callable")
         elif callable(query):
             _query = query
 
@@ -1203,9 +1207,12 @@ class Basic(object):
                 _value = lambda expr, result: value(expr)
             else:
                 raise TypeError(
-                    "given a callable, replace() expects another callable")
+                    "given a callable, replace() expects "
+                    "another callable")
         else:
-            raise TypeError("first argument to replace() must be a type, an expression or a callable")
+            raise TypeError(
+                "first argument to replace() must be a "
+                "type, an expression or a callable")
 
         mapping = {}
 
@@ -1340,7 +1347,6 @@ class Basic(object):
         """wrapper for count_ops that returns the operation count."""
         from sympy import count_ops
         return count_ops(self, visual)
-        return sum(a.count_ops(visual) for a in self.args)
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
