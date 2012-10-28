@@ -330,14 +330,51 @@ class Pow(Expr):
     def _eval_expand_power_base(self, **hints):
         """(a*b)**n -> a**n * b**n"""
         force = hints.get('force', False)
-        b, ewas = self.args
+        b = self.base
         e = self.exp
         if b.is_Mul:
-            bargs = b.args
+            bargs, nc = b.args_cnc()
+            if nc:
+                if len(nc) == 1:
+                    bargs.extend(nc)
+                    nc = []
+                else:
+                    # process c part
+                    if len(bargs) > 1:
+                        c = Mul._from_args(bargs)**e
+                        # play it safe since we are creating a new
+                        # factor we want to make sure that no trickery
+                        # reduces this to an object without an expand
+                        # method
+                        if hasattr(c, '_eval_expand_power_base'):
+                            c = c._eval_expand_power_base(**hints)
+                    elif bargs:
+                        c = bargs[0]**e
+                    else:
+                        c = S.One
+
+                    # process nc part
+
+                    # expand each term - this is top-level-only
+                    # expansion but we have to watch out for things
+                    # that don't have an _eval_expand method
+                    nc = [_._eval_expand_power_base(**hints)
+                        if hasattr(_, '_eval_expand_power_base') else _
+                        for _ in nc]
+                    if e.is_Integer:
+                        nc = Mul(*nc*abs(e))
+                        if e < 0:
+                            nc = 1/nc
+                    else:
+                        nc = Mul._from_args(nc)**e
+                    return c*nc
+
+            # commutative only
+
             if force or e.is_integer:
                 nonneg = bargs
                 other = []
-            elif ewas.is_Rational or len(bargs) == 2 and bargs[0] is S.NegativeOne:
+            elif e.is_Rational or len(bargs) == 2 and bargs[0] is S.NegativeOne:
                 # the Rational exponent was already expanded automatically
                 # if there is a negative Number * foo, foo must be unknown
                 #    or else it, too, would have automatically expanded;
@@ -353,16 +390,16 @@ class Pow(Expr):
                 # that now we are doing it for an arbitrary exponent for which
                 # no automatic expansion is done
                 def pred(x):
-                    if x.is_polar is None:
-                        return x.is_nonnegative
-                    return x.is_polar
+                    b = x.is_polar
+                    return b or (x.is_nonnegative if b is None else None)
                 sifted = sift(b.args, pred)
                 nonneg = sifted[True]
                 other = sifted[None]
                 neg = sifted[False]
+                assert len(sifted) == 3
 
                 # make sure the Number gets pulled out
-                if neg and neg[0].is_Number and neg[0] is not S.NegativeOne:
+                if neg and neg[0] is not S.NegativeOne and neg[0].is_Number:
                     nonneg.append(-neg[0])
                     neg[0] = S.NegativeOne
 
@@ -375,19 +412,9 @@ class Pow(Expr):
                 nonneg += [-n for n in neg]
 
             if nonneg:  # then there's a new expression to return
-                d = sift(nonneg, lambda x: x.is_commutative is True)
-                c = d[True]
-                nc = d[False]
-                if not e.is_Integer:
-                    other.extend(nc)
-                    nc = []
-                elif len(nc) == 1:
-                    c.extend(nc)
-                    nc = []
-                else:
-                    nc = [Mul._from_args(nc)]*e
-                other = [Pow(Mul(*other), e)] + nc
-                return Mul(*([Pow(b, e) for b in c] + other))
+                other = [Pow(Mul(*other), e)]
+                return Mul(*([Pow(b, e) for b in nonneg] + other))
+
         return Pow(b, e)
 
     def _eval_expand_multinomial(self, **hints):
