@@ -726,7 +726,7 @@ def test_issue_1791():
     assert integrate(exp(-log(x)**2), x) == \
         sqrt(pi)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
     assert integrate(exp(log(x)**2), x) == \
-        -I*sqrt(pi)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
+        -I*sqrt(pi)*exp(-S(1)/4)*erf(I*log(x) + I/2)/2
     assert integrate(exp(-z*log(x)**2), x) == sqrt(pi)*erf(sqrt(z)*log(x)
         - 1/(2*sqrt(z)))*exp(S(1)/(4*z))/(2*sqrt(z))
 
