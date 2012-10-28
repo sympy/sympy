@@ -1359,6 +1359,12 @@ def generate_oriented_forest(n):
             else:
                 break
 
+# define keys for use with lazyDSU_sort; define as tuples
+# so they can't be inadvertently changed
+
+small_first_keys = (lambda _: _.count_ops(), default_sort_key)
+big_first_keys = (lambda _: -(_.count_ops()), default_sort_key)
+
 def lazyDSU_sort(seq, keys, warn=False):
     """Return sorted seq, breaking ties by applying keys only when needed.
 
