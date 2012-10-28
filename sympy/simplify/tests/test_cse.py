@@ -1,14 +1,13 @@
 import itertools
 
-from sympy import (Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq)
+from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
+    Matrix, S, cos, sin, Eq, Function, Tuple)
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
 w, x, y, z = symbols('w,x,y,z')
-x0, x1, x2 = list(itertools.islice(cse_main.numbered_symbols(), 0, 3))
-negone = sympify(-1)
+x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11 = symbols('x:12')
 
 
 def test_numbered_symbols():
@@ -94,8 +93,8 @@ def test_subtraction_opt():
     e = (x - y)*(z - y) + exp((x - y)*(z - y))
     substs, reduced = cse(
         [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
-    assert substs == [(x0, x - y), (x1, y - z), (x2, x0*x1)]
-    assert reduced == [-x2 + exp(-x2)]
+    assert substs == [(x0, (x - y)*(y - z))]
+    assert reduced == [-x0 + exp(-x0)]
     assert cse(-(x - y)*(z - y) + exp(-(x - y)*(z - y))) == \
         ([(x0, (x - y)*(y - z))], [x0 + exp(x0)])
     # issue 978
@@ -123,12 +122,9 @@ def test_multiple_expressions():
     l = [(x - z)*(y - z), x - z, y - z]
     substs, reduced = cse(l)
     rsubsts, _ = cse(reversed(l))
-    substitutions = [
-        [(x0, x - z), (x1, y - z)],
-        [(x0, y - z), (x1, x - z)],
-    ]
-    assert substs in substitutions
-    assert rsubsts in substitutions
+    substitutions = [(x0, x - z), (x1, y - z)]
+    assert substs == substitutions
+    assert rsubsts == substitutions
     assert reduced == [x0*x1, x0, x1]
     l = [w*y + w + x + y + z, w*x*y]
     assert cse(l) == ([(x0, w*y)], [w + x + x0 + y + z, x*x0])
@@ -167,7 +163,7 @@ def test_issue_3164():
 
 
 def test_dont_cse_tuples():
-    from sympy import Subs, Function
+    from sympy import Subs
     f = Function("f")
     g = Function("g")
 
@@ -211,7 +207,31 @@ def test_pow_invpow():
 
 def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
-    assert cse([eq, Eq(x, z + 1), z - 2],
-           postprocess=cse_main.cse_separate) == \
-        [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) +
-           cos(x0), z - 2]]
+    assert cse([eq, Eq(x, z + 1), z - 2, (z+1)*(x+1)],
+        postprocess=cse_main.cse_separate) == \
+        [[(x1, y + 1), (x2, z + 1), (x, x2), (x0, x + 1)],
+        [x0 + exp(x0/x1) + cos(x1), x2 - 3, x0*x2]]
+
+def test_issue1400():
+    # previously, this gave 16 constants
+    from sympy.abc import a, b
+    B = Function('B')
+    G = Function('G')
+    t = Tuple(*
+        (a, a + S(1)/2, 2*a, b, 2*a - b + 1, (sqrt(z)/2)**(-2*a + 1)*B(2*a -
+        b, sqrt(z))*B(b - 1, sqrt(z))*G(b)*G(2*a - b + 1),
+        sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b,
+        sqrt(z))*G(b)*G(2*a - b + 1), sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b - 1,
+        sqrt(z))*B(2*a - b + 1, sqrt(z))*G(b)*G(2*a - b + 1),
+        (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1,
+        sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
+        -2*a))
+
+    c = cse(t)
+    ans = (
+        [(x0, b - 1), (x1, 2*a), (x2, -b), (x3, sqrt(z)), (x4, -x0 + x1 - 1),
+        (x5, -x1), (x6, x4 + 1), (x7, B(x0, x3)), (x8, B(x4, x3)), (x9, B(x6,
+        x3)), (x10, (x3/2)**(x5 + 1)*G(b)*G(x6)), (x11, x10*x3)], [(a, a +
+        S(1)/2, x1, b, x6, x10*x7*x8, x11*x8*B(-x2, x3), x11*x7*x9,
+        x10*x9*B(-x2, x3), 1, 0, S(1)/2, z/2, -x0, -x4, x5)])
+    assert ans == c
