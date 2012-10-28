@@ -6,6 +6,7 @@ import tempfile
 
 from latex import latex
 
+
 def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
@@ -75,9 +76,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
             # sorted in order from most pretty to most ugly
             # very discussable, but indeed 'gv' looks awful :)
             candidates = {
-                "dvi" : [ "evince", "okular", "kdvi", "xdvi" ],
-                "ps"  : [ "evince", "okular", "gsview", "gv" ],
-                "pdf" : [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
+                "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
+                "ps": [ "evince", "okular", "gsview", "gv" ],
+                "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
             }
 
             try:
@@ -86,7 +87,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
                         viewer = candidate
                         break
                 else:
-                    raise SystemError("No viewers found for '%s' output format." % output)
+                    raise SystemError(
+                        "No viewers found for '%s' output format." % output)
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
     else:
@@ -113,7 +115,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
 
-
     tmp = tempfile.mktemp()
 
     with open(tmp + ".tex", "w") as tex:
@@ -131,10 +132,10 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
 
     if output != "dvi":
         command = {
-            "ps"  : "dvips -o %s.ps %s.dvi",
-            "pdf" : "dvipdf %s.dvi %s.pdf",
-            "png" : "dvipng -T tight -z 9 " + \
-                    "--truecolor -o %s.png %s.dvi",
+            "ps": "dvips -o %s.ps %s.dvi",
+            "pdf": "dvipdf %s.dvi %s.pdf",
+            "png": "dvipng -T tight -z 9 " +
+            "--truecolor -o %s.png %s.dvi",
         }
 
         try:
@@ -166,10 +167,10 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
         offset = 25
 
         win = window.Window(
-            width = img.width + 2*offset,
-            height = img.height + 2*offset,
-            caption = "sympy",
-            resizable = False
+            width=img.width + 2*offset,
+            height=img.height + 2*offset,
+            caption="sympy",
+            resizable=False
         )
 
         win.set_vsync(False)
@@ -206,7 +207,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
         win.close()
     else:
         os.system("%s %s &> /dev/null &" % (viewer, src))
-        time.sleep(2) # wait for the viewer to read data
+        time.sleep(2)  # wait for the viewer to read data
 
     os.remove(src)
     os.chdir(cwd)

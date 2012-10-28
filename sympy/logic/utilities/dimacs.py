@@ -9,6 +9,7 @@ from sympy.core import Symbol
 from sympy.logic.boolalg import And, Or
 import re
 
+
 def load(s):
     """Loads a boolean expression from a string.
 
@@ -44,19 +45,23 @@ def load(s):
                 list = []
                 for lit in nums:
                     if lit != '':
-                        if int(lit) == 0: continue
+                        if int(lit) == 0:
+                            continue
                         num = abs(int(lit))
                         sign = True
                         if int(lit) < 0:
                             sign = False
 
-                        if sign: list.append(Symbol("cnf_%s" % num))
-                        else: list.append(~Symbol("cnf_%s" % num))
+                        if sign:
+                            list.append(Symbol("cnf_%s" % num))
+                        else:
+                            list.append(~Symbol("cnf_%s" % num))
 
                 if len(list) > 0:
                     clauses.append(Or(*list))
 
     return And(*clauses)
+
 
 def load_file(location):
     """Loads a boolean expression from a file."""

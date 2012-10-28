@@ -12,6 +12,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 import re
 
+
 class Symbol(AtomicExpr, Boolean):
     """
     Assumptions:
@@ -62,8 +63,9 @@ class Symbol(AtomicExpr, Boolean):
         if 'dummy' in assumptions:
             SymPyDeprecationWarning(
                 feature="Symbol('x', dummy=True)",
-                useinstead="Dummy() or symbols(..., cls=Dummy)"
-                ).warn()
+                useinstead="Dummy() or symbols(..., cls=Dummy)",
+                issue=3378, deprecated_since_version="0.7.0",
+            ).warn()
             if assumptions.pop('dummy'):
                 return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
@@ -76,21 +78,22 @@ class Symbol(AtomicExpr, Boolean):
         return Symbol.__xnew_cached_(cls, name, **assumptions)
 
     def __new_stage2__(cls, name, **assumptions):
-        assert isinstance(name, str),repr(type(name))
+        assert isinstance(name, str), repr(type(name))
         obj = Expr.__new__(cls)
         obj.name = name
         obj._assumptions = StdFactKB(assumptions)
         return obj
 
-    __xnew__       = staticmethod(__new_stage2__)            # never cached (e.g. dummy)
-    __xnew_cached_ = staticmethod(cacheit(__new_stage2__))   # symbols are always cached
+    __xnew__ = staticmethod(
+        __new_stage2__)            # never cached (e.g. dummy)
+    __xnew_cached_ = staticmethod(
+        cacheit(__new_stage2__))   # symbols are always cached
 
     def __getnewargs__(self):
         return (self.name,)
 
     def __getstate__(self):
         return {'_assumptions': self._assumptions}
-
 
     def _hashable_content(self):
         return (self.name,) + tuple(sorted(self.assumptions0.iteritems()))
@@ -133,6 +136,7 @@ class Symbol(AtomicExpr, Boolean):
     @property
     def free_symbols(self):
         return set([self])
+
 
 class Dummy(Symbol):
     """Dummy symbols are each unique, identified by an internal count index:
@@ -177,6 +181,7 @@ class Dummy(Symbol):
 
     def _hashable_content(self):
         return Symbol._hashable_content(self) + (self.dummy_index,)
+
 
 class Wild(Symbol):
     """
@@ -226,6 +231,7 @@ class Wild(Symbol):
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
 _re_var_split = re.compile(r"\s*,\s*|\s+")
+
 
 def symbols(names, **args):
     """
@@ -309,14 +315,19 @@ def symbols(names, **args):
     """
     result = []
     if 'each_char' in args:
+        if args['each_char']:
+            value = "Tip: ' '.join(s) will transform a string s = 'xyz' to 'x y z'."
+        else:
+            value = ""
         SymPyDeprecationWarning(
             feature="each_char in the options to symbols() and var()",
-            useinstead="spaces or commas between symbol names"
-            ).warn()
+            useinstead="spaces or commas between symbol names",
+            issue=1919, deprecated_since_version="0.7.0", value=value
+        ).warn()
 
     if isinstance(names, basestring):
         names = names.strip()
-        as_seq= names.endswith(',')
+        as_seq = names.endswith(',')
         if as_seq:
             names = names[:-1].rstrip()
         if not names:
@@ -360,18 +371,19 @@ def symbols(names, **args):
             if match is not None:
                 start, end = match.groups()
 
-                for name in xrange(ord(start), ord(end)+1):
+                for name in xrange(ord(start), ord(end) + 1):
                     symbol = cls(chr(name), **args)
                     result.append(symbol)
 
                 seq = True
                 continue
 
-            raise ValueError("'%s' is not a valid symbol range specification" % name)
+            raise ValueError(
+                "'%s' is not a valid symbol range specification" % name)
 
         if not seq and len(result) <= 1:
             if not result:
-                raise ValueError('missing symbol') # should never happen
+                raise ValueError('missing symbol')  # should never happen
             return result[0]
 
         return tuple(result)
@@ -380,6 +392,7 @@ def symbols(names, **args):
             result.append(symbols(name, **args))
 
         return type(names)(result)
+
 
 def var(names, **args):
     """
@@ -434,6 +447,6 @@ def var(names, **args):
             else:
                 traverse(syms, frame)
     finally:
-        del frame # break cyclic dependencies as stated in inspect docs
+        del frame  # break cyclic dependencies as stated in inspect docs
 
     return syms

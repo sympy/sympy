@@ -1,10 +1,13 @@
 from sympy.core import Expr, S, sympify, oo, pi, Symbol, zoo
+from sympy.core.compatibility import as_int
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.elementary.trigonometric import cos, sin, tan, sqrt
 from sympy.simplify import simplify, nsimplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.matrices import Matrix
 from sympy.solvers import solve
+from sympy.utilities.iterables import has_variety, has_dups
+
 from entity import GeometryEntity
 from point import Point
 from ellipse import Circle
@@ -12,6 +15,7 @@ from line import Line, Segment
 from util import _symbol
 
 import warnings
+
 
 class Polygon(GeometryEntity):
     """A two-dimensional polygon.
@@ -109,9 +113,9 @@ class Polygon(GeometryEntity):
             n = kwargs.pop('n')
             args = list(args)
             # return a virtual polygon with n sides
-            if len(args) == 2: # center, radius
+            if len(args) == 2:  # center, radius
                 args.append(n)
-            elif len(args) == 3: # center, radius, rotation
+            elif len(args) == 3:  # center, radius, rotation
                 args.insert(2, n)
             return RegularPolygon(*args, **kwargs)
 
@@ -124,7 +128,7 @@ class Polygon(GeometryEntity):
                 continue
             nodup.append(p)
         if len(nodup) > 1 and nodup[-1] == nodup[0]:
-            nodup.pop() # last point was same as first
+            nodup.pop()  # last point was same as first
 
         # remove collinear points unless they are shared points
         got = set()
@@ -176,7 +180,8 @@ class Polygon(GeometryEntity):
                             ty = (solve(ai[1] - aj[1]) or [S.Zero])[0]
                             if (tx or ty) and ty.is_number and 0 <= ty <= 1:
                                 print ai, aj
-                                raise GeometryError("Polygon has intersecting sides.")
+                                raise GeometryError(
+                                    "Polygon has intersecting sides.")
 
         return rv
 
@@ -498,7 +503,7 @@ class Polygon(GeometryEntity):
         # move to p, checking that the result is numeric
         lit = []
         for v in self.vertices:
-            lit.append(v - p) # the difference is simplified
+            lit.append(v - p)  # the difference is simplified
             if lit[-1].free_symbols:
                 return None
         self = Polygon(*lit)
@@ -587,9 +592,10 @@ class Polygon(GeometryEntity):
         for s in self.sides:
             side_perim_fraction = s.length/perimeter
             perim_fraction_end = perim_fraction_start + side_perim_fraction
-            pt  = s.arbitrary_point(parameter).subs(
-                  t, (t - perim_fraction_start)/side_perim_fraction)
-            sides.append((pt, (perim_fraction_start <= t < perim_fraction_end)))
+            pt = s.arbitrary_point(parameter).subs(
+                t, (t - perim_fraction_start)/side_perim_fraction)
+            sides.append(
+                (pt, (perim_fraction_start <= t < perim_fraction_end)))
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
@@ -802,21 +808,27 @@ class Polygon(GeometryEntity):
         point2 = e1_connections[e1_ymax][1]
         angle1 = support_line.angle_between(Line(e1_ymax, point1))
         angle2 = support_line.angle_between(Line(e1_ymax, point2))
-        if angle1 < angle2: e1_next = point1
-        elif angle2 < angle1: e1_next = point2
+        if angle1 < angle2:
+            e1_next = point1
+        elif angle2 < angle1:
+            e1_next = point2
         elif Point.distance(e1_ymax, point1) > Point.distance(e1_ymax, point2):
             e1_next = point2
-        else: e1_next = point1
+        else:
+            e1_next = point1
 
         point1 = e2_connections[e2_ymin][0]
         point2 = e2_connections[e2_ymin][1]
         angle1 = support_line.angle_between(Line(e2_ymin, point1))
         angle2 = support_line.angle_between(Line(e2_ymin, point2))
-        if angle1 > angle2: e2_next = point1
-        elif angle2 > angle1: e2_next = point2
+        if angle1 > angle2:
+            e2_next = point1
+        elif angle2 > angle1:
+            e2_next = point2
         elif Point.distance(e2_ymin, point1) > Point.distance(e2_ymin, point2):
             e2_next = point2
-        else: e2_next = point1
+        else:
+            e2_next = point1
 
         '''
         Loop which determins the distance between anti-podal pairs and updates the
@@ -824,14 +836,16 @@ class Polygon(GeometryEntity):
         '''
         while True:
             e1_angle = support_line.angle_between(Line(e1_current, e1_next))
-            e2_angle = pi - support_line.angle_between(Line(e2_current, e2_next))
+            e2_angle = pi - support_line.angle_between(Line(
+                e2_current, e2_next))
 
             if e1_angle < e2_angle:
                 support_line = Line(e1_current, e1_next)
                 e1_segment = Segment(e1_current, e1_next)
                 min_dist_current = e1_segment.distance(e2_current)
 
-                if min_dist_current.evalf() < min_dist.evalf(): min_dist = min_dist_current
+                if min_dist_current.evalf() < min_dist.evalf():
+                    min_dist = min_dist_current
 
                 if e1_connections[e1_next][0] != e1_current:
                     e1_current = e1_next
@@ -844,7 +858,8 @@ class Polygon(GeometryEntity):
                 e2_segment = Segment(e2_current, e2_next)
                 min_dist_current = e2_segment.distance(e1_current)
 
-                if min_dist_current.evalf() < min_dist.evalf(): min_dist = min_dist_current
+                if min_dist_current.evalf() < min_dist.evalf():
+                    min_dist = min_dist_current
 
                 if e2_connections[e2_next][0] != e2_current:
                     e2_current = e2_next
@@ -860,7 +875,8 @@ class Polygon(GeometryEntity):
                 min2 = e2_segment.distance(e1_next)
 
                 min_dist_current = min(min1, min2)
-                if min_dist_current.evalf() < min_dist.evalf(): min_dist = min_dist_current
+                if min_dist_current.evalf() < min_dist.evalf():
+                    min_dist = min_dist_current
 
                 if e1_connections[e1_next][0] != e1_current:
                     e1_current = e1_next
@@ -875,7 +891,8 @@ class Polygon(GeometryEntity):
                 else:
                     e2_current = e2_next
                     e2_next = e2_connections[e2_next][1]
-            if e1_current == e1_ymax and e2_current == e2_ymin: break
+            if e1_current == e1_ymax and e2_current == e2_ymin:
+                break
         return min_dist
 
     def __eq__(self, o):
@@ -1017,14 +1034,12 @@ class RegularPolygon(Polygon):
     __slots__ = ['_n', '_center', '_radius', '_rot']
 
     def __new__(self, c, r, n, rot=0, **kwargs):
-        from sympy.ntheory.residue_ntheory import int_tested
-
         r, n, rot = sympify([r, n, rot])
         c = Point(c)
         if not isinstance(r, Expr):
             raise GeometryError("r must be an Expr object, not %s" % r)
         if n.is_Number:
-            int_tested(n) # let an error raise if necessary
+            as_int(n)  # let an error raise if necessary
             if n < 3:
                 raise GeometryError("n must be a >= 3, not %s" % n)
 
@@ -1340,9 +1355,9 @@ class RegularPolygon(Polygon):
         ========
 
         >>> from sympy.geometry import RegularPolygon, Point
-        >>> rp = RegularPolygon(Point(0, 0), 4, 8)
+        >>> rp = RegularPolygon(Point(0, 0), 4, 7)
         >>> rp.incircle
-        Circle(Point(0, 0), 4*cos(pi/8))
+        Circle(Point(0, 0), 4*cos(pi/7))
 
         """
         return Circle(self.center, self.apothem)
@@ -1359,7 +1374,9 @@ class RegularPolygon(Polygon):
         >>> from sympy import RegularPolygon, Point
         >>> r = RegularPolygon(Point(0, 0), 5, 3)
         >>> r.angles
-        {Point(-5/2, -5*sqrt(3)/2): pi/3, Point(-5/2, 5*sqrt(3)/2): pi/3, Point(5, 0): pi/3}
+        {Point(-5/2, -5*sqrt(3)/2): pi/3,
+         Point(-5/2, 5*sqrt(3)/2): pi/3,
+         Point(5, 0): pi/3}
         """
         ret = {}
         ang = self.interior_angle
@@ -1466,7 +1483,7 @@ class RegularPolygon(Polygon):
 
         """
 
-        r = type(self)(*self.args) # need a copy or else changes are in-place
+        r = type(self)(*self.args)  # need a copy or else changes are in-place
         r._rot += angle
         return GeometryEntity.rotate(r, angle, pt)
 
@@ -1537,6 +1554,7 @@ class RegularPolygon(Polygon):
 
     def __hash__(self):
         return super(RegularPolygon, self).__hash__()
+
 
 class Triangle(Polygon):
     """
@@ -1614,7 +1632,7 @@ class Triangle(Polygon):
                 continue
             nodup.append(p)
         if len(nodup) > 1 and nodup[-1] == nodup[0]:
-            nodup.pop() # last point was same as first
+            nodup.pop()  # last point was same as first
 
         # remove collinear points
         i = -3
@@ -1700,6 +1718,7 @@ class Triangle(Polygon):
 
         s1_1, s1_2, s1_3 = [side.length for side in t1.sides]
         s2 = [side.length for side in t2.sides]
+
         def _are_similar(u1, u2, u3, v1, v2, v3):
             e1 = simplify(u1/v1)
             e2 = simplify(u2/v2)
@@ -1708,11 +1727,11 @@ class Triangle(Polygon):
 
         # There's only 6 permutations, so write them out
         return _are_similar(s1_1, s1_2, s1_3, *s2) or \
-               _are_similar(s1_1, s1_3, s1_2, *s2) or \
-               _are_similar(s1_2, s1_1, s1_3, *s2) or \
-               _are_similar(s1_2, s1_3, s1_1, *s2) or \
-               _are_similar(s1_3, s1_1, s1_2, *s2) or \
-               _are_similar(s1_3, s1_2, s1_1, *s2)
+            _are_similar(s1_1, s1_3, s1_2, *s2) or \
+            _are_similar(s1_2, s1_1, s1_3, *s2) or \
+            _are_similar(s1_2, s1_3, s1_1, *s2) or \
+            _are_similar(s1_3, s1_1, s1_2, *s2) or \
+            _are_similar(s1_3, s1_2, s1_1, *s2)
 
     def is_equilateral(self):
         """Are all the sides the same length?
@@ -1742,7 +1761,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) == 1
+        return not has_variety(s.length for s in self.sides)
 
     def is_isosceles(self):
         """Are two or more of the sides the same length?
@@ -1766,7 +1785,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) < 3
+        return has_dups(s.length for s in self.sides)
 
     def is_scalene(self):
         """Are all the sides of the triangle of different lengths?
@@ -1790,7 +1809,7 @@ class Triangle(Polygon):
         True
 
         """
-        return len(set([s.length for s in self.sides])) == 3
+        return not has_dups(s.length for s in self.sides)
 
     def is_right(self):
         """Is the triangle right-angled.
@@ -1817,8 +1836,8 @@ class Triangle(Polygon):
         """
         s = self.sides
         return Segment.is_perpendicular(s[0], s[1]) or \
-               Segment.is_perpendicular(s[1], s[2]) or \
-               Segment.is_perpendicular(s[0], s[2])
+            Segment.is_perpendicular(s[1], s[2]) or \
+            Segment.is_perpendicular(s[0], s[2])
 
     @property
     def altitudes(self):
@@ -1912,7 +1931,7 @@ class Triangle(Polygon):
         >>> t.circumcenter
         Point(1/2, 1/2)
         """
-        a,b,c = [x.perpendicular_bisector() for x in self.sides]
+        a, b, c = [x.perpendicular_bisector() for x in self.sides]
         return a.intersection(b)[0]
 
     @property
@@ -2165,33 +2184,39 @@ class Triangle(Polygon):
     #    """Returns a list of the three excircles for this triangle."""
     #    pass
 
+
 def rad(d):
     """Return the radian value for the given degrees (pi = 180 degrees)."""
     return d*pi/180
+
 
 def deg(r):
     """Return the degree value for the given radians (pi = 180 degrees)."""
     return r/pi*180
 
+
 def _slope(d):
     rv = tan(rad(d))
     return rv
 
+
 def _asa(d1, l, d2):
     """Return triangle having side with length l on the x-axis."""
     xy = Line((0, 0), slope=_slope(d1)).intersection(
-         Line((l, 0), slope=_slope(180 - d2)))[0]
-    return Triangle((0,0),(l,0),xy)
+        Line((l, 0), slope=_slope(180 - d2)))[0]
+    return Triangle((0, 0), (l, 0), xy)
+
 
 def _sss(l1, l2, l3):
     """Return triangle having side of length l1 on the x-axis."""
-    c1 = Circle((0,0), l3)
+    c1 = Circle((0, 0), l3)
     c2 = Circle((l1, 0), l2)
     inter = [a for a in c1.intersection(c2) if a.y.is_nonnegative]
     if not inter:
         return None
     pt = inter[0]
-    return Triangle((0,0), (l1,0), pt)
+    return Triangle((0, 0), (l1, 0), pt)
+
 
 def _sas(l1, d, l2):
     """Return triangle having side with length l2 on the x-axis."""

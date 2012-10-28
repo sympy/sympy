@@ -25,6 +25,7 @@ __all__ = [
     'apply_grover'
 ]
 
+
 def superposition_basis(nqubits):
     """Creates an equal superposition of the computational basis.
 
@@ -52,6 +53,7 @@ def superposition_basis(nqubits):
 
     amp = 1/sqrt(2**nqubits)
     return sum([amp*IntQubit(n, nqubits) for n in range(2**nqubits)])
+
 
 class OracleGate(Gate):
     """A black box gate.
@@ -98,7 +100,7 @@ class OracleGate(Gate):
         if len(args) != 2:
             raise QuantumError(
                 'Insufficient/excessive arguments to Oracle.  Please ' +
-                    'supply the number of qubits and an unknown function.'
+                'supply the number of qubits and an unknown function.'
             )
         sub_args = (args[0],)
         sub_args = UnitaryOperator._eval_args(sub_args)
@@ -150,7 +152,7 @@ class OracleGate(Gate):
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'OracleGate operates on %r qubits, got: %r'
-                    (self.nqubits, qubits.nqubits)
+                (self.nqubits, qubits.nqubits)
             )
         # If function returns 1 on qubits
             # return the negative of the qubits (flip the sign)
@@ -167,6 +169,7 @@ class OracleGate(Gate):
         raise NotImplementedError(
             "Represent for the Oracle has not been implemented yet"
         )
+
 
 class WGate(Gate):
     """General n qubit W Gate in Grover's algorithm.
@@ -190,7 +193,7 @@ class WGate(Gate):
         if len(args) != 1:
             raise QuantumError(
                 'Insufficient/excessive arguments to W gate.  Please ' +
-                    'supply the number of qubits to operate on.'
+                'supply the number of qubits to operate on.'
             )
         args = UnitaryOperator._eval_args(args)
         if not args[0].is_Integer:
@@ -217,7 +220,7 @@ class WGate(Gate):
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'WGate operates on %r qubits, got: %r'
-                    (self.nqubits, qubits.nqubits)
+                (self.nqubits, qubits.nqubits)
             )
 
         # See 'Quantum Computer Science' by David Mermin p.92 -> W|a> result
@@ -227,6 +230,7 @@ class WGate(Gate):
         basis_states = superposition_basis(self.nqubits)
         change_to_basis = (2/sqrt(2**self.nqubits))*basis_states
         return change_to_basis - qubits
+
 
 def grover_iteration(qstate, oracle):
     """Applies one application of the Oracle and W Gate, WV.
@@ -265,6 +269,7 @@ def grover_iteration(qstate, oracle):
     wgate = WGate(oracle.nqubits)
     return wgate*oracle*qstate
 
+
 def apply_grover(oracle, nqubits, iterations=None):
     """Applies grover's algorithm.
 
@@ -297,7 +302,7 @@ def apply_grover(oracle, nqubits, iterations=None):
     if nqubits <= 0:
         raise QuantumError(
             'Grover\'s algorithm needs nqubits > 0, received %r qubits'
-                % nqubits
+            % nqubits
         )
     if iterations is None:
         iterations = floor(sqrt(2**nqubits)*(pi/4))

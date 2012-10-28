@@ -12,6 +12,7 @@ __all__ = [
     'hbar'
 ]
 
+
 class HBar(NumberSymbol):
     """Reduced Plank's constant in numerical and symbolic form [1]_.
 

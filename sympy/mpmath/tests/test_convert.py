@@ -144,11 +144,46 @@ def test_conversion_methods():
         assert (y+z).ae(mpc('4.3'))
         assert (z+w).ae(mpc('4.3', '1.7'))
         assert (w+z).ae(mpc('4.3', '1.7'))
-        x-y; y-x; x-w; w-x; z-y; y-z; z-w; w-z
-        x*y; y*x; x*w; w*x; z*y; y*z; z*w; w*z
-        x/y; y/x; x/w; w/x; z/y; y/z; z/w; w/z
-        x**y; y**x; x**w; w**x; z**y; y**z; z**w; w**z
-        x==y; y==x; x==w; w==x; z==y; y==z; z==w; w==z
+        x-y
+        y-x
+        x-w
+        w-x
+        z-y
+        y-z
+        z-w
+        w-z
+        x*y
+        y*x
+        x*w
+        w*x
+        z*y
+        y*z
+        z*w
+        w*z
+        x/y
+        y/x
+        x/w
+        w/x
+        z/y
+        y/z
+        z/w
+        w/z
+        x**y
+        y**x
+        x**w
+        w**x
+        z**y
+        y**z
+        z**w
+        w**z
+        x==y
+        y==x
+        x==w
+        w==x
+        z==y
+        y==z
+        z==w
+        w==z
     mp.dps = 15
     assert x.__add__(a) is NotImplemented
     assert x.__radd__(a) is NotImplemented

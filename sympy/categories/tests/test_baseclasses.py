@@ -5,6 +5,7 @@ from sympy.categories.baseclasses import Class
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import FiniteSet, EmptySet, Dict, Tuple
 
+
 def test_morphisms():
     A = Object("A")
     B = Object("B")
@@ -80,6 +81,7 @@ def test_morphisms():
     raises(ValueError, lambda: NamedMorphism(A, B, ""))
     raises(NotImplementedError, lambda: Morphism(A, B))
 
+
 def test_diagram():
     A = Object("A")
     B = Object("B")
@@ -124,7 +126,7 @@ def test_diagram():
     # Make sure that (re-)adding composites (with new properties)
     # works as expected.
     d = Diagram([f, g], {g * f: "unique"})
-    assert d.conclusions == Dict({g*f:FiniteSet("unique")})
+    assert d.conclusions == Dict({g * f: FiniteSet("unique")})
 
     # Check the hom-sets when there are premises and conclusions.
     assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
@@ -132,7 +134,7 @@ def test_diagram():
     assert d.hom(A, C) == (FiniteSet(g * f), FiniteSet(g * f))
 
     # Check how the properties of composite morphisms are computed.
-    d = Diagram({f: ["unique", "isomorphism"], g:"unique"})
+    d = Diagram({f: ["unique", "isomorphism"], g: "unique"})
     assert d.premises[g * f] == FiniteSet("unique")
 
     # Check that conclusion morphisms with new objects are not allowed.
@@ -146,7 +148,7 @@ def test_diagram():
     assert d.objects == empty
 
     # Check a SymPy Dict object.
-    d = Diagram(Dict({f: FiniteSet("unique", "isomorphism"), g:"unique"}))
+    d = Diagram(Dict({f: FiniteSet("unique", "isomorphism"), g: "unique"}))
     assert d.premises[g * f] == FiniteSet("unique")
 
     # Check the addition of components of composite morphisms.
@@ -177,9 +179,11 @@ def test_diagram():
     d = Diagram([f, g], {f: "unique", g * f: "veryunique"})
     d1 = d.subdiagram_from_objects(FiniteSet(A, B))
     assert d1 == Diagram([f], {f: "unique"})
-    raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A, Object("D"))))
+    raises(ValueError, lambda: d.subdiagram_from_objects(FiniteSet(A,
+           Object("D"))))
 
     raises(ValueError, lambda: Diagram({IdentityMorphism(A): "unique"}))
+
 
 def test_category():
     A = Object("A")

@@ -20,47 +20,50 @@ def test_x():
     assert qapply(X*XKet(x)) == x*XKet(x)
     assert XKet(x).dual_class() == XBra
     assert XBra(x).dual_class() == XKet
-    assert (Dagger(XKet(y))*XKet(x)).doit() == DiracDelta(x-y)
-    assert (PxBra(px)*XKet(x)).doit() ==\
+    assert (Dagger(XKet(y))*XKet(x)).doit() == DiracDelta(x - y)
+    assert (PxBra(px)*XKet(x)).doit() == \
         exp(-I*x*px/hbar)/sqrt(2*pi*hbar)
-    assert represent(XKet(x)) == DiracDelta(x-x_1)
+    assert represent(XKet(x)) == DiracDelta(x - x_1)
     assert represent(XBra(x)) == DiracDelta(-x + x_1)
     assert XBra(x).position == x
-    assert represent(XOp()*XKet()) == x*DiracDelta(x-x_2)
+    assert represent(XOp()*XKet()) == x*DiracDelta(x - x_2)
     assert represent(XOp()*XKet()*XBra('y')) == \
-           x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
+        x*DiracDelta(x - x_3)*DiracDelta(x_1 - y)
     assert represent(XBra("y")*XKet()) == DiracDelta(x - y)
-    assert represent(XKet()*XBra()) == DiracDelta(x - x_2) * DiracDelta(x_1 - x)
+    assert represent(
+        XKet()*XBra()) == DiracDelta(x - x_2) * DiracDelta(x_1 - x)
 
-    rep_p = represent(XOp(), basis = PxOp)
+    rep_p = represent(XOp(), basis=PxOp)
     assert rep_p == hbar*I*DiracDelta(px_1 - px_2)*DifferentialOperator(px_1)
-    assert rep_p == represent(XOp(), basis = PxOp())
-    assert rep_p == represent(XOp(), basis = PxKet)
-    assert rep_p == represent(XOp(), basis = PxKet())
+    assert rep_p == represent(XOp(), basis=PxOp())
+    assert rep_p == represent(XOp(), basis=PxKet)
+    assert rep_p == represent(XOp(), basis=PxKet())
 
-    assert represent(XOp()*PxKet(), basis = PxKet) == \
-           hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
+    assert represent(XOp()*PxKet(), basis=PxKet) == \
+        hbar*I*DiracDelta(px - px_2)*DifferentialOperator(px)
+
 
 def test_p():
     assert Px.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
     assert qapply(Px*PxKet(px)) == px*PxKet(px)
     assert PxKet(px).dual_class() == PxBra
     assert PxBra(x).dual_class() == PxKet
-    assert (Dagger(PxKet(py))*PxKet(px)).doit() == DiracDelta(px-py)
-    assert (XBra(x)*PxKet(px)).doit() ==\
+    assert (Dagger(PxKet(py))*PxKet(px)).doit() == DiracDelta(px - py)
+    assert (XBra(x)*PxKet(px)).doit() == \
         exp(I*x*px/hbar)/sqrt(2*pi*hbar)
-    assert represent(PxKet(px)) == DiracDelta(px-px_1)
+    assert represent(PxKet(px)) == DiracDelta(px - px_1)
 
-    rep_x = represent(PxOp(), basis = XOp)
+    rep_x = represent(PxOp(), basis=XOp)
     assert rep_x == -hbar*I*DiracDelta(x_1 - x_2)*DifferentialOperator(x_1)
-    assert rep_x == represent(PxOp(), basis = XOp())
-    assert rep_x == represent(PxOp(), basis = XKet)
-    assert rep_x == represent(PxOp(), basis = XKet())
+    assert rep_x == represent(PxOp(), basis=XOp())
+    assert rep_x == represent(PxOp(), basis=XKet)
+    assert rep_x == represent(PxOp(), basis=XKet())
 
     assert represent(PxOp()*XKet(), basis=XKet) == \
-           -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)
+        -hbar*I*DiracDelta(x - x_2)*DifferentialOperator(x)
     assert represent(XBra("y")*PxOp()*XKet(), basis=XKet) == \
-           -hbar*I*DiracDelta(x-y)*DifferentialOperator(x)
+        -hbar*I*DiracDelta(x - y)*DifferentialOperator(x)
+
 
 def test_3dpos():
     assert Y.hilbert_space == L2(Interval(S.NegativeInfinity, S.Infinity))
@@ -83,7 +86,7 @@ def test_3dpos():
 
     other_ket = PositionKet3D(x_1, y_1, z_1)
     assert (Dagger(other_ket)*test_ket).doit() == \
-           DiracDelta(x - x_1)*DiracDelta(y - y_1)*DiracDelta(z - z_1)
+        DiracDelta(x - x_1)*DiracDelta(y - y_1)*DiracDelta(z - z_1)
 
     assert test_ket.position_x == x
     assert test_ket.position_y == y

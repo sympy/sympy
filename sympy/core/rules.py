@@ -2,6 +2,7 @@
 Replacement rules.
 """
 
+
 class Transform(object):
     """
     Immutable mapping that can be used as a generic transformation rule.

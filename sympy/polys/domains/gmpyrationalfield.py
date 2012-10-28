@@ -9,12 +9,13 @@ from sympy.polys.domains.groundtypes import (
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class GMPYRationalField(RationalField):
     """Rational field based on GMPY mpq class. """
 
     dtype = GMPYRationalType
-    zero  = dtype(0)
-    one   = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     alias = 'QQ_gmpy'
 
     def __init__(self):

@@ -11,18 +11,12 @@ import and declare our first Matrix object:
 
     >>> from sympy.interactive.printing import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
-    >>> from sympy.matrices import *
-    >>> Matrix([[1,0], [0,1]])
-    [1  0]
-    [    ]
-    [0  1]
-    >>> Matrix((
-    ...   Matrix((
-    ...     (1, 0, 0),
-    ...     (0, 0, 0)
-    ...   )),
-    ...   (0, 0, -1)
-    ... ))
+    >>> from sympy.matrices import Matrix, eye, zeros, ones, diag, GramSchmidt
+    >>> M = Matrix([[1,0,0], [0,0,0]]); M
+    [1  0  0]
+    [       ]
+    [0  0  0]
+    >>> Matrix([M, (0, 0, -1)])
     [1  0  0 ]
     [        ]
     [0  0  0 ]
@@ -37,25 +31,24 @@ import and declare our first Matrix object:
     [ ]
     [3]
 
-This is the standard manner one creates a matrix, i.e. with a list of
-appropriately-sizes lists and/or matrices. SymPy also supports more advanced
-methods of matrix creation including a single list of values and dimension
-inputs:
+In addition to creating a matrix from a list of appropriately-sized lists
+and/or matrices, SymPy also supports more advanced methods of matrix creation
+including a single list of values and dimension inputs:
 
     >>> Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     [1  2  3]
     [       ]
     [4  5  6]
 
-More interestingly (and usefully), we can use a 2-variable function (or lambda)
-to make one. Here we create an indicator function which is 1 on the diagonal
-and then use it to make the identity matrix:
+More interesting (and useful), is the ability to use a 2-variable function
+(or lambda) to create a matrix. Here we create an indicator function which
+is 1 on the diagonal and then use it to make the identity matrix:
 
     >>> def f(i,j):
     ...     if i == j:
-    ...             return 1
+    ...         return 1
     ...     else:
-    ...             return 0
+    ...         return 0
     ...
     >>> Matrix(4, 4, f)
     [1  0  0  0]
@@ -76,9 +69,10 @@ permutation entries:
     [          ]
     [1  0  1  0]
 
-There are also a couple of special constructors for quick matrix construction -
+There are also a couple of special constructors for quick matrix construction:
 ``eye`` is the identity matrix, ``zeros`` and ``ones`` for matrices of all
-zeros and ones, respectively:
+zeros and ones, respectively, and ``diag`` to put matrices or elements along
+the diagonal:
 
     >>> eye(4)
     [1  0  0  0]
@@ -104,6 +98,12 @@ zeros and ones, respectively:
     [1  1  1]
     >>> ones(1, 3)
     [1  1  1]
+    >>> diag(1, Matrix([[1, 2], [3, 4]]))
+    [1  0  0]
+    [       ]
+    [0  1  2]
+    [       ]
+    [0  3  4]
 
 
 Basic Manipulation
@@ -118,40 +118,64 @@ careful - to access the entries as if they were a 1-d list.
     >>> M[4]
     5
 
-Now, the more standard entry access is a pair of indices:
+Now, the more standard entry access is a pair of indices which will always
+return the value at the corresponding row and column of the matrix:
 
-    >>> M[1,2]
+    >>> M[1, 2]
     6
-    >>> M[0,0]
+    >>> M[0, 0]
     1
-    >>> M[1,1]
+    >>> M[1, 1]
     5
 
-Since this is Python we're also able to slice submatrices::
+Since this is Python we're also able to slice submatrices; slices always
+give a matrix in return, even if the dimension is 1 x 1::
 
-    >>> M[0:2,0:2]
+    >>> M[0:2, 0:2]
     [1  2]
     [    ]
     [4  5]
-    >>> M[1:2,2]
-    [6]
-    >>> M[:,2]
+    >>> M[2:2, 2]
+    []
+    >>> M[:, 2]
     [3]
     [ ]
     [6]
+    >>> M[:1, 2]
+    [3]
 
-Remember in the 2nd example above that slicing 2:2 gives an empty range and
-that, as in python, a 4 column list is indexed from 0 to 3. In particular, this
-mean a quick way to create a copy of the matrix is:
+In the 2nd example above notice that the slice 2:2 gives an empty range. Note
+also (in keeping with 0-based indexing of Python) the first row/column is 0.
 
-    >>> M2 = M[:,:]
-    >>> M2[0,0] = 100
-    >>> M
+You cannot access rows or columns that are not present unless they
+are in a slice:
+
+    >>> M[:, 10] # the 10-th column (not there)
+    Traceback (most recent call last):
+    ...
+    IndexError: Index out of range: a[[0, 10]]
+    >>> M[:, 10:11] # the 10-th column (if there)
+    []
+    >>> M[:, :10] # all columns up to the 10-th
     [1  2  3]
     [       ]
     [4  5  6]
 
-See? Changing M2 didn't change M. Since we can slice, we can also assign
+Slicing an empty matrix works as long as you use a slice for the coordinate
+that has no size:
+
+    >>> Matrix(0, 3, [])[:, 1]
+    []
+
+Slicing gives a copy of what is sliced, so modifications of one object
+do not affect the other:
+
+    >>> M2 = M[:, :]
+    >>> M2[0, 0] = 100
+    >>> M[0, 0] == 100
+    False
+
+Notice that changing M2 didn't change M. Since we can slice, we can also assign
 entries:
 
     >>> M = Matrix(([1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]))
@@ -331,8 +355,8 @@ Linear algebra
 --------------
 
 Now that we have the basics out of the way, let's see what we can do with the
-actual matrices. Of course the first things that come to mind are the basics
-like the determinant:
+actual matrices. Of course, one of the first things that comes to mind is the
+determinant:
 
     >>> M = Matrix(( [1, 2, 3], [3, 6, 2], [2, 0, 1] ))
     >>> M.det()
@@ -344,8 +368,9 @@ like the determinant:
     >>> M3.det()
     0
 
-and the inverse. In SymPy the inverse is computed by Gaussian elimination by
-default but we can specify it be done by LU decomposition as well:
+Another common operation is the inevers: In SymPy, this is computed by Gaussian
+elimination by default (for dense matrices) but we can specify it be done by LU
+decomposition as well:
 
     >>> M2.inv()
     [1  0  0]
@@ -353,19 +378,19 @@ default but we can specify it be done by LU decomposition as well:
     [0  1  0]
     [       ]
     [0  0  1]
-    >>> M2.inv("LU")
+    >>> M2.inv(method="LU")
     [1  0  0]
     [       ]
     [0  1  0]
     [       ]
     [0  0  1]
-    >>> M.inv("LU")
+    >>> M.inv(method="LU")
     [-3/14  1/14  1/2 ]
     [                 ]
     [-1/28  5/28  -1/4]
     [                 ]
     [ 3/7   -1/7   0  ]
-    >>> M * M.inv("LU")
+    >>> M * M.inv(method="LU")
     [1  0  0]
     [       ]
     [0  1  0]
@@ -485,12 +510,9 @@ So there is quite a bit that can be done with the module including eigenvalues,
 eigenvectors, nullspace calculation, cofactor expansion tools, and so on. From
 here one might want to look over the matrices.py file for all functionality.
 
-Matrix Class Reference
-----------------------
-.. autoclass:: Matrix
-   :members:
-
-.. autoclass:: SparseMatrix
+MatrixBase Class Reference
+--------------------------
+.. autoclass:: MatrixBase
    :members:
 
 Matrix Exceptions Reference
@@ -506,43 +528,43 @@ Matrix Exceptions Reference
 Matrix Functions Reference
 --------------------------
 
-.. autofunction:: matrix_multiply
+.. autofunction:: classof
 
-.. autofunction:: matrix_multiply_elementwise
+.. autofunction:: sympy.matrices.dense.matrix_multiply_elementwise
 
-.. autofunction:: matrix_add
+.. autofunction:: sympy.matrices.dense.zeros
 
-.. autofunction:: zeros
+.. autofunction:: sympy.matrices.dense.ones
 
-.. autofunction:: ones
+.. autofunction:: sympy.matrices.dense.eye
 
-.. autofunction:: eye
+.. autofunction:: sympy.matrices.dense.diag
 
-.. autofunction:: diag
+.. autofunction:: sympy.matrices.dense.jordan_cell
 
-.. autofunction:: randMatrix
+.. autofunction:: sympy.matrices.dense.hessian
 
-.. autofunction:: hessian
+.. autofunction:: sympy.matrices.dense.GramSchmidt
 
-.. autofunction:: GramSchmidt
+.. autofunction:: sympy.matrices.dense.wronskian
 
-.. autofunction:: wronskian
+.. autofunction:: sympy.matrices.dense.casoratian
 
-.. autofunction:: casoratian
+.. autofunction:: sympy.matrices.dense.randMatrix
 
 Numpy Utility Functions Reference
 ---------------------------------
 
-.. autofunction:: list2numpy
+.. autofunction:: sympy.matrices.dense.list2numpy
 
-.. autofunction:: matrix2numpy
+.. autofunction:: sympy.matrices.dense.matrix2numpy
+
+.. autofunction:: sympy.matrices.dense.symarray
+
+.. autofunction:: sympy.matrices.dense.rot_axis1
+
+.. autofunction:: sympy.matrices.dense.rot_axis2
+
+.. autofunction:: sympy.matrices.dense.rot_axis3
 
 .. autofunction:: a2idx
-
-.. autofunction:: symarray
-
-.. autofunction:: rot_axis1
-
-.. autofunction:: rot_axis2
-
-.. autofunction:: rot_axis3

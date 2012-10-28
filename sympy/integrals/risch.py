@@ -40,6 +40,7 @@ from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum
 
 from sympy.utilities.iterables import numbered_symbols
 
+
 # TODO: Should this go in the regular namespace?
 # If so, index should default to False, I think.
 def integer_powers(exprs, index=True):

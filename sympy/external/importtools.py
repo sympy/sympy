@@ -6,8 +6,9 @@ import sys
 # For example, you might set both to False before running the tests so that
 # warnings are not printed to the console, or set both to True for debugging.
 
-WARN_NOT_INSTALLED = None # Default is False
-WARN_OLD_VERSION = None # Default is True
+WARN_NOT_INSTALLED = None  # Default is False
+WARN_OLD_VERSION = None  # Default is True
+
 
 def __sympy_debug():
     # helper function from sympy/__init__.py
@@ -19,6 +20,7 @@ def __sympy_debug():
 if __sympy_debug():
     WARN_OLD_VERSION = True
     WARN_NOT_INSTALLED = True
+
 
 def import_module(module, min_module_version=None, min_python_version=None,
         warn_not_installed=None, warn_old_version=None,
@@ -111,7 +113,8 @@ def import_module(module, min_module_version=None, min_python_version=None,
         if sys.version_info < min_python_version:
             if warn_old_version:
                 warnings.warn("Python version is too old to use %s "
-                    "(%s or newer required)" % (module, '.'.join(map(str, min_python_version))),
+                    "(%s or newer required)" % (
+                        module, '.'.join(map(str, min_python_version))),
                     UserWarning)
             return
 
@@ -129,7 +132,8 @@ def import_module(module, min_module_version=None, min_python_version=None,
     #except catch as e:
     except catch, e:
         if warn_not_installed:
-            warnings.warn("%s module could not be used (%s)" % (module, repr(e)))
+            warnings.warn(
+                "%s module could not be used (%s)" % (module, repr(e)))
         return
 
     if min_module_version:

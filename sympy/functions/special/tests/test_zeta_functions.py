@@ -10,13 +10,14 @@ a = Symbol('a')
 z = Symbol('z')
 s = Symbol('s')
 
+
 def test_zeta_eval():
 
     assert zeta(nan) == nan
     assert zeta(x, nan) == nan
 
-    assert zeta(0) == Rational(-1,2)
-    assert zeta(0, x) == Rational(1,2) - x
+    assert zeta(0) == Rational(-1, 2)
+    assert zeta(0, x) == Rational(1, 2) - x
 
     assert zeta(1) == zoo
     assert zeta(1, 2) == zoo
@@ -57,15 +58,18 @@ def test_zeta_eval():
     assert zeta(0, 2) == -Rational(3, 2)
     assert zeta(0, -2) == Rational(3, 2)
 
-    assert zeta(3).evalf(20).epsilon_eq(Float("1.2020569031595942854",20), 1e-19)
+    assert zeta(
+        3).evalf(20).epsilon_eq(Float("1.2020569031595942854", 20), 1e-19)
+
 
 def test_dirichlet_eta_eval():
 
-    assert dirichlet_eta(0) == Rational(1,2)
-    assert dirichlet_eta(-1) == Rational(1,4)
+    assert dirichlet_eta(0) == Rational(1, 2)
+    assert dirichlet_eta(-1) == Rational(1, 4)
     assert dirichlet_eta(1) == log(2)
     assert dirichlet_eta(2) == pi**2/12
-    assert dirichlet_eta(4) == pi**4*Rational(7,720)
+    assert dirichlet_eta(4) == pi**4*Rational(7, 720)
+
 
 def test_rewriting():
     assert dirichlet_eta(x).rewrite(zeta) == (1 - 2**(1 - x))*zeta(x)
@@ -79,12 +83,14 @@ def test_rewriting():
     assert lerchphi(1, x, a).rewrite(zeta) == zeta(x, a)
     assert z*lerchphi(z, s, 1).rewrite(polylog) == polylog(s, z)
 
+
 def test_derivatives():
     from sympy import Derivative
     assert zeta(x, a).diff(x) == Derivative(zeta(x, a), x)
     assert zeta(x, a).diff(a) == -x*zeta(x + 1, a)
-    assert lerchphi(z, s, a).diff(z) == (lerchphi(z, s-1, a) - a*lerchphi(z, s, a))/z
-    assert lerchphi(z, s, a).diff(a) == -s*lerchphi(z, s+1, a)
+    assert lerchphi(
+        z, s, a).diff(z) == (lerchphi(z, s - 1, a) - a*lerchphi(z, s, a))/z
+    assert lerchphi(z, s, a).diff(a) == -s*lerchphi(z, s + 1, a)
     assert polylog(s, z).diff(z) == polylog(s - 1, z)/z
 
     b = randcplx()
@@ -94,11 +100,12 @@ def test_derivatives():
     assert td(lerchphi(c, b, x), x)
     assert td(lerchphi(x, b, c), x)
 
+
 def myexpand(func, target):
     expanded = expand_func(func)
     if target is not None:
         return expanded == target
-    if expanded == func: # it didn't expand
+    if expanded == func:  # it didn't expand
         return False
 
     # check to see that the expanded and original evaluate to the same value
@@ -107,6 +114,7 @@ def myexpand(func, target):
         subs[a] = randcplx()
     return abs(func.subs(subs).n()
                - expanded.replace(exp_polar, exp).subs(subs).n()) < 1e-10
+
 
 def test_polylog_expansion():
     from sympy import factor, log
@@ -130,7 +138,7 @@ def test_lerchphi_expansion():
 
     # polylog reduction
     assert myexpand(lerchphi(z, s, S(1)/2),
-                    2**(s-1)*(polylog(s, sqrt(z))/sqrt(z) \
+                    2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z)
                               - polylog(s, polar_lift(-1)*sqrt(z))/sqrt(z)))
     assert myexpand(lerchphi(z, s, 2), -1/z + polylog(s, z)/z**2)
     assert myexpand(lerchphi(z, s, S(3)/2), None)
@@ -140,7 +148,7 @@ def test_lerchphi_expansion():
 
     # hurwitz zeta reduction
     assert myexpand(lerchphi(-1, s, a),
-                    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, (a+1)/2))
+                    2**(-s)*zeta(s, a/2) - 2**(-s)*zeta(s, (a + 1)/2))
     assert myexpand(lerchphi(I, s, a), None)
     assert myexpand(lerchphi(-I, s, a), None)
     assert myexpand(lerchphi(exp(2*I*pi/5), s, a), None)

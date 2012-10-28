@@ -39,13 +39,23 @@ Examples
 __all__ = []
 
 import rv_interface
-from rv_interface import *
+from rv_interface import (
+    cdf, covariance, density, dependent, E, given, independent, P, pspace,
+    random_symbols, sample, sample_iter, skewness, std, variance, where,
+)
 __all__.extend(rv_interface.__all__)
 
 import frv_types
-from frv_types import *
+from frv_types import (
+    Bernoulli, Binomial, Coin, Die, DiscreteUniform, FiniteRV, Hypergeometric,
+)
 __all__.extend(frv_types.__all__)
 
 import crv_types
-from crv_types import *
+from crv_types import (
+    Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ContinuousRV, Dagum,
+    Exponential, Gamma, Laplace, Logistic, LogNormal, Maxwell, Nakagami,
+    Normal, Pareto, Rayleigh, StudentT, Triangular, Uniform, UniformSum,
+    Weibull, WignerSemicircle,
+)
 __all__.extend(crv_types.__all__)

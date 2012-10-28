@@ -1,25 +1,32 @@
 from __future__ import division
-from sympy.plotting.intervalmath import *
+
 from sympy.external import import_module
+from sympy.plotting.intervalmath import (
+    Abs, acos, acosh, And, asin, asinh, atan, atanh, ceil, cos, cosh,
+    exp, floor, imax, imin, interval, log, log10, Or, sin, sinh, sqrt,
+    tan, tanh,
+)
 
 np = import_module('numpy')
 if not np:
     disabled = True
 
 #requires Numpy. Hence included in interval_functions
+
+
 def test_interval_pow():
     a = 2**interval(1, 2) == interval(2, 4)
     assert a == (True, True)
     a = interval(1, 2)**interval(1, 2) == interval(1, 4)
     assert a == (True, True)
     a = interval(-1, 1)**interval(0.5, 2)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(-2, -1) ** interval(1, 2)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(-2, -1) ** (1 / 2)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = interval(-1, 1)**(1 / 2)
-    assert a.is_valid == None
+    assert a.is_valid is None
     a = interval(-1, 1)**(1 / 3) == interval(-1, 1)
     assert a == (True, True)
     a = interval(-1, 1)**2 == interval(0, 1)
@@ -30,20 +37,22 @@ def test_interval_pow():
     assert a == (True, True)
 
     a = interval(1, 2, is_valid=False)**2
-    assert a.is_valid == False
+    assert a.is_valid is False
 
     a = (-3)**interval(1, 2)
-    assert a.is_valid == False
+    assert a.is_valid is False
     a = (-4)**interval(0.5, 0.5)
-    assert a.is_valid == False
+    assert a.is_valid is False
     assert ((-3)**interval(1, 1) == interval(-3, -3)) == (True, True)
 
     a = interval(8, 64)**(2 / 3)
-    assert abs(a.start - 4) < 1e-10 #eps
+    assert abs(a.start - 4) < 1e-10  # eps
     assert abs(a.end - 16) < 1e-10
     a = interval(-8, 64)**(2 / 3)
-    assert abs(a.start - 4) < 1e-10 #eps
+    assert abs(a.start - 4) < 1e-10  # eps
     assert abs(a.end - 16) < 1e-10
+
+
 def test_exp():
     a = exp(interval(-np.inf, 0))
     assert a.start == np.exp(-np.inf)
@@ -70,6 +79,7 @@ def test_log():
     assert a.start == np.log(2)
     assert a.end == np.log(2)
 
+
 def test_log10():
     a = log10(interval(1, 2))
     assert a.start == 0
@@ -83,7 +93,6 @@ def test_log10():
     a = log10(2)
     assert a.start == np.log10(2)
     assert a.end == np.log10(2)
-
 
 
 def test_atan():
@@ -125,7 +134,7 @@ def test_sin():
     assert a.end == np.sin(np.pi / 4)
 
     a = sin(interval(1, 2, is_valid=False))
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_cos():
@@ -154,7 +163,7 @@ def test_cos():
     assert a.end == 1
 
     a = cos(interval(1, 2, is_valid=False))
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_tan():
@@ -275,8 +284,7 @@ def test_asin():
     assert a.end == np.arcsin(0.5)
 
     a = asin(1.5)
-    assert a.is_valid == False
-
+    assert a.is_valid is False
 
 
 def test_acos():
@@ -300,7 +308,7 @@ def test_acos():
     assert a.end == np.arccos(0.5)
 
     a = acos(1.5)
-    assert a.is_valid == False
+    assert a.is_valid is False
 
 
 def test_ceil():
@@ -360,7 +368,7 @@ def test_acosh():
     assert a.is_valid is False
 
     a = acosh(0.5)
-    assert a.is_valid == False
+    assert a.is_valid is False
 
     a = acosh(2)
     assert a.start == np.arccosh(2)

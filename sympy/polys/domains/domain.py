@@ -8,17 +8,18 @@ from sympy.polys.polyerrors import (
     DomainError,
 )
 
+
 class Domain(object):
     """Represents an abstract domain. """
 
     dtype = None
-    zero  = None
-    one   = None
+    zero = None
+    one = None
 
-    has_Ring  = False
+    has_Ring = False
     has_Field = False
 
-    has_assoc_Ring  = False
+    has_assoc_Ring = False
     has_assoc_Field = False
 
     is_ZZ = False
@@ -35,14 +36,14 @@ class Domain(object):
     is_Numerical = False
     is_Algebraic = False
 
-    is_Simple    = False
+    is_Simple = False
     is_Composite = False
 
     has_CharacteristicZero = False
 
     is_EX = False
 
-    rep   = None
+    rep = None
     alias = None
 
     def __init__(self):
@@ -80,7 +81,8 @@ class Domain(object):
                 if result is not None:
                     return result
 
-            raise CoercionFailed("can't convert %s of type %s to %s" % (a, K0, K1))
+            raise CoercionFailed(
+                "can't convert %s of type %s to %s" % (a, K0, K1))
         else:
             try:
                 if K1.of_type(a):
@@ -281,7 +283,8 @@ class Domain(object):
             if K1.is_Composite:
                 return K1.__class__(K0.unify(K1.dom), *K1.gens)
             elif K1.is_Algebraic:
-                raise NotImplementedError("unification of different algebraic extensions")
+                raise NotImplementedError(
+                    "unification of different algebraic extensions")
             elif K1.is_ZZ or K1.is_QQ:
                 return K0
             else:
@@ -300,7 +303,8 @@ class Domain(object):
                 if K0.is_ZZ or K0.is_QQ:
                     return K1
                 else:
-                    raise UnificationFailed("can't unify %s with %s" % (K0, K1))
+                    raise UnificationFailed(
+                        "can't unify %s with %s" % (K0, K1))
             else:
                 if K0.has_Field:
                     return K0
@@ -458,9 +462,21 @@ class Domain(object):
         """Returns denominator of ``a``. """
         raise NotImplementedError
 
+    def half_gcdex(self, a, b):
+        """Half extended GCD of ``a`` and ``b``. """
+        s, t, h = self.gcdex(a, b)
+        return s, h
+
     def gcdex(self, a, b):
         """Extended GCD of ``a`` and ``b``. """
         raise NotImplementedError
+
+    def cofactors(self, a, b):
+        """Returns GCD and cofactors of ``a`` and ``b``. """
+        gcd = self.gcd(a, b)
+        cfa = self.quo(a, gcd)
+        cfb = self.quo(b, gcd)
+        return gcd, cfa, cfb
 
     def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """

@@ -2,6 +2,7 @@
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class Ideal(object):
     """
     Abstract base class for ideals.
@@ -107,7 +108,8 @@ class Ideal(object):
     def _check_ideal(self, J):
         """Helper to check ``J`` is an ideal of our ring."""
         if not isinstance(J, Ideal) or J.ring != self.ring:
-            raise ValueError('J must be an ideal of %s, got %s' % (self.ring, J))
+            raise ValueError(
+                'J must be an ideal of %s, got %s' % (self.ring, J))
 
     def contains(self, elem):
         """
@@ -255,6 +257,7 @@ class Ideal(object):
     def __ne__(self, e):
         return not (self == e)
 
+
 class ModuleImplementedIdeal(Ideal):
     """
     Ideal implementation relying on the modules code.
@@ -340,7 +343,7 @@ class ModuleImplementedIdeal(Ideal):
         if not isinstance(J, ModuleImplementedIdeal):
             raise NotImplementedError
         return self.__class__(self.ring, self._module.submodule(
-                *[[x*y] for [x] in self._module.gens for [y] in J._module.gens]))
+            *[[x*y] for [x] in self._module.gens for [y] in J._module.gens]))
 
     def in_terms_of_generators(self, e):
         """

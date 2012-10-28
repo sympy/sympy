@@ -1,5 +1,6 @@
 from sympy import Expr, Add, Mul, Matrix, Pow, sympify, Matrix, Tuple
 
+
 def _is_scalar(e):
     """ Helper method used in Tr"""
 
@@ -9,10 +10,11 @@ def _is_scalar(e):
         if (e.is_Integer or e.is_Float or
             e.is_Rational or e.is_Number or
             (e.is_Symbol and e.is_commutative)
-            ):
+                ):
             return True
 
     return False
+
 
 def _cycle_permute(l):
     """ Cyclic permutations based on canonical ordering
@@ -28,10 +30,10 @@ def _cycle_permute(l):
         return l
 
     min_item = min(l)
-    indices = [i for i, x in enumerate(l) if x ==  min_item]
+    indices = [i for i, x in enumerate(l) if x == min_item]
 
     le = list(l)
-    le.extend(l) # duplicate and extend string for easy processing
+    le.extend(l)  # duplicate and extend string for easy processing
 
     # adding the first min_item index back for easier looping
     indices.append(len(l) + indices[0])
@@ -39,13 +41,13 @@ def _cycle_permute(l):
     # create sublist of items with first item as min_item and last_item
     # in each of the sublist is item just before the next occurence of
     # minitem in the cycle formed.
-    sublist = [[le[indices[i]:indices[i+1]]] for i in
-               xrange(len(indices)-1)]
+    sublist = [[le[indices[i]:indices[i + 1]]] for i in
+               xrange(len(indices) - 1)]
 
     # we do comparison of strings by comparing elements
     # in each sublist
     idx = sublist.index(min(sublist))
-    ordered_l = le[indices[idx]:indices[idx]+len(l)]
+    ordered_l = le[indices[idx]:indices[idx] + len(l)]
 
     return ordered_l
 
@@ -61,6 +63,7 @@ def _rearrange_args(l):
     x = list(l[-1:])
     x.extend(l[0:-1])
     return Mul(*x).args
+
 
 class Tr(Expr):
     """ Generic Trace operation than can trace over:
@@ -118,7 +121,6 @@ class Tr(Expr):
             raise ValueError("Arguments to Tr should be of form"
                              "(expr[, [indices]])")
 
-
         if isinstance(expr, Matrix):
             return expr.trace()
         elif hasattr(expr, 'trace') and callable(expr.trace):
@@ -134,10 +136,10 @@ class Tr(Expr):
                 obj = Expr.__new__(cls, Mul(*nc_part), indices )
                 #this check is needed to prevent cached instances
                 #being returned even if len(c_part)==0
-                return Mul(*c_part)*obj if len(c_part)>0 else obj
+                return Mul(*c_part)*obj if len(c_part) > 0 else obj
         elif isinstance(expr, Pow):
             if (_is_scalar(expr.args[0]) and
-                _is_scalar(expr.args[1])):
+                    _is_scalar(expr.args[1])):
                 return expr
             else:
                 return Expr.__new__(cls, expr, indices)
@@ -147,7 +149,7 @@ class Tr(Expr):
 
             return Expr.__new__(cls, expr, indices)
 
-    def doit(self,**kwargs):
+    def doit(self, **kwargs):
         """ Perform the trace operation.
 
         #TODO: Current version ignores the indices set for partial trace.
@@ -170,7 +172,6 @@ class Tr(Expr):
         #TODO : This function to be reviewed
         # and implementation improved.
         return True
-
 
     #TODO: Review if the permute method is needed
     # and if it needs to return a new instance
@@ -209,4 +210,4 @@ class Tr(Expr):
         else:
             args = [self.args[0]]
 
-        return tuple(args)  + (self.args[1], )
+        return tuple(args) + (self.args[1], )

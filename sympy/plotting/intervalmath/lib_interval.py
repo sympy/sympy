@@ -4,6 +4,7 @@ from sympy.external import import_module
 
 np = import_module('numpy')
 
+
 def Abs(x):
     if isinstance(x, (int, float)):
         return interval(abs(x))
@@ -16,6 +17,8 @@ def Abs(x):
         raise NotImplementedError
 
 #Monotonic
+
+
 def exp(x):
     """evaluates the exponential of an interval"""
     if isinstance(x, (int, float)):
@@ -178,10 +181,10 @@ def imin(*args):
             else:
                 return interval(-np.inf, np.inf, is_valid=None)
         start_array = [a if isinstance(a, (int, float)) else a.start
-                        for a in new_args]
+                       for a in new_args]
 
         end_array = [a if isinstance(a, (int, float)) else a.end
-                        for a in new_args]
+                     for a in new_args]
         return interval(min(start_array), min(end_array))
 
 
@@ -198,10 +201,10 @@ def imax(*args):
             else:
                 return interval(-np.inf, np.inf, is_valid=None)
         start_array = [a if isinstance(a, (int, float)) else a.start
-                        for a in new_args]
+                       for a in new_args]
 
         end_array = [a if isinstance(a, (int, float)) else a.end
-                        for a in new_args]
+                     for a in new_args]
 
         return interval(max(start_array), max(end_array))
 
@@ -256,7 +259,7 @@ def asin(x):
             return interval(np.arcsin(x), np.arcsin(x))
     elif isinstance(x, interval):
         #Outside the domain
-        if  x.is_valid is False or x.start > 1 or x.end < -1:
+        if x.is_valid is False or x.start > 1 or x.end < -1:
             return interval(-np.inf, np.inf, is_valid=False)
         #Partially outside the domain
         elif x.start < -1 or x.end > 1:
@@ -277,7 +280,7 @@ def acos(x):
             return interval(np.arccos(x), np.arccos(x))
     elif isinstance(x, interval):
         #Outside the domain
-        if  x.is_valid is False or x.start > 1 or x.end < -1:
+        if x.is_valid is False or x.start > 1 or x.end < -1:
             return interval(-np.inf, np.inf, is_valid=False)
         #Partially outside the domain
         elif x.start < -1 or x.end > 1:
@@ -374,7 +377,7 @@ def atanh(x):
             return interval(np.arctanh(x))
     elif isinstance(x, interval):
         #outside the domain
-        if  x.is_valid is False or x.start >= 1 or x.end <= -1:
+        if x.is_valid is False or x.start >= 1 or x.end <= -1:
             return interval(-np.inf, np.inf, is_valid=False)
         #partly outside the domain
         elif x.start <= -1 or x.end >= 1:

@@ -6,6 +6,7 @@ from plot_controller import PlotController
 
 from time import clock
 
+
 class PlotWindow(ManagedWindow):
 
     def __init__(self, plot, **kwargs):
@@ -79,7 +80,7 @@ class PlotWindow(ManagedWindow):
         calc_verts_pos, calc_verts_len = 0, 0
         calc_cverts_pos, calc_cverts_len = 0, 0
 
-        should_update_caption = (clock()-self.last_caption_update >
+        should_update_caption = (clock() - self.last_caption_update >
                                  self.caption_update_interval)
 
         if len(self.plot._functions.values()) == 0:

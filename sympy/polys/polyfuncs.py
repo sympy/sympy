@@ -15,6 +15,7 @@ from sympy.utilities import numbered_symbols, take
 
 from sympy.core import S, Basic, Add, Mul
 
+
 def symmetrize(F, *gens, **args):
     """
     Rewrite a polynomial in terms of elementary symmetric polynomials.
@@ -81,7 +82,7 @@ def symmetrize(F, *gens, **args):
     gens, dom = opt.gens, opt.domain
 
     for i in xrange(0, len(gens)):
-        poly = symmetric_poly(i+1, gens, polys=True)
+        poly = symmetric_poly(i + 1, gens, polys=True)
         polys.append((symbols.next(), poly.set_domain(dom)))
 
     indices = range(0, len(gens) - 1)
@@ -100,7 +101,7 @@ def symmetrize(F, *gens, **args):
             _height, _monom, _coeff = -1, None, None
 
             for i, (monom, coeff) in enumerate(f.terms()):
-                if all(monom[i] >= monom[i+1] for i in indices):
+                if all(monom[i] >= monom[i + 1] for i in indices):
                     height = max([ n*m for n, m in zip(weights, monom) ])
 
                     if height > _height:
@@ -145,6 +146,7 @@ def symmetrize(F, *gens, **args):
             return result, polys
         else:
             return result + (polys,)
+
 
 def horner(f, *gens, **args):
     """
@@ -198,6 +200,7 @@ def horner(f, *gens, **args):
 
     return form
 
+
 def interpolate(data, x):
     """
     Construct an interpolating polynomial for the data points.
@@ -208,13 +211,23 @@ def interpolate(data, x):
     >>> from sympy.polys.polyfuncs import interpolate
     >>> from sympy.abc import x
 
+    A list is interpreted as though it were paired with a range starting
+    from 1:
+
     >>> interpolate([1, 4, 9, 16], x)
     x**2
+
+    This can be made explicit by giving a list of coordinates:
+
     >>> interpolate([(1, 1), (2, 4), (3, 9)], x)
     x**2
-    >>> interpolate([(1, 2), (2, 5), (3, 10)], x)
+
+    The (x, y) coordinates can also be given as keys and values of a
+    dictionary (and the points need not be equispaced):
+
+    >>> interpolate([(-1, 2), (1, 2), (2, 5)], x)
     x**2 + 1
-    >>> interpolate({1: 2, 2: 5, 3: 10}, x)
+    >>> interpolate({-1: 2, 1: 2, 2: 5}, x)
     x**2 + 1
 
     """
@@ -226,12 +239,13 @@ def interpolate(data, x):
         if isinstance(data[0], tuple):
             X, Y = zip(*data)
         else:
-            X = range(1, n+1)
+            X = range(1, n + 1)
             Y = list(data)
 
     poly = interpolating_poly(n, x, X, Y)
 
     return poly.expand()
+
 
 def viete(f, roots=None, *gens, **args):
     """
@@ -260,12 +274,14 @@ def viete(f, roots=None, *gens, **args):
         raise ComputationFailed('viete', 1, exc)
 
     if f.is_multivariate:
-        raise MultivariatePolynomialError("multivariate polynomials are not allowed")
+        raise MultivariatePolynomialError(
+            "multivariate polynomials are not allowed")
 
     n = f.degree()
 
     if n < 1:
-        raise ValueError("can't derive Viete's formulas for a constant polynomial")
+        raise ValueError(
+            "can't derive Viete's formulas for a constant polynomial")
 
     if roots is None:
         roots = numbered_symbols('r', start=1)
@@ -279,7 +295,7 @@ def viete(f, roots=None, *gens, **args):
     result, sign = [], -1
 
     for i, coeff in enumerate(coeffs[1:]):
-        poly = symmetric_poly(i+1, roots)
+        poly = symmetric_poly(i + 1, roots)
         coeff = sign*(coeff/lc)
         result.append((poly, coeff))
         sign = -sign

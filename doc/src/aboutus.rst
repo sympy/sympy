@@ -91,7 +91,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Jorn Baayen: improvements to piecewise functions and latex printing, bug fixes
 #. Eh Tan: improve trigonometric simplification
 #. Renato Coutinho: derivative improvements
-#. Oscar Benjamin: latex printer fix
+#. Oscar Benjamin: latex printer fix, gcd bug fix
 #. Øyvind Jensen: implemented coupled cluster expansion and wick theorem, improvements to assumptions, bugfixes
 #. Julio Idichekop Filho: indentation fixes, docstring improvements
 #. Łukasz Pankowski: fix matrix multiplication with numpy scalars
@@ -172,7 +172,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Chancellor Arkantos: Fixes to the logo
 #. Stepan Simsa: Translation of the tutorial to Czech
 #. Tobias Lenz: Unicode pretty printer for Sum
-#. Siddhu: Documentation fixes for the Physics module
+#. Siddhanathan Shanmugam: Documentation fixes for the Physics module
 #. Tiffany Zhu: Improved the latex() docstring
 #. Alexey Subach: Translation of the tutorial to Russian
 #. Joan Creus: Improvements to the test runner
@@ -208,14 +208,26 @@ want to be mentioned here, so see our repository history for a full list).
 #. Ashwini Oruganti: Changes to Pow printing
 #. Andreas Kloeckner: Fix to cse()
 #. Prateek Papriwal: improve summation documentation
+#. Arpit Goyal: Improvements to Integral and Sum
 #. Angadh Nanjangud: in physics.mechanics, added a function and tests for the parallel axis theorem
 #. Comer Duncan: added dual, is_antisymmetric, and det_lu_decomposition to matrices.py
-#. Jens H. Nielsen: added sets to modules listing
+#. Jens H. Nielsen: added sets to modules listing, update IPython printing extension
 #. Joseph Dougherty: modified whitespace cleaning to remove multiple newlines at eof
 #. marshall2389: Spelling correction
 #. Guru Devanla: Implemented quantum density operator
 #. George Waksman: Implemented JavaScript code printer and MathML printer
 #. Angus Griffith: Fix bug in rsolve
+#. Timothy Reluga: Rewrite trigonometric functions as rationals
+#. Brian Stephanik: Test for a bug in fcode
+#. Ljubiša Moćić: Serbian translation of the tutorial
+#. Piotr Korgul: Polish translation of the tutorial
+#. Rom le Clair: French translation of the tutorial
+#. Alexandr Popov: Fixes to Pauli algebra
+#. Saurabh Jha: Work on Kauers algorithm
+#. Tarun Gaba: Implemented some trigonometric integrals
+#. Takafumi Arakaki: Add info target to the doc Makefile
+#. Alexander Eberspächer: correct typo in aboutus.rst
+#. Sachin Joglekar: Simplification of logic expressions to SOP and POS forms
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -226,17 +238,18 @@ Financial and Infrastructure Support
 ------------------------------------
 
 * `Google <http://www.google.com/corporate/>`_: SymPy has received generous
-  financial support from Google in various years through the Google Summer of
-  Code program by providing stipends:
+  financial support from Google in various years through the `Google Summer of
+  Code <http://www.google-melange.com/>`_ program by providing stipends:
 
   * in 2007 for 5 students (`GSoC 2007 <http://code.google.com/p/sympy/wiki/GSoC2007>`_)
   * in 2008 for 1 student (`GSoC 2008 <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
   * in 2009 for 5 students (`GSoC 2009 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
   * in 2010 for 5 students (`GSoC 2010 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
-  * in 2011 for 9 studends (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
+  * in 2011 for 9 students (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
+  * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
 
 * `Python Software Foundation (PSF) <http://www.python.org/psf/>`_ has hosted
-  various GSoC studends over the years:
+  various GSoC students over the years:
 
   * 3 GSoC 2007 students (Brian, Robert and Jason)
   * 1 GSoC 2008 student (Fredrik)
@@ -250,7 +263,12 @@ Financial and Infrastructure Support
   * 3 students (Aaron, Dale and Fabian) in 2009
   * 1 student (Addison) in 2010
 
-* `the Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
+* `The Space Telescope Science Institute <http://www.stsci.edu/portal/>`_: STScI hosted 1 GSoC 2007 student (Mateusz)
+
+* Several 13-17 year old pre-university students contributed as part of
+  Google's `Code-In
+  <http://www.google-melange.com/gci/homepage/google/gci2011>`_ 2011.  (`GCI
+  2011 <http://www.google-melange.com/gci/org/google/gci2011/sympy>`_)
 
 * `Simula Research Laboratory <http://www.simula.no/>`_: supports Pearu Peterson work in SymPy/SymPy Core projects
 
@@ -261,7 +279,7 @@ License
 -------
 
 Unless stated otherwise, all files in the SymPy project, SymPy's webpage (and
-wiki), all images and all documentation including this User's Guide is licensed
+wiki), all images and all documentation including this User's Guide are licensed
 using the new BSD license:
 
 .. literalinclude:: ../../LICENSE

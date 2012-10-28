@@ -17,20 +17,20 @@ def display_fraction(digits, skip=0, colwidth=10, columns=5):
     """Pretty printer for first n digits of a fraction"""
     perline = colwidth * columns
     printed = 0
-    for linecount in range((len(digits)-skip) // (colwidth * columns)):
-        line = digits[skip+linecount*perline:skip+(linecount+1)*perline]
+    for linecount in range((len(digits) - skip) // (colwidth * columns)):
+        line = digits[skip + linecount*perline:skip + (linecount + 1)*perline]
         for i in range(columns):
-            print line[i*colwidth : (i+1)*colwidth],
-        print ":", (linecount+1)*perline
-        if (linecount+1) % 10 == 0:
+            print line[i*colwidth: (i + 1)*colwidth],
+        print ":", (linecount + 1)*perline
+        if (linecount + 1) % 10 == 0:
             print
         printed += colwidth*columns
-    rem = (len(digits)-skip) % (colwidth * columns)
+    rem = (len(digits) - skip) % (colwidth * columns)
     if rem:
         buf = digits[-rem:]
         s = ""
         for i in range(columns):
-            s += buf[:colwidth].ljust(colwidth+1, " ")
+            s += buf[:colwidth].ljust(colwidth + 1, " ")
             buf = buf[colwidth:]
         print s + ":", printed + colwidth*columns
 
@@ -43,7 +43,7 @@ def calculateit(func, base, n, tofile):
     else:
         skip = len(intpart)
     print "Step 1 of 2: calculating binary value..."
-    prec = int(n*math.log(base,2))+10
+    prec = int(n*math.log(base, 2)) + 10
     t = clock()
     a = func(prec)
     step1_time = clock() - t

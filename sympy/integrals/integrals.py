@@ -17,6 +17,7 @@ from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
 
+
 def _process_limits(*symbols):
     """Convert the symbols-related limits into proper limits,
     storing them as Tuple(symbol, lower, upper). The sign of
@@ -58,6 +59,7 @@ def _process_limits(*symbols):
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
     return limits, sign
+
 
 class Integral(Expr):
     """Represents unevaluated integral."""
@@ -126,7 +128,8 @@ class Integral(Expr):
             # no symbols provided -- let's compute full anti-derivative
             free = function.free_symbols
             if len(free) != 1:
-                raise ValueError("specify variables of integration for %s" % function)
+                raise ValueError(
+                    "specify variables of integration for %s" % function)
             limits, sign = [Tuple(s) for s in free], 1
 
         while isinstance(function, Integral):
@@ -138,7 +141,7 @@ class Integral(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative # limits already checked
+        obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
 
@@ -272,7 +275,7 @@ class Integral(Expr):
         is_number
         """
         if (self.function.is_zero or
-            any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
+                any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
             return True
         if not self.free_symbols and self.function.is_number:
             # the integrand is a number and the limits are numerical
@@ -325,9 +328,9 @@ class Integral(Expr):
         for xab in limits:
             if len(xab) == 1:
                 isyms.add(xab[0])
-                continue # it may be removed later
-            elif len(xab) == 3 and xab[1] == xab[2]: # XXX naive equality test
-                return True # integral collapsed
+                continue  # it may be removed later
+            elif len(xab) == 3 and xab[1] == xab[2]:  # XXX naive equality test
+                return True  # integral collapsed
             if xab[0] in isyms:
                 # take it out of the symbols since it will be replace
                 # with whatever the limits of the integral are
@@ -495,8 +498,9 @@ class Integral(Expr):
             # when this is removed, update the docstring
             from sympy.utilities.exceptions import SymPyDeprecationWarning
             SymPyDeprecationWarning(
-            feature="transform(x, f(x), inverse=True)",
-            useinstead="transform(f(x), x)"
+                feature="transform(x, f(x), inverse=True)",
+                useinstead="transform(f(x), x)",
+                issue=3380, deprecated_since_version="0.7.2",
             ).warn()
             # in the old style x and u contained the same variable so
             # don't worry about using the old-style feature with the
@@ -508,7 +512,8 @@ class Integral(Expr):
 
         xfree = x.free_symbols.intersection(self.variables)
         if len(xfree) > 1:
-            raise ValueError('F(x) can only contain one of: %s' % self.variables)
+            raise ValueError(
+                'F(x) can only contain one of: %s' % self.variables)
         xvar = xfree.pop() if xfree else d
 
         if xvar not in self.variables:
@@ -641,7 +646,7 @@ class Integral(Expr):
         meijerg = hints.get('meijerg', None)
         conds = hints.get('conds', 'piecewise')
         if conds not in ['separate', 'piecewise', 'none']:
-            raise ValueError('conds must be one of "separate", "piecewise", ' \
+            raise ValueError('conds must be one of "separate", "piecewise", '
                              '"none", got: %s' % conds)
 
         # check for the trivial case of equal upper and lower limits
@@ -659,7 +664,8 @@ class Integral(Expr):
         # There is no trivial answer, so continue
 
         undone_limits = []
-        ulj = set() # free symbols of any undone limits' upper and lower limits
+        # ulj = free symbols of any undone limits' upper and lower limits
+        ulj = set()
         for xab in self.limits:
             # compute uli, the free symbols in the
             # Upper and Lower limits of limit I
@@ -702,7 +708,7 @@ class Integral(Expr):
                                           (Integral(function, (x, a, b)), True))
                         elif conds == 'separate':
                             if len(self.limits) != 1:
-                                raise ValueError('conds=separate not supported in ' \
+                                raise ValueError('conds=separate not supported in '
                                                  'multiple integrals')
                             ret = f, cond
                         else:
@@ -711,8 +717,8 @@ class Integral(Expr):
 
             meijerg1 = meijerg
             if len(xab) == 3 and xab[1].is_real and xab[2].is_real \
-               and not function.is_Poly and \
-               (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)):
+                and not function.is_Poly and \
+                    (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)):
                 ret = try_meijerg(function, xab)
                 if ret is not None:
                     function = ret
@@ -775,6 +781,16 @@ class Integral(Expr):
             return self.func(*([function] + undone_limits))
         return function
 
+    def _eval_adjoint(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.adjoint(), *self.limits)
+        return None
+
+    def _eval_conjugate(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.conjugate(), *self.limits)
+        return None
+
     def _eval_derivative(self, sym):
         """Evaluate the derivative of the current Integral object by
         differentiating under the integral sign [1], using the Fundamental
@@ -828,7 +844,7 @@ class Integral(Expr):
             a = b = None
             x = limit[0]
 
-        if limits: # f is the argument to an integral
+        if limits:  # f is the argument to an integral
             f = Integral(f, *tuple(limits))
 
         # assemble the pieces
@@ -946,7 +962,8 @@ class Integral(Expr):
                     h_order_expr = self._eval_integral(order_term.expr, x)
 
                     if h_order_expr is not None:
-                        h_order_term = order_term.func(h_order_expr, *order_term.variables)
+                        h_order_term = order_term.func(
+                            h_order_expr, *order_term.variables)
                         parts.append(coeff*(h + h_order_term))
                         continue
 
@@ -1031,7 +1048,6 @@ class Integral(Expr):
                 if f.is_Add:
                     return self._eval_integral(f, x, meijerg)
 
-
             if h is not None:
                 parts.append(coeff * h)
             else:
@@ -1044,7 +1060,8 @@ class Integral(Expr):
             yield integrate(term, *self.limits)
 
     def _eval_nseries(self, x, n, logx):
-        terms, order = self.function.nseries(x, n=n, logx=logx).as_coeff_add(C.Order)
+        terms, order = self.function.nseries(
+            x, n=n, logx=logx).as_coeff_add(C.Order)
         return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_subs(self, old, new):
@@ -1140,6 +1157,11 @@ class Integral(Expr):
             integrand = integrand.subs(old, new)
         return Integral(integrand, *limits)
 
+    def _eval_transpose(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.transpose(), *self.limits)
+        return None
+
     def as_sum(self, n, method="midpoint"):
         """
         Approximates the integral by a sum.
@@ -1205,7 +1227,8 @@ class Integral(Expr):
 
         limits = self.limits
         if len(limits) > 1:
-            raise NotImplementedError("Multidimensional midpoint rule not implemented yet")
+            raise NotImplementedError(
+                "Multidimensional midpoint rule not implemented yet")
         else:
             limit = limits[0]
         if n <= 0:
@@ -1214,7 +1237,7 @@ class Integral(Expr):
             raise NotImplementedError("Infinite summation not yet implemented")
         sym, lower_limit, upper_limit = limit
         dx = (upper_limit - lower_limit)/n
-        result = 0.
+        result = 0
         for i in range(n):
             if method == "midpoint":
                 xi = lower_limit + i*dx + dx/2
@@ -1338,7 +1361,8 @@ def integrate(*args, **kwargs):
     in interactive sessions and should be avoided in library code.
 
     >>> integrate(x**a*exp(-x), (x, 0, oo)) # same as conds='piecewise'
-    Piecewise((gamma(a + 1), -re(a) < 1), (Integral(x**a*exp(-x), (x, 0, oo)), True))
+    Piecewise((gamma(a + 1), -re(a) < 1),
+        (Integral(x**a*exp(-x), (x, 0, oo)), True))
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')
     gamma(a + 1)
@@ -1356,9 +1380,10 @@ def integrate(*args, **kwargs):
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep = False, meijerg = meijerg, conds = conds)
+        return integral.doit(deep=False, meijerg=meijerg, conds=conds)
     else:
         return integral
+
 
 @xthreaded
 def line_integrate(field, curve, vars):
@@ -1382,7 +1407,8 @@ def line_integrate(field, curve, vars):
     """
     F = sympify(field)
     if not F:
-        raise ValueError("Expecting function specifying field as first argument.")
+        raise ValueError(
+            "Expecting function specifying field as first argument.")
     if not isinstance(curve, Curve):
         raise ValueError("Expecting Curve entity as second argument.")
     if not is_sequence(vars):
@@ -1405,5 +1431,5 @@ def line_integrate(field, curve, vars):
         Ft = Ft.subs(var, _f)
     Ft = Ft * sqrt(dldt)
 
-    integral = Integral(Ft, curve.limits).doit(deep = False)
+    integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral

@@ -1,11 +1,13 @@
 from str import StrPrinter
 from sympy.utilities import default_sort_key
 
+
 def _find_first_symbol(expr):
     for atom in expr.atoms():
         if atom.is_Symbol:
             return atom
     raise ValueError('expression must contain a Symbol: %r' % expr)
+
 
 class LambdaPrinter(StrPrinter):
     """
@@ -13,10 +15,18 @@ class LambdaPrinter(StrPrinter):
     lambdify.
     """
 
-    def _print_Matrix(self, expr):
-        return "Matrix([%s])"%expr._format_str(self._print, ",")
-
-    _print_MutableMatrix = _print_Matrix
+    def _print_MatrixBase(self, expr):
+        return "%s([%s])" % (expr.__class__.__name__,
+        expr._format_str(self._print, ","))
+    _print_SparseMatrix = \
+        _print_MutableSparseMatrix = \
+        _print_ImmutableSparseMatrix = \
+        _print_Matrix = \
+        _print_DenseMatrix = \
+        _print_MutableDenseMatrix = \
+        _print_ImmutableMatrix = \
+        _print_ImmutableDenseMatrix = \
+        _print_MatrixBase
 
     def _print_Piecewise(self, expr):
         from sympy.core.sets import Interval
@@ -60,6 +70,7 @@ class LambdaPrinter(StrPrinter):
     def _print_Not(self, expr):
         result = ['(', 'not (', self._print(expr.args[0]), '))']
         return ''.join(result)
+
 
 def lambdarepr(expr, **settings):
     """

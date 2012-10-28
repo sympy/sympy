@@ -13,9 +13,10 @@ from sympy.simplify import simplify
 from sympy.geometry.exceptions import GeometryError
 from sympy.functions.elementary.miscellaneous import sqrt
 from entity import GeometryEntity
-from sympy.matrices.matrices import Matrix
+from sympy.matrices import Matrix
 from sympy.core.numbers import Float
 from sympy.simplify.simplify import nsimplify
+
 
 class Point(GeometryEntity):
     """A point in a 2-dimensional Euclidean space.
@@ -82,7 +83,8 @@ class Point(GeometryEntity):
             coords = Tuple(*args)
 
         if len(coords) != 2:
-            raise NotImplementedError("Only two dimensional points currently supported")
+            raise NotImplementedError(
+                "Only two dimensional points currently supported")
         if kwargs.get('evaluate', True):
             coords = [nsimplify(c) for c in coords]
 
@@ -206,7 +208,7 @@ class Point(GeometryEntity):
         if len(points) == 0:
             return False
         if len(points) <= 2:
-            return True # two points always form a line
+            return True  # two points always form a line
         points = [Point(a) for a in points]
 
         # XXX Cross product is used now, but that only extends to three
@@ -223,7 +225,7 @@ class Point(GeometryEntity):
             if test is False:
                 return False
             if rv and not test:
-                  rv = test
+                rv = test
         return rv
 
     def is_concyclic(*points):
@@ -567,7 +569,8 @@ class Point(GeometryEntity):
                 return Point(*[simplify(a + b) for a, b in
                                zip(self.args, other.args)])
             else:
-                raise TypeError("Points must have the same number of dimensions")
+                raise TypeError(
+                    "Points must have the same number of dimensions")
         else:
             raise ValueError('Cannot add non-Point, %s, to a Point' % other)
 

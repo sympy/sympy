@@ -8,6 +8,7 @@ from sympy.core.compatibility import callable, reduce, cmp, iterable
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
+
 class Basic(object):
     """
     Base class for all objects in sympy.
@@ -70,7 +71,7 @@ class Basic(object):
     is_Matrix = False
 
     @property
-    @deprecated
+    @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
     def is_Real(self):  # pragma: no cover
         """Deprecated alias for ``is_Float``"""
         # When this is removed, remove the piece of code disabling the warning
@@ -79,12 +80,14 @@ class Basic(object):
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._assumptions  = cls.default_assumptions
-        obj._mhash = None # will be set by __hash__ method.
+        obj._assumptions = cls.default_assumptions
+        obj._mhash = None  # will be set by __hash__ method.
 
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+    def copy(self):
+        return self.func(*self.args)
 
     def __reduce_ex__(self, proto):
         """ Pickling support."""
@@ -110,9 +113,13 @@ class Basic(object):
         return h
 
     def _hashable_content(self):
-        # If class defines additional attributes, like name in Symbol,
-        # then this method should be updated accordingly to return
-        # relevant attributes as tuple.
+        """Return a tuple of information about self that can be used to
+        compute the hash. If a class defines additional attributes,
+        like ``name`` in Symbol, then this method should be updated
+        accordingly to return such relevent attributes.
+
+        Defining more than _hashable_content is necessary if __eq__ has
+        been defined by a class. See note about this in Basic.__eq__."""
         return self._args
 
     @property
@@ -212,13 +219,15 @@ class Basic(object):
                     if c != 0:
                         return c
 
-        return Basic.compare(a,b)
+        return Basic.compare(a, b)
 
     @staticmethod
-    @deprecated
+    @deprecated(useinstead="default_sort_key", issue=1491, deprecated_since_version="0.7.2")
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?
+
+        THIS FUNCTION IS DEPRECATED.  Use ``default_sort_key`` instead.
 
         ::
 
@@ -263,7 +272,7 @@ class Basic(object):
 
         # both objects are non-SymPy
         if (not isinstance(a, Basic)) and (not isinstance(b, Basic)):
-            return cmp(a,b)
+            return cmp(a, b)
 
         if not isinstance(a, Basic):
             return -1   # other < sympy
@@ -330,13 +339,25 @@ class Basic(object):
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
-        """a == b  -> Compare two symbolic trees and see whether they are equal
+        """Return a boolean indicating whether a == b on the basis of
+        their symbolic trees.
 
-           this is the same as:
+        This is the same as a.compare(b) == 0 but faster.
 
-             a.compare(b) == 0
+        Notes
+        =====
 
-           but faster
+        If a class that overrides __eq__() needs to retain the
+        implementation of __hash__() from a parent class, the
+        interpreter must be told this explicitly by setting __hash__ =
+        <ParentClass>.__hash__. Otherwise the inheritance of __hash__()
+        will be blocked, just as if __hash__ had been explicitly set to
+        None.
+
+        References
+        ==========
+
+        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
         if type(self) is not type(other):
@@ -354,7 +375,6 @@ class Basic(object):
                 return False
 
         return self._hashable_content() == other._hashable_content()
-
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
@@ -407,7 +427,8 @@ class Basic(object):
         elif len(dummy_symbols) == 1:
             dummy = dummy_symbols.pop()
         else:
-            raise ValueError("only one dummy symbol allowed on the left-hand side")
+            raise ValueError(
+                "only one dummy symbol allowed on the left-hand side")
 
         if symbol is None:
             symbols = other.free_symbols
@@ -506,7 +527,8 @@ class Basic(object):
 
         """
         if types:
-            types = tuple([t if isinstance(t, type) else type(t) for t in types])
+            types = tuple(
+                [t if isinstance(t, type) else type(t) for t in types])
         else:
             types = (Atom,)
         result = set()
@@ -829,14 +851,15 @@ class Basic(object):
                     d.setdefault(ops, []).append((o, n))
                 newseq = []
                 for k in sorted(d.keys(), reverse=True):
-                    newseq.extend(sorted([v[0] for v in d[k]], key=default_sort_key))
+                    newseq.extend(
+                        sorted([v[0] for v in d[k]], key=default_sort_key))
                 sequence = [(k, sequence[k]) for k in newseq]
                 del newseq, d
             else:
                 sequence = sorted([(k, v) for (k, v) in sequence.iteritems()],
                                   key=default_sort_key)
 
-        if kwargs.pop('simultaneous', False): # XXX should this be the default for dict subs?
+        if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
             for old, new in sequence:
@@ -1026,7 +1049,7 @@ class Basic(object):
                 return self.func(*args)
         return self
 
-    @deprecated
+    @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -1070,7 +1093,8 @@ class Basic(object):
         """Helper for .has()"""
         from sympy.core.function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
-            return any(f.func == pattern or f == pattern for f in self.atoms(Function, UndefinedFunction))
+            return any(f.func == pattern or f == pattern
+            for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
         if isinstance(pattern, BasicType):
@@ -1083,11 +1107,9 @@ class Basic(object):
         except AttributeError:
             return any(arg == pattern for arg in preorder_traversal(self))
 
-
     def _has_matcher(self):
         """Helper for .has()"""
         return self.__eq__
-
 
     def replace(self, query, value, map=False):
         """
@@ -1170,7 +1192,8 @@ class Basic(object):
             if isinstance(value, Basic):
                 _value = lambda expr, result: value.subs(result)
             elif callable(value):
-                _value = lambda expr, result: value(**dict([ (str(key)[:-1], val) for key, val in result.iteritems() ]))
+                _value = lambda expr, result: value(**dict([ (
+                    str(key)[:-1], val) for key, val in result.iteritems() ]))
             else:
                 raise TypeError("given an expression, replace() expects another expression or a callable")
         elif callable(query):
@@ -1179,7 +1202,8 @@ class Basic(object):
             if callable(value):
                 _value = lambda expr, result: value(expr)
             else:
-                raise TypeError("given a callable, replace() expects another callable")
+                raise TypeError(
+                    "given a callable, replace() expects another callable")
         else:
             raise TypeError("first argument to replace() must be a type, an expression or a callable")
 
@@ -1395,6 +1419,7 @@ class Basic(object):
                 else:
                     return self
 
+
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
@@ -1420,10 +1445,6 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
-    @deprecated
-    def __contains__(self, obj):
-        return (self == obj)
-
     @classmethod
     def class_key(cls):
         return 2, 0, cls.__name__
@@ -1441,6 +1462,7 @@ class Atom(Basic):
         # to see that this property is not called for Atoms.
         raise AttributeError('Atoms have no args. It might be necessary'
         ' to make a check for Atoms in the calling code.')
+
 
 def _aresame(a, b):
     """Return True if a and b are structurally the same, else False.
@@ -1469,6 +1491,7 @@ def _aresame(a, b):
             return False
     else:
         return True
+
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is
@@ -1509,6 +1532,7 @@ def _atomic(e):
             pot.skip()
             atoms.add(p)
     return atoms
+
 
 class preorder_traversal(object):
     """
@@ -1599,6 +1623,7 @@ class preorder_traversal(object):
 
     def __iter__(self):
         return self
+
 
 def _make_find_query(query):
     """Convert the argument of Basic.find() into a callable"""

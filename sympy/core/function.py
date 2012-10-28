@@ -38,8 +38,8 @@ from basic import Basic
 from singleton import S
 from sympify import sympify
 from expr import Expr, AtomicExpr
-from decorators import _sympifyit, deprecated
-from compatibility import iterable,is_sequence
+from decorators import _sympifyit
+from compatibility import iterable, is_sequence
 from cache import cacheit
 from numbers import Rational, Float
 from add import Add
@@ -51,6 +51,7 @@ from sympy.utilities.iterables import uniq
 
 from sympy import mpmath
 import sympy.mpmath.libmp as mlib
+
 
 def _coeff_isneg(a):
     """Return True if the leading Number is negative.
@@ -75,13 +76,16 @@ def _coeff_isneg(a):
         a = a.args[0]
     return a.is_Number and a.is_negative
 
+
 class PoleError(Exception):
     pass
+
 
 class ArgumentIndexError(ValueError):
     def __str__(self):
         return ("Invalid operation with argument number %s for Function %s" %
-                        (self.args[1], self.args[0]))
+               (self.args[1], self.args[0]))
+
 
 class FunctionClass(ManagedProperties):
     """
@@ -96,10 +100,6 @@ class FunctionClass(ManagedProperties):
 
     def __repr__(cls):
         return cls.__name__
-
-    @deprecated
-    def __contains__(self, obj):
-        return (self == obj)
 
 
 class Application(Basic):
@@ -167,12 +167,6 @@ class Application(Basic):
             (self.nargs == new.nargs or not new.nargs or
              isinstance(new.nargs, tuple) and self.nargs in new.nargs)):
             return new(*self.args)
-
-    @deprecated
-    def __contains__(self, obj):
-        if self.func == obj:
-            return True
-        return super(Application, self).__contains__(obj)
 
 
 class Function(Application, Expr):
@@ -277,8 +271,7 @@ class Function(Application, Expr):
                 # and change NumPy to take advantage of this.
                 temp = ('%(name)s takes exactly %(args)s '
                        'argument%(plural)s (%(given)s given)')
-                raise TypeError(temp %
-                    {
+                raise TypeError(temp % {
                     'name': cls,
                     'args': cls.nargs,
                     'plural': 's'*(n != 1),
@@ -341,7 +334,6 @@ class Function(Application, Expr):
             i = 0 if nargs is None else 10000
 
         return 4, i, name
-
 
     @property
     def is_commutative(self):
@@ -454,13 +446,13 @@ class Function(Application, Expr):
                 supported.'''))
         args = self.args
         args0 = [t.limit(x, 0) for t in args]
-        if any(t.is_bounded == False for t in args0):
+        if any(t.is_bounded is False for t in args0):
             from sympy import oo, zoo, nan
             # XXX could use t.as_leading_term(x) here but it's a little
             # slower
             a = [t.compute_leading_term(x, logx=logx) for t in args]
             a0 = [t.limit(x, 0) for t in a]
-            if any ([t.has(oo, -oo, zoo, nan) for t in a0]):
+            if any([t.has(oo, -oo, zoo, nan) for t in a0]):
                 return self._eval_aseries(n, args0, x, logx
                                           )._eval_nseries(x, n, logx)
             # Careful: the argument goes to oo, but only logarithmically so. We
@@ -501,7 +493,7 @@ class Function(Application, Expr):
                     raise PoleError("Cannot expand %s around 0" % (self))
                 series = term
                 fact = S.One
-                for i in range(n-1):
+                for i in range(n - 1):
                     i += 1
                     fact *= Rational(i)
                     e = e.diff(x)
@@ -519,7 +511,7 @@ class Function(Application, Expr):
         arg = self.args[0]
         l = []
         g = None
-        for i in xrange(n+2):
+        for i in xrange(n + 2):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -549,15 +541,15 @@ class Function(Application, Expr):
                 nargs = self.nargs[-1]
             else:
                 nargs = self.nargs
-            if not (1<=argindex<=nargs):
+            if not (1 <= argindex <= nargs):
                 raise ArgumentIndexError(self, argindex)
-        if not self.args[argindex-1].is_Symbol:
+        if not self.args[argindex - 1].is_Symbol:
             # See issue 1525 and issue 1620 and issue 2501
             arg_dummy = C.Dummy('xi_%i' % argindex)
             return Subs(Derivative(
-                self.subs(self.args[argindex-1], arg_dummy),
-                arg_dummy), arg_dummy, self.args[argindex-1])
-        return Derivative(self,self.args[argindex-1],evaluate=False)
+                self.subs(self.args[argindex - 1], arg_dummy),
+                arg_dummy), arg_dummy, self.args[argindex - 1])
+        return Derivative(self, self.args[argindex - 1], evaluate=False)
 
     def _eval_as_leading_term(self, x):
         """Stub that should be overridden by new Functions to return
@@ -608,6 +600,7 @@ class AppliedUndef(Function):
         result.nargs = len(args)
         return result
 
+
 class UndefinedFunction(FunctionClass):
     """
     The (meta)class of undefined functions.
@@ -631,7 +624,7 @@ class WildFunction(Function, AtomicExpr):
 
     def matches(self, expr, repl_dict={}):
         if self.nargs is not None:
-            if not hasattr(expr,'nargs') or self.nargs != expr.nargs:
+            if not hasattr(expr, 'nargs') or self.nargs != expr.nargs:
                 return None
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
@@ -640,6 +633,7 @@ class WildFunction(Function, AtomicExpr):
     @property
     def is_number(self):
         return False
+
 
 class Derivative(Expr):
     """
@@ -743,9 +737,11 @@ class Derivative(Expr):
         >>> from sympy import symbols, Function
         >>> f, g = symbols('f g', cls=Function)
         >>> f(2*g(x)).diff(x)
-        2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (2*g(x),))
+        2*Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
+                                              (_xi_1,), (2*g(x),))
         >>> f(g(x)).diff(x)
-        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
+                                            (_xi_1,), (g(x),))
 
     Finally, note that, to be consistent with variational calculus, and to
     ensure that the definition of substituting a Function for a Symbol in an
@@ -791,10 +787,11 @@ class Derivative(Expr):
         >>> Derivative(f(x)**2, f(x), evaluate=True)
         2*f(x)
         >>> Derivative(f(g(x)), x, evaluate=True)
-        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1), (_xi_1,), (g(x),))
+        Derivative(g(x), x)*Subs(Derivative(f(_xi_1), _xi_1),
+                                            (_xi_1,), (g(x),))
     """
 
-    is_Derivative   = True
+    is_Derivative = True
 
     @property
     def _diff_wrt(self):
@@ -843,8 +840,8 @@ class Derivative(Expr):
         variable_count = []
         all_zero = True
         i = 0
-        while i < len(variables) - 1: # process up to final Integer
-            v, count = variables[i: i+2]
+        while i < len(variables) - 1:  # process up to final Integer
+            v, count = variables[i: i + 2]
             iwas = i
             if v._diff_wrt:
                 # We need to test the more specific case of count being an
@@ -856,7 +853,7 @@ class Derivative(Expr):
                     count = 1
                     i += 1
 
-            if i == iwas: # didn't get an update because of bad input
+            if i == iwas:  # didn't get an update because of bad input
                 from sympy.utilities.misc import filldedent
                 raise ValueError(filldedent('''
                 Can\'t differentiate wrt the variable: %s, %s''' % (v, count)))
@@ -1066,6 +1063,7 @@ class Derivative(Expr):
         if len(self.free_symbols) != 1 or len(self.variables) != 1:
             raise NotImplementedError('partials and higher order derivatives')
         z = list(self.free_symbols)[0]
+
         def eval(x):
             f0 = self.expr.subs(z, Expr._from_mpmath(x, prec=mpmath.mp.prec))
             f0 = f0.evalf(mlib.libmpf.prec_to_dps(mpmath.mp.prec))
@@ -1108,6 +1106,7 @@ class Derivative(Expr):
 
     def _eval_as_leading_term(self, x):
         return self.args[0].as_leading_term(x)
+
 
 class Lambda(Expr):
     """
@@ -1211,6 +1210,7 @@ class Lambda(Expr):
         else:
             return None
 
+
 class Subs(Expr):
     """
     Represents unevaluated substitutions of an expression.
@@ -1262,7 +1262,7 @@ class Subs(Expr):
 
         if uniq(variables) != variables:
             repeated = [ v for v in set(variables)
-                                    if list(variables).count(v) > 1 ]
+                         if list(variables).count(v) > 1 ]
             raise ValueError('cannot substitute expressions %s more than '
                              'once.' % repeated)
 
@@ -1358,7 +1358,7 @@ class Subs(Expr):
         if s not in self.free_symbols:
             return S.Zero
         return Subs(self.expr.diff(s), self.variables, self.point).doit() \
-                + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
+            + Add(*[ Subs(point.diff(s) * self.expr.diff(arg),
                     self.variables, self.point).doit() for arg,
                     point in zip(self.variables, self.point) ])
 
@@ -1427,7 +1427,8 @@ def diff(f, *symbols, **kwargs):
     kwargs.setdefault('evaluate', True)
     return Derivative(f, *symbols, **kwargs)
 
-def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
+
+def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         mul=True, log=True, multinomial=True, basic=True, **hints):
     """
     Expand an expression using methods given as hints.
@@ -1757,6 +1758,8 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True, \
     return sympify(e).expand(deep=deep, modulus=modulus, **hints)
 
 # These are simple wrappers around single hints.
+
+
 def expand_mul(expr, deep=True):
     """
     Wrapper around expand that only uses the mul hint.  See the expand
@@ -1771,8 +1774,9 @@ def expand_mul(expr, deep=True):
     x*exp(x + y)*log(x*y**2) + y*exp(x + y)*log(x*y**2)
 
     """
-    return sympify(expr).expand(deep=deep, mul=True, power_exp=False,\
+    return sympify(expr).expand(deep=deep, mul=True, power_exp=False,
     power_base=False, basic=False, multinomial=False, log=False)
+
 
 def expand_multinomial(expr, deep=True):
     """
@@ -1788,8 +1792,9 @@ def expand_multinomial(expr, deep=True):
     x**2 + 2*x*exp(x + 1) + exp(2*x + 2)
 
     """
-    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,\
+    return sympify(expr).expand(deep=deep, mul=False, power_exp=False,
     power_base=False, basic=False, multinomial=True, log=False)
+
 
 def expand_log(expr, deep=True, force=False):
     """
@@ -1809,6 +1814,7 @@ def expand_log(expr, deep=True, force=False):
         power_exp=False, power_base=False, multinomial=False,
         basic=False, force=force)
 
+
 def expand_func(expr, deep=True):
     """
     Wrapper around expand that only uses the func hint.  See the expand
@@ -1823,8 +1829,9 @@ def expand_func(expr, deep=True):
     x*(x + 1)*gamma(x)
 
     """
-    return sympify(expr).expand(deep=deep, func=True, basic=False,\
+    return sympify(expr).expand(deep=deep, func=True, basic=False,
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+
 
 def expand_trig(expr, deep=True):
     """
@@ -1840,8 +1847,9 @@ def expand_trig(expr, deep=True):
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
 
     """
-    return sympify(expr).expand(deep=deep, trig=True, basic=False,\
+    return sympify(expr).expand(deep=deep, trig=True, basic=False,
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+
 
 def expand_complex(expr, deep=True):
     """
@@ -1862,8 +1870,9 @@ def expand_complex(expr, deep=True):
     ========
     Expr.as_real_imag
     """
-    return sympify(expr).expand(deep=deep, complex=True, basic=False,\
+    return sympify(expr).expand(deep=deep, complex=True, basic=False,
     log=False, mul=False, power_exp=False, power_base=False, multinomial=False)
+
 
 def expand_power_base(expr, deep=True, force=False):
     """
@@ -1929,6 +1938,7 @@ def expand_power_base(expr, deep=True, force=False):
         power_exp=False, power_base=True, multinomial=False,
         basic=False, force=force)
 
+
 def expand_power_exp(expr, deep=True):
     """
     Wrapper around expand that only uses the power_exp hint.
@@ -1943,8 +1953,9 @@ def expand_power_exp(expr, deep=True):
     >>> expand_power_exp(x**(y + 2))
     x**2*x**y
     """
-    return sympify(expr).expand(deep=deep, complex=False, basic=False,\
+    return sympify(expr).expand(deep=deep, complex=False, basic=False,
     log=False, mul=False, power_exp=True, power_base=False, multinomial=False)
+
 
 def count_ops(expr, visual=False):
     """
@@ -2048,13 +2059,13 @@ def count_ops(expr, visual=False):
                     if n < 0:
                         ops.append(NEG)
                     args.append(d)
-                    continue # won't be -Mul but could be Add
+                    continue  # won't be -Mul but could be Add
                 elif d is not S.One:
                     if not d.is_Integer:
                         args.append(d)
                     ops.append(DIV)
                     args.append(n)
-                    continue # could be -Mul
+                    continue  # could be -Mul
             elif a.is_Add:
                 aargs = list(a.args)
                 negs = 0
@@ -2068,20 +2079,20 @@ def count_ops(expr, visual=False):
                         args.append(ai)
                         if i > 0:
                             ops.append(ADD)
-                if negs == len(aargs): # -x - y = NEG + SUB
+                if negs == len(aargs):  # -x - y = NEG + SUB
                     ops.append(NEG)
-                elif _coeff_isneg(aargs[0]): # -x + y = SUB, but already recorded ADD
+                elif _coeff_isneg(aargs[0]):  # -x + y = SUB, but already recorded ADD
                     ops.append(SUB - ADD)
                 continue
             if a.is_Pow and a.exp is S.NegativeOne:
                 ops.append(DIV)
-                args.append(a.base) # won't be -Mul but could be Add
+                args.append(a.base)  # won't be -Mul but could be Add
                 continue
             if (a.is_Mul or
                 a.is_Pow or
                 a.is_Function or
                 isinstance(a, Derivative) or
-                isinstance(a, C.Integral)):
+                    isinstance(a, C.Integral)):
 
                 o = C.Symbol(a.func.__name__.upper())
                 # count the args
@@ -2099,7 +2110,7 @@ def count_ops(expr, visual=False):
         ops = [count_ops(i, visual=visual) for i in expr]
     elif not isinstance(expr, Basic):
         ops = []
-    else: # it's Basic not isinstance(expr, Expr):
+    else:  # it's Basic not isinstance(expr, Expr):
         assert isinstance(expr, Basic)
         ops = [count_ops(a, visual=visual) for a in expr.args]
 
@@ -2117,6 +2128,7 @@ def count_ops(expr, visual=False):
         return int(ops)
 
     return sum(int((a.args or [1])[0]) for a in Add.make_args(ops))
+
 
 def nfloat(expr, n=15, exponent=False):
     """Make all Rationals in expr Floats except those in exponents
@@ -2165,11 +2177,11 @@ def nfloat(expr, n=15, exponent=False):
         floex = lambda x: Pow(x.base, Float(x.exp, ''), evaluate=False)
         rv = expr.n(n).replace(intex, floex)
 
-
     funcs = [f for f in rv.atoms(Function)]
     funcs.sort(key=count_ops)
     funcs.reverse()
     return rv.subs([(f, f.func(*[nfloat(a, n, exponent)
                      for a in f.args])) for f in funcs])
+
 
 from sympy.core.symbol import Dummy
