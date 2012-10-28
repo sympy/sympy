@@ -64,7 +64,8 @@ Common Subexpression Detection and Collection
 .. module:: sympy.simplify.cse_main
 
 Before evaluating a large expression, it is often useful to identify common
-subexpressions, collect them and evaluate them at once. This is implemented in the ``cse`` function. Examples::
+subexpressions, collect them and evaluate them at once. This is implemented
+in the ``cse`` function. Examples::
 
     >>> from sympy import cse, sqrt, sin, pprint
     >>> from sympy.abc import x
@@ -79,8 +80,8 @@ subexpressions, collect them and evaluate them at once. This is implemented in t
 
     >>> pprint(cse(sqrt(sin(x+1) + 5 + cos(y))*sqrt(sin(x+1) + 4 + cos(y))),
     ...     use_unicode=True)
-    ⎛                                                 ⎡  ________   ________⎤⎞
-    ⎝[(x₀, cos(y)), (x₁, sin(x + 1)), (x₂, x₀ + x₁)], ⎣╲╱ x₂ + 4 ⋅╲╱ x₂ + 5 ⎦⎠
+    ⎛                             ⎡  ________   ________⎤⎞
+    ⎝[(x₀, sin(x + 1) + cos(y))], ⎣╲╱ x₀ + 4 ⋅╲╱ x₀ + 5 ⎦⎠
 
     >>> pprint(cse((x-y)*(z-y) + sqrt((x-y)*(z-y))), use_unicode=True)
     ⎛                          ⎡  ____     ⎤⎞
