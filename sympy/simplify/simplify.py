@@ -8,14 +8,13 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Function, Equality, Dummy, Atom, Expr, factor_terms,
     expand_multinomial, expand_power_base, symbols)
 
-from sympy.core.compatibility import iterable, reduce
+from sympy.core.compatibility import iterable, reduce, default_sort_key
 from sympy.core.numbers import igcd, Float
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
-from sympy.utilities.misc import default_sort_key
 from sympy.utilities.iterables import flatten, has_variety
 
 from sympy.simplify.cse_main import cse

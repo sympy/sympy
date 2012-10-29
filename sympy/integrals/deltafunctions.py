@@ -1,7 +1,7 @@
 import sympy
 from sympy.functions import DiracDelta, Heaviside
 from sympy.solvers import solve
-from sympy.utilities.misc import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 
 def change_mul(node, x):

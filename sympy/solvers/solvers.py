@@ -37,13 +37,13 @@ from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.iterables import lazyDSU_sort
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.misc import default_sort_key, filldedent
+from sympy.utilities.misc import filldedent
 from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
 
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, default_sort_key
 
 from sympy.assumptions import Q, ask
 
