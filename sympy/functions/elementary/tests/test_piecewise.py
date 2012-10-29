@@ -2,6 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
+    cos, exp,
 )
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -53,6 +54,8 @@ def test_piecewise():
     assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, -y) == Piecewise((1, Eq(y, 0)), (0, True))
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, -z) == 0
+    assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
+        Piecewise((1, Eq(exp(z), cos(z))), (0, True))
 
     # Test evalf
     assert p.evalf() == p

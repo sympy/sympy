@@ -424,11 +424,15 @@ class Piecewise(Function):
                 c = bool(c) or c
             if isinstance(c, Equality):
                 from sympy import solve
-                slns = solve(c, dict=True)
-                if not slns:
-                    c = False
-                elif len(slns) == 1:
-                    c = And(*[Equality(key, value) for key, value in slns[0].iteritems()])
+                try:
+                    slns = solve(c, dict=True)
+                    if not slns:
+                        c = False
+                    elif len(slns) == 1:
+                        c = And(*[Equality(key, value)
+                                  for key, value in slns[0].iteritems()])
+                except NotImplementedError:
+                    pass
 
             args[i] = e, c
 
