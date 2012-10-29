@@ -152,7 +152,7 @@ class OracleGate(Gate):
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'OracleGate operates on %r qubits, got: %r'
-                (self.nqubits, qubits.nqubits)
+                % (self.nqubits, qubits.nqubits)
             )
         # If function returns 1 on qubits
             # return the negative of the qubits (flip the sign)
@@ -220,7 +220,7 @@ class WGate(Gate):
         if qubits.nqubits != self.nqubits:
             raise QuantumError(
                 'WGate operates on %r qubits, got: %r'
-                (self.nqubits, qubits.nqubits)
+                % (self.nqubits, qubits.nqubits)
             )
 
         # See 'Quantum Computer Science' by David Mermin p.92 -> W|a> result
