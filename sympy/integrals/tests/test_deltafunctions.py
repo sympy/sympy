@@ -1,15 +1,31 @@
 from sympy import (
-    cos, DiracDelta, Heaviside, Function, Integral, integrate, oo,
+    cos, DiracDelta, Heaviside, Function, integrate, oo,
     pi, S, sin, symbols,
 )
-from sympy.integrals.deltafunctions import deltaintegrate
+from sympy.integrals.deltafunctions import change_mul, deltaintegrate
 
 f = Function("f")
 x_1, x_2, x, y, z = symbols("x_1 x_2 x y z")
 
+
+def test_change_mul():
+    assert change_mul(x, x) == x
+    assert change_mul(x*y, x) == (None, None)
+    assert change_mul(x*y*DiracDelta(x), x) == (DiracDelta(x), x*y)
+    assert change_mul(x*y*DiracDelta(x)*DiracDelta(y), x) == \
+        (DiracDelta(x), x*y*DiracDelta(y))
+
+
 def test_deltaintegrate_DiracDelta():
+    assert deltaintegrate(x, x) is None
+    assert deltaintegrate(x + DiracDelta(x), x) is None
+    assert deltaintegrate(DiracDelta(x, 0), x) == Heaviside(x)
+    for n in range(10):
+        assert deltaintegrate(DiracDelta(x, n + 1), x) == DiracDelta(x, n)
     assert deltaintegrate(DiracDelta(x), x) == Heaviside(x)
     assert deltaintegrate(DiracDelta(-x), x) == Heaviside(x)
+    assert deltaintegrate(DiracDelta(x - y), x) == Heaviside(x - y)
+    assert deltaintegrate(DiracDelta(y - x), x) == Heaviside(x - y)
 
     assert deltaintegrate(DiracDelta(x) * f(x), x) == f(0) * Heaviside(x)
     assert deltaintegrate(DiracDelta(-x) * f(x), x) == f(0) * Heaviside(x)
