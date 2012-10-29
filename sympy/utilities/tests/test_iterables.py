@@ -18,6 +18,7 @@ def test_postorder_traversal():
     expr = z + w*(x + y)
     expected = [z, w, x, y, x + y, w*(x + y), w*(x + y) + z]
     assert list(postorder_traversal(expr, key=default_sort_key)) == expected
+    assert list(postorder_traversal(expr, key=small_first_keys)) == expected
 
     expr = Piecewise((x, x < 1), (x**2, True))
     expected = [

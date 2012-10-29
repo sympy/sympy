@@ -39,6 +39,7 @@ from sympy.integrals import Integral, integrate
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
 
 from sympy.utilities.iterables import numbered_symbols
+from sympy.core.compatibility import reduce
 
 
 # TODO: Should this go in the regular namespace?

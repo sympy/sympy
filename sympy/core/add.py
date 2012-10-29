@@ -837,7 +837,7 @@ class Add(AssocOp):
 
     @property
     def _sorted_args(self):
-        from sympy.utilities.misc import default_sort_key
+        from sympy.core.compatibility import default_sort_key
         return sorted(self.args, key=lambda w: default_sort_key(w))
 
 from mul import Mul, _keep_coeff, prod
