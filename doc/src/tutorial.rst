@@ -852,7 +852,6 @@ default. You can override this using the ``use_unicode`` option.:
     ⎮ x  dx
     ⌡
 
-
 See also the wiki `Pretty Printing
 <https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ for more examples of a nice
 unicode printing.

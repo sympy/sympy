@@ -1055,7 +1055,7 @@ def test_inv_iszerofunc():
 
 
 def test_jacobian_metrics():
-    rho, phi = symbols("rho phi")
+    rho, phi = symbols("rho,phi")
     X = Matrix([rho*cos(phi), rho*sin(phi)])
     Y = Matrix([rho, phi])
     J = X.jacobian(Y)
@@ -1068,7 +1068,7 @@ def test_jacobian_metrics():
 
 
 def test_jacobian2():
-    rho, phi = symbols("rho phi")
+    rho, phi = symbols("rho,phi")
     X = Matrix([rho*cos(phi), rho*sin(phi), rho**2])
     Y = Matrix([rho, phi])
     J = Matrix([

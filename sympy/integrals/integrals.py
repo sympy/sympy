@@ -6,7 +6,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
-from sympy.integrals.risch import heurisch
+from sympy.integrals.heurisch import heurisch
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities import xthreaded, flatten
 from sympy.utilities.misc import filldedent

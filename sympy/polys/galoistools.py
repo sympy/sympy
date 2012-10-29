@@ -111,7 +111,7 @@ def gf_crt2(U, M, p, E, S, K):
 
 def gf_int(a, p):
     """
-    Coerce ``a mod p`` to an integer in ``[-p/2, p/2]`` range.
+    Coerce ``a mod p`` to an integer in the range ``[-p/2, p/2]``.
 
     Examples
     ========
@@ -132,7 +132,7 @@ def gf_int(a, p):
 
 def gf_degree(f):
     """
-    Return leading degree of ``f``.
+    Return the leading degree of ``f``.
 
     Examples
     ========
@@ -150,7 +150,7 @@ def gf_degree(f):
 
 def gf_LC(f, K):
     """
-    Return leading coefficient of ``f``.
+    Return the leading coefficient of ``f``.
 
     Examples
     ========
@@ -170,7 +170,7 @@ def gf_LC(f, K):
 
 def gf_TC(f, K):
     """
-    Return trailing coefficient of ``f``.
+    Return the trailing coefficient of ``f``.
 
     Examples
     ========
@@ -271,7 +271,7 @@ def gf_convert(f, p, K0, K1):
 @cythonized("k,n")
 def gf_from_dict(f, p, K):
     """
-    Create ``GF(p)[x]`` polynomial from a dict.
+    Create a ``GF(p)[x]`` polynomial from a dict.
 
     Examples
     ========
@@ -300,7 +300,7 @@ def gf_from_dict(f, p, K):
 @cythonized("k,n")
 def gf_to_dict(f, p, symmetric=True):
     """
-    Convert ``GF(p)[x]`` polynomial to a dict.
+    Convert a ``GF(p)[x]`` polynomial to a dict.
 
     Examples
     ========
@@ -329,7 +329,7 @@ def gf_to_dict(f, p, symmetric=True):
 
 def gf_from_int_poly(f, p):
     """
-    Create ``GF(p)[x]`` polynomial from ``Z[x]``.
+    Create a ``GF(p)[x]`` polynomial from ``Z[x]``.
 
     Examples
     ========
@@ -346,7 +346,7 @@ def gf_from_int_poly(f, p):
 
 def gf_to_int_poly(f, p, symmetric=True):
     """
-    Convert ``GF(p)[x]`` polynomial to ``Z[x]``.
+    Convert a ``GF(p)[x]`` polynomial to ``Z[x]``.
 
 
     Examples
@@ -909,8 +909,8 @@ def gf_pow_mod(f, n, g, p, K):
     Compute ``f**n`` in ``GF(p)[x]/(g)`` using repeated squaring.
 
     Given polynomials ``f`` and ``g`` in ``GF(p)[x]`` and a non-negative
-    integer ``n``, efficiently computes ``f**n (mod g)`` i.e. remainder
-    from division ``f**n`` by ``g`` using repeated squaring algorithm.
+    integer ``n``, efficiently computes ``f**n (mod g)`` i.e. the remainder
+    of ``f**n`` from division by ``g``, using the repeated squaring algorithm.
 
     Examples
     ========
@@ -1494,7 +1494,7 @@ def gf_sqf_part(f, p, K):
 @cythonized("i,n,d,r")
 def gf_sqf_list(f, p, K, all=False):
     """
-    Return square-free decomposition of a ``GF(p)[x]`` polynomial.
+    Return the square-free decomposition of a ``GF(p)[x]`` polynomial.
 
     Given a polynomial ``f`` in ``GF(p)[x]``, returns the leading coefficient
     of ``f`` and a square-free decomposition ``f_1**e_1 f_2**e_2 ... f_k**e_k``

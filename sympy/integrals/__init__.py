@@ -10,6 +10,7 @@
     -cos(x)
 """
 from integrals import integrate, Integral, line_integrate
+from risch import risch_integrate
 from transforms import (mellin_transform, inverse_mellin_transform,
                         MellinTransform, InverseMellinTransform,
                         laplace_transform, inverse_laplace_transform,

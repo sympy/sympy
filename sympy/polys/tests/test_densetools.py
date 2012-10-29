@@ -50,7 +50,9 @@ from sympy.polys.specialpolys import (
 
 from sympy.polys.domains import FF, ZZ, QQ, EX
 
-from sympy import S, I
+from sympy import S, I, sin
+
+from sympy.abc import x
 
 from sympy.utilities.pytest import raises
 
@@ -630,6 +632,8 @@ def test_dup_clear_denoms():
     assert dup_clear_denoms(
         [EX(S(3)/2), EX(S(9)/4)], EX) == (EX(4), [EX(6), EX(9)])
 
+    assert dup_clear_denoms([EX(7)], EX) == (EX(1), [EX(7)])
+    assert dup_clear_denoms([EX(sin(x)/x), EX(0)], EX) == (EX(x), [EX(sin(x)), EX(0)])
 
 def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[]], 1, QQ, ZZ) == (ZZ(1), [[]])
@@ -657,3 +661,5 @@ def test_dmp_clear_denoms():
 
     assert dmp_clear_denoms(
         [[EX(S(3)/2)], [EX(S(9)/4)]], 1, EX) == (EX(4), [[EX(6)], [EX(9)]])
+    assert dmp_clear_denoms([[EX(7)]], 1, EX) == (EX(1), [[EX(7)]])
+    assert dmp_clear_denoms([[EX(sin(x)/x), EX(0)]], 1, EX) == (EX(x), [[EX(sin(x)), EX(0)]])
