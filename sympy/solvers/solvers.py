@@ -1569,12 +1569,12 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
 def solve_linear_system(system, *symbols, **flags):
     r"""
     Solve system of N linear equations with M variables, which means
-    both Cramer and over defined systems are supported. The possible
+    both under- and overdetermined systems are supported. The possible
     number of solutions is zero, one or infinite. Respectively, this
-    procedure will return None or dictionary with solutions. In the
-    case of over-defined systems all arbitrary parameters are skipped.
-    This may cause situation in which an empty dictionary is returned.
-    In this case it means all symbols can be assigned arbitrary values.
+    procedure will return None or a dictionary with solutions. In the
+    case of underdetermined systems, all arbitrary parameters are skipped.
+    This may cause a situation in which an empty dictionary is returned.
+    In that case, all symbols can be assigned arbitrary values.
 
     Input to this functions is a Nx(M+1) matrix, which means it has
     to be in augmented form. If you prefer to enter N equations and M
