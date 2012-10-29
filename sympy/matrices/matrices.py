@@ -1178,7 +1178,7 @@ class MatrixBase(object):
         LUsolve
         """
         if not self.is_square:
-            raise NonSquareMatrixError()
+            raise NonSquareMatrixError("A Matrix must be square to apply LUdecomposition_Simple().")
         n = self.rows
         A = self.as_mutable()
         p = []
@@ -2373,7 +2373,7 @@ class MatrixBase(object):
         """
         from dense import Matrix
         if not self.is_square:
-            raise NonSquareMatrixError()
+            raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         big = Matrix.hstack(self.as_mutable(), Matrix.eye(self.rows))
         red = big.rref(iszerofunc=iszerofunc, simplify=True)[0]
@@ -2393,7 +2393,7 @@ class MatrixBase(object):
         inverse_GE
         """
         if not self.is_square:
-            raise NonSquareMatrixError()
+            raise NonSquareMatrixError("A Matrix must be square to invert.")
 
         d = self.berkowitz_det()
         zero = d.equals(0)

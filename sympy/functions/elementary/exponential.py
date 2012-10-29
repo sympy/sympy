@@ -239,6 +239,9 @@ class exp(ExpBase):
                     elif (coeff + S.Half).is_odd:
                         return S.ImaginaryUnit
 
+            # Warning: code in risch.py will be very sensitive to changes
+            # in this (see DifferentialExtension).
+
             # look for a single log factor
 
             coeff, terms = arg.as_coeff_Mul()

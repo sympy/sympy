@@ -20,6 +20,15 @@ def symmetrize(F, *gens, **args):
     """
     Rewrite a polynomial in terms of elementary symmetric polynomials.
 
+    A symmetric polynomial is a multivariate polynomial that remains invariant
+    under any variable permutation, i.e., if ``f = f(x_1, x_2, ..., x_n)``,
+    then ``f = f(x_{i_1}, x_{i_2}, ..., x_{i_n})``, where
+    ``(i_1, i_2, ..., i_n)`` is a permutation of ``(1, 2, ..., n)`` (an
+    element of the group ``S_n``).
+
+    Returns a tuple of symmetric polynomials ``(f1, f2, ..., fn)`` such that
+    ``f = f1 + f2 + ... + fn``.
+
     Examples
     ========
 
@@ -143,6 +152,9 @@ def horner(f, *gens, **args):
     """
     Rewrite a polynomial in Horner form.
 
+    Among other applications, evaluation of a polynomial at a point is optimal
+    when it is applied using the Horner scheme ([1]).
+
     Examples
     ========
 
@@ -162,6 +174,10 @@ def horner(f, *gens, **args):
 
     >>> horner(f, wrt=y)
     y*(x*y*(4*x + 2) + x*(2*x + 1))
+
+    References
+    ==========
+    [1] - http://en.wikipedia.org/wiki/Horner_scheme
 
     """
     allowed_flags(args, [])

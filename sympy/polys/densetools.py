@@ -44,7 +44,7 @@ from math import ceil as _ceil, log as _log
 @cythonized("m,n,i,j")
 def dup_integrate(f, m, K):
     """
-    Computes indefinite integral of ``f`` in ``K[x]``.
+    Computes the indefinite integral of ``f`` in ``K[x]``.
 
     Examples
     ========
@@ -69,7 +69,7 @@ def dup_integrate(f, m, K):
         for j in xrange(1, m):
             n *= i + j + 1
 
-        g.insert(0, K.quo(c, K(n)))
+        g.insert(0, K.exquo(c, K(n)))
 
     return g
 
@@ -77,7 +77,7 @@ def dup_integrate(f, m, K):
 @cythonized("m,u,v,n,i,j")
 def dmp_integrate(f, m, u, K):
     """
-    Computes indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
+    Computes the indefinite integral of ``f`` in ``x_0`` in ``K[X]``.
 
     Examples
     ========
@@ -124,7 +124,7 @@ def _rec_integrate_in(g, m, v, i, j, K):
 @cythonized("m,j,u")
 def dmp_integrate_in(f, m, j, u, K):
     """
-    Computes indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
+    Computes the indefinite integral of ``f`` in ``x_j`` in ``K[X]``.
 
     Examples
     ========
@@ -139,7 +139,7 @@ def dmp_integrate_in(f, m, j, u, K):
 
     """
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= u expected, got %s" % (u, j))
 
     return _rec_integrate_in(f, m, u, 0, j, K)
 
@@ -267,7 +267,7 @@ def dmp_diff_in(f, m, j, u, K):
 
     """
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= %s expected, got %s" % (u, j))
 
     return _rec_diff_in(f, m, u, 0, j, K)
 
@@ -361,7 +361,7 @@ def dmp_eval_in(f, a, j, u, K):
 
     """
     if j < 0 or j > u:
-        raise IndexError("-%s <= j < %s expected, got %s" % (u, u, j))
+        raise IndexError("0 <= j <= %s expected, got %s" % (u, j))
 
     return _rec_eval_in(f, a, u, 0, j, K)
 
@@ -453,7 +453,7 @@ def dmp_diff_eval_in(f, m, a, j, u, K):
 
 def dup_trunc(f, p, K):
     """
-    Reduce ``K[x]`` polynomial modulo a constant ``p`` in ``K``.
+    Reduce a ``K[x]`` polynomial modulo a constant ``p`` in ``K``.
 
     Examples
     ========
@@ -486,7 +486,7 @@ def dup_trunc(f, p, K):
 @cythonized("u")
 def dmp_trunc(f, p, u, K):
     """
-    Reduce ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
+    Reduce a ``K[X]`` polynomial modulo a polynomial ``p`` in ``K[Y]``.
 
     Examples
     ========
@@ -507,7 +507,7 @@ def dmp_trunc(f, p, u, K):
 @cythonized("u,v")
 def dmp_ground_trunc(f, p, u, K):
     """
-    Reduce ``K[X]`` polynomial modulo a constant ``p`` in ``K``.
+    Reduce a ``K[X]`` polynomial modulo a constant ``p`` in ``K``.
 
     Examples
     ========
@@ -531,7 +531,7 @@ def dmp_ground_trunc(f, p, u, K):
 
 def dup_monic(f, K):
     """
-    Divides all coefficients by ``LC(f)`` in ``K[x]``.
+    Divide all coefficients by ``LC(f)`` in ``K[x]``.
 
     Examples
     ========
@@ -560,7 +560,7 @@ def dup_monic(f, K):
 @cythonized("u")
 def dmp_ground_monic(f, u, K):
     """
-    Divides all coefficients by ``LC(f)`` in ``K[X]``.
+    Divide all coefficients by ``LC(f)`` in ``K[X]``.
 
     Examples
     ========
@@ -1225,7 +1225,10 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
 
     """
     if K1 is None:
-        K1 = K0.get_ring()
+       if K0.has_assoc_Ring:
+           K1 = K0.get_ring()
+       else:
+           K1 = K0
 
     common = K1.one
 
@@ -1282,7 +1285,10 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
         return dup_clear_denoms(f, K0, K1, convert=convert)
 
     if K1 is None:
-        K1 = K0.get_ring()
+        if K0.has_assoc_Ring:
+            K1 = K0.get_ring()
+        else:
+            K1 = K0
 
     common = _rec_clear_denoms(f, u, K0, K1)
 
