@@ -411,34 +411,10 @@ def test_failing_integrals():
 
 
 def test_integrate_DiracDelta():
-    assert integrate(DiracDelta(x), x) == Heaviside(x)
-    assert integrate(DiracDelta(x) * f(x), x) == f(0) * Heaviside(x)
+    # This is here to check that deltaintegrate is being called.
+    # More tests are in test_deltafunctions.py
     assert integrate(DiracDelta(x) * f(x), (x, -oo, oo)) == f(0)
-    assert integrate(DiracDelta(-x) * f(x), (x, -oo, oo)) == f(0)
-    assert integrate(DiracDelta(-(x - 1)) * f(x), (x, -oo, oo)) == f(1)
     assert integrate(DiracDelta(x) * f(x), (x, 0, oo)) == f(0)/2
-    assert integrate(DiracDelta(x**2 + x - 2), x) - \
-        (Heaviside(-1 + x)/3 + Heaviside(2 + x)/3) == 0
-    assert integrate(cos(x)*(DiracDelta(x) + DiracDelta(x**2 - 1))*sin(x)*(x - pi), x) - \
-        (-pi*(cos(1)*Heaviside(-1 + x)*sin(1)/2 - cos(1)*Heaviside(1 + x)*sin(1)/2) +
-         cos(1)*Heaviside(1 + x)*sin(1)/2 + cos(1)*Heaviside(-1 + x)*sin(1)/2) == 0
-    assert integrate(x_2*DiracDelta(x - x_2)*DiracDelta(x_2 - x_1), (x_2, -oo, oo)) == \
-        x*DiracDelta(x - x_1)
-    assert integrate(
-        x*y**2*z*DiracDelta(y - x)*DiracDelta(y - z)*DiracDelta(x - z),
-        (y, -oo, oo)) == x**3*z*DiracDelta(x - z)**2
-    assert integrate((x + 1)*DiracDelta(2*x), (x, -oo, oo)) == S(1)/2
-    assert integrate((x + 1)*DiracDelta(2*x/3 + 4/S(9)), (x, -oo, oo)) == \
-        S(1)/2
-
-    a, b, c = symbols('a b c', commutative=False)
-    assert integrate(DiracDelta(x - y)*f(x - b)*f(x - a), (x, -oo, oo)) == \
-        f(y - b)*f(y - a)
-    assert integrate(f(x - a)*DiracDelta(x - y)*f(x - c)*f(x - b),
-                     (x, -oo, oo)) == f(y - a)*f(y - c)*f(y - b)
-
-    assert integrate(DiracDelta(x - z)*f(x - b)*f(x - a)*DiracDelta(x - y),
-                     (x, -oo, oo)) == DiracDelta(y - z)*f(y - b)*f(y - a)
 
 
 def test_subs1():
