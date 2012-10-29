@@ -4,7 +4,7 @@ of Basic or Atom."""
 from sympy.core.basic import Basic, Atom, preorder_traversal
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
-from sympy.utilities.misc import default_sort_key
+from sympy.core.compatibility import default_sort_key, small_first_keys
 
 from sympy.utilities.pytest import raises
 
@@ -140,6 +140,8 @@ def test_preorder_traversal():
     expr = z + w*(x + y)
     assert list(preorder_traversal([expr], key=default_sort_key)) == \
         [[w*(x + y) + z], w*(x + y) + z, z, w*(x + y), w, x + y, x, y]
+    assert list(preorder_traversal((x + y)*z, key=small_first_keys)) == \
+        [z*(x + y), z, x + y, x, y]
 
 
 def test_sorted_args():

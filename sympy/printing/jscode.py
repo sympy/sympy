@@ -10,7 +10,7 @@ Math object where possible.
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.utilities.misc import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 
 # dictionary mapping sympy function to (argument_conditions, Javascript_function).
