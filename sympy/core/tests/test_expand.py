@@ -1,11 +1,8 @@
-from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S, re, im,
-    Tuple, sin, Mul, Pow)
-
+from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
+    sin, Mul, Pow, cse)
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
-from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
-    expand_func, expand_trig, expand_complex, expand_power_base,
-    expand_power_exp)
+from sympy.core.function import expand_power_base
 
 from sympy.abc import x, y, z
 
@@ -18,8 +15,8 @@ def test_expand_no_log():
 
 
 def test_expand_no_multinomial():
-    assert ((1 + x)*(1 + (
-        1 + x)**4)).expand(multinomial=False) == 1 + x + (1 + x)**4 + x*(1 + x)**4
+    assert ((1 + x)*(1 + (1 + x)**4)).expand(multinomial=False) == \
+        1 + x + (1 + x)**4 + x*(1 + x)**4
 
 
 def test_expand_negative_integer_powers():
@@ -126,8 +123,6 @@ def test_expand_frac():
 
 
 def test_issue_3022():
-    # TODO when 3460 is merged, move this import to the top
-    from sympy import cse
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     r, e = cse((eq).expand(complex=True))
     assert r == S('''[

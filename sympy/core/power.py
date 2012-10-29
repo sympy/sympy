@@ -269,10 +269,22 @@ class Pow(Expr):
                     return Pow(new, pow)  # (2**x).subs(exp(x*log(2)), z) -> z
 
     def as_base_exp(self):
-        """Return base and exp of self unless base is 1/Integer, then return Integer, -exp.
+        """Return base and exp of self.
 
-        If this extra processing is not needed, the base and exp properties will
-        give the raw arguments, e.g. (1/2, 2) for (1/2)**2 rather than (2, -2).
+        If base is 1/Integer, then return Integer, -exp. If this extra
+        processing is not needed, the base and exp properties will
+        give the raw arguments
+
+        Examples
+        ========
+
+        >>> from sympy import Pow, S
+        >>> p = Pow(S.Half, 2, evaluate=False)
+        >>> p.as_base_exp()
+        (2, -2)
+        >>> p.args
+        (1/2, 2)
+
         """
 
         b, e = self.args
@@ -374,7 +386,8 @@ class Pow(Expr):
             if force or e.is_integer:
                 nonneg = bargs
                 other = []
-            elif e.is_Rational or len(bargs) == 2 and bargs[0] is S.NegativeOne:
+            elif (e.is_Rational or
+                    len(bargs) == 2 and bargs[0] is S.NegativeOne):
                 # the Rational exponent was already expanded automatically
                 # if there is a negative Number * foo, foo must be unknown
                 #    or else it, too, would have automatically expanded;
@@ -453,7 +466,8 @@ class Pow(Expr):
 
                     expanded_base_n = Pow(base, n)
                     if expanded_base_n.is_Pow:
-                        expanded_base_n = expanded_base_n._eval_expand_multinomial()
+                        expanded_base_n = \
+                            expanded_base_n._eval_expand_multinomial()
                     for term in Add.make_args(expanded_base_n):
                         result.append(term*radical)
 
@@ -475,10 +489,12 @@ class Pow(Expr):
                     f = Add(*other_terms)
 
                     if n == 2:
-                        return expand_multinomial(f**n, deep=False) + n*f*Add(*order_terms)
+                        return expand_multinomial(f**n, deep=False) + \
+                            n*f*Add(*order_terms)
                     else:
                         g = expand_multinomial(f**(n - 1), deep=False)
-                        return expand_mul(f*g, deep=False) + n*g*Add(*order_terms)
+                        return expand_mul(f*g, deep=False) + \
+                            n*g*Add(*order_terms)
 
                 if base.is_number:
                     # Efficiently expand expressions of the form (a + b*I)**n
@@ -542,10 +558,12 @@ class Pow(Expr):
                 else:
                     multi = (base**(n - 1))._eval_expand_multinomial()
                     if multi.is_Add:
-                        return Add(*[f*g for f in base.args for g in multi.args])
+                        return Add(*[f*g for f in base.args
+                            for g in multi.args])
                     else:
                         return Add(*[f*multi for f in base.args])
-        elif exp.is_Rational and exp.p < 0 and base.is_Add and abs(exp.p) > exp.q:
+        elif (exp.is_Rational and exp.p < 0 and base.is_Add and
+                abs(exp.p) > exp.q):
             return 1 / Pow(base, -exp)._eval_expand_multinomial()
         elif exp.is_Add and base.is_Number:
             #  a + b      a  b
@@ -737,12 +755,12 @@ class Pow(Expr):
 
     def _eval_nseries(self, x, n, logx):
         # NOTE! This function is an important part of the gruntz algorithm
-        #       for computing limits. It has to return a generalized power series
-        #       with coefficients in C(log, log(x)). In more detail:
+        #       for computing limits. It has to return a generalized power
+        #       series with coefficients in C(log, log(x)). In more detail:
         # It has to return an expression
         #     c_0*x**e_0 + c_1*x**e_1 + ... (finitely many terms)
-        # where e_i are numbers (not necessarily integers) and c_i are expression
-        # involving only numbers, the log function, and log(x).
+        # where e_i are numbers (not necessarily integers) and c_i are
+        # expressions involving only numbers, the log function, and log(x).
         from sympy import powsimp, collect, exp, log, O, ceiling
         b, e = self.args
         if e.is_Integer:
@@ -796,7 +814,8 @@ class Pow(Expr):
                     terms.append(O(x**n))
                 return powsimp(Add(*terms), deep=True, combine='exp')
             else:
-                # negative powers are rewritten to the cases above, for example:
+                # negative powers are rewritten to the cases above, for
+                # example:
                 # sin(x)**(-4) = 1/( sin(x)**4) = ...
                 # and expand the denominator:
                 denominator = (b**(-e))._eval_nseries(x, n=n, logx=logx)
