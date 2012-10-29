@@ -1,7 +1,4 @@
-from sympy import (
-    cos, DiracDelta, Heaviside, Function, integrate, oo,
-    pi, S, sin, symbols,
-)
+from sympy import cos, DiracDelta, Heaviside, Function, pi, S, sin, symbols
 from sympy.integrals.deltafunctions import change_mul, deltaintegrate
 
 f = Function("f")
@@ -16,7 +13,7 @@ def test_change_mul():
         (DiracDelta(x), x*y*DiracDelta(y))
 
 
-def test_deltaintegrate_DiracDelta():
+def test_deltaintegrate():
     assert deltaintegrate(x, x) is None
     assert deltaintegrate(x + DiracDelta(x), x) is None
     assert deltaintegrate(DiracDelta(x, 0), x) == Heaviside(x)
@@ -41,20 +38,21 @@ def test_deltaintegrate_DiracDelta():
         cos(1)*Heaviside(-1 + x)*sin(1)/2) == 0
 
     p = x_2*DiracDelta(x - x_2)*DiracDelta(x_2 - x_1)
-    assert integrate(p, (x_2, -oo, oo)) == x*DiracDelta(x - x_1)
+    assert deltaintegrate(p, x_2) == x*DiracDelta(x - x_1)*Heaviside(x_2 - x)
 
     p = x*y**2*z*DiracDelta(y - x)*DiracDelta(y - z)*DiracDelta(x - z)
-    assert integrate(p, (y, -oo, oo)) == x**3*z*DiracDelta(x - z)**2
+    assert deltaintegrate(p, y) == x**3*z*DiracDelta(x - z)**2*Heaviside(y - x)
     assert deltaintegrate((x + 1)*DiracDelta(2*x), x) == S(1)/2 * Heaviside(x)
     assert deltaintegrate((x + 1)*DiracDelta(2*x/3 + 4/S(9)), x) == \
         S(1)/2 * Heaviside(x + S(2)/3)
 
     a, b, c = symbols('a b c', commutative=False)
-    assert integrate(DiracDelta(x - y)*f(x - b)*f(x - a), (x, -oo, oo)) == \
-        f(y - b)*f(y - a)
+    assert deltaintegrate(DiracDelta(x - y)*f(x - b)*f(x - a), x) == \
+        f(y - b)*f(y - a)*Heaviside(x - y)
 
     p = f(x - a)*DiracDelta(x - y)*f(x - c)*f(x - b)
-    assert integrate(p, (x, -oo, oo)) == f(y - a)*f(y - c)*f(y - b)
+    assert deltaintegrate(p, x) == f(y - a)*f(y - c)*f(y - b)*Heaviside(x - y)
 
-    assert integrate(DiracDelta(x - z)*f(x - b)*f(x - a)*DiracDelta(x - y),
-                     (x, -oo, oo)) == DiracDelta(y - z)*f(y - b)*f(y - a)
+    p = DiracDelta(x - z)*f(x - b)*f(x - a)*DiracDelta(x - y)
+    assert deltaintegrate(p, x) == DiracDelta(y - z)*f(y - b)*f(y - a) * \
+        Heaviside(x - y)
