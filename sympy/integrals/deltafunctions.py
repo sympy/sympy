@@ -1,4 +1,3 @@
-import sympy
 from sympy.functions import DiracDelta, Heaviside
 from sympy.solvers import solve
 from sympy.utilities.misc import default_sort_key
@@ -26,11 +25,11 @@ def change_mul(node, x):
        >>> from sympy import DiracDelta, cos
        >>> from sympy.integrals.deltafunctions import change_mul
        >>> from sympy.abc import x, y
-       >>> change_mul(x*y*DiracDelta(x)*cos(x),x)
+       >>> change_mul(x*y*DiracDelta(x)*cos(x), x)
        (DiracDelta(x), x*y*cos(x))
-       >>> change_mul(x*y*DiracDelta(x**2-1)*cos(x),x)
+       >>> change_mul(x*y*DiracDelta(x**2 - 1)*cos(x), x)
        (None, x*y*cos(x)*DiracDelta(x - 1)/2 + x*y*cos(x)*DiracDelta(x + 1)/2)
-       >>> change_mul(x*y*DiracDelta(cos(x))*cos(x),x)
+       >>> change_mul(x*y*DiracDelta(cos(x))*cos(x), x)
        (None, None)
 
        See Also
@@ -130,6 +129,9 @@ def deltaintegrate(f, x):
     """
     if not f.has(DiracDelta):
         return None
+
+    from sympy.integrals import Integral, integrate
+
     # g(x) = DiracDelta(h(x))
     if f.func == DiracDelta:
         h = f.simplify(x)
@@ -140,22 +142,24 @@ def deltaintegrate(f, x):
                 if (len(f.args) <= 1 or f.args[1] == 0):
                     return Heaviside(f.args[0])
                 else:
-                    return (DiracDelta(f.args[0], f.args[1] - 1)/ f.args[0].as_poly().LC())
+                    return (DiracDelta(f.args[0], f.args[1] - 1) /
+                        f.args[0].as_poly().LC())
         else:  # let's try to integrate the simplified expression
-            fh = sympy.integrals.integrate(h, x)
+            fh = integrate(h, x)
             return fh
-    elif f.is_Mul:  # g(x)=a*b*c*f(DiracDelta(h(x)))*d*e
+    elif f.is_Mul:  # g(x) = a*b*c*f(DiracDelta(h(x)))*d*e
         g = f.expand()
         if f != g:  # the expansion worked
-            fh = sympy.integrals.integrate(g, x)
-            if fh and not isinstance(fh, sympy.integrals.Integral):
+            fh = integrate(g, x)
+            if fh and not isinstance(fh, Integral):
                 return fh
-        else:  # no expansion performed, try to extract a simple DiracDelta term
+        else:
+            # no expansion performed, try to extract a simple DiracDelta term
             dg, rest_mult = change_mul(f, x)
 
             if not dg:
                 if rest_mult:
-                    fh = sympy.integrals.integrate(rest_mult, x)
+                    fh = integrate(rest_mult, x)
                     return fh
             else:
                 dg = dg.simplify(x)
