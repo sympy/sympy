@@ -3,7 +3,7 @@ from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, compile_rule, conjuncts, disjuncts,
     distribute_and_over_or, eliminate_implications, is_cnf,
-    simplify_logic, to_cnf, to_int_repr
+    simplify_logic, to_cnf, to_int_repr, bool_equal
 )
 from sympy.utilities.pytest import raises
 
@@ -177,6 +177,18 @@ def test_simplification():
     assert POSform('x', [[1]], [[0]]) is True
     assert POSform('x', [[0]], [[1]]) is True
     assert POSform('x', [], []) is False
+
+
+def test_bool_equal():
+    """
+    Test working of bool_equal function.
+    """
+    minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
+        [1, 1, 1, 1]]
+    from sympy.abc import a, b, c, x, y, z
+    assert bool_equal(Not(Not(a)), a)
+    assert bool_equal(SOPform(['w', 'x', 'y', 'z'], minterms), POSform(['w', 'x', 'y', 'z'], minterms))
+    assert bool_equal(SOPform(['x', 'z', 'y'],[[1, 0, 1]]), SOPform(['a', 'b', 'c'],[[1, 0, 1]]), deep = True) == {x: c, y: a, z: b}
 
 
 def test_bool_symbol():

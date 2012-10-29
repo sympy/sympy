@@ -822,3 +822,103 @@ def simplify_logic(expr):
         return SOPform(variables, truthtable)
     else:
         return POSform(variables, truthtable)
+
+
+def bool_equal(function1, function2, deep = False):
+    """
+    Function to check whether two Boolean functions are
+    logically equivalent.
+
+    If deep = False, just check whether the two functions
+    give true for same inputs. In this case, values are
+    given according to lexicographic ordering of variables.
+
+    If deep = True, check whether there is any mapping of
+    variables from the first function to the other, such
+    that equivalent inputs given according to the mapping
+    give same outputs. If yes, return dictionary of mapping.
+    This dictionary may be one of the many possible mappings
+    to make the functions equivalent. If not, return False.
+
+    Examples
+    ========
+    >>> from sympy import SOPform, bool_equal
+    >>> from sympy.abc import x, y, z, a, b, c
+    >>> function1 = SOPform(['x','z','y'],[[1,0,1]])
+    >>> function2 = SOPform(['a','b','c'],[[1,0,1]])
+    >>> bool_equal(function1, function2, deep = True)
+    {x: c, y: a, z: b}
+
+    """
+    
+    if deep:
+        variables1 = list(function1.free_symbols)
+        variables2 = list(function2.free_symbols)
+        if len(variables1) != len(variables2):
+            return False
+        minterms1 = []
+        minterms2 = []
+        t = [0] * len(variables1)
+        for x in range(2 ** len(variables1)):
+            b = [int(y) for y in bin(x)[2:]]
+            t[-len(b):] = b
+            if function1.subs(zip(variables1, [bool(i) for i in t])) != True:
+                minterms1.append(t[:])
+            if function2.subs(zip(variables2, [bool(i) for i in t])) != True:
+                minterms2.append(t[:])
+        alphabet = map(chr, range(97, 123))
+        l2 = [1]
+        l1 = minterms1
+        while (l1 != l2):
+            l1 = _simplified_pairs(l1)
+            l2 = _simplified_pairs(l1)
+        string1 = _rem_redundancy(l1, minterms1, alphabet[:len(variables1)], 1)
+        l2 = [1]
+        l1 = minterms2
+        while (l1 != l2):
+            l1 = _simplified_pairs(l1)
+            l2 = _simplified_pairs(l1)
+        string2 = _rem_redundancy(l1, minterms2, alphabet[:len(variables2)], 1)
+        if len(string1) != len(string2):
+            return False
+        list1 = []
+        list2 = []
+        for x in range(len(string1)):
+            if string1[x] != string2[x]:
+                if string1[x] in alphabet and string2[x] in alphabet:
+                    if string1[x] not in list1:
+                        list1.append(string1[x])
+                        if string2[x] in list2:
+                            return False
+                        list2.append(string2[x])
+                    else:
+                        if string2[x] != list2[list1.index(string1[x])]:
+                            return False
+                else:
+                    return False
+            if string1[x] in alphabet and string2[x] in alphabet:
+                if string1[x] not in list1:
+                    list1.append(string1[x])
+                    if string2[x] in list2:
+                        return False
+                    list2.append(string2[x])
+                else:
+                    if string2[x] != list2[list1.index(string1[x])]:
+                        return False
+        mapping = {}
+        for i, x in enumerate(list1):
+            mapping[variables1[alphabet.index(x)]] = variables2[alphabet.index(list2[i])]
+        return mapping
+    else:
+        variables1 = list(function1.free_symbols)
+        variables2 = list(function2.free_symbols)
+        if len(variables1) != len(variables2):
+            return False
+        t = [0] * len(variables1)
+        for x in range(2 ** len(variables1)):
+            b = [int(y) for y in bin(x)[2:]]
+            t[-len(b):] = b
+            if function1.subs(zip(variables1, [bool(i) for i in t])) != function2.subs(zip(variables2, [bool(i) for i in t])):
+                return False
+        return True
+>>>>>>> Created bool_equal function
