@@ -69,6 +69,7 @@ class Basic(object):
     is_Boolean = False
     is_Not = False
     is_Matrix = False
+    is_associative = None
 
     @property
     @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")

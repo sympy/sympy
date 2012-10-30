@@ -22,6 +22,7 @@ class AssocOp(Expr):
     This is an abstract base class, concrete derived classes must define
     the attribute `identity`.
     """
+    is_associative = True
 
     # for performance reason, we don't let is_commutative go to assumptions,
     # and keep it right here

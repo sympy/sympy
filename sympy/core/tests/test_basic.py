@@ -146,3 +146,8 @@ def test_sorted_args():
     x = symbols('x')
     assert b21._sorted_args == b21.args
     raises(AttributeError, lambda: x._sorted_args)
+
+def test_associative_commutative():
+    b = Basic(1,2)
+    assert b.is_commutative is None
+    assert b.is_associative is None
