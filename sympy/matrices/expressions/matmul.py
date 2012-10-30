@@ -144,7 +144,7 @@ def remove_ids(mul):
     # Separate Exprs from MatrixExprs in args
     factor, mmul = mul.as_coeff_mmul()
     # Apply standard rm_id for MatMuls
-    result = rm_id(lambda x: x.is_Identity == True)(mmul)
+    result = rm_id(lambda x: x.is_Identity is True)(mmul)
     if result != mmul:
         return newmul(factor, *result.args)  # Recombine and return
     else:
