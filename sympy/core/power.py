@@ -5,6 +5,7 @@ from cache import cacheit
 from core import C
 from sympy.core.function import (_coeff_isneg, expand_complex,
     expand_multinomial, expand_mul)
+from sympy.core.logic import fuzzy_bool
 from singleton import S
 from expr import Expr
 
