@@ -39,7 +39,7 @@ class MatMul(MatrixExpr):
     def _entry(self, i, j):
         coeff, matrices = self.as_coeff_matrices()
 
-        if len(matrices) == 1: # situation like 2*X, matmul is just X
+        if len(matrices) == 1:  # situation like 2*X, matmul is just X
             return coeff * matrices[0][i, j]
 
         head, tail = matrices[0], matrices[1:]
@@ -125,7 +125,7 @@ def xxinv(mul):
             if X.is_square and Y.is_square and X == Inverse(Y):
                 I = Identity(X.rows)
                 return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
-        except ValueError: # Y might not be invertible
+        except ValueError:  # Y might not be invertible
             pass
 
     return mul
@@ -146,7 +146,7 @@ def remove_ids(mul):
     # Apply standard rm_id for MatMuls
     result = rm_id(lambda x: x.is_Identity == True)(mmul)
     if result != mmul:
-        return newmul(factor, *result.args) # Recombine and return
+        return newmul(factor, *result.args)  # Recombine and return
     else:
         return mul
 
