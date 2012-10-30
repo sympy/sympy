@@ -8,12 +8,12 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
     exp_polar, Lambda)
 from sympy.core.function import AppliedUndef
-from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
 from sympy.utilities.pytest import raises, XFAIL
 
+from sympy.abc import a, b, c, n, t, u, x, y, z
 
 class DummyNumber(object):
     """

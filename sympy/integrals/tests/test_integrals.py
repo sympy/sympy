@@ -7,7 +7,7 @@ from sympy import (
     Tuple,
 )
 from sympy.utilities.pytest import XFAIL, raises
-from sympy.physics.units import m, s
+from sympy.physics import units
 
 x, y, a, t, x_1, x_2, z = symbols('x y a t x_1 x_2 z')
 n = Symbol('n', integer=True)
@@ -250,6 +250,8 @@ def test_issue587():  # remove this when fresnel itegrals are implemented
 
 
 def test_integrate_units():
+    m = units.m
+    s = units.s
     assert integrate(x * m/s, (x, 1*s, 5*s)) == 12*m*s
 
 
@@ -527,7 +529,6 @@ def test_expand_integral():
         Integral(cos(x**2)*sin(x**2) + cos(x**2), (x, 0, 1))
     assert Integral(cos(x**2)*(sin(x**2) + 1), x).expand() == \
         Integral(cos(x**2)*sin(x**2) + cos(x**2), x)
-    i = Integral(x, (x, 1, 2), (x, 1, 2))
 
 
 def test_as_sum_midpoint1():

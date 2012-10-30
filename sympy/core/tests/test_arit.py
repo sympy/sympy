@@ -1,8 +1,8 @@
 from __future__ import division
 
-from sympy import (Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi,
+from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        Tuple)
+)
 from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
