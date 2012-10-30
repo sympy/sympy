@@ -25,7 +25,6 @@ class RaisingOp(SHOOp):
 	def _eval_rewrite_as_xp(self, *args):
 		return (Integer(1)/sqrt(Integer(2)*hbar*m*w))*(Integer(-1)*I*Px + m*w*X)
 
-	@classmethod
 	def _eval_adjoint(self):
 		return LoweringOp(*self.args)
 		
@@ -39,7 +38,7 @@ class RaisingOp(SHOOp):
 		temp = ket.n + Integer(1)
 		return sqrt(temp)*SHOKet(temp)
 		
-	# Printing 
+	# Printing Methods
 	def _sympyrepr(self, printer, *args):
 		arg0 = printer._print(self.args[0], *args)
 		return '%s(%s)' % (self.__class__.__name__, arg0)
@@ -80,7 +79,6 @@ class LoweringOp(SHOOp):
 	def _eval_rewrite_as_xp(self, *args):
 		return (Integer(1)/sqrt(Integer(2)*hbar*m*w))*(I*Px + m*w*X)
 	
-	@classmethod
 	def _eval_adjoint(self):
 		return RaisingOp(*self.args)
 
@@ -130,6 +128,9 @@ class Hamiltonian(SHOOp):
 		
 	def _eval_rewrite_as_n(self, *args):
 		return hbar*w*(N + Integer(1)/Integer(2))
+		
+	def _eval_rewrite_as_am(self, *args):
+		return hbar*w*(am*ap - Integer(1)/Integer(2))
 	
 	@classmethod
 	def _apply_operator_SHOKet(self, ket):
@@ -142,10 +143,10 @@ ap = RaisingOp('a')
 am = LoweringOp('a')
 H = Hamiltonian('H')
 N = NumberOp('N')
-w = Symbol('w')
+w = Symbol('omega')
 m = Symbol('m')
-#--------------------------------------------------------------------
 
+#--------------------------------------------------------------------
 
 class SHOState(State):
 
