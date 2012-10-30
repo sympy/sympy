@@ -7,6 +7,9 @@ class Adjoint(MatrixExpr):
 
     Represents the Adjoint of a matrix expression.
 
+    Examples
+    ========
+
     >>> from sympy import MatrixSymbol, Adjoint
     >>> A = MatrixSymbol('A', 3, 5)
     >>> B = MatrixSymbol('B', 5, 3)
