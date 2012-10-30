@@ -182,7 +182,7 @@ def _remove_singletons(reps, exprs):
                     else:
                         used = j - len(exprs)
 
-            if used is not True:
+            if type(used) is int:
 
                 # undo the change
 
