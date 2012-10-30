@@ -45,6 +45,10 @@ class MatAdd(MatrixExpr):
         from transpose import Transpose
         return MatAdd(*[Transpose(arg) for arg in self.args])
 
+    def _eval_adjoint(self):
+        from adjoint import Adjoint
+        return MatAdd(*[Adjoint(arg) for arg in self.args])
+
     def _eval_trace(self):
         from trace import Trace
         return MatAdd(*[Trace(arg) for arg in self.args])

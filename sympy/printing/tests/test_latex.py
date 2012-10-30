@@ -792,3 +792,11 @@ def test_Tr():
     A, B = symbols('A B', commutative=False)
     t = Tr(A*B)
     assert latex(t) == r'\mbox{Tr}\left(A B\right)'
+
+def test_Adjoint():
+    from sympy.matrices import MatrixSymbol, Adjoint
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    # Either of these would be fine
+    assert latex(Adjoint(X+Y)) in \
+            [r'\left(X + Y\right)^\dag', r'X^\dag + Y^\dag']

@@ -72,6 +72,10 @@ class MatMul(MatrixExpr):
         from transpose import Transpose
         return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
 
+    def _eval_adjoint(self):
+        from adjoint import Adjoint
+        return MatMul(*[Adjoint(arg) for arg in self.args[::-1]])
+
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()
         if factor != 1:

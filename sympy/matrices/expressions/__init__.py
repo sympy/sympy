@@ -10,3 +10,4 @@ from matmul import MatMul
 from matpow import MatPow
 from trace import Trace
 from transpose import Transpose
+from adjoint import Adjoint
