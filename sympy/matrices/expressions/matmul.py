@@ -97,7 +97,7 @@ class MatMul(MatrixExpr):
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
     for i in range(len(matrices)-1):
-        A,B = matrices[i:i+2]
+        A, B = matrices[i:i+2]
         if A.cols != B.rows:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
