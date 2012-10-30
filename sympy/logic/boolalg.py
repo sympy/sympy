@@ -759,7 +759,6 @@ def POSform(variables, minterms, dontcares=[]):
 
     """
     variables = [str(v) for v in variables]
-    from sympy.core.compatibility import bin
     if minterms == []:
         return False
     t = [0] * len(variables)
@@ -804,7 +803,6 @@ def simplify_logic(expr):
     And(Not(x), Not(y))
 
     """
-    from sympy.core.compatibility import bin
     expr = sympify(expr)
     variables = list(expr.free_symbols)
     string_variables = [x.name for x in variables]

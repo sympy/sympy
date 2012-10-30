@@ -9,7 +9,6 @@ from compatibility import reduce, as_int, default_sort_key
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
 
 from collections import defaultdict
-from math import log10, ceil
 from inspect import getmro
 
 
