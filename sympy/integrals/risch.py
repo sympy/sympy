@@ -36,7 +36,7 @@ from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
 
 from sympy.integrals import Integral, integrate
 
-from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum
+from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
 
 from sympy.utilities.iterables import numbered_symbols
 
@@ -735,7 +735,11 @@ def as_poly_1t(p, t, z):
     one_t_part = pa.slice(0, d + 1) # requires polys11
     r = pd.degree() - pa.degree()
     t_part = pa - one_t_part
-    t_part = t_part.to_field().exquo(pd)
+    try:
+        t_part = t_part.to_field().exquo(pd)
+    except DomainError, e:
+        # Issue 1851
+        raise NotImplementedError(e)
     # Compute the negative degree parts.  Also requires polys11.
     one_t_part = Poly.from_list(reversed(one_t_part.rep.rep), *one_t_part.gens,
         **{'domain':one_t_part.domain})
