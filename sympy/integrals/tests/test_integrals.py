@@ -817,8 +817,19 @@ def test_limit_bug():
         -((-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z) + \
         log(z**2)/(2*z) + EulerGamma/z + 2*log(pi)/z
 
+def test_issue_1604():
+    g = Function('g')
+    assert integrate(exp(x)*g(x), x).has(Integral)
+
+def test_issue_1888():
+    f = Function('f')
+    assert integrate(f(x).diff(x)**2, x).has(Integral)
+
 # The following tests work using meijerint.
 
+def test_issue459():
+    from sympy import Si
+    assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
 
 def test_issue841():
     from sympy import expand_mul
@@ -829,27 +840,21 @@ def test_issue841():
     assert expand_mul(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == \
         sqrt(pi)*exp(d**2/a)/sqrt(a)
 
-
 def test_issue1304():
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
         1/(y**2*sqrt(1 + y**2/x**2))
 
-
-def test_issue459():
-    from sympy import Si
-    assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
-
+def test_issue_1323():
+    assert integrate(1/sqrt(16 + 4*x**2), x) == asinh(x/2) / 2
 
 def test_issue1394():
     from sympy import simplify
     assert simplify(integrate(x*sqrt(1 + 2*x), x)) == \
         sqrt(2*x + 1)*(6*x**2 + x - 1)/15
 
-
 def test_issue1638():
     assert integrate(sin(x)/x, (x, -oo, oo)) == pi
     assert integrate(sin(x)/x, (x, 0, oo)) == pi/2
-
 
 def test_issue1893():
     from sympy import simplify, expand_func, polygamma, gamma

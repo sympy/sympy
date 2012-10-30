@@ -28,68 +28,14 @@ def run_with_timeout(test, time):
     return r
 
 @XFAIL
-def test_issue_459():
-    # Si special function
-    assert not integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)).has(Integral)
-
-@XFAIL
 def test_issue_781():
     t = 5 # Timeout time
     # integrate_hyperexponential(Poly(t*2*(1 - t0**2)*t0*(x**3 + x**2), t), Poly((1 + t0**2)**2*2*(x**2 + x + 1), t), [Poly(1, x), Poly(1 + t0**2, t0), Poly(t, t)], [x, t0, t], [exp, tan])
     assert not run_with_timeout("integrate(exp(x)*cos(2*x)*sin(2*x) * (x**3+x**2)/(2*(x**2+x+1)) , x)", t).has(Integral)
 
 @XFAIL
-def test_issue_841a():
-    assert not integrate(exp(-x**2)*exp(I*k*x), (x, -oo, oo)).has(Integral)
-
-@XFAIL
-def test_issue_841b():
-    a = Symbol('a', positive=True)
-    assert not integrate(c*exp(-x**2/a)*exp(I*k*x), (x, -oo, oo)).has(Integral)
-
-@XFAIL
-def test_issue_1001():
-    # Note: issue has additional integral
-    assert not integrate(sqrt(y**2-x**2), x).has(Integral)
-
-@XFAIL
-def test_issue_1020():
-    assert not integrate(sqrt(y**2 - x**2)/x, x).has(Integral)
-
-@XFAIL
 def test_issue_1113():
     assert not integrate(sign(x), x).has(Integral)
-
-@XFAIL
-def test_issue_1116():
-    # (singularity detection)
-    assert integrate(1/(x**2), (x, -1, 1)) == oo
-
-@XFAIL
-def test_issue_1127a():
-    # The integral doesn't calculate, but the real problem is an exception
-    # caused the by Real (1/2 instead of S(1)/2) making it fail.
-    assert not integrate(-(1 + (-x + x**2)**(1/2))/(-x + (1 + (-x + x**2)**(1/2))*x), x).has(Integral)
-
-@XFAIL
-def test_issue_1127b():
-    assert not integrate(2*a/((4*a**2+x**2)*sqrt(4*a**2+x**2)),x).has(Integral)
-
-@XFAIL
-def test_issue_1127c():
-    # The integral doesn't calculate, but the real problem is an exception
-    # caused by the Real (3/2 instead of S(3)/2) making it fail.
-    assert not integrate(2*a/((((2*a)**2+x**2))**(3/2)),x).has(Integral)
-
-@XFAIL
-def test_issue_1127d():
-    # The same as test_issue_1127c with sympified exponent
-    assert not integrate(2*a/((4*a**2+x**2)*sqrt(4*a**2+x**2)),x).has(Integral)
-
-@XFAIL
-def test_issue_1127e():
-    # Similar to test_issue_841a above
-    assert not integrate(-(8 + 2*sin(x) + 6*exp(x))*exp(2*x), x).has(Integral)
 
 @XFAIL
 def test_issue_1135():
@@ -100,28 +46,12 @@ def test_issue_1227():
     assert not (2*integrate(((h*(x-R+b))/b)*sqrt(R**2-x**2), (x, R-b, R))).has(Integral)
 
 @XFAIL
-def test_issue_1304a():
-    assert not integrate(sqrt(x**2 + y**2), x).has(Integral)
-
-@XFAIL
-def test_issue_1304b():
-    assert not integrate(1/(x**2 + y**2)**(Rational(3,2)),y).has(Integral)
-
-@XFAIL
-def test_issue_1323():
-    assert not integrate(1/sqrt(16 + 4*x**2), x).has(Integral)
-
-@XFAIL
 def test_issue_1392():
     assert not integrate(x*sqrt(x**2+2*x+4), x).has(Integral)
 
 @XFAIL
 def test_issue_1393():
     assert not integrate(x**2 * sqrt(5-x**2), x).has(Integral)
-
-@XFAIL
-def test_issue_1394():
-    assert not integrate(x*sqrt(1+2*x), x).has(Integral)
 
 @XFAIL
 def test_issue_1412():
@@ -135,11 +65,6 @@ def test_issue_1412():
 def test_issue_1415():
     # The correct answer is 2*sin(x)
     assert not integrate(sin(2*x)/ sin(x)).has(Integral)
-
-@XFAIL
-def test_issue_1418():
-    # Currently give a traceback
-    assert not integrate((x**Rational(1,2) - x**3)/x**Rational(1,3), x).has(Integral)
 
 @XFAIL
 def test_issue_1426():
@@ -157,19 +82,6 @@ def test_issue_1452():
     assert integrate(1/(x*sqrt(1-x**2)),x).has(Integral)
 
 @XFAIL
-def test_issue_1576a():
-    assert not integrate(4*pi**2*x**2*y**4*(y**2+9*x**2)/(y**2+x**2)**3, x).has(Integral)
-
-@XFAIL
-def test_issue_1576b():
-    assert not integrate((1+x)/(a+x**2), x).has(Integral)
-
-@XFAIL
-def test_issue_1604():
-    g = Function('g')
-    assert integrate(exp(x)*g(x), x).has(Integral)
-
-@XFAIL
 def test_issue_1638a():
     # Implementation of Si()
     assert integrate(sin(x)/x, x).has(Integral)
@@ -179,30 +91,10 @@ def test_issue_1638b():
     assert integrate(sin(x)/x, (x, -oo, oo)) == pi/2
 
 @XFAIL
-def test_issue_1768():
-    assert not integrate(sin(x)*tan(x), x).has(Integral)
-
-@XFAIL
-def test_issue_1791():
-    # Note: Answer contains erf()
-    assert not integrate(exp(-log(x)**2),x).has(Integral)
-
-@XFAIL
 def test_issue_1792():
     # Requires the hypergeometric function.
     t = 5 # Timeout
     assert not run_with_timeout("integrate(cos(x)**y, x)", t).has(Integral)
-
-@XFAIL
-def test_issue_1793a():
-    P1 = -A*exp(-z)
-    P2 = -A/(c*t)*(sin(x)**2 + cos(y)**2)
-    assert not integrate(c*(P2 - P1), t).has(Integral)
-
-@XFAIL
-def test_issue_1793b():
-    # (traceback)
-    assert not integrate((sin(y)*x**3 + 2*cos(y)*x**2 + 12)/(x**2 + 2), x).has(Integral)
 
 @XFAIL
 def test_issue_1796a():
@@ -240,8 +132,3 @@ def test_issue_1893():
     # Nonelementary integral.  Requires hypergeometric/Meijer-G handling.
     t = 5 # Timeout
     assert not run_with_timeout("integrate(log(x) * x**(k-1) * exp(-x) / gamma(k), (x, 0, oo))", t).has(Integral)
-
-@XFAIL
-def test_issue_1888():
-    f = Function('f')
-    assert integrate(f(x).diff(x)**2, x).has(Integral)
