@@ -63,8 +63,6 @@ class DiracDelta(Function):
             return S.NaN
         if arg.is_positive or arg.is_negative:
             return S.Zero
-        elif arg.is_zero:
-            return S.Infinity
 
     def simplify(self, x):
         """simplify(self, x)
