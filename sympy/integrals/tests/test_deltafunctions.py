@@ -28,6 +28,9 @@ def test_deltaintegrate():
     assert deltaintegrate(DiracDelta(x - y), x) == Heaviside(x - y)
     assert deltaintegrate(DiracDelta(y - x), x) == Heaviside(x - y)
 
+    assert deltaintegrate(x*DiracDelta(x), x) == 0
+    assert deltaintegrate((x - y)*DiracDelta(x - y), x) == 0
+
     assert deltaintegrate(DiracDelta(x)**2, x) == DiracDelta(0)*Heaviside(x)
     assert deltaintegrate(y*DiracDelta(x)**2, x) == \
         y*DiracDelta(0)*Heaviside(x)

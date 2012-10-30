@@ -154,7 +154,7 @@ def deltaintegrate(f, x):
         g = f.expand()
         if f != g:  # the expansion worked
             fh = integrate(g, x)
-            if fh and not isinstance(fh, Integral):
+            if fh is not None and not isinstance(fh, Integral):
                 return fh
         else:
             # no expansion performed, try to extract a simple DiracDelta term
