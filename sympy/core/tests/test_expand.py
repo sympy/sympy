@@ -1,5 +1,5 @@
 from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
-    sin, Mul, Pow, cse, Mod)
+    cos, sin, Mul, Pow, cse, Mod, O)
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
 from sympy.core.function import expand_power_base
@@ -34,6 +34,7 @@ def test_expand_negative_integer_powers():
 def test_expand_non_commutative():
     A = Symbol('A', commutative=False)
     B = Symbol('B', commutative=False)
+    C = Symbol('C', commutative=False)
     a = Symbol('a')
     b = Symbol('b')
     i = Symbol('i', integer=True)
@@ -42,7 +43,9 @@ def test_expand_non_commutative():
     p = Symbol('p', polar=True)
     np = Symbol('p', polar=False)
 
-    assert ((A + B)**2).expand() == A*B + B*A + A**2 + B**2
+    assert (C*(A + B)).expand() == C*A + C*B
+    assert (C*(A + B)).expand() != A*C + B*C
+    assert ((A + B)**2).expand() == A**2 + A*B + B*A + B**2
     assert ((A + B)**3).expand() == (A**2*B + B**2*A + A*B**2 + B*A**2 +
                                      A**3 + B**3 + A*B*A + B*A*B)
     # 3120
@@ -161,3 +164,89 @@ def test_expand_power_base():
     assert expand_power_base((exp(x)*exp(y))**z).is_Pow
     assert expand_power_base(
         (exp(x)*exp(y))**z, force=True) == exp(x)**z*exp(y)**z
+
+def test_expand_arit():
+    a = Symbol("a")
+    b = Symbol("b", positive=True)
+    c = Symbol("c")
+
+    p = R(5)
+    e = (a + b)*c
+    assert e == c*(a + b)
+    assert (e.expand() - a*c - b*c) == R(0)
+    e = (a + b)*(a + b)
+    assert e == (a + b)**2
+    assert e.expand() == 2*a*b + a**2 + b**2
+    e = (a + b)*(a + b)**R(2)
+    assert e == (a + b)**3
+    assert e.expand() == 3*b*a**2 + 3*a*b**2 + a**3 + b**3
+    assert e.expand() == 3*b*a**2 + 3*a*b**2 + a**3 + b**3
+    e = (a + b)*(a + c)*(b + c)
+    assert e == (a + c)*(a + b)*(b + c)
+    assert e.expand() == 2*a*b*c + b*a**2 + c*a**2 + b*c**2 + a*c**2 + c*b**2 + a*b**2
+    e = (a + R(1))**p
+    assert e == (1 + a)**5
+    assert e.expand() == 1 + 5*a + 10*a**2 + 10*a**3 + 5*a**4 + a**5
+    e = (a + b + c)*(a + c + p)
+    assert e == (5 + a + c)*(a + b + c)
+    assert e.expand() == 5*a + 5*b + 5*c + 2*a*c + b*c + a*b + a**2 + c**2
+    x = Symbol("x")
+    s = exp(x*x) - 1
+    e = s.nseries(x, 0, 3)/x**2
+    assert e.expand() == 1 + x**2/2 + O(x**4)
+
+    e = (x*(y + z))**(x*(y + z))*(x + y)
+    assert e.expand(power_exp=False, power_base=False) == x*(x*y + x*
+                    z)**(x*y + x*z) + y*(x*y + x*z)**(x*y + x*z)
+    assert e.expand(power_exp=False, power_base=False, deep=False) == x* \
+        (x*(y + z))**(x*(y + z)) + y*(x*(y + z))**(x*(y + z))
+    e = (x*(y + z))**z
+    assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y +
+                    z)**z, (x*y + x*z)**z]
+    assert ((2*y)**z).expand() == 2**z*y**z
+    p = Symbol('p', positive=True)
+    assert sqrt(-x).expand().is_Pow
+    assert sqrt(-x).expand(force=True) == I*sqrt(x)
+    assert ((2*y*p)**z).expand() == 2**z*p**z*y**z
+    assert ((2*y*p*x)**z).expand() == 2**z*p**z*(x*y)**z
+    assert ((2*y*p*x)**z).expand(force=True) == 2**z*p**z*x**z*y**z
+    assert ((2*y*p*-pi)**z).expand() == 2**z*pi**z*p**z*(-y)**z
+    assert ((2*y*p*-pi*x)**z).expand() == 2**z*pi**z*p**z*(-x*y)**z
+    n = Symbol('n', negative=True)
+    m = Symbol('m', negative=True)
+    assert ((-2*x*y*n)**z).expand() == 2**z*(-n)**z*(x*y)**z
+    assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
+    # issue 2383
+    assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
+    # issue 2506 (2)
+    assert (cos(x + y)**2).expand(trig=True) in [
+        (-sin(x)*sin(y) + cos(x)*cos(y))**2,
+        sin(x)**2*sin(y)**2 - 2*sin(x)*sin(y)*cos(x)*cos(y) + cos(x)**2*cos(y)**2
+    ]
+
+    # Check that this isn't too slow
+    x = Symbol('x')
+    W = 1
+    for i in range(1, 21):
+        W = W * (x - i)
+    W = W.expand()
+    assert W.has(-1672280820*x**15)
+
+
+def test_power_expand():
+    """Test for Pow.expand()"""
+    a = Symbol('a')
+    b = Symbol('b')
+    p = (a + b)**2
+    assert p.expand() == a**2 + b**2 + 2*a*b
+
+    p = (1 + 2*(1 + a))**2
+    assert p.expand() == 9 + 4*(a**2) + 12*a
+
+    p = 2**(a + b)
+    assert p.expand() == 2**a*2**b
+
+    A = Symbol('A', commutative=False)
+    B = Symbol('B', commutative=False)
+    assert (2**(A + B)).expand() == 2**(A + B)
+    assert (A**(a + b)).expand() != A**(a + b)

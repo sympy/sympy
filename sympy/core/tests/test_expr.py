@@ -1155,11 +1155,6 @@ def test_issue2201():
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
 
 
-def test_issue_2061():
-    assert sqrt(-1.0*x) == 1.0*sqrt(-x)
-    assert sqrt(1.0*x) == 1.0*sqrt(x)
-
-
 def test_as_coeff_Mul():
     assert Integer(3).as_coeff_Mul() == (Integer(3), Integer(1))
     assert Rational(3, 4).as_coeff_Mul() == (Rational(3, 4), Integer(1))
