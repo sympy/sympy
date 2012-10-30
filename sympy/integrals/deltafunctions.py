@@ -1,3 +1,4 @@
+from sympy.core import Mul
 from sympy.functions import DiracDelta, Heaviside
 from sympy.solvers import solve
 from sympy.utilities.misc import default_sort_key
@@ -38,7 +39,7 @@ def change_mul(node, x):
        sympy.functions.special.delta_functions.DiracDelta
        deltaintegrate
     """
-    if not node.is_Mul:
+    if not (node.is_Mul or node.is_Pow):
         return node
 
     new_args = []
@@ -51,27 +52,29 @@ def change_mul(node, x):
     sorted_args.extend(nc)
 
     for arg in sorted_args:
-        if arg.func == DiracDelta and arg.is_simple(x) \
-                and (len(arg.args) <= 1 or arg.args[1] == 0):
-            if dirac is None:
-                dirac = arg
-            else:
-                new_args.append(arg)
+        if arg.is_Pow and arg.base.func is DiracDelta:
+            new_args.append(arg.func(arg.base, arg.exp - 1))
+            arg = arg.base
+        if dirac is None and (arg.func is DiracDelta and arg.is_simple(x)
+                and (len(arg.args) <= 1 or arg.args[1] == 0)):
+            dirac = arg
         else:
-            new_args.append(change_mul(arg, x))
+            new_args.append(arg)
     if not dirac:  # there was no simple dirac
         new_args = []
         for arg in sorted_args:
-            if arg.func == DiracDelta:
+            if arg.func is DiracDelta:
                 new_args.append(arg.simplify(x))
+            elif arg.is_Pow and arg.base.func is DiracDelta:
+                new_args.append(arg.func(arg.base.simplify(x), arg.exp))
             else:
                 new_args.append(change_mul(arg, x))
         if new_args != sorted_args:
-            nnode = node.__class__(*new_args).expand()
+            nnode = Mul(*new_args).expand()
         else:  # if the node didn't change there is nothing to do
             nnode = None
         return (None, nnode)
-    return (dirac, node.func(*new_args))
+    return (dirac, Mul(*new_args))
 
 
 def deltaintegrate(f, x):
@@ -147,7 +150,7 @@ def deltaintegrate(f, x):
         else:  # let's try to integrate the simplified expression
             fh = integrate(h, x)
             return fh
-    elif f.is_Mul:  # g(x) = a*b*c*f(DiracDelta(h(x)))*d*e
+    elif f.is_Mul or f.is_Pow:  # g(x) = a*b*c*f(DiracDelta(h(x)))*d*e
         g = f.expand()
         if f != g:  # the expansion worked
             fh = integrate(g, x)

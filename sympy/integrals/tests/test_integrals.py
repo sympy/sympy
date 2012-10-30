@@ -415,6 +415,7 @@ def test_integrate_DiracDelta():
     # More tests are in test_deltafunctions.py
     assert integrate(DiracDelta(x) * f(x), (x, -oo, oo)) == f(0)
     assert integrate(DiracDelta(x) * f(x), (x, 0, oo)) == f(0)/2
+    assert integrate(DiracDelta(x)**2, (x, -oo, oo)) == DiracDelta(0)
 
 
 def test_subs1():

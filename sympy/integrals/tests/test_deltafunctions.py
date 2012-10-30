@@ -11,6 +11,10 @@ def test_change_mul():
     assert change_mul(x*y*DiracDelta(x), x) == (DiracDelta(x), x*y)
     assert change_mul(x*y*DiracDelta(x)*DiracDelta(y), x) == \
         (DiracDelta(x), x*y*DiracDelta(y))
+    assert change_mul(DiracDelta(x)**2, x) == \
+        (DiracDelta(x), DiracDelta(x))
+    assert change_mul(y*DiracDelta(x)**2, x) == \
+        (DiracDelta(x), y*DiracDelta(x))
 
 
 def test_deltaintegrate():
@@ -23,6 +27,12 @@ def test_deltaintegrate():
     assert deltaintegrate(DiracDelta(-x), x) == Heaviside(x)
     assert deltaintegrate(DiracDelta(x - y), x) == Heaviside(x - y)
     assert deltaintegrate(DiracDelta(y - x), x) == Heaviside(x - y)
+
+    assert deltaintegrate(DiracDelta(x)**2, x) == DiracDelta(0)*Heaviside(x)
+    assert deltaintegrate(y*DiracDelta(x)**2, x) == \
+        y*DiracDelta(0)*Heaviside(x)
+    assert deltaintegrate(DiracDelta(x, 1)**2, x) is None
+    assert deltaintegrate(y*DiracDelta(x, 1)**2, x) is None
 
     assert deltaintegrate(DiracDelta(x) * f(x), x) == f(0) * Heaviside(x)
     assert deltaintegrate(DiracDelta(-x) * f(x), x) == f(0) * Heaviside(x)
