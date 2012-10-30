@@ -1,9 +1,10 @@
 from sympy import Symbol, sympify, Tuple, Integer
 from sympy.core.basic import Basic
-from sympy.core.singleton import S
 from sympy.core.decorators import _sympifyit, call_highest_priority
+from sympy.core.singleton import S
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+
 
 class MatrixExpr(Basic):
     """ Matrix Expression Class
@@ -243,6 +244,7 @@ class MatrixExpr(Basic):
     def as_coeff_mmul(self):
         return 1, Basic.__new__(MatMul, self)
 
+
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
 
@@ -294,10 +296,10 @@ class MatrixSymbol(MatrixExpr):
         else:
             return Symbol('%s_%s%s' % (self.name, str(i), str(j)))
 
-
     @property
     def free_symbols(self):
         return set((self,))
+
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
