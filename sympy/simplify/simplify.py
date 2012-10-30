@@ -2274,12 +2274,20 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 elif neg:
                     # their negative signs cancel in groups of 2*q if we know
                     # that e = p/q else we have to treat them as unknown
+                    israt = False
                     if e.is_Rational:
+                        israt = True
+                    else:
+                        p, d = e.as_numer_denom()
+                        if p.is_integer and d.is_integer:
+                            israt = True
+                    if israt:
                         neg = [-w for w in neg]
-                        unk.extend([S.NegativeOne]*(len(neg) % (2*e.q)))
+                        unk.extend([S.NegativeOne]*len(neg))
                     else:
                         unk.extend(neg)
                         neg = []
+                    del israt
 
                 # these shouldn't be joined
                 for b in unk:

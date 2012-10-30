@@ -343,93 +343,118 @@ class Pow(Expr):
     def _eval_expand_power_base(self, **hints):
         """(a*b)**n -> a**n * b**n"""
         force = hints.get('force', False)
+
         b = self.base
         e = self.exp
-        if b.is_Mul:
-            bargs, nc = b.args_cnc()
-            if nc:
-                if len(nc) == 1:
-                    bargs.extend(nc)
-                    nc = []
+        if not b.is_Mul:
+            return self
+
+        cargs, nc = b.args_cnc(split_1=False)
+
+        # expand each term - this is top-level-only
+        # expansion but we have to watch out for things
+        # that don't have an _eval_expand method
+        if nc:
+            nc = [_._eval_expand_power_base(**hints)
+                if hasattr(_, '_eval_expand_power_base') else _
+                for _ in nc]
+
+            if e.is_Integer:
+                if e.is_positive:
+                    rv = Mul(*nc*e)
                 else:
-                    # process c part
-                    if len(bargs) > 1:
-                        c = Mul._from_args(bargs)**e
-                        # play it safe since we are creating a new
-                        # factor we want to make sure that no trickery
-                        # reduces this to an object without an expand
-                        # method
-                        if hasattr(c, '_eval_expand_power_base'):
-                            c = c._eval_expand_power_base(**hints)
-                    elif bargs:
-                        c = bargs[0]**e
-                    else:
-                        c = S.One
+                    rv = 1/Mul(*nc*-e)
+                assert not cargs
+                return rv
 
-                    # process nc part
+            if not cargs:
+                return Pow(Mul(*nc), e, evaluate=False)
 
-                    # expand each term - this is top-level-only
-                    # expansion but we have to watch out for things
-                    # that don't have an _eval_expand method
-                    nc = [_._eval_expand_power_base(**hints)
-                        if hasattr(_, '_eval_expand_power_base') else _
-                        for _ in nc]
-                    if e.is_Integer:
-                        nc = Mul(*nc*abs(e))
-                        if e < 0:
-                            nc = 1/nc
-                    else:
-                        nc = Mul._from_args(nc)**e
-                    return c*nc
+            nc = [Mul(*nc)]
 
-            # commutative only
-
-            if force or e.is_integer:
-                nonneg = bargs
-                other = []
-            elif (e.is_Rational or
-                    len(bargs) == 2 and bargs[0] is S.NegativeOne):
-                # the Rational exponent was already expanded automatically
-                # if there is a negative Number * foo, foo must be unknown
-                #    or else it, too, would have automatically expanded;
-                #    sqrt(-Number*foo) -> sqrt(Number)*sqrt(-foo); then
-                #    sqrt(-foo) -> unchanged if foo is not positive else
-                #               -> I*sqrt(foo)
-                #    So...if we have a 2 arg Mul and the first is a Number
-                #    that number is -1 and there is nothing more than can
-                #    be done without the force=True hint
-                nonneg = []
+        # sift the commutative bases
+        def pred(x):
+            if x is S.ImaginaryUnit:
+                return S.ImaginaryUnit
+            polar = x.is_polar
+            if polar:
+                return True
+            if polar is None:
+                return fuzzy_bool(x.is_nonnegative)
+        sifted = sift(cargs, pred)
+        nonneg = sifted[True]
+        other = sifted[None]
+        neg = sifted[False]
+        imag = sifted[S.ImaginaryUnit]
+        if imag:
+            I = S.ImaginaryUnit
+            i = len(imag) % 4
+            if i == 0:
+                pass
+            elif i == 1:
+                other.append(I)
+            elif i == 2:
+                if neg:
+                    nonn = -neg.pop()
+                    if nonn is not S.One:
+                        nonneg.append(nonn)
+                else:
+                    neg.append(S.NegativeOne)
             else:
-                # this is just like what is happening automatically, except
-                # that now we are doing it for an arbitrary exponent for which
-                # no automatic expansion is done
-                def pred(x):
-                    b = x.is_polar
-                    return b or (x.is_nonnegative if b is None else None)
-                sifted = sift(b.args, pred)
-                nonneg = sifted[True]
-                other = sifted[None]
-                neg = sifted[False]
-                assert len(sifted) == 3
+                if neg:
+                    nonn = -neg.pop()
+                    if nonn is not S.One:
+                        nonneg.append(nonn)
+                else:
+                    neg.append(S.NegativeOne)
+                other.append(I)
+            del imag
 
-                # make sure the Number gets pulled out
-                if neg and neg[0] is not S.NegativeOne and neg[0].is_Number:
-                    nonneg.append(-neg[0])
-                    neg[0] = S.NegativeOne
+        # bring out the bases that can be separated from the base
 
-                # leave behind a negative sign
-                oddneg = len(neg) % 2
-                if oddneg:
+        if force or e.is_integer:
+            # treat all commutatives the same and put nc in other
+            cargs = nonneg + neg + other
+            other = nc
+        else:
+            # this is just like what is happening automatically, except
+            # that now we are doing it for an arbitrary exponent for which
+            # no automatic expansion is done
+
+            assert not e.is_Integer
+
+            # handle negatives by making them all positive and putting
+            # the residual -1 in other
+            if len(neg) > 1:
+                o = S.One
+                if not other and neg[0].is_Number:
+                    o *= neg.pop(0)
+                if len(neg) % 2:
+                    o = -o
+                for n in neg:
+                    nonneg.append(-n)
+                if o is not S.One:
+                    other.append(o)
+            elif neg and other:
+                if neg[0].is_Number and neg[0] is not S.NegativeOne:
                     other.append(S.NegativeOne)
+                    nonneg.append(-neg[0])
+                else:
+                    other.extend(neg)
+            else:
+                other.extend(neg)
+            del neg
 
-                # negate all negatives and append to nonneg
-                nonneg += [-n for n in neg]
+            cargs = nonneg
+            other += nc
 
-            if nonneg:  # then there's a new expression to return
-                other = [Pow(Mul(*other), e)]
-                return Mul(*([Pow(b, e) for b in nonneg] + other))
+        rv = S.One
+        if cargs:
+            rv *= Mul(*[Pow(b, e, evaluate=False) for b in cargs])
+        if other:
+            rv *= Pow(Mul(*other), e, evaluate=False)
+        return rv
 
-        return Pow(b, e)
 
     def _eval_expand_multinomial(self, **hints):
         """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
@@ -583,7 +608,6 @@ class Pow(Expr):
             return result
 
     def as_real_imag(self, deep=True, **hints):
-        from sympy.core.symbol import symbols
         from sympy.polys.polytools import poly
 
         if self.exp.is_Integer:
@@ -1045,4 +1069,4 @@ class Pow(Expr):
 from add import Add
 from numbers import Integer
 from mul import Mul, _keep_coeff
-from symbol import Symbol, Dummy
+from symbol import Symbol, Dummy, symbols

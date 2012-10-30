@@ -501,6 +501,18 @@ def test_powsimp():
     # force=True overrides assumptions
     assert powsimp((-1)**(2*x), force=True) == 1
 
+    # rational exponents allow combining of negative terms
+    w, n, m = symbols('w n m', negative=True)
+    e = i/a  # not a rational exponent if `a` is unknown
+    ex = w**e*n**e*m**e
+    assert powsimp(ex) == m**(i/a)*n**(i/a)*w**(i/a)
+    e = i/3
+    ex = w**e*n**e*m**e
+    assert powsimp(ex) == (-1)**i*(-m*n*w)**(i/3)
+    e = (3 + i)/i
+    ex = w**e*n**e*m**e
+    assert powsimp(ex) == (-1)**(3*e)*(-m*n*w)**e
+
     eq = x**(2*a/3)
     # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
     assert powsimp(eq).exp == eq.exp == 2*a/3
@@ -1013,6 +1025,7 @@ def test_powdenest():
     assert powdenest((x**2*y**6)**i) != (x*y**3)**(2*i)
     x, y = symbols('x,y', positive=True)
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
+
     assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(4)/3)*y)**(i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
 

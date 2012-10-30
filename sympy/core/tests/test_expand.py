@@ -1,5 +1,5 @@
 from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
-    sin, Mul, Pow, cse)
+    sin, Mul, Pow, cse, Mod)
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
 from sympy.core.function import expand_power_base
@@ -32,8 +32,8 @@ def test_expand_negative_integer_powers():
 
 
 def test_expand_non_commutative():
-    A = x = Symbol('x', commutative=False)
-    B = y = Symbol('y', commutative=False)
+    A = Symbol('A', commutative=False)
+    B = Symbol('B', commutative=False)
     a = Symbol('a')
     b = Symbol('b')
     i = Symbol('i', integer=True)
@@ -42,9 +42,9 @@ def test_expand_non_commutative():
     p = Symbol('p', polar=True)
     np = Symbol('p', polar=False)
 
-    assert ((x + y)**2).expand() == x*y + y*x + x**2 + y**2
-    assert ((x + y)**3).expand() == (x**2*y + y**2*x + x*y**2 + y*x**2 +
-                                     x**3 + y**3 + x*y*x + y*x*y)
+    assert ((A + B)**2).expand() == A*B + B*A + A**2 + B**2
+    assert ((A + B)**3).expand() == (A**2*B + B**2*A + A*B**2 + B*A**2 +
+                                     A**3 + B**3 + A*B*A + B*A*B)
     # 3120
     assert ((a*A*B*A**-1)**2).expand() == a**2*A*B**2/A
     # Note that (a*A*B*A**-1)**2 is automatically converted to a**2*(A*B*A**-1)**2
@@ -67,13 +67,14 @@ def test_expand_non_commutative():
     assert ((a*(a*b)**i)**i).expand() == a**i*a**(i**2)*b**(i**2)
     e = Pow(Mul(a, 1/a, A, B, evaluate=False), S(2), evaluate=False)
     assert e.expand() == A*B*A*B
-    assert sqrt(a*(x*b)**i).expand() == sqrt(a*b**i*x**i)
+    assert sqrt(a*(A*b)**i).expand() == sqrt(a*b**i*A**i)
     assert (sqrt(-a)**a).expand() == sqrt(-a)**a
     assert expand((-2*n)**(i/3)) == 2**(i/3)*(-n)**(i/3)
-    assert expand((-2*n*m)**(i/3)) == (-1)**(i/3)*2**(i/3)*(-m)**(i/3)*(-n)**(i/3)
-    assert expand((-2*a*p)**(i/3)) == 2**(i/3)*p**(i/3)*(-a)**(i/3)
-    assert expand((-2*a*np)**(i/3)) == 2**(i/3)*(-a*np)**(i/3)
-
+    assert expand((-2*n*m)**(i/a)) == (-2)**(i/a)*(-n)**(i/a)*(-m)**(i/a)
+    assert expand((-2*a*p)**b) == 2**b*p**b*(-a)**b
+    assert expand((-2*a*np)**b) == 2**b*(-a*np)**b
+    assert expand(sqrt(A*B)) == sqrt(A*B)
+    assert expand(sqrt(-2*a*b)) == sqrt(2)*sqrt(-a*b)
 
 def test_expand_radicals():
     a = (x + y)**R(1, 2)
