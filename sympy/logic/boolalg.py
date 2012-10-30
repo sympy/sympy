@@ -339,28 +339,6 @@ class ITE(BooleanFunction):
 ### end class definitions. Some useful methods
 
 
-def fuzzy_not(arg):
-    """
-    Not in fuzzy logic
-
-    Will return Not if arg is a boolean value, and None if argument
-    is None.
-
-    Examples:
-
-    >>> from sympy.logic.boolalg import fuzzy_not
-    >>> fuzzy_not(True)
-    False
-    >>> fuzzy_not(None)
-    >>> fuzzy_not(False)
-    True
-
-    """
-    if arg is None:
-        return
-    return not arg
-
-
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
 

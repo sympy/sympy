@@ -17,6 +17,11 @@ def fuzzy_bool(x):
     """
     if x is None:
         return None
+    # equality and is-testing are faster than bool
+    if x is True or x == 1:
+        return True
+    elif x is False or x == 0:
+        return False
     return bool(x)
 
 
@@ -71,7 +76,22 @@ def fuzzy_and(*args):
 
 
 def fuzzy_not(v):
-    """'not' in fuzzy logic"""
+    """
+    Not in fuzzy logic
+
+    Will return Not if arg is a boolean value, and None if argument
+    is None.
+
+    Examples:
+
+    >>> from sympy.core.logic import fuzzy_not
+    >>> fuzzy_not(True)
+    False
+    >>> fuzzy_not(None)
+    >>> fuzzy_not(False)
+    True
+
+    """
     if v is None:
         return v
     else:
