@@ -115,6 +115,9 @@ class MatrixExpr(Basic):
     def _eval_inverse(self):
         raise NotImplementedError()
 
+    def _eval_power(self, exp):
+        return MatPow(self, exp)
+
     def _eval_simplify(self, **kwargs):
         if self.is_Atom:
             return self

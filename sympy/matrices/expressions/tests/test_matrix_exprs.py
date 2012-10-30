@@ -303,7 +303,9 @@ def test_MatPow():
 
     assert A**0 == Identity(n)
     assert A**1 == A
+    assert A**2 == AA
     assert A**-1 == Inverse(A)
+    assert A**S.Half == sqrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
 
 
