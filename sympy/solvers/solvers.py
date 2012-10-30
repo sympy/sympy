@@ -12,7 +12,8 @@ This module contain solvers for all kinds of equations:
 
 """
 
-from sympy.core.compatibility import iterable, is_sequence
+from sympy.core.compatibility import (iterable, is_sequence, small_first_keys,
+    lazyDSU_sort)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic, Expr
@@ -35,7 +36,6 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
-from sympy.utilities.iterables import lazyDSU_sort
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
 from sympy.mpmath import findroot
@@ -1343,12 +1343,9 @@ def _solve_system(exprs, symbols, **flags):
         do_simplify = flags.get('simplify', True)
         # sort so equation with the fewest potential symbols is first;
         # break ties with count_ops and default_sort_key
-        failed = lazyDSU_sort(failed,
-            keys=[
-                              lambda x: len(_ok_syms(x)),
-            lambda x: x.count_ops(),
-            default_sort_key],
-            warn=False)
+        _keys = list(small_first_keys)
+        _keys.insert(1, lambda _: len(_ok_syms(_)))
+        failed = lazyDSU_sort(failed, _keys, warn=False)
         for eq in failed:
             newresult = []
             bad_results = []
