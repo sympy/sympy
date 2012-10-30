@@ -154,7 +154,7 @@ def test_pow():
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
-    assert (-2*x)**k == 2**k*x**k
+    assert (-2*x)**k == (-2*x)**k  # we choose not to auto expand this
     assert (-1)**k == 1
 
 
@@ -196,12 +196,29 @@ def test_pow_im():
     assert Mul(*args)**e == ans
     args = [I, I, I, 2]
     e = Rational(1, 3)
-    ans = -(-1)**Rational(5, 6)*2**e
+    ans = 2**e*(-I)**e
     assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
+    args.append(-3)
+    ans = (6*I)**e
+    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args)**e == ans
+    args.append(-1)
+    ans = (-6*I)**e
+    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args)**e == ans
+
     args = [I, I, 2]
     e = Rational(1, 3)
     ans = (-2)**e
+    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args)**e == ans
+    args.append(-3)
+    ans = (6)**e
+    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args)**e == ans
+    args.append(-1)
+    ans = (-6)**e
     assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
 
