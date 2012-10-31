@@ -824,7 +824,7 @@ def simplify_logic(expr):
         return POSform(variables, truthtable)
 
 
-def bool_equal(function1, function2, deep = False):
+def bool_equal(function1, function2, deep=False):
     """
     Function to check whether two Boolean functions are
     logically equivalent.
@@ -850,7 +850,6 @@ def bool_equal(function1, function2, deep = False):
     {x: a, y: c, z: b}
 
     """
-    
     if deep:
         from sympy.core import Symbol
         function1 = simplify_logic(function1)
