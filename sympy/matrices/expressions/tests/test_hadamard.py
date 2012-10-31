@@ -31,3 +31,10 @@ def test_mixed_indexing():
 
     assert (X*HadamardProduct(Y, Z))[0, 0] == \
             X[0, 0]*Y[0, 0]*Z[0, 0] + X[0, 1]*Y[1, 0]*Z[1, 0]
+
+def test_canonicalize():
+    X = MatrixSymbol('X', 2, 2)
+    expr = HadamardProduct(X, evaluate=False, check=False)
+    assert isinstance(expr, HadamardProduct)
+    expr2 = expr.canonicalize() # unpack is called
+    assert isinstance(expr2, MatrixSymbol)
