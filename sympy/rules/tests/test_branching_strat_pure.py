@@ -1,4 +1,5 @@
-from sympy.rules.branching_strat_pure import (exhaust, debug, multiplex)
+from sympy.rules.branching_strat_pure import (exhaust, debug, multiplex,
+        condition)
 
 
 def posdec(x):
@@ -41,3 +42,9 @@ def test_multiplex():
     assert set(brl(3)) == {2}
     assert set(brl(7)) == {6, 8}
     assert set(brl(5)) == {4, 6}
+
+def test_condition():
+    even = lambda x: x%2 == 0
+    brl = condition(even, branch5)
+    assert set(brl(4)) == set(branch5(4))
+    assert set(brl(5)) == set([])

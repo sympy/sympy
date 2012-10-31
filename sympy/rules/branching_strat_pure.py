@@ -35,3 +35,12 @@ def multiplex(*brules):
                     seen.add(nexpr)
                     yield nexpr
     return multiplex_brl
+
+def condition(cond, brule):
+    """ Only apply rule if condition is true """
+    def conditioned_brl(expr):
+        if cond(expr):
+            for x in brule(expr): yield x
+        else:
+            pass
+    return conditioned_brl
