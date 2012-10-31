@@ -847,67 +847,64 @@ def bool_equal(function1, function2, deep = False):
     >>> function1 = SOPform(['x','z','y'],[[1,0,1]])
     >>> function2 = SOPform(['a','b','c'],[[1,0,1]])
     >>> bool_equal(function1, function2, deep = True)
-    {x: c, y: a, z: b}
+    {x: a, y: c, z: b}
 
     """
     
     if deep:
-        variables1 = list(function1.free_symbols)
-        variables2 = list(function2.free_symbols)
-        if (len(variables1) > 26 or len(variables2) > 26):
-            raise NotImplementedError("Maximum of 26 variables supported.")
-        minterms1 = []
-        minterms2 = []
-        t = [0] * len(variables1)
-        for x in range(2 ** len(variables1)):
-            b = [int(y) for y in bin(x)[2:]]
-            t[-len(b):] = b
-            if function1.subs(zip(variables1, [bool(i) for i in t])) == True:
-                minterms1.append(t[:])
-            if function2.subs(zip(variables2, [bool(i) for i in t])) == True:
-                minterms2.append(t[:])
-        alphabet = map(chr, range(97, 123))
-        l2 = [1]
-        l1 = minterms1
-        while (l1 != l2):
-            l1 = _simplified_pairs(l1)
-            l2 = _simplified_pairs(l1)
-        string1 = _rem_redundancy(l1, minterms1, alphabet[:len(variables1)], 1)
-        l2 = [1]
-        l1 = minterms2
-        while (l1 != l2):
-            l1 = _simplified_pairs(l1)
-            l2 = _simplified_pairs(l1)
-        string2 = _rem_redundancy(l1, minterms2, alphabet[:len(variables2)], 1)
-        if len(string1) != len(string2):
-            return False
-        list1 = []
-        list2 = []
-        for x in range(len(string1)):
-            if string1[x] != string2[x]:
-                if string1[x] in alphabet and string2[x] in alphabet:
-                    if string1[x] not in list1:
-                        list1.append(string1[x])
-                        if string2[x] in list2:
-                            return False
-                        list2.append(string2[x])
-                    else:
-                        if string2[x] != list2[list1.index(string1[x])]:
-                            return False
-                else:
-                    return False
-            if string1[x] in alphabet and string2[x] in alphabet:
-                if string1[x] not in list1:
-                    list1.append(string1[x])
-                    if string2[x] in list2:
-                        return False
-                    list2.append(string2[x])
-                else:
-                    if string2[x] != list2[list1.index(string1[x])]:
-                        return False
+        from sympy.core import Symbol
+        function1 = simplify_logic(function1)
+        function2 = simplify_logic(function2)
+        funcs1 = [function1]
+        funcs2 = [function2]
         mapping = {}
-        for i, x in enumerate(list1):
-            mapping[variables1[alphabet.index(x)]] = variables2[alphabet.index(list2[i])]
+        while len(funcs1) != 0 and len(funcs2) != 0:
+            temp1 = []
+            temp2 = []
+            if len(funcs1) != len(funcs2):
+                return False
+            for i, f1 in enumerate(funcs1):
+                if f1.__class__ == Symbol:
+                    if f1 in mapping:
+                        if funcs2[i] != mapping[f1]:
+                            return False
+                    else:
+                        mapping[f1] = funcs2[i]
+                elif f1.__class__ == Not:
+                    if f1.args[0] in mapping:
+                        if funcs2[i].args[0] != mapping[f1.args[0]]:
+                            return False
+                    else:
+                        mapping[f1.args[0]] = funcs2[i].args[0]
+                else:
+                    args1 = []
+                    args2 = []
+                    count = 0
+                    for x in f1.args:
+                        if x.__class__ == Symbol:
+                            args1.insert(0, x)
+                            count += 1
+                        elif x.__class__ == Not:
+                            args1.insert(count, x)
+                        else:
+                            args1.insert(-1, x)
+                    count = 0
+                    for y in funcs2[i].args:
+                        if y.__class__ == Symbol:
+                            args2.insert(0, y)
+                            count += 1
+                        elif y.__class__ == Not:
+                            args2.insert(count, y)
+                        else:
+                            args2.insert(-1, y)
+                    if len(args1) != len(args2):
+                        return False
+                    else:
+                        for j, fa1 in enumerate(args1):
+                            temp1.append(fa1)
+                            temp2.append(args2[j])
+            funcs1 = temp1[:]
+            funcs2 = temp2[:]
         return mapping
     else:
         variables1 = list(function1.free_symbols)

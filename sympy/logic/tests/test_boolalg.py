@@ -188,7 +188,7 @@ def test_bool_equal():
     from sympy.abc import a, b, c, x, y, z
     assert bool_equal(Not(Not(a)), a)
     assert bool_equal(SOPform(['w', 'x', 'y', 'z'], minterms), POSform(['w', 'x', 'y', 'z'], minterms))
-    assert bool_equal(SOPform(['x', 'z', 'y'],[[1, 0, 1]]), SOPform(['a', 'b', 'c'],[[1, 0, 1]]), deep = True) == {x: c, y: a, z: b}
+    assert bool_equal(SOPform(['x', 'z', 'y'],[[1, 0, 1]]), SOPform(['a', 'b', 'c'],[[1, 0, 1]]), deep = True) == {x: a, y: c, z: b}
 
 
 def test_bool_symbol():
