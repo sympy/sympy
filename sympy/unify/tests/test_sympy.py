@@ -1,6 +1,6 @@
 from sympy import Add, Basic, Wild
-from unify import Compound
-from unify_sympy import (destruct, construct, unify, is_associative,
+from sympy.unify.unify import Compound
+from sympy.unify.unify_sympy import (destruct, construct, unify, is_associative,
         is_commutative)
 
 def test_destruct():
@@ -17,14 +17,12 @@ def test_nested():
     expr = Basic(1, Basic(2), 3)
     cmpd = Compound(Basic, (1, Compound(Basic, (2,)), 3))
     assert destruct(expr) == cmpd
-    print construct(cmpd)
     assert construct(cmpd) == expr
 
 def test_unify():
     expr = Basic(1, 2, 3)
     a, b, c = map(Wild, 'abc')
     pattern = Basic(a, b, c)
-    print list(unify(expr, pattern, {}))
     assert setdicteq(unify(expr, pattern, {}), ({a: 1, b: 2, c: 3},
                                                 {a: 1, b: 3, c: 2},
                                                 {a: 2, b: 1, c: 3},
@@ -46,7 +44,6 @@ def test_unify_iter():
     expr = Add(1, 2, 3, evaluate=False)
     a, b, c = map(Wild, 'abc')
     pattern = Add(a, c, evaluate=False)
-    print list(unify(expr, pattern, {}))
     assert is_associative(destruct(pattern))
     assert is_commutative(destruct(pattern))
 
@@ -65,5 +62,4 @@ def test_hard_match():
     expr = sin(x) + cos(x)**2
     p, q = map(Wild, 'pq')
     pattern = sin(p) + cos(p)**2
-    print list(unify(expr, pattern, {}))
     assert list(unify(expr, pattern, {})) == [{p: x}]

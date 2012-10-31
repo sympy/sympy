@@ -18,7 +18,6 @@ def test_moderate():
     rl = rewriterule(p1, p2)
 
     expr = x**2 + y**3
-    print list(rl(expr))
     assert list(rl(expr)) == [(x*y)**4]
 
 def test_sincos():

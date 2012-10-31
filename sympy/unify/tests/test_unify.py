@@ -16,7 +16,6 @@ def unify(a, b, d):
                            is_commutative=is_commutative)
 
 def test_basic():
-    print list(unify(a, x, {}))
     assert list(unify(a, x, {})) == [{x: a}]
     assert list(unify(1, x, {})) == [{x: 1}]
     assert list(unify(a, a, {})) == [{}]
@@ -44,25 +43,21 @@ def test_commutative():
     c1 = C('CAdd', (1,2,3))
     c2 = C('CAdd', (x,y))
     result = list(unify(c1, c2, {}))
-    print result
     assert  {x: 1, y: C('CAdd', (2, 3))} in result
     assert ({x: 2, y: C('CAdd', (1, 3))} in result or
             {x: 2, y: C('CAdd', (3, 1))} in result)
 
 def _test_combinations_assoc():
-    print list(allcombinations((1,2,3), (a,b), True))
     assert set(allcombinations((1,2,3), (a,b), True)) == \
             {(((1, 2), (3,)), (a, b)), (((1,), (2, 3)), (a, b))}
 
 def _test_combinations_comm():
-    print list(allcombinations((1,2,3), (a,b), None))
     assert set(allcombinations((1,2,3), (a,b), None)) == \
             {(((1,), (2, 3)), ('a', 'b')), (((2,), (3, 1)), ('a', 'b')),
              (((3,), (1, 2)), ('a', 'b')), (((1, 2), (3,)), ('a', 'b')),
              (((2, 3), (1,)), ('a', 'b')), (((3, 1), (2,)), ('a', 'b'))}
 
 def test_allcombinations():
-    print set(allcombinations((1,2), (1,2), False))
     assert set(allcombinations((1,2), (1,2), False)) ==\
             {(((1,),(2,)), ((1,),(2,))), (((1,),(2,)), ((2,),(1,)))}
 
@@ -70,7 +65,6 @@ def test_allcombinations():
 def test_commutativity():
     c1 = Compound('CAdd', (a, b))
     c2 = Compound('CAdd', (x, y))
-    print list(unify(c1, c2, {}))
     assert is_commutative(c1) and is_commutative(c2)
     assert len(list(unify(c1, c2, {}))) == 2
 

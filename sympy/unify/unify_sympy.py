@@ -78,15 +78,3 @@ def unify(x, y, s, **kwargs):
                                               **kwargs)
     for d in ds:
         yield {construct(k): construct(v) for k, v in d.items()}
-
-def rewriterule(p1, p2):
-    from sympy.rules.tools import subs
-    from sympy import Expr
-    def rewrite_rl(expr):
-        match = unify(p1, expr, {})
-        for m in match:
-            expr2 = subs(m)(p2)
-            if isinstance(expr2, Expr):
-                expr2 = rebuild(expr2)
-            yield expr2
-    return rewrite_rl
