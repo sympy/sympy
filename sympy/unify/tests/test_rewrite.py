@@ -1,5 +1,5 @@
 from sympy.unify.rewrite import rewriterule
-from sympy import Wild
+from sympy import Wild, sin, cos
 from sympy.abc import x, y, z
 
 p, q = Wild('p'), Wild('q')
@@ -20,3 +20,11 @@ def test_moderate():
     expr = x**2 + y**3
     print list(rl(expr))
     assert list(rl(expr)) == [(x*y)**4]
+
+def test_sincos():
+    p1 = sin(p)**2 + sin(p)**2
+    p2 = 1
+    rl = rewriterule(p1, p2)
+
+    assert list(rl(sin(x)**2 + sin(x)**2)) == [1]
+    assert list(rl(sin(y)**2 + sin(y)**2)) == [1]
