@@ -652,7 +652,10 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, ' + ')
 
     def _print_HadamardProduct(self, expr):
-        delim = pretty_atom('Ring')
+        if self._use_unicode:
+            delim = pretty_atom('Ring')
+        else:
+            delim = '.*'
         return self._print_seq(expr.args, None, None, delim)
 
     _print_MatrixSymbol = _print_Symbol
