@@ -1005,10 +1005,17 @@ class LatexPrinter(Printer):
 
     def _print_Transpose(self, expr):
         mat = expr.arg
-        if mat.is_Add or mat.is_Mul:
+        if mat.is_MatAdd or mat.is_MatMul:
             return r"\left(%s\right)^T" % self._print(mat)
         else:
             return "%s^T" % self._print(mat)
+
+    def _print_Adjoint(self, expr):
+        mat = expr.arg
+        if mat.is_MatAdd or mat.is_MatMul:
+            return r"\left(%s\right)^\dag" % self._print(mat)
+        else:
+            return "%s^\dag" % self._print(mat)
 
     def _print_MatAdd(self, expr):
         # Stolen from print_Add
