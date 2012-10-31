@@ -1,4 +1,4 @@
-from sympy import Basic, Wild
+from sympy import Basic, Wild, Expr
 from unify import Compound, Variable, _unify
 from unify import *
 
@@ -6,12 +6,12 @@ def sympy_associative(op):
     from sympy import MatAdd, MatMul, Union, Intersection
     from sympy.core.operations import AssocOp
     assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection)
-    return any(issubclass(op, op) for op in assoc_ops)
+    return any(issubclass(op, aop) for aop in assoc_ops)
 
 def sympy_commutative(op):
     from sympy import Add, MatAdd, Union
     comm_ops = (Add, MatAdd, Union)
-    return any(issubclass(op, op) for op in comm_ops)
+    return any(issubclass(op, cop) for cop in comm_ops)
 
 def is_associative(x):
     return isinstance(x, Compound) and sympy_associative(x.op)

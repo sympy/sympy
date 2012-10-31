@@ -1,7 +1,7 @@
 from sympy import Add, Basic, Wild
-from sympy.unify.unify import Compound
+from sympy.unify.unify import Compound, Variable
 from sympy.unify.unify_sympy import (destruct, construct, unify, is_associative,
-        is_commutative, iswild, wildify)
+        is_commutative, iswild, wildify, wildtoken, patternify)
 from sympy.abc import w, x, y, z
 
 def test_destruct():
@@ -24,6 +24,13 @@ def test_unify():
     expr = Basic(1, 2, 3)
     a, b, c = map(Wild, 'abc')
     pattern = Basic(a, b, c)
+    assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
+
+def test_unify_commutative():
+    expr = Add(1, 2, 3, evaluate=False)
+    a, b, c = map(Wild, 'abc')
+    pattern = Add(a, b, c, evaluate=False)
+
     assert setdicteq(unify(expr, pattern, {}), ({a: 1, b: 2, c: 3},
                                                 {a: 1, b: 3, c: 2},
                                                 {a: 2, b: 1, c: 3},
@@ -70,6 +77,7 @@ def test_wildify():
     assert wildtoken(wildify(1)) is 1
 
 def test_patternify():
-    assert patternify(x + y, x) == Compound(Add, (Variable(x), y))
+    assert destruct(patternify(x + y, x)) in (Compound(Add, (Variable(x), y)),
+                                              Compound(Add, (y, Variable(x))))
     pattern = patternify(x**2 + y**2, x)
     assert list(unify(pattern, w**2 + y**2, {})) == [{x: w}]
