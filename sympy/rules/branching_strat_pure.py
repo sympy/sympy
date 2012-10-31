@@ -12,3 +12,16 @@ def exhaust(brule):
             yield expr
     return exhaust_brl
 
+def debug(brule, file=None):
+    """ Print out before and after expressions each time rule is used """
+    if file is None:
+        from sys import stdout
+        file = stdout
+    def debug_brl(expr):
+        for result in brule(expr):
+            if result != expr:
+                file.write("Rule: %s\n"%brule.func_name)
+                file.write("In: %s\nOut: %s\n\n"%(expr, result))
+            yield result
+    return debug_brl
+
