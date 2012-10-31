@@ -1,4 +1,4 @@
-from sympy.rules.branching_strat_pure import (exhaust, debug, multiplex,
+from sympy.rules.branch_strat_pure import (exhaust, debug, multiplex,
         condition, notempty)
 
 
