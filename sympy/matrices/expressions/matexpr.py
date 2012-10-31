@@ -263,7 +263,6 @@ class MatrixSymbol(MatrixExpr):
     2*A*B + I
     """
     is_commutative = False
-    is_Atom = True
 
     def __new__(cls, name, n, m):
         n, m = sympify(n), sympify(m)
@@ -303,6 +302,8 @@ class MatrixSymbol(MatrixExpr):
     def free_symbols(self):
         return set((self,))
 
+    def _eval_simplify(self, **kwargs):
+        return self
 
 class Identity(MatrixSymbol):
     """The Matrix Identity I - multiplicative identity
