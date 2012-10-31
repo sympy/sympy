@@ -1,5 +1,5 @@
 from sympy.rules.branching_strat_pure import (exhaust, debug, multiplex,
-        condition)
+        condition, notempty)
 
 
 def posdec(x):
@@ -17,6 +17,12 @@ def branch5(x):
         yield x+1
         yield x-1
     else:
+        yield x
+
+even = lambda x: x%2 == 0
+
+def ident_if_even(x):
+    if even(x):
         yield x
 
 def test_exhaust():
@@ -44,7 +50,11 @@ def test_multiplex():
     assert set(brl(5)) == {4, 6}
 
 def test_condition():
-    even = lambda x: x%2 == 0
     brl = condition(even, branch5)
     assert set(brl(4)) == set(branch5(4))
     assert set(brl(5)) == set([])
+
+def test_notempty():
+    brl = notempty(ident_if_even)
+    assert set(brl(4)) == {4}
+    assert set(brl(5)) == {5}
