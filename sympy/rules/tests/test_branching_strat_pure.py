@@ -1,4 +1,4 @@
-from sympy.rules.branching_strat_pure import (exhaust, debug)
+from sympy.rules.branching_strat_pure import (exhaust, debug, multiplex)
 
 
 def posdec(x):
@@ -35,3 +35,9 @@ def test_debug():
     assert posdec.func_name in log
     assert '5' in log
     assert '4' in log
+
+def test_multiplex():
+    brl = multiplex(posdec, branch5)
+    assert set(brl(3)) == {2}
+    assert set(brl(7)) == {6, 8}
+    assert set(brl(5)) == {4, 6}
