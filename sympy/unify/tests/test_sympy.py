@@ -24,7 +24,14 @@ def test_unify():
     expr = Basic(1, 2, 3)
     a, b, c = map(Wild, 'abc')
     pattern = Basic(a, b, c)
-    assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
+    print list(unify(expr, pattern, {}))
+    assert setdicteq(unify(expr, pattern, {}), ({a: 1, b: 2, c: 3},
+                                                {a: 1, b: 3, c: 2},
+                                                {a: 2, b: 1, c: 3},
+                                                {a: 2, b: 3, c: 1},
+                                                {a: 3, b: 1, c: 2},
+                                                {a: 3, b: 2, c: 1}))
+
 
 def setsetstr(a):
     return set(frozenset(str(item) for item in ael.items()) for ael in a)
