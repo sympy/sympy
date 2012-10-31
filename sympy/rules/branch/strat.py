@@ -1,5 +1,5 @@
-from branch_strat_pure import exhaust, multiplex
-from branch_traverse import top_down
+from strat_pure import exhaust, multiplex, debug, notempty, condition
+from traverse import top_down
 
 def canon(*rules):
     """ Strategy for canonicalization

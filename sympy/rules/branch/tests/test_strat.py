@@ -1,4 +1,4 @@
-from sympy.rules.branch_strat import canon
+from sympy.rules.branch.strat import canon
 from sympy import Basic
 
 

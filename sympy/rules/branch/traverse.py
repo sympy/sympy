@@ -1,6 +1,6 @@
 # Branching Strategies to traverse a Tree
-from util import new, is_leaf, children
-from branch_strat_pure import notempty
+from sympy.rules.util import new, is_leaf, children
+from strat_pure import notempty
 from itertools import product
 
 def top_down(brule):

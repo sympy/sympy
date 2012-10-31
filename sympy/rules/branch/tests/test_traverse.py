@@ -1,5 +1,5 @@
 from sympy import Basic, symbols, Symbol, S
-from sympy.rules.branch_traverse import top_down
+from sympy.rules.branch.traverse import top_down
 
 def inc(x):
     if isinstance(x, int):
