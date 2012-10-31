@@ -2,7 +2,7 @@ from sympy import Add, Basic, Wild
 from sympy.unify.unify import Compound, Variable
 from sympy.unify.unify_sympy import (destruct, construct, unify, is_associative,
         is_commutative, iswild, wildify, wildtoken, patternify)
-from sympy.abc import w, x, y, z
+from sympy.abc import w, x, y, z, n, m
 
 def test_destruct():
     expr     = Basic(1, 2, 3)
@@ -72,7 +72,6 @@ def test_hard_match():
     assert list(unify(expr, pattern, {})) == [{p: x}]
 
 def test_wildify():
-    print wildify(1)
     assert iswild(wildify(1))
     assert wildtoken(wildify(1)) is 1
 
@@ -81,3 +80,12 @@ def test_patternify():
                                               Compound(Add, (y, Variable(x))))
     pattern = patternify(x**2 + y**2, x)
     assert list(unify(pattern, w**2 + y**2, {})) == [{x: w}]
+
+def test_matrix():
+    from sympy import MatrixSymbol
+    X = MatrixSymbol('X', n, n)
+    Y = MatrixSymbol('Y', 2, 2)
+    Z = MatrixSymbol('Z', 2, 3)
+    p = patternify(X, 'X', n)
+    assert list(unify(p, Y, {})) == [{'X': 'Y', n: 2}]
+    assert list(unify(p, Z, {})) == []
