@@ -32,7 +32,6 @@ def test_unify():
                                                 {a: 3, b: 1, c: 2},
                                                 {a: 3, b: 2, c: 1}))
 
-
 def setsetstr(a):
     return set(frozenset(str(item) for item in ael.items()) for ael in a)
 def setdicteq(a, b):
