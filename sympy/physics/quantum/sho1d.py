@@ -139,13 +139,6 @@ class Hamiltonian(SHOOp):
 	def _eval_commutator_NumberOp(self, other):
 		return Integer(0)
 	
-ap = RaisingOp('a')
-am = LoweringOp('a')
-H = Hamiltonian('H')
-N = NumberOp('N')
-w = Symbol('omega')
-m = Symbol('m')
-
 #--------------------------------------------------------------------
 
 class SHOState(State):
@@ -172,3 +165,12 @@ class SHOBra(SHOState, Bra):
 	def dual_class(self):
 		return SHOKet
 
+		
+ap = RaisingOp('a')
+am = LoweringOp('a')
+H = Hamiltonian('H')
+N = NumberOp('N')
+k = SHOKet('k')
+b = SHOBra('b')
+w = Symbol('omega')
+m = Symbol('m')
