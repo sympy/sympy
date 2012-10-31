@@ -31,6 +31,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
+from sympy.core.compatibility import reduce
 
 from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
 
@@ -242,7 +243,6 @@ class DifferentialExtension(object):
         self.reset(dummy=dummy)
         exp_new_extension, log_new_extension = True, True
         while True:
-            restart = False
             if self.newf.is_rational_function(*self.T):
                 break
 

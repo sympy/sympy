@@ -3,7 +3,7 @@ from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Boolean, Or
-from sympy.utilities.misc import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 
 class ExprCondPair(Tuple):

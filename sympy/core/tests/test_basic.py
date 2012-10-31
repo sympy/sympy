@@ -4,7 +4,7 @@ of Basic or Atom."""
 from sympy.core.basic import Basic, Atom, preorder_traversal
 from sympy.core.singleton import S, Singleton
 from sympy.core.symbol import symbols
-from sympy.utilities.misc import default_sort_key
+from sympy.core.compatibility import default_sort_key
 
 from sympy.utilities.pytest import raises
 

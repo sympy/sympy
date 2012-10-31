@@ -1,13 +1,14 @@
 import itertools
 
-from sympy import (Add, Mul, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq)
+from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
+    Matrix, S, cos, sin, Eq, Function, Tuple)
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
 
 w, x, y, z = symbols('w,x,y,z')
-x0, x1, x2 = list(itertools.islice(cse_main.numbered_symbols(), 0, 3))
+x0, x1, x2, x3, x4, x5, x6, x7, x8, x9, x10 = \
+    list(itertools.islice(cse_main.numbered_symbols(), 0, 11))
 negone = sympify(-1)
 
 
@@ -94,8 +95,8 @@ def test_subtraction_opt():
     e = (x - y)*(z - y) + exp((x - y)*(z - y))
     substs, reduced = cse(
         [e], optimizations=[(cse_opts.sub_pre, cse_opts.sub_post)])
-    assert substs == [(x0, x - y), (x1, y - z), (x2, x0*x1)]
-    assert reduced == [-x2 + exp(-x2)]
+    assert substs == [(x0, (x - y)*(y - z))]
+    assert reduced == [-x0 + exp(-x0)]
     assert cse(-(x - y)*(z - y) + exp(-(x - y)*(z - y))) == \
         ([(x0, (x - y)*(y - z))], [x0 + exp(x0)])
     # issue 978
@@ -167,7 +168,7 @@ def test_issue_3164():
 
 
 def test_dont_cse_tuples():
-    from sympy import Subs, Function
+    from sympy import Subs
     f = Function("f")
     g = Function("g")
 
@@ -211,7 +212,31 @@ def test_pow_invpow():
 
 def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
-    assert cse([eq, Eq(x, z + 1), z - 2],
-           postprocess=cse_main.cse_separate) == \
-        [[(x0, y + 1), (x, z + 1), (x1, x + 1)], [x1 + exp(x1/x0) +
-           cos(x0), z - 2]]
+    assert cse([eq, Eq(x, z + 1), z - 2, (z+1)*(x+1)],
+        postprocess=cse_main.cse_separate) == \
+        [[(x1, y + 1), (x2, z + 1), (x, x2), (x0, x + 1)],
+        [x0 + exp(x0/x1) + cos(x1), x2 - 3, x0*x2]]
+
+def test_issue1400():
+    # previously, this gave 16 constants
+    from sympy.abc import a, b
+    B = Function('B')
+    G = Function('G')
+    t = Tuple(*
+        (a, a + S(1)/2, 2*a, b, 2*a - b + 1, (sqrt(z)/2)**(-2*a + 1)*B(2*a -
+        b, sqrt(z))*B(b - 1, sqrt(z))*G(b)*G(2*a - b + 1),
+        sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b,
+        sqrt(z))*G(b)*G(2*a - b + 1), sqrt(z)*(sqrt(z)/2)**(-2*a + 1)*B(b - 1,
+        sqrt(z))*B(2*a - b + 1, sqrt(z))*G(b)*G(2*a - b + 1),
+        (sqrt(z)/2)**(-2*a + 1)*B(b, sqrt(z))*B(2*a - b + 1,
+        sqrt(z))*G(b)*G(2*a - b + 1), 1, 0, S(1)/2, z/2, -b + 1, -2*a + b,
+        -2*a))
+
+    c = cse(t)
+    ans = (
+        [(x0, b - 1), (x1, 2*a), (x2, sqrt(z)), (x3, -x0 + x1 - 1), (x4, x3 +
+        1), (x5, B(b, x2)), (x6, B(x0, x2)), (x7, B(x3, x2)), (x8, B(x4, x2)),
+        (x9, (x2/2)**(-x1 + 1)*G(b)*G(x4)), (x10, x2*x9)], [(a, a + S(1)/2,
+        x1, b, x4, x6*x7*x9, x10*x5*x7, x10*x6*x8, x5*x8*x9, 1, 0, S(1)/2,
+        z/2, -x0, -x3, -x1)])
+    assert ans == c

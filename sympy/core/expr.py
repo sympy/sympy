@@ -5,9 +5,8 @@ from singleton import S
 from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from compatibility import reduce, as_int
+from compatibility import reduce, as_int, default_sort_key
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
-from sympy.utilities.misc import default_sort_key
 
 from collections import defaultdict
 from math import log10, ceil
@@ -892,7 +891,7 @@ class Expr(Basic, EvalfMixin):
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
-        from sympy import count_ops
+        from function import count_ops
         return count_ops(self, visual)
 
     def args_cnc(self, cset=False, warn=True):

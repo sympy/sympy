@@ -7,12 +7,11 @@ from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
 from sympy.core.sympify import sympify, SympifyError
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, default_sort_key
 
 from sympy.polys import PurePoly, roots, cancel
 from sympy.simplify import simplify as _simplify, signsimp, nsimplify
 from sympy.utilities.iterables import flatten
-from sympy.utilities.misc import default_sort_key
 from sympy.functions.elementary.miscellaneous import sqrt, Max, Min
 from sympy.printing import sstr
 from sympy.core.compatibility import callable, reduce, as_int

@@ -4,7 +4,8 @@ from sympy.core.assumptions import ManagedProperties
 from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.core.compatibility import callable, reduce, cmp, iterable
+from sympy.core.compatibility import (callable, reduce, cmp, iterable,
+    lazyDSU_sort)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
@@ -1185,7 +1186,9 @@ class Basic(object):
             elif callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
-                raise TypeError("given a type, replace() expects another type or a callable")
+                raise TypeError(
+                    "given a type, replace() expects another "
+                    "type or a callable")
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
 
@@ -1195,7 +1198,9 @@ class Basic(object):
                 _value = lambda expr, result: value(**dict([ (
                     str(key)[:-1], val) for key, val in result.iteritems() ]))
             else:
-                raise TypeError("given an expression, replace() expects another expression or a callable")
+                raise TypeError(
+                    "given an expression, replace() expects "
+                    "another expression or a callable")
         elif callable(query):
             _query = query
 
@@ -1203,9 +1208,12 @@ class Basic(object):
                 _value = lambda expr, result: value(expr)
             else:
                 raise TypeError(
-                    "given a callable, replace() expects another callable")
+                    "given a callable, replace() expects "
+                    "another callable")
         else:
-            raise TypeError("first argument to replace() must be a type, an expression or a callable")
+            raise TypeError(
+                "first argument to replace() must be a "
+                "type, an expression or a callable")
 
         mapping = {}
 
@@ -1340,7 +1348,6 @@ class Basic(object):
         """wrapper for count_ops that returns the operation count."""
         from sympy import count_ops
         return count_ops(self, visual)
-        return sum(a.count_ops(visual) for a in self.args)
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -1565,14 +1572,20 @@ class preorder_traversal(object):
     >>> from sympy import symbols
     >>> from sympy import symbols, default_sort_key
     >>> from sympy.core.basic import preorder_traversal
+    >>> from sympy.utilities.iterables import small_first_keys
     >>> x, y, z = symbols('x y z')
 
     The nodes are returned in the order that they are encountered unless key
-    is given.
+    is given. The key can be a single-argument function that returns a key
+    for a given expression or a list of single argument functions which will
+    be applied as needed, in a lazy fashion to return the nodes in a desired
+    order.
 
     >>> list(preorder_traversal((x + y)*z, key=None)) # doctest: +SKIP
     [z*(x + y), z, x + y, y, x]
     >>> list(preorder_traversal((x + y)*z, key=default_sort_key))
+    [z*(x + y), z, x + y, x, y]
+    >>> list(preorder_traversal((x + y)*z, key=small_first_keys))
     [z*(x + y), z, x + y, x, y]
 
     """
@@ -1589,7 +1602,10 @@ class preorder_traversal(object):
             args = node.args
             if key:
                 args = list(args)
-                args.sort(key=key)
+                if isinstance(key, (list, tuple)):
+                    args = lazyDSU_sort(args, key)
+                else:
+                    args.sort(key=key)
             for arg in args:
                 for subtree in self._preorder_traversal(arg, key):
                     yield subtree
