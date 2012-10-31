@@ -854,17 +854,17 @@ def bool_equal(function1, function2, deep = False):
     if deep:
         variables1 = list(function1.free_symbols)
         variables2 = list(function2.free_symbols)
-        if len(variables1) != len(variables2):
-            return False
+        if (len(variables1) > 26 or len(variables2) > 26):
+            raise NotImplementedError("Maximum of 26 variables supported.")
         minterms1 = []
         minterms2 = []
         t = [0] * len(variables1)
         for x in range(2 ** len(variables1)):
             b = [int(y) for y in bin(x)[2:]]
             t[-len(b):] = b
-            if function1.subs(zip(variables1, [bool(i) for i in t])) != True:
+            if function1.subs(zip(variables1, [bool(i) for i in t])) == True:
                 minterms1.append(t[:])
-            if function2.subs(zip(variables2, [bool(i) for i in t])) != True:
+            if function2.subs(zip(variables2, [bool(i) for i in t])) == True:
                 minterms2.append(t[:])
         alphabet = map(chr, range(97, 123))
         l2 = [1]
