@@ -23,7 +23,7 @@ class SHOOp(Operator):
 class RaisingOp(SHOOp):
 
 	def _eval_rewrite_as_xp(self, *args):
-		return (Integer(1)/sqrt(Integer(2)*hbar*m*w))*(Integer(-1)*I*Px + m*w*X)
+		return (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(Integer(-1)*I*Px + m*omega*X)
 
 	def _eval_adjoint(self):
 		return LoweringOp(*self.args)
@@ -77,7 +77,7 @@ class RaisingOp(SHOOp):
 class LoweringOp(SHOOp):
 
 	def _eval_rewrite_as_xp(self, *args):
-		return (Integer(1)/sqrt(Integer(2)*hbar*m*w))*(I*Px + m*w*X)
+		return (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(I*Px + m*omega*X)
 	
 	def _eval_adjoint(self):
 		return RaisingOp(*self.args)
@@ -99,12 +99,11 @@ class LoweringOp(SHOOp):
 class NumberOp(SHOOp):
 	
 	def _eval_rewrite_as_a(self, *args):
-		return ap*am
+		return ad*a
 	
 	def _eval_rewrite_as_H(self, *args):
-		return H/(hbar*w) - Integer(1)/Integer(2)
+		return H/(hbar*omega) - Integer(1)/Integer(2)
 	
-	@classmethod
 	def _apply_operator_SHOKet(self, ket):
 		return ket.n*ket
 		
@@ -121,20 +120,16 @@ class NumberOp(SHOOp):
 class Hamiltonian(SHOOp):
 
 	def _eval_rewrite_as_a(self, *args):
-		return hbar*w*(ap*am + Integer(1)/Integer(2))
+		return hbar*omega*(ad*a + Integer(1)/Integer(2))
 		
 	def _eval_rewrite_as_xp(self, *args):
-		return (Integer(1)/(Integer(2)*m))*(Px**2 + (m*w*X)**2)
+		return (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
 		
 	def _eval_rewrite_as_n(self, *args):
-		return hbar*w*(N + Integer(1)/Integer(2))
-		
-	def _eval_rewrite_as_am(self, *args):
-		return hbar*w*(am*ap - Integer(1)/Integer(2))
+		return hbar*omega*(N + Integer(1)/Integer(2))
 	
-	@classmethod
 	def _apply_operator_SHOKet(self, ket):
-		return (hbar*w*(ket.n + Integer(1)/Integer(2)))*ket
+		return (hbar*omega*(ket.n + Integer(1)/Integer(2)))*ket
 		
 	def _eval_commutator_NumberOp(self, other):
 		return Integer(0)
@@ -166,11 +161,9 @@ class SHOBra(SHOState, Bra):
 		return SHOKet
 
 		
-ap = RaisingOp('a')
-am = LoweringOp('a')
+ad = RaisingOp('a')
+a = LoweringOp('a')
 H = Hamiltonian('H')
 N = NumberOp('N')
-k = SHOKet('k')
-b = SHOBra('b')
-w = Symbol('omega')
+omega = Symbol('omega')
 m = Symbol('m')
