@@ -1,7 +1,8 @@
 from sympy import Add, Basic, Wild
 from sympy.unify.unify import Compound
 from sympy.unify.unify_sympy import (destruct, construct, unify, is_associative,
-        is_commutative)
+        is_commutative, iswild, wildify)
+from sympy.abc import w, x, y, z
 
 def test_destruct():
     expr     = Basic(1, 2, 3)
@@ -58,8 +59,17 @@ def test_unify_iter():
 
 def test_hard_match():
     from sympy import sin, cos
-    from sympy.abc import x
     expr = sin(x) + cos(x)**2
     p, q = map(Wild, 'pq')
     pattern = sin(p) + cos(p)**2
     assert list(unify(expr, pattern, {})) == [{p: x}]
+
+def test_wildify():
+    print wildify(1)
+    assert iswild(wildify(1))
+    assert wildtoken(wildify(1)) is 1
+
+def test_patternify():
+    assert patternify(x + y, x) == Compound(Add, (Variable(x), y))
+    pattern = patternify(x**2 + y**2, x)
+    assert list(unify(pattern, w**2 + y**2, {})) == [{x: w}]
