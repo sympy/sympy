@@ -136,7 +136,7 @@ def partition(it, part):
 
 
 def index(it, ind):
-    """ Fancy indexing into an iterable
+    """ Fancy indexing into an indexable iterable (tuple, list)
 
     >>> index([10, 20, 30], (1, 2, 0))
     [20, 30, 10]
