@@ -858,7 +858,7 @@ def bool_equal(function1, function2, deep=False):
             return False
         if len(function1.args) != len(function2.args):
             return False
-        values = [1.7471, 2.8393, 4.1263, 3.7693]
+        values = [1.7471, 2.8393, 0.41263, 0.37693]
         i = 1
         while i <= 2:
             if i == 1:
@@ -880,13 +880,13 @@ def bool_equal(function1, function2, deep=False):
                     mainkey = mainkey - values[1]
                     keys[term.args[0]] = keys[term.args[0]] - values[1]
                 else:
-                    tempkey = values[0] * values[3]
+                    tempkey = 10
                     for x in term.args:
                         if x.is_Symbol:
-                            tempkey = tempkey + values[2]
+                            tempkey = tempkey * values[2]
                             keys[x] = keys[x] + values[2]
                         if x.is_Not:
-                            tempkey = tempkey - values[3]
+                            tempkey = tempkey * (- values[3])
                             keys[x.args[0]] = keys[x.args[0]] - values[3]
                     mainkey = mainkey + tempkey
             if i == 1:
