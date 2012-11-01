@@ -61,20 +61,8 @@ def destruct(s):
     return Compound(s.__class__, tuple(map(destruct, s.args)))
 
 def rebuild(s):
-    """ Rebuild a SymPy expression using auto-evaluation """
-
-    return _build(destruct(s))
-
-def _build(t):
-    # This function is the same as construct but builds the op in an
-    # autoevaluated way. We do this only to get is_commutative. This function
-    # should not be used otherwise.
-    if isinstance(t, Variable):
-        return t.arg
-    if not isinstance(t, Compound):
-        return t
-    # This does auto-evaluation. Watch out!
-    return t.op(*map(_build, t.args))
+    """ Rebuild a SymPy expression """
+    return construct(destruct(s))
 
 def construct(t):
     """ Turn a Compound Tuple into a SymPy object """
