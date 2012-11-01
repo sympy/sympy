@@ -76,7 +76,7 @@ def construct(t):
         return t
     return Basic.__new__(t.op, *map(construct, t.args))
 
-def unify(x, y, s, **kwargs):
+def unify(x, y, s={}, **kwargs):
     """ Structural unification of two expressions possibly containing Wilds
 
     >>> from unify_sympy import unify

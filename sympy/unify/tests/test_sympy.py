@@ -25,6 +25,7 @@ def test_unify():
     a, b, c = map(Wild, 'abc')
     pattern = Basic(a, b, c)
     assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
+    assert list(unify(expr, pattern))     == [{a: 1, b: 2, c: 3}]
 
 def test_unify_commutative():
     expr = Add(1, 2, 3, evaluate=False)
