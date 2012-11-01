@@ -355,9 +355,9 @@ class Pow(Expr):
         # expansion but we have to watch out for things
         # that don't have an _eval_expand method
         if nc:
-            nc = [_._eval_expand_power_base(**hints)
-                if hasattr(_, '_eval_expand_power_base') else _
-                for _ in nc]
+            nc = [i._eval_expand_power_base(**hints)
+                if hasattr(i, '_eval_expand_power_base') else i
+                for i in nc]
 
             if e.is_Integer:
                 if e.is_positive:

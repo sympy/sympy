@@ -17,11 +17,6 @@ def fuzzy_bool(x):
     """
     if x is None:
         return None
-    # equality and is-testing are faster than bool
-    if x is True or x == 1:
-        return True
-    elif x is False or x == 0:
-        return False
     return bool(x)
 
 

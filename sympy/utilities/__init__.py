@@ -5,7 +5,7 @@ from iterables import (flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, dict_merge,
     postorder_traversal, interactive_traversal,
     prefixes, postfixes, sift, topological_sort, unflatten,
-    quick_sort, has_dups, has_variety, reshape, default_sort_key)
+    has_dups, has_variety, reshape, default_sort_key, ordered)
 
 from lambdify import lambdify
 from source import source

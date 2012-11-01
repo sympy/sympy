@@ -130,13 +130,13 @@ def test_issue_3022():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
     r, e = cse((eq).expand(complex=True))
     assert r == S('''[
-        (x0, re(x)), (x1, im(x)), (x2, atan2(x1, x0)/2), (x3, x0**2 + x1**2),
-        (x4, sin(x2)), (x5, cos(x2)), (x6, atan2(0, x3)/4), (x7, sin(x6)),
-        (x8, cos(x6)), (x9, x4*x7), (x10, x5*x7), (x11, x4*x8), (x12, x5*x8)
-        ]''')
+        (x0, re(x)), (x1, im(x)), (x2, sin(atan2(x1, x0)/2)),
+        (x3, cos(atan2(x1, x0)/2)), (x4, x0**2 + x1**2),
+        (x5, sin(atan2(0, x4)/4)), (x6, cos(atan2(0, x4)/4)),
+        (x7, x2*x5), (x8, x3*x5), (x9, x2*x6), (x10, x3*x6)]''')
     assert e == S('''[
-        sqrt(2)*(x10 + I*x10 + x11 + I*x11 - x12 + I*x12 + x9 -
-        I*x9)/(8*pi**(S(3)/2)*x3**(S(1)/4))]''')
+        sqrt(2)*(-x10 + I*x10 + x7 - I*x7 + x8 + I*x8 + x9 + I*x9)/
+        (8*pi**(3/2)*x4**(1/4))]''')
 
 
 def test_expand_power_base():

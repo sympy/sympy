@@ -31,7 +31,7 @@ from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
-from sympy.core.compatibility import reduce, lazyDSU_sort, small_first_keys
+from sympy.core.compatibility import reduce, ordered
 
 from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
 
@@ -40,9 +40,6 @@ from sympy.integrals import Integral, integrate
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
 
 from sympy.utilities.iterables import numbered_symbols
-from sympy.core.compatibility import reduce
-
-ordered = lambda _: lazyDSU_sort(_, small_first_keys)
 
 # TODO: Should this go in the regular namespace?
 # If so, index should default to False, I think.
