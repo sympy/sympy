@@ -793,39 +793,27 @@ class tan(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            cst_table = {
-                2: S.ComplexInfinity,
-                3: sqrt(3),
-                4: S.One,
-                6: 1 / sqrt(3),
-            }
-
-            try:
-                result = cst_table[pi_coeff.q]
-
-                if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 3):
-                    return -result
-                else:
-                    return result
-            except KeyError:
-                if pi_coeff.p > pi_coeff.q:
-                    p, q = pi_coeff.p % pi_coeff.q, pi_coeff.q
-                    if 2 * p > q:
-                        return -cls(C.Rational(q - p, q)*S.Pi)
-                    return cls(C.Rational(p, q)*S.Pi)
-                else:
-                    newarg = pi_coeff*S.Pi
-                    if newarg != arg:
-                        return cls(newarg)
-                    return None
+            if pi_coeff.is_Rational:
+                narg = ((pi_coeff + S.Half) % 1 - S.Half)*S.Pi
+                # see cos() to specify which expressions should  be
+                # expanded automatically in terms of radicals
+                cresult, sresult = cos(narg), cos(narg-S.Pi/2)
+                if not isinstance(cresult, cos) \
+                    and not isinstance(sresult, cos):
+                    if cresult == 0:
+                        return S.ComplexInfinity
+                    return (sresult/cresult)
+                if narg != arg:
+                    return cls(narg)
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
             if m:
-                if (m*2/S.Pi) % 2 == 0:
-                    return tan(x)
-                else:
+                tanm = tan(m)
+                tanx = tan(x)
+                if tanm is S.ComplexInfinity:
                     return -cot(x)
+                return (tanm + tanx)/(1 - tanm*tanx)
 
         if arg.func is atan:
             return arg.args[0]
@@ -890,7 +878,34 @@ class tan(TrigonometricFunction):
         denom = cos(re)**2 + C.sinh(im)**2
         return (sin(re)*cos(re)/denom, C.sinh(im)*C.cosh(im)/denom)
 
-    # TODO: Implement _eval_expand_trig
+    def _eval_expand_trig(self, **hints):
+        arg = self.args[0]
+        x = None
+        if arg.is_Add:
+            from sympy import symmetric_poly
+            n = len(arg.args)
+            TX = []
+            for x in arg.args:
+                tx = tan(x, evaluate=False)._eval_expand_trig()
+                TX.append(tx)
+
+            Yg = numbered_symbols('Y')
+            Y = [ Yg.next() for i in xrange(n) ]
+
+            p = [0,0]
+            for i in xrange(n+1):
+                p[1-i%2] += symmetric_poly(i,Y)*(-1)**((i%4)//2)
+            return (p[0]/p[1]).subs(zip(Y,TX))
+
+        else:
+            coeff, terms = arg.as_coeff_Mul(rational=True)
+            if coeff.is_Integer and coeff > 1:
+                I = S.ImaginaryUnit
+                z = C.Symbol('dummy',real=True)
+                P = ((1+I*z)**coeff).expand()
+                return (C.im(P)/C.re(P)).subs([(z,tan(terms))])
+        return tan(arg)
+
 
     def _eval_rewrite_as_exp(self, arg):
         exp, I = C.exp, S.ImaginaryUnit
@@ -910,6 +925,18 @@ class tan(TrigonometricFunction):
 
     def _eval_rewrite_as_cot(self, arg):
         return 1/cot(arg)
+
+    def _eval_rewrite_as_pow(self, arg):
+        y = self.rewrite(cos).rewrite(pow)
+        if y.has(cos):
+            return None
+        return y
+
+    def _eval_rewrite_as_sqrt(self, arg):
+        y = self.rewrite(cos).rewrite(sqrt)
+        if y.has(cos):
+            return None
+        return y
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -978,39 +1005,31 @@ class cot(TrigonometricFunction):
                     return cls(narg)
                 return None
 
-            cst_table = {
-                2: S.Zero,
-                3: 1 / sqrt(3),
-                4: S.One,
-                6: sqrt(3)
-            }
-
-            try:
-                result = cst_table[pi_coeff.q]
-
-                if (2*pi_coeff.p // pi_coeff.q) % 4 in (1, 3):
-                    return -result
-                else:
-                    return result
-            except KeyError:
-                if pi_coeff.p > pi_coeff.q:
-                    p, q = pi_coeff.p % pi_coeff.q, pi_coeff.q
-                    if 2 * p > q:
-                        return -cls(C.Rational(q - p, q)*S.Pi)
-                    return cls(C.Rational(p, q)*S.Pi)
-                else:
-                    newarg = pi_coeff*S.Pi
-                    if newarg != arg:
-                        return cls(newarg)
-                    return None
+            if pi_coeff.is_Rational:
+                narg = (((pi_coeff + S.Half) % 1) - S.Half)*S.Pi
+                # see cos() to specify which expressions should be
+                # expanded automatically in terms of radicals
+                cresult, sresult = cos(narg), cos(narg-S.Pi/2)
+                if not isinstance(cresult, cos) \
+                    and not isinstance(sresult, cos):
+                    if sresult == 0:
+                        return S.ComplexInfinity
+                    return cresult / sresult
+                if narg != arg:
+                    return cls(narg)
 
         if arg.is_Add:
             x, m = _peeloff_pi(arg)
             if m:
-                if (m*2/S.Pi) % 2 == 0:
-                    return cot(x)
-                else:
+                cotm = cot(m)
+                if cotm == 0:
                     return -tan(x)
+                cotx = cot(x)
+                if cotm is S.ComplexInfinity:
+                    return cotx
+                if cotm.is_Rational:
+                    return (cotm*cotx - 1) / (cotm + cotx)
+            return None
 
         if arg.func is acot:
             return arg.args[0]
@@ -1095,6 +1114,18 @@ class cot(TrigonometricFunction):
     def _eval_rewrite_as_tan(self, arg):
         return 1/tan(arg)
 
+    def _eval_rewrite_as_pow(self, arg):
+        y = self.rewrite(cos).rewrite(pow)
+        if y.has(cos):
+            return None
+        return y
+
+    def _eval_rewrite_as_sqrt(self, arg):
+        y = self.rewrite(cos).rewrite(sqrt)
+        if y.has(cos):
+            return None
+        return y
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -1105,6 +1136,33 @@ class cot(TrigonometricFunction):
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+    def _eval_expand_trig(self, **hints):
+        arg = self.args[0]
+        x = None
+        if arg.is_Add:
+            from sympy import symmetric_poly
+            n = len(arg.args)
+            CX = []
+            for x in arg.args:
+                cx = cot(x, evaluate=False)._eval_expand_trig()
+                CX.append(cx)
+
+            Yg = numbered_symbols('Y')
+            Y = [ Yg.next() for i in xrange(n) ]
+
+            p = [0,0]
+            for i in xrange(n,-1,-1):
+                p[(n-i)%2] += symmetric_poly(i,Y)*(-1)**(((n-i)%4)//2)
+            return (p[0]/p[1]).subs(zip(Y,CX))
+        else:
+            coeff, terms = arg.as_coeff_Mul(rational=True)
+            if coeff.is_Integer and coeff > 1:
+                I = S.ImaginaryUnit
+                z = C.Symbol('dummy',real=True)
+                P = ((z+I)**coeff).expand()
+                return (C.re(P)/C.im(P)).subs([(z,cot(terms))])
+        return cot(arg)
 
     def _sage_(self):
         import sage.all as sage
