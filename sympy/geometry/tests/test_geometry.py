@@ -251,8 +251,8 @@ def test_line():
     assert Ray((1, 1), angle=4.0*pi) == Ray((1, 1), (2, 1))
     assert Ray((1, 1), angle=0) == Ray((1, 1), (2, 1))
     # XXX don't know why this fails without str
-    assert str(Ray((1, 1), angle=4.2*pi)) == str(Ray(Point(1, 1),
-               Point(2, 1 + C.tan(0.2*pi))))
+    assert str(Ray((1, 1), angle=4.05*pi)) == str(Ray(Point(1, 1),
+               Point(2, 1 + C.tan(0.05*pi))))
     assert Ray((1, 1), angle=5) == Ray((1, 1), (2, 1 + C.tan(5)))
     raises(ValueError, lambda: Ray((1, 1), 1))
 
@@ -992,12 +992,12 @@ def test_transform():
 def test_line_intersection():
     assert asa(120, 8, 52) == \
         Triangle(
-            Point(0, 0),
-            Point(8, 0),
-            Point(
-                8*tan(32*pi/45)/(tan(32*pi/45) + sqrt(3)),
-                (24*tan(32*pi/45) - 8*sqrt(3)*tan(32*pi/45)**2)/
-                (-3 + tan(32*pi/45)**2)))
+             Point(0, 0),
+             Point(8, 0),
+             Point((8*tan(13*pi/45)**2 + 8*sqrt(3)*tan(13*pi/45))/
+                (-3 + tan(13*pi/45)**2),
+                (-24*tan(13*pi/45) - 8*sqrt(3)*tan(13*pi/45)**2)/
+                (-3 + tan(13*pi/45)**2)))
     assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == \
         [Point(1, 1)]
     assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == \
