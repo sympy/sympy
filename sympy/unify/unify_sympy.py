@@ -104,4 +104,4 @@ def unify(x, y, s={}, **kwargs):
                                               is_commutative=is_commutative,
                                               **kwargs)
     for d in ds:
-        yield {construct(k): construct(v) for k, v in d.items()}
+        yield dict((construct(k), construct(v)) for k, v in d.items())
