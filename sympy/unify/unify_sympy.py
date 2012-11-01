@@ -1,4 +1,4 @@
-from sympy import Basic, Wild, Expr
+from sympy import Basic, Wild, Expr, Tuple
 from unify import Compound, Variable, _unify
 from unify import *
 
@@ -39,9 +39,16 @@ def outermost(*wilds):
 
 def patternify(expr, *wilds):
     from sympy.rules.tools import subs
-    # Prefer outermost wilds
-    repldict = {w: wildify(w) for w in outermost(*wilds)}
-    return subs(repldict)(expr)
+    keys = wilds
+    values = map(wildify, wilds)
+
+    while keys:
+        k, keys = keys[0], keys[1:]
+        v, values = values[0], values[1:]
+        rl = subs({k: v})
+        expr = rl(expr)
+        keys = map(rl, keys)
+    return expr
 
 def destruct(s):
     """ Turn a SymPy object into a Compound Tuple """

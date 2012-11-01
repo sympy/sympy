@@ -2,7 +2,7 @@ from sympy import Add, Basic, Wild
 from sympy.unify.unify import Compound, Variable
 from sympy.unify.unify_sympy import (destruct, construct, unify, is_associative,
         is_commutative, iswild, wildify, wildtoken, patternify, outermost)
-from sympy.abc import w, x, y, z, n, m
+from sympy.abc import w, x, y, z, n, m, k
 
 def test_destruct():
     expr     = Basic(1, 2, 3)
@@ -91,8 +91,10 @@ def test_matrix():
     assert list(unify(p, Y, {})) == [{'X': 'Y', n: 2}]
     assert list(unify(p, Z, {})) == []
 
-def test_outermost():
-    assert set(outermost(x)) == {x}
-    assert set(outermost(x, y)) == {x, y}
-    assert set(outermost(x, y, 2*x)) == {2*x, y}
-    assert set(outermost(x, y, 2*x + y)) == {2*x + y}
+def test_wilds_in_wilds():
+    from sympy import MatrixSymbol, MatMul
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', m, k)
+    pattern = patternify(A*B, 'A', n, m, B) # note that m is in B as well
+    assert destruct(pattern) == Compound(MatMul, (Compound(MatrixSymbol,
+        (Variable('A'), Variable(n), Variable(m))), Variable(B)))
