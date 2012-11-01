@@ -1,4 +1,4 @@
-from sympy import Basic, Wild, Expr, Tuple
+from sympy import Basic, Wild, Expr, Tuple, Add, Mul, Pow
 from unify import Compound, Variable, _unify
 from unify import *
 
@@ -62,6 +62,7 @@ def destruct(s):
 
 def rebuild(s):
     """ Rebuild a SymPy expression using auto-evaluation """
+
     return _build(destruct(s))
 
 def _build(t):
@@ -81,7 +82,10 @@ def construct(t):
         return t.arg
     if not isinstance(t, Compound):
         return t
-    return Basic.__new__(t.op, *map(construct, t.args))
+    if t.op in (Add, Mul, Pow):
+        return t.op(*map(construct, t.args), evaluate=False)
+    else:
+        return Basic.__new__(t.op, *map(construct, t.args))
 
 def unify(x, y, s={}, **kwargs):
     """ Structural unification of two expressions possibly containing Wilds

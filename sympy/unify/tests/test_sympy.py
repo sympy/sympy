@@ -98,3 +98,10 @@ def test_wilds_in_wilds():
     pattern = patternify(A*B, 'A', n, m, B) # note that m is in B as well
     assert destruct(pattern) == Compound(MatMul, (Compound(MatrixSymbol,
         (Variable('A'), Variable(n), Variable(m))), Variable(B)))
+
+def test_non_frankenAdds():
+    # the is_commutative property used to fail because of Basic.__new__
+    expr = x+y*2
+    rebuilt = construct(destruct(expr))
+    str(rebuilt)
+    rebuilt.is_commutative
