@@ -847,63 +847,66 @@ def bool_equal(function1, function2, deep=False):
     >>> function1 = SOPform(['x','z','y'],[[1,0,1]])
     >>> function2 = SOPform(['a','b','c'],[[1,0,1]])
     >>> bool_equal(function1, function2, deep = True)
-    {x: a, y: c, z: b}
+    {x: c, y: a, z: b}
 
     """
     if deep:
         from sympy.core import Symbol
         function1 = simplify_logic(function1)
         function2 = simplify_logic(function2)
-        funcs1 = [function1]
-        funcs2 = [function2]
-        mapping = {}
-        while len(funcs1) != 0 and len(funcs2) != 0:
-            temp1 = []
-            temp2 = []
-            if len(funcs1) != len(funcs2):
-                return False
-            for i, f1 in enumerate(funcs1):
-                if f1.__class__ == Symbol:
-                    if f1 in mapping:
-                        if funcs2[i] != mapping[f1]:
-                            return False
-                    else:
-                        mapping[f1] = funcs2[i]
-                elif f1.__class__ == Not:
-                    if f1.args[0] in mapping:
-                        if funcs2[i].args[0] != mapping[f1.args[0]]:
-                            return False
-                    else:
-                        mapping[f1.args[0]] = funcs2[i].args[0]
+        if function1.__class__ != function2.__class__:
+            return False
+        if len(function1.args) != len(function2.args):
+            return False
+        values = [1.7471, 2.8393, 4.1263, 3.7693]
+        i = 1
+        while i <= 2:
+            if i == 1:
+                function = function1
+                keys = {}
+                for x in function1.free_symbols:
+                    keys[x] = 0
+            else:
+                function = function2
+                keys = {}
+                for x in function2.free_symbols:
+                    keys[x] = 0
+            mainkey = 0
+            for term in function.args:
+                if term.is_Symbol:
+                    mainkey = mainkey + values[0]
+                    keys[term] = keys[term] + values[0]
+                elif term.is_Not:
+                    mainkey = mainkey - values[1]
+                    keys[term.args[0]] = keys[term.args[0]] - values[1]
                 else:
-                    args1 = []
-                    args2 = []
-                    count = 0
-                    for x in f1.args:
-                        if x.__class__ == Symbol:
-                            args1.insert(0, x)
-                            count += 1
-                        elif x.__class__ == Not:
-                            args1.insert(count, x)
-                        else:
-                            args1.insert(-1, x)
-                    count = 0
-                    for y in funcs2[i].args:
-                        if y.__class__ == Symbol:
-                            args2.insert(0, y)
-                            count += 1
-                        elif y.__class__ == Not:
-                            args2.insert(count, y)
-                        else:
-                            args2.insert(-1, y)
-                    if len(args1) != len(args2):
-                        return False
-                    else:
-                        for j, fa1 in enumerate(args1):
-                            temp1.append(fa1)
-                            temp2.append(args2[j])
-            funcs1 = temp1[:]
-            funcs2 = temp2[:]
+                    tempkey = values[0] * values[3]
+                    for x in term.args:
+                        if x.is_Symbol:
+                            tempkey = tempkey + values[2]
+                            keys[x] = keys[x] + values[2]
+                        if x.is_Not:
+                            tempkey = tempkey - values[3]
+                            keys[x.args[0]] = keys[x.args[0]] - values[3]
+                    mainkey = mainkey + tempkey
+            if i == 1:
+                keys1 = keys.copy()
+                mainkey1 = mainkey
+            else:
+                keys2 = keys.copy()
+                mainkey2 = mainkey
+            i += 1
+        l_keys1 = [keys1[x] for x in keys1]
+        l_keys2 = [keys2[x] for x in keys2]
+        if mainkey1 != mainkey2 or l_keys1.sort() != l_keys2.sort():
+            return False
+        mapping = {}
+        for x in keys1:
+            for y in keys2:
+                if keys2[y] == keys1[x]:
+                    mapping[x] = y
+                    del keys2[y]
+                    break
         return mapping
     else:
         variables1 = list(function1.free_symbols)
