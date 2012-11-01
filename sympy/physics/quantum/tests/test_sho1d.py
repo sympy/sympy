@@ -1,15 +1,21 @@
 """Tests for sho1d.py"""
 
-from sympy import *
-from sympy.physics.quantum import *
-from sympy.physics.quantum.qexpr import *
-from sympy.physics.quantum.cartesian import *
+from sympy import Integer, Symbol, sqrt, I
+from sympy.physics.quantum.constants import hbar
+from sympy.physics.quantum import Commutator, adjoint
+from sympy.physics.quantum.qapply import qapply
+from sympy.physics.quantum.innerproduct import InnerProduct
+from sympy.physics.quantum.cartesian import X, Px
+from sympy.physics.quantum.special.tensor_functions import KroneckerDelta
 
-from sympy.physics.quantum.sho1d import *
+from sympy.physics.quantum.sho1d import (RaisingOp, LoweringOp,
+										SHOKet, SHOBra, 
+										Hamiltonian, NumberOp)
 
 ad = RaisingOp('a')
 a = LoweringOp('a')
 k = SHOKet('k')
+kz = SHOKet('0')
 b = SHOBra('b')
 H = Hamiltonian('H')
 N = NumberOp('N')
@@ -29,6 +35,7 @@ def test_a():
 	assert Commutator(a, ad).doit() == Integer(1)
 	assert Commutator(a, N).doit() == a
 	assert qapply(a*k) == (sqrt(k.n)*SHOKet(k.n-Integer(1))).expand()
+	assert qapply(a*kz) == Integer(0)
 	assert a().rewrite('xp').doit() == \
 		(Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(I*Px + m*omega*X)
 		
