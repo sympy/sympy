@@ -1599,6 +1599,12 @@ def solve_linear_system(system, *symbols, **flags):
     >>> solve_linear_system(system, x, y)
     {x: -6, y: 2}
 
+    A degenerate system returns an empty dictionary.
+
+    >>> system = Matrix(( (0,0,0), (0,0,0) ))
+    >>> solve_linear_system(system, x, y)
+    {}
+
     """
     matrix = system[:, :]
     syms = list(symbols)
@@ -1663,7 +1669,9 @@ def solve_linear_system(system, *symbols, **flags):
                 # so now we can safely skip it
                 matrix.row_del(i)
                 if not matrix:
-                    return None
+                    # every choice of variable values is a solution
+                    # so we return an empty dict instead of None
+                    return dict()
                 continue
 
             # we want to change the order of colums so
