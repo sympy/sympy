@@ -640,8 +640,10 @@ class PrettyPrinter(Printer):
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
+        from sympy import Add, MatAdd, HadamardProduct
         for i, a in enumerate(args):
-            if (a.is_Add or a.is_Matrix and a.is_MatAdd) and len(expr.args) > 1:
+            if (isinstance(a, (Add, MatAdd, HadamardProduct))
+                    and len(expr.args) > 1):
                 args[i] = prettyForm(*self._print(a).parens())
             else:
                 args[i] = self._print(a)
@@ -652,11 +654,13 @@ class PrettyPrinter(Printer):
         return self._print_seq(expr.args, None, None, ' + ')
 
     def _print_HadamardProduct(self, expr):
+        from sympy import MatAdd, MatMul
         if self._use_unicode:
             delim = pretty_atom('Ring')
         else:
             delim = '.*'
-        return self._print_seq(expr.args, None, None, delim)
+        return self._print_seq(expr.args, None, None, delim,
+                parenthesize=lambda x: isinstance(x, (MatAdd, MatMul)))
 
     _print_MatrixSymbol = _print_Symbol
 
