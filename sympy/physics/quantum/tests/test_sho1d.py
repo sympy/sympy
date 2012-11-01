@@ -36,7 +36,6 @@ def test_a():
 	assert Commutator(a, ad).doit() == Integer(1)
 	assert Commutator(a, N).doit() == a
 	assert qapply(a*k) == (sqrt(k.n)*SHOKet(k.n-Integer(1))).expand()
-	assert qapply(a*kz) == Integer(0)
 	assert a().rewrite('xp').doit() == \
 		(Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(I*Px + m*omega*X)
 		
