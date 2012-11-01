@@ -1031,17 +1031,17 @@ class LatexPrinter(Printer):
         return tex
 
     def _print_MatMul(self, expr):
-        from sympy import Add, MatAdd
+        from sympy import Add, MatAdd, HadamardProduct
         def parens(x):
-            if isinstance(x, (Add, MatAdd)):
+            if isinstance(x, (Add, MatAdd, HadamardProduct)):
                 return r"\left(%s\right)"%self._print(x)
             return self._print(x)
         return ' '.join(map(parens, expr.args))
 
     def _print_HadamardProduct(self, expr):
-        from sympy import Add, MatAdd
+        from sympy import Add, MatAdd, MatMul
         def parens(x):
-            if isinstance(x, (Add, MatAdd)):
+            if isinstance(x, (Add, MatAdd, MatMul)):
                 return r"\left(%s\right)"%self._print(x)
             return self._print(x)
         return ' \circ '.join(map(parens, expr.args))
