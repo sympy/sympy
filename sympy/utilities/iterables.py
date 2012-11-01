@@ -117,6 +117,10 @@ def reshape(seq, how):
 
     >>> reshape(tuple(seq), ([1], 1, (2,)))
     (([1], 2, (3, 4)), ([5], 6, (7, 8)))
+
+    >>> reshape(range(12), [2, [3], set([2]), (1, (3,), 1)])
+    [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+
     """
     m = sum(flatten(how))
     n, rem = divmod(len(seq), m)
@@ -134,8 +138,8 @@ def reshape(seq, how):
                 i += hi
             else:
                 n = sum(flatten(hi))
-                fg = type(hi)
-                rv[k].append(fg(reshape(seq[i: i + n], hi))[0])
+                hi_type = type(hi)
+                rv[k].append(hi_type(reshape(seq[i: i + n], hi)[0]))
                 i += n
         rv[k] = container(rv[k])
     return type(seq)(rv)
