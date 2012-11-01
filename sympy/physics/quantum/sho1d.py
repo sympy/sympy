@@ -6,7 +6,7 @@ from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import Bra, Ket, State
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.cartesian import X, Px
-from sympy.physics.quantum.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 
 #--------------------------------------------------------------------
 
