@@ -535,30 +535,6 @@ def eliminate_implications(expr):
         return expr.func(*args)
 
 
-@deprecated(useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
-def compile_rule(s):
-    """
-    Transforms a rule into a sympy expression
-    A rule is a string of the form "symbol1 & symbol2 | ..."
-    See sympy.assumptions.known_facts for examples of rules
-
-    TODO: can this be replaced by sympify ?
-
-    Examples
-    ========
-
-    >>> from sympy.logic.boolalg import compile_rule
-    >>> compile_rule('A & B')
-    And(A, B)
-    >>> compile_rule('(~B & ~C)|A')
-    Or(A, And(Not(B), Not(C)))
-    """
-    import re
-    from sympy.core import Symbol
-    return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s),
-        {'Symbol': Symbol})
-
-
 def to_int_repr(clauses, symbols):
     """
     Takes clauses in CNF format and puts them into an integer representation.
