@@ -425,7 +425,7 @@ except ImportError:  # Python 2.5
         if n < 0:
             return '-%s' % bin(-n)
         return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
-            ]).lstrip('0') or '0')
+                                  ]).lstrip('0') or '0')
 
 
 def as_int(n):
@@ -471,7 +471,7 @@ def default_sort_key(item, order=None):
     key.
 
     The ``order`` argument is passed along to the sort_key routine and is
-    used to determe how the terms *within* an expression are ordered.
+    used to determine how the terms *within* an expression are ordered.
     (See examples below) ``order`` options are: 'lex', 'grlex', 'grevlex',
     and reversed values of the same (e.g. 'rev-lex'). The default order
     value is None (which translates to 'lex').
@@ -610,39 +610,54 @@ def default_sort_key(item, order=None):
             ), args, S.One.sort_key(), S.One
 
 
-# define keys for use with lazyDSU_sort; define as tuples
-# so they can't be inadvertently changed
+def _nodes(e):
+    """
+    A helper for ordered() which returns the node count of ``e`` which
+    for Basic object is the number of Basic nodes in the expression tree
+    but for other object is 1 (unless the object is an iterable or dict
+    for which the sum of nodes is returned).
+    """
+    from basic import Basic
 
-small_first_keys = (lambda _: _.count_ops(), default_sort_key)
-big_first_keys = (lambda _: -(_.count_ops()), default_sort_key)
+    if isinstance(e, Basic):
+        return e.count(Basic)
+    elif iterable(e):
+        return 1 + sum(_nodes(ei) for ei in e)
+    elif isinstance(e, dict):
+        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.iteritems())
+    else:
+        return 1
 
 
-def lazyDSU_sort(seq, keys, warn=False):
-    """Return sorted seq, breaking ties by applying keys only when needed.
+def ordered(seq, keys=None, default=True, warn=False):
+    """Return an iterator of the seq where keys are used to break ties.
+    Two default keys will be applied after and provided unless ``default``
+    is False. The two keys are _nodes and default_sort_key which will
+    place smaller expressions before larger ones (in terms of Basic nodes)
+    and where there are ties, they will be broken by the default_sort_key.
 
     If ``warn`` is True then an error will be raised if there were no
-    keys remaining to break ties.
+    keys remaining to break ties. This can be used if it was expected that
+    there should be no ties.
 
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import lazyDSU_sort, default_sort_key
+    >>> from sympy.utilities.iterables import ordered, default_sort_key
+    >>> from sympy import count_ops
     >>> from sympy.abc import x, y
 
     The count_ops is not sufficient to break ties in this list and the first
-    two items appear in their original order: Python sorting is stable.
+    two items appear in their original order (i.e. the sorting is stable):
 
-    >>> lazyDSU_sort([y + 2, x + 2, x**2 + y + 3],
-    ...    [lambda x: x.count_ops()], warn=False)
+    >>> list(ordered([y + 2, x + 2, x**2 + y + 3],
+    ...    count_ops, default=False, warn=False))
     ...
     [y + 2, x + 2, x**2 + y + 3]
 
-    The use of default_sort_key allows the tie to be broken (and warn can
-    be safely left False).
+    The default_sort_key allows the tie to be broken:
 
-    >>> lazyDSU_sort([y + 2, x + 2, x**2 + y + 3],
-    ...    [lambda x: x.count_ops(),
-    ...     default_sort_key])
+    >>> list(ordered([y + 2, x + 2, x**2 + y + 3]))
     ...
     [x + 2, y + 2, x**2 + y + 3]
 
@@ -652,13 +667,13 @@ def lazyDSU_sort(seq, keys, warn=False):
     ...    lambda x: len(x),
     ...    lambda x: sum(x)]]
     ...
-    >>> lazyDSU_sort(seq, keys, warn=False)
+    >>> list(ordered(seq, keys, default=False, warn=False))
     [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
 
     If ``warn`` is True, an error will be raised if there were not
     enough keys to break ties:
 
-    >>> lazyDSU_sort(seq, keys, warn=True)
+    >>> list(ordered(seq, keys, default=False, warn=True))
     Traceback (most recent call last):
     ...
     ValueError: not enough keys to break ties
@@ -675,62 +690,52 @@ def lazyDSU_sort(seq, keys, warn=False):
     second key is expensive to compute then it is inefficient to decorate
     all items with both keys: only those items having identical first key
     values need to be decorated. This function applies keys successively
-    only when needed to break ties.
+    only when needed to break ties. By yielding an iterator, use of the
+    tie-breaker is delayed as long as possible.
+
+    This function is best used in cases when use of the first key is
+    expected to be a good hashing function; if there are no unique hashes
+    from application of a key then that key should not have been used. The
+    exception, however, is that even if there are many collisions, if the
+    first group is small and one does not need to process all items in the
+    list then time will not be wasted sorting what one was not interested
+    in. For example, if one were looking for the minimum in a list and
+    there were several criteria used to define the sort order, then this
+    function would be good at returning that quickly if the first group
+    of candidates is small relative to the number of items being processed.
+
     """
     d = defaultdict(list)
-    keys = list(keys)
-    f = keys.pop(0)
-    for a in seq:
-        d[f(a)].append(a)
-    seq = []
+    if keys:
+        if not isinstance(keys, (list, tuple)):
+            keys = [keys]
+        keys = list(keys)
+
+        f = keys.pop(0)
+        for a in seq:
+            d[f(a)].append(a)
+    else:
+        if not default:
+            raise ValueError('if default=False then keys must be provided')
+        d[None].extend(seq)
+
     for k in sorted(d.keys()):
         if len(d[k]) > 1:
             if keys:
-                d[k] = lazyDSU_sort(d[k], keys, warn)
+                d[k] = ordered(d[k], keys, default, warn)
+            elif default:
+                d[k] = ordered(d[k], (_nodes, default_sort_key,),
+                                default=False, warn=warn)
             elif warn:
                 raise ValueError('not enough keys to break ties')
-            seq.extend(d[k])
-        else:
-            seq.append(d[k][0])
-    return seq
+        for v in d[k]:
+            yield v
+        d.pop(k)
 
-
-def quick_sort(seq, quick=True):
-    """Sort by hash and break ties with default_sort_key (default)
-    or entirely by default_sort_key if ``quick`` is False.
-
-    When sorting for consistency between systems, ``quick`` should be
-    False; if sorting is just needed to give consistent orderings during
-    a given session ``quick`` can be True.
-
-    >>> from sympy.core.compatibility import quick_sort
-    >>> from sympy.abc import x
-
-    For PYTHONHASHSEED=3923375334 the x came first; for
-    PYTHONHASHSEED=158315900 the x came last (on a 32-bit system).
-
-    >>> quick_sort([x, 1, 3]) in [(1, 3, x), (x, 1, 3)]
-    True
-    """
-    from sympy.utilities.iterables import default_sort_key
-
-    if not quick:
-        seq = list(seq)
-        seq.sort(key=default_sort_key)
-    else:
-        d = defaultdict(list)
-        for a in seq:
-            d[hash(a)].append(a)
-        seq = []
-        for k in sorted(d.keys()):
-            if len(d[k]) > 1:
-                seq.extend(sorted(d[k], key=default_sort_key))
-            else:
-                seq.extend(d[k])
-    return tuple(seq)
 
 class _Link(object):
     __slots__ = 'right', 'left', 'key', '__weakref__'
+
 
 class oset(object):
     """

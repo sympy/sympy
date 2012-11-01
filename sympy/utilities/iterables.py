@@ -7,9 +7,9 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
-    as_int, big_first_keys, combinations, combinations_with_replacement,
-    default_sort_key, is_sequence, iterable, lazyDSU_sort, permutations,
-    product as cartes, quick_sort, small_first_keys
+    as_int, combinations, combinations_with_replacement,
+    default_sort_key, is_sequence, iterable, permutations,
+    product as cartes, ordered
 )
 
 
@@ -181,7 +181,7 @@ def group(container, multiple=True):
     return groups
 
 
-def postorder_traversal(node, key=None):
+def postorder_traversal(node, keys=None):
     """
     Do a postorder traversal of a tree.
 
@@ -193,48 +193,48 @@ def postorder_traversal(node, key=None):
     ==========
     node : sympy expression
         The expression to traverse.
-    key : (default None) sort key
-        The key used to sort args of Basic objects. When None, args of Basic
-        objects are processed in arbitrary order.
+    keys : (default None) sort key(s)
+        The key(s) used to sort args of Basic objects. When None, args of Basic
+        objects are processed in arbitrary order. If key is defined, it will
+        be passed along to ordered() as the only key(s) to use to sort the
+        arguments; if ``key`` is simply True then the default keys of
+        ``ordered`` will be used (node count and default_sort_key).
 
-    Returns
-    =======
+    Yields
+    ======
     subtree : sympy expression
         All of the subtrees in the tree.
 
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import (
-    ...    postorder_traversal, big_first_keys, default_sort_key)
+    >>> from sympy.utilities.iterables import postorder_traversal
     >>> from sympy.abc import w, x, y, z
 
     The nodes are returned in the order that they are encountered unless key
-    is given.
+    is given; simply passing key=True will guarantee that the traversal is
+    unique.
 
     >>> list(postorder_traversal(w + (x + y)*z)) # doctest: +SKIP
     [z, y, x, x + y, z*(x + y), w, w + z*(x + y)]
-    >>> list(postorder_traversal(w + (x + y)*z, key=default_sort_key))
+    >>> list(postorder_traversal(w + (x + y)*z, keys=True))
     [w, z, x, y, x + y, z*(x + y), w + z*(x + y)]
-    >>> list(postorder_traversal(w + (x + y)*z, key=big_first_keys))
-    [x, y, x + y, z, z*(x + y), w, w + z*(x + y)]
 
 
     """
     if isinstance(node, Basic):
         args = node.args
-        if key:
-            args = list(args)
-            if isinstance(key, (list, tuple)):
-                args = lazyDSU_sort(args, key)
+        if keys:
+            if keys != True:
+                args = ordered(args, keys, default=False)
             else:
-                args.sort(key=key)
+                args = ordered(args)
         for arg in args:
-            for subtree in postorder_traversal(arg, key):
+            for subtree in postorder_traversal(arg, keys):
                 yield subtree
     elif iterable(node):
         for item in node:
-            for subtree in postorder_traversal(item, key):
+            for subtree in postorder_traversal(item, keys):
                 yield subtree
     yield node
 
@@ -538,12 +538,12 @@ def sift(seq, keyfunc):
     {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
 
     If you need to sort the sifted items it might be better to use
-    the lazyDSU_sort which can economically apply multiple sort keys
+    ``ordered`` which can economically apply multiple sort keys
     to a squence while sorting.
 
     See Also
     ========
-    lazyDSU_sort
+    ordered
     """
     m = defaultdict(list)
     for i in seq:

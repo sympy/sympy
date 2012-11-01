@@ -683,7 +683,7 @@ def _mask_nc(eq):
     rep = []
     nc_obj = set()
     nc_syms = set()
-    pot = preorder_traversal(expr, key=default_sort_key)
+    pot = preorder_traversal(expr, keys=default_sort_key)
     for i, a in enumerate(pot):
         if any(a == r[0] for r in rep):
             pot.skip()
