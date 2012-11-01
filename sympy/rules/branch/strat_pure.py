@@ -13,8 +13,8 @@ def exhaust(brule):
     return exhaust_brl
 
 def debug(brule, file=None):
-    """ Print out before and after expressions each time rule is used """
-    if file is None:
+    """ Print the input and output expressions at each rule application """
+    if not file:
         from sys import stdout
         file = stdout
     def debug_brl(expr):
