@@ -2,7 +2,7 @@
 
 from sympy.rules.util import new, is_leaf, children
 from strat_pure import notempty
-from itertools import product
+from sympy.compatibility import product
 
 def top_down(brule):
     """ Apply a rule down a tree running it on the top nodes first """
