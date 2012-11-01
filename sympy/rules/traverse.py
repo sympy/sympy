@@ -1,4 +1,5 @@
-# Strategies to traverse a Tree
+""" Strategies to Traverse a Tree """
+
 from util import new, is_leaf, children
 
 def top_down(rule):

@@ -1,3 +1,4 @@
+""" Generic SymPy-Independent Strategies """
 
 def exhaust(brule):
     """ Apply a branching rule repeatedly until it has no effect """

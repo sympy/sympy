@@ -1,4 +1,5 @@
-# Branching Strategies to traverse a Tree
+""" Branching Strategies to Traverse a Tree """
+
 from sympy.rules.util import new, is_leaf, children
 from strat_pure import notempty
 from itertools import product

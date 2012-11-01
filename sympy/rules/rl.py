@@ -1,5 +1,7 @@
-# Generic rules for SymPy.
-# This file assumes knowledge of Basic and little else
+""" Generic Rules for SymPy
+
+This file assumes knowledge of Basic and little else.
+"""
 from sympy import Basic
 from sympy.utilities.iterables import sift
 from util import new
