@@ -21,10 +21,6 @@ def branch5(x):
 
 even = lambda x: x%2 == 0
 
-def ident_if_even(x):
-    if even(x):
-        yield x
-
 def test_exhaust():
     brl = exhaust(branch5)
     assert set(brl(3)) == {0}
@@ -55,6 +51,11 @@ def test_condition():
     assert set(brl(5)) == set([])
 
 def test_notempty():
+
+    def ident_if_even(x):
+        if even(x):
+            yield x
+
     brl = notempty(ident_if_even)
     assert set(brl(4)) == {4}
     assert set(brl(5)) == {5}
