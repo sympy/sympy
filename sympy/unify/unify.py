@@ -27,12 +27,6 @@ CondVariable = namedtuple('Variable', 'arg valid')
 from sys import stdout
 
 def _unify(x, y, s, **fns):
-    # file = fns.get('file', stdout)
-    # file.write('Unify: \n')
-    # file.write('    x: %s\n'%str(x))
-    # file.write('    y: %s\n'%str(y))
-    # file.write('    s: %s\n'%str(s))
-
     if x == y:
         yield s
     elif isinstance(x, (Variable, CondVariable)):
@@ -65,7 +59,6 @@ def _unify(x, y, s, **fns):
                     yield x
 
 def _unify_var(var, x, s, **fns):
-    # print 'UnVar: ', var, x, s
     if var in s:
         for x in _unify(s[var], x, s, **fns): yield x
     elif occur_check(var, x):
