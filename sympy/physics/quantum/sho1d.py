@@ -1,11 +1,12 @@
 """Simple Harmonic Oscillator 1-Dimension"""
 
-#%load_ext sympyprinting
-
-from sympy import *
-from sympy.physics.quantum import *
-from sympy.physics.quantum.qexpr import *
-from sympy.physics.quantum.cartesian import *
+from sympy import sqrt, I, Symbol, Integer
+from sympy.physics.quantum.constants import hbar
+from sympy.physics.quantum.operator import Operator
+from sympy.physics.quantum.state import Bra, Ket, State
+from sympy.physics.quantum.qexpr import QExpr
+from sympy.physics.quantum.cartesian import X, Px
+from sympy.physics.quantum.special.tensor_functions import KroneckerDelta
 
 #--------------------------------------------------------------------
 
