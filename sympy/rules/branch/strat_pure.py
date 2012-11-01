@@ -1,6 +1,6 @@
 
 def exhaust(brule):
-    """ Apply a rule repeatedly until it has no effect """
+    """ Apply a branching rule repeatedly until it has no effect """
     def exhaust_brl(expr):
         seen = set([expr])
         for nexpr in brule(expr):
@@ -37,7 +37,7 @@ def multiplex(*brules):
     return multiplex_brl
 
 def condition(cond, brule):
-    """ Only apply rule if condition is true """
+    """ Only apply branching rule if condition is true """
     def conditioned_brl(expr):
         if cond(expr):
             for x in brule(expr): yield x
