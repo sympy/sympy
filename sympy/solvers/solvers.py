@@ -1424,7 +1424,7 @@ def _solve_system(exprs, symbols, **flags):
 
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
-    r""" Return a tuple containing derived from f = lhs - rhs that is either:
+    r""" Return a tuple derived from f = lhs - rhs that is either:
 
         (numerator, denominator) of ``f``
             If this comes back as (0, 1) it means
