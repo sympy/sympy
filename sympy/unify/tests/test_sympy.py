@@ -1,7 +1,7 @@
 from sympy import Add, Basic, Wild
 from sympy.unify.unify import Compound, Variable
 from sympy.unify.unify_sympy import (destruct, construct, unify, is_associative,
-        is_commutative, iswild, wildify, wildtoken, patternify)
+        is_commutative, iswild, wildify, wildtoken, patternify, outermost)
 from sympy.abc import w, x, y, z, n, m
 
 def test_destruct():
@@ -89,3 +89,9 @@ def test_matrix():
     p = patternify(X, 'X', n)
     assert list(unify(p, Y, {})) == [{'X': 'Y', n: 2}]
     assert list(unify(p, Z, {})) == []
+
+def test_outermost():
+    assert set(outermost(x)) == {x}
+    assert set(outermost(x, y)) == {x, y}
+    assert set(outermost(x, y, 2*x)) == {2*x, y}
+    assert set(outermost(x, y, 2*x + y)) == {2*x + y}

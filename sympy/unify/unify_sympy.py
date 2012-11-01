@@ -32,9 +32,15 @@ def iswild(s):
 def wildtoken(s):
     return s[1]
 
+def outermost(*wilds):
+    return [wild for wild in wilds if not any(w.has(wild) for w in wilds
+                                            if isinstance(w, Basic)
+                                            and w != wild)]
+
 def patternify(expr, *wilds):
     from sympy.rules.tools import subs
-    repldict = {w: wildify(w) for w in wilds}
+    # Prefer outermost wilds
+    repldict = {w: wildify(w) for w in outermost(*wilds)}
     return subs(repldict)(expr)
 
 def destruct(s):
