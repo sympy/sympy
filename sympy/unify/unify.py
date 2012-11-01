@@ -125,7 +125,7 @@ def allcombinations(A, B, ordered):
             yield partition(A, part), tuple((b,) for b in B)
 
 def partition(it, part):
-    """ Partition an iterable into pieces defined by indices
+    """ Partition a tuple/list into pieces defined by indices
 
     >>> partition((10, 20, 30, 40), [[0, 1, 2], [3]])
     ((10, 20, 30), (40,))
