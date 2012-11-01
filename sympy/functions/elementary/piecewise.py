@@ -421,7 +421,7 @@ class Piecewise(Function):
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
             if isinstance(c, Equality):
-                c = bool(c) or c
+                c = (c.lhs - c.rhs).is_zero or c
             if isinstance(c, Equality):
                 from sympy import solve
                 try:
