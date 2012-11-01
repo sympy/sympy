@@ -91,7 +91,7 @@ class LoweringOp(SHOOp):
 
 	def _apply_operator_SHOKet(self, ket):
 		temp = ket.n - Integer(1)
-		if temp == Integer(0):
+		if ket.n == Integer(0):
 			return Integer(0)
 		else:
 			return sqrt(ket.n)*SHOKet(temp)
