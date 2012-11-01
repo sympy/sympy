@@ -1,5 +1,5 @@
 from sympy.utilities.pytest import raises
-from sympy import S, symbols, Symbol, Tuple, Mul, Lambda, simplify, sin, cos
+from sympy import S, symbols, Symbol, Tuple, Lambda, simplify, sin, cos
 from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
         MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
         ZeroMatrix, MatAdd, MatPow, ImmutableMatrix, Trace,
@@ -293,9 +293,7 @@ def test_MatMul():
 def test_MatPow():
     A = MatrixSymbol('A', n, n)
 
-    assert Inverse(A).is_Pow
     AA = MatPow(A, 2)
-    assert AA.is_Pow
     assert AA.exp == 2
     assert AA.base == A
     assert (A**n).exp == n
