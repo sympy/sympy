@@ -15,4 +15,3 @@ def top_down(brule):
                 for args in product(*map(top_down_rl, children(newexpr))):
                     yield new(type(newexpr), *args)
     return top_down_rl
-
