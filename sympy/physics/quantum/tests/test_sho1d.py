@@ -7,7 +7,7 @@ from sympy.physics.quantum import Commutator
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.cartesian import X, Px
-from sympy.physics.quantum.special.tensor_functions import KroneckerDelta
+from sympy.functions.special.tensor_functions import KroneckerDelta
 
 from sympy.physics.quantum.sho1d import (RaisingOp, LoweringOp,
 										SHOKet, SHOBra, 
