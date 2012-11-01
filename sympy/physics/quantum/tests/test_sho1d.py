@@ -1,8 +1,9 @@
 """Tests for sho1d.py"""
 
 from sympy import Integer, Symbol, sqrt, I
+from sympy.functions.elementary.complexes import adjoint
 from sympy.physics.quantum.constants import hbar
-from sympy.physics.quantum import Commutator, adjoint
+from sympy.physics.quantum import Commutator
 from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.cartesian import X, Px
