@@ -400,7 +400,7 @@ class Mul(AssocOp):
 
         # extract gcd of bases in num_rat
         # 2**(1/3)*6**(1/4) -> 2**(1/3+1/4)*3**(1/4)
-        pnew = {}
+        pnew = defaultdict(list)
         i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
@@ -431,12 +431,14 @@ class Mul(AssocOp):
                 if obj.is_Number:
                     coeff *= obj
                 else:
-                    if obj.is_Mul:  # sqrt(12) -> 2*sqrt(3)
-                        c, obj = obj.args  # expecting only 2 args
-                        coeff *= c
-                        assert obj.is_Pow
-                        bi, ei = obj.args
-                    pnew.setdefault(ei, []).append(bi)
+                    # changes like sqrt(12) -> 2*sqrt(3)
+                    for obj in Mul.make_args(obj):
+                        if obj.is_Number:
+                            coeff *= obj
+                        else:
+                            assert obj.is_Pow
+                            bi, ei = obj.args
+                            pnew[ei].append(bi)
 
             num_rat.extend(grow)
             i += 1
