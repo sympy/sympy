@@ -287,7 +287,7 @@ def test_tsolve():
     assert solve(3*x + log(4*x), x) == [LambertW(Rational(3, 4))/3]
     assert set(solve((2*x + 8)*(8 + exp(x)), x)) == set([S(-4), log(8) + pi*I])
     eq = 2*exp(3*x + 4) - 3
-    ans = solve(eq, x)
+    ans = solve(eq, x)  # this generated a failure in flatten
     assert len(ans) == 3 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
     assert solve(2*log(3*x + 4) - 3, x) == [(exp(Rational(3, 2)) - 4)/3]
     assert solve(exp(x) + 1, x) == [pi*I]
