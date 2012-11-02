@@ -1,4 +1,4 @@
-from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix
+from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace
 
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)
@@ -75,3 +75,6 @@ def test_diagonal():
                Q.diagonal(Z)) is True
     assert ask(Q.diagonal(ZeroMatrix(3, 3)))
     assert ask(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X))
+
+def test_non_atoms():
+    assert ask(Q.real(Trace(X)), Q.positive(Trace(X)))
