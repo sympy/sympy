@@ -30,9 +30,11 @@ def _unify(x, y, s, **fns):
     if x == y:
         yield s
     elif isinstance(x, (Variable, CondVariable)):
-        for x in _unify_var(x, y, s, **fns): yield x
+        for x in _unify_var(x, y, s, **fns):
+            yield x
     elif isinstance(y, (Variable, CondVariable)):
-        for x in _unify_var(y, x, s, **fns): yield x
+        for x in _unify_var(y, x, s, **fns):
+            yield x
     elif isinstance(x, Compound) and isinstance(y, Compound):
         is_commutative = fns.get('is_commutative', lambda x: False)
         is_associative = fns.get('is_associative', lambda x: False)
@@ -46,9 +48,11 @@ def _unify(x, y, s, **fns):
                 for aaargs, bbargs in combinations:
                     aa = [unpack(Compound(a.op, arg)) for arg in aaargs]
                     bb = [unpack(Compound(b.op, arg)) for arg in bbargs]
-                    for x in _unify(aa, bb, sop, **fns): yield x
+                    for x in _unify(aa, bb, sop, **fns):
+                        yield x
             elif len(x.args) == len(y.args):
-                for x in _unify(x.args, y.args, sop, **fns): yield x
+                for x in _unify(x.args, y.args, sop, **fns):
+                    yield x
 
     elif is_args(x) and is_args(y) and len(x) == len(y):
         if len(x) == 0:
@@ -60,7 +64,8 @@ def _unify(x, y, s, **fns):
 
 def _unify_var(var, x, s, **fns):
     if var in s:
-        for x in _unify(s[var], x, s, **fns): yield x
+        for x in _unify(s[var], x, s, **fns):
+            yield x
     elif occur_check(var, x):
         pass
     elif isinstance(var, CondVariable) and var.valid(x):
