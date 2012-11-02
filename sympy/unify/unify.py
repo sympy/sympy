@@ -50,7 +50,7 @@ def _unify(x, y, s, **fns):
             elif len(x.args) == len(y.args):
                 for x in _unify(x.args, y.args, sop, **fns): yield x
 
-    elif iterable(x) and iterable(y) and len(x) == len(y):
+    elif is_args(x) and is_args(y) and len(x) == len(y):
         if len(x) == 0:
             yield s
         else:
@@ -74,7 +74,7 @@ def occur_check(var, x):
         return True
     elif isinstance(x, Compound):
         return occur_check(var, x.args)
-    elif iterable(x):
+    elif is_args(x):
         if any(occur_check(var, xi) for xi in x): return True
     return False
 
@@ -84,7 +84,7 @@ def assoc(d, key, val):
     d[key] = val
     return d
 
-def iterable(x):
+def is_args(x):
     """ Is x a traditional iterable? """
     return type(x) in (tuple, list, set)
 
