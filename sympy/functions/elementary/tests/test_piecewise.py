@@ -51,11 +51,13 @@ def test_piecewise():
     assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 0) == 1
     assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 1) == 0
     assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, y) == 1
-    assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, -y) == Piecewise((1, Eq(y, 0)), (0, True))
+    assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, -y) == \
+        Piecewise((1, Eq(y, 0)), (0, True))
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, -z) == 0
     assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
         Piecewise((1, Eq(exp(z), cos(z))), (0, True))
+    assert Piecewise((1, Eq(x, y*(y + 1))), (0, True)).subs(x, y**2 + y) == 1
 
     # Test evalf
     assert p.evalf() == p

@@ -421,18 +421,23 @@ class Piecewise(Function):
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
             if isinstance(c, Equality):
-                c = (c.lhs - c.rhs).is_zero or c
-            if isinstance(c, Equality):
-                from sympy import solve
-                try:
-                    slns = solve(c, dict=True)
-                    if not slns:
-                        c = False
-                    elif len(slns) == 1:
-                        c = And(*[Equality(key, value)
-                                  for key, value in slns[0].iteritems()])
-                except NotImplementedError:
-                    pass
+                d = Dummy()
+                from sympy import checksol
+                if checksol(d, d, c.lhs - c.rhs, minimal=True):
+                    # the equality is trivially solved
+                    c = True
+                else:
+                    # try to solve the equality
+                    from sympy import solve
+                    try:
+                        slns = solve(c, dict=True)
+                        if not slns:
+                            c = False
+                        elif len(slns) == 1:
+                            c = And(*[Equality(key, value)
+                                      for key, value in slns[0].iteritems()])
+                    except NotImplementedError:
+                        pass
 
             args[i] = e, c
 
