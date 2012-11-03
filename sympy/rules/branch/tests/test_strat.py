@@ -9,15 +9,16 @@ def posdec(x):
         yield x
 
 def branch5(x):
-    if 0 < x < 5:
-        yield x-1
-    elif 5 < x < 10:
-        yield x+1
-    elif x == 5:
-        yield x+1
-        yield x-1
-    else:
-        yield x
+    if isinstance(x, int):
+        if 0 < x < 5:
+            yield x-1
+        elif 5 < x < 10:
+            yield x+1
+        elif x == 5:
+            yield x+1
+            yield x-1
+        else:
+            yield x
 
 def test_zero_ints():
     expr      =  Basic(2, Basic(5, 3), 8)
