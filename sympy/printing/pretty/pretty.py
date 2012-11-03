@@ -608,6 +608,9 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+    def _print_Trace(self, e):
+        return self._print_Function(e)
+
     def _print_Transpose(self, T):
         pform = self._print(T.arg)
         if (T.arg.is_MatAdd or T.arg.is_MatMul):
