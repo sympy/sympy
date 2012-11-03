@@ -100,9 +100,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
     if assumptions is True:
         return
 
-    if not expr.is_Atom:
-        return
-
     local_facts = _extract_facts(assumptions, expr)
     if local_facts is None or local_facts is True:
         return
