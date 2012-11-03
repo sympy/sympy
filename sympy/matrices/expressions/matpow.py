@@ -3,7 +3,7 @@ from sympy import Pow, S, Basic
 from sympy.core.sympify import _sympify
 
 
-class MatPow(MatrixExpr, Pow):
+class MatPow(MatrixExpr):
 
     def __new__(cls, b, e):
         assert b.is_Matrix
@@ -16,6 +16,14 @@ class MatPow(MatrixExpr, Pow):
             return Identity(b.rows)
         else:
             return MatrixExpr.__new__(cls, b, e)
+
+    @property
+    def base(self):
+        return self.args[0]
+
+    @property
+    def exp(self):
+        return self.args[1]
 
     @property
     def shape(self):
