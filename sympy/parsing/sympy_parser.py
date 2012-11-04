@@ -347,14 +347,22 @@ def auto_symbol(tokens, local_dict, global_dict):
     """Inserts calls to ``Symbol`` for undefined variables."""
     result = []
     prevTok = (None, None)
-    for toknum, tokval in tokens:
-        if toknum == NAME:
-            name = tokval
+
+    tokens.append((None, None))  # so zip traverses all tokens
+    for tok, nextTok in zip(tokens, tokens[1:]):
+        tokNum, tokVal = tok
+        nextTokNum, nextTokVal = nextTok
+        if tokNum == NAME:
+            name = tokVal
 
             if (name in ['True', 'False', 'None']
                 or iskeyword(name)
                 or name in local_dict
-                or (prevTok[0] == OP and prevTok[1] == '.')):
+                # Don't convert attribute access
+                or (prevTok[0] == OP and prevTok[1] == '.')
+                # Don't convert keyword arguments
+                or (prevTok[0] == OP and prevTok[1] in ('(', ',')
+                    and nextTokNum == OP and nextTokVal == '=')):
                 result.append((NAME, name))
             elif name in global_dict:
                 obj = global_dict[name]
@@ -369,9 +377,9 @@ def auto_symbol(tokens, local_dict, global_dict):
                     (OP, ')'),
                 ])
         else:
-            result.append((toknum, tokval))
+            result.append((tokNum, tokVal))
 
-        prevTok = (toknum, tokval)
+        prevTok = (tokNum, tokVal)
 
     return result
 
