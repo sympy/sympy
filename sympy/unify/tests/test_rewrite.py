@@ -27,3 +27,8 @@ def test_sincos():
 
     assert list(rl(sin(x)**2 + sin(x)**2)) == [1]
     assert list(rl(sin(y)**2 + sin(y)**2)) == [1]
+
+def test_Exprs_ok():
+    rl = rewriterule(p+q, q+p)
+    rl(x+y).next().is_commutative
+    str(rl(x+y).next())
