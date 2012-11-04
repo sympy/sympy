@@ -5,8 +5,7 @@ from sympy import Expr
 
 def rewriterule(p1, p2):
     def rewrite_rl(expr):
-        match = unify(p1, expr, {})
-        for m in match:
+        for m in unify(p1, expr, {}):
             expr2 = subs(m)(p2)
             if isinstance(expr2, Expr):
                 expr2 = rebuild(expr2)
