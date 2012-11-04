@@ -3,16 +3,14 @@ import random
 from operator import gt
 
 from sympy.core import Basic, C
-from sympy.core.compatibility import is_sequence, iterable  # logical location
-from sympy.core.compatibility import (as_int, quick_sort,
-         product as cartes, combinations, combinations_with_replacement)
-from sympy.utilities.misc import default_sort_key
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # this is the logical location of these functions
-from sympy.utilities.misc import default_sort_key
-from sympy.core.compatibility import (is_sequence, iterable,
-    product as cartes, combinations, combinations_with_replacement)
+from sympy.core.compatibility import (
+    as_int, combinations, combinations_with_replacement,
+    default_sort_key, is_sequence, iterable, permutations,
+    product as cartes, ordered
+)
 
 
 def flatten(iterable, levels=None, cls=None):
@@ -119,6 +117,10 @@ def reshape(seq, how):
 
     >>> reshape(tuple(seq), ([1], 1, (2,)))
     (([1], 2, (3, 4)), ([5], 6, (7, 8)))
+
+    >>> reshape(range(12), [2, [3], set([2]), (1, (3,), 1)])
+    [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+
     """
     m = sum(flatten(how))
     n, rem = divmod(len(seq), m)
@@ -136,8 +138,8 @@ def reshape(seq, how):
                 i += hi
             else:
                 n = sum(flatten(hi))
-                fg = type(hi)
-                rv[k].append(fg(reshape(seq[i: i + n], hi))[0])
+                hi_type = type(hi)
+                rv[k].append(hi_type(reshape(seq[i: i + n], hi)[0]))
                 i += n
         rv[k] = container(rv[k])
     return type(seq)(rv)
@@ -179,7 +181,7 @@ def group(container, multiple=True):
     return groups
 
 
-def postorder_traversal(node, key=None):
+def postorder_traversal(node, keys=None):
     """
     Do a postorder traversal of a tree.
 
@@ -191,42 +193,48 @@ def postorder_traversal(node, key=None):
     ==========
     node : sympy expression
         The expression to traverse.
-    key : (default None) sort key
-        The key used to sort args of Basic objects. When None, args of Basic
-        objects are processed in arbitrary order.
+    keys : (default None) sort key(s)
+        The key(s) used to sort args of Basic objects. When None, args of Basic
+        objects are processed in arbitrary order. If key is defined, it will
+        be passed along to ordered() as the only key(s) to use to sort the
+        arguments; if ``key`` is simply True then the default keys of
+        ``ordered`` will be used (node count and default_sort_key).
 
-    Returns
-    =======
+    Yields
+    ======
     subtree : sympy expression
         All of the subtrees in the tree.
 
     Examples
     ========
-    >>> from sympy import symbols, default_sort_key
+
     >>> from sympy.utilities.iterables import postorder_traversal
     >>> from sympy.abc import w, x, y, z
 
     The nodes are returned in the order that they are encountered unless key
-    is given.
+    is given; simply passing key=True will guarantee that the traversal is
+    unique.
 
     >>> list(postorder_traversal(w + (x + y)*z)) # doctest: +SKIP
     [z, y, x, x + y, z*(x + y), w, w + z*(x + y)]
-    >>> list(postorder_traversal(w + (x + y)*z, key=default_sort_key))
+    >>> list(postorder_traversal(w + (x + y)*z, keys=True))
     [w, z, x, y, x + y, z*(x + y), w + z*(x + y)]
 
 
     """
     if isinstance(node, Basic):
         args = node.args
-        if key:
-            args = list(args)
-            args.sort(key=key)
+        if keys:
+            if keys != True:
+                args = ordered(args, keys, default=False)
+            else:
+                args = ordered(args)
         for arg in args:
-            for subtree in postorder_traversal(arg, key):
+            for subtree in postorder_traversal(arg, keys):
                 yield subtree
     elif iterable(node):
         for item in node:
-            for subtree in postorder_traversal(item, key):
+            for subtree in postorder_traversal(item, keys):
                 yield subtree
     yield node
 
@@ -384,6 +392,7 @@ def subsets(seq, k=None, repetition=False):
 
        Examples
        ========
+
        >>> from sympy.utilities.iterables import subsets
 
        subsets(seq, k) will return the n!/k!/(n - k)! k-subsets (combinations)
@@ -529,12 +538,12 @@ def sift(seq, keyfunc):
     {E: [exp(x)], x: [sqrt(x)], y: [y**(2*x)]}
 
     If you need to sort the sifted items it might be better to use
-    the lazyDSU_sort which can economically apply multiple sort keys
+    ``ordered`` which can economically apply multiple sort keys
     to a squence while sorting.
 
     See Also
     ========
-    lazyDSU_sort
+    ordered
     """
     m = defaultdict(list)
     for i in seq:
@@ -1091,6 +1100,7 @@ def has_dups(seq):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import has_dups
     >>> from sympy import Dict, Set
 
@@ -1112,6 +1122,7 @@ def has_variety(seq):
 
     Examples
     ========
+
     >>> from sympy.utilities.iterables import has_variety
     >>> from sympy import Dict, Set
 
@@ -1358,84 +1369,6 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
-
-def lazyDSU_sort(seq, keys, warn=False):
-    """Return sorted seq, breaking ties by applying keys only when needed.
-
-    If ``warn`` is True then an error will be raised if there were no
-    keys remaining to break ties.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import lazyDSU_sort, default_sort_key
-    >>> from sympy.abc import x, y
-
-    The count_ops is not sufficient to break ties in this list and the first
-    two items appear in their original order: Python sorting is stable.
-
-    >>> lazyDSU_sort([y + 2, x + 2, x**2 + y + 3],
-    ...    [lambda x: x.count_ops()], warn=False)
-    ...
-    [y + 2, x + 2, x**2 + y + 3]
-
-    The use of default_sort_key allows the tie to be broken (and warn can
-    be safely left False).
-
-    >>> lazyDSU_sort([y + 2, x + 2, x**2 + y + 3],
-    ...    [lambda x: x.count_ops(),
-    ...     default_sort_key])
-    ...
-    [x + 2, y + 2, x**2 + y + 3]
-
-    Here, sequences are sorted by length, then sum:
-
-    >>> seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], [
-    ...    lambda x: len(x),
-    ...    lambda x: sum(x)]]
-    ...
-    >>> lazyDSU_sort(seq, keys, warn=False)
-    [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
-
-    If ``warn`` is True, an error will be raised if there were not
-    enough keys to break ties:
-
-    >>> lazyDSU_sort(seq, keys, warn=True)
-    Traceback (most recent call last):
-    ...
-    ValueError: not enough keys to break ties
-
-
-    Notes
-    =====
-
-    The decorated sort is one of the fastest ways to sort a sequence for
-    which special item comparison is desired: the sequence is decorated,
-    sorted on the basis of the decoration (e.g. making all letters lower
-    case) and then undecorated. If one wants to break ties for items that
-    have the same decorated value, a second key can be used. But if the
-    second key is expensive to compute then it is inefficient to decorate
-    all items with both keys: only those items having identical first key
-    values need to be decorated. This function applies keys successively
-    only when needed to break ties.
-    """
-    d = defaultdict(list)
-    keys = list(keys)
-    f = keys.pop(0)
-    for a in seq:
-        d[f(a)].append(a)
-    seq = []
-    for k in sorted(d.keys()):
-        if len(d[k]) > 1:
-            if keys:
-                d[k] = lazyDSU_sort(d[k], keys, warn)
-            elif warn:
-                raise ValueError('not enough keys to break ties')
-            seq.extend(d[k])
-        else:
-            seq.append(d[k][0])
-    return seq
-
 
 def minlex(seq, directed=True):
     """Return a tuple where the smallest element appears first; if

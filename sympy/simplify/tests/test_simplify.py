@@ -91,8 +91,7 @@ def test_trigsimp1():
     assert trigsimp(1/sin(x)**2 - cot(x)**2) == 1
 
     assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
-    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) in \
-        [2 + 3*cos(x/2)**2, 5 - 3*sin(x/2)**2]
+    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == -3*sin(x/2)**2 + 5
 
     assert trigsimp(sin(x)/cos(x)) == tan(x)
     assert trigsimp(2*tan(x)*cos(x)) == 2*sin(x)
@@ -208,8 +207,7 @@ def test_hyperbolic_simp():
     assert trigsimp(coth(x)**2 - 1/sinh(x)**2) == 1
 
     assert trigsimp(5*cosh(x)**2 - 5*sinh(x)**2) == 5
-    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) in \
-        [2 + 3*cosh(x/2)**2, 5 + 3*sinh(x/2)**2]
+    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) == 3*sinh(x/2)**2 + 5
 
     assert trigsimp(sinh(x)/cosh(x)) == tanh(x)
     assert trigsimp(tanh(x)) == trigsimp(sinh(x)/cosh(x))
@@ -500,6 +498,18 @@ def test_powsimp():
     assert powsimp((-1)**(-x)) != (-1)**x  # could be 1/((-1)**x), but is not
     # force=True overrides assumptions
     assert powsimp((-1)**(2*x), force=True) == 1
+
+    # rational exponents allow combining of negative terms
+    w, n, m = symbols('w n m', negative=True)
+    e = i/a  # not a rational exponent if `a` is unknown
+    ex = w**e*n**e*m**e
+    assert powsimp(ex) == m**(i/a)*n**(i/a)*w**(i/a)
+    e = i/3
+    ex = w**e*n**e*m**e
+    assert powsimp(ex) == (-1)**i*(-m*n*w)**(i/3)
+    e = (3 + i)/i
+    ex = w**e*n**e*m**e
+    assert powsimp(ex) == (-1)**(3*e)*(-m*n*w)**e
 
     eq = x**(2*a/3)
     # eq != (x**a)**(2/3) (try x = -1 and a = 3 to see)
@@ -1013,6 +1023,7 @@ def test_powdenest():
     assert powdenest((x**2*y**6)**i) != (x*y**3)**(2*i)
     x, y = symbols('x,y', positive=True)
     assert powdenest((x**2*y**6)**i) == (x*y**3)**(2*i)
+
     assert powdenest((x**(2*i/3)*y**(i/2))**(2*i)) == (x**(S(4)/3)*y)**(i**2)
     assert powdenest(sqrt(x**(2*i)*y**(6*i))) == (x*y**3)**i
 

@@ -402,7 +402,7 @@ def test_separable3():
     eq13 = f(x).diff(x) - f(x)*log(f(x))/tan(x)
     sol11 = Eq(f(x), C1*sqrt(1 + tan(x)**2))
     sol12 = Eq(log(-1 + cos(f(x))**2)/2, C1 + 2*x + 2*log(x - 1))
-    sol13 = Eq(log(log(f(x))), C1 + log(cos(x)**2 - 1)/2 )
+    sol13 = Eq(log(log(f(x))), C1 + log(cos(x)**2 - 1)/2)
     assert dsolve(eq11, hint='separable') == simplify(sol11)
     assert dsolve(eq12, hint='separable', simplify=False) == sol12
     assert dsolve(eq13, hint='separable', simplify=False) == sol13
@@ -439,15 +439,15 @@ def test_separable5():
                        x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
     sol19f = Eq(f(x), (C1 + (x - 1)*exp(x))*exp(-x)/(-x + 1))
     sol19g = Eq(f(x), (C1*exp(-x) - x + 1)/(x - 1))
+    sol19h = Eq(f(x), (C1*exp(-x) - x + 1)/(-x + 1))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, hint='separable') == sol15
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
     assert dsolve(eq17, hint='separable') == sol17
     assert dsolve(eq18, hint='separable', simplify=False) == sol18
-    assert dsolve(
-        eq19, hint='separable') in [sol19g, sol19f, sol19a, sol19b, sol19c,
-                                    sol19d, sol19e]
+    assert dsolve(eq19, hint='separable') in [sol19h, sol19g, sol19f, sol19a,
+        sol19b, sol19c, sol19d, sol19e]
     assert dsolve(eq20, hint='separable', simplify=False) == sol20
     assert dsolve(eq21, hint='separable', simplify=False) == sol21
     assert checkodesol(eq15, sol15, order=1, solve_for_func=False)[0]
@@ -513,6 +513,7 @@ def test_1st_homogeneous_coeff_ode():
     sol1b = Eq(sqrt(cos(f(x)/x)**2 - 1)*f(x), C1)
     sol2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
     sol3 = Eq(f(x), x*exp(1 - LambertW(C1*x)))
+    sol3b = Eq(f(x),  x*exp(LambertW(C1*x) + 1))
     sol4 = Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
     #sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
     sol5 = Eq(log(C1*x*sqrt(f(x)/x)) + x**2/(2*f(x)**2), 0)
@@ -525,7 +526,7 @@ def test_1st_homogeneous_coeff_ode():
     # indep_div_dep actually has a simpler solution for eq2,
     # but it runs too slow
     assert dsolve(eq2, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol2
-    assert dsolve(eq3, hint='1st_homogeneous_coeff_best') == sol3
+    assert  dsolve(eq3, hint='1st_homogeneous_coeff_best') in [sol3b, sol3]
     assert dsolve(eq4, hint='1st_homogeneous_coeff_best') == sol4
     assert dsolve(eq5, hint='1st_homogeneous_coeff_best') == sol5
     assert dsolve(eq6, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol6
