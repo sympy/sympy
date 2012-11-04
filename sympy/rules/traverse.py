@@ -1,6 +1,5 @@
 """ Strategies to Traverse a Tree """
-
-from util import new, is_leaf, children
+from util import new, is_leaf
 
 def top_down(rule):
     """ Apply a rule down a tree running it on the top nodes first """
@@ -8,7 +7,7 @@ def top_down(rule):
         newexpr = rule(expr)
         if is_leaf(newexpr):
             return newexpr
-        return new(type(newexpr), *map(top_down_rl, children(newexpr)))
+        return new(type(newexpr), *map(top_down_rl, newexpr.args))
     return top_down_rl
 
 def bottom_up(rule):
@@ -17,5 +16,5 @@ def bottom_up(rule):
         if is_leaf(expr):
             return rule(expr)
         else:
-            return rule(new(type(expr), *map(bottom_up_rl, children(expr))))
+            return rule(new(type(expr), *map(bottom_up_rl, expr.args)))
     return bottom_up_rl
