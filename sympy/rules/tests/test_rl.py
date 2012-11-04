@@ -1,4 +1,4 @@
-from sympy.rules.rl import rm_id, glom, flatten, unpack, sort, distribute
+from sympy.rules.rl import rm_id, glom, flatten, unpack, sort, distribute, subs
 from sympy import Basic
 
 def test_rm_id():
@@ -46,3 +46,8 @@ def test_distribute_add_mul():
     expected = Add(Mul(2, x), Mul(2, y))
     distribute_mul = distribute(Mul, Add)
     assert distribute_mul(expr) == expected
+
+def test_subs():
+    rl = subs(1, 2)
+    assert rl(1) == 2
+    assert rl(3) == 3
