@@ -19,7 +19,7 @@ Submodules
 
 rules.rl         - some fundamental rules
 rules.strat_pure - generic non-SymPy specific strategies
-rules.traverse   - strategies that traverse a SymPy AST
+rules.traverse   - strategies that traverse a SymPy tree
 rules.strat      - some conglomerate strategies that do depend on SymPy
 """
 
@@ -29,3 +29,4 @@ from rl import rm_id, unpack, flatten, sort, glom, distribute
 from util import new
 from strat import (canon, condition, debug, typed, chain, null_safe, do_one,
         exhaust)
+import branch

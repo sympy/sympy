@@ -84,6 +84,7 @@ modules = [
     'sympy.printing',
     'sympy.printing.pretty',
     'sympy.rules',
+    'sympy.rules.branch',
     'sympy.series',
     'sympy.sets',
     'sympy.simplify',

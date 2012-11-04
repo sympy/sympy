@@ -1,4 +1,4 @@
-# Generic strategies. No dependence on SymPy
+""" Generic SymPy-Independent Strategies """
 
 def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
