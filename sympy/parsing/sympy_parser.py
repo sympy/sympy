@@ -346,30 +346,32 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 def auto_symbol(tokens, local_dict, global_dict):
     """Inserts calls to ``Symbol`` for undefined variables."""
     result = []
+    prevTok = (None, None)
     for toknum, tokval in tokens:
         if toknum == NAME:
             name = tokval
 
             if (name in ['True', 'False', 'None']
                 or iskeyword(name)
-                    or name in local_dict):
+                or name in local_dict
+                or (prevTok[0] == OP and prevTok[1] == '.')):
                 result.append((NAME, name))
-                continue
             elif name in global_dict:
                 obj = global_dict[name]
 
                 if isinstance(obj, (Basic, type)) or callable(obj):
                     result.append((NAME, name))
-                    continue
-
-            result.extend([
-                (NAME, 'Symbol'),
-                (OP, '('),
-                (NAME, repr(str(name))),
-                (OP, ')'),
-            ])
+            else:
+                result.extend([
+                    (NAME, 'Symbol'),
+                    (OP, '('),
+                    (NAME, repr(str(name))),
+                    (OP, ')'),
+                ])
         else:
             result.append((toknum, tokval))
+
+        prevTok = (toknum, tokval)
 
     return result
 
