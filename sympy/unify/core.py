@@ -27,6 +27,23 @@ CondVariable = namedtuple('Variable', 'arg valid')
 from sys import stdout
 
 def unify(x, y, s, **fns):
+    """ Unify two expressions
+
+    inputs:
+        x, y - expression trees containing leaves, Compounds and Variables
+        s    - a mapping of variables to subtrees
+    outputs:
+        a mapping {Variable: subtree}
+
+    Example
+    =======
+
+    >>> from sympy.unify.core import unify, Compound, Variable
+    >>> expr    = Compound("Add", ("x", "y"))
+    >>> pattern = Compound("Add", ("x", Variable("a")))
+    >>> unify(expr, pattern, {}).next()
+    {('a',): 'y'}
+    """
     if x == y:
         yield s
     elif isinstance(x, (Variable, CondVariable)):
