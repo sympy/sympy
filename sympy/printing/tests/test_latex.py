@@ -793,13 +793,14 @@ def test_Tr():
     t = Tr(A*B)
     assert latex(t) == r'\mbox{Tr}\left(A B\right)'
 
+
 def test_Adjoint():
     from sympy.matrices import MatrixSymbol, Adjoint
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
     # Either of these would be fine
-    assert latex(Adjoint(X+Y)) in \
-            [r'\left(X + Y\right)^\dag', r'X^\dag + Y^\dag']
+    assert latex(Adjoint(X + Y)) == r'X^\dag + Y^\dag'
+
 
 def test_Hadamard():
     from sympy.matrices import MatrixSymbol, HadamardProduct
