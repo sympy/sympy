@@ -5,6 +5,7 @@ from sympy.parsing.sympy_parser import (
     implicit_multiplication_application
 )
 
+
 def test_implicit_multiplication_application():
     d = {
         '2x': '2*x',  # implicit multiplication
