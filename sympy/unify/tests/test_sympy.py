@@ -1,7 +1,7 @@
 from sympy import Add, Basic, Wild
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (destruct, construct, unify, is_associative,
-        is_commutative, iswild, wildify, wildtoken, patternify, outermost)
+        is_commutative, iswild, wildify, wildtoken, patternify)
 from sympy.abc import w, x, y, z, n, m, k
 
 def test_destruct():
