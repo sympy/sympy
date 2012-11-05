@@ -1410,9 +1410,11 @@ def test_sympy__integrals__integrals__Integral():
     from sympy.integrals.integrals import Integral
     assert _test_args(Integral(2, (x, 0, 1)))
 
+
 def test_sympy__integrals__risch__NonElementaryIntegral():
     from sympy.integrals.risch import NonElementaryIntegral
     assert _test_args(NonElementaryIntegral(exp(-x**2), x))
+
 
 @SKIP("abstract class")
 def test_sympy__integrals__transforms__IntegralTransform():
@@ -1631,12 +1633,14 @@ def test_sympy__matrices__expressions__matmul__MatMul():
     Y = MatrixSymbol('Y', y, x)
     assert _test_args(MatMul(X, Y))
 
+
 def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     from sympy.matrices.expressions.hadamard import HadamardProduct
     from sympy.matrices.expressions import MatrixSymbol
     X = MatrixSymbol('X', x, y)
     Y = MatrixSymbol('Y', x, y)
     assert _test_args(HadamardProduct(X, Y))
+
 
 def test_sympy__matrices__expressions__matpow__MatPow():
     from sympy.matrices.expressions.matpow import MatPow
@@ -1650,10 +1654,12 @@ def test_sympy__matrices__expressions__transpose__Transpose():
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Transpose(MatrixSymbol('A', 3, 5)))
 
+
 def test_sympy__matrices__expressions__adjoint__Adjoint():
     from sympy.matrices.expressions.adjoint import Adjoint
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Adjoint(MatrixSymbol('A', 3, 5)))
+
 
 def test_sympy__matrices__expressions__trace__Trace():
     from sympy.matrices.expressions.trace import Trace

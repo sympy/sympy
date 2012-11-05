@@ -15,6 +15,7 @@ from sympy.utilities.pytest import raises, XFAIL
 
 from sympy.abc import a, b, c, n, t, u, x, y, z
 
+
 class DummyNumber(object):
     """
     Minimal implementation of a number that works with SymPy.

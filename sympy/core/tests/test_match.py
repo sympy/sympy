@@ -527,7 +527,7 @@ def test_issue_1460():
 
     # Note that solve will give
     # multiple roots but match only gives one:
-    # 
+    #
     # >>> solve(x**r-y**2,y)
     # [-x**(r/2), x**(r/2)]
 

@@ -455,7 +455,6 @@ class Pow(Expr):
             rv *= Pow(Mul(*other), e, evaluate=False)
         return rv
 
-
     def _eval_expand_multinomial(self, **hints):
         """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
         b = self.base
