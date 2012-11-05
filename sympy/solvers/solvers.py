@@ -1424,7 +1424,7 @@ def _solve_system(exprs, symbols, **flags):
 
 
 def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
-    r""" Return a tuple containing derived from f = lhs - rhs that is either:
+    r""" Return a tuple derived from f = lhs - rhs that is either:
 
         (numerator, denominator) of ``f``
             If this comes back as (0, 1) it means
@@ -1569,12 +1569,12 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
 def solve_linear_system(system, *symbols, **flags):
     r"""
     Solve system of N linear equations with M variables, which means
-    both Cramer and over defined systems are supported. The possible
+    both under- and overdetermined systems are supported. The possible
     number of solutions is zero, one or infinite. Respectively, this
-    procedure will return None or dictionary with solutions. In the
-    case of over-defined systems all arbitrary parameters are skipped.
-    This may cause situation in which an empty dictionary is returned.
-    In this case it means all symbols can be assigned arbitrary values.
+    procedure will return None or a dictionary with solutions. In the
+    case of underdetermined systems, all arbitrary parameters are skipped.
+    This may cause a situation in which an empty dictionary is returned.
+    In that case, all symbols can be assigned arbitrary values.
 
     Input to this functions is a Nx(M+1) matrix, which means it has
     to be in augmented form. If you prefer to enter N equations and M
@@ -1598,6 +1598,12 @@ def solve_linear_system(system, *symbols, **flags):
     >>> system = Matrix(( (1, 4, 2), (-2, 1, 14)))
     >>> solve_linear_system(system, x, y)
     {x: -6, y: 2}
+
+    A degenerate system returns an empty dictionary.
+
+    >>> system = Matrix(( (0,0,0), (0,0,0) ))
+    >>> solve_linear_system(system, x, y)
+    {}
 
     """
     matrix = system[:, :]
@@ -1663,7 +1669,9 @@ def solve_linear_system(system, *symbols, **flags):
                 # so now we can safely skip it
                 matrix.row_del(i)
                 if not matrix:
-                    return None
+                    # every choice of variable values is a solution
+                    # so we return an empty dict instead of None
+                    return dict()
                 continue
 
             # we want to change the order of colums so
