@@ -1,3 +1,3 @@
-import unify
-import unify_sympy
+import core
+import sympy
 import rewrite

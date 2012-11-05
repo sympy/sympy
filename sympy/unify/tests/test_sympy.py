@@ -1,6 +1,6 @@
 from sympy import Add, Basic, Wild
-from sympy.unify.unify import Compound, Variable
-from sympy.unify.unify_sympy import (destruct, construct, unify, is_associative,
+from sympy.unify.core import Compound, Variable
+from sympy.unify.usympy import (destruct, construct, unify, is_associative,
         is_commutative, iswild, wildify, wildtoken, patternify, outermost)
 from sympy.abc import w, x, y, z, n, m, k
 

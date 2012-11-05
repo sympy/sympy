@@ -1,4 +1,4 @@
-from sympy.unify.unify import _unify, Compound, Variable, CondVariable, allcombinations
+from sympy.unify.core import _unify, Compound, Variable, CondVariable, allcombinations
 
 a,b,c = 'abc'
 w,x,y,z = map(Variable, 'wxyz')

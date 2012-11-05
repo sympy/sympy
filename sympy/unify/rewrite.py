@@ -1,5 +1,5 @@
-from sympy.unify.unify_sympy import unify
-from sympy.unify.unify_sympy import rebuild
+from sympy.unify.usympy import unify
+from sympy.unify.usympy import rebuild
 from sympy.rules.tools import subs
 from sympy import Expr
 

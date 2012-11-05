@@ -1,6 +1,6 @@
 from sympy import Basic, Wild, Expr, Tuple, Add, Mul, Pow
-from unify import Compound, Variable, _unify
-from unify import *
+from core import Compound, Variable, _unify
+from core import *
 
 def sympy_associative(op):
     from sympy import MatAdd, MatMul, Union, Intersection
