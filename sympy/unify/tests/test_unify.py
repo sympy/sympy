@@ -1,4 +1,5 @@
-from sympy.unify.core import _unify, Compound, Variable, CondVariable, allcombinations
+from sympy.unify.core import Compound, Variable, CondVariable, allcombinations
+from sympy.unify import core
 
 a,b,c = 'abc'
 w,x,y,z = map(Variable, 'wxyz')
@@ -12,8 +13,8 @@ def is_commutative(x):
 
 
 def unify(a, b, d):
-    return _unify(a, b, d, is_associative=is_associative,
-                           is_commutative=is_commutative)
+    return core.unify(a, b, d, is_associative=is_associative,
+                          is_commutative=is_commutative)
 
 def test_basic():
     assert list(unify(a, x, {})) == [{x: a}]

@@ -1,6 +1,6 @@
 from sympy import Basic, Wild, Expr, Tuple, Add, Mul, Pow
-from core import Compound, Variable, _unify
-from core import *
+from core import Compound, Variable
+import core
 
 def sympy_associative(op):
     from sympy import MatAdd, MatMul, Union, Intersection
@@ -92,8 +92,8 @@ def unify(x, y, s={}, **kwargs):
     [{p_: z, q_: x + y}, {p_: y + z, q_: x}]
     """
 
-    ds = _unify(destruct(x), destruct(y), {}, is_associative=is_associative,
-                                              is_commutative=is_commutative,
-                                              **kwargs)
+    ds = core.unify(destruct(x), destruct(y), {}, is_associative=is_associative,
+                                                  is_commutative=is_commutative,
+                                                  **kwargs)
     for d in ds:
         yield dict((construct(k), construct(v)) for k, v in d.items())
