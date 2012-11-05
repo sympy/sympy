@@ -13,6 +13,7 @@ import math
 from time import clock
 import sys
 
+
 def display_fraction(digits, skip=0, colwidth=10, columns=5):
     """Pretty printer for first n digits of a fraction"""
     perline = colwidth * columns
@@ -33,6 +34,7 @@ def display_fraction(digits, skip=0, colwidth=10, columns=5):
             s += buf[:colwidth].ljust(colwidth + 1, " ")
             buf = buf[colwidth:]
         print s + ":", printed + colwidth*columns
+
 
 def calculateit(func, base, n, tofile):
     """Writes first n base-digits of a mpmath function to file"""
@@ -64,6 +66,7 @@ def calculateit(func, base, n, tofile):
     print "\nFinished in %f seconds (%f calc, %f convert)" % \
         ((step1_time + step2_time), step1_time, step2_time)
 
+
 def interactive():
     """Simple function to interact with user"""
     print "Compute digits of pi with SymPy\n"
@@ -73,6 +76,7 @@ def interactive():
     if tofile:
         tofile = open(tofile, "w")
     calculateit(pi, base, digits, tofile)
+
 
 def main():
     """A non-interactive runner"""

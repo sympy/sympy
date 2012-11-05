@@ -16,14 +16,17 @@ something is not clear, like what the Ricci tensor is, etc.
 from sympy import (exp, Symbol, sin, Rational, Derivative, dsolve, Function,
                   Matrix, Eq, pprint, Pow, classify_ode, solve)
 
+
 def grad(f, X):
     a = []
     for x in X:
         a.append(f.diff(x))
     return a
 
+
 def d(m, x):
     return grad(m[0, 0], x)
+
 
 class MT(object):
     def __init__(self, m):
@@ -39,6 +42,7 @@ class MT(object):
     def uu(self, i, j):
         return self.guu[i, j]
 
+
 class G(object):
     def __init__(self, g, x):
         self.g = g
@@ -53,6 +57,7 @@ class G(object):
                     - g.dd(k, l).diff(x[m]))
         return r
 
+
 class Riemann(object):
     def __init__(self, G, x):
         self.G = G
@@ -66,6 +71,7 @@ class Riemann(object):
             r += G.udd(rho, mu, lam)*G.udd(lam, nu, sigma) \
                 - G.udd(rho, nu, lam)*G.udd(lam, mu, sigma)
         return r
+
 
 class Ricci(object):
     def __init__(self, R, x):
@@ -86,6 +92,7 @@ class Ricci(object):
         for lam in [0, 1, 2, 3]:
             r += self.g.uu(mu, lam)*self.dd(lam, nu)
         return r.expand()
+
 
 def curvature(Rmn):
     return Rmn.ud(0, 0) + Rmn.ud(1, 1) + Rmn.ud(2, 2) + Rmn.ud(3, 3)
@@ -140,8 +147,10 @@ X = (t, r, theta, phi)
 Gamma = G(g, X)
 Rmn = Ricci(Riemann(Gamma, X), X)
 
+
 def pprint_Gamma_udd(i, k, l):
     pprint(Eq(Symbol('Gamma^%i_%i%i' % (i, k, l)), Gamma.udd(i, k, l)))
+
 
 def pprint_Rmn_dd(i, j):
     pprint(Eq(Symbol('R_%i%i' % (i, j)), Rmn.dd(i, j)))
@@ -154,6 +163,7 @@ def eq1():
     e = e.subs(nu(r), -lam(r))
     pprint(dsolve(e, lam(r)))
 
+
 def eq2():
     r = Symbol("r")
     e = Rmn.dd(1, 1)
@@ -161,11 +171,13 @@ def eq2():
     e = e.subs(nu(r), -lam(r))
     pprint(dsolve(e, lam(r)))
 
+
 def eq3():
     r = Symbol("r")
     e = Rmn.dd(2, 2)
     e = e.subs(nu(r), -lam(r))
     pprint(dsolve(e, lam(r)))
+
 
 def eq4():
     r = Symbol("r")

@@ -7,6 +7,7 @@ This example shows how to work with the Hydrogen radial wavefunctions.
 from sympy import var, pprint, Integral, oo, Eq
 from sympy.physics.hydrogen import R_nl
 
+
 def main():
     print "Hydrogen radial wavefunctions:"
     var("r a")

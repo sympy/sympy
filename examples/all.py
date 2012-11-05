@@ -85,6 +85,7 @@ WINDOWED_EXAMPLES = [
 
 EXAMPLE_DIR = os.path.dirname(__file__)
 
+
 def __import__(name, globals=None, locals=None, fromlist=None):
     """An alternative to the import function so that we can import
     modules defined as strings.

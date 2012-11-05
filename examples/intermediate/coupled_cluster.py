@@ -38,6 +38,7 @@ def get_CC_operators():
     T2 = Rational(1, 4)*t_abij*abji
     return (T1, T2)
 
+
 def main():
     print
     print "Calculates the Coupled-Cluster energy- and amplitude equations"
