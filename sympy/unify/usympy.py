@@ -78,18 +78,21 @@ def construct(t):
 def unify(x, y, s={}, **kwargs):
     """ Structural unification of two expressions possibly containing Wilds
 
-    >>> from unify_sympy import unify
+    Examples
+    ========
+
+    >>> from sympy.unify.usympy import unify
     >>> from sympy import Wild
     >>> from sympy.abc import x, y, z
     >>> expr = 2*x + y + z
     >>> pattern = 2*Wild('p') + Wild('q')
-    >>> list(unify(expr, pattern, {}))
-    [{p_: x, q_: y + z}]
+    >>> unify(expr, pattern, {}).next()
+    {p_: x, q_: y + z}
 
     >>> expr = x + y + z
     >>> pattern = Wild('p') + Wild('q')
-    >>> list(unify(expr, pattern, {}))
-    [{p_: z, q_: x + y}, {p_: y + z, q_: x}]
+    >>> len(list(unify(expr, pattern, {})))
+    12
     """
 
     ds = core.unify(destruct(x), destruct(y), {}, is_associative=is_associative,
