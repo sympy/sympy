@@ -1,4 +1,5 @@
 from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace
+from sympy.utilities.pytest import XFAIL
 
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)
@@ -79,3 +80,15 @@ def test_diagonal():
 
 def test_non_atoms():
     assert ask(Q.real(Trace(X)), Q.positive(Trace(X)))
+
+@XFAIL
+def test_non_trivial_implies():
+    X = MatrixSymbol('X', 3, 3)
+    Y = MatrixSymbol('Y', 3, 3)
+    assert ask(Q.lower_triangular(X+Y), Q.lower_triangular(X) &
+               Q.lower_triangular(Y))
+    assert ask(Q.triangular(X), Q.lower_triangular(X))
+    assert ask(Q.triangular(X+Y), Q.lower_triangular(X) &
+               Q.lower_triangular(Y))
+
+
