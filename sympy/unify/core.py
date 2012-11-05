@@ -1,18 +1,15 @@
 """ Generic Unification algorithm for expression trees with lists of children
 
-The implementation is a direct translation of
+This implementation is a direct translation of
 
-Artificial Intelligence: A Modern Approach
-by
-Stuart Russel and Peter Norvig
-
+Artificial Intelligence: A Modern Approach by Stuart Russel and Peter Norvig
 Second edition, section 9.2, page 276
 
 It is modified in the following ways:
 
 1.  We allow associative and commutative Compound expressions. This results in
     combinatorial blowup.
-2.  We explore the tree lazily
+2.  We explore the tree lazily.
 3.  We provide generic interfaces to symbolic algebra libraries in Python.
 
 A more traditional version can be found here
