@@ -16,8 +16,8 @@
     print 'B^2 =', Bsq
     print 'L^2 =', (L*L)()
     s, c, Binv, M, S, C, alpha = symbols('s c Binv M S C alpha')
-    Bhat = Binv*B # Normalize translation generator
-    R = c + s*Bhat # Rotor R = exp(alpha*Bhat/2)
+    Bhat = Binv*B  # Normalize translation generator
+    R = c + s*Bhat  # Rotor R = exp(alpha*Bhat/2)
     print 's = sinh(alpha/2) and c = cosh(alpha/2)'
     print 'R = exp(alpha*B/(2*|B|)) =', R
     Z = R*X*R.rev()
