@@ -173,7 +173,7 @@ class AskUpperTriangularHandler(CommonHandler):
     """
     @staticmethod
     def MatMul(expr, assumptions):
-        factor, matrices= expr.as_coeff_matrices()
+        factor, matrices = expr.as_coeff_matrices()
         if all(ask(Q.upper_triangular(m), assumptions) for m in matrices):
             return True
 
@@ -207,7 +207,7 @@ class AskLowerTriangularHandler(CommonHandler):
     """
     @staticmethod
     def MatMul(expr, assumptions):
-        factor, matrices= expr.as_coeff_matrices()
+        factor, matrices = expr.as_coeff_matrices()
         if all(ask(Q.lower_triangular(m), assumptions) for m in matrices):
             return True
 
@@ -241,7 +241,7 @@ class AskDiagonalHandler(CommonHandler):
     """
     @staticmethod
     def MatMul(expr, assumptions):
-        factor, matrices= expr.as_coeff_matrices()
+        factor, matrices = expr.as_coeff_matrices()
         if all(ask(Q.diagonal(m), assumptions) for m in matrices):
             return True
 
