@@ -272,8 +272,8 @@ class Lambdifier(object):
                 raise ImportError(
                     'experimental_lambdify failed to import numpy.')
         if use_interval:
-            namespace.update({'imath': __import__(
-                'sympy.plotting.intervalmath', fromlist=['intervalmath'])})
+            namespace.update({'imath': __import__('sympy.plotting.intervalmath', fromlist=['intervalmath'])})
+            namespace.update({'math' : __import__('math')})
 
         # Construct the lambda
         if self.print_lambda:
@@ -383,13 +383,16 @@ class Lambdifier(object):
         'pi': 'cmath.pi',
         'E': 'cmath.e',
     }
+
     ###
     # intervalmath
     ###
+
     interval_not_functions = {
-        'pi': 'cmath.pi',
-        'E': 'cmath.e'
-    }
+        'pi': 'math.pi',
+        'E': 'math.e'
+        }
+
     interval_functions_same = [
         'sin', 'cos', 'exp', 'tan', 'atan', 'log',
         'sqrt', 'cosh', 'sinh', 'tanh', 'floor',
@@ -422,6 +425,8 @@ class Lambdifier(object):
             dict_str.update(self.math_not_functions)
         if self.use_python_cmath:
             dict_str.update(self.cmath_not_functions)
+        if self.use_interval:
+            dict_str.update(self.interval_not_functions)
         return dict_str
 
     # For functions
