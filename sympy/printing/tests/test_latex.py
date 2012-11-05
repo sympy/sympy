@@ -800,3 +800,10 @@ def test_Adjoint():
     # Either of these would be fine
     assert latex(Adjoint(X+Y)) in \
             [r'\left(X + Y\right)^\dag', r'X^\dag + Y^\dag']
+
+def test_Hadamard():
+    from sympy.matrices import MatrixSymbol, HadamardProduct
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
+    assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'

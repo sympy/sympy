@@ -4,14 +4,14 @@ from sympy.matrices.expressions.blockmatrix import (bc_matmul,
 from sympy.matrices.expressions import MatrixSymbol, Identity, MatMul
 from sympy import symbols, Matrix
 
-n,m,l,k,o,p = symbols('n,m,l,k,o,p')
+n, m, l, k, o, p = symbols('n,m,l,k,o,p')
 A = MatrixSymbol('A', n, m)
 B = MatrixSymbol('B', n, k)
 C = MatrixSymbol('C', l, m)
 D = MatrixSymbol('D', l, k)
 M = MatrixSymbol('M', m+k, p)
 N = MatrixSymbol('N', l+n, k+m)
-X = BlockMatrix(Matrix([[A,B],[C,D]]))
+X = BlockMatrix(Matrix([[A, B], [C, D]]))
 
 G = MatrixSymbol('G', n, n)
 H = MatrixSymbol('H', n, n)
@@ -32,7 +32,7 @@ def test_bc_dist_diag():
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', m, m)
     C = MatrixSymbol('C', l, l)
-    X = BlockDiagMatrix(A,B,C)
+    X = BlockDiagMatrix(A, B, C)
 
     assert bc_dist(X+X).equals(BlockDiagMatrix(2*A, 2*B, 2*C))
 
@@ -46,6 +46,6 @@ def test_block_plus_ident():
     B = MatrixSymbol('B', n, m)
     C = MatrixSymbol('C', m, n)
     D = MatrixSymbol('D', m, m)
-    X = BlockMatrix([[A,B],[C,D]])
+    X = BlockMatrix([[A, B], [C, D]])
     assert bc_block_plus_ident(X+Identity(m+n)) == \
             BlockDiagMatrix(Identity(n), Identity(m)) + X
