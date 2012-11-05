@@ -533,6 +533,8 @@ class Quantity(AtomicExpr):
         return obj
 
     def __str__(self):
+        if _UNIT_SYSTEM:
+            return '%s %s' % (self.factor, _UNIT_SYSTEM.get_unit(self.unit))
         return '%s %s' % (self.factor, self.unit)
 
     __repr__ = __str__
