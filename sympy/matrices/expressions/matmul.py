@@ -37,12 +37,12 @@ class MatMul(MatrixExpr):
         return (matrices[0].rows, matrices[-1].cols)
 
     def _entry(self, i, j):
-        coeff, matmul = self.as_coeff_mmul()
+        coeff, matrices = self.as_coeff_matrices()
 
-        if not matmul.is_MatMul: # situation like 2*X, matmul is just X
-            return coeff * matmul[i, j]
+        if len(matrices) == 1:  # situation like 2*X, matmul is just X
+            return coeff * matrices[0][i, j]
 
-        head, tail = matmul.args[0], matmul.args[1:]
+        head, tail = matrices[0], matrices[1:]
         assert len(tail) != 0
 
         X = head
@@ -97,7 +97,7 @@ class MatMul(MatrixExpr):
 def validate(*matrices):
     """ Checks for valid shapes for args of MatMul """
     for i in range(len(matrices)-1):
-        A,B = matrices[i:i+2]
+        A, B = matrices[i:i+2]
         if A.cols != B.rows:
             raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
 
@@ -125,7 +125,7 @@ def xxinv(mul):
             if X.is_square and Y.is_square and X == Inverse(Y):
                 I = Identity(X.rows)
                 return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
-        except ValueError: # Y might not be invertible
+        except ValueError:  # Y might not be invertible
             pass
 
     return mul
@@ -144,9 +144,9 @@ def remove_ids(mul):
     # Separate Exprs from MatrixExprs in args
     factor, mmul = mul.as_coeff_mmul()
     # Apply standard rm_id for MatMuls
-    result = rm_id(lambda x: x.is_Identity == True)(mmul)
+    result = rm_id(lambda x: x.is_Identity is True)(mmul)
     if result != mmul:
-        return newmul(factor, *result.args) # Recombine and return
+        return newmul(factor, *result.args)  # Recombine and return
     else:
         return mul
 

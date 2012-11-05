@@ -239,7 +239,7 @@ class BlockDiagMatrix(BlockMatrix):
 
     @property
     def diag(self):
-        return [self.blocks[i,i] for i in range(self.blocks.rows)]
+        return [self.blocks[i, i] for i in range(self.blocks.rows)]
 
     def _eval_inverse(self):
         return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
@@ -297,7 +297,7 @@ def block_collapse(expr):
 
 def bc_unpack(expr):
     if expr.blockshape == (1, 1):
-        return expr.blocks[0,0]
+        return expr.blocks[0, 0]
     return expr
 
 def bc_matadd(expr):
@@ -331,8 +331,8 @@ def bc_dist(expr):
     factor, mat = expr.as_coeff_mmul()
     if factor != 1 and unpack(mat).is_BlockMatrix:
         B = unpack(mat).blocks
-        return BlockMatrix([[factor * B[i,j] for j in range(B.cols)]
-                                             for i in range(B.rows)])
+        return BlockMatrix([[factor * B[i, j] for j in range(B.cols)]
+                                              for i in range(B.rows)])
     return expr
 
 def bc_matmul(expr):
