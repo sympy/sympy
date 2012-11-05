@@ -43,6 +43,7 @@ omit_dir_patterns = ['.*tests', 'benchmark', 'examples',
 omit_dir_re = re.compile(r'|'.join(omit_dir_patterns))
 source_re = re.compile(r'.*\.py$')
 
+
 def generate_covered_files(top_dir):
     for dirpath, dirnames, filenames in os.walk(top_dir):
         omit_dirs = [dirn for dirn in dirnames if omit_dir_re.match(dirn)]

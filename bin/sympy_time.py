@@ -9,6 +9,7 @@ level = 0
 parent = None
 children = {}
 
+
 def new_import(name, globals={}, locals={}, fromlist=[]):
     global level, parent
     if name in seen:

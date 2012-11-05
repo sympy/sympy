@@ -1,6 +1,7 @@
 import time
 import timeit
 
+
 class TreeNode(object):
     def __init__(self, name):
         self._name = name
@@ -90,6 +91,7 @@ class TreeNode(object):
 pp = TreeNode(None)  # We have to use pp since there is a sage function
                      #called parent that gets imported
 seen = set()
+
 
 def new_import(name, globals={}, locals={}, fromlist=[]):
     global pp
