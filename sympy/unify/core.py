@@ -127,17 +127,18 @@ def allcombinations(A, B, ordered):
     A and B can be rearranged so that the larger of the two lists is
     reorganized into smaller sublists.
 
+    >>> from sympy.unify.core import allcombinations
     >>> for x in allcombinations((1, 2, 3), (5, 6), True): print x
-    (((1,), (2, 3)), (5, 6))
-    (((1, 2), (3,)), (5, 6))
+    (((1,), (2, 3)), ((5,), (6,)))
+    (((1, 2), (3,)), ((5,), (6,)))
 
     >>> for x in allcombinations((1, 2, 3), (5, 6), None): print x
-    (((1,), (2, 3)), (5, 6))
-    (((2,), (3, 1)), (5, 6))
-    (((3,), (1, 2)), (5, 6))
-    (((1, 2), (3,)), (5, 6))
-    (((2, 3), (1,)), (5, 6))
-    (((3, 1), (2,)), (5, 6))
+    (((1,), (2, 3)), ((5,), (6,)))
+    (((2,), (3, 1)), ((5,), (6,)))
+    (((3,), (1, 2)), ((5,), (6,)))
+    (((1, 2), (3,)), ((5,), (6,)))
+    (((2, 3), (1,)), ((5,), (6,)))
+    (((3, 1), (2,)), ((5,), (6,)))
     """
     sm, bg = (A, B) if len(A) < len(B) else (B, A)
     for part in kbin(range(len(bg)), len(sm), ordered=ordered):
@@ -149,6 +150,7 @@ def allcombinations(A, B, ordered):
 def partition(it, part):
     """ Partition a tuple/list into pieces defined by indices
 
+    >>> from sympy.unify.core import partition
     >>> partition((10, 20, 30, 40), [[0, 1, 2], [3]])
     ((10, 20, 30), (40,))
     """
@@ -160,6 +162,7 @@ def partition(it, part):
 def index(it, ind):
     """ Fancy indexing into an indexable iterable (tuple, list)
 
+    >>> from sympy.unify.core import index
     >>> index([10, 20, 30], (1, 2, 0))
     [20, 30, 10]
     """
@@ -177,7 +180,7 @@ def kbin(l, k, ordered=True):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import kbin
+    >>> from sympy.unify.core import kbin
     >>> for p in kbin(range(3), 2):
     ...     print p
     ...
