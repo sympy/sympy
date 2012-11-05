@@ -847,7 +847,7 @@ def bool_equal(function1, function2, deep=False):
     >>> function1 = SOPform(['x','z','y'],[[1,0,1]])
     >>> function2 = SOPform(['a','b','c'],[[1,0,1]])
     >>> bool_equal(function1, function2, deep = True)
-    {x: c, y: a, z: b}
+    {x: a, y: c, z: b}
 
     """
     if deep:
@@ -856,6 +856,8 @@ def bool_equal(function1, function2, deep=False):
         function2 = simplify_logic(function2)
         if function1.__class__ != function2.__class__:
             return False
+        if function1.is_Symbol == Symbol:
+            return {function1:function2}
         if len(function1.args) != len(function2.args):
             return False
         values = [1.7471, 2.8393, 0.41263, 0.37693]
