@@ -412,6 +412,7 @@ class Piecewise(Function):
         """
         Piecewise conditions may contain bool which are not of Basic type.
         """
+        from sympy import checksol, solve
         args = list(self.args)
         for i, (e, c) in enumerate(args):
             e = e._subs(old, new)
@@ -421,14 +422,11 @@ class Piecewise(Function):
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
             if isinstance(c, Equality):
-                d = Dummy()
-                from sympy import checksol
-                if checksol(d, d, c.lhs - c.rhs, minimal=True):
+                if checksol(c, {}, minimal=True):
                     # the equality is trivially solved
                     c = True
                 else:
                     # try to solve the equality
-                    from sympy import solve
                     try:
                         slns = solve(c, dict=True)
                         if not slns:
