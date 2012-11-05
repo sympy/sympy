@@ -1,16 +1,19 @@
+from sympy import cos, Lambda, S, simplify, sin, sqrt, symbols, Tuple
+from sympy.matrices import (
+    BlockDiagMatrix, BlockMatrix, block_collapse, eye, FunctionMatrix,
+    Identity, ImmutableMatrix, Inverse, MatAdd, MatMul, MatPow, Matrix,
+    MatrixExpr, MatrixSymbol, ShapeError, Trace, Transpose, ZeroMatrix,
+)
 from sympy.utilities.pytest import raises
-from sympy import S, symbols, Symbol, Tuple, Lambda, simplify, sin, cos
-from sympy.matrices import (eye, MatrixSymbol, Transpose, Inverse, ShapeError,
-        MatMul, Identity, BlockMatrix, BlockDiagMatrix, block_collapse, Matrix,
-        ZeroMatrix, MatAdd, MatPow, ImmutableMatrix, Trace,
-        MatrixExpr, FunctionMatrix)
 
-n,m,l,k,p = symbols('n m l k p', integer=True)
+n, m, l, k, p = symbols('n m l k p', integer=True)
+x = symbols('x')
 A = MatrixSymbol('A', n, m)
 B = MatrixSymbol('B', m, l)
 C = MatrixSymbol('C', n, n)
 D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
+
 
 def test_transpose():
     Sq = MatrixSymbol('Sq', n, n)
@@ -82,8 +85,6 @@ def test_shape():
 
 
 def test_matexpr():
-    x = Symbol('x')
-
     assert (x*A).shape == A.shape
     assert (x*A).__class__ == MatMul
     assert 2*A - A - A == ZeroMatrix(*A.shape)
@@ -154,6 +155,7 @@ def test_BlockMatrix():
     # Make sure that MatrixSymbols will enter 1x1 BlockMatrix if it simplifies
     assert block_collapse(Ab + Z) == A + Z
 
+
 def test_BlockMatrix_Trace():
     A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
     X = BlockMatrix([[A, B], [C, D]])
@@ -170,8 +172,8 @@ def test_squareBlockMatrix():
 
     assert X.is_square
 
-    assert block_collapse(X+Identity(m + n)).equals(
-            BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
+    assert block_collapse(X + Identity(m + n)).equals(
+        BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
     Q = X + Identity(m + n)
 
     assert block_collapse(Inverse(Q)) == Inverse(block_collapse(Q))
@@ -266,6 +268,7 @@ def test_MatAdd():
     assert MatAdd(A, ZeroMatrix(n, m), -A) == ZeroMatrix(n, m)
     # raises(TypeError, lambda : MatAdd(ZeroMatrix(n,m), S(0)))
 
+
 def test_MatMul():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
@@ -300,8 +303,11 @@ def test_MatPow():
 
     assert A**0 == Identity(n)
     assert A**1 == A
+    assert A**2 == AA
     assert A**-1 == Inverse(A)
+    assert A**S.Half == sqrt(A)
     raises(ShapeError, lambda: MatrixSymbol('B', 3, 2)**2)
+
 
 def test_MatrixSymbol():
     n, m, t = symbols('n,m,t')
@@ -309,25 +315,29 @@ def test_MatrixSymbol():
     assert X.shape == (n, m)
     raises(TypeError, lambda: MatrixSymbol('X', n, m)(t))  # issue 2756
 
+
 def test_dense_conversion():
     X = MatrixSymbol('X', 2, 2)
     x00, x01, x10, x11 = symbols('X_00 X_01 X_10 X_11')
     assert ImmutableMatrix(X) == ImmutableMatrix([[x00, x01], [x10, x11]])
     assert Matrix(X) == Matrix([[x00, x01], [x10, x11]])
 
+
 def test_free_symbols():
     assert (C*D).free_symbols == set((C, D))
+
 
 def test_zero_matmul():
     assert isinstance(S.Zero * MatrixSymbol('X', 2, 2), MatrixExpr)
 
-x = Symbol('x')
+
 def test_matadd_simplify():
     A = MatrixSymbol('A', 1, 1)
-    assert simplify(MatAdd(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) ==\
-                    MatAdd(A, ImmutableMatrix([[1]]))
+    assert simplify(MatAdd(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
+        MatAdd(A, ImmutableMatrix([[1]]))
+
 
 def test_matmul_simplify():
     A = MatrixSymbol('A', 1, 1)
-    assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) ==\
-                    MatMul(A, ImmutableMatrix([[1]]))
+    assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
+        MatMul(A, ImmutableMatrix([[1]]))
