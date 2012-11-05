@@ -93,7 +93,7 @@ def test_ratint():
     assert ratint(x/(1 - x**2), x) == -log(x**2 - 1)/2
     assert ratint(-x/(1 - x**2), x) == log(x**2 - 1)/2
 
-    assert ratint((x/4 - 4/(1 - x)).diff(x), x) ==  x/4 + 4/(x - 1)
+    assert ratint((x/4 - 4/(1 - x)).diff(x), x) == x/4 + 4/(x - 1)
 
     ans = atan(x)
     assert ratint(1/(x**2 + 1), x, symbol=x) == ans

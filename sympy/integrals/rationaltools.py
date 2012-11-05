@@ -204,7 +204,7 @@ def ratint_logpart(f, g, x, t=None):
 
     res, R = resultant(a, b, includePRS=True)
 
-    res= Poly(res, t, composite=False)
+    res = Poly(res, t, composite=False)
 
     R_map, H = {}, []
 
