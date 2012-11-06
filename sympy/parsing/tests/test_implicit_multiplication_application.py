@@ -14,6 +14,11 @@ def test_implicit_multiplication_application():
         '2sin x': '2*sin(x)',
         'x y z': 'x*y*z',
         'sin(2 * 3x)': 'sin(2 * 3 * x)',
+        'sin(x) (1 + cos(x))': 'sin(x) * (1 + cos(x))',
+        '(x + 2) sin(x)': '(x + 2) * sin(x)',
+        '(x + 2) sin x': '(x + 2) * sin(x)',
+        'sin(sin x)': 'sin(sin(x))',
+        'factorial': 'factorial',  # don't apply a bare function
         'x sin x': 'x * sin(x)',  # both application and multiplication
         'xy sin x': 'x * y * sin(x)',
         '(x+2)(x+3)': '(x + 2) * (x+3)',
@@ -34,3 +39,5 @@ def test_implicit_multiplication_application():
         implicit = parse_expr(e, transformations=transformations2)
         normal = parse_expr(d[e], transformations=transformations)
         assert(implicit == normal)
+
+test_implicit_multiplication_application()

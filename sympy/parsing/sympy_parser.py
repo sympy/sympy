@@ -1,7 +1,8 @@
 """Transform a string with Python-like source code into SymPy expression. """
 
 from sympy_tokenize import \
-    generate_tokens, untokenize, TokenError, NUMBER, STRING, NAME, OP
+    generate_tokens, untokenize, TokenError, \
+    NUMBER, STRING, NAME, OP, ENDMARKER
 
 from keyword import iskeyword
 from StringIO import StringIO
@@ -239,11 +240,14 @@ def _implicit_application(tokens, local_dict, global_dict):
     exponent = None
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
-        if tok[0] == NAME and nextTok[0] != OP and nextTok[1] != '(':
+        if (tok[0] == NAME and
+            nextTok[0] != OP and nextTok[1] != '(' and
+            nextTok[0] != ENDMARKER):
             func = global_dict.get(tok[1])
             is_Function = getattr(func, 'is_Function', False)
             if (is_Function or
-                (callable(func) and not hasattr(func, 'is_Function'))):
+                (callable(func) and not hasattr(func, 'is_Function')) or
+                isinstance(nextTok, AppliedFunction)):
                 result.append((OP, '('))
                 appendParen += 1
         elif isinstance(tok, AppliedFunction) and not tok.args:
@@ -267,6 +271,8 @@ def _implicit_application(tokens, local_dict, global_dict):
                 result.extend(exponent)
                 exponent = None
 
+    result.append(tokens[-1])
+
     # An expression like sin tan x will result in sin(tan(x) because there
     # isn't a token at the end to cause the loop to insert the close
     # parenthesis
@@ -279,7 +285,6 @@ def _implicit_application(tokens, local_dict, global_dict):
     if exponent:
         result.extend(exponent)
 
-    result.append(tokens[-1])
     return result
 
 def _function_exponents(tokens, local_dict, global_dict):
