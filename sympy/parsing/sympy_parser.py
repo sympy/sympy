@@ -30,7 +30,7 @@ def _token_splittable(token):
         try:
             return not unicodedata.lookup('GREEK SMALL LETTER ' + token)
         except KeyError:
-            return True
+            pass
     return True
 
 
@@ -98,8 +98,6 @@ def _flatten(result):
     for tok in result:
         if isinstance(tok, AppliedFunction):
             result2.extend(tok.expand())
-        elif isinstance(tok, ParenthesisGroup):
-            result2.extend(tok)
         else:
             result2.append(tok)
     return result2
