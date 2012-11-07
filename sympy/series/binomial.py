@@ -11,6 +11,7 @@ def binomial_expand(function):
 
     Examples
     ========
+    
     >>> from sympy import binomial_expand, symbols
     >>> x,y,z = symbols('x,y,z')
     >>> binomial_expand((x + y + z) ** 2)
@@ -20,36 +21,39 @@ def binomial_expand(function):
         0.02972025*x**5 + O(x**6)
 
     """
-    if function.__class__ == Pow:
+    function = sympify(function).evalf()
+    if function.is_Pow:
         xin, yin = symbols('xin,yin')
+        if not(function.base.is_Add):
+            return function
         exp = function.exp
         args_list = list(function.base.args)
-        if len(args_list) == 0 or len(args_list) == 1:
+        if len(args_list) < 2:
             return function
         req = args_list.pop(1)
         other = Add(*args_list)
         args_list = list((((1 + xin) ** exp).series()).args)
-        counter = 0
-        while counter <= (len(args_list) - 1):
-            if args_list[counter].__class__ == Mul or args_list[counter].__class__ == Pow:
-                args_list[counter] = args_list[counter].subs(xin, (xin / yin))
-            counter += 1
-        counter = 0
-        while counter <= (len(args_list) - 1):
-            if args_list[counter].__class__ == Mul:
-                temp = list(args_list[counter].args)
-                counter2 = 0
-                while counter2 <= (len(temp) - 1):
-                    if temp[counter2].__class__ == Pow:
-                        if temp[counter2].base == yin:
-                            new = Pow(yin, (temp[counter2].exp + exp))
-                            temp[counter2] = new
-                    counter2 += 1
-                args_list[counter] = Mul(*temp)
-                counter += 1
+        i = 0
+        for i in range(len(args_list)):
+            if args_list[i].is_Mul or args_list[i].is_Pow:
+                args_list[i] = args_list[i].subs(xin, (xin / yin))
+            i += 1
+        i = 0
+        for i in range(len(args_list)):
+            if args_list[i].is_Mul:
+                temp = list(args_list[i].args)
+                j = 0
+                for j in range(len(temp)):
+                    if temp[j].is_Pow:
+                        if temp[j].base == yin:
+                            new = Pow(yin, (temp[j].exp + exp))
+                            temp[j] = new
+                    j += 1
+                args_list[i] = Mul(*temp)
+                i += 1
             else:
-                args_list[counter] = (args_list[counter] * (other ** exp)).evalf()
-                counter += 1
+                args_list[i] = (args_list[i] * (other ** exp)).evalf()
+                i += 1
         step1 = ((Add(*args_list)).subs(xin, req))
         step2 = (step1.subs(yin, other))
         return step2.expand()
