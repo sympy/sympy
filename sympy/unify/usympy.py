@@ -82,7 +82,7 @@ def unify(x, y, s={}, **kwargs):
     >>> from sympy.abc import x, y, z
     >>> expr = 2*x + y + z
     >>> pattern = 2*Wild('p') + Wild('q')
-    >>> unify(expr, pattern, {}).next()
+    >>> next(unify(expr, pattern, {}))
     {p_: x, q_: y + z}
 
     >>> expr = x + y + z

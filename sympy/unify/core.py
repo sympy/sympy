@@ -38,7 +38,7 @@ def unify(x, y, s, **fns):
     >>> from sympy.unify.core import unify, Compound, Variable
     >>> expr    = Compound("Add", ("x", "y"))
     >>> pattern = Compound("Add", ("x", Variable("a")))
-    >>> unify(expr, pattern, {}).next()
+    >>> next(unify(expr, pattern, {}))
     {('a',): 'y'}
     """
     if x == y:

@@ -30,5 +30,5 @@ def test_sincos():
 
 def test_Exprs_ok():
     rl = rewriterule(p+q, q+p)
-    rl(x+y).next().is_commutative
-    str(rl(x+y).next())
+    next(rl(x+y)).is_commutative
+    str(next(rl(x+y)))
