@@ -824,30 +824,35 @@ def simplify_logic(expr):
         return POSform(variables, truthtable)
 
 
-def bool_equal(function1, function2, deep=False):
+def bool_equal(function1, function2, deep=False, mapping=False):
     """
     Function to check whether two Boolean functions are
     logically equivalent.
 
     If deep = False, just check whether the two functions
-    give true for same inputs. In this case, values are
-    given according to lexicographic ordering of variables.
+    give true for same inputs. In this case, inputs are tested
+    according to lexicographic ordering of variables.
 
     If deep = True, check whether there is any mapping of
     variables from the first function to the other, such
     that equivalent inputs given according to the mapping
-    give same outputs. If yes, return dictionary of mapping.
-    This dictionary may be one of the many possible mappings
-    to make the functions equivalent. If not, return False.
+    give same outputs. If yes, return True. If not, return
+    False.
+
+    In both cases for values of 'deep' if mapping = True,
+    return mapping (dictionary) of variables that makes
+    functions equivalent. This dictionary may be one of
+    the many possibilities. If mapping = False, return
+    just True or False.
 
     Examples
     ========
     >>> from sympy import SOPform, bool_equal
     >>> from sympy.abc import x, y, z, a, b, c
-    >>> function1 = SOPform(['x','z','y'],[[1,0,1]])
-    >>> function2 = SOPform(['a','b','c'],[[1,0,1]])
-    >>> bool_equal(function1, function2, deep = True)
-    {x: a, y: c, z: b}
+    >>> function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
+    >>> function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
+    >>> bool_equal(function1, function2, deep = True, mapping = True)
+    {y: a, z: b}
 
     """
     if deep:
@@ -856,7 +861,7 @@ def bool_equal(function1, function2, deep=False):
         function2 = simplify_logic(function2)
         if function1.__class__ != function2.__class__:
             return False
-        if function1.is_Symbol == Symbol:
+        if function1.is_Symbol:
             return {function1:function2}
         if len(function1.args) != len(function2.args):
             return False
@@ -902,14 +907,17 @@ def bool_equal(function1, function2, deep=False):
         l_keys2 = [keys2[x] for x in keys2]
         if mainkey1 != mainkey2 or l_keys1.sort() != l_keys2.sort():
             return False
-        mapping = {}
-        for x in keys1:
-            for y in keys2:
-                if keys2[y] == keys1[x]:
-                    mapping[x] = y
-                    del keys2[y]
-                    break
-        return mapping
+        if mapping:
+            mapping = {}
+            for x in keys1:
+                for y in keys2:
+                    if keys2[y] == keys1[x]:
+                        mapping[x] = y
+                        del keys2[y]
+                        break
+            return mapping
+        else:
+            return True
     else:
         variables1 = list(function1.free_symbols)
         variables2 = list(function2.free_symbols)
@@ -921,5 +929,10 @@ def bool_equal(function1, function2, deep=False):
             t[-len(b):] = b
             if function1.subs(zip(variables1, [bool(i) for i in t])) != function2.subs(zip(variables2, [bool(i) for i in t])):
                 return False
-        return True
->>>>>>> Created bool_equal function
+        if mapping:
+            mapping = {}
+            for i, x in enumerate(variables1):
+                mapping[x] = variables2[i]
+            return mapping
+        else:
+            return True
