@@ -23,7 +23,7 @@ Variable = namedtuple('Variable', 'arg')
 CondVariable = namedtuple('Variable', 'arg valid')
 from sys import stdout
 
-def unify(x, y, s, **fns):
+def unify(x, y, s={}, **fns):
     """ Unify two expressions
 
     inputs:

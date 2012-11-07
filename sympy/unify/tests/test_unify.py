@@ -12,8 +12,8 @@ def is_commutative(x):
     return isinstance(x, Compound) and (x.op in ('CAdd', 'CMul'))
 
 
-def unify(a, b, d):
-    return core.unify(a, b, d, is_associative=is_associative,
+def unify(a, b, s={}):
+    return core.unify(a, b, s=s, is_associative=is_associative,
                           is_commutative=is_commutative)
 
 def test_basic():
@@ -83,3 +83,6 @@ def test_CondVariable():
     pattern = C('CAdd', (z, y))
 
     assert list(unify(expr, pattern, {})) == []
+
+def test_defaultdict():
+    assert next(unify(Variable('x'), 'foo')) == {Variable('x'): 'foo'}
