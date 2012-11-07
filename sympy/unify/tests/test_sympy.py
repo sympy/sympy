@@ -40,7 +40,7 @@ def test_unify_commutative():
                                                 {a: 3, b: 2, c: 1}))
 
 def setsetstr(a):
-    return set(frozenset(str(item) for item in ael.items()) for ael in a)
+    return set(frozenset(map(str, ael.items())) for ael in a)
 def setdicteq(a, b):
     return setsetstr(a) == setsetstr(b)
 
@@ -58,11 +58,19 @@ def test_unify_iter():
 
     result   = list(unify(expr, pattern, {}))
     expected = [{a: 1, c: Add(2, 3, evaluate=False)},
+                {a: 1, c: Add(3, 2, evaluate=False)},
                 {a: 2, c: Add(1, 3, evaluate=False)},
+                {a: 2, c: Add(3, 1, evaluate=False)},
                 {a: 3, c: Add(1, 2, evaluate=False)},
+                {a: 3, c: Add(2, 1, evaluate=False)},
                 {a: Add(1, 2, evaluate=False), c: 3},
+                {a: Add(2, 1, evaluate=False), c: 3},
                 {a: Add(1, 3, evaluate=False), c: 2},
-                {a: Add(2, 3, evaluate=False), c: 1}]
+                {a: Add(3, 1, evaluate=False), c: 2},
+                {a: Add(2, 3, evaluate=False), c: 1},
+                {a: Add(3, 2, evaluate=False), c: 1}]
+
+    assert len(result) == len(expected)
     assert setdicteq(result, expected)
 
 def test_hard_match():
