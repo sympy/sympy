@@ -11,7 +11,7 @@ def binomial_expand(function):
 
     Examples
     ========
-    
+
     >>> from sympy import binomial_expand, symbols
     >>> x,y,z = symbols('x,y,z')
     >>> binomial_expand((x + y + z) ** 2)
