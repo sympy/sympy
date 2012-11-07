@@ -1,4 +1,4 @@
-from sympy.core import Mul, Add, Pow
+from sympy.core import Mul, Add, Pow, sympify
 from sympy.core.symbol import symbols, Symbol
 
 
