@@ -9,7 +9,7 @@ def canon(*rules):
     Do each one in turn.
     Keep doing this until there is no change.
     """
-    return exhaust(chain(*map(bottom_up, rules)))
+    return exhaust(top_down(exhaust(do_one(*rules))))
 
 def typed(ruletypes):
     """ Apply rules based on the expression type
