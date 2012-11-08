@@ -81,3 +81,12 @@ def do_one(*rules):
                 return result
         return expr
     return do_one_rl
+
+def switch(key, ruledict):
+    """ Select a rule based on the result of key called on the function """
+    def switch_rl(expr):
+        rl = ruledict.get(key(expr), identity)
+        return rl(expr)
+    return switch_rl
+
+identity = lambda x: x

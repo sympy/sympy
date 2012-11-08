@@ -1,5 +1,5 @@
 from strat_pure import (exhaust, memoize, condition, chain, debug, tryit,
-        null_safe, do_one)
+        null_safe, do_one, switch)
 from traverse import bottom_up, top_down
 
 def canon(*rules):
@@ -23,7 +23,4 @@ def typed(ruletypes):
     >>> rm_ones  = rm_id(lambda x: x==1)
     >>> remove_idents = typed({Add: rm_zeros, Mul: rm_ones})
     """
-    def typed_rl(expr):
-        rl = ruletypes.get(type(expr), lambda x:x)
-        return rl(expr)
-    return typed_rl
+    return switch(type, ruletypes)

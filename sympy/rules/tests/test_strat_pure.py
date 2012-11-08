@@ -1,5 +1,5 @@
 from sympy.rules.strat_pure import (null_safe, exhaust, memoize, condition,
-        chain, tryit, do_one, debug)
+        chain, tryit, do_one, debug, switch)
 
 def test_null_safe():
     def rl(expr):
@@ -58,3 +58,13 @@ def test_debug():
     assert posdec.func_name in log
     assert '5' in log
     assert '4' in log
+
+def test_switch():
+    inc = lambda x: x + 1
+    dec = lambda x: x - 1
+    key = lambda x: x % 3
+    rl = switch(key, {0: inc, 1: dec})
+
+    assert rl(3) == 4
+    assert rl(4) == 3
+    assert rl(5) == 5
