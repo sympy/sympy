@@ -151,10 +151,7 @@ def partition(it, part):
     >>> partition((10, 20, 30, 40), [[0, 1, 2], [3]])
     ((10, 20, 30), (40,))
     """
-
-    t = type(it)
-    return t([index(it, ind) for ind in part])
-
+    return type(it)([index(it, ind) for ind in part])
 
 def index(it, ind):
     """ Fancy indexing into an indexable iterable (tuple, list)
@@ -167,7 +164,7 @@ def index(it, ind):
 
 def kbin(l, k, ordered=True):
     """
-    Return sequence ``l`` partitioned into ``k`` bins.
+    Yield all partitions of the sequence ``l`` into ``k`` bins.
     If ordered is True then the order of the items in the
     flattened partition will be the same as the order of the
     items in ``l``; if False, all permutations of the items will
