@@ -49,7 +49,7 @@ def debug(rule, file=None):
         result = rule(expr)
         if result != expr:
             file.write("Rule: %s\n"%rule.func_name)
-            file.write("In: %s\nOut: %s\n\n"%(expr, result))
+            file.write("In:   %s\nOut:  %s\n\n"%(expr, result))
         return result
     return debug_rl
 
