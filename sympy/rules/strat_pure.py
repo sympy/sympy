@@ -63,7 +63,7 @@ def null_safe(rule):
             return result
     return null_safe_rl
 
-def try_safe(rule):
+def tryit(rule):
     """ Return original expr if rule raises exception """
     def try_rl(expr):
         try:

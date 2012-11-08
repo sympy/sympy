@@ -1,4 +1,4 @@
-from strat_pure import (exhaust, memoize, condition, chain, debug, try_safe,
+from strat_pure import (exhaust, memoize, condition, chain, debug, tryit,
         null_safe, do_one)
 from traverse import bottom_up, top_down
 

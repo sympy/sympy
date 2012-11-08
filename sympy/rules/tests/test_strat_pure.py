@@ -1,5 +1,5 @@
 from sympy.rules.strat_pure import (null_safe, exhaust, memoize, condition,
-        chain, try_safe, do_one, debug)
+        chain, tryit, do_one, debug)
 
 def test_null_safe():
     def rl(expr):
@@ -37,10 +37,10 @@ def test_chain():
     assert rl(5) == 3
     assert rl(1) == 0
 
-def test_try_safe():
+def test_tryit():
     def rl(expr):
         assert False
-    safe_rl = try_safe(rl)
+    safe_rl = tryit(rl)
     assert safe_rl(1) == 1
 
 def test_do_one():
