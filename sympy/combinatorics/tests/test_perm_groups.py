@@ -62,6 +62,9 @@ def test_order():
 
 
 def test_stabilizer():
+    S = SymmetricGroup(2)
+    H = S.stabilizer(0)
+    assert H.generators == [Permutation(1)]
     a = Permutation([2, 0, 1, 3, 4, 5])
     b = Permutation([2, 1, 3, 4, 5, 0])
     G = PermutationGroup([a, b])
@@ -651,6 +654,9 @@ def test_is_trivial():
 
 
 def test_pointwise_stabilizer():
+    S = SymmetricGroup(2)
+    stab = S.pointwise_stabilizer([0])
+    assert stab.generators == [Permutation(1)]
     S = SymmetricGroup(5)
     points = []
     stab = S
