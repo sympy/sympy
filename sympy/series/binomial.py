@@ -28,8 +28,6 @@ def binomial_expand(function):
             return function
         exp = function.exp
         args_list = list(function.base.args)
-        if len(args_list) < 2:
-            return function
         req = args_list.pop(1)
         other = Add(*args_list)
         args_list = list((((1 + xin) ** exp).series()).args)
