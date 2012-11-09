@@ -231,7 +231,7 @@ def real_root(arg, n=None):
 ###############################################################################
 
 
-class MinMaxBase(LatticeOp):
+class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
         if not args:
             raise ValueError("The Max/Min functions must have arguments.")
@@ -352,7 +352,7 @@ class MinMaxBase(LatticeOp):
         return False
 
 
-class Max(MinMaxBase, Application, Basic):
+class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.
 
@@ -458,7 +458,7 @@ class Max(MinMaxBase, Application, Basic):
         return (x < y)
 
 
-class Min(MinMaxBase, Application, Basic):
+class Min(MinMaxBase, Application):
     """
     Return, if possible, the minimum value of the list.
 

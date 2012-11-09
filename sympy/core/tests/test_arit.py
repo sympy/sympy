@@ -1403,7 +1403,6 @@ def test_issue_2941():
 
 def test_issue_2983():
     assert Max(x, 1) * Max(x, 2) == Max(x, 1) * Max(x, 2)
-    assert Or(x, z) * Or(x, z) == Or(x, z) * Or(x, z)
 
 
 def test_issue_2978():

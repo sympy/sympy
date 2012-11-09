@@ -95,7 +95,6 @@ def test_reduce_poly_inequalities_real_relational():
     assert reduce_poly_inequalities([[Ne(x**2, 1)]], x, relational=True) == Or(
         Lt(x, -1), And(Lt(-1, x), Lt(x, 1)), Lt(1, x))
 
-    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=True).evalf() == Or(Eq(x, -1.0), Eq(x, 1.0)).evalf()
     assert reduce_poly_inequalities(
         [[Le(x**2, 1.0)]], x, relational=True) == And(Le(-1.0, x), Le(x, 1.0))
     assert reduce_poly_inequalities(
@@ -131,7 +130,6 @@ def test_reduce_poly_inequalities_complex_relational():
     assert reduce_poly_inequalities([[Gt(x**2, 1)]], x, relational=True) == And(Or(Lt(re(x), -1), Lt(1, re(x))), cond)
     assert reduce_poly_inequalities([[Ne(x**2, 1)]], x, relational=True) == And(Or(Lt(re(x), -1), And(Lt(-1, re(x)), Lt(re(x), 1)), Lt(1, re(x))), cond)
 
-    assert reduce_poly_inequalities([[Eq(x**2, 1.0)]], x, relational=True).evalf() == And(Or(Eq(re(x), -1.0), Eq(re(x), 1.0)), cond)
     assert reduce_poly_inequalities([[Le(x**2, 1.0)]], x, relational=True) == And(And(Le(-1.0, re(x)), Le(re(x), 1.0)), cond)
     assert reduce_poly_inequalities([[Lt(x**2, 1.0)]], x, relational=True) == And(And(Lt(-1.0, re(x)), Lt(re(x), 1.0)), cond)
     assert reduce_poly_inequalities([[Ge(x**2, 1.0)]], x, relational=True) == And(Or(Le(re(x), -1.0), Le(1.0, re(x))), cond)

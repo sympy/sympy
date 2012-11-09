@@ -271,8 +271,6 @@ def plot_implicit(expr, *args, **kwargs):
 
     >>> p7 = plot_implicit(And(y > x, y > -x))  # doctest: +SKIP
     """
-
-    assert isinstance(expr, Expr)
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
 

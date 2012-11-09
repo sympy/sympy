@@ -1,13 +1,14 @@
-from core import C
-from singleton import S
-from operations import AssocOp
-from cache import cacheit
-from numbers import ilcm, igcd
-
 from collections import defaultdict
 
+from sympy.core.core import C
+from sympy.core.singleton import S
+from sympy.core.operations import AssocOp
+from sympy.core.cache import cacheit
+from sympy.core.numbers import ilcm, igcd
+from sympy.core.expr import Expr
 
-class Add(AssocOp):
+
+class Add(Expr, AssocOp):
 
     __slots__ = []
 
