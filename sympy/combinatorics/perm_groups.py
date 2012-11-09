@@ -2247,6 +2247,8 @@ class PermutationGroup(Basic):
             for gen in strong_gens:
                 if [gen(point) for point in points] == points:
                     stab_gens.append(gen)
+            if not stab_gens:
+                stab_gens = _af_new(range(degree))
             return PermutationGroup(stab_gens)
         else:
             gens = self._generators
