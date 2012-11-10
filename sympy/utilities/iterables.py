@@ -1435,3 +1435,96 @@ def runs(seq, op=gt):
     if run:
         cycles.append(run)
     return cycles
+
+
+def kbins(l, k, ordered=11):
+    """
+    Return sequence ``l`` partitioned into ``k`` bins.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import kbins
+
+    The default is to give the items in the same order, but grouped
+    into k partitions:
+
+    >>> for p in kbins(range(5), 2):
+    ...     print p
+    ...
+    ((0,), (1, 2, 3, 4))
+    ((0, 1), (2, 3, 4))
+    ((0, 1, 2), (3, 4))
+    ((0, 1, 2, 3), (4,))
+
+    The ``ordered`` flag is a 2 digit integer indicating whether the order of
+    the bins and the order of the items in the bins matters. Given::
+
+        A = [[0], [1, 2]]
+        B = [[1, 2], [0]]
+        C = [[2, 1], [0]]
+        D = [[0], [2, 1]]
+
+    the following values for ``ordered`` have the shown meanings::
+
+        00 means A == B == C == D
+        01 means A == B
+        10 means A == D
+        11 means A == A
+
+    When the order of something matters, it is returned as a tuple, otherwise a
+    list. (A tuple is used in case the items of ``l`` are not hashable.)
+
+    >>> for p in kbins(range(3), 2, ordered=10):
+    ...     print p
+    ...
+    ([0, 1], [2])
+    ([2], [0, 1])
+    ([0], [1, 2])
+    ([1, 2], [0])
+    ([0, 2], [1])
+    ([1], [0, 2])
+
+    See Also
+    ========
+    partitions, multiset_partitions
+
+    """
+    def partition(lista, bins):
+        #  EnricoGiampieri's partition generator from
+        #  http://stackoverflow.com/questions/13131491/
+        #  partition-n-items-into-k-bins-in-python-lazily
+        if len(lista) == 1 or bins == 1:
+            yield [lista]
+        elif len(lista) > 1 and bins > 1:
+            for i in range(1, len(lista)):
+                for part in partition(lista[i:], bins - 1):
+                    if len([lista[:i]] + part) == bins:
+                        yield [lista[:i]] + part
+
+    if ordered == 11:
+        for p in partition(l, k):
+            yield tuple([tuple(i) for i in p])
+    elif ordered == 00:
+        for p in multiset_partitions(l, k):
+            yield p
+    elif ordered == 10:
+        for p in multiset_partitions(l, k):
+            for perm in permutations(p):
+                yield perm
+    elif ordered == 01:
+        for p in partitions(len(l), k):
+            if sum(p.values()) != k:
+                continue
+            for li in permutations(l):
+                rv = []
+                i = j = 0
+                for size, multiplicity in sorted(p.items()):
+                    for m in range(multiplicity):
+                        j = i + size
+                        rv.append(li[i: j])
+                        i = j
+                yield rv
+    else:
+        raise ValueError(
+            'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
