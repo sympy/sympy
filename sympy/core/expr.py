@@ -649,7 +649,7 @@ class Expr(Basic, EvalfMixin):
             A = 0
         else:
             A = self.subs(x, a)
-            if A is S.NaN:
+            if A.has(S.NaN):
                 A = limit(self, x, a)
                 if A is S.NaN:
                     return A
@@ -658,7 +658,7 @@ class Expr(Basic, EvalfMixin):
             B = 0
         else:
             B = self.subs(x, b)
-            if B is S.NaN:
+            if B.has(S.NaN):
                 B = limit(self, x, b)
 
         return B - A

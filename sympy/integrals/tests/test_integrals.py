@@ -4,7 +4,7 @@ from sympy import (
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple,
+    Tuple, nan,
 )
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.physics.units import m, s
@@ -888,3 +888,9 @@ def test_issue_3154():
 def test_issue1054():
     assert integrate(1/(1+x+y+z), (x, 0, 1), (y, 0, 1), (z, 0, 1)) in \
         [6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2]
+
+def test_issue_1227():
+    R, b, h = symbols('R b h')
+    # It doesn't matter if we can do the integral.  Just make sure the result
+    # doesn't contain nan.  This is really a test against _eval_interval.
+    assert not integrate(((h*(x-R+b))/b)*sqrt(R**2-x**2), (x, R-b, R)).has(nan)
