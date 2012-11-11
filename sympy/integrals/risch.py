@@ -1155,7 +1155,7 @@ def integrate_primitive(a, d, DE, z=None):
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[0], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
-        i = Integral(cancel(i).subs(s), DE.x)
+        i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), i, b)
 
@@ -1170,7 +1170,7 @@ def integrate_primitive(a, d, DE, z=None):
         residue_reduce_to_basic(g2, DE, z))
     if not b:
         # TODO: This does not do the right thing when b is False
-        i = Integral(cancel(i.as_expr()).subs(s), DE.x)
+        i = NonElementaryIntegral(cancel(i.as_expr()).subs(s), DE.x)
     else:
         i = cancel(i.as_expr())
 
@@ -1245,7 +1245,7 @@ def integrate_hyperexponential(a, d, DE, z=None):
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
             g1[0]*derivation(g1[0], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
-        i = Integral(cancel(i.subs(s)), DE.x)
+        i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
             residue_reduce_to_basic(g2, DE, z), i, b)
 
@@ -1265,7 +1265,7 @@ def integrate_hyperexponential(a, d, DE, z=None):
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
             (qd**2).as_expr()
-        i = Integral(cancel(i).subs(s), DE.x)
+        i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
 
     return (ret, i, b)
 
@@ -1327,9 +1327,55 @@ def integrate_nonlinear_no_specials(a, d, DE, z=None):
         residue_reduce_to_basic(g2, DE, z))
     return (ret, b)
 
-def risch_integrate(f, x, extension=None, handle_first='log'):
+class NonElementaryIntegral(Integral):
+    """
+    Represents a nonelementary Integral.
+
+    If the result of integrate() is an instance of this class, it is
+    guaranteed to be nonelementary.  Note that integrate() by default will try
+    to find any closed-form solution, even in terms of special functions which
+    may themselves not be elementary.  To make integrate() only give
+    elementary solutions, or, in the cases where it can prove the integral to
+    be nonelementary, instances of this class, use integrate(risch=True).
+    In this case, integrate() may raise NotImplementedError if it cannot make
+    such a determination.
+
+    integrate() uses the deterministic Risch algorithm to integrate elementary
+    functions or prove that they have no elementary integral.  In some cases,
+    this algorithm can split an integral into an elementary and nonelementary
+    part, so that the result of integrate will be the sum of an elementary
+    expression and a NonElementaryIntegral.
+
+    Example
+    =======
+
+    >>> from sympy import integrate, exp, log, Integral
+    >>> from sympy.abc import x
+
+    >>> a = integrate(exp(-x**2), x, risch=True)
+    >>> print a
+    Integral(exp(-x**2), x)
+    >>> type(a)
+    <class 'sympy.integrals.risch.NonElementaryIntegral'>
+
+    >>> expr = (2*log(x)**2 - log(x) - x**2)/(log(x)**3 - x**2*log(x))
+    >>> b = integrate(expr, x, risch=True)
+    >>> print b
+    -log(-x + log(x))/2 + log(x + log(x))/2 + Integral(1/log(x), x)
+    >>> type(b.atoms(Integral).pop())
+    <class 'sympy.integrals.risch.NonElementaryIntegral'>
+
+    """
+    # TODO: This is useful in and of itself, because isinstance(result,
+    # NonElementaryIntegral) will tell if the integral has been proven to be
+    # elementary. But should we do more?  Perhaps a no-op .doit() if
+    # elementary=True?  Or maybe some information on why the integral is
+    # nonelementary.
+    pass
+
+def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False):
     r"""
-    Prototype function for the Risch Integration Algorithm.
+    The Risch Integration Algorithm.
 
     Only transcendental functions are supported.  Currently, only exponentials
     and logarithms are supported, but support for trigonometric functions is
@@ -1337,11 +1383,28 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
 
     If this function returns an unevaluated Integral in the result, it means
     that it has proven that integral to be nonelementary.  Any errors will
-    result in raising NotImplementedError.
+    result in raising NotImplementedError.  The unevaluated Integral will be
+    an instance of NonElementaryIntegral, a subclass of Integral.
+
+    handle_first may be either 'exp' or 'log'.  This changes the order in
+    which the extension is built, and may result in a different (but
+    equivalent) solution (for an example of this, see issue 2010).  It is also
+    possible that the integral may be computed with one but not the other,
+    because not all cases have been implemented yet.  It defaults to 'log' so
+    that the outer extension is exponential when possible, because more of the
+    exponential case has been implemented.
+
+    If separate_integral is True, the result is returned as a tuple (ans, i),
+    where the integral is ans + i, ans is elementary, and i is either a
+    NonElementaryIntegral or 0.  This useful if you want to try further
+    integrating the NonElementaryIntegral part using other algorithms to
+    possibly get a solution in terms of special functions.  It is False by
+    default.
 
     Examples
     ========
-    >>> from sympy import risch_integrate, exp, log, pprint
+    >>> from sympy.integrals.risch import risch_integrate
+    >>> from sympy import exp, log, pprint
     >>> from sympy.abc import x
 
     First, we try integrating exp(-x**2). Except for a constant factor of
@@ -1410,6 +1473,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
          1
     -----------
     log(log(x))
+
     """
     f = S(f)
 
@@ -1431,7 +1495,7 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
         elif case == 'base':
             # XXX: We can't call ratint() directly here because it doesn't
             # handle polynomials correctly.
-            ans = integrate(fa.as_expr()/fd.as_expr(), DE.x)
+            ans = integrate(fa.as_expr()/fd.as_expr(), DE.x, risch=False)
             b = False
             i = S(0)
         else:
@@ -1443,5 +1507,13 @@ def risch_integrate(f, x, extension=None, handle_first='log'):
             DE.decrement_level()
             fa, fd = frac_in(i, DE.t)
         else:
-            result += i
-            return result.subs(DE.backsubs)
+            result, i = result.subs(DE.backsubs), i.subs(DE.backsubs)
+            if not separate_integral:
+                result += i
+                return result
+            else:
+
+                if isinstance(i, NonElementaryIntegral):
+                    return (result, i)
+                else:
+                    return (result, 0)
