@@ -186,3 +186,62 @@ def _verify_normal_closure(group, arg, closure=None):
             conjugates.add(gen^el)
     naive_closure = PermutationGroup(list(conjugates))
     return closure.is_subgroup(naive_closure)
+
+def canonicalize_naive(g, dummies, sym, *v):
+    """
+    canonicalize tensor formed by tensors of the different types
+
+    g  permutation representing the tensor
+    dummies  list of dummy indices
+    msym symmetry of the metric
+
+    v is a list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`
+    base_i, gens_i BSGS for tensors of this type
+    n_i  number ot tensors of type `i`
+
+    sym_i symmetry under exchange of two component tensors of type `i`
+          None  no symmetry
+          0     commuting
+          1     anticommuting
+
+    Return 0 if the tensor is zero, else return the array form of
+    the permutation representing the canonical form of the tensor.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.testutil import canonicalize_naive
+    >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
+    >>> from sympy.combinatorics import Permutation, PermutationGroup
+    >>> g = Permutation([1,3,2,0,4,5])
+    >>> base2, gens2 = get_symmetric_group_sgs(2)
+    >>> canonicalize_naive(g, [2, 3], 0, (base2, gens2, 2, 0))
+    [0, 2, 1, 3, 4, 5]
+    """
+    from sympy.combinatorics.perm_groups import PermutationGroup
+    from sympy.combinatorics.tensor_can import gens_products, dummy_sgs
+    from sympy.combinatorics.permutations import Permutation, _af_rmul
+    v1 = []
+    for i in range(len(v)):
+        base_i, gens_i, n_i, sym_i = v[i]
+        v1.append((base_i, gens_i, [[]]*n_i, sym_i))
+    size, sbase, sgens = gens_products(*v1)
+    dgens = dummy_sgs(dummies, sym, size-2)
+    S = PermutationGroup([Permutation(x) for x in sgens])
+    D = PermutationGroup([Permutation(x) for x in dgens])
+    dlist = list(D.generate(af=True))
+    g = g.array_form
+    st = set()
+    for s in S.generate(af=True):
+        h = _af_rmul(g, s)
+        for d in dlist:
+            q = tuple(_af_rmul(d, h))
+            st.add(q)
+    a = list(st)
+    a.sort()
+    prev = (0,)*size
+    for h in a:
+        if h[:-2] == prev[:-2]:
+            if h[-1] != prev[-1]:
+                return 0
+        prev = h
+    return list(a[0])
