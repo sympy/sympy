@@ -928,7 +928,7 @@ class Integral(Expr):
              is actually part of a different method of Integral), since it can
              compute closed-form solutions of definite integrals even when no
              closed-form indefinite integral exists.  But it also is capable
-             of computing many definite integrals as well.
+             of computing many indefinite integrals as well.
 
            - Another advantage of this method is that it can use some results
              about the Meijer G-Function to give a result in terms of a
