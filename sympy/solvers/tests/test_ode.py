@@ -596,7 +596,8 @@ def test_1st_homogeneous_coeff_ode_check3():
     # Checker can't verify this form either
     # (False,
     #   C1*(log(C1*LambertW(C2*x)/x) + LambertW(C2*x) - 1)*LambertW(C2*x))
-    # It is because a = W(a)*exp(W(a)), so log(a) == log(W(a)) + W(a)
+    # It is because a = W(a)*exp(W(a)), so log(a) == log(W(a)) + W(a) and C2 =
+    # -E/C1 (which can be verified by solving with simplify=False).
     sol3b = Eq(f(x), C1*LambertW(C2*x))
     assert checkodesol(eq3, sol3b, solve_for_func=True)[0]
     # and without an assumption about x and f(x), the implicit form doesn't
