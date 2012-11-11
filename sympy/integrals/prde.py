@@ -713,6 +713,9 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         return None
     else:
         if not all(i.is_Rational for i in u):
+            # TODO: But maybe we can tell if they're not rational, like
+            # log(2)/log(3). Also, there should be an option to continue
+            # anyway, even if the result might potentially be wrong.
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:

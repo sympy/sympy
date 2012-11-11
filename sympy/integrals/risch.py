@@ -657,6 +657,9 @@ class NonElementaryIntegralException(Exception):
     integral in the given differential field.
     """
     # TODO: Rewrite algorithms below to use this (?)
+
+    # TODO: Pass through information about why the integral was nonelementary,
+    # and store that in the resulting NonElementaryIntegral somehow.
     pass
 
 def gcdex_diophantine(a, b, c):
@@ -725,6 +728,8 @@ def as_poly_1t(p, t, z):
     >>> as_poly_1t(p, x, z).as_expr().subs(z, 1/x) == p
     True
     """
+    # TODO: Use this on the final result.  That way, we can avoid answers like
+    # (...)*exp(-x).
     pa, pd = frac_in(p, t, cancel=True)
     if not pd.is_monomial:
         # XXX: Is there a better Poly exception that we could raise here
