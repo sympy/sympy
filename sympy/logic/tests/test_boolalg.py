@@ -188,10 +188,10 @@ def test_bool_equal():
     from sympy.abc import a, b, c, x, y, z
     assert bool_equal(Not(Not(a)), a)
     assert bool_equal(SOPform(['w', 'x', 'y', 'z'], minterms), POSform(['w', 'x', 'y', 'z'], minterms))
-    assert bool_equal(SOPform(['x', 'z', 'y'],[[1, 0, 1]]), SOPform(['a', 'b', 'c'],[[1, 0, 1]]), deep=True) != False
+    assert bool_equal(SOPform(['x', 'z', 'y'],[[1, 0, 1]]), SOPform(['a', 'b', 'c'],[[1, 0, 1]]))
     function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
     function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
-    assert bool_equal(function1, function2, deep = True, mapping = True) == {y: a, z: b}
+    assert bool_equal(function1, function2, mapping = True) == {y: a, z: b}
 
 def test_bool_symbol():
     """Test that mixing symbols with boolean values

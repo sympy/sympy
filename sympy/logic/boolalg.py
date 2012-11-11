@@ -824,26 +824,25 @@ def simplify_logic(expr):
         return POSform(variables, truthtable)
 
 
-def bool_equal(function1, function2, deep=False, mapping=False):
+def bool_equal(function1, function2, mapping=False):
     """
     Function to check whether two Boolean functions are
     logically equivalent.
 
-    If deep = False, just check whether the two functions
-    give true for same inputs. In this case, inputs are tested
-    according to lexicographic ordering of variables.
+    Check whether there is any mapping of variables from the
+    first function to the other, such that equivalent inputs
+    given according to the mapping give same outputs. If yes,
+    return True. If not, return False.
 
-    If deep = True, check whether there is any mapping of
-    variables from the first function to the other, such
-    that equivalent inputs given according to the mapping
-    give same outputs. If yes, return True. If not, return
-    False.
+    If mapping = True, return mapping (dictionary) of variables
+    that makes functions equivalent. This dictionary may be one
+    of the many possibilities. If mapping = False, return just
+    True or False.
 
-    In both cases for values of 'deep' if mapping = True,
-    return mapping (dictionary) of variables that makes
-    functions equivalent. This dictionary may be one of
-    the many possibilities. If mapping = False, return
-    just True or False.
+    The procedure assigns a key to every function after it has
+    been simplified and to every variable in it, based on its
+    args. The use of prime numbers in doing so ensures that the
+    keys assigned to any function/variable are not equal wrongly.
 
     Examples
     ========
@@ -851,88 +850,82 @@ def bool_equal(function1, function2, deep=False, mapping=False):
     >>> from sympy.abc import x, y, z, a, b, c
     >>> function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
     >>> function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
-    >>> bool_equal(function1, function2, deep = True, mapping = True)
+    >>> bool_equal(function1, function2, mapping = True)
     {y: a, z: b}
 
     """
-    if deep:
-        from sympy.core import Symbol
-        function1 = simplify_logic(function1)
-        function2 = simplify_logic(function2)
-        if function1.__class__ != function2.__class__:
-            return False
-        if function1.is_Symbol:
-            return {function1:function2}
-        if len(function1.args) != len(function2.args):
-            return False
-        values = [1.7471, 2.8393, 0.41263, 0.37693]
-        i = 1
-        while i <= 2:
-            if i == 1:
-                function = function1
-                keys = {}
-                for x in function1.free_symbols:
-                    keys[x] = 0
-            else:
-                function = function2
-                keys = {}
-                for x in function2.free_symbols:
-                    keys[x] = 0
-            mainkey = 0
-            for term in function.args:
-                if term.is_Symbol:
-                    mainkey = mainkey + values[0]
-                    keys[term] = keys[term] + values[0]
-                elif term.is_Not:
-                    mainkey = mainkey - values[1]
-                    keys[term.args[0]] = keys[term.args[0]] - values[1]
-                else:
-                    tempkey = 10
-                    for x in term.args:
-                        if x.is_Symbol:
-                            tempkey = tempkey * values[2]
-                            keys[x] = keys[x] + values[2]
-                        if x.is_Not:
-                            tempkey = tempkey * (- values[3])
-                            keys[x.args[0]] = keys[x.args[0]] - values[3]
-                    mainkey = mainkey + tempkey
-            if i == 1:
-                keys1 = keys.copy()
-                mainkey1 = mainkey
-            else:
-                keys2 = keys.copy()
-                mainkey2 = mainkey
-            i += 1
-        l_keys1 = [keys1[x] for x in keys1]
-        l_keys2 = [keys2[x] for x in keys2]
-        if mainkey1 != mainkey2 or l_keys1.sort() != l_keys2.sort():
-            return False
-        if mapping:
-            mapping = {}
-            for x in keys1:
-                for y in keys2:
-                    if keys2[y] == keys1[x]:
-                        mapping[x] = y
-                        del keys2[y]
-                        break
-            return mapping
+    from sympy.core import Symbol
+    function1 = simplify_logic(function1)
+    function2 = simplify_logic(function2)
+    if function1.__class__ != function2.__class__:
+        return False
+    if function1.is_Symbol:
+        return {function1:function2}
+    if len(function1.args) != len(function2.args):
+        return False
+    #list of random prime numbers used
+    values = [17471, 28393, 41263, 37693]
+    i = 1
+    #iterate through the args to assign keys
+    while i <= 2:
+        if i == 1:
+            function = function1
+            keys = {}
+            for x in function1.free_symbols:
+                keys[x] = 0
         else:
-            return True
+            function = function2
+            keys = {}
+            for x in function2.free_symbols:
+                keys[x] = 0
+        mainkey = 0
+        for term in function.args:
+            if term.is_Symbol:
+                #if arg is Symbol, alter the key for the corresponding
+                #symbol and the mainkey using first prime number.
+                mainkey = mainkey + values[0]
+                keys[term] = keys[term] + values[0]
+            elif term.is_Not:
+                #if arg is Not(Symbol), alter the key for the Symbol
+                #and the the mainkey using second prime number.
+                mainkey = mainkey - values[1]
+                keys[term.args[0]] = keys[term.args[0]] + values[1]
+            else:
+                #if arg is And/Or, alter the keys using the third and
+                #fourth prime numbers. Each And/Or arg has a unique key,
+                #based on the occurences of variables in it.
+                tempkey = 10
+                for x in term.args:
+                    if x.is_Symbol:
+                        tempkey = tempkey * values[2]
+                        keys[x] = keys[x] + values[2]
+                    if x.is_Not:
+                        tempkey = tempkey * (- values[3])
+                        keys[x.args[0]] = keys[x.args[0]] + values[3]
+                mainkey = mainkey + tempkey
+        if i == 1:
+            keys1 = keys.copy()
+            mainkey1 = mainkey
+        else:
+            keys2 = keys.copy()
+            mainkey2 = mainkey
+        i += 1
+    l_keys1 = [keys1[x] for x in keys1]
+    l_keys2 = [keys2[x] for x in keys2]
+    #Match the mainkeys and variable-key patterns.
+    if mainkey1 != mainkey2 or l_keys1.sort() != l_keys2.sort():
+        return False
+    if mapping:
+        #if mapping is required, match variables with
+        #equal keys. In this case, the mapping may be one of
+        #the many possiblities.
+        mapping = {}
+        for x in keys1:
+            for y in keys2:
+                if keys2[y] == keys1[x]:
+                    mapping[x] = y
+                    del keys2[y]
+                    break
+        return mapping
     else:
-        variables1 = list(function1.free_symbols)
-        variables2 = list(function2.free_symbols)
-        if len(variables1) != len(variables2):
-            return False
-        t = [0] * len(variables1)
-        for x in range(2 ** len(variables1)):
-            b = [int(y) for y in bin(x)[2:]]
-            t[-len(b):] = b
-            if function1.subs(zip(variables1, [bool(i) for i in t])) != function2.subs(zip(variables2, [bool(i) for i in t])):
-                return False
-        if mapping:
-            mapping = {}
-            for i, x in enumerate(variables1):
-                mapping[x] = variables2[i]
-            return mapping
-        else:
-            return True
+        return True
