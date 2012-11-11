@@ -2030,13 +2030,13 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                                 /     2   \
-                                 |    f (x)|
-                     /f(x)\   log|3 + -----|
-                  log|----|      |       2 |
-           /x \      \ x  /      \      x  /
-        log|--| + --------- + -------------- = 0
-           \C1/       3             3
+                 /          3   \
+                     |3*f(x)   f (x)|
+                  log|------ + -----|
+                     |  x         3 |
+           /x \      \           x  /
+        log|--| + ------------------- = 0
+           \C1/            3
 
     References
     ==========

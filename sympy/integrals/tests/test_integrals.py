@@ -775,6 +775,8 @@ def test_issue_1793a():
         c*(-A*(-h2)*log(c*t)/c + A*t*exp(-z)),
         c*( A* h1 *log(c*t)/c + A*t*exp(-z)),
         c*( A* h2 *log(c*t)/c + A*t*exp(-z)),
+        (A*c*t - A*(-h1)*log(t)*exp(z))*exp(-z),
+        (A*c*t - A*(-h2)*log(t)*exp(z))*exp(-z),
     ]
 
 
@@ -887,10 +889,22 @@ def test_issue_3154():
 
 def test_issue1054():
     assert integrate(1/(1+x+y+z), (x, 0, 1), (y, 0, 1), (z, 0, 1)) in \
-        [6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2]
+        [6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2,
+         -12*log(3) - 3*log(6)/2 + 47*log(2)/2]
 
 def test_issue_1227():
     R, b, h = symbols('R b h')
     # It doesn't matter if we can do the integral.  Just make sure the result
     # doesn't contain nan.  This is really a test against _eval_interval.
     assert not integrate(((h*(x-R+b))/b)*sqrt(R**2-x**2), (x, R-b, R)).has(nan)
+
+def test_powers():
+    assert integrate(2**x + 3**x, x) == 2**x/log(2) + 3**x/log(3)
+
+def test_risch_option():
+    # risch=True only allowed on indefinite integrals
+    raises(ValueError, lambda: integrate(1/log(x), (x, 0, oo), risch=True))
+    assert integrate(exp(-x**2), x, risch=True) == NonElementaryIntegral(exp(-x**2), x)
+    assert integrate(log(1/x)*y, x, y, risch=True) == y**2*(x*log(1/x)/2 + x/2)
+    assert integrate(erf(x), x, risch=True) == Integral(erf(x), x)
+    # TODO: How to test risch=False?
