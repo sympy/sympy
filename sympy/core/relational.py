@@ -201,6 +201,9 @@ class Relational(Boolean, Expr, EvalfMixin):
         return self.__class__(self.lhs.simplify(ratio=ratio),
                               self.rhs.simplify(ratio=ratio))
 
+    def __nonzero__(self):
+        raise TypeError("symbolic boolean expression has no truth value.")
+
 
 class Equality(Relational):
 
@@ -218,10 +221,6 @@ class Equality(Relational):
     def _eval_relation_doit(cls, lhs, rhs):
         return Eq(lhs, rhs)
 
-    def __nonzero__(self):
-        return self.lhs.compare(self.rhs) == 0
-
-
 class Unequality(Relational):
 
     rel_op = '!='
@@ -235,10 +234,6 @@ class Unequality(Relational):
     @classmethod
     def _eval_relation_doit(cls, lhs, rhs):
         return Ne(lhs, rhs)
-
-    def __nonzero__(self):
-        return self.lhs.compare(self.rhs) != 0
-
 
 class _Greater(Relational):
     """Not intended for general use
@@ -525,9 +520,6 @@ class GreaterThan(_Greater):
     def _eval_relation(cls, lhs, rhs):
         return lhs >= rhs
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) >= 0
-
 
 class LessThan(_Less):
     __doc__ = GreaterThan.__doc__
@@ -538,9 +530,6 @@ class LessThan(_Less):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return lhs <= rhs
-
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) <= 0
 
 
 class StrictGreaterThan(_Greater):
@@ -553,9 +542,6 @@ class StrictGreaterThan(_Greater):
     def _eval_relation(cls, lhs, rhs):
         return lhs > rhs
 
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) > 0
-
 
 class StrictLessThan(_Less):
     __doc__ = GreaterThan.__doc__
@@ -566,9 +552,6 @@ class StrictLessThan(_Less):
     @classmethod
     def _eval_relation(cls, lhs, rhs):
         return lhs < rhs
-
-    def __nonzero__(self):
-        return self.lhs.compare( self.rhs ) < 0
 
 # A class-specific (not object-specific) data item used for a minor speedup.  It
 # is defined here, rather than directly in the class, because the classes that
