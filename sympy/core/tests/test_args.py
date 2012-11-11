@@ -10,8 +10,7 @@ import os
 import re
 import warnings
 
-from sympy import Basic, S, symbols, sqrt, sin
-from sympy import Basic, S, symbols, sqrt, sin, oo, Interval
+from sympy import Basic, S, symbols, sqrt, sin, oo, Interval, exp
 from sympy.utilities.pytest import XFAIL, SKIP
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1411,6 +1410,9 @@ def test_sympy__integrals__integrals__Integral():
     from sympy.integrals.integrals import Integral
     assert _test_args(Integral(2, (x, 0, 1)))
 
+def test_sympy__integrals__risch__NonElementaryIntegral():
+    from sympy.integrals.risch import NonElementaryIntegral
+    assert _test_args(NonElementaryIntegral(exp(-x**2), x))
 
 @SKIP("abstract class")
 def test_sympy__integrals__transforms__IntegralTransform():
