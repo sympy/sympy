@@ -6,7 +6,8 @@ from sympy import (
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
     Tuple, nan,
 )
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.integrals.risch import NonElementaryIntegral
+from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.physics.units import m, s
 
 x, y, a, t, x_1, x_2, z = symbols('x y a t x_1 x_2 z')
@@ -736,6 +737,7 @@ def test_issue_1277():
                 (n**2 - 2**(1/n)*n**2 - n*2**(1/n))/(2**(1 + 1/n) + n*2**(1 + 1/n))) == 0
 
 
+@slow
 def test_issue_1418():
     assert integrate((sqrt(x) - x**3)/x**Rational(1, 3), x) == \
         6*x**Rational(7, 6)/7 - 3*x**Rational(11, 3)/11
