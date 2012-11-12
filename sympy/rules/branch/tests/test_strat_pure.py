@@ -23,9 +23,9 @@ even = lambda x: x%2 == 0
 
 def test_exhaust():
     brl = exhaust(branch5)
-    assert set(brl(3)) == {0}
-    assert set(brl(7)) == {10}
-    assert set(brl(5)) == {0, 10}
+    assert set(brl(3)) == set([0])
+    assert set(brl(7)) == set([10])
+    assert set(brl(5)) == set([0, 10])
 
 def test_debug():
     import StringIO
@@ -41,9 +41,9 @@ def test_debug():
 
 def test_multiplex():
     brl = multiplex(posdec, branch5)
-    assert set(brl(3)) == {2}
-    assert set(brl(7)) == {6, 8}
-    assert set(brl(5)) == {4, 6}
+    assert set(brl(3)) == set([2])
+    assert set(brl(7)) == set([6, 8])
+    assert set(brl(5)) == set([4, 6])
 
 def test_condition():
     brl = condition(even, branch5)
@@ -57,5 +57,5 @@ def test_notempty():
             yield x
 
     brl = notempty(ident_if_even)
-    assert set(brl(4)) == {4}
-    assert set(brl(5)) == {5}
+    assert set(brl(4)) == set([4])
+    assert set(brl(5)) == set([5])
