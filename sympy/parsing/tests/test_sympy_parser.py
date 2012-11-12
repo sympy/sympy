@@ -19,7 +19,15 @@ def test_sympy_parser():
         '10!': 3628800,
         '(_kern)': Symbol('_kern'),
         '-(2)': -Integer(2),
-        '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)]
+        '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)],
+        'Symbol("x").free_symbols': x.free_symbols,
+        "S('S(3).n(n=3)')": 3.00,
+        'factorint(12, visual=True)': Mul(
+            Pow(2, 2, evaluate=False),
+            Pow(3, 1, evaluate=False),
+            evaluate=False),
+        'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
+
     }
     for text, result in inputs.items():
         assert parse_expr(text) == result
