@@ -77,7 +77,8 @@ def test_count_ops_visual():
     assert count({}) is S.Zero
     assert count([x + 1, sin(x)*y, None]) == SIN + ADD + MUL
     assert count([]) is S.Zero
-    assert count(And(x, y, z)) == 2*AND
+
+    # XXX: These are a bit surprising, only Expr-compatible ops are counted.
+    assert count(And(x, y, z)) == 0
     assert count(Basic(x, x + y)) == ADD
-    # is this right or should we count the Eq, too...like an Add?
     assert count(Eq(x + y, S(2))) == ADD

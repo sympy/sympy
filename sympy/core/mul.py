@@ -1,13 +1,14 @@
 from collections import defaultdict
 import operator
 
-from sympify import sympify
-from basic import Basic, C
-from singleton import S
-from operations import AssocOp
-from cache import cacheit
-from logic import fuzzy_not
-from compatibility import cmp_to_key
+from sympy.core.sympify import sympify
+from sympy.core.basic import Basic, C
+from sympy.core.singleton import S
+from sympy.core.operations import AssocOp
+from sympy.core.cache import cacheit
+from sympy.core.logic import fuzzy_not
+from sympy.core.compatibility import cmp_to_key
+from sympy.core.expr import Expr
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -22,7 +23,7 @@ class NC_Marker:
     is_commutative = False
 
 
-class Mul(AssocOp):
+class Mul(Expr, AssocOp):
 
     __slots__ = []
 

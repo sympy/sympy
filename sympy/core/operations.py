@@ -1,17 +1,12 @@
 from sympy.core.core import C
-from sympy.core.expr import Expr
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp, quick_sort
 from sympy.core.logic import fuzzy_and
 
-# from add import Add /cyclic/
-# from mul import Mul /cyclic/
-# from function import Lambda, WildFunction /cyclic/
 
-
-class AssocOp(Expr):
+class AssocOp(Basic):
     """ Associative operations, can separate noncommutative and
     commutative parts.
 
@@ -56,7 +51,7 @@ class AssocOp(Expr):
         elif len(args) == 1:
             return args[0]
 
-        obj = Expr.__new__(cls, *args)
+        obj = super(AssocOp, cls).__new__(cls, *args)
         if is_commutative is None:
             is_commutative = fuzzy_and(a.is_commutative for a in args)
         obj.is_commutative = is_commutative
@@ -329,7 +324,7 @@ class LatticeOp(AssocOp):
         elif len(_args) == 1:
             return set(_args).pop()
         else:
-            obj = Expr.__new__(cls, _args)
+            obj = super(AssocOp, cls).__new__(cls, _args)
             obj._argset = _args
             return obj
 
