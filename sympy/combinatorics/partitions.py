@@ -1,7 +1,6 @@
 from sympy.core import Basic, C, Dict, sympify
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, default_sort_key
 from sympy.matrices import zeros
-from sympy.utilities.misc import default_sort_key
 from sympy.utilities.iterables import has_dups, flatten, group
 
 from collections import defaultdict

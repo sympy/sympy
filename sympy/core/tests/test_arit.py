@@ -1,8 +1,8 @@
 from __future__ import division
 
-from sympy import (Symbol, sin, cos, exp, O, sqrt, Rational, Float, re, pi,
+from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
-        Tuple)
+)
 from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
@@ -154,7 +154,7 @@ def test_pow():
     assert (-1)**x == (-1)**x
     assert (-1)**n == (-1)**n
     assert (-2)**k == 2**k
-    assert (-2*x)**k == 2**k*x**k
+    assert (-2*x)**k == (-2*x)**k  # we choose not to auto expand this
     assert (-1)**k == 1
 
 
@@ -196,97 +196,31 @@ def test_pow_im():
     assert Mul(*args)**e == ans
     args = [I, I, I, 2]
     e = Rational(1, 3)
-    ans = -(-1)**Rational(5, 6)*2**e
+    ans = 2**e*(-I)**e
     assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
+    args.append(-3)
+    ans = (6*I)**e
+    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args)**e == ans
+    args.append(-1)
+    ans = (-6*I)**e
+    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args)**e == ans
+
     args = [I, I, 2]
     e = Rational(1, 3)
     ans = (-2)**e
     assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
-
-
-def test_expand():
-    p = Rational(5)
-    e = (a + b)*c
-    assert e == c*(a + b)
-    assert (e.expand() - a*c - b*c) == Rational(0)
-    e = (a + b)*(a + b)
-    assert e == (a + b)**2
-    assert e.expand() == 2*a*b + a**2 + b**2
-    e = (a + b)*(a + b)**Rational(2)
-    assert e == (a + b)**3
-    assert e.expand() == 3*b*a**2 + 3*a*b**2 + a**3 + b**3
-    assert e.expand() == 3*b*a**2 + 3*a*b**2 + a**3 + b**3
-    e = (a + b)*(a + c)*(b + c)
-    assert e == (a + c)*(a + b)*(b + c)
-    assert e.expand() == 2*a*b*c + b*a**2 + c*a**2 + b*c**2 + a*c**2 + c*b**2 + a*b**2
-    e = (a + Rational(1))**p
-    assert e == (1 + a)**5
-    assert e.expand() == 1 + 5*a + 10*a**2 + 10*a**3 + 5*a**4 + a**5
-    e = (a + b + c)*(a + c + p)
-    assert e == (5 + a + c)*(a + b + c)
-    assert e.expand() == 5*a + 5*b + 5*c + 2*a*c + b*c + a*b + a**2 + c**2
-    x = Symbol("x")
-    s = exp(x*x) - 1
-    e = s.nseries(x, 0, 3)/x**2
-    assert e.expand() == 1 + x**2/2 + O(x**4)
-
-    e = (x*(y + z))**(x*(y + z))*(x + y)
-    assert e.expand(power_exp=False, power_base=False) == x*(x*y + x*
-                    z)**(x*y + x*z) + y*(x*y + x*z)**(x*y + x*z)
-    assert e.expand(power_exp=False, power_base=False, deep=False) == x* \
-        (x*(y + z))**(x*(y + z)) + y*(x*(y + z))**(x*(y + z))
-    e = (x*(y + z))**z
-    assert e.expand(power_base=True, mul=True, deep=True) in [x**z*(y +
-                    z)**z, (x*y + x*z)**z]
-    assert ((2*y)**z).expand() == 2**z*y**z
-    p = Symbol('p', positive=True)
-    assert sqrt(-x).expand().is_Pow
-    assert sqrt(-x).expand(force=True) == I*sqrt(x)
-    assert ((2*y*p)**z).expand() == 2**z*p**z*y**z
-    assert ((2*y*p*x)**z).expand() == 2**z*p**z*(x*y)**z
-    assert ((2*y*p*x)**z).expand(force=True) == 2**z*p**z*x**z*y**z
-    assert ((2*y*p*-pi)**z).expand() == 2**z*pi**z*p**z*(-y)**z
-    assert ((2*y*p*-pi*x)**z).expand() == 2**z*pi**z*p**z*(-x*y)**z
-    n = Symbol('n', negative=True)
-    m = Symbol('m', negative=True)
-    assert ((-2*x*y*n)**z).expand() == 2**z*(-n)**z*(x*y)**z
-    assert ((-2*x*y*n*m)**z).expand() == 2**z*(-m)**z*(-n)**z*(-x*y)**z
-    # issue 2383
-    assert sqrt(-2*x*n) == sqrt(2)*sqrt(-n)*sqrt(x)
-    # issue 2506 (2)
-    assert (cos(x + y)**2).expand(trig=True) in [
-        (-sin(x)*sin(y) + cos(x)*cos(y))**2,
-        sin(x)**2*sin(y)**2 - 2*sin(x)*sin(y)*cos(x)*cos(y) + cos(x)**2*cos(y)**2
-    ]
-
-    # Check that this isn't too slow
-    x = Symbol('x')
-    W = 1
-    for i in range(1, 21):
-        W = W * (x - i)
-    W = W.expand()
-    assert W.has(-1672280820*x**15)
-
-
-def test_power_expand():
-    """Test for Pow.expand()"""
-    a = Symbol('a')
-    b = Symbol('b')
-    p = (a + b)**2
-    assert p.expand() == a**2 + b**2 + 2*a*b
-
-    p = (1 + 2*(1 + a))**2
-    assert p.expand() == 9 + 4*(a**2) + 12*a
-
-    p = 2**(a + b)
-    assert p.expand() == 2**a*2**b
-
-    A = Symbol('A', commutative=False)
-    B = Symbol('B', commutative=False)
-    assert (2**(A + B)).expand() == 2**(A + B)
-    assert (A**(a + b)).expand() != A**(a + b)
+    args.append(-3)
+    ans = (6)**e
+    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args)**e == ans
+    args.append(-1)
+    ans = (-6)**e
+    assert Mul(*args, **dict(evaluate=False))**e == ans
+    assert Mul(*args)**e == ans
 
 
 def test_real_mul():
@@ -309,12 +243,8 @@ def test_ncmul():
 
     assert C*(A + B)*C != C*C*(A + B)
 
-    assert (C*(A + B)).expand() == C*A + C*B
-    assert (C*(A + B)).expand() != A*C + B*C
-
     assert A*A == A**2
     assert (A + B)*(A + B) == (A + B)**2
-    assert ((A + B)**2).expand() == A**2 + A*B + B*A + B**2
 
     assert A**-1 * A == 1
     assert A/A == 1
@@ -1437,6 +1367,7 @@ def test_issue_2061_2988_2990_2991():
     assert (-2*B*C)**2 == 4*(B*C)**2
     #2061
     assert sqrt(-1.0*x) == 1.0*sqrt(-x)
+    assert sqrt(1.0*x) == 1.0*sqrt(x)
     #2991
     assert (-2*x*y*A*B)**2 == 4*x**2*y**2*(A*B)**2
 

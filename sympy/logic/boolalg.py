@@ -339,28 +339,6 @@ class ITE(BooleanFunction):
 ### end class definitions. Some useful methods
 
 
-def fuzzy_not(arg):
-    """
-    Not in fuzzy logic
-
-    Will return Not if arg is a boolean value, and None if argument
-    is None.
-
-    Examples:
-
-    >>> from sympy.logic.boolalg import fuzzy_not
-    >>> fuzzy_not(True)
-    False
-    >>> fuzzy_not(None)
-    >>> fuzzy_not(False)
-    True
-
-    """
-    if arg is None:
-        return
-    return not arg
-
-
 def conjuncts(expr):
     """Return a list of the conjuncts in the expr s.
 
@@ -781,7 +759,6 @@ def POSform(variables, minterms, dontcares=[]):
 
     """
     variables = [str(v) for v in variables]
-    from sympy.core.compatibility import bin
     if minterms == []:
         return False
     t = [0] * len(variables)
@@ -826,7 +803,6 @@ def simplify_logic(expr):
     And(Not(x), Not(y))
 
     """
-    from sympy.core.compatibility import bin
     expr = sympify(expr)
     variables = list(expr.free_symbols)
     string_variables = [x.name for x in variables]

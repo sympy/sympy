@@ -2,7 +2,7 @@ from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.cache import cacheit
-from sympy.core.compatibility import cmp, quick_sort
+from sympy.core.compatibility import cmp, ordered
 from sympy.core.logic import fuzzy_and
 
 
@@ -366,7 +366,7 @@ class LatticeOp(AssocOp):
     @property
     @cacheit
     def args(self):
-        return quick_sort(self._argset)
+        return tuple(ordered(self._argset))
 
     @staticmethod
     def _compare_pretty(a, b):

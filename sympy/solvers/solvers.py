@@ -12,7 +12,8 @@ This module contain solvers for all kinds of equations:
 
 """
 
-from sympy.core.compatibility import iterable, is_sequence
+from sympy.core.compatibility import (iterable, is_sequence, ordered,
+    default_sort_key, reduce)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic, Expr
@@ -35,15 +36,12 @@ from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
-from sympy.utilities.iterables import lazyDSU_sort
 from sympy.utilities.lambdify import lambdify
-from sympy.utilities.misc import default_sort_key, filldedent
+from sympy.utilities.misc import filldedent
 from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
 from sympy.solvers.inequalities import reduce_inequalities
-
-from sympy.core.compatibility import reduce
 
 from sympy.assumptions import Q, ask
 
@@ -1341,15 +1339,8 @@ def _solve_system(exprs, symbols, **flags):
         legal = set(symbols)  # what we are interested in
         simplify_flag = flags.get('simplify', None)
         do_simplify = flags.get('simplify', True)
-        # sort so equation with the fewest potential symbols is first;
-        # break ties with count_ops and default_sort_key
-        failed = lazyDSU_sort(failed,
-            keys=[
-                              lambda x: len(_ok_syms(x)),
-            lambda x: x.count_ops(),
-            default_sort_key],
-            warn=False)
-        for eq in failed:
+        # sort so equation with the fewest potential symbols is first
+        for eq in ordered(failed, lambda _: len(_ok_syms(_))):
             newresult = []
             bad_results = []
             got_s = None
