@@ -318,7 +318,7 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
     for i in range(size - 2):
         b = base[i]
         testb = b in b_S and sgensx
-        sgensx1 = [Permutation(_) for _ in sgensx]
+        sgensx1 = [_af_new(_) for _ in sgensx]
         if testb:
             deltab = _orbit(size, sgensx1, b)
         else:
@@ -326,7 +326,7 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
         # p1 = min(IMAGES) = min(Union D_p*h*deltab for h in TAB)
         md = _min_dummies(dumx, 0, dummies)
         p_i = min([min([md[h[x]] for x in deltab]) for s,d,h in TAB])
-        dsgsx1 = [Permutation(_) for _ in dsgsx]
+        dsgsx1 = [_af_new(_) for _ in dsgsx]
         Dxtrav = _orbit_transversal(size, dsgsx1, p_i, False, af=True) \
                 if dumx else None
         if Dxtrav:
