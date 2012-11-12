@@ -45,20 +45,22 @@ class RaisingOp(SHOOp):
 	
 	Create a Raising Operator and rewrite it in terms of positon and
 	momentum, and show that taking its adjoint returns 'a':
-	
-		>>> from sympy.physics.quantum import sho1d
-		>>> from sympy.functions.elementary.complexes import adjoint
+
+		>>> from sympy.physics.quantum.sho1d import RaisingOp
+		>>> from sympy.physics.quantum import Dagger
 	
 		>>> ad = RaisingOp('a')
 		>>> ad().rewrite('xp').doit()
-		1/sqrt(2*hbar*m*omega)*(-I*Px + m*omega*X)
+		sqrt(2)*(m*omega*X - I*Px)/(2*sqrt(hbar)*sqrt(m*omega))
 		
-		>>> adjoint(ad)
+		>>> Dagger(ad)
 		a
 		
 	Taking the commutator of a^dagger with other Operators:
 	
-		>>> from sympy.physics.quantum import sho1d, Commutator
+		>>> from sympy.physics.quantum import Commutator
+		>>> from sympy.physics.quantum.sho1d import (RaisingOp, LoweringOp,
+													NumberOp)
 		
 		>>> ad = RaisingOp('a')
 		>>> a = LoweringOp('a')
@@ -66,16 +68,17 @@ class RaisingOp(SHOOp):
 		>>> Commutator(ad, a).doit()
 		-1
 		>>> Commutator(ad, N).doit()
-		-a^dagger
+		-RaisingOp(a)
 	
 	Apply a^dagger to a state:
 	
-		>>> from sympy.physics.quantum import sho1d, qapply
+		>>> from sympy.physics.quantum import qapply
+		>>> from sympy.physics.quantum.sho1d import RaisingOp, SHOKet
 		
 		>>> ad = RaisingOp('a')
 		>>> k = SHOKet('k')
-		>>> qapply(ad,k)
-		sqrt(k+1)|k+1>
+		>>> qapply(ad*k)
+		sqrt(k + 1)*|k + 1>
 		
 	"""
 
@@ -155,19 +158,21 @@ class LoweringOp(SHOOp):
 	Create a Lowering Operator and rewrite it in terms of positon and
 	momentum, and show that taking its adjoint returns a^dagger:
 	
-		>>> from sympy.physics.quantum import sho1d
-		>>> from sympy.functions.elementary.complexes import adjoint
+		>>> from sympy.physics.quantum.sho1d import LoweringOp
+		>>> from sympy.physics.quantum import Dagger
 	
 		>>> a = LoweringOp('a')
 		>>> a().rewrite('xp').doit()
-		1/sqrt(2*hbar*m*omega)*(I*Px + m*omega*X)
+		sqrt(2)*(m*omega*X + I*Px)/(2*sqrt(hbar)*sqrt(m*omega))
 		
-		>>> adjoint(a)
-		a^dagger
+		>>> Dagger(a)
+		RaisingOp(a)
 		
 	Taking the commutator of 'a' with other Operators:
 	
-		>>> from sympy.physics.quantum import sho1d, Commutator
+		>>> from sympy.physics.quantum import Commutator
+		>>> from sympy.physics.quantum.sho1d import (LoweringOp, RaisingOp,
+													NumberOp)
 		
 		>>> a = LoweringOp('a')
 		>>> ad = RaisingOp('a')
@@ -179,20 +184,22 @@ class LoweringOp(SHOOp):
 	
 	Apply 'a' to a state:
 	
-		>>> from sympy.physics.quantum import sho1d, qapply
+		>>> from sympy.physics.quantum import qapply
+		>>> from sympy.physics.quantum.sho1d import LoweringOp, SHOKet
 		
 		>>> a = LoweringOp('a')
 		>>> k = SHOKet('k')
-		>>> qapply(a,k)
-		sqrt(k)|k-1>
+		>>> qapply(a*k)
+		sqrt(k)*|k - 1>
 		
 	Taking 'a' of the lowest state will return 0:
 	
-		>>> from sympy.physics.quantum import sho1d, qapply
+		>>> from sympy.physics.quantum import qapply
+		>>> from sympy.physics.quantum.sho1d import LoweringOp, SHOKet
 		
 		>>> a = LoweringOp('a')
 		>>> k = SHOKet(0)
-		>>> qapply(a,k)
+		>>> qapply(a*k)
 		0
 		
 	"""
@@ -239,17 +246,19 @@ class NumberOp(SHOOp):
 	Create a Number Operator and rewrite it in terms of the ladder 
 	operators and Hamiltonian:
 	
-		>>> from sympy.physics.quantum import sho1d
+		>>> from sympy.physics.quantum.sho1d import NumberOp 
 		
 		>>> N = NumberOp('N')
 		>>> N().rewrite('a').doit()
-		a^dagger*a
+		RaisingOp(a)*a
 		>>> N().rewrite('H').doit()
-		H/(hbar*omega) - 1/2
+		-1/2 + H/(hbar*omega)
 		
 	Take the Commutator of the Number Operator with other Operators:
 	
-		>>> from sympy.physics.quantum import sho1d, Commutator
+		>>> from sympy.physics.quantum import Commutator
+		>>> from sympy.physics.quantum.sho1d import (NumberOp, Hamiltonian,
+													RaisingOp, LoweringOp)
 		
 		>>> N = NumberOp('N')
 		>>> H = Hamiltonian('H')
@@ -257,19 +266,20 @@ class NumberOp(SHOOp):
 		>>> a = LoweringOp('a')
 		>>> Commutator(N,H).doit()
 		0
-		>>> Commutator(N,ad).doit(0
-		a^dagger
+		>>> Commutator(N,ad).doit()
+		RaisingOp(a)
 		>>> Commutator(N,a).doit()
 		-a
 		
 	Apply the Number Operator to a state:
 	
-		>>> from sympy.physics.quantum import sho1d, qapply
+		>>> from sympy.physics.quantum import qapply
+		>>> from sympy.physics.quantum.sho1d import NumberOp, SHOKet
 		
 		>>> N = NumberOp('N')
 		>>> k = SHOKet('k')
-		>>> qapply(N,k)
-		k|k>
+		>>> qapply(N*k)
+		k*|k>
 	
 	"""
 	
@@ -312,19 +322,20 @@ class Hamiltonian(SHOOp):
 	Create a Hamiltonian Operator and rewrite it in terms of the ladder
 	operators, position and momentum, and the Number Operator:
 	
-		>>> from sympy.physics.quantum import sho1d
+		>>> from sympy.physics.quantum.sho1d import Hamiltonian
 		
 		>>> H = Hamiltonian('H')
 		>>> H().rewrite('a').doit()
-		hbar*omega*(a^dagger*a + 1/2)
+		hbar*omega*(1/2 + RaisingOp(a)*a)
 		>>> H().rewrite('xp').doit()
-		1/2m * (Px**2 + (m*omega*X)^2)
-		>>> H().rewrite('n').doit()
-		hbar*omega*(N + 1/2)
+		(m**2*omega**2*X**2 + Px**2)/(2*m)
+		>>> H().rewrite('N').doit()
+		hbar*omega*(1/2 + N)
 		
 	Take the Commutator of the Hamiltonian and the Number Operator:
 	
-		>>> from sympy.physics.quantum import sho1d, Commutator
+		>>> from sympy.physics.quantum import Commutator
+		>>> from sympy.physics.quantum.sho1d import Hamiltonian, NumberOp
 		
 		>>> H = Hamiltonian('H')
 		>>> N = NumberOp('N')
@@ -333,12 +344,13 @@ class Hamiltonian(SHOOp):
 		
 	Apply the Hamiltonian Operator to a state:
 	
-		>>> from sympy.physics.quantum import sho1d, qapply
+		>>> from sympy.physics.quantum import qapply
+		>>> from sympy.physics.quantum.sho1d import Hamiltonian, SHOKet
 		
 		>>> H = Hamiltonian('H')
 		>>> k = SHOKet('k')
-		>>> qapply(H,k)
-		hbar*omega*(k + 1/2)|k>
+		>>> qapply(H*k)
+		hbar*k*omega*|k> + hbar*omega*|k>/2
 	
 	"""
 
@@ -348,7 +360,7 @@ class Hamiltonian(SHOOp):
 	def _eval_rewrite_as_xp(self, *args):
 		return (Integer(1)/(Integer(2)*m))*(Px**2 + (m*omega*X)**2)
 		
-	def _eval_rewrite_as_n(self, *args):
+	def _eval_rewrite_as_N(self, *args):
 		return hbar*omega*(N + Integer(1)/Integer(2))
 	
 	def _apply_operator_SHOKet(self, ket):
@@ -384,22 +396,23 @@ class SHOKet(SHOState, Ket):
 	
 	Ket's know about their associated bra:
 	
-		>>> from sympy.physics.quantum import sho1d
+		>>> from sympy.physics.quantum.sho1d import SHOKet
 		
 		>>> k = SHOKet('k')
 		>>> k.dual
 		<k|
 		>>> k.dual_class()
-		<class 'sympy.quantum.sho1d.SHOBra'>
+		<class 'sympy.physics.quantum.sho1d.SHOBra'>
 		
 	Take the Inner Product with a bra:
 	
-		>>> from sympy.physics.quantum import sho1d, InnerProduct
+		>>> from sympy.physics.quantum import InnerProduct
+		>>> from sympy.physics.quantum.sho1d import SHOKet, SHOBra
 		
 		>>> k = SHOKet('k')
 		>>> b = SHOBra('b')
-		>>> InnerProduct(k,b).doit()
-		<b|k>
+		>>> InnerProduct(b,k).doit()
+		KroneckerDelta(k, b)
 		
 	"""
 	
@@ -429,13 +442,13 @@ class SHOBra(SHOState, Bra):
 	
 	Bra's know about their associated ket:
 	
-		>>> from sympy.physics.quantum import sho1d
+		>>> from sympy.physics.quantum.sho1d import SHOBra
 		
 		>>> b = SHOBra('b')
 		>>> b.dual
 		|b>
 		>>> b.dual_class()
-		<class 'sympy.quantum.sho1d.SHOKet'>
+		<class 'sympy.physics.quantum.sho1d.SHOKet'>
 		
 	"""
 	
