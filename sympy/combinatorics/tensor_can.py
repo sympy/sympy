@@ -549,7 +549,6 @@ def canonicalize(g, dummies, msym, *v):
 
     Examples
     ========
-    >>> from sympy.combinatorics.testutil import canonicalize_naive
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, canonicalize
     >>> from sympy.combinatorics import Permutation, PermutationGroup
     >>> g = Permutation([1,3,2,0,4,5])
@@ -570,8 +569,11 @@ def canonicalize(g, dummies, msym, *v):
         # if it is not minimal use canonicalize_naive
         # TODO use baseswap to find a minimal BSGS if this occurs.
         if not _is_minimal_bsgs(base_i, gens_i):
-            can = canonicalize_naive(g, dummies, msym, *v)
-            return can
+            mbsgs = get_minimal_bsgs(base_i, gens_i)
+            if not mbsgs:
+                can = canonicalize_naive(g, dummies, msym, *v)
+                return can
+            base_i, gens_i = mbsgs
         v1.append((base_i, gens_i, [[]]*n_i, sym_i))
         num_tensors += n_i
     # slot symmetry of the tensor
@@ -748,16 +750,49 @@ def _is_minimal_bsgs(base, gens):
     >>> from sympy.combinatorics.tensor_can import riemann_bsgs, _is_minimal_bsgs
     >>> _is_minimal_bsgs(*riemann_bsgs)
     True
+    >>> riemann_bsgs1 = ([2, 0], [[1,0,2,3,5,4], [2,3,0,1,4,5]])
+    >>> _is_minimal_bsgs(*riemann_bsgs1)
+    False
     """
+    base1 = []
     sgs1 = gens[:]
     size = len(gens[0])
     for i in range(size):
-        if i not in base:
-            if not all(h[i] == i for h in sgs1):
-                return False
-        else:
+        if not all(h[i] == i for h in sgs1):
+            base1.append(i)
             sgs1 = [h for h in sgs1 if h[i] == i]
-    return True
+    return base1 == base
+
+def get_minimal_bsgs(base, gens):
+    """
+    Compute a minimal GSGS
+
+    base, gens BSGS
+
+    If base, gens is a minimal BSGS return it; else return a minimal BSGS
+    if it fails in finding one, it returns None
+
+    TODO: use baseswap in the case in which if it fails in finding a
+    minimal BSGS
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.tensor_can import get_minimal_bsgs
+    >>> riemann_bsgs1 = ([2, 0], [[1,0,2,3,5,4], [2,3,0,1,4,5]])
+    >>> get_minimal_bsgs(*riemann_bsgs1)
+    ([0, 2], [[1, 0, 2, 3, 5, 4], [2, 3, 0, 1, 4, 5], [0, 1, 3, 2, 5, 4]])
+    """
+    if _is_minimal_bsgs(base, gens):
+        return base, gens
+    if isinstance(gens[0], list):
+        gens = [Permutation(h) for h in gens]
+    G = PermutationGroup(gens)
+    base, gens = G.schreier_sims_incremental()
+    gens = [h._array_form for h in gens]
+    if not  _is_minimal_bsgs(base, gens):
+        raise None
+    return base, gens
 
 def tensor_gens(base, gens, list_free_indices, sym=0):
     """
