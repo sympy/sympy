@@ -33,7 +33,8 @@ def test_implicit_multiplication_application():
         'alpha': 'Symbol("alpha")',  # don't split Greek letters/subscripts
         'x_2': 'Symbol("x_2")',
         'sin^2 x**2': 'sin(x**2)**2',  # function raised to a power
-        'sin**3(x)': 'sin(x)**3'
+        'sin**3(x)': 'sin(x)**3',
+        '(factorial)': 'factorial'
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (implicit_multiplication_application,)

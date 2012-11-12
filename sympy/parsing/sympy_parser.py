@@ -239,7 +239,7 @@ def _implicit_application(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (tok[0] == NAME and
-            nextTok[0] != OP and nextTok[1] != '(' and
+            nextTok[0] != OP and
             nextTok[0] != ENDMARKER):
             func = global_dict.get(tok[1])
             is_Function = getattr(func, 'is_Function', False)
@@ -271,15 +271,8 @@ def _implicit_application(tokens, local_dict, global_dict):
 
     result.append(tokens[-1])
 
-    # An expression like sin tan x will result in sin(tan(x) because there
-    # isn't a token at the end to cause the loop to insert the close
-    # parenthesis
     if appendParen:
-        if result[-1][0] == OP and result[-1][1] == '(':
-            # Function implicitly applied to nothing, undo that
-            del result[-1]
-        else:
-            result.extend([(OP, ')')] * appendParen)
+        result.extend([(OP, ')')] * appendParen)
     if exponent:
         result.extend(exponent)
 

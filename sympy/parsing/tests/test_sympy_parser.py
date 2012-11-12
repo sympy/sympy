@@ -1,7 +1,9 @@
-from sympy.parsing.sympy_parser import parse_expr
+from sympy.parsing.sympy_parser import (
+    parse_expr, standard_transformations, rationalize, TokenError
+)
 from sympy import *
 
-def test_implicit_multiplication_application():
+def test_sympy_parser():
     x = Symbol('x')
     inputs = {
         '2*x': 2 * x,
@@ -10,14 +12,29 @@ def test_implicit_multiplication_application():
         '2+3j': 2 + 3*I,
         'exp(x)': exp(x),
         'x!': factorial(x),
-        'Symbol("x").free_symbols': x.free_symbols,
-        "S('S(3).n(n=3)')": 3.00,
-        'factorint(12, visual=True)': Mul(
-            Pow(2, 2, evaluate=False),
-            Pow(3, 1, evaluate=False),
-            evaluate=False),
-        'Limit(sin(x), x, 0, dir="-")': Limit(sin(x), x, 0, dir='-'),
+        '3.[3]': Rational(10, 3),
+        '10!': 3628800,
+        '(_kern)': Symbol('_kern'),
+        '-(2)': -Integer(2),
+        '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)]
     }
     for text, result in inputs.items():
-        print text, parse_expr(text), result
-        assert(parse_expr(text) == result)
+        assert parse_expr(text) == result
+
+def test_rationalize():
+    inputs = {
+        '0.123': Rational(123,1000)
+    }
+    transformations = standard_transformations + (rationalize,)
+    for text, result in inputs.items():
+        assert parse_expr(text, transformations=transformations) == result
+
+def test_factorial_fail():
+    inputs = ['x!!!', 'x!!!!', '(!)']
+
+    for text in inputs:
+        try:
+            parse_expr(text)
+            assert False
+        except TokenError:
+            assert True
