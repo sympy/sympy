@@ -62,30 +62,30 @@ def dummy_sgs(dummies, sym, n):
 def _min_dummies(dummies, sym, indices):
     """
     Return list of minima of the orbits of indices in group of dummies
-
-    sym symmetry under interchange of contracted dummies
-    sym = None  n symmetry
-    sym = 0 symmetric
-          1 antisymmetric
+    see `double_coset_can_rep` for the description of `dummies` and `sym`
+    indices is the initial list of dummy indices
 
     Examples
     ========
     >>> from sympy.combinatorics.tensor_can import _min_dummies
-    >>> _min_dummies([2,3,4,5,6,7], 0, range(10))
+    >>> _min_dummies([[2,3,4,5,6,7]], [0], range(10))
     [0, 1, 2, 2, 2, 2, 2, 2, 8, 9]
     """
-    if sym is not None:
-        if not dummies:
-            return indices
-        m = min(dummies)
-        n = len(indices)
-        res = indices[:]
+    num_types = len(sym)
+    m = []
+    for dx in dummies:
+        if dx:
+            m.append(min(dx))
+        else:
+            m.append(None)
+    res = indices[:]
+    for i in range(num_types):
         for c, i in enumerate(indices):
-            if i in dummies:
-                res[c] = m
-        return res
-    else:
-        raise NotImplementedError
+            for j in range(num_types):
+                if i in dummies[j]:
+                    res[c] = m[j]
+                    break
+    return res
 
 
 def _trace_S(s, j, b, S_cosets):
@@ -110,19 +110,25 @@ def _trace_D(gj, p_i, Dxtrav):
             return h
     return None
 
-def _dumx_remove(dumx, p0):
+def _dumx_remove(dumx, dumx_flat, p0):
     """
     remove p0 from dumx
     """
-    if p0 not in dumx:
-        return
-    k = dumx.index(p0)
-    if k % 2 == 0:
-        p0_paired = dumx[k+1]
-    else:
-        p0_paired = dumx[k-1]
-    dumx.remove(p0)
-    dumx.remove(p0_paired)
+    res = []
+    for dx in dumx:
+        if p0 not in dx:
+            res.append(dx)
+            continue
+        k = dx.index(p0)
+        if k % 2 == 0:
+            p0_paired = dx[k+1]
+        else:
+            p0_paired = dx[k-1]
+        dx.remove(p0)
+        dx.remove(p0_paired)
+        dumx_flat.remove(p0)
+        dumx_flat.remove(p0_paired)
+        res.append(dx)
 
 def transversal2coset(size, base, transversal):
     a = []
@@ -139,14 +145,27 @@ def transversal2coset(size, base, transversal):
     return a[:j+1]
 
 
-def double_coset_can_rep(sym, sgens, g, sgs=None):
+def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
     """
     Butler-Portugal algorithm for tensor canonicalization with dummy indices
 
-      sym     symmetry of the contructing metric
-              0     symmetric
-              1     antisymmetric
-              None  no symmetry (not implemented yet)
+      dummies can be a list or a list of lists;
+              in the first case it is a list of dummy indices;
+              in the second case it is a list of lists of dummy indices,
+              one list for each type of index;
+              the dummy indices must come after the free indices,
+              and put in order contravariant, covariant
+              [d0, -d0, d1,-d1,...]
+
+      sym     can be an integer or a list;
+              in the first case it is the symmetry of the dummy index metric;
+              in the second case it is the list of the summetries of the
+              index metric for each type
+
+              allowed symmetries of the contructing metric
+                0     symmetric
+                1     antisymmetric
+                None  no symmetry (not implemented yet)
 
       sgens   generators of the group of slot symmetries of a minimal BSGS
       g       permutation representing the tensor
@@ -264,7 +283,7 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
     >>> base = [0, 2]
     >>> g = Permutation([4,2,0,1,3,5,6,7])
     >>> transversals = get_transversals(base, gens)
-    >>> double_coset_can_rep(0, gens, g, (transversals, base))
+    >>> double_coset_can_rep([range(6)], [0], gens, g, (transversals, base))
     [0, 1, 2, 3, 4, 5, 7, 6]
 
     T^{d3}_{d1 d2}^{d1}_{d3}^{d2}
@@ -273,7 +292,7 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
     = T^{d3}_{d1 d3}^{d1}_{d2}^{d2}    symmetric metric
     = 0
     >>> g = [4,1,3,0,5,2,6,7]
-    >>> double_coset_can_rep(0, gens, g, (transversals, base))
+    >>> double_coset_can_rep([range(6)], [0], gens, g, (transversals, base))
     0
     """
     if sym is None:
@@ -287,10 +306,15 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
         if sortedg != range(size):
             raise ValueError('g must be a permutation')
         size1 = size - 1
-    dummies = range(size - 2)
+    # take this away; dummies = [[0,1,2,3,4], [5,6,7,8]]
     num_dummies = size - 2
-    dumx = range(num_dummies)
-    base = range(num_dummies)
+    indices = range(num_dummies)
+    num_types = len(sym)
+    # dumx = [[0,1,2,3,4], [5,6,7,8]]
+    dumx = dummies[:]
+    dumx_flat = []
+    for dx in dumx:
+        dumx_flat.extend(dx)
     # strong base generators for Sx; start with Sx=S
     if not sgs:
         S = PermutationGroup(sgens)
@@ -303,20 +327,22 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
                                strong_gens_distr)
         sgensx = [h._array_form for h in strong_gens]
     else:
-        sgensx = [h.array_form for h in sgens]
+        sgensx = [h._array_form for h in sgens]
         S_transversals, b_S = sgs
     b_S = b_S[:]
     if b_S:
         S_transversals = transversal2coset(size, b_S, S_transversals)
     # strong generating set for D
-    dsgsx = dummy_sgs(dumx, sym, num_dummies)
+    dsgsx = []
+    for i in range(num_types):
+       dsgsx.extend(dummy_sgs(dumx[i], sym[i], num_dummies))
     ginv = _af_invert(g)
     idn = range(size)
     # TAB = list of entries (s, d, h) where h = _af_rmuln(d,g,s)
     # for short, in the following d*g*s means _af_rmuln(d,g,s)
     TAB = [(idn, idn, g)]
     for i in range(size - 2):
-        b = base[i]
+        b = i
         testb = b in b_S and sgensx
         sgensx1 = [_af_new(_) for _ in sgensx]
         if testb:
@@ -324,14 +350,21 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
         else:
             deltab = set([b])
         # p1 = min(IMAGES) = min(Union D_p*h*deltab for h in TAB)
-        md = _min_dummies(dumx, 0, dummies)
+        md = _min_dummies(dumx, sym, indices)
         p_i = min([min([md[h[x]] for x in deltab]) for s,d,h in TAB])
         dsgsx1 = [_af_new(_) for _ in dsgsx]
         Dxtrav = _orbit_transversal(size, dsgsx1, p_i, False, af=True) \
                 if dumx else None
         if Dxtrav:
             Dxtrav = [_af_invert(x) for x in Dxtrav]
-        deltap = dumx if p_i in dumx else [p_i]
+        # dumx= [[0, 1, 2, 3, 4, 5, 6, 7]]
+        for ii in range(num_types):
+            if p_i in dumx[ii]:
+                deltap = dumx[ii]
+                break
+        else:
+            deltap = [p_i]
+
         TAB1 = []
         nTAB = len(TAB)
         while TAB:
@@ -375,7 +408,7 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
                 # d1 = trace_D(d*g*j,...)**-1*d
                 # to save an inversion in the inner loop; notice we did
                 # Dxtrav = [perm_af_invert(x) for x in Dxtrav] out of the loop
-                if dumx:
+                if dumx_flat:
                     d1 = _trace_D(dg[j], p_i, Dxtrav)
                     if not d1:
                         continue
@@ -407,8 +440,10 @@ def double_coset_can_rep(sym, sgens, g, sgs=None):
         sgensx = [h for h in sgensx if h[b] == b]
         if b in b_S:
             b_S.remove(b)
-        _dumx_remove(dumx, p_i)
-        dsgsx = dummy_sgs(dumx, sym, num_dummies)
+        _dumx_remove(dumx, dumx_flat, p_i)
+        dsgsx = []
+        for i in range(num_types):
+            dsgsx.extend(dummy_sgs(dumx[i], sym[i], num_dummies))
     return TAB[0][-1]
 
 
@@ -511,25 +546,31 @@ def canonicalize(g, dummies, msym, *v):
     """
     canonicalize tensor formed by tensors of the different types
 
-    g  permutation representing the tensor
-    dummies  list of dummy indices; the dummy indices must come
-             after the free indices, and put in order
-             contravariant, covariant
-             [d0, -d0, d1,-d1,...]
+      g     permutation representing the tensor
+            dummies can be a list or a list of lists;
+            in the first case it is a list of dummy indices;
+            in the second case it is a list of lists of dummy indices,
+            one list for each type of index;
+            the dummy indices must come after the free indices,
+            and put in order contravariant, covariant
+            [d0, -d0, d1,-d1,...]
 
-    msym symmetry of the dummy index metric
+      msym  can be an integer or a list;
+            in the first case it is the symmetry of the dummy index metric;
+            in the second case it is the list of the summetries of the
+            index metric for each type
 
-    v is a list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`
-         base_i, gens_i BSGS for tensors of this type
-         The BSGS should have minimal base under lexicographic ordering;
-         if not, canonicalize_naive is used, whichis much slower.
+            symmetry under exchange of two component tensors of type `i`
+              None  no symmetry
+              0     commuting
+              1     anticommuting
 
-    n_i  number ot tensors of type `i`
+      v     is a list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`
+            base_i, gens_i BSGS for tensors of this type
+            The BSGS should have minimal base under lexicographic ordering;
+            if not, canonicalize_naive is used, whichis much slower.
 
-    sym_i symmetry under exchange of two component tensors of type `i`
-          None  no symmetry
-          0     commuting
-          1     anticommuting
+    n_i     number ot tensors of type `i`
 
     Return 0 if the tensor is zero, else return the array form of
     the permutation representing the canonical form of the tensor.
@@ -539,8 +580,10 @@ def canonicalize(g, dummies, msym, *v):
 
     First one uses canonical_free to get the minimum tensor under
     lexicographic order, using only the slot symmetries.
-    If the component tensors have not minimal BSGS, canonicalize_naive
+    If the component tensors have not minimal BSGS, it is attempted
+    to find it; if the attempt fails canonicalize_naive
     is used instead.
+
     Compute the residual slot symmetry keeping fixed the free indices
     using tensor_gens(base, gens, list_free_indices, sym)
     Reduce the problem eliminating the free indices.
@@ -557,8 +600,15 @@ def canonicalize(g, dummies, msym, *v):
     [0, 2, 1, 3, 4, 5]
     """
     from sympy.combinatorics.testutil import canonicalize_naive
-    if not msym in [0, 1, None]:
-        raise ValueError('msym must be 0, 1 or None')
+    # check on msym; TODO case in which it is a tuple
+    if isinstance(msym, int):
+        if not msym in [0, 1, None]:
+            raise ValueError('msym must be 0, 1 or None')
+        num_types = 1
+    else:
+        num_types = len(msym)
+        if len(dummies) != num_types:
+            raise ValueError('dummies and msym must have the same number of elements')
     size = g.size
     num_tensors = 0
     v1 = []
@@ -576,16 +626,27 @@ def canonicalize(g, dummies, msym, *v):
             base_i, gens_i = mbsgs
         v1.append((base_i, gens_i, [[]]*n_i, sym_i))
         num_tensors += n_i
+
+    if num_types == 1:
+        dummies = [dummies]
+        msym = [msym]
+    flat_dummies = []
+    for dumx in dummies:
+        flat_dummies.extend(dumx)
+
+    if flat_dummies and flat_dummies != range(flat_dummies[0], flat_dummies[-1] + 1):
+        raise ValueError('dummies is not valid')
+
     # slot symmetry of the tensor
     size1, sbase, sgens = gens_products(*v1)
     assert size == size1
-    free = [i for i in range(size-2) if i not in dummies]
+    free = [i for i in range(size-2) if i not in flat_dummies]
     num_free = len(free)
 
     sgens = [_af_new(h) for h in sgens]
     # g1 minimal tensor under slot symmetry
     g1, gens1 = canonical_free(sbase, sgens, g, num_free)
-    if not dummies:
+    if not flat_dummies:
         return g1
     # save the sign of g1
     sign = 0 if g1[-1] == size-1 else 1
@@ -616,10 +677,10 @@ def canonicalize(g, dummies, msym, *v):
     size, sbase, sgens = gens_products(*v1)
 
     # reduce the permutations getting rid of the free indices
-    pos_dummies = [g1.index(x) for x in dummies]
+    pos_dummies = [g1.index(x) for x in flat_dummies]
     pos_free = [g1.index(x) for x in range(num_free)]
     size_red = size - num_free
-    g1_red = [x - num_free for x in g1 if x in dummies]
+    g1_red = [x - num_free for x in g1 if x in flat_dummies]
     if sign:
         g1_red.extend([size_red - 1, size_red - 2])
     else:
@@ -627,10 +688,11 @@ def canonicalize(g, dummies, msym, *v):
     map_slots = _get_map_slots(size, pos_free)
     sbase_red = [map_slots[i] for i in sbase if i not in pos_free]
     sgens_red = [[map_slots[i] for i in y if i not in pos_free] for y in sgens]
+    dummies_red = [[x - num_free for x in y] for y in dummies]
     transv_red = get_transversals(sbase_red, sgens_red)
     g1_red = _af_new(g1_red)
     sgens_red = [_af_new(h) for h in sgens_red]
-    g2 = double_coset_can_rep(msym, sgens_red, g1_red, (transv_red, sbase_red))
+    g2 = double_coset_can_rep(dummies_red, msym, sgens_red, g1_red, (transv_red, sbase_red))
     if g2 == 0:
         return 0
     # lift to the case with the free indices

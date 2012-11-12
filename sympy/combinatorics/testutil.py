@@ -226,6 +226,15 @@ def canonicalize_naive(g, dummies, sym, *v):
         v1.append((base_i, gens_i, [[]]*n_i, sym_i))
     size, sbase, sgens = gens_products(*v1)
     dgens = dummy_sgs(dummies, sym, size-2)
+    if isinstance(sym, int):
+        num_types = 1
+        dummies = [dummies]
+        sym = [sym]
+    else:
+        num_types = len(sym)
+    dgens = []
+    for i in range(num_types):
+        dgens.extend(dummy_sgs(dummies[i], sym[i], size - 2))
     S = PermutationGroup([Permutation(x) for x in sgens])
     D = PermutationGroup([Permutation(x) for x in dgens])
     dlist = list(D.generate(af=True))

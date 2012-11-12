@@ -1,8 +1,7 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation, Perm
 from sympy.combinatorics.tensor_can import (dummy_sgs, riemann_bsgs,
-    get_symmetric_group_sgs, gens_products, get_transversals,
-    double_coset_can_rep, canonicalize, bsgs_direct_product)
+    get_symmetric_group_sgs, gens_products, canonicalize, bsgs_direct_product)
 from sympy.combinatorics.testutil import canonicalize_naive
 from sympy.utilities.pytest import skip, XFAIL
 
@@ -370,15 +369,27 @@ def test_riemann_products():
     #      0  1   2  3   4  5  6   7  8   9  10  11]
     # g = [4,2,10, 0,11,8, 1,9,6, 5,7,3, 12,13]
     # if the dummy indices m_i and d_i were separated,
-    # one would get
-    # T_c = A^{n0 d0 d1} * A^n1_d0^d2 * A^m0_d1^a0 * A_{m0,d2}^a1
-    # can = [0,6,8,1,7,10,4,9,2,5,11,3,12,13]
-    # Here they are not, so can is
+    # one gets
+    # T_c = A^{n0 d0 d1} * A^n1_d0^d2 * A^m0^a0_d1 * A_m0^a1_d2
+    # can = [0, 6, 8, 1, 7, 10, 4, 2, 9, 5, 3, 11, 12, 13]
+    # If they are not, so can is
     # T_c = A^{n0 m0 d0} A^n1_m0^d1 A^{d2 a0}_d0 A_d2^a1_d1
     # can = [0, 4, 6, 1, 5, 8, 10, 2, 7, 11, 3, 9, 12, 13]
+    # xase with single type of indices
  
     base, gens = bsgs_direct_product(base1, gens1, base2, gens2, 1)
     dummies = range(4, 12)
     g = Permutation([4,2,10, 0,11,8, 1,9,6, 5,7,3, 12,13])
     can = canonicalize(g, dummies, 0, (base, gens, 4, 0))
     assert can == [0, 4, 6, 1, 5, 8, 10, 2, 7, 11, 3, 9, 12, 13]
+    # case with separated indices
+    dummies = [range(4, 6), range(6,12)]
+    sym = [0, 0]
+    can = canonicalize(g, dummies, sym, (base, gens, 4, 0))
+    assert can == [0, 6, 8, 1, 7, 10, 4, 2, 9, 5, 3, 11, 12, 13]
+    # case with separated indices with the second type of index
+    # with antisymmetric metric: there is a sign change
+    sym = [0, 1]
+    can = canonicalize(g, dummies, sym, (base, gens, 4, 0))
+    assert can == [0, 6, 8, 1, 7, 10, 4, 2, 9, 5, 3, 11, 13, 12]
+
