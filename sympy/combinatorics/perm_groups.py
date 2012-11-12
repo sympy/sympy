@@ -837,25 +837,26 @@ class PermutationGroup(Basic):
         res = self.normal_closure(commutators)
         return res
 
-    def coset_factor(self, g):
+    def coset_factor(self, g, factor_index=False):
         """Return ``G``'s (self's) coset factorization of ``g``
 
-        Returns a tuple ``[b[0],..,b[n]]``, where ``b[i]``
-        belongs to ``self._basic_orbits[i]``
-
         If ``g`` is an element of ``G`` then it can be written as the product
-        of permutations drawn from the Schreier-Sims coset decomposition.
-        From the list returned ``[b[0],..,b[n]]``
-        ``f[i] = G._transversals[b[i]]``
-        ``g = f[n]*...f[1]*f[0]``
+        of permutations drawn from the Schreier-Sims coset decomposition,
+
+        The permutations returned in ``f`` are those for which
+        the product gives ``g``: ``g = f[n]*...f[1]*f[0]`` where ``n = len(B)``
+        and ``B = G.base``. f[i] is one of the permutations in
+        ``self._basic_orbits[i]``.
+
+        If factor_index==True,
+        returns a tuple ``[b[0],..,b[n]]``, where ``b[i]``
+        belongs to ``self._basic_orbits[i]``
 
         Examples
         ========
 
-        >>> from sympy.combinatorics import Permutation, Cycle
+        >>> from sympy.combinatorics import Permutation, PermutationGroup
         >>> Permutation.print_cyclic = True
-        >>> from sympy.combinatorics.perm_groups import PermutationGroup
-
         >>> a = Permutation(0, 1, 3, 7, 6, 4)(2, 5)
         >>> b = Permutation(0, 1, 3, 2)(4, 5, 7, 6)
         >>> G = PermutationGroup([a, b])
@@ -873,14 +874,14 @@ class PermutationGroup(Basic):
         3) drawn from u. See below that a factor from u1 and u2
         and the Identity permutation have been used:
 
-        >>> f = G.coset_factor(g); f
+        >>> f = G.coset_factor(g)
+        >>> f[2]*f[1]*f[0] == g
+        True
+        >>> f1 = G.coset_factor(g, True); f1
         [0, 4, 4]
-
-        We confirm that this list identifies the original g:
-
         >>> tr = G.basic_transversals
-        >>> Permutation.rmul(*[tr[i][f[i]] for i in range(len(G.base))])
-        Permutation(7)(1, 2, 4)(3, 6, 5)
+        >>> f[0] == tr[0][f1[0]]
+        True
 
         If g is not an element of G then [] is returned:
 
@@ -915,6 +916,10 @@ class PermutationGroup(Basic):
             factors.append(beta)
         if h != I:
             return []
+        if factor_index:
+            return factors
+        tr = self.basic_transversals
+        factors = [tr[i][factors[i]] for i in range(len(base))]
         return factors
 
     def coset_rank(self, g):
@@ -948,7 +953,7 @@ class PermutationGroup(Basic):
         coset_factor
 
         """
-        factors = self.coset_factor(g)
+        factors = self.coset_factor(g, True)
         if not factors:
             return None
         rank = 0
@@ -1375,7 +1380,7 @@ class PermutationGroup(Basic):
             g = Permutation(g, size=self.degree)
         if g in self.generators:
             return True
-        return bool(self.coset_factor(g.array_form))
+        return bool(self.coset_factor(g.array_form, True))
 
     @property
     def is_abelian(self):
@@ -1543,7 +1548,7 @@ class PermutationGroup(Basic):
         for g1 in gens1:
             for g2 in gens2:
                 p = _af_rmuln(g1, g2, _af_invert(g1))
-                if not self.coset_factor(p):
+                if not self.coset_factor(p, True):
                     return False
         return True
 
