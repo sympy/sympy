@@ -1232,6 +1232,7 @@ class PermutationGroup(Basic):
 
     def generate_schreier_sims(self, af=False):
         """Yield group elements using the Schreier-Sims representation
+        in coset_rank order
 
         If af = True it yields the array form of the permutations
 

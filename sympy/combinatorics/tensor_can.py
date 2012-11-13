@@ -46,13 +46,16 @@ def dummy_sgs(dummies, sym, n):
     """
     assert len(dummies) <= n
     res = []
-    for j in dummies[::2]:
-        a = range(n+2)
-        if sym == 1:
-            a[n] = n+1
-            a[n+1] = n
-        a[j], a[j+1] = a[j+1], a[j]
-        res.append(a)
+    # exchange of contravariant and covariant indices
+    if sym != None:
+        for j in dummies[::2]:
+            a = range(n+2)
+            if sym == 1:
+                a[n] = n+1
+                a[n+1] = n
+            a[j], a[j+1] = a[j+1], a[j]
+            res.append(a)
+    # rename dummy indices
     for j in dummies[:-3:2]:
         a = range(n+2)
         a[j:j+4] = a[j+2],a[j+3],a[j],a[j+1]
@@ -192,8 +195,6 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
        contravariant index < covariant index
     that is the canonical form of the tensor.
 
-    that is the canonical form of the tensor.
-
     The canonical form is -T^{d1 d2 d3}_{d1 d2 d3}
     obtained using T^{a0,a1,a2,a3,a4,a5} = -T^{a2,a1,a0,a3,a4,a5}
 
@@ -273,6 +274,17 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
 
     h_n*b_j = p_j for all j, so that h_n is the solution
 
+    This algorithm differs slightly from the original algorithm [3];
+    i) the canonical form is minimal lexicographically, while in [3]
+       it is minimal with respect to the base ordering;
+       it is required that the BSGS has minimal base under lexicographic order
+    ii) a simpler data structure is used
+    iii) equal tensors `h` are eliminated from TAB
+
+    Note: in this documentation we use the conventions for multiplication
+    of permutations p, q with (p*q)(i) = p[q[i]] which is opposite
+    to the one used in the Permutation class.
+
     Examples
     ========
 
@@ -295,8 +307,6 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
     >>> double_coset_can_rep([range(6)], [0], gens, g, (transversals, base))
     0
     """
-    if sym is None:
-        raise NotImplementedError
     if isinstance(g, Permutation):
         size = g.size
         g = g.array_form
@@ -306,11 +316,10 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
         if sortedg != range(size):
             raise ValueError('g must be a permutation')
         size1 = size - 1
-    # take this away; dummies = [[0,1,2,3,4], [5,6,7,8]]
     num_dummies = size - 2
     indices = range(num_dummies)
+    all_metrics_with_sym = all([_ != None for _ in sym])
     num_types = len(sym)
-    # dumx = [[0,1,2,3,4], [5,6,7,8]]
     dumx = dummies[:]
     dumx_flat = []
     for dx in dumx:
@@ -319,7 +328,7 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
     if not sgs:
         S = PermutationGroup(sgens)
         b_S, strong_gens = S.schreier_sims_incremental()
-        if sorted(b_S) != b_S:
+        if not _is_minimal_bsgs(b_S, strong_gens):
             # TODO use baseswap to get a BSGS with ordered strong baswe
             raise NotImplementedError
         strong_gens_distr = _distribute_gens_by_base(b_S, strong_gens)
@@ -350,21 +359,28 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
         else:
             deltab = set([b])
         # p1 = min(IMAGES) = min(Union D_p*h*deltab for h in TAB)
-        md = _min_dummies(dumx, sym, indices)
+        if all_metrics_with_sym:
+            md = _min_dummies(dumx, sym, indices)
+        else:
+            md = [min(_orbit(size, [_af_new(ddx) for ddx in dsgsx], ii)) for ii in range(size-2)]
+
         p_i = min([min([md[h[x]] for x in deltab]) for s,d,h in TAB])
         dsgsx1 = [_af_new(_) for _ in dsgsx]
         Dxtrav = _orbit_transversal(size, dsgsx1, p_i, False, af=True) \
-                if dumx else None
+                if dsgsx else None
         if Dxtrav:
             Dxtrav = [_af_invert(x) for x in Dxtrav]
         # dumx= [[0, 1, 2, 3, 4, 5, 6, 7]]
         for ii in range(num_types):
             if p_i in dumx[ii]:
-                deltap = dumx[ii]
+                if sym[ii] != None:
+                    deltap = dumx[ii]
+                else:
+                    p_i_index = dumx[ii].index(p_i)%2
+                    deltap = dumx[ii][p_i_index::2]
                 break
         else:
             deltap = [p_i]
-
         TAB1 = []
         nTAB = len(TAB)
         while TAB:
@@ -400,7 +416,6 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
                         s1 = [s[ix] for ix in s1]
                 else:
                     s1 = s
-
                 #assert s1[b] == j  # invariant
                 # solve d1*g*j = p_i with d1 = dx*d for some element dg
                 # of the stabilizer of ..., p_{i-1}
@@ -408,7 +423,7 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
                 # d1 = trace_D(d*g*j,...)**-1*d
                 # to save an inversion in the inner loop; notice we did
                 # Dxtrav = [perm_af_invert(x) for x in Dxtrav] out of the loop
-                if dumx_flat:
+                if Dxtrav:
                     d1 = _trace_D(dg[j], p_i, Dxtrav)
                     if not d1:
                         continue
@@ -601,7 +616,7 @@ def canonicalize(g, dummies, msym, *v):
     """
     from sympy.combinatorics.testutil import canonicalize_naive
     # check on msym; TODO case in which it is a tuple
-    if isinstance(msym, int):
+    if not isinstance(msym, list):
         if not msym in [0, 1, None]:
             raise ValueError('msym must be 0, 1 or None')
         num_types = 1

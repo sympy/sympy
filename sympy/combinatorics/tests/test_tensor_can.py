@@ -201,6 +201,38 @@ def test_canonicalize_no_dummies():
     can = canonicalize(g, [], 0, (base2, gens2, 2, 1))
     assert can == [0,2,1,3,4,5]
 
+def test_no_metric_symmetry():
+    # no metric symmetry
+    # A^d1_d0 * A^d0_d1; ord = [d0,-d0,d1,-d1]; g= [2,1,0,3,4,5]
+    # T_c = A^d0_d1 * A^d1_d0; can = [0,3,2,1,4,5]
+    g = Permutation([2,1,0,3,4,5])
+    can = canonicalize(g, range(4), None, [[], [range(4)], 2, 0])
+    assert can == [0,3,2,1,4,5]
+
+    # A^d1_d2 * A^d0_d3 * A^d2_d1 * A^d3_d0
+    # ord = [d0,-d0,d1,-d1,d2,-d2,d3,-d3]
+    #        0    1  2  3  4   5   6   7
+    # g = [2,5,0,7,4,3,6,1,8,9]
+    # T_c = A^d0_d1 * A^d1_d0 * A^d2_d3 * A^d3_d2
+    # can = [0,3,2,1,4,7,6,5,8,9]
+    g = Permutation([2,5,0,7,4,3,6,1,8,9])
+    #can = canonicalize(g, range(8), 0, [[], [range(4)], 4, 0])
+    #assert can == [0, 2, 3, 1, 4, 6, 7, 5, 8, 9]
+    can = canonicalize(g, range(8), None, [[], [range(4)], 4, 0])
+    assert can == [0, 3, 2, 1, 4, 7, 6, 5, 8, 9]
+
+    # A^d0_d2 * A^d1_d3 * A^d3_d0 * A^d2_d1
+    # g = [0,5,2,7,6,1,4,3,8,9]
+    # T_c = A^d0_d1 * A^d1_d2 * A^d2_d3 * A^d3_d0
+    # can = [0,3,2,5,4,7,6,1,8,9]
+    g = Permutation([0,5,2,7,6,1,4,3,8,9])
+    can = canonicalize(g, range(8), None, [[], [range(4)], 4, 0])
+    assert can == [0,3,2,5,4,7,6,1,8,9]
+
+    g = Permutation([12,7,10,3,14,13,4,11,6,1,2,9,0,15,8,5,16,17])
+    can = canonicalize(g, range(16), None, [[], [range(4)], 8, 0])
+    assert can == [0,3,2,5,4,7,6,1,8,11,10,13,12,15,14,9,16,17]
+
 
 def test_canonicalize1():
     base1, gens1 = get_symmetric_group_sgs(1)
@@ -322,6 +354,7 @@ def test_riemann_products():
     baser, gensr = riemann_bsgs
     base1, gens1 = get_symmetric_group_sgs(1)
     base2, gens2 = get_symmetric_group_sgs(2)
+    base2a, gens2a = get_symmetric_group_sgs(2, 1)
 
     # R^{a b d0}_d0 = 0
     g = Permutation([0,1,2,3,4,5])
@@ -359,8 +392,20 @@ def test_riemann_products():
     g = Permutation([10,0,2,6,8,11,1,3,4,5,7,9,12,13])
     can = canonicalize(g, range(6,12), 0, (baser, gensr, 3, 0))
     assert can == [0, 6, 2, 8, 1, 3, 7, 10, 4, 5, 9, 11, 12, 13]
-    can1 = canonicalize_naive(g, range(6,12), 0, (baser, gensr, 3, 0))
-    assert can == can1
+    #can1 = canonicalize_naive(g, range(6,12), 0, (baser, gensr, 3, 0))
+    #assert can == can1
+
+    # A^n_{i, j} antisymmetric in i,j
+    # A_m0^d0_a1 * A_m1^a0_d0; ord = [m0,m1,a0,a1,d0,-d0]
+    # g = [0,4,3,1,2,5,6,7]
+    # T_c = -A_{m a1}^d0 * A_m1^a0_d0
+    # can = [0,3,4,1,2,5,7,6]
+    base, gens = bsgs_direct_product(base1, gens1, base2a, gens2a, 1)
+    dummies = range(4, 6)
+    g = Permutation([0,4,3,1,2,5,6,7])
+    can = canonicalize(g, dummies, 0, (base, gens, 2, 0))
+    assert can == [0, 3, 4, 1, 2, 5, 7, 6]
+
 
     # A^n_{i, j} symmetric in i,j
     # A^m0_a0^d2 * A^n0_d2^d1 * A^n1_d1^d0 * A_{m0 d0}^a1
