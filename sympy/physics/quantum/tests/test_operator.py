@@ -12,19 +12,19 @@ from sympy.core.trace import Tr
 from sympy.physics.quantum.spin import JzKet, JzBra
 
 
-class TestKet(Ket):
+class CustomKet(Ket):
     @classmethod
     def default_args(self):
         return ("t",)
 
 
-class TestOp(HermitianOperator):
+class CustomOp(HermitianOperator):
     @classmethod
     def default_args(self):
         return ("T",)
 
-t_ket = TestKet()
-t_op = TestOp()
+t_ket = CustomKet()
+t_op = CustomOp()
 
 
 def test_operator():
