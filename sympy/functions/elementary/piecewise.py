@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, Function, diff, Tuple
+from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
@@ -200,6 +200,11 @@ class Piecewise(Function):
         # following papers;
         #     http://portal.acm.org/citation.cfm?id=281649
         #     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.70.4127&rep=rep1&type=pdf
+
+        if a is None or b is None:
+            # In this case, it is just simple substitution
+            return super(Piecewise, self)._eval_interval(sym, a, b)
+
         mul = 1
         if (a == b) is True:
             return S.Zero

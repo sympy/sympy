@@ -1,6 +1,6 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import with_statement
-from sympy import (Poly, S, Function, log, symbols, exp, tan, Integral, sqrt,
+from sympy import (Poly, S, Function, log, symbols, exp, tan, sqrt,
     Symbol, Lambda, sin)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
@@ -8,7 +8,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     integrate_primitive, integrate_hyperexponential_polynomial,
     integrate_hyperexponential, integrate_hypertangent_polynomial,
     integrate_nonlinear_no_specials, integer_powers, DifferentialExtension,
-    risch_integrate, DecrementLevel)
+    risch_integrate, DecrementLevel, NonElementaryIntegral)
 from sympy.utilities.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
@@ -184,7 +184,7 @@ def test_integrate_hyperexponential():
         'Tfuncs': [lambda x: exp(x**2)]})
 
     assert integrate_hyperexponential(a, d, DE) == \
-        (0, Integral(exp(x**2), x), False)
+        (0, NonElementaryIntegral(exp(x**2), x), False)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t, t)], 'Tfuncs': [exp]})
     assert integrate_hyperexponential(a, d, DE) == (exp(x), 0, True)
@@ -210,7 +210,7 @@ def test_integrate_hyperexponential():
     assert integrate_hyperexponential(Poly(1 + t, t), Poly(t, t), DE) == \
         (-exp(-x), 1, True)  # x - exp(-x)
     assert integrate_hyperexponential(Poly(x, t), Poly(t + 1, t), DE) == \
-        (0, Integral(x/(1 + exp(x)), x), False)
+        (0, NonElementaryIntegral(x/(1 + exp(x)), x), False)
 
 
 def test_integrate_hyperexponential_polynomial():
@@ -245,17 +245,17 @@ def test_integrate_primitive():
         'Tfuncs': [log]})
     assert integrate_primitive(Poly(t, t), Poly(1, t), DE) == (x*log(x), -1, True)
     # (x*log(x) - x, True)
-    assert integrate_primitive(Poly(x, t), Poly(t, t), DE) == (0, Integral(x/log(x), x), False)
+    assert integrate_primitive(Poly(x, t), Poly(t, t), DE) == (0, NonElementaryIntegral(x/log(x), x), False)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)],
         'Tfuncs': [log, lambda x: log(x + 1)]})
     assert integrate_primitive(Poly(t1, t2), Poly(t2, t2), DE) == \
-        (0, Integral(log(x)/log(1 + x), x), False)
+        (0, NonElementaryIntegral(log(x)/log(1 + x), x), False)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x*t1), t2)],
         'Tfuncs': [log, lambda x: log(log(x))]})
     assert integrate_primitive(Poly(t2, t2), Poly(t1, t2), DE) == \
-        (0, Integral(log(log(x))/log(x), x), False)
+        (0, NonElementaryIntegral(log(log(x))/log(x), x), False)
 
 
 def test_integrate_hypertangent_polynomial():
@@ -524,7 +524,7 @@ def test_risch_integrate():
     # From my GSoC writeup
     assert risch_integrate((1 + 2*x**2 + x**4 + 2*x**3*exp(2*x**2))/
     (x**4*exp(x**2) + 2*x**2*exp(x**2) + exp(x**2)), x) == \
-        Integral(exp(-x**2), x) + exp(x**2)/(1 + x**2)
+        NonElementaryIntegral(exp(-x**2), x) + exp(x**2)/(1 + x**2)
 
     assert risch_integrate(0, x) == 0
 

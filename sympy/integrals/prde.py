@@ -212,9 +212,9 @@ def constant_system(A, u, DE):
                 for s in range(A.rows):
                     # A[s, :] = A[s, :] - A[s, i]*A[:, m+1]
                     Asj = A[s, j]
-                    A.row(s, lambda r, jj: cancel(r - Asj*Rm1[jj]))
+                    A.row_op(s, lambda r, jj: cancel(r - Asj*Rm1[jj]))
                     # u[s] = u[s] - A[s, j]*u[m+1
-                    u.row(s, lambda r, jj: cancel(r - Asj*um1))
+                    u.row_op(s, lambda r, jj: cancel(r - Asj*um1))
 
                 A = A.col_join(Rm1)
                 u = u.col_join(Matrix([um1]))
@@ -713,6 +713,9 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
         return None
     else:
         if not all(i.is_Rational for i in u):
+            # TODO: But maybe we can tell if they're not rational, like
+            # log(2)/log(3). Also, there should be an option to continue
+            # anyway, even if the result might potentially be wrong.
             raise NotImplementedError("Cannot work with non-rational "
                 "coefficients in this case.")
         else:
