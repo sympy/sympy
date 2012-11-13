@@ -59,7 +59,7 @@ It is described in great(er) detail in the Sphinx documentation.
 from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
 from sympy.core.mod import Mod
 from sympy.functions.special.hyper import hyper
-from sympy.utilities.misc import default_sort_key
+from sympy.core.compatibility import default_sort_key
 from sympy import SYMPY_DEBUG
 
 from sympy.utilities.timeutils import timethis

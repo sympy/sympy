@@ -1,13 +1,14 @@
 from collections import defaultdict
 import operator
 
-from sympify import sympify
-from basic import Basic, C
-from singleton import S
-from operations import AssocOp
-from cache import cacheit
-from logic import fuzzy_not
-from compatibility import cmp_to_key
+from sympy.core.sympify import sympify
+from sympy.core.basic import Basic, C
+from sympy.core.singleton import S
+from sympy.core.operations import AssocOp
+from sympy.core.cache import cacheit
+from sympy.core.logic import fuzzy_not
+from sympy.core.compatibility import cmp_to_key
+from sympy.core.expr import Expr
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
@@ -22,7 +23,7 @@ class NC_Marker:
     is_commutative = False
 
 
-class Mul(AssocOp):
+class Mul(Expr, AssocOp):
 
     __slots__ = []
 
@@ -400,7 +401,7 @@ class Mul(AssocOp):
 
         # extract gcd of bases in num_rat
         # 2**(1/3)*6**(1/4) -> 2**(1/3+1/4)*3**(1/4)
-        pnew = {}
+        pnew = defaultdict(list)
         i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
@@ -431,12 +432,14 @@ class Mul(AssocOp):
                 if obj.is_Number:
                     coeff *= obj
                 else:
-                    if obj.is_Mul:  # sqrt(12) -> 2*sqrt(3)
-                        c, obj = obj.args  # expecting only 2 args
-                        coeff *= c
-                        assert obj.is_Pow
-                        bi, ei = obj.args
-                    pnew.setdefault(ei, []).append(bi)
+                    # changes like sqrt(12) -> 2*sqrt(3)
+                    for obj in Mul.make_args(obj):
+                        if obj.is_Number:
+                            coeff *= obj
+                        else:
+                            assert obj.is_Pow
+                            bi, ei = obj.args
+                            pnew[ei].append(bi)
 
             num_rat.extend(grow)
             i += 1
@@ -517,85 +520,18 @@ class Mul(AssocOp):
     def _eval_power(b, e):
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
-        coeff, b = b.as_coeff_Mul()
-        bc, bnc = b.args_cnc()
+        cargs, nc = b.args_cnc(split_1=False)
 
-        done = [Pow(Mul._from_args(bnc), e, evaluate=False) if bnc else S.One]
+        if e.is_Integer:
+            return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
+                   Pow(Mul._from_args(nc), e, evaluate=False)
 
-        if e.is_Number:
-            if e.is_Integer:
-                # (a*b)**2 -> a**2 * b**2
-                return Mul(*([s**e for s in [coeff] + bc] + done))
+        p = Pow(b, e, evaluate=False)
 
-            if e.is_Rational or e.is_Float:
-                unk = []
-                nonneg = []
-                neg = []
-                iu = []
-                for bi in bc:
-                    if bi.is_polar:
-                        nonneg.append(bi)
-                    elif bi.is_negative is not None:
-                        if bi.is_negative:
-                            neg.append(bi)
-                        elif bi.is_nonnegative:
-                            nonneg.append(bi)
-                        elif bi is S.ImaginaryUnit:
-                            iu.append(bi)
-                        else:
-                            unk.append(bi)
-                    else:
-                        unk.append(bi)
+        if e.is_Rational or e.is_Float:
+            return p._eval_expand_power_base()
 
-                if iu:
-                    niu = len(iu) % 4
-                    i = S.ImaginaryUnit if niu % 2 else S.One
-                    if niu in (2, 3):
-                        coeff = -coeff
-                    if i is S.ImaginaryUnit:
-                        if unk or e.is_Float:
-                            unk.append(i)
-                        else:
-                            if coeff.is_negative and e.is_Rational:
-                                coeff = -coeff
-                                ie = Rational(4*e.q - e.p, 2*e.q)
-                                done.append(Pow(-1, ie))
-                            else:
-                                done.append(i**e)
-
-                if len(unk) == len(bc) or len(neg) == len(bc) == 1:
-                    # if all terms were unknown there is nothing to pull
-                    # out except maybe the coeff; if there is a single
-                    # negative term, this is the base case which cannot
-                    # be processed further
-                    if coeff.is_negative:
-                        coeff *= -1
-                        bc[0] = -bc[0]
-                    if coeff is S.One:
-                        return None
-                    return Mul(*([Pow(coeff, e), Pow(Mul(*bc), e)] + done))
-
-                # otherwise return the new expression expanding out the known
-                # terms; those that are not known can be expanded out with
-                # expand_power_base() but this will introduce a lot of
-                # "garbage" that is needed to keep one on the same branch as
-                # the unexpanded expression. The negatives are brought out
-                # with a negative sign added and a negative left behind in the
-                # unexpanded terms if there were an odd number of negatives.
-                if coeff.is_negative:
-                    coeff = -coeff
-                    neg.append(S.NegativeOne)
-                if neg:
-                    neg = [-w for w in neg]
-                    if len(neg) % 2:
-                        unk.append(S.NegativeOne)
-
-                done.extend(
-                    [Pow(s, e) for s in nonneg + neg + [coeff, Mul(*unk)]])
-                return Mul(*done)
-
-        if e.is_even and coeff.is_negative:
-            return Pow(-coeff, e)*Pow(b, e)
+        return p
 
     @classmethod
     def class_key(cls):
@@ -1148,11 +1084,14 @@ class Mul(AssocOp):
             return False
 
     def _eval_subs(self, old, new):
-        from sympy import sign, Dummy, multiplicity
+        from sympy import sign, multiplicity
         from sympy.simplify.simplify import powdenest, fraction
 
         if not old.is_Mul:
             return None
+
+        if old.args[0] == -1:
+            return self._subs(-old, -new)
 
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
@@ -1198,7 +1137,6 @@ class Mul(AssocOp):
             but not vice versa, and 2/5 does not divide 1/3) then return
             the integer number of times it divides, else return 0.
             """
-
             if not b.q % a.q or not a.q % b.q:
                 return int(a/b)
             return 0
@@ -1267,7 +1205,7 @@ class Mul(AssocOp):
         elif len(old_c) > len(c):
             # more commutative terms
             ok = False
-        elif set(_[0] for _ in old_nc).difference(set(_[0] for _ in nc)):
+        elif set(i[0] for i in old_nc).difference(set(i[0] for i in nc)):
             # unmatched non-commutative bases
             ok = False
         elif set(old_c).difference(set(c)):

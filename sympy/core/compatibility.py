@@ -14,11 +14,11 @@ from collections import defaultdict
 
 def iterable(i, exclude=(basestring, dict)):
     """
-    Return a boolean indicating whether i is an iterable in the sympy sense.
+    Return a boolean indicating whether ``i`` is SymPy iterable.
 
-    When sympy is working with iterables, it is almost always assuming
+    When SymPy is working with iterables, it is almost always assuming
     that the iterable is not a string or a mapping, so those are excluded
-    by default. If you want a pure python definition, make exclude=None. To
+    by default. If you want a pure Python definition, make exclude=None. To
     exclude multiple items, pass them as a tuple.
 
     See also: is_sequence
@@ -59,7 +59,7 @@ def iterable(i, exclude=(basestring, dict)):
 
 def is_sequence(i, include=None):
     """
-    Return a boolean indicating whether i is a sequence in the sympy
+    Return a boolean indicating whether ``i`` is a sequence in the SymPy
     sense. If anything that fails the test below should be included as
     being a sequence for your application, set 'include' to that object's
     type; multiple types should be passed as a tuple of types.
@@ -425,7 +425,7 @@ except ImportError:  # Python 2.5
         if n < 0:
             return '-%s' % bin(-n)
         return '0b%s' % (''.join([_hexDict[hstr] for hstr in hex(n)[2:].lower()
-            ]).lstrip('0') or '0')
+                                  ]).lstrip('0') or '0')
 
 
 def as_int(n):
@@ -458,36 +458,276 @@ def as_int(n):
     return result
 
 
-def quick_sort(seq, quick=True):
-    """Sort by hash and break ties with default_sort_key (default)
-    or entirely by default_sort_key if ``quick`` is False.
+def default_sort_key(item, order=None):
+    """Return a key that can be used for sorting.
 
-    When sorting for consistency between systems, ``quick`` should be
-    False; if sorting is just needed to give consistent orderings during
-    a given session ``quick`` can be True.
+    The key has the structure:
 
-    >>> from sympy.core.compatibility import quick_sort
+    (class_key, (len(args), args), exponent.sort_key(), coefficient)
+
+    This key is supplied by the sort_key routine of Basic objects when
+    ``item`` is a Basic object or an object (other than a string) that
+    sympifies to a Basic object. Otherwise, this function produces the
+    key.
+
+    The ``order`` argument is passed along to the sort_key routine and is
+    used to determine how the terms *within* an expression are ordered.
+    (See examples below) ``order`` options are: 'lex', 'grlex', 'grevlex',
+    and reversed values of the same (e.g. 'rev-lex'). The default order
+    value is None (which translates to 'lex').
+
+    Examples
+    ========
+
+    >>> from sympy import Basic, S, I, default_sort_key
+    >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
-    For PYTHONHASHSEED=3923375334 the x came first; for
-    PYTHONHASHSEED=158315900 the x came last (on a 32-bit system).
+    The following are eqivalent ways of getting the key for an object:
 
-    >>> quick_sort([x, 1, 3]) in [(1, 3, x), (x, 1, 3)]
+    >>> x.sort_key() == default_sort_key(x)
     True
-    """
-    from sympy.utilities.iterables import default_sort_key
 
-    if not quick:
-        seq = list(seq)
-        seq.sort(key=default_sort_key)
+    Here are some examples of the key that is produced:
+
+    >>> default_sort_key(UndefinedFunction('f'))
+    ((0, 0, 'UndefinedFunction'), (1, ('f',)), ((1, 0, 'Number'),
+        (0, ()), (), 1), 1)
+    >>> default_sort_key('1')
+    ((0, 0, 'str'), (1, ('1',)), ((1, 0, 'Number'), (0, ()), (), 1), 1)
+    >>> default_sort_key(S.One)
+    ((1, 0, 'Number'), (0, ()), (), 1)
+    >>> default_sort_key(2)
+    ((1, 0, 'Number'), (0, ()), (), 2)
+
+
+    While sort_key is a method only defined for SymPy objects,
+    default_sort_key will accept anything as an argument so it is
+    more robust as a sorting key. For the following, using key=
+    lambda i: i.sort_key() would fail because 2 doesn't have a sort_key
+    method; that's why default_sort_key is used. Note, that it also
+    handles sympification of non-string items likes ints:
+
+    >>> a = [2, I, -I]
+    >>> sorted(a, key=default_sort_key)
+    [2, -I, I]
+
+    The returned key can be used anywhere that a key can be specified for
+    a function, e.g. sort, min, max, etc...:
+
+    >>> a.sort(key=default_sort_key); a[0]
+    2
+    >>> min(a, key=default_sort_key)
+    2
+
+    Note
+    ----
+
+    The key returned is useful for getting items into a canonical order
+    that will be the same across platforms. It is not directly useful for
+    sorting lists of expressions:
+
+    >>> a, b = x, 1/x
+
+    Since ``a`` has only 1 term, its value of sort_key is unaffected by
+    ``order``:
+
+    >>> a.sort_key() == a.sort_key('rev-lex')
+    True
+
+    If ``a`` and ``b`` are combined then the key will differ because there
+    are terms that can be ordered:
+
+    >>> eq = a + b
+    >>> eq.sort_key() == eq.sort_key('rev-lex')
+    False
+    >>> eq.as_ordered_terms()
+    [x, 1/x]
+    >>> eq.as_ordered_terms('rev-lex')
+    [1/x, x]
+
+    But since the keys for each of these terms are independent of ``order``'s
+    value, they don't sort differently when they appear separately in a list:
+
+    >>> sorted(eq.args, key=default_sort_key)
+    [1/x, x]
+    >>> sorted(eq.args, key=lambda i: default_sort_key(i, order='rev-lex'))
+    [1/x, x]
+
+    The order of terms obtained when using these keys is the order that would
+    be obtained if those terms were *factors* in a product.
+
+    See Also
+    ========
+
+    sympy.core.expr.as_ordered_factors, sympy.core.expr.as_ordered_terms
+
+    """
+
+    from sympy.core import S, Basic
+    from sympy.core.sympify import sympify, SympifyError
+    from sympy.core.compatibility import iterable
+
+    if isinstance(item, Basic):
+        return item.sort_key(order=order)
+
+    if iterable(item, exclude=basestring):
+        if isinstance(item, dict):
+            args = item.items()
+            unordered = True
+        elif isinstance(item, set):
+            args = item
+            unordered = True
+        else:
+            # e.g. tuple, list
+            args = list(item)
+            unordered = False
+
+        args = [default_sort_key(arg, order=order) for arg in args]
+
+        if unordered:
+            # e.g. dict, set
+            args = sorted(args)
+
+        cls_index, args = 10, (len(args), tuple(args))
     else:
-        d = defaultdict(list)
-        for a in seq:
-            d[hash(a)].append(a)
-        seq = []
-        for k in sorted(d.keys()):
-            if len(d[k]) > 1:
-                seq.extend(sorted(d[k], key=default_sort_key))
+        if not isinstance(item, basestring):
+            try:
+                item = sympify(item)
+            except SympifyError:
+                # e.g. lambda x: x
+                pass
             else:
-                seq.extend(d[k])
-    return tuple(seq)
+                if isinstance(item, Basic):
+                    # e.g int -> Integer
+                    return default_sort_key(item)
+                # e.g. UndefinedFunction
+
+        # e.g. str
+        cls_index, args = 0, (1, (str(item),))
+
+    return (cls_index, 0, item.__class__.__name__
+            ), args, S.One.sort_key(), S.One
+
+
+def _nodes(e):
+    """
+    A helper for ordered() which returns the node count of ``e`` which
+    for Basic object is the number of Basic nodes in the expression tree
+    but for other object is 1 (unless the object is an iterable or dict
+    for which the sum of nodes is returned).
+    """
+    from basic import Basic
+
+    if isinstance(e, Basic):
+        return e.count(Basic)
+    elif iterable(e):
+        return 1 + sum(_nodes(ei) for ei in e)
+    elif isinstance(e, dict):
+        return 1 + sum(_nodes(k) + _nodes(v) for k, v in e.iteritems())
+    else:
+        return 1
+
+
+def ordered(seq, keys=None, default=True, warn=False):
+    """Return an iterator of the seq where keys are used to break ties.
+    Two default keys will be applied after and provided unless ``default``
+    is False. The two keys are _nodes and default_sort_key which will
+    place smaller expressions before larger ones (in terms of Basic nodes)
+    and where there are ties, they will be broken by the default_sort_key.
+
+    If ``warn`` is True then an error will be raised if there were no
+    keys remaining to break ties. This can be used if it was expected that
+    there should be no ties.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import ordered, default_sort_key
+    >>> from sympy import count_ops
+    >>> from sympy.abc import x, y
+
+    The count_ops is not sufficient to break ties in this list and the first
+    two items appear in their original order (i.e. the sorting is stable):
+
+    >>> list(ordered([y + 2, x + 2, x**2 + y + 3],
+    ...    count_ops, default=False, warn=False))
+    ...
+    [y + 2, x + 2, x**2 + y + 3]
+
+    The default_sort_key allows the tie to be broken:
+
+    >>> list(ordered([y + 2, x + 2, x**2 + y + 3]))
+    ...
+    [x + 2, y + 2, x**2 + y + 3]
+
+    Here, sequences are sorted by length, then sum:
+
+    >>> seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], [
+    ...    lambda x: len(x),
+    ...    lambda x: sum(x)]]
+    ...
+    >>> list(ordered(seq, keys, default=False, warn=False))
+    [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
+
+    If ``warn`` is True, an error will be raised if there were not
+    enough keys to break ties:
+
+    >>> list(ordered(seq, keys, default=False, warn=True))
+    Traceback (most recent call last):
+    ...
+    ValueError: not enough keys to break ties
+
+
+    Notes
+    =====
+
+    The decorated sort is one of the fastest ways to sort a sequence for
+    which special item comparison is desired: the sequence is decorated,
+    sorted on the basis of the decoration (e.g. making all letters lower
+    case) and then undecorated. If one wants to break ties for items that
+    have the same decorated value, a second key can be used. But if the
+    second key is expensive to compute then it is inefficient to decorate
+    all items with both keys: only those items having identical first key
+    values need to be decorated. This function applies keys successively
+    only when needed to break ties. By yielding an iterator, use of the
+    tie-breaker is delayed as long as possible.
+
+    This function is best used in cases when use of the first key is
+    expected to be a good hashing function; if there are no unique hashes
+    from application of a key then that key should not have been used. The
+    exception, however, is that even if there are many collisions, if the
+    first group is small and one does not need to process all items in the
+    list then time will not be wasted sorting what one was not interested
+    in. For example, if one were looking for the minimum in a list and
+    there were several criteria used to define the sort order, then this
+    function would be good at returning that quickly if the first group
+    of candidates is small relative to the number of items being processed.
+
+    """
+    d = defaultdict(list)
+    if keys:
+        if not isinstance(keys, (list, tuple)):
+            keys = [keys]
+        keys = list(keys)
+
+        f = keys.pop(0)
+        for a in seq:
+            d[f(a)].append(a)
+    else:
+        if not default:
+            raise ValueError('if default=False then keys must be provided')
+        d[None].extend(seq)
+
+    for k in sorted(d.keys()):
+        if len(d[k]) > 1:
+            if keys:
+                d[k] = ordered(d[k], keys, default, warn)
+            elif default:
+                d[k] = ordered(d[k], (_nodes, default_sort_key,),
+                                default=False, warn=warn)
+            elif warn:
+                raise ValueError('not enough keys to break ties')
+        for v in d[k]:
+            yield v
+        d.pop(k)

@@ -441,15 +441,15 @@ def test_separable5():
                        x*exp(x) + exp(x))/((1 - x)*(-exp(x) + x*exp(x))))
     sol19f = Eq(f(x), (C1 + (x - 1)*exp(x))*exp(-x)/(-x + 1))
     sol19g = Eq(f(x), (C1*exp(-x) - x + 1)/(x - 1))
+    sol19h = Eq(f(x), (C1*exp(-x) - x + 1)/(-x + 1))
     sol20 = Eq(log(-1 + 3*f(x)**2)/6, C1 + x**2/2)
     sol21 = Eq(-exp(-f(x)), C1 + exp(x))
     assert dsolve(eq15, hint='separable') == sol15
     assert dsolve(eq16, hint='separable', simplify=False) == sol16
     assert dsolve(eq17, hint='separable') == sol17
     assert dsolve(eq18, hint='separable', simplify=False) == sol18
-    assert dsolve(
-        eq19, hint='separable') in [sol19g, sol19f, sol19a, sol19b, sol19c,
-                                    sol19d, sol19e]
+    assert dsolve(eq19, hint='separable') in [sol19h, sol19g, sol19f, sol19a,
+        sol19b, sol19c, sol19d, sol19e]
     assert dsolve(eq20, hint='separable', simplify=False) == sol20
     assert dsolve(eq21, hint='separable', simplify=False) == sol21
     assert checkodesol(eq15, sol15, order=1, solve_for_func=False)[0]

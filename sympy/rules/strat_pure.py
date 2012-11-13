@@ -49,7 +49,7 @@ def debug(rule, file=None):
         result = rule(expr)
         if result != expr:
             file.write("Rule: %s\n"%rule.func_name)
-            file.write("In: %s\nOut: %s\n\n"%(expr, result))
+            file.write("In:   %s\nOut:  %s\n\n"%(expr, result))
         return result
     return debug_rl
 
@@ -63,7 +63,7 @@ def null_safe(rule):
             return result
     return null_safe_rl
 
-def try_safe(rule):
+def tryit(rule):
     """ Return original expr if rule raises exception """
     def try_rl(expr):
         try:
@@ -81,3 +81,12 @@ def do_one(*rules):
                 return result
         return expr
     return do_one_rl
+
+def switch(key, ruledict):
+    """ Select a rule based on the result of key called on the function """
+    def switch_rl(expr):
+        rl = ruledict.get(key(expr), identity)
+        return rl(expr)
+    return switch_rl
+
+identity = lambda x: x

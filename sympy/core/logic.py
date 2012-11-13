@@ -71,7 +71,22 @@ def fuzzy_and(*args):
 
 
 def fuzzy_not(v):
-    """'not' in fuzzy logic"""
+    """
+    Not in fuzzy logic
+
+    Will return Not if arg is a boolean value, and None if argument
+    is None.
+
+    Examples:
+
+    >>> from sympy.core.logic import fuzzy_not
+    >>> fuzzy_not(True)
+    False
+    >>> fuzzy_not(None)
+    >>> fuzzy_not(False)
+    True
+
+    """
     if v is None:
         return v
     else:

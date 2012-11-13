@@ -5,12 +5,10 @@ from singleton import S
 from evalf import EvalfMixin, pure_complex
 from decorators import _sympifyit, call_highest_priority
 from cache import cacheit
-from compatibility import reduce, as_int
+from compatibility import reduce, as_int, default_sort_key
 from sympy.mpmath.libmp import mpf_log, prec_to_dps
-from sympy.utilities.misc import default_sort_key
 
 from collections import defaultdict
-from math import log10, ceil
 from inspect import getmro
 
 
@@ -892,10 +890,10 @@ class Expr(Basic, EvalfMixin):
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
-        from sympy import count_ops
+        from function import count_ops
         return count_ops(self, visual)
 
-    def args_cnc(self, cset=False, warn=True):
+    def args_cnc(self, cset=False, warn=True, split_1=True):
         """Return [commutative factors, non-commutative factors] of self.
 
         self is treated as a Mul and the ordering of the factors is maintained.
@@ -904,7 +902,7 @@ class Expr(Basic, EvalfMixin):
         then an error will be raised unless it is explicitly supressed by
         setting ``warn`` to False.
 
-        Note: -1 is always separated from a Number.
+        Note: -1 is always separated from a Number unless split_1 is False.
 
         >>> from sympy import symbols, oo
         >>> A, B = symbols('A B', commutative=0)
@@ -915,6 +913,8 @@ class Expr(Basic, EvalfMixin):
         [[-1, 2.5, x], []]
         >>> (-2*x*A*B*y).args_cnc()
         [[-1, 2, x, y], [A, B]]
+        >>> (-2*x*A*B*y).args_cnc(split_1=False)
+        [[-2, x, y], [A, B]]
         >>> (-2*x*y).args_cnc(cset=True)
         [set([-1, 2, x, y]), []]
 
@@ -939,7 +939,7 @@ class Expr(Basic, EvalfMixin):
             c = args
             nc = []
 
-        if c and (
+        if c and split_1 and (
             c[0].is_Number and
             c[0].is_negative and
                 c[0] != S.NegativeOne):

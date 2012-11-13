@@ -5,7 +5,7 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        quick_sort, minlex, runs, lazyDSU_sort, reshape)
+        ordered, minlex, runs, reshape)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -16,7 +16,8 @@ w, x, y, z = symbols('w,x,y,z')
 def test_postorder_traversal():
     expr = z + w*(x + y)
     expected = [z, w, x, y, x + y, w*(x + y), w*(x + y) + z]
-    assert list(postorder_traversal(expr, key=default_sort_key)) == expected
+    assert list(postorder_traversal(expr, keys=default_sort_key)) == expected
+    assert list(postorder_traversal(expr, keys=True)) == expected
 
     expr = Piecewise((x, x < 1), (x**2, True))
     expected = [
@@ -24,12 +25,12 @@ def test_postorder_traversal():
         ExprCondPair.true_sentinel, 2, x, x**2,
         ExprCondPair(x**2, True), Piecewise((x, x < 1), (x**2, True))
     ]
-    assert list(postorder_traversal(expr, key=default_sort_key)) == expected
+    assert list(postorder_traversal(expr, keys=default_sort_key)) == expected
     assert list(postorder_traversal(
-        [expr], key=default_sort_key)) == expected + [[expr]]
+        [expr], keys=default_sort_key)) == expected + [[expr]]
 
     assert list(postorder_traversal(Integral(x**2, (x, 0, 1)),
-        key=default_sort_key)) == [
+        keys=default_sort_key)) == [
             2, x, x**2, 0, 1, x, Tuple(x, 0, 1),
             Integral(x**2, Tuple(x, 0, 1))
         ]
@@ -352,20 +353,18 @@ def test_minlex():
     assert minlex((1, 0, 2), directed=False) == (0, 1, 2)
 
 
-def test_quick_sort():
-    assert quick_sort((x, y)) in [(x, y), (y, x)]
-    assert quick_sort((x, y)) == quick_sort((y, x))
-    assert quick_sort((x, y), quick=False) == (x, y)
+def test_ordered():
+    assert list(ordered((x, y), hash, default=False)) in [[x, y], [y, x]]
+    assert list(ordered((x, y), hash, default=False)) == \
+           list(ordered((y, x), hash, default=False))
+    assert list(ordered((x, y))) == [x, y]
 
-
-def test_lazyDSU_sort():
-    seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]], (
-                 lambda x: len(x),
-    lambda x: sum(x))]
-    assert lazyDSU_sort(seq, keys, warn=False) == \
+    seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]],
+        (lambda x: len(x), lambda x: sum(x))]
+    assert list(ordered(seq, keys, default=False, warn=False)) == \
         [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
-    raises(ValueError, lambda: lazyDSU_sort(seq, keys, warn=True))
-
+    raises(ValueError, lambda:
+        list(ordered(seq, keys, default=False, warn=True)))
 
 def test_runs():
     assert runs([]) == []
@@ -396,3 +395,5 @@ def test_reshape():
         (([[1], 2, (3, 4)],), ([[5], 6, (7, 8)],))
     assert reshape(tuple(seq), ([1], 1, (2,))) == \
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
+    assert reshape(range(12), [2, [3], set([2]), (1, (3,), 1)]) == \
+        [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]

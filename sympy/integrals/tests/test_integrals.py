@@ -8,7 +8,7 @@ from sympy import (
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
-from sympy.physics.units import m, s
+from sympy.physics import units
 
 x, y, a, t, x_1, x_2, z = symbols('x y a t x_1 x_2 z')
 n = Symbol('n', integer=True)
@@ -251,6 +251,8 @@ def test_issue587():  # remove this when fresnel itegrals are implemented
 
 
 def test_integrate_units():
+    m = units.m
+    s = units.s
     assert integrate(x * m/s, (x, 1*s, 5*s)) == 12*m*s
 
 
@@ -528,7 +530,6 @@ def test_expand_integral():
         Integral(cos(x**2)*sin(x**2) + cos(x**2), (x, 0, 1))
     assert Integral(cos(x**2)*(sin(x**2) + 1), x).expand() == \
         Integral(cos(x**2)*sin(x**2) + cos(x**2), x)
-    i = Integral(x, (x, 1, 2), (x, 1, 2))
 
 
 def test_as_sum_midpoint1():
@@ -727,7 +728,7 @@ def test_issue_1791():
     assert integrate(exp(-log(x)**2), x) == \
         sqrt(pi)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
     assert integrate(exp(log(x)**2), x) == \
-        -I*sqrt(pi)*erf(I*log(x) + I/2)*exp(-S(1)/4)/2
+        -I*sqrt(pi)*exp(-S(1)/4)*erf(I*log(x) + I/2)/2
     assert integrate(exp(-z*log(x)**2), x) == sqrt(pi)*erf(sqrt(z)*log(x)
         - 1/(2*sqrt(z)))*exp(S(1)/(4*z))/(2*sqrt(z))
 
@@ -768,10 +769,11 @@ def test_issue_1793a():
     P1 = -A*exp(-z)
     P2 = -A/(c*t)*(sin(x)**2 + cos(y)**2)
 
-    # TODO: make trigsimp() deterministic
     h1 = -sin(x)**2 - cos(y)**2
     h2 = -sin(x)**2 + sin(y)**2 - 1
 
+    # there is still some non-deterministic behavior in integrate
+    # or trigsimp which permits one of the following
     assert integrate(c*(P2 - P1), t) in [
         c*(-A*(-h1)*log(c*t)/c + A*t*exp(-z)),
         c*(-A*(-h2)*log(c*t)/c + A*t*exp(-z)),
@@ -780,7 +782,6 @@ def test_issue_1793a():
         (A*c*t - A*(-h1)*log(t)*exp(z))*exp(-z),
         (A*c*t - A*(-h2)*log(t)*exp(z))*exp(-z),
     ]
-
 
 def test_issue_1793b():
     # Issues relating to issue 1497 are making the actual result of this hard
