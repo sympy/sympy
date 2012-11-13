@@ -4,7 +4,8 @@ from sympy.core.assumptions import ManagedProperties
 from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.core.compatibility import callable, reduce, cmp, iterable
+from sympy.core.compatibility import (callable, reduce, cmp, iterable,
+    ordered)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
 
@@ -1185,7 +1186,9 @@ class Basic(object):
             elif callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
-                raise TypeError("given a type, replace() expects another type or a callable")
+                raise TypeError(
+                    "given a type, replace() expects another "
+                    "type or a callable")
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
 
@@ -1195,7 +1198,9 @@ class Basic(object):
                 _value = lambda expr, result: value(**dict([ (
                     str(key)[:-1], val) for key, val in result.iteritems() ]))
             else:
-                raise TypeError("given an expression, replace() expects another expression or a callable")
+                raise TypeError(
+                    "given an expression, replace() expects "
+                    "another expression or a callable")
         elif callable(query):
             _query = query
 
@@ -1203,9 +1208,12 @@ class Basic(object):
                 _value = lambda expr, result: value(expr)
             else:
                 raise TypeError(
-                    "given a callable, replace() expects another callable")
+                    "given a callable, replace() expects "
+                    "another callable")
         else:
-            raise TypeError("first argument to replace() must be a type, an expression or a callable")
+            raise TypeError(
+                "first argument to replace() must be a "
+                "type, an expression or a callable")
 
         mapping = {}
 
@@ -1340,7 +1348,6 @@ class Basic(object):
         """wrapper for count_ops that returns the operation count."""
         from sympy import count_ops
         return count_ops(self, visual)
-        return sum(a.count_ops(visual) for a in self.args)
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -1551,9 +1558,12 @@ class preorder_traversal(object):
     ==========
     node : sympy expression
         The expression to traverse.
-    key : (default None) sort key
-        The key used to sort args of Basic objects. When None, args of Basic
-        objects are processed in arbitrary order.
+    keys : (default None) sort key(s)
+        The key(s) used to sort args of Basic objects. When None, args of Basic
+        objects are processed in arbitrary order. If key is defined, it will
+        be passed along to ordered() as the only key(s) to use to sort the
+        arguments; if ``key`` is simply True then the default keys of ordered
+        will be used.
 
     Yields
     ======
@@ -1568,34 +1578,37 @@ class preorder_traversal(object):
     >>> x, y, z = symbols('x y z')
 
     The nodes are returned in the order that they are encountered unless key
-    is given.
+    is given; simply passing key=True will guarantee that the traversal is
+    unique.
 
-    >>> list(preorder_traversal((x + y)*z, key=None)) # doctest: +SKIP
+    >>> list(preorder_traversal((x + y)*z, keys=None)) # doctest: +SKIP
     [z*(x + y), z, x + y, y, x]
-    >>> list(preorder_traversal((x + y)*z, key=default_sort_key))
+    >>> list(preorder_traversal((x + y)*z, keys=True))
     [z*(x + y), z, x + y, x, y]
 
     """
-    def __init__(self, node, key=None):
+    def __init__(self, node, keys=None):
         self._skip_flag = False
-        self._pt = self._preorder_traversal(node, key)
+        self._pt = self._preorder_traversal(node, keys)
 
-    def _preorder_traversal(self, node, key):
+    def _preorder_traversal(self, node, keys):
         yield node
         if self._skip_flag:
             self._skip_flag = False
             return
         if isinstance(node, Basic):
             args = node.args
-            if key:
-                args = list(args)
-                args.sort(key=key)
+            if keys:
+                if keys != True:
+                    args = ordered(args, keys, default=False)
+                else:
+                    args = ordered(args)
             for arg in args:
-                for subtree in self._preorder_traversal(arg, key):
+                for subtree in self._preorder_traversal(arg, keys):
                     yield subtree
         elif iterable(node):
             for item in node:
-                for subtree in self._preorder_traversal(item, key):
+                for subtree in self._preorder_traversal(item, keys):
                     yield subtree
 
     def skip(self):

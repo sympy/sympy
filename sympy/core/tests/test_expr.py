@@ -8,12 +8,12 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
     exp_polar, Lambda)
 from sympy.core.function import AppliedUndef
-from sympy.abc import a, b, c, d, e, n, t, u, x, y, z
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
 
 from sympy.utilities.pytest import raises, XFAIL
 
+from sympy.abc import a, b, c, n, t, u, x, y, z
 
 class DummyNumber(object):
     """
@@ -1153,11 +1153,6 @@ def test_free_symbols():
 def test_issue2201():
     x = Symbol('x', commutative=False)
     assert x*sqrt(2)/sqrt(6) == x*sqrt(3)/3
-
-
-def test_issue_2061():
-    assert sqrt(-1.0*x) == 1.0*sqrt(-x)
-    assert sqrt(1.0*x) == 1.0*sqrt(x)
 
 
 def test_as_coeff_Mul():

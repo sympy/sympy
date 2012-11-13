@@ -18,8 +18,7 @@ from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
 from sympy.polys.polyroots import root_factors
 
-from sympy.core.compatibility import reduce
-from sympy.utilities.misc import default_sort_key
+from sympy.core.compatibility import reduce, default_sort_key
 
 def components(f, x):
     """

@@ -1,5 +1,4 @@
 from collections import defaultdict
-from operator import itemgetter
 
 from sympy import SYMPY_DEBUG
 
@@ -8,14 +7,13 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Function, Equality, Dummy, Atom, Expr, factor_terms,
     expand_multinomial, expand_power_base, symbols)
 
-from sympy.core.compatibility import iterable, reduce
-from sympy.core.numbers import igcd, Float
+from sympy.core.compatibility import iterable, reduce, default_sort_key
+from sympy.core.numbers import Float
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
-from sympy.utilities.misc import default_sort_key
 from sympy.utilities.iterables import flatten, has_variety
 
 from sympy.simplify.cse_main import cse
@@ -23,8 +21,7 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, terms_gcd, lcm, gcd)
-from sympy.polys.polytools import _keep_coeff
+    ComputationFailed, lcm, gcd)
 
 import sympy.mpmath as mpmath
 
@@ -755,9 +752,9 @@ def ratsimpmodprime(expr, G, *gens, **args):
     http://citeseer.ist.psu.edu/viewdoc/summary?doi=10.1.1.163.6984
     (specifically, the second algorithm)
     """
-    from sympy.polys import polyoptions as options, parallel_poly_from_expr, degree_list
-    from sympy.polys.polyerrors import PolificationFailed
-    from sympy import monomials, symbols, solve, Monomial
+    from sympy.polys import parallel_poly_from_expr
+    from sympy.polys.polyerrors import PolificationFailed, DomainError
+    from sympy import solve, Monomial
     from sympy.polys.monomialtools import monomial_div
     from sympy.core.compatibility import product
 
@@ -2275,12 +2272,20 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 elif neg:
                     # their negative signs cancel in groups of 2*q if we know
                     # that e = p/q else we have to treat them as unknown
+                    israt = False
                     if e.is_Rational:
+                        israt = True
+                    else:
+                        p, d = e.as_numer_denom()
+                        if p.is_integer and d.is_integer:
+                            israt = True
+                    if israt:
                         neg = [-w for w in neg]
-                        unk.extend([S.NegativeOne]*(len(neg) % (2*e.q)))
+                        unk.extend([S.NegativeOne]*len(neg))
                     else:
                         unk.extend(neg)
                         neg = []
+                    del israt
 
                 # these shouldn't be joined
                 for b in unk:
@@ -2515,8 +2520,6 @@ def combsimp(expr):
 
     def rule_gamma(expr):
         """ Simplify products of gamma functions further. """
-        from itertools import count
-        from sympy.core.compatibility import permutations
 
         if expr.is_Atom:
             return expr
@@ -2569,7 +2572,6 @@ def combsimp(expr):
                     n = g1 + g2 - 1
                     if not n.is_Integer:
                         continue
-                    append = False
                     numer.append(S.Pi)
                     denom.append(C.sin(S.Pi*g1))
                     gammas.pop(i)
