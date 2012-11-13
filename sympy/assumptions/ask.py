@@ -206,7 +206,8 @@ def compute_known_facts(known_facts, known_facts_keys):
     # -{ Known facts in compressed sets }-
     known_facts_dict = {
         %s
-    }''')
+    }
+    ''')
     # Compute the known facts in CNF form for logical inference
     LINE = ",\n    "
     HANG = ' '*8
