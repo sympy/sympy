@@ -1,4 +1,4 @@
-from sympy import symbols
+from sympy import symbols, sympify, Dummy
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, compile_rule, conjuncts, disjuncts,
@@ -8,7 +8,7 @@ from sympy.logic.boolalg import (
 from sympy.utilities.pytest import raises
 
 
-A, B, C = symbols('A,B,C')
+A, B, C, Q = symbols('A,B,C,Q')
 
 
 def test_overloading():
@@ -148,6 +148,7 @@ def test_simplification():
     assert Not(SOPform('xyz', set2)) == And(Or(Not(x), Not(z)), Or(x, z))
     assert POSform('xyz', set1 + set2) is True
     assert SOPform('xyz', set1 + set2) is True
+    assert SOPform([Dummy(), Dummy(), Dummy()], set1 + set2) is True
 
     minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
         [1, 1, 1, 1]]
@@ -166,6 +167,16 @@ def test_simplification():
     ans = SOPform('xy', [[1, 0]])
     assert SOPform([x, y], [[1, 0]]) == ans
     assert POSform(['x', 'y'], [[1, 0]]) == ans
+
+    raises(ValueError, lambda: SOPform('x', [[1]], [[1]]))
+    assert SOPform('x', [[1]], [[0]]) is True
+    assert SOPform('x', [[0]], [[1]]) is True
+    assert SOPform('x', [], []) is False
+
+    raises(ValueError, lambda: POSform('x', [[1]], [[1]]))
+    assert POSform('x', [[1]], [[0]]) is True
+    assert POSform('x', [[0]], [[1]]) is True
+    assert POSform('x', [], []) is False
 
 
 def test_bool_symbol():
@@ -274,8 +285,8 @@ def test_to_cnf():
 
 
 def test_compile_rule():
-    from sympy import sympify
     assert compile_rule("A & B") == sympify("A & B")
+    assert compile_rule("C & Q") == And(C, Q)  # this would fail with sympify
 
 
 def test_to_int_repr():
