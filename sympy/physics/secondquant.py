@@ -15,6 +15,7 @@ from sympy.printing.str import StrPrinter
 from sympy.physics.quantum.qexpr import split_commutative_parts
 from sympy.core.compatibility import reduce
 from sympy.utilities.iterables import has_dups
+from sympy.utilities import default_sort_key
 
 __all__ = [
     'Dagger',
@@ -1730,7 +1731,7 @@ class Commutator(Function):
         #
         # Canonical ordering of arguments
         #
-        if a > b:
+        if a.sort_key() > b.sort_key():
             return S.NegativeOne*cls(b, a)
 
     def doit(self, **hints):
@@ -2436,7 +2437,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
 
     dummies = expr.atoms(Dummy)
     if not new_indices:
-        dummies = sorted(dummies)
+        dummies = sorted(dummies, key=default_sort_key)
 
     # generate lists with the dummies we will insert
     a = i = p = 0
