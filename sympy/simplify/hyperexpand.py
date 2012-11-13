@@ -56,15 +56,29 @@ It is described in great(er) detail in the Sphinx documentation.
 # o Deciding if one index quadruple is reachable from another is tricky. For
 #   this reason, we use hand-built routines to match and instantiate formulas.
 #
-from sympy.core import S, Dummy, symbols, sympify, Tuple, expand, I, Mul
-from sympy.core.mod import Mod
-from sympy.functions.special.hyper import hyper
-from sympy.core.compatibility import default_sort_key
+from collections import defaultdict
+
 from sympy import SYMPY_DEBUG
+from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
+    EulerGamma, ilcm, oo, zoo, expand_func, Add, nan)
+from sympy.core.mod import Mod
+from sympy.core.compatibility import default_sort_key, permutations, product
+from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
+        besseli, gamma, uppergamma, erf, sin, besselj, Ei, Ci, Si, Shi,
+        sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
+        rf, factorial, lerchphi, Piecewise, re)
+from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
+        HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
+        HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
+        HyperRep_cosasin, HyperRep_sinasin, meijerg)
+from sympy.simplify import powdenest, simplify, polarify, unpolarify
+from sympy.polys import poly, Poly
+from sympy.series import residue
 
 # leave add formulae at the top for easy reference
 def add_formulae(formulae):
     """ Create our knowledge base. """
+    from sympy.matrices import Matrix
 
     a, b, c, z = symbols('a b c, z', cls=Dummy)
 
@@ -76,17 +90,6 @@ def add_formulae(formulae):
 
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
-
-    from sympy import (
-        exp, sqrt, root, cosh, log, asin, atan, I, lowergamma, cos,
-        atanh, besseli, gamma, erf, pi, sin, besselj, Ei,
-        EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix,
-        fresnels, fresnelc)
-    from sympy.functions.special.hyper import (HyperRep_atanh,
-        HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
-        HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
-        HyperRep_cosasin, HyperRep_sinasin)
-    from sympy import polar_lift, exp_polar
 
     # 0F0
     add((), (), exp(z))
@@ -329,7 +332,7 @@ def add_formulae(formulae):
 
 
 def add_meijerg_formulae(formulae):
-    from sympy import Matrix, gamma, uppergamma, exp, Si, Ci, sin, cos, sqrt, pi
+    from sympy.matrices import Matrix
 
     a, b, c, z = map(Dummy, 'abcz')
     rho = Dummy('rho')
@@ -402,7 +405,6 @@ def make_simp(z):
 
     def simp(expr):
         """ Efficiently simplify the rational function ``expr``. """
-        from sympy import poly
         numer, denom = expr.as_numer_denom()
         c, numer, denom = poly(numer, z).cancel(poly(denom, z))
         return c * numer.as_expr() / denom.as_expr()
@@ -421,7 +423,6 @@ class IndexPair(object):
     """ Holds a pair of indices, and methods to compute their invariants. """
 
     def __init__(self, ap, bq):
-        from sympy import expand, Tuple
         self.ap = Tuple(*map(expand, ap))
         self.bq = Tuple(*map(expand, bq))
 
@@ -452,8 +453,6 @@ class IndexPair(object):
         >>> IndexPair(ap, bq).compute_buckets()
         ({0: (-2,), 1/3: (1/3,), 1/2: (1/2, -1/2)}, {0: (1, 2)})
         """
-        from collections import defaultdict
-
         # TODO this should probably be cached somewhere
         abuckets = defaultdict(tuple)
         bbuckets = defaultdict(tuple)
@@ -542,8 +541,6 @@ class IndexQuadruple(object):
     """ Holds a quadruple of indices. """
 
     def __init__(self, an, ap, bm, bq):
-        from sympy import expand, Tuple
-
         def tr(l):
             return Tuple(*map(expand, l))
         self.an = tr(an)
@@ -568,7 +565,6 @@ class IndexQuadruple(object):
         {0: [2], Mod(y, 1): [y, y + 1, y + 3]}, {0: [2]}, {Mod(y, 1): [y]})
 
         """
-        from collections import defaultdict
         dicts = pan, pap, pbm, pbq = defaultdict(list), defaultdict(list), \
             defaultdict(list), defaultdict(list)
         for dic, lis in zip(dicts, (self.an, self.ap, self.bm, self.bq)):
@@ -674,7 +670,6 @@ class Formula(object):
         lcms = {}
         isolation = {}
         for a in symbols:
-            from sympy import ilcm
             l = 1
             isolating = []
             others = list(symbols[:])
@@ -723,13 +718,12 @@ class Formula(object):
         Note that the returned instantiations need not actually match,
         or be valid!
         """
+        from sympy.solvers import solve
         ap = ip.ap
         bq = ip.bq
         if len(ap) != len(self.indices.ap) or len(bq) != len(self.indices.bq):
             raise TypeError('Cannot instantiate other number of parameters')
 
-        from sympy import solve
-        from sympy.core.compatibility import permutations, product
         res = []
         our_params = list(self.indices.ap) + list(self.indices.bq)
         for na in permutations(ap):
@@ -756,7 +750,6 @@ class Formula(object):
                     a = self.symbols[0]
                     aval, d = repl[a]
                     if aval < 0 and d == 1:
-                        from sympy import ceiling
                         aval -= ceiling(aval) - 1
                         res.append(Formula(self.indices.ap.subs(a, aval),
                                            self.indices.bq.subs(a, aval),
@@ -801,7 +794,6 @@ class Formula(object):
         >>> Formula(a, b, None, None, []).is_suitable()
         True
         """
-        from sympy import oo, zoo
         if len(self.symbols) > 0:
             return None
         for a in self.indices.ap:
@@ -937,7 +929,6 @@ class MeijerFormulaCollection(object):
     """
 
     def __init__(self):
-        from collections import defaultdict
         formulae = []
         add_meijerg_formulae(formulae)
         self.formulae = defaultdict(list)
@@ -1412,7 +1403,6 @@ class ReduceOrder(Operator):
     def _meijer(cls, b, a, sign):
         """ Cancel b + sign*s and a + sign*s
             This is for meijer G functions. """
-        from sympy import Add
         b = sympify(b)
         a = sympify(a)
         n = b - a
@@ -1533,8 +1523,6 @@ def reduce_order_meijer(iq):
 
 def make_derivative_operator(M, z):
     """ Create a derivative operator, to be passed to Operator.apply. """
-    from sympy import poly
-
     def doit(C):
         r = z*C.diff(z) + C*M
         r = r.applyfunc(make_simp(z))
@@ -1691,7 +1679,6 @@ def devise_plan(ip, nip, z):
 
 def try_shifted_sum(ip, z):
     """ Try to recognise a hypergeometric sum that starts from k > 0. """
-    from sympy.functions import rf, factorial
     abuckets, bbuckets = ip.compute_buckets()
     if not S(0) in abuckets or len(abuckets[S(0)]) != 1:
         return None
@@ -1742,7 +1729,6 @@ def try_shifted_sum(ip, z):
 def try_polynomial(ip, z):
     """ Recognise polynomial cases. Returns None if not such a case.
         Requires order to be fully reduced. """
-    from sympy import oo, factorial, rf, Expr
     abuckets, bbuckets = ip.compute_buckets()
     a0 = list(abuckets.get(S(0), []))
     b0 = list(bbuckets.get(S(0), []))
@@ -1781,8 +1767,8 @@ def try_lerchphi(nip):
     # section 18.
     # We don't need to implement the reduction to polylog here, this
     # is handled by expand_func.
-    from sympy import (expand_func, lerchphi, apart, Dummy, rf, Poly, Matrix,
-                       zeros, Add)
+    from sympy.matrices import Matrix, zeros
+    from sympy.polys import apart
 
     # First we need to figure out if the summation coefficient is a rational
     # function of the summation index, and construct that rational function.
@@ -1923,7 +1909,7 @@ def build_hypergeometric_formula(nip):
     # would have kicked in. However, `ap` could be empty. In this case we can
     # use a different basis.
     # I'm not aware of a basis that works in all cases.
-    from sympy import zeros, Dummy, Matrix, hyper, eye, Mul
+    from sympy import zeros, Matrix, eye
     z = Dummy('z')
     if nip.ap:
         afactors = map(lambda a: _x + a, nip.ap)
@@ -1984,7 +1970,6 @@ def hyperexpand_special(ap, bq, z):
     # This code is very ad-hoc. There are many clever algorithms
     # (notably Zeilberger's) related to this problem.
     # For now we just want a few simple cases to work.
-    from sympy import gamma, simplify, cos, unpolarify, pi
     p, q = len(ap), len(bq)
     z_ = z
     z = unpolarify(z)
@@ -2023,7 +2008,6 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     is multiplied by premult. Then ops0 is applied.
     premult must be a*z**prem for some a independent of z.
     """
-    from sympy.simplify import powdenest, simplify, polarify, unpolarify
     z = polarify(z, subs=False)
     if rewrite == 'default':
         rewrite = 'nonrepsmall'
@@ -2255,7 +2239,6 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
 
     Currently this just does slater's theorem.
     """
-    from sympy import hyper, Piecewise, meijerg, powdenest, re, polar_lift, oo
     global _meijercollection
     if _meijercollection is None:
         _meijercollection = MeijerFormulaCollection()
@@ -2311,8 +2294,6 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
         return True
 
     def do_slater(an, bm, ap, bq, z, zfinal):
-        from sympy import gamma, residue, factorial, rf, expand_func, \
-            polar_lift
         # zfinal is the value that will eventually be substituted for z.
         # We pass it to _hyperexpand to improve performance.
         iq = IndexQuadruple(an, bm, ap, bq)
@@ -2458,7 +2439,6 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
         cond2 = cond2.subs(z, z0)
 
     def weight(expr, cond):
-        from sympy import oo, zoo, nan
         if cond is True:
             c0 = 0
         elif cond is False:
@@ -2518,8 +2498,6 @@ def hyperexpand(f, allow_hyper=False, rewrite='default'):
     >>> hyperexpand(1 + hyper([1, 1, 1], [], z))
     hyper((1, 1, 1), (), z) + 1
     """
-    from sympy.functions import hyper, meijerg
-    from sympy import nan, zoo, oo
     f = sympify(f)
 
     def do_replace(ap, bq, z):
@@ -2535,5 +2513,3 @@ def hyperexpand(f, allow_hyper=False, rewrite='default'):
         if not r.has(nan, zoo, oo, -oo):
             return r
     return f.replace(hyper, do_replace).replace(meijerg, do_meijer)
-
-from sympy.polys.polytools import Poly
