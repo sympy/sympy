@@ -7,6 +7,9 @@ def unique(seq):
             seen.add(item)
             yield item
 
+def intersect(a, b):
+    return not not set(a).intersection(set(b))
+
 class Computation(object):
 
     inputs  = None
@@ -38,3 +41,25 @@ class CompositeComputation(Computation):
 
     def edges(self):
         return itertools.chain(*[c.edges() for c in self.computations])
+
+    def dag_io(self):
+        """ Return a dag of computations from inputs to outputs
+
+        returns {A: {Bs}} such that A must occur before each of the Bs
+        """
+        return {A: set([B for B in self.computations
+                          if intersect(A.outputs, B.inputs)])
+                    for A in self.computations}
+
+    def dag_oi(self):
+        """ Return a dag of computations from outputs to inputs
+
+        returns {A: {Bs}} such that A requires each of the Bs before it runs
+        """
+        return {A: set([B for B in self.computations
+                          if intersect(A.inputs, B.outputs)])
+                    for A in self.computations}
+
+    def toposort(self):
+        from sympy.utilities.iterables import _toposort
+        return _toposort(self.dag_io())

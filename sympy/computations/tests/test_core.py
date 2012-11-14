@@ -18,10 +18,18 @@ class TComp(Computation):
         self.inputs = tuple(inputs)
         self.outputs = tuple(outputs)
 
+    def __str__(self):
+        ins  = "["+', '.join(self.inputs) +"]"
+        outs = "["+', '.join(self.outputs)+"]"
+        return "%s -> %s -> %s"%(ins, str(self.op), outs)
+
 class TComposite(CompositeComputation):
     """ Test CompositeComputation class """
     def __init__(self, *computations):
         self.computations = computations
+
+    def __str__(self):
+        return "[[" + ", ".join(map(str, self.computations)) + "]]"
 
 def test_testcomp():
     A = TComp('add', (a, b, c), (d,))
@@ -36,3 +44,18 @@ def test_composite():
     assert tuple(C.outputs) == (f,)
     assert tuple(C.edges()) == ((a, A), (b, A), (c, A), (A, d), (d, M), (e, M),
             (M, f))
+
+def test_composite_dag():
+    A = TComp('add', (a, b, c), (d,))
+    M = TComp('mul', (d, e), (f,))
+    C = TComposite(A, M)
+
+    assert C.dag_io() == {A: set([M]), M: set()}
+    assert C.dag_oi() == {M: set([A]), A: set()}
+
+def test_toposort():
+    A = TComp('add', (a, b, c), (d,))
+    M = TComp('mul', (d, e), (f,))
+    C = TComposite(A, M)
+
+    assert tuple(C.toposort()) == (A, M)
