@@ -66,7 +66,7 @@ def construct(t):
     if not isinstance(t, Compound):
         return t
     if t.op in (Add, Mul, Pow):
-        return t.op(*map(construct, t.args), evaluate=False)
+        return t.op(*map(construct, t.args), **{'evaluate': False})
     else:
         return Basic.__new__(t.op, *map(construct, t.args))
 
