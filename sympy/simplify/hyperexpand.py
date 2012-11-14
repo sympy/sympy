@@ -436,6 +436,9 @@ class Hyper_Function(Expr):
     def sizes(self):
         return (len(self.ap), len(self.bq))
 
+    def __call__(self, arg):
+        return hyper(self.ap, self.bq, arg)
+
     def compute_buckets(self, oabuckets=None, obbuckets=None):
         """
         Partition ``ap`` and ``bq`` mod 1.

@@ -143,7 +143,7 @@ def test_formulae():
     from sympy.simplify.hyperexpand import FormulaCollection
     formulae = FormulaCollection().formulae
     for formula in formulae:
-        h = hyper(formula.func.ap, formula.func.bq, formula.z)
+        h = formula.func(formula.z)
         rep = {}
         for n, sym in enumerate(formula.symbols):
             rep[sym] = randcplx(n)
@@ -595,7 +595,7 @@ def test_partial_simp():
             Hyper_Function([], [a, b, c, d, e])]:
         f = build_hypergeometric_formula(func)
         z = f.z
-        assert f.closed_form == hyper(func.ap, func.bq, z)
+        assert f.closed_form == func(z)
         deriv1 = f.B.diff(z)*z
         deriv2 = f.M*f.B
         for func1, func2 in zip(deriv1, deriv2):
