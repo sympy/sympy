@@ -588,7 +588,11 @@ class log(Function):
                     arg.base.is_polar:
                 b = arg.base
                 e = arg.exp
-                return unpolarify(e) * self.func(b)._eval_expand_log(**hints)
+                a = self.func(b)
+                if isinstance(a, log):
+                    return unpolarify(e) * a._eval_expand_log(**hints)
+                else:
+                    return unpolarify(e) * a
 
         return self.func(arg)
 
