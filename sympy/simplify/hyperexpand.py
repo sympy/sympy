@@ -60,7 +60,7 @@ from collections import defaultdict
 
 from sympy import SYMPY_DEBUG
 from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
-    EulerGamma, ilcm, oo, zoo, expand_func, Add, nan)
+    EulerGamma, ilcm, oo, zoo, expand_func, Add, nan, Expr)
 from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, permutations, product
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
@@ -419,19 +419,22 @@ def debug(*args):
         print
 
 
-class IndexPair(object):
-    """ Holds a pair of indices, and methods to compute their invariants. """
+class Hyper_Function(Expr):
+    """ A generalized hypergeometric function. """
 
-    def __init__(self, ap, bq):
-        self.ap = Tuple(*map(expand, ap))
-        self.bq = Tuple(*map(expand, bq))
+    def __new__(cls, ap, bq):
+        obj = super(Hyper_Function, cls).__new__(cls)
+        obj.ap = Tuple(*map(expand, ap))
+        obj.bq = Tuple(*map(expand, bq))
+        return obj
+
+    @property
+    def args(self):
+        return (self.ap, self.bq)
 
     @property
     def sizes(self):
         return (len(self.ap), len(self.bq))
-
-    def __repr__(self):
-        return 'IndexPair(%s, %s)' % (self.ap, self.bq)
 
     def compute_buckets(self, oabuckets=None, obbuckets=None):
         """
@@ -446,11 +449,11 @@ class IndexPair(object):
         If oabuckets, obbuckets is specified, try to use the same Mod objects
         for parameters where possible.
 
-        >>> from sympy.simplify.hyperexpand import IndexPair
+        >>> from sympy.simplify.hyperexpand import Hyper_Function
         >>> from sympy import S
         >>> ap = (S(1)/2, S(1)/3, S(-1)/2, -2)
         >>> bq = (1, 2)
-        >>> IndexPair(ap, bq).compute_buckets()
+        >>> Hyper_Function(ap, bq).compute_buckets()
         ({0: (-2,), 1/3: (1/3,), 1/2: (1/2, -1/2)}, {0: (1, 2)})
         """
         # TODO this should probably be cached somewhere
@@ -481,7 +484,7 @@ class IndexPair(object):
         If the index pair contains parameters, then this is not truly an
         invariant, since the parameters cannot be sorted uniquely mod1.
 
-        >>> from sympy.simplify.hyperexpand import IndexPair
+        >>> from sympy.simplify.hyperexpand import Hyper_Function
         >>> from sympy import S
         >>> ap = (S(1)/2, S(1)/3, S(-1)/2, -2)
         >>> bq = (1, 2)
@@ -491,7 +494,7 @@ class IndexPair(object):
                     n1 = 1, n2 = 1,   n2 = 2
              r = 1, t1 = 0
                     m1 = 2:
-        >>> IndexPair(ap, bq).build_invariants()
+        >>> Hyper_Function(ap, bq).build_invariants()
         (1, ((0, 1), (1/3, 1), (1/2, 2)), ((0, 2),))
         """
         abuckets, bbuckets = self.compute_buckets()
@@ -509,11 +512,11 @@ class IndexPair(object):
 
         return (gamma, tr(abuckets), tr(bbuckets))
 
-    def difficulty(self, ip):
-        """ Estimate how many steps it takes to reach ``ip`` from self.
+    def difficulty(self, func):
+        """ Estimate how many steps it takes to reach ``func`` from self.
             Return -1 if impossible. """
         oabuckets, obbuckets = self.compute_buckets()
-        abuckets, bbuckets = ip.compute_buckets(oabuckets, obbuckets)
+        abuckets, bbuckets = func.compute_buckets(oabuckets, obbuckets)
 
         gt0 = lambda x: (x > 0) is True
         if S(0) in abuckets and (not S(0) in oabuckets or
@@ -599,7 +602,7 @@ class Formula(object):
     - z, the argument
     - closed_form, the closed form expression
     - symbols, the free symbols (parameters) in the formula
-    - indices, the parameters
+    - func, the function
     - B, C, M (see _compute_basis)
     - lcms, a dictionary which maps symbol -> lcm of denominators
     - isolation, a dictonary which maps symbol -> (num, coeff) pairs
@@ -634,8 +637,8 @@ class Formula(object):
         """
         from sympy.matrices import Matrix, eye, zeros
 
-        afactors = map(lambda a: _x + a, self.indices.ap)
-        bfactors = map(lambda b: _x + b - 1, self.indices.bq)
+        afactors = map(lambda a: _x + a, self.func.ap)
+        bfactors = map(lambda b: _x + b - 1, self.func.bq)
         expr = _x*Mul(*bfactors) - self.z*Mul(*afactors)
         poly = Poly(expr, _x)
 
@@ -699,7 +702,7 @@ class Formula(object):
         self.lcms = lcms
         self.isolation = isolation
 
-        self.indices = IndexPair(ap, bq)
+        self.func = Hyper_Function(ap, bq)
 
         # TODO with symbolic parameters, it could be advantageous
         #      (for prettier answers) to compute a basis only *after*
@@ -711,21 +714,22 @@ class Formula(object):
     def closed_form(self):
         return (self.C*self.B)[0]
 
-    def find_instantiations(self, ip):
+    def find_instantiations(self, func):
         """
-        Try to find instantiations of the free symbols that match
-        ``ip.ap``, ``ip.bq``. Return the instantiated formulae as a list.
-        Note that the returned instantiations need not actually match,
-        or be valid!
+        Find instantiations of the free symbols that match ``func``.
+
+        Return the instantiated formulae as a list.  Note that the returned
+        instantiations need not actually match, or be valid!
+
         """
         from sympy.solvers import solve
-        ap = ip.ap
-        bq = ip.bq
-        if len(ap) != len(self.indices.ap) or len(bq) != len(self.indices.bq):
+        ap = func.ap
+        bq = func.bq
+        if len(ap) != len(self.func.ap) or len(bq) != len(self.func.bq):
             raise TypeError('Cannot instantiate other number of parameters')
 
         res = []
-        our_params = list(self.indices.ap) + list(self.indices.bq)
+        our_params = list(self.func.ap) + list(self.func.bq)
         for na in permutations(ap):
             for nb in permutations(bq):
                 all_params = list(na) + list(nb)
@@ -737,8 +741,8 @@ class Formula(object):
                     rep = {}
                     for i, a in zip(change, repl.keys()):
                         rep[a] = repl[a][0] + i*repl[a][1]
-                    res.append(Formula(self.indices.ap.subs(rep),
-                                       self.indices.bq.subs(rep),
+                    res.append(Formula(self.func.ap.subs(rep),
+                                       self.func.bq.subs(rep),
                                        self.z, None, [], self.B.subs(rep),
                                        self.C.subs(rep), self.M.subs(rep)))
                 # if say a = -1/2, and there is 2*a in the formula, then
@@ -751,8 +755,8 @@ class Formula(object):
                     aval, d = repl[a]
                     if aval < 0 and d == 1:
                         aval -= ceiling(aval) - 1
-                        res.append(Formula(self.indices.ap.subs(a, aval),
-                                           self.indices.bq.subs(a, aval),
+                        res.append(Formula(self.func.ap.subs(a, aval),
+                                           self.func.bq.subs(a, aval),
                                        self.z, None, [], self.B.subs(a, aval),
                                        self.C.subs(rep), self.M.subs(a, aval)))
         return res
@@ -796,14 +800,14 @@ class Formula(object):
         """
         if len(self.symbols) > 0:
             return None
-        for a in self.indices.ap:
-            for b in self.indices.bq:
+        for a in self.func.ap:
+            for b in self.func.bq:
                 if (a - b).is_integer and not a < b:
                     return False
-        for a in self.indices.ap:
+        for a in self.func.ap:
             if a == 0:
                 return False
-        for b in self.indices.bq:
+        for b in self.func.bq:
             if b <= 0 and b.is_integer:
                 return False
         for e in [self.B, self.M, self.C]:
@@ -829,32 +833,33 @@ class FormulaCollection(object):
         # These dicts are indexed by (p, q).
 
         for f in self.formulae:
-            sizes = f.indices.sizes
+            sizes = f.func.sizes
             if len(f.symbols) > 0:
                 self.symbolic_formulae.setdefault(sizes, []).append(f)
             else:
-                inv = f.indices.build_invariants()
+                inv = f.func.build_invariants()
                 self.concrete_formulae.setdefault(sizes, {})[inv] = f
 
-    def lookup_origin(self, ip):
+    def lookup_origin(self, func):
         """
-        Given the suitable parameters ``ip.ap``, ``ip.bq``, try to find an
-        origin in our knowledge base.
+        Given the suitable target ``func``, try to find an origin in our
+        knowledge base.
 
-        >>> from sympy.simplify.hyperexpand import FormulaCollection, IndexPair
+        >>> from sympy.simplify.hyperexpand import (FormulaCollection,
+        ...     Hyper_Function)
         >>> f = FormulaCollection()
-        >>> f.lookup_origin(IndexPair((), ())).closed_form
+        >>> f.lookup_origin(Hyper_Function((), ())).closed_form
         exp(_z)
-        >>> f.lookup_origin(IndexPair([1], ())).closed_form
+        >>> f.lookup_origin(Hyper_Function([1], ())).closed_form
         HyperRep_power1(-1, _z)
 
         >>> from sympy import S
-        >>> i = IndexPair([S('1/4'), S('3/4 + 4')], [S.Half])
+        >>> i = Hyper_Function([S('1/4'), S('3/4 + 4')], [S.Half])
         >>> f.lookup_origin(i).closed_form
         HyperRep_sqrts1(-17/4, _z)
         """
-        inv = ip.build_invariants()
-        sizes = ip.sizes
+        inv = func.build_invariants()
+        sizes = func.sizes
         if sizes in self.concrete_formulae and \
                 inv in self.concrete_formulae[sizes]:
             return self.concrete_formulae[sizes][inv]
@@ -865,11 +870,11 @@ class FormulaCollection(object):
 
         possible = []
         for f in self.symbolic_formulae[sizes]:
-            l = f.find_instantiations(ip)
+            l = f.find_instantiations(func)
             for f2 in l:
                 if not f2.is_suitable():
                     continue
-                diff = f2.indices.difficulty(ip)
+                diff = f2.func.difficulty(func)
                 if diff != -1:
                     possible.append((diff, f2))
 
@@ -1464,29 +1469,29 @@ def _reduce_order(ap, bq, gen, key):
     return nap, bq, operators
 
 
-def reduce_order(ip):
+def reduce_order(func):
     """
-    Given the hypergeometric parameters ``ip.ap``, ``ip.bq``,
-    find a sequence of operators to reduces order as much as possible.
+    Given the hypergeometric function ``func``, find a sequence of operators to
+    reduces order as much as possible.
 
-    Return (nip, [operators]), where applying the operators to the
-    hypergeometric function specified by nip.ap, nip.bq yields ap, bq.
+    Return (newfunc, [operators]), where applying the operators to the
+    hypergeometric function newfunc yields func.
 
     Examples
     ========
 
-    >>> from sympy.simplify.hyperexpand import reduce_order, IndexPair
-    >>> reduce_order(IndexPair((1, 2), (3, 4)))
-    (IndexPair((1, 2), (3, 4)), [])
-    >>> reduce_order(IndexPair((1,), (1,)))
-    (IndexPair((), ()), [<Reduce order by cancelling upper 1 with lower 1.>])
-    >>> reduce_order(IndexPair((2, 4), (3, 3)))
-    (IndexPair((2,), (3,)), [<Reduce order by cancelling
+    >>> from sympy.simplify.hyperexpand import reduce_order, Hyper_Function
+    >>> reduce_order(Hyper_Function((1, 2), (3, 4)))
+    (Hyper_Function((1, 2), (3, 4)), [])
+    >>> reduce_order(Hyper_Function((1,), (1,)))
+    (Hyper_Function((), ()), [<Reduce order by cancelling upper 1 with lower 1.>])
+    >>> reduce_order(Hyper_Function((2, 4), (3, 3)))
+    (Hyper_Function((2,), (3,)), [<Reduce order by cancelling
     upper 4 with lower 3.>])
     """
-    nap, nbq, operators = _reduce_order(ip.ap, ip.bq, ReduceOrder, lambda x: x)
+    nap, nbq, operators = _reduce_order(func.ap, func.bq, ReduceOrder, lambda x: x)
 
-    return IndexPair(Tuple(*nap), Tuple(*nbq)), operators
+    return Hyper_Function(Tuple(*nap), Tuple(*nbq)), operators
 
 
 def reduce_order_meijer(iq):
@@ -1541,56 +1546,55 @@ def apply_operators(obj, ops, op):
     return res
 
 
-def devise_plan(ip, nip, z):
+def devise_plan(target, origin, z):
     """
     Devise a plan (consisting of shift and un-shift operators) to be applied
-    to the hypergeometric function (``nip.ap``, ``nip.bq``) to yield
-    (``ip.ap``, ``ip.bq``).
+    to the hypergeometric function ``target`` to yield ``origin``.
     Returns a list of operators.
 
-    >>> from sympy.simplify.hyperexpand import devise_plan, IndexPair
+    >>> from sympy.simplify.hyperexpand import devise_plan, Hyper_Function
     >>> from sympy.abc import z
 
     Nothing to do:
 
-    >>> devise_plan(IndexPair((1, 2), ()), IndexPair((1, 2), ()), z)
+    >>> devise_plan(Hyper_Function((1, 2), ()), Hyper_Function((1, 2), ()), z)
     []
-    >>> devise_plan(IndexPair((), (1, 2)), IndexPair((), (1, 2)), z)
+    >>> devise_plan(Hyper_Function((), (1, 2)), Hyper_Function((), (1, 2)), z)
     []
 
     Very simple plans:
 
-    >>> devise_plan(IndexPair((2,), ()), IndexPair((1,), ()), z)
+    >>> devise_plan(Hyper_Function((2,), ()), Hyper_Function((1,), ()), z)
     [<Increment upper 1.>]
-    >>> devise_plan(IndexPair((), (2,)), IndexPair((), (1,)), z)
+    >>> devise_plan(Hyper_Function((), (2,)), Hyper_Function((), (1,)), z)
     [<Increment lower index #0 of [], [1].>]
 
     Several buckets:
 
     >>> from sympy import S
-    >>> devise_plan(IndexPair((1, S.Half), ()),
-    ...             IndexPair((2, S('3/2')), ()), z) #doctest: +NORMALIZE_WHITESPACE
+    >>> devise_plan(Hyper_Function((1, S.Half), ()),
+    ...             Hyper_Function((2, S('3/2')), ()), z) #doctest: +NORMALIZE_WHITESPACE
     [<Decrement upper index #0 of [3/2, 1], [].>,
     <Decrement upper index #0 of [2, 3/2], [].>]
 
     A slightly more complicated plan:
 
-    >>> devise_plan(IndexPair((1, 3), ()), IndexPair((2, 2), ()), z)
+    >>> devise_plan(Hyper_Function((1, 3), ()), Hyper_Function((2, 2), ()), z)
     [<Increment upper 2.>, <Decrement upper index #0 of [2, 2], [].>]
 
     Another more complicated plan: (note that the ap have to be shifted first!)
 
-    >>> devise_plan(IndexPair((1, -1), (2,)), IndexPair((3, -2), (4,)), z)
+    >>> devise_plan(Hyper_Function((1, -1), (2,)), Hyper_Function((3, -2), (4,)), z)
     [<Decrement lower 3.>, <Decrement lower 4.>,
     <Decrement upper index #1 of [-1, 2], [4].>,
     <Decrement upper index #1 of [-1, 3], [4].>, <Increment upper -2.>]
     """
-    abuckets, bbuckets = ip.compute_buckets()
-    nabuckets, nbbuckets = nip.compute_buckets(abuckets, bbuckets)
+    abuckets, bbuckets = target.compute_buckets()
+    nabuckets, nbbuckets = origin.compute_buckets(abuckets, bbuckets)
 
     if len(abuckets.keys()) != len(nabuckets.keys()) or \
             len(bbuckets.keys()) != len(nbbuckets.keys()):
-        raise ValueError('%s not reachable from %s' % (ip, nip))
+        raise ValueError('%s not reachable from %s' % (target, origin))
 
     ops = []
 
@@ -1633,8 +1637,7 @@ def devise_plan(ip, nip, z):
             bk = bbuckets[r]
             nbk = nbbuckets[r]
         if len(al) != len(nal) or len(bk) != len(nbk):
-            raise ValueError('%s not reachable from %s' % (
-                             (ip.ap, ip.bq), (nip.ap, nip.bq)))
+            raise ValueError('%s not reachable from %s' % (target, origin))
 
         al, nal, bk, nbk = [sorted(list(w), key=default_sort_key)
             for w in [al, nal, bk, nbk]]
@@ -1677,9 +1680,9 @@ def devise_plan(ip, nip, z):
     return ops
 
 
-def try_shifted_sum(ip, z):
+def try_shifted_sum(func, z):
     """ Try to recognise a hypergeometric sum that starts from k > 0. """
-    abuckets, bbuckets = ip.compute_buckets()
+    abuckets, bbuckets = func.compute_buckets()
     if not S(0) in abuckets or len(abuckets[S(0)]) != 1:
         return None
     r = abuckets[S(0)][0]
@@ -1693,9 +1696,9 @@ def try_shifted_sum(ip, z):
     if k <= 0:
         return None
 
-    nap = list(ip.ap)
+    nap = list(func.ap)
     nap.remove(r)
-    nbq = list(ip.bq)
+    nbq = list(func.bq)
     nbq.remove(k)
     k -= 1
     nap = map(lambda x: x - k, nap)
@@ -1723,13 +1726,13 @@ def try_shifted_sum(ip, z):
             m /= rf(b, n)
         p += m
 
-    return IndexPair(nap, nbq), ops, -p
+    return Hyper_Function(nap, nbq), ops, -p
 
 
-def try_polynomial(ip, z):
+def try_polynomial(func, z):
     """ Recognise polynomial cases. Returns None if not such a case.
         Requires order to be fully reduced. """
-    abuckets, bbuckets = ip.compute_buckets()
+    abuckets, bbuckets = func.compute_buckets()
     a0 = list(abuckets.get(S(0), []))
     b0 = list(bbuckets.get(S(0), []))
     a0.sort()
@@ -1748,17 +1751,17 @@ def try_polynomial(ip, z):
     for n in Tuple(*range(-a)):
         fac *= z
         fac /= n + 1
-        for a in ip.ap:
+        for a in func.ap:
             fac *= a + n
-        for b in ip.bq:
+        for b in func.bq:
             fac /= b + n
         res += fac
     return res
 
 
-def try_lerchphi(nip):
+def try_lerchphi(func):
     """
-    Try to find an expression for IndexPair ``nip`` in terms of Lerch
+    Try to find an expression for Hyper_Function ``func`` in terms of Lerch
     Transcendents.
 
     Return None if no such expression can be found.
@@ -1772,7 +1775,7 @@ def try_lerchphi(nip):
 
     # First we need to figure out if the summation coefficient is a rational
     # function of the summation index, and construct that rational function.
-    abuckets, bbuckets = nip.compute_buckets()
+    abuckets, bbuckets = func.compute_buckets()
     # Update all the keys in bbuckets to be the same Mod objects as abuckets.
     akeys = abuckets.keys()
     bkeys = []
@@ -1899,29 +1902,31 @@ def try_lerchphi(nip):
     for b, l in deriv.items():
         for c, b2 in l:
             M[trans[b], trans[b2]] = c
-    return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+    return Formula(func.ap, func.bq, z, None, [], B, C, M)
 
 
-def build_hypergeometric_formula(nip):
-    """ Create a formula object representing the hypergeometric function
-        Corresponding to nip. """
+def build_hypergeometric_formula(func):
+    """
+    Create a formula object representing the hypergeometric function ``func``.
+
+    """
     # We know that no `ap` are negative integers, otherwise "detect poly"
     # would have kicked in. However, `ap` could be empty. In this case we can
     # use a different basis.
     # I'm not aware of a basis that works in all cases.
     from sympy import zeros, Matrix, eye
     z = Dummy('z')
-    if nip.ap:
-        afactors = map(lambda a: _x + a, nip.ap)
-        bfactors = map(lambda b: _x + b - 1, nip.bq)
+    if func.ap:
+        afactors = map(lambda a: _x + a, func.ap)
+        bfactors = map(lambda b: _x + b - 1, func.bq)
         expr = _x*Mul(*bfactors) - z*Mul(*afactors)
         poly = Poly(expr, _x)
         n = poly.degree()
         basis = []
         M = zeros(n)
         for k in xrange(n):
-            a = nip.ap[0] + k
-            basis += [hyper([a] + list(nip.ap[1:]), nip.bq, z)]
+            a = func.ap[0] + k
+            basis += [hyper([a] + list(func.ap[1:]), func.bq, z)]
             if k < n - 1:
                 M[k, k] = -a
                 M[k, k + 1] = a
@@ -1938,12 +1943,12 @@ def build_hypergeometric_formula(nip):
                 res[r] += c*d
         for k, c in enumerate(res):
             M[n - 1, k] = -c/derivs[n - 1][0, n - 1]/poly.all_coeffs()[0]
-        return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+        return Formula(func.ap, func.bq, z, None, [], B, C, M)
     else:
         # Since there are no `ap`, none of the `bq` can be non-positive
         # integers.
         basis = []
-        bq = list(nip.bq[:])
+        bq = list(func.bq[:])
         for i in range(len(bq)):
             basis += [hyper([], bq, z)]
             bq[i] += 1
@@ -1952,11 +1957,11 @@ def build_hypergeometric_formula(nip):
         n = len(B)
         C = Matrix([[1] + [0]*(n - 1)])
         M = zeros(n)
-        M[0, n - 1] = z/Mul(*nip.bq)
+        M[0, n - 1] = z/Mul(*func.bq)
         for k in range(1, n):
-            M[k, k - 1] = nip.bq[k - 1]
-            M[k, k] = -nip.bq[k - 1]
-        return Formula(nip.ap, nip.bq, z, None, [], B, C, M)
+            M[k, k - 1] = func.bq[k - 1]
+            M[k, k] = -func.bq[k - 1]
+        return Formula(func.ap, func.bq, z, None, [], B, C, M)
 
 
 def hyperexpand_special(ap, bq, z):
@@ -1998,11 +2003,10 @@ def hyperexpand_special(ap, bq, z):
 _collection = None
 
 
-def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
+def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
                  rewrite='default'):
     """
-    Try to find an expression for the hypergeometric function
-    ``ip.ap``, ``ip.bq``.
+    Try to find an expression for the hypergeometric function ``func``.
 
     The result is expressed in terms of a dummy variable z0. Then it
     is multiplied by premult. Then ops0 is applied.
@@ -2037,17 +2041,17 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     if _collection is None:
         _collection = FormulaCollection()
 
-    debug('Trying to expand hypergeometric function corresponding to', ip)
+    debug('Trying to expand hypergeometric function ', func)
 
     # First reduce order as much as possible.
-    nip, ops = reduce_order(ip)
+    func, ops = reduce_order(func)
     if ops:
-        debug('  Reduced order to', nip)
+        debug('  Reduced order to', func)
     else:
         debug('  Could not reduce order.')
 
     # Now try polynomial cases
-    res = try_polynomial(nip, z0)
+    res = try_polynomial(func, z0)
     if res is not None:
         debug('  Recognised polynomial.')
         p = apply_operators(res, ops, lambda f: z0*f.diff(z0))
@@ -2056,10 +2060,10 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
     # Try to recognise a shifted sum.
     p = S(0)
-    res = try_shifted_sum(nip, z0)
+    res = try_shifted_sum(func, z0)
     if res is not None:
-        nip, nops, p = res
-        debug('  Recognised shifted sum, reducerd order to', nip)
+        func, nops, p = res
+        debug('  Recognised shifted sum, reduced order to', func)
         ops += nops
 
     # apply the plan for poly
@@ -2068,32 +2072,32 @@ def _hyperexpand(ip, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
     p = simplify(p).subs(z0, z)
 
     # Try special expansions early.
-    if unpolarify(z) in [1, -1] and (len(nip.ap), len(nip.bq)) == (2, 1):
-        f = build_hypergeometric_formula(nip)
+    if unpolarify(z) in [1, -1] and (len(func.ap), len(func.bq)) == (2, 1):
+        f = build_hypergeometric_formula(func)
         r = carryout_plan(f, ops).replace(hyper, hyperexpand_special)
         if not r.has(hyper):
             return r + p
 
     # Try to find a formula in our collection
-    f = _collection.lookup_origin(nip)
+    formula = _collection.lookup_origin(func)
 
     # Now try a lerch phi formula
-    if f is None:
-        f = try_lerchphi(nip)
+    if formula is None:
+        formula = try_lerchphi(func)
 
-    if f is None:
+    if formula is None:
         debug('  Could not find an origin.',
-              'Will return answer in terms of ' +
+              'Will return answer in terms of '
               'simpler hypergeometric functions.')
-        f = build_hypergeometric_formula(nip)
+        formula = build_hypergeometric_formula(func)
 
-    debug('  Found an origin:', f.closed_form, f.indices)
+    debug('  Found an origin:', formula.closed_form, formula.func)
 
-    # We need to find the operators that convert f into (nap, nbq).
-    ops += devise_plan(nip, f.indices, z0)
+    # We need to find the operators that convert formula into func.
+    ops += devise_plan(func, formula.func, z0)
 
     # Now carry out the plan.
-    r = carryout_plan(f, ops) + p
+    r = carryout_plan(formula, ops) + p
 
     return powdenest(r, polar=True).replace(hyper, hyperexpand_special)
 
@@ -2330,7 +2334,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
                 # NOTE even though k "is" +-1, this has to be t/k instead of
                 #      t*k ... we are using polar numbers for consistency!
                 premult = (t/k)**bh
-                hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
+                hyp = _hyperexpand(Hyper_Function(nap, nbq), harg, ops,
                                    t, premult, bh, rewrite=None)
                 res += fac * hyp
             else:
@@ -2375,7 +2379,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
                 nap = [1 + au - a for a in list(an) + list(ap)] + [1]
                 nbq = [1 + au - b for b in list(bm) + list(bq)]
 
-                hyp = _hyperexpand(IndexPair(nap, nbq), harg, ops,
+                hyp = _hyperexpand(Hyper_Function(nap, nbq), harg, ops,
                                    t, premult, au, rewrite=None)
 
                 C = S(-1)**(lu)/factorial(lu)
@@ -2501,7 +2505,7 @@ def hyperexpand(f, allow_hyper=False, rewrite='default'):
     f = sympify(f)
 
     def do_replace(ap, bq, z):
-        r = _hyperexpand(IndexPair(ap, bq), z, rewrite=rewrite)
+        r = _hyperexpand(Hyper_Function(ap, bq), z, rewrite=rewrite)
         if r is None:
             return hyper(ap, bq, z)
         else:

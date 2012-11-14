@@ -4,7 +4,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        MeijerUnShiftD,
                        ReduceOrder, reduce_order, apply_operators,
                        devise_plan, make_derivative_operator, Formula,
-                       hyperexpand, IndexPair, IndexQuadruple,
+                       hyperexpand, Hyper_Function, IndexQuadruple,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
 from sympy import hyper, I, S, meijerg, Piecewise, exp_polar
@@ -143,7 +143,7 @@ def test_formulae():
     from sympy.simplify.hyperexpand import FormulaCollection
     formulae = FormulaCollection().formulae
     for formula in formulae:
-        h = hyper(formula.indices.ap, formula.indices.bq, formula.z)
+        h = hyper(formula.func.ap, formula.func.bq, formula.z)
         rep = {}
         for n, sym in enumerate(formula.symbols):
             rep[sym] = randcplx(n)
@@ -204,13 +204,14 @@ def op(f):
 
 
 def test_plan():
-    assert devise_plan(IndexPair([0], ()), IndexPair([0], ()), z) == []
-    raises(ValueError,
-        lambda: devise_plan(IndexPair([1], ()), IndexPair((), ()), z))
-    raises(ValueError,
-        lambda: devise_plan(IndexPair([2], [1]), IndexPair([2], [2]), z))
-    raises(KeyError,
-        lambda: devise_plan(IndexPair([2], []), IndexPair([S("1/2")], []), z))
+    assert devise_plan(Hyper_Function([0], ()),
+            Hyper_Function([0], ()), z) == []
+    with raises(ValueError):
+        devise_plan(Hyper_Function([1], ()), Hyper_Function((), ()), z)
+    with raises(ValueError):
+        devise_plan(Hyper_Function([2], [1]), Hyper_Function([2], [2]), z)
+    with raises(KeyError):
+        devise_plan(Hyper_Function([2], []), Hyper_Function([S("1/2")], []), z)
 
     # We cannot use pi/(10000 + n) because polys is insanely slow.
     a1, a2, b1 = map(lambda n: randcplx(n), range(3))
@@ -218,14 +219,16 @@ def test_plan():
     h = hyper([a1, a2], [b1], z)
 
     h2 = hyper((a1 + 1, a2), [b1], z)
-    assert tn(apply_operators(h, devise_plan(IndexPair((a1 + 1, a2), [b1]),
-                                      IndexPair((a1, a2), [b1]), z), op),
-       h2, z)
+    assert tn(apply_operators(h,
+        devise_plan(Hyper_Function((a1 + 1, a2), [b1]),
+            Hyper_Function((a1, a2), [b1]), z), op),
+        h2, z)
 
     h2 = hyper((a1 + 1, a2 - 1), [b1], z)
-    assert tn(apply_operators(h, devise_plan(IndexPair((a1 + 1, a2 - 1), [b1]),
-                                      IndexPair((a1, a2), [b1]), z), op),
-       h2, z)
+    assert tn(apply_operators(h,
+        devise_plan(Hyper_Function((a1 + 1, a2 - 1), [b1]),
+            Hyper_Function((a1, a2), [b1]), z), op),
+        h2, z)
 
 
 def test_plan_derivatives():
@@ -233,15 +236,15 @@ def test_plan_derivatives():
     b1, b2 = 3, S('5/2')
     h = hyper((a1, a2, a3), (b1, b2), z)
     h2 = hyper((a1 + 1, a2 + 1, a3 + 2), (b1 + 1, b2 + 1), z)
-    ops = devise_plan(IndexPair((a1 + 1, a2 + 1, a3 + 2), (b1 + 1, b2 + 1)),
-                      IndexPair((a1, a2, a3), (b1, b2)), z)
+    ops = devise_plan(Hyper_Function((a1 + 1, a2 + 1, a3 + 2), (b1 + 1, b2 + 1)),
+        Hyper_Function((a1, a2, a3), (b1, b2)), z)
     f = Formula((a1, a2, a3), (b1, b2), z, h, [])
     deriv = make_derivative_operator(f.M, z)
     assert tn((apply_operators(f.C, ops, deriv)*f.B)[0], h2, z)
 
     h2 = hyper((a1, a2 - 1, a3 - 2), (b1 - 1, b2 - 1), z)
-    ops = devise_plan(IndexPair((a1, a2 - 1, a3 - 2), (b1 - 1, b2 - 1)),
-                      IndexPair((a1, a2, a3), (b1, b2)), z)
+    ops = devise_plan(Hyper_Function((a1, a2 - 1, a3 - 2), (b1 - 1, b2 - 1)),
+                      Hyper_Function((a1, a2, a3), (b1, b2)), z)
     assert tn((apply_operators(f.C, ops, deriv)*f.B)[0], h2, z)
 
 
@@ -265,9 +268,9 @@ def test_reduction_operators():
     # test several step order reduction
     ap = (a2 + 4, a1, b1 + 1)
     bq = (a2, b1, b1)
-    nip, ops = reduce_order(IndexPair(ap, bq))
-    assert nip.ap == (a1,)
-    assert nip.bq == (b1,)
+    func, ops = reduce_order(Hyper_Function(ap, bq))
+    assert func.ap == (a1,)
+    assert func.bq == (b1,)
     assert tn(apply_operators(h, ops, op), hyper(ap, bq, z), z)
 
 
@@ -588,10 +591,11 @@ def test_lerchphi():
 def test_partial_simp():
     # First test that hypergeometric function formulae work.
     a, b, c, d, e = map(lambda _: randcplx(), range(5))
-    for idxp in [IndexPair([a, b, c], [d, e]), IndexPair([], [a, b, c, d, e])]:
-        f = build_hypergeometric_formula(idxp)
+    for func in [Hyper_Function([a, b, c], [d, e]),
+            Hyper_Function([], [a, b, c, d, e])]:
+        f = build_hypergeometric_formula(func)
         z = f.z
-        assert f.closed_form == hyper(idxp.ap, idxp.bq, z)
+        assert f.closed_form == hyper(func.ap, func.bq, z)
         deriv1 = f.B.diff(z)*z
         deriv2 = f.M*f.B
         for func1, func2 in zip(deriv1, deriv2):
