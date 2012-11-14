@@ -743,6 +743,7 @@ except ImportError:
     def namedtuple(typename, field_names, verbose=False, rename=False):
         """Returns a new subclass of tuple with named fields.
 
+        >>> from sympy.core.compatibility import namedtuple
         >>> Point = namedtuple('Point', 'x y')
         >>> Point.__doc__               # docstring for the new class
         'Point(x, y)'
