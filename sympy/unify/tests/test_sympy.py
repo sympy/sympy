@@ -28,6 +28,11 @@ def test_unify():
     assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
     assert list(unify(expr, pattern))     == [{a: 1, b: 2, c: 3}]
 
+def iterdicteq(a, b):
+    a = tuple(a)
+    b = tuple(b)
+    return len(a) == len(b) and all(x in b for x in a)
+
 def test_unify_commutative():
     expr = Add(1, 2, 3, evaluate=False)
     a, b, c = map(ExprWild, 'abc')
@@ -41,7 +46,7 @@ def test_unify_commutative():
                                                 {a: 3, b: 1, c: 2},
                                                 {a: 3, b: 2, c: 1})
 
-    assert sorted(result) == sorted(expected)
+    assert iterdicteq(result, expected)
 
 def test_unify_iter():
     expr = Add(1, 2, 3, evaluate=False)
@@ -64,8 +69,7 @@ def test_unify_iter():
                 {a: Add(2, 3, evaluate=False), c: 1},
                 {a: Add(3, 2, evaluate=False), c: 1}]
 
-    assert len(result) == len(expected)
-    assert all(x in expected for x in result)
+    assert iterdicteq(result, expected)
 
 def test_hard_match():
     from sympy import sin, cos
