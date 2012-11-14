@@ -753,7 +753,7 @@ class Formula(object):
                 if len(self.symbols) == 1:
                     a = self.symbols[0]
                     aval, d = repl[a]
-                    if aval < 0 and d == 1:
+                    if aval.is_negative and d == 1:
                         aval -= ceiling(aval) - 1
                         res.append(Formula(self.func.ap.subs(a, aval),
                                            self.func.bq.subs(a, aval),
@@ -808,7 +808,7 @@ class Formula(object):
             if a == 0:
                 return False
         for b in self.func.bq:
-            if b <= 0 and b.is_integer:
+            if b.is_integer and b.is_nonpositive:
                 return False
         for e in [self.B, self.M, self.C]:
             if e is None:
@@ -1387,7 +1387,7 @@ class ReduceOrder(Operator):
         ai = sympify(ai)
         bj = sympify(bj)
         n = ai - bj
-        if n < 0 or not n.is_Integer:
+        if not n.is_Integer or n < 0:
             return None
         if bj.is_integer and bj <= 0 and bj + n - 1 >= 0:
             return None
