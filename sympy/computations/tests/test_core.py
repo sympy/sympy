@@ -1,6 +1,6 @@
 from sympy.computations.core import Computation, unique, CompositeComputation
 
-a,b,c,d,e,f = 'abcdef'
+a,b,c,d,e,f,g,h = 'abcdefgh'
 
 def test_Computation():
     C = Computation()
@@ -59,3 +59,12 @@ def test_toposort():
     C = TComposite(A, M)
 
     assert tuple(C.toposort()) == (A, M)
+
+def test_multi_out():
+    MM = TComp('minmax', (a, b), (d, e))
+    A =  TComp('foo', (d,), (f,))
+    B =  TComp('bar', (a, f), (g, h))
+    C =  TComposite(MM, A, B)
+    assert C.inputs == (a, b)
+    assert C.outputs == (e, g, h)
+    assert tuple(C.toposort()) == (MM, A, B)
