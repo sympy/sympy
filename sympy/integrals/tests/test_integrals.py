@@ -4,9 +4,10 @@ from sympy import (
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple,
+    Tuple, nan,
 )
-from sympy.utilities.pytest import XFAIL, raises
+from sympy.integrals.risch import NonElementaryIntegral
+from sympy.utilities.pytest import XFAIL, raises, slow
 from sympy.physics import units
 
 x, y, a, t, x_1, x_2, z = symbols('x y a t x_1 x_2 z')
@@ -737,6 +738,7 @@ def test_issue_1277():
                 (n**2 - 2**(1/n)*n**2 - n*2**(1/n))/(2**(1 + 1/n) + n*2**(1 + 1/n))) == 0
 
 
+@slow
 def test_issue_1418():
     assert integrate((sqrt(x) - x**3)/x**Rational(1, 3), x) == \
         6*x**Rational(7, 6)/7 - 3*x**Rational(11, 3)/11
@@ -777,6 +779,8 @@ def test_issue_1793a():
         c*(-A*(-h2)*log(c*t)/c + A*t*exp(-z)),
         c*( A* h1 *log(c*t)/c + A*t*exp(-z)),
         c*( A* h2 *log(c*t)/c + A*t*exp(-z)),
+        (A*c*t - A*(-h1)*log(t)*exp(z))*exp(-z),
+        (A*c*t - A*(-h2)*log(t)*exp(z))*exp(-z),
     ]
 
 def test_issue_1793b():
@@ -888,4 +892,22 @@ def test_issue_3154():
 
 def test_issue1054():
     assert integrate(1/(1+x+y+z), (x, 0, 1), (y, 0, 1), (z, 0, 1)) in \
-        [6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2]
+        [6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2,
+         -12*log(3) - 3*log(6)/2 + 47*log(2)/2]
+
+def test_issue_1227():
+    R, b, h = symbols('R b h')
+    # It doesn't matter if we can do the integral.  Just make sure the result
+    # doesn't contain nan.  This is really a test against _eval_interval.
+    assert not integrate(((h*(x-R+b))/b)*sqrt(R**2-x**2), (x, R-b, R)).has(nan)
+
+def test_powers():
+    assert integrate(2**x + 3**x, x) == 2**x/log(2) + 3**x/log(3)
+
+def test_risch_option():
+    # risch=True only allowed on indefinite integrals
+    raises(ValueError, lambda: integrate(1/log(x), (x, 0, oo), risch=True))
+    assert integrate(exp(-x**2), x, risch=True) == NonElementaryIntegral(exp(-x**2), x)
+    assert integrate(log(1/x)*y, x, y, risch=True) == y**2*(x*log(1/x)/2 + x/2)
+    assert integrate(erf(x), x, risch=True) == Integral(erf(x), x)
+    # TODO: How to test risch=False?
