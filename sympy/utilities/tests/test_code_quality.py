@@ -43,6 +43,7 @@ str_raise_re = re.compile(
 gen_raise_re = re.compile(
     r'^\s*(>>> )?(\.\.\. )?raise(\s+Exception|\s*(\(\s*)+Exception)')
 old_raise_re = re.compile(r'^\s*(>>> )?(\.\.\. )?raise((\s*\(\s*)|\s+)\w+\s*,')
+test_suite_def_re = re.compile('^def\s+(?!(_|test))[^(]*\(\s*\)\s*:$')
 
 
 def tab_in_leading(s):
@@ -106,11 +107,10 @@ def test_files():
                 test_this_file(fname, test_file)
 
     def test_this_file(fname, test_file):
-        if re.match('.*test_.*\.py$', fname):
-            _test_suite_defs(fname, test_file)
-
         line = None  # to flag the case where there were no lines in file
         for idx, line in enumerate(test_file):
+            if re.match(r'.*test_.*\.py$', fname) and test_suite_def_re.match(line):
+                assert False, message_test_suite_def % (fname, idx + 1)
             if line.endswith(" \n") or line.endswith("\t\n"):
                 assert False, message_space % (fname, idx + 1)
             if line.endswith("\r\n"):
@@ -172,16 +172,6 @@ def test_files():
     check_directory_tree(BIN_PATH, test, set(["~", ".pyc"]), "*")
     check_directory_tree(SYMPY_PATH, test, exclude)
     check_directory_tree(EXAMPLES_PATH, test, exclude)
-
-
-def _test_suite_defs(fname, test_file):
-    for idx, li in enumerate(test_file):
-        if li.startswith('def '):
-            if (re.match('.*\(\w\)\w:$', li) and
-                    not re.match('def +(_|(test_))', li)):
-                assert False, \
-                    message_test_suite_def % \
-                    (fname, '%s: %s' % (idx, li))
 
 
 def _with_space(c):
@@ -301,6 +291,6 @@ def test_test_suite_defs():
         "def  foo():\n",
     ]
     for c in candidates_ok:
-        _test_suite_defs('', c)
+        assert test_suite_def_re.search(c) is None, c
     for c in candidates_fail:
-        raises(AssertionError, _test_suite_defs('', c))
+        assert test_suite_def_re.search(c) is not None, c
