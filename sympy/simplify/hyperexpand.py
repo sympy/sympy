@@ -83,10 +83,12 @@ def add_formulae(formulae):
     a, b, c, z = symbols('a b c, z', cls=Dummy)
 
     def add(ap, bq, res):
-        formulae.append(Formula(ap, bq, z, res, (a, b, c)))
+        func = Hyper_Function(ap, bq)
+        formulae.append(Formula(func, z, res, (a, b, c)))
 
     def addb(ap, bq, B, C, M):
-        formulae.append(Formula(ap, bq, z, None, (a, b, c), B, C, M))
+        func = Hyper_Function(ap, bq)
+        formulae.append(Formula(func, z, None, (a, b, c), B, C, M))
 
     # Luke, Y. L. (1969), The Special Functions and Their Approximations,
     # Volume 1, section 6.2
@@ -615,8 +617,9 @@ class Formula(object):
     - isolation, a dictonary which maps symbol -> (num, coeff) pairs
 
     >>> from sympy.abc import a, b, z
-    >>> from sympy.simplify.hyperexpand import Formula
-    >>> f = Formula((a/2, a/3 + b, (1+a)/2), (a, b, (a+b)/7), z, None, [a, b])
+    >>> from sympy.simplify.hyperexpand import Formula, Hyper_Function
+    >>> func = Hyper_Function((a/2, a/3 + b, (1+a)/2), (a, b, (a+b)/7))
+    >>> f = Formula(func, z, None, [a, b])
 
     The lcm of all denominators of coefficients of a is 2*3*7
     >>> f.lcms[a]
@@ -663,26 +666,25 @@ class Formula(object):
         l.reverse()
         self.M = m.row_insert(n, -Matrix([l])/poly.all_coeffs()[0])
 
-    def __init__(self, ap, bq, z, res, symbols, B=None, C=None, M=None):
-        ap = Tuple(*map(expand, ap))
-        bq = Tuple(*map(expand, bq))
+    def __init__(self, func, z, res, symbols, B=None, C=None, M=None):
         z = sympify(z)
         res = sympify(res)
-        symbols = filter(lambda x: ap.has(x) or bq.has(x), sympify(symbols))
+        symbols = filter(lambda x: func.has(x), sympify(symbols))
 
         self.z = z
         self.symbols = symbols
         self.B = B
         self.C = C
         self.M = M
+        self.func = func
 
-        params = list(ap) + list(bq)
+        params = list(func.ap) + list(func.bq)
         lcms = {}
         isolation = {}
         for a in symbols:
             l = 1
             isolating = []
-            others = list(symbols[:])
+            others = list(symbols)
             others.remove(a)
             i = 0
             for p in params:
@@ -708,8 +710,6 @@ class Formula(object):
 
         self.lcms = lcms
         self.isolation = isolation
-
-        self.func = Hyper_Function(ap, bq)
 
         # TODO with symbolic parameters, it could be advantageous
         #      (for prettier answers) to compute a basis only *after*
@@ -748,10 +748,8 @@ class Formula(object):
                     rep = {}
                     for i, a in zip(change, repl.keys()):
                         rep[a] = repl[a][0] + i*repl[a][1]
-                    res.append(Formula(self.func.ap.subs(rep),
-                                       self.func.bq.subs(rep),
-                                       self.z, None, [], self.B.subs(rep),
-                                       self.C.subs(rep), self.M.subs(rep)))
+                    res.append(Formula(self.func.subs(rep), self.z, None, [],
+                        self.B.subs(rep), self.C.subs(rep), self.M.subs(rep)))
                 # if say a = -1/2, and there is 2*a in the formula, then
                 # there will be a negative integer. But this origin is also
                 # reachable from a = 1/2 ...
@@ -762,8 +760,7 @@ class Formula(object):
                     aval, d = repl[a]
                     if aval.is_negative and d == 1:
                         aval -= ceiling(aval) - 1
-                        res.append(Formula(self.func.ap.subs(a, aval),
-                                           self.func.bq.subs(a, aval),
+                        res.append(Formula(self.func.subs(a, aval),
                                        self.z, None, [], self.B.subs(a, aval),
                                        self.C.subs(rep), self.M.subs(a, aval)))
         return res
@@ -772,37 +769,44 @@ class Formula(object):
         """
         Decide if ``self`` is a suitable origin.
 
-        >>> from sympy.simplify.hyperexpand import Formula
+        >>> from sympy.simplify.hyperexpand import Formula, Hyper_Function
         >>> from sympy import S
 
         If ai - bq in Z and bq >= ai this is fine:
-        >>> Formula((S(1)/2,), (S(3)/2,), None, None, []).is_suitable()
+        >>> func = Hyper_Function((S(1)/2,), (S(3)/2,))
+        >>> Formula(func, None, None, []).is_suitable()
         True
 
         but ai = bq is not:
-        >>> Formula((S(1)/2,), (S(1)/2,), None, None, []).is_suitable()
+        >>> func = Hyper_Function((S(1)/2,), (S(1)/2,))
+        >>> Formula(func, None, None, []).is_suitable()
         False
 
         and ai > bq is not either:
-        >>> Formula((S(1)/2,), (-S(1)/2,), None, None, []).is_suitable()
+        >>> func = Hyper_Function((S(1)/2,), (-S(1)/2,))
+        >>> Formula(func, None, None, []).is_suitable()
         False
 
         None of the bj can be a non-positive integer:
-        >>> Formula((S(1)/2,), (0,), None, None, []).is_suitable()
+        >>> func = Hyper_Function((S(1)/2,), (0,))
+        >>> Formula(func, None, None, []).is_suitable()
         False
-        >>> Formula((S(1)/2,), (-1, 1,), None, None, []).is_suitable()
+        >>> func = Hyper_Function((S(1)/2,), (-1, 1,))
+        >>> Formula(func, None, None, []).is_suitable()
         False
 
         None of the ai can be zero:
-        >>> Formula((S(1)/2, 0), (1,), None, None, []).is_suitable()
+        >>> func = Hyper_Function((S(1)/2, 0), (1,))
+        >>> Formula(func, None, None, []).is_suitable()
         False
 
 
         More complicated examples:
-        >>> Formula((S(1)/2, 1), (2, -S(2)/3), None, None, []).is_suitable()
+        >>> func = Hyper_Function((S(1)/2, 1), (2, -S(2)/3))
+        >>> Formula(func, None, None, []).is_suitable()
         True
-        >>> a, b = (S(1)/2, 1), (2, -S(2)/3, S(3)/2)
-        >>> Formula(a, b, None, None, []).is_suitable()
+        >>> func = Hyper_Function((S(1)/2, 1), (2, -S(2)/3, S(3)/2))
+        >>> Formula(func, None, None, []).is_suitable()
         True
         """
         if len(self.symbols) > 0:
@@ -1909,7 +1913,7 @@ def try_lerchphi(func):
     for b, l in deriv.items():
         for c, b2 in l:
             M[trans[b], trans[b2]] = c
-    return Formula(func.ap, func.bq, z, None, [], B, C, M)
+    return Formula(func, z, None, [], B, C, M)
 
 
 def build_hypergeometric_formula(func):
@@ -1950,7 +1954,7 @@ def build_hypergeometric_formula(func):
                 res[r] += c*d
         for k, c in enumerate(res):
             M[n - 1, k] = -c/derivs[n - 1][0, n - 1]/poly.all_coeffs()[0]
-        return Formula(func.ap, func.bq, z, None, [], B, C, M)
+        return Formula(func, z, None, [], B, C, M)
     else:
         # Since there are no `ap`, none of the `bq` can be non-positive
         # integers.
@@ -1968,7 +1972,7 @@ def build_hypergeometric_formula(func):
         for k in range(1, n):
             M[k, k - 1] = func.bq[k - 1]
             M[k, k] = -func.bq[k - 1]
-        return Formula(func.ap, func.bq, z, None, [], B, C, M)
+        return Formula(func, z, None, [], B, C, M)
 
 
 def hyperexpand_special(ap, bq, z):
