@@ -28,8 +28,14 @@ class Computation(object):
     def variables(self):
         return itertools.chain(self.inputs, self.outputs)
 
+    def __add__(self, other):
+        return CompositeComputation(self, other)
+
 class CompositeComputation(Computation):
     """ A computation composed of other computations """
+
+    def __init__(self, *computations):
+        self.computations = computations
 
     def _input_outputs(self):
         """ Find the inputs and outputs of the complete computation """

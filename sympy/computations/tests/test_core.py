@@ -25,9 +25,6 @@ class TComp(Computation):
 
 class TComposite(CompositeComputation):
     """ Test CompositeComputation class """
-    def __init__(self, *computations):
-        self.computations = computations
-
     def __str__(self):
         return "[[" + ", ".join(map(str, self.computations)) + "]]"
 
@@ -69,3 +66,12 @@ def test_multi_out():
     assert C.inputs == (a, b)
     assert C.outputs == (e, g, h)
     assert tuple(C.toposort()) == (MM, A, B)
+
+def test_add():
+    MM = TComp('minmax', (a, b), (d, e))
+    A =  TComp('foo', (d,), (f,))
+    B =  TComp('bar', (a, f), (g, h))
+    C =  TComposite(MM, A, B)
+    C2 = MM+A+B
+    assert C.inputs == C2.inputs
+    assert C.outputs == C2.outputs
