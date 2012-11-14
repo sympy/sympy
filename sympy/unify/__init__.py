@@ -1,3 +1,3 @@
 import core
-import sympy
+import usympy
 import rewrite

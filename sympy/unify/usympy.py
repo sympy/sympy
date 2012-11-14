@@ -30,6 +30,22 @@ def is_commutative(x):
         return _build(x).is_commutative
 
 def patternify(expr, *wilds):
+    """ Create a matching pattern from an expression
+
+    Example
+    =======
+
+    >>> from sympy import symbols, sin, cos
+    >>> from sympy.unify.usympy import patternify
+    >>> a, b, c, x, y = symbols('a b c x y')
+
+    >>> # Search for anything of the form sin(foo)**2 + cos(foo)**2
+    >>> pattern = patternify(sin(x)**2 + cos(x)**2, x)
+
+    >>> # Search for any two things added to c. Note that here c is not a wild
+    >>> a, b, c = symbols('a,b,c')
+    >>> pattern = patternify(a + b + c, a, b)
+    """
     from sympy.rules.tools import subs
     keys = list(wilds)
     values = map(Wild, wilds)
@@ -43,7 +59,7 @@ def patternify(expr, *wilds):
     return expr
 
 def destruct(s):
-    """ Turn a SymPy object into a Compound Tuple """
+    """ Turn a SymPy object into a Compound """
     if isinstance(s, ExprWild):
         return Variable(s)
     if isinstance(s, Wild):
@@ -53,7 +69,7 @@ def destruct(s):
     return Compound(s.__class__, tuple(map(destruct, s.args)))
 
 def construct(t):
-    """ Turn a Compound Tuple into a SymPy object """
+    """ Turn a Compound into a SymPy object """
     if isinstance(t, Variable):
         return t.arg
     if not isinstance(t, Compound):
@@ -64,7 +80,10 @@ def construct(t):
         return Basic.__new__(t.op, *map(construct, t.args))
 
 def rebuild(s):
-    """ Rebuild a SymPy expression """
+    """ Rebuild a SymPy expression
+
+    This removes harm caused by Expr-Rules interactions
+    """
     return construct(destruct(s))
 
 def unify(x, y, s={}, **kwargs):
