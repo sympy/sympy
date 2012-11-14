@@ -33,22 +33,15 @@ def test_unify_commutative():
     a, b, c = map(ExprWild, 'abc')
     pattern = Add(a, b, c, evaluate=False)
 
-    assert setdicteq(unify(expr, pattern, {}), ({a: 1, b: 2, c: 3},
+    result  = tuple(unify(expr, pattern, {}))
+    expected =                                 ({a: 1, b: 2, c: 3},
                                                 {a: 1, b: 3, c: 2},
                                                 {a: 2, b: 1, c: 3},
                                                 {a: 2, b: 3, c: 1},
                                                 {a: 3, b: 1, c: 2},
-                                                {a: 3, b: 2, c: 1}))
+                                                {a: 3, b: 2, c: 1})
 
-def setsetstr(a):
-    return set(frozenset(map(str, ael.items())) for ael in a)
-def setdicteq(a, b):
-    return setsetstr(a) == setsetstr(b)
-
-def test_listdictseteq():
-    a = [{1:1, 2:2, 3:3}, {2:2, 3:3}]
-    b = [{2:2, 3:3}, {1:1, 2:2, 3:3}]
-    assert setdicteq(a, b)
+    assert sorted(result) == sorted(expected)
 
 def test_unify_iter():
     expr = Add(1, 2, 3, evaluate=False)
@@ -72,7 +65,7 @@ def test_unify_iter():
                 {a: Add(3, 2, evaluate=False), c: 1}]
 
     assert len(result) == len(expected)
-    assert setdicteq(result, expected)
+    assert all(x in expected for x in result)
 
 def test_hard_match():
     from sympy import sin, cos
