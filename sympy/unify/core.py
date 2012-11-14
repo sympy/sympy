@@ -17,7 +17,6 @@ http://aima.cs.berkeley.edu/python/logic.html
 """
 
 from sympy.core.compatibility import namedtuple
-from itertools import combinations
 Compound = namedtuple('Compound', 'op args')
 Variable = namedtuple('Variable', 'arg')
 CondVariable = namedtuple('Variable', 'arg valid')
