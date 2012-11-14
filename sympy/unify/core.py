@@ -22,6 +22,7 @@ Compound = namedtuple('Compound', 'op args')
 Variable = namedtuple('Variable', 'arg')
 CondVariable = namedtuple('Variable', 'arg valid')
 from sys import stdout
+from sympy.utilities.iterables import kbins
 
 def unify(x, y, s={}, **fns):
     """ Unify two expressions
@@ -56,10 +57,10 @@ def unify(x, y, s={}, **fns):
             if is_associative(x) and is_associative(y):
                 a, b = (x, y) if len(x.args) < len(y.args) else (y, x)
                 if is_commutative(x) and is_commutative(y):
-                    combinations = allcombinations(a.args, b.args, False)
+                    combs = allcombinations(a.args, b.args, 'commutative')
                 else:
-                    combinations = allcombinations(a.args, b.args, True)
-                for aaargs, bbargs in combinations:
+                    combs = allcombinations(a.args, b.args, 'associative')
+                for aaargs, bbargs in combs:
                     aa = [unpack(Compound(a.op, arg)) for arg in aaargs]
                     bb = [unpack(Compound(b.op, arg)) for arg in bbargs]
                     for x in unify(aa, bb, sop, **fns):
@@ -117,28 +118,37 @@ def allcombinations(A, B, ordered):
     """
     Restructure A and B to have the same number of elements
 
-    Assuming either
-    associativity - ordered == True
-    commutativity - ordered == None
+    ordered must be either 'commutative' or 'associative'
 
     A and B can be rearranged so that the larger of the two lists is
     reorganized into smaller sublists.
 
     >>> from sympy.unify.core import allcombinations
-    >>> for x in allcombinations((1, 2, 3), (5, 6), True): print x
+    >>> for x in allcombinations((1, 2, 3), (5, 6), 'associative'): print x
     (((1,), (2, 3)), ((5,), (6,)))
     (((1, 2), (3,)), ((5,), (6,)))
 
-    >>> for x in allcombinations((1, 2, 3), (5, 6), None): print x
-    (((1,), (2, 3)), ((5,), (6,)))
-    (((2,), (3, 1)), ((5,), (6,)))
-    (((3,), (1, 2)), ((5,), (6,)))
-    (((1, 2), (3,)), ((5,), (6,)))
-    (((2, 3), (1,)), ((5,), (6,)))
-    (((3, 1), (2,)), ((5,), (6,)))
+    >>> for x in allcombinations((1, 2, 3), (5, 6), 'commutative'): print x
+        (((1,), (2, 3)), ((5,), (6,)))
+        (((1, 2), (3,)), ((5,), (6,)))
+        (((1,), (3, 2)), ((5,), (6,)))
+        (((1, 3), (2,)), ((5,), (6,)))
+        (((2,), (1, 3)), ((5,), (6,)))
+        (((2, 1), (3,)), ((5,), (6,)))
+        (((2,), (3, 1)), ((5,), (6,)))
+        (((2, 3), (1,)), ((5,), (6,)))
+        (((3,), (1, 2)), ((5,), (6,)))
+        (((3, 1), (2,)), ((5,), (6,)))
+        (((3,), (2, 1)), ((5,), (6,)))
+        (((3, 2), (1,)), ((5,), (6,)))
     """
+
+    if ordered == "commutative":
+        ordered = 11
+    if ordered == "associative":
+        ordered = None
     sm, bg = (A, B) if len(A) < len(B) else (B, A)
-    for part in kbin(range(len(bg)), len(sm), ordered=ordered):
+    for part in kbins(range(len(bg)), len(sm), ordered=ordered):
         if bg == B:
             yield tuple((a,) for a in A), partition(B, part)
         else:
@@ -161,81 +171,3 @@ def index(it, ind):
     [20, 30, 10]
     """
     return type(it)([it[i] for i in ind])
-
-def kbin(l, k, ordered=True):
-    """
-    Yield all partitions of the sequence ``l`` into ``k`` bins.
-    If ordered is True then the order of the items in the
-    flattened partition will be the same as the order of the
-    items in ``l``; if False, all permutations of the items will
-    be given; if None, only unique permutations for a given
-    partition will be given.
-
-    Examples
-    ========
-
-    >>> from sympy.unify.core import kbin
-    >>> for p in kbin(range(3), 2):
-    ...     print p
-    ...
-    [[0], [1, 2]]
-    [[0, 1], [2]]
-    >>> for p in kbin(range(3), 2, ordered=False):
-    ...     print p
-    ...
-    [(0,), (1, 2)]
-    [(0,), (2, 1)]
-    [(1,), (0, 2)]
-    [(1,), (2, 0)]
-    [(2,), (0, 1)]
-    [(2,), (1, 0)]
-    [(0, 1), (2,)]
-    [(0, 2), (1,)]
-    [(1, 0), (2,)]
-    [(1, 2), (0,)]
-    [(2, 0), (1,)]
-    [(2, 1), (0,)]
-    >>> for p in kbin(range(3), 2, ordered=None):
-    ...     print p
-    ...
-    [[0], [1, 2]]
-    [[1], [2, 0]]
-    [[2], [0, 1]]
-    [[0, 1], [2]]
-    [[1, 2], [0]]
-    [[2, 0], [1]]
-
-    """
-    from sympy.utilities.iterables import partitions
-    from itertools import permutations
-    def rotations(seq):
-        for i in range(len(seq)):
-            yield seq
-            seq.append(seq.pop(0))
-    if ordered is None:
-        func = rotations
-    else:
-        func = permutations
-    for p in partitions(len(l), k):
-        if sum(p.values()) != k:
-            continue
-        for pe in permutations(p.keys()):
-            rv = []
-            i = 0
-            for part in pe:
-                for do in range(p[part]):
-                    j = i + part
-                    rv.append(l[i: j])
-                    i = j
-            if ordered:
-                yield rv
-            else:
-                template = [len(i) for i in rv]
-                for pp in func(l):
-                    rvp = []
-                    ii = 0
-                    for t in template:
-                        jj = ii + t
-                        rvp.append(pp[ii: jj])
-                        ii = jj
-                    yield rvp

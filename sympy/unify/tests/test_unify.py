@@ -59,7 +59,7 @@ def _test_combinations_comm():
              (((2, 3), (1,)), ('a', 'b')), (((3, 1), (2,)), ('a', 'b'))))
 
 def test_allcombinations():
-    assert set(allcombinations((1,2), (1,2), False)) ==\
+    assert set(allcombinations((1,2), (1,2), 'commutative')) ==\
         set(((((1,),(2,)), ((1,),(2,))), (((1,),(2,)), ((2,),(1,)))))
 
 
