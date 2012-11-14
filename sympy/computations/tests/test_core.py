@@ -1,4 +1,6 @@
-from sympy.computations.core import Computation, unique
+from sympy.computations.core import Computation, unique, CompositeComputation
+
+a,b,c,d,e,f = 'abcdef'
 
 def test_Computation():
     C = Computation()
@@ -8,3 +10,29 @@ def test_Computation():
 
 def test_unique():
     assert tuple(unique((1, 3, 1, 2))) == (1, 3, 2)
+
+class TComp(Computation):
+    """ Test Computation class """
+    def __init__(self, op, inputs, outputs):
+        self.op = op
+        self.inputs = tuple(inputs)
+        self.outputs = tuple(outputs)
+
+class TComposite(CompositeComputation):
+    """ Test CompositeComputation class """
+    def __init__(self, *computations):
+        self.computations = computations
+
+def test_testcomp():
+    A = TComp('add', (a, b, c), (d,))
+    assert A.inputs == (a, b, c)
+    assert tuple(A.edges()) == ((a, A), (b, A), (c, A), (A, d))
+
+def test_composite():
+    A = TComp('add', (a, b, c), (d,))
+    M = TComp('mul', (d, e), (f,))
+    C = TComposite(A, M)
+    assert tuple(C.inputs)  == (a, b, c, e)
+    assert tuple(C.outputs) == (f,)
+    assert tuple(C.edges()) == ((a, A), (b, A), (c, A), (A, d), (d, M), (e, M),
+            (M, f))

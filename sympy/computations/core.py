@@ -19,14 +19,22 @@ class Computation(object):
 
 class CompositeComputation(Computation):
 
+    def _input_outputs(self):
+        allin = tuple(unique(itertools.chain(
+                        *[c.inputs  for c in self.computations])))
+        allout = tuple(unique(itertools.chain(
+                        *[c.outputs for c in self.computations])))
+        inputs  = tuple(i for i in allin  if i not in allout)
+        outputs = tuple(o for o in allout if o not in allin)
+        return inputs, outputs
+
     @property
     def inputs(self):
-        return unique(itertools.chain(*[c.inputs for c in self.computations]))
+        return self._input_outputs()[0]
 
     @property
     def outputs(self):
-        return unique(itertools.chain(*[c.outputs for c in self.computations]))
+        return self._input_outputs()[1]
 
-    @property
     def edges(self):
         return itertools.chain(*[c.edges() for c in self.computations])
