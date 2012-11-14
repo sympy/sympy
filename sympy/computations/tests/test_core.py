@@ -70,3 +70,7 @@ def test_add():
     C2 = MM+A+B
     assert C.inputs == C2.inputs
     assert C.outputs == C2.outputs
+
+def test_eq():
+    assert TComp('foo', (a,), (b,)) == TComp('foo', (a,), (b,))
+    assert TComp('foo', (a,), (b,)) != TComp('foo', (a,), (c,))

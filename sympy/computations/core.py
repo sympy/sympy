@@ -36,6 +36,11 @@ class Computation(object):
         outs = "["+', '.join(self.outputs)+"]"
         return "%s -> %s -> %s"%(ins, str(self.__class__.__name__), outs)
 
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.inputs == other.inputs and
+                self.outputs == other.outputs)
+
 class CompositeComputation(Computation):
     """ A computation composed of other computations """
 
