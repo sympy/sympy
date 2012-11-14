@@ -436,6 +436,10 @@ class Hyper_Function(Expr):
     def sizes(self):
         return (len(self.ap), len(self.bq))
 
+    def _hashable_content(self):
+        return super(Hyper_Function, self)._hashable_content() + (self.ap,
+                self.bq)
+
     def __call__(self, arg):
         return hyper(self.ap, self.bq, arg)
 
