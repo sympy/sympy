@@ -1,7 +1,9 @@
+from sympy.core import Symbol, Float, Rational, Integer, I
+from sympy.functions import exp, factorial
+
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError
 )
-from sympy import *
 
 def test_sympy_parser():
     x = Symbol('x')
