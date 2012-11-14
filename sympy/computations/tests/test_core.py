@@ -23,11 +23,6 @@ class TComp(Computation):
         outs = "["+', '.join(self.outputs)+"]"
         return "%s -> %s -> %s"%(ins, str(self.op), outs)
 
-class TComposite(CompositeComputation):
-    """ Test CompositeComputation class """
-    def __str__(self):
-        return "[[" + ", ".join(map(str, self.computations)) + "]]"
-
 def test_testcomp():
     A = TComp('add', (a, b, c), (d,))
     assert A.inputs == (a, b, c)
@@ -36,7 +31,7 @@ def test_testcomp():
 def test_composite():
     A = TComp('add', (a, b, c), (d,))
     M = TComp('mul', (d, e), (f,))
-    C = TComposite(A, M)
+    C = CompositeComputation(A, M)
     assert tuple(C.inputs)  == (a, b, c, e)
     assert tuple(C.outputs) == (f,)
     assert tuple(C.edges()) == ((a, A), (b, A), (c, A), (A, d), (d, M), (e, M),
@@ -46,7 +41,7 @@ def test_composite():
 def test_composite_dag():
     A = TComp('add', (a, b, c), (d,))
     M = TComp('mul', (d, e), (f,))
-    C = TComposite(A, M)
+    C = CompositeComputation(A, M)
 
     assert C.dag_io() == {A: set([M]), M: set()}
     assert C.dag_oi() == {M: set([A]), A: set()}
@@ -54,7 +49,7 @@ def test_composite_dag():
 def test_toposort():
     A = TComp('add', (a, b, c), (d,))
     M = TComp('mul', (d, e), (f,))
-    C = TComposite(A, M)
+    C = CompositeComputation(A, M)
 
     assert tuple(C.toposort()) == (A, M)
 
@@ -62,7 +57,7 @@ def test_multi_out():
     MM = TComp('minmax', (a, b), (d, e))
     A =  TComp('foo', (d,), (f,))
     B =  TComp('bar', (a, f), (g, h))
-    C =  TComposite(MM, A, B)
+    C =  CompositeComputation(MM, A, B)
     assert C.inputs == (a, b)
     assert C.outputs == (e, g, h)
     assert tuple(C.toposort()) == (MM, A, B)
@@ -71,7 +66,7 @@ def test_add():
     MM = TComp('minmax', (a, b), (d, e))
     A =  TComp('foo', (d,), (f,))
     B =  TComp('bar', (a, f), (g, h))
-    C =  TComposite(MM, A, B)
+    C =  CompositeComputation(MM, A, B)
     C2 = MM+A+B
     assert C.inputs == C2.inputs
     assert C.outputs == C2.outputs
