@@ -926,9 +926,7 @@ class Permutation(Basic):
     @property
     def array_form(self):
         """
-        This is used to convert from cyclic notation to the
-        canonical notation.
-
+        Return a copy of the attribute _array_form
         Examples
         ========
 
@@ -943,24 +941,8 @@ class Permutation(Basic):
         [2, 0, 3, 1]
         >>> Permutation([[1, 2], [4, 5]]).array_form
         [0, 2, 1, 3, 5, 4]
-
-        See Also
-        ========
-
-        cyclic_form
         """
-        # watch that given list doesn't shadow the argument:
-        # store a copy; return a copy
-        if self._array_form is not None:
-            return self._array_form[:]
-        cycles = self.args[0]
-        perm = range(self.size)
-        for c in cycles:
-            for i in range(len(c) - 1):
-                perm[c[i]] = c[i + 1]
-            perm[c[-1]] = c[0]
-        self._array_form = perm
-        return self.array_form
+        return self._array_form[:]
 
     def list(self, size=None):
         """Return the permutation as an explicit list, possibly

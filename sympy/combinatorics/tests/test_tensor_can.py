@@ -1,10 +1,18 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation, Perm
-from sympy.combinatorics.tensor_can import (dummy_sgs, riemann_bsgs,
-    get_symmetric_group_sgs, gens_products, canonicalize, bsgs_direct_product)
+from sympy.combinatorics.tensor_can import (perm_af_direct_product, dummy_sgs, 
+    riemann_bsgs, get_symmetric_group_sgs, gens_products, canonicalize, 
+    bsgs_direct_product)
 from sympy.combinatorics.testutil import canonicalize_naive
 from sympy.utilities.pytest import skip, XFAIL
 
+def test_perm_af_direct_product():
+    gens1 = [[1,0,2,3], [0,1,3,2]]
+    gens2 = [[1,0]]
+    assert perm_af_direct_product(gens1, gens2) == [[1, 0, 2, 3, 4, 5], [0, 1, 3, 2, 4, 5], [0, 1, 2, 3, 5, 4]]
+    gens1 = [[1,0,2,3,5,4], [0,1,3,2,4,5]]
+    gens2 = [[1,0,2,3]]
+    assert [[1, 0, 2, 3, 4, 5, 7, 6], [0, 1, 3, 2, 4, 5, 6, 7], [0, 1, 2, 3, 5, 4, 6, 7]]
 
 def test_dummy_sgs():
     a = dummy_sgs([1,2], 0, 4)
@@ -308,6 +316,9 @@ def test_riemann_invariants():
     # T_c = -R^{d0 d1}_{d0 d1}; can = [0,2,1,3,5,4]
     g = Permutation([0,2,3,1,4,5])
     can = canonicalize(g, range(2, 4), 0, (baser, gensr, 1, 0))
+    assert can == [0,2,1,3,5,4]
+    # use a non minimal BSGS
+    can = canonicalize(g, range(2, 4), 0, ([2, 0], [[1,0,2,3,5,4], [2,3,0,1,4,5]], 1, 0))
     assert can == [0,2,1,3,5,4]
 
     """

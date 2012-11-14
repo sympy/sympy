@@ -19,6 +19,8 @@ def test_Permutation():
     assert list(p(1, 2)) == [0, 2, 1, 3]
     # conversion to list
     assert list(p) == range(4)
+    assert Permutation(size=4) == Permutation(3)
+    assert Permutation(Permutation(3), size=5) == Permutation(4)
     # cycle form with size
     assert Permutation([[1, 2]], size=4) == Permutation([[1, 2], [0], [3]])
     # random generation
@@ -274,6 +276,13 @@ def test_ranking():
         [2, 1, 0, 3], [3, 2, 1, 0], [0, 2, 3, 1], [0, 3, 1, 2], [0, 2, 1, 3],
         [3, 1, 2, 0], [0, 3, 2, 1], [0, 1, 3, 2], [0, 1, 2, 3]]
 
+    N = 10
+    p1 = Permutation(a[0])
+    for i in range(1, N+1):
+        p1 = p1*Permutation(a[i])
+    p2 = Permutation.rmul_with_af(*[Permutation(h) for h in a[N::-1]])
+    assert p1 == p2
+
     ok = []
     p = Permutation([1, 0])
     for i in range(3):
@@ -344,6 +353,10 @@ def test_args():
 
 
 def test_Cycle():
+    assert str(Cycle()) == 'Cycle()'
+    assert Cycle(Cycle(1,2)) == Cycle(1, 2)
+    assert Cycle(1,2).copy() == Cycle(1,2)
+    assert list(Cycle(1, 3, 2)) == [0, 3, 1, 2]
     assert Cycle(1, 2)(2, 3) == Cycle(1, 3, 2)
     assert Cycle(1, 2)(2, 3)(4, 5) == Cycle(1, 3, 2)(4, 5)
     assert Permutation(Cycle(1, 2)(2, 1, 0, 3)).cyclic_form, Cycle(0, 2, 1)

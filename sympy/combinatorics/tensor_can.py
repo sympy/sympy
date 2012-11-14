@@ -148,7 +148,7 @@ def transversal2coset(size, base, transversal):
     return a[:j+1]
 
 
-def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
+def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     """
     Butler-Portugal algorithm for tensor canonicalization with dummy indices
 
@@ -295,7 +295,7 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
     >>> base = [0, 2]
     >>> g = Permutation([4,2,0,1,3,5,6,7])
     >>> transversals = get_transversals(base, gens)
-    >>> double_coset_can_rep([range(6)], [0], gens, g, (transversals, base))
+    >>> double_coset_can_rep([range(6)], [0], base, gens, transversals, g)
     [0, 1, 2, 3, 4, 5, 7, 6]
 
     T^{d3}_{d1 d2}^{d1}_{d3}^{d2}
@@ -303,19 +303,12 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
     = T_{d3 d1}^{d3}^{d1}_{d2}^{d2}    under slot symmetry -(0,2)
     = T^{d3}_{d1 d3}^{d1}_{d2}^{d2}    symmetric metric
     = 0
-    >>> g = [4,1,3,0,5,2,6,7]
-    >>> double_coset_can_rep([range(6)], [0], gens, g, (transversals, base))
+    >>> g = Permutation([4,1,3,0,5,2,6,7])
+    >>> double_coset_can_rep([range(6)], [0], base, gens, transversals, g)
     0
     """
-    if isinstance(g, Permutation):
-        size = g.size
-        g = g.array_form
-    else:
-        size = len(g)
-        sortedg = sorted(g)
-        if sortedg != range(size):
-            raise ValueError('g must be a permutation')
-        size1 = size - 1
+    size = g.size
+    g = g.array_form
     num_dummies = size - 2
     indices = range(num_dummies)
     all_metrics_with_sym = all([_ != None for _ in sym])
@@ -324,21 +317,8 @@ def double_coset_can_rep(dummies, sym, sgens, g, sgs=None):
     dumx_flat = []
     for dx in dumx:
         dumx_flat.extend(dx)
-    # strong base generators for Sx; start with Sx=S
-    if not sgs:
-        S = PermutationGroup(sgens)
-        b_S, strong_gens = S.schreier_sims_incremental()
-        if not _is_minimal_bsgs(b_S, strong_gens):
-            # TODO use baseswap to get a BSGS with ordered strong baswe
-            raise NotImplementedError
-        strong_gens_distr = _distribute_gens_by_base(b_S, strong_gens)
-        b_S, S_transversals = _orbits_transversals_from_bsgs(b_S,
-                               strong_gens_distr)
-        sgensx = [h._array_form for h in strong_gens]
-    else:
-        sgensx = [h._array_form for h in sgens]
-        S_transversals, b_S = sgs
     b_S = b_S[:]
+    sgensx = [h._array_form for h in sgens]
     if b_S:
         S_transversals = transversal2coset(size, b_S, S_transversals)
     # strong generating set for D
@@ -707,7 +687,7 @@ def canonicalize(g, dummies, msym, *v):
     transv_red = get_transversals(sbase_red, sgens_red)
     g1_red = _af_new(g1_red)
     sgens_red = [_af_new(h) for h in sgens_red]
-    g2 = double_coset_can_rep(dummies_red, msym, sgens_red, g1_red, (transv_red, sbase_red))
+    g2 = double_coset_can_rep(dummies_red, msym, sbase_red, sgens_red, transv_red, g1_red)
     if g2 == 0:
         return 0
     # lift to the case with the free indices
@@ -860,15 +840,15 @@ def get_minimal_bsgs(base, gens):
     >>> get_minimal_bsgs(*riemann_bsgs1)
     ([0, 2], [[1, 0, 2, 3, 5, 4], [2, 3, 0, 1, 4, 5], [0, 1, 3, 2, 5, 4]])
     """
-    if _is_minimal_bsgs(base, gens):
-        return base, gens
+    #if _is_minimal_bsgs(base, gens):
+    #    return base, gens
     if isinstance(gens[0], list):
         gens = [Permutation(h) for h in gens]
     G = PermutationGroup(gens)
     base, gens = G.schreier_sims_incremental()
     gens = [h._array_form for h in gens]
-    if not  _is_minimal_bsgs(base, gens):
-        raise None
+    if not _is_minimal_bsgs(base, gens):
+        return None
     return base, gens
 
 def tensor_gens(base, gens, list_free_indices, sym=0):
@@ -948,7 +928,7 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     # if sym == None there are no generators for commuting tensors
     if sym == None:
         if not res_gens:
-            res_gens = id_af
+            res_gens = [id_af]
         return size, res_base, res_gens
 
     # if the component tensors have moinimal BSGS, so is their direct
@@ -977,18 +957,6 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
         if i not in res_base:
             res_base.append(i)
     res_base.sort()
-    # if commutator generators have been added, res_base might not fix
-    # them, so add elements to it.
-    fixed_gens = res_gens
-    for i in res_base:
-        fixed_gens = [h for h in fixed_gens if h[i] == i]
-    if fixed_gens:
-        for i in range(size):
-            if i in res_base:
-                continue
-            if any(h[i] != i for h in fixed_gens):
-                res_base.append(i)
-                fixed_gens = [h for h in fixed_gens if h[i] == i]
     if not res_gens:
         res_gens = [id_af]
 
