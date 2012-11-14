@@ -63,6 +63,45 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...
     SympifyError: SympifyError: "could not parse u'x***2'"
 
+    Locals
+    ------
+
+    The sympification happens with access to everything that is loaded
+    by ``from sympy import *``; if anything is used in the expression to be
+    sympified that is not defined by that import then it will be converted
+    to a symbol. In the following, the ``bitcout`` function is treated as
+    a symbol and the ``O`` is interpreted as the default Order shorthand
+    (and raises an error because it is being used improperly):
+
+    >>> s = 'bitcount(42)'
+    >>> sympify(s)
+    bitcount(42)
+    >>> sympify("O + 1")
+    Traceback (most recent call last):
+    ...
+    TypeError: unbound method...
+
+    In order to have ``bitcount`` be recognized it can be imported into a
+    namespace dictionary and passed as locals:
+
+    >>> ns = {}
+    >>> exec 'from sympy.core.evalf import bitcount' in ns
+    >>> sympify(s, locals=ns)
+    6
+
+    In order to have the ``O`` interpreted as a Symbol, identify it as such
+    in the namespace dictionary. This can be done in a variety of ways; all
+    three of the following are possibilities:
+
+    >>> from sympy import Symbol
+    >>> ns["O"] = Symbol("O")  # method 1
+    >>> exec 'from sympy.abc import O' in ns  # method 2
+    >>> ns.update(dict(O=Symbol("O")))  # method 3
+    >>> sympify("O + 1", locals=ns)
+    O + 1
+
+    Strict
+    ------
 
     If the option ``strict`` is set to ``True``, only the types for which an
     explicit conversion has been defined are converted. In the other
@@ -74,6 +113,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: True
+
+    Extending
+    ---------
 
     To extend ``sympify`` to convert custom objects (not derived from ``Basic``),
     just define a ``_sympy_`` method to your class. You can do that even to

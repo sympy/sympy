@@ -452,3 +452,8 @@ def test_issue_3441_3453():
     assert S('[[2/6,2], (2/4,)]') == [[Rational(1, 3), 2], (Rational(1, 2),)]
     assert S('[[[2*(1)]]]') == [[[2]]]
     assert S('Matrix([2*(1)])') == Matrix([2])
+
+def test_issue_2497():
+    locals = {}
+    exec "from sympy.abc import Q, C" in locals
+    assert str(S('C&Q', locals)) == 'And(C, Q)'
