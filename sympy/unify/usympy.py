@@ -1,6 +1,6 @@
 from sympy import Basic, Expr, Tuple, Add, Mul, Pow
 from sympy import Wild as ExprWild
-from collections import namedtuple
+from sympy.core.compatibility import namedtuple
 
 from core import Compound, Variable
 import core
