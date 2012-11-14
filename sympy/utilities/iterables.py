@@ -1437,7 +1437,7 @@ def runs(seq, op=gt):
     return cycles
 
 
-def kbins(l, k, ordered=11):
+def kbins(l, k, ordered=None):
     """
     Return sequence ``l`` partitioned into ``k`` bins.
 
@@ -1447,17 +1447,18 @@ def kbins(l, k, ordered=11):
     >>> from sympy.utilities.iterables import kbins
 
     The default is to give the items in the same order, but grouped
-    into k partitions:
+    into k partitions without any reordering:
 
     >>> for p in kbins(range(5), 2):
     ...     print p
     ...
-    ((0,), (1, 2, 3, 4))
-    ((0, 1), (2, 3, 4))
-    ((0, 1, 2), (3, 4))
-    ((0, 1, 2, 3), (4,))
+    [[0], [1, 2, 3, 4]]
+    [[0, 1], [2, 3, 4]]
+    [[0, 1, 2], [3, 4]]
+    [[0, 1, 2, 3], [4]]
 
-    The ``ordered`` flag is a 2 digit integer indicating whether the order of
+    The ``ordered`` flag which is either None (to give the simple partition
+    of the the elements) or is a 2 digit integer indicating whether the order of
     the bins and the order of the items in the bins matters. Given::
 
         A = [[0], [1, 2]]
@@ -1472,18 +1473,45 @@ def kbins(l, k, ordered=11):
         10 means A == D
         11 means A == A
 
-    When the order of something matters, it is returned as a tuple, otherwise a
-    list. (A tuple is used in case the items of ``l`` are not hashable.)
-
-    >>> for p in kbins(range(3), 2, ordered=10):
-    ...     print p
+    >>> for ordered in [None, 0, 1, 10, 11]:
+    ...     print 'ordered =', ordered
+    ...     for p in kbins(range(3), 2, ordered=ordered):
+    ...         print '    ', p
     ...
-    ([0, 1], [2])
-    ([2], [0, 1])
-    ([0], [1, 2])
-    ([1, 2], [0])
-    ([0, 2], [1])
-    ([1], [0, 2])
+    ordered = None
+         [[0], [1, 2]]
+         [[0, 1], [2]]
+    ordered = 0
+         [[0, 1], [2]]
+         [[0], [1, 2]]
+         [[0, 2], [1]]
+    ordered = 1
+         [[0], [1, 2]]
+         [[0], [2, 1]]
+         [[1], [0, 2]]
+         [[1], [2, 0]]
+         [[2], [0, 1]]
+         [[2], [1, 0]]
+    ordered = 10
+         [[0, 1], [2]]
+         [[2], [0, 1]]
+         [[0], [1, 2]]
+         [[1, 2], [0]]
+         [[0, 2], [1]]
+         [[1], [0, 2]]
+    ordered = 11
+         [[0], [1, 2]]
+         [[0, 1], [2]]
+         [[0], [2, 1]]
+         [[0, 2], [1]]
+         [[1], [0, 2]]
+         [[1, 0], [2]]
+         [[1], [2, 0]]
+         [[1, 2], [0]]
+         [[2], [0, 1]]
+         [[2, 0], [1]]
+         [[2], [1, 0]]
+         [[2, 1], [0]]
 
     See Also
     ========
@@ -1502,16 +1530,21 @@ def kbins(l, k, ordered=11):
                     if len([lista[:i]] + part) == bins:
                         yield [lista[:i]] + part
 
-    if ordered == 11:
+    if ordered is None:
         for p in partition(l, k):
-            yield tuple([tuple(i) for i in p])
+            yield p
+    elif ordered == 11:
+        for pl in permutations(l):
+            pl = list(pl)
+            for p in partition(pl, k):
+                yield p
     elif ordered == 00:
         for p in multiset_partitions(l, k):
             yield p
     elif ordered == 10:
         for p in multiset_partitions(l, k):
             for perm in permutations(p):
-                yield perm
+                yield list(perm)
     elif ordered == 01:
         for p in partitions(len(l), k):
             if sum(p.values()) != k:
@@ -1519,6 +1552,7 @@ def kbins(l, k, ordered=11):
             for li in permutations(l):
                 rv = []
                 i = j = 0
+                li = list(li)
                 for size, multiplicity in sorted(p.items()):
                     for m in range(multiplicity):
                         j = i + size
