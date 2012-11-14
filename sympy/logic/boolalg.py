@@ -1,9 +1,11 @@
 """Boolean algebra module for SymPy"""
+from collections import defaultdict
+
 from sympy.core.basic import Basic
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
-from sympy.core.compatibility import bin
+from sympy.core.compatibility import bin, default_sort_key
 
 
 class Boolean(Basic):
@@ -824,108 +826,138 @@ def simplify_logic(expr):
         return POSform(variables, truthtable)
 
 
-def bool_equal(function1, function2, mapping=False):
-    """
-    Function to check whether two Boolean functions are
-    logically equivalent.
-
-    Check whether there is any mapping of variables from the
-    first function to the other, such that equivalent inputs
-    given according to the mapping give same outputs. If yes,
-    return True. If not, return False.
-
-    If mapping = True, return mapping (dictionary) of variables
-    that makes functions equivalent. This dictionary may be one
-    of the many possibilities. If mapping = False, return just
-    True or False.
-
-    The procedure assigns a key to every function after it has
-    been simplified and to every variable in it, based on its
-    args. The use of prime numbers in doing so ensures that the
-    keys assigned to any function/variable are not equal wrongly.
+def bool_equal(bool1, bool2, info=False):
+    """Return True if the two expressions represent the same logical
+    behavior for some correspondence between the variables of each
+    (which may be different). For example, And(x, y) is logically
+    equivalent to And(a, b) for {x: a, y: b} (or vice versa). If the
+    mapping is desired, then set ``info`` to True and the simplified
+    form of the functions and the mapping of variables will be
+    returned.
 
     Examples
     ========
-    >>> from sympy import SOPform, bool_equal
-    >>> from sympy.abc import x, y, z, a, b, c
+
+    >>> from sympy import SOPform, bool_equal, Or, And, Not, Xor
+    >>> from sympy.abc import w, x, y, z, a, b, c, d
     >>> function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
     >>> function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
-    >>> bool_equal(function1, function2, mapping = True)
-    {y: a, z: b}
+    >>> bool_equal(function1, function2, info=True)
+    (And(Not(z), y), {y: a, z: b})
+
+    The results are not necessarily unique, but they are canonical. Here,
+    ``(w, z)`` could be ``(a, d)`` or ``(d, a)``:
+
+    >>> eq =  Or(And(Not(y), w), And(Not(y), z), And(x, y))
+    >>> eq2 = Or(And(Not(c), a), And(Not(c), d), And(b, c))
+    >>> bool_equal(eq, eq2)
+    True
+    >>> bool_equal(eq, eq2, info=True)
+    (Or(And(Not(y), w), And(Not(y), z), And(x, y)), {w: a, x: b, y: c, z: d})
+    >>> eq = And(Xor(a, b), c, And(c,d))
+    >>> bool_equal(eq, eq.subs(c, x), info=True)
+    (And(Or(Not(a), Not(b)), Or(a, b), c, d), {a: a, b: b, c: d, d: x})
 
     """
-    from sympy.core import Symbol
-    function1 = simplify_logic(function1)
-    function2 = simplify_logic(function2)
-    if function1.__class__ != function2.__class__:
-        return False
-    if function1.is_Symbol:
-        return {function1:function2}
-    if len(function1.args) != len(function2.args):
-        return False
-    #list of random prime numbers used
-    values = [17471, 28393, 41263, 37693]
-    i = 1
-    #iterate through the args to assign keys
-    while i <= 2:
-        if i == 1:
-            function = function1
-            keys = {}
-            for x in function1.free_symbols:
-                keys[x] = 0
-        else:
-            function = function2
-            keys = {}
-            for x in function2.free_symbols:
-                keys[x] = 0
-        mainkey = 0
-        for term in function.args:
-            if term.is_Symbol:
-                #if arg is Symbol, alter the key for the corresponding
-                #symbol and the mainkey using first prime number.
-                mainkey = mainkey + values[0]
-                keys[term] = keys[term] + values[0]
-            elif term.is_Not:
-                #if arg is Not(Symbol), alter the key for the Symbol
-                #and the the mainkey using second prime number.
-                mainkey = mainkey - values[1]
-                keys[term.args[0]] = keys[term.args[0]] + values[1]
+    from sympy.core.compatibility import permutations
+    from sympy.utilities.iterables import flatten, cartes, default_sort_key
+    ordered = lambda x: sorted(x, key=default_sort_key)
+
+    def match(function1, function2):
+        """Return the mapping that equates variables between two
+        simplified boolean expressions if possible.
+
+        By "simplified" we mean that a function has been denested
+        and is either an And (or an Or) whose arguments are either
+        symbols (x), negated symbols (Not(x)), or Or (or an And) whose
+        arguments are only symbols or negated symbols. For example,
+        And(x, Not(y), Or(y, Not(z))).
+
+        Basic.match is not robust enough (see issue 1736) so this is
+        a workaround that is valid for simplified boolean expressions
+        """
+        def finger(eq):
+            """
+            Assign a 5-item fingerprint to each symbol in the equation:
+            [
+            # of times it appeared as a Symbol,
+            # of times it appeared as a Not(symbol),
+            # of times it appeared as a Symbol in an And or Or,
+            # of times it appeared as a Not(Symbol) in an And or Or,
+            sum of count_ops of expressions it appeared with,
+            ]
+
+            >>> eq
+            Or(And(Not(y), a), And(Not(y), b), And(x, y))
+            >>> dict(finger(eq))
+            {(0, 0, 1, 2, 5): [y], (0, 0, 1, 0, 2): [b, a], (0, 0, 1, 0, 1): [x]}
+
+            So y and x have unique fingerprints, but a and b do not.
+            """
+            f = eq.free_symbols
+            d = dict(zip(f, [[0] * 5 for fi in f]))
+            o = dict([(a, a.count_ops()) for a in eq.args])
+            for a in eq.args:
+                if a.is_Symbol:
+                    d[a][0] += 1
+                elif a.is_Not:
+                    d[a.args[0]][1] += 1
+                else:
+                    for ai in a.args:
+                        if ai.is_Symbol:
+                            d[ai][2] += 1
+                            d[ai][-1] += o[a]
+                        else:
+                            d[ai.args[0]][3] += 1
+                            d[ai.args[0]][-1] += o[a]
+            inv = defaultdict(list)
+            for k, v in d.iteritems():
+                inv[tuple(v)].append(k)
+            return inv
+
+        # do some quick checks
+        if function1.__class__ != function2.__class__:
+            return None
+        if len(function1.args) != len(function2.args):
+            return None
+        if function1.is_Symbol:
+            return {function1: function2}
+
+        # get the fingerprint dictionaries
+        f1 = finger(function1)
+        f2 = finger(function2)
+
+        # more quick checks
+        if len(f1) != len(f2):
+            return False
+        if not all(k in f2 for k in f1.keys()):
+            return False
+
+        # identify those that are known and those that are ambiguous
+        # and need permutations (or a better fingerprint?) to resolve them
+        know = {}
+        perm = []
+        for k in f1.keys():
+            if len(f1[k]) == 1:
+                know[f1[k][0]] = f2[k][0]
             else:
-                #if arg is And/Or, alter the keys using the third and
-                #fourth prime numbers. Each And/Or arg has a unique key,
-                #based on the occurences of variables in it.
-                tempkey = 10
-                for x in term.args:
-                    if x.is_Symbol:
-                        tempkey = tempkey * values[2]
-                        keys[x] = keys[x] + values[2]
-                    if x.is_Not:
-                        tempkey = tempkey * (- values[3])
-                        keys[x.args[0]] = keys[x.args[0]] + values[3]
-                mainkey = mainkey + tempkey
-        if i == 1:
-            keys1 = keys.copy()
-            mainkey1 = mainkey
+                perm.append((ordered(f1[k]), ordered(f2[k])))
+
+        if perm:
+            unk = flatten([i[0] for i in perm])
+            func2 = function1.xreplace(know)
+            for p in cartes(*[permutations(i[1]) for i in perm]):
+                reps = dict(zip(unk, flatten(p)))
+                if func2.xreplace(reps) == function2:
+                    know.update(reps)
+                    return know
+            return False
         else:
-            keys2 = keys.copy()
-            mainkey2 = mainkey
-        i += 1
-    l_keys1 = [keys1[x] for x in keys1]
-    l_keys2 = [keys2[x] for x in keys2]
-    #Match the mainkeys and variable-key patterns.
-    if mainkey1 != mainkey2 or l_keys1.sort() != l_keys2.sort():
-        return False
-    if mapping:
-        #if mapping is required, match variables with
-        #equal keys. In this case, the mapping may be one of
-        #the many possiblities.
-        mapping = {}
-        for x in keys1:
-            for y in keys2:
-                if keys2[y] == keys1[x]:
-                    mapping[x] = y
-                    del keys2[y]
-                    break
-        return mapping
-    else:
-        return True
+            return know
+
+    a = simplify_logic(bool1)
+    b = simplify_logic(bool2)
+    m = match(a, b)
+    if m and info:
+        return a, m
+    return m is not None
