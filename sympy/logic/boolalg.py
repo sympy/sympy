@@ -513,14 +513,16 @@ def eliminate_implications(expr):
         return expr.func(*args)
 
 
-@deprecated(useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
+@deprecated(
+    useinstead="sympify", issue=2947, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
-    Transforms a rule into a sympy expression
+    Transforms a rule into a SymPy expression
     A rule is a string of the form "symbol1 & symbol2 | ..."
-    See sympy.assumptions.known_facts for examples of rules
 
-    TODO: can this be replaced by sympify ?
+    Note: this is nearly the same as sympifying the expression, but
+    this function converts all variables to Symbols -- there are no
+    special function names recognized.
 
     Examples
     ========
@@ -532,9 +534,7 @@ def compile_rule(s):
     Or(A, And(Not(B), Not(C)))
     """
     import re
-    from sympy.core import Symbol
-    return eval(re.sub(r'([a-zA-Z0-9_.]+)', r'Symbol("\1")', s),
-        {'Symbol': Symbol})
+    return sympify(re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)', r'Symbol("\1")', s))
 
 
 def to_int_repr(clauses, symbols):
@@ -587,12 +587,12 @@ def _convert_to_varsSOP(minterm, variables):
     temp = []
     for i, m in enumerate(minterm):
         if m == 0:
-            temp.append("~" + variables[i])
+            temp.append(Not(variables[i]))
         elif m == 1:
             temp.append(variables[i])
         else:
             pass  # ignore the 3s
-    return '&'.join(temp)
+    return And(*temp)
 
 
 def _convert_to_varsPOS(maxterm, variables):
@@ -603,12 +603,12 @@ def _convert_to_varsPOS(maxterm, variables):
     temp = []
     for i, m in enumerate(maxterm):
         if m == 1:
-            temp.append('~' + variables[i])
+            temp.append(Not(variables[i]))
         elif m == 0:
             temp.append(variables[i])
         else:
             pass  # ignore the 3s
-    return '(' + '|'.join(temp) + ')'
+    return Or(*temp)
 
 
 def _simplified_pairs(terms):
@@ -637,19 +637,17 @@ def _compare_term(minterm, term):
     Compares if a binary term is satisfied by the given term. Used
     for recognizing prime implicants.
     """
-    flag = True
     for i, x in enumerate(term):
         if x != 3 and x != minterm[i]:
-            flag = False
-            break
-    return flag
+            return False
+    return True
 
 
-def _rem_redundancy(l1, terms, variables, mode):
+def _rem_redundancy(l1, terms):
     """
     After the truth table has been sufficiently simplified, use the prime
     implicant table method to recognize and eliminate redundant pairs,
-    and return the relevant function in string form.
+    and return the essential arguments.
     """
     essential = []
     for x in terms:
@@ -670,23 +668,15 @@ def _rem_redundancy(l1, terms, variables, mode):
                     if z not in essential:
                         essential.append(z)
                     break
-    string = []
-    if mode == 1:
-        for x in essential:
-            string.append(_convert_to_varsSOP(x, variables))
-        op = '|'
-    else:
-        for x in essential:
-            string.append(_convert_to_varsPOS(x, variables))
-        op = "&"
-    return op.join(string)
+
+    return essential
 
 
 def SOPform(variables, minterms, dontcares=[]):
     """
     The SOPform function uses simplified_pairs and a redundant group-
     eliminating algorithm to convert the list of all input combos that
-    generate '1'(the minterms) into the smallest Sum of Products form.
+    generate '1' (the minterms) into the smallest Sum of Products form.
 
     The variables must be given as the first argument.
 
@@ -705,7 +695,7 @@ def SOPform(variables, minterms, dontcares=[]):
     ...             [0, 1, 1, 1], [1, 0, 1, 1], [1, 1, 1, 1]]
     >>> dontcares = [[0, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 1]]
     >>> SOPform(['w','x','y','z'], minterms, dontcares)
-        Or(And(Not(w), z), And(y, z))
+    Or(And(Not(w), z), And(y, z))
 
     References
     ==========
@@ -713,18 +703,26 @@ def SOPform(variables, minterms, dontcares=[]):
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    variables = [str(v) for v in variables]
+    from sympy.core.symbol import Symbol
+
+    variables = [Symbol(v) if not isinstance(v, Symbol) else v
+        for v in variables]
     if minterms == []:
         return False
-    l2 = [1]
-    l1 = minterms + dontcares
-    while (l1 != l2):
-        l1 = _simplified_pairs(l1)
-        l2 = _simplified_pairs(l1)
-    string = _rem_redundancy(l1, minterms, variables, 1)
-    if string == '':
-        return True
-    return sympify(string)
+
+    minterms = [list(i) for i in minterms]
+    dontcares = [list(i) for i in dontcares]
+    for d in dontcares:
+        if d in minterms:
+            raise ValueError('%s in minterms is also in dontcares' % d)
+
+    old = None
+    new = minterms + dontcares
+    while new != old:
+        old = new
+        new = _simplified_pairs(old)
+    essential = _rem_redundancy(new, minterms)
+    return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
 
 
 def POSform(variables, minterms, dontcares=[]):
@@ -758,9 +756,19 @@ def POSform(variables, minterms, dontcares=[]):
     .. [1] en.wikipedia.org/wiki/Quine-McCluskey_algorithm
 
     """
-    variables = [str(v) for v in variables]
+    from sympy.core.symbol import Symbol
+
+    variables = [Symbol(v) if not isinstance(v, Symbol) else v
+        for v in variables]
     if minterms == []:
         return False
+
+    minterms = [list(i) for i in minterms]
+    dontcares = [list(i) for i in dontcares]
+    for d in dontcares:
+        if d in minterms:
+            raise ValueError('%s in minterms is also in dontcares' % d)
+
     t = [0] * len(variables)
     maxterms = []
     for x in range(2 ** len(variables)):
@@ -768,23 +776,21 @@ def POSform(variables, minterms, dontcares=[]):
         t[-len(b):] = b
         if (t not in minterms) and (t not in dontcares):
             maxterms.append(t[:])
-    l2 = [1]
-    l1 = maxterms + dontcares
-    while (l1 != l2):
-        l1 = _simplified_pairs(l1)
-        l2 = _simplified_pairs(l1)
-    string = _rem_redundancy(l1, maxterms, variables, 2)
-    if string == '':
-        return True
-    return sympify(string)
+    old = None
+    new = maxterms + dontcares
+    while new != old:
+        old = new
+        new = _simplified_pairs(old)
+    essential = _rem_redundancy(new, maxterms)
+    return And(*[_convert_to_varsPOS(x, variables) for x in essential])
 
 
 def simplify_logic(expr):
     """
     This function simplifies a boolean function to its
-    simplified version in SOP or POS form. The return type is a
-    Or object or And object in SymPy. The input can be a string
-    or a boolean expression.
+    simplified version in SOP or POS form. The return type is an
+    Or or And object in SymPy. The input can be a string or a boolean
+    expression.
 
     Examples
     ========
@@ -805,7 +811,6 @@ def simplify_logic(expr):
     """
     expr = sympify(expr)
     variables = list(expr.free_symbols)
-    string_variables = [x.name for x in variables]
     truthtable = []
     t = [0] * len(variables)
     for x in range(2 ** len(variables)):
@@ -814,6 +819,6 @@ def simplify_logic(expr):
         if expr.subs(zip(variables, [bool(i) for i in t])) is True:
             truthtable.append(t[:])
     if (len(truthtable) >= (2 ** (len(variables) - 1))):
-        return SOPform(string_variables, truthtable)
+        return SOPform(variables, truthtable)
     else:
-        return POSform(string_variables, truthtable)
+        return POSform(variables, truthtable)
