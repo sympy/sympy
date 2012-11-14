@@ -11,6 +11,10 @@ def intersect(a, b):
     return not not set(a).intersection(set(b))
 
 class Computation(object):
+    """ An interface for a Computation
+
+    Computations have inputs and outputs
+    """
 
     inputs  = None
     outputs = None
@@ -25,8 +29,10 @@ class Computation(object):
         return itertools.chain(self.inputs, self.outputs)
 
 class CompositeComputation(Computation):
+    """ A computation composed of other computations """
 
     def _input_outputs(self):
+        """ Find the inputs and outputs of the complete computation """
         allin = tuple(unique(itertools.chain(
                         *[c.inputs  for c in self.computations])))
         allout = tuple(unique(itertools.chain(
@@ -70,5 +76,6 @@ class CompositeComputation(Computation):
                     for A in self.computations}
 
     def toposort(self):
+        """ Order computations in an executable order """
         from sympy.utilities.iterables import _toposort
         return _toposort(self.dag_io())
