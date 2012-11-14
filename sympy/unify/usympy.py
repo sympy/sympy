@@ -1,11 +1,14 @@
 from sympy import Basic, Expr, Tuple, Add, Mul, Pow
 from sympy import Wild as ExprWild
-from sympy.core.compatibility import namedtuple
 
 from core import Compound, Variable
 import core
 
-Wild = namedtuple('Wild', 'arg')
+class Wild(object):
+    def __init__(self, arg):
+        self.arg = arg
+    def __eq__(self, other):
+        return type(self) == type(other) and self.arg == other.arg
 
 def sympy_associative(op):
     from sympy import MatAdd, MatMul, Union, Intersection

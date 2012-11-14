@@ -16,10 +16,32 @@ A more traditional version can be found here
 http://aima.cs.berkeley.edu/python/logic.html
 """
 
-from sympy.core.compatibility import namedtuple
-Compound = namedtuple('Compound', 'op args')
-Variable = namedtuple('Variable', 'arg')
-CondVariable = namedtuple('Variable', 'arg valid')
+class Compound(object):
+    def __init__(self, op, args):
+        self.op = op
+        self.args = args
+    def __eq__(self, other):
+        return type(self) == type(other) and self.op == other.op and self.args == other.args
+    def __hash__(self):
+        return hash((type(self), self.op, self.args))
+
+class Variable(object):
+    def __init__(self, arg):
+        self.arg = arg
+    def __eq__(self, other):
+        return type(self) == type(other) and self.arg == other.arg
+    def __hash__(self):
+        return hash((type(self), self.arg))
+
+class CondVariable(object):
+    def __init__(self, arg, valid):
+        self.arg = arg
+        self.valid = valid
+    def __eq__(self, other):
+        return type(self) == type(other) and self.arg == other.arg and self.valid == other.valid
+    def __hash__(self):
+        return hash((type(self), self.arg, self.valid))
+
 from sys import stdout
 from sympy.utilities.iterables import kbins
 
