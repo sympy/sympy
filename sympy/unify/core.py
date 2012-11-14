@@ -31,7 +31,7 @@ def unify(x, y, s={}, **fns):
         x, y - expression trees containing leaves, Compounds and Variables
         s    - a mapping of variables to subtrees
     outputs:
-        a mapping {Variable: subtree}
+        lazy sequence of mappings {Variable: subtree}
 
     Example
     =======
