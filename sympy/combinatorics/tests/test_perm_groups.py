@@ -89,6 +89,8 @@ def test_stabilizer():
     G = PermutationGroup(gens)
     G2 = G.stabilizer(2)
     assert G2.order() == 181440
+    S = SymmetricGroup(3)
+    assert [G.order() for G in S.basic_stabilizers] == [6, 2]
 
 
 def test_center():
@@ -175,6 +177,7 @@ def test_coset_rank():
         assert h == h1
         i += 1
     assert G.coset_unrank(48) == None
+    assert G.coset_unrank(G.coset_rank(gens[0])) == gens[0]
 
 def test_coset_factor():
     a = Permutation([0, 2, 1])
@@ -199,6 +202,9 @@ def test_coset_factor():
     p = Permutation.rmul(*v)
     assert p == c
     assert g.contains(c)
+    G = PermutationGroup([Permutation([2,1,0])])
+    p = Permutation([1,0,2])
+    assert G.coset_factor(p) == []
 
 def test_orbits():
     a = Permutation([2, 0, 1])

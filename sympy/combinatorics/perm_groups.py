@@ -2397,11 +2397,7 @@ class PermutationGroup(Basic):
         An element of the group can be written as the product
         h_1*..*h_s.
 
-        We use Jerrum's filter in our implementation of the
-        Schreier-Sims algorithm. It runs in polynomial time.
-
-        This implementation is a translation of the C++ implementation in
-        http://www.m8j.net
+        We use the incremental Schreier-Sims algorithm.
 
         Examples
         ========

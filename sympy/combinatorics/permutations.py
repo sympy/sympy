@@ -1510,17 +1510,8 @@ class Permutation(Basic):
                 try:
                     # P([a, b, c])
                     return [i[j] for j in self.array_form]
-                except TypeError:
-                    try:
-                        if isinstance(i, Cycle):
-                            i = Permutation(i.list(), size=self.size)
-                        else:
-                            i = Permutation(
-                                i.array_form, size=self.size)
-                        i = i.array_form
-                        return [i[j] for j in self.array_form]
-                    except:
-                        raise TypeError('unrecognized argument')
+                except:
+                    raise TypeError('unrecognized argument')
         else:
             # P(1, 2, 3)
             return self*Permutation(Cycle(*i), size=self.size)
