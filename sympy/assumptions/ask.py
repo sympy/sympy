@@ -195,6 +195,12 @@ def compute_known_facts(known_facts, known_facts_keys):
     from textwrap import dedent, wrap
 
     fact_string = dedent('''\
+    """
+    This contents of this file is the return value of
+    ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
+    edit this file.
+    """
+
     from sympy.logic.boolalg import And, Not, Or
     from sympy.assumptions.ask import Q
 
