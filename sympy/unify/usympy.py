@@ -47,16 +47,7 @@ def patternify(expr, *wilds):
     >>> pattern = patternify(a + b + c, a, b)
     """
     from sympy.rules.tools import subs
-    keys = list(wilds)
-    values = map(Wild, wilds)
-
-    while keys:
-        k = keys.pop()
-        v = values.pop()
-        rl = subs({k: v})
-        expr = rl(expr)
-        keys = map(rl, keys)
-    return expr
+    return subs(dict(zip(wilds, map(Wild, wilds))))(expr)
 
 def destruct(s):
     """ Turn a SymPy object into a Compound """
