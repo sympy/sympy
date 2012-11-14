@@ -1,7 +1,8 @@
-from sympy import Add, Basic, Wild
+from sympy import Add, Basic
+from sympy import Wild as ExprWild
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (destruct, construct, unify, is_associative,
-        is_commutative, iswild, wildify, wildtoken, patternify)
+        is_commutative, patternify, Wild)
 from sympy.abc import w, x, y, z, n, m, k
 
 def test_destruct():
@@ -22,14 +23,14 @@ def test_nested():
 
 def test_unify():
     expr = Basic(1, 2, 3)
-    a, b, c = map(Wild, 'abc')
+    a, b, c = map(ExprWild, 'abc')
     pattern = Basic(a, b, c)
     assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
     assert list(unify(expr, pattern))     == [{a: 1, b: 2, c: 3}]
 
 def test_unify_commutative():
     expr = Add(1, 2, 3, evaluate=False)
-    a, b, c = map(Wild, 'abc')
+    a, b, c = map(ExprWild, 'abc')
     pattern = Add(a, b, c, evaluate=False)
 
     assert setdicteq(unify(expr, pattern, {}), ({a: 1, b: 2, c: 3},
@@ -51,7 +52,7 @@ def test_listdictseteq():
 
 def test_unify_iter():
     expr = Add(1, 2, 3, evaluate=False)
-    a, b, c = map(Wild, 'abc')
+    a, b, c = map(ExprWild, 'abc')
     pattern = Add(a, c, evaluate=False)
     assert is_associative(destruct(pattern))
     assert is_commutative(destruct(pattern))
@@ -76,13 +77,12 @@ def test_unify_iter():
 def test_hard_match():
     from sympy import sin, cos
     expr = sin(x) + cos(x)**2
-    p, q = map(Wild, 'pq')
+    p, q = map(ExprWild, 'pq')
     pattern = sin(p) + cos(p)**2
     assert list(unify(expr, pattern, {})) == [{p: x}]
 
-def test_wildify():
-    assert iswild(wildify(1))
-    assert wildtoken(wildify(1)) is 1
+def test_Wild():
+    assert Wild(1).arg is 1
 
 def test_patternify():
     assert destruct(patternify(x + y, x)) in (Compound(Add, (Variable(x), y)),

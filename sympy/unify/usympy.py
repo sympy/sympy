@@ -1,6 +1,11 @@
-from sympy import Basic, Wild, Expr, Tuple, Add, Mul, Pow
+from sympy import Basic, Expr, Tuple, Add, Mul, Pow
+from sympy import Wild as ExprWild
+from collections import namedtuple
+
 from core import Compound, Variable
 import core
+
+Wild = namedtuple('Wild', 'arg')
 
 def sympy_associative(op):
     from sympy import MatAdd, MatMul, Union, Intersection
@@ -24,19 +29,10 @@ def is_commutative(x):
     if isinstance(x.op, Expr):
         return _build(x).is_commutative
 
-def wildify(s):
-    return ("WILD!", s)
-
-def iswild(s):
-    return isinstance(s, tuple) and s[0] == "WILD!"
-
-def wildtoken(s):
-    return s[1]
-
 def patternify(expr, *wilds):
     from sympy.rules.tools import subs
     keys = list(wilds)
-    values = map(wildify, wilds)
+    values = map(Wild, wilds)
 
     while keys:
         k = keys.pop()
@@ -48,10 +44,10 @@ def patternify(expr, *wilds):
 
 def destruct(s):
     """ Turn a SymPy object into a Compound Tuple """
-    if isinstance(s, Wild):
+    if isinstance(s, ExprWild):
         return Variable(s)
-    if iswild(s):
-        return Variable(wildtoken(s))
+    if isinstance(s, Wild):
+        return Variable(s.arg)
     if not isinstance(s, Basic) or s.is_Atom:
         return s
     return Compound(s.__class__, tuple(map(destruct, s.args)))
