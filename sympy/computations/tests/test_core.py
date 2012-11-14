@@ -71,6 +71,11 @@ def test_add():
     assert C.inputs == C2.inputs
     assert C.outputs == C2.outputs
 
-def test_eq():
+def test_computation_eq():
     assert TComp('foo', (a,), (b,)) == TComp('foo', (a,), (b,))
     assert TComp('foo', (a,), (b,)) != TComp('foo', (a,), (c,))
+
+def test_computation_eq():
+    A =  TComp('foo', (d,), (f,))
+    B =  TComp('bar', (a, f), (g, h))
+    assert A+B == A+B

@@ -73,6 +73,10 @@ class CompositeComputation(Computation):
     def __str__(self):
         return "[[" + ", ".join(map(str, self.computations)) + "]]"
 
+    def __eq__(self, other):
+        return (type(self) == type(other) and
+                self.computations == other.computations)
+
     def edges(self):
         return itertools.chain(*[c.edges() for c in self.computations])
 
