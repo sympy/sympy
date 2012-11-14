@@ -1,14 +1,14 @@
 from sympy import Add, Basic
 from sympy import Wild as ExprWild
 from sympy.unify.core import Compound, Variable
-from sympy.unify.usympy import (destruct, construct, unify, is_associative,
+from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
         is_commutative, patternify, Wild)
 from sympy.abc import w, x, y, z, n, m, k
 
-def test_destruct():
+def test_deconstruct():
     expr     = Basic(1, 2, 3)
     expected = Compound(Basic, (1, 2, 3))
-    assert destruct(expr) == expected
+    assert deconstruct(expr) == expected
 
 def test_construct():
     expr     = Compound(Basic, (1, 2, 3))
@@ -18,7 +18,7 @@ def test_construct():
 def test_nested():
     expr = Basic(1, Basic(2), 3)
     cmpd = Compound(Basic, (1, Compound(Basic, (2,)), 3))
-    assert destruct(expr) == cmpd
+    assert deconstruct(expr) == cmpd
     assert construct(cmpd) == expr
 
 def test_unify():
@@ -54,8 +54,8 @@ def test_unify_iter():
     expr = Add(1, 2, 3, evaluate=False)
     a, b, c = map(ExprWild, 'abc')
     pattern = Add(a, c, evaluate=False)
-    assert is_associative(destruct(pattern))
-    assert is_commutative(destruct(pattern))
+    assert is_associative(deconstruct(pattern))
+    assert is_commutative(deconstruct(pattern))
 
     result   = list(unify(expr, pattern, {}))
     expected = [{a: 1, c: Add(2, 3, evaluate=False)},
@@ -85,8 +85,8 @@ def test_Wild():
     assert Wild(1).arg is 1
 
 def test_patternify():
-    assert destruct(patternify(x + y, x)) in (Compound(Add, (Variable(x), y)),
-                                              Compound(Add, (y, Variable(x))))
+    assert deconstruct(patternify(x + y, x)) in (
+            Compound(Add, (Variable(x), y)), Compound(Add, (y, Variable(x))))
     pattern = patternify(x**2 + y**2, x)
     assert list(unify(pattern, w**2 + y**2, {})) == [{x: w}]
 
@@ -104,14 +104,14 @@ def test_wilds_in_wilds():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, k)
     pattern = patternify(A*B, 'A', n, m, B) # note that m is in B as well
-    assert destruct(pattern) == Compound(MatMul, (Compound(MatrixSymbol,
+    assert deconstruct(pattern) == Compound(MatMul, (Compound(MatrixSymbol,
         (Variable('A'), Variable(n), Variable(m))), Variable(B)))
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
     # This caused is_commutative and str calls to fail
     expr = x+y*2
-    rebuilt = construct(destruct(expr))
+    rebuilt = construct(deconstruct(expr))
     # Ensure that we can run these commands without causing an error
     str(rebuilt)
     rebuilt.is_commutative

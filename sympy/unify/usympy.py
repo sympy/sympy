@@ -49,7 +49,7 @@ def patternify(expr, *wilds):
     from sympy.rules.tools import subs
     return subs(dict(zip(wilds, map(Wild, wilds))))(expr)
 
-def destruct(s):
+def deconstruct(s):
     """ Turn a SymPy object into a Compound """
     if isinstance(s, ExprWild):
         return Variable(s)
@@ -57,7 +57,7 @@ def destruct(s):
         return Variable(s.arg)
     if not isinstance(s, Basic) or s.is_Atom:
         return s
-    return Compound(s.__class__, tuple(map(destruct, s.args)))
+    return Compound(s.__class__, tuple(map(deconstruct, s.args)))
 
 def construct(t):
     """ Turn a Compound into a SymPy object """
@@ -75,7 +75,7 @@ def rebuild(s):
 
     This removes harm caused by Expr-Rules interactions
     """
-    return construct(destruct(s))
+    return construct(deconstruct(s))
 
 def unify(x, y, s={}, **kwargs):
     """ Structural unification of two expressions/patterns
@@ -97,8 +97,9 @@ def unify(x, y, s={}, **kwargs):
     12
     """
 
-    ds = core.unify(destruct(x), destruct(y), {}, is_associative=is_associative,
-                                                  is_commutative=is_commutative,
-                                                  **kwargs)
+    ds = core.unify(deconstruct(x), deconstruct(y), {},
+                                                is_associative=is_associative,
+                                                is_commutative=is_commutative,
+                                                **kwargs)
     for d in ds:
         yield dict((construct(k), construct(v)) for k, v in d.items())
