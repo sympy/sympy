@@ -31,6 +31,11 @@ class Computation(object):
     def __add__(self, other):
         return CompositeComputation(self, other)
 
+    def __str__(self):
+        ins  = "["+', '.join(self.inputs) +"]"
+        outs = "["+', '.join(self.outputs)+"]"
+        return "%s -> %s -> %s"%(ins, str(self.__class__.__name__), outs)
+
 class CompositeComputation(Computation):
     """ A computation composed of other computations """
 
@@ -59,6 +64,9 @@ class CompositeComputation(Computation):
     def variables(self):
         return unique(itertools.chain(
                         *[c.variables for c in self.computations]))
+
+    def __str__(self):
+        return "[[" + ", ".join(map(str, self.computations)) + "]]"
 
     def edges(self):
         return itertools.chain(*[c.edges() for c in self.computations])
