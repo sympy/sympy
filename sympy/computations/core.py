@@ -20,6 +20,10 @@ class Computation(object):
         outedges = ((self, o) for o in self.outputs)
         return itertools.chain(inedges, outedges)
 
+    @property
+    def variables(self):
+        return itertools.chain(self.inputs, self.outputs)
+
 class CompositeComputation(Computation):
 
     def _input_outputs(self):
@@ -38,6 +42,11 @@ class CompositeComputation(Computation):
     @property
     def outputs(self):
         return self._input_outputs()[1]
+
+    @property
+    def variables(self):
+        return unique(itertools.chain(
+                        *[c.variables for c in self.computations]))
 
     def edges(self):
         return itertools.chain(*[c.edges() for c in self.computations])

@@ -44,6 +44,7 @@ def test_composite():
     assert tuple(C.outputs) == (f,)
     assert tuple(C.edges()) == ((a, A), (b, A), (c, A), (A, d), (d, M), (e, M),
             (M, f))
+    assert set(C.variables) == set((a,b,c,d,e,f))
 
 def test_composite_dag():
     A = TComp('add', (a, b, c), (d,))
