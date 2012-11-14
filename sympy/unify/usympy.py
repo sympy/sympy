@@ -35,12 +35,12 @@ def wildtoken(s):
 
 def patternify(expr, *wilds):
     from sympy.rules.tools import subs
-    keys = wilds
+    keys = list(wilds)
     values = map(wildify, wilds)
 
     while keys:
-        k, keys = keys[0], keys[1:]
-        v, values = values[0], values[1:]
+        k = keys.pop()
+        v = values.pop()
         rl = subs({k: v})
         expr = rl(expr)
         keys = map(rl, keys)
