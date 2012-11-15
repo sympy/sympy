@@ -5,7 +5,7 @@ from sympy.core.basic import Basic
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
-from sympy.core.compatibility import bin, default_sort_key
+from sympy.core.compatibility import bin, default_sort_key, ordered
 
 
 class Boolean(Basic):
@@ -45,6 +45,11 @@ class BooleanFunction(Application, Boolean):
 
     def __call__(self, *args):
         return self.func(*[arg(*args) for arg in self.args])
+
+    @property
+    def _ops(self):
+        return len(self.args) + \
+            sum(getattr(ai, '_ops', 0) for ai in self.args)
 
 
 class And(LatticeOp, BooleanFunction):
@@ -826,6 +831,48 @@ def simplify_logic(expr):
         return POSform(variables, truthtable)
 
 
+def _finger(eq):
+    """
+    Assign a 5-item fingerprint to each symbol in the equation:
+    [
+    # of times it appeared as a Symbol,
+    # of times it appeared as a Not(symbol),
+    # of times it appeared as a Symbol in an And or Or,
+    # of times it appeared as a Not(Symbol) in an And or Or,
+    sum of count_ops of expressions it appeared with,
+    ]
+
+    >>> from sympy.logic.boolalg import _finger as finger
+    >>> from sympy import And, Or, Not
+    >>> from sympy.abc import a, b, x, y
+    >>> eq = Or(And(Not(y), a), And(Not(y), b), And(x, y))
+    >>> dict(finger(eq))
+    {(0, 0, 1, 0, 2): [x], (0, 0, 1, 0, 3): [a, b], (0, 0, 1, 2, 8): [y]}
+
+    So y and x have unique fingerprints, but a and b do not.
+    """
+    f = eq.free_symbols
+    d = dict(zip(f, [[0] * 5 for fi in f]))
+    o = dict([(a, getattr(a, '_ops', 0)) for a in eq.args])
+    for a in eq.args:
+        if a.is_Symbol:
+            d[a][0] += 1
+        elif a.is_Not:
+            d[a.args[0]][1] += 1
+        else:
+            for ai in a.args:
+                if ai.is_Symbol:
+                    d[ai][2] += 1
+                    d[ai][-1] += o[a]
+                else:
+                    d[ai.args[0]][3] += 1
+                    d[ai.args[0]][-1] += o[a]
+    inv = defaultdict(list)
+    for k, v in ordered(d.iteritems()):
+        inv[tuple(v)].append(k)
+    return inv
+
+
 def bool_equal(bool1, bool2, info=False):
     """Return True if the two expressions represent the same logical
     behavior for some correspondence between the variables of each
@@ -876,44 +923,6 @@ def bool_equal(bool1, bool2, info=False):
         Basic.match is not robust enough (see issue 1736) so this is
         a workaround that is valid for simplified boolean expressions
         """
-        def finger(eq):
-            """
-            Assign a 5-item fingerprint to each symbol in the equation:
-            [
-            # of times it appeared as a Symbol,
-            # of times it appeared as a Not(symbol),
-            # of times it appeared as a Symbol in an And or Or,
-            # of times it appeared as a Not(Symbol) in an And or Or,
-            sum of count_ops of expressions it appeared with,
-            ]
-
-            >>> eq
-            Or(And(Not(y), a), And(Not(y), b), And(x, y))
-            >>> dict(finger(eq))
-            {(0, 0, 1, 2, 5): [y], (0, 0, 1, 0, 2): [b, a], (0, 0, 1, 0, 1): [x]}
-
-            So y and x have unique fingerprints, but a and b do not.
-            """
-            f = eq.free_symbols
-            d = dict(zip(f, [[0] * 5 for fi in f]))
-            o = dict([(a, a.count_ops()) for a in eq.args])
-            for a in eq.args:
-                if a.is_Symbol:
-                    d[a][0] += 1
-                elif a.is_Not:
-                    d[a.args[0]][1] += 1
-                else:
-                    for ai in a.args:
-                        if ai.is_Symbol:
-                            d[ai][2] += 1
-                            d[ai][-1] += o[a]
-                        else:
-                            d[ai.args[0]][3] += 1
-                            d[ai.args[0]][-1] += o[a]
-            inv = defaultdict(list)
-            for k, v in d.iteritems():
-                inv[tuple(v)].append(k)
-            return inv
 
         # do some quick checks
         if function1.__class__ != function2.__class__:
@@ -924,8 +933,8 @@ def bool_equal(bool1, bool2, info=False):
             return {function1: function2}
 
         # get the fingerprint dictionaries
-        f1 = finger(function1)
-        f2 = finger(function2)
+        f1 = _finger(function1)
+        f2 = _finger(function2)
 
         # more quick checks
         if len(f1) != len(f2):
