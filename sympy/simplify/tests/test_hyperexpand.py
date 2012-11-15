@@ -210,7 +210,7 @@ def test_plan():
         devise_plan(Hyper_Function([1], ()), Hyper_Function((), ()), z)
     with raises(ValueError):
         devise_plan(Hyper_Function([2], [1]), Hyper_Function([2], [2]), z)
-    with raises(KeyError):
+    with raises(ValueError):
         devise_plan(Hyper_Function([2], []), Hyper_Function([S("1/2")], []), z)
 
     # We cannot use pi/(10000 + n) because polys is insanely slow.

@@ -63,6 +63,7 @@ from sympy.core import (S, Dummy, symbols, sympify, Tuple, expand, I, pi, Mul,
     EulerGamma, ilcm, oo, zoo, expand_func, Add, nan, Expr)
 from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, permutations, product
+from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
@@ -445,38 +446,25 @@ class Hyper_Function(Expr):
     def __call__(self, arg):
         return hyper(self.ap, self.bq, arg)
 
-    def compute_buckets(self, oabuckets=None, obbuckets=None):
+    def compute_buckets(self):
         """
         Partition ``ap`` and ``bq`` mod 1.
 
         Partition parameters ``ap``, ``bq`` into buckets, i.e., return two
         dicts abuckets, bbuckets such that every key in (ab)buckets is a
         rational in the range [0, 1) [represented either by a Rational or a Mod
-        object], and such that (ab)buckets[key] is a tuple of all elements of
+        object], and such that (ab)buckets[key] is a list of all elements of
         respectively ``ap`` or ``bq`` that are congruent to ``key`` modulo 1.
-
-        If oabuckets, obbuckets is specified, try to use the same Mod objects
-        for parameters where possible.
 
         >>> from sympy.simplify.hyperexpand import Hyper_Function
         >>> from sympy import S
         >>> ap = (S(1)/2, S(1)/3, S(-1)/2, -2)
         >>> bq = (1, 2)
         >>> Hyper_Function(ap, bq).compute_buckets()
-        ({0: (-2,), 1/3: (1/3,), 1/2: (1/2, -1/2)}, {0: (1, 2)})
+        ({0: [-2], 1/3: [1/3], 1/2: [1/2, -1/2]}, {0: [1, 2]})
         """
-        # TODO this should probably be cached somewhere
-        abuckets = defaultdict(tuple)
-        bbuckets = defaultdict(tuple)
-
-        # NOTE the new Mod object does so much canonization that we can ignore
-        #      o(ab)buckets.
-
-        for params, bucket in [(self.ap, abuckets), (self.bq, bbuckets)]:
-            for p in params:
-                bucket[Mod(p, 1)] += (p, )
-
-        return dict(abuckets), dict(bbuckets)
+        mod1 = lambda x: Mod(x, 1)
+        return sift(self.ap, mod1), sift(self.bq, mod1)
 
     def build_invariants(self):
         """
@@ -508,15 +496,14 @@ class Hyper_Function(Expr):
         """
         abuckets, bbuckets = self.compute_buckets()
 
-        gamma = 0
-        if S(0) in abuckets:
-            gamma = len(filter(lambda x: x < 0, abuckets[S(0)]))
+        gamma = sum(bool(x.is_negative) for x in abuckets[S(0)])
 
         def tr(bucket):
             bucket = bucket.items()
             if not any(isinstance(x[0], Mod) for x in bucket):
                 bucket.sort(key=lambda x: x[0])
-            bucket = tuple(map(lambda x: (x[0], len(x[1])), bucket))
+            bucket = tuple([(mod, len(values)) for mod, values in bucket if
+                    values])
             return bucket
 
         return (gamma, tr(abuckets), tr(bbuckets))
@@ -525,11 +512,10 @@ class Hyper_Function(Expr):
         """ Estimate how many steps it takes to reach ``func`` from self.
             Return -1 if impossible. """
         oabuckets, obbuckets = self.compute_buckets()
-        abuckets, bbuckets = func.compute_buckets(oabuckets, obbuckets)
+        abuckets, bbuckets = func.compute_buckets()
 
         gt0 = lambda x: (x > 0) is True
-        if S(0) in abuckets and (not S(0) in oabuckets or
-            len(filter(gt0, abuckets[S(0)])) !=
+        if (len(filter(gt0, abuckets[S(0)])) !=
                 len(filter(gt0, oabuckets[S(0)]))):
             return -1
 
@@ -1601,7 +1587,7 @@ def devise_plan(target, origin, z):
     <Decrement upper index #1 of [-1, 3], [4].>, <Increment upper -2.>]
     """
     abuckets, bbuckets = target.compute_buckets()
-    nabuckets, nbbuckets = origin.compute_buckets(abuckets, bbuckets)
+    nabuckets, nbbuckets = origin.compute_buckets()
 
     if len(abuckets.keys()) != len(nabuckets.keys()) or \
             len(bbuckets.keys()) != len(nbbuckets.keys()):
@@ -1694,7 +1680,7 @@ def devise_plan(target, origin, z):
 def try_shifted_sum(func, z):
     """ Try to recognise a hypergeometric sum that starts from k > 0. """
     abuckets, bbuckets = func.compute_buckets()
-    if not S(0) in abuckets or len(abuckets[S(0)]) != 1:
+    if len(abuckets[S(0)]) != 1:
         return None
     r = abuckets[S(0)][0]
     if r <= 0:
@@ -1744,8 +1730,8 @@ def try_polynomial(func, z):
     """ Recognise polynomial cases. Returns None if not such a case.
         Requires order to be fully reduced. """
     abuckets, bbuckets = func.compute_buckets()
-    a0 = list(abuckets.get(S(0), []))
-    b0 = list(bbuckets.get(S(0), []))
+    a0 = abuckets[S(0)]
+    b0 = bbuckets[S(0)]
     a0.sort()
     b0.sort()
     al0 = filter(lambda x: x <= 0, a0)
@@ -1787,26 +1773,12 @@ def try_lerchphi(func):
     # First we need to figure out if the summation coefficient is a rational
     # function of the summation index, and construct that rational function.
     abuckets, bbuckets = func.compute_buckets()
-    # Update all the keys in bbuckets to be the same Mod objects as abuckets.
-    akeys = abuckets.keys()
-    bkeys = []
-    for key in bbuckets.keys():
-        new = key
-        for a in akeys:
-            if a == key:
-                new = a
-                break
-        bkeys += [(new, key)]
-    bb = {}
-    for new, key in bkeys:
-        bb[new] = bbuckets[key]
-    bbuckets = bb
 
     paired = {}
     for key, value in abuckets.items():
         if key != 0 and not key in bbuckets:
             return None
-        bvalue = bbuckets.get(key, [])
+        bvalue = bbuckets[key]
         paired[key] = (list(value), list(bvalue))
         bbuckets.pop(key, None)
     if bbuckets != {}:
