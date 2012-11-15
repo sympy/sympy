@@ -310,6 +310,37 @@ def test_canonicalize1():
     can = canonicalize(g, range(4,12), 0, (base3, gens3, 4, 0))
     assert can == [0,4,6, 1,5,8, 2,3,10, 7,9,11, 12,13]
 
+    # A commuting symmetric, B anticommuting
+    # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
+    # ord = [d0,-d0,d1,-d1,d2,-d2,d3,-d3]
+    # g = [0,2,4,5,7,3,1,6,8,9]
+    # in this esxample and in the next three,
+    # renaming dummy indices and using symmetry of A,
+    # T = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3
+    # can = 0
+    g = Permutation([0,2,4,5,7,3,1,6,8,9])
+    can = canonicalize(g, range(8), 0, (base3, gens3,2,0), (base2a,gens2a,1,0))
+    assert can == 0
+    # A anticommuting symmetric, B anticommuting
+    # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
+    # T_c = A^{d0 d1 d2} * A_{d0 d1}^d3 * B_{d2 d3}
+    # can = [0,2,4, 1,3,6, 5,7, 8,9]
+    can = canonicalize(g, range(8), 0, (base3, gens3,2,1), (base2a,gens2a,1,0))
+    assert can == [0,2,4, 1,3,6, 5,7, 8,9]
+    # A anticommuting symmetric, B anticommuting, antisymmetric metric
+    # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
+    # T_c = -A^{d0 d1 d2} * A_{d0 d1}^d3 * B_{d2 d3}
+    # can = [0,2,4, 1,3,6, 5,7, 9,8]
+    can = canonicalize(g, range(8), 1, (base3, gens3,2,1), (base2a,gens2a,1,0))
+    assert can == [0,2,4, 1,3,6, 5,7, 9,8]
+
+    # A anticommuting symmetric, B anticommuting, no metric symmetry
+    # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
+    # T_c = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3
+    # can = [0,2,4, 1,3,7, 5,6, 8,9]
+    can = canonicalize(g, range(8), None, (base3, gens3,2,1), (base2a,gens2a,1,0))
+    assert can == [0,2,4,1,3,7,5,6,8,9]
+
     # Gamma anticommuting
     # Gamma_{mu nu} * gamma^rho * Gamma^{nu mu alpha}
     # ord = [alpha, rho, mu,-mu,nu,-nu]

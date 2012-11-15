@@ -1375,8 +1375,8 @@ class Permutation(Basic):
         if self.size != h.size:
             raise ValueError("The permutations must be of equal size.")
         a = [None]*self.size
-        h = h.array_form
-        p = self.array_form
+        h = h._array_form
+        p = self._array_form
         for i in range(self.size):
             a[h[i]] = h[p[i]]
         return _af_new(a)
@@ -1462,7 +1462,7 @@ class Permutation(Basic):
         >>> p*~p == ~p*p == Permutation([0, 1, 2, 3])
         True
         """
-        return _af_new(_af_invert(self.array_form))
+        return _af_new(_af_invert(self._array_form))
 
     def __iter__(self):
         """Yield elements from array form.
@@ -1505,11 +1505,11 @@ class Permutation(Basic):
             i = i[0]
             try:
                 # P(1)
-                return self.array_form[i]
+                return self._array_form[i]
             except TypeError:
                 try:
                     # P([a, b, c])
-                    return [i[j] for j in self.array_form]
+                    return [i[j] for j in self._array_form]
                 except:
                     raise TypeError('unrecognized argument')
         else:
@@ -1669,20 +1669,17 @@ class Permutation(Basic):
             return None
         return Perm.unrank_nonlex(self.size, r + 1)
 
-    def rank(self, i=None):
+    def rank(self):
         """
-        Returns the lexicographic rank of the permutation (default) or
-        the ith ranked permutation of self.
+        Returns the lexicographic rank of the permutation.
 
         Examples
         ========
 
         >>> from sympy.combinatorics.permutations import Permutation
-        >>> p = Permutation([0,1,2,3])
+        >>> p = Permutation([0, 1, 2, 3])
         >>> p.rank()
         0
-        >>> p.rank(23) == Permutation([3, 2, 1, 0])
-        True
         >>> p = Permutation([3, 2, 1, 0])
         >>> p.rank()
         23
@@ -1692,8 +1689,6 @@ class Permutation(Basic):
 
         next_lex, unrank_lex, cardinality, length, order, size
         """
-        if i is not None:
-            return self.unrank_lex(self.size, i)
         if not self._rank is None:
             return self._rank
         rank = 0

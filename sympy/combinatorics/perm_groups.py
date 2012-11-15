@@ -3229,18 +3229,18 @@ def _orbit(degree, generators, alpha, action='tuples'):
     ========
 
     >>> from sympy.combinatorics import Permutation
-    >>> from sympy.combinatorics.perm_groups import PermutationGroup
+    >>> from sympy.combinatorics.perm_groups import PermutationGroup, _orbit
     >>> a = Permutation([1,2,0,4,5,6,3])
     >>> G = PermutationGroup([a])
-    >>> G.orbit(0)
+    >>> _orbit(G.degree, G.generators, 0)
     set([0, 1, 2])
-    >>> G.orbit([0,4], 'union')
+    >>> _orbit(G.degree, G.generators, [0, 4], 'union')
     set([0, 1, 2, 3, 4, 5, 6])
 
     See Also
     ========
 
-    orbit_transversal
+    orbit, orbit_transversal
 
     """
     if not hasattr(alpha, '__getitem__'):

@@ -152,28 +152,24 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     """
     Butler-Portugal algorithm for tensor canonicalization with dummy indices
 
-      dummies can be a list or a list of lists;
-              in the first case it is a list of dummy indices;
-              in the second case it is a list of lists of dummy indices,
+      dummies list of lists of dummy indices,
               one list for each type of index;
               the dummy indices must come after the free indices,
               and put in order contravariant, covariant
               [d0, -d0, d1,-d1,...]
 
-      sym     can be an integer or a list;
-              in the first case it is the symmetry of the dummy index metric;
-              in the second case it is the list of the summetries of the
-              index metric for each type
+      sym     list of the symmetries of the index metric for each type
 
               allowed symmetries of the contructing metric
                 0     symmetric
                 1     antisymmetric
                 None  no symmetry (not implemented yet)
 
-      sgens   generators of the group of slot symmetries of a minimal BSGS
+      b_S     base of the slot symmetry BSGS
+      sgens   generators of the slot symmetries of a minimal BSGS
+      S_transversals transversals for the slot BSGS
+
       g       permutation representing the tensor
-      sgs     if it is not None, sgens is a strong generating set of S
-              sgs is the tuple (S_transversals, S_base)
 
     A tensor with dummy indices can be represented in a number
     of equivalent ways which typically grows exponentially with
@@ -184,11 +180,35 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     The Butler-Portugal algorithm [3] is an efficient algorithm to
     put tensors in canonical form, solving the above problem.
 
+    Portugal observed that a tensor can be represented by a permutation,
+    and that the class of tensors equivalent to it under slot and dummy
+    symmetries is equivalent to the double coset `D*g*S`
+    (Note: in this documentation we use the conventions for multiplication
+    of permutations p, q with (p*q)(i) = p[q[i]] which is opposite
+    to the one used in the Permutation class)
+
+    Using the algorithm by Butler to find a representative of the
+    double coset one can find a canonical form for the tensor.
+
+    To see this correspondence,
+    let `g` be a permutation in array form; a tensor with indices `ind`
+    (the indices including both the contravariant and the covariant ones)
+    can be written as `t = T(ind[g[0],..., ind[g[n-1]])', where `n= len(ind)`;
+    `g` has size `n + 2`, the last two indices for the sign of the tensor
+    (trick introduced in [4]).
+    A slot symmetry transformation `s` is a permutation acting on the slots
+    `t --> T(ind[(g*s)[0]],..., ind[(g*s)[n-1]])`
+    A dummy symmetry transformation acts on `ind`
+    `t --> T(ind[(d*g)[0]],..., ind[(d*g)[n-1]])`
+    Being interested only in the traansformations of the tensor under
+    these symmetries, one can represent the tensor by `g`, which transforms
+    as `g --> d*g*s`, so it belongs to the coset `D*g*S`.
+
     Let us explain the conventions by an example.
 
-    Given a tensor T^{d3 d2 d1}_{d1 d2 d3}
-    where T^{a0,a1,a2,a3,a4,a5} = -T^{a2,a1,a0,a3,a4,a5}
-                                = -{Ta4,a1,a2,a3,a0,a5}
+    Given a tensor T^{d3 d2 d1}_{d1 d2 d3} with the slot symmetries
+          `T^{a0,a1,a2,a3,a4,a5} = -T^{a2,a1,a0,a3,a4,a5}`
+                                 `= -{Ta4,a1,a2,a3,a0,a5}`
     and symmetric metric, find the tensor equivalent to it which
     is the lowest under the ordering of indices:
        lexicographic ordering d1, d2, d3
@@ -209,7 +229,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
 
     where the last two indices are for the sign
 
-    sgens = [Permutation([2,1,0,3,4,5,7,6]), Permutation([4,1,2,3,0,5,7,6])]
+    sgens = [Permutation(0,2)(6,7), Permutation(0,4)(6,7)]
 
     sgens[0] is the slot symmetry -(0,2)
     T^{a0,a1,a2,a3,a4,a5} = -T^{a2,a1,a0,a3,a4,a5};    -(0,2)
@@ -255,9 +275,9 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
 
 
     The algorithm keeps a TAB of elements (s_i, d_i, h_i)
-    where h_i = d_i*g*s_i satisfying h_i*b_j = p_j for 0 <= j < i
+    where h_i = d_i*g*s_i satisfying h_i[j] = p_j for 0 <= j < i
     starting from s_0 = id, d_0 = id, h_0 = g
-    The equations h_0*b_0 = p_0, h_1*b_1 = p_1 are solved in this order,
+    The equations h_0[0] = p_0, h_1[1] = p_1,... are solved in this order,
     choosing each time the lowest possible value of p_i
     For j < i
     d_i*g*s_i*S_{b_0,...,b_{i-1}}*b_j = D_{p_0,...,p_{i-1}}*p_j
@@ -273,17 +293,28 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     h_{i+1}*b_i = d_{i+1}*g*s_{i+1}*b_i = p_i
 
     h_n*b_j = p_j for all j, so that h_n is the solution
+    Add the found (s, d, h) to TAB1.
+    At the end of the iteration sort TAB1 with respect to the `h`;
+    if there are two consecutive `h` in TAB1 which differ only for the
+    sign, the tensor is zero, so return 0;
+    if there are two consecutive `h` which are equal, keep only one.
 
-    This algorithm differs slightly from the original algorithm [3];
+    Then stabilize the slot generators under `i` and the dummy generators
+    under `p_i`.
+
+    It is important that the slot BSGS has lexicographic minimal base,
+    otherwise there is an `i` which does not belong to the slot base
+    for which `p_i` is fixed by the dummy symmetry only, and then
+    the slot generators are stabilized under `i`, destroying the
+    sequence of slot stabilizers.
+
+    This algorithm differs slightly from the original algorithm [3]:
     i) the canonical form is minimal lexicographically, while in [3]
-       it is minimal with respect to the base ordering;
+       it is minimal with respect to the base ordering; here
        it is required that the BSGS has minimal base under lexicographic order
     ii) a simpler data structure is used
     iii) equal tensors `h` are eliminated from TAB
 
-    Note: in this documentation we use the conventions for multiplication
-    of permutations p, q with (p*q)(i) = p[q[i]] which is opposite
-    to the one used in the Permutation class.
 
     Examples
     ========
@@ -411,7 +442,7 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
                     if p_i != dg[j]:
                         continue
                     d1 = idn
-                #assert d1[p_i] == dg[j]  # invariant
+                assert d1[dg[j]] == p_i  # invariant
                 d1 = [d1[ix] for ix in d]
                 h1 = [d1[g[ix]] for ix in s1]
                 #assert h1[b] == p_i  # invariant
@@ -595,13 +626,14 @@ def canonicalize(g, dummies, msym, *v):
     [0, 2, 1, 3, 4, 5]
     """
     from sympy.combinatorics.testutil import canonicalize_naive
-    # check on msym; TODO case in which it is a tuple
     if not isinstance(msym, list):
         if not msym in [0, 1, None]:
             raise ValueError('msym must be 0, 1 or None')
         num_types = 1
     else:
         num_types = len(msym)
+        if not all(msymx in [0,1,None] for msymx in msym):
+            raise ValueError('msym entries must be 0, 1 or None')
         if len(dummies) != num_types:
             raise ValueError('dummies and msym must have the same number of elements')
     size = g.size
@@ -612,7 +644,6 @@ def canonicalize(g, dummies, msym, *v):
         # check that the BSGS is minimal;
         # this property is used in double_coset_can_rep;
         # if it is not minimal use canonicalize_naive
-        # TODO use baseswap to find a minimal BSGS if this occurs.
         if not _is_minimal_bsgs(base_i, gens_i):
             mbsgs = get_minimal_bsgs(base_i, gens_i)
             if not mbsgs:
@@ -654,7 +685,6 @@ def canonicalize(g, dummies, msym, *v):
     for i in range(len(v)):
         free_i = []
         base_i, gens_i, n_i, sym_i = v[i]
-        # TODO deal with case gens_i == []
         len_tens = len(gens_i[0]) - 2
         # for each component tensor get a list od fixed islots
         for j in range(n_i):
@@ -926,8 +956,8 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
         size += num_indices
     nr = size - 2
     res_gens = [h for h in res_gens if h != id_af]
-    # if sym == None there are no generators for commuting tensors
-    if sym == None:
+    # if sym there are no commuting tensors stop here
+    if sym == None or not no_free:
         if not res_gens:
             res_gens = [id_af]
         return size, res_base, res_gens
