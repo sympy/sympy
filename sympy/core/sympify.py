@@ -100,6 +100,18 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     >>> sympify("O + 1", locals=ns)
     O + 1
 
+    If you want *all* single-letter and Greek-letter variables to be symbols
+    then you can use the clashing-symbols dictionaries that have been defined
+    there as private variables: _clash1 (single-letter variables), _clash2
+    (the multi-letter Greek names) or _clash (both single and multi-letter
+    names that are defined in abc).
+
+    >>> from sympy.abc import _clash1
+    >>> _clash1
+    {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
+    >>> sympify('C & Q', _clash1)
+    And(C, Q)
+
     Strict
     ------
 
