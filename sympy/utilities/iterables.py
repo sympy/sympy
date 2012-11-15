@@ -850,33 +850,43 @@ def multiset_partitions(multiset, m, _patch=True):
                         yield [[multiset[i] for i in j] for j in k]
         return patch()
 
-    cache = {}
+    cache = set()
 
-    def visit(n, a):
+    def visit():
+        if len(set(a)) != m:  # possible when an a[i] goes to 0
+            return None
+
         ps = [[] for i in xrange(m)]
         for j in xrange(n):
-            ps[a[j + 1]].append(multiset[j])
-        canonical = tuple(tuple(j) for j in ps)
-        if not canonical in cache:
-            cache[canonical] = 1
-            return ps
+            ps[a[j + 1]].append(j)
 
-    def f(m_arr, n_arr, sigma, n, a):
+        if canon:
+            canonical = tuple(sorted(tuple(
+                [canon[i] for i in j]) for j in ps))
+        else:
+            canonical = tuple(tuple(j) for j in sorted(ps))
+
+        if canonical not in cache:
+            cache.add(canonical)
+            return [[multiset[j] for j in p] for p in ps]
+
+    def f(m_arr, n_arr, sigma=0):
         if m_arr <= 2:
-            v = visit(n, a)
+            v = visit()
             if v is not None:
                 yield v
         else:
-            for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
-                yield v
+            for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2):
+                if v is not None:
+                    yield v
         if n_arr == m_arr + 1:
             a[m_arr] = m_arr - 1
-            v = visit(n, a)
+            v = visit()
             if v is not None:
                 yield v
             while a[n_arr] > 0:
-                a[n_arr] = a[n_arr] - 1
-                v = visit(n, a)
+                a[n_arr] -= 1
+                v = visit()
                 if v is not None:
                     yield v
         elif n_arr > m_arr + 1:
@@ -885,39 +895,39 @@ def multiset_partitions(multiset, m, _patch=True):
             else:
                 a[m_arr] = m_arr - 1
             func = [f, b][(a[n_arr] + sigma) % 2]
-            for v in func(m_arr, n_arr - 1, 0, n, a):
+            for v in func(m_arr, n_arr - 1):
                 if v is not None:
                     yield v
             while a[n_arr] > 0:
-                a[n_arr] = a[n_arr] - 1
+                a[n_arr] -= 1
                 func = [f, b][(a[n_arr] + sigma) % 2]
-                for v in func(m_arr, n_arr - 1, 0, n, a):
+                for v in func(m_arr, n_arr - 1):
                     if v is not None:
                         yield v
 
-    def b(m_arr, n_arr, sigma, n, a):
+    def b(m_arr, n_arr, sigma=0):
         if n_arr == m_arr + 1:
-            v = visit(n, a)
+            v = visit()
             if v is not None:
                 yield v
             while a[n_arr] < m_arr - 1:
-                a[n_arr] = a[n_arr] + 1
-                v = visit(n, a)
+                a[n_arr] += 1
+                v = visit()
                 if v is not None:
                     yield v
             a[m_arr] = 0
-            v = visit(n, a)
+            v = visit()
             if v is not None:
                 yield v
         elif n_arr > m_arr + 1:
             func = [f, b][(a[n_arr] + sigma) % 2]
-            for v in func(m_arr, n_arr - 1, 0, n, a):
+            for v in func(m_arr, n_arr - 1):
                 if v is not None:
                     yield v
             while a[n_arr] < m_arr - 1:
-                a[n_arr] = a[n_arr] + 1
+                a[n_arr] += 1
                 func = [f, b][(a[n_arr] + sigma) % 2]
-                for v in func(m_arr, n_arr - 1, 0, n, a):
+                for v in func(m_arr, n_arr - 1):
                     if v is not None:
                         yield v
             if (m_arr + sigma) % 2 == 1:
@@ -925,19 +935,34 @@ def multiset_partitions(multiset, m, _patch=True):
             else:
                 a[m_arr] = 0
         if m_arr <= 2:
-            v = visit(n, a)
+            v = visit()
             if v is not None:
                 yield v
         else:
-            for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
+            for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2):
                 if v is not None:
                     yield v
 
     n = len(multiset)
+
+    # if there are repeated elements, sort them and define the
+    # canon dictionary that will be used to create the cache key
+    # in case elements of the multiset are not hashable
+    canon = {}
+    for i, mi in enumerate(multiset):
+        canon[i] = multiset.index(mi)
+    if len(set(canon.values())) != n:
+        multiset.sort()
+        canon = {}
+        for i, mi in enumerate(multiset):
+            canon[i] = multiset.index(mi)
+    else:
+        canon = None
+
     a = [0] * (n + 1)
     for j in xrange(1, m + 1):
         a[n - m + j] = j - 1
-    return f(m, n, 0, n, a)
+    return f(m, n)
 
 
 def partitions(n, m=None, k=None):
