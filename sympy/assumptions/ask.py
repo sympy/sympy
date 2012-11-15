@@ -191,6 +191,10 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
 def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
     assumptions system.
+
+    This function is typically applied to the variables
+    ``known_facts`` and ``known_facts_keys`` defined at the bottom of
+    this file.
     """
     from textwrap import dedent, wrap
 
