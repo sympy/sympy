@@ -16,6 +16,8 @@ A more traditional version can be found here
 http://aima.cs.berkeley.edu/python/logic.html
 """
 
+from sympy.utilities.iterables import kbins
+
 class Compound(object):
     def __init__(self, op, args):
         self.op = op
@@ -58,9 +60,6 @@ class CondVariable(object):
     def __str__(self):
         return "CondVar(%s)" % str(self.arg)
 
-from sys import stdout
-from sympy.utilities.iterables import kbins
-
 def unify(x, y, s={}, **fns):
     """ Unify two expressions
 
@@ -74,6 +73,7 @@ def unify(x, y, s={}, **fns):
     =======
 
     >>> from sympy.unify.core import unify, Compound, Variable
+    >>> from sympy.core.compatibility import next
     >>> expr    = Compound("Add", ("x", "y"))
     >>> pattern = Compound("Add", ("x", Variable("a")))
     >>> next(unify(expr, pattern, {}))

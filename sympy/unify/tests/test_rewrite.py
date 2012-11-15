@@ -1,6 +1,7 @@
 from sympy.unify.rewrite import rewriterule
 from sympy import Wild, sin, cos
 from sympy.abc import x, y, z
+from sympy.core.compatibility import next
 
 p, q = Wild('p'), Wild('q')
 
