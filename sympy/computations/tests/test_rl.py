@@ -1,5 +1,5 @@
 from sympy.computations.core import Computation, unique, CompositeComputation
-from sympy.computations.rl import flatten, unpack
+from sympy.rules.rl import flatten, unpack
 
 a,b,c,d,e,f,g,h = 'abcdefgh'
 

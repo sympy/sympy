@@ -1,4 +1,5 @@
 import itertools
+from sympy import Basic
 
 def unique(seq):
     seen = set()
@@ -10,7 +11,7 @@ def unique(seq):
 def intersect(a, b):
     return not not set(a).intersection(set(b))
 
-class Computation(object):
+class Computation(Basic):
     """ An interface for a Computation
 
     Computations have inputs and outputs
@@ -36,16 +37,11 @@ class Computation(object):
         outs = "["+', '.join(self.outputs)+"]"
         return "%s -> %s -> %s"%(ins, str(self.__class__.__name__), outs)
 
-    def __eq__(self, other):
-        return (type(self) == type(other) and
-                self.inputs == other.inputs and
-                self.outputs == other.outputs)
 
 class CompositeComputation(Computation):
     """ A computation composed of other computations """
 
-    def __init__(self, *computations):
-        self.computations = computations
+    computations = property(lambda self: self.args)
 
     def _input_outputs(self):
         """ Find the inputs and outputs of the complete computation """
@@ -72,10 +68,6 @@ class CompositeComputation(Computation):
 
     def __str__(self):
         return "[[" + ", ".join(map(str, self.computations)) + "]]"
-
-    def __eq__(self, other):
-        return (type(self) == type(other) and
-                self.computations == other.computations)
 
     def edges(self):
         return itertools.chain(*[c.edges() for c in self.computations])
