@@ -46,11 +46,6 @@ class BooleanFunction(Application, Boolean):
     def __call__(self, *args):
         return self.func(*[arg(*args) for arg in self.args])
 
-    @property
-    def _ops(self):
-        return len(self.args) + \
-            sum(getattr(ai, '_ops', 0) for ai in self.args)
-
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -839,7 +834,8 @@ def _finger(eq):
     # of times it appeared as a Not(symbol),
     # of times it appeared as a Symbol in an And or Or,
     # of times it appeared as a Not(Symbol) in an And or Or,
-    sum of count_ops of expressions it appeared with,
+    sum of the number of arguments with which it appeared,
+    counting Symbol as 1 and Not(Symbol) as 2
     ]
 
     >>> from sympy.logic.boolalg import _finger as finger
@@ -853,20 +849,20 @@ def _finger(eq):
     """
     f = eq.free_symbols
     d = dict(zip(f, [[0] * 5 for fi in f]))
-    o = dict([(a, getattr(a, '_ops', 0)) for a in eq.args])
     for a in eq.args:
         if a.is_Symbol:
             d[a][0] += 1
         elif a.is_Not:
             d[a.args[0]][1] += 1
         else:
+            o = len(a.args) + sum(ai.func is Not for ai in a.args)
             for ai in a.args:
                 if ai.is_Symbol:
                     d[ai][2] += 1
-                    d[ai][-1] += o[a]
+                    d[ai][-1] += o
                 else:
                     d[ai.args[0]][3] += 1
-                    d[ai.args[0]][-1] += o[a]
+                    d[ai.args[0]][-1] += o
     inv = defaultdict(list)
     for k, v in ordered(d.iteritems()):
         inv[tuple(v)].append(k)
