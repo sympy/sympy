@@ -20,27 +20,43 @@ class Compound(object):
     def __init__(self, op, args):
         self.op = op
         self.args = args
+
     def __eq__(self, other):
-        return type(self) == type(other) and self.op == other.op and self.args == other.args
+        return (type(self) == type(other) and self.op == other.op and
+                self.args == other.args)
+
     def __hash__(self):
         return hash((type(self), self.op, self.args))
+
+    def __str__(self):
+        return "%s[%s]" % (str(self.op), ', '.join(map(str, self.args)))
 
 class Variable(object):
     def __init__(self, arg):
         self.arg = arg
+
     def __eq__(self, other):
         return type(self) == type(other) and self.arg == other.arg
+
     def __hash__(self):
         return hash((type(self), self.arg))
+
+    def __str__(self):
+        return "Var(%s)" % str(self.arg)
 
 class CondVariable(object):
     def __init__(self, arg, valid):
         self.arg = arg
         self.valid = valid
+
     def __eq__(self, other):
         return type(self) == type(other) and self.arg == other.arg and self.valid == other.valid
+
     def __hash__(self):
         return hash((type(self), self.arg, self.valid))
+
+    def __str__(self):
+        return "CondVar(%s)" % str(self.arg)
 
 from sys import stdout
 from sympy.utilities.iterables import kbins
@@ -61,7 +77,7 @@ def unify(x, y, s={}, **fns):
     >>> expr    = Compound("Add", ("x", "y"))
     >>> pattern = Compound("Add", ("x", Variable("a")))
     >>> next(unify(expr, pattern, {}))
-    {('a',): 'y'}
+    {Var(a): 'y'}
     """
     if x == y:
         yield s
