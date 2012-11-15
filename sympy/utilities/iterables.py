@@ -809,160 +809,126 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
-def multiset_partitions(multiset, m, _patch=True):
+def multiset_partitions(multiset, m):
     """
-    This is the algorithm for generating multiset partitions
-    as described by Knuth in TAOCP Vol 4.
-
-    Given a multiset, this algorithm visits all of its
-    m-partitions, that is, all partitions having exactly size m
-    using auxiliary arrays as described in the book.
+    Return unique partitions of the given multiset (in list form).
+    If ``multiset`` is an integer, the partitions of ``range(multiset)``
+    will be returned.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import multiset_partitions
     >>> list(multiset_partitions([1,2,3,4], 2))
-    [[[1], [2, 3, 4]], [[1, 2], [3, 4]], [[1, 2, 3], [4]],
-    [[1, 2, 4], [3]], [[1, 3], [2, 4]], [[1, 3, 4], [2]], [[1, 4], [2, 3]]]
+    [[[1, 2, 3], [4]], [[1, 2, 4], [3]], [[1, 2], [3, 4]],
+    [[1, 3, 4], [2]], [[1, 3], [2, 4]], [[1, 4], [2, 3]],
+    [[1], [2, 3, 4]]]
     >>> list(multiset_partitions([1,2,3,4], 1))
     [[[1, 2, 3, 4]]]
-    >>> list(multiset_partitions([1,2,3,4], 4))
-    [[[1], [2], [3], [4]]]
+
+    The input is not sorted, but only unique partitions are returned:
+
+    >>> list(multiset_partitions([1, 2, 2, 1], 2))
+    [[[1, 2, 2], [1]], [[1, 2, 1], [2]], [[1, 2], [2, 1]], [[1, 1], [2, 2]]]
+    >>> list(multiset_partitions([1, 1, 2, 2], 2))
+    [[[1, 1, 2], [2]], [[1, 1], [2, 2]], [[1, 2, 2], [1]], [[1, 2], [1, 2]]]
 
     See Also
     ========
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     """
-    if _patch:
-        # this is a temporary fix; there is a problem in the
-        # un-patched code: if you try multiset_partitions(range(5), 2)
-        # you will only get 10 of the 15 partitions with it. The
-        # patched version returns partitions in a slightly different
-        # order, so when it is removed, some of the doctest and tests
-        # will have to be changed back.
-        def patch():
-            for k in kbins(range(len(multiset)), m, 11):
-                if all(k[i][0] > k[i - 1][0] for i in range(1, len(k))):
-                    if all(all(ki[i] > ki[i - 1]
-                            for i in range(1, len(ki))) for ki in k):
-                        yield [[multiset[i] for i in j] for j in k]
-        return patch()
+    def nexequ(n, nc, p, q, mtc):
+        """Update p and q for given nc.
 
-    cache = set()
+        input for mtc = 0::
 
-    def visit():
-        if len(set(a)) != m:  # possible when an a[i] goes to 0
-            return None
+            p = [0]*(n+1)
+            q = []
+            nc = None
 
-        ps = [[] for i in xrange(m)]
-        for j in xrange(n):
-            ps[a[j + 1]].append(j)
+        input for mtc = 1::
 
-        if canon:
-            canonical = tuple(sorted(tuple(
-                [canon[i] for i in j]) for j in ps))
+            nc, p, q from last call to nexequ
+
+        Reference: Nijenhuis, Albert and Wilf, Herbert,
+        Combinatorial Algorithms, 2nd ed, page 91
+        """
+        if not mtc:
+            nc = 1
+            q[:] = [1]*(n + 1)
+            p[1] = n
         else:
-            canonical = tuple(tuple(j) for j in sorted(ps))
+            m=n
+            while 1:
+                l=q[m]
+                if p[l] != 1:
+                    break
+                q[m]=1
+                m-=1
+            nc+=m-n
+            p[1]+=n-m
+            if l==nc:
+                nc+=1
+                p[nc]=0
+            q[m]=l+1
+            p[l]-=1
+            p[l+1]+=1
+        return nc
 
-        if canonical not in cache:
-            cache.add(canonical)
-            return [[multiset[j] for j in p] for p in ps]
+    if type(multiset) is int:
+        n = multiset
+        multiset = range(multiset)
+        if m == 1:
+            yield [multiset[:]]
+        canon = 0
+    else:
+        if m == 1:
+            yield [multiset[:]]
 
-    def f(m_arr, n_arr, sigma=0):
-        if m_arr <= 2:
-            v = visit()
-            if v is not None:
-                yield v
-        else:
-            for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2):
-                if v is not None:
-                    yield v
-        if n_arr == m_arr + 1:
-            a[m_arr] = m_arr - 1
-            v = visit()
-            if v is not None:
-                yield v
-            while a[n_arr] > 0:
-                a[n_arr] -= 1
-                v = visit()
-                if v is not None:
-                    yield v
-        elif n_arr > m_arr + 1:
-            if (m_arr + sigma) % 2 == 1:
-                a[n_arr - 1] = m_arr - 1
-            else:
-                a[m_arr] = m_arr - 1
-            func = [f, b][(a[n_arr] + sigma) % 2]
-            for v in func(m_arr, n_arr - 1):
-                if v is not None:
-                    yield v
-            while a[n_arr] > 0:
-                a[n_arr] -= 1
-                func = [f, b][(a[n_arr] + sigma) % 2]
-                for v in func(m_arr, n_arr - 1):
-                    if v is not None:
-                        yield v
+        n = len(multiset)
 
-    def b(m_arr, n_arr, sigma=0):
-        if n_arr == m_arr + 1:
-            v = visit()
-            if v is not None:
-                yield v
-            while a[n_arr] < m_arr - 1:
-                a[n_arr] += 1
-                v = visit()
-                if v is not None:
-                    yield v
-            a[m_arr] = 0
-            v = visit()
-            if v is not None:
-                yield v
-        elif n_arr > m_arr + 1:
-            func = [f, b][(a[n_arr] + sigma) % 2]
-            for v in func(m_arr, n_arr - 1):
-                if v is not None:
-                    yield v
-            while a[n_arr] < m_arr - 1:
-                a[n_arr] += 1
-                func = [f, b][(a[n_arr] + sigma) % 2]
-                for v in func(m_arr, n_arr - 1):
-                    if v is not None:
-                        yield v
-            if (m_arr + sigma) % 2 == 1:
-                a[n_arr - 1] = 0
-            else:
-                a[m_arr] = 0
-        if m_arr <= 2:
-            v = visit()
-            if v is not None:
-                yield v
-        else:
-            for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2):
-                if v is not None:
-                    yield v
-
-    n = len(multiset)
-
-    # if there are repeated elements, sort them and define the
-    # canon dictionary that will be used to create the cache key
-    # in case elements of the multiset are not hashable
-    canon = {}
-    for i, mi in enumerate(multiset):
-        canon[i] = multiset.index(mi)
-    if len(set(canon.values())) != n:
-        multiset.sort()
+        # if there are repeated elements, sort them and define the
+        # canon dictionary that will be used to create the cache key
+        # in case elements of the multiset are not hashable
+        cache = set()
         canon = {}
         for i, mi in enumerate(multiset):
             canon[i] = multiset.index(mi)
-    else:
-        canon = None
+        if len(set(canon.values())) != n:
+            canon = {}
+            for i, mi in enumerate(multiset):
+                canon[i] = multiset.index(mi)
+        else:
+            canon = None
 
-    a = [0] * (n + 1)
-    for j in xrange(1, m + 1):
-        a[n - m + j] = j - 1
-    return f(m, n)
+    p = [0]*(n + 1)
+    q = []
+    nc = None
+    nc = nexequ(n, nc, p, q, 0)
+    if canon == 0:
+        while nc != n:
+            nc = nexequ(n, nc, p, q, 1)
+            if nc == m:
+                rv = [[] for i in range(m + 1)]
+                for i in range(n):
+                    rv[q[i + 1]].append(multiset[i])
+                yield rv[1:]
+    else:
+        while nc != n:
+            nc = nexequ(n, nc, p, q, 1)
+            if nc == m:
+                rv = [[] for i in xrange(m + 1)]
+                for i in xrange(n):
+                    rv[q[i + 1]].append(i)
+                if canon:
+                    canonical = tuple(sorted([tuple(
+                        sorted([canon[i] for i in j])) for j in rv]))
+                else:
+                    canonical = tuple(tuple(j) for j in rv)
+                if canonical not in cache:
+                    cache.add(canonical)
+                    yield [[multiset[j] for j in i] for i in rv[1:]]
 
 
 def partitions(n, m=None, k=None):
@@ -1524,9 +1490,9 @@ def kbins(l, k, ordered=None):
          [[0], [1, 2]]
          [[0, 1], [2]]
     ordered = 0
-         [[0], [1, 2]]
          [[0, 1], [2]]
          [[0, 2], [1]]
+         [[0], [1, 2]]
     ordered = 1
          [[0], [1, 2]]
          [[0], [2, 1]]
@@ -1535,12 +1501,12 @@ def kbins(l, k, ordered=None):
          [[2], [0, 1]]
          [[2], [1, 0]]
     ordered = 10
-         [[0], [1, 2]]
-         [[1, 2], [0]]
          [[0, 1], [2]]
          [[2], [0, 1]]
          [[0, 2], [1]]
          [[1], [0, 2]]
+         [[0], [1, 2]]
+         [[1, 2], [0]]
     ordered = 11
          [[0], [1, 2]]
          [[0, 1], [2]]
