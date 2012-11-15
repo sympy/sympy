@@ -421,6 +421,7 @@ def debug(*args):
             print a,
         print
 
+_mod1 = lambda x: Mod(x, 1)
 
 class Hyper_Function(Expr):
     """ A generalized hypergeometric function. """
@@ -455,29 +456,9 @@ class Hyper_Function(Expr):
     def __call__(self, arg):
         return hyper(self.ap, self.bq, arg)
 
-    def compute_buckets(self):
-        """
-        Partition ``ap`` and ``bq`` mod 1.
-
-        Partition parameters ``ap``, ``bq`` into buckets, i.e., return two
-        dicts abuckets, bbuckets such that every key in (ab)buckets is a
-        rational in the range [0, 1) [represented either by a Rational or a Mod
-        object], and such that (ab)buckets[key] is a list of all elements of
-        respectively ``ap`` or ``bq`` that are congruent to ``key`` modulo 1.
-
-        >>> from sympy.simplify.hyperexpand import Hyper_Function
-        >>> from sympy import S
-        >>> ap = (S(1)/2, S(1)/3, S(-1)/2, -2)
-        >>> bq = (1, 2)
-        >>> Hyper_Function(ap, bq).compute_buckets()
-        ({0: [-2], 1/3: [1/3], 1/2: [1/2, -1/2]}, {0: [1, 2]})
-        """
-        mod1 = lambda x: Mod(x, 1)
-        return sift(self.ap, mod1), sift(self.bq, mod1)
-
     def build_invariants(self):
         """
-        Compute the invariant vector of (``ap``, ``bq``).
+        Compute the invariant vector.
 
         The invariant vector is:
             (gamma, ((s1, n1), ..., (sk, nk)), ((t1, m1), ..., (tr, mr)))
@@ -503,7 +484,7 @@ class Hyper_Function(Expr):
         >>> Hyper_Function(ap, bq).build_invariants()
         (1, ((0, 1), (1/3, 1), (1/2, 2)), ((0, 2),))
         """
-        abuckets, bbuckets = self.compute_buckets()
+        abuckets, bbuckets = sift(self.ap, _mod1), sift(self.bq, _mod1)
 
         def tr(bucket):
             bucket = bucket.items()
@@ -520,8 +501,8 @@ class Hyper_Function(Expr):
             Return -1 if impossible. """
         if self.gamma != func.gamma:
             return -1
-        oabuckets, obbuckets = self.compute_buckets()
-        abuckets, bbuckets = func.compute_buckets()
+        oabuckets, obbuckets, abuckets, bbuckets = [sift(params, _mod1) for
+                params in (self.ap, self.bq, func.ap, func.bq)]
 
         diff = 0
         for bucket, obucket in [(abuckets, oabuckets), (bbuckets, obbuckets)]:
@@ -1590,8 +1571,8 @@ def devise_plan(target, origin, z):
     <Decrement upper index #1 of [-1, 2], [4].>,
     <Decrement upper index #1 of [-1, 3], [4].>, <Increment upper -2.>]
     """
-    abuckets, bbuckets = target.compute_buckets()
-    nabuckets, nbbuckets = origin.compute_buckets()
+    abuckets, bbuckets, nabuckets, nbbuckets = [sift(params, _mod1) for
+            params in (target.ap, target.bq, origin.ap, origin.bq)]
 
     if len(abuckets.keys()) != len(nabuckets.keys()) or \
             len(bbuckets.keys()) != len(nbbuckets.keys()):
@@ -1683,7 +1664,7 @@ def devise_plan(target, origin, z):
 
 def try_shifted_sum(func, z):
     """ Try to recognise a hypergeometric sum that starts from k > 0. """
-    abuckets, bbuckets = func.compute_buckets()
+    abuckets, bbuckets = sift(func.ap, _mod1), sift(func.bq, _mod1)
     if len(abuckets[S(0)]) != 1:
         return None
     r = abuckets[S(0)][0]
@@ -1733,7 +1714,7 @@ def try_shifted_sum(func, z):
 def try_polynomial(func, z):
     """ Recognise polynomial cases. Returns None if not such a case.
         Requires order to be fully reduced. """
-    abuckets, bbuckets = func.compute_buckets()
+    abuckets, bbuckets = sift(func.ap, _mod1), sift(func.bq, _mod1)
     a0 = abuckets[S(0)]
     b0 = bbuckets[S(0)]
     a0.sort()
@@ -1776,7 +1757,7 @@ def try_lerchphi(func):
 
     # First we need to figure out if the summation coefficient is a rational
     # function of the summation index, and construct that rational function.
-    abuckets, bbuckets = func.compute_buckets()
+    abuckets, bbuckets = sift(func.ap, _mod1), sift(func.bq, _mod1)
 
     paired = {}
     for key, value in abuckets.items():
