@@ -809,7 +809,7 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
-def multiset_partitions(multiset, m):
+def multiset_partitions(multiset, m, _patch=True):
     """
     This is the algorithm for generating multiset partitions
     as described by Knuth in TAOCP Vol 4.
@@ -823,8 +823,8 @@ def multiset_partitions(multiset, m):
 
     >>> from sympy.utilities.iterables import multiset_partitions
     >>> list(multiset_partitions([1,2,3,4], 2))
-    [[[1, 2, 3], [4]], [[1, 3], [2, 4]], [[1], [2, 3, 4]], [[1, 2], \
-    [3, 4]], [[1, 2, 4], [3]], [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
+    [[[1], [2, 3, 4]], [[1, 2], [3, 4]], [[1, 2, 3], [4]],
+    [[1, 2, 4], [3]], [[1, 3], [2, 4]], [[1, 3, 4], [2]], [[1, 4], [2, 3]]]
     >>> list(multiset_partitions([1,2,3,4], 1))
     [[[1, 2, 3, 4]]]
     >>> list(multiset_partitions([1,2,3,4], 4))
@@ -835,6 +835,21 @@ def multiset_partitions(multiset, m):
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     """
+    if _patch:
+        # this is a temporary fix; there is a problem in the
+        # un-patched code: if you try multiset_partitions(range(5), 2)
+        # you will only get 10 of the 15 partitions with it. The
+        # patched version returns partitions in a slightly different
+        # order, so when it is removed, some of the doctest and tests
+        # will have to be changed back.
+        def patch():
+            for k in kbins(range(len(multiset)), m, 11):
+                if all(k[i][0] > k[i - 1][0] for i in range(1, len(k))):
+                    if all(all(ki[i] > ki[i - 1]
+                            for i in range(1, len(ki))) for ki in k):
+                        yield [[multiset[i] for i in j] for j in k]
+        return patch()
+
     cache = {}
 
     def visit(n, a):
@@ -1484,8 +1499,8 @@ def kbins(l, k, ordered=None):
          [[0], [1, 2]]
          [[0, 1], [2]]
     ordered = 0
-         [[0, 1], [2]]
          [[0], [1, 2]]
+         [[0, 1], [2]]
          [[0, 2], [1]]
     ordered = 1
          [[0], [1, 2]]
@@ -1495,10 +1510,10 @@ def kbins(l, k, ordered=None):
          [[2], [0, 1]]
          [[2], [1, 0]]
     ordered = 10
-         [[0, 1], [2]]
-         [[2], [0, 1]]
          [[0], [1, 2]]
          [[1, 2], [0]]
+         [[0, 1], [2]]
+         [[2], [0, 1]]
          [[0, 2], [1]]
          [[1], [0, 2]]
     ordered = 11
