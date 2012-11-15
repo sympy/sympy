@@ -439,6 +439,15 @@ class Hyper_Function(Expr):
     def sizes(self):
         return (len(self.ap), len(self.bq))
 
+    @property
+    def gamma(self):
+        """
+        Number of upper parameters that are negative integers
+
+        This is a transformation invariant.
+        """
+        return sum(bool(x.is_integer and x.is_negative) for x in self.ap)
+
     def _hashable_content(self):
         return super(Hyper_Function, self)._hashable_content() + (self.ap,
                 self.bq)
@@ -496,8 +505,6 @@ class Hyper_Function(Expr):
         """
         abuckets, bbuckets = self.compute_buckets()
 
-        gamma = sum(bool(x.is_negative) for x in abuckets[S(0)])
-
         def tr(bucket):
             bucket = bucket.items()
             if not any(isinstance(x[0], Mod) for x in bucket):
@@ -506,18 +513,15 @@ class Hyper_Function(Expr):
                     values])
             return bucket
 
-        return (gamma, tr(abuckets), tr(bbuckets))
+        return (self.gamma, tr(abuckets), tr(bbuckets))
 
     def difficulty(self, func):
         """ Estimate how many steps it takes to reach ``func`` from self.
             Return -1 if impossible. """
+        if self.gamma != func.gamma:
+            return -1
         oabuckets, obbuckets = self.compute_buckets()
         abuckets, bbuckets = func.compute_buckets()
-
-        gt0 = lambda x: (x > 0) is True
-        if (len(filter(gt0, abuckets[S(0)])) !=
-                len(filter(gt0, oabuckets[S(0)]))):
-            return -1
 
         diff = 0
         for bucket, obucket in [(abuckets, oabuckets), (bbuckets, obbuckets)]:

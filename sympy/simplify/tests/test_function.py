@@ -30,3 +30,13 @@ def test_eq():
     assert Hyper_Function([1], []) != Hyper_Function([2], [])
     assert Hyper_Function([1], []) != Hyper_Function([1, 2], [])
     assert Hyper_Function([1], []) != Hyper_Function([1], [2])
+
+def test_gamma():
+    assert Hyper_Function([2, 3], [-1]).gamma == 0
+    assert Hyper_Function([-2, -3], [-1]).gamma == 2
+    n = Dummy(integer=True)
+    assert Hyper_Function([-1, n, 1], []).gamma == 1
+    assert Hyper_Function([-1, -n, 1], []).gamma == 1
+    p = Dummy(integer=True, positive=True)
+    assert Hyper_Function([-1, p, 1], []).gamma == 1
+    assert Hyper_Function([-1, -p, 1], []).gamma == 2
