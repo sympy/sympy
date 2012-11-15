@@ -634,7 +634,8 @@ def canonicalize(g, dummies, msym, *v):
 
     # slot symmetry of the tensor
     size1, sbase, sgens = gens_products(*v1)
-    assert size == size1
+    if size != size1:
+        raise ValueError('g has size %d, generators have size %d' %(size, size1))
     free = [i for i in range(size-2) if i not in flat_dummies]
     num_free = len(free)
 

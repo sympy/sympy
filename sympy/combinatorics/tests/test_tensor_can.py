@@ -248,6 +248,7 @@ def test_canonicalize1():
     base2, gens2 = get_symmetric_group_sgs(2)
     base3, gens3 = get_symmetric_group_sgs(3)
     base2a, gens2a = get_symmetric_group_sgs(2, 1)
+    base3a, gens3a = get_symmetric_group_sgs(3, 1)
 
     # A_d0*A^d0; ord = [d0,-d0]; g = [1,0,2,3]
     # T_c = A^d0*A_d0; can = [0,1,2,3]
@@ -308,6 +309,44 @@ def test_canonicalize1():
     g = Permutation([10,4,8, 0,7,9, 6,11,1, 2,3,5, 12,13])
     can = canonicalize(g, range(4,12), 0, (base3, gens3, 4, 0))
     assert can == [0,4,6, 1,5,8, 2,3,10, 7,9,11, 12,13]
+
+    # Gamma anticommuting
+    # Gamma_{mu nu} * gamma^rho * Gamma^{nu mu alpha}
+    # ord = [alpha, rho, mu,-mu,nu,-nu]
+    # g = [3,5,1,4,2,0,6,7]
+    # T_c = -Gamma^{mu nu} * gamma^rho * Gamma_{alpha mu nu}
+    # can = [2,4,1,0,3,5,7,6]]
+    g = Permutation([3,5,1,4,2,0,6,7])
+    t0 = (base2a, gens2a, 1, None)
+    t1 = (base1, gens1, 1, None)
+    t2 = (base3a, gens3a, 1, None)
+    can = canonicalize(g, range(2, 6), 0, t0, t1, t2)
+    assert can == [2,4,1,0,3,5,7,6]
+
+    # Gamma_{mu nu} * Gamma^{gamma beta} * gamma_rho * Gamma^{nu mu alpha}
+    # ord = [alpha, beta, gamma, -rho, mu,-mu,nu,-nu]
+    #         0      1      2     3    4   5   6  7
+    # g = [5,7,2,1,3,6,4,0,8,9]
+    # T_c = Gamma^{mu nu} * Gamma^{beta gamma} * gamma_rho * Gamma^alpha_{mu nu}    # can = [4,6,1,2,3,0,5,7,8,9]
+    t0 = (base2a, gens2a, 2, None)
+    g = Permutation([5,7,2,1,3,6,4,0,8,9])
+    can = canonicalize(g, range(4, 8), 0, t0, t1, t2)
+    assert can == [4,6,1,2,3,0,5,7,8,9]
+
+    # f^a_{b,c} antisymmetric in b,c; A_mu^a no symmetry
+    # f^c_{d a} * f_{c e b} * A_mu^d * A_nu^a * A^{nu e} * A^{mu b}
+    # ord = [mu,-mu,nu,-nu,a,-a,b,-b,c,-c,d,-d, e, -e]
+    #         0  1  2   3  4  5 6  7 8  9 10 11 12 13
+    # g = [8,11,5, 9,13,7, 1,10, 3,4, 2,12, 0,6, 14,15]
+    # T_c = -f^{a b c} * f_a^{d e} * A^mu_b * A_{mu d} * A^nu_c * A_{nu e}
+    # can = [4,6,8,       5,10,12,   0,7,     1,11,       2,9,    3,13, 15,14]
+    g = Permutation([8,11,5, 9,13,7, 1,10, 3,4, 2,12, 0,6, 14,15])
+    base_f, gens_f = bsgs_direct_product(base1, gens1, base2a, gens2a, 1)
+    base_A, gens_A = bsgs_direct_product(base1, gens1, base1, gens1, 1)
+    t0 = (base_f, gens_f, 2, 0)
+    t1 = (base_A, gens_A, 4, 0)
+    can = canonicalize(g, [range(4), range(4, 14)], [0, 0], t0, t1)
+    assert can == [4,6,8, 5,10,12, 0,7, 1,11, 2,9, 3,13, 15,14]
 
 
 def test_riemann_invariants():
