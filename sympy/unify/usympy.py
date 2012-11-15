@@ -1,4 +1,4 @@
-from sympy import Basic, Expr, Tuple, Add, Mul, Pow
+from sympy import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
 from sympy import Wild as ExprWild
 
 from core import Compound, Variable
@@ -11,14 +11,14 @@ class Wild(object):
         return type(self) == type(other) and self.arg == other.arg
 
 def sympy_associative(op):
-    from sympy import MatAdd, MatMul, Union, Intersection
+    from sympy import MatAdd, MatMul, Union, Intersection, FiniteSet
     from sympy.core.operations import AssocOp
-    assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection)
+    assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection, FiniteSet)
     return any(issubclass(op, aop) for aop in assoc_ops)
 
 def sympy_commutative(op):
-    from sympy import Add, MatAdd, Union, Intersection
-    comm_ops = (Add, MatAdd, Union, Intersection)
+    from sympy import Add, MatAdd, Union, Intersection, FiniteSet
+    comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet)
     return any(issubclass(op, cop) for cop in comm_ops)
 
 def is_associative(x):
@@ -68,7 +68,7 @@ def construct(t):
         return t.arg
     if not isinstance(t, Compound):
         return t
-    if t.op in (Add, Mul, Pow):
+    if t.op in (Add, Mul, Pow, FiniteSet):
         return t.op(*map(construct, t.args), **{'evaluate': False})
     else:
         return Basic.__new__(t.op, *map(construct, t.args))

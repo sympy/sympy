@@ -1,4 +1,4 @@
-from sympy import Add, Basic
+from sympy import Add, Basic, symbols
 from sympy import Wild as ExprWild
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
@@ -112,3 +112,11 @@ def test_non_frankenAdds():
     # Ensure that we can run these commands without causing an error
     str(rebuilt)
     rebuilt.is_commutative
+
+def test_FiniteSet_commutivity():
+    from sympy import FiniteSet
+    a, b, c, x, y = symbols('a,b,c,x,y')
+    s = FiniteSet(a, b, c)
+    t = FiniteSet(x, y)
+    pattern = patternify(t, x, y)
+    assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, pattern))
