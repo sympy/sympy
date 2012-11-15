@@ -8,6 +8,7 @@ from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
+from sympy.abc import _clash, _clash1, _clash2
 
 from sympy import mpmath
 
@@ -454,6 +455,9 @@ def test_issue_3441_3453():
     assert S('Matrix([2*(1)])') == Matrix([2])
 
 def test_issue_2497():
+    assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
+    assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
+    assert str(S('gamma(C, Q)', locals=_clash)) == 'gamma(C, Q)'
     locals = {}
     exec "from sympy.abc import Q, C" in locals
     assert str(S('C&Q', locals)) == 'And(C, Q)'
