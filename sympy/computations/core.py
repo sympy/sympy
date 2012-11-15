@@ -33,8 +33,8 @@ class Computation(Basic):
         return CompositeComputation(self, other)
 
     def __str__(self):
-        ins  = "["+', '.join(self.inputs) +"]"
-        outs = "["+', '.join(self.outputs)+"]"
+        ins  = "["+', '.join(map(str, self.inputs)) +"]"
+        outs = "["+', '.join(map(str, self.outputs))+"]"
         return "%s -> %s -> %s"%(ins, str(self.__class__.__name__), outs)
 
 
