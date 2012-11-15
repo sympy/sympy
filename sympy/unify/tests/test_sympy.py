@@ -120,3 +120,12 @@ def test_FiniteSet_commutivity():
     t = FiniteSet(x, y)
     pattern = patternify(t, x, y)
     assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, pattern))
+
+def test_FiniteSet_complex():
+    from sympy import FiniteSet
+    a, b, c, x, y, z = symbols('a,b,c,x,y,z')
+    expr = FiniteSet(Basic(1, x), y, Basic(x, z))
+    expected = tuple([{b: 1, a: FiniteSet(y, Basic(x, z))},
+                      {b: z, a: FiniteSet(y, Basic(1, x))}])
+    pattern = patternify(FiniteSet(a, Basic(x, b)), a, b)
+    assert iterdicteq(unify(expr, pattern), expected)
