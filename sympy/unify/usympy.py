@@ -79,7 +79,7 @@ def rebuild(s):
     """
     return construct(deconstruct(s))
 
-def unify(x, y, s={}, **kwargs):
+def unify(x, y, s=None, **kwargs):
     """ Structural unification of two expressions/patterns
 
     Examples
@@ -99,6 +99,7 @@ def unify(x, y, s={}, **kwargs):
     >>> len(list(unify(expr, pattern, {})))
     12
     """
+    s = s or {}
 
     ds = core.unify(deconstruct(x), deconstruct(y), {},
                                                 is_associative=is_associative,

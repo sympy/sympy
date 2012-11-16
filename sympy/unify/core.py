@@ -60,7 +60,7 @@ class CondVariable(object):
     def __str__(self):
         return "CondVar(%s)" % str(self.arg)
 
-def unify(x, y, s={}, **fns):
+def unify(x, y, s=None, **fns):
     """ Unify two expressions
 
     inputs:
@@ -79,6 +79,8 @@ def unify(x, y, s={}, **fns):
     >>> next(unify(expr, pattern, {}))
     {Var(a): 'y'}
     """
+    s = s or {}
+
     if x == y:
         yield s
     elif isinstance(x, (Variable, CondVariable)):
