@@ -132,7 +132,9 @@ linkcheck:
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in _build/linkcheck/output.txt."
 
-cheatsheet:
+cheatsheet: _build/cheatsheet/cheatsheet.pdf
+
+_build/cheatsheet/cheatsheet.pdf: cheatsheet/cheatsheet.tex
 	mkdir -p _build/cheatsheet
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
 	pdflatex -output-directory=_build/cheatsheet cheatsheet/cheatsheet.tex
