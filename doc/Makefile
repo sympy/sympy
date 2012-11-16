@@ -72,7 +72,7 @@ htmlapi:
 gettext:
 	mkdir -p _build/
 	$(SPHINXBUILD) -b gettext -D master_doc=tutorial/tutorial -D source_suffix=.en.rst src _build/gettext
-	cp _build/gettext/tutorial.pot src/
+	cp _build/gettext/tutorial.pot src/tutorial/
 
 htmli18n:
 	mkdir -p _build/i18n/
@@ -80,7 +80,7 @@ htmli18n:
 	for l in $(LANGUAGES); do \
 		mkdir -p _build/doctrees-$$l ; \
 		mkdir -p _build/i18n/$$l/LC_MESSAGES/ ; \
-		msgfmt src/tutorial.$$l.po -o _build/i18n/$$l/LC_MESSAGES/tutorial.mo ; \
+		msgfmt src/tutorial/tutorial.$$l.po -o _build/i18n/$$l/LC_MESSAGES/tutorial.mo ; \
 		$(SPHINXBUILD) -b html -D language=$$l -D master_doc=tutorial/tutorial \
 			-D source_suffix=.en.rst -d _build/doctrees-$$l $(SPHINXOPTS) src _build/i18n/$$l ; \
 		cp _build/i18n/$$l/tutorial/tutorial.html _build/html/tutorial/tutorial.$$l.html ; \
