@@ -48,9 +48,6 @@ covhtml/
 doc/_build/
 doc/sphinx/
 
-# Internationalization files (cd doc; make htmli18n)
-doc/src/i18n/
-
 # pdf files generated from svg files (cd doc; make latex)
 doc/src/modules/physics/mechanics/*.pdf
 
