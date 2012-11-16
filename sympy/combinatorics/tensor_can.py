@@ -304,9 +304,9 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
 
     It is important that the slot BSGS has lexicographic minimal base,
     otherwise there is an `i` which does not belong to the slot base
-    for which `p_i` is fixed by the dummy symmetry only, and then
-    the slot generators are stabilized under `i`, destroying the
-    sequence of slot stabilizers.
+    for which `p_i` is fixed by the dummy symmetry only, while `i`
+    is not invariant from the slot stabilizer, so `p_i` is not in
+    general the minimal value.
 
     This algorithm differs slightly from the original algorithm [3]:
     i) the canonical form is minimal lexicographically, while in [3]
@@ -364,8 +364,8 @@ def double_coset_can_rep(dummies, sym, b_S, sgens, S_transversals, g):
     for i in range(size - 2):
         b = i
         testb = b in b_S and sgensx
-        sgensx1 = [_af_new(_) for _ in sgensx]
         if testb:
+            sgensx1 = [_af_new(_) for _ in sgensx]
             deltab = _orbit(size, sgensx1, b)
         else:
             deltab = set([b])
@@ -495,7 +495,7 @@ def canonical_free(base, gens, g, num_free):
     >>> base = [0, 2]
     >>> g = Permutation([2, 1, 0, 3, 4, 5])
     >>> canonical_free(base, gens, g, 4)
-    ([0, 3, 1, 2, 5, 4], [])
+    [0, 3, 1, 2, 5, 4]
 
     Consider the product of Riemann tensors
     `T = R^{a}_{d0}^{d1,d2}*R_{d2,d1}^{d0,b}`
@@ -511,16 +511,16 @@ def canonical_free(base, gens, g, num_free):
     >>> size, sbase, sgens = tensor_gens(base, gens, [[],[]], 0)
     >>> g = Permutation([0,3,4,6,7,5,2,1,8,9])
     >>> canonical_free(sbase, [Permutation(h) for h in sgens], g, 2)
-    ([0, 3, 4, 6, 1, 2, 5, 7, 8, 9], [])
+    [0, 3, 4, 6, 1, 2, 5, 7, 8, 9]
     """
     g = g.array_form
     size = len(g)
     if not base:
-        return g[:], [range(size)]
-    K = [x.array_form for x in gens]
+        return g[:]
 
-    transversals = get_transversals(base, K)
+    transversals = get_transversals(base, gens)
     cosets = transversal2coset(size, base, transversals)
+    K = [h._array_form for h in gens]
     m = len(base)
     for x in sorted(g[:-2]):
         if x not in base:
@@ -532,7 +532,6 @@ def canonical_free(base, gens, g, num_free):
         delta = [x[b] for x in cosets[b]]
         delta1 = [lambd[x] for x in delta]
         delta1min = min(delta1)
-
         k = delta1.index(delta1min)
         p = delta[k]
         for omega in cosets[b]:
@@ -540,7 +539,7 @@ def canonical_free(base, gens, g, num_free):
                 break
         lambd = _af_rmul(lambd, omega)
         K = [px for px in K if px[b] == b]
-    return lambd, K
+    return lambd
 
 
 def _get_map_slots(size, fixed_slots):
@@ -581,22 +580,29 @@ def canonicalize(g, dummies, msym, *v):
             and put in order contravariant, covariant
             [d0, -d0, d1,-d1,...]
 
+      dummies can be a list of dummy indices or a list of lists of
+              dummy indices, one list for each type of index;
+              the dummy indices must come after the free indices,
+              and put in order contravariant, covariant
+              [d0, -d0, d1,-d1,...]
+
       msym  can be an integer or a list;
             in the first case it is the symmetry of the dummy index metric;
-            in the second case it is the list of the summetries of the
+            in the second case it is the list of the symmetries of the
             index metric for each type
-
-            symmetry under exchange of two component tensors of type `i`
-              None  no symmetry
-              0     commuting
-              1     anticommuting
 
       v     is a list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`
             base_i, gens_i BSGS for tensors of this type
             The BSGS should have minimal base under lexicographic ordering;
-            if not, canonicalize_naive is used, whichis much slower.
+            if not, canonicalize_naive is used, which is much slower.
 
-    n_i     number ot tensors of type `i`
+            n_i     number ot tensors of type `i`
+            sym_i   symmetry under exchange of component tensors of type `i`
+
+      Both for msym and sym_i the cases are
+            None  no symmetry
+            0     commuting
+            1     anticommuting
 
     Return 0 if the tensor is zero, else return the array form of
     the permutation representing the canonical form of the tensor.
@@ -670,9 +676,8 @@ def canonicalize(g, dummies, msym, *v):
     free = [i for i in range(size-2) if i not in flat_dummies]
     num_free = len(free)
 
-    sgens = [_af_new(h) for h in sgens]
     # g1 minimal tensor under slot symmetry
-    g1, gens1 = canonical_free(sbase, sgens, g, num_free)
+    g1 = canonical_free(sbase, sgens, g, num_free)
     if not flat_dummies:
         return g1
     # save the sign of g1
@@ -685,7 +690,7 @@ def canonicalize(g, dummies, msym, *v):
     for i in range(len(v)):
         free_i = []
         base_i, gens_i, n_i, sym_i = v[i]
-        len_tens = len(gens_i[0]) - 2
+        len_tens = gens_i[0].size - 2
         # for each component tensor get a list od fixed islots
         for j in range(n_i):
             # get the elements corresponding to the component tensor
@@ -713,11 +718,10 @@ def canonicalize(g, dummies, msym, *v):
         g1_red.extend([size_red - 2, size_red - 1])
     map_slots = _get_map_slots(size, pos_free)
     sbase_red = [map_slots[i] for i in sbase if i not in pos_free]
-    sgens_red = [[map_slots[i] for i in y if i not in pos_free] for y in sgens]
+    sgens_red = [_af_new([map_slots[i] for i in y._array_form if i not in pos_free]) for y in sgens]
     dummies_red = [[x - num_free for x in y] for y in dummies]
     transv_red = get_transversals(sbase_red, sgens_red)
     g1_red = _af_new(g1_red)
-    sgens_red = [_af_new(h) for h in sgens_red]
     g2 = double_coset_can_rep(dummies_red, msym, sbase_red, sgens_red, transv_red, g1_red)
     if g2 == 0:
         return 0
@@ -775,19 +779,21 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=False):
     >>> base1, gens1 = get_symmetric_group_sgs(1)
     >>> base2, gens2 = get_symmetric_group_sgs(2)
     >>> bsgs_direct_product(base1, gens1, base2, gens2, 1)
-    ([1], [[0, 2, 1, 3, 4]])
+    ([1], [Permutation(4)(1, 2)])
     """
     s = 2 if signed else 0
-    n1 = len(gens1[0]) - s
+    n1 = gens1[0].size - s
     base = base1[:]
     base += [x + n1 for x in base2]
+    gens1 = [h._array_form for h in gens1]
+    gens2 = [h._array_form for h in gens2]
     gens = perm_af_direct_product(gens1, gens2, signed)
     size = len(gens[0])
     id_af = range(size)
     gens = [h for h in gens if h != id_af]
     if not gens:
         gens = [id_af]
-    return base, gens
+    return base, [_af_new(h) for h in gens]
 
 def get_symmetric_group_sgs(n, sym=0):
     """
@@ -798,19 +804,20 @@ def get_symmetric_group_sgs(n, sym=0):
     ========
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
     >>> get_symmetric_group_sgs(3)
-    ([0, 1], [[1, 0, 2, 3, 4], [0, 2, 1, 3, 4]])
+    ([0, 1], [Permutation(4)(0, 1), Permutation(4)(1, 2)])
     """
     if n == 1:
-        return [], [range(3)]
-    gens = [Permutation(n-1)(i, i+1).array_form for i in range(n-1)]
+        return [], [_af_new(range(3))]
+    gens = [Permutation(n-1)(i, i+1)._array_form for i in range(n-1)]
     if sym == 0:
         gens = [x + [n, n+1] for x in gens]
     else:
         gens = [x + [n+1, n] for x in gens]
     base = range(n-1)
-    return base, gens
+    return base, [_af_new(h) for h in gens]
 
-riemann_bsgs = [0, 2], [[1,0,2,3,5,4], [0,1,3,2,5,4], [2,3,0,1,4,5]]
+riemann_bsgs = [0, 2], [Permutation(0,1)(4,5), Permutation(2,3)(4,5), \
+               Permutation(5)(0,2)(1,3)]
 
 def get_transversals(base, gens):
     """
@@ -818,8 +825,6 @@ def get_transversals(base, gens):
     """
     if not base:
         return []
-    if not isinstance(gens[0], Permutation):
-        gens = [_af_new(h) for h in gens]
     stabs =  _distribute_gens_by_base(base, gens)
     orbits, transversals = _orbits_transversals_from_bsgs(base, stabs)
     transversals = [dict((x, h._array_form) for x, h in y.items()) for y in \
@@ -835,20 +840,21 @@ def _is_minimal_bsgs(base, gens):
 
     Examples
     ========
+    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import riemann_bsgs, _is_minimal_bsgs
     >>> _is_minimal_bsgs(*riemann_bsgs)
     True
-    >>> riemann_bsgs1 = ([2, 0], [[1,0,2,3,5,4], [2,3,0,1,4,5]])
+    >>> riemann_bsgs1 = ([2, 0], ([Permutation(5)(0,1)(4,5), Permutation(5)(0,2)(1,3)]))
     >>> _is_minimal_bsgs(*riemann_bsgs1)
     False
     """
     base1 = []
     sgs1 = gens[:]
-    size = len(gens[0])
+    size = gens[0].size
     for i in range(size):
-        if not all(h[i] == i for h in sgs1):
+        if not all(h._array_form[i] == i for h in sgs1):
             base1.append(i)
-            sgs1 = [h for h in sgs1 if h[i] == i]
+            sgs1 = [h for h in sgs1 if h._array_form[i] == i]
     return base1 == base
 
 def get_minimal_bsgs(base, gens):
@@ -866,18 +872,14 @@ def get_minimal_bsgs(base, gens):
     Examples
     ========
 
+    >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import get_minimal_bsgs
-    >>> riemann_bsgs1 = ([2, 0], [[1,0,2,3,5,4], [2,3,0,1,4,5]])
+    >>> riemann_bsgs1 = ([2, 0], ([Permutation(5)(0,1)(4,5), Permutation(5)(0,2)(1,3)]))
     >>> get_minimal_bsgs(*riemann_bsgs1)
-    ([0, 2], [[1, 0, 2, 3, 5, 4], [2, 3, 0, 1, 4, 5], [0, 1, 3, 2, 5, 4]])
+    ([0, 2], [Permutation(0, 1)(4, 5), Permutation(5)(0, 2)(1, 3), Permutation(2, 3)(4, 5)])
     """
-    #if _is_minimal_bsgs(base, gens):
-    #    return base, gens
-    if isinstance(gens[0], list):
-        gens = [Permutation(h) for h in gens]
     G = PermutationGroup(gens)
     base, gens = G.schreier_sims_incremental()
-    gens = [h._array_form for h in gens]
     if not _is_minimal_bsgs(base, gens):
         return None
     return base, gens
@@ -902,11 +904,11 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
     two symmetric tensors with 3 indices without free indices
     >>> base, gens = get_symmetric_group_sgs(3)
     >>> tensor_gens(base, gens, [[], []])
-    (8, [0, 1, 3, 4], [[1, 0, 2, 3, 4, 5, 6, 7], [0, 2, 1, 3, 4, 5, 6, 7], [0, 1, 2, 4, 3, 5, 6, 7], [0, 1, 2, 3, 5, 4, 6, 7], [3, 4, 5, 0, 1, 2, 6, 7]])
+    (8, [0, 1, 3, 4], [Permutation(7)(0, 1), Permutation(7)(1, 2), Permutation(7)(3, 4), Permutation(7)(4, 5), Permutation(7)(0, 3)(1, 4)(2, 5)])
 
     two symmetric tensors with 3 indices with free indices in slot 1 and 0
     >>> tensor_gens(base, gens, [[1],[0]])
-    (8, [0, 4], [[2, 1, 0, 3, 4, 5, 6, 7], [0, 1, 2, 3, 5, 4, 6, 7]])
+    (8, [0, 4], [Permutation(7)(0, 2), Permutation(7)(4, 5)])
 
     four symmetric tensors with 3 indices, two of which with free indices
 
@@ -920,28 +922,28 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
         else:
             H = G.pointwise_stabilizer(free_indices)
             base, sgs = H.schreier_sims_incremental()
-            return base, [h._array_form for h in sgs]
+            return base, sgs
 
     # if not base there is no slot symmetry for the component tensors
     # if list_free_indices.count([]) < 2 there is no commutation symmetry
     # so there is no resulting slot symmetry
     if not base and list_free_indices.count([]) < 2:
         n = len(list_free_indices)
-        size = len(gens[0])
-        size = n*(len(gens[0]) - 2) + 2
-        return size, [], [range(size)]
+        size = gens[0].size
+        size = n*(gens[0].size - 2) + 2
+        return size, [], [_af_new(range(size))]
 
     # if any(list_free_indices) one needs to compute the pointwise
     # stabilizer, so G is needed
     if any(list_free_indices):
-        G = PermutationGroup([_af_new(h) for h in gens])
+        G = PermutationGroup(gens)
     else:
         G = None
 
     # no_free list of lists of indices for component tensors without fixed
     # indices
     no_free = []
-    size = len(gens[0])
+    size = gens[0].size
     id_af = range(size)
     num_indices = size - 2
     if not list_free_indices[0]:
@@ -955,11 +957,11 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
             no_free.append(range(size-2, size - 2 + num_indices))
         size += num_indices
     nr = size - 2
-    res_gens = [h for h in res_gens if h != id_af]
+    res_gens = [h for h in res_gens if h._array_form != id_af]
     # if sym there are no commuting tensors stop here
     if sym == None or not no_free:
         if not res_gens:
-            res_gens = [id_af]
+            res_gens = [_af_new(id_af)]
         return size, res_base, res_gens
 
     # if the component tensors have moinimal BSGS, so is their direct
@@ -982,14 +984,14 @@ def tensor_gens(base, gens, list_free_indices, sym=0):
             a.extend([nr, nr + 1])
         else:
             a.extend([nr + 1, nr])
-        res_gens.append(a)
+        res_gens.append(_af_new(a))
     # each base is ordered; order the union of the two bases
     for i in base_comm:
         if i not in res_base:
             res_base.append(i)
     res_base.sort()
     if not res_gens:
-        res_gens = [id_af]
+        res_gens = [_af_new(id_af)]
 
     return size, res_base, res_gens
 
@@ -1012,16 +1014,16 @@ def gens_products(*v):
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, gens_products
     >>> base, gens = get_symmetric_group_sgs(2)
     >>> gens_products((base,gens,[[],[]],0))
-    (6, [0, 2], [[1, 0, 2, 3, 4, 5], [0, 1, 3, 2, 4, 5], [2, 3, 0, 1, 4, 5]])
+    (6, [0, 2], [Permutation(5)(0, 1), Permutation(5)(2, 3), Permutation(5)(0, 2)(1, 3)])
     >>> gens_products((base,gens,[[1],[]],0))
-    (6, [2], [[0, 1, 3, 2, 4, 5]])
+    (6, [2], [Permutation(5)(2, 3)])
     """
     res_size, res_base, res_gens = tensor_gens(*v[0])
     for i in range(1, len(v)):
         size, base, gens = tensor_gens(*v[i])
         res_base, res_gens = bsgs_direct_product(res_base, res_gens, base,
                                                gens, 1)
-    res_size = len(res_gens[0])
+    res_size = res_gens[0].size
     id_af = range(res_size)
     res_gens = [h for h in res_gens if h != id_af]
     if not res_gens:

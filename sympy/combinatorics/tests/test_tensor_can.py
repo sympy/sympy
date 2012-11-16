@@ -26,12 +26,12 @@ def test_dummy_sgs():
         Perm(9)(2,4)(3,5)]]
 
 def test_get_symmetric_group_sgs():
-    assert get_symmetric_group_sgs(2) == ([0], [[1,0,2,3]])
-    assert get_symmetric_group_sgs(2, 1) == ([0], [[1,0,3,2]])
-    assert get_symmetric_group_sgs(3) == ([0,1], [[1,0,2,3,4],[0,2,1,3,4]])
-    assert get_symmetric_group_sgs(3, 1) == ([0,1], [[1,0,2,4,3],[0,2,1,4,3]])
-    assert get_symmetric_group_sgs(4) == ([0,1,2], [[1,0,2,3,4,5], [0,2,1,3,4,5], [0,1,3,2,4,5]])
-    assert get_symmetric_group_sgs(4, 1) == ([0,1,2], [[1,0,2,3,5,4], [0,2,1,3,5,4], [0,1,3,2,5,4]])
+    assert get_symmetric_group_sgs(2) == ([0], [Permutation(3)(0,1)])
+    assert get_symmetric_group_sgs(2, 1) == ([0], [Permutation(0,1)(2,3)])
+    assert get_symmetric_group_sgs(3) == ([0,1], [Permutation(4)(0,1), Permutation(4)(1,2)])
+    assert get_symmetric_group_sgs(3, 1) == ([0,1], [Permutation(0,1)(3,4), Permutation(1,2)(3,4)])
+    assert get_symmetric_group_sgs(4) == ([0,1,2], [Permutation(5)(0,1), Permutation(5)(1,2), Permutation(5)(2,3)])
+    assert get_symmetric_group_sgs(4, 1) == ([0,1,2], [Permutation(0,1)(4,5), Permutation(1,2)(4,5), Permutation(2,3)(4,5)])
 
 
 def test_canonicalize_no_slot_sym():
@@ -108,13 +108,13 @@ def test_canonicalize_no_slot_sym():
     # T_c = A^{d0 d1}*B_d1*C_d0; can = [0,2,3,1,4,5]
     g = Permutation([2,1,0,3,4,5])
     dummies = [0,1,2,3]
-    t0 = ([], [range(4)], 1, 0)
+    t0 = ([], [Permutation(range(4))], 1, 0)
     can = canonicalize(g, dummies, 0, t0, t1, t2)
     assert can == [0,2,3,1,4,5]
     # A, B without symmetry
     # A^{d1}_{d0}*B_{d1}^{d0}; g = [2,1,3,0,4,5]
     # T_c = A^{d0 d1}*B_{d0 d1}; can = [0,2,1,3,4,5]
-    t0 = t1 = ([], [range(4)], 1, 0)
+    t0 = t1 = ([], [Permutation(range(4))], 1, 0)
     dummies = [0,1,2,3]
     g = Permutation([2,1,3,0,4,5])
     can = canonicalize(g, dummies, 0, t0, t1)
@@ -129,7 +129,7 @@ def test_canonicalize_no_slot_sym():
     # A^{d1 d0}*B_{a d0}*C_{d1 b} ord=[a,b,d0,-d0,d1,-d1]
     # g=[4,2,0,3,5,1,6,7]
     # T_c=A^{d0 d1}*B_{a d1}*C_{d0 b}; can = [2,4,0,5,3,1,6,7]
-    t0 = t1 = t2 = ([], [range(4)], 1, 0)
+    t0 = t1 = t2 = ([], [Permutation(range(4))], 1, 0)
     dummies = [2,3,4,5]
     g = Permutation([4,2,0,3,5,1,6,7])
     can = canonicalize(g, dummies, 0, t0, t1, t2)
@@ -140,7 +140,7 @@ def test_canonicalize_no_slot_sym():
     # g=[4,2,0,3,5,1,6,7]
     # T_c = A^{d0 d1}*B_{a d0}*C_{d1 b}; can = [2,4,0,3,5,1,6,7]
     t0 = (base2,gens2,1,0)
-    t1 = t2 = ([], [range(4)], 1, 0)
+    t1 = t2 = ([], [Permutation(range(4))], 1, 0)
     dummies = [2,3,4,5]
     g = Permutation([4,2,0,3,5,1,6,7])
     can = canonicalize(g, dummies, 0, t0, t1, t2)
@@ -151,7 +151,7 @@ def test_canonicalize_no_slot_sym():
     # g=[4,2,0,3,5,1,6,7]
     # T_c = A^{d0 d1}*B_{a d0}*C_{b d1}; can = [2,4,0,3,1,5,6,7]
     t0 = t2 = (base2,gens2,1,0)
-    t1 = ([], [range(4)], 1, 0)
+    t1 = ([], [Permutation(range(4))], 1, 0)
     dummies = [2,3,4,5]
     g = Permutation([4,2,0,3,5,1,6,7])
     can = canonicalize(g, dummies, 0, t0, t1, t2)
@@ -162,7 +162,7 @@ def test_canonicalize_no_slot_sym():
     # g=[4,2,0,3,5,1,6,7]
     # T_c = -A^{d0 d1}*B_{a d0}*C_{b d1}; can = [2,4,0,3,1,5,7,6]
     t0 = (base2,gens2, 1, 0)
-    t1 = ([], [range(4)], 1, 0)
+    t1 = ([], [Permutation(range(4))], 1, 0)
     base2a, gens2a = get_symmetric_group_sgs(2, 1)
     t2 = (base2a, gens2a, 1, 0)
     dummies = [2,3,4,5]
@@ -214,7 +214,7 @@ def test_no_metric_symmetry():
     # A^d1_d0 * A^d0_d1; ord = [d0,-d0,d1,-d1]; g= [2,1,0,3,4,5]
     # T_c = A^d0_d1 * A^d1_d0; can = [0,3,2,1,4,5]
     g = Permutation([2,1,0,3,4,5])
-    can = canonicalize(g, range(4), None, [[], [range(4)], 2, 0])
+    can = canonicalize(g, range(4), None, [[], [Permutation(range(4))], 2, 0])
     assert can == [0,3,2,1,4,5]
 
     # A^d1_d2 * A^d0_d3 * A^d2_d1 * A^d3_d0
@@ -226,7 +226,7 @@ def test_no_metric_symmetry():
     g = Permutation([2,5,0,7,4,3,6,1,8,9])
     #can = canonicalize(g, range(8), 0, [[], [range(4)], 4, 0])
     #assert can == [0, 2, 3, 1, 4, 6, 7, 5, 8, 9]
-    can = canonicalize(g, range(8), None, [[], [range(4)], 4, 0])
+    can = canonicalize(g, range(8), None, [[], [Permutation(range(4))], 4, 0])
     assert can == [0, 3, 2, 1, 4, 7, 6, 5, 8, 9]
 
     # A^d0_d2 * A^d1_d3 * A^d3_d0 * A^d2_d1
@@ -234,11 +234,11 @@ def test_no_metric_symmetry():
     # T_c = A^d0_d1 * A^d1_d2 * A^d2_d3 * A^d3_d0
     # can = [0,3,2,5,4,7,6,1,8,9]
     g = Permutation([0,5,2,7,6,1,4,3,8,9])
-    can = canonicalize(g, range(8), None, [[], [range(4)], 4, 0])
+    can = canonicalize(g, range(8), None, [[], [Permutation(range(4))], 4, 0])
     assert can == [0,3,2,5,4,7,6,1,8,9]
 
     g = Permutation([12,7,10,3,14,13,4,11,6,1,2,9,0,15,8,5,16,17])
-    can = canonicalize(g, range(16), None, [[], [range(4)], 8, 0])
+    can = canonicalize(g, range(16), None, [[], [Permutation(range(4))], 8, 0])
     assert can == [0,3,2,5,4,7,6,1,8,11,10,13,12,15,14,9,16,17]
 
 
@@ -388,7 +388,7 @@ def test_riemann_invariants():
     can = canonicalize(g, range(2, 4), 0, (baser, gensr, 1, 0))
     assert can == [0,2,1,3,5,4]
     # use a non minimal BSGS
-    can = canonicalize(g, range(2, 4), 0, ([2, 0], [[1,0,2,3,5,4], [2,3,0,1,4,5]], 1, 0))
+    can = canonicalize(g, range(2, 4), 0, ([2, 0], [Permutation([1,0,2,3,5,4]), Permutation([2,3,0,1,4,5])], 1, 0))
     assert can == [0,2,1,3,5,4]
 
     """
@@ -408,7 +408,7 @@ def test_riemann_invariants():
     assert can == [0,2,4,6,1,3,8,10,5,7,12,14,9,11,16,18,13,15,20,22,17,19,21,23,24,25]
 
     # use a non minimal BSGS
-    can = canonicalize(g, range(24), 0, ([2, 0], [[1,0,2,3,5,4], [2,3,0,1,4,5]], 6, 0))
+    can = canonicalize(g, range(24), 0, ([2, 0], [Permutation([1,0,2,3,5,4]), Permutation([2,3,0,1,4,5])], 6, 0))
     assert can == [0,2,4,6,1,3,8,10,5,7,12,14,9,11,16,18,13,15,20,22,17,19,21,23,24,25]
 
     #R^{d0 d1 d2 d3} * R_{d0 d1}^{d4 d5} * R_{d2 d3}^{d6 d7} *

@@ -235,7 +235,7 @@ def canonicalize_naive(g, dummies, sym, *v):
     dgens = []
     for i in range(num_types):
         dgens.extend(dummy_sgs(dummies[i], sym[i], size - 2))
-    S = PermutationGroup([Permutation(x) for x in sgens])
+    S = PermutationGroup(sgens)
     D = PermutationGroup([Permutation(x) for x in dgens])
     dlist = list(D.generate(af=True))
     g = g.array_form
