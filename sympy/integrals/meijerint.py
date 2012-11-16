@@ -36,6 +36,7 @@ from sympy.logic.boolalg import And, Or
 from sympy.functions.special.delta_functions import Heaviside
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.functions.special.hyper import meijerg
+from sympy.utilities.iterables import multiset_partitions, ordered
 from sympy.utilities.misc import debug as _debug
 from sympy.utilities import default_sort_key
 
@@ -443,13 +444,19 @@ def _mul_as_two_parts(f):
     Find all the ways to split f into a product of two terms.
     Return None on failure.
 
+    The order of the results is arbitrary so they should be sorted
+    (perhaps with ordered) for any use that might cause results to
+    non-deterministic.
+
+    Examples
+    ========
+
     >>> from sympy.integrals.meijerint import _mul_as_two_parts
-    >>> from sympy import sin, exp
+    >>> from sympy import sin, exp, ordered
     >>> from sympy.abc import x
-    >>> _mul_as_two_parts(x*sin(x)*exp(x))
-    [(x*exp(x), sin(x)), (x, exp(x)*sin(x)), (x*sin(x), exp(x))]
+    >>> list(ordered(_mul_as_two_parts(x*sin(x)*exp(x))))
+    [(x, exp(x)*sin(x)), (x*exp(x), sin(x)), (x*sin(x), exp(x))]
     """
-    from sympy.utilities.iterables import multiset_partitions
 
     gs = _mul_args(f)
     if len(gs) < 2:
@@ -1547,12 +1554,12 @@ def _rewrite2(f, x):
     l = _mul_as_two_parts(g)
     if not l:
         return None
-    l.sort(
-        key=lambda p: (max(len(_exponents(p[0], x)), len(_exponents(p[1], x))),
-                       max(len(
-                           _functions(p[0], x)), len(_functions(p[1], x))),
-                       max(len(_find_splitting_points(p[0], x)),
-                           len(_find_splitting_points(p[1], x)))))
+    l = list(ordered(l, [
+        lambda p: max(len(_exponents(p[0], x)), len(_exponents(p[1], x))),
+        lambda p: max(len(_functions(p[0], x)), len(_functions(p[1], x))),
+        lambda p: max(len(_find_splitting_points(p[0], x)),
+                      len(_find_splitting_points(p[1], x)))]))
+
     for recursive in [False, True]:
         for fac1, fac2 in l:
             g1 = _rewrite_single(fac1, x, recursive)
@@ -1583,7 +1590,7 @@ def meijerint_indefinite(f, x):
         if not res.has(hyper, meijerg):
             return results[-1]
     if results:
-        return sorted(results, key=count_ops)[0]
+        return next(ordered(results))
 
 
 def _meijerint_indefinite_1(f, x):
