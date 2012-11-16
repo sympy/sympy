@@ -935,30 +935,15 @@ def bool_equal(bool1, bool2, info=False):
         # more quick checks
         if len(f1) != len(f2):
             return False
-        if not all(k in f2 for k in f1.keys()):
-            return False
-
-        # identify those that are known and those that are ambiguous
-        # and need permutations (or a better fingerprint?) to resolve them
-        know = {}
-        perm = []
+        matchdict = {}
         for k in f1.keys():
-            if len(f1[k]) == 1:
-                know[f1[k][0]] = f2[k][0]
-            else:
-                perm.append((ordered(f1[k]), ordered(f2[k])))
-
-        if perm:
-            unk = flatten([i[0] for i in perm])
-            func2 = function1.xreplace(know)
-            for p in cartes(*[permutations(i[1]) for i in perm]):
-                reps = dict(zip(unk, flatten(p)))
-                if func2.xreplace(reps) == function2:
-                    know.update(reps)
-                    return know
-            return False
-        else:
-            return know
+            if k not in f2:
+                return False
+            if len(f1[k]) != len(f2[k]):
+                return False
+            for i,x in enumerate(f1[k]):
+                matchdict[x] = f2[k][i]
+        return matchdict
 
     a = simplify_logic(bool1)
     b = simplify_logic(bool2)
