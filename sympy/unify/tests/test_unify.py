@@ -19,6 +19,7 @@ def unify(a, b, s={}):
 
 def test_basic():
     assert list(unify(a, x, {})) == [{x: a}]
+    assert list(unify(a, x, {x: 10})) == []
     assert list(unify(1, x, {})) == [{x: 1}]
     assert list(unify(a, a, {})) == [{}]
     assert list(unify((w, x), (y, z), {})) == [{w: y, x: z}]

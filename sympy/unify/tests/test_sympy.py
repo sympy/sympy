@@ -28,6 +28,13 @@ def test_unify():
     assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
     assert list(unify(expr, pattern))     == [{a: 1, b: 2, c: 3}]
 
+def test_s_input():
+    expr = Basic(1, 2)
+    a, b = map(ExprWild, 'ab')
+    pattern = Basic(a, b)
+    assert list(unify(expr, pattern, {})) == [{a: 1, b: 2}]
+    assert list(unify(expr, pattern, {a: 5})) == []
+
 def iterdicteq(a, b):
     a = tuple(a)
     b = tuple(b)

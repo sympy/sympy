@@ -100,8 +100,9 @@ def unify(x, y, s=None, **kwargs):
     12
     """
     s = s or {}
+    s = dict((deconstruct(k), deconstruct(v)) for k, v in s.items())
 
-    ds = core.unify(deconstruct(x), deconstruct(y), {},
+    ds = core.unify(deconstruct(x), deconstruct(y), s,
                                                 is_associative=is_associative,
                                                 is_commutative=is_commutative,
                                                 **kwargs)
