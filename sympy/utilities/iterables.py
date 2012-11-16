@@ -809,11 +809,11 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
-def multiset_partitions(multiset, m):
+def multiset_partitions(multiset, m=None):
     """
     Return unique partitions of the given multiset (in list form).
-    If ``multiset`` is an integer, the partitions of ``range(multiset)``
-    will be returned.
+    If ``m`` is None, all multisets will be returned. If ``multiset``
+    is an int, a range [0, 1, ..., multiset - 1] will be supplied.
 
     Examples
     ========
@@ -826,12 +826,16 @@ def multiset_partitions(multiset, m):
     >>> list(multiset_partitions([1,2,3,4], 1))
     [[[1, 2, 3, 4]]]
 
-    The input is not sorted, but only unique partitions are returned:
+    Although the input is not sorted, only unique partitions are returned:
 
     >>> list(multiset_partitions([1, 2, 2, 1], 2))
     [[[1, 2, 2], [1]], [[1, 2, 1], [2]], [[1, 2], [2, 1]], [[1, 1], [2, 2]]]
     >>> list(multiset_partitions([1, 1, 2, 2], 2))
     [[[1, 1, 2], [2]], [[1, 1], [2, 2]], [[1, 2, 2], [1]], [[1, 2], [1, 2]]]
+
+    If a multiset alone is given, all partitions will be returned:
+    >>> list(multiset_partitions([1, 1, 2]))
+    [[[1, 1], [2]], [[1, 2], [1]], [[1], [1], [2]]]
 
     See Also
     ========
@@ -881,10 +885,12 @@ def multiset_partitions(multiset, m):
         multiset = range(multiset)
         if m == 1:
             yield [multiset[:]]
+            return
         canon = 0
     else:
         if m == 1:
             yield [multiset[:]]
+            return
 
         n = len(multiset)
 
@@ -909,16 +915,16 @@ def multiset_partitions(multiset, m):
     if canon == 0:
         while nc != n:
             nc = nexequ(n, nc, p, q, 1)
-            if nc == m:
-                rv = [[] for i in range(m + 1)]
+            if m is None or nc == m:
+                rv = [[] for i in range(nc + 1)]
                 for i in range(n):
                     rv[q[i + 1]].append(multiset[i])
                 yield rv[1:]
     else:
         while nc != n:
             nc = nexequ(n, nc, p, q, 1)
-            if nc == m:
-                rv = [[] for i in xrange(m + 1)]
+            if m is None or nc == m:
+                rv = [[] for i in xrange(nc + 1)]
                 for i in xrange(n):
                     rv[q[i + 1]].append(i)
                 if canon:
@@ -931,13 +937,15 @@ def multiset_partitions(multiset, m):
                     yield [[multiset[j] for j in i] for i in rv[1:]]
 
 
-def partitions(n, m=None, k=None):
+def partitions(n, m=None, k=None, size=False):
     """Generate all partitions of integer n (>= 0).
 
     'm' limits the number of parts in the partition, e.g. if m=2 then
         partitions will contain no more than 2 numbers, while
     'k' limits the numbers which may appear in the partition, e.g. k=2 will
         return partitions with no element greater than 2.
+    'size', when True, will return (M, P) where M is the sum of the
+        multiplicities and P is the generated partition.
 
     Each partition is represented as a dictionary, mapping an integer
     to the number of copies of that integer in the partition.  For example,
@@ -976,6 +984,8 @@ def partitions(n, m=None, k=None):
 
     >>> [p.copy() for p in partitions(6, k=2)]
     [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
+    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]
+    [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
 
     Reference:
         modified from Tim Peter's version to allow for k and m values:
@@ -1008,7 +1018,10 @@ def partitions(n, m=None, k=None):
         ms[r] = 1
         keys.append(r)
     room = m - q - bool(r)
-    yield ms
+    if size:
+        yield sum(ms.values()), ms
+    else:
+        yield ms
 
     while keys != [1]:
         # Reuse any 1's.
@@ -1045,7 +1058,10 @@ def partitions(n, m=None, k=None):
                 keys.append(r)
             break
         room -= need
-        yield ms
+        if size:
+            yield sum(ms.values()), ms
+        else:
+            yield ms
 
 
 def binary_partitions(n):
@@ -1554,8 +1570,8 @@ def kbins(l, k, ordered=None):
             for perm in permutations(p):
                 yield list(perm)
     elif ordered == 01:
-        for p in partitions(len(l), k):
-            if sum(p.values()) != k:
+        for kgot, p in partitions(len(l), k, size=True):
+            if kgot != k:
                 continue
             for li in permutations(l):
                 rv = []
