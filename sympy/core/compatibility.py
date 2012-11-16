@@ -731,3 +731,9 @@ def ordered(seq, keys=None, default=True, warn=False):
         for v in d[k]:
             yield v
         d.pop(k)
+
+try:
+    next = next
+except NameError:
+    def next(x):
+        return x.next()

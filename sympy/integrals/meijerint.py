@@ -26,6 +26,7 @@ The main references for this are:
     Gordon and Breach Science Publisher
 """
 from sympy.core import oo, S, pi
+from sympy.core.compatibility import next
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
 from sympy.core.mul import Mul
