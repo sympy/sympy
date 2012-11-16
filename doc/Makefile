@@ -6,9 +6,7 @@ RST2HTML     = rst2html
 # You can set these variables from the command line.
 SPHINXOPTS   =
 SPHINXVER    = 0.5
-#SPHINXBUILDpy  = sphinx/Sphinx-$(SPHINXVER)/sphinx-build.py
-SPHINXBUILDpy  = sphinx-build
-SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) $(SPHINXBUILDpy)
+SPHINXBUILD  = PYTHONPATH=..:$(PYTHONPATH) sphinx-build
 PAPER        =
 
 SVGFILES = $(wildcard src/modules/physics/mechanics/*.svg)
@@ -49,13 +47,7 @@ clean:
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
-$(SPHINXBUILDpy):
-	rm -rf sphinx
-#	mkdir sphinx
-#	cd sphinx; wget http://pypi.python.org/packages/source/S/Sphinx/Sphinx-$(SPHINXVER).tar.gz;
-#	cd sphinx; tar xzf Sphinx-$(SPHINXVER).tar.gz
-
-html: $(SPHINXBUILDpy)
+html:
 	mkdir -p src/.static
 	mkdir -p _build/html
 	mkdir -p _build/doctrees
@@ -69,7 +61,7 @@ html: $(SPHINXBUILDpy)
 html-errors: SPHINXOPTS += -W
 html-errors: html
 
-htmlapi: $(SPHINXBUILDpy)
+htmlapi:
 	mkdir -p api/.static
 	mkdir -p api/modules
 	mkdir -p _build/api _build/doctreesapi
@@ -108,7 +100,7 @@ htmlhelp:
 	@echo "Build finished; now you can run HTML Help Workshop with the" \
 	      ".hhp project file in _build/htmlhelp."
 
-latex: $(SPHINXBUILDpy) $(PDFFILES)
+latex: $(PDFFILES)
 	mkdir -p _build/latex _build/doctrees
 	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) _build/latex
 	sed -i "s/pdflatex/xelatex/g" _build/latex/Makefile
