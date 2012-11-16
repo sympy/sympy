@@ -963,10 +963,18 @@ Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
 that contains a lot of useful examples, tutorials, cookbooks that we and our
 users contributed, and feel free to edit it.
 
-Translations
-============
+.. only:: html
 
-This tutorial is also available in other languages:
+    Translations
+    ============
 
-.. toctree::
-   :maxdepth: 1
+    This tutorial is also available in other languages:
+
+        - `Bulgarian <tutorial.bg.html>`_
+        - `Tcheck <tutorial.cs.html>`_
+        - `Deutsch <tutorial.de.html>`_
+        - `English <tutorial.en.html>`_
+        - `Francais <tutorial.fr.html>`_
+        - `Polish <tutorial.pl.html>`_
+        - `Russian <tutorial.ru.html>`_
+        - `Serbian <tutorial.sr.html>`_
