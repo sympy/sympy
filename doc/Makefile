@@ -28,17 +28,17 @@ LANGUAGES = bg cs de fr pl ru sr
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
-	@echo "  html        to make standalone HTML files"
-	@echo "  web         to make files usable by Sphinx.web"
-	@echo "  htmlhelp    to make HTML files and a HTML help project"
-	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
-	@echo "  texinfo     to make Texinfo files"
-	@echo "  info        to make Texinfo files and run them through makeinfo"
 	@echo "  changes     to make an overview over all changed/added/deprecated items"
-	@echo "  linkcheck   to check all external links for integrity"
 	@echo "  cheatsheet  to make the Cheatsheet"
-	@echo "  htmli18n    to make the i18n versions"
+	@echo "  html        to make standalone HTML files"
 	@echo "  html-errors to make the standalone HTML files, stopping on any errors or warnings"
+	@echo "  htmlhelp    to make HTML files and a HTML help project"
+	@echo "  htmli18n    to make the i18n versions"
+	@echo "  info        to make Texinfo files and run them through makeinfo"
+	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
+	@echo "  linkcheck   to check all external links for integrity"
+	@echo "  texinfo     to make Texinfo files"
+	@echo "  web         to make files usable by Sphinx.web"
 
 clean:
 	-rm -rf _build
