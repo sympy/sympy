@@ -970,11 +970,11 @@ users contributed, and feel free to edit it.
 
     This tutorial is also available in other languages:
 
-        - `Bulgarian <tutorial.bg.html>`_
-        - `Tcheck <tutorial.cs.html>`_
+        - `Български <tutorial.bg.html>`_
+        - `Česky <tutorial.cs.html>`_
         - `Deutsch <tutorial.de.html>`_
         - `English <tutorial.en.html>`_
-        - `Francais <tutorial.fr.html>`_
-        - `Polish <tutorial.pl.html>`_
-        - `Russian <tutorial.ru.html>`_
-        - `Serbian <tutorial.sr.html>`_
+        - `Français <tutorial.fr.html>`_
+        - `Polski <tutorial.pl.html>`_
+        - `Русский <tutorial.ru.html>`_
+        - `Српски <tutorial.sr.html>`_
