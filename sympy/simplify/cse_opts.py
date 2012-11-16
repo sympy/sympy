@@ -6,6 +6,7 @@ from sympy.core.basic import preorder_traversal
 from sympy.core.exprtools import factor_terms
 from sympy.utilities.iterables import default_sort_key
 
+
 class Neg(Expr):
     """ Stub to hold negated expression.
     """

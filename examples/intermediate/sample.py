@@ -8,6 +8,7 @@ graphing functions using matplotlib.
 from numpy import repeat, arange, empty, ndarray, array
 from sympy import Symbol, Basic, Rational, I, sympify
 
+
 def sample2d(f, x_args):
     """
     Samples a 2d function f over specified intervals and returns two
@@ -37,6 +38,7 @@ def sample2d(f, x_args):
         except TypeError:
             Y[i] = None
     return X, Y
+
 
 def sample3d(f, x_args, y_args):
     """
@@ -91,6 +93,7 @@ def sample3d(f, x_args, y_args):
             except (TypeError, NotImplementedError):
                 Z[j][k] = 0
     return X, Y, Z
+
 
 def sample(f, *var_args):
     """

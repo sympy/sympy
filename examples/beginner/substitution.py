@@ -8,6 +8,7 @@ Demonstrates substitution.
 import sympy
 from sympy import pprint
 
+
 def main():
     x = sympy.Symbol('x')
     y = sympy.Symbol('y')

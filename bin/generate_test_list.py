@@ -31,6 +31,7 @@ tests = [
 
 from glob import glob
 
+
 def get_paths(level=15):
     """
     Generates a set of paths for testfiles searching.

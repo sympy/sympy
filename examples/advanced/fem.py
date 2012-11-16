@@ -20,6 +20,7 @@ from sympy import symbols, Symbol, factorial, Rational, zeros, div, eye, \
 
 x, y, z = symbols('x,y,z')
 
+
 class ReferenceSimplex:
     def __init__(self, nsd):
         self.nsd = nsd
@@ -43,6 +44,7 @@ class ReferenceSimplex:
             limit += p
             intf = integrate(intf, (p, 0, limit))
         return intf
+
 
 def bernstein_space(order, nsd):
     if nsd > 3:
@@ -87,6 +89,7 @@ def bernstein_space(order, nsd):
                             coeff.append(aij)
 
     return sum, coeff, basis
+
 
 def create_point_set(order, nsd):
     h = Rational(1, order)

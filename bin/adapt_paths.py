@@ -20,8 +20,10 @@ from glob import glob
 import re
 import difflib
 
+
 def get_files_mpmath():
     return glob("sympy/mpmath/tests/test_*.py")
+
 
 def fix_file(filename):
     with open(filename) as f:

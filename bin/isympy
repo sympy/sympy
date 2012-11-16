@@ -172,18 +172,21 @@ See also isympy --help.
 
 """
 
-import os, sys, warnings
+import os
+import sys
+import warnings
 
 
 # hook in-tree SymPy into Python path, if possible
 
 isympy_path = os.path.abspath(__file__)
-isympy_dir  = os.path.dirname(isympy_path)
-sympy_top   = os.path.split(isympy_dir)[0]
-sympy_dir   = os.path.join(sympy_top, 'sympy')
+isympy_dir = os.path.dirname(isympy_path)
+sympy_top = os.path.split(isympy_dir)[0]
+sympy_dir = os.path.join(sympy_top, 'sympy')
 
 if os.path.isdir(sympy_dir):
     sys.path.insert(0, sympy_top)
+
 
 def main():
     from optparse import OptionParser
@@ -193,7 +196,7 @@ def main():
         # below because optparse line wraps it weird.  The argparse module
         # allows you to disable this, though, but it's only available in
         # Python 2.7+.
-        print __doc__ # the docstring of this module above
+        print __doc__  # the docstring of this module above
     usage = 'usage: isympy [options] -- [ipython options]'
     parser = OptionParser(
         usage=usage,
@@ -201,7 +204,7 @@ def main():
         # XXX: We need a more centralized place to store the version.
         # It is currently stored in sympy.__version__, but we can't yet
         # import sympy at this point.
-        )
+    )
 
     parser.add_option(
         '-c', '--console',
@@ -311,11 +314,11 @@ def main():
         ipython = None
 
     args = {
-        'pretty_print' : True,
-        'use_unicode'  : None,
-        'use_latex'    : None,
-        'order'        : None,
-        'argv'         : ipy_args,
+        'pretty_print': True,
+        'use_unicode':  None,
+        'use_latex':    None,
+        'order':        None,
+        'argv':         ipy_args,
     }
 
     if options.pretty == 'unicode':
@@ -331,7 +334,6 @@ def main():
     args['quiet'] = options.quiet
     args['auto_symbols'] = options.auto_symbols or options.interactive
     args['auto_int_to_Integer'] = options.auto_int_to_Integer or options.interactive
-
 
     from sympy.utilities.exceptions import SymPyDeprecationWarning
     warnings.simplefilter("always", SymPyDeprecationWarning)

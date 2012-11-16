@@ -51,12 +51,14 @@ for name, value in color_templates:
 c_normal = '\033[0m'
 c_color = '\033[%sm'
 
+
 def print_header(name, underline=None, overline=None):
 
     print
     print name
     if underline:
         print underline*len(name)
+
 
 def print_coverage(module_path, c, c_md, c_mdt, c_idt, f, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose=False, no_color=False):
 
@@ -136,12 +138,13 @@ def _is_indirect(member, doc):
     else:
         return False
 
+
 def _get_arg_list(name, fobj):
 
     """ Given a function object, constructs a list of arguments
     and their defaults. Takes care of varargs and kwargs """
 
-    trunc = 20 # Sometimes argument length can be huge
+    trunc = 20  # Sometimes argument length can be huge
 
     argspec = inspect.getargspec(fobj)
 
@@ -175,6 +178,7 @@ def _get_arg_list(name, fobj):
     str_param = "%s(%s)" % (name, ', '.join(arg_list))
 
     return str_param
+
 
 def get_mod_name(path, base):
 
@@ -291,6 +295,7 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest):
         c_has_doctest.append(full_name)
 
     return c_dt, c, source
+
 
 def coverage(module_path, verbose=False, no_color=False):
 
@@ -412,6 +417,7 @@ def coverage(module_path, verbose=False, no_color=False):
     print_coverage(module_path, classes, c_md, c_mdt, c_idt, functions, f_md, f_mdt, f_idt, score, total_doctests, total_members, verbose, no_color)
 
     return total_doctests, total_members
+
 
 def go(sympy_top, file, verbose=False, no_color=False, exact=True):
 

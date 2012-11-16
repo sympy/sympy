@@ -783,6 +783,7 @@ def test_issue_1793a():
         (A*c*t - A*(-h2)*log(t)*exp(z))*exp(-z),
     ]
 
+
 def test_issue_1793b():
     # Issues relating to issue 1497 are making the actual result of this hard
     # to test.  The answer should be something like
@@ -822,9 +823,11 @@ def test_limit_bug():
         -((-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z) + \
         log(z**2)/(2*z) + EulerGamma/z + 2*log(pi)/z
 
+
 def test_issue_1604():
     g = Function('g')
     assert integrate(exp(x)*g(x), x).has(Integral)
+
 
 def test_issue_1888():
     f = Function('f')
@@ -832,9 +835,11 @@ def test_issue_1888():
 
 # The following tests work using meijerint.
 
+
 def test_issue459():
     from sympy import Si
     assert integrate(cos(x*y), (x, -pi/2, pi/2), (y, 0, pi)) == 2*Si(pi**2/2)
+
 
 def test_issue841():
     from sympy import expand_mul
@@ -845,21 +850,26 @@ def test_issue841():
     assert expand_mul(integrate(exp(-a*x**2 + 2*d*x), (x, -oo, oo))) == \
         sqrt(pi)*exp(d**2/a)/sqrt(a)
 
+
 def test_issue1304():
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
         1/(y**2*sqrt(1 + y**2/x**2))
 
+
 def test_issue_1323():
     assert integrate(1/sqrt(16 + 4*x**2), x) == asinh(x/2) / 2
+
 
 def test_issue1394():
     from sympy import simplify
     assert simplify(integrate(x*sqrt(1 + 2*x), x)) == \
         sqrt(2*x + 1)*(6*x**2 + x - 1)/15
 
+
 def test_issue1638():
     assert integrate(sin(x)/x, (x, -oo, oo)) == pi
     assert integrate(sin(x)/x, (x, 0, oo)) == pi/2
+
 
 def test_issue1893():
     from sympy import simplify, expand_func, polygamma, gamma
@@ -890,19 +900,23 @@ def test_issue_3154():
     assert integrate((sqrt(1 - x) + sqrt(1 + x))**2/x, x, meijerg=True) == \
         Integral((sqrt(-x + 1) + sqrt(x + 1))**2/x, x)
 
+
 def test_issue1054():
-    assert integrate(1/(1+x+y+z), (x, 0, 1), (y, 0, 1), (z, 0, 1)) in \
+    assert integrate(1/(1 + x + y + z), (x, 0, 1), (y, 0, 1), (z, 0, 1)) in \
         [6*log(2) + 8*log(4) - 27*log(3)/2, 22*log(2) - 27*log(3)/2,
          -12*log(3) - 3*log(6)/2 + 47*log(2)/2]
+
 
 def test_issue_1227():
     R, b, h = symbols('R b h')
     # It doesn't matter if we can do the integral.  Just make sure the result
     # doesn't contain nan.  This is really a test against _eval_interval.
-    assert not integrate(((h*(x-R+b))/b)*sqrt(R**2-x**2), (x, R-b, R)).has(nan)
+    assert not integrate(((h*(x - R + b))/b)*sqrt(R**2 - x**2), (x, R - b, R)).has(nan)
+
 
 def test_powers():
     assert integrate(2**x + 3**x, x) == 2**x/log(2) + 3**x/log(3)
+
 
 def test_risch_option():
     # risch=True only allowed on indefinite integrals

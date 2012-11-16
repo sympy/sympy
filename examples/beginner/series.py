@@ -7,6 +7,7 @@ Demonstrates series.
 
 from sympy import Symbol, cos, sin, pprint
 
+
 def main():
     x = Symbol('x')
 

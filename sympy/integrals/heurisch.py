@@ -20,6 +20,7 @@ from sympy.polys.polyroots import root_factors
 
 from sympy.core.compatibility import reduce, default_sort_key
 
+
 def components(f, x):
     """
     Returns a set of all functional components of the given expression
@@ -65,6 +66,7 @@ def components(f, x):
 
 # name -> [] of symbols
 _symbols_cache = {}
+
 
 # NB @cacheit is not convenient here
 def _symbols(name, n):
@@ -167,8 +169,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
         return indep * f * x
 
     rewritables = {
-        (sin, cos, cot)     : tan,
-        (sinh, cosh, coth)  : tanh,
+        (sin, cos, cot): tan,
+        (sinh, cosh, coth): tanh,
     }
 
     if rewrite:
@@ -201,19 +203,19 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
                         if M is not None:
                             if M[a].is_positive:
-                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c] - M[b]**2/(4*M[a]))*
                                           erf(-sqrt(-M[a])*x + M[b]/(2*sqrt(-M[a]))))
                             elif M[a].is_negative:
-                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c]-M[b]**2/(4*M[a]))* \
+                                terms.add(sqrt(pi/4*(-M[a]))*exp(M[c] - M[b]**2/(4*M[a]))*
                                           erf(sqrt(-M[a])*x - M[b]/(2*sqrt(-M[a]))))
 
                         M = g.args[0].match(a*log(x)**2)
 
                         if M is not None:
                             if M[a].is_positive:
-                                terms.add(-I*erf(I*(sqrt(M[a])*log(x)+1/(2*sqrt(M[a])))))
+                                terms.add(-I*erf(I*(sqrt(M[a])*log(x) + 1/(2*sqrt(M[a])))))
                             if M[a].is_negative:
-                                terms.add(erf(sqrt(-M[a])*log(x)-1/(2*sqrt(-M[a]))))
+                                terms.add(erf(sqrt(-M[a])*log(x) - 1/(2*sqrt(-M[a]))))
 
                 elif g.is_Pow:
                     if g.exp.is_Rational and g.exp.q == 2:
@@ -231,8 +233,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
                             if M[a].is_positive:
                                 terms.add(acosh(sqrt(M[a]/M[b])*x))
                             elif M[a].is_negative:
-                                terms.add((-M[b]/2*sqrt(-M[a])*\
-                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2-M[b]))))
+                                terms.add((-M[b]/2*sqrt(-M[a])*
+                                           atan(sqrt(-M[a])*x/sqrt(M[a]*x**2 - M[b]))))
 
         else:
             terms |= set(hints)
@@ -458,7 +460,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
         return indep * antideriv
     else:
         if retries >= 0:
-            result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries-1)
+            result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries - 1)
 
             if result is not None:
                 return indep*result

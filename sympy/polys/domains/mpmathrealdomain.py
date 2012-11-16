@@ -3,6 +3,7 @@
 from sympy.polys.domains.realdomain import RealDomain
 from sympy.polys.domains.groundtypes import MPmathRealType
 
+
 class MPmathRealDomain(RealDomain):
     """Domain for real numbers based on mpmath mpf type. """
 

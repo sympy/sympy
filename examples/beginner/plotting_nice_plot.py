@@ -8,6 +8,7 @@ Demonstrates simple plotting.
 from sympy import Symbol, cos, sin, Plot, log, tan
 from sympy.abc import x, y
 
+
 def main():
     fun1 = cos(x)*sin(y)
     fun2 = sin(x)*sin(y)

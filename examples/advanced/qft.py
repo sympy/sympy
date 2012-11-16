@@ -35,6 +35,7 @@ sigma3 = msigma(3)
 E = Symbol("E", real=True)
 m = Symbol("m", real=True)
 
+
 def u(p, r):
     """ p = (p1, p2, p3); r = 0,1 """
     assert r in [1, 2]
@@ -47,6 +48,7 @@ def u(p, r):
     if a == 0:
         a = zeros(2, 1)
     return sqrt(E + m) * Matrix([[ksi[0, 0]], [ksi[1, 0]], [a[0, 0]], [a[1, 0]]])
+
 
 def v(p, r):
     """ p = (p1, p2, p3); r = 0,1 """
@@ -61,16 +63,20 @@ def v(p, r):
         a = zeros(2, 1)
     return sqrt(E + m) * Matrix([[a[0, 0]], [a[1, 0]], [ksi[0, 0]], [ksi[1, 0]]])
 
+
 def pslash(p):
     p1, p2, p3 = p
     p0 = sqrt(m**2 + p1**2 + p2**2 + p3**2)
     return gamma0*p0 - gamma1*p1 - gamma2*p2 - gamma3*p3
 
+
 def Tr(M):
     return M.trace()
 
+
 def xprint(lhs, rhs):
     pprint( Eq(sympify(lhs), rhs ) )
+
 
 def main():
     a = Symbol("a", real=True)

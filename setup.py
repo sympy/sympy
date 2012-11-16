@@ -96,6 +96,7 @@ modules = [
     'sympy.utilities.mathml',
 ]
 
+
 class audit(Command):
     """Audits SymPy's source code for following issues:
         - Names which are used but not defined or used before they are defined.
@@ -130,6 +131,7 @@ class audit(Command):
         if warns > 0:
             print ("Audit finished with total %d warnings" % warns)
 
+
 class clean(Command):
     """Cleans *.pyc and debian trashs, so you should get the same copy as
     is in the VCS.
@@ -162,7 +164,7 @@ class test_sympy(Command):
     user_options = []  # distutils complains if this is not here.
 
     def __init__(self, *args):
-        self.args = args[0] # so we can pass it to other classes
+        self.args = args[0]  # so we can pass it to other classes
         Command.__init__(self, *args)
 
     def initialize_options(self):  # distutils wants this
@@ -174,6 +176,7 @@ class test_sympy(Command):
     def run(self):
         sympy.utilities.runtests.run_all_tests()
 
+
 class run_benchmarks(Command):
     """Runs all SymPy benchmarks"""
 
@@ -181,7 +184,7 @@ class run_benchmarks(Command):
     user_options = []  # distutils complains if this is not here.
 
     def __init__(self, *args):
-        self.args = args[0] # so we can pass it to other classes
+        self.args = args[0]  # so we can pass it to other classes
         Command.__init__(self, *args)
 
     def initialize_options(self):  # distutils wants this

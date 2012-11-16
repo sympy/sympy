@@ -2532,6 +2532,7 @@ def _nth_linear_match(eq, func, order):
                 terms[len(f.args[1:])] += c
     return terms
 
+
 def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     r"""
     Solves an nth order linear homogeneous variable-coefficient
@@ -2609,8 +2610,8 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     chareq, symbol = S.Zero, Dummy('x')
 
     for i in r.keys():
-        if not isinstance(i,str) and i >= 0:
-            chareq += (r[i]*diff(x**symbol,x,i)*x**-symbol).expand()
+        if not isinstance(i, str) and i >= 0:
+            chareq += (r[i]*diff(x**symbol, x, i)*x**-symbol).expand()
 
     chareq = Poly(chareq, symbol)
     chareqroots = [RootOf(chareq, k) for k in xrange(chareq.degree())]
@@ -2635,8 +2636,8 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             else:
                 reroot = re(root)
                 imroot = im(root)
-                gsol += ln(x)**i*(x**reroot)*(constants.next()*sin(abs(imroot)*ln(x)) \
-                + constants.next()*cos(imroot*ln(x)))
+                gsol += ln(x)**i*(x**reroot)*(constants.next()*sin(abs(imroot)*ln(x))
+                    + constants.next()*cos(imroot*ln(x)))
                 # Preserve ordering (multiplicity, real part, imaginary part)
                 # It will be assumed implicitly when constructing
                 # fundamental solution sets.
@@ -2661,9 +2662,10 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
         if returns == 'list':
             return gensols
         else:
-            return {'sol':Eq(f(x), gsol), 'list':gensols}
+            return {'sol': Eq(f(x), gsol), 'list': gensols}
     else:
         raise ValueError('Unknown value for key "returns".')
+
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     r"""

@@ -524,7 +524,7 @@ class Mul(Expr, AssocOp):
 
         if e.is_Integer:
             return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
-                   Pow(Mul._from_args(nc), e, evaluate=False)
+                Pow(Mul._from_args(nc), e, evaluate=False)
 
         p = Pow(b, e, evaluate=False)
 

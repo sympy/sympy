@@ -32,7 +32,7 @@ class Q:
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
     orthogonal = Predicate('orthogonal')
-    positive_definite= Predicate('positive_definite')
+    positive_definite = Predicate('positive_definite')
     upper_triangular = Predicate('upper_triangular')
     lower_triangular = Predicate('lower_triangular')
     diagonal = Predicate('diagonal')
@@ -255,7 +255,6 @@ _handlers = [
 ]
 for name, value in _handlers:
     register_handler(name, _val_template % value)
-
 
 
 known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__

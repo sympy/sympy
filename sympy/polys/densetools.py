@@ -1225,10 +1225,10 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
 
     """
     if K1 is None:
-       if K0.has_assoc_Ring:
-           K1 = K0.get_ring()
-       else:
-           K1 = K0
+        if K0.has_assoc_Ring:
+            K1 = K0.get_ring()
+        else:
+            K1 = K0
 
     common = K1.one
 

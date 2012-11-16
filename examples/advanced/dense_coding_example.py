@@ -9,6 +9,7 @@ from sympy.physics.quantum.qubit import Qubit
 from sympy.physics.quantum.circuitplot import circuit_plot
 from sympy.physics.quantum.grover import superposition_basis
 
+
 def main():
     psi = superposition_basis(2)
     psi

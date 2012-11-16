@@ -8,6 +8,7 @@ Demonstrates matrix computations using the Vandermonde matrix.
 
 from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros
 
+
 def symbol_gen(sym_str):
     """Symbol generator
 

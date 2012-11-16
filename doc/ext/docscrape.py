@@ -8,6 +8,7 @@ import re
 import pydoc
 from StringIO import StringIO
 
+
 class Reader(object):
     """
     A line-based string reader.
@@ -23,7 +24,7 @@ class Reader(object):
         if isinstance(data, list):
             self._str = data
         else:
-            self._str = data.split('\n') # store string as list of lines
+            self._str = data.split('\n')  # store string as list of lines
 
         self.reset()
 
@@ -31,7 +32,7 @@ class Reader(object):
         return self._str[n]
 
     def reset(self):
-        self._l = 0 # current line nr
+        self._l = 0  # current line nr
 
     def read(self):
         if not self.eof():
@@ -150,7 +151,7 @@ class NumpyDocString(object):
         section = self._doc.read_to_next_empty_line()
 
         while not self._is_at_section() and not self._doc.eof():
-            if not self._doc.peek(-1).strip(): # previous line was empty
+            if not self._doc.peek(-1).strip():  # previous line was empty
                 section += ['']
 
             section += self._doc.read_to_next_empty_line()
@@ -162,7 +163,7 @@ class NumpyDocString(object):
             data = self._read_to_next_section()
             name = data[0].strip()
 
-            if name.startswith('..'): # index section
+            if name.startswith('..'):  # index section
                 yield name, data[1:]
             elif len(data) < 2:
                 yield StopIteration
@@ -406,9 +407,11 @@ def indent(str, indent=4):
     lines = str.split('\n')
     return '\n'.join(indent_str + l for l in lines)
 
+
 def dedent_lines(lines):
     """Deindent a list of lines maximally"""
     return textwrap.dedent("\n".join(lines)).split("\n")
+
 
 def header(text, style='-'):
     return text + '\n' + style*len(text) + '\n'
@@ -417,7 +420,7 @@ def header(text, style='-'):
 class FunctionDoc(NumpyDocString):
     def __init__(self, func, role='func', doc=None, config={}):
         self._f = func
-        self._role = role # e.g. "func" or "meth"
+        self._role = role  # e.g. "func" or "meth"
 
         if doc is None:
             if func is None:

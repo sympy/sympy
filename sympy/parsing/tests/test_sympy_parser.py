@@ -5,6 +5,7 @@ from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError
 )
 
+
 def test_sympy_parser():
     x = Symbol('x')
     inputs = {
@@ -23,13 +24,15 @@ def test_sympy_parser():
     for text, result in inputs.items():
         assert parse_expr(text) == result
 
+
 def test_rationalize():
     inputs = {
-        '0.123': Rational(123,1000)
+        '0.123': Rational(123, 1000)
     }
     transformations = standard_transformations + (rationalize,)
     for text, result in inputs.items():
         assert parse_expr(text, transformations=transformations) == result
+
 
 def test_factorial_fail():
     inputs = ['x!!!', 'x!!!!', '(!)']

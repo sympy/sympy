@@ -207,10 +207,11 @@ def test_pow_invpow():
 
 def test_postprocess():
     eq = (x + 1 + exp((x + 1)/(y + 1)) + cos(y + 1))
-    assert cse([eq, Eq(x, z + 1), z - 2, (z+1)*(x+1)],
+    assert cse([eq, Eq(x, z + 1), z - 2, (z + 1)*(x + 1)],
         postprocess=cse_main.cse_separate) == \
         [[(x1, y + 1), (x2, z + 1), (x, x2), (x0, x + 1)],
         [x0 + exp(x0/x1) + cos(x1), x2 - 3, x0*x2]]
+
 
 def test_issue1400():
     # previously, this gave 16 constants

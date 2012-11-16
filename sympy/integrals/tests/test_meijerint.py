@@ -207,6 +207,7 @@ def test_meijerint():
     assert simplify(integrate(x**s*exp(-a*x**2), (x, -oo, oo))) == \
         a**(-s/2 - S(1)/2)*((-1)**s + 1)*gamma(s/2 + S(1)/2)/2
 
+
 def test_bessel():
     from sympy import (besselj, Heaviside, besseli, polar_lift, exp_polar,
                        powdenest)

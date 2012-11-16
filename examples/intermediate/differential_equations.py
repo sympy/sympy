@@ -8,6 +8,7 @@ equations.
 
 from sympy import dsolve, Eq, Function, sin, Symbol
 
+
 def main():
     x = Symbol("x")
     f = Function("f")

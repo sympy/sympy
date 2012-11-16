@@ -992,9 +992,9 @@ def test_transform():
 def test_line_intersection():
     assert asa(120, 8, 52) == \
         Triangle(
-             Point(0, 0),
-             Point(8, 0),
-             Point((8*tan(13*pi/45)**2 + 8*sqrt(3)*tan(13*pi/45))/
+            Point(0, 0),
+            Point(8, 0),
+            Point((8*tan(13*pi/45)**2 + 8*sqrt(3)*tan(13*pi/45))/
                 (-3 + tan(13*pi/45)**2),
                 (-24*tan(13*pi/45) - 8*sqrt(3)*tan(13*pi/45)**2)/
                 (-3 + tan(13*pi/45)**2)))

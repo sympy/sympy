@@ -54,6 +54,7 @@ gridsize = 200              # number of points in the grid
 
 # ***************************************************************************
 
+
 def main():
 
     print __doc__
@@ -136,7 +137,7 @@ def main():
         # setup expression for the integration
         #
 
-        step = Symbol('step') # use symbolic stepsize for flexibility
+        step = Symbol('step')  # use symbolic stepsize for flexibility
 
         # let i represent an index of the grid array, and let A represent the
         # grid array.  Then we can approximate the integral by a sum over the
