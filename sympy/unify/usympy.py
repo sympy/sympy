@@ -1,8 +1,10 @@
-from sympy import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
-from sympy import Wild as ExprWild
-
-from core import Compound, Variable
-import core
+from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
+from sympy.core import Wild as ExprWild
+from sympy.matrices import MatAdd, MatMul
+from sympy.core.sets import Union, Intersection, FiniteSet
+from sympy.core.operations import AssocOp
+from sympy.unify.core import Compound, Variable
+from sympy.unify import core
 
 class Wild(object):
     def __init__(self, arg):
@@ -11,13 +13,10 @@ class Wild(object):
         return type(self) == type(other) and self.arg == other.arg
 
 def sympy_associative(op):
-    from sympy import MatAdd, MatMul, Union, Intersection, FiniteSet
-    from sympy.core.operations import AssocOp
     assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection, FiniteSet)
     return any(issubclass(op, aop) for aop in assoc_ops)
 
 def sympy_commutative(op):
-    from sympy import Add, MatAdd, Union, Intersection, FiniteSet
     comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet)
     return any(issubclass(op, cop) for cop in comm_ops)
 
