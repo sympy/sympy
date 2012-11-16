@@ -104,30 +104,36 @@ def checksol(f, symbol, sol=None, **flags):
     Examples
     ========
 
-       >>> from sympy import symbols
-       >>> from sympy.solvers import checksol
-       >>> x, y = symbols('x,y')
-       >>> checksol(x**4-1, x, 1)
-       True
-       >>> checksol(x**4-1, x, 0)
-       False
-       >>> checksol(x**2 + y**2 - 5**2, {x:3, y: 4})
-       True
+    >>> from sympy import symbols
+    >>> from sympy.solvers import checksol
+    >>> x, y = symbols('x,y')
+    >>> checksol(x**4 - 1, x, 1)
+    True
+    >>> checksol(x**4 - 1, x, 0)
+    False
+    >>> checksol(x**2 + y**2 - 5**2, {x: 3, y: 4})
+    True
 
-       None is returned if checksol() could not conclude.
+    To check if an expression is zero using checksol, pass it
+    as ``f`` and send an empty dictionary for ``symbol``:
 
-       flags:
-           'numerical=True (default)'
-               do a fast numerical check if ``f`` has only one symbol.
-           'minimal=True (default is False)'
-               a very fast, minimal testing.
-           'warn=True (default is False)'
-               print a warning if checksol() could not conclude.
-           'simplify=True (default)'
-               simplify solution before substituting into function and
-               simplify the function before trying specific simplifications
-           'force=True (default is False)'
-               make positive all symbols without assumptions regarding sign.
+    >>> checksol(x**2 + x - x*(x + 1), {})
+    True
+
+    None is returned if checksol() could not conclude.
+
+    flags:
+        'numerical=True (default)'
+           do a fast numerical check if ``f`` has only one symbol.
+        'minimal=True (default is False)'
+           a very fast, minimal testing.
+        'warn=True (default is False)'
+           print a warning if checksol() could not conclude.
+        'simplify=True (default)'
+           simplify solution before substituting into function and
+           simplify the function before trying specific simplifications
+        'force=True (default is False)'
+           make positive all symbols without assumptions regarding sign.
 
     """
 
@@ -160,7 +166,7 @@ def checksol(f, symbol, sol=None, **flags):
     if not f:
         return True
 
-    if not f.has(*sol.keys()):
+    if sol and not f.has(*sol.keys()):
         # if f(y) == 0, x=3 does not set f(y) to zero...nor does it not
         return None
 

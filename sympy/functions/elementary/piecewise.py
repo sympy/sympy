@@ -148,11 +148,14 @@ class Piecewise(Function):
             elif cond_eval:
                 if all_conds_evaled:
                     return expr
-            if len(non_false_ecpairs) != 0 and non_false_ecpairs[-1].expr == expr:
-                non_false_ecpairs[-1] = ExprCondPair(
-                    expr, Or(cond, non_false_ecpairs[-1].cond))
-            else:
-                non_false_ecpairs.append( ExprCondPair(expr, cond) )
+            if len(non_false_ecpairs) != 0:
+                if non_false_ecpairs[-1].cond == cond:
+                    continue
+                elif non_false_ecpairs[-1].expr == expr:
+                    non_false_ecpairs[-1] = ExprCondPair(
+                        expr, Or(cond, non_false_ecpairs[-1].cond))
+                    continue
+            non_false_ecpairs.append(ExprCondPair(expr, cond))
         if len(non_false_ecpairs) != len(args) or piecewise_again:
             return Piecewise(*non_false_ecpairs)
 
@@ -414,6 +417,7 @@ class Piecewise(Function):
         """
         Piecewise conditions may contain bool which are not of Basic type.
         """
+        from sympy import checksol, solve
         args = list(self.args)
         for i, (e, c) in enumerate(args):
             e = e._subs(old, new)
@@ -422,6 +426,21 @@ class Piecewise(Function):
                 pass
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
+            if isinstance(c, Equality):
+                if checksol(c, {}, minimal=True):
+                    # the equality is trivially solved
+                    c = True
+                else:
+                    # try to solve the equality
+                    try:
+                        slns = solve(c, dict=True)
+                        if not slns:
+                            c = False
+                        elif len(slns) == 1:
+                            c = And(*[Equality(key, value)
+                                      for key, value in slns[0].iteritems()])
+                    except NotImplementedError:
+                        pass
 
             args[i] = e, c
 
