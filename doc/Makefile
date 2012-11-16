@@ -47,6 +47,7 @@ help:
 clean:
 	-rm -rf _build
 	-rm -rf sphinx
+	-rm -f $(PDFFILES)
 
 $(SPHINXBUILDpy):
 	rm -rf sphinx
