@@ -71,7 +71,7 @@ htmlapi:
 
 gettext:
 	mkdir -p _build/
-	$(SPHINXBUILD) -b gettext src _build/gettext src/tutorial.rst
+	$(SPHINXBUILD) -b gettext -D master_doc=tutorial/tutorial -D source_suffix=.en.rst src _build/gettext
 	cp _build/gettext/tutorial.pot src/
 
 htmli18n:
