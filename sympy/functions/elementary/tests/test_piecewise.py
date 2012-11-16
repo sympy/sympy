@@ -2,24 +2,28 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
+    cos, exp,
 )
 from sympy.utilities.pytest import XFAIL, raises
 
 x, y = symbols('x y')
+z = symbols('z', nonzero=True)
 
 
 def test_piecewise():
 
     # Test canonization
     assert Piecewise((x, x < 1), (0, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise(
-        (x, x < 1), (0, True), (1, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise(
-        (x, x < 1), (0, False), (-1, 1 > 2)) == Piecewise((x, x < 1))
-    assert Piecewise(
-        (x, x < 1), (0, x < 2), (0, True)) == Piecewise((x, x < 1), (0, True))
-    assert Piecewise((x, x < 1), (
-        x, x < 2), (0, True)) == Piecewise((x, Or(x < 1, x < 2)), (0, True))
+    assert Piecewise((x, x < 1), (0, True), (1, True)) == \
+        Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (0, False), (-1, 1 > 2)) == \
+        Piecewise((x, x < 1))
+    assert Piecewise((x, x < 1), (0, x < 1), (0, True)) == \
+        Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (0, x < 2), (0, True)) == \
+        Piecewise((x, x < 1), (0, True))
+    assert Piecewise((x, x < 1), (x, x < 2), (0, True)) == \
+        Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
     raises(TypeError, lambda: Piecewise(x))
@@ -43,6 +47,17 @@ def test_piecewise():
     pf = Piecewise((f(x), x < -1), (f(x) + h(x) + 2, x <= 1))
     pg = Piecewise((g(x), x < -1), (g(x) + h(x) + 2, x <= 1))
     assert pg.subs(g, f) == pf
+
+    assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 0) == 1
+    assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 1) == 0
+    assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, y) == 1
+    assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, -y) == \
+        Piecewise((1, Eq(y, 0)), (0, True))
+    assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
+    assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, -z) == 0
+    assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
+        Piecewise((1, Eq(exp(z), cos(z))), (0, True))
+    assert Piecewise((1, Eq(x, y*(y + 1))), (0, True)).subs(x, y**2 + y) == 1
 
     # Test evalf
     assert p.evalf() == p
