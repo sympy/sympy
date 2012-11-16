@@ -76,12 +76,14 @@ gettext:
 
 htmli18n:
 	mkdir -p _build/i18n/
-	mkdir -p _build/html/
+	mkdir -p _build/html/tutorial
 	for l in $(LANGUAGES); do \
+		mkdir -p _build/doctrees-$$l ; \
 		mkdir -p src/i18n/$$l/LC_MESSAGES/ ; \
 		msgfmt src/tutorial.$$l.po -o src/i18n/$$l/LC_MESSAGES/tutorial.mo ; \
-		$(SPHINXBUILD) -b html -D language=$$l $(ALLSPHINXOPTS) _build/i18n/$$l src/tutorial.rst ; \
-		cp _build/i18n/$$l/tutorial.html _build/html/tutorial.$$l.html ; \
+		$(SPHINXBUILD) -b html -D language=$$l -D master_doc=tutorial/tutorial \
+			-D source_suffix=.en.rst -d _build/doctrees-$$l $(SPHINXOPTS) src _build/i18n/$$l ; \
+		cp _build/i18n/$$l/tutorial/tutorial.html _build/html/tutorial/tutorial.$$l.html ; \
 	done
 
 web:
