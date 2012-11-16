@@ -914,7 +914,7 @@ def bool_equal(bool1, bool2, info=False):
         and is either an And (or an Or) whose arguments are either
         symbols (x), negated symbols (Not(x)), or Or (or an And) whose
         arguments are only symbols or negated symbols. For example,
-        And(x, Not(y), Or(y, Not(z))).
+        And(x, Not(y), Or(w, Not(z))).
 
         Basic.match is not robust enough (see issue 1736) so this is
         a workaround that is valid for simplified boolean expressions
