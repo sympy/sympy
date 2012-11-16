@@ -22,7 +22,8 @@ ALLSPHINXOPTSapi = -d _build/doctreesapi -D latex_paper_size=$(PAPER) \
 
 LANGUAGES = bg cs de fr pl ru sr
 
-.PHONY: help clean html web htmlhelp latex changes linkcheck cheatsheet
+.PHONY: changes cheatsheet clean gettext help html html-errors \
+        htmlapi htmlhelp htmli18n info latex linkcheck texinfo web
 
 .SUFFIXES: .pdf .svg
 
