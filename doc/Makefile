@@ -12,11 +12,10 @@ PAPER        =
 SVGFILES = $(wildcard src/modules/physics/mechanics/*.svg)
 PDFFILES = $(SVGFILES:%.svg=%.pdf)
 
-ALLSPHINXOPTS = -d _build/doctrees -D latex_paper_size=$(PAPER) \
+ALLSPHINXOPTS = -d _build/doctrees $(SPHINXOPTS) src
+ALLSPHINXOPTSapi = -d _build/doctrees-api $(SPHINXOPTS) api
+ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
                 $(SPHINXOPTS) src
-
-ALLSPHINXOPTSapi = -d _build/doctreesapi -D latex_paper_size=$(PAPER) \
-                $(SPHINXOPTS) api
 
 LANGUAGES = bg cs de fr pl ru sr
 
@@ -102,7 +101,7 @@ htmlhelp:
 
 latex: $(PDFFILES)
 	mkdir -p _build/latex _build/doctrees
-	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTS) _build/latex
+	$(SPHINXBUILD) -b latex $(ALLSPHINXOPTSlatex) _build/latex
 	sed -i "s/pdflatex/xelatex/g" _build/latex/Makefile
 	@echo
 	@echo "Build finished; the LaTeX files are in _build/latex."
