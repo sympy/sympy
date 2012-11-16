@@ -24,7 +24,7 @@ using ``make html`` and then just run::
 
 This will create ``tutorial.cs.html``, ``tutorial.ru.html`` (and so on for all
 languages) in the ``_build/html/`` directory. The input is the English tutorial
-``tutorial.rst`` and the .po files ``tutorial.cs.po``, ``tutorial.ru.po``, etc.
+``tutorial.en.rst`` and the .po files ``tutorial.cs.po``, ``tutorial.ru.po``, etc.
 You can freely change the English tutorial -- sentences that are not translated
 will remain in English in the translated verions.
 

@@ -29,7 +29,7 @@ The easiest way to download it is to go to
 http://code.google.com/p/sympy/ and
 download the latest tarball from the Featured Downloads:
 
-.. image:: figures/featured-downloads.png
+.. image:: ../figures/featured-downloads.png
 
 Unpack it:
 
@@ -933,7 +933,7 @@ Tip: To make pretty printing the default in the Python interpreter, use::
 If pyglet is installed, a pyglet window will open containing the LaTeX
 rendered expression:
 
-.. image:: pics/pngview1.png
+.. image:: ../pics/pngview1.png
 
 Notes
 -----
