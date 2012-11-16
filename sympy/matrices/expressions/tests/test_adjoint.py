@@ -24,4 +24,3 @@ def test_adjoint():
     assert Trace(Adjoint(Sq)) == conjugate(Trace(Sq))
 
     assert Adjoint(Sq)[0, 1] == conjugate(Sq[1, 0])
-
