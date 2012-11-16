@@ -344,9 +344,9 @@ def add_meijerg_formulae(formulae):
         formulae.append(MeijerFormula(an, ap, bm, bq, z, [a, b, c, rho],
                                       B, C, M, matcher))
 
-    def detect_uppergamma(iq):
-        x = iq.an[0]
-        y, z = iq.bm
+    def detect_uppergamma(func):
+        x = func.an[0]
+        y, z = func.bm
         swapped = False
         if not Mod((x - y).simplify(), 1):
             swapped = True
@@ -356,7 +356,7 @@ def add_meijerg_formulae(formulae):
         l = [y, x]
         if swapped:
             l = [x, y]
-        return {rho: y, a: x - y}, IndexQuadruple([x], [], l, [])
+        return {rho: y, a: x - y}, G_Function([x], [], l, [])
 
     add([a + rho], [], [rho, a + rho], [],
         Matrix([gamma(1 - a)*z**rho*exp(z)*uppergamma(a, z),
@@ -365,10 +365,10 @@ def add_meijerg_formulae(formulae):
         Matrix([[rho + z, -1], [0, a + rho]]),
         detect_uppergamma)
 
-    def detect_3113(iq):
+    def detect_3113(func):
         """http://functions.wolfram.com/07.34.03.0984.01"""
-        x = iq.an[0]
-        u, v, w = iq.bm
+        x = func.an[0]
+        u, v, w = func.bm
         if Mod((u - v).simplify(), 1) == 0:
             if Mod((v - w).simplify(), 1) == 0:
                 return
@@ -388,7 +388,7 @@ def add_meijerg_formulae(formulae):
                 x > x1 or x > x2):
             return
 
-        return {a: x}, IndexQuadruple([x], [], [x - S(1)/2 + t for t in sig], [])
+        return {a: x}, G_Function([x], [], [x - S(1)/2 + t for t in sig], [])
 
     s = sin(2*sqrt(z))
     c_ = cos(2*sqrt(z))
@@ -520,8 +520,8 @@ class Hyper_Function(Expr):
         return diff
 
 
-class IndexQuadruple(object):
-    """ Holds a quadruple of indices. """
+class G_Function(object):
+    """ A Meijer G-function. """
 
     def __init__(self, an, ap, bm, bq):
         def tr(l):
@@ -531,6 +531,9 @@ class IndexQuadruple(object):
         self.bm = tr(bm)
         self.bq = tr(bq)
 
+    def __call__(self, z):
+        return meijerg(self.an, self.ap, self.bm, self.bq, z)
+
     def compute_buckets(self):
         """
         Compute buckets for the fours sets of parameters.
@@ -539,11 +542,11 @@ class IndexQuadruple(object):
         same, and that the buckets are sorted by real part (an and bq
         descendending, bm and ap ascending).
 
-        >>> from sympy.simplify.hyperexpand import IndexQuadruple
+        >>> from sympy.simplify.hyperexpand import G_Function
         >>> from sympy.abc import y
         >>> from sympy import S
         >>> a, b = [1, 3, 2, S(3)/2], [1 + y, y, 2, y + 3]
-        >>> IndexQuadruple(a, b, [2], [y]).compute_buckets()
+        >>> G_Function(a, b, [2], [y]).compute_buckets()
         ({0: [3, 2, 1], 1/2: [3/2]},
         {0: [2], Mod(y, 1): [y, y + 1, y + 3]}, {0: [2]}, {Mod(y, 1): [y]})
 
@@ -567,7 +570,7 @@ class IndexQuadruple(object):
         return (len(self.an), len(self.ap), len(self.bm), len(self.bq))
 
     def __repr__(self):
-        return 'IndexQuadruple(%s, %s, %s, %s)' % (self.an, self.ap,
+        return 'G_Function(%s, %s, %s, %s)' % (self.an, self.ap,
                                                    self.bm, self.bq)
 
 # Dummy variable.
@@ -876,13 +879,13 @@ class MeijerFormula(object):
     Its data members are:
     - z, the argument
     - symbols, the free symbols (parameters) in the formula
-    - indices, the parameters
+    - func, the function
     - B, C, M (c/f ordinary Formula)
     """
 
     def __init__(self, an, ap, bm, bq, z, symbols, B, C, M, matcher):
         an, ap, bm, bq = [Tuple(*map(expand, w)) for w in [an, ap, bm, bq]]
-        self.indices = IndexQuadruple(an, ap, bm, bq)
+        self.func = G_Function(an, ap, bm, bq)
         self.z = z
         self.symbols = symbols
         self._matcher = matcher
@@ -894,17 +897,17 @@ class MeijerFormula(object):
     def closed_form(self):
         return (self.C*self.B)[0]
 
-    def try_instantiate(self, iq):
+    def try_instantiate(self, func):
         """
-        Try to instantiate the current formula to (almost) match iq.
+        Try to instantiate the current formula to (almost) match func.
         This uses the _matcher passed on init.
         """
-        if iq.signature != self.indices.signature:
+        if func.signature != self.func.signature:
             return None
-        res = self._matcher(iq)
+        res = self._matcher(func)
         if res is not None:
-            subs, niq = res
-            return MeijerFormula(niq.an, niq.ap, niq.bm, niq.bq,
+            subs, newfunc = res
+            return MeijerFormula(newfunc.an, newfunc.ap, newfunc.bm, newfunc.bq,
                                  self.z, [],
                                  self.B.subs(subs), self.C.subs(subs),
                                  self.M.subs(subs), None)
@@ -920,15 +923,15 @@ class MeijerFormulaCollection(object):
         add_meijerg_formulae(formulae)
         self.formulae = defaultdict(list)
         for formula in formulae:
-            self.formulae[formula.indices.signature].append(formula)
+            self.formulae[formula.func.signature].append(formula)
         self.formulae = dict(self.formulae)
 
-    def lookup_origin(self, iq):
-        """ Try to find a formula that matches iq. """
-        if not iq.signature in self.formulae:
+    def lookup_origin(self, func):
+        """ Try to find a formula that matches func. """
+        if not func.signature in self.formulae:
             return None
-        for formula in self.formulae[iq.signature]:
-            res = formula.try_instantiate(iq)
+        for formula in self.formulae[func.signature]:
+            res = formula.try_instantiate(func)
             if res is not None:
                 return res
 
@@ -1476,36 +1479,34 @@ def reduce_order(func):
     return Hyper_Function(Tuple(*nap), Tuple(*nbq)), operators
 
 
-def reduce_order_meijer(iq):
+def reduce_order_meijer(func):
     """
-    Given the Meijer G function parameters, ``iq.am``, ``iq.ap``, ``iq.bm``,
-    ``iq.bq``, find a sequence of operators that reduces order as much as
-    possible.
+    Given the Meijer G function parameters, ``func``, find a sequence of
+    operators that reduces order as much as possible.
 
-    Return niq, [operators].
+    Return newfunc, [operators].
 
     Examples
     ========
 
     >>> from sympy.simplify.hyperexpand import (reduce_order_meijer,
-    ...                                         IndexQuadruple)
-    >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [3, 4], [1, 2]))[0]
-    IndexQuadruple((4, 3), (5, 6), (3, 4), (2, 1))
-    >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [3, 4], [1, 8]))[0]
-    IndexQuadruple((3,), (5, 6), (3, 4), (1,))
-    >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [7, 5], [1, 5]))[0]
-    IndexQuadruple((3,), (), (), (1,))
-    >>> reduce_order_meijer(IndexQuadruple([3, 4], [5, 6], [7, 5], [5, 3]))[0]
-    IndexQuadruple((), (), (), ())
+    ...                                         G_Function)
+    >>> reduce_order_meijer(G_Function([3, 4], [5, 6], [3, 4], [1, 2]))[0]
+    G_Function((4, 3), (5, 6), (3, 4), (2, 1))
+    >>> reduce_order_meijer(G_Function([3, 4], [5, 6], [3, 4], [1, 8]))[0]
+    G_Function((3,), (5, 6), (3, 4), (1,))
+    >>> reduce_order_meijer(G_Function([3, 4], [5, 6], [7, 5], [1, 5]))[0]
+    G_Function((3,), (), (), (1,))
+    >>> reduce_order_meijer(G_Function([3, 4], [5, 6], [7, 5], [5, 3]))[0]
+    G_Function((), (), (), ())
     """
 
-    nan, nbq, ops1 = _reduce_order(iq.an, iq.bq, ReduceOrder.meijer_plus,
+    nan, nbq, ops1 = _reduce_order(func.an, func.bq, ReduceOrder.meijer_plus,
                                    lambda x: -x)
-    nbm, nap, ops2 = _reduce_order(iq.bm, iq.ap, ReduceOrder.meijer_minus,
+    nbm, nap, ops2 = _reduce_order(func.bm, func.ap, ReduceOrder.meijer_minus,
                                    lambda x: x)
 
-    return IndexQuadruple(*[Tuple(*w) for w in [nan, nap, nbm, nbq]]), \
-        ops1 + ops2
+    return G_Function(nan, nap, nbm, nbq), ops1 + ops2
 
 
 def make_derivative_operator(M, z):
@@ -2072,52 +2073,51 @@ def _hyperexpand(func, z, ops0=[], z0=Dummy('z0'), premult=1, prem=0,
 
 def devise_plan_meijer(fro, to, z):
     """
-    Find a sequence of operators to convert index quadruple ``fro`` into
-    index quadruple ``to``. It is assumed that fro and to have the same
-    signatures, and that in fact any corresponding pair of parameters differs
-    by integers, and a direct path is possible. I.e. if there are parameters
-       a1 b1 c1  and a2 b2 c2
-    it is assumed that a1 can be shifted to a2, etc.
-    The only thing this routine determines is the order of shifts to apply,
-    nothing clever will be tried.
+    Find operators to convert G-function ``fro`` into G-function ``to``.
+
+    It is assumed that fro and to have the same signatures, and that in fact
+    any corresponding pair of parameters differs by integers, and a direct path
+    is possible. I.e. if there are parameters a1 b1 c1  and a2 b2 c2 it is
+    assumed that a1 can be shifted to a2, etc. The only thing this routine
+    determines is the order of shifts to apply, nothing clever will be tried.
     It is also assumed that fro is suitable.
 
     >>> from sympy.simplify.hyperexpand import (devise_plan_meijer,
-    ...                                         IndexQuadruple)
+    ...                                         G_Function)
     >>> from sympy.abc import z
 
     Empty plan:
 
-    >>> devise_plan_meijer(IndexQuadruple([1], [2], [3], [4]),
-    ...                    IndexQuadruple([1], [2], [3], [4]), z)
+    >>> devise_plan_meijer(G_Function([1], [2], [3], [4]),
+    ...                    G_Function([1], [2], [3], [4]), z)
     []
 
     Very simple plans:
 
-    >>> devise_plan_meijer(IndexQuadruple([0], [], [], []),
-    ...                    IndexQuadruple([1], [], [], []), z)
+    >>> devise_plan_meijer(G_Function([0], [], [], []),
+    ...                    G_Function([1], [], [], []), z)
     [<Increment upper a index #0 of [0], [], [], [].>]
-    >>> devise_plan_meijer(IndexQuadruple([0], [], [], []),
-    ...                    IndexQuadruple([-1], [], [], []), z)
+    >>> devise_plan_meijer(G_Function([0], [], [], []),
+    ...                    G_Function([-1], [], [], []), z)
     [<Decrement upper a=0.>]
-    >>> devise_plan_meijer(IndexQuadruple([], [1], [], []),
-    ...                    IndexQuadruple([], [2], [], []), z)
+    >>> devise_plan_meijer(G_Function([], [1], [], []),
+    ...                    G_Function([], [2], [], []), z)
     [<Increment lower a index #0 of [], [1], [], [].>]
 
     Slightly more complicated plans:
 
-    >>> devise_plan_meijer(IndexQuadruple([0], [], [], []),
-    ...                    IndexQuadruple([2], [], [], []), z)
+    >>> devise_plan_meijer(G_Function([0], [], [], []),
+    ...                    G_Function([2], [], [], []), z)
     [<Increment upper a index #0 of [1], [], [], [].>,
     <Increment upper a index #0 of [0], [], [], [].>]
-    >>> devise_plan_meijer(IndexQuadruple([0], [], [0], []),
-    ...                    IndexQuadruple([-1], [], [1], []), z)
+    >>> devise_plan_meijer(G_Function([0], [], [0], []),
+    ...                    G_Function([-1], [], [1], []), z)
     [<Increment upper b=0.>, <Decrement upper a=0.>]
 
     Order matters:
 
-    >>> devise_plan_meijer(IndexQuadruple([0], [], [0], []),
-    ...                    IndexQuadruple([1], [], [1], []), z)
+    >>> devise_plan_meijer(G_Function([0], [], [0], []),
+    ...                    G_Function([1], [], [1], []), z)
     [<Increment upper a index #0 of [0], [], [1], [].>, <Increment upper b=0.>]
     """
     # TODO for now, we use the following simple heuristic: inverse-shift
@@ -2203,10 +2203,10 @@ def devise_plan_meijer(fro, to, z):
 _meijercollection = None
 
 
-def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
+def _meijergexpand(func, z0, allow_hyper=False, rewrite='default'):
     """
     Try to find an expression for the Meijer G function specified
-    by the IndexQuadruple ``iq``. If ``allow_hyper`` is True, then returning
+    by the G_Function ``func``. If ``allow_hyper`` is True, then returning
     an expression in terms of hypergeometric functions is allowed.
 
     Currently this just does slater's theorem.
@@ -2217,23 +2217,23 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     if rewrite == 'default':
         rewrite = None
 
-    iq_ = iq
-    debug('Try to expand meijer G function corresponding to', iq)
+    func0 = func
+    debug('Try to expand meijer G function corresponding to', func)
 
     # We will play games with analytic continuation - rather use a fresh symbol
     z = Dummy('z')
 
-    iq, ops = reduce_order_meijer(iq)
+    func, ops = reduce_order_meijer(func)
     if ops:
-        debug('  Reduced order to', iq)
+        debug('  Reduced order to', func)
     else:
         debug('  Could not reduce order.')
 
     # Try to find a direct formula
-    f = _meijercollection.lookup_origin(iq)
+    f = _meijercollection.lookup_origin(func)
     if f is not None:
-        debug('  Found a Meijer G formula:', f.indices)
-        ops += devise_plan_meijer(f.indices, iq, z)
+        debug('  Found a Meijer G formula:', f.func)
+        ops += devise_plan_meijer(f.func, func, z)
 
         # Now carry out the plan.
         C = apply_operators(f.C.subs(f.z, z), ops,
@@ -2268,8 +2268,8 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     def do_slater(an, bm, ap, bq, z, zfinal):
         # zfinal is the value that will eventually be substituted for z.
         # We pass it to _hyperexpand to improve performance.
-        iq = IndexQuadruple(an, bm, ap, bq)
-        _, pbm, pap, _ = iq.compute_buckets()
+        func = G_Function(an, bm, ap, bq)
+        _, pbm, pap, _ = func.compute_buckets()
         if not can_do(pbm, pap):
             return S(0), False
 
@@ -2367,14 +2367,14 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
         return res, cond
 
     t = Dummy('t')
-    slater1, cond1 = do_slater(iq.an, iq.bm, iq.ap, iq.bq, z, z0)
+    slater1, cond1 = do_slater(func.an, func.bm, func.ap, func.bq, z, z0)
 
     def tr(l):
         return [1 - x for x in l]
 
     for op in ops:
         op._poly = Poly(op._poly.subs({z: 1/t, _x: -_x}), _x)
-    slater2, cond2 = do_slater(tr(iq.bm), tr(iq.an), tr(iq.bq), tr(iq.ap),
+    slater2, cond2 = do_slater(tr(func.bm), tr(func.an), tr(func.bq), tr(func.ap),
                                t, 1/z0)
 
     slater1 = powdenest(slater1.subs(z, z0), polar=True)
@@ -2382,7 +2382,7 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
     if not isinstance(cond2, bool):
         cond2 = cond2.subs(t, 1/z)
 
-    m = meijerg(iq.an, iq.ap, iq.bm, iq.bq, z)
+    m = func(z)
     if m.delta > 0 or \
         (m.delta == 0 and len(m.ap) == len(m.bq) and
             (re(m.nu) < -1) is not False and polar_lift(z0) == polar_lift(1)):
@@ -2432,21 +2432,19 @@ def _meijergexpand(iq, z0, allow_hyper=False, rewrite='default'):
         else:
             return slater2
     if max(w1[0], w2[0]) <= 1 and max(w1[1], w2[1]) <= 1:
-        return Piecewise((slater1, cond1), (slater2, cond2),
-                   (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
+        return Piecewise((slater1, cond1), (slater2, cond2), (func0(z0), True))
 
     # We couldn't find an expression without hypergeometric functions.
     # TODO it would be helpful to give conditions under which the integral
     #      is known to diverge.
-    r = Piecewise((slater1, cond1), (slater2, cond2),
-                  (meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0), True))
+    r = Piecewise((slater1, cond1), (slater2, cond2), (func0(z0), True))
     if r.has(hyper) and not allow_hyper:
         debug('  Could express using hypergeometric functions, ' +
               'but not allowed.')
     if not r.has(hyper) or allow_hyper:
         return r
 
-    return meijerg(iq_.an, iq_.ap, iq_.bm, iq_.bq, z0)
+    return func0(z0)
 
 
 def hyperexpand(f, allow_hyper=False, rewrite='default'):
@@ -2480,7 +2478,7 @@ def hyperexpand(f, allow_hyper=False, rewrite='default'):
             return r
 
     def do_meijer(ap, bq, z):
-        r = _meijergexpand(IndexQuadruple(ap[0], ap[1], bq[0], bq[1]), z,
+        r = _meijergexpand(G_Function(ap[0], ap[1], bq[0], bq[1]), z,
                            allow_hyper, rewrite=rewrite)
         if not r.has(nan, zoo, oo, -oo):
             return r

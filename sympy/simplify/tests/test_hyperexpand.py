@@ -4,7 +4,7 @@ from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        MeijerUnShiftD,
                        ReduceOrder, reduce_order, apply_operators,
                        devise_plan, make_derivative_operator, Formula,
-                       hyperexpand, Hyper_Function, IndexQuadruple,
+                       hyperexpand, Hyper_Function, G_Function,
                        reduce_order_meijer,
                        build_hypergeometric_formula)
 from sympy import hyper, I, S, meijerg, Piecewise, exp_polar
@@ -176,8 +176,8 @@ def test_meijerg_formulae():
     formulae = MeijerFormulaCollection().formulae
     for sig in formulae:
         for formula in formulae[sig]:
-            g = meijerg(formula.indices.an, formula.indices.ap,
-                        formula.indices.bm, formula.indices.bq,
+            g = meijerg(formula.func.an, formula.func.ap,
+                        formula.func.bm, formula.func.bq,
                         formula.z)
             rep = {}
             for sym in formula.symbols:
@@ -461,7 +461,7 @@ def test_meijerg():
     bq = [b3, b4, a2 + 1]
     ap = [a3, a4, b2 - 1]
     bm = [b1, b2 + 1]
-    niq, ops = reduce_order_meijer(IndexQuadruple(an, ap, bm, bq))
+    niq, ops = reduce_order_meijer(G_Function(an, ap, bm, bq))
     assert niq.an == (a1,)
     assert set(niq.ap) == set([a3, a4])
     assert niq.bm == (b1,)
