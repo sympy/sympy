@@ -520,16 +520,23 @@ class Hyper_Function(Expr):
         return diff
 
 
-class G_Function(object):
+class G_Function(Expr):
     """ A Meijer G-function. """
 
-    def __init__(self, an, ap, bm, bq):
-        def tr(l):
-            return Tuple(*map(expand, l))
-        self.an = tr(an)
-        self.ap = tr(ap)
-        self.bm = tr(bm)
-        self.bq = tr(bq)
+    def __new__(cls, an, ap, bm, bq):
+        obj = super(G_Function, cls).__new__(cls)
+        obj.an = Tuple(*map(expand, an))
+        obj.ap = Tuple(*map(expand, ap))
+        obj.bm = Tuple(*map(expand, bm))
+        obj.bq = Tuple(*map(expand, bq))
+        return obj
+
+    @property
+    def args(self):
+        return (self.an, self.ap, self.bm, self.bq)
+
+    def _hashable_content(self):
+        return super(G_Function, self)._hashable_content() + self.args
 
     def __call__(self, z):
         return meijerg(self.an, self.ap, self.bm, self.bq, z)
@@ -569,13 +576,9 @@ class G_Function(object):
     def signature(self):
         return (len(self.an), len(self.ap), len(self.bm), len(self.bq))
 
-    def __repr__(self):
-        return 'G_Function(%s, %s, %s, %s)' % (self.an, self.ap,
-                                                   self.bm, self.bq)
 
 # Dummy variable.
 _x = Dummy('x')
-
 
 class Formula(object):
     """

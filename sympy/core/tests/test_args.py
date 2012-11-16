@@ -2528,6 +2528,10 @@ def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))
 
+def test_sympy__simplify__hyperexpand__G_Function():
+    from sympy.simplify.hyperexpand import G_Function
+    assert _test_args(G_Function([2], [1], [], []))
+
 
 def test_sympy__tensor__indexed__Idx():
     from sympy.tensor.indexed import Idx
