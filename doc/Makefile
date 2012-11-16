@@ -74,7 +74,6 @@ htmlapi: $(SPHINXBUILDpy)
 	mkdir -p api/modules
 	mkdir -p _build/api _build/doctreesapi
 	rm -f api/modules/sympy*.rst
-	./generate_reference.py
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTSapi) _build/api
 	@echo
 	@echo "Build finished. The API docs pages are in _build/api."
