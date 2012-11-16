@@ -28,7 +28,7 @@ help:
 	@echo "Please use \`make <target>' where <target> is one of"
 	@echo "  changes     to make an overview over all changed/added/deprecated items"
 	@echo "  cheatsheet  to make the Cheatsheet"
-	@echo "  clean       to make remove generated files"
+	@echo "  clean       to remove generated files"
 	@echo "  gettext     to make pot files for translation"
 	@echo "  html        to make standalone HTML files"
 	@echo "  html-errors to make the standalone HTML files, stopping on any errors or warnings"
