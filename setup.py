@@ -48,6 +48,7 @@ modules = [
     'sympy.assumptions.handlers',
     'sympy.categories',
     'sympy.combinatorics',
+    'sympy.computations',
     'sympy.concrete',
     'sympy.core',
     'sympy.diffgeom',

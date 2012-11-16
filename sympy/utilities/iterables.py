@@ -1436,7 +1436,6 @@ def runs(seq, op=gt):
         cycles.append(run)
     return cycles
 
-
 def kbins(l, k, ordered=None):
     """
     Return sequence ``l`` partitioned into ``k`` bins.
@@ -1562,3 +1561,56 @@ def kbins(l, k, ordered=None):
     else:
         raise ValueError(
             'ordered must be one of 00, 01, 10 or 11, not %s' % ordered)
+
+def reverse_dict(d):
+    """ Reverses direction of dependence dict
+
+    >>> from sympy.utilities.iterables import reverse_dict
+    >>> d = {'a': (1, 2), 'b': (2, 3), 'c':()}
+    >>> reverse_dict(d)
+    {1: ('a',), 2: ('a', 'b'), 3: ('b',)}
+
+    note: This function was originally written for the Theano Project
+    """
+    result = {}
+    for key in d:
+        for val in d[key]:
+            result[val] = result.get(val, tuple()) + (key, )
+    return result
+
+def _toposort(edges):
+    """ Topological sort algorithm by Kahn [1] - O(nodes + vertices)
+
+    inputs:
+        edges - a dict of the form {a: {b, c}} where b and c depend on a
+    outputs:
+        L - an ordered list of nodes that satisfy the dependencies of edges
+
+    >>> from sympy.utilities.iterables import _toposort
+    >>> _toposort({1: {2, 3}, 2: (3, )})
+    [1, 2, 3]
+
+    Closely follows the wikipedia page [2]
+
+    [1] Kahn, Arthur B. (1962), "Topological sorting of large networks",
+    Communications of the ACM
+    [2] http://en.wikipedia.org/wiki/Toposort#Algorithms
+
+    note: This function was originally written for the Theano Project
+    """
+    incoming_edges = reverse_dict(edges)
+    incoming_edges = dict((k, set(val)) for k, val in incoming_edges.items())
+    S = set((v for v in edges if v not in incoming_edges))
+    L = []
+
+    while S:
+        n = S.pop()
+        L.append(n)
+        for m in edges.get(n, ()):
+            assert n in incoming_edges[m]
+            incoming_edges[m].remove(n)
+            if not incoming_edges[m]:
+                S.add(m)
+    if any(incoming_edges.get(v, None) for v in edges):
+        raise ValueError("Input has cycles")
+    return L
