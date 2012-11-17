@@ -43,6 +43,7 @@ def mplot3d(f, var1, var2, show=True):
     if show:
         p.show()
 
+
 def main():
     x = Symbol('x')
     y = Symbol('y')

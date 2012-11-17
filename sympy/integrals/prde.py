@@ -29,6 +29,7 @@ from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
 
+
 def prde_normal_denom(fa, fd, G, DE):
     """
     Parametric Risch Differential Equation - Normal part of the denominator.
@@ -56,6 +57,7 @@ def prde_normal_denom(fa, fd, G, DE):
     G = [(c*A).cancel(D, include=True) for A, D in G]
 
     return (a, (ba, bd), G, h)
+
 
 def prde_special_denom(a, ba, bd, G, DE, case='auto'):
     """
@@ -112,7 +114,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
     N = max(0, -nb)
     pN = p**N
-    pn = p**-n # This is 1/h
+    pn = p**-n  # This is 1/h
 
     A = a*pN
     B = ba*pN.quo(bd) + Poly(n, DE.t)*a*derivation(p, DE).quo(p)*pN
@@ -121,6 +123,7 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
     # (a*p**N, (b + n*a*Dp/p)*p**N, g1*p**(N - n), ..., gm*p**(N - n), p**-n)
     return (A, B, G, h)
+
 
 def prde_linear_constraints(a, b, G, DE):
     """
@@ -147,10 +150,11 @@ def prde_linear_constraints(a, b, G, DE):
         N = max([ri.degree(DE.t) for _, ri in Q])
         M = Matrix(N + 1, m, lambda i, j: Q[j][1].nth(i))
     else:
-        M = Matrix() # No constraints, return the empty matrix.
+        M = Matrix()  # No constraints, return the empty matrix.
 
     qs, _ = zip(*Q)
     return (qs, M)
+
 
 def constant_system(A, u, DE):
     """
@@ -221,6 +225,7 @@ def constant_system(A, u, DE):
 
     return (A, u)
 
+
 def prde_spde(a, b, Q, n, DE):
     """
     Special Polynomial Differential Equation algorithm: Parametric Version.
@@ -242,6 +247,7 @@ def prde_spde(a, b, Q, n, DE):
 
     return (A, B, Qq, R, n1)
 
+
 def prde_no_cancel_b_large(b, Q, n, DE):
     """
     Parametric Poly Risch Differential Equation - No cancellation: deg(b) large enough.
@@ -257,7 +263,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, -1, -1): # [n, ..., 0]
+    for N in xrange(n, -1, -1):  # [n, ..., 0]
         for i in range(m):
             si = Q[i].nth(N + db)/b.LC()
             sitn = Poly(si*DE.t**N, DE.t)
@@ -276,6 +282,7 @@ def prde_no_cancel_b_large(b, Q, n, DE):
 
     return (H, A)
 
+
 def prde_no_cancel_b_small(b, Q, n, DE):
     """
     Parametric Poly Risch Differential Equation - No cancellation: deg(b) small enough.
@@ -290,13 +297,12 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     m = len(Q)
     H = [Poly(0, DE.t)]*m
 
-    for N in xrange(n, 0, -1): # [n, ..., 1]
+    for N in xrange(n, 0, -1):  # [n, ..., 1]
         for i in range(m):
             si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
             sitn = Poly(si*DE.t**N, DE.t)
             H[i] = H[i] + sitn
             Q[i] = Q[i] - derivation(sitn, DE) - b*sitn
-
 
     if b.degree(DE.t) > 0:
         for i in range(m):
@@ -316,6 +322,7 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     else:
         # TODO: implement this (requires recursive param_rischDE() call)
         raise NotImplementedError
+
 
 def param_rischDE(fa, fd, G, DE):
     """
@@ -344,6 +351,7 @@ def param_rischDE(fa, fd, G, DE):
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
 
+
 def limited_integrate_reduce(fa, fd, G, DE):
     """
     Simpler version of step 1 & 2 for the limited integration problem.
@@ -365,7 +373,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     dn, ds = splitfactor(fd, DE)
     E = [splitfactor(gd, DE) for _, gd in G]
     En, Es = zip(*E)
-    c = reduce(lambda i, j: i.lcm(j), (dn,) + En) # lcm(dn, en1, ..., enm)
+    c = reduce(lambda i, j: i.lcm(j), (dn,) + En)  # lcm(dn, en1, ..., enm)
     hn = c.gcd(c.diff(DE.t))
     a = hn
     b = -derivation(hn, DE)
@@ -374,7 +382,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
     # These are the cases where we know that S1irr = Sirr, but there could be
     # others, and this algorithm will need to be extended to handle them.
     if DE.case in ['base', 'primitive', 'exp', 'tan']:
-        hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es) # lcm(ds, es1, ..., esm)
+        hs = reduce(lambda i, j: i.lcm(j), (ds,) + Es)  # lcm(ds, es1, ..., esm)
         a = hn*hs
         b = -derivation(hn, DE) - (hn*derivation(hs, DE)).quo(hs)
         mu = min(order_at_oo(fa, fd, DE.t), min([order_at_oo(ga, gd, DE.t) for
@@ -389,6 +397,7 @@ def limited_integrate_reduce(fa, fd, G, DE):
 
     V = [(-a*hn*ga).cancel(gd, include=True) for ga, gd in G]
     return (a, b, a, N, (a*hn*fa).cancel(fd, include=True), V)
+
 
 def limited_integrate(fa, fd, G, DE):
     """
@@ -457,8 +466,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             # deg(q) > B, no solution for c.
             return None
 
-
-        N, M = s[c1].as_numer_denom() # N and M are integers
+        N, M = s[c1].as_numer_denom()  # N and M are integers
         N, M = Poly(N, DE.t), Poly(M, DE.t)
 
         nfmwa = N*fa*wd - M*wa*fd
@@ -491,8 +499,8 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
         raise NotImplementedError("parametric_log_deriv_heu() "
             "heuristic failed: z in k.")
 
-    u1, r1 = (fa*l.quo(fd)).div(z) # (l*f).div(z)
-    u2, r2 = (wa*l.quo(wd)).div(z) # (l*w).div(z)
+    u1, r1 = (fa*l.quo(fd)).div(z)  # (l*f).div(z)
+    u2, r2 = (wa*l.quo(wd)).div(z)  # (l*w).div(z)
 
     eqs = [r1.nth(i) - c1*r2.nth(i) for i in range(z.degree(DE.t))]
     s = solve(eqs, c1)
@@ -517,6 +525,7 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
 
     return (Q*N, Q*M, v)
 
+
 def parametric_log_deriv(fa, fd, wa, wd, DE):
     # TODO: Write the full algorithm using the structure theorems.
 #    try:
@@ -527,6 +536,7 @@ def parametric_log_deriv(fa, fd, wa, wd, DE):
         # It isn't too worrisome, because the heuristic handles most difficult
         # cases.
     return A
+
 
 def is_deriv_k(fa, fd, DE):
     """
@@ -587,9 +597,9 @@ def is_deriv_k(fa, fd, DE):
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
         if filter(lambda i: i == 'tan', DE.cases) or \
-            set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
-                raise NotImplementedError("Real version of the structure "
-                    "theorems with hypertangent support is not yet implemented.")
+                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
+            raise NotImplementedError("Real version of the structure "
+                "theorems with hypertangent support is not yet implemented.")
 
         # TODO: What should really be done in this case?
         raise NotImplementedError("Nonelementary extensions not supported "
@@ -623,10 +633,11 @@ def is_deriv_k(fa, fd, DE):
                 # We need to get around things like sqrt(x**2) != x
                 # and also sqrt(x**2 + 2*x + 1) != x + 1
                 icoeff, iterms = sqf_list(i)
-                l.append(Mul(*([Pow(icoeff,j)] + [Pow(b, e*j) for b, e in iterms])))
+                l.append(Mul(*([Pow(icoeff, j)] + [Pow(b, e*j) for b, e in iterms])))
             const = cancel(fa.as_expr()/fd.as_expr()/Mul(*l))
 
             return (ans, result, const)
+
 
 def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     """
@@ -690,9 +701,9 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
     # Our assumption here is that each monomial is recursively transcendental
     if len(DE.L_K) + len(DE.E_K) != len(DE.D) - 1:
         if filter(lambda i: i == 'tan', DE.cases) or \
-            set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
-                raise NotImplementedError("Real version of the structure "
-                    "theorems with hypertangent support is not yet implemented.")
+                set(filter(lambda i: i == 'primitive', DE.cases)) - set(DE.L_K):
+            raise NotImplementedError("Real version of the structure "
+                "theorems with hypertangent support is not yet implemented.")
 
         # TODO: What should really be done in this case?
         raise NotImplementedError("Nonelementary extensions not supported "
@@ -733,6 +744,7 @@ def is_log_deriv_k_t_radical(fa, fd, DE, Df=True):
 
             return (ans, result, n, const)
 
+
 def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     """
     Checks if f can be written as the logarithmic derivative of a k(t)-radical.
@@ -766,10 +778,10 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
 
     roots = [(i, i.real_roots()) for i, _ in H]
     if not all(len(j) == i.degree() and all(k.is_Rational for k in j) for
-        i, j in roots):
-            # If f is the logarithmic derivative of a k(t)-radical, then all the
-            # roots of the resultant must be rational numbers.
-            return None
+               i, j in roots):
+        # If f is the logarithmic derivative of a k(t)-radical, then all the
+        # roots of the resultant must be rational numbers.
+        return None
 
     # [(a, i), ...], where i*log(a) is a term in the log-part of the integral
     # of f
@@ -844,7 +856,7 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
         residueterms]] + [n], S(1))
     residueterms = [(i, j*common_denom) for i, j in residueterms]
     m = common_denom//n
-    assert common_denom == n*m # Verify exact division
+    assert common_denom == n*m  # Verify exact division
     u = cancel(u**m*Mul(*[Pow(i, j) for i, j in residueterms]))
 
     return (common_denom, u)

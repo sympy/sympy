@@ -5,6 +5,7 @@ import pydoc
 import sphinx
 from docscrape import NumpyDocString, FunctionDoc, ClassDoc
 
+
 class SphinxDocString(NumpyDocString):
     def __init__(self, docstring, config={}):
         self.use_plots = config.get('use_plots', False)
@@ -199,20 +200,24 @@ class SphinxDocString(NumpyDocString):
         out = self._str_indent(out, indent)
         return '\n'.join(out)
 
+
 class SphinxFunctionDoc(SphinxDocString, FunctionDoc):
     def __init__(self, obj, doc=None, config={}):
         self.use_plots = config.get('use_plots', False)
         FunctionDoc.__init__(self, obj, doc=doc, config=config)
+
 
 class SphinxClassDoc(SphinxDocString, ClassDoc):
     def __init__(self, obj, doc=None, func_doc=None, config={}):
         self.use_plots = config.get('use_plots', False)
         ClassDoc.__init__(self, obj, doc=doc, func_doc=None, config=config)
 
+
 class SphinxObjDoc(SphinxDocString):
     def __init__(self, obj, doc=None, config={}):
         self._f = obj
         SphinxDocString.__init__(self, doc, config=config)
+
 
 def get_doc_object(obj, what=None, doc=None, config={}):
     if inspect.isclass(obj):

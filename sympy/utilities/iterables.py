@@ -506,6 +506,7 @@ def capture(func):
         sys.stdout = stdout
     return file.getvalue()
 
+
 def sift(seq, keyfunc):
     """
     Sift the sequence, ``seq`` into a dictionary according to keyfunc.
@@ -1369,6 +1370,7 @@ def generate_oriented_forest(n):
                     break
             else:
                 break
+
 
 def minlex(seq, directed=True):
     """Return a tuple where the smallest element appears first; if

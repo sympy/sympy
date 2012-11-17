@@ -8,6 +8,7 @@ Demonstrates how to create symbols and print some algebra operations.
 import sympy
 from sympy import pprint
 
+
 def main():
     a = sympy.Symbol('a')
     b = sympy.Symbol('b')

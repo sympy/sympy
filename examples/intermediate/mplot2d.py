@@ -13,6 +13,7 @@ from sympy import log, pi, sqrt, sin, Symbol
 from sympy.core.compatibility import is_sequence
 from sympy.external import import_module
 
+
 def mplot2d(f, var, show=True):
     """
     Plot a 2d function using matplotlib/Tk.
@@ -35,6 +36,7 @@ def mplot2d(f, var, show=True):
     p.draw()
     if show:
         p.show()
+
 
 def main():
     x = Symbol('x')

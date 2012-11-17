@@ -117,8 +117,8 @@ def test_hermite_reduce():
     Poly(-x*t**2 + 2*x*t - x, t), DE) == \
         ((Poly(3, t), Poly(t - 1, t)), (Poly(0, t), Poly(1, t)), (Poly(1, t), Poly(x, t)))
     assert hermite_reduce(Poly(-x**2*t**6 + (-1 - 2*x**3 + x**4)*t**3 +
-    (-3 - 3*x**4)*t**2 - 2*x*t - x - 3*x**2, t),
-    Poly(x**4*t**6 - 2*x**2*t**3 + 1, t), DE) == \
+        (-3 - 3*x**4)*t**2 - 2*x*t - x - 3*x**2, t),
+        Poly(x**4*t**6 - 2*x**2*t**3 + 1, t), DE) == \
         ((Poly(x**5*t + x**2 + x**6, t), Poly(x**5*t**3 - x**3, t)), (Poly(0, t),
         Poly(1, t)), (Poly(-1, t), Poly(x**2, t)))
     assert hermite_reduce(Poly((-2 + 3*x)*t**3 + (-1 + x)*t**2 +
@@ -268,8 +268,8 @@ def test_integrate_hypertangent_polynomial():
 
 
 def test_integrate_nonlinear_no_specials():
-    a, d, = Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 -(x**2 -
-    nu**2)*t - x**5/4, t), Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 +x**4 + x**6/4, t)
+    a, d, = Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 - (x**2 -
+    nu**2)*t - x**5/4, t), Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 + x**4 + x**6/4, t)
     # f(x) == phi_nu(x), the logarithmic derivative of J_v, the Bessel function,
     # which has no specials (see Chapter 5, note 4 of Bronstein's book).
     f = Function('phi_nu')
@@ -377,7 +377,7 @@ def test_DifferentialExtension_handle_first():
     handle_first='exp', dummy=False)._important_attrs == \
         DifferentialExtension(-x**x*log(x)**2 + x**x - x**x/x, x,
         handle_first='log', dummy=False)._important_attrs == \
-            (Poly((-1 + x - x*t0**2)*t1, t1), Poly(x, t1),
+        (Poly((-1 + x - x*t0**2)*t1, t1), Poly(x, t1),
             [Poly(1, x), Poly(1/x, t0), Poly((1 + t0)*t1, t1)], [x, t0, t1],
             [Lambda(i, log(i)), Lambda(i, exp(t0*i))], [(exp(x*log(x)), x**x)],
             [2], [t0*x], [1], [x])

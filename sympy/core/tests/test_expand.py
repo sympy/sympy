@@ -79,6 +79,7 @@ def test_expand_non_commutative():
     assert expand(sqrt(A*B)) == sqrt(A*B)
     assert expand(sqrt(-2*a*b)) == sqrt(2)*sqrt(-a*b)
 
+
 def test_expand_radicals():
     a = (x + y)**R(1, 2)
 
@@ -164,6 +165,7 @@ def test_expand_power_base():
     assert expand_power_base((exp(x)*exp(y))**z).is_Pow
     assert expand_power_base(
         (exp(x)*exp(y))**z, force=True) == exp(x)**z*exp(y)**z
+
 
 def test_expand_arit():
     a = Symbol("a")

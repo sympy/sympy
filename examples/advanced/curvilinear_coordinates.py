@@ -12,6 +12,7 @@ tensor, Laplace operator, ...
 from sympy import var, sin, cos, pprint, Matrix, eye, trigsimp, Eq, \
     Function, simplify, sinh, cosh, expand
 
+
 def laplace(f, g_inv, g_det, X):
     """
     Calculates Laplace(f), using the inverse metric g_inv, the determinant of
@@ -26,6 +27,7 @@ def laplace(f, g_inv, g_det, X):
             r += g_det.diff(X[sigma]) * g_inv[sigma, alpha] * \
                 f.diff(X[alpha]) / (2*g_det)
     return r
+
 
 def transform(name, X, Y, g_correct=None, recursive=False):
     """

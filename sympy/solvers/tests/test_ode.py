@@ -81,7 +81,7 @@ def test_dsolve_options():
     Integral_keys = ['1st_exact_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
-    'best', 'best_hint', 'default', 'nth_linear_euler_eq_homogeneous', \
+    'best', 'best_hint', 'default', 'nth_linear_euler_eq_homogeneous',
     'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
     assert a['order'] == ode_order(eq, f(x))
@@ -1373,56 +1373,57 @@ def test_issue_2013_2331():
     assert homogeneous_order(-log(x) + acosh(x), x) is None
     assert homogeneous_order(y - log(x), x, y) is None
 
+
 def test_nth_order_linear_euler_eq_homogeneous():
-    x,t,a,b,c = symbols('x,t,a,b,c')
+    x, t, a, b, c = symbols('x t a b c')
     y = Function('y')
     our_hint = "nth_linear_euler_eq_homogeneous"
 
-    eq = diff(f(t),t,4)*t**4 - 13*diff(f(t),t,2)*t**2 + 36*f(t)
+    eq = diff(f(t), t, 4)*t**4 - 13*diff(f(t), t, 2)*t**2 + 36*f(t)
     assert our_hint in classify_ode(eq)
 
-    eq = a*y(t)+b*t*diff(y(t),t)+c*t**2*diff(y(t),t,2)
+    eq = a*y(t) + b*t*diff(y(t), t) + c*t**2*diff(y(t), t, 2)
     assert our_hint in classify_ode(eq)
 
-    eq = Eq( -3*diff(f(x),x)*x + 2*x**2*diff(f(x),x,x),0)
-    sol = C1 + C2*x**Rational(5,2)
+    eq = Eq(-3*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0)
+    sol = C1 + C2*x**Rational(5, 2)
     sols = constant_renumber(sol, 'C', 1, 3)
     assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in ( sol, sols )
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
-    eq = Eq(3*f(x) - 5*diff(f(x),x)*x + 2*x**2*diff(f(x),x,x),0)
+    eq = Eq(3*f(x) - 5*diff(f(x), x)*x + 2*x**2*diff(f(x), x, x), 0)
     sol = C1*sqrt(x) + C2*x**3
     sols = constant_renumber(sol, 'C', 1, 3)
     assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in ( sol, sols )
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
-    eq = Eq(4*f(x) + 5*diff(f(x),x)*x + x**2*diff(f(x),x,x),0)
+    eq = Eq(4*f(x) + 5*diff(f(x), x)*x + x**2*diff(f(x), x, x), 0)
     sol = (C1 + C2*log(x))/x**2
     sols = constant_renumber(sol, 'C', 1, 3)
     assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in ( sol, sols )
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
-    eq = Eq(6*f(x) - 6*diff(f(x),x)*x + 1*x**2*diff(f(x),x,x)+x**3*diff(f(x),x,x,x),0)
+    eq = Eq(6*f(x) - 6*diff(f(x), x)*x + 1*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0)
     sol = dsolve(eq, f(x), hint=our_hint)
     sol = C1/x**2 + C2*x + C3*x**3
     sols = constant_renumber(sol, 'C', 1, 4)
     assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in ( sol, sols )
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
-    eq = Eq(-125*f(x) + 61*diff(f(x),x)*x -12*x**2*diff(f(x),x,x)+x**3*diff(f(x),x,x,x),0)
+    eq = Eq(-125*f(x) + 61*diff(f(x), x)*x - 12*x**2*diff(f(x), x, x) + x**3*diff(f(x), x, x, x), 0)
     sol = x**5*(C1 + C2*log(x) + C3*log(x)**2)
     sols = constant_renumber(sol, 'C', 1, 4)
     assert our_hint in classify_ode(eq)
-    assert dsolve(eq, f(x), hint=our_hint).rhs in ( sol, sols )
+    assert dsolve(eq, f(x), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
-    eq = t**2*diff(y(t),t,2)+t*diff(y(t),t)-9*y(t)
+    eq = t**2*diff(y(t), t, 2) + t*diff(y(t), t) - 9*y(t)
     sol = C1*t**3 + C2*t**-3
     sols = constant_renumber(sol, 'C', 1, 3)
     assert our_hint in classify_ode(eq)
-    assert dsolve(eq, y(t), hint=our_hint).rhs in ( sol, sols )
+    assert dsolve(eq, y(t), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]

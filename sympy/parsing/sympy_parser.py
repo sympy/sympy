@@ -14,6 +14,7 @@ from sympy.core.basic import Basic, C
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
 UNSPLITTABLE_TOKEN_NAMES = ['_kern']
 
+
 def _token_splittable(token):
     """
     Predicate for whether a token name can be split into multiple tokens.
@@ -61,6 +62,7 @@ def _add_factorial_tokens(name, result):
 
     return result
 
+
 class AppliedFunction(object):
     """
     A group of tokens representing a function and its arguments.
@@ -89,9 +91,11 @@ class AppliedFunction(object):
         return "AppliedFunction(%s, %s, %s)" % (self.function, self.args,
                                                 self.exponent)
 
+
 class ParenthesisGroup(list):
     """List of tokens representing an expression in parentheses."""
     pass
+
 
 def _flatten(result):
     result2 = []
@@ -101,6 +105,7 @@ def _flatten(result):
         else:
             result2.append(tok)
     return result2
+
 
 def _group_parentheses(tokens, local_dict, global_dict):
     """Group tokens between parentheses with ParenthesisGroup.
@@ -141,6 +146,7 @@ def _group_parentheses(tokens, local_dict, global_dict):
             result.append(token)
     return result
 
+
 def _apply_functions(tokens, local_dict, global_dict):
     """Convert a NAME token + ParenthesisGroup into an AppliedFunction.
 
@@ -165,6 +171,7 @@ def _apply_functions(tokens, local_dict, global_dict):
             result.append(tok)
     return result
 
+
 def _split_symbols(tokens, local_dict, global_dict):
     result = []
     for tok in tokens:
@@ -181,6 +188,7 @@ def _split_symbols(tokens, local_dict, global_dict):
                     continue
         result.append(tok)
     return result
+
 
 def _implicit_multiplication(tokens, local_dict, global_dict):
     """Implicitly adds '*' tokens.
@@ -203,7 +211,7 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (isinstance(tok, AppliedFunction) and
-            isinstance(nextTok, AppliedFunction)):
+                isinstance(nextTok, AppliedFunction)):
             result.append((OP, '*'))
         elif (isinstance(tok, AppliedFunction) and
               nextTok[0] == OP and nextTok[1] == '('):
@@ -227,6 +235,7 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
     result.append(tokens[-1])
     return result
 
+
 def _implicit_application(tokens, local_dict, global_dict):
     """Adds parentheses as needed after functions.
 
@@ -240,12 +249,12 @@ def _implicit_application(tokens, local_dict, global_dict):
         result.append(tok)
         if (tok[0] == NAME and
             nextTok[0] != OP and
-            nextTok[0] != ENDMARKER):
+                nextTok[0] != ENDMARKER):
             func = global_dict.get(tok[1])
             is_Function = getattr(func, 'is_Function', False)
             if (is_Function or
                 (callable(func) and not hasattr(func, 'is_Function')) or
-                isinstance(nextTok, AppliedFunction)):
+                    isinstance(nextTok, AppliedFunction)):
                 result.append((OP, '('))
                 appendParen += 1
         elif isinstance(tok, AppliedFunction) and not tok.args:
@@ -278,6 +287,7 @@ def _implicit_application(tokens, local_dict, global_dict):
 
     return result
 
+
 def _function_exponents(tokens, local_dict, global_dict):
     """Preprocess functions raised to powers."""
     result = []
@@ -285,7 +295,7 @@ def _function_exponents(tokens, local_dict, global_dict):
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (tok[0] == NAME and nextTok[0] == OP
-            and nextTok[1] in ('**', '^')):
+                and nextTok[1] in ('**', '^')):
             if getattr(global_dict.get(tok[1]), 'is_Function', False):
                 result[-1] = AppliedFunction(tok, [])
                 need_exponent = True
@@ -296,6 +306,7 @@ def _function_exponents(tokens, local_dict, global_dict):
                 need_exponent = False
     result.append(tokens[-1])
     return result
+
 
 def implicit_multiplication_application(result, local_dict, global_dict):
     """Allows a slightly relaxed syntax.
@@ -331,6 +342,7 @@ def implicit_multiplication_application(result, local_dict, global_dict):
     result = _flatten(result)
     return result
 
+
 def auto_symbol(tokens, local_dict, global_dict):
     """Inserts calls to ``Symbol`` for undefined variables."""
     result = []
@@ -340,7 +352,7 @@ def auto_symbol(tokens, local_dict, global_dict):
 
             if (name in ['True', 'False', 'None']
                 or iskeyword(name)
-                or name in local_dict):
+                    or name in local_dict):
                 result.append((NAME, name))
                 continue
             elif name in global_dict:
@@ -360,6 +372,7 @@ def auto_symbol(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
+
 
 def factorial_notation(tokens, local_dict, global_dict):
     """Allows standard notation for factorial."""
@@ -386,6 +399,7 @@ def factorial_notation(tokens, local_dict, global_dict):
 
     return result
 
+
 def convert_xor(tokens, local_dict, global_dict):
     """Treats XOR, '^', as exponentiation, '**'."""
     result = []
@@ -399,6 +413,7 @@ def convert_xor(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
+
 
 def auto_number(tokens, local_dict, global_dict):
     """Converts numeric literals to use SymPy equivalents.
@@ -460,6 +475,7 @@ def auto_number(tokens, local_dict, global_dict):
 
     return result
 
+
 def rationalize(tokens, local_dict, global_dict):
     """Converts floats into ``Rational``s. Run AFTER ``auto_number``."""
     result = []
@@ -479,6 +495,7 @@ def rationalize(tokens, local_dict, global_dict):
     return result
 
 standard_transformations = (auto_symbol, auto_number, factorial_notation)
+
 
 def parse_expr(s, local_dict=None, transformations=standard_transformations):
     """
@@ -523,11 +540,12 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations):
 
     code = untokenize(tokens)
     expr = eval(
-        code, global_dict, local_dict) # take local objects in preference
+        code, global_dict, local_dict)  # take local objects in preference
 
     if not hit:
         return expr
     rep = {C.Symbol(kern): 1}
+
     def _clear(expr):
         if hasattr(expr, 'xreplace'):
             return expr.xreplace(rep)

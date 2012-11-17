@@ -1,5 +1,5 @@
 from sympy import (plot_implicit, cos, Symbol, Eq, sin, re, And, Or, exp, I,
-                    tan, pi)
+                   tan, pi)
 from sympy.plotting.plot import matplotlib, unset_show
 from tempfile import NamedTemporaryFile
 from sympy.utilities.pytest import skip
@@ -32,14 +32,14 @@ def plot_and_save(name):
     #Test all input args for plot_implicit
     plot_implicit(Eq(y**2, x**3 - x)).save(tmp_file())
     plot_implicit(Eq(y**2, x**3 - x), adaptive=False).save(tmp_file())
-    plot_implicit(Eq(y**2, x**3 - x), adaptive=False, points = 500).save(tmp_file())
+    plot_implicit(Eq(y**2, x**3 - x), adaptive=False, points=500).save(tmp_file())
     plot_implicit(y > x, (x, -5, 5)).save(tmp_file())
     plot_implicit(And(y > exp(x), y > x + 2)).save(tmp_file())
     plot_implicit(Or(y > x, y > -x)).save(tmp_file())
     plot_implicit(x**2 - 1, (x, -5, 5)).save(tmp_file())
     plot_implicit(x**2 - 1).save(tmp_file())
-    plot_implicit(y > x, depth = -5).save(tmp_file())
-    plot_implicit(y > x, depth = 5).save(tmp_file())
+    plot_implicit(y > x, depth=-5).save(tmp_file())
+    plot_implicit(y > x, depth=5).save(tmp_file())
     plot_implicit(y > cos(x), adaptive=False).save(tmp_file())
     plot_implicit(y < cos(x), adaptive=False).save(tmp_file())
     plot_implicit(And(y > cos(x), Or(y > x, Eq(y, x)))).save(tmp_file())

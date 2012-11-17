@@ -725,7 +725,7 @@ def ordered(seq, keys=None, default=True, warn=False):
                 d[k] = ordered(d[k], keys, default, warn)
             elif default:
                 d[k] = ordered(d[k], (_nodes, default_sort_key,),
-                                default=False, warn=warn)
+                               default=False, warn=warn)
             elif warn:
                 raise ValueError('not enough keys to break ties')
         for v in d[k]:

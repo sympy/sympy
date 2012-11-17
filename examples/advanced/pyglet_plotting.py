@@ -14,6 +14,7 @@ from sympy.core.compatibility import callable
 
 from time import sleep, clock
 
+
 def main():
     x, y, z = symbols('x,y,z')
 
@@ -68,7 +69,7 @@ def main():
     @example_wrapper
     def polar_flower():
         p[8] = 1.5*sin(4*x), [160], 'mode=polar'
-        p[8].color = z, x, y, (0.5, 0.5, 0.5), (0.8, 0.8, 0.8), (x, y, None, z) # z is used for t
+        p[8].color = z, x, y, (0.5, 0.5, 0.5), (0.8, 0.8, 0.8), (x, y, None, z)  # z is used for t
 
     @example_wrapper
     def simple_cylinder():
@@ -86,12 +87,12 @@ def main():
 
     @example_wrapper
     def torus():
-        a, b = 1, 0.5 # radius, thickness
+        a, b = 1, 0.5  # radius, thickness
         p[13] = (a + b*cos(x))*cos(y), (a + b*cos(x))*sin(y), b*sin(x), [x, 0, pi*2, 40], [y, 0, pi*2, 40]
 
     @example_wrapper
     def warped_torus():
-        a, b = 2, 1 # radius, thickness
+        a, b = 2, 1  # radius, thickness
         p[13] = (a + b*cos(x))*cos(y), (a + b*cos(x))*sin(y), b*sin(x) + 0.5*sin(4*y), [x, 0, pi*2, 40], [y, 0, pi*2, 40]
 
     @example_wrapper
@@ -202,7 +203,7 @@ def main():
             print "Not a valid example.\n"
         print p
 
-    example(0) # 0 - 15 are defined above
+    example(0)  # 0 - 15 are defined above
     print help_str()
 
 if __name__ == "__main__":

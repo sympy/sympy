@@ -635,6 +635,7 @@ def test_dup_clear_denoms():
     assert dup_clear_denoms([EX(7)], EX) == (EX(1), [EX(7)])
     assert dup_clear_denoms([EX(sin(x)/x), EX(0)], EX) == (EX(x), [EX(sin(x)), EX(0)])
 
+
 def test_dmp_clear_denoms():
     assert dmp_clear_denoms([[]], 1, QQ, ZZ) == (ZZ(1), [[]])
 

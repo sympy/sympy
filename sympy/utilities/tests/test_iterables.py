@@ -157,9 +157,10 @@ def test_numbered_symbols():
 
 
 def test_sift():
-    assert sift(range(5), lambda _: _%2) == {1: [1, 3], 0: [0, 2, 4]}
+    assert sift(range(5), lambda _: _ % 2) == {1: [1, 3], 0: [0, 2, 4]}
     assert sift([x, y], lambda _: _.has(x)) == {False: [y], True: [x]}
     assert sift([S.One], lambda _: _.has(x)) == {False: [1]}
+
 
 def test_take():
     X = numbered_symbols()
@@ -346,6 +347,7 @@ def test_common_prefix_suffix():
     assert common_suffix([1, 2, 3], [9, 2, 3]) == [2, 3]
     assert common_suffix([1, 2, 3], [9, 7, 3]) == [3]
 
+
 def test_minlex():
     assert minlex([1, 2, 0]) == (0, 1, 2)
     assert minlex((1, 2, 0)) == (0, 1, 2)
@@ -356,7 +358,7 @@ def test_minlex():
 def test_ordered():
     assert list(ordered((x, y), hash, default=False)) in [[x, y], [y, x]]
     assert list(ordered((x, y), hash, default=False)) == \
-           list(ordered((y, x), hash, default=False))
+        list(ordered((y, x), hash, default=False))
     assert list(ordered((x, y))) == [x, y]
 
     seq, keys = [[[1, 2, 1], [0, 3, 1], [1, 1, 3], [2], [1]],
@@ -365,6 +367,7 @@ def test_ordered():
         [[1], [2], [1, 2, 1], [0, 3, 1], [1, 1, 3]]
     raises(ValueError, lambda:
         list(ordered(seq, keys, default=False, warn=True)))
+
 
 def test_runs():
     assert runs([]) == []

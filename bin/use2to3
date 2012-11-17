@@ -28,7 +28,7 @@ import fileinput
 
 from subprocess import check_output, CalledProcessError
 
-destination = "py3k-sympy" # directory to copy to
+destination = "py3k-sympy"  # directory to copy to
 
 np = os.path.normpath
 
@@ -44,7 +44,7 @@ skip_files = (
     # as we need it only for 2.5, just skip copying it
     'sympy/parsing/ast_parser_python25.py',
     'bin/use2to3',
-    )
+)
 
 # generate the relevant rst files
 # most of them should be in this directory:
@@ -71,7 +71,7 @@ dst_files = set()
 try:
     files = check_output(['git', 'ls-files'])
     filenames = files.decode('utf-8').split('\n')
-    filenames.pop() # the last element is an empty string, delete it
+    filenames.pop()  # the last element is an empty string, delete it
 
     for filename in skip_files:
         filenames.remove(filename)
@@ -116,12 +116,12 @@ except (CalledProcessError, WindowsError):
 
 # arguments to call 2to3 with
 args_2to3 = [
-    "-w",         # writes back the changes
-    "-n",         # doesn't write a backup file
-    "--no-diffs", # don't show the diffs for individual files
+    "-w",          # writes back the changes
+    "-n",          # doesn't write a backup file
+    "--no-diffs",  # don't show the diffs for individual files
 ]
 
-args_2to3_doctests = args_2to3 + ["-d"] # convert doctests too
+args_2to3_doctests = args_2to3 + ["-d"]  # convert doctests too
 
 # extend the argument list with the list of files that need it
 args_2to3.extend(modified_files)
@@ -144,7 +144,7 @@ eofnewlines = re.compile("\s\s+$")
 
 for filepath in modified_files + modified_rst_files:
     with open(filepath, 'r') as f:
-        text = f.read() or '\n' # all must end with newline
+        text = f.read() or '\n'  # all must end with newline
 
     n = len(text)
     text = whitespace.sub('', text)
@@ -176,14 +176,14 @@ for root, dirs, files in os.walk(destination):
 try:
     shutil.rmtree(os.path.join(destination, "./sympy/mpmath"))
     shutil.rmtree(os.path.join(destination, "./doc/src/modules/mpmath"))
-except OSError: # directories don't exist
+except OSError:  # directories don't exist
     pass
 
 shutil.copytree("sympy/mpmath", os.path.join(destination, "./sympy/mpmath"))
 shutil.copytree("doc/src/modules/mpmath", os.path.join(destination, "./doc/src/modules/mpmath"))
 
 if not modified_files:
-    exit() # fileinput doesn't work as expected when passed an empty list
+    exit()  # fileinput doesn't work as expected when passed an empty list
 
 # change the shebang lines to point to "python3"
 for line in fileinput.input(modified_files, inplace=1):
