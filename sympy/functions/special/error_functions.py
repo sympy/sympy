@@ -676,7 +676,7 @@ class Ci(TrigonometricIntegral):
 
     _trigfunc = C.cos
     _atzero = S.ComplexInfinity
-    _atinf = 0
+    _atinf = S.Zero
     _atneginf = I*pi
 
     @classmethod
