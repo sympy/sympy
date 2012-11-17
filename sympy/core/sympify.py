@@ -67,15 +67,17 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ------
 
     The sympification happens with access to everything that is loaded
-    by ``from sympy import *``; if anything is used in the expression to be
-    sympified that is not defined by that import then it will be converted
-    to a symbol. In the following, the ``bitcout`` function is treated as
-    a symbol and the ``O`` is interpreted as the default Order shorthand
-    (and raises an error because it is being used improperly):
+    by ``from sympy import *``; anything used in a string that is not
+    defined by that import will be converted to a symbol. In the following,
+    the ``bitcout`` function is treated as a symbol and the ``O`` is
+    interpreted as the Order object (used with series) and it raises
+    an error when used improperly:
 
     >>> s = 'bitcount(42)'
     >>> sympify(s)
     bitcount(42)
+    >>> sympify("O(x)")
+    O(x)
     >>> sympify("O + 1")
     Traceback (most recent call last):
     ...
