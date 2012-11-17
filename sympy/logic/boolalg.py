@@ -5,7 +5,7 @@ from sympy.core.basic import Basic
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
-from sympy.core.compatibility import bin, default_sort_key, ordered
+from sympy.core.compatibility import ordered, product as cartes
 
 
 class Boolean(Basic):
@@ -259,7 +259,8 @@ class Implies(BooleanFunction):
         try:
             A, B = args
         except ValueError:
-            raise ValueError("%d operand(s) used for an Implies "
+            raise ValueError(
+                "%d operand(s) used for an Implies "
                 "(pairs are required): %s" % (len(args), str(args)))
         if A is True or A is False or B is True or B is False:
             return Or(Not(A), B)
@@ -323,11 +324,11 @@ class ITE(BooleanFunction):
         ========
 
         >>> from sympy.logic.boolalg import ITE, And, Xor, Or
-        >>> from sympy.abc import x,y,z
+        >>> from sympy.abc import x, y, z
         >>> x = True
         >>> y = False
         >>> z = True
-        >>> ITE(x,y,z)
+        >>> ITE(x, y, z)
         False
         >>> ITE(Or(x, y), And(x, z), Xor(z, x))
         True
@@ -423,6 +424,8 @@ def to_cnf(expr):
         return expr
 
     expr = sympify(expr)
+    if not isinstance(expr, BooleanFunction):
+        return expr
     expr = eliminate_implications(expr)
     return distribute_and_over_or(expr)
 
@@ -629,14 +632,14 @@ def _simplified_pairs(terms):
                 newterm[index] = 3
                 if newterm not in simplified_terms:
                     simplified_terms.append(newterm)
-    simplified_terms.extend([terms[i] for i in
-        filter(lambda _: _ is not None, todo)])
+    simplified_terms.extend(
+        [terms[i] for i in filter(lambda _: _ is not None, todo)])
     return simplified_terms
 
 
 def _compare_term(minterm, term):
     """
-    Compares if a binary term is satisfied by the given term. Used
+    Return True if a binary term is satisfied by the given term. Used
     for recognizing prime implicants.
     """
     for i, x in enumerate(term):
@@ -674,7 +677,7 @@ def _rem_redundancy(l1, terms):
     return essential
 
 
-def SOPform(variables, minterms, dontcares=[]):
+def SOPform(variables, minterms, dontcares=None):
     """
     The SOPform function uses simplified_pairs and a redundant group-
     eliminating algorithm to convert the list of all input combos that
@@ -684,7 +687,7 @@ def SOPform(variables, minterms, dontcares=[]):
 
     Return a logical Or function (i.e., the "sum of products" or "SOP"
     form) that gives the desired outcome. If there are inputs that can
-    be ignored, pass them as a list too.
+    be ignored, pass them as a list, too.
 
     The result will be one of the (perhaps many) functions that satisfy
     the conditions.
@@ -708,12 +711,12 @@ def SOPform(variables, minterms, dontcares=[]):
     from sympy.core.symbol import Symbol
 
     variables = [Symbol(v) if not isinstance(v, Symbol) else v
-        for v in variables]
+                 for v in variables]
     if minterms == []:
         return False
 
     minterms = [list(i) for i in minterms]
-    dontcares = [list(i) for i in dontcares]
+    dontcares = [list(i) for i in (dontcares or [])]
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
@@ -727,7 +730,7 @@ def SOPform(variables, minterms, dontcares=[]):
     return Or(*[_convert_to_varsSOP(x, variables) for x in essential])
 
 
-def POSform(variables, minterms, dontcares=[]):
+def POSform(variables, minterms, dontcares=None):
     """
     The POSform function uses simplified_pairs and a redundant-group
     eliminating algorithm to convert the list of all input combinations
@@ -737,7 +740,7 @@ def POSform(variables, minterms, dontcares=[]):
 
     Return a logical And function (i.e., the "product of sums" or "POS"
     form) that gives the desired outcome. If there are inputs that can
-    be ignored, pass them as a list too.
+    be ignored, pass them as a list, too.
 
     The result will be one of the (perhaps many) functions that satisfy
     the conditions.
@@ -761,23 +764,21 @@ def POSform(variables, minterms, dontcares=[]):
     from sympy.core.symbol import Symbol
 
     variables = [Symbol(v) if not isinstance(v, Symbol) else v
-        for v in variables]
+                 for v in variables]
     if minterms == []:
         return False
 
     minterms = [list(i) for i in minterms]
-    dontcares = [list(i) for i in dontcares]
+    dontcares = [list(i) for i in (dontcares or [])]
     for d in dontcares:
         if d in minterms:
             raise ValueError('%s in minterms is also in dontcares' % d)
 
-    t = [0] * len(variables)
     maxterms = []
-    for x in range(2 ** len(variables)):
-        b = [int(y) for y in bin(x)[2:]]
-        t[-len(b):] = b
+    for t in cartes(*[[0, 1]] * len(variables)):
+        t = list(t)
         if (t not in minterms) and (t not in dontcares):
-            maxterms.append(t[:])
+            maxterms.append(t)
     old = None
     new = maxterms + dontcares
     while new != old:
@@ -812,14 +813,14 @@ def simplify_logic(expr):
 
     """
     expr = sympify(expr)
+    if not isinstance(expr, BooleanFunction):
+        return expr
     variables = list(expr.free_symbols)
     truthtable = []
-    t = [0] * len(variables)
-    for x in range(2 ** len(variables)):
-        b = [int(y) for y in bin(x)[2:]]
-        t[-len(b):] = b
-        if expr.subs(zip(variables, [bool(i) for i in t])) is True:
-            truthtable.append(t[:])
+    for t in cartes(*[[0, 1]] * len(variables)):
+        t = list(t)
+        if expr.subs(zip(variables, t)) == True:
+            truthtable.append(t)
     if (len(truthtable) >= (2 ** (len(variables) - 1))):
         return SOPform(variables, truthtable)
     else:
@@ -902,9 +903,6 @@ def bool_equal(bool1, bool2, info=False):
     (And(Or(Not(a), Not(b)), Or(a, b), c, d), {a: a, b: b, c: d, d: x})
 
     """
-    from sympy.core.compatibility import permutations
-    from sympy.utilities.iterables import flatten, cartes, default_sort_key
-    ordered = lambda x: sorted(x, key=default_sort_key)
 
     def match(function1, function2):
         """Return the mapping that equates variables between two
@@ -935,13 +933,15 @@ def bool_equal(bool1, bool2, info=False):
         # more quick checks
         if len(f1) != len(f2):
             return False
+
+        # assemble the match dictionary if possible
         matchdict = {}
         for k in f1.keys():
             if k not in f2:
                 return False
             if len(f1[k]) != len(f2[k]):
                 return False
-            for i,x in enumerate(f1[k]):
+            for i, x in enumerate(f1[k]):
                 matchdict[x] = f2[k][i]
         return matchdict
 
