@@ -457,7 +457,7 @@ def test_issue_3441_3453():
 def test_issue_2497():
     assert str(S("Q & C", locals=_clash1)) == 'And(C, Q)'
     assert str(S('pi(x)', locals=_clash2)) == 'pi(x)'
-    assert str(S('gamma(C, Q)', locals=_clash)) == 'gamma(C, Q)'
+    assert str(S('pi(C, Q)', locals=_clash)) == 'pi(C, Q)'
     locals = {}
     exec "from sympy.abc import Q, C" in locals
     assert str(S('C&Q', locals)) == 'And(C, Q)'
