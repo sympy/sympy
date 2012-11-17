@@ -809,132 +809,185 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
+def _set_partitions(n):
+    """Cycle through all partions of n elements, returning the
+    current number of partitions and yield ``m`` and a mutable
+    list, ``q`` such that element[i] is in part q[i] of the
+    partition.
+
+    NOTE: ``q`` is modified in place and generally should not be changed
+    between function calls.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import _set_partitions
+
+    >>> def as_partition(s, m, q):
+    ...     p = [[] for i in range(m)]
+    ...     for i, qi in enumerate(q):
+    ...         p[qi].append(s[i])
+    ...     return p
+    ...
+
+    >>> for m, q in _set_partitions(3):
+    ...     print m, q, as_partition('abc', m, q)
+    1 [0, 0, 0] [['a', 'b', 'c']]
+    2 [0, 0, 1] [['a', 'b'], ['c']]
+    2 [0, 1, 0] [['a', 'c'], ['b']]
+    2 [0, 1, 1] [['a'], ['b', 'c']]
+    3 [0, 1, 2] [['a'], ['b'], ['c']]
+
+    Note
+    ====
+
+    This routine was rewritten to use 0-based lists.
+
+    Reference
+    =========
+
+    Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
+    2nd Ed, p 91, algorithm "nexequ". Available online from
+    http://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
+    November 17, 2012).
+
+    """
+    p = [0]*n
+    q = [0]*n
+    nc = 1
+    yield nc, q
+    while nc != n:
+        m = n
+        while 1:
+            m -= 1
+            i = q[m]
+            if p[i] != 1:
+                break
+            q[m] = 0
+        i += 1
+        q[m] = i
+        m += 1
+        nc += m - n
+        p[0] += n - m
+        if i == nc:
+            p[nc] = 0
+            nc += 1
+        p[i - 1] -= 1
+        p[i] += 1
+        yield nc, q
+
+
 def multiset_partitions(multiset, m=None):
     """
     Return unique partitions of the given multiset (in list form).
-    If ``m`` is None, all multisets will be returned. If ``multiset``
-    is an int, a range [0, 1, ..., multiset - 1] will be supplied.
+    If ``m`` is None, all multisets will be returned, otherwise only
+    partitions with ``m`` parts will be returned.
+
+    If ``multiset`` is an integer, a range [0, 1, ..., multiset - 1]
+    will be supplied.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import multiset_partitions
-    >>> list(multiset_partitions([1,2,3,4], 2))
+    >>> list(multiset_partitions([1, 2, 3, 4], 2))
     [[[1, 2, 3], [4]], [[1, 2, 4], [3]], [[1, 2], [3, 4]],
     [[1, 3, 4], [2]], [[1, 3], [2, 4]], [[1, 4], [2, 3]],
     [[1], [2, 3, 4]]]
-    >>> list(multiset_partitions([1,2,3,4], 1))
+    >>> list(multiset_partitions([1, 2, 3, 4], 1))
     [[[1, 2, 3, 4]]]
 
-    Although the input is not sorted, only unique partitions are returned:
+    Only unique partitions are returned and these will be returned in a
+    canonical order regardless of the order of the input:
 
-    >>> list(multiset_partitions([1, 2, 2, 1], 2))
-    [[[1, 2, 2], [1]], [[1, 2, 1], [2]], [[1, 2], [2, 1]], [[1, 1], [2, 2]]]
-    >>> list(multiset_partitions([1, 1, 2, 2], 2))
-    [[[1, 1, 2], [2]], [[1, 1], [2, 2]], [[1, 2, 2], [1]], [[1, 2], [1, 2]]]
+    >>> a = [1, 2, 2, 1]
+    >>> ans = list(multiset_partitions(a, 2))
+    >>> a.sort()
+    >>> list(multiset_partitions(a, 2)) == ans
+    True
 
-    If a multiset alone is given, all partitions will be returned:
+    If m is omitted then all partitions will be returned:
+
     >>> list(multiset_partitions([1, 1, 2]))
-    [[[1, 1], [2]], [[1, 2], [1]], [[1], [1], [2]]]
+    [[[1, 1, 2]], [[1, 1], [2]], [[1, 2], [1]], [[1], [1], [2]]]
+    >>> list(multiset_partitions([1]*3))
+    [[[1, 1, 1]], [[1], [1, 1]], [[1], [1], [1]]]
+
+    Note: when all the elements are the same in the multiset, the order
+    of the returned partitions is determined by the ``partitions``
+    routine.
 
     See Also
     ========
+    partitions
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     """
-    def nexequ(n, nc, p, q, mtc):
-        """Update p and q for given nc.
-
-        input for mtc = 0::
-
-            p = [0]*(n+1)
-            q = []
-            nc = None
-
-        input for mtc = 1::
-
-            nc, p, q from last call to nexequ
-
-        Reference: Nijenhuis, Albert and Wilf, Herbert,
-        Combinatorial Algorithms, 2nd ed, page 91
-        """
-        if not mtc:
-            nc = 1
-            q[:] = [1]*(n + 1)
-            p[1] = n
-        else:
-            m=n
-            while 1:
-                l=q[m]
-                if p[l] != 1:
-                    break
-                q[m]=1
-                m-=1
-            nc+=m-n
-            p[1]+=n-m
-            if l==nc:
-                nc+=1
-                p[nc]=0
-            q[m]=l+1
-            p[l]-=1
-            p[l+1]+=1
-        return nc
 
     if type(multiset) is int:
         n = multiset
+        if m and m > n:
+            raise ValueError('m > len(multiset)')
         multiset = range(multiset)
         if m == 1:
             yield [multiset[:]]
             return
-        canon = 0
-    else:
+        for nc, q in _set_partitions(n):
+            if m is None or nc == m:
+                rv = [[] for i in range(nc)]
+                for i in range(n):
+                    rv[q[i]].append(multiset[i])
+                yield rv
+    elif not has_variety(multiset):
+        n = len(multiset)
+        if m and m > n:
+            raise ValueError('m > len(multiset)')
         if m == 1:
             yield [multiset[:]]
             return
-
+        x = multiset[:1]
+        for size, p in partitions(n, m, size=True):
+            if m is None or size == m:
+                rv = []
+                for k in sorted(p):
+                    rv.extend([x*k]*p[k])
+                yield rv
+    else:
         n = len(multiset)
+        if m and m > n:
+            raise ValueError('m > len(multiset)')
+        if m == 1:
+            yield [multiset[:]]
+            return
 
         # if there are repeated elements, sort them and define the
         # canon dictionary that will be used to create the cache key
         # in case elements of the multiset are not hashable
         cache = set()
-        canon = {}
+        canon = {}  # {physical position: position where it appeared first}
         for i, mi in enumerate(multiset):
-            canon[i] = multiset.index(mi)
+            canon.setdefault(i, canon.get(i, multiset.index(mi)))
         if len(set(canon.values())) != n:
+            multiset = list(ordered(multiset))
             canon = {}
             for i, mi in enumerate(multiset):
-                canon[i] = multiset.index(mi)
+                canon.setdefault(i, canon.get(i, multiset.index(mi)))
         else:
             canon = None
 
-    p = [0]*(n + 1)
-    q = []
-    nc = None
-    nc = nexequ(n, nc, p, q, 0)
-    if canon == 0:
-        while nc != n:
-            nc = nexequ(n, nc, p, q, 1)
+        for nc, q in _set_partitions(n):
             if m is None or nc == m:
-                rv = [[] for i in range(nc + 1)]
-                for i in range(n):
-                    rv[q[i + 1]].append(multiset[i])
-                yield rv[1:]
-    else:
-        while nc != n:
-            nc = nexequ(n, nc, p, q, 1)
-            if m is None or nc == m:
-                rv = [[] for i in xrange(nc + 1)]
+                rv = [[] for i in range(nc)]
                 for i in xrange(n):
-                    rv[q[i + 1]].append(i)
+                    rv[q[i]].append(i)
                 if canon:
-                    canonical = tuple(sorted([tuple(
-                        sorted([canon[i] for i in j])) for j in rv]))
+                    canonical = tuple(
+                        sorted([tuple([canon[i] for i in j]) for j in rv]))
                 else:
                     canonical = tuple(tuple(j) for j in rv)
                 if canonical not in cache:
                     cache.add(canonical)
-                    yield [[multiset[j] for j in i] for i in rv[1:]]
+                    yield [[multiset[j] for j in i] for i in rv]
 
 
 def partitions(n, m=None, k=None, size=False):
@@ -953,7 +1006,8 @@ def partitions(n, m=None, k=None, size=False):
 
     >>> from sympy.utilities.iterables import partitions
 
-    Maximum key (number in partition) limited with k (in this case, 2):
+    The numbers appearing in the partition (the key of the returned dict)
+    are limited with k:
 
     >>> for p in partitions(6, k=2):
     ...     print p
@@ -962,7 +1016,8 @@ def partitions(n, m=None, k=None, size=False):
     {1: 4, 2: 1}
     {1: 6}
 
-    Maximum number of parts in partion limited with m (in this case, 2):
+    The maximum number of parts in partion (the values of the returned dict)
+    are limited with m:
 
     >>> for p in partitions(6, m=2):
     ...     print p
@@ -974,7 +1029,7 @@ def partitions(n, m=None, k=None, size=False):
 
     Note that the _same_ dictionary object is returned each time.
     This is for speed:  generating each partition goes quickly,
-    taking constant time independent of n.
+    taking constant time, independent of n.
 
     >>> [p for p in partitions(6, k=2)]
     [{1: 6}, {1: 6}, {1: 6}, {1: 6}]
