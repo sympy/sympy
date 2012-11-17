@@ -1,14 +1,14 @@
 from sympy import symbols, sympify, Dummy
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
-    SOPform, Xor, compile_rule, conjuncts, disjuncts,
+    SOPform, Xor, conjuncts, disjuncts,
     distribute_and_over_or, eliminate_implications, is_cnf,
-    simplify_logic, to_cnf, to_int_repr
+    simplify_logic, to_cnf, to_int_repr, bool_equal
 )
 from sympy.utilities.pytest import raises
 
 
-A, B, C, Q = symbols('A,B,C,Q')
+A, B, C = symbols('A,B,C')
 
 
 def test_overloading():
@@ -179,6 +179,25 @@ def test_simplification():
     assert POSform('x', [], []) is False
 
 
+def test_bool_equal():
+    """
+    Test working of bool_equal function.
+    """
+
+    minterms = [[0, 0, 0, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 0, 1, 1],
+        [1, 1, 1, 1]]
+    from sympy.abc import a, b, c, x, y, z
+    assert bool_equal(Not(Not(a)), a)
+    assert bool_equal(SOPform(['w', 'x', 'y', 'z'], minterms),
+        POSform(['w', 'x', 'y', 'z'], minterms))
+    assert bool_equal(SOPform(['x', 'z', 'y'],[[1, 0, 1]]),
+        SOPform(['a', 'b', 'c'],[[1, 0, 1]])) != False
+    function1 = SOPform(['x','z','y'],[[1, 0, 1], [0, 0, 1]])
+    function2 = SOPform(['a','b','c'],[[1, 0, 1], [1, 0, 0]])
+    assert bool_equal(function1, function2, info=True) == \
+        (function1, {y: a, z: b})
+
+
 def test_bool_symbol():
     """Test that mixing symbols with boolean values
     works as expected"""
@@ -282,11 +301,6 @@ def test_to_cnf():
     assert to_cnf(Equivalent(A, B & C)) == (~A | B) & (~A | C) & (~B | ~C | A)
     assert to_cnf(Equivalent(A, B | C)) == \
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
-
-
-def test_compile_rule():
-    assert compile_rule("A & B") == sympify("A & B")
-    assert compile_rule("C & Q") == And(C, Q)  # this would fail with sympify
 
 
 def test_to_int_repr():
