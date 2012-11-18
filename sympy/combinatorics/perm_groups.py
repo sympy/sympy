@@ -2839,7 +2839,9 @@ class PermutationGroup(Basic):
             These are used to rule out group elements by partial base images,
             so that ``tests[l](g)`` returns False if the element ``g`` is known
             not to satisfy prop base on where g sends the first ``l + 1`` base
-            points. ``init_subgroup`` - if a subgroup of the saught group is
+            points.
+        init_subgroup
+            if a subgroup of the sought group is
             known in advance, it can be passed to the function as this
             parameter.
 

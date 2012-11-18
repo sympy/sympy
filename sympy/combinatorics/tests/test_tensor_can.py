@@ -9,7 +9,7 @@ from sympy.utilities.pytest import skip, XFAIL
 def test_perm_af_direct_product():
     gens1 = [[1,0,2,3], [0,1,3,2]]
     gens2 = [[1,0]]
-    assert perm_af_direct_product(gens1, gens2) == [[1, 0, 2, 3, 4, 5], [0, 1, 3, 2, 4, 5], [0, 1, 2, 3, 5, 4]]
+    assert perm_af_direct_product(gens1, gens2, 0) == [[1, 0, 2, 3, 4, 5], [0, 1, 3, 2, 4, 5], [0, 1, 2, 3, 5, 4]]
     gens1 = [[1,0,2,3,5,4], [0,1,3,2,4,5]]
     gens2 = [[1,0,2,3]]
     assert [[1, 0, 2, 3, 4, 5, 7, 6], [0, 1, 3, 2, 4, 5, 6, 7], [0, 1, 2, 3, 5, 4, 6, 7]]
@@ -372,8 +372,8 @@ def test_canonicalize1():
     # T_c = -f^{a b c} * f_a^{d e} * A^mu_b * A_{mu d} * A^nu_c * A_{nu e}
     # can = [4,6,8,       5,10,12,   0,7,     1,11,       2,9,    3,13, 15,14]
     g = Permutation([8,11,5, 9,13,7, 1,10, 3,4, 2,12, 0,6, 14,15])
-    base_f, gens_f = bsgs_direct_product(base1, gens1, base2a, gens2a, 1)
-    base_A, gens_A = bsgs_direct_product(base1, gens1, base1, gens1, 1)
+    base_f, gens_f = bsgs_direct_product(base1, gens1, base2a, gens2a)
+    base_A, gens_A = bsgs_direct_product(base1, gens1, base1, gens1)
     t0 = (base_f, gens_f, 2, 0)
     t1 = (base_A, gens_A, 4, 0)
     can = canonicalize(g, [range(4), range(4, 14)], [0, 0], t0, t1)
@@ -481,7 +481,7 @@ def test_riemann_products():
     # g = [0,4,3,1,2,5,6,7]
     # T_c = -A_{m a1}^d0 * A_m1^a0_d0
     # can = [0,3,4,1,2,5,7,6]
-    base, gens = bsgs_direct_product(base1, gens1, base2a, gens2a, 1)
+    base, gens = bsgs_direct_product(base1, gens1, base2a, gens2a)
     dummies = range(4, 6)
     g = Permutation([0,4,3,1,2,5,6,7])
     can = canonicalize(g, dummies, 0, (base, gens, 2, 0))
@@ -503,7 +503,7 @@ def test_riemann_products():
     # can = [0, 4, 6, 1, 5, 8, 10, 2, 7, 11, 3, 9, 12, 13]
     # xase with single type of indices
  
-    base, gens = bsgs_direct_product(base1, gens1, base2, gens2, 1)
+    base, gens = bsgs_direct_product(base1, gens1, base2, gens2)
     dummies = range(4, 12)
     g = Permutation([4,2,10, 0,11,8, 1,9,6, 5,7,3, 12,13])
     can = canonicalize(g, dummies, 0, (base, gens, 4, 0))
