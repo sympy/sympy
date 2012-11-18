@@ -1260,7 +1260,7 @@ class Subs(Expr):
             variables = [variables]
         variables = list(sympify(variables))
 
-        if uniq(variables) != variables:
+        if list(uniq(variables)) != variables:
             repeated = [ v for v in set(variables)
                          if list(variables).count(v) > 1 ]
             raise ValueError('cannot substitute expressions %s more than '

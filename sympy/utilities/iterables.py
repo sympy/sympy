@@ -1220,32 +1220,49 @@ def has_variety(seq):
 
 def uniq(seq):
     """
-    Remove repeated elements from an iterable, preserving order of first
-    appearance.
-
-    Returns a sequence of the same type of the input, or a list if the input
-    was not a sequence.
+    Yield unique elements from ``seq`` as an iterator.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import uniq
-    >>> uniq([1,4,1,5,4,2,1,2])
+    >>> dat = [1, 4, 1, 5, 4, 2, 1, 2]
+    >>> uniq(dat)
+    <generator object uniq at ...>
+    >>> list(_)
     [1, 4, 5, 2]
-    >>> uniq((1,4,1,5,4,2,1,2))
-    (1, 4, 5, 2)
-    >>> uniq(x for x in (1,4,1,5,4,2,1,2))
+    >>> list(uniq(x for x in dat))
     [1, 4, 5, 2]
+    >>> list(uniq([[1], [2, 1], [1]]))
+    [[1], [2, 1], [1]]
 
     """
     from sympy.core.function import Tuple
-    seen = set()
-    result = (s for s in seq if not (s in seen or seen.add(s)))
+
     if not hasattr(seq, '__getitem__'):
-        return list(result)
-    if isinstance(seq, Tuple):
-        return Tuple(*tuple(result))
-    return type(seq)(result)
+        container = list
+    else:
+        container = type(seq)
+
+    try:
+        seen = set()
+        result = []
+        for s in seq:
+            if not (s in seen or seen.add(s)):
+                yield s
+    except TypeError:
+        # something was unhashable
+        if not hasattr(seq, '__getitem__'):
+            yield s
+            result = [s]
+        else:
+            result = []
+        for s in seq:
+            for r in result:
+                if s == r:
+                    break
+            else:
+                yield s
 
 
 def generate_bell(n):

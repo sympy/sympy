@@ -5,7 +5,7 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        ordered, minlex, runs, reshape)
+        ordered, minlex, runs, reshape, uniq)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -410,3 +410,10 @@ def test_reshape():
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
     assert reshape(range(12), [2, [3], set([2]), (1, (3,), 1)]) == \
         [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+
+def test_uniq():
+    assert list(uniq(p.copy() for p in partitions(4))) == \
+        [{4: 1}, {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}]
+    assert list(uniq(x % 2 for x in range(5))) == [0, 1]
+    assert list(uniq('a')) == ['a']
+    assert list(uniq('ababc')) == list('abc')
