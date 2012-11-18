@@ -825,9 +825,17 @@ def _partition(seq, vector, m=None):
     >>> _partition('abcde', [1, 0, 1, 2, 0], 3)
     [['b', 'e'], ['a', 'c'], ['d']]
 
+    The output of _set_partitions can be passed as follows:
+
+    >>> output = (3, [1, 0, 1, 2, 0])
+    >>> _partition('abcde', *output)
+    [['b', 'e'], ['a', 'c'], ['d']]
+
     """
     if m is None:
         m = max(vector) + 1
+    elif type(vector) is int:  # entered as m, vector
+        vector, m = m, vector
     p = [[] for i in range(m)]
     for i, v in enumerate(vector):
         p[v].append(seq[i])
