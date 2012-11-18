@@ -809,6 +809,31 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
+def _partition(seq, vector, m=None):
+    """
+    Return the partion of seq as specified by the partition vector.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import _partition
+    >>> _partition('abcde', [1, 0, 1, 2, 0])
+    [['b', 'e'], ['a', 'c'], ['d']]
+
+    Specifying the number of bins in the partition is optional:
+
+    >>> _partition('abcde', [1, 0, 1, 2, 0], 3)
+    [['b', 'e'], ['a', 'c'], ['d']]
+
+    """
+    if m is None:
+        m = max(vector) + 1
+    p = [[] for i in range(m)]
+    for i, v in enumerate(vector):
+        p[v].append(seq[i])
+    return p
+
+
 def _set_partitions(n):
     """Cycle through all partions of n elements, returning the
     current number of partitions and yield ``m`` and a mutable
@@ -821,17 +846,9 @@ def _set_partitions(n):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import _set_partitions
-
-    >>> def as_partition(s, m, q):
-    ...     p = [[] for i in range(m)]
-    ...     for i, qi in enumerate(q):
-    ...         p[qi].append(s[i])
-    ...     return p
-    ...
-
+    >>> from sympy.utilities.iterables import _set_partitions, _partition
     >>> for m, q in _set_partitions(3):
-    ...     print m, q, as_partition('abc', m, q)
+    ...     print m, q, _partition('abc', q, m)
     1 [0, 0, 0] [['a', 'b', 'c']]
     2 [0, 0, 1] [['a', 'b'], ['c']]
     2 [0, 1, 0] [['a', 'c'], ['b']]
@@ -913,7 +930,33 @@ def multiset_partitions(multiset, m=None):
     >>> list(multiset_partitions([1]*3))
     [[[1, 1, 1]], [[1], [1, 1]], [[1], [1], [1]]]
 
-    Note: when all the elements are the same in the multiset, the order
+    Counting
+    ========
+
+    The number of partitions returned is given by the bell number:
+
+    >>> from sympy import bell
+    >>> len(list(multiset_partitions(5))) == bell(5) == 52
+    True
+
+    The number of partitions of length k from a set of size n is given by the
+    Stirling Number of the 2nd kind:
+
+    >>> def S2(n, k):
+    ...     from sympy import Dummy, binomial, factorial, Sum
+    ...     if k > n:
+    ...         return 0
+    ...     j = Dummy()
+    ...     arg = (-1)**(k-j)*j**n*binomial(k,j)
+    ...     return 1/factorial(k)*Sum(arg,(j,0,k)).doit()
+    ...
+    >>> S2(5, 2) == len(list(multiset_partitions(5, 2))) == 15
+    True
+
+    Notes
+    =====
+
+    When all the elements are the same in the multiset, the order
     of the returned partitions is determined by the ``partitions``
     routine.
 
