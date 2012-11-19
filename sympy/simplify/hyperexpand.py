@@ -727,19 +727,6 @@ class Formula(object):
                         rep[a] = repl[a][0] + i*repl[a][1]
                     res.append(Formula(self.func.subs(rep), self.z, None, [],
                         self.B.subs(rep), self.C.subs(rep), self.M.subs(rep)))
-                # if say a = -1/2, and there is 2*a in the formula, then
-                # there will be a negative integer. But this origin is also
-                # reachable from a = 1/2 ...
-                # So throw this in as well.
-                # The code is not as general as it could be, but good enough.
-                if len(self.symbols) == 1:
-                    a = self.symbols[0]
-                    aval, d = repl[a]
-                    if aval.is_negative and d == 1:
-                        aval -= ceiling(aval) - 1
-                        res.append(Formula(self.func.subs(a, aval),
-                                       self.z, None, [], self.B.subs(a, aval),
-                                       self.C.subs(rep), self.M.subs(a, aval)))
         return res
 
     def is_suitable(self):
