@@ -46,7 +46,7 @@ clean:
 	-rm -rf sphinx
 	-rm -f $(PDFFILES)
 
-html:
+html: htmli18n
 	mkdir -p src/.static
 	mkdir -p _build/html
 	mkdir -p _build/doctrees
