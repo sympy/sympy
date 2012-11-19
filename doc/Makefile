@@ -19,8 +19,12 @@ ALLSPHINXOPTSlatex = -d _build/doctrees-latex -D latex_paper_size=$(PAPER) \
 
 LANGUAGES = bg cs de fr pl ru sr
 
+MOFILES = $(foreach l,$(LANGUAGES),$(addprefix _build/i18n/,$(addsuffix /LC_MESSAGES/tutorial.mo,${l})))
+POFILES = $(foreach l,$(LANGUAGES),$(addprefix src/tutorial/tutorial.,$(addsuffix .po,${l})))
+
 .PHONY: changes cheatsheet clean gettext help html html-errors \
-        htmlapi htmlhelp htmli18n info latex linkcheck texinfo web
+        htmlapi htmlhelp htmli18n info latex linkcheck texinfo \
+        update-po web
 
 .SUFFIXES: .pdf .svg
 
@@ -75,20 +79,14 @@ gettext:
 		-D source_suffix=.en.rst -d _build/doctrees-en src src/tutorial
 	sed -i "/^\# [0-9a-zA-Z]*$$/d" src/tutorial/tutorial.pot
 
-update-po:
-	for l in $(LANGUAGES); do \
-		msgmerge -U src/tutorial/tutorial.$$l.po src/tutorial/tutorial.pot ; \
-	done
+update-po: $(POFILES)
 
-htmli18n:
+htmli18n: $(MOFILES)
 	mkdir -p _build/i18n/
 	mkdir -p _build/html/tutorial
 	for l in $(LANGUAGES); do \
-		mkdir -p _build/doctrees-$$l ; \
-		mkdir -p _build/i18n/$$l/LC_MESSAGES/ ; \
-		msgfmt src/tutorial/tutorial.$$l.po -o _build/i18n/$$l/LC_MESSAGES/tutorial.mo ; \
 		$(SPHINXBUILD) -b html -D language=$$l -D master_doc=tutorial/tutorial \
-			-D source_suffix=.en.rst -d _build/doctrees-$$l $(SPHINXOPTS) src _build/i18n/$$l ; \
+			-D source_suffix=.en.rst -d _build/doctrees-$$l src _build/i18n/$$l ; \
 		cp _build/i18n/$$l/tutorial/tutorial.html _build/html/tutorial/tutorial.$$l.html ; \
 	done
 
