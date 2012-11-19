@@ -229,6 +229,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Alexander Eberspächer: correct typo in aboutus.rst
 #. Sachin Joglekar: Simplification of logic expressions to SOP and POS forms
 #. Tyler Pirtle: Fix improperly formatted error message
+#. Vasily Povalyaev: Fix latex(Min)
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
