@@ -46,7 +46,7 @@ msgstr ""
 "Този урок е въведение към SymPy. Прочетете го, за да научите какво и как "
 "може SymPy, и ако искате да научите повече, прочетете :ref:`SymPy User's "
 "Guide <guide>`, :ref:`SymPy Modules Reference <module-docs>`. или  `сорс "
-"код<https://github.com/sympy/sympy/>`_ директно."
+"код <https://github.com/sympy/sympy/>`_ директно."
 
 #: tutorial.en.rst:26
 msgid "First Steps with SymPy"
