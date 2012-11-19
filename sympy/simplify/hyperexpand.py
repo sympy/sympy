@@ -698,11 +698,16 @@ class Formula(object):
     def closed_form(self):
         return (self.C*self.B)[0]
 
+    def do_subs(self, repl):
+        """Apply substitutions to the formula"""
+        return Formula(self.func.subs(repl), self.z, None, [],
+                self.B.subs(repl), self.C.subs(repl), self.M.subs(repl))
+
     def find_instantiations(self, func):
         """
-        Find instantiations of the free symbols that match ``func``.
+        Find substitutions of the free symbols that match ``func``.
 
-        Return the instantiated formulae as a list.  Note that the returned
+        Return the substitution dictionaries as a list. Note that the returned
         instantiations need not actually match, or be valid!
 
         """
@@ -725,8 +730,7 @@ class Formula(object):
                     rep = {}
                     for i, a in zip(change, repl.keys()):
                         rep[a] = repl[a][0] + i*repl[a][1]
-                    res.append(Formula(self.func.subs(rep), self.z, None, [],
-                        self.B.subs(rep), self.C.subs(rep), self.M.subs(rep)))
+                    res.append(rep)
         return res
 
     def is_suitable(self):
@@ -845,8 +849,9 @@ class FormulaCollection(object):
 
         possible = []
         for f in self.symbolic_formulae[sizes]:
-            l = f.find_instantiations(func)
-            for f2 in l:
+            repls = f.find_instantiations(func)
+            for repl in repls:
+                f2 = f.do_subs(repl)
                 if not f2.is_suitable():
                     continue
                 diff = f2.func.difficulty(func)
