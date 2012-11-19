@@ -1029,17 +1029,16 @@ def multiset_partitions(multiset, m=None):
         for nc, q in _set_partitions(n):
             if m is None or nc == m:
                 rv = [[] for i in range(nc)]
-                for i in xrange(n):
+                for i in range(n):
                     rv[q[i]].append(i)
                 if canon:
                     canonical = tuple(
                         sorted([tuple([canon[i] for i in j]) for j in rv]))
-                else:
-                    canonical = tuple(tuple(j) for j in rv)
-                if canonical not in cache:
+                    if canonical in cache:
+                        continue
                     cache.add(canonical)
-                    yield [[multiset[j] for j in i] for i in rv]
 
+                yield [[multiset[j] for j in i] for i in rv]
 
 def partitions(n, m=None, k=None, size=False):
     """Generate all partitions of integer n (>= 0).
