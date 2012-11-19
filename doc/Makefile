@@ -39,6 +39,7 @@ help:
 	@echo "  latex       to make LaTeX files, you can set PAPER=a4 or PAPER=letter"
 	@echo "  linkcheck   to check all external links for integrity"
 	@echo "  texinfo     to make Texinfo files"
+	@echo "  update-po   to update po files for translation"
 	@echo "  web         to make files usable by Sphinx.web"
 
 clean:
@@ -70,9 +71,14 @@ htmlapi:
 	@echo "Build finished. The API docs pages are in _build/api."
 
 gettext:
-	mkdir -p _build/
-	$(SPHINXBUILD) -b gettext -D master_doc=tutorial/tutorial -D source_suffix=.en.rst src _build/gettext
-	cp _build/gettext/tutorial.pot src/tutorial/
+	$(SPHINXBUILD) -b gettext -t gettext -D master_doc=tutorial/tutorial \
+		-D source_suffix=.en.rst -d _build/doctrees-en src src/tutorial
+	sed -i "/^\# [0-9a-zA-Z]*$$/d" src/tutorial/tutorial.pot
+
+update-po:
+	for l in $(LANGUAGES); do \
+		msgmerge -U src/tutorial/tutorial.$$l.po src/tutorial/tutorial.pot ; \
+	done
 
 htmli18n:
 	mkdir -p _build/i18n/
@@ -85,6 +91,15 @@ htmli18n:
 			-D source_suffix=.en.rst -d _build/doctrees-$$l $(SPHINXOPTS) src _build/i18n/$$l ; \
 		cp _build/i18n/$$l/tutorial/tutorial.html _build/html/tutorial/tutorial.$$l.html ; \
 	done
+
+$(POFILES): src/tutorial/tutorial.pot
+	msgmerge -U $@ $<
+	touch $@
+
+$(MOFILES): _build/i18n/%/LC_MESSAGES/tutorial.mo: src/tutorial/tutorial.%.po
+	mkdir -p $(dir $@)
+	msgfmt $< -o $@
+	rm -rf _build/doctrees-$*
 
 web:
 	mkdir -p _build/web _build/doctrees
