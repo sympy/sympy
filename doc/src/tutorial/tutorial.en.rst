@@ -963,12 +963,14 @@ Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
 that contains a lot of useful examples, tutorials, cookbooks that we and our
 users contributed, and feel free to edit it.
 
-.. only:: html
+.. only:: html or gettext
 
     Translations
-    ============
+    ------------
 
     This tutorial is also available in other languages:
+
+.. only:: html
 
         - `Български <tutorial.bg.html>`_
         - `Česky <tutorial.cs.html>`_
