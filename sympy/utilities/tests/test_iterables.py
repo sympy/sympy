@@ -251,6 +251,9 @@ def test_multiset_partitions():
     assert list(multiset_partitions([1]*3, 2)) == [[[1], [1, 1]]]
     assert list(multiset_partitions([1]*3)) == [
         [[1, 1, 1]], [[1], [1, 1]], [[1], [1], [1]]]
+    a = [3, 2, 1]
+    assert list(multiset_partitions(a)) == \
+        list(multiset_partitions(sorted(a)))
 
 
 def test_partitions():

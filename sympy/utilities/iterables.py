@@ -930,6 +930,10 @@ def multiset_partitions(multiset, m=None):
     >>> a.sort()
     >>> list(multiset_partitions(a, 2)) == ans
     True
+    >>> a = range(3, 1, -1)
+    >>> (list(multiset_partitions(a)) ==
+    ...  list(multiset_partitions(sorted(a))))
+    True
 
     If m is omitted then all partitions will be returned:
 
@@ -1004,6 +1008,7 @@ def multiset_partitions(multiset, m=None):
                     rv.extend([x*k]*p[k])
                 yield rv
     else:
+        multiset = list(ordered(multiset))
         n = len(multiset)
         if m and m > n:
             raise ValueError('m > len(multiset)')
@@ -1019,7 +1024,6 @@ def multiset_partitions(multiset, m=None):
         for i, mi in enumerate(multiset):
             canon.setdefault(i, canon.get(i, multiset.index(mi)))
         if len(set(canon.values())) != n:
-            multiset = list(ordered(multiset))
             canon = {}
             for i, mi in enumerate(multiset):
                 canon.setdefault(i, canon.get(i, multiset.index(mi)))
