@@ -90,8 +90,8 @@ msgid ""
 "For other means how to install SymPy, consult the  Downloads_ tab on the "
 "SymPy's webpage."
 msgstr ""
-"Pour d'autres moyens d'installer SymPy, consultez l'onglet Téléchargements_ "
-"(\"Downloads\" en anglais) sur la page web de SymPy."
+"Pour d'autres moyens d'installer SymPy, consultez l'onglet Téléchargements "
+"(\"Downloads_\" en anglais) sur la page web de SymPy."
 
 #: tutorial.en.rst:87
 msgid "isympy Console"
