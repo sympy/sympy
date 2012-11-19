@@ -41,7 +41,7 @@ In order to update translations, you first need to make sure that the
 
 If you are creating a translation for a new language, copy the generated
 ``tutorial.pot`` to a new file ``tutorial.??.po`` where ``??`` is the
-two-character language code for your language. Aalso add the language
+two-character language code for your language. Also add the language
 code to the LANGUAGES macro in the Makefile.
 
 If you are just updating a translation, for example the
