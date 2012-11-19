@@ -63,6 +63,59 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...
     SympifyError: SympifyError: "could not parse u'x***2'"
 
+    Locals
+    ------
+
+    The sympification happens with access to everything that is loaded
+    by ``from sympy import *``; anything used in a string that is not
+    defined by that import will be converted to a symbol. In the following,
+    the ``bitcout`` function is treated as a symbol and the ``O`` is
+    interpreted as the Order object (used with series) and it raises
+    an error when used improperly:
+
+    >>> s = 'bitcount(42)'
+    >>> sympify(s)
+    bitcount(42)
+    >>> sympify("O(x)")
+    O(x)
+    >>> sympify("O + 1")
+    Traceback (most recent call last):
+    ...
+    TypeError: unbound method...
+
+    In order to have ``bitcount`` be recognized it can be imported into a
+    namespace dictionary and passed as locals:
+
+    >>> ns = {}
+    >>> exec 'from sympy.core.evalf import bitcount' in ns
+    >>> sympify(s, locals=ns)
+    6
+
+    In order to have the ``O`` interpreted as a Symbol, identify it as such
+    in the namespace dictionary. This can be done in a variety of ways; all
+    three of the following are possibilities:
+
+    >>> from sympy import Symbol
+    >>> ns["O"] = Symbol("O")  # method 1
+    >>> exec 'from sympy.abc import O' in ns  # method 2
+    >>> ns.update(dict(O=Symbol("O")))  # method 3
+    >>> sympify("O + 1", locals=ns)
+    O + 1
+
+    If you want *all* single-letter and Greek-letter variables to be symbols
+    then you can use the clashing-symbols dictionaries that have been defined
+    there as private variables: _clash1 (single-letter variables), _clash2
+    (the multi-letter Greek names) or _clash (both single and multi-letter
+    names that are defined in abc).
+
+    >>> from sympy.abc import _clash1
+    >>> _clash1
+    {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
+    >>> sympify('C & Q', _clash1)
+    And(C, Q)
+
+    Strict
+    ------
 
     If the option ``strict`` is set to ``True``, only the types for which an
     explicit conversion has been defined are converted. In the other
@@ -74,6 +127,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     Traceback (most recent call last):
     ...
     SympifyError: SympifyError: True
+
+    Extending
+    ---------
 
     To extend ``sympify`` to convert custom objects (not derived from ``Basic``),
     just define a ``_sympy_`` method to your class. You can do that even to
