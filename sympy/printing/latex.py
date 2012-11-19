@@ -507,12 +507,22 @@ class LatexPrinter(Printer):
     def _print_Min(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        return r"\min\left(%s\right)" % ", ".join(texargs)
+        tex = r"\min\left(%s\right)" % ", ".join(texargs)
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
 
     def _print_Max(self, expr, exp=None):
         args = sorted(expr.args, key=default_sort_key)
         texargs = [r"%s" % self._print(symbol) for symbol in args]
-        return r"\max\left(%s\right)" % ", ".join(texargs)
+        tex = r"\max\left(%s\right)" % ", ".join(texargs)
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
 
     def _print_floor(self, expr, exp=None):
         tex = r"\lfloor{%s}\rfloor" % self._print(expr.args[0])
