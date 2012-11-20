@@ -19,6 +19,10 @@ http://aima.cs.berkeley.edu/python/logic.html
 from sympy.utilities.iterables import kbins
 
 class Compound(object):
+    """ A little class to represent an interior node in the tree
+
+    This is analagous to SymPy.Basic for non-Atoms
+    """
     def __init__(self, op, args):
         self.op = op
         self.args = args
@@ -34,6 +38,7 @@ class Compound(object):
         return "%s[%s]" % (str(self.op), ', '.join(map(str, self.args)))
 
 class Variable(object):
+    """ A Wild token """
     def __init__(self, arg):
         self.arg = arg
 
@@ -47,12 +52,17 @@ class Variable(object):
         return "Variable(%s)" % str(self.arg)
 
 class CondVariable(object):
+    """ A wild token that matches conditionally
+
+    valid - an additional constraining funciton on a match """
     def __init__(self, arg, valid):
         self.arg = arg
         self.valid = valid
 
     def __eq__(self, other):
-        return type(self) == type(other) and self.arg == other.arg and self.valid == other.valid
+        return (type(self) == type(other) and
+                self.arg == other.arg and
+                self.valid == other.valid)
 
     def __hash__(self):
         return hash((type(self), self.arg, self.valid))
