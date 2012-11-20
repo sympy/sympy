@@ -1,5 +1,5 @@
 """
-This contents of this file is the return value of
+The contents of this file are the return value of
 ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
 edit this file.
 """
