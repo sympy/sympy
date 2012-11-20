@@ -1,47 +1,53 @@
+"""
+The contents of this file are the return value of
+``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
+edit this file.
+"""
+
 from sympy.logic.boolalg import And, Not, Or
 from sympy.assumptions.ask import Q
 
 # -{ Known facts in CNF }-
 known_facts_cnf = And(
-    Or(Not(Q.negative), Q.nonzero),
-    Or(Not(Q.composite), Not(Q.prime)),
-    Or(Not(Q.prime), Q.positive),
-    Or(Not(Q.real), Q.extended_real),
-    Or(Not(Q.nonzero), Q.real),
-    Or(Not(Q.extended_real), Q.infinity, Q.real),
-    Or(Not(Q.irrational), Not(Q.rational)),
-    Or(Not(Q.diagonal), Q.lower_triangular),
-    Or(Not(Q.imaginary), Not(Q.real)),
-    Or(Not(Q.even), Q.integer),
-    Or(Not(Q.real), Q.complex),
-    Or(Not(Q.imaginary), Q.complex),
-    Or(Not(Q.positive), Q.nonzero),
-    Or(Not(Q.infinity), Q.extended_real),
-    Or(Not(Q.negative), Not(Q.positive)),
-    Or(Not(Q.real), Q.hermitian),
-    Or(Not(Q.diagonal), Q.upper_triangular),
-    Or(Not(Q.orthogonal), Q.positive_definite),
-    Or(Not(Q.irrational), Q.real),
-    Or(Not(Q.prime), Q.integer),
-    Or(Not(Q.integer), Not(Q.positive), Q.composite, Q.prime),
-    Or(Not(Q.antihermitian), Not(Q.hermitian)),
-    Or(Not(Q.rational), Q.real),
-    Or(Not(Q.nonzero), Q.negative, Q.positive),
-    Or(Not(Q.odd), Q.integer),
-    Or(Not(Q.real), Q.irrational, Q.rational),
-    Or(Not(Q.integer), Q.even, Q.odd),
     Or(Not(Q.imaginary), Q.antihermitian),
+    Or(Not(Q.imaginary), Q.complex),
+    Or(Not(Q.real), Q.complex),
+    Or(Not(Q.infinity), Q.extended_real),
+    Or(Not(Q.real), Q.extended_real),
+    Or(Not(Q.real), Q.hermitian),
+    Or(Not(Q.even), Q.integer),
+    Or(Not(Q.odd), Q.integer),
+    Or(Not(Q.prime), Q.integer),
+    Or(Not(Q.positive_definite), Q.invertible),
+    Or(Not(Q.diagonal), Q.lower_triangular),
+    Or(Not(Q.negative), Q.nonzero),
+    Or(Not(Q.positive), Q.nonzero),
+    Or(Not(Q.prime), Q.positive),
+    Or(Not(Q.orthogonal), Q.positive_definite),
     Or(Not(Q.integer), Q.rational),
+    Or(Not(Q.irrational), Q.real),
+    Or(Not(Q.nonzero), Q.real),
+    Or(Not(Q.rational), Q.real),
+    Or(Not(Q.diagonal), Q.upper_triangular),
+    Or(Not(Q.antihermitian), Not(Q.hermitian)),
+    Or(Not(Q.composite), Not(Q.prime)),
     Or(Not(Q.even), Not(Q.odd)),
-    Or(Not(Q.positive_definite), Q.invertible)
+    Or(Not(Q.imaginary), Not(Q.real)),
+    Or(Not(Q.irrational), Not(Q.rational)),
+    Or(Not(Q.negative), Not(Q.positive)),
+    Or(Not(Q.integer), Q.even, Q.odd),
+    Or(Not(Q.extended_real), Q.infinity, Q.real),
+    Or(Not(Q.real), Q.irrational, Q.rational),
+    Or(Not(Q.nonzero), Q.negative, Q.positive),
+    Or(Not(Q.integer), Not(Q.positive), Q.composite, Q.prime)
 )
 
 # -{ Known facts in compressed sets }-
 known_facts_dict = {
     Q.symmetric: set([Q.symmetric]),
     Q.invertible: set([Q.invertible]),
-    Q.odd: set([Q.complex, Q.odd, Q.hermitian, Q.real,
-        Q.rational, Q.extended_real, Q.integer]),
+    Q.odd: set([Q.complex, Q.odd, Q.hermitian, Q.real, Q.rational,
+        Q.extended_real, Q.integer]),
     Q.upper_triangular: set([Q.upper_triangular]),
     Q.diagonal: set([Q.upper_triangular, Q.diagonal, Q.lower_triangular]),
     Q.antihermitian: set([Q.antihermitian]),
@@ -66,13 +72,13 @@ known_facts_dict = {
     Q.infinity: set([Q.extended_real, Q.infinity]),
     Q.complex: set([Q.complex]),
     Q.lower_triangular: set([Q.lower_triangular]),
-    Q.positive: set([Q.complex, Q.positive, Q.nonzero, Q.hermitian, Q.real,
-        Q.extended_real]),
+    Q.positive: set([Q.complex, Q.positive, Q.nonzero, Q.hermitian,
+        Q.real, Q.extended_real]),
     Q.composite: set([Q.composite]),
     Q.prime: set([Q.complex, Q.positive, Q.real, Q.hermitian, Q.prime,
         Q.rational, Q.extended_real, Q.nonzero, Q.integer]),
-    Q.negative: set([Q.complex, Q.nonzero, Q.hermitian, Q.real, Q.negative,
-        Q.extended_real]),
+    Q.negative: set([Q.complex, Q.nonzero, Q.hermitian, Q.real,
+        Q.negative, Q.extended_real]),
     Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real,
         Q.hermitian]),
     Q.imaginary: set([Q.antihermitian, Q.complex, Q.imaginary])

@@ -191,10 +191,20 @@ def single_fact_lookup(known_facts_keys, known_facts_cnf):
 def compute_known_facts(known_facts, known_facts_keys):
     """Compute the various forms of knowledge compilation used by the
     assumptions system.
+
+    This function is typically applied to the variables
+    ``known_facts`` and ``known_facts_keys`` defined at the bottom of
+    this file.
     """
     from textwrap import dedent, wrap
 
     fact_string = dedent('''\
+    """
+    The contents of this file are the return value of
+    ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
+    edit this file.
+    """
+
     from sympy.logic.boolalg import And, Not, Or
     from sympy.assumptions.ask import Q
 
@@ -206,7 +216,8 @@ def compute_known_facts(known_facts, known_facts_keys):
     # -{ Known facts in compressed sets }-
     known_facts_dict = {
         %s
-    }''')
+    }
+    ''')
     # Compute the known facts in CNF form for logical inference
     LINE = ",\n    "
     HANG = ' '*8
