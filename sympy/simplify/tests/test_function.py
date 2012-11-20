@@ -1,5 +1,5 @@
 """ Unit tests for Hyper_Function"""
-from sympy.core import symbols, Dummy, Tuple
+from sympy.core import symbols, Dummy, Tuple, S
 from sympy.functions import hyper
 
 from sympy.simplify.hyperexpand import Hyper_Function
@@ -40,3 +40,15 @@ def test_gamma():
     p = Dummy(integer=True, positive=True)
     assert Hyper_Function([-1, p, 1], []).gamma == 1
     assert Hyper_Function([-1, -p, 1], []).gamma == 2
+
+def test_suitable_origin():
+    assert Hyper_Function((S(1)/2,), (S(3)/2,))._is_suitable_origin() is True
+    assert Hyper_Function((S(1)/2,), (S(1)/2,))._is_suitable_origin() is False
+    assert Hyper_Function((S(1)/2,), (-S(1)/2,))._is_suitable_origin() is False
+    assert Hyper_Function((S(1)/2,), (0,))._is_suitable_origin() is False
+    assert Hyper_Function((S(1)/2,), (-1, 1,))._is_suitable_origin() is False
+    assert Hyper_Function((S(1)/2, 0), (1,))._is_suitable_origin() is False
+    assert Hyper_Function((S(1)/2, 1),
+            (2, -S(2)/3))._is_suitable_origin() is True
+    assert Hyper_Function((S(1)/2, 1),
+            (2, -S(2)/3, S(3)/2))._is_suitable_origin() is True

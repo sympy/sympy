@@ -519,6 +519,31 @@ class Hyper_Function(Expr):
 
         return diff
 
+    def _is_suitable_origin(self):
+        """
+        Decide if ``self`` is a suitable origin.
+
+        A function is a suitable origin iff:
+        * none of the ai equals bj + n, with n a non-negative integer
+        * none of the ai is zero
+        * none of the bj is a non-positive integer
+
+        Note that this gives meaningful results only when none of the indices
+        are symbolic.
+
+        """
+        for a in self.ap:
+            for b in self.bq:
+                if (a - b).is_integer and not a < b:
+                    return False
+        for a in self.ap:
+            if a == 0:
+                return False
+        for b in self.bq:
+            if b.is_integer and b.is_nonpositive:
+                return False
+        return True
+
 
 class G_Function(Expr):
     """ A Meijer G-function. """
@@ -735,64 +760,18 @@ class Formula(object):
 
     def is_suitable(self):
         """
-        Decide if ``self`` is a suitable origin.
+        Decide if the formula is suitable.
 
-        >>> from sympy.simplify.hyperexpand import Formula, Hyper_Function
-        >>> from sympy import S
+        A formula is suitable iff it has no symbolic parameters, the function
+        is a suitable origin and the matrix representations are well defined.
 
-        If ai - bq in Z and bq >= ai this is fine:
-        >>> func = Hyper_Function((S(1)/2,), (S(3)/2,))
-        >>> Formula(func, None, None, []).is_suitable()
-        True
-
-        but ai = bq is not:
-        >>> func = Hyper_Function((S(1)/2,), (S(1)/2,))
-        >>> Formula(func, None, None, []).is_suitable()
-        False
-
-        and ai > bq is not either:
-        >>> func = Hyper_Function((S(1)/2,), (-S(1)/2,))
-        >>> Formula(func, None, None, []).is_suitable()
-        False
-
-        None of the bj can be a non-positive integer:
-        >>> func = Hyper_Function((S(1)/2,), (0,))
-        >>> Formula(func, None, None, []).is_suitable()
-        False
-        >>> func = Hyper_Function((S(1)/2,), (-1, 1,))
-        >>> Formula(func, None, None, []).is_suitable()
-        False
-
-        None of the ai can be zero:
-        >>> func = Hyper_Function((S(1)/2, 0), (1,))
-        >>> Formula(func, None, None, []).is_suitable()
-        False
-
-
-        More complicated examples:
-        >>> func = Hyper_Function((S(1)/2, 1), (2, -S(2)/3))
-        >>> Formula(func, None, None, []).is_suitable()
-        True
-        >>> func = Hyper_Function((S(1)/2, 1), (2, -S(2)/3, S(3)/2))
-        >>> Formula(func, None, None, []).is_suitable()
-        True
         """
         if len(self.symbols) > 0:
             return None
-        for a in self.func.ap:
-            for b in self.func.bq:
-                if (a - b).is_integer and not a < b:
-                    return False
-        for a in self.func.ap:
-            if a == 0:
-                return False
-        for b in self.func.bq:
-            if b.is_integer and b.is_nonpositive:
-                return False
+        if not self.func._is_suitable_origin():
+            return False
         for e in [self.B, self.M, self.C]:
-            if e is None:
-                continue
-            if e.has(S.NaN) or e.has(oo) or e.has(-oo) or e.has(zoo):
+            if e.has(S.NaN, oo, -oo, zoo):
                 return False
         return True
 
