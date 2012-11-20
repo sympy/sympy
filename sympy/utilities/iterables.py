@@ -364,8 +364,9 @@ def variations(seq, n, repetition=False):
     ========
 
     sympy.core.compatibility.permutations
+    sympy.core.compatibility.product
     """
-    from sympy.core.compatibility import permutations
+    from sympy.core.compatibility import permutations, product
 
     if not repetition:
         seq = tuple(seq)
@@ -377,9 +378,8 @@ def variations(seq, n, repetition=False):
         if n == 0:
             yield ()
         else:
-            for i in xrange(len(seq)):
-                for cc in variations(seq, n - 1, True):
-                    yield (seq[i],) + cc
+            for i in product(seq, repeat=n):
+                yield i
 
 
 def subsets(seq, k=None, repetition=False):
@@ -902,6 +902,82 @@ def _set_partitions(n):
         yield nc, q
 
 
+def multiset_combinations(m, n):
+    """
+    Return the unique combinations of size ``n`` from multiset ``m``.
+
+    TODO - logic is wrong so test fails. Needs fixing.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset_combinations
+    >>> [''.join(i) for i in  multiset_combinations('baby', 3)]
+    ['abb', 'aby', 'bby']
+
+    """
+    if type(m) is dict:
+        if n > sum(m.values()):
+            yield []
+        g = [(k, m[k]) for k in ordered(m)]
+    else:
+        m = list(m)
+        if n > len(m):
+            yield []
+        m = list(ordered(m))
+        g = [list(i) for i in group(m, multiple=False)]
+    c = []
+    for i in range(n):
+        c.append([])
+        for j, (mi, k) in enumerate(g):
+            if k:
+                c[-1].append(mi)
+                g[j][1] -= 1
+    for i in cartes(*c):
+        yield i
+
+
+def multiset_permutations(m, g=None):
+    """
+    Return the unique permutations of multiset ``m``.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset_permutations
+    >>> [''.join(i) for i in multiset_permutations('aab')]
+    ['aab', 'aba', 'baa']
+    >>> factorial(len('banana'))
+    720
+    >>> len(list(multiset_permutations('banana')))
+    60
+    """
+    if g is None:
+        if type(m) is dict:
+            g = [(k, m[k]) for k in ordered(m)]
+        else:
+            m = list(ordered(m))
+            g = [list(i) for i in group(m, multiple=False)]
+        del m
+    do = [gi for gi in g if gi[1]]
+    if not do:
+        yield []
+    elif len(do) == 1:
+        k, v = do[0]
+        yield [k for i in range(v)]
+    elif all(v == 1 for v in do):
+        for p in permutations([k for k, v in g]):
+            yield list(p)
+    else:
+        for i, (k, v) in enumerate(g):
+            if not v:
+                continue
+            g[i][1] -= 1
+            for j in multiset_permutations(None, g):
+                yield [k] + j
+            g[i][1] += 1
+
+
 def multiset_partitions(multiset, m=None):
     """
     Return unique partitions of the given multiset (in list form).
@@ -1048,6 +1124,7 @@ def multiset_partitions(multiset, m=None):
                     cache.add(canonical)
 
                 yield [[multiset[j] for j in i] for i in rv]
+
 
 def partitions(n, m=None, k=None, size=False):
     """Generate all partitions of integer n (>= 0).

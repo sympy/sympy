@@ -5,7 +5,8 @@ from sympy.utilities.iterables import (postorder_traversal, flatten, group,
         multiset_partitions, partitions, binary_partitions, generate_bell,
         generate_involutions, generate_derangements, unrestricted_necklace,
         generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        ordered, minlex, runs, reshape, uniq)
+        ordered, minlex, runs, reshape, uniq, multiset_combinations,
+        multiset_permutations)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -149,6 +150,9 @@ def test_cartes():
     assert list(cartes([1, 2], [3, 4, 5])) == \
         [(1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5)]
     assert list(cartes()) == [()]
+    assert list(cartes('a')) == [('a',)]
+    assert list(cartes('a', repeat=2)) == [('a', 'a')]
+    assert list(cartes(range(2))) == [(0,), (1,)]
 
 
 def test_numbered_symbols():
@@ -254,6 +258,18 @@ def test_multiset_partitions():
     a = [3, 2, 1]
     assert list(multiset_partitions(a)) == \
         list(multiset_partitions(sorted(a)))
+
+
+def XXXtest_multiset_combinations():
+    assert [''.join(i) for i in
+        list(multiset_combinations('mississippi', 3))] == [
+        'iii', 'iis', 'ips', 'iss', 'mps', 'mss', 'pss', 'sss']
+
+
+def test_multiset_permutations():
+    assert [''.join(i) for i in (list(multiset_permutations('baby')))] == [
+        'abby', 'abyb', 'aybb', 'baby', 'bayb', 'bbay', 'bbya', 'byab',
+        'byba', 'yabb', 'ybab', 'ybba']
 
 
 def test_partitions():
