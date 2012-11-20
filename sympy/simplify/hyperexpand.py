@@ -723,11 +723,6 @@ class Formula(object):
     def closed_form(self):
         return (self.C*self.B)[0]
 
-    def do_subs(self, repl):
-        """Apply substitutions to the formula"""
-        return Formula(self.func.subs(repl), self.z, None, [],
-                self.B.subs(repl), self.C.subs(repl), self.M.subs(repl))
-
     def find_instantiations(self, func):
         """
         Find substitutions of the free symbols that match ``func``.
@@ -757,23 +752,6 @@ class Formula(object):
                         rep[a] = repl[a][0] + i*repl[a][1]
                     res.append(rep)
         return res
-
-    def is_suitable(self):
-        """
-        Decide if the formula is suitable.
-
-        A formula is suitable iff it has no symbolic parameters, the function
-        is a suitable origin and the matrix representations are well defined.
-
-        """
-        if len(self.symbols) > 0:
-            return None
-        if not self.func._is_suitable_origin():
-            return False
-        for e in [self.B, self.M, self.C]:
-            if e.has(S.NaN, oo, -oo, zoo):
-                return False
-        return True
 
 
 class FormulaCollection(object):
@@ -830,12 +808,17 @@ class FormulaCollection(object):
         for f in self.symbolic_formulae[sizes]:
             repls = f.find_instantiations(func)
             for repl in repls:
-                f2 = f.do_subs(repl)
-                if not f2.is_suitable():
+                func2 = f.func.xreplace(repl)
+                if not func2._is_suitable_origin():
                     continue
-                diff = f2.func.difficulty(func)
-                if diff != -1:
-                    possible.append((diff, f2))
+                diff = func2.difficulty(func)
+                if diff == -1:
+                    continue
+                f2 = Formula(func2, f.z, None, [], f.B.subs(repl),
+                        f.C.subs(repl), f.M.subs(repl))
+                if any(e.has(S.NaN, oo, -oo, zoo) for e in [f2.B, f2.M, f2.C]):
+                    continue
+                possible.append((diff, f2))
 
         if not possible:
             # Give up.
