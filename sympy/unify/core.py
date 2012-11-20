@@ -54,7 +54,9 @@ class Variable(object):
 class CondVariable(object):
     """ A wild token that matches conditionally
 
-    valid - an additional constraining funciton on a match """
+    arg   - a wild token
+    valid - an additional constraining function on a match
+    """
     def __init__(self, arg, valid):
         self.arg = arg
         self.valid = valid
