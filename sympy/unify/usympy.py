@@ -1,3 +1,9 @@
+""" SymPy interface to Unificaiton engine
+
+See sympy.unify for module level docstring
+See sympy.unify.core for algorithmic docstring """
+
+
 from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
 from sympy.core import Wild as ExprWild
 from sympy.matrices import MatAdd, MatMul

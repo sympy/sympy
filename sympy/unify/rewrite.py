@@ -1,3 +1,5 @@
+""" Functions to support rewriting of SymPy expressions """
+
 from sympy.unify.usympy import unify
 from sympy.unify.usympy import rebuild
 from sympy.rules.tools import subs
