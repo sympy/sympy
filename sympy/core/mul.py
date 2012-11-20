@@ -408,8 +408,8 @@ class Mul(Expr, AssocOp):
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
-                g = igcd(bi, bj)
-                if g != 1:
+                g = _rgcd(bi, bj)
+                if g is not S.One:
                     # 4**r1*6**r2 -> 2**(r1+r2)  *  2**r1 *  3**r2
                     # this might have a gcd with something else
                     e = ei + ej
@@ -422,9 +422,9 @@ class Mul(Expr, AssocOp):
                             e = Rational(ep, e.q)
                         grow.append((g, e))
                     # update the jth item
-                    num_rat[j] = (bj//g, ej)
+                    num_rat[j] = (bj/g, ej)
                     # update bi that we are checking with
-                    bi = bi//g
+                    bi = bi/g
                     if bi is S.One:
                         break
             if bi is not S.One:
@@ -1493,6 +1493,9 @@ def _keep_coeff(coeff, factors, clear=True):
     else:
         return coeff*factors
 
-from numbers import Rational, igcd
+from numbers import Rational, igcd, ilcm, Integer
+def _rgcd(a, b):
+    return Rational(Integer(igcd(a.p, b.p)), Integer(ilcm(a.q, b.q)))
+
 from power import Pow
 from add import Add
