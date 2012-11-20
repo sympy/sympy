@@ -44,7 +44,7 @@ class Variable(object):
         return hash((type(self), self.arg))
 
     def __str__(self):
-        return "Var(%s)" % str(self.arg)
+        return "Variable(%s)" % str(self.arg)
 
 class CondVariable(object):
     def __init__(self, arg, valid):
@@ -58,7 +58,7 @@ class CondVariable(object):
         return hash((type(self), self.arg, self.valid))
 
     def __str__(self):
-        return "CondVar(%s)" % str(self.arg)
+        return "CondVariable(%s)" % str(self.arg)
 
 def unify(x, y, s=None, **fns):
     """ Unify two expressions
@@ -77,7 +77,7 @@ def unify(x, y, s=None, **fns):
     >>> expr    = Compound("Add", ("x", "y"))
     >>> pattern = Compound("Add", ("x", Variable("a")))
     >>> next(unify(expr, pattern, {}))
-    {Var(a): 'y'}
+    {Variable(a): 'y'}
     """
     s = s or {}
 
