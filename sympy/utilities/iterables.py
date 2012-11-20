@@ -993,7 +993,12 @@ def multiset_partitions(multiset, m=None):
                 for i in range(n):
                     rv[q[i]].append(multiset[i])
                 yield rv
-    elif not has_variety(multiset):
+        return
+
+    if len(multiset) == 1 and type(multiset) is str:
+        multiset = [multiset]
+
+    if not has_variety(multiset):
         n = len(multiset)
         if m and m > n:
             raise ValueError('m > len(multiset)')
