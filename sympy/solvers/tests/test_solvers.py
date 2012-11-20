@@ -1068,3 +1068,12 @@ def test_overdetermined():
     assert solve(eqs, x) == [(S.Half,)]
     assert solve(eqs, x, manual=True) == [(S.Half,)]
     assert solve(eqs, x, manual=True, check=False) == [(S.Half/2,), (S.Half,)]
+
+def test_issue_3506():
+    x = symbols('x')
+    assert solve(4**(x/2) - 2**(x/3)) == [0]
+    # while the first one passed, this one failed
+    x = symbols('x', real=True)
+    assert solve(5**(x/2) - 2**(x/3)) == [0]
+    b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
+    assert solve(5**(x/2) - 2**(3/x)) == [-b, b]

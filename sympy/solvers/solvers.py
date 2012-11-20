@@ -16,7 +16,8 @@ from sympy.core.compatibility import (iterable, is_sequence, ordered,
     default_sort_key, reduce)
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
-from sympy.core import C, S, Add, Symbol, Wild, Equality, Dummy, Basic, Expr
+from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
+    Expr, Mul)
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
                           count_ops)
@@ -27,7 +28,7 @@ from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sinh, tanh, coth, acos, asin, atan, acot, acosh,
-                             asinh, atanh, acoth, Abs)
+                             asinh, atanh, acoth, Abs, sign)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify)
@@ -2185,11 +2186,24 @@ def _invert(eq, *symbols, **kwargs):
             a, b = lhs.as_two_terms()
             ai, ad = a.as_independent(*symbols)
             bi, bd = b.as_independent(*symbols)
-            if any(_ispow(i) for i in (ad, bd)) and \
-                    ad.as_base_exp()[0] == bd.as_base_exp()[0]:
-                # a = -b
-                lhs = powsimp(powdenest(ad/bd))
-                rhs = -bi/ai
+            if any(_ispow(i) for i in (ad, bd)):
+                a_base, a_exp = ad.as_base_exp()
+                b_base, b_exp = bd.as_base_exp()
+                if a_base == b_base:
+                    # a = -b
+                    lhs = powsimp(powdenest(ad/bd))
+                    rhs = -bi/ai
+                else:
+                    bases = (b_base, a_base)
+                    expos = (b_exp, a_exp)
+                    if (all(i.is_real for i in bases + expos) and
+                            all(i.is_positive for i in bases) and
+                            any(i.has(*symbols) for i in expos) and
+                            not any(i.has(*symbols) for i in bases) and
+                            sign(ai*bi).is_negative):
+                        # ai*a_base**a_exp = -bi*b_base**b_exp
+                        lhs = a_exp*log(a_base) - b_exp*log(b_base)
+                        rhs = -log(ai/-bi)
 
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
@@ -2313,20 +2327,25 @@ def unrad(eq, *syms, **flags):
 
     poly = eq.as_poly()
 
-    rads = set([g for g in poly.gens if _take(g) and
-                g.is_Pow and g.exp.as_coeff_mul()[0].q != 1])
+    # if all the bases are the same or all the radicals are in one
+    # term, `lcm` will be the lcm of the radical's exponent
+    # denominators
+    lcm = 1
+    rads = set()
+    bases = set()
+    for g in poly.gens:
+        if not _take(g) or not g.is_Pow:
+            continue
+        ecoeff = g.exp.as_coeff_mul()[0]  # a Rational
+        if ecoeff.q != 1:
+            rads.add(g)
+            lcm = ilcm(lcm, ecoeff.q)
+            bases.add(g.base)
 
     if not rads:
         return
 
     depth = sqrt_depth(eq)
-
-    # if all the bases are the same or all the radicals are in one
-    # term, this is the lcm of the radical's exponent denominators
-    lcm = reduce(ilcm, [r.exp.q for r in rads])
-
-    # find the bases of the radicals
-    bases = set([r.as_base_exp()[0] for r in rads])
 
     # get terms together that have common generators
     drad = dict(zip(rads, range(len(rads))))
