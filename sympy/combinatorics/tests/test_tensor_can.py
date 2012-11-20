@@ -1,7 +1,7 @@
 from sympy.combinatorics.perm_groups import PermutationGroup
 from sympy.combinatorics.permutations import Permutation, Perm
-from sympy.combinatorics.tensor_can import (perm_af_direct_product, dummy_sgs, 
-    riemann_bsgs, get_symmetric_group_sgs, gens_products, canonicalize, 
+from sympy.combinatorics.tensor_can import (perm_af_direct_product, dummy_sgs,
+    riemann_bsgs, get_symmetric_group_sgs, gens_products, canonicalize,
     bsgs_direct_product)
 from sympy.combinatorics.testutil import canonicalize_naive, graph_certificate
 from sympy.utilities.pytest import skip, XFAIL
@@ -18,11 +18,11 @@ def test_dummy_sgs():
     a = dummy_sgs([1,2], 0, 4)
     assert a == [[0,2,1,3,4,5]]
     a = dummy_sgs([2,3,4,5], 0, 8)
-    assert a == [x._array_form for x in [Perm(9)(2,3), Perm(9)(4,5), 
+    assert a == [x._array_form for x in [Perm(9)(2,3), Perm(9)(4,5),
         Perm(9)(2,4)(3,5)]]
 
     a = dummy_sgs([2,3,4,5], 1, 8)
-    assert a == [x._array_form for x in [Perm(2,3)(8,9), Perm(4,5)(8,9), 
+    assert a == [x._array_form for x in [Perm(2,3)(8,9), Perm(4,5)(8,9),
         Perm(9)(2,4)(3,5)]]
 
 def test_get_symmetric_group_sgs():
@@ -392,10 +392,10 @@ def test_riemann_invariants():
     assert can == [0,2,1,3,5,4]
 
     """
-    The following tests in test_riemann_invariants and in 
-    test_riemann_invariants1 have been checked using xperm.c from XPerm in 
+    The following tests in test_riemann_invariants and in
+    test_riemann_invariants1 have been checked using xperm.c from XPerm in
     in [1] and with an older version contained in [2]
-    
+
     [1] xperm.c part of xPerm written by J. M. Martin-Garcia
         http://www.xact.es/index.html
     [2] test_xperm.cc in cadabra by Kasper Peeters, http://cadabra.phi-sci.com/
@@ -425,11 +425,11 @@ def test_riemann_invariants1():
     g = Permutation([17, 44, 11, 3, 0, 19, 23, 15, 38, 4, 25, 27, 43, 36, 22, 14, 8, 30, 41, 20, 2, 10, 12, 28, 18, 1, 29, 13, 37, 42, 33, 7, 9, 31, 24, 26, 39, 5, 34, 47, 32, 6, 21, 40, 35, 46, 45, 16, 48, 49])
     can = canonicalize(g, range(48), 0, (baser, gensr, 12, 0))
     assert can == [0, 2, 4, 6, 1, 3, 8, 10, 5, 7, 12, 14, 9, 11, 16, 18, 13, 15, 20, 22, 17, 19, 24, 26, 21, 23, 28, 30, 25, 27, 32, 34, 29, 31, 36, 38, 33, 35, 40, 42, 37, 39, 44, 46, 41, 43, 45, 47, 48, 49]
-     
+
     g = Permutation([0,2,4,6, 7,8,10,12, 14,16,18,20, 19,22,24,26, 5,21,28,30, 32,34,36,38, 40,42,44,46, 13,48,50,52, 15,49,54,56, 17,33,41,58, 9,23,60,62, 29,35,63,64, 3,45,66,68, 25,37,47,57, 11,31,69,70, 27,39,53,72, 1,59,73,74, 55,61,67,76, 43,65,75,78, 51,71,77,79, 80,81])
     can = canonicalize(g, range(80), 0, (baser, gensr, 20, 0))
     assert can == [0,2,4,6, 1,8,10,12, 3,14,16,18, 5,20,22,24, 7,26,28,30, 9,15,32,34, 11,36,23,38, 13,40,42,44, 17,39,29,46, 19,48,43,50, 21,45,52,54, 25,56,33,58, 27,60,53,62, 31,51,64,66, 35,65,47,68, 37,70,49,72, 41,74,57,76, 55,67,59,78, 61,69,71,75, 63,79,73,77, 80,81]
-    
+
 
 def test_riemann_products():
     baser, gensr = riemann_bsgs
@@ -462,7 +462,7 @@ def test_riemann_products():
     # R^{d6 d5}_d2^d1 * R^{d4 d0 d2 d3} * A_{d6 d0} A_{d3 d1} * A_{d4 d5}
     # g = [12,10,5,2, 8,0,4,6, 13,1, 7,3, 9,11,14,15]
     # T_c = -R^{d0 d1 d2 d3} * R_d0^{d4 d5 d6} * A_{d1 d4}*A_{d2 d5}*A_{d3 d6}
-    
+
     g = Permutation([12,10,5,2,8,0,4,6,13,1,7,3,9,11,14,15])
     can = canonicalize(g, range(14), 0, ((baser,gensr,2,0)), (base2,gens2,3,0))
     assert can == [0, 2, 4, 6, 1, 8, 10, 12, 3, 9, 5, 11, 7, 13, 15, 14]
@@ -501,8 +501,8 @@ def test_riemann_products():
     # If they are not, so can is
     # T_c = A^{n0 m0 d0} A^n1_m0^d1 A^{d2 a0}_d0 A_d2^a1_d1
     # can = [0, 4, 6, 1, 5, 8, 10, 2, 7, 11, 3, 9, 12, 13]
-    # xase with single type of indices
- 
+    # case with single type of indices
+
     base, gens = bsgs_direct_product(base1, gens1, base2, gens2)
     dummies = range(4, 12)
     g = Permutation([4,2,10, 0,11,8, 1,9,6, 5,7,3, 12,13])
@@ -549,5 +549,3 @@ def test_graph_certificate():
     g1a = randomize_graph(10, g1)
     c1a = graph_certificate(g1a)
     assert c1 == c1a
-
-
