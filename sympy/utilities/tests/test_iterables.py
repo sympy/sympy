@@ -1,12 +1,14 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic, default_sort_key
-from sympy.utilities.iterables import (postorder_traversal, flatten, group,
-        take, subsets, variations, cartes, numbered_symbols, dict_merge,
-        prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
-        multiset_partitions, partitions, binary_partitions, generate_bell,
-        generate_involutions, generate_derangements, unrestricted_necklace,
-        generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        ordered, minlex, runs, reshape, uniq, multiset_combinations,
-        multiset_permutations)
+from sympy.combinatorics import RGS_enum, RGS_unrank
+from sympy.utilities.iterables import (
+    postorder_traversal, flatten, group,
+    take, subsets, variations, cartes, numbered_symbols, dict_merge,
+    prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
+    multiset_partitions, partitions, binary_partitions, generate_bell,
+    generate_involutions, generate_derangements, unrestricted_necklace,
+    generate_oriented_forest, unflatten, common_prefix, common_suffix,
+    ordered, minlex, runs, reshape, uniq, multiset_combinations,
+    multiset_permutations, _set_partitions)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -260,10 +262,11 @@ def test_multiset_partitions():
         list(multiset_partitions(sorted(a)))
 
 
-def XXXtest_multiset_combinations():
+def test_multiset_combinations():
     assert [''.join(i) for i in
         list(multiset_combinations('mississippi', 3))] == [
-        'iii', 'iis', 'ips', 'iss', 'mps', 'mss', 'pss', 'sss']
+        'iii', 'iim', 'iip', 'iis', 'imp', 'ims', 'ipp', 'ips',
+        'iss', 'mpp', 'mps', 'mss', 'pps', 'pss', 'sss']
 
 
 def test_multiset_permutations():
@@ -290,6 +293,18 @@ def test_partitions():
 
     raises(ValueError, lambda: list(partitions(3, 0)))
 
+    # Consistency check on output of _partitions and RGS_unrank.
+    # This provides a sanity test on both routines.  Also verifies that
+    # the total number of partitions is the same in each case.
+    #    (from pkrathmann2)
+
+    for n in range(2, 6):
+        i  = 0
+        num_partitions = RGS_enum(n)
+        for m, q  in _set_partitions(n):
+            assert  q == RGS_unrank(i, n)
+            i = i+1
+        assert i == RGS_enum(n)
 
 def test_binary_partitions():
     assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1],

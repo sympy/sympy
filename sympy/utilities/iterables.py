@@ -191,6 +191,7 @@ def postorder_traversal(node, keys=None):
 
     Parameters
     ==========
+
     node : sympy expression
         The expression to traverse.
     keys : (default None) sort key(s)
@@ -441,7 +442,8 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     increasing subscripts.
 
     Parameters
-    ----------
+    ==========
+
     prefix : str, optional
         The prefix to use. By default, this function will generate symbols of
         the form "x0", "x1", etc.
@@ -453,7 +455,8 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
         The start number.  By default, it is 0.
 
     Returns
-    -------
+    =======
+
     sym : Symbol
         The subscripted symbols.
     """
@@ -665,7 +668,8 @@ def topological_sort(graph, key=None):
     r"""
     Topological sort of graph's vertices.
 
-    **Parameters**
+    Parameters
+    ==========
 
     ``graph`` : ``tuple[list, list[tuple[T, T]]``
         A tuple consisting of a list of vertices and a list of edges of
@@ -809,6 +813,101 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
+def multiset_combinations(m, n, g=None):
+    """
+    Return the unique combinations of size ``n`` from multiset ``m``.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset_combinations
+    >>> from sympy.core.compatibility import combinations
+    >>> [''.join(i) for i in  multiset_combinations('baby', 3)]
+    ['abb', 'aby', 'bby']
+
+    >>> def count(f, s): return len(list(f(s, 3)))
+
+    The number of combinations depends on the number of letters; the
+    number of unique combinations depends on how the letters are
+    repeated.
+
+    >>> s1 = 'abracadabra'
+    >>> s2 = 'banana tree'
+    >>> count(combinations, s1), count(multiset_combinations, s1)
+    (165, 23)
+    >>> count(combinations, s2), count(multiset_combinations, s2)
+    (165, 54)
+
+    """
+    if g is None:
+        if type(m) is dict:
+            if n > sum(m.values()):
+                yield []
+            g = [(k, m[k]) for k in ordered(m)]
+        else:
+            m = list(m)
+            if n > len(m):
+                yield []
+            m = list(ordered(m))
+            g = [list(i) for i in group(m, multiple=False)]
+    def tot(g):
+        return sum(v for k, v in g)
+    if tot(g) < n or not n:
+        yield []
+    else:
+        for i, (k, v) in enumerate(g):
+            if v >= n:
+                yield [k]*n
+                v = n - 1
+            for v in range(min(n, v), 0, -1):
+                for j in multiset_combinations(None, n - v, g[i + 1:]):
+                    rv = [k]*v + j
+                    if len(rv) == n:
+                        yield rv
+
+
+def multiset_permutations(m, g=None):
+    """
+    Return the unique permutations of multiset ``m``.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset_permutations
+    >>> from sympy import factorial
+    >>> [''.join(i) for i in multiset_permutations('aab')]
+    ['aab', 'aba', 'baa']
+    >>> factorial(len('banana'))
+    720
+    >>> len(list(multiset_permutations('banana')))
+    60
+    """
+    if g is None:
+        if type(m) is dict:
+            g = [(k, m[k]) for k in ordered(m)]
+        else:
+            m = list(ordered(m))
+            g = [list(i) for i in group(m, multiple=False)]
+        del m
+    do = [gi for gi in g if gi[1]]
+    if not do:
+        yield []
+    elif len(do) == 1:
+        k, v = do[0]
+        yield [k for i in range(v)]
+    elif all(v == 1 for v in do):
+        for p in permutations([k for k, v in g]):
+            yield list(p)
+    else:
+        for i, (k, v) in enumerate(g):
+            if not v:
+                continue
+            g[i][1] -= 1
+            for j in multiset_permutations(None, g):
+                yield [k] + j
+            g[i][1] += 1
+
+
 def _partition(seq, vector, m=None):
     """
     Return the partion of seq as specified by the partition vector.
@@ -830,6 +929,10 @@ def _partition(seq, vector, m=None):
     >>> output = (3, [1, 0, 1, 2, 0])
     >>> _partition('abcde', *output)
     [['b', 'e'], ['a', 'c'], ['d']]
+
+    See Also
+    ========
+    combinatorics.partitions.Partition.from_rgs()
 
     """
     if m is None:
@@ -866,7 +969,28 @@ def _set_partitions(n):
     Note
     ====
 
-    This routine was rewritten to use 0-based lists.
+
+    This algorithm is similar to, and solves the same problem as,
+    Algorithm 7.2.1.5H, from volume 4A of Knuth's The Art of Computer
+    Programming.  Knuth uses the term "restricted growth string" where
+    this code refers to a "partition vector". In each case, the meaning is
+    the same: the value in the ith element of the vector specifies to
+    which part the ith set element is to be assigned.
+
+    At the lowest level, this code implements an n-digit big-endian
+    counter (stored in the array q) which is incremented (with carries) to
+    get the next partition in the sequence.  A special twist is that a
+    digit is constrained to be at most one greater than the maximum of all
+    the digits to the left of it.  The array p maintains this maximum, so
+    that the code can efficiently decide when a digit can be incremented
+    in place or whether it needs to be reset to 0 and trigger a carry to
+    the next digit.  The enumeration starts with all the digits 0 (which
+    corresponds to all the set elements being assigned to the same 0th
+    part), and ends with 0123...n, which corresponds to each set element
+    being assigned to a different, singleton, part.
+
+    This routine was rewritten to use 0-based lists while trying to
+    preserve the beauty and efficiency of the original algorithm.
 
     Reference
     =========
@@ -900,82 +1024,6 @@ def _set_partitions(n):
         p[i - 1] -= 1
         p[i] += 1
         yield nc, q
-
-
-def multiset_combinations(m, n):
-    """
-    Return the unique combinations of size ``n`` from multiset ``m``.
-
-    TODO - logic is wrong so test fails. Needs fixing.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import multiset_combinations
-    >>> [''.join(i) for i in  multiset_combinations('baby', 3)]
-    ['abb', 'aby', 'bby']
-
-    """
-    if type(m) is dict:
-        if n > sum(m.values()):
-            yield []
-        g = [(k, m[k]) for k in ordered(m)]
-    else:
-        m = list(m)
-        if n > len(m):
-            yield []
-        m = list(ordered(m))
-        g = [list(i) for i in group(m, multiple=False)]
-    c = []
-    for i in range(n):
-        c.append([])
-        for j, (mi, k) in enumerate(g):
-            if k:
-                c[-1].append(mi)
-                g[j][1] -= 1
-    for i in cartes(*c):
-        yield i
-
-
-def multiset_permutations(m, g=None):
-    """
-    Return the unique permutations of multiset ``m``.
-
-    Examples
-    ========
-
-    >>> from sympy.utilities.iterables import multiset_permutations
-    >>> [''.join(i) for i in multiset_permutations('aab')]
-    ['aab', 'aba', 'baa']
-    >>> factorial(len('banana'))
-    720
-    >>> len(list(multiset_permutations('banana')))
-    60
-    """
-    if g is None:
-        if type(m) is dict:
-            g = [(k, m[k]) for k in ordered(m)]
-        else:
-            m = list(ordered(m))
-            g = [list(i) for i in group(m, multiple=False)]
-        del m
-    do = [gi for gi in g if gi[1]]
-    if not do:
-        yield []
-    elif len(do) == 1:
-        k, v = do[0]
-        yield [k for i in range(v)]
-    elif all(v == 1 for v in do):
-        for p in permutations([k for k, v in g]):
-            yield list(p)
-    else:
-        for i, (k, v) in enumerate(g):
-            if not v:
-                continue
-            g[i][1] -= 1
-            for j in multiset_permutations(None, g):
-                yield [k] + j
-            g[i][1] += 1
 
 
 def multiset_partitions(multiset, m=None):
@@ -1021,7 +1069,7 @@ def multiset_partitions(multiset, m=None):
     Counting
     ========
 
-    The number of partitions returned is given by the bell number:
+    The number of partitions of a set is given by the bell number:
 
     >>> from sympy import bell
     >>> len(list(multiset_partitions(5))) == bell(5) == 52
@@ -1040,6 +1088,8 @@ def multiset_partitions(multiset, m=None):
     ...
     >>> S2(5, 2) == len(list(multiset_partitions(5, 2))) == 15
     True
+
+    These comments on counting apply to *sets*, not multisets.
 
     Notes
     =====
@@ -1129,16 +1179,23 @@ def multiset_partitions(multiset, m=None):
 def partitions(n, m=None, k=None, size=False):
     """Generate all partitions of integer n (>= 0).
 
-    'm' limits the number of parts in the partition, e.g. if m=2 then
-        partitions will contain no more than 2 numbers, while
-    'k' limits the numbers which may appear in the partition, e.g. k=2 will
-        return partitions with no element greater than 2.
-    'size', when True, will return (M, P) where M is the sum of the
+    Parameters
+    ==========
+
+    ``m`` : integer (default gives partitions of all sizes)
+        limits number of parts in parition (mnemonic: m, maximum parts)
+    ``k`` : integer (default gives partitions number from 1 through n)
+        limits the numbers that are kept in the partition (mnemonic: k, keys)
+    ``size`` : bool (default False, only partition is returned)
+        when ``True`` then (M, P) is returned where M is the sum of the
         multiplicities and P is the generated partition.
 
     Each partition is represented as a dictionary, mapping an integer
     to the number of copies of that integer in the partition.  For example,
-    the first partition of 4 returned is {4: 1}: a single 4.
+    the first partition of 4 returned is {4: 1}, "4: one of them".
+
+    Examples
+    ========
 
     >>> from sympy.utilities.iterables import partitions
 
@@ -1186,6 +1243,7 @@ def partitions(n, m=None, k=None, size=False):
     ========
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
+
     """
     if n < 0:
         raise ValueError("n must be >= 0")

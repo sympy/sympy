@@ -183,7 +183,7 @@ except ImportError:  # Python 2.5
         ========
         variations
         """
-        pools = map(tuple, args) * kwds.get('repeat', 1)
+        pools = map(tuple, args) * kwargs.get('repeat', 1)
         result = [[]]
         for pool in pools:
             result = [x + [y] for x in result for y in pool]

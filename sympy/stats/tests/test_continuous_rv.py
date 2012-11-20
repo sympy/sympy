@@ -1,13 +1,14 @@
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
-                         given, pspace, cdf, ContinuousRV, sample)
-from sympy.stats import (Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, Dagum,
+                         given, pspace, cdf, ContinuousRV, sample,
+                         Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, Dagum,
                          Exponential, Gamma, Laplace, Logistic, LogNormal,
-                         Maxwell, Nakagami, Normal, Pareto, Rayleigh, StudentT,
-                         Triangular, Uniform, UniformSum, Weibull,
+                         Maxwell, Nakagami, Normal, Pareto, Rayleigh,
+                         StudentT, Triangular, Uniform, UniformSum, Weibull,
                          WignerSemicircle)
 from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, Lambda, factorial, binomial, floor)
+                   Piecewise, Integral, sin, Lambda, factorial, binomial,
+                   floor)
 from sympy.utilities.pytest import raises, XFAIL
 
 oo = S.Infinity
