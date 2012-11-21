@@ -1227,9 +1227,10 @@ def uniq(seq):
 
     >>> from sympy.utilities.iterables import uniq
     >>> dat = [1, 4, 1, 5, 4, 2, 1, 2]
-    >>> uniq(dat)
-    <generator object uniq at ...>
-    >>> list(_)
+    >>> type(uniq(dat)) in (list, tuple)
+    False
+
+    >>> list(uniq(dat))
     [1, 4, 5, 2]
     >>> list(uniq(x for x in dat))
     [1, 4, 5, 2]
