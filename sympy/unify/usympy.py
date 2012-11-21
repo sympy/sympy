@@ -6,11 +6,15 @@ See sympy.unify.core for algorithmic docstring """
 
 from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
 from sympy.core import Wild as ExprWild
-from sympy.matrices import MatAdd, MatMul
+from sympy.matrices import MatAdd, MatMul, MatrixExpr
 from sympy.core.sets import Union, Intersection, FiniteSet
-from sympy.core.operations import AssocOp
+from sympy.core.operations import AssocOp, LatticeOp
 from sympy.unify.core import Compound, Variable, CondVariable
 from sympy.unify import core
+
+basic_new_legal = [MatrixExpr]
+eval_false_legal = [AssocOp, Pow, FiniteSet]
+illegal = [LatticeOp]
 
 def sympy_associative(op):
     assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection, FiniteSet)
@@ -66,6 +70,9 @@ def patternify(expr, *wilds, **kwargs):
 
 def deconstruct(s):
     """ Turn a SymPy object into a Compound """
+    if isinstance(s, tuple(illegal)):
+        raise NotImplementedError("Unification not supported on type %s"%(
+            type(s)))
     if isinstance(s, ExprWild):
         return Variable(s)
     if isinstance(s, (Variable, CondVariable)):
@@ -80,10 +87,12 @@ def construct(t):
         return t.arg
     if not isinstance(t, Compound):
         return t
-    if t.op in (Add, Mul, Pow, FiniteSet):
+    if any(issubclass(t.op, cls) for cls in eval_false_legal):
         return t.op(*map(construct, t.args), **{'evaluate': False})
-    else:
+    elif any(issubclass(t.op, cls) for cls in basic_new_legal):
         return Basic.__new__(t.op, *map(construct, t.args))
+    else:
+        return t.op(*map(construct, t.args))
 
 def rebuild(s):
     """ Rebuild a SymPy expression

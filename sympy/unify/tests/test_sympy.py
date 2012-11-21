@@ -1,4 +1,4 @@
-from sympy import Add, Basic, symbols, Mul
+from sympy import Add, Basic, symbols, Mul, And
 from sympy import Wild as ExprWild
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
@@ -139,3 +139,8 @@ def test_patternify_with_types():
     pattern = patternify(x + y, x, y, types={x: Mul})
     expr = a*b + c
     assert list(unify(expr, pattern)) == [{x: a*b, y: c}]
+
+@XFAIL
+def test_and():
+    pattern = patternify(And(x, y), x, y)
+    str(list(unify((x>0) & (z<3), pattern)))
