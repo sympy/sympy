@@ -1077,10 +1077,3 @@ def test_issue_3506():
     assert solve(5**(x/2) - 2**(x/3)) == [0]
     b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
     assert solve(5**(x/2) - 2**(3/x)) == [-b, b]
-
-def test_issue_3512():
-    ans = solve([x**2 + y**2 -4, y - x**3], x, y, manual=True)
-    assert [NS(ai, 3) for a in ans for ai in a] == [
-        '1.2', '1.6', '-0.71 - 1.1*I', '2.2 - 0.35*I',
-        '-0.71 + 1.1*I', '2.2 + 0.35*I', '0.71 + 1.1*I',
-        '-2.2 + 0.35*I', '0.71 - 1.1*I', '-2.2 - 0.35*I']
