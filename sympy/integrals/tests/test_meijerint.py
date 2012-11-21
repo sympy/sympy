@@ -92,12 +92,12 @@ def test_recursive():
     from sympy import symbols, exp_polar, expand
     a, b, c = symbols('a b c', positive=True)
     assert simplify(integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))) \
-        == sqrt(2*pi)/4*(1 + erf(sqrt(2)/2*(a + b))) \
-        *exp(-a**2 - b**2 + (a + b)**2/2)
+        == (sqrt(2)*sqrt(pi)*(erf(sqrt(2)*(a + b)/2) + 1)*exp(
+        -a**2/2 + a*b - b**2/2))/4
     assert simplify(integrate(
         exp(-(x - a)**2)*exp(-(x - b)**2)*exp(c*x), (x, 0, oo))) == \
-        sqrt(2*pi)/4*(1 + erf(sqrt(2)/4*(2*a + 2*b + c))) \
-        *exp(-a**2 - b**2 + (2*a + 2*b + c)**2/8)
+        (sqrt(2)*sqrt(pi)*(erf(sqrt(2)*(2*a + 2*b + c)/4) + 1)*
+        exp(-a**2/2 + a*b + a*c/2 - b**2/2 + b*c/2 + c**2/8)/4)
     assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo))) == \
         sqrt(pi)/2*(1 + erf(a + b + c))
     assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo))) == \
@@ -198,9 +198,8 @@ def test_meijerint():
     # Test a bug with argument 1/x
     alpha = symbols('alpha', positive=True)
     assert meijerint_definite((2 - x)**alpha*sin(alpha/x), x, 0, 2) == \
-        (sqrt(pi)*gamma(alpha + 1)
-            *meijerg([S(1)/2, 0, S(1)/2], [1], [],
-                     [-alpha/2, -alpha/2 - S(1)/2], 16/alpha**2), True)
+        (sqrt(pi)*alpha*gamma(alpha + 1)*meijerg(((), (alpha/2 + S(1)/2,
+        alpha/2 + 1)), ((0, 0, S(1)/2), (-S(1)/2,)), alpha**S(2)/16)/4, True)
 
     # test a bug related to 3016
     a, s = symbols('a s', positive=True)

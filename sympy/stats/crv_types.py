@@ -1110,7 +1110,7 @@ def Normal(name, mean, std):
     ========
 
     >>> from sympy.stats import Normal, density, E, std, cdf, skewness
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy import Symbol, simplify, pprint, factor, together
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
@@ -1120,7 +1120,8 @@ def Normal(name, mean, std):
     >>> density(X)
     Lambda(_x, sqrt(2)*exp(-(_x - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
 
-    >>> C = simplify(cdf(X))
+    >>> C = simplify(cdf(X)) # it needs a little more help...
+    >>> C = C.func(C.args[0], together(factor(C.args[1]), deep=True))
     >>> pprint(C, use_unicode=False)
               /      /  ___         \    \
               |      |\/ 2 *(z - mu)|    |
