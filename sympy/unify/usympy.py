@@ -12,12 +12,6 @@ from sympy.core.operations import AssocOp
 from sympy.unify.core import Compound, Variable
 from sympy.unify import core
 
-class Wild(object):
-    def __init__(self, arg):
-        self.arg = arg
-    def __eq__(self, other):
-        return type(self) == type(other) and self.arg == other.arg
-
 def sympy_associative(op):
     assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection, FiniteSet)
     return any(issubclass(op, aop) for aop in assoc_ops)
@@ -55,14 +49,14 @@ def patternify(expr, *wilds):
     >>> pattern = patternify(a + b + c, a, b)
     """
     from sympy.rules.tools import subs
-    return subs(dict(zip(wilds, map(Wild, wilds))))(expr)
+    return subs(dict(zip(wilds, map(Variable, wilds))))(expr)
 
 def deconstruct(s):
     """ Turn a SymPy object into a Compound """
     if isinstance(s, ExprWild):
         return Variable(s)
-    if isinstance(s, Wild):
-        return Variable(s.arg)
+    if isinstance(s, Variable):
+        return s
     if not isinstance(s, Basic) or s.is_Atom:
         return s
     return Compound(s.__class__, tuple(map(deconstruct, s.args)))

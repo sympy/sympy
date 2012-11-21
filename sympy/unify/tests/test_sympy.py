@@ -2,7 +2,7 @@ from sympy import Add, Basic, symbols
 from sympy import Wild as ExprWild
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
-        is_commutative, patternify, Wild)
+        is_commutative, patternify)
 from sympy.abc import w, x, y, z, n, m, k
 
 def test_deconstruct():
@@ -84,9 +84,6 @@ def test_hard_match():
     p, q = map(ExprWild, 'pq')
     pattern = sin(p) + cos(p)**2
     assert list(unify(expr, pattern, {})) == [{p: x}]
-
-def test_Wild():
-    assert Wild(1).arg is 1
 
 def test_patternify():
     assert deconstruct(patternify(x + y, x)) in (
