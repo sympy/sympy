@@ -1,4 +1,4 @@
-from sympy import Add, Basic, symbols
+from sympy import Add, Basic, symbols, Mul
 from sympy import Wild as ExprWild
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
@@ -133,3 +133,9 @@ def test_FiniteSet_complex():
                       {b: z, a: FiniteSet(y, Basic(1, x))}])
     pattern = patternify(FiniteSet(a, Basic(x, b)), a, b)
     assert iterdicteq(unify(expr, pattern), expected)
+
+def test_patternify_with_types():
+    a, b, c, x, y = symbols('a,b,c,x,y')
+    pattern = patternify(x + y, x, y, types={x: Mul})
+    expr = a*b + c
+    assert list(unify(expr, pattern)) == [{x: a*b, y: c}]

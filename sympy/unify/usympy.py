@@ -9,7 +9,7 @@ from sympy.core import Wild as ExprWild
 from sympy.matrices import MatAdd, MatMul
 from sympy.core.sets import Union, Intersection, FiniteSet
 from sympy.core.operations import AssocOp
-from sympy.unify.core import Compound, Variable
+from sympy.unify.core import Compound, Variable, CondVariable
 from sympy.unify import core
 
 def sympy_associative(op):
@@ -31,13 +31,20 @@ def is_commutative(x):
     if isinstance(x.op, Expr):
         return _build(x).is_commutative
 
-def patternify(expr, *wilds):
+def mk_matchtype(typ):
+    def matchtype(x):
+        return (isinstance(x, typ) or
+                isinstance(x, Compound) and issubclass(x.op, typ))
+    return matchtype
+
+
+def patternify(expr, *wilds, **kwargs):
     """ Create a matching pattern from an expression
 
     Example
     =======
 
-    >>> from sympy import symbols, sin, cos
+    >>> from sympy import symbols, sin, cos, Mul
     >>> from sympy.unify.usympy import patternify
     >>> a, b, c, x, y = symbols('a b c x y')
 
@@ -45,17 +52,23 @@ def patternify(expr, *wilds):
     >>> pattern = patternify(sin(x)**2 + cos(x)**2, x)
 
     >>> # Search for any two things added to c. Note that here c is not a wild
-    >>> a, b, c = symbols('a,b,c')
     >>> pattern = patternify(a + b + c, a, b)
+
+    >>> # Search for two things added together, one must be a Mul
+    >>> pattern = patternify(a + b, a, b, types={a: Mul})
     """
     from sympy.rules.tools import subs
-    return subs(dict(zip(wilds, map(Variable, wilds))))(expr)
+    types = kwargs.get('types', {})
+    vars = [CondVariable(wild, mk_matchtype(types[wild]))
+                if wild in types else Variable(wild)
+                for wild in wilds]
+    return subs(dict(zip(wilds, vars)))(expr)
 
 def deconstruct(s):
     """ Turn a SymPy object into a Compound """
     if isinstance(s, ExprWild):
         return Variable(s)
-    if isinstance(s, Variable):
+    if isinstance(s, (Variable, CondVariable)):
         return s
     if not isinstance(s, Basic) or s.is_Atom:
         return s
@@ -63,7 +76,7 @@ def deconstruct(s):
 
 def construct(t):
     """ Turn a Compound into a SymPy object """
-    if isinstance(t, Variable):
+    if isinstance(t, (Variable, CondVariable)):
         return t.arg
     if not isinstance(t, Compound):
         return t
