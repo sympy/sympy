@@ -1398,3 +1398,8 @@ def test_float_int():
 
     assert int(12345678901234567890 + cos(1)**2 + sin(1)**2) == \
         12345678901234567891
+
+def test_issue_3512a():
+    assert Mul.flatten([3**Rational(1, 3),
+        Pow(-Rational(1, 9), Rational(2, 3), evaluate=False)]) == \
+        ([Rational(1, 3), (-1)**Rational(2, 3)], [], None)
