@@ -58,7 +58,7 @@ release = '0.7.2-git'
 today_fmt = '%B %d, %Y'
 
 # Translations:
-locale_dirs = ["i18n/"]
+locale_dirs = ["../_build/i18n/"]
 
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
