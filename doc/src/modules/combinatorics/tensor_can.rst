@@ -1,7 +1,7 @@
-.. _combinatorics-perm_groups:
+.. _combinatorics-tensor_can:
 
-Permutation Groups
-==================
+Tensor Canonicalization
+=======================
 
 .. module:: sympy.combinatorics.tensor_can
 
