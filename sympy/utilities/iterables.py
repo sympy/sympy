@@ -1462,42 +1462,62 @@ def uniq(seq):
 
 def generate_bell(n):
     """
-    Generates the bell permutations.
+    Generates the bell permutations, returning the permutations *in place*.
 
-    In a Bell permutation, each cycle is a decreasing
-    sequence of integers.
-
-    Reference:
-    [1] Generating involutions, derangements, and relatives by ECO
-    Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+    In a Bell permutation, a swap of adjacent elements occurs
+    each cycle and the swap location oscillates between the first
+    and last pairs in a periodic fashion.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import generate_bell
-    >>> list(generate_bell(3))
-    [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 0, 1), (2, 1, 0)]
-    """
-    P = [i for i in xrange(n)]
-    T = [0]
-    cache = set()
+    >>> from sympy import zeros, Matrix, factorial, pprint
+    >>> m = zeros(4, 24)
+    >>> for i, p in enumerate(generate_bell(4)):
+    ...     m[:, i] = Matrix(list(p))
 
-    def gen(P, T, t):
-        if t == (n - 1):
-            cache.add(tuple(P))
+    Tracing out where the 0 appears in the permutation allow one to see the
+    gentle changing of element order during each cycle. Although the shape
+    seen here is suggestive of stacked bells, the original algorithm was
+    used by bell ringers to cycle through all permutations of bells while
+    ringing [wikipedia].
+
+    >>> m.print_nonzero('X')
+    [ XXXXXX  XXXXXX  XXXXXX ]
+    [X XXXX XX XXXX XX XXXX X]
+    [XX XX XXXX XX XXXX XX XX]
+    [XXX  XXXXXX  XXXXXX  XXX]
+
+    References
+    ==========
+
+    * http://stackoverflow.com/questions/4856615/recursive-permutation/4857018
+    * http://programminggeeks.com/bell-algorithm-for-permutation/
+    * http://en.wikipedia.org/wiki/
+      Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+    * Generating involutions, derangements, and relatives by ECO
+      Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+
+    """
+    from sympy.functions.combinatorial.factorials import factorial
+    pos = dir = 1
+    do = factorial(n)
+    p = range(n)
+    yield p
+    do -= 1
+    while do:
+        if pos >= n:
+            dir = -dir
+            p[0], p[1] = p[1], p[0]
+        elif pos < 1:
+            dir = -dir
+            p[-2], p[-1] = p[-1], p[-2]
         else:
-            for i in T:
-                P[i], P[t + 1] = P[t + 1], P[i]
-                if tuple(P) not in cache:
-                    cache.add(tuple(P))
-                    gen(P, T, t + 1)
-                P[i], P[t + 1] = P[t + 1], P[i]
-            T.append(t + 1)
-            cache.add(tuple(P))
-            gen(P, T, t + 1)
-            T.remove(t + 1)
-    gen(P, T, 0)
-    return sorted(cache)
+            p[pos - 1], p[pos] = p[pos], p[pos - 1]
+        pos += dir
+        yield p
+        do -= 1
 
 
 def generate_involutions(n):

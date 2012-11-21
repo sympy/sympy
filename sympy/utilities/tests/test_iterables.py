@@ -1,5 +1,6 @@
 from sympy import (
-    symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix)
+    symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
+    factorial)
 from sympy.combinatorics import RGS_enum, RGS_unrank
 from sympy.utilities.iterables import (
     postorder_traversal, flatten, group,
@@ -318,13 +319,10 @@ def test_binary_partitions():
 
 
 def test_bell_perm():
-    assert [len(generate_bell(i)) for i in xrange(1, 7)] == [1, 2, 5,
-                15, 52, 203]
-    assert list(generate_bell(4)) == [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3),
-                                      (0, 3, 1, 2), (0, 3, 2, 1), (1, 0, 2, 3),
-                                      (1, 0, 3, 2), (2, 0, 1, 3), (2, 1, 0, 3),
-                                      (2, 3, 0, 1), (3, 0, 1, 2), (3, 0, 2, 1),
-                                      (3, 1, 0, 2), (3, 1, 2, 0), (3, 2, 1, 0)]
+    assert [len(list(generate_bell(i))) for i in xrange(1, 7)] == [
+        factorial(i) for i in xrange(1, 7)]
+    assert [i[:] for i in generate_bell(3)] == [
+        [0, 1, 2], [1, 0, 2], [1, 2, 0], [2, 1, 0], [2, 0, 1], [0, 2, 1]]
 
 
 def test_involutions():
