@@ -96,11 +96,11 @@ def unify(x, y, s=None, **fns):
     if x == y:
         yield s
     elif isinstance(x, (Variable, CondVariable)):
-        for x in unify_var(x, y, s, **fns):
-            yield x
+        for match in unify_var(x, y, s, **fns):
+            yield match
     elif isinstance(y, (Variable, CondVariable)):
-        for x in unify_var(y, x, s, **fns):
-            yield x
+        for match in unify_var(y, x, s, **fns):
+            yield match
     elif isinstance(x, Compound) and isinstance(y, Compound):
         is_commutative = fns.get('is_commutative', lambda x: False)
         is_associative = fns.get('is_associative', lambda x: False)
@@ -114,24 +114,24 @@ def unify(x, y, s=None, **fns):
                 for aaargs, bbargs in combs:
                     aa = [unpack(Compound(a.op, arg)) for arg in aaargs]
                     bb = [unpack(Compound(b.op, arg)) for arg in bbargs]
-                    for x in unify(aa, bb, sop, **fns):
-                        yield x
+                    for match in unify(aa, bb, sop, **fns):
+                        yield match
             elif len(x.args) == len(y.args):
-                for x in unify(x.args, y.args, sop, **fns):
-                    yield x
+                for match in unify(x.args, y.args, sop, **fns):
+                    yield match
 
     elif is_args(x) and is_args(y) and len(x) == len(y):
         if len(x) == 0:
             yield s
         else:
             for shead in unify(x[0], y[0], s, **fns):
-                for x in unify(x[1:], y[1:], shead, **fns):
-                    yield x
+                for match in unify(x[1:], y[1:], shead, **fns):
+                    yield match
 
 def unify_var(var, x, s, **fns):
     if var in s:
-        for x in unify(s[var], x, s, **fns):
-            yield x
+        for match in unify(s[var], x, s, **fns):
+            yield match
     elif occur_check(var, x):
         pass
     elif isinstance(var, CondVariable) and var.valid(x):
