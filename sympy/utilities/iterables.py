@@ -191,6 +191,7 @@ def postorder_traversal(node, keys=None):
 
     Parameters
     ==========
+
     node : sympy expression
         The expression to traverse.
     keys : (default None) sort key(s)
@@ -364,8 +365,9 @@ def variations(seq, n, repetition=False):
     ========
 
     sympy.core.compatibility.permutations
+    sympy.core.compatibility.product
     """
-    from sympy.core.compatibility import permutations
+    from sympy.core.compatibility import permutations, product
 
     if not repetition:
         seq = tuple(seq)
@@ -377,9 +379,8 @@ def variations(seq, n, repetition=False):
         if n == 0:
             yield ()
         else:
-            for i in xrange(len(seq)):
-                for cc in variations(seq, n - 1, True):
-                    yield (seq[i],) + cc
+            for i in product(seq, repeat=n):
+                yield i
 
 
 def subsets(seq, k=None, repetition=False):
@@ -441,7 +442,8 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     increasing subscripts.
 
     Parameters
-    ----------
+    ==========
+
     prefix : str, optional
         The prefix to use. By default, this function will generate symbols of
         the form "x0", "x1", etc.
@@ -453,7 +455,8 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
         The start number.  By default, it is 0.
 
     Returns
-    -------
+    =======
+
     sym : Symbol
         The subscripted symbols.
     """
@@ -665,7 +668,8 @@ def topological_sort(graph, key=None):
     r"""
     Topological sort of graph's vertices.
 
-    **Parameters**
+    Parameters
+    ==========
 
     ``graph`` : ``tuple[list, list[tuple[T, T]]``
         A tuple consisting of a list of vertices and a list of edges of
@@ -809,137 +813,394 @@ def rotate_right(x, y):
     return x[y:] + x[:y]
 
 
-def multiset_partitions(multiset, m):
+def multiset_combinations(m, n, g=None):
     """
-    This is the algorithm for generating multiset partitions
-    as described by Knuth in TAOCP Vol 4.
+    Return the unique combinations of size ``n`` from multiset ``m``.
 
-    Given a multiset, this algorithm visits all of its
-    m-partitions, that is, all partitions having exactly size m
-    using auxiliary arrays as described in the book.
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset_combinations
+    >>> from sympy.core.compatibility import combinations
+    >>> [''.join(i) for i in  multiset_combinations('baby', 3)]
+    ['abb', 'aby', 'bby']
+
+    >>> def count(f, s): return len(list(f(s, 3)))
+
+    The number of combinations depends on the number of letters; the
+    number of unique combinations depends on how the letters are
+    repeated.
+
+    >>> s1 = 'abracadabra'
+    >>> s2 = 'banana tree'
+    >>> count(combinations, s1), count(multiset_combinations, s1)
+    (165, 23)
+    >>> count(combinations, s2), count(multiset_combinations, s2)
+    (165, 54)
+
+    """
+    if g is None:
+        if type(m) is dict:
+            if n > sum(m.values()):
+                yield []
+            g = [(k, m[k]) for k in ordered(m)]
+        else:
+            m = list(m)
+            if n > len(m):
+                yield []
+            m = list(ordered(m))
+            g = [list(i) for i in group(m, multiple=False)]
+    def tot(g):
+        return sum(v for k, v in g)
+    if tot(g) < n or not n:
+        yield []
+    else:
+        for i, (k, v) in enumerate(g):
+            if v >= n:
+                yield [k]*n
+                v = n - 1
+            for v in range(min(n, v), 0, -1):
+                for j in multiset_combinations(None, n - v, g[i + 1:]):
+                    rv = [k]*v + j
+                    if len(rv) == n:
+                        yield rv
+
+
+def multiset_permutations(m, g=None):
+    """
+    Return the unique permutations of multiset ``m``.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset_permutations
+    >>> from sympy import factorial
+    >>> [''.join(i) for i in multiset_permutations('aab')]
+    ['aab', 'aba', 'baa']
+    >>> factorial(len('banana'))
+    720
+    >>> len(list(multiset_permutations('banana')))
+    60
+    """
+    if g is None:
+        if type(m) is dict:
+            g = [(k, m[k]) for k in ordered(m)]
+        else:
+            m = list(ordered(m))
+            g = [list(i) for i in group(m, multiple=False)]
+        del m
+    do = [gi for gi in g if gi[1]]
+    if not do:
+        yield []
+    elif len(do) == 1:
+        k, v = do[0]
+        yield [k for i in range(v)]
+    elif all(v == 1 for v in do):
+        for p in permutations([k for k, v in g]):
+            yield list(p)
+    else:
+        for i, (k, v) in enumerate(g):
+            if not v:
+                continue
+            g[i][1] -= 1
+            for j in multiset_permutations(None, g):
+                yield [k] + j
+            g[i][1] += 1
+
+
+def _partition(seq, vector, m=None):
+    """
+    Return the partion of seq as specified by the partition vector.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import _partition
+    >>> _partition('abcde', [1, 0, 1, 2, 0])
+    [['b', 'e'], ['a', 'c'], ['d']]
+
+    Specifying the number of bins in the partition is optional:
+
+    >>> _partition('abcde', [1, 0, 1, 2, 0], 3)
+    [['b', 'e'], ['a', 'c'], ['d']]
+
+    The output of _set_partitions can be passed as follows:
+
+    >>> output = (3, [1, 0, 1, 2, 0])
+    >>> _partition('abcde', *output)
+    [['b', 'e'], ['a', 'c'], ['d']]
+
+    See Also
+    ========
+    combinatorics.partitions.Partition.from_rgs()
+
+    """
+    if m is None:
+        m = max(vector) + 1
+    elif type(vector) is int:  # entered as m, vector
+        vector, m = m, vector
+    p = [[] for i in range(m)]
+    for i, v in enumerate(vector):
+        p[v].append(seq[i])
+    return p
+
+
+def _set_partitions(n):
+    """Cycle through all partions of n elements, returning the
+    current number of partitions and yield ``m`` and a mutable
+    list, ``q`` such that element[i] is in part q[i] of the
+    partition.
+
+    NOTE: ``q`` is modified in place and generally should not be changed
+    between function calls.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import _set_partitions, _partition
+    >>> for m, q in _set_partitions(3):
+    ...     print m, q, _partition('abc', q, m)
+    1 [0, 0, 0] [['a', 'b', 'c']]
+    2 [0, 0, 1] [['a', 'b'], ['c']]
+    2 [0, 1, 0] [['a', 'c'], ['b']]
+    2 [0, 1, 1] [['a'], ['b', 'c']]
+    3 [0, 1, 2] [['a'], ['b'], ['c']]
+
+    Note
+    ====
+
+
+    This algorithm is similar to, and solves the same problem as,
+    Algorithm 7.2.1.5H, from volume 4A of Knuth's The Art of Computer
+    Programming.  Knuth uses the term "restricted growth string" where
+    this code refers to a "partition vector". In each case, the meaning is
+    the same: the value in the ith element of the vector specifies to
+    which part the ith set element is to be assigned.
+
+    At the lowest level, this code implements an n-digit big-endian
+    counter (stored in the array q) which is incremented (with carries) to
+    get the next partition in the sequence.  A special twist is that a
+    digit is constrained to be at most one greater than the maximum of all
+    the digits to the left of it.  The array p maintains this maximum, so
+    that the code can efficiently decide when a digit can be incremented
+    in place or whether it needs to be reset to 0 and trigger a carry to
+    the next digit.  The enumeration starts with all the digits 0 (which
+    corresponds to all the set elements being assigned to the same 0th
+    part), and ends with 0123...n, which corresponds to each set element
+    being assigned to a different, singleton, part.
+
+    This routine was rewritten to use 0-based lists while trying to
+    preserve the beauty and efficiency of the original algorithm.
+
+    Reference
+    =========
+
+    Nijenhuis, Albert and Wilf, Herbert. (1978) Combinatorial Algorithms,
+    2nd Ed, p 91, algorithm "nexequ". Available online from
+    http://www.math.upenn.edu/~wilf/website/CombAlgDownld.html (viewed
+    November 17, 2012).
+
+    """
+    p = [0]*n
+    q = [0]*n
+    nc = 1
+    yield nc, q
+    while nc != n:
+        m = n
+        while 1:
+            m -= 1
+            i = q[m]
+            if p[i] != 1:
+                break
+            q[m] = 0
+        i += 1
+        q[m] = i
+        m += 1
+        nc += m - n
+        p[0] += n - m
+        if i == nc:
+            p[nc] = 0
+            nc += 1
+        p[i - 1] -= 1
+        p[i] += 1
+        yield nc, q
+
+
+def multiset_partitions(multiset, m=None):
+    """
+    Return unique partitions of the given multiset (in list form).
+    If ``m`` is None, all multisets will be returned, otherwise only
+    partitions with ``m`` parts will be returned.
+
+    If ``multiset`` is an integer, a range [0, 1, ..., multiset - 1]
+    will be supplied.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import multiset_partitions
-    >>> list(multiset_partitions([1,2,3,4], 2))
-    [[[1, 2, 3], [4]], [[1, 3], [2, 4]], [[1], [2, 3, 4]], [[1, 2], \
-    [3, 4]], [[1, 2, 4], [3]], [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
-    >>> list(multiset_partitions([1,2,3,4], 1))
+    >>> list(multiset_partitions([1, 2, 3, 4], 2))
+    [[[1, 2, 3], [4]], [[1, 2, 4], [3]], [[1, 2], [3, 4]],
+    [[1, 3, 4], [2]], [[1, 3], [2, 4]], [[1, 4], [2, 3]],
+    [[1], [2, 3, 4]]]
+    >>> list(multiset_partitions([1, 2, 3, 4], 1))
     [[[1, 2, 3, 4]]]
-    >>> list(multiset_partitions([1,2,3,4], 4))
-    [[[1], [2], [3], [4]]]
+
+    Only unique partitions are returned and these will be returned in a
+    canonical order regardless of the order of the input:
+
+    >>> a = [1, 2, 2, 1]
+    >>> ans = list(multiset_partitions(a, 2))
+    >>> a.sort()
+    >>> list(multiset_partitions(a, 2)) == ans
+    True
+    >>> a = range(3, 1, -1)
+    >>> (list(multiset_partitions(a)) ==
+    ...  list(multiset_partitions(sorted(a))))
+    True
+
+    If m is omitted then all partitions will be returned:
+
+    >>> list(multiset_partitions([1, 1, 2]))
+    [[[1, 1, 2]], [[1, 1], [2]], [[1, 2], [1]], [[1], [1], [2]]]
+    >>> list(multiset_partitions([1]*3))
+    [[[1, 1, 1]], [[1], [1, 1]], [[1], [1], [1]]]
+
+    Counting
+    ========
+
+    The number of partitions of a set is given by the bell number:
+
+    >>> from sympy import bell
+    >>> len(list(multiset_partitions(5))) == bell(5) == 52
+    True
+
+    The number of partitions of length k from a set of size n is given by the
+    Stirling Number of the 2nd kind:
+
+    >>> def S2(n, k):
+    ...     from sympy import Dummy, binomial, factorial, Sum
+    ...     if k > n:
+    ...         return 0
+    ...     j = Dummy()
+    ...     arg = (-1)**(k-j)*j**n*binomial(k,j)
+    ...     return 1/factorial(k)*Sum(arg,(j,0,k)).doit()
+    ...
+    >>> S2(5, 2) == len(list(multiset_partitions(5, 2))) == 15
+    True
+
+    These comments on counting apply to *sets*, not multisets.
+
+    Notes
+    =====
+
+    When all the elements are the same in the multiset, the order
+    of the returned partitions is determined by the ``partitions``
+    routine.
 
     See Also
     ========
+    partitions
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
     """
-    cache = {}
 
-    def visit(n, a):
-        ps = [[] for i in xrange(m)]
-        for j in xrange(n):
-            ps[a[j + 1]].append(multiset[j])
-        canonical = tuple(tuple(j) for j in ps)
-        if not canonical in cache:
-            cache[canonical] = 1
-            return ps
+    if type(multiset) is int:
+        n = multiset
+        if m and m > n:
+            raise ValueError('m > len(multiset)')
+        multiset = range(multiset)
+        if m == 1:
+            yield [multiset[:]]
+            return
+        for nc, q in _set_partitions(n):
+            if m is None or nc == m:
+                rv = [[] for i in range(nc)]
+                for i in range(n):
+                    rv[q[i]].append(multiset[i])
+                yield rv
+        return
 
-    def f(m_arr, n_arr, sigma, n, a):
-        if m_arr <= 2:
-            v = visit(n, a)
-            if v is not None:
-                yield v
+    if len(multiset) == 1 and type(multiset) is str:
+        multiset = [multiset]
+
+    if not has_variety(multiset):
+        n = len(multiset)
+        if m and m > n:
+            raise ValueError('m > len(multiset)')
+        if m == 1:
+            yield [multiset[:]]
+            return
+        x = multiset[:1]
+        for size, p in partitions(n, m, size=True):
+            if m is None or size == m:
+                rv = []
+                for k in sorted(p):
+                    rv.extend([x*k]*p[k])
+                yield rv
+    else:
+        multiset = list(ordered(multiset))
+        n = len(multiset)
+        if m and m > n:
+            raise ValueError('m > len(multiset)')
+        if m == 1:
+            yield [multiset[:]]
+            return
+
+        # if there are repeated elements, sort them and define the
+        # canon dictionary that will be used to create the cache key
+        # in case elements of the multiset are not hashable
+        cache = set()
+        canon = {}  # {physical position: position where it appeared first}
+        for i, mi in enumerate(multiset):
+            canon.setdefault(i, canon.get(i, multiset.index(mi)))
+        if len(set(canon.values())) != n:
+            canon = {}
+            for i, mi in enumerate(multiset):
+                canon.setdefault(i, canon.get(i, multiset.index(mi)))
         else:
-            for v in f(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
-                yield v
-        if n_arr == m_arr + 1:
-            a[m_arr] = m_arr - 1
-            v = visit(n, a)
-            if v is not None:
-                yield v
-            while a[n_arr] > 0:
-                a[n_arr] = a[n_arr] - 1
-                v = visit(n, a)
-                if v is not None:
-                    yield v
-        elif n_arr > m_arr + 1:
-            if (m_arr + sigma) % 2 == 1:
-                a[n_arr - 1] = m_arr - 1
-            else:
-                a[m_arr] = m_arr - 1
-            func = [f, b][(a[n_arr] + sigma) % 2]
-            for v in func(m_arr, n_arr - 1, 0, n, a):
-                if v is not None:
-                    yield v
-            while a[n_arr] > 0:
-                a[n_arr] = a[n_arr] - 1
-                func = [f, b][(a[n_arr] + sigma) % 2]
-                for v in func(m_arr, n_arr - 1, 0, n, a):
-                    if v is not None:
-                        yield v
+            canon = None
 
-    def b(m_arr, n_arr, sigma, n, a):
-        if n_arr == m_arr + 1:
-            v = visit(n, a)
-            if v is not None:
-                yield v
-            while a[n_arr] < m_arr - 1:
-                a[n_arr] = a[n_arr] + 1
-                v = visit(n, a)
-                if v is not None:
-                    yield v
-            a[m_arr] = 0
-            v = visit(n, a)
-            if v is not None:
-                yield v
-        elif n_arr > m_arr + 1:
-            func = [f, b][(a[n_arr] + sigma) % 2]
-            for v in func(m_arr, n_arr - 1, 0, n, a):
-                if v is not None:
-                    yield v
-            while a[n_arr] < m_arr - 1:
-                a[n_arr] = a[n_arr] + 1
-                func = [f, b][(a[n_arr] + sigma) % 2]
-                for v in func(m_arr, n_arr - 1, 0, n, a):
-                    if v is not None:
-                        yield v
-            if (m_arr + sigma) % 2 == 1:
-                a[n_arr - 1] = 0
-            else:
-                a[m_arr] = 0
-        if m_arr <= 2:
-            v = visit(n, a)
-            if v is not None:
-                yield v
-        else:
-            for v in b(m_arr - 1, n_arr - 1, (m_arr + sigma) % 2, n, a):
-                if v is not None:
-                    yield v
+        for nc, q in _set_partitions(n):
+            if m is None or nc == m:
+                rv = [[] for i in range(nc)]
+                for i in range(n):
+                    rv[q[i]].append(i)
+                if canon:
+                    canonical = tuple(
+                        sorted([tuple([canon[i] for i in j]) for j in rv]))
+                    if canonical in cache:
+                        continue
+                    cache.add(canonical)
 
-    n = len(multiset)
-    a = [0] * (n + 1)
-    for j in xrange(1, m + 1):
-        a[n - m + j] = j - 1
-    return f(m, n, 0, n, a)
+                yield [[multiset[j] for j in i] for i in rv]
 
 
-def partitions(n, m=None, k=None):
+def partitions(n, m=None, k=None, size=False):
     """Generate all partitions of integer n (>= 0).
 
-    'm' limits the number of parts in the partition, e.g. if m=2 then
-        partitions will contain no more than 2 numbers, while
-    'k' limits the numbers which may appear in the partition, e.g. k=2 will
-        return partitions with no element greater than 2.
+    Parameters
+    ==========
+
+    ``m`` : integer (default gives partitions of all sizes)
+        limits number of parts in parition (mnemonic: m, maximum parts)
+    ``k`` : integer (default gives partitions number from 1 through n)
+        limits the numbers that are kept in the partition (mnemonic: k, keys)
+    ``size`` : bool (default False, only partition is returned)
+        when ``True`` then (M, P) is returned where M is the sum of the
+        multiplicities and P is the generated partition.
 
     Each partition is represented as a dictionary, mapping an integer
     to the number of copies of that integer in the partition.  For example,
-    the first partition of 4 returned is {4: 1}: a single 4.
+    the first partition of 4 returned is {4: 1}, "4: one of them".
+
+    Examples
+    ========
 
     >>> from sympy.utilities.iterables import partitions
 
-    Maximum key (number in partition) limited with k (in this case, 2):
+    The numbers appearing in the partition (the key of the returned dict)
+    are limited with k:
 
     >>> for p in partitions(6, k=2):
     ...     print p
@@ -948,7 +1209,8 @@ def partitions(n, m=None, k=None):
     {1: 4, 2: 1}
     {1: 6}
 
-    Maximum number of parts in partion limited with m (in this case, 2):
+    The maximum number of parts in partion (the values of the returned dict)
+    are limited with m:
 
     >>> for p in partitions(6, m=2):
     ...     print p
@@ -960,7 +1222,7 @@ def partitions(n, m=None, k=None):
 
     Note that the _same_ dictionary object is returned each time.
     This is for speed:  generating each partition goes quickly,
-    taking constant time independent of n.
+    taking constant time, independent of n.
 
     >>> [p for p in partitions(6, k=2)]
     [{1: 6}, {1: 6}, {1: 6}, {1: 6}]
@@ -970,6 +1232,8 @@ def partitions(n, m=None, k=None):
 
     >>> [p.copy() for p in partitions(6, k=2)]
     [{2: 3}, {1: 2, 2: 2}, {1: 4, 2: 1}, {1: 6}]
+    >>> [(M, p.copy()) for M, p in partitions(6, k=2, size=True)]
+    [(3, {2: 3}), (4, {1: 2, 2: 2}), (5, {1: 4, 2: 1}), (6, {1: 6})]
 
     Reference:
         modified from Tim Peter's version to allow for k and m values:
@@ -979,6 +1243,7 @@ def partitions(n, m=None, k=None):
     ========
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
+
     """
     if n < 0:
         raise ValueError("n must be >= 0")
@@ -1002,7 +1267,10 @@ def partitions(n, m=None, k=None):
         ms[r] = 1
         keys.append(r)
     room = m - q - bool(r)
-    yield ms
+    if size:
+        yield sum(ms.values()), ms
+    else:
+        yield ms
 
     while keys != [1]:
         # Reuse any 1's.
@@ -1039,7 +1307,10 @@ def partitions(n, m=None, k=None):
                 keys.append(r)
             break
         room -= need
-        yield ms
+        if size:
+            yield sum(ms.values()), ms
+        else:
+            yield ms
 
 
 def binary_partitions(n):
@@ -1143,32 +1414,50 @@ def has_variety(seq):
 
 def uniq(seq):
     """
-    Remove repeated elements from an iterable, preserving order of first
-    appearance.
-
-    Returns a sequence of the same type of the input, or a list if the input
-    was not a sequence.
+    Yield unique elements from ``seq`` as an iterator.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import uniq
-    >>> uniq([1,4,1,5,4,2,1,2])
+    >>> dat = [1, 4, 1, 5, 4, 2, 1, 2]
+    >>> type(uniq(dat)) in (list, tuple)
+    False
+
+    >>> list(uniq(dat))
     [1, 4, 5, 2]
-    >>> uniq((1,4,1,5,4,2,1,2))
-    (1, 4, 5, 2)
-    >>> uniq(x for x in (1,4,1,5,4,2,1,2))
+    >>> list(uniq(x for x in dat))
     [1, 4, 5, 2]
+    >>> list(uniq([[1], [2, 1], [1]]))
+    [[1], [2, 1], [1]]
 
     """
     from sympy.core.function import Tuple
-    seen = set()
-    result = (s for s in seq if not (s in seen or seen.add(s)))
+
     if not hasattr(seq, '__getitem__'):
-        return list(result)
-    if isinstance(seq, Tuple):
-        return Tuple(*tuple(result))
-    return type(seq)(result)
+        container = list
+    else:
+        container = type(seq)
+
+    try:
+        seen = set()
+        result = []
+        for s in seq:
+            if not (s in seen or seen.add(s)):
+                yield s
+    except TypeError:
+        # something was unhashable
+        if not hasattr(seq, '__getitem__'):
+            yield s
+            result = [s]
+        else:
+            result = []
+        for s in seq:
+            for r in result:
+                if s == r:
+                    break
+            else:
+                yield s
 
 
 def generate_bell(n):
@@ -1286,8 +1575,8 @@ def generate_derangements(perm):
     p = variations(indices, len(indices))
     for rv in \
             uniq(tuple(perm[i] for i in idx)
-                 for idx in p if all(perm[k] !=
-                                     perm[idx[k]] for k in xrange(len(perm)))):
+            for idx in p if all(
+            perm[k] != perm[idx[k]] for k in xrange(len(perm)))):
         yield list(rv)
 
 
@@ -1377,8 +1666,14 @@ def minlex(seq, directed=True):
     ``directed`` is True (default) then the order is preserved, otherwise the
     sequence will be reversed if that gives a lexically smaller ordering.
 
+    Note
+    ====
+
+    It is assumed that the sequence does not contain repeats.
+
     Examples
     ========
+
     >>> from sympy.combinatorics.polyhedron import minlex
     >>> minlex((1, 2, 0))
     (0, 1, 2)
@@ -1485,8 +1780,8 @@ def kbins(l, k, ordered=None):
          [[0, 1], [2]]
     ordered = 0
          [[0, 1], [2]]
-         [[0], [1, 2]]
          [[0, 2], [1]]
+         [[0], [1, 2]]
     ordered = 1
          [[0], [1, 2]]
          [[0], [2, 1]]
@@ -1497,10 +1792,10 @@ def kbins(l, k, ordered=None):
     ordered = 10
          [[0, 1], [2]]
          [[2], [0, 1]]
-         [[0], [1, 2]]
-         [[1, 2], [0]]
          [[0, 2], [1]]
          [[1], [0, 2]]
+         [[0], [1, 2]]
+         [[1, 2], [0]]
     ordered = 11
          [[0], [1, 2]]
          [[0, 1], [2]]
@@ -1548,8 +1843,8 @@ def kbins(l, k, ordered=None):
             for perm in permutations(p):
                 yield list(perm)
     elif ordered == 01:
-        for p in partitions(len(l), k):
-            if sum(p.values()) != k:
+        for kgot, p in partitions(len(l), k, size=True):
+            if kgot != k:
                 continue
             for li in permutations(l):
                 rv = []

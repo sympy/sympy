@@ -1,11 +1,14 @@
 from sympy import symbols, Integral, Tuple, Dummy, Basic, default_sort_key
-from sympy.utilities.iterables import (postorder_traversal, flatten, group,
-        take, subsets, variations, cartes, numbered_symbols, dict_merge,
-        prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
-        multiset_partitions, partitions, binary_partitions, generate_bell,
-        generate_involutions, generate_derangements, unrestricted_necklace,
-        generate_oriented_forest, unflatten, common_prefix, common_suffix,
-        ordered, minlex, runs, reshape)
+from sympy.combinatorics import RGS_enum, RGS_unrank
+from sympy.utilities.iterables import (
+    postorder_traversal, flatten, group,
+    take, subsets, variations, cartes, numbered_symbols, dict_merge,
+    prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
+    multiset_partitions, partitions, binary_partitions, generate_bell,
+    generate_involutions, generate_derangements, unrestricted_necklace,
+    generate_oriented_forest, unflatten, common_prefix, common_suffix,
+    ordered, minlex, runs, reshape, uniq, multiset_combinations,
+    multiset_permutations, _set_partitions)
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -149,6 +152,9 @@ def test_cartes():
     assert list(cartes([1, 2], [3, 4, 5])) == \
         [(1, 3), (1, 4), (1, 5), (2, 3), (2, 4), (2, 5)]
     assert list(cartes()) == [()]
+    assert list(cartes('a')) == [('a',)]
+    assert list(cartes('a', repeat=2)) == [('a', 'a')]
+    assert list(cartes(range(2))) == [(0,), (1,)]
 
 
 def test_numbered_symbols():
@@ -228,19 +234,45 @@ def test_multiset_partitions():
     assert len(list(multiset_partitions(A, 3))) == 25
 
     assert list(multiset_partitions([1, 1, 1, 2, 2], 2)) == [
-        [[1, 1, 1, 2], [2]], [[1, 1, 2], [1, 2]], [[1, 1], [1, 2, 2]],
-        [[1], [1, 1, 2, 2]], [[1, 2], [1, 1, 2]], [[1, 1, 2, 2], [1]],
-        [[1, 2, 2], [1, 1]]]
+        [[1, 1, 1, 2], [2]], [[1, 1, 1], [2, 2]], [[1, 1, 2, 2], [1]],
+        [[1, 1, 2], [1, 2]], [[1, 1], [1, 2, 2]]]
 
-    assert list(multiset_partitions([1, 1, 2, 2], 2)) == [[[1, 1, 2], [2]],
-        [[1, 2], [1, 2]], [[1], [1, 2, 2]], [[1, 1], [2, 2]], [[1, 2, 2], [1]]]
+    assert list(multiset_partitions([1, 1, 2, 2], 2)) == [
+        [[1, 1, 2], [2]], [[1, 1], [2, 2]], [[1, 2, 2], [1]],
+        [[1, 2], [1, 2]]]
 
-    assert list(multiset_partitions([1, 2, 3, 4], 2)) == [[[1, 2, 3], [4]],
-        [[1, 3], [2, 4]], [[1], [2, 3, 4]], [[1, 2], [3, 4]],
-        [[1, 2, 4], [3]], [[1, 4], [2, 3]], [[1, 3, 4], [2]]]
+    assert list(multiset_partitions([1, 2, 3, 4], 2)) == [
+        [[1, 2, 3], [4]], [[1, 2, 4], [3]], [[1, 2], [3, 4]],
+        [[1, 3, 4], [2]], [[1, 3], [2, 4]], [[1, 4], [2, 3]],
+        [[1], [2, 3, 4]]]
 
-    assert list(multiset_partitions([1, 2, 2], 2)) == [[[1, 2], [2]],
-        [[1], [2, 2]]]
+    assert list(multiset_partitions([1, 2, 2], 2)) == [
+        [[1, 2], [2]], [[1], [2, 2]]]
+
+    assert list(multiset_partitions(3)) == [
+        [[0, 1, 2]], [[0, 1], [2]], [[0, 2], [1]], [[0], [1, 2]],
+        [[0], [1], [2]]]
+    assert list(multiset_partitions(3, 2)) == [
+        [[0, 1], [2]], [[0, 2], [1]], [[0], [1, 2]]]
+    assert list(multiset_partitions([1]*3, 2)) == [[[1], [1, 1]]]
+    assert list(multiset_partitions([1]*3)) == [
+        [[1, 1, 1]], [[1], [1, 1]], [[1], [1], [1]]]
+    a = [3, 2, 1]
+    assert list(multiset_partitions(a)) == \
+        list(multiset_partitions(sorted(a)))
+
+
+def test_multiset_combinations():
+    assert [''.join(i) for i in
+        list(multiset_combinations('mississippi', 3))] == [
+        'iii', 'iim', 'iip', 'iis', 'imp', 'ims', 'ipp', 'ips',
+        'iss', 'mpp', 'mps', 'mss', 'pps', 'pss', 'sss']
+
+
+def test_multiset_permutations():
+    assert [''.join(i) for i in (list(multiset_permutations('baby')))] == [
+        'abby', 'abyb', 'aybb', 'baby', 'bayb', 'bbay', 'bbya', 'byab',
+        'byba', 'yabb', 'ybab', 'ybba']
 
 
 def test_partitions():
@@ -261,6 +293,18 @@ def test_partitions():
 
     raises(ValueError, lambda: list(partitions(3, 0)))
 
+    # Consistency check on output of _partitions and RGS_unrank.
+    # This provides a sanity test on both routines.  Also verifies that
+    # the total number of partitions is the same in each case.
+    #    (from pkrathmann2)
+
+    for n in range(2, 6):
+        i  = 0
+        num_partitions = RGS_enum(n)
+        for m, q  in _set_partitions(n):
+            assert  q == RGS_unrank(i, n)
+            i = i+1
+        assert i == RGS_enum(n)
 
 def test_binary_partitions():
     assert [i[:] for i in binary_partitions(10)] == [[8, 2], [8, 1, 1],
@@ -400,3 +444,10 @@ def test_reshape():
         (([1], 2, (3, 4)), ([5], 6, (7, 8)))
     assert reshape(range(12), [2, [3], set([2]), (1, (3,), 1)]) == \
         [[0, 1, [2, 3, 4], set([5, 6]), (7, (8, 9, 10), 11)]]
+
+def test_uniq():
+    assert list(uniq(p.copy() for p in partitions(4))) == \
+        [{4: 1}, {1: 1, 3: 1}, {2: 2}, {1: 2, 2: 1}, {1: 4}]
+    assert list(uniq(x % 2 for x in range(5))) == [0, 1]
+    assert list(uniq('a')) == ['a']
+    assert list(uniq('ababc')) == list('abc')

@@ -2594,7 +2594,7 @@ def combsimp(expr):
             # find runs in coeffs such that the difference in terms (mod 1)
             # of t1, t2, ..., tn is 1/n
             from sympy.utilities.iterables import uniq
-            u = uniq(coeffs)
+            u = list(uniq(coeffs))
             for i in range(len(u)):
                 dj = ([((u[j] - u[i]) % 1, j) for j in range(i + 1, len(u))])
                 for one, j in dj:

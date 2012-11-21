@@ -5,7 +5,7 @@ from sympy.core.basic import Basic
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
-from sympy.core.compatibility import ordered, product as cartes
+from sympy.core.compatibility import ordered, product
 
 
 class Boolean(Basic):
@@ -775,7 +775,7 @@ def POSform(variables, minterms, dontcares=None):
             raise ValueError('%s in minterms is also in dontcares' % d)
 
     maxterms = []
-    for t in cartes(*[[0, 1]] * len(variables)):
+    for t in product([0, 1], repeat=len(variables)):
         t = list(t)
         if (t not in minterms) and (t not in dontcares):
             maxterms.append(t)
@@ -817,7 +817,7 @@ def simplify_logic(expr):
         return expr
     variables = list(expr.free_symbols)
     truthtable = []
-    for t in cartes(*[[0, 1]] * len(variables)):
+    for t in product([0, 1], repeat=len(variables)):
         t = list(t)
         if expr.subs(zip(variables, t)) == True:
             truthtable.append(t)

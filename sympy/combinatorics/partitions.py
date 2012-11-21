@@ -1,5 +1,6 @@
 from sympy.core import Basic, C, Dict, sympify
 from sympy.core.compatibility import as_int, default_sort_key
+from sympy.functions.combinatorial.numbers import bell
 from sympy.matrices import zeros
 from sympy.utilities.iterables import has_dups, flatten, group
 
@@ -626,20 +627,14 @@ def RGS_enum(m):
     ...     a += 1
     ...
     >>> assert len(s) == 15
+
     """
     if (m < 1):
         return 0
     elif (m == 1):
         return 1
     else:
-        m += 1
-        b = [1] * (m)
-        for j in xrange(1, m):
-            for i in xrange(1, j):
-                b[j] += C.binomial(j - 1, i) * b[i]
-
-        nrgf = b[m - 1]
-    return nrgf
+        return bell(m)
 
 
 def RGS_unrank(rank, m):
