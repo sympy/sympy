@@ -1666,8 +1666,14 @@ def minlex(seq, directed=True):
     ``directed`` is True (default) then the order is preserved, otherwise the
     sequence will be reversed if that gives a lexically smaller ordering.
 
+    Note
+    ====
+
+    It is assumed that the sequence does not contain repeats.
+
     Examples
     ========
+
     >>> from sympy.combinatorics.polyhedron import minlex
     >>> minlex((1, 2, 0))
     (0, 1, 2)
