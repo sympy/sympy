@@ -66,13 +66,13 @@ def patternify(expr, *wilds, **kwargs):
     vars = [CondVariable(wild, mk_matchtype(types[wild]))
                 if wild in types else Variable(wild)
                 for wild in wilds]
+    if any(expr.has(cls) for cls in illegal):
+        raise NotImplementedError("Unification not supported on type %s"%(
+            type(s)))
     return subs(dict(zip(wilds, vars)))(expr)
 
 def deconstruct(s):
     """ Turn a SymPy object into a Compound """
-    if isinstance(s, tuple(illegal)):
-        raise NotImplementedError("Unification not supported on type %s"%(
-            type(s)))
     if isinstance(s, ExprWild):
         return Variable(s)
     if isinstance(s, (Variable, CondVariable)):
