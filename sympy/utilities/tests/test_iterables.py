@@ -1,4 +1,5 @@
-from sympy import symbols, Integral, Tuple, Dummy, Basic, default_sort_key
+from sympy import (
+    symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix)
 from sympy.combinatorics import RGS_enum, RGS_unrank
 from sympy.utilities.iterables import (
     postorder_traversal, flatten, group,
@@ -346,17 +347,20 @@ def test_derangements():
 
 
 def test_unrestricted_necklaces():
-    assert [i[:] for i in unrestricted_necklace(4, 5)] == [[0, 0, 0, 0],
-        [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], [0, 0, 4, 0], [0, 1, 1, 1],
-        [0, 1, 2, 1], [0, 1, 3, 1], [0, 1, 4, 1], [0, 2, 2, 2], [0, 2, 3, 2],
-        [0, 2, 4, 2], [0, 3, 3, 3], [0, 3, 4, 3], [0, 4, 4, 4]]
-    assert [i[:] for i in unrestricted_necklace(6, 3)] == [[0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0], [0, 0, 0, 2, 0, 0], [0, 0, 1, 0, 1, 0],
-        [0, 0, 1, 1, 0, 1], [0, 0, 1, 2, 0, 1], [0, 0, 2, 0, 2, 0],
-        [0, 0, 2, 1, 0, 2], [0, 0, 2, 2, 0, 2], [0, 1, 1, 1, 1, 1],
-        [0, 1, 1, 2, 1, 1], [0, 1, 2, 1, 2, 1], [0, 1, 2, 2, 1, 2],
-        [0, 2, 2, 2, 2, 2]]
-    assert len(list(unrestricted_necklace(20, 2))) == 111
+    def count(n, k, f):
+        return len(list(unrestricted_necklace(n, k, f)))
+    m = []
+    for i in range(1, 8):
+        m.append((
+        i, count(i, 2, 0), count(i, 2, 1), count(i, 3, 1)))
+    assert Matrix(m) == Matrix([
+        [1,   2,   2,   3],
+        [2,   3,   3,   6],
+        [3,   4,   4,  10],
+        [4,   6,   6,  21],
+        [5,   8,   8,  39],
+        [6,  14,  13,  92],
+        [7,  20,  18, 198]])
 
 
 def test_generate_oriented_forest():

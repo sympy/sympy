@@ -1580,43 +1580,51 @@ def generate_derangements(perm):
         yield list(rv)
 
 
-def unrestricted_necklace(n, k):
+def unrestricted_necklace(n, k, free=True):
     """
-    A routine to generate unrestriced necklaces.
-
-    Here n is the length of the necklace and k - 1
-    is the maximum permissible element in the
-    generated necklaces.
-
-    Reference:
-    http://mathworld.wolfram.com/Necklace.html
+    A routine to generate necklaces that may (free=True) or may not
+    (free=False) be turned over to be viewed. The "necklaces" returned
+    are comprised of ``n`` integers (beads) with ``k`` different
+    values (colors). Only unique necklaces are returned.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import unrestricted_necklace
-    >>> [i[:] for i in unrestricted_necklace(3, 2)]
-    [[0, 0, 0], [0, 1, 1]]
-    >>> [i[:] for i in unrestricted_necklace(4, 4)]
-    [[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], \
-    [0, 1, 1, 1], [0, 1, 2, 1], [0, 1, 3, 1], [0, 2, 2, 2], \
-    [0, 2, 3, 2], [0, 3, 3, 3]]
-    """
-    a = [0] * n
+    >>> necklace = lambda a, b: unrestricted_necklace(a, b, False)
+    >>> bracelet = lambda a, b: unrestricted_necklace(a, b, True)
+    >>> def show(s, i):
+    ...     return ''.join(s[j] for j in i)
 
-    def gen(t, p):
-        if (t > n - 1):
-            if (n % p == 0):
-                yield a
-        else:
-            a[t] = a[t - p]
-            for necklace in gen(t + 1, p):
-                yield necklace
-            for j in xrange(a[t - p] + 1, k):
-                a[t] = j
-                for necklace in gen(t + 1, t):
-                    yield necklace
-    return gen(1, 1)
+    The "unrestricted necklace" is sometimes also referred to as a
+    "bracelet" (an object that can be turned over, a sequence that can
+    be reversed) and the term "necklace" is used to imply a sequence
+    that cannot be reversed. So ACB == ABC for a bracelet (rotate and
+    reverse) while the two are different for a necklace since rotation
+    alone cannot make the two sequences the same.
+
+    (mnemonic: Bracelets can be viewed Backwards, but Not Necklaces.)
+
+    >>> B = [show('ABC', i) for i in bracelet(3, 3)]
+    >>> N = [show('ABC', i) for i in necklace(3, 3)]
+    >>> set(N) - set(B)
+    set(['ACB'])
+
+    >>> list(necklace(4, 2))
+    [(0, 0, 0, 0), (0, 0, 0, 1), (0, 0, 1, 1),
+     (0, 1, 0, 1), (0, 1, 1, 1), (1, 1, 1, 1)]
+
+    >>> [show('.o', i) for i in bracelet(4, 2)]
+    ['....', '...o', '..oo', '.o.o', '.ooo', 'oooo']
+
+    References
+    ==========
+
+    http://mathworld.wolfram.com/Necklace.html
+
+    """
+    return uniq(minlex(i, directed=not free, is_set=False) for i in
+        variations(range(k), n, repetition=True))
 
 
 def generate_oriented_forest(n):
@@ -1661,15 +1669,17 @@ def generate_oriented_forest(n):
                 break
 
 
-def minlex(seq, directed=True):
-    """Return a tuple where the smallest element appears first; if
-    ``directed`` is True (default) then the order is preserved, otherwise the
-    sequence will be reversed if that gives a lexically smaller ordering.
+def minlex(seq, directed=True, is_set=True, small=None):
+    """
+    Return a tuple where the smallest element appears first; if
+    ``directed`` is True (default) then the order is preserved, otherwise
+    the sequence will be reversed if that gives a smaller ordering.
 
-    Note
-    ====
+    If every element appears only once then is_set can keep it's default
+    value of True, otherwise False should be passed.
 
-    It is assumed that the sequence does not contain repeats.
+    If the smallest element is known at the time of calling, it can be
+    passed and the calculation of the smallest element will be omitted.
 
     Examples
     ========
@@ -1681,20 +1691,57 @@ def minlex(seq, directed=True):
     (0, 2, 1)
     >>> minlex((1, 0, 2), directed=False)
     (0, 1, 2)
+
+    >>> minlex('11010011000', 1, is_set=False)
+    '00011010011'
+    >>> minlex('11010011000', 0, is_set=False)
+    '00011001011'
+
     """
+    is_str = isinstance(seq, str)
     seq = list(seq)
-    small = min(seq)
-    i = seq.index(small)
-    if not directed:
-        n = len(seq)
-        p = (i + 1) % n
-        m = (i - 1) % n
-        if seq[p] > seq[m]:
-            seq = list(reversed(seq))
-            i = n - i - 1
-    if i:
-        seq = rotate_left(seq, i)
-    return tuple(seq)
+    if small is None:
+        small = min(seq)
+    if is_set:
+        i = seq.index(small)
+        if not directed:
+            n = len(seq)
+            p = (i + 1) % n
+            m = (i - 1) % n
+            if seq[p] > seq[m]:
+                seq = list(reversed(seq))
+                i = n - i - 1
+        if i:
+            seq = rotate_left(seq, i)
+        best = seq
+    else:
+        count = seq.count(small)
+        if count == 1 and directed:
+            best = rotate_left(seq, seq.index(small))
+        else:
+            # if not directed, and not a set, we can't just
+            # pass this off to minlex with is_set True since
+            # peeking at the neighbor may not be sufficient to
+            # make the decision so we continue...
+            best = seq
+            for i in range(count):
+                seq = rotate_left(seq, seq.index(small, count != 1))
+                if seq < best:
+                    best = seq
+                # it's cheaper to rotate now rather than search
+                # again for these in reversed order so we test
+                # the reverse now
+                if not directed:
+                    seq = rotate_left(seq, 1)
+                    seq = list(reversed(seq))
+                    if seq < best:
+                        best = seq
+                    seq = list(reversed(seq))
+                    seq = rotate_right(seq, 1)
+    # common return
+    if is_str:
+        return ''.join(best)
+    return tuple(best)
 
 
 def runs(seq, op=gt):
