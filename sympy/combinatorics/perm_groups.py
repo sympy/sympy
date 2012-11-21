@@ -132,7 +132,7 @@ class PermutationGroup(Basic):
                 if args[i].size != degree:
                     args[i] = Permutation(args[i], size=degree)
         if kwargs.pop('dups', True):
-            args = uniq([_af_new(list(a)) for a in args])
+            args = list(uniq([_af_new(list(a)) for a in args]))
         obj = Basic.__new__(cls, *args, **kwargs)
         obj._generators = args
         obj._order = None
