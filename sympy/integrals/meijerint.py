@@ -445,9 +445,10 @@ def _mul_as_two_parts(f):
     Find all the ways to split f into a product of two terms.
     Return None on failure.
 
-    The order of the results is arbitrary so they should be sorted
-    (perhaps with ordered) for any use that might cause results to
-    non-deterministic.
+    Although the order is canonical from multiset_partitions, this is
+    not necessarily the best order to process the terms. For example,
+    if the case of len(gs) == 2 is removed and multiset is allowed to
+    sort the terms, some tests fail.
 
     Examples
     ========
@@ -462,7 +463,8 @@ def _mul_as_two_parts(f):
     gs = _mul_args(f)
     if len(gs) < 2:
         return None
-
+    if len(gs) == 2:
+        return [tuple(gs)]
     return [(Mul(*x), Mul(*y)) for (x, y) in multiset_partitions(gs, 2)]
 
 
