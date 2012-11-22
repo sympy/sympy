@@ -947,10 +947,9 @@ def _partition(seq, vector, m=None):
 
 
 def _set_partitions(n):
-    """Cycle through all partions of n elements, returning the
-    current number of partitions and yield ``m`` and a mutable
-    list, ``q`` such that element[i] is in part q[i] of the
-    partition.
+    """Cycle through all partions of n elements, yielding the
+    current number of partitions, ``m``, and a mutable list, ``q``
+    such that element[i] is in part q[i] of the partition.
 
     NOTE: ``q`` is modified in place and generally should not be changed
     between function calls.
@@ -967,9 +966,8 @@ def _set_partitions(n):
     2 [0, 1, 1] [['a'], ['b', 'c']]
     3 [0, 1, 2] [['a'], ['b'], ['c']]
 
-    Note
-    ====
-
+    Notes
+    =====
 
     This algorithm is similar to, and solves the same problem as,
     Algorithm 7.2.1.5H, from volume 4A of Knuth's The Art of Computer
