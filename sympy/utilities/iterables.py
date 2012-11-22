@@ -2,6 +2,7 @@ from collections import defaultdict
 import random
 from operator import gt
 
+from sympy.core.decorators import deprecated
 from sympy.core import Basic, C
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -1600,7 +1601,14 @@ def generate_derangements(perm):
         yield list(rv)
 
 
-def unrestricted_necklace(n, k, free=True):
+@deprecated(
+    useinstead="bracelets", deprecated_since_version="0.7.3")
+def unrestricted_necklace(n, k):
+    """Wrapper to necklaces to return a free (unrestricted) necklace."""
+    return necklaces(n, k, free=True)
+
+
+def necklaces(n, k, free=False):
     """
     A routine to generate necklaces that may (free=True) or may not
     (free=False) be turned over to be viewed. The "necklaces" returned
@@ -1610,9 +1618,7 @@ def unrestricted_necklace(n, k, free=True):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import unrestricted_necklace
-    >>> necklace = lambda a, b: unrestricted_necklace(a, b, False)
-    >>> bracelet = lambda a, b: unrestricted_necklace(a, b, True)
+    >>> from sympy.utilities.iterables import necklaces, bracelets
     >>> def show(s, i):
     ...     return ''.join(s[j] for j in i)
 
@@ -1625,16 +1631,16 @@ def unrestricted_necklace(n, k, free=True):
 
     (mnemonic: Bracelets can be viewed Backwards, but Not Necklaces.)
 
-    >>> B = [show('ABC', i) for i in bracelet(3, 3)]
-    >>> N = [show('ABC', i) for i in necklace(3, 3)]
+    >>> B = [show('ABC', i) for i in bracelets(3, 3)]
+    >>> N = [show('ABC', i) for i in necklaces(3, 3)]
     >>> set(N) - set(B)
     set(['ACB'])
 
-    >>> list(necklace(4, 2))
+    >>> list(necklaces(4, 2))
     [(0, 0, 0, 0), (0, 0, 0, 1), (0, 0, 1, 1),
      (0, 1, 0, 1), (0, 1, 1, 1), (1, 1, 1, 1)]
 
-    >>> [show('.o', i) for i in bracelet(4, 2)]
+    >>> [show('.o', i) for i in bracelets(4, 2)]
     ['....', '...o', '..oo', '.o.o', '.ooo', 'oooo']
 
     References
@@ -1645,6 +1651,11 @@ def unrestricted_necklace(n, k, free=True):
     """
     return uniq(minlex(i, directed=not free, is_set=False) for i in
         variations(range(k), n, repetition=True))
+
+
+def bracelets(n, k):
+    """Wrapper to necklaces to return a free (unrestricted) necklace."""
+    return necklaces(n, k, free=True)
 
 
 def generate_oriented_forest(n):

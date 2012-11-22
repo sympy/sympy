@@ -7,7 +7,7 @@ from sympy.utilities.iterables import (
     take, subsets, variations, cartes, numbered_symbols, dict_merge,
     prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
     multiset_partitions, partitions, binary_partitions, generate_bell,
-    generate_involutions, generate_derangements, unrestricted_necklace,
+    generate_involutions, generate_derangements, necklaces,
     generate_oriented_forest, unflatten, common_prefix, common_suffix,
     ordered, minlex, runs, reshape, uniq, multiset_combinations,
     multiset_permutations, _set_partitions)
@@ -344,9 +344,9 @@ def test_derangements():
                                                          [2, 2, 1, 0]]
 
 
-def test_unrestricted_necklaces():
+def test_necklaces():
     def count(n, k, f):
-        return len(list(unrestricted_necklace(n, k, f)))
+        return len(list(necklaces(n, k, f)))
     m = []
     for i in range(1, 8):
         m.append((
