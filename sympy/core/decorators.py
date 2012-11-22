@@ -67,7 +67,11 @@ def __sympifyit(func, arg, retval=None):
         @wraps(func)
         def __sympifyit_wrapper(a, b):
             try:
-                return func(a, sympify(b, strict=True))
+                # If an external class has _op_priority, it knows how to deal
+                # with sympy objects. Otherwise, it must be converted.
+                if not hasattr(b, '_op_priority'):
+                    b = sympify(b, strict=True)
+                return func(a, b)
             except SympifyError:
                 return retval
 
