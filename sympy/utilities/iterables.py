@@ -1541,34 +1541,18 @@ def generate_involutions(n):
     ========
 
     >>> from sympy.utilities.iterables import generate_involutions
-    >>> generate_involutions(3)
+    >>> list(generate_involutions(3))
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
-    >>> len(generate_involutions(4))
+    >>> len(list(generate_involutions(4)))
     10
     """
-    P = range(n)  # the items of the permutation
-    F = [0]  # the fixed points {is this right??}
-    cache = set()
-
-    def gen(P, F, t):
-        if t == n:
-            cache.add(tuple(P))
+    idx = range(n)
+    for p in permutations(idx):
+        for i in idx:
+            if p[p[i]] != i:
+                break
         else:
-            for j in xrange(len(F)):
-                P[j], P[t] = P[t], P[j]
-                if tuple(P) not in cache:
-                    cache.add(tuple(P))
-                    Fj = F.pop(j)
-                    gen(P, F, t + 1)
-                    F.insert(j, Fj)
-                P[j], P[t] = P[t], P[j]
-            t += 1
-            F.append(t)
-            cache.add(tuple(P))
-            gen(P, F, t)
-            F.pop()
-    gen(P, F, 1)
-    return sorted(cache)
+            yield p
 
 
 def generate_derangements(perm):

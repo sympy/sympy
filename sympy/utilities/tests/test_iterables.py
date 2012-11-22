@@ -1,7 +1,7 @@
 from sympy import (
     symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
     factorial)
-from sympy.combinatorics import RGS_enum, RGS_unrank
+from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.utilities.iterables import (
     postorder_traversal, flatten, group,
     take, subsets, variations, cartes, numbered_symbols, dict_merge,
@@ -326,13 +326,11 @@ def test_bell_perm():
 
 
 def test_involutions():
-    assert [len(generate_involutions(
-        n)) for n in range(1, 7)] == [1, 2, 4, 10, 26, 76]
-    assert generate_involutions(4) == [(0, 1, 2, 3), (0, 1, 3, 2),
-                                       (0, 2, 1, 3), (0, 3, 2, 1),
-                                       (1, 0, 2, 3), (2, 1, 0, 3),
-                                       (3, 0, 2, 1), (3, 1, 0, 2),
-                                       (3, 1, 2, 0), (3, 2, 1, 0)]
+    lengths = [1, 2, 4, 10, 26, 76]
+    for n, N in enumerate(lengths):
+        i = list(generate_involutions(n + 1))
+        assert len(i) == N
+        assert len(set([Permutation(j)**2 for j in i])) == 1
 
 
 def test_derangements():
