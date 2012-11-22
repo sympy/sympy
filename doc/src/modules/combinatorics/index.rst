@@ -21,3 +21,4 @@ Contents
    util.rst
    group_constructs.rst
    testutil.rst
+   tensor_can.rst
