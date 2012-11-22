@@ -55,10 +55,10 @@ for root, dirs, files in os.walk('doc/src/modules'):
 
 # some files aren't in /doc/src/modules, add them explicitly
 relevant_rst_files.append(np('./doc/src/install.rst'))
-relevant_rst_files.append(np('./doc/src/tutorial.rst'))
 relevant_rst_files.append(np('./doc/src/gotchas.rst'))
 relevant_rst_files.append(np('./doc/src/guide.rst'))
 relevant_rst_files.append(np('./doc/src/python-comparisons.rst'))
+relevant_rst_files.append(np('./doc/src/tutorial/tutorial.en.rst'))
 
 # some files need 2to3, but don't have the .py suffix
 relevant_no_extension = ('bin/doctest', 'bin/isympy', 'bin/test',

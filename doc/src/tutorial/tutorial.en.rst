@@ -29,7 +29,7 @@ The easiest way to download it is to go to
 http://code.google.com/p/sympy/ and
 download the latest tarball from the Featured Downloads:
 
-.. image:: figures/featured-downloads.png
+.. image:: ../figures/featured-downloads.png
 
 Unpack it:
 
@@ -933,7 +933,7 @@ Tip: To make pretty printing the default in the Python interpreter, use::
 If pyglet is installed, a pyglet window will open containing the LaTeX
 rendered expression:
 
-.. image:: pics/pngview1.png
+.. image:: ../pics/pngview1.png
 
 Notes
 -----
@@ -963,10 +963,20 @@ Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_,
 that contains a lot of useful examples, tutorials, cookbooks that we and our
 users contributed, and feel free to edit it.
 
-Translations
-============
+.. only:: html or gettext
 
-This tutorial is also available in other languages:
+    Translations
+    ------------
 
-.. toctree::
-   :maxdepth: 1
+    This tutorial is also available in other languages:
+
+.. only:: html
+
+        - `Български <tutorial.bg.html>`_
+        - `Česky <tutorial.cs.html>`_
+        - `Deutsch <tutorial.de.html>`_
+        - `English <tutorial.en.html>`_
+        - `Français <tutorial.fr.html>`_
+        - `Polski <tutorial.pl.html>`_
+        - `Русский <tutorial.ru.html>`_
+        - `Српски <tutorial.sr.html>`_

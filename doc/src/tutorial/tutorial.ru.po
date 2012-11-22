@@ -1,4 +1,4 @@
-# SOME DESCRIPTIVE TITLE.
+# Russian translation of the SymPy tutorial.
 # Copyright (C) 2008, 2009, 2010, 2011, 2012 SymPy Development Team
 # This file is distributed under the same license as the SymPy package.
 # Alexey Subach <alexey.subach@gmail.com>, 2011
@@ -7,27 +7,24 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SymPy 0.7.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-03-19 21:43\n"
+"POT-Creation-Date: 2012-11-19 14:52\n"
 "PO-Revision-Date: 2012-03-19 21:40+0400\n"
 "Last-Translator: Alexey Gudchenko <proga@goodok.ru>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language-Team: \n"
 "Language: Russian\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-# 3b8d0d99cbd0485d8a0f874d50c2e0ba
-#: ../../src/tutorial.rst:5
+#: tutorial.en.rst:5
 msgid "Tutorial"
 msgstr "Краткое руководство"
 
-# 261dbc2a93064851bb80b80a8985f0bd
-#: ../../src/tutorial.rst:10
+#: tutorial.en.rst:10
 msgid "Introduction"
 msgstr "Введение"
 
-# d007423f3c5d4407b0ca3221168f4a1e
-#: ../../src/tutorial.rst:12
+#: tutorial.en.rst:12
 msgid ""
 "SymPy is a Python library for symbolic mathematics. It aims to become a full-"
 "featured computer algebra system (CAS) while keeping the code as simple as "
@@ -39,28 +36,25 @@ msgstr ""
 "(CAS), при этом сохраняя код максимально понятным и легко расширяемым. SymPy "
 "полностью написан на Python и не требует сторонних библиотек."
 
-# 344f5db4e74749c1a76459f6cec09b63
-#: ../../src/tutorial.rst:17
+#: tutorial.en.rst:17
 msgid ""
 "This tutorial gives an overview and introduction to SymPy. Read this to have "
 "an idea what SymPy can do for you (and how) and if you want to know more, "
 "read the :ref:`SymPy User's Guide <guide>`, :ref:`SymPy Modules Reference "
 "<module-docs>`. or the `sources <https://github.com/sympy/sympy/>`_ directly."
 msgstr ""
-"Данное руководство представляет из себя введение в SymPy. В "
-"нем вы узнаете об основных возможностях SymPy и каким образом использовать "
-"эту программу. Если же вы желаете прочитать более подробное руководство, то "
-"обратитесь к :ref:`Руководству пользователя SymPy <guide>`, :ref:`Описанию "
-"модулей SymPy <module-docs>`. Можно также обратиться и к `исходному коду "
-"<https://github.com/sympy/sympy/>`_ библиотеки."
+"Данное руководство представляет из себя введение в SymPy. В нем вы узнаете "
+"об основных возможностях SymPy и каким образом использовать эту программу. "
+"Если же вы желаете прочитать более подробное руководство, то обратитесь к :"
+"ref:`Руководству пользователя SymPy <guide>`, :ref:`Описанию модулей SymPy "
+"<module-docs>`. Можно также обратиться и к `исходному коду <https://github."
+"com/sympy/sympy/>`_ библиотеки."
 
-# 12619172a6874cb4af84282e3e1bfc39
-#: ../../src/tutorial.rst:26
+#: tutorial.en.rst:26
 msgid "First Steps with SymPy"
 msgstr "Первые шаги с SymPy"
 
-# 6f67d8997f1a474288d6bd50f5ddbc4f
-#: ../../src/tutorial.rst:28
+#: tutorial.en.rst:28
 msgid ""
 "The easiest way to download it is to go to http://code.google.com/p/sympy/ "
 "and download the latest tarball from the Featured Downloads:"
@@ -68,20 +62,17 @@ msgstr ""
 "Скачать SymPy проще всего с http://code.google.com/p/sympy/. В разделе "
 "Featured, Downloads нужно найти и загрузить последнюю версию дистрибутива:"
 
-# 65bde5e4aded4818bc11c4b9cfc8a3b7
-#: ../../src/tutorial.rst:34
+#: tutorial.en.rst:34
 msgid "Unpack it:"
 msgstr ""
 "Для Windows-систем, нужно скачать и запустить установочный .exe файл. В "
 "POSIX-совместимых системах нужно скачать .tar.gz файл и распаковать его:"
 
-# 76f6f7d72759408084134e093b5d9aea
-#: ../../src/tutorial.rst:40
+#: tutorial.en.rst:40
 msgid "and try it from a Python interpreter:"
 msgstr "и запустить из интерпретатора Python:"
 
-# 4ddd39aeea714e9f8495cd77f7e4d7dd
-#: ../../src/tutorial.rst:54
+#: tutorial.en.rst:54
 msgid ""
 "You can use SymPy as shown above and this is indeed the recommended way if "
 "you use it in your program. You can also install it using ``./setup.py "
@@ -94,8 +85,7 @@ msgstr ""
 "команду ./setup.py install. Или, если вы работаете в Linux, можно установить "
 "пакет ``python-sympy`` с помощью системы установки программ:"
 
-# ce08a431018449c093786fe229ef9736
-#: ../../src/tutorial.rst:80
+#: tutorial.en.rst:80
 msgid ""
 "For other means how to install SymPy, consult the  Downloads_ tab on the "
 "SymPy's webpage."
@@ -103,13 +93,11 @@ msgstr ""
 "Другие способы установки SymPy описаны в разделе Downloads_ на домашней "
 "странице SymPy."
 
-# e81794f1d22c4f47b1f0b5f484ccb789
-#: ../../src/tutorial.rst:87
+#: tutorial.en.rst:87
 msgid "isympy Console"
 msgstr "Консоль isympy"
 
-# 342865b9196045a6a2a11ae9d69bc980
-#: ../../src/tutorial.rst:89
+#: tutorial.en.rst:89
 msgid ""
 "For experimenting with new features, or when figuring out how to do things, "
 "you can use our special wrapper around IPython called ``isympy`` (located in "
@@ -123,8 +111,7 @@ msgstr ""
 "для обучения SymPy. Она использует стандартный терминал IPython, но с уже "
 "включенными в нее важными модулями SymPy и определенными переменными x, y, z:"
 
-# 9d9f7e2ea55549268218f99a5b14593a
-#: ../../src/tutorial.rst:119
+#: tutorial.en.rst:119
 msgid ""
 "Commands entered by you are bold. Thus what we did in 3 lines in a regular "
 "Python interpreter can be done in 1 line in isympy."
@@ -134,20 +121,16 @@ msgstr ""
 "isympy. Кроме того программа поддерживает различные способы отображения "
 "результатов, в том числе графические."
 
-# f53c41b84d8b4d47894877572350325c
-#: ../../src/tutorial.rst:124
+#: tutorial.en.rst:124
 msgid "Using SymPy as a calculator"
 msgstr "Использование SymPy в качестве калькулятора"
 
-# c6a7837a22d44c27a5d35a905779bd84
-# 88460153b0404c1c80d7d9fef1b9d530
-#: ../../src/tutorial.rst:126
+#: tutorial.en.rst:126
 msgid "SymPy has three built-in numeric types: Float, Rational and Integer."
 msgstr ""
 "SymPy поддерживает три типа численных данных: Float, Rational и Integer."
 
-# 68eba98bb6f742d799aba6051f7f3d0f
-#: ../../src/tutorial.rst:128
+#: tutorial.en.rst:128
 msgid ""
 "The Rational class represents a rational number as a pair of two Integers: "
 "the numerator and the denominator. So Rational(1,2) represents 1/2, Rational"
@@ -157,8 +140,7 @@ msgstr ""
 "двух целых чисел: числителя и знаменателя. Например, Rational(1,2) "
 "представляет дробь 1/2, Rational(5,2) представляет дробь 5/2, и так далее."
 
-# 4178f4aea2b54612a2a0c8f74fe2aa63
-#: ../../src/tutorial.rst:147
+#: tutorial.en.rst:147
 msgid ""
 "Proceed with caution while working with Python int's and floating point "
 "numbers, especially in division, since you may create a Python number, not a "
@@ -173,8 +155,7 @@ msgstr ""
 "division\", и в результате получается питоновский тип float.И этот же "
 "стандарт \"true division\" по умолчанию включен и в isympy::"
 
-# 723ba484cf134b71aaf8e7140c9a3954
-#: ../../src/tutorial.rst:157
+#: tutorial.en.rst:157
 msgid ""
 "But in earlier Python versions where division has not been imported, a "
 "truncated int will result::"
@@ -182,8 +163,7 @@ msgstr ""
 "В более ранних версиях Python этого не получится, и результатом будет "
 "целочисленное деление::"
 
-# 0f88584459994baa87824d3fd4cf34f1
-#: ../../src/tutorial.rst:163
+#: tutorial.en.rst:163
 msgid ""
 "In both cases, however, you are not dealing with a SymPy Number because "
 "Python created its own number. Most of the time you will probably be working "
@@ -198,8 +178,7 @@ msgstr ""
 "что вы используете класс Rational. Кому-то может показаться удобным "
 "обозначать Rational как ``R``::"
 
-# bf581140e5ea4f8f98031862c785375e
-#: ../../src/tutorial.rst:175
+#: tutorial.en.rst:175
 msgid ""
 "We also have some special constants, like e and pi, that are treated as "
 "symbols (1+pi won't evaluate to something numeric, rather it will remain as "
@@ -209,8 +188,7 @@ msgstr ""
 "себя как переменные (то есть выражение 1+pi не преобразуется сразу в число, "
 "а так и останется 1+pi)::"
 
-# 366cb3315e5f4371927639cebbf8a726
-#: ../../src/tutorial.rst:189
+#: tutorial.en.rst:189
 msgid "as you see, evalf evaluates the expression to a floating-point number"
 msgstr ""
 "как вы видите, функция evalf переводит исходное выражение в число с "
@@ -218,19 +196,16 @@ msgstr ""
 "нужно передать в качестве аргумента этой функции требуемое число десятичных "
 "знаков."
 
-# b300cf55ed11465bac6e0991d6f61a15
-#: ../../src/tutorial.rst:191
+#: tutorial.en.rst:191
 msgid "The symbol ``oo`` is used for a class defining mathematical infinity::"
 msgstr ""
 "Для работы с математической бесконечностью используется символ ``oo``::"
 
-# addc7fddfd294a0e8da003463f35b614
-#: ../../src/tutorial.rst:200
+#: tutorial.en.rst:200
 msgid "Symbols"
 msgstr "Переменные"
 
-# 8508a3480ca34bd4a8741733e17ccc56
-#: ../../src/tutorial.rst:202
+#: tutorial.en.rst:202
 msgid ""
 "In contrast to other Computer Algebra Systems, in SymPy you have to declare "
 "symbolic variables explicitly::"
@@ -238,8 +213,7 @@ msgstr ""
 "В отличие от многих других систем компьютерной алгебры, вам нужно явно "
 "декларировать символьные переменные::"
 
-# 19bcc88285724ae99b448a86d7980ce9
-#: ../../src/tutorial.rst:209
+#: tutorial.en.rst:209
 msgid ""
 "On the left is the normal Python variable which has been assigned to the "
 "SymPy Symbol class. Predefined symbols (including those for symbols with "
@@ -248,8 +222,7 @@ msgstr ""
 "В левой части этого выражения находится переменная Python, которая "
 "питоновским присваиванием соотносится с объектом класса Symbol из SymPy."
 
-# 6b654b5bda774aa0a4b150388bc102dc
-#: ../../src/tutorial.rst:215
+#: tutorial.en.rst:215
 msgid ""
 "Symbols can also be created with the ``symbols`` or ``var`` functions, the "
 "latter automatically adding the created symbols to the namespace, and both "
@@ -259,8 +232,7 @@ msgstr ""
 "или ``var``. Они допускают указание диапазона. Их отличие состоит в том, что "
 "``var`` добавляет созданные переменные в текущее пространство имен:"
 
-# aa93d9743638443ebbae8bc5bee19e56
-#: ../../src/tutorial.rst:227
+#: tutorial.en.rst:227
 msgid ""
 "Instances of the Symbol class \"play well together\" and are the building "
 "blocks of expresions::"
@@ -268,8 +240,7 @@ msgstr ""
 "Экземпляры класса Symbol взаимодействуют друг с другом. Таким образом, с "
 "помощью них конструируются алгебраические выражения::"
 
-# c613786cee894688b20cdccfeaac8c9b
-#: ../../src/tutorial.rst:239
+#: tutorial.en.rst:239
 msgid ""
 "They can be substituted with other numbers, symbols or expressions using "
 "``subs(old, new)``::"
@@ -277,16 +248,14 @@ msgstr ""
 "Переменные могут быть заменены на другие переменные, числа или выражения с "
 "помощью функции подстановки ``subs(old, new)``::"
 
-# 3872add29a8b4a71a5e26a3218130491
-#: ../../src/tutorial.rst:250
+#: tutorial.en.rst:250
 msgid "For the remainder of the tutorial, we assume that we have run::"
 msgstr ""
 "Теперь, с этого момента, для всех написанных ниже примеров мы будем "
 "предполагать, что запустили следующую команду по настройке системы "
 "отображения результатов::"
 
-# d1b280862f04408a98ba048cc9460eaa
-#: ../../src/tutorial.rst:255
+#: tutorial.en.rst:255
 msgid ""
 "This will make things look better when printed. See the :ref:`printing-"
 "tutorial` section below. If you have a unicode font installed, you can pass "
@@ -297,37 +266,31 @@ msgstr ""
 "у вас установлен шрифт с юникодом, вы можете использовать опцию "
 "use_unicode=True для еще более красивого вывода."
 
-# 17ee30ecb05a410d94cccf0cc229ae5b
-#: ../../src/tutorial.rst:260
+#: tutorial.en.rst:260
 msgid "Algebra"
 msgstr "Алгебра"
 
-# 673fbe9f608748128027755ac1b0d7cb
-#: ../../src/tutorial.rst:262
+#: tutorial.en.rst:262
 msgid "For partial fraction decomposition, use ``apart(expr, x)``::"
 msgstr ""
 "Чтобы разложить выражение на простейшие дроби используется функция ``apart"
 "(expr, x)``::"
 
-# 723c57a6e36f43eca18771e2ad246955
-#: ../../src/tutorial.rst:287
+#: tutorial.en.rst:287
 msgid "To combine things back together, use ``together(expr, x)``::"
 msgstr ""
 "Чтобы снова привести дробь к общему знаменателю используется функция "
 "``together(expr, x)``::"
 
-# 607fa824a12d461d9eaf6c83bbc902d0
-#: ../../src/tutorial.rst:309
+#: tutorial.en.rst:309
 msgid "Calculus"
 msgstr "Вычисления"
 
-# 9cbc010ae5b54d2a9222db8a78a2687c
-#: ../../src/tutorial.rst:314
+#: tutorial.en.rst:314
 msgid "Limits"
 msgstr "Пределы"
 
-# e2cfd8cf367b4f41a2eb8f98045e1f45
-#: ../../src/tutorial.rst:316
+#: tutorial.en.rst:316
 msgid ""
 "Limits are easy to use in SymPy, they follow the syntax ``limit(function, "
 "variable, point)``, so to compute the limit of f(x) as x -> 0, you would "
@@ -337,13 +300,11 @@ msgstr ""
 "используйте функцию ``limit(function, variable, point)``. Например, чтобы "
 "вычислить предел f(x) при x -> 0, вам нужно ввести ``limit(f, x, 0)``::"
 
-# 7cc96e845d0a4c479199f4a51ed7d665
-#: ../../src/tutorial.rst:325
+#: tutorial.en.rst:325
 msgid "you can also calculate the limit at infinity::"
 msgstr "также вы можете вычислять пределы при x, стремящемся к бесконечности::"
 
-# d67693fb8cc04954be3bff6aaa712bfa
-#: ../../src/tutorial.rst:336
+#: tutorial.en.rst:336
 msgid ""
 "for some non-trivial examples on limits, you can read the test file "
 "`test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/"
@@ -353,13 +314,11 @@ msgstr ""
 "с тестами `test_demidovich.py <https://github.com/sympy/sympy/blob/master/"
 "sympy/series/tests/test_demidovich.py>`_ "
 
-# c92009d7b6df4e2d8f9fe9ad14657bbd
-#: ../../src/tutorial.rst:343
+#: tutorial.en.rst:343
 msgid "Differentiation"
 msgstr "Дифференцирование"
 
-# 476aa0220145495a932178c9fc3b305a
-#: ../../src/tutorial.rst:345
+#: tutorial.en.rst:345
 msgid ""
 "You can differentiate any SymPy expression using ``diff(func, var)``. "
 "Examples::"
@@ -367,14 +326,12 @@ msgstr ""
 "Продифференцировать любое выражение SymPy, можно используя ``diff(func, var)"
 "``. Примеры::"
 
-# 35850640eccf4071b1b0318a49055f39
-#: ../../src/tutorial.rst:358
+#: tutorial.en.rst:358
 msgid "You can check, that it is correct by::"
 msgstr ""
 "Можно, кстати, через пределы проверить правильность вычислений производной::"
 
-# 5ffab586313e4970aa3c933d631bc676
-#: ../../src/tutorial.rst:366
+#: tutorial.en.rst:366
 msgid ""
 "Higher derivatives can be calculated using the ``diff(func, var, n)`` "
 "method::"
@@ -382,29 +339,46 @@ msgstr ""
 "Производные более высших порядков можно вычислить, используя дополнительный "
 "параметр этой же функции ``diff(func, var, n)``::"
 
-# 0624a0af400f4e78a351b056a7ba009c
-#: ../../src/tutorial.rst:383
+#: tutorial.en.rst:383
 msgid "Series expansion"
 msgstr "Разложение в ряд"
 
-# b40c746b225d4749a9298ad077c3ce4d
-#: ../../src/tutorial.rst:385
+#: tutorial.en.rst:385
 msgid "Use ``.series(var, point, order)``::"
 msgstr ""
 "Для разложения в ряд используйте метод ``.series(var, point, order)``::"
 
-# f9106b494ab2465bbbd4108736f67a1e
-#: ../../src/tutorial.rst:400
+#: tutorial.en.rst:400
 msgid "Another simple example::"
 msgstr "Еще один простой пример::"
 
-# d4aa5a4ef31d4327a70c47b42cc0d2d4
-#: ../../src/tutorial.rst:420
+#: tutorial.en.rst:424
+msgid "Summation"
+msgstr ""
+
+#: tutorial.en.rst:426
+msgid ""
+"Compute the summation of f with respect to the given summation variable over "
+"the given limits."
+msgstr ""
+
+#: tutorial.en.rst:428
+msgid ""
+"summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, "
+"i.e., ::"
+msgstr ""
+
+#: tutorial.en.rst:439
+msgid ""
+"If it cannot compute the sum, it prints the corresponding summation formula. "
+"Repeated sums can be computed by introducing additional limits::"
+msgstr ""
+
+#: tutorial.en.rst:473
 msgid "Integration"
 msgstr "Интегрирование"
 
-# 8e985ebba8d5463bb1af3a3220dd21b0
-#: ../../src/tutorial.rst:422
+#: tutorial.en.rst:475
 msgid ""
 "SymPy has support for indefinite and definite integration of transcendental "
 "elementary and special functions via ``integrate()`` facility, which uses "
@@ -416,33 +390,27 @@ msgstr ""
 "Нормана и некоторые шаблоны и эвристики. Можно вычислять интегралы "
 "трансцендентных, простых и специальных функций::"
 
-# 6ff3ff4c189f45078f75a93aa2863ef9
-#: ../../src/tutorial.rst:430
+#: tutorial.en.rst:483
 msgid "You can integrate elementary functions::"
 msgstr "Вы можете интегрировать простейшие функции::"
 
-# ead91a6c777f47dea8be1a1e50bdf752
-#: ../../src/tutorial.rst:443
+#: tutorial.en.rst:496
 msgid "Also special functions are handled easily::"
 msgstr "Примеры интегрирования некоторых специальных функций::"
 
-# 40ad8cd5c7e3460f9cceb59630cf562c
-#: ../../src/tutorial.rst:451
+#: tutorial.en.rst:504
 msgid "It is possible to compute definite integrals::"
 msgstr "Возможно также вычислить определенный интеграл::"
 
-# 19602e9ed1b641f993f704eb31111beb
-#: ../../src/tutorial.rst:460
+#: tutorial.en.rst:513
 msgid "Also, improper integrals are supported as well::"
 msgstr "Поддерживаются и несобственные интегралы::"
 
-# b8ef574746f1448ab78da1958f9de616
-#: ../../src/tutorial.rst:472
+#: tutorial.en.rst:525
 msgid "Complex numbers"
 msgstr "Комплексные числа"
 
-# 13fbbe2555b14aefb25e48ac5ed298a0
-#: ../../src/tutorial.rst:474
+#: tutorial.en.rst:527
 msgid ""
 "Besides the imaginary unit, I, which is imaginary, symbols can be created "
 "with attributes (e.g. real, positive, complex, etc...) and this will affect "
@@ -452,86 +420,69 @@ msgstr ""
 "иметь специальные атрибуты (real, positive, complex и т.д), которые "
 "определяют поведение этих символов при вычислении символьных выражений::"
 
-# d726887f4f0444dba6e4ef6a2bb702d6
-#: ../../src/tutorial.rst:491
+#: tutorial.en.rst:544
 msgid "Functions"
 msgstr "Функции"
 
-# 42585fb828e24af79c0278aa14bcc2c3
-#: ../../src/tutorial.rst:493
+#: tutorial.en.rst:546
 msgid "**trigonometric**::"
 msgstr "**тригонометрические**::"
 
-# be0be9ba76c042b68160f1907d2b0d13
-#: ../../src/tutorial.rst:542
+#: tutorial.en.rst:595
 msgid "**spherical harmonics**::"
 msgstr "**сферические**::"
 
-# bdc2ad96783444459c3e66c409914143
-#: ../../src/tutorial.rst:568
+#: tutorial.en.rst:621
 msgid "**factorials and gamma function**::"
 msgstr "**факториалы и гамма-функции**::"
 
-# c621f51005504ee9890d34156556de57
-#: ../../src/tutorial.rst:586
+#: tutorial.en.rst:639
 msgid "**zeta function**::"
 msgstr "**дзета-функции**::"
 
-# 95ad3014dc9442cc8eb8438b2cc28327
-#: ../../src/tutorial.rst:611
+#: tutorial.en.rst:664
 msgid "**polynomials**::"
 msgstr "**многочлены**::"
 
-# d91cad90caee4aa7b2922a42ebe608b1
-#: ../../src/tutorial.rst:650
+#: tutorial.en.rst:703
 msgid "Differential Equations"
 msgstr "Дифференциальные уравнения"
 
-# 18467aefa0364cec936571494c1993da
-# 65279c1f5c4a448fbb813790d956ac48
-#: ../../src/tutorial.rst:652 ../../src/tutorial.rst:672
+#: tutorial.en.rst:705 tutorial.en.rst:725
 msgid "In ``isympy``::"
 msgstr "В ``isympy``::"
 
-# e036530fce79489cbf1c494a9443568f
-#: ../../src/tutorial.rst:670
+#: tutorial.en.rst:723
 msgid "Algebraic equations"
 msgstr "Алгебраические уравнения"
 
-# fd5aedc6ba9f45b4868c10764f9e6797
-#: ../../src/tutorial.rst:685
+#: tutorial.en.rst:738
 msgid "Linear Algebra"
 msgstr "Линейная алгебра"
 
-# 372cf49866874ec1a97d6cb813f8b63b
-#: ../../src/tutorial.rst:690
+#: tutorial.en.rst:743
 msgid "Matrices"
 msgstr "Матрицы"
 
-# fc4620da22164a3c8f25be8591759f97
-#: ../../src/tutorial.rst:692
+#: tutorial.en.rst:745
 msgid "Matrices are created as instances from the Matrix class::"
 msgstr "Матрицы задаются с помощью конструктора Matrix::"
 
-# 0289f9cec4f140c6adc90aa38f84efee
-#: ../../src/tutorial.rst:700
+#: tutorial.en.rst:753
 msgid "They can also contain symbols::"
 msgstr "В матрицах вы также можете использовать символьные переменные::"
 
-# ced23cc091a34db6be3b5597fd056f32
-#: ../../src/tutorial.rst:715
+#: tutorial.en.rst:768
 msgid "For more about Matrices, see the Linear Algebra tutorial."
 msgstr ""
 "Для того, чтобы узнать о матрицах подробнее, прочитайте, пожалуйста, "
 "Руководство по Линейной Алгебре."
 
-# 71124cfe123649c28c7a61251d0b1cdd
-#: ../../src/tutorial.rst:720
+#: tutorial.en.rst:773
 msgid "Pattern matching"
 msgstr "Сопоставление с образцом"
 
-# b9ecf875555748978255bc268bc4123c
-#: ../../src/tutorial.rst:722
+#: tutorial.en.rst:775
 msgid ""
 "Use the ``.match()`` method, along with the ``Wild`` class, to perform "
 "pattern matching on expressions. The method will return a dictionary with "
@@ -541,13 +492,11 @@ msgstr ""
 "вместе со вспомогательным классом ``Wild``. Эта функция вернет словарь с "
 "необходимыми заменами, например::"
 
-# 06d4a8e419854045af79b0076e71616a
-#: ../../src/tutorial.rst:736
+#: tutorial.en.rst:789
 msgid "If the match is unsuccessful, it returns ``None``::"
 msgstr "Если же сопоставление не удалось, функция вернет``None``::"
 
-# 7219ffc6e8b0486a913297c19b5fce1f
-#: ../../src/tutorial.rst:741
+#: tutorial.en.rst:794
 msgid ""
 "One can also use the exclude parameter of the ``Wild`` class to ensure that "
 "certain things do not show up in the result::"
@@ -555,42 +504,35 @@ msgstr ""
 "Также можно использовать параметр exclude для исключения некоторых значений "
 "из результата::"
 
-# a692f291013a4777a4771188901c6bf2
-#: ../../src/tutorial.rst:755
+#: tutorial.en.rst:808
 msgid "Printing"
 msgstr "Печать"
 
-# 8cfe16423a79408c828d270def412899
-#: ../../src/tutorial.rst:757
+#: tutorial.en.rst:810
 msgid "There are many ways to print expressions."
 msgstr "Реализовано несколько способов вывода выражений на экран."
 
-# a9891e6028b644879ce5e3a8489a72a5
-#: ../../src/tutorial.rst:759
+#: tutorial.en.rst:812
 msgid "**Standard**"
 msgstr "**Стандартный**"
 
-# 9802b10f6c2d4b7997302f4315e8bf2a
-#: ../../src/tutorial.rst:761
+#: tutorial.en.rst:814
 msgid "This is what ``str(expression)`` returns and it looks like this:"
 msgstr ""
 "Стандартный способ представлен функцией ``str(expression)``, которая "
 "работает следующим образом:"
 
-# 461df293b09c46b1bf24bc5c335b4401
-#: ../../src/tutorial.rst:772
+#: tutorial.en.rst:825
 msgid "**Pretty printing**"
 msgstr "**Красивая печать**"
 
-# 29c9e2204a0948db9d8328300f3bdd1a
-#: ../../src/tutorial.rst:774
+#: tutorial.en.rst:827
 msgid "Nice ascii-art printing is produced by the ``pprint`` function:"
 msgstr ""
 "Этот способ печати выражений основан на ascii-графике и реализован через "
 "функцию ``pprint``:"
 
-# 5fc9fa809fa04cee8113a669f032b9c3
-#: ../../src/tutorial.rst:793
+#: tutorial.en.rst:846
 msgid ""
 "If you have a unicode font installed, the ``pprint`` function will use it by "
 "default. You can override this using the ``use_unicode`` option.:"
@@ -599,8 +541,7 @@ msgstr ""
 "юникодом по умолчанию. Эту настройку можно отключить, используя "
 "``use_unicode``:"
 
-# dcbf982351c1414bb0c2653039d6f569
-#: ../../src/tutorial.rst:803
+#: tutorial.en.rst:855
 msgid ""
 "See also the wiki `Pretty Printing <https://github.com/sympy/sympy/wiki/"
 "Pretty-Printing>`_ for more examples of a nice unicode printing."
@@ -609,48 +550,40 @@ msgstr ""
 "обратится к статье `Pretty Printing <https://github.com/sympy/sympy/wiki/"
 "Pretty-Printing>`_ из нашего Вики."
 
-# af26680251b0437e807a48d7946c3724
-#: ../../src/tutorial.rst:807
+#: tutorial.en.rst:859
 msgid ""
 "Tip: To make pretty printing the default in the Python interpreter, use::"
 msgstr ""
 "Совет: Чтобы активировать Pretty-print по умолчанию в интерпретаторе Python, "
 "используйте::"
 
-# b34cf35aca67417bbedfd0f9912d3dab
-#: ../../src/tutorial.rst:830
+#: tutorial.en.rst:882
 msgid "**Python printing**"
 msgstr "**Печать объектов Python**"
 
-# f6300e28499f4c23b1a18aca896340bb
-#: ../../src/tutorial.rst:846
+#: tutorial.en.rst:898
 msgid "**LaTeX printing**"
 msgstr "**Печать в формате LaTeX**"
 
-# 3b81c7e35c364676a8ec8587b515ac8b
-#: ../../src/tutorial.rst:863
+#: tutorial.en.rst:915
 msgid "**MathML**"
 msgstr "**MathML**"
 
-# ee36b86c5d54419fbde01ac89cab213b
-#: ../../src/tutorial.rst:875
+#: tutorial.en.rst:927
 msgid "**Pyglet**"
 msgstr "**Pyglet**"
 
-# 8ea61d943b2b4960a879932eba46bc1b
-#: ../../src/tutorial.rst:881
+#: tutorial.en.rst:933
 msgid ""
 "If pyglet is installed, a pyglet window will open containing the LaTeX "
 "rendered expression:"
 msgstr "Появится окно pyglet с отрисованным выражением LaTeX:"
 
-# 8741a66d24b04738a563afc90a41567b
-#: ../../src/tutorial.rst:887
+#: tutorial.en.rst:939
 msgid "Notes"
 msgstr "Примечания"
 
-# 51219a05b9a84e79b754d8d03b7fc4fb
-#: ../../src/tutorial.rst:889
+#: tutorial.en.rst:941
 msgid ""
 "``isympy`` calls ``pprint`` automatically, so that's why you see pretty "
 "printing by default."
@@ -658,8 +591,7 @@ msgstr ""
 "``isympy`` вызывает ``pprint`` автоматически, по этой причине Pretty-print "
 "будет включен в ``isympy`` по умолчанию."
 
-# 7b126ec3363b4c63a6d6b98728a9738a
-#: ../../src/tutorial.rst:892
+#: tutorial.en.rst:944
 msgid ""
 "Note that there is also a printing module available, ``sympy.printing``.  "
 "Other printing methods available through this module are:"
@@ -667,8 +599,7 @@ msgstr ""
 "Также доступен модуль печати - ``sympy.printing``. Через этот модуль "
 "доступны следующий функции печати:"
 
-# 1001063c4e97442dbcb0491eb0641bba
-#: ../../src/tutorial.rst:895
+#: tutorial.en.rst:947
 msgid ""
 "``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, "
 "respectively, a pretty representation of ``expr``. This is the same as the "
@@ -678,8 +609,7 @@ msgstr ""
 "выводит на экран, соответственно, \"Красивое\" представление выражения "
 "``expr``. "
 
-# ee0ca8e34ce04b458228cb9d6565ec1a
-#: ../../src/tutorial.rst:897
+#: tutorial.en.rst:949
 msgid ""
 "``latex(expr)``, ``print_latex(expr)``: Return or print, respectively, a "
 "`LaTeX <http://www.latex-project.org/>`_  representation of ``expr``"
@@ -688,8 +618,7 @@ msgstr ""
 "соответственно, `LaTeX <http://www.latex-project.org/>`_ -представление "
 "``expr``"
 
-# ebfeade491644b0b85f72b00bd3c1bdf
-#: ../../src/tutorial.rst:899
+#: tutorial.en.rst:951
 msgid ""
 "``mathml(expr)``, ``print_mathml(expr)``: Return or print, respectively, a "
 "`MathML <http://www.w3.org/Math/>`_ representation of ``expr``."
@@ -697,8 +626,7 @@ msgstr ""
 "``mathml(expr)``, ``print_mathml(expr)``: Возвращает или выводит на экран, "
 "соответственно, `MathML <http://www.w3.org/Math/>`_ -представление ``expr``."
 
-# bc0334fae2224eb2bfc81a55e7f522dd
-#: ../../src/tutorial.rst:901
+#: tutorial.en.rst:953
 msgid ""
 "``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/"
 "mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview "
@@ -708,13 +636,11 @@ msgstr ""
 "mml-widget/>`_, виджет GTK, который отображает код MathML. Необходимо "
 "наличие пакета `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ ."
 
-# e76c7af419504e458893b76b1b485fd4
-#: ../../src/tutorial.rst:904
+#: tutorial.en.rst:956
 msgid "Further documentation"
 msgstr "Другие справочники"
 
-# 2757e954e4c04b01bf9607f2127c3146
-#: ../../src/tutorial.rst:906
+#: tutorial.en.rst:958
 msgid ""
 "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
 "Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
@@ -722,8 +648,7 @@ msgstr ""
 "Чтобы узнать о SymPy подробнее, обратитесь :ref:`Руководство пользователя "
 "SymPy <guide>` и :ref:`Описание модулей SymPy <module-docs>`."
 
-# a037027043bd483dab5a52bd8d325980
-#: ../../src/tutorial.rst:910
+#: tutorial.en.rst:962
 msgid ""
 "Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/"
 ">`_, that contains a lot of useful examples, tutorials, cookbooks that we "
@@ -734,12 +659,10 @@ msgstr ""
 "созданны нами и нашим сообществом. Мы будем рады, если и вы внесете в него "
 "свой весомый вклад."
 
-# f6e1f1f3b1214ffc848b88bd85bc8bfd
-#: ../../src/tutorial.rst:915
+#: tutorial.en.rst:969
 msgid "Translations"
 msgstr "Переводы"
 
-# cf4fe2ed5e27427cb8d4af80f7e88c3f
-#: ../../src/tutorial.rst:917
+#: tutorial.en.rst:971
 msgid "This tutorial is also available in other languages:"
 msgstr "Этот текст доступен на других языках:"

@@ -91,7 +91,7 @@ From here, execute some simple SymPy statements like the ones below::
     >>> integrate(1/x, x)
     log(x)
 
-For a starter guide on using SymPy effectively, refer to the :doc:`tutorial`.
+For a starter guide on using SymPy effectively, refer to the :ref:`tutorial`.
 
 Questions
 =========
