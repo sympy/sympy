@@ -30,7 +30,7 @@ def _cmp_perm_lists(first, second):
         set([tuple(a) for a in second])
 
 
-def _naive_list_centralizer(self, other):
+def _naive_list_centralizer(self, other, af=False):
     from sympy.combinatorics.perm_groups import PermutationGroup
     """
     Return a list of elements for the centralizer of a subgroup/set/element.
@@ -53,21 +53,25 @@ def _naive_list_centralizer(self, other):
     sympy.combinatorics.perm_groups.centralizer
 
     """
+    from sympy.combinatorics.permutations import _af_commutes_with
     if hasattr(other, 'generators'):
-        elements = list(self.generate_dimino())
-        gens = other.generators
-        commutes_with_gens = lambda x: [rmul(x, gen) for gen in gens] == \
-                                       [rmul(gen, x) for gen in gens]
+        elements = list(self.generate_dimino(af=True))
+        gens = [x._array_form for x in other.generators]
+        commutes_with_gens = lambda x: all(_af_commutes_with(x, gen) for gen in gens)
         centralizer_list = []
-        for element in elements:
-            if commutes_with_gens(element):
-                centralizer_list.append(element)
+        if not af:
+            for element in elements:
+                if commutes_with_gens(element):
+                    centralizer_list.append(Permutation._af_new(element))
+        else:
+            for element in elements:
+                if commutes_with_gens(element):
+                    centralizer_list.append(element)
         return centralizer_list
     elif hasattr(other, 'getitem'):
-        return _naive_list_centralizer(self, PermutationGroup(other))
+        return _naive_list_centralizer(self, PermutationGroup(other), af)
     elif hasattr(other, 'array_form'):
-        return _naive_list_centralizer(self, PermutationGroup([other]))
-
+        return _naive_list_centralizer(self, PermutationGroup([other]), af)
 
 def _verify_bsgs(group, base, gens):
     """
@@ -138,8 +142,8 @@ def _verify_centralizer(group, arg, centr=None):
     """
     if centr is None:
         centr = group.centralizer(arg)
-    centr_list = list(centr.generate_dimino())
-    centr_list_naive = _naive_list_centralizer(group, arg)
+    centr_list = list(centr.generate_dimino(af=True))
+    centr_list_naive = _naive_list_centralizer(group, arg, af=True)
     return _cmp_perm_lists(centr_list, centr_list_naive)
 
 
@@ -170,18 +174,157 @@ def _verify_normal_closure(group, arg, closure=None):
     """
     if closure is None:
         closure = group.normal_closure(arg)
-    conjugates = []
-    group_els = list(group.generate_dimino())
+    conjugates = set()
     if hasattr(arg, 'generators'):
         subgr_gens = arg.generators
     elif hasattr(arg, '__getitem__'):
         subgr_gens = arg
     elif hasattr(arg, 'array_form'):
         subgr_gens = [arg]
-    for el in group_els:
+    for el in group.generate_dimino():
         for gen in subgr_gens:
-            conjugate = rmul(~el, gen, el)
-            if conjugate not in conjugates:
-                conjugates.append(conjugate)
-    naive_closure = PermutationGroup(conjugates)
+            conjugates.add(gen^el)
+    naive_closure = PermutationGroup(list(conjugates))
     return closure.is_subgroup(naive_closure)
+
+def canonicalize_naive(g, dummies, sym, *v):
+    """
+    canonicalize tensor formed by tensors of the different types
+
+    g  permutation representing the tensor
+    dummies  list of dummy indices
+    msym symmetry of the metric
+
+    v is a list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`
+    base_i, gens_i BSGS for tensors of this type
+    n_i  number ot tensors of type `i`
+
+    sym_i symmetry under exchange of two component tensors of type `i`
+          None  no symmetry
+          0     commuting
+          1     anticommuting
+
+    Return 0 if the tensor is zero, else return the array form of
+    the permutation representing the canonical form of the tensor.
+
+    Examples
+    ========
+    >>> from sympy.combinatorics.testutil import canonicalize_naive
+    >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
+    >>> from sympy.combinatorics import Permutation, PermutationGroup
+    >>> g = Permutation([1,3,2,0,4,5])
+    >>> base2, gens2 = get_symmetric_group_sgs(2)
+    >>> canonicalize_naive(g, [2, 3], 0, (base2, gens2, 2, 0))
+    [0, 2, 1, 3, 4, 5]
+    """
+    from sympy.combinatorics.perm_groups import PermutationGroup
+    from sympy.combinatorics.tensor_can import gens_products, dummy_sgs
+    from sympy.combinatorics.permutations import Permutation, _af_rmul
+    v1 = []
+    for i in range(len(v)):
+        base_i, gens_i, n_i, sym_i = v[i]
+        v1.append((base_i, gens_i, [[]]*n_i, sym_i))
+    size, sbase, sgens = gens_products(*v1)
+    dgens = dummy_sgs(dummies, sym, size-2)
+    if isinstance(sym, int):
+        num_types = 1
+        dummies = [dummies]
+        sym = [sym]
+    else:
+        num_types = len(sym)
+    dgens = []
+    for i in range(num_types):
+        dgens.extend(dummy_sgs(dummies[i], sym[i], size - 2))
+    S = PermutationGroup(sgens)
+    D = PermutationGroup([Permutation(x) for x in dgens])
+    dlist = list(D.generate(af=True))
+    g = g.array_form
+    st = set()
+    for s in S.generate(af=True):
+        h = _af_rmul(g, s)
+        for d in dlist:
+            q = tuple(_af_rmul(d, h))
+            st.add(q)
+    a = list(st)
+    a.sort()
+    prev = (0,)*size
+    for h in a:
+        if h[:-2] == prev[:-2]:
+            if h[-1] != prev[-1]:
+                return 0
+        prev = h
+    return list(a[0])
+
+def graph_certificate(gr):
+    """
+    Return a certificate for the graph
+
+    gr adjacency list
+
+    The graph is assumed to be unoriented and without
+    external lines.
+
+    Associate to each vertex of the graph a symmetric tensor with
+    number of indices equal to the degree of the vertex; indices
+    are contracted when they correspond to the same line of the graph.
+    The canonical form of the tensor gives a certificate for the graph.
+
+    This is not an efficient algorithm to get the certificate of a graph.
+
+    Examples
+    ========
+
+    >>> from sympy.combinatorics.testutil import graph_certificate
+    >>> gr1 = {0:[1,2,3,5], 1:[0,2,4], 2:[0,1,3,4], 3:[0,2,4], 4:[1,2,3,5], 5:[0,4]}
+    >>> gr2 = {0:[1,5], 1:[0,2,3,4], 2:[1,3,5], 3:[1,2,4,5], 4:[1,3,5], 5:[0,2,3,4]}
+    >>> c1 = graph_certificate(gr1)
+    >>> c2 = graph_certificate(gr2)
+    >>> c1
+    [0, 2, 4, 6, 1, 8, 10, 12, 3, 14, 16, 18, 5, 9, 15, 7, 11, 17, 13, 19, 20, 21]
+    >>> c1 == c2
+    True
+    """
+    from sympy.combinatorics.permutations import _af_invert
+    from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, canonicalize
+    items = gr.items()
+    items.sort(key=lambda x: len(x[1]), reverse=True)
+    pvert = [x[0] for x in items]
+    pvert = _af_invert(pvert)
+
+    # the indices of the tensor are twice the number of lines of the graph
+    num_indices = 0
+    for v, neigh in items:
+      num_indices += len(neigh)
+    # associate to each vertex its indices; for each line
+    # between two vertices assign the
+    # even index to the vertex which comes first in items,
+    # the odd index to the other vertex
+    vertices = [[] for i in items]
+    i = 0
+    for v, neigh in items:
+        for v2 in neigh:
+            if pvert[v] < pvert[v2]:
+                vertices[pvert[v]].append(i)
+                vertices[pvert[v2]].append(i+1)
+                i += 2
+    g = []
+    for v in vertices:
+      g.extend(v)
+    assert len(g) == num_indices
+    g += [num_indices, num_indices + 1]
+    size = num_indices + 2
+    assert sorted(g) == range(size)
+    g = Permutation(g)
+    vlen = [0]*(len(vertices[0])+1)
+    for neigh in vertices:
+        vlen[len(neigh)] += 1
+    v = []
+    for i in range(len(vlen)):
+        n = vlen[i]
+        if n:
+            base, gens = get_symmetric_group_sgs(i)
+            v.append((base, gens, n, 0))
+    v.reverse()
+    dummies = range(num_indices)
+    can = canonicalize(g, dummies, 0, *v)
+    return can
