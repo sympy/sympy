@@ -336,12 +336,17 @@ def test_involutions():
 
 
 def test_derangements():
-    assert len(list(generate_derangements([0, 1, 2, 3, 4, 5]))) == 265
-    assert list(generate_derangements([0, 1, 2, 3])) == [[1, 0, 3, 2],
-        [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], [2, 3, 0, 1], [2, 3, 1, 0],
-        [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
-    assert list(generate_derangements([0, 1, 2, 2])) == [[2, 2, 0, 1],
-                                                         [2, 2, 1, 0]]
+    assert len(list(generate_derangements(range(6)))) == 265
+    assert ''.join(''.join(i) for i in generate_derangements('abcde')) == (
+    'badecbaecdbcaedbcdeabceadbdaecbdeacbdecabeacdbedacbedcacabedcadebcaebd'
+    'cdaebcdbeacdeabcdebaceabdcebadcedabcedbadabecdaebcdaecbdcaebdcbeadceab'
+    'dcebadeabcdeacbdebacdebcaeabcdeadbceadcbecabdecbadecdabecdbaedabcedacb'
+    'edbacedbca')
+    assert list(generate_derangements([0, 1, 2, 3])) == [
+        [1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1],
+        [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
+    assert list(generate_derangements([0, 1, 2, 2])) == [
+        [2, 2, 0, 1], [2, 2, 1, 0]]
 
 
 def test_necklaces():

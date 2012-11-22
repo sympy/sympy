@@ -10,7 +10,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (
     as_int, combinations, combinations_with_replacement,
     default_sort_key, is_sequence, iterable, permutations,
-    product as cartes, ordered
+    product as cartes, ordered, next
 )
 
 
@@ -1573,7 +1573,7 @@ def generate_involutions(n):
 
 def generate_derangements(perm):
     """
-    Routine to generate derangements.
+    Routine to generate unique derangements.
 
     TODO: This will be rewritten to use the
     ECO operator approach once the permutations
@@ -1583,22 +1583,21 @@ def generate_derangements(perm):
     ========
 
     >>> from sympy.utilities.iterables import generate_derangements
-    >>> list(generate_derangements([0,1,2]))
+    >>> list(generate_derangements([0, 1, 2]))
     [[1, 2, 0], [2, 0, 1]]
-    >>> list(generate_derangements([0,1,2,3]))
+    >>> list(generate_derangements([0, 1, 2, 3]))
     [[1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], \
     [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], \
     [3, 2, 1, 0]]
-    >>> list(generate_derangements([0,1,1]))
+    >>> list(generate_derangements([0, 1, 1]))
     []
     """
+    p = multiset_permutations(perm)
     indices = range(len(perm))
-    p = variations(indices, len(indices))
-    for rv in \
-            uniq(tuple(perm[i] for i in idx)
-            for idx in p if all(
-            perm[k] != perm[idx[k]] for k in xrange(len(perm)))):
-        yield list(rv)
+    p0 = next(p)
+    for pi in p:
+        if all(pi[i] != p0[i] for i in indices):
+            yield pi
 
 
 @deprecated(
