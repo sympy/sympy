@@ -2,6 +2,7 @@ from collections import defaultdict
 import random
 from operator import gt
 
+from sympy.core.decorators import deprecated
 from sympy.core import Basic, C
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
@@ -9,7 +10,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (
     as_int, combinations, combinations_with_replacement,
     default_sort_key, is_sequence, iterable, permutations,
-    product as cartes, ordered
+    product as cartes, ordered, next
 )
 
 
@@ -946,10 +947,9 @@ def _partition(seq, vector, m=None):
 
 
 def _set_partitions(n):
-    """Cycle through all partions of n elements, returning the
-    current number of partitions and yield ``m`` and a mutable
-    list, ``q`` such that element[i] is in part q[i] of the
-    partition.
+    """Cycle through all partions of n elements, yielding the
+    current number of partitions, ``m``, and a mutable list, ``q``
+    such that element[i] is in part q[i] of the partition.
 
     NOTE: ``q`` is modified in place and generally should not be changed
     between function calls.
@@ -966,9 +966,8 @@ def _set_partitions(n):
     2 [0, 1, 1] [['a'], ['b', 'c']]
     3 [0, 1, 2] [['a'], ['b'], ['c']]
 
-    Note
-    ====
-
+    Notes
+    =====
 
     This algorithm is similar to, and solves the same problem as,
     Algorithm 7.2.1.5H, from volume 4A of Knuth's The Art of Computer
@@ -1462,42 +1461,73 @@ def uniq(seq):
 
 def generate_bell(n):
     """
-    Generates the bell permutations.
-
-    In a Bell permutation, each cycle is a decreasing
-    sequence of integers.
-
-    Reference:
-    [1] Generating involutions, derangements, and relatives by ECO
-    Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+    Generates the bell permutations of length ``n``.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import generate_bell
-    >>> list(generate_bell(3))
-    [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 0, 1), (2, 1, 0)]
-    """
-    P = [i for i in xrange(n)]
-    T = [0]
-    cache = set()
+    >>> from sympy import zeros, Matrix, factorial, pprint
+    >>> from sympy.core.compatibility import permutations
 
-    def gen(P, T, t):
-        if t == (n - 1):
-            cache.add(tuple(P))
+    This is the sort of permutation used in the ringing of physical bells,
+    and does not produce permutations in lexicographical order. Rather, the
+    permutations differ from each other by exactly one inversion, and the
+    position at which the swapping occurs varies periodically in a simple
+    fashion. Consider the first few permutations of 4 elements generated
+    by ``permutations`` and ``generate_bell``:
+
+    >>> list(permutations(range(4)))[:5]
+    [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 2, 3, 1), (0, 3, 1, 2)]
+    >>> list(generate_bell(4))[:5]
+    [(0, 1, 2, 3), (1, 0, 2, 3), (1, 2, 0, 3), (1, 2, 3, 0), (2, 1, 3, 0)]
+
+    Notice how the 2nd and 3rd lexicographical permutations have 3 elements
+    out of place whereas each bell permutations always has only two
+    elements out of place relative to the previous permutation.
+
+    How the position of inversion varies across the elements can be seen
+    by tracing out where the 0 appears in the permutations:
+
+    >>> m = zeros(4, 24)
+    >>> for i, p in enumerate(generate_bell(4)):
+    ...     m[:, i] = Matrix(list(p))
+    >>> m.print_nonzero('X')
+    [ XXXXXX  XXXXXX  XXXXXX ]
+    [X XXXX XX XXXX XX XXXX X]
+    [XX XX XXXX XX XXXX XX XX]
+    [XXX  XXXXXX  XXXXXX  XXX]
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Method_ringing
+    * http://stackoverflow.com/questions/4856615/recursive-permutation/4857018
+    * http://programminggeeks.com/bell-algorithm-for-permutation/
+    * http://en.wikipedia.org/wiki/
+      Steinhaus%E2%80%93Johnson%E2%80%93Trotter_algorithm
+    * Generating involutions, derangements, and relatives by ECO
+      Vincent Vajnovszki, DMTCS vol 1 issue 12, 2010
+
+    """
+    from sympy.functions.combinatorial.factorials import factorial
+    pos = dir = 1
+    do = factorial(n)
+    p = range(n)
+    yield tuple(p)
+    do -= 1
+    while do:
+        if pos >= n:
+            dir = -dir
+            p[0], p[1] = p[1], p[0]
+        elif pos < 1:
+            dir = -dir
+            p[-2], p[-1] = p[-1], p[-2]
         else:
-            for i in T:
-                P[i], P[t + 1] = P[t + 1], P[i]
-                if tuple(P) not in cache:
-                    cache.add(tuple(P))
-                    gen(P, T, t + 1)
-                P[i], P[t + 1] = P[t + 1], P[i]
-            T.append(t + 1)
-            cache.add(tuple(P))
-            gen(P, T, t + 1)
-            T.remove(t + 1)
-    gen(P, T, 0)
-    return sorted(cache)
+            p[pos - 1], p[pos] = p[pos], p[pos - 1]
+        pos += dir
+        yield tuple(p)
+        do -= 1
 
 
 def generate_involutions(n):
@@ -1520,39 +1550,23 @@ def generate_involutions(n):
     ========
 
     >>> from sympy.utilities.iterables import generate_involutions
-    >>> generate_involutions(3)
+    >>> list(generate_involutions(3))
     [(0, 1, 2), (0, 2, 1), (1, 0, 2), (2, 1, 0)]
-    >>> len(generate_involutions(4))
+    >>> len(list(generate_involutions(4)))
     10
     """
-    P = range(n)  # the items of the permutation
-    F = [0]  # the fixed points {is this right??}
-    cache = set()
-
-    def gen(P, F, t):
-        if t == n:
-            cache.add(tuple(P))
+    idx = range(n)
+    for p in permutations(idx):
+        for i in idx:
+            if p[p[i]] != i:
+                break
         else:
-            for j in xrange(len(F)):
-                P[j], P[t] = P[t], P[j]
-                if tuple(P) not in cache:
-                    cache.add(tuple(P))
-                    Fj = F.pop(j)
-                    gen(P, F, t + 1)
-                    F.insert(j, Fj)
-                P[j], P[t] = P[t], P[j]
-            t += 1
-            F.append(t)
-            cache.add(tuple(P))
-            gen(P, F, t)
-            F.pop()
-    gen(P, F, 1)
-    return sorted(cache)
+            yield p
 
 
 def generate_derangements(perm):
     """
-    Routine to generate derangements.
+    Routine to generate unique derangements.
 
     TODO: This will be rewritten to use the
     ECO operator approach once the permutations
@@ -1562,61 +1576,78 @@ def generate_derangements(perm):
     ========
 
     >>> from sympy.utilities.iterables import generate_derangements
-    >>> list(generate_derangements([0,1,2]))
+    >>> list(generate_derangements([0, 1, 2]))
     [[1, 2, 0], [2, 0, 1]]
-    >>> list(generate_derangements([0,1,2,3]))
+    >>> list(generate_derangements([0, 1, 2, 3]))
     [[1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], \
     [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], \
     [3, 2, 1, 0]]
-    >>> list(generate_derangements([0,1,1]))
+    >>> list(generate_derangements([0, 1, 1]))
     []
     """
+    p = multiset_permutations(perm)
     indices = range(len(perm))
-    p = variations(indices, len(indices))
-    for rv in \
-            uniq(tuple(perm[i] for i in idx)
-            for idx in p if all(
-            perm[k] != perm[idx[k]] for k in xrange(len(perm)))):
-        yield list(rv)
+    p0 = next(p)
+    for pi in p:
+        if all(pi[i] != p0[i] for i in indices):
+            yield pi
 
 
+@deprecated(
+    useinstead="bracelets", deprecated_since_version="0.7.3")
 def unrestricted_necklace(n, k):
+    """Wrapper to necklaces to return a free (unrestricted) necklace."""
+    return necklaces(n, k, free=True)
+
+
+def necklaces(n, k, free=False):
     """
-    A routine to generate unrestriced necklaces.
-
-    Here n is the length of the necklace and k - 1
-    is the maximum permissible element in the
-    generated necklaces.
-
-    Reference:
-    http://mathworld.wolfram.com/Necklace.html
+    A routine to generate necklaces that may (free=True) or may not
+    (free=False) be turned over to be viewed. The "necklaces" returned
+    are comprised of ``n`` integers (beads) with ``k`` different
+    values (colors). Only unique necklaces are returned.
 
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import unrestricted_necklace
-    >>> [i[:] for i in unrestricted_necklace(3, 2)]
-    [[0, 0, 0], [0, 1, 1]]
-    >>> [i[:] for i in unrestricted_necklace(4, 4)]
-    [[0, 0, 0, 0], [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], \
-    [0, 1, 1, 1], [0, 1, 2, 1], [0, 1, 3, 1], [0, 2, 2, 2], \
-    [0, 2, 3, 2], [0, 3, 3, 3]]
-    """
-    a = [0] * n
+    >>> from sympy.utilities.iterables import necklaces, bracelets
+    >>> def show(s, i):
+    ...     return ''.join(s[j] for j in i)
 
-    def gen(t, p):
-        if (t > n - 1):
-            if (n % p == 0):
-                yield a
-        else:
-            a[t] = a[t - p]
-            for necklace in gen(t + 1, p):
-                yield necklace
-            for j in xrange(a[t - p] + 1, k):
-                a[t] = j
-                for necklace in gen(t + 1, t):
-                    yield necklace
-    return gen(1, 1)
+    The "unrestricted necklace" is sometimes also referred to as a
+    "bracelet" (an object that can be turned over, a sequence that can
+    be reversed) and the term "necklace" is used to imply a sequence
+    that cannot be reversed. So ACB == ABC for a bracelet (rotate and
+    reverse) while the two are different for a necklace since rotation
+    alone cannot make the two sequences the same.
+
+    (mnemonic: Bracelets can be viewed Backwards, but Not Necklaces.)
+
+    >>> B = [show('ABC', i) for i in bracelets(3, 3)]
+    >>> N = [show('ABC', i) for i in necklaces(3, 3)]
+    >>> set(N) - set(B)
+    set(['ACB'])
+
+    >>> list(necklaces(4, 2))
+    [(0, 0, 0, 0), (0, 0, 0, 1), (0, 0, 1, 1),
+     (0, 1, 0, 1), (0, 1, 1, 1), (1, 1, 1, 1)]
+
+    >>> [show('.o', i) for i in bracelets(4, 2)]
+    ['....', '...o', '..oo', '.o.o', '.ooo', 'oooo']
+
+    References
+    ==========
+
+    http://mathworld.wolfram.com/Necklace.html
+
+    """
+    return uniq(minlex(i, directed=not free, is_set=False) for i in
+        variations(range(k), n, repetition=True))
+
+
+def bracelets(n, k):
+    """Wrapper to necklaces to return a free (unrestricted) necklace."""
+    return necklaces(n, k, free=True)
 
 
 def generate_oriented_forest(n):
@@ -1661,15 +1692,17 @@ def generate_oriented_forest(n):
                 break
 
 
-def minlex(seq, directed=True):
-    """Return a tuple where the smallest element appears first; if
-    ``directed`` is True (default) then the order is preserved, otherwise the
-    sequence will be reversed if that gives a lexically smaller ordering.
+def minlex(seq, directed=True, is_set=True, small=None):
+    """
+    Return a tuple where the smallest element appears first; if
+    ``directed`` is True (default) then the order is preserved, otherwise
+    the sequence will be reversed if that gives a smaller ordering.
 
-    Note
-    ====
+    If every element appears only once then is_set can keep it's default
+    value of True, otherwise False should be passed.
 
-    It is assumed that the sequence does not contain repeats.
+    If the smallest element is known at the time of calling, it can be
+    passed and the calculation of the smallest element will be omitted.
 
     Examples
     ========
@@ -1681,20 +1714,57 @@ def minlex(seq, directed=True):
     (0, 2, 1)
     >>> minlex((1, 0, 2), directed=False)
     (0, 1, 2)
+
+    >>> minlex('11010011000', 1, is_set=False)
+    '00011010011'
+    >>> minlex('11010011000', 0, is_set=False)
+    '00011001011'
+
     """
+    is_str = isinstance(seq, str)
     seq = list(seq)
-    small = min(seq)
-    i = seq.index(small)
-    if not directed:
-        n = len(seq)
-        p = (i + 1) % n
-        m = (i - 1) % n
-        if seq[p] > seq[m]:
-            seq = list(reversed(seq))
-            i = n - i - 1
-    if i:
-        seq = rotate_left(seq, i)
-    return tuple(seq)
+    if small is None:
+        small = min(seq)
+    if is_set:
+        i = seq.index(small)
+        if not directed:
+            n = len(seq)
+            p = (i + 1) % n
+            m = (i - 1) % n
+            if seq[p] > seq[m]:
+                seq = list(reversed(seq))
+                i = n - i - 1
+        if i:
+            seq = rotate_left(seq, i)
+        best = seq
+    else:
+        count = seq.count(small)
+        if count == 1 and directed:
+            best = rotate_left(seq, seq.index(small))
+        else:
+            # if not directed, and not a set, we can't just
+            # pass this off to minlex with is_set True since
+            # peeking at the neighbor may not be sufficient to
+            # make the decision so we continue...
+            best = seq
+            for i in range(count):
+                seq = rotate_left(seq, seq.index(small, count != 1))
+                if seq < best:
+                    best = seq
+                # it's cheaper to rotate now rather than search
+                # again for these in reversed order so we test
+                # the reverse now
+                if not directed:
+                    seq = rotate_left(seq, 1)
+                    seq = list(reversed(seq))
+                    if seq < best:
+                        best = seq
+                    seq = list(reversed(seq))
+                    seq = rotate_right(seq, 1)
+    # common return
+    if is_str:
+        return ''.join(best)
+    return tuple(best)
 
 
 def runs(seq, op=gt):

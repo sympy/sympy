@@ -87,10 +87,12 @@ class GrayCode(Basic):
         if 'start' in kw_args:
             obj._current = kw_args["start"]
             if len(obj._current) > n:
-                raise ValueError('Gray code start has length %i but should not be greater than %i' % (len(obj._current), n))
+                raise ValueError('Gray code start has length %i but '
+                'should not be greater than %i' % (len(obj._current), n))
         elif 'rank' in kw_args:
             if int(kw_args["rank"]) != kw_args["rank"]:
-                raise ValueError('Gray code rank must be a positive integer, not %i' % kw_args["rank"])
+                raise ValueError('Gray code rank must be a positive integer, '
+                'not %i' % kw_args["rank"])
             obj._rank = int(kw_args["rank"]) % obj.selections
             obj._current = obj.unrank(n, obj._rank)
         return obj
@@ -177,7 +179,8 @@ class GrayCode(Basic):
         current = self.current
         graycode_bin = gray_to_bin(current)
         if len(graycode_bin) > self.n:
-            raise ValueError('Gray code start has length %i but should not be greater than %i' % (len(graycode_bin), bits))
+            raise ValueError('Gray code start has length %i but should '
+            'not be greater than %i' % (len(graycode_bin), bits))
         self._current = int(current, 2)
         graycode_int = int(''.join(graycode_bin), 2)
         for i in xrange(graycode_int, 1 << bits):
