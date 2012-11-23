@@ -44,9 +44,9 @@ msgid ""
 "<module-docs>`. or the `sources <https://github.com/sympy/sympy/>`_ directly."
 msgstr ""
 "Този урок е въведение към SymPy. Прочетете го, за да научите какво и как "
-"може SymPy, и ако искате да научите повече, прочетете :ref:`SymPy User's "
-"Guide <guide>`, :ref:`SymPy Modules Reference <module-docs>`. или  `сорс код "
-"<https://github.com/sympy/sympy/>`_ директно."
+"може SymPy, и ако искате да научите повече, прочетете `SymPy User's "
+"Guide <../guide.html>`_, `SymPy Modules Reference <../modules/index.html>`_. "
+"или  `сорс код <https://github.com/sympy/sympy/>`_ директно."
 
 #: tutorial.en.rst:26
 msgid "First Steps with SymPy"
@@ -610,8 +610,8 @@ msgid ""
 "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
 "Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
 msgstr ""
-"Време е да научите повече за SymPy. Прегледайте :ref:`SymPy User's Guide "
-"<guide>` и :ref:`SymPy Modules Reference <module-docs>`."
+"Време е да научите повече за SymPy. Прегледайте `SymPy User's Guide "
+"<../guide.html>`_ и `SymPy Modules Reference <../modules/index.html>`_."
 
 #: tutorial.en.rst:1046
 msgid ""

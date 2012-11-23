@@ -46,8 +46,8 @@ msgid ""
 msgstr ""
 "Tento tutoriál je úvodem do SymPy a zároveň ukazuje, co SymPy umí. Přečtěte "
 "si ho, aby jste zjistili, jak pro vás může být SymPy užitečná a pokud budete "
-"chtít vědět víc, přečtěte si :ref:`Uživatelskou příručku SymPy <guide>`, :"
-"ref:`Přehled modulů SymPy <module-docs>`. nebo přímo `zdrojové kódy <https://"
+"chtít vědět víc, přečtěte si `Uživatelskou příručku SymPy <../guide.html>`_, "
+"`Přehled modulů SymPy <../modules/index.html>`_. nebo přímo `zdrojové kódy <https://"
 "github.com/sympy/sympy/>`_"
 
 #: tutorial.en.rst:26
@@ -247,8 +247,8 @@ msgid ""
 "tutorial` section below. If you have a unicode font installed, you can pass "
 "use_unicode=True for a slightly nicer output."
 msgstr ""
-"To nám zajistí hezčí výstup. Koukněte do sekce níže :ref:`printing-tutorial-"
-"cs`. Pokud máte nainstalovaný font unicode, volbou ``use_unicode=True`` "
+"To nám zajistí hezčí výstup. Koukněte do sekce níže :ref:`printing-tutorial`. "
+"Pokud máte nainstalovaný font unicode, volbou ``use_unicode=True`` "
 "dostanete o něco hezčí výstup."
 
 #: tutorial.en.rst:278
@@ -621,8 +621,8 @@ msgid ""
 "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
 "Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
 msgstr ""
-"Nyní je čas dozvědět se více o SymPy. Pročtěte si :ref:`Uživatelskou "
-"příručku SymPy <guide>` a :ref:`Přehled modulů SymPy <module-docs>`."
+"Nyní je čas dozvědět se více o SymPy. Pročtěte si `Uživatelskou "
+"příručku SymPy <../guide.html>`_ a `Přehled modulů SymPy <../modules/index.html>`_."
 
 #: tutorial.en.rst:1046
 #, fuzzy

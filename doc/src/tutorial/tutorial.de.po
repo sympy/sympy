@@ -47,8 +47,8 @@ msgid ""
 msgstr ""
 "Dieses Tutorial schafft einen Überblick und gibt eine Einführung in SymPy. "
 "Wenn du wissen möchtest, was SymPy tun kann (und wie), lies diese Seite, und "
-"wenn du mehr erfahren möchtest, lies den :ref:`SymPy User's Guide <guide>` "
-"und die :ref:`SymPy Modules Reference <module-docs>` oder den `Quellcode "
+"wenn du mehr erfahren möchtest, lies den `SymPy User's Guide <../guide.html>`_ "
+"und die `SymPy Modules Reference <../modules/index.html>`_ oder den `Quellcode "
 "<https://github.com/sympy/sympy/>`_ selbst."
 
 #: tutorial.en.rst:26
@@ -611,8 +611,8 @@ msgid ""
 "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
 "Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
 msgstr ""
-"Nun ist Zeit, mehr über SymPy zu lernen. Lies den :ref:`SymPy User's Guide "
-"<guide>` und die :ref:`SymPy Modules Reference <module-docs>`."
+"Nun ist Zeit, mehr über SymPy zu lernen. Lies den `SymPy User's Guide "
+"<../guide.html>`_ und die `SymPy Modules Reference <../modules/index.html>`_."
 
 #: tutorial.en.rst:1046
 msgid ""

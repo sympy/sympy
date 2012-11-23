@@ -48,8 +48,8 @@ msgid ""
 msgstr ""
 "Ten tutorial przedstawia ogólny zarys i przegląd wybranych funkcji SymPy. "
 "Dzięki niemu dowiesz się, co SymPy może dla Ciebie zrobić (i jak). Jeśli "
-"będziesz chciał dowiedzieć się więcej, przeczytaj :ref:`Przewodnik "
-"użytkownika <guide>`, :ref:`Opis modułów <module-docs>`. lub też "
+"będziesz chciał dowiedzieć się więcej, przeczytaj `Przewodnik "
+"użytkownika <../guide.html>`_, `Opis modułów <../modules/index.html>`_, lub też "
 "bezpośrednio `źródła <https://github.com/sympy/sympy/>`_."
 
 #: tutorial.en.rst:26
@@ -643,9 +643,8 @@ msgid ""
 "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
 "Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
 msgstr ""
-"Teraz nadszedł czas, by dowiedzieć się więcej na temat SymPy. Przejdź do :"
-"ref:`Przewodniku użytkownika <guide>` oraz :ref:`Opisu modułów SymPy <module-"
-"docs>`."
+"Teraz nadszedł czas, by dowiedzieć się więcej na temat SymPy. Przejdź do "
+"`Przewodniku użytkownika <../guide.html>`_ oraz `Opisu modułów SymPy <../modules/index.html>`_."
 
 #: tutorial.en.rst:1046
 #, fuzzy

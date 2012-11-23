@@ -47,8 +47,8 @@ msgid ""
 msgstr ""
 "Овај туторијал даје вам преглед и увод у SymPy. Прочитајте га да бисте имали "
 "идеју шта SymPy можете урадити (и како) а ако хоћете да сазнате више, "
-"прочитајте :ref:`SymPy кориснички водич <guide>`, :ref:`SymPy референтни "
-"модул <module-docs>`. или `изворни код <https://github.com/sympy/sympy/>`_ "
+"прочитајте `SymPy кориснички водич <../guide.html>`_, `SymPy референтни "
+"модул <../modules/index.html>`_. или `изворни код <https://github.com/sympy/sympy/>`_ "
 "директно."
 
 #: tutorial.en.rst:26
@@ -620,8 +620,8 @@ msgid ""
 "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
 "Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
 msgstr ""
-"Сада можете учити даље. Погледајте: :ref:`SymPy User's Guide <guide>` и :ref:"
-"`SymPy Modules Reference <module-docs>`. Напомена: Остатак документације је "
+"Сада можете учити даље. Погледајте: `SymPy User's Guide <../guide.html>`_ и "
+"`SymPy Modules Reference <../modules/index.html>`_. Напомена: Остатак документације је "
 "доступан само на енглеском језику."
 
 #: tutorial.en.rst:1046
