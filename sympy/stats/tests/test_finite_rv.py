@@ -1,5 +1,6 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial)
+        symbols, simplify, Eq, cos, And, Tuple, Or, Dict, sympify, binomial,
+        factor)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
         given, independent, dependent, where, FiniteRV, pspace, cdf)
@@ -145,7 +146,7 @@ def test_cdf():
 
 def test_coins():
     C, D = Coin('C'), Coin('D')
-    H, T = sorted(density(C).keys())
+    H, T = symbols('H, T')
     assert P(Eq(C, D)) == S.Half
     assert density(Tuple(C, D)) == {(H, H): S.One/4, (H, T): S.One/4,
             (T, H): S.One/4, (T, T): S.One/4}
@@ -180,15 +181,14 @@ def test_binomial_symbolic():
     n = 10  # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)
     X = Binomial('X', n, p)
-    assert Eq(simplify(E(X)), n*p)
-    assert Eq(simplify(variance(X)), n*p*(1 - p))
-# Can't detect the equality
-#    assert Eq(simplify(skewness(X)), (1-2*p)/sqrt(n*p*(1-p)))
+    assert simplify(E(X)) == n*p
+    assert simplify(variance(X)) == n*p*(1 - p)
+    assert factor(simplify(skewness(X))) == factor((1-2*p)/sqrt(n*p*(1-p)))
 
     # Test ability to change success/failure winnings
     H, T = symbols('H T')
     Y = Binomial('Y', n, p, succ=H, fail=T)
-    assert Eq(simplify(E(Y)), simplify(n*(H*p + T*(1 - p))))
+    assert simplify(E(Y)) == simplify(n*(H*p + T*(1 - p)))
 
 
 def test_hypergeometric_numeric():
