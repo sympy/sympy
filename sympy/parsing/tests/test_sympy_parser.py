@@ -1,5 +1,7 @@
-from sympy.core import Symbol, Float, Rational, Integer, I
-from sympy.functions import exp, factorial
+from sympy.core import Symbol, Float, Rational, Integer, I, Mul, Pow
+from sympy.functions import exp, factorial, sin
+from sympy.logic import And
+from sympy.series import Limit
 
 from sympy.parsing.sympy_parser import (
     parse_expr, standard_transformations, rationalize, TokenError
