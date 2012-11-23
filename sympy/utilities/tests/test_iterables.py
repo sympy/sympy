@@ -1,11 +1,13 @@
-from sympy import symbols, Integral, Tuple, Dummy, Basic, default_sort_key
-from sympy.combinatorics import RGS_enum, RGS_unrank
+from sympy import (
+    symbols, Integral, Tuple, Dummy, Basic, default_sort_key, Matrix,
+    factorial)
+from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.utilities.iterables import (
     postorder_traversal, flatten, group,
     take, subsets, variations, cartes, numbered_symbols, dict_merge,
     prefixes, postfixes, sift, topological_sort, rotate_left, rotate_right,
     multiset_partitions, partitions, binary_partitions, generate_bell,
-    generate_involutions, generate_derangements, unrestricted_necklace,
+    generate_involutions, generate_derangements, necklaces,
     generate_oriented_forest, unflatten, common_prefix, common_suffix,
     ordered, minlex, runs, reshape, uniq, multiset_combinations,
     multiset_permutations, _set_partitions)
@@ -317,46 +319,49 @@ def test_binary_partitions():
 
 
 def test_bell_perm():
-    assert [len(generate_bell(i)) for i in xrange(1, 7)] == [1, 2, 5,
-                15, 52, 203]
-    assert list(generate_bell(4)) == [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3),
-                                      (0, 3, 1, 2), (0, 3, 2, 1), (1, 0, 2, 3),
-                                      (1, 0, 3, 2), (2, 0, 1, 3), (2, 1, 0, 3),
-                                      (2, 3, 0, 1), (3, 0, 1, 2), (3, 0, 2, 1),
-                                      (3, 1, 0, 2), (3, 1, 2, 0), (3, 2, 1, 0)]
+    assert [len(list(generate_bell(i))) for i in xrange(1, 7)] == [
+        factorial(i) for i in xrange(1, 7)]
+    assert list(generate_bell(3)) == [
+        (0, 1, 2), (1, 0, 2), (1, 2, 0), (2, 1, 0), (2, 0, 1), (0, 2, 1)]
 
 
 def test_involutions():
-    assert [len(generate_involutions(
-        n)) for n in range(1, 7)] == [1, 2, 4, 10, 26, 76]
-    assert generate_involutions(4) == [(0, 1, 2, 3), (0, 1, 3, 2),
-                                       (0, 2, 1, 3), (0, 3, 2, 1),
-                                       (1, 0, 2, 3), (2, 1, 0, 3),
-                                       (3, 0, 2, 1), (3, 1, 0, 2),
-                                       (3, 1, 2, 0), (3, 2, 1, 0)]
+    lengths = [1, 2, 4, 10, 26, 76]
+    for n, N in enumerate(lengths):
+        i = list(generate_involutions(n + 1))
+        assert len(i) == N
+        assert len(set([Permutation(j)**2 for j in i])) == 1
 
 
 def test_derangements():
-    assert len(list(generate_derangements([0, 1, 2, 3, 4, 5]))) == 265
-    assert list(generate_derangements([0, 1, 2, 3])) == [[1, 0, 3, 2],
-        [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1], [2, 3, 0, 1], [2, 3, 1, 0],
-        [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
-    assert list(generate_derangements([0, 1, 2, 2])) == [[2, 2, 0, 1],
-                                                         [2, 2, 1, 0]]
+    assert len(list(generate_derangements(range(6)))) == 265
+    assert ''.join(''.join(i) for i in generate_derangements('abcde')) == (
+    'badecbaecdbcaedbcdeabceadbdaecbdeacbdecabeacdbedacbedcacabedcadebcaebd'
+    'cdaebcdbeacdeabcdebaceabdcebadcedabcedbadabecdaebcdaecbdcaebdcbeadceab'
+    'dcebadeabcdeacbdebacdebcaeabcdeadbceadcbecabdecbadecdabecdbaedabcedacb'
+    'edbacedbca')
+    assert list(generate_derangements([0, 1, 2, 3])) == [
+        [1, 0, 3, 2], [1, 2, 3, 0], [1, 3, 0, 2], [2, 0, 3, 1],
+        [2, 3, 0, 1], [2, 3, 1, 0], [3, 0, 1, 2], [3, 2, 0, 1], [3, 2, 1, 0]]
+    assert list(generate_derangements([0, 1, 2, 2])) == [
+        [2, 2, 0, 1], [2, 2, 1, 0]]
 
 
-def test_unrestricted_necklaces():
-    assert [i[:] for i in unrestricted_necklace(4, 5)] == [[0, 0, 0, 0],
-        [0, 0, 1, 0], [0, 0, 2, 0], [0, 0, 3, 0], [0, 0, 4, 0], [0, 1, 1, 1],
-        [0, 1, 2, 1], [0, 1, 3, 1], [0, 1, 4, 1], [0, 2, 2, 2], [0, 2, 3, 2],
-        [0, 2, 4, 2], [0, 3, 3, 3], [0, 3, 4, 3], [0, 4, 4, 4]]
-    assert [i[:] for i in unrestricted_necklace(6, 3)] == [[0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0], [0, 0, 0, 2, 0, 0], [0, 0, 1, 0, 1, 0],
-        [0, 0, 1, 1, 0, 1], [0, 0, 1, 2, 0, 1], [0, 0, 2, 0, 2, 0],
-        [0, 0, 2, 1, 0, 2], [0, 0, 2, 2, 0, 2], [0, 1, 1, 1, 1, 1],
-        [0, 1, 1, 2, 1, 1], [0, 1, 2, 1, 2, 1], [0, 1, 2, 2, 1, 2],
-        [0, 2, 2, 2, 2, 2]]
-    assert len(list(unrestricted_necklace(20, 2))) == 111
+def test_necklaces():
+    def count(n, k, f):
+        return len(list(necklaces(n, k, f)))
+    m = []
+    for i in range(1, 8):
+        m.append((
+        i, count(i, 2, 0), count(i, 2, 1), count(i, 3, 1)))
+    assert Matrix(m) == Matrix([
+        [1,   2,   2,   3],
+        [2,   3,   3,   6],
+        [3,   4,   4,  10],
+        [4,   6,   6,  21],
+        [5,   8,   8,  39],
+        [6,  14,  13,  92],
+        [7,  20,  18, 198]])
 
 
 def test_generate_oriented_forest():
