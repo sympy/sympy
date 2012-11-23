@@ -234,12 +234,12 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     from sympy.parsing.sympy_parser import convert_xor as t_convert_xor
     from sympy.parsing.sympy_parser import rationalize as t_rationalize
 
-    transformations = [standard_transformations]
+    transformations = standard_transformations
 
     if rational:
-        transformations.append(t_rationalize)
+        transformations += (t_rationalize,)
     if convert_xor:
-        transformations.append(t_convert_xor)
+        transformations += (t_convert_xor,)
 
     try:
         a = a.replace('\n', '')

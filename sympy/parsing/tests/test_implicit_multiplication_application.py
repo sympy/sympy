@@ -37,7 +37,7 @@ def test_implicit_multiplication_application():
         'sin**3(x)': 'sin(x)**3',
         '(factorial)': 'factorial'
     }
-    transformations = (standard_transformations, convert_xor)
+    transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (implicit_multiplication_application,)
     for e in d:
         implicit = parse_expr(e, transformations=transformations2)

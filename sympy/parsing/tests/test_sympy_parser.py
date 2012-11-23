@@ -39,7 +39,7 @@ def test_rationalize():
     inputs = {
         '0.123': Rational(123, 1000)
     }
-    transformations = (standard_transformations, rationalize)
+    transformations = standard_transformations + (rationalize,)
     for text, result in inputs.items():
         assert parse_expr(text, transformations=transformations) == result
 

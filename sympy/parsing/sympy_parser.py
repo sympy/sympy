@@ -364,18 +364,19 @@ def auto_symbol(tokens, local_dict, global_dict):
                 or (prevTok[0] == OP and prevTok[1] in ('(', ',')
                     and nextTokNum == OP and nextTokVal == '=')):
                 result.append((NAME, name))
+                continue
             elif name in global_dict:
                 obj = global_dict[name]
-
                 if isinstance(obj, (Basic, type)) or callable(obj):
                     result.append((NAME, name))
-            else:
-                result.extend([
-                    (NAME, 'Symbol'),
-                    (OP, '('),
-                    (NAME, repr(str(name))),
-                    (OP, ')'),
-                ])
+                    continue
+
+            result.extend([
+                (NAME, 'Symbol'),
+                (OP, '('),
+                (NAME, repr(str(name))),
+                (OP, ')'),
+            ])
         else:
             result.append((tokNum, tokVal))
 
@@ -504,13 +505,7 @@ def rationalize(tokens, local_dict, global_dict):
 
     return result
 
-def standard_transformations(tokens, local_dict, global_dict):
-    """
-    Converts symbols, numeric literals, and factorials.
-    """
-    for transform in (auto_symbol, auto_number, factorial_notation):
-        tokens = transform(tokens, local_dict, global_dict)
-    return tokens
+standard_transformations = (auto_symbol, auto_number, factorial_notation)
 
 def stringify_expr(s, local_dict, global_dict, transformations):
     """
@@ -564,7 +559,7 @@ def eval_expr(code, hit, local_dict, global_dict):
     return _clear(expr)
 
 def parse_expr(s, local_dict=None, global_dict=None,
-               transformations=(standard_transformations,)):
+               transformations=standard_transformations):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
