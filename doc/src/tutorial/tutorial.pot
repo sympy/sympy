@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SymPy 0.7.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-19 15:25\n"
+"POT-Creation-Date: 2012-11-23 15:11\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -81,343 +81,343 @@ msgid "The Rational class represents a rational number as a pair of two Integers
 msgstr ""
 
 #: tutorial.en.rst:147
-msgid "Proceed with caution while working with Python int's and floating point numbers, especially in division, since you may create a Python number, not a SymPy number. A ratio of two Python ints may create a float -- the \"true division\" standard of Python 3 and the default behavior of ``isympy`` which imports division from __future__::"
+msgid "Proceed with caution while working with Python int's and floating point numbers, especially in division, since you may create a Python number, not a SymPy number. A ratio of two Python ints may create a float -- the \"true division\" standard of Python 3 and the default behavior of ``isympy`` which imports division from __future__:"
 msgstr ""
 
-#: tutorial.en.rst:157
-msgid "But in earlier Python versions where division has not been imported, a truncated int will result::"
+#: tutorial.en.rst:159
+msgid "But in earlier Python versions where division has not been imported, a truncated int will result:"
 msgstr ""
 
-#: tutorial.en.rst:163
-msgid "In both cases, however, you are not dealing with a SymPy Number because Python created its own number. Most of the time you will probably be working with Rational numbers, so make sure to use Rational to get the SymPy result. One might find it convenient to equate ``R`` and Rational::"
+#: tutorial.en.rst:167
+msgid "In both cases, however, you are not dealing with a SymPy Number because Python created its own number. Most of the time you will probably be working with Rational numbers, so make sure to use Rational to get the SymPy result. One might find it convenient to equate ``R`` and Rational:"
 msgstr ""
 
-#: tutorial.en.rst:175
-msgid "We also have some special constants, like e and pi, that are treated as symbols (1+pi won't evaluate to something numeric, rather it will remain as 1+pi), and have arbitrary precision::"
+#: tutorial.en.rst:181
+msgid "We also have some special constants, like e and pi, that are treated as symbols (1+pi won't evaluate to something numeric, rather it will remain as 1+pi), and have arbitrary precision:"
 msgstr ""
 
-#: tutorial.en.rst:189
+#: tutorial.en.rst:197
 msgid "as you see, evalf evaluates the expression to a floating-point number"
 msgstr ""
 
-#: tutorial.en.rst:191
-msgid "The symbol ``oo`` is used for a class defining mathematical infinity::"
+#: tutorial.en.rst:199
+msgid "The symbol ``oo`` is used for a class defining mathematical infinity:"
 msgstr ""
 
-#: tutorial.en.rst:200
+#: tutorial.en.rst:210
 msgid "Symbols"
 msgstr ""
 
-#: tutorial.en.rst:202
-msgid "In contrast to other Computer Algebra Systems, in SymPy you have to declare symbolic variables explicitly::"
+#: tutorial.en.rst:212
+msgid "In contrast to other Computer Algebra Systems, in SymPy you have to declare symbolic variables explicitly:"
 msgstr ""
 
-#: tutorial.en.rst:209
+#: tutorial.en.rst:221
 msgid "On the left is the normal Python variable which has been assigned to the SymPy Symbol class. Predefined symbols (including those for symbols with Greek names) are available for import from abc:"
 msgstr ""
 
-#: tutorial.en.rst:215
+#: tutorial.en.rst:227
 msgid "Symbols can also be created with the ``symbols`` or ``var`` functions, the latter automatically adding the created symbols to the namespace, and both accepting a range notation:"
 msgstr ""
 
-#: tutorial.en.rst:227
-msgid "Instances of the Symbol class \"play well together\" and are the building blocks of expresions::"
-msgstr ""
-
 #: tutorial.en.rst:239
-msgid "They can be substituted with other numbers, symbols or expressions using ``subs(old, new)``::"
+msgid "Instances of the Symbol class \"play well together\" and are the building blocks of expresions:"
 msgstr ""
 
-#: tutorial.en.rst:250
-msgid "For the remainder of the tutorial, we assume that we have run::"
+#: tutorial.en.rst:253
+msgid "They can be substituted with other numbers, symbols or expressions using ``subs(old, new)``:"
 msgstr ""
 
-#: tutorial.en.rst:255
+#: tutorial.en.rst:266
+msgid "For the remainder of the tutorial, we assume that we have run:"
+msgstr ""
+
+#: tutorial.en.rst:273
 msgid "This will make things look better when printed. See the :ref:`printing-tutorial` section below. If you have a unicode font installed, you can pass use_unicode=True for a slightly nicer output."
 msgstr ""
 
-#: tutorial.en.rst:260
+#: tutorial.en.rst:278
 msgid "Algebra"
 msgstr ""
 
-#: tutorial.en.rst:262
-msgid "For partial fraction decomposition, use ``apart(expr, x)``::"
+#: tutorial.en.rst:280
+msgid "For partial fraction decomposition, use ``apart(expr, x)``:"
 msgstr ""
 
-#: tutorial.en.rst:287
-msgid "To combine things back together, use ``together(expr, x)``::"
+#: tutorial.en.rst:307
+msgid "To combine things back together, use ``together(expr, x)``:"
 msgstr ""
 
-#: tutorial.en.rst:309
+#: tutorial.en.rst:331
 msgid "Calculus"
 msgstr ""
 
-#: tutorial.en.rst:314
+#: tutorial.en.rst:336
 msgid "Limits"
 msgstr ""
 
-#: tutorial.en.rst:316
-msgid "Limits are easy to use in SymPy, they follow the syntax ``limit(function, variable, point)``, so to compute the limit of f(x) as x -> 0, you would issue ``limit(f, x, 0)``::"
+#: tutorial.en.rst:338
+msgid "Limits are easy to use in SymPy, they follow the syntax ``limit(function, variable, point)``, so to compute the limit of f(x) as x -> 0, you would issue ``limit(f, x, 0)``:"
 msgstr ""
 
-#: tutorial.en.rst:325
-msgid "you can also calculate the limit at infinity::"
+#: tutorial.en.rst:349
+msgid "you can also calculate the limit at infinity:"
 msgstr ""
 
-#: tutorial.en.rst:336
+#: tutorial.en.rst:362
 msgid "for some non-trivial examples on limits, you can read the test file `test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/tests/test_demidovich.py>`_"
 msgstr ""
 
-#: tutorial.en.rst:343
+#: tutorial.en.rst:369
 msgid "Differentiation"
 msgstr ""
 
-#: tutorial.en.rst:345
-msgid "You can differentiate any SymPy expression using ``diff(func, var)``. Examples::"
+#: tutorial.en.rst:371
+msgid "You can differentiate any SymPy expression using ``diff(func, var)``. Examples:"
 msgstr ""
 
-#: tutorial.en.rst:358
-msgid "You can check, that it is correct by::"
+#: tutorial.en.rst:386
+msgid "You can check, that it is correct by:"
 msgstr ""
 
-#: tutorial.en.rst:366
-msgid "Higher derivatives can be calculated using the ``diff(func, var, n)`` method::"
+#: tutorial.en.rst:396
+msgid "Higher derivatives can be calculated using the ``diff(func, var, n)`` method:"
 msgstr ""
 
-#: tutorial.en.rst:383
+#: tutorial.en.rst:415
 msgid "Series expansion"
 msgstr ""
 
-#: tutorial.en.rst:385
-msgid "Use ``.series(var, point, order)``::"
+#: tutorial.en.rst:417
+msgid "Use ``.series(var, point, order)``:"
 msgstr ""
 
-#: tutorial.en.rst:400
-msgid "Another simple example::"
+#: tutorial.en.rst:434
+msgid "Another simple example:"
 msgstr ""
 
-#: tutorial.en.rst:424
+#: tutorial.en.rst:460
 msgid "Summation"
 msgstr ""
 
-#: tutorial.en.rst:426
+#: tutorial.en.rst:462
 msgid "Compute the summation of f with respect to the given summation variable over the given limits."
 msgstr ""
 
-#: tutorial.en.rst:428
-msgid "summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, i.e., ::"
+#: tutorial.en.rst:464
+msgid "summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, i.e.,"
 msgstr ""
 
-#: tutorial.en.rst:439
-msgid "If it cannot compute the sum, it prints the corresponding summation formula. Repeated sums can be computed by introducing additional limits::"
-msgstr ""
-
-#: tutorial.en.rst:473
-msgid "Integration"
-msgstr ""
-
-#: tutorial.en.rst:475
-msgid "SymPy has support for indefinite and definite integration of transcendental elementary and special functions via ``integrate()`` facility, which uses powerful extended Risch-Norman algorithm and some heuristics and pattern matching::"
-msgstr ""
-
-#: tutorial.en.rst:483
-msgid "You can integrate elementary functions::"
-msgstr ""
-
-#: tutorial.en.rst:496
-msgid "Also special functions are handled easily::"
-msgstr ""
-
-#: tutorial.en.rst:504
-msgid "It is possible to compute definite integrals::"
+#: tutorial.en.rst:477
+msgid "If it cannot compute the sum, it prints the corresponding summation formula. Repeated sums can be computed by introducing additional limits:"
 msgstr ""
 
 #: tutorial.en.rst:513
-msgid "Also, improper integrals are supported as well::"
+msgid "Integration"
+msgstr ""
+
+#: tutorial.en.rst:515
+msgid "SymPy has support for indefinite and definite integration of transcendental elementary and special functions via ``integrate()`` facility, which uses powerful extended Risch-Norman algorithm and some heuristics and pattern matching:"
 msgstr ""
 
 #: tutorial.en.rst:525
+msgid "You can integrate elementary functions:"
+msgstr ""
+
+#: tutorial.en.rst:540
+msgid "Also special functions are handled easily:"
+msgstr ""
+
+#: tutorial.en.rst:550
+msgid "It is possible to compute definite integrals:"
+msgstr ""
+
+#: tutorial.en.rst:561
+msgid "Also, improper integrals are supported as well:"
+msgstr ""
+
+#: tutorial.en.rst:575
 msgid "Complex numbers"
 msgstr ""
 
-#: tutorial.en.rst:527
-msgid "Besides the imaginary unit, I, which is imaginary, symbols can be created with attributes (e.g. real, positive, complex, etc...) and this will affect how they behave::"
+#: tutorial.en.rst:577
+msgid "Besides the imaginary unit, I, which is imaginary, symbols can be created with attributes (e.g. real, positive, complex, etc...) and this will affect how they behave:"
 msgstr ""
 
-#: tutorial.en.rst:544
+#: tutorial.en.rst:596
 msgid "Functions"
 msgstr ""
 
-#: tutorial.en.rst:546
-msgid "**trigonometric**::"
+#: tutorial.en.rst:598
+msgid "**trigonometric**"
 msgstr ""
 
-#: tutorial.en.rst:595
-msgid "**spherical harmonics**::"
+#: tutorial.en.rst:649
+msgid "**spherical harmonics**"
 msgstr ""
 
-#: tutorial.en.rst:621
-msgid "**factorials and gamma function**::"
+#: tutorial.en.rst:677
+msgid "**factorials and gamma function**"
 msgstr ""
 
-#: tutorial.en.rst:639
-msgid "**zeta function**::"
+#: tutorial.en.rst:697
+msgid "**zeta function**"
 msgstr ""
 
-#: tutorial.en.rst:664
-msgid "**polynomials**::"
+#: tutorial.en.rst:724
+msgid "**polynomials**"
 msgstr ""
 
-#: tutorial.en.rst:703
+#: tutorial.en.rst:765
 msgid "Differential Equations"
 msgstr ""
 
-#: tutorial.en.rst:705
-#: tutorial.en.rst:725
-msgid "In ``isympy``::"
+#: tutorial.en.rst:767
+#: tutorial.en.rst:789
+msgid "In ``isympy``:"
 msgstr ""
 
-#: tutorial.en.rst:723
+#: tutorial.en.rst:787
 msgid "Algebraic equations"
 msgstr ""
 
-#: tutorial.en.rst:738
+#: tutorial.en.rst:804
 msgid "Linear Algebra"
 msgstr ""
 
-#: tutorial.en.rst:743
+#: tutorial.en.rst:809
 msgid "Matrices"
 msgstr ""
 
-#: tutorial.en.rst:745
-msgid "Matrices are created as instances from the Matrix class::"
+#: tutorial.en.rst:811
+msgid "Matrices are created as instances from the Matrix class:"
 msgstr ""
 
-#: tutorial.en.rst:753
-msgid "They can also contain symbols::"
+#: tutorial.en.rst:821
+msgid "They can also contain symbols:"
 msgstr ""
 
-#: tutorial.en.rst:768
+#: tutorial.en.rst:838
 msgid "For more about Matrices, see the Linear Algebra tutorial."
 msgstr ""
 
-#: tutorial.en.rst:773
+#: tutorial.en.rst:843
 msgid "Pattern matching"
 msgstr ""
 
-#: tutorial.en.rst:775
-msgid "Use the ``.match()`` method, along with the ``Wild`` class, to perform pattern matching on expressions. The method will return a dictionary with the required substitutions, as follows::"
+#: tutorial.en.rst:845
+msgid "Use the ``.match()`` method, along with the ``Wild`` class, to perform pattern matching on expressions. The method will return a dictionary with the required substitutions, as follows:"
 msgstr ""
 
-#: tutorial.en.rst:789
-msgid "If the match is unsuccessful, it returns ``None``::"
+#: tutorial.en.rst:861
+msgid "If the match is unsuccessful, it returns ``None``:"
 msgstr ""
 
-#: tutorial.en.rst:794
-msgid "One can also use the exclude parameter of the ``Wild`` class to ensure that certain things do not show up in the result::"
+#: tutorial.en.rst:868
+msgid "One can also use the exclude parameter of the ``Wild`` class to ensure that certain things do not show up in the result:"
 msgstr ""
 
-#: tutorial.en.rst:808
+#: tutorial.en.rst:884
 msgid "Printing"
 msgstr ""
 
-#: tutorial.en.rst:810
+#: tutorial.en.rst:886
 msgid "There are many ways to print expressions."
 msgstr ""
 
-#: tutorial.en.rst:812
+#: tutorial.en.rst:888
 msgid "**Standard**"
 msgstr ""
 
-#: tutorial.en.rst:814
+#: tutorial.en.rst:890
 msgid "This is what ``str(expression)`` returns and it looks like this:"
 msgstr ""
 
-#: tutorial.en.rst:825
+#: tutorial.en.rst:901
 msgid "**Pretty printing**"
 msgstr ""
 
-#: tutorial.en.rst:827
+#: tutorial.en.rst:903
 msgid "Nice ascii-art printing is produced by the ``pprint`` function:"
 msgstr ""
 
-#: tutorial.en.rst:846
+#: tutorial.en.rst:922
 msgid "If you have a unicode font installed, the ``pprint`` function will use it by default. You can override this using the ``use_unicode`` option.:"
 msgstr ""
 
-#: tutorial.en.rst:855
+#: tutorial.en.rst:931
 msgid "See also the wiki `Pretty Printing <https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ for more examples of a nice unicode printing."
 msgstr ""
 
-#: tutorial.en.rst:859
-msgid "Tip: To make pretty printing the default in the Python interpreter, use::"
+#: tutorial.en.rst:935
+msgid "Tip: To make pretty printing the default in the Python interpreter, use:"
 msgstr ""
 
-#: tutorial.en.rst:882
+#: tutorial.en.rst:960
 msgid "**Python printing**"
 msgstr ""
 
-#: tutorial.en.rst:898
+#: tutorial.en.rst:978
 msgid "**LaTeX printing**"
 msgstr ""
 
-#: tutorial.en.rst:915
+#: tutorial.en.rst:997
 msgid "**MathML**"
 msgstr ""
 
-#: tutorial.en.rst:927
+#: tutorial.en.rst:1009
 msgid "**Pyglet**"
 msgstr ""
 
-#: tutorial.en.rst:933
+#: tutorial.en.rst:1017
 msgid "If pyglet is installed, a pyglet window will open containing the LaTeX rendered expression:"
 msgstr ""
 
-#: tutorial.en.rst:939
+#: tutorial.en.rst:1023
 msgid "Notes"
 msgstr ""
 
-#: tutorial.en.rst:941
+#: tutorial.en.rst:1025
 msgid "``isympy`` calls ``pprint`` automatically, so that's why you see pretty printing by default."
 msgstr ""
 
-#: tutorial.en.rst:944
+#: tutorial.en.rst:1028
 msgid "Note that there is also a printing module available, ``sympy.printing``.  Other printing methods available through this module are:"
 msgstr ""
 
-#: tutorial.en.rst:947
+#: tutorial.en.rst:1031
 msgid "``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, respectively, a pretty representation of ``expr``. This is the same as the second level of representation described above."
 msgstr ""
 
-#: tutorial.en.rst:949
+#: tutorial.en.rst:1033
 msgid "``latex(expr)``, ``print_latex(expr)``: Return or print, respectively, a `LaTeX <http://www.latex-project.org/>`_  representation of ``expr``"
 msgstr ""
 
-#: tutorial.en.rst:951
+#: tutorial.en.rst:1035
 msgid "``mathml(expr)``, ``print_mathml(expr)``: Return or print, respectively, a `MathML <http://www.w3.org/Math/>`_ representation of ``expr``."
 msgstr ""
 
-#: tutorial.en.rst:953
+#: tutorial.en.rst:1037
 msgid "``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ program is required."
 msgstr ""
 
-#: tutorial.en.rst:956
+#: tutorial.en.rst:1040
 msgid "Further documentation"
 msgstr ""
 
-#: tutorial.en.rst:958
+#: tutorial.en.rst:1042
 msgid "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
 msgstr ""
 
-#: tutorial.en.rst:962
+#: tutorial.en.rst:1046
 msgid "Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/>`_, that contains a lot of useful examples, tutorials, cookbooks that we and our users contributed, and feel free to edit it."
 msgstr ""
 
-#: tutorial.en.rst:969
+#: tutorial.en.rst:1053
 msgid "Translations"
 msgstr ""
 
-#: tutorial.en.rst:971
+#: tutorial.en.rst:1055
 msgid "This tutorial is also available in other languages:"
 msgstr ""
 

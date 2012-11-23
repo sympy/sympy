@@ -149,13 +149,17 @@ point numbers, especially in division, since you may create a
 Python number, not a SymPy number. A ratio of two Python ints may
 create a float -- the "true division" standard of Python 3
 and the default behavior of ``isympy`` which imports division
-from __future__::
+from __future__:
+
+::
 
     >>> 1/2 #doctest: +SKIP
     0.5
 
 But in earlier Python versions where division has not been imported, a
-truncated int will result::
+truncated int will result:
+
+::
 
     >>> 1/2 #doctest: +SKIP
     0
@@ -164,7 +168,9 @@ In both cases, however, you are not dealing with a SymPy Number because
 Python created its own number. Most of the time you will probably be
 working with Rational numbers, so make sure to use Rational to get
 the SymPy result. One might find it convenient to equate ``R`` and
-Rational::
+Rational:
+
+::
 
     >>> R = Rational
     >>> R(1, 2)
@@ -174,7 +180,9 @@ Rational::
 
 We also have some special constants, like e and pi, that are treated as symbols
 (1+pi won't evaluate to something numeric, rather it will remain as 1+pi), and
-have arbitrary precision::
+have arbitrary precision:
+
+::
 
     >>> from sympy import pi, E
     >>> pi**2
@@ -188,7 +196,9 @@ have arbitrary precision::
 
 as you see, evalf evaluates the expression to a floating-point number
 
-The symbol ``oo`` is used for a class defining mathematical infinity::
+The symbol ``oo`` is used for a class defining mathematical infinity:
+
+::
 
     >>> from sympy import oo
     >>> oo > 99999
@@ -200,7 +210,9 @@ Symbols
 -------
 
 In contrast to other Computer Algebra Systems, in SymPy you have to declare
-symbolic variables explicitly::
+symbolic variables explicitly:
+
+::
 
     >>> from sympy import Symbol
     >>> x = Symbol('x')
@@ -225,7 +237,9 @@ accepting a range notation:
     (g0, g1)
 
 Instances of the Symbol class "play well together" and are the building blocks
-of expresions::
+of expresions:
+
+::
 
     >>> x+y+x-y
     2*x
@@ -236,7 +250,9 @@ of expresions::
     >>> ((x+y)**2).expand()
     x**2 + 2*x*y + y**2
 
-They can be substituted with other numbers, symbols or expressions using ``subs(old, new)``::
+They can be substituted with other numbers, symbols or expressions using ``subs(old, new)``:
+
+::
 
     >>> ((x+y)**2).subs(x, 1)
     (y + 1)**2
@@ -247,7 +263,9 @@ They can be substituted with other numbers, symbols or expressions using ``subs(
     >>> ((x+y)**2).subs(x, 1-y)
     1
 
-For the remainder of the tutorial, we assume that we have run::
+For the remainder of the tutorial, we assume that we have run:
+
+::
 
     >>> from sympy import init_printing
     >>> init_printing(use_unicode=False, wrap_line=False, no_global=True)
@@ -259,7 +277,9 @@ use_unicode=True for a slightly nicer output.
 Algebra
 =======
 
-For partial fraction decomposition, use ``apart(expr, x)``::
+For partial fraction decomposition, use ``apart(expr, x)``:
+
+::
 
     >>> from sympy import apart
     >>> from sympy.abc import x, y, z
@@ -284,7 +304,9 @@ For partial fraction decomposition, use ``apart(expr, x)``::
     1 + -----
         x - 1
 
-To combine things back together, use ``together(expr, x)``::
+To combine things back together, use ``together(expr, x)``:
+
+::
 
     >>> from sympy import together
     >>> together(1/x + 1/y + 1/z)
@@ -315,14 +337,18 @@ Limits
 
 Limits are easy to use in SymPy, they follow the syntax ``limit(function,
 variable, point)``, so to compute the limit of f(x) as x -> 0, you would issue
-``limit(f, x, 0)``::
+``limit(f, x, 0)``:
+
+::
 
    >>> from sympy import limit, Symbol, sin, oo
    >>> x = Symbol("x")
    >>> limit(sin(x)/x, x, 0)
    1
 
-you can also calculate the limit at infinity::
+you can also calculate the limit at infinity:
+
+::
 
    >>> limit(x, x, oo)
    oo
@@ -342,7 +368,9 @@ for some non-trivial examples on limits, you can read the test file
 Differentiation
 ---------------
 
-You can differentiate any SymPy expression using ``diff(func, var)``. Examples::
+You can differentiate any SymPy expression using ``diff(func, var)``. Examples:
+
+::
 
     >>> from sympy import diff, Symbol, sin, tan
     >>> x = Symbol('x')
@@ -355,7 +383,9 @@ You can differentiate any SymPy expression using ``diff(func, var)``. Examples::
        2
     tan (x) + 1
 
-You can check, that it is correct by::
+You can check, that it is correct by:
+
+::
 
     >>> from sympy import limit
     >>> from sympy.abc import delta
@@ -363,7 +393,9 @@ You can check, that it is correct by::
        2
     tan (x) + 1
 
-Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
+Higher derivatives can be calculated using the ``diff(func, var, n)`` method:
+
+::
 
     >>> diff(sin(2*x), x, 1)
     2*cos(2*x)
@@ -382,7 +414,9 @@ Higher derivatives can be calculated using the ``diff(func, var, n)`` method::
 Series expansion
 ----------------
 
-Use ``.series(var, point, order)``::
+Use ``.series(var, point, order)``:
+
+::
 
     >>> from sympy import Symbol, cos
     >>> x = Symbol('x')
@@ -397,7 +431,9 @@ Use ``.series(var, point, order)``::
     1 + -- + ---- + ----- + ------ + O\x  /
         2     24     720     8064
 
-Another simple example::
+Another simple example:
+
+::
 
     >>> from sympy import Integral, pprint
 
@@ -426,7 +462,9 @@ Summation
 Compute the summation of f with respect to the given summation variable over the given limits.
 
 summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
-i.e., ::
+i.e.,
+
+::
 
                                 b
                               ____
@@ -437,7 +475,9 @@ i.e., ::
 
 
 If it cannot compute the sum, it prints the corresponding summation formula.
-Repeated sums can be computed by introducing additional limits::
+Repeated sums can be computed by introducing additional limits:
+
+::
 
     >>> from sympy import summation, oo, symbols, log
     >>> i, n, m = symbols('i n m', integer=True)
@@ -475,12 +515,16 @@ Integration
 SymPy has support for indefinite and definite integration of transcendental
 elementary and special functions via ``integrate()`` facility, which uses
 powerful extended Risch-Norman algorithm and some heuristics and pattern
-matching::
+matching:
+
+::
 
     >>> from sympy import integrate, erf, exp, sin, log, oo, pi, sinh, symbols
     >>> x, y = symbols('x,y')
 
-You can integrate elementary functions::
+You can integrate elementary functions:
+
+::
 
     >>> integrate(6*x**5, x)
      6
@@ -493,7 +537,9 @@ You can integrate elementary functions::
      2
     x  + cosh(x)
 
-Also special functions are handled easily::
+Also special functions are handled easily:
+
+::
 
     >>> integrate(exp(-x**2)*erf(x), x)
       ____    2
@@ -501,7 +547,9 @@ Also special functions are handled easily::
     --------------
           4
 
-It is possible to compute definite integrals::
+It is possible to compute definite integrals:
+
+::
 
     >>> integrate(x**3, (x, -1, 1))
     0
@@ -510,7 +558,9 @@ It is possible to compute definite integrals::
     >>> integrate(cos(x), (x, -pi/2, pi/2))
     2
 
-Also, improper integrals are supported as well::
+Also, improper integrals are supported as well:
+
+::
 
     >>> integrate(exp(-x), (x, 0, oo))
     1
@@ -526,7 +576,9 @@ Complex numbers
 
 Besides the imaginary unit, I, which is imaginary, symbols can be created with
 attributes (e.g. real, positive, complex, etc...) and this will affect how
-they behave::
+they behave:
+
+::
 
     >>> from sympy import Symbol, exp, I
     >>> x = Symbol("x") # a plain x with no attributes
@@ -543,7 +595,9 @@ they behave::
 Functions
 ---------
 
-**trigonometric**::
+**trigonometric**
+
+::
 
     >>> from sympy import asin, asinh, cos, sin, sinh, symbols, I
     >>> x, y = symbols('x,y')
@@ -592,7 +646,9 @@ Functions
     x - -- + ---- - ---- + ----- + O\x  /
         6     40    112     1152
 
-**spherical harmonics**::
+**spherical harmonics**
+
+::
 
     >>> from sympy import Ylm
     >>> from sympy.abc import theta, phi
@@ -618,7 +674,9 @@ Functions
                       ____
                   4*\/ pi
 
-**factorials and gamma function**::
+**factorials and gamma function**
+
+::
 
     >>> from sympy import factorial, gamma, Symbol
     >>> x = Symbol("x")
@@ -636,7 +694,9 @@ Functions
     1 - EulerGamma*x + x *|----------- + ---| + O\x /
                           \     2         12/
 
-**zeta function**::
+**zeta function**
+
+::
 
     >>> from sympy import zeta
     >>> zeta(4, x)
@@ -661,7 +721,9 @@ Functions
       16    90
 
 
-**polynomials**::
+**polynomials**
+
+::
 
     >>> from sympy import assoc_legendre, chebyshevt, legendre, hermite
     >>> chebyshevt(2, x)
@@ -702,7 +764,9 @@ Functions
 Differential Equations
 ----------------------
 
-In ``isympy``::
+In ``isympy``:
+
+::
 
     >>> from sympy import Function, Symbol, dsolve
     >>> f = Function('f')
@@ -722,7 +786,9 @@ In ``isympy``::
 Algebraic equations
 -------------------
 
-In ``isympy``::
+In ``isympy``:
+
+::
 
     >>> from sympy import solve, symbols
     >>> x, y = symbols('x,y')
@@ -742,7 +808,9 @@ Linear Algebra
 Matrices
 --------
 
-Matrices are created as instances from the Matrix class::
+Matrices are created as instances from the Matrix class:
+
+::
 
     >>> from sympy import Matrix, Symbol
     >>> Matrix([[1,0], [0,1]])
@@ -750,7 +818,9 @@ Matrices are created as instances from the Matrix class::
     [    ]
     [0  1]
 
-They can also contain symbols::
+They can also contain symbols:
+
+::
 
     >>> x = Symbol('x')
     >>> y = Symbol('y')
@@ -774,7 +844,9 @@ Pattern matching
 
 Use the ``.match()`` method, along with the ``Wild`` class, to perform pattern
 matching on expressions. The method will return a dictionary with the required
-substitutions, as follows::
+substitutions, as follows:
+
+::
 
     >>> from sympy import Symbol, Wild
     >>> x = Symbol('x')
@@ -786,13 +858,17 @@ substitutions, as follows::
     >>> (x**2).match(p*x**q)
     {p: 1, q: 2}
 
-If the match is unsuccessful, it returns ``None``::
+If the match is unsuccessful, it returns ``None``:
+
+::
 
     >>> print (x+1).match(p**x)
     None
 
 One can also use the exclude parameter of the ``Wild`` class to ensure that
-certain things do not show up in the result::
+certain things do not show up in the result:
+
+::
 
     >>> p = Wild('p', exclude=[1,x])
     >>> print (x+1).match(x+p) # 1 is excluded
@@ -856,7 +932,9 @@ See also the wiki `Pretty Printing
 <https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ for more examples of a nice
 unicode printing.
 
-Tip: To make pretty printing the default in the Python interpreter, use::
+Tip: To make pretty printing the default in the Python interpreter, use:
+
+::
 
     $ python
     Python 2.5.2 (r252:60911, Jun 25 2008, 17:58:32)
@@ -881,6 +959,8 @@ Tip: To make pretty printing the default in the Python interpreter, use::
 
 **Python printing**
 
+::
+
     >>> from sympy.printing.python import python
     >>> from sympy import Integral
     >>> from sympy.abc import x
@@ -896,6 +976,8 @@ Tip: To make pretty printing the default in the Python interpreter, use::
 
 
 **LaTeX printing**
+
+::
 
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
@@ -925,6 +1007,8 @@ Tip: To make pretty printing the default in the Python interpreter, use::
     <apply><power/><ci>x</ci><cn>-1</cn></apply>
 
 **Pyglet**
+
+::
 
     >>> from sympy import Integral, preview
     >>> from sympy.abc import x
