@@ -28,20 +28,25 @@ def dummy_sgs(dummies, sym, n):
     """
     Return the strong generators for dummy indices
 
-    dummies   list of dummy indices,
-              `dummies[2k], dummies[2k+1]` are paired indices
-    sym       symmetry under interchange of contracted dummies
-    sym =     None  no symmetry
-              0 symmetric
-              1 antisymmetric
-    n         number of indices
+    Parameters
+    ==========
+
+    dummies : list of dummy indices
+        `dummies[2k], dummies[2k+1]` are paired indices
+    sym : symmetry under interchange of contracted dummies::
+        * None  no symmetry
+        * 0     commuting
+        * 1     anticommuting
+
+    n : number of indices
 
     in base form the dummy indices are always in consecutive positions
 
     Examples
     ========
+
     >>> from sympy.combinatorics.tensor_can import dummy_sgs
-    >>> dummy_sgs([2,3,4,5,6,7], 0, 8)
+    >>> dummy_sgs(range(2, 8), 0, 8)
     [[0, 1, 3, 2, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3, 5, 4, 6, 7, 8, 9],
      [0, 1, 2, 3, 4, 5, 7, 6, 8, 9], [0, 1, 4, 5, 2, 3, 6, 7, 8, 9],
      [0, 1, 2, 3, 6, 7, 4, 5, 8, 9]]
@@ -73,8 +78,9 @@ def _min_dummies(dummies, sym, indices):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.tensor_can import _min_dummies
-    >>> _min_dummies([[2,3,4,5,6,7]], [0], range(10))
+    >>> _min_dummies([range(2, 8)], [0], range(10))
     [0, 1, 2, 2, 2, 2, 2, 2, 8, 9]
     """
     num_types = len(sym)
@@ -535,6 +541,7 @@ def canonical_free(base, gens, g, num_free):
 
     Examples
     ========
+
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import canonical_free
     >>> gens = [[1,0,2,3,5,4], [2,3,0,1,4,5],[0,1,3,2,5,4]]
@@ -620,40 +627,44 @@ def canonicalize(g, dummies, msym, *v):
     """
     canonicalize tensor formed by tensors
 
-      g     permutation representing the tensor
+    Parameters
+    ==========
 
-      dummies list representing the dummy indices
-              it can be a list of dummy indices of the same type
-              or a list of lists of dummy indices, one list for each
-              type of index;
-              the dummy indices must come after the free indices,
-              and put in order contravariant, covariant
-              [d0, -d0, d1,-d1,...]
+    g : permutation representing the tensor
 
-      msym  symmetry of the metric(s)
-            it can be an integer or a list;
-            in the first case it is the symmetry of the dummy index metric;
-            in the second case it is the list of the symmetries of the
-            index metric for each type
+    dummies : list representing the dummy indices
+      it can be a list of dummy indices of the same type
+      or a list of lists of dummy indices, one list for each
+      type of index;
+      the dummy indices must come after the free indices,
+      and put in order contravariant, covariant
+      [d0, -d0, d1,-d1,...]
+    msym :  symmetry of the metric(s)
+        it can be an integer or a list;
+        in the first case it is the symmetry of the dummy index metric;
+        in the second case it is the list of the symmetries of the
+        index metric for each type
+    v : list, (base_i, gens_i, n_i, sym_i) for tensors of type `i`
 
-      v     is a list of (base_i, gens_i, n_i, sym_i) for tensors of type `i`
-            base_i, gens_i BSGS for tensors of this type.
+    base_i, gens_i : BSGS for tensors of this type.
+        The BSGS should have minimal base under lexicographic ordering;
+        if not, an attempt is made do get the minimal BSGS;
+        in case of failure,
+        canonicalize_naive is used, which is much slower.
 
-            The BSGS should have minimal base under lexicographic ordering;
-            if not, an attempt is made do get the minimal BSGS;
-            in case of failure,
-            canonicalize_naive is used, which is much slower.
+    n_i :    number of tensors of type `i`.
 
-            n_i     number of tensors of type `i`.
+    sym_i :  symmetry under exchange of component tensors of type `i`.
 
-            sym_i   symmetry under exchange of component tensors of type `i`.
-
-      Both for msym and sym_i the cases are
+        Both for msym and sym_i the cases are
             * None  no symmetry
             * 0     commuting
             * 1     anticommuting
 
-    Return 0 if the tensor is zero, else return the array form of
+    Returns
+    =======
+
+    0 if the tensor is zero, else return the array form of
     the permutation representing the canonical form of the tensor.
 
     Algorithm
@@ -686,7 +697,7 @@ def canonicalize(g, dummies, msym, *v):
 
     g = [1,3,0,5,4,2,6,7]
 
-    T_c = 0
+    `T_c = 0`
 
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, canonicalize, bsgs_direct_product
     >>> from sympy.combinatorics import Permutation
@@ -701,7 +712,7 @@ def canonicalize(g, dummies, msym, *v):
 
     `T_c = -A^{d0 d1} * B_{d0}{}^{d2} * B_{d1 d2}`
 
-    `can = [0,2,1,4,3,5,7,6]`
+    can = [0,2,1,4,3,5,7,6]
 
     >>> t1 = (base2a, gens2a, 2, 1)
     >>> canonicalize(g, range(6), 0, t0, t1)
@@ -843,6 +854,7 @@ def perm_af_direct_product(gens1, gens2, signed=True):
 
     Examples
     ========
+
     >>> from sympy.combinatorics.tensor_can import perm_af_direct_product
     >>> gens1 = [[1,0,2,3], [0,1,3,2]]
     >>> gens2 = [[1,0]]
@@ -887,6 +899,7 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
 
     Examples
     ========
+
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import (get_symmetric_group_sgs, bsgs_direct_product)
     >>> Permutation.print_cyclic = True
@@ -917,6 +930,7 @@ def get_symmetric_group_sgs(n, sym=0):
 
     Examples
     ========
+
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import get_symmetric_group_sgs
     >>> Permutation.print_cyclic = True
@@ -958,6 +972,7 @@ def _is_minimal_bsgs(base, gens):
 
     Examples
     ========
+
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.combinatorics.tensor_can import riemann_bsgs, _is_minimal_bsgs
     >>> _is_minimal_bsgs(*riemann_bsgs)
