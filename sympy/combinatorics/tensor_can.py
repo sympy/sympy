@@ -635,7 +635,7 @@ def canonicalize(g, dummies, msym, *v):
             in case of failure,
             canonicalize_naive is used, which is much slower.
 
-            n_i     number ot tensors of type `i`.
+            n_i     number of tensors of type `i`.
 
             sym_i   symmetry under exchange of component tensors of type `i`.
 
