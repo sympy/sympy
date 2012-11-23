@@ -325,8 +325,8 @@ def implicit_multiplication_application(result, local_dict, global_dict):
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, implicit_multiplication_application)
     >>> parse_expr("10sin**2 x**2 + 3xyz + tan theta",
-    ... transformations=(standard_transformations,
-    ... implicit_multiplication_application))
+    ... transformations=(standard_transformations +
+    ... (implicit_multiplication_application,)))
     3*x*y*z + 10*sin(x**2)**2 + tan(theta)
 
     """
@@ -598,8 +598,8 @@ def parse_expr(s, local_dict=None, global_dict=None,
     <class 'sympy.core.numbers.Half'>
     >>> from sympy.parsing.sympy_parser import standard_transformations,\\
     ... implicit_multiplication_application
-    >>> transformations=(standard_transformations,
-    ... implicit_multiplication_application)
+    >>> transformations = (standard_transformations +
+    ...     (implicit_multiplication_application,))
     >>> parse_expr("2x", transformations=transformations)
     2*x
 
