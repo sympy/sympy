@@ -563,7 +563,8 @@ def eval_expr(code, hit, local_dict, global_dict):
         return expr
     return _clear(expr)
 
-def parse_expr(s, local_dict=None, transformations=(standard_transformations,)):
+def parse_expr(s, local_dict=None, global_dict=None,
+               transformations=(standard_transformations,)):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
@@ -575,27 +576,29 @@ def parse_expr(s, local_dict=None, transformations=(standard_transformations,)):
     local_dict : dict, optional
         A dictionary of local variables to use when parsing.
 
+    global_dict: dict, optional
+        A dictionary of global variables. By default, this is initialized
+        with `from sympy import *`; provide this parameter to override this
+        behavior (for instance, to parse ``"Q & S"``).
+
     transformations : tuple, optional
         A tuple of transformation functions used to modify the tokens of the
         parsed expression before evaluation. The default transformations
         convert numeric literals into their SymPy equivalents, convert
         undefined variables into SymPy symbols, and allow the use of standard
-        mathematical factorial notation (e.g. `x!`).
+        mathematical factorial notation (e.g. ``x!``).
 
 
     Examples
     ========
 
     >>> from sympy.parsing.sympy_parser import parse_expr
-
     >>> parse_expr("1/2")
     1/2
     >>> type(_)
     <class 'sympy.core.numbers.Half'>
-
-    >>> from sympy.parsing.sympy_parser import standard_transformations, \
-        implicit_multiplication_application
-
+    >>> from sympy.parsing.sympy_parser import standard_transformations,\\
+    ... implicit_multiplication_application
     >>> transformations=(standard_transformations,
     ... implicit_multiplication_application)
     >>> parse_expr("2x", transformations=transformations)
@@ -612,8 +615,9 @@ def parse_expr(s, local_dict=None, transformations=(standard_transformations,)):
     if local_dict is None:
         local_dict = {}
 
-    global_dict = {}
-    exec 'from sympy import *' in global_dict
+    if global_dict is None:
+        global_dict = {}
+        exec 'from sympy import *' in global_dict
 
     code, hit = stringify_expr(s, local_dict, global_dict, transformations)
     return eval_expr(code, hit, local_dict, global_dict)
