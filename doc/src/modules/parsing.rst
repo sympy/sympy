@@ -43,7 +43,7 @@ local_dict, global_dict`` and returns a list of transformed tokens. They can
 be used by passing a list of functions to :py:func:`parse_expr` and are
 applied in the order given.
 
-.. autofunction:: sympy.parsing.sympy_parser.standard_transformations
+.. autodata:: sympy.parsing.sympy_parser.standard_transformations
 
 .. autofunction:: sympy.parsing.sympy_parser.implicit_multiplication_application
 

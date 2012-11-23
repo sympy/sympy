@@ -505,6 +505,9 @@ def rationalize(tokens, local_dict, global_dict):
 
     return result
 
+#: Standard transformations for :func:`parse_expr`.
+#: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
+#: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
 standard_transformations = (auto_symbol, auto_number, factorial_notation)
 
 def stringify_expr(s, local_dict, global_dict, transformations):
