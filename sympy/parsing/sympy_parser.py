@@ -411,7 +411,7 @@ def factorial_notation(tokens, local_dict, global_dict):
 
 
 def convert_xor(tokens, local_dict, global_dict):
-    """Treats XOR, '^', as exponentiation, '**'."""
+    """Treats XOR, ``^``, as exponentiation, ``**``."""
     result = []
     for toknum, tokval in tokens:
         if toknum == OP:
@@ -487,7 +487,7 @@ def auto_number(tokens, local_dict, global_dict):
 
 
 def rationalize(tokens, local_dict, global_dict):
-    """Converts floats into ``Rational``s. Run AFTER ``auto_number``."""
+    """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
     result = []
     passed_float = False
     for toknum, tokval in tokens:
@@ -576,10 +576,10 @@ def parse_expr(s, local_dict=None, global_dict=None,
     local_dict : dict, optional
         A dictionary of local variables to use when parsing.
 
-    global_dict: dict, optional
+    global_dict : dict, optional
         A dictionary of global variables. By default, this is initialized
-        with `from sympy import *`; provide this parameter to override this
-        behavior (for instance, to parse ``"Q & S"``).
+        with ``from sympy import *``; provide this parameter to override
+        this behavior (for instance, to parse ``"Q & S"``).
 
     transformations : tuple, optional
         A tuple of transformation functions used to modify the tokens of the
