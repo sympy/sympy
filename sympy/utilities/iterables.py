@@ -1461,27 +1461,37 @@ def uniq(seq):
 
 def generate_bell(n):
     """
-    Generates the bell permutations, returning the permutations *in place*.
-
-    In a Bell permutation, a swap of adjacent elements occurs
-    each cycle and the swap location oscillates between the first
-    and last pairs in a periodic fashion.
+    Generates the bell permutations of length ``n``.
 
     Examples
     ========
 
     >>> from sympy.utilities.iterables import generate_bell
     >>> from sympy import zeros, Matrix, factorial, pprint
+    >>> from sympy.core.compatibility import permutations
+
+    This is the sort of permutation used in the ringing of physical bells,
+    and does not produce permutations in lexicographical order. Rather, the
+    permutations differ from each other by exactly one inversion, and the
+    position at which the swapping occurs varies periodically in a simple
+    fashion. Consider the first few permutations of 4 elements generated
+    by ``permutations`` and ``generate_bell``:
+
+    >>> list(permutations(range(4)))[:5]
+    [(0, 1, 2, 3), (0, 1, 3, 2), (0, 2, 1, 3), (0, 2, 3, 1), (0, 3, 1, 2)]
+    >>> list(generate_bell(4))[:5]
+    [(0, 1, 2, 3), (1, 0, 2, 3), (1, 2, 0, 3), (1, 2, 3, 0), (2, 1, 3, 0)]
+
+    Notice how the 2nd and 3rd lexicographical permutations have 3 elements
+    out of place whereas each bell permutations always has only two
+    elements out of place relative to the previous permutation.
+
+    How the position of inversion varies across the elements can be seen
+    by tracing out where the 0 appears in the permutations:
+
     >>> m = zeros(4, 24)
     >>> for i, p in enumerate(generate_bell(4)):
     ...     m[:, i] = Matrix(list(p))
-
-    Tracing out where the 0 appears in the permutation allow one to see the
-    gentle changing of element order during each cycle. Although the shape
-    seen here is suggestive of stacked bells, the original algorithm was
-    used by bell ringers to cycle through all permutations of bells while
-    ringing [wikipedia].
-
     >>> m.print_nonzero('X')
     [ XXXXXX  XXXXXX  XXXXXX ]
     [X XXXX XX XXXX XX XXXX X]
@@ -1491,6 +1501,7 @@ def generate_bell(n):
     References
     ==========
 
+    * http://en.wikipedia.org/wiki/Method_ringing
     * http://stackoverflow.com/questions/4856615/recursive-permutation/4857018
     * http://programminggeeks.com/bell-algorithm-for-permutation/
     * http://en.wikipedia.org/wiki/
@@ -1503,7 +1514,7 @@ def generate_bell(n):
     pos = dir = 1
     do = factorial(n)
     p = range(n)
-    yield p
+    yield tuple(p)
     do -= 1
     while do:
         if pos >= n:
@@ -1515,7 +1526,7 @@ def generate_bell(n):
         else:
             p[pos - 1], p[pos] = p[pos], p[pos - 1]
         pos += dir
-        yield p
+        yield tuple(p)
         do -= 1
 
 
