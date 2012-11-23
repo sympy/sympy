@@ -723,7 +723,7 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
 
     Uses subs for computation. This is slow but almost always works.
     """
-    if condition:
+    if condition is not None:
         ps = pspace(Tuple(expr, condition))
     else:
         ps = pspace(expr)
@@ -733,7 +733,7 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
     while count < numsamples:
         d = ps.sample()  # a dictionary that maps RVs to values
 
-        if condition:  # Check that these values satisfy the condition
+        if condition is not None:  # Check that these values satisfy the condition
             gd = condition.subs(d)
             if not isinstance(gd, bool):
                 raise ValueError("Conditions must not contain free symbols")
