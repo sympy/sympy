@@ -1,8 +1,8 @@
-from matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
-from sympy.core import Mul, Add, Basic
-from sympy import sympify
+from sympy.core import Mul, Add, Basic, sympify
+from sympy.functions import transpose, adjoint
 from sympy.rules import (rm_id, unpack, condition, debug, flatten, exhaust,
         do_one, new)
+from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
 
 class MatMul(MatrixExpr):
     """A Product of Matrix Expressions
@@ -69,12 +69,10 @@ class MatMul(MatrixExpr):
         return coeff, Basic.__new__(MatMul, *matrices)
 
     def _eval_transpose(self):
-        from transpose import Transpose
-        return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
+        return MatMul(*[transpose(arg) for arg in self.args[::-1]])
 
     def _eval_adjoint(self):
-        from adjoint import Adjoint
-        return MatMul(*[Adjoint(arg) for arg in self.args[::-1]])
+        return MatMul(*[adjoint(arg) for arg in self.args[::-1]])
 
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()

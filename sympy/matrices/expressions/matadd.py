@@ -1,7 +1,8 @@
-from matexpr import MatrixExpr, ShapeError, ZeroMatrix
-from sympy import Add, Basic, sympify
+from sympy.core import Add, Basic, sympify
+from sympy.functions import transpose, adjoint
 from sympy.rules import (rm_id, unpack, flatten, sort, condition, debug,
         exhaust, do_one, glom)
+from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
 
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
@@ -42,12 +43,10 @@ class MatAdd(MatrixExpr):
         return Add(*[arg._entry(i, j) for arg in self.args])
 
     def _eval_transpose(self):
-        from transpose import Transpose
-        return MatAdd(*[Transpose(arg) for arg in self.args])
+        return MatAdd(*[transpose(arg) for arg in self.args])
 
     def _eval_adjoint(self):
-        from adjoint import Adjoint
-        return MatAdd(*[Adjoint(arg) for arg in self.args])
+        return MatAdd(*[adjoint(arg) for arg in self.args])
 
     def _eval_trace(self):
         from trace import Trace

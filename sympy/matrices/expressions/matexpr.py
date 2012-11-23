@@ -3,6 +3,7 @@ from functools import wraps
 from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic
 from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import SympifyError
+from sympy.functions import transpose, conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
 
@@ -127,7 +128,8 @@ class MatrixExpr(Basic):
         return self.rows == self.cols
 
     def _eval_transpose(self):
-        raise NotImplementedError()
+        from sympy.matrices.expressions.transpose import Transpose
+        return Transpose(self)
 
     def _eval_inverse(self):
         raise NotImplementedError()
@@ -142,25 +144,21 @@ class MatrixExpr(Basic):
             return self.__class__(*[simplify(x, **kwargs) for x in self.args])
 
     def _eval_adjoint(self):
-        return self.T.conjugate()
+        from sympy.matrices.expressions.adjoint import Adjoint
+        return Adjoint(self)
 
     def _entry(self, i, j):
         raise NotImplementedError(
             "Indexing not implemented for %s" % self.__class__.__name__)
 
     def adjoint(self):
-        raise NotImplementedError(
-            "adjoint not implemented for %s" % self.__class__.__name__)
+        return adjoint(self)
 
     def conjugate(self):
-        raise NotImplementedError(
-            "conjugate not implemented for %s" % self.__class__.__name__)
+        return conjugate(self)
 
     def transpose(self):
-        try:
-            return self._eval_transpose()
-        except (AttributeError, NotImplementedError):
-            return Basic.__new__(Transpose, self)
+        return transpose(self)
 
     T = property(transpose, None, None, 'Matrix transposition.')
 
@@ -318,6 +316,13 @@ class MatrixSymbol(MatrixExpr):
     @property
     def free_symbols(self):
         return set((self,))
+
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            return type(self)(self.name, self.args[1].doit(**hints),
+                    self.args[2].doit(**hints))
+        else:
+            return self
 
     def _eval_simplify(self, **kwargs):
         return self

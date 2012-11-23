@@ -1,4 +1,6 @@
-from sympy import cos, Lambda, S, simplify, sin, sqrt, symbols, Tuple
+from sympy.core import Lambda, S, symbols, Tuple
+from sympy.functions import transpose, sin, cos, sqrt
+from sympy.simplify import simplify
 from sympy.matrices import (
     BlockDiagMatrix, BlockMatrix, block_collapse, eye, FunctionMatrix,
     Identity, ImmutableMatrix, Inverse, MatAdd, MatMul, MatPow, Matrix,
@@ -20,15 +22,15 @@ def test_transpose():
 
     assert Transpose(A).shape == (m, n)
     assert Transpose(A*B).shape == (l, n)
-    assert Transpose(Transpose(A)) == A
+    assert transpose(Transpose(A)) == A
 
-    assert Transpose(eye(3)) == eye(3)
+    assert transpose(eye(3)) == eye(3)
 
-    assert Transpose(S(5)) == S(5)
+    assert transpose(S(5)) == S(5)
 
-    assert Transpose(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 3], [2, 4]])
+    assert transpose(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 3], [2, 4]])
 
-    assert Transpose(Trace(Sq)) == Trace(Sq)
+    assert transpose(Trace(Sq)) == Trace(Sq)
 
 
 def test_inverse():
@@ -119,9 +121,9 @@ def test_BlockMatrix():
     assert block_collapse(E.T*A*F) == E.T*A*F
 
     assert X.shape == (l + n, k + m)
-    assert (block_collapse(Transpose(X)) ==
+    assert (block_collapse(transpose(X)) ==
             BlockMatrix(Matrix([[A.T, C.T], [B.T, D.T]])))
-    assert Transpose(X).shape == X.shape[::-1]
+    assert transpose(X).shape == X.shape[::-1]
     assert X.blockshape == (2, 2)
 
     # Test that BlockMatrices and MatrixSymbols can still mix
@@ -140,14 +142,14 @@ def test_BlockMatrix():
     assert (X*Y).shape == (l + n, 1)
     assert block_collapse(X*Y).blocks[0, 0] == A*E + B*F
     assert block_collapse(X*Y).blocks[1, 0] == C*E + D*F
-    assert (block_collapse(Transpose(block_collapse(Transpose(X*Y)))) ==
+    assert (block_collapse(transpose(block_collapse(transpose(X*Y)))) ==
             block_collapse(X*Y))
 
     # block_collapse passes down into container objects, transposes, and inverse
     assert block_collapse(Tuple(X*Y, 2*X)) == (
         block_collapse(X*Y), block_collapse(2*X))
-    assert (block_collapse(Transpose(X*Y)) ==
-            block_collapse(Transpose(block_collapse(X*Y))))
+    assert (block_collapse(transpose(X*Y)) ==
+            block_collapse(transpose(block_collapse(X*Y))))
 
     Ab = BlockMatrix([[A]])
     Z = MatrixSymbol('Z', *A.shape)
@@ -236,7 +238,7 @@ def test_ZeroMatrix():
     assert Z*A.T == ZeroMatrix(n, n)
     assert A - A == ZeroMatrix(*A.shape)
 
-    assert Transpose(Z) == ZeroMatrix(m, n)
+    assert transpose(Z) == ZeroMatrix(m, n)
     assert Z.conjugate() == Z
 
 
@@ -248,7 +250,7 @@ def test_Identity():
     assert A*Im == A
     assert In*A == A
 
-    assert Transpose(In) == In
+    assert transpose(In) == In
     assert Inverse(In) == In
     assert In.conjugate() == In
 
@@ -314,6 +316,7 @@ def test_MatrixSymbol():
     X = MatrixSymbol('X', n, m)
     assert X.shape == (n, m)
     raises(TypeError, lambda: MatrixSymbol('X', n, m)(t))  # issue 2756
+    assert X.doit() == X
 
 
 def test_dense_conversion():

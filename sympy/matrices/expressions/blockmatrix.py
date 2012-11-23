@@ -1,13 +1,15 @@
-from matexpr import MatrixExpr, ZeroMatrix, Identity
-from matmul import MatMul
-from matadd import MatAdd
-from matpow import MatPow
-from transpose import Transpose
-from trace import Trace
-from inverse import Inverse
-from sympy.matrices import Matrix, eye
-from sympy import Tuple, Basic, Add
+from sympy.core import Tuple, Basic, Add
 from sympy.rules import typed, canon, debug, do_one, unpack
+from sympy.functions import transpose
+
+from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.matpow import MatPow
+from sympy.matrices.expressions.transpose import Transpose
+from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices import Matrix, eye
 
 
 class BlockMatrix(MatrixExpr):
@@ -96,7 +98,7 @@ class BlockMatrix(MatrixExpr):
 
     def _eval_transpose(self):
         # Flip all the individual matrices
-        matrices = [Transpose(matrix) for matrix in self.blocks]
+        matrices = [transpose(matrix) for matrix in self.blocks]
         # Make a copy
         M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
         # Transpose the block structure

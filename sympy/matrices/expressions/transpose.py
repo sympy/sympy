@@ -1,31 +1,41 @@
-from matexpr import MatrixExpr
-from sympy import Basic
+from sympy.core import Basic
+from sympy.functions import transpose
 
+from sympy.matrices.expressions.matexpr import MatrixExpr
 
 class Transpose(MatrixExpr):
-    """Matrix Transpose
+    """
+    The transpose of a matrix expression.
 
-    Represents the transpose of a matrix expression.
+    This is a symbolic object that simply stores its argument without
+    evaluating it. To actually compute the transpose, use the ``transpose()``
+    function, or the ``.T`` attribute of matrices.
 
-    Use .T as shorthand
+    Examples
+    ========
 
-    >>> from sympy import MatrixSymbol, Transpose
+    >>> from sympy.matrices import MatrixSymbol, Transpose
+    >>> from sympy.functions import transpose
     >>> A = MatrixSymbol('A', 3, 5)
     >>> B = MatrixSymbol('B', 5, 3)
     >>> Transpose(A)
     A'
-    >>> A.T
-    A'
+    >>> A.T == transpose(A) == Transpose(A)
+    True
     >>> Transpose(A*B)
+    (A*B)'
+    >>> transpose(A*B)
     B'*A'
+
     """
     is_Transpose = True
 
-    def __new__(cls, mat):
-        try:
-            return mat.transpose()
-        except (AttributeError, NotImplementedError):
-            return Basic.__new__(cls, mat)
+    def doit(self, **hints):
+        arg = self.arg
+        if hints.get('deep', True) and isinstance(arg, Basic):
+            return transpose(arg.doit(**hints))
+        else:
+            return transpose(self.arg)
 
     @property
     def arg(self):
