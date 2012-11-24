@@ -2,7 +2,9 @@ from sympy.core import Mul, Add, Basic, sympify
 from sympy.functions import transpose, adjoint
 from sympy.rules import (rm_id, unpack, condition, debug, flatten, exhaust,
         do_one, new)
-from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
+from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
+        Identity, ZeroMatrix)
+
 
 class MatMul(MatrixExpr):
     """A Product of Matrix Expressions
@@ -83,11 +85,13 @@ class MatMul(MatrixExpr):
             raise NotImplementedError("Can't simplify any further")
 
     def _eval_inverse(self):
-        from inverse import Inverse
         try:
-            return MatMul(*[Inverse(arg) for arg in self.args[::-1]])
+            return MatMul(*[
+                arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
+                    for arg in self.args[::-1]])
         except ShapeError:
-            raise NotImplementedError("Can not decompose this Inverse")
+            from sympy.matrices.expressions.inverse import Inverse
+            return Inverse(self)
 
     def canonicalize(self):
         return canonicalize(self)
@@ -120,7 +124,7 @@ def xxinv(mul):
     factor, matrices = mul.as_coeff_matrices()
     for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
         try:
-            if X.is_square and Y.is_square and X == Inverse(Y):
+            if X.is_square and Y.is_square and X == Y.inverse():
                 I = Identity(X.rows)
                 return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
         except ValueError:  # Y might not be invertible

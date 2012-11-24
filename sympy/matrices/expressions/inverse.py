@@ -5,29 +5,34 @@ from sympy.matrices.expressions.matpow import MatPow
 
 
 class Inverse(MatPow):
-    """Matrix Inverse
+    """
+    The multiplicative inverse of a matrix expression
 
-    Represents the Inverse of a matrix expression
+    This is a symbolic object that simply stores its argument without
+    evaluating it. To actually compute the inverse, use the ``.inverse()``
+    method of matrices.
 
-    Use .I as shorthand
+    Examples
+    ========
 
     >>> from sympy import MatrixSymbol, Inverse
     >>> A = MatrixSymbol('A', 3, 3)
     >>> B = MatrixSymbol('B', 3, 3)
     >>> Inverse(A)
     A^-1
-    >>> A.I
-    A^-1
-    >>> Inverse(A*B)
+    >>> A.inverse() == Inverse(A)
+    True
+    >>> (A*B).inverse()
     B^-1*A^-1
+    >>> (A*B).inverse() == Inverse(A*B)
+    False
 
     """
     is_Inverse = True
 
     def __new__(cls, mat):
         mat = _sympify(mat)
-        if not mat.is_Matrix:
-            return mat**(-1)
+        assert mat.is_Matrix
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s" % mat)
         return MatPow.__new__(cls, mat, -1)

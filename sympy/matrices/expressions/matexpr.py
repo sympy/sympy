@@ -132,7 +132,8 @@ class MatrixExpr(Basic):
         return Transpose(self)
 
     def _eval_inverse(self):
-        raise NotImplementedError()
+        from sympy.matrices.expressions.inverse import Inverse
+        return Inverse(self)
 
     def _eval_power(self, exp):
         return MatPow(self, exp)
@@ -162,9 +163,12 @@ class MatrixExpr(Basic):
 
     T = property(transpose, None, None, 'Matrix transposition.')
 
+    def inverse(self):
+        return self._eval_inverse()
+
     @property
     def I(self):
-        return Inverse(self)
+        return self.inverse()
 
     def valid_index(self, i, j):
         def is_valid(idx):

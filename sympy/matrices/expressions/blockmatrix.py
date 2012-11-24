@@ -136,22 +136,22 @@ class BlockMatrix(MatrixExpr):
     def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
         if self.blockshape == (1, 1):
-            mat = Matrix(1, 1, (Inverse(self.blocks[0]), ))
+            mat = Matrix(1, 1, (self.blocks[0].inverse(),))
             return BlockMatrix(mat)
         # Inverse of a two by two block matrix is known
         elif expand and self.blockshape == (2, 2):
             # Cite: The Matrix Cookbook Section 9.1.3
             A11, A12, A21, A22 = (self.blocks[0, 0], self.blocks[0, 1],
                     self.blocks[1, 0], self.blocks[1, 1])
-            C1 = A11 - A12*Inverse(A22)*A21
-            C2 = A22 - A21*Inverse(A11)*A12
-            mat = Matrix([[Inverse(C1), Inverse(-A11)*A12*Inverse(C2)],
-                [-Inverse(C2)*A21*Inverse(A11), Inverse(C2)]])
+            C1 = A11 - A12*A22.I*A21
+            C2 = A22 - A21*A11.I*A12
+            mat = Matrix([[C1.I, (-A11).I*A12*C2.I],
+                [-C2.I*A21*A11.I, C2.I]])
             return BlockMatrix(mat)
         else:
-            raise NotImplementedError()
+            return Inverse(self)
 
-    def inv(self, expand=False):
+    def inverse(self, expand=False):
         """Return inverse of matrix.
 
         Examples
@@ -160,7 +160,7 @@ class BlockMatrix(MatrixExpr):
         >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
         >>> from sympy.abc import l, m, n
         >>> X = MatrixSymbol('X', n, n)
-        >>> BlockMatrix([[X]]).inv()
+        >>> BlockMatrix([[X]]).inverse()
         [X^-1]
 
         >>> Y = MatrixSymbol('Y', m ,m)
@@ -169,16 +169,12 @@ class BlockMatrix(MatrixExpr):
         >>> B
         [X, Z]
         [0, Y]
-        >>> B.inv(expand=True)
+        >>> B.inverse(expand=True)
         [X^-1, (-1)*X^-1*Z*Y^-1]
         [   0,             Y^-1]
 
         """
         return self._eval_inverse(expand)
-
-    def inverse(self):
-        # XXX document how this is different than inv
-        return Inverse(self)
 
     def _entry(self, i, j):
         # Find row entry
@@ -243,8 +239,8 @@ class BlockDiagMatrix(BlockMatrix):
     def diag(self):
         return [self.blocks[i, i] for i in range(self.blocks.rows)]
 
-    def _eval_inverse(self):
-        return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
+    def _eval_inverse(self, expand='ignored'):
+        return BlockDiagMatrix(*[mat.inverse() for mat in self.diag])
 
     def _blockmul(self, other):
         if  (other.is_Matrix and other.is_BlockMatrix and

@@ -35,23 +35,17 @@ def test_transpose():
 
 def test_inverse():
     raises(ShapeError, lambda: Inverse(A))
-    assert Inverse(Inverse(C)) == C
+    assert C.inverse().inverse() == C
 
-    assert Inverse(C)*C == Identity(C.rows)
+    assert C.inverse()*C == Identity(C.rows)
 
-    assert Inverse(eye(3)) == eye(3)
-
-    assert Inverse(S(3)) == S(1)/3
-
-    assert Inverse(Identity(n)) == Identity(n)
+    assert Identity(n).inverse() == Identity(n)
+    assert (3*Identity(n)).inverse() == Identity(n)/3
 
     # Simplifies Muls if possible (i.e. submatrices are square)
-    assert Inverse(C*D) == D.I*C.I
+    assert (C*D).inverse() == D.I*C.I
     # But still works when not possible
-    assert Inverse(A*E).is_Inverse
-
-    # We play nice with traditional explicit matrices
-    assert Inverse(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 2], [3, 4]]).inv()
+    assert isinstance((A*E).inverse(), Inverse)
 
 
 def test_trace():
@@ -184,12 +178,12 @@ def test_squareBlockMatrix():
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
 
     assert Y.I.blocks[0, 0] == A.I
-    assert Inverse(X, expand=True) == BlockMatrix([
+    assert X.inverse(expand=True) == BlockMatrix([
         [(-B*D.I*C + A).I, -A.I*B*(D + -C*A.I*B).I],
         [-(D - C*A.I*B).I*C*A.I, (D - C*A.I*B).I]])
 
-    assert Inverse(X, expand=False).is_Inverse
-    assert X.inverse().is_Inverse
+    assert isinstance(X.inverse(expand=False), Inverse)
+    assert isinstance(X.inverse(), Inverse)
 
     assert not X.is_Identity
 
@@ -251,7 +245,7 @@ def test_Identity():
     assert In*A == A
 
     assert transpose(In) == In
-    assert Inverse(In) == In
+    assert In.inverse() == In
     assert In.conjugate() == In
 
 
