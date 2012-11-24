@@ -8,7 +8,7 @@ class MatPow(MatrixExpr):
     def __new__(cls, b, e):
         assert b.is_Matrix
         e = _sympify(e)
-        if e is S.One or b.is_ZeroMatrix:
+        if e is S.One:
             return b
         elif not b.is_square:
             raise ShapeError("Power of non-square matrix %s" % b)

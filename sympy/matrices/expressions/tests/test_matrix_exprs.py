@@ -235,6 +235,12 @@ def test_ZeroMatrix():
     assert transpose(Z) == ZeroMatrix(m, n)
     assert Z.conjugate() == Z
 
+    assert ZeroMatrix(n, n)**0 == Identity(n)
+    with raises(ShapeError):
+        Z**0
+    with raises(ShapeError):
+        Z**2
+
 
 def test_Identity():
     A = MatrixSymbol('A', n, m)

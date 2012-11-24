@@ -381,6 +381,15 @@ class ZeroMatrix(MatrixSymbol):
     def __new__(cls, n, m):
         return MatrixSymbol.__new__(cls, "0", n, m)
 
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rpow__')
+    def __pow__(self, other):
+        if other != 1 and not self.is_square:
+            raise ShapeError("Power of non-square matrix %s" % self)
+        if other == 0:
+            return Identity(self.rows)
+        return self
+
     def _eval_transpose(self):
         return ZeroMatrix(self.cols, self.rows)
 
