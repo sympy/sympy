@@ -38,7 +38,6 @@ class BlockMatrix(MatrixExpr):
 
     """
     is_BlockMatrix = True
-    is_BlockDiagMatrix = False
 
     def __new__(cls, *args):
         from sympy.matrices.immutable import ImmutableMatrix
@@ -226,8 +225,6 @@ class BlockDiagMatrix(BlockMatrix):
     [0, Y]
 
     """
-    is_BlockDiagMatrix = True
-
     def __new__(cls, *mats):
         from sympy.matrices.immutable import ImmutableMatrix
         data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
@@ -243,8 +240,7 @@ class BlockDiagMatrix(BlockMatrix):
         return BlockDiagMatrix(*[mat.inverse() for mat in self.diag])
 
     def _blockmul(self, other):
-        if  (other.is_Matrix and other.is_BlockMatrix and
-                other.is_BlockDiagMatrix and
+        if (isinstance(other, BlockDiagMatrix) and
                 self.blockshape[1] == other.blockshape[0] and
                 self.colblocksizes == other.rowblocksizes):
             return BlockDiagMatrix(*[a*b for a, b in zip(self.diag, other.diag)])
@@ -252,9 +248,7 @@ class BlockDiagMatrix(BlockMatrix):
             return BlockMatrix._blockmul(self, other)
 
     def _blockadd(self, other):
-
-        if  (other.is_Matrix and other.is_BlockMatrix and
-                other.is_BlockDiagMatrix and
+        if (isinstance(other, BlockDiagMatrix) and
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
