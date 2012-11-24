@@ -562,8 +562,8 @@ def eval_expr(code, hit, kern, local_dict, global_dict):
         return expr
     return _clear(expr)
 
-def parse_expr(s, local_dict=None, global_dict=None,
-               transformations=standard_transformations):
+def parse_expr(s, local_dict=None, transformations=standard_transformations,
+               global_dict=None):
     """Converts the string ``s`` to a SymPy expression, in ``local_dict``
 
     Parameters
