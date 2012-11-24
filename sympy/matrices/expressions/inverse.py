@@ -1,5 +1,7 @@
-from matexpr import ShapeError
-from matpow import MatPow
+from sympy.core.sympify import _sympify
+
+from sympy.matrices.expressions.matexpr import ShapeError
+from sympy.matrices.expressions.matpow import MatPow
 
 
 class Inverse(MatPow):
@@ -22,18 +24,13 @@ class Inverse(MatPow):
     """
     is_Inverse = True
 
-    def __new__(cls, mat, **kwargs):
-
+    def __new__(cls, mat):
+        mat = _sympify(mat)
         if not mat.is_Matrix:
             return mat**(-1)
-
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s" % mat)
-
-        try:
-            return mat._eval_inverse(**kwargs)
-        except (AttributeError, NotImplementedError):
-            return MatPow.__new__(cls, mat, -1)
+        return MatPow.__new__(cls, mat, -1)
 
     @property
     def arg(self):
@@ -45,3 +42,9 @@ class Inverse(MatPow):
 
     def _eval_inverse(self):
         return self.arg
+
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            return self.arg.doit(**hints).inverse()
+        else:
+            return self.arg.inverse()
