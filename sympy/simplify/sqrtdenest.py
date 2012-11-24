@@ -73,7 +73,7 @@ def is_algebraic(p):
         return False
 
 
-def subsets(n):
+def _subsets(n):
     """
     Returns all possible subsets of the set (0, 1, ..., n-1) except the
     empty set, listed in reversed lexicographical order according to binary
@@ -82,8 +82,8 @@ def subsets(n):
     Examples
     ========
 
-    >>> from sympy.simplify.sqrtdenest import subsets
-    >>> subsets(2)
+    >>> from sympy.simplify.sqrtdenest import _subsets
+    >>> _subsets(2)
     [[1, 0], [0, 1], [1, 1]]
 
     """
@@ -95,7 +95,7 @@ def subsets(n):
         a = [[1, 0, 0], [0, 1, 0], [1, 1, 0],
              [0, 0, 1], [1, 0, 1], [0, 1, 1], [1, 1, 1]]
     else:
-        b = subsets(n - 1)
+        b = _subsets(n - 1)
         a0 = [x + [0] for x in b]
         a1 = [x + [1] for x in b]
         a = a0 + [[0]*(n - 1) + [1]] + a1
@@ -537,7 +537,7 @@ def _denester(nested, av0, h, max_depth_level):
         return None, None
     if (av0[0] is None and
             all(n.is_Number for n in nested)):  # no arguments are nested
-        for f in subsets(len(nested)):  # test subset 'f' of nested
+        for f in _subsets(len(nested)):  # test subset 'f' of nested
             p = _mexpand(Mul(*[nested[i] for i in range(len(f)) if f[i]]))
             if f.count(1) > 1 and f[-1]:
                 p = -p

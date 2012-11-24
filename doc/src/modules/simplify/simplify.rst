@@ -91,10 +91,6 @@ sqrtdenest
 ^^^^^^^^^^
 .. autofunction:: sqrtdenest
 
-subsets
-^^^^^^^
-.. autofunction:: subsets
-
 Common Subexpresion Elimination
 -------------------------------
 .. module:: sympy.simplify.cse_main
