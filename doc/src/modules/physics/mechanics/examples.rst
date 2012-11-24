@@ -80,15 +80,12 @@ we form the body list. ::
   >>> BodyList = [BodyD]
 
 Finally we form the equations of motion, using the same steps we did before.
-Specify inertial frame, supply generalized speeds, supply kinematic
-differential equation dictionary, compute Fr from the force list and Fr* from
-the body list, compute the mass matrix and forcing terms, then solve for the u
-dots (time derivatives of the generalized speeds). ::
+Specify inertial frame, supply generalized coordinates and speeds, supply
+kinematic differential equation dictionary, compute Fr from the force list and
+Fr* from the body list, compute the mass matrix and forcing terms, then solve
+for the u dots (time derivatives of the generalized speeds). ::
 
-  >>> KM = Kane(N)
-  >>> KM.coords([q1, q2, q3])
-  >>> KM.speeds([u1, u2, u3])
-  >>> KM.kindiffeq(kd)
+  >>> KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd)
   >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
   >>> MM = KM.mass_matrix
   >>> forcing = KM.forcing
@@ -155,10 +152,8 @@ represent the constraint forces in those directions. ::
   >>> BodyD = RigidBody('BodyD', Dmc, R, m, (I, Dmc))
   >>> BodyList = [BodyD]
 
-  >>> KM = Kane(N)
-  >>> KM.coords([q1, q2, q3])
-  >>> KM.speeds([u1, u2, u3], u_auxiliary=[u4, u5, u6])
-  >>> KM.kindiffeq(kd)
+  >>> KM = KanesMethod(N, q_ind=[q1, q2, q3], u_ind=[u1, u2, u3], kd_eqs=kd,
+  ...           u_auxiliary=[u4, u5, u6])
   >>> (fr, frstar) = KM.kanes_equations(ForceList, BodyList)
   >>> MM = KM.mass_matrix
   >>> forcing = KM.forcing
@@ -172,9 +167,9 @@ represent the constraint forces in those directions. ::
   [                        (-2*u2 + u3*tan(q2))*u1]
   >>> from sympy import signsimp, factor_terms
   >>> mprint(KM.auxiliary_eqs.applyfunc(lambda w: factor_terms(signsimp(w))))
-  [                                                   -m*r*(u1*u3 + u2') + f1]
-  [      -m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) + f2]
-  [-g*m + m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) + f3]
+  [                                                   m*r*(u1*u3 + u2') - f1]
+  [      m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) - f2]
+  [g*m - m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) - f3]
 
 The Bicycle
 ===========
@@ -350,23 +345,23 @@ dynamic equations, but instead is necessary for the linearization process. ::
 The force list; each body has the appropriate gravitational force applied at
 its center of mass. ::
 
-  >>> FL = [(Frame_mc, -mframe * g * Y.z), (Fork_mc, -mfork * g * Y.z), (WF_mc, -mwf * g * Y.z), (WR_mc, -mwr * g * Y.z)]
+  >>> FL = [(Frame_mc, -mframe * g * Y.z), (Fork_mc, -mfork * g * Y.z),
+  ...       (WF_mc, -mwf * g * Y.z), (WR_mc, -mwr * g * Y.z)]
   >>> BL = [BodyFrame, BodyFork, BodyWR, BodyWF]
 
 The N frame is the inertial frame, coordinates are supplied in the order of
-independent, dependent coordinates, as are the speeds. The kinematic
-differential equation are also entered here.  Here the dependent speeds are
-specified, in the same order they were provided in earlier, along with the
-non-holonomic constraints.  The dependent coordinate is also provided, with the
-holonomic constraint.  Again, this is only provided for the linearization
-process. ::
+independent, dependent coordinates. The kinematic differential equations are
+also entered here. Here the independent speeds are specified, followed by the
+dependent speeds, along with the non-holonomic constraints. The dependent
+coordinate is also provided, with the holonomic constraint. Again, this is only
+comes into play in the linearization process, but is necessary for the
+linearization to correctly work. ::
 
-  >>> KM = Kane(N)
-  >>> KM.coords([q1, q2, q5], qdep=[q4], coneqs=conlist_coord)
-  >>> print('Before Handling of Dependent Speeds.')
-  Before Handling of Dependent Speeds.
-  >>> KM.speeds([u2, u3, u5], udep=[u1, u4, u6], coneqs=conlist_speed)
-  >>> KM.kindiffeq(kd)
+  >>> KM = KanesMethod(N, q_ind=[q1, q2, q3],
+  ...           q_dependent=[q4], configuration_constraints=conlist_coord,
+  ...           u_ind=[u2, u3, u5],
+  ...           u_dependent=[u1, u4, u6], velocity_constraints=conlist_speed,
+  ...           kd_eqs=kd)
   >>> print('Before Forming Generalized Active and Inertia Forces, Fr and Fr*')
   Before Forming Generalized Active and Inertia Forces, Fr and Fr*
   >>> (fr, frstar) = KM.kanes_equations(FL, BL)
