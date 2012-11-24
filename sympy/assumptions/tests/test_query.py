@@ -1351,6 +1351,11 @@ def test_imaginary():
     assert ask(Q.imaginary(x**y), Q.positive(x) & Q.real(y)) is False
     assert ask(Q.imaginary(x**y), Q.negative(x) & Q.real(y)) is True
     assert ask(Q.imaginary(x**y), Q.integer(x) & Q.imaginary(y)) is None
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is True
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is True
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.integer(y/z)) is False
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.positive(x)) is False
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is True
 
 
 def test_infinitesimal():
@@ -1578,6 +1583,11 @@ def test_real():
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.integer(y)) is None
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.odd(y)) is False
     assert ask(Q.real(x**y), Q.imaginary(x) & Q.even(y)) is True
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.rational(y/z) & Q.even(z) & Q.positive(x)) is True
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is False
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.integer(y/z)) is True
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.positive(x)) is True
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is False
 
     # trigonometric functions
     assert ask(Q.real(sin(x))) is None
