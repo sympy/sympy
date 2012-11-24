@@ -85,7 +85,7 @@ htmli18n: $(MOFILES)
 	mkdir -p _build/i18n/
 	mkdir -p _build/html/tutorial
 	for l in $(LANGUAGES); do \
-		$(SPHINXBUILD) -b html -D language=$$l -D master_doc=tutorial/tutorial \
+		$(SPHINXBUILD) $(SPHINXOPTS) -b html -D language=$$l -D master_doc=tutorial/tutorial \
 			-D source_suffix=.en.rst -d _build/doctrees-$$l src _build/i18n/$$l ; \
 		cp _build/i18n/$$l/tutorial/tutorial.html _build/html/tutorial/tutorial.$$l.html ; \
 	done

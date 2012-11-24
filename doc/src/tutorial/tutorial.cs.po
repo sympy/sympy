@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SymPy 0.7.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-19 14:52\n"
+"POT-Creation-Date: 2012-11-23 15:11\n"
 "PO-Revision-Date: 2011-12-27 11:52-0800\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -46,8 +46,8 @@ msgid ""
 msgstr ""
 "Tento tutoriál je úvodem do SymPy a zároveň ukazuje, co SymPy umí. Přečtěte "
 "si ho, aby jste zjistili, jak pro vás může být SymPy užitečná a pokud budete "
-"chtít vědět víc, přečtěte si :ref:`Uživatelskou příručku SymPy <guide>`, :"
-"ref:`Přehled modulů SymPy <module-docs>`. nebo přímo `zdrojové kódy <https://"
+"chtít vědět víc, přečtěte si `Uživatelskou příručku SymPy <../guide.html>`_, "
+"`Přehled modulů SymPy <../modules/index.html>`_. nebo přímo `zdrojové kódy <https://"
 "github.com/sympy/sympy/>`_"
 
 #: tutorial.en.rst:26
@@ -142,65 +142,65 @@ msgid ""
 "numbers, especially in division, since you may create a Python number, not a "
 "SymPy number. A ratio of two Python ints may create a float -- the \"true "
 "division\" standard of Python 3 and the default behavior of ``isympy`` which "
-"imports division from __future__::"
+"imports division from __future__:"
 msgstr ""
 "Postupujte opatrně, když pracujete s Inty a Floaty v Pythonu, obzvlášť při "
 "dělení, jelikož můžete vytvořit číslo Pythonu místo SymPy. Podíl dvou Intů v "
 "Pythonu může vytvořit Float -- \"pravé dělení\", standard Pythonu 3 a "
-"defaultní chování ``isympy``, které vkládá dělení z __future__::"
+"defaultní chování ``isympy``, které vkládá dělení z __future__:"
 
-#: tutorial.en.rst:157
+#: tutorial.en.rst:159
 msgid ""
 "But in earlier Python versions where division has not been imported, a "
-"truncated int will result::"
+"truncated int will result:"
 msgstr ""
 "Ale v dřívějších verzích Pythonu, kde nebylo dělení zakomponováno, vyšel "
-"oříznutý int::"
+"oříznutý int:"
 
-#: tutorial.en.rst:163
+#: tutorial.en.rst:167
 msgid ""
 "In both cases, however, you are not dealing with a SymPy Number because "
 "Python created its own number. Most of the time you will probably be working "
 "with Rational numbers, so make sure to use Rational to get the SymPy result. "
-"One might find it convenient to equate ``R`` and Rational::"
+"One might find it convenient to equate ``R`` and Rational:"
 msgstr ""
 "V obou případech se nejedná o číslo SymPy, protože Python vytvořil své "
 "vlastní číslo. Většinu času budete pravděpodobně pracovat s čísly Rational, "
 "takže dávejte pozor, abyste používali Rational a dostali tak výsledek SymPy. "
-"Někomu může připadat příhodné používat místo dlouhého Rational krátké ``R``::"
+"Někomu může připadat příhodné používat místo dlouhého Rational krátké ``R``:"
 
-#: tutorial.en.rst:175
+#: tutorial.en.rst:181
 msgid ""
 "We also have some special constants, like e and pi, that are treated as "
 "symbols (1+pi won't evaluate to something numeric, rather it will remain as "
-"1+pi), and have arbitrary precision::"
+"1+pi), and have arbitrary precision:"
 msgstr ""
 "Také máme k dispozici několik konstant, jak e nebo pí, se kterými se pracuje "
 "jako se symboly (1+pi se nevypočítá jako numerická hodnota, ale ponechá se "
-"1+pi) a mají libovolnou přesnost::"
+"1+pi) a mají libovolnou přesnost:"
 
-#: tutorial.en.rst:189
+#: tutorial.en.rst:197
 msgid "as you see, evalf evaluates the expression to a floating-point number"
 msgstr ""
 "jak vidíte, evalf vyhodnotí výraz na číslo s pohyblivou desetinnou čárkou."
 
-#: tutorial.en.rst:191
-msgid "The symbol ``oo`` is used for a class defining mathematical infinity::"
-msgstr "Symbol ``oo`` se používá pro třídu definující matematické nekonečno::"
+#: tutorial.en.rst:199
+msgid "The symbol ``oo`` is used for a class defining mathematical infinity:"
+msgstr "Symbol ``oo`` se používá pro třídu definující matematické nekonečno:"
 
-#: tutorial.en.rst:200
+#: tutorial.en.rst:210
 msgid "Symbols"
 msgstr "Symboly"
 
-#: tutorial.en.rst:202
+#: tutorial.en.rst:212
 msgid ""
 "In contrast to other Computer Algebra Systems, in SymPy you have to declare "
-"symbolic variables explicitly::"
+"symbolic variables explicitly:"
 msgstr ""
 "Narozdíl od jiných počítačových algebraických systémů, v SymPy je třeba "
-"explicitně deklarovat symbolické proměnné::"
+"explicitně deklarovat symbolické proměnné:"
 
-#: tutorial.en.rst:209
+#: tutorial.en.rst:221
 #, fuzzy
 msgid ""
 "On the left is the normal Python variable which has been assigned to the "
@@ -208,9 +208,9 @@ msgid ""
 "Greek names) are available for import from abc:"
 msgstr ""
 "Nalevo je běžná proměnná Pythonu, která byla přiřazená SymPy třídě Symbol. "
-"Instance třídy Symbol \"si dobře rozumí\" a jsou to stavební kameny výrazů::"
+"Instance třídy Symbol \"si dobře rozumí\" a jsou to stavební kameny výrazů:"
 
-#: tutorial.en.rst:215
+#: tutorial.en.rst:227
 msgid ""
 "Symbols can also be created with the ``symbols`` or ``var`` functions, the "
 "latter automatically adding the created symbols to the namespace, and both "
@@ -220,73 +220,73 @@ msgstr ""
 "funkce ``var`` automaticky přídá vytvořené symboly do namespace, a jak "
 "``symbols``, tak ``var`` podporují range notaci:"
 
-#: tutorial.en.rst:227
+#: tutorial.en.rst:239
 #, fuzzy
 msgid ""
 "Instances of the Symbol class \"play well together\" and are the building "
-"blocks of expresions::"
+"blocks of expresions:"
 msgstr ""
 "Nalevo je běžná proměnná Pythonu, která byla přiřazená SymPy třídě Symbol. "
-"Instance třídy Symbol \"si dobře rozumí\" a jsou to stavební kameny výrazů::"
+"Instance třídy Symbol \"si dobře rozumí\" a jsou to stavební kameny výrazů:"
 
-#: tutorial.en.rst:239
+#: tutorial.en.rst:253
 msgid ""
 "They can be substituted with other numbers, symbols or expressions using "
-"``subs(old, new)``::"
+"``subs(old, new)``:"
 msgstr ""
 "Mohou být nahrazeny jinými čísly, symboly nebo výrazy použitím ``subs(stary, "
-"novy)``::"
+"novy)``:"
 
-#: tutorial.en.rst:250
-msgid "For the remainder of the tutorial, we assume that we have run::"
-msgstr "Pro celý zbytek tutoriálu předpokládejme, že jsme zadali::"
+#: tutorial.en.rst:266
+msgid "For the remainder of the tutorial, we assume that we have run:"
+msgstr "Pro celý zbytek tutoriálu předpokládejme, že jsme zadali:"
 
-#: tutorial.en.rst:255
+#: tutorial.en.rst:273
 msgid ""
 "This will make things look better when printed. See the :ref:`printing-"
 "tutorial` section below. If you have a unicode font installed, you can pass "
 "use_unicode=True for a slightly nicer output."
 msgstr ""
-"To nám zajistí hezčí výstup. Koukněte do sekce níže :ref:`printing-tutorial-"
-"cs`. Pokud máte nainstalovaný font unicode, volbou ``use_unicode=True`` "
+"To nám zajistí hezčí výstup. Koukněte do sekce níže :ref:`printing-tutorial`. "
+"Pokud máte nainstalovaný font unicode, volbou ``use_unicode=True`` "
 "dostanete o něco hezčí výstup."
 
-#: tutorial.en.rst:260
+#: tutorial.en.rst:278
 msgid "Algebra"
 msgstr "Algebra"
 
-#: tutorial.en.rst:262
-msgid "For partial fraction decomposition, use ``apart(expr, x)``::"
-msgstr "Pro rozklad na parciální zlomky, použijte ``apart(expr, x)``::"
+#: tutorial.en.rst:280
+msgid "For partial fraction decomposition, use ``apart(expr, x)``:"
+msgstr "Pro rozklad na parciální zlomky, použijte ``apart(expr, x)``:"
 
-#: tutorial.en.rst:287
-msgid "To combine things back together, use ``together(expr, x)``::"
-msgstr "Pro zpětné sdružení věcí dohromady, použijte ``together(expr, x)``::"
+#: tutorial.en.rst:307
+msgid "To combine things back together, use ``together(expr, x)``:"
+msgstr "Pro zpětné sdružení věcí dohromady, použijte ``together(expr, x)``:"
 
-#: tutorial.en.rst:309
+#: tutorial.en.rst:331
 msgid "Calculus"
 msgstr "Analýza"
 
-#: tutorial.en.rst:314
+#: tutorial.en.rst:336
 msgid "Limits"
 msgstr "Limity"
 
-#: tutorial.en.rst:316
+#: tutorial.en.rst:338
 #, fuzzy
 msgid ""
 "Limits are easy to use in SymPy, they follow the syntax ``limit(function, "
 "variable, point)``, so to compute the limit of f(x) as x -> 0, you would "
-"issue ``limit(f, x, 0)``::"
+"issue ``limit(f, x, 0)``:"
 msgstr ""
 "Limity se používají v sympy jednoduše, pomocí syntaxe ``limit(function, "
 "variable, point)``, takže pro vypočtení limity f(x) pro x -> 0 byste "
-"dosadili ``limit(f, x, 0)``::"
+"dosadili ``limit(f, x, 0)``:"
 
-#: tutorial.en.rst:325
-msgid "you can also calculate the limit at infinity::"
-msgstr "také můžete spočítat limitu v nekonečnu::"
+#: tutorial.en.rst:349
+msgid "you can also calculate the limit at infinity:"
+msgstr "také můžete spočítat limitu v nekonečnu:"
 
-#: tutorial.en.rst:336
+#: tutorial.en.rst:362
 msgid ""
 "for some non-trivial examples on limits, you can read the test file "
 "`test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/"
@@ -296,230 +296,229 @@ msgstr ""
 "`test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/"
 "tests/test_demidovich.py>`_"
 
-#: tutorial.en.rst:343
+#: tutorial.en.rst:369
 msgid "Differentiation"
 msgstr "Derivace"
 
-#: tutorial.en.rst:345
+#: tutorial.en.rst:371
 msgid ""
 "You can differentiate any SymPy expression using ``diff(func, var)``. "
-"Examples::"
+"Examples:"
 msgstr ""
 "Můžete derivovat libovolný výraz v SymPy pomocí ``diff(func, var)``. "
-"Například::"
+"Například:"
 
-#: tutorial.en.rst:358
-msgid "You can check, that it is correct by::"
-msgstr "Výsledek si můžete zkontrolovat::"
+#: tutorial.en.rst:386
+msgid "You can check, that it is correct by:"
+msgstr "Výsledek si můžete zkontrolovat:"
 
-#: tutorial.en.rst:366
+#: tutorial.en.rst:396
 msgid ""
-"Higher derivatives can be calculated using the ``diff(func, var, n)`` "
-"method::"
-msgstr "Vyšší derivace můžete spočítat pomocí ``diff(func, var, n)``::"
+"Higher derivatives can be calculated using the ``diff(func, var, n)`` method:"
+msgstr "Vyšší derivace můžete spočítat pomocí ``diff(func, var, n)``:"
 
-#: tutorial.en.rst:383
+#: tutorial.en.rst:415
 msgid "Series expansion"
 msgstr "Rozvoj v řady"
 
-#: tutorial.en.rst:385
-msgid "Use ``.series(var, point, order)``::"
-msgstr "Použijte ``.series(var, point, order)``::"
+#: tutorial.en.rst:417
+msgid "Use ``.series(var, point, order)``:"
+msgstr "Použijte ``.series(var, point, order)``:"
 
-#: tutorial.en.rst:400
-msgid "Another simple example::"
-msgstr "Další jednoduchý příklad::"
+#: tutorial.en.rst:434
+msgid "Another simple example:"
+msgstr "Další jednoduchý příklad:"
 
-#: tutorial.en.rst:424
+#: tutorial.en.rst:460
 msgid "Summation"
 msgstr ""
 
-#: tutorial.en.rst:426
+#: tutorial.en.rst:462
 msgid ""
 "Compute the summation of f with respect to the given summation variable over "
 "the given limits."
 msgstr ""
 
-#: tutorial.en.rst:428
+#: tutorial.en.rst:464
 msgid ""
 "summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, "
-"i.e., ::"
+"i.e.,"
 msgstr ""
 
-#: tutorial.en.rst:439
+#: tutorial.en.rst:477
 msgid ""
 "If it cannot compute the sum, it prints the corresponding summation formula. "
-"Repeated sums can be computed by introducing additional limits::"
+"Repeated sums can be computed by introducing additional limits:"
 msgstr ""
 
-#: tutorial.en.rst:473
+#: tutorial.en.rst:513
 msgid "Integration"
 msgstr "Integrály"
 
-#: tutorial.en.rst:475
+#: tutorial.en.rst:515
 msgid ""
 "SymPy has support for indefinite and definite integration of transcendental "
 "elementary and special functions via ``integrate()`` facility, which uses "
 "powerful extended Risch-Norman algorithm and some heuristics and pattern "
-"matching::"
+"matching:"
 msgstr ""
 "SymPy umí počítat neurčité a určité integrály elementárních a speciálních "
 "transcendentních funkcí pomocí fuknce ``integrate()``, která využívá silného "
 "rozšířeného Risch-Normanova algoritmu, některých heuristik a porovnávání "
-"vzorků::"
-
-#: tutorial.en.rst:483
-msgid "You can integrate elementary functions::"
-msgstr "Můžete integrovat elementární funkce::"
-
-#: tutorial.en.rst:496
-msgid "Also special functions are handled easily::"
-msgstr "Také speciální funkce lze jednoduše integrovat::"
-
-#: tutorial.en.rst:504
-#, fuzzy
-msgid "It is possible to compute definite integrals::"
-msgstr "Je možné vypočítat určitý integrál::"
-
-#: tutorial.en.rst:513
-#, fuzzy
-msgid "Also, improper integrals are supported as well::"
-msgstr "Podporovány jsou i nevlastní integrály::"
+"vzorků:"
 
 #: tutorial.en.rst:525
+msgid "You can integrate elementary functions:"
+msgstr "Můžete integrovat elementární funkce:"
+
+#: tutorial.en.rst:540
+msgid "Also special functions are handled easily:"
+msgstr "Také speciální funkce lze jednoduše integrovat:"
+
+#: tutorial.en.rst:550
+#, fuzzy
+msgid "It is possible to compute definite integrals:"
+msgstr "Je možné vypočítat určitý integrál:"
+
+#: tutorial.en.rst:561
+#, fuzzy
+msgid "Also, improper integrals are supported as well:"
+msgstr "Podporovány jsou i nevlastní integrály:"
+
+#: tutorial.en.rst:575
 msgid "Complex numbers"
 msgstr "Komplexní čísla"
 
-#: tutorial.en.rst:527
+#: tutorial.en.rst:577
 msgid ""
 "Besides the imaginary unit, I, which is imaginary, symbols can be created "
 "with attributes (e.g. real, positive, complex, etc...) and this will affect "
-"how they behave::"
+"how they behave:"
 msgstr ""
 "Kromě imaginárního čísla, I, symboly mohou být vytvořeny s atributy "
 "(například real, positive, complex, atd...), a to ovlivní jak se budou "
 "chovat:"
 
-#: tutorial.en.rst:544
+#: tutorial.en.rst:596
 msgid "Functions"
 msgstr "Funkce"
 
-#: tutorial.en.rst:546
-msgid "**trigonometric**::"
-msgstr "**trigonometrické**::"
+#: tutorial.en.rst:598
+msgid "**trigonometric**"
+msgstr "**trigonometrické**"
 
-#: tutorial.en.rst:595
-msgid "**spherical harmonics**::"
-msgstr "**Sférické funkce**::"
+#: tutorial.en.rst:649
+msgid "**spherical harmonics**"
+msgstr "**Sférické funkce**"
 
-#: tutorial.en.rst:621
-msgid "**factorials and gamma function**::"
-msgstr "**Faktoriály a gamma funkce**::"
+#: tutorial.en.rst:677
+msgid "**factorials and gamma function**"
+msgstr "**Faktoriály a gamma funkce**"
 
-#: tutorial.en.rst:639
-msgid "**zeta function**::"
-msgstr "**Zeta funkce**::"
+#: tutorial.en.rst:697
+msgid "**zeta function**"
+msgstr "**Zeta funkce**"
 
-#: tutorial.en.rst:664
-msgid "**polynomials**::"
-msgstr "**Polynomy**::"
+#: tutorial.en.rst:724
+msgid "**polynomials**"
+msgstr "**Polynomy**"
 
-#: tutorial.en.rst:703
+#: tutorial.en.rst:765
 msgid "Differential Equations"
 msgstr "Diferenciální rovnice"
 
-#: tutorial.en.rst:705 tutorial.en.rst:725
-msgid "In ``isympy``::"
-msgstr "V ``isympy``::"
+#: tutorial.en.rst:767 tutorial.en.rst:789
+msgid "In ``isympy``:"
+msgstr "V ``isympy``:"
 
-#: tutorial.en.rst:723
+#: tutorial.en.rst:787
 msgid "Algebraic equations"
 msgstr "Algebraické rovnice"
 
-#: tutorial.en.rst:738
+#: tutorial.en.rst:804
 msgid "Linear Algebra"
 msgstr "Lineární algebra"
 
-#: tutorial.en.rst:743
+#: tutorial.en.rst:809
 msgid "Matrices"
 msgstr "Matice"
 
-#: tutorial.en.rst:745
-msgid "Matrices are created as instances from the Matrix class::"
-msgstr "Matice jsou vytvořeny jako instance třídy Matrix::"
+#: tutorial.en.rst:811
+msgid "Matrices are created as instances from the Matrix class:"
+msgstr "Matice jsou vytvořeny jako instance třídy Matrix:"
 
-#: tutorial.en.rst:753
+#: tutorial.en.rst:821
 #, fuzzy
-msgid "They can also contain symbols::"
-msgstr "Lze tam také vložit symboly::"
+msgid "They can also contain symbols:"
+msgstr "Lze tam také vložit symboly:"
 
-#: tutorial.en.rst:768
+#: tutorial.en.rst:838
 #, fuzzy
 msgid "For more about Matrices, see the Linear Algebra tutorial."
 msgstr ""
 "Pro více informací a příkladů s maticemi se podívejte na Linear Algebra "
 "tutorial."
 
-#: tutorial.en.rst:773
+#: tutorial.en.rst:843
 msgid "Pattern matching"
 msgstr "Porovnávání vzorků"
 
-#: tutorial.en.rst:775
+#: tutorial.en.rst:845
 msgid ""
 "Use the ``.match()`` method, along with the ``Wild`` class, to perform "
 "pattern matching on expressions. The method will return a dictionary with "
-"the required substitutions, as follows::"
+"the required substitutions, as follows:"
 msgstr ""
 "Použijte metodu ``.match()`` spolu s třídou ``Wild`` pro porovnávání výrazů. "
-"Metoda vrátí slovník s požadovanými substitucemi, jako vidíme zde::"
+"Metoda vrátí slovník s požadovanými substitucemi, jako vidíme zde:"
 
-#: tutorial.en.rst:789
-msgid "If the match is unsuccessful, it returns ``None``::"
-msgstr "Pokud je porovnání neúspěšné, vrátí ``None``::"
+#: tutorial.en.rst:861
+msgid "If the match is unsuccessful, it returns ``None``:"
+msgstr "Pokud je porovnání neúspěšné, vrátí ``None``:"
 
-#: tutorial.en.rst:794
+#: tutorial.en.rst:868
 msgid ""
 "One can also use the exclude parameter of the ``Wild`` class to ensure that "
-"certain things do not show up in the result::"
+"certain things do not show up in the result:"
 msgstr ""
 "Lze také použít parametr ``exclude`` třídy ``Wild``, aby se určité věci "
-"nezobrazily ve výsledku::"
+"nezobrazily ve výsledku:"
 
-#: tutorial.en.rst:808
+#: tutorial.en.rst:884
 msgid "Printing"
 msgstr "Výpis"
 
-#: tutorial.en.rst:810
+#: tutorial.en.rst:886
 msgid "There are many ways to print expressions."
 msgstr "Je spousta způsobů, jak mohou být výrazy vypisovány."
 
-#: tutorial.en.rst:812
+#: tutorial.en.rst:888
 msgid "**Standard**"
 msgstr "**Standardní**"
 
-#: tutorial.en.rst:814
+#: tutorial.en.rst:890
 msgid "This is what ``str(expression)`` returns and it looks like this:"
-msgstr "To je to, co vrátí ``str(expression)`` a vypadá to takto::"
+msgstr "To je to, co vrátí ``str(expression)`` a vypadá to takto:"
 
-#: tutorial.en.rst:825
+#: tutorial.en.rst:901
 msgid "**Pretty printing**"
 msgstr "**Pěkný výpis**"
 
-#: tutorial.en.rst:827
+#: tutorial.en.rst:903
 #, fuzzy
 msgid "Nice ascii-art printing is produced by the ``pprint`` function:"
-msgstr "To je pěkný ascii-art výpis vytvořený funkcí ``pprint``::"
+msgstr "To je pěkný ascii-art výpis vytvořený funkcí ``pprint``:"
 
-#: tutorial.en.rst:846
+#: tutorial.en.rst:922
 #, fuzzy
 msgid ""
 "If you have a unicode font installed, the ``pprint`` function will use it by "
 "default. You can override this using the ``use_unicode`` option.:"
 msgstr ""
 "Pokud máte nainstalované písmo unicode, měla by ho funkce automaticky "
-"využívat. Využívání unicode písma se dá nastavit změnou ``use_unicode``::"
+"využívat. Využívání unicode písma se dá nastavit změnou ``use_unicode``:"
 
-#: tutorial.en.rst:855
+#: tutorial.en.rst:931
 msgid ""
 "See also the wiki `Pretty Printing <https://github.com/sympy/sympy/wiki/"
 "Pretty-Printing>`_ for more examples of a nice unicode printing."
@@ -527,49 +526,49 @@ msgstr ""
 "Pro více příkladů pěkného unicode výstupu koukněte na wiki na `Pretty "
 "Printing <https://github.com/sympy/sympy/wiki/Pretty-Printing>`_"
 
-#: tutorial.en.rst:859
+#: tutorial.en.rst:935
 #, fuzzy
 msgid ""
-"Tip: To make pretty printing the default in the Python interpreter, use::"
+"Tip: To make pretty printing the default in the Python interpreter, use:"
 msgstr ""
 "Tip: Pokud chcete v interpretru Pythonu pěkné vypisování používat defaultně, "
-"proveďte::"
+"proveďte:"
 
-#: tutorial.en.rst:882
+#: tutorial.en.rst:960
 msgid "**Python printing**"
-msgstr "**Python výstup**::"
+msgstr "**Python výstup**"
 
-#: tutorial.en.rst:898
+#: tutorial.en.rst:978
 msgid "**LaTeX printing**"
-msgstr "**LaTeX výstup**::"
+msgstr "**LaTeX výstup**"
 
-#: tutorial.en.rst:915
+#: tutorial.en.rst:997
 msgid "**MathML**"
-msgstr "**MathML**::"
+msgstr "**MathML**"
 
-#: tutorial.en.rst:927
+#: tutorial.en.rst:1009
 msgid "**Pyglet**"
-msgstr "**Pyglet**::"
+msgstr "**Pyglet**"
 
-#: tutorial.en.rst:933
+#: tutorial.en.rst:1017
 #, fuzzy
 msgid ""
 "If pyglet is installed, a pyglet window will open containing the LaTeX "
 "rendered expression:"
 msgstr "A vyskočí pyglet okno s výrazem formátovaným v LaTeXu:"
 
-#: tutorial.en.rst:939
+#: tutorial.en.rst:1023
 msgid "Notes"
 msgstr "Poznámky"
 
-#: tutorial.en.rst:941
+#: tutorial.en.rst:1025
 msgid ""
 "``isympy`` calls ``pprint`` automatically, so that's why you see pretty "
 "printing by default."
 msgstr ""
 "``isympy`` volá ``pprint`` automaticky, proto standardně vidíte pěkný výpis."
 
-#: tutorial.en.rst:944
+#: tutorial.en.rst:1028
 msgid ""
 "Note that there is also a printing module available, ``sympy.printing``.  "
 "Other printing methods available through this module are:"
@@ -577,7 +576,7 @@ msgstr ""
 "Všimněte si, že je přístupný modul pro výpisy, ``sympy.printing``. Další "
 "metody dostupné díky tomuto modulu jsou:"
 
-#: tutorial.en.rst:947
+#: tutorial.en.rst:1031
 msgid ""
 "``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, "
 "respectively, a pretty representation of ``expr``. This is the same as the "
@@ -587,7 +586,7 @@ msgstr ""
 "respektive vypisuje, pěknou reprezentaci ``expr``. Je to jako druhá úroveň "
 "reprezentace popsané výše."
 
-#: tutorial.en.rst:949
+#: tutorial.en.rst:1033
 msgid ""
 "``latex(expr)``, ``print_latex(expr)``: Return or print, respectively, a "
 "`LaTeX <http://www.latex-project.org/>`_  representation of ``expr``"
@@ -595,7 +594,7 @@ msgstr ""
 "``latex(expr)``, ``print_latex(expr)``: Vrací, respektive vypisuje, `LaTeX "
 "<http://www.latex-project.org/>`_  reprezentaci ``expr``"
 
-#: tutorial.en.rst:951
+#: tutorial.en.rst:1035
 msgid ""
 "``mathml(expr)``, ``print_mathml(expr)``: Return or print, respectively, a "
 "`MathML <http://www.w3.org/Math/>`_ representation of ``expr``."
@@ -603,7 +602,7 @@ msgstr ""
 " ``mathml(expr)``, ``print_mathml(expr)``: Vrací, respektive vypisuje, "
 "`MathML <http://www.w3.org/Math/>`_ reprezentaci ``expr``."
 
-#: tutorial.en.rst:953
+#: tutorial.en.rst:1037
 msgid ""
 "``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/"
 "mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview "
@@ -613,19 +612,19 @@ msgstr ""
 "it/mml-widget/>`_, GTK widgetu, který zobrazuje MathML kód. Je vyžadován "
 "program `Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_."
 
-#: tutorial.en.rst:956
+#: tutorial.en.rst:1040
 msgid "Further documentation"
 msgstr "Další dokumentace"
 
-#: tutorial.en.rst:958
+#: tutorial.en.rst:1042
 msgid ""
 "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
 "Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
 msgstr ""
-"Nyní je čas dozvědět se více o SymPy. Pročtěte si :ref:`Uživatelskou "
-"příručku SymPy <guide>` a :ref:`Přehled modulů SymPy <module-docs>`."
+"Nyní je čas dozvědět se více o SymPy. Pročtěte si `Uživatelskou "
+"příručku SymPy <../guide.html>`_ a `Přehled modulů SymPy <../modules/index.html>`_."
 
-#: tutorial.en.rst:962
+#: tutorial.en.rst:1046
 #, fuzzy
 msgid ""
 "Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/"
@@ -636,10 +635,10 @@ msgstr ""
 "která obsahuje spoustu užitečných příkladů, tutoriálů a kuchařek, které jsme "
 "my a naši uživatelé dodali. A nebojte se je upravit."
 
-#: tutorial.en.rst:969
+#: tutorial.en.rst:1053
 msgid "Translations"
 msgstr "Překlady"
 
-#: tutorial.en.rst:971
+#: tutorial.en.rst:1055
 msgid "This tutorial is also available in other languages:"
 msgstr "Tento tutoriál je také k dispozici v těchto jazycích:"
