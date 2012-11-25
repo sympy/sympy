@@ -187,7 +187,9 @@ class AssocOp(Basic):
 
         # now to real work ;)
         i = 0
-        while 1:
+        saw = set()
+        while expr not in saw:
+            saw.add(expr)
             expr_list = (self.identity,) + tuple(ordered(self.make_args(expr)))
             for last_op in reversed(expr_list):
                 for w in reversed(wild_part):
@@ -228,18 +230,16 @@ class AssocOp(Basic):
                     # try collection on non-Wild symbols
                     from sympy.simplify.simplify import collect
                     was = expr
+                    did = set()
                     for w in reversed(wild_part):
                         c, w = w.as_coeff_mul(Wild)
-                        free = list(ordered(c.free_symbols))
+                        free = c.free_symbols - did
                         if free:
-                            old = expr
+                            did.update(free)
                             expr = collect(expr, free)
-                            if expr != was:
-                                break
-                    else:
-                        break
-                    i = 0
-                    continue
+                    if expr != was:
+                        i += 0
+                        continue
 
                 break  # if we didn't continue, there is nothing more to do
 
