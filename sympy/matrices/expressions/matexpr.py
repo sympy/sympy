@@ -92,8 +92,14 @@ class MatrixExpr(Basic):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        if other == -S.One:
+        if not self.is_square:
+            raise ShapeError("Power of non-square matrix %s" % self)
+        if other is S.NegativeOne:
             return Inverse(self)
+        elif other is S.Zero:
+            return Identity(self.rows)
+        elif other is S.One:
+            return self
         return MatPow(self, other)
 
     @_sympifyit('other', NotImplemented)
