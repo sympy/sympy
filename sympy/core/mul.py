@@ -807,6 +807,9 @@ class Mul(Expr, AssocOp):
             for x in rhs.args:
                 if x in a:
                     a.remove(x)
+                elif -x in a:
+                    a.remove(-x)
+                    b.append(-1)
                 else:
                     b.append(x)
             return Mul(*a)/Mul(*b)

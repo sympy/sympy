@@ -601,3 +601,9 @@ def test_issue_784():
     g3 = Wild('g3', exclude=[gamma])
     assert f.expand().match(g1 * log(gamma) + g2 * gamma + g3) == \
     {g3: log(2)/2 + log(pi)/2, g1: -S(1)/2, g2: -mu**2/2 + mu*x - x**2/2}
+
+
+def test_issue_3004():
+    x = Symbol('x')
+    a = Wild('a')
+    assert (-I*x*oo).match(I*a*oo) == {a: -x}
