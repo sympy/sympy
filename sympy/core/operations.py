@@ -168,10 +168,10 @@ class AssocOp(Basic):
             return d
 
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
-        wild_part = []
-        exact_part = []
         from function import WildFunction
         from symbol import Wild
+        wild_part = []
+        exact_part = []
         for p in ordered(self.args):
             if p.has(Wild, WildFunction) and (not expr.has(p)):
                 # not all Wild should stay Wilds, for example:
@@ -187,13 +187,45 @@ class AssocOp(Basic):
 
         # now to real work ;)
         expr_list = (self.identity,) + tuple(ordered(self.make_args(expr)))
-        for last_op in reversed(expr_list):
-            for w in reversed(wild_part):
-                d1 = w.matches(last_op, repl_dict)
-                if d1 is not None:
-                    d2 = self.xreplace(d1).matches(expr, d1)
-                    if d2 is not None:
-                        return d2
+        for i in range(2):
+
+            for last_op in reversed(expr_list):
+                for w in reversed(wild_part):
+                    d1 = w.matches(last_op, repl_dict)
+                    if d1 is not None:
+                        d2 = self.xreplace(d1).matches(expr, d1)
+                        if d2 is not None:
+                            return d2
+
+            if i == 0:
+                if self.is_Mul:
+                    # make e**i look like Mul
+                    if expr.is_Pow and expr.exp.is_Integer:
+                        if expr.exp > 0:
+                            expr = C.Mul(*
+                                [expr.base, expr.base**(expr.exp - 1)],
+                                **{'evaluate': False})
+                        else:
+                            expr = C.Mul(*
+                                [1/expr.base, expr.base**(expr.exp + 1)],
+                                **{'evaluate': False})
+                        i += 1
+                        continue
+
+                elif self.is_Add:
+                    # make i*e look like Add
+                    c, e = expr.as_coeff_Mul()
+                    if abs(c) > 1:
+                        if c > 0:
+                            expr = C.Add(*[e, (c - 1)*e],
+                                **{'evaluate': False})
+                        else:
+                            expr = C.Add(*[-e, (c + 1)*e],
+                                **{'evaluate': False})
+                        i += 1
+                        continue
+
+                break  # if we didn't continue, there is nothing more to do
 
         return
 
