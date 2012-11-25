@@ -186,9 +186,9 @@ class AssocOp(Basic):
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        expr_list = (self.identity,) + tuple(ordered(self.make_args(expr)))
-        for i in range(2):
-
+        i = 0
+        while 1:
+            expr_list = (self.identity,) + tuple(ordered(self.make_args(expr)))
             for last_op in reversed(expr_list):
                 for w in reversed(wild_part):
                     d1 = w.matches(last_op, repl_dict)
@@ -224,6 +224,22 @@ class AssocOp(Basic):
                                 **{'evaluate': False})
                         i += 1
                         continue
+
+                    # try collection on non-Wild symbols
+                    from sympy.simplify.simplify import collect
+                    was = expr
+                    for w in reversed(wild_part):
+                        c, w = w.as_coeff_mul(Wild)
+                        free = list(ordered(c.free_symbols))
+                        if free:
+                            old = expr
+                            expr = collect(expr, free)
+                            if expr != was:
+                                break
+                    else:
+                        break
+                    i = 0
+                    continue
 
                 break  # if we didn't continue, there is nothing more to do
 

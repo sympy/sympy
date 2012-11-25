@@ -555,6 +555,7 @@ def test_issue_1460():
     assert (-e).match(sqrt(a)) is None
     assert (-e).match(a**2) == {a: I*sqrt(pi)}
 
+
 def test_issue_1784():
     a = Wild('a')
     x = Symbol('x')
@@ -564,6 +565,7 @@ def test_issue_1784():
     for eq in e:
         for pat in p:
             assert eq.match(pat) == {a: 2}
+
 
 def test_issue_1220():
     x, y = symbols('x y')
@@ -582,9 +584,20 @@ def test_issue_1220():
     ok(Wild("ress", exclude=[x])*x + Wild("rest"))
     ok(Wild("resu", exclude=[x])*x + Wild("rest"))
 
+
 def test_issue_679():
     p, c, q = symbols('p c q', cls=Wild)
     x = Symbol('x')
 
     assert (sin(x)**2).match(sin(p)*sin(q)*c) == {q: x, c: 1, p: x}
     assert (2*sin(x)).match(sin(p) + sin(q) + c) == {q: x, c: 0, p: x}
+
+
+def test_issue_784():
+    mu, gamma, x = symbols('mu gamma x')
+    f = (- gamma * (x-mu)**2 - log(gamma) + log(2*pi)) / 2
+    g1 = Wild('g1', exclude=[gamma])
+    g2 = Wild('g2', exclude=[gamma])
+    g3 = Wild('g3', exclude=[gamma])
+    assert f.expand().match(g1 * log(gamma) + g2 * gamma + g3) == \
+    {g3: log(2)/2 + log(pi)/2, g1: -S(1)/2, g2: -mu**2/2 + mu*x - x**2/2}
