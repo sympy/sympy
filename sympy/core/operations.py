@@ -172,7 +172,7 @@ class AssocOp(Basic):
         exact_part = []
         from function import WildFunction
         from symbol import Wild
-        for p in self.args:
+        for p in ordered(self.args):
             if p.has(Wild, WildFunction) and (not expr.has(p)):
                 # not all Wild should stay Wilds, for example:
                 # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
@@ -186,7 +186,7 @@ class AssocOp(Basic):
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        expr_list = (self.identity,) + self.make_args(expr)
+        expr_list = (self.identity,) + tuple(ordered(self.make_args(expr)))
         for last_op in reversed(expr_list):
             for w in reversed(wild_part):
                 d1 = w.matches(last_op, repl_dict)

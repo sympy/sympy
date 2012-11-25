@@ -564,3 +564,21 @@ def test_issue_1784():
     for eq in e:
         for pat in p:
             assert eq.match(pat) == {a: 2}
+
+def test_issue_1220():
+    x, y = symbols('x y')
+
+    p = -x*(S(1)/8 - y)
+    ans = set([S.Zero, y - S(1)/8])
+
+    def ok(pat):
+        assert set(p.match(pat).values()) == ans
+
+    ok(Wild("coeff", exclude=[x])*x + Wild("rest"))
+    ok(Wild("w", exclude=[x])*x + Wild("rest"))
+    ok(Wild("coeff", exclude=[x])*x + Wild("rest"))
+    ok(Wild("w", exclude=[x])*x + Wild("rest"))
+    ok(Wild("e", exclude=[x])*x + Wild("rest"))
+    ok(Wild("ress", exclude=[x])*x + Wild("rest"))
+    ok(Wild("resu", exclude=[x])*x + Wild("rest"))
+
