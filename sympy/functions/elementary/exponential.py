@@ -342,8 +342,10 @@ class exp(ExpBase):
             o = exp(o.exp*log(o.base))
         if o.func is exp:
             # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
-            a, expr_terms = self.args[0].as_coeff_mul()
-            b, expr_terms_ = o.args[0].as_coeff_mul()
+            a, expr_terms = self.args[0].as_independent(
+                C.Symbol, as_Add=False)
+            b, expr_terms_ = o.args[0].as_independent(
+                C.Symbol, as_Add=False)
 
             if expr_terms == expr_terms_:
                 return new**(a/b)
@@ -367,8 +369,8 @@ class exp(ExpBase):
                     return r
         if o is S.Exp1:
             # treat this however Pow is being treated
-            u = C.Dummy('u')
-            return (u**self.args[0]).subs(u, new)
+            u = C.Dummy('u', positive=True)
+            return (u**self.args[0]).xreplace({u: new})
 
         return Function._eval_subs(self, o, new)
 
