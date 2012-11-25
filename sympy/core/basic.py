@@ -1343,7 +1343,14 @@ class Basic(object):
         4*x**2
 
         """
+        from sympy import signsimp, count_ops
         pattern = sympify(pattern)
+        s = signsimp(self)
+        p = signsimp(pattern)
+        # if we still have the same relationship between the types of
+        # input, then use the sign simplified forms
+        if (pattern.func == self.func) and (s.func == p.func):
+            return p.matches(s)
         return pattern.matches(self)
 
     def count_ops(self, visual=None):

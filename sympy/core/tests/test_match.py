@@ -445,7 +445,7 @@ def test_issue_784():
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
     assert f.match(a * log(gamma) + b * gamma + c) == \
-        {a: -S(1)/2, b: -(x - mu)**2/2, c: log(2*pi)/2}
+        {a: -S(1)/2, b: -(mu - x)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: -S(1)/2, b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
 
@@ -554,3 +554,13 @@ def test_issue_1460():
     assert e.match(1/a**2) == {a: 1/sqrt(e)}
     assert (-e).match(sqrt(a)) is None
     assert (-e).match(a**2) == {a: I*sqrt(pi)}
+
+def test_issue_1784():
+    a = Wild('a')
+    x = Symbol('x')
+
+    e = [i**2 for i in (x - 2, 2 - x)]
+    p = [i**2 for i in (x - a, a- x)]
+    for eq in e:
+        for pat in p:
+            assert eq.match(pat) == {a: 2}
