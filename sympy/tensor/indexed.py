@@ -142,7 +142,8 @@ class Indexed(Expr):
         elif not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol or IndexedBase as base."""))
-        return Expr.__new__(cls, base, *sympify(args), **kw_args)
+        args = map(sympify, args)
+        return Expr.__new__(cls, base, *args, **kw_args)
 
     @property
     def base(self):
@@ -310,7 +311,7 @@ class IndexedBase(Expr):
     it overrides any shape information in the indices. (But not the index
     ranges!)
 
-    >>> m, n, o, p = symbols('m n o p',  integer=True)
+    >>> m, n, o, p = symbols('m n o p', integer=True)
     >>> i = Idx('i', m)
     >>> j = Idx('j', n)
     >>> A[i, j].shape

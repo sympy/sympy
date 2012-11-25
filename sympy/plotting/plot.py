@@ -1156,7 +1156,7 @@ def plot(*args, **kwargs):
     Plot, LineOver1DRangeSeries.
 
     """
-    args = sympify([arg for arg in args])
+    args = map(sympify, args)
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 1)
@@ -1277,7 +1277,7 @@ def plot_parametric(*args, **kwargs):
     Plot, Parametric2DLineSeries
 
     """
-    args = sympify([arg for arg in args])
+    args = map(sympify, args)
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 2, 1)
@@ -1365,7 +1365,7 @@ def plot3d_parametric_line(*args, **kwargs):
     Plot, Parametric3DLineSeries
 
     """
-    args = sympify([arg for arg in args])
+    args = map(sympify, args)
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 1)
@@ -1465,7 +1465,7 @@ def plot3d(*args, **kwargs):
 
     """
 
-    args = sympify([arg for arg in args])
+    args = map(sympify, args)
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 1, 2)
@@ -1556,7 +1556,7 @@ def plot3d_parametric_surface(*args, **kwargs):
 
     """
 
-    args = sympify([arg for arg in args])
+    args = map(sympify, args)
     show = kwargs.pop('show', True)
     series = []
     plot_expr = check_arguments(args, 3, 2)

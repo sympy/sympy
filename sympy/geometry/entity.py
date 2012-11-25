@@ -37,7 +37,8 @@ class GeometryEntity(Basic):
     """
 
     def __new__(cls, *args, **kwargs):
-        return Basic.__new__(cls, *sympify(args))
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args)
 
     def _sympy_(self):
         return self
