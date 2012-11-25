@@ -34,7 +34,7 @@
     >>> from sympy.tensor import IndexedBase, Idx
     >>> from sympy import symbols
     >>> M = IndexedBase('M')
-    >>> i, j = map(Idx, ['i', 'j'])
+    >>> i, j = symbols('i j', cls=Idx)
     >>> M[i, j]
     M[i, j]
 
@@ -119,7 +119,7 @@ class Indexed(Expr):
 
     >>> from sympy.tensor import Indexed, IndexedBase, Idx
     >>> from sympy import symbols
-    >>> i, j = map(Idx, ['i', 'j'])
+    >>> i, j = symbols('i j', cls=Idx)
     >>> Indexed('A', i, j)
     A[i, j]
 
@@ -142,7 +142,7 @@ class Indexed(Expr):
         elif not isinstance(base, IndexedBase):
             raise TypeError(filldedent("""
                 Indexed expects string, Symbol or IndexedBase as base."""))
-        return Expr.__new__(cls, base, *args, **kw_args)
+        return Expr.__new__(cls, base, *sympify(args), **kw_args)
 
     @property
     def base(self):
@@ -152,7 +152,8 @@ class Indexed(Expr):
         ========
 
         >>> from sympy.tensor import Indexed, IndexedBase, Idx
-        >>> i, j = map(Idx, ['i', 'j'])
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j', cls=Idx)
         >>> Indexed('A', i, j).base
         A
         >>> B = IndexedBase('B')
@@ -171,7 +172,8 @@ class Indexed(Expr):
         ========
 
         >>> from sympy.tensor import Indexed, Idx
-        >>> i, j = map(Idx, ['i', 'j'])
+        >>> from sympy import symbols
+        >>> i, j = symbols('i j', cls=Idx)
         >>> Indexed('A', i, j).indices
         (i, j)
 
@@ -187,7 +189,8 @@ class Indexed(Expr):
         ========
 
         >>> from sympy.tensor import Indexed, Idx
-        >>> i, j, k, l, m = map(Idx, ['i', 'j', 'k', 'l', 'm'])
+        >>> from sympy import symbols
+        >>> i, j, k, l, m = symbols('i:m', cls=Idx)
         >>> Indexed('A', i, j).rank
         2
         >>> q = Indexed('A', i, j, k, l, m)
@@ -294,7 +297,7 @@ class IndexedBase(Expr):
     >>> type(A)
     <class 'sympy.tensor.indexed.IndexedBase'>
 
-    When an IndexedBase object recieves indices, it returns an array with named
+    When an IndexedBase object receives indices, it returns an array with named
     axes, represented by an Indexed object:
 
     >>> i, j = symbols('i j', integer=True)
@@ -307,7 +310,7 @@ class IndexedBase(Expr):
     it overrides any shape information in the indices. (But not the index
     ranges!)
 
-    >>> m, n, o, p = symbols('m n o p', integer=True)
+    >>> m, n, o, p = symbols('m n o p',  integer=True)
     >>> i = Idx('i', m)
     >>> j = Idx('j', n)
     >>> A[i, j].shape
@@ -328,7 +331,7 @@ class IndexedBase(Expr):
         if is_sequence(shape):
             obj._shape = Tuple(*shape)
         else:
-            obj._shape = shape
+            obj._shape = sympify(shape)
         return obj
 
     @property
