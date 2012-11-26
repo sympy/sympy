@@ -454,15 +454,15 @@ class MatrixBase(object):
             #return product
             A = self
             B = other
-            if A.shape[1] != B.shape[0]:
+            if A.cols != B.rows:
                 raise ShapeError("Matrices size mismatch.")
+            if A.cols == 0:
+                return classof(A, B)._new(A.rows, B.cols, lambda i, j: 0)
             blst = B.T.tolist()
             alst = A.tolist()
             return classof(A, B)._new(A.rows, B.cols, lambda i, j:
-                                      reduce(lambda k, l: k + l,
-                                             map(lambda n, m: n*m,
-                                                alst[i],
-                                                blst[j]), 0))
+                reduce(lambda k, l: k + l,
+                    [a_ik * b_kj for a_ik, b_kj in zip(alst[i], blst[j])]))
         else:
             return self._new(self.rows, self.cols,
                 map(lambda i: i*other, self._mat))

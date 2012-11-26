@@ -22,11 +22,6 @@ class MatAdd(MatrixExpr):
         evaluate = kwargs.get('evaluate', True)
         check    = kwargs.get('check'   , True)
 
-        # TODO: This is a kludge
-        # We still use Matrix + 0 in a few places. This removes it
-        # In particular see matrix_multiply
-        args = [x for x in args if not x == 0]
-
         obj = Basic.__new__(cls, *args)
         if check:
             validate(*args)
