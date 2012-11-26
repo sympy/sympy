@@ -271,7 +271,7 @@ def test_MatAdd():
     # raises(TypeError, lambda : MatAdd(ZeroMatrix(n,m), S(0)))
 
 
-def test_MatMul():
+def test_multiplication():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
     C = MatrixSymbol('C', n, n)
@@ -283,16 +283,16 @@ def test_MatMul():
     raises(ShapeError, lambda: B*A)
     assert (2*A).shape == A.shape
 
-    assert MatMul(A, ZeroMatrix(m, m), B) == ZeroMatrix(n, l)
+    assert A * ZeroMatrix(m, m) * B == ZeroMatrix(n, l)
 
-    assert MatMul(C*Identity(n)*C.I) == Identity(n)
+    assert C * Identity(n) * C.I == Identity(n)
 
     assert B/2 == S.Half*B
     raises(NotImplementedError, lambda: 2/B)
 
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, n)
-    assert MatMul(Identity(n), (A + B)).is_MatAdd
+    assert Identity(n) * (A + B) == A + B
 
 
 def test_MatPow():

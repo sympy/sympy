@@ -26,7 +26,6 @@ class MatPow(MatrixExpr):
     def _entry(self, i, j):
         if self.exp.is_Integer:
             # Make an explicity MatMul out of the MatPow
-            return Basic.__new__(MatMul,
-                    *[self.base for k in range(self.exp)])._entry(i, j)
+            return MatMul(*[self.base for k in range(self.exp)])._entry(i, j)
 
 from matmul import MatMul

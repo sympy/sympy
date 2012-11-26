@@ -82,12 +82,12 @@ class MatrixExpr(Basic):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return MatMul(self, other)
+        return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return MatMul(other, self)
+        return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
@@ -110,7 +110,7 @@ class MatrixExpr(Basic):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return MatMul(self, other**S.NegativeOne)
+        return self * other**S.NegativeOne
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
@@ -270,7 +270,7 @@ class MatrixExpr(Basic):
         return self
 
     def as_coeff_mmul(self):
-        return 1, Basic.__new__(MatMul, self)
+        return 1, MatMul(self)
 
 
 class MatrixSymbol(MatrixExpr):

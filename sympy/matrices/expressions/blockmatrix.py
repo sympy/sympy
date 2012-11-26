@@ -337,7 +337,7 @@ def bc_matmul(expr):
             matrices.pop(i+1)
         else:
             i+=1
-    return MatMul(factor, *matrices)
+    return MatMul(factor, *matrices).doit()
 
 def bc_matpow(expr):
     if expr.exp.is_number and expr.exp.is_integer:

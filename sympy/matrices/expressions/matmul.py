@@ -7,9 +7,11 @@ from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
 
 
 class MatMul(MatrixExpr):
-    """A Product of Matrix Expressions
+    """
+    A product of matrix expressions
 
-    MatMul inherits from and operates like SymPy Mul
+    Examples
+    ========
 
     >>> from sympy import MatMul, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 4)
@@ -21,16 +23,13 @@ class MatMul(MatrixExpr):
     is_MatMul = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
-        check    = kwargs.get('check'   , True)
+        check = kwargs.get('check', True)
 
         args = map(sympify, args)
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
-        if evaluate:
-            return canonicalize(obj)
         return obj
 
     @property
@@ -68,7 +67,7 @@ class MatMul(MatrixExpr):
 
     def as_coeff_mmul(self):
         coeff, matrices = self.as_coeff_matrices()
-        return coeff, Basic.__new__(MatMul, *matrices)
+        return coeff, MatMul(*matrices)
 
     def _eval_transpose(self):
         return MatMul(*[transpose(arg) for arg in self.args[::-1]])
@@ -88,12 +87,12 @@ class MatMul(MatrixExpr):
         try:
             return MatMul(*[
                 arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
-                    for arg in self.args[::-1]])
+                    for arg in self.args[::-1]]).doit()
         except ShapeError:
             from sympy.matrices.expressions.inverse import Inverse
             return Inverse(self)
 
-    def canonicalize(self):
+    def doit(self, **ignored):
         return canonicalize(self)
 
 def validate(*matrices):
