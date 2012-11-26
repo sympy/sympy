@@ -3025,8 +3025,12 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     if (n, d) != fraction(expr):
         expr0b = powsimp(n)/powsimp(d)
         if expr0b != expr0:
-            expr1b = cancel(expr0b)
-            expr2b = together(expr1b.expand(), deep=True)
+            if expr.is_commutative is False:
+                expr1b = together(expr0b)
+                expr2b = factor_terms(expr1b)
+            else:
+                expr1b = cancel(expr0b)
+                expr2b = together(expr1b.expand(), deep=True)
             if shorter(expr2b, expr) == expr2b:
                 expr1, expr2 = expr1b, expr2b
 

@@ -323,6 +323,8 @@ def test_simplify():
     A, B = symbols('A,B', commutative=False)
 
     assert simplify(A*B - B*A) == A*B - B*A
+    assert simplify(A/(1 + y/x)) == x*A/(x + y)
+    assert simplify(A*(1/x + 1/y)) == (x + y)*A/(x*y)
 
     assert simplify(log(2) + log(3)) == log(6)
     assert simplify(log(2*x) - log(2)) == log(x)
