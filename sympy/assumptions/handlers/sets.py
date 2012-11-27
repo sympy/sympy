@@ -3,6 +3,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 """
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
+from sympy import I
 
 
 class AskIntegerHandler(CommonHandler):
@@ -191,7 +192,13 @@ class AskRealHandler(CommonHandler):
 
     @staticmethod
     def _number(expr, assumptions):
-        return not expr.as_real_imag()[1]
+        # let as_real_imag() work first since the expression may
+        # be simpler to evaluate
+        i = expr.as_real_imag()[1].evalf(2)
+        if i._prec != 1:
+            return not i
+        # allow None to be returned if we couldn't show for sure
+        # that i was 0
 
     @staticmethod
     def Add(expr, assumptions):
@@ -230,21 +237,29 @@ class AskRealHandler(CommonHandler):
         Positive**Real        -> Real
         Real**(Integer/Even)  -> Real if base is nonnegative
         Real**(Integer/Odd)   -> Real
+        Real**Imaginary       -> ?
+        Imaginary**Real       -> ?
+        Real**Real            -> ?
         """
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
-        if ask(Q.real(expr.base), assumptions):
-            if ask(Q.integer(expr.exp), assumptions):
-                return True
-            elif expr.exp.is_Rational:
-                if (expr.exp.q % 2 == 0):
-                    return ask(Q.real(expr.base), assumptions) and \
-                        not ask(Q.negative(expr.base), assumptions)
-                else:
+        if ask(Q.imaginary(expr.base), assumptions):
+            if ask(Q.real(expr.exp), assumptions):
+                if ask(Q.odd(expr.exp), assumptions):
+                    return False
+                elif ask(Q.even(expr.exp), assumptions):
                     return True
-            elif ask(Q.real(expr.exp), assumptions):
-                if ask(Q.positive(expr.base), assumptions):
+        elif ask(Q.real(expr.base), assumptions):
+            if ask(Q.real(expr.exp), assumptions):
+                if expr.exp.is_Rational and \
+                   ask(Q.even(expr.exp.q), assumptions):
+                    return ask(Q.positive(expr.base), assumptions)
+                elif ask(Q.integer(expr.exp), assumptions):
                     return True
+                elif ask(Q.positive(expr.base), assumptions):
+                    return True
+                elif ask(Q.negative(expr.base), assumptions):
+                    return False
 
     @staticmethod
     def Rational(expr, assumptions):
@@ -422,7 +437,7 @@ class AskImaginaryHandler(CommonHandler):
     @staticmethod
     def _number(expr, assumptions):
         # helper method
-        return not expr.as_real_imag()[0]
+        return not expr.as_real_imag()[0].evalf()
 
     @staticmethod
     def Add(expr, assumptions):
@@ -468,7 +483,35 @@ class AskImaginaryHandler(CommonHandler):
                 return False
             return result
 
-    Pow = Add
+    @staticmethod
+    def Pow(expr, assumptions):
+        """
+        Imaginary**integer -> Imaginary if integer % 2 == 1
+        Imaginary**integer -> real if integer % 2 == 0
+        Imaginary**Imaginary    -> ?
+        Imaginary**Real         -> ?
+        """
+        if expr.is_number:
+            return AskImaginaryHandler._number(expr, assumptions)
+        if ask(Q.imaginary(expr.base), assumptions):
+            if ask(Q.real(expr.exp), assumptions):
+                if ask(Q.odd(expr.exp), assumptions):
+                    return True
+                elif ask(Q.even(expr.exp), assumptions):
+                    return False
+        elif ask(Q.real(expr.base), assumptions):
+            if ask(Q.real(expr.exp), assumptions):
+                if expr.exp.is_Rational and \
+                   ask(Q.even(expr.exp.q), assumptions):
+                    return ask(Q.negative(expr.base),assumptions)
+                elif ask(Q.integer(expr.exp), assumptions):
+                    return False
+                elif ask(Q.positive(expr.base), assumptions):
+                    return False
+                elif ask(Q.negative(expr.base), assumptions):
+                    return True
+
+
 
     @staticmethod
     def Number(expr, assumptions):
