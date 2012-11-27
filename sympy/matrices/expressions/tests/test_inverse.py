@@ -14,6 +14,14 @@ E = MatrixSymbol('E', m, n)
 
 def test_inverse():
     raises(ShapeError, lambda: Inverse(A))
+    raises(ShapeError, lambda: Inverse(A*B))
+
+    assert Inverse(C).shape == (n, n)
+    assert Inverse(A*E).shape == (n, n)
+    assert Inverse(E*A).shape == (m, m)
+    assert Inverse(C).inverse() == C
+    assert isinstance(Inverse(Inverse(C)), Inverse)
+
     assert C.inverse().inverse() == C
 
     assert C.inverse()*C == Identity(C.rows)
@@ -25,3 +33,6 @@ def test_inverse():
     assert (C*D).inverse() == D.I*C.I
     # But still works when not possible
     assert isinstance((A*E).inverse(), Inverse)
+
+    assert Inverse(eye(3)).doit() == eye(3)
+    assert Inverse(eye(3)).doit(deep=False) == eye(3)

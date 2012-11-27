@@ -1,11 +1,13 @@
-from sympy.matrices.expressions import MatrixSymbol, Adjoint, Trace
+from sympy.core import symbols, S
+from sympy.functions import adjoint, conjugate, transpose
+from sympy.matrices.expressions import MatrixSymbol, Adjoint, Trace, Transpose
 from sympy.matrices import eye, Matrix
-from sympy import symbols, S, conjugate, adjoint
 
-n,m,l,k,p = symbols('n m l k p', integer=True)
+n, m, l, k, p = symbols('n m l k p', integer=True)
 A = MatrixSymbol('A', n, m)
 B = MatrixSymbol('B', m, l)
 C = MatrixSymbol('C', n, n)
+
 
 def test_adjoint():
     Sq = MatrixSymbol('Sq', n, n)
@@ -14,6 +16,9 @@ def test_adjoint():
     assert Adjoint(A*B).shape == (l, n)
     assert adjoint(Adjoint(A)) == A
     assert isinstance(Adjoint(Adjoint(A)), Adjoint)
+
+    assert conjugate(Adjoint(A)) == Transpose(A)
+    assert transpose(Adjoint(A)) == Adjoint(Transpose(A))
 
     assert Adjoint(eye(3)).doit() == eye(3)
 

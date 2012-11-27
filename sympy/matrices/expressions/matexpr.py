@@ -137,6 +137,11 @@ class MatrixExpr(Basic):
         from sympy.matrices.expressions.transpose import Transpose
         return Transpose(self)
 
+    def _eval_conjugate(self):
+        from sympy.matrices.expressions.adjoint import Adjoint
+        from sympy.matrices.expressions.transpose import Transpose
+        return Adjoint(Transpose(self))
+
     def _eval_inverse(self):
         from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)

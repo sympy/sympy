@@ -1,6 +1,7 @@
-from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.core import Basic
-from sympy.functions import conjugate, adjoint
+from sympy.functions import adjoint, conjugate, transpose
+from sympy.matrices.expressions.matexpr import MatrixExpr
+
 
 class Adjoint(MatrixExpr):
     """
@@ -45,6 +46,12 @@ class Adjoint(MatrixExpr):
     def _eval_adjoint(self):
         return self.arg
 
+    def _eval_conjugate(self):
+        return transpose(self.arg)
+
     def _eval_trace(self):
         from sympy.matrices.expressions.trace import Trace
         return conjugate(Trace(self.arg))
+
+    def _eval_transpose(self):
+        return conjugate(self.arg)

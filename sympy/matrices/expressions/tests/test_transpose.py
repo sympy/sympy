@@ -15,11 +15,20 @@ def test_transpose():
     assert Transpose(A).shape == (m, n)
     assert Transpose(A*B).shape == (l, n)
     assert transpose(Transpose(A)) == A
+    assert isinstance(Transpose(Transpose(A)), Transpose)
 
-    assert transpose(eye(3)) == eye(3)
+    assert adjoint(Transpose(A)) == Adjoint(Transpose(A))
+    assert conjugate(Transpose(A)) == Adjoint(A)
 
-    assert transpose(S(5)) == S(5)
+    assert Transpose(eye(3)).doit() == eye(3)
 
-    assert transpose(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 3], [2, 4]])
+    assert Transpose(S(5)).doit() == S(5)
+
+    assert Transpose(Matrix([[1, 2], [3, 4]])).doit() == Matrix([[1, 3], [2, 4]])
 
     assert transpose(Trace(Sq)) == Trace(Sq)
+    assert Trace(Transpose(Sq)) == Trace(Sq)
+
+    assert Transpose(Sq)[0, 1] == Sq[1, 0]
+
+    assert Transpose(A*B).doit() == Transpose(B) * Transpose(A)
