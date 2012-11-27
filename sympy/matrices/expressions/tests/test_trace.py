@@ -1,7 +1,9 @@
 from sympy.core import Lambda, S, symbols
+from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices import eye, Matrix, ShapeError
 from sympy.matrices.expressions import (
-    Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace, ZeroMatrix
+    Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Trace,
+    ZeroMatrix
 )
 from sympy.utilities.pytest import raises
 
@@ -17,6 +19,10 @@ def test_trace():
     raises(ShapeError, lambda: Trace(C))
     assert Trace(eye(3)) == 3
     assert Trace(Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])) == 15
+
+    assert adjoint(Trace(A)) == Trace(Adjoint(A))
+    assert conjugate(Trace(A)) == Trace(Adjoint(A))
+    assert transpose(Trace(A)) == Trace(A)
 
     A / Trace(A)  # Make sure this is possible
 
