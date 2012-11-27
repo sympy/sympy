@@ -36,6 +36,7 @@ class LatexPrinter(Printer):
         "itex": False,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
+        "fold_short_frac": True,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
         "mat_str": "smallmatrix",
@@ -259,8 +260,37 @@ class LatexPrinter(Printer):
                 elif coeff is not S.One:
                     tex += str(self._print(coeff)) + " "
 
-            tex += r"\frac{%s}{%s}" % \
-                (convert(numer), convert(denom))
+            snumer = convert(numer)
+            sdenom = convert(denom)
+            ratio = 2
+            if self._settings['fold_short_frac'] \
+                    and len(sdenom.split()) <= 2 and not "^" in sdenom:
+                if numer.is_Add:
+                    tex += r"\left(%s\right) / %s" % (snumer, sdenom)
+                else:
+                    tex += r"%s / %s" % (snumer, sdenom)
+            elif len(snumer.split()) > ratio*len(sdenom.split()):
+                if numer.is_Add:
+                    tex += r"\frac{1}{%s} \left(%s\right)" % (sdenom, snumer)
+                elif numer.is_Mul:
+                    a = S.One
+                    b = S.One
+                    for x in numer.args:
+                        if x.is_Add or len(convert(a*x).split()) > ratio*len(sdenom.split()) or \
+                                (b.is_commutative is x.is_commutative is False):
+                            b *= x
+                        else:
+                            a *= x
+                    if b.is_Add:
+                        tex += r"\frac{%s}{%s} \left(%s\right)" \
+                            % (convert(a), sdenom, convert(b))
+                    else:
+                        tex += r"\frac{%s}{%s} %s" \
+                            % (convert(a), sdenom, convert(b))
+                else:
+                    tex += r"\frac{1}{%s} %s" % (sdenom, snumer)
+            else:
+                tex += r"\frac{%s}{%s}" % (snumer, sdenom)
 
         return tex
 
@@ -1599,6 +1629,15 @@ def latex(expr, **settings):
     >>> latex((2*tau)**sin(Rational(7,2)), fold_func_brackets = True)
     '\\left(2 \\tau\\right)^{\\sin {\\frac{7}{2}}}'
 
+    fold_short_frac: Emit "p / q" instead of "\frac{p}{q}" when the
+    denominator is simple enough (at most two terms and no powers).
+    The default value is `True`.
+
+    >>> latex(3*x**2/y)
+    '3 x^{2} / y'
+    >>> latex(3*x**2/y, fold_short_frac=False)
+    '\\frac{3 x^{2}}{y}'
+
     mul_symbol: The symbol to use for multiplication. Can be one of None,
     "ldot", "dot", or "times".
 
@@ -1638,7 +1677,7 @@ def latex(expr, **settings):
     also SymPy matrices:
 
     >>> latex([2/x, y], mode='inline')
-    '$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$'
+    '$\\begin{bmatrix}2 / x, & y\\end{bmatrix}$'
 
     """
 

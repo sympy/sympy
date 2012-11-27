@@ -985,8 +985,8 @@ Tip: To make pretty printing the default in the Python interpreter, use:
     \begin{equation}x^{2}\end{equation}
     >>> latex(x**2, mode='equation*')
     \begin{equation*}x^{2}\end{equation*}
-    >>> latex(1/x)
-    \frac{1}{x}
+    >>> latex(1/(x + 1))
+    \frac{1}{x + 1}
     >>> latex(Integral(x**2, x))
     \int x^{2}\, dx
 
