@@ -254,6 +254,8 @@ class LatexPrinter(Printer):
             else:
                 if coeff.is_Rational and coeff.p == 1:
                     denom *= coeff.q
+                elif coeff.is_Rational and coeff.q == 1:
+                    numer *= coeff.p
                 elif coeff is not S.One:
                     tex += str(self._print(coeff)) + " "
 
