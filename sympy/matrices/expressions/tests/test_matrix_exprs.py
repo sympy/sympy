@@ -17,37 +17,6 @@ D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 
 
-def test_transpose():
-    Sq = MatrixSymbol('Sq', n, n)
-
-    assert Transpose(A).shape == (m, n)
-    assert Transpose(A*B).shape == (l, n)
-    assert transpose(Transpose(A)) == A
-
-    assert transpose(eye(3)) == eye(3)
-
-    assert transpose(S(5)) == S(5)
-
-    assert transpose(Matrix([[1, 2], [3, 4]])) == Matrix([[1, 3], [2, 4]])
-
-    assert transpose(Trace(Sq)) == Trace(Sq)
-
-
-def test_inverse():
-    raises(ShapeError, lambda: Inverse(A))
-    assert C.inverse().inverse() == C
-
-    assert C.inverse()*C == Identity(C.rows)
-
-    assert Identity(n).inverse() == Identity(n)
-    assert (3*Identity(n)).inverse() == Identity(n)/3
-
-    # Simplifies Muls if possible (i.e. submatrices are square)
-    assert (C*D).inverse() == D.I*C.I
-    # But still works when not possible
-    assert isinstance((A*E).inverse(), Inverse)
-
-
 def test_trace():
     A = MatrixSymbol('A', n, n)
     B = MatrixSymbol('B', n, n)
