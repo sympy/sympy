@@ -216,6 +216,11 @@ class Pow(Expr):
             elif (self.exp in [S.ImaginaryUnit, -S.ImaginaryUnit] and
                   self.base in [S.ImaginaryUnit, -S.ImaginaryUnit]):
                 return True
+            elif self.exp.is_Add:
+                c, a = self.exp.as_coeff_Add()
+                if c and c.is_Integer:
+                    return C.Mul(
+                        self.base**c, self.base**a, evaluate=False).is_real
         if real_b and im_e:
             if self.base is S.NegativeOne:
                 return True
