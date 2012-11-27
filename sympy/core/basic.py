@@ -1585,6 +1585,7 @@ class preorder_traversal(object):
 
     Examples
     ========
+
     >>> from sympy import symbols
     >>> from sympy import symbols, default_sort_key
     >>> from sympy.core.basic import preorder_traversal

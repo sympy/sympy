@@ -32,17 +32,18 @@ There are two types of functions:
     (x,)
 
 """
-from core import BasicMeta, C
+from add import Add
 from assumptions import ManagedProperties
 from basic import Basic
+from cache import cacheit
+from compatibility import iterable, is_sequence
+from core import BasicMeta, C
+from decorators import _sympifyit
+from expr import Expr, AtomicExpr
+from numbers import Rational, Float
+from rules import Transform
 from singleton import S
 from sympify import sympify
-from expr import Expr, AtomicExpr
-from decorators import _sympifyit
-from compatibility import iterable, is_sequence
-from cache import cacheit
-from numbers import Rational, Float
-from add import Add
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
@@ -2147,41 +2148,39 @@ def nfloat(expr, n=15, exponent=False):
 
     """
     from sympy.core import Pow
+    from sympy.core.basic import _aresame
+
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):
             return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
                                expr.iteritems()])
         return type(expr)([nfloat(a, n, exponent) for a in expr])
     elif not isinstance(expr, Expr):
-        return Float(expr, '')
-    elif expr.is_Float:
-        return expr.n(n)
-    elif expr.is_Integer:
-        return Float(float(expr)).n(n)
-    elif expr.is_Rational:
-        return Float(expr).n(n)
+        return Float(expr, n)
+    elif expr.is_Number:
+        return Float(expr, n)
+    elif expr.is_number:
+        return expr.evalf(n)
 
-    if not exponent:
-        bases = {}
-        expos = {}
-        reps = {}
-        for p in expr.atoms(Pow):
-            b, e = p.as_base_exp()
-            b = bases.setdefault(p.base, nfloat(p.base, n, exponent))
-            e = expos.setdefault(e, Dummy())
-            reps[p] = Pow(b, e, evaluate=False)
-        rv = expr.xreplace(dict(reps)).n(n).xreplace(
-            dict([(v, k) for k, v in expos.iteritems()]))
-    else:
-        intex = lambda x: x.is_Pow and x.exp.is_Integer
-        floex = lambda x: Pow(x.base, Float(x.exp, ''), evaluate=False)
-        rv = expr.n(n).replace(intex, floex)
+    def rule(e):
+        if e.is_Pow:
+            b, ex = e.as_base_exp()
+            b = nfloat(b, n, exponent)
+            if exponent:
+                ex = nfloat(ex, n, exponent)
+            return e.func(b, ex)
+        elif e.is_Add or e.is_Mul:
+            c2, r2 = c, r = e.as_independent(C.Symbol)
+            if not c is e.identity:
+                c2 = nfloat(c, n, exponent)
+            r2 = e.func(*[nfloat(a, n, exponent) for a in e.make_args(r)])
+            if not c2.is_Rational or not _aresame(r2, r):
+                return e.func(c2, r2)
+        elif isinstance(e, Function):
+            return e.func(*nfloat(e.args, n, exponent))
+        return e
 
-    funcs = [f for f in rv.atoms(Function)]
-    funcs.sort(key=count_ops)
-    funcs.reverse()
-    return rv.subs([(f, f.func(*[nfloat(a, n, exponent)
-                     for a in f.args])) for f in funcs])
+    return expr.xreplace(Transform(lambda x: rule(x)))
 
 
 from sympy.core.symbol import Dummy
