@@ -1015,14 +1015,14 @@ class LatexPrinter(Printer):
 
     def _print_Transpose(self, expr):
         mat = expr.arg
-        if mat.is_MatAdd or mat.is_MatMul:
+        if not mat.is_Atom:
             return r"\left(%s\right)^T" % self._print(mat)
         else:
             return "%s^T" % self._print(mat)
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
-        if mat.is_MatAdd or mat.is_MatMul:
+        if not mat.is_Atom:
             return r"\left(%s\right)^\dag" % self._print(mat)
         else:
             return "%s^\dag" % self._print(mat)
@@ -1060,7 +1060,7 @@ class LatexPrinter(Printer):
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
-        if base.is_Add or base.is_Mul:
+        if not base.is_Atom:
             return r"\left(%s\right)^{%s}" % (self._print(base), self._print(exp))
         else:
             return "%s^{%s}" % (self._print(base), self._print(exp))

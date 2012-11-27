@@ -797,11 +797,20 @@ def test_Tr():
 
 
 def test_Adjoint():
-    from sympy.matrices import MatrixSymbol, Adjoint
+    from sympy.matrices import MatrixSymbol, Adjoint, Inverse, Transpose
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
+    assert latex(Adjoint(X)) == r'X^\dag'
     assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dag'
     assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dag + Y^\dag'
+    assert latex(Adjoint(X*Y)) == r'\left(X Y\right)^\dag'
+    assert latex(Adjoint(Y)*Adjoint(X)) == r'Y^\dag X^\dag'
+    assert latex(Adjoint(X**2)) == r'\left(X^{2}\right)^\dag'
+    assert latex(Adjoint(X)**2) == r'\left(X^\dag\right)^{2}'
+    assert latex(Adjoint(Inverse(X))) == r'\left(X^{-1}\right)^\dag'
+    assert latex(Inverse(Adjoint(X))) == r'\left(X^\dag\right)^{-1}'
+    assert latex(Adjoint(Transpose(X))) == r'\left(X^T\right)^\dag'
+    assert latex(Transpose(Adjoint(X))) == r'\left(X^\dag\right)^T'
 
 
 def test_Hadamard():
