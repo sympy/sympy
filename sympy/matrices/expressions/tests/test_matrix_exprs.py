@@ -17,32 +17,6 @@ D = MatrixSymbol('D', n, n)
 E = MatrixSymbol('E', m, n)
 
 
-def test_trace():
-    A = MatrixSymbol('A', n, n)
-    B = MatrixSymbol('B', n, n)
-    assert isinstance(Trace(A), Trace)
-    assert not isinstance(Trace(A), MatrixExpr)
-    raises(ShapeError, lambda: Trace(MatrixSymbol('B', 3, 4)))
-    assert Trace(eye(3)) == 3
-    assert Trace(Matrix(3, 3, [1, 2, 3, 4, 5, 6, 7, 8, 9])) == 15
-
-    A / Trace(A)  # Make sure this is possible
-
-    # Some easy simplifications
-    assert Trace(Identity(5)) == 5
-    assert Trace(ZeroMatrix(5, 5)) == 0
-    assert Trace(2*A*B) == 2 * Trace(A*B)
-    assert Trace(A.T) == Trace(A)
-
-    i, j = symbols('i,j')
-    F = FunctionMatrix(3, 3, Lambda((i, j), i + j))
-    assert Trace(F).doit() == (0 + 0) + (1 + 1) + (2 + 2)
-
-    raises(TypeError, lambda: Trace(S.One))
-
-    assert Trace(A).arg is A
-
-
 def test_shape():
     assert A.shape == (n, m)
     assert (A*B).shape == (n, l)
