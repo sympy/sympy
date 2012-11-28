@@ -78,9 +78,6 @@ class MatrixBase(object):
     is_Identity = None
     _class_priority = 3
 
-    def _sympy_(self):
-        raise SympifyError('Matrix cannot be sympified')
-
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
         """Return the number of rows, cols and flat matrix elements.
@@ -2738,7 +2735,7 @@ class MatrixBase(object):
         flags.pop('rational', None)
 
         for r, k in vlist:
-            tmp = self - eye(self.rows)*r
+            tmp = self.as_mutable() - eye(self.rows)*r
             basis = tmp.nullspace()
             # whether tmp.is_symbolic() is True or False, it is possible that
             # the basis will come back as [] in which case simplification is
@@ -3494,9 +3491,9 @@ class MatrixBase(object):
 
 def classof(A, B):
     """
-    Determines strategy for combining Immutable and Mutable matrices
+    Get the type of the result when combining matrices of different types.
 
-    Currently the strategy is that Mutability is contagious
+    Currently the strategy is that immutability is contagious.
 
     Examples
     ========
@@ -3506,7 +3503,7 @@ def classof(A, B):
     >>> M = Matrix([[1, 2], [3, 4]]) # a Mutable Matrix
     >>> IM = ImmutableMatrix([[1, 2], [3, 4]])
     >>> classof(M, IM)
-    <class 'sympy.matrices.dense.MutableDenseMatrix'>
+    <class 'sympy.matrices.immutable.ImmutableMatrix'>
     """
     try:
         if A._class_priority > B._class_priority:

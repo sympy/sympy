@@ -8,6 +8,7 @@ Here we test the extent to which they cooperate
 from sympy import symbols
 from sympy.matrices import (Matrix, MatrixSymbol, eye, Identity,
         ImmutableMatrix)
+from sympy.matrices.expressions import MatrixExpr, MatAdd
 from sympy.matrices.matrices import classof
 from sympy.utilities.pytest import raises
 
@@ -21,16 +22,16 @@ a, b, c = symbols('a,b,c')
 
 
 def test_IM_MM():
-    assert (MM + IM).__class__ is Matrix
-    assert (IM + MM).__class__ is Matrix
-    assert (2*IM + MM).__class__ is Matrix
+    assert isinstance(MM + IM, ImmutableMatrix)
+    assert isinstance(IM + MM, ImmutableMatrix)
+    assert isinstance(2*IM + MM, ImmutableMatrix)
     assert MM.equals(IM)
 
 
 def test_ME_MM():
-    assert (Identity(3) + MM).__class__ is Matrix
-    assert (SM + MM).__class__ is Matrix
-    assert (MM + SM).__class__ is Matrix
+    assert isinstance(Identity(3) + MM, MatrixExpr)
+    assert isinstance(SM + MM, MatAdd)
+    assert isinstance(MM + SM, MatAdd)
     assert (Identity(3) + MM)[1, 1] == 6
 
 
@@ -60,5 +61,6 @@ def test_classof():
     C = MatrixSymbol('C', 3, 3)
     assert classof(A, A) == Matrix
     assert classof(B, B) == ImmutableMatrix
-    assert classof(A, B) == Matrix
+    assert classof(A, B) == ImmutableMatrix
+    assert classof(B, A) == ImmutableMatrix
     raises(TypeError, lambda: classof(A, C))
