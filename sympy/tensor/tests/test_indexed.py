@@ -92,7 +92,7 @@ def test_IndexedBase_sugar():
     assert A1 == A2[(i, j)]
     assert A1 == A2[[i, j]]
     assert A1 == A2[Tuple(i, j)]
-
+    assert all(a.is_Integer for a in A2[1, 0].args[1:])
 
 def test_IndexedBase_subs():
     i, j, k = symbols('i j k', integer=True)
