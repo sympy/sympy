@@ -101,7 +101,8 @@ def test_mul():
 
     e = 4*x
     assert e.match(p*x) == {p: 4}
-    assert e.match(p*y) == {p: 4*x/y}
+    assert e.match(p*y) is None
+    assert e.match(e + p*y) == {p: 0}
 
     e = a*x*b*c
     assert e.match(p*x) == {p: a*b*c}
@@ -607,3 +608,10 @@ def test_issue_3004():
     x = Symbol('x')
     a = Wild('a')
     assert (-I*x*oo).match(I*a*oo) == {a: -x}
+
+
+@XFAIL
+def test_issue_3539():
+    a = Wild('a')
+    x = Symbol('x')
+    assert (x - 2).match(a - x) is None

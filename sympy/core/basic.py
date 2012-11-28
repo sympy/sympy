@@ -1282,16 +1282,19 @@ class Basic(object):
 
     def matches(self, expr, repl_dict={}):
         """
-        Helper method for match() - switches the pattern and expr.
+        Helper method for match() that looks for a match between wild symbols
+        in self and expressions in expr.
 
-        Can be used to solve linear equations:
+        Examples
+        ========
 
-        >>> from sympy import Symbol, Wild, Integer
-        >>> a,b = map(Symbol, 'ab')
+        >>> from sympy import symbols, Wild, Integer, Basic
+        >>> a, b, c = symbols('a b c')
         >>> x = Wild('x')
-        >>> (a+b*x).matches(Integer(0))
-        {x_: -a/b}
-
+        >>> Basic(a + x, x).matches(Basic(a + b, c)) is None
+        True
+        >>> Basic(a + x, x).matches(Basic(a + b + c, b + c))
+        {x_: b + c}
         """
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):

@@ -181,8 +181,15 @@ class AssocOp(Basic):
                 exact_part.append(p)
 
         if exact_part:
+            exact = self.func(*exact_part)
+            free = expr.free_symbols
+            if free and (exact.free_symbols - free):
+                # there are symbols in the exact part that are not
+                # in the expr; but if there are no free symbols, let
+                # the matching continue
+                return None
             newpattern = self.func(*wild_part)
-            newexpr = self._combine_inverse(expr, self.func(*exact_part))
+            newexpr = self._combine_inverse(expr, exact)
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
