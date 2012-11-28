@@ -401,7 +401,7 @@ def _sqrt_symbolic_denest(a, b, r):
     sqrt(sqrt(sqrt(x + 3) + 1) + 1) + 1 + sqrt(2)
     """
 
-    a, b, r = sympify([a, b, r])
+    a, b, r = map(sympify, (a, b, r))
     rval = _sqrt_match(r)
     if not rval:
         return None

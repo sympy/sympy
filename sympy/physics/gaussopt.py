@@ -226,7 +226,7 @@ class FlatRefraction(RayTransferMatrix):
     [0, n1/n2]
     """
     def __new__(cls, n1, n2):
-        n1, n2 = sympify((n1, n2))
+        n1, n2 = map(sympify, (n1, n2))
         return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
 
 
@@ -257,7 +257,7 @@ class CurvedRefraction(RayTransferMatrix):
     [(n1 - n2)/(R*n2), n1/n2]
     """
     def __new__(cls, R, n1, n2):
-        R, n1, n2 = sympify((R, n1, n2))
+        R, n1, n2 = map(sympify, (R, n1, n2))
         return RayTransferMatrix.__new__(cls, 1, 0, (n1 - n2)/R/n2, n1/n2)
 
 
@@ -484,7 +484,7 @@ class BeamParameter(Expr):
     __slots__ = ['z', 'z_r', 'wavelen']
 
     def __new__(cls, wavelen, z, **kwargs):
-        wavelen, z = sympify((wavelen, z))
+        wavelen, z = map(sympify, (wavelen, z))
         inst = Expr.__new__(cls, wavelen, z)
         inst.wavelen = wavelen
         inst.z = z
@@ -639,7 +639,7 @@ def waist2rayleigh(w, wavelen):
     >>> waist2rayleigh(w, wavelen)
     pi*w**2/wavelen
     """
-    w, wavelen = sympify((w, wavelen))
+    w, wavelen = map(sympify, (w, wavelen))
     return w**2*pi/wavelen
 
 
@@ -660,7 +660,7 @@ def rayleigh2waist(z_r, wavelen):
     >>> rayleigh2waist(z_r, wavelen)
     sqrt(wavelen*z_r)/sqrt(pi)
     """
-    z_r, wavelen = sympify((z_r, wavelen))
+    z_r, wavelen = map(sympify, (z_r, wavelen))
     return sqrt(z_r/pi*wavelen)
 
 
@@ -685,7 +685,7 @@ def geometric_conj_ab(a, b):
     >>> geometric_conj_ab(a, b)
     a*b/(a + b)
     """
-    a, b = sympify((a, b))
+    a, b = map(sympify, (a, b))
     if abs(a) == oo or abs(b) == oo:
         return a if abs(b) == oo else b
     else:
@@ -716,7 +716,7 @@ def geometric_conj_af(a, f):
     >>> geometric_conj_bf(b, f)
     b*f/(b - f)
     """
-    a, f = sympify((a, f))
+    a, f = map(sympify, (a, f))
     return -geometric_conj_ab(a, -f)
 
 geometric_conj_bf = geometric_conj_af
@@ -757,7 +757,7 @@ def gaussian_conj(s_in, z_r_in, f):
     >>> gaussian_conj(s_in, z_r_in, f)[2]
     1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)
     """
-    s_in, z_r_in, f = sympify((s_in, z_r_in, f))
+    s_in, z_r_in, f = map(sympify, (s_in, z_r_in, f))
     s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in - f)) + 1/f )
     m = 1/sqrt((1 - (s_in/f)**2) + (z_r_in/f)**2)
     z_r_out = z_r_in / ((1 - (s_in/f)**2) + (z_r_in/f)**2)
@@ -801,7 +801,7 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     f
     """
     #TODO add the other possible arguments
-    wavelen, waist_in, waist_out = sympify((wavelen, waist_in, waist_out))
+    wavelen, waist_in, waist_out = map(sympify, (wavelen, waist_in, waist_out))
     m = waist_out / waist_in
     z = waist2rayleigh(waist_in, wavelen)
     if len(kwargs) != 1:
