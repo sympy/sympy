@@ -1,9 +1,26 @@
-from sympy import Symbol, sympify, Tuple, Integer
-from sympy.core.basic import Basic
-from sympy.core.decorators import _sympifyit, call_highest_priority
-from sympy.core.singleton import S
+from functools import wraps
+
+from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic
+from sympy.core.decorators import call_highest_priority
+from sympy.core.sympify import SympifyError
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
+
+
+def _sympifyit(arg, retval=None):
+    # This version of _sympifyit sympifies MutableMatrix objects
+    def deco(func):
+        @wraps(func)
+        def __sympifyit_wrapper(a, b):
+            try:
+                b = sympify(b, strict=True)
+                return func(a, b)
+            except SympifyError:
+                return retval
+
+        return __sympifyit_wrapper
+
+    return deco
 
 
 class MatrixExpr(Basic):
