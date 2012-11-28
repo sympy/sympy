@@ -412,7 +412,7 @@ class Float(Number):
     Examples
     ========
 
-    >>> from sympy import Float
+    >>> from sympy import Float, pi
     >>> Float(3.5)
     3.50000000000000
     >>> Float(3)
@@ -520,8 +520,15 @@ class Float(Number):
     An actual mpf tuple also contains the number of bits in c as the last
     element of the tuple, but this is not needed for instantiation:
 
-        >>> _._mpf_
-        (1, 5, 0, 3)
+    >>> _._mpf_
+    (1, 5, 0, 3)
+
+    That last value can be used to create the corresponding Float, however,
+    by passing the tuple and prec='' to Float to copy the precision from the
+    mpf tuple:
+
+    >>> Float(pi.n(5)._mpf_, '')
+    3.1416
 
     """
     __slots__ = ['_mpf_', '_prec']
@@ -554,9 +561,12 @@ class Float(Number):
                 # even if num == int(num) -- because we don't know how
                 # it became that exact float.
                 num = str(num)
+            elif type(num) is tuple and len(num) == 4:
+                return Float._new(num, num[-1])
             elif not isinstance(num, basestring):
                 raise ValueError('The null string can only be used when '
-                'the number to Float is passed as a string.')
+                'the number to Float is passed as a string or is a tuple '
+                'with length of 4.')
             ok = None
             if _literal_float(num):
                 try:
