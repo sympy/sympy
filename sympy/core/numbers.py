@@ -608,6 +608,10 @@ class Float(Number):
         if not num:
             return C.Zero()
 
+        if _mpf_ == fnan:
+            # Return symbolic NaN in place of float NaN
+            return S.NaN
+
         obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
         obj._prec = prec
@@ -617,6 +621,8 @@ class Float(Number):
     def _new(cls, _mpf_, _prec):
         if _mpf_ == mlib.fzero:
             return S.Zero
+        if _mpf_ == fnan:
+            return S.NaN
 
         # the new Float should be normalized unless it is
         # an integer because Float doesn't return Floats
@@ -2216,7 +2222,7 @@ class NaN(Number):
     __truediv__ = __div__
 
     def _as_mpf_val(self, prec):
-        return mlib.fnan
+        return fnan
 
     def _sage_(self):
         import sage.all as sage

@@ -516,15 +516,18 @@ def test_Infinity():
     assert float(1) - oo == Float('-inf')
     assert float(1) - -oo == Float('inf')
 
-    from sympy.mpmath.libmp.libmpf import fnan
-    assert (oo*Float('nan'))._mpf_ == fnan
-    assert (-oo*Float('nan'))._mpf_ == fnan
-    assert (oo/Float('nan'))._mpf_ == fnan
-    assert (-oo/Float('nan'))._mpf_ == fnan
-    assert (oo + Float('nan'))._mpf_ == fnan
-    assert (-oo + Float('nan'))._mpf_ == fnan
-    assert (oo - Float('nan'))._mpf_ == fnan
-    assert (-oo - Float('nan'))._mpf_ == fnan
+    assert Float('nan') == nan
+    assert nan*1.0 == nan
+    assert -1.0*nan == nan
+    assert nan*oo == nan
+    assert nan*-oo == nan
+    assert nan/oo == nan
+    assert nan/-oo == nan
+    assert nan + oo == nan
+    assert nan + -oo == nan
+    assert nan - oo == nan
+    assert nan - -oo == nan
+    assert -oo * S.Zero == nan
 
     assert oo*nan == nan
     assert -oo*nan == nan
