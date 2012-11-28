@@ -590,13 +590,15 @@ class Basic(object):
             return False
         if is_real and is_number:
             return True
-        n, i = self.evalf(2).as_real_imag()
+        n, i = [p.evalf(2) for p in self.as_real_imag()]
         if not i.is_Number or not n.is_Number:
             return False
         if i:
-            if i._prec != 1:
-                return False
-        return n._prec != 1
+            # if _prec = 1 we can't decide and if not,
+            # the answer is False so return False
+            return False
+        else:
+            return n._prec != 1
 
     @property
     def func(self):

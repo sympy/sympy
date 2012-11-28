@@ -467,6 +467,54 @@ def test_I():
     assert ask(Q.hermitian(z)) is False
     assert ask(Q.antihermitian(z)) is False
 
+    z = I**(I)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is True
+
+    z = (-I)**(I)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is True
+
+    z = (3*I)**(I)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is False
+
+    z = (1)**(I)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is True
+
+    z = (-1)**(I)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is True
+
+    z = (1+I)**(I)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is False
+
+    z = (I)**(I+3)
+    assert ask(Q.imaginary(z)) is True
+    assert ask(Q.real(z)) is False
+
+    z = (I)**(I+2)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is True
+
+    z = (I)**(2)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is True
+
+    z = (I)**(3)
+    assert ask(Q.imaginary(z)) is True
+    assert ask(Q.real(z)) is False
+
+    z = (3)**(I)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is False
+
+    z = (I)**(0)
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.real(z)) is True
+
 
 @slow
 def test_bounded():
@@ -965,6 +1013,16 @@ def test_bounded_xfail():
     assert ask(Q.bounded(cos(x)**x)) is True
     assert ask(Q.bounded(sin(x) ** x)) is True
 
+@XFAIL
+def test_imaginary_xfail():
+    assert ask(Q.imaginary(0**I)) is None
+    assert ask(Q.imaginary(0**(-I))) is None
+
+@XFAIL
+def test_real_xfail():
+    assert ask(Q.real(0**I)) is None
+    assert ask(Q.real(0**(-I))) is None
+
 
 def test_commutative():
     """By default objects are Q.commutative that is why it returns True
@@ -1275,6 +1333,10 @@ def test_imaginary():
     assert ask(Q.imaginary(I*x), Q.real(x)) is True
     assert ask(Q.imaginary(I*x), Q.imaginary(x)) is False
     assert ask(Q.imaginary(I*x), Q.complex(x)) is None
+    assert ask(Q.imaginary(I**x), Q.negative(x)) is None
+    assert ask(Q.imaginary(I**x), Q.positive(x)) is None
+    assert ask(Q.imaginary(I**x), Q.even(x)) is False
+    assert ask(Q.imaginary(I**y), Q.odd(y)) is True
     assert ask(Q.imaginary(x*y), Q.imaginary(x) & Q.real(y)) is True
 
     assert ask(
@@ -1283,6 +1345,25 @@ def test_imaginary():
         Q.real(x) & Q.real(y) & Q.imaginary(z)) is None
     assert ask(Q.imaginary(x + y + z),
         Q.real(x) & Q.imaginary(y) & Q.imaginary(z)) is False
+    assert ask(Q.imaginary(x**0), Q.imaginary(x)) is False
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.imaginary(y)) is None
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.real(y)) is None
+    assert ask(Q.imaginary(x**y), Q.real(x) & Q.imaginary(y)) is None
+    assert ask(Q.imaginary(x**y), Q.real(x) & Q.real(y)) is None
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.integer(y)) is None
+    assert ask(Q.imaginary(x**y), Q.imaginary(y) & Q.integer(x)) is None
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.odd(y)) is True
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.rational(y)) is None
+    assert ask(Q.imaginary(x**y), Q.imaginary(x) & Q.even(y)) is False
+    assert ask(Q.imaginary(x**y), Q.real(x) & Q.integer(y)) is False
+    assert ask(Q.imaginary(x**y), Q.positive(x) & Q.real(y)) is False
+    assert ask(Q.imaginary(x**y), Q.negative(x) & Q.real(y)) is True
+    assert ask(Q.imaginary(x**y), Q.integer(x) & Q.imaginary(y)) is None
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is True
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is True
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.integer(y/z)) is False
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.positive(x)) is False
+    assert ask(Q.imaginary(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is True
 
 
 def test_infinitesimal():
@@ -1500,6 +1581,21 @@ def test_real():
     assert ask(Q.real(x**y), Q.real(x) & Q.integer(y)) is True
     assert ask(Q.real(x**y), Q.real(x) & Q.real(y)) is None
     assert ask(Q.real(x**y), Q.positive(x) & Q.real(y)) is True
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.imaginary(y)) is None
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.real(y)) is None
+    assert ask(Q.real(x**y), Q.real(x) & Q.imaginary(y)) is None
+    assert ask(Q.real(x**0), Q.imaginary(x)) is True
+    assert ask(Q.real(x**y), Q.real(x) & Q.integer(y)) is True
+    assert ask(Q.real(x**y), Q.positive(x) & Q.real(y)) is True
+    assert ask(Q.real(x**y), Q.real(x) & Q.rational(y)) is None
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.integer(y)) is None
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.odd(y)) is False
+    assert ask(Q.real(x**y), Q.imaginary(x) & Q.even(y)) is True
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.rational(y/z) & Q.even(z) & Q.positive(x)) is True
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.rational(y/z) & Q.even(z) & Q.negative(x)) is False
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.integer(y/z)) is True
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.positive(x)) is True
+    assert ask(Q.real(x**(y/z)), Q.real(x) & Q.real(y/z) & Q.negative(x)) is False
 
     # trigonometric functions
     assert ask(Q.real(sin(x))) is None

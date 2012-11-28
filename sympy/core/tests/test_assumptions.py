@@ -613,3 +613,11 @@ def test_inconsistent():
     # cf. issues 2696 and 2446
     raises(InconsistentAssumptions, lambda: Symbol('x', real=True,
            commutative=False))
+
+
+def test_issue_3532():
+    assert ((-1)**(I)).is_real is True
+    assert ((-1)**(I*2)).is_real is True
+    assert ((-1)**(I/2)).is_real is True
+    assert ((-1)**(I*S.Pi)).is_real is True
+    assert (I**(I + 2)).is_real is True
