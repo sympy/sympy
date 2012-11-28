@@ -1028,16 +1028,8 @@ class LatexPrinter(Printer):
             return "%s^\dag" % self._print(mat)
 
     def _print_MatAdd(self, expr):
-        # Stolen from print_Add
         terms = list(expr.args)
-        tex = self._print(terms[0])
-
-        for term in terms[1:]:
-            if not _coeff_isneg(term):
-                tex += " +"
-
-            tex += " " + self._print(term)
-
+        tex = " + ".join(map(self._print, terms))
         return tex
 
     def _print_MatMul(self, expr):
