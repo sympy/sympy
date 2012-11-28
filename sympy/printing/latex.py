@@ -137,9 +137,9 @@ class LatexPrinter(Printer):
 
         for term in terms[1:]:
             if not _coeff_isneg(term):
-                tex += " +"
-
-            tex += " " + self._print(term)
+                tex += " + " + self._print(term)
+            else:
+                tex += " - " + self._print(-term)
 
         return tex
 

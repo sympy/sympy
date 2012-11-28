@@ -487,15 +487,15 @@ def test_latex_Piecewise():
 
 def test_latex_Matrix():
     M = Matrix([[1 + x, y], [y, x - 1]])
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -' \
-                       '1\\end{smallmatrix}\\right]'
+    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x - 1' \
+                       '\\end{smallmatrix}\\right]'
     settings = {'mat_str': 'bmatrix'}
     assert latex(M, **settings) == '\\left[\\begin{bmatrix}x + 1 & y\\\\y &' \
-        ' x -1\\end{bmatrix}\\right]'
+        ' x - 1\\end{bmatrix}\\right]'
     settings['mat_delim'] = None
-    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x -1' \
+    assert latex(M, **settings) == '\\begin{bmatrix}x + 1 & y\\\\y & x - 1' \
         '\\end{bmatrix}'
-    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x -1' \
+    assert latex(M) == '\\left[\\begin{smallmatrix}x + 1 & y\\\\y & x - 1' \
                        '\\end{smallmatrix}\\right]'
 
 
