@@ -1,6 +1,6 @@
 """Tests for sho1d.py"""
 
-from sympy import Integer, Symbol, sqrt, I
+from sympy import Integer, Symbol, sqrt, I, S
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum import Commutator
@@ -8,44 +8,51 @@ from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.innerproduct import InnerProduct
 from sympy.physics.quantum.cartesian import X, Px
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.physics.quantum.hilbert import ComplexSpace
 
 from sympy.physics.quantum.sho1d import (RaisingOp, LoweringOp,
-                                        SHOKet, SHOBra, 
+                                        SHOKet, SHOBra,
                                         Hamiltonian, NumberOp)
 
 ad = RaisingOp('a')
 a = LoweringOp('a')
 k = SHOKet('k')
 kz = SHOKet(0)
+kf = SHOKet(1)
 b = SHOBra('b')
 H = Hamiltonian('H')
 N = NumberOp('N')
 omega = Symbol('omega')
 m = Symbol('m')
 
-def test_ad():
+def test_RaisingOp():
     assert Dagger(ad) == a
     assert Commutator(ad, a).doit() == Integer(-1)
     assert Commutator(ad, N).doit() == Integer(-1)*ad
     assert qapply(ad*k) == (sqrt(k.n + 1)*SHOKet(k.n + 1)).expand()
+    assert qapply(ad*kz) == (sqrt(kz.n + 1)*SHOKet(kz.n + 1)).expand()
+    assert qapply(ad*kf) == (sqrt(kf.n + 1)*SHOKet(kf.n + 1)).expand()
     assert ad().rewrite('xp').doit() == \
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(Integer(-1)*I*Px + m*omega*X)
+    assert ad.hilbert_space == ComplexSpace(S.Infinity)
 
-def test_a():
+def test_LoweringOp():
     assert Dagger(a) == ad
     assert Commutator(a, ad).doit() == Integer(1)
     assert Commutator(a, N).doit() == a
     assert qapply(a*k) == (sqrt(k.n)*SHOKet(k.n-Integer(1))).expand()
     assert qapply(a*kz) == Integer(0)
+    assert qapply(a*kf) == (sqrt(kf.n)*SHOKet(kf.n-Integer(1))).expand()
     assert a().rewrite('xp').doit() == \
         (Integer(1)/sqrt(Integer(2)*hbar*m*omega))*(I*Px + m*omega*X)
 
-def test_k():
+def test_SHOKet():
     assert SHOKet('k').dual_class() == SHOBra
     assert SHOBra('b').dual_class() == SHOKet
     assert InnerProduct(b,k).doit() == KroneckerDelta(k.n, b.n)
+    assert k.hilbert_space == ComplexSpace(S.Infinity)
 
-def test_N():
+def test_NumberOp():
     assert Commutator(N, ad).doit() == ad
     assert Commutator(N, a).doit() == Integer(-1)*a
     assert Commutator(N, H).doit() == Integer(0)
@@ -53,7 +60,7 @@ def test_N():
     assert N().rewrite('a').doit() == ad*a
     assert N().rewrite('H').doit() == H/(hbar*omega) - Integer(1)/Integer(2)
 
-def test_H():
+def test_Hamiltonian():
     assert Commutator(H, N).doit() == Integer(0)
     assert qapply(H*k) == ((hbar*omega*(k.n + Integer(1)/Integer(2)))*k).expand()
     assert H().rewrite('a').doit() == hbar*omega*(ad*a + Integer(1)/Integer(2))

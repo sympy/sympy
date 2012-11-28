@@ -1,12 +1,13 @@
 """Simple Harmonic Oscillator 1-Dimension"""
 
-from sympy import sqrt, I, Symbol, Integer
+from sympy import sqrt, I, Symbol, Integer, S
 from sympy.physics.quantum.constants import hbar
 from sympy.physics.quantum.operator import Operator
 from sympy.physics.quantum.state import Bra, Ket, State
 from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.cartesian import X, Px
 from sympy.functions.special.tensor_functions import KroneckerDelta
+from sympy.physics.quantum.hilbert import ComplexSpace
 
 #-------------------------------------------------------------------------
 
@@ -25,13 +26,16 @@ class SHOOp(Operator):
         else:
             raise ValueError("Too many arguments")
 
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        return ComplexSpace(S.Infinity)
 
 class RaisingOp(SHOOp):
     """The Raising Operator or a^dagger.
 
     When a^dagger acts on a state it raises the state up by one. Taking
     the adjoint of a^dagger returns 'a', the Lowering Operator. a^dagger
-    be rewriten in terms of postion and momentum.
+    be rewritten in terms of postion and momentum.
 
     Parameters
     ==========
@@ -103,47 +107,26 @@ class RaisingOp(SHOOp):
     # Printing Methods
     #---------------------------------------------------------------------
 
-    def _sympyrepr(self, printer, *args):
+    def _print_contents(self, printer, *args):
         arg0 = printer._print(self.args[0], *args)
         return '%s(%s)' % (self.__class__.__name__, arg0)
 
-    def _sympystr(self, printer, *args):
-        arg0 = printer._print(self.args[0], *args)
-        return '%s(%s)' % (self.__class__.__name__, arg0)
-
-    def _pretty(self, printer, *args):
+    def _print_contents_pretty(self, printer, *args):
         from sympy.printing.pretty.stringpict import prettyForm
         pform = printer._print(self.args[0], *args)
         pform = pform**prettyForm(u'\u2020')
         return pform
 
-    def _latex(self, printer, *args):
+    def _print_contents_latex(self, printer, *args):
         arg = printer._print(self.args[0])
         return '%s^{\\dag}' % arg
-
-
-    def _print_label_repr(self, printer, *args):
-        return self._print_sequence(
-            self.label, self._sympyrepr, ',',printer, *args
-        )
-
-    def _print_label_pretty(self,printer, *args):
-        return self._print_sequence(
-            self.label, self._pretty, self._label_separator, printer, *args
-        )
-
-    def _print_label_latex(self, printer, *args):
-        return self._print_sequence(
-            self.label, self._latex, self._label_separator, printer, *args
-        )
-
 
 class LoweringOp(SHOOp):
     """The Lowering Operator or 'a'.
 
     When 'a' acts on a state it lowers the state up by one. Taking
     the adjoint of 'a' returns a^dagger, the Raising Operator. 'a'
-    be rewriten in terms of postion and momentum.
+    be rewritten in terms of position and momentum.
 
     Parameters
     ==========
@@ -373,6 +356,10 @@ class Hamiltonian(SHOOp):
 
 class SHOState(State):
     """State class for SHO states"""
+
+    @classmethod
+    def _eval_hilbert_space(cls, label):
+        return ComplexSpace(S.Infinity)
 
     @property
     def n(self):
