@@ -1384,26 +1384,37 @@ class Basic(object):
         return self.func(*terms)
 
     def rewrite(self, *args, **hints):
-        """Rewrites expression containing applications of functions
-           of one kind in terms of functions of different kind. For
-           example you can rewrite trigonometric functions as complex
-           exponentials or combinatorial functions as gamma function.
+        """ Rewrite functions in terms of other functions.
 
-           As a pattern this function accepts a list of functions to
-           to rewrite (instances of DefinedFunction class). As rule
-           you can use string or a destination function instance (in
-           this case rewrite() will use the str() function).
+        Rewrites expression containing applications of functions
+        of one kind in terms of functions of different kind. For
+        example you can rewrite trigonometric functions as complex
+        exponentials or combinatorial functions as gamma function.
 
-           There is also possibility to pass hints on how to rewrite
-           the given expressions. For now there is only one such hint
-           defined called 'deep'. When 'deep' is set to False it will
-           forbid functions to rewrite their contents.
+        As a pattern this function accepts a list of functions to
+        to rewrite (instances of DefinedFunction class). As rule
+        you can use string or a destination function instance (in
+        this case rewrite() will use the str() function).
 
-           >>> from sympy import sin, exp, I
-           >>> from sympy.abc import x, y
+        There is also possibility to pass hints on how to rewrite
+        the given expressions. For now there is only one such hint
+        defined called 'deep'. When 'deep' is set to False it will
+        forbid functions to rewrite their contents.
 
-           >>> sin(x).rewrite(sin, exp)
-           -I*(exp(I*x) - exp(-I*x))/2
+        >>> from sympy import sin, exp, I
+        >>> from sympy.abc import x, y
+
+        Unspecified pattern:
+        >>> sin(x).rewrite(exp)
+        -I*(exp(I*x) - exp(-I*x))/2
+
+        Pattern as a single function:
+        >>> sin(x).rewrite(sin, exp)
+        -I*(exp(I*x) - exp(-I*x))/2
+
+        Pattern as a list of functions:
+        >>> sin(x).rewrite([sin, ], exp)
+        -I*(exp(I*x) - exp(-I*x))/2
 
         """
         if self.is_Atom or not args:
