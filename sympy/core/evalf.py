@@ -6,10 +6,10 @@ import sympy.mpmath.libmp as libmp
 from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
 from sympy.mpmath import inf as mpmath_inf
 from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp,
-        from_rational, fhalf, fnone, fone, fzero, mpf_abs, mpf_add, mpf_atan,
-        mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt, mpf_mul,
-        mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin, mpf_sqrt,
-        normalize, round_nearest, to_int, to_str)
+        from_rational, fhalf, fnan, fnone, fone, fzero, mpf_abs, mpf_add,
+        mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
+        mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
+        mpf_sqrt, normalize, round_nearest, to_int, to_str)
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpc import _infs_nan
 from sympy.mpmath.libmp.libmpf import dps_to_prec
@@ -1106,6 +1106,7 @@ def _create_evalf_table():
         C.Exp1: lambda x, prec, options: (mpf_e(prec), None, prec, None),
         C.ImaginaryUnit: lambda x, prec, options: (None, fone, None, prec),
         C.NegativeOne: lambda x, prec, options: (fnone, None, prec, None),
+        C.NaN : lambda x, prec, options: (fnan, None, prec, None),
 
         C.exp: lambda x, prec, options: evalf_pow(C.Pow(S.Exp1, x.args[0],
         evaluate=False), prec, options),

@@ -371,4 +371,3 @@ def test_chop_value():
 def test_infinities():
     assert oo.evalf(chop=True) == inf
     assert (-oo).evalf(chop=True) == ninf
-    assert S.NaN.evalf(chop=True) == nan

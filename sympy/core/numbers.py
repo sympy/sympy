@@ -608,6 +608,10 @@ class Float(Number):
         if not num:
             return C.Zero()
 
+        if _mpf_ == fnan:
+            # Return symbolic NaN in place of float NaN
+            return S.NaN
+
         obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
         obj._prec = prec
@@ -617,6 +621,8 @@ class Float(Number):
     def _new(cls, _mpf_, _prec):
         if _mpf_ == mlib.fzero:
             return S.Zero
+        if _mpf_ == fnan:
+            return S.NaN
 
         # the new Float should be normalized unless it is
         # an integer because Float doesn't return Floats
@@ -2144,7 +2150,7 @@ class NegativeInfinity(Number):
         return other is S.NegativeInfinity
 
 
-class NaN(Number):
+class NaN(Float):
     """
     Not a Number.
 
@@ -2183,6 +2189,7 @@ class NaN(Number):
     is_commutative = True
     is_real = None
     is_rational = None
+    is_irrational = None
     is_integer = None
     is_comparable = False
     is_finite = None
@@ -2192,10 +2199,15 @@ class NaN(Number):
     is_positive = None
     is_negative = None
 
-    __slots__ = []
+    is_Float = False
+
+    __slots__ = ['_mpf_', '_prec']
 
     def __new__(cls):
-        return AtomicExpr.__new__(cls)
+        obj = AtomicExpr.__new__(cls)
+        obj._mpf_ = fnan
+        obj._prec = 15
+        return obj
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -2216,7 +2228,7 @@ class NaN(Number):
     __truediv__ = __div__
 
     def _as_mpf_val(self, prec):
-        return mlib.fnan
+        return fnan
 
     def _sage_(self):
         import sage.all as sage
@@ -2242,6 +2254,9 @@ class NaN(Number):
 
     def __le__(self, other):
         return False
+
+    def __nonzero__(self):
+        return True
 
 nan = S.NaN
 
