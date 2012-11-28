@@ -2150,7 +2150,7 @@ class NegativeInfinity(Number):
         return other is S.NegativeInfinity
 
 
-class NaN(Float):
+class NaN(Number):
     """
     Not a Number.
 
@@ -2189,7 +2189,6 @@ class NaN(Float):
     is_commutative = True
     is_real = None
     is_rational = None
-    is_irrational = None
     is_integer = None
     is_comparable = False
     is_finite = None
@@ -2199,15 +2198,10 @@ class NaN(Float):
     is_positive = None
     is_negative = None
 
-    is_Float = False
-
-    __slots__ = ['_mpf_', '_prec']
+    __slots__ = []
 
     def __new__(cls):
-        obj = AtomicExpr.__new__(cls)
-        obj._mpf_ = fnan
-        obj._prec = 15
-        return obj
+        return AtomicExpr.__new__(cls)
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -2254,9 +2248,6 @@ class NaN(Float):
 
     def __le__(self, other):
         return False
-
-    def __nonzero__(self):
-        return True
 
 nan = S.NaN
 
