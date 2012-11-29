@@ -547,22 +547,13 @@ class Float(Number):
                 num = '0' + num
             elif num.startswith('-.') and len(num) > 2:
                 num = '-0.' + num[2:]
-        if isinstance(num, float) and num == 0:
+        elif isinstance(num, float) and num == 0:
             num = '0'
-        elif isinstance(num, int):
-            if num == 0 and prec == '':
-                prec = 1
-            num = str(num)
+        elif isinstance(num, (int, long, Integer)):
+            num = str(num)  # faster than mlib.from_int
+
         if prec == '':
-            if isinstance(num, (int, long, Integer)):
-                # an int is unambiguous, but if someone enters
-                # .99999999999999999, Python automatically converts
-                # this to 1.0 and although 1.0 == 1, this is not
-                # really what the user typed, so we avoid guessing --
-                # even if num == int(num) -- because we don't know how
-                # it became that exact float.
-                num = str(num)
-            elif type(num) is tuple and len(num) == 4:
+            if type(num) is tuple and len(num) == 4:
                 return Float._new(num, num[-1])
             elif not isinstance(num, basestring):
                 raise ValueError('The null string can only be used when '
@@ -584,14 +575,12 @@ class Float(Number):
         else:
             dps = prec
 
-        if prec != '' and isinstance(num, (int, long, Integer)):
-            # if this is changed here it has to be changed in _new, too
-            return Integer(num)
-
         prec = mlib.libmpf.dps_to_prec(dps)
         if isinstance(num, float):
             _mpf_ = mlib.from_float(num, prec, rnd)
-        elif isinstance(num, (str, decimal.Decimal, Integer)):
+        elif isinstance(num, str):
+            _mpf_ = mlib.from_str(num, prec, rnd)
+        elif isinstance(num, decimal.Decimal):
             _mpf_ = mlib.from_str(str(num), prec, rnd)
         elif isinstance(num, Rational):
             _mpf_ = mlib.from_rational(num.p, num.q, prec, rnd)
@@ -616,12 +605,8 @@ class Float(Number):
         else:
             _mpf_ = mpmath.mpf(num)._mpf_
 
-        if not num:
-            return C.Zero()
-
         if _mpf_ == FNAN:
-            # Return symbolic NaN in place of float NaN
-            return S.NaN
+            return S.NaN  # special-cased
 
         obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
@@ -630,8 +615,8 @@ class Float(Number):
 
     @classmethod
     def _new(cls, _mpf_, _prec):
-        if _mpf_ == FZERO:
-            return S.Zero
+        if _mpf_ == FZERO:  # XXX this should return same as Float(0)
+            return S.Zero   # but this breaks an existing test
         elif _mpf_ == FNAN:
             return S.NaN
 
