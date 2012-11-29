@@ -10,7 +10,8 @@ import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from sympy.mpmath.ctx_mp import mpnumeric
-from sympy.mpmath.libmp.libmpf import fnan, _normalize as mpf_normalize
+from sympy.mpmath.libmp.libmpf import (
+    fnan as FNAN, fzero as FZERO, _normalize as mpf_normalize)
 
 import decimal
 import math
@@ -35,7 +36,7 @@ def mpf_norm(mpf, prec):
         # hack for mpf_normalize which does not do this;
         # it assumes that if man is zero the result is 0
         if not bc:
-            return mlib.fzero
+            return FZERO
         else:
             # don't change anything; this should already
             # be a well formed mpf tuple
@@ -618,7 +619,7 @@ class Float(Number):
         if not num:
             return C.Zero()
 
-        if _mpf_ == fnan:
+        if _mpf_ == FNAN:
             # Return symbolic NaN in place of float NaN
             return S.NaN
 
@@ -629,9 +630,9 @@ class Float(Number):
 
     @classmethod
     def _new(cls, _mpf_, _prec):
-        if _mpf_ == mlib.fzero:
+        if _mpf_ == FZERO:
             return S.Zero
-        if _mpf_ == fnan:
+        elif _mpf_ == FNAN:
             return S.NaN
 
         # the new Float should be normalized unless it is
@@ -644,7 +645,7 @@ class Float(Number):
         if not man:
             # hack for mpf_normalize which does not do this
             if not bc:
-                ok = mlib.fzero
+                ok = FZERO
             else:
                 ok = (sign % 2, long(man), expt, bc)
         elif expt < 0:
@@ -792,7 +793,7 @@ class Float(Number):
         if isinstance(other, Float):
             # hack for the nan == nan case which, to mpf_eq is not equal
             # but to SymPy should be equal
-            if other._mpf_ == self._mpf_ == fnan:
+            if other._mpf_ == self._mpf_ == FNAN:
                 return True
             return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
         if isinstance(other, Number):
@@ -1864,7 +1865,7 @@ class Infinity(Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('-inf') or other._mpf_ == fnan:
+                if other == Float('-inf') or other._mpf_ == FNAN:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 else:
@@ -1880,7 +1881,7 @@ class Infinity(Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('inf') or other._mpf_ == fnan:
+                if other == Float('inf') or other._mpf_ == FNAN:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 else:
@@ -1895,7 +1896,7 @@ class Infinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other._mpf_ == fnan or other == 0:
+                if other._mpf_ == FNAN or other == 0:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 if other > 0:
@@ -1920,7 +1921,7 @@ class Infinity(Number):
             elif other.is_Float:
                 if other == Float('-inf') or \
                     other == Float('inf') or \
-                        other._mpf_ == fnan:
+                        other._mpf_ == FNAN:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 elif other >= 0:
@@ -2023,7 +2024,7 @@ class NegativeInfinity(Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('inf') or other._mpf_ == fnan:
+                if other == Float('inf') or other._mpf_ == FNAN:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 else:
@@ -2039,7 +2040,7 @@ class NegativeInfinity(Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('-inf') or other._mpf_ == fnan:
+                if other == Float('-inf') or other._mpf_ == FNAN:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 else:
@@ -2054,7 +2055,7 @@ class NegativeInfinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other._mpf_ == fnan or other == 0:
+                if other._mpf_ == FNAN or other == 0:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 elif other > 0:
@@ -2080,7 +2081,7 @@ class NegativeInfinity(Number):
                 if other == Float('-inf') or \
                     other == Float('inf') or \
                     other == Float('nan') or \
-                        other._mpf_ == fnan:
+                        other._mpf_ == FNAN:
                     #Used workaround because Float('nan') == Float('nan') return False
                     return Float('nan')
                 elif other >= 0:
@@ -2232,7 +2233,7 @@ class NaN(Number):
     __truediv__ = __div__
 
     def _as_mpf_val(self, prec):
-        return fnan
+        return FNAN
 
     def _sage_(self):
         import sage.all as sage
