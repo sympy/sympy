@@ -81,12 +81,9 @@ class Subset(Basic):
         next_binary, prev_binary
         """
         bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
-        next_bin_list = list(bin((int(reduce(lambda x, y:
-                                             x + y, bin_list), 2) + k)
-                                 % 2**self.superset_size))[2:]
-        next_bin_list = [0] * (self.superset_size - len(next_bin_list)) + \
-            next_bin_list
-        return Subset.subset_from_bitlist(self.superset, next_bin_list)
+        n = (int(''.join(bin_list), 2) + k) % 2**self.superset_size
+        bits = bin(n)[2:].rjust(self.superset_size, '0')
+        return Subset.subset_from_bitlist(self.superset, bits)
 
     def next_binary(self):
         """
@@ -443,9 +440,8 @@ class Subset(Basic):
         ========
         iterate_binary, rank_binary
         """
-        bin_list = list(bin(rank))[2:]
-        bin_list = [0] * (len(superset) - len(bin_list)) + bin_list
-        return Subset.subset_from_bitlist(superset, bin_list)
+        bits = bin(rank)[2:].rjust(len(superset), '0')
+        return Subset.subset_from_bitlist(superset, bits)
 
     @classmethod
     def unrank_gray(self, rank, superset):

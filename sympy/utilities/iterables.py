@@ -10,7 +10,7 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.compatibility import (
     as_int, combinations, combinations_with_replacement,
     default_sort_key, is_sequence, iterable, permutations,
-    product as cartes, ordered, next
+    product as cartes, ordered, next, bin
 )
 
 
@@ -146,25 +146,32 @@ def reshape(seq, how):
     return type(seq)(rv)
 
 
-def group(container, multiple=True):
+def group(seq, multiple=True):
     """
-    Splits a container into a list of lists of equal, adjacent elements.
+    Splits a sequence into a list of lists of equal, adjacent elements.
+
+    Examples
+    ========
 
     >>> from sympy.utilities.iterables import group
 
     >>> group([1, 1, 1, 2, 2, 3])
     [[1, 1, 1], [2, 2], [3]]
-
     >>> group([1, 1, 1, 2, 2, 3], multiple=False)
     [(1, 3), (2, 2), (3, 1)]
+    >>> group([1, 1, 3, 2, 2, 1], multiple=False)
+    [(1, 2), (3, 1), (2, 2), (1, 1)]
 
+    See Also
+    ========
+    multiset
     """
-    if not container:
+    if not seq:
         return []
 
-    current, groups = [container[0]], []
+    current, groups = [seq[0]], []
 
-    for elem in container[1:]:
+    for elem in seq[1:]:
         if elem == current[-1]:
             current.append(elem)
         else:
@@ -180,6 +187,27 @@ def group(container, multiple=True):
         groups[i] = (current[0], len(current))
 
     return groups
+
+
+def multiset(seq):
+    """Return the hashable sequence in multiset form with values being the
+    multiplicity of the item in the sequence.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import multiset, group
+    >>> multiset('mississippi')
+    {'i': 4, 'm': 1, 'p': 2, 's': 4}
+
+    See Also
+    ========
+    group
+    """
+    rv = defaultdict(int)
+    for s in seq:
+        rv[s] += 1
+    return dict(rv)
 
 
 def postorder_traversal(node, keys=None):
@@ -332,6 +360,66 @@ def interactive_traversal(expr):
         return result
 
     return _interactive_traversal(expr, 0)
+
+
+def ibin(n, bits=0, str=False):
+    """Return a list of length ``bits`` corresponding to the binary value
+    of ``n`` with small bits to the right (last). If bits is omitted, the
+    length will be the number required to represent ``n``. If the bits are
+    desired in reversed order, use the [::-1] slice of the returned list.
+
+    If a sequence of all bits-length lists starting from [0, 0,..., 0]
+    through [1, 1, ..., 1] are desired, pass a non-integer for bits, e.g.
+    'all'.
+
+    If the bit *string* is desired pass ``str=True``.
+
+    Examples
+    ========
+
+    >>> from sympy.utilities.iterables import ibin, variations
+    >>> ibin(2)
+    [1, 0]
+    >>> ibin(2, 4)
+    [0, 0, 1, 0]
+    >>> ibin(2, 4)[::-1]
+    [0, 1, 0, 0]
+
+    If all lists corresponding to 0 to 2**n - 1, pass a non-integer
+    for bits:
+
+    >>> bits = 2
+    >>> for i in ibin(2, 'all'):
+    ...     print i
+    (0, 0)
+    (0, 1)
+    (1, 0)
+    (1, 1)
+
+    If a bit string is desired of a given length, use str=True:
+
+    >>> n = 123
+    >>> bits = 10
+    >>> ibin(n, bits, str=True)
+    '0001111011'
+    >>> ibin(n, bits, str=True)[::-1]  # small bits left
+    '1101111000'
+    >>> list(ibin(3, 'all', str=True))
+    ['000', '001', '010', '011', '100', '101', '110', '111']
+
+    """
+    if not str:
+        try:
+            bits = as_int(bits)
+            return [1 if i == "1" else 0 for i in bin(n)[2:].rjust(bits, "0")]
+        except ValueError:
+            return variations(range(2), n, repetition=True)
+    else:
+        try:
+            bits = as_int(bits)
+            return bin(n)[2:].rjust(bits, "0")
+        except ValueError:
+            return (bin(i)[2:].rjust(n, "0") for i in range(2**n))
 
 
 def variations(seq, n, repetition=False):
@@ -790,7 +878,7 @@ def rotate_left(x, y):
     [1, 2, 0]
     """
     if len(x) == 0:
-        return x
+        return []
     y = y % len(x)
     return x[y:] + x[:y]
 
@@ -809,7 +897,7 @@ def rotate_right(x, y):
     [2, 0, 1]
     """
     if len(x) == 0:
-        return x
+        return []
     y = len(x) - y % len(x)
     return x[y:] + x[:y]
 
@@ -843,17 +931,20 @@ def multiset_combinations(m, n, g=None):
     if g is None:
         if type(m) is dict:
             if n > sum(m.values()):
-                yield []
-            g = [(k, m[k]) for k in ordered(m)]
+                return
+            g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(m)
             if n > len(m):
-                yield []
-            m = list(ordered(m))
-            g = [list(i) for i in group(m, multiple=False)]
-    def tot(g):
-        return sum(v for k, v in g)
-    if tot(g) < n or not n:
+                return
+            try:
+                m = multiset(m)
+                g = [(k, m[k]) for k in ordered(m)]
+            except TypeError:
+                m = list(ordered(m))
+                g = [list(i) for i in group(m, multiple=False)]
+        del m
+    if sum(v for k, v in g) < n or not n:
         yield []
     else:
         for i, (k, v) in enumerate(g):
@@ -867,7 +958,7 @@ def multiset_combinations(m, n, g=None):
                         yield rv
 
 
-def multiset_permutations(m, g=None):
+def multiset_permutations(m, k=None, g=None):
     """
     Return the unique permutations of multiset ``m``.
 
@@ -883,30 +974,36 @@ def multiset_permutations(m, g=None):
     >>> len(list(multiset_permutations('banana')))
     60
     """
+    size = k
     if g is None:
         if type(m) is dict:
-            g = [(k, m[k]) for k in ordered(m)]
+            g = [[k, m[k]] for k in ordered(m)]
         else:
             m = list(ordered(m))
             g = [list(i) for i in group(m, multiple=False)]
         del m
-    do = [gi for gi in g if gi[1]]
-    if not do:
-        yield []
+    do = [gi for gi in g if gi[1] > 0]
+    SUM = sum([gi[1] for gi in do])
+    if not do or size is not None and (size > SUM or size < 1):
+        return
+    elif size == 1:
+        for k, v in do:
+            yield [k]
     elif len(do) == 1:
         k, v = do[0]
+        v = v if size is None else (size if size <= v else 0)
         yield [k for i in range(v)]
-    elif all(v == 1 for v in do):
-        for p in permutations([k for k, v in g]):
+    elif all(v == 1 for k, v in do):
+        for p in permutations([k for k, v in do], size):
             yield list(p)
     else:
-        for i, (k, v) in enumerate(g):
-            if not v:
-                continue
-            g[i][1] -= 1
-            for j in multiset_permutations(None, g):
-                yield [k] + j
-            g[i][1] += 1
+        size = size if size is not None else SUM
+        for i, (k, v) in enumerate(do):
+            do[i][1] -= 1
+            for j in multiset_permutations(None, size - 1, do):
+                if j:
+                    yield [k] + j
+            do[i][1] += 1
 
 
 def _partition(seq, vector, m=None):
@@ -1107,7 +1204,7 @@ def multiset_partitions(multiset, m=None):
     if type(multiset) is int:
         n = multiset
         if m and m > n:
-            raise ValueError('m > len(multiset)')
+            return
         multiset = range(multiset)
         if m == 1:
             yield [multiset[:]]
@@ -1126,7 +1223,7 @@ def multiset_partitions(multiset, m=None):
     if not has_variety(multiset):
         n = len(multiset)
         if m and m > n:
-            raise ValueError('m > len(multiset)')
+            return
         if m == 1:
             yield [multiset[:]]
             return
@@ -1141,7 +1238,7 @@ def multiset_partitions(multiset, m=None):
         multiset = list(ordered(multiset))
         n = len(multiset)
         if m and m > n:
-            raise ValueError('m > len(multiset)')
+            return
         if m == 1:
             yield [multiset[:]]
             return
@@ -1208,8 +1305,8 @@ def partitions(n, m=None, k=None, size=False):
     {1: 4, 2: 1}
     {1: 6}
 
-    The maximum number of parts in partion (the values of the returned dict)
-    are limited with m:
+    The maximum number of parts in the partion (the sum of the values in
+    the returned dict) are limited with m:
 
     >>> for p in partitions(6, m=2):
     ...     print p
@@ -1641,7 +1738,7 @@ def necklaces(n, k, free=False):
     http://mathworld.wolfram.com/Necklace.html
 
     """
-    return uniq(minlex(i, directed=not free, is_set=False) for i in
+    return uniq(minlex(i, directed=not free) for i in
         variations(range(k), n, repetition=True))
 
 
@@ -1692,14 +1789,14 @@ def generate_oriented_forest(n):
                 break
 
 
-def minlex(seq, directed=True, is_set=True, small=None):
+def minlex(seq, directed=True, is_set=False, small=None):
     """
     Return a tuple where the smallest element appears first; if
     ``directed`` is True (default) then the order is preserved, otherwise
     the sequence will be reversed if that gives a smaller ordering.
 
-    If every element appears only once then is_set can keep it's default
-    value of True, otherwise False should be passed.
+    If every element appears only once then is_set can be set to True
+    for more efficient processing.
 
     If the smallest element is known at the time of calling, it can be
     passed and the calculation of the smallest element will be omitted.
@@ -1715,9 +1812,9 @@ def minlex(seq, directed=True, is_set=True, small=None):
     >>> minlex((1, 0, 2), directed=False)
     (0, 1, 2)
 
-    >>> minlex('11010011000', 1, is_set=False)
+    >>> minlex('11010011000', directed=True)
     '00011010011'
-    >>> minlex('11010011000', 0, is_set=False)
+    >>> minlex('11010011000', directed=False)
     '00011001011'
 
     """
@@ -1901,7 +1998,7 @@ def kbins(l, k, ordered=None):
         for p in partition(l, k):
             yield p
     elif ordered == 11:
-        for pl in permutations(l):
+        for pl in multiset_permutations(l):
             pl = list(pl)
             for p in partition(pl, k):
                 yield p
@@ -1916,7 +2013,7 @@ def kbins(l, k, ordered=None):
         for kgot, p in partitions(len(l), k, size=True):
             if kgot != k:
                 continue
-            for li in permutations(l):
+            for li in multiset_permutations(l):
                 rv = []
                 i = j = 0
                 li = list(li)

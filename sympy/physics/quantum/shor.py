@@ -13,7 +13,7 @@ import random
 from sympy import Mul, S
 from sympy import log, sqrt
 from sympy.core.numbers import igcd
-from sympy.core.compatibility import bin
+from sympy.utilities.iterables import variations
 
 from sympy.physics.quantum.gate import Gate
 from sympy.physics.quantum.qubit import Qubit, measure_partial_oneshot
@@ -107,25 +107,6 @@ def shor(N):
     return answer
 
 
-def arr(num, t):
-    """Return a list of ``t`` binary digits of ``num``; low digits rightmost.
-
-    Examples
-    ========
-    >>> from sympy.physics.quantum.shor import arr
-    >>> arr(5, 6)
-    [0, 0, 0, 1, 0, 1]
-    >>> arr(5, 2)
-    [0, 1]
-    """
-    binary_array = [0]*t
-    b = list(bin(abs(num))[2:])  # strip 0b
-    b = b[-t:]
-    for i in range(-1, -min(len(b), t) - 1, -1):
-        binary_array[i] = int(b[i])
-    return binary_array
-
-
 def getr(x, y, N):
     fraction = continued_fraction(x, y)
     # Now convert into r
@@ -177,8 +158,8 @@ def period_find(a, N):
     #Put second half into superposition of states so we have |1>x|0> + |2>x|0> + ... |k>x>|0> + ... + |2**n-1>x|0>
     factor = 1/sqrt(2**t)
     qubits = 0
-    for i in range(2**t):
-        qbitArray = arr(i, t) + start
+    for arr in variations(range(2), t, repetition=True):
+        qbitArray = arr + start
         qubits = qubits + Qubit(*qbitArray)
     circuit = (factor*qubits).expand()
     #Controlled second half of register so that we have:
