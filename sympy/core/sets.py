@@ -1151,14 +1151,17 @@ class FiniteSet(Set, EvalfMixin):
     is_FiniteSet = True
     is_iterable = True
 
-    def __new__(cls, *args):
-        if len(args) == 1 and iterable(args[0]):
-            args = args[0]
+    def __new__(cls, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', True)
+        if evaluate:
+            if len(args) == 1 and iterable(args[0]):
+                args = args[0]
 
-        args = map(sympify, args)
+            args = map(sympify, args)
 
-        if len(args) == 0:
-            return EmptySet()
+            if len(args) == 0:
+                return EmptySet()
+
 
         args = frozenset(args)  # remove duplicates
         obj = Basic.__new__(cls, *args)
