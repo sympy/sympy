@@ -12,7 +12,7 @@ from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp,
         mpf_sqrt, normalize, round_nearest, to_int, to_str)
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpc import _infs_nan
-from sympy.mpmath.libmp.libmpf import dps_to_prec
+from sympy.mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
 
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
@@ -1283,6 +1283,8 @@ class EvalfMixin(object):
         errmsg = "cannot convert to mpmath number"
         if allow_ints and self.is_Integer:
             return self.p
+        if hasattr(self, '_as_mpf_val'):
+            return make_mpf(self._as_mpf_val(prec))
         try:
             re, im, _, _ = evalf(self, prec, {})
             if im:
