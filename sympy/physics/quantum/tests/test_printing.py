@@ -17,6 +17,7 @@ from sympy.physics.quantum.qubit import Qubit, IntQubit
 from sympy.physics.quantum.spin import Jz, J2, JzBra, JzBraCoupled, JzKet, JzKetCoupled, Rotation, WignerD
 from sympy.physics.quantum.state import Bra, Ket, TimeDepBra, TimeDepKet
 from sympy.physics.quantum.tensorproduct import TensorProduct
+from sympy.physics.quantum.sho1d import RaisingOp
 
 from sympy import Derivative, Function, Interval, Matrix, Pow, S, symbols, Symbol, oo
 from sympy.utilities.pytest import XFAIL
@@ -871,3 +872,9 @@ u"""\
     assert latex(e4) == \
         r'\left(\left(\mathcal{C}^{1}\otimes \mathcal{C}^{2}\right)\oplus {\mathcal{F}}^{\otimes 2}\right)\otimes \left({\mathcal{L}^2}\left( \left[0, \infty\right) \right)\oplus \mathcal{H}\right)'
     sT(e4, "TensorProductHilbertSpace((DirectSumHilbertSpace(TensorProductHilbertSpace(ComplexSpace(Integer(1)),ComplexSpace(Integer(2))),TensorPowerHilbertSpace(FockSpace(),Integer(2)))),(DirectSumHilbertSpace(L2(Interval(Integer(0), oo, False, True)),HilbertSpace())))")
+
+
+def _test_sho1d():
+    ad = RaisingOp('a')
+    assert pretty(ad) == u' \u2020\na '
+    assert latex(ad) == 'a^{\\dag}'
