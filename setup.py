@@ -92,6 +92,7 @@ modules = [
     'sympy.statistics',
     'sympy.stats',
     'sympy.tensor',
+    'sympy.unify',
     'sympy.utilities',
     'sympy.utilities.mathml',
 ]
@@ -238,6 +239,8 @@ tests = [
     'sympy.polys.tests',
     'sympy.printing.pretty.tests',
     'sympy.printing.tests',
+    'sympy.rules.branch.tests',
+    'sympy.rules.tests',
     'sympy.series.tests',
     'sympy.sets.tests',
     'sympy.simplify.tests',
@@ -245,6 +248,7 @@ tests = [
     'sympy.statistics.tests',
     'sympy.stats.tests',
     'sympy.tensor.tests',
+    'sympy.unify.tests',
     'sympy.utilities.tests',
 ]
 
