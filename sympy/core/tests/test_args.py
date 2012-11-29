@@ -2211,6 +2211,46 @@ def test_sympy__physics__quantum__identitysearch__GateIdentity():
     assert _test_args(GateIdentity(X(0), X(0)))
 
 
+def test_sympy__physics__quantum__sho1d__SHOOp():
+    from sympy.physics.quantum.sho1d import SHOOp
+    assert _test_args(SHOOp('a'))
+
+
+def test_sympy__physics__quantum__sho1d__RaisingOp():
+    from sympy.physics.quantum.sho1d import RaisingOp
+    assert _test_args(RaisingOp('a'))
+
+
+def test_sympy__physics__quantum__sho1d__LoweringOp():
+    from sympy.physics.quantum.sho1d import LoweringOp
+    assert _test_args(LoweringOp('a'))
+
+
+def test_sympy__physics__quantum__sho1d__NumberOp():
+    from sympy.physics.quantum.sho1d import NumberOp
+    assert _test_args(NumberOp('N'))
+
+
+def test_sympy__physics__quantum__sho1d__Hamiltonian():
+    from sympy.physics.quantum.sho1d import Hamiltonian
+    assert _test_args(Hamiltonian('H'))
+
+
+def test_sympy__physics__quantum__sho1d__SHOState():
+    from sympy.physics.quantum.sho1d import SHOState
+    assert _test_args(SHOState(0))
+
+
+def test_sympy__physics__quantum__sho1d__SHOKet():
+    from sympy.physics.quantum.sho1d import SHOKet
+    assert _test_args(SHOKet(0))
+
+
+def test_sympy__physics__quantum__sho1d__SHOBra():
+    from sympy.physics.quantum.sho1d import SHOBra
+    assert _test_args(SHOBra(0))
+
+
 def test_sympy__physics__secondquant__AnnihilateBoson():
     from sympy.physics.secondquant import AnnihilateBoson
     assert _test_args(AnnihilateBoson(0))
