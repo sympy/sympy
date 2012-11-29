@@ -408,5 +408,5 @@ def graycode_subsets(gray_code_set):
     ========
     get_subset_from_bitstring
     """
-    return [get_subset_from_bitstring(gray_code_set, bitstring) for
-            bitstring in list(GrayCode(len(gray_code_set)).generate_gray())]
+    for bitstring in list(GrayCode(len(gray_code_set)).generate_gray()):
+        yield get_subset_from_bitstring(gray_code_set, bitstring)

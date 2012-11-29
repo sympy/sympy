@@ -373,7 +373,7 @@ class Polyhedron(Basic):
         [1] www.ocf.berkeley.edu/~wwu/articles/platonicsolids.pdf
 
         """
-        faces = [minlex(f, directed=False) for f in faces]
+        faces = [minlex(f, directed=False, is_set=True) for f in faces]
         corners, faces, pgroup = args = \
             [Tuple(*a) for a in (corners, faces, pgroup)]
         obj = Basic.__new__(cls, *args)
@@ -677,8 +677,9 @@ def _pgroup_calcs():
             # enumerating the faces
             reorder = unflatten([c[j] for j in flat_faces], n)
             # make them canonical
-            reorder = [tuple(map(as_int, minlex(f, directed=False)))
-                for f in reorder]
+            reorder = [tuple(map(as_int,
+                       minlex(f, directed=False, is_set=True)))
+                       for f in reorder]
             # map face to vertex: the resulting list of vertices are the
             # permutation that we seek for the double
             new_pgroup.append(Perm([fmap[f] for f in reorder]))

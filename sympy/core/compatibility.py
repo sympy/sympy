@@ -456,8 +456,11 @@ def as_int(n):
     ValueError: ... is not an integer
 
     """
-    result = int(n)
-    if result != n:
+    try:
+        result = int(n)
+        if result != n:
+            raise TypeError
+    except TypeError:
         raise ValueError('%s is not an integer' % n)
     return result
 
