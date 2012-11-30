@@ -270,34 +270,30 @@ class AssocOp(Basic):
             # that's why we don't call to evalf.
             x = x._evalf(prec) if x is not self.identity else self.identity
             args = []
-            hit = False
             for a in self.func.make_args(tail):
                 # here we call to _eval_evalf since we don't know what we
                 # are dealing with and all other _eval_evalf routines should
                 # be doing the same thing (i.e. taking binary prec and
                 # finding the evalf-able args)
                 newa = a._eval_evalf(prec)
-                if newa is None or _aresame(newa, a):
+                if newa is None:
                     args.append(a)
                 else:
-                    hit = True
                     args.append(newa)
-            if hit:
+            if not _aresame(tuple(args), self.func.make_args(tail)):
                 tail = self.func(*args)
             return self.func(x, tail)
 
         # this is the same as above, but there were no pure-number args to
         # deal with
         args = []
-        hit = False
         for a in self.args:
             newa = a._eval_evalf(prec)
-            if newa is None or _aresame(newa, a):
+            if newa is None:
                 args.append(a)
             else:
-                hit = True
                 args.append(newa)
-        if hit:
+        if not _aresame(tuple(args), self.args):
             return self.func(*args)
         return self
 

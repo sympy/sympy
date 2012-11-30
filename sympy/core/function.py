@@ -2155,32 +2155,35 @@ def nfloat(expr, n=15, exponent=False):
             return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
                                expr.iteritems()])
         return type(expr)([nfloat(a, n, exponent) for a in expr])
-    elif not isinstance(expr, Expr):
-        return Float(expr, n)
-    elif expr.is_Number:
-        return Float(expr, n)
-    elif expr.is_number:
-        return expr.evalf(n)
+    rv = sympify(expr)
 
-    def rule(e):
-        if e.is_Pow:
-            b, ex = e.as_base_exp()
-            b = nfloat(b, n, exponent)
-            if exponent:
-                ex = nfloat(ex, n, exponent)
-            return e.func(b, ex)
-        elif e.is_Add or e.is_Mul:
-            c2, r2 = c, r = e.as_independent(C.Symbol)
-            if not c is e.identity:
-                c2 = nfloat(c, n, exponent)
-            r2 = e.func(*[nfloat(a, n, exponent) for a in e.make_args(r)])
-            if not c2.is_Rational or not _aresame(r2, r):
-                return e.func(c2, r2)
-        elif isinstance(e, Function):
-            return e.func(*nfloat(e.args, n, exponent))
-        return e
+    if rv.is_Number:
+        return Float(rv, n)
+    elif rv.is_number:
+        # evalf doesn't always set the precision
+        rv = rv.n(n)
+        if rv.is_Number:
+            rv = Float(rv.n(n), n)
+        else:
+            pass  # pure_complex(rv) is likely True
+        return rv
 
-    return expr.xreplace(Transform(lambda x: rule(x)))
+    if not exponent:
+        reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
+        rv = rv.xreplace(dict(reps))
+    rv = rv.n(n)
+    if not exponent:
+        rv = rv.xreplace(dict([(d.exp, p.exp) for p, d in reps]))
+    else:
+        # Pow._eval_evalf special cases Integer exponents so if
+        # exponent is suppose to be handled we have to do so here
+        rv = rv.xreplace(Transform(
+            lambda x: Pow(x.base, Float(x.exp, n)),
+            lambda x: x.is_Pow and x.exp.is_Integer))
+
+    return rv.xreplace(Transform(
+        lambda x: x.func(*nfloat(x.args, n, exponent)),
+        lambda x: isinstance(x, Function)))
 
 
 from sympy.core.symbol import Dummy
