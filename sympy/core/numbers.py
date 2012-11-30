@@ -1850,9 +1850,8 @@ class Infinity(Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('-inf') or other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                if other == Float('-inf'):
+                    return S.NaN
                 else:
                     return Float('inf')
             else:
@@ -1866,9 +1865,8 @@ class Infinity(Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('inf') or other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                if other == Float('inf'):
+                    return S.NaN
                 else:
                     return Float('inf')
             else:
@@ -1881,9 +1879,8 @@ class Infinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other._mpf_ == FNAN or other == 0:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                if other == 0:
+                    return S.NaN
                 if other > 0:
                     return Float('inf')
                 else:
@@ -1905,10 +1902,8 @@ class Infinity(Number):
                 return S.NaN
             elif other.is_Float:
                 if other == Float('-inf') or \
-                    other == Float('inf') or \
-                        other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                        other == Float('inf'):
+                    return S.NaN
                 elif other >= 0:
                     return Float('inf')
                 else:
@@ -2009,8 +2004,7 @@ class NegativeInfinity(Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('inf') or other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
+                if other == Float('inf'):
                     return Float('nan')
                 else:
                     return Float('-inf')
@@ -2025,8 +2019,7 @@ class NegativeInfinity(Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('-inf') or other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
+                if other == Float('-inf'):
                     return Float('nan')
                 else:
                     return Float('-inf')
@@ -2040,9 +2033,8 @@ class NegativeInfinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other._mpf_ == FNAN or other == 0:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                if other is S.NaN or other == 0:
+                    return S.NaN
                 elif other > 0:
                     return Float('-inf')
                 else:
@@ -2065,10 +2057,8 @@ class NegativeInfinity(Number):
             elif other.is_Float:
                 if other == Float('-inf') or \
                     other == Float('inf') or \
-                    other == Float('nan') or \
-                        other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                    other is S.NaN:
+                    return S.NaN
                 elif other >= 0:
                     return Float('-inf')
                 else:
