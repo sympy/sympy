@@ -55,3 +55,19 @@ def notempty(brule):
         if not yielded:
             yield expr
     return notempty_brl
+
+def chain(*brules):
+    """
+    Compose a sequence of brules so that they apply to the expr sequentially
+    """
+    def chain_brl(expr):
+        if not brules:
+            yield expr
+            raise StopIteration()
+
+        head, tail = brules[0], brules[1:]
+        for nexpr in head(expr):
+            for nnexpr in chain(*tail)(nexpr):
+                yield nnexpr
+
+    return chain_brl

@@ -1,5 +1,5 @@
 from sympy.rules.branch.strat_pure import (exhaust, debug, multiplex,
-        condition, notempty)
+        condition, notempty, chain)
 
 
 def posdec(x):
@@ -59,3 +59,12 @@ def test_notempty():
     brl = notempty(ident_if_even)
     assert set(brl(4)) == set([4])
     assert set(brl(5)) == set([5])
+
+def test_chain():
+    def inc(x):
+        yield x + 1
+    assert list(chain()(2)) == [2]  # identity
+    assert list(chain(inc, inc)(2)) == [4]
+    assert list(chain(branch5, inc)(4)) == [4]
+    assert set(chain(branch5, inc)(5)) == set([5, 7])
+    assert list(chain(inc, branch5)(5)) == [7]
