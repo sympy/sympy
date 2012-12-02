@@ -541,11 +541,18 @@ def test_nfloat():
     eq = x**(S(4)/3) + 4*x**(x/3)/3
     assert _aresame(nfloat(eq), x**(S(4)/3) + (4.0/3)*x**(x/3))
     big = 12345678901234567890
-    Float_big = Float(big, '')
+    Float_big = Float(big)
     assert _aresame(nfloat(x**big, exponent=True),
                     x**Float_big)
     assert _aresame(nfloat(big), Float_big)
+    assert nfloat({x: sqrt(2)}) == {x: nfloat(sqrt(2))}
+    assert nfloat({sqrt(2): x}) == {sqrt(2): x}
+    assert nfloat(cos(x + sqrt(2))) == cos(x + nfloat(sqrt(2)))
 
     # issues 3243
     f = S('x*lamda + lamda**3*(x/2 + 1/2) + lamda**2 + 1/4')
     assert not any(a.free_symbols for a in solve(f.subs(x, -0.139)))
+
+    # issue 3533
+    assert nfloat(-100000*sqrt(2500000001) + 5000000001) == \
+        9.99999999800000e-11

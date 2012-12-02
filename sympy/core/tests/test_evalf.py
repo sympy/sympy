@@ -376,3 +376,9 @@ def test_infinities():
 def test_to_mpmath():
     assert sqrt(3)._to_mpmath(20)._mpf_ == (0, 908093L, -19, 20)
     assert S(3.2)._to_mpmath(20)._mpf_ == (0, 838861L, -18, 20)
+
+
+def test_issue_3533_evalf():
+    add = (-100000*sqrt(2500000001) + 5000000001)
+    assert add.n() == 9.999999998e-11
+    assert (add*add).n() == 9.999999996e-21

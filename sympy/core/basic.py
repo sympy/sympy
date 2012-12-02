@@ -1048,7 +1048,7 @@ class Basic(object):
             return rule[self]
         elif rule:
             args = tuple([arg.xreplace(rule) for arg in self.args])
-            if args != self.args:
+            if not _aresame(args, self.args):
                 return self.func(*args)
         return self
 
@@ -1585,6 +1585,7 @@ class preorder_traversal(object):
 
     Examples
     ========
+
     >>> from sympy import symbols
     >>> from sympy import symbols, default_sort_key
     >>> from sympy.core.basic import preorder_traversal

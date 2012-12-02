@@ -1,6 +1,6 @@
 from sympy.core.core import C
 from sympy.core.sympify import _sympify, sympify
-from sympy.core.basic import Basic
+from sympy.core.basic import Basic, _aresame
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp, ordered
 from sympy.core.logic import fuzzy_and
@@ -251,7 +251,51 @@ class AssocOp(Basic):
         return not multi
 
     def _eval_evalf(self, prec):
-        return self.func(*[s._evalf(prec) for s in self.args])
+        """
+        Evaluate the parts of self that are numbers; if the whole thing
+        was a number with no functions it would have been evaluated, but
+        it wasn't so we must judiciously extract the numbers and reconstruct
+        the object. This is *not* simply replacing numbers with evaluated
+        numbers. Nunmbers should be handled in the largest pure-number
+        expression as possible. So the code below separates ``self`` into
+        number and non-number parts and evaluates the number parts and
+        walks the args of the non-number part recursively (doing the same
+        thing).
+        """
+        x, tail = self.as_independent(C.Symbol)
+
+        if tail is not self.identity:
+            # here, we have a number so we just call to _evalf with prec;
+            # prec is not the same as n, it is the binary precision so
+            # that's why we don't call to evalf.
+            x = x._evalf(prec) if x is not self.identity else self.identity
+            args = []
+            for a in self.func.make_args(tail):
+                # here we call to _eval_evalf since we don't know what we
+                # are dealing with and all other _eval_evalf routines should
+                # be doing the same thing (i.e. taking binary prec and
+                # finding the evalf-able args)
+                newa = a._eval_evalf(prec)
+                if newa is None:
+                    args.append(a)
+                else:
+                    args.append(newa)
+            if not _aresame(tuple(args), self.func.make_args(tail)):
+                tail = self.func(*args)
+            return self.func(x, tail)
+
+        # this is the same as above, but there were no pure-number args to
+        # deal with
+        args = []
+        for a in self.args:
+            newa = a._eval_evalf(prec)
+            if newa is None:
+                args.append(a)
+            else:
+                args.append(newa)
+        if not _aresame(tuple(args), self.args):
+            return self.func(*args)
+        return self
 
     @classmethod
     def make_args(cls, expr):
