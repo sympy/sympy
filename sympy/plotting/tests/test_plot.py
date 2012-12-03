@@ -1,8 +1,7 @@
 from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
-                   oo, LambertW, I, simplify, E, exp)
+                   oo, LambertW, I)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
-from sympy.stats import StudentT
 from sympy.plotting.plot import matplotlib, unset_show
 from sympy.utilities.pytest import skip
 from tempfile import NamedTemporaryFile
@@ -183,13 +182,10 @@ def plot_and_save(name):
     # Test expressions that can not be translated to np and generate complex
     # results.
     ###
-    plot(sin(x) + I * cos(x)).save(tmp_file())
+    plot(sin(x) + I*cos(x)).save(tmp_file())
     plot(sqrt(sqrt(-x))).save(tmp_file())
     plot(LambertW(x)).save(tmp_file())
     plot(sqrt(LambertW(x))).save(tmp_file())
-    X = StudentT("X", 50)
-    t = Symbol('t', positive=True)
-    plot(simplify(E(exp(I * t * X))), (t, 1e-6, 1e-2)).save(tmp_file())
 
 
 def test_matplotlib():
