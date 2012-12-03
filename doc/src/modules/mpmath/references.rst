@@ -16,7 +16,7 @@ References not listed here can be found in the source code.
 
 .. [BorweinBorwein] J Borwein & P B Borwein. *Pi and the AGM: A Study in Analytic Number Theory and Computational Complexity*, Wiley 1987
 
-.. [BorweinZeta] P Borwein. "An Efficient Algorithm for the Riemann Zeta Function", http://www.cecm.sfu.ca/personal/pborwein/PAPERS/P117.ps
+.. [BorweinZeta] P Borwein. "An Efficient Algorithm for the Riemann Zeta Function", http://www.cecm.sfu.ca/personal/pborwein/PAPERS/P115.pdf
 
 .. [CabralRosetti] L G Cabral-Rosetti & M A Sanchis-Lozano. "Appell Functions and the Scalar One-Loop Three-point Integrals in Feynman Diagrams". http://arxiv.org/abs/hep-ph/0206081
 
