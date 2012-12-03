@@ -568,7 +568,6 @@ def pollard_pm1(n, B=10, a=2, retries=0, seed=1234):
       A Computational Perspective", Springer, 2nd edition, 236-238
     - http://modular.math.washington.edu/edu/2007/spring/ent/ent-html/
             node81.html
-    - http://www.math.mcgill.ca/darmon/courses/05-06/usra/charest.pdf
     - http://www.cs.toronto.edu/~yuvalf/Factorization.pdf
     """
 
