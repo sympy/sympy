@@ -5,7 +5,7 @@ The following is a non-comprehensive list of works used in the development of mp
 or cited for examples or mathematical definitions used in this documentation.
 References not listed here can be found in the source code.
 
-.. [AbramowitzStegun] M Abramowitz & I Stegun. *Handbook of Mathematical Functions, 9th Ed.*, Tenth Printing, December 1972, with corrections (electronic copy: http://www.math.ucla.edu/~cbm/aands/)
+.. [AbramowitzStegun] M Abramowitz & I Stegun. *Handbook of Mathematical Functions, 9th Ed.*, Tenth Printing, December 1972, with corrections
 
 .. [Bailey] D H Bailey. "Tanh-Sinh High-Precision Quadrature", http://crd.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf
 
