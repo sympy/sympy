@@ -58,10 +58,9 @@ def test_BlockMatrix():
     assert block_collapse(E.T*A*F) == E.T*A*F
 
     assert X.shape == (l + n, k + m)
-    assert (block_collapse(transpose(X)) ==
-            BlockMatrix(Matrix([[A.T, C.T], [B.T, D.T]])))
-    assert transpose(X).shape == X.shape[::-1]
     assert X.blockshape == (2, 2)
+    assert transpose(X) == BlockMatrix(Matrix([[A.T, C.T], [B.T, D.T]]))
+    assert transpose(X).shape == X.shape[::-1]
 
     # Test that BlockMatrices and MatrixSymbols can still mix
     assert (X*M).is_MatMul
@@ -79,19 +78,15 @@ def test_BlockMatrix():
     assert (X*Y).shape == (l + n, 1)
     assert block_collapse(X*Y).blocks[0, 0] == A*E + B*F
     assert block_collapse(X*Y).blocks[1, 0] == C*E + D*F
-    assert (block_collapse(transpose(block_collapse(transpose(X*Y)))) ==
-            block_collapse(X*Y))
 
     # block_collapse passes down into container objects, transposes, and inverse
+    assert block_collapse(transpose(X*Y)) == transpose(block_collapse(X*Y))
     assert block_collapse(Tuple(X*Y, 2*X)) == (
         block_collapse(X*Y), block_collapse(2*X))
-    assert (block_collapse(transpose(X*Y)) ==
-            block_collapse(transpose(block_collapse(X*Y))))
-
-    Ab = BlockMatrix([[A]])
-    Z = MatrixSymbol('Z', *A.shape)
 
     # Make sure that MatrixSymbols will enter 1x1 BlockMatrix if it simplifies
+    Ab = BlockMatrix([[A]])
+    Z = MatrixSymbol('Z', *A.shape)
     assert block_collapse(Ab + Z) == A + Z
 
 
@@ -111,11 +106,11 @@ def test_squareBlockMatrix():
 
     assert X.is_square
 
-    assert block_collapse(X + Identity(m + n)).equals(
+    assert (block_collapse(X + Identity(m + n)) ==
         BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
     Q = X + Identity(m + n)
 
-    assert block_collapse(Inverse(Q)) == Inverse(block_collapse(Q))
+    assert block_collapse(Q.inverse()) == Inverse(block_collapse(Q))
 
     assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
@@ -148,15 +143,13 @@ def test_BlockDiagMatrix():
     assert all(X.blocks[i, j].is_ZeroMatrix if i != j else X.blocks[i, j] in [A, B, C]
             for i in range(3) for j in range(3))
 
-    assert block_collapse(X.I * X).is_Identity
+    assert isinstance(block_collapse(X.I * X), Identity)
 
-    assert block_collapse(X*X).equals(BlockDiagMatrix(A*A, B*B, C*C))
-
+    assert block_collapse(X*X) == BlockDiagMatrix(A*A, B*B, C*C)
+    #XXX: should be == ??
     assert block_collapse(X + X).equals(BlockDiagMatrix(2*A, 2*B, 2*C))
-
-    assert block_collapse(X*Y).equals(BlockDiagMatrix(A*A, 2*B*B, 3*C*C))
-
-    assert block_collapse(X + Y).equals(BlockDiagMatrix(2*A, 3*B, 4*C))
+    assert block_collapse(X*Y) == BlockDiagMatrix(A*A, 2*B*B, 3*C*C)
+    assert block_collapse(X + Y) == BlockDiagMatrix(2*A, 3*B, 4*C)
 
     # Ensure that BlockDiagMatrices can still interact with normal MatrixExprs
     assert (X*(2*M)).is_MatMul

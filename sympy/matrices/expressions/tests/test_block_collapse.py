@@ -4,15 +4,7 @@ from sympy.matrices.expressions.blockmatrix import (bc_matmul,
 from sympy.matrices.expressions import MatrixSymbol, Identity, MatMul
 from sympy import symbols, Matrix
 
-n, m, l, k, o, p = symbols('n,m,l,k,o,p')
-A = MatrixSymbol('A', n, m)
-B = MatrixSymbol('B', n, k)
-C = MatrixSymbol('C', l, m)
-D = MatrixSymbol('D', l, k)
-M = MatrixSymbol('M', m+k, p)
-N = MatrixSymbol('N', l+n, k+m)
-X = BlockMatrix(Matrix([[A, B], [C, D]]))
-
+l, m, n = symbols('l, m, n', integer=True)
 G = MatrixSymbol('G', n, n)
 H = MatrixSymbol('H', n, n)
 b1 = BlockMatrix([[G, H]])
@@ -20,9 +12,6 @@ b2 = BlockMatrix([[G], [H]])
 
 def test_bc_matmul():
     assert bc_matmul(H*b1*b2*G) == H*BlockMatrix([[G*G + H*H]])*G
-
-#def test_bc_transpose():
-#    assert bc_transpose(BlockMatrix([[G, H]]).T) == BlockMatrix([[G.T, H.T]])
 
 def test_bc_matadd():
     assert bc_matadd(BlockMatrix([[G, H]]) + BlockMatrix([[H, H]])) == \
@@ -38,7 +27,7 @@ def test_bc_dist_diag():
 
 def test_bc_matpow():
     A = MatrixSymbol('A', n, n)
-    assert bc_matpow(A**2) == MatMul(A, A, evaluate=False)
+    assert bc_matpow(A**2) == MatMul(A, A)
     assert bc_matpow(A**n) == A**n
 
 def test_block_plus_ident():
