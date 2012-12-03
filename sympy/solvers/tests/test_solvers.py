@@ -118,7 +118,7 @@ def test_solve_args():
         (exp(x) - x, exp(y) - y)) == [{x: -LambertW(-1), y: -LambertW(-1)}]
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
-    #symbol is not a symbol or function
+    #symbol is a number
     raises(TypeError, lambda: solve(x**2 - pi, pi))
     # no equations
     assert solve([], [x]) == []

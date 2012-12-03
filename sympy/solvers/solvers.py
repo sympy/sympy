@@ -353,7 +353,7 @@ def solve(f, *symbols, **flags):
         - a Relational expression or boolean
         - iterable of one or more of the above
 
-    * symbols (Symbol, Function or Derivative) specified as
+    * symbols (object(s) to solve for) specified as
         - none given (all free symbols will be used)
         - single symbol
         - denested list of symbols
@@ -480,6 +480,12 @@ def solve(f, *symbols, **flags):
           [-x + Derivative(f(x), x)]
           >>> set(solve(x + exp(x)**2, exp(x)))
           set([-sqrt(-x), sqrt(-x)])
+
+          >>> from sympy import Indexed, IndexedBase, Tuple
+          >>> A = IndexedBase('A')
+          >>> eqs = Tuple(A[1] + A[2] - 3, A[1] - A[2] + 1)
+          >>> solve(eqs, eqs.atoms(Indexed))
+          {A[1]: 1, A[2]: 2}
 
         * To solve for a *symbol* implicitly, use 'implicit=True':
 
@@ -666,27 +672,18 @@ def solve(f, *symbols, **flags):
         # be unambiguous
         symbols = sorted(symbols, key=default_sort_key)
 
-    # we can solve for Function and Derivative instances by replacing them
-    # with Dummy symbols or functions
+    # we can solve for non-symbol entities by replacing them with Dummy symbols
     symbols_new = []
     symbol_swapped = False
     funcs = []
     for i, s in enumerate(symbols):
         if s.is_Symbol:
             s_new = s
-        elif s.is_Function:
+        elif not s.is_number or isinstance(s, AppliedUndef):  # other
             symbol_swapped = True
-            s_new = Dummy('F%d' % i)
-            funcs.append(s)
-        elif s.is_Derivative:
-            symbol_swapped = True
-            s_new = Dummy('D%d' % i)
-        elif s.is_Pow:
-            symbol_swapped = True
-            s_new = Dummy('P%d' % i)
+            s_new = Dummy('X%d' % i)
         else:
-            msg = 'expected Symbol, Function, Power or Derivative but got %s'
-            raise TypeError(msg % type(s))
+            raise TypeError('solving for numbers is disallowed')
         symbols_new.append(s_new)
 
     if symbol_swapped:
@@ -833,6 +830,7 @@ def solve(f, *symbols, **flags):
             for i, sol in enumerate(solution):
                 solution[i] = dict([(swap_sym[k], v.subs(swap_sym))
                               for k, v in sol.iteritems()])
+
     # undo the dictionary solutions returned when the system was only partially
     # solved with poly-system if all symbols are present
     if (
