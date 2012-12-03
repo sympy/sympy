@@ -23,6 +23,7 @@ def test_swap_back():
         {fx: gx + 5, y: -gx - 3}
     assert solve(fx + gx*x - 2, [fx, gx]) == {fx: 2, gx: 0}
     assert solve(fx + gx**2*x - y, [fx, gx]) == [{fx: y - gx**2*x}]
+    assert solve([f(1) - 2, x + 2]) == [{x: -2, f(1): 2}]
 
 
 def guess_solve_strategy(eq, symbol):
