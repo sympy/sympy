@@ -43,7 +43,7 @@ See `debian <http://packages.debian.org/python-mpmath>`_ and `ubuntu <https://la
 OpenSUSE
 ........
 
-Mpmath is provided in the "Science" repository for all recent versions of `openSUSE <http://www.opensuse.org/>`_. To add this repository to the YAST software management tool, see http://en.opensuse.org/Add_Package_Repositories_to_YaST
+Mpmath is provided in the "Science" repository for all recent versions of `openSUSE <http://www.opensuse.org/>`_. To add this repository to the YAST software management tool, see http://en.opensuse.org/SDB:Add_package_repositories
 
 Look up http://download.opensuse.org/repositories/science/ for a list
 of supported OpenSUSE versions and use http://download.opensuse.org/repositories/science/openSUSE_11.1/
