@@ -467,10 +467,12 @@ def solve(f, *symbols, **flags):
             >>> solve(z**2*x - z**2*y**2)
             [{x: y**2}]
 
-    * when a Function or Derivative is given as a symbol, it is
-      isolated algebraically and an implicit solution may be obtained;
-      to obtain the solution for a function within a derivative, use
-      dsolve.
+    * when an object other than a Symbol is given as a symbol, it is
+      isolated algebraically and an implicit solution may be obtained.
+      This is mostly provided as a convenience to save one from replacing
+      the object with a Symbol and solving for that Symbol. It will only
+      work if the specified object can be replaced with a Symbol using the
+      subs method.
 
           >>> solve(f(x) - x, f(x))
           [x]
@@ -481,7 +483,7 @@ def solve(f, *symbols, **flags):
           >>> set(solve(x + exp(x)**2, exp(x)))
           set([-sqrt(-x), sqrt(-x)])
 
-          >>> from sympy import Indexed, IndexedBase, Tuple
+          >>> from sympy import Indexed, IndexedBase, Tuple, sqrt
           >>> A = IndexedBase('A')
           >>> eqs = Tuple(A[1] + A[2] - 3, A[1] - A[2] + 1)
           >>> solve(eqs, eqs.atoms(Indexed))
@@ -493,6 +495,25 @@ def solve(f, *symbols, **flags):
             [-LambertW(1)]
             >>> solve(x + exp(x), x, implicit=True)
             [-exp(x)]
+
+        * It is possible to solve for anything (except numbers) that can
+          be targeted with subs:
+
+            >>> solve(x + 2 + sqrt(3), x + 2)
+            [-sqrt(3)]
+            >>> solve((x + 2 + sqrt(3), x + 4 + y), y, x + 2)
+            {y: -2 + sqrt(3), x + 2: -sqrt(3)}
+
+        * Nothing heroic is done in this implicit solving so you may end up
+          with a symbol still in the solution:
+
+            >>> eqs = (x*y + 3*y + sqrt(3), x + 4 + y)
+            >>> solve(eqs, y, x + 2)
+            {y: sqrt(3)/(-x - 3), x + 2: (-2*x - 6 + sqrt(3))/(x + 3)}
+            >>> solve(eqs, y*x, x)
+            {x: -y - 4, x*y: -3*y - sqrt(3)}
+
+        * To solve for a function within a derivative, use dsolve.
 
     * single expression and more than 1 symbol
 
@@ -661,6 +682,7 @@ def solve(f, *symbols, **flags):
                             isinstance(p, AppliedUndef):
                         flags['dict'] = True  # better show symbols
                         symbols.add(p)
+                        pot.skip()  # don't go any deeper
         symbols = list(symbols)
         # supply dummy symbols so solve(3) behaves like solve(3, x)
         for i in range(len(f) - len(symbols)):
@@ -711,7 +733,7 @@ def solve(f, *symbols, **flags):
 
     # get rid of equations that have no symbols of interest; we don't
     # try to solve them because the user didn't ask and they might be
-    # hard to solve; this means that solutions may be give in terms
+    # hard to solve; this means that solutions may be given in terms
     # of the eliminated equations e.g. solve((x-y, y-3), x) -> {x: y}
     newf = []
     for fi in f:
@@ -798,7 +820,7 @@ def solve(f, *symbols, **flags):
     #
     # postprocessing
     ###########################################################################
-    # Restore masked off derivatives
+    # Restore masked-off objects
     if non_inverts:
 
         def _do_dict(solution):
@@ -825,7 +847,7 @@ def solve(f, *symbols, **flags):
             raise NotImplementedError(filldedent('''
                             no handling of %s was implemented''' % solution))
 
-    # Restore original Functions and Derivatives if a dictionary is returned.
+    # Restore original "symbols" if a dictionary is returned.
     # This is not necessary for
     #   - the single univariate equation case
     #     since the symbol will have been removed from the solution;
