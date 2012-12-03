@@ -516,9 +516,10 @@ Go to issues_ that are sorted by priority and simply find something that you
 would like to get fixed and fix it. If you find something odd, please report it
 into issues_ first before fixing it. Feel free to consult with us on the
 mailinglist_.  Then send your patch either to the issues_ or the mailinglist_.
-See the SymPyDevelopment_ wiki, but don't worry about it too much if you find
-it too formal - simply get in touch with us on the mailinglist_ and we'll help
-you get your patch accepted.
+See the `SymPy Development 
+<https://github.com/sympy/sympy/wiki/old-wiki-Sympy-Development>` wiki page,
+but don't worry about it too much if you find it too formal - simply get in touch
+with us on the mailinglist_ and we'll help you get your patch accepted.
 
 .. _issues:             http://code.google.com/p/sympy/issues/list
 .. _mailinglist:        http://groups.google.com/group/sympy
