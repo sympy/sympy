@@ -90,7 +90,7 @@ class Operator(QExpr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Operator_(physics)
+    .. [1] http://en.wikipedia.org/wiki/Operator_&#40;physics&#41;
     .. [2] http://en.wikipedia.org/wiki/Observable
     """
 
