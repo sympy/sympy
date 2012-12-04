@@ -1,3 +1,4 @@
+import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple)
@@ -206,7 +207,6 @@ def _test_rational_new(cls):
     assert cls(1) is S.One
     assert cls(-1) is S.NegativeOne
     # These look odd, but are similar to int():
-    assert cls(0.9) is S.Zero
     assert cls('1') is S.One
     assert cls(u'-1') is S.NegativeOne
 
@@ -214,7 +214,6 @@ def _test_rational_new(cls):
     assert _strictly_equal(i, cls('10'))
     assert _strictly_equal(i, cls(u'10'))
     assert _strictly_equal(i, cls(10L))
-    assert _strictly_equal(i, cls(10.5))
     assert _strictly_equal(i, cls(i))
 
     raises(TypeError, lambda: cls(Symbol('x')))
@@ -226,6 +225,8 @@ def test_Integer_new():
     """
     _test_rational_new(Integer)
 
+    assert _strictly_equal(Integer(0.9), S.Zero)
+    assert _strictly_equal(Integer(10.5), Integer(10))
     raises(ValueError, lambda: Integer("10.5"))
     assert Integer(Rational('1.' + '9'*20)) == 1
 
@@ -241,8 +242,6 @@ def test_Rational_new():
     assert n1 == Rational(Integer(1), Integer(2))
     assert n1 == Rational(1, Integer(2))
     assert n1 == Rational(Rational(1, 2))
-    assert n1 == Rational(1.2, 2)
-    assert n1 == Rational('.5')
     assert 1 == Rational(n1, n1)
     assert Rational(3, 2) == Rational(Rational(1, 2), Rational(1, 3))
     assert Rational(3, 1) == Rational(1, Rational(1, 3))
@@ -252,7 +251,14 @@ def test_Rational_new():
     assert Rational('.76').limit_denominator(4) == n3_4
     assert Rational(19, 25).limit_denominator(4) == n3_4
     assert Rational('19/25').limit_denominator(4) == n3_4
-    raises(ValueError, lambda: Rational('1/2 + 2/3'))
+    assert Rational(1.0, 3) == Rational(1, 3)
+    assert Rational(1, 3.0) == Rational(1, 3)
+    assert Rational(Float(0.5)) == Rational(1, 2)
+    assert Rational('1e2/1e-2') == Rational(10000)
+    assert Rational(-1, 0) == S.NegativeInfinity
+    assert Rational(1, 0) == S.Infinity
+    raises(TypeError, lambda: Rational('3**3'))
+    raises(TypeError, lambda: Rational('1/2 + 2/3'))
 
     # handle fractions.Fraction instances
     try:
@@ -390,6 +396,7 @@ def test_Float():
     assert Float(S.Zero) == zero
     assert Float(S.One) == Float(1.0)
 
+    assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
 
 def test_Float_eval():
     a = Float(3.2)

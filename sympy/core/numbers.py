@@ -62,6 +62,18 @@ def seterr(divide=False):
         _errdict["divide"] = divide
 
 
+def _as_integer_ratio(p):
+    """compatibility implementation for python < 2.6"""
+    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
+    p = [1, -1][neg_pow % 2]*man
+    if expt < 0:
+        q = 2**-expt
+    else:
+        q = 1
+        p *= 2**expt
+    return p, q
+
+
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
     # _is_special is needed for Python 2.5 support; is_finite for Python 3.3
@@ -703,7 +715,15 @@ class Float(Number):
         return self.num < 0
 
     def __nonzero__(self):
-        # but do not base answer on `man` alone (see mpf_norm docstring)
+        # do not base answer on `man` alone:
+        # >>> mpf('0')._mpf_
+        # (0, 0L, 0, 0)
+        # >>> mpf('nan')._mpf_
+        # (0, 0L, -123, -1)
+        # >>> mpf('inf')._mpf_
+        # (0, 0L, -456, -2)
+        # >>> mpf('-inf')._mpf_
+        # (1, 0L, -789, -3)
         sign, man, expt, bc = self._mpf_
         return not (man == 0 and bc == 0)
 
@@ -896,16 +916,33 @@ class Rational(Number):
     Examples
     ========
 
-    >>> from sympy import Rational
+    >>> from sympy import Rational, nsimplify, S, pi
     >>> from sympy.abc import x, y
     >>> Rational(3)
     3
-    >>> Rational(1,2)
+    >>> Rational(1, 2)
     1/2
-    >>> Rational(1.5)
-    1
 
-    Rational can also accept strings that are valid literals for reals:
+    Rational is unprejudiced in accepting input. If a float is passed, the
+    underlying value of the binary representation will be returned:
+
+    >>> Rational(.5)
+    1/2
+    >>> Rational(.2)
+    3602879701896397/18014398509481984
+
+    If the simpler representation of the float is desired then consider
+    limiting the denominator to the desired value or convert the float to
+    a string (which is roughly equivalent to limiting the denominator to
+    10**12):
+
+    >>> Rational(str(.2))
+    1/5
+    >>> Rational(.2).limit_denominator(10**12)
+    1/5
+
+    An arbitrarily precise Rational is obtained when a string literal is
+    passed:
 
     >>> Rational("1.23")
     123/100
@@ -913,16 +950,35 @@ class Rational(Number):
     1/100
     >>> Rational(".1")
     1/10
+    >>> Rational('1e-2/3.2')
+    1/320
 
-    Parsing needs for any other type of string for which a Rational is desired
-    can be handled with the rational=True option in sympify() which produces
-    rationals from strings like '.[3]' (=1/3) and '3/10' (=3/10).
+    The conversion of other types of strings can be handled by
+    the sympify() function, and conversion of floats to expressions
+    or simple fractions can be handled with nsimplify:
 
-    **Low-level**
+    >>> S('.[3]')  # repeating digits in brackets
+    1/3
+    >>> S('3**2/10')  # general expressions
+    9/10
+    >>> nsimplify(.3)  # numbers that have a simple form
+    3/10
+
+    But if the input does not reduce to a literal Rational, an error will
+    be raised:
+
+    >>> Rational(pi)
+    Traceback (most recent call last):
+    ...
+    TypeError: invalid input: pi
+
+
+    Low-level
+    ---------
 
     Access numerator and denominator as .p and .q:
 
-    >>> r = Rational(3,4)
+    >>> r = Rational(3, 4)
     >>> r
     3/4
     >>> r.p
@@ -936,6 +992,9 @@ class Rational(Number):
     >>> r.p//r.q
     0
 
+    See Also
+    ========
+    sympify, sympy.simplify.simplify.nsimplify
     """
     is_real = True
     is_integer = False
@@ -950,6 +1009,7 @@ class Rational(Number):
         if q is None:
             if isinstance(p, Rational):
                 return p
+
             if isinstance(p, basestring):
                 p = p.replace(' ', '')
                 try:
@@ -965,18 +1025,38 @@ class Rational(Number):
                     if f:
                         n, d = f.groups()
                         return Rational(int(n), int(d))
-                    raise ValueError('invalid literal: %s' % p)
-            elif not isinstance(p, Basic):
-                return Rational(S(p))
+                    elif p.count('/') == 1:
+                        p, q = p.split('/')
+                        return Rational(Rational(p), Rational(q))
+                    else:
+                        pass  # let sympify handle it
+            else:
+                if isinstance(p, decimal.Decimal):
+                    rv =  _decimal_to_Rational_prec(p)[0]
+                try:
+                    if isinstance(p, fractions.Fraction):
+                        return Rational(p.numerator, p.denominator)
+                except NameError:
+                    pass  # error will raise below
+
+                if isinstance(p, (float, Float)):
+                    return Rational(*_as_integer_ratio(p))
+
+            if not isinstance(p, (int, long, Rational)):
+                raise TypeError('invalid input: %s' % p)
             q = S.One
+        else:
+            p = Rational(p)
+            q = Rational(q)
+
         if isinstance(q, Rational):
             p *= q.q
             q = q.p
         if isinstance(p, Rational):
             q *= p.q
             p = p.p
-        p = int(p)
-        q = int(q)
+
+        # p and q are now integers
         if q == 0:
             if p == 0:
                 if _errdict["divide"]:
@@ -1416,7 +1496,11 @@ class Integer(Rational):
         # an integer). So we proceed by taking int() of the input and
         # let the int routines determine whether the expression can
         # be made into an int or whether an error should be raised.
-        ival = int(i)
+        try:
+            ival = int(i)
+        except TypeError:
+            raise TypeError(
+                'Integer can only work with integer expressions.')
         try:
             return _intcache[ival]
         except KeyError:
