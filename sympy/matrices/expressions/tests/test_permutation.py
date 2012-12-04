@@ -27,3 +27,10 @@ def test_matrix_expr_as_input():
     A = MatrixSymbol('A', 1, n)
     P = PermutationMatrix(A)
     assert P.shape == (n, n)
+
+def test_identity():
+    assert PermutationMatrix(0, 1).is_Identity
+    assert not PermutationMatrix(1, 0).is_Identity
+    n = Symbol('n')
+    A = MatrixSymbol('A', 1, n)
+    assert not PermutationMatrix(A).is_Identity
