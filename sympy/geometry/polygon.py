@@ -493,7 +493,6 @@ class Polygon(GeometryEntity):
         ==========
 
         [1] http://www.ariel.com.au/a/python-point-int-poly.html
-        [2] http://local.wasp.uwa.edu.au/~pbourke/geometry/insidepoly/
 
         """
         p = Point(p)
