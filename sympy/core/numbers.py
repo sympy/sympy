@@ -71,8 +71,8 @@ def _decimal_to_Rational_prec(dec):
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
     prec = len(d)
-    if int(dec) == dec:
-        rv = Rational(int(dec))
+    if e >= 0:  # it's an integer
+        rv = Integer(int(dec))
     else:
         s = (-1)**s
         d = sum([di*10**i for i, di in enumerate(reversed(d))])
