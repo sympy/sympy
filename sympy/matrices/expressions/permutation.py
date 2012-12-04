@@ -1,4 +1,4 @@
-from sympy import Basic, Integer
+from sympy import Basic, S
 from matexpr import MatrixExpr
 from sympy.core.compatibility import iterable
 
@@ -40,11 +40,11 @@ class PermutationMatrix(MatrixExpr):
         return Basic.__new__(cls, arg)
 
     arg = property(lambda self: self.args[0])
-    shape = property(lambda self: (Integer(len(self.arg)),)*2)
+    shape = property(lambda self: (S(self.arg.cols),)*2)
 
     @property
     def is_Identity(self):
-        return all(self.arg[i] == i for i in range(self.arg.cols))
+        return all(self.arg[0, i] == i for i in range(self.arg.cols))
 
     def _entry(self, i, j):
         return 1 if self.arg[i] == j else 0
