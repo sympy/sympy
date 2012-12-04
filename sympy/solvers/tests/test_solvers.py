@@ -23,6 +23,7 @@ def test_swap_back():
         {fx: gx + 5, y: -gx - 3}
     assert solve(fx + gx*x - 2, [fx, gx]) == {fx: 2, gx: 0}
     assert solve(fx + gx**2*x - y, [fx, gx]) == [{fx: y - gx**2*x}]
+    assert solve([f(1) - 2, x + 2]) == [{x: -2, f(1): 2}]
 
 
 def guess_solve_strategy(eq, symbol):
@@ -118,8 +119,8 @@ def test_solve_args():
         (exp(x) - x, exp(y) - y)) == [{x: -LambertW(-1), y: -LambertW(-1)}]
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
-    #symbol is not a symbol or function
-    raises(TypeError, lambda: solve(x**2 - pi, pi))
+    #symbol is a number
+    assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
     # overdetermined system
