@@ -11,7 +11,7 @@ import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from sympy.mpmath.ctx_mp import mpnumeric
 from sympy.mpmath.libmp.libmpf import (
-    fnan as FNAN, fzero as FZERO, _normalize as mpf_normalize)
+    fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize)
 
 import decimal
 import math
@@ -28,15 +28,17 @@ def mpf_norm(mpf, prec):
     precision.
 
     This also contains a portion of code to not return zero if
-    the mantissa is 0 since it is zero for mpf's +inf, -inf and
-    nan, too.
+    the mantissa is 0; this is a necessary (but not sufficient) test of
+    zero since the mantissa for mpf's values "+inf", "-inf" and "nan" have
+    a mantissa of zero, too.
     """
     sign, man, expt, bc = mpf
     if not man:
         # hack for mpf_normalize which does not do this;
         # it assumes that if man is zero the result is 0
+        # (see issue 3540)
         if not bc:
-            return FZERO
+            return _mpf_zero
         else:
             # don't change anything; this should already
             # be a well formed mpf tuple
@@ -307,16 +309,16 @@ class Number(AtomicExpr):
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity:
-                if self == 0:
+                if self.is_zero:
                     return S.NaN
-                elif self > 0:
+                elif self.is_positive:
                     return S.Infinity
                 else:
                     return S.NegativeInfinity
             elif other is S.NegativeInfinity:
-                if self == 0:
+                if self.is_zero:
                     return S.NaN
-                elif self > 0:
+                elif self.is_positive:
                     return S.NegativeInfinity
                 else:
                     return S.Infinity
@@ -619,8 +621,11 @@ class Float(Number):
         else:
             _mpf_ = mpmath.mpf(num)._mpf_
 
-        if _mpf_ == FNAN:
-            return S.NaN  # special-cased
+        # special cases
+        if _mpf_ == _mpf_zero:
+            pass  # we want a Float
+        elif _mpf_ == _mpf_nan:
+            return S.NaN
 
         obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
@@ -629,9 +634,10 @@ class Float(Number):
 
     @classmethod
     def _new(cls, _mpf_, _prec):
-        if _mpf_ == FZERO:  # XXX this should return same as Float(0)
-            return S.Zero   # but this breaks an existing test
-        elif _mpf_ == FNAN:
+        # special cases
+        if _mpf_ == _mpf_zero:
+            return S.Zero  # XXX this is different from Float which gives 0.0
+        elif _mpf_ == _mpf_nan:
             return S.NaN
 
         # the new Float should be normalized unless it is
@@ -644,7 +650,7 @@ class Float(Number):
         if not man:
             # hack for mpf_normalize which does not do this
             if not bc:
-                ok = FZERO
+                ok = _mpf_zero
             else:
                 ok = (sign % 2, long(man), expt, bc)
         elif expt < 0:
@@ -767,7 +773,7 @@ class Float(Number):
                 return Float._new(y, prec)
             except mlib.ComplexResult:
                 re, im = mlib.mpc_pow(
-                    (self, mlib.fzero), (expt, mlib.fzero), prec, rnd)
+                    (self, _mpf_zero), (expt, _mpf_zero), prec, rnd)
                 return Float._new(re, prec) + \
                     Float._new(im, prec)*S.ImaginaryUnit
 
@@ -795,10 +801,6 @@ class Float(Number):
                 return False
             return other.__eq__(self)
         if isinstance(other, Float):
-            # hack for the nan == nan case which, to mpf_eq is not equal
-            # but to SymPy should be equal
-            if other._mpf_ == self._mpf_ == FNAN:
-                return True
             return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
         if isinstance(other, Number):
             # numbers should compare at the same precision;
@@ -1134,7 +1136,7 @@ class Rational(Number):
                 ne = -expt
                 if (ne is S.One):
                     return Rational(self.q, self.p)
-                if self < 0:
+                if self.is_negative:
                     if expt.q != 1:
                         return -(S.NegativeOne)**((expt.p % expt.q) /
                                S(expt.q))*Rational(self.q, -self.p)**ne
@@ -1158,7 +1160,8 @@ class Rational(Number):
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
                     return Integer(self.p)**expt*Integer(self.q)**(-expt)
                 # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(expt.p*(expt.q - 1), expt.q) / \
+                return Integer(self.q)**Rational(
+                expt.p*(expt.q - 1), expt.q) / \
                     Integer(self.q)**Integer(expt.p)
 
         if self.is_negative and expt.is_even:
@@ -1596,13 +1599,13 @@ class Integer(Rational):
                 return (-self)**expt
         if not isinstance(expt, Rational):
             return
-        if expt is S.Half and self < 0:
+        if expt is S.Half and self.is_negative:
             # we extract I for this special case since everyone is doing so
             return S.ImaginaryUnit*Pow(-self, expt)
-        if expt < 0:
+        if expt.is_negative:
             # invert base and change sign on exponent
             ne = -expt
-            if self < 0:
+            if self.is_negative:
                 if expt.q != 1:
                     return -(S.NegativeOne)**((expt.p % expt.q) /
                             S(expt.q))*Rational(1, -self)**ne
@@ -1615,8 +1618,8 @@ class Integer(Rational):
         if xexact:
             # if it's a perfect root we've finished
             result = Integer(x**abs(expt.p))
-            if self < 0:
-                result *= (-1)**expt
+            if self.is_negative:
+                result *= S.NegativeOne**expt
             return result
 
         # The following is an algorithm where we collect perfect roots
@@ -2049,14 +2052,14 @@ class NegativeInfinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other is S.NaN or other == 0:
+                if other is S.NaN or other.is_zero:
                     return S.NaN
-                elif other > 0:
+                elif other.is_positive:
                     return Float('-inf')
                 else:
                     return Float('inf')
             else:
-                if other > 0:
+                if other.is_positive:
                     return S.NegativeInfinity
                 else:
                     return S.Infinity
@@ -2224,7 +2227,7 @@ class NaN(Number):
     __truediv__ = __div__
 
     def _as_mpf_val(self, prec):
-        return FNAN
+        return _mpf_nan
 
     def _sage_(self):
         import sage.all as sage
