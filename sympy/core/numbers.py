@@ -441,6 +441,17 @@ class Float(Number):
     >>> Float(3, '')
     3.
 
+    If a number is written in scientific notation, only the digits before the
+    exponent are considered significant if a decimal appears, otherwise the
+    "e" signifies only how to move the decimal:
+
+    >>> Float('60.e2', '')  # 2 digits significant
+    6.0e+3
+    >>> Float('60e2', '')  # 4 digits significant
+    6000.
+    >>> Float('600e-2', '')  # 3 digits significant
+    6.00
+
     Notes
     =====
 
@@ -551,6 +562,8 @@ class Float(Number):
             num = '0'
         elif isinstance(num, (int, long, Integer)):
             num = str(num)  # faster than mlib.from_int
+        elif isinstance(num, mpmath.mpf):
+            num = num._mpf_
 
         if prec == '':
             if type(num) is tuple and len(num) == 4:
@@ -566,10 +579,11 @@ class Float(Number):
                 except decimal.InvalidOperation:
                     pass
                 else:
+                    isint = '.' not in num
                     num, dps = _decimal_to_Rational_prec(Num)
+                    if num.is_Integer and isint:
+                        dps = max(dps, len(str(num).lstrip('-')))
                     ok = True
-                    if num.is_Integer:
-                        dps = len(str(num))
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
         else:

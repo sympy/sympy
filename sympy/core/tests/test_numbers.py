@@ -1246,3 +1246,20 @@ def test_Float_eq():
 def test_int_NumberSymbols():
     assert [int(i) for i in [pi, EulerGamma, E, GoldenRatio, Catalan]] == \
         [3, 0, 2, 1, 0]
+
+
+def test_3541():
+    from sympy.mpmath.libmp.libmpf import (
+        _normalize as mpf_normalize, finf, fninf, fzero)
+    # fnan is not included because Float no longer returns fnan,
+    # but otherwise, the same sort of test could apply
+    assert Float(finf).is_zero is False
+    assert Float(fninf).is_zero is False
+
+def test_3250():
+    from sympy.mpmath import mpf
+    assert str(Float(mpf((1,22,2,22)), '')) == '-88.000'
+    assert Float('23.e3', '')._prec == 10
+    assert Float('23e3', '')._prec == 20
+    assert Float('23000', '')._prec == 20
+    assert Float('-23000', '')._prec == 20
