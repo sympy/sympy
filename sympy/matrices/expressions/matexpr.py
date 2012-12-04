@@ -375,6 +375,11 @@ class Identity(MatrixSymbol):
         else:
             return S.Zero
 
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            return type(self)(self.rows.doit(**hints))
+        else:
+            return self
 
 class ZeroMatrix(MatrixSymbol):
     """The Matrix Zero 0 - additive identity
@@ -412,6 +417,12 @@ class ZeroMatrix(MatrixSymbol):
 
     def _entry(self, i, j):
         return S.Zero
+
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            return type(self)(self.rows.doit(**hints), self.cols.doit(**hints))
+        else:
+            return self
 
 
 def matrix_symbols(expr):

@@ -1,4 +1,4 @@
-from sympy.core import S, symbols
+from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
@@ -57,6 +57,12 @@ def test_ZeroMatrix():
     with raises(ShapeError):
         Z**2
 
+def test_ZeroMatrix_doit():
+    Znn = ZeroMatrix(Add(n, n, evaluate=False), n)
+    assert isinstance(Znn.rows, Add)
+    assert Znn.doit() == ZeroMatrix(2*n, n)
+    assert isinstance(Znn.doit().rows, Mul)
+
 
 def test_Identity():
     A = MatrixSymbol('A', n, m)
@@ -69,6 +75,12 @@ def test_Identity():
     assert transpose(In) == In
     assert In.inverse() == In
     assert In.conjugate() == In
+
+def test_Identity_doit():
+    Inn = Identity(Add(n, n, evaluate=False))
+    assert isinstance(Inn.rows, Add)
+    assert Inn.doit() == Identity(2*n)
+    assert isinstance(Inn.doit().rows, Mul)
 
 
 def test_MatAdd():
