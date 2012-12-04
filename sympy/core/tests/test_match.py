@@ -610,7 +610,6 @@ def test_issue_3004():
     assert (-I*x*oo).match(I*a*oo) == {a: -x}
 
 
-@XFAIL
 def test_issue_3539():
     a = Wild('a')
     x = Symbol('x')
