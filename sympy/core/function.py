@@ -32,17 +32,18 @@ There are two types of functions:
     (x,)
 
 """
-from core import BasicMeta, C
+from add import Add
 from assumptions import ManagedProperties
 from basic import Basic
+from cache import cacheit
+from compatibility import iterable, is_sequence
+from core import BasicMeta, C
+from decorators import _sympifyit
+from expr import Expr, AtomicExpr
+from numbers import Rational, Float
+from rules import Transform
 from singleton import S
 from sympify import sympify
-from expr import Expr, AtomicExpr
-from decorators import _sympifyit
-from compatibility import iterable, is_sequence
-from cache import cacheit
-from numbers import Rational, Float
-from add import Add
 
 from sympy.core.containers import Tuple, Dict
 from sympy.core.logic import fuzzy_and
@@ -2147,41 +2148,42 @@ def nfloat(expr, n=15, exponent=False):
 
     """
     from sympy.core import Pow
+    from sympy.core.basic import _aresame
+
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):
             return type(expr)([(k, nfloat(v, n, exponent)) for k, v in
                                expr.iteritems()])
         return type(expr)([nfloat(a, n, exponent) for a in expr])
-    elif not isinstance(expr, Expr):
-        return Float(expr, '')
-    elif expr.is_Float:
-        return expr.n(n)
-    elif expr.is_Integer:
-        return Float(float(expr)).n(n)
-    elif expr.is_Rational:
-        return Float(expr).n(n)
+    rv = sympify(expr)
+
+    if rv.is_Number:
+        return Float(rv, n)
+    elif rv.is_number:
+        # evalf doesn't always set the precision
+        rv = rv.n(n)
+        if rv.is_Number:
+            rv = Float(rv.n(n), n)
+        else:
+            pass  # pure_complex(rv) is likely True
+        return rv
 
     if not exponent:
-        bases = {}
-        expos = {}
-        reps = {}
-        for p in expr.atoms(Pow):
-            b, e = p.as_base_exp()
-            b = bases.setdefault(p.base, nfloat(p.base, n, exponent))
-            e = expos.setdefault(e, Dummy())
-            reps[p] = Pow(b, e, evaluate=False)
-        rv = expr.xreplace(dict(reps)).n(n).xreplace(
-            dict([(v, k) for k, v in expos.iteritems()]))
+        reps = [(p, Pow(p.base, Dummy())) for p in rv.atoms(Pow)]
+        rv = rv.xreplace(dict(reps))
+    rv = rv.n(n)
+    if not exponent:
+        rv = rv.xreplace(dict([(d.exp, p.exp) for p, d in reps]))
     else:
-        intex = lambda x: x.is_Pow and x.exp.is_Integer
-        floex = lambda x: Pow(x.base, Float(x.exp, ''), evaluate=False)
-        rv = expr.n(n).replace(intex, floex)
+        # Pow._eval_evalf special cases Integer exponents so if
+        # exponent is suppose to be handled we have to do so here
+        rv = rv.xreplace(Transform(
+            lambda x: Pow(x.base, Float(x.exp, n)),
+            lambda x: x.is_Pow and x.exp.is_Integer))
 
-    funcs = [f for f in rv.atoms(Function)]
-    funcs.sort(key=count_ops)
-    funcs.reverse()
-    return rv.subs([(f, f.func(*[nfloat(a, n, exponent)
-                     for a in f.args])) for f in funcs])
+    return rv.xreplace(Transform(
+        lambda x: x.func(*nfloat(x.args, n, exponent)),
+        lambda x: isinstance(x, Function)))
 
 
 from sympy.core.symbol import Dummy
