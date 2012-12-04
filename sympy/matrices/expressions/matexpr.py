@@ -45,7 +45,6 @@ class MatrixExpr(Basic):
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
-    is_BlockMatrix = False
     is_MatAdd = False
     is_MatMul = False
 
