@@ -1255,6 +1255,8 @@ def test_3541():
     # but otherwise, the same sort of test could apply
     assert Float(finf).is_zero is False
     assert Float(fninf).is_zero is False
+    assert bool(Float(0)) is False
+
 
 def test_3250():
     from sympy.mpmath import mpf

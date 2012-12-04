@@ -696,6 +696,11 @@ class Float(Number):
     def _eval_is_negative(self):
         return self.num < 0
 
+    def __nonzero__(self):
+        # but do not base answer on `man` alone (see mpf_norm docstring)
+        sign, man, expt, bc = self._mpf_
+        return not (man == 0 and bc == 0)
+
     def __neg__(self):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
 
@@ -859,9 +864,6 @@ class Float(Number):
         if isinstance(other, Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__le__(self, other)
-
-    def __nonzero__(self):
-        return mpmath.mpf(self._mpf_) != 0
 
     def __hash__(self):
         return super(Float, self).__hash__()
