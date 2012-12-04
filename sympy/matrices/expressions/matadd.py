@@ -19,16 +19,12 @@ class MatAdd(MatrixExpr):
     is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
-        check    = kwargs.get('check'   , True)
+        check = kwargs.get('check', True)
 
         obj = Basic.__new__(cls, *args)
         if check:
             validate(*args)
-        if evaluate:
-            return canonicalize(obj)
-        else:
-            return obj
+        return obj
 
     @property
     def shape(self):
@@ -38,16 +34,16 @@ class MatAdd(MatrixExpr):
         return Add(*[arg._entry(i, j) for arg in self.args])
 
     def _eval_transpose(self):
-        return MatAdd(*[transpose(arg) for arg in self.args])
+        return MatAdd(*[transpose(arg) for arg in self.args]).doit()
 
     def _eval_adjoint(self):
-        return MatAdd(*[adjoint(arg) for arg in self.args])
+        return MatAdd(*[adjoint(arg) for arg in self.args]).doit()
 
     def _eval_trace(self):
         from trace import Trace
-        return MatAdd(*[Trace(arg) for arg in self.args])
+        return MatAdd(*[Trace(arg) for arg in self.args]).doit()
 
-    def canonicalize(self):
+    def doit(self, **ignored):
         return canonicalize(self)
 
 def validate(*args):

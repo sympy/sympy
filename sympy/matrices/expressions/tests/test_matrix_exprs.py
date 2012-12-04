@@ -1,3 +1,5 @@
+from __future__ import with_statement
+
 from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
@@ -83,20 +85,22 @@ def test_Identity_doit():
     assert isinstance(Inn.doit().rows, Mul)
 
 
-def test_MatAdd():
+def test_addition():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', n, m)
 
+    assert isinstance(A + B, MatAdd)
     assert (A + B).shape == A.shape
-    assert MatAdd(A, -A, 2*B).is_MatMul
+    assert isinstance(A - A + 2*B, MatMul)
 
     raises(ShapeError, lambda: A + B.T)
     raises(TypeError, lambda: A + 1)
     raises(TypeError, lambda: 5 + A)
     raises(TypeError, lambda: 5 - A)
 
-    assert MatAdd(A, ZeroMatrix(n, m), -A) == ZeroMatrix(n, m)
-    # raises(TypeError, lambda : MatAdd(ZeroMatrix(n,m), S(0)))
+    assert A + ZeroMatrix(n, m) - A == ZeroMatrix(n, m)
+    with raises(TypeError):
+        ZeroMatrix(n,m) + S(0)
 
 
 def test_multiplication():

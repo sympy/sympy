@@ -53,7 +53,7 @@ class MatrixExpr(Basic):
     # The following is adapted from the core Expr object
 
     def __neg__(self):
-        return MatMul(S.NegativeOne, self)
+        return MatMul(S.NegativeOne, self).doit()
 
     def __abs__(self):
         raise NotImplementedError
@@ -61,22 +61,22 @@ class MatrixExpr(Basic):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatAdd(self, other)
+        return MatAdd(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatAdd(other, self)
+        return MatAdd(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatAdd(self, -other)
+        return MatAdd(self, -other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatAdd(other, -self)
+        return MatAdd(other, -self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
@@ -379,6 +379,7 @@ class Identity(MatrixSymbol):
             return type(self)(self.rows.doit(**hints))
         else:
             return self
+
 
 class ZeroMatrix(MatrixSymbol):
     """The Matrix Zero 0 - additive identity
