@@ -408,7 +408,6 @@ def pollard_rho(n, s=2, a=1, retries=5, seed=1234, max_steps=None, F=None):
 
     - Richard Crandall & Carl Pomerance (2005), "Prime Numbers:
       A Computational Perspective", Springer, 2nd edition, 229-231
-    - http://www.csh.rit.edu/~pat/math/quickies/rho/
 
     """
     n = int(n)
