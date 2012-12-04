@@ -496,8 +496,8 @@ def solve(f, *symbols, **flags):
             >>> solve(x + exp(x), x, implicit=True)
             [-exp(x)]
 
-        * It is possible to solve for anything (except numbers) that can
-          be targeted with subs:
+        * It is possible to solve for anything that can be targeted with
+          subs:
 
             >>> solve(x + 2 + sqrt(3), x + 2)
             [-sqrt(3)]
@@ -512,6 +512,17 @@ def solve(f, *symbols, **flags):
             {y: sqrt(3)/(-x - 3), x + 2: (-2*x - 6 + sqrt(3))/(x + 3)}
             >>> solve(eqs, y*x, x)
             {x: -y - 4, x*y: -3*y - sqrt(3)}
+
+        * if you attempt to solve for a number remember that the number
+          you have obtained does not necessarily mean that the value is
+          equivalent to the expression obtained:
+
+            >>> solve(sqrt(2) - 1, 1)
+            [sqrt(2)]
+            >>> solve(x - y + 1, 1)  # /!\ -1 is targeted, too
+            [x/(y - 1)]
+            >>> [_.subs(z, -1) for _ in solve((x - y + 1).subs(-1, z), 1)]
+            [-x + y]
 
         * To solve for a function within a derivative, use dsolve.
 
@@ -709,15 +720,12 @@ def solve(f, *symbols, **flags):
     # we can solve for non-symbol entities by replacing them with Dummy symbols
     symbols_new = []
     symbol_swapped = False
-    funcs = []
     for i, s in enumerate(symbols):
         if s.is_Symbol:
             s_new = s
-        elif not s.is_number or isinstance(s, AppliedUndef):  # other
+        else:
             symbol_swapped = True
             s_new = Dummy('X%d' % i)
-        else:
-            raise TypeError('solving for numbers is disallowed')
         symbols_new.append(s_new)
 
     if symbol_swapped:

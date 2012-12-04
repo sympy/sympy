@@ -120,7 +120,7 @@ def test_solve_args():
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
     #symbol is a number
-    raises(TypeError, lambda: solve(x**2 - pi, pi))
+    assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
     # overdetermined system
