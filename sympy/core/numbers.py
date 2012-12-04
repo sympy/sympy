@@ -1029,7 +1029,7 @@ class Rational(Number):
                         p, q = p.split('/')
                         return Rational(Rational(p), Rational(q))
                     else:
-                        pass  # let sympify handle it
+                        pass  # error will raise below
             else:
                 if isinstance(p, decimal.Decimal):
                     rv =  _decimal_to_Rational_prec(p)[0]
@@ -2007,7 +2007,7 @@ class Infinity(Number):
                 if other == Float('-inf') or \
                         other == Float('inf'):
                     return S.NaN
-                elif other >= 0:
+                elif other.is_nonnegative:
                     return Float('inf')
                 else:
                     return Float('-inf')
@@ -2160,9 +2160,9 @@ class NegativeInfinity(Number):
             elif other.is_Float:
                 if other == Float('-inf') or \
                     other == Float('inf') or \
-                    other is S.NaN:
+                        other is S.NaN:
                     return S.NaN
-                elif other >= 0:
+                elif other.is_nonnegative:
                     return Float('-inf')
                 else:
                     return Float('inf')

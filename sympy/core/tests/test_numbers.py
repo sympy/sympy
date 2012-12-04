@@ -4,10 +4,9 @@ from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.basic import _aresame
 from sympy.core.power import integer_nthroot
-from sympy.utilities.pytest import XFAIL, slow
-
-from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
-from sympy.utilities.pytest import raises
+from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
+from sympy.mpmath import mpf
+from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy import mpmath
 
 
@@ -574,6 +573,26 @@ def test_Infinity_2():
     assert (-oo)*x != -oo
     assert (-oo)*(pi - 1) == -oo
     assert (-oo)*(1 - pi) == oo
+
+    assert (-1)**S.NaN is S.NaN
+    assert oo - Float('inf') is S.NaN
+    assert oo + Float('-inf') is S.NaN
+    assert oo*0 is S.NaN
+    assert oo/Float('inf') is S.NaN
+    assert oo/Float('-inf') is S.NaN
+    assert oo**S.NaN is S.NaN
+    assert -oo + Float('inf') is S.NaN
+    assert -oo - Float('-inf') is S.NaN
+    assert -oo*S.NaN is S.NaN
+    assert -oo*0 is S.NaN
+    assert -oo/Float('inf') is S.NaN
+    assert -oo/Float('-inf') is S.NaN
+    assert -oo/S.NaN is S.NaN
+    assert abs(-oo) == oo
+    assert all((-oo)**i is S.NaN for i in (oo, -oo, S.NaN))
+    assert (-oo)**3 == -oo
+    assert (-oo)**2 == oo
+    assert abs(S.ComplexInfinity) == oo
 
 
 def test_Infinity_inequations():
@@ -1272,3 +1291,7 @@ def test_3250():
     assert Float('23e3', '')._prec == 20
     assert Float('23000', '')._prec == 20
     assert Float('-23000', '')._prec == 20
+
+def test_mpf_norm():
+    assert mpf_norm((1, 0, 1, 0), 10) == mpf('0')._mpf_
+    assert Float._new((1, 0, 1, 0), 10)._mpf_ == mpf('0')._mpf_
