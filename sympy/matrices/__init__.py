@@ -27,7 +27,8 @@ from .expressions import (
     Transpose, ZeroMatrix, OneMatrix, blockcut, block_collapse, matrix_symbols, Adjoint,
     hadamard_product, HadamardProduct, HadamardPower, Determinant, det,
     diagonalize_vector, DiagMatrix, DiagonalMatrix, DiagonalOf, trace,
-    DotProduct, kronecker_product, KroneckerProduct)
+    DotProduct, kronecker_product, KroneckerProduct,
+    PermutationMatrix, MatrixPermute)
 
 __all__ = [
     'ShapeError', 'NonSquareMatrixError',
@@ -58,5 +59,5 @@ __all__ = [
     'hadamard_product', 'HadamardProduct', 'HadamardPower', 'Determinant',
     'det', 'diagonalize_vector', 'DiagMatrix', 'DiagonalMatrix',
     'DiagonalOf', 'trace', 'DotProduct', 'kronecker_product',
-    'KroneckerProduct',
+    'KroneckerProduct', 'PermutationMatrix', 'MatrixPermute',
 ]
