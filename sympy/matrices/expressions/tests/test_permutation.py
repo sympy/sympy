@@ -16,6 +16,6 @@ def test_inputs():
 
 def test_matrix_interaction():
     P = PermutationMatrix((1, 2, 0))
-    assert P*Matrix(3, 3, range(9)) == Matrix([[3, 4, 5],
-                                               [6, 7, 8],
-                                               [0, 1, 2]])
+    assert Matrix(P*Matrix(3, 3, range(9))) == Matrix([[3, 4, 5],
+                                                       [6, 7, 8],
+                                                       [0, 1, 2]])
