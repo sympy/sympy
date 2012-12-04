@@ -44,7 +44,8 @@ class PermutationMatrix(MatrixExpr):
 
     @property
     def is_Identity(self):
-        return all(self.arg[0, i] == i for i in range(self.arg.cols))
+        return (S(self.arg.cols).is_Number and
+                all(self.arg[0, i] == i for i in range(self.arg.cols)))
 
     def _entry(self, i, j):
         return 1 if self.arg[i] == j else 0
