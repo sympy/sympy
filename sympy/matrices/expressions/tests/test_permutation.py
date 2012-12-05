@@ -34,3 +34,9 @@ def test_identity():
     n = Symbol('n')
     A = MatrixSymbol('A', 1, n)
     assert not PermutationMatrix(A).is_Identity
+
+def test_permutation_permutation_interaction():
+    from sympy.combinatorics import Permutation
+    p = Permutation([1, 0, 2])
+    P = PermutationMatrix(p)
+    assert P.arg == ImmutableMatrix([1, 0, 2]).T
