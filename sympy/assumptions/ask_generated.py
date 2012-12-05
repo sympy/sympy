@@ -89,5 +89,5 @@ known_facts_dict = {
     Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real,
         Q.hermitian]),
     Q.unit_triangular: set([Q.unit_triangular]),
-    Q.imaginary: set([Q.antihermitian, Q.complex, Q.imaginary])
+    Q.imaginary: set([Q.antihermitian, Q.complex, Q.imaginary]),
 }
