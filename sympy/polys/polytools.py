@@ -5977,9 +5977,6 @@ class GroebnerBasis(Basic):
         Computation of Zero-dimensional Groebner Bases by Change of
         Ordering
 
-        J.C. Faugere's lecture notes:
-        http://www-salsa.lip6.fr/~jcf/Papers/2010_MPRI5e.pdf
-
         """
         opt = self._options
 

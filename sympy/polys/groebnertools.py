@@ -841,9 +841,6 @@ def matrix_fglm(F, u, O_from, O_to, K):
     J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
     Computation of Zero-dimensional Groebner Bases by Change of
     Ordering
-
-    J.C. Faugere's lecture notes:
-    http://www-salsa.lip6.fr/~jcf/Papers/2010_MPRI5e.pdf
     """
     old_basis = _basis(F, u, O_from, K)
     M = _representing_matrices(old_basis, F, u, O_from, K)

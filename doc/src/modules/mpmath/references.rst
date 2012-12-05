@@ -5,7 +5,7 @@ The following is a non-comprehensive list of works used in the development of mp
 or cited for examples or mathematical definitions used in this documentation.
 References not listed here can be found in the source code.
 
-.. [AbramowitzStegun] M Abramowitz & I Stegun. *Handbook of Mathematical Functions, 9th Ed.*, Tenth Printing, December 1972, with corrections (electronic copy: http://www.math.ucla.edu/~cbm/aands/)
+.. [AbramowitzStegun] M Abramowitz & I Stegun. *Handbook of Mathematical Functions, 9th Ed.*, Tenth Printing, December 1972, with corrections
 
 .. [Bailey] D H Bailey. "Tanh-Sinh High-Precision Quadrature", http://crd.lbl.gov/~dhbailey/dhbpapers/dhb-tanh-sinh.pdf
 
@@ -16,7 +16,7 @@ References not listed here can be found in the source code.
 
 .. [BorweinBorwein] J Borwein & P B Borwein. *Pi and the AGM: A Study in Analytic Number Theory and Computational Complexity*, Wiley 1987
 
-.. [BorweinZeta] P Borwein. "An Efficient Algorithm for the Riemann Zeta Function", http://www.cecm.sfu.ca/personal/pborwein/PAPERS/P117.ps
+.. [BorweinZeta] P Borwein. "An Efficient Algorithm for the Riemann Zeta Function", http://www.cecm.sfu.ca/personal/pborwein/PAPERS/P115.pdf
 
 .. [CabralRosetti] L G Cabral-Rosetti & M A Sanchis-Lozano. "Appell Functions and the Scalar One-Loop Three-point Integrals in Feynman Diagrams". http://arxiv.org/abs/hep-ph/0206081
 

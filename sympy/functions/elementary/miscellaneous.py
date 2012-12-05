@@ -433,7 +433,7 @@ class Max(MinMaxBase, Application):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
-    .. [2] http://en.wikipedia.org/wiki/Lattice_(order)
+    .. [2] http://en.wikipedia.org/wiki/Lattice_%28order%29
 
     See Also
     ========

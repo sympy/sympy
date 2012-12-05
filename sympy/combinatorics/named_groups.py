@@ -12,8 +12,7 @@ def AbelianGroup(*cyclic_orders):
     According to the structure theorem for finite abelian groups ([1]),
     every finite abelian group can be written as the direct product of finitely
     many cyclic groups.
-    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely
-    _generated_abelian_groups
+    [1] http://groupprops.subwiki.org/wiki/Structure_theorem_for_finitely_generated_abelian_groups
 
     Examples
     ========
