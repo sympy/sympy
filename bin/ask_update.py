@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """ Update the ask_generated.py file
 
 This must be run each time known_facts is changed
