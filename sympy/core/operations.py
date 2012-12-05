@@ -352,7 +352,7 @@ class LatticeOp(AssocOp):
 
     References:
 
-    [1] - http://en.wikipedia.org/wiki/Lattice_(order)
+    [1] - http://en.wikipedia.org/wiki/Lattice_%28order%29
     """
 
     is_commutative = True

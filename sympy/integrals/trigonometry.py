@@ -44,7 +44,7 @@ def trigintegrate(f, x):
        >>> trigintegrate(sin(x)*tan(x), x)
        -log(sin(x) - 1)/2 + log(sin(x) + 1)/2 - sin(x)
 
-       http://en.wikibooks.org/wiki/Calculus/Further_integration_techniques
+       http://en.wikibooks.org/wiki/Calculus/Integration_techniques
 
     See Also
     ========

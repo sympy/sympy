@@ -1416,8 +1416,7 @@ def diff(f, *symbols, **kwargs):
     References
     ==========
 
-    http://documents.wolfram.com/v5/Built-inFunctions/AlgebraicComputation/
-           Calculus/D.html
+    http://reference.wolfram.com/legacy/v5_2/Built-inFunctions/AlgebraicComputation/Calculus/D.html
 
     See Also
     ========
