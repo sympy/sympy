@@ -1,5 +1,5 @@
-from sympy import Basic, S
-from matexpr import MatrixExpr
+from sympy.core import Basic, S
+from sympy.matrices.expressions.matexpr import MatrixExpr
 from sympy.core.compatibility import iterable
 
 class PermutationMatrix(MatrixExpr):
