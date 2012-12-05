@@ -612,11 +612,35 @@ class UndefinedFunction(FunctionClass):
 
 class WildFunction(Function, AtomicExpr):
     """
-    WildFunction() matches any expression but another WildFunction()
-    XXX is this as intended, does it work ?
+    A WildFunction function matches any function (with its arguments).
+
+    Examples
+    ========
+
+    >>> from sympy import Wild, WildFunction, Function, cos
+    >>> from sympy.abc import x, y, z
+    >>> F = WildFunction('F')
+    >>> f = Function('f')
+    >>> x.match(F)
+    >>> F.match(F)
+    {F_: F_}
+    >>> f(x).match(F)
+    {F_: f(x)}
+    >>> cos(x).match(F)
+    {F_: cos(x)}
+    >>> f(x, y).match(F)
+
+    To match functions with more than 1 arguments, set ``nargs`` to the
+    desired value:
+
+    >>> F.nargs = 2
+    >>> f(x, y).match(F)
+    {F_: f(x, y)}
+
     """
 
     nargs = 1
+    include = set()
 
     def __new__(cls, name, **assumptions):
         obj = Function.__new__(cls, name, **assumptions)
@@ -627,6 +651,7 @@ class WildFunction(Function, AtomicExpr):
         if self.nargs is not None:
             if not hasattr(expr, 'nargs') or self.nargs != expr.nargs:
                 return None
+
         repl_dict = repl_dict.copy()
         repl_dict[self] = expr
         return repl_dict

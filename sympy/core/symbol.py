@@ -185,7 +185,28 @@ class Dummy(Symbol):
 
 class Wild(Symbol):
     """
-    Wild() matches any expression but another Wild().
+    A Wild symbol matches anything.
+
+    Examples
+    ========
+
+    >>> from sympy import Wild, WildFunction, cos, pi
+    >>> from sympy.abc import x
+    >>> a = Wild('a')
+    >>> b = Wild('b')
+    >>> b.match(a)
+    {a_: b_}
+    >>> x.match(a)
+    {a_: x}
+    >>> pi.match(a)
+    {a_: pi}
+    >>> (x**2).match(a)
+    {a_: x**2}
+    >>> cos(x).match(a)
+    {a_: cos(x)}
+    >>> A = WildFunction('A')
+    >>> A.match(a)
+    {a_: A_}
     """
 
     __slots__ = ['exclude', 'properties']
