@@ -1,5 +1,5 @@
 from sympy.rules.branch.strat_pure import (exhaust, debug, multiplex,
-        condition, notempty, chain, onaction)
+        condition, notempty, chain, onaction, sfilter)
 
 
 def posdec(x):
@@ -26,6 +26,10 @@ def inc(x):
 
 def ident(x):
     yield x
+
+def one_to_n(n):
+    for i in range(n):
+        yield i
 
 def test_exhaust():
     brl = exhaust(branch5)
@@ -55,6 +59,10 @@ def test_condition():
     brl = condition(even, branch5)
     assert set(brl(4)) == set(branch5(4))
     assert set(brl(5)) == set([])
+
+def test_sfilter():
+    brl = sfilter(even, one_to_n)
+    assert set(brl(10)) == set([0, 2, 4, 6, 8])
 
 def test_notempty():
 

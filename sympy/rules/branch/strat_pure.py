@@ -1,4 +1,5 @@
 """ Generic SymPy-Independent Strategies """
+import itertools
 
 def exhaust(brule):
     """ Apply a branching rule repeatedly until it has no effect """
@@ -52,6 +53,13 @@ def condition(cond, brule):
         else:
             pass
     return conditioned_brl
+
+def sfilter(pred, brule):
+    """ Yield only those results which satisfy the predicate """
+    def filtered_brl(expr):
+        for x in itertools.ifilter(pred, brule(expr)):
+            yield x
+    return filtered_brl
 
 def notempty(brule):
     def notempty_brl(expr):
