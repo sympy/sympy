@@ -41,6 +41,8 @@ Matrix Expressions Core Reference
    :members:
 .. autoclass:: FunctionMatrix 
    :members:
+.. autoclass:: PermutationMatrix
+   :members:
 .. autoclass:: Identity 
    :members:
 .. autoclass:: ZeroMatrix 
