@@ -69,6 +69,7 @@ def test_triangular():
             Q.lower_triangular(Z)) is True
     assert ask(Q.lower_triangular(Identity(3))) is True
     assert ask(Q.lower_triangular(ZeroMatrix(3, 3))) is True
+    assert ask(Q.triangular(X), Q.unit_triangular(X))
 
 
 def test_diagonal():
@@ -76,6 +77,9 @@ def test_diagonal():
                Q.diagonal(Z)) is True
     assert ask(Q.diagonal(ZeroMatrix(3, 3)))
     assert ask(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X))
+    assert ask(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X))
+    assert ask(Q.diagonal(X), Q.symmetric(X))
+    assert ask(Q.diagonal(X), Q.triangular(X))
 
 
 def test_non_atoms():
@@ -90,5 +94,3 @@ def test_non_trivial_implies():
     assert ask(Q.triangular(X), Q.lower_triangular(X))
     assert ask(Q.triangular(X+Y), Q.lower_triangular(X) &
                Q.lower_triangular(Y))
-
-
