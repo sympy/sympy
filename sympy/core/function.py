@@ -623,7 +623,7 @@ class WildFunction(Function, AtomicExpr):
         obj.name = name
         return obj
 
-    def matches(self, expr, repl_dict={}):
+    def matches(self, expr, repl_dict={}, old=False):
         if self.nargs is not None:
             if not hasattr(expr, 'nargs') or self.nargs != expr.nargs:
                 return None
