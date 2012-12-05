@@ -30,6 +30,7 @@ known_facts_cnf = And(
     Or(Not(Q.rational), Q.real),
     Or(Not(Q.diagonal), Q.symmetric),
     Or(Not(Q.lower_triangular), Q.triangular),
+    Or(Not(Q.unit_triangular), Q.triangular),
     Or(Not(Q.upper_triangular), Q.triangular),
     Or(Not(Q.diagonal), Q.upper_triangular),
     Or(Not(Q.antihermitian), Not(Q.hermitian)),
@@ -88,6 +89,6 @@ known_facts_dict = {
         Q.negative, Q.extended_real]),
     Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real,
         Q.hermitian]),
-    Q.unit_triangular: set([Q.unit_triangular]),
+    Q.unit_triangular: set([Q.triangular, Q.unit_triangular]),
     Q.imaginary: set([Q.antihermitian, Q.complex, Q.imaginary]),
 }
