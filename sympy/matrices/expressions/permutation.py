@@ -31,8 +31,8 @@ class PermutationMatrix(MatrixExpr):
         else:
             arg = args
 
-        if isinstance(arg, (list, tuple, MutableMatrix)):
-            arg = ImmutableMatrix(1, len(arg), arg)
+        if not isinstance(arg, MatrixExpr):
+            arg = ImmutableMatrix(list(arg)).T
 
         if arg.shape[0] != 1:
             raise ValueError("Input must be row vector")
