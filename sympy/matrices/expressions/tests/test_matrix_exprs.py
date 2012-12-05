@@ -4,7 +4,8 @@ from sympy.core import S, symbols, Add, Mul
 from sympy.functions import transpose, sin, cos, sqrt
 from sympy.simplify import simplify
 from sympy.matrices import (Identity, ImmutableMatrix, Inverse, MatAdd, MatMul,
-        MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,)
+        MatPow, Matrix, MatrixExpr, MatrixSymbol, ShapeError, ZeroMatrix,
+        Transpose, Adjoint)
 from sympy.utilities.pytest import raises
 
 n, m, l, k, p = symbols('n m l k p', integer=True)
@@ -180,6 +181,10 @@ def test_matmul_simplify():
 def test_invariants():
     A = MatrixSymbol('A', n, m)
     B = MatrixSymbol('B', m, l)
-    objs = [Identity(n), ZeroMatrix(m, n), A, MatMul(A, B), MatAdd(A, A)]
+    X = MatrixSymbol('X', n, n)
+    objs = [Identity(n), ZeroMatrix(m, n), A, MatMul(A, B), MatAdd(A, A),
+            Transpose(A), Adjoint(A), Inverse(X), MatPow(X, 2), MatPow(X, -1),
+            MatPow(X, 0)]
     for obj in objs:
+        print obj
         assert obj == obj.__class__(*obj.args)
