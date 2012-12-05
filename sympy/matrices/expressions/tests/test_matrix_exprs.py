@@ -186,5 +186,4 @@ def test_invariants():
             Transpose(A), Adjoint(A), Inverse(X), MatPow(X, 2), MatPow(X, -1),
             MatPow(X, 0)]
     for obj in objs:
-        print obj
         assert obj == obj.__class__(*obj.args)
