@@ -292,7 +292,11 @@ known_facts = And(
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.positive_definite, Q.invertible),
     Implies(Q.diagonal, Q.upper_triangular),
-    Implies(Q.diagonal, Q.lower_triangular)
+    Implies(Q.diagonal, Q.lower_triangular),
+    Implies(Q.lower_triangular, Q.triangular),
+    Implies(Q.upper_triangular, Q.triangular),
+    Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
+    Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal)
 )
 
 from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf
