@@ -190,7 +190,7 @@ class AssocOp(Basic):
                 return None
             newpattern = self.func(*wild_part)
             newexpr = self._combine_inverse(expr, exact)
-            if expr.is_Add and newexpr.count_ops() > expr.count_ops():
+            if (expr.is_Add or expr.is_Mul) and newexpr.count_ops() > expr.count_ops():
                 return None
             return newpattern.matches(newexpr, repl_dict)
 
