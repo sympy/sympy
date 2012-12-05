@@ -1424,7 +1424,7 @@ def _rewrite_single(f, x, recursive=True):
     if t in _lookup_table:
         l = _lookup_table[t]
         for formula, terms, cond, hint in l:
-            subs = f.match(formula)
+            subs = f.match(formula, old=True)
             if subs:
                 subs_ = {}
                 for fro, to in subs.items():
