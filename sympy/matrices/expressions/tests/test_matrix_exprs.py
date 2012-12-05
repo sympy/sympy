@@ -176,3 +176,10 @@ def test_matmul_simplify():
     A = MatrixSymbol('A', 1, 1)
     assert simplify(MatMul(A, ImmutableMatrix([[sin(x)**2 + cos(x)**2]]))) == \
         MatMul(A, ImmutableMatrix([[1]]))
+
+def test_invariants():
+    A = MatrixSymbol('A', n, m)
+    B = MatrixSymbol('B', m, l)
+    objs = [Identity(n), ZeroMatrix(m, n), A, MatMul(A, B), MatAdd(A, A)]
+    for obj in objs:
+        assert obj == obj.__class__(*obj.args)

@@ -341,7 +341,7 @@ class MatrixSymbol(MatrixExpr):
     def _eval_simplify(self, **kwargs):
         return self
 
-class Identity(MatrixSymbol):
+class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
 
     >>> from sympy.matrices import Identity, MatrixSymbol
@@ -354,7 +354,19 @@ class Identity(MatrixSymbol):
     is_Identity = True
 
     def __new__(cls, n):
-        return MatrixSymbol.__new__(cls, "I", n, n)
+        return super(Identity, cls).__new__(cls, n)
+
+    @property
+    def rows(self):
+        return self.args[0]
+
+    @property
+    def cols(self):
+        return self.args[0]
+
+    @property
+    def shape(self):
+        return (self.args[0], self.args[0])
 
     def _eval_transpose(self):
         return self
@@ -374,14 +386,8 @@ class Identity(MatrixSymbol):
         else:
             return S.Zero
 
-    def doit(self, **hints):
-        if hints.get('deep', True):
-            return type(self)(self.rows.doit(**hints))
-        else:
-            return self
 
-
-class ZeroMatrix(MatrixSymbol):
+class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
 
     >>> from sympy import MatrixSymbol, ZeroMatrix
@@ -394,8 +400,21 @@ class ZeroMatrix(MatrixSymbol):
     """
     is_ZeroMatrix = True
 
-    def __new__(cls, n, m):
-        return MatrixSymbol.__new__(cls, "0", n, m)
+    def __new__(cls, m, n):
+        return super(ZeroMatrix, cls).__new__(cls, m, n)
+
+    @property
+    def rows(self):
+        return self.args[0]
+
+    @property
+    def cols(self):
+        return self.args[1]
+
+    @property
+    def shape(self):
+        return (self.args[0], self.args[1])
+
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
@@ -417,12 +436,6 @@ class ZeroMatrix(MatrixSymbol):
 
     def _entry(self, i, j):
         return S.Zero
-
-    def doit(self, **hints):
-        if hints.get('deep', True):
-            return type(self)(self.rows.doit(**hints), self.cols.doit(**hints))
-        else:
-            return self
 
 
 def matrix_symbols(expr):
