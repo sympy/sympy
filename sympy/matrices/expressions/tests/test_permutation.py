@@ -9,6 +9,8 @@ def test_basic():
     assert Matrix(PermutationMatrix((1, 0))) == Matrix([[0, 1], [1, 0]])
     assert isinstance(PermutationMatrix((1, 0)) * MatrixSymbol('A', 2, 2),
                       MatMul)
+    p = PermutationMatrix(1, 0)
+    assert type(p)(*p.args) == p
 
 def test_inputs():
     P = PermutationMatrix(1, 0)
