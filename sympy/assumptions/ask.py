@@ -296,7 +296,8 @@ known_facts = And(
     Implies(Q.lower_triangular, Q.triangular),
     Implies(Q.upper_triangular, Q.triangular),
     Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
-    Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal)
+    Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
+    Implies(Q.diagonal, Q.symmetric)
 )
 
 from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf
