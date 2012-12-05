@@ -223,23 +223,46 @@ class BlockDiagMatrix(BlockMatrix):
 
     """
     def __new__(cls, *mats):
-        from sympy.matrices.immutable import ImmutableMatrix
-        data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
-                        for j in range(len(mats))]
-                        for i in range(len(mats))]
-        return Basic.__new__(BlockDiagMatrix, ImmutableMatrix(data))
+        return Basic.__new__(BlockDiagMatrix, *mats)
 
     @property
     def diag(self):
-        return [self.blocks[i, i] for i in range(self.blocks.rows)]
+        return self.args
+
+    @property
+    def blocks(self):
+        from sympy.matrices.immutable import ImmutableMatrix
+        mats = self.args
+        data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
+                        for j in range(len(mats))]
+                        for i in range(len(mats))]
+        return ImmutableMatrix(data)
+
+    @property
+    def shape(self):
+        return (sum(block.rows for block in self.args),
+                sum(block.cols for block in self.args))
+
+    @property
+    def blockshape(self):
+        n = len(self.args)
+        return (n, n)
+
+    @property
+    def rowblocksizes(self):
+        return [block.rows for block in self.args]
+
+    @property
+    def colblocksizes(self):
+        return [block.cols for block in self.args]
 
     def _eval_inverse(self, expand='ignored'):
-        return BlockDiagMatrix(*[mat.inverse() for mat in self.diag])
+        return BlockDiagMatrix(*[mat.inverse() for mat in self.args])
 
     def _blockmul(self, other):
         if (isinstance(other, BlockDiagMatrix) and
                 self.colblocksizes == other.rowblocksizes):
-            return BlockDiagMatrix(*[a*b for a, b in zip(self.diag, other.diag)])
+            return BlockDiagMatrix(*[a*b for a, b in zip(self.args, other.args)])
         else:
             return BlockMatrix._blockmul(self, other)
 
@@ -248,15 +271,10 @@ class BlockDiagMatrix(BlockMatrix):
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
-            return BlockDiagMatrix(*[a + b for a, b in zip(self.diag, other.diag)])
+            return BlockDiagMatrix(*[a + b for a, b in zip(self.args, other.args)])
         else:
             return BlockMatrix._blockadd(self, other)
 
-    def doit(self, **hints):
-        if hints.get('deep', True):
-            return BlockDiagMatrix(*self.blocks.doit(**hints).diag)
-        else:
-            return self
 
 def block_collapse(expr):
     """Evaluates a block matrix expression

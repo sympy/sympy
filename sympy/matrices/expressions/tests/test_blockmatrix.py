@@ -45,6 +45,8 @@ def test_BlockMatrix():
     N = MatrixSymbol('N', l + n, k + m)
     X = BlockMatrix(Matrix([[A, B], [C, D]]))
 
+    assert X.__class__(*X.args) == X
+
     # block_collapse does nothing on normal inputs
     E = MatrixSymbol('E', n, m)
     assert block_collapse(A + 2*E) == A + 2*E
@@ -136,6 +138,7 @@ def test_BlockDiagMatrix():
     assert X.shape == (n + m + l, n + m + l)
     assert all(X.blocks[i, j].is_ZeroMatrix if i != j else X.blocks[i, j] in [A, B, C]
             for i in range(3) for j in range(3))
+    assert X.__class__(*X.args) == X
 
     assert isinstance(block_collapse(X.I * X), Identity)
 
