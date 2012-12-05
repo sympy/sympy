@@ -231,6 +231,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tyler Pirtle: Fix improperly formatted error message
 #. Vasily Povalyaev: Fix latex(Min)
 #. Colleen Lee: replace uses of fnan with S.NaN
+#. Niklas Thörne: Fix links in the docs
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
