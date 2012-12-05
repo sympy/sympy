@@ -3041,6 +3041,10 @@ def test_sympy__matrices__expressions__factorizations__SofSVD():
 def test_sympy__matrices__expressions__factorizations__Factorization():
     pass
 
+def test_sympy__matrices__expressions__permutation__PermutationMatrix():
+    from sympy.matrices.expressions.permutation import PermutationMatrix
+    assert _test_args(PermutationMatrix([2, 0, 1]))
+
 def test_sympy__physics__vector__frame__CoordinateSym():
     from sympy.physics.vector import CoordinateSym
     from sympy.physics.vector import ReferenceFrame
