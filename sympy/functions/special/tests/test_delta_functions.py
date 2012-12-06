@@ -17,10 +17,9 @@ def test_DiracDelta():
     assert DiracDelta(5.1) == 0
     assert DiracDelta(-pi) == 0
     assert DiracDelta(5, 7) == 0
-    assert DiracDelta(0) == oo
-    assert DiracDelta(0, 5) == oo
     assert DiracDelta(nan) == nan
-    assert DiracDelta(x).func == DiracDelta
+    assert DiracDelta(0).func is DiracDelta
+    assert DiracDelta(x).func is DiracDelta
 
     assert adjoint(DiracDelta(x)) == DiracDelta(x)
     assert adjoint(DiracDelta(x - y)) == DiracDelta(x - y)
