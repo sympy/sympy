@@ -3333,6 +3333,9 @@ An integral representation::
     0.06674960718150520648014567
     >>> quad(lambda t: exp(-z*t)*t**(a-1)*(1+t)**(b-a-1),[0,inf]) / gamma(a)
     0.06674960718150520648014567
+
+
+[1] http://people.math.sfu.ca/~cbm/aands/page_504.htm
 """
 
 hyp2f0 = r"""
@@ -3347,7 +3350,7 @@ This series usually does not converge. For small enough `z`, it can be viewed
 as an asymptotic series that may be summed directly with an appropriate
 truncation. When this is not the case, :func:`~mpmath.hyp2f0` gives a regularized sum,
 or equivalently, it uses a representation in terms of the
-hypergeometric U function. The series also converges when either `a` or `b`
+hypergeometric U function [1]. The series also converges when either `a` or `b`
 is a nonpositive integer, as it then terminates into a polynomial
 after `-a` or `-b` terms.
 
@@ -3397,6 +3400,9 @@ The coefficients of the polynomials can be recovered using Taylor expansion::
     [1.0, -1.5, 2.25, -1.875, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     >>> nprint(taylor(lambda x: hyp2f0(-4,0.5,x), 0, 10))
     [1.0, -2.0, 4.5, -7.5, 6.5625, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+
+
+[1] http://people.math.sfu.ca/~cbm/aands/page_504.htm
 """
 
 
