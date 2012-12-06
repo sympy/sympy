@@ -39,8 +39,13 @@ class PermutationMatrix(MatrixExpr):
 
         return Basic.__new__(cls, arg)
 
-    arg = property(lambda self: self.args[0])
-    shape = property(lambda self: (S(self.arg.cols),)*2)
+    @property
+    def arg(self):
+        return self.args[0]
+
+    @property
+    def shape(self):
+        return (S(self.arg.cols),)*2
 
     @property
     def is_Identity(self):
