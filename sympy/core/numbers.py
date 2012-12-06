@@ -11,7 +11,7 @@ import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from sympy.mpmath.ctx_mp import mpnumeric
 from sympy.mpmath.libmp.libmpf import (
-    fnan as FNAN, fzero as FZERO, _normalize as mpf_normalize)
+    fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize)
 
 import decimal
 import math
@@ -28,15 +28,17 @@ def mpf_norm(mpf, prec):
     precision.
 
     This also contains a portion of code to not return zero if
-    the mantissa is 0 since it is zero for mpf's +inf, -inf and
-    nan, too.
+    the mantissa is 0; this is a necessary (but not sufficient) test of
+    zero since the mantissa for mpf's values "+inf", "-inf" and "nan" have
+    a mantissa of zero, too.
     """
     sign, man, expt, bc = mpf
     if not man:
         # hack for mpf_normalize which does not do this;
         # it assumes that if man is zero the result is 0
+        # (see issue 3540)
         if not bc:
-            return FZERO
+            return _mpf_zero
         else:
             # don't change anything; this should already
             # be a well formed mpf tuple
@@ -60,6 +62,18 @@ def seterr(divide=False):
         _errdict["divide"] = divide
 
 
+def _as_integer_ratio(p):
+    """compatibility implementation for python < 2.6"""
+    neg_pow, man, expt, bc = getattr(p, '_mpf_', mpmath.mpf(p)._mpf_)
+    p = [1, -1][neg_pow % 2]*man
+    if expt < 0:
+        q = 2**-expt
+    else:
+        q = 1
+        p *= 2**expt
+    return p, q
+
+
 def _decimal_to_Rational_prec(dec):
     """Convert an ordinary decimal instance to a Rational."""
     # _is_special is needed for Python 2.5 support; is_finite for Python 3.3
@@ -71,8 +85,8 @@ def _decimal_to_Rational_prec(dec):
         raise TypeError("dec must be finite, got %s." % dec)
     s, d, e = dec.as_tuple()
     prec = len(d)
-    if int(dec) == dec:
-        rv = Rational(int(dec))
+    if e >= 0:  # it's an integer
+        rv = Integer(int(dec))
     else:
         s = (-1)**s
         d = sum([di*10**i for i, di in enumerate(reversed(d))])
@@ -307,16 +321,16 @@ class Number(AtomicExpr):
             if other is S.NaN:
                 return S.NaN
             elif other is S.Infinity:
-                if self == 0:
+                if self.is_zero:
                     return S.NaN
-                elif self > 0:
+                elif self.is_positive:
                     return S.Infinity
                 else:
                     return S.NegativeInfinity
             elif other is S.NegativeInfinity:
-                if self == 0:
+                if self.is_zero:
                     return S.NaN
-                elif self > 0:
+                elif self.is_positive:
                     return S.NegativeInfinity
                 else:
                     return S.Infinity
@@ -441,6 +455,17 @@ class Float(Number):
     >>> Float(3, '')
     3.
 
+    If a number is written in scientific notation, only the digits before the
+    exponent are considered significant if a decimal appears, otherwise the
+    "e" signifies only how to move the decimal:
+
+    >>> Float('60.e2', '')  # 2 digits significant
+    6.0e+3
+    >>> Float('60e2', '')  # 4 digits significant
+    6000.
+    >>> Float('600e-2', '')  # 3 digits significant
+    6.00
+
     Notes
     =====
 
@@ -551,6 +576,8 @@ class Float(Number):
             num = '0'
         elif isinstance(num, (int, long, Integer)):
             num = str(num)  # faster than mlib.from_int
+        elif isinstance(num, mpmath.mpf):
+            num = num._mpf_
 
         if prec == '':
             if type(num) is tuple and len(num) == 4:
@@ -566,10 +593,11 @@ class Float(Number):
                 except decimal.InvalidOperation:
                     pass
                 else:
+                    isint = '.' not in num
                     num, dps = _decimal_to_Rational_prec(Num)
+                    if num.is_Integer and isint:
+                        dps = max(dps, len(str(num).lstrip('-')))
                     ok = True
-                    if num.is_Integer:
-                        dps = len(str(num))
             if ok is None:
                 raise ValueError('string-float not recognized: %s' % num)
         else:
@@ -605,8 +633,11 @@ class Float(Number):
         else:
             _mpf_ = mpmath.mpf(num)._mpf_
 
-        if _mpf_ == FNAN:
-            return S.NaN  # special-cased
+        # special cases
+        if _mpf_ == _mpf_zero:
+            pass  # we want a Float
+        elif _mpf_ == _mpf_nan:
+            return S.NaN
 
         obj = Expr.__new__(cls)
         obj._mpf_ = _mpf_
@@ -615,9 +646,10 @@ class Float(Number):
 
     @classmethod
     def _new(cls, _mpf_, _prec):
-        if _mpf_ == FZERO:  # XXX this should return same as Float(0)
-            return S.Zero   # but this breaks an existing test
-        elif _mpf_ == FNAN:
+        # special cases
+        if _mpf_ == _mpf_zero:
+            return S.Zero  # XXX this is different from Float which gives 0.0
+        elif _mpf_ == _mpf_nan:
             return S.NaN
 
         # the new Float should be normalized unless it is
@@ -630,7 +662,7 @@ class Float(Number):
         if not man:
             # hack for mpf_normalize which does not do this
             if not bc:
-                ok = FZERO
+                ok = _mpf_zero
             else:
                 ok = (sign % 2, long(man), expt, bc)
         elif expt < 0:
@@ -681,6 +713,19 @@ class Float(Number):
 
     def _eval_is_negative(self):
         return self.num < 0
+
+    def __nonzero__(self):
+        # do not base answer on `man` alone:
+        # >>> mpf('0')._mpf_
+        # (0, 0L, 0, 0)
+        # >>> mpf('nan')._mpf_
+        # (0, 0L, -123, -1)
+        # >>> mpf('inf')._mpf_
+        # (0, 0L, -456, -2)
+        # >>> mpf('-inf')._mpf_
+        # (1, 0L, -789, -3)
+        sign, man, expt, bc = self._mpf_
+        return not (man == 0 and bc == 0)
 
     def __neg__(self):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
@@ -748,7 +793,7 @@ class Float(Number):
                 return Float._new(y, prec)
             except mlib.ComplexResult:
                 re, im = mlib.mpc_pow(
-                    (self, mlib.fzero), (expt, mlib.fzero), prec, rnd)
+                    (self, _mpf_zero), (expt, _mpf_zero), prec, rnd)
                 return Float._new(re, prec) + \
                     Float._new(im, prec)*S.ImaginaryUnit
 
@@ -776,10 +821,6 @@ class Float(Number):
                 return False
             return other.__eq__(self)
         if isinstance(other, Float):
-            # hack for the nan == nan case which, to mpf_eq is not equal
-            # but to SymPy should be equal
-            if other._mpf_ == self._mpf_ == FNAN:
-                return True
             return bool(mlib.mpf_eq(self._mpf_, other._mpf_))
         if isinstance(other, Number):
             # numbers should compare at the same precision;
@@ -846,9 +887,6 @@ class Float(Number):
             return bool(mlib.mpf_le(self._mpf_, other._as_mpf_val(self._prec)))
         return Expr.__le__(self, other)
 
-    def __nonzero__(self):
-        return mpmath.mpf(self._mpf_) != 0
-
     def __hash__(self):
         return super(Float, self).__hash__()
 
@@ -878,16 +916,33 @@ class Rational(Number):
     Examples
     ========
 
-    >>> from sympy import Rational
+    >>> from sympy import Rational, nsimplify, S, pi
     >>> from sympy.abc import x, y
     >>> Rational(3)
     3
-    >>> Rational(1,2)
+    >>> Rational(1, 2)
     1/2
-    >>> Rational(1.5)
-    1
 
-    Rational can also accept strings that are valid literals for reals:
+    Rational is unprejudiced in accepting input. If a float is passed, the
+    underlying value of the binary representation will be returned:
+
+    >>> Rational(.5)
+    1/2
+    >>> Rational(.2)
+    3602879701896397/18014398509481984
+
+    If the simpler representation of the float is desired then consider
+    limiting the denominator to the desired value or convert the float to
+    a string (which is roughly equivalent to limiting the denominator to
+    10**12):
+
+    >>> Rational(str(.2))
+    1/5
+    >>> Rational(.2).limit_denominator(10**12)
+    1/5
+
+    An arbitrarily precise Rational is obtained when a string literal is
+    passed:
 
     >>> Rational("1.23")
     123/100
@@ -895,16 +950,35 @@ class Rational(Number):
     1/100
     >>> Rational(".1")
     1/10
+    >>> Rational('1e-2/3.2')
+    1/320
 
-    Parsing needs for any other type of string for which a Rational is desired
-    can be handled with the rational=True option in sympify() which produces
-    rationals from strings like '.[3]' (=1/3) and '3/10' (=3/10).
+    The conversion of other types of strings can be handled by
+    the sympify() function, and conversion of floats to expressions
+    or simple fractions can be handled with nsimplify:
 
-    **Low-level**
+    >>> S('.[3]')  # repeating digits in brackets
+    1/3
+    >>> S('3**2/10')  # general expressions
+    9/10
+    >>> nsimplify(.3)  # numbers that have a simple form
+    3/10
+
+    But if the input does not reduce to a literal Rational, an error will
+    be raised:
+
+    >>> Rational(pi)
+    Traceback (most recent call last):
+    ...
+    TypeError: invalid input: pi
+
+
+    Low-level
+    ---------
 
     Access numerator and denominator as .p and .q:
 
-    >>> r = Rational(3,4)
+    >>> r = Rational(3, 4)
     >>> r
     3/4
     >>> r.p
@@ -918,6 +992,9 @@ class Rational(Number):
     >>> r.p//r.q
     0
 
+    See Also
+    ========
+    sympify, sympy.simplify.simplify.nsimplify
     """
     is_real = True
     is_integer = False
@@ -932,6 +1009,7 @@ class Rational(Number):
         if q is None:
             if isinstance(p, Rational):
                 return p
+
             if isinstance(p, basestring):
                 p = p.replace(' ', '')
                 try:
@@ -947,18 +1025,38 @@ class Rational(Number):
                     if f:
                         n, d = f.groups()
                         return Rational(int(n), int(d))
-                    raise ValueError('invalid literal: %s' % p)
-            elif not isinstance(p, Basic):
-                return Rational(S(p))
+                    elif p.count('/') == 1:
+                        p, q = p.split('/')
+                        return Rational(Rational(p), Rational(q))
+                    else:
+                        pass  # error will raise below
+            else:
+                if isinstance(p, decimal.Decimal):
+                    rv =  _decimal_to_Rational_prec(p)[0]
+                try:
+                    if isinstance(p, fractions.Fraction):
+                        return Rational(p.numerator, p.denominator)
+                except NameError:
+                    pass  # error will raise below
+
+                if isinstance(p, (float, Float)):
+                    return Rational(*_as_integer_ratio(p))
+
+            if not isinstance(p, (int, long, Rational)):
+                raise TypeError('invalid input: %s' % p)
             q = S.One
+        else:
+            p = Rational(p)
+            q = Rational(q)
+
         if isinstance(q, Rational):
             p *= q.q
             q = q.p
         if isinstance(p, Rational):
             q *= p.q
             p = p.p
-        p = int(p)
-        q = int(q)
+
+        # p and q are now integers
         if q == 0:
             if p == 0:
                 if _errdict["divide"]:
@@ -1118,7 +1216,7 @@ class Rational(Number):
                 ne = -expt
                 if (ne is S.One):
                     return Rational(self.q, self.p)
-                if self < 0:
+                if self.is_negative:
                     if expt.q != 1:
                         return -(S.NegativeOne)**((expt.p % expt.q) /
                                S(expt.q))*Rational(self.q, -self.p)**ne
@@ -1142,7 +1240,8 @@ class Rational(Number):
                     # (4/3)**(5/6) -> 4**(5/6)*3**(-5/6)
                     return Integer(self.p)**expt*Integer(self.q)**(-expt)
                 # as the above caught negative self.p, now self is positive
-                return Integer(self.q)**Rational(expt.p*(expt.q - 1), expt.q) / \
+                return Integer(self.q)**Rational(
+                expt.p*(expt.q - 1), expt.q) / \
                     Integer(self.q)**Integer(expt.p)
 
         if self.is_negative and expt.is_even:
@@ -1397,7 +1496,11 @@ class Integer(Rational):
         # an integer). So we proceed by taking int() of the input and
         # let the int routines determine whether the expression can
         # be made into an int or whether an error should be raised.
-        ival = int(i)
+        try:
+            ival = int(i)
+        except TypeError:
+            raise TypeError(
+                'Integer can only work with integer expressions.')
         try:
             return _intcache[ival]
         except KeyError:
@@ -1580,13 +1683,13 @@ class Integer(Rational):
                 return (-self)**expt
         if not isinstance(expt, Rational):
             return
-        if expt is S.Half and self < 0:
+        if expt is S.Half and self.is_negative:
             # we extract I for this special case since everyone is doing so
             return S.ImaginaryUnit*Pow(-self, expt)
-        if expt < 0:
+        if expt.is_negative:
             # invert base and change sign on exponent
             ne = -expt
-            if self < 0:
+            if self.is_negative:
                 if expt.q != 1:
                     return -(S.NegativeOne)**((expt.p % expt.q) /
                             S(expt.q))*Rational(1, -self)**ne
@@ -1599,8 +1702,8 @@ class Integer(Rational):
         if xexact:
             # if it's a perfect root we've finished
             result = Integer(x**abs(expt.p))
-            if self < 0:
-                result *= (-1)**expt
+            if self.is_negative:
+                result *= S.NegativeOne**expt
             return result
 
         # The following is an algorithm where we collect perfect roots
@@ -1850,9 +1953,8 @@ class Infinity(Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('-inf') or other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                if other == Float('-inf'):
+                    return S.NaN
                 else:
                     return Float('inf')
             else:
@@ -1866,9 +1968,8 @@ class Infinity(Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('inf') or other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                if other == Float('inf'):
+                    return S.NaN
                 else:
                     return Float('inf')
             else:
@@ -1881,9 +1982,8 @@ class Infinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other._mpf_ == FNAN or other == 0:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
+                if other == 0:
+                    return S.NaN
                 if other > 0:
                     return Float('inf')
                 else:
@@ -1905,11 +2005,9 @@ class Infinity(Number):
                 return S.NaN
             elif other.is_Float:
                 if other == Float('-inf') or \
-                    other == Float('inf') or \
-                        other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
-                elif other >= 0:
+                        other == Float('inf'):
+                    return S.NaN
+                elif other.is_nonnegative:
                     return Float('inf')
                 else:
                     return Float('-inf')
@@ -2009,8 +2107,7 @@ class NegativeInfinity(Number):
             if other is S.Infinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('inf') or other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
+                if other == Float('inf'):
                     return Float('nan')
                 else:
                     return Float('-inf')
@@ -2025,8 +2122,7 @@ class NegativeInfinity(Number):
             if other is S.NegativeInfinity or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other == Float('-inf') or other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
+                if other == Float('-inf'):
                     return Float('nan')
                 else:
                     return Float('-inf')
@@ -2040,15 +2136,14 @@ class NegativeInfinity(Number):
             if other is S.Zero or other is S.NaN:
                 return S.NaN
             elif other.is_Float:
-                if other._mpf_ == FNAN or other == 0:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
-                elif other > 0:
+                if other is S.NaN or other.is_zero:
+                    return S.NaN
+                elif other.is_positive:
                     return Float('-inf')
                 else:
                     return Float('inf')
             else:
-                if other > 0:
+                if other.is_positive:
                     return S.NegativeInfinity
                 else:
                     return S.Infinity
@@ -2065,11 +2160,9 @@ class NegativeInfinity(Number):
             elif other.is_Float:
                 if other == Float('-inf') or \
                     other == Float('inf') or \
-                    other == Float('nan') or \
-                        other._mpf_ == FNAN:
-                    #Used workaround because Float('nan') == Float('nan') return False
-                    return Float('nan')
-                elif other >= 0:
+                        other is S.NaN:
+                    return S.NaN
+                elif other.is_nonnegative:
                     return Float('-inf')
                 else:
                     return Float('inf')
@@ -2218,7 +2311,7 @@ class NaN(Number):
     __truediv__ = __div__
 
     def _as_mpf_val(self, prec):
-        return FNAN
+        return _mpf_nan
 
     def _sage_(self):
         import sage.all as sage
