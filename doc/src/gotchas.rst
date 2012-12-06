@@ -359,12 +359,8 @@ You only need to be careful with number/number.
 
     >>> Rational(2, x)
     Traceback (most recent call last):
-      File "...", line ..., in ...
-        compileflags, 1) in test.globs
-      File "<...>", line 1, in <module>
-        Rational(2, x)
-      ...
-    TypeError: int() argument must be a string or a number, not 'Symbol'
+    ...
+    TypeError: invalid input: x
     >>> 2/x
     2/x
 

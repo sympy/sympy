@@ -1,12 +1,12 @@
+import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
                    Number, zoo, log, Mul, Pow, Tuple)
 from sympy.core.basic import _aresame
 from sympy.core.power import integer_nthroot
-from sympy.utilities.pytest import XFAIL, slow
-
-from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache
-from sympy.utilities.pytest import raises
+from sympy.core.numbers import igcd, ilcm, igcdex, seterr, _intcache, mpf_norm
+from sympy.mpmath import mpf
+from sympy.utilities.pytest import XFAIL, slow, raises
 from sympy import mpmath
 
 
@@ -206,7 +206,6 @@ def _test_rational_new(cls):
     assert cls(1) is S.One
     assert cls(-1) is S.NegativeOne
     # These look odd, but are similar to int():
-    assert cls(0.9) is S.Zero
     assert cls('1') is S.One
     assert cls(u'-1') is S.NegativeOne
 
@@ -214,7 +213,6 @@ def _test_rational_new(cls):
     assert _strictly_equal(i, cls('10'))
     assert _strictly_equal(i, cls(u'10'))
     assert _strictly_equal(i, cls(10L))
-    assert _strictly_equal(i, cls(10.5))
     assert _strictly_equal(i, cls(i))
 
     raises(TypeError, lambda: cls(Symbol('x')))
@@ -226,6 +224,8 @@ def test_Integer_new():
     """
     _test_rational_new(Integer)
 
+    assert _strictly_equal(Integer(0.9), S.Zero)
+    assert _strictly_equal(Integer(10.5), Integer(10))
     raises(ValueError, lambda: Integer("10.5"))
     assert Integer(Rational('1.' + '9'*20)) == 1
 
@@ -241,8 +241,6 @@ def test_Rational_new():
     assert n1 == Rational(Integer(1), Integer(2))
     assert n1 == Rational(1, Integer(2))
     assert n1 == Rational(Rational(1, 2))
-    assert n1 == Rational(1.2, 2)
-    assert n1 == Rational('.5')
     assert 1 == Rational(n1, n1)
     assert Rational(3, 2) == Rational(Rational(1, 2), Rational(1, 3))
     assert Rational(3, 1) == Rational(1, Rational(1, 3))
@@ -252,7 +250,14 @@ def test_Rational_new():
     assert Rational('.76').limit_denominator(4) == n3_4
     assert Rational(19, 25).limit_denominator(4) == n3_4
     assert Rational('19/25').limit_denominator(4) == n3_4
-    raises(ValueError, lambda: Rational('1/2 + 2/3'))
+    assert Rational(1.0, 3) == Rational(1, 3)
+    assert Rational(1, 3.0) == Rational(1, 3)
+    assert Rational(Float(0.5)) == Rational(1, 2)
+    assert Rational('1e2/1e-2') == Rational(10000)
+    assert Rational(-1, 0) == S.NegativeInfinity
+    assert Rational(1, 0) == S.Infinity
+    raises(TypeError, lambda: Rational('3**3'))
+    raises(TypeError, lambda: Rational('1/2 + 2/3'))
 
     # handle fractions.Fraction instances
     try:
@@ -390,6 +395,7 @@ def test_Float():
     assert Float(S.Zero) == zero
     assert Float(S.One) == Float(1.0)
 
+    assert Float(decimal.Decimal('0.1'), 3) == Float('.1', 3)
 
 def test_Float_eval():
     a = Float(3.2)
@@ -567,6 +573,26 @@ def test_Infinity_2():
     assert (-oo)*x != -oo
     assert (-oo)*(pi - 1) == -oo
     assert (-oo)*(1 - pi) == oo
+
+    assert (-1)**S.NaN is S.NaN
+    assert oo - Float('inf') is S.NaN
+    assert oo + Float('-inf') is S.NaN
+    assert oo*0 is S.NaN
+    assert oo/Float('inf') is S.NaN
+    assert oo/Float('-inf') is S.NaN
+    assert oo**S.NaN is S.NaN
+    assert -oo + Float('inf') is S.NaN
+    assert -oo - Float('-inf') is S.NaN
+    assert -oo*S.NaN is S.NaN
+    assert -oo*0 is S.NaN
+    assert -oo/Float('inf') is S.NaN
+    assert -oo/Float('-inf') is S.NaN
+    assert -oo/S.NaN is S.NaN
+    assert abs(-oo) == oo
+    assert all((-oo)**i is S.NaN for i in (oo, -oo, S.NaN))
+    assert (-oo)**3 == -oo
+    assert (-oo)**2 == oo
+    assert abs(S.ComplexInfinity) == oo
 
 
 def test_Infinity_inequations():
@@ -1246,3 +1272,26 @@ def test_Float_eq():
 def test_int_NumberSymbols():
     assert [int(i) for i in [pi, EulerGamma, E, GoldenRatio, Catalan]] == \
         [3, 0, 2, 1, 0]
+
+
+def test_3541():
+    from sympy.mpmath.libmp.libmpf import (
+        _normalize as mpf_normalize, finf, fninf, fzero)
+    # fnan is not included because Float no longer returns fnan,
+    # but otherwise, the same sort of test could apply
+    assert Float(finf).is_zero is False
+    assert Float(fninf).is_zero is False
+    assert bool(Float(0)) is False
+
+
+def test_3250():
+    from sympy.mpmath import mpf
+    assert str(Float(mpf((1,22,2,22)), '')) == '-88.000'
+    assert Float('23.e3', '')._prec == 10
+    assert Float('23e3', '')._prec == 20
+    assert Float('23000', '')._prec == 20
+    assert Float('-23000', '')._prec == 20
+
+def test_mpf_norm():
+    assert mpf_norm((1, 0, 1, 0), 10) == mpf('0')._mpf_
+    assert Float._new((1, 0, 1, 0), 10)._mpf_ == mpf('0')._mpf_

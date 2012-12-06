@@ -59,7 +59,9 @@ def _pi_coeff(arg, cycles=1):
     something with known parity then the multiple is returned as 0 otherwise
     as 2.
 
-    Examples:
+    Examples
+    ========
+
     >>> from sympy.functions.elementary.trigonometric import _pi_coeff as coeff
     >>> from sympy import pi
     >>> from sympy.abc import x, y
@@ -93,7 +95,7 @@ def _pi_coeff(arg, cycles=1):
                 # recast exact binary fractions to Rationals
                 f = abs(c) % 1
                 if f != 0:
-                    p = -round(log(f, 2).evalf())
+                    p = -int(round(log(f, 2).evalf()))
                     m = 2**p
                     cm = c*m
                     i = int(cm)
@@ -571,9 +573,9 @@ class cos(TrigonometricFunction):
                 return r.q
 
             if None == factors:
-                a = [n/x**y for x, y in factorint(r.q).iteritems()]
+                a = [n//x**y for x, y in factorint(r.q).iteritems()]
             else:
-                a = [n/x for x in factors]
+                a = [n//x for x in factors]
             if len(a) == 1:
                 return [ r ]
             h = migcdex(a)
