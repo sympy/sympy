@@ -78,8 +78,8 @@ def test_diagonal():
     assert ask(Q.diagonal(ZeroMatrix(3, 3)))
     assert ask(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X))
     assert ask(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X))
-    assert ask(Q.diagonal(X), Q.symmetric(X))
-    assert ask(Q.diagonal(X), Q.triangular(X))
+    assert ask(Q.symmetric(X), Q.diagonal(X))
+    assert ask(Q.triangular(X), Q.diagonal(X))
 
 
 def test_non_atoms():
