@@ -610,7 +610,8 @@ class PrettyPrinter(Printer):
 
     def _print_Transpose(self, expr):
         pform = self._print(expr.arg)
-        if not expr.arg.is_Atom:
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(expr.arg, MatrixSymbol):
             pform = prettyForm(*pform.parens())
         pform = pform**(prettyForm('T'))
         return pform
@@ -621,7 +622,8 @@ class PrettyPrinter(Printer):
             dag = prettyForm(u'\u2020')
         else:
             dag = prettyForm('+')
-        if not expr.arg.is_Atom:
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(expr.arg, MatrixSymbol):
             pform = prettyForm(*pform.parens())
         pform = pform**dag
         return pform
@@ -648,7 +650,8 @@ class PrettyPrinter(Printer):
 
     def _print_MatPow(self, expr):
         pform = self._print(expr.base)
-        if not expr.base.is_Atom:
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(expr.base, MatrixSymbol):
             pform = prettyForm(*pform.parens())
         pform = pform**(self._print(expr.exp))
         return pform

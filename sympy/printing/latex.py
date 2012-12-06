@@ -1015,14 +1015,16 @@ class LatexPrinter(Printer):
 
     def _print_Transpose(self, expr):
         mat = expr.arg
-        if not mat.is_Atom:
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(mat, MatrixSymbol):
             return r"\left(%s\right)^T" % self._print(mat)
         else:
             return "%s^T" % self._print(mat)
 
     def _print_Adjoint(self, expr):
         mat = expr.arg
-        if not mat.is_Atom:
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(mat, MatrixSymbol):
             return r"\left(%s\right)^\dag" % self._print(mat)
         else:
             return "%s^\dag" % self._print(mat)
@@ -1052,7 +1054,8 @@ class LatexPrinter(Printer):
 
     def _print_MatPow(self, expr):
         base, exp = expr.base, expr.exp
-        if not base.is_Atom:
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(base, MatrixSymbol):
             return r"\left(%s\right)^{%s}" % (self._print(base), self._print(exp))
         else:
             return "%s^{%s}" % (self._print(base), self._print(exp))
