@@ -121,7 +121,7 @@ class AssocOp(Basic):
         # c_part, nc_part, order_symbols
         return [], new_seq, None
 
-    def _matches_commutative(self, expr, repl_dict={}):
+    def _matches_commutative(self, expr, repl_dict={}, old=False):
         """
         Matches Add/Mul "pattern" to an expression "expr".
 
@@ -168,11 +168,11 @@ class AssocOp(Basic):
             return d
 
         # eliminate exact part from pattern: (2+a+w1+w2).matches(expr) -> (w1+w2).matches(expr-a-2)
-        wild_part = []
-        exact_part = []
         from function import WildFunction
         from symbol import Wild
-        for p in self.args:
+        wild_part = []
+        exact_part = []
+        for p in ordered(self.args):
             if p.has(Wild, WildFunction) and (not expr.has(p)):
                 # not all Wild should stay Wilds, for example:
                 # (w2+w3).matches(w1) -> (w1+w3).matches(w1) -> w3.matches(0)
@@ -181,19 +181,77 @@ class AssocOp(Basic):
                 exact_part.append(p)
 
         if exact_part:
+            exact = self.func(*exact_part)
+            free = expr.free_symbols
+            if free and (exact.free_symbols - free):
+                # there are symbols in the exact part that are not
+                # in the expr; but if there are no free symbols, let
+                # the matching continue
+                return None
             newpattern = self.func(*wild_part)
-            newexpr = self._combine_inverse(expr, self.func(*exact_part))
+            newexpr = self._combine_inverse(expr, exact)
+            if not old and (expr.is_Add or expr.is_Mul):
+                if newexpr.count_ops() > expr.count_ops():
+                    return None
             return newpattern.matches(newexpr, repl_dict)
 
         # now to real work ;)
-        expr_list = (self.identity,) + self.make_args(expr)
-        for last_op in reversed(expr_list):
-            for w in reversed(wild_part):
-                d1 = w.matches(last_op, repl_dict)
-                if d1 is not None:
-                    d2 = self.xreplace(d1).matches(expr, d1)
-                    if d2 is not None:
-                        return d2
+        i = 0
+        saw = set()
+        while expr not in saw:
+            saw.add(expr)
+            expr_list = (self.identity,) + tuple(ordered(self.make_args(expr)))
+            for last_op in reversed(expr_list):
+                for w in reversed(wild_part):
+                    d1 = w.matches(last_op, repl_dict)
+                    if d1 is not None:
+                        d2 = self.xreplace(d1).matches(expr, d1)
+                        if d2 is not None:
+                            return d2
+
+            if i == 0:
+                if self.is_Mul:
+                    # make e**i look like Mul
+                    if expr.is_Pow and expr.exp.is_Integer:
+                        if expr.exp > 0:
+                            expr = C.Mul(*
+                                [expr.base, expr.base**(expr.exp - 1)],
+                                **{'evaluate': False})
+                        else:
+                            expr = C.Mul(*
+                                [1/expr.base, expr.base**(expr.exp + 1)],
+                                **{'evaluate': False})
+                        i += 1
+                        continue
+
+                elif self.is_Add:
+                    # make i*e look like Add
+                    c, e = expr.as_coeff_Mul()
+                    if abs(c) > 1:
+                        if c > 0:
+                            expr = C.Add(*[e, (c - 1)*e],
+                                **{'evaluate': False})
+                        else:
+                            expr = C.Add(*[-e, (c + 1)*e],
+                                **{'evaluate': False})
+                        i += 1
+                        continue
+
+                    # try collection on non-Wild symbols
+                    from sympy.simplify.simplify import collect
+                    was = expr
+                    did = set()
+                    for w in reversed(wild_part):
+                        c, w = w.as_coeff_mul(Wild)
+                        free = c.free_symbols - did
+                        if free:
+                            did.update(free)
+                            expr = collect(expr, free)
+                    if expr != was:
+                        i += 0
+                        continue
+
+                break  # if we didn't continue, there is nothing more to do
 
         return
 

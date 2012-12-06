@@ -386,6 +386,9 @@ def test_solve_linear():
     assert solve_linear(cos(x)**2 + sin(x)**2 + 2 + y, symbols=[x]) == (0, 1)
     assert solve_linear(Eq(x, 3)) == (x, 3)
     assert solve_linear(1/(1/x - 2)) == (0, 0)
+    assert solve_linear((x + 1)*exp(-x), symbols=[x]) == (x + 1, exp(x))
+    assert solve_linear((x + 1)*exp(x), symbols=[x]) == ((x + 1)*exp(x), 1)
+    assert solve_linear(x*exp(-x**2), symbols=[x]) == (0, 0)
     raises(ValueError, lambda: solve_linear(Eq(x, 3), 3))
 
 

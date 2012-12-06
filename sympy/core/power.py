@@ -764,7 +764,7 @@ class Pow(Expr):
             exp = -exp
         return Pow(n, exp), Pow(d, exp)
 
-    def matches(self, expr, repl_dict={}):
+    def matches(self, expr, repl_dict={}, old=False):
         expr = _sympify(expr)
 
         # special case, pattern = 1 and expr.exp can match to 0
