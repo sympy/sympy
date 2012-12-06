@@ -1280,18 +1280,21 @@ class Basic(object):
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in preorder_traversal(self))
 
-    def matches(self, expr, repl_dict={}):
+    def matches(self, expr, repl_dict={}, old=False):
         """
-        Helper method for match() - switches the pattern and expr.
+        Helper method for match() that looks for a match between wild symbols
+        in self and expressions in expr.
 
-        Can be used to solve linear equations:
+        Examples
+        ========
 
-        >>> from sympy import Symbol, Wild, Integer
-        >>> a,b = map(Symbol, 'ab')
+        >>> from sympy import symbols, Wild, Integer, Basic
+        >>> a, b, c = symbols('a b c')
         >>> x = Wild('x')
-        >>> (a+b*x).matches(Integer(0))
-        {x_: -a/b}
-
+        >>> Basic(a + x, x).matches(Basic(a + b, c)) is None
+        True
+        >>> Basic(a + x, x).matches(Basic(a + b + c, b + c))
+        {x_: b + c}
         """
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
@@ -1307,12 +1310,12 @@ class Basic(object):
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
-            d = arg.xreplace(d).matches(other_arg, d)
+            d = arg.xreplace(d).matches(other_arg, d, old=old)
             if d is None:
                 return None
         return d
 
-    def match(self, pattern):
+    def match(self, pattern, old=False):
         """
         Pattern matching.
 
@@ -1342,9 +1345,27 @@ class Basic(object):
         >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
+        The ``old`` flag will give the old-style pattern matching where
+        expressions and patterns are essentially solved to give the
+        match. Both of the following give None unless ``old=True``:
+
+        >>> (x - 2).match(p - x, old=True)
+        {p_: 2*x - 2}
+        >>> (2/x).match(p*x, old=True)
+        {p_: 2/x**2}
+
         """
+        from sympy import signsimp, count_ops
         pattern = sympify(pattern)
-        return pattern.matches(self)
+        s = signsimp(self)
+        p = signsimp(pattern)
+        # if we still have the same relationship between the types of
+        # input, then use the sign simplified forms
+        if (pattern.func == self.func) and (s.func == p.func):
+            rv = p.matches(s, old=old)
+        else:
+            rv = pattern.matches(self, old=old)
+        return rv
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
@@ -1455,7 +1476,7 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def matches(self, expr, repl_dict={}):
+    def matches(self, expr, repl_dict={}, old=False):
         if self == expr:
             return repl_dict
 

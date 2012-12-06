@@ -101,7 +101,8 @@ def test_mul():
 
     e = 4*x
     assert e.match(p*x) == {p: 4}
-    assert e.match(p*y) == {p: 4*x/y}
+    assert e.match(p*y) is None
+    assert e.match(e + p*y) == {p: 0}
 
     e = a*x*b*c
     assert e.match(p*x) == {p: a*b*c}
@@ -445,7 +446,7 @@ def test_issue_784():
     a, b, c = symbols('a b c', cls=Wild, exclude=(gamma,))
 
     assert f.match(a * log(gamma) + b * gamma + c) == \
-        {a: -S(1)/2, b: -(x - mu)**2/2, c: log(2*pi)/2}
+        {a: -S(1)/2, b: -(mu - x)**2/2, c: log(2*pi)/2}
     assert f.expand().collect(gamma).match(a * log(gamma) + b * gamma + c) == \
         {a: -S(1)/2, b: (-(x - mu)**2/2).expand(), c: (log(2*pi)/2).expand()}
 
@@ -554,3 +555,64 @@ def test_issue_1460():
     assert e.match(1/a**2) == {a: 1/sqrt(e)}
     assert (-e).match(sqrt(a)) is None
     assert (-e).match(a**2) == {a: I*sqrt(pi)}
+
+
+def test_issue_1784():
+    a = Wild('a')
+    x = Symbol('x')
+
+    e = [i**2 for i in (x - 2, 2 - x)]
+    p = [i**2 for i in (x - a, a- x)]
+    for eq in e:
+        for pat in p:
+            assert eq.match(pat) == {a: 2}
+
+
+def test_issue_1220():
+    x, y = symbols('x y')
+
+    p = -x*(S(1)/8 - y)
+    ans = set([S.Zero, y - S(1)/8])
+
+    def ok(pat):
+        assert set(p.match(pat).values()) == ans
+
+    ok(Wild("coeff", exclude=[x])*x + Wild("rest"))
+    ok(Wild("w", exclude=[x])*x + Wild("rest"))
+    ok(Wild("coeff", exclude=[x])*x + Wild("rest"))
+    ok(Wild("w", exclude=[x])*x + Wild("rest"))
+    ok(Wild("e", exclude=[x])*x + Wild("rest"))
+    ok(Wild("ress", exclude=[x])*x + Wild("rest"))
+    ok(Wild("resu", exclude=[x])*x + Wild("rest"))
+
+
+def test_issue_679():
+    p, c, q = symbols('p c q', cls=Wild)
+    x = Symbol('x')
+
+    assert (sin(x)**2).match(sin(p)*sin(q)*c) == {q: x, c: 1, p: x}
+    assert (2*sin(x)).match(sin(p) + sin(q) + c) == {q: x, c: 0, p: x}
+
+
+def test_issue_784():
+    mu, gamma, x = symbols('mu gamma x')
+    f = (- gamma * (x-mu)**2 - log(gamma) + log(2*pi)) / 2
+    g1 = Wild('g1', exclude=[gamma])
+    g2 = Wild('g2', exclude=[gamma])
+    g3 = Wild('g3', exclude=[gamma])
+    assert f.expand().match(g1 * log(gamma) + g2 * gamma + g3) == \
+    {g3: log(2)/2 + log(pi)/2, g1: -S(1)/2, g2: -mu**2/2 + mu*x - x**2/2}
+
+
+def test_issue_3004():
+    x = Symbol('x')
+    a = Wild('a')
+    assert (-I*x*oo).match(I*a*oo) == {a: -x}
+
+
+def test_issue_3539():
+    a = Wild('a')
+    x = Symbol('x')
+    assert (x - 2).match(a - x) is None
+    assert (6/x).match(a*x) is None
+    assert (6/x**2).match(a/x) == {a: 6/x}

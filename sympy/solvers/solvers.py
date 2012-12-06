@@ -1565,6 +1565,7 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
                              ''' % (bad, eg)))
         symbols = free.intersection(symbols)
     symbols = symbols.difference(exclude)
+    dfree = d.free_symbols
 
     # derivatives are easy to do but tricky to analyze to see if they are going
     # to disallow a linear solution, so for simplicity we just evaluate the
@@ -1596,7 +1597,8 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
                                 i.function.is_number]
                         # do a slight bit of simplification
                         vi = expand_mul(vi.subs(irep))
-                        return xi, vi
+                        if not d.has(xi) or not (d/xi).has(xi):
+                            return xi, vi
 
         if all_zero:
             return S.Zero, S.One
