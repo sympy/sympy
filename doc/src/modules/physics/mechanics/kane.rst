@@ -50,10 +50,10 @@ in the following fashion:
 Kane's Method in Physics/Mechanics
 ==================================
 
-Formulation of the equations of motion in :mod:`mechanics` starts with creation
-of a ``KanesMethod`` object. Upon initialization of the ``KanesMethod`` object,
-an inertial reference frame needs to be supplied. along with some basic system
-information, suchs as coordinates and speeds ::
+The formulation of the equations of motion in :mod:`mechanics` starts with
+creation of a ``KanesMethod`` object. Upon initialization of the
+``KanesMethod`` object, an inertial reference frame needs to be supplied. along
+with some basic system information, suchs as coordinates and speeds ::
 
   >>> from sympy.physics.mechanics import *
   >>> N = ReferenceFrame('N')
@@ -251,7 +251,7 @@ as keyword arguments in a list of expressions which are equal to zero. It
 should be noted that :mod:`mechanics` requires that the holonomic constraint
 equations must be supplied as velocity level constraint equations i.e. the
 holonomic constraint equations must be supplied after they have been
-differentiated with respect to time. Modifyinh the example above, the equations
+differentiated with respect to time. Modifying the example above, the equations
 of motion can then be generated: ::
 
   >>> LM = LagrangesMethod(L, [q1, q2], coneqs = [q1d - q2d])
