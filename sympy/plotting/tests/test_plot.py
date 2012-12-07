@@ -1,5 +1,5 @@
 from sympy import (pi, sin, cos, Symbol, Integral, summation, sqrt, log,
-                   oo, LambertW, I)
+                   oo, LambertW, I, meijerg, exp_polar)
 from sympy.plotting import (plot, plot_parametric, plot3d_parametric_line,
                             plot3d, plot3d_parametric_surface)
 from sympy.plotting.plot import matplotlib, unset_show
@@ -186,6 +186,11 @@ def plot_and_save(name):
     plot(sqrt(sqrt(-x))).save(tmp_file())
     plot(LambertW(x)).save(tmp_file())
     plot(sqrt(LambertW(x))).save(tmp_file())
+
+    #Characteristic function of a StudentT distribution with nu=10
+    plot((meijerg(((1 / 2,), ()), ((5, 0, 1 / 2), ()), 5 * x**2 * exp_polar(-I*pi)/2)
+            + meijerg(((1/2,), ()), ((5, 0, 1/2), ()),
+                5*x**2 * exp_polar(I*pi)/2)) / (48 * pi), (x, 1e-6, 1e-2))
 
 
 def test_matplotlib():
