@@ -16,4 +16,3 @@ f = open('sympy/assumptions/ask_generated.py', 'w')
 code = compute_known_facts(known_facts, known_facts_keys)
 f.write(code)
 f.close()
-
