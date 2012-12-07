@@ -63,8 +63,6 @@ class DiracDelta(Function):
             return S.NaN
         if arg.is_positive or arg.is_negative:
             return S.Zero
-        elif arg.is_zero:
-            return S.Infinity
 
     def simplify(self, x):
         """simplify(self, x)
@@ -107,8 +105,8 @@ class DiracDelta(Function):
             darg = diff(self.args[0], x)
             for r in argroots:
                 #should I care about multiplicities of roots?
-                if r.is_real and not darg.subs(x, r).is_zero:
-                    result = result + DiracDelta(x - r)/abs(darg.subs(x, r))
+                if r.is_real is not False and not darg.subs(x, r).is_zero:
+                    result += DiracDelta(x - r)/abs(darg.subs(x, r))
                 else:
                     valid = False
                     break
