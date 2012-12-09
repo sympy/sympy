@@ -36,6 +36,8 @@ class Q:
     upper_triangular = Predicate('upper_triangular')
     lower_triangular = Predicate('lower_triangular')
     diagonal = Predicate('diagonal')
+    triangular = Predicate('triangular')
+    unit_triangular = Predicate('unit_triangular')
 
 
 def _extract_facts(expr, symbol):
@@ -228,7 +230,7 @@ def compute_known_facts(known_facts, known_facts_keys):
         wrap("%s: %s" % item,
             subsequent_indent=HANG,
             break_long_words=False))
-        for item in mapping.items()])
+        for item in mapping.items()]) + ','
     return fact_string % (c, m)
 
 # handlers_dict tells us what ask handler we should use
@@ -290,7 +292,13 @@ known_facts = And(
     Implies(Q.orthogonal, Q.positive_definite),
     Implies(Q.positive_definite, Q.invertible),
     Implies(Q.diagonal, Q.upper_triangular),
-    Implies(Q.diagonal, Q.lower_triangular)
+    Implies(Q.diagonal, Q.lower_triangular),
+    Implies(Q.lower_triangular, Q.triangular),
+    Implies(Q.upper_triangular, Q.triangular),
+    Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
+    Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
+    Implies(Q.diagonal, Q.symmetric),
+    Implies(Q.unit_triangular, Q.triangular),
 )
 
 from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf
