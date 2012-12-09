@@ -446,13 +446,14 @@ class LineOver1DRangeSeries(Line2DBaseSeries):
                     yarray = map(f, xarray)
                     if any(y is not None for y in yarray):
                         for i in len(yarray) - 1:
-                            if yarray[i] is None or yarray[i + 1] is None:
+                            if yarray[i] is not None or yarray[i + 1] is not None:
                                 sample([xarray[i], yarray[i]],
                                     [xarray[i + 1], yarray[i + 1]], depth + 1)
 
                 #Sample further if one of the end points in None( i.e. a complex
                 #value) or the three points are not almost collinear.
-                elif p[1] is None or q[1] is None or not flat(p, new_point, q):
+                elif (p[1] is None or q[1] is None or new_point[1] is None
+                        or not flat(p, new_point, q)):
                     sample(p, new_point, depth + 1)
                     sample(new_point, q, depth + 1)
                 else:
@@ -565,7 +566,7 @@ class Parametric2DLineSeries(Line2DBaseSeries):
                         for x, y in zip(x_array, y_array)):
                     for i in len(y_array) - 1:
                         if ((x_array[i] is not None and y_array[i] is not None) or
-                                (x_array[i + 1] is not None and y_array[i] is not None)):
+                                (x_array[i + 1] is not None and y_array[i + 1] is not None)):
                             point_a = [x_array[i], y_array[i]]
                             point_b = [x_array[i + 1], y_array[i + 1]]
                             sample(param_array[i], param_array[i], point_a,
