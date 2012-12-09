@@ -513,7 +513,7 @@ The Rolling Disc Example using Lagranges Method
 
 Here the rolling disc is formed from the contact point up, removing the
 need to introduce generalized speeds. Only 3 configuration and 3
-speed variables are need to describe this system, along with the
+speed variables are needed to describe this system, along with the
 disc's mass and radius, and the local gravity. ::
 
   >>> from sympy import symbols, cos, sin
