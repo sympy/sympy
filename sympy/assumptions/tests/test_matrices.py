@@ -1,4 +1,5 @@
 from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace
+from sympy.utilities.pytest import XFAIL
 
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)
@@ -68,6 +69,7 @@ def test_triangular():
             Q.lower_triangular(Z)) is True
     assert ask(Q.lower_triangular(Identity(3))) is True
     assert ask(Q.lower_triangular(ZeroMatrix(3, 3))) is True
+    assert ask(Q.triangular(X), Q.unit_triangular(X))
 
 
 def test_diagonal():
@@ -75,7 +77,20 @@ def test_diagonal():
                Q.diagonal(Z)) is True
     assert ask(Q.diagonal(ZeroMatrix(3, 3)))
     assert ask(Q.lower_triangular(X) & Q.upper_triangular(X), Q.diagonal(X))
+    assert ask(Q.diagonal(X), Q.lower_triangular(X) & Q.upper_triangular(X))
+    assert ask(Q.symmetric(X), Q.diagonal(X))
+    assert ask(Q.triangular(X), Q.diagonal(X))
 
 
 def test_non_atoms():
     assert ask(Q.real(Trace(X)), Q.positive(Trace(X)))
+
+@XFAIL
+def test_non_trivial_implies():
+    X = MatrixSymbol('X', 3, 3)
+    Y = MatrixSymbol('Y', 3, 3)
+    assert ask(Q.lower_triangular(X+Y), Q.lower_triangular(X) &
+               Q.lower_triangular(Y))
+    assert ask(Q.triangular(X), Q.lower_triangular(X))
+    assert ask(Q.triangular(X+Y), Q.lower_triangular(X) &
+               Q.lower_triangular(Y))
