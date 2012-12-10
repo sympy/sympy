@@ -212,7 +212,7 @@ in the following fashion:
 Lagrange's Method in Physics/Mechanics
 ======================================
 
-Formulation of the equations of motion in :mod:`mechanics` using
+The formulation of the equations of motion in :mod:`mechanics` using
 Lagrange's Method starts with the creation of generalized coordinates and a
 Lagrangian. The Lagrangian can either be created with the ``Lagrangian``
 function or can be a user supplied function. In this case we will supply the
