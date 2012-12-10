@@ -75,10 +75,8 @@ distribution, e.g.:
     Setting up python-sympy (0.5.12-1) ...
 
 
-For other means how to install SymPy, consult the  Downloads_ tab on the
-SymPy's webpage.
-
-.. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
+For other means how to install SymPy, consult the wiki page
+`Download and Installation <https://github.com/sympy/sympy/wiki/Download-Installation>`_.
 
 
 isympy Console
