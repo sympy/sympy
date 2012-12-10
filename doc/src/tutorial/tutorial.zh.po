@@ -700,7 +700,7 @@ msgstr ""
 "还可以浏览我们的公共网页 "
 "`wiki.sympy.org <http://wiki.sympy.org/>`_ ，"
 "上面有很多有用的例子、教程和cookbooks"
-"都大家参考，这些资料都是我们和用户"
+"供大家参考，这些资料都是我们和用户"
 "编辑的，欢迎您的参与。"
 
 #: tutorial.en.rst:1053
