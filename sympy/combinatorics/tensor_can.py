@@ -775,7 +775,7 @@ def canonicalize(g, dummies, msym, *v):
         v1.append((base_i, gens_i, [[]] * n_i, sym_i))
         num_tensors += n_i
 
-    if num_types == 1:
+    if num_types == 1 and not isinstance(msym, list):
         dummies = [dummies]
         msym = [msym]
     flat_dummies = []
