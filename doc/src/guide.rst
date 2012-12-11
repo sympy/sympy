@@ -24,15 +24,15 @@ Everyone has different ways of understanding the code written by others.
 Ondřej's approach
 -----------------
 
-Let's say I'd like to understand how ``x+y+x`` works and how it is possible
-that it gets simplified to ``2*x+y``.
+Let's say I'd like to understand how ``x + y + x`` works and how it is possible
+that it gets simplified to ``2*x + y``.
 
 I write a simple script, I usually call it ``t.py`` (I don't remember anymore
 why I call it that way)::
 
     from sympy.abc import x, y
 
-    e = x + y +x
+    e = x + y + x
 
     print e
 
@@ -64,7 +64,7 @@ Then I step into (F7) and after a little debugging I get for example:
          to fit in this guide.
 
 I see values of all local variables in the left panel, so it's very easy to see
-what's happening. You can see, that the ``y+2*x`` is emerging in the ``obj``
+what's happening. You can see, that the ``y + 2*x`` is emerging in the ``obj``
 variable. Observing that ``obj`` is constructed from ``c_part`` and ``nc_part``
 and seeing what ``c_part`` contains (``y`` and ``2*x``). So looking at the line
 28 (the whole line is not visible on the screenshot, so here it is)::
@@ -124,19 +124,19 @@ class supports.
 
 For easier use, there is a syntactic sugar for expressions like:
 
-``cos(x)+1`` is equal to ``cos(x).__add__(1)`` is equal to
-``Add(cos(x),Integer(1))``
+``cos(x) + 1`` is equal to ``cos(x).__add__(1)`` is equal to
+``Add(cos(x), Integer(1))``
 
 or
 
 ``2/cos(x)`` is equal to ``cos(x).__rdiv__(2)`` is equal to
-``Mul(Rational(2),Pow(cos(x),Rational(-1)))``.
+``Mul(Rational(2), Pow(cos(x), Rational(-1)))``.
 
 So, you can write normal expressions using python arithmetics like this::
 
-    a=Symbol("a")
-    b=Symbol("b")
-    e=(a+b)**2
+    a = Symbol("a")
+    b = Symbol("b")
+    e = (a + b)**2
     print e
 
 but from the sympy point of view, we just need the classes ``Add``, ``Mul``,
@@ -155,8 +155,8 @@ implementation.  Obviously, the definition of the canonical form is arbitrary,
 the only requirement is that all equivalent expressions must have the same
 canonical form.  We tried the conversion to a canonical (standard) form to be
 as fast as possible and also in a way so that the result is what you would
-write by hand - so for example ``b*a + -4 + b + a*b + 4 + (a+b)**2`` becomes
-``2*a*b + b + (a+b)**2``.
+write by hand - so for example ``b*a + -4 + b + a*b + 4 + (a + b)**2`` becomes
+``2*a*b + b + (a + b)**2``.
 
 Whenever you construct an expression, for example ``Add(x, x)``, the
 ``Add.__new__()`` is called and it determines what to return. In this case::
@@ -179,17 +179,17 @@ Comparisons
 Expressions can be compared using a regular python syntax::
 
     >>> from sympy.abc import x, y
-    >>> x+y == y+x
+    >>> x + y == y + x
     True
 
-    >>> x+y == y-x
+    >>> x + y == y - x
     False
 
-We made the following decision in SymPy: ``a=Symbol("x")`` and another
-``b=Symbol("x")`` (with the same string "x") is the same thing, i.e ``a==b`` is
-``True``. We chose ``a==b``, because it is more natural - ``exp(x)==exp(x)`` is
+We made the following decision in SymPy: ``a = Symbol("x")`` and another
+``b = Symbol("x")`` (with the same string "x") is the same thing, i.e ``a == b`` is
+``True``. We chose ``a == b``, because it is more natural - ``exp(x) == exp(x)`` is
 also ``True`` for the same instance of ``x`` but different instances of ``exp``,
-so we chose to have ``exp(x)==exp(x)`` even for different instances of ``x``.
+so we chose to have ``exp(x) == exp(x)`` even for different instances of ``x``.
 
 Sometimes, you need to have a unique symbol, for example as a temporary one in
 some calculation, which is going to be substituted for something else at the
@@ -228,8 +228,8 @@ You can define the ``cos`` class like this::
     class cos(Function):
         pass
 
-and use it like ``1+cos(x)``, but if you don't implement the ``fdiff()`` method,
-you will not be able to call ``(1+cos(x)).series()``.
+and use it like ``1 + cos(x)``, but if you don't implement the ``fdiff()`` method,
+you will not be able to call ``(1 + cos(x)).series()``.
 
 The symbolic object is characterized (defined) by the things which it can do,
 so implementing more methods like ``fdiff()``, ``subs()`` etc., you are creating
@@ -244,7 +244,7 @@ immediately which methods need to be implemented in each situation.
 All objects in sympy are immutable - in the sense that any operation just
 returns a new instance (it can return the same instance only if it didn't
 change). This is a common mistake to change the current instance, like
-``self.arg=self.arg +1`` (wrong!). Use ``arg=self.arg + 1; return arg`` instead.
+``self.arg = self.arg + 1`` (wrong!). Use ``arg = self.arg + 1; return arg`` instead.
 The object is immutable in the
 sense of the symbolic expression it represents. It can modify itself to keep
 track of, for example, its hash. Or it can recalculate anything regarding the
@@ -341,7 +341,7 @@ This is how to create a function with two variables::
         def eval(cls, n, k):
             if not 0 <= k < n:
                 raise ValueError("must have 0 <= k < n")
-            return C.cos(S.Pi*(2*k+1)/(2*n))
+            return C.cos(S.Pi*(2*k + 1)/(2*n))
 
 
 .. note:: the first argument of a @classmethod should be ``cls`` (i.e. not
@@ -388,7 +388,7 @@ the function itself::
     ...     nargs = 1
     ...
     ...     def fdiff(self, argindex = 1):
-    ...         return 1-what_am_i(self.args[0])**2
+    ...         return 1 - what_am_i(self.args[0])**2
     ...
     ...     @classmethod
     ...     def eval(cls, arg):
@@ -421,7 +421,7 @@ can use them all over SymPy, e.g.::
     1
 
 
-common tasks
+Common tasks
 ------------
 
 Please use the same way as is shown below all across SymPy.
@@ -536,4 +536,3 @@ Improving the docs
 
 Please see :ref:`the documentation <module-docs>` how to fix and improve
 SymPy's documentation. All contribution is very welcome.
-
