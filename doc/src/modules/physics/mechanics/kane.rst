@@ -35,7 +35,7 @@ form:
 
  :math:`\mathbf{M}(q, t) \dot{u} = \mathbf{f}(q, \dot{q}, u, t)`
 
-For a non-holonomic system with "o" total speeds and "m" motion constraints, we
+For a non-holonomic system with $o$ total speeds and $m$ motion constraints, we
 will get o - m equations. The mass-matrix/forcing equations are then augmented
 in the following fashion:
 
@@ -197,7 +197,7 @@ where in the case of a system without constraints:
 
  :math:`x = \ddot{q}`
 
-For a constrained system with "n" generalized speeds and "m" constraints, we
+For a constrained system with $n$ generalized speeds and $m$ constraints, we
 will get n - m equations. The mass-matrix/forcing equations are then augmented
 in the following fashion:
 
