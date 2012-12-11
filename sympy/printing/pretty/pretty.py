@@ -1169,7 +1169,8 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Pow(self, power):
-        from sympy import fraction
+        from sympy.physics.quantum import Operator
+        from sympy.simplify.simplify import fraction
         b, e = power.as_base_exp()
         if power.is_commutative:
             if e is S.NegativeOne:
@@ -1178,9 +1179,14 @@ class PrettyPrinter(Printer):
             if n is S.One and d.is_Atom and not e.is_Integer:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
+                if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
+                    return prettyForm("1") / \
+                        prettyForm(*self._print(b).parens())**self._print(-e)
                 return prettyForm("1")/self._print(b)**self._print(-e)
 
         # None of the above special forms, do a standard power
+        if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
+            return prettyForm(*self._print(b).parens())**self._print(e)
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):
