@@ -171,6 +171,12 @@ class KroneckerDelta(Function):
                 i.assumptions0.get("above_fermi"):
             return S.Zero
 
+    def _eval_power(self, expt):
+        if expt.is_positive:
+            return self
+        if expt.is_negative and not -expt is S.One:
+            return 1/self
+
     @property
     def is_above_fermi(self):
         """
