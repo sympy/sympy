@@ -657,6 +657,18 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{E}_{%s}%s" % (nu, tex)
 
+    def _print_subfactorial(self, expr, exp=None):
+        x = expr.args[0]
+        if self._needs_brackets(x):
+            tex = r"!\left(%s\right)" % self._print(x)
+        else:
+            tex = "!" + self._print(x)
+
+        if exp is not None:
+            return r"%s^{%s}" % (tex, exp)
+        else:
+            return tex
+
     def _print_factorial(self, expr, exp=None):
         x = expr.args[0]
         if self._needs_brackets(x):

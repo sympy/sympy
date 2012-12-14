@@ -5,7 +5,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     Interval, Lambda, Limit, Matrix, nan, O, oo, pi, Rational, Float, Rel,
     S, sin, SparseMatrix, sqrt, summation, Sum, Symbol, symbols, Wild,
     WildFunction, zeta, zoo, Dummy, Dict, Tuple, FiniteSet, factor,
-    MatrixSymbol)
+    MatrixSymbol, subfactorial)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
 from sympy.polys import Poly, RootOf, RootSum, groebner
@@ -107,6 +107,9 @@ def test_factorial():
     assert str(factorial(factorial2(n))) == '(n!!)!'
     assert str(factorial2(factorial(n))) == '(n!)!!'
     assert str(factorial2(factorial2(n))) == '(n!!)!!'
+    assert str(subfactorial(3)) == "2"
+    assert str(subfactorial(n)) == "!n"
+    assert str(subfactorial(2*n)) == "!(2*n)"
 
 
 def test_Function():
