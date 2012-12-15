@@ -312,14 +312,6 @@ def check_assumptions(expr, **assumptions):
     for key, expected in assumptions.iteritems():
         if expected is None:
             continue
-        if hasattr(Q, key):
-            test = ask(getattr(Q, key)(expr))
-            if test is expected:
-                continue
-            elif test is not None:
-                return False
-        # ask() can't conclude. Try using old assumption system.
-        # XXX: remove once transition to new assumption system is finished.
         test = getattr(expr, 'is_' + key, None)
         if test is expected:
             continue
