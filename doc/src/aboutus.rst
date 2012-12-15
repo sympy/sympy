@@ -232,6 +232,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Vasily Povalyaev: Fix latex(Min)
 #. Colleen Lee: replace uses of fnan with S.NaN
 #. Niklas Thörne: Fix links in the docs
+#. Huijun Mai: Chinese translation of the tutorial
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
