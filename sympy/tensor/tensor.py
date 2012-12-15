@@ -14,7 +14,7 @@ from sympy.simplify import simplify
 from sympy import cacheit
 
 class TensorIndexType(object):
-    def __init__(self, name, metric_sym=0, dummy_fmt=None):
+    def __init__(self, name, metric_sym=0, dim=None, dummy_fmt=None):
         """
         name   name of the tensor type
 
@@ -38,6 +38,18 @@ class TensorIndexType(object):
             self.dummy_fmt = '%s_%%d' % self.name
         else:
             self.dummy_fmt = '%s_%%d' % dummy_fmt
+        self.metric = self.get_metric()
+        self.dim = dim
+
+    def get_metric(self):
+        if self.metric_sym is None:
+            return None
+        sym2 = TensorSymmetry(get_symmetric_group_sgs(2, self.metric_sym))
+        S2 = TensorType([self]*2, sym2)
+        metric = S2('metric')
+        return metric
+
+
 
     def __str__(self):
         return self.name
@@ -92,7 +104,14 @@ class TensorIndex(object):
                self.tensortype == other.tensortype and \
                self.is_contravariant == other.is_contravariant
 
-    __neg__ = covariant
+    def __neq__(self, other):
+        return not (self == other)
+
+    @cacheit
+    def __neg__(self):
+        t1 = TensorIndex(self.name, self.tensortype,
+                (not self.is_contravariant))
+        return t1
 
 def tensor_indices(s, typ):
     """
@@ -255,9 +274,15 @@ class TensorHead(Basic):
         Returns 0 (1) if self and other (anti)commute
         Returns None if self and other do not (anti)commute
         """
-        if self.commuting == None or other.commuting == None:
-            return None
-        return self.commuting * other.commuting
+        if self.commuting == 0 or other.commuting == 0:
+            return 0
+        if self.commuting == 1 and other.commuting == 1:
+            return 1
+        return None
+
+        #if self.commuting == None or other.commuting == None:
+        #    return None
+        #return self.commuting * other.commuting
 
 
     def __str__(self):
@@ -316,11 +341,10 @@ class TensExpr(Basic):
 
     #@call_highest_priority('__radd__')
     def __add__(self, other):
+        other = sympify(other)
         if self.is_TensAdd:
             args = self.args + (other,)
             return TensAdd(*args)
-        if other.is_TensAdd:
-            args = (self,) + other.args
         return TensAdd(self, other)
 
     #@call_highest_priority('__add__')
@@ -329,6 +353,7 @@ class TensExpr(Basic):
 
     #@call_highest_priority('__rsub__')
     def __sub__(self, other):
+        other = sympify(other)
         return TensAdd(self, -other)
 
     #@call_highest_priority('__sub__')
@@ -416,9 +441,9 @@ class TensExpr(Basic):
             args = self.args
             args1 = []
             for x in args:
-                y = x.substitute_indices(*indices)
+                y = x.substitute_indices(*index_tuples)
                 args1.append(y)
-            return TensAdd(args1)
+            return TensAdd(*args1)
 
 class TensAdd(TensExpr):
     is_Tensor = True
@@ -430,7 +455,15 @@ class TensAdd(TensExpr):
         """
         args = [sympify(x) for x in args if x]
         if not all(x.is_Tensor for x in args):
-            raise ValueError('all arguments should be tensors')
+            args1 = [x for x in args if x.is_Tensor]
+            args2 = [x for x in args if not x.is_Tensor]
+            t0 = args1[0]
+            if t0.is_TensAdd:
+                t0 = t0.args[0]
+            if t0.free:
+               raise ValueError('all tensors must have the same indices')
+            t1 = Tensor(Add(*args2), [], [], [])
+            args = [t1] + args1
         a = []
         for x in args:
             if x.is_TensAdd:
@@ -438,9 +471,13 @@ class TensAdd(TensExpr):
             else:
                 a.append(x)
         args = a
-        indices = set([x[0] for x in args[0].free])
-        if not all(set([y[0] for y in x.free]) == indices for x in args[1:]):
+
+        indices0 = sorted([x[0] for x in args[0].free], key=lambda x: x.name)
+        list_indices = [sorted([y[0] for y in x.free], key=lambda x: x.name) for x in args[1:]]
+        if not all(x == indices0 for x in list_indices):
+            print 'ERR list_indices=%s indices0=%s' %(list_indices, indices0)
             raise ValueError('all tensors must have the same indices')
+
         obj = Basic.__new__(cls, **kw_args)
         args.sort(key=lambda x: (x.components, x.free, x.dum))
         a = []
@@ -449,6 +486,10 @@ class TensAdd(TensExpr):
         prev_coeff = prev.coeff
         changed = False
         new = 0
+        if len(args) == 1 and args[0].is_TensMul:
+            obj._args = tuple(args)
+            return obj
+
         for x in args[1:]:
             # if x and prev have the same tensor, update the coeff of prev
             if x.components == prev.components \
@@ -484,18 +525,39 @@ class TensAdd(TensExpr):
 
         # TODO introduce option not to use canon_bp automatically in TensAdd
         if all(x.is_TensMul for x in a):
-            a = [x.canon_bp() for x in a]
+            a = [canon_bp(x) for x in a]
         obj._args = tuple(a)
-        obj.set_indices = indices
         return obj
 
     def canon_bp(self):
         args = [x.canon_bp() for x in self.args]
         args.sort(key=lambda x: (x.components, x.free, x.dum))
-        return TensAdd(*args)
+        res = TensAdd(*args)
+        return res
 
     def __eq__(self, other):
-        return self - other == 0
+        other = sympify(other)
+        if not other.is_Tensor:
+            if len(self.args) == 1:
+                return self.args[0].coeff == other
+        t = self - other
+        if not t.is_Tensor:
+            return t == 0
+        else:
+            if t.is_TensMul:
+                return t.coeff == 0
+            else:
+                return all(x.coeff == 0 for x in t.args)
+
+    def __neq__(self, other):
+        return not (self == other)
+
+    def contract_metric(self, g, contract_all=False):
+        args = [x.contract_metric(g, contract_all) for x in self.args]
+        if len(args) == 1:
+            return args[0]
+        t = TensAdd(*args)
+        return t.canon_bp()
 
     def _pretty(self):
         a = []
@@ -549,13 +611,20 @@ class Tensor(TensExpr):
     def __eq__(self, other):
         if not other.is_Tensor :
             return False
+        res = self - other
+        return res == 0
+
         res = self.components == other.components and \
-            self.free == other.free and \
-            self.dum == other.dum and self.coeff == other.coeff
+            sorted(self.free) == sorted(other.free) and \
+            sorted(self.dum) == sorted(other.dum) and self.coeff == other.coeff
         return res
 
     def __neq__(self, other):
         return not self == other
+
+    @property
+    def set_free_indices(self):
+        return set([x[0] for x in self.free])
 
     @staticmethod
     def from_indices(indices, types):
@@ -877,6 +946,8 @@ class Tensor(TensExpr):
         from sympy.combinatorics.tensor_can import canonicalize
         if self._is_canon_bp:
             return self
+        if not self.components:
+            return self
         t = self.sorted_components()
         g, dummies, msym, v = t.canon_args()
         can = canonicalize(g, dummies, msym, *v)
@@ -885,7 +956,110 @@ class Tensor(TensExpr):
         return t.perm2tensor(can, True)
 
 
+    def contract_metric(self, g, contract_all=False):
+        if not self.components:
+            return self
+        free_indices = [x[0] for x in self.free]
+        a = self.split()
+        typ = g.index_types[0]
+        # if a component tensor of a has 2 dummy indices, it is g(d,-d) = dim
+        for i, tx in enumerate(a):
+            if tx.components[0] == g:
+                free_indices_g = [x[0] for x in a[i].free]
+                if len(free_indices_g) == 0:
+                    a1 = a[:i] + a[i + 1:]
+                    t = tensor_mul(*a1)*(typ.dim*a[i].coeff)
+                    if contract_all == True and g in t.components:
+                        return t.contract_metric(g, True)
+                    return t
+
+        # if all metric tensors have only free indices, there is no contraction
+        for i, tg in enumerate(a):
+            if tg.components[0] == g:
+                tg_free_indices = [x[0] for x in tg.free]
+                if all(indx in free_indices for indx in tg_free_indices):
+                    continue
+                break
+        else:
+            return self
+
+        # tg has one or two indices contracted with other tensors
+        # i position of tg in a
+        coeff = S.One
+        tg_free = tg.free
+        if tg_free[0][0] in free_indices or tg_free[1][0] in free_indices:
+            if tg_free[0][0] in free_indices:
+                ind_free = tg_free[0][0]
+                ind, ipos1, _ = tg_free[1]
+            else:
+                ind_free = tg_free[1][0]
+                ind, ipos1, _ = tg_free[0]
+
+            ind1 = -ind
+            # search ind1 in self.dum
+            for j, tx in enumerate(a):
+                if ind1 in [x[0] for x in tx.free]:
+                    break
+            free1 = []
+            for indx, iposx, _ in tx.free:
+                if indx == ind1:
+                    free1.append((ind_free, iposx, 0))
+                else:
+                    free1.append((indx, iposx, 0))
+            t1 = Tensor(tx.coeff, tx.components, free1, tx.dum)
+            a[j] = t1
+            a = a[:i] + a[i + 1:]
+            coeff = coeff*tg.coeff
+            res = tensor_mul(*a)
+        else:
+            # tg has two indices contracted with other tensors
+            ind1 = tg_free[0][0]
+            ind2 = tg_free[1][0]
+            ind1m = -ind1
+            ind2m = -ind2
+            for k, ty in enumerate(a):
+                if ind2m in [x[0] for x in ty.free]:
+                    break
+            if ty.components == [g]:
+                ty_indices = [x[0] for  x in ty.free]
+                if all(x in [ind1m, ind2m] for x in ty_indices):
+                    if i < k:
+                        a = a[:i] + a[i+1:k] + a[k+1:]
+                    else:
+                        a = a[:k] + a[k+1:i] + a[k+1:]
+                    if a:
+                        res = tensor_mul(*a)
+                        res = (coeff*typ.dim*tg.coeff*ty.coeff)*res
+                    else:
+                        res = coeff*typ.dim*tg.coeff*ty.coeff
+                        res = Tensor(res, [],[],[], is_canon_bp=True)
+                    if contract_all == True and g in res.components:
+                        return res.contract_metric(g, True)
+                    return res
+
+            free2 = []
+            for indx, iposx, _ in ty.free:
+                if indx == ind2m:
+                    free2.append((ind1, iposx, 0))
+                else:
+                    free2.append((indx, iposx, 0))
+            t2 = Tensor(ty.coeff, ty.components, free2, ty.dum)
+            a[k] = t2
+            a = a[:i] + a[i + 1:]
+            coeff = coeff*tg.coeff
+            res = tensor_mul(*a)
+        res = coeff*res
+        if contract_all == True and g in res.components:
+            return res.contract_metric(g, True)
+        return res
+
+
+
+
+
     def _pretty(self):
+        if self.components == []:
+            return str(self.coeff)
         indices = [str(ind) for ind in self.get_indices()]
         pos = 0
         a = []
@@ -920,6 +1094,8 @@ def tensor_mul(*a):
     """
     product of tensors
     """
+    if not a:
+        return Tensor(S.One, [], [], [])
     t = a[0]
     for tx in a[1:]:
         t = t*tx

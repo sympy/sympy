@@ -1,10 +1,9 @@
-from sympy.core import S, Rational
+from sympy.core import S, Rational, Symbol
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replaceR, riemann_cyclic)
-
 
 def test_get_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -520,3 +519,102 @@ def test_div():
     assert t1._is_canon_bp
     t1 = t1/4
     assert t1._is_canon_bp
+
+def test_metric_contract1():
+    D = Symbol('D')
+    Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
+    a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
+    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    S2 = TensorType([Lorentz]*2, sym2)
+    g = Lorentz.metric
+    A, B = S2('A,B')
+
+    # case with g with all free indices
+    t1 = A(a,b)*B(-b,c)*g(d, e)
+    t2 = t1.contract_metric(g)
+    assert t1 == t2
+
+    # case of g(d, -d)
+    t1 = A(a,b)*B(-b,c)*g(-d, d)
+    t2 = t1.contract_metric(g)
+    assert t2 == D*A(a, d)*B(-d, c)
+
+    # g with one free index
+    t1 = A(a,b)*B(-b,-c)*g(c, d)
+    t2 = t1.contract_metric(g)
+    assert t2 == A(a, c)*B(-c, d)
+
+    # g with both indices contracted with another tensor
+    t1 = A(a,b)*B(-b,-c)*g(c, -a)
+    t2 = t1.contract_metric(g)
+    assert t2 == A(a, b)*B(-b, -a)
+
+    t1 = A(a,b)*B(-b,-c)*g(c, d)*g(-a, -d)
+    t2 = t1.contract_metric(g)
+    t2 = t2.contract_metric(g)
+    assert t2 == A(a,b)*B(-b,-a)
+
+def test_metric_contract1():
+    D = Symbol('D')
+    Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
+    a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
+    g = Lorentz.metric
+    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym1)
+    p, q = S1('p,q')
+
+    t1 = g(a,b)*p(c)*p(-c)
+    t2 = 3*g(-a,-b)*q(c)*q(-c)
+    t = t1*t2
+    t = t.contract_metric(g)
+    t = t.contract_metric(g)
+    assert t == 3*D*p(a)*p(-a)*q(b)*q(-b)
+    t1 = g(a,b)*p(c)*p(-c)
+    t2 = 3*q(-a)*q(-b)
+    t = t1*t2
+    t = t.contract_metric(g)
+    t = t.canon_bp()
+    assert t == 3*p(a)*p(-a)*q(b)*q(-b)
+
+    t1 = 2*g(a,b)*p(c)*p(-c)
+    t2 = - 3*g(-a,-b)*q(c)*q(-c)
+    t = t1*t2
+    t = t.contract_metric(g)
+    t = t.contract_metric(g)
+    t = 6*g(a,b)*g(-a,-b)*p(c)*p(-c)*q(d)*q(-d)
+    t = t.contract_metric(g)
+    t = t.contract_metric(g)
+
+    t1 = 2*g(a,b)*p(c)*p(-c)
+    t2 = q(-a)*q(-b) + 3*g(-a,-b)*q(c)*q(-c)
+    t = t1*t2
+    t = t.contract_metric(g)
+    assert t == (2 + 6*D)*p(a)*p(-a)*q(b)*q(-b)
+
+    t1 = p(a)*p(b) + p(a)*q(b) + 2*g(a,b)*p(c)*p(-c)
+    t2 = q(-a)*q(-b) - g(-a,-b)*q(c)*q(-c)
+    t = t1*t2
+    t = t.contract_metric(g)
+    t1 = (1 - 2*D)*p(a)*p(-a)*q(b)*q(-b) + p(a)*q(-a)*p(b)*q(-b)
+    assert t == t1
+
+    t = g(a,b)*g(c,d)*g(-b,-c)
+    t1 = t.contract_metric(g)
+    t1 = t1.canon_bp()
+    assert t1 == g(a,c)*g(d,-c)
+
+    t2 = t1.contract_metric(g)
+    assert t2 == g(a, d)
+
+    t1 = t.contract_metric(g, True)
+    assert t1 == g(a, d)
+
+    t1 = g(a,b)*g(c,d) + g(a,c)*g(b,d) + g(a,d)*g(b,c)
+    t2 = t1.substitute_indices((a,-a),(b,-b),(c,-c),(d,-d))
+    t = t1*t2
+    t3 = t.contract_metric(g)
+    t3 = t3.contract_metric(g)
+    t3 = t3.contract_metric(g)
+    assert t3 == 3*D**2 + 6*D
+    t = t.contract_metric(g, True)
+    assert t == 3*D**2 + 6*D
