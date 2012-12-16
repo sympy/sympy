@@ -35,6 +35,7 @@ class RootOf(Expr):
     """Represents ``k``-th root of a univariate polynomial. """
 
     __slots__ = ['poly', 'index']
+    is_complex = True
 
     def __new__(cls, f, x, index=None, radicals=True, expand=True):
         """Construct a new ``RootOf`` object for ``k``-th root of ``f``. """
@@ -110,19 +111,9 @@ class RootOf(Expr):
     def free_symbols(self):
         return self.poly.free_symbols
 
-    @property
-    def is_commutative(self):
-        return True
-
-    @property
-    def is_real(self):
+    def _eval_is_real(self):
         """Return ``True`` if the root is real. """
         return self.index < len(_reals_cache[self.poly])
-
-    @property
-    def is_complex(self):
-        """Return ``True`` if the root is complex. """
-        return not self.is_real
 
     @classmethod
     def real_roots(cls, poly, radicals=True):
