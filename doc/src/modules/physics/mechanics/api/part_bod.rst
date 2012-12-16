@@ -38,3 +38,18 @@ angular_momentum
 ================
 
 .. autofunction:: sympy.physics.mechanics.functions.angular_momentum
+
+kinetic_energy
+==============
+
+.. autofunction:: sympy.physics.mechanics.functions.kinetic_energy
+
+potential_energy
+================
+
+.. autofunction:: sympy.physics.mechanics.functions.potential_energy
+
+Lagrangian
+==========
+
+.. autofunction:: sympy.physics.mechanics.functions.Lagrangian
