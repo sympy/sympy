@@ -141,7 +141,7 @@ class Sum(Expr):
             i, a, b = limit
             dif = b - a
             if dif.is_Integer and dif < 0:
-                a, b = b, a
+                return S.zero
 
             f = eval_sum(f, (i, a, b))
             if f is None:
