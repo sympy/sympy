@@ -133,3 +133,26 @@ def test_catalan():
 
     c = catalan(0.5).evalf()
     assert str(c) == '0.848826363156775'
+
+
+def test_nC_nP():
+    from sympy.utilities.iterables import multiset_permutations, multiset_combinations
+    from sympy.functions.combinatorial.numbers import nP, nC
+    from random import choice
+    from string import lowercase as c
+
+    for i in range(100):
+        s = ''.join(choice(c) for i in range(7))
+        try:
+            for i in range(8):
+                assert len(list(multiset_permutations(s, i))) == nP(s, i)
+        except:
+            print s, i
+
+    for i in range(100):
+        s = ''.join(choice(c) for i in range(7))
+        try:
+            for i in range(8):
+                assert len(list(multiset_combinations(s, i))) == nC(s, i)
+        except:
+            print s, i, 'combo', len(list(multiset_combinations(s, i))) , nC(s, i)

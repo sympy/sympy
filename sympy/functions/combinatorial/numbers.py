@@ -7,10 +7,12 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul
+from sympy import (
+    Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul)
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
+from sympy import cacheit
 
 
 def _product(a, b):
@@ -667,3 +669,199 @@ class catalan(Function):
 
     def _eval_evalf(self, prec):
         return self.rewrite(C.gamma).evalf(prec)
+
+###########################################################
+###
+### Functions for enumerating permutations and combinations
+###
+###########################################################
+
+
+def _combinatorial_tuple(n):
+    """Return tuple used in permutation and combination counting. Input
+    is a dictionary giving items with counts as values or a sequence of
+    items (which need not be sorted).
+    """
+    if type(n) is dict:  # item: count
+        if not all(isinstance(v, int) and v >= 0 for v in n.values()):
+            raise ValueError
+        tot = sum(n.values())
+        items = sum(1 for k in n if n[k] > 0)
+        return tuple([n[k] for k in n if n[k] > 0] + [items, tot])
+    else:
+        n = list(n)
+        s = set(n)
+        m = dict(zip(s, range(len(s))))
+        d = dict(zip(range(len(s)), [0]*len(s)))
+        for i in n:
+            d[m[i]] += 1
+        return _combinatorial_tuple(d)
+
+
+@cacheit
+def nP(n, k=None, replacement=False):
+    """Return the number of permutations of n items (entered as string,
+    integer or _combinatorial_tuple(seq)) taken k at a time. If k is
+    negative, the total number of permutations of all lengths through -k
+    will be returned.
+
+    Examples
+    ========
+
+    >>> from foo import nP as p, _combinatorial_tuple
+    >>> p(3, 2)
+    6
+    >>> p('abc', 2)
+    6
+    >>> p('aab', 2)
+    3
+    >>> t = _combinatorial_tuple([1, 2, 2])
+    >>> p(t, 2)
+    3
+    >>> [nP(3, i) for i in range(4)]
+    [1, 3, 6, 6]
+    >>> sum(_)
+    16
+    >>> p(3, -3)
+    16
+    """
+    from sympy.functions.combinatorial.factorials import factorial
+    from sympy.core.mul import prod
+
+    if k == 0:
+        return 1
+    if type(n) is int:
+        k = k or n
+        if k < 0:
+            return sum(nP(n, i, replacement) for i in range(-k + 1))
+        if replacement:
+            return n**k
+        if k > n:
+            return 0
+        elif k == n:
+            return factorial(k)
+        elif k == 1:
+            return n
+        else:
+            return factorial(n)/factorial(n - k)
+    elif type(n) is tuple:
+        if replacement:
+            return nP(n[-2], k, replacement)
+        k = k or n[-1]
+        if k < 0:
+            return sum(nP(n, i) for i in range(-k + 1))
+        elif k == n[-1]:
+            return factorial(k)/prod([factorial(i) for i in n[:-2] if i > 1])
+        elif k > n[-1]:
+            return 0
+        elif k == 1:
+            return n[-2]
+        else:
+            tot = 0
+            n = list(n)
+            for i in range(len(n) - 2):
+                if not n[i]:
+                    continue
+                n[-1] -= 1
+                if n[i] == 1:
+                    n[i] = 0
+                    n[-2] -= 1
+                    tot += nP(tuple(n), k-1)
+                    n[-2] += 1
+                    n[i] = 1
+                else:
+                    n[i] -= 1
+                    tot += nP(tuple(n), k-1)
+                    n[i] += 1
+                n[-1] += 1
+            return tot
+    else:
+        return nP(_combinatorial_tuple(n), k, replacement)
+
+
+@cacheit
+def _gen_poly(n):
+    """for n = (m1, m2, .., mk) return the coefficients of the polynomial,
+    prod(sum(x**i for i in range(nj+1)) for nj in n), the coefficient of
+    x**r being the number of r-length combinations of sum(n) elements with
+    multiplicities given by n. The coefficients are given as a dictionary.
+
+    Examples
+    ========
+
+    >>> from foo import _gen_poly
+    >>> n = (2, 2, 3)  # e.g. aabbccc
+    >>> c = _gen_poly(n); dict(c)
+    {0: 1, 1: 3, 2: 6, 3: 8, 4: 8, 5: 6, 6: 3, 7: 1}
+    >>> c[8]
+    0
+    >>> t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
+    >>> assert sum(_gen_poly(n)[i] for i in range(55)) == 58212000
+    """
+    from collections import defaultdict
+
+    n = list(n)
+    rv = [1]*(n.pop() + 1)
+    while n:
+        ni = n.pop()
+        add = rv[:]
+        for do in range(ni):
+            add.insert(0, 0)
+            rv.append(0)
+            for i in range(len(rv)):
+                rv[i] += add[i]
+    d = defaultdict(int)
+    for i in range(len(rv)):
+        d[i] = rv[i]
+    return d
+
+
+def nC(n, k, replacement=False):
+    """Return the number of combinations of n items (entered as a string,
+    integer, or _combinatorial_tuple(seq)) taken k at a time.  If k is
+    negative, the total number of combinations of all lengths through -k
+    will be returned.
+
+    Examples
+    ========
+
+    >>> from foo import nC as c, _combinatorial_tuple
+    >>> c(3, 2)
+    3
+    >>> c('abc', 2)
+    3
+    >>> c('aab', 2)
+    2
+    >>> t = _combinatorial_tuple([1, 2, 2])
+    >>> c(t, 2)
+    2
+
+    See Also
+    ========
+    multiset_combinations
+    """
+    if type(n) is int:
+        if k is None:
+            k = n
+        if k < 0:
+            if not replacement and k == -n:
+                return 2**n
+            return sum(nC(n, i, replacement) for i in range(-k + 1))
+        if replacement:
+            return binomial(n + k - 1, k)
+        return binomial(n, k)
+    elif type(n) is str:
+        n = _combinatorial_tuple(n)
+    if type(n) is tuple:
+        if replacement:
+            return nC(n[-2], k, replacement)
+        if k < 0:
+            if not replacement and k == -sum(n):
+                return prod(m + 1 for m in n[:-2])
+            return sum(nC(n, i, replacement) for i in range(-k + 1))
+        n = n[:-2]
+        if k == 1:
+            return len(n)
+        return _gen_poly(n)[k]
+    else:
+        return nC(_combinatorial_tuple(n), k, replacement)
