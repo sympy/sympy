@@ -1,14 +1,14 @@
-__all__ = ['EField', 'ParticleCharge']
+__all__ = ['EField', 'ParticleCharge', 'check_conservative']
 
 from sympy.physics.mechanics import Vector, Particle
 from sympy.physics.mechanics.essential import _check_vector
-from sympy import integrate
+from sympy import integrate, simplify, diff, Basic
 from math import pi
 
 e0 = 8.854187817620 * 10 ** -12
 
 
-class EField:
+class EField(Basic):
     """
     Represents a purely electric vector field in space. It must be defined in
     such a way that it can be expressed entirely in one frame.
@@ -53,12 +53,16 @@ class EField:
         #it is defined in.
         vector.express(vector.args[0][1])
         #Check whether field is conservative.
-        if (_check_conservative(vector)):
+        if (check_conservative(vector)):
             self.vector = vector
             #Store a reference frame to do all the relevant calculations in.
             self.frame = vector.args[0][1]
         else:
             raise ValueError("Given vector must define conservative field.")
+
+    def magnitude(self):
+        """Magnitude of the EField Vector."""
+        return self.vector.magnitude()
 
     def __add__(self, other_field):
         """Addition operator for EField."""
@@ -88,12 +92,12 @@ class EField:
         """Printing methid."""
         return (self.vector).__str__()
     
-    def potential_difference(self, origin, point1, point2):
+    def potential_difference(self, point1, point2):
         """
-        Calculates the electrostatic potential difference between two points for the field
-        and the specified origin. The position vectors of the points with respect to the
-        origin must be such that they can be expressed entirely in the reference frames
-        contained in the definition of the electric field.
+        Calculates the electrostatic potential difference between two points for the field.
+        The two points must be defined in such a way that the vectorial distance between them
+        can be expressed entirely in the one of the reference frames used in the definition
+        of the EField.
 
         The potential difference is irrespective of the reference frame used for calculations.
 
@@ -110,22 +114,21 @@ class EField:
         >>> p.set_pos(o,3*N.x+4*N.y)
         >>> q = Point('q')
         >>> q.set_pos(o,2*N.x+7*N.y)
-        >>> field.potential_difference(o,p,q)
+        >>> field.potential_difference(p,q)
         3
         
         """
         from sympy.abc import x, y, z
         variables = [x, y, z]
         #Express every vector in one frame.
-        pos_vector1 = (point1.pos_from(origin)).express(self.frame)
-        pos_vector2 = (point2.pos_from(origin)).express(self.frame)
+        pos_vector = ((point2).pos_from(point1)).express(self.frame)
         temp = (self.vector).express(self.frame)
         initial_values = []
         final_values = []
         #Store limits of integration in initial_values and final_values
         for i in range(3):
-            initial_values.append(pos_vector1.args[0][0][i])
-            final_values.append(pos_vector2.args[0][0][i])
+            initial_values.append(0)
+            final_values.append(pos_vector.args[0][0][i])
         pot_difference = 0
         #Integrate electric field to get potential difference.
         for i in range(3):
@@ -141,26 +144,44 @@ class ParticleCharge(Particle):
     """
 
     def __init__(self, name, point, charge = 0, mass = 0):
+        """Constructor for ParticleCharge class."""
         Particle.__init__(self, name, point, mass)
         self.set_charge(charge)
 
     def set_charge(self, newcharge):
+        """
+        Set the electrostatic charge of the ParticleCharge to the specified
+        value.
+        """
         self.charge = newcharge
 
     def get_charge(self):
+        """
+        Returns the charge possesed by the ParticleCharge.
+        """
         return self.charge
 
     def field_at(self, point):
+        """
+        Returns the EField due to the ParticleCharge at the specified Point.
+        The vectorial distance between the ParticleCharge and the Point must
+        be entirely expressable in one ReferenceFrame.
+        """
         pos_vector = point.pos_from(self.get_point())
         magnitude = (self.charge)/(4 * pi * e0 * (pos_vector.magnitude()) ** 2)
         return EField(magnitude * (pos_vector.normalize()))
 
     def potential_at(self,vpoint):
+        """
+        Returns the potential due to the ParticleCharge at the specified Point.
+        The vectorial distance between the ParticleCharge and the Point must
+        be entirely expressable in one ReferenceFrame.
+        """
         pos_vector = point.pos_from(self.get_point())
         return (self.charge)/(4 * pi * e0 * abs(pos_vector.magnitude()))
 
 
-def _check_conservative(vector):
+def check_conservative(vector):
     """
     Checks if 'vector' defines a field that is conservative.
     If yes, return True.
@@ -172,7 +193,19 @@ def _check_conservative(vector):
     dfdx = ((vector.args[0][0][0]).diff(y)).diff(z)
     dfdy = ((vector.args[0][0][1]).diff(x)).diff(z)
     dfdz = ((vector.args[0][0][2]).diff(x)).diff(y)
-    if (dfdx == dfdy == dfdz):
+    if simplify(dfdx - dfdy) == 0 and simplify(dfdy - dfdz) == 0:
         return True
     else:
         return False
+
+def get_field(expr, N):
+    """
+    Returns the EField associated with the potential function 'expr'
+    'expr' must be a valid potential function. If not, gives ValueError.
+    """
+    from sympy.abc import x, y, z
+    v = - diff(expr,x) *N.x - diff(expr,y)*N.y - diff(expr,z)*N.z
+    if (check_conservative(v)):
+        return EField(v)
+    else:
+        raise ValueError("Given function is not a valid potential function.")
