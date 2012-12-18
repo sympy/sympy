@@ -295,6 +295,7 @@ def test_Sum_interface():
     assert Sum(0, (n, 0, 2)).doit() == 0
     assert isinstance(Sum(0, (n, 0, oo)), Sum)
     assert Sum(0, (n, 0, oo)).doit() == 0
+    assert Sum(x, (x, 2, 0)).doit() == 0
     raises(ValueError, lambda: Sum(1))
     raises(ValueError, lambda: summation(1))
 
