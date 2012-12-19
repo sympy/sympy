@@ -873,3 +873,135 @@ def nC(n, k, replacement=False):
         return _gen_poly(n)[k]
     else:
         return nC(_combinatorial_tuple(n), k, replacement)
+
+
+@cacheit
+def stirling(n, k):
+    """Return Stirling number of the 2nd kind, S(n, k). The sum of all
+    Stirling numbers for k = 1 through n is bell(n). The recurrence
+    relationship for these numbers is::
+
+    {0}       {n}   {0}      {n + 1}     {n}   {  n  }
+    { } = 1;  { } = { } = 0; {     } = k*{ } + {     }
+    {0}       {0}   {k}      {  k  }     {k}   {k - 1}
+
+    This number counts the ways in which n distinct items can be partitioned
+    into k parts.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import stirling as S
+    >>> from sympy import bell
+    >>> from sympy.utilities.iterables import multiset_partitions
+    >>> [S(10, i) for i in range(12)]
+    [0, 1, 511, 9330, 34105, 42525, 22827, 5880, 750, 45, 1, 0]
+    >>> sum(_) == bell(10)
+    True
+    >>> len(list(multiset_partitions(range(4), 2))) == S(4, 2)
+    True
+
+    See Also
+    ========
+    sympy.utilities.iterables.multiset_partitions
+
+    """
+    # TODO: make this like bell()
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+    return k*stirling(n - 1, k) + stirling(n - 1, k - 1)
+
+
+def nT(n, k=None):
+    """Return the number of partitions of n items (entered as a string,
+    integer, n (=n identical items or -n different items) of size k.
+    If k is negative, the total number of partitions of all lengths through
+    -k will be returned. If k is None the total number of ways to partion
+    n will be returned.
+
+    Examples
+    ========
+
+    Partitions of the given multiset:
+
+    >>> [nT('aabbc', i) for i in range(1, 7)]
+    [1, 8, 11, 5, 1, 0]
+    >>> [nT('aabbc', -i) for i in range(1, 7)]
+    [1, 9, 20, 25, 26, 26]
+    >>> nT('aabbc')
+    26
+
+    Partitions when all (n) items are identical:
+
+    >>> [nT(5, i) for i in range(1, 6)]
+    [1, 2, 2, 1, 1]
+    >>> [nT(5, -i) for i in range(1, 6)]
+    [1, 3, 5, 6, 7]
+    >>> nT(5)
+    7
+
+    When all (-n) items are different:
+
+    >>> [nT(-5,i) for i in range(1, 6)]
+    [1, 15, 25, 10, 1]
+    >>> [nT(-5, -i) for i in range(1, 6)]
+    [1, 16, 41, 51, 52]
+    >>> nT(-5)
+    52
+    """
+    from sympy.utilities.iterables import partitions, multiset_partitions
+
+    if type(n) is int:
+        if k is None:
+            k = -abs(n)
+        if n < 0:
+            # all distinct
+            n = -n
+            if k == -n:
+                return bell(n)
+            if k == n:
+                return 1
+            if k < 0:
+                tot = 0
+                for i in range(1, -k + 1):
+                    tot += stirling(n, i)
+                return tot
+            else:
+                return stirling(n, k)
+        # all the same
+        if k == -n:
+            return len(list(partitions(n)))
+        tot = 0
+        if k < 0:
+            k = -k
+            for p in partitions(n, k, size=True):
+                tot += p[0] <= k
+        else:
+            for p in partitions(n, k, size=True):
+                tot += p[0] == k
+        return tot
+    elif type(n) is str:
+        u = len(set(n))
+        if u == 1:
+            return nT(len(n), k)
+        elif u == len(n):
+            return nT(-u, k)
+    if type(n) is tuple:
+        n = n[:-2]
+        N = sum(n)
+        if k is None:
+            k = -N
+        n = [i for i,j in enumerate(n) for ii in range(j)]
+        if k < 0:
+            k = -k
+            if k == N:
+                return len(list(multiset_partitions(n)))
+            tot = 0
+            for p in multiset_partitions(n):
+                tot += len(p) <= k
+            return tot
+        return len(list(multiset_partitions(n, k)))
+    else:
+        return nT(_combinatorial_tuple(n), k)

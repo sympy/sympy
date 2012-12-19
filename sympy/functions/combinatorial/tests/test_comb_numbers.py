@@ -135,9 +135,11 @@ def test_catalan():
     assert str(c) == '0.848826363156775'
 
 
-def test_nC_nP():
-    from sympy.utilities.iterables import multiset_permutations, multiset_combinations
-    from sympy.functions.combinatorial.numbers import nP, nC
+def test_nC_nP_nT():
+    from sympy.utilities.iterables import (
+        multiset_permutations, multiset_combinations, multiset_partitions,
+        partitions)
+    from sympy.functions.combinatorial.numbers import nP, nC, nT
     from random import choice
     from string import lowercase as c
 
@@ -147,7 +149,8 @@ def test_nC_nP():
             for i in range(8):
                 assert len(list(multiset_permutations(s, i))) == nP(s, i)
         except:
-            print s, i
+            print s, i, 'failed perm test'
+            raise ValueError()
 
     for i in range(100):
         s = ''.join(choice(c) for i in range(7))
@@ -155,4 +158,22 @@ def test_nC_nP():
             for i in range(8):
                 assert len(list(multiset_combinations(s, i))) == nC(s, i)
         except:
-            print s, i, 'combo', len(list(multiset_combinations(s, i))) , nC(s, i)
+            print s, i, 'failed combo test'
+            raise ValueError()
+
+    for i in range(1, 10):
+        for j in range(1, i + 2):
+            assert nT(i, j) == sum(1 for p in partitions(i, j, size=True) if p[0] == j)
+
+    for i in range(1, 10):
+        for j in range(1, i + 2):
+            assert nT(-i, j) == len(list(multiset_partitions(range(i), j)))
+
+    for i in range(100):
+        s = ''.join(choice(c) for i in range(7))
+        try:
+            for i in range(1, 8):
+                assert len(list(multiset_partitions(s, i))) == nT(s, i)
+        except:
+            print s, i, 'failed partition test'
+            raise ValueError()
