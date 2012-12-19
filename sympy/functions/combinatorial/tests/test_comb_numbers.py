@@ -138,8 +138,10 @@ def test_catalan():
 def test_nC_nP_nT():
     from sympy.utilities.iterables import (
         multiset_permutations, multiset_combinations, multiset_partitions,
-        partitions)
-    from sympy.functions.combinatorial.numbers import nP, nC, nT
+        partitions, subsets, permutations)
+    from sympy.functions.combinatorial.numbers import nP, nC, nT, stirling
+    from sympy.combinatorics.permutations import Permutation
+    from sympy.core.numbers import oo
     from random import choice
     from string import lowercase as c
 
@@ -148,7 +150,7 @@ def test_nC_nP_nT():
         try:
             for i in range(8):
                 assert len(list(multiset_permutations(s, i))) == nP(s, i)
-        except:
+        except AssertionError:
             print s, i, 'failed perm test'
             raise ValueError()
 
@@ -157,7 +159,7 @@ def test_nC_nP_nT():
         try:
             for i in range(8):
                 assert len(list(multiset_combinations(s, i))) == nC(s, i)
-        except:
+        except AssertionError:
             print s, i, 'failed combo test'
             raise ValueError()
 
@@ -174,6 +176,24 @@ def test_nC_nP_nT():
         try:
             for i in range(1, 8):
                 assert len(list(multiset_partitions(s, i))) == nT(s, i)
-        except:
+        except AssertionError:
             print s, i, 'failed partition test'
             raise ValueError()
+
+    # tests for Stirling numbers of the first kind that are not tested in the
+    # above
+    assert [stirling(9, i, kind=1) for i in range(11)] == [
+        0, 40320, 109584, 118124, 67284, 22449, 4536, 546, 36, 1, 0]
+    perms = list(permutations(range(4)))
+    assert [sum(1 for p in perms if Permutation(p).cycles == i)
+            for i in range(5)] == [0, 6, 11, 6, 1] == [
+            stirling(4, i, kind=1) for i in range(5)]
+
+    def delta(p):
+        if len(p) == 1:
+            return oo
+        return min(abs(i[0] - i[1]) for i in subsets(p, 2))
+    parts = multiset_partitions(range(5), 3)
+    d = 2
+    assert (sum(1 for p in parts if all(delta(i) >= d for i in p)) ==
+            stirling(5, 3, d=d) == 7)

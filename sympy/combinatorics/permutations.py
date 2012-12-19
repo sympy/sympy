@@ -2191,6 +2191,10 @@ class Permutation(Basic):
         [[0], [1], [2]]
         >>> Permutation(0, 1)(2, 3).cycles
         2
+
+        See Also
+        ========
+        sympy.functions.combinatorial.stirling
         """
         return len(self.full_cyclic_form)
 

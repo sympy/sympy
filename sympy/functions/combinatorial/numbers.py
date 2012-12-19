@@ -876,24 +876,45 @@ def nC(n, k, replacement=False):
 
 
 @cacheit
-def stirling(n, k):
-    """Return Stirling number of the 2nd kind, S(n, k). The sum of all
-    Stirling numbers for k = 1 through n is bell(n). The recurrence
-    relationship for these numbers is::
+def stirling(n, k, d=None, kind=2):
+    """Return Stirling number S(n, k) of the first or second kind.
+    The sum of all Stirling numbers of the second kind for k = 1
+    through n is bell(n). The recurrence relationship for these numbers
+    is::
 
     {0}       {n}   {0}      {n + 1}     {n}   {  n  }
-    { } = 1;  { } = { } = 0; {     } = k*{ } + {     }
+    { } = 1;  { } = { } = 0; {     } = j*{ } + {     }
     {0}       {0}   {k}      {  k  }     {k}   {k - 1}
+    
+    where j = n for Stirling numbers of the first kind and k for Stirling
+    numbers of the second kind. If d is given, the "reduced Stirling number
+    of the second kind is returned: S^d(n, k) = S(n - d + 1, k - d + 1) with
+    n >= k >= d. (This the the number of ways to partition n integers into
+    k groups with no difference less than d.)
 
-    This number counts the ways in which n distinct items can be partitioned
-    into k parts.
+    The first kind of Striling number counts the number of permutations of n
+    distinct items that have k cycles; the second kind counts the ways in
+    which n distinct items can be partitioned into k parts.
 
     Examples
     ========
 
     >>> from sympy.functions.combinatorial.numbers import stirling as S
-    >>> from sympy import bell
+    >>> from sympy import bell, permutations, Permutation
     >>> from sympy.utilities.iterables import multiset_partitions
+
+    First kind:
+
+    >>> [S(10, i, kind=1) for i in range(12)]
+    [0, 10, 2551, 30505, 80725, 77280, 33411, 7266, 822, 46, 1, 0]
+    >>> perms = permutations(range(4))
+    >>> [sum(1 for p in perms if Permutation(p).cycles == i) for i in range(5)]
+    [0, 6, 11, 6, 1]
+    >>> [stirling(4, i, 1) for i in range(5)]
+    [0, 6, 11, 6, 1]
+
+    Second kind:
+
     >>> [S(10, i) for i in range(12)]
     [0, 1, 511, 9330, 34105, 42525, 22827, 5880, 750, 45, 1, 0]
     >>> sum(_) == bell(10)
@@ -901,17 +922,44 @@ def stirling(n, k):
     >>> len(list(multiset_partitions(range(4), 2))) == S(4, 2)
     True
 
+    Reduced second kind:
+
+    >>> from sympy import subsets, oo
+    >>> def delta(p):
+    ...    if len(p) == 1:
+    ...        return oo
+    ...    return min(abs(i[0] - i[1]) for i in subsets(p, 2))
+    >>> parts = multiset_partitions(range(5), 3)
+    >>> sum(1 for p in parts if all(delta(i) >= d for i in p))
+    7
+    >>> stirling(5, 3, 2)
+    7
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    * http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+
     See Also
     ========
     sympy.utilities.iterables.multiset_partitions
 
     """
     # TODO: make this like bell()
+
+    # assert n >= k
+    if d:
+        # assert k >= d
+        # kind is ignored -- only kind=2 is supported
+        return stirling(n - d + 1, k - d + 1)
     if n == k == 0:
         return S.One
     if 0 in (n, k):
         return S.Zero
-    return k*stirling(n - 1, k) + stirling(n - 1, k - 1)
+    n1 = n - 1
+    return [None, n1, k][kind]*stirling(n1, k, kind=kind) + \
+        stirling(n1, k - 1, kind=kind)
 
 
 def nT(n, k=None):
