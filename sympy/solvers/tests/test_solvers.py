@@ -1007,7 +1007,7 @@ def test_float_handling():
 
 
 def test_check_assumptions():
-    x = symbols('x', positive=1)
+    x = symbols('x', positive=True)
     assert solve(x**2 - 1) == [1]
 
 
@@ -1058,6 +1058,11 @@ def test_exclude():
 def test_high_order_roots():
     s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
+
+def test_real_roots():
+    # cf. issue 3551
+    x = Symbol('x', real=True)
+    assert len(solve(x**5 + x**3 + 1)) == 1
 
 
 def test_issue3429():

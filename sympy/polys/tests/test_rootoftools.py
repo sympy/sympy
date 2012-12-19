@@ -125,9 +125,7 @@ def test_RootOf_is_real():
 
 
 def test_RootOf_is_complex():
-    assert RootOf(x**3 + x + 3, 0).is_complex is False
-    assert RootOf(x**3 + x + 3, 1).is_complex is True
-    assert RootOf(x**3 + x + 3, 2).is_complex is True
+    assert RootOf(x**3 + x + 3, 0).is_complex is True
 
 
 def test_RootOf_subs():
