@@ -801,15 +801,23 @@ def _gen_poly(n):
     from collections import defaultdict
 
     n = list(n)
+    ord = sum(n)
+    need = (ord + 2)//2
     rv = [1]*(n.pop() + 1)
+    rv.extend([0]*(need - len(rv)))
     while n:
         ni = n.pop()
-        add = rv[:]
-        for do in range(ni):
-            add.insert(0, 0)
-            rv.append(0)
-            for i in range(len(rv)):
-                rv[i] += add[i]
+        N = ni + 1
+        was = rv[:]
+        for i in range(1, N):
+            rv[i] += rv[i - 1]
+        for i in range(N, need):
+            rv[i] += rv[i - 1] - was[i - N]
+    rev = list(reversed(rv))
+    if ord % 2:
+        rv = rv + rev
+    else:
+        rv[-1:] = rev
     d = defaultdict(int)
     for i in range(len(rv)):
         d[i] = rv[i]
