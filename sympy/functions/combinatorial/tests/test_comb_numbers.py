@@ -3,7 +3,7 @@ from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, \
     binomial, gamma, sqrt, hyper, log, polygamma, diff, \
     Expr, sympify
 
-from sympy.utilities.pytest import XFAIL
+from sympy.utilities.pytest import XFAIL, raises
 
 x = Symbol('x')
 
@@ -139,7 +139,8 @@ def test_nC_nP_nT():
     from sympy.utilities.iterables import (
         multiset_permutations, multiset_combinations, multiset_partitions,
         partitions, subsets, permutations)
-    from sympy.functions.combinatorial.numbers import nP, nC, nT, stirling
+    from sympy.functions.combinatorial.numbers import (
+        nP, nC, nT, stirling, _data)
     from sympy.combinatorics.permutations import Permutation
     from sympy.core.numbers import oo
     from random import choice
@@ -147,35 +148,67 @@ def test_nC_nP_nT():
 
     for i in range(100):
         s = ''.join(choice(c) for i in range(7))
+        u = len(s) == len(set(s))
         try:
+            tot = 0
             for i in range(8):
-                assert len(list(multiset_permutations(s, i))) == nP(s, i)
+                check = nP(s, i)
+                tot += check
+                assert len(list(multiset_permutations(s, i))) == check
+                assert tot == nP(s, -i)
+                if u:
+                    assert nP(len(s), i) == check
+                    assert nP(len(s), -i) == tot
         except AssertionError:
             print s, i, 'failed perm test'
             raise ValueError()
 
     for i in range(100):
         s = ''.join(choice(c) for i in range(7))
+        u = len(s) == len(set(s))
         try:
+            tot = 0
             for i in range(8):
-                assert len(list(multiset_combinations(s, i))) == nC(s, i)
+                check = nC(s, i)
+                tot += check
+                assert len(list(multiset_combinations(s, i))) == check
+                assert tot == nC(s, -i)
+                if u:
+                    assert nC(len(s), i) == check
+                    assert nC(len(s), -i) == tot
         except AssertionError:
             print s, i, 'failed combo test'
             raise ValueError()
 
     for i in range(1, 10):
+        tot = 0
         for j in range(1, i + 2):
-            assert nT(i, j) == sum(1 for p in partitions(i, j, size=True) if p[0] == j)
+            check = nT(i, j)
+            tot += check
+            assert sum(1 for p in partitions(i, j, size=True) if p[0] == j) == check
+            assert nT(i, -j) == tot
 
     for i in range(1, 10):
+        tot = 0
         for j in range(1, i + 2):
-            assert nT(-i, j) == len(list(multiset_partitions(range(i), j)))
+            check = nT(-i, j)
+            tot += check
+            assert len(list(multiset_partitions(range(i), j))) == check
+            assert nT(-i, -j) == tot
 
     for i in range(100):
         s = ''.join(choice(c) for i in range(7))
+        u = len(s) == len(set(s))
         try:
+            tot = 0
             for i in range(1, 8):
-                assert len(list(multiset_partitions(s, i))) == nT(s, i)
+                check = nT(s, i)
+                tot += check
+                assert len(list(multiset_partitions(s, i))) == check
+                assert nT(s, -i) == tot
+                if u:
+                    assert nT(-len(s), i) == check
+                    assert nT(-len(s), -i) == tot
         except AssertionError:
             print s, i, 'failed partition test'
             raise ValueError()
@@ -197,3 +230,18 @@ def test_nC_nP_nT():
     d = 2
     assert (sum(1 for p in parts if all(delta(i) >= d for i in p)) ==
             stirling(5, 3, d=d) == 7)
+
+    # other coverage tests
+    assert nC('abb', 2) == nC('aab', 2) == 2
+    assert nP(3, 3, replacement=True) == nP('aabc', 3, replacement=True) == 27
+    assert nP(3, 4) == 0
+    assert nP('aabc', 5) == 0
+    assert nC(4, 2, replacement=True) == nC('abcdd', 2, replacement=True) == \
+        len(list(multiset_combinations('aabbccdd', 2))) == 10
+    assert nC('abcdd', -5) == sum(nC('abcdd', i) for i in range(6)) == 24
+    assert nC(list('abcdd'), 4) == 4
+    assert nT('aaaa') == nT(4) == len(list(partitions(4))) == 5
+    assert nT('aaab') == len(list(multiset_partitions('aaab'))) == 7
+    assert nC('aabb'*3, 3) == 4  # aaa, bbb, abb, baa
+    raises(ValueError, lambda: nP('aabc', replacement=True))
+    raises(ValueError, lambda: _data({1:'a'}))

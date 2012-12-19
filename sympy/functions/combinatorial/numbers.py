@@ -7,8 +7,8 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from sympy import (
-    Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul)
+from sympy.core.function import Function, expand_mul
+from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Basic, Dummy
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
@@ -670,24 +670,34 @@ class catalan(Function):
     def _eval_evalf(self, prec):
         return self.rewrite(C.gamma).evalf(prec)
 
-###########################################################
+#######################################################################
 ###
-### Functions for enumerating permutations and combinations
+### Functions for enumerating partitions, permutations and combinations
 ###
-###########################################################
+#######################################################################
 
 
-def _combinatorial_tuple(n):
+_N = -2
+_ITEMS = -3
+_OK = Dummy()
+_M = slice(None, _ITEMS)
+def _data(n):
     """Return tuple used in permutation and combination counting. Input
     is a dictionary giving items with counts as values or a sequence of
     items (which need not be sorted).
+
+    It would be nice to have an object that can switch between list and
+    tuple easily while still maintaining a class identity, but I'm not
+    sure how to do this. So instead, a Dummy is added to the end of the
+    tuple and that is what identifies the tuple as this special form of
+    the data.
     """
     if type(n) is dict:  # item: count
         if not all(isinstance(v, int) and v >= 0 for v in n.values()):
             raise ValueError
         tot = sum(n.values())
         items = sum(1 for k in n if n[k] > 0)
-        return tuple([n[k] for k in n if n[k] > 0] + [items, tot])
+        return tuple([n[k] for k in n if n[k] > 0] + [items, tot, _OK])
     else:
         n = list(n)
         s = set(n)
@@ -695,34 +705,34 @@ def _combinatorial_tuple(n):
         d = dict(zip(range(len(s)), [0]*len(s)))
         for i in n:
             d[m[i]] += 1
-        return _combinatorial_tuple(d)
+        return _data(d)
 
 
 @cacheit
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of n items (entered as string,
-    integer or _combinatorial_tuple(seq)) taken k at a time. If k is
+    integer or _data(seq)) taken k at a time. If k is
     negative, the total number of permutations of all lengths through -k
     will be returned.
 
     Examples
     ========
 
-    >>> from foo import nP as p, _combinatorial_tuple
-    >>> p(3, 2)
+    >>> from sympy.functions.combinatorial.numbers import nP, _data
+    >>> nP(3, 2)
     6
-    >>> p('abc', 2)
+    >>> nP('abc', 2)
     6
-    >>> p('aab', 2)
+    >>> nP('aab', 2)
     3
-    >>> t = _combinatorial_tuple([1, 2, 2])
-    >>> p(t, 2)
+    >>> t = _data([1, 2, 2])
+    >>> nP(t, 2)
     3
     >>> [nP(3, i) for i in range(4)]
     [1, 3, 6, 6]
     >>> sum(_)
     16
-    >>> p(3, -3)
+    >>> nP(3, -3)
     16
     """
     from sympy.functions.combinatorial.factorials import factorial
@@ -731,7 +741,10 @@ def nP(n, k=None, replacement=False):
     if k == 0:
         return 1
     if type(n) is int:
-        k = k or n
+        if k is None:
+            if replacement:
+                raise ValueError('specify k when replacement is True')
+            k = n
         if k < 0:
             return sum(nP(n, i, replacement) for i in range(-k + 1))
         if replacement:
@@ -744,39 +757,39 @@ def nP(n, k=None, replacement=False):
             return n
         else:
             return factorial(n)/factorial(n - k)
-    elif type(n) is tuple:
+    elif type(n) is tuple and n[-1] == _OK:
         if replacement:
-            return nP(n[-2], k, replacement)
-        k = k or n[-1]
+            return nP(n[_ITEMS], k, replacement)
+        k = k or n[_N]
         if k < 0:
             return sum(nP(n, i) for i in range(-k + 1))
-        elif k == n[-1]:
-            return factorial(k)/prod([factorial(i) for i in n[:-2] if i > 1])
-        elif k > n[-1]:
+        elif k == n[_N]:
+            return factorial(k)/prod([factorial(i) for i in n[_M] if i > 1])
+        elif k > n[_N]:
             return 0
         elif k == 1:
-            return n[-2]
+            return n[_ITEMS]
         else:
             tot = 0
             n = list(n)
-            for i in range(len(n) - 2):
+            for i in range(len(n[_M])):
                 if not n[i]:
                     continue
-                n[-1] -= 1
+                n[_N] -= 1
                 if n[i] == 1:
                     n[i] = 0
-                    n[-2] -= 1
-                    tot += nP(tuple(n), k-1)
-                    n[-2] += 1
+                    n[_ITEMS] -= 1
+                    tot += nP(tuple(n), k - 1)
+                    n[_ITEMS] += 1
                     n[i] = 1
                 else:
                     n[i] -= 1
-                    tot += nP(tuple(n), k-1)
+                    tot += nP(tuple(n), k - 1)
                     n[i] += 1
-                n[-1] += 1
+                n[_N] += 1
             return tot
     else:
-        return nP(_combinatorial_tuple(n), k, replacement)
+        return nP(_data(n), k, replacement)
 
 
 @cacheit
@@ -789,14 +802,14 @@ def _gen_poly(n):
     Examples
     ========
 
-    >>> from foo import _gen_poly
+    >>> from sympy.functions.combinatorial.numbers import _gen_poly
     >>> n = (2, 2, 3)  # e.g. aabbccc
     >>> c = _gen_poly(n); dict(c)
     {0: 1, 1: 3, 2: 6, 3: 8, 4: 8, 5: 6, 6: 3, 7: 1}
     >>> c[8]
     0
     >>> t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
-    >>> assert sum(_gen_poly(n)[i] for i in range(55)) == 58212000
+    >>> assert sum(_gen_poly(t)[i] for i in range(55)) == 58212000
     """
     from collections import defaultdict
 
@@ -805,6 +818,7 @@ def _gen_poly(n):
     need = (ord + 2)//2
     rv = [1]*(n.pop() + 1)
     rv.extend([0]*(need - len(rv)))
+    rv = rv[:need]
     while n:
         ni = n.pop()
         N = ni + 1
@@ -826,31 +840,32 @@ def _gen_poly(n):
 
 def nC(n, k, replacement=False):
     """Return the number of combinations of n items (entered as a string,
-    integer, or _combinatorial_tuple(seq)) taken k at a time.  If k is
+    integer, or _data(seq)) taken k at a time.  If k is
     negative, the total number of combinations of all lengths through -k
     will be returned.
 
     Examples
     ========
 
-    >>> from foo import nC as c, _combinatorial_tuple
-    >>> c(3, 2)
+    >>> from sympy.functions.combinatorial.numbers import nC, _data
+    >>> nC(3, 2)
     3
-    >>> c('abc', 2)
+    >>> nC('abc', 2)
     3
-    >>> c('aab', 2)
+    >>> nC('aab', 2)
     2
-    >>> t = _combinatorial_tuple([1, 2, 2])
-    >>> c(t, 2)
+    >>> t = _data([1, 2, 2])
+    >>> nC(t, 2)
     2
 
     See Also
     ========
     multiset_combinations
     """
+    from sympy.functions.combinatorial.factorials import binomial
+    from sympy.core.mul import prod
+
     if type(n) is int:
-        if k is None:
-            k = n
         if k < 0:
             if not replacement and k == -n:
                 return 2**n
@@ -859,20 +874,19 @@ def nC(n, k, replacement=False):
             return binomial(n + k - 1, k)
         return binomial(n, k)
     elif type(n) is str:
-        n = _combinatorial_tuple(n)
-    if type(n) is tuple:
+        n = _data(n)
+    if type(n) is tuple and n[-1] == _OK:
         if replacement:
-            return nC(n[-2], k, replacement)
+            return nC(n[_ITEMS], k, replacement)
         if k < 0:
-            if not replacement and k == -sum(n):
-                return prod(m + 1 for m in n[:-2])
+            if not replacement and k == -n[_N]:
+                return prod(m + 1 for m in n[_M])
             return sum(nC(n, i, replacement) for i in range(-k + 1))
-        n = n[:-2]
         if k == 1:
-            return len(n)
-        return _gen_poly(n)[k]
+            return len(n[_M])
+        return _gen_poly(tuple(n[_M]))[k]
     else:
-        return nC(_combinatorial_tuple(n), k, replacement)
+        return nC(_data(n), k, replacement)
 
 
 @cacheit
@@ -885,7 +899,7 @@ def stirling(n, k, d=None, kind=2):
     {0}       {n}   {0}      {n + 1}     {n}   {  n  }
     { } = 1;  { } = { } = 0; {     } = j*{ } + {     }
     {0}       {0}   {k}      {  k  }     {k}   {k - 1}
-    
+
     where j = n for Stirling numbers of the first kind and k for Stirling
     numbers of the second kind. If d is given, the "reduced Stirling number
     of the second kind is returned: S^d(n, k) = S(n - d + 1, k - d + 1) with
@@ -899,27 +913,28 @@ def stirling(n, k, d=None, kind=2):
     Examples
     ========
 
-    >>> from sympy.functions.combinatorial.numbers import stirling as S
-    >>> from sympy import bell, permutations, Permutation
-    >>> from sympy.utilities.iterables import multiset_partitions
+    >>> from sympy.functions.combinatorial.numbers import stirling
+    >>> from sympy import bell
+    >>> from sympy.combinatorics import Permutation
+    >>> from sympy.utilities.iterables import multiset_partitions, permutations
 
     First kind:
 
-    >>> [S(10, i, kind=1) for i in range(12)]
-    [0, 10, 2551, 30505, 80725, 77280, 33411, 7266, 822, 46, 1, 0]
-    >>> perms = permutations(range(4))
-    >>> [sum(1 for p in perms if Permutation(p).cycles == i) for i in range(5)]
+    >>> [stirling(6, i, kind=1) for i in range(7)]
+    [0, 120, 274, 225, 85, 15, 1]
+    >>> perms = list(permutations(range(4)))
+    >>> [sum(Permutation(p).cycles == i for p in perms) for i in range(5)]
     [0, 6, 11, 6, 1]
-    >>> [stirling(4, i, 1) for i in range(5)]
+    >>> [stirling(4, i, kind=1) for i in range(5)]
     [0, 6, 11, 6, 1]
 
     Second kind:
 
-    >>> [S(10, i) for i in range(12)]
+    >>> [stirling(10, i) for i in range(12)]
     [0, 1, 511, 9330, 34105, 42525, 22827, 5880, 750, 45, 1, 0]
     >>> sum(_) == bell(10)
     True
-    >>> len(list(multiset_partitions(range(4), 2))) == S(4, 2)
+    >>> len(list(multiset_partitions(range(4), 2))) == stirling(4, 2)
     True
 
     Reduced second kind:
@@ -930,6 +945,7 @@ def stirling(n, k, d=None, kind=2):
     ...        return oo
     ...    return min(abs(i[0] - i[1]) for i in subsets(p, 2))
     >>> parts = multiset_partitions(range(5), 3)
+    >>> d = 2
     >>> sum(1 for p in parts if all(delta(i) >= d for i in p))
     7
     >>> stirling(5, 3, 2)
@@ -946,7 +962,7 @@ def stirling(n, k, d=None, kind=2):
     sympy.utilities.iterables.multiset_partitions
 
     """
-    # TODO: make this like bell()
+    # TODO: make this a class like bell()
 
     # assert n >= k
     if d:
@@ -972,6 +988,8 @@ def nT(n, k=None):
     Examples
     ========
 
+    >>> from sympy.functions.combinatorial.numbers import nT
+
     Partitions of the given multiset:
 
     >>> [nT('aabbc', i) for i in range(1, 7)]
@@ -992,7 +1010,7 @@ def nT(n, k=None):
 
     When all (-n) items are different:
 
-    >>> [nT(-5,i) for i in range(1, 6)]
+    >>> [nT(-5, i) for i in range(1, 6)]
     [1, 15, 25, 10, 1]
     >>> [nT(-5, -i) for i in range(1, 6)]
     [1, 16, 41, 51, 52]
@@ -1036,15 +1054,14 @@ def nT(n, k=None):
             return nT(len(n), k)
         elif u == len(n):
             return nT(-u, k)
-    if type(n) is tuple:
-        n = n[:-2]
-        N = sum(n)
+    if type(n) is tuple and n[-1] == _OK:
+        N = n[_N]
         if k is None:
             k = -N
-        n = [i for i,j in enumerate(n) for ii in range(j)]
+        n = [i for i, j in enumerate(n[_M]) for ii in range(j)]
         if k < 0:
             k = -k
-            if k == N:
+            if k == -N:
                 return len(list(multiset_partitions(n)))
             tot = 0
             for p in multiset_partitions(n):
@@ -1052,4 +1069,4 @@ def nT(n, k=None):
             return tot
         return len(list(multiset_partitions(n, k)))
     else:
-        return nT(_combinatorial_tuple(n), k)
+        return nT(_data(n), k)
