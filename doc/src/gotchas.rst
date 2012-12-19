@@ -8,6 +8,7 @@ Gotchas and Pitfalls
 
 Introduction
 ============
+
 SymPy runs under the `Python Programming Language
 <http://www.python.org/>`_, so there are some things that may behave
 differently than they do in other, independent computer algebra systems
@@ -28,10 +29,12 @@ internal testing of the examples.
 
 Equals Signs (=)
 ================
+
 Single Equals Sign
 ------------------
+
 The equals sign (``=``) is the assignment operator, not an equality.  If
-you want to do :math:`x=y`, use ``Eq(x,y)`` for equality.
+you want to do :math:`x = y`, use ``Eq(x, y)`` for equality.
 Alternatively, all expressions are assumed to equal zero, so you can
 just subtract one side and use ``x - y``.
 
@@ -46,6 +49,7 @@ For example:
 
 Double Equals Signs
 -------------------
+
 Double equals signs (``==``) are used to test equality.  However, this
 tests expressions exactly, not symbolically.  For example:
 
@@ -75,8 +79,10 @@ equation reduces to 0.
 
 Variables
 =========
+
 Variables Assignment does not Create a Relation Between Expressions
 -------------------------------------------------------------------
+
 When you use ``=`` to do assignment, remember that in Python, as in most
 programming languages, the variable does not change if you change the
 value you assigned to it.  The equations you are typing use the values
@@ -85,14 +91,14 @@ Python definitions. They are not altered by changes made afterwards.
 Consider the following:
 
     >>> from sympy import Symbol
-    >>> a = Symbol('a') # Symbol, `a`, stored as variable "a"
-    >>> b = a + 1       # an expression involving `a` stored as variable "b"
+    >>> a = Symbol('a')  # Symbol, `a`, stored as variable "a"
+    >>> b = a + 1        # an expression involving `a` stored as variable "b"
     >>> print b
     a + 1
-    >>> a = 4           # "a" now points to literal integer 4, not Symbol('a')
+    >>> a = 4            # "a" now points to literal integer 4, not Symbol('a')
     >>> print a
     4
-    >>> b               # "b" is still pointing at the expression involving `a`
+    >>> b                # "b" is still pointing at the expression involving `a`
     a + 1
 
 Changing quantity :obj:`a` does not change :obj:`b`; you are not working
@@ -107,11 +113,11 @@ it to.
     >>> d = r*t
     >>> print d
     rate*time
-    >>> r=80
-    >>> t=2
+    >>> r = 80
+    >>> t = 2
     >>> print d         # We haven't changed d, only r and t
     rate*time
-    >>> d=r*t
+    >>> d = r*t
     >>> print d         # Now d is using the current values of r and t
     160
 
@@ -173,15 +179,16 @@ If you define a circular relationship, you will get a
 
 Symbols
 -------
+
 Symbols are variables, and like all other variables, they need to be
 assigned before you can use them.  For example:
 
     >>> import sympy
-    >>> z**2 # z is not defined yet #doctest: +SKIP
+    >>> z**2  # z is not defined yet #doctest: +SKIP
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
     NameError: name 'z' is not defined
-    >>> sympy.var('z') # This is the easiest way to define z as a standard symbol
+    >>> sympy.var('z')  # This is the easiest way to define z as a standard symbol
     z
     >>> z**2
     z**2
@@ -202,7 +209,7 @@ You can also import common symbol names from :mod:`sympy.abc`.
     >>> w
     w
     >>> import sympy
-    >>> dir(sympy.abc) #doctest: +SKIP
+    >>> dir(sympy.abc)  #doctest: +SKIP
     ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',
     'P', 'Q', 'R', 'S', 'Symbol', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
     '__builtins__', '__doc__', '__file__', '__name__', '__package__', '_greek',
@@ -231,23 +238,23 @@ Or better yet, always use lowercase letters for Symbol names.  Python will
 not prevent you from overriding default SymPy names or functions, so be
 careful.
 
-    >>> cos(pi) # cos and pi are a built-in sympy names.
+    >>> cos(pi)  # cos and pi are a built-in sympy names.
     -1
-    >>> pi = 3 # Notice that there is no warning for overriding pi.
+    >>> pi = 3   # Notice that there is no warning for overriding pi.
     >>> cos(pi)
     cos(3)
-    >>> def cos(x): # No warning for overriding built-in functions either.
+    >>> def cos(x):  # No warning for overriding built-in functions either.
     ...     return 5*x
     ...
     >>> cos(pi)
     15
-    >>> from sympy import cos # reimport to restore normal behavior
+    >>> from sympy import cos  # reimport to restore normal behavior
 
 
 To get a full list of all default names in SymPy do:
 
     >>> import sympy
-    >>> dir(sympy) #doctest: +SKIP
+    >>> dir(sympy)  #doctest: +SKIP
     # A big list of all default sympy names and functions follows.
     # Ignore everything that starts and ends with __.
 
@@ -265,10 +272,12 @@ trick for getting tab completion in the regular Python console.
 
 Symbolic Expressions
 ====================
+
 .. _python-vs-sympy-numbers:
 
 Python numbers vs. SymPy Numbers
 --------------------------------
+
 SymPy uses its own classes for integers, rational numbers, and floating
 point numbers instead of the default Python :obj:`int` and :obj:`float`
 types because it allows for more control.  But you have to be careful.
@@ -276,11 +285,11 @@ If you type an expression that just has numbers in it, it will default
 to a Python expression.  Use the :func:`sympify` function, or just
 :func:`S`, to ensure that something is a SymPy expression.
 
-    >>> 6.2 # Python float. Notice the floating point accuracy problems. #doctest: +SKIP
+    >>> 6.2  # Python float. Notice the floating point accuracy problems. #doctest: +SKIP
     6.2000000000000002
     >>> type(6.2)
     <... 'float'>
-    >>> S(6.2) # SymPy Float has no such problems because of arbitrary precision.
+    >>> S(6.2)  # SymPy Float has no such problems because of arbitrary precision.
     6.20000000000000
     >>> type(S(6.2))
     <class 'sympy.core.numbers.Float'>
@@ -292,11 +301,11 @@ evaluate the two numbers before SymPy has a chance to get
 to them.  The solution is to :func:`sympify` one of the numbers, or use
 :mod:`Rational`.
 
-    >>> x**(1/2) # evaluates to x**0 or x**0.5 #doctest: +SKIP
+    >>> x**(1/2)  # evaluates to x**0 or x**0.5 #doctest: +SKIP
     x**0.5
-    >>> x**(S(1)/2) # sympyify one of the ints
+    >>> x**(S(1)/2)  # sympyify one of the ints
     sqrt(x)
-    >>> x**Rational(1, 2) # use the Rational class
+    >>> x**Rational(1, 2)  # use the Rational class
     sqrt(x)
 
 With a power of ``1/2`` you can also use ``sqrt`` shorthand:
@@ -319,13 +328,13 @@ you don't have to worry about this problem:
     Rational.
 
     >>> x = Symbol('x')
-    >>> print solve(7*x -22,x)
+    >>> print solve(7*x -22, x)
     [22/7]
-    >>> 22/7 # If we just copy and paste we get int 3 or a float #doctest: +SKIP
+    >>> 22/7  # If we just copy and paste we get int 3 or a float #doctest: +SKIP
     3.142857142857143
     >>> # One solution is to just assign the expression to a variable
     >>> # if we need to use it again.
-    >>> a = solve(7*x - 22,x)
+    >>> a = solve(7*x - 22, x)
     >>> a
     [22/7]
 
@@ -340,15 +349,15 @@ __future__ import division`` to prevent the ``/`` sign from performing
 `integer division <http://en.wikipedia.org/wiki/Integer_division>`_.
 
     >>> from __future__ import division
-    >>> 1/2 # with division imported it evaluates to a python float #doctest: +SKIP
+    >>> 1/2   # With division imported it evaluates to a python float #doctest: +SKIP
     0.5
-    >>> 1//2 # You can still achieve integer division with //
+    >>> 1//2  # You can still achieve integer division with //
     0
 
     But be careful: you will now receive floats where you might have desired
     a Rational:
 
-    >>> x**(1/2) #doctest: +SKIP
+    >>> x**(1/2)  #doctest: +SKIP
     x**0.5
 
 :mod:`Rational` only works for number/number and is only meant for
@@ -496,8 +505,8 @@ demonstrates how this works::
 	    var('x y a b')
 	    expr = 3*x + 4*y
 	    print 'original =', expr
-	    expr_modified = expr.subs({x:a, y:b})
-	    print 'modified = ', expr_modified
+	    expr_modified = expr.subs({x: a, y: b})
+	    print 'modified =', expr_modified
 
 	if __name__ == "__main__":
 	    main()
@@ -506,7 +515,7 @@ The output shows that the :func:`subs` function has replaced variable
 :obj:`x` with variable :obj:`a`, and variable :obj:`y` with variable :obj:`b`::
 
 	original = 3*x + 4*y
-	modified =  3*a + 4*b
+	modified = 3*a + 4*b
 
 The :func:`subs` function does not modify the original expression :obj:`expr`.
 Rather, a modified copy of the expression is returned. This returned object
@@ -517,6 +526,7 @@ before it is used.
 
 Mathematical Operators
 ----------------------
+
 SymPy uses the same default operators as Python.  Most of these, like
 ``*/+-``, are standard.  Aside from integer division discussed in
 :ref:`Python numbers vs. SymPy Numbers <python-vs-sympy-numbers>` above,
@@ -534,11 +544,11 @@ In :command:`isympy`, with the :command:`ipython` shell::
     SyntaxError: invalid syntax
     >>> 2*x
     2*x
-    >>> (x+1)^2 # This is not power.  Use ** instead.
+    >>> (x + 1)^2  # This is not power.  Use ** instead.
     Traceback (most recent call last):
     ...
     TypeError: unsupported operand type(s) for ^: 'Add' and 'int'
-    >>> (x+1)**2
+    >>> (x + 1)**2
     (x + 1)**2
     >>> pprint(3 - x**(2*x)/(x + 1))
         2*x
@@ -549,6 +559,7 @@ In :command:`isympy`, with the :command:`ipython` shell::
 
 Inverse Trig Functions
 ----------------------
+
 SymPy uses different names for some functions than most computer algebra
 systems.  In particular, the inverse trig functions use the python names
 of :func:`asin`, :func:`acos` and so on instead of the usual ``arcsin``
@@ -557,6 +568,7 @@ above to see the names of all SymPy functions.
 
 Special Symbols
 ===============
+
 The symbols ``[]``, ``{}``, ``=``, and ``()`` have special meanings in
 Python, and thus in SymPy.  See the Python docs linked to above for
 additional information.
@@ -565,6 +577,7 @@ additional information.
 
 Lists
 -----
+
 Square brackets ``[]`` denote a list.  A list is a container that holds
 any number of different objects.  A list can contain anything, including
 items of different types.  Lists are mutable, which means that you can
@@ -578,15 +591,15 @@ or list variable.  Items are numbered using the space before the item.
 
 Example:
 
-    >>> a = [x, 1] # A simple list of two items
+    >>> a = [x, 1]  # A simple list of two items
     >>> a
     [x, 1]
-    >>> a[0] # This is the first item
+    >>> a[0]  # This is the first item
     x
-    >>> a[0] = 2 # You can change values of lists after they have been created
+    >>> a[0] = 2  # You can change values of lists after they have been created
     >>> print a
     [2, 1]
-    >>> print solve(x**2+2*x-1,x) # Some functions return lists
+    >>> print solve(x**2 + 2*x - 1, x)  # Some functions return lists
     [-1 + sqrt(2), -sqrt(2) - 1]
 
 
@@ -596,21 +609,22 @@ Example:
 
 Dictionaries
 ------------
+
 Curly brackets ``{}`` denote a dictionary, or a dict for short.  A
 dictionary is an unordered list of non-duplicate keys and values.  The
-syntax is ``{key:value}``.  You can access values of keys using square
+syntax is ``{key: value}``.  You can access values of keys using square
 bracket notation.
 
-    >>> d = {'a':1, 'b':2} # A dictionary.
+    >>> d = {'a': 1, 'b': 2}  # A dictionary.
     >>> d
     {'a': 1, 'b': 2}
-    >>> d['a'] # How to access items in a dict
+    >>> d['a']  # How to access items in a dict
     1
-    >>> roots((x-1)**2*(x-2),x) # some functions return dicts
+    >>> roots((x - 1)**2*(x - 2), x)  # Some functions return dicts
     {1: 2, 2: 1}
     >>> # Some SymPy functions return dictionaries.  For example,
     >>> # roots returns a dictionary of root:multiplicity items.
-    >>> roots((x - 5)**2*(x + 3),x)
+    >>> roots((x - 5)**2*(x + 3), x)
     {-3: 1, 5: 2}
     >>> # This means that the root -3 occurs once and the root 5 occurs twice.
 
@@ -620,6 +634,7 @@ bracket notation.
 
 Tuples
 ------
+
 Parentheses ``()``, aside from changing operator precedence and their
 use in function calls, (like ``cos(x)``), are also used for tuples.  A
 ``tuple`` is identical to a :ref:`list <lists>`, except that it is not
@@ -628,12 +643,12 @@ have been created.  In general, you will not need tuples in SymPy, but
 sometimes it can be more convenient to type parentheses instead of
 square brackets.
 
-    >>> t = (1, 2, x) # Tuples are like lists
+    >>> t = (1, 2, x)  # Tuples are like lists
     >>> t
     (1, 2, x)
     >>> t[0]
     1
-    >>> t[0] = 4 # Except you can not change them after they have been created
+    >>> t[0] = 4  # Except you can not change them after they have been created
     Traceback (most recent call last):
       File "<console>", line 1, in <module>
     TypeError: 'tuple' object does not support item assignment
@@ -665,6 +680,7 @@ square brackets.
 
 Keyword Arguments
 -----------------
+
 Aside from the usage described :ref:`above <equals-signs>`, equals signs
 (``=``) are also used to give named arguments to functions.  Any
 function that has ``key=value`` in its parameters list (see below on how
@@ -720,14 +736,16 @@ that you want, and they will all be evaluated according to the function.
 
 Getting help from within SymPy
 ==============================
+
 help()
 ------
+
 Although all docs are available at `docs.sympy.org <http://docs.sympy.org/>`_ or on the
 `SymPy Wiki <http://wiki.sympy.org/>`_, you can also get info on functions from within the
 Python interpreter that runs SymPy.  The easiest way to do this is to do
 ``help(function)``, or ``function?`` if you are using :command:`ipython`::
 
-    In [1]: help(powsimp) # help() works everywhere
+    In [1]: help(powsimp)  # help() works everywhere
 
     In [2]: # But in ipython, you can also use ?, which is better because it
     In [3]: # it gives you more information
@@ -741,12 +759,13 @@ These will give you the function parameters and docstring for
 
 source()
 --------
+
 Another useful option is the :func:`source` function.  This will print
 the source code of a function, including any docstring that it may have.
 You can also do ``function??`` in :command:`ipython`.  For example,
 from SymPy 0.6.5:
 
-    >>> source(simplify) # simplify() is actually only 2 lines of code. #doctest: +SKIP
+    >>> source(simplify)  # simplify() is actually only 2 lines of code. #doctest: +SKIP
     In file: ./sympy/simplify/simplify.py
     def simplify(expr):
         """Naively simplifies the given expression.
@@ -762,4 +781,3 @@ from SymPy 0.6.5:
         """
         expr = Poly.cancel(powsimp(expr))
         return powsimp(together(expr.expand()), combine='exp', deep=True)
-

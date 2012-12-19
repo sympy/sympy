@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: SymPy 0.7.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2012-11-23 15:11\n"
+"POT-Creation-Date: 2012-12-10 15:09\n"
 "PO-Revision-Date: 2011-12-29 19:03+0530\n"
 "Last-Translator: \n"
 "Language-Team: \n"
@@ -40,19 +40,20 @@ msgstr ""
 msgid ""
 "This tutorial gives an overview and introduction to SymPy. Read this to have "
 "an idea what SymPy can do for you (and how) and if you want to know more, "
-"read the :ref:`SymPy User's Guide <guide>`, :ref:`SymPy Modules Reference "
-"<module-docs>`. or the `sources <https://github.com/sympy/sympy/>`_ directly."
+"read the :ref:`SymPy User's Guide <guide>`, the :ref:`SymPy Modules "
+"Reference <module-docs>`, or the `sources <https://github.com/sympy/sympy/"
+">`_ directly."
 msgstr ""
 "Този урок е въведение към SymPy. Прочетете го, за да научите какво и как "
-"може SymPy, и ако искате да научите повече, прочетете `SymPy User's "
-"Guide <../guide.html>`_, `SymPy Modules Reference <../modules/index.html>`_. "
-"или  `сорс код <https://github.com/sympy/sympy/>`_ директно."
+"може SymPy, и ако искате да научите повече, прочетете `SymPy User's Guide "
+"<../guide.html>`_, `SymPy Modules Reference <../modules/index.html>`_, или  "
+"`сорс код <https://github.com/sympy/sympy/>`_ директно."
 
-#: tutorial.en.rst:26
+#: tutorial.en.rst:24
 msgid "First Steps with SymPy"
 msgstr "Първи стъпки със SymPy"
 
-#: tutorial.en.rst:28
+#: tutorial.en.rst:26
 msgid ""
 "The easiest way to download it is to go to http://code.google.com/p/sympy/ "
 "and download the latest tarball from the Featured Downloads:"
@@ -60,15 +61,15 @@ msgstr ""
 "Най-лесният начин да свалите SymPy е да отидете на http://code.google.com/p/"
 "sympy/  и да изтеглите последния архив."
 
-#: tutorial.en.rst:34
+#: tutorial.en.rst:32
 msgid "Unpack it:"
 msgstr "Разархивирайте го:"
 
-#: tutorial.en.rst:40
+#: tutorial.en.rst:38
 msgid "and try it from a Python interpreter:"
 msgstr "и го изпробвайте от интерпретатор на Python:"
 
-#: tutorial.en.rst:54
+#: tutorial.en.rst:52
 msgid ""
 "You can use SymPy as shown above and this is indeed the recommended way if "
 "you use it in your program. You can also install it using ``./setup.py "
@@ -81,17 +82,18 @@ msgstr ""
 "модул на Python,или просто инсталирайте пакет във вашата любима Linux "
 "дистрибуция, например:"
 
-#: tutorial.en.rst:80
+#: tutorial.en.rst:78
+#, fuzzy
 msgid ""
-"For other means how to install SymPy, consult the  Downloads_ tab on the "
-"SymPy's webpage."
+"For other means how to install SymPy, consult the wiki page `Download and "
+"Installation <https://github.com/sympy/sympy/wiki/Download-Installation>`_."
 msgstr "За други начини за инсталация може да погледнете страницата ни за"
 
-#: tutorial.en.rst:87
+#: tutorial.en.rst:83
 msgid "isympy Console"
 msgstr "isympy Конзола"
 
-#: tutorial.en.rst:89
+#: tutorial.en.rst:85
 msgid ""
 "For experimenting with new features, or when figuring out how to do things, "
 "you can use our special wrapper around IPython called ``isympy`` (located in "
@@ -106,7 +108,7 @@ msgstr ""
 "която включва съответните SymPy модули и дефинираните символи  x, y, z, "
 "както и някои други неща:"
 
-#: tutorial.en.rst:119
+#: tutorial.en.rst:115
 msgid ""
 "Commands entered by you are bold. Thus what we did in 3 lines in a regular "
 "Python interpreter can be done in 1 line in isympy."
@@ -114,26 +116,26 @@ msgstr ""
 "Командите, въведени от вас, са удебелени. Така, това което направихме в 3 "
 "линии на обикновен Python, може да се направи с 1 линия на isympy."
 
-#: tutorial.en.rst:124
+#: tutorial.en.rst:120
 msgid "Using SymPy as a calculator"
 msgstr "Използване на SymPy като калкулатор"
 
-#: tutorial.en.rst:126
+#: tutorial.en.rst:122
 msgid "SymPy has three built-in numeric types: Float, Rational and Integer."
 msgstr ""
 "SymPy има 3 вградени типове числа: Цели, с плаваща запетая и рационални."
 
-#: tutorial.en.rst:128
+#: tutorial.en.rst:124
 msgid ""
 "The Rational class represents a rational number as a pair of two Integers: "
-"the numerator and the denominator. So Rational(1,2) represents 1/2, Rational"
-"(5,2) represents 5/2, and so on."
+"the numerator and the denominator. So Rational(1, 2) represents 1/2, Rational"
+"(5, 2) represents 5/2, and so on."
 msgstr ""
 "Рационалният клас представлява рационална дроб като двойка от цели числа: "
-"числителя и знаменателя, така че Rational(1,2) представлява 1/2, Rational"
-"(5,2) 5/2 и така нататък."
+"числителя и знаменателя, така че Rational(1, 2) представлява 1/2, Rational"
+"(5, 2) 5/2 и така нататък."
 
-#: tutorial.en.rst:147
+#: tutorial.en.rst:143
 msgid ""
 "Proceed with caution while working with Python int's and floating point "
 "numbers, especially in division, since you may create a Python number, not a "
@@ -148,7 +150,7 @@ msgstr ""
 "3, и подразбиращото се поведение на ``isympy``, което въвежда делението от "
 "__future__:"
 
-#: tutorial.en.rst:159
+#: tutorial.en.rst:155
 msgid ""
 "But in earlier Python versions where division has not been imported, a "
 "truncated int will result:"
@@ -156,7 +158,7 @@ msgstr ""
 "Но в по-ранните версии на Python, където \"истинското делението\" не бе "
 "въведено, като резултат ще бъде закръглено число:"
 
-#: tutorial.en.rst:167
+#: tutorial.en.rst:163
 msgid ""
 "In both cases, however, you are not dealing with a SymPy Number because "
 "Python created its own number. Most of the time you will probably be working "
@@ -168,31 +170,31 @@ msgstr ""
 "числа, така че се уверете, че използвате Rational, за да получите очаквания "
 "резултат. Може да сметнете за удобно да използвате ``R`` като Rational:"
 
-#: tutorial.en.rst:181
+#: tutorial.en.rst:177
 msgid ""
 "We also have some special constants, like e and pi, that are treated as "
-"symbols (1+pi won't evaluate to something numeric, rather it will remain as "
-"1+pi), and have arbitrary precision:"
+"symbols (1 + pi won't evaluate to something numeric, rather it will remain "
+"as 1 + pi), and have arbitrary precision:"
 msgstr ""
 "Ние също така имаме някои специални константи, като e и pi, които се "
-"третират като символи (1+pi няма да се изчисли като някое число, а ще си "
-"остане 1+pi) и имат арбитрарна точност:"
+"третират като символи (1 + pi няма да се изчисли като някое число, а ще си "
+"остане 1 + pi) и имат арбитрарна точност:"
 
-#: tutorial.en.rst:197
+#: tutorial.en.rst:193
 msgid "as you see, evalf evaluates the expression to a floating-point number"
 msgstr "Както виждате, evalf изчислява израза до число с плаваща запетая."
 
-#: tutorial.en.rst:199
+#: tutorial.en.rst:195
 msgid "The symbol ``oo`` is used for a class defining mathematical infinity:"
 msgstr ""
 "Също така има и клас, представляващ математическа безкрайност, наречен  "
 "``oo``:"
 
-#: tutorial.en.rst:210
+#: tutorial.en.rst:206
 msgid "Symbols"
 msgstr "Символи"
 
-#: tutorial.en.rst:212
+#: tutorial.en.rst:208
 msgid ""
 "In contrast to other Computer Algebra Systems, in SymPy you have to declare "
 "symbolic variables explicitly:"
@@ -200,7 +202,7 @@ msgstr ""
 "За разлика от други компютърни алгебрични системи (CAS), в SymPy вие трябва "
 "изрично да декларирате символните променливи:"
 
-#: tutorial.en.rst:221
+#: tutorial.en.rst:217
 msgid ""
 "On the left is the normal Python variable which has been assigned to the "
 "SymPy Symbol class. Predefined symbols (including those for symbols with "
@@ -210,20 +212,20 @@ msgstr ""
 "класа Symbol. Инстанциите на този клас могат да се комбинират и да направят "
 "израз:"
 
-#: tutorial.en.rst:227
+#: tutorial.en.rst:223
 msgid ""
 "Symbols can also be created with the ``symbols`` or ``var`` functions, the "
 "latter automatically adding the created symbols to the namespace, and both "
 "accepting a range notation:"
 msgstr ""
 
-#: tutorial.en.rst:239
+#: tutorial.en.rst:235
 msgid ""
 "Instances of the Symbol class \"play well together\" and are the building "
 "blocks of expresions:"
 msgstr "Инстанциите на този клас могат да се комбинират и да направят израз:"
 
-#: tutorial.en.rst:253
+#: tutorial.en.rst:249
 msgid ""
 "They can be substituted with other numbers, symbols or expressions using "
 "``subs(old, new)``:"
@@ -231,11 +233,11 @@ msgstr ""
 "И да ги замествате с други символи или числа като използвате ``subs(old, new)"
 "``:"
 
-#: tutorial.en.rst:266
+#: tutorial.en.rst:262
 msgid "For the remainder of the tutorial, we assume that we have run:"
 msgstr "До края на този урок предполагаме, че сте изпълнили следния код:"
 
-#: tutorial.en.rst:273
+#: tutorial.en.rst:269
 msgid ""
 "This will make things look better when printed. See the :ref:`printing-"
 "tutorial` section below. If you have a unicode font installed, you can pass "
@@ -246,28 +248,28 @@ msgstr ""
 "инсталиран някой unicode шрифт, може да подадете use_unicode=True за доста "
 "по-красив изход."
 
-#: tutorial.en.rst:278
+#: tutorial.en.rst:274
 msgid "Algebra"
 msgstr "Алгебра"
 
-#: tutorial.en.rst:280
+#: tutorial.en.rst:276
 msgid "For partial fraction decomposition, use ``apart(expr, x)``:"
 msgstr "За да разложите непълни дроби, използвайте ``apart(expr, x)``:"
 
-#: tutorial.en.rst:307
+#: tutorial.en.rst:303
 msgid "To combine things back together, use ``together(expr, x)``:"
 msgstr ""
 "За да комбинирате нещата отново заедно, използвайте ``together(expr, x)``:"
 
-#: tutorial.en.rst:331
+#: tutorial.en.rst:327
 msgid "Calculus"
 msgstr "Висша математика"
 
-#: tutorial.en.rst:336
+#: tutorial.en.rst:332
 msgid "Limits"
 msgstr "Граници"
 
-#: tutorial.en.rst:338
+#: tutorial.en.rst:334
 msgid ""
 "Limits are easy to use in SymPy, they follow the syntax ``limit(function, "
 "variable, point)``, so to compute the limit of f(x) as x -> 0, you would "
@@ -277,11 +279,11 @@ msgstr ""
 "синтаксис limit(function, variable, point), така че за да изчислите "
 "границата на f(x), където  x -> 0 бихте използвали ``limit(f, x, 0)``:"
 
-#: tutorial.en.rst:349
+#: tutorial.en.rst:345
 msgid "you can also calculate the limit at infinity:"
 msgstr "също така може да изчислите граница до безкрайност:"
 
-#: tutorial.en.rst:362
+#: tutorial.en.rst:358
 msgid ""
 "for some non-trivial examples on limits, you can read the test file "
 "`test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/"
@@ -291,11 +293,11 @@ msgstr ""
 "`test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/"
 "tests/test_demidovich.py>`_"
 
-#: tutorial.en.rst:369
+#: tutorial.en.rst:365
 msgid "Differentiation"
 msgstr "Диференциално смятане"
 
-#: tutorial.en.rst:371
+#: tutorial.en.rst:367
 msgid ""
 "You can differentiate any SymPy expression using ``diff(func, var)``. "
 "Examples:"
@@ -303,56 +305,56 @@ msgstr ""
 "Може да изчислите производните на който и да е израз в SymPy, като "
 "използвате ``diff(func, var)``. Примери:"
 
-#: tutorial.en.rst:386
+#: tutorial.en.rst:382
 msgid "You can check, that it is correct by:"
 msgstr "Можете да проверите, че е правилно, като:"
 
-#: tutorial.en.rst:396
+#: tutorial.en.rst:392
 msgid ""
 "Higher derivatives can be calculated using the ``diff(func, var, n)`` method:"
 msgstr ""
 "Производни от по-висок ред могат да бъдат пресметнати чрез използването на "
 "метода ``diff(func, var, n)`` :"
 
-#: tutorial.en.rst:415
+#: tutorial.en.rst:411
 msgid "Series expansion"
 msgstr "Разлагане в ред"
 
-#: tutorial.en.rst:417
+#: tutorial.en.rst:413
 msgid "Use ``.series(var, point, order)``:"
 msgstr "Използвайте метода ``.series(var, point, order)``:"
 
-#: tutorial.en.rst:434
+#: tutorial.en.rst:430
 msgid "Another simple example:"
 msgstr "Друг прост пример:"
 
-#: tutorial.en.rst:460
+#: tutorial.en.rst:456
 msgid "Summation"
 msgstr ""
 
-#: tutorial.en.rst:462
+#: tutorial.en.rst:458
 msgid ""
 "Compute the summation of f with respect to the given summation variable over "
 "the given limits."
 msgstr ""
 
-#: tutorial.en.rst:464
+#: tutorial.en.rst:460
 msgid ""
 "summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, "
 "i.e.,"
 msgstr ""
 
-#: tutorial.en.rst:477
+#: tutorial.en.rst:473
 msgid ""
 "If it cannot compute the sum, it prints the corresponding summation formula. "
 "Repeated sums can be computed by introducing additional limits:"
 msgstr ""
 
-#: tutorial.en.rst:513
+#: tutorial.en.rst:509
 msgid "Integration"
 msgstr "Интегриране"
 
-#: tutorial.en.rst:515
+#: tutorial.en.rst:511
 msgid ""
 "SymPy has support for indefinite and definite integration of transcendental "
 "elementary and special functions via ``integrate()`` facility, which uses "
@@ -364,95 +366,95 @@ msgstr ""
 "мощния разширен алгоритъм на Risch-Norman и няколко еврестики и сравнения с "
 "шаблони:"
 
-#: tutorial.en.rst:525
+#: tutorial.en.rst:521
 msgid "You can integrate elementary functions:"
 msgstr "Можете да декларирате елементарни функции:"
 
-#: tutorial.en.rst:540
+#: tutorial.en.rst:536
 msgid "Also special functions are handled easily:"
 msgstr "Лесно можете да се справите и със специалните функции:"
 
-#: tutorial.en.rst:550
+#: tutorial.en.rst:546
 msgid "It is possible to compute definite integrals:"
 msgstr "Възможно е да изчислите даден интеграл:"
 
-#: tutorial.en.rst:561
+#: tutorial.en.rst:557
 msgid "Also, improper integrals are supported as well:"
 msgstr "Също така се поддържат и неопределени интеграли:"
 
-#: tutorial.en.rst:575
+#: tutorial.en.rst:571
 msgid "Complex numbers"
 msgstr "Комплексни числа"
 
-#: tutorial.en.rst:577
+#: tutorial.en.rst:573
 msgid ""
 "Besides the imaginary unit, I, which is imaginary, symbols can be created "
 "with attributes (e.g. real, positive, complex, etc...) and this will affect "
 "how they behave:"
 msgstr ""
 
-#: tutorial.en.rst:596
+#: tutorial.en.rst:592
 msgid "Functions"
 msgstr "Функции"
 
-#: tutorial.en.rst:598
+#: tutorial.en.rst:594
 msgid "**trigonometric**"
 msgstr "**тригонометрични**"
 
-#: tutorial.en.rst:649
+#: tutorial.en.rst:645
 msgid "**spherical harmonics**"
 msgstr "**сферични хармонични**"
 
-#: tutorial.en.rst:677
+#: tutorial.en.rst:673
 msgid "**factorials and gamma function**"
 msgstr "**факториел и гама функции**"
 
-#: tutorial.en.rst:697
+#: tutorial.en.rst:693
 msgid "**zeta function**"
 msgstr "**дзета функции**"
 
-#: tutorial.en.rst:724
+#: tutorial.en.rst:720
 msgid "**polynomials**"
 msgstr "**полиноми**"
 
-#: tutorial.en.rst:765
+#: tutorial.en.rst:761
 msgid "Differential Equations"
 msgstr "Диференциални уравнения"
 
-#: tutorial.en.rst:767 tutorial.en.rst:789
+#: tutorial.en.rst:763 tutorial.en.rst:785
 msgid "In ``isympy``:"
 msgstr "В ``isympy``:"
 
-#: tutorial.en.rst:787
+#: tutorial.en.rst:783
 msgid "Algebraic equations"
 msgstr "Алгебрични уравнения"
 
-#: tutorial.en.rst:804
+#: tutorial.en.rst:800
 msgid "Linear Algebra"
 msgstr "Линейна алгебра"
 
-#: tutorial.en.rst:809
+#: tutorial.en.rst:805
 msgid "Matrices"
 msgstr "Матрици"
 
-#: tutorial.en.rst:811
+#: tutorial.en.rst:807
 msgid "Matrices are created as instances from the Matrix class:"
 msgstr "Матриците се създават като инстанции на Matrix класа:"
 
-#: tutorial.en.rst:821
+#: tutorial.en.rst:817
 msgid "They can also contain symbols:"
 msgstr "също така може да слагате символи в тях:"
 
-#: tutorial.en.rst:838
+#: tutorial.en.rst:834
 msgid "For more about Matrices, see the Linear Algebra tutorial."
 msgstr ""
 "За повече информация и примери с матрици вижте Linear Algebra tutorial."
 
-#: tutorial.en.rst:843
+#: tutorial.en.rst:839
 msgid "Pattern matching"
 msgstr "Сравняване на шаблони"
 
-#: tutorial.en.rst:845
+#: tutorial.en.rst:841
 msgid ""
 "Use the ``.match()`` method, along with the ``Wild`` class, to perform "
 "pattern matching on expressions. The method will return a dictionary with "
@@ -462,11 +464,11 @@ msgstr ""
 "с даден шаблон. Методът ще върне речник с изисканите замествания, както "
 "следва:"
 
-#: tutorial.en.rst:861
+#: tutorial.en.rst:857
 msgid "If the match is unsuccessful, it returns ``None``:"
 msgstr "Ако съвпадението е неуспешно, методът връща ``None``:"
 
-#: tutorial.en.rst:868
+#: tutorial.en.rst:864
 msgid ""
 "One can also use the exclude parameter of the ``Wild`` class to ensure that "
 "certain things do not show up in the result:"
@@ -474,32 +476,32 @@ msgstr ""
 "Можете да използвате и втория незадължителен параметър exclude, за да се "
 "уверите, че някои неща не се появяват в резултата:"
 
-#: tutorial.en.rst:884
+#: tutorial.en.rst:880
 msgid "Printing"
 msgstr "Принтиране"
 
-#: tutorial.en.rst:886
+#: tutorial.en.rst:882
 msgid "There are many ways to print expressions."
 msgstr "Има много начини, по които изразите може да се отпечатат."
 
-#: tutorial.en.rst:888
+#: tutorial.en.rst:884
 msgid "**Standard**"
 msgstr "**Стандартен начин**"
 
-#: tutorial.en.rst:890
+#: tutorial.en.rst:886
 msgid "This is what ``str(expression)`` returns and it looks like this:"
 msgstr "Това е резултатът от ``str(expression)`` и изглежда така:"
 
-#: tutorial.en.rst:901
+#: tutorial.en.rst:897
 msgid "**Pretty printing**"
 msgstr "**Красиво отпечатване (pretty printing)**"
 
-#: tutorial.en.rst:903
+#: tutorial.en.rst:899
 msgid "Nice ascii-art printing is produced by the ``pprint`` function:"
 msgstr ""
 "Това е хубаво отпечатване тип ascii-art, направено от ``pprint`` функция:"
 
-#: tutorial.en.rst:922
+#: tutorial.en.rst:918
 msgid ""
 "If you have a unicode font installed, the ``pprint`` function will use it by "
 "default. You can override this using the ``use_unicode`` option.:"
@@ -508,7 +510,7 @@ msgstr ""
 "подразбиране. Може смените това поведение, като използвате опцията "
 "``use_unicode``.:"
 
-#: tutorial.en.rst:931
+#: tutorial.en.rst:927
 msgid ""
 "See also the wiki `Pretty Printing <https://github.com/sympy/sympy/wiki/"
 "Pretty-Printing>`_ for more examples of a nice unicode printing."
@@ -516,40 +518,40 @@ msgstr ""
 "Също така вижте уикито `Pretty Printing <https://github.com/sympy/sympy/wiki/"
 "Pretty-Printing>`_ за повече примери за добро unicode принтиране."
 
-#: tutorial.en.rst:935
+#: tutorial.en.rst:931
 msgid ""
 "Tip: To make pretty printing the default in the Python interpreter, use:"
 msgstr ""
 "Съвет:За да направите красивото отпечатване(pretty printing) по подразбиране "
 "в интерпретатора на Python, използвайте:"
 
-#: tutorial.en.rst:960
+#: tutorial.en.rst:956
 msgid "**Python printing**"
 msgstr "**Python отпечатване**"
 
-#: tutorial.en.rst:978
+#: tutorial.en.rst:974
 msgid "**LaTeX printing**"
 msgstr "**LaTeX отпечатване**"
 
-#: tutorial.en.rst:997
+#: tutorial.en.rst:993
 msgid "**MathML**"
 msgstr "*MathML**"
 
-#: tutorial.en.rst:1009
+#: tutorial.en.rst:1005
 msgid "**Pyglet**"
 msgstr "**Pyglet**"
 
-#: tutorial.en.rst:1017
+#: tutorial.en.rst:1013
 msgid ""
 "If pyglet is installed, a pyglet window will open containing the LaTeX "
 "rendered expression:"
 msgstr "И pyglet прозорец с LaTeX рендиран израз ще се появи:"
 
-#: tutorial.en.rst:1023
+#: tutorial.en.rst:1019
 msgid "Notes"
 msgstr "Бележки"
 
-#: tutorial.en.rst:1025
+#: tutorial.en.rst:1021
 msgid ""
 "``isympy`` calls ``pprint`` automatically, so that's why you see pretty "
 "printing by default."
@@ -557,7 +559,7 @@ msgstr ""
 "``isympy`` извиква ``pprint`` автоматично, поради тази причина виждате "
 "красивото отпечатване (pretty printing) по подразбиране."
 
-#: tutorial.en.rst:1028
+#: tutorial.en.rst:1024
 msgid ""
 "Note that there is also a printing module available, ``sympy.printing``.  "
 "Other printing methods available through this module are:"
@@ -565,7 +567,7 @@ msgstr ""
 "Забележете, че също така има модул за принтиране, ``sympy.printing``. Други "
 "методи за принтиране, налични чрез този модул, са:"
 
-#: tutorial.en.rst:1031
+#: tutorial.en.rst:1027
 msgid ""
 "``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, "
 "respectively, a pretty representation of ``expr``. This is the same as the "
@@ -575,7 +577,7 @@ msgstr ""
 "принтира, съответно, красива репрезентация на ``expr``. Това е еквивалентно "
 "на второто ниво на репрезентация показано по-горе."
 
-#: tutorial.en.rst:1033
+#: tutorial.en.rst:1029
 msgid ""
 "``latex(expr)``, ``print_latex(expr)``: Return or print, respectively, a "
 "`LaTeX <http://www.latex-project.org/>`_  representation of ``expr``"
@@ -583,7 +585,7 @@ msgstr ""
 "``latex(expr)``, ``print_latex(expr)``: Връща или принтира, съответно, "
 "`LaTeX <http://www.latex-project.org/>`_  репрезентация на ``expr``"
 
-#: tutorial.en.rst:1035
+#: tutorial.en.rst:1031
 msgid ""
 "``mathml(expr)``, ``print_mathml(expr)``: Return or print, respectively, a "
 "`MathML <http://www.w3.org/Math/>`_ representation of ``expr``."
@@ -591,7 +593,7 @@ msgstr ""
 "``mathml(expr)``, ``print_mathml(expr)``: Връща или принтира, съответно, "
 "`MathML <http://www.w3.org/Math/>`_ репрезентация на ``expr``."
 
-#: tutorial.en.rst:1037
+#: tutorial.en.rst:1033
 msgid ""
 "``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/"
 "mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview "
@@ -601,19 +603,19 @@ msgstr ""
 "it/mml-widget/>`_, GTK интрумент, който визуализира MathML код. Изисква се "
 "`Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ ."
 
-#: tutorial.en.rst:1040
+#: tutorial.en.rst:1036
 msgid "Further documentation"
 msgstr "Допълнителна документация"
 
-#: tutorial.en.rst:1042
+#: tutorial.en.rst:1038
 msgid ""
 "Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
 "Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
 msgstr ""
-"Време е да научите повече за SymPy. Прегледайте `SymPy User's Guide "
-"<../guide.html>`_ и `SymPy Modules Reference <../modules/index.html>`_."
+"Време е да научите повече за SymPy. Прегледайте `SymPy User's Guide <../"
+"guide.html>`_ и `SymPy Modules Reference <../modules/index.html>`_."
 
-#: tutorial.en.rst:1046
+#: tutorial.en.rst:1042
 msgid ""
 "Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/"
 ">`_, that contains a lot of useful examples, tutorials, cookbooks that we "
@@ -624,10 +626,10 @@ msgstr ""
 "наръчници, за които ние и нашите потребители допринасяме и Ви окуражаваме да "
 "редактирате и подобрите."
 
-#: tutorial.en.rst:1053
+#: tutorial.en.rst:1049
 msgid "Translations"
 msgstr ""
 
-#: tutorial.en.rst:1055
+#: tutorial.en.rst:1051
 msgid "This tutorial is also available in other languages:"
 msgstr ""
