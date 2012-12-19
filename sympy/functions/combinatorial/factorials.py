@@ -167,9 +167,11 @@ class subfactorial(CombinatorialFunction):
     """The subfactorial counts the derangements of n items and is
     defined for non-negative integers as::
 
-                {  1                             for n = 0
-        !n =    {  0                             for n = 1
-                {  (n - 1)*(!(n - 1) + !(n - 2)) for n > 1
+              ,
+             |  1                             for n = 0
+        !n = {  0                             for n = 1
+             |  (n - 1)*(!(n - 1) + !(n - 2)) for n > 1
+              `
 
     It can also be written as int(round(n!/exp(1))) but the recursive
     definition with caching is implemented for this function.
@@ -226,10 +228,11 @@ class factorial2(CombinatorialFunction):
 
     The double factorial is defined for integers >= -1 as::
 
-                {  n*(n - 2)*(n - 4)* ... * 1    for n odd
-        n!! =   {  n*(n - 2)*(n - 4)* ... * 2    for n even
-                {  1                             for n = 0, -1
-
+               ,
+              |  n*(n - 2)*(n - 4)* ... * 1    for n odd
+        n!! = {  n*(n - 2)*(n - 4)* ... * 2    for n even
+              |  1                             for n = 0, -1
+               `
 
     Examples
     ========
