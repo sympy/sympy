@@ -10,6 +10,7 @@ distributions have SymPy packages available.
 
 Source
 ======
+
 SymPy currently recommends that users install directly from the source files.
 You will first have to download the source files via the archive. Download the
 latest release (tar.gz) from the `downloads site`_ and open it with your
@@ -43,6 +44,7 @@ You may now run SymPy statements directly within the Python shell::
 
 Git
 ===
+
 If you are a developer or like to get the latest updates as they come, be sure
 to install from git. To download the repository, execute the following from the
 command line::
@@ -66,10 +68,11 @@ directory.
 
 If you're using the git repository with Python 3, you have to use the
 ``./bin/use2to3`` script to build the Python 3 version of SymPy. This will put
-everything in the py3ksympy directory.
+everything in the py3k-sympy directory.
 
 Other Methods
 =============
+
 An installation executable is available for Windows users at the
 `downloads site`_ (.exe). In addition, various Linux distributions have SymPy
 available as a package. Others are strongly encouraged to download from source
@@ -77,6 +80,7 @@ available as a package. Others are strongly encouraged to download from source
 
 Run SymPy
 =========
+
 After installation, it is best to verify that your freshly-installed SymPy
 works. To do this, start up Python and import the SymPy libraries::
 

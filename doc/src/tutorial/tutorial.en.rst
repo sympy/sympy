@@ -16,11 +16,9 @@ entirely in Python and does not require any external libraries.
 
 This tutorial gives an overview and introduction to SymPy.
 Read this to have an idea what SymPy can do for you (and how) and if you want
-to know more, read the
-:ref:`SymPy User's Guide <guide>`,
-:ref:`SymPy Modules Reference <module-docs>`.
-or the `sources
-<https://github.com/sympy/sympy/>`_ directly.
+to know more, read the :ref:`SymPy User's Guide <guide>`, the
+:ref:`SymPy Modules Reference <module-docs>`, or the
+`sources <https://github.com/sympy/sympy/>`_ directly.
 
 First Steps with SymPy
 ======================
@@ -77,10 +75,8 @@ distribution, e.g.:
     Setting up python-sympy (0.5.12-1) ...
 
 
-For other means how to install SymPy, consult the  Downloads_ tab on the
-SymPy's webpage.
-
-.. _Downloads: http://code.google.com/p/sympy/wiki/DownloadInstallation?tm=2
+For other means how to install SymPy, consult the wiki page
+`Download and Installation <https://github.com/sympy/sympy/wiki/Download-Installation>`_.
 
 
 isympy Console
@@ -126,13 +122,13 @@ Using SymPy as a calculator
 SymPy has three built-in numeric types: Float, Rational and Integer.
 
 The Rational class represents a rational number as a pair of two Integers:
-the numerator and the denominator. So Rational(1,2) represents 1/2,
-Rational(5,2) represents 5/2, and so on.
+the numerator and the denominator. So Rational(1, 2) represents 1/2,
+Rational(5, 2) represents 5/2, and so on.
 
 ::
 
     >>> from sympy import Rational
-    >>> a = Rational(1,2)
+    >>> a = Rational(1, 2)
 
     >>> a
     1/2
@@ -179,7 +175,7 @@ Rational:
     1/2
 
 We also have some special constants, like e and pi, that are treated as symbols
-(1+pi won't evaluate to something numeric, rather it will remain as 1+pi), and
+(1 + pi won't evaluate to something numeric, rather it will remain as 1 + pi), and
 have arbitrary precision:
 
 ::
@@ -241,26 +237,26 @@ of expresions:
 
 ::
 
-    >>> x+y+x-y
+    >>> x + y + x - y
     2*x
 
-    >>> (x+y)**2
+    >>> (x + y)**2
     (x + y)**2
 
-    >>> ((x+y)**2).expand()
+    >>> ((x + y)**2).expand()
     x**2 + 2*x*y + y**2
 
 They can be substituted with other numbers, symbols or expressions using ``subs(old, new)``:
 
 ::
 
-    >>> ((x+y)**2).subs(x, 1)
+    >>> ((x + y)**2).subs(x, 1)
     (y + 1)**2
 
-    >>> ((x+y)**2).subs(x, y)
+    >>> ((x + y)**2).subs(x, y)
     4*y**2
 
-    >>> ((x+y)**2).subs(x, 1-y)
+    >>> ((x + y)**2).subs(x, 1 - y)
     1
 
 For the remainder of the tutorial, we assume that we have run:
@@ -284,22 +280,22 @@ For partial fraction decomposition, use ``apart(expr, x)``:
     >>> from sympy import apart
     >>> from sympy.abc import x, y, z
 
-    >>> 1/( (x+2)*(x+1) )
+    >>> 1/( (x + 2)*(x + 1) )
            1
     ---------------
     (x + 1)*(x + 2)
 
-    >>> apart(1/( (x+2)*(x+1) ), x)
+    >>> apart(1/( (x + 2)*(x + 1) ), x)
         1       1
     - ----- + -----
       x + 2   x + 1
 
-    >>> (x+1)/(x-1)
+    >>> (x + 1)/(x - 1)
     x + 1
     -----
     x - 1
 
-    >>> apart((x+1)/(x-1), x)
+    >>> apart((x + 1)/(x - 1), x)
           2
     1 + -----
         x - 1
@@ -314,12 +310,12 @@ To combine things back together, use ``together(expr, x)``:
     ---------------
          x*y*z
 
-    >>> together(apart((x+1)/(x-1), x), x)
+    >>> together(apart((x + 1)/(x - 1), x), x)
     x + 1
     -----
     x - 1
 
-    >>> together(apart(1/( (x+2)*(x+1) ), x), x)
+    >>> together(apart(1/( (x + 2)*(x + 1) ), x), x)
            1
     ---------------
     (x + 1)*(x + 2)
@@ -602,10 +598,10 @@ Functions
     >>> from sympy import asin, asinh, cos, sin, sinh, symbols, I
     >>> x, y = symbols('x,y')
 
-    >>> sin(x+y).expand(trig=True)
+    >>> sin(x + y).expand(trig=True)
     sin(x)*cos(y) + sin(y)*cos(x)
 
-    >>> cos(x+y).expand(trig=True)
+    >>> cos(x + y).expand(trig=True)
     -sin(x)*sin(y) + cos(x)*cos(y)
 
     >>> sin(I*x)
@@ -813,7 +809,7 @@ Matrices are created as instances from the Matrix class:
 ::
 
     >>> from sympy import Matrix, Symbol
-    >>> Matrix([[1,0], [0,1]])
+    >>> Matrix([[1, 0], [0, 1]])
     [1  0]
     [    ]
     [0  1]
@@ -824,7 +820,7 @@ They can also contain symbols:
 
     >>> x = Symbol('x')
     >>> y = Symbol('y')
-    >>> A = Matrix([[1,x], [y,1]])
+    >>> A = Matrix([[1, x], [y, 1]])
     >>> A
     [1  x]
     [    ]
@@ -862,7 +858,7 @@ If the match is unsuccessful, it returns ``None``:
 
 ::
 
-    >>> print (x+1).match(p**x)
+    >>> print (x + 1).match(p**x)
     None
 
 One can also use the exclude parameter of the ``Wild`` class to ensure that
@@ -870,12 +866,12 @@ certain things do not show up in the result:
 
 ::
 
-    >>> p = Wild('p', exclude=[1,x])
-    >>> print (x+1).match(x+p) # 1 is excluded
+    >>> p = Wild('p', exclude=[1, x])
+    >>> print (x + 1).match(x + p) # 1 is excluded
     None
-    >>> print (x+1).match(p+1) # x is excluded
+    >>> print (x + 1).match(p + 1) # x is excluded
     None
-    >>> print (x+1).match(x+2+p) # -1 is not excluded
+    >>> print (x + 1).match(x + 2 + p) # -1 is not excluded
     {p_: -1}
 
 .. _printing-tutorial:

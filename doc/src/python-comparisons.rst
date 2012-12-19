@@ -280,14 +280,14 @@ The above method resolution can be verified using the following program::
     show("set([a, b])")
 
     print "--- x = set([a, b]); y = set([a, b]); ---"
-    x = set([a,b])
-    y = set([a,b])
+    x = set([a, b])
+    y = set([a, b])
     print "               x == y :"
     x == y
 
     print "--- x = set([a, b]); y = set([b, d]); ---"
-    x = set([a,b])
-    y = set([b,d])
+    x = set([a, b])
+    y = set([b, d])
     print "               x == y :"
     x == y
 
