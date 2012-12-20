@@ -381,7 +381,7 @@ class GammaMatrices(object):
         >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
         >>> sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
         >>> S1 = TensorType([Lorentz], sym1)
-        >>> GM = GammaMatrices( Lorentz)
+        >>> GM = GammaMatrices(Lorentz)
         >>> gamma_trace = GM.gamma_trace
         >>> G = GM.G
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
