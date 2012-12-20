@@ -1,4 +1,4 @@
-__all__ = ['EField', 'ParticleCharge', 'check_conservative']
+__all__ = ['EField', 'ParticleCharge', 'check_conservative', 'get_field']
 
 from sympy.physics.mechanics import Vector, Particle
 from sympy.physics.mechanics.essential import _check_vector
@@ -12,8 +12,8 @@ class EField(Basic):
     """
     Represents a purely electric vector field in space. It must be defined in
     such a way that it can be expressed entirely in one frame.
-    """
-    
+    """ 
+
     def __init__(self, vector):
         """
         Constructor for EField class.
@@ -30,7 +30,7 @@ class EField(Basic):
         ========
 
         >>> from sympy.physics.electrical import EField
-        >>> from sympy.physics.mechanics import Vector, ReferenceFrame
+        >>> from sympy.physics.mechanics import ReferenceFrame
         >>> from sympy import symbols
         >>> N = ReferenceFrame('N')
         >>> x, y, v = symbols('x y v')
@@ -88,6 +88,10 @@ class EField(Basic):
         """To test the equality of two EFields."""
         return self.vector == other.get_vector()
 
+    def __neg__(self):
+        """Negation function"""
+        return EField(-1 * self.vector)
+
     def __str__(self):
         """Printing methid."""
         return (self.vector).__str__()
@@ -121,7 +125,11 @@ class EField(Basic):
         from sympy.abc import x, y, z
         variables = [x, y, z]
         #Express every vector in one frame.
-        pos_vector = ((point2).pos_from(point1)).express(self.frame)
+        pos_vector = ((point2).pos_from(point1))
+        #Handle special case where point1 and point2 to are same.
+        if pos_vector == 0:
+            return 0
+        pos_vector = pos_vector.express(self.frame)
         temp = (self.vector).express(self.frame)
         initial_values = []
         final_values = []
@@ -168,16 +176,22 @@ class ParticleCharge(Particle):
         be entirely expressable in one ReferenceFrame.
         """
         pos_vector = point.pos_from(self.get_point())
+        if pos_vector == 0:
+            from sympy import oo
+            return oo
         magnitude = (self.charge)/(4 * pi * e0 * (pos_vector.magnitude()) ** 2)
         return EField(magnitude * (pos_vector.normalize()))
 
-    def potential_at(self,vpoint):
+    def potential_at(self,point):
         """
         Returns the potential due to the ParticleCharge at the specified Point.
         The vectorial distance between the ParticleCharge and the Point must
         be entirely expressable in one ReferenceFrame.
         """
         pos_vector = point.pos_from(self.get_point())
+        if pos_vector == 0:
+            from sympy import oo
+            return oo
         return (self.charge)/(4 * pi * e0 * abs(pos_vector.magnitude()))
 
 
