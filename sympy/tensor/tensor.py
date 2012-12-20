@@ -14,16 +14,24 @@ from sympy.simplify import simplify
 from sympy import cacheit
 
 class TensorIndexType(object):
-    def __init__(self, name, metric_sym=0, dim=None, dummy_fmt=None):
+    def __init__(self, name, metric_sym=0, dim=None, eps_dim = None,
+                 dummy_fmt=None):
         """
         name   name of the tensor type
 
-        metric_sym:
+        `metric\_sym`:
         0      symmetric
         1      antisymmetric
         None   no symmetry
 
-        dummy_fmt name of the head of dummy indices; by default it is
+        dim    dimension, it can be a symbol or a positive integer
+
+        `eps\_dim`  dimension of the epsilon tensor; it is by default
+                 equal to dim, if the latter is an integer; else
+                 it can be assigned (for use in naive dimensional
+                 regularization)
+
+        `dummy\_fmt` name of the head of dummy indices; by default it is
         the name of the tensor type
 
         Examples
@@ -40,6 +48,14 @@ class TensorIndexType(object):
             self.dummy_fmt = '%s_%%d' % dummy_fmt
         self.metric = self.get_metric()
         self.dim = dim
+        if eps_dim:
+            self.eps_dim = eps_dim
+        else:
+            self.eps_dim = dim
+        if isinstance(self.eps_dim, int):
+            self.epsilon = self.get_epsilon()
+        else:
+            self.epsilon = None
 
     def get_metric(self):
         if self.metric_sym is None:
@@ -49,6 +65,11 @@ class TensorIndexType(object):
         metric = S2('metric')
         return metric
 
+    def get_epsilon(self):
+        sym = TensorSymmetry(get_symmetric_group_sgs(self.eps_dim, 1))
+        Sdim = TensorType([self]*self.eps_dim, sym)
+        epsilon = Sdim('Eps')
+        return epsilon
 
 
     def __str__(self):
@@ -63,7 +84,7 @@ class TensorIndex(object):
     An index can be in contravariant or in covariant form; in the latter
     case it is represented prepending a `-` to the index name.
 
-    Dummy indices have the head given by `dummy_fmt`
+    Dummy indices have the head given by `dummy\_fmt`
 
 
     Examples
@@ -104,7 +125,7 @@ class TensorIndex(object):
                self.tensortype == other.tensortype and \
                self.is_contravariant == other.is_contravariant
 
-    def __neq__(self, other):
+    def __ne__(self, other):
         return not (self == other)
 
     @cacheit
@@ -132,15 +153,13 @@ class TensorSymmetry(object):
     """
     Symmetry of a tensor
 
-    bsgs tuple (base, sgs) BSBS of the symmetry of the tensor
-
-    Examples
-    ========
+    bsgs tuple (base, sgs) BSGS of the symmetry of the tensor
 
     Examples
     ========
 
     Define a symmetric tensor
+
     >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
@@ -180,6 +199,7 @@ class TensorType(Basic):
     ========
 
     Define a symmetric tensor
+
     >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
@@ -214,6 +234,7 @@ class TensorType(Basic):
 
         Define symmetric tensors `V`, `W` and `G`, respectively commuting,
         anticommuting and with no commutation symmetry
+
         >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs, canon_bp
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b = tensor_indices('a,b', Lorentz)
@@ -266,13 +287,16 @@ class TensorHead(Basic):
             return False
         return self.name == other.name and self.index_types == other.index_types
 
-    def __neq__(self, other):
-        return not self == other
+    def __ne__(self, other):
+        return not (self == other)
 
     def commutes_with(self, other):
         """
         Returns 0 (1) if self and other (anti)commute
         Returns None if self and other do not (anti)commute
+
+        TODO: it should be possible to assign rules for commutations
+        between tensors, to be used here.
         """
         if self.commuting == 0 or other.commuting == 0:
             return 0
@@ -324,6 +348,14 @@ class TensExpr(Basic):
 
     Tensor objects are formed by products of component tensors,
     and include a coefficient, which is a SymPy expression.
+
+
+    In the internal representation contracted indices are represented
+    by `(ipos1, ipos2, icomp1, icomp2)`, where `icomp1` is the position
+    of the component tensor with contravariant index, `ipos1` is the
+    slot which the index occupies in that component tensor.
+
+    Contracted indices are therefore nameless in the internal representation.
     """
 
     _op_priority = 11.0
@@ -339,7 +371,6 @@ class TensExpr(Basic):
     def __abs__(self):
         raise NotImplementedError
 
-    #@call_highest_priority('__radd__')
     def __add__(self, other):
         other = sympify(other)
         if self.is_TensAdd:
@@ -347,44 +378,35 @@ class TensExpr(Basic):
             return TensAdd(*args)
         return TensAdd(self, other)
 
-    #@call_highest_priority('__add__')
     def __radd__(self, other):
         return TensAdd(other, self)
 
-    #@call_highest_priority('__rsub__')
     def __sub__(self, other):
         other = sympify(other)
         return TensAdd(self, -other)
 
-    #@call_highest_priority('__sub__')
     def __rsub__(self, other):
         return TensAdd(other, -self)
 
-    #@call_highest_priority('__rmul__')
     def __mul__(self, other):
-        #return TensMul(self, other)
         if self.is_TensAdd:
             return TensAdd(*[x*other for x in self.args])
         if other.is_TensAdd:
             return TensAdd(*[self*x for x in other.args])
         return Tensor.__mul__(self, other)
 
-    #@call_highest_priority('__mul__')
     def __rmul__(self, other):
         if self.is_TensMul:
             coeff = other*self.coeff
             return Tensor(coeff, self.components, self.free, self.dum)
         return TensAdd(*[x*other for x in self.args])
 
-    #@call_highest_priority('__rpow__')
     def __pow__(self, other):
         raise NotImplementedError
 
-    #@call_highest_priority('__pow__')
     def __rpow__(self, other):
         raise NotImplementedError
 
-    #@call_highest_priority('__rdiv__')
     def __div__(self, other):
         other = sympify(other)
         if other.is_Tensor:
@@ -393,7 +415,6 @@ class TensExpr(Basic):
         return Tensor(coeff, self.components, self.free, self.dum, is_canon_bp=self._is_canon_bp)
 
 
-    #@call_highest_priority('__div__')
     def __rdiv__(self, other):
         raise NotImplementedError()
 
@@ -402,12 +423,12 @@ class TensExpr(Basic):
 
     def substitute_indices(self, *index_tuples):
         """
-        Return a tensor with indices substituted according to `index_tuples`
+        Return a tensor with indices substituted according to `index\_tuples`
 
         Examples
         ========
 
-        from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType
         >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
@@ -446,6 +467,9 @@ class TensExpr(Basic):
             return TensAdd(*args1)
 
 class TensAdd(TensExpr):
+    """
+    Sum of tensors
+    """
     is_Tensor = True
     is_TensAdd = True
 
@@ -455,7 +479,7 @@ class TensAdd(TensExpr):
         """
         args = [sympify(x) for x in args if x]
         if not all(x.is_Tensor for x in args):
-            args1 = [x for x in args if x.is_Tensor]
+            args1 = [x for x in args if x.is_Tensor and x.coeff]
             args2 = [x for x in args if not x.is_Tensor]
             t0 = args1[0]
             if t0.is_TensAdd:
@@ -471,6 +495,9 @@ class TensAdd(TensExpr):
             else:
                 a.append(x)
         args = a
+        args = [x for x in args if x.coeff]
+        if not args:
+            return S.Zero
 
         indices0 = sorted([x[0] for x in args[0].free], key=lambda x: x.name)
         list_indices = [sorted([y[0] for y in x.free], key=lambda x: x.name) for x in args[1:]]
@@ -526,6 +553,9 @@ class TensAdd(TensExpr):
         # TODO introduce option not to use canon_bp automatically in TensAdd
         if all(x.is_TensMul for x in a):
             a = [canon_bp(x) for x in a]
+        a = [x for x in a if x]
+        if not a:
+            return S.Zero
         obj._args = tuple(a)
         return obj
 
@@ -540,6 +570,8 @@ class TensAdd(TensExpr):
         if not other.is_Tensor:
             if len(self.args) == 1:
                 return self.args[0].coeff == other
+        if other.is_Tensor and other.is_TensMul and other.coeff == 0:
+            return self == 0
         t = self - other
         if not t.is_Tensor:
             return t == 0
@@ -549,10 +581,18 @@ class TensAdd(TensExpr):
             else:
                 return all(x.coeff == 0 for x in t.args)
 
-    def __neq__(self, other):
+    def __ne__(self, other):
         return not (self == other)
 
     def contract_metric(self, g, contract_all=False):
+        """
+        Raise or lower indices with the metric `g`
+
+        g  metric
+
+        `contract\_all` if True, eliminate all `g` which are contracted
+        """
+
         args = [x.contract_metric(g, contract_all) for x in self.args]
         if len(args) == 1:
             return args[0]
@@ -592,9 +632,6 @@ class Tensor(TensExpr):
         component tensor; the corresponding covariant index is
         in the `ipos2` slot position in the `icomp2`-th component tensor.
         """
-        # composite tensor
-        # p_i*p_i
-        # t = Tensor(None, t1, t2)
         obj = Basic.__new__(cls)
         obj.components = args[0]
         obj.types = []
@@ -609,6 +646,9 @@ class Tensor(TensExpr):
         return obj
 
     def __eq__(self, other):
+        if other == 0:
+            return self.coeff == 0
+        other = sympify(other)
         if not other.is_Tensor :
             return False
         res = self - other
@@ -619,7 +659,7 @@ class Tensor(TensExpr):
             sorted(self.dum) == sorted(other.dum) and self.coeff == other.coeff
         return res
 
-    def __neq__(self, other):
+    def __ne__(self, other):
         return not self == other
 
     @property
@@ -712,7 +752,7 @@ class Tensor(TensExpr):
 
     def split(self):
         """
-        Returns a list of tensors, whose proouct is `self`
+        Returns a list of tensors, whose product is `self`
 
         Dummy indices contracted among different tensor components
         become free indices with the same name as the one used to
@@ -732,8 +772,6 @@ class Tensor(TensExpr):
         A(a, L_0)*B(-L_0, c)
         >>> t.split()
         [A(a, L_0), B(-L_0, c)]
-
-
         """
         indices = self.get_indices()
         pos = 0
@@ -750,7 +788,7 @@ class Tensor(TensExpr):
         """
         Returns (g, dummies, msym, v), the entries of `canonicalize`
 
-        see `canonicalize` in tensor_can.py
+        see `canonicalize` in `tensor\_can.py`
         """
         # to be called after sorted_components
         from sympy.combinatorics.permutations import _af_new
@@ -806,7 +844,6 @@ class Tensor(TensExpr):
         return _af_new(g), dummies, msym, v
 
     def __mul__(self, other):
-        #if not isinstance(other, Tensor):
         other = sympify(other)
         if not other.is_Tensor:
             coeff = self.coeff*other
@@ -881,7 +918,7 @@ class Tensor(TensExpr):
         g  permutation corrisponding to the tensor in the representation
         used in canonicalization
 
-        canon_bp   if canon_bp is True, then `g` is the permutation
+        `canon\_bp`   if True, then `g` is the permutation
         corresponding to the canonical form of the tensor
         """
         from bisect import bisect_right
@@ -901,7 +938,7 @@ class Tensor(TensExpr):
         icomp = -1
         for i in range(rank):
             if i in vpos:
-                icomp += 1
+                icomp += vpos.count(i)
                 pos0 = i
             ipos = i - pos0
             gi = g[i]
@@ -922,8 +959,6 @@ class Tensor(TensExpr):
         if g[-1] != len(g) - 1:
             coeff = -coeff
         res = Tensor(coeff, components, free, dum, is_canon_bp=canon_bp)
-        #if canon_bp:
-        #    res._canon_bp = True
         return res
 
     def canon_bp(self):
@@ -933,6 +968,7 @@ class Tensor(TensExpr):
 
         Examples
         ========
+
         >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, get_symmetric_group_sgs, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
@@ -957,6 +993,31 @@ class Tensor(TensExpr):
 
 
     def contract_metric(self, g, contract_all=False):
+        """
+        Raise or lower indices with the metric `g`
+
+        `g`  metric
+
+        `contract\_all` if True, eliminate all `g` which are contracted
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, get_symmetric_group_sgs, TensorType
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
+        >>> sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+        >>> S1 = TensorType([Lorentz], sym1)
+        >>> g = Lorentz.metric
+        >>> p, q = S1('p,q')
+        >>> t = p(m0)*q(m1)*g(-m0, -m1); t
+        p(L_1)*q(L_0)*metric(-L_1, -L_0)
+        >>> t.contract_metric(g)
+        p(-L_0)*q(L_0)
+        """
+        if g.index_types[0].metric_sym != 0:
+            # TODO case of antisymmetric metric
+            raise NotImplementedError
         if not self.components:
             return self
         free_indices = [x[0] for x in self.free]
@@ -1054,9 +1115,6 @@ class Tensor(TensExpr):
         return res
 
 
-
-
-
     def _pretty(self):
         if self.components == []:
             return str(self.coeff)
@@ -1064,7 +1122,10 @@ class Tensor(TensExpr):
         pos = 0
         a = []
         for t in self.components:
-            a.append('%s(%s)' % (t.name, ', '.join(indices[pos:pos + t.rank])))
+            if t.rank > 0:
+                a.append('%s(%s)' % (t.name, ', '.join(indices[pos:pos + t.rank])))
+            else:
+                a.append('%s' % t.name)
             pos += t.rank
         res = '*'. join(a)
         if self.coeff == S.One:
@@ -1101,9 +1162,33 @@ def tensor_mul(*a):
         t = t*tx
     return t
 
+def tensorlist_contract_metric(a, tg):
+    """
+    contract `tg` with a tensor in the list `a = t.split()`
+    """
+    ind1, ind2 = [x[0] for x in tg.free]
+    mind1 = -ind1
+    mind2 = -ind2
+    for i in range(len(a)):
+        t1 = a[i]
+        for j in range(len(t1.free)):
+            indx, ipos, _ = t1.free[j]
+            if indx == mind1 or indx == mind2:
+                ind3 = ind2 if indx == mind1 else ind1
+                free1 = t1.free[:]
+                free1[j] = (ind3, ipos, 0)
+                t2 = Tensor(t1.coeff, t1.components, free1, t1.dum)
+                a[i] = t2
+                return a
+    a.append(tg)
+    return a
+
+
 def riemann_cyclic_replaceR(t_r):
     """
-    R(m,n,p,q) -> 2/3*R(m,n,p,q) - 1/3*R(m,q,n,p) + 1/3*R(m,p,n,q)
+    replace Riemann tensor with an equivalent expression
+
+    `R(m,n,p,q) -> 2/3*R(m,n,p,q) - 1/3*R(m,q,n,p) + 1/3*R(m,p,n,q)`
 
     """
     free = sorted(t_r.free, key=lambda x: x[1])
@@ -1117,7 +1202,9 @@ def riemann_cyclic_replaceR(t_r):
 def riemann_cyclic(t2):
     """
     replace each Riemann tensor with an equivalent expression
-    satisfying the cyclic identity
+    satisfying the cyclic identity.
+
+    This trick is discussed in the reference guide to Cadabra.
 
     Examples
     ========

@@ -504,6 +504,10 @@ def test_riemann_cyclic():
     t1 = riemann_cyclic(t)
     assert t1 == 0
 
+    t = R(i,j,k,l)*R(-k,-l,m,n)*(R(-m,-n,-i,-j) + 2*R(-m,-j,-n,-i))
+    t1 = riemann_cyclic(t)
+    assert t1 == 0
+
 def test_div():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0,m1,m2,m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
@@ -618,3 +622,44 @@ def test_metric_contract1():
     assert t3 == 3*D**2 + 6*D
     t = t.contract_metric(g, True)
     assert t == 3*D**2 + 6*D
+
+def test_epsilon():
+    Lorentz = TensorIndexType('Lorentz', dim=4, dummy_fmt='L')
+    a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
+    g = Lorentz.metric
+    epsilon = Lorentz.epsilon
+    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym1)
+    p, q, r, s = S1('p,q,r,s')
+
+    t = epsilon(b,a,c,d)
+    t1 = t.canon_bp()
+    assert t1 == -epsilon(a,b,c,d)
+
+    t = epsilon(c,b,d,a)
+    t1 = t.canon_bp()
+    assert t1 == epsilon(a,b,c,d)
+
+    t = epsilon(c,a,d,b)
+    t1 = t.canon_bp()
+    assert t1 == -epsilon(a,b,c,d)
+
+    t = epsilon(a,b,c,d)*p(-a)*q(-b)
+    t1 = t.canon_bp()
+    assert t1 == epsilon(c, d, a, b)*p(-a)*q(-b)
+
+    t = epsilon(c,b,d,a)*p(-a)*q(-b)
+    t1 = t.canon_bp()
+    assert t1 == epsilon(c, d, a, b)*p(-a)*q(-b)
+
+    t = epsilon(c,a,d,b)*p(-a)*q(-b)
+    t1 = t.canon_bp()
+    assert t1 == -epsilon(c, d, a, b)*p(-a)*q(-b)
+
+    t = epsilon(c,a,d,b)*p(-a)*p(-b)
+    t1 = t.canon_bp()
+    assert t1 == 0
+
+    t = epsilon(c,a,d,b)*p(-a)*q(-b) + epsilon(a,b,c,d)*p(-b)*q(-a)
+    t1 = t.canon_bp()
+    assert t1 == -2*epsilon(c, d, a, b)*p(-a)*q(-b)
