@@ -1,13 +1,17 @@
-from matexpr import MatrixExpr, ShapeError, Identity, ZeroMatrix
-from sympy.core import Mul, Add, Basic
-from sympy import sympify
+from sympy.core import Mul, Add, Basic, sympify
+from sympy.functions import transpose, adjoint
 from sympy.rules import (rm_id, unpack, condition, debug, flatten, exhaust,
         do_one, new)
+from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
+        Identity, ZeroMatrix)
+
 
 class MatMul(MatrixExpr):
-    """A Product of Matrix Expressions
+    """
+    A product of matrix expressions
 
-    MatMul inherits from and operates like SymPy Mul
+    Examples
+    ========
 
     >>> from sympy import MatMul, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 4)
@@ -19,16 +23,13 @@ class MatMul(MatrixExpr):
     is_MatMul = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
-        check    = kwargs.get('check'   , True)
+        check = kwargs.get('check', True)
 
         args = map(sympify, args)
         obj = Basic.__new__(cls, *args)
         factor, matrices = obj.as_coeff_matrices()
         if check:
             validate(*matrices)
-        if evaluate:
-            return canonicalize(obj)
         return obj
 
     @property
@@ -66,15 +67,13 @@ class MatMul(MatrixExpr):
 
     def as_coeff_mmul(self):
         coeff, matrices = self.as_coeff_matrices()
-        return coeff, Basic.__new__(MatMul, *matrices)
+        return coeff, MatMul(*matrices)
 
     def _eval_transpose(self):
-        from transpose import Transpose
-        return MatMul(*[Transpose(arg) for arg in self.args[::-1]])
+        return MatMul(*[transpose(arg) for arg in self.args[::-1]]).doit()
 
     def _eval_adjoint(self):
-        from adjoint import Adjoint
-        return MatMul(*[Adjoint(arg) for arg in self.args[::-1]])
+        return MatMul(*[adjoint(arg) for arg in self.args[::-1]]).doit()
 
     def _eval_trace(self):
         factor, mmul = self.as_coeff_mmul()
@@ -85,13 +84,15 @@ class MatMul(MatrixExpr):
             raise NotImplementedError("Can't simplify any further")
 
     def _eval_inverse(self):
-        from inverse import Inverse
         try:
-            return MatMul(*[Inverse(arg) for arg in self.args[::-1]])
+            return MatMul(*[
+                arg.inverse() if isinstance(arg, MatrixExpr) else arg**-1
+                    for arg in self.args[::-1]]).doit()
         except ShapeError:
-            raise NotImplementedError("Can not decompose this Inverse")
+            from sympy.matrices.expressions.inverse import Inverse
+            return Inverse(self)
 
-    def canonicalize(self):
+    def doit(self, **ignored):
         return canonicalize(self)
 
 def validate(*matrices):
@@ -122,7 +123,7 @@ def xxinv(mul):
     factor, matrices = mul.as_coeff_matrices()
     for i, (X, Y) in enumerate(zip(matrices[:-1], matrices[1:])):
         try:
-            if X.is_square and Y.is_square and X == Inverse(Y):
+            if X.is_square and Y.is_square and X == Y.inverse():
                 I = Identity(X.rows)
                 return newmul(factor, *(matrices[:i] + [I] + matrices[i+2:]))
         except ValueError:  # Y might not be invertible

@@ -244,6 +244,9 @@ class DenseMatrix(MatrixBase):
                 lambda i, j: self[i, j].conjugate())
         return out
 
+    def _eval_adjoint(self):
+        return self.T.C
+
     def _eval_inverse(self, **kwargs):
         """Return the matrix inverse using the method indicated (default
         is Gauss elimination).

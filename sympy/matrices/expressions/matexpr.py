@@ -3,6 +3,7 @@ from functools import wraps
 from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic
 from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import SympifyError
+from sympy.functions import transpose, conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
 
@@ -44,7 +45,6 @@ class MatrixExpr(Basic):
     is_Inverse = False
     is_Transpose = False
     is_ZeroMatrix = False
-    is_BlockMatrix = False
     is_MatAdd = False
     is_MatMul = False
 
@@ -53,7 +53,7 @@ class MatrixExpr(Basic):
     # The following is adapted from the core Expr object
 
     def __neg__(self):
-        return MatMul(S.NegativeOne, self)
+        return MatMul(S.NegativeOne, self).doit()
 
     def __abs__(self):
         raise NotImplementedError
@@ -61,38 +61,44 @@ class MatrixExpr(Basic):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatAdd(self, other)
+        return MatAdd(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatAdd(other, self)
+        return MatAdd(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatAdd(self, -other)
+        return MatAdd(self, -other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatAdd(other, -self)
+        return MatAdd(other, -self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return MatMul(self, other)
+        return MatMul(self, other).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return MatMul(other, self)
+        return MatMul(other, self).doit()
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        if other == -S.One:
+        if not self.is_square:
+            raise ShapeError("Power of non-square matrix %s" % self)
+        if other is S.NegativeOne:
             return Inverse(self)
+        elif other is S.Zero:
+            return Identity(self.rows)
+        elif other is S.One:
+            return self
         return MatPow(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -103,7 +109,7 @@ class MatrixExpr(Basic):
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__rdiv__')
     def __div__(self, other):
-        return MatMul(self, other**S.NegativeOne)
+        return self * other**S.NegativeOne
 
     @_sympifyit('other', NotImplemented)
     @call_highest_priority('__div__')
@@ -127,10 +133,17 @@ class MatrixExpr(Basic):
         return self.rows == self.cols
 
     def _eval_transpose(self):
-        raise NotImplementedError()
+        from sympy.matrices.expressions.transpose import Transpose
+        return Transpose(self)
+
+    def _eval_conjugate(self):
+        from sympy.matrices.expressions.adjoint import Adjoint
+        from sympy.matrices.expressions.transpose import Transpose
+        return Adjoint(Transpose(self))
 
     def _eval_inverse(self):
-        raise NotImplementedError()
+        from sympy.matrices.expressions.inverse import Inverse
+        return Inverse(self)
 
     def _eval_power(self, exp):
         return MatPow(self, exp)
@@ -142,31 +155,30 @@ class MatrixExpr(Basic):
             return self.__class__(*[simplify(x, **kwargs) for x in self.args])
 
     def _eval_adjoint(self):
-        return self.T.conjugate()
+        from sympy.matrices.expressions.adjoint import Adjoint
+        return Adjoint(self)
 
     def _entry(self, i, j):
         raise NotImplementedError(
             "Indexing not implemented for %s" % self.__class__.__name__)
 
     def adjoint(self):
-        raise NotImplementedError(
-            "adjoint not implemented for %s" % self.__class__.__name__)
+        return adjoint(self)
 
     def conjugate(self):
-        raise NotImplementedError(
-            "conjugate not implemented for %s" % self.__class__.__name__)
+        return conjugate(self)
 
     def transpose(self):
-        try:
-            return self._eval_transpose()
-        except (AttributeError, NotImplementedError):
-            return Basic.__new__(Transpose, self)
+        return transpose(self)
 
     T = property(transpose, None, None, 'Matrix transposition.')
 
+    def inverse(self):
+        return self._eval_inverse()
+
     @property
     def I(self):
-        return Inverse(self)
+        return self.inverse()
 
     def valid_index(self, i, j):
         def is_valid(idx):
@@ -262,7 +274,7 @@ class MatrixExpr(Basic):
         return self
 
     def as_coeff_mmul(self):
-        return 1, Basic.__new__(MatMul, self)
+        return 1, MatMul(self)
 
 
 class MatrixSymbol(MatrixExpr):
@@ -319,10 +331,17 @@ class MatrixSymbol(MatrixExpr):
     def free_symbols(self):
         return set((self,))
 
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            return type(self)(self.name, self.args[1].doit(**hints),
+                    self.args[2].doit(**hints))
+        else:
+            return self
+
     def _eval_simplify(self, **kwargs):
         return self
 
-class Identity(MatrixSymbol):
+class Identity(MatrixExpr):
     """The Matrix Identity I - multiplicative identity
 
     >>> from sympy.matrices import Identity, MatrixSymbol
@@ -335,7 +354,19 @@ class Identity(MatrixSymbol):
     is_Identity = True
 
     def __new__(cls, n):
-        return MatrixSymbol.__new__(cls, "I", n, n)
+        return super(Identity, cls).__new__(cls, n)
+
+    @property
+    def rows(self):
+        return self.args[0]
+
+    @property
+    def cols(self):
+        return self.args[0]
+
+    @property
+    def shape(self):
+        return (self.args[0], self.args[0])
 
     def _eval_transpose(self):
         return self
@@ -356,7 +387,7 @@ class Identity(MatrixSymbol):
             return S.Zero
 
 
-class ZeroMatrix(MatrixSymbol):
+class ZeroMatrix(MatrixExpr):
     """The Matrix Zero 0 - additive identity
 
     >>> from sympy import MatrixSymbol, ZeroMatrix
@@ -369,8 +400,30 @@ class ZeroMatrix(MatrixSymbol):
     """
     is_ZeroMatrix = True
 
-    def __new__(cls, n, m):
-        return MatrixSymbol.__new__(cls, "0", n, m)
+    def __new__(cls, m, n):
+        return super(ZeroMatrix, cls).__new__(cls, m, n)
+
+    @property
+    def rows(self):
+        return self.args[0]
+
+    @property
+    def cols(self):
+        return self.args[1]
+
+    @property
+    def shape(self):
+        return (self.args[0], self.args[1])
+
+
+    @_sympifyit('other', NotImplemented)
+    @call_highest_priority('__rpow__')
+    def __pow__(self, other):
+        if other != 1 and not self.is_square:
+            raise ShapeError("Power of non-square matrix %s" % self)
+        if other == 0:
+            return Identity(self.rows)
+        return self
 
     def _eval_transpose(self):
         return ZeroMatrix(self.cols, self.rows)

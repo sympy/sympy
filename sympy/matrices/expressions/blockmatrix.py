@@ -1,13 +1,16 @@
-from matexpr import MatrixExpr, ZeroMatrix, Identity
-from matmul import MatMul
-from matadd import MatAdd
-from matpow import MatPow
-from transpose import Transpose
-from trace import Trace
-from inverse import Inverse
-from sympy.matrices import Matrix, eye
-from sympy import Tuple, Basic, Add
+from sympy.core import Tuple, Basic, Add
 from sympy.rules import typed, canon, debug, do_one, unpack
+from sympy.functions import transpose
+from sympy.utilities import sift
+
+from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
+from sympy.matrices.expressions.matmul import MatMul
+from sympy.matrices.expressions.matadd import MatAdd
+from sympy.matrices.expressions.matpow import MatPow
+from sympy.matrices.expressions.transpose import Transpose
+from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.inverse import Inverse
+from sympy.matrices import Matrix, eye
 
 
 class BlockMatrix(MatrixExpr):
@@ -35,9 +38,6 @@ class BlockMatrix(MatrixExpr):
     [X, Z + Z*Y]
 
     """
-    is_BlockMatrix = True
-    is_BlockDiagMatrix = False
-
     def __new__(cls, *args):
         from sympy.matrices.immutable import ImmutableMatrix
         mat = ImmutableMatrix(*args)
@@ -79,24 +79,22 @@ class BlockMatrix(MatrixExpr):
             and self.colblocksizes == other.colblocksizes)
 
     def _blockmul(self, other):
-
-        if  (other.is_Matrix and other.is_BlockMatrix and
-                self.blockshape[1] == other.blockshape[0] and
+        if (isinstance(other, BlockMatrix) and
                 self.colblocksizes == other.rowblocksizes):
             return BlockMatrix(self.blocks*other.blocks)
 
-        return MatrixExpr.__mul__(self, other)
+        return self * other
 
     def _blockadd(self, other):
-        if   (other.is_Matrix and other.is_BlockMatrix
+        if (isinstance(other, BlockMatrix)
                 and self.structurally_equal(other)):
             return BlockMatrix(self.blocks + other.blocks)
 
-        return MatrixExpr.__add__(self, other)
+        return self + other
 
     def _eval_transpose(self):
         # Flip all the individual matrices
-        matrices = [Transpose(matrix) for matrix in self.blocks]
+        matrices = [transpose(matrix) for matrix in self.blocks]
         # Make a copy
         M = Matrix(self.blockshape[0], self.blockshape[1], matrices)
         # Transpose the block structure
@@ -134,22 +132,22 @@ class BlockMatrix(MatrixExpr):
     def _eval_inverse(self, expand=False):
         # Inverse of one by one block matrix is easy
         if self.blockshape == (1, 1):
-            mat = Matrix(1, 1, (Inverse(self.blocks[0]), ))
+            mat = Matrix(1, 1, (self.blocks[0].inverse(),))
             return BlockMatrix(mat)
         # Inverse of a two by two block matrix is known
         elif expand and self.blockshape == (2, 2):
             # Cite: The Matrix Cookbook Section 9.1.3
             A11, A12, A21, A22 = (self.blocks[0, 0], self.blocks[0, 1],
                     self.blocks[1, 0], self.blocks[1, 1])
-            C1 = A11 - A12*Inverse(A22)*A21
-            C2 = A22 - A21*Inverse(A11)*A12
-            mat = Matrix([[Inverse(C1), Inverse(-A11)*A12*Inverse(C2)],
-                [-Inverse(C2)*A21*Inverse(A11), Inverse(C2)]])
+            C1 = A11 - A12*A22.I*A21
+            C2 = A22 - A21*A11.I*A12
+            mat = Matrix([[C1.I, (-A11).I*A12*C2.I],
+                [-C2.I*A21*A11.I, C2.I]])
             return BlockMatrix(mat)
         else:
-            raise NotImplementedError()
+            return Inverse(self)
 
-    def inv(self, expand=False):
+    def inverse(self, expand=False):
         """Return inverse of matrix.
 
         Examples
@@ -158,7 +156,7 @@ class BlockMatrix(MatrixExpr):
         >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
         >>> from sympy.abc import l, m, n
         >>> X = MatrixSymbol('X', n, n)
-        >>> BlockMatrix([[X]]).inv()
+        >>> BlockMatrix([[X]]).inverse()
         [X^-1]
 
         >>> Y = MatrixSymbol('Y', m ,m)
@@ -167,16 +165,12 @@ class BlockMatrix(MatrixExpr):
         >>> B
         [X, Z]
         [0, Y]
-        >>> B.inv(expand=True)
+        >>> B.inverse(expand=True)
         [X^-1, (-1)*X^-1*Z*Y^-1]
         [   0,             Y^-1]
 
         """
         return self._eval_inverse(expand)
-
-    def inverse(self):
-        # XXX document how this is different than inv
-        return Inverse(self)
 
     def _entry(self, i, j):
         # Find row entry
@@ -211,13 +205,13 @@ class BlockMatrix(MatrixExpr):
     def equals(self, other):
         if self == other:
             return True
-        if (self.is_BlockMatrix and other.is_BlockMatrix and
-                self.blocks == other.blocks):
+        if (isinstance(other, BlockMatrix) and self.blocks == other.blocks):
             return True
         return super(BlockMatrix, self).equals(other)
 
 class BlockDiagMatrix(BlockMatrix):
-    """A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
+    """
+    A BlockDiagMatrix is a BlockMatrix with matrices only along the diagonal
 
     >>> from sympy import MatrixSymbol, BlockDiagMatrix, symbols, Identity
     >>> n,m,l = symbols('n m l')
@@ -228,41 +222,59 @@ class BlockDiagMatrix(BlockMatrix):
     [0, Y]
 
     """
-    is_BlockDiagMatrix = True
-
     def __new__(cls, *mats):
-        from sympy.matrices.immutable import ImmutableMatrix
-        data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
-                        for j in range(len(mats))]
-                        for i in range(len(mats))]
-        return Basic.__new__(BlockDiagMatrix, ImmutableMatrix(data))
+        return Basic.__new__(BlockDiagMatrix, *mats)
 
     @property
     def diag(self):
-        return [self.blocks[i, i] for i in range(self.blocks.rows)]
+        return self.args
 
-    def _eval_inverse(self):
-        return BlockDiagMatrix(*[Inverse(mat) for mat in self.diag])
+    @property
+    def blocks(self):
+        from sympy.matrices.immutable import ImmutableMatrix
+        mats = self.args
+        data = [[mats[i] if i == j else ZeroMatrix(mats[i].rows, mats[j].cols)
+                        for j in range(len(mats))]
+                        for i in range(len(mats))]
+        return ImmutableMatrix(data)
+
+    @property
+    def shape(self):
+        return (sum(block.rows for block in self.args),
+                sum(block.cols for block in self.args))
+
+    @property
+    def blockshape(self):
+        n = len(self.args)
+        return (n, n)
+
+    @property
+    def rowblocksizes(self):
+        return [block.rows for block in self.args]
+
+    @property
+    def colblocksizes(self):
+        return [block.cols for block in self.args]
+
+    def _eval_inverse(self, expand='ignored'):
+        return BlockDiagMatrix(*[mat.inverse() for mat in self.args])
 
     def _blockmul(self, other):
-        if  (other.is_Matrix and other.is_BlockMatrix and
-                other.is_BlockDiagMatrix and
-                self.blockshape[1] == other.blockshape[0] and
+        if (isinstance(other, BlockDiagMatrix) and
                 self.colblocksizes == other.rowblocksizes):
-            return BlockDiagMatrix(*[a*b for a, b in zip(self.diag, other.diag)])
+            return BlockDiagMatrix(*[a*b for a, b in zip(self.args, other.args)])
         else:
             return BlockMatrix._blockmul(self, other)
 
     def _blockadd(self, other):
-
-        if  (other.is_Matrix and other.is_BlockMatrix and
-                other.is_BlockDiagMatrix and
+        if (isinstance(other, BlockDiagMatrix) and
                 self.blockshape == other.blockshape and
                 self.rowblocksizes == other.rowblocksizes and
                 self.colblocksizes == other.colblocksizes):
-            return BlockDiagMatrix(*[a + b for a, b in zip(self.diag, other.diag)])
+            return BlockDiagMatrix(*[a + b for a, b in zip(self.args, other.args)])
         else:
             return BlockMatrix._blockadd(self, other)
+
 
 def block_collapse(expr):
     """Evaluates a block matrix expression
@@ -287,11 +299,10 @@ def block_collapse(expr):
     """
     rule = canon(typed({MatAdd: do_one(bc_matadd, bc_block_plus_ident),
                         MatMul: do_one(bc_matmul, bc_dist),
-                        MatPow: bc_matpow,
                         BlockMatrix: bc_unpack}))
     result = rule(expr)
     try:
-        return result.canonicalize()
+        return result.doit()
     except AttributeError:
         return result
 
@@ -301,35 +312,38 @@ def bc_unpack(expr):
     return expr
 
 def bc_matadd(expr):
-    nonblocks = [arg for arg in expr.args if not arg.is_BlockMatrix]
-    blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
+    args = sift(expr.args, lambda M: isinstance(M, BlockMatrix))
+    blocks = args[True]
     if not blocks:
         return expr
 
+    nonblocks = args[False]
     block = blocks[0]
     for b in blocks[1:]:
         block = block._blockadd(b)
-
-    return MatAdd(*(nonblocks+[block]))
+    if nonblocks:
+        return MatAdd(*nonblocks) + block
+    else:
+        return block
 
 def bc_block_plus_ident(expr):
     idents = [arg for arg in expr.args if arg.is_Identity]
     if not idents:
         return expr
 
-    blocks = [arg for arg in expr.args if arg.is_BlockMatrix]
+    blocks = [arg for arg in expr.args if isinstance(arg, BlockMatrix)]
     if (blocks and all(b.structurally_equal(blocks[0]) for b in blocks)
                and blocks[0].is_structurally_symmetric):
         block_id = BlockDiagMatrix(*[Identity(k)
                                         for k in blocks[0].rowblocksizes])
-        return MatAdd(block_id * len(idents), *blocks)
+        return MatAdd(block_id * len(idents), *blocks).doit()
 
     return expr
 
 def bc_dist(expr):
     """ Turn  a*[X, Y] into [a*X, a*Y] """
     factor, mat = expr.as_coeff_mmul()
-    if factor != 1 and unpack(mat).is_BlockMatrix:
+    if factor != 1 and isinstance(unpack(mat), BlockMatrix):
         B = unpack(mat).blocks
         return BlockMatrix([[factor * B[i, j] for j in range(B.cols)]
                                               for i in range(B.rows)])
@@ -340,14 +354,9 @@ def bc_matmul(expr):
     i = 0
     while (i+1 < len(matrices)):
         A, B = matrices[i:i+2]
-        if A.is_BlockMatrix and B.is_BlockMatrix:
+        if isinstance(A, BlockMatrix) and isinstance(B, BlockMatrix):
             matrices[i] = A._blockmul(B)
             matrices.pop(i+1)
         else:
             i+=1
-    return MatMul(factor, *matrices)
-
-def bc_matpow(expr):
-    if expr.exp.is_number and expr.exp.is_integer:
-        return MatMul(*([expr.base]*expr.exp))
-    return expr
+    return MatMul(factor, *matrices).doit()
