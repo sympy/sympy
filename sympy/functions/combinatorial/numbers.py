@@ -9,6 +9,7 @@ the separate 'factorials' module.
 
 from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Basic, Dummy
+from sympy.core.compatibility import as_int
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
@@ -681,6 +682,8 @@ _N = -2
 _ITEMS = -3
 _OK = Dummy()
 _M = slice(None, _ITEMS)
+
+
 def _data(n):
     """Return tuple used in permutation and combination counting. Input
     is a dictionary giving items with counts as values or a sequence of
@@ -701,6 +704,10 @@ def _data(n):
     else:
         n = list(n)
         s = set(n)
+        if len(s) == len(n):
+            n = [1]*len(n)
+            n.extend([len(n), len(n), _OK])
+            return tuple(n)
         m = dict(zip(s, range(len(s))))
         d = dict(zip(range(len(s)), [0]*len(s)))
         for i in n:
@@ -708,10 +715,9 @@ def _data(n):
         return _data(d)
 
 
-@cacheit
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of n items (entered as string,
-    integer or _data(seq)) taken k at a time. If k is
+    integer or sequence) taken k at a time. If k is
     negative, the total number of permutations of all lengths through -k
     will be returned.
 
@@ -725,8 +731,7 @@ def nP(n, k=None, replacement=False):
     6
     >>> nP('aab', 2)
     3
-    >>> t = _data([1, 2, 2])
-    >>> nP(t, 2)
+    >>> nP([1, 2, 2], 2)
     3
     >>> [nP(3, i) for i in range(4)]
     [1, 3, 6, 6]
@@ -735,6 +740,14 @@ def nP(n, k=None, replacement=False):
     >>> nP(3, -3)
     16
     """
+    try:
+        return Integer(_nP(as_int(n), k, replacement))
+    except ValueError:
+        return Integer(_nP(_data(n), k, replacement))
+
+
+@cacheit
+def _nP(n, k=None, replacement=False):
     from sympy.functions.combinatorial.factorials import factorial
     from sympy.core.mul import prod
 
@@ -746,7 +759,7 @@ def nP(n, k=None, replacement=False):
                 raise ValueError('specify k when replacement is True')
             k = n
         if k < 0:
-            return sum(nP(n, i, replacement) for i in range(-k + 1))
+            return sum(_nP(n, i, replacement) for i in range(-k + 1))
         if replacement:
             return n**k
         if k > n:
@@ -757,12 +770,12 @@ def nP(n, k=None, replacement=False):
             return n
         else:
             return factorial(n)/factorial(n - k)
-    elif type(n) is tuple and n[-1] == _OK:
+    else:  # _data tuple
         if replacement:
-            return nP(n[_ITEMS], k, replacement)
+            return _nP(n[_ITEMS], k, replacement)
         k = k or n[_N]
         if k < 0:
-            return sum(nP(n, i) for i in range(-k + 1))
+            return sum(_nP(n, i) for i in range(-k + 1))
         elif k == n[_N]:
             return factorial(k)/prod([factorial(i) for i in n[_M] if i > 1])
         elif k > n[_N]:
@@ -779,17 +792,15 @@ def nP(n, k=None, replacement=False):
                 if n[i] == 1:
                     n[i] = 0
                     n[_ITEMS] -= 1
-                    tot += nP(tuple(n), k - 1)
+                    tot += _nP(tuple(n), k - 1)
                     n[_ITEMS] += 1
                     n[i] = 1
                 else:
                     n[i] -= 1
-                    tot += nP(tuple(n), k - 1)
+                    tot += _nP(tuple(n), k - 1)
                     n[i] += 1
                 n[_N] += 1
             return tot
-    else:
-        return nP(_data(n), k, replacement)
 
 
 @cacheit
@@ -823,7 +834,7 @@ def _gen_poly(n):
         ni = n.pop()
         N = ni + 1
         was = rv[:]
-        for i in range(1, N):
+        for i in range(1, min(N, len(rv))):
             rv[i] += rv[i - 1]
         for i in range(N, need):
             rv[i] += rv[i - 1] - was[i - N]
@@ -901,14 +912,15 @@ def stirling(n, k, d=None, kind=2):
     {0}       {0}   {k}      {  k  }     {k}   {k - 1}
 
     where j = n for Stirling numbers of the first kind and k for Stirling
-    numbers of the second kind. If d is given, the "reduced Stirling number
-    of the second kind is returned: S^d(n, k) = S(n - d + 1, k - d + 1) with
-    n >= k >= d. (This the the number of ways to partition n integers into
-    k groups with no difference less than d.)
+    numbers of the second kind.
 
-    The first kind of Striling number counts the number of permutations of n
+    The first kind of Stirling number counts the number of permutations of n
     distinct items that have k cycles; the second kind counts the ways in
-    which n distinct items can be partitioned into k parts.
+    which n distinct items can be partitioned into k parts. If d is given,
+    the "reduced Stirling number of the second kind" is returned:
+    ``S^d(n, k) = S(n - d + 1, k - d + 1)`` with ``n >= k >= d``. (This
+    is the number of ways to partition n integers into k groups with no
+    pairwise difference less than d.)
 
     Examples
     ========
@@ -979,11 +991,14 @@ def stirling(n, k, d=None, kind=2):
 
 
 def nT(n, k=None):
-    """Return the number of partitions of n items (entered as a string,
-    integer, n (=n identical items or -n different items) of size k.
-    If k is negative, the total number of partitions of all lengths through
-    -k will be returned. If k is None the total number of ways to partion
-    n will be returned.
+    """Return the number of k-sized partitions of n items. If n is an integer
+    it is interpreted as n identical items; n can also be entered as
+    a multiset, string or sequence. To indicate n different items, pass
+    range(n) for n.
+
+    If k is negative, the total number of
+    partitions of all lengths through -k will be returned. If k is None the
+    total number of ways to partion n will be returned.
 
     Examples
     ========
@@ -1010,11 +1025,12 @@ def nT(n, k=None):
 
     When all (-n) items are different:
 
-    >>> [nT(-5, i) for i in range(1, 6)]
+    >>> n = range(5)
+    >>> [nT(n, i) for i in range(1, 6)]
     [1, 15, 25, 10, 1]
-    >>> [nT(-5, -i) for i in range(1, 6)]
+    >>> [nT(n, -i) for i in range(1, 6)]
     [1, 16, 41, 51, 52]
-    >>> nT(-5)
+    >>> nT(n)
     52
     """
     from sympy.utilities.iterables import partitions, multiset_partitions
@@ -1022,20 +1038,6 @@ def nT(n, k=None):
     if type(n) is int:
         if k is None:
             k = -abs(n)
-        if n < 0:
-            # all distinct
-            n = -n
-            if k == -n:
-                return bell(n)
-            if k == n:
-                return 1
-            if k < 0:
-                tot = 0
-                for i in range(1, -k + 1):
-                    tot += stirling(n, i)
-                return tot
-            else:
-                return stirling(n, k)
         # all the same
         if k == -n:
             return len(list(partitions(n)))
@@ -1053,11 +1055,27 @@ def nT(n, k=None):
         if u == 1:
             return nT(len(n), k)
         elif u == len(n):
-            return nT(-u, k)
+            n = range(u)
     if type(n) is tuple and n[-1] == _OK:
         N = n[_N]
         if k is None:
             k = -N
+        if n[_N] == n[_ITEMS]:
+            # all distinct
+            if k == -N:
+                return bell(N)
+            if k == N:
+                return 1
+            if k < 0:
+                tot = 0
+                for i in range(1, -k + 1):
+                    tot += stirling(N, i)
+                return tot
+            else:
+                return stirling(N, k)
+        # else expand the tuple with repeats; it would be
+        # better to keep it in multiset form but multiset_partitions
+        # presently works with a list representation
         n = [i for i, j in enumerate(n[_M]) for ii in range(j)]
         if k < 0:
             k = -k

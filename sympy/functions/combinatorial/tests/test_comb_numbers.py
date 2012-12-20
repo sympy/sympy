@@ -140,7 +140,7 @@ def test_nC_nP_nT():
         multiset_permutations, multiset_combinations, multiset_partitions,
         partitions, subsets, permutations)
     from sympy.functions.combinatorial.numbers import (
-        nP, nC, nT, stirling, _data)
+        nP, nC, nT, stirling, _data, _gen_poly)
     from sympy.combinatorics.permutations import Permutation
     from sympy.core.numbers import oo
     from random import choice
@@ -191,10 +191,10 @@ def test_nC_nP_nT():
     for i in range(1, 10):
         tot = 0
         for j in range(1, i + 2):
-            check = nT(-i, j)
+            check = nT(range(i), j)
             tot += check
             assert len(list(multiset_partitions(range(i), j))) == check
-            assert nT(-i, -j) == tot
+            assert nT(range(i), -j) == tot
 
     for i in range(100):
         s = ''.join(choice(c) for i in range(7))
@@ -207,8 +207,8 @@ def test_nC_nP_nT():
                 assert len(list(multiset_partitions(s, i))) == check
                 assert nT(s, -i) == tot
                 if u:
-                    assert nT(-len(s), i) == check
-                    assert nT(-len(s), -i) == tot
+                    assert nT(range(len(s)), i) == check
+                    assert nT(range(len(s)), -i) == tot
         except AssertionError:
             print s, i, 'failed partition test'
             raise ValueError()
@@ -243,5 +243,7 @@ def test_nC_nP_nT():
     assert nT('aaaa') == nT(4) == len(list(partitions(4))) == 5
     assert nT('aaab') == len(list(multiset_partitions('aaab'))) == 7
     assert nC('aabb'*3, 3) == 4  # aaa, bbb, abb, baa
+    assert dict(_gen_poly((4,1,1,1))) == {
+        0: 1, 1: 4, 2: 7, 3: 8, 4: 8, 5: 7, 6: 4, 7: 1}
     raises(ValueError, lambda: nP('aabc', replacement=True))
     raises(ValueError, lambda: _data({1:'a'}))
