@@ -32,6 +32,10 @@ class HadamardProduct(MatrixExpr):
     """
     Elementwise product of matrix expressions
 
+    This is a symbolic object that simply stores its argument without
+    evaluating it. To actually compute the product, use the function
+    ``hadamard_product()``.
+
     >>> from sympy.matrices import hadamard_product, HadamardProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)

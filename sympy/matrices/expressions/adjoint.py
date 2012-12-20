@@ -7,6 +7,10 @@ class Adjoint(MatrixExpr):
     """
     The Hermitian adjoint of a matrix expression.
 
+    This is a symbolic object that simply stores its argument without
+    evaluating it. To actually compute the adjoint, use the ``adjoint()``
+    function.
+
     Examples
     ========
 

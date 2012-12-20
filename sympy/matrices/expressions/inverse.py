@@ -25,8 +25,8 @@ class Inverse(MatPow):
     True
     >>> (A*B).inverse()
     B^-1*A^-1
-    >>> (A*B).inverse() == Inverse(A*B)
-    False
+    >>> Inverse(A*B)
+    (A*B)^-1
 
     """
     is_Inverse = True
