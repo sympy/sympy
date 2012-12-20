@@ -333,7 +333,7 @@ def test_canonicalize1():
     can = canonicalize(g, range(8), 1, (base3, gens3,2,1), (base2a,gens2a,1,0))
     assert can == [0,2,4, 1,3,6, 5,7, 9,8]
 
-    # A anticommuting symmetric, B anticommuting anticommuting, 
+    # A anticommuting symmetric, B anticommuting anticommuting,
     # no metric symmetry
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3

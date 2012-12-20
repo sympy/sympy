@@ -335,6 +335,12 @@ class StrPrinter(Printer):
                 use = trim
             return 'Permutation(%s)' % use
 
+    def _print_Tensor(self, expr):
+        return expr._pretty()
+
+    def _print_TensAdd(self, expr):
+        return expr._pretty()
+
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % str(a) for a in expr.args]
         return 'PermutationGroup([\n%s])' % ',\n'.join(p)
