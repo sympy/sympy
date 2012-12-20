@@ -1010,10 +1010,11 @@ class Tensor(TensExpr):
         >>> S1 = TensorType([Lorentz], sym1)
         >>> g = Lorentz.metric
         >>> p, q = S1('p,q')
-        >>> t = p(m0)*q(m1)*g(-m0, -m1); t
-        p(L_1)*q(L_0)*metric(-L_1, -L_0)
-        >>> t.contract_metric(g)
-        p(-L_0)*q(L_0)
+        >>> t = p(m0)*q(m1)*g(-m0, -m1)
+        >>> t.canon_bp()
+        metric(L_0, L_1)*p(-L_0)*q(-L_1)
+        >>> t.contract_metric(g).canon_bp()
+        p(L_0)*q(-L_0)
         """
         if g.index_types[0].metric_sym != 0:
             # TODO case of antisymmetric metric
