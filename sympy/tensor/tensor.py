@@ -469,6 +469,20 @@ class TensExpr(Basic):
 class TensAdd(TensExpr):
     """
     Sum of tensors
+
+    Examples
+    ========
+
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensAdd
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    >>> a, b = tensor_indices('a,b', Lorentz)
+    >>> sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    >>> S1 = TensorType([Lorentz], sym)
+    >>> p, q = S1('p,q')
+    >>> t1 = p(a)
+    >>> t2 = q(a)
+    >>> t1 + t2
+    p(a) + q(a)
     """
     is_Tensor = True
     is_TensAdd = True
