@@ -1,8 +1,10 @@
-from sympy.matrices.expressions import MatrixSymbol, HadamardProduct
-from sympy.matrices import ShapeError
-from sympy import symbols
+from __future__ import with_statement
+
+from sympy.core import symbols
 from sympy.utilities.pytest import raises
 
+from sympy.matrices import ShapeError, MatrixSymbol
+from sympy.matrices.expressions import HadamardProduct, hadamard_product
 
 def test_HadamardProduct():
     n, m, k = symbols('n,m,k')
@@ -34,7 +36,21 @@ def test_mixed_indexing():
 
 def test_canonicalize():
     X = MatrixSymbol('X', 2, 2)
-    expr = HadamardProduct(X, evaluate=False, check=False)
+    expr = HadamardProduct(X, check=False)
     assert isinstance(expr, HadamardProduct)
-    expr2 = expr.canonicalize() # unpack is called
+    expr2 = expr.doit() # unpack is called
     assert isinstance(expr2, MatrixSymbol)
+
+def test_hadamard():
+    m, n, p = symbols('m, n, p', integer=True)
+    A = MatrixSymbol('A', m, n)
+    B = MatrixSymbol('B', m, n)
+    C = MatrixSymbol('C', m, p)
+    with raises(TypeError):
+        hadamard_product()
+    assert hadamard_product(A) == A
+    assert isinstance(hadamard_product(A, B), HadamardProduct)
+    assert hadamard_product(A, B).doit() == hadamard_product(A, B)
+    assert hadamard_product(A, B) == hadamard_product(B, A)
+    with raises(ShapeError):
+        hadamard_product(A, C)

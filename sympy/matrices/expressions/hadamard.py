@@ -1,31 +1,55 @@
-from matexpr import MatrixExpr, ShapeError
-from sympy import Mul, Basic, sympify
+from sympy.core import Mul, Basic, sympify
 from sympy.rules import (unpack, flatten, sort, condition, exhaust, do_one)
 
-class HadamardProduct(MatrixExpr):
-    """Elementwise Product of Matrix Expressions
+from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
 
-    >>> from sympy import HadamardProduct, MatrixSymbol
+def hadamard_product(*matrices):
+    """
+    Return the elementwise (aka Hadamard) product of matrices.
+
+    Examples
+    --------
+    >>> from sympy.matrices import hadamard_product, MatrixSymbol
+    >>> A = MatrixSymbol('A', 2, 3)
+    >>> B = MatrixSymbol('B', 2, 3)
+    >>> hadamard_product(A)
+    A
+    >>> hadamard_product(A, B)
+    A.*B
+    >>> hadamard_product(A, B)[0, 1]
+    A_01*B_01
+    """
+    if not matrices:
+        raise TypeError("Empty Hadamard product is undefined")
+    validate(*matrices)
+    if len(matrices) == 1:
+        return matrices[0]
+    else:
+        return HadamardProduct(*matrices).doit()
+
+
+class HadamardProduct(MatrixExpr):
+    """
+    Elementwise product of matrix expressions
+
+    This is a symbolic object that simply stores its argument without
+    evaluating it. To actually compute the product, use the function
+    ``hadamard_product()``.
+
+    >>> from sympy.matrices import hadamard_product, HadamardProduct, MatrixSymbol
     >>> A = MatrixSymbol('A', 5, 5)
     >>> B = MatrixSymbol('B', 5, 5)
-    >>> C = MatrixSymbol('C', 5, 5)
-    >>> HadamardProduct(A, B, C)
-    A.*B.*C
+    >>> isinstance(hadamard_product(A, B), HadamardProduct)
+    True
     """
     is_HadamardProduct = True
 
     def __new__(cls, *args, **kwargs):
         args = map(sympify, args)
-        evaluate = kwargs.get('evaluate', True)
-        check    = kwargs.get('check'   , True)
-
-        obj = Basic.__new__(cls, *args)
+        check = kwargs.get('check'   , True)
         if check:
             validate(*args)
-        if evaluate:
-            return canonicalize(obj)
-        else:
-            return obj
+        return super(HadamardProduct, cls).__new__(cls, *args)
 
     @property
     def shape(self):
@@ -38,7 +62,7 @@ class HadamardProduct(MatrixExpr):
         from transpose import Transpose
         return HadamardProduct(*[Transpose(arg) for arg in self.args])
 
-    def canonicalize(self):
+    def doit(self, **ignored):
         return canonicalize(self)
 
 def validate(*args):
@@ -47,7 +71,7 @@ def validate(*args):
     A = args[0]
     for B in args[1:]:
         if A.shape != B.shape:
-            raise ShapeError("Matrices %s and %s are not aligned"%(A, B))
+            raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
 rules = (unpack,
          flatten,

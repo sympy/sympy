@@ -1,7 +1,8 @@
-from matexpr import MatrixExpr, ShapeError, ZeroMatrix
-from sympy import Add, Basic, sympify
+from sympy.core import Add, Basic, sympify
+from sympy.functions import transpose, adjoint
 from sympy.rules import (rm_id, unpack, flatten, sort, condition, debug,
         exhaust, do_one, glom)
+from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError, ZeroMatrix
 
 class MatAdd(MatrixExpr):
     """A Sum of Matrix Expressions
@@ -18,21 +19,12 @@ class MatAdd(MatrixExpr):
     is_MatAdd = True
 
     def __new__(cls, *args, **kwargs):
-        evaluate = kwargs.get('evaluate', True)
-        check    = kwargs.get('check'   , True)
-
-        # TODO: This is a kludge
-        # We still use Matrix + 0 in a few places. This removes it
-        # In particular see matrix_multiply
-        args = [x for x in args if not x == 0]
+        check = kwargs.get('check', True)
 
         obj = Basic.__new__(cls, *args)
         if check:
             validate(*args)
-        if evaluate:
-            return canonicalize(obj)
-        else:
-            return obj
+        return obj
 
     @property
     def shape(self):
@@ -42,18 +34,16 @@ class MatAdd(MatrixExpr):
         return Add(*[arg._entry(i, j) for arg in self.args])
 
     def _eval_transpose(self):
-        from transpose import Transpose
-        return MatAdd(*[Transpose(arg) for arg in self.args])
+        return MatAdd(*[transpose(arg) for arg in self.args]).doit()
 
     def _eval_adjoint(self):
-        from adjoint import Adjoint
-        return MatAdd(*[Adjoint(arg) for arg in self.args])
+        return MatAdd(*[adjoint(arg) for arg in self.args]).doit()
 
     def _eval_trace(self):
         from trace import Trace
-        return MatAdd(*[Trace(arg) for arg in self.args])
+        return MatAdd(*[Trace(arg) for arg in self.args]).doit()
 
-    def canonicalize(self):
+    def doit(self, **ignored):
         return canonicalize(self)
 
 def validate(*args):

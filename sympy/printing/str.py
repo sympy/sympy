@@ -540,6 +540,12 @@ class StrPrinter(Printer):
         return expr.name
     _print_MatrixSymbol = _print_Symbol
 
+    def _print_Identity(self, expr):
+        return "I"
+
+    def _print_ZeroMatrix(self, expr):
+        return "0"
+
     def _print_Predicate(self, expr):
         return "Q.%s" % expr.name
 

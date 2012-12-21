@@ -71,6 +71,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     _eval_trace = DenseMatrix._eval_trace
     _eval_transpose = DenseMatrix._eval_transpose
     _eval_conjugate = DenseMatrix._eval_conjugate
+    _eval_adjoint = DenseMatrix._eval_adjoint
     _eval_inverse = DenseMatrix._eval_inverse
     _eval_simplify = DenseMatrix._eval_simplify
 

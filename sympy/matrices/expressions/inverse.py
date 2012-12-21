@@ -1,39 +1,43 @@
-from matexpr import ShapeError
-from matpow import MatPow
+from sympy.core.sympify import _sympify
+from sympy.core import S, Basic
+
+from sympy.matrices.expressions.matexpr import ShapeError
+from sympy.matrices.expressions.matpow import MatPow
 
 
 class Inverse(MatPow):
-    """Matrix Inverse
+    """
+    The multiplicative inverse of a matrix expression
 
-    Represents the Inverse of a matrix expression
+    This is a symbolic object that simply stores its argument without
+    evaluating it. To actually compute the inverse, use the ``.inverse()``
+    method of matrices.
 
-    Use .I as shorthand
+    Examples
+    ========
 
     >>> from sympy import MatrixSymbol, Inverse
     >>> A = MatrixSymbol('A', 3, 3)
     >>> B = MatrixSymbol('B', 3, 3)
     >>> Inverse(A)
     A^-1
-    >>> A.I
-    A^-1
-    >>> Inverse(A*B)
+    >>> A.inverse() == Inverse(A)
+    True
+    >>> (A*B).inverse()
     B^-1*A^-1
+    >>> Inverse(A*B)
+    (A*B)^-1
 
     """
     is_Inverse = True
+    exp = S(-1)
 
-    def __new__(cls, mat, **kwargs):
-
-        if not mat.is_Matrix:
-            return mat**(-1)
-
+    def __new__(cls, mat):
+        mat = _sympify(mat)
+        assert mat.is_Matrix
         if not mat.is_square:
             raise ShapeError("Inverse of non-square matrix %s" % mat)
-
-        try:
-            return mat._eval_inverse(**kwargs)
-        except (AttributeError, NotImplementedError):
-            return MatPow.__new__(cls, mat, -1)
+        return Basic.__new__(cls, mat)
 
     @property
     def arg(self):
@@ -45,3 +49,9 @@ class Inverse(MatPow):
 
     def _eval_inverse(self):
         return self.arg
+
+    def doit(self, **hints):
+        if hints.get('deep', True):
+            return self.arg.doit(**hints).inverse()
+        else:
+            return self.arg.inverse()

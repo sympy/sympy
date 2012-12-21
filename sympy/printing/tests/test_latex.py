@@ -800,8 +800,8 @@ def test_Adjoint():
     from sympy.matrices import MatrixSymbol, Adjoint
     X = MatrixSymbol('X', 2, 2)
     Y = MatrixSymbol('Y', 2, 2)
-    # Either of these would be fine
-    assert latex(Adjoint(X + Y)) == r'X^\dag + Y^\dag'
+    assert latex(Adjoint(X + Y)) == r'\left(X + Y\right)^\dag'
+    assert latex(Adjoint(X) + Adjoint(Y)) == r'X^\dag + Y^\dag'
 
 
 def test_Hadamard():
