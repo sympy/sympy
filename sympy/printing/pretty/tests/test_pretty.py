@@ -2164,6 +2164,40 @@ u"""\
     assert upretty(expr) == ucode_str
 
 
+def test_Adjoint():
+    from sympy.matrices import Adjoint, Inverse, MatrixSymbol, Transpose
+    X = MatrixSymbol('X', 2, 2)
+    Y = MatrixSymbol('Y', 2, 2)
+    assert pretty(Adjoint(X)) == " +\nX "
+    assert pretty(Adjoint(X + Y)) == "       +\n(X + Y) "
+    assert pretty(Adjoint(X) + Adjoint(Y)) == " +    +\nX  + Y "
+    assert pretty(Adjoint(X*Y)) == "     +\n(X*Y) "
+    assert pretty(Adjoint(Y)*Adjoint(X)) == " +  +\nY *X "
+    assert pretty(Adjoint(X**2)) == "    +\n/ 2\\ \n\\X / "
+    assert pretty(Adjoint(X)**2) == "    2\n/ +\\ \n\\X / "
+    assert pretty(Adjoint(Inverse(X))) == "     +\n/ -1\\ \n\\X  / "
+    assert pretty(Inverse(Adjoint(X))) == "    -1\n/ +\\  \n\\X /  "
+    assert pretty(Adjoint(Transpose(X))) == "    +\n/ T\\ \n\\X / "
+    assert pretty(Transpose(Adjoint(X))) == "    T\n/ +\\ \n\\X / "
+    assert upretty(Adjoint(X)) == u" \u2020\nX "
+    assert upretty(Adjoint(X + Y)) == u"       \u2020\n(X + Y) "
+    assert upretty(Adjoint(X) + Adjoint(Y)) == u" \u2020    \u2020\nX  + Y "
+    assert upretty(Adjoint(X*Y)) == u"     \u2020\n(X\u22c5Y) "
+    assert upretty(Adjoint(Y)*Adjoint(X)) == u" \u2020  \u2020\nY \u22c5X "
+    assert upretty(Adjoint(X**2)) == \
+        u"    \u2020\n\u239b 2\u239e \n\u239dX \u23a0 "
+    assert upretty(Adjoint(X)**2) == \
+        u"    2\n\u239b \u2020\u239e \n\u239dX \u23a0 "
+    assert upretty(Adjoint(Inverse(X))) == \
+        u"     \u2020\n\u239b -1\u239e \n\u239dX  \u23a0 "
+    assert upretty(Inverse(Adjoint(X))) == \
+        u"    -1\n\u239b \u2020\u239e  \n\u239dX \u23a0  "
+    assert upretty(Adjoint(Transpose(X))) == \
+        u"    \u2020\n\u239b T\u239e \n\u239dX \u23a0 "
+    assert upretty(Transpose(Adjoint(X))) == \
+        u"    T\n\u239b \u2020\u239e \n\u239dX \u23a0 "
+
+
 def test_pretty_piecewise():
     expr = Piecewise((x, x < 1), (x**2, True))
     ascii_str = \
