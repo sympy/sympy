@@ -1681,6 +1681,10 @@ def generate_derangements(perm):
     [3, 2, 1, 0]]
     >>> list(generate_derangements([0, 1, 1]))
     []
+
+    See Also
+    ========
+    sympy.functions.combinatorial.factorials.subfactorial
     """
     p = multiset_permutations(perm)
     indices = range(len(perm))

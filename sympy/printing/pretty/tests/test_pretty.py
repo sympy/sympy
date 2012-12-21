@@ -9,7 +9,7 @@ from sympy import (
     binomial, catalan, ceiling, conjugate, cos, euler, exp, expint,
     factorial, factorial2, floor, gamma, groebner, homomorphism, hyper,
     log, lowergamma, meijerg, oo, pi, sin,
-    sqrt, sqrt, symbols, tan, uppergamma)
+    sqrt, sqrt, symbols, tan, uppergamma, subfactorial)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -83,6 +83,8 @@ Abs(x/(x**2+1)) #
 Abs(1 / (y - Abs(x)))
 factorial(n)
 factorial(2*n)
+subfactorial(n)
+subfactorial(2*n)
 factorial(factorial(factorial(n)))
 factorial(n+1) #
 conjugate(x)
@@ -1004,6 +1006,30 @@ u"""\
 
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
+
+    expr = subfactorial(n)
+    ascii_str = \
+"""\
+!n\
+"""
+    ucode_str = \
+u"""\
+!n\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = subfactorial(2*n)
+    ascii_str = \
+"""\
+!(2*n)\
+"""
+    ucode_str = \
+u"""\
+!(2⋅n)\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
     n = Symbol('n', integer=True)
     expr = factorial2(n)

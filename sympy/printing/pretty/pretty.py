@@ -84,6 +84,15 @@ class PrettyPrinter(Printer):
     _print_Integers = _print_Atom
     _print_Reals = _print_Atom
 
+    def _print_subfactorial(self, e):
+        x = e.args[0]
+        pform = self._print(x)
+        # Add parentheses if needed
+        if not ((x.is_Integer and x.is_nonnegative) or x.is_Symbol):
+            pform = prettyForm(*pform.parens())
+        pform = prettyForm(*pform.left('!'))
+        return pform
+
     def _print_factorial(self, e):
         x = e.args[0]
         pform = self._print(x)
