@@ -608,35 +608,33 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
-    def _print_Transpose(self, T):
-        pform = self._print(T.arg)
-        if (T.arg.is_MatAdd or T.arg.is_MatMul):
+    def _print_Transpose(self, expr):
+        pform = self._print(expr.arg)
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(expr.arg, MatrixSymbol):
             pform = prettyForm(*pform.parens())
-        pform = prettyForm(*pform.right("'"))
+        pform = pform**(prettyForm('T'))
         return pform
 
-    def _print_Adjoint(self, A):
-        pform = self._print(A.arg)
+    def _print_Adjoint(self, expr):
+        pform = self._print(expr.arg)
         if self._use_unicode:
             dag = prettyForm(u'\u2020')
         else:
             dag = prettyForm('+')
-        if (A.arg.is_MatAdd or A.arg.is_MatMul):
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(expr.arg, MatrixSymbol):
             pform = prettyForm(*pform.parens())
-        pform = pform**prettyForm(u'\u2020')
-        return pform
-
-    def _print_Inverse(self, I):
-        pform = self._print(I.arg)
-        if (I.arg.is_Add or I.arg.is_Mul or I.arg.is_Pow):
-            pform = prettyForm(*pform.parens())
-        pform = prettyForm(*pform.right("^-1"))
+        pform = pform**dag
         return pform
 
     def _print_BlockMatrix(self, B):
         if B.blocks.shape == (1, 1):
             return self._print(B.blocks[0, 0])
         return self._print(B.blocks)
+
+    def _print_MatAdd(self, expr):
+        return self._print_seq(expr.args, None, None, ' + ')
 
     def _print_MatMul(self, expr):
         args = list(expr.args)
@@ -650,8 +648,13 @@ class PrettyPrinter(Printer):
 
         return prettyForm.__mul__(*args)
 
-    def _print_MatAdd(self, expr):
-        return self._print_seq(expr.args, None, None, ' + ')
+    def _print_MatPow(self, expr):
+        pform = self._print(expr.base)
+        from sympy.matrices import MatrixSymbol
+        if not isinstance(expr.base, MatrixSymbol):
+            pform = prettyForm(*pform.parens())
+        pform = pform**(self._print(expr.exp))
+        return pform
 
     def _print_HadamardProduct(self, expr):
         from sympy import MatAdd, MatMul
