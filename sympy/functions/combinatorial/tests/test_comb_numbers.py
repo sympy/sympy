@@ -144,8 +144,8 @@ def test_nC_nP_nT():
     from sympy.combinatorics.permutations import Permutation
     from sympy.core.numbers import oo
     from random import choice
-    from string import lowercase as c
 
+    c = 'abcdefghijklmnopqrstuvwxyz'
     for i in range(100):
         s = ''.join(choice(c) for i in range(7))
         u = len(s) == len(set(s))
