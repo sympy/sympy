@@ -66,8 +66,8 @@ class GammaMatrices(object):
         if t.is_TensAdd:
             a = [self.G5_to_right(x) for x in t.args]
             return TensAdd(*a)
-        components = t.components
-        if not t.components:
+        components = t._components
+        if not components:
             return t
         ncomps = len(components)
         G = self.G
@@ -82,7 +82,7 @@ class GammaMatrices(object):
                 for j in range(i + 1, ncomps):
                     if components[j] == G:
                         numG += 1
-        ct = t.coeff if 0 in vposG5 else S.One
+        ct = t._coeff if 0 in vposG5 else S.One
         a = t.split()
         a1 = []
         for i in range(ncomps):
@@ -100,7 +100,7 @@ class GammaMatrices(object):
 
     def match1_gamma(self, t, n):
         #t = t.sorted_components()
-        components = t.components
+        components = t._components
         ncomps = len(components)
         G = self.G
         for i in range(ncomps):
@@ -108,7 +108,7 @@ class GammaMatrices(object):
                 continue
             for j in range(i + 1, ncomps):
                 if components[j] == G and abs(j - i) == n + 1 and \
-                        (0, 0, i, j) in t.dum:
+                        (0, 0, i, j) in t._dum:
                     return i, j
 
 
@@ -146,25 +146,25 @@ class GammaMatrices(object):
         i, j = r
         a = t.split()
         za = zip(a, range(len(a)))
-        tc = t.coeff if i == 0 else S.One
+        tc = t._coeff if i == 0 else S.One
         a1 = [x for x, y in za if y not in r]
         D = self.D
         if n == 0:
             # G(m)*G(-m) = d
             t1 = tensor_mul(*a1)
-            t2 = Tensor(D*t1.coeff*tc, t1.components, t1.free, t1.dum)
+            t2 = Tensor(D*t1._coeff*tc, t1._components, t1._free, t1._dum)
             return t2
         if n == 1:
             # G(m)*G(n)*G(-m) = (2 - d)*G(n)
             t1 = tensor_mul(*a1)
-            t2 = Tensor((2-D)*t1.coeff*tc, t1.components, t1.free, t1.dum)
+            t2 = Tensor((2-D)*t1._coeff*tc, t1._components, t1._free, t1._dum)
             return t2
         if n == 2:
             # G(m)*G(n1)*G(n2)*G(-m) = (d-4)*G(n1)*G(n2) + 4*delta(n1, n2)
             t1 = ((D-4)*tc)*tensor_mul(*a1)
             a2 = a[:i] + a[j + 1:]
-            ind1 = a[r[0] + 1].free[0][0]
-            ind2 = a[r[1] - 1].free[0][0]
+            ind1 = a[r[0] + 1]._free[0][0]
+            ind2 = a[r[1] - 1]._free[0][0]
             if a2:
                 a2 = tensorlist_contract_metric(a2, self.g(ind1, ind2))
                 t2 = (4*tc)*tensor_mul(*a2)
@@ -223,7 +223,6 @@ class GammaMatrices(object):
             return t
         if t.is_TensMul:
             for n in range(nmax + 1):
-                #print 'DB10 t=%s n=%d' %(t, n)
                 r = self.match1_gamma(t, n)
                 if not r:
                     continue
@@ -240,7 +239,7 @@ class GammaMatrices(object):
             return t1.contract_metric(self.g, contract_all=True)
 
     def match2_gamma(self, t, n):
-        components = t.components
+        components = t._components
         ncomps = len(components)
         G = self.G
         # G(a)*G(b)*...*p(-a)*p(-b)
@@ -250,7 +249,7 @@ class GammaMatrices(object):
             if not components[i + n + 1] == G:
                 continue
             p_pos1 = p_pos2 = 0
-            for dx in t.dum:
+            for dx in t._dum:
                 if dx[2] == i:
                     p_pos1 = dx[3]
                 if dx[2] == i + n + 1:
@@ -295,9 +294,9 @@ class GammaMatrices(object):
         i0, i1, i2 = r
         if n == 0:
             a = t.split()
-            ct = t.coeff if i0 == 0 else S.One
+            ct = t._coeff if i0 == 0 else S.One
             p = a[i1]
-            ind_p = p.free[0][0]
+            ind_p = p._free[0][0]
             # G(m0)*G(m1)*p(-m0)*p(-m1) = p(m0)*p(-m0)
             a1 = a[:i0] + a[i0 + 2:i1] + a[i1 + 1:i2] + a[i2 + 1:]
             a2 = [p.substitute_indices((ind_p, -ind_p)), p]
@@ -308,10 +307,10 @@ class GammaMatrices(object):
             # G(m0)*G(ind1)*G(m1)*p(-m0)*p(-m1) =
             # 2*G(m0)*p(-m0)*p(ind1) - G(ind1)*p(m0)*p(-m0)
             a = t.split()
-            ind1 = a[i0 + 1].free[0][0]
-            ct = t.coeff if i0 == 0 else S.One
+            ind1 = a[i0 + 1]._free[0][0]
+            ct = t._coeff if i0 == 0 else S.One
             p = a[i1]
-            ind_p = p.free[0][0]
+            ind_p = p._free[0][0]
             a1 = a[:i0] + [a[i0 + 1]] + a[i0 + 3:i1] + a[i1 + 1:i2] + a[i2 + 1:]
             a2 = [p.substitute_indices((ind_p, -ind_p)), p]
             a3 = a1 + a2
@@ -319,7 +318,7 @@ class GammaMatrices(object):
             args = [t1]
             a1 = a[:i0 + 1] + a[i0 + 3:i2] + a[i2 + 1:]
             p = a[i2]
-            ind_p = p.free[0][0]
+            ind_p = p._free[0][0]
             a2 = [p.substitute_indices((ind_p, ind1))]
             a3 = a1 + a2
             t2 = tensor_mul(*a3)*2
@@ -399,7 +398,7 @@ class GammaMatrices(object):
         if t.is_TensAdd:
             a = [self.gamma_trace(x) for x in t.args]
             return TensAdd(*a)
-        components = t.components
+        components = t._components
         ncomps = len(components)
         G = self.G
         G5 = self.G5
@@ -411,7 +410,7 @@ class GammaMatrices(object):
             return self.gctr*t
         withG5 = False
         t = t.canon_bp()
-        components = t.components
+        components = t._components
         for i in range(ncomps):
             if components[i] == G:
                 break
@@ -428,8 +427,8 @@ class GammaMatrices(object):
                 return Tensor(S.Zero, [], [], [])
             if numG == 4:
                 a = t.split()
-                indices = [x.free[0][0] for x in a[i:j]]
-                ct = t.coeff if i == 0 else S.One
+                indices = [x._free[0][0] for x in a[i:j]]
+                ct = t._coeff if i == 0 else S.One
                 t1 = (self.gctr*ct*self.g5c)*self.epsilon(*indices)
                 a2 = a[:i] + a[j + 1:]
                 t2 = tensor_mul(*a2)
@@ -450,13 +449,13 @@ class GammaMatrices(object):
                     a = t.split()
                     args = []
                     for k1 in range(i, j):
-                        ind1 = a[k1].free[0][0]
+                        ind1 = a[k1]._free[0][0]
                         for k2 in range(k1 + 1, j):
-                            ind2 = a[k2].free[0][0]
+                            ind2 = a[k2]._free[0][0]
                             sign = 1 if (k1 - k2) % 2 == 1 else -1
                             a1 = a[:k1] + a[k1 + 1:k2] + a[k2 + 1:]
                             a1 = tensorlist_contract_metric(a1, g(ind1, ind2))
-                            ct = t.coeff if k1 == 0 else S.One
+                            ct = t._coeff if k1 == 0 else S.One
                             t1 = (sign*ct)*tensor_mul(*a1)
                             args.append(t1)
                     t2 = TensAdd(*args)
@@ -480,17 +479,17 @@ class GammaMatrices(object):
                 if t == t2:
                     a = t.split()
                     # G are from i to j1 included; anticommute G(j1) through
-                    ind1 = a[i].free[0][0]
-                    ind2 = a[i + 1].free[0][0]
+                    ind1 = a[i]._free[0][0]
+                    ind2 = a[i + 1]._free[0][0]
                     aa = a[:i] + a[i + 2:]
                     aa = tensorlist_contract_metric(aa, g(ind1, ind2))
-                    ct = t.coeff if i == 0 else S.One
+                    ct = t._coeff if i == 0 else S.One
                     t1 = ct*tensor_mul(*aa)
                     args = [t1]
                     sign = 1
                     for k in range(i + 2, j):
                         sign = -sign
-                        ind2 = a[k].free[0][0]
+                        ind2 = a[k]._free[0][0]
                         aa = a[:i] + a[i + 1:k] + a[k + 1:]
                         aa = tensorlist_contract_metric(aa, g(ind1, ind2))
                         t2 = sign*tensor_mul(*aa)
@@ -503,7 +502,7 @@ class GammaMatrices(object):
             t1 = self.gamma_trace1(*a[i:j])
             a2 = a[:i] + a[j:]
             t2 = tensor_mul(*a2)
-            ct = t.coeff if i == 0 else S.One
+            ct = t._coeff if i == 0 else S.One
             t3 = ct*t1*t2
             if not t3:
                 return t3
@@ -518,14 +517,14 @@ class GammaMatrices(object):
         if n%2 == 1:
             return Tensor(S.Zero, [], [], [])
         if n == 2:
-            ind0 = a[0].free[0][0]
-            ind1 = a[1].free[0][0]
+            ind0 = a[0]._free[0][0]
+            ind1 = a[1]._free[0][0]
             return self.gctr*self.g(ind0, ind1)
         if n == 4:
-            ind0 = a[0].free[0][0]
-            ind1 = a[1].free[0][0]
-            ind2 = a[2].free[0][0]
-            ind3 = a[3].free[0][0]
+            ind0 = a[0]._free[0][0]
+            ind1 = a[1]._free[0][0]
+            ind2 = a[2]._free[0][0]
+            ind3 = a[3]._free[0][0]
             return self.gctr*(self.g(ind0, ind1)*self.g(ind2, ind3) - \
                 self.g(ind0, ind2)*self.g(ind1, ind3) + self.g(ind0, ind3)*self.g(ind1, ind2))
         else:

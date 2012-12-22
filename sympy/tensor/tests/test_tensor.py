@@ -3,14 +3,17 @@ from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
-  tensor_mul, canon_bp, TensAdd, riemann_cyclic_replaceR, riemann_cyclic)
+  tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
+  tensorlist_contract_metric, Tensor)
 
 def test_get_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
+    assert a != -a
     sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
     S2 = TensorType([Lorentz]*2, sym2)
     A, B = S2('A,B')
+    assert A != B
     t = A(a,b)*B(-b,c)
     indices = t.get_indices()
     L_0 = TensorIndex('L_0', Lorentz)
@@ -18,6 +21,7 @@ def test_get_indices():
     a = t.split()
     t2 = tensor_mul(*a)
     assert t == t2
+    assert tensor_mul(*[]) == Tensor(S.One, [],[],[])
 
 def test_canonicalize_no_slot_sym():
     # A_d0 * B^d0; T_c = A^d0*B_d0
@@ -478,14 +482,30 @@ def test_substitute_indices():
     t1a = A(j, l)*B(-l, -k)
     assert t1 == t1a
 
-def test_riemann_cyclic_replaceR():
+    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym1)
+    p = S1('p')
+    t = p(i)
+    t1 = t.substitute_indices((j, k))
+    assert t1 == t
+    t1 = t.substitute_indices((i, j))
+    assert t1 == p(j)
+    t1 = t.substitute_indices((i, -j))
+    assert t1 == p(-j)
+    t1 = t.substitute_indices((-i, j))
+    assert t1 == p(-j)
+    t1 = t.substitute_indices((-i, -j))
+    assert t1 == p(j)
+
+
+def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0,m1,m2,m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
     symr = TensorSymmetry(riemann_bsgs)
     R4 = TensorType([Lorentz]*4, symr)
     R = R4('R')
     t = R(m0,m2,m1,m3)
-    t1 = riemann_cyclic_replaceR(t)
+    t1 = riemann_cyclic_replace(t)
     t1a =  -S.One/3*R(m0, m3, m2, m1) + S.One/3*R(m0, m1, m2, m3) + Rational(2,3)*R(m0, m2, m1, m3)
     assert t1 == t1a
 
@@ -622,6 +642,27 @@ def test_metric_contract1():
     assert t3 == 3*D**2 + 6*D
     t = t.contract_metric(g, True)
     assert t == 3*D**2 + 6*D
+
+    t = 2*p(a)*g(b,-b)
+    t1 = t.contract_metric(g)
+    assert t1 == 2*D*p(a)
+
+    t = 2*p(a)*g(b,-a)
+    #t = 2*p(a)*g(-a, b)
+    t1 = t.contract_metric(g)
+    assert t1 == 2*p(b)
+
+    M = Symbol('M')
+    t = (p(a)*p(b) + g(a, b)*M**2)*g(-a, -b) - D*M**2
+    t1 = t.contract_metric(g)
+    assert t1 == p(a)*p(-a)
+
+    v = [p(a), q(b), p(c)]
+    v1 = tensorlist_contract_metric(v, g(-a, -b))
+    assert v1 == [p(-b), q(b), p(c)]
+    v = [p(a), q(b), p(c)]
+    v1 = tensorlist_contract_metric(v, g(d, e))
+    assert v1 == [p(a), q(b), p(c), g(d, e)]
 
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_fmt='L')
