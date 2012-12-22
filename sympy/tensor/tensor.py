@@ -43,6 +43,7 @@ class TensorIndexType(object):
             self.dummy_fmt = '%s_%%d' % dummy_fmt
         self.metric = self.get_metric()
         self.dim = dim
+        self.delta = self.get_kronecker_delta()
         if eps_dim:
             self.eps_dim = eps_dim
         else:
@@ -59,6 +60,12 @@ class TensorIndexType(object):
         S2 = TensorType([self]*2, sym2)
         metric = S2('metric')
         return metric
+
+    def get_kronecker_delta(self):
+        sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+        S2 = TensorType([self]*2, sym2)
+        delta = S2('KD')
+        return delta
 
     def get_epsilon(self):
         sym = TensorSymmetry(get_symmetric_group_sgs(self.eps_dim, 1))
@@ -558,7 +565,6 @@ class TensAdd(TensExpr):
             a.append(prev)
         if not a:
             return S.Zero
-
         # TODO introduce option not to use canon_bp automatically in TensAdd
         if all(x.is_TensMul for x in a):
             a = [canon_bp(x) for x in a]
@@ -596,6 +602,14 @@ class TensAdd(TensExpr):
 
     def __ne__(self, other):
         return not (self == other)
+
+    def contract_delta(self, delta):
+        args = [x.contract_delta(delta) for x in self.args]
+        if len(args) == 1:
+            return args[0]
+        t = TensAdd(*args)
+        return t.canon_bp()
+
 
     def contract_metric(self, g, contract_all=False):
         """
@@ -1043,6 +1057,106 @@ class Tensor(TensExpr):
         return t.perm2tensor(can, True)
 
 
+    def contract_delta(self, delta):
+        if not self._components:
+            return self
+        free_indices = [x[0] for x in self._free]
+        a = self.split()
+        typ = delta.index_types[0]
+        # if a component tensor of a has 2 dummy indices, it is g(d,-d) = dim
+        for i, tx in enumerate(a):
+            if tx._components[0] == delta:
+                free_indices_g = [x[0] for x in a[i]._free]
+                if len(free_indices_g) == 0:
+                    a1 = a[:i] + a[i + 1:]
+                    t = tensor_mul(*a1)*(typ.dim*a[i]._coeff)
+                    if delta in t._components:
+                        return t.contract_delta(delta, True)
+                    return t
+
+        # if all metric tensors have only free indices, there is no contraction
+        for i, tg in enumerate(a):
+            if tg._components[0] == delta:
+                tg_free_indices = [x[0] for x in tg._free]
+                if tg_free_indices[0].is_contravariant == tg_free_indices[1].is_contravariant:
+                    raise ValueError('both indices are (contra)variant')
+                if all(indx in free_indices for indx in tg_free_indices):
+                    continue
+                break
+        else:
+            return self
+
+        # tg has one or two indices contracted with other tensors
+        # i position of tg in a
+        coeff = S.One
+        tg_free = tg._free
+        if tg_free[0][0] in free_indices or tg_free[1][0] in free_indices:
+            if tg_free[0][0] in free_indices:
+                ind_free = tg_free[0][0]
+                ind, ipos1, _ = tg_free[1]
+            else:
+                ind_free = tg_free[1][0]
+                ind, ipos1, _ = tg_free[0]
+
+            ind1 = -ind
+            # search ind1 in self._dum
+            for j, tx in enumerate(a):
+                if ind1 in [x[0] for x in tx._free]:
+                    break
+            free1 = []
+            for indx, iposx, _ in tx._free:
+                if indx == ind1:
+                    free1.append((ind_free, iposx, 0))
+                else:
+                    free1.append((indx, iposx, 0))
+            t1 = Tensor(tx._coeff, tx._components, free1, tx._dum)
+            a[j] = t1
+            a = a[:i] + a[i + 1:]
+            coeff = coeff*tg._coeff
+            res = tensor_mul(*a)
+        else:
+            # tg has two indices contracted with other tensors
+            ind1 = tg_free[0][0]
+            ind2 = tg_free[1][0]
+            ind1m = -ind1
+            ind2m = -ind2
+            for k, ty in enumerate(a):
+                if ind2m in [x[0] for x in ty._free]:
+                    break
+            if ty._components == [delta]:
+                ty_indices = [x[0] for  x in ty._free]
+                if all(x in [ind1m, ind2m] for x in ty_indices):
+                    if i < k:
+                        a = a[:i] + a[i+1:k] + a[k+1:]
+                    else:
+                        a = a[:k] + a[k+1:i] + a[k+1:]
+                    if a:
+                        res = tensor_mul(*a)
+                        res = (coeff*typ.dim*tg._coeff*ty._coeff)*res
+                    else:
+                        res = coeff*typ.dim*tg._coeff*ty._coeff
+                        res = Tensor(res, [],[],[], is_canon_bp=True)
+                    if delta in res._components:
+                        return res.contract_delta(delta)
+                    return res
+
+            free2 = []
+            for indx, iposx, _ in ty._free:
+                if indx == ind2m:
+                    free2.append((ind1, iposx, 0))
+                else:
+                    free2.append((indx, iposx, 0))
+            t2 = Tensor(ty._coeff, ty._components, free2, ty._dum)
+            a[k] = t2
+            a = a[:i] + a[i + 1:]
+            coeff = coeff*tg._coeff
+            res = tensor_mul(*a)
+        res = coeff*res
+        if delta in res._components:
+            return res.contract_delta(delta)
+        return res
+
+
     def contract_metric(self, g, contract_all=False):
         """
         Raise or lower indices with the metric ``g``
@@ -1067,6 +1181,8 @@ class Tensor(TensExpr):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
+        delta = g.index_types[0].delta
+        self = self.contract_delta(delta)
         if g.index_types[0].metric_sym != 0:
             # TODO case of antisymmetric metric
             raise NotImplementedError
