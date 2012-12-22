@@ -66,6 +66,8 @@ class TensorIndexType(object):
         epsilon = Sdim('Eps')
         return epsilon
 
+    def __lt__(self, other):
+        return self.name < other.name
 
     def __str__(self):
         return self.name
@@ -118,6 +120,9 @@ class TensorIndex(object):
 
     def __ne__(self, other):
         return not (self == other)
+
+    def __lt__(self, other):
+        return (self.tensortype, self.name) < (other.tensortype, other.name)
 
     def __neg__(self):
         t1 = TensorIndex(self.name, self.tensortype,
@@ -273,6 +278,9 @@ class TensorHead(Basic):
 
     def __ne__(self, other):
         return not (self == other)
+
+    def __lt__(self, other):
+        return (self.name, self.index_types) < (other.name, other.index_types)
 
     def commutes_with(self, other):
         """
