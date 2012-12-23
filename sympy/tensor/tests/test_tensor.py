@@ -5,6 +5,7 @@ from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
   tensorlist_contract_metric, TensMul)
+from sympy.utilities.pytest import raises
 
 #################### Tests from tensor_can.py #######################
 
@@ -393,6 +394,30 @@ def test_riemann_products():
     tc = t.canon_bp()
     assert str(tc) == 'R(a0, L_0, a2, L_1)*R(a1, a3, -L_0, L_2)*R(a4, a5, -L_1, -L_2)'
 ######################################################################
+
+def test_canonicalize2():
+    D = Symbol('D')
+    Eucl = TensorIndexType('Eucl', metric_sym=0, dim=D, dummy_fmt='E')
+    i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14 = \
+      tensor_indices('i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14', Eucl)
+    sym3a = TensorSymmetry(get_symmetric_group_sgs(3, 1))
+    S3a = TensorType([Eucl]*3, sym3a)
+    A = S3a('A')
+
+    # two examples from Cvitanovic, Group Theory page 59
+    # of identities for antisymmetric tensors of rank 3
+    # contracted according to the Kuratowski graph  eq.(6.59)
+    t = A(i0,i1,i2)*A(-i1,i3,i4)*A(-i3,i7,i5)*A(-i2,-i5,i6)*A(-i4,-i6,i8)
+    t1 = t.canon_bp()
+    assert t1 == 0
+
+    # eq.(6.60)
+    #t = A(i0,i1,i2)*A(-i1,i3,i4)*A(-i2,i5,i6)*A(-i3,i7,i8)*A(-i6,-i7,i9)*
+    #    A(-i8,i10,i13)*A(-i5,-i10,i11)*A(-i4,-i11,i12)*A(-i3,-i12,i14)
+    t = A(i0,i1,i2)*A(-i1,i3,i4)*A(-i2,i5,i6)*A(-i3,i7,i8)*A(-i6,-i7,i9)*\
+        A(-i8,i10,i13)*A(-i5,-i10,i11)*A(-i4,-i11,i12)*A(-i9,-i12,i14)
+    t1 = t.canon_bp()
+    assert t1 == 0
 
 
 def test_get_indices():
