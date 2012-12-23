@@ -1071,7 +1071,7 @@ class Tensor(TensExpr):
                     a1 = a[:i] + a[i + 1:]
                     t = tensor_mul(*a1)*(typ.dim*a[i]._coeff)
                     if delta in t._components:
-                        return t.contract_delta(delta, True)
+                        return t.contract_delta(delta)
                     return t
 
         # if all metric tensors have only free indices, there is no contraction
