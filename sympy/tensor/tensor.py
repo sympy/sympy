@@ -2,14 +2,27 @@ from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 
-class TensorIndexType(object):
+
+class TensorIndexType(Basic):
     """
     A TensorIndexType is characterized by its name, by metric_sym,
     giving the symmetry of its metric.
 
+    ``metric_sym = 0`` symmetric metric (in Riemannian geometry)
+
+    ``metric_sym = 1`` antisymmetric metric (for spinor calculus)
+
+    In these two cases the metric is used to raise and lower indices.
+
+    ``metric_sym = None``  there is no metric, it is not possible to
+    raise or lower indices; e.g. the index of the defining representation
+    of ``SU(N)`` , is 'covariant' and the conjugate representation is
+    'contravariant'; for ``N > 2`` they are linearly independent.
+
+
     If a dimension ``dim`` is defined, it can be a symbol or an integer.
     """
-    def __init__(self, name, metric_sym=0, dim=None, eps_dim = None,
+    def __new__(cls, name, metric_sym=0, dim=None, eps_dim = None,
                  dummy_fmt=None):
         """
         name   name of the tensor type
@@ -19,7 +32,7 @@ class TensorIndexType(object):
         1      antisymmetric
         None   no symmetry
 
-        dim    dimension, it can be a symbol or a positive integer
+        ``dim``    dimension, it can be a symbol or a positive integer
 
         ``eps_dim``  dimension of the epsilon tensor; it is by default
                  equal to dim, if the latter is an integer; else
@@ -35,22 +48,25 @@ class TensorIndexType(object):
         >>> from sympy.tensor.tensor import TensorIndexType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         """
-        self.name = name
-        self.metric_sym = metric_sym
+        obj = Basic.__new__(cls, name, metric_sym)
+
+        obj.name = name
+        obj.metric_sym = metric_sym
         if not dummy_fmt:
-            self.dummy_fmt = '%s_%%d' % self.name
+            obj.dummy_fmt = '%s_%%d' % obj.name
         else:
-            self.dummy_fmt = '%s_%%d' % dummy_fmt
-        self.metric = self.get_metric()
-        self.dim = dim
+            obj.dummy_fmt = '%s_%%d' % dummy_fmt
+        obj.metric = obj.get_metric()
+        obj.dim = dim
         if eps_dim:
-            self.eps_dim = eps_dim
+            obj.eps_dim = eps_dim
         else:
-            self.eps_dim = dim
-        if isinstance(self.eps_dim, int):
-            self.epsilon = self.get_epsilon()
+            obj.eps_dim = dim
+        if isinstance(obj.eps_dim, int):
+            obj.epsilon = obj.get_epsilon()
         else:
-            self.epsilon = None
+            obj.epsilon = None
+        return obj
 
     def get_metric(self):
         if self.metric_sym is None:
@@ -74,7 +90,7 @@ class TensorIndexType(object):
 
     __repr__ = __str__
 
-class TensorIndex(object):
+class TensorIndex(Basic):
     """
     Tensor indices are contructed with the Einstein summation convention.
 
@@ -100,26 +116,19 @@ class TensorIndex(object):
     >>> A(i)*B(-i)
     A(L_0)*B(-L_0)
     """
-    def __init__(self, name, tensortype, is_contravariant=True):
-        self.name = name
-        self.tensortype = tensortype
-        self.is_contravariant = is_contravariant
+    def __new__(cls, name, tensortype, is_contravariant=True):
 
-    def __str__(self):
+        obj = Basic.__new__(cls, name, tensortype, is_contravariant)
+        obj.name = name
+        obj.tensortype = tensortype
+        obj.is_contravariant = is_contravariant
+        return obj
+
+    def _pretty(self):
         s = self.name
         if not self.is_contravariant:
             s = '-%s' % s
         return s
-
-    __repr__ = __str__
-
-    def __eq__(self, other):
-        return self.name == other.name and \
-               self.tensortype == other.tensortype and \
-               self.is_contravariant == other.is_contravariant
-
-    def __ne__(self, other):
-        return not (self == other)
 
     def __lt__(self, other):
         return (self.tensortype, self.name) < (other.tensortype, other.name)
@@ -148,7 +157,7 @@ def tensor_indices(s, typ):
     return [TensorIndex(i, typ) for i in a]
 
 
-class TensorSymmetry(object):
+class TensorSymmetry(Basic):
     """
     Symmetry of a tensor
 
@@ -166,9 +175,16 @@ class TensorSymmetry(object):
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> V = S2('V')
     """
-    def __init__(self, bsgs):
-        self.base, self.generators = bsgs
-        self.rank = self.generators[0].size
+    def __new__(cls, bsgs, **kw_args):
+        base, generators = bsgs
+        obj = Basic.__new__(cls, base, generators, **kw_args)
+        return obj
+
+    base = property(lambda self: self.args[0])
+    generators = property(lambda self: self.args[1])
+    rank = property(lambda self: self.args[1][0].size)
+
+
 
 
 class TensorType(Basic):
@@ -190,14 +206,15 @@ class TensorType(Basic):
     is_commutative = False
 
     def __new__(cls, index_types, symmetry, **kw_args):
-        obj = Basic.__new__(cls, **kw_args)
-        obj.index_types = []
-        obj.index_types = index_types
-        obj.types = list(set(obj.index_types))
-        obj.types.sort(key=lambda x: x.name)
-        obj.symmetry = symmetry
         assert symmetry.rank == len(index_types) + 2
+        obj = Basic.__new__(cls, index_types, symmetry, **kw_args)
         return obj
+
+    index_types = property(lambda self: self.args[0])
+
+    symmetry = property(lambda self: self.args[1])
+
+    types = property(lambda self: sorted(set(self.index_types), key=lambda x: x.name))
 
     def __str__(self):
         return 'TensorType(%s)' %([str(x) for x in self.index_types])
@@ -262,22 +279,15 @@ class TensorHead(Basic):
         """
         assert isinstance(name, basestring)
 
-        obj = Basic.__new__(cls, **kw_args)
-        obj.name = name
-        obj.index_types = typ.index_types
+        obj = Basic.__new__(cls, name, typ, **kw_args)
         obj.rank = len(obj.index_types)
         obj.types = typ.types
         obj.symmetry = typ.symmetry
         obj.commuting = commuting
         return obj
 
-    def __eq__(self, other):
-        if not isinstance(other, TensorHead):
-            return False
-        return self.name == other.name and self.index_types == other.index_types
-
-    def __ne__(self, other):
-        return not (self == other)
+    name = property(lambda self: self.args[0])
+    index_types = property(lambda self: self.args[1].index_types)
 
     def __lt__(self, other):
         return (self.name, self.index_types) < (other.name, other.index_types)
@@ -319,10 +329,10 @@ class TensorHead(Basic):
         """
         assert self.rank == len(indices)
         components = [self]
-        free, dum =  Tensor.from_indices(*indices)
+        free, dum =  TensMul.from_indices(*indices)
         free.sort(key=lambda x: x[0].name)
         dum.sort()
-        return Tensor(S.One, components, free, dum)
+        return TensMul(S.One, components, free, dum)
 
 
 class TensExpr(Basic):
@@ -330,12 +340,12 @@ class TensExpr(Basic):
     A tensor expression is an expression formed by tensors;
     currently the sums of tensors are distributed.
 
-    A TensExpr can be a TensAdd or a Tensor.
+    A TensExpr can be a TensAdd or a TensMul.
 
     TensAdd objects are put in canonic form using the Butler-Portugal
     algorithm for canonicalization under monoterm symmetries.
 
-    Tensor objects are formed by products of component tensors,
+    TensMul objects are formed by products of component tensors,
     and include a coefficient, which is a SymPy expression.
 
 
@@ -382,12 +392,12 @@ class TensExpr(Basic):
             return TensAdd(*[x*other for x in self.args])
         if other.is_TensAdd:
             return TensAdd(*[self*x for x in other.args])
-        return Tensor.__mul__(self, other)
+        return TensMul.__mul__(self, other)
 
     def __rmul__(self, other):
         if self.is_TensMul:
             coeff = other*self._coeff
-            return Tensor(coeff, self._components, self._free, self._dum)
+            return TensMul(coeff, self._components, self._free, self._dum)
         return TensAdd(*[x*other for x in self.args])
 
     def __pow__(self, other):
@@ -401,7 +411,7 @@ class TensExpr(Basic):
         if other.is_Tensor:
             raise ValueError('cannot divide by a tensor')
         coeff = self._coeff/other
-        return Tensor(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
+        return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
 
 
     def __rdiv__(self, other):
@@ -443,7 +453,7 @@ class TensExpr(Basic):
                 else:
                     free1.append((j, ipos, cpos))
 
-            return Tensor(self._coeff, self._components, free1, self._dum)
+            return TensMul(self._coeff, self._components, free1, self._dum)
         if self.is_TensAdd:
             args = self.args
             args1 = []
@@ -451,6 +461,89 @@ class TensExpr(Basic):
                 y = x.substitute_indices(*index_tuples)
                 args1.append(y)
             return TensAdd(*args1)
+
+def _tensAdd_collect_terms(args):
+    """
+    collect TensMul terms differing at most by their coefficient
+    """
+    a = []
+    pprev = None
+    prev = args[0]
+    prev_coeff = prev._coeff
+    changed = False
+    new = 0
+
+    for x in args[1:]:
+        # if x and prev have the same tensor, update the coeff of prev
+        if x._components == prev._components \
+                and x._free == prev._free and x._dum == prev._dum:
+            prev_coeff = prev_coeff + x._coeff
+            changed = True
+            op = 0
+        else:
+            # x and prev are different; if not changed, prev has not
+            # been updated; store it
+            if not changed:
+                a.append(prev)
+            else:
+                # get a tensor from prev with coeff=prev_coeff and store it
+                if prev_coeff:
+                    t = TensMul(prev_coeff, prev._components,
+                        prev._free, prev._dum)
+                    a.append(t)
+            # move x to prev
+            op = 1
+            pprev, prev = prev, x
+            pprev_coeff, prev_coeff = prev_coeff, x._coeff
+            changed = False
+    # if the case op=0 prev was not stored; store it now
+    # in the case op=1 x was not stored; store it now (as prev)
+    if op == 0 and prev_coeff:
+        prev = TensMul(prev_coeff, prev._components, prev._free, prev._dum)
+        a.append(prev)
+    elif op == 1:
+        a.append(prev)
+    return a
+
+def _tensAdd_flatten(args):
+    """
+    flatten TensAdd, coerce terms which are not tensors to tensors
+    """
+    if not all(x.is_Tensor for x in args):
+        args1 = []
+        for x in args:
+            if x.is_Tensor:
+                if x.is_TensAdd:
+                    args1.extend(list(x.args))
+                else:
+                    args1.append(x)
+        args1 = [x for x in args1 if x.is_Tensor and x._coeff]
+        args2 = [x for x in args if not x.is_Tensor]
+        t0 = args1[0]
+        if t0.is_TensAdd:
+            t0 = t0.args[0]
+        if t0._free:
+           raise ValueError('all tensors must have the same indices')
+        t1 = TensMul(Add(*args2), [], [], [])
+        args = [t1] + args1
+    a = []
+    for x in args:
+        if x.is_TensAdd:
+            a.extend(list(x.args))
+        else:
+            a.append(x)
+    args = [x for x in a if x._coeff]
+    return args
+
+def _tensAdd_check(args):
+    """
+    check that all addends have the same free indices
+    """
+    indices0 = sorted([x[0] for x in args[0]._free], key=lambda x: x.name)
+    list_indices = [sorted([y[0] for y in x._free], key=lambda x: x.name) for x in args[1:]]
+    if not all(x == indices0 for x in list_indices):
+        raise ValueError('all tensors must have the same indices')
+
 
 class TensAdd(TensExpr):
     """
@@ -480,87 +573,21 @@ class TensAdd(TensExpr):
         args  tuple of addends
         """
         args = [sympify(x) for x in args if x]
-        if not all(x.is_Tensor for x in args):
-            args1 = []
-            for x in args:
-                if x.is_Tensor:
-                    if x.is_TensAdd:
-                        args1.extend(list(x.args))
-                    else:
-                        args1.append(x)
-            args1 = [x for x in args1 if x.is_Tensor and x._coeff]
-            args2 = [x for x in args if not x.is_Tensor]
-            t0 = args1[0]
-            if t0.is_TensAdd:
-                t0 = t0.args[0]
-            if t0._free:
-               raise ValueError('all tensors must have the same indices')
-            t1 = Tensor(Add(*args2), [], [], [])
-            args = [t1] + args1
-        a = []
-        for x in args:
-            if x.is_TensAdd:
-                a.extend(list(x.args))
-            else:
-                a.append(x)
-        args = a
-        args = [x for x in args if x._coeff]
+        args = _tensAdd_flatten(args)
         if not args:
             return S.Zero
 
-        indices0 = sorted([x[0] for x in args[0]._free], key=lambda x: x.name)
-        list_indices = [sorted([y[0] for y in x._free], key=lambda x: x.name) for x in args[1:]]
-        if not all(x == indices0 for x in list_indices):
-            raise ValueError('all tensors must have the same indices')
-
+        _tensAdd_check(args)
         obj = Basic.__new__(cls, **kw_args)
-        args.sort(key=lambda x: (x._components, x._free, x._dum))
-        a = []
-        pprev = None
-        prev = args[0]
-        prev_coeff = prev._coeff
-        changed = False
-        new = 0
         if len(args) == 1 and args[0].is_TensMul:
             obj._args = tuple(args)
             return obj
-
-        for x in args[1:]:
-            # if x and prev have the same tensor, update the coeff of prev
-            if x._components == prev._components \
-                    and x._free == prev._free and x._dum == prev._dum:
-                prev_coeff = prev_coeff + x._coeff
-                changed = True
-                op = 0
-            else:
-                # x and prev are different; if not changed, prev has not
-                # been updated; store it
-                if not changed:
-                    a.append(prev)
-                else:
-                    # get a tensor from prev with coeff=prev_coeff and store it
-                    if prev_coeff:
-                        t = Tensor(prev_coeff, prev._components,
-                            prev._free, prev._dum)
-                        a.append(t)
-                # move x to prev
-                op = 1
-                pprev, prev = prev, x
-                pprev_coeff, prev_coeff = prev_coeff, x._coeff
-                changed = False
-        # if the case op=0 prev was not stored; store it now
-        # in the case op=1 x was not stored; store it now (as prev)
-        if op == 0 and prev_coeff:
-            prev = Tensor(prev_coeff, prev._components, prev._free, prev._dum)
-            a.append(prev)
-        elif op == 1:
-            a.append(prev)
+        args.sort(key=lambda x: (x._components, x._free, x._dum))
+        a = _tensAdd_collect_terms(args)
         if not a:
             return S.Zero
 
-        # TODO introduce option not to use canon_bp automatically in TensAdd
-        if all(x.is_TensMul for x in a):
-            a = [canon_bp(x) for x in a]
+        a = [canon_bp(x) for x in a]
         a = [x for x in a if x]
         if not a:
             return S.Zero
@@ -621,7 +648,7 @@ class TensAdd(TensExpr):
         s = s.replace('+ -', '- ')
         return s
 
-class Tensor(TensExpr):
+class TensMul(TensExpr):
     """
     Product of tensors
     """
@@ -684,10 +711,10 @@ class Tensor(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, Tensor, get_symmetric_group_sgs
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, TensMul, get_symmetric_group_sgs
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-        >>> Tensor.from_indices(m0, m1, -m1, m3)
+        >>> TensMul.from_indices(m0, m1, -m1, m3)
         ([(m0, 0, 0), (m3, 3, 0)], [(1, 2, 0, 0)])
         """
         n = len(indices)
@@ -806,7 +833,7 @@ class Tensor(TensExpr):
             t1 = t(*indices[pos:pos + t.rank])
             pos += t.rank
             res.append(t1)
-        res[0] = Tensor(self._coeff, res[0]._components, res[0]._free, res[0]._dum, is_canon_bp=res[0]._is_canon_bp)
+        res[0] = TensMul(self._coeff, res[0]._components, res[0]._free, res[0]._dum, is_canon_bp=res[0]._is_canon_bp)
         return res
 
     def canon_args(self):
@@ -893,7 +920,7 @@ class Tensor(TensExpr):
         other = sympify(other)
         if not other.is_Tensor:
             coeff = self._coeff*other
-            return Tensor(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
+            return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
         if other.is_TensAdd:
             return TensAdd(*[self*x for x in other.args])
 
@@ -922,7 +949,7 @@ class Tensor(TensExpr):
                 new_dummy = (ipos2, ipos1, cpos2, cpos1)
             dum.append(new_dummy)
         coeff = self._coeff*other._coeff
-        return Tensor(coeff, components, free, dum)
+        return TensMul(coeff, components, free, dum)
 
 
     def sorted_components(self):
@@ -955,7 +982,7 @@ class Tensor(TensExpr):
             coeff = -self._coeff
         else:
             coeff = self._coeff
-        t = Tensor(coeff, components, free, dum)
+        t = TensMul(coeff, components, free, dum)
         return t
 
     def perm2tensor(self, g, canon_bp=False):
@@ -1005,7 +1032,7 @@ class Tensor(TensExpr):
         coeff = self._coeff
         if g[-1] != len(g) - 1:
             coeff = -coeff
-        res = Tensor(coeff, components, free, dum, is_canon_bp=canon_bp)
+        res = TensMul(coeff, components, free, dum, is_canon_bp=canon_bp)
         return res
 
     def canon_bp(self):
@@ -1118,7 +1145,7 @@ class Tensor(TensExpr):
                     free1.append((ind_free, iposx, 0))
                 else:
                     free1.append((indx, iposx, 0))
-            t1 = Tensor(tx._coeff, tx._components, free1, tx._dum)
+            t1 = TensMul(tx._coeff, tx._components, free1, tx._dum)
             a[j] = t1
             a = a[:i] + a[i + 1:]
             coeff = coeff*tg._coeff
@@ -1144,7 +1171,7 @@ class Tensor(TensExpr):
                         res = (coeff*typ.dim*tg._coeff*ty._coeff)*res
                     else:
                         res = coeff*typ.dim*tg._coeff*ty._coeff
-                        res = Tensor(res, [],[],[], is_canon_bp=True)
+                        res = TensMul(res, [],[],[], is_canon_bp=True)
                     if contract_all == True and g in res._components:
                         return res.contract_metric(g, True)
                     return res
@@ -1155,7 +1182,7 @@ class Tensor(TensExpr):
                     free2.append((ind1, iposx, 0))
                 else:
                     free2.append((indx, iposx, 0))
-            t2 = Tensor(ty._coeff, ty._components, free2, ty._dum)
+            t2 = TensMul(ty._coeff, ty._components, free2, ty._dum)
             a[k] = t2
             a = a[:i] + a[i + 1:]
             coeff = coeff*tg._coeff
@@ -1203,7 +1230,7 @@ def tensor_mul(*a):
     product of tensors
     """
     if not a:
-        return Tensor(S.One, [], [], [])
+        return TensMul(S.One, [], [], [])
     t = a[0]
     for tx in a[1:]:
         t = t*tx
@@ -1224,7 +1251,7 @@ def tensorlist_contract_metric(a, tg):
                 ind3 = ind2 if indx == mind1 else ind1
                 free1 = t1._free[:]
                 free1[j] = (ind3, ipos, 0)
-                t2 = Tensor(t1._coeff, t1._components, free1, t1._dum)
+                t2 = TensMul(t1._coeff, t1._components, free1, t1._dum)
                 a[i] = t2
                 return a
     a.append(tg)
