@@ -1,5 +1,6 @@
 from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S
+from sympy.core.symbol import Symbol, symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 
 
@@ -140,7 +141,7 @@ class TensorIndex(Basic):
 
 def tensor_indices(s, typ):
     """
-    Returns tensor indices given their names and the TensorIndexType ``typ``
+    Returns list of tensor indices given their names and the type ``typ``
 
     ``s`` string of comma separated names of indices
 
@@ -153,7 +154,11 @@ def tensor_indices(s, typ):
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     """
-    a = s.split(',')
+    if isinstance(s, str):
+        a = [x.name for x in symbols(s, seq=True)]
+    else:
+        raise ValueError('expecting a string')
+
     return [TensorIndex(i, typ) for i in a]
 
 
@@ -221,7 +226,10 @@ class TensorType(Basic):
 
     def __call__(self, s, commuting=0):
         """
-        commuting:
+        Return a TensorHead object or a list of TensorHead objects.
+
+        ``s``  name or string of names
+        ``commuting``:
         None no commutation rule
         0    commutes
         1    anticommutes
@@ -245,7 +253,10 @@ class TensorType(Basic):
         >>> canon_bp(W(a, b)*W(-b, -a))
         0
         """
-        names = s.split(',')
+        if isinstance(s, str):
+            names = [x.name for x in symbols(s, seq=True)]
+        else:
+            raise ValueError('expecting a string')
         if len(names) == 1:
             return TensorHead(names[0], self, commuting)
         else:

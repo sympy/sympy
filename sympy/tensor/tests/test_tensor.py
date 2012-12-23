@@ -51,7 +51,7 @@ def test_canonicalize_no_slot_sym():
     nsym2 = TensorSymmetry(([], [Permutation(range(4))]))
     NS2 = TensorType([Lorentz]*2, nsym2)
     A = NS2('A')
-    B, C = S1('B,C')
+    B, C = S1('B, C')
     t = A(d1, -d0)*B(d0)*C(-d1)
     tc = t.canon_bp()
     assert str(tc) == 'A(L_0, L_1)*B(-L_1)*C(-L_0)'
@@ -95,7 +95,7 @@ def test_canonicalize_no_slot_sym():
 
 def test_canonicalize_no_dummies():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
+    a, b, c, d = tensor_indices('a, b, c, d', Lorentz)
     sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
     sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
     sym2a = TensorSymmetry(get_symmetric_group_sgs(2, 1))
@@ -145,7 +145,7 @@ def test_no_metric_symmetry():
     # A^d1_d0 * A^d0_d1
     # T_c = A^d0_d1 * A^d1_d0
     Lorentz = TensorIndexType('Lorentz', metric_sym=None, dummy_fmt='L')
-    d0, d1, d2, d3 = tensor_indices('d0,d1,d2,d3', Lorentz)
+    d0, d1, d2, d3 = tensor_indices('d0 d1 d2 d3', Lorentz)
     nsym2 = TensorSymmetry(([], [Permutation(range(4))]))
     NS2 = TensorType([Lorentz]*2, nsym2)
     A = NS2('A')
@@ -426,7 +426,7 @@ def test_get_indices():
     assert a != -a
     sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
     S2 = TensorType([Lorentz]*2, sym2)
-    A, B = S2('A,B')
+    A, B = S2('A B')
     assert A != B
     t = A(a,b)*B(-b,c)
     indices = t.get_indices()
