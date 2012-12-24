@@ -12,7 +12,7 @@ from sympy import (
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
-    uppergamma, zeta)
+    uppergamma, zeta, subfactorial)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -141,6 +141,9 @@ def test_latex_functions():
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"
+
+    assert latex(subfactorial(k)) == r"!k"
+    assert latex(subfactorial(-k)) == r"!\left(- k\right)"
 
     assert latex(factorial2(k)) == r"k!!"
     assert latex(factorial2(-k)) == r"\left(- k\right)!!"

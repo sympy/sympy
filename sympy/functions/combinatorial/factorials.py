@@ -3,7 +3,9 @@ from sympy.core.function import Function, ArgumentIndexError
 from sympy.ntheory import sieve
 from math import sqrt as _sqrt
 
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, as_int
+from sympy.core.cache import cacheit
+
 
 
 class CombinatorialFunction(Function):
@@ -161,16 +163,76 @@ class MultiFactorial(CombinatorialFunction):
     pass
 
 
+class subfactorial(CombinatorialFunction):
+    """The subfactorial counts the derangements of n items and is
+    defined for non-negative integers as::
+
+              ,
+             |  1                             for n = 0
+        !n = {  0                             for n = 1
+             |  (n - 1)*(!(n - 1) + !(n - 2)) for n > 1
+              `
+
+    It can also be written as int(round(n!/exp(1))) but the recursive
+    definition with caching is implemented for this function.
+
+    References
+    ==========
+    * http://en.wikipedia.org/wiki/Subfactorial
+
+    Examples
+    ========
+
+    >>> from sympy import subfactorial
+    >>> from sympy.abc import n
+    >>> subfactorial(n + 1)
+    !(n + 1)
+    >>> subfactorial(5)
+    44
+
+    See Also
+    ========
+    factorial, sympy.utilities.iterables.generate_derangements
+    """
+    nargs = 1
+
+    @classmethod
+    @cacheit
+    def _eval(self, n):
+        if not n:
+            return 1
+        elif n == 1:
+            return 0
+        return (n - 1)*(self._eval(n - 1) + self._eval(n - 2))
+
+    @classmethod
+    def eval(cls, arg):
+        try:
+            arg = as_int(arg)
+            if arg < 0:
+                raise ValueError
+            return C.Integer(cls._eval(arg))
+        except ValueError:
+            if sympify(arg).is_Number:
+                raise ValueError("argument must be a nonnegative integer")
+
+    def _sympystr(self, p):
+        if self.args[0].is_Atom:
+            return "!%s" % p.doprint(self.args[0])
+        else:
+            return "!(%s)" % p.doprint(self.args[0])
+
+
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
 
     The double factorial is defined for integers >= -1 as::
 
-                 ,
-                |  n*(n - 2)*(n - 4)* ... * 1    for n odd
-        n!! =  -|  n*(n - 2)*(n - 4)* ... * 2    for n even
-                |  1                             for n = 0, -1
-                 '
+               ,
+              |  n*(n - 2)*(n - 4)* ... * 1    for n odd
+        n!! = {  n*(n - 2)*(n - 4)* ... * 2    for n even
+              |  1                             for n = 0, -1
+               `
 
     Examples
     ========
