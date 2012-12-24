@@ -717,9 +717,8 @@ def _data(n):
 
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of n items (entered as string,
-    integer or sequence) taken k at a time. If k is
-    negative, the total number of permutations of all lengths through -k
-    will be returned.
+    integer or sequence) taken k at a time. If k is negative, the total
+    number of permutations of all lengths through -k will be returned.
 
     Examples
     ========
@@ -739,6 +738,11 @@ def nP(n, k=None, replacement=False):
     16
     >>> nP(3, -3)
     16
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Permutation
     """
     try:
         return Integer(_nP(as_int(n), k, replacement))
@@ -806,7 +810,7 @@ def _nP(n, k=None, replacement=False):
 @cacheit
 def _gen_poly(n):
     """for n = (m1, m2, .., mk) return the coefficients of the polynomial,
-    prod(sum(x**i for i in range(nj+1)) for nj in n), the coefficient of
+    prod(sum(x**i for i in range(nj + 1)) for nj in n), the coefficient of
     x**r being the number of r-length combinations of sum(n) elements with
     multiplicities given by n. The coefficients are given as a dictionary.
 
@@ -821,6 +825,10 @@ def _gen_poly(n):
     0
     >>> t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
     >>> assert sum(_gen_poly(t)[i] for i in range(55)) == 58212000
+
+    The generating poly used here is the same as that listed in
+    http://tinyurl.com/cep849r, but in a refactored form.
+
     """
     from collections import defaultdict
 
@@ -851,9 +859,8 @@ def _gen_poly(n):
 
 def nC(n, k, replacement=False):
     """Return the number of combinations of n items (entered as a string,
-    integer, or _data(seq)) taken k at a time.  If k is
-    negative, the total number of combinations of all lengths through -k
-    will be returned.
+    integer, or _data(seq)) taken k at a time.  If k is negative, the total
+    number of combinations of all lengths through -k will be returned.
 
     Examples
     ========
@@ -868,6 +875,12 @@ def nC(n, k, replacement=False):
     >>> t = _data([1, 2, 2])
     >>> nC(t, 2)
     2
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Combination
+    * http://tinyurl.com/cep849r
 
     See Also
     ========
@@ -887,14 +900,17 @@ def nC(n, k, replacement=False):
     elif type(n) is str:
         n = _data(n)
     if type(n) is tuple and n[-1] == _OK:
+        N = n[_N]
         if replacement:
             return nC(n[_ITEMS], k, replacement)
         if k < 0:
             if not replacement and k == -n[_N]:
                 return prod(m + 1 for m in n[_M])
             return sum(nC(n, i, replacement) for i in range(-k + 1))
-        if k == 1:
-            return len(n[_M])
+        if k in (1, N - 1):
+            return n[_ITEMS]
+        if k in (0, N):
+            return 1
         return _gen_poly(tuple(n[_M]))[k]
     else:
         return nC(_data(n), k, replacement)
@@ -990,7 +1006,14 @@ def stirling(n, k, d=None, kind=2):
         stirling(n1, k - 1, kind=kind)
 
 
-def nT(n, k=None):
+@cacheit
+def _nT(n, k):
+    if k == 0:
+        return 1 if k == n else 0
+    return sum(_nT(n - k, j) for j in range(min(k, n - k) + 1))
+
+
+def nT(n, k=None, _last=None):
     """Return the number of k-sized partitions of n items. If n is an integer
     it is interpreted as n identical items; n can also be entered as
     a multiset, string or sequence. To indicate n different items, pass
@@ -1032,24 +1055,22 @@ def nT(n, k=None):
     [1, 16, 41, 51, 52]
     >>> nT(n)
     52
+
+    References
+    ==========
+
+    * http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
+
     """
     from sympy.utilities.iterables import partitions, multiset_partitions
 
     if type(n) is int:
+        # all the same
         if k is None:
             k = -abs(n)
-        # all the same
-        if k == -n:
-            return len(list(partitions(n)))
-        tot = 0
         if k < 0:
-            k = -k
-            for p in partitions(n, k, size=True):
-                tot += p[0] <= k
-        else:
-            for p in partitions(n, k, size=True):
-                tot += p[0] == k
-        return tot
+            return sum(_nT(n, k) for k in range(1, -k + 1))
+        return _nT(n, k)
     elif type(n) is str:
         u = len(set(n))
         if u == 1:
@@ -1060,12 +1081,20 @@ def nT(n, k=None):
         N = n[_N]
         if k is None:
             k = -N
-        if n[_N] == n[_ITEMS]:
+        if k in (1, N, -1):
+            return 1
+        if abs(k) == 2:
+            m, r = divmod(N, 2)
+            rv = sum(nC(n, i) for i in range(1, m + 1))
+            if not r:
+                rv -= nC(n, m)//2
+            if k == -2:
+                rv += 1  # for k == 1
+            return rv
+        if N == n[_ITEMS]:
             # all distinct
             if k == -N:
                 return bell(N)
-            if k == N:
-                return 1
             if k < 0:
                 tot = 0
                 for i in range(1, -k + 1):

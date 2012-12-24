@@ -1194,13 +1194,15 @@ def multiset_partitions(multiset, m=None):
 
     When all the elements are the same in the multiset, the order
     of the returned partitions is determined by the ``partitions``
-    routine.
+    routine. If one is counting partitions then it is better to use
+    the ``nT`` function.
 
     See Also
     ========
     partitions
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
+    sympy.functions.combinatorial.numbers.nT
     """
 
     if type(multiset) is int:
