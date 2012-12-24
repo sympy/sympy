@@ -2447,10 +2447,10 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A', 1))
     assert _test_args(IndexedBase('A')[0, 1])
 
-@XFAIL
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
-    assert _test_args(TensorIndexType('Lorentz', dummy_fmt='L'))
+    from sympy import Symbol
+    assert _test_args(TensorIndexType(Symbol('Lorentz'), metric_sym=S.Zero))
 
 @XFAIL
 def test_sympy__tensor__tensor__TensorSymmetry():

@@ -144,7 +144,7 @@ def test_no_metric_symmetry():
     # no metric symmetry; A no symmetry
     # A^d1_d0 * A^d0_d1
     # T_c = A^d0_d1 * A^d1_d0
-    Lorentz = TensorIndexType('Lorentz', metric_sym=None, dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', metric_antisym=None, dummy_fmt='L')
     d0, d1, d2, d3 = tensor_indices('d0 d1 d2 d3', Lorentz)
     nsym2 = TensorSymmetry(([], [Permutation(range(4))]))
     NS2 = TensorType([Lorentz]*2, nsym2)
@@ -256,7 +256,7 @@ def test_canonicalize1():
     # A anticommuting symmetric, B antisymmetric commuting, antisymmetric metric
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = -A^{d0 d1 d2} * A_{d0 d1}^d3 * B_{d2 d3}
-    Spinor = TensorIndexType('Spinor', metric_sym=1, dummy_fmt='S')
+    Spinor = TensorIndexType('Spinor', metric_antisym=1, dummy_fmt='S')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
       tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Spinor)
     S3 = TensorType([Spinor]*3, sym3)
@@ -271,7 +271,7 @@ def test_canonicalize1():
     # no metric symmetry
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3
-    Mat = TensorIndexType('Mat', metric_sym=None, dummy_fmt='M')
+    Mat = TensorIndexType('Mat', metric_antisym=None, dummy_fmt='M')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
       tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Spinor)
     S3 = TensorType([Mat]*3, sym3)
@@ -397,7 +397,7 @@ def test_riemann_products():
 
 def test_canonicalize2():
     D = Symbol('D')
-    Eucl = TensorIndexType('Eucl', metric_sym=0, dim=D, dummy_fmt='E')
+    Eucl = TensorIndexType('Eucl', metric_antisym=0, dim=D, dummy_fmt='E')
     i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14 = \
       tensor_indices('i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14', Eucl)
     sym3a = TensorSymmetry(get_symmetric_group_sgs(3, 1))

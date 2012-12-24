@@ -6,32 +6,33 @@ from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_
 
 class TensorIndexType(Basic):
     """
-    A TensorIndexType is characterized by its name, by metric_sym,
+    A TensorIndexType is characterized by its name, by metric_antisym,
     giving the symmetry of its metric.
 
-    ``metric_sym = 0`` symmetric metric (in Riemannian geometry)
+    ``metric_antisym = False`` symmetric metric (in Riemannian geometry)
 
-    ``metric_sym = 1`` antisymmetric metric (for spinor calculus)
+    ``metric_antisym = True`` antisymmetric metric (for spinor calculus)
 
     In these two cases the metric is used to raise and lower indices.
 
-    ``metric_sym = None``  there is no metric, it is not possible to
-    raise or lower indices; e.g. the index of the defining representation
-    of ``SU(N)`` , is 'covariant' and the conjugate representation is
+    ``metric_antisym = None``  there is no metric;
+    it is not possible to raise or lower indices;
+    e.g. the index of the defining representation of ``SU(N)``
+    is 'covariant' and the conjugate representation is
     'contravariant'; for ``N > 2`` they are linearly independent.
 
 
     If a dimension ``dim`` is defined, it can be a symbol or an integer.
     """
-    def __new__(cls, name, metric_sym=0, dim=None, eps_dim = None,
+    def __new__(cls, name, metric_antisym=False, dim=None, eps_dim = None,
                  dummy_fmt=None):
         """
         name   name of the tensor type
 
-        ``metric_sym``:
-        0      symmetric
-        1      antisymmetric
-        None   no symmetry
+        ``metric_antisym``:
+        False      symmetric
+        True       antisymmetric
+        None       no symmetry
 
         ``dim``    dimension, it can be a symbol or a positive integer
 
@@ -49,35 +50,31 @@ class TensorIndexType(Basic):
         >>> from sympy.tensor.tensor import TensorIndexType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         """
-        obj = Basic.__new__(cls, name, metric_sym)
-
-        obj.name = name
-        obj.metric_sym = metric_sym
+        obj = Basic.__new__(cls, name, metric_antisym)
         if not dummy_fmt:
             obj.dummy_fmt = '%s_%%d' % obj.name
         else:
             obj.dummy_fmt = '%s_%%d' % dummy_fmt
         obj.metric = obj.get_metric()
         obj.dim = dim
-        if eps_dim:
-            obj.eps_dim = eps_dim
-        else:
-            obj.eps_dim = dim
-        if isinstance(obj.eps_dim, int):
-            obj.epsilon = obj.get_epsilon()
-        else:
-            obj.epsilon = None
+        obj.eps_dim = eps_dim if eps_dim else dim
+        obj.epsilon = obj.get_epsilon()
         return obj
 
+    name = property(lambda self: self.args[0])
+    metric_antisym = property(lambda self: self.args[1])
+
     def get_metric(self):
-        if self.metric_sym is None:
+        if self.metric_antisym is None:
             return None
-        sym2 = TensorSymmetry(get_symmetric_group_sgs(2, self.metric_sym))
+        sym2 = TensorSymmetry(get_symmetric_group_sgs(2, self.metric_antisym))
         S2 = TensorType([self]*2, sym2)
         metric = S2('metric')
         return metric
 
     def get_epsilon(self):
+        if not isinstance(self.eps_dim, int):
+            return None
         sym = TensorSymmetry(get_symmetric_group_sgs(self.eps_dim, 1))
         Sdim = TensorType([self]*self.eps_dim, sym)
         epsilon = Sdim('Eps')
@@ -191,7 +188,6 @@ class TensorSymmetry(Basic):
 
 
 
-
 class TensorType(Basic):
     """
     A TensorType object is characterised by its index types and its symmetry
@@ -224,15 +220,15 @@ class TensorType(Basic):
     def __str__(self):
         return 'TensorType(%s)' %([str(x) for x in self.index_types])
 
-    def __call__(self, s, commuting=0):
+    def __call__(self, s, anticommuting=False):
         """
         Return a TensorHead object or a list of TensorHead objects.
 
         ``s``  name or string of names
-        ``commuting``:
-        None no commutation rule
-        0    commutes
-        1    anticommutes
+        ``anticommuting``:
+        None     no commutation rule
+        False    commutes
+        True     anticommutes
 
         Examples
         ========
@@ -258,14 +254,14 @@ class TensorType(Basic):
         else:
             raise ValueError('expecting a string')
         if len(names) == 1:
-            return TensorHead(names[0], self, commuting)
+            return TensorHead(names[0], self, anticommuting)
         else:
-            return [TensorHead(name, self, commuting) for name in names]
+            return [TensorHead(name, self, anticommuting) for name in names]
 
 class TensorHead(Basic):
     is_commutative = False
 
-    def __new__(cls, name, typ, commuting, **kw_args):
+    def __new__(cls, name, typ, anticommuting, **kw_args):
         """
         tensor with given name, index types, symmetry, commutation rule
 
@@ -273,10 +269,10 @@ class TensorHead(Basic):
 
         ``typ`` list of TensorIndexType
 
-        ``commuting`` commutation property
-        0     commuting tensor
-        1     anticommuting tensor
-        None  no commutation rule
+        ``anticommuting`` commutation property
+        False     commuting tensor
+        True      anticommuting tensor
+        None      no commutation rule
 
         Examples
         ========
@@ -294,7 +290,7 @@ class TensorHead(Basic):
         obj.rank = len(obj.index_types)
         obj.types = typ.types
         obj.symmetry = typ.symmetry
-        obj.commuting = commuting
+        obj.anticomm = anticommuting
         return obj
 
     name = property(lambda self: self.args[0])
@@ -312,9 +308,9 @@ class TensorHead(Basic):
         TODO: it should be possible to assign rules for commutations
         between tensors, to be used here.
         """
-        if self.commuting == 0 or other.commuting == 0:
+        if self.anticomm == 0 or other.anticomm == 0:
             return 0
-        if self.commuting == 1 and other.commuting == 1:
+        if self.anticomm == 1 and other.anticomm == 1:
             return 1
         return None
 
@@ -887,7 +883,7 @@ class TensMul(TensExpr):
                     dummies.append(a)
                 a = [pos, pos + 1]
                 prev = typ
-                msym.append(typ.metric_sym)
+                msym.append(typ.metric_antisym)
             else:
                 a.extend([pos, pos + 1])
             pos += 2
@@ -903,7 +899,7 @@ class TensMul(TensExpr):
                 numtyp.append([prev, 1])
         v = []
         for h, n in numtyp:
-            v.append((h.symmetry.base, h.symmetry.generators, n, h.commuting))
+            v.append((h.symmetry.base, h.symmetry.generators, n, h.anticomm))
         return _af_new(g), dummies, msym, v
 
     def __mul__(self, other):
@@ -1104,7 +1100,7 @@ class TensMul(TensExpr):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
-        if g.index_types[0].metric_sym != 0:
+        if g.index_types[0].metric_antisym != 0:
             # TODO case of antisymmetric metric
             raise NotImplementedError
         if not self._components:

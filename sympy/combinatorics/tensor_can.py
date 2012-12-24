@@ -923,10 +923,14 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     return base, [_af_new(h) for h in gens]
 
 
-def get_symmetric_group_sgs(n, sym=0):
+def get_symmetric_group_sgs(n, antisym=False):
     """
-    Return base, gens of the minimal BSGS for (anti)symmetric group
-    with n elements
+    Return base, gens of the minimal BSGS for (anti)symmetric tensor
+
+    ``n``  rank of the tensor
+
+    ``antisym = False`` symmetric tensor
+    ``antisym = True``  antisymmetric tensor
 
     Examples
     ========
@@ -940,7 +944,7 @@ def get_symmetric_group_sgs(n, sym=0):
     if n == 1:
         return [], [_af_new(range(3))]
     gens = [Permutation(n - 1)(i, i + 1)._array_form for i in range(n - 1)]
-    if sym == 0:
+    if antisym == 0:
         gens = [x + [n, n + 1] for x in gens]
     else:
         gens = [x + [n + 1, n] for x in gens]
