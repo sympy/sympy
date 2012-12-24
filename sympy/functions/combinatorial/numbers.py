@@ -8,7 +8,7 @@ the separate 'factorials' module.
 """
 
 from sympy.core.function import Function, expand_mul
-from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Basic, Dummy
+from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int
 
 from sympy.mpmath import bernfrac
@@ -392,8 +392,9 @@ class bell(Function):
         s = S.Zero
         a = S.One
         for m in xrange(1, n - k + 2):
-            s += a*bell._bell_incomplete_poly(n - m, k - 1, symbols)*symbols[m - 1]
-            a = a*(n - m)/m
+            s += a * bell._bell_incomplete_poly(
+                n - m, k - 1, symbols) * symbols[m - 1]
+            a = a * (n - m) / m
         return expand_mul(s)
 
     @classmethod
@@ -1036,6 +1037,8 @@ def nT(n, k=None, _last=None):
     [1, 9, 20, 25, 26, 26]
     >>> nT('aabbc')
     26
+    >>> [nT("mississippi", i) for i in range(1,12)]
+    [1, 74, 609, 1521, 1768, 1224, 579, 197, 50, 9, 1]
 
     Partitions when all (n) items are identical:
 
@@ -1062,7 +1065,7 @@ def nT(n, k=None, _last=None):
     * http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
 
     """
-    from sympy.utilities.iterables import partitions, multiset_partitions
+    from sympy.utilities.iterables import partitions
 
     if type(n) is int:
         # all the same
@@ -1102,18 +1105,74 @@ def nT(n, k=None, _last=None):
                 return tot
             else:
                 return stirling(N, k)
-        # else expand the tuple with repeats; it would be
-        # better to keep it in multiset form but multiset_partitions
-        # presently works with a list representation
-        n = [i for i, j in enumerate(n[_M]) for ii in range(j)]
         if k < 0:
-            k = -k
-            if k == -N:
-                return len(list(multiset_partitions(n)))
-            tot = 0
-            for p in multiset_partitions(n):
-                tot += len(p) <= k
-            return tot
-        return len(list(multiset_partitions(n, k)))
+            return sum(nT(n, k) for k in range(1, -k + 1))
+        nfull = _expand(n[_M])  # TODO put this in condensed form and cache _pcount
+        tot = 0
+        for p in partitions(N, m=k, size=True):
+            s, p = p
+            if s == k:
+                tot += _pcount(nfull, p.copy())  # TODO send tuple(p.items()) when _pcount is cached
+        return tot
     else:
         return nT(_data(n), k)
+
+
+def _expand(m):
+    return [i for i, j in enumerate(m) for ii in range(j)]
+
+
+def _contract(n):
+    from sympy.utilities.iterables import multiset
+    return tuple(sorted(multiset(n).values()))
+
+
+def _pcount(n, p):
+    return __pcount(_contract(n), tuple(p.items()))
+
+
+@cacheit
+def __pcount(n, p):
+    from sympy.utilities.iterables import multiset_combinations
+    n, p = _expand(n), dict(p)
+    m = max(p)
+    r = p.pop(m)
+    if (m == 1 or r == 1) and r*m == len(n):
+        return 1
+    tot = 0
+    if r == 1:
+        for c in multiset_combinations(n, m):
+            newn = []
+            for ni in n:
+                if ni in c:
+                    c.remove(ni)
+                    continue
+                newn.append(ni)
+            tot += _pcount(newn, p.copy())
+    else:
+        for c in multiset_combinations(n, m*r):
+            count = _split(_contract(c), m, r)
+            newn = []
+            for ni in n:
+                if ni in c:
+                    c.remove(ni)
+                    continue
+                newn.append(ni)
+            if p:
+                tot += _pcount(newn, p.copy())*count
+            else:
+                tot += count
+    return tot
+
+
+@cacheit
+def _split(n, take, m):
+    from sympy.utilities.iterables import multiset_combinations, flatten, subsets, multiset
+
+    n = _expand(n)
+    tot = 0
+    ok = multiset(n)
+    for cc in subsets(list(multiset_combinations(n, take)), m, repetition=True):
+        if multiset(flatten(cc)) == ok:
+            tot += 1
+    return tot
