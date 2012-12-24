@@ -2450,7 +2450,7 @@ def test_sympy__tensor__indexed__IndexedBase():
 def test_sympy__tensor__tensor__TensorIndexType():
     from sympy.tensor.tensor import TensorIndexType
     from sympy import Symbol
-    assert _test_args(TensorIndexType(Symbol('Lorentz'), metric_sym=S.Zero))
+    assert _test_args(TensorIndexType(Symbol('Lorentz'), metric_antisym=S.Zero))
 
 @XFAIL
 def test_sympy__tensor__tensor__TensorSymmetry():
