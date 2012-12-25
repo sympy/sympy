@@ -1,7 +1,7 @@
 from sympy import Symbol, S, I
 from sympy.combinatorics import Permutation
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
-  TensorSymmetry, get_symmetric_group_sgs, TensorType, tensor_mul, Tensor,
+  TensorSymmetry, get_symmetric_group_sgs, TensorType, tensor_mul, TensMul,
   TensAdd, TensorHead, tensorlist_contract_metric)
 
 
@@ -51,7 +51,7 @@ class GammaMatrices(object):
         sym0 = TensorSymmetry(([], [Permutation(1)]))
         S0 = TensorType([], sym0)
         self.Gamma5 = S0('G5', None)
-        self.G5 = Tensor(S.One, [self.Gamma5], [], [])
+        self.G5 = TensMul(S.One, [self.Gamma5], [], [])
         self.g5c = g5c
         self.epsilon = typ.epsilon
         self.eps_dim = typ.eps_dim
@@ -124,7 +124,7 @@ class GammaMatrices(object):
 
         >>> from sympy import Symbol, S
         >>> from sympy.tensor.tensor import (TensorIndexType, tensor_indices,\
-            TensorSymmetry, get_symmetric_group_sgs, TensorType, Tensor)
+            TensorSymmetry, get_symmetric_group_sgs, TensorType, TensMul)
         >>> from sympy.tensor.dgamma_matr import GammaMatrices
         >>> D = Symbol('D')
         >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
@@ -152,12 +152,12 @@ class GammaMatrices(object):
         if n == 0:
             # G(m)*G(-m) = d
             t1 = tensor_mul(*a1)
-            t2 = Tensor(D*t1._coeff*tc, t1._components, t1._free, t1._dum)
+            t2 = TensMul(D*t1._coeff*tc, t1._components, t1._free, t1._dum)
             return t2
         if n == 1:
             # G(m)*G(n)*G(-m) = (2 - d)*G(n)
             t1 = tensor_mul(*a1)
-            t2 = Tensor((2-D)*t1._coeff*tc, t1._components, t1._free, t1._dum)
+            t2 = TensMul((2-D)*t1._coeff*tc, t1._components, t1._free, t1._dum)
             return t2
         if n == 2:
             # G(m)*G(n1)*G(n2)*G(-m) = (d-4)*G(n1)*G(n2) + 4*delta(n1, n2)
@@ -206,7 +206,7 @@ class GammaMatrices(object):
 
         >>> from sympy import Symbol, S
         >>> from sympy.tensor.tensor import (TensorIndexType, tensor_indices,\
-            TensorSymmetry, get_symmetric_group_sgs, TensorType, Tensor)
+            TensorSymmetry, get_symmetric_group_sgs, TensorType, TensMul)
         >>> from sympy.tensor.dgamma_matr import GammaMatrices
         >>> D = Symbol('D')
         >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
@@ -256,7 +256,7 @@ class GammaMatrices(object):
                     p_pos2 = dx[3]
             if p_pos1 > 0 and p_pos2 > 0:
                 if components[p_pos1] == components[p_pos2] \
-                    and components[p_pos1].commuting == 0:
+                    and components[p_pos1].anticomm == 0:
                     return i, p_pos1, p_pos2
         return None
 
@@ -272,7 +272,7 @@ class GammaMatrices(object):
 
         >>> from sympy import Symbol, S
         >>> from sympy.tensor.tensor import (TensorIndexType, tensor_indices,\
-            TensorSymmetry, get_symmetric_group_sgs, TensorType, Tensor)
+            TensorSymmetry, get_symmetric_group_sgs, TensorType, TensMul)
         >>> from sympy.tensor.dgamma_matr import GammaMatrices
         >>> D = Symbol('D')
         >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
@@ -338,7 +338,7 @@ class GammaMatrices(object):
 
         >>> from sympy import Symbol, S
         >>> from sympy.tensor.tensor import (TensorIndexType, tensor_indices,\
-            TensorSymmetry, get_symmetric_group_sgs, TensorType, Tensor)
+            TensorSymmetry, get_symmetric_group_sgs, TensorType, TensMul)
         >>> from sympy.tensor.dgamma_matr import GammaMatrices
         >>> D = Symbol('D')
         >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
@@ -374,7 +374,7 @@ class GammaMatrices(object):
 
         >>> from sympy import Symbol, S
         >>> from sympy.tensor.tensor import (TensorIndexType, tensor_indices,\
-                TensorSymmetry, get_symmetric_group_sgs, TensorType, Tensor)
+                TensorSymmetry, get_symmetric_group_sgs, TensorType, TensMul)
         >>> from sympy.tensor.dgamma_matr import GammaMatrices
         >>> D = Symbol('D')
         >>> Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
@@ -406,7 +406,7 @@ class GammaMatrices(object):
         g = self.g
         if all(x != G for x in components):
             if any(x == Gamma5 for x in components):
-                return Tensor(S.Zero, [], [], [])
+                return TensMul(S.Zero, [], [], [])
             return self.gctr*t
         withG5 = False
         t = t.canon_bp()
@@ -424,7 +424,7 @@ class GammaMatrices(object):
             withG5 = True
         if withG5:
             if numG < 4 or numG % 2 != self.eps_dim % 2:
-                return Tensor(S.Zero, [], [], [])
+                return TensMul(S.Zero, [], [], [])
             if numG == 4:
                 a = t.split()
                 indices = [x._free[0][0] for x in a[i:j]]
@@ -436,7 +436,7 @@ class GammaMatrices(object):
                 res = res.canon_bp()
                 return res
             if numG > 4:
-                prev = Tensor(S.Zero, [], [], [])
+                prev = TensMul(S.Zero, [], [], [])
                 t2 = t
                 while True:
                     t2 = self.do_rule1_gamma(t2)
@@ -465,9 +465,9 @@ class GammaMatrices(object):
         else:
             # without G5
             if numG % 2 == 1:
-                return Tensor(S.Zero, [], [], [])
+                return TensMul(S.Zero, [], [], [])
             if numG > 4:
-                prev = Tensor(S.Zero, [], [], [])
+                prev = TensMul(S.Zero, [], [], [])
                 t2 = t
                 while True:
                     t2 = self.do_rule1_gamma(t2)
@@ -515,7 +515,7 @@ class GammaMatrices(object):
             return self.gctr
         n = len(a)
         if n%2 == 1:
-            return Tensor(S.Zero, [], [], [])
+            return TensMul(S.Zero, [], [], [])
         if n == 2:
             ind0 = a[0]._free[0][0]
             ind1 = a[1]._free[0][0]

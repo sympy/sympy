@@ -1,6 +1,6 @@
 from sympy import Symbol, S, I
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices, \
-TensorSymmetry, get_symmetric_group_sgs, TensorType, Tensor)
+TensorSymmetry, get_symmetric_group_sgs, TensorType, TensMul)
 from sympy.tensor.dgamma_matr import GammaMatrices
 from sympy.utilities.pytest import skip, XFAIL
 
