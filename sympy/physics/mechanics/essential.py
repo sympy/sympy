@@ -522,6 +522,7 @@ class ReferenceFrame(object):
 
         """
 
+        from sympy.physics.mechanics import Point
         if not isinstance(name, (str, unicode)):
             raise TypeError('Need to supply a valid name')
         # The if statements below are for custom printing of basis-vectors for
@@ -582,6 +583,8 @@ class ReferenceFrame(object):
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
+        self._origin = Point(name + '_origin')
+        
 
     def __getitem__(self, ind):
         """Returns basis vector for the provided index (index being an str)"""
@@ -1039,6 +1042,49 @@ class ReferenceFrame(object):
     def z(self):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
+
+    def get_point_at(self, pointname, x, y, z):
+        """
+        Returns Point at [x, y, z] with respect to the ReferenceFrame's origin
+        and names it to 'pointname'.
+        """
+        from sympy.physics.mechanics import Point
+        temp = Point(pointname)
+        temp.set_pos(self._origin, x * self._x + y * self._y + z * self._z)
+        return temp
+
+    def get_origin(self):
+        """The origin of the ReferenceFrame."""
+        return self._origin
+
+    def shift_origin_to(self, neworigin):
+        """Shift the origin of the Reference Frame to neworigin."""
+        self._origin = neworigin
+
+    def get_coordinates(self, point):
+        """Returns the co-ordinates of 'point' in the ReferenceFrame, if possible.
+
+        Examples
+        ========
+        >>> from sympy.physics.mechanics import ReferenceFrame, Point
+        >>> N = ReferenceFrame('N')
+        >>> p = N.get_point_at('p', 1, 2, 3)
+        >>> N.get_coordinates(p)
+        [1, 2, 3]
+        >>> o = N.get_origin()
+        >>> N.shift_origin_to(p)
+        >>> N.get_coordinates(p)
+        [0, 0, 0]
+        >>> N.get_coordinates(o)
+        [-1, -2, -3]
+        
+        """
+        from sympy.physics.mechanics import Point
+        pos_vector = point.pos_from(self._origin)
+        if pos_vector == 0:
+            return [0, 0, 0]
+        pos_vector = pos_vector.express(self)
+        return [x for x in pos_vector.args[0][0]]
 
 
 class Vector(object):

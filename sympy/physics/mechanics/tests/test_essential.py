@@ -1,9 +1,19 @@
 from sympy import cos, Matrix, sin, symbols, pi
 from sympy.abc import x, y, z
-from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
+from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols, Point
 
 Vector.simp = True
 A = ReferenceFrame('A')
+
+def test_coordinate():
+    """Test the use of ReferenceFrame as a co-ordinate frame"""
+    p = Point('p')
+    p.set_pos(A.get_origin(), 1 * A.x + 2 * A.y + 3 * A.z)
+    assert A.get_coordinates(p) == [1, 2, 3]
+    q = A.get_point_at('q', 1, 2, 3)
+    assert p.pos_from(q) == 0
+    A.shift_origin_to(p)
+    assert A.get_coordinates(q) == [0, 0, 0]
 
 
 def test_dyadic():
