@@ -1,4 +1,4 @@
-from sympy.core import S, Rational, Symbol
+from sympy.core import S, Rational, Symbol, Basic
 from sympy.combinatorics import Permutation
 from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
@@ -144,7 +144,7 @@ def test_no_metric_symmetry():
     # no metric symmetry; A no symmetry
     # A^d1_d0 * A^d0_d1
     # T_c = A^d0_d1 * A^d1_d0
-    Lorentz = TensorIndexType('Lorentz', metric_antisym=None, dummy_fmt='L')
+    Lorentz = TensorIndexType('Lorentz', metric=None, dummy_fmt='L')
     d0, d1, d2, d3 = tensor_indices('d0 d1 d2 d3', Lorentz)
     nsym2 = TensorSymmetry(([], [Permutation(range(4))]))
     NS2 = TensorType([Lorentz]*2, nsym2)
@@ -256,7 +256,7 @@ def test_canonicalize1():
     # A anticommuting symmetric, B antisymmetric commuting, antisymmetric metric
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = -A^{d0 d1 d2} * A_{d0 d1}^d3 * B_{d2 d3}
-    Spinor = TensorIndexType('Spinor', metric_antisym=1, dummy_fmt='S')
+    Spinor = TensorIndexType('Spinor', metric=1, dummy_fmt='S')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
       tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Spinor)
     S3 = TensorType([Spinor]*3, sym3)
@@ -271,7 +271,7 @@ def test_canonicalize1():
     # no metric symmetry
     # A^{d0 d1 d2} * A_{d2 d3 d1} * B_d0^d3
     # T_c = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3
-    Mat = TensorIndexType('Mat', metric_antisym=None, dummy_fmt='M')
+    Mat = TensorIndexType('Mat', metric=None, dummy_fmt='M')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
       tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Spinor)
     S3 = TensorType([Mat]*3, sym3)
@@ -397,7 +397,7 @@ def test_riemann_products():
 
 def test_canonicalize2():
     D = Symbol('D')
-    Eucl = TensorIndexType('Eucl', metric_antisym=0, dim=D, dummy_fmt='E')
+    Eucl = TensorIndexType('Eucl', metric=0, dim=D, dummy_fmt='E')
     i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14 = \
       tensor_indices('i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14', Eucl)
     sym3a = TensorSymmetry(get_symmetric_group_sgs(3, 1))
@@ -418,6 +418,29 @@ def test_canonicalize2():
         A(-i8,i10,i13)*A(-i5,-i10,i11)*A(-i4,-i11,i12)*A(-i9,-i12,i14)
     t1 = t.canon_bp()
     assert t1 == 0
+
+class Metric(Basic):
+    def __new__(cls, name, antisym, **kwargs):
+        obj = Basic.__new__(cls, name, antisym, **kwargs)
+        obj.name = name
+        obj.antisym = antisym
+        return obj
+
+def test_TensorIndexType():
+    D = Symbol('D')
+    G = Metric('g', False)
+    Lorentz = TensorIndexType('Lorentz', metric=G, dim=D, dummy_fmt='L')
+    m0, m1, m2, m3, m4 = tensor_indices('m0,m1,m2,m3,m4', Lorentz)
+    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym1)
+    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    S2 = TensorType([Lorentz]*2, sym2)
+    g = Lorentz.metric
+    p = S1('p')
+    assert str(g) == 'g(Lorentz,Lorentz)'
+    t = g(m0, m1)*p(-m1)
+    t1 = t.contract_metric(g)
+    assert t1 == p(m0)
 
 
 def test_get_indices():
@@ -732,3 +755,46 @@ def test_epsilon():
     t = epsilon(c,a,d,b)*p(-a)*q(-b) + epsilon(a,b,c,d)*p(-b)*q(-a)
     t1 = t.canon_bp()
     assert t1 == -2*epsilon(c, d, a, b)*p(-a)*q(-b)
+
+def test_contract_delta1():
+    # see Group Theory by Cvitanovic page 9
+    n = Symbol('n')
+    Color = TensorIndexType('Color', metric=None, dim=n, dummy_fmt='C')
+    a, b, c, d, e, f = tensor_indices('a,b,c,d,e,f', Color)
+    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Color], sym1)
+    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    S2 = TensorType([Color]*2, sym2)
+    delta = Color.delta
+
+    def idn(a, b, d, c):
+        assert a.is_contravariant and d.is_contravariant
+        assert not (b.is_contravariant or c.is_contravariant)
+        return delta(a, c)*delta(d, b)
+
+    def T(a, b, d, c):
+        assert a.is_contravariant and d.is_contravariant
+        assert not (b.is_contravariant or c.is_contravariant)
+        return delta(a, b)*delta(d, c)
+
+    def P1(a, b, c, d):
+        return idn(a,b,c,d) - 1/n*T(a,b,c,d)
+
+    def P2(a, b, c, d):
+        return 1/n*T(a,b,c,d)
+
+    t = P1(a, -b, e, -f)*P1(f, -e, d, -c)
+    t1 = t.contract_delta(delta)
+    assert t1 == P1(a, -b, d, -c)
+
+    t = P2(a, -b, e, -f)*P2(f, -e, d, -c)
+    t1 = t.contract_delta(delta)
+    assert t1 == P2(a, -b, d, -c)
+
+    t = P1(a, -b, e, -f)*P2(f, -e, d, -c)
+    t1 = t.contract_delta(delta)
+    assert t1 == 0
+
+    t = P1(a, -b, b, -a)
+    t1 = t.contract_delta(delta)
+    assert t1 == n**2 - 1
