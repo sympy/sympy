@@ -4,6 +4,9 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 
 
+def is_Tensor(x):
+    return isinstance(x, TensExpr)
+
 class TensorIndexType(Basic):
     """
     A TensorIndexType is characterized by its name, by metric_antisym,
@@ -372,8 +375,6 @@ class TensExpr(Basic):
     """
 
     _op_priority = 11.0
-    is_Tensor = True
-    is_TensExpr = True
     is_TensMul = False
     is_TensAdd = False
     is_commutative = False
@@ -422,7 +423,7 @@ class TensExpr(Basic):
 
     def __div__(self, other):
         other = sympify(other)
-        if other.is_Tensor:
+        if is_Tensor(other):
             raise ValueError('cannot divide by a tensor')
         coeff = self._coeff/other
         return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
@@ -523,16 +524,16 @@ def _tensAdd_flatten(args):
     """
     flatten TensAdd, coerce terms which are not tensors to tensors
     """
-    if not all(x.is_Tensor for x in args):
+    if not all(is_Tensor(x) for x in args):
         args1 = []
         for x in args:
-            if x.is_Tensor:
+            if is_Tensor(x):
                 if x.is_TensAdd:
                     args1.extend(list(x.args))
                 else:
                     args1.append(x)
-        args1 = [x for x in args1 if x.is_Tensor and x._coeff]
-        args2 = [x for x in args if not x.is_Tensor]
+        args1 = [x for x in args1 if is_Tensor(x) and x._coeff]
+        args2 = [x for x in args if not is_Tensor(x)]
         t0 = args1[0]
         if t0.is_TensAdd:
             t0 = t0.args[0]
@@ -579,7 +580,6 @@ class TensAdd(TensExpr):
     >>> t1 + t2
     p(a) + q(a)
     """
-    is_Tensor = True
     is_TensAdd = True
 
     def __new__(cls, *args, **kw_args):
@@ -620,13 +620,13 @@ class TensAdd(TensExpr):
 
     def __eq__(self, other):
         other = sympify(other)
-        if not other.is_Tensor:
+        if not is_Tensor(other):
             if len(self.args) == 1:
                 return self.args[0]._coeff == other
-        if other.is_Tensor and other.is_TensMul and other._coeff == 0:
+        if is_Tensor(other) and other.is_TensMul and other._coeff == 0:
             return self == 0
         t = self - other
-        if not t.is_Tensor:
+        if not is_Tensor(t):
             return t == 0
         else:
             if t.is_TensMul:
@@ -673,7 +673,6 @@ class TensMul(TensExpr):
     """
     Product of tensors
     """
-    is_Tensor = True
     is_TensMul = True
 
     def __new__(cls, coeff, *args, **kw_args):
@@ -710,7 +709,7 @@ class TensMul(TensExpr):
         if other == 0:
             return self._coeff == 0
         other = sympify(other)
-        if not other.is_Tensor :
+        if not is_Tensor(other):
             return False
         res = self - other
         return res == 0
@@ -939,7 +938,7 @@ class TensMul(TensExpr):
         p(L_0)*q(-L_0)
         """
         other = sympify(other)
-        if not other.is_Tensor:
+        if not is_Tensor(other):
             coeff = self._coeff*other
             return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
         if other.is_TensAdd:
@@ -1339,7 +1338,7 @@ def canon_bp(p):
     """
     Butler-Portugal canonicalization
     """
-    if p.is_Tensor:
+    if is_Tensor(p):
         return p.canon_bp()
     return p
 

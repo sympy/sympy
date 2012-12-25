@@ -1,6 +1,6 @@
 from sympy import Symbol, S, I
 from sympy.combinatorics import Permutation
-from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
+from sympy.tensor.tensor import (is_Tensor, TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, tensor_mul, TensMul,
   TensAdd, TensorHead, tensorlist_contract_metric)
 
@@ -61,7 +61,7 @@ class GammaMatrices(object):
         """
         move G5 to the right
         """
-        if not t.is_Tensor:
+        if not is_Tensor(t):
             return t
         if t.is_TensAdd:
             a = [self.G5_to_right(x) for x in t.args]
@@ -219,7 +219,7 @@ class GammaMatrices(object):
         >>> GM.do_rule1_gamma(t, doall=True)
         D*(-D + 2)
         """
-        if not t.is_Tensor:
+        if not is_Tensor(t):
             return t
         if t.is_TensMul:
             for n in range(nmax + 1):
@@ -354,7 +354,7 @@ class GammaMatrices(object):
         >>> GM.do_rule2_gamma(t)
         (-M**2)*G(L_0)*G(-L_0) + G(L_0)*G(-L_0)*p(L_1)*p(-L_1)
         """
-        if not t.is_Tensor:
+        if not is_Tensor(t):
             return t
         if t.is_TensMul:
             for n in range(nmax + 1):
@@ -392,7 +392,7 @@ class GammaMatrices(object):
         >>> gamma_trace(t)
         -4*metric(m0, m2)*p(L_0)*q(-L_0) + 4*p(m0)*q(m2) + 4*p(m2)*q(m0)
         """
-        if not t.is_Tensor:
+        if not is_Tensor(t):
             return self.gctr*t
         t = self.G5_to_right(t)
         if t.is_TensAdd:
