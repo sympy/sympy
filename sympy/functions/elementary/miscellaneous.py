@@ -1,9 +1,10 @@
 from sympy.core import S, C, sympify
+from sympy.core.add import Add
 from sympy.core.basic import Basic
 from sympy.core.containers import Tuple
 from sympy.core.numbers import Rational
 from sympy.core.operations import LatticeOp, ShortCircuit
-from sympy.core.function import Application, Lambda
+from sympy.core.function import Application, Lambda, ArgumentIndexError
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
@@ -351,6 +352,21 @@ class MinMaxBase(Expr, LatticeOp):
             return True
         return False
 
+    def _eval_derivative(self, s):
+        # f(x).diff(s) -> x.diff(s) * f.fdiff(1)(s)
+        i = 0
+        l = []
+        for a in self.args:
+            i += 1
+            da = a.diff(s)
+            if da is S.Zero:
+                continue
+            try:
+                df = self.fdiff(i)
+            except ArgumentIndexError:
+                df = Function.fdiff(self, i)
+            l.append(df * da)
+        return Add(*l)
 
 class Max(MinMaxBase, Application):
     """
@@ -457,6 +473,18 @@ class Max(MinMaxBase, Application):
         """
         return (x < y)
 
+    def fdiff( self, argindex ):
+        from sympy.functions.special.delta_functions import Heaviside
+        n = len(self.args)
+        if 0 < argindex and argindex <= n:
+            argindex -= 1
+            if n == 2:
+                return Heaviside( self.args[argindex] - self.args[1-argindex] )
+            newargs = tuple([self.args[i] for i in xrange(n) if i != argindex])
+            return Heaviside( self.args[argindex] - Max(*newargs) )
+        else:
+            raise ArgumentIndexError(self, argindex)
+
 
 class Min(MinMaxBase, Application):
     """
@@ -506,3 +534,15 @@ class Min(MinMaxBase, Application):
         Check if x > y.
         """
         return (x > y)
+
+    def fdiff( self, argindex ):
+        from sympy.functions.special.delta_functions import Heaviside
+        n = len(self.args)
+        if 0 < argindex and argindex <= n:
+            argindex -= 1
+            if n == 2:
+                return Heaviside( self.args[1-argindex] - self.args[argindex] )
+            newargs = tuple([ self.args[i] for i in xrange(n) if i != argindex])
+            return Heaviside( Min(*newargs) - self.args[argindex] )
+        else:
+            raise ArgumentIndexError(self, argindex)

@@ -92,6 +92,12 @@ def test_Min():
     raises(ValueError, lambda: Min(I, x))
     raises(ValueError, lambda: Min(S.ComplexInfinity, x))
 
+    from sympy.functions.special.delta_functions import Heaviside
+    assert Min(1,x).diff(x) == Heaviside(1-x)
+    assert Min(x,1).diff(x) == Heaviside(1-x)
+    assert Min(0,-x,1-2*x).diff(x) == -Heaviside(x + Min(0, -2*x + 1)) \
+        - 2*Heaviside(2*x + Min(0, -x) - 1)
+
 
 def test_Max():
     from sympy.abc import x, y, z
@@ -131,6 +137,12 @@ def test_Max():
     # True
     # Max(n, -oo, n_,  p, 1000) == Max(p, 1000)
     # False
+
+    from sympy.functions.special.delta_functions import Heaviside
+    assert Max(1,x).diff(x) == Heaviside(x-1)
+    assert Max(x,1).diff(x) == Heaviside(x-1)
+    assert Max(x**2, 1+x, 1).diff(x) == 2*x*Heaviside(x**2 - Max(1,x+1)) \
+        + Heaviside(x - Max(1,x**2) + 1)
 
 
 def test_root():
