@@ -584,7 +584,6 @@ class ReferenceFrame(object):
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
         self._origin = Point(name + '_origin')
-        
 
     def __getitem__(self, ind):
         """Returns basis vector for the provided index (index being an str)"""
@@ -1077,7 +1076,7 @@ class ReferenceFrame(object):
         [0, 0, 0]
         >>> N.get_coordinates(o)
         [-1, -2, -3]
-        
+
         """
         from sympy.physics.mechanics import Point
         pos_vector = point.pos_from(self._origin)
