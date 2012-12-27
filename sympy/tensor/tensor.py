@@ -352,7 +352,7 @@ class TensorHead(Basic):
         >>> A = S2('A')
         >>> t = A(a, -b)
         """
-        assert self.rank == len(indices)
+        assert [indices[i].tensortype for i in range(len(indices))] == self.index_types
         components = [self]
         free, dum =  TensMul.from_indices(*indices)
         free.sort(key=lambda x: x[0].name)
@@ -1096,7 +1096,10 @@ class TensMul(TensExpr):
             return S.Zero
         return t.perm2tensor(can, True)
 
-    def contract(self, g, is_metric, contract_all=False):
+    def _contract(self, g, is_metric, contract_all=False):
+        """
+        helper method for ``contract_metric`` and ``contract_delta``
+        """
         if not self._components:
             return self
         free_indices = [x[0] for x in self._free]
@@ -1110,7 +1113,7 @@ class TensMul(TensExpr):
                     a1 = a[:i] + a[i + 1:]
                     t = tensor_mul(*a1)*(typ.dim*a[i]._coeff)
                     if contract_all == True and g in t._components:
-                        return t.contract(g, is_metric, True)
+                        return t._contract(g, is_metric, True)
                     return t
 
         # if all metric tensors have only free indices, there is no contraction
@@ -1168,7 +1171,7 @@ class TensMul(TensExpr):
                     if i < k:
                         a = a[:i] + a[i+1:k] + a[k+1:]
                     else:
-                        a = a[:k] + a[k+1:i] + a[k+1:]
+                        a = a[:k] + a[k+1:i] + a[i+1:]
                     if a:
                         res = tensor_mul(*a)
                         res = (coeff*typ.dim*tg._coeff*ty._coeff)*res
@@ -1176,27 +1179,44 @@ class TensMul(TensExpr):
                         res = coeff*typ.dim*tg._coeff*ty._coeff
                         res = TensMul(res, [],[],[], is_canon_bp=True)
                     if contract_all == True and g in res._components:
-                        return res.contract(g, is_metric, True)
+                        return res._contract(g, is_metric, True)
                     return res
-
             free2 = []
-            for indx, iposx, _ in ty._free:
-                if indx == ind2m:
-                    free2.append((ind1, iposx, 0))
-                else:
-                    free2.append((indx, iposx, 0))
-            t2 = TensMul(ty._coeff, ty._components, free2, ty._dum)
+            # ty._free contains ind2m; replace ind2m with ind1
+            # in the fee indices of ty, unless ty has ind1m as free index;
+            # in that case take away it from free and create a dummy entry
+
+            ty_freeindices = [x[0] for x in ty._free]
+            if ind1m in ty_freeindices:
+                free2 = [(indx, iposx, cposx) for indx, iposx, cposx in ty._free if indx != ind1m and indx != ind2m]
+                dum2 = ty._dum[:]
+                for indx, iposx, _ in ty._free:
+                    if indx == ind1m:
+                        iposx1 = iposx
+                    if indx == ind2m:
+                        iposx2 = iposx
+                # ind1m is covariant
+                dum2.append((iposx2, iposx1, 0, 0))
+            else:
+                free2 = []
+                for indx, iposx, _ in ty._free:
+                    if indx == ind2m:
+                        free2.append((ind1, iposx, 0))
+                    else:
+                        free2.append((indx, iposx, 0))
+                dum2 = ty._dum
+            t2 = TensMul(ty._coeff, ty._components, free2, dum2)
             a[k] = t2
             a = a[:i] + a[i + 1:]
             coeff = coeff*tg._coeff
             res = tensor_mul(*a)
         res = coeff*res
         if contract_all == True and g in res._components:
-            return res.contract(g, is_metric, True)
+            return res._contract(g, is_metric, True)
         return res
 
     def contract_delta(self, delta):
-        return self.contract(delta, False, True)
+        return self._contract(delta, False, True)
 
     def contract_metric(self, g, contract_all=False):
         """
@@ -1225,7 +1245,7 @@ class TensMul(TensExpr):
         if g.index_types[0].metric_antisym != 0:
             # TODO case of antisymmetric metric
             raise NotImplementedError
-        return self.contract(g, True, contract_all)
+        return self._contract(g, True, contract_all)
 
 
     def _pretty(self):

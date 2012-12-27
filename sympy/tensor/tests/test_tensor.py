@@ -273,7 +273,7 @@ def test_canonicalize1():
     # T_c = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3
     Mat = TensorIndexType('Mat', metric=None, dummy_fmt='M')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
-      tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Spinor)
+      tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Mat)
     S3 = TensorType([Mat]*3, sym3)
     S2a = TensorType([Mat]*2, sym2a)
     A = S3('A', 1)
@@ -629,6 +629,11 @@ def test_metric_contract1():
     t2 = t1.contract_metric(g)
     t2 = t2.contract_metric(g)
     assert t2 == A(a,b)*B(-b,-a)
+
+    t1 = A(a,b)*g(-a,-b)
+    t2 = t1.contract_metric(g)
+    assert t2 == A(a, -a)
+    assert not t2._free
 
 def test_metric_contract1():
     D = Symbol('D')
