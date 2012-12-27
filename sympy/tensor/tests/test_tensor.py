@@ -273,7 +273,7 @@ def test_canonicalize1():
     # T_c = A^{d0 d1 d2} * A_{d0 d1 d3} * B_d2^d3
     Mat = TensorIndexType('Mat', metric=None, dummy_fmt='M')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
-      tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Spinor)
+      tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Mat)
     S3 = TensorType([Mat]*3, sym3)
     S2a = TensorType([Mat]*2, sym2a)
     A = S3('A', 1)
@@ -548,6 +548,23 @@ def test_substitute_indices():
     assert t1 == p(-j)
     t1 = t.substitute_indices((-i, -j))
     assert t1 == p(j)
+
+def test_substitute_tensor():
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
+    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    S1 = TensorType([Lorentz], sym1)
+    S2 = TensorType([Lorentz]*2, sym2)
+    p, q = S1('p,q')
+    A = S2('A')
+    t = 2*p(m0)*q(m1)
+    t1 = p(m1)
+    t2 = 3*A(m1, m2)*p(-m2)
+    t3 = t.substitute_tensor(t1, t2)
+    assert t3 == 6*A(m0, m2)*p(-m2)*q(m1)
+    t4 = t.substitute_tensor(q(m1), t2)
+    assert t4 == 6*p(m0)*A(m1, m2)*p(-m2)
 
 
 def test_riemann_cyclic_replace():

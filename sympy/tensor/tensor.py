@@ -352,7 +352,7 @@ class TensorHead(Basic):
         >>> A = S2('A')
         >>> t = A(a, -b)
         """
-        assert self.rank == len(indices)
+        assert [indices[i].tensortype for i in range(len(indices))] == self.index_types
         components = [self]
         free, dum =  TensMul.from_indices(*indices)
         free.sort(key=lambda x: x[0].name)
@@ -666,6 +666,16 @@ class TensAdd(TensExpr):
             return args[0]
         t = TensAdd(*args)
         return t.canon_bp()
+
+    def substitute_tensor(self, t1, t2, subst_all=False):
+        args = self.args
+        args1 = []
+        for x in args:
+            y = x.substitute_tensor(t1, t2, subst_all)
+            args1.append(y)
+        return TensAdd(*args1)
+
+
 
     def _pretty(self):
         a = []
@@ -1168,7 +1178,7 @@ class TensMul(TensExpr):
                     if i < k:
                         a = a[:i] + a[i+1:k] + a[k+1:]
                     else:
-                        a = a[:k] + a[k+1:i] + a[k+1:]
+                        a = a[:k] + a[k+1:i] + a[i+1:]
                     if a:
                         res = tensor_mul(*a)
                         res = (coeff*typ.dim*tg._coeff*ty._coeff)*res
@@ -1178,14 +1188,31 @@ class TensMul(TensExpr):
                     if contract_all == True and g in res._components:
                         return res.contract(g, is_metric, True)
                     return res
-
             free2 = []
-            for indx, iposx, _ in ty._free:
-                if indx == ind2m:
-                    free2.append((ind1, iposx, 0))
-                else:
-                    free2.append((indx, iposx, 0))
-            t2 = TensMul(ty._coeff, ty._components, free2, ty._dum)
+            # ty._free contains ind2m; replace ind2m with ind1
+            # in the fee indices of ty, unless ty has ind1m as free index;
+            # in that case take away it from free and create a dummy entry
+
+            ty_freeindices = [x[0] for x in ty._free]
+            if ind1m in ty_freeindices:
+                free2 = [(indx, iposx, cposx) for indx, iposx, cposx in ty._free if indx != ind1m and indx != ind2m]
+                dum2 = ty._dum[:]
+                for indx, iposx, _ in ty._free:
+                    if indx == ind1m:
+                        iposx1 = iposx
+                    if indx == ind2m:
+                        iposx2 = iposx
+                # ind1m is covariant
+                dum2.append((iposx2, iposx1, 0, 0))
+            else:
+                free2 = []
+                for indx, iposx, _ in ty._free:
+                    if indx == ind2m:
+                        free2.append((ind1, iposx, 0))
+                    else:
+                        free2.append((indx, iposx, 0))
+                dum2 = ty._dum
+            t2 = TensMul(ty._coeff, ty._components, free2, dum2)
             a[k] = t2
             a = a[:i] + a[i + 1:]
             coeff = coeff*tg._coeff
@@ -1226,6 +1253,47 @@ class TensMul(TensExpr):
             # TODO case of antisymmetric metric
             raise NotImplementedError
         return self.contract(g, True, contract_all)
+
+    def substitute_tensor(self, t1, t2, subst_all=False):
+        # FIXME fix the check
+        #assert sorted(t1._free) == sorted(t2._free)
+        components = self._components
+        assert len(t1._components) == 1 and t1._coeff == 1
+        component1 = t1._components[0]
+        for i in range(len(components)):
+            if component1 == components[i]:
+                break
+        else:
+            return self
+        a = self.split()
+        if a[i]._dum != t1._dum:
+            return self
+
+        ct = self._coeff if i == 0 else S.One
+        # sort free indices according to the position
+        free0 = sorted(a[i]._free, key=lambda x: x[1])
+        free1 = sorted(t1._free, key=lambda x: x[1])
+        index_tuples = []
+        for j in range(len(free0)):
+            index_tuples.append((free1[j][0], free0[j][0]))
+        t2 = t2.substitute_indices(*index_tuples)
+        a1 = a[:i] + [t2] + a[i + 1:]
+        t = tensor_mul(*a1)*ct
+        return t
+
+    def substitute_tensors(self, i, j, t):
+        """
+        substitute tensors in positions ``i, j`` with tensor ``t``
+        """
+        a = self.split()
+        assert i < j
+        ct = self._coeff if i == 0 else S.One
+        a = self.split()
+        a1 = a[:i] + a[i + 1:j] + a[j + 1:] + [t]
+        t = tensor_mul(*a1)*ct
+        return t
+
+
 
 
     def _pretty(self):
