@@ -1,5 +1,5 @@
 from sympy import (
-    symbols, expand, expand_func, erf, nan, oo, Float, conjugate,
+    symbols, expand, expand_func, erf, erfc, nan, oo, Float, conjugate,
     sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
     polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
     log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
@@ -68,6 +68,36 @@ def test__erfs():
     assert expand(erf(z).rewrite('tractable').diff(z).rewrite('intractable')) \
         == erf(z).diff(z)
     assert _erfs(z).rewrite("intractable") == (-erf(z) + 1)*exp(z**2)
+
+def test_erfc():
+    assert erfc(nan) == nan
+
+    assert erfc(oo) == 0
+    assert erfc(-oo) == 2
+
+    assert erfc(0) == 1
+
+    assert erfc(I*oo) == -oo*I
+    assert erfc(-I*oo) == oo*I
+
+    assert erfc(I).is_real is False
+    assert erfc(0).is_real is True
+
+    assert conjugate(erfc(z)) == erfc(conjugate(z))
+
+    assert erfc(x).as_leading_term(x) == S.One
+    assert erfc(1/x).as_leading_term(x) == erfc(1/x)
+
+    assert erfc(z).rewrite('erf') == 1 - erf(z)
+
+def test_erfc_series():
+    assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
+        2*x**3/3/sqrt(pi) - x**5/5/sqrt(pi) + O(x**7)
+
+
+def test_erfc_evalf():
+    assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8  # XXX
+
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
 #      branch, hence take x in the lower half plane (d=0).
