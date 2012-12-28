@@ -145,6 +145,9 @@ class erf(Function):
     def _eval_rewrite_as_tractable(self, z):
         return S.One - _erfs(z)*C.exp(-z**2)
 
+    def _eval_rewrite_as_erfc(self, z):
+        return S.One - erfc(z)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -153,6 +156,131 @@ class erf(Function):
         else:
             return self.func(arg)
 
+class erfc(Function):
+    """
+        Complementary Error Function:
+
+      The function is defined as erfc(x) = 1-erf(x)
+
+      or in ASCII::
+              oo
+            /
+           |
+           |     2
+           |   -t
+        2* |  e    dt
+           |
+          /
+          x
+        -------------
+              ____
+            \/ pi
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erfc
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> erfc(0)
+    1
+    >>> erfc(oo)
+    0
+    >>> erfc(-oo)
+    2
+    >>> erfc(I*oo)
+    -oo*I
+    >>> erfc(-I*oo)
+    oo*I
+
+
+    The error function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(erfc(z))
+    erfc(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(erfc(z), z)
+    -2*exp(-z**2)/sqrt(pi)
+
+    We can numerically evaluate the error function to arbitrary precision
+    on the whole complex plane:
+
+    >>> erfc(4).evalf(30)
+    0.0000000154172579002800188521596734869
+
+    >>> erfc(4*I).evalf(30)
+    1.0 - 1296959.73071763923152794095062*I
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [3] http://mathworld.wolfram.com/Erfc.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
+    """
+
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -2*C.exp(-self.args[0]**2)/sqrt(S.Pi)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, arg):
+        if arg.is_Number:
+            if arg is S.NaN:
+                return S.NaN
+            elif arg is S.Infinity:
+                return S.Zero
+            elif arg is S.NegativeInfinity:
+                return S(2)
+            elif arg is S.Zero:
+                return S.One
+
+        t = arg.extract_multiplicatively(S.ImaginaryUnit)
+        if t == S.Infinity or t == S.NegativeInfinity:
+            return -arg
+
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n == 0:
+            return S.One
+        elif n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            k = C.floor((n - 1)/S(2))
+            if len(previous_terms) > 2:
+                return -previous_terms[-2] * x**2 * (n - 2)/(n*k)
+            else:
+                return -2*(-1)**k * x**n/(n*C.factorial(k)*sqrt(S.Pi))
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_rewrite_as_erf(self, z):
+        return S.One - erf(z)
+
+    def _eval_as_leading_term(self, x):
+        arg = self.args[0].as_leading_term(x)
+
+        if x in arg.free_symbols and C.Order(1, x).contains(arg):
+            return S.One
+        else:
+            return self.func(arg)
 
 ###############################################################################
 #################### EXPONENTIAL INTEGRALS ####################################
