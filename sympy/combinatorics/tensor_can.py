@@ -530,14 +530,15 @@ def canonical_free(base, gens, g, num_free):
     """
     canonicalization of a tensor with respect to free indices
     choosing the minimum with respect to lexicographical ordering
+    in the free indices
 
-    base, gens  BSGS for slot permutation group
-    g           permutation representing the tensor
-    num_free    number of free indices
+    ``base``, ``gens``  BSGS for slot permutation group
+    ``g``               permutation representing the tensor
+    ``num_free``        number of free indices
     The indices must be ordered with first the free indices
 
     see explanation in double_coset_can_rep
-    The algorithm is given in [2]
+    The algorithm is a variation of the one given in [2].
 
     Examples
     ========
@@ -552,20 +553,23 @@ def canonical_free(base, gens, g, num_free):
     [0, 3, 1, 2, 5, 4]
 
     Consider the product of Riemann tensors
-    `T = R^{a}_{d0}^{d1,d2}*R_{d2,d1}^{d0,b}`
-    The order of the indices is [a,b,d0,-d0,d1,-d1,d2,-d2]
+    ``T = R^{a}_{d0}^{d1,d2}*R_{d2,d1}^{d0,b}``
+    The order of the indices is ``[a,b,d0,-d0,d1,-d1,d2,-d2]``
     The permutation corresponding to the tensor is
-    g = [0,3,4,6,7,5,2,1,8,9]
-    Use the slot symmetries to get `T` is the form which is the minimum
-    in lexicographic order
-    `R^{a}_{d0}^{d1,d2}*R^{b,d0}_{d1,d2}` corresponding to
-    `[0, 3, 4, 6, 1, 2, 5, 7, 8, 9]`
+    ``g = [0,3,4,6,7,5,2,1,8,9]``
+
+    In particular ``a`` is position ``0``, ``b`` is in position ``9``.
+    Use the slot symmetries to get `T` is a form which is the minimal
+    in lexicographic order in the free indices ``a`` and ``b``, e.g.
+    ``-R^{a}_{d0}^{d1,d2}*R^{b,d0}_{d2,d1}`` corresponding to
+    ``[0, 3, 4, 6, 1, 2, 7, 5, 9, 8]``
+
     >>> from sympy.combinatorics.tensor_can import riemann_bsgs, tensor_gens
     >>> base, gens = riemann_bsgs
     >>> size, sbase, sgens = tensor_gens(base, gens, [[],[]], 0)
     >>> g = Permutation([0,3,4,6,7,5,2,1,8,9])
     >>> canonical_free(sbase, [Permutation(h) for h in sgens], g, 2)
-    [0, 3, 4, 6, 1, 2, 5, 7, 8, 9]
+    [0, 3, 4, 6, 1, 2, 7, 5, 9, 8]
     """
     g = g.array_form
     size = len(g)
@@ -573,27 +577,26 @@ def canonical_free(base, gens, g, num_free):
         return g[:]
 
     transversals = get_transversals(base, gens)
-    cosets = transversal2coset(size, base, transversals)
-    K = [h._array_form for h in gens]
     m = len(base)
     for x in sorted(g[:-2]):
         if x not in base:
             base.append(x)
-    lambd = g
-    K1 = []
-    for i in range(m):
+    h = g
+    for i, transv in enumerate(transversals):
         b = base[i]
-        delta = [x[b] for x in cosets[b]]
-        delta1 = [lambd[x] for x in delta]
-        delta1min = min(delta1)
-        k = delta1.index(delta1min)
-        p = delta[k]
-        for omega in cosets[b]:
-            if omega[b] == p:
-                break
-        lambd = _af_rmul(lambd, omega)
-        K = [px for px in K if px[b] == b]
-    return lambd
+        h_i = [size]*num_free
+        # find the element s in transversals[i] such that
+        # _af_rmul(h, s) has its free elements with the lowest position in h
+        s = None
+        for sk in transv.values():
+            h1 = _af_rmul(h, sk)
+            hi = [h1.index(ix) for ix in range(num_free)]
+            if hi < h_i:
+                h_i = hi
+                s = sk
+        if s:
+            h = _af_rmul(h, s)
+    return h
 
 
 def _get_map_slots(size, fixed_slots):
@@ -923,10 +926,14 @@ def bsgs_direct_product(base1, gens1, base2, gens2, signed=True):
     return base, [_af_new(h) for h in gens]
 
 
-def get_symmetric_group_sgs(n, sym=0):
+def get_symmetric_group_sgs(n, antisym=False):
     """
-    Return base, gens of the minimal BSGS for (anti)symmetric group
-    with n elements
+    Return base, gens of the minimal BSGS for (anti)symmetric tensor
+
+    ``n``  rank of the tensor
+
+    ``antisym = False`` symmetric tensor
+    ``antisym = True``  antisymmetric tensor
 
     Examples
     ========
@@ -940,7 +947,7 @@ def get_symmetric_group_sgs(n, sym=0):
     if n == 1:
         return [], [_af_new(range(3))]
     gens = [Permutation(n - 1)(i, i + 1)._array_form for i in range(n - 1)]
-    if sym == 0:
+    if antisym == 0:
         gens = [x + [n, n + 1] for x in gens]
     else:
         gens = [x + [n + 1, n] for x in gens]

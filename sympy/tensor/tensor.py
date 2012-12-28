@@ -190,7 +190,6 @@ class TensorSymmetry(Basic):
 
     >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> V = S2('V')
@@ -204,6 +203,72 @@ class TensorSymmetry(Basic):
     generators = property(lambda self: self.args[1])
     rank = property(lambda self: self.args[1][0].size)
 
+def tensorsymmetry(*args):
+    """
+    return a ``TensorSymmetry`` object
+
+    One can represent a tensor with any slot symmetry group using a BSGS
+    ``args`` can be a BSGS
+    ``args[0]``    base
+    ``args[1]``    sgs
+
+    Usually tensors are in (direct products of) irreducible representations
+    of the symmetric group;
+    ``args`` can be a list of lists representing Young tableaux
+    ``[[1]]``       vector
+    ``[[1]*n]``     symmetric tensor of rank ``n``
+    ``[[n]``        antisymmetric tensor of rank ``n``
+    ``[[2, 2]]``    slot symmetry of the Riemann tensor
+    ``[[1],[1]]``   vector*vector
+
+    TODO implement this with arbitrary Young tableaux
+
+    Examples
+    ========
+
+    Symmetric tensor using a BSBS
+
+    Symmetric tensor using a Young tableau
+
+    >>> from sympy.tensor.tensor import TensorIndexType, TensorType, tensorsymmetry
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    >>> sym2 = tensorsymmetry([1, 1])
+    >>> S2 = TensorType([Lorentz]*2, sym2)
+    >>> V = S2('V')
+
+    Symmetric tensor using a BSGS
+    >>> from sympy.tensor.tensor import TensorSymmetry, get_symmetric_group_sgs
+    >>> sym2 = tensorsymmetry(*get_symmetric_group_sgs(2))
+    >>> S2 = TensorType([Lorentz]*2, sym2)
+    >>> V = S2('V')
+    """
+    from sympy.combinatorics import Permutation
+    def tableau2bsgs(a):
+        if len(a) == 1:
+            # antisymmetric vector
+            n = a[0]
+            bsgs = get_symmetric_group_sgs(n, 1)
+        else:
+            if all(x == 1 for x in a):
+                # symmetric vector
+                n = len(a)
+                bsgs = get_symmetric_group_sgs(n)
+            elif a == [2, 2]:
+                bsgs = riemann_bsgs
+            else:
+                raise NotImplementedError
+        return bsgs
+
+
+    if not args:
+        return TensorSymmetry([[], [Permutation(2)]])
+    if len(args) == 2 and isinstance(args[1][0], Permutation):
+        return TensorSymmetry(args)
+    base, sgs = tableau2bsgs(args[0])
+    for a in args[1:]:
+        basex, sgsx = tableau2bsgs(a)
+        base, sgs = bsgs_direct_product(base, sgs, basex, sgsx)
+    return TensorSymmetry((base, sgs))
 
 
 class TensorType(Basic):
@@ -215,10 +280,9 @@ class TensorType(Basic):
 
     Define a symmetric tensor
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-    >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
-    >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    >>> sym2 = tensorsymmetry([1, 1])
     >>> S2 = TensorType([Lorentz]*2, sym2)
     >>> V = S2('V')
     """
@@ -254,10 +318,10 @@ class TensorType(Basic):
         Define symmetric tensors ``V``, ``W`` and ``G``, respectively
         commuting, anticommuting and with no commutation symmetry
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs, canon_bp
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType, canon_bp
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b = tensor_indices('a,b', Lorentz)
-        >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+        >>> sym2 = tensorsymmetry([1]*2)
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> V = S2('V')
         >>> W = S2('W', 1)
@@ -295,10 +359,9 @@ class TensorHead(Basic):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+        >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> a, b = tensor_indices('a,b', Lorentz)
-        >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+        >>> sym2 = tensorsymmetry([1]*2)
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> A = S2('A')
         """
@@ -344,10 +407,10 @@ class TensorHead(Basic):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b = tensor_indices('a,b', Lorentz)
-        >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+        >>> sym2 = tensorsymmetry([1]*2)
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> A = S2('A')
         >>> t = A(a, -b)
@@ -451,10 +514,10 @@ class TensExpr(Basic):
         ========
 
         >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+        >>> sym2 = tensorsymmetry([1]*2)
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> A, B = S2('A,B')
         >>> t = A(i, k)*B(-k, -j); t
@@ -577,10 +640,10 @@ class TensAdd(TensExpr):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensAdd
+    >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType, tensor_indices, TensAdd
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> a, b = tensor_indices('a,b', Lorentz)
-    >>> sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    >>> sym = tensorsymmetry([1])
     >>> S1 = TensorType([Lorentz], sym)
     >>> p, q = S1('p,q')
     >>> t1 = p(a)
@@ -608,11 +671,12 @@ class TensAdd(TensExpr):
         a = _tensAdd_collect_terms(args)
         if not a:
             return S.Zero
-
         a = [canon_bp(x) for x in a]
         a = [x for x in a if x]
         if not a:
             return S.Zero
+        if len(a) == 1:
+            return a[0]
         obj._args = tuple(a)
         return obj
 
@@ -675,8 +739,6 @@ class TensAdd(TensExpr):
             args1.append(y)
         return TensAdd(*args1)
 
-
-
     def _pretty(self):
         a = []
         args = self.args
@@ -728,7 +790,8 @@ class TensMul(TensExpr):
             return self._coeff == 0
         other = sympify(other)
         if not is_Tensor(other):
-            return False
+            assert not self._components
+            return self._coeff == other
         res = self - other
         return res == 0
 
@@ -749,7 +812,7 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, TensMul, get_symmetric_group_sgs
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensMul
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
         >>> TensMul.from_indices(m0, m1, -m1, m3)
@@ -805,10 +868,10 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, get_symmetric_group_sgs, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+        >>> sym1 = tensorsymmetry([1])
         >>> S1 = TensorType([Lorentz], sym1)
         >>> g = Lorentz.metric
         >>> p, q = S1('p,q')
@@ -825,7 +888,12 @@ class TensMul(TensExpr):
             vpos.append(pos)
             pos += t.rank
         cdt = defaultdict(int)
+        # if the free indices have names with dummy_fmt, start with an
+        # index higher than those for the dummy indices
+        # to avoid name collisions
         for indx, ipos, cpos in self._free:
+            if indx.name.split('_')[0] == indx.tensortype.dummy_fmt[:-3]:
+                cdt[indx.tensortype] = max(cdt[indx.tensortype], int(indx.name.split('_')[1]) + 1)
             start = vpos[cpos]
             indices[start + ipos] = indx
         for ipos1, ipos2, cpos1, cpos2 in self._dum:
@@ -851,10 +919,10 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
-        >>> sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+        >>> sym2 = tensorsymmetry([1]*2)
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> A, B = S2('A,B')
         >>> t = A(a,b)*B(-b,c)
@@ -892,10 +960,13 @@ class TensMul(TensExpr):
         for t in self._components:
             vpos.append(pos)
             pos += t.rank
+        # ordered indices: first the free indices, ordered by types
+        # then the dummy indices, ordered by types and contravariant before
+        # covariant
+        # g[position in tensor] = position in ordered indices
         for i, (indx, ipos, cpos) in enumerate(self._free):
             pos = vpos[cpos] + ipos
             g[pos] = i
-
         pos = len(self._free)
         j = len(self._free)
         dummies = []
@@ -943,10 +1014,10 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, get_symmetric_group_sgs, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+        >>> sym1 = tensorsymmetry([1])
         >>> S1 = TensorType([Lorentz], sym1)
         >>> g = Lorentz.metric
         >>> p, q = S1('p,q')
@@ -1081,10 +1152,10 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, get_symmetric_group_sgs, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> sym2a = TensorSymmetry(get_symmetric_group_sgs(2, 1))
+        >>> sym2a = tensorsymmetry([2])
         >>> S2 = TensorType([Lorentz]*2, sym2a)
         >>> A = S2('A')
         >>> t = A(m0,-m1)*A(m1,-m0)
@@ -1106,7 +1177,10 @@ class TensMul(TensExpr):
             return S.Zero
         return t.perm2tensor(can, True)
 
-    def contract(self, g, is_metric, contract_all=False):
+    def _contract(self, g, is_metric, contract_all=False):
+        """
+        helper method for ``contract_metric`` and ``contract_delta``
+        """
         if not self._components:
             return self
         free_indices = [x[0] for x in self._free]
@@ -1120,7 +1194,7 @@ class TensMul(TensExpr):
                     a1 = a[:i] + a[i + 1:]
                     t = tensor_mul(*a1)*(typ.dim*a[i]._coeff)
                     if contract_all == True and g in t._components:
-                        return t.contract(g, is_metric, True)
+                        return t._contract(g, is_metric, True)
                     return t
 
         # if all metric tensors have only free indices, there is no contraction
@@ -1186,7 +1260,7 @@ class TensMul(TensExpr):
                         res = coeff*typ.dim*tg._coeff*ty._coeff
                         res = TensMul(res, [],[],[], is_canon_bp=True)
                     if contract_all == True and g in res._components:
-                        return res.contract(g, is_metric, True)
+                        return res._contract(g, is_metric, True)
                     return res
             free2 = []
             # ty._free contains ind2m; replace ind2m with ind1
@@ -1219,11 +1293,11 @@ class TensMul(TensExpr):
             res = tensor_mul(*a)
         res = coeff*res
         if contract_all == True and g in res._components:
-            return res.contract(g, is_metric, True)
+            return res._contract(g, is_metric, True)
         return res
 
     def contract_delta(self, delta):
-        return self.contract(delta, False, True)
+        return self._contract(delta, False, True)
 
     def contract_metric(self, g, contract_all=False):
         """
@@ -1236,10 +1310,10 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, get_symmetric_group_sgs, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+        >>> sym1 = tensorsymmetry([1])
         >>> S1 = TensorType([Lorentz], sym1)
         >>> g = Lorentz.metric
         >>> p, q = S1('p,q')
@@ -1252,7 +1326,7 @@ class TensMul(TensExpr):
         if g.index_types[0].metric_antisym != 0:
             # TODO case of antisymmetric metric
             raise NotImplementedError
-        return self.contract(g, True, contract_all)
+        return self._contract(g, True, contract_all)
 
     def substitute_tensor(self, t1, t2, subst_all=False):
         # FIXME fix the check
@@ -1292,8 +1366,6 @@ class TensMul(TensExpr):
         a1 = a[:i] + a[i + 1:j] + a[j + 1:] + [t]
         t = tensor_mul(*a1)*ct
         return t
-
-
 
 
     def _pretty(self):
@@ -1386,10 +1458,10 @@ def riemann_cyclic(t2):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, riemann_cyclic, riemann_bsgs
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType, riemann_cyclic
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-    >>> symr = TensorSymmetry(riemann_bsgs)
+    >>> symr = tensorsymmetry([2, 2])
     >>> R4 = TensorType([Lorentz]*4, symr)
     >>> R = R4('R')
     >>> t = R(i,j,k,l)*(R(-i,-j,-k,-l) - 2*R(-i,-k,-j,-l))

@@ -4,7 +4,7 @@ from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
-  tensorlist_contract_metric, TensMul)
+  tensorlist_contract_metric, TensMul, tensorsymmetry)
 from sympy.utilities.pytest import raises
 
 #################### Tests from tensor_can.py #######################
@@ -13,7 +13,7 @@ def test_canonicalize_no_slot_sym():
     # A_d0 * B^d0; T_c = A^d0*B_d0
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, d0, d1 = tensor_indices('a,b,d0,d1', Lorentz)
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    sym1 = tensorsymmetry([1])
     S1 = TensorType([Lorentz], sym1)
     A, B = S1('A,B')
     t = A(-d0)*B(d0)
@@ -31,7 +31,7 @@ def test_canonicalize_no_slot_sym():
 
     # A symmetric
     # A^{b}_{d0}*A^{d0, a}; T_c = A^{a d0}*A{b}_{d0}
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym2 = tensorsymmetry([1]*2)
     S2 = TensorType([Lorentz]*2, sym2)
     A = S2('A')
     t = A(b, -d0)*A(d0, a)
@@ -48,7 +48,7 @@ def test_canonicalize_no_slot_sym():
     # A without symmetry
     # A^{d1}_{d0}*B^d0*C_d1 ord=[d0,-d0,d1,-d1]; g = [2,1,0,3,4,5]
     # T_c = A^{d0 d1}*B_d1*C_d0; can = [0,2,3,1,4,5]
-    nsym2 = TensorSymmetry(([], [Permutation(range(4))]))
+    nsym2 = tensorsymmetry([1],[1])
     NS2 = TensorType([Lorentz]*2, nsym2)
     A = NS2('A')
     B, C = S1('B, C')
@@ -96,9 +96,9 @@ def test_canonicalize_no_slot_sym():
 def test_canonicalize_no_dummies():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a, b, c, d', Lorentz)
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
-    sym2a = TensorSymmetry(get_symmetric_group_sgs(2, 1))
+    sym1 = tensorsymmetry([1])
+    sym2 = tensorsymmetry([1]*2)
+    sym2a = tensorsymmetry([2])
 
     # A commuting
     # A^c A^b A^a
@@ -146,7 +146,7 @@ def test_no_metric_symmetry():
     # T_c = A^d0_d1 * A^d1_d0
     Lorentz = TensorIndexType('Lorentz', metric=None, dummy_fmt='L')
     d0, d1, d2, d3 = tensor_indices('d0 d1 d2 d3', Lorentz)
-    nsym2 = TensorSymmetry(([], [Permutation(range(4))]))
+    nsym2 = tensorsymmetry([1], [1])
     NS2 = TensorType([Lorentz]*2, nsym2)
     A = NS2('A')
     t = A(d1, -d0)*A(d0, -d1)
@@ -169,12 +169,12 @@ def test_canonicalize1():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, a0, a1, a2, a3, b, d0, d1, d2, d3 = \
       tensor_indices('a,a0,a1,a2,a3,b,d0,d1,d2,d3', Lorentz)
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    sym1 = tensorsymmetry([1])
     base3, gens3 = get_symmetric_group_sgs(3)
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
-    sym2a = TensorSymmetry(get_symmetric_group_sgs(2, 1))
-    sym3 = TensorSymmetry(get_symmetric_group_sgs(3))
-    sym3a = TensorSymmetry(get_symmetric_group_sgs(3, 1))
+    sym2 = tensorsymmetry([1]*2)
+    sym2a = tensorsymmetry([2])
+    sym3 = tensorsymmetry([1]*3)
+    sym3a = tensorsymmetry([3])
 
     # A_d0*A^d0; ord = [d0,-d0]
     # T_c = A^d0*A_d0
@@ -310,10 +310,9 @@ def test_canonicalize1():
     Flavor = TensorIndexType('Flavor', dummy_fmt='F')
     a, b, c, d, e, ff = tensor_indices('a,b,c,d,e,f', Flavor)
     mu, nu = tensor_indices('mu,nu', Lorentz)
-    sym_f = TensorSymmetry(bsgs_direct_product(sym1.base, sym1.generators,
-            sym2a.base, sym2a.generators))
+    sym_f = tensorsymmetry([1], [2])
     S_f = TensorType([Flavor]*3, sym_f)
-    sym_A = TensorSymmetry(bsgs_direct_product(sym1.base, sym1.generators, sym1.base, sym1.generators))
+    sym_A = tensorsymmetry([1], [1])
     S_A = TensorType([Lorentz, Flavor], sym_A)
     f = S_f('f')
     A = S_A('A')
@@ -358,9 +357,9 @@ def test_riemann_products():
     symr = TensorSymmetry(riemann_bsgs)
     R4 = TensorType([Lorentz]*4, symr)
     R = R4('R')
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
-    sym2a = TensorSymmetry(get_symmetric_group_sgs(2, 1))
+    sym1 = tensorsymmetry([1])
+    sym2 = tensorsymmetry([1]*2)
+    sym2a = tensorsymmetry([2])
     # R^{a b d0}_d0 = 0
     t = R(a, b, d0, -d0)
     tc = t.canon_bp()
@@ -400,7 +399,7 @@ def test_canonicalize2():
     Eucl = TensorIndexType('Eucl', metric=0, dim=D, dummy_fmt='E')
     i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14 = \
       tensor_indices('i0,i1,i2,i3,i4,i5,i6,i7,i8,i9,i10,i11,i12,i13,i14', Eucl)
-    sym3a = TensorSymmetry(get_symmetric_group_sgs(3, 1))
+    sym3a = tensorsymmetry([3])
     S3a = TensorType([Eucl]*3, sym3a)
     A = S3a('A')
 
@@ -431,9 +430,9 @@ def test_TensorIndexType():
     G = Metric('g', False)
     Lorentz = TensorIndexType('Lorentz', metric=G, dim=D, dummy_fmt='L')
     m0, m1, m2, m3, m4 = tensor_indices('m0,m1,m2,m3,m4', Lorentz)
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    sym1 = tensorsymmetry([1])
     S1 = TensorType([Lorentz], sym1)
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym2 = tensorsymmetry([1]*2)
     S2 = TensorType([Lorentz]*2, sym2)
     g = Lorentz.metric
     p = S1('p')
@@ -447,7 +446,7 @@ def test_get_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     assert a != -a
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym2 = tensorsymmetry([1]*2)
     S2 = TensorType([Lorentz]*2, sym2)
     A, B = S2('A B')
     assert A != B
@@ -466,8 +465,8 @@ def test_add1():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a,b,d0,d1,i,j,k = tensor_indices('a,b,d0,d1,i,j,k', Lorentz)
     # A, B symmetric
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym1 = tensorsymmetry([1])
+    sym2 = tensorsymmetry([1]*2)
     S2 = TensorType([Lorentz]*2, sym2)
     A, B = S2('A,B')
     t1 = A(b,-d0)*B(d0,a)
@@ -509,8 +508,8 @@ def test_add1():
 def test_add2():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m, n, p, q = tensor_indices('m,n,p,q', Lorentz)
-    symr = TensorSymmetry(riemann_bsgs)
-    sym3a = TensorSymmetry(get_symmetric_group_sgs(3, 1))
+    symr = tensorsymmetry([2, 2])
+    sym3a = tensorsymmetry([3])
     R4 = TensorType([Lorentz]*4, symr)
     S3a = TensorType([Lorentz]*3, sym3a)
     R = R4('R')
@@ -526,7 +525,7 @@ def test_add2():
 def test_substitute_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     i, j, k, l, m, n, p, q = tensor_indices('i,j,k,l,m,n,p,q', Lorentz)
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym2 = tensorsymmetry([1]*2)
     S2 = TensorType([Lorentz]*2, sym2)
     A, B = S2('A,B')
     t = A(i, k)*B(-k, -j)
@@ -534,7 +533,7 @@ def test_substitute_indices():
     t1a = A(j, l)*B(-l, -k)
     assert t1 == t1a
 
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    sym1 = tensorsymmetry([1])
     S1 = TensorType([Lorentz], sym1)
     p = S1('p')
     t = p(i)
@@ -552,8 +551,8 @@ def test_substitute_indices():
 def test_substitute_tensor():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0, m1, m2, m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym1 = tensorsymmetry([1])
+    sym2 = tensorsymmetry([1]*2)
     S1 = TensorType([Lorentz], sym1)
     S2 = TensorType([Lorentz]*2, sym2)
     p, q = S1('p,q')
@@ -566,11 +565,10 @@ def test_substitute_tensor():
     t4 = t.substitute_tensor(q(m1), t2)
     assert t4 == 6*p(m0)*A(m1, m2)*p(-m2)
 
-
 def test_riemann_cyclic_replace():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0,m1,m2,m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-    symr = TensorSymmetry(riemann_bsgs)
+    symr = tensorsymmetry([2, 2])
     R4 = TensorType([Lorentz]*4, symr)
     R = R4('R')
     t = R(m0,m2,m1,m3)
@@ -581,7 +579,7 @@ def test_riemann_cyclic_replace():
 def test_riemann_cyclic():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     i, j, k, l, m, n, p, q = tensor_indices('i,j,k,l,m,n,p,q', Lorentz)
-    symr = TensorSymmetry(riemann_bsgs)
+    symr = tensorsymmetry([2, 2])
     R4 = TensorType([Lorentz]*4, symr)
     R = R4('R')
     t = R(i,j,k,l) + R(i,l,j,k) + R(i,k,l,j) - \
@@ -600,7 +598,7 @@ def test_riemann_cyclic():
 def test_div():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     m0,m1,m2,m3 = tensor_indices('m0,m1,m2,m3', Lorentz)
-    symr = TensorSymmetry(riemann_bsgs)
+    symr = tensorsymmetry([2, 2])
     R4 = TensorType([Lorentz]*4, symr)
     R = R4('R')
     t = R(m0,m1,-m1,m3)
@@ -617,7 +615,7 @@ def test_metric_contract1():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym2 = tensorsymmetry([1]*2)
     S2 = TensorType([Lorentz]*2, sym2)
     g = Lorentz.metric
     A, B = S2('A,B')
@@ -647,12 +645,17 @@ def test_metric_contract1():
     t2 = t2.contract_metric(g)
     assert t2 == A(a,b)*B(-b,-a)
 
+    t1 = A(a,b)*g(-a,-b)
+    t2 = t1.contract_metric(g)
+    assert t2 == A(a, -a)
+    assert not t2._free
+
 def test_metric_contract1():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
     g = Lorentz.metric
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    sym1 = tensorsymmetry([1])
     S1 = TensorType([Lorentz], sym1)
     p, q = S1('p,q')
 
@@ -737,7 +740,7 @@ def test_epsilon():
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
     g = Lorentz.metric
     epsilon = Lorentz.epsilon
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    sym1 = tensorsymmetry([1])
     S1 = TensorType([Lorentz], sym1)
     p, q, r, s = S1('p,q,r,s')
 
@@ -778,9 +781,9 @@ def test_contract_delta1():
     n = Symbol('n')
     Color = TensorIndexType('Color', metric=None, dim=n, dummy_fmt='C')
     a, b, c, d, e, f = tensor_indices('a,b,c,d,e,f', Color)
-    sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
+    sym1 = tensorsymmetry([1])
     S1 = TensorType([Color], sym1)
-    sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
+    sym2 = tensorsymmetry([2])
     S2 = TensorType([Color]*2, sym2)
     delta = Color.delta
 
