@@ -132,3 +132,15 @@ def test_logic_not():
     # functionality into some method.
     assert Not(And('a', 'b')) == Or(Not('a'), Not('b'))
     assert Not(Or('a', 'b')) == And(Not('a'), Not('b'))
+
+def test_logic_printing():
+   from sympy import symbols, pretty
+   from sympy.printing import latex
+   
+   syms = symbols('a:f')
+   expr = And(*syms)
+
+   assert latex(expr) == 'a \\wedge b \\wedge c \\wedge d \\wedge e \\wedge f'
+   assert pretty(expr) == 'And(a, b, c, d, e, f)'
+   assert str(expr) == 'And(a, b, c, d, e, f)'
+
