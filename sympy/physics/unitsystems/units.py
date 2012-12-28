@@ -399,9 +399,9 @@ class UnitSystem(object):
         self.name = name
         self.description = description
 
-        self._base_units = base
+        self._base_units = tuple(base)
         # TODO: use another table to store constants?
-        self._units = list(units) + [u for u in base if u not in units]
+        self._units = tuple(units) + tuple([u for u in base if u not in units])
 
         self._list_dim()
         self._compute_can_transf_matrix()
@@ -506,6 +506,21 @@ class UnitSystem(object):
 
         return found_unit
 
+    def extend(self, base, units=(), name='', description=''):
+        """
+        Extend the current system into a new one.
+
+        Take the base and normal units of the current system to merge
+        them to the base and normal units given in argument.
+        If not provided, name and description are overriden by empty strings.
+        """
+
+        base = self._base_units + tuple(base)
+        units = tuple(units) + tuple([u for u in base if u not in units])
+
+        return UnitSystem(base, units, name, description)
+
+
 class Quantity(AtomicExpr):
 
     is_commutative = True
@@ -533,8 +548,6 @@ class Quantity(AtomicExpr):
         return obj
 
     def __str__(self):
-        if _UNIT_SYSTEM:
-            return '%s %s' % (self.factor, _UNIT_SYSTEM.get_unit(self.unit))
         return '%s %s' % (self.factor, self.unit)
 
     __repr__ = __str__
