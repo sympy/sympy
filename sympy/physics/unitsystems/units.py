@@ -516,7 +516,7 @@ class UnitSystem(object):
         """
 
         base = self._base_units + tuple(base)
-        units = tuple(units) + tuple([u for u in base if u not in units])
+        units = self._units + tuple(units)
 
         return UnitSystem(base, units, name, description)
 

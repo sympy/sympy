@@ -18,6 +18,9 @@ class Dimension(Dict):
     """
     This class represent the dimension of a physical units.
 
+    The dimensions should have a name and possibly a symbol. All other
+    arguments are dimensional powers.
+
     Examples
     ========
 

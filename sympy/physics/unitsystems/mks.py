@@ -18,10 +18,11 @@ time = Dimension(name='time', symbol='T', time=1)
 velocity = Dimension(name='velocity', length=1, time=-1)
 acceleration = Dimension(name='acceleration', length=1, time=-2)
 momentum = Dimension(name='momentum', mass=1, length=1, time=-1)
-force = Dimension(name='force', mass=1, length=1, time=-2)
-energy = Dimension(name='energy', mass=1, length=2, time=-2)
+force = Dimension(name='force', symbol='F', mass=1, length=1, time=-2)
+energy = Dimension(name='energy', symbol='E', mass=1, length=2, time=-2)
 power = Dimension(name='power', mass=1, length=2, time=-3)
 pressure = Dimension(name='pressure', mass=1, length=-1, time=-2)
+frequency = Dimension(name='frequency', symbol='f', time=-1)
 
 # base units
 m = Unit(dimension=length, abbrev='m')
@@ -36,6 +37,7 @@ J = Unit(dimension=energy, factor=10**3, abbrev='J')
 N = Unit(dimension=force, factor=10**3, abbrev='N')
 W = Unit(dimension=power, factor=10**3, abbrev='W')
 Pa = Unit(dimension=pressure, factor=10**3, abbrev='Pa')
+Hz = Unit(dimension=frequency, abbrev='Hz')
 
 # constants
 # Newton constant
@@ -43,5 +45,5 @@ G = Constant(m**3*kg**-1*s**-2, factor=6.67384e-11, abbrev='G')
 # speed of light
 c = Constant(dimension=velocity, factor=299792458, abbrev='c')
 
-units = (v, a, p, J, N, W, Pa, G, c)
+units = (v, a, p, J, N, W, Pa, Hz, G, c)
 mks = UnitSystem(base=(m, kg, s), units=units, name='MKS')
