@@ -671,11 +671,12 @@ class TensAdd(TensExpr):
         a = _tensAdd_collect_terms(args)
         if not a:
             return S.Zero
-
         a = [canon_bp(x) for x in a]
         a = [x for x in a if x]
         if not a:
             return S.Zero
+        if len(a) == 1:
+            return a[0]
         obj._args = tuple(a)
         return obj
 
@@ -781,7 +782,8 @@ class TensMul(TensExpr):
             return self._coeff == 0
         other = sympify(other)
         if not is_Tensor(other):
-            return False
+            assert not self._components
+            return self._coeff == other
         res = self - other
         return res == 0
 
@@ -878,7 +880,12 @@ class TensMul(TensExpr):
             vpos.append(pos)
             pos += t.rank
         cdt = defaultdict(int)
+        # if the free indices have names with dummy_fmt, start with an
+        # index higher than those for the dummy indices
+        # to avoid name collisions
         for indx, ipos, cpos in self._free:
+            if indx.name.split('_')[0] == indx.tensortype.dummy_fmt[:-3]:
+                cdt[indx.tensortype] = max(cdt[indx.tensortype], int(indx.name.split('_')[1]) + 1)
             start = vpos[cpos]
             indices[start + ipos] = indx
         for ipos1, ipos2, cpos1, cpos2 in self._dum:
@@ -945,10 +952,13 @@ class TensMul(TensExpr):
         for t in self._components:
             vpos.append(pos)
             pos += t.rank
+        # ordered indices: first the free indices, ordered by types
+        # then the dummy indices, ordered by types and contravariant before
+        # covariant
+        # g[position in tensor] = position in ordered indices
         for i, (indx, ipos, cpos) in enumerate(self._free):
             pos = vpos[cpos] + ipos
             g[pos] = i
-
         pos = len(self._free)
         j = len(self._free)
         dummies = []

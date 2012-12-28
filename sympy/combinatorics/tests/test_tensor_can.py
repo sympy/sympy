@@ -241,6 +241,18 @@ def test_no_metric_symmetry():
     can = canonicalize(g, range(16), None, [[], [Permutation(range(4))], 8, 0])
     assert can == [0,3,2,5,4,7,6,1,8,11,10,13,12,15,14,9,16,17]
 
+def test_canonical_free():
+    # t = A^{d0 a1}*A_d0^a0
+    # ord = [a0,a1,d0,-d0];  g = [2,1,3,0,4,5]; dummies = [[2,3]]
+    # t_c = A_d0^a0*A^{d0 a1}
+    # can = [3,0, 2,1, 4,5]
+    base = [0]
+    gens = [Permutation(5)(0,2)(1,3)]
+    g = Permutation([2,1,3,0,4,5])
+    num_free = 2
+    dummies = [[2,3]]
+    can = canonicalize(g, dummies, [None], ([], [Permutation(3)], 2, 0))
+    assert can == [3,0, 2,1, 4,5]
 
 def test_canonicalize1():
     base1, gens1 = get_symmetric_group_sgs(1)
