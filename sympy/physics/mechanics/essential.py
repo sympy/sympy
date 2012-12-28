@@ -521,7 +521,7 @@ class ReferenceFrame(object):
         'A1'
 
         """
-
+        
         from sympy.physics.mechanics import Point
         if not isinstance(name, (str, unicode)):
             raise TypeError('Need to supply a valid name')
@@ -1042,7 +1042,7 @@ class ReferenceFrame(object):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
 
-    def get_point_at(self, pointname, x, y, z):
+    def create_point_at(self, pointname, x, y, z):
         """
         Returns Point at [x, y, z] with respect to the ReferenceFrame's origin
         and names it to 'pointname'.
@@ -1060,25 +1060,24 @@ class ReferenceFrame(object):
         """Shift the origin of the Reference Frame to neworigin."""
         self._origin = neworigin
 
-    def get_coordinates(self, point):
+    def get_point_coordinates(self, point):
         """Returns the co-ordinates of 'point' in the ReferenceFrame, if possible.
 
         Examples
         ========
         >>> from sympy.physics.mechanics import ReferenceFrame, Point
         >>> N = ReferenceFrame('N')
-        >>> p = N.get_point_at('p', 1, 2, 3)
-        >>> N.get_coordinates(p)
+        >>> p = N.create_point_at('p', 1, 2, 3)
+        >>> N.get_point_coordinates(p)
         [1, 2, 3]
         >>> o = N.get_origin()
         >>> N.shift_origin_to(p)
-        >>> N.get_coordinates(p)
+        >>> N.get_point_coordinates(p)
         [0, 0, 0]
-        >>> N.get_coordinates(o)
+        >>> N.get_point_coordinates(o)
         [-1, -2, -3]
 
         """
-        from sympy.physics.mechanics import Point
         pos_vector = point.pos_from(self._origin)
         if pos_vector == 0:
             return [0, 0, 0]
