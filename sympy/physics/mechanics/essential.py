@@ -521,7 +521,7 @@ class ReferenceFrame(object):
         'A1'
 
         """
-        
+
         from sympy.physics.mechanics import Point
         if not isinstance(name, (str, unicode)):
             raise TypeError('Need to supply a valid name')
