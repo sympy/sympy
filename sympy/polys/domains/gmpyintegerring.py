@@ -10,12 +10,13 @@ from sympy.polys.domains.groundtypes import (
 
 from sympy.polys.polyerrors import CoercionFailed
 
+
 class GMPYIntegerRing(IntegerRing):
     """Integer ring based on GMPY's ``mpz`` type. """
 
     dtype = GMPYIntegerType
-    zero  = dtype(0)
-    one   = dtype(1)
+    zero = dtype(0)
+    one = dtype(1)
     alias = 'ZZ_gmpy'
 
     def __init__(self):

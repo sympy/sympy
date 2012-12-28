@@ -10,6 +10,7 @@ class SympifyError(ValueError):
     def __init__(self, expr, base_exc=None):
         self.expr = expr
         self.base_exc = base_exc
+
     def __str__(self):
         if self.base_exc is None:
             return "SympifyError: %r" % (self.expr,)
@@ -18,7 +19,8 @@ class SympifyError(ValueError):
             "raised:\n%s: %s" % (self.expr, self.base_exc.__class__.__name__,
             str(self.base_exc)))
 
-converter = {} #See sympify docstring.
+converter = {}  # See sympify docstring.
+
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
@@ -61,6 +63,59 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...
     SympifyError: SympifyError: "could not parse u'x***2'"
 
+    Locals
+    ------
+
+    The sympification happens with access to everything that is loaded
+    by ``from sympy import *``; anything used in a string that is not
+    defined by that import will be converted to a symbol. In the following,
+    the ``bitcout`` function is treated as a symbol and the ``O`` is
+    interpreted as the Order object (used with series) and it raises
+    an error when used improperly:
+
+    >>> s = 'bitcount(42)'
+    >>> sympify(s)
+    bitcount(42)
+    >>> sympify("O(x)")
+    O(x)
+    >>> sympify("O + 1")
+    Traceback (most recent call last):
+    ...
+    TypeError: unbound method...
+
+    In order to have ``bitcount`` be recognized it can be imported into a
+    namespace dictionary and passed as locals:
+
+    >>> ns = {}
+    >>> exec 'from sympy.core.evalf import bitcount' in ns
+    >>> sympify(s, locals=ns)
+    6
+
+    In order to have the ``O`` interpreted as a Symbol, identify it as such
+    in the namespace dictionary. This can be done in a variety of ways; all
+    three of the following are possibilities:
+
+    >>> from sympy import Symbol
+    >>> ns["O"] = Symbol("O")  # method 1
+    >>> exec 'from sympy.abc import O' in ns  # method 2
+    >>> ns.update(dict(O=Symbol("O")))  # method 3
+    >>> sympify("O + 1", locals=ns)
+    O + 1
+
+    If you want *all* single-letter and Greek-letter variables to be symbols
+    then you can use the clashing-symbols dictionaries that have been defined
+    there as private variables: _clash1 (single-letter variables), _clash2
+    (the multi-letter Greek names) or _clash (both single and multi-letter
+    names that are defined in abc).
+
+    >>> from sympy.abc import _clash1
+    >>> _clash1
+    {'C': C, 'E': E, 'I': I, 'N': N, 'O': O, 'Q': Q, 'S': S}
+    >>> sympify('C & Q', _clash1)
+    And(C, Q)
+
+    Strict
+    ------
 
     If the option ``strict`` is set to ``True``, only the types for which an
     explicit conversion has been defined are converted. In the other
@@ -73,8 +128,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...
     SympifyError: SympifyError: True
 
-    To extend `sympify` to convert custom objects (not derived from `Basic`),
-    just define a `_sympy_` method to your class. You can do that even to
+    Extending
+    ---------
+
+    To extend ``sympify`` to convert custom objects (not derived from ``Basic``),
+    just define a ``_sympy_`` method to your class. You can do that even to
     classes that you do not own by subclassing or adding the method at runtime.
 
     >>> from sympy import Matrix
@@ -90,9 +148,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     [2]
 
     If you do not have control over the class definition you could also use the
-    `converter` global dictionary. The key is the class and the value is a
+    ``converter`` global dictionary. The key is the class and the value is a
     function that takes a single argument and returns the desired SymPy
-    object, e.g. `converter[MyList] = lambda x: Matrix(x)`.
+    object, e.g. ``converter[MyList] = lambda x: Matrix(x)``.
 
     >>> class MyList2(object):   # XXX Do not do this if you control the class!
     ...     def __iter__(self):  #     Use _sympy_!
@@ -109,7 +167,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
     try:
         cls = a.__class__
-    except AttributeError:  #a is probably an old-style class object
+    except AttributeError:  # a is probably an old-style class object
         cls = type(a)
     if cls in sympy_classes:
         return a
@@ -171,15 +229,26 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     except Exception, exc:
         raise SympifyError(a, exc)
 
-    from sympy.parsing.sympy_parser import parse_expr, TokenError
+    from sympy.parsing.sympy_parser import (parse_expr, TokenError,
+                                            standard_transformations)
+    from sympy.parsing.sympy_parser import convert_xor as t_convert_xor
+    from sympy.parsing.sympy_parser import rationalize as t_rationalize
+
+    transformations = standard_transformations
+
+    if rational:
+        transformations += (t_rationalize,)
+    if convert_xor:
+        transformations += (t_convert_xor,)
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, locals or {}, rational, convert_xor)
+        expr = parse_expr(a, locals or {}, transformations)
     except (TokenError, SyntaxError):
         raise SympifyError('could not parse %r' % a)
 
     return expr
+
 
 def _sympify(a):
     """Short version of sympify for internal usage for __add__ and __eq__

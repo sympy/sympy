@@ -14,12 +14,13 @@ n_tests = 50
 from pexpect import run
 from numpy import mean, std
 
+
 def test():
     t = run("python bin/test_import.py")
     t = float(t)
     return t
 
-tests = [test() for x in range(n_tests+1)]
+tests = [test() for x in range(n_tests + 1)]
 print "Note: the first run (warm up) was not included in the average + std dev"
 print "All runs (including warm up):"
 print tests

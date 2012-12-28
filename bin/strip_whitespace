@@ -4,6 +4,7 @@ from __future__ import with_statement
 
 import os
 
+
 def strip_file(filename, write, report):
     # .readlines() retains \n chars, while .read().splitlines() does not.
     # Assuming that whitespace errors will be few, we will thus only need
@@ -54,13 +55,14 @@ def strip_file(filename, write, report):
         with open(filename, "wb") as f:
             f.writelines(lines)
 
+
 def go(path, write, report):
     allowed_ext = [
-            ".cpp",
-            ".cc",
-            ".h",
-            ".py",
-            ]
+        ".cpp",
+        ".cc",
+        ".h",
+        ".py",
+    ]
     for root, dirs, files in os.walk(path):
         if ".git" in dirs:
             dirs.remove(".git")
@@ -69,6 +71,7 @@ def go(path, write, report):
                 continue
             filename = os.path.join(root, file)
             strip_file(filename, write, report)
+
 
 def main():
     from optparse import OptionParser

@@ -1,9 +1,10 @@
 from sympy.core.numbers import igcdex, igcd
 from sympy.core.mul import prod
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.core.compatibility import as_int
 from sympy.ntheory.primetest import isprime
 from sympy.polys.domains import ZZ
 from sympy.polys.galoistools import gf_crt, gf_crt1, gf_crt2
+
 
 def symmetric_residue(a, m):
     """Return the residual mod m such that it is within half of the modulus.
@@ -18,6 +19,7 @@ def symmetric_residue(a, m):
         return a
     else:
         return a - m
+
 
 def crt(m, v, symmetric=False, check=True):
     r"""Chinese Remainder Theorem.
@@ -75,8 +77,8 @@ def crt(m, v, symmetric=False, check=True):
     sympy.polys.galoistools.gf_crt : low level crt routine used by this routine
     """
     if check:
-        m = int_tested(*m)
-        v = int_tested(*v)
+        m = map(as_int, m)
+        v = map(as_int, v)
 
     result = gf_crt(v, m, ZZ)
     mm = prod(m)
@@ -94,6 +96,7 @@ def crt(m, v, symmetric=False, check=True):
         return symmetric_residue(result, mm), mm
     return result, mm
 
+
 def crt1(m):
     """First part of Chinese Remainder Theorem, for multiple application.
 
@@ -106,6 +109,7 @@ def crt1(m):
     """
 
     return gf_crt1(m, ZZ)
+
 
 def crt2(m, v, mm, e, s, symmetric=False):
     """Second part of Chinese Remainder Theorem, for multiple application.
@@ -124,6 +128,7 @@ def crt2(m, v, mm, e, s, symmetric=False):
     if symmetric:
         return symmetric_residue(result, mm), mm
     return result, mm
+
 
 def solve_congruence(*remainder_modulus_pairs, **hint):
     """Compute the integer ``n`` that has the residual ``ai`` when it is
@@ -186,7 +191,6 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
 
         - http://en.wikipedia.org/wiki/Method_of_successive_substitution
         """
-        from sympy.core.numbers import igcdex
         a1, m1 = c1
         a2, m2 = c2
         a, b, c = m1, a2 - a1, m2
@@ -204,7 +208,7 @@ def solve_congruence(*remainder_modulus_pairs, **hint):
     symmetric = hint.get('symmetric', False)
 
     if hint.get('check', True):
-        rm = [int_tested(*pair) for pair in rm]
+        rm = [(as_int(r), as_int(m)) for r, m in rm]
 
         # ignore redundant pairs but raise an error otherwise; also
         # make sure that a unique set of bases is sent to gf_crt if

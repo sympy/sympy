@@ -55,7 +55,7 @@ class StateBase(QExpr):
     """Abstract base class for general abstract states in quantum mechanics.
 
     All other state classes defined will need to inherit from this class. It
-    carries the basic structure for all other states such as dual, _eval_dagger
+    carries the basic structure for all other states such as dual, _eval_adjoint
     and label.
 
     This is an abstract base class and you should not instantiate it directly,
@@ -85,12 +85,13 @@ class StateBase(QExpr):
         operator instances. See cartesian.py for examples,
         """
 
-        raise NotImplementedError("Cannot map this state to operators. Method not implemented!")
+        raise NotImplementedError(
+            "Cannot map this state to operators. Method not implemented!")
 
     @property
     def operators(self):
         """Return the operator(s) that this state is an eigenstate of"""
-        from operatorset import state_to_operators #import internally to avoid circular import errors
+        from operatorset import state_to_operators  # import internally to avoid circular import errors
         return state_to_operators(self)
 
     def _enumerate_state(self, num_states, **options):
@@ -115,7 +116,7 @@ class StateBase(QExpr):
             'dual_class must be implemented in a subclass'
         )
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         """Compute the dagger of this state using the dual."""
         return self.dual
 
@@ -145,18 +146,22 @@ class StateBase(QExpr):
         for bracket in lbracket, rbracket:
             # Create left bracket
             if bracket in set([_lbracket, _lbracket_ucode]):
-                bracket_args = [ ' ' * (height//2-i-1) + slash for i in range(height // 2)]
-                bracket_args.extend([ ' ' * i + bslash for i in range(height // 2)])
+                bracket_args = [ ' ' * (height//2 - i - 1) +
+                                 slash for i in range(height // 2)]
+                bracket_args.extend(
+                    [ ' ' * i + bslash for i in range(height // 2)])
             # Create right bracket
             elif bracket in set([_rbracket, _rbracket_ucode]):
                 bracket_args = [ ' ' * i + bslash for i in range(height // 2)]
-                bracket_args.extend([ ' ' * (height//2-i-1) + slash for i in range(height // 2)])
+                bracket_args.extend([ ' ' * (
+                    height//2 - i - 1) + slash for i in range(height // 2)])
             # Create straight bracket
             elif bracket in set([_straight_bracket, _straight_bracket_ucode]):
                 bracket_args = [vert for i in range(height)]
             else:
                 raise ValueError(bracket)
-            brackets.append(stringPict('\n'.join(bracket_args), baseline=height//2))
+            brackets.append(
+                stringPict('\n'.join(bracket_args), baseline=height//2))
         return brackets
 
     def _sympystr(self, printer, *args):
@@ -167,7 +172,8 @@ class StateBase(QExpr):
         from sympy.printing.pretty.stringpict import prettyForm
         # Get brackets
         pform = self._print_contents_pretty(printer, *args)
-        lbracket, rbracket = self._pretty_brackets(pform.height(), printer._use_unicode)
+        lbracket, rbracket = self._pretty_brackets(
+            pform.height(), printer._use_unicode)
         # Put together state
         pform = prettyForm(*pform.left(lbracket))
         pform = prettyForm(*pform.right(rbracket))
@@ -258,6 +264,7 @@ class KetBase(StateBase):
         """
         return dispatch_method(self, '_apply_operator', op, **options)
 
+
 class BraBase(StateBase):
     """Base class for Bras.
 
@@ -318,7 +325,6 @@ class BraBase(StateBase):
 class State(StateBase):
     """General abstract quantum state used as a base class for Ket and Bra."""
     pass
-
 
 
 class Ket(State, KetBase):
@@ -385,6 +391,7 @@ class Ket(State, KetBase):
     def dual_class(self):
         return Bra
 
+
 class Bra(State, BraBase):
     """A general time-independent Bra in quantum mechanics.
 
@@ -448,6 +455,7 @@ class Bra(State, BraBase):
 #-----------------------------------------------------------------------------
 # Time dependent states, bras and kets.
 #-----------------------------------------------------------------------------
+
 
 class TimeDepState(StateBase):
     """Base class for a general time-dependent quantum state.
@@ -518,7 +526,8 @@ class TimeDepState(StateBase):
         return printer._print_seq((label, time), delimiter=';')
 
     def _print_contents_latex(self, printer, *args):
-        label = self._print_sequence(self.label, self._label_separator, printer, *args)
+        label = self._print_sequence(
+            self.label, self._label_separator, printer, *args)
         time = self._print_time_latex(printer, *args)
         return '%s;%s' % (label, time)
 
@@ -602,6 +611,7 @@ class TimeDepBra(TimeDepState, BraBase):
     @classmethod
     def dual_class(self):
         return TimeDepKet
+
 
 class Wavefunction(Function):
     """Class for representations in continuous bases
@@ -699,7 +709,7 @@ class Wavefunction(Function):
                 new_args[ct] = Tuple(*arg)
             else:
                 new_args[ct] = arg
-            ct+=1
+            ct += 1
 
         return super(Function, cls).__new__(cls, *new_args, **options)
 
@@ -707,19 +717,20 @@ class Wavefunction(Function):
         var = self.variables
 
         if len(args) != len(var):
-            raise NotImplementedError("Incorrect number of arguments to function!")
+            raise NotImplementedError(
+                "Incorrect number of arguments to function!")
 
         ct = 0
         #If the passed value is outside the specified bounds, return 0
         for v in var:
-            lower,upper = self.limits[v]
+            lower, upper = self.limits[v]
 
             #Do the comparison to limits only if the passed symbol is actually
             #a symbol present in the limits;
             #Had problems with a comparison of x > L
             if isinstance(args[ct], Expr) and \
-                   not (lower in args[ct].free_symbols \
-                        or upper in args[ct].free_symbols):
+                not (lower in args[ct].free_symbols
+                     or upper in args[ct].free_symbols):
                 continue
 
             if args[ct] < lower or args[ct] > upper:
@@ -743,11 +754,11 @@ class Wavefunction(Function):
 
         return Wavefunction(deriv, *self.args[1:])
 
-    def _eval_dagger(self):
-        return conjugate(self)
-
     def _eval_conjugate(self):
         return Wavefunction(conjugate(self.expr), *self.args[1:])
+
+    def _eval_transpose(self):
+        return self
 
     @property
     def free_symbols(self):
@@ -810,7 +821,7 @@ class Wavefunction(Function):
             {x: (-oo, oo), y: (-1, 2)}
 
         """
-        limits = [(g[1], g[2]) if isinstance(g, Tuple) else (-oo, oo) \
+        limits = [(g[1], g[2]) if isinstance(g, Tuple) else (-oo, oo)
                   for g in self._args[1:]]
         return dict(zip(self.variables, tuple(limits)))
 

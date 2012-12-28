@@ -27,7 +27,8 @@ __all__ = [
 ]
 
 np = import_module('numpy', min_python_version=(2, 6))
-scipy = import_module('scipy', __import__kwargs={'fromlist':['sparse']})
+scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+
 
 def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
     """Checks if a given scipy.sparse matrix is a scalar matrix.
@@ -39,6 +40,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
 
     Parameters
     ==========
+
     circuit : Gate tuple
         Sequence of quantum gates representing a quantum circuit
     nqubits : int
@@ -48,9 +50,6 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
     eps : number
         The tolerance value for zeroing out elements in the matrix.
         Values in the range [-eps, +eps] will be changed to a zero.
-
-    Examples
-    ========
     """
 
     if not np or not scipy:
@@ -77,10 +76,10 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         # the matrix into real and imaginary components
         # Find the real values in between -eps and eps
         bool_real = np.logical_and(dense_matrix.real > -eps,
-                                      dense_matrix.real < eps)
+                                   dense_matrix.real < eps)
         # Find the imaginary values between -eps and eps
         bool_imag = np.logical_and(dense_matrix.imag > -eps,
-                                      dense_matrix.imag < eps)
+                                   dense_matrix.imag < eps)
         # Replaces values between -eps and eps with 0
         corrected_real = np.where(bool_real, 0.0, dense_matrix.real)
         corrected_imag = np.where(bool_imag, 0.0, dense_matrix.imag)
@@ -100,7 +99,7 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         first_element = corrected_dense[0][0]
         # If the first element is a zero, then can't rescale matrix
         # and definitely not diagonal
-        if (first_element == 0.0+0.0j):
+        if (first_element == 0.0 + 0.0j):
             return False
 
         # The dimensions of the dense matrix should still
@@ -116,14 +115,16 @@ def is_scalar_sparse_matrix(circuit, nqubits, identity_only, eps=1e-11):
         imag_is_zero = abs(first_element.imag) < eps
         is_one = real_is_one and imag_is_zero
         is_identity = is_one if identity_only else True
-        return is_diagonal and has_correct_trace and is_identity
+        return bool(is_diagonal and has_correct_trace and is_identity)
+
 
 def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
     """Checks if a given circuit, in matrix form, is equivalent to
-       a scalar value.
+    a scalar value.
 
     Parameters
     ==========
+
     circuit : Gate tuple
         Sequence of quantum gates representing a quantum circuit
     nqubits : int
@@ -158,20 +159,21 @@ def is_scalar_nonsparse_matrix(circuit, nqubits, identity_only):
 
         # The matrix is scalar if it's diagonal and the adjusted trace
         # value is equal to 2^nqubits
-        return (matrix.is_diagonal() and
-                has_correct_trace and
-                is_identity)
+        return bool(
+            matrix.is_diagonal() and has_correct_trace and is_identity)
 
 if np and scipy:
     is_scalar_matrix = is_scalar_sparse_matrix
 else:
     is_scalar_matrix = is_scalar_nonsparse_matrix
 
+
 def _get_min_qubits(a_gate):
     if isinstance(a_gate, Pow):
         return a_gate.base.min_qubits
     else:
         return a_gate.min_qubits
+
 
 def ll_op(left, right):
     """Perform a LL operation.
@@ -187,6 +189,7 @@ def ll_op(left, right):
 
     Parameters
     ==========
+
     left : Gate tuple
         The left circuit of a gate rule expression.
     right : Gate tuple
@@ -197,22 +200,20 @@ def ll_op(left, right):
 
     Generate a new gate rule using a LL operation:
 
-        >>> from sympy.physics.quantum.identitysearch import ll_op
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> ll_op((x, y, z), ())
-        ((Y(0), Z(0)), (X(0),))
+    >>> from sympy.physics.quantum.identitysearch import ll_op
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> ll_op((x, y, z), ())
+    ((Y(0), Z(0)), (X(0),))
 
-        >>> ll_op((y, z), (x,))
-        ((Z(0),), (Y(0), X(0)))
+    >>> ll_op((y, z), (x,))
+    ((Z(0),), (Y(0), X(0)))
     """
 
     if (len(left) > 0):
         ll_gate = left[0]
         ll_gate_is_unitary = is_scalar_matrix(
-                                 (Dagger(ll_gate), ll_gate),
-                                 _get_min_qubits(ll_gate),
-                                 True)
+            (Dagger(ll_gate), ll_gate), _get_min_qubits(ll_gate), True)
 
     if (len(left) > 0 and ll_gate_is_unitary):
         # Get the new left side w/o the leftmost gate
@@ -223,6 +224,7 @@ def ll_op(left, right):
         return (new_left, new_right)
 
     return None
+
 
 def lr_op(left, right):
     """Perform a LR operation.
@@ -238,6 +240,7 @@ def lr_op(left, right):
 
     Parameters
     ==========
+
     left : Gate tuple
         The left circuit of a gate rule expression.
     right : Gate tuple
@@ -248,32 +251,31 @@ def lr_op(left, right):
 
     Generate a new gate rule using a LR operation:
 
-        >>> from sympy.physics.quantum.identitysearch import lr_op
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> lr_op((x, y, z), ())
-        ((X(0), Y(0)), (Z(0),))
+    >>> from sympy.physics.quantum.identitysearch import lr_op
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> lr_op((x, y, z), ())
+    ((X(0), Y(0)), (Z(0),))
 
-        >>> lr_op((x, y), (z,))
-        ((X(0),), (Z(0), Y(0)))
+    >>> lr_op((x, y), (z,))
+    ((X(0),), (Z(0), Y(0)))
     """
 
     if (len(left) > 0):
-        lr_gate = left[len(left)-1]
+        lr_gate = left[len(left) - 1]
         lr_gate_is_unitary = is_scalar_matrix(
-                                 (Dagger(lr_gate), lr_gate),
-                                 _get_min_qubits(lr_gate),
-                                 True)
+            (Dagger(lr_gate), lr_gate), _get_min_qubits(lr_gate), True)
 
     if (len(left) > 0 and lr_gate_is_unitary):
         # Get the new left side w/o the rightmost gate
-        new_left = left[0:len(left)-1]
+        new_left = left[0:len(left) - 1]
         # Add the rightmost gate to the right position on the right side
         new_right = right + (Dagger(lr_gate),)
         # Return the new gate rule
         return (new_left, new_right)
 
     return None
+
 
 def rl_op(left, right):
     """Perform a RL operation.
@@ -289,6 +291,7 @@ def rl_op(left, right):
 
     Parameters
     ==========
+
     left : Gate tuple
         The left circuit of a gate rule expression.
     right : Gate tuple
@@ -299,22 +302,20 @@ def rl_op(left, right):
 
     Generate a new gate rule using a RL operation:
 
-        >>> from sympy.physics.quantum.identitysearch import rl_op
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> rl_op((x,), (y, z))
-        ((Y(0), X(0)), (Z(0),))
+    >>> from sympy.physics.quantum.identitysearch import rl_op
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> rl_op((x,), (y, z))
+    ((Y(0), X(0)), (Z(0),))
 
-        >>> rl_op((x, y), (z,))
-        ((Z(0), X(0), Y(0)), ())
+    >>> rl_op((x, y), (z,))
+    ((Z(0), X(0), Y(0)), ())
     """
 
     if (len(right) > 0):
         rl_gate = right[0]
         rl_gate_is_unitary = is_scalar_matrix(
-                                 (Dagger(rl_gate), rl_gate),
-                                 _get_min_qubits(rl_gate),
-                                 True)
+            (Dagger(rl_gate), rl_gate), _get_min_qubits(rl_gate), True)
 
     if (len(right) > 0 and rl_gate_is_unitary):
         # Get the new right side w/o the leftmost gate
@@ -325,6 +326,7 @@ def rl_op(left, right):
         return (new_left, new_right)
 
     return None
+
 
 def rr_op(left, right):
     """Perform a RR operation.
@@ -340,6 +342,7 @@ def rr_op(left, right):
 
     Parameters
     ==========
+
     left : Gate tuple
         The left circuit of a gate rule expression.
     right : Gate tuple
@@ -350,32 +353,31 @@ def rr_op(left, right):
 
     Generate a new gate rule using a RR operation:
 
-        >>> from sympy.physics.quantum.identitysearch import rr_op
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> rr_op((x, y), (z,))
-        ((X(0), Y(0), Z(0)), ())
+    >>> from sympy.physics.quantum.identitysearch import rr_op
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> rr_op((x, y), (z,))
+    ((X(0), Y(0), Z(0)), ())
 
-        >>> rr_op((x,), (y, z))
-        ((X(0), Z(0)), (Y(0),))
+    >>> rr_op((x,), (y, z))
+    ((X(0), Z(0)), (Y(0),))
     """
 
     if (len(right) > 0):
-        rr_gate = right[len(right)-1]
+        rr_gate = right[len(right) - 1]
         rr_gate_is_unitary = is_scalar_matrix(
-                                 (Dagger(rr_gate), rr_gate),
-                                 _get_min_qubits(rr_gate),
-                                 True)
+            (Dagger(rr_gate), rr_gate), _get_min_qubits(rr_gate), True)
 
     if (len(right) > 0 and rr_gate_is_unitary):
         # Get the new right side w/o the rightmost gate
-        new_right = right[0:len(right)-1]
+        new_right = right[0:len(right) - 1]
         # Add the rightmost gate to the right position on the right side
         new_left = left + (Dagger(rr_gate),)
         # Return the new gate rule
         return (new_left, new_right)
 
     return None
+
 
 def generate_gate_rules(gate_seq, return_as_muls=False):
     """Returns a set of gate rules.  Each gate rules is represented
@@ -419,6 +421,7 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     Parameters
     ==========
+
     gate_seq : Gate tuple, Mul, or Number
         A variable length tuple or Mul of Gates whose product is equal to
         a scalar matrix
@@ -430,33 +433,32 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     Find the gate rules of the current circuit using tuples:
 
-        >>> from sympy.physics.quantum.identitysearch import \
-                    generate_gate_rules
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_gate_rules((x, x))
-        set([((X(0),), (X(0),)), ((X(0), X(0)), ())])
+    >>> from sympy.physics.quantum.identitysearch import generate_gate_rules
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> generate_gate_rules((x, x))
+    set([((X(0),), (X(0),)), ((X(0), X(0)), ())])
 
-        >>> generate_gate_rules((x, y, z))
-        set([((), (X(0), Z(0), Y(0))), ((), (Y(0), X(0), Z(0))),
-             ((), (Z(0), Y(0), X(0))), ((X(0),), (Z(0), Y(0))),
-             ((Y(0),), (X(0), Z(0))), ((Z(0),), (Y(0), X(0))),
-             ((X(0), Y(0)), (Z(0),)), ((Y(0), Z(0)), (X(0),)),
-             ((Z(0), X(0)), (Y(0),)), ((X(0), Y(0), Z(0)), ()),
-             ((Y(0), Z(0), X(0)), ()), ((Z(0), X(0), Y(0)), ())])
+    >>> generate_gate_rules((x, y, z))
+    set([((), (X(0), Z(0), Y(0))), ((), (Y(0), X(0), Z(0))),
+         ((), (Z(0), Y(0), X(0))), ((X(0),), (Z(0), Y(0))),
+         ((Y(0),), (X(0), Z(0))), ((Z(0),), (Y(0), X(0))),
+         ((X(0), Y(0)), (Z(0),)), ((Y(0), Z(0)), (X(0),)),
+         ((Z(0), X(0)), (Y(0),)), ((X(0), Y(0), Z(0)), ()),
+         ((Y(0), Z(0), X(0)), ()), ((Z(0), X(0), Y(0)), ())])
 
     Find the gate rules of the current circuit using Muls:
 
-        >>> generate_gate_rules(x*x, return_as_muls=True)
-        set([(1, 1)])
+    >>> generate_gate_rules(x*x, return_as_muls=True)
+    set([(1, 1)])
 
-        >>> generate_gate_rules(x*y*z, return_as_muls=True)
-        set([(1, X(0)*Z(0)*Y(0)), (1, Y(0)*X(0)*Z(0)),
-             (1, Z(0)*Y(0)*X(0)), (X(0)*Y(0), Z(0)),
-             (Y(0)*Z(0), X(0)), (Z(0)*X(0), Y(0)),
-             (X(0)*Y(0)*Z(0), 1), (Y(0)*Z(0)*X(0), 1),
-             (Z(0)*X(0)*Y(0), 1), (X(0), Z(0)*Y(0)),
-             (Y(0), X(0)*Z(0)), (Z(0), Y(0)*X(0))])
+    >>> generate_gate_rules(x*y*z, return_as_muls=True)
+    set([(1, X(0)*Z(0)*Y(0)), (1, Y(0)*X(0)*Z(0)),
+         (1, Z(0)*Y(0)*X(0)), (X(0)*Y(0), Z(0)),
+         (Y(0)*Z(0), X(0)), (Z(0)*X(0), Y(0)),
+         (X(0)*Y(0)*Z(0), 1), (Y(0)*Z(0)*X(0), 1),
+         (Z(0)*X(0)*Y(0), 1), (X(0), Z(0)*Y(0)),
+         (Y(0), X(0)*Z(0)), (Z(0), Y(0)*X(0))])
     """
 
     if isinstance(gate_seq, Number):
@@ -521,6 +523,7 @@ def generate_gate_rules(gate_seq, return_as_muls=False):
 
     return rules
 
+
 def generate_equivalent_ids(gate_seq, return_as_muls=False):
     """Returns a set of equivalent gate identities.
 
@@ -542,6 +545,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
 
     Parameters
     ==========
+
     gate_seq : Gate tuple, Mul, or Number
         A variable length tuple or Mul of Gates whose product is equal to
         a scalar matrix.
@@ -553,25 +557,24 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
 
     Find equivalent gate identities from the current circuit with tuples:
 
-        >>> from sympy.physics.quantum.identitysearch import \
-                    generate_equivalent_ids
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> generate_equivalent_ids((x, x))
-        set([(X(0), X(0))])
+    >>> from sympy.physics.quantum.identitysearch import generate_equivalent_ids
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> generate_equivalent_ids((x, x))
+    set([(X(0), X(0))])
 
-        >>> generate_equivalent_ids((x, y, z))
-        set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
-             (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
+    >>> generate_equivalent_ids((x, y, z))
+    set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
+         (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
 
     Find equivalent gate identities from the current circuit with Muls:
 
-        >>> generate_equivalent_ids(x*x, return_as_muls=True)
-        set([1])
+    >>> generate_equivalent_ids(x*x, return_as_muls=True)
+    set([1])
 
-        >>> generate_equivalent_ids(x*y*z, return_as_muls=True)
-        set([X(0)*Y(0)*Z(0), X(0)*Z(0)*Y(0), Y(0)*X(0)*Z(0),
-             Y(0)*Z(0)*X(0), Z(0)*X(0)*Y(0), Z(0)*Y(0)*X(0)])
+    >>> generate_equivalent_ids(x*y*z, return_as_muls=True)
+    set([X(0)*Y(0)*Z(0), X(0)*Z(0)*Y(0), Y(0)*X(0)*Z(0),
+         Y(0)*Z(0)*X(0), Z(0)*X(0)*Y(0), Z(0)*Y(0)*X(0)])
     """
 
     if isinstance(gate_seq, Number):
@@ -599,6 +602,7 @@ def generate_equivalent_ids(gate_seq, return_as_muls=False):
 
     return eq_ids
 
+
 class GateIdentity(Basic):
     """Wrapper class for circuits that reduce to a scalar value.
 
@@ -609,6 +613,7 @@ class GateIdentity(Basic):
 
     Parameters
     ==========
+
     args : Gate tuple
         A variable length tuple of Gates that form an identity.
 
@@ -617,17 +622,16 @@ class GateIdentity(Basic):
 
     Create a GateIdentity and look at its attributes:
 
-        >>> from sympy.physics.quantum.identitysearch import \
-                    GateIdentity
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> an_identity = GateIdentity(x, y, z)
-        >>> an_identity.circuit
-        X(0)*Y(0)*Z(0)
+    >>> from sympy.physics.quantum.identitysearch import GateIdentity
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> an_identity = GateIdentity(x, y, z)
+    >>> an_identity.circuit
+    X(0)*Y(0)*Z(0)
 
-        >>> an_identity.equivalent_ids
-        set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
-             (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
+    >>> an_identity.equivalent_ids
+    set([(X(0), Y(0), Z(0)), (X(0), Z(0), Y(0)), (Y(0), X(0), Z(0)),
+         (Y(0), Z(0), X(0)), (Z(0), X(0), Y(0)), (Z(0), Y(0), X(0))])
     """
 
     def __new__(cls, *args):
@@ -659,11 +663,13 @@ class GateIdentity(Basic):
         """Returns the string of gates in a tuple."""
         return str(self.circuit)
 
+
 def is_degenerate(identity_set, gate_identity):
     """Checks if a gate identity is a permutation of another identity.
 
     Parameters
     ==========
+
     identity_set : set
         A Python set with GateIdentity objects.
     gate_identity : GateIdentity
@@ -674,19 +680,19 @@ def is_degenerate(identity_set, gate_identity):
 
     Check if the identity is a permutation of another identity:
 
-        >>> from sympy.physics.quantum.identitysearch import \
-                    GateIdentity, is_degenerate
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> an_identity = GateIdentity(x, y, z)
-        >>> id_set = set([an_identity])
-        >>> another_id = (y, z, x)
-        >>> is_degenerate(id_set, another_id)
-        True
+    >>> from sympy.physics.quantum.identitysearch import (
+    ...     GateIdentity, is_degenerate)
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> an_identity = GateIdentity(x, y, z)
+    >>> id_set = set([an_identity])
+    >>> another_id = (y, z, x)
+    >>> is_degenerate(id_set, another_id)
+    True
 
-        >>> another_id = (x, x)
-        >>> is_degenerate(id_set, another_id)
-        False
+    >>> another_id = (x, x)
+    >>> is_degenerate(id_set, another_id)
+    False
     """
 
     # For now, just iteratively go through the set and check if the current
@@ -696,12 +702,14 @@ def is_degenerate(identity_set, gate_identity):
             return True
     return False
 
+
 def is_reducible(circuit, nqubits, begin, end):
     """Determines if a circuit is reducible by checking
     if its subcircuits are scalar values.
 
     Parameters
     ==========
+
     circuit : Gate tuple
         A tuple of Gates representing a circuit.  The circuit to check
         if a gate identity is contained in a subcircuit.
@@ -717,20 +725,20 @@ def is_reducible(circuit, nqubits, begin, end):
 
     Check if the circuit can be reduced:
 
-        >>> from sympy.physics.quantum.identitysearch import \
-                    GateIdentity, is_reducible
-        >>> from sympy.physics.quantum.gate import X, Y, Z
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> is_reducible((x, y, z), 1, 0, 3)
-        True
+    >>> from sympy.physics.quantum.identitysearch import (
+    ...     GateIdentity, is_reducible)
+    >>> from sympy.physics.quantum.gate import X, Y, Z
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> is_reducible((x, y, z), 1, 0, 3)
+    True
 
     Check if an interval in the circuit can be reduced:
 
-        >>> is_reducible((x, y, z), 1, 1, 3)
-        False
+    >>> is_reducible((x, y, z), 1, 1, 3)
+    False
 
-        >>> is_reducible((x, y, y), 1, 1, 3)
-        True
+    >>> is_reducible((x, y, y), 1, 1, 3)
+    True
     """
 
     current_circuit = ()
@@ -745,6 +753,7 @@ def is_reducible(circuit, nqubits, begin, end):
 
     return False
 
+
 def bfs_identity_search(gate_list, nqubits, max_depth=None,
        identity_only=False):
     """Constructs a set of gate identities from the list of possible gates.
@@ -754,6 +763,7 @@ def bfs_identity_search(gate_list, nqubits, max_depth=None,
 
     Parameters
     ==========
+
     gate_list : list, Gate
         A list of Gates from which to search for gate identities.
     nqubits : int
@@ -769,22 +779,21 @@ def bfs_identity_search(gate_list, nqubits, max_depth=None,
 
     Find a list of gate identities:
 
-        >>> from sympy.physics.quantum.identitysearch import \
-                    bfs_identity_search
-        >>> from sympy.physics.quantum.gate import X, Y, Z, H
-        >>> x = X(0); y = Y(0); z = Z(0)
-        >>> bfs_identity_search([x], 1, max_depth=2)
-        set([GateIdentity(X(0), X(0))])
+    >>> from sympy.physics.quantum.identitysearch import bfs_identity_search
+    >>> from sympy.physics.quantum.gate import X, Y, Z, H
+    >>> x = X(0); y = Y(0); z = Z(0)
+    >>> bfs_identity_search([x], 1, max_depth=2)
+    set([GateIdentity(X(0), X(0))])
 
-        >>> bfs_identity_search([x, y, z], 1)
-        set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
-             GateIdentity(Z(0), Z(0)), GateIdentity(X(0), Y(0), Z(0))])
+    >>> bfs_identity_search([x, y, z], 1)
+    set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
+         GateIdentity(Z(0), Z(0)), GateIdentity(X(0), Y(0), Z(0))])
 
     Find a list of identities that only equal to 1:
 
-        >>> bfs_identity_search([x, y, z], 1, identity_only=True)
-        set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
-             GateIdentity(Z(0), Z(0))])
+    >>> bfs_identity_search([x, y, z], 1, identity_only=True)
+    set([GateIdentity(X(0), X(0)), GateIdentity(Y(0), Y(0)),
+         GateIdentity(Z(0), Z(0))])
     """
 
     if max_depth is None or max_depth <= 0:
@@ -813,18 +822,19 @@ def bfs_identity_search(gate_list, nqubits, max_depth=None,
             # the evaluated matrix will actually be an integer
             if (is_scalar_matrix(new_circuit, nqubits, id_only) and
                 not is_degenerate(ids, new_circuit) and
-                not circuit_reducible):
+                    not circuit_reducible):
                 ids.add(GateIdentity(*new_circuit))
 
             elif (len(new_circuit) < max_depth and
-                not circuit_reducible):
+                  not circuit_reducible):
                 queue.append(new_circuit)
 
     return ids
 
+
 def random_identity_search(gate_list, numgates, nqubits):
     """Randomly selects numgates from gate_list and checks if it is
-       a gate identity.
+    a gate identity.
 
     If the circuit is a gate identity, the circuit is returned;
     Otherwise, None is returned.

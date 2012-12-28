@@ -8,6 +8,7 @@ Demonstrates sympy defined functions.
 import sympy
 from sympy import pprint
 
+
 def main():
     a = sympy.Symbol('a')
     b = sympy.Symbol('b')

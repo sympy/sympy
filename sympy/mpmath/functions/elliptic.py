@@ -528,7 +528,10 @@ def RJ_calc(ctx, x, y, z, p, r):
         sp = ctx.sqrt(pm)
         lm = sx*sy + sx*sz + sy*sz
         Am1 = (Am+lm)*g
-        xm = (xm+lm)*g; ym = (ym+lm)*g; zm = (zm+lm)*g; pm = (pm+lm)*g
+        xm = (xm+lm)*g
+        ym = (ym+lm)*g
+        zm = (zm+lm)*g
+        pm = (pm+lm)*g
         dm = (sp+sx) * (sp+sy) * (sp+sz)
         em = delta * ctx.power(4, -3*m) / dm**2
         if pow4 * Q < abs(Am):

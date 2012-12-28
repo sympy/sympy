@@ -1,4 +1,7 @@
-from sympy import symbols, DiracDelta, Heaviside, nan, oo, sqrt, pi, conjugate
+from sympy import (
+    adjoint, conjugate, DiracDelta, Heaviside, nan, oo, pi, sqrt, symbols,
+    transpose,
+)
 
 from sympy.utilities.pytest import raises
 
@@ -6,28 +9,33 @@ from sympy.core.function import ArgumentIndexError
 
 from sympy.core import I
 
-x,y = symbols('x y')
+x, y = symbols('x y')
+
 
 def test_DiracDelta():
     assert DiracDelta(1) == 0
     assert DiracDelta(5.1) == 0
     assert DiracDelta(-pi) == 0
-    assert DiracDelta(5,7) == 0
-    assert DiracDelta(0) == oo
-    assert DiracDelta(0,5) == oo
+    assert DiracDelta(5, 7) == 0
     assert DiracDelta(nan) == nan
-    assert DiracDelta(x).func == DiracDelta
+    assert DiracDelta(0).func is DiracDelta
+    assert DiracDelta(x).func is DiracDelta
+
+    assert adjoint(DiracDelta(x)) == DiracDelta(x)
+    assert adjoint(DiracDelta(x - y)) == DiracDelta(x - y)
     assert conjugate(DiracDelta(x)) == DiracDelta(x)
     assert conjugate(DiracDelta(x - y)) == DiracDelta(x - y)
+    assert transpose(DiracDelta(x)) == DiracDelta(x)
+    assert transpose(DiracDelta(x - y)) == DiracDelta(x - y)
 
-    assert DiracDelta(x).diff(x) == DiracDelta(x,1)
-    assert DiracDelta(x,1).diff(x) == DiracDelta(x,2)
+    assert DiracDelta(x).diff(x) == DiracDelta(x, 1)
+    assert DiracDelta(x, 1).diff(x) == DiracDelta(x, 2)
 
-    assert DiracDelta(x).is_simple(x) == True
-    assert DiracDelta(3*x).is_simple(x) == True
-    assert DiracDelta(x**2).is_simple(x) == False
-    assert DiracDelta(sqrt(x)).is_simple(x) == False
-    assert DiracDelta(x).is_simple(y) == False
+    assert DiracDelta(x).is_simple(x) is True
+    assert DiracDelta(3*x).is_simple(x) is True
+    assert DiracDelta(x**2).is_simple(x) is False
+    assert DiracDelta(sqrt(x)).is_simple(x) is False
+    assert DiracDelta(x).is_simple(y) is False
 
     assert DiracDelta(x*y).simplify(x) == DiracDelta(x)/abs(y)
     assert DiracDelta(x*y).simplify(y) == DiracDelta(y)/abs(x)
@@ -35,7 +43,8 @@ def test_DiracDelta():
     assert DiracDelta(y).simplify(x) == DiracDelta(y)
 
     raises(ArgumentIndexError, lambda: DiracDelta(x).fdiff(2))
-    raises(ValueError, lambda: DiracDelta(x,-1))
+    raises(ValueError, lambda: DiracDelta(x, -1))
+
 
 def test_heaviside():
     assert Heaviside(0) == 0.5
@@ -43,10 +52,17 @@ def test_heaviside():
     assert Heaviside(1) == 1
     assert Heaviside(nan) == nan
 
+    assert adjoint(Heaviside(x)) == Heaviside(x)
+    assert adjoint(Heaviside(x - y)) == Heaviside(x - y)
+    assert conjugate(Heaviside(x)) == Heaviside(x)
+    assert conjugate(Heaviside(x - y)) == Heaviside(x - y)
+    assert transpose(Heaviside(x)) == Heaviside(x)
+    assert transpose(Heaviside(x - y)) == Heaviside(x - y)
+
     assert Heaviside(x).diff(x) == DiracDelta(x)
-    assert Heaviside(x+I).is_Function
-    assert Heaviside(I*x).is_Function
+    assert Heaviside(x + I).is_Function is True
+    assert Heaviside(I*x).is_Function is True
 
     raises(ArgumentIndexError, lambda: Heaviside(x).fdiff(2))
     raises(ValueError, lambda: Heaviside(I))
-    raises(ValueError, lambda: Heaviside(2+3*I))
+    raises(ValueError, lambda: Heaviside(2 + 3*I))

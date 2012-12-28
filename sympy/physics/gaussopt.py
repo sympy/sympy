@@ -3,15 +3,23 @@
 Gaussian optics.
 
 The module implements:
-    Ray transfer matrices for geometrical and gaussian optics
-     See RayTransferMatrix, GeometricRay and BeamParameter
-    Conjugation relations for geometrical and gaussian optics
-     See geometric_conj*, gauss_conj and conjugate_gauss_beams
+
+- Ray transfer matrices for geometrical and gaussian optics.
+
+  See RayTransferMatrix, GeometricRay and BeamParameter
+
+- Conjugation relations for geometrical and gaussian optics.
+
+  See geometric_conj*, gauss_conj and conjugate_gauss_beams
 
 The conventions for the distances are as follows:
-    focal distance - positive for convergent lenses
-    object distance - positive for real objects
-    image distance - positive for real images
+
+focal distance
+    positive for convergent lenses
+object distance
+    positive for real objects
+image distance
+    positive for real images
 """
 
 from sympy import (atan2, Expr, I, im, Matrix, oo, pi, re, sqrt, sympify,
@@ -21,6 +29,7 @@ from sympy.utilities.misc import filldedent
 ###
 # A, B, C, D matrices
 ###
+
 
 class RayTransferMatrix(Matrix):
     """
@@ -32,10 +41,10 @@ class RayTransferMatrix(Matrix):
     Parameters
     ==========
 
-    parameters A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
+    parameters : A, B, C and D or 2x2 matrix (Matrix(2, 2, [A, B, C, D]))
 
     Examples
-    =======
+    ========
 
     >>> from sympy.physics.gaussopt import RayTransferMatrix, ThinLens
     >>> from sympy import Symbol, Matrix
@@ -79,8 +88,8 @@ class RayTransferMatrix(Matrix):
         if len(args) == 4:
             temp = ((args[0], args[1]), (args[2], args[3]))
         elif len(args) == 1 \
-             and isinstance(args[0], Matrix) \
-             and args[0].shape == (2, 2):
+            and isinstance(args[0], Matrix) \
+                and args[0].shape == (2, 2):
             temp = args[0]
         else:
             raise ValueError(filldedent('''
@@ -96,9 +105,9 @@ class RayTransferMatrix(Matrix):
         elif isinstance(other, BeamParameter):
             temp = self*Matrix(((other.q,), (1,)))
             q = (temp[0]/temp[1]).expand(complex=True)
-            return BeamParameter(other.wavelen, \
-                                 together(re(q)), \
-                                 z_r = together(im(q)))
+            return BeamParameter(other.wavelen,
+                                 together(re(q)),
+                                 z_r=together(im(q)))
         else:
             return Matrix.__mul__(self, other)
 
@@ -162,6 +171,7 @@ class RayTransferMatrix(Matrix):
         """
         return self[1, 1]
 
+
 class FreeSpace(RayTransferMatrix):
     """
     Ray Transfer Matrix for free space.
@@ -189,6 +199,7 @@ class FreeSpace(RayTransferMatrix):
     def __new__(cls, d):
         return RayTransferMatrix.__new__(cls, 1, d, 0, 1)
 
+
 class FlatRefraction(RayTransferMatrix):
     """
     Ray Transfer Matrix for refraction.
@@ -196,8 +207,8 @@ class FlatRefraction(RayTransferMatrix):
     Parameters
     ==========
 
-    n1: refractive index of one medium
-    n2: refractive index of other medium
+    n1 : refractive index of one medium
+    n2 : refractive index of other medium
 
     See Also
     ========
@@ -215,8 +226,9 @@ class FlatRefraction(RayTransferMatrix):
     [0, n1/n2]
     """
     def __new__(cls, n1, n2):
-        n1, n2 = sympify((n1, n2))
+        n1, n2 = map(sympify, (n1, n2))
         return RayTransferMatrix.__new__(cls, 1, 0, 0, n1/n2)
+
 
 class CurvedRefraction(RayTransferMatrix):
     """
@@ -225,9 +237,9 @@ class CurvedRefraction(RayTransferMatrix):
     Parameters
     ==========
 
-    R: radius of curvature (positive for concave),
-    n1: refractive index of one medium
-    n2: refractive index of other medium
+    R : radius of curvature (positive for concave)
+    n1 : refractive index of one medium
+    n2 : refractive index of other medium
 
     See Also
     ========
@@ -245,14 +257,18 @@ class CurvedRefraction(RayTransferMatrix):
     [(n1 - n2)/(R*n2), n1/n2]
     """
     def __new__(cls, R, n1, n2):
-        R, n1 , n2 = sympify((R, n1, n2))
-        return RayTransferMatrix.__new__(cls, 1, 0, (n1-n2)/R/n2, n1/n2)
+        R, n1, n2 = map(sympify, (R, n1, n2))
+        return RayTransferMatrix.__new__(cls, 1, 0, (n1 - n2)/R/n2, n1/n2)
+
 
 class FlatMirror(RayTransferMatrix):
     """
     Ray Transfer Matrix for reflection.
 
-    See Also: RayTransferMatrix
+    See Also
+    ========
+
+    RayTransferMatrix
 
     Examples
     ========
@@ -265,6 +281,7 @@ class FlatMirror(RayTransferMatrix):
     def __new__(cls):
         return RayTransferMatrix.__new__(cls, 1, 0, 0, 1)
 
+
 class CurvedMirror(RayTransferMatrix):
     """
     Ray Transfer Matrix for reflection from curved surface.
@@ -272,7 +289,7 @@ class CurvedMirror(RayTransferMatrix):
     Parameters
     ==========
 
-    radius of curvature (positive for concave)
+    R : radius of curvature (positive for concave)
 
     See Also
     ========
@@ -293,6 +310,7 @@ class CurvedMirror(RayTransferMatrix):
         R = sympify(R)
         return RayTransferMatrix.__new__(cls, 1, 0, -2/R, 1)
 
+
 class ThinLens(RayTransferMatrix):
     """
     Ray Transfer Matrix for a thin lens.
@@ -300,7 +318,7 @@ class ThinLens(RayTransferMatrix):
     Parameters
     ==========
 
-    the focal distance
+    f : the focal distance
 
     See Also
     ========
@@ -333,7 +351,9 @@ class GeometricRay(Matrix):
     Parameters
     ==========
 
-    height and angle or 2x1 matrix (Matrix(2, 1, [height, angle]))
+    h : height, and
+    angle : angle, or
+    matrix : a 2x1 matrix (Matrix(2, 1, [height, angle]))
 
     Examples
     =======
@@ -363,7 +383,7 @@ class GeometricRay(Matrix):
 
     def __new__(cls, *args):
         if len(args) == 1 and isinstance(args[0], Matrix) \
-                          and args[0].shape == (2, 1):
+                and args[0].shape == (2, 1):
             temp = args[0]
         elif len(args) == 2:
             temp = ((args[0],), (args[1],))
@@ -419,7 +439,10 @@ class BeamParameter(Expr):
     Parameters
     ==========
 
-    wavelength, distance to waist, and w (waist) or z_r (rayleigh range)
+    wavelen : the wavelength,
+    z : the distance to waist, and
+    w : the waist, or
+    z_r : the rayleigh range
 
     Examples
     ========
@@ -461,11 +484,11 @@ class BeamParameter(Expr):
     __slots__ = ['z', 'z_r', 'wavelen']
 
     def __new__(cls, wavelen, z, **kwargs):
-        wavelen, z = sympify((wavelen, z))
+        wavelen, z = map(sympify, (wavelen, z))
         inst = Expr.__new__(cls, wavelen, z)
         inst.wavelen = wavelen
         inst.z = z
-        if len(kwargs) !=1:
+        if len(kwargs) != 1:
             raise ValueError('Constructor expects exactly one named argument.')
         elif 'z_r' in kwargs:
             inst.z_r = sympify(kwargs['z_r'])
@@ -503,17 +526,17 @@ class BeamParameter(Expr):
         >>> p.radius
         0.2809/pi**2 + 1
         """
-        return self.z*(1+(self.z/self.z_r)**2)
+        return self.z*(1 + (self.z/self.z_r)**2)
 
     @property
     def w(self):
         """
-        The beam radius at 1/e^2 intensity.
+        The beam radius at `1/e^2` intensity.
 
         See Also
         ========
 
-        w_0: minimal radius of beam
+        w_0 : the minimal radius of beam
 
         Examples
         ========
@@ -523,18 +546,17 @@ class BeamParameter(Expr):
         >>> p.w
         0.001*sqrt(0.2809/pi**2 + 1)
         """
-        return self.w_0*sqrt(1+(self.z/self.z_r)**2)
+        return self.w_0*sqrt(1 + (self.z/self.z_r)**2)
 
     @property
     def w_0(self):
         """
         The beam waist (minimal radius).
 
-
         See Also
         ========
 
-        w: beam radius at 1/e^2 intensity
+        w : the beam radius at `1/e^2` intensity
 
         Examples
         ========
@@ -617,8 +639,9 @@ def waist2rayleigh(w, wavelen):
     >>> waist2rayleigh(w, wavelen)
     pi*w**2/wavelen
     """
-    w, wavelen = sympify((w, wavelen))
+    w, wavelen = map(sympify, (w, wavelen))
     return w**2*pi/wavelen
+
 
 def rayleigh2waist(z_r, wavelen):
     """Calculate the waist from the rayleigh range of a gaussian beam.
@@ -637,7 +660,7 @@ def rayleigh2waist(z_r, wavelen):
     >>> rayleigh2waist(z_r, wavelen)
     sqrt(wavelen*z_r)/sqrt(pi)
     """
-    z_r, wavelen = sympify((z_r, wavelen))
+    z_r, wavelen = map(sympify, (z_r, wavelen))
     return sqrt(z_r/pi*wavelen)
 
 
@@ -662,11 +685,12 @@ def geometric_conj_ab(a, b):
     >>> geometric_conj_ab(a, b)
     a*b/(a + b)
     """
-    a, b = sympify((a, b))
+    a, b = map(sympify, (a, b))
     if abs(a) == oo or abs(b) == oo:
         return a if abs(b) == oo else b
     else:
-        return a*b/(a+b)
+        return a*b/(a + b)
+
 
 def geometric_conj_af(a, f):
     """
@@ -692,10 +716,11 @@ def geometric_conj_af(a, f):
     >>> geometric_conj_bf(b, f)
     b*f/(b - f)
     """
-    a, f = sympify((a, f))
+    a, f = map(sympify, (a, f))
     return -geometric_conj_ab(a, -f)
 
 geometric_conj_bf = geometric_conj_af
+
 
 def gaussian_conj(s_in, z_r_in, f):
     """
@@ -704,17 +729,17 @@ def gaussian_conj(s_in, z_r_in, f):
     Parameters
     ==========
 
-    s_in: distance to optical element from the waist
-    z_r_in: the rayleigh range of the incident beam
-    f: the focal length of the optical element
+    s_in : the distance to optical element from the waist
+    z_r_in : the rayleigh range of the incident beam
+    f : the focal length of the optical element
 
     Returns
     =======
 
-    A tuple containing (s_out, z_r_out, m)
-     - s_out - distance between the new waist and the optical element
-     - z_r_out - rayleigh range of the emergent beam
-     - m - the ration between the new and the old waists
+    a tuple containing (s_out, z_r_out, m)
+    s_out : the distance between the new waist and the optical element
+    z_r_out : the rayleigh range of the emergent beam
+    m : the ration between the new and the old waists
 
     Examples
     ========
@@ -732,11 +757,12 @@ def gaussian_conj(s_in, z_r_in, f):
     >>> gaussian_conj(s_in, z_r_in, f)[2]
     1/sqrt(1 - s_in**2/f**2 + z_r_in**2/f**2)
     """
-    s_in, z_r_in, f = sympify((s_in, z_r_in, f))
-    s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in-f)) + 1/f )
-    m = 1/sqrt((1-(s_in/f)**2) + (z_r_in/f)**2)
-    z_r_out = z_r_in / ((1-(s_in/f)**2) + (z_r_in/f)**2)
+    s_in, z_r_in, f = map(sympify, (s_in, z_r_in, f))
+    s_out = 1 / ( -1/(s_in + z_r_in**2/(s_in - f)) + 1/f )
+    m = 1/sqrt((1 - (s_in/f)**2) + (z_r_in/f)**2)
+    z_r_out = z_r_in / ((1 - (s_in/f)**2) + (z_r_in/f)**2)
     return (s_out, z_r_out, m)
+
 
 def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     """
@@ -745,17 +771,17 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     Parameters
     ==========
 
-    wavelen: the wavelength of the beam
-    waist_in and waist_out: the waists to be conjugated
-    f: the focal distance of the element used in the conjugation
+    wavelen : the wavelength of the beam
+    waist_in and waist_out : the waists to be conjugated
+    f : the focal distance of the element used in the conjugation
 
     Returns
     =======
 
-    A tuple containing (s_in, s_out, f)
-     - s_in - distance before the optical element
-     - s_out - distance after the optical element
-     - f -  focal distance of the optical element
+    a tuple containing (s_in, s_out, f)
+    s_in : the distance before the optical element
+    s_out : the distance after the optical element
+    f : the focal distance of the optical element
 
     Examples
     ========
@@ -768,13 +794,14 @@ def conjugate_gauss_beams(wavelen, waist_in, waist_out, **kwargs):
     f*(-sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)) + 1)
 
     >>> factor(conjugate_gauss_beams(l, w_i, w_o, f=f)[1])
-    f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 - pi**2*w_i**4/(f**2*l**2)))/w_i**2
+    f*w_o**2*(w_i**2/w_o**2 - sqrt(w_i**2/w_o**2 -
+              pi**2*w_i**4/(f**2*l**2)))/w_i**2
 
     >>> conjugate_gauss_beams(l, w_i, w_o, f=f)[2]
     f
     """
     #TODO add the other possible arguments
-    wavelen, waist_in, waist_out = sympify((wavelen, waist_in, waist_out))
+    wavelen, waist_in, waist_out = map(sympify, (wavelen, waist_in, waist_out))
     m = waist_out / waist_in
     z = waist2rayleigh(waist_in, wavelen)
     if len(kwargs) != 1:

@@ -2,6 +2,7 @@ from pyglet.gl import *
 from plot_mode_base import PlotModeBase
 from sympy.core import S
 
+
 class PlotSurface(PlotModeBase):
 
     default_rot_preset = 'perspective'
@@ -18,7 +19,7 @@ class PlotSurface(PlotModeBase):
 
         self._calculating_verts_pos = 0.0
         self._calculating_verts_len = float(
-                        self.u_interval.v_len*self.v_interval.v_len)
+            self.u_interval.v_len*self.v_interval.v_len)
 
         verts = list()
         b = self.bounds
@@ -26,7 +27,7 @@ class PlotSurface(PlotModeBase):
             column = list()
             for v in self.v_set:
                 try:
-                    _e = evaluate(u, v) # calculate vertex
+                    _e = evaluate(u, v)  # calculate vertex
                 except ZeroDivisionError:
                     _e = None
                 if _e is not None:  # update bounding box
@@ -49,8 +50,10 @@ class PlotSurface(PlotModeBase):
     def _on_calculate_cverts(self):
         if not self.verts or not self.color:
             return
+
         def set_work_len(n):
             self._calculating_cverts_len = float(n)
+
         def inc_work_pos():
             self._calculating_cverts_pos += 1.0
         set_work_len(1)
@@ -72,14 +75,14 @@ class PlotSurface(PlotModeBase):
             for u in xrange(1, len(self.u_set)):
                 glBegin(GL_QUAD_STRIP)
                 for v in xrange(len(self.v_set)):
-                    pa = self.verts[u-1][v]
+                    pa = self.verts[u - 1][v]
                     pb = self.verts[u][v]
                     if pa is None or pb is None:
                         glEnd()
                         glBegin(GL_QUAD_STRIP)
                         continue
                     if use_cverts:
-                        ca = self.cverts[u-1][v]
+                        ca = self.cverts[u - 1][v]
                         cb = self.cverts[u][v]
                         if ca is None:
                             ca = (0, 0, 0)

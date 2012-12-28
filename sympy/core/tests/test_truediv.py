@@ -4,40 +4,45 @@ from __future__ import division
 
 from sympy import Rational, Symbol, Float
 
+
 def test_truediv():
     assert 1/2 != 0
     assert Rational(1)/2 != 0
+
 
 def dotest(s):
     x = Symbol("x")
     y = Symbol("y")
     l = [
-    Rational(2),
-    Float("1.3"),
-    x,
-    y,
-    pow(x,y)*y,
-    5,
-    5.5
+        Rational(2),
+        Float("1.3"),
+        x,
+        y,
+        pow(x, y)*y,
+        5,
+        5.5
     ]
     for x in l:
         for y in l:
-            s(x,y)
+            s(x, y)
+    return True
+
 
 def test_basic():
-    def s(a,b):
+    def s(a, b):
         x = a
         x = +a
         x = -a
-        x = a+b
-        x = a-b
+        x = a + b
+        x = a - b
         x = a*b
         x = a/b
         x = a**b
-    dotest(s)
+    assert dotest(s)
+
 
 def test_ibasic():
-    def s(a,b):
+    def s(a, b):
         x = a
         x += b
         x = a
@@ -46,4 +51,4 @@ def test_ibasic():
         x *= b
         x = a
         x /= b
-    dotest(s)
+    assert dotest(s)

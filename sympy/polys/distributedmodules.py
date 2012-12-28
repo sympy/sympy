@@ -39,9 +39,10 @@ from sympy.polys.distributedpolys import (
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import parallel_dict_from_expr
 from sympy import S, sympify
-from sympy.core.compatibility import permutations, combinations
+from sympy.core.compatibility import permutations, next
 
 # Additional monomial tools.
+
 
 def sdm_monomial_mul(M, X):
     """
@@ -59,6 +60,7 @@ def sdm_monomial_mul(M, X):
     """
     return (M[0],) + monomial_mul(X, M[1:])
 
+
 def sdm_monomial_deg(M):
     """
     Return the total degree of ``M``.
@@ -73,6 +75,24 @@ def sdm_monomial_deg(M):
     3
     """
     return monomial_deg(M[1:])
+
+
+def sdm_monomial_lcm(A, B):
+    """
+    Return the "least common multiple" of ``A`` and ``B``.
+
+    IF `A = M e_j` and `B = N e_j`, where `M` and `N` are polynomial monomials,
+    this returns `\lcm(M, N) e_j`. Note that ``A`` and ``B`` involve distinct
+    monomials.
+
+    Otherwise the result is undefined.
+
+    >>> from sympy.polys.distributedmodules import sdm_monomial_lcm
+    >>> sdm_monomial_lcm((1, 2, 3), (1, 0, 5))
+    (1, 2, 5)
+    """
+    return (A[0],) + monomial_lcm(A[1:], B[1:])
+
 
 def sdm_monomial_divides(A, B):
     """
@@ -132,6 +152,7 @@ def sdm_monomial_divides(A, B):
 sdm_LC = sdp_LC
 sdm_to_dict = sdp_to_dict
 
+
 def sdm_from_dict(d, O):
     """
     Create an sdm from a dictionary.
@@ -145,6 +166,7 @@ def sdm_from_dict(d, O):
     [((1, 1, 0), 1/1), ((1, 0, 0), 2/1)]
     """
     return sdp_strip(sdp_from_dict(d, O))
+
 
 def sdm_add(f, g, O, K):
     """
@@ -183,6 +205,7 @@ def sdm_add(f, g, O, K):
     # send 0 for u (3rd parameter) since it is not needed
     return sdp_add(f, g, 0, O, K)
 
+
 def sdm_LM(f):
     r"""
     Returns the leading monomial of ``f``.
@@ -200,6 +223,7 @@ def sdm_LM(f):
     """
     return f[0][0]
 
+
 def sdm_LT(f):
     r"""
     Returns the leading term of ``f``.
@@ -216,6 +240,7 @@ def sdm_LT(f):
     ((4, 0, 1), 3/1)
     """
     return f[0]
+
 
 def sdm_mul_term(f, term, O, K):
     """
@@ -262,9 +287,11 @@ def sdm_mul_term(f, term, O, K):
         else:
             return [ (sdm_monomial_mul(f_M, X), f_c * c) for f_M, f_c in f ]
 
+
 def sdm_zero():
     """Return the zero module element."""
     return []
+
 
 def sdm_deg(f):
     """
@@ -309,6 +336,7 @@ def sdm_from_vector(vec, O, K, **opts):
             dic[(i,) + k] = K.convert(v)
     return sdm_from_dict(dic, O)
 
+
 def sdm_to_vector(f, gens, K, n=None):
     """
     Convert sdm ``f`` into a list of polynomial expressions.
@@ -342,7 +370,8 @@ def sdm_to_vector(f, gens, K, n=None):
 
 # Algorithms.
 
-def sdm_spoly(f, g, O, K):
+
+def sdm_spoly(f, g, O, K, phantom=None):
     """
     Compute the generalized s-polynomial of ``f`` and ``g``.
 
@@ -355,6 +384,10 @@ def sdm_spoly(f, g, O, K):
     `F`, their s-poly is defined to be zero. Otherwise it is a certain linear
     combination of `f` and `g` in which the leading terms cancel.
     See [SCA, defn 2.3.6] for details.
+
+    If ``phantom`` is not ``None``, it should be a pair of module elements on
+    which to perform the same operation(s) as on ``f`` and ``g``. The in this
+    case both results are returned.
 
     Examples
     ========
@@ -378,10 +411,17 @@ def sdm_spoly(f, g, O, K):
     LM1 = LM1[1:]
     LM2 = LM2[1:]
     lcm = monomial_lcm(LM1, LM2)
-    return sdm_add(sdm_mul_term(f, (monomial_div(lcm, LM1), K.one), O, K),
-                   sdm_mul_term(g, (monomial_div(lcm, LM2),
-                                    K.quo(-sdm_LC(f, K), sdm_LC(g, K))), O, K),
-                   O, K)
+    m1 = monomial_div(lcm, LM1)
+    m2 = monomial_div(lcm, LM2)
+    c = K.quo(-sdm_LC(f, K), sdm_LC(g, K))
+    r1 = sdm_add(sdm_mul_term(f, (m1, K.one), O, K),
+                 sdm_mul_term(g, (m2, c), O, K), O, K)
+    if phantom is None:
+        return r1
+    r2 = sdm_add(sdm_mul_term(phantom[0], (m1, K.one), O, K),
+                 sdm_mul_term(phantom[1], (m2, c), O, K), O, K)
+    return r1, r2
+
 
 def sdm_ecart(f):
     """
@@ -403,7 +443,8 @@ def sdm_ecart(f):
     """
     return sdm_deg(f) - sdm_monomial_deg(sdm_LM(f))
 
-def sdm_nf_mora(f, G, O, K):
+
+def sdm_nf_mora(f, G, O, K, phantom=None):
     r"""
     Compute a weak normal form of ``f`` with respect to ``G`` and order ``O``.
 
@@ -423,22 +464,109 @@ def sdm_nf_mora(f, G, O, K):
 
     This is the generalized Mora algorithm for computing weak normal forms with
     respect to arbitrary monomial orders [SCA, algorithm 2.3.9].
+
+    If ``phantom`` is not ``None``, it should be a pair of "phantom" arguments
+    on which to perform the same computations as on ``f``, ``G``, both results
+    are then returned.
     """
+    from itertools import repeat
     h = f
     T = list(G)
+    if phantom is not None:
+        # "phantom" variables with suffix p
+        hp = phantom[0]
+        Tp = list(phantom[1])
+        phantom = True
+    else:
+        Tp = repeat([])
+        phantom = False
     while h:
         # TODO better data structure!!!
-        Th = [(g, sdm_ecart(g)) for g in T \
+        Th = [(g, sdm_ecart(g), gp) for g, gp in zip(T, Tp)
               if sdm_monomial_divides(sdm_LM(g), sdm_LM(h))]
         if not Th:
             break
-        g = min(Th, key=lambda x: x[1])[0]
+        g, _, gp = min(Th, key=lambda x: x[1])
         if sdm_ecart(g) > sdm_ecart(h):
             T.append(h)
-        h = sdm_spoly(h, g, O, K)
+            if phantom:
+                Tp.append(hp)
+        if phantom:
+            h, hp = sdm_spoly(h, g, O, K, phantom=(hp, gp))
+        else:
+            h = sdm_spoly(h, g, O, K)
+    if phantom:
+        return h, hp
     return h
 
-def sdm_groebner(G, NF, O, K):
+
+def sdm_nf_buchberger(f, G, O, K, phantom=None):
+    r"""
+    Compute a weak normal form of ``f`` with respect to ``G`` and order ``O``.
+
+    The ground field is assumed to be ``K``, and monomials ordered according to
+    ``O``.
+
+    This is the standard Buchberger algorithm for computing weak normal forms with
+    respect to *global* monomial orders [SCA, algorithm 1.6.10].
+
+    If ``phantom`` is not ``None``, it should be a pair of "phantom" arguments
+    on which to perform the same computations as on ``f``, ``G``, both results
+    are then returned.
+    """
+    from itertools import repeat
+    h = f
+    T = list(G)
+    if phantom is not None:
+        # "phantom" variables with suffix p
+        hp = phantom[0]
+        Tp = list(phantom[1])
+        phantom = True
+    else:
+        Tp = repeat([])
+        phantom = False
+    while h:
+        try:
+            g, gp = next((g, gp) for g, gp in zip(T, Tp)
+                         if sdm_monomial_divides(sdm_LM(g), sdm_LM(h)))
+        except StopIteration:
+            break
+        if phantom:
+            h, hp = sdm_spoly(h, g, O, K, phantom=(hp, gp))
+        else:
+            h = sdm_spoly(h, g, O, K)
+    if phantom:
+        return h, hp
+    return h
+
+
+def sdm_nf_buchberger_reduced(f, G, O, K):
+    r"""
+    Compute a reduced normal form of ``f`` with respect to ``G`` and order ``O``.
+
+    The ground field is assumed to be ``K``, and monomials ordered according to
+    ``O``.
+
+    In contrast to weak normal forms, reduced normal forms *are* unique, but
+    their computation is more expensive.
+
+    This is the standard Buchberger algorithm for computing reduced normal forms
+    with respect to *global* monomial orders [SCA, algorithm 1.6.11].
+
+    The ``pantom`` option is not supported, so this normal form cannot be used
+    as a normal form for the "extended" groebner algorithm.
+    """
+    h = sdm_zero()
+    g = f
+    while g:
+        g = sdm_nf_buchberger(g, G, O, K)
+        if g:
+            h = sdm_add(h, [sdm_LT(g)], O, K)
+            g = g[1:]
+    return h
+
+
+def sdm_groebner(G, NF, O, K, extended=False):
     """
     Compute a minimal standard basis of ``G`` with respect to order ``O``.
 
@@ -458,54 +586,123 @@ def sdm_groebner(G, NF, O, K):
     Minimal standard bases are not unique. This algorithm computes a
     deterministic result, depending on the particular order of `G`.
 
-    See [SCA, algorithm 2.3.8, and remark 1.6.3].
+    If ``extended=True``, also compute the transition matrix from the initial
+    generators to the groebner basis. That is, return a list of coefficient
+    vectors, expressing the elements of the groebner basis in terms of the
+    elements of ``G``.
+
+    This functions implements the "sugar" strategy, see
+
+    Giovini et al: "One sugar cube, please" OR Selection strategies in
+    Buchberger algorithm.
     """
-    # First compute a standard basis
-    S = [f for f in G if f]
-    P = list(combinations(S, 2))
 
-    def prune(P, S, h):
-        """
-        Prune the pair-set by applying the chain criterion
-        [SCA, remark 2.5.11].
-        """
+    # The critical pair set.
+    # A critical pair is stored as (i, j, s, t) where (i, j) defines the pair
+    # (by indexing S), s is the sugar of the pair, and t is the lcm of their
+    # leading monomials.
+    P = []
+
+    # The eventual standard basis.
+    S = []
+    Sugars = []
+
+    def Ssugar(i, j):
+        """Compute the sugar of the S-poly corresponding to (i, j)."""
+        LMi = sdm_LM(S[i])
+        LMj = sdm_LM(S[j])
+        return max(Sugars[i] - sdm_monomial_deg(LMi),
+                   Sugars[j] - sdm_monomial_deg(LMj)) \
+            + sdm_monomial_deg(sdm_monomial_lcm(LMi, LMj))
+
+    ourkey = lambda p: (p[2], O(p[3]), p[1])
+
+    def update(f, sugar, P):
+        """Add f with sugar ``sugar`` to S, update P."""
+        if not f:
+            return P
+        k = len(S)
+        S.append(f)
+        Sugars.append(sugar)
+
+        LMf = sdm_LM(f)
+
+        def removethis(pair):
+            i, j, s, t = pair
+            if LMf[0] != t[0]:
+                return False
+            tik = sdm_monomial_lcm(LMf, sdm_LM(S[i]))
+            tjk = sdm_monomial_lcm(LMf, sdm_LM(S[j]))
+            return tik != t and tjk != t and sdm_monomial_divides(tik, t) and \
+                sdm_monomial_divides(tjk, t)
+        # apply the chain criterion
+        P = [p for p in P if not removethis(p)]
+
+        # new-pair set
+        N = [(i, k, Ssugar(i, k), sdm_monomial_lcm(LMf, sdm_LM(S[i])))
+             for i in range(k) if LMf[0] == sdm_LM(S[i])[0]]
+        # TODO apply the product criterion?
+        N.sort(key=ourkey)
         remove = set()
-        retain = set()
-        for (a, b, c) in permutations(S, 3):
-            A = sdm_LM(a)
-            B = sdm_LM(b)
-            C = sdm_LM(c)
-            if len(set([A[0], B[0], C[0]])) != 1 or not h in [a, b, c] or \
-               any(tuple(x) in retain for x in [a, b, c]):
-                continue
-            if monomial_divides(B[1:], monomial_lcm(A[1:], C[1:])):
-                remove.add((tuple(a), tuple(c)))
-                retain.update([tuple(b), tuple(c), tuple(a)])
-        return [(f, g) for (f, g) in P if (h not in [f, g]) or \
-                    ((tuple(f), tuple(g)) not in remove and \
-                     (tuple(g), tuple(f)) not in remove)]
+        for i, p in enumerate(N):
+            for j in range(i + 1, len(N)):
+                if sdm_monomial_divides(p[3], N[j][3]):
+                    remove.add(j)
 
+        # TODO mergesort?
+        P.extend(reversed([p for i, p in enumerate(N) if not i in remove]))
+        P.sort(key=ourkey, reverse=True)
+        # NOTE reverse-sort, because we want to pop from the end
+        return P
+
+    # Figure out the number of generators in the ground ring.
+    try:
+        # NOTE: we look for the first non-zero vector, take its first monomial
+        #       the number of generators in the ring is one less than the length
+        #       (since the zeroth entry is for the module generators)
+        numgens = len(next(x[0] for x in G if x)[0]) - 1
+    except StopIteration:
+        # No non-zero elements in G ...
+        if extended:
+            return [], []
+        return []
+
+    # This list will store expressions of the elements of S in terms of the
+    # initial generators
+    coefficients = []
+
+    # First add all the elements of G to S
+    for i, f in enumerate(G):
+        P = update(f, sdm_deg(f), P)
+        if extended and f:
+            coefficients.append(sdm_from_dict({(i,) + (0,)*numgens: K(1)}, O))
+
+    # Now carry out the buchberger algorithm.
     while P:
-        # TODO better data structures!!!
-        #print len(P), len(S)
-        # Use the "normal selection strategy"
-        lcms = [(i, sdm_LM(f)[:1] + monomial_lcm(sdm_LM(f)[1:], sdm_LM(g)[1:])) for \
-                i, (f, g) in enumerate(P)]
-        i = min(lcms, key=lambda x: O(x[1]))[0]
-        f, g = P.pop(i)
-        h = NF(sdm_spoly(f, g, O, K), S, O, K)
-        if h:
-            S.append(h)
-            P.extend((h, f) for f in S if sdm_LM(h)[0] == sdm_LM(f)[0])
-            P = prune(P, S, h)
+        i, j, s, t = P.pop()
+        f, sf, g, sg = S[i], Sugars[i], S[j], Sugars[j]
+        if extended:
+            sp, coeff = sdm_spoly(f, g, O, K,
+                                  phantom=(coefficients[i], coefficients[j]))
+            h, hcoeff = NF(sp, S, O, K, phantom=(coeff, coefficients))
+            if h:
+                coefficients.append(hcoeff)
+        else:
+            h = NF(sdm_spoly(f, g, O, K), S, O, K)
+        P = update(h, Ssugar(i, j), P)
 
-    # Now interreduce it. (TODO again, better data structures)
-    S = set(tuple(f) for f in S)
-    for a, b in permutations(S, 2):
-        A = sdm_LM(list(a))
-        B = sdm_LM(list(b))
-        if sdm_monomial_divides(A, B) and b in S and a in S:
-            S.remove(b)
+    # Finally interreduce the standard basis.
+    # (TODO again, better data structures)
+    S = set((tuple(f), i) for i, f in enumerate(S))
+    for (a, ai), (b, bi) in permutations(S, 2):
+        A = sdm_LM(a)
+        B = sdm_LM(b)
+        if sdm_monomial_divides(A, B) and (b, bi) in S and (a, ai) in S:
+            S.remove((b, bi))
 
-    return sorted((list(f) for f in S), key=lambda f: O(sdm_LM(f)),
-                  reverse=True)
+    L = sorted(((list(f), i) for f, i in S), key=lambda p: O(sdm_LM(p[0])),
+               reverse=True)
+    res = [x[0] for x in L]
+    if extended:
+        return res, [coefficients[i] for _, i in L]
+    return res

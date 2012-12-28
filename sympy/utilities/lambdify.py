@@ -5,7 +5,7 @@ lambda functions which can be used to calculate numerical values very fast.
 
 from __future__ import division
 from sympy.external import import_module
-from sympy.core.compatibility import is_sequence
+from sympy.core.compatibility import is_sequence, iterable
 
 import inspect
 
@@ -26,63 +26,67 @@ SYMPY_DEFAULT = {}
 
 # Mappings between sympy and other modules function names.
 MATH_TRANSLATIONS = {
-    "Abs":"fabs",
-    "ceiling":"ceil",
-    "E":"e",
-    "ln":"log",
+    "Abs": "fabs",
+    "ceiling": "ceil",
+    "E": "e",
+    "ln": "log",
 }
 
 MPMATH_TRANSLATIONS = {
-    "ceiling":"ceil",
-    "chebyshevt":"chebyt",
-    "chebyshevu":"chebyu",
-    "E":"e",
-    "I":"j",
-    "ln":"log",
+    "ceiling": "ceil",
+    "chebyshevt": "chebyt",
+    "chebyshevu": "chebyu",
+    "E": "e",
+    "I": "j",
+    "ln": "log",
     #"lowergamma":"lower_gamma",
-    "oo":"inf",
+    "oo": "inf",
     #"uppergamma":"upper_gamma",
-    "LambertW":"lambertw",
-    "Matrix":"matrix",
-    "conjugate":"conj",
-    "dirichlet_eta":"altzeta",
-    "Ei":"ei",
-    "Shi":"shi",
-    "Chi":"chi",
-    "Si":"si",
-    "Ci":"ci"
+    "LambertW": "lambertw",
+    "Matrix": "matrix",
+    "MutableDenseMatrix": "matrix",
+    "conjugate": "conj",
+    "dirichlet_eta": "altzeta",
+    "Ei": "ei",
+    "Shi": "shi",
+    "Chi": "chi",
+    "Si": "si",
+    "Ci": "ci"
 }
 
 NUMPY_TRANSLATIONS = {
-    "Abs":"abs",
-    "acos":"arccos",
-    "acosh":"arccosh",
-    "arg":"angle",
-    "asin":"arcsin",
-    "asinh":"arcsinh",
-    "atan":"arctan",
-    "atan2":"arctan2",
-    "atanh":"arctanh",
-    "ceiling":"ceil",
-    "E":"e",
-    "im":"imag",
-    "ln":"log",
-    "Matrix":"matrix",
-    "Max":"amax",
-    "Min":"amin",
-    "oo":"inf",
-    "re":"real",
+    "Abs": "abs",
+    "acos": "arccos",
+    "acosh": "arccosh",
+    "arg": "angle",
+    "asin": "arcsin",
+    "asinh": "arcsinh",
+    "atan": "arctan",
+    "atan2": "arctan2",
+    "atanh": "arctanh",
+    "ceiling": "ceil",
+    "E": "e",
+    "im": "imag",
+    "ln": "log",
+    "Matrix": "matrix",
+    "MutableDenseMatrix": "matrix",
+    "Max": "amax",
+    "Min": "amin",
+    "oo": "inf",
+    "re": "real",
 }
 
 # Available modules:
 MODULES = {
-    "math"   : (MATH,   MATH_DEFAULT,   MATH_TRANSLATIONS,   ("from math import *",)),
-    "mpmath" : (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
-    "numpy"  : (NUMPY,  NUMPY_DEFAULT,  NUMPY_TRANSLATIONS,  ("import_module('numpy')",)),
-    "sympy"  : (SYMPY,  SYMPY_DEFAULT,  {},                  ("from sympy.functions import *",
-                                                              "from sympy.matrices import Matrix",
-                                                              "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
+    "math": (MATH, MATH_DEFAULT, MATH_TRANSLATIONS, ("from math import *",)),
+    "mpmath": (MPMATH, MPMATH_DEFAULT, MPMATH_TRANSLATIONS, ("from sympy.mpmath import *",)),
+    "numpy": (NUMPY, NUMPY_DEFAULT, NUMPY_TRANSLATIONS, ("import_module('numpy')",)),
+    "sympy": (SYMPY, SYMPY_DEFAULT, {}, (
+        "from sympy.functions import *",
+        "from sympy.matrices import *",
+        "from sympy import Integral, pi, oo, nan, zoo, E, I",)),
 }
+
 
 def _import(module, reload="False"):
     """
@@ -94,9 +98,11 @@ def _import(module, reload="False"):
     other modules.
     """
     try:
-        namespace, namespace_default, translations, import_commands = MODULES[module]
+        namespace, namespace_default, translations, import_commands = MODULES[
+            module]
     except KeyError:
-        raise NameError("'%s' module can't be used for lambdification" % module)
+        raise NameError(
+            "'%s' module can't be used for lambdification" % module)
 
     # Clear namespace or exit
     if namespace != namespace_default:
@@ -121,48 +127,31 @@ def _import(module, reload="False"):
             except ImportError:
                 pass
 
-        raise ImportError("can't import '%s' with '%s' command" % (module, import_command))
+        raise ImportError(
+            "can't import '%s' with '%s' command" % (module, import_command))
 
     # Add translated names to namespace
     for sympyname, translation in translations.iteritems():
         namespace[sympyname] = namespace[translation]
 
+
 def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     """
     Returns a lambda function for fast calculation of numerical values.
 
-    Usage:
-
-    >>> from sympy import sqrt, sin
-    >>> from sympy.utilities.lambdify import lambdify
-    >>> from sympy.abc import x, y, z
-    >>> f = lambdify(x, x**2)
-    >>> f(2)
-    4
-    >>> f = lambdify((x,y,z), [z,y,x])
-    >>> f(1,2,3)
-    [3, 2, 1]
-    >>> f = lambdify(x, sqrt(x))
-    >>> f(4)
-    2.0
-    >>> f = lambdify((x,y), sin(x*y)**2)
-    >>> f(0, 5)
-    0.0
-
     If not specified differently by the user, SymPy functions are replaced as
     far as possible by either python-math, numpy (if available) or mpmath
-    functions - exactly in this order.
-    To change this behavior, the "modules" argument can be used.
-    It accepts:
+    functions - exactly in this order. To change this behavior, the "modules"
+    argument can be used. It accepts:
 
      - the strings "math", "mpmath", "numpy", "sympy"
      - any modules (e.g. math)
      - dictionaries that map names of sympy functions to arbitrary functions
-     - lists that contain a mix of the arguments above. (Entries that are first
-        in the list have higher priority)
+     - lists that contain a mix of the arguments above, with higher priority
+       given to entries appearing first.
 
-    Examples
-    ========
+    Usage
+    =====
 
     (1) Use one of the provided modules:
 
@@ -201,22 +190,42 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
 
         >> lambda x: my_cool_function(x)
 
+    Examples
+    ========
+
+    >>> from sympy.utilities.lambdify import implemented_function, lambdify
+    >>> from sympy import sqrt, sin, Matrix
+    >>> from sympy import Function
+    >>> from sympy.abc import x, y, z
+
+    >>> f = lambdify(x, x**2)
+    >>> f(2)
+    4
+    >>> f = lambdify((x, y, z), [z, y, x])
+    >>> f(1,2,3)
+    [3, 2, 1]
+    >>> f = lambdify(x, sqrt(x))
+    >>> f(4)
+    2.0
+    >>> f = lambdify((x, y), sin(x*y)**2)
+    >>> f(0, 5)
+    0.0
+    >>> f = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
+    >>> f(1, 2)
+    [1, 3]
+
     Functions present in `expr` can also carry their own numerical
     implementations, in a callable attached to the ``_imp_``
     attribute.  Usually you attach this using the
     ``implemented_function`` factory:
 
-    >>> from sympy.abc import x, y, z
-    >>> from sympy.utilities.lambdify import lambdify, implemented_function
-    >>> from sympy import Function
     >>> f = implemented_function(Function('f'), lambda x: x+1)
     >>> func = lambdify(x, f(x))
     >>> func(4)
     5
 
-    ``lambdify`` always prefers ``_imp_`` implementations to
-    implementations in other namespaces, unless the ``use_imps`` input
-    parameter is False.
+    ``lambdify`` always prefers ``_imp_`` implementations to implementations
+    in other namespaces, unless the ``use_imps`` input parameter is False.
     """
     from sympy.core.symbol import Symbol
 
@@ -259,8 +268,8 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
 
     # Create lambda function.
     lstr = lambdastr(args, expr, printer=printer)
-
     return eval(lstr, namespace)
+
 
 def _get_namespace(m):
     """
@@ -275,6 +284,7 @@ def _get_namespace(m):
         return m.__dict__
     else:
         raise TypeError("Argument must be either a string, dict or module but it is: %s" % m)
+
 
 def lambdastr(args, expr, printer=None):
     """
@@ -301,15 +311,17 @@ def lambdastr(args, expr, printer=None):
         from sympy.printing.lambdarepr import lambdarepr
 
     # Transform everything to strings.
+    from sympy.matrices import DeferredVector
     expr = lambdarepr(expr)
     if isinstance(args, str):
         pass
-    elif hasattr(args, "__iter__"):
+    elif iterable(args, exclude=DeferredVector):
         args = ",".join(str(a) for a in args)
     else:
         args = str(args)
 
     return "lambda %s: (%s)" % (args, expr)
+
 
 def _imp_namespace(expr, namespace=None):
     """ Return namespace dict with function implementations
@@ -376,6 +388,7 @@ def _imp_namespace(expr, namespace=None):
         for arg in expr.args:
             _imp_namespace(arg, namespace)
     return namespace
+
 
 def implemented_function(symfunc, implementation):
     """ Add numerical ``implementation`` to function ``symfunc``.

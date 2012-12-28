@@ -24,8 +24,9 @@ __all__ = [
 ]
 
 np = import_module('numpy', min_python_version=(2, 6))
-matplotlib = import_module('matplotlib', __import__kwargs={'fromlist':['pyplot']},
-    catch=(RuntimeError,)) # This is raised in environments that have no display.
+matplotlib = import_module(
+    'matplotlib', __import__kwargs={'fromlist': ['pyplot']},
+    catch=(RuntimeError,))  # This is raised in environments that have no display.
 
 if not np or not matplotlib:
     class CircuitPlot(object):
@@ -68,38 +69,38 @@ else:
         def _create_grid(self):
             """Create the grid of wires."""
             scale = self.scale
-            wire_grid = np.arange(0.0,self.nqubits*scale,scale,dtype=float)
-            gate_grid = np.arange(0.0,self.ngates*scale,scale,dtype=float)
+            wire_grid = np.arange(0.0, self.nqubits*scale, scale, dtype=float)
+            gate_grid = np.arange(0.0, self.ngates*scale, scale, dtype=float)
             self._wire_grid = wire_grid
             self._gate_grid = gate_grid
 
         def _create_figure(self):
             """Create the main matplotlib figure."""
             self._figure = pyplot.figure(
-                figsize=(self.ngates*self.scale,self.nqubits*self.scale),
+                figsize=(self.ngates*self.scale, self.nqubits*self.scale),
                 facecolor='w',
                 edgecolor='w'
             )
             ax = self._figure.add_subplot(
-                1,1,1,
+                1, 1, 1,
                 frameon=True
             )
             ax.set_axis_off()
             offset = 0.5*self.scale
-            ax.set_xlim(self._gate_grid[0]-offset,self._gate_grid[-1]+offset)
-            ax.set_ylim(self._wire_grid[0]-offset,self._wire_grid[-1]+offset)
+            ax.set_xlim(self._gate_grid[0] - offset, self._gate_grid[-1] + offset)
+            ax.set_ylim(self._wire_grid[0] - offset, self._wire_grid[-1] + offset)
             ax.set_aspect('equal')
             self._axes = ax
 
         def _plot_wires(self):
             """Plot the wires of the circuit diagram."""
             xstart = self._gate_grid[0]
-            xstop =  self._gate_grid[-1]
-            xdata = (xstart-self.scale, xstop+self.scale)
+            xstop = self._gate_grid[-1]
+            xdata = (xstart - self.scale, xstop + self.scale)
             for i in range(self.nqubits):
                 ydata = (self._wire_grid[i], self._wire_grid[i])
                 line = Line2D(
-                    xdata,ydata,
+                    xdata, ydata,
                     color='k',
                     lw=self.linewidth
                 )
@@ -131,7 +132,7 @@ else:
                 color='k',
                 ha='center',
                 va='center',
-                bbox = dict(ec='k',fc='w',fill=True,lw=self.linewidth),
+                bbox=dict(ec='k', fc='w', fill=True, lw=self.linewidth),
                 size=self.fontsize
             )
 
@@ -140,7 +141,7 @@ else:
             xdata = (self._gate_grid[gate_idx], self._gate_grid[gate_idx])
             ydata = (self._wire_grid[min_wire], self._wire_grid[max_wire])
             line = Line2D(
-                xdata,ydata,
+                xdata, ydata,
                 color='k',
                 lw=self.linewidth
             )
@@ -152,7 +153,7 @@ else:
             y = self._wire_grid[wire_idx]
             radius = self.control_radius
             c = Circle(
-                (x,y),
+                (x, y),
                 radius*self.scale,
                 ec='k',
                 fc='k',
@@ -167,7 +168,7 @@ else:
             y = self._wire_grid[wire_idx]
             radius = self.not_radius
             c = Circle(
-                (x,y),
+                (x, y),
                 radius,
                 ec='k',
                 fc='w',
@@ -176,7 +177,7 @@ else:
             )
             self._axes.add_patch(c)
             l = Line2D(
-                (x,x),(y-radius,y+radius),
+                (x, x), (y - radius, y + radius),
                 color='k',
                 lw=self.linewidth
             )
@@ -188,20 +189,19 @@ else:
             y = self._wire_grid[wire_idx]
             d = self.swap_delta
             l1 = Line2D(
-                (x-d,x+d),
-                (y-d,y+d),
+                (x - d, x + d),
+                (y - d, y + d),
                 color='k',
                 lw=self.linewidth
             )
             l2 = Line2D(
-                (x-d,x+d),
-                (y+d,y-d),
+                (x - d, x + d),
+                (y + d, y - d),
                 color='k',
                 lw=self.linewidth
             )
             self._axes.add_line(l1)
             self._axes.add_line(l2)
-
 
     def circuit_plot(c, nqubits, **kwargs):
         """Draw the circuit diagram for the circuit with nqubits.

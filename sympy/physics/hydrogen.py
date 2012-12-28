@@ -1,4 +1,5 @@
-from sympy import factorial, sqrt, exp, S, laguerre_l, Float
+from sympy import factorial, sqrt, exp, S, assoc_laguerre, Float
+
 
 def R_nl(n, l, r, Z=1):
     """
@@ -70,14 +71,15 @@ def R_nl(n, l, r, Z=1):
     # radial quantum number
     n_r = n - l - 1
     # rescaled "r"
-    a = 1/Z # Bohr radius
+    a = 1/Z  # Bohr radius
     r0 = 2 * r / (n * a)
     # normalization coefficient
-    C =  sqrt((S(2)/(n*a))**3 * factorial(n_r) / (2*n*factorial(n+l)))
+    C = sqrt((S(2)/(n*a))**3 * factorial(n_r) / (2*n*factorial(n + l)))
     # This is an equivalent normalization coefficient, that can be found in
     # some books. Both coefficients seem to be the same fast:
     # C =  S(2)/n**2 * sqrt(1/a**3 * factorial(n_r) / (factorial(n+l)))
-    return C * r0**l * laguerre_l(n_r, 2*l+1, r0).expand() * exp(-r0/2)
+    return C * r0**l * assoc_laguerre(n_r, 2*l + 1, r0).expand() * exp(-r0/2)
+
 
 def E_nl(n, Z=1):
     """
@@ -108,6 +110,7 @@ def E_nl(n, Z=1):
     if n.is_integer and (n < 1):
         raise ValueError("'n' must be positive integer")
     return -Z**2/(2*n**2)
+
 
 def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
     """
@@ -157,7 +160,7 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
         raise ValueError("'l' must be positive or zero")
     if not (n > l):
         raise ValueError("'n' must be greater than 'l'")
-    if (l==0 and spin_up is False):
+    if (l == 0 and spin_up is False):
         raise ValueError("Spin must be up for l==0.")
     # skappa is sign*kappa, where sign contains the correct sign
     if spin_up:
@@ -166,4 +169,4 @@ def E_nl_dirac(n, l, spin_up=True, Z=1, c=Float("137.035999037")):
         skappa = -l
     c = S(c)
     beta = sqrt(skappa**2 - Z**2/c**2)
-    return c**2/sqrt(1+Z**2/(n + skappa + beta)**2/c**2) - c**2
+    return c**2/sqrt(1 + Z**2/(n + skappa + beta)**2/c**2) - c**2

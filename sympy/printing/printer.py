@@ -73,6 +73,7 @@ from sympy.core.core import BasicMeta
 
 from sympy.core.compatibility import cmp_to_key
 
+
 class Printer(object):
     """Generic printer
 

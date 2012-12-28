@@ -3,8 +3,10 @@ from sympy.core.sets import FiniteSet, Interval
 from sympy import (S, Symbol, Lambda, symbols, cos, sin, pi, oo, Basic,
         Rational, sqrt)
 from sympy.utilities.pytest import XFAIL
+import itertools
 
 x = Symbol('x')
+
 
 def test_naturals():
     N = S.Naturals
@@ -12,15 +14,16 @@ def test_naturals():
     assert -5 not in N
     assert 5.5 not in N
     ni = iter(N)
-    a,b,c,d = ni.next(), ni.next(), ni.next(), ni.next()
-    assert (a,b,c,d) == (1,2,3,4)
+    a, b, c, d = ni.next(), ni.next(), ni.next(), ni.next()
+    assert (a, b, c, d) == (1, 2, 3, 4)
     assert isinstance(a, Basic)
 
-    assert N.intersect(Interval(-5, 5)) == FiniteSet(1, 2, 3, 4, 5)
-    assert N.intersect(Interval(-5, 5, True, True)) == FiniteSet(1, 2, 3, 4)
+    assert N.intersect(Interval(-5, 5)) == Range(1, 6)
+    assert N.intersect(Interval(-5, 5, True, True)) == Range(1, 5)
 
     assert N.inf == 1
     assert N.sup == oo
+
 
 def test_integers():
     Z = S.Integers
@@ -28,15 +31,16 @@ def test_integers():
     assert -5 in Z
     assert 5.5 not in Z
     zi = iter(Z)
-    a,b,c,d = zi.next(), zi.next(), zi.next(), zi.next()
-    assert (a,b,c,d) == (0, 1, -1, 2)
+    a, b, c, d = zi.next(), zi.next(), zi.next(), zi.next()
+    assert (a, b, c, d) == (0, 1, -1, 2)
     assert isinstance(a, Basic)
 
-    assert Z.intersect(Interval(-5, 5)) == FiniteSet(range(-5, 6))
-    assert Z.intersect(Interval(-5, 5, True, True)) == FiniteSet(range(-4,5))
+    assert Z.intersect(Interval(-5, 5)) == Range(-5, 6)
+    assert Z.intersect(Interval(-5, 5, True, True)) == Range(-4, 5)
 
     assert Z.inf == -oo
     assert Z.sup == oo
+
 
 def test_TransformationSet():
     squares = TransformationSet(Lambda(x, x**2), S.Naturals)
@@ -47,15 +51,16 @@ def test_TransformationSet():
     assert 16 not in squares.intersect(Interval(0, 10))
 
     si = iter(squares)
-    a,b,c,d = si.next(), si.next(), si.next(), si.next()
-    assert (a,b,c,d) == (1, 4, 9, 16)
+    a, b, c, d = si.next(), si.next(), si.next(), si.next()
+    assert (a, b, c, d) == (1, 4, 9, 16)
 
     harmonics = TransformationSet(Lambda(x, 1/x), S.Naturals)
-    assert Rational(1,5) in harmonics
+    assert Rational(1, 5) in harmonics
     assert .25 in harmonics
     assert .3 not in harmonics
 
     assert harmonics.is_iterable
+
 
 @XFAIL
 def test_halfcircle():
@@ -72,12 +77,14 @@ def test_halfcircle():
 
     assert not halfcircle.is_iterable
 
+
 def test_transformation_iterator_not_injetive():
-    L = Lambda(x, x - x%2) # produces 0, 2, 2, 4, 4, 6, 6, ...
+    L = Lambda(x, x - x % 2)  # produces 0, 2, 2, 4, 4, 6, 6, ...
     evens = TransformationSet(L, S.Naturals)
     i = iter(evens)
     # No repeats here
     assert (i.next(), i.next(), i.next(), i.next()) == (0, 2, 4, 6)
+
 
 def test_Range():
     assert Range(5) == Range(0, 5) == Range(0, 5, 1)
@@ -106,7 +113,7 @@ def test_Range():
 def test_range_interval_intersection():
     # Intersection with intervals
     assert FiniteSet(Range(0, 10, 1).intersect(Interval(2, 6))) == \
-            FiniteSet(2, 3, 4, 5, 6)
+        FiniteSet(2, 3, 4, 5, 6)
 
     # Open Intervals are removed
     assert (FiniteSet(Range(0, 10, 1).intersect(Interval(2, 6, True, True)))
@@ -118,20 +125,39 @@ def test_range_interval_intersection():
 
     # Going backwards
     assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6))) == \
-            FiniteSet(-5, -2, 1, 4)
+        FiniteSet(-5, -2, 1, 4)
     assert FiniteSet(Range(10, -9, -3).intersect(Interval(-5, 6, True))) == \
-            FiniteSet(-2, 1, 4)
+        FiniteSet(-2, 1, 4)
+
 
 def test_fun():
     assert (FiniteSet(TransformationSet(Lambda(x, sin(pi*x/4)),
-        Range(-10,11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
+        Range(-10, 11))) == FiniteSet(-1, -sqrt(2)/2, 0, sqrt(2)/2, 1))
+
 
 def test_reals():
     assert 5 in S.Reals
     assert S.Pi in S.Reals
     assert -sqrt(2) in S.Reals
-    assert (2,5) not in S.Reals
+    assert (2, 5) not in S.Reals
 
-@XFAIL # this is because contains is now very strict
+
+@XFAIL  # this is because contains is now very strict
 def test_reals_fail():
     assert sqrt(-1) not in S.Reals
+
+
+def take(n, iterable):
+    "Return first n items of the iterable as a list"
+    return list(itertools.islice(iterable, n))
+
+
+def test_intersections():
+    assert 5 in S.Integers.intersect(S.Reals)
+    assert 5 in S.Integers.intersect(S.Reals)
+    assert -5 not in S.Naturals.intersect(S.Reals)
+    assert 5.5 not in S.Integers.intersect(S.Reals)
+    assert 5 in S.Integers.intersect(Interval(3, oo))
+    assert -5 in S.Integers.intersect(Interval(-oo, 3))
+    assert all(x.is_Integer
+            for x in take(10, S.Integers.intersect(Interval(3, oo)) ))

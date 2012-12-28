@@ -1,6 +1,7 @@
 from sympy.core import (Set, Basic, FiniteSet, EmptySet, Dict, Symbol,
                         Tuple)
 
+
 class Class(Set):
     r"""
     The base class for any kind of class in the set-theoretic sense.
@@ -16,6 +17,7 @@ class Class(Set):
     """
     is_proper = False
 
+
 class Object(Symbol):
     """
     The base class for any kind of object in an abstract category.
@@ -24,6 +26,7 @@ class Object(Symbol):
     class is the recommended way to create abstract objects in
     abstract categories.
     """
+
 
 class Morphism(Basic):
     """
@@ -128,6 +131,7 @@ class Morphism(Basic):
         """
         return self.compose(other)
 
+
 class IdentityMorphism(Morphism):
     """
     Represents an identity morphism.
@@ -156,6 +160,7 @@ class IdentityMorphism(Morphism):
     """
     def __new__(cls, domain):
         return Basic.__new__(cls, domain, domain)
+
 
 class NamedMorphism(Morphism):
     """
@@ -204,6 +209,7 @@ class NamedMorphism(Morphism):
 
         """
         return self.args[2].name
+
 
 class CompositeMorphism(Morphism):
     r"""
@@ -269,7 +275,7 @@ class CompositeMorphism(Morphism):
             following = components[i + 1]
 
             if not isinstance(current, Morphism) or \
-                   not isinstance(following, Morphism):
+                    not isinstance(following, Morphism):
                 raise TypeError("All components must be morphisms.")
 
             if current.codomain != following.domain:
@@ -302,7 +308,7 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -326,7 +332,7 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -349,7 +355,7 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -374,7 +380,7 @@ class CompositeMorphism(Morphism):
         Examples
         ========
 
-        >>> from sympy.categories import Object, NamedMorphism, CompositeMorphism
+        >>> from sympy.categories import Object, NamedMorphism
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -385,6 +391,7 @@ class CompositeMorphism(Morphism):
 
         """
         return NamedMorphism(self.domain, self.codomain, new_name)
+
 
 class Category(Basic):
     r"""
@@ -509,6 +516,7 @@ class Category(Basic):
         raise NotImplementedError(
             "Obtaining the class of morphisms is not implemented in Category.")
 
+
 class Diagram(Basic):
     r"""
     Represents a diagram in a certain category.
@@ -519,6 +527,9 @@ class Diagram(Basic):
     as all composites of morphisms included in the diagram belong to
     the diagram.  For a more formal approach to this notion see
     [Pare1970].
+
+    The components of composite morphisms are also added to the
+    diagram.  No properties are assigned to such morphisms by default.
 
     A commutative diagram is often accompanied by a statement of the
     following kind: "if such morphisms with such properties exist,
@@ -541,19 +552,20 @@ class Diagram(Basic):
     ========
 
     >>> from sympy.categories import Object, NamedMorphism, Diagram
-    >>> from sympy import FiniteSet, pprint
+    >>> from sympy import FiniteSet, pprint, default_sort_key
     >>> A = Object("A")
     >>> B = Object("B")
     >>> C = Object("C")
     >>> f = NamedMorphism(A, B, "f")
     >>> g = NamedMorphism(B, C, "g")
     >>> d = Diagram([f, g])
-    >>> pprint(d.premises.keys(), use_unicode=False)
-    [f:A-->B, id:B-->B, g*f:A-->C, g:B-->C, id:C-->C, id:A-->A]
+    >>> premises_keys = sorted(d.premises.keys(), key=default_sort_key)
+    >>> pprint(premises_keys, use_unicode=False)
+    [g*f:A-->C, id:A-->A, id:B-->B, id:C-->C, f:A-->B, g:B-->C]
     >>> pprint(d.premises, use_unicode=False)
     {g*f:A-->C: EmptySet(), id:A-->A: EmptySet(), id:B-->B: EmptySet(), id:C-->C:
     EmptySet(), f:A-->B: EmptySet(), g:B-->C: EmptySet()}
-    >>> d = Diagram([f, g], {g * f:"unique"})
+    >>> d = Diagram([f, g], {g * f: "unique"})
     >>> pprint(d.conclusions)
     {g*f:A-->C: {unique}}
 
@@ -580,7 +592,8 @@ class Diagram(Basic):
             return False
 
     @staticmethod
-    def _add_morphism(morphisms, morphism, props, add_identities=True):
+    def _add_morphism_closure(morphisms, morphism, props, add_identities=True,
+                              recurse_composites=True):
         """
         Adds a morphism and its attributes to the supplied dictionary
         ``morphisms``.  If ``add_identities`` is True, also adds the
@@ -591,6 +604,14 @@ class Diagram(Basic):
             # We have just added a new morphism.
 
             if isinstance(morphism, IdentityMorphism):
+                if props:
+                    # Properties for identity morphisms don't really
+                    # make sense, because very much is known about
+                    # identity morphisms already, so much that they
+                    # are trivial.  Having properties for identity
+                    # morphisms would only be confusing.
+                    raise ValueError(
+                        "Instances of IdentityMorphism cannot have properties.")
                 return
 
             if add_identities:
@@ -610,6 +631,14 @@ class Diagram(Basic):
                 if morphism.codomain == existing_morphism.domain:
                     right = existing_morphism * morphism
                     Diagram._set_dict_union(morphisms, right, new_props)
+
+            if isinstance(morphism, CompositeMorphism) and recurse_composites:
+                # This is a composite morphism, add its components as
+                # well.
+                empty = EmptySet()
+                for component in morphism.components:
+                    Diagram._add_morphism_closure(morphisms, component, empty,
+                                                  add_identities)
 
     def __new__(cls, *args):
         """
@@ -636,7 +665,6 @@ class Diagram(Basic):
 
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -647,7 +675,7 @@ class Diagram(Basic):
         True
         >>> g * f in d.premises.keys()
         True
-        >>> d = Diagram([f, g], {g * f:"unique"})
+        >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f]
         {unique}
 
@@ -670,13 +698,14 @@ class Diagram(Basic):
 
                 for morphism in premises_arg:
                     objects |= FiniteSet(morphism.domain, morphism.codomain)
-                    Diagram._add_morphism(premises, morphism, empty)
+                    Diagram._add_morphism_closure(premises, morphism, empty)
             elif isinstance(premises_arg, dict) or isinstance(premises_arg, Dict):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
                 for morphism, props in premises_arg.items():
                     objects |= FiniteSet(morphism.domain, morphism.codomain)
-                    Diagram._add_morphism(premises, morphism, FiniteSet(props))
+                    Diagram._add_morphism_closure(
+                        premises, morphism, FiniteSet(props))
 
         if len(args) >= 2:
             # We also have some conclusions.
@@ -691,19 +720,24 @@ class Diagram(Basic):
                     # Check that no new objects appear in conclusions.
                     if (morphism.domain in objects) and \
                        (morphism.codomain in objects):
-                        # No need to add identities this time.
-                        Diagram._add_morphism(conclusions, morphism, empty, False)
+                        # No need to add identities and recurse
+                        # composites this time.
+                        Diagram._add_morphism_closure(
+                            conclusions, morphism, empty, add_identities=False,
+                            recurse_composites=False)
             elif isinstance(conclusions_arg, dict) or \
-                     isinstance(conclusions_arg, Dict):
+                    isinstance(conclusions_arg, Dict):
                 # The user has supplied a dictionary of morphisms and
                 # their properties.
                 for morphism, props in conclusions_arg.items():
                     # Check that no new objects appear in conclusions.
                     if (morphism.domain in objects) and \
                        (morphism.codomain in objects):
-                        # No need to add identities this time.
-                        Diagram._add_morphism(conclusions, morphism,
-                                           FiniteSet(props), False)
+                        # No need to add identities and recurse
+                        # composites this time.
+                        Diagram._add_morphism_closure(
+                            conclusions, morphism, FiniteSet(props),
+                            add_identities=False, recurse_composites=False)
 
         return Basic.__new__(cls, Dict(premises), Dict(conclusions), objects)
 
@@ -716,7 +750,7 @@ class Diagram(Basic):
         ========
         >>> from sympy.categories import Object, NamedMorphism
         >>> from sympy.categories import IdentityMorphism, Diagram
-        >>> from sympy import EmptySet, Dict, pretty
+        >>> from sympy import pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> f = NamedMorphism(A, B, "f")
@@ -749,7 +783,7 @@ class Diagram(Basic):
         True
         >>> g * f in d.premises.keys()
         True
-        >>> d = Diagram([f, g], {g * f:"unique"})
+        >>> d = Diagram([f, g], {g * f: "unique"})
         >>> d.conclusions[g * f] == FiniteSet("unique")
         True
 
@@ -765,7 +799,6 @@ class Diagram(Basic):
         Examples
         ========
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -788,7 +821,7 @@ class Diagram(Basic):
         ========
 
         >>> from sympy.categories import Object, NamedMorphism, Diagram
-        >>> from sympy import FiniteSet, pretty
+        >>> from sympy import pretty
         >>> A = Object("A")
         >>> B = Object("B")
         >>> C = Object("C")
@@ -813,3 +846,77 @@ class Diagram(Basic):
                 conclusions |= FiniteSet(morphism)
 
         return (premises, conclusions)
+
+    def is_subdiagram(self, diagram):
+        """
+        Checks whether ``diagram`` is a subdiagram of ``self``.
+        Diagram `D'` is a subdiagram of `D` if all premises
+        (conclusions) of `D'` are contained in the premises
+        (conclusions) of `D`.  The morphisms contained
+        both in `D'` and `D` should have the same properties for `D'`
+        to be a subdiagram of `D`.
+
+        Examples
+        ========
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram([f, g], {g * f: "unique"})
+        >>> d1 = Diagram([f])
+        >>> d.is_subdiagram(d1)
+        True
+        >>> d1.is_subdiagram(d)
+        False
+        """
+        premises = all([(m in self.premises) and
+                        (diagram.premises[m] == self.premises[m])
+                        for m in diagram.premises])
+        if not premises:
+            return False
+
+        conclusions = all([(m in self.conclusions) and
+                           (diagram.conclusions[m] == self.conclusions[m])
+                        for m in diagram.conclusions])
+
+        # Premises is surely ``True`` here.
+        return conclusions
+
+    def subdiagram_from_objects(self, objects):
+        """
+        If ``objects`` is a subset of the objects of ``self``, returns
+        a diagram which has as premises all those premises of ``self``
+        which have a domains and codomains in ``objects``, likewise
+        for conclusions.  Properties are preserved.
+
+        Examples
+        ========
+        >>> from sympy.categories import Object, NamedMorphism, Diagram
+        >>> from sympy import FiniteSet
+        >>> A = Object("A")
+        >>> B = Object("B")
+        >>> C = Object("C")
+        >>> f = NamedMorphism(A, B, "f")
+        >>> g = NamedMorphism(B, C, "g")
+        >>> d = Diagram([f, g], {f: "unique", g*f: "veryunique"})
+        >>> d1 = d.subdiagram_from_objects(FiniteSet(A, B))
+        >>> d1 == Diagram([f], {f: "unique"})
+        True
+        """
+        if not self.objects.subset(objects):
+            raise ValueError(
+                "Supplied objects should all belong to the diagram.")
+
+        new_premises = {}
+        for morphism, props in self.premises.items():
+            if (morphism.domain in objects) and (morphism.codomain in objects):
+                new_premises[morphism] = props
+
+        new_conclusions = {}
+        for morphism, props in self.conclusions.items():
+            if (morphism.domain in objects) and (morphism.codomain in objects):
+                new_conclusions[morphism] = props
+
+        return Diagram(new_premises, new_conclusions)

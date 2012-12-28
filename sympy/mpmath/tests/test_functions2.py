@@ -1396,7 +1396,8 @@ def test_hypercomb_zero_pow():
 
 def test_spherharm():
     mp.dps = 15
-    t = 0.5; r = 0.25
+    t = 0.5
+    r = 0.25
     assert spherharm(0,0,t,r).ae(0.28209479177387814347)
     assert spherharm(1,-1,t,r).ae(0.16048941205971996369 - 0.04097967481096344271j)
     assert spherharm(1,0,t,r).ae(0.42878904414183579379)

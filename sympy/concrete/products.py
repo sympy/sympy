@@ -3,6 +3,7 @@ from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
 
+
 class Product(Expr):
     """Represents unevaluated product.
 
@@ -29,13 +30,14 @@ class Product(Expr):
         # Only limits with lower and upper bounds are supported; the indefinite
         # Product is not supported
         if any(len(l) != 3 or None in l for l in limits):
-            raise ValueError('Product requires values for lower and upper bounds.')
+            raise ValueError(
+                'Product requires values for lower and upper bounds.')
 
         obj = Expr.__new__(cls, **assumptions)
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative # limits already checked
+        obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
 
@@ -126,6 +128,14 @@ class Product(Expr):
         else:
             return powsimp(f)
 
+    def _eval_adjoint(self):
+        if self.is_commutative:
+            return Product(self.function.adjoint(), *self.limits)
+        return None
+
+    def _eval_conjugate(self):
+        return Product(self.function.conjugate(), *self.limits)
+
     def _eval_product(self, term, limits):
         from sympy import summation
 
@@ -139,7 +149,7 @@ class Product(Expr):
 
         dif = n - a
         if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in xrange(dif  + 1)])
+            return Mul(*[term.subs(k, a + i) for i in xrange(dif + 1)])
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)
@@ -149,14 +159,14 @@ class Product(Expr):
             all_roots = roots(poly, multiple=True)
 
             for r in all_roots:
-                A *= C.RisingFactorial(a-r, n-a+1)
+                A *= C.RisingFactorial(a - r, n - a + 1)
                 Q *= n - r
 
             if len(all_roots) < poly.degree():
                 arg = quo(poly, Q.as_poly(k))
                 B = Product(arg, (k, a, n)).doit()
 
-            return poly.LC()**(n-a+1) * A * B
+            return poly.LC()**(n - a + 1) * A * B
 
         elif term.is_Add:
             p, q = term.as_numer_denom()
@@ -203,6 +213,12 @@ class Product(Expr):
                 return Product(evaluated, limits)
             else:
                 return f
+
+    def _eval_transpose(self):
+        if self.is_commutative:
+            return Product(self.function.transpose(), *self.limits)
+        return None
+
 
 def product(*args, **kwargs):
     r"""

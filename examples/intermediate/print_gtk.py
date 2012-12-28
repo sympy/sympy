@@ -7,6 +7,7 @@ Demonstrates printing with gtkmathview using mathml
 
 from sympy import Integral, Limit, print_gtk, sin, Symbol
 
+
 def main():
     x = Symbol('x')
 

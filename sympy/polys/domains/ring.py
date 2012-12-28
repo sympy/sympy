@@ -3,6 +3,7 @@
 from sympy.polys.domains.domain import Domain
 from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible
 
+
 class Ring(Domain):
     """Represents a ring domain. """
 
@@ -47,6 +48,13 @@ class Ring(Domain):
         else:
             raise NotReversible('only unity is reversible in a ring')
 
+    def is_unit(self, a):
+        try:
+            self.revert(a)
+            return True
+        except NotReversible:
+            return False
+
     def numer(self, a):
         """Returns numerator of ``a``. """
         return a
@@ -54,3 +62,56 @@ class Ring(Domain):
     def denom(self, a):
         """Returns denominator of `a`. """
         return self.one
+
+    def free_module(self, rank):
+        """
+        Generate a free module of rank ``rank`` over self.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].free_module(2)
+        QQ[x]**2
+        """
+        raise NotImplementedError
+
+    def ideal(self, *gens):
+        """
+        Generate an ideal of ``self``.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].ideal(x**2)
+        <x**2>
+        """
+        from sympy.polys.agca.ideals import ModuleImplementedIdeal
+        return ModuleImplementedIdeal(self, self.free_module(1).submodule(
+            *[[x] for x in gens]))
+
+    def quotient_ring(self, e):
+        """
+        Form a quotient ring of ``self``.
+
+        Here ``e`` can be an ideal or an iterable.
+
+        >>> from sympy.abc import x
+        >>> from sympy import QQ
+        >>> QQ[x].quotient_ring(QQ[x].ideal(x**2))
+        QQ[x]/<x**2>
+        >>> QQ[x].quotient_ring([x**2])
+        QQ[x]/<x**2>
+
+        The division operator has been overloaded for this:
+
+        >>> QQ[x]/[x**2]
+        QQ[x]/<x**2>
+        """
+        from sympy.polys.agca.ideals import Ideal
+        from sympy.polys.domains import QuotientRing
+        if not isinstance(e, Ideal):
+            e = self.ideal(*e)
+        return QuotientRing(self, e)
+
+    def __div__(self, e):
+        return self.quotient_ring(e)
+
+    __truediv__ = __div__

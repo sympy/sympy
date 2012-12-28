@@ -83,8 +83,10 @@ class AntiCommutator(Expr):
 
     @classmethod
     def eval(cls, a, b):
-        if not (a and b): return S.Zero
-        if a == b: return Integer(2)*a**2
+        if not (a and b):
+            return S.Zero
+        if a == b:
+            return Integer(2)*a**2
         if a.is_commutative or b.is_commutative:
             return Integer(2)*a*b
 
@@ -99,11 +101,7 @@ class AntiCommutator(Expr):
         # Canonical ordering of arguments
         #The Commutator [A,B] is on canonical form if A < B.
         if a.compare(b) == 1:
-            return cls(b,a)
-
-    def _eval_expand_anticommutator(self, **hints):
-        # No changes, so return self
-        return self
+            return cls(b, a)
 
     def doit(self, **hints):
         """ Evaluate anticommutator """
@@ -121,12 +119,13 @@ class AntiCommutator(Expr):
                 return comm.doit(**hints)
         return (A*B + B*A).doit(**hints)
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return AntiCommutator(Dagger(self.args[0]), Dagger(self.args[1]))
 
     def _sympyrepr(self, printer, *args):
         return "%s(%s,%s)" % (
-            self.__class__.__name__, printer._print(self.args[0]), printer._print(self.args[1])
+            self.__class__.__name__, printer._print(
+                self.args[0]), printer._print(self.args[1])
         )
 
     def _sympystr(self, printer, *args):

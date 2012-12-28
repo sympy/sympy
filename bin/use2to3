@@ -28,51 +28,50 @@ import fileinput
 
 from subprocess import check_output, CalledProcessError
 
-destination = "py3k-sympy" # directory to copy to
+destination = "py3k-sympy"  # directory to copy to
 
 np = os.path.normpath
 
 modified_files = []
-modified_txt_files = []
+modified_rst_files = []
 
-# we need to run 2to3 on .txt files; however, not all .txt files are doctests,
+# we need to run 2to3 on .rst files; however, not all .rst files are doctests,
 # so we need a list of files we care about
-relevant_txt_files = []
+relevant_rst_files = []
 
 skip_files = (
     # this files produces doctest errors under py3k
     # as we need it only for 2.5, just skip copying it
     'sympy/parsing/ast_parser_python25.py',
     'bin/use2to3',
-    )
+)
 
-# generate the relevant txt files
+# generate the relevant rst files
 # most of them should be in this directory:
 for root, dirs, files in os.walk('doc/src/modules'):
     # NOTE: this will consider mpmath-related files relevant, but it doesn't matter
-    for filename in fnmatch.filter(files, '*.txt'):
-        relevant_txt_files.append(os.path.join(root, filename))
+    for filename in fnmatch.filter(files, '*.rst'):
+        relevant_rst_files.append(os.path.join(root, filename))
 
 # some files aren't in /doc/src/modules, add them explicitly
-relevant_txt_files.append(np('./doc/src/install.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.bg.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.cs.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.de.txt'))
-relevant_txt_files.append(np('./doc/src/tutorial.ru.txt'))
-relevant_txt_files.append(np('./doc/src/gotchas.txt'))
-relevant_txt_files.append(np('./doc/src/guide.txt'))
-relevant_txt_files.append(np('./doc/src/python-comparisons.txt'))
+relevant_rst_files.append(np('./doc/src/install.rst'))
+relevant_rst_files.append(np('./doc/src/gotchas.rst'))
+relevant_rst_files.append(np('./doc/src/guide.rst'))
+relevant_rst_files.append(np('./doc/src/python-comparisons.rst'))
+relevant_rst_files.append(np('./doc/src/tutorial/tutorial.en.rst'))
 
 # some files need 2to3, but don't have the .py suffix
 relevant_no_extension = ('bin/doctest', 'bin/isympy', 'bin/test',
                          'bin/test_import', 'bin/test_isolated')
 
+# Keep a record of destination files, used to remove any lingering files.
+dst_files = set()
+
 # ask git for a list of tracked files
 try:
     files = check_output(['git', 'ls-files'])
     filenames = files.decode('utf-8').split('\n')
-    filenames.pop() # the last element is an empty string, delete it
+    filenames.pop()  # the last element is an empty string, delete it
 
     for filename in skip_files:
         filenames.remove(filename)
@@ -80,6 +79,7 @@ try:
     for filename in filenames:
         src = filename
         dst = os.path.normpath(os.path.join(destination, filename))
+        dst_files.add(dst)
 
         dstdir = os.path.split(dst)[0]
         if "mpmath" in dstdir:
@@ -97,11 +97,11 @@ try:
         # add to the list of files to pass to 2to3 if needed
         if filename.endswith(".py"):
             modified_files.append(dst)
-        elif filename.endswith(".txt"):
+        elif filename.endswith(".rst"):
             # we need to check the exact path here, not just the filename
-            # as there are eg. multiple index.txt files and not all are relevant
-            if np(src) in relevant_txt_files:
-                modified_txt_files.append(dst)
+            # as there are eg. multiple index.rst files and not all are relevant
+            if np(src) in relevant_rst_files:
+                modified_rst_files.append(dst)
         elif filename in relevant_no_extension:
             modified_files.append(dst)
 except (CalledProcessError, WindowsError):
@@ -116,22 +116,24 @@ except (CalledProcessError, WindowsError):
 
 # arguments to call 2to3 with
 args_2to3 = [
-    "-w",         # writes back the changes
-    "-n",         # doesn't write a backup file
-    "--no-diffs", # don't show the diffs for individual files
+    "-w",          # writes back the changes
+    "-n",          # doesn't write a backup file
+    "--no-diffs",  # don't show the diffs for individual files
 ]
 
-args_2to3_doctests = args_2to3 + ["-d"] # convert doctests too
+args_2to3_doctests = args_2to3 + ["-d"]  # convert doctests too
 
 # extend the argument list with the list of files that need it
 args_2to3.extend(modified_files)
 args_2to3_doctests.extend(modified_files)
-args_2to3_doctests.extend(modified_txt_files)
+args_2to3_doctests.extend(modified_rst_files)
 
 # call 2to3, once for regular files and once for doctests
 from lib2to3.main import main as main2to3
-main2to3("lib2to3.fixes", args_2to3)
-main2to3("lib2to3.fixes", args_2to3_doctests)
+if modified_files:
+    main2to3("lib2to3.fixes", args_2to3)
+if modified_files or modified_rst_files:
+    main2to3("lib2to3.fixes", args_2to3_doctests)
 
 # remove trailing spaced added to lines by 2to3
 whitespace = re.compile(" +$", re.MULTILINE)
@@ -140,9 +142,9 @@ whitespace = re.compile(" +$", re.MULTILINE)
 # slipped in before extra newlines, \s\s is used
 eofnewlines = re.compile("\s\s+$")
 
-for filepath in modified_files + modified_txt_files:
+for filepath in modified_files + modified_rst_files:
     with open(filepath, 'r') as f:
-        text = f.read() or '\n' # all must end with newline
+        text = f.read() or '\n'  # all must end with newline
 
     n = len(text)
     text = whitespace.sub('', text)
@@ -154,6 +156,16 @@ for filepath in modified_files + modified_txt_files:
         with open(filepath, 'w') as f:
             f.write(text)
 
+# Remove files that no longer exist
+for root, dirs, files in os.walk(destination):
+    if "mpmath" in root:
+        continue
+    for file in files:
+        filepath = os.path.normpath(os.path.join(root, file))
+        if filepath not in dst_files:
+            sys.stdout.write("Removing lingering file %s\n" % filepath)
+            os.remove(filepath)
+
 # once we are finished with everything, we should finally copy over the files
 # provided by mpmath; these should all be in the following two directories
 
@@ -164,14 +176,14 @@ for filepath in modified_files + modified_txt_files:
 try:
     shutil.rmtree(os.path.join(destination, "./sympy/mpmath"))
     shutil.rmtree(os.path.join(destination, "./doc/src/modules/mpmath"))
-except OSError: # directories don't exist
+except OSError:  # directories don't exist
     pass
 
 shutil.copytree("sympy/mpmath", os.path.join(destination, "./sympy/mpmath"))
 shutil.copytree("doc/src/modules/mpmath", os.path.join(destination, "./doc/src/modules/mpmath"))
 
 if not modified_files:
-    exit() # fileinput doesn't work as expected when passed an empty list
+    exit()  # fileinput doesn't work as expected when passed an empty list
 
 # change the shebang lines to point to "python3"
 for line in fileinput.input(modified_files, inplace=1):

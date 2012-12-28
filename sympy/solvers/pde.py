@@ -7,10 +7,11 @@ Currently implemented methods:
 
 from sympy import Eq, Equality
 from sympy.simplify import simplify
-
 from sympy.core.compatibility import reduce
+from sympy.utilities.iterables import has_dups
 
 import operator
+
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive
@@ -48,7 +49,6 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     pde_separate_add, pde_separate_mul
     """
 
-
     do_add = False
     if strategy == 'add':
         do_add = True
@@ -78,7 +78,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     if len(subs_args) != len(orig_args):
         raise ValueError("Variable counts do not match")
     # Check for duplicate arguments like  [X(x), u(x, y)]
-    if len(subs_args) != len(set(subs_args)):
+    if has_dups(subs_args):
         raise ValueError("Duplicate substitution arguments detected")
     # Check whether the variables match
     if set(orig_args) != set(subs_args):
@@ -97,6 +97,7 @@ def pde_separate(eq, fun, sep, strategy='mul'):
     svar = subs_args[0]
     dvar = subs_args[1:]
     return _separate(result, svar, dvar)
+
 
 def pde_separate_add(eq, fun, sep):
     """
@@ -122,6 +123,7 @@ def pde_separate_add(eq, fun, sep):
     """
     return pde_separate(eq, fun, sep, strategy='add')
 
+
 def pde_separate_mul(eq, fun, sep):
     """
     Helper function for searching multiplicative separable solutions.
@@ -145,6 +147,7 @@ def pde_separate_mul(eq, fun, sep):
 
     """
     return pde_separate(eq, fun, sep, strategy='mul')
+
 
 def _separate(eq, dep, others):
     """Separate expression into two parts based on dependencies of variables."""

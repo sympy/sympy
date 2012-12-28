@@ -5,6 +5,7 @@ from sympy.polys.polyutils import PicklableWithSlots
 from sympy.utilities import cythonized
 from sympy.polys.polyerrors import ExactQuotientFailed
 
+
 def monomials(variables, degree):
     r"""
     Generate a set of monomials of the given total degree or less.
@@ -45,10 +46,11 @@ def monomials(variables, degree):
 
         monoms = monomials(tail, degree)
 
-        for i in range(1, degree+1):
-            monoms |= set([ x**i * m for m in monomials(tail, degree-i) ])
+        for i in range(1, degree + 1):
+            monoms |= set([ x**i * m for m in monomials(tail, degree - i) ])
 
         return monoms
+
 
 def monomial_count(V, N):
     r"""
@@ -81,6 +83,7 @@ def monomial_count(V, N):
     """
     return C.factorial(V + N) / C.factorial(V) / C.factorial(N)
 
+
 class MonomialOrder(object):
     """Base class for monomial orderings. """
 
@@ -105,6 +108,7 @@ class MonomialOrder(object):
     def __ne__(self, other):
         return not (self == other)
 
+
 class LexOrder(MonomialOrder):
     """Lexicographic order of monomials. """
 
@@ -113,6 +117,7 @@ class LexOrder(MonomialOrder):
 
     def key(self, monomial):
         return monomial
+
 
 class GradedLexOrder(MonomialOrder):
     """Graded lexicographic order of monomials. """
@@ -123,6 +128,7 @@ class GradedLexOrder(MonomialOrder):
     def key(self, monomial):
         return (sum(monomial), monomial)
 
+
 class ReversedGradedLexOrder(MonomialOrder):
     """Reversed graded lexicographic order of monomials. """
 
@@ -131,6 +137,7 @@ class ReversedGradedLexOrder(MonomialOrder):
 
     def key(self, monomial):
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
+
 
 class ProductOrder(MonomialOrder):
     """
@@ -202,6 +209,7 @@ class ProductOrder(MonomialOrder):
             return False
         return None
 
+
 class InverseOrder(MonomialOrder):
     """
     The "inverse" of another monomial order.
@@ -229,6 +237,7 @@ class InverseOrder(MonomialOrder):
 
     def key(self, monomial):
         from sympy.core.compatibility import iterable
+
         def inv(l):
             if iterable(l):
                 return tuple(inv(x) for x in l)
@@ -257,13 +266,14 @@ igrlex = InverseOrder(grlex)
 igrevlex = InverseOrder(grevlex)
 
 _monomial_key = {
-    'lex'      : lex,
-    'grlex'    : grlex,
-    'grevlex'  : grevlex,
-    'ilex'     : ilex,
-    'igrlex'   : igrlex,
-    'igrevlex' : igrevlex
+    'lex': lex,
+    'grlex': grlex,
+    'grevlex': grevlex,
+    'ilex': ilex,
+    'igrlex': igrlex,
+    'igrevlex': igrevlex
 }
+
 
 def monomial_key(order=None):
     """
@@ -301,6 +311,7 @@ def monomial_key(order=None):
     else:
         raise ValueError("monomial ordering specification must be a string or a callable, got %s" % order)
 
+
 class _ItemGetter(object):
     """Helper class to return a subsequence of values."""
 
@@ -314,6 +325,7 @@ class _ItemGetter(object):
         if not isinstance(other, _ItemGetter):
             return False
         return self.seq == other.seq
+
 
 def build_product_order(arg, gens):
     """
@@ -339,10 +351,12 @@ def build_product_order(arg, gens):
     for expr in arg:
         name = expr[0]
         var = expr[1:]
+
         def makelambda(var):
             return _ItemGetter(gens2idx[g] for g in var)
         order.append((monomial_key(name), makelambda(var)))
     return ProductOrder(*order)
+
 
 @cythonized("a,b")
 def monomial_mul(A, B):
@@ -360,6 +374,7 @@ def monomial_mul(A, B):
 
     """
     return tuple([ a + b for a, b in zip(A, B) ])
+
 
 @cythonized("a,b,c")
 def monomial_div(A, B):
@@ -388,6 +403,7 @@ def monomial_div(A, B):
     else:
         return None
 
+
 @cythonized("a,b")
 def monomial_gcd(A, B):
     """
@@ -404,6 +420,7 @@ def monomial_gcd(A, B):
 
     """
     return tuple([ min(a, b) for a, b in zip(A, B) ])
+
 
 @cythonized("a,b")
 def monomial_lcm(A, B):
@@ -423,6 +440,8 @@ def monomial_lcm(A, B):
     return tuple([ max(a, b) for a, b in zip(A, B) ])
 
 # TODO cythonize
+
+
 def monomial_divides(A, B):
     """
     Does there exist a monomial X such that XA == B?
@@ -434,6 +453,7 @@ def monomial_divides(A, B):
     False
     """
     return all(a <= b for a, b in zip(A, B))
+
 
 @cythonized("i,n")
 def monomial_max(*monoms):
@@ -458,6 +478,7 @@ def monomial_max(*monoms):
 
     return tuple(M)
 
+
 @cythonized("i,n")
 def monomial_min(*monoms):
     """
@@ -481,6 +502,7 @@ def monomial_min(*monoms):
 
     return tuple(M)
 
+
 def monomial_deg(M):
     """
     Returns the total degree of a monomial.
@@ -492,6 +514,7 @@ def monomial_deg(M):
     3
     """
     return sum(M)
+
 
 class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """
@@ -528,7 +551,8 @@ class Monomial(PicklableWithSlots):
         gens = gens or self.gens
 
         if not gens:
-            raise ValueError("can't convert %s to an expression without generators" % self)
+            raise ValueError(
+                "can't convert %s to an expression without generators" % self)
 
         return Mul(*[ gen**exp for gen, exp in zip(gens, self.exponents) ])
 
@@ -594,7 +618,8 @@ class Monomial(PicklableWithSlots):
         elif isinstance(other, (tuple, Tuple)):
             exponents = other
         else:
-            raise TypeError("an instance of Monomial class expected, got %s" % other)
+            raise TypeError(
+                "an instance of Monomial class expected, got %s" % other)
 
         return self.rebuild(monomial_gcd(self.exponents, exponents))
 
@@ -605,6 +630,7 @@ class Monomial(PicklableWithSlots):
         elif isinstance(other, (tuple, Tuple)):
             exponents = other
         else:
-            raise TypeError("an instance of Monomial class expected, got %s" % other)
+            raise TypeError(
+                "an instance of Monomial class expected, got %s" % other)
 
         return self.rebuild(monomial_lcm(self.exponents, exponents))

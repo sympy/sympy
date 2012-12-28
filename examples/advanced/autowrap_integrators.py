@@ -36,7 +36,7 @@ pylab = import_module('pylab', warn_not_installed=True)
 from sympy.utilities.lambdify import implemented_function
 from sympy.utilities.autowrap import autowrap, ufuncify
 from sympy import Idx, IndexedBase, Lambda, pprint, Symbol, oo, Integral,\
-        Function
+    Function
 from sympy.physics.sho import R_nl
 from sympy.physics.hydrogen import R_nl as hydro_nl
 
@@ -53,6 +53,7 @@ rmax = 20                   # cut off in the radial direction
 gridsize = 200              # number of points in the grid
 
 # ***************************************************************************
+
 
 def main():
 
@@ -78,18 +79,15 @@ def main():
         expr = expr.evalf(15)
 
         print "The h.o. wave function with l = %i and n = %i is" % (
-                orbital_momentum_l, n)
+            orbital_momentum_l, n)
         pprint(expr)
 
         # implement, compile and wrap it as a ufunc
         basis_ho[n] = ufuncify(x, expr)
 
-
     # now let's see if we can express a hydrogen radial wave in terms of
     # the ho basis.  Here's the solution we will approximate:
-
     H_ufunc = ufuncify(x, hydro_nl(hydrogen_n, orbital_momentum_l, 1, x))
-
 
     # The transformation to a different basis can be written like this,
     #
@@ -110,7 +108,6 @@ def main():
     # the low-level code.  (In fact, summations are very easy to create, and as
     # we will see it is often necessary to take extra steps in order to avoid
     # them.)
-
     # we need one integration ufunc for each wave function in the h.o. basis
     binary_integrator = {}
     for n in range(basis_dimension):
@@ -131,7 +128,6 @@ def main():
         psi_ho = implemented_function('psi_ho',
                 Lambda(x, R_nl(n, orbital_momentum_l, omega2, x)))
 
-
         # We represent the hydrogen function by an array which will be an input
         # argument to the binary routine.  This will let the integrators find
         # h.o. basis coefficients for any wave function we throw at them.
@@ -141,7 +137,7 @@ def main():
         # setup expression for the integration
         #
 
-        step = Symbol('step') # use symbolic stepsize for flexibility
+        step = Symbol('step')  # use symbolic stepsize for flexibility
 
         # let i represent an index of the grid array, and let A represent the
         # grid array.  Then we can approximate the integral by a sum over the
@@ -150,7 +146,7 @@ def main():
 
         expr = A[i]**2*psi_ho(A[i])*psi[i]*step
 
-        if n==0:
+        if n == 0:
             print "Setting up binary integrators for the integral:"
             pprint(Integral(x**2*psi_ho(x)*Function('psi')(x), (x, 0, oo)))
 
@@ -165,12 +161,11 @@ def main():
         binary_integrator[n] = autowrap(expr, args=[A.label, psi.label, step, m])
 
         # Lets see how it converges with the grid dimension
-        print "Checking convergence of integrator for n = %i" %n
+        print "Checking convergence of integrator for n = %i" % n
         for g in range(3, 8):
             grid, step = np.linspace(0, rmax, 2**g, retstep=True)
             print "grid dimension %5i, integral = %e" % (2**g,
                     binary_integrator[n](grid, H_ufunc(grid), step))
-
 
     print "A binary integrator has been set up for each basis state"
     print "We will now use them to reconstruct a hydrogen solution."
@@ -178,14 +173,13 @@ def main():
     # Note: We didn't need to specify grid or use gridsize before now
     grid, stepsize = np.linspace(0, rmax, gridsize, retstep=True)
 
-    print "Calculating coefficients with gridsize = %i and stepsize %f" %(
-            len(grid), stepsize)
+    print "Calculating coefficients with gridsize = %i and stepsize %f" % (
+        len(grid), stepsize)
 
     coeffs = {}
     for n in range(basis_dimension):
         coeffs[n] = binary_integrator[n](grid, H_ufunc(grid), stepsize)
         print "c(%i) = %e" % (n, coeffs[n])
-
 
     print "Constructing the approximate hydrogen wave"
     hydro_approx = 0
@@ -194,8 +188,7 @@ def main():
         hydro_approx += basis_ho[n](grid)*coeffs[n]
         all_steps[n] = hydro_approx.copy()
         if pylab:
-            line = pylab.plot(grid, all_steps[n], ':', label='max n = %i'%n)
-
+            line = pylab.plot(grid, all_steps[n], ':', label='max n = %i' % n)
 
     # check error numerically
     diff = np.max(np.abs(hydro_approx - H_ufunc(grid)))
@@ -204,7 +197,6 @@ def main():
         print "This is much, try to increase the basis size or adjust omega"
     else:
         print "Ah, that's a pretty good approximation!"
-
 
     # Check visually
     if pylab:

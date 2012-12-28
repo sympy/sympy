@@ -8,12 +8,13 @@ from sympy.polys.polyerrors import DomainError, CoercionFailed
 
 import math
 
-class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
+
+class RealDomain(CharacteristicZero, SimpleDomain):  # XXX: should be a field
     """Abstract domain for real numbers. """
 
-    rep   = 'RR'
+    rep = 'RR'
 
-    is_Exact     = False
+    is_Exact = False
     is_Numerical = True
 
     _convert_excludes = [
@@ -23,11 +24,11 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
 
     def as_integer_ratio(self, a, **args):
         """Convert real number to a (numer, denom) pair. """
-        v, n = math.frexp(a) # XXX: hack, will work only for floats
+        v, n = math.frexp(a)  # XXX: hack, will work only for floats
 
         for i in xrange(300):
             if v != math.floor(v):
-                v, n = 2*v, n-1
+                v, n = 2*v, n - 1
             else:
                 break
 
@@ -60,7 +61,7 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
         p0, q0, p1, q1 = 0, 1, 1, 0
 
         while True:
-            a  = n//d
+            a = n//d
             q2 = q0 + a*q1
 
             if q2 > max_denom:
@@ -95,19 +96,20 @@ class RealDomain(CharacteristicZero, SimpleDomain): # XXX: should be a field
         return QQ
 
     def exquo(self, a, b):
-        """Exact quotient of ``a`` and ``b``, implies ``__div__``.  """
+        """Exact quotient of ``a`` and ``b``.  """
         return a / b
 
     def quo(self, a, b):
-        """Quotient of ``a`` and ``b``, implies ``__div__``. """
+        """Quotient of ``a`` and ``b``. """
         return a / b
 
     def rem(self, a, b):
-        """Remainder of ``a`` and ``b``, implies nothing.  """
-        return self.zero
+        """Remainder of ``a`` and ``b``.  """
+        return a % b
 
     def div(self, a, b):
-        """Division of ``a`` and ``b``, implies ``__div__``. """
+        """Division of ``a`` and ``b``. """
+        return (a / b, a % b)
 
     def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """

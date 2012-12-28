@@ -27,164 +27,169 @@ from sympy import S, Symbol, symbols, groebner
 from sympy.utilities.pytest import raises, skip, XFAIL
 from sympy.polys import polyconfig as config
 
-def helper_test_sdp_groebner():
-    f = sdp_from_dict({(1,2): QQ(2,), (2,0): QQ(1)}, lex)
-    g = sdp_from_dict({(0,3): QQ(2), (1,1): QQ(1), (0,0): QQ(-1)},  lex)
 
-    a = sdp_from_dict({(1,0): QQ(1,1)}, lex)
-    b = sdp_from_dict({(0,3): QQ(1,1), (0,0): QQ(-1,2)}, lex)
+def _test_sdp_groebner():
+    f = sdp_from_dict({(1, 2): QQ(2,), (2, 0): QQ(1)}, lex)
+    g = sdp_from_dict({(0, 3): QQ(2), (1, 1): QQ(1), (0, 0): QQ(-1)}, lex)
+
+    a = sdp_from_dict({(1, 0): QQ(1, 1)}, lex)
+    b = sdp_from_dict({(0, 3): QQ(1, 1), (0, 0): QQ(-1, 2)}, lex)
 
     assert sdp_groebner((f, g), 1, lex, QQ) == [a, b]
 
-    f = sdp_from_dict({(2,1): QQ(2,), (0,2): QQ(1)}, lex)
-    g = sdp_from_dict({(3,0): QQ(2), (1,1): QQ(1), (0,0): QQ(-1)},  lex)
+    f = sdp_from_dict({(2, 1): QQ(2,), (0, 2): QQ(1)}, lex)
+    g = sdp_from_dict({(3, 0): QQ(2), (1, 1): QQ(1), (0, 0): QQ(-1)}, lex)
 
-    a = sdp_from_dict({(0,1): QQ(1,1)}, lex)
-    b = sdp_from_dict({(3,0): QQ(1,1), (0,0): QQ(-1,2)}, lex)
+    a = sdp_from_dict({(0, 1): QQ(1, 1)}, lex)
+    b = sdp_from_dict({(3, 0): QQ(1, 1), (0, 0): QQ(-1, 2)}, lex)
 
     assert sdp_groebner((f, g), 1, lex, QQ) == [b, a]
 
-    f = sdp_from_dict({(0,0,2): QQ(-1), (1,0,0): QQ(1)}, lex)
-    g = sdp_from_dict({(0,0,3): QQ(-1), (0,1,0): QQ(1)}, lex)
+    f = sdp_from_dict({(0, 0, 2): QQ(-1), (1, 0, 0): QQ(1)}, lex)
+    g = sdp_from_dict({(0, 0, 3): QQ(-1), (0, 1, 0): QQ(1)}, lex)
 
     assert sdp_groebner((f, g), 1, lex, QQ) == [f, g]
 
-    f = sdp_from_dict({(3,0): QQ(1), (1,1): QQ(-2)}, grlex)
-    g = sdp_from_dict({(2,1): QQ(1), (0,2): QQ(-2), (1,0): QQ(1)}, grlex)
+    f = sdp_from_dict({(3, 0): QQ(1), (1, 1): QQ(-2)}, grlex)
+    g = sdp_from_dict({(2, 1): QQ(1), (0, 2): QQ(-2), (1, 0): QQ(1)}, grlex)
 
-    a = sdp_from_dict({(2,0): QQ(1)}, grlex)
-    b = sdp_from_dict({(1,1): QQ(1)}, grlex)
-    c = sdp_from_dict({(0,2): QQ(1), (1, 0): QQ(-1,2)}, grlex)
+    a = sdp_from_dict({(2, 0): QQ(1)}, grlex)
+    b = sdp_from_dict({(1, 1): QQ(1)}, grlex)
+    c = sdp_from_dict({(0, 2): QQ(1), (1, 0): QQ(-1, 2)}, grlex)
 
     assert sdp_groebner((f, g), 1, grlex, QQ) == [a, b, c]
 
-    f = sdp_from_dict({(2,0,0): -QQ(1), (0,1,0): QQ(1)}, lex)
-    g = sdp_from_dict({(3,0,0): -QQ(1), (0,0,1): QQ(1)}, lex)
+    f = sdp_from_dict({(2, 0, 0): -QQ(1), (0, 1, 0): QQ(1)}, lex)
+    g = sdp_from_dict({(3, 0, 0): -QQ(1), (0, 0, 1): QQ(1)}, lex)
 
     assert sdp_groebner((f, g), 2, lex, QQ) == [
-        sdp_from_dict({(2,0,0): QQ(1), (0,1,0): -QQ(1)}, lex),
-        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, lex),
-        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, lex),
-        sdp_from_dict({(0,3,0): QQ(1), (0,0,2): -QQ(1)}, lex),
+        sdp_from_dict({(2, 0, 0): QQ(1), (0, 1, 0): -QQ(1)}, lex),
+        sdp_from_dict({(1, 1, 0): QQ(1), (0, 0, 1): -QQ(1)}, lex),
+        sdp_from_dict({(1, 0, 1): QQ(1), (0, 2, 0): -QQ(1)}, lex),
+        sdp_from_dict({(0, 3, 0): QQ(1), (0, 0, 2): -QQ(1)}, lex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -QQ(1), (0,1,0): QQ(1)}, grlex)
-    g = sdp_from_dict({(3,0,0): -QQ(1), (0,0,1): QQ(1)}, grlex)
+    f = sdp_from_dict({(2, 0, 0): -QQ(1), (0, 1, 0): QQ(1)}, grlex)
+    g = sdp_from_dict({(3, 0, 0): -QQ(1), (0, 0, 1): QQ(1)}, grlex)
 
     assert sdp_groebner((f, g), 2, grlex, QQ) == [
-        sdp_from_dict({(0,3,0): QQ(1), (0,0,2): -QQ(1)}, grlex),
-        sdp_from_dict({(2,0,0): QQ(1), (0,1,0): -QQ(1)}, grlex),
-        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, grlex),
-        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 3, 0): QQ(1), (0, 0, 2): -QQ(1)}, grlex),
+        sdp_from_dict({(2, 0, 0): QQ(1), (0, 1, 0): -QQ(1)}, grlex),
+        sdp_from_dict({(1, 1, 0): QQ(1), (0, 0, 1): -QQ(1)}, grlex),
+        sdp_from_dict({(1, 0, 1): QQ(1), (0, 2, 0): -QQ(1)}, grlex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -QQ(1), (0,0,1): QQ(1)}, lex)
-    g = sdp_from_dict({(3,0,0): -QQ(1), (0,1,0): QQ(1)}, lex)
+    f = sdp_from_dict({(2, 0, 0): -QQ(1), (0, 0, 1): QQ(1)}, lex)
+    g = sdp_from_dict({(3, 0, 0): -QQ(1), (0, 1, 0): QQ(1)}, lex)
 
     assert sdp_groebner((f, g), 2, lex, QQ) == [
-        sdp_from_dict({(2,0,0): QQ(1), (0,0,1): -QQ(1)}, lex),
-        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, lex),
-        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, lex),
-        sdp_from_dict({(0,2,0): QQ(1), (0,0,3): -QQ(1)}, lex),
+        sdp_from_dict({(2, 0, 0): QQ(1), (0, 0, 1): -QQ(1)}, lex),
+        sdp_from_dict({(1, 1, 0): QQ(1), (0, 0, 2): -QQ(1)}, lex),
+        sdp_from_dict({(1, 0, 1): QQ(1), (0, 1, 0): -QQ(1)}, lex),
+        sdp_from_dict({(0, 2, 0): QQ(1), (0, 0, 3): -QQ(1)}, lex),
     ]
 
-    f = sdp_from_dict({(2,0,0): -QQ(1), (0,0,1): QQ(1)}, grlex)
-    g = sdp_from_dict({(3,0,0): -QQ(1), (0,1,0): QQ(1)}, grlex)
+    f = sdp_from_dict({(2, 0, 0): -QQ(1), (0, 0, 1): QQ(1)}, grlex)
+    g = sdp_from_dict({(3, 0, 0): -QQ(1), (0, 1, 0): QQ(1)}, grlex)
 
     assert sdp_groebner((f, g), 2, grlex, QQ) == [
-        sdp_from_dict({(0,0,3): QQ(1), (0,2,0): -QQ(1)}, grlex),
-        sdp_from_dict({(2,0,0): QQ(1), (0,0,1): -QQ(1)}, grlex),
-        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, grlex),
-        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 0, 3): QQ(1), (0, 2, 0): -QQ(1)}, grlex),
+        sdp_from_dict({(2, 0, 0): QQ(1), (0, 0, 1): -QQ(1)}, grlex),
+        sdp_from_dict({(1, 1, 0): QQ(1), (0, 0, 2): -QQ(1)}, grlex),
+        sdp_from_dict({(1, 0, 1): QQ(1), (0, 1, 0): -QQ(1)}, grlex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -QQ(1), (1,0,0): QQ(1)}, lex)
-    g = sdp_from_dict({(0,3,0): -QQ(1), (0,0,1): QQ(1)}, lex)
+    f = sdp_from_dict({(0, 2, 0): -QQ(1), (1, 0, 0): QQ(1)}, lex)
+    g = sdp_from_dict({(0, 3, 0): -QQ(1), (0, 0, 1): QQ(1)}, lex)
 
     assert sdp_groebner((f, g), 2, lex, QQ) == [
-        sdp_from_dict({(1,0,0): QQ(1), (0,2,0): -QQ(1)}, lex),
-        sdp_from_dict({(0,3,0): QQ(1), (0,0,1): -QQ(1)}, lex),
+        sdp_from_dict({(1, 0, 0): QQ(1), (0, 2, 0): -QQ(1)}, lex),
+        sdp_from_dict({(0, 3, 0): QQ(1), (0, 0, 1): -QQ(1)}, lex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -QQ(1), (1,0,0): QQ(1)}, grlex)
-    g = sdp_from_dict({(0,3,0): -QQ(1), (0,0,1): QQ(1)}, grlex)
+    f = sdp_from_dict({(0, 2, 0): -QQ(1), (1, 0, 0): QQ(1)}, grlex)
+    g = sdp_from_dict({(0, 3, 0): -QQ(1), (0, 0, 1): QQ(1)}, grlex)
 
     assert sdp_groebner((f, g), 2, grlex, QQ) == [
-        sdp_from_dict({(2,0,0): QQ(1), (0,1,1): -QQ(1)}, grlex),
-        sdp_from_dict({(1,1,0): QQ(1), (0,0,1): -QQ(1)}, grlex),
-        sdp_from_dict({(0,2,0): QQ(1), (1,0,0): -QQ(1)}, grlex),
+        sdp_from_dict({(2, 0, 0): QQ(1), (0, 1, 1): -QQ(1)}, grlex),
+        sdp_from_dict({(1, 1, 0): QQ(1), (0, 0, 1): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 2, 0): QQ(1), (1, 0, 0): -QQ(1)}, grlex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -QQ(1), (1,0,0): QQ(1)}, lex)
-    g = sdp_from_dict({(0,0,3): -QQ(1), (0,1,0): QQ(1)}, lex)
+    f = sdp_from_dict({(0, 0, 2): -QQ(1), (1, 0, 0): QQ(1)}, lex)
+    g = sdp_from_dict({(0, 0, 3): -QQ(1), (0, 1, 0): QQ(1)}, lex)
 
     assert sdp_groebner((f, g), 2, lex, QQ) == [
-        sdp_from_dict({(1,0,0): QQ(1), (0,0,2): -QQ(1)}, lex),
-        sdp_from_dict({(0,1,0): QQ(1), (0,0,3): -QQ(1)}, lex),
+        sdp_from_dict({(1, 0, 0): QQ(1), (0, 0, 2): -QQ(1)}, lex),
+        sdp_from_dict({(0, 1, 0): QQ(1), (0, 0, 3): -QQ(1)}, lex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -QQ(1), (1,0,0): QQ(1)}, grlex)
-    g = sdp_from_dict({(0,0,3): -QQ(1), (0,1,0): QQ(1)}, grlex)
+    f = sdp_from_dict({(0, 0, 2): -QQ(1), (1, 0, 0): QQ(1)}, grlex)
+    g = sdp_from_dict({(0, 0, 3): -QQ(1), (0, 1, 0): QQ(1)}, grlex)
 
     assert sdp_groebner((f, g), 2, grlex, QQ) == [
-        sdp_from_dict({(2,0,0): QQ(1), (0,1,1): -QQ(1)}, grlex),
-        sdp_from_dict({(1,0,1): QQ(1), (0,1,0): -QQ(1)}, grlex),
-        sdp_from_dict({(0,0,2): QQ(1), (1,0,0): -QQ(1)}, grlex),
+        sdp_from_dict({(2, 0, 0): QQ(1), (0, 1, 1): -QQ(1)}, grlex),
+        sdp_from_dict({(1, 0, 1): QQ(1), (0, 1, 0): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 0, 2): QQ(1), (1, 0, 0): -QQ(1)}, grlex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -QQ(1), (0,0,1): QQ(1)}, lex)
-    g = sdp_from_dict({(0,3,0): -QQ(1), (1,0,0): QQ(1)}, lex)
+    f = sdp_from_dict({(0, 2, 0): -QQ(1), (0, 0, 1): QQ(1)}, lex)
+    g = sdp_from_dict({(0, 3, 0): -QQ(1), (1, 0, 0): QQ(1)}, lex)
 
     assert sdp_groebner((f, g), 2, lex, QQ) == [
-        sdp_from_dict({(1,0,0): QQ(1), (0,1,1): -QQ(1)}, lex),
-        sdp_from_dict({(0,2,0): QQ(1), (0,0,1): -QQ(1)}, lex),
+        sdp_from_dict({(1, 0, 0): QQ(1), (0, 1, 1): -QQ(1)}, lex),
+        sdp_from_dict({(0, 2, 0): QQ(1), (0, 0, 1): -QQ(1)}, lex),
     ]
 
-    f = sdp_from_dict({(0,2,0): -QQ(1), (0,0,1): QQ(1)}, grlex)
-    g = sdp_from_dict({(0,3,0): -QQ(1), (1,0,0): QQ(1)}, grlex)
+    f = sdp_from_dict({(0, 2, 0): -QQ(1), (0, 0, 1): QQ(1)}, grlex)
+    g = sdp_from_dict({(0, 3, 0): -QQ(1), (1, 0, 0): QQ(1)}, grlex)
 
     assert sdp_groebner((f, g), 2, grlex, QQ) == [
-        sdp_from_dict({(0,0,3): QQ(1), (2,0,0): -QQ(1)}, grlex),
-        sdp_from_dict({(1,1,0): QQ(1), (0,0,2): -QQ(1)}, grlex),
-        sdp_from_dict({(0,2,0): QQ(1), (0,0,1): -QQ(1)}, grlex),
-        sdp_from_dict({(0,1,1): QQ(1), (1,0,0): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 0, 3): QQ(1), (2, 0, 0): -QQ(1)}, grlex),
+        sdp_from_dict({(1, 1, 0): QQ(1), (0, 0, 2): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 2, 0): QQ(1), (0, 0, 1): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 1, 1): QQ(1), (1, 0, 0): -QQ(1)}, grlex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -QQ(1), (0,1,0): QQ(1)}, lex)
-    g = sdp_from_dict({(0,0,3): -QQ(1), (1,0,0): QQ(1)}, lex)
+    f = sdp_from_dict({(0, 0, 2): -QQ(1), (0, 1, 0): QQ(1)}, lex)
+    g = sdp_from_dict({(0, 0, 3): -QQ(1), (1, 0, 0): QQ(1)}, lex)
 
     assert sdp_groebner((f, g), 2, lex, QQ) == [
-        sdp_from_dict({(1,0,0): QQ(1), (0,0,3): -QQ(1)}, lex),
-        sdp_from_dict({(0,1,0): QQ(1), (0,0,2): -QQ(1)}, lex),
+        sdp_from_dict({(1, 0, 0): QQ(1), (0, 0, 3): -QQ(1)}, lex),
+        sdp_from_dict({(0, 1, 0): QQ(1), (0, 0, 2): -QQ(1)}, lex),
     ]
 
-    f = sdp_from_dict({(0,0,2): -QQ(1), (0,1,0): QQ(1)}, grlex)
-    g = sdp_from_dict({(0,0,3): -QQ(1), (1,0,0): QQ(1)}, grlex)
+    f = sdp_from_dict({(0, 0, 2): -QQ(1), (0, 1, 0): QQ(1)}, grlex)
+    g = sdp_from_dict({(0, 0, 3): -QQ(1), (1, 0, 0): QQ(1)}, grlex)
 
     assert sdp_groebner((f, g), 2, grlex, QQ) == [
-        sdp_from_dict({(0,3,0): QQ(1), (2,0,0): -QQ(1)}, grlex),
-        sdp_from_dict({(1,0,1): QQ(1), (0,2,0): -QQ(1)}, grlex),
-        sdp_from_dict({(0,1,1): QQ(1), (1,0,0): -QQ(1)}, grlex),
-        sdp_from_dict({(0,0,2): QQ(1), (0,1,0): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 3, 0): QQ(1), (2, 0, 0): -QQ(1)}, grlex),
+        sdp_from_dict({(1, 0, 1): QQ(1), (0, 2, 0): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 1, 1): QQ(1), (1, 0, 0): -QQ(1)}, grlex),
+        sdp_from_dict({(0, 0, 2): QQ(1), (0, 1, 0): -QQ(1)}, grlex),
     ]
 
-    f = sdp_from_dict({(2,2): QQ(4), (1,1): QQ(4), (0,0): QQ(1)}, lex)
-    g = sdp_from_dict({(2,0): QQ(1), (0,2): QQ(1), (0,0):-QQ(1)}, lex)
+    f = sdp_from_dict({(2, 2): QQ(4), (1, 1): QQ(4), (0, 0): QQ(1)}, lex)
+    g = sdp_from_dict({(2, 0): QQ(1), (0, 2): QQ(1), (0, 0): -QQ(1)}, lex)
 
     assert sdp_groebner((f, g), 1, lex, QQ) == [
-        sdp_from_dict({(1,0): QQ(1,1), (0,7): QQ(-4,1), (0,5): QQ(8,1), (0,3): QQ(-7,1), (0,1): QQ(3,1)}, lex),
-        sdp_from_dict({(0,8): QQ(1,1), (0,6): QQ(-2,1), (0,4): QQ(3,2), (0,2): QQ(-1,2), (0,0): QQ(1,16)}, lex),
+        sdp_from_dict({(1, 0): QQ(1, 1), (0, 7): QQ(-4, 1), (
+            0, 5): QQ(8, 1), (0, 3): QQ(-7, 1), (0, 1): QQ(3, 1)}, lex),
+        sdp_from_dict({(0, 8): QQ(1, 1), (0, 6): QQ(-2, 1), (
+            0, 4): QQ(3, 2), (0, 2): QQ(-1, 2), (0, 0): QQ(1, 16)}, lex),
     ]
 
     raises(DomainError, lambda: sdp_groebner([], 1, lex, ZZ))
 
+
 def test_sdp_groebner():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_sdp_groebner()
+    _test_sdp_groebner()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_sdp_groebner()
+    _test_sdp_groebner()
 
-def helper_test_benchmark_minpoly():
+
+def _test_benchmark_minpoly():
     x, y, z = symbols('x,y,z')
 
     I = [x**3 + x + 1, y**2 + y + 1, (x + y) * z - (x**2 + y)]
@@ -196,28 +201,34 @@ def helper_test_benchmark_minpoly():
     ]
 
     assert groebner(I, x, y, z, order='lex', field=True) == [
-        -S(25)/53 + x + 6878*z/2067 - 3687*z**2/689 + 6062*z**3/2067 - 355*z**4/689 + 155*z**5/2067,
-        -S(308)/159 + y + 1043*z/159 - 387*z**2/53 + 523*z**3/159 - 91*z**4/159 + 4*z**5/53,
+        -S(25)/53 + x + 6878*z/2067 - 3687*z**2/689 + 6062*z**3/
+        2067 - 355*z**4/689 + 155*z**5/2067,
+        -S(308)/159 + y + 1043*z/159 - 387*z**2/53 + 523*z**3/159 -
+        91*z**4/159 + 4*z**5/53,
         13 - 46*z + 89*z**2 - 82*z**3 + 41*z**4 - 7*z**5 + z**6,
     ]
 
+
 def test_benchmark_minpoly():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_minpoly()
+    _test_benchmark_minpoly()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_minpoly()
+    _test_benchmark_minpoly()
+
 
 @XFAIL
 def test_benchmark_coloring():
     skip('takes too much time')
 
-    V = range(1, 12+1)
-    E = [(1,2),(2,3),(1,4),(1,6),(1,12),(2,5),(2,7),(3,8),(3,10),
-         (4,11),(4,9),(5,6),(6,7),(7,8),(8,9),(9,10),(10,11),
-         (11,12),(5,12),(5,9),(6,10),(7,11),(8,12),(3,4)]
+    V = range(1, 12 + 1)
+    E = [(
+        1, 2), (
+            2, 3), (1, 4), (1, 6), (1, 12), (2, 5), (2, 7), (3, 8), (3, 10),
+        (4, 11), (4, 9), (5, 6), (6, 7), (7, 8), (8, 9), (9, 10), (10, 11),
+        (11, 12), (5, 12), (5, 9), (6, 10), (7, 11), (8, 12), (3, 4)]
 
     V = [Symbol('x' + str(i)) for i in V]
-    E = [(V[i-1], V[j-1]) for i, j in E]
+    E = [(V[i - 1], V[j - 1]) for i, j in E]
 
     x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12 = V
 
@@ -243,7 +254,8 @@ def test_benchmark_coloring():
 
     assert groebner(I, V, order='lex') == [1]
 
-def helper_test_benchmark_katsura_3():
+
+def _test_benchmark_katsura_3():
     x0, x1, x2 = symbols('x:3')
 
     I = [x0 + 2*x1 + 2*x2 - 1,
@@ -263,13 +275,15 @@ def helper_test_benchmark_katsura_3():
         -1 + x0 + 2*x1 + 2*x2,
     ]
 
+
 def test_benchmark_katsura3():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_katsura_3()
+    _test_benchmark_katsura_3()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_katsura_3()
+    _test_benchmark_katsura_3()
 
-def helper_test_benchmark_katsura_4():
+
+def _test_benchmark_katsura_4():
     x0, x1, x2, x3 = symbols('x:4')
 
     I = [x0 + 2*x1 + 2*x2 + 2*x3 - 1,
@@ -281,27 +295,34 @@ def helper_test_benchmark_katsura_4():
         5913075*x0 - 159690237696*x3**7 + 31246269696*x3**6 + 27439610544*x3**5 - 6475723368*x3**4 - 838935856*x3**3 + 275119624*x3**2 + 4884038*x3 - 5913075,
         1971025*x1 - 97197721632*x3**7 + 73975630752*x3**6 - 12121915032*x3**5 - 2760941496*x3**4 + 814792828*x3**3 - 1678512*x3**2 - 9158924*x3,
         5913075*x2 + 371438283744*x3**7 - 237550027104*x3**6 + 22645939824*x3**5 + 11520686172*x3**4 - 2024910556*x3**3 - 132524276*x3**2 + 30947828*x3,
-        128304*x3**8 - 93312*x3**7 + 15552*x3**6 + 3144*x3**5 - 1120*x3**4 + 36*x3**3 + 15*x3**2 - x3,
+        128304*x3**8 - 93312*x3**7 + 15552*x3**6 + 3144*x3**5 -
+        1120*x3**4 + 36*x3**3 + 15*x3**2 - x3,
     ]
 
     assert groebner(I, x0, x1, x2, x3, order='grlex') == [
-        393*x1 - 4662*x2**2 + 4462*x2*x3 - 59*x2 + 224532*x3**4 - 91224*x3**3 - 678*x3**2 + 2046*x3,
-        -x1 + 196*x2**3 - 21*x2**2 + 60*x2*x3 - 18*x2 - 168*x3**3 + 83*x3**2 - 9*x3,
-        -6*x1 + 1134*x2**2*x3 - 189*x2**2 - 466*x2*x3 + 32*x2 - 630*x3**3 + 57*x3**2 + 51*x3,
-        33*x1 + 63*x2**2 + 2268*x2*x3**2 - 188*x2*x3 + 34*x2 + 2520*x3**3 - 849*x3**2 + 3*x3,
+        393*x1 - 4662*x2**2 + 4462*x2*x3 - 59*x2 + 224532*x3**4 -
+        91224*x3**3 - 678*x3**2 + 2046*x3,
+        -x1 + 196*x2**3 - 21*x2**2 + 60*x2*x3 - 18*x2 - 168*x3**3 +
+        83*x3**2 - 9*x3,
+        -6*x1 + 1134*x2**2*x3 - 189*x2**2 - 466*x2*x3 + 32*x2 -
+        630*x3**3 + 57*x3**2 + 51*x3,
+        33*x1 + 63*x2**2 + 2268*x2*x3**2 - 188*x2*x3 + 34*x2 +
+        2520*x3**3 - 849*x3**2 + 3*x3,
         7*x1**2 - x1 - 7*x2**2 - 24*x2*x3 + 3*x2 - 15*x3**2 + 5*x3,
         14*x1*x2 - x1 + 14*x2**2 + 18*x2*x3 - 4*x2 + 6*x3**2 - 2*x3,
         14*x1*x3 - x1 + 7*x2**2 + 32*x2*x3 - 4*x2 + 27*x3**2 - 9*x3,
         x0 + 2*x1 + 2*x2 + 2*x3 - 1,
     ]
 
+
 def test_benchmark_kastura_4():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_katsura_4()
+    _test_benchmark_katsura_4()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_katsura_4()
+    _test_benchmark_katsura_4()
 
-def helper_test_benchmark_czichowski():
+
+def _test_benchmark_czichowski():
     x, t = symbols('x t')
 
     I = [9*x**8 + 36*x**7 - 32*x**6 - 252*x**5 - 78*x**4 + 468*x**3 + 288*x**2 - 108*x + 9, (-72 - 72*t)*x**7 + (-256 - 252*t)*x**6 + (192 + 192*t)*x**5 + (1280 + 1260*t)*x**4 + (312 + 312*t)*x**3 + (-404*t)*x**2 + (-576 - 576*t)*x + 96 + 108*t]
@@ -318,19 +339,22 @@ def helper_test_benchmark_czichowski():
         -3725142681462373002731339445216700112264527*t**3 + 583711207282060457652784180668273817487940*t**2*x - 12381382393074485225164741437227437062814908*t**2 + 151081054097783125250959636747516827435040*t*x**2 + 1814103857455163948531448580501928933873280*t*x - 13353115629395094645843682074271212731433648*t + 236415091385250007660606958022544983766080*x**2 + 1390443278862804663728298060085399578417600*x - 4716885828494075789338754454248931750698880
     ]
 
+
 @XFAIL
 def test_benchmark_czichowski():
     skip('This takes too much time (without gmpy)')
 
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_czichowski()
+    _test_benchmark_czichowski()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_czichowski()
+    _test_benchmark_czichowski()
 
-def helper_test_benchmark_cyclic_4():
+
+def _test_benchmark_cyclic_4():
     a, b, c, d = symbols('a b c d')
 
-    I = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d + b*c*d, a*b*c*d - 1]
+    I = [a + b + c + d, a*b + a*d + b*c + b*d, a*b*c + a*b*d + a*c*d +
+        b*c*d, a*b*c*d - 1]
 
     assert groebner(I, a, b, c, d, order='lex') == [
         4*a + 3*d**9 - 4*d**5 - 3*d,
@@ -350,11 +374,13 @@ def helper_test_benchmark_cyclic_4():
         a + b + c + d
     ]
 
+
 def test_benchmark_cyclic_4():
     config.setup('GB_METHOD', 'f5b')
-    helper_test_benchmark_cyclic_4()
+    _test_benchmark_cyclic_4()
     config.setup('GB_METHOD', 'buchberger')
-    helper_test_benchmark_cyclic_4()
+    _test_benchmark_cyclic_4()
+
 
 def test_sig_key():
     s1 = sig((0,) * 3, 2)
@@ -364,6 +390,7 @@ def test_sig_key():
     assert sig_key(s1, lex) > sig_key(s2, lex)
     assert sig_key(s2, lex) < sig_key(s3, lex)
 
+
 def test_lbp_key():
     p1 = lbp(sig((0,) * 4, 3), [], 12)
     p2 = lbp(sig((0,) * 4, 4), [], 13)
@@ -372,24 +399,34 @@ def test_lbp_key():
     assert lbp_key(p1, lex) > lbp_key(p2, lex)
     assert lbp_key(p2, lex) < lbp_key(p3, lex)
 
+
 def test_critical_pair():
     # from cyclic4 with grlex
-    p1 = (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1,1)), ((0, 0, 2, 2), QQ(1,1)), ((0, 0, 0, 4), QQ(-1,1)), ((0, 0, 0, 0), QQ(-1,1))], 4)
-    q1 = (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1,1)), ((0, 1, 0, 1), QQ(-1,1)), ((0, 0, 1, 1), QQ(-1,1)), ((0, 0, 0, 2), QQ(-1,1))], 2)
+    p1 = (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1, 1)), ((0, 0, 2, 2),
+          QQ(1, 1)), ((0, 0, 0, 4), QQ(-1, 1)), ((0, 0, 0, 0), QQ(-1, 1))], 4)
+    q1 = (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1, 1)), ((0, 1, 0, 1), QQ(
+        -1, 1)), ((0, 0, 1, 1), QQ(-1, 1)), ((0, 0, 0, 2), QQ(-1, 1))], 2)
 
-    p2 = (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1,1)), ((0, 0, 2, 3), QQ(1,1)), ((0, 0, 1, 0), QQ(-1,1)), ((0, 0, 0, 1), QQ(-1,1))], 5)
-    q2 = (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1,1)), ((0, 0, 0, 6), QQ(1,1)), ((0, 1, 1, 0), QQ(1,1)), ((0, 0, 1, 1), QQ(1,1))], 13)
+    p2 = (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1, 1)), ((0, 0, 2, 3),
+          QQ(1, 1)), ((0, 0, 1, 0), QQ(-1, 1)), ((0, 0, 0, 1), QQ(-1, 1))], 5)
+    q2 = (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1, 1)), ((0, 0, 0, 6),
+          QQ(1, 1)), ((0, 1, 1, 0), QQ(1, 1)), ((0, 0, 1, 1), QQ(1, 1))], 13)
 
-    assert critical_pair(p1, q1, 3, grlex, QQ) == (((0, 0, 1, 2), 2), ((0, 0, 1, 2), QQ(-1,1)), (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1,1)), ((0, 1, 0, 1), QQ(-1,1)), ((0, 0, 1, 1), QQ(-1,1)), ((0, 0, 0, 2), QQ(-1,1))], 2), ((0, 1, 0, 0), 4), ((0, 1, 0, 0), QQ(1,1)), (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1,1)), ((0, 0, 2, 2), QQ(1,1)), ((0, 0, 0, 4), QQ(-1,1)), ((0, 0, 0, 0), QQ(-1,1))], 4))
-    assert critical_pair(p2, q2, 3, grlex, QQ) == (((0, 0, 4, 2), 2), ((0, 0, 2, 0), QQ(1,1)), (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1,1)), ((0, 0, 0, 6), QQ(1,1)), ((0, 1, 1, 0), QQ(1,1)), ((0, 0, 1, 1), QQ(1,1))], 13), ((0, 0, 0, 5), 3), ((0, 0, 0, 3), QQ(1,1)), (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1,1)), ((0, 0, 2, 3), QQ(1,1)), ((0, 0, 1, 0), QQ(-1,1)), ((0, 0, 0, 1), QQ(-1,1))], 5))
+    assert critical_pair(p1, q1, 3, grlex, QQ) == (((0, 0, 1, 2), 2), ((0, 0, 1, 2), QQ(-1, 1)), (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1, 1)), ((0, 1, 0, 1), QQ(-1, 1)), ((0, 0, 1, 1), QQ(-1, 1)), ((0, 0, 0, 2), QQ(-1, 1))], 2), ((0, 1, 0, 0), 4), ((0, 1, 0, 0), QQ(1, 1)), (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1, 1)), ((0, 0, 2, 2), QQ(1, 1)), ((0, 0, 0, 4), QQ(-1, 1)), ((0, 0, 0, 0), QQ(-1, 1))], 4))
+    assert critical_pair(p2, q2, 3, grlex, QQ) == (((0, 0, 4, 2), 2), ((0, 0, 2, 0), QQ(1, 1)), (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1, 1)), ((0, 0, 0, 6), QQ(1, 1)), ((0, 1, 1, 0), QQ(1, 1)), ((0, 0, 1, 1), QQ(1, 1))], 13), ((0, 0, 0, 5), 3), ((0, 0, 0, 3), QQ(1, 1)), (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1, 1)), ((0, 0, 2, 3), QQ(1, 1)), ((0, 0, 1, 0), QQ(-1, 1)), ((0, 0, 0, 1), QQ(-1, 1))], 5))
+
 
 def test_cp_key():
     # from cyclic4 with grlex
-    p1 = (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1,1)), ((0, 0, 2, 2), QQ(1,1)), ((0, 0, 0, 4), QQ(-1,1)), ((0, 0, 0, 0), QQ(-1,1))], 4)
-    q1 = (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1,1)), ((0, 1, 0, 1), QQ(-1,1)), ((0, 0, 1, 1), QQ(-1,1)), ((0, 0, 0, 2), QQ(-1,1))], 2)
+    p1 = (((0, 0, 0, 0), 4), [((0, 1, 1, 2), QQ(1, 1)), ((0, 0, 2, 2),
+          QQ(1, 1)), ((0, 0, 0, 4), QQ(-1, 1)), ((0, 0, 0, 0), QQ(-1, 1))], 4)
+    q1 = (((0, 0, 0, 0), 2), [((0, 2, 0, 0), QQ(-1, 1)), ((0, 1, 0, 1), QQ(
+        -1, 1)), ((0, 0, 1, 1), QQ(-1, 1)), ((0, 0, 0, 2), QQ(-1, 1))], 2)
 
-    p2 = (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1,1)), ((0, 0, 2, 3), QQ(1,1)), ((0, 0, 1, 0), QQ(-1,1)), ((0, 0, 0, 1), QQ(-1,1))], 5)
-    q2 = (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1,1)), ((0, 0, 0, 6), QQ(1,1)), ((0, 1, 1, 0), QQ(1,1)), ((0, 0, 1, 1), QQ(1,1))], 13)
+    p2 = (((0, 0, 0, 2), 3), [((0, 0, 3, 2), QQ(1, 1)), ((0, 0, 2, 3),
+          QQ(1, 1)), ((0, 0, 1, 0), QQ(-1, 1)), ((0, 0, 0, 1), QQ(-1, 1))], 5)
+    q2 = (((0, 0, 2, 2), 2), [((0, 0, 1, 5), QQ(1, 1)), ((0, 0, 0, 6),
+          QQ(1, 1)), ((0, 1, 1, 0), QQ(1, 1)), ((0, 0, 1, 1), QQ(1, 1))], 13)
 
     cp1 = critical_pair(p1, q1, 3, grlex, QQ)
     cp2 = critical_pair(p2, q2, 3, grlex, QQ)
@@ -401,22 +438,24 @@ def test_cp_key():
 
     assert cp_key(cp1, grlex) < cp_key(cp2, grlex)
 
+
 def test_is_rewritable_or_comparable():
     # from katsura4 with grlex
     p = lbp(sig((0, 0, 2, 1), 2), [], 2)
-    B = [lbp(sig((0, 0, 0, 1), 2), [((0, 0, 2, 1), QQ(1,1)), ((0, 0, 1, 2), QQ(76,35)), ((0, 0, 0, 3), QQ(13,7)), ((0, 2, 0, 0), QQ(2,45)), ((0, 1, 1, 0), QQ(1,5)), ((0, 1, 0, 1), QQ(5,63)), ((0, 0, 2, 0), QQ(4,45)), ((0, 0, 1, 1), QQ(-32,105)), ((0, 0, 0, 2), QQ(-13,21))], 6)]
+    B = [lbp(sig((0, 0, 0, 1), 2), [((0, 0, 2, 1), QQ(1, 1)), ((0, 0, 1, 2), QQ(76, 35)), ((0, 0, 0, 3), QQ(13, 7)), ((0, 2, 0, 0), QQ(2, 45)), ((0, 1, 1, 0), QQ(1, 5)), ((0, 1, 0, 1), QQ(5, 63)), ((0, 0, 2, 0), QQ(4, 45)), ((0, 0, 1, 1), QQ(-32, 105)), ((0, 0, 0, 2), QQ(-13, 21))], 6)]
 
     # rewritable:
-    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) == True
+    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) is True
 
     p = lbp(sig((0, 1, 1, 0), 2), [], 7)
-    B = [lbp(sig((0, 0, 0, 0), 3), [((0, 1, 1, 0), QQ(10,3)), ((0, 1, 0, 1), QQ(4,3)), ((0, 0, 2, 0), QQ(4,1)), ((0, 0, 1, 1), QQ(22,3)), ((0, 0, 0, 2), QQ(4,1)), ((0, 1, 0, 0), QQ(-1,3)), ((0, 0, 1, 0), QQ(-4,3)), ((0, 0, 0, 1), QQ(-4,3))], 3)]
+    B = [lbp(sig((0, 0, 0, 0), 3), [((0, 1, 1, 0), QQ(10, 3)), ((0, 1, 0, 1), QQ(4, 3)), ((0, 0, 2, 0), QQ(4, 1)), ((0, 0, 1, 1), QQ(22, 3)), ((0, 0, 0, 2), QQ(4, 1)), ((0, 1, 0, 0), QQ(-1, 3)), ((0, 0, 1, 0), QQ(-4, 3)), ((0, 0, 0, 1), QQ(-4, 3))], 3)]
     # comparable:
-    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) == True
+    assert is_rewritable_or_comparable(Sign(p), Num(p), B, 3, QQ) is True
+
 
 def test_f5_reduce():
     # katsura3 with lex
-    F = [(((0, 0, 0), 1), [((1, 0, 0), QQ(1,1)), ((0, 1, 0), QQ(2,1)), ((0, 0, 1), QQ(2,1)), ((0, 0, 0), QQ(-1,1))], 1), (((0, 0, 0), 2), [((0, 2, 0), QQ(6,1)), ((0, 1, 1), QQ(8,1)), ((0, 1, 0), QQ(-2,1)), ((0, 0, 2), QQ(6,1)), ((0, 0, 1), QQ(-2,1))], 2), (((0, 0, 0), 3), [((0, 1, 1), QQ(10,3)), ((0, 1, 0), QQ(-1,3)), ((0, 0, 2), QQ(4,1)), ((0, 0, 1), QQ(-4,3))], 3), (((0, 0, 1), 2), [((0, 1, 0), QQ(1,1)), ((0, 0, 3), QQ(30,1)), ((0, 0, 2), QQ(-79,7)), ((0, 0, 1), QQ(3,7))], 4), (((0, 0, 2), 2), [((0, 0, 4), QQ(1,1)), ((0, 0, 3), QQ(-10,21)), ((0, 0, 2), QQ(1,84)), ((0, 0, 1), QQ(1,84))], 5)]
+    F = [(((0, 0, 0), 1), [((1, 0, 0), QQ(1, 1)), ((0, 1, 0), QQ(2, 1)), ((0, 0, 1), QQ(2, 1)), ((0, 0, 0), QQ(-1, 1))], 1), (((0, 0, 0), 2), [((0, 2, 0), QQ(6, 1)), ((0, 1, 1), QQ(8, 1)), ((0, 1, 0), QQ(-2, 1)), ((0, 0, 2), QQ(6, 1)), ((0, 0, 1), QQ(-2, 1))], 2), (((0, 0, 0), 3), [((0, 1, 1), QQ(10, 3)), ((0, 1, 0), QQ(-1, 3)), ((0, 0, 2), QQ(4, 1)), ((0, 0, 1), QQ(-4, 3))], 3), (((0, 0, 1), 2), [((0, 1, 0), QQ(1, 1)), ((0, 0, 3), QQ(30, 1)), ((0, 0, 2), QQ(-79, 7)), ((0, 0, 1), QQ(3, 7))], 4), (((0, 0, 2), 2), [((0, 0, 4), QQ(1, 1)), ((0, 0, 3), QQ(-10, 21)), ((0, 0, 2), QQ(1, 84)), ((0, 0, 1), QQ(1, 84))], 5)]
 
     cp = critical_pair(F[0], F[1], 2, lex, QQ)
     s = s_poly(cp, 2, lex, QQ)
@@ -426,20 +465,24 @@ def test_f5_reduce():
     s = lbp(sig(Sign(s)[0], 100), Polyn(s), Num(s))
     assert f5_reduce(s, F, 2, lex, QQ) == s
 
-def test_matrix_fglm():
-    pass  # see test_polytools.py
 
 def test_representing_matrices():
     basis = [(0, 0), (0, 1), (1, 0), (1, 1)]
-    F = [[((2, 0), QQ(1,1)), ((1, 0), QQ(-1,1)), ((0, 1), QQ(-3,1)), ((0, 0), QQ(1,1))],
-        [((0, 2), QQ(1,1)), ((1, 0), QQ(-2,1)), ((0, 1), QQ(1,1)), ((0, 0), QQ(-1,1))]]
+    F = [[(
+        (
+            2, 0), QQ(
+                1, 1)), (
+                    (
+                        1, 0), QQ(
+                            -1, 1)), ((0, 1), QQ(-3, 1)), ((0, 0), QQ(1, 1))],
+        [((0, 2), QQ(1, 1)), ((1, 0), QQ(-2, 1)), ((0, 1), QQ(1, 1)), ((0, 0), QQ(-1, 1))]]
 
-    assert _representing_matrices(basis, F, 1, grlex, QQ) ==[ \
-        [[QQ(0,1), QQ(0,1), QQ(-1,1), QQ(3,1)],
-        [QQ(0,1), QQ(0,1), QQ(3,1), QQ(-4,1)],
-        [QQ(1,1), QQ(0,1), QQ(1,1), QQ(6,1)],
-        [QQ(0,1), QQ(1,1), QQ(0,1), QQ(1,1)]],
-        [[QQ(0,1), QQ(1,1), QQ(0,1), QQ(-2,1)],
-        [QQ(1,1), QQ(-1,1), QQ(0,1), QQ(6,1)],
-        [QQ(0,1), QQ(2,1), QQ(0,1), QQ(3,1)],
-        [QQ(0,1), QQ(0,1), QQ(1,1), QQ(-1,1)]]]
+    assert _representing_matrices(basis, F, 1, grlex, QQ) == [
+        [[QQ(0, 1), QQ(0, 1), QQ(-1, 1), QQ(3, 1)],
+        [QQ(0, 1), QQ(0, 1), QQ(3, 1), QQ(-4, 1)],
+        [QQ(1, 1), QQ(0, 1), QQ(1, 1), QQ(6, 1)],
+        [QQ(0, 1), QQ(1, 1), QQ(0, 1), QQ(1, 1)]],
+        [[QQ(0, 1), QQ(1, 1), QQ(0, 1), QQ(-2, 1)],
+        [QQ(1, 1), QQ(-1, 1), QQ(0, 1), QQ(6, 1)],
+        [QQ(0, 1), QQ(2, 1), QQ(0, 1), QQ(3, 1)],
+        [QQ(0, 1), QQ(0, 1), QQ(1, 1), QQ(-1, 1)]]]

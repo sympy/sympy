@@ -26,6 +26,7 @@ __all__ = [
 # Operators and outer products
 #-----------------------------------------------------------------------------
 
+
 class Operator(QExpr):
     """Base class for non-commuting quantum operators.
 
@@ -89,7 +90,7 @@ class Operator(QExpr):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Operator_(physics)
+    .. [1] http://en.wikipedia.org/wiki/Operator_%28physics%29
     .. [2] http://en.wikipedia.org/wiki/Observable
     """
 
@@ -195,8 +196,7 @@ class HermitianOperator(Operator):
     H
     """
 
-    def _eval_dagger(self):
-        return self
+    is_hermitian = True
 
     def _eval_inverse(self):
         if isinstance(self, UnitaryOperator):
@@ -214,6 +214,7 @@ class HermitianOperator(Operator):
                 return self
         else:
             return Operator._eval_power(self, exp)
+
 
 class UnitaryOperator(Operator):
     """A unitary operator that satisfies U*Dagger(U) == 1.
@@ -234,7 +235,7 @@ class UnitaryOperator(Operator):
     1
     """
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return self._eval_inverse()
 
 
@@ -311,11 +312,11 @@ class OuterProduct(Operator):
             raise TypeError('BraBase subclass expected, got: %r' % ket)
         if not ket.dual_class() == bra.__class__:
             raise TypeError(
-                'ket and bra are not dual classes: %r, %r' % \
+                'ket and bra are not dual classes: %r, %r' %
                 (ket.__class__, bra.__class__)
             )
         # TODO: make sure the hilbert spaces of the bra and ket are compatible
-        obj = Expr.__new__(cls, *args)
+        obj = Expr.__new__(cls, *args, **old_assumptions)
         obj.hilbert_space = ket.hilbert_space
         return obj
 
@@ -329,11 +330,11 @@ class OuterProduct(Operator):
         """Return the bra on the right side of the outer product."""
         return self.args[1]
 
-    def _eval_dagger(self):
+    def _eval_adjoint(self):
         return OuterProduct(Dagger(self.bra), Dagger(self.ket))
 
     def _sympystr(self, printer, *args):
-        return str(self.ket)+str(self.bra)
+        return str(self.ket) + str(self.bra)
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,
@@ -346,12 +347,19 @@ class OuterProduct(Operator):
     def _latex(self, printer, *args):
         k = printer._print(self.ket, *args)
         b = printer._print(self.bra, *args)
-        return k+b
+        return k + b
 
     def _represent(self, **options):
         k = self.ket._represent(**options)
         b = self.bra._represent(**options)
         return k*b
+
+    def _eval_trace(self, **kwargs):
+        # TODO if operands are tensorproducts this may be will be handled
+        # differently.
+
+        return self.ket._eval_trace(self.bra, **kwargs)
+
 
 class DifferentialOperator(Operator):
     """An operator for representing the differential operator, i.e. d/dx
@@ -500,7 +508,7 @@ class DifferentialOperator(Operator):
         return '%s(%s)' % (
             self._print_operator_name(printer, *args),
             self._print_label(printer, *args)
-          )
+        )
 
     def _print_pretty(self, printer, *args):
         pform = self._print_operator_name_pretty(printer, *args)

@@ -19,4 +19,6 @@ from transforms import (mellin_transform, inverse_mellin_transform,
                         sine_transform, inverse_sine_transform,
                         SineTransform, InverseSineTransform,
                         cosine_transform, inverse_cosine_transform,
-                        CosineTransform, InverseCosineTransform)
+                        CosineTransform, InverseCosineTransform,
+                        hankel_transform, inverse_hankel_transform,
+                        HankelTransform, InverseHankelTransform)

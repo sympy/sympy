@@ -51,6 +51,7 @@ from collections import defaultdict
 
 from logic import Logic, And, Or, Not
 
+
 def _base_fact(atom):
     """Return the literal fact of an atom.
 
@@ -61,6 +62,7 @@ def _base_fact(atom):
     else:
         return atom
 
+
 def _as_pair(atom):
     if isinstance(atom, Not):
         return (atom.arg, False)
@@ -68,6 +70,8 @@ def _as_pair(atom):
         return (atom, True)
 
 # XXX this prepares forward-chaining rules for alpha-network
+
+
 def deduce_alpha_implications(implications):
     """deduce all implications
 
@@ -110,7 +114,8 @@ def deduce_alpha_implications(implications):
         impl.discard(a)
         na = Not(a)
         if na in impl:
-            raise ValueError('implications are inconsistent: %s -> %s %s' % (a, na, impl))
+            raise ValueError(
+                'implications are inconsistent: %s -> %s %s' % (a, na, impl))
 
     return res
 
@@ -171,10 +176,10 @@ def apply_beta_to_alpha_route(alpha_implications, beta_rules):
                     bimpl_impl = x_impl.get(bimpl)
                     if bimpl_impl is not None:
                         ximpls |= bimpl_impl[0]
-                    seen_static_extension=True
+                    seen_static_extension = True
 
     # attach beta-nodes which can be possibly triggered by an alpha-chain
-    for bidx, (bcond,bimpl) in enumerate(beta_rules):
+    for bidx, (bcond, bimpl) in enumerate(beta_rules):
         bargs = set(bcond.args)
         for x, (ximpls, bb) in x_impl.iteritems():
             x_all = ximpls | set([x])
@@ -225,6 +230,7 @@ def rules_2prereq(rules):
 # RULES PROVER #
 ################
 
+
 class TautologyDetected(Exception):
     """(internal) Prover uses it for reporting detected tautology"""
     pass
@@ -261,17 +267,17 @@ class Prover(object):
 
     def __init__(self):
         self.proved_rules = []
-        self._rules_seen  = set()
+        self._rules_seen = set()
 
     def split_alpha_beta(self):
         """split proved rules into alpha and beta chains"""
         rules_alpha = []    # a      -> b
-        rules_beta  = []    # &(...) -> b
-        for a,b in self.proved_rules:
+        rules_beta = []     # &(...) -> b
+        for a, b in self.proved_rules:
             if isinstance(a, And):
-                rules_beta.append((a,b))
+                rules_beta.append((a, b))
             else:
-                rules_alpha.append((a,b) )
+                rules_alpha.append((a, b) )
         return rules_alpha, rules_beta
 
     @property
@@ -288,10 +294,10 @@ class Prover(object):
             return
         if isinstance(a, bool):
             return
-        if (a,b) in self._rules_seen:
+        if (a, b) in self._rules_seen:
             return
         else:
-            self._rules_seen.add((a,b))
+            self._rules_seen.add((a, b))
 
         # this is the core of processing
         try:
@@ -316,12 +322,12 @@ class Prover(object):
             if not isinstance(a, Logic):    # Atom
                 # tautology:  a -> a|c|...
                 if a in b.args:
-                    raise TautologyDetected(a,b, 'a -> a|c|...')
+                    raise TautologyDetected(a, b, 'a -> a|c|...')
             self.process_rule(And(*[Not(barg) for barg in b.args]), Not(a))
 
             for bidx in range(len(b.args)):
                 barg = b.args[bidx]
-                brest= b.args[:bidx] + b.args[bidx+1:]
+                brest = b.args[:bidx] + b.args[bidx + 1:]
                 self.process_rule(And(a, Not(barg)), Or(*brest))
 
         # left part
@@ -330,22 +336,23 @@ class Prover(object):
         #                    (this will be the basis of beta-network)
         elif isinstance(a, And):
             if b in a.args:
-                raise TautologyDetected(a,b, 'a & b -> a')
-            self.proved_rules.append((a,b))
+                raise TautologyDetected(a, b, 'a & b -> a')
+            self.proved_rules.append((a, b))
             # XXX NOTE at present we ignore  !c -> !a | !b
 
         elif isinstance(a, Or):
             if b in a.args:
-                raise TautologyDetected(a,b, 'a | b -> a')
+                raise TautologyDetected(a, b, 'a | b -> a')
             for aarg in a.args:
                 self.process_rule(aarg, b)
 
         else:
             # both `a` and `b` are atoms
-            self.proved_rules.append((a,b))     # a  -> b
+            self.proved_rules.append((a, b))             # a  -> b
             self.proved_rules.append((Not(b), Not(a)))   # !b -> !a
 
 ########################################
+
 
 class FactRules(object):
     """Rules that describe how to deduce facts in logic space
@@ -406,7 +413,7 @@ class FactRules(object):
         self.beta_rules = []
         for bcond, bimpl in P.rules_beta:
             self.beta_rules.append(
-                    (set(_as_pair(a) for a in bcond.args), _as_pair(bimpl)))
+                (set(_as_pair(a) for a in bcond.args), _as_pair(bimpl)))
 
         # deduce alpha implications
         impl_a = deduce_alpha_implications(P.rules_alpha)
@@ -436,10 +443,12 @@ class FactRules(object):
             prereq[k] |= pitems
         self.prereq = prereq
 
+
 class InconsistentAssumptions(ValueError):
     def __str__(self):
         kb, fact, value = self.args
         return "%s, %s=%s" % (kb, fact, value)
+
 
 class FactKB(dict):
     """

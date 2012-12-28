@@ -6,6 +6,7 @@ from sympy.core.function import ArgumentIndexError
 ###################### LERCH TRANSCENDENT #####################################
 ###############################################################################
 
+
 class lerchphi(Function):
     r"""
     Lerch transcendent (Lerch phi function).
@@ -93,9 +94,11 @@ class lerchphi(Function):
 
     >>> from sympy import S
     >>> expand_func(lerchphi(z, s, S(1)/2))
-    2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) - polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))
+    2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -
+                polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))
     >>> expand_func(lerchphi(z, s, S(3)/2))
-    -2**s/z + 2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) - polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))/z
+    -2**s/z + 2**(s - 1)*(polylog(s, sqrt(z))/sqrt(z) -
+                          polylog(s, sqrt(z)*exp_polar(I*pi))/sqrt(z))/z
 
     The derivatives with respect to :math:`z` and :math:`a` can be computed in
     closed form:
@@ -110,10 +113,7 @@ class lerchphi(Function):
 
     def _eval_expand_func(self, **hints):
         from sympy import exp, I, floor, Add, Poly, Dummy, exp_polar, unpolarify
-        if hints.get('deep', False):
-            z, s, a = map(lambda x: x._eval_expand_func(**hints), self.args)
-        else:
-            z, s, a = self.args
+        z, s, a = self.args
         if z == 1:
             return zeta(s, a)
         if s.is_Integer and s <= 0:
@@ -151,9 +151,9 @@ class lerchphi(Function):
             m, n = S([a.p, a.q])
             zet = exp_polar(2*pi*I/n)
             root = z**(1/n)
-            return add + mul*n**(s-1)*Add(
-                *[polylog(s, zet**k*root)._eval_expand_func(**hints) \
-                   / (unpolarify(zet)**k*root)**m for k in xrange(n)])
+            return add + mul*n**(s - 1)*Add(
+                *[polylog(s, zet**k*root)._eval_expand_func(**hints)
+                  / (unpolarify(zet)**k*root)**m for k in xrange(n)])
 
         # TODO use minpoly instead of ad-hoc methods when issue 2789 is fixed
         if z.func is exp and (z.args[0]/(pi*I)).is_Rational or z in [-1, I, -I]:
@@ -167,7 +167,7 @@ class lerchphi(Function):
             else:
                 arg = z.args[0]/(2*pi*I)
                 p, q = S([arg.p, arg.q])
-            return Add(*[exp(2*pi*I*k*p/q)/q**s*zeta(s, (k + a)/q) \
+            return Add(*[exp(2*pi*I*k*p/q)/q**s*zeta(s, (k + a)/q)
                          for k in xrange(q)])
 
         return lerchphi(z, s, a)
@@ -175,9 +175,9 @@ class lerchphi(Function):
     def fdiff(self, argindex=1):
         z, s, a = self.args
         if argindex == 3:
-            return -s*lerchphi(z, s+1, a)
+            return -s*lerchphi(z, s + 1, a)
         elif argindex == 1:
-            return (lerchphi(z, s-1, a) - a*lerchphi(z, s, a))/z
+            return (lerchphi(z, s - 1, a) - a*lerchphi(z, s, a))/z
         else:
             raise ArgumentIndexError
 
@@ -187,14 +187,17 @@ class lerchphi(Function):
             return res
         else:
             return self
+
     def _eval_rewrite_as_zeta(self, z, s, a):
         return self._eval_rewrite_helper(z, s, a, zeta)
+
     def _eval_rewrite_as_polylog(self, z, s, a):
         return self._eval_rewrite_helper(z, s, a, polylog)
 
 ###############################################################################
 ###################### POLYLOGARITHM ##########################################
 ###############################################################################
+
 
 class polylog(Function):
     r"""
@@ -276,7 +279,7 @@ class polylog(Function):
     def fdiff(self, argindex=1):
         s, z = self.args
         if argindex == 2:
-            return polylog(s-1, z)/z
+            return polylog(s - 1, z)/z
         raise ArgumentIndexError
 
     def _eval_rewrite_as_lerchphi(self, s, z):
@@ -284,10 +287,7 @@ class polylog(Function):
 
     def _eval_expand_func(self, **hints):
         from sympy import log, expand_mul, Dummy, exp_polar, I
-        if hints.get('deep', False):
-            s, z = map(lambda x: x._eval_expand_func(**hints), self.args)
-        else:
-            s, z = self.args
+        s, z = self.args
         if s == 1:
             return -log(1 + exp_polar(-I*pi)*z)
         if s.is_Integer and s <= 0:
@@ -301,6 +301,7 @@ class polylog(Function):
 ###############################################################################
 ###################### HURWITZ GENERALIZED ZETA FUNCTION ######################
 ###############################################################################
+
 
 class zeta(Function):
     r"""
@@ -439,17 +440,17 @@ class zeta(Function):
             elif z.is_Integer:
                 if a.is_Integer:
                     if z.is_negative:
-                        zeta = (-1)**z * C.bernoulli(-z+1)/(-z+1)
+                        zeta = (-1)**z * C.bernoulli(-z + 1)/(-z + 1)
                     elif z.is_even:
                         B, F = C.bernoulli(z), C.factorial(z)
-                        zeta = 2**(z-1) * abs(B) * pi**z / F
+                        zeta = 2**(z - 1) * abs(B) * pi**z / F
                     else:
                         return
 
                     if a.is_negative:
                         return zeta + C.harmonic(abs(a), z)
                     else:
-                        return zeta - C.harmonic(a-1, z)
+                        return zeta - C.harmonic(a - 1, z)
 
     def _eval_rewrite_as_dirichlet_eta(self, s, a=1):
         if a != 1:
@@ -469,6 +470,7 @@ class zeta(Function):
             return -s*zeta(s + 1, a)
         else:
             raise ArgumentIndexError
+
 
 class dirichlet_eta(Function):
     r"""
@@ -510,7 +512,7 @@ class dirichlet_eta(Function):
             return C.log(2)
         z = zeta(s)
         if not z.has(zeta):
-            return (1-2**(1-s))*z
+            return (1 - 2**(1 - s))*z
 
     def _eval_rewrite_as_zeta(self, s):
-        return (1-2**(1-s)) * zeta(s)
+        return (1 - 2**(1 - s)) * zeta(s)

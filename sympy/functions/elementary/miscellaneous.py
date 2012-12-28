@@ -7,7 +7,8 @@ from sympy.core.function import Application, Lambda
 from sympy.core.expr import Expr
 from sympy.core.singleton import Singleton
 from sympy.core.rules import Transform
-from sympy.ntheory.residue_ntheory import int_tested
+from sympy.core.compatibility import as_int
+
 
 class IdentityFunction(Lambda):
     """
@@ -25,6 +26,7 @@ class IdentityFunction(Lambda):
     __metaclass__ = Singleton
     __slots__ = []
     nargs = 1
+
     def __new__(cls):
         x = C.Dummy('x')
         #construct "by hand" to avoid infinite loop
@@ -34,6 +36,7 @@ Id = S.IdentityFunction
 ###############################################################################
 ############################# ROOT and SQUARE ROOT FUNCTION ###################
 ###############################################################################
+
 
 def sqrt(arg):
     """The square root function
@@ -183,6 +186,7 @@ def root(arg, n):
     n = sympify(n)
     return C.Pow(arg, 1/n)
 
+
 def real_root(arg, n=None):
     """Return the real nth-root of arg if possible. If n is omitted then
     all instances of -1**(1/odd) will be changed to -1.
@@ -208,7 +212,7 @@ def real_root(arg, n=None):
     root, sqrt
     """
     if n is not None:
-        n = int_tested(n)
+        n = as_int(n)
         rv = C.Pow(arg, Rational(1, n))
         if n % 2 == 0:
             return rv
@@ -226,7 +230,8 @@ def real_root(arg, n=None):
 ############################# MINIMUM and MAXIMUM #############################
 ###############################################################################
 
-class MinMaxBase(LatticeOp):
+
+class MinMaxBase(Expr, LatticeOp):
     def __new__(cls, *args, **assumptions):
         if not args:
             raise ValueError("The Max/Min functions must have arguments.")
@@ -271,7 +276,7 @@ class MinMaxBase(LatticeOp):
         for arg in arg_sequence:
 
             # pre-filter, checking comparability of arguments
-            if (arg.is_real == False) or (arg is S.ComplexInfinity):
+            if (arg.is_real is False) or (arg is S.ComplexInfinity):
                 raise ValueError("The argument '%s' is not comparable." % arg)
 
             if arg == cls.zero:
@@ -342,11 +347,12 @@ class MinMaxBase(LatticeOp):
         yx = cls._rel_inversed(x, y)
         if isinstance(yx, bool):
             if yx:
-                return False # never occurs?
+                return False  # never occurs?
             return True
         return False
 
-class Max(MinMaxBase, Application, Basic):
+
+class Max(MinMaxBase, Application):
     """
     Return, if possible, the maximum value of the list.
 
@@ -427,7 +433,7 @@ class Max(MinMaxBase, Application, Basic):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Directed_complete_partial_order
-    .. [2] http://en.wikipedia.org/wiki/Lattice_(order)
+    .. [2] http://en.wikipedia.org/wiki/Lattice_%28order%29
 
     See Also
     ========
@@ -452,7 +458,7 @@ class Max(MinMaxBase, Application, Basic):
         return (x < y)
 
 
-class Min(MinMaxBase, Application, Basic):
+class Min(MinMaxBase, Application):
     """
     Return, if possible, the minimum value of the list.
 

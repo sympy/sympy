@@ -13,7 +13,8 @@ for about, category in sorted(t.items()):
     if about == ():
         doc += 'Elementary functions:\n\n'
     else:
-        doc += 'Functions involving ' + ', '.join('`%s`' % latex(list(category[0][0].atoms(func))[0]) for func in about) + ':\n\n'
+        doc += 'Functions involving ' + ', '.join('`%s`' % latex(
+            list(category[0][0].atoms(func))[0]) for func in about) + ':\n\n'
     for formula, gs, cond, hint in category:
         if not isinstance(gs, list):
             g = Symbol('\\text{generated}')
