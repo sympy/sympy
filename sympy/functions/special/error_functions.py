@@ -236,8 +236,10 @@ class erfc(Function):
     -2*exp(-z**2)/sqrt(pi)
 
     It also follows
-    >>>erfc(-x)
-    >>>2 - erfc(x)
+    
+    >>> erfc(-z)
+    -erfc(z) + 2
+    
     We can numerically evaluate the error function to arbitrary precision
     on the whole complex plane:
 
@@ -346,7 +348,6 @@ class erfc(Function):
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
                 self.func(x + x*sqrt(sq)))
         return (re, im)
-
 
 ###############################################################################
 #################### EXPONENTIAL INTEGRALS ####################################

@@ -106,6 +106,8 @@ def test_erfc():
          I*(erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
          erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
          re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+    
+    raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))    
 
 def test_erfc_series():
     assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
