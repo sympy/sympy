@@ -236,10 +236,10 @@ class erfc(Function):
     -2*exp(-z**2)/sqrt(pi)
 
     It also follows
-    
+
     >>> erfc(-z)
     -erfc(z) + 2
-    
+
     We can numerically evaluate the error function to arbitrary precision
     on the whole complex plane:
 
@@ -253,8 +253,8 @@ class erfc(Function):
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Error_function
-    .. [3] http://mathworld.wolfram.com/Erfc.html
-    .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
+    .. [2] http://mathworld.wolfram.com/Erfc.html
+    .. [3] http://functions.wolfram.com/GammaBetaErf/Erfc
     """
 
     nargs = 1
@@ -327,6 +327,175 @@ class erfc(Function):
             return S.One
         else:
             return self.func(arg)
+
+    def _as_real_imag(self, deep=True, **hints):
+        if self.args[0].is_real:
+            if deep:
+                hints['complex'] = False
+                return (self.expand(deep, **hints), S.Zero)
+            else:
+                return (self, S.Zero)
+        if deep:
+            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+        else:
+            re, im = self.args[0].as_real_imag()
+        return (re, im)
+
+    def as_real_imag(self, deep=True, **hints):
+        x, y = self._as_real_imag(deep=deep, **hints)
+        sq = -y**2/x**2
+        re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
+        im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
+                self.func(x + x*sqrt(sq)))
+        return (re, im)
+
+class erfi(Function):
+    """
+    Imaginative error function:
+
+    The function erfi is defined as
+
+    in Latex:
+    $erfc(x) = \frac{2}{\sqrt{\pi}}*\int_0^\x e^{x^2}dx$
+
+    Or, in ASCII::
+
+                        x
+                    /
+                   |
+                   |    2
+                   |   t
+    erfi(x) =   2* |  e   dt
+                   |
+                  /
+                  0
+                -------------
+                      ____
+                    \/ pi
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erfi
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> erf(0)
+    0
+    >>> erf(oo)
+    oo
+    >>> erf(-oo)
+    -oo
+    >>> erf(I*oo)
+    I
+    >>> erf(-I*oo)
+    -I
+
+    In general one can pull out factors of -1 and I from the argument:
+
+    >>> erf(-z)
+    -erf(z)
+
+    >>> erfi(I*z)
+    I*erfi(z)
+
+    The error function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(erf(z))
+    erf(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(erf(z), z)
+    2*exp(z**2)/sqrt(pi)
+
+    We can numerically evaluate the error function to arbitrary precision
+    on the whole complex plane:
+
+    >>> erf(2).evalf(30)
+    18.5648024145755525987042919132
+
+    >>> erf(-2*I).evalf(30)
+    -18.5648024145755525987042919132*I
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Error_function
+    .. [2] http://mathworld.wolfram.com/Erfi.html
+    .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
+    """
+    nargs = 1
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return 2*C.exp(self.args[0]**2)/sqrt(S.Pi)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, z):
+        if z.is_Number:
+            if z is S.NaN:
+                return S.NaN
+            if z is S.Zero:
+                return S.Zero
+            if z is S.Infinity:
+                return S.Infinity
+            if z is S.NegativeInfinity:
+                return S.NegativeInfinity
+
+        # Try to pull out factors of -1 and I
+        prefact = S.One
+        newarg = z
+        changed = False
+
+        nz = newarg.extract_multiplicatively(I)
+        if nz is S.Infinity:
+            return I
+        elif nz is S.NegativeInfinity:
+            return -I
+        elif nz is not None:
+            prefact = I*prefact
+            newarg = nz
+            changed = True
+
+        nz = newarg.extract_multiplicatively(-1)
+        if nz is not None:
+            prefact = -prefact
+            newarg = nz
+            changed = True
+
+        if changed:
+            return prefact*cls(newarg)
+
+    @staticmethod
+    @cacheit
+    def taylor_term(n, x, *previous_terms):
+        if n < 0 or n % 2 == 0:
+            return S.Zero
+        else:
+            x = sympify(x)
+            k = C.floor((n - 1)/S(2))
+            if len(previous_terms) > 2:
+                return previous_terms[-2] * x**2 * (n - 2)/(n*k)
+            else:
+                return 2 * x**n/(n*C.factorial(k)*sqrt(S.Pi))
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_rewrite_as_erf(self, z):
+        return -I*erf(I*z)
+
+    def _eval_rewrite_as_erfc(self, z):
+        return I*erfc(I*z) - I
 
     def _as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:

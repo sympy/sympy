@@ -1,5 +1,5 @@
 from sympy import (
-    symbols, expand, expand_func, erf, erfc, nan, oo, Float, conjugate,
+    symbols, expand, expand_func, erf, erfc, erfi, nan, oo, Float, conjugate,
     sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
     polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
     log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
@@ -64,7 +64,7 @@ def test_erf_series():
 
 
 def test_erf_evalf():
-    assert abs( erf(Float(2.0)) - 0.995322265 ) < 1E-8  # XXX
+    assert abs( erf(Float(2.0)) - 0.995322265 ) < 1E-8 # XXX
 
 
 def test__erfs():
@@ -107,7 +107,7 @@ def test_erfc():
          erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
          re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
     
-    raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))    
+    raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))
 
 def test_erfc_series():
     assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
@@ -115,11 +115,50 @@ def test_erfc_series():
 
 
 def test_erfc_evalf():
-    assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8  # XXX
+    assert abs( erfc(Float(2.0)) - 0.00467773 ) < 1E-8 # XXX
 
+def test_erfi():
+    assert erfi(nan) == nan
+
+    assert erfi(oo) == S.Infinity
+    assert erfi(-oo) == -S.NegativeInfinity
+
+    assert erfi(0) == S.Zero
+
+    assert erfi(I*oo) == I
+    assert erfi(-I*oo) == -I
+
+    assert erfi(-x) == -erfi(x)
+    assert erfi(I*x) == I*erfi(x)
+    assert erfi(-I*x) == -I*erfi(x)
+
+    assert erfi(I).is_real is False
+    assert erfi(0).is_real is True
+
+    assert conjugate(erfi(z)) == erfi(conjugate(z))
+
+    assert erfi(z).rewrite('erf') == -I*erf(I*z)
+    assert erfi(z).rewrite('erfc') == I*erfc(I*z) - I
+
+    assert erfi(x).as_real_imag() == \
+        ((erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erfi(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
+
+    raises(ArgumentIndexError, lambda: erfi(x).fdiff(2))
+
+def test_erfi_series():
+    assert erfi(x).series(x, 0, 7) == 2*x/sqrt(pi) + \
+        2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
+
+
+def test_erfi_evalf():
+    assert abs( erfi(Float(2.0)) - 18.5648024145756 ) < 1E-13  # XXX
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
-#      branch, hence take x in the lower half plane (d=0).
+# branch, hence take x in the lower half plane (d=0).
 
 
 def mytn(expr1, expr2, expr3, x, d=0):
