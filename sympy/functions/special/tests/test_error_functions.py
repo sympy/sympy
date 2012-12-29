@@ -1,9 +1,9 @@
 from sympy import (
-    symbols, expand, expand_func, erf, erfc, erfi, nan, oo, Float, conjugate,
+    symbols, expand, expand_func, erf, erfc, nan, oo, Float, conjugate,
     sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
     polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
     log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
-    Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
+    Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc, erfi)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -106,7 +106,7 @@ def test_erfc():
          I*(erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
          erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
          re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
-    
+
     raises(ArgumentIndexError, lambda: erfc(x).fdiff(2))
 
 def test_erfc_series():
@@ -121,7 +121,7 @@ def test_erfi():
     assert erfi(nan) == nan
 
     assert erfi(oo) == S.Infinity
-    assert erfi(-oo) == -S.NegativeInfinity
+    assert erfi(-oo) == S.NegativeInfinity
 
     assert erfi(0) == S.Zero
 
