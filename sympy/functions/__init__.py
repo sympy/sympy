@@ -22,7 +22,7 @@ from sympy.functions.elementary.hyperbolic import (sinh, cosh, tanh, coth,
         asinh, acosh, atanh, acoth)
 from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
-from sympy.functions.special.error_functions import (erf, erfc, Ei, expint,
+from sympy.functions.special.error_functions import (erf, erfc, erfi, Ei, expint,
         E1, Si, Ci, Shi, Chi, fresnels, fresnelc)
 from sympy.functions.special.gamma_functions import (gamma, lowergamma,
         uppergamma, polygamma, loggamma, digamma, trigamma, beta)
