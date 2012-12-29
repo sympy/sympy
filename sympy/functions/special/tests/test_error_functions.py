@@ -40,12 +40,20 @@ def test_erf():
     assert erf(1/x).as_leading_term(x) == erf(1/x)
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
+    assert erf(z).rewrite('erfc') == S.One - erfc(z)
 
     assert limit(exp(x)*exp(x**2)*(erf(x + 1/exp(x)) - erf(x)), x, oo) == \
         2/sqrt(pi)
     assert limit((1 - erf(z))*exp(z**2)*z, z, oo) == 1/sqrt(pi)
     assert limit((1 - erf(x))*exp(x**2)*sqrt(pi)*x, x, oo) == 1
     assert limit(((1 - erf(x))*exp(x**2)*sqrt(pi)*x - 1)*2*x**2, x, oo) == -1
+
+    assert erf(x).as_real_imag() == \
+        ((erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erf(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erf(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
 
     raises(ArgumentIndexError, lambda: erf(x).fdiff(2))
 
@@ -80,6 +88,8 @@ def test_erfc():
     assert erfc(I*oo) == -oo*I
     assert erfc(-I*oo) == oo*I
 
+    assert erfc(-x) == S(2) - erfc(x)
+
     assert erfc(I).is_real is False
     assert erfc(0).is_real is True
 
@@ -89,6 +99,13 @@ def test_erfc():
     assert erfc(1/x).as_leading_term(x) == erfc(1/x)
 
     assert erfc(z).rewrite('erf') == 1 - erf(z)
+
+    assert erfc(x).as_real_imag() == \
+        ((erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
+         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))/2,
+         I*(erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x))) -
+         erfc(re(x) + I*re(x)*Abs(im(x))/Abs(re(x)))) *
+         re(x)*Abs(im(x))/(2*im(x)*Abs(re(x)))))
 
 def test_erfc_series():
     assert erfc(x).series(x, 0, 7) == 1 - 2*x/sqrt(pi) + \
