@@ -341,3 +341,15 @@ def test_ITE():
     B = True
     assert ITE(And(A, B), B, C) == C
     assert ITE(Or(A, False), And(B, True), False) is False
+
+def test_logic_printing():
+   from sympy.core.symbol import symbols
+   from sympy.printing.pretty.pretty import pretty
+   from sympy.printing import latex
+
+   syms = symbols('a:f')
+   expr = And(*syms)
+
+   assert latex(expr) == 'a \\wedge b \\wedge c \\wedge d \\wedge e \\wedge f'
+   assert pretty(expr) == u'a \u2227 b \u2227 c \u2227 d \u2227 e \u2227 f'
+   assert str(expr) == 'And(a, b, c, d, e, f)'
