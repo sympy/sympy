@@ -356,7 +356,7 @@ class erfi(Function):
     The function erfi is defined as
 
     in Latex:
-    $erfc(x) = \frac{2}{\sqrt{\pi}}*\int_0^\x e^{x^2}dx$
+    $erfi(x) = \frac{2}{\sqrt{\pi}}*\int_0^\x e^{x^2}dx$
 
     Or, in ASCII::
 
@@ -381,21 +381,21 @@ class erfi(Function):
 
     Several special values are known:
 
-    >>> erf(0)
+    >>> erfi(0)
     0
-    >>> erf(oo)
+    >>> erfi(oo)
     oo
-    >>> erf(-oo)
+    >>> erfi(-oo)
     -oo
-    >>> erf(I*oo)
+    >>> erfi(I*oo)
     I
-    >>> erf(-I*oo)
+    >>> erfi(-I*oo)
     -I
 
     In general one can pull out factors of -1 and I from the argument:
 
-    >>> erf(-z)
-    -erf(z)
+    >>> erfi(-z)
+    -erfi(z)
 
     >>> erfi(I*z)
     I*erfi(z)
@@ -403,22 +403,22 @@ class erfi(Function):
     The error function obeys the mirror symmetry:
 
     >>> from sympy import conjugate
-    >>> conjugate(erf(z))
-    erf(conjugate(z))
+    >>> conjugate(erfi(z))
+    erfi(conjugate(z))
 
     Differentiation with respect to z is supported:
 
     >>> from sympy import diff
-    >>> diff(erf(z), z)
+    >>> diff(erfi(z), z)
     2*exp(z**2)/sqrt(pi)
 
     We can numerically evaluate the error function to arbitrary precision
     on the whole complex plane:
 
-    >>> erf(2).evalf(30)
+    >>> erfi(2).evalf(30)
     18.5648024145755525987042919132
 
-    >>> erf(-2*I).evalf(30)
+    >>> erfi(-2*I).evalf(30)
     -18.5648024145755525987042919132*I
 
     References
