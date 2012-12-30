@@ -192,6 +192,11 @@ def test_si():
     assert Shi(exp_polar(2*pi*I)*x) == Shi(x)
     assert Shi(exp_polar(-2*pi*I)*x) == Shi(x)
 
+    assert Si(oo) == pi/2
+    assert Si(-oo) == -pi/2
+    assert Shi(oo) == oo
+    assert Shi(-oo) == -oo
+
     assert mytd(Si(x), sin(x)/x, x)
     assert mytd(Shi(x), sinh(x)/x, x)
 
@@ -237,6 +242,11 @@ def test_ci():
     assert Chi(exp_polar(-2*I*pi)*x) == Chi(x) - 2*I*pi
     assert Chi(exp_polar(2*I*pi)*x) == Chi(x) + 2*I*pi
     assert Ci(exp_polar(-2*I*pi)*x) == Ci(x) - 2*I*pi
+
+    assert Ci(oo) == 0
+    assert Ci(-oo) == I*pi
+    assert Chi(oo) == oo
+    assert Chi(-oo) == oo
 
     assert mytd(Ci(x), cos(x)/x, x)
     assert mytd(Chi(x), cosh(x)/x, x)
