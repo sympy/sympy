@@ -1,9 +1,10 @@
 from sympy import (
-    symbols, expand, expand_func, erf, erfc, nan, oo, Float, conjugate,
-    sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
-    polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
-    log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
-    Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc, erfi)
+    symbols, expand, expand_func, erf, erfc, erfi, nan, oo,
+    Float, conjugate, sqrt, sin, cos, pi, re, im, Abs, O,
+    factorial, exp_polar, polar_lift, Symbol, I, integrate,
+    exp, uppergamma, expint, log, loggamma, limit, hyper,
+    meijerg, gamma, S, Shi, Chi, Si, Ci, E1, Ei, sin, cos,
+    sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -41,6 +42,7 @@ def test_erf():
 
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
     assert erf(z).rewrite('erfc') == S.One - erfc(z)
+    assert erf(z).rewrite('erfi') == -I*erfi(I*z)
 
     assert limit(exp(x)*exp(x**2)*(erf(x + 1/exp(x)) - erf(x)), x, oo) == \
         2/sqrt(pi)
@@ -99,6 +101,7 @@ def test_erfc():
     assert erfc(1/x).as_leading_term(x) == erfc(1/x)
 
     assert erfc(z).rewrite('erf') == 1 - erf(z)
+    assert erfc(z).rewrite('erfi') == 1 + I*erfi(I*z)
 
     assert erfc(x).as_real_imag() == \
         ((erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
@@ -129,8 +132,6 @@ def test_erfi():
     assert erfi(-I*oo) == -I
 
     assert erfi(-x) == -erfi(x)
-    assert erfi(I*x) == I*erfi(x)
-    assert erfi(-I*x) == -I*erfi(x)
 
     assert erfi(I).is_real is False
     assert erfi(0).is_real is True

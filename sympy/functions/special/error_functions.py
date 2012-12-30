@@ -16,30 +16,13 @@ from sympy.functions.special.hyper import hyper, meijerg
 
 
 class erf(Function):
-    """
+    r"""
     The Gauss error function.
 
     This function is defined as:
 
-    :math:`\\mathrm{erf}(x)=\\frac{2}{\\sqrt{\\pi}} \\int_0^x e^{-t^2} \\, \\mathrm{d}x`
-
     in Latex::
-    $erf(x) = \frac{2}{\sqrt{\pi}}*\int_0^x e^{-x^2}dx$
-
-    Or, in ASCII::
-
-                        x
-                    /
-                   |
-                   |     2
-                   |   -t
-    erf(x) =    2* |  e    dt
-                   |
-                  /
-                  0
-                -------------
-                      ____
-                    \/ pi
+    erf(x) = \frac{2}{\sqrt{\pi}}\int_0^x e^{-x^2}dx
 
     Examples
     ========
@@ -151,6 +134,8 @@ class erf(Function):
     def _eval_rewrite_as_erfc(self, z):
         return S.One - erfc(z)
 
+    def _eval_rewrite_as_erfi(self, z):
+        return -I*erfi(I*z)
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -159,7 +144,7 @@ class erf(Function):
         else:
             return self.func(arg)
 
-    def _as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -167,13 +152,9 @@ class erf(Function):
             else:
                 return (self, S.Zero)
         if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+            x, y = self.args[0].expand(deep, **hints).as_real_imag()
         else:
-            re, im = self.args[0].as_real_imag()
-        return (re, im)
-
-    def as_real_imag(self, deep=True, **hints):
-        x, y = self._as_real_imag(deep=deep, **hints)
+            x, y = self.args[0].as_real_imag()
         sq = -y**2/x**2
         re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
@@ -181,27 +162,13 @@ class erf(Function):
         return (re, im)
 
 class erfc(Function):
-    """
+    r"""
         Complementary Error Function:
 
       The function is defined as
 
-      in latex::
-      $erfc(x) = \frac{2}{\sqrt{\pi}}*\int_x^\infty e^{-x^2}dx$
+      erfc(x) = \frac{2}{\sqrt{\pi}}\int_x^\infty e^{-x^2}dx
 
-      in ASCII::
-                      oo
-                    /
-                   |
-                   |     2
-                   |   -t
-     erfc(x) =  2* |  e    dt
-                   |
-                  /
-                  x
-                -------------
-                      ____
-                    \/ pi
 
     Examples
     ========
@@ -272,8 +239,6 @@ class erfc(Function):
                 return S.NaN
             elif arg is S.Infinity:
                 return S.Zero
-            elif arg is S.NegativeInfinity:
-                return S(2)
             elif arg is S.Zero:
                 return S.One
 
@@ -281,19 +246,9 @@ class erfc(Function):
         if t is S.Infinity or t is S.NegativeInfinity:
             return -arg
 
-                # Try to pull out factors of -1
-        prefact = S.One
-        newarg = arg
-        changed = False
-
-        nz = newarg.extract_multiplicatively(-1)
-        if nz is not None:
-            prefact = -prefact
-            newarg = nz
-            changed = True
-
-        if changed:
-            return S(2) + prefact*cls(newarg)
+        # Try to pull out factors of -1
+        if arg.could_extract_minus_sign():
+            return S(2) - cls(-arg)
 
 
     @staticmethod
@@ -320,6 +275,9 @@ class erfc(Function):
     def _eval_rewrite_as_erf(self, z):
         return S.One - erf(z)
 
+    def _eval_rewrite_as_erfi(self, z):
+        return S.One + I*erfi(I*z)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -328,7 +286,7 @@ class erfc(Function):
         else:
             return self.func(arg)
 
-    def _as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -336,13 +294,9 @@ class erfc(Function):
             else:
                 return (self, S.Zero)
         if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+            x, y = self.args[0].expand(deep, **hints).as_real_imag()
         else:
-            re, im = self.args[0].as_real_imag()
-        return (re, im)
-
-    def as_real_imag(self, deep=True, **hints):
-        x, y = self._as_real_imag(deep=deep, **hints)
+            x, y = self.args[0].as_real_imag()
         sq = -y**2/x**2
         re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
@@ -350,28 +304,13 @@ class erfc(Function):
         return (re, im)
 
 class erfi(Function):
-    """
-    Imaginative error function:
+    r"""
+    Imaginary error function:
 
     The function erfi is defined as
 
     in Latex:
-    $erfi(x) = \frac{2}{\sqrt{\pi}}*\int_0^\x e^{x^2}dx$
-
-    Or, in ASCII::
-
-                        x
-                    /
-                   |
-                   |    2
-                   |   t
-    erfi(x) =   2* |  e   dt
-                   |
-                  /
-                  0
-                -------------
-                      ____
-                    \/ pi
+    erfi(x) = \frac{2}{\sqrt{\pi}}\int_0^\x e^{x^2}dx
 
     Examples
     ========
@@ -397,11 +336,6 @@ class erfi(Function):
     >>> erfi(-z)
     -erfi(z)
 
-    >>> erfi(I*z)
-    I*erfi(z)
-
-    The error function obeys the mirror symmetry:
-
     >>> from sympy import conjugate
     >>> conjugate(erfi(z))
     erfi(conjugate(z))
@@ -419,7 +353,7 @@ class erfi(Function):
     18.5648024145755525987042919132
 
     >>> erfi(-2*I).evalf(30)
-    -18.5648024145755525987042919132*I
+    -0.995322265018952734162069256367*I
 
     References
     ==========
@@ -427,7 +361,9 @@ class erfi(Function):
     .. [1] http://en.wikipedia.org/wiki/Error_function
     .. [2] http://mathworld.wolfram.com/Erfi.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
+
     """
+
     nargs = 1
 
     def fdiff(self, argindex=1):
@@ -441,36 +377,18 @@ class erfi(Function):
         if z.is_Number:
             if z is S.NaN:
                 return S.NaN
-            if z is S.Zero:
+            elif z is S.Zero:
                 return S.Zero
-            if z is S.Infinity:
+            elif z is S.Infinity:
                 return S.Infinity
-            if z is S.NegativeInfinity:
-                return S.NegativeInfinity
 
-        # Try to pull out factors of -1 and I
-        prefact = S.One
-        newarg = z
-        changed = False
+        # Try to pull out factors of -1
+        if z.could_extract_minus_sign():
+            return -cls(-z)
 
-        nz = newarg.extract_multiplicatively(I)
+        nz = z.extract_multiplicatively(I)
         if nz is S.Infinity:
             return I
-        elif nz is S.NegativeInfinity:
-            return -I
-        elif nz is not None:
-            prefact = I*prefact
-            newarg = nz
-            changed = True
-
-        nz = newarg.extract_multiplicatively(-1)
-        if nz is not None:
-            prefact = -prefact
-            newarg = nz
-            changed = True
-
-        if changed:
-            return prefact*cls(newarg)
 
     @staticmethod
     @cacheit
@@ -497,7 +415,7 @@ class erfi(Function):
     def _eval_rewrite_as_erfc(self, z):
         return I*erfc(I*z) - I
 
-    def _as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -505,13 +423,9 @@ class erfi(Function):
             else:
                 return (self, S.Zero)
         if deep:
-            re, im = self.args[0].expand(deep, **hints).as_real_imag()
+            x, y = self.args[0].expand(deep, **hints).as_real_imag()
         else:
-            re, im = self.args[0].as_real_imag()
-        return (re, im)
-
-    def as_real_imag(self, deep=True, **hints):
-        x, y = self._as_real_imag(deep=deep, **hints)
+            x, y = self.args[0].as_real_imag()
         sq = -y**2/x**2
         re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
