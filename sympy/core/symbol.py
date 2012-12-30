@@ -361,7 +361,7 @@ def symbols(names, **args):
 
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)
-        
+
         for name in names:
             if not name:
                 raise ValueError('missing symbol')
