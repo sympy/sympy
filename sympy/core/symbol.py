@@ -251,6 +251,7 @@ class Wild(Symbol):
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
 _re_var_scope = re.compile(r"^(.):(.)$")
+_re_var_ranged_scope = re.compile(r"^([^\W\d_]*?)(.):(.)$")
 _re_var_split = re.compile(r"\s*,\s*|\s+")
 
 
@@ -360,7 +361,7 @@ def symbols(names, **args):
 
         cls = args.pop('cls', Symbol)
         seq = args.pop('seq', as_seq)
-
+        
         for name in names:
             if not name:
                 raise ValueError('missing symbol')
@@ -398,6 +399,20 @@ def symbols(names, **args):
 
                 seq = True
                 continue
+
+            match = _re_var_ranged_scope.match(name)
+
+            if match is not None:
+                name, start, end = match.groups()
+
+                for subname in xrange(ord(start), ord(end) + 1):
+                    symbol = cls(name + chr(subname), **args)
+                    result.append(symbol)
+
+                seq = True
+                continue
+
+
 
             raise ValueError(
                 "'%s' is not a valid symbol range specification" % name)
