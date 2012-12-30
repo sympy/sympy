@@ -50,6 +50,12 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: Shi
 .. autoclass:: Chi
 
+.. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
+   :members:
+
+.. autoclass:: fresnels
+.. autoclass:: fresnelc
+
 Bessel Type Functions
 ---------------------
 
