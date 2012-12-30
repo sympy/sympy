@@ -1014,7 +1014,7 @@ def _nT(n, k):
     return sum(_nT(n - k, j) for j in range(min(k, n - k) + 1))
 
 
-def nT(n, k=None, _last=None):
+def nT(n, k=None):
     """Return the number of k-sized partitions of n items. If n is an integer
     it is interpreted as n identical items; n can also be entered as
     a multiset, string or sequence. To indicate n different items, pass
@@ -1065,7 +1065,7 @@ def nT(n, k=None, _last=None):
     * http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
 
     """
-    from sympy.utilities.iterables import partitions
+    from sympy.utilities.iterables import multiset_partitions
 
     if type(n) is int:
         # all the same
@@ -1107,72 +1107,12 @@ def nT(n, k=None, _last=None):
                 return stirling(N, k)
         if k < 0:
             return sum(nT(n, k) for k in range(1, -k + 1))
-        nfull = _expand(n[_M])  # TODO put this in condensed form and cache _pcount
+        # TODO is there a faster way than just smartly generating the
+        # partitions?
         tot = 0
-        for p in partitions(N, m=k, size=True):
-            s, p = p
-            if s == k:
-                tot += _pcount(nfull, p.copy())  # TODO send tuple(p.items()) when _pcount is cached
+        for p in multiset_partitions(
+                [i for i, j in enumerate(n[_M]) for ii in range(j)]):
+            tot += len(p) == k
         return tot
     else:
         return nT(_data(n), k)
-
-
-def _expand(m):
-    return [i for i, j in enumerate(m) for ii in range(j)]
-
-
-def _contract(n):
-    from sympy.utilities.iterables import multiset
-    return tuple(sorted(multiset(n).values()))
-
-
-def _pcount(n, p):
-    return __pcount(_contract(n), tuple(p.items()))
-
-
-@cacheit
-def __pcount(n, p):
-    from sympy.utilities.iterables import multiset_combinations
-    n, p = _expand(n), dict(p)
-    m = max(p)
-    r = p.pop(m)
-    if (m == 1 or r == 1) and r*m == len(n):
-        return 1
-    tot = 0
-    if r == 1:
-        for c in multiset_combinations(n, m):
-            newn = []
-            for ni in n:
-                if ni in c:
-                    c.remove(ni)
-                    continue
-                newn.append(ni)
-            tot += _pcount(newn, p.copy())
-    else:
-        for c in multiset_combinations(n, m*r):
-            count = _split(_contract(c), m, r)
-            newn = []
-            for ni in n:
-                if ni in c:
-                    c.remove(ni)
-                    continue
-                newn.append(ni)
-            if p:
-                tot += _pcount(newn, p.copy())*count
-            else:
-                tot += count
-    return tot
-
-
-@cacheit
-def _split(n, take, m):
-    from sympy.utilities.iterables import multiset_combinations, flatten, subsets, multiset
-
-    n = _expand(n)
-    tot = 0
-    ok = multiset(n)
-    for cc in subsets(list(multiset_combinations(n, take)), m, repetition=True):
-        if multiset(flatten(cc)) == ok:
-            tot += 1
-    return tot
