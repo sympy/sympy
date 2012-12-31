@@ -84,7 +84,7 @@ def add_formulae(formulae):
 
     from sympy import (
         exp, sqrt, root, cosh, log, asin, atan, I, cos, atanh, besseli,
-        gamma, lowergamma, uppergamma, erf, pi, sin, besselj, Ei,
+        gamma, lowergamma, uppergamma, expint, erf, pi, sin, besselj, Ei,
         EulerGamma, Shi, sinh, cosh, Chi, diag, Matrix,
         fresnels, fresnelc)
     from sympy.functions.special.hyper import (HyperRep_atanh,
@@ -336,10 +336,22 @@ def add_formulae(formulae):
     # This is rule: http://functions.wolfram.com/07.31.03.0134.01
     # Initial reason to add it was a nice solution for
     # integrate(erf(a*z)/z**2, z) and same for erfc and erfi.
-    add([1, 1, a], [2, 2, a+1], (a/(z*(a-1)**2)) *
-        (1 - (-z)**(1-a) * (gamma(a) - uppergamma(a,-z))
-         - (a-1) * (EulerGamma + uppergamma(0,-z) + log(-z))
-         - exp(z)))
+    # Basic rule
+    # add([1, 1, a], [2, 2, a+1], (a/(z*(a-1)**2)) *
+    #     (1 - (-z)**(1-a) * (gamma(a) - uppergamma(a,-z))
+    #      - (a-1) * (EulerGamma + uppergamma(0,-z) + log(-z))
+    #      - exp(z)))
+    # Manually tuned rule
+    addb([1, 1, a], [2, 2, a+1],
+         Matrix([a*(log(-z) + expint(1, -z) + EulerGamma)/(z*(a**2 - 2*a + 1)),
+                 a*(-z)**(-a)*(gamma(a) - uppergamma(a, -z))/(a - 1)**2,
+                 a*exp(z)/(a**2 - 2*a + 1),
+                 a/(z*(a**2 - 2*a + 1))]),
+         Matrix([[1-a],[1],[-1/z],[1]]),
+         Matrix([[-1,0,-1/z,1],
+                 [0,-a,1,0],
+                 [0,0,z,0],
+                 [0,0,0,-1]]))
 
 
 def add_meijerg_formulae(formulae):
