@@ -80,4 +80,3 @@ def test_trivial():
 @XFAIL
 def test_trivial_bugs():
     assert findroot(lambda x, y: x + y, (1, -1)) == (1, -1)
-

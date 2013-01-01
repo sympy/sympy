@@ -156,4 +156,3 @@ if __name__ == '__main__':
         r.write_results(show_missing=True, summary=True, coverdir="/tmp")
     else:
         testit(importdir, testdir)
-

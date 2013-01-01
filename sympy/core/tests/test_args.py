@@ -1173,6 +1173,22 @@ def test_sympy__functions__special__error_functions__erfi():
     from sympy.functions.special.error_functions import erfi
     assert _test_args(erfi(2))
 
+def test_sympy__functions__special__error_functions__erf2():
+    from sympy.functions.special.error_functions import erf2
+    assert _test_args(erf2(2, 3))
+
+def test_sympy__functions__special__error_functions__Ierf():
+    from sympy.functions.special.error_functions import Ierf
+    assert _test_args(Ierf(2))
+
+def test_sympy__functions__special__error_functions__Ierfc():
+    from sympy.functions.special.error_functions import Ierfc
+    assert _test_args(Ierfc(2))
+
+def test_sympy__functions__special__error_functions__Ierf2():
+    from sympy.functions.special.error_functions import Ierf2
+    assert _test_args(Ierf2(2, 3))
+
 @SKIP("abstract class")
 def test_sympy__functions__special__error_functions__FresnelIntegral():
     pass
