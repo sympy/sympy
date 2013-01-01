@@ -81,7 +81,7 @@ def _create_lookup_table(table):
 
     # Section 8.4.2
     from sympy import (gamma, pi, cos, exp, re, sin, sqrt, sinh, cosh,
-                       factorial, log, erf, polar_lift)
+                       factorial, log, erf, erfc, erfi, polar_lift)
     # TODO this needs more polar_lift (c/f entry for exp)
     add(Heaviside(t - b)*(t - b)**(a - 1), [a], [], [], [0], t/b,
         gamma(a)*b**(a - 1), And(b > 0))
@@ -190,9 +190,12 @@ def _create_lookup_table(table):
     add(expint(a, t), [], [a], [a - 1, 0], [], t)
 
     # Section 8.4.14
-    # TODO erfc
     add(erf(t), [1], [], [S(1)/2], [0], t**2, 1/sqrt(pi))
     # TODO exp(-x)*erf(I*x) does not work
+    add(erfc(t), [], [1], [0, S(1)/2], [], t**2, 1/sqrt(pi))
+    # This formula for erfi(z) yields a wrong(?) minus sign
+    #add(erfi(t), [1], [], [S(1)/2], [0], -t**2, I/sqrt(pi))
+    add(erfi(t), [S(1)/2], [], [0], [-S(1)/2], -t**2, t/sqrt(pi))
 
     # Fresnel Integrals
     add(fresnels(t), [1], [], [S(3)/4], [0, S(1)/4], pi**2*t**4/16, S(1)/2)
