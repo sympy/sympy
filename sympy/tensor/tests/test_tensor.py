@@ -474,7 +474,7 @@ def test_add1():
     t2 = A(b,-d0)*t2a
     assert str(t2) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0)'
     t2b = t2 + t1
-    assert str(t2b) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0) + A(b, L_0)*B(a, -L_0)'
+    assert str(t2b) == '2*A(b, L_0)*B(a, -L_0) + A(a, L_0)*A(b, -L_0)'
     S1 = TensorType([Lorentz], sym1)
     p, q, r = S1('p,q,r')
     t = q(d0)*2
@@ -653,10 +653,12 @@ def test_metric_contract1():
 def test_metric_contract1():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
-    a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
+    a, b, c, d, e, L_0 = tensor_indices('a,b,c,d,e,L_0', Lorentz)
     g = Lorentz.metric
     sym1 = tensorsymmetry([1])
+    sym2 = tensorsymmetry([1]*2)
     S1 = TensorType([Lorentz], sym1)
+    S2 = TensorType([Lorentz]*2, sym2)
     p, q = S1('p,q')
 
     t1 = g(a,b)*p(c)*p(-c)
@@ -734,6 +736,11 @@ def test_metric_contract1():
     v = [p(a), q(b), p(c)]
     v1 = tensorlist_contract_metric(v, g(d, e))
     assert v1 == [p(a), q(b), p(c), g(d, e)]
+
+    A = S2('A')
+    t = A(a, b)*p(L_0)*g(-a, -b)
+    t1 = t.contract_metric(g)
+    assert str(t1) == 'A(L_1, -L_1)*p(L_0)' or str(t1) == 'A(-L_1, L_1)*p(L_0)'
 
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_fmt='L')

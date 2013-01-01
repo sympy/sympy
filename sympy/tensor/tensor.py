@@ -548,6 +548,7 @@ class TensExpr(Basic):
                 args1.append(y)
             return TensAdd(*args1)
 
+
 def _tensAdd_collect_terms(args):
     """
     collect TensMul terms differing at most by their coefficient
@@ -668,9 +669,11 @@ class TensAdd(TensExpr):
             obj._args = tuple(args)
             return obj
         args.sort(key=lambda x: (x._components, x._free, x._dum))
-        a = _tensAdd_collect_terms(args)
-        if not a:
+        args = [x.canon_bp() for x in args if x]
+        args = [x for x in args if x]
+        if not args:
             return S.Zero
+        a = _tensAdd_collect_terms(args)
         a = [canon_bp(x) for x in a]
         a = [x for x in a if x]
         if not a:
@@ -714,7 +717,7 @@ class TensAdd(TensExpr):
         if len(args) == 1:
             return args[0]
         t = TensAdd(*args)
-        return t.canon_bp()
+        return canon_bp(t)
 
     def contract_metric(self, g, contract_all=False):
         """
@@ -738,6 +741,10 @@ class TensAdd(TensExpr):
             y = x.substitute_tensor(t1, t2, subst_all)
             args1.append(y)
         return TensAdd(*args1)
+
+    def expand_coeff(self):
+        args = [_tensor_expand_coeff(x) for x in self.args]
+        return TensAdd(args)
 
     def _pretty(self):
         a = []
@@ -836,6 +843,7 @@ class TensMul(TensExpr):
                 # check consistency and update free
                 if is_contr:
                     if contr:
+                        print 'ERR indices=', indices
                         raise ValueError('two equal contravariant indices in slots %d and %d' %(pos, i))
                     else:
                         free[pos] = False
@@ -845,6 +853,7 @@ class TensMul(TensExpr):
                         free[pos] = False
                         free[i] = False
                     else:
+                        print 'ERR indices=', indices
                         raise ValueError('two equal covariant indices in slots %d and %d' %(pos, i))
                 if contr:
                     dum.append((i, pos, 0, 0))
@@ -934,6 +943,8 @@ class TensMul(TensExpr):
         indices = self.get_indices()
         pos = 0
         components = self._components
+        if not components:
+            return [TensMul(self._coeff, [], [], [])]
         res = []
         for t in self._components:
             t1 = t(*indices[pos:pos + t.rank])
@@ -1329,6 +1340,9 @@ class TensMul(TensExpr):
         return self._contract(g, True, contract_all)
 
     def substitute_tensor(self, t1, t2, subst_all=False):
+        """
+        Return tensor obtained substituting ``t1`` with ``t2`` in ``self``.
+        """
         # FIXME fix the check
         #assert sorted(t1._free) == sorted(t2._free)
         components = self._components
@@ -1350,23 +1364,42 @@ class TensMul(TensExpr):
         index_tuples = []
         for j in range(len(free0)):
             index_tuples.append((free1[j][0], free0[j][0]))
-        t2 = t2.substitute_indices(*index_tuples)
-        a1 = a[:i] + [t2] + a[i + 1:]
+        t2s = t2.substitute_indices(*index_tuples)
+        a1 = a[:i] + [t2s] + a[i + 1:]
         t = tensor_mul(*a1)*ct
+        if subst_all:
+            return t.substitute_tensor(t1, t2, subst_all)
         return t
 
-    def substitute_tensors(self, i, j, t):
+    def substitute_tensors(self, i, j, t, a=None):
         """
         substitute tensors in positions ``i, j`` with tensor ``t``
         """
-        a = self.split()
+        if not a:
+            a = self.split()
         assert i < j
         ct = self._coeff if i == 0 else S.One
-        a = self.split()
+        #a = self.split()
         a1 = a[:i] + a[i + 1:j] + a[j + 1:] + [t]
         t = tensor_mul(*a1)*ct
         return t
 
+    def _as_coeff_mul(self):
+        a = self.split()
+        coeff = a[0]._coeff()
+        t0 = TensMul(S.One, a[0]._components, a[0]._free, a[0]._dum)
+        a[0] = t0
+        t1 = tensor_mul(*a)
+        return coeff, t1
+
+    def expand_coeff(self):
+        a = self.split()
+        self._coeff = self._coeff.expand()
+        return self
+
+    def expand_coeff(self):
+        coeff, t = self._as_coeff_mul()
+        return coeff.expand()*t
 
     def _pretty(self):
         if self._components == []:
@@ -1410,6 +1443,12 @@ def tensor_mul(*a):
     for tx in a[1:]:
         t = t*tx
     return t
+
+def _tensor_expand_coeff(p):
+    if not is_Tensor(p):
+        return p
+    return p.expand_coeff()
+
 
 def tensorlist_contract_metric(a, tg):
     """
