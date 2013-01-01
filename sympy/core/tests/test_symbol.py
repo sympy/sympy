@@ -330,6 +330,14 @@ def test_symbols():
     assert symbols('a:d,x:z') == (a, b, c, d, x, y, z)
     assert symbols(('a:d', 'x:z')) == ((a, b, c, d), (x, y, z))
 
+    aa = Symbol('aa')
+    ab = Symbol('ab')
+    ac = Symbol('ac')
+    ad = Symbol('ad')
+
+    assert symbols('aa:d') == (aa, ab, ac, ad)
+    assert symbols('aa:d,x:z') == (aa, ab, ac, ad, x, y, z)
+    assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
 
 def test_call():
     f = Symbol('f')
