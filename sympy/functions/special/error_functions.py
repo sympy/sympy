@@ -537,32 +537,32 @@ class erf2(Function):
     def _eval_rewrite_as_erfi(self, x, y):
         return I*(erfi(I*x)-erfi(I*y))
 
-class Ierf(Function):
+class erfinv(Function):
     r"""
     Imaginary Error Function:
 
-    The Ierf function is defined as:
+    The erfinv function is defined as:
 
-    :math:`\mathrm{erf}(x) = y \Rightarrow \mathrm{Ierf}(y)= x`
+    :math:`\mathrm{erf}(x) = y \Rightarrow \mathrm{erfinv}(y)= x`
 
     Examples
     ========
 
-    >>> from sympy import I, oo, Ierf
+    >>> from sympy import I, oo, erfinv
     >>> from sympy.abc import x, y
 
     Several special values are known:
 
-    >>> Ierf(0)
+    >>> erfinv(0)
     0
-    >>> Ierf(1)
+    >>> erfinv(1)
     oo
 
     Differentiation with respect to z is supported:
 
     >>> from sympy import diff
-    >>> diff(Ierf(x), x)
-    sqrt(pi)*exp(Ierf(x)**2)/2
+    >>> diff(erfinv(x), x)
+    sqrt(pi)*exp(erfinv(x)**2)/2
 
     References:
 
@@ -594,36 +594,36 @@ class Ierf(Function):
        return None            # unless there is some other _eval method is
                                # present It's just for time being
 
-    def _eval_rewrite_as_Ierfc(self, z):
-       return Ierfc(1-z)
+    def _eval_rewrite_as_erfcinv(self, z):
+       return erfcinv(1-z)
 
 
-class Ierfc (Function):
+class erfcinv (Function):
     r"""
     Inverse Complementary Error Function:
 
-    The Ierfc function is defined as:
+    The erfcinv function is defined as:
 
-    :math:`\mathrm{erfc}(x) = y \Rightarrow \mathrm{Ierfc}(y)= x`
+    :math:`\mathrm{erfc}(x) = y \Rightarrow \mathrm{erfcinv}(y)= x`
 
     Examples
     ========
 
-    >>> from sympy import I, oo, Ierfc
+    >>> from sympy import I, oo, erfcinv
     >>> from sympy.abc import x, y
 
     Several special values are known:
 
-    >>> Ierfc(1)
+    >>> erfcinv(1)
     0
-    >>> Ierfc(0)
+    >>> erfcinv(0)
     oo
 
     Differentiation with respect to z is supported:
 
     >>> from sympy import diff
-    >>> diff(Ierfc(x), x)
-    -sqrt(pi)*exp(Ierfc(x)**2)/2
+    >>> diff(erfcinv(x), x)
+    -sqrt(pi)*exp(erfcinv(x)**2)/2
 
     References:
 
@@ -654,43 +654,43 @@ class Ierfc (Function):
         return None            # unless there is some other _eval method is
                                # present It's just for time being
 
-    def _eval_rewrite_as_Ierf(self, z):
-        return Ierf(1-z)
+    def _eval_rewrite_as_erfinv(self, z):
+        return erfinv(1-z)
 
-class Ierf2(Function):
+class erf2inv(Function):
     r"""
     Bivariate Inverse error function:
 
-    The Ierf2 function is defined as:
+    The erf2inv function is defined as:
 
-    :math:`\mathrm{erf2}(x, w) = y \Rightarrow \mathrm{Ierf2}(x, y)= w`
+    :math:`\mathrm{erf2}(x, w) = y \Rightarrow \mathrm{erf2inv}(x, y)= w`
 
     Examples
     ========
 
-    >>> from sympy import I, oo, Ierf2, Ierf, Ierfc
+    >>> from sympy import I, oo, erf2inv, erfinv, erfcinv
     >>> from sympy.abc import x, y
 
     Several special values are known:
 
-    >>> Ierf2(0, 0)
+    >>> erf2inv(0, 0)
     0
-    >>> Ierf2(1, 0)
+    >>> erf2inv(1, 0)
     1
-    >>> Ierf2(0, 1)
+    >>> erf2inv(0, 1)
     oo
-    >>> Ierf2(0, y)
-    Ierf(y)
-    >>> Ierf2(oo, y)
-    Ierfc(-y)
+    >>> erf2inv(0, y)
+    erfinv(y)
+    >>> erf2inv(oo, y)
+    erfcinv(-y)
 
     Differentiation with respect to z is supported:
 
     >>> from sympy import diff
-    >>> diff(Ierf2(x, y), x)
-    exp(-x**2 + Ierf2(x, y)**2)
-    >>> diff(Ierf2(x, y), y)
-    sqrt(pi)*exp(Ierf2(x, y)**2)/2
+    >>> diff(erf2inv(x, y), x)
+    exp(-x**2 + erf2inv(x, y)**2)
+    >>> diff(erf2inv(x, y), y)
+    sqrt(pi)*exp(erf2inv(x, y)**2)/2
 
     References:
 
@@ -717,9 +717,9 @@ class Ierf2(Function):
         elif ((y is S.Zero) and (x is S.One)):
             return S.One
         elif ((x is S.Zero) and (not y.is_Number)):
-            return Ierf(y)
+            return erfinv(y)
         elif ((x is S.Infinity) and (not y.is_Number)):
-            return Ierfc(-y)
+            return erfcinv(-y)
 
 
 ###############################################################################
