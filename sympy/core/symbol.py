@@ -392,7 +392,6 @@ def symbols(names, **args):
             if match is not None:
                 name, start, end, suffix = match.groups()
                 letters = list(string.letters)
- 
                 start = letters.index(start)
                 end = letters.index(end)
 
