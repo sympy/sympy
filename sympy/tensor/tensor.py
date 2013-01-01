@@ -668,11 +668,11 @@ class TensAdd(TensExpr):
             obj._args = tuple(args)
             return obj
         args.sort(key=lambda x: (x._components, x._free, x._dum))
-        a = _tensAdd_collect_terms(args)
-        if not a:
+        args = [x.canon_bp() for x in args if x]
+        args = [x for x in args if x]
+        if not args:
             return S.Zero
-        a = [canon_bp(x) for x in a]
-        a = [x for x in a if x]
+        a = _tensAdd_collect_terms(args)
         if not a:
             return S.Zero
         if len(a) == 1:
@@ -714,7 +714,7 @@ class TensAdd(TensExpr):
         if len(args) == 1:
             return args[0]
         t = TensAdd(*args)
-        return t.canon_bp()
+        return canon_bp(t)
 
     def contract_metric(self, g, contract_all=False):
         """
@@ -926,6 +926,8 @@ class TensMul(TensExpr):
         indices = self.get_indices()
         pos = 0
         components = self._components
+        if not components:
+            return [TensMul(self._coeff, [], [], [])]
         res = []
         for t in self._components:
             t1 = t(*indices[pos:pos + t.rank])

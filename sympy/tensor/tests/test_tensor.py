@@ -474,7 +474,7 @@ def test_add1():
     t2 = A(b,-d0)*t2a
     assert str(t2) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0)'
     t2b = t2 + t1
-    assert str(t2b) == 'A(a, L_0)*A(b, -L_0) + A(b, L_0)*B(a, -L_0) + A(b, L_0)*B(a, -L_0)'
+    assert str(t2b) == '2*A(b, L_0)*B(a, -L_0) + A(a, L_0)*A(b, -L_0)'
     S1 = TensorType([Lorentz], sym1)
     p, q, r = S1('p,q,r')
     t = q(d0)*2
