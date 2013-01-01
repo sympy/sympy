@@ -674,8 +674,6 @@ class TensAdd(TensExpr):
         if not args:
             return S.Zero
         a = _tensAdd_collect_terms(args)
-        a = [canon_bp(x) for x in a]
-        a = [x for x in a if x]
         if not a:
             return S.Zero
         if len(a) == 1:
