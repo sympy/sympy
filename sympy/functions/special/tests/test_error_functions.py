@@ -1,6 +1,6 @@
 from sympy import (
     symbols, expand, expand_func, erf, erfc, erfi, erf2,
-    Ierf, Ierfc, Ierf2, nan, oo, Float, conjugate, sqrt,
+    erfinv, erfcinv, erf2inv, nan, oo, Float, conjugate, sqrt,
     sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
     polar_lift, Symbol, I, integrate, exp, uppergamma,
     expint, log, loggamma, limit, hyper, meijerg, gamma,
@@ -184,33 +184,33 @@ def test_erf2():
 
     raises(ArgumentIndexError, lambda: erfi(x).fdiff(3))
 
-def test_Ierf():
-    assert Ierf(0) == 0
-    assert Ierf(1) == S.Infinity
-    assert Ierf(nan) == S.NaN
+def test_erfinv():
+    assert erfinv(0) == 0
+    assert erfinv(1) == S.Infinity
+    assert erfinv(nan) == S.NaN
 
-    assert Ierf(x).diff() == sqrt(pi)*exp(Ierf(x)**2)/2
+    assert erfinv(x).diff() == sqrt(pi)*exp(erfinv(x)**2)/2
 
-    assert Ierf(z).rewrite('Ierfc') == Ierfc(1-z)
+    assert erfinv(z).rewrite('erfcinv') == erfcinv(1-z)
 
-def test_Ierfc():
-    assert Ierfc(1) == 0
-    assert Ierfc(0) == S.Infinity
-    assert Ierfc(nan) == S.NaN
+def test_erfcinv():
+    assert erfcinv(1) == 0
+    assert erfcinv(0) == S.Infinity
+    assert erfcinv(nan) == S.NaN
 
-    assert Ierfc(x).diff() == -sqrt(pi)*exp(Ierfc(x)**2)/2
+    assert erfcinv(x).diff() == -sqrt(pi)*exp(erfcinv(x)**2)/2
 
-    assert Ierfc(z).rewrite('Ierf') == Ierf(1-z)
+    assert erfcinv(z).rewrite('erfinv') == erfinv(1-z)
 
-def test_Ierf2():
-    assert Ierf2(0, 0) == S.Zero
-    assert Ierf2(0, 1) == S.Infinity
-    assert Ierf2(1, 0) == S.One
-    assert Ierf2(0, y) == Ierf(y)
-    assert Ierf2(oo,y) == Ierfc(-y)
+def test_erf2inv():
+    assert erf2inv(0, 0) == S.Zero
+    assert erf2inv(0, 1) == S.Infinity
+    assert erf2inv(1, 0) == S.One
+    assert erf2inv(0, y) == erfinv(y)
+    assert erf2inv(oo,y) == erfcinv(-y)
 
-    assert Ierf2(x, y).diff(x) == exp(-x**2 + Ierf2(x, y)**2)
-    assert Ierf2(x, y).diff(y) == sqrt(pi)*exp(Ierf2(x, y)**2)/2
+    assert erf2inv(x, y).diff(x) == exp(-x**2 + erf2inv(x, y)**2)
+    assert erf2inv(x, y).diff(y) == sqrt(pi)*exp(erf2inv(x, y)**2)/2
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
 # branch, hence take x in the lower half plane (d=0).

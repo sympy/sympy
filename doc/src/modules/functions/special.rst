@@ -56,9 +56,9 @@ Error Functions
 .. autoclass:: sympy.functions.special.error_functions.erfc
 .. autoclass:: sympy.functions.special.error_functions.erfi
 .. autoclass:: sympy.functions.special.error_functions.erf2
-.. autoclass:: sympy.functions.special.error_functions.Ierf
-.. autoclass:: sympy.functions.special.error_functions.Ierfc
-.. autoclass:: sympy.functions.special.error_functions.Ierf2
+.. autoclass:: sympy.functions.special.error_functions.erfinv
+.. autoclass:: sympy.functions.special.error_functions.erfcinv
+.. autoclass:: sympy.functions.special.error_functions.erf2inv
 
 Bessel Type Functions
 ---------------------
