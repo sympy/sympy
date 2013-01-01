@@ -41,7 +41,6 @@ Special Cases of the Incomplete Gamma Functions
 -----------------------------------------------
 .. module:: sympy.functions.special.error_functions
 
-.. autoclass:: erf
 .. autoclass:: Ei
 .. autoclass:: expint
 .. autofunction:: E1
@@ -49,6 +48,17 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: Ci
 .. autoclass:: Shi
 .. autoclass:: Chi
+
+Error Functions
+---------------
+
+.. autoclass:: sympy.functions.special.error_functions.erf
+.. autoclass:: sympy.functions.special.error_functions.erfc
+.. autoclass:: sympy.functions.special.error_functions.erfi
+.. autoclass:: sympy.functions.special.error_functions.erf2
+.. autoclass:: sympy.functions.special.error_functions.Ierf
+.. autoclass:: sympy.functions.special.error_functions.Ierfc
+.. autoclass:: sympy.functions.special.error_functions.Ierf2
 
 Bessel Type Functions
 ---------------------

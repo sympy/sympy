@@ -21,8 +21,7 @@ class erf(Function):
 
     This function is defined as:
 
-    in Latex::
-    erf(x) = \frac{2}{\sqrt{\pi}}\int_0^x e^{-x^2}dx
+    :math:`\mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t`
 
     Examples
     ========
@@ -136,6 +135,7 @@ class erf(Function):
 
     def _eval_rewrite_as_erfi(self, z):
         return -I*erfi(I*z)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -155,20 +155,20 @@ class erf(Function):
             x, y = self.args[0].expand(deep, **hints).as_real_imag()
         else:
             x, y = self.args[0].as_real_imag()
+
         sq = -y**2/x**2
         re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
-                self.func(x + x*sqrt(sq)))
+                    self.func(x + x*sqrt(sq)))
         return (re, im)
 
 class erfc(Function):
     r"""
-        Complementary Error Function:
+    Complementary Error Function:
 
-      The function is defined as
+    The function is defined as
 
-      erfc(x) = \frac{2}{\sqrt{\pi}}\int_x^\infty e^{-x^2}dx
-
+    :math:`\mathrm{erfc}(x) = \frac{2}{\sqrt{\pi}} \int_x^\infty e^{-t^2} \mathrm{d}t`
 
     Examples
     ========
@@ -297,10 +297,11 @@ class erfc(Function):
             x, y = self.args[0].expand(deep, **hints).as_real_imag()
         else:
             x, y = self.args[0].as_real_imag()
+
         sq = -y**2/x**2
         re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
-                self.func(x + x*sqrt(sq)))
+                    self.func(x + x*sqrt(sq)))
         return (re, im)
 
 class erfi(Function):
@@ -309,8 +310,7 @@ class erfi(Function):
 
     The function erfi is defined as
 
-    in Latex:
-    erfi(x) = \frac{2}{\sqrt{\pi}}\int_0^\x e^{x^2}dx
+    :math:`\mathrm{erfi}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2} \mathrm{d}t`
 
     Examples
     ========
@@ -426,11 +426,301 @@ class erfi(Function):
             x, y = self.args[0].expand(deep, **hints).as_real_imag()
         else:
             x, y = self.args[0].as_real_imag()
+
         sq = -y**2/x**2
         re = S.Half*(self.func(x + x*sqrt(sq)) + self.func(x - x*sqrt(sq)))
         im = x/(2*y) * sqrt(sq) * (self.func(x - x*sqrt(sq)) -
-                self.func(x + x*sqrt(sq)))
+                    self.func(x + x*sqrt(sq)))
         return (re, im)
+
+class erf2(Function):
+    r"""
+    Bivariate error function.
+
+    This function is defined as:
+
+    :math:`\mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, erf2
+    >>> from sympy.abc import x, y
+
+    Several special values are known:
+
+    >>> erf2(0, 0)
+    0
+    >>> erf2(x, x)
+    0
+    >>> erf2(x, oo)
+    -erf(x) + 1
+    >>> erf2(x, -oo)
+    -erf(x) - 1
+    >>> erf2(oo, y)
+    erf(y) - 1
+    >>> erf2(-oo, y)
+    erf(y) + 1
+
+    In general one can pull out factors of -1:
+
+    >>> erf2(-x, -y)
+    -erf2(x, y)
+
+    The error function obeys the mirror symmetry:
+
+    from sympy import conjugate
+    conjugate(erf2(x, y))
+    erf2(conjugate(x), conjugate(y))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(erf2(x, y), x)
+    -2*exp(-x**2)/sqrt(pi)
+    >>> diff(erf2(x, y), y)
+    2*exp(-y**2)/sqrt(pi)
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
+
+    """
+
+    nargs = 2
+
+    def fdiff(self, argindex):
+        x, y = self.args
+        if argindex == 1:
+            return -2*C.exp(-x**2)/sqrt(S.Pi)
+        elif argindex == 2:
+            return 2*C.exp(-y**2)/sqrt(S.Pi)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, x, y):
+        I = S.Infinity
+        N = S.NegativeInfinity
+        O = S.Zero
+        if (x == y) and (x is not S.NaN):
+            return S.Zero
+        elif ((x is I or x is N or x is O) or (y is I or y is N or y is O)):
+            return erf(y) - erf(x)
+        elif x is S.NaN or y is S.NaN:
+            return S.NaN
+
+        #Try to pull out -1 factor
+        sign_x = x.could_extract_minus_sign()
+        sign_y = y.could_extract_minus_sign()
+        if (sign_x and sign_y):
+            return -cls(-x, -y)
+        elif (sign_x or sign_y):
+            return erf(y)-erf(x)
+
+    @staticmethod
+    @cacheit
+
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate(), self.args[1].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real and self.args[1].is_real
+
+    def _eval_rewrite_as_erf(self, x, y):
+        return erf(y) - erf(x)
+
+    def _eval_rewrite_as_erfc(self, x, y):
+        return erfc(x) - erfc(y)
+
+    def _eval_rewrite_as_erfi(self, x, y):
+        return I*(erfi(I*x)-erfi(I*y))
+
+class Ierf(Function):
+    r"""
+    Imaginary Error Function:
+
+    The Ierf function is defined as:
+
+    :math:`\mathrm{erf}(x) = y \Rightarrow \mathrm{Ierf}(y)= x`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, Ierf
+    >>> from sympy.abc import x, y
+
+    Several special values are known:
+
+    >>> Ierf(0)
+    0
+    >>> Ierf(1)
+    oo
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(Ierf(x), x)
+    sqrt(pi)*exp(Ierf(x)**2)/2
+
+    References:
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf/
+
+    """
+    nargs = 1
+    unbranched = True
+
+    def fdiff(self, argindex =1):
+        if argindex == 1:
+            return sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
+        else :
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, z):
+        if z is S.Zero:
+            return S.Zero
+        elif z is S.One:
+            return S.Infinity
+        elif z is S.NaN:
+            return S.NaN
+
+    @staticmethod
+    @cacheit
+
+    def _eval_conjugate(self): # _eval_rewrite method is not working
+       return None            # unless there is some other _eval method is
+                               # present It's just for time being
+
+    def _eval_rewrite_as_Ierfc(self, z):
+       return Ierfc(1-z)
+
+
+class Ierfc (Function):
+    r"""
+    Inverse Complementary Error Function:
+
+    The Ierfc function is defined as:
+
+    :math:`\mathrm{erfc}(x) = y \Rightarrow \mathrm{Ierfc}(y)= x`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, Ierfc
+    >>> from sympy.abc import x, y
+
+    Several special values are known:
+
+    >>> Ierfc(1)
+    0
+    >>> Ierfc(0)
+    oo
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(Ierfc(x), x)
+    -sqrt(pi)*exp(Ierfc(x)**2)/2
+
+    References:
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
+
+    """
+    nargs = 1
+
+    def fdiff(self, argindex =1):
+        if argindex == 1:
+            return -sqrt(S.Pi)*C.exp(self.func(self.args[0])**2)*S.Half
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, z):
+        if z is S.Zero:
+            return S.Infinity
+        elif z is S.One:
+            return S.Zero
+        elif z is S.NaN:
+            return S.NaN
+
+    @staticmethod
+    @cacheit
+
+    def _eval_conjugate(self): # _eval_rewrite method is not working
+        return None            # unless there is some other _eval method is
+                               # present It's just for time being
+
+    def _eval_rewrite_as_Ierf(self, z):
+        return Ierf(1-z)
+
+class Ierf2(Function):
+    r"""
+    Bivariate Inverse error function:
+
+    The Ierf2 function is defined as:
+
+    :math:`\mathrm{erf2}(x, w) = y \Rightarrow \mathrm{Ierf2}(x, y)= w`
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, Ierf2, Ierf, Ierfc
+    >>> from sympy.abc import x, y
+
+    Several special values are known:
+
+    >>> Ierf2(0, 0)
+    0
+    >>> Ierf2(1, 0)
+    1
+    >>> Ierf2(0, 1)
+    oo
+    >>> Ierf2(0, y)
+    Ierf(y)
+    >>> Ierf2(oo, y)
+    Ierfc(-y)
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(Ierf2(x, y), x)
+    exp(-x**2 + Ierf2(x, y)**2)
+    >>> diff(Ierf2(x, y), y)
+    sqrt(pi)*exp(Ierf2(x, y)**2)/2
+
+    References:
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
+
+    """
+    nargs = 2
+
+    def fdiff(self, argindex):
+        x, y = self.args
+        if argindex == 1:
+            return C.exp(self.func(x,y)**2-x**2)
+        elif argindex == 2:
+            return sqrt(S.Pi)*S.Half*C.exp(self.func(x,y)**2)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    @classmethod
+    def eval(cls, x, y):
+        if ((x is S.Zero) and (y is S.Zero)):
+            return S.Zero
+        elif ((x is S.Zero) and (y is S.One)):
+            return S.Infinity
+        elif ((y is S.Zero) and (x is S.One)):
+            return S.One
+        elif ((x is S.Zero) and (not y.is_Number)):
+            return Ierf(y)
+        elif ((x is S.Infinity) and (not y.is_Number)):
+            return Ierfc(-y)
+
 
 ###############################################################################
 #################### EXPONENTIAL INTEGRALS ####################################

@@ -1,10 +1,10 @@
 from sympy import (
-    symbols, expand, expand_func, erf, erfc, erfi, nan, oo,
-    Float, conjugate, sqrt, sin, cos, pi, re, im, Abs, O,
-    factorial, exp_polar, polar_lift, Symbol, I, integrate,
-    exp, uppergamma, expint, log, loggamma, limit, hyper,
-    meijerg, gamma, S, Shi, Chi, Si, Ci, E1, Ei, sin, cos,
-    sinh, cosh, fresnels, fresnelc)
+    symbols, expand, expand_func, erf, erfc, erfi, erf2,
+    Ierf, Ierfc, Ierf2, nan, oo, Float, conjugate, sqrt,
+    sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
+    polar_lift, Symbol, I, integrate, exp, uppergamma,
+    expint, log, loggamma, limit, hyper, meijerg, gamma,
+    S, Shi, Chi, Si, Ci, E1, Ei, sin, cos,sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -154,9 +154,63 @@ def test_erfi_series():
     assert erfi(x).series(x, 0, 7) == 2*x/sqrt(pi) + \
         2*x**3/3/sqrt(pi) + x**5/5/sqrt(pi) + O(x**7)
 
-
 def test_erfi_evalf():
     assert abs( erfi(Float(2.0)) - 18.5648024145756 ) < 1E-13  # XXX
+
+def test_erf2():
+
+    assert erf2(0, 0) == S.Zero
+    assert erf2(x, x) == S.Zero
+    assert erf2(nan, 0) == nan
+
+    assert erf2(-oo,  y) ==  erf(y) + 1
+    assert erf2( oo,  y) ==  erf(y) - 1
+    assert erf2(  x, oo) ==  1 - erf(x)
+    assert erf2(  x,-oo) == -1 - erf(x)
+
+    assert erf2(-x, -y) == -erf2(x,y)
+    assert erf2(-x,  y) == erf(y) + erf(x)
+    assert erf2( x, -y) == -erf(y) - erf(x)
+
+
+    assert erf2(I, 0).is_real is False
+    assert erf2(0, 0).is_real is True
+
+    #assert conjugate(erf2(x, y)) == erf2(conjugate(x), conjugate(y))
+
+    assert erf2(x, y).rewrite('erf')  == erf(y) - erf(x)
+    assert erf2(x, y).rewrite('erfc') == erfc(x) - erfc(y)
+    assert erf2(x, y).rewrite('erfi') == I*(erfi(I*x) - erfi(I*y))
+
+    raises(ArgumentIndexError, lambda: erfi(x).fdiff(3))
+
+def test_Ierf():
+    assert Ierf(0) == 0
+    assert Ierf(1) == S.Infinity
+    assert Ierf(nan) == S.NaN
+
+    assert Ierf(x).diff() == sqrt(pi)*exp(Ierf(x)**2)/2
+
+    assert Ierf(z).rewrite('Ierfc') == Ierfc(1-z)
+
+def test_Ierfc():
+    assert Ierfc(1) == 0
+    assert Ierfc(0) == S.Infinity
+    assert Ierfc(nan) == S.NaN
+
+    assert Ierfc(x).diff() == -sqrt(pi)*exp(Ierfc(x)**2)/2
+
+    assert Ierfc(z).rewrite('Ierf') == Ierf(1-z)
+
+def test_Ierf2():
+    assert Ierf2(0, 0) == S.Zero
+    assert Ierf2(0, 1) == S.Infinity
+    assert Ierf2(1, 0) == S.One
+    assert Ierf2(0, y) == Ierf(y)
+    assert Ierf2(oo,y) == Ierfc(-y)
+
+    assert Ierf2(x, y).diff(x) == exp(-x**2 + Ierf2(x, y)**2)
+    assert Ierf2(x, y).diff(y) == sqrt(pi)*exp(Ierf2(x, y)**2)/2
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
 # branch, hence take x in the lower half plane (d=0).

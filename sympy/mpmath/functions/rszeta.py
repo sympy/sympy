@@ -1429,4 +1429,3 @@ def rs_z(ctx, w, derivative=0):
         return z_half(ctx, w, derivative)
     else:
         return z_offline(ctx, w, derivative)
-
