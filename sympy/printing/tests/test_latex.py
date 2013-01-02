@@ -19,6 +19,7 @@ from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
+from sympy.logic.boolalg import And, Or
 from sympy.core.trace import Tr
 
 x, y, z, t, a, b = symbols('x y z t a b')
@@ -822,3 +823,12 @@ def test_Hadamard():
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
+
+def test_boolean_args_order():
+    syms = symbols('a:f')
+
+    expr = And(*syms)
+    assert latex(expr) == 'a \\wedge b \\wedge c \\wedge d \\wedge e \\wedge f'
+
+    expr = Or(*syms)
+    assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'

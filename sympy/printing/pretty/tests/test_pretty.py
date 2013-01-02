@@ -2680,6 +2680,17 @@ def test_pretty_Boolean():
     assert pretty(expr) == "Or(x, y)"
     assert upretty(expr) == u"x ∨ y"
 
+    syms = symbols('a:f')
+    expr = And(*syms)
+
+    assert pretty(expr) == "And(a, b, c, d, e, f)"
+    assert upretty(expr) == u"a ∧ b ∧ c ∧ d ∧ e ∧ f"
+
+    expr = Or(*syms)
+
+    assert pretty(expr) == "Or(a, b, c, d, e, f)"
+    assert upretty(expr) == u"a ∨ b ∨ c ∨ d ∨ e ∨ f"
+
     expr = Xor(x, y, evaluate=False)
 
     assert pretty(expr) == "Xor(x, y)"
