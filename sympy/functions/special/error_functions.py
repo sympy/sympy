@@ -225,6 +225,7 @@ class erfc(Function):
     """
 
     nargs = 1
+    unbranched = True
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -365,6 +366,7 @@ class erfi(Function):
     """
 
     nargs = 1
+    unbranched = True
 
     def fdiff(self, argindex=1):
         if argindex == 1:
@@ -473,7 +475,7 @@ class erf2(Function):
     conjugate(erf2(x, y))
     erf2(conjugate(x), conjugate(y))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to x, y is supported:
 
     >>> from sympy import diff
     >>> diff(erf2(x, y), x)
@@ -504,12 +506,13 @@ class erf2(Function):
         I = S.Infinity
         N = S.NegativeInfinity
         O = S.Zero
-        if (x == y) and (x is not S.NaN):
+        if x is S.NaN or y is S.NaN:
+            return S.NaN
+        elif (x == y) and (x is not S.NaN):
             return S.Zero
         elif ((x is I or x is N or x is O) or (y is I or y is N or y is O)):
             return erf(y) - erf(x)
-        elif x is S.NaN or y is S.NaN:
-            return S.NaN
+
 
         #Try to pull out -1 factor
         sign_x = x.could_extract_minus_sign()
@@ -518,9 +521,6 @@ class erf2(Function):
             return -cls(-x, -y)
         elif (sign_x or sign_y):
             return erf(y)-erf(x)
-
-    @staticmethod
-    @cacheit
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate(), self.args[1].conjugate())
@@ -549,7 +549,7 @@ class erfinv(Function):
     ========
 
     >>> from sympy import I, oo, erfinv
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
 
     Several special values are known:
 
@@ -558,7 +558,7 @@ class erfinv(Function):
     >>> erfinv(1)
     oo
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to x is supported:
 
     >>> from sympy import diff
     >>> diff(erfinv(x), x)
@@ -569,8 +569,8 @@ class erfinv(Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf/
 
     """
+
     nargs = 1
-    unbranched = True
 
     def fdiff(self, argindex =1):
         if argindex == 1:
@@ -580,19 +580,13 @@ class erfinv(Function):
 
     @classmethod
     def eval(cls, z):
-        if z is S.Zero:
+        if z is S.NaN:
+            return S.NaN
+        elif z is S.Zero:
             return S.Zero
         elif z is S.One:
             return S.Infinity
-        elif z is S.NaN:
-            return S.NaN
 
-    @staticmethod
-    @cacheit
-
-    def _eval_conjugate(self): # _eval_rewrite method is not working
-       return None            # unless there is some other _eval method is
-                               # present It's just for time being
 
     def _eval_rewrite_as_erfcinv(self, z):
        return erfcinv(1-z)
@@ -610,7 +604,7 @@ class erfcinv (Function):
     ========
 
     >>> from sympy import I, oo, erfcinv
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
 
     Several special values are known:
 
@@ -619,7 +613,7 @@ class erfcinv (Function):
     >>> erfcinv(0)
     oo
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to x is supported:
 
     >>> from sympy import diff
     >>> diff(erfcinv(x), x)
@@ -630,6 +624,7 @@ class erfcinv (Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
 
     """
+
     nargs = 1
 
     def fdiff(self, argindex =1):
@@ -640,19 +635,13 @@ class erfcinv (Function):
 
     @classmethod
     def eval(cls, z):
-        if z is S.Zero:
+        if z is S.NaN:
+            return S.NaN
+        elif z is S.Zero:
             return S.Infinity
         elif z is S.One:
             return S.Zero
-        elif z is S.NaN:
-            return S.NaN
 
-    @staticmethod
-    @cacheit
-
-    def _eval_conjugate(self): # _eval_rewrite method is not working
-        return None            # unless there is some other _eval method is
-                               # present It's just for time being
 
     def _eval_rewrite_as_erfinv(self, z):
         return erfinv(1-z)
@@ -684,7 +673,7 @@ class erf2inv(Function):
     >>> erf2inv(oo, y)
     erfcinv(-y)
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to x, y is supported:
 
     >>> from sympy import diff
     >>> diff(erf2inv(x, y), x)
@@ -697,6 +686,7 @@ class erf2inv(Function):
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
 
     """
+
     nargs = 2
 
     def fdiff(self, argindex):
@@ -710,7 +700,9 @@ class erf2inv(Function):
 
     @classmethod
     def eval(cls, x, y):
-        if ((x is S.Zero) and (y is S.Zero)):
+        if x is S.NaN or y is S.NaN:
+            return S.NaN
+        elif ((x is S.Zero) and (y is S.Zero)):
             return S.Zero
         elif ((x is S.Zero) and (y is S.One)):
             return S.Infinity
