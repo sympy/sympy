@@ -272,6 +272,9 @@ class erfc(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def _eval_rewrite_as_tractable(self, z):
+        return self.rewrite(erf).rewrite("tractable", deep=True)
+
     def _eval_rewrite_as_erf(self, z):
         return S.One - erf(z)
 
@@ -408,6 +411,9 @@ class erfi(Function):
 
     def _eval_is_real(self):
         return self.args[0].is_real
+
+    def _eval_rewrite_as_tractable(self, z):
+        return self.rewrite(erf).rewrite("tractable", deep=True)
 
     def _eval_rewrite_as_erf(self, z):
         return -I*erf(I*z)
