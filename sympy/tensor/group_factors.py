@@ -65,21 +65,25 @@ def match_C_square(t, th):
 
 class SuNGroupFactors(object):
     """
-    SU(N)
+    SU(N) generators in any representation satisfy the
     Lie algebra ``[T(i), T(j)] = I*C(i,j, -k)*T(k)``
 
-    ``tr(T(i)*T(j)) = g(i, j)``
+    ``tr(rep, T(i)*T(j)) = a_rep*g(i, j)`` where
+    ``a_rep`` depends on the representation.
 
-    ``g(i, j)`` is the metric in the adjoint representation space;
-    it is proportional to the identity matrix due to Shur lemma.
+    ``g(i, j)`` is the metric in the adjoint representation space.
 
-    ``T(i, -a, b)`` is the generator in the defining representation ``N``
     For ``N > 2`` there is no metric in the defining representation.
+
+    Let ``T(i, -a, b)`` be the generator in the defining representation ``N``
+    normalized with ``a_rep = 1``
 
     Define ``theta(i_1, ..., i_n) = tr(T(i_1)*...*T^(i_n))
 
+    Multiplying the Lie algebra relation by ``T(-k)`` and tracing one gets
     ``C_(i j k) = -I*theta(i, j, k) + I*theta(j, i, k)``
 
+    For ``SU(N)`` one has the relation
     ``T(i,-d,a)*T(-i,-b,c) =``
     ``delta(-b,a)*delta(-d,c) - 1/N*delta(-d,a)*delta(-b,c)``
 
@@ -161,6 +165,19 @@ class SuNGroupFactors(object):
         r = match_C_triangle(t, self.C)
         if not r:
             return t
+        i0, i1, i2 = sorted(r)
+        a = t.split()
+        a1 = a[:i0] + a[i0 + 1: i1] + a[1 + 1:i2] + a[i2 + 1:]
+        t1 = tensor_mul(*a1)
+        t2 = tensor_mul(a[i0], a[i1], a[i2])
+        t2 = self.rule_C2theta_all(t2)
+        t = t1*t2
+        prev = S.Zero
+        while t != prev:
+            prev = t
+            t = self.rule_thetaithetai(t)
+            t = t.contract_metric(self.g, True)
+            t = self.rule_thetaii(t)
         return t
 
     def rule_C_square(self, t):
@@ -269,6 +286,21 @@ class SuNGroupFactors(object):
     def rule_C2theta_all(self, t):
         """
         convert all ``C`` to ``theta`` and apply simplifying rules.
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.group_factors import SuNGroupFactors
+        >>> from sympy import Symbol
+        >>> from sympy.tensor.tensor import tensor_indices
+        >>> N = Symbol('N')
+        >>> SN = SuNGroupFactors(N)
+        >>> C = SN.C
+        >>> i0,i1,i2,i3,i4,i5,i6 = tensor_indices('i0:7', SN.ASuN)
+        >>> t = C(i0,i1,i2)*C(-i0,-i2,i3)
+        >>> t = SN.rule_C2theta_all(t)
+        >>> SN.rule_C2theta_all(t)
+        (-2*N)*metric(i1, i3)
         """
 
         tC = self.tC

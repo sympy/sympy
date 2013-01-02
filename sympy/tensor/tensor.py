@@ -742,7 +742,7 @@ class TensAdd(TensExpr):
 
     def expand_coeff(self):
         args = [_tensor_expand_coeff(x) for x in self.args]
-        return TensAdd(args)
+        return TensAdd(*args)
 
     def _pretty(self):
         a = []

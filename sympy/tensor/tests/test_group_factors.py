@@ -40,6 +40,20 @@ def test_SuN():
     t = t.expand_coeff()
     assert t == (2*N**4 + 24*N**2)*g(i0, i12)
 
+    # without using rule_C_triangle it is 2.5x slower
+    t = C(i0,i1,i2)*C(-i2,i3,i5)*C(-i1,-i3,i4)*C(-i4,-i5,i6)
+    t = SN.rule_C_triangle(t)
+    t = SN.rule_C2theta_all(t)
+    t = t.expand_coeff()
+    assert t == 2*N**2*g(i0, i6)
+
+    # first graph in page 72 in Ref. [1]
+    t = theta(i0,i1,i2,i3)*theta(-i3,-i2,-i1,-i0)
+    t = SN.rule_C2theta_all(t)
+    t = t.expand_coeff()
+    assert (t._coeff - (N**4 - 3*N**2 + 3)*(N**2 - 1)/N**2).expand() == 0
+
+
     # Identically vanishing tensors
     # contracted according to the Kuratowski graph  eq.(6.59) in Ref. [1]
     t = C(i0,i1,i2)*C(-i1,i3,i4)*C(-i3,i7,i5)*C(-i2,-i5,i6)*C(-i4,-i6,i8)
