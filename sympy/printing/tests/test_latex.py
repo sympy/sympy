@@ -19,7 +19,7 @@ from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
-from sympy.logic.boolalg import And
+from sympy.logic.boolalg import And, Or
 from sympy.core.trace import Tr
 
 x, y, z, t, a, b = symbols('x y z t a b')
