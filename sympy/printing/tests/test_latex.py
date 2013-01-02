@@ -828,7 +828,7 @@ def test_boolean_args_order():
     syms = symbols('a:f')
 
     expr = And(*syms)
-    assert latex(expr) == 'a \\wedge b \\wedge c \\wedge d \\wedge e \\wedge f' 
+    assert latex(expr) == 'a \\wedge b \\wedge c \\wedge d \\wedge e \\wedge f'
 
     expr = Or(*syms)
-    assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f' 
+    assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'
