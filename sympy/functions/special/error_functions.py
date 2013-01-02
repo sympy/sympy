@@ -144,7 +144,7 @@ class erf(Function):
         else:
             return self.func(arg)
 
-    def as_real_imag(self, deep=True, **hints):
+    def _as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -289,7 +289,7 @@ class erfc(Function):
         else:
             return self.func(arg)
 
-    def as_real_imag(self, deep=True, **hints):
+    def _as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -421,7 +421,7 @@ class erfi(Function):
     def _eval_rewrite_as_erfc(self, z):
         return I*erfc(I*z) - I
 
-    def as_real_imag(self, deep=True, **hints):
+    def _as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -1720,15 +1720,30 @@ class _erfs(Function):
     nargs = 1
 
     def _eval_aseries(self, n, args0, x, logx):
-        if args0[0] != S.Infinity:
-            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+        point = args0[0]
 
-        z = self.args[0]
-        l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
-            4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
-        o = C.Order(1/z**(2*n + 1), x)
-        # It is very inefficient to first add the order and then do the nseries
-        return (Add(*l))._eval_nseries(x, n, logx) + o
+        # Expansion at oo
+        if point is S.Infinity:
+            z = self.args[0]
+            l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
+                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+            o = C.Order(1/z**(2*n + 1), x)
+            # It is very inefficient to first add the order and then do the nseries
+            return (Add(*l))._eval_nseries(x, n, logx) + o
+
+        # Expansion at I*oo
+        t = point.extract_multiplicatively(S.ImaginaryUnit)
+        if t is S.Infinity:
+            z = self.args[0]
+            # TODO: is the series really correct?
+            l = [ 1/sqrt(S.Pi) * C.factorial(2*k)*(-S(
+                4))**(-k)/C.factorial(k) * (1/z)**(2*k + 1) for k in xrange(0, n) ]
+            o = C.Order(1/z**(2*n + 1), x)
+            # It is very inefficient to first add the order and then do the nseries
+            return (Add(*l))._eval_nseries(x, n, logx) + o
+
+        # All other points are not handled
+        return super(_erfs, self)._eval_aseries(n, args0, x, logx)
 
     def fdiff(self, argindex=1):
         if argindex == 1:
