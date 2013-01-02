@@ -10,7 +10,7 @@ from sympy.core.logic import fuzzy_bool
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
-import re
+import re, string
 
 
 class Symbol(AtomicExpr, Boolean):
@@ -250,7 +250,7 @@ class Wild(Symbol):
         raise TypeError("'%s' object is not callable" % type(self).__name__)
 
 _re_var_range = re.compile(r"^(.*?)(\d*):(\d+)$")
-_re_var_scope = re.compile(r"^(.):(.)$")
+_re_var_scope = re.compile(r"^(.*?|)(.):(.)(.*?|)$")
 _re_var_split = re.compile(r"\s*,\s*|\s+")
 
 
@@ -390,10 +390,14 @@ def symbols(names, **args):
             match = _re_var_scope.match(name)
 
             if match is not None:
-                start, end = match.groups()
+                name, start, end, suffix = match.groups()
+                letters = list(string.ascii_lowercase + string.ascii_uppercase
+                        + string.digits)
+                start = letters.index(start)
+                end = letters.index(end)
 
-                for name in xrange(ord(start), ord(end) + 1):
-                    symbol = cls(chr(name), **args)
+                for subname in xrange(start, end + 1):
+                    symbol = cls(name + letters[subname] + suffix, **args)
                     result.append(symbol)
 
                 seq = True
