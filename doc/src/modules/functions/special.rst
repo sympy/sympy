@@ -16,12 +16,6 @@ beta
 
 .. autofunction:: sympy.functions.special.gamma_functions.beta
 
-erf
----
-
-.. autoclass:: sympy.functions.special.error_functions.erf
-   :members:
-
 Gamma and Related Functions
 ---------------------------
 .. autoclass:: sympy.functions.special.gamma_functions.gamma
@@ -49,7 +43,6 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: Shi
 .. autoclass:: Chi
 
-<<<<<<< HEAD
 .. autoclass:: sympy.functions.special.error_functions.FresnelIntegral
    :members:
 
@@ -63,16 +56,9 @@ Error Functions
 .. autoclass:: sympy.functions.special.error_functions.erfc
 .. autoclass:: sympy.functions.special.error_functions.erfi
 .. autoclass:: sympy.functions.special.error_functions.erf2
-<<<<<<< HEAD
 .. autoclass:: sympy.functions.special.error_functions.erfinv
 .. autoclass:: sympy.functions.special.error_functions.erfcinv
 .. autoclass:: sympy.functions.special.error_functions.erf2inv
-=======
-
->>>>>>> 4c9fdf7... Implementation of erf2, Ierf, Ierfc, Ierf2 and their tests
-=======
-
->>>>>>> b7a1eca... Name fix for Inverse Error Functions
 
 Bessel Type Functions
 ---------------------
