@@ -340,6 +340,36 @@ class TensorType(Basic):
         else:
             return [TensorHead(name, self, anticommuting) for name in names]
 
+def tensorhead(name, typ, sym, anticommuting=False):
+    """
+    Function generating tensorhead(s).
+
+    ``name`` name or sequence of names (as in ``symbol``)
+
+    ``typ``  index types
+
+    ``sym``  same as ``*args`` in ``tensorsymmetry``
+
+    ``anticommuting``:
+        None     no commutation rule
+        False    commutes
+        True     anticommutes
+    Examples
+    ========
+
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+    >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    >>> a, b = tensor_indices('a,b', Lorentz)
+    >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
+    >>> A(a, -b)
+    A(a, -b)
+
+    """
+    sym = tensorsymmetry(*sym)
+    S = TensorType(typ, sym)
+    return S(name, anticommuting)
+
+
 class TensorHead(Basic):
     is_commutative = False
 
@@ -407,12 +437,10 @@ class TensorHead(Basic):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b = tensor_indices('a,b', Lorentz)
-        >>> sym2 = tensorsymmetry([1]*2)
-        >>> S2 = TensorType([Lorentz]*2, sym2)
-        >>> A = S2('A')
+        >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
         >>> t = A(a, -b)
         """
         assert [indices[i].tensortype for i in range(len(indices))] == self.index_types
@@ -513,13 +541,10 @@ class TensExpr(Basic):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> sym2 = tensorsymmetry([1]*2)
-        >>> S2 = TensorType([Lorentz]*2, sym2)
-        >>> A, B = S2('A,B')
+        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
         >>> t = A(i, k)*B(-k, -j); t
         A(i, L_0)*B(-L_0, -j)
         >>> t.substitute_indices((i,j), (j, k))
@@ -641,12 +666,10 @@ class TensAdd(TensExpr):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensorsymmetry, TensorType, tensor_indices, TensAdd
+    >>> from sympy.tensor.tensor import TensorIndexType, tensorhead, tensor_indices
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> a, b = tensor_indices('a,b', Lorentz)
-    >>> sym = tensorsymmetry([1])
-    >>> S1 = TensorType([Lorentz], sym)
-    >>> p, q = S1('p,q')
+    >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
     >>> t1 = p(a)
     >>> t2 = q(a)
     >>> t1 + t2
@@ -875,13 +898,11 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> sym1 = tensorsymmetry([1])
-        >>> S1 = TensorType([Lorentz], sym1)
         >>> g = Lorentz.metric
-        >>> p, q = S1('p,q')
+        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
         >>> t = p(m1)*g(m0,m2)
         >>> t.get_indices()
         [m1, m0, m2]
@@ -926,12 +947,10 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
-        >>> sym2 = tensorsymmetry([1]*2)
-        >>> S2 = TensorType([Lorentz]*2, sym2)
-        >>> A, B = S2('A,B')
+        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
         >>> t = A(a,b)*B(-b,c)
         >>> t
         A(a, L_0)*B(-L_0, c)
@@ -1023,13 +1042,11 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> sym1 = tensorsymmetry([1])
-        >>> S1 = TensorType([Lorentz], sym1)
         >>> g = Lorentz.metric
-        >>> p, q = S1('p,q')
+        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
         >>> t1 = p(m0)
         >>> t2 = q(-m0)
         >>> t1*t2
@@ -1161,12 +1178,10 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> sym2a = tensorsymmetry([2])
-        >>> S2 = TensorType([Lorentz]*2, sym2a)
-        >>> A = S2('A')
+        >>> A = tensorhead('A', [Lorentz]*2, [[2]])
         >>> t = A(m0,-m1)*A(m1,-m0)
         >>> t.canon_bp()
         -A(L_0, L_1)*A(-L_0, -L_1)
@@ -1319,13 +1334,11 @@ class TensMul(TensExpr):
         Examples
         ========
 
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> m0, m1, m2 = tensor_indices('m0,m1,m2', Lorentz)
-        >>> sym1 = tensorsymmetry([1])
-        >>> S1 = TensorType([Lorentz], sym1)
         >>> g = Lorentz.metric
-        >>> p, q = S1('p,q')
+        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
         >>> t = p(m0)*q(m1)*g(-m0, -m1)
         >>> t.canon_bp()
         metric(L_0, L_1)*p(-L_0)*q(-L_1)
@@ -1495,12 +1508,10 @@ def riemann_cyclic(t2):
     Examples
     ========
 
-    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorsymmetry, TensorType, riemann_cyclic
+    >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead, riemann_cyclic
     >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-    >>> symr = tensorsymmetry([2, 2])
-    >>> R4 = TensorType([Lorentz]*4, symr)
-    >>> R = R4('R')
+    >>> R = tensorhead('R', [Lorentz]*4, [[2, 2]])
     >>> t = R(i,j,k,l)*(R(-i,-j,-k,-l) - 2*R(-i,-k,-j,-l))
     >>> riemann_cyclic(t)
     0
