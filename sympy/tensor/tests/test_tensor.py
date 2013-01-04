@@ -571,7 +571,7 @@ def test_div():
     t1 = t1/4
     assert t1._is_canon_bp
 
-def test_metric_contract1():
+def test_contract_metric1():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
@@ -608,7 +608,7 @@ def test_metric_contract1():
     assert t2 == A(a, -a)
     assert not t2._free
 
-def test_metric_contract1():
+def test_contract_metric2():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
     a, b, c, d, e, L_0 = tensor_indices('a,b,c,d,e,L_0', Lorentz)
@@ -695,6 +695,54 @@ def test_metric_contract1():
     t = A(a, b)*p(L_0)*g(-a, -b)
     t1 = t.contract_metric(g)
     assert str(t1) == 'A(L_1, -L_1)*p(L_0)' or str(t1) == 'A(-L_1, L_1)*p(L_0)'
+
+def test_metric_contract3():
+    D = Symbol('D')
+    Spinor = TensorIndexType('Spinor', dim=D, metric=True, dummy_fmt='S')
+    a0,a1,a2,a3,a4 = tensor_indices('a0:5', Spinor)
+    C = Spinor.metric
+    chi, psi = tensorhead('chi,psi', [Spinor], [[1]], 1)
+    B = tensorhead('B', [Spinor]*2, [[1],[1]])
+
+    t = C(a0,a1)*B(-a1,-a0)
+    t1 = t.contract_metric(C)
+    assert t1 == B(a0, -a0)
+
+    t = C(a0,-a1)*B(a1,-a0)
+    t1 = t.contract_metric(C)
+    assert t1 == -B(a0, -a0)
+
+    t = C(-a0,a1)*B(-a1,a0)
+    t1 = t.contract_metric(C)
+    assert t1 == -B(a0, -a0)
+
+    t = C(-a0,-a1)*B(a1,a0)
+    t1 = t.contract_metric(C)
+    assert t1 == B(a0, -a0)
+
+    t = C(a0,a1)*chi(-a0)*psi(-a1)
+    t1 = t.contract_metric(C)
+    assert t1 == -chi(a1)*psi(-a1)
+
+    t = C(a1,a0)*chi(-a0)*psi(-a1)
+    t1 = t.contract_metric(C)
+    assert t1 == chi(a1)*psi(-a1)
+
+    t = C(-a1,a0)*chi(-a0)*psi(a1)
+    t1 = t.contract_metric(C)
+    assert t1 == chi(-a1)*psi(a1)
+
+    t = C(a0, -a1)*chi(-a0)*psi(a1)
+    t1 = t.contract_metric(C)
+    assert t1 == -chi(-a1)*psi(a1)
+
+    t = C(-a0,-a1)*chi(a0)*psi(a1)
+    t1 = t.contract_metric(C)
+    assert t1 == chi(-a1)*psi(a1)
+
+    t = C(-a1,-a0)*chi(a0)*psi(a1)
+    t1 = t.contract_metric(C)
+    assert t1 == -chi(-a1)*psi(a1)
 
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_fmt='L')

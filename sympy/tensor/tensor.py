@@ -18,6 +18,15 @@ class TensorIndexType(Basic):
 
     In these two cases the metric is used to raise and lower indices.
 
+    In the case of antisymmetric metric, the following raising and
+    lowering conventions will be adopted:
+
+    ``psi(a) = g(a, b)*psi(-b); chi(-a) = chi(b)*g(-b, -a)
+
+    ``g(-a, b) = delta(-a, b); g(b, -a) = -delta(a, -b)``
+
+    where ``delta(-a, b) = delta(b, -a)`` is the Kronecker delta
+
     ``metric = None``  there is no metric;
     it is not possible to raise or lower indices;
     e.g. the index of the defining representation of ``SU(N)``
@@ -443,7 +452,8 @@ class TensorHead(Basic):
         >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
         >>> t = A(a, -b)
         """
-        assert [indices[i].tensortype for i in range(len(indices))] == self.index_types
+        if not [indices[i].tensortype for i in range(len(indices))] == self.index_types:
+            raise ValueError('wrong index type')
         components = [self]
         free, dum =  TensMul.from_indices(*indices)
         free.sort(key=lambda x: x[0].name)
@@ -1201,9 +1211,16 @@ class TensMul(TensExpr):
             return S.Zero
         return t.perm2tensor(can, True)
 
-    def _contract(self, g, is_metric, contract_all=False):
+    def _contract(self, g, antisym, contract_all=False):
         """
         helper method for ``contract_metric`` and ``contract_delta``
+
+        ``g`` metric to be contracted
+
+        ``antisym``:
+        False  symmetric metric
+        True   antisymmetric metric
+        None   delta
         """
         if not self._components:
             return self
@@ -1211,33 +1228,42 @@ class TensMul(TensExpr):
         a = self.split()
         typ = g.index_types[0]
         # if a component tensor of a has 2 dummy indices, it is g(d,-d) = dim
-        for i, tx in enumerate(a):
-            if tx._components[0] == g:
-                free_indices_g = [x[0] for x in a[i]._free]
-                if len(free_indices_g) == 0:
-                    a1 = a[:i] + a[i + 1:]
-                    t = tensor_mul(*a1)*(typ.dim*a[i]._coeff)
-                    if contract_all == True and g in t._components:
-                        return t._contract(g, is_metric, True)
-                    return t
-
-        # if all metric tensors have only free indices, there is no contraction
         for i, tg in enumerate(a):
             if tg._components[0] == g:
                 tg_free_indices = [x[0] for x in tg._free]
-                if not is_metric:
-                    if tg_free_indices[0].is_contravariant == tg_free_indices[1].is_contravariant:
-                        raise ValueError('both indices are (contra)variant')
+                if len(tg_free_indices) == 0:
+                    # g is contracted with itself
+                    a1 = a[:i] + a[i + 1:]
+                    t11 = tensor_mul(*a1)
+                    if typ.dim is None:
+                        raise ValueError('dimension not assigned')
+                    coeff = typ.dim*a[i]._coeff
+                    if antisym and tg._dum[0][0] == 0:
+                        # g(i, -i) = -D
+                        coeff = -coeff
+                    t = tensor_mul(*a1)*coeff
+                    if contract_all == True and g in t._components:
+                        return t._contract(g, antisym, True)
+                    return t
+
                 if all(indx in free_indices for indx in tg_free_indices):
                     continue
-                break
+                else:
+                    break
         else:
+        # if all metric tensors have only free indices, there is no contraction
             return self
+
         # tg has one or two indices contracted with other tensors
         # i position of tg in a
         coeff = S.One
         tg_free = tg._free
+        if antisym:
+            # order by slot position
+            tg_free = sorted(tg_free, key=lambda x: x[1])
+
         if tg_free[0][0] in free_indices or tg_free[1][0] in free_indices:
+            # tg has one free index
             if tg_free[0][0] in free_indices:
                 ind_free = tg_free[0][0]
                 ind, ipos1, _ = tg_free[1]
@@ -1246,20 +1272,28 @@ class TensMul(TensExpr):
                 ind, ipos1, _ = tg_free[0]
 
             ind1 = -ind
-            # search ind1 in self._dum
+            # search ind1 in the other component tensors
             for j, tx in enumerate(a):
                 if ind1 in [x[0] for x in tx._free]:
                     break
+            # replace ind1 with ind_free
             free1 = []
             for indx, iposx, _ in tx._free:
                 if indx == ind1:
                     free1.append((ind_free, iposx, 0))
                 else:
                     free1.append((indx, iposx, 0))
-            t1 = TensMul(tx._coeff, tx._components, free1, tx._dum)
+            coeff = tx._coeff
+            if antisym:
+                if ind.is_contravariant and ind == tg_free[0][0] or \
+                (not ind.is_contravariant) and ind == tg_free[1][0]:
+                    # g(i1, i0)*psi(-i1) = -psi(i0)
+                    # g(-i0, -i1)*psi(i1) = -psi(-i0)
+                    coeff = -coeff
+            t1 = TensMul(coeff, tx._components, free1, tx._dum)
             a[j] = t1
             a = a[:i] + a[i + 1:]
-            coeff = coeff*tg._coeff
+            coeff = tg._coeff
             res = tensor_mul(*a)
         else:
             # tg has two indices contracted with other tensors
@@ -1270,29 +1304,41 @@ class TensMul(TensExpr):
             for k, ty in enumerate(a):
                 if ind2m in [x[0] for x in ty._free]:
                     break
+            # ty has the index ind2m
+            ty_free = ty._free[:]
             if ty._components == [g]:
                 ty_indices = [x[0] for  x in ty._free]
                 if all(x in [ind1m, ind2m] for x in ty_indices):
-                    if i < k:
-                        a = a[:i] + a[i+1:k] + a[k+1:]
-                    else:
-                        a = a[:k] + a[k+1:i] + a[i+1:]
+                    # the two `g` are completely contracted
+                    # i < k always
+                    a = a[:i] + a[i+1:k] + a[k+1:]
+                    coeff = coeff*typ.dim*tg._coeff*ty._coeff
+                    if antisym:
+                        ty_free = sorted(ty_free, key=lambda x: x[1])
+                        if ind1.is_contravariant == ind2.is_contravariant:
+                            # g(i,j)*g(-i,-j) = g(-i,-j)*g(i,j) = dim
+                            # g(i,j)*g(-j,-i) = g(-i,-j)*g(j,i) = -dim
+                            if ind1m == ty_free[1][0]:
+                                coeff = -coeff
+                        else:
+                            # g(-i,j)*g(i,-j) = g(i,-j)^g(-i,j) = -dim
+                            # g(-i,j)*g(-j,i) = g(i,-j)*g(j,i) = dim
+                            if ind1m == ty_free[0][0]:
+                                coeff = -coeff
+
                     if a:
                         res = tensor_mul(*a)
-                        res = (coeff*typ.dim*tg._coeff*ty._coeff)*res
+                        res = coeff*res
                     else:
-                        res = coeff*typ.dim*tg._coeff*ty._coeff
-                        res = TensMul(res, [],[],[], is_canon_bp=True)
+                        res = TensMul(coeff, [],[],[], is_canon_bp=True)
                     if contract_all == True and g in res._components:
-                        return res._contract(g, is_metric, True)
+                        return res._contract(g, antisym, True)
                     return res
-            free2 = []
-            # ty._free contains ind2m; replace ind2m with ind1
-            # in the fee indices of ty, unless ty has ind1m as free index;
-            # in that case take away it from free and create a dummy entry
 
-            ty_freeindices = [x[0] for x in ty._free]
+            free2 = []
+            ty_freeindices = [x[0] for x in ty_free]
             if ind1m in ty_freeindices:
+                # tg has both indices contracted with ty
                 free2 = [(indx, iposx, cposx) for indx, iposx, cposx in ty._free if indx != ind1m and indx != ind2m]
                 dum2 = ty._dum[:]
                 for indx, iposx, _ in ty._free:
@@ -1300,15 +1346,41 @@ class TensMul(TensExpr):
                         iposx1 = iposx
                     if indx == ind2m:
                         iposx2 = iposx
-                # ind1m is covariant
-                dum2.append((iposx2, iposx1, 0, 0))
-            else:
-                free2 = []
-                for indx, iposx, _ in ty._free:
-                    if indx == ind2m:
-                        free2.append((ind1, iposx, 0))
+                if antisym:
+                    if ind1.is_contravariant == ind2.is_contravariant:
+                        if iposx1 < iposx2:
+                            coeff = -coeff
+                            dum2.append((iposx1, iposx2, 0, 0))
+                        else:
+                            dum2.append((iposx2, iposx1, 0, 0))
                     else:
-                        free2.append((indx, iposx, 0))
+                        if iposx1 > iposx2:
+                            coeff = -coeff
+                            dum2.append((iposx2, iposx1, 0, 0))
+                        else:
+                            dum2.append((iposx1, iposx2, 0, 0))
+                else:
+                    dum2.append((iposx1, iposx2, 0, 0))
+            else:
+                # replace ind2m with ind1 in the free indices of ty
+
+                free2 = []
+                if not antisym:
+                    for indx, iposx, _ in ty._free:
+                        if indx == ind2m:
+                            free2.append((ind1, iposx, 0))
+                        else:
+                            free2.append((indx, iposx, 0))
+                else:
+                    for indx, iposx, _ in ty._free:
+                        if indx == ind2m:
+                            free2.append((ind1, iposx, 0))
+                            if indx.is_contravariant:
+                                coeff = -coeff
+                        else:
+                            free2.append((indx, iposx, 0))
+                            if not indx.is_contravariant:
+                                coeff = -coeff
                 dum2 = ty._dum
             t2 = TensMul(ty._coeff, ty._components, free2, dum2)
             a[k] = t2
@@ -1317,11 +1389,11 @@ class TensMul(TensExpr):
             res = tensor_mul(*a)
         res = coeff*res
         if contract_all == True and g in res._components:
-            return res._contract(g, is_metric, True)
+            return res._contract(g, antisym, True)
         return res
 
     def contract_delta(self, delta):
-        return self._contract(delta, False, True)
+        return self._contract(delta, None, True)
 
     def contract_metric(self, g, contract_all=False):
         """
@@ -1345,10 +1417,10 @@ class TensMul(TensExpr):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
-        if g.index_types[0].metric_antisym != 0:
+        if g.index_types[0].metric_antisym is None:
             # TODO case of antisymmetric metric
             raise NotImplementedError
-        return self._contract(g, True, contract_all)
+        return self._contract(g, g.index_types[0].metric_antisym, contract_all)
 
     def substitute_tensor(self, t1, t2, subst_all=False):
         """
