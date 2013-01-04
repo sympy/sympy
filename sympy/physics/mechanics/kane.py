@@ -559,8 +559,13 @@ class KanesMethod(object):
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
         if self._uaux != []:
-            km = KanesMethod(self._inertial, self._q, self._uaux,
+            if self._udep == []:
+                km = KanesMethod(self._inertial, self._q, self._uaux,
                              u_auxiliary=self._uaux)
+            else:
+                km = KanesMethod(self._inertial, self._q, self._uaux, 
+                u_auxiliary=self._uaux, u_dependent=self._udep, 
+                velocity_constraints=(self._k_nh * Matrix(self._u) + self._f_nh))
             fraux = km._form_fr(FL)
             frstaraux = km._form_frstar(BL)
             self._aux_eq = fraux + frstaraux
