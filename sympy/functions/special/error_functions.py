@@ -584,6 +584,10 @@ class li(Function):
 
     _eval_rewrite_as_Chi = _eval_rewrite_as_Shi
 
+    def _eval_rewrite_as_hyper(self, z):
+        return (C.log(z)*hyper((1, 1), (2, 2), C.log(z)) +
+                S.Half*(C.log(C.log(z)) - C.log(S.One/C.log(z))) + S.EulerGamma)
+
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
