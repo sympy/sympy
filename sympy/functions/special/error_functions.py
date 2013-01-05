@@ -461,6 +461,122 @@ def E1(z):
     return expint(1, z)
 
 
+class li(Function):
+    r"""
+    The classical logarithmic integral.
+
+    For the use in SymPy, this function is defined as
+
+    .. math:: \operatorname{li}(x) = \int_0^x \frac{1}{\log(t)} \mathrm{d}t \,.
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, li
+    >>> from sympy.abc import z
+
+    Several special values are known:
+
+    >>> li(0)
+    0
+    >>> li(1)
+    -oo
+    >>> li(oo)
+    oo
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(li(x), x)
+    1/log(x)
+
+    Defining the `li` function via an integral:
+
+
+    The logarithmic integral can also be defined in terms of Ei:
+
+    >>> li(x).rewrite(Ei)
+    Ei(log(x))
+    >>> diff(li(x).rewrite(Ei), x)
+    1/log(x)
+
+    We can numerically evaluate the Fresnel integral to arbitrary precision
+    on the whole complex plane (except the singular points):
+
+    >>> li(2).evalf(30)
+    1.04516378011749278484458888919
+
+    >>> li(2*I).evalf(30)
+    1.0652795784357498247001125598 + 3.08346052231061726610939702133*I
+
+    Further transformations include rewriting `li` in terms of
+    the trigonometric integrals `Si`, `Ci`, `Shi` and `Chi`:
+
+    >>> li(x).rewrite(Si)
+    -log(I*log(x)) - log(1/log(x))/2 + log(log(x))/2 + Ci(I*log(x)) + Shi(log(x))
+    >>> li(x).rewrite(Ci)
+    -log(I*log(x)) - log(1/log(x))/2 + log(log(x))/2 + Ci(I*log(x)) + Shi(log(x))
+    >>> li(x).rewrite(Shi)
+    -log(1/log(x))/2 + log(log(x))/2 + Chi(log(x)) - Shi(log(x))
+    >>> li(x).rewrite(Chi)
+    -log(1/log(x))/2 + log(log(x))/2 + Chi(log(x)) - Shi(log(x))
+
+    See Also
+    ========
+
+    Ei, E1, expint, Si, Ci, Shi, Chi
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Logarithmic_integral
+    .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
+    .. [3] http://dlmf.nist.gov/6
+    """
+
+    nargs = 1
+
+    @classmethod
+    def eval(cls, z):
+        if z is S.Zero:
+            return S.Zero
+        elif z is S.One:
+            return S.NegativeInfinity
+        elif z is S.Infinity:
+            return S.Infinity
+
+    def fdiff(self, argindex=1):
+        arg = self.args[0]
+        if argindex == 1:
+            return S.One / C.log(arg)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_conjugate(self):
+        z = self.args[0]
+        # Exclude values on the branch cut (-oo, 0)
+        if not (z.is_real and z.is_negative):
+            return self.func(z.conjugate())
+
+    def _eval_rewrite_as_Ei(self, z):
+        return Ei(C.log(z))
+
+    def _eval_rewrite_as_uppergamma(self, z):
+        from sympy import uppergamma
+        return (-uppergamma(0, -C.log(z)) +
+                S.Half*(C.log(C.log(z)) - C.log(S.One/C.log(z))) - C.log(-C.log(z)))
+
+    def _eval_rewrite_as_Si(self, z):
+        return (Ci(I*C.log(z)) - I*Si(I*C.log(z)) -
+                S.Half*(C.log(S.One/C.log(z)) - C.log(C.log(z))) - C.log(I*C.log(z)))
+
+    _eval_rewrite_as_Ci = _eval_rewrite_as_Si
+
+    def _eval_rewrite_as_Shi(self, z):
+        return (Chi(C.log(z)) - Shi(C.log(z)) - S.Half*(C.log(S.One/C.log(z)) - C.log(C.log(z))))
+
+    _eval_rewrite_as_Chi = _eval_rewrite_as_Shi
+
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
