@@ -588,6 +588,10 @@ class li(Function):
         return (C.log(z)*hyper((1, 1), (2, 2), C.log(z)) +
                 S.Half*(C.log(C.log(z)) - C.log(S.One/C.log(z))) + S.EulerGamma)
 
+    def _eval_rewrite_as_meijerg(self, z):
+        return (-C.log(-C.log(z)) - S.Half*(C.log(S.One/C.log(z)) - C.log(C.log(z)))
+                - meijerg(((), (1,)), ((0, 0), ()), -C.log(z)))
+
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
