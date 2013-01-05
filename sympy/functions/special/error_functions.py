@@ -1283,7 +1283,7 @@ class fresnelc(FresnelIntegral):
 
 class _erfs(Function):
     """
-    Helper function to make the :math:`erf(z)` function
+    Helper function to make the `erf(z)` function
     tractable for the Gruntz algorithm.
     """
 
@@ -1309,3 +1309,33 @@ class _erfs(Function):
 
     def _eval_rewrite_as_intractable(self, z):
         return (S.One - erf(z))*C.exp(z**2)
+
+
+class _eis(Function):
+    """
+    Helper function to make the`Ei(z)` and `li(z)` functions
+    tractable for the Gruntz algorithm.
+    """
+
+    nargs = 1
+
+    def _eval_aseries(self, n, args0, x, logx):
+        if args0[0] != S.Infinity:
+            return super(_erfs, self)._eval_aseries(n, args0, x, logx)
+
+        z = self.args[0]
+        l = [ C.factorial(k) * (1/z)**(k + 1) for k in xrange(0, n) ]
+        o = C.Order(1/z**(n + 1), x)
+        # It is very inefficient to first add the order and then do the nseries
+        return (Add(*l))._eval_nseries(x, n, logx) + o
+
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            z = self.args[0]
+            return S.One / z - _eis(z)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_rewrite_as_intractable(self, z):
+        return C.exp(-z)*Ei(z)
