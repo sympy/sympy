@@ -487,18 +487,19 @@ class li(Function):
     Differentiation with respect to z is supported:
 
     >>> from sympy import diff
-    >>> diff(li(x), x)
-    1/log(x)
+    >>> diff(li(z), z)
+    1/log(z)
 
     Defining the `li` function via an integral:
 
 
     The logarithmic integral can also be defined in terms of Ei:
 
-    >>> li(x).rewrite(Ei)
-    Ei(log(x))
-    >>> diff(li(x).rewrite(Ei), x)
-    1/log(x)
+    >>> from sympy import Ei
+    >>> li(z).rewrite(Ei)
+    Ei(log(z))
+    >>> diff(li(z).rewrite(Ei), z)
+    1/log(z)
 
     We can numerically evaluate the Fresnel integral to arbitrary precision
     on the whole complex plane (except the singular points):
@@ -512,14 +513,15 @@ class li(Function):
     Further transformations include rewriting `li` in terms of
     the trigonometric integrals `Si`, `Ci`, `Shi` and `Chi`:
 
-    >>> li(x).rewrite(Si)
-    -log(I*log(x)) - log(1/log(x))/2 + log(log(x))/2 + Ci(I*log(x)) + Shi(log(x))
-    >>> li(x).rewrite(Ci)
-    -log(I*log(x)) - log(1/log(x))/2 + log(log(x))/2 + Ci(I*log(x)) + Shi(log(x))
-    >>> li(x).rewrite(Shi)
-    -log(1/log(x))/2 + log(log(x))/2 + Chi(log(x)) - Shi(log(x))
-    >>> li(x).rewrite(Chi)
-    -log(1/log(x))/2 + log(log(x))/2 + Chi(log(x)) - Shi(log(x))
+    >>> from sympy import Si, Ci, Shi, Chi
+    >>> li(z).rewrite(Si)
+    -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
+    >>> li(z).rewrite(Ci)
+    -log(I*log(z)) - log(1/log(z))/2 + log(log(z))/2 + Ci(I*log(z)) + Shi(log(z))
+    >>> li(z).rewrite(Shi)
+    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
+    >>> li(z).rewrite(Chi)
+    -log(1/log(z))/2 + log(log(z))/2 + Chi(log(z)) - Shi(log(z))
 
     See Also
     ========
