@@ -592,6 +592,9 @@ class li(Function):
         return (-C.log(-C.log(z)) - S.Half*(C.log(S.One/C.log(z)) - C.log(C.log(z)))
                 - meijerg(((), (1,)), ((0, 0), ()), -C.log(z)))
 
+    def _eval_rewrite_as_tractable(self, z):
+        return z * _eis(C.log(z))
+
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
 ###############################################################################
