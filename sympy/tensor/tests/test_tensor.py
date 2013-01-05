@@ -831,7 +831,7 @@ def test_fun():
     # check that g_{a b; c} = 0
     # example taken from  L. Brewin
     # "A brief introduction to Cadabra" arxiv:0903.2085
-    # dg_{a b c} = \partial_{a} g_{a b}
+    # dg_{a b c} = \partial_{a} g_{b c} is symmetric in b, c
     dg = tensorhead('dg', [Lorentz]*3, [[1], [1]*2])
     # gamma^a_{b c} is the Christoffel symbol
     gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
