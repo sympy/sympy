@@ -791,13 +791,13 @@ def test_contract_delta1():
     delta = Color.delta
 
     def idn(a, b, d, c):
-        assert a.is_contravariant and d.is_contravariant
-        assert not (b.is_contravariant or c.is_contravariant)
+        assert a.is_up and d.is_up
+        assert not (b.is_up or c.is_up)
         return delta(a, c)*delta(d, b)
 
     def T(a, b, d, c):
-        assert a.is_contravariant and d.is_contravariant
-        assert not (b.is_contravariant or c.is_contravariant)
+        assert a.is_up and d.is_up
+        assert not (b.is_up or c.is_up)
         return delta(a, b)*delta(d, c)
 
     def P1(a, b, c, d):
@@ -821,3 +821,22 @@ def test_contract_delta1():
     t = P1(a, -b, b, -a)
     t1 = t.contract_delta(delta)
     assert t1 == n**2 - 1
+
+def test_fun():
+    D = Symbol('D')
+    Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
+    a,b,c,d = tensor_indices('a,b,c,d', Lorentz)
+    g = Lorentz.metric
+
+    # check that g_{a b; c} = 0
+    # example taken from  L. Brewin
+    # "A brief introduction to Cadabra" arxiv:0903.2085
+    # dg_{a b c} = \partial_{a} g_{a b}
+    dg = tensorhead('dg', [Lorentz]*3, [[1], [1]*2])
+    # gamma^a_{b c} is the Christoffel symbol
+    gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
+    gamma.set_free_args([a, -b, -c])
+    # t = g_{a b; c}
+    t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
+    t = t.contract_metric(g, True)
+    assert t == 0
