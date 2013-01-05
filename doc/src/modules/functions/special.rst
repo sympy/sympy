@@ -45,6 +45,7 @@ Special Cases of the Incomplete Gamma Functions
 .. autoclass:: Ei
 .. autoclass:: expint
 .. autofunction:: E1
+.. autoclass:: li
 .. autoclass:: Si
 .. autoclass:: Ci
 .. autoclass:: Shi

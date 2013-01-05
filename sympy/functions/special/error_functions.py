@@ -501,7 +501,7 @@ class li(Function):
     >>> diff(li(z).rewrite(Ei), z)
     1/log(z)
 
-    We can numerically evaluate the Fresnel integral to arbitrary precision
+    We can numerically evaluate the logarithmic integral to arbitrary precision
     on the whole complex plane (except the singular points):
 
     >>> li(2).evalf(30)
