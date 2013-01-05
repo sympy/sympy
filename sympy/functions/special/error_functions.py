@@ -286,6 +286,11 @@ class Ei(Function):
     def _eval_rewrite_as_expint(self, z):
         return -expint(1, polar_lift(-1)*z) - I*pi
 
+    def _eval_rewrite_as_li(self, z):
+        from sympy import log
+        if isinstance(z, log):
+            return li(z.args[0])
+
     def _eval_rewrite_as_Si(self, z):
         return Shi(z) + Chi(z)
     _eval_rewrite_as_Ci = _eval_rewrite_as_Si
