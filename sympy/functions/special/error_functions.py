@@ -297,6 +297,8 @@ class Ei(Function):
     _eval_rewrite_as_Chi = _eval_rewrite_as_Si
     _eval_rewrite_as_Shi = _eval_rewrite_as_Si
 
+    def _eval_rewrite_as_tractable(self, z):
+        return C.exp(z) * _eis(z)
 
 class expint(Function):
     r"""
