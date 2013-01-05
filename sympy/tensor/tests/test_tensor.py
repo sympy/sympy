@@ -558,7 +558,7 @@ def test_div():
     t1 = t1/4
     assert t1._is_canon_bp
 
-def test_metric_contract1():
+def test_contract_metric1():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
@@ -595,7 +595,7 @@ def test_metric_contract1():
     assert t2 == A(a, -a)
     assert not t2._free
 
-def test_metric_contract1():
+def test_contract_metric2():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
     a, b, c, d, e, L_0 = tensor_indices('a,b,c,d,e,L_0', Lorentz)
@@ -683,6 +683,54 @@ def test_metric_contract1():
     t1 = t.contract_metric(g)
     assert str(t1) == 'A(L_1, -L_1)*p(L_0)' or str(t1) == 'A(-L_1, L_1)*p(L_0)'
 
+def test_metric_contract3():
+    D = Symbol('D')
+    Spinor = TensorIndexType('Spinor', dim=D, metric=True, dummy_fmt='S')
+    a0,a1,a2,a3,a4 = tensor_indices('a0:5', Spinor)
+    C = Spinor.metric
+    chi, psi = tensorhead('chi,psi', [Spinor], [[1]], 1)
+    B = tensorhead('B', [Spinor]*2, [[1],[1]])
+
+    t = C(a0,a1)*B(-a1,-a0)
+    t1 = t.contract_metric(C)
+    assert t1 == B(a0, -a0)
+
+    t = C(a0,-a1)*B(a1,-a0)
+    t1 = t.contract_metric(C)
+    assert t1 == -B(a0, -a0)
+
+    t = C(-a0,a1)*B(-a1,a0)
+    t1 = t.contract_metric(C)
+    assert t1 == -B(a0, -a0)
+
+    t = C(-a0,-a1)*B(a1,a0)
+    t1 = t.contract_metric(C)
+    assert t1 == B(a0, -a0)
+
+    t = C(a0,a1)*chi(-a0)*psi(-a1)
+    t1 = t.contract_metric(C)
+    assert t1 == -chi(a1)*psi(-a1)
+
+    t = C(a1,a0)*chi(-a0)*psi(-a1)
+    t1 = t.contract_metric(C)
+    assert t1 == chi(a1)*psi(-a1)
+
+    t = C(-a1,a0)*chi(-a0)*psi(a1)
+    t1 = t.contract_metric(C)
+    assert t1 == chi(-a1)*psi(a1)
+
+    t = C(a0, -a1)*chi(-a0)*psi(a1)
+    t1 = t.contract_metric(C)
+    assert t1 == -chi(-a1)*psi(a1)
+
+    t = C(-a0,-a1)*chi(a0)*psi(a1)
+    t1 = t.contract_metric(C)
+    assert t1 == chi(-a1)*psi(a1)
+
+    t = C(-a1,-a0)*chi(a0)*psi(a1)
+    t1 = t.contract_metric(C)
+    assert t1 == -chi(-a1)*psi(a1)
+
 def test_epsilon():
     Lorentz = TensorIndexType('Lorentz', dim=4, dummy_fmt='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
@@ -730,13 +778,13 @@ def test_contract_delta1():
     delta = Color.delta
 
     def idn(a, b, d, c):
-        assert a.is_contravariant and d.is_contravariant
-        assert not (b.is_contravariant or c.is_contravariant)
+        assert a.is_up and d.is_up
+        assert not (b.is_up or c.is_up)
         return delta(a, c)*delta(d, b)
 
     def T(a, b, d, c):
-        assert a.is_contravariant and d.is_contravariant
-        assert not (b.is_contravariant or c.is_contravariant)
+        assert a.is_up and d.is_up
+        assert not (b.is_up or c.is_up)
         return delta(a, b)*delta(d, c)
 
     def P1(a, b, c, d):
@@ -760,3 +808,22 @@ def test_contract_delta1():
     t = P1(a, -b, b, -a)
     t1 = t.contract_delta(delta)
     assert t1 == n**2 - 1
+
+def test_fun():
+    D = Symbol('D')
+    Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
+    a,b,c,d = tensor_indices('a,b,c,d', Lorentz)
+    g = Lorentz.metric
+
+    # check that g_{a b; c} = 0
+    # example taken from  L. Brewin
+    # "A brief introduction to Cadabra" arxiv:0903.2085
+    # dg_{a b c} = \partial_{a} g_{a b}
+    dg = tensorhead('dg', [Lorentz]*3, [[1], [1]*2])
+    # gamma^a_{b c} is the Christoffel symbol
+    gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
+    gamma.set_free_args([a, -b, -c])
+    # t = g_{a b; c}
+    t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
+    t = t.contract_metric(g, True)
+    assert t == 0
