@@ -1,9 +1,9 @@
 from sympy import (
-    symbols, expand, expand_func, erf, nan, oo, Float, conjugate,
-    sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar,
-    polar_lift, Symbol, I, integrate, exp, uppergamma, expint,
+    symbols, expand, expand_func, erf, nan, oo, Float, conjugate, diff,
+    sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar, gruntz,
+    polar_lift, Symbol, I, integrate, exp, uppergamma, expint, EulerGamma,
     log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
-    Si, Ci, E1, Ei, sin, cos, sinh, cosh, fresnels, fresnelc)
+    Si, Ci, E1, Ei, li, sin, cos, sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs
 
@@ -178,6 +178,44 @@ def tn_arg(func):
         test(exp_polar(-I*pi/2), -I, 1) and \
         test(exp_polar(I*pi), -1, I) and \
         test(exp_polar(-I*pi), -1, -I)
+
+
+def test_li():
+    z = Symbol("z")
+    zr = Symbol("z", real=True)
+    zp = Symbol("z", positive=True)
+    zn = Symbol("z", negative=True)
+
+    assert li(0) == 0
+    assert li(1) == -oo
+    assert li(oo) == oo
+
+    assert li(z) == li(z)
+
+    assert diff(li(z), z) == 1/log(z)
+
+    assert conjugate(li(z)) == li(conjugate(z))
+    assert conjugate(li(-zr)) == li(-zr)
+    assert conjugate(li(-zp)) == conjugate(li(-zp))
+    assert conjugate(li(zn)) == conjugate(li(zn))
+
+    assert li(z).rewrite(Ei) == Ei(log(z))
+    assert li(z).rewrite(uppergamma) == (-log(1/log(z))/2 - log(-log(z)) +
+                                         log(log(z))/2 - expint(1, -log(z)))
+    assert li(z).rewrite(Si) == (-log(I*log(z)) - log(1/log(z))/2 +
+                                 log(log(z))/2 + Ci(I*log(z)) + Shi(log(z)))
+    assert li(z).rewrite(Ci) == (-log(I*log(z)) - log(1/log(z))/2 +
+                                 log(log(z))/2 + Ci(I*log(z)) + Shi(log(z)))
+    assert li(z).rewrite(Shi) == (-log(1/log(z))/2 + log(log(z))/2 +
+                                  Chi(log(z)) - Shi(log(z)))
+    assert li(z).rewrite(Chi) == (-log(1/log(z))/2 + log(log(z))/2 +
+                                  Chi(log(z)) - Shi(log(z)))
+    assert li(z).rewrite(hyper) ==(log(z)*hyper((1, 1), (2, 2), log(z)) -
+                                   log(1/log(z))/2 + log(log(z))/2 + EulerGamma)
+    assert li(z).rewrite(meijerg) == (-log(1/log(z))/2 - log(-log(z)) + log(log(z))/2 -
+                                      meijerg(((), (1,)), ((0, 0), ()), -log(z)))
+
+    assert gruntz(1/li(z), z, oo) == 0
 
 
 def test_si():
