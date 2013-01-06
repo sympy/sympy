@@ -812,8 +812,14 @@ def test_contract_delta1():
 def test_fun():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
-    a,b,c,d = tensor_indices('a,b,c,d', Lorentz)
+    a,b,c,d,e = tensor_indices('a,b,c,d,e', Lorentz)
     g = Lorentz.metric
+
+    p, q = tensorhead('p q', [Lorentz], [[1]])
+    t = q(c)*p(a)*q(b) + g(a,b)*g(c,d)*q(-d)
+    assert t(a,b,c) == t
+    assert t - t(b,a,c) == q(c)*p(a)*q(b) - q(c)*p(b)*q(a)
+    assert t(b,c,d) == q(d)*p(b)*q(c) + g(b,c)*g(d,e)*q(-e)
 
     # check that g_{a b; c} = 0
     # example taken from  L. Brewin
@@ -822,7 +828,6 @@ def test_fun():
     dg = tensorhead('dg', [Lorentz]*3, [[1], [1]*2])
     # gamma^a_{b c} is the Christoffel symbol
     gamma = S.Half*g(a,d)*(dg(-b,-d,-c) + dg(-c,-b,-d) - dg(-d,-b,-c))
-    gamma.set_free_args([a, -b, -c])
     # t = g_{a b; c}
     t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
     t = t.contract_metric(g, True)
