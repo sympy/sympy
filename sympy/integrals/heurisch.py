@@ -198,7 +198,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
                         if M is not None:
                             if M[a].is_positive:
-                                terms.add(I*erfi(sqrt(M[a])*x))
+                                terms.add(erfi(sqrt(M[a])*x))
                             else: # M[a].is_negative or unknown
                                 terms.add(erf(sqrt(-M[a])*x))
 
@@ -207,7 +207,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
                         if M is not None:
                             if M[a].is_positive:
                                 terms.add(sqrt(pi/4*(-M[a]))*exp(M[c] - M[b]**2/(4*M[a]))*
-                                          (-I)*erfi(sqrt(M[a])*x + M[b]/(2*sqrt(M[a]))))
+                                          erfi(sqrt(M[a])*x + M[b]/(2*sqrt(M[a]))))
                             elif M[a].is_negative:
                                 terms.add(sqrt(pi/4*(-M[a]))*exp(M[c] - M[b]**2/(4*M[a]))*
                                           erf(sqrt(-M[a])*x - M[b]/(2*sqrt(-M[a]))))
