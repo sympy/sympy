@@ -5,7 +5,7 @@ from sympy import (
     log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
     Si, Ci, E1, Ei, li, sin, cos, sinh, cosh, fresnels, fresnelc)
 
-from sympy.functions.special.error_functions import _erfs
+from sympy.functions.special.error_functions import _erfs, _eis
 
 from sympy.core.function import ArgumentIndexError
 
@@ -68,6 +68,25 @@ def test__erfs():
     assert expand(erf(z).rewrite('tractable').diff(z).rewrite('intractable')) \
         == erf(z).diff(z)
     assert _erfs(z).rewrite("intractable") == (-erf(z) + 1)*exp(z**2)
+
+
+def test__eis():
+    assert _eis(z).diff(z) == -_eis(z) + 1/z
+
+    assert _eis(1/z).series(z) == \
+        z + z**2 + 2*z**3 + 6*z**4 + 24*z**5 + O(z**6)
+
+    assert Ei(z).rewrite('tractable') == exp(z)*_eis(z)
+    assert li(z).rewrite('tractable') == z*_eis(log(z))
+
+    assert _eis(z).rewrite('intractable') == exp(-z)*Ei(z)
+
+    assert expand(li(z).rewrite('tractable').diff(z).rewrite('intractable')) \
+        == li(z).diff(z)
+
+    assert expand(Ei(z).rewrite('tractable').diff(z).rewrite('intractable')) \
+        == Ei(z).diff(z)
+
 
 # NOTE we multiply by exp_polar(I*pi) and need this to be on the principal
 #      branch, hence take x in the lower half plane (d=0).
