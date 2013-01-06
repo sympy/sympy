@@ -149,6 +149,8 @@ def test_ei():
     assert Ei(x).rewrite(li) == Ei(x)
     assert Ei(log(x)).rewrite(li) == li(x)
 
+    assert gruntz(Ei(x+exp(-x))*exp(-x)*x, x, oo) == 1
+
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
