@@ -127,6 +127,9 @@ def test_ei():
     assert mytn(Ei(x*polar_lift(I)), Ei(x*polar_lift(I)).rewrite(Si),
                 Ci(x) + I*Si(x) + I*pi/2, x)
 
+    assert Ei(x).rewrite(li) == Ei(x)
+    assert Ei(log(x)).rewrite(li) == li(x)
+
 
 def test_expint():
     assert mytn(expint(x, y), expint(x, y).rewrite(uppergamma),
