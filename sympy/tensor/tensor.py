@@ -682,7 +682,6 @@ class TensAdd(TensExpr):
     >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
     >>> t = p(a) + q(a); t
     p(a) + q(a)
-    >>> t.set_free_args([a])
     >>> t(b)
     p(b) + q(b)
     """
@@ -713,30 +712,16 @@ class TensAdd(TensExpr):
         if len(a) == 1:
             return a[0]
         obj._args = tuple(a)
-        obj.free_args = None
         # attribute that can be assigned to make the tensor callable
         return obj
 
-    def set_free_args(self, free_args, sym=None):
-        """Set arguments to call a tensor.
-
-        ``free_args``  list of the free indices
-        It must be compatible with ``_free``
-
-        ``sym`` symmetry of the tensor (to be implemented)
-
-        """
-        t0 = self.args[0]
-        if not sorted([x[0] for x in t0._free]) == sorted(free_args):
-            raise ValueError('indices do not match')
-        self.free_args = free_args
+    @property
+    def free_args(self):
+        return self.args[0].free_args
 
 
     def __call__(self, *indices):
-        """Returns tensor with ``free_args`` indices replaced by ``indices``
-
-        If ``free_args`` is not defined or has not the same tensortypes
-        as ``indices`` an error is raised.
+        """Returns tensor with ordered free indices replaced by ``indices``
 
         Examples
         ========
@@ -749,7 +734,6 @@ class TensAdd(TensExpr):
         >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
         >>> g = Lorentz.metric
         >>> t = p(i0)*p(i1) + g(i0,i1)*q(i2)*q(-i2)
-        >>> t.set_free_args([i0,i1])
         >>> t(i0,i2)
         metric(i0, i2)*q(L_0)*q(-L_0) + p(i0)*p(i2)
         >>> t(i0,i1) - t(i1,i0)
@@ -757,14 +741,12 @@ class TensAdd(TensExpr):
         """
         free_args = self.free_args
         indices = list(indices)
-        if free_args is None:
-            raise ValueError('`free_args` has not been assigned')
-        indices = list(indices)
         if [x.tensortype for x in indices] != [x.tensortype for x in free_args]:
             raise ValueError('incompatible types')
+        if indices == free_args:
+            return self
         index_tuples = zip(free_args, indices)
         a = [x.fun_eval(*index_tuples) for x in self.args]
-        free_types = set([x.tensortype for x in free_args])
         res = TensAdd(*a)
 
         return res
@@ -902,8 +884,11 @@ class TensMul(TensExpr):
         obj._coeff = coeff
         obj._is_canon_bp = kw_args.get('is_canon_bp', False)
 
-        obj.free_args = None
         return obj
+
+    @property
+    def free_args(self):
+        return sorted([x[0] for x in self._free])
 
     def __eq__(self, other):
         if other == 0:
@@ -1469,24 +1454,9 @@ class TensMul(TensExpr):
                 free1.append((j, ipos, cpos))
         return TensMul(self._coeff, self._components, free1, self._dum)
 
-    def set_free_args(self, free_args, sym=None):
-        """Set arguments to call a tensor.
-
-        ``free_args``  list of the free indices
-        It must be compatible with ``_free``
-
-        ``sym`` symmetry of the tensor (to be implemented)
-
-        """
-        if not sorted([x[0] for x in self._free]) == sorted(free_args):
-            raise ValueError('indices do not match')
-        self.free_args = free_args
 
     def __call__(self, *indices):
-        """Returns tensor with ``free_args`` indices replaced by ``indices``
-
-        If ``free_args`` is not defined or has not the same tensortypes
-        as ``indices`` an error is raised.
+        """Returns tensor with ordered free indices replaced by ``indices``
 
         Examples
         ========
@@ -1499,20 +1469,17 @@ class TensMul(TensExpr):
         >>> g = Lorentz.metric
         >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
         >>> t = p(i0)*q(i1)*q(-i1)
-        >>> t.set_free_args([i0])
         >>> t(i1)
         p(i1)*q(L_0)*q(-L_0)
         """
         free_args = self.free_args
-        if free_args is None:
-            raise ValueError('`free_args` has not been assigned')
         indices = list(indices)
         if [x.tensortype for x in indices] != [x.tensortype for x in free_args]:
             raise ValueError('incompatible types')
+        if indices == free_args:
+            return self
         t = self.fun_eval(*zip(free_args, indices))
         return t
-        #t = t.contract_delta(delta)
-        #raise NotImplementedError
 
     def _as_coeff_mul(self):
         a = self.split()
