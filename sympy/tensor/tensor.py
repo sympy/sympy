@@ -701,18 +701,21 @@ class TensAdd(TensExpr):
         if len(args) == 1 and args[0].is_TensMul:
             obj._args = tuple(args)
             return obj
-        args.sort(key=lambda x: (x._components, x._free, x._dum))
         args = [x.canon_bp() for x in args if x]
         args = [x for x in args if x]
         if not args:
             return S.Zero
+
+        # collect canonicalized terms
+        args.sort(key=lambda x: (x._components, x._free, x._dum))
         a = _tensAdd_collect_terms(args)
+
         if not a:
             return S.Zero
+        # it there is only a component tensor return it
         if len(a) == 1:
             return a[0]
         obj._args = tuple(a)
-        # attribute that can be assigned to make the tensor callable
         return obj
 
     @property
@@ -769,6 +772,7 @@ class TensAdd(TensExpr):
         if isinstance(other, TensExpr) and other.is_TensMul and other._coeff == 0:
             return self == 0
         t = self - other
+
         if not isinstance(t, TensExpr):
             return t == 0
         else:
@@ -800,7 +804,7 @@ class TensAdd(TensExpr):
         if len(args) == 1:
             return args[0]
         t = TensAdd(*args)
-        return t.canon_bp()
+        return canon_bp(t)
 
     def substitute_tensor(self, t1, t2, subst_all=False):
         args = self.args
@@ -1278,7 +1282,7 @@ class TensMul(TensExpr):
             return S.Zero
         return t.perm2tensor(can, True)
 
-    def _contract(self, g, antisym, contract_all=False, onlydelta=False):
+    def _contract(self, g, antisym, contract_all=False):
         """
         helper method for ``contract_metric`` and ``contract_delta``
 
@@ -1294,33 +1298,21 @@ class TensMul(TensExpr):
         free_indices = [x[0] for x in self._free]
         a = self.split()
         typ = g.index_types[0]
-        # if a component tensor of a has 2 dummy indices, it is g(d,-d) = dim
         for i, tg in enumerate(a):
             if tg._components[0] == g:
-                tg_free_indices = [x[0] for x in tg._free]
-                if onlydelta and tg_free_indices[0].is_up == tg_free_indices[1].is_up:
-                    continue
-                if len(tg_free_indices) == 0:
-                    # g is contracted with itself
-                    a1 = a[:i] + a[i + 1:]
-                    t11 = tensor_mul(*a1)
-                    if typ.dim is None:
-                        raise ValueError('dimension not assigned')
-                    coeff = typ.dim*a[i]._coeff
-                    if antisym and tg._dum[0][0] == 0:
-                        # g(i, -i) = -D
-                        coeff = -coeff
-                    t = tensor_mul(*a1)*coeff
+                tg_free = [x[0] for x in tg._free]
+                if len(tg_free) == 0:
+                    t = _contract_g_with_itself(a, i, tg, tg_free, g, antisym)
                     if contract_all == True and g in t._components:
                         return t._contract(g, antisym, True)
                     return t
-
-                if all(indx in free_indices for indx in tg_free_indices):
+                if all(indx in free_indices for indx in tg_free):
                     continue
                 else:
                     break
         else:
-        # if all metric tensors have only free indices, there is no contraction
+            # if all metric tensors have only free indices,
+            # there is no contraction
             return self
 
         # tg has one or two indices contracted with other tensors
@@ -1343,12 +1335,7 @@ class TensMul(TensExpr):
 
     def contract_delta(self, delta):
         typ = delta.types[0]
-        g = typ.metric
-        if g:
-            antisym = typ.metric_antisym
-            t = self._contract(g, antisym, contract_all=True, onlydelta=True)
-        else:
-            t = self._contract(delta, None, True)
+        t = self._contract(delta, None, True)
         return t
 
     def contract_metric(self, g, contract_all=False):
@@ -1606,6 +1593,22 @@ def riemann_cyclic(t2):
         return t3
     else:
         return canon_bp(t3)
+
+def _contract_g_with_itself(a, i, tg, tg_free, g, antisym):
+    """
+    helper function for _contract
+    """
+    typ = g.index_types[0]
+    a1 = a[:i] + a[i + 1:]
+    t11 = tensor_mul(*a1)
+    if typ.dim is None:
+        raise ValueError('dimension not assigned')
+    coeff = typ.dim*a[i]._coeff
+    if antisym and tg._dum[0][0] == 0:
+        # g(i, -i) = -D
+        coeff = -coeff
+    t = tensor_mul(*a1)*coeff
+    return t
 
 def _contract_g_with_free_index(a, free_indices, i, tg, tg_free, g, antisym):
     """
