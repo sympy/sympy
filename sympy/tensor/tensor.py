@@ -38,12 +38,6 @@ TODO:
 for example in ``p(a)*p(b)/(p**2 + m**2)`` the scalar ``p**2``
 is equivalent to the tensor ``p(c)*p(-c)``, but can appear in the denominator.
 
-
-* improve the commutation model:
-currently tensors can be commuting, anticommuting or not commuting;
-it should be possible to assign commutation relations between
-specific ``TensorHead``.
-
 * introduce tensor symmetrizers and algebraic operations on them
 
 * Rule for contraction of Levi-Civita ``epsilon`` tensors:
@@ -61,7 +55,81 @@ from sympy.core import Basic, sympify, Add, Mul, S
 from sympy.core.symbol import Symbol, symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 
+class _TensorManager(object):
+    def __init__(self, comm=[defaultdict(int) for i in range(2)]):
+        self._comm = comm
+        for i in range(len(self._comm)):
+            self._comm[0][i] = 0
+        self._comm[1][0] = 0
+        self._comm[1][1] = 0
 
+    def set_comm(self, i, j, c):
+        """
+        set the commutation parameter ``c`` for commutation groups ``i, j``
+
+        ``c``     commutation number
+        0        commuting
+        1        anticommuting
+        None     no commutation property
+
+        Tensors in the group ``i=0`` commute with any other tensor.
+        Tensors in the group ``i=1`` anticommute within that group.
+        For the remaining cases, use this method to set the commutation rules;
+        by default ``c=None``.
+
+        Examples
+        ========
+
+        ``G`` and ``GH`` do not commute with themselves and commute with
+        each other; A is commuting.
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead, TensorManager
+        >>> Lorentz = TensorIndexType('Lorentz')
+        >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
+        >>> A = tensorhead('A', [Lorentz], [[1]])
+        >>> G = tensorhead('G', [Lorentz], [[1]], 2)
+        >>> GH = tensorhead('GH', [Lorentz], [[1]], 3)
+        >>> TensorManager.set_comm(2, 3, 0)
+        >>> (GH(i1)*G(i0)).canon_bp()
+        G(i0)*GH(i1)
+        >>> (G(i1)*G(i0)).canon_bp()
+        G(i1)*G(i0)
+        >>> (G(i1)*A(i0)).canon_bp()
+        A(i0)*G(i1)
+        """
+        assert isinstance(i, int) and isinstance(j, int) and i >= 2 and j >= 2
+        assert c is None or isinstance(c, int) and c >= 0
+        m =  max(i,j) + 1
+        if len(self._comm) < m:
+            self._comm.extend([{} for k in range(m - len(self._comm))])
+        if not self._comm[i]:
+            self._comm[i][0] = 0
+        self._comm[i][j] = c
+        self._comm[j][i] = c
+
+    def set_comms(self, *args):
+        for i, j, c in range(len(args)):
+            set_comm(self, i, j, c)
+
+    def get_comm(self, i, j):
+        """
+        Return the commutation parameter for commutation groups ``i, j``
+
+        see ``_TensorManager.set_comm``
+        """
+        try:
+            return self._comm[i].get(j, 0 if i*j == 0 else None)
+        except IndexError:
+            if j == 0:
+                return 0
+            return None
+
+
+    def clear(self):
+        for i in range(2, len(self._comm)):
+            self._comm[i].clear()
+
+TensorManager = _TensorManager()
 
 class TensorIndexType(Basic):
     """
@@ -367,15 +435,12 @@ class TensorType(Basic):
     def __str__(self):
         return 'TensorType(%s)' %([str(x) for x in self.index_types])
 
-    def __call__(self, s, anticommuting=False):
+    def __call__(self, s, comm=0):
         """
         Return a TensorHead object or a list of TensorHead objects.
 
         ``s``  name or string of names
-        ``anticommuting``:
-        None     no commutation rule
-        False    commutes
-        True     anticommutes
+        ``commuting``:
 
         Examples
         ========
@@ -390,7 +455,7 @@ class TensorType(Basic):
         >>> S2 = TensorType([Lorentz]*2, sym2)
         >>> V = S2('V')
         >>> W = S2('W', 1)
-        >>> G = S2('G', None)
+        >>> G = S2('G', 2)
         >>> canon_bp(V(a, b)*V(-b, -a))
         V(L_0, L_1)*V(-L_0, -L_1)
         >>> canon_bp(W(a, b)*W(-b, -a))
@@ -401,11 +466,11 @@ class TensorType(Basic):
         else:
             raise ValueError('expecting a string')
         if len(names) == 1:
-            return TensorHead(names[0], self, anticommuting)
+            return TensorHead(names[0], self, comm)
         else:
-            return [TensorHead(name, self, anticommuting) for name in names]
+            return [TensorHead(name, self, comm) for name in names]
 
-def tensorhead(name, typ, sym, anticommuting=False):
+def tensorhead(name, typ, sym, comm=0):
     """
     Function generating tensorhead(s).
 
@@ -415,10 +480,10 @@ def tensorhead(name, typ, sym, anticommuting=False):
 
     ``sym``  same as ``*args`` in ``tensorsymmetry``
 
-    ``anticommuting``:
-        None     no commutation rule
-        False    commutes
-        True     anticommutes
+    ``comm``: commutation group number
+     see ``_TensorManager.set_comm``
+
+
     Examples
     ========
 
@@ -432,13 +497,13 @@ def tensorhead(name, typ, sym, anticommuting=False):
     """
     sym = tensorsymmetry(*sym)
     S = TensorType(typ, sym)
-    return S(name, anticommuting)
+    return S(name, comm)
 
 
 class TensorHead(Basic):
     is_commutative = False
 
-    def __new__(cls, name, typ, anticommuting, **kw_args):
+    def __new__(cls, name, typ, comm, **kw_args):
         """
         tensor with given name, index types, symmetry, commutation rule
 
@@ -446,10 +511,9 @@ class TensorHead(Basic):
 
         ``typ`` list of TensorIndexType
 
-        ``anticommuting`` commutation property
-        False     commuting tensor
-        True      anticommuting tensor
-        None      no commutation rule
+        ``comm`` commutation group number
+        see ``_TensorManager.set_comm``
+
 
         Examples
         ========
@@ -466,7 +530,7 @@ class TensorHead(Basic):
         obj.rank = len(obj.index_types)
         obj.types = typ.types
         obj.symmetry = typ.symmetry
-        obj.anticomm = anticommuting
+        obj.comm = comm
         return obj
 
     name = property(lambda self: self.args[0])
@@ -480,15 +544,9 @@ class TensorHead(Basic):
         Returns 0 (1) if self and other (anti)commute.
 
         Returns None if self and other do not (anti)commute.
-
-        TODO: it should be possible to assign rules for commutations
-        between tensors, to be used here.
         """
-        if self.anticomm == 0 or other.anticomm == 0:
-            return 0
-        if self.anticomm == 1 and other.anticomm == 1:
-            return 1
-        return None
+        r = TensorManager.get_comm(self.comm, other.comm)
+        return r
 
 
     def __str__(self):
@@ -1150,7 +1208,12 @@ class TensMul(TensExpr):
                 numtyp.append([prev, 1])
         v = []
         for h, n in numtyp:
-            v.append((h.symmetry.base, h.symmetry.generators, n, h.anticomm))
+            if h.comm == 0 or h.comm == 1:
+                comm = h.comm
+            else:
+                comm = TensorManager.get_comm(h.comm, h.comm)
+
+            v.append((h.symmetry.base, h.symmetry.generators, n, comm))
         return _af_new(g), dummies, msym, v
 
     def __mul__(self, other):
@@ -1219,13 +1282,14 @@ class TensMul(TensExpr):
         for i in range(n):
             for j in range(n, i, -1):
                 c = cv[j-1][0].commutes_with(cv[j][0])
-                if c == None:
+                if c not in [0,1]:
                     continue
                 if (cv[j-1][0].types, cv[j-1][0].name) > \
                         (cv[j][0].types, cv[j][0].name):
                     cv[j-1], cv[j] = cv[j], cv[j-1]
                     if c:
                         sign = -sign
+
         # perm_inv[new_pos] = old_pos
         components = [x[0] for x in cv]
         perm_inv = [x[1] for x in cv]
