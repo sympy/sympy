@@ -39,6 +39,8 @@ class GammaMatrices(object):
         with Lorentz signature `g5c = I`, which is the default;
         in Euclidean space `g5c = 1`
 
+        The attribute `Gsymbol` can be used to set commutation relations
+        with other tensors using ``TensorManager``.
         """
         self.g = typ.metric
         if not typ.dim:
@@ -47,10 +49,11 @@ class GammaMatrices(object):
         self.typ = typ
         sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
         S1 = TensorType([typ], sym1)
-        self.G = S1('G', 2)
+        self.Gsymbol = Symbol('Gsymbol')
+        self.G = S1('G', self.Gsymbol)
         sym0 = TensorSymmetry(([], [Permutation(1)]))
         S0 = TensorType([], sym0)
-        self.Gamma5 = S0('G5', 2)
+        self.Gamma5 = S0('G5', self.Gsymbol)
         self.G5 = TensMul(S.One, [self.Gamma5], [], [])
         self.g5c = g5c
         self.epsilon = typ.epsilon

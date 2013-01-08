@@ -57,16 +57,19 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 
 class _TensorManager(object):
-    def __init__(self, comm=[defaultdict(int) for i in range(2)]):
-        self._comm = comm
-        for i in range(len(self._comm)):
-            self._comm[0][i] = 0
-        self._comm[1][0] = 0
-        self._comm[1][1] = 0
+    def __init__(self):
+        self._comm = defaultdict(dict)
+        self._comm[0][0] = 0
+        self._comm[0][1] = 0
+        self._comm[1][0] = 1
 
     def set_comm(self, i, j, c):
         """
         set the commutation parameter ``c`` for commutation groups ``i, j``
+
+        ``i, j`` they can be symbols or numbers, apart from ``0`` and ``1``
+        which are reserved respectively for commuting and anticommuting
+        tensors
 
         ``c``     commutation number
         0        commuting
@@ -98,15 +101,15 @@ class _TensorManager(object):
         >>> (G(i1)*A(i0)).canon_bp()
         A(i0)*G(i1)
         """
-        assert isinstance(i, int) and isinstance(j, int) and i >= 2 and j >= 2
-        assert c is None or isinstance(c, int) and c >= 0
-        m =  max(i,j) + 1
-        if len(self._comm) < m:
-            self._comm.extend([{} for k in range(m - len(self._comm))])
-        if not self._comm[i]:
+        if i not in self._comm.keys():
             self._comm[i][0] = 0
-        self._comm[i][j] = c
-        self._comm[j][i] = c
+            self._comm[0][i] = 0
+        if j not in self._comm.keys():
+            self._comm[0][j] = 0
+        if j not in self._comm[i]:
+            self._comm[i][j] = c
+        if i not in self._comm[j]:
+            self._comm[j][i] = c
 
     def set_comms(self, *args):
         for i, j, c in range(len(args)):
@@ -118,12 +121,9 @@ class _TensorManager(object):
 
         see ``_TensorManager.set_comm``
         """
-        try:
-            return self._comm[i].get(j, 0 if i*j == 0 else None)
-        except IndexError:
-            if j == 0:
-                return 0
-            return None
+        if i == 0 or j == 0:
+            return 0
+        return self._comm[i].get(j)
 
 
     def clear(self):
@@ -1540,7 +1540,6 @@ class TensMul(TensExpr):
         >>> t.substitute_indices((i,j), (j, k))
         A(j, L_0)*B(-L_0, -k)
         """
-        #fixed = kwargs.pop('fixed', False)
         free = self._free
         free1 = []
         for j, ipos, cpos in free:

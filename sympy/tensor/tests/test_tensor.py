@@ -866,3 +866,22 @@ def test_TensorManager():
     qsh = GH(ih)*qh(-ih)
     assert ps*qsh == qsh*ps
     assert ps*qs != qs*ps
+
+    TensorManager.clear()
+    # same as before, but using symbols in TensorManager
+    Gsymbol = Symbol('Gsymbol')
+    GHsymbol = Symbol('GHsymbol')
+    p, q = tensorhead('p q', [Lorentz], [[1]])
+    ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
+    G = tensorhead('G', [Lorentz], [[1]], Gsymbol)
+    GH = tensorhead('GH', [LorentzH], [[1]], GHsymbol)
+    TensorManager.set_comm(Gsymbol, GHsymbol, 0)
+    ps = G(i)*p(-i)
+    psh = GH(ih)*ph(-ih)
+    t = ps + psh
+    t1 = t*t
+    assert t1 == ps*ps + 2*ps*psh + psh*psh
+    qs = G(i)*q(-i)
+    qsh = GH(ih)*qh(-ih)
+    assert ps*qsh == qsh*ps
+    assert ps*qs != qs*ps
