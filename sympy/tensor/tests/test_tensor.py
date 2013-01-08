@@ -858,11 +858,12 @@ def test_TensorManager():
     # same as before, but using symbols in TensorManager
     Gsymbol = Symbol('Gsymbol')
     GHsymbol = Symbol('GHsymbol')
+    TensorManager.set_comm(Gsymbol, GHsymbol, 0)
     p, q = tensorhead('p q', [Lorentz], [[1]])
     ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
     G = tensorhead('G', [Lorentz], [[1]], Gsymbol)
+    assert TensorManager._comm_i2symbol[G.comm] == Gsymbol
     GH = tensorhead('GH', [LorentzH], [[1]], GHsymbol)
-    TensorManager.set_comm(Gsymbol, GHsymbol, 0)
     ps = G(i)*p(-i)
     psh = GH(ih)*ph(-ih)
     t = ps + psh
