@@ -1,6 +1,7 @@
 """
-In this module it is used the abstract index notation, first formalized
-by Penrose.
+This module defines tensors with abstract index notation.
+
+The abstract index notation has been first formalized by Penrose.
 
 Tensor indices are formal objects, with a tensor type; there is no
 notion of index range, it is only possible to assign the dimension,
@@ -46,7 +47,6 @@ one must intoduce generalized Kronecker deltas to do this properly
 * develop a Young tableaux model:
 one of its uses is in ``tensorsymmetry`` to provide the symmetry of the tensor
 using the Young diagrams
-
 """
 
 
@@ -56,16 +56,19 @@ from sympy.core.symbol import Symbol, symbols
 from sympy.combinatorics.tensor_can import get_symmetric_group_sgs, bsgs_direct_product, canonicalize, riemann_bsgs
 
 class _TensorManager(object):
-    def __init__(self, comm=[defaultdict(int) for i in range(2)]):
-        self._comm = comm
-        for i in range(len(self._comm)):
-            self._comm[0][i] = 0
-        self._comm[1][0] = 0
-        self._comm[1][1] = 0
+    def __init__(self):
+        self._comm = defaultdict(dict)
+        self._comm[0][0] = 0
+        self._comm[0][1] = 0
+        self._comm[1][0] = 1
 
     def set_comm(self, i, j, c):
         """
         set the commutation parameter ``c`` for commutation groups ``i, j``
+
+        ``i, j`` they can be symbols or numbers, apart from ``0`` and ``1``
+        which are reserved respectively for commuting and anticommuting
+        tensors
 
         ``c``     commutation number
         0        commuting
@@ -97,15 +100,15 @@ class _TensorManager(object):
         >>> (G(i1)*A(i0)).canon_bp()
         A(i0)*G(i1)
         """
-        assert isinstance(i, int) and isinstance(j, int) and i >= 2 and j >= 2
-        assert c is None or isinstance(c, int) and c >= 0
-        m =  max(i,j) + 1
-        if len(self._comm) < m:
-            self._comm.extend([{} for k in range(m - len(self._comm))])
-        if not self._comm[i]:
+        if i not in self._comm.keys():
             self._comm[i][0] = 0
-        self._comm[i][j] = c
-        self._comm[j][i] = c
+            self._comm[0][i] = 0
+        if j not in self._comm.keys():
+            self._comm[0][j] = 0
+        if j not in self._comm[i]:
+            self._comm[i][j] = c
+        if i not in self._comm[j]:
+            self._comm[j][i] = c
 
     def set_comms(self, *args):
         for i, j, c in range(len(args)):
@@ -117,12 +120,9 @@ class _TensorManager(object):
 
         see ``_TensorManager.set_comm``
         """
-        try:
-            return self._comm[i].get(j, 0 if i*j == 0 else None)
-        except IndexError:
-            if j == 0:
-                return 0
-            return None
+        if i == 0 or j == 0:
+            return 0
+        return self._comm[i].get(j)
 
 
     def clear(self):
@@ -440,7 +440,9 @@ class TensorType(Basic):
         Return a TensorHead object or a list of TensorHead objects.
 
         ``s``  name or string of names
-        ``commuting``:
+
+        ``comm``: commutation group number
+        see ``_TensorManager.set_comm``
 
         Examples
         ========
@@ -481,7 +483,7 @@ def tensorhead(name, typ, sym, comm=0):
     ``sym``  same as ``*args`` in ``tensorsymmetry``
 
     ``comm``: commutation group number
-     see ``_TensorManager.set_comm``
+    see ``_TensorManager.set_comm``
 
 
     Examples
@@ -1282,7 +1284,7 @@ class TensMul(TensExpr):
         for i in range(n):
             for j in range(n, i, -1):
                 c = cv[j-1][0].commutes_with(cv[j][0])
-                if c not in [0,1]:
+                if c not in [0, 1]:
                     continue
                 if (cv[j-1][0].types, cv[j-1][0].name) > \
                         (cv[j][0].types, cv[j][0].name):
@@ -1399,7 +1401,6 @@ class TensMul(TensExpr):
         free_indices = [x[0] for x in self._free]
         a = self.split()
         typ = g.index_types[0]
-        # if a component tensor of a has 2 dummy indices, it is g(d,-d) = dim
         for i, tg in enumerate(a):
             if tg._components[0] == g:
                 tg_free = [x[0] for x in tg._free]
