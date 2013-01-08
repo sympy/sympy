@@ -191,7 +191,7 @@ class TensorIndexType(Basic):
     def __new__(cls, name, metric=False, dim=None, eps_dim = None,
                  dummy_fmt=None):
         """
-        name   name of the tensor type
+        ``name``   name of the tensor type
 
         ``metric``: it can be True, False, None or another object
         If it is True, False, None it gives its antisymmetry:
@@ -387,8 +387,6 @@ def tensorsymmetry(*args):
     Examples
     ========
 
-    Symmetric tensor using a BSBS
-
     Symmetric tensor using a Young tableau
 
     >>> from sympy.tensor.tensor import TensorIndexType, TensorType, tensorsymmetry
@@ -419,7 +417,6 @@ def tensorsymmetry(*args):
             else:
                 raise NotImplementedError
         return bsgs
-
 
     if not args:
         return TensorSymmetry([[], [Permutation(2)]])
