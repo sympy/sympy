@@ -4,7 +4,7 @@ from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
-  tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead)
+  tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead, TensorManager)
 from sympy.utilities.pytest import raises
 
 #################### Tests from tensor_can.py #######################
@@ -288,9 +288,9 @@ def test_canonicalize1():
     S3a = TensorType([Lorentz]*3, sym3a)
     alpha, beta, gamma, mu, nu, rho = \
       tensor_indices('alpha,beta,gamma,mu,nu,rho', Lorentz)
-    Gamma = S1('Gamma', None)
-    Gamma2 = S2a('Gamma', None)
-    Gamma3 = S3a('Gamma', None)
+    Gamma = S1('Gamma', 2)
+    Gamma2 = S2a('Gamma', 2)
+    Gamma3 = S3a('Gamma', 2)
     t = Gamma2(-mu,-nu)*Gamma(rho)*Gamma3(nu, mu, alpha)
     tc = t.canon_bp()
     assert str(tc) == '-Gamma(L_0, L_1)*Gamma(rho)*Gamma(alpha, -L_0, -L_1)'
@@ -845,3 +845,24 @@ def test_fun():
     t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
     t = t.contract_metric(g, True)
     assert t == 0
+
+def test_TensorManager():
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    LorentzH = TensorIndexType('LorentzH', dummy_fmt='LH')
+    i, j = tensor_indices('i,j', Lorentz)
+    ih, jh = tensor_indices('ih,jh', LorentzH)
+    TensorManager.set_comm(2, 3, 0)
+    p, q = tensorhead('p q', [Lorentz], [[1]])
+    ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
+    G = tensorhead('G', [Lorentz], [[1]], 2)
+    GH = tensorhead('GH', [LorentzH], [[1]], 3)
+    TensorManager.set_comm(2, 3, 0)
+    ps = G(i)*p(-i)
+    psh = GH(ih)*ph(-ih)
+    t = ps + psh
+    t1 = t*t
+    assert t1 == ps*ps + 2*ps*psh + psh*psh
+    qs = G(i)*q(-i)
+    qsh = GH(ih)*qh(-ih)
+    assert ps*qsh == qsh*ps
+    assert ps*qs != qs*ps

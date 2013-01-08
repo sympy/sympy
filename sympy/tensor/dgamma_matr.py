@@ -47,10 +47,10 @@ class GammaMatrices(object):
         self.typ = typ
         sym1 = TensorSymmetry(get_symmetric_group_sgs(1))
         S1 = TensorType([typ], sym1)
-        self.G = S1('G', None)
+        self.G = S1('G', 2)
         sym0 = TensorSymmetry(([], [Permutation(1)]))
         S0 = TensorType([], sym0)
-        self.Gamma5 = S0('G5', None)
+        self.Gamma5 = S0('G5', 2)
         self.G5 = TensMul(S.One, [self.Gamma5], [], [])
         self.g5c = g5c
         self.epsilon = typ.epsilon
@@ -256,7 +256,7 @@ class GammaMatrices(object):
                     p_pos2 = dx[3]
             if p_pos1 > 0 and p_pos2 > 0:
                 if components[p_pos1] == components[p_pos2] \
-                    and components[p_pos1].anticomm == 0:
+                    and components[p_pos1].comm == 0:
                     return i, p_pos1, p_pos2
         return None
 
