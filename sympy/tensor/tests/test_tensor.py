@@ -291,6 +291,7 @@ def test_canonicalize1():
     Gamma = S1('Gamma', 2)
     Gamma2 = S2a('Gamma', 2)
     Gamma3 = S3a('Gamma', 2)
+    TensorManager.set_comm(2,2,None)
     t = Gamma2(-mu,-nu)*Gamma(rho)*Gamma3(nu, mu, alpha)
     tc = t.canon_bp()
     assert str(tc) == '-Gamma(L_0, L_1)*Gamma(rho)*Gamma(alpha, -L_0, -L_1)'
@@ -871,11 +872,12 @@ def test_TensorManager():
     # same as before, but using symbols in TensorManager
     Gsymbol = Symbol('Gsymbol')
     GHsymbol = Symbol('GHsymbol')
+    TensorManager.set_comm(Gsymbol, GHsymbol, 0)
     p, q = tensorhead('p q', [Lorentz], [[1]])
     ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
     G = tensorhead('G', [Lorentz], [[1]], Gsymbol)
+    assert TensorManager._comm_i2symbol[G.comm] == Gsymbol
     GH = tensorhead('GH', [LorentzH], [[1]], GHsymbol)
-    TensorManager.set_comm(Gsymbol, GHsymbol, 0)
     ps = G(i)*p(-i)
     psh = GH(ih)*ph(-ih)
     t = ps + psh

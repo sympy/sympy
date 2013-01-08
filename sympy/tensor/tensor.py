@@ -62,6 +62,25 @@ class _TensorManager(object):
         self._comm[0][0] = 0
         self._comm[0][1] = 0
         self._comm[1][0] = 1
+        self._comm_symbols2i = {0:0, 1:1}
+        self._comm_i2symbol = {0:0, 1:1}
+
+    def comm_symbols2i(self, i):
+        """
+        get the commutation group number corresponding to ``i``
+
+        ``i`` can be a symbol or a number
+        """
+        if i not in self._comm_symbols2i:
+            n = len(self._comm_symbols2i)
+            self._comm[n][0] = 0
+            self._comm[0][n] = 0
+            self._comm_symbols2i[i] = n
+            return n
+        return self._comm_symbols2i[i]
+
+    def comm_i2symbol(self, i):
+        return self._comm_i2symbol[i]
 
     def set_comm(self, i, j, c):
         """
@@ -101,15 +120,23 @@ class _TensorManager(object):
         >>> (G(i1)*A(i0)).canon_bp()
         A(i0)*G(i1)
         """
-        if i not in self._comm.keys():
-            self._comm[i][0] = 0
-            self._comm[0][i] = 0
+    def set_comm(self, i, j, c):
+        if i not in self._comm_symbols2i:
+            n = len(self._comm_symbols2i)
+            self._comm[n][0] = 0
+            self._comm[0][n] = 0
+            self._comm_symbols2i[i] = n
+            self._comm_i2symbol[n] = i
         if j not in self._comm.keys():
-            self._comm[0][j] = 0
-        if j not in self._comm[i]:
-            self._comm[i][j] = c
-        if i not in self._comm[j]:
-            self._comm[j][i] = c
+            n = len(self._comm_symbols2i)
+            self._comm[0][n] = 0
+            self._comm[n][0] = 0
+            self._comm_symbols2i[j] = n
+            self._comm_i2symbol[n] = j
+        ni = self._comm_symbols2i[i]
+        nj = self._comm_symbols2i[j]
+        self._comm[ni][nj] = c
+        self._comm[nj][ni] = c
 
     def set_comms(self, *args):
         for i, j, c in range(len(args)):
@@ -121,10 +148,12 @@ class _TensorManager(object):
 
         see ``_TensorManager.set_comm``
         """
-        if i == 0 or j == 0:
-            return 0
-        return self._comm[i].get(j)
-
+        try:
+            return self._comm[i].get(j, 0 if i*j == 0 else None)
+        except IndexError:
+            if j == 0:
+                return 0
+            return None
 
     def clear(self):
         for i in range(2, len(self._comm)):
@@ -532,7 +561,7 @@ class TensorHead(Basic):
         obj.rank = len(obj.index_types)
         obj.types = typ.types
         obj.symmetry = typ.symmetry
-        obj.comm = comm
+        obj.comm = TensorManager.comm_symbols2i(comm)
         return obj
 
     name = property(lambda self: self.args[0])
