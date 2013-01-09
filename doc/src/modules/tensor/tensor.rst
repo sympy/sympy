@@ -5,6 +5,9 @@ Tensor
 
 .. module:: sympy.tensor.tensor
 
+.. autoclass:: _TensorManager
+   :members:
+
 .. autoclass:: TensorIndexType
    :members:
 
@@ -28,14 +31,14 @@ Tensor
 .. autoclass:: TensAdd
    :members:
 
-.. autoclass:: Tensor
+.. autoclass:: TensMul
    :members:
 
 .. autofunction:: canon_bp
 
 .. autofunction:: tensor_mul
 
-.. autofunction:: riemann_cyclic_replaceR
+.. autofunction:: riemann_cyclic_replace
 
 .. autofunction:: riemann_cyclic
 

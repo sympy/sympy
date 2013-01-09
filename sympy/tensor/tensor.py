@@ -172,7 +172,7 @@ class TensorIndexType(Basic):
     In the case of antisymmetric metric, the following raising and
     lowering conventions will be adopted:
 
-    ``psi(a) = g(a, b)*psi(-b); chi(-a) = chi(b)*g(-b, -a)
+    ``psi(a) = g(a, b)*psi(-b); chi(-a) = chi(b)*g(-b, -a)``
 
     ``g(-a, b) = delta(-a, b); g(b, -a) = -delta(a, -b)``
 
@@ -342,7 +342,7 @@ class TensorSymmetry(Basic):
     """
     Symmetry of a tensor
 
-    bsgs tuple (base, sgs) BSGS of the symmetry of the tensor
+    ``bsgs`` tuple (base, sgs) BSGS of the symmetry of the tensor
 
     Examples
     ========
