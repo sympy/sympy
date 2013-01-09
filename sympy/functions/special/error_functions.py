@@ -567,6 +567,9 @@ class li(Function):
         if not (z.is_real and z.is_negative):
             return self.func(z.conjugate())
 
+    def _eval_rewrite_as_Li(self, z):
+        return Li(z) + li(2)
+
     def _eval_rewrite_as_Ei(self, z):
         return Ei(C.log(z))
 
@@ -596,6 +599,25 @@ class li(Function):
 
     def _eval_rewrite_as_tractable(self, z):
         return z * _eis(C.log(z))
+
+
+class Li(Function):
+    r"""
+    The offset logarithmic integral.
+    """
+
+    nargs = 1
+
+    @classmethod
+    def eval(cls, z):
+        if z is 2*S.One:
+            return S.Zero
+
+    def _eval_rewrite_as_li(self, z):
+        return li(z) - li(2)
+
+    def _eval_rewrite_as_tractable(self, z):
+        return self.rewrite(li).rewrite("tractable", deep=True)
 
 ###############################################################################
 #################### TRIGONOMETRIC INTEGRALS ##################################
