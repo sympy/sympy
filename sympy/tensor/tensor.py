@@ -50,7 +50,6 @@ using the Young diagrams
 """
 
 
-
 from collections import defaultdict
 from sympy.core import Basic, sympify, Add, Mul, S
 from sympy.core.symbol import Symbol, symbols
@@ -120,7 +119,6 @@ class _TensorManager(object):
         >>> (G(i1)*A(i0)).canon_bp()
         A(i0)*G(i1)
         """
-    def set_comm(self, i, j, c):
         if i not in self._comm_symbols2i:
             n = len(self._comm_symbols2i)
             self._comm[n][0] = 0
@@ -161,7 +159,6 @@ class _TensorManager(object):
 
 TensorManager = _TensorManager()
 
-
 class TensorIndexType(Basic):
     """
     A TensorIndexType is characterized by its name and its metric.
@@ -175,7 +172,7 @@ class TensorIndexType(Basic):
     In the case of antisymmetric metric, the following raising and
     lowering conventions will be adopted:
 
-    ``psi(a) = g(a, b)*psi(-b); chi(-a) = chi(b)*g(-b, -a)
+    ``psi(a) = g(a, b)*psi(-b); chi(-a) = chi(b)*g(-b, -a)``
 
     ``g(-a, b) = delta(-a, b); g(b, -a) = -delta(a, -b)``
 
@@ -194,7 +191,7 @@ class TensorIndexType(Basic):
     def __new__(cls, name, metric=False, dim=None, eps_dim = None,
                  dummy_fmt=None):
         """
-        name   name of the tensor type
+        ``name``   name of the tensor type
 
         ``metric``: it can be True, False, None or another object
         If it is True, False, None it gives its antisymmetry:
@@ -345,7 +342,7 @@ class TensorSymmetry(Basic):
     """
     Symmetry of a tensor
 
-    bsgs tuple (base, sgs) BSGS of the symmetry of the tensor
+    ``bsgs`` tuple (base, sgs) BSGS of the symmetry of the tensor
 
     Examples
     ========
@@ -366,6 +363,10 @@ class TensorSymmetry(Basic):
     base = property(lambda self: self.args[0])
     generators = property(lambda self: self.args[1])
     rank = property(lambda self: self.args[1][0].size)
+
+    def _hashable_content(self):
+        r = (tuple(self.base), tuple(self.generators))
+        return r
 
 def tensorsymmetry(*args):
     """
@@ -389,8 +390,6 @@ def tensorsymmetry(*args):
 
     Examples
     ========
-
-    Symmetric tensor using a BSBS
 
     Symmetric tensor using a Young tableau
 
@@ -422,7 +421,6 @@ def tensorsymmetry(*args):
             else:
                 raise NotImplementedError
         return bsgs
-
 
     if not args:
         return TensorSymmetry([[], [Permutation(2)]])
@@ -516,6 +514,7 @@ def tensorhead(name, typ, sym, comm=0):
     ``comm``: commutation group number
     see ``_TensorManager.set_comm``
 
+
     Examples
     ========
 
@@ -546,6 +545,7 @@ class TensorHead(Basic):
         ``comm`` commutation group number
         see ``_TensorManager.set_comm``
 
+
         Examples
         ========
 
@@ -570,6 +570,10 @@ class TensorHead(Basic):
     def __lt__(self, other):
         return (self.name, self.index_types) < (other.name, other.index_types)
 
+    def _hashable_content(self):
+        r = (self.name, tuple(self.types), self.symmetry, self.comm)
+        return r
+
     def commutes_with(self, other):
         """
         Returns 0 (1) if self and other (anti)commute.
@@ -578,6 +582,7 @@ class TensorHead(Basic):
         """
         r = TensorManager.get_comm(self.comm, other.comm)
         return r
+
 
     def __str__(self):
         return '%s(%s)' %(self.name, ','.join([str(x) for x in self.index_types]))
@@ -855,7 +860,6 @@ class TensAdd(TensExpr):
         # collect canonicalized terms
         args.sort(key=lambda x: (x._components, x._free, x._dum))
         a = _tensAdd_collect_terms(args)
-
         if not a:
             return S.Zero
         # it there is only a component tensor return it
@@ -917,7 +921,6 @@ class TensAdd(TensExpr):
         if isinstance(other, TensExpr) and other.is_TensMul and other._coeff == 0:
             return self == 0
         t = self - other
-
         if not isinstance(t, TensExpr):
             return t == 0
         else:
@@ -925,6 +928,9 @@ class TensAdd(TensExpr):
                 return t._coeff == 0
             else:
                 return all(x._coeff == 0 for x in t.args)
+
+    def _hashable_content(self):
+        return tuple(self.args)
 
     def __ne__(self, other):
         return not (self == other)
@@ -1047,6 +1053,12 @@ class TensMul(TensExpr):
             return self._coeff == other
         res = self - other
         return res == 0
+
+    def _hashable_content(self):
+        t = self.canon_bp()
+        r = (t._coeff, tuple(t._components), \
+                tuple(sorted(t._free)), tuple(sorted(t._dum)))
+        return r
 
     def __ne__(self, other):
         return not self == other
