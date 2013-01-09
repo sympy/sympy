@@ -291,7 +291,6 @@ def test_canonicalize1():
     Gamma = S1('Gamma', 2)
     Gamma2 = S2a('Gamma', 2)
     Gamma3 = S3a('Gamma', 2)
-    TensorManager.set_comm(2,2,None)
     t = Gamma2(-mu,-nu)*Gamma(rho)*Gamma3(nu, mu, alpha)
     tc = t.canon_bp()
     assert str(tc) == '-Gamma(L_0, L_1)*Gamma(rho)*Gamma(alpha, -L_0, -L_1)'
@@ -897,6 +896,7 @@ def test_hash():
     p, q = tensorhead('p q', [Lorentz], [[1]])
     t1 = p(a)*q(b)
     t2 = p(a)*p(b)
+    assert hash(t1) != hash(t2)
     t3 = p(a)*p(b) + g(a,b)
-    d = {t1:1, t2:2, t3:3}
-    assert d[t1] == 1 and d[t2] == 2 and d[t3] == 3
+    t4 = p(a)*p(b) - g(a,b)
+    assert hash(t3) != hash(t4)
