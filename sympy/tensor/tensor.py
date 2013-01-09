@@ -368,6 +368,9 @@ class TensorSymmetry(Basic):
         r = (tuple(self.base), tuple(self.generators))
         return r
 
+    def __hash__(self):
+        return Basic.__hash__(self)
+
 def tensorsymmetry(*args):
     """
     return a ``TensorSymmetry`` object
@@ -573,6 +576,9 @@ class TensorHead(Basic):
     def _hashable_content(self):
         r = (self.name, tuple(self.types), self.symmetry, self.comm)
         return r
+
+    def __hash__(self):
+        return Basic.__hash__(self)
 
     def commutes_with(self, other):
         """
@@ -932,6 +938,9 @@ class TensAdd(TensExpr):
     def _hashable_content(self):
         return tuple(self.args)
 
+    def __hash__(self):
+        return Basic.__hash__(self)
+
     def __ne__(self, other):
         return not (self == other)
 
@@ -1048,6 +1057,9 @@ class TensMul(TensExpr):
         r = (t._coeff, tuple(t._components), \
                 tuple(sorted(t._free)), tuple(sorted(t._dum)))
         return r
+
+    def __hash__(self):
+        return Basic.__hash__(self)
 
     def __ne__(self, other):
         return not self == other

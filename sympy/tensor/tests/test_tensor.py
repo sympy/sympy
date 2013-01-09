@@ -884,3 +884,6 @@ def test_hash():
     t1 = p(a)*q(b)
     t2 = p(a)*p(b)
     assert hash(t1) != hash(t2)
+    t3 = p(a)*p(b) + g(a,b)
+    t4 = p(a)*p(b) - g(a,b)
+    assert hash(t3) != hash(t4)
