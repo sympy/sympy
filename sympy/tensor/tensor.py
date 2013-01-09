@@ -364,6 +364,10 @@ class TensorSymmetry(Basic):
     generators = property(lambda self: self.args[1])
     rank = property(lambda self: self.args[1][0].size)
 
+    def _hashable_content(self):
+        r = (tuple(self.base), tuple(self.generators))
+        return r
+
 def tensorsymmetry(*args):
     """
     return a ``TensorSymmetry`` object
@@ -565,6 +569,10 @@ class TensorHead(Basic):
 
     def __lt__(self, other):
         return (self.name, self.index_types) < (other.name, other.index_types)
+
+    def _hashable_content(self):
+        r = (self.name, tuple(self.types), self.symmetry, self.comm)
+        return r
 
     def commutes_with(self, other):
         """
@@ -921,6 +929,9 @@ class TensAdd(TensExpr):
             else:
                 return all(x._coeff == 0 for x in t.args)
 
+    def _hashable_content(self):
+        return tuple(self.args)
+
     def __ne__(self, other):
         return not (self == other)
 
@@ -1031,6 +1042,12 @@ class TensMul(TensExpr):
             return self._coeff == other
         res = self - other
         return res == 0
+
+    def _hashable_content(self):
+        t = self.canon_bp()
+        r = (t._coeff, tuple(t._components), \
+                tuple(sorted(t._free)), tuple(sorted(t._dum)))
+        return r
 
     def __ne__(self, other):
         return not self == other

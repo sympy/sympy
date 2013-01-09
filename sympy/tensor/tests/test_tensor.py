@@ -873,3 +873,14 @@ def test_TensorManager():
     qsh = GH(ih)*qh(-ih)
     assert ps*qsh == qsh*ps
     assert ps*qs != qs*ps
+
+def test_hash():
+    D = Symbol('D')
+    Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
+    a,b,c,d,e = tensor_indices('a,b,c,d,e', Lorentz)
+    g = Lorentz.metric
+
+    p, q = tensorhead('p q', [Lorentz], [[1]])
+    t1 = p(a)*q(b)
+    t2 = p(a)*p(b)
+    assert hash(t1) != hash(t2)
