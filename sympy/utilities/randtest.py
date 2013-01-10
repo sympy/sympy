@@ -3,7 +3,7 @@
 from random import uniform
 import random
 
-from sympy import I, nsimplify, Tuple
+from sympy import I, nsimplify, Tuple, Symbol
 from sympy.core.compatibility import is_sequence, as_int
 
 
@@ -57,7 +57,7 @@ def test_numerically(f, g, z=None, tol=1.0e-6, a=2, b=-1, c=3, d=1):
     True
     """
     f, g, z = Tuple(f, g, z)
-    z = [z] if z else (f.free_symbols | g.free_symbols)
+    z = [z] if isinstance(z, Symbol) else (f.free_symbols | g.free_symbols)
     reps = zip(z, [random_complex_number(a, b, c, d) for zi in z])
     z1 = f.subs(reps).n()
     z2 = g.subs(reps).n()

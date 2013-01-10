@@ -926,42 +926,51 @@ def trigsimp(expr, deep=False, recursive=False):
     return result
 
 
-def _trigsimp(expr, deep=False):
+def _dotrig(a, b):
+    """Helper to tell whether ``a`` and ``b`` have the same sorts
+    of symbols in them -- no need to test hyperbolic patterns against
+    expressions that have no hyperbolics in them."""
+    return a.func == b.func and (
+        a.has(C.TrigonometricFunction) and b.has(C.TrigonometricFunction) or
+        a.has(C.HyperbolicFunction) and b.has(C.HyperbolicFunction))
+
+def _trigsimp(expr, deep=False, numbers=False):
     """recursive helper for trigsimp"""
+    if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
+        pass
+    elif not numbers and expr.is_number:
+        pass
+
     a, b, c = symbols('a b c', cls=Wild)
     d = Wild('d', commutative=False)
     sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
     sinh, cosh, tanh, coth = C.sinh, C.cosh, C.tanh, C.coth
     # for the simplifications like sinh/cosh -> tanh:
     matchers_division = (
-        (a*sin(b)**c/cos(b)**c, a*tan(b)**c),
-        (a*tan(b)**c*cos(b)**c, a*sin(b)**c),
-        (a*cot(b)**c*sin(b)**c, a*cos(b)**c),
-        (a*tan(b)**c/sin(b)**c, a/cos(b)**c),
-        (a*cot(b)**c/cos(b)**c, a/sin(b)**c),
-        (a*cot(b)**c*tan(b)**c, a),
+        (a*sin(b)**c/cos(b)**c, a*tan(b)**c, sin(b), cos(b)),
+        (a*tan(b)**c*cos(b)**c, a*sin(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c*sin(b)**c, a*cos(b)**c, sin(b), cos(b)),
+        (a*tan(b)**c/sin(b)**c, a/cos(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c/cos(b)**c, a/sin(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c*tan(b)**c, a, sin(b), cos(b)),
+        (a*(cos(b) + 1)**c*(cos(b) - 1)**c, a*(-sin(b)**2)**c, cos(b) + 1, cos(b) - 1),
+        (a*(sin(b) + 1)**c*(sin(b) - 1)**c, a*(-cos(b)**2)**c, sin(b) + 1, sin(b) - 1),
 
-        (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c),
-        (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c),
-        (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c),
-        (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c),
-        (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c),
-        (a*coth(b)**c*tanh(b)**c, a),
-
-        # same as above but with noncommutative prefactor
-        (a*d*sin(b)**c/cos(b)**c, a*d*tan(b)**c),
-        (a*d*tan(b)**c*cos(b)**c, a*d*sin(b)**c),
-        (a*d*cot(b)**c*sin(b)**c, a*d*cos(b)**c),
-        (a*d*tan(b)**c/sin(b)**c, a*d/cos(b)**c),
-        (a*d*cot(b)**c/cos(b)**c, a*d/sin(b)**c),
-        (a*d*cot(b)**c*tan(b)**c, a*d),
-
-        (a*d*sinh(b)**c/cosh(b)**c, a*d*tanh(b)**c),
-        (a*d*tanh(b)**c*cosh(b)**c, a*d*sinh(b)**c),
-        (a*d*coth(b)**c*sinh(b)**c, a*d*cosh(b)**c),
-        (a*d*tanh(b)**c/sinh(b)**c, a*d/cosh(b)**c),
-        (a*d*coth(b)**c/cosh(b)**c, a*d/sinh(b)**c),
-        (a*d*coth(b)**c*tanh(b)**c, a*d),
+        (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c, S.One, S.One),
+        (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c, S.One, S.One),
+        (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c, S.One, S.One),
+        (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c, S.One, S.One),
+        (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c, S.One, S.One),
+        (a*coth(b)**c*tanh(b)**c, a, S.One, S.One),
+        (c*(tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)), tanh(a + b)*c, S.One, S.One),
+    )
+    matchers_add = (
+        (c*sin(a)*cos(b) + c*cos(a)*sin(b) + d, sin(a + b)*c + d),
+        (c*cos(a)*cos(b) - c*sin(a)*sin(b) + d, cos(a + b)*c + d),
+        (c*sin(a)*cos(b) - c*cos(a)*sin(b) + d, sin(a - b)*c + d),
+        (c*cos(a)*cos(b) + c*sin(a)*sin(b) + d, cos(a - b)*c + d),
+        (c*sinh(a)*cosh(b) + c*sinh(b)*cosh(a) + d, sinh(a + b)*c + d),
+        (c*cosh(a)*cosh(b) + c*sinh(a)*sinh(b) + d, cosh(a + b)*c + d),
     )
     # for cos(x)**2 + sin(x)**2 -> 1
     matchers_identity = (
@@ -979,23 +988,9 @@ def _trigsimp(expr, deep=False):
         (a*cosh(b + c), a*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
         (a*tanh(b + c), a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
 
-        # same as above but with noncommutative prefactor
-        (a*d*sin(b)**2, a*d - a*d*cos(b)**2),
-        (a*d*tan(b)**2, a*d*(1/cos(b))**2 - a*d),
-        (a*d*cot(b)**2, a*d*(1/sin(b))**2 - a*d),
-        (a*d*sin(b + c), a*d*(sin(b)*cos(c) + sin(c)*cos(b))),
-        (a*d*cos(b + c), a*d*(cos(b)*cos(c) - sin(b)*sin(c))),
-        (a*d*tan(b + c), a*d*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
-
-        (a*d*sinh(b)**2, a*d*cosh(b)**2 - a*d),
-        (a*d*tanh(b)**2, a*d - a*d*(1/cosh(b))**2),
-        (a*d*coth(b)**2, a*d + a*d*(1/sinh(b))**2),
-        (a*d*sinh(b + c), a*d*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
-        (a*d*cosh(b + c), a*d*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
-        (a*d*tanh(b + c), a*d*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
     )
 
-    # Reduce any lingering artefacts, such as sin(x)**2 changing
+    # Reduce any lingering artifacts, such as sin(x)**2 changing
     # to 1-cos(x)**2 when sin(x)**2 was "simpler"
     artifacts = (
         (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
@@ -1018,39 +1013,67 @@ def _trigsimp(expr, deep=False):
 
     if expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
-        for pattern, simp in matchers_division:
-            res = expr.match(pattern)
-            if res and res.get(c, 0):
-                # if "a" contains any of sin("b"), cos("b"), tan("b"), cot("b"),
-                # sinh("b"), cosh("b"), tanh("b") or coth("b),
-                # skip the simplification:
-                if res[a].has(C.TrigonometricFunction, C.HyperbolicFunction):
+        if not expr.is_commutative:
+            com, nc = expr.args_cnc()
+            expr = _trigsimp(Mul._from_args(com), deep)*Mul._from_args(nc)
+        else:
+            for pattern, simp, ok1, ok2 in matchers_division:
+                if not _dotrig(expr, pattern):
                     continue
-                # simplify and finish:
-                expr = simp.subs(res)
-                break  # process below
+                res = expr.match(pattern)
+                if res and res.get(c, 0):
+                    if not res[c].is_integer:
+                        ok = ok1.subs(res)
+                        if not ok.is_positive:
+                            continue
+                        ok = ok2.subs(res)
+                        if not ok.is_positive:
+                            continue
+                    # if "a" contains any of sin("b"), cos("b"), tan("b"), cot("b"),
+                    # sinh("b"), cosh("b"), tanh("b") or coth("b),
+                    # skip the simplification:
+                    if res[a].has(C.TrigonometricFunction, C.HyperbolicFunction):
+                        continue
+                    # simplify and finish:
+                    expr = simp.subs(res)
+                    break  # process below
 
     if expr.is_Add:
-        # The types of hyper functions we are looking for
-        # Scan for the terms we need
         args = []
         for term in expr.args:
+            if not term.is_commutative:
+                com, nc = term.args_cnc()
+                nc = Mul._from_args(nc)
+                term = Mul._from_args(com)
+            else:
+                nc = S.One
             term = _trigsimp(term, deep)
             for pattern, result in matchers_identity:
                 res = term.match(pattern)
                 if res is not None:
                     term = result.subs(res)
                     break
-            args.append(term)
+            args.append(term*nc)
         if args != expr.args:
             expr = Add(*args)
             expr = min(expr, expand(expr), key=count_ops)
 
+        if expr.is_Add:
+            for pattern, result in matchers_add:
+                if not _dotrig(expr, pattern):
+                    continue
+                res = term.match(pattern)
+                if res is not None:
+                    term = result.subs(res)
+                    break
+
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
         for pattern, result, ex in artifacts:
-            if expr.is_number:
+            if expr.is_number and numbers is False:
                 break
+            if not _dotrig(expr, pattern):
+                continue
             # Substitute a new wild that excludes some function(s)
             # to help influence a better match. This is because
             # sometimes, for example, 'a' would match sec(x)**2

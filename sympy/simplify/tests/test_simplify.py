@@ -91,6 +91,7 @@ def test_trigsimp1():
     assert trigsimp(1/sin(x)**2 - cot(x)**2) == 1
 
     assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
+    # TODO is 3*cos(x)/2 + 7/2 is nicer for the following?
     assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 3*cos(x/2)**2 + 2
 
     assert trigsimp(sin(x)/cos(x)) == tan(x)
@@ -150,6 +151,186 @@ def test_trigsimp3():
     assert trigsimp(cos(x)**10/sin(x)**10) == 1/tan(x)**10
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
+
+
+@XFAIL
+def test_1562():
+    a, x, y = symbols('a x y')
+    # factoring necessary
+    eq = -4*sin(x)**4 + 4*cos(x)**4 - 8*cos(x)**2
+    assert trigsimp(eq) == -4
+    n = sin(x)**6 + 4*sin(x)**4*cos(x)**2 + 5*sin(x)**2*cos(x)**4 + 2*cos(x)**6
+    d = -sin(x)**2 - 2*cos(x)**2
+    assert simplify(n/d) == -1
+    assert trigsimp(-2*cos(x)**2 + cos(x)**4 - sin(x)**4) == -1
+    eq = (- sin(x)**3/4)*cos(x) + (cos(x)**3/4)*sin(x) - sin(2*x)*cos(2*x)/8
+    assert trigsimp(eq) == 0
+
+
+@XFAIL
+def test_trigsimp_multiple():
+    a, x, y = symbols('a x y')
+
+    # check for multiple patterns
+    assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
+           tan(x)**-2*tan(y)**-2
+
+
+@XFAIL
+def test_trigsimp_factoring():
+    # 1395 - factoring necessary
+    assert trigsimp(sin(a)**2*sin(b)**2 +
+                    cos(a)**2*cos(b)**2*tan(a)**2 +
+                    cos(a)**2) == 1
+
+
+@XFAIL
+def test_2849():
+    a, x, y = symbols('a x y')
+    assert trigsimp(diff(integrate(cos(x)/sin(x)**7, x), x)) == \
+           cos(x)/sin(x)**7
+
+
+@XFAIL
+def test_1181():
+    a, x, y = symbols('a x y')
+    assert trigsimp(cos(x)**2 + cos(y)**2*sin(x)**2 + sin(y)**2*sin(x)**2) == 1
+    assert trigsimp(a**2*cos(y)**2*sin(x)**2 + a**2*sin(y)**2*sin(x)**2) == a**2*sin(x)**2
+
+
+@XFAIL
+def test_1676():
+    a, x, y = symbols('a x y')
+    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)) == sin(x + y)
+    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)+3) == sin(x + y) + 3
+
+@XFAIL
+def test_1181():
+    a, x, y = symbols('a x y')
+    assert trigsimp(cos(x)**2 + cos(y)**2*sin(x)**2 + sin(y)**2*sin(x)**2) == 1
+    assert trigsimp(a**2*sin(x)**2 + a**2*cos(y)**2*cos(x)**2 + a**2*cos(x)**2*sin(y)**2) == a**2
+    assert trigsimp(a**2*cos(y)**2*sin(x)**2 + a**2*sin(y)**2*sin(x)**2) == a**2*sin(x)**2
+
+
+def test_trigsimp_issues():
+    a, x, y = symbols('a x y')
+
+    # 1526 - factor_terms works, too
+    assert trigsimp(sin(x)**3 + cos(x)**2*sin(x)) == sin(x)
+
+    # issue 2849
+    assert trigsimp(diff(integrate(cos(x)/sin(x)**3, x), x)) == \
+            cos(x)/sin(x)**3
+    assert trigsimp(diff(integrate(sin(x)/cos(x)**3, x), x)) == \
+            sin(x)/cos(x)**3
+
+    # check integer exponents
+    e = sin(x)**y/cos(x)**y
+    assert trigsimp(e) == e
+    assert trigsimp(e.subs(y,2)) == tan(x)**2
+    assert trigsimp(e.subs(x,1)) == tan(1)**y
+
+
+def test_trigsimp_assumptions():
+    from random import random, randint
+    from sympy.utilities.iterables import flatten
+    from sympy.utilities.randtest import test_numerically, random_complex_number, comp
+
+    a, b, c = symbols('a b c', cls=Wild)
+    d = Wild('d', commutative=False)
+    # for the simplifications like sinh/cosh -> tanh:
+    matchers_division = (
+        (a*sin(b)**c/cos(b)**c, a*tan(b)**c, sin(b), cos(b)),
+        (a*tan(b)**c*cos(b)**c, a*sin(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c*sin(b)**c, a*cos(b)**c, sin(b), cos(b)),
+        (a*tan(b)**c/sin(b)**c, a/cos(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c/cos(b)**c, a/sin(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c*tan(b)**c, a, sin(b), cos(b)),
+        (a*(cos(b) + 1)**c*(cos(b) - 1)**c, a*(-sin(b)**2)**c, cos(b) + 1, cos(b) - 1),
+        (a*(sin(b) + 1)**c*(sin(b) - 1)**c, a*(-cos(b)**2)**c, sin(b) + 1, sin(b) - 1),
+
+        (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c, S.One, S.One),
+        (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c, S.One, S.One),
+        (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c, S.One, S.One),
+        (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c, S.One, S.One),
+        (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c, S.One, S.One),
+        (a*coth(b)**c*tanh(b)**c, a, S.One, S.One),
+        (c*(tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)), tanh(a + b)*c, S.One, S.One),
+    )
+    matchers_add = (
+        (c*sin(a)*cos(b) + c*cos(a)*sin(b) + d, sin(a + b)*c + d),
+        (c*cos(a)*cos(b) - c*sin(a)*sin(b) + d, cos(a + b)*c + d),
+        (c*sin(a)*cos(b) - c*cos(a)*sin(b) + d, sin(a - b)*c + d),
+        (c*cos(a)*cos(b) + c*sin(a)*sin(b) + d, cos(a - b)*c + d),
+        (c*sinh(a)*cosh(b) + c*sinh(b)*cosh(a) + d, sinh(a + b)*c + d),
+        (c*cosh(a)*cosh(b) + c*sinh(a)*sinh(b) + d, cosh(a + b)*c + d),
+    )
+    # for cos(x)**2 + sin(x)**2 -> 1
+    matchers_identity = (
+        (a*sin(b)**2, a - a*cos(b)**2),
+        (a*tan(b)**2, a*(1/cos(b))**2 - a),
+        (a*cot(b)**2, a*(1/sin(b))**2 - a),
+        (a*sin(b + c), a*(sin(b)*cos(c) + sin(c)*cos(b))),
+        (a*cos(b + c), a*(cos(b)*cos(c) - sin(b)*sin(c))),
+        (a*tan(b + c), a*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
+
+        (a*sinh(b)**2, a*cosh(b)**2 - a),
+        (a*tanh(b)**2, a - a*(1/cosh(b))**2),
+        (a*coth(b)**2, a + a*(1/sinh(b))**2),
+        (a*sinh(b + c), a*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
+        (a*cosh(b + c), a*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
+        (a*tanh(b + c), a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
+
+    )
+
+    # Reduce any lingering artifacts, such as sin(x)**2 changing
+    # to 1-cos(x)**2 when sin(x)**2 was "simpler"
+    artifacts = (
+        (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
+        (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
+        (a - a*(1/sin(b))**2 + c, -a*cot(b)**2 + c, sin),
+
+        (a - a*cosh(b)**2 + c, -a*sinh(b)**2 + c, cosh),
+        (a - a*(1/cosh(b))**2 + c, a*tanh(b)**2 + c, cosh),
+        (a + a*(1/sinh(b))**2 + c, a*coth(b)**2 + c, sinh),
+
+        # same as above but with noncommutative prefactor
+        (a*d - a*d*cos(b)**2 + c, a*d*sin(b)**2 + c, cos),
+        (a*d - a*d*(1/cos(b))**2 + c, -a*d*tan(b)**2 + c, cos),
+        (a*d - a*d*(1/sin(b))**2 + c, -a*d*cot(b)**2 + c, sin),
+
+        (a*d - a*d*cosh(b)**2 + c, -a*d*sinh(b)**2 + c, cosh),
+        (a*d - a*d*(1/cosh(b))**2 + c, a*d*tanh(b)**2 + c, cosh),
+        (a*d + a*d*(1/sinh(b))**2 + c, a*d*coth(b)**2 + c, sinh),
+    )
+
+    # check that these are always valid
+    pats = [artifacts, matchers_add, matchers_identity]
+    for i, p in enumerate(flatten(pats, 1)):
+        o, n = p[:2]
+        try:
+            assert test_numerically(o, n, list(o.free_symbols))
+        except:
+            print o,n
+
+    # check that these are valid if the bases are positive or
+    # exponents are integers
+    for i, p in enumerate(matchers_division):
+        o, n = p[:2]
+        f = o.free_symbols
+        reps = dict(zip(f, [random_complex_number() for fi in f]))
+        # integer exponent
+        save = reps.pop(c)
+        reps[c] = randint(1, 10)
+        try:
+            assert comp(o.subs(reps), n.subs(reps), 1e-6)
+        except:
+            print i, o, n, reps
+
+        # real argument
+        reps[c] = save
+        reps[b] = 1  # sin and cos are both positive at b = 1
+        assert comp(o.subs(reps), n.subs(reps), 1e-6)
 
 
 def test_trigsimp_issue_2515():
