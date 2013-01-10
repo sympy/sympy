@@ -701,7 +701,6 @@ class TensExpr(Basic):
     """
 
     _op_priority = 11.0
-    is_TensMul = False
     is_TensAdd = False
     is_commutative = False
 
@@ -713,7 +712,7 @@ class TensExpr(Basic):
 
     def __add__(self, other):
         other = sympify(other)
-        if self.is_TensAdd:
+        if isinstance(self, TensAdd):
             args = self.args + (other,)
             return TensAdd(*args)
         return TensAdd(self, other)
@@ -729,14 +728,14 @@ class TensExpr(Basic):
         return TensAdd(other, -self)
 
     def __mul__(self, other):
-        if self.is_TensAdd:
+        if isinstance(self, TensAdd):
             return TensAdd(*[x*other for x in self.args])
         if other.is_TensAdd:
             return TensAdd(*[self*x for x in other.args])
         return TensMul.__mul__(self, other)
 
     def __rmul__(self, other):
-        if self.is_TensMul:
+        if isinstance(self, TensMul):
             coeff = other*self._coeff
             return TensMul(coeff, self._components, self._free, self._dum)
         return TensAdd(*[x*other for x in self.args])
@@ -876,7 +875,7 @@ class TensAdd(TensExpr):
 
         _tensAdd_check(args)
         obj = Basic.__new__(cls, **kw_args)
-        if len(args) == 1 and args[0].is_TensMul:
+        if len(args) == 1 and isinstance(args[0], TensMul):
             obj._args = tuple(args)
             return obj
         args = [x.canon_bp() for x in args if x]
@@ -945,13 +944,14 @@ class TensAdd(TensExpr):
         if not isinstance(other, TensExpr):
             if len(self.args) == 1:
                 return self.args[0]._coeff == other
-        if isinstance(other, TensExpr) and other.is_TensMul and other._coeff == 0:
+        if isinstance(other, TensExpr) and isinstance(other, TensMul ) \
+            and other._coeff == 0:
             return self == 0
         t = self - other
         if not isinstance(t, TensExpr):
             return t == 0
         else:
-            if t.is_TensMul:
+            if isinstance(t, TensMul):
                 return t._coeff == 0
             else:
                 return all(x._coeff == 0 for x in t.args)
@@ -1066,7 +1066,6 @@ class TensMul(TensExpr):
     """
     Product of tensors
     """
-    is_TensMul = True
 
     def __new__(cls, coeff, *args, **kw_args):
         """

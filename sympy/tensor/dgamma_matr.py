@@ -66,7 +66,7 @@ class GammaMatrices(object):
         """
         if not isinstance(t, TensExpr):
             return t
-        if t.is_TensAdd:
+        if isinstance(t, TensAdd):
             a = [self.G5_to_right(x) for x in t.args]
             return TensAdd(*a)
         components = t._components
@@ -224,7 +224,7 @@ class GammaMatrices(object):
         """
         if not isinstance(t, TensExpr):
             return t
-        if t.is_TensMul:
+        if isinstance(t, TensMul):
             for n in range(nmax + 1):
                 r = self.match1_gamma(t, n)
                 if not r:
@@ -236,7 +236,7 @@ class GammaMatrices(object):
                         t1 = self.do_rule1_gamma(t1, nmax, doall)
                 return t1
             return t
-        if t.is_TensAdd:
+        if isinstance(t, TensAdd):
             a = [self.do_rule1_gamma(tx, nmax, doall) for tx in t.args]
             t1 = TensAdd(*a)
             return t1.contract_metric(self.g, contract_all=True)
@@ -359,10 +359,10 @@ class GammaMatrices(object):
         """
         if not isinstance(t, TensExpr):
             return t
-        if t.is_TensMul:
+        if isinstance(t, TensMul):
             for n in range(nmax + 1):
                 t = self.rule2_gamma(t, n)
-        if t.is_TensAdd:
+        if isinstance(t, TensAdd):
             a = [self.do_rule2_gamma(tx) for tx in t.args]
             t = TensAdd(*a)
         return t
@@ -398,7 +398,7 @@ class GammaMatrices(object):
         if not isinstance(t, TensExpr):
             return self.gctr*t
         t = self.G5_to_right(t)
-        if t.is_TensAdd:
+        if isinstance(t, TensAdd):
             a = [self.gamma_trace(x) for x in t.args]
             return TensAdd(*a)
         components = t._components
