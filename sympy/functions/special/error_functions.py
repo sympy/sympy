@@ -517,6 +517,12 @@ class li(Function):
     >>> li(2*I).evalf(30)
     1.0652795784357498247001125598 + 3.08346052231061726610939702133*I
 
+    We can even compute Soldner's constant by the help of mpmath:
+
+    >>> from mpmath import findroot
+    >>> findroot(li, 2)
+    1.45136923488338
+
     Further transformations include rewriting `li` in terms of
     the trigonometric integrals `Si`, `Ci`, `Shi` and `Chi`:
 
@@ -533,7 +539,7 @@ class li(Function):
     See Also
     ========
 
-    Ei, E1, expint, Si, Ci, Shi, Chi
+    Ei, E1, expint, Li, Si, Ci, Shi, Chi
 
     References
     ==========
@@ -541,6 +547,7 @@ class li(Function):
     .. [1] http://en.wikipedia.org/wiki/Logarithmic_integral
     .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
     .. [3] http://dlmf.nist.gov/6
+    .. [4] http://mathworld.wolfram.com/SoldnersConstant.html
     """
 
     nargs = 1
@@ -604,6 +611,54 @@ class li(Function):
 class Li(Function):
     r"""
     The offset logarithmic integral.
+
+    For the use in SymPy, this function is defined as
+
+    .. math:: \operatorname{Li}(x) = \operatorname{li}(x) - \operatorname{li}(2)
+
+    Examples
+    ========
+
+    >>> from sympy import I, oo, Li
+    >>> from sympy.abc import z
+
+    The following special value is known:
+
+    >>> Li(2)
+    0
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(Li(z), z)
+    1/log(z)
+
+    The shifted logarithmic integral can be written in terms of `li(z)`:
+
+    >>> from sympy import li
+    >>> Li(z).rewrite(li)
+    li(z) - li(2)
+
+    We can numerically evaluate the logarithmic integral to arbitrary precision
+    on the whole complex plane (except the singular points):
+
+    >>> Li(2).evalf(30)
+    0
+
+    >>> Li(4).evalf(30)
+    1.92242131492155809316615998938
+
+    See Also
+    ========
+
+    Ei, E1, expint, li, Si, Ci, Shi, Chi
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Logarithmic_integral
+    .. [2] http://mathworld.wolfram.com/LogarithmicIntegral.html
+    .. [3] http://dlmf.nist.gov/6
     """
 
     nargs = 1
@@ -612,6 +667,16 @@ class Li(Function):
     def eval(cls, z):
         if z is 2*S.One:
             return S.Zero
+
+    def fdiff(self, argindex=1):
+        arg = self.args[0]
+        if argindex == 1:
+            return S.One / C.log(arg)
+        else:
+            raise ArgumentIndexError(self, argindex)
+
+    def _eval_evalf(self, prec):
+        return self.rewrite(li).evalf(prec)
 
     def _eval_rewrite_as_li(self, z):
         return li(z) - li(2)
