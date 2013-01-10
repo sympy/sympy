@@ -61,8 +61,12 @@ class _TensorManager(object):
         self._comm[0][0] = 0
         self._comm[0][1] = 0
         self._comm[1][0] = 1
-        self._comm_symbols2i = {0:0, 1:1}
-        self._comm_i2symbol = {0:0, 1:1}
+        self._comm[2][0] = 1
+        self._comm[0][2] = 1
+        self._comm[2][1] = None
+        self._comm[1][2] = None
+        self._comm_symbols2i = {0:0, 1:1, 2:2}
+        self._comm_i2symbol = {0:0, 1:1, 2:2}
 
     def comm_symbols2i(self, i):
         """
@@ -85,9 +89,10 @@ class _TensorManager(object):
         """
         set the commutation parameter ``c`` for commutation groups ``i, j``
 
-        ``i, j`` they can be symbols or numbers, apart from ``0`` and ``1``
-        which are reserved respectively for commuting and anticommuting
-        tensors
+        ``i, j`` they can be symbols or numbers, apart from ``0, 1`` and ``2``
+        which are reserved respectively for commuting, anticommuting
+        tensors and tensors not commuting with any other group apart with
+        the commuting tensors.
 
         ``c``     commutation number
         0        commuting
@@ -96,6 +101,8 @@ class _TensorManager(object):
 
         Tensors in the group ``i=0`` commute with any other tensor.
         Tensors in the group ``i=1`` anticommute within that group.
+        Tensors in the group ``i=2`` commute only with the ``0`` group.
+
         For the remaining cases, use this method to set the commutation rules;
         by default ``c=None``.
 
@@ -109,9 +116,9 @@ class _TensorManager(object):
         >>> Lorentz = TensorIndexType('Lorentz')
         >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
         >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> G = tensorhead('G', [Lorentz], [[1]], 2)
-        >>> GH = tensorhead('GH', [Lorentz], [[1]], 3)
-        >>> TensorManager.set_comm(2, 3, 0)
+        >>> G = tensorhead('G', [Lorentz], [[1]], 3)
+        >>> GH = tensorhead('GH', [Lorentz], [[1]], 4)
+        >>> TensorManager.set_comm(3, 4, 0)
         >>> (GH(i1)*G(i0)).canon_bp()
         G(i0)*GH(i1)
         >>> (G(i1)*G(i0)).canon_bp()
@@ -615,6 +622,62 @@ class TensorHead(Basic):
         dum.sort()
         return TensMul(S.One, components, free, dum)
 
+class HoldTensorHead(TensorHead):
+    def __new__(cls, t, **kw_args):
+        """
+
+        ``t``   tensor expression
+
+        Keyword arguments:
+        ``symmetry`` symmetry of the tensor expression;
+        if not assigned no symmetry is assumed
+
+        ``comm``  commutation group;
+        if not assigned it is assumed to be not commuting
+
+        Examples
+        ====
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead, HoldTensorHead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> a,b,c,d = tensor_indices('a,b,c,d', Lorentz)
+        >>> p, q = tensorhead('p,q', [Lorentz], [[1]])
+        >>> h1 = HoldTensorHead(p(a)*q(b) - p(b)*q(a), symm=[[2]], comm=0)
+        >>> h2 = HoldTensorHead(p(a)*q(b) - p(b)*q(a), symm=[[1]*2], comm=0)
+        >>> (h1(a,b)*h2(-a,-b)).canon_bp()
+        0
+        >>> t = h1(a,b)*h1(-a,-b)
+        >>> t.expand(True) - 2*p(a)*p(-a)*q(b)*q(-b) + 2*p(a)*q(-a)*q(b)*p(-b)
+        0
+        """
+        types = [x.tensortype for x in t.free_args]
+        rank = len(t.free_args)
+        symmetry = kw_args.get('symm', [[1]]*rank)
+        if isinstance(symmetry, list):
+            symmetry = tensorsymmetry(*symmetry)
+        comm = kw_args.get('comm')
+        if not comm:
+            comm = 2
+        else:
+            comm = TensorManager.comm_symbols2i(comm)
+        name = str(t)
+        typ = TensorType(types, symmetry)
+        obj = Basic.__new__(cls, name, typ, t)
+        obj.free_args = t.free_args
+        obj.comm = comm
+        obj.symmetry = symmetry
+        obj.types = types
+        obj.rank = rank
+        return obj
+
+    name = property(lambda self: self.args[0])
+    t = property(lambda self: self.args[2])
+
+
+    def call(self, *indices):
+        t = self.t.substitute_indices(*zip(self.free_args, indices))
+        return t
+
 
 class TensExpr(Basic):
     """
@@ -1003,6 +1066,13 @@ class TensAdd(TensExpr):
         args = [_tensor_expand_coeff(x) for x in self.args]
         return TensAdd(*args)
 
+    def expand(self, expand_all=False):
+        """
+        expand HoldTensorHead tensors
+        """
+        a = [x.expand(expand_all) for x in self.args]
+        return TensAdd(*a)
+
     def _pretty(self):
         a = []
         args = self.args
@@ -1074,6 +1144,31 @@ class TensMul(TensExpr):
 
     def __ne__(self, other):
         return not self == other
+
+    def expand(self, expand_all=False):
+        """
+        expand HoldTensorHead tensors
+        """
+        if len(self._components) == 1:
+            if isinstance(self._components[0], HoldTensorHead):
+                return self._components[0].call(*self.free_args)
+            else:
+                return self
+        a = self.split()
+        if expand_all:
+            a1 = [x.expand(expand_all) for x in a]
+        else:
+            a1 = []
+            expanded = False
+            for i, t in enumerate(a):
+                t1 = t.expand()
+                if t1 is not t:
+                    expanded = True
+                a1.append(t1)
+                if expanded is True:
+                    break
+            a1 += a[i + 1:]
+        return tensor_mul(*a1)
 
     @staticmethod
     def from_indices(*indices):
@@ -1647,14 +1742,19 @@ class TensMul(TensExpr):
     def _pretty(self):
         if self._components == []:
             return str(self._coeff)
-        indices = [str(ind) for ind in self.get_indices()]
+        indices = self.get_indices()
+        sindices = [str(ind) for ind in indices]
         pos = 0
         a = []
         for t in self._components:
-            if t.rank > 0:
-                a.append('%s(%s)' % (t.name, ', '.join(indices[pos:pos + t.rank])))
+            if isinstance(t, HoldTensorHead):
+                rt = '(%s)' % (t.call(*indices[pos:pos + t.rank]))
+                a.append(rt)
             else:
-                a.append('%s' % t.name)
+                if t.rank > 0:
+                    a.append('%s(%s)' % (t.name, ', '.join(sindices[pos:pos + t.rank])))
+                else:
+                    a.append('%s' % t.name)
             pos += t.rank
         res = '*'. join(a)
         if self._coeff == S.One:

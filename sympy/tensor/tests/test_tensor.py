@@ -4,7 +4,8 @@ from sympy.combinatorics.tensor_can import (bsgs_direct_product, riemann_bsgs)
 from sympy.tensor.tensor import (TensorIndexType, tensor_indices,
   TensorSymmetry, get_symmetric_group_sgs, TensorType, TensorIndex,
   tensor_mul, canon_bp, TensAdd, riemann_cyclic_replace, riemann_cyclic,
-  tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead, TensorManager)
+  tensorlist_contract_metric, TensMul, tensorsymmetry, tensorhead,
+  TensorManager, HoldTensorHead)
 from sympy.utilities.pytest import raises
 
 #################### Tests from tensor_can.py #######################
@@ -851,12 +852,11 @@ def test_TensorManager():
     LorentzH = TensorIndexType('LorentzH', dummy_fmt='LH')
     i, j = tensor_indices('i,j', Lorentz)
     ih, jh = tensor_indices('ih,jh', LorentzH)
-    TensorManager.set_comm(2, 3, 0)
+    TensorManager.set_comm(3, 4, 0)
     p, q = tensorhead('p q', [Lorentz], [[1]])
     ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
-    G = tensorhead('G', [Lorentz], [[1]], 2)
-    GH = tensorhead('GH', [LorentzH], [[1]], 3)
-    TensorManager.set_comm(2, 3, 0)
+    G = tensorhead('G', [Lorentz], [[1]], 3)
+    GH = tensorhead('GH', [LorentzH], [[1]], 4)
     ps = G(i)*p(-i)
     psh = GH(ih)*ph(-ih)
     t = ps + psh
@@ -900,3 +900,19 @@ def test_hash():
     t3 = p(a)*p(b) + g(a,b)
     t4 = p(a)*p(b) - g(a,b)
     assert hash(t3) != hash(t4)
+
+def test_hold1():
+    D = Symbol('D')
+    Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
+    a,b,c,d = tensor_indices('a,b,c,d', Lorentz)
+    g = Lorentz.metric
+    p, q, r, s = tensorhead('p,q,r,s', [Lorentz], [[1]])
+    t = p(a)*q(b)*r(c)
+    t1 = t(a,b,c) + t(a,c,b) + t(b,a,c) + t(b,c,a) + t(c,a,b) + t(c,b,a)
+    h = HoldTensorHead(t1, symmetry=tensorsymmetry([1]*3), comm=0)
+    t2 = t1(a,b,c)*t1(-a,-b,-c)
+    # this is faster
+    t2a = h(a,b,c)*h(-a,-b,-c)
+    t2a = t2a.expand()
+    t2a = t2a.expand()
+    assert t2 == t2a
