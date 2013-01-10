@@ -841,9 +841,9 @@ def test_TensorManager():
     TensorManager.set_comm(2, 3, 0)
     p, q = tensorhead('p q', [Lorentz], [[1]])
     ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
-    G = tensorhead('G', [Lorentz], [[1]], 2)
-    GH = tensorhead('GH', [LorentzH], [[1]], 3)
-    TensorManager.set_comm(2, 3, 0)
+    G = tensorhead('G', [Lorentz], [[1]], 3)
+    GH = tensorhead('GH', [LorentzH], [[1]], 4)
+    TensorManager.set_comm(3, 4, 0)
     ps = G(i)*p(-i)
     psh = GH(ih)*ph(-ih)
     t = ps + psh

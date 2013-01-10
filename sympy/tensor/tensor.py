@@ -40,8 +40,12 @@ class _TensorManager(object):
         self._comm[0][0] = 0
         self._comm[0][1] = 0
         self._comm[1][0] = 1
-        self._comm_symbols2i = {0:0, 1:1}
-        self._comm_i2symbol = {0:0, 1:1}
+        self._comm[2][0] = 1
+        self._comm[0][2] = 1
+        self._comm[2][1] = None
+        self._comm[1][2] = None
+        self._comm_symbols2i = {0:0, 1:1, 2:2}
+        self._comm_i2symbol = {0:0, 1:1, 2:2}
 
     def comm_symbols2i(self, i):
         """
@@ -64,9 +68,10 @@ class _TensorManager(object):
         """
         set the commutation parameter ``c`` for commutation groups ``i, j``
 
-        ``i, j`` they can be symbols or numbers, apart from ``0`` and ``1``
-        which are reserved respectively for commuting and anticommuting
-        tensors
+        ``i, j`` they can be symbols or numbers, apart from ``0, 1`` and ``2``
+        which are reserved respectively for commuting, anticommuting
+        tensors and tensors not commuting with any other group apart with
+        the commuting tensors.
 
         ``c``     commutation number
         0        commuting
@@ -75,6 +80,8 @@ class _TensorManager(object):
 
         Tensors in the group ``i=0`` commute with any other tensor.
         Tensors in the group ``i=1`` anticommute within that group.
+        Tensors in the group ``i=2`` commute only with the ``0`` group.
+
         For the remaining cases, use this method to set the commutation rules;
         by default ``c=None``.
 
@@ -88,9 +95,9 @@ class _TensorManager(object):
         >>> Lorentz = TensorIndexType('Lorentz')
         >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
         >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> G = tensorhead('G', [Lorentz], [[1]], 2)
-        >>> GH = tensorhead('GH', [Lorentz], [[1]], 3)
-        >>> TensorManager.set_comm(2, 3, 0)
+        >>> G = tensorhead('G', [Lorentz], [[1]], 3)
+        >>> GH = tensorhead('GH', [Lorentz], [[1]], 4)
+        >>> TensorManager.set_comm(3, 4, 0)
         >>> (GH(i1)*G(i0)).canon_bp()
         G(i0)*GH(i1)
         >>> (G(i1)*G(i0)).canon_bp()
@@ -638,8 +645,6 @@ class TensExpr(Basic):
     """
 
     _op_priority = 11.0
-    is_TensMul = False
-    is_TensAdd = False
     is_commutative = False
 
     def __neg__(self):
@@ -663,14 +668,14 @@ class TensExpr(Basic):
         return TensAdd(other, -self)
 
     def __mul__(self, other):
-        if self.is_TensAdd:
+        if isinstance(self, TensAdd):
             return TensAdd(*[x*other for x in self.args])
-        if other.is_TensAdd:
+        if isinstance(other, TensAdd):
             return TensAdd(*[self*x for x in other.args])
         return TensMul.__mul__(self, other)
 
     def __rmul__(self, other):
-        if self.is_TensMul:
+        if isinstance(self, TensMul):
             coeff = other*self._coeff
             return TensMul(coeff, self._components, self._free, self._dum)
         return TensAdd(*[x*other for x in self.args])
@@ -747,14 +752,14 @@ def _tensAdd_flatten(args):
         args1 = []
         for x in args:
             if isinstance(x, TensExpr):
-                if x.is_TensAdd:
+                if isinstance(x, TensAdd):
                     args1.extend(list(x.args))
                 else:
                     args1.append(x)
         args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
         args2 = [x for x in args if not isinstance(x, TensExpr)]
         t0 = args1[0]
-        if t0.is_TensAdd:
+        if isinstance(t0, TensAdd):
             t0 = t0.args[0]
         if t0._free:
            raise ValueError('all tensors must have the same indices')
@@ -762,7 +767,7 @@ def _tensAdd_flatten(args):
         args = [t1] + args1
     a = []
     for x in args:
-        if x.is_TensAdd:
+        if isinstance(x, TensAdd):
             a.extend(list(x.args))
         else:
             a.append(x)
@@ -797,7 +802,6 @@ class TensAdd(TensExpr):
     >>> t(b)
     p(b) + q(b)
     """
-    is_TensAdd = True
 
     def __new__(cls, *args, **kw_args):
         """
@@ -810,7 +814,7 @@ class TensAdd(TensExpr):
 
         _tensAdd_check(args)
         obj = Basic.__new__(cls, **kw_args)
-        if len(args) == 1 and args[0].is_TensMul:
+        if len(args) == 1 and isinstance(args[0], TensMul):
             obj._args = tuple(args)
             return obj
         args = [x.canon_bp() for x in args if x]
@@ -879,13 +883,14 @@ class TensAdd(TensExpr):
         if not isinstance(other, TensExpr):
             if len(self.args) == 1:
                 return self.args[0]._coeff == other
-        if isinstance(other, TensExpr) and other.is_TensMul and other._coeff == 0:
+        if isinstance(other, TensExpr) and isinstance(other, TensMul) \
+            and other._coeff == 0:
             return self == 0
         t = self - other
         if not isinstance(t, TensExpr):
             return t == 0
         else:
-            if t.is_TensMul:
+            if isinstance(t, TensMul):
                 return t._coeff == 0
             else:
                 return all(x._coeff == 0 for x in t.args)
@@ -982,7 +987,6 @@ class TensMul(TensExpr):
     """
     Product of tensors
     """
-    is_TensMul = True
 
     def __new__(cls, coeff, *args, **kw_args):
         """
@@ -1272,7 +1276,7 @@ class TensMul(TensExpr):
         if not isinstance(other, TensExpr):
             coeff = self._coeff*other
             return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
-        if other.is_TensAdd:
+        if isinstance(other, TensAdd):
             return TensAdd(*[self*x for x in other.args])
 
         components = self._components + other._components
