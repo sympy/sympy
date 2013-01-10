@@ -1,6 +1,6 @@
 __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
-           'MechanicsLatexPrinter']
+           'MechanicsLatexPrinter', 'CoordinateFrame']
 
 from sympy import (
     Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
@@ -522,7 +522,6 @@ class ReferenceFrame(object):
 
         """
 
-        from sympy.physics.mechanics import Point
         if not isinstance(name, (str, unicode)):
             raise TypeError('Need to supply a valid name')
         # The if statements below are for custom printing of basis-vectors for
@@ -583,7 +582,6 @@ class ReferenceFrame(object):
         self._x = Vector([(Matrix([1, 0, 0]), self)])
         self._y = Vector([(Matrix([0, 1, 0]), self)])
         self._z = Vector([(Matrix([0, 0, 1]), self)])
-        self._origin = Point(name + '_origin')
 
     def __getitem__(self, ind):
         """Returns basis vector for the provided index (index being an str)"""
@@ -1027,6 +1025,24 @@ class ReferenceFrame(object):
         self._ang_vel_dict.update({otherframe: value})
         otherframe._ang_vel_dict.update({self: -value})
 
+    def components_of(self, vector):
+        """
+        Returns the list of X, Y and Z components of a vector, if possible,
+        in this frame.
+
+        Examples
+        ========
+
+        >>> from sympy.physics.mechanics import ReferenceFrame
+        >>> N = ReferenceFrame('N')
+        >>> v = 3 * N.x + 4 * N.y
+        >>> N.components_of(v)
+        [3, 4, 0]
+
+        """
+
+        return [vector & self.x, vector & self.y, vector & self.z]
+
     @property
     def x(self):
         """The basis Vector for the ReferenceFrame, in the x direction. """
@@ -1042,9 +1058,26 @@ class ReferenceFrame(object):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
 
-    def create_point_at(self, pointname, x, y, z):
+
+class CoordinateFrame(ReferenceFrame):
+    """
+    Class defining a co-ordinate frame in 3-dimensional space with a unique origin.
+    Has all the properties of ReferenceFrame.
+    """
+    def __init__(self, name, indices=None, latexs=None):
         """
-        Returns Point at [x, y, z] with respect to the ReferenceFrame's origin
+        Constructor for CoordinateFrame class.
+        Calls ReferenceFrame's constructor and defines a new origin paramater
+        for the object.
+        """
+
+        ReferenceFrame.__init__(self, name, indices,latexs)
+        from sympy.physics.mechanics import Point
+        self._origin = Point(name + '_origin')
+
+    def create_point(self, pointname, x, y, z):
+        """
+        Returns Point at [x, y, z] with respect to the CoordinateFrame's origin
         and names it to 'pointname'.
         """
         from sympy.physics.mechanics import Point
@@ -1053,21 +1086,21 @@ class ReferenceFrame(object):
         return temp
 
     def get_origin(self):
-        """The origin of the ReferenceFrame."""
+        """The origin of the CoordinateFrame."""
         return self._origin
 
     def shift_origin_to(self, neworigin):
-        """Shift the origin of the Reference Frame to neworigin."""
+        """Shift the origin of the CoordinateFrame to neworigin."""
         self._origin = neworigin
 
     def get_point_coordinates(self, point):
-        """Returns the co-ordinates of 'point' in the ReferenceFrame, if possible.
+        """Returns the co-ordinates of 'point' in the CoordinateFrame, if possible.
 
         Examples
         ========
-        >>> from sympy.physics.mechanics import ReferenceFrame, Point
-        >>> N = ReferenceFrame('N')
-        >>> p = N.create_point_at('p', 1, 2, 3)
+        >>> from sympy.physics.mechanics import CoordinateFrame, Point
+        >>> N = CoordinateFrame('N')
+        >>> p = N.create_point('p', 1, 2, 3)
         >>> N.get_point_coordinates(p)
         [1, 2, 3]
         >>> o = N.get_origin()
@@ -1082,7 +1115,18 @@ class ReferenceFrame(object):
         if pos_vector == 0:
             return [0, 0, 0]
         pos_vector = pos_vector.express(self)
-        return [x for x in pos_vector.args[0][0]]
+        return self.components_of(pos_vector)
+
+    def orientnew(self, newname, rot_type, amounts, rot_order='', indices=None,
+                  latexs=None):
+        """
+        Creates a new CoordinateFrame oriented with respect to this Frame.
+        Calls ReferenceFrame's orientnew method and shifts the new CoordinateFrame's
+        origin to the this frame.
+        """
+        newframe = ReferenceFrame.orientnew(self, newname, rot_type, amounts, rot_order, indices, latexs)
+        newframe.shift_origin_to(self._origin)
+        return newframe
 
 
 class Vector(object):
