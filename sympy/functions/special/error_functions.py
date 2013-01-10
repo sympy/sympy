@@ -1405,7 +1405,7 @@ class _erfs(Function):
 
 class _eis(Function):
     """
-    Helper function to make the`Ei(z)` and `li(z)` functions
+    Helper function to make the `Ei(z)` and `li(z)` functions
     tractable for the Gruntz algorithm.
     """
 
