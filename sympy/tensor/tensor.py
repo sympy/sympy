@@ -26,27 +26,6 @@ the Butler-Portugal algorithm for canonicalization.
 
 If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
-
-
-
-TODO:
-
-* better integration in SymPy
-
-* term collection
-
-* introduce scalars:
-for example in ``p(a)*p(b)/(p**2 + m**2)`` the scalar ``p**2``
-is equivalent to the tensor ``p(c)*p(-c)``, but can appear in the denominator.
-
-* introduce tensor symmetrizers and algebraic operations on them
-
-* Rule for contraction of Levi-Civita ``epsilon`` tensors:
-one must intoduce generalized Kronecker deltas to do this properly
-
-* develop a Young tableaux model:
-one of its uses is in ``tensorsymmetry`` to provide the symmetry of the tensor
-using the Young diagrams
 """
 
 
@@ -249,8 +228,9 @@ class TensorIndexType(Basic):
         obj.epsilon = obj.get_epsilon()
         return obj
 
-    name = property(lambda self: self.args[0])
-
+    @property
+    def name(self):
+        return self.args[0]
 
     def get_kronecker_delta(self):
         sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
@@ -367,9 +347,17 @@ class TensorSymmetry(Basic):
         obj = Basic.__new__(cls, base, generators, **kw_args)
         return obj
 
-    base = property(lambda self: self.args[0])
-    generators = property(lambda self: self.args[1])
-    rank = property(lambda self: self.args[1][0].size)
+    @property
+    def base(self):
+        return self.args[0]
+
+    @property
+    def generators(self):
+        return self.args[1]
+
+    @property
+    def rank(self):
+        return self.args[1][0].size
 
     def _hashable_content(self):
         r = (tuple(self.base), tuple(self.generators))
@@ -465,11 +453,17 @@ class TensorType(Basic):
         obj = Basic.__new__(cls, index_types, symmetry, **kw_args)
         return obj
 
-    index_types = property(lambda self: self.args[0])
+    @property
+    def index_types(self):
+        return self.args[0]
 
-    symmetry = property(lambda self: self.args[1])
+    @property
+    def symmetry(self):
+        return self.args[1]
 
-    types = property(lambda self: sorted(set(self.index_types), key=lambda x: x.name))
+    @property
+    def types(self):
+        return sorted(set(self.index_types), key=lambda x: x.name)
 
     def __str__(self):
         return 'TensorType(%s)' %([str(x) for x in self.index_types])
@@ -574,8 +568,13 @@ class TensorHead(Basic):
         obj.comm = TensorManager.comm_symbols2i(comm)
         return obj
 
-    name = property(lambda self: self.args[0])
-    index_types = property(lambda self: self.args[1].index_types)
+    @property
+    def name(self):
+        return self.args[0]
+
+    @property
+    def index_types(self):
+        return self.args[1].index_types
 
     def __lt__(self, other):
         return (self.name, self.index_types) < (other.name, other.index_types)
@@ -761,47 +760,6 @@ class TensExpr(Basic):
 
     __truediv__ = __div__
     __rtruediv__ = __rdiv__
-
-    def substitute_indices(self, *index_tuples):
-        """
-        Return a tensor with free indices substituted according to ``index_tuples``
-
-        ``index_types`` list of tuples ``(old_index, new_index)``
-
-        Examples
-        ========
-
-        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
-        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
-        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
-        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
-        >>> t = A(i, k)*B(-k, -j); t
-        A(i, L_0)*B(-L_0, -j)
-        >>> t.substitute_indices((i,j), (j, k))
-        A(j, L_0)*B(-L_0, -k)
-        """
-        if self.is_TensMul:
-            free = self._free
-            free1 = []
-            for j, ipos, cpos in free:
-                for i, v in index_tuples:
-                    if i.name == j.name and i.tensortype == j.tensortype:
-                        if i.is_up == j.is_up:
-                            free1.append((v, ipos, cpos))
-                        else:
-                            free1.append((-v, ipos, cpos))
-                        break
-                else:
-                    free1.append((j, ipos, cpos))
-
-            return TensMul(self._coeff, self._components, free1, self._dum)
-        if self.is_TensAdd:
-            args = self.args
-            args1 = []
-            for x in args:
-                y = x.substitute_indices(*index_tuples)
-                args1.append(y)
-            return TensAdd(*args1)
 
 
 def _tensAdd_collect_terms(args):
@@ -1072,6 +1030,27 @@ class TensAdd(TensExpr):
         """
         a = [x.expand(expand_all) for x in self.args]
         return TensAdd(*a)
+
+    def substitute_indices(self, *index_tuples):
+        """
+        Return a tensor with free indices substituted according to ``index_tuples``
+
+        ``index_types`` list of tuples ``(old_index, new_index)``
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
+        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        """
+        args = self.args
+        args1 = []
+        for x in args:
+            y = x.substitute_indices(*index_tuples)
+            args1.append(y)
+        return TensAdd(*args1)
 
     def _pretty(self):
         a = []
@@ -1624,6 +1603,39 @@ class TensMul(TensExpr):
         if g.index_types[0].metric_antisym is None:
             raise NotImplementedError
         return self._contract(g, g.index_types[0].metric_antisym, contract_all)
+
+    def substitute_indices(self, *index_tuples):
+        """
+        Return a tensor with free indices substituted according to ``index_tuples``
+
+        ``index_types`` list of tuples ``(old_index, new_index)``
+
+        Examples
+        ========
+
+        >>> from sympy.tensor.tensor import TensorIndexType, tensor_indices, tensorhead
+        >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+        >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
+        >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> t = A(i, k)*B(-k, -j); t
+        A(i, L_0)*B(-L_0, -j)
+        >>> t.substitute_indices((i,j), (j, k))
+        A(j, L_0)*B(-L_0, -k)
+        """
+        free = self._free
+        free1 = []
+        for j, ipos, cpos in free:
+            for i, v in index_tuples:
+                if i.name == j.name and i.tensortype == j.tensortype:
+                    if i.is_up == j.is_up:
+                        free1.append((v, ipos, cpos))
+                    else:
+                        free1.append((-v, ipos, cpos))
+                    break
+            else:
+                free1.append((j, ipos, cpos))
+
+        return TensMul(self._coeff, self._components, free1, self._dum)
 
     def substitute_tensor(self, t1, t2, subst_all=False):
         """
