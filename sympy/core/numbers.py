@@ -1196,7 +1196,10 @@ class Rational(Number):
             n = (self.p*other.q) // (other.p*self.q)
             return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
         if isinstance(other, Float):
-            return self.evalf() % other
+            evalf = self.evalf()
+            # In case self.evalf() does not return Float.
+            if isinstance(evalf, Float):
+                return evalf % other
         return Number.__mod__(self, other)
 
     @_sympifyit('other', NotImplemented)
@@ -1204,12 +1207,7 @@ class Rational(Number):
         if isinstance(other, Rational):
             return Rational.__mod__(other, self)
         if isinstance(other, Float):
-            if isinstance(self.evalf(), Float):
-                return self.evalf() % other
-                # self.evalf() does not return a Float and returns S.Zero
-                # so, since 0 % (num) is 0, return S.Zero
-            elif self.evalf() is S.Zero:
-                return self.evalf()
+            return self.evalf() % other
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
