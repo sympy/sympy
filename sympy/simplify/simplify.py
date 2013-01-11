@@ -3087,7 +3087,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     return expr
 
 
-def _real_to_rational(expr):
+def _real_to_rational(expr, tolerance=None):
     """
     Replace all reals in expr with rationals.
 
@@ -3100,7 +3100,15 @@ def _real_to_rational(expr):
     """
     p = expr
     reps = {}
+    if tolerance is not None:
+        tolerance = 1/tolerance
+        round_to = int(round(mpmath.log10(tolerance)))
     for r in p.atoms(C.Float):
+        oldr = r
+        try:
+            r = Float(round(r, round_to))
+        except UnboundLocalError:
+            pass
         newr = nsimplify(r, rational=False)
         if not newr.is_Rational or r.is_finite and not newr.is_finite:
             if newr < 0:
@@ -3112,7 +3120,7 @@ def _real_to_rational(expr):
                 newr = Rational(str(r/d))*d
             else:
                 newr = Integer(0)
-        reps[r] = newr
+        reps[oldr] = newr
     return p.subs(reps, simultaneous=True)
 
 
@@ -3158,7 +3166,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     """
     expr = sympify(expr)
     if rational or expr.free_symbols:
-        return _real_to_rational(expr)
+        return _real_to_rational(expr, tolerance)
 
     # sympy's default tolarance for Rationals is 15; other numbers may have
     # lower tolerances set, so use them to pick the largest tolerance if none
