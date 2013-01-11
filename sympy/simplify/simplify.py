@@ -13,7 +13,10 @@ from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 
-from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
+from sympy.functions import (
+    gamma, exp, sqrt, log, root, exp_polar,
+    sin, cos, tan, cot, sinh, cosh, tanh, coth)
+
 from sympy.utilities.iterables import flatten, has_variety
 
 from sympy.simplify.cse_main import cse
@@ -934,17 +937,13 @@ def _dotrig(a, b):
         a.has(C.TrigonometricFunction) and b.has(C.TrigonometricFunction) or
         a.has(C.HyperbolicFunction) and b.has(C.HyperbolicFunction))
 
-def _trigsimp(expr, deep=False, numbers=False):
-    """recursive helper for trigsimp"""
-    if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
-        pass
-    elif not numbers and expr.is_number:
-        pass
 
+_trigpat = None
+def _trigpats():
+    global _trigpat
     a, b, c = symbols('a b c', cls=Wild)
     d = Wild('d', commutative=False)
-    sin, cos, tan, cot = C.sin, C.cos, C.tan, C.cot
-    sinh, cosh, tanh, coth = C.sinh, C.cosh, C.tanh, C.coth
+
     # for the simplifications like sinh/cosh -> tanh:
     matchers_division = (
         (a*sin(b)**c/cos(b)**c, a*tan(b)**c, sin(b), cos(b)),
@@ -964,6 +963,7 @@ def _trigsimp(expr, deep=False, numbers=False):
         (a*coth(b)**c*tanh(b)**c, a, S.One, S.One),
         (c*(tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)), tanh(a + b)*c, S.One, S.One),
     )
+
     matchers_add = (
         (c*sin(a)*cos(b) + c*cos(a)*sin(b) + d, sin(a + b)*c + d),
         (c*cos(a)*cos(b) - c*sin(a)*sin(b) + d, cos(a + b)*c + d),
@@ -972,6 +972,7 @@ def _trigsimp(expr, deep=False, numbers=False):
         (c*sinh(a)*cosh(b) + c*sinh(b)*cosh(a) + d, sinh(a + b)*c + d),
         (c*cosh(a)*cosh(b) + c*sinh(a)*sinh(b) + d, cosh(a + b)*c + d),
     )
+
     # for cos(x)**2 + sin(x)**2 -> 1
     matchers_identity = (
         (a*sin(b)**2, a - a*cos(b)**2),
@@ -1010,6 +1011,23 @@ def _trigsimp(expr, deep=False, numbers=False):
         (a*d - a*d*(1/cosh(b))**2 + c, a*d*tanh(b)**2 + c, cosh),
         (a*d + a*d*(1/sinh(b))**2 + c, a*d*coth(b)**2 + c, sinh),
     )
+
+    _trigpat = (a, b, c, d, matchers_division, matchers_add,
+        matchers_identity, artifacts)
+    return _trigpat
+
+
+def _trigsimp(expr, deep=False, numbers=False):
+    """recursive helper for trigsimp"""
+    if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
+        pass
+    elif not numbers and expr.is_number:
+        pass
+
+    if _trigpat is None:
+        _trigpats()
+    a, b, c, d, matchers_division, matchers_add, \
+    matchers_identity, artifacts = _trigpat
 
     if expr.is_Mul:
         # do some simplifications like sin/cos -> tan:
