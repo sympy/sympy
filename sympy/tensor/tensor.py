@@ -236,10 +236,11 @@ class TensorIndexType(Basic):
     def __new__(cls, name, metric=False, dim=None, eps_dim = None,
                  dummy_fmt=None):
         obj = Basic.__new__(cls, name, metric)
+        obj._name = name
         if not dummy_fmt:
-            obj.dummy_fmt = '%s_%%d' % obj.name
+            obj._dummy_fmt = '%s_%%d' % obj.name
         else:
-            obj.dummy_fmt = '%s_%%d' % dummy_fmt
+            obj._dummy_fmt = '%s_%%d' % dummy_fmt
         if metric is None:
             obj.metric_antisym = None
             obj.metric = None
@@ -262,7 +263,7 @@ class TensorIndexType(Basic):
 
     @property
     def name(self):
-        return self.args[0]
+        return self._name
 
     @property
     def dim(self):
@@ -279,6 +280,10 @@ class TensorIndexType(Basic):
     @property
     def epsilon(self):
         return self._epsilon
+
+    @property
+    def dummy_fmt(self):
+        return self._dummy_fmt
 
     def get_kronecker_delta(self):
         sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
@@ -689,6 +694,7 @@ class TensorHead(Basic):
         assert isinstance(name, basestring)
 
         obj = Basic.__new__(cls, name, typ, **kw_args)
+        obj._name = obj.args[0]
         obj._rank = len(obj.index_types)
         obj._types = typ.types
         obj._symmetry = typ.symmetry
@@ -697,7 +703,7 @@ class TensorHead(Basic):
 
     @property
     def name(self):
-        return self.args[0]
+        return self._name
 
     @property
     def rank(self):
@@ -709,7 +715,7 @@ class TensorHead(Basic):
 
     @property
     def symmetry(self):
-        return self.symmetry
+        return self._symmetry
 
     @property
     def typ(self):
@@ -727,7 +733,7 @@ class TensorHead(Basic):
         return (self.name, self.index_types) < (other.name, other.index_types)
 
     def _hashable_content(self):
-        r = (self.name, tuple(self._types), self._symmetry, self._comm)
+        r = (self._name, tuple(self._types), self._symmetry, self._comm)
         return r
 
     def commutes_with(self, other):
@@ -1068,7 +1074,7 @@ class TensAdd(TensExpr):
         return tuple(self.args)
 
     def __hash__(self):
-        return Basic.__hash__(self)
+        return super(TensAdd, self).__hash__()
 
     def __ne__(self, other):
         return not (self == other)
@@ -1260,7 +1266,7 @@ class TensMul(TensExpr):
         return r
 
     def __hash__(self):
-        return Basic.__hash__(self)
+        return super(TensMul, self).__hash__()
 
     def __ne__(self, other):
         return not self == other
@@ -1294,7 +1300,7 @@ class TensMul(TensExpr):
         index_dict = {}
         dum = []
         for i, index in enumerate(indices):
-            name = index.name
+            name = index._name
             typ = index._tensortype
             contr = index._is_up
             if (name, typ) in index_dict:
@@ -1358,8 +1364,8 @@ class TensMul(TensExpr):
         # index higher than those for the dummy indices
         # to avoid name collisions
         for indx, ipos, cpos in self._free:
-            if indx.name.split('_')[0] == indx._tensortype.dummy_fmt[:-3]:
-                cdt[indx._tensortype] = max(cdt[indx._tensortype], int(indx.name.split('_')[1]) + 1)
+            if indx._name.split('_')[0] == indx._tensortype._dummy_fmt[:-3]:
+                cdt[indx._tensortype] = max(cdt[indx._tensortype], int(indx._name.split('_')[1]) + 1)
             start = vpos[cpos]
             indices[start + ipos] = indx
         for ipos1, ipos2, cpos1, cpos2 in self._dum:
@@ -1417,7 +1423,7 @@ class TensMul(TensExpr):
         # to be called after sorted_components
         from sympy.combinatorics.permutations import _af_new
         types = list(set(self._types))
-        types.sort(key = lambda x: x.name)
+        types.sort(key = lambda x: x._name)
         n = self._ext_rank
         g = [None]*n + [n, n+1]
         pos = 0
@@ -1555,8 +1561,8 @@ class TensMul(TensExpr):
                 c = cv[j-1][0].commutes_with(cv[j][0])
                 if c not in [0, 1]:
                     continue
-                if (cv[j-1][0]._types, cv[j-1][0].name) > \
-                        (cv[j][0]._types, cv[j][0].name):
+                if (cv[j-1][0]._types, cv[j-1][0]._name) > \
+                        (cv[j][0]._types, cv[j][0]._name):
                     cv[j-1], cv[j] = cv[j], cv[j-1]
                     if c:
                         sign = -sign
@@ -1759,7 +1765,7 @@ class TensMul(TensExpr):
         free1 = []
         for j, ipos, cpos in free:
             for i, v in index_tuples:
-                if i.name == j.name and i._tensortype == j._tensortype:
+                if i._name == j._name and i._tensortype == j._tensortype:
                     if i._is_up == j._is_up:
                         free1.append((v, ipos, cpos))
                     else:
