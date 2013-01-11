@@ -236,10 +236,11 @@ class TensorIndexType(Basic):
     def __new__(cls, name, metric=False, dim=None, eps_dim = None,
                  dummy_fmt=None):
         obj = Basic.__new__(cls, name, metric)
+        obj._name = name
         if not dummy_fmt:
-            obj.dummy_fmt = '%s_%%d' % obj.name
+            obj._dummy_fmt = '%s_%%d' % obj.name
         else:
-            obj.dummy_fmt = '%s_%%d' % dummy_fmt
+            obj._dummy_fmt = '%s_%%d' % dummy_fmt
         if metric is None:
             obj.metric_antisym = None
             obj.metric = None
@@ -262,7 +263,7 @@ class TensorIndexType(Basic):
 
     @property
     def name(self):
-        return self.args[0]
+        return self._name
 
     @property
     def dim(self):
@@ -280,6 +281,10 @@ class TensorIndexType(Basic):
     def epsilon(self):
         return self._epsilon
 
+    @property
+    def dummy_fmt(self):
+        return self._dummy_fmt
+
     def get_kronecker_delta(self):
         sym2 = TensorSymmetry(get_symmetric_group_sgs(2))
         S2 = TensorType([self]*2, sym2)
@@ -287,10 +292,10 @@ class TensorIndexType(Basic):
         return delta
 
     def get_epsilon(self):
-        if not isinstance(self.eps_dim, int):
+        if not isinstance(self._eps_dim, int):
             return None
-        sym = TensorSymmetry(get_symmetric_group_sgs(self.eps_dim, 1))
-        Sdim = TensorType([self]*self.eps_dim, sym)
+        sym = TensorSymmetry(get_symmetric_group_sgs(self._eps_dim, 1))
+        Sdim = TensorType([self]*self._eps_dim, sym)
         epsilon = Sdim('Eps')
         return epsilon
 
@@ -347,32 +352,35 @@ class TensorIndex(Basic):
     def __new__(cls, name, tensortype, is_up=True):
 
         obj = Basic.__new__(cls, name, tensortype, is_up)
+        obj._name = name
+        obj._tensortype = tensortype
+        obj._is_up = is_up
         return obj
 
     @property
     def name(self):
-        return self.args[0]
+        return self._name
 
     @property
     def tensortype(self):
-        return self.args[1]
+        return self._tensortype
 
     @property
     def is_up(self):
-        return self.args[2]
+        return self._is_up
 
     def _pretty(self):
-        s = self.name
-        if not self.is_up:
+        s = self._name
+        if not self._is_up:
             s = '-%s' % s
         return s
 
     def __lt__(self, other):
-        return (self.tensortype, self.name) < (other.tensortype, other.name)
+        return (self._tensortype, self._name) < (other._tensortype, other._name)
 
     def __neg__(self):
-        t1 = TensorIndex(self.name, self.tensortype,
-                (not self.is_up))
+        t1 = TensorIndex(self._name, self._tensortype,
+                (not self._is_up))
         return t1
 
 def tensor_indices(s, typ):
@@ -687,6 +695,7 @@ class TensorHead(Basic):
         assert isinstance(name, basestring)
 
         obj = Basic.__new__(cls, name, typ, **kw_args)
+        obj._name = obj.args[0]
         obj._rank = len(obj.index_types)
         obj._types = typ.types
         obj._symmetry = typ.symmetry
@@ -695,7 +704,7 @@ class TensorHead(Basic):
 
     @property
     def name(self):
-        return self.args[0]
+        return self._name
 
     @property
     def rank(self):
@@ -710,6 +719,10 @@ class TensorHead(Basic):
         return self._symmetry
 
     @property
+    def typ(self):
+        return self.args[1]
+
+    @property
     def comm(self):
         return self._comm
 
@@ -721,7 +734,7 @@ class TensorHead(Basic):
         return (self.name, self.index_types) < (other.name, other.index_types)
 
     def _hashable_content(self):
-        r = (self.name, tuple(self.types), self.symmetry, self.comm)
+        r = (self._name, tuple(self._types), self._symmetry, self._comm)
         return r
 
     def commutes_with(self, other):
@@ -730,7 +743,7 @@ class TensorHead(Basic):
 
         Returns None if self and other do not (anti)commute.
         """
-        r = TensorManager.get_comm(self.comm, other.comm)
+        r = TensorManager.get_comm(self._comm, other._comm)
         return r
 
 
@@ -750,7 +763,7 @@ class TensorHead(Basic):
         >>> A = tensorhead('A', [Lorentz]*2, [[1]*2])
         >>> t = A(a, -b)
         """
-        if not [indices[i].tensortype for i in range(len(indices))] == self.index_types:
+        if not [indices[i]._tensortype for i in range(len(indices))] == self.index_types:
             raise ValueError('wrong index type')
         components = [self]
         free, dum =  TensMul.from_indices(*indices)
@@ -799,6 +812,7 @@ class HoldTensorHead(TensorHead):
         name = str(t)
         typ = TensorType(types, symmetry)
         obj = Basic.__new__(cls, name, typ, t)
+        obj._name = name
         obj.free_args = t.free_args
         obj._comm = comm
         obj._symmetry = symmetry
@@ -806,7 +820,7 @@ class HoldTensorHead(TensorHead):
         obj._rank = rank
         return obj
 
-    name = property(lambda self: self.args[0])
+    name = property(lambda self: self._name)
     t = property(lambda self: self.args[2])
 
 
@@ -1040,6 +1054,11 @@ class TensAdd(TensExpr):
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
 
+        Parameters
+        ==========
+
+        ``indices``
+
         Examples
         ========
 
@@ -1058,7 +1077,7 @@ class TensAdd(TensExpr):
         """
         free_args = self.free_args
         indices = list(indices)
-        if [x.tensortype for x in indices] != [x.tensortype for x in free_args]:
+        if [x._tensortype for x in indices] != [x._tensortype for x in free_args]:
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
@@ -1082,7 +1101,7 @@ class TensAdd(TensExpr):
         if not isinstance(other, TensExpr):
             if len(self.args) == 1:
                 return self.args[0]._coeff == other
-        if isinstance(other, TensExpr) and isinstance(other, TensMul ) \
+        if isinstance(other, TensExpr) and isinstance(other, TensMul) \
             and other._coeff == 0:
             return self == 0
         t = self - other
@@ -1133,7 +1152,7 @@ class TensAdd(TensExpr):
 
         ``g`` :  metric
 
-        ``contract_all`` if True, eliminate all ``g`` which are contracted
+        ``contract_all`` : if True, eliminate all ``g`` which are contracted
         """
 
         args = [x.contract_metric(g, contract_all) for x in self.args]
@@ -1267,7 +1286,7 @@ class TensMul(TensExpr):
         obj._components = args[0]
         obj._types = []
         for t in obj._components:
-            obj.types.extend(t._types)
+            obj._types.extend(t._types)
         obj._free = args[1]
         obj._dum = args[2]
         obj._ext_rank = len(obj._free) + 2*len(obj._dum)
@@ -1380,9 +1399,9 @@ class TensMul(TensExpr):
         index_dict = {}
         dum = []
         for i, index in enumerate(indices):
-            name = index.name
-            typ = index.tensortype
-            contr = index.is_up
+            name = index._name
+            typ = index._tensortype
+            contr = index._is_up
             if (name, typ) in index_dict:
                 # found a pair of dummy indices
                 is_contr, pos = index_dict[(name, typ)]
@@ -1404,7 +1423,7 @@ class TensMul(TensExpr):
                 else:
                     dum.append((pos, i, 0, 0))
             else:
-                index_dict[(name, typ)] = index.is_up, i
+                index_dict[(name, typ)] = index._is_up, i
 
         free = [(index, i, 0) for i, index in enumerate(indices) if free[i]]
         free.sort()
@@ -1438,14 +1457,14 @@ class TensMul(TensExpr):
         components = self._components
         for t in components:
             vpos.append(pos)
-            pos += t.rank
+            pos += t._rank
         cdt = defaultdict(int)
         # if the free indices have names with dummy_fmt, start with an
         # index higher than those for the dummy indices
         # to avoid name collisions
         for indx, ipos, cpos in self._free:
-            if indx.name.split('_')[0] == indx.tensortype.dummy_fmt[:-3]:
-                cdt[indx.tensortype] = max(cdt[indx.tensortype], int(indx.name.split('_')[1]) + 1)
+            if indx._name.split('_')[0] == indx._tensortype._dummy_fmt[:-3]:
+                cdt[indx._tensortype] = max(cdt[indx._tensortype], int(indx._name.split('_')[1]) + 1)
             start = vpos[cpos]
             indices[start + ipos] = indx
         for ipos1, ipos2, cpos1, cpos2 in self._dum:
@@ -1488,8 +1507,8 @@ class TensMul(TensExpr):
             return [TensMul(self._coeff, [], [], [])]
         res = []
         for t in components:
-            t1 = t(*indices[pos:pos + t.rank])
-            pos += t.rank
+            t1 = t(*indices[pos:pos + t._rank])
+            pos += t._rank
             res.append(t1)
         res[0] = TensMul(self._coeff, res[0]._components, res[0]._free, res[0]._dum, is_canon_bp=res[0]._is_canon_bp)
         return res
@@ -1502,8 +1521,8 @@ class TensMul(TensExpr):
         """
         # to be called after sorted_components
         from sympy.combinatorics.permutations import _af_new
-        types = list(set(self.types))
-        types.sort(key = lambda x: x.name)
+        types = list(set(self._types))
+        types.sort(key = lambda x: x._name)
         n = self._ext_rank
         g = [None]*n + [n, n+1]
         pos = 0
@@ -1511,7 +1530,7 @@ class TensMul(TensExpr):
         components = self._components
         for t in components:
             vpos.append(pos)
-            pos += t.rank
+            pos += t._rank
         # ordered indices: first the free indices, ordered by types
         # then the dummy indices, ordered by types and contravariant before
         # covariant
@@ -1553,11 +1572,11 @@ class TensMul(TensExpr):
                 numtyp.append([prev, 1])
         v = []
         for h, n in numtyp:
-            if h.comm == 0 or h.comm == 1:
-                comm = h.comm
+            if h._comm == 0 or h._comm == 1:
+                comm = h._comm
             else:
-                comm = TensorManager.get_comm(h.comm, h.comm)
-            v.append((h.symmetry.base, h.symmetry.generators, n, comm))
+                comm = TensorManager.get_comm(h._comm, h._comm)
+            v.append((h._symmetry.base, h._symmetry.generators, n, comm))
         return _af_new(g), dummies, msym, v
 
     def __mul__(self, other):
@@ -1604,9 +1623,9 @@ class TensMul(TensExpr):
             ipos1, cpos1, ind1 = free_dict1[name]
             ipos2, cpos2, ind2 = free_dict2[name]
             cpos2 += nc1
-            if ind1.is_up == ind2.is_up:
+            if ind1._is_up == ind2._is_up:
                 raise ValueError('wrong index contruction %s' % ind1)
-            if ind1.is_up:
+            if ind1._is_up:
                 new_dummy = (ipos1, ipos2, cpos1, cpos2)
             else:
                 new_dummy = (ipos2, ipos1, cpos2, cpos1)
@@ -1628,6 +1647,9 @@ class TensMul(TensExpr):
     def sorted_components(self):
         """
         Returns a tensor with sorted components
+
+        The sorting is done taking into account the commutation group
+        of the component tensors.
         """
         from sympy.combinatorics.permutations import _af_invert
         cv = zip(self._components, range(len(self._components)))
@@ -1638,8 +1660,8 @@ class TensMul(TensExpr):
                 c = cv[j-1][0].commutes_with(cv[j][0])
                 if c not in [0, 1]:
                     continue
-                if (cv[j-1][0].types, cv[j-1][0].name) > \
-                        (cv[j][0].types, cv[j][0].name):
+                if (cv[j-1][0]._types, cv[j-1][0]._name) > \
+                        (cv[j][0]._types, cv[j][0]._name):
                     cv[j-1], cv[j] = cv[j], cv[j-1]
                     if c:
                         sign = -sign
@@ -1671,7 +1693,7 @@ class TensMul(TensExpr):
         pos = 0
         for t in components:
             vpos.append(pos)
-            pos += t.rank
+            pos += t._rank
         sorted_free = [x[0] for x in self._free]
         sorted_free.sort()
         nfree = len(sorted_free)
@@ -1788,7 +1810,7 @@ class TensMul(TensExpr):
         return res
 
     def contract_delta(self, delta):
-        typ = delta.types[0]
+        typ = delta._types[0]
         t = self._contract(delta, None, True)
         return t
 
@@ -1840,8 +1862,8 @@ class TensMul(TensExpr):
         free1 = []
         for j, ipos, cpos in free:
             for i, v in index_tuples:
-                if i.name == j.name and i.tensortype == j.tensortype:
-                    if i.is_up == j.is_up:
+                if i._name == j._name and i._tensortype == j._tensortype:
+                    if i._is_up == j._is_up:
                         free1.append((v, ipos, cpos))
                     else:
                         free1.append((-v, ipos, cpos))
@@ -1946,7 +1968,7 @@ class TensMul(TensExpr):
         """
         free_args = self.free_args
         indices = list(indices)
-        if [x.tensortype for x in indices] != [x.tensortype for x in free_args]:
+        if [x._tensortype for x in indices] != [x._tensortype for x in free_args]:
             raise ValueError('incompatible types')
         if indices == free_args:
             return self
@@ -2094,9 +2116,9 @@ def _contract_g_with_itself(a, i, tg, tg_free, g, antisym):
     typ = g.index_types[0]
     a1 = a[:i] + a[i + 1:]
     t11 = tensor_mul(*a1)
-    if typ.dim is None:
+    if typ._dim is None:
         raise ValueError('dimension not assigned')
-    coeff = typ.dim*a[i]._coeff
+    coeff = typ._dim*a[i]._coeff
     if antisym and tg._dum[0][0] == 0:
         # g(i, -i) = -D
         coeff = -coeff
@@ -2128,8 +2150,8 @@ def _contract_g_with_free_index(a, free_indices, i, tg, tg_free, g, antisym):
             free1.append((indx, iposx, 0))
     coeff = tx._coeff
     if antisym:
-        if ind.is_up and ind == tg_free[0][0] or \
-        (not ind.is_up) and ind == tg_free[1][0]:
+        if ind._is_up and ind == tg_free[0][0] or \
+        (not ind._is_up) and ind == tg_free[1][0]:
             # g(i1, i0)*psi(-i1) = -psi(i0)
             # g(-i0, -i1)*psi(i1) = -psi(-i0)
             coeff = -coeff
@@ -2160,10 +2182,10 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
             # the two `g` are completely contracted
             # i < k always
             a = a[:i] + a[i+1:k] + a[k+1:]
-            coeff = coeff*typ.dim*tg._coeff*ty._coeff
+            coeff = coeff*typ._dim*tg._coeff*ty._coeff
             if antisym:
                 ty_free = sorted(ty_free, key=lambda x: x[1])
-                if ind1.is_up == ind2.is_up:
+                if ind1._is_up == ind2._is_up:
                     # g(i,j)*g(-i,-j) = g(-i,-j)*g(i,j) = dim
                     # g(i,j)*g(-j,-i) = g(-i,-j)*g(j,i) = -dim
                     if ind1m == ty_free[1][0]:
@@ -2193,7 +2215,7 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
             if indx == ind2m:
                 iposx2 = iposx
         if antisym:
-            if ind1.is_up == ind2.is_up:
+            if ind1._is_up == ind2._is_up:
                 if iposx1 < iposx2:
                     coeff = -coeff
                     dum2.append((iposx1, iposx2, 0, 0))
@@ -2221,11 +2243,11 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
             for indx, iposx, _ in ty._free:
                 if indx == ind2m:
                     free2.append((ind1, iposx, 0))
-                    if indx.is_up:
+                    if indx._is_up:
                         coeff = -coeff
                 else:
                     free2.append((indx, iposx, 0))
-                    if not indx.is_up:
+                    if not indx._is_up:
                         coeff = -coeff
         dum2 = ty._dum
 
