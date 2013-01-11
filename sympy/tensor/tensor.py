@@ -380,7 +380,7 @@ class TensorIndex(Basic):
 
 def tensor_indices(s, typ):
     """
-    Returns list of tensor indices given their names and the types
+    Returns list of tensor indices given their names and their types
 
     Parameters
     ==========
@@ -461,9 +461,6 @@ class TensorSymmetry(Basic):
     def _hashable_content(self):
         r = (tuple(self.base), tuple(self.generators))
         return r
-
-    def __hash__(self):
-        return Basic.__hash__(self)
 
 def tensorsymmetry(*args):
     """
@@ -715,6 +712,10 @@ class TensorHead(Basic):
         return self.symmetry
 
     @property
+    def typ(self):
+        return self.args[1]
+
+    @property
     def comm(self):
         return self._comm
 
@@ -728,9 +729,6 @@ class TensorHead(Basic):
     def _hashable_content(self):
         r = (self.name, tuple(self._types), self._symmetry, self._comm)
         return r
-
-    def __hash__(self):
-        return Basic.__hash__(self)
 
     def commutes_with(self, other):
         """
