@@ -1207,7 +1207,7 @@ class Rational(Number):
         if isinstance(other, Rational):
             return Rational.__mod__(other, self)
         if isinstance(other, Float):
-            return self.evalf() % other
+            return other % self.evalf()
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
