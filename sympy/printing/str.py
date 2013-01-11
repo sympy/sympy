@@ -338,6 +338,9 @@ class StrPrinter(Printer):
     def _print_TensorIndex(self, expr):
         return expr._pretty()
 
+    def _print_TensorHead(self, expr):
+        return expr._pretty()
+
     def _print_TensMul(self, expr):
         return expr._pretty()
 
