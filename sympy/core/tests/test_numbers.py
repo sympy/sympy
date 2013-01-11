@@ -63,6 +63,10 @@ def test_mod():
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
 
+    s = S.Zero
+
+    assert s % float(1) == S.Zero
+
     # No rounding required since these numbers can be represented
     # exactly.
     assert Rational(3, 4) % Float(1.1) == 0.75
