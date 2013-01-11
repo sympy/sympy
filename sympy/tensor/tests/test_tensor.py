@@ -482,6 +482,10 @@ def test_add1():
     t2 = (p(j) + q(j) + 2*r(j))*(p(i) - q(i))
     t = t1 + t2
     assert t == 2*p(i)*p(j) + 2*p(i)*r(j) + 2*p(j)*r(i) - 2*q(i)*q(j) - 2*q(i)*r(j) - 2*q(j)*r(i)
+    t = p(i)*q(j)/2
+    assert 2*t == p(i)*q(j)
+    t = (p(i) + q(i))/2
+    assert 2*t == p(i) + q(i)
 
 def test_add2():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')

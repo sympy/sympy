@@ -140,7 +140,7 @@ class _TensorManager(object):
             return None
 
     def clear(self):
-        for i in range(2, len(self._comm)):
+        for i in range(3, len(self._comm)):
             self._comm[i].clear()
 
 TensorManager = _TensorManager()
@@ -701,7 +701,6 @@ class TensExpr(Basic):
     """
 
     _op_priority = 11.0
-    is_TensAdd = False
     is_commutative = False
 
     def __neg__(self):
@@ -711,33 +710,21 @@ class TensExpr(Basic):
         raise NotImplementedError
 
     def __add__(self, other):
-        other = sympify(other)
-        if isinstance(self, TensAdd):
-            args = self.args + (other,)
-            return TensAdd(*args)
         return TensAdd(self, other)
 
     def __radd__(self, other):
         return TensAdd(other, self)
 
     def __sub__(self, other):
-        other = sympify(other)
         return TensAdd(self, -other)
 
     def __rsub__(self, other):
         return TensAdd(other, -self)
 
     def __mul__(self, other):
-        if isinstance(self, TensAdd):
-            return TensAdd(*[x*other for x in self.args])
-        if other.is_TensAdd:
-            return TensAdd(*[self*x for x in other.args])
-        return TensMul.__mul__(self, other)
+        raise NotImplementedError
 
     def __rmul__(self, other):
-        if isinstance(self, TensMul):
-            coeff = other*self._coeff
-            return TensMul(coeff, self._components, self._free, self._dum)
         return TensAdd(*[x*other for x in self.args])
 
     def __pow__(self, other):
@@ -747,12 +734,7 @@ class TensExpr(Basic):
         raise NotImplementedError
 
     def __div__(self, other):
-        other = sympify(other)
-        if isinstance(other, TensExpr):
-            raise ValueError('cannot divide by a tensor')
-        coeff = self._coeff/other
-        return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
-
+        raise NotImplementedError
 
     def __rdiv__(self, other):
         raise NotImplementedError()
@@ -812,14 +794,14 @@ def _tensAdd_flatten(args):
         args1 = []
         for x in args:
             if isinstance(x, TensExpr):
-                if x.is_TensAdd:
+                if isinstance(x, TensAdd):
                     args1.extend(list(x.args))
                 else:
                     args1.append(x)
         args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
         args2 = [x for x in args if not isinstance(x, TensExpr)]
         t0 = args1[0]
-        if t0.is_TensAdd:
+        if isinstance(t0, TensAdd):
             t0 = t0.args[0]
         if t0._free:
            raise ValueError('all tensors must have the same indices')
@@ -827,7 +809,7 @@ def _tensAdd_flatten(args):
         args = [t1] + args1
     a = []
     for x in args:
-        if x.is_TensAdd:
+        if isinstance(x, TensAdd):
             a.extend(list(x.args))
         else:
             a.append(x)
@@ -862,7 +844,6 @@ class TensAdd(TensExpr):
     >>> t(b)
     p(b) + q(b)
     """
-    is_TensAdd = True
 
     def __new__(cls, *args, **kw_args):
         """
@@ -955,6 +936,20 @@ class TensAdd(TensExpr):
                 return t._coeff == 0
             else:
                 return all(x._coeff == 0 for x in t.args)
+
+    def __add__(self, other):
+        other = sympify(other)
+        args = self.args + (other,)
+        return TensAdd(*args)
+
+    def __mul__(self, other):
+        return TensAdd(*[x*other for x in self.args])
+
+    def __div__(self, other):
+        other = sympify(other)
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        return TensAdd(*[x/other for x in self.args])
 
     def _hashable_content(self):
         return tuple(self.args)
@@ -1379,7 +1374,7 @@ class TensMul(TensExpr):
         if not isinstance(other, TensExpr):
             coeff = self._coeff*other
             return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
-        if other.is_TensAdd:
+        if isinstance(other, TensAdd):
             return TensAdd(*[self*x for x in other.args])
 
         components = self._components + other._components
@@ -1409,6 +1404,16 @@ class TensMul(TensExpr):
         coeff = self._coeff*other._coeff
         return TensMul(coeff, components, free, dum)
 
+    def __rmul__(self, other):
+        coeff = other*self._coeff
+        return TensMul(coeff, self._components, self._free, self._dum)
+
+    def __div__(self, other):
+        other = sympify(other)
+        if isinstance(other, TensExpr):
+            raise ValueError('cannot divide by a tensor')
+        coeff = self._coeff/other
+        return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
 
     def sorted_components(self):
         """

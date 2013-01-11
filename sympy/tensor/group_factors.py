@@ -158,7 +158,7 @@ class SuNGroupFactors(object):
         """
         evaluate a triangle of C's
         """
-        if t.is_TensAdd:
+        if isinstance(t, TensAdd):
             args = t.args
             args = [self.rule_C_triangle(x) for x in args]
             return TensAdd(*args)
@@ -184,7 +184,7 @@ class SuNGroupFactors(object):
         """
         evaluate a square of C's
         """
-        if t.is_TensAdd:
+        if isinstance(t, TensAdd):
             args = t.args
             args = [self.rule_C_square(x) for x in args]
             return TensAdd(*args)
@@ -212,7 +212,7 @@ class SuNGroupFactors(object):
         theta(i_0,..,i_m)*theta(j_0,..,j_n) - 1/N*theta(i_0,..,i_m,j_0,..,j_n)
 
         """
-        if t.is_TensAdd:
+        if isinstance(t, TensAdd):
             args = t.args
             args = [self.rule_thetaii(x) for x in args]
             return TensAdd(*args)
@@ -249,7 +249,7 @@ class SuNGroupFactors(object):
         theta(k,i_0,..,i_m)*theta(k,j_0,...,j_n) =
         theta(i_0,...,i_m,j_0,...,j_n) - 1/N*theta(i_0,..,i_m)*theta(j_0,...,j_n)
         """
-        if t.is_TensAdd:
+        if isinstance(t, TensAdd):
             args = t.args
             args = [self.rule_thetaithetai(x) for x in args]
             return TensAdd(*args)
