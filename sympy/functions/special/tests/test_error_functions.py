@@ -3,7 +3,7 @@ from sympy import (
     sqrt, sin, cos, pi, re, im, Abs, O, factorial, exp_polar, gruntz,
     polar_lift, Symbol, I, integrate, exp, uppergamma, expint, EulerGamma,
     log, loggamma, limit, hyper, meijerg, gamma, S, Shi, Chi,
-    Si, Ci, E1, Ei, li, sin, cos, sinh, cosh, fresnels, fresnelc)
+    Si, Ci, E1, Ei, li, Li, sin, cos, sinh, cosh, fresnels, fresnelc)
 
 from sympy.functions.special.error_functions import _erfs, _eis
 
@@ -214,7 +214,7 @@ def test_li():
     assert li(1) == -oo
     assert li(oo) == oo
 
-    assert li(z) == li(z)
+    assert isinstance(li(z), li)
 
     assert diff(li(z), z) == 1/log(z)
 
@@ -223,6 +223,7 @@ def test_li():
     assert conjugate(li(-zp)) == conjugate(li(-zp))
     assert conjugate(li(zn)) == conjugate(li(zn))
 
+    assert li(z).rewrite(Li) == Li(z) + li(2)
     assert li(z).rewrite(Ei) == Ei(log(z))
     assert li(z).rewrite(uppergamma) == (-log(1/log(z))/2 - log(-log(z)) +
                                          log(log(z))/2 - expint(1, -log(z)))
@@ -240,6 +241,18 @@ def test_li():
                                       meijerg(((), (1,)), ((0, 0), ()), -log(z)))
 
     assert gruntz(1/li(z), z, oo) == 0
+
+
+def test_Li():
+    assert Li(2) == 0
+    assert Li(oo) == oo
+
+    assert isinstance(Li(z), Li)
+
+    assert diff(Li(z), z) == 1/log(z)
+
+    assert gruntz(1/Li(z), z, oo) == 0
+    assert Li(z).rewrite(li) == li(z) - li(2)
 
 
 def test_si():

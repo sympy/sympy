@@ -665,7 +665,9 @@ class Li(Function):
 
     @classmethod
     def eval(cls, z):
-        if z is 2*S.One:
+        if z is S.Infinity:
+            return S.Infinity
+        elif z is 2*S.One:
             return S.Zero
 
     def fdiff(self, argindex=1):
