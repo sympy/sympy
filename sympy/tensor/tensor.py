@@ -47,7 +47,9 @@ class _TensorManager(object):
     `1`   tensors anticommuting among themselves
     `2`   tensors not commuting, apart with those with ``comm=0``
 
-    Other groups can be defined using `set_comm`.
+    Other groups can be defined using `set_comm`; tensors in those
+    groups commute with those with ``comm=0``; by default they
+    do not commute with any other group.
     """
     def __init__(self):
         self._comm_init()
@@ -72,7 +74,10 @@ class _TensorManager(object):
         """
         get the commutation group number corresponding to ``i``
 
-        ``i`` can be a symbol or a number
+        ``i`` can be a symbol or a number or a string
+
+        If ``i`` is not already defined its commutation group number
+        is set.
         """
         if i not in self._comm_symbols2i:
             n = len(self._comm_symbols2i)
@@ -84,28 +89,37 @@ class _TensorManager(object):
         return self._comm_symbols2i[i]
 
     def comm_i2symbol(self, i):
+        """
+        Returns the symbol corresponding to the commutation group number.
+        """
         return self._comm_i2symbol[i]
 
     def set_comm(self, i, j, c):
         """
         set the commutation parameter ``c`` for commutation groups ``i, j``
 
-        ``i, j`` they can be symbols or numbers, apart from ``0, 1`` and ``2``
-        which are reserved respectively for commuting, anticommuting
-        tensors and tensors not commuting with any other group apart with
-        the commuting tensors.
+        Parameters
+        ==========
 
-        ``c``     commutation number
+        ``i, j`` : symbols representing commutation groups
+
+        ``c``  :  group commutation number
+
+        Notes
+        =====
+
+        ``i, j`` can be symbols, strings or numbers,
+        apart from ``0, 1`` and ``2`` which are reserved respectively
+        for commuting, anticommuting tensors and tensors not commuting
+        with any other group apart with the commuting tensors.
+        For the remaining cases, use this method to set the commutation rules;
+        by default ``c=None``.
+
+        The group commutation number ``c`` is assigned in corrispondence
+        to the group commutation symbols; it can be
         0        commuting
         1        anticommuting
         None     no commutation property
-
-        Tensors in the group ``i=0`` commute with any other tensor.
-        Tensors in the group ``i=1`` anticommute within that group.
-        Tensors in the group ``i=2`` commute only with the ``0`` group.
-
-        For the remaining cases, use this method to set the commutation rules;
-        by default ``c=None``.
 
         Examples
         ========
@@ -127,6 +141,9 @@ class _TensorManager(object):
         >>> (G(i1)*A(i0)).canon_bp()
         A(i0)*G(i1)
         """
+        if c not in (0, 1, None):
+            raise ValueError('`c` can assume only the values 0, 1 or None')
+
         if i not in self._comm_symbols2i:
             n = len(self._comm_symbols2i)
             self._comm[n][0] = 0
@@ -145,6 +162,14 @@ class _TensorManager(object):
         self._comm[nj][ni] = c
 
     def set_comms(self, *args):
+        """
+        set the commutation group numbers ``c`` for symbols ``i, j``
+
+        Parameters
+        ==========
+
+        ``args`` : sequence of ``(i, j, c``
+        """
         for i, j, c in range(len(args)):
             set_comm(self, i, j, c)
 
@@ -162,6 +187,9 @@ class _TensorManager(object):
             return None
 
     def clear(self):
+        """
+        Clear the TensorManager.
+        """
         self._comm_init()
 
 
@@ -847,7 +875,6 @@ class TensExpr(Basic):
         raise NotImplementedError()
 
     __truediv__ = __div__
-    __rtruediv__ = __rdiv__
 
 
 def _tensAdd_collect_terms(args):
@@ -1086,6 +1113,8 @@ class TensAdd(TensExpr):
         if isinstance(other, TensExpr):
             raise ValueError('cannot divide by a tensor')
         return TensAdd(*[x/other for x in self.args])
+
+    __truediv__ = __div__
 
     def _hashable_content(self):
         return tuple(self.args)
@@ -1573,6 +1602,8 @@ class TensMul(TensExpr):
             raise ValueError('cannot divide by a tensor')
         coeff = self._coeff/other
         return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
+
+    __truediv__ = __div__
 
     def sorted_components(self):
         """
