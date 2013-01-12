@@ -50,6 +50,9 @@ class _TensorManager(object):
     Other groups can be defined using `set_comm`.
     """
     def __init__(self):
+        self._comm_init()
+
+    def _comm_init(self):
         self._comm = defaultdict(dict)
         self._comm[0][0] = 0
         self._comm[0][1] = 0
@@ -60,6 +63,10 @@ class _TensorManager(object):
         self._comm[1][2] = None
         self._comm_symbols2i = {0:0, 1:1, 2:2}
         self._comm_i2symbol = {0:0, 1:1, 2:2}
+
+    @property
+    def comm(self):
+        return self._comm
 
     def comm_symbols2i(self, i):
         """
@@ -72,6 +79,7 @@ class _TensorManager(object):
             self._comm[n][0] = 0
             self._comm[0][n] = 0
             self._comm_symbols2i[i] = n
+            self._comm_i2symbol[n] = i
             return n
         return self._comm_symbols2i[i]
 
@@ -125,7 +133,7 @@ class _TensorManager(object):
             self._comm[0][n] = 0
             self._comm_symbols2i[i] = n
             self._comm_i2symbol[n] = i
-        if j not in self._comm.keys():
+        if j not in self._comm_symbols2i:
             n = len(self._comm_symbols2i)
             self._comm[0][n] = 0
             self._comm[n][0] = 0
@@ -154,8 +162,8 @@ class _TensorManager(object):
             return None
 
     def clear(self):
-        for i in range(3, len(self._comm)):
-            self._comm[i].clear()
+        self._comm_init()
+
 
 TensorManager = _TensorManager()
 
@@ -860,28 +868,28 @@ class TensExpr(Basic):
     is_commutative = False
 
     def __neg__(self):
-        return (-1)*self
+        return self*S.NegativeOne
 
     def __abs__(self):
         raise NotImplementedError
 
     def __add__(self, other):
-        return TensAdd(self, other)
+        raise NotImplementedError
 
     def __radd__(self, other):
-        return TensAdd(other, self)
+        raise NotImplementedError
 
     def __sub__(self, other):
-        return TensAdd(self, -other)
+        raise NotImplementedError
 
     def __rsub__(self, other):
-        return TensAdd(other, -self)
+        raise NotImplementedError
 
     def __mul__(self, other):
         raise NotImplementedError
 
     def __rmul__(self, other):
-        return TensAdd(*[x*other for x in self.args])
+        return self*other
 
     def __pow__(self, other):
         raise NotImplementedError
@@ -1117,6 +1125,15 @@ class TensAdd(TensExpr):
         other = sympify(other)
         args = self.args + (other,)
         return TensAdd(*args)
+
+    def __radd__(self, other):
+        return TensAdd(other, self)
+
+    def __sub__(self, other):
+        return TensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return TensAdd(other, -self)
 
     def __mul__(self, other):
         return TensAdd(*[x*other for x in self.args])
@@ -1578,6 +1595,18 @@ class TensMul(TensExpr):
                 comm = TensorManager.get_comm(h._comm, h._comm)
             v.append((h._symmetry.base, h._symmetry.generators, n, comm))
         return _af_new(g), dummies, msym, v
+
+    def __add__(self, other):
+        return TensAdd(self, other)
+
+    def __radd__(self, other):
+        return TensAdd(other, self)
+
+    def __sub__(self, other):
+        return TensAdd(self, -other)
+
+    def __rsub__(self, other):
+        return TensAdd(other, -self)
 
     def __mul__(self, other):
         """

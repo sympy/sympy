@@ -856,9 +856,10 @@ def test_TensorManager():
     LorentzH = TensorIndexType('LorentzH', dummy_fmt='LH')
     i, j = tensor_indices('i,j', Lorentz)
     ih, jh = tensor_indices('ih,jh', LorentzH)
-    TensorManager.set_comm(3, 4, 0)
     p, q = tensorhead('p q', [Lorentz], [[1]])
     ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
+
+    TensorManager.set_comm(3, 4, 0)
     G = tensorhead('G', [Lorentz], [[1]], 3)
     GH = tensorhead('GH', [LorentzH], [[1]], 4)
     ps = G(i)*p(-i)
@@ -871,16 +872,27 @@ def test_TensorManager():
     assert ps*qsh == qsh*ps
     assert ps*qs != qs*ps
 
-    TensorManager.clear()
     # same as before, but using symbols in TensorManager
     Gsymbol = Symbol('Gsymbol')
     GHsymbol = Symbol('GHsymbol')
     TensorManager.set_comm(Gsymbol, GHsymbol, 0)
-    p, q = tensorhead('p q', [Lorentz], [[1]])
-    ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
     G = tensorhead('G', [Lorentz], [[1]], Gsymbol)
     assert TensorManager._comm_i2symbol[G.comm] == Gsymbol
     GH = tensorhead('GH', [LorentzH], [[1]], GHsymbol)
+    ps = G(i)*p(-i)
+    psh = GH(ih)*ph(-ih)
+    t = ps + psh
+    t1 = t*t
+    assert t1 == ps*ps + 2*ps*psh + psh*psh
+    qs = G(i)*q(-i)
+    qsh = GH(ih)*qh(-ih)
+    assert ps*qsh == qsh*ps
+    assert ps*qs != qs*ps
+
+    # do it again the other way
+    TensorManager.set_comm(3, 4, 0)
+    G = tensorhead('G', [Lorentz], [[1]], 3)
+    GH = tensorhead('GH', [LorentzH], [[1]], 4)
     ps = G(i)*p(-i)
     psh = GH(ih)*ph(-ih)
     t = ps + psh
