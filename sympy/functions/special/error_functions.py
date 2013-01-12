@@ -207,7 +207,7 @@ class Ei(Function):
     Si: Sine integral.
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral
+    Chi: Hyperbolic cosine integral.
     sympy.functions.special.gamma_functions.uppergamma
 
     References
@@ -343,7 +343,7 @@ class expint(Function):
     Si: Sine integral.
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral
+    Chi: Hyperbolic cosine integral.
     sympy.functions.special.gamma_functions.uppergamma
 
     References
@@ -488,7 +488,7 @@ def E1(z):
     Si: Sine integral.
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral
+    Chi: Hyperbolic cosine integral.
     """
     return expint(1, z)
 
@@ -571,7 +571,7 @@ class li(Function):
     Si: Sine integral.
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral
+    Chi: Hyperbolic cosine integral.
 
     References
     ==========
@@ -690,7 +690,7 @@ class Li(Function):
     Si: Sine integral.
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral
+    Chi: Hyperbolic cosine integral.
 
     References
     ==========
@@ -806,7 +806,7 @@ class Si(TrigonometricIntegral):
 
     Ci: Cosine integral.
     Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral
+    Chi: Hyperbolic cosine integral.
     Ei: Exponential integral.
     expint: Generalised exponential integral.
     E1: Special case of the generalised exponential integral.
@@ -901,7 +901,7 @@ class Ci(TrigonometricIntegral):
 
     Si: Sine integral.
     Shi: Hyperbolic sine integral.
-    Chi: Hyperbolic cosine integral
+    Chi: Hyperbolic cosine integral.
     Ei: Exponential integral.
     expint: Generalised exponential integral.
     E1: Special case of the generalised exponential integral.
@@ -978,7 +978,7 @@ class Shi(TrigonometricIntegral):
 
     Si: Sine integral.
     Ci: Cosine integral.
-    Chi: Hyperbolic cosine integral
+    Chi: Hyperbolic cosine integral.
     Ei: Exponential integral.
     expint: Generalised exponential integral.
     E1: Special case of the generalised exponential integral.
