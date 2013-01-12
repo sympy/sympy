@@ -200,7 +200,15 @@ class Ei(Function):
     See Also
     ========
 
-    expint, sympy.functions.special.gamma_functions.uppergamma
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral
+    sympy.functions.special.gamma_functions.uppergamma
 
     References
     ==========
@@ -328,8 +336,14 @@ class expint(Function):
     See Also
     ========
 
-    E1: The classical case, returns expint(1, z).
     Ei: Another related function called exponential integral.
+    E1: The classical case, returns expint(1, z).
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral
     sympy.functions.special.gamma_functions.uppergamma
 
     References
@@ -464,6 +478,17 @@ def E1(z):
 
     This is equivalent to ``expint(1, z)``.
 
+    See Also
+    ========
+
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral
     """
     return expint(1, z)
 
@@ -539,7 +564,14 @@ class li(Function):
     See Also
     ========
 
-    Ei, E1, expint, Li, Si, Ci, Shi, Chi
+    Li: Offset logarithmic integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral
 
     References
     ==========
@@ -651,7 +683,14 @@ class Li(Function):
     See Also
     ========
 
-    Ei, E1, expint, li, Si, Ci, Shi, Chi
+    li: Logarithmic integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    Si: Sine integral.
+    Ci: Cosine integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral
 
     References
     ==========
@@ -766,9 +805,13 @@ class Si(TrigonometricIntegral):
     ========
 
     Ci: Cosine integral.
-    Shi: Sinh integral.
-    Chi: Cosh integral.
-    expint: The generalised exponential integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
 
     References
     ==========
@@ -857,9 +900,13 @@ class Ci(TrigonometricIntegral):
     ========
 
     Si: Sine integral.
-    Shi: Sinh integral.
-    Chi: Cosh integral.
-    expint: The generalised exponential integral.
+    Shi: Hyperbolic sine integral.
+    Chi: Hyperbolic cosine integral
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
 
     References
     ==========
@@ -931,8 +978,12 @@ class Shi(TrigonometricIntegral):
 
     Si: Sine integral.
     Ci: Cosine integral.
-    Chi: Cosh integral.
-    expint: The generalised exponential integral.
+    Chi: Hyperbolic cosine integral
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
 
     References
     ==========
@@ -1017,8 +1068,12 @@ class Chi(TrigonometricIntegral):
 
     Si: Sine integral.
     Ci: Cosine integral.
-    Shi: Sinh integral.
-    expint: The generalised exponential integral.
+    Shi: Hyperbolic sine integral.
+    Ei: Exponential integral.
+    expint: Generalised exponential integral.
+    E1: Special case of the generalised exponential integral.
+    li: Logarithmic integral.
+    Li: Offset logarithmic integral.
 
     References
     ==========
