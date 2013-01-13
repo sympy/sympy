@@ -11,7 +11,6 @@ from sympy.functions.special.hyper import hyper
 from sympy.core.compatibility import xrange
 
 # TODO
-# o Airy Ai and Bi functions
 # o Scorer functions G1 and G2
 # o Asymptotic expansions
 #   These are possible, e.g. for fixed order, but since the bessel type
@@ -783,8 +782,87 @@ class AiryBase(Function):
 
 class airyai(AiryBase):
     r"""
-    Airy function Ai
+    The Airy function `\operatorname{Ai}` of the first kind.
 
+    The Airy function `\operatorname{Ai}(z)` is defined to be the function
+    satisfying Airy's differential equation
+
+    .. math::
+        \frac{\mathrm{d}^2 w(z)}{\mathrm{d}z^2} - z w(z) = 0.
+
+    Equivalently, for real `z`
+
+    .. math::
+        \operatorname{Ai}(z) := \frac{1}{\pi}
+        \int_0^\infty \cos\left(\frac{t^3}{3} + z t\right) \mathrm{d}t.
+
+    Examples
+    ========
+
+    Create an Airy function object:
+
+    >>> from sympy import airyai
+    >>> from sympy.abc import z
+
+    >>> airyai(z)
+    airyai(z)
+
+    Several special values are known:
+
+    >>> airyai(0)
+    3**(1/3)/(3*gamma(2/3))
+    >>> from sympy import oo
+    >>> airyai(oo)
+    0
+    >>> airyai(-oo)
+    0
+
+    The Airy function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(airyai(z))
+    airyai(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(airyai(z), z)
+    airyaiprime(z)
+    >>> diff(airyai(z), z, 2)
+    z*airyai(z)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(airyai(z), z, 0, 3)
+    3**(5/6)*gamma(1/3)/(6*pi) - 3**(1/6)*z*gamma(2/3)/(2*pi) + O(z**3)
+
+    We can numerically evaluate the Airy function to arbitrary precision
+    on the whole complex plane:
+
+    >>> airyai(-2).evalf(50)
+    0.22740742820168557599192443603787379946077222541710
+
+    Rewrite Ai(z) in terms of hypergeometric functions:
+
+    >>> from sympy import hyper
+    >>> airyai(z).rewrite(hyper)
+    -3**(2/3)*z*hyper((), (4/3,), z**3/9)/(3*gamma(1/3)) + 3**(1/3)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3))
+
+    See Also
+    ========
+
+    airybi: Airy function of the second kind.
+    airyaiprime: Derivative of the Airy function of the first kind.
+    airybiprime: Derivative of the Airy function of the second kind.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Airy_function
+    .. [2] http://dlmf.nist.gov/9
+    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
+    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
     """
 
     nargs = 1
@@ -869,8 +947,89 @@ class airyai(AiryBase):
 
 class airybi(AiryBase):
     r"""
-    Airy function Bi
+    The Airy function `\operatorname{Bi}` of the second kind.
 
+    The Airy function `\operatorname{Bi}(z)` is defined to be the function
+    satisfying Airy's differential equation
+
+    .. math::
+        \frac{\mathrm{d}^2 w(z)}{\mathrm{d}z^2} - z w(z) = 0.
+
+    Equivalently, for real `z`
+
+    .. math::
+        \operatorname{Bi}(z) := \frac{1}{\pi}
+                 \int_0^\infty
+                   \exp\left(-\frac{t^3}{3} + z t\right)
+                   + \sin\left(\frac{t^3}{3} + z t\right) \mathrm{d}t.
+
+    Examples
+    ========
+
+    Create an Airy function object:
+
+    >>> from sympy import airybi
+    >>> from sympy.abc import z
+
+    >>> airybi(z)
+    airybi(z)
+
+    Several special values are known:
+
+    >>> airybi(0)
+    3**(5/6)/(3*gamma(2/3))
+    >>> from sympy import oo
+    >>> airybi(oo)
+    oo
+    >>> airybi(-oo)
+    0
+
+    The Airy function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(airybi(z))
+    airybi(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(airybi(z), z)
+    airybiprime(z)
+    >>> diff(airybi(z), z, 2)
+    z*airybi(z)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(airybi(z), z, 0, 3)
+    3**(1/3)*gamma(1/3)/(2*pi) + 3**(2/3)*z*gamma(2/3)/(2*pi) + O(z**3)
+
+    We can numerically evaluate the Airy function to arbitrary precision
+    on the whole complex plane:
+
+    >>> airybi(-2).evalf(50)
+    -0.41230258795639848808323405461146104203453483447240
+
+    Rewrite Bi(z) in terms of hypergeometric functions:
+
+    >>> from sympy import hyper
+    >>> airybi(z).rewrite(hyper)
+    3**(1/6)*z*hyper((), (4/3,), z**3/9)/gamma(1/3) + 3**(5/6)*hyper((), (2/3,), z**3/9)/(3*gamma(2/3))
+
+    See Also
+    ========
+
+    airyai: Airy function of the first kind.
+    airyaiprime: Derivative of the Airy function of the first kind.
+    airybiprime: Derivative of the Airy function of the second kind.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Airy_function
+    .. [2] http://dlmf.nist.gov/9
+    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
+    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
     """
 
     nargs = 1
@@ -957,8 +1116,78 @@ class airybi(AiryBase):
 
 class airyaiprime(AiryBase):
     r"""
-    Airy function Ai'
+    The derivative `\operatorname{Ai}^\prime` of the Airy function of the first kind.
 
+    The Airy function `\operatorname{Ai}^\prime(z)` is defined to be the function
+
+    .. math::
+        \operatorname{Ai}^\prime(z) := \frac{\mathrm{d} \operatorname{Ai}(z)}{\mathrm{d} z}.
+
+    Examples
+    ========
+
+    Create an Airy function object:
+
+    >>> from sympy import airyaiprime
+    >>> from sympy.abc import z
+
+    >>> airyaiprime(z)
+    airyaiprime(z)
+
+    Several special values are known:
+
+    >>> airyaiprime(0)
+    -3**(2/3)/(3*gamma(1/3))
+    >>> from sympy import oo
+    >>> airyaiprime(oo)
+    0
+
+    The Airy function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(airyaiprime(z))
+    airyaiprime(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(airyaiprime(z), z)
+    z*airyai(z)
+    >>> diff(airyaiprime(z), z, 2)
+    z*airyaiprime(z) + airyai(z)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(airyaiprime(z), z, 0, 3)
+    -3**(2/3)/(3*gamma(1/3)) + 3**(1/3)*z**2/(6*gamma(2/3)) + O(z**3)
+
+    We can numerically evaluate the Airy function to arbitrary precision
+    on the whole complex plane:
+
+    >>> airyaiprime(-2).evalf(50)
+    0.61825902074169104140626429133247528291577794512415
+
+    Rewrite Ai'(z) in terms of hypergeometric functions:
+
+    >>> from sympy import hyper
+    >>> airyaiprime(z).rewrite(hyper)
+    3**(1/3)*z**2*hyper((), (5/3,), z**3/9)/(6*gamma(2/3)) - 3**(2/3)*hyper((), (1/3,), z**3/9)/(3*gamma(1/3))
+
+    See Also
+    ========
+
+    airyai: Airy function of the first kind.
+    airybi: Airy function of the second kind.
+    airybiprime: Derivative of the Airy function of the second kind.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Airy_function
+    .. [2] http://dlmf.nist.gov/9
+    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
+    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
     """
 
     nargs = 1
@@ -1040,8 +1269,80 @@ class airyaiprime(AiryBase):
 
 class airybiprime(AiryBase):
     r"""
-    Airy function Bi'
+    The derivative `\operatorname{Bi}^\prime` of the Airy function of the first kind.
 
+    The Airy function `\operatorname{Bi}^\prime(z)` is defined to be the function
+
+    .. math::
+        \operatorname{Bi}^\prime(z) := \frac{\mathrm{d} \operatorname{Bi}(z)}{\mathrm{d} z}.
+
+    Examples
+    ========
+
+    Create an Airy function object:
+
+    >>> from sympy import airybiprime
+    >>> from sympy.abc import z
+
+    >>> airybiprime(z)
+    airybiprime(z)
+
+    Several special values are known:
+
+    >>> airybiprime(0)
+    3**(1/6)/gamma(1/3)
+    >>> from sympy import oo
+    >>> airybiprime(oo)
+    oo
+    >>> airybiprime(-oo)
+    0
+
+    The Airy function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(airybiprime(z))
+    airybiprime(conjugate(z))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(airybiprime(z), z)
+    z*airybi(z)
+    >>> diff(airybiprime(z), z, 2)
+    z*airybiprime(z) + airybi(z)
+
+    Series expansion is also supported:
+
+    >>> from sympy import series
+    >>> series(airybiprime(z), z, 0, 3)
+    3**(1/6)/gamma(1/3) + 3**(5/6)*z**2/(6*gamma(2/3)) + O(z**3)
+
+    We can numerically evaluate the Airy function to arbitrary precision
+    on the whole complex plane:
+
+    >>> airybiprime(-2).evalf(50)
+    0.27879516692116952268509756941098324140300059345163
+
+    Rewrite Bi'(z) in terms of hypergeometric functions:
+
+    >>> from sympy import hyper
+    >>> airybiprime(z).rewrite(hyper)
+    3**(5/6)*z**2*hyper((), (5/3,), z**3/9)/(6*gamma(2/3)) + 3**(1/6)*hyper((), (1/3,), z**3/9)/gamma(1/3)
+
+    See Also
+    ========
+
+    airyai: Airy function of the first kind.
+    airybi: Airy function of the second kind.
+    airyaiprime: Derivative of the Airy function of the first kind.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Airy_function
+    .. [2] http://dlmf.nist.gov/9
+    .. [3] http://www.encyclopediaofmath.org/index.php/Airy_functions
+    .. [4] http://mathworld.wolfram.com/AiryFunctions.html
     """
 
     nargs = 1
