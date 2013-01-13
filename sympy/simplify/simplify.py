@@ -3100,15 +3100,14 @@ def _real_to_rational(expr, tolerance=None):
     """
     p = expr
     reps = {}
+    round_to = None
     if tolerance is not None:
         tolerance = 1/tolerance
         round_to = int(round(mpmath.log10(tolerance)))
     for r in p.atoms(C.Float):
         oldr = r
-        try:
+        if round_to is not None:
             r = Float(round(r, round_to))
-        except UnboundLocalError:
-            pass
         newr = nsimplify(r, rational=False)
         if not newr.is_Rational or r.is_finite and not newr.is_finite:
             if newr < 0:
