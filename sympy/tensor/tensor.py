@@ -55,12 +55,11 @@ class _TensorManager(object):
         self._comm_init()
 
     def _comm_init(self):
-        self._comm = defaultdict(dict)
-        self._comm[0][0] = 0
-        self._comm[0][1] = 0
-        self._comm[1][0] = 1
-        self._comm[2][0] = 1
-        self._comm[0][2] = 1
+        self._comm = [{} for i in range(3)]
+        for i in range(3):
+            self._comm[0][i] = 0
+            self._comm[i][0] = 0
+        self._comm[1][1] = 1
         self._comm[2][1] = None
         self._comm[1][2] = None
         self._comm_symbols2i = {0:0, 1:1, 2:2}
@@ -80,7 +79,8 @@ class _TensorManager(object):
         is set.
         """
         if i not in self._comm_symbols2i:
-            n = len(self._comm_symbols2i)
+            n = len(self._comm)
+            self._comm.append({})
             self._comm[n][0] = 0
             self._comm[0][n] = 0
             self._comm_symbols2i[i] = n
@@ -145,13 +145,15 @@ class _TensorManager(object):
             raise ValueError('`c` can assume only the values 0, 1 or None')
 
         if i not in self._comm_symbols2i:
-            n = len(self._comm_symbols2i)
+            n = len(self._comm)
+            self._comm.append({})
             self._comm[n][0] = 0
             self._comm[0][n] = 0
             self._comm_symbols2i[i] = n
             self._comm_i2symbol[n] = i
         if j not in self._comm_symbols2i:
-            n = len(self._comm_symbols2i)
+            n = len(self._comm)
+            self._comm.append({})
             self._comm[0][n] = 0
             self._comm[n][0] = 0
             self._comm_symbols2i[j] = n
@@ -170,21 +172,16 @@ class _TensorManager(object):
 
         ``args`` : sequence of ``(i, j, c``
         """
-        for i, j, c in range(len(args)):
-            set_comm(self, i, j, c)
+        for i, j, c in args:
+            self.set_comm(i, j, c)
 
     def get_comm(self, i, j):
         """
-        Return the commutation parameter for commutation groups ``i, j``
+        Return the commutation parameter for commutation groups numbers ``i, j``
 
         see ``_TensorManager.set_comm``
         """
-        try:
-            return self._comm[i].get(j, 0 if i*j == 0 else None)
-        except IndexError:
-            if j == 0:
-                return 0
-            return None
+        return self._comm[i].get(j, 0 if i == 0 or j == 0 else None)
 
     def clear(self):
         """
@@ -944,7 +941,6 @@ def _tensAdd_collect_terms(args):
     prev = args[0]
     prev_coeff = prev._coeff
     changed = False
-    new = 0
 
     for x in args[1:]:
         # if x and prev have the same tensor, update the coeff of prev
@@ -995,8 +991,6 @@ def _tensAdd_flatten(args):
         t0 = args1[0]
         if isinstance(t0, TensAdd):
             t0 = t0.args[0]
-        if t0._free:
-           raise ValueError('all tensors must have the same indices')
         t1 = TensMul(Add(*args2), [], [], [])
         args = [t1] + args1
     a = []
@@ -1085,7 +1079,7 @@ class TensAdd(TensExpr):
 
     @property
     def rank(self):
-        return self.args[0]._rank
+        return self.args[0].rank
 
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
@@ -1137,9 +1131,6 @@ class TensAdd(TensExpr):
         if not isinstance(other, TensExpr):
             if len(self.args) == 1:
                 return self.args[0]._coeff == other
-        if isinstance(other, TensExpr) and isinstance(other, TensMul) \
-            and other._coeff == 0:
-            return self == 0
         t = self - other
         if not isinstance(t, TensExpr):
             return t == 0
@@ -1150,9 +1141,8 @@ class TensAdd(TensExpr):
                 return all(x._coeff == 0 for x in t.args)
 
     def __add__(self, other):
-        other = sympify(other)
         args = self.args + (other,)
-        return TensAdd(*args)
+        return TensAdd(self, other)
 
     def __radd__(self, other):
         return TensAdd(other, self)
@@ -1172,7 +1162,11 @@ class TensAdd(TensExpr):
             raise ValueError('cannot divide by a tensor')
         return TensAdd(*[x/other for x in self.args])
 
+    def __rdiv__(self, other):
+        raise ValueError('cannot divide by a tensor')
+
     __truediv__ = __div__
+    __truerdiv__ = __rdiv__
 
     def _hashable_content(self):
         return tuple(self.args)
@@ -1185,8 +1179,6 @@ class TensAdd(TensExpr):
 
     def contract_delta(self, delta):
         args = [x.contract_delta(delta) for x in self.args]
-        if len(args) == 1:
-            return args[0]
         t = TensAdd(*args)
         return canon_bp(t)
 
@@ -1200,11 +1192,14 @@ class TensAdd(TensExpr):
         ``g`` :  metric
 
         ``contract_all`` : if True, eliminate all ``g`` which are contracted
+
+        Notes
+        =====
+
+        see the ``TensorIndexType`` docstring for the contraction conventions
         """
 
         args = [x.contract_metric(g, contract_all) for x in self.args]
-        if len(args) == 1:
-            return args[0]
         t = TensAdd(*args)
         return canon_bp(t)
 
@@ -1693,6 +1688,7 @@ class TensMul(TensExpr):
         return TensMul(coeff, components, free, dum)
 
     def __rmul__(self, other):
+        other = sympify(other)
         coeff = other*self._coeff
         return TensMul(coeff, self._components, self._free, self._dum)
 
@@ -1703,7 +1699,11 @@ class TensMul(TensExpr):
         coeff = self._coeff/other
         return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
 
+    def __rdiv__(self, other):
+        raise ValueError('cannot divide by a tensor')
+
     __truediv__ = __div__
+    __truerdiv__ = __rdiv__
 
     def sorted_components(self):
         """
@@ -1883,6 +1883,11 @@ class TensMul(TensExpr):
 
         ``contract_all`` if True, eliminate all ``g`` which are contracted
 
+        Notes
+        =====
+
+        see the ``TensorIndexType`` docstring for the contraction conventions
+
         Examples
         ========
 
@@ -1897,8 +1902,6 @@ class TensMul(TensExpr):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
-        if g.index_types[0].metric_antisym is None:
-            raise NotImplementedError
         return self._contract(g, g.index_types[0].metric_antisym, contract_all)
 
     def substitute_indices(self, *index_tuples):
@@ -2136,8 +2139,11 @@ def riemann_cyclic(t2):
     >>> riemann_cyclic(t)
     0
     """
-    a = t2.args
-    a1 = [x.split() for x in a]
+    if isinstance(t2, TensMul):
+        args = [t2]
+    else:
+        args = t2.args
+    a1 = [x.split() for x in args]
     a2 = [[riemann_cyclic_replace(tx) for tx in y] for y in a1]
     a3 = [tensor_mul(*v) for v in a2]
     t3 = TensAdd(*a3)
@@ -2238,7 +2244,7 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
     # ty has the index ind2m
     ty_free = ty._free[:]
     if ty._components == [g]:
-        ty_indices = [x[0] for  x in ty._free]
+        ty_indices = [x[0] for  x in ty_free]
         if all(x in [ind1m, ind2m] for x in ty_indices):
             # the two `g` are completely contracted
             # i < k always
@@ -2270,7 +2276,7 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
         # tg has both indices contracted with ty
         free2 = [(indx, iposx, cposx) for indx, iposx, cposx in ty._free if indx != ind1m and indx != ind2m]
         dum2 = ty._dum[:]
-        for indx, iposx, _ in ty._free:
+        for indx, iposx, _ in ty_free:
             if indx == ind1m:
                 iposx1 = iposx
             if indx == ind2m:
@@ -2295,21 +2301,19 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
 
         free2 = []
         if not antisym:
-            for indx, iposx, _ in ty._free:
+            for indx, iposx, _ in ty_free:
                 if indx == ind2m:
                     free2.append((ind1, iposx, 0))
                 else:
                     free2.append((indx, iposx, 0))
         else:
-            for indx, iposx, _ in ty._free:
+            for indx, iposx, _ in ty_free:
                 if indx == ind2m:
                     free2.append((ind1, iposx, 0))
                     if indx._is_up:
                         coeff = -coeff
                 else:
                     free2.append((indx, iposx, 0))
-                    if not indx._is_up:
-                        coeff = -coeff
         dum2 = ty._dum
 
     t2 = TensMul(ty._coeff, ty._components, free2, dum2)
