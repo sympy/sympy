@@ -256,6 +256,11 @@ def _create_lookup_table(table):
     add(elliptic_k(t), [S.Half, S.Half], [], [0], [0], -t, S.Half)
     add(elliptic_e(t), [S.Half, 3*S.Half], [], [0], [0], -t, -S.Half/2)
 
+    # Orthogonal polynomials
+    from sympy import hermite
+    add(hermite(a, t), [], [(a-1)/2], [0, S.Half], [], t**2, 2**a/exp(-t**2))
+
+
 
 ####################################################################
 # First some helper functions.
