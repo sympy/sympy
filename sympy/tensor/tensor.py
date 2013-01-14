@@ -42,12 +42,15 @@ class _TensorManager(object):
     =====
 
     Tensors belong to tensor commutation groups; each group has a label
-    ``comm`; there are predefined labels:
-    `0`   tensors commuting with any other tensor
-    `1`   tensors anticommuting among themselves
-    `2`   tensors not commuting, apart with those with ``comm=0``
+    ``comm``; there are predefined labels:
 
-    Other groups can be defined using `set_comm`; tensors in those
+    ``0``   tensors commuting with any other tensor
+
+    ``1``   tensors anticommuting among themselves
+
+    ``2``   tensors not commuting, apart with those with ``comm=0``
+
+    Other groups can be defined using ``set_comm``; tensors in those
     groups commute with those with ``comm=0``; by default they
     do not commute with any other group.
     """
@@ -55,12 +58,11 @@ class _TensorManager(object):
         self._comm_init()
 
     def _comm_init(self):
-        self._comm = defaultdict(dict)
-        self._comm[0][0] = 0
-        self._comm[0][1] = 0
-        self._comm[1][0] = 1
-        self._comm[2][0] = 1
-        self._comm[0][2] = 1
+        self._comm = [{} for i in range(3)]
+        for i in range(3):
+            self._comm[0][i] = 0
+            self._comm[i][0] = 0
+        self._comm[1][1] = 1
         self._comm[2][1] = None
         self._comm[1][2] = None
         self._comm_symbols2i = {0:0, 1:1, 2:2}
@@ -80,7 +82,8 @@ class _TensorManager(object):
         is set.
         """
         if i not in self._comm_symbols2i:
-            n = len(self._comm_symbols2i)
+            n = len(self._comm)
+            self._comm.append({})
             self._comm[n][0] = 0
             self._comm[0][n] = 0
             self._comm_symbols2i[i] = n
@@ -101,9 +104,9 @@ class _TensorManager(object):
         Parameters
         ==========
 
-        ``i, j`` : symbols representing commutation groups
+        i, j : symbols representing commutation groups
 
-        ``c``  :  group commutation number
+        c  :  group commutation number
 
         Notes
         =====
@@ -117,8 +120,11 @@ class _TensorManager(object):
 
         The group commutation number ``c`` is assigned in corrispondence
         to the group commutation symbols; it can be
+
         0        commuting
+
         1        anticommuting
+
         None     no commutation property
 
         Examples
@@ -131,9 +137,9 @@ class _TensorManager(object):
         >>> Lorentz = TensorIndexType('Lorentz')
         >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
         >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> G = tensorhead('G', [Lorentz], [[1]], 3)
-        >>> GH = tensorhead('GH', [Lorentz], [[1]], 4)
-        >>> TensorManager.set_comm(3, 4, 0)
+        >>> G = tensorhead('G', [Lorentz], [[1]], 'Gcomm')
+        >>> GH = tensorhead('GH', [Lorentz], [[1]], 'GHcomm')
+        >>> TensorManager.set_comm('Gcomm', 'GHcomm', 0)
         >>> (GH(i1)*G(i0)).canon_bp()
         G(i0)*GH(i1)
         >>> (G(i1)*G(i0)).canon_bp()
@@ -145,13 +151,15 @@ class _TensorManager(object):
             raise ValueError('`c` can assume only the values 0, 1 or None')
 
         if i not in self._comm_symbols2i:
-            n = len(self._comm_symbols2i)
+            n = len(self._comm)
+            self._comm.append({})
             self._comm[n][0] = 0
             self._comm[0][n] = 0
             self._comm_symbols2i[i] = n
             self._comm_i2symbol[n] = i
         if j not in self._comm_symbols2i:
-            n = len(self._comm_symbols2i)
+            n = len(self._comm)
+            self._comm.append({})
             self._comm[0][n] = 0
             self._comm[n][0] = 0
             self._comm_symbols2i[j] = n
@@ -168,23 +176,18 @@ class _TensorManager(object):
         Parameters
         ==========
 
-        ``args`` : sequence of ``(i, j, c``
+        args : sequence of ``(i, j, c)``
         """
-        for i, j, c in range(len(args)):
-            set_comm(self, i, j, c)
+        for i, j, c in args:
+            self.set_comm(i, j, c)
 
     def get_comm(self, i, j):
         """
-        Return the commutation parameter for commutation groups ``i, j``
+        Return the commutation parameter for commutation group numbers ``i, j``
 
         see ``_TensorManager.set_comm``
         """
-        try:
-            return self._comm[i].get(j, 0 if i*j == 0 else None)
-        except IndexError:
-            if j == 0:
-                return 0
-            return None
+        return self._comm[i].get(j, 0 if i == 0 or j == 0 else None)
 
     def clear(self):
         """
@@ -202,16 +205,16 @@ class TensorIndexType(Basic):
     Parameters
     ==========
 
-    ``name`` : name of the tensor type
+    name : name of the tensor type
 
-    ``metric`` : metric symmetry or metric object or ``None``
+    metric : metric symmetry or metric object or ``None``
 
 
-    ``dim`` : dimension, it can be a symbol or an integer or ``None``
+    dim : dimension, it can be a symbol or an integer or ``None``
 
-    ``eps_dim`` : dimension of the epsilon tensor
+    eps_dim : dimension of the epsilon tensor
 
-    ``dummy_fmt`` : name of the head of dummy indices
+    dummy_fmt : name of the head of dummy indices
 
     Attributes
     ==========
@@ -350,9 +353,9 @@ class TensorIndex(Basic):
     Parameters
     ==========
 
-    ``name`` : name of the index
-    ``tensortype`` : ``TensorIndexType`` of the index
-    ``is_up`` :  flag for contravariant index
+    name : name of the index
+    tensortype : ``TensorIndexType`` of the index
+    is_up :  flag for contravariant index
 
     Attributes
     ==========
@@ -426,9 +429,9 @@ def tensor_indices(s, typ):
     Parameters
     ==========
 
-    ``s`` : string of comma separated names of indices
+    s : string of comma separated names of indices
 
-    ``typ`` : list of ``TensorIndexType`` of the indices
+    typ : list of ``TensorIndexType`` of the indices
 
     Examples
     ========
@@ -452,7 +455,7 @@ class TensorSymmetry(Basic):
     Parameters
     ==========
 
-    ``bsgs`` : tuple ``(base, sgs)`` BSGS of the symmetry of the tensor
+    bsgs : tuple ``(base, sgs)`` BSGS of the symmetry of the tensor
 
     Attributes
     ==========
@@ -497,7 +500,7 @@ class TensorSymmetry(Basic):
 
     @property
     def rank(self):
-        return self.args[1][0].size
+        return self.args[1][0].size - 2
 
     def _hashable_content(self):
         r = (tuple(self.base), tuple(self.generators))
@@ -558,7 +561,7 @@ def tensorsymmetry(*args):
         return bsgs
 
     if not args:
-        return TensorSymmetry([[], [Permutation(2)]])
+        return TensorSymmetry([[], [Permutation(1)]])
     if len(args) == 2 and isinstance(args[1][0], Permutation):
         return TensorSymmetry(args)
     base, sgs = tableau2bsgs(args[0])
@@ -575,8 +578,8 @@ class TensorType(Basic):
     Parameters
     ==========
 
-    ``index_types`` : list of ``TensorIndexType`` of the tensor indices
-    ``symmetry`` : ``TensorSymmetry`` of the tensor
+    index_types : list of ``TensorIndexType`` of the tensor indices
+    symmetry : ``TensorSymmetry`` of the tensor
 
     Attributes
     ==========
@@ -599,7 +602,7 @@ class TensorType(Basic):
     is_commutative = False
 
     def __new__(cls, index_types, symmetry, **kw_args):
-        assert symmetry.rank == len(index_types) + 2
+        assert symmetry.rank == len(index_types)
         obj = Basic.__new__(cls, index_types, symmetry, **kw_args)
         return obj
 
@@ -659,13 +662,16 @@ def tensorhead(name, typ, sym, comm=0):
     """
     Function generating tensorhead(s).
 
-    ``name`` name or sequence of names (as in ``symbol``)
+    Parameters
+    ==========
 
-    ``typ``  index types
+    name : name or sequence of names (as in ``symbol``)
 
-    ``sym``  same as ``*args`` in ``tensorsymmetry``
+    typ :  index types
 
-    ``comm``: commutation group number
+    sym :  same as ``*args`` in ``tensorsymmetry``
+
+    comm : commutation group number
     see ``_TensorManager.set_comm``
 
 
@@ -692,11 +698,11 @@ class TensorHead(Basic):
     Parameters
     ==========
 
-    ``name`` : name of the tensor
+    name : name of the tensor
 
-    ``typ`` : list of TensorIndexType
+    typ : list of TensorIndexType
 
-    ``comm`` : commutation group number
+    comm : commutation group number
 
     Attributes
     ==========
@@ -875,6 +881,7 @@ class TensExpr(Basic):
         raise NotImplementedError()
 
     __truediv__ = __div__
+    __rtruediv__ = __rdiv__
 
 
 def _tensAdd_collect_terms(args):
@@ -886,7 +893,6 @@ def _tensAdd_collect_terms(args):
     prev = args[0]
     prev_coeff = prev._coeff
     changed = False
-    new = 0
 
     for x in args[1:]:
         # if x and prev have the same tensor, update the coeff of prev
@@ -934,11 +940,6 @@ def _tensAdd_flatten(args):
                     args1.append(x)
         args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
         args2 = [x for x in args if not isinstance(x, TensExpr)]
-        t0 = args1[0]
-        if isinstance(t0, TensAdd):
-            t0 = t0.args[0]
-        if t0._free:
-           raise ValueError('all tensors must have the same indices')
         t1 = TensMul(Add(*args2), [], [], [])
         args = [t1] + args1
     a = []
@@ -967,7 +968,7 @@ class TensAdd(TensExpr):
     Parameters
     ==========
 
-    ``free_args`` : list of the free indices
+    free_args : list of the free indices
 
     Attributes
     ==========
@@ -1027,7 +1028,7 @@ class TensAdd(TensExpr):
 
     @property
     def rank(self):
-        return self.args[0]._rank
+        return self.args[0].rank
 
     def __call__(self, *indices):
         """Returns tensor with ordered free indices replaced by ``indices``
@@ -1035,7 +1036,7 @@ class TensAdd(TensExpr):
         Parameters
         ==========
 
-        ``indices``
+        indices
 
         Examples
         ========
@@ -1076,11 +1077,7 @@ class TensAdd(TensExpr):
 
     def __eq__(self, other):
         other = sympify(other)
-        if not isinstance(other, TensExpr):
-            if len(self.args) == 1:
-                return self.args[0]._coeff == other
-        if isinstance(other, TensExpr) and isinstance(other, TensMul) \
-            and other._coeff == 0:
+        if isinstance(other, TensMul) and other._coeff == 0:
             return self == 0
         t = self - other
         if not isinstance(t, TensExpr):
@@ -1092,9 +1089,7 @@ class TensAdd(TensExpr):
                 return all(x._coeff == 0 for x in t.args)
 
     def __add__(self, other):
-        other = sympify(other)
-        args = self.args + (other,)
-        return TensAdd(*args)
+        return TensAdd(self, other)
 
     def __radd__(self, other):
         return TensAdd(other, self)
@@ -1114,7 +1109,11 @@ class TensAdd(TensExpr):
             raise ValueError('cannot divide by a tensor')
         return TensAdd(*[x/other for x in self.args])
 
+    def __rdiv__(self, other):
+        raise ValueError('cannot divide by a tensor')
+
     __truediv__ = __div__
+    __truerdiv__ = __rdiv__
 
     def _hashable_content(self):
         return tuple(self.args)
@@ -1127,8 +1126,6 @@ class TensAdd(TensExpr):
 
     def contract_delta(self, delta):
         args = [x.contract_delta(delta) for x in self.args]
-        if len(args) == 1:
-            return args[0]
         t = TensAdd(*args)
         return canon_bp(t)
 
@@ -1139,14 +1136,17 @@ class TensAdd(TensExpr):
         Parameters
         ==========
 
-        ``g`` :  metric
+        g :  metric
 
-        ``contract_all`` : if True, eliminate all ``g`` which are contracted
+        contract_all : if True, eliminate all ``g`` which are contracted
+
+        Notes
+        =====
+
+        see the ``TensorIndexType`` docstring for the contraction conventions
         """
 
         args = [x.contract_metric(g, contract_all) for x in self.args]
-        if len(args) == 1:
-            return args[0]
         t = TensAdd(*args)
         return canon_bp(t)
 
@@ -1158,7 +1158,7 @@ class TensAdd(TensExpr):
         Parameters
         ==========
 
-        ``index_types`` : list of tuples ``(old_index, new_index)``
+        index_types : list of tuples ``(old_index, new_index)``
 
         Examples
         ========
@@ -1167,10 +1167,9 @@ class TensAdd(TensExpr):
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
         >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
-        >>> t = A(i, k)*B(-k, -j); t
-        A(i, L_0)*B(-L_0, -j)
-        >>> t.substitute_indices((i,j), (j, k))
-        A(j, L_0)*B(-L_0, -k)
+        >>> t = A(i, k)*B(-k, -j) + A(i, -j)
+        >>> t.fun_eval((i, k),(-j, l))
+        A(k, L_0)*B(l, -L_0) + A(k, l)
         """
         args = self.args
         args1 = []
@@ -1186,7 +1185,7 @@ class TensAdd(TensExpr):
         Parameters
         ==========
 
-        ``index_types`` : list of tuples ``(old_index, new_index)``
+        index_types : list of tuples ``(old_index, new_index)``
 
         Examples
         ========
@@ -1195,6 +1194,10 @@ class TensAdd(TensExpr):
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
         >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> t = A(i, k)*B(-k, -j); t
+        A(i, L_0)*B(-L_0, -j)
+        >>> t.substitute_indices((i,j), (j, k))
+        A(j, L_0)*B(-L_0, -k)
         """
         args = self.args
         args1 = []
@@ -1220,8 +1223,8 @@ class TensMul(TensExpr):
     Parameters
     ==========
 
-    ``coeff`` : SymPy coefficient of the tensor
-    ``args``
+    coeff : SymPy coefficient of the tensor
+    args
 
     Attributes
     ==========
@@ -1233,7 +1236,7 @@ class TensMul(TensExpr):
     ``ext_rank`` : rank of the tensor counting the dummy indices
     ``rank`` : rank of the tensor
     ``coeff`` : SymPy coefficient of the tensor
-    ``free_args``: list of the free indices in sorted order
+    ``free_args`` : list of the free indices in sorted order
     ``is_canon_bp`` : ``True`` if the tensor in in canonical form
 
     Notes
@@ -1593,6 +1596,7 @@ class TensMul(TensExpr):
         return TensMul(coeff, components, free, dum)
 
     def __rmul__(self, other):
+        other = sympify(other)
         coeff = other*self._coeff
         return TensMul(coeff, self._components, self._free, self._dum)
 
@@ -1603,7 +1607,11 @@ class TensMul(TensExpr):
         coeff = self._coeff/other
         return TensMul(coeff, self._components, self._free, self._dum, is_canon_bp=self._is_canon_bp)
 
+    def __rdiv__(self, other):
+        raise ValueError('cannot divide by a tensor')
+
     __truediv__ = __div__
+    __truerdiv__ = __rdiv__
 
     def sorted_components(self):
         """
@@ -1784,6 +1792,11 @@ class TensMul(TensExpr):
 
         ``contract_all`` if True, eliminate all ``g`` which are contracted
 
+        Notes
+        =====
+
+        see the ``TensorIndexType`` docstring for the contraction conventions
+
         Examples
         ========
 
@@ -1798,8 +1811,6 @@ class TensMul(TensExpr):
         >>> t.contract_metric(g).canon_bp()
         p(L_0)*q(-L_0)
         """
-        if g.index_types[0].metric_antisym is None:
-            raise NotImplementedError
         return self._contract(g, g.index_types[0].metric_antisym, contract_all)
 
 
@@ -1851,8 +1862,8 @@ class TensMul(TensExpr):
         >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
         >>> t = A(i, k)*B(-k, -j); t
         A(i, L_0)*B(-L_0, -j)
-        >>> t.substitute_indices((i,j), (j, k))
-        A(j, L_0)*B(-L_0, -k)
+        >>> t.fun_eval((i, k),(-j, l))
+        A(k, L_0)*B(-L_0, l)
         """
         free = self._free
         free1 = []
@@ -1972,8 +1983,11 @@ def riemann_cyclic(t2):
     >>> riemann_cyclic(t)
     0
     """
-    a = t2.args
-    a1 = [x.split() for x in a]
+    if isinstance(t2, TensMul):
+        args = [t2]
+    else:
+        args = t2.args
+    a1 = [x.split() for x in args]
     a2 = [[riemann_cyclic_replace(tx) for tx in y] for y in a1]
     a3 = [tensor_mul(*v) for v in a2]
     t3 = TensAdd(*a3)
@@ -2075,7 +2089,7 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
     # ty has the index ind2m
     ty_free = ty._free[:]
     if ty._components == [g]:
-        ty_indices = [x[0] for  x in ty._free]
+        ty_indices = [x[0] for  x in ty_free]
         if all(x in [ind1m, ind2m] for x in ty_indices):
             # the two `g` are completely contracted
             # i < k always
@@ -2107,7 +2121,7 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
         # tg has both indices contracted with ty
         free2 = [(indx, iposx, cposx) for indx, iposx, cposx in ty._free if indx != ind1m and indx != ind2m]
         dum2 = ty._dum[:]
-        for indx, iposx, _ in ty._free:
+        for indx, iposx, _ in ty_free:
             if indx == ind1m:
                 iposx1 = iposx
             if indx == ind2m:
@@ -2132,21 +2146,19 @@ def _contract_g_without_free_index(a, free_indices, i, tg, tg_free, g, typ, anti
 
         free2 = []
         if not antisym:
-            for indx, iposx, _ in ty._free:
+            for indx, iposx, _ in ty_free:
                 if indx == ind2m:
                     free2.append((ind1, iposx, 0))
                 else:
                     free2.append((indx, iposx, 0))
         else:
-            for indx, iposx, _ in ty._free:
+            for indx, iposx, _ in ty_free:
                 if indx == ind2m:
                     free2.append((ind1, iposx, 0))
                     if indx._is_up:
                         coeff = -coeff
                 else:
                     free2.append((indx, iposx, 0))
-                    if not indx._is_up:
-                        coeff = -coeff
         dum2 = ty._dum
 
     t2 = TensMul(ty._coeff, ty._components, free2, dum2)
