@@ -645,10 +645,8 @@ def _separatevars(expr, force):
     # First try other expansion methods
     expr = expr.expand(mul=False, multinomial=False, force=force)
 
-    _expr = expr
-    if expr.is_commutative:  # factor fails for nc
-        _expr, reps = posify(expr) if force else (expr, {})
-        expr = factor(_expr).subs(reps)
+    _expr, reps = posify(expr) if force else (expr, {})
+    expr = factor(_expr).subs(reps)
 
     if not expr.is_Add:
         return expr
