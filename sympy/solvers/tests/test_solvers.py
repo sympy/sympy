@@ -558,9 +558,9 @@ def test_issue_2033():
     assert solve([exp(x) - sin(y), 1/y - 3], [x, y]) == \
         [(log(sin(S(1)/3)), S(1)/3)]
     assert solve([exp(x) - sin(y), 1/exp(y) - 3], [x, y]) == \
-        [(log(-sin(log(3))), -log(3))]
+        [(log(sin(log(3))) + I*pi, -log(3))]
     assert set(solve([exp(x) - sin(y), y**2 - 4], [x, y])) == \
-        set([(log(-sin(2)), -S(2)), (log(sin(2)), S(2))])
+        set([(log(sin(2))  + I*pi, -S(2)), (log(sin(2)), S(2))])
     eqs = [exp(x)**2 - sin(y) + z**2, 1/exp(y) - 3]
     assert solve(eqs, set=True) == \
         ([x, y], set([

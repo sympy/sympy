@@ -7,7 +7,8 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Function, Equality, Dummy, Atom, Expr, factor_terms,
     expand_multinomial, expand_power_base, symbols)
 
-from sympy.core.compatibility import iterable, reduce, default_sort_key
+from sympy.core.compatibility import (
+    iterable, reduce, default_sort_key, set_union)
 from sympy.core.numbers import Float
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
@@ -911,7 +912,8 @@ def trigsimp(expr, deep=False, recursive=False, first=True):
 
     """
     old = expr
-    if first:
+    if first and len(set_union(*[t.free_symbols for t in expr.atoms(
+            C.TrigonometricFunction, C.TrigonometricFunction)])) > 1:
         d = separatevars(expr)
         if d.is_Mul:
             d = separatevars(d, dict=True) or d

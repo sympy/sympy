@@ -994,10 +994,8 @@ def test_line_intersection():
         Triangle(
             Point(0, 0),
             Point(8, 0),
-            Point((8*tan(13*pi/45)**2 + 8*sqrt(3)*tan(13*pi/45))/
-                (-3 + tan(13*pi/45)**2),
-                (-24*tan(13*pi/45) - 8*sqrt(3)*tan(13*pi/45)**2)/
-                (-3 + tan(13*pi/45)**2)))
+            Point(-8*tan(13*pi/45)/(-tan(13*pi/45) + sqrt(3)),
+            8*sqrt(3)*tan(13*pi/45)/(-tan(13*pi/45) + sqrt(3))))
     assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == \
         [Point(1, 1)]
     assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == \

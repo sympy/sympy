@@ -186,4 +186,4 @@ def test_rolling_disc():
     assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
     assert (RHS[4] == (-4*g*sin(q2) + 5*r*sin(q2)*cos(q2)*q1d**2
         + 6*r*cos(q2)*q1d*q3d)/(5*r))
-    assert RHS[5] == (-5*cos(q2)*q1d + 6*tan(q2)*q3d + 4*q1d/cos(q2))*q2d
+    assert RHS[5] == (5*sin(q2)**2*q1d + 6*sin(q2)*q3d - q1d)*q2d/cos(q2)
