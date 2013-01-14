@@ -14,6 +14,7 @@ from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
+from sympy.functions.elementary.integers import ceiling
 from sympy.utilities.iterables import flatten, has_variety
 
 from sympy.simplify.cse_main import cse
@@ -3100,15 +3101,19 @@ def _real_to_rational(expr, tolerance=None):
     """
     p = expr
     reps = {}
-    round_to = None
-    if tolerance is not None:
-        tolerance = 1/tolerance
-        round_to = int(round(mpmath.log10(tolerance)))
+    reduce_num = None
+    if tolerance is not None and tolerance < 1:
+        reduce_num = ceiling(1/tolerance)
+        
     for r in p.atoms(C.Float):
         oldr = r
-        if round_to is not None:
-            r = Float(round(r, round_to))
-        newr = nsimplify(r, rational=False)
+        if reduce_num is not None:
+            newr = nsimplify(r, rational=False)
+            newr = Rational(newr).limit_denominator(reduce_num)
+        elif tolerance is not None and tolerance >=1 and r.is_integer is False:
+            newr = nsimplify(tolerance*round(r/tolerance), rational=False)
+        else:
+            newr = nsimplify(r, rational=False)
         if not newr.is_Rational or r.is_finite and not newr.is_finite:
             if newr < 0:
                 newr = -r
