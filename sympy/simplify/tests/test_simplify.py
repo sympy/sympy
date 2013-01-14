@@ -156,8 +156,8 @@ def test_trigsimp3():
 
 @XFAIL
 def test_1562():
+    # factor(eq.rewrite(exp)) works for these
     a, x, y = symbols('a x y')
-    # factoring necessary
     eq = -4*sin(x)**4 + 4*cos(x)**4 - 8*cos(x)**2
     assert trigsimp(eq) == -4
     n = sin(x)**6 + 4*sin(x)**4*cos(x)**2 + 5*sin(x)**2*cos(x)**4 + 2*cos(x)**6
@@ -169,20 +169,11 @@ def test_1562():
 
 
 @XFAIL
-def test_trigsimp_multiple():
-    a, x, y = symbols('a x y')
-
-    # check for multiple patterns
-    assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
-           tan(x)**-2*tan(y)**-2
-
-
-@XFAIL
 def test_trigsimp_factoring():
-    # 1395 - factoring necessary
-    assert trigsimp(sin(a)**2*sin(b)**2 +
-                    cos(a)**2*cos(b)**2*tan(a)**2 +
-                    cos(a)**2) == 1
+    a, b = symbols('a b')
+    # 1395 - factor(eq.rewrite(exp)) works
+    eq = sin(a)**2*sin(b)**2 + cos(a)**2*cos(b)**2*tan(a)**2 + cos(a)**2
+    assert trigsimp(eq) == 1
 
 
 @XFAIL
@@ -231,11 +222,16 @@ def test_trigsimp_issues():
     assert trigsimp(e.subs(y,2)) == tan(x)**2
     assert trigsimp(e.subs(x,1)) == tan(1)**y
 
+    # check for multiple patterns
+    assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
+           tan(x)**-2*tan(y)**-2
+
 
 def test_trigsimp_assumptions():
     from random import random, randint
     from sympy.utilities.iterables import flatten
-    from sympy.utilities.randtest import test_numerically, random_complex_number, comp
+    from sympy.utilities.randtest import (
+        test_numerically, random_complex_number, comp)
 
     a, b, c, d, matchers_division, matchers_add, \
     matchers_identity, artifacts = _trigpats()
@@ -409,7 +405,7 @@ def test_simplify():
     assert simplify(e) == 1 + y
 
     e = (2 * (1/n - cos(n * pi)/n))/pi
-    assert simplify(e) == 2*((1 - 1*cos(pi*n))/(pi*n))
+    assert simplify(e) == 2*((-cos(pi*n) + 1)/(pi*n))
 
     e = integrate(1/(x**3 + 1), x).diff(x)
     assert simplify(e) == 1/(x**3 + 1)

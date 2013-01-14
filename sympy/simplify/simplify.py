@@ -881,7 +881,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     return c/d
 
 
-def trigsimp(expr, deep=False, recursive=False):
+def trigsimp(expr, deep=False, recursive=False, first=True):
     """
     reduces expression by using known trig identities
 
@@ -910,8 +910,24 @@ def trigsimp(expr, deep=False, recursive=False):
     log(2)
 
     """
-    if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
-        return expr
+    old = expr
+    if first:
+        d = separatevars(expr)
+        if d.is_Mul:
+            d = separatevars(d, dict=True) or d
+        try:
+            expr = 1
+            for k, v in d.iteritems():
+                # remove hollow factoring
+                was = v
+                v = expand_mul(v)
+                vnew = trigsimp(v, deep, recursive, first=False)
+                if vnew == v:
+                    vnew = was
+                expr *= vnew
+            old = expr
+        except AttributeError:
+            expr = old
 
     if recursive:
         w, g = cse(expr)
@@ -924,6 +940,11 @@ def trigsimp(expr, deep=False, recursive=False):
     else:
         result = _trigsimp(expr, deep)
 
+    if result == expr:
+        n = factor(expr.rewrite(exp))
+        if n.is_number:
+            return n
+        return old
     return result
 
 
