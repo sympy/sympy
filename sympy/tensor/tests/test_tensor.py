@@ -436,11 +436,7 @@ def test_TensorIndexType():
     sym2n = tensorsymmetry(*get_symmetric_group_sgs(2))
     assert sym2 == sym2n
     g = Lorentz.metric
-    p = tensorhead('p', [Lorentz], [[1]])
     assert str(g) == 'g(Lorentz,Lorentz)'
-    t = g(m0, m1)*p(-m1)
-    t1 = t.contract_metric(g)
-    assert t1 == p(m0)
     assert Lorentz.eps_dim == Lorentz.dim
 
     TSpace = TensorIndexType('TSpace')
@@ -449,10 +445,7 @@ def test_TensorIndexType():
     A = tensorhead('A', [TSpace]*2, [[1]*2])
     assert  str(A(i0,-i0).canon_bp()) == 'A(TSpace_0, -TSpace_0)'
 
-
-
-def test_get_indices():
-    from sympy.abc import x
+def test_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     assert a != -a
@@ -462,53 +455,44 @@ def test_get_indices():
     indices = t.get_indices()
     L_0 = TensorIndex('L_0', Lorentz)
     assert indices == [a, L_0, -L_0, c]
-    t2 = tensor_mul(*t.split())
-    assert t == t2
-    assert tensor_mul(*[]) == TensMul(S.One, [],[],[])
+    raises(ValueError, lambda: tensor_indices(3, Lorentz))
+    raises(ValueError, lambda: A(a,b,c))
 
+def test_tensorsymmetry():
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     sym = tensorsymmetry([1]*2)
-    assert A.typ == TensorType([Lorentz]*2, sym)
-    assert A.symmetry == sym
     sym1 = TensorSymmetry(get_symmetric_group_sgs(2))
     assert sym == sym1
+    sym = tensorsymmetry([2])
+    sym1 = TensorSymmetry(get_symmetric_group_sgs(2, 1))
+    assert sym == sym1
+
+def test_TensorType():
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    sym = tensorsymmetry([1]*2)
+    A = tensorhead('A', [Lorentz]*2, [[1]*2])
+    assert A.typ == TensorType([Lorentz]*2, sym)
     assert A.types == [Lorentz]
     typ =  TensorType([Lorentz]*2, sym)
     assert str(typ) == "TensorType(['Lorentz', 'Lorentz'])"
-
-    t = TensMul(S.One, [],[],[])
-    assert str(t) == '1'
-    t = (1 + x)*A(a, b)
-    assert str(t) == '(x + 1)*A(a, b)'
-    assert t.types == [Lorentz]
-    assert t.rank == 2
-    assert t.dum == []
-    assert t.coeff == 1 + x
-    assert sorted(t.free) == [(a, 0, 0), (b, 1, 0)]
-    assert t.components == [A]
-    t = A(a, b) + B(a, b)
-    assert t.rank == 2
-    t1 = t - A(a, b) - B(a, b)
-    assert t1 == 0
-    t = 1 - (A(a, -a) + B(a, -a))
-    t1 = 1 + (A(a, -a) + B(a, -a))
-    assert t + t1 == 2
-    t2 = 1 + A(a, -a)
-    assert t1 != t2
     raises(ValueError, lambda: typ(2))
-    raises(ValueError, lambda: A(a,b,c))
-    raises(ValueError, lambda: tensor_indices(3, typ))
+
+def test_TensExpr():
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
     g = Lorentz.metric
-    raises(ValueError, lambda: g(a, -a).contract_metric(g))
+    A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
     raises(ValueError, lambda: g(c, d)/g(a, b))
     raises(ValueError, lambda: S.One/g(a, b))
     raises(ValueError, lambda: (A(c, d) + g(c, d))/g(a, b))
     raises(ValueError, lambda: S.One/(A(c, d) + g(c, d)))
     raises(ValueError, lambda: A(a, b) + A(a, c))
-    raises(NotImplementedError, lambda: TensExpr.__mul__(t2, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__add__(t2, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__radd__(t2, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__sub__(t2, 'a'))
-    raises(NotImplementedError, lambda: TensExpr.__div__(t2, 'a'))
+    t = A(a, b) + B(a, b)
+    raises(NotImplementedError, lambda: TensExpr.__mul__(t, 'a'))
+    raises(NotImplementedError, lambda: TensExpr.__add__(t, 'a'))
+    raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
+    raises(NotImplementedError, lambda: TensExpr.__sub__(t, 'a'))
+    raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
     raises(NotImplementedError, lambda: A(a, b)**2)
     raises(NotImplementedError, lambda: 2**A(a, b))
     raises(NotImplementedError, lambda: abs(A(a, b)))
@@ -565,8 +549,15 @@ def test_add1():
     t = S.One + p(i)*p(-i)
     assert t - p(-j)*p(j) == 1
 
-    t = TensMul(1, [], [], [])
-    assert t.split()[0] == t
+    t = A(a, b) + B(a, b)
+    assert t.rank == 2
+    t1 = t - A(a, b) - B(a, b)
+    assert t1 == 0
+    t = 1 - (A(a, -a) + B(a, -a))
+    t1 = 1 + (A(a, -a) + B(a, -a))
+    assert t + t1 == 2
+    t2 = 1 + A(a, -a)
+    assert t1 != t2
 
 def test_add2():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -579,6 +570,31 @@ def test_add2():
     t1 = S(2)/3*R(m,n,p,q) - S(1)/3*R(m,q,n,p) + S(1)/3*R(m,p,n,q)
     t2 = t1*A(-n,-p,-q)
     assert t2 == 0
+
+def test_mul():
+    from sympy.abc import x
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
+    sym = tensorsymmetry([1]*2)
+    t = TensMul(S.One, [],[],[])
+    assert str(t) == '1'
+    A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
+    t = (1 + x)*A(a, b)
+    assert str(t) == '(x + 1)*A(a, b)'
+    assert t.types == [Lorentz]
+    assert t.rank == 2
+    assert t.dum == []
+    assert t.coeff == 1 + x
+    assert sorted(t.free) == [(a, 0, 0), (b, 1, 0)]
+    assert t.components == [A]
+
+    t = A(-b, a)*B(-a, c)*A(-c, d)
+    t1 = tensor_mul(*t.split())
+    assert t == t1
+    assert tensor_mul(*[]) == TensMul(S.One, [],[],[])
+
+    t = TensMul(1, [], [], [])
+    assert t.split()[0] == t
 
 
 def test_substitute_indices():
@@ -665,6 +681,10 @@ def test_contract_metric1():
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
     a, b, c, d, e = tensor_indices('a,b,c,d,e', Lorentz)
     g = Lorentz.metric
+    p = tensorhead('p', [Lorentz], [[1]])
+    t = g(a, b)*p(-b)
+    t1 = t.contract_metric(g)
+    assert t1 == p(a)
     A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
 
     # case with g with all free indices
@@ -696,6 +716,11 @@ def test_contract_metric1():
     t2 = t1.contract_metric(g)
     assert t2 == A(a, -a)
     assert not t2._free
+
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    g = Lorentz.metric
+    raises(ValueError, lambda: g(a, -a).contract_metric(g)) # no dim
 
 def test_contract_metric2():
     D = Symbol('D')
@@ -991,20 +1016,6 @@ def test_TensorManager():
     p, q = tensorhead('p q', [Lorentz], [[1]])
     ph, qh = tensorhead('ph qh', [LorentzH], [[1]])
 
-    G = tensorhead('G', [Lorentz], [[1]], 3)
-    TensorManager.set_comm(3, 4, 0)
-    GH = tensorhead('GH', [LorentzH], [[1]], 4)
-    ps = G(i)*p(-i)
-    psh = GH(ih)*ph(-ih)
-    t = ps + psh
-    t1 = t*t
-    assert t1 == ps*ps + 2*ps*psh + psh*psh
-    qs = G(i)*q(-i)
-    qsh = GH(ih)*qh(-ih)
-    assert ps*qsh == qsh*ps
-    assert ps*qs != qs*ps
-
-    # same as before, but using symbols in TensorManager
     Gsymbol = Symbol('Gsymbol')
     GHsymbol = Symbol('GHsymbol')
     TensorManager.set_comm(Gsymbol, GHsymbol, 0)
@@ -1023,30 +1034,13 @@ def test_TensorManager():
     n = TensorManager.comm_symbols2i(Gsymbol)
     assert TensorManager.comm_i2symbol(n) == Gsymbol
 
-    # do it again the other way
-    TensorManager.set_comm(3, 4, 0)
-    G = tensorhead('G', [Lorentz], [[1]], 3)
-    n3 = TensorManager.comm_symbols2i(3)
-    GH = tensorhead('GH', [LorentzH], [[1]], 4)
-    n4 = TensorManager.comm_symbols2i(4)
-    assert TensorManager.get_comm(n3, n4) == 0
-    ps = G(i)*p(-i)
-    psh = GH(ih)*ph(-ih)
-    t = ps + psh
-    t1 = t*t
-    assert t1 == ps*ps + 2*ps*psh + psh*psh
-    qs = G(i)*q(-i)
-    qsh = GH(ih)*qh(-ih)
-    assert ps*qsh == qsh*ps
-    assert ps*qs != qs*ps
-
     assert GHsymbol in TensorManager._comm_symbols2i
+    raises(ValueError, lambda: TensorManager.set_comm(GHsymbol, 1, 2))
+    TensorManager.set_comms((Gsymbol,GHsymbol,0),(Gsymbol,1,1))
+    assert TensorManager.get_comm(n, 1) == TensorManager.get_comm(1, n) == 1
     TensorManager.clear()
     assert TensorManager.comm == [{0:0, 1:0, 2:0}, {0:0, 1:1, 2:None}, {0:0, 1:None}]
     assert GHsymbol not in TensorManager._comm_symbols2i
-    TensorManager.set_comms((3,4,0),(3,1,1))
-    assert TensorManager.get_comm(3, 1) == TensorManager.get_comm(1, 3) == 1
-    raises(ValueError, lambda: TensorManager.set_comm(4, 5, 2))
 
 def test_hash():
     D = Symbol('D')
