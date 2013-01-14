@@ -177,7 +177,7 @@ class _TensorManager(object):
 
     def get_comm(self, i, j):
         """
-        Return the commutation parameter for commutation groups numbers ``i, j``
+        Return the commutation parameter for commutation group numbers ``i, j``
 
         see ``_TensorManager.set_comm``
         """
@@ -494,7 +494,7 @@ class TensorSymmetry(Basic):
 
     @property
     def rank(self):
-        return self.args[1][0].size
+        return self.args[1][0].size - 2
 
     def _hashable_content(self):
         r = (tuple(self.base), tuple(self.generators))
@@ -555,7 +555,7 @@ def tensorsymmetry(*args):
         return bsgs
 
     if not args:
-        return TensorSymmetry([[], [Permutation(2)]])
+        return TensorSymmetry([[], [Permutation(1)]])
     if len(args) == 2 and isinstance(args[1][0], Permutation):
         return TensorSymmetry(args)
     base, sgs = tableau2bsgs(args[0])
@@ -596,7 +596,7 @@ class TensorType(Basic):
     is_commutative = False
 
     def __new__(cls, index_types, symmetry, **kw_args):
-        assert symmetry.rank == len(index_types) + 2
+        assert symmetry.rank == len(index_types)
         obj = Basic.__new__(cls, index_types, symmetry, **kw_args)
         return obj
 
@@ -988,9 +988,6 @@ def _tensAdd_flatten(args):
                     args1.append(x)
         args1 = [x for x in args1 if isinstance(x, TensExpr) and x._coeff]
         args2 = [x for x in args if not isinstance(x, TensExpr)]
-        t0 = args1[0]
-        if isinstance(t0, TensAdd):
-            t0 = t0.args[0]
         t1 = TensMul(Add(*args2), [], [], [])
         args = [t1] + args1
     a = []
@@ -1128,9 +1125,8 @@ class TensAdd(TensExpr):
 
     def __eq__(self, other):
         other = sympify(other)
-        if not isinstance(other, TensExpr):
-            if len(self.args) == 1:
-                return self.args[0]._coeff == other
+        if isinstance(other, TensMul) and other._coeff == 0:
+            return self == 0
         t = self - other
         if not isinstance(t, TensExpr):
             return t == 0
@@ -1141,7 +1137,6 @@ class TensAdd(TensExpr):
                 return all(x._coeff == 0 for x in t.args)
 
     def __add__(self, other):
-        args = self.args + (other,)
         return TensAdd(self, other)
 
     def __radd__(self, other):
@@ -1227,10 +1222,9 @@ class TensAdd(TensExpr):
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
         >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
-        >>> t = A(i, k)*B(-k, -j); t
-        A(i, L_0)*B(-L_0, -j)
-        >>> t.substitute_indices((i,j), (j, k))
-        A(j, L_0)*B(-L_0, -k)
+        >>> t = A(i, k)*B(-k, -j) + A(i, -j)
+        >>> t.fun_eval((i, k),(-j, l))
+        A(k, L_0)*B(l, -L_0) + A(k, l)
         """
         args = self.args
         args1 = []
@@ -1266,6 +1260,10 @@ class TensAdd(TensExpr):
         >>> Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
         >>> i, j, k, l = tensor_indices('i,j,k,l', Lorentz)
         >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
+        >>> t = A(i, k)*B(-k, -j); t
+        A(i, L_0)*B(-L_0, -j)
+        >>> t.substitute_indices((i,j), (j, k))
+        A(j, L_0)*B(-L_0, -k)
         """
         args = self.args
         args1 = []
@@ -1997,8 +1995,8 @@ class TensMul(TensExpr):
         >>> A, B = tensorhead('A,B', [Lorentz]*2, [[1]*2])
         >>> t = A(i, k)*B(-k, -j); t
         A(i, L_0)*B(-L_0, -j)
-        >>> t.substitute_indices((i,j), (j, k))
-        A(j, L_0)*B(-L_0, -k)
+        >>> t.fun_eval((i, k),(-j, l))
+        A(k, L_0)*B(-L_0, l)
         """
         free = self._free
         free1 = []

@@ -448,9 +448,9 @@ def test_TensorIndexType():
 def test_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
     a, b, c, d = tensor_indices('a,b,c,d', Lorentz)
+    assert a.tensortype == Lorentz
     assert a != -a
     A, B = tensorhead('A B', [Lorentz]*2, [[1]*2])
-    assert A != B
     t = A(a,b)*B(-b,c)
     indices = t.get_indices()
     L_0 = TensorIndex('L_0', Lorentz)
@@ -466,6 +466,9 @@ def test_tensorsymmetry():
     sym = tensorsymmetry([2])
     sym1 = TensorSymmetry(get_symmetric_group_sgs(2, 1))
     assert sym == sym1
+    sym2 = tensorsymmetry()
+    assert sym2.base == [] and sym2.generators == [Permutation(1)]
+    raises(NotImplementedError, lambda: tensorsymmetry([2, 1]))
 
 def test_TensorType():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -492,10 +495,22 @@ def test_TensExpr():
     raises(NotImplementedError, lambda: TensExpr.__add__(t, 'a'))
     raises(NotImplementedError, lambda: TensExpr.__radd__(t, 'a'))
     raises(NotImplementedError, lambda: TensExpr.__sub__(t, 'a'))
+    raises(NotImplementedError, lambda: TensExpr.__rsub__(t, 'a'))
     raises(NotImplementedError, lambda: TensExpr.__div__(t, 'a'))
+    raises(NotImplementedError, lambda: TensExpr.__rdiv__(t, 'a'))
     raises(NotImplementedError, lambda: A(a, b)**2)
     raises(NotImplementedError, lambda: 2**A(a, b))
     raises(NotImplementedError, lambda: abs(A(a, b)))
+
+def test_TensorHead():
+    assert TensAdd() == 0
+    # simple example of algebraic expression
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a,b = tensor_indices('a,b', Lorentz)
+    # A, B symmetric
+    A = tensorhead('A', [Lorentz]*2, [[1]*2])
+    assert A.rank == 2
+    assert A.symmetry == tensorsymmetry([1]*2)
 
 def test_add1():
     assert TensAdd() == 0
@@ -558,6 +573,9 @@ def test_add1():
     assert t + t1 == 2
     t2 = 1 + A(a, -a)
     assert t1 != t2
+    assert t2 != TensMul(0, [],[],[])
+    t = p(i) + q(i)
+    raises(ValueError, lambda: t(i, j))
 
 def test_add2():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -570,6 +588,8 @@ def test_add2():
     t1 = S(2)/3*R(m,n,p,q) - S(1)/3*R(m,q,n,p) + S(1)/3*R(m,p,n,q)
     t2 = t1*A(-n,-p,-q)
     assert t2 == 0
+    t = A(m, -m, n) + A(n, p, -p)
+    assert t == 0
 
 def test_mul():
     from sympy.abc import x
@@ -590,12 +610,22 @@ def test_mul():
 
     t = A(-b, a)*B(-a, c)*A(-c, d)
     t1 = tensor_mul(*t.split())
+    assert t == t(-b, d)
     assert t == t1
     assert tensor_mul(*[]) == TensMul(S.One, [],[],[])
 
     t = TensMul(1, [], [], [])
+    zsym = tensorsymmetry()
+    typ =  TensorType([], zsym)
+    C = typ('C')
+    assert str(C()) == 'C'
+    assert str(t) == '1'
     assert t.split()[0] == t
-
+    raises(ValueError, lambda: TensMul.from_indices(a, a))
+    raises(ValueError, lambda: TensMul.from_indices(-a, -a))
+    raises(ValueError, lambda: A(a, b)*A(a, c))
+    t = A(a, b)*A(-a, c)
+    raises(ValueError, lambda: t(a, b, c))
 
 def test_substitute_indices():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -995,6 +1025,8 @@ def test_fun():
     assert t(a,b,c) == t
     assert t - t(b,a,c) == q(c)*p(a)*q(b) - q(c)*p(b)*q(a)
     assert t(b,c,d) == q(d)*p(b)*q(c) + g(b,c)*g(d,e)*q(-e)
+    t1 = t.fun_eval((a,b),(b,a))
+    assert t1 == q(c)*p(b)*q(a) + g(a,b)*g(c,d)*q(-d)
 
     # check that g_{a b; c} = 0
     # example taken from  L. Brewin
@@ -1007,6 +1039,8 @@ def test_fun():
     t = dg(-c,-a,-b) - g(-a,-d)*gamma(d,-b,-c) - g(-b,-d)*gamma(d,-a,-c)
     t = t.contract_metric(g, True)
     assert t == 0
+    t = q(c)*p(a)*q(b)
+    assert t(b,c,d) == q(d)*p(b)*q(c)
 
 def test_TensorManager():
     Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
@@ -1041,7 +1075,8 @@ def test_TensorManager():
     TensorManager.clear()
     assert TensorManager.comm == [{0:0, 1:0, 2:0}, {0:0, 1:1, 2:None}, {0:0, 1:None}]
     assert GHsymbol not in TensorManager._comm_symbols2i
-
+    nh = TensorManager.comm_symbols2i(GHsymbol)
+    assert GHsymbol in TensorManager._comm_symbols2i
 def test_hash():
     D = Symbol('D')
     Lorentz = TensorIndexType('Lorentz', dim=D, dummy_fmt='L')
