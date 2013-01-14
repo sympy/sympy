@@ -3104,7 +3104,6 @@ def _real_to_rational(expr, tolerance=None):
     reduce_num = None
     if tolerance is not None and tolerance < 1:
         reduce_num = ceiling(1/tolerance)
-        
     for r in p.atoms(C.Float):
         oldr = r
         if reduce_num is not None:
