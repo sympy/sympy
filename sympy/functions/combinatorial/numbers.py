@@ -679,41 +679,41 @@ class catalan(Function):
 #######################################################################
 
 
-_N = -2
-_ITEMS = -3
-_OK = Dummy()
+class _MultisetHistogram(tuple):
+    pass
+
+
+_N = -1
+_ITEMS = -2
 _M = slice(None, _ITEMS)
 
 
-def _data(n):
+def _multiset_histogram(n):
     """Return tuple used in permutation and combination counting. Input
     is a dictionary giving items with counts as values or a sequence of
     items (which need not be sorted).
 
-    It would be nice to have an object that can switch between list and
-    tuple easily while still maintaining a class identity, but I'm not
-    sure how to do this. So instead, a Dummy is added to the end of the
-    tuple and that is what identifies the tuple as this special form of
-    the data.
+    The data is stored in a class deriving from tuple so it is easily
+    recognized and so it can be converted easily to a list.
     """
     if type(n) is dict:  # item: count
         if not all(isinstance(v, int) and v >= 0 for v in n.values()):
             raise ValueError
         tot = sum(n.values())
         items = sum(1 for k in n if n[k] > 0)
-        return tuple([n[k] for k in n if n[k] > 0] + [items, tot, _OK])
+        return _MultisetHistogram([n[k] for k in n if n[k] > 0] + [items, tot])
     else:
         n = list(n)
         s = set(n)
         if len(s) == len(n):
             n = [1]*len(n)
-            n.extend([len(n), len(n), _OK])
-            return tuple(n)
+            n.extend([len(n), len(n)])
+            return _MultisetHistogram(n)
         m = dict(zip(s, range(len(s))))
         d = dict(zip(range(len(s)), [0]*len(s)))
         for i in n:
             d[m[i]] += 1
-        return _data(d)
+        return _multiset_histogram(d)
 
 
 def nP(n, k=None, replacement=False):
@@ -724,7 +724,7 @@ def nP(n, k=None, replacement=False):
     Examples
     ========
 
-    >>> from sympy.functions.combinatorial.numbers import nP, _data
+    >>> from sympy.functions.combinatorial.numbers import nP
     >>> nP(3, 2)
     6
     >>> nP('abc', 2)
@@ -748,7 +748,7 @@ def nP(n, k=None, replacement=False):
     try:
         return Integer(_nP(as_int(n), k, replacement))
     except ValueError:
-        return Integer(_nP(_data(n), k, replacement))
+        return Integer(_nP(_multiset_histogram(n), k, replacement))
 
 
 @cacheit
@@ -774,8 +774,8 @@ def _nP(n, k=None, replacement=False):
         elif k == 1:
             return n
         else:
-            return factorial(n)/factorial(n - k)
-    else:  # _data tuple
+            return _product(n - k + 1, n)
+    elif isinstance(n, _MultisetHistogram):
         if replacement:
             return _nP(n[_ITEMS], k, replacement)
         k = k or n[_N]
@@ -797,12 +797,12 @@ def _nP(n, k=None, replacement=False):
                 if n[i] == 1:
                     n[i] = 0
                     n[_ITEMS] -= 1
-                    tot += _nP(tuple(n), k - 1)
+                    tot += _nP(_MultisetHistogram(n), k - 1)
                     n[_ITEMS] += 1
                     n[i] = 1
                 else:
                     n[i] -= 1
-                    tot += _nP(tuple(n), k - 1)
+                    tot += _nP(_MultisetHistogram(n), k - 1)
                     n[i] += 1
                 n[_N] += 1
             return tot
@@ -859,23 +859,33 @@ def _gen_poly(n):
 
 
 def nC(n, k, replacement=False):
-    """Return the number of combinations of n items (entered as a string,
-    integer, or _data(seq)) taken k at a time.  If k is negative, the total
-    number of combinations of all lengths through -k will be returned.
+    """Return the number of combinations of n items taken k at a time.
+    
+    When ``n`` is an integer it represents a set of ``n`` items, otherwise
+    ``n`` should be a sequence of the elements of the (multi)set. The
+    elements of the sequence are the elements of the multiset, where
+    repetition of elements indicates the multiplicity of the elements.
+
+    If ``k`` is negative, the total number of combinations of all lengths
+    through -k will be returned.
+
+    If ``replacement`` is True then a given item can appear more than once
+    in the ``k`` items. (For example, for 'ab' sets of 2 would include 'aa',
+    'ab', and 'bb'.) The multiplicity of elements in ``n`` is ignored when
+    ``replacement`` is True.
 
     Examples
     ========
 
-    >>> from sympy.functions.combinatorial.numbers import nC, _data
+    >>> from sympy.functions.combinatorial.numbers import nC
     >>> nC(3, 2)
     3
     >>> nC('abc', 2)
     3
     >>> nC('aab', 2)
     2
-    >>> t = _data([1, 2, 2])
-    >>> nC(t, 2)
-    2
+    >>> nC('aab', 2, replacement=True) == nC('ab', 2, replacement=True) == 3
+    True
 
     References
     ==========
@@ -898,9 +908,7 @@ def nC(n, k, replacement=False):
         if replacement:
             return binomial(n + k - 1, k)
         return binomial(n, k)
-    elif type(n) is str:
-        n = _data(n)
-    if type(n) is tuple and n[-1] == _OK:
+    if isinstance(n, _MultisetHistogram):
         N = n[_N]
         if replacement:
             return nC(n[_ITEMS], k, replacement)
@@ -914,7 +922,7 @@ def nC(n, k, replacement=False):
             return 1
         return _gen_poly(tuple(n[_M]))[k]
     else:
-        return nC(_data(n), k, replacement)
+        return nC(_multiset_histogram(n), k, replacement)
 
 
 @cacheit
@@ -1080,7 +1088,7 @@ def nT(n, k=None):
             return nT(len(n), k)
         elif u == len(n):
             n = range(u)
-    if type(n) is tuple and n[-1] == _OK:
+    if isinstance(n, _MultisetHistogram):
         N = n[_N]
         if k is None:
             k = -N
@@ -1115,4 +1123,4 @@ def nT(n, k=None):
             tot += len(p) == k
         return tot
     else:
-        return nT(_data(n), k)
+        return nT(_multiset_histogram(n), k)
