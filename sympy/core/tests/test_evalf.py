@@ -194,6 +194,8 @@ def test_evalf_bugs():
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
+    #3561. Also NaN != mpmath.nan
+    assert (2*sin(oo)).n() == S.NaN
 
 
 def test_evalf_integer_parts():

@@ -489,6 +489,8 @@ def evalf_mul(v, prec, options):
     direction = 0
     args.append(S.One)
     complex_factors = []
+    # list of exceptions -inf, inf and nan respectively
+    exptn_args = [(1, 0L, -789, -3), (0, 0L, -456, -2), (0, 0L, -123, -1)]
     for i, arg in enumerate(args):
         if i != last and pure_complex(arg):
             args[-1] = (args[-1]*arg).expand()
@@ -507,9 +509,12 @@ def evalf_mul(v, prec, options):
         else:
             return None, None, None, None
         direction += 2*s
-        man *= m
-        exp += e
-        bc += b
+        if re in exptn_args:
+            return re, None, acc, None
+        else:
+            man *= m
+            exp += e
+            bc += b
         if bc > 3*working_prec:
             man >>= working_prec
             exp += working_prec
