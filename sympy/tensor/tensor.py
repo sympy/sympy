@@ -43,8 +43,11 @@ class _TensorManager(object):
 
     Tensors belong to tensor commutation groups; each group has a label
     ``comm``; there are predefined labels:
+
     ``0``   tensors commuting with any other tensor
+
     ``1``   tensors anticommuting among themselves
+
     ``2``   tensors not commuting, apart with those with ``comm=0``
 
     Other groups can be defined using ``set_comm``; tensors in those
@@ -101,9 +104,9 @@ class _TensorManager(object):
         Parameters
         ==========
 
-        ``i, j`` : symbols representing commutation groups
+        i, j : symbols representing commutation groups
 
-        ``c``  :  group commutation number
+        c  :  group commutation number
 
         Notes
         =====
@@ -117,8 +120,11 @@ class _TensorManager(object):
 
         The group commutation number ``c`` is assigned in corrispondence
         to the group commutation symbols; it can be
+
         0        commuting
+
         1        anticommuting
+
         None     no commutation property
 
         Examples
@@ -131,9 +137,9 @@ class _TensorManager(object):
         >>> Lorentz = TensorIndexType('Lorentz')
         >>> i0,i1,i2,i3,i4 = tensor_indices('i0:5', Lorentz)
         >>> A = tensorhead('A', [Lorentz], [[1]])
-        >>> G = tensorhead('G', [Lorentz], [[1]], 3)
-        >>> GH = tensorhead('GH', [Lorentz], [[1]], 4)
-        >>> TensorManager.set_comm(3, 4, 0)
+        >>> G = tensorhead('G', [Lorentz], [[1]], 'Gcomm')
+        >>> GH = tensorhead('GH', [Lorentz], [[1]], 'GHcomm')
+        >>> TensorManager.set_comm('Gcomm', 'GHcomm', 0)
         >>> (GH(i1)*G(i0)).canon_bp()
         G(i0)*GH(i1)
         >>> (G(i1)*G(i0)).canon_bp()
@@ -170,7 +176,7 @@ class _TensorManager(object):
         Parameters
         ==========
 
-        ``args`` : sequence of ``(i, j, c``
+        args : sequence of ``(i, j, c)``
         """
         for i, j, c in args:
             self.set_comm(i, j, c)
@@ -199,16 +205,16 @@ class TensorIndexType(Basic):
     Parameters
     ==========
 
-    ``name`` : name of the tensor type
+    name : name of the tensor type
 
-    ``metric`` : metric symmetry or metric object or ``None``
+    metric : metric symmetry or metric object or ``None``
 
 
-    ``dim`` : dimension, it can be a symbol or an integer or ``None``
+    dim : dimension, it can be a symbol or an integer or ``None``
 
-    ``eps_dim`` : dimension of the epsilon tensor
+    eps_dim : dimension of the epsilon tensor
 
-    ``dummy_fmt`` : name of the head of dummy indices
+    dummy_fmt : name of the head of dummy indices
 
     Attributes
     ==========
@@ -347,9 +353,9 @@ class TensorIndex(Basic):
     Parameters
     ==========
 
-    ``name`` : name of the index
-    ``tensortype`` : ``TensorIndexType`` of the index
-    ``is_up`` :  flag for contravariant index
+    name : name of the index
+    tensortype : ``TensorIndexType`` of the index
+    is_up :  flag for contravariant index
 
     Attributes
     ==========
@@ -423,9 +429,9 @@ def tensor_indices(s, typ):
     Parameters
     ==========
 
-    ``s`` : string of comma separated names of indices
+    s : string of comma separated names of indices
 
-    ``typ`` : list of ``TensorIndexType`` of the indices
+    typ : list of ``TensorIndexType`` of the indices
 
     Examples
     ========
@@ -449,7 +455,7 @@ class TensorSymmetry(Basic):
     Parameters
     ==========
 
-    ``bsgs`` : tuple ``(base, sgs)`` BSGS of the symmetry of the tensor
+    bsgs : tuple ``(base, sgs)`` BSGS of the symmetry of the tensor
 
     Attributes
     ==========
@@ -572,8 +578,8 @@ class TensorType(Basic):
     Parameters
     ==========
 
-    ``index_types`` : list of ``TensorIndexType`` of the tensor indices
-    ``symmetry`` : ``TensorSymmetry`` of the tensor
+    index_types : list of ``TensorIndexType`` of the tensor indices
+    symmetry : ``TensorSymmetry`` of the tensor
 
     Attributes
     ==========
@@ -656,13 +662,16 @@ def tensorhead(name, typ, sym, comm=0):
     """
     Function generating tensorhead(s).
 
-    ``name`` name or sequence of names (as in ``symbol``)
+    Parameters
+    ==========
 
-    ``typ``  index types
+    name : name or sequence of names (as in ``symbol``)
 
-    ``sym``  same as ``*args`` in ``tensorsymmetry``
+    typ : index types
 
-    ``comm``: commutation group number
+    sym : same as ``*args`` in ``tensorsymmetry``
+
+    comm : commutation group number
     see ``_TensorManager.set_comm``
 
 
@@ -689,11 +698,11 @@ class TensorHead(Basic):
     Parameters
     ==========
 
-    ``name`` : name of the tensor
+    name : name of the tensor
 
-    ``typ`` : list of TensorIndexType
+    typ : list of TensorIndexType
 
-    ``comm`` : commutation group number
+    comm : commutation group number
 
     Attributes
     ==========
@@ -1016,7 +1025,7 @@ class TensAdd(TensExpr):
     Parameters
     ==========
 
-    ``free_args`` : list of the free indices
+    free_args : list of the free indices
 
     Attributes
     ==========
@@ -1084,7 +1093,7 @@ class TensAdd(TensExpr):
         Parameters
         ==========
 
-        ``indices``
+        indices
 
         Examples
         ========
@@ -1184,9 +1193,9 @@ class TensAdd(TensExpr):
         Parameters
         ==========
 
-        ``g`` :  metric
+        g :  metric
 
-        ``contract_all`` : if True, eliminate all ``g`` which are contracted
+        contract_all : if True, eliminate all ``g`` which are contracted
 
         Notes
         =====
@@ -1213,7 +1222,7 @@ class TensAdd(TensExpr):
         Parameters
         ==========
 
-        ``index_types`` : list of tuples ``(old_index, new_index)``
+        index_types : list of tuples ``(old_index, new_index)``
 
         Examples
         ========
@@ -1251,7 +1260,7 @@ class TensAdd(TensExpr):
         Parameters
         ==========
 
-        ``index_types`` : list of tuples ``(old_index, new_index)``
+        index_types : list of tuples ``(old_index, new_index)``
 
         Examples
         ========
@@ -1289,8 +1298,8 @@ class TensMul(TensExpr):
     Parameters
     ==========
 
-    ``coeff`` : SymPy coefficient of the tensor
-    ``args``
+    coeff : SymPy coefficient of the tensor
+    args
 
     Attributes
     ==========
@@ -1302,7 +1311,7 @@ class TensMul(TensExpr):
     ``ext_rank`` : rank of the tensor counting the dummy indices
     ``rank`` : rank of the tensor
     ``coeff`` : SymPy coefficient of the tensor
-    ``free_args``: list of the free indices in sorted order
+    ``free_args`` : list of the free indices in sorted order
     ``is_canon_bp`` : ``True`` if the tensor in in canonical form
 
     Notes
