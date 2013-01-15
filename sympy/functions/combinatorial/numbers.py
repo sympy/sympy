@@ -1018,6 +1018,8 @@ def stirling(n, k, d=None, kind=2):
 
 @cacheit
 def _nT(n, k):
+    """Return the partitions of ``n`` items into ``k`` parts. This
+    is used by ``nT`` for the case when ``n`` is an integer."""
     if k == 0:
         return 1 if k == n else 0
     return sum(_nT(n - k, j) for j in range(min(k, n - k) + 1))
@@ -1026,8 +1028,8 @@ def _nT(n, k):
 def nT(n, k=None):
     """Return the number of k-sized partitions of n items. If n is an integer
     it is interpreted as n identical items; n can also be entered as
-    a multiset, string or sequence. To indicate n different items, pass
-    range(n) for n.
+    a multiset, or sequence. To indicate n different items, pass range(n)
+    for n.
 
     If k is negative, the total number of partitions of all lengths through
     ``-k`` will be returned. If ``k`` is None the total number of ways to
