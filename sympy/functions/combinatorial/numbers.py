@@ -746,9 +746,10 @@ def nP(n, k=None, replacement=False):
     http://en.wikipedia.org/wiki/Permutation
     """
     try:
-        return Integer(_nP(as_int(n), k, replacement))
+        n = as_int(n)
     except ValueError:
         return Integer(_nP(_multiset_histogram(n), k, replacement))
+    return Integer(_nP(n, k, replacement))
 
 
 @cacheit
@@ -860,7 +861,7 @@ def _gen_poly(n):
 
 def nC(n, k, replacement=False):
     """Return the number of combinations of n items taken k at a time.
-    
+
     When ``n`` is an integer it represents a set of ``n`` items, otherwise
     ``n`` should be a sequence of the elements of the (multi)set. The
     elements of the sequence are the elements of the multiset, where
@@ -1028,9 +1029,9 @@ def nT(n, k=None):
     a multiset, string or sequence. To indicate n different items, pass
     range(n) for n.
 
-    If k is negative, the total number of
-    partitions of all lengths through -k will be returned. If k is None the
-    total number of ways to partion n will be returned.
+    If k is negative, the total number of partitions of all lengths through
+    ``-k`` will be returned. If ``k`` is None the total number of ways to
+    partion ``n`` will be returned.
 
     Examples
     ========
