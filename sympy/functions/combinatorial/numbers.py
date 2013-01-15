@@ -13,7 +13,7 @@ from sympy.core.compatibility import as_int
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
-from sympy import cacheit
+from sympy.utilities.memoization import memoize, memoize_kw
 
 
 def _product(a, b):
@@ -752,7 +752,7 @@ def nP(n, k=None, replacement=False):
     return Integer(_nP(n, k, replacement))
 
 
-@cacheit
+@memoize_kw
 def _nP(n, k=None, replacement=False):
     from sympy.functions.combinatorial.factorials import factorial
     from sympy.core.mul import prod
@@ -809,7 +809,7 @@ def _nP(n, k=None, replacement=False):
             return tot
 
 
-@cacheit
+@memoize
 def _gen_poly(n):
     """for n = (m1, m2, .., mk) return the coefficients of the polynomial,
     prod(sum(x**i for i in range(nj + 1)) for nj in n), the coefficient of
@@ -926,7 +926,7 @@ def nC(n, k, replacement=False):
         return nC(_multiset_histogram(n), k, replacement)
 
 
-@cacheit
+@memoize_kw
 def stirling(n, k, d=None, kind=2):
     """Return Stirling number S(n, k) of the first or second kind.
     The sum of all Stirling numbers of the second kind for k = 1
@@ -1016,7 +1016,7 @@ def stirling(n, k, d=None, kind=2):
         stirling(n1, k - 1, kind=kind)
 
 
-@cacheit
+@memoize
 def _nT(n, k):
     """Return the partitions of ``n`` items into ``k`` parts. This
     is used by ``nT`` for the case when ``n`` is an integer."""
