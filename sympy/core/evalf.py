@@ -430,10 +430,13 @@ def evalf_add(v, prec, options):
 
     i = 0
     target_prec = prec
+    nan_tup = evalf(S.NaN, prec + 10, options)
     while 1:
         options['maxprec'] = min(oldmaxprec, 2*prec)
 
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
+        if nan_tup in terms:
+            return nan_tup[0], None, prec, prec
         re, re_acc = add_terms(
             [a[0::2] for a in terms if a[0]], prec, target_prec)
         im, im_acc = add_terms(
