@@ -168,10 +168,8 @@ def test_1562():
     assert trigsimp(eq) == 0
 
 
-@XFAIL
-def test_trigsimp_factoring():
+def test_1395():
     a, b = symbols('a b')
-    # 1395 - factor(eq.rewrite(exp)) works
     eq = sin(a)**2*sin(b)**2 + cos(a)**2*cos(b)**2*tan(a)**2 + cos(a)**2
     assert trigsimp(eq) == 1
 
@@ -183,20 +181,12 @@ def test_2849():
            cos(x)/sin(x)**7
 
 
-@XFAIL
-def test_1181():
-    a, x, y = symbols('a x y')
-    assert trigsimp(cos(x)**2 + cos(y)**2*sin(x)**2 + sin(y)**2*sin(x)**2) == 1
-    assert trigsimp(a**2*cos(y)**2*sin(x)**2 + a**2*sin(y)**2*sin(x)**2) == a**2*sin(x)**2
-
-
 def test_1676():
     a, x, y = symbols('a x y')
     assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)) == sin(x + y)
     assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)+3) == sin(x + y) + 3
 
 
-@XFAIL
 def test_1181():
     a, x, y = symbols('a x y')
     assert trigsimp(cos(x)**2 + cos(y)**2*sin(x)**2 + sin(y)**2*sin(x)**2) == 1

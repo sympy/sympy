@@ -912,24 +912,35 @@ def trigsimp(expr, deep=False, recursive=False, first=True):
 
     """
     old = expr
-    if first and len(set_union(*[t.free_symbols for t in expr.atoms(
-            C.TrigonometricFunction, C.TrigonometricFunction)])) > 1:
-        d = separatevars(expr)
-        if d.is_Mul:
-            d = separatevars(d, dict=True) or d
-        try:
-            expr = 1
-            for k, v in d.iteritems():
-                # remove hollow factoring
-                was = v
-                v = expand_mul(v)
-                vnew = trigsimp(v, deep, recursive, first=False)
-                if vnew == v:
-                    vnew = was
-                expr *= vnew
-            old = expr
-        except AttributeError:
-            expr = old
+    if first:
+        trigsyms = set_union(*[t.free_symbols for t in expr.atoms(
+                C.TrigonometricFunction, C.TrigonometricFunction)])
+        if len(trigsyms) > 1:
+            d = separatevars(expr)
+            if d.is_Mul:
+                d = separatevars(d, dict=True) or d
+            if isinstance(d, dict):
+                expr = 1
+                for k, v in d.iteritems():
+                    # remove hollow factoring
+                    was = v
+                    v = expand_mul(v)
+                    vnew = trigsimp(v, deep, recursive, first=False)
+                    if vnew == v:
+                        vnew = was
+                    expr *= vnew
+                old = expr
+            else:
+                if not d.is_Add:
+                    expr = old
+                else:
+                    for s in trigsyms:
+                        r, e = expr.as_independent(s)
+                        if r:
+                            expr = r + trigsimp(e, deep, recursive, first=False)
+                            if not expr.is_Add:
+                                break
+                    old = expr
 
     if recursive:
         w, g = cse(expr)
