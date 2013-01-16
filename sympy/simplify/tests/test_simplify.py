@@ -154,9 +154,7 @@ def test_trigsimp3():
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
 
-@XFAIL
 def test_1562():
-    # factor(eq.rewrite(exp)) works for these
     a, x, y = symbols('a x y')
     eq = -4*sin(x)**4 + 4*cos(x)**4 - 8*cos(x)**2
     assert trigsimp(eq) == -4

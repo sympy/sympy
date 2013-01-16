@@ -163,15 +163,15 @@ def test_Vector():
 
     assert isinstance(v3, Vector)
     # We probably shouldn't be using simplify in dot...
-    assert dot(v3, A.x) == x*(x + 1)
-    assert dot(v3, A.y) == y*(y + 1)
-    assert dot(v3, A.z) == z*(z + 1)
+    assert dot(v3, A.x) == (x*(x + 1)).expand()
+    assert dot(v3, A.y) == (y*(y + 1)).expand()
+    assert dot(v3, A.z) == (z*(z + 1)).expand()
 
     assert isinstance(v4, Vector)
     # We probably shouldn't be using simplify in dot...
-    assert dot(v4, A.x) == x*(1 - x)
-    assert dot(v4, A.y) == y*(1 - y)
-    assert dot(v4, A.z) == z*(1 - z)
+    assert dot(v4, A.x) == (x*(1 - x)).expand()
+    assert dot(v4, A.y) == (y*(1 - y)).expand()
+    assert dot(v4, A.z) == (z*(1 - z)).expand()
 
 
 def test_Vector_diffs():

@@ -913,8 +913,11 @@ def trigsimp(expr, deep=False, recursive=False, first=True):
     """
     old = expr
     if first:
+        if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
+            return expr
+
         trigsyms = set_union(*[t.free_symbols for t in expr.atoms(
-                C.TrigonometricFunction, C.TrigonometricFunction)])
+                C.TrigonometricFunction, C.HyperbolicFunction)])
         if len(trigsyms) > 1:
             d = separatevars(expr)
             if d.is_Mul:
@@ -953,11 +956,6 @@ def trigsimp(expr, deep=False, recursive=False, first=True):
     else:
         result = _trigsimp(expr, deep)
 
-    if result == expr:
-        n = factor(expr.rewrite(exp))
-        if n.is_number:
-            return n
-        return old
     return result
 
 
@@ -1052,9 +1050,9 @@ def _trigpats():
 def _trigsimp(expr, deep=False, numbers=False):
     """recursive helper for trigsimp"""
     if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
-        pass
+        return expr
     elif not numbers and expr.is_number:
-        pass
+        return expr
 
     if _trigpat is None:
         _trigpats()
@@ -1140,10 +1138,22 @@ def _trigsimp(expr, deep=False, numbers=False):
                 expr = result.subs(m)
                 m = expr.match(pattern)
 
-        return expr
-
     elif expr.is_Mul or expr.is_Pow or deep and expr.args:
-        return expr.func(*[_trigsimp(a, deep) for a in expr.args])
+        expr = expr.func(*[_trigsimp(a, deep) for a in expr.args])
+
+    try:
+        e = expr.atoms(exp)
+        new = expr.rewrite(exp, deep=True)
+        if new == e:
+            raise TypeError
+        fnew = factor(new)
+        if fnew != new:
+            new = sorted([new, factor(new)], key=count_ops)[0]
+        # if all exp that were introduced disappeared then accept it
+        if not (new.atoms(exp) - e):
+            expr = new
+    except TypeError:
+        pass
 
     return expr
 
