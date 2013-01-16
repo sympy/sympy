@@ -766,7 +766,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
 
     try:
         polys, opt = parallel_poly_from_expr([num, denom] + G, *gens, **args)
-    except PolificationFailed, exc:
+    except PolificationFailed:
         return expr
 
     domain = opt.domain
@@ -1101,9 +1101,9 @@ def _trigsimp(expr, deep=False, numbers=False):
             for pattern, result in matchers_add:
                 if not _dotrig(expr, pattern):
                     continue
-                res = term.match(pattern)
+                res = expr.match(pattern)
                 if res is not None:
-                    term = result.subs(res)
+                    expr = result.subs(res)
                     break
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
