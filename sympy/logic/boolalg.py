@@ -36,6 +36,9 @@ class Boolean(Basic):
     def __xor__(self, other):
         return Xor(self, other)
 
+    def _eval_simplify(self, ratio, measure):
+        return simplify_logic(self)
+
 
 class BooleanFunction(Application, Boolean):
     """Boolean function is a function that lives in a boolean space

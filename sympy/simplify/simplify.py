@@ -3011,10 +3011,6 @@ def simplify(expr, ratio=1.7, measure=count_ops):
             return choices[0]
         return min(choices, key=measure)
 
-    if sympify(expr).is_Boolean:
-        from sympy.logic import simplify_logic
-        return simplify_logic(sympify(expr))
-
     expr0 = powsimp(expr)
     if expr.is_commutative is False:
         expr1 = together(expr0)
