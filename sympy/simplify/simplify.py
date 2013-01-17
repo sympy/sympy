@@ -883,6 +883,9 @@ def ratsimpmodprime(expr, G, *gens, **args):
     return c/d
 
 
+_trigs = (C.TrigonometricFunction, C.HyperbolicFunction)
+
+
 def trigsimp(expr, deep=False, recursive=False, first=True):
     """
     reduces expression by using known trig identities
@@ -914,11 +917,11 @@ def trigsimp(expr, deep=False, recursive=False, first=True):
     """
     old = expr
     if first:
-        if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
+
+        if not expr.has(*_trigs):
             return expr
 
-        trigsyms = set_union(*[t.free_symbols for t in expr.atoms(
-                C.TrigonometricFunction, C.HyperbolicFunction)])
+        trigsyms = set_union(*[t.free_symbols for t in expr.atoms(*_trigs)])
         if len(trigsyms) > 1:
             d = separatevars(expr)
             if d.is_Mul:
@@ -935,9 +938,7 @@ def trigsimp(expr, deep=False, recursive=False, first=True):
                     expr *= vnew
                 old = expr
             else:
-                if not d.is_Add:
-                    expr = old
-                else:
+                if d.is_Add:
                     for s in trigsyms:
                         r, e = expr.as_independent(s)
                         if r:
@@ -1051,7 +1052,7 @@ def _trigpats():
 def _trigsimp(expr, deep=False):
     # protect the cache from non-trig patterns; we only allow
     # trig patterns to enter the cache
-    if expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
+    if expr.has(*_trigs):
         return __trigsimp(expr, deep)
     return expr
 
@@ -1148,8 +1149,10 @@ def __trigsimp(expr, deep=False):
         expr = expr.func(*[_trigsimp(a, deep) for a in expr.args])
 
     try:
+        if not expr.has(*_trigs):
+            raise TypeError
         e = expr.atoms(exp)
-        new = expr.rewrite(exp, deep=True)
+        new = expr.rewrite(exp, deep=deep)
         if new == e:
             raise TypeError
         fnew = factor(new)
@@ -2971,11 +2974,9 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     simplification functions:
 
     >>> from sympy import trigsimp, cancel
-    >>> b = trigsimp(a)
-    >>> b
+    >>> trigsimp(a)
     (x**2 + x)/x
-    >>> c = cancel(b)
-    >>> c
+    >>> cancel(_)
     x + 1
 
     In some cases, applying :func:`simplify` may actually result in some more
