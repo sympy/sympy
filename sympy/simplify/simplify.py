@@ -7,6 +7,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Function, Equality, Dummy, Atom, Expr, factor_terms,
     expand_multinomial, expand_power_base, symbols)
 
+from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
     iterable, reduce, default_sort_key, set_union)
 from sympy.core.numbers import Float
@@ -1048,9 +1049,16 @@ def _trigpats():
 
 
 def _trigsimp(expr, deep=False):
+    # protect the cache from non-trig patterns; we only allow
+    # trig patterns to enter the cache
+    if expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
+        return __trigsimp(expr, deep)
+    return expr
+
+
+@cacheit
+def __trigsimp(expr, deep=False):
     """recursive helper for trigsimp"""
-    if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
-        return expr
 
     if _trigpat is None:
         _trigpats()
