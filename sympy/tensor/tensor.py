@@ -22,7 +22,8 @@ The contracted indices are dummy indices, internally they have no name,
 the indices being represented by a graph-like structure.
 
 Tensors are put in canonical form using ``canon_bp``, which uses
-the Butler-Portugal algorithm for canonicalization.
+the Butler-Portugal algorithm for canonicalization using the monoterm
+symmetries of the tensors.
 
 If there is a (anti)symmetric metric, the indices can be raised and
 lowered when the tensor is put in canonical form.
@@ -450,7 +451,7 @@ def tensor_indices(s, typ):
 
 class TensorSymmetry(Basic):
     """
-    Symmetry of a tensor
+    Monoterm symmetry of a tensor
 
     Parameters
     ==========
@@ -467,7 +468,9 @@ class TensorSymmetry(Basic):
     Notes
     =====
 
-    A tensor can have an arbitrary symmetry provided by its BSGS.
+    A tensor can have an arbitrary monoterm symmetry provided by its BSGS.
+    Multiterm symmetries, like the cyclic symmetry of the Riemann tensor,
+    are not covered.
 
     See Also
     ========
@@ -511,20 +514,33 @@ def tensorsymmetry(*args):
     """
     Return a ``TensorSymmetry`` object.
 
-    One can represent a tensor with any slot symmetry group using a BSGS
+    One can represent a tensor with any monoterm slot symmetry group
+    using a BSGS.
+
     ``args`` can be a BSGS
     ``args[0]``    base
     ``args[1]``    sgs
 
-    Usually tensors are in (direct products of) irreducible representations
+    Usually tensors are in (direct products of) representations
     of the symmetric group;
-    ``args`` can be a list of lists representing Young tableaux
+    ``args`` can be a list of lists representing the shapes of Young tableaux
+
+    Notes
+    =====
+
+    For instance:
     ``[[1]]``       vector
     ``[[1]*n]``     symmetric tensor of rank ``n``
-    ``[[n]``        antisymmetric tensor of rank ``n``
-    ``[[2, 2]]``    slot symmetry of the Riemann tensor
+    ``[[n]]``       antisymmetric tensor of rank ``n``
+    ``[[2, 2]]``    monoterm slot symmetry of the Riemann tensor
     ``[[1],[1]]``   vector*vector
+    ``[[2],[1],[1]`` (antisymmetric tensor)*vector*vector
 
+    Notice that with the shape ``[2, 2]`` we associate only the monoterm
+    symmetries of the Riemann tensor; this is an abuse of notation,
+    since the shape ``[2, 2]`` corresponds usually to the irreducible
+    representation characterized by the monoterm symmetries and by the
+    cyclic symmetry.
 
     Examples
     ========
