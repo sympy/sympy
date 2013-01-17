@@ -178,6 +178,11 @@ def test_simplification():
     assert POSform('x', [[0]], [[1]]) is True
     assert POSform('x', [], []) is False
 
+    #check working of simplify
+    assert simplify(sympify('(A & B) | (A & C)')) == ans
+    assert simplify(And(x, Not(x))) == False
+    assert simplify(Or(x, Not(x))) == True
+
 
 def test_bool_equal():
     """

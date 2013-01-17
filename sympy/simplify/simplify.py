@@ -2979,7 +2979,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     """
 
     try:
-        return expr._eval_simplify(ratio=ratio, measure=measure)
+        return sympify(expr)._eval_simplify(ratio=ratio, measure=measure)
     except AttributeError:
         pass
 
