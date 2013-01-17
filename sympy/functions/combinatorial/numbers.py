@@ -810,23 +810,26 @@ def _nP(n, k=None, replacement=False):
 
 
 @memoize
-def _gen_poly(n):
+def _AOP_product(n):
     """for n = (m1, m2, .., mk) return the coefficients of the polynomial,
-    prod(sum(x**i for i in range(nj + 1)) for nj in n), the coefficient of
-    x**r being the number of r-length combinations of sum(n) elements with
-    multiplicities given by n. The coefficients are given as a dictionary.
+    prod(sum(x**i for i in range(nj + 1)) for nj in n); i.e. the coefficients
+    of the product of AOPs (all-one polynomials) or order given in n.  The
+    resulting coefficient corresponding to x**r is the number of r-length
+    combinations of sum(n) elements with multiplicities given in n.
+    The coefficients are given as a default dictionary (so if a query is made
+    for a key that is not present, 0 will be returned).
 
     Examples
     ========
 
-    >>> from sympy.functions.combinatorial.numbers import _gen_poly
+    >>> from sympy.functions.combinatorial.numbers import _AOP_product
+    >>> from sympy.abc import x
     >>> n = (2, 2, 3)  # e.g. aabbccc
-    >>> c = _gen_poly(n); dict(c)
+    >>> prod = ((x**2 + x + 1)*(x**2 + x + 1)*(x**3 + x**2 + x + 1)).expand()
+    >>> c = _AOP_product(n); dict(c)
     {0: 1, 1: 3, 2: 6, 3: 8, 4: 8, 5: 6, 6: 3, 7: 1}
-    >>> c[8]
-    0
-    >>> t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
-    >>> assert sum(_gen_poly(t)[i] for i in range(55)) == 58212000
+    >>> [c[i] for i in range(8)] == [prod.coeff(x, i) for i in range(8)]
+    True
 
     The generating poly used here is the same as that listed in
     http://tinyurl.com/cep849r, but in a refactored form.
@@ -921,7 +924,7 @@ def nC(n, k, replacement=False):
             return n[_ITEMS]
         if k in (0, N):
             return 1
-        return _gen_poly(tuple(n[_M]))[k]
+        return _AOP_product(tuple(n[_M]))[k]
     else:
         return nC(_multiset_histogram(n), k, replacement)
 
@@ -1012,7 +1015,9 @@ def stirling(n, k, d=None, kind=2):
     if 0 in (n, k):
         return S.Zero
     n1 = n - 1
-    return [None, n1, k][kind]*stirling(n1, k, kind=kind) + \
+    if kind not in (1, 2):
+        raise ValueError('kind must be 1 or 2, not %s' % k)
+    return (n1 if kind == 1 else k)*stirling(n1, k, kind=kind) + \
         stirling(n1, k - 1, kind=kind)
 
 

@@ -140,7 +140,7 @@ def test_nC_nP_nT():
         multiset_permutations, multiset_combinations, multiset_partitions,
         partitions, subsets, permutations)
     from sympy.functions.combinatorial.numbers import (
-        nP, nC, nT, stirling, _multiset_histogram, _gen_poly)
+        nP, nC, nT, stirling, _multiset_histogram, _AOP_product)
     from sympy.combinatorics.permutations import Permutation
     from sympy.core.numbers import oo
     from random import choice
@@ -243,7 +243,11 @@ def test_nC_nP_nT():
     assert nT('aaaa') == nT(4) == len(list(partitions(4))) == 5
     assert nT('aaab') == len(list(multiset_partitions('aaab'))) == 7
     assert nC('aabb'*3, 3) == 4  # aaa, bbb, abb, baa
-    assert dict(_gen_poly((4,1,1,1))) == {
+    assert dict(_AOP_product((4,1,1,1))) == {
         0: 1, 1: 4, 2: 7, 3: 8, 4: 8, 5: 7, 6: 4, 7: 1}
+    # the following was the first t that showed a problem in a previous form of
+    # the function, so it's not as random as it may appear
+    t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
+    assert sum(_AOP_product(t)[i] for i in range(55)) == 58212000
     raises(ValueError, lambda: nP('aabc', replacement=True))
     raises(ValueError, lambda: _multiset_histogram({1:'a'}))
