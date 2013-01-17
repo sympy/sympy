@@ -120,13 +120,19 @@ class Pow(Expr):
 
     def _eval_power(self, other):
         from sympy.functions.elementary.exponential import log
+        from sympy.core.evalf import evalf
 
         b, e = self.as_base_exp()
         b_nneg = b.is_nonnegative
         if b.is_real and not b_nneg and e.is_even:
             b = abs(b)
             b_nneg = True
-        smallarg = (abs(e) <= abs(S.Pi/log(b)))
+
+        # Special case for when b is nan. See pull req 1714 for details
+        if b is S.NaN:
+            smallarg = (abs(e) <= S.Zero)
+        else:
+            smallarg = (abs(e) <= abs(S.Pi/log(b)))
         if (other.is_Rational and other.q == 2 and
                 e.is_real is False and smallarg is False):
             return -Pow(b, e*other)

@@ -378,6 +378,16 @@ def add_terms(terms, prec, target_prec):
         return terms[0]
     working_prec = 2*prec
     sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
+    new_terms = [C.Float._new(t[0], prec) for t in terms]
+    if (S.NaN in new_terms or S.Infinity in new_terms
+        or S.NegativeInfinity in new_terms):
+        new_sum = S.Zero
+        for t in new_terms:
+            new_sum = new_sum + t
+        result = evalf(new_sum, prec+4, {})
+        r = result[0], result[2]
+        return r
+
     for x, accuracy in terms:
         sign, man, exp, bc = x
         if sign:
@@ -430,13 +440,10 @@ def evalf_add(v, prec, options):
 
     i = 0
     target_prec = prec
-    nan_tup = evalf(S.NaN, prec + 10, options)
     while 1:
         options['maxprec'] = min(oldmaxprec, 2*prec)
 
         terms = [evalf(arg, prec + 10, options) for arg in v.args]
-        if nan_tup in terms:
-            return nan_tup[0], None, prec, prec
         re, re_acc = add_terms(
             [a[0::2] for a in terms if a[0]], prec, target_prec)
         im, im_acc = add_terms(
@@ -492,8 +499,17 @@ def evalf_mul(v, prec, options):
     direction = 0
     args.append(S.One)
     complex_factors = []
-    # list of exceptions -inf, inf and nan respectively
-    exptn_args = [(1, 0L, -789, -3), (0, 0L, -456, -2), (0, 0L, -123, -1)]
+
+    terms = [evalf(arg, prec + 10, options) for arg in v.args]
+    from core import C
+    terms = [C.Float._new(t[0], prec) for t in terms if t[0] is not None]
+    if (S.NaN in terms or S.Infinity in terms
+        or S.NegativeInfinity in terms):
+        new_mul = S.One
+        for t in terms:
+            new_mul *=  t
+        return evalf(new_mul, prec+4, {})
+
     for i, arg in enumerate(args):
         if i != last and pure_complex(arg):
             args[-1] = (args[-1]*arg).expand()
@@ -512,12 +528,9 @@ def evalf_mul(v, prec, options):
         else:
             return None, None, None, None
         direction += 2*s
-        if re in exptn_args:
-            return re, None, acc, None
-        else:
-            man *= m
-            exp += e
-            bc += b
+        man *= m
+        exp += e
+        bc += b
         if bc > 3*working_prec:
             man >>= working_prec
             exp += working_prec
