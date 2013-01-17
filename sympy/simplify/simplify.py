@@ -13,6 +13,7 @@ from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 
+from sympy.logic import simplify_logic
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
 from sympy.utilities.iterables import flatten, has_variety
 
@@ -3010,6 +3011,13 @@ def simplify(expr, ratio=1.7, measure=count_ops):
         if not has_variety(choices):
             return choices[0]
         return min(choices, key=measure)
+
+    expr = sympify(expr)
+    if not isinstance(expr, Basic):
+        return expr
+
+    if expr.is_Boolean:
+        return simplify_logic(expr)
 
     expr0 = powsimp(expr)
     if expr.is_commutative is False:

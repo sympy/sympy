@@ -1,4 +1,4 @@
-from sympy import symbols, sympify, Dummy
+from sympy import symbols, sympify, Dummy, simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts,
@@ -179,7 +179,7 @@ def test_simplification():
     assert POSform('x', [], []) is False
 
     #check working of simplify
-    assert simplify(sympify('(A & B) | (A & C)')) == ans
+    assert simplify('(A & B) | (A & C)') == sympify('And(A, Or(B, C))')
     assert simplify(And(x, Not(x))) == False
     assert simplify(Or(x, Not(x))) == True
 
