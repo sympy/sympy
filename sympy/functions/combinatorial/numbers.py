@@ -718,8 +718,10 @@ def _multiset_histogram(n):
 
 def nP(n, k=None, replacement=False):
     """Return the number of permutations of n items (entered as string,
-    integer or sequence) taken k at a time. If k is negative, the total
-    number of permutations of all lengths through -k will be returned.
+    integer or sequence) taken k at a time.
+
+    If ``k`` is None then the total of all permutations of length 0
+    through ``n`` will be returned.
 
     Examples
     ========
@@ -759,29 +761,26 @@ def _nP(n, k=None, replacement=False):
 
     if k == 0:
         return 1
-    if type(n) is int:
+    if type(n) is int:  # n different items
+        # assert n >= 0
         if k is None:
-            if replacement:
-                raise ValueError('specify k when replacement is True')
-            k = n
-        if k < 0:
-            return sum(_nP(n, i, replacement) for i in range(-k + 1))
-        if replacement:
+            return sum(_nP(n, i, replacement) for i in range(n + 1))
+        elif replacement:
             return n**k
-        if k > n:
+        elif k > n:
             return 0
         elif k == n:
             return factorial(k)
         elif k == 1:
             return n
         else:
+            # assert k >= 0
             return _product(n - k + 1, n)
     elif isinstance(n, _MultisetHistogram):
-        if replacement:
-            return _nP(n[_ITEMS], k, replacement)
-        k = k or n[_N]
-        if k < 0:
-            return sum(_nP(n, i) for i in range(-k + 1))
+        if k is None:
+            return sum(_nP(n, i, replacement) for i in range(n[_N] + 1))
+        elif replacement:
+            return n[_ITEMS]**k
         elif k == n[_N]:
             return factorial(k)/prod([factorial(i) for i in n[_M] if i > 1])
         elif k > n[_N]:
@@ -789,6 +788,7 @@ def _nP(n, k=None, replacement=False):
         elif k == 1:
             return n[_ITEMS]
         else:
+            # assert k >= 0
             tot = 0
             n = list(n)
             for i in range(len(n[_M])):
@@ -862,34 +862,55 @@ def _AOP_product(n):
     return d
 
 
-def nC(n, k, replacement=False):
-    """Return the number of combinations of n items taken k at a time.
+def nC(n, k=None, replacement=False):
+    """Return the number of combinations of ``n`` items taken ``k`` at a time.
 
-    When ``n`` is an integer it represents a set of ``n`` items, otherwise
-    ``n`` should be a sequence of the elements of the (multi)set. The
-    elements of the sequence are the elements of the multiset, where
-    repetition of elements indicates the multiplicity of the elements.
+    Possible values for ``n``::
+        integer - set of length ``n``
+        sequence - converted to a multiset internally
+        multiset - {element: multiplicity}
 
-    If ``k`` is negative, the total number of combinations of all lengths
-    through -k will be returned.
+    If ``k`` is None then the total of all combinations of length 0
+    through the number of items represented in ``n`` will be returned.
 
     If ``replacement`` is True then a given item can appear more than once
     in the ``k`` items. (For example, for 'ab' sets of 2 would include 'aa',
     'ab', and 'bb'.) The multiplicity of elements in ``n`` is ignored when
-    ``replacement`` is True.
+    ``replacement`` is True but the total number of elements is considered
+    since no element can appear more times than the number of elements in
+    ``n``.
 
     Examples
     ========
 
     >>> from sympy.functions.combinatorial.numbers import nC
+    >>> from sympy.utilities.iterables import multiset_combinations
     >>> nC(3, 2)
     3
     >>> nC('abc', 2)
     3
     >>> nC('aab', 2)
     2
-    >>> nC('aab', 2, replacement=True) == nC('ab', 2, replacement=True) == 3
-    True
+
+    When ``replacement`` is True, each item can have multiplicity
+    equal to the length represented by ``n``:
+
+    >>> nC('aabc', replacement=True)
+    35
+    >>> [len(list(multiset_combinations('aaaabbbbcccc', i))) for i in range(5)]
+    [1, 3, 6, 10, 15]
+    >>> sum(_)
+    35
+
+    If there are ``k`` items with multiplicities ``m_1, m_2, ..., m_k``
+    then the total of all combinations of length 0 hrough ``k`` is the
+    product, ``(m_1 + 1)*(m_2 + 1)*...*(m_k + 1)``. When the multiplicity
+    of each item is 1 (i.e., k unique items) then there are 2**k
+    combinations. For example, if there are 4 unique items, the total number
+    of combinations is 16:
+
+    >>> sum(nC(4, i) for i in range(5))
+    16
 
     References
     ==========
@@ -905,24 +926,26 @@ def nC(n, k, replacement=False):
     from sympy.core.mul import prod
 
     if type(n) is int:
-        if k < 0:
-            if not replacement and k == -n:
+        if k is None:
+            if not replacement:
                 return 2**n
-            return sum(nC(n, i, replacement) for i in range(-k + 1))
+            return sum(nC(n, i, replacement) for i in range(n + 1))
+        assert k >= 0
         if replacement:
             return binomial(n + k - 1, k)
         return binomial(n, k)
     if isinstance(n, _MultisetHistogram):
         N = n[_N]
-        if replacement:
-            return nC(n[_ITEMS], k, replacement)
-        if k < 0:
-            if not replacement and k == -n[_N]:
+        if k is None:
+            if not replacement:
                 return prod(m + 1 for m in n[_M])
-            return sum(nC(n, i, replacement) for i in range(-k + 1))
-        if k in (1, N - 1):
+            return sum(nC(n, i, replacement) for i in range(N + 1))
+        elif replacement:
+            return nC(n[_ITEMS], k, replacement)
+        # assert k >= 0
+        elif k in (1, N - 1):
             return n[_ITEMS]
-        if k in (0, N):
+        elif k in (0, N):
             return 1
         return _AOP_product(tuple(n[_M]))[k]
     else:
@@ -1036,9 +1059,8 @@ def nT(n, k=None):
     a multiset, or sequence. To indicate n different items, pass range(n)
     for n.
 
-    If k is negative, the total number of partitions of all lengths through
-    ``-k`` will be returned. If ``k`` is None the total number of ways to
-    partion ``n`` will be returned.
+    If ``k`` is None the total number of ways to partion ``n`` will be
+    returned.
 
     Examples
     ========
@@ -1056,7 +1078,7 @@ def nT(n, k=None):
     >>> [nT("mississippi", i) for i in range(1,12)]
     [1, 74, 609, 1521, 1768, 1224, 579, 197, 50, 9, 1]
 
-    Partitions when all (n) items are identical:
+    Partitions when all items are identical:
 
     >>> [nT(5, i) for i in range(1, 6)]
     [1, 2, 2, 1, 1]
@@ -1065,7 +1087,7 @@ def nT(n, k=None):
     >>> nT(5)
     7
 
-    When all (-n) items are different:
+    When all items are different:
 
     >>> n = range(5)
     >>> [nT(n, i) for i in range(1, 6)]
@@ -1084,51 +1106,45 @@ def nT(n, k=None):
     from sympy.utilities.iterables import multiset_partitions
 
     if type(n) is int:
+        # assert n >= 0
         # all the same
         if k is None:
-            k = -abs(n)
-        if k < 0:
-            return sum(_nT(n, k) for k in range(1, -k + 1))
+            return sum(_nT(n, k) for k in range(1, n + 1))
         return _nT(n, k)
-    elif type(n) is str:
-        u = len(set(n))
-        if u == 1:
-            return nT(len(n), k)
-        elif u == len(n):
-            n = range(u)
-    if isinstance(n, _MultisetHistogram):
-        N = n[_N]
+    if not isinstance(n, _MultisetHistogram):
+        try:
+            # if n contains hashable items there is some
+            # quick handling that can be done
+            u = len(set(n))
+            if u == 1:
+                return nT(len(n), k)
+            elif u == len(n):
+                n = range(u)
+            raise TypeError
+        except TypeError:
+            n = _multiset_histogram(n)
+    N = n[_N]
+    if k is None and N == 1:
+        return 1
+    if k in (1, N):
+        return 1
+    if k == 2 or N == 2 and k is None:
+        m, r = divmod(N, 2)
+        rv = sum(nC(n, i) for i in range(1, m + 1))
+        if not r:
+            rv -= nC(n, m)//2
         if k is None:
-            k = -N
-        if k in (1, N, -1):
-            return 1
-        if abs(k) == 2:
-            m, r = divmod(N, 2)
-            rv = sum(nC(n, i) for i in range(1, m + 1))
-            if not r:
-                rv -= nC(n, m)//2
-            if k == -2:
-                rv += 1  # for k == 1
-            return rv
-        if N == n[_ITEMS]:
-            # all distinct
-            if k == -N:
-                return bell(N)
-            if k < 0:
-                tot = 0
-                for i in range(1, -k + 1):
-                    tot += stirling(N, i)
-                return tot
-            else:
-                return stirling(N, k)
-        if k < 0:
-            return sum(nT(n, k) for k in range(1, -k + 1))
-        # TODO is there a faster way than just smartly generating the
-        # partitions?
-        tot = 0
-        for p in multiset_partitions(
-                [i for i, j in enumerate(n[_M]) for ii in range(j)]):
-            tot += len(p) == k
-        return tot
-    else:
-        return nT(_multiset_histogram(n), k)
+            rv += 1  # for k == 1
+        return rv
+    if N == n[_ITEMS]:
+        # all distinct
+        if k is None:
+            return bell(N)
+        return stirling(N, k)
+    if k is None:
+        return sum(nT(n, k) for k in range(1, N + 1))
+    tot = 0
+    for p in multiset_partitions(
+            [i for i, j in enumerate(n[_M]) for ii in range(j)]):
+        tot += len(p) == k
+    return tot

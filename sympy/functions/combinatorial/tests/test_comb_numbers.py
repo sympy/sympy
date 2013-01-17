@@ -155,10 +155,9 @@ def test_nC_nP_nT():
                 check = nP(s, i)
                 tot += check
                 assert len(list(multiset_permutations(s, i))) == check
-                assert tot == nP(s, -i)
                 if u:
                     assert nP(len(s), i) == check
-                    assert nP(len(s), -i) == tot
+            assert nP(s) == tot
         except AssertionError:
             print s, i, 'failed perm test'
             raise ValueError()
@@ -172,10 +171,11 @@ def test_nC_nP_nT():
                 check = nC(s, i)
                 tot += check
                 assert len(list(multiset_combinations(s, i))) == check
-                assert tot == nC(s, -i)
                 if u:
                     assert nC(len(s), i) == check
-                    assert nC(len(s), -i) == tot
+            assert nC(s) == tot
+            if u:
+                assert nC(len(s)) == tot
         except AssertionError:
             print s, i, 'failed combo test'
             raise ValueError()
@@ -186,7 +186,7 @@ def test_nC_nP_nT():
             check = nT(i, j)
             tot += check
             assert sum(1 for p in partitions(i, j, size=True) if p[0] == j) == check
-            assert nT(i, -j) == tot
+        assert nT(i) == tot
 
     for i in range(1, 10):
         tot = 0
@@ -194,7 +194,7 @@ def test_nC_nP_nT():
             check = nT(range(i), j)
             tot += check
             assert len(list(multiset_partitions(range(i), j))) == check
-            assert nT(range(i), -j) == tot
+        assert nT(range(i)) == tot
 
     for i in range(100):
         s = ''.join(choice(c) for i in range(7))
@@ -205,10 +205,11 @@ def test_nC_nP_nT():
                 check = nT(s, i)
                 tot += check
                 assert len(list(multiset_partitions(s, i))) == check
-                assert nT(s, -i) == tot
                 if u:
                     assert nT(range(len(s)), i) == check
-                    assert nT(range(len(s)), -i) == tot
+            if u:
+                assert nT(range(len(s))) == tot
+            assert nT(s) == tot
         except AssertionError:
             print s, i, 'failed partition test'
             raise ValueError()
@@ -238,7 +239,7 @@ def test_nC_nP_nT():
     assert nP('aabc', 5) == 0
     assert nC(4, 2, replacement=True) == nC('abcdd', 2, replacement=True) == \
         len(list(multiset_combinations('aabbccdd', 2))) == 10
-    assert nC('abcdd', -5) == sum(nC('abcdd', i) for i in range(6)) == 24
+    assert nC('abcdd') == sum(nC('abcdd', i) for i in range(6)) == 24
     assert nC(list('abcdd'), 4) == 4
     assert nT('aaaa') == nT(4) == len(list(partitions(4))) == 5
     assert nT('aaab') == len(list(multiset_partitions('aaab'))) == 7
@@ -249,5 +250,4 @@ def test_nC_nP_nT():
     # the function, so it's not as random as it may appear
     t = (3, 9, 4, 6, 6, 5, 5, 2, 10, 4)
     assert sum(_AOP_product(t)[i] for i in range(55)) == 58212000
-    raises(ValueError, lambda: nP('aabc', replacement=True))
     raises(ValueError, lambda: _multiset_histogram({1:'a'}))
