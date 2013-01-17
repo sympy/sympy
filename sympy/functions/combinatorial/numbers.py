@@ -10,10 +10,10 @@ the separate 'factorials' module.
 from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int
+from sympy.core.cache import cacheit
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
-from sympy.utilities.memoization import memoize, memoize_kw
 
 
 def _product(a, b):
@@ -752,7 +752,7 @@ def nP(n, k=None, replacement=False):
     return Integer(_nP(n, k, replacement))
 
 
-@memoize_kw
+@cacheit
 def _nP(n, k=None, replacement=False):
     from sympy.functions.combinatorial.factorials import factorial
     from sympy.core.mul import prod
@@ -809,7 +809,7 @@ def _nP(n, k=None, replacement=False):
             return tot
 
 
-@memoize
+@cacheit
 def _AOP_product(n):
     """for n = (m1, m2, .., mk) return the coefficients of the polynomial,
     prod(sum(x**i for i in range(nj + 1)) for nj in n); i.e. the coefficients
@@ -929,7 +929,7 @@ def nC(n, k, replacement=False):
         return nC(_multiset_histogram(n), k, replacement)
 
 
-@memoize_kw
+@cacheit
 def stirling(n, k, d=None, kind=2):
     """Return Stirling number S(n, k) of the first or second kind.
     The sum of all Stirling numbers of the second kind for k = 1
@@ -1021,7 +1021,7 @@ def stirling(n, k, d=None, kind=2):
         stirling(n1, k - 1, kind=kind)
 
 
-@memoize
+@cacheit
 def _nT(n, k):
     """Return the partitions of ``n`` items into ``k`` parts. This
     is used by ``nT`` for the case when ``n`` is an integer."""
