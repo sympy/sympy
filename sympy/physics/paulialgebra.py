@@ -12,7 +12,8 @@ from sympy import Symbol, I
 
 __all__ = ['evaluate_pauli_product']
 
-def delta(i,j):
+
+def delta(i, j):
     """
     Returns 1 if i == j, else 0.
 
@@ -27,12 +28,13 @@ def delta(i,j):
     >>> delta(2, 3)
     0
     """
-    if i==j:
+    if i == j:
         return 1
     else:
         return 0
 
-def epsilon(i,j,k):
+
+def epsilon(i, j, k):
     """
     Return 1 if i,j,k is equal to (1,2,3), (2,3,1), or (3,1,2);
     -1 if i,j,k is equal to (1,3,2), (3,2,1), or (2,1,3);
@@ -49,12 +51,13 @@ def epsilon(i,j,k):
     >>> epsilon(1, 3, 2)
     -1
     """
-    if (i,j,k) in [(1,2,3), (2,3,1), (3,1,2)]:
+    if (i, j, k) in [(1, 2, 3), (2, 3, 1), (3, 1, 2)]:
         return 1
-    elif (i,j,k) in [(1,3,2), (3,2,1), (2,1,3)]:
+    elif (i, j, k) in [(1, 3, 2), (3, 2, 1), (2, 1, 3)]:
         return -1
     else:
         return 0
+
 
 class Pauli(Symbol):
     """The class representing algebraic properties of Pauli matrices
@@ -102,10 +105,10 @@ class Pauli(Symbol):
     __slots__ = ["i"]
 
     def __new__(cls, i):
-        if not i in [1,2,3]:
+        if not i in [1, 2, 3]:
             raise IndexError("Invalid Pauli index")
-        obj = Symbol.__new__(cls, "sigma%d"%i, commutative=False)
-        obj.i=i
+        obj = Symbol.__new__(cls, "sigma%d" % i, commutative=False)
+        obj.i = i
         return obj
 
     def __getnewargs__(self):
@@ -114,17 +117,18 @@ class Pauli(Symbol):
     # FIXME don't work for -I*Pauli(2)*Pauli(3)
     def __mul__(self, other):
         if isinstance(other, Pauli):
-            j=self.i
-            k=other.i
-            return delta(j,k) \
-                +I*epsilon(j,k,1)*Pauli(1) \
-                +I*epsilon(j,k,2)*Pauli(2) \
-                +I*epsilon(j,k,3)*Pauli(3)
+            j = self.i
+            k = other.i
+            return delta(j, k) \
+                + I*epsilon(j, k, 1)*Pauli(1) \
+                + I*epsilon(j, k, 2)*Pauli(2) \
+                + I*epsilon(j, k, 3)*Pauli(3)
         return super(Pauli, self).__mul__(other)
 
     def _eval_power(b, e):
         if e.is_Integer and e.is_positive:
             return super(Pauli, b).__pow__(int(e) % 2)
+
 
 def evaluate_pauli_product(arg):
     '''Help function to evaluate Pauli matrices product
@@ -155,4 +159,4 @@ def evaluate_pauli_product(arg):
             sigma_product *= el
         else:
             com_product *= el
-    return (sigma_product*com_product)
+    return (tmp[0]*sigma_product*com_product)

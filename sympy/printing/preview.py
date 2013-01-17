@@ -6,62 +6,61 @@ import tempfile
 
 from latex import latex
 
-def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
-    """View expression or LaTeX markup in PNG, DVI, PostScript or
-       PDF form.
 
-       If the expr argument is an expression, it will be exported to
-       LaTeX and then compiled using available the TeX distribution.
-       The first argument, 'expr', may also be a LaTeX string.
-       The function will then run the appropriate viewer for the given
-       output format or use the user defined one. By default png
-       output is generated.
+def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_settings):
+    r"""
+    View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
-       By default pretty Euler fonts are used for typesetting (they
-       were used to typeset the well known "Concrete Mathematics"
-       book). For that to work, you need the 'eulervm.sty' LaTeX style (in
-       Debian/Ubuntu, install the texlive-fonts-extra package). If you prefer
-       default AMS fonts or your system lacks 'eulervm' LaTeX package then
-       unset the 'euler' keyword argument.
+    If the expr argument is an expression, it will be exported to LaTeX and
+    then compiled using available the TeX distribution.  The first argument,
+    'expr', may also be a LaTeX string.  The function will then run the
+    appropriate viewer for the given output format or use the user defined
+    one. By default png output is generated.
 
-       To use viewer auto-detection, lets say for 'png' output, issue::
+    By default pretty Euler fonts are used for typesetting (they were used to
+    typeset the well known "Concrete Mathematics" book). For that to work, you
+    need the 'eulervm.sty' LaTeX style (in Debian/Ubuntu, install the
+    texlive-fonts-extra package). If you prefer default AMS fonts or your
+    system lacks 'eulervm' LaTeX package then unset the 'euler' keyword
+    argument.
 
-           >> from sympy import *
-           >> x, y = symbols("x,y")
+    To use viewer auto-detection, lets say for 'png' output, issue
 
-           >> preview(x + y, output='png')
+    >>> from sympy import symbols, preview, Symbol
+    >>> x, y = symbols("x,y")
 
-       This will choose 'pyglet' by default. To select different one::
+    >>> preview(x + y, output='png') # doctest: +SKIP
 
-           >> preview(x + y, output='png', viewer='gimp')
+    This will choose 'pyglet' by default. To select a different one, do
 
+    >>> preview(x + y, output='png', viewer='gimp') # doctest: +SKIP
 
-       The 'png' format is considered special. For all other formats
-       the rules are slightly different. As an example we will take
-       'dvi' output format. If you would run::
+    The 'png' format is considered special. For all other formats the rules
+    are slightly different. As an example we will take 'dvi' output format. If
+    you would run
 
-           >> preview(x + y, output='dvi')
+    >>> preview(x + y, output='dvi') # doctest: +SKIP
 
-       then 'view' will look for available 'dvi' viewers on your
-       system (predefined in the function, so it will try evince,
-       first, then kdvi and xdvi). If nothing is found you will
-       need to set the viewer explicitly::
+    then 'view' will look for available 'dvi' viewers on your system
+    (predefined in the function, so it will try evince, first, then kdvi and
+    xdvi). If nothing is found you will need to set the viewer explicitly.
 
-           >> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
+    >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer') # doctest: +SKIP
 
-       This will skip auto-detection and will run user specified
-       'superior-dvi-viewer'. If 'view' fails to find it on
-       your system it will gracefully raise an exception. You may also
-       enter 'file' for the viewer argument. Doing so will cause this function
-       to return a file object in read-only mode.
+    This will skip auto-detection and will run user specified
+    'superior-dvi-viewer'. If 'view' fails to find it on your system it will
+    gracefully raise an exception. You may also enter 'file' for the viewer
+    argument. Doing so will cause this function to return a file object in
+    read-only mode.
 
-       Currently this depends on pexpect, which is not available for windows.
+    Currently this depends on pexpect, which is not available for windows.
 
-       Additional keyword args will be passed to the latex call. E.g. the
-       symbol_names flag::
+    Additional keyword args will be passed to the latex call, e.g., the
+    symbol_names flag.
 
-           >> phidd = Symbol('phidd')
-           >> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
+    >>> phidd = Symbol('phidd')
+    >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'}) # doctest: +SKIP
+
     """
 
     # we don't want to depend on anything not in the
@@ -77,9 +76,9 @@ def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
             # sorted in order from most pretty to most ugly
             # very discussable, but indeed 'gv' looks awful :)
             candidates = {
-                "dvi" : [ "evince", "okular", "kdvi", "xdvi" ],
-                "ps"  : [ "evince", "okular", "gsview", "gv" ],
-                "pdf" : [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
+                "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
+                "ps": [ "evince", "okular", "gsview", "gv" ],
+                "pdf": [ "evince", "okular", "kpdf", "acroread", "xpdf", "gv" ],
             }
 
             try:
@@ -88,40 +87,33 @@ def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
                         viewer = candidate
                         break
                 else:
-                    raise SystemError("No viewers found for '%s' output format." % output)
+                    raise SystemError(
+                        "No viewers found for '%s' output format." % output)
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
     else:
         if viewer not in special and not pexpect.which(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
-    if not euler:
-        format = r"""\documentclass[12pt]{article}
-                     \usepackage{amsmath}
-                     \usepackage{amsfonts}
-                     \begin{document}
-                     \pagestyle{empty}
-                     %s
-                     \vfill
-                     \end{document}
-                 """
-    else:
-        format = r"""\documentclass[12pt]{article}
-                     \usepackage{amsmath}
-                     \usepackage{amsfonts}
-                     \usepackage{eulervm}
-                     \begin{document}
-                     \pagestyle{empty}
-                     %s
-                     \vfill
-                     \end{document}
-                 """
+    actual_packages = packages + ("amsmath", "amsfonts")
+    if euler:
+        actual_packages += ("euler",)
+    package_includes = "\n".join(["\\usepackage{%s}" % p
+                                  for p in actual_packages])
+
+    format = r"""\documentclass[12pt]{article}
+                 %s
+                 \begin{document}
+                 \pagestyle{empty}
+                 %s
+                 \vfill
+                 \end{document}
+              """ % (package_includes, "%s")
 
     if isinstance(expr, str):
         latex_string = expr
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
-
 
     tmp = tempfile.mktemp()
 
@@ -140,10 +132,10 @@ def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
 
     if output != "dvi":
         command = {
-            "ps"  : "dvips -o %s.ps %s.dvi",
-            "pdf" : "dvipdf %s.dvi %s.pdf",
-            "png" : "dvipng -T tight -z 9 " + \
-                    "--truecolor -o %s.png %s.dvi",
+            "ps": "dvips -o %s.ps %s.dvi",
+            "pdf": "dvipdf %s.dvi %s.pdf",
+            "png": "dvipng -T tight -z 9 " +
+            "--truecolor -o %s.png %s.dvi",
         }
 
         try:
@@ -175,10 +167,10 @@ def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
         offset = 25
 
         win = window.Window(
-            width = img.width + 2*offset,
-            height = img.height + 2*offset,
-            caption = "sympy",
-            resizable = False
+            width=img.width + 2*offset,
+            height=img.height + 2*offset,
+            caption="sympy",
+            resizable=False
         )
 
         win.set_vsync(False)
@@ -215,7 +207,7 @@ def preview(expr, output='png', viewer=None, euler=True, **latex_settings):
         win.close()
     else:
         os.system("%s %s &> /dev/null &" % (viewer, src))
-        time.sleep(2) # wait for the viewer to read data
+        time.sleep(2)  # wait for the viewer to read data
 
     os.remove(src)
     os.chdir(cwd)

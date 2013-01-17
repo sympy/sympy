@@ -5,11 +5,14 @@ from sympy.physics.quantum.gate import (X, Y, Z, H, S, T, CNOT,
 from sympy.physics.quantum.identitysearch import bfs_identity_search
 from sympy.physics.quantum.circuitutils import (kmp_table, find_subcircuit,
         replace_subcircuit, convert_to_symbolic_indices,
-        convert_to_real_indices, random_reduce, random_insert)
+        convert_to_real_indices, random_reduce, random_insert,
+        flatten_ids)
+
 
 def create_gate_sequence(qubit=0):
     gates = (X(qubit), Y(qubit), Z(qubit), H(qubit))
     return gates
+
 
 def test_kmp_table():
     word = ('a', 'b', 'c', 'd', 'a', 'b', 'd')
@@ -19,7 +22,7 @@ def test_kmp_table():
     word = ('P', 'A', 'R', 'T', 'I', 'C', 'I', 'P', 'A', 'T', 'E', ' ',
             'I', 'N', ' ', 'P', 'A', 'R', 'A', 'C', 'H', 'U', 'T', 'E')
     expected_table = [-1, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0,
-                       0, 0, 0, 0, 1, 2, 3, 0, 0, 0, 0, 0]
+                      0, 0, 0, 0, 1, 2, 3, 0, 0, 0, 0, 0]
     assert expected_table == kmp_table(word)
 
     x = X(0)
@@ -33,6 +36,7 @@ def test_kmp_table():
     word = (x, x, y, h, z)
     expected_table = [-1, 0, 1, 0, 0]
     assert expected_table == kmp_table(word)
+
 
 def test_find_subcircuit():
     x = X(0)
@@ -81,12 +85,13 @@ def test_find_subcircuit():
     result = find_subcircuit(circuit, subcircuit)
     assert result == 0
 
+
 def test_replace_subcircuit():
     x = X(0)
     y = Y(0)
     z = Z(0)
     h = H(0)
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cgate_z = CGate((0,), Z(1))
 
     # Standard cases
@@ -130,17 +135,18 @@ def test_replace_subcircuit():
                      replace=replace, pos=1)
     assert actual == (x, y, h, cnot, cgate_z, z)
 
+
 def test_convert_to_symbolic_indices():
     (x, y, z, h) = create_gate_sequence()
 
     i0 = Symbol('i0')
-    exp_map = {i0 : Integer(0)}
+    exp_map = {i0: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x,))
     assert actual == (X(i0),)
     assert act_map == exp_map
 
     expected = (X(i0), Y(i0), Z(i0), H(i0))
-    exp_map = {i0 : Integer(0)}
+    exp_map = {i0: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x, y, z, h))
     assert actual == expected
     assert exp_map == act_map
@@ -149,32 +155,32 @@ def test_convert_to_symbolic_indices():
     i1 = Symbol('i1')
 
     expected = (X(i0), Y(i0), Z(i0), H(i0))
-    exp_map = {i0 : Integer(1)}
+    exp_map = {i0: Integer(1)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x1, y1, z1, h1))
     assert actual == expected
     assert act_map == exp_map
 
     expected = (X(i0), Y(i0), Z(i0), H(i0), X(i1), Y(i1), Z(i1), H(i1))
-    exp_map = {i0 : Integer(0), i1 : Integer(1)}
+    exp_map = {i0: Integer(0), i1: Integer(1)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x, y, z, h,
                                          x1, y1, z1, h1))
     assert actual == expected
     assert act_map == exp_map
 
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(Mul(x1, y1,
                                          z1, h1, x, y, z, h))
     assert actual == expected
     assert act_map == exp_map
 
     expected = (X(i0), X(i1), Y(i0), Y(i1), Z(i0), Z(i1), H(i0), H(i1))
-    exp_map = {i0 : Integer(0), i1 : Integer(1)}
+    exp_map = {i0: Integer(0), i1: Integer(1)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(Mul(x, x1,
                                          y, y1, z, z1, h, h1))
     assert actual == expected
     assert act_map == exp_map
 
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices((x1, x, y1, y,
                                          z1, z, h1, h))
     assert actual == expected
@@ -188,7 +194,7 @@ def test_convert_to_symbolic_indices():
     expected = (X(i0), X(i1), Y(i0), Y(i1), Z(i0), Z(i1),
                 H(i0), H(i1), CNOT(i1, i0), CNOT(i0, i1),
                 CGate(i1, Z(i0)), CGate(i0, Z(i1)))
-    exp_map = {i0 : Integer(0), i1 : Integer(1)}
+    exp_map = {i0: Integer(0), i1: Integer(1)}
     args = (x, x1, y, y1, z, z1, h, h1, cnot_10, cnot_01,
             cgate_z_10, cgate_z_01)
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
@@ -200,27 +206,27 @@ def test_convert_to_symbolic_indices():
     expected = (X(i0), X(i1), Y(i0), Y(i1), Z(i0), Z(i1),
                 H(i0), H(i1), CNOT(i0, i1), CNOT(i1, i0),
                 CGate(i0, Z(i1)), CGate(i1, Z(i0)))
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_10, h, cgate_z_01, h)
     expected = (CNOT(i0, i1), H(i1), CGate(i1, Z(i0)), H(i1))
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_01, h1, cgate_z_10, h1)
-    exp_map = {i0 : Integer(0), i1 : Integer(1)}
+    exp_map = {i0: Integer(0), i1: Integer(1)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
     args = (cnot_10, h1, cgate_z_01, h1)
     expected = (CNOT(i0, i1), H(i0), CGate(i1, Z(i0)), H(i0))
-    exp_map = {i0 : Integer(1), i1 : Integer(0)}
+    exp_map = {i0: Integer(1), i1: Integer(0)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
@@ -231,29 +237,30 @@ def test_convert_to_symbolic_indices():
     args = (ccgate_z, ccgate_x)
 
     expected = (CGate(i0, CGate(i1, Z(i2))), CGate(i1, CGate(i2, X(i0))))
-    exp_map = {i0 : Integer(0), i1 : Integer(1), i2 : Integer(2)}
+    exp_map = {i0: Integer(0), i1: Integer(1), i2: Integer(2)}
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
 
-    ndx_map = {i0 : Integer(0)}
+    ndx_map = {i0: Integer(0)}
     index_gen = numbered_symbols(prefix='i', start=1)
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args,
                                          qubit_map=ndx_map,
                                          start=i0,
-                                         gen = index_gen)
+                                         gen=index_gen)
     assert actual == expected
     assert act_map == exp_map
 
     i3 = Symbol('i3')
-    cgate_x0_c321 = CGate((3,2,1), X(0))
-    exp_map = {i0 : Integer(3), i1 : Integer(2),
-               i2 : Integer(1), i3 : Integer(0)}
+    cgate_x0_c321 = CGate((3, 2, 1), X(0))
+    exp_map = {i0: Integer(3), i1: Integer(2),
+               i2: Integer(1), i3: Integer(0)}
     expected = (CGate((i0, i1, i2), X(i3)),)
     args = (cgate_x0_c321,)
     actual, act_map, sndx, gen = convert_to_symbolic_indices(args)
     assert actual == expected
     assert act_map == exp_map
+
 
 def test_convert_to_real_indices():
     i0 = Symbol('i0')
@@ -265,14 +272,14 @@ def test_convert_to_real_indices():
     y_i0 = Y(i0)
     z_i0 = Z(i0)
 
-    qubit_map = {i0 : 0}
+    qubit_map = {i0: 0}
     args = (z_i0, y_i0, x_i0)
     expected = (z, y, x)
     actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
-    cnot_10 = CNOT(1,0)
-    cnot_01 = CNOT(0,1)
+    cnot_10 = CNOT(1, 0)
+    cnot_01 = CNOT(0, 1)
     cgate_z_10 = CGate(1, Z(0))
     cgate_z_01 = CGate(0, Z(1))
 
@@ -280,7 +287,7 @@ def test_convert_to_real_indices():
     cnot_i0_i1 = CNOT(i0, i1)
     cgate_z_i1_i0 = CGate(i1, Z(i0))
 
-    qubit_map = {i0 : 0, i1 : 1}
+    qubit_map = {i0: 0, i1: 1}
     args = (cnot_i1_i0,)
     expected = (cnot_10,)
     actual = convert_to_real_indices(args, qubit_map)
@@ -296,7 +303,7 @@ def test_convert_to_real_indices():
     actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
 
-    qubit_map = {i0 : 1, i1 : 0}
+    qubit_map = {i0: 1, i1: 0}
     args = (cgate_z_i1_i0,)
     expected = (cgate_z_01,)
     actual = convert_to_real_indices(args, qubit_map)
@@ -306,27 +313,27 @@ def test_convert_to_real_indices():
     ccgate_z = CGate(i0, CGate(i1, Z(i2)))
     ccgate_x = CGate(i1, CGate(i2, X(i0)))
 
-    qubit_map = {i0 : 0, i1 : 1, i2 : 2}
+    qubit_map = {i0: 0, i1: 1, i2: 2}
     args = (ccgate_z, ccgate_x)
     expected = (CGate(0, CGate(1, Z(2))), CGate(1, CGate(2, X(0))))
     actual = convert_to_real_indices(Mul(*args), qubit_map)
     assert actual == expected
 
-    qubit_map = {i0 : 1, i2 : 0, i1 : 2}
+    qubit_map = {i0: 1, i2: 0, i1: 2}
     args = (ccgate_x, ccgate_z)
     expected = (CGate(2, CGate(0, X(1))), CGate(1, CGate(2, Z(0))))
     actual = convert_to_real_indices(args, qubit_map)
     assert actual == expected
+
 
 def test_random_reduce():
     x = X(0)
     y = Y(0)
     z = Z(0)
     h = H(0)
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cgate_z = CGate((0,), Z(1))
 
-    seq = [2, 11, 9, 3, 5]
     gate_list = [x, y, z]
     ids = list(bfs_identity_search(gate_list, 1, max_depth=4))
 
@@ -334,81 +341,58 @@ def test_random_reduce():
     assert random_reduce(circuit, []) == circuit
     assert random_reduce(circuit, ids) == circuit
 
+    seq = [2, 11, 9, 3, 5]
     circuit = (x, y, z, x, y, h)
-    # seed = 1, indices to attempt removal: 2, 11, 9, 3
-    # removed id: y, z, x
-    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
-    assert actual == (x, y, h)
+    assert random_reduce(circuit, ids, seed=seq) == (x, y, h)
 
     circuit = (x, x, y, y, z, z)
-    # seed = 1, indices to attempt removal: 2, 11, 9
-    # removed id: y, y
-    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
-    assert actual == (x, x, z, z)
+    assert random_reduce(circuit, ids, seed=seq) == (x, x, y, y)
 
     seq = [14, 13, 0]
-    # seed = 2, indices: 14, 13, 0
-    # removed id: z, z
-    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
-    assert random_reduce(circuit, ids, random_sequence=iter(seq)) == (x, x, y, y)
+    assert random_reduce(circuit, ids, seed=seq) == (y, y, z, z)
 
     gate_list = [x, y, z, h, cnot, cgate_z]
     ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
 
-    seq = [30, 29, 1, 2, 23, 19, 17, 7, 14, 13, 12, 3, 8, 7, 13, 16, 15,
-           8, 6, 3]
+    seq = [25]
     circuit = (x, y, z, y, h, y, h, cgate_z, h, cnot)
-    expected = (x, y, z, y, h, y)
-    # seed = 2, indices: 30, 29, 1, 2, 23, 19, 17, 7, 14, 13, 12, 3, 8
-    #                    7, 13, 16, 15, 8, 6, 3
-    # removed id: h, cgate_z, h, cnot
-    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
-    assert actual == expected
+    expected = (x, y, z, cgate_z, h, cnot)
+    assert random_reduce(circuit, ids, seed=seq) == expected
+    circuit = Mul(*circuit)
+    assert random_reduce(circuit, ids, seed=seq) == expected
 
-    circuit = Mul(*(x, y, z, y, h, y, h, cgate_z, h, cnot))
-    expected = (x, y, z, y, h, y)
-    # seed = 2, indices: 30, 29, 1, 2, 23, 19, 17, 7, 14, 13, 12, 3, 8
-    #                    7, 13, 16, 15, 8, 6, 3
-    # removed id: h, cgate_z, h, cnot
-    actual = random_reduce(circuit, ids, random_sequence=iter(seq))
-    assert actual == expected
 
 def test_random_insert():
     x = X(0)
     y = Y(0)
     z = Z(0)
     h = H(0)
-    cnot = CNOT(1,0)
+    cnot = CNOT(1, 0)
     cgate_z = CGate((0,), Z(1))
-
 
     choices = [(x, x)]
     circuit = (y, y)
-    # insert location: 0; circuit choice: 1
-    actual = random_insert(circuit, choices, insert_loc=0, insert_circuit_loc=0)
+    loc, choice = 0, 0
+    actual = random_insert(circuit, choices, seed=[loc, choice])
     assert actual == (x, x, y, y)
 
     circuit = (x, y, z, h)
     choices = [(h, h), (x, y, z)]
     expected = (x, x, y, z, y, z, h)
-    # insert location: 1; circuit choice: 1
-    actual = random_insert(circuit, choices, insert_loc=1, insert_circuit_loc=1)
+    loc, choice = 1, 1
+    actual = random_insert(circuit, choices, seed=[loc, choice])
     assert actual == expected
 
     gate_list = [x, y, z, h, cnot, cgate_z]
     ids = list(bfs_identity_search(gate_list, 2, max_depth=4))
 
-    collapse_eq_ids = lambda acc, an_id: acc + list(an_id.equivalent_ids)
-    eq_ids = reduce(collapse_eq_ids, ids, [])
+    eq_ids = flatten_ids(ids)
 
     circuit = (x, y, h, cnot, cgate_z)
-    expected = (x, y, z, y, z, y, h, cnot, cgate_z)
-    # insert location: 1; circuit choice: 30
-    actual = random_insert(circuit, eq_ids, insert_loc=1, insert_circuit_loc=30)
+    expected = (x, z, x, z, x, y, h, cnot, cgate_z)
+    loc, choice = 1, 30
+    actual = random_insert(circuit, eq_ids, seed=[loc, choice])
     assert actual == expected
-
-    circuit = Mul(*(x, y, h, cnot, cgate_z))
-    expected = (x, y, z, y, z, y, h, cnot, cgate_z)
-    # insert location: 1; circuit choice: 30
-    actual = random_insert(circuit, eq_ids, insert_loc=1, insert_circuit_loc=30)
+    circuit = Mul(*circuit)
+    actual = random_insert(circuit, eq_ids, seed=[loc, choice])
     assert actual == expected

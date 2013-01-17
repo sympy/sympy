@@ -75,6 +75,7 @@ import warnings
 
 #TODO debuging output
 
+
 class vectorized_lambdify(object):
     """ Return a sufficiently smart, vectorized and lambdified function.
 
@@ -112,16 +113,17 @@ class vectorized_lambdify(object):
         try:
             temp_args = (np.array(a, dtype=np.complex) for a in args)
             results = self.vector_func(*temp_args)
-            results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
+            results = np.ma.masked_where(
+                np.abs(results.imag) != 0, results.real, copy=False)
         except Exception, e:
             #DEBUG: print 'Error', type(e), e
             if ((isinstance(e, TypeError)
-                   and 'unhashable type: \'numpy.ndarray\'' in str(e))
-                  or
-                  (isinstance(e, ValueError)
-                   and ('Invalid limits given:' in str(e)
-                        or 'negative dimensions are not allowed' in str(e) #XXX
-                        or 'sequence too large; must be smaller than 32' in str(e)))): #XXX
+                 and 'unhashable type: \'numpy.ndarray\'' in str(e))
+                or
+                (isinstance(e, ValueError)
+                 and ('Invalid limits given:' in str(e)
+                      or 'negative dimensions are not allowed' in str(e)  # XXX
+                      or 'sequence too large; must be smaller than 32' in str(e)))):  # XXX
                 # Almost all functions were translated to numpy, but some were
                 # left as sympy functions. They recieved an ndarray as an
                 # argument and failed.
@@ -130,10 +132,13 @@ class vectorized_lambdify(object):
                 #   other ugly exceptions that are not well understood (marked with XXX)
                 # TODO: Cleanup the ugly special cases marked with xxx above.
                 # Solution: use cmath and vectorize the final lambda.
-                self.lambda_func = experimental_lambdify(self.args, self.expr, use_python_cmath=True)
-                self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
+                self.lambda_func = experimental_lambdify(
+                    self.args, self.expr, use_python_cmath=True)
+                self.vector_func = np.vectorize(
+                    self.lambda_func, otypes=[np.complex])
                 results = self.vector_func(*args)
-                results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
+                results = np.ma.masked_where(
+                    np.abs(results.imag) != 0, results.real, copy=False)
             else:
                 # Complete failure. One last try with no translations, only
                 # wrapping in complex((...).evalf()) and returning the real
@@ -142,12 +147,14 @@ class vectorized_lambdify(object):
                     raise e
                 else:
                     self.failure = True
-                    self.lambda_func = experimental_lambdify(self.args, self.expr,
-                                                        use_evalf=True,
-                                                        complex_wrap_evalf=True)
-                    self.vector_func = np.vectorize(self.lambda_func, otypes=[np.complex])
+                    self.lambda_func = experimental_lambdify(
+                        self.args, self.expr, use_evalf=True,
+                        complex_wrap_evalf=True)
+                    self.vector_func = np.vectorize(
+                        self.lambda_func, otypes=[np.complex])
                     results = self.vector_func(*args)
-                    results = np.ma.masked_where(np.abs(results.imag) != 0, results.real, copy=False)
+                    results = np.ma.masked_where(
+                        np.abs(results.imag) != 0, results.real, copy=False)
                     warnings.warn('The evaluation of the expression is'
                             ' problematic. We are trying a failback method'
                             ' that may still work. Please report this as a bug.')
@@ -157,19 +164,71 @@ class vectorized_lambdify(object):
         return results
 
 
+class lambdify(object):
+    """Returns the lambdified function.
+
+    This function uses experimental_lambdify to create a lambdified
+    expression. It uses cmath to lambdify the expression. If the function
+    is not implemented in python cmath, python cmath calls evalf on those
+    functions.
+    """
+
+    def __init__(self, args, expr):
+        self.args = args
+        self.expr = expr
+        self.lambda_func = experimental_lambdify(args, expr, use_evalf=True,
+                                                 use_python_cmath=True)
+        self.failure = False
+
+    def __call__(self, args):
+        args = complex(args)
+        try:
+            #The result can be sympy.Float. Hence wrap it with complex type.
+            result = complex(self.lambda_func(args))
+            if abs(result.imag) > 1e-7 * abs(result):
+                return None
+            else:
+                return result.real
+        except Exception, e:
+            # The exceptions raised by sympy, cmath are not consistent and
+            # hence it is not possible to specify all the exceptions that
+            # are to be caught. Presently there are no cases for which the code
+            # reaches this block other than ZeroDivisionError. Also the
+            # exception is caught only once. If the exception repeats itself,
+            # then it is not caught and the corresponding error is raised.
+            # XXX: Remove catching all exceptions once the plotting module
+            # is heavily tested.
+            if isinstance(e, ZeroDivisionError):
+                return None
+            else:
+                if self.failure:
+                    raise e
+                #Failure
+                #Try wrapping it with complex(..).evalf()
+                self.failure = True
+                self.lambda_func = experimental_lambdify(self.args, self.expr,
+                                                    use_evalf=True,
+                                                    complex_wrap_evalf=True)
+                result = self.lambda_func(args)
+                warnings.warn('The evaluation of the expression is'
+                        ' problematic. We are trying a failback method'
+                        ' that may still work. Please report this as a bug.')
+                if abs(result.imag) > 0:
+                    return None
+                else:
+                    return result.real
+
+
 def experimental_lambdify(*args, **kwargs):
     l = Lambdifier(*args, **kwargs)
     return l.lambda_func
 
 
 class Lambdifier(object):
-    def __init__(self, args, expr, print_lambda=False,
-                                   use_evalf=False,
-                                   float_wrap_evalf=False,
-                                   complex_wrap_evalf=False,
-                                   use_np=False,
-                                   use_python_math=False,
-                                   use_python_cmath=False):
+    def __init__(self, args, expr, print_lambda=False, use_evalf=False,
+                 float_wrap_evalf=False, complex_wrap_evalf=False,
+                 use_np=False, use_python_math=False, use_python_cmath=False,
+                 use_interval=False):
 
         self.print_lambda = print_lambda
         self.use_evalf = use_evalf
@@ -178,6 +237,7 @@ class Lambdifier(object):
         self.use_np = use_np
         self.use_python_math = use_python_math
         self.use_python_cmath = use_python_cmath
+        self.use_interval = use_interval
 
         # Constructing the argument string
         if not all([isinstance(a, Symbol) for a in args]):
@@ -202,43 +262,45 @@ class Lambdifier(object):
         namespace.update({'sqrt': sqrt})
         # End workaround.
         if use_python_math:
-            namespace.update({'math' : __import__('math')})
+            namespace.update({'math': __import__('math')})
         if use_python_cmath:
-            namespace.update({'cmath' : __import__('cmath')})
+            namespace.update({'cmath': __import__('cmath')})
         if use_np:
             try:
-                namespace.update({'np' : __import__('numpy')})
+                namespace.update({'np': __import__('numpy')})
             except ImportError:
-                raise ImportError('experimental_lambdify failed to import numpy.')
+                raise ImportError(
+                    'experimental_lambdify failed to import numpy.')
+        if use_interval:
+            namespace.update({'imath': __import__(
+                'sympy.plotting.intervalmath', fromlist=['intervalmath'])})
+            namespace.update({'math': __import__('math')})
 
         # Construct the lambda
         if self.print_lambda:
             print newexpr
-        eval_str = 'lambda %s : ( %s )' %(argstr, newexpr)
+        eval_str = 'lambda %s : ( %s )' % (argstr, newexpr)
         exec "from __future__ import division; MYNEWLAMBDA = %s" % eval_str in namespace
         self.lambda_func = namespace['MYNEWLAMBDA']
-
 
     ##############################################################################
     # Dicts for translating from sympy to other modules
     ##############################################################################
-
     ###
     # builtins
     ###
-
     # Functions with different names in builtins
     builtin_functions_different = {
-            'Min':'min',
-            'Max':'max',
-            'Abs':'abs',
-            }
+        'Min': 'min',
+        'Max': 'max',
+        'Abs': 'abs',
+    }
 
     # Strings that should be translated
     builtin_not_functions = {
-            'I' :'1j',
-            'oo':'1e400',
-            }
+        'I': '1j',
+        'oo': '1e400',
+    }
 
     ###
     # numpy
@@ -246,39 +308,35 @@ class Lambdifier(object):
 
     # Functions that are the same in numpy
     numpy_functions_same = [
-            'sin', 'cos', 'tan',
-            'sinh', 'cosh', 'tanh',
-            'exp', 'log',
-            'sqrt',
-            'floor',
-            'conjugate',
-            ]
+        'sin', 'cos', 'tan', 'sinh', 'cosh', 'tanh', 'exp', 'log',
+        'sqrt', 'floor', 'conjugate',
+    ]
 
     # Functions with different names in numpy
     numpy_functions_different = {
-            "acos":"arccos",
-            "acosh":"arccosh",
-            "arg":"angle",
-            "asin":"arcsin",
-            "asinh":"arcsinh",
-            "atan":"arctan",
-            "atan2":"arctan2",
-            "atanh":"arctanh",
-            "ceiling":"ceil",
-            "im":"imag",
-            "ln":"log",
-            "Max":"amax",
-            "Min":"amin",
-            "re":"real",
-            "Abs":"abs",
-            }
+        "acos": "arccos",
+        "acosh": "arccosh",
+        "arg": "angle",
+        "asin": "arcsin",
+        "asinh": "arcsinh",
+        "atan": "arctan",
+        "atan2": "arctan2",
+        "atanh": "arctanh",
+        "ceiling": "ceil",
+        "im": "imag",
+        "ln": "log",
+        "Max": "amax",
+        "Min": "amin",
+        "re": "real",
+        "Abs": "abs",
+    }
 
     # Strings that should be translated
     numpy_not_functions = {
-            'pi':'np.pi',
-            'oo':'np.inf',
-            'E' :'np.e',
-            }
+        'pi': 'np.pi',
+        'oo': 'np.inf',
+        'E': 'np.e',
+    }
 
     ###
     # python math
@@ -286,28 +344,23 @@ class Lambdifier(object):
 
     # Functions that are the same in math
     math_functions_same = [
-            'sin', 'cos', 'tan',
-            'asin', 'acos', 'atan', 'atan2',
-            'sinh', 'cosh', 'tanh',
-            'asinh', 'acosh', 'atanh',
-            'exp', 'log', 'erf',
-            'sqrt',
-            'floor',
-            'factorial', 'gamma',
-            ]
+        'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'atan2',
+        'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
+        'exp', 'log', 'erf', 'sqrt', 'floor', 'factorial', 'gamma',
+    ]
 
     # Functions with different names in math
     math_functions_different = {
-            'ceiling':'ceil',
-            'ln':'log',
-            'loggamma':'lgamma'
-            }
+        'ceiling': 'ceil',
+        'ln': 'log',
+        'loggamma': 'lgamma'
+    }
 
     # Strings that should be translated
     math_not_functions = {
-            'pi':'math.pi',
-            'E' :'math.e',
-            }
+        'pi': 'math.pi',
+        'E': 'math.e',
+    }
 
     ###
     # python cmath
@@ -315,25 +368,45 @@ class Lambdifier(object):
 
     # Functions that are the same in cmath
     cmath_functions_same = [
-            'sin', 'cos', 'tan',
-            'asin', 'acos', 'atan',
-            'sinh', 'cosh', 'tanh',
-            'asinh', 'acosh', 'atanh',
-            'exp', 'log',
-            'sqrt',
-            ]
+        'sin', 'cos', 'tan', 'asin', 'acos', 'atan',
+        'sinh', 'cosh', 'tanh', 'asinh', 'acosh', 'atanh',
+        'exp', 'log', 'sqrt',
+    ]
 
     # Functions with different names in cmath
     cmath_functions_different = {
-            'ln':'log',
-            'arg':'phase',
-            }
+        'ln': 'log',
+        'arg': 'phase',
+    }
 
     # Strings that should be translated
     cmath_not_functions = {
-            'pi':'cmath.pi',
-            'E' :'cmath.e',
-            }
+        'pi': 'cmath.pi',
+        'E': 'cmath.e',
+    }
+
+    ###
+    # intervalmath
+    ###
+
+    interval_not_functions = {
+        'pi': 'math.pi',
+        'E': 'math.e'
+    }
+
+    interval_functions_same = [
+        'sin', 'cos', 'exp', 'tan', 'atan', 'log',
+        'sqrt', 'cosh', 'sinh', 'tanh', 'floor',
+        'acos', 'asin', 'acosh', 'asinh', 'atanh',
+        'Abs', 'And', 'Or'
+    ]
+
+    interval_functions_different = {
+        'Min': 'imin',
+        'Max': 'imax',
+        'ceiling': 'ceil',
+
+    }
 
     ###
     # mpmath, etc
@@ -353,6 +426,8 @@ class Lambdifier(object):
             dict_str.update(self.math_not_functions)
         if self.use_python_cmath:
             dict_str.update(self.cmath_not_functions)
+        if self.use_interval:
+            dict_str.update(self.interval_not_functions)
         return dict_str
 
     # For functions
@@ -360,19 +435,24 @@ class Lambdifier(object):
         dict_fun = dict(self.builtin_functions_different)
         if self.use_np:
             for s in self.numpy_functions_same:
-                dict_fun[s] = 'np.'+s
+                dict_fun[s] = 'np.' + s
             for k, v in self.numpy_functions_different.iteritems():
-                dict_fun[k] = 'np.'+v
+                dict_fun[k] = 'np.' + v
         if self.use_python_math:
             for s in self.math_functions_same:
-                dict_fun[s] = 'math.'+s
+                dict_fun[s] = 'math.' + s
             for k, v in self.math_functions_different.iteritems():
-                dict_fun[k] = 'math.'+v
+                dict_fun[k] = 'math.' + v
         if self.use_python_cmath:
             for s in self.cmath_functions_same:
-                dict_fun[s] = 'cmath.'+s
+                dict_fun[s] = 'cmath.' + s
             for k, v in self.cmath_functions_different.iteritems():
-                dict_fun[k] = 'cmath.'+v
+                dict_fun[k] = 'cmath.' + v
+        if self.use_interval:
+            for s in self.interval_functions_same:
+                dict_fun[s] = 'imath.' + s
+            for k, v in self.interval_functions_different.iteritems():
+                dict_fun[k] = 'imath.' + v
         return dict_fun
 
     ##############################################################################
@@ -515,9 +595,10 @@ class Lambdifier(object):
             # Either one of those can be used but not all at the same time.
             # The code considers the sin example as the right one.
             regexlist = [
-                    r'<class \'sympy[\w.]*?.([\w]*)\'>$', # the example Integral
-                    r'<function ([\w]*) at 0x[\w]*>$',    # the example sqrt
-                    ]
+                r'<class \'sympy[\w.]*?.([\w]*)\'>$',
+                # the example Integral
+                r'<function ([\w]*) at 0x[\w]*>$',    # the example sqrt
+            ]
             for r in regexlist:
                 m = re.match(r, funcname)
                 if m is not None:
@@ -528,11 +609,11 @@ class Lambdifier(object):
             for a in expr.args:
                 if (isinstance(a, Symbol) or
                     isinstance(a, NumberSymbol) or
-                    a in [I, zoo, oo]):
+                        a in [I, zoo, oo]):
                     continue
                 else:
                     args_dict.update(cls.sympy_expression_namespace(a))
-            args_dict.update({funcname : expr.func})
+            args_dict.update({funcname: expr.func})
             return args_dict
 
     @staticmethod

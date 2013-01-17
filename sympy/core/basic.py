@@ -4,9 +4,11 @@ from sympy.core.assumptions import ManagedProperties
 from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
 from sympy.core.sympify import _sympify, sympify, SympifyError
-from sympy.core.compatibility import callable, reduce, cmp, iterable
+from sympy.core.compatibility import (callable, reduce, cmp, iterable,
+    ordered)
 from sympy.core.decorators import deprecated
 from sympy.core.singleton import S
+
 
 class Basic(object):
     """
@@ -70,7 +72,7 @@ class Basic(object):
     is_Matrix = False
 
     @property
-    @deprecated
+    @deprecated(useinstead="is_Float", issue=1721, deprecated_since_version="0.7.0")
     def is_Real(self):  # pragma: no cover
         """Deprecated alias for ``is_Float``"""
         # When this is removed, remove the piece of code disabling the warning
@@ -79,12 +81,14 @@ class Basic(object):
 
     def __new__(cls, *args):
         obj = object.__new__(cls)
-        obj._assumptions  = cls.default_assumptions
-        obj._mhash = None # will be set by __hash__ method.
+        obj._assumptions = cls.default_assumptions
+        obj._mhash = None  # will be set by __hash__ method.
 
         obj._args = args  # all items in args must be Basic objects
         return obj
 
+    def copy(self):
+        return self.func(*self.args)
 
     def __reduce_ex__(self, proto):
         """ Pickling support."""
@@ -110,9 +114,13 @@ class Basic(object):
         return h
 
     def _hashable_content(self):
-        # If class defines additional attributes, like name in Symbol,
-        # then this method should be updated accordingly to return
-        # relevant attributes as tuple.
+        """Return a tuple of information about self that can be used to
+        compute the hash. If a class defines additional attributes,
+        like ``name`` in Symbol, then this method should be updated
+        accordingly to return such relevent attributes.
+
+        Defining more than _hashable_content is necessary if __eq__ has
+        been defined by a class. See note about this in Basic.__eq__."""
         return self._args
 
     @property
@@ -137,9 +145,10 @@ class Basic(object):
         {'commutative': True}
         >>> x = Symbol("x", positive=True)
         >>> x.assumptions0
-        {'commutative': True, 'complex': True, 'imaginary': False,
-        'negative': False, 'nonnegative': True, 'nonpositive': False,
-        'nonzero': True, 'positive': True, 'real': True, 'zero': False}
+        {'commutative': True, 'complex': True, 'hermitian': True,
+        'imaginary': False, 'negative': False, 'nonnegative': True,
+        'nonpositive': False, 'nonzero': True, 'positive': True, 'real': True,
+        'zero': False}
 
         """
         return {}
@@ -211,13 +220,15 @@ class Basic(object):
                     if c != 0:
                         return c
 
-        return Basic.compare(a,b)
+        return Basic.compare(a, b)
 
     @staticmethod
-    @deprecated
+    @deprecated(useinstead="default_sort_key", issue=1491, deprecated_since_version="0.7.2")
     def compare_pretty(a, b):
         """
         Is a > b in the sense of ordering in printing?
+
+        THIS FUNCTION IS DEPRECATED.  Use ``default_sort_key`` instead.
 
         ::
 
@@ -262,7 +273,7 @@ class Basic(object):
 
         # both objects are non-SymPy
         if (not isinstance(a, Basic)) and (not isinstance(b, Basic)):
-            return cmp(a,b)
+            return cmp(a, b)
 
         if not isinstance(a, Basic):
             return -1   # other < sympy
@@ -320,21 +331,34 @@ class Basic(object):
         # XXX: remove this when issue #2070 is fixed
         def inner_key(arg):
             if isinstance(arg, Basic):
-                return arg.sort_key()
+                return arg.sort_key(order)
             else:
                 return arg
 
-        args = len(self.args), tuple([ inner_key(arg) for arg in self.args ])
+        args = self._sorted_args
+        args = len(args), tuple([ inner_key(arg) for arg in args ])
         return self.class_key(), args, S.One.sort_key(), S.One
 
     def __eq__(self, other):
-        """a == b  -> Compare two symbolic trees and see whether they are equal
+        """Return a boolean indicating whether a == b on the basis of
+        their symbolic trees.
 
-           this is the same as:
+        This is the same as a.compare(b) == 0 but faster.
 
-             a.compare(b) == 0
+        Notes
+        =====
 
-           but faster
+        If a class that overrides __eq__() needs to retain the
+        implementation of __hash__() from a parent class, the
+        interpreter must be told this explicitly by setting __hash__ =
+        <ParentClass>.__hash__. Otherwise the inheritance of __hash__()
+        will be blocked, just as if __hash__ had been explicitly set to
+        None.
+
+        References
+        ==========
+
+        from http://docs.python.org/dev/reference/datamodel.html#object.__hash__
         """
 
         if type(self) is not type(other):
@@ -352,7 +376,6 @@ class Basic(object):
                 return False
 
         return self._hashable_content() == other._hashable_content()
-
 
     def __ne__(self, other):
         """a != b  -> Compare two symbolic trees and see whether they are different
@@ -405,7 +428,8 @@ class Basic(object):
         elif len(dummy_symbols) == 1:
             dummy = dummy_symbols.pop()
         else:
-            raise ValueError("only one dummy symbol allowed on the left-hand side")
+            raise ValueError(
+                "only one dummy symbol allowed on the left-hand side")
 
         if symbol is None:
             symbols = other.free_symbols
@@ -504,7 +528,8 @@ class Basic(object):
 
         """
         if types:
-            types = tuple([t if isinstance(t, type) else type(t) for t in types])
+            types = tuple(
+                [t if isinstance(t, type) else type(t) for t in types])
         else:
             types = (Atom,)
         result = set()
@@ -565,13 +590,15 @@ class Basic(object):
             return False
         if is_real and is_number:
             return True
-        n, i = self.evalf(2).as_real_imag()
+        n, i = [p.evalf(2) for p in self.as_real_imag()]
         if not i.is_Number or not n.is_Number:
             return False
         if i:
-            if i._prec != 1:
-                return False
-        return n._prec != 1
+            # if _prec = 1 we can't decide and if not,
+            # the answer is False so return False
+            return False
+        else:
+            return n._prec != 1
 
     @property
     def func(self):
@@ -631,9 +658,18 @@ class Basic(object):
         """
         return self._args
 
+    @property
+    def _sorted_args(self):
+        """
+        The same as ``args``.  Derived classes which don't fix an
+        order on their arguments should override this method to
+        produce the sorted representation.
+        """
+        return self.args
+
     def iter_basic_args(self):
         """
-        Iterates arguments of 'self'.
+        Iterates arguments of ``self``.
 
         Examples
         ========
@@ -818,14 +854,15 @@ class Basic(object):
                     d.setdefault(ops, []).append((o, n))
                 newseq = []
                 for k in sorted(d.keys(), reverse=True):
-                    newseq.extend(sorted([v[0] for v in d[k]], key=default_sort_key))
+                    newseq.extend(
+                        sorted([v[0] for v in d[k]], key=default_sort_key))
                 sequence = [(k, sequence[k]) for k in newseq]
                 del newseq, d
             else:
                 sequence = sorted([(k, v) for (k, v) in sequence.iteritems()],
                                   key=default_sort_key)
 
-        if kwargs.pop('simultaneous', False): # XXX should this be the default for dict subs?
+        if kwargs.pop('simultaneous', False):  # XXX should this be the default for dict subs?
             reps = {}
             rv = self
             for old, new in sequence:
@@ -1011,11 +1048,11 @@ class Basic(object):
             return rule[self]
         elif rule:
             args = tuple([arg.xreplace(rule) for arg in self.args])
-            if args != self.args:
+            if not _aresame(args, self.args):
                 return self.func(*args)
         return self
 
-    @deprecated
+    @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
     def __contains__(self, obj):
         if self == obj:
             return True
@@ -1059,7 +1096,8 @@ class Basic(object):
         """Helper for .has()"""
         from sympy.core.function import UndefinedFunction, Function
         if isinstance(pattern, UndefinedFunction):
-            return any(f.func == pattern or f == pattern for f in self.atoms(Function, UndefinedFunction))
+            return any(f.func == pattern or f == pattern
+            for f in self.atoms(Function, UndefinedFunction))
 
         pattern = sympify(pattern)
         if isinstance(pattern, BasicType):
@@ -1072,11 +1110,9 @@ class Basic(object):
         except AttributeError:
             return any(arg == pattern for arg in preorder_traversal(self))
 
-
     def _has_matcher(self):
         """Helper for .has()"""
         return self.__eq__
-
 
     def replace(self, query, value, map=False):
         """
@@ -1093,6 +1129,9 @@ class Basic(object):
 
         Examples
         ========
+
+        Initial setup
+
             >>> from sympy import log, sin, cos, tan, Wild
             >>> from sympy.abc import x, y
             >>> f = log(sin(x)) + tan(sin(x**2))
@@ -1149,25 +1188,34 @@ class Basic(object):
             elif callable(value):
                 _value = lambda expr, result: value(*expr.args)
             else:
-                raise TypeError("given a type, replace() expects another type or a callable")
+                raise TypeError(
+                    "given a type, replace() expects another "
+                    "type or a callable")
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
 
             if isinstance(value, Basic):
                 _value = lambda expr, result: value.subs(result)
             elif callable(value):
-                _value = lambda expr, result: value(**dict([ (str(key)[:-1], val) for key, val in result.iteritems() ]))
+                _value = lambda expr, result: value(**dict([ (
+                    str(key)[:-1], val) for key, val in result.iteritems() ]))
             else:
-                raise TypeError("given an expression, replace() expects another expression or a callable")
+                raise TypeError(
+                    "given an expression, replace() expects "
+                    "another expression or a callable")
         elif callable(query):
             _query = query
 
             if callable(value):
                 _value = lambda expr, result: value(expr)
             else:
-                raise TypeError("given a callable, replace() expects another callable")
+                raise TypeError(
+                    "given a callable, replace() expects "
+                    "another callable")
         else:
-            raise TypeError("first argument to replace() must be a type, an expression or a callable")
+            raise TypeError(
+                "first argument to replace() must be a "
+                "type, an expression or a callable")
 
         mapping = {}
 
@@ -1232,18 +1280,21 @@ class Basic(object):
         query = _make_find_query(query)
         return sum(bool(query(sub)) for sub in preorder_traversal(self))
 
-    def matches(self, expr, repl_dict={}):
+    def matches(self, expr, repl_dict={}, old=False):
         """
-        Helper method for match() - switches the pattern and expr.
+        Helper method for match() that looks for a match between wild symbols
+        in self and expressions in expr.
 
-        Can be used to solve linear equations:
+        Examples
+        ========
 
-        >>> from sympy import Symbol, Wild, Integer
-        >>> a,b = map(Symbol, 'ab')
+        >>> from sympy import symbols, Wild, Integer, Basic
+        >>> a, b, c = symbols('a b c')
         >>> x = Wild('x')
-        >>> (a+b*x).matches(Integer(0))
-        {x_: -a/b}
-
+        >>> Basic(a + x, x).matches(Basic(a + b, c)) is None
+        True
+        >>> Basic(a + x, x).matches(Basic(a + b + c, b + c))
+        {x_: b + c}
         """
         expr = sympify(expr)
         if not isinstance(expr, self.__class__):
@@ -1259,12 +1310,12 @@ class Basic(object):
         for arg, other_arg in zip(self.args, expr.args):
             if arg == other_arg:
                 continue
-            d = arg.xreplace(d).matches(other_arg, d)
+            d = arg.xreplace(d).matches(other_arg, d, old=old)
             if d is None:
                 return None
         return d
 
-    def match(self, pattern):
+    def match(self, pattern, old=False):
         """
         Pattern matching.
 
@@ -1294,15 +1345,32 @@ class Basic(object):
         >>> (p*q**r).xreplace(e.match(p*q**r))
         4*x**2
 
+        The ``old`` flag will give the old-style pattern matching where
+        expressions and patterns are essentially solved to give the
+        match. Both of the following give None unless ``old=True``:
+
+        >>> (x - 2).match(p - x, old=True)
+        {p_: 2*x - 2}
+        >>> (2/x).match(p*x, old=True)
+        {p_: 2/x**2}
+
         """
+        from sympy import signsimp, count_ops
         pattern = sympify(pattern)
-        return pattern.matches(self)
+        s = signsimp(self)
+        p = signsimp(pattern)
+        # if we still have the same relationship between the types of
+        # input, then use the sign simplified forms
+        if (pattern.func == self.func) and (s.func == p.func):
+            rv = p.matches(s, old=old)
+        else:
+            rv = pattern.matches(self, old=old)
+        return rv
 
     def count_ops(self, visual=None):
         """wrapper for count_ops that returns the operation count."""
         from sympy import count_ops
         return count_ops(self, visual)
-        return sum(a.count_ops(visual) for a in self.args)
 
     def doit(self, **hints):
         """Evaluate objects that are not evaluated by default like limits,
@@ -1337,26 +1405,37 @@ class Basic(object):
         return self.func(*terms)
 
     def rewrite(self, *args, **hints):
-        """Rewrites expression containing applications of functions
-           of one kind in terms of functions of different kind. For
-           example you can rewrite trigonometric functions as complex
-           exponentials or combinatorial functions as gamma function.
+        """ Rewrite functions in terms of other functions.
 
-           As a pattern this function accepts a list of functions to
-           to rewrite (instances of DefinedFunction class). As rule
-           you can use string or a destination function instance (in
-           this case rewrite() will use the str() function).
+        Rewrites expression containing applications of functions
+        of one kind in terms of functions of different kind. For
+        example you can rewrite trigonometric functions as complex
+        exponentials or combinatorial functions as gamma function.
 
-           There is also possibility to pass hints on how to rewrite
-           the given expressions. For now there is only one such hint
-           defined called 'deep'. When 'deep' is set to False it will
-           forbid functions to rewrite their contents.
+        As a pattern this function accepts a list of functions to
+        to rewrite (instances of DefinedFunction class). As rule
+        you can use string or a destination function instance (in
+        this case rewrite() will use the str() function).
 
-           >>> from sympy import sin, exp, I
-           >>> from sympy.abc import x, y
+        There is also possibility to pass hints on how to rewrite
+        the given expressions. For now there is only one such hint
+        defined called 'deep'. When 'deep' is set to False it will
+        forbid functions to rewrite their contents.
 
-           >>> sin(x).rewrite(sin, exp)
-           -I*(exp(I*x) - exp(-I*x))/2
+        >>> from sympy import sin, exp, I
+        >>> from sympy.abc import x, y
+
+        Unspecified pattern:
+        >>> sin(x).rewrite(exp)
+        -I*(exp(I*x) - exp(-I*x))/2
+
+        Pattern as a single function:
+        >>> sin(x).rewrite(sin, exp)
+        -I*(exp(I*x) - exp(-I*x))/2
+
+        Pattern as a list of functions:
+        >>> sin(x).rewrite([sin, ], exp)
+        -I*(exp(I*x) - exp(-I*x))/2
 
         """
         if self.is_Atom or not args:
@@ -1381,6 +1460,7 @@ class Basic(object):
                 else:
                     return self
 
+
 class Atom(Basic):
     """
     A parent class for atomic things. An atom is an expression with no subexpressions.
@@ -1396,7 +1476,7 @@ class Atom(Basic):
 
     __slots__ = []
 
-    def matches(self, expr, repl_dict={}):
+    def matches(self, expr, repl_dict={}, old=False):
         if self == expr:
             return repl_dict
 
@@ -1406,10 +1486,6 @@ class Atom(Basic):
     def doit(self, **hints):
         return self
 
-    @deprecated
-    def __contains__(self, obj):
-        return (self == obj)
-
     @classmethod
     def class_key(cls):
         return 2, 0, cls.__name__
@@ -1418,6 +1494,16 @@ class Atom(Basic):
     def sort_key(self, order=None):
         from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
+
+    @property
+    def _sorted_args(self):
+        # this is here as a safeguard against accidentally using _sorted_args
+        # on Atoms -- they cannot be rebuilt as atom.func(*atom._sorted_args)
+        # since there are no args. So the calling routine should be checking
+        # to see that this property is not called for Atoms.
+        raise AttributeError('Atoms have no args. It might be necessary'
+        ' to make a check for Atoms in the calling code.')
+
 
 def _aresame(a, b):
     """Return True if a and b are structurally the same, else False.
@@ -1446,6 +1532,7 @@ def _aresame(a, b):
             return False
     else:
         return True
+
 
 def _atomic(e):
     """Return atom-like quantities as far as substitution is
@@ -1487,49 +1574,76 @@ def _atomic(e):
             atoms.add(p)
     return atoms
 
+
 class preorder_traversal(object):
     """
     Do a pre-order traversal of a tree.
 
     This iterator recursively yields nodes that it has visited in a pre-order
-    fashion. That is, it yields the current node then descends through the tree
-    breadth-first to yield all of a node's children's pre-order traversal.
+    fashion. That is, it yields the current node then descends through the
+    tree breadth-first to yield all of a node's children's pre-order
+    traversal.
+
+
+    For an expression, the order of the traversal depends on the order of
+    .args, which in many cases can be arbitrary.
 
     Parameters
-    ----------
+    ==========
     node : sympy expression
         The expression to traverse.
+    keys : (default None) sort key(s)
+        The key(s) used to sort args of Basic objects. When None, args of Basic
+        objects are processed in arbitrary order. If key is defined, it will
+        be passed along to ordered() as the only key(s) to use to sort the
+        arguments; if ``key`` is simply True then the default keys of ordered
+        will be used.
 
     Yields
-    ------
+    ======
     subtree : sympy expression
         All of the subtrees in the tree.
 
     Examples
-    --------
+    ========
+
     >>> from sympy import symbols
+    >>> from sympy import symbols, default_sort_key
     >>> from sympy.core.basic import preorder_traversal
     >>> x, y, z = symbols('x y z')
-    >>> set(preorder_traversal((x+y)*z)) == set([z, x + y, z*(x + y), x, y])
-    True
+
+    The nodes are returned in the order that they are encountered unless key
+    is given; simply passing key=True will guarantee that the traversal is
+    unique.
+
+    >>> list(preorder_traversal((x + y)*z, keys=None)) # doctest: +SKIP
+    [z*(x + y), z, x + y, y, x]
+    >>> list(preorder_traversal((x + y)*z, keys=True))
+    [z*(x + y), z, x + y, x, y]
 
     """
-    def __init__(self, node):
+    def __init__(self, node, keys=None):
         self._skip_flag = False
-        self._pt = self._preorder_traversal(node)
+        self._pt = self._preorder_traversal(node, keys)
 
-    def _preorder_traversal(self, node):
+    def _preorder_traversal(self, node, keys):
         yield node
         if self._skip_flag:
             self._skip_flag = False
             return
         if isinstance(node, Basic):
-            for arg in node.args:
-                for subtree in self._preorder_traversal(arg):
+            args = node.args
+            if keys:
+                if keys != True:
+                    args = ordered(args, keys, default=False)
+                else:
+                    args = ordered(args)
+            for arg in args:
+                for subtree in self._preorder_traversal(arg, keys):
                     yield subtree
         elif iterable(node):
             for item in node:
-                for subtree in self._preorder_traversal(item):
+                for subtree in self._preorder_traversal(item, keys):
                     yield subtree
 
     def skip(self):
@@ -1557,6 +1671,7 @@ class preorder_traversal(object):
 
     def __iter__(self):
         return self
+
 
 def _make_find_query(query):
     """Convert the argument of Basic.find() into a callable"""

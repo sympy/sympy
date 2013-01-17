@@ -3,6 +3,7 @@
 from sympy.core import Basic, Add, sympify
 from sympy.core.exprtools import gcd_terms
 
+
 def together(expr, deep=False):
     """
     Denest and combine rational expressions using symbolic methods.
@@ -57,10 +58,7 @@ def together(expr, deep=False):
     """
     def _together(expr):
         if isinstance(expr, Basic):
-            if expr.is_commutative is False:
-                numer, denom = expr.as_numer_denom()
-                return numer/denom
-            elif expr.is_Atom or (expr.is_Function and not deep):
+            if expr.is_Atom or (expr.is_Function and not deep):
                 return expr
             elif expr.is_Add:
                 return gcd_terms(map(_together, Add.make_args(expr)))

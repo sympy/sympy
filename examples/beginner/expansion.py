@@ -8,6 +8,7 @@ Demonstrates how to expand expressions.
 import sympy
 from sympy import pprint
 
+
 def main():
     a = sympy.Symbol('a')
     b = sympy.Symbol('b')

@@ -6,7 +6,7 @@ from sympy.core.compatibility import is_sequence
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
-from sympy.integrals.risch import heurisch
+from sympy.integrals.heurisch import heurisch
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities import xthreaded, flatten
 from sympy.utilities.misc import filldedent
@@ -16,6 +16,7 @@ from sympy.functions import Piecewise, sqrt, sign
 from sympy.geometry import Curve
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.series import limit
+
 
 def _process_limits(*symbols):
     """Convert the symbols-related limits into proper limits,
@@ -58,6 +59,7 @@ def _process_limits(*symbols):
         raise ValueError('Invalid limits given: %s' % str(symbols))
 
     return limits, sign
+
 
 class Integral(Expr):
     """Represents unevaluated integral."""
@@ -126,7 +128,8 @@ class Integral(Expr):
             # no symbols provided -- let's compute full anti-derivative
             free = function.free_symbols
             if len(free) != 1:
-                raise ValueError("specify variables of integration for %s" % function)
+                raise ValueError(
+                    "specify variables of integration for %s" % function)
             limits, sign = [Tuple(s) for s in free], 1
 
         while isinstance(function, Integral):
@@ -138,7 +141,7 @@ class Integral(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
-        obj.is_commutative = function.is_commutative # limits already checked
+        obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
 
@@ -272,7 +275,7 @@ class Integral(Expr):
         is_number
         """
         if (self.function.is_zero or
-            any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
+                any(len(xab) == 3 and xab[1] == xab[2] for xab in self.limits)):
             return True
         if not self.free_symbols and self.function.is_number:
             # the integrand is a number and the limits are numerical
@@ -325,9 +328,9 @@ class Integral(Expr):
         for xab in limits:
             if len(xab) == 1:
                 isyms.add(xab[0])
-                continue # it may be removed later
-            elif len(xab) == 3 and xab[1] == xab[2]: # XXX naive equality test
-                return True # integral collapsed
+                continue  # it may be removed later
+            elif len(xab) == 3 and xab[1] == xab[2]:  # XXX naive equality test
+                return True  # integral collapsed
             if xab[0] in isyms:
                 # take it out of the symbols since it will be replace
                 # with whatever the limits of the integral are
@@ -385,7 +388,7 @@ class Integral(Expr):
         return Integral(f, *limits)
 
     def transform(self, x, u, inverse=False):
-        """
+        r"""
         Performs a change of variables from `x` to `u` using the relationship
         given by `x` and `u` which will define the transformations `f` and `F`
         (which are inverses of each other) as follows:
@@ -404,18 +407,11 @@ class Integral(Expr):
         Once f and F have been identified, the transformation is made as
         follows:
 
-                       F(b)
-          b              /
-          /             |
-         |              |       d
-         |  x dx  -->   |  f(x)*--(f(x)) dx  where F(x) is the inverse of f(x)
-         |              |       dx
-        /               |
-        a              /
-                      F(a)
+        .. math:: \int_a^b x \mathrm{d}x \rightarrow \int_{F(a)}^{F(b)} f(x)
+                  \frac{\mathrm{d}}{\mathrm{d}x}
 
-        where the limits and integrand have been corrected so as to retain the
-        same value after integration.
+        where `F(x)` is the inverse of `f(x)` and the limits and integrand have
+        been corrected so as to retain the same value after integration.
 
         Notes
         =====
@@ -502,8 +498,9 @@ class Integral(Expr):
             # when this is removed, update the docstring
             from sympy.utilities.exceptions import SymPyDeprecationWarning
             SymPyDeprecationWarning(
-            feature="transform(x, f(x), inverse=True)",
-            useinstead="transform(f(x), x)"
+                feature="transform(x, f(x), inverse=True)",
+                useinstead="transform(f(x), x)",
+                issue=3380, deprecated_since_version="0.7.2",
             ).warn()
             # in the old style x and u contained the same variable so
             # don't worry about using the old-style feature with the
@@ -515,7 +512,8 @@ class Integral(Expr):
 
         xfree = x.free_symbols.intersection(self.variables)
         if len(xfree) > 1:
-            raise ValueError('F(x) can only contain one of: %s' % self.variables)
+            raise ValueError(
+                'F(x) can only contain one of: %s' % self.variables)
         xvar = xfree.pop() if xfree else d
 
         if xvar not in self.variables:
@@ -647,9 +645,14 @@ class Integral(Expr):
         deep = hints.get('deep', True)
         meijerg = hints.get('meijerg', None)
         conds = hints.get('conds', 'piecewise')
+        risch = hints.get('risch', None)
+
         if conds not in ['separate', 'piecewise', 'none']:
-            raise ValueError('conds must be one of "separate", "piecewise", ' \
+            raise ValueError('conds must be one of "separate", "piecewise", '
                              '"none", got: %s' % conds)
+
+        if risch and any(len(xab) > 1 for xab in self.limits):
+            raise ValueError('risch=True is only allowed for indefinite integrals.')
 
         # check for the trivial case of equal upper and lower limits
         if self.is_zero:
@@ -666,7 +669,8 @@ class Integral(Expr):
         # There is no trivial answer, so continue
 
         undone_limits = []
-        ulj = set() # free symbols of any undone limits' upper and lower limits
+        # ulj = free symbols of any undone limits' upper and lower limits
+        ulj = set()
         for xab in self.limits:
             # compute uli, the free symbols in the
             # Upper and Lower limits of limit I
@@ -709,7 +713,7 @@ class Integral(Expr):
                                           (Integral(function, (x, a, b)), True))
                         elif conds == 'separate':
                             if len(self.limits) != 1:
-                                raise ValueError('conds=separate not supported in ' \
+                                raise ValueError('conds=separate not supported in '
                                                  'multiple integrals')
                             ret = f, cond
                         else:
@@ -718,8 +722,8 @@ class Integral(Expr):
 
             meijerg1 = meijerg
             if len(xab) == 3 and xab[1].is_real and xab[2].is_real \
-               and not function.is_Poly and \
-               (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)):
+                and not function.is_Poly and \
+                    (xab[1].has(oo, -oo) or xab[2].has(oo, -oo)):
                 ret = try_meijerg(function, xab)
                 if ret is not None:
                     function = ret
@@ -737,7 +741,7 @@ class Integral(Expr):
             if meijerg1 is False and meijerg is True:
                 antideriv = None
             else:
-                antideriv = self._eval_integral(function, xab[0], meijerg1)
+                antideriv = self._eval_integral(function, xab[0], meijerg=meijerg1, risch=risch)
                 if antideriv is None and meijerg1 is True:
                     ret = try_meijerg(function, xab)
                     if ret is not None:
@@ -782,12 +786,15 @@ class Integral(Expr):
             return self.func(*([function] + undone_limits))
         return function
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        if not deep:
-            return self
-        else:
-            return Integral(self.function.expand(deep=deep, **hints),\
-            *self.limits)
+    def _eval_adjoint(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.adjoint(), *self.limits)
+        return None
+
+    def _eval_conjugate(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.conjugate(), *self.limits)
+        return None
 
     def _eval_derivative(self, sym):
         """Evaluate the derivative of the current Integral object by
@@ -842,7 +849,7 @@ class Integral(Expr):
             a = b = None
             x = limit[0]
 
-        if limits: # f is the argument to an integral
+        if limits:  # f is the argument to an integral
             f = Integral(f, *tuple(limits))
 
         # assemble the pieces
@@ -874,45 +881,81 @@ class Integral(Expr):
             rv += Integral(arg, Tuple(x, a, b))
         return rv
 
-    def _eval_integral(self, f, x, meijerg=None):
-        """Calculate the anti-derivative to the function f(x).
-
-        This is a powerful function that should in theory be able to integrate
-        everything that can be integrated. If you find something, that it
-        doesn't, it is easy to implement it.
-
-        (1) Simple heuristics (based on pattern matching and integral table):
-
-         - most frequently used functions (e.g. polynomials)
-         - functions non-integrable by any of the following algorithms (e.g.
-           exp(-x**2))
-
-        (2) Integration of rational functions:
-
-         (a) using apart() - apart() is full partial fraction decomposition
-             procedure based on Bronstein-Salvy algorithm. It gives formal
-             decomposition with no polynomial factorization at all (so it's
-             fast and gives the most general results). However it needs an
-             implementation of the RootsOf class.
-         (b) using Trager's algorithm - possibly faster than (a) but needs
-             implementation :)
-
-        (3) Whichever implementation of pmInt (Mateusz, Kirill's or a
-            combination of both).
-
-          - this way we can handle efficiently huge class of elementary and
-            special functions
-
-        (4) Recursive Risch algorithm as described in Bronstein's integration
-            tutorial.
-
-          - this way we can handle those integrable functions for which (3)
-            fails
-
-        (5) Powerful heuristics based mostly on user defined rules.
-
-         - handle complicated, rarely used cases
+    def _eval_integral(self, f, x, meijerg=None, risch=None):
         """
+        Calculate the anti-derivative to the function f(x).
+
+        The following algorithms are applied (roughly in this order):
+
+        1. Simple heuristics (based on pattern matching and integral table):
+
+           - most frequently used functions (e.g. polynomials, products of trig functions)
+
+        2. Integration of rational functions:
+
+           - A complete algorithm for integrating rational functions is
+             implemented (the Lazard-Rioboo-Trager algorithm).  The algorithm
+             also uses the partial fraction decomposition algorithm
+             implemented in apart() as a preprocessor to make this process
+             faster.  Note that the integral of a rational function is always
+             elementary, but in general, it may include a RootSum.
+
+        3. Full Risch algorithm:
+
+           - The Risch algorithm is a complete decision
+             procedure for integrating elementary functions, which means that
+             given any elementary function, it will either compute an
+             elementary antiderivative, or else prove that none exists.
+             Currently, part of transcendental case is implemented, meaning
+             elementary integrals containing exponentials, logarithms, and
+             (soon!) trigonometric functions can be computed.  The algebraic
+             case, e.g., functions containing roots, is much more difficult
+             and is not implemented yet.
+
+           - If the routine fails (because the integrand is not elementary, or
+             because a case is not implemented yet), it continues on to the
+             next algorithms below.  If the routine proves that the integrals
+             is nonelementary, it still moves on to the algorithms below,
+             because we might be able to find a closed-form solution in terms
+             of special functions.  If risch=True, however, it will stop here.
+
+        4. The Meijer G-Function algorithm:
+
+           - This algorithm works by first rewriting the integrand in terms of
+             very general Meijer G-Function (meijerg in SymPy), integrating
+             it, and then rewriting the result back, if possible.  This
+             algorithm is particularly powerful for definite integrals (which
+             is actually part of a different method of Integral), since it can
+             compute closed-form solutions of definite integrals even when no
+             closed-form indefinite integral exists.  But it also is capable
+             of computing many indefinite integrals as well.
+
+           - Another advantage of this method is that it can use some results
+             about the Meijer G-Function to give a result in terms of a
+             Piecewise expression, which allows to express conditionally
+             convergent integrals.
+
+           - Setting meijerg=True will cause integrate() to use only this
+             method.
+
+        5. The Heuristic Risch algorithm:
+
+           - This is a heuristic version of the Risch algorithm, meaning that
+             it is not deterministic.  This is tried as a last resort because
+             it can be very slow.  It is still used because not enough of the
+             full Risch algorithm is implemented, so that there are still some
+             integrals that can only be computed using this method.  The goal
+             is to implement enough of the Risch and Meijer G methods so that
+             this can be deleted.
+
+        """
+        from sympy.integrals.risch import risch_integrate
+
+        if risch:
+            try:
+                return risch_integrate(f, x)
+            except NotImplementedError:
+                return None
 
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
@@ -937,9 +980,30 @@ class Integral(Expr):
         if poly is not None and not meijerg:
             return poly.integrate().as_expr()
 
+        if risch is not False:
+            try:
+                result, i = risch_integrate(f, x, separate_integral=True)
+            except NotImplementedError:
+                pass
+            else:
+                if i:
+                    # There was a nonelementary integral. Try integrating it.
+                    return result + i.doit(risch=False)
+                else:
+                    return result
+
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
+
+        # Note that in general, this is a bad idea, because Integral(g1) +
+        # Integral(g2) might not be computable, even if Integral(g1 + g2) is.
+        # For example, Integral(x**x + x**x*log(x)).  But many heuristics only
+        # work term-wise.  So we compute this step last, after trying
+        # risch_integrate.  We also try risch_integrate again in this loop,
+        # because maybe the integral is a sum of an elementary part and a
+        # nonelementary part (like erf(x) + exp(x)).  risch_integrate() is
+        # quite fast, so this is acceptable.
         parts = []
         args = Add.make_args(f)
         for g in args:
@@ -960,7 +1024,8 @@ class Integral(Expr):
                     h_order_expr = self._eval_integral(order_term.expr, x)
 
                     if h_order_expr is not None:
-                        h_order_term = order_term.func(h_order_expr, *order_term.variables)
+                        h_order_term = order_term.func(
+                            h_order_expr, *order_term.variables)
                         parts.append(coeff*(h + h_order_term))
                         continue
 
@@ -1005,8 +1070,20 @@ class Integral(Expr):
                     parts.append(coeff * h)
                     continue
 
-            if not meijerg:
-                # fall back to the more general algorithm
+                # Try risch again.
+                if risch is not False:
+                    try:
+                        h, i = risch_integrate(g, x, separate_integral=True)
+                    except NotImplementedError:
+                        h = None
+                    else:
+                        if i:
+                            h = h + i.doit(risch=False)
+
+                        parts.append(coeff*h)
+                        continue
+
+                # fall back to heurisch
                 try:
                     h = heurisch(g, x, hints=[])
                 except PolynomialError:
@@ -1043,8 +1120,10 @@ class Integral(Expr):
             if not h and len(args) == 1:
                 f = f.expand(mul=True, deep=False)
                 if f.is_Add:
-                    return self._eval_integral(f, x, meijerg)
-
+                    # Note: risch will be identical on the expanded
+                    # expression, but maybe it will be able to pick out parts,
+                    # like x*(exp(x) + erf(x)).
+                    return self._eval_integral(f, x, meijerg=meijerg, risch=risch)
 
             if h is not None:
                 parts.append(coeff * h)
@@ -1058,7 +1137,8 @@ class Integral(Expr):
             yield integrate(term, *self.limits)
 
     def _eval_nseries(self, x, n, logx):
-        terms, order = self.function.nseries(x, n=n, logx=logx).as_coeff_add(C.Order)
+        terms, order = self.function.nseries(
+            x, n=n, logx=logx).as_coeff_add(C.Order)
         return integrate(terms, *self.limits) + Add(*order)*x
 
     def _eval_subs(self, old, new):
@@ -1154,6 +1234,11 @@ class Integral(Expr):
             integrand = integrand.subs(old, new)
         return Integral(integrand, *limits)
 
+    def _eval_transpose(self):
+        if all(map(lambda x: x.is_real, flatten(self.limits))):
+            return Integral(self.function.transpose(), *self.limits)
+        return None
+
     def as_sum(self, n, method="midpoint"):
         """
         Approximates the integral by a sum.
@@ -1219,7 +1304,8 @@ class Integral(Expr):
 
         limits = self.limits
         if len(limits) > 1:
-            raise NotImplementedError("Multidimensional midpoint rule not implemented yet")
+            raise NotImplementedError(
+                "Multidimensional midpoint rule not implemented yet")
         else:
             limit = limits[0]
         if n <= 0:
@@ -1228,7 +1314,7 @@ class Integral(Expr):
             raise NotImplementedError("Infinite summation not yet implemented")
         sym, lower_limit, upper_limit = limit
         dx = (upper_limit - lower_limit)/n
-        result = 0.
+        result = 0
         for i in range(n):
             if method == "midpoint":
                 xi = lower_limit + i*dx + dx/2
@@ -1274,14 +1360,33 @@ def integrate(*args, **kwargs):
 
     **Strategy**
 
-    SymPy uses various approaches to integration. One method is to find
-    an antiderivative for the integrand, and then use the fundamental
+    SymPy uses various approaches to definite integration. One method is to
+    find an antiderivative for the integrand, and then use the fundamental
     theorem of calculus. Various functions are implemented to integrate
     polynomial, rational and trigonometric functions, and integrands
-    containing DiracDelta terms. There is also a (very successful,
-    albeit somewhat slow) general implementation of the heuristic risch
-    algorithm. See the docstring of Integral._eval_integral() for more
+    containing DiracDelta terms.
+
+    SymPy also implements the part of the Risch algorithm, which is a decision
+    procedure for integrating elementary functions, i.e., the algorithm can
+    either find an elementary antiderivative, or prove that one does not
+    exist.  There is also a (very successful, albeit somewhat slow) general
+    implementation of the heuristic Risch algorithm.  This algorithm will
+    eventually be phased out as more of the full Risch algorithm is
+    implemented. See the docstring of Integral._eval_integral() for more
     details on computing the antiderivative using algebraic methods.
+
+    The option risch=True can be used to use only the (full) Risch algorithm.
+    This is useful if you want to know if an elementary function has an
+    elementary antiderivative.  If the indefinite Integral returned by this
+    function is an instance of NonElementaryIntegral, that means that the
+    Risch algorithm has proven that integral to be non-elementary.  Note that
+    by default, additional methods (such as the Meijer G method outlined
+    below) are tried on these integrals, as they may be expressible in terms
+    of special functions, so if you only care about elementary answers, use
+    risch=True.  Also note that an unevaluated Integral returned by this
+    function is not necessarily a NonElementaryIntegral, even with risch=True,
+    as it may just be an indication that the particular part of the Risch
+    algorithm needed to integrate that function is not yet implemented.
 
     Another family of strategies comes from re-writing the integrand in
     terms of so-called Meijer G-functions. Indefinite integrals of a
@@ -1352,7 +1457,8 @@ def integrate(*args, **kwargs):
     in interactive sessions and should be avoided in library code.
 
     >>> integrate(x**a*exp(-x), (x, 0, oo)) # same as conds='piecewise'
-    Piecewise((gamma(a + 1), -re(a) < 1), (Integral(x**a*exp(-x), (x, 0, oo)), True))
+    Piecewise((gamma(a + 1), -re(a) < 1),
+        (Integral(x**a*exp(-x), (x, 0, oo)), True))
 
     >>> integrate(x**a*exp(-x), (x, 0, oo), conds='none')
     gamma(a + 1)
@@ -1364,15 +1470,18 @@ def integrate(*args, **kwargs):
     ========
 
     Integral, Integral.doit
+
     """
     meijerg = kwargs.pop('meijerg', None)
     conds = kwargs.pop('conds', 'piecewise')
+    risch = kwargs.pop('risch', None)
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep = False, meijerg = meijerg, conds = conds)
+        return integral.doit(deep=False, meijerg=meijerg, conds=conds, risch=risch)
     else:
         return integral
+
 
 @xthreaded
 def line_integrate(field, curve, vars):
@@ -1396,7 +1505,8 @@ def line_integrate(field, curve, vars):
     """
     F = sympify(field)
     if not F:
-        raise ValueError("Expecting function specifying field as first argument.")
+        raise ValueError(
+            "Expecting function specifying field as first argument.")
     if not isinstance(curve, Curve):
         raise ValueError("Expecting Curve entity as second argument.")
     if not is_sequence(vars):
@@ -1419,5 +1529,5 @@ def line_integrate(field, curve, vars):
         Ft = Ft.subs(var, _f)
     Ft = Ft * sqrt(dldt)
 
-    integral = Integral(Ft, curve.limits).doit(deep = False)
+    integral = Integral(Ft, curve.limits).doit(deep=False)
     return integral

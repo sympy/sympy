@@ -3,6 +3,7 @@ from util import interpolate, rinterpolate, create_bounds, update_bounds
 
 from sympy.core.compatibility import callable
 
+
 class ColorGradient(object):
     colors = [0.4, 0.4, 0.4], [0.9, 0.9, 0.9]
     intervals = 0.0, 1.0
@@ -26,20 +27,21 @@ class ColorGradient(object):
     def _find_interval(self, v):
         m = len(self.intervals)
         i = 0
-        while i < m-1 and self.intervals[i] <= v:
+        while i < m - 1 and self.intervals[i] <= v:
             i += 1
         return i
 
     def _interpolate_axis(self, axis, v):
         i = self._find_interval(v)
-        v = rinterpolate(self.intervals[i-1], self.intervals[i], v)
-        return interpolate(self.colors[i-1][axis], self.colors[i][axis], v)
+        v = rinterpolate(self.intervals[i - 1], self.intervals[i], v)
+        return interpolate(self.colors[i - 1][axis], self.colors[i][axis], v)
 
     def __call__(self, r, g, b):
         c = self._interpolate_axis
         return c(0, r), c(1, g), c(2, b)
 
-default_color_schemes = {} # defined at the bottom of this file
+default_color_schemes = {}  # defined at the bottom of this file
+
 
 class ColorScheme(object):
 
@@ -169,7 +171,7 @@ class ColorScheme(object):
         # when vars are given explicitly, any vars
         # not given are marked 'unbound' as to not
         # be accidentally used in an expression
-        vars = [Symbol('unbound%i'%(i)) for i in xrange(1,6)]
+        vars = [Symbol('unbound%i' % (i)) for i in xrange(1, 6)]
         # interpret as t
         if len(args) == 1:
             vars[3] = args[0]
@@ -218,7 +220,7 @@ class ColorScheme(object):
         except AssertionError, ae:
             raise ValueError("Color function needs to return 3-tuple r,g,b.")
         except Exception, ie:
-            pass # color function probably not valid at 0,0,0,0,0
+            pass  # color function probably not valid at 0,0,0,0,0
 
     def __call__(self, x, y, z, u, v):
         try:
@@ -327,9 +329,9 @@ default_color_schemes['zfade3'] = ColorScheme(z, (None, None, z),
                                                1.00, (1.0, 0.2, 0.2)])
 
 default_color_schemes['zfade4'] = ColorScheme(z, (None, None, z),
-                                              [0.0,  (0.3, 0.3, 1.0),
+                                              [0.0, (0.3, 0.3, 1.0),
                                                0.30, (0.3, 1.0, 0.3),
-                                               0.55, (0.95,1.0, 0.2),
-                                               0.65, (1.0,0.95, 0.2),
+                                               0.55, (0.95, 1.0, 0.2),
+                                               0.65, (1.0, 0.95, 0.2),
                                                0.85, (1.0, 0.7, 0.2),
-                                               1.0,  (1.0, 0.3, 0.2)])
+                                               1.0, (1.0, 0.3, 0.2)])

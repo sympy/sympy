@@ -12,9 +12,10 @@ from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
 
+
 def _product(a, b):
     p = 1
-    for k in xrange(a, b+1):
+    for k in xrange(a, b + 1):
         p *= k
     return p
 
@@ -83,7 +84,7 @@ class fibonacci(Function):
         if n.is_Integer:
             n = int(n)
             if n < 0:
-                return S.NegativeOne**(n+1) * fibonacci(-n)
+                return S.NegativeOne**(n + 1) * fibonacci(-n)
             if sym is None:
                 return Integer(cls._fib(n))
             else:
@@ -91,6 +92,7 @@ class fibonacci(Function):
                     raise ValueError("Fibonacci polynomials are defined "
                        "only for positive integer indices.")
                 return cls._fibpoly(n).subs(_sym, sym)
+
 
 class lucas(Function):
     """
@@ -125,7 +127,7 @@ class lucas(Function):
     @classmethod
     def eval(cls, n):
         if n.is_Integer:
-            return fibonacci(n+1) + fibonacci(n-1)
+            return fibonacci(n + 1) + fibonacci(n - 1)
 
 
 #----------------------------------------------------------------------------#
@@ -213,22 +215,22 @@ class bernoulli(Function):
     @staticmethod
     def _calc_bernoulli(n):
         s = 0
-        a = int(C.binomial(n+3, n-6))
-        for j in xrange(1, n//6+1):
+        a = int(C.binomial(n + 3, n - 6))
+        for j in xrange(1, n//6 + 1):
             s += a * bernoulli(n - 6*j)
             # Avoid computing each binomial coefficient from scratch
-            a *= _product(n-6 - 6*j + 1, n-6*j)
-            a //= _product(6*j+4, 6*j+9)
+            a *= _product(n - 6 - 6*j + 1, n - 6*j)
+            a //= _product(6*j + 4, 6*j + 9)
         if n % 6 == 4:
-            s = -Rational(n+3, 6) - s
+            s = -Rational(n + 3, 6) - s
         else:
-            s = Rational(n+3, 3) - s
-        return s / C.binomial(n+3, n)
+            s = Rational(n + 3, 3) - s
+        return s / C.binomial(n + 3, n)
 
     # We implement a specialized memoization scheme to handle each
     # case modulo 6 separately
-    _cache = {0: S.One, 2:Rational(1,6), 4:Rational(-1,30)}
-    _highest = {0:0, 2:2, 4:4}
+    _cache = {0: S.One, 2: Rational(1, 6), 4: Rational(-1, 30)}
+    _highest = {0: 0, 2: 2, 4: 4}
 
     @classmethod
     def eval(cls, n, sym=None):
@@ -237,8 +239,10 @@ class bernoulli(Function):
                 if n is S.Zero:
                     return S.One
                 elif n is S.One:
-                    if sym is None: return -S.Half
-                    else:           return sym - S.Half
+                    if sym is None:
+                        return -S.Half
+                    else:
+                        return sym - S.Half
                 # Bernoulli numbers
                 elif sym is None:
                     if n.is_odd:
@@ -255,7 +259,7 @@ class bernoulli(Function):
                     # To avoid excessive recursion when, say, bernoulli(1000) is
                     # requested, calculate and cache the entire sequence ... B_988,
                     # B_994, B_1000 in increasing order
-                    for i in xrange(highest_cached+6, n+6, 6):
+                    for i in xrange(highest_cached + 6, n + 6, 6):
                         b = cls._calc_bernoulli(i)
                         cls._cache[i] = b
                         cls._highest[case] = i
@@ -264,7 +268,7 @@ class bernoulli(Function):
                 else:
                     n, result = int(n), []
                     for k in xrange(n + 1):
-                        result.append(C.binomial(n, k)*cls(k)*sym**(n-k))
+                        result.append(C.binomial(n, k)*cls(k)*sym**(n - k))
                     return Add(*result)
             else:
                 raise ValueError("Bernoulli numbers are defined only"
@@ -281,32 +285,32 @@ class bell(Function):
     r"""
     Bell numbers / Bell polynomials
 
-    The Bell numbers satisfy `B_0 = 1` and::
+    The Bell numbers satisfy `B_0 = 1` and
 
-    .. math:: B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k
+    .. math:: B_n = \sum_{k=0}^{n-1} \binom{n-1}{k} B_k.
 
-    They are also given by::
+    They are also given by:
 
-    .. math:: B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}
+    .. math:: B_n = \frac{1}{e} \sum_{k=0}^{\infty} \frac{k^n}{k!}.
 
-    The Bell polynomials are given by `B_0(x) = 1` and::
+    The Bell polynomials are given by `B_0(x) = 1` and
 
-    .. math:: B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x)
+    .. math:: B_n(x) = x \sum_{k=1}^{n-1} \binom{n-1}{k-1} B_{k-1}(x).
 
     The second kind of Bell polynomials (are sometimes called "partial" Bell
-    polynomials or incomplete Bell polynomials) are defined as:
+    polynomials or incomplete Bell polynomials) are defined as
 
     .. math:: B_{n,k}(x_1, x_2,\dotsc x_{n-k+1}) =
             \sum_{j_1+j_2+j_2+\dotsb=k \atop j_1+2j_2+3j_2+\dotsb=n}
                 \frac{n!}{j_1!j_2!\dotsb j_{n-k+1}!}
                 \left(\frac{x_1}{1!} \right)^{j_1}
                 \left(\frac{x_2}{2!} \right)^{j_2} \dotsb
-                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}
+                \left(\frac{x_{n-k+1}}{(n-k+1)!} \right) ^{j_{n-k+1}}.
 
-    * bell(n) gives the nth Bell number, `B_n`
-    * bell(n, x) gives the nth Bell polynomial, `B_n(x)`
-    * bell(n, k, (x1, x2, ...)) gives Bell polynomial of the second kind,
-            `B_n_k(x_1, x_2, \dotsc, x_{n-k+1})`
+    * bell(n) gives the `n^{th}` Bell number, `B_n`.
+    * bell(n, x) gives the `n^{th}` Bell polynomial, `B_n(x)`.
+    * bell(n, k, (x1, x2, ...)) gives Bell polynomials of the second kind,
+      `B_{n,k}(x_1, x_2, \dotsc, x_{n-k+1})`.
 
     Notes
     =====
@@ -347,7 +351,7 @@ class bell(Function):
         s = 1
         a = 1
         for k in xrange(1, n):
-            a = a * (n-k) // k
+            a = a * (n - k) // k
             s += a * prev[k]
         return s
 
@@ -356,9 +360,9 @@ class bell(Function):
     def _bell_poly(n, prev):
         s = 1
         a = 1
-        for k in xrange(2, n+1):
-            a = a * (n-k+1) // (k-1)
-            s += a * prev[k-1]
+        for k in xrange(2, n + 1):
+            a = a * (n - k + 1) // (k - 1)
+            s += a * prev[k - 1]
         return expand_mul(_sym * s)
 
     @staticmethod
@@ -378,15 +382,15 @@ class bell(Function):
             B_{0,k} = 0; for k>=1
 
         """
-        if (n==0) and (k==0):
+        if (n == 0) and (k == 0):
             return S.One
-        elif (n==0) or (k==0):
+        elif (n == 0) or (k == 0):
             return S.Zero
         s = S.Zero
         a = S.One
-        for m in xrange(1, n-k+2):
-            s += a*bell._bell_incomplete_poly(n-m, k-1, symbols)*symbols[m-1]
-            a = a*(n-m)/m
+        for m in xrange(1, n - k + 2):
+            s += a*bell._bell_incomplete_poly(n - m, k - 1, symbols)*symbols[m - 1]
+            a = a*(n - m)/m
         return expand_mul(s)
 
     @classmethod
@@ -405,6 +409,7 @@ class bell(Function):
 #                           Harmonic numbers                                 #
 #                                                                            #
 #----------------------------------------------------------------------------#
+
 
 class harmonic(Function):
     r"""
@@ -475,6 +480,7 @@ class harmonic(Function):
 #                                                                            #
 #----------------------------------------------------------------------------#
 
+
 class euler(Function):
     r"""
     Euler numbers
@@ -531,17 +537,15 @@ class euler(Function):
             res = mp.eulernum(m, exact=True)
             return Integer(res)
 
-
     def _eval_rewrite_as_Sum(self, arg):
         if arg.is_even:
             k = C.Dummy("k", integer=True)
             j = C.Dummy("j", integer=True)
             n = self.args[0] / 2
-            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k,j) * ((-1)**j * (k-2*j)**(2*n+1)) /
-                  (2**k*S.ImaginaryUnit**k * k), (j,0,k)), (k, 1, 2*n+1)))
+            Em = (S.ImaginaryUnit * C.Sum( C.Sum( C.binomial(k, j) * ((-1)**j * (k - 2*j)**(2*n + 1)) /
+                  (2**k*S.ImaginaryUnit**k * k), (j, 0, k)), (k, 1, 2*n + 1)))
 
             return Em
-
 
     def _eval_evalf(self, prec):
         m = self.args[0]
@@ -561,6 +565,7 @@ class euler(Function):
 #                           Catalan numbers                                  #
 #                                                                            #
 #----------------------------------------------------------------------------#
+
 
 class catalan(Function):
     r"""
@@ -644,21 +649,21 @@ class catalan(Function):
     @classmethod
     def eval(cls, n, evaluate=True):
         if n.is_Integer and n.is_nonnegative:
-            return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+            return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
 
     def fdiff(self, argindex=1):
         n = self.args[0]
-        return catalan(n)*(C.polygamma(0,n+Rational(1,2))-C.polygamma(0,n+2)+C.log(4))
+        return catalan(n)*(C.polygamma(0, n + Rational(1, 2)) - C.polygamma(0, n + 2) + C.log(4))
 
-    def _eval_rewrite_as_binomial(self,n):
-        return C.binomial(2*n,n)/(n + 1)
+    def _eval_rewrite_as_binomial(self, n):
+        return C.binomial(2*n, n)/(n + 1)
 
-    def _eval_rewrite_as_gamma(self,n):
+    def _eval_rewrite_as_gamma(self, n):
         # The gamma function allows to generalize Catalan numbers to complex n
-        return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n+2))
+        return 4**n*C.gamma(n + S.Half)/(C.gamma(S.Half)*C.gamma(n + 2))
 
-    def _eval_rewrite_as_hyper(self,n):
-        return C.hyper([1-n,-n],[2],1)
+    def _eval_rewrite_as_hyper(self, n):
+        return C.hyper([1 - n, -n], [2], 1)
 
     def _eval_evalf(self, prec):
         return self.rewrite(C.gamma).evalf(prec)

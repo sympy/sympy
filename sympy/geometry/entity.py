@@ -11,7 +11,7 @@ from sympy.core.compatibility import cmp, is_sequence
 from sympy.core.basic import Basic
 from sympy.core.sympify import sympify
 from sympy.functions import cos, sin
-from sympy.matrices.matrices import eye
+from sympy.matrices import eye
 
 # How entities are ordered; used by __cmp__ in GeometryEntity
 ordering_of_classes = [
@@ -27,6 +27,7 @@ ordering_of_classes = [
     "Curve"
 ]
 
+
 class GeometryEntity(Basic):
     """The base class for all geometrical entities.
 
@@ -36,7 +37,8 @@ class GeometryEntity(Basic):
     """
 
     def __new__(cls, *args, **kwargs):
-        return Basic.__new__(cls, *sympify(args))
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args)
 
     def _sympy_(self):
         return self
@@ -122,7 +124,7 @@ class GeometryEntity(Basic):
         if pt:
             pt = Point(pt)
             return self.translate(*(-pt).args).scale(x, y).translate(*pt.args)
-        return type(self)(*[a.scale(x, y) for a in self.args]) # if this fails, override this class
+        return type(self)(*[a.scale(x, y) for a in self.args])  # if this fails, override this class
 
     def translate(self, x=0, y=0):
         """Shift the object by adding to the x,y-coordinates the values x and y.
@@ -142,7 +144,8 @@ class GeometryEntity(Basic):
         >>> t.translate(2)
         Triangle(Point(3, 0), Point(3/2, sqrt(3)/2), Point(3/2, -sqrt(3)/2))
         >>> t.translate(2, 2)
-        Triangle(Point(3, 2), Point(3/2, sqrt(3)/2 + 2), Point(3/2, -sqrt(3)/2 + 2))
+        Triangle(Point(3, 2), Point(3/2, sqrt(3)/2 + 2),
+            Point(3/2, -sqrt(3)/2 + 2))
 
         """
         newargs = []
@@ -289,12 +292,14 @@ class GeometryEntity(Basic):
             new = Point(new)
             return self._subs(old, new)
 
+
 def translate(x, y):
     """Return the matrix to translate a 2-D point by x and y."""
     rv = eye(3)
     rv[2, 0] = x
     rv[2, 1] = y
     return rv
+
 
 def scale(x, y, pt=None):
     """Return the matrix to multiply a 2-D point's coordinates by x and y.
@@ -310,6 +315,7 @@ def scale(x, y, pt=None):
         tr2 = translate(*pt.args)
         return tr1*rv*tr2
     return rv
+
 
 def rotate(th):
     """Return the matrix to rotate a 2-D point about the origin by ``angle``.

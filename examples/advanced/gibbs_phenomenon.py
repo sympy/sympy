@@ -14,11 +14,12 @@ See:
 """
 
 from sympy import var, sqrt, integrate, conjugate, seterr, Abs, pprint, I, pi,\
-        sin, cos, sign, Plot, lambdify, Integral, S
+    sin, cos, sign, Plot, lambdify, Integral, S
 
 #seterr(True)
 
 x = var("x", real=True)
+
 
 def l2_norm(f, lim):
     """
@@ -40,11 +41,13 @@ def l2_norm(f, lim):
     """
     return sqrt(integrate(Abs(f)**2, lim))
 
+
 def l2_inner_product(a, b, lim):
     """
     Calculates the L2 inner product (a, b) over the domain lim.
     """
     return integrate(conjugate(a)*b, lim)
+
 
 def l2_projection(f, basis, lim):
     """
@@ -52,8 +55,9 @@ def l2_projection(f, basis, lim):
     """
     r = 0
     for b in basis:
-        r +=  l2_inner_product(f, b, lim) * b
+        r += l2_inner_product(f, b, lim) * b
     return r
+
 
 def l2_gram_schmidt(list, lim):
     """
@@ -81,8 +85,10 @@ def l2_gram_schmidt(list, lim):
         r.append(v/v_norm)
     return r
 
+
 def integ(f):
     return integrate(f, (x, -pi, 0)) + integrate(-f, (x, 0, pi))
+
 
 def series(L):
     """
@@ -92,6 +98,7 @@ def series(L):
     for b in L:
         r += integ(b)*b
     return r
+
 
 def msolve(f, x):
     """
@@ -104,19 +111,20 @@ def msolve(f, x):
     f = lambdify(x, f)
     x0 = -0.001
     dx = 0.001
-    while f(x0-dx) * f(x0) > 0:
-        x0 = x0-dx
-    x_max = x0-dx
+    while f(x0 - dx) * f(x0) > 0:
+        x0 = x0 - dx
+    x_max = x0 - dx
     x_min = x0
     assert f(x_max) > 0
     assert f(x_min) < 0
     for n in range(100):
-        x0 = (x_max+x_min)/2
+        x0 = (x_max + x_min)/2
         if f(x0) > 0:
             x_max = x0
         else:
             x_min = x0
     return x0
+
 
 def main():
     #L = l2_gram_schmidt([1, cos(x), sin(x), cos(2*x), sin(2*x)], (x, -pi, pi))

@@ -31,6 +31,7 @@ tests = [
 
 from glob import glob
 
+
 def get_paths(level=15):
     """
     Generates a set of paths for testfiles searching.
@@ -46,8 +47,8 @@ def get_paths(level=15):
     """
     wildcards = ["/"]
     for i in range(level):
-        wildcards.append(wildcards[-1]+"*/")
-    p = ["sympy"+x+"test_*.py" for x in wildcards]
+        wildcards.append(wildcards[-1] + "*/")
+    p = ["sympy" + x + "test_*.py" for x in wildcards]
     return p
 
 g = []

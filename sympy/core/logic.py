@@ -8,6 +8,7 @@ this stuff for general purpose.
 """
 from sympy.core.compatibility import iterable, cmp
 
+
 def fuzzy_bool(x):
     """Return True, False or None according to x.
 
@@ -17,6 +18,7 @@ def fuzzy_bool(x):
     if x is None:
         return None
     return bool(x)
+
 
 def fuzzy_and(*args):
     """Return True (all True), False (any False) or None.
@@ -50,8 +52,7 @@ def fuzzy_and(*args):
             return True
         elif a is False or b is False:
             return False
-    elif (len(args) == 1 and iterable(args[0]) or
-        len(args) > 2):
+    elif (len(args) == 1 and iterable(args[0]) or len(args) > 2):
         if len(args) == 1:
             args = args[0]
         if args:
@@ -60,7 +61,7 @@ def fuzzy_and(*args):
                 ai = fuzzy_bool(ai)
                 if ai is False:
                     return False
-                if rv: # this will stop updating if a None is ever trapped
+                if rv:  # this will stop updating if a None is ever trapped
                     rv = ai
             return rv
     if not args:
@@ -68,12 +69,29 @@ def fuzzy_and(*args):
     elif len(args) == 1:
         return fuzzy_bool(args[0])
 
+
 def fuzzy_not(v):
-    """'not' in fuzzy logic"""
+    """
+    Not in fuzzy logic
+
+    Will return Not if arg is a boolean value, and None if argument
+    is None.
+
+    Examples:
+
+    >>> from sympy.core.logic import fuzzy_not
+    >>> fuzzy_not(True)
+    False
+    >>> fuzzy_not(None)
+    >>> fuzzy_not(False)
+    True
+
+    """
     if v is None:
         return v
     else:
         return not v
+
 
 class Logic(object):
     """Logical expression"""
@@ -91,7 +109,6 @@ class Logic(object):
     def __hash__(self):
         return hash( (type(self).__name__,) + tuple(self.args) )
 
-
     def __eq__(a, b):
         if not isinstance(b, type(a)):
             return False
@@ -108,7 +125,6 @@ class Logic(object):
         if cls.__cmp__(other) == -1:
             return True
         return False
-
 
     def __cmp__(a, b):
         if type(a) is not type(b):
@@ -130,15 +146,17 @@ class Logic(object):
 
            !a & !b | c
         """
-        lexpr   = None  # current logical expression
+        lexpr = None  # current logical expression
         schedop = None  # scheduled operation
         for term in text.split():
             # operation symbol
             if term in '&|':
                 if schedop is not None:
-                    raise ValueError('double op forbidden: "%s %s"' % (term, schedop))
+                    raise ValueError(
+                        'double op forbidden: "%s %s"' % (term, schedop))
                 if lexpr is None:
-                    raise ValueError('%s cannot be in the beginning of expression' % term)
+                    raise ValueError(
+                        '%s cannot be in the beginning of expression' % term)
                 schedop = term
                 continue
             if term[0] == '!':
@@ -152,7 +170,8 @@ class Logic(object):
 
             # this should be atom
             if lexpr is not None:
-                raise ValueError('missing op between "%s" and "%s"' % (lexpr, term))
+                raise ValueError(
+                    'missing op between "%s" and "%s"' % (lexpr, term))
 
             lexpr = term
 
@@ -191,7 +210,6 @@ class AndOr_Base(Logic):
 
         return Logic.__new__(cls, *sorted(args, key=hash))
 
-
     @classmethod
     def flatten(cls, args):
         # quick-n-dirty flattening for And and Or
@@ -220,7 +238,6 @@ class And(AndOr_Base):
         # !(a&b&c ...) == !a | !b | !c ...
         return Or( *[Not(a) for a in self.args] )
 
-
     # (a|b|...) & c == (a&c) | (b&c) | ...
     def expand(self):
 
@@ -228,7 +245,7 @@ class And(AndOr_Base):
         for i in range(len(self.args)):
             arg = self.args[i]
             if isinstance(arg, Or):
-                arest = self.args[:i] + self.args[i+1:]
+                arest = self.args[:i] + self.args[i + 1:]
 
                 orterms = [And( *(arest + (a,)) ) for a in arg.args]
                 for j in range(len(orterms)):
@@ -248,6 +265,7 @@ class Or(AndOr_Base):
     def _eval_propagate_not(self):
         # !(a|b|c ...) == !a & !b & !c ...
         return And( *[Not(a) for a in self.args] )
+
 
 class Not(Logic):
 

@@ -89,11 +89,8 @@ class InnerProduct(Expr):
     def ket(self):
         return self.args[1]
 
-    def _eval_dagger(self):
-        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
-
     def _eval_conjugate(self):
-        return self._eval_dagger()
+        return InnerProduct(Dagger(self.ket), Dagger(self.bra))
 
     def _sympyrepr(self, printer, *args):
         return '%s(%s,%s)' % (self.__class__.__name__,

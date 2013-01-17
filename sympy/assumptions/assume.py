@@ -1,6 +1,9 @@
 import inspect
-from sympy.utilities.source import get_class
+from sympy.core.cache import cacheit
+from sympy.core.singleton import S
 from sympy.logic.boolalg import Boolean
+from sympy.utilities.source import get_class
+
 
 class AssumptionsContext(set):
     """Set representing assumptions.
@@ -33,6 +36,7 @@ class AssumptionsContext(set):
 
 global_assumptions = AssumptionsContext()
 
+
 class AppliedPredicate(Boolean):
     """The class of expressions resulting from applying a Predicate.
 
@@ -49,7 +53,7 @@ class AppliedPredicate(Boolean):
     def __new__(cls, predicate, arg):
         return Boolean.__new__(cls, predicate, arg)
 
-    is_Atom = True # do not attempt to decompose this
+    is_Atom = True  # do not attempt to decompose this
 
     @property
     def arg(self):
@@ -76,6 +80,10 @@ class AppliedPredicate(Boolean):
     def func(self):
         return self._args[0]
 
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (2, (self.func.name, self.arg.sort_key())), S.One.sort_key(), S.One
+
     def __eq__(self, other):
         if type(other) is AppliedPredicate:
             return self._args == other._args
@@ -86,6 +94,7 @@ class AppliedPredicate(Boolean):
 
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
+
 
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
@@ -134,6 +143,10 @@ class Predicate(Boolean):
 
     def remove_handler(self, handler):
         self.handlers.remove(handler)
+
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
 
     def eval(self, expr, assumptions=True):
         """

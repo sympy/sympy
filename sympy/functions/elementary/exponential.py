@@ -20,6 +20,7 @@ from sympy.ntheory import multiplicity, perfect_power
 # log(x(1+p)), this *has* to be expanded to log(x)+log(1+p) if x.is_positive and
 # p.is_positive.]
 
+
 class ExpBase(Function):
 
     nargs = 1
@@ -115,19 +116,15 @@ class ExpBase(Function):
         elif besmall is False and e.is_Rational and e.q == 2:
             return -rv
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+    def _eval_expand_power_exp(self, **hints):
+        arg = self.args[0]
         if arg.is_Add and arg.is_commutative:
             expr = 1
             for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
                 expr *= self.func(x)
             return expr
         return self.func(arg)
+
 
 class exp_polar(ExpBase):
     r"""
@@ -162,7 +159,7 @@ class exp_polar(ExpBase):
     """
 
     is_polar = True
-    is_comparable = False # cannot be evalf'd
+    is_comparable = False  # cannot be evalf'd
 
     def _eval_Abs(self):
         from sympy import expand_mul
@@ -173,7 +170,7 @@ class exp_polar(ExpBase):
         from sympy import im, pi, re
         i = im(self.args[0])
         if i <= -pi or i > pi:
-            return self # cannot evalf for this argument
+            return self  # cannot evalf for this argument
         res = exp(self.args[0])._eval_evalf(prec)
         if i > 0 and im(res) < 0:
             # i ~ pi, but exp(I*i) evaluated to argument slightly bigger than pi
@@ -189,6 +186,7 @@ class exp_polar(ExpBase):
         if self.args[0] == 0:
             return self, S(1)
         return ExpBase.as_base_exp(self)
+
 
 class exp(ExpBase):
     """
@@ -240,6 +238,9 @@ class exp(ExpBase):
                         return -S.ImaginaryUnit
                     elif (coeff + S.Half).is_odd:
                         return S.ImaginaryUnit
+
+            # Warning: code in risch.py will be very sensitive to changes
+            # in this (see DifferentialExtension).
 
             # look for a single log factor
 
@@ -302,10 +303,6 @@ class exp(ExpBase):
                 return p * x / n
         return x**n/C.factorial()(n)
 
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
-
     def as_real_imag(self, deep=True, **hints):
         """
         Returns this function as a 2-tuple representing a complex number.
@@ -341,18 +338,19 @@ class exp(ExpBase):
     def _eval_subs(self, old, new):
         arg = self.args[0]
         o = old
-        if old.is_Pow: # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
+        if old.is_Pow:  # handle (exp(3*log(x))).subs(x**2, z) -> z**(3/2)
             o = exp(o.exp*log(o.base))
         if o.func is exp:
             # exp(a*expr) .subs( exp(b*expr), y )  ->  y ** (a/b)
-            a, expr_terms = self.args[0].as_coeff_mul()
-            b, expr_terms_= o.args[0].as_coeff_mul()
+            a, expr_terms = self.args[0].as_independent(
+                C.Symbol, as_Add=False)
+            b, expr_terms_ = o.args[0].as_independent(
+                C.Symbol, as_Add=False)
 
             if expr_terms == expr_terms_:
                 return new**(a/b)
 
-
-            if arg.is_Add: # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
+            if arg.is_Add:  # exp(2*x+a).subs(exp(3*x),y) -> y**(2/3) * exp(a)
                 # exp(exp(x) + exp(x**2)).subs(exp(exp(x)), w) -> w * exp(exp(x**2))
                 oarg = o.args[0]
                 new_l = []
@@ -371,8 +369,8 @@ class exp(ExpBase):
                     return r
         if o is S.Exp1:
             # treat this however Pow is being treated
-            u = C.Dummy('u')
-            return (u**self.args[0]).subs(u, new)
+            u = C.Dummy('u', positive=True)
+            return (u**self.args[0]).xreplace({u: new})
 
         return Function._eval_subs(self, o, new)
 
@@ -433,21 +431,22 @@ class exp(ExpBase):
         if arg.is_Add:
             return Mul(*[exp(f).as_leading_term(x) for f in arg.args])
         arg = self.args[0].as_leading_term(x)
-        if C.Order(1,x).contains(arg):
+        if C.Order(1, x).contains(arg):
             return S.One
         return exp(arg)
 
     def _eval_rewrite_as_sin(self, arg):
         I = S.ImaginaryUnit
-        return C.sin(I*arg+S.Pi/2) - I*C.sin(I*arg)
+        return C.sin(I*arg + S.Pi/2) - I*C.sin(I*arg)
 
     def _eval_rewrite_as_cos(self, arg):
         I = S.ImaginaryUnit
-        return C.cos(I*arg) + I*C.cos(I*arg+S.Pi/2)
+        return C.cos(I*arg) + I*C.cos(I*arg + S.Pi/2)
 
     def _sage_(self):
         import sage.all as sage
         return sage.exp(self.args[0]._sage_())
+
 
 class log(Function):
     """
@@ -459,7 +458,7 @@ class log(Function):
     exp
     """
 
-    nargs = (1,2)
+    nargs = (1, 2)
 
     def fdiff(self, argindex=1):
         """
@@ -553,7 +552,7 @@ class log(Function):
 
     @staticmethod
     @cacheit
-    def taylor_term(n, x, *previous_terms): # of log(1+x)
+    def taylor_term(n, x, *previous_terms):  # of log(1+x)
         """
         Returns the next term in the Taylor series expansion of log(1+x).
         """
@@ -566,38 +565,36 @@ class log(Function):
         if previous_terms:
             p = previous_terms[-1]
             if p is not None:
-                return powsimp((-n) * p * x / (n+1), deep=True, combine='exp')
-        return (1-2*(n%2)) * x**(n+1)/(n+1)
+                return powsimp((-n) * p * x / (n + 1), deep=True, combine='exp')
+        return (1 - 2*(n % 2)) * x**(n + 1)/(n + 1)
 
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify
         force = hints.get('force', False)
-        if deep:
-            arg = self.args[0].expand(deep=deep, **hints)
-        else:
-            arg = self.args[0]
+        arg = self.args[0]
         if arg.is_Mul:
             expr = []
             nonpos = []
             for x in arg.args:
-                if deep:
-                    x = x.expand(deep=deep, **hints)
                 if force or x.is_positive or x.is_polar:
-                    expr.append(self.func(x)._eval_expand_log(deep=deep, **hints))
+                    a = self.func(x)
+                    if isinstance(a, log):
+                        expr.append(self.func(x)._eval_expand_log(**hints))
+                    else:
+                        expr.append(a)
                 else:
                     nonpos.append(x)
             return Add(*expr) + log(Mul(*nonpos))
         elif arg.is_Pow:
             if force or (arg.exp.is_real and arg.base.is_positive) or \
-                        arg.base.is_polar:
-                if deep:
-                    b = arg.base.expand(deep=deep, **hints)
-                    e = arg.exp.expand(deep=deep, **hints)
+                    arg.base.is_polar:
+                b = arg.base
+                e = arg.exp
+                a = self.func(b)
+                if isinstance(a, log):
+                    return unpolarify(e) * a._eval_expand_log(**hints)
                 else:
-                    b = arg.base
-                    e = arg.exp
-                return unpolarify(e) * self.func(b)._eval_expand_log(deep=deep,\
-                **hints)
+                    return unpolarify(e) * a
 
         return self.func(arg)
 
@@ -627,15 +624,11 @@ class log(Function):
         else:
             abs = C.Abs(self.args[0])
             arg = C.arg(self.args[0])
-        if hints.get('log', False): # Expand the log
+        if hints.get('log', False):  # Expand the log
             hints['complex'] = False
             return (log(abs).expand(deep, **hints), arg)
         else:
             return (log(abs), arg)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        re_part, im_part = self.as_real_imag(deep=deep, **hints)
-        return re_part + im_part*S.ImaginaryUnit
 
     def _eval_is_rational(self):
         s = self.func(*self.args)
@@ -690,7 +683,7 @@ class log(Function):
             #l = r.get(l, S.Zero)
             k, l = r[k], r[l]
             if l != 0 and not l.has(x) and not k.has(x):
-                r = log(k) + l*logx # XXX true regardless of assumptions?
+                r = log(k) + l*logx  # XXX true regardless of assumptions?
                 return r
 
         # TODO new and probably slow
@@ -708,7 +701,6 @@ class log(Function):
             l.append(g)
         return log(a) + b*logx + Add(*l) + C.Order(p**n, x)
 
-
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
         if arg is S.One:
@@ -718,6 +710,7 @@ class log(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.log(self.args[0]._sage_())
+
 
 class LambertW(Function):
     """Lambert W function, defined as the inverse function of
@@ -749,7 +742,7 @@ class LambertW(Function):
         """
         if argindex == 1:
             x = self.args[0]
-            return LambertW(x)/(x*(1+LambertW(x)))
+            return LambertW(x)/(x*(1 + LambertW(x)))
         else:
             raise ArgumentIndexError(self, argindex)
 

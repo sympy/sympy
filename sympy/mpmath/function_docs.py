@@ -3335,7 +3335,7 @@ An integral representation::
     0.06674960718150520648014567
 
 
-[1] http://www.math.ucla.edu/~cbm/aands/page_504.htm
+[1] http://people.math.sfu.ca/~cbm/aands/page_504.htm
 """
 
 hyp2f0 = r"""
@@ -3402,7 +3402,7 @@ The coefficients of the polynomials can be recovered using Taylor expansion::
     [1.0, -2.0, 4.5, -7.5, 6.5625, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 
 
-[1] http://www.math.ucla.edu/~cbm/aands/page_504.htm
+[1] http://people.math.sfu.ca/~cbm/aands/page_504.htm
 """
 
 

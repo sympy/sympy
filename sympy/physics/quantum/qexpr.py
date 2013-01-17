@@ -4,6 +4,7 @@ from sympy.printing.pretty.stringpict import prettyForm
 from sympy.core.containers import Tuple
 from sympy.core.compatibility import is_sequence
 
+from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.matrixutils import (
     numpy_ndarray, scipy_sparse_matrix,
     to_sympy, to_numpy, to_scipy_sparse
@@ -49,6 +50,7 @@ def _qsympify_sequence(seq):
 
     return tuple(__qsympify_sequence_helper(seq))
 
+
 def __qsympify_sequence_helper(seq):
     """
        Helper function for _qsympify_sequence
@@ -93,7 +95,9 @@ class QExpr(Expr):
     # The separator used in printing the label.
     _label_separator = u''
 
-    def __new__(cls, *args):
+    is_commutative = False
+
+    def __new__(cls, *args, **old_assumptions):
         """Construct a new quantum object.
 
         Parameters
@@ -125,13 +129,13 @@ class QExpr(Expr):
         args = cls._eval_args(args)
         if len(args) == 0:
             args = cls._eval_args(tuple(cls.default_args()))
-        inst = Expr.__new__(cls, *args)
+        inst = Expr.__new__(cls, *args, **old_assumptions)
         # Now set the slots on the instance
         inst.hilbert_space = cls._eval_hilbert_space(args)
         return inst
 
     @classmethod
-    def _new_rawargs(cls, hilbert_space, *args):
+    def _new_rawargs(cls, hilbert_space, *args, **old_assumptions):
         """Create new instance of this class with hilbert_space and args.
 
         This is used to bypass the more complex logic in the ``__new__``
@@ -141,7 +145,7 @@ class QExpr(Expr):
         the creation of the object.
         """
 
-        obj = Expr.__new__(cls, *args)
+        obj = Expr.__new__(cls, *args, **old_assumptions)
         obj.hilbert_space = hilbert_space
         return obj
 
@@ -158,7 +162,7 @@ class QExpr(Expr):
 
         This must be a tuple, rather than a Tuple.
         """
-        if len(self.args) == 0: # If there is no label specified, return the default
+        if len(self.args) == 0:  # If there is no label specified, return the default
             return self._eval_args(list(self.default_args()))
         else:
             return self.args
@@ -181,6 +185,14 @@ class QExpr(Expr):
     # _eval_* methods
     #-------------------------------------------------------------------------
 
+    def _eval_adjoint(self):
+        obj = Expr._eval_adjoint(self)
+        if obj is None:
+            obj = Expr.__new__(Dagger, self)
+        if isinstance(obj, QExpr):
+            obj.hilbert_space = self.hilbert_space
+        return obj
+
     @classmethod
     def _eval_args(cls, args):
         """Process the args passed to the __new__ method.
@@ -195,10 +207,6 @@ class QExpr(Expr):
         """
         from sympy.physics.quantum.hilbert import HilbertSpace
         return HilbertSpace()
-
-    def _eval_dagger(self):
-        """Compute the Dagger of this state."""
-        raise NotImplementedError('_eval_dagger not defined on: %r' % self)
 
     #-------------------------------------------------------------------------
     # Printing
@@ -316,7 +324,8 @@ class QExpr(Expr):
         # than str(). See L1072 of basic.py.
         # This will call self.rule(*self.args) for rewriting.
         if hints.get('deep', False):
-            args = [ a._eval_rewrite(pattern, rule, **hints) for a in self.args ]
+            args = [ a._eval_rewrite(pattern, rule, **hints)
+                     for a in self.args ]
         else:
             args = self.args
 
@@ -370,7 +379,7 @@ class QExpr(Expr):
             the representation, such as the number of basis functions to
             be used.
         """
-        basis = options.pop('basis',None)
+        basis = options.pop('basis', None)
         if basis is None:
             result = self._represent_default_basis(**options)
         else:
@@ -386,17 +395,19 @@ class QExpr(Expr):
             return to_sympy(result)
         elif format == 'numpy' and not isinstance(result, numpy_ndarray):
             return to_numpy(result)
-        elif format == 'scipy.sparse' and\
-        not isinstance(result, scipy_sparse_matrix):
+        elif format == 'scipy.sparse' and \
+                not isinstance(result, scipy_sparse_matrix):
             return to_scipy_sparse(result)
 
         return result
+
 
 def split_commutative_parts(e):
     """Split into commutative and non-commutative parts."""
     c_part, nc_part = e.args_cnc()
     c_part = list(c_part)
     return c_part, nc_part
+
 
 def split_qexpr_parts(e):
     """Split an expression into Expr and noncommutative QExpr parts."""
@@ -420,6 +431,6 @@ def dispatch_method(self, basename, arg, **options):
         if result is not None:
             return result
     raise NotImplementedError(
-        "%s.%s can't handle: %r" % \
-            (self.__class__.__name__, basename, arg)
+        "%s.%s can't handle: %r" %
+        (self.__class__.__name__, basename, arg)
     )

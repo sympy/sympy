@@ -4,6 +4,7 @@ from core import Registry
 from assumptions import ManagedProperties
 from sympify import sympify
 
+
 class SingletonRegistry(Registry):
     """
     A map between singleton classes and the corresponding instances.

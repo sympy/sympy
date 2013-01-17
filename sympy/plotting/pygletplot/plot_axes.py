@@ -8,6 +8,7 @@ from util import dot_product, vec_sub, vec_mag
 from sympy.core import S
 from sympy.core.compatibility import is_sequence
 
+
 class PlotAxes(PlotObject):
 
     def __init__(self, *args, **kwargs):
@@ -53,9 +54,9 @@ class PlotAxes(PlotObject):
         def flexible_boolean(input, default):
             if input in [True, False]:
                 return input
-            if input in ['f','F','false','False']:
+            if input in ['f', 'F', 'false', 'False']:
                 return False
-            if input in ['t','T','true','True']:
+            if input in ['t', 'T', 'true', 'True']:
                 return True
             return default
 
@@ -63,8 +64,10 @@ class PlotAxes(PlotObject):
         self.visible = flexible_boolean(kwargs.pop('visible', ''), True)
         self._overlay = flexible_boolean(kwargs.pop('overlay', ''), True)
         self._colored = flexible_boolean(kwargs.pop('colored', ''), False)
-        self._label_axes = flexible_boolean(kwargs.pop('label_axes', ''), False)
-        self._label_ticks = flexible_boolean(kwargs.pop('label_ticks', ''), True)
+        self._label_axes = flexible_boolean(
+            kwargs.pop('label_axes', ''), False)
+        self._label_ticks = flexible_boolean(
+            kwargs.pop('label_ticks', ''), True)
 
         # setup label font
         self.font_face = kwargs.pop('font_face', 'Arial')
@@ -79,7 +82,7 @@ class PlotAxes(PlotObject):
 
     def reset_bounding_box(self):
         self._bounding_box = [[None, None], [None, None], [None, None]]
-        self._axis_ticks = [[],[],[]]
+        self._axis_ticks = [[], [], []]
 
     def draw(self):
         if self._render_object:
@@ -113,6 +116,7 @@ class PlotAxes(PlotObject):
     def toggle_colors(self):
         self._colored = not self._colored
 
+
 class PlotAxesBase(PlotObject):
 
     def __init__(self, parent_axes):
@@ -127,7 +131,7 @@ class PlotAxesBase(PlotObject):
         self.draw_axis(0, color[0])
 
     def draw_background(self, color):
-        pass # optional
+        pass  # optional
 
     def draw_axis(self, axis, color):
         raise NotImplementedError()
@@ -159,9 +163,10 @@ class PlotAxesBase(PlotObject):
         o = self._p._origin
         glBegin(GL_LINES)
         glColor3f(*color)
-        glVertex3f(v[0][0]+o[0], v[0][1]+o[1], v[0][2]+o[2])
-        glVertex3f(v[1][0]+o[0], v[1][1]+o[1], v[1][2]+o[2])
+        glVertex3f(v[0][0] + o[0], v[0][1] + o[1], v[0][2] + o[2])
+        glVertex3f(v[1][0] + o[0], v[1][1] + o[1], v[1][2] + o[2])
         glEnd()
+
 
 class PlotAxesOrdinate(PlotAxesBase):
 
@@ -185,7 +190,7 @@ class PlotAxesOrdinate(PlotAxesBase):
         d = d / vec_mag(axis_vector)
 
         # don't draw labels if we're looking down the axis
-        labels_visible = abs(d-1.0) > 0.02
+        labels_visible = abs(d - 1.0) > 0.02
 
         # draw the ticks and labels
         for tick in ticks:
@@ -208,8 +213,8 @@ class PlotAxesOrdinate(PlotAxesBase):
         axis_labels[0][axis] -= 0.3
         axis_labels[1][axis] += 0.3
         a_str = ['X', 'Y', 'Z'][axis]
-        self.draw_text("-"+a_str, axis_labels[0], color)
-        self.draw_text("+"+a_str, axis_labels[1], color)
+        self.draw_text("-" + a_str, axis_labels[0], color)
+        self.draw_text("+" + a_str, axis_labels[1], color)
 
     def draw_tick_line(self, axis, color, radius, tick, labels_visible):
         tick_axis = {0: 1, 1: 0, 2: 1}[axis]
@@ -225,8 +230,10 @@ class PlotAxesOrdinate(PlotAxesBase):
             return
         tick_label_vector = [0, 0, 0]
         tick_label_vector[axis] = tick
-        tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1,1,1][axis] * radius * 3.5
+        tick_label_vector[{0: 1, 1: 0, 2: 1}[axis]] = [-1, 1, 1][
+            axis] * radius * 3.5
         self.draw_text(str(tick), tick_label_vector, color, scale=0.5)
+
 
 class PlotAxesFrame(PlotAxesBase):
 

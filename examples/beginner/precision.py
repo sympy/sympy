@@ -8,6 +8,7 @@ Demonstrates SymPy's arbitrary integer precision abilities
 import sympy
 from sympy import Mul, Pow, S
 
+
 def main():
     x = Pow(2, 50, evaluate=False)
     y = Pow(10, -50, evaluate=False)

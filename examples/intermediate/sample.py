@@ -8,6 +8,7 @@ graphing functions using matplotlib.
 from numpy import repeat, arange, empty, ndarray, array
 from sympy import Symbol, Basic, Rational, I, sympify
 
+
 def sample2d(f, x_args):
     """
     Samples a 2d function f over specified intervals and returns two
@@ -28,7 +29,7 @@ def sample2d(f, x_args):
 
     x_l = float(x_max - x_min)
     x_d = x_l/float(x_n)
-    X = arange(float(x_min), float(x_max)+x_d, x_d)
+    X = arange(float(x_min), float(x_max) + x_d, x_d)
 
     Y = empty(len(X))
     for i in range(len(X)):
@@ -37,6 +38,7 @@ def sample2d(f, x_args):
         except TypeError:
             Y[i] = None
     return X, Y
+
 
 def sample3d(f, x_args, y_args):
     """
@@ -61,11 +63,11 @@ def sample3d(f, x_args, y_args):
 
     x_l = float(x_max - x_min)
     x_d = x_l/float(x_n)
-    x_a = arange(float(x_min), float(x_max)+x_d, x_d)
+    x_a = arange(float(x_min), float(x_max) + x_d, x_d)
 
     y_l = float(y_max - y_min)
     y_d = y_l/float(y_n)
-    y_a = arange(float(y_min), float(y_max)+y_d, y_d)
+    y_a = arange(float(y_min), float(y_max) + y_d, y_d)
 
     def meshgrid(x, y):
         """
@@ -91,6 +93,7 @@ def sample3d(f, x_args, y_args):
             except (TypeError, NotImplementedError):
                 Z[j][k] = 0
     return X, Y, Z
+
 
 def sample(f, *var_args):
     """

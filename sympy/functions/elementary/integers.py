@@ -8,6 +8,7 @@ from sympy.core.evalf import get_integer_part, PrecisionExhausted
 ######################### FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
 
+
 class RoundFunction(Function):
     """The base class for rounding functions."""
 
@@ -45,9 +46,10 @@ class RoundFunction(Function):
         if npart and (
             not spart or
             npart.is_real and spart.is_imaginary or
-            npart.is_imaginary and spart.is_real):
+                npart.is_imaginary and spart.is_real):
             try:
-                re, im = get_integer_part(npart, cls._dir, {}, return_ints=True)
+                re, im = get_integer_part(
+                    npart, cls._dir, {}, return_ints=True)
                 ipart += C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
                 npart = S.Zero
             except (PrecisionExhausted, NotImplementedError):
@@ -69,6 +71,7 @@ class RoundFunction(Function):
 
     def _eval_is_integer(self):
         return self.args[0].is_real
+
 
 class floor(RoundFunction):
     """
@@ -119,9 +122,10 @@ class floor(RoundFunction):
             if direction.is_positive:
                 return r
             else:
-                return r-1
+                return r - 1
         else:
             return r
+
 
 class ceiling(RoundFunction):
     """

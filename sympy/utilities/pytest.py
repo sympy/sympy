@@ -53,6 +53,7 @@ if not USE_PYTEST:
 
         Note that you cannot test multiple statements via
         ``with raises``:
+
         >>> with raises(ZeroDivisionError): # doctest: +SKIP
         ...     n = 1/0    # will execute and raise, aborting the ``with``
         ...     n = 9999/0 # never executed
@@ -63,6 +64,7 @@ if not USE_PYTEST:
 
         To test multiple statements, you'll need a separate ``with``
         for each:
+
         >>> with raises(ZeroDivisionError): # doctest: +SKIP
         ...     n = 1/0    # will execute and raise
         ... with raises(ZeroDivisionError):
@@ -91,8 +93,10 @@ if not USE_PYTEST:
     class RaisesContext(object):
         def __init__(self, expectedException):
             self.expectedException = expectedException
+
         def __enter__(self):
             return None
+
         def __exit__(self, exc_type, exc_value, traceback):
             if exc_type is None:
                 raise AssertionError("DID NOT RAISE")
@@ -128,7 +132,6 @@ if not USE_PYTEST:
     def skip(str):
         raise Skipped(str)
 
-
     def SKIP(reason):
         """Similar to :func:`skip`, but this is a decorator. """
         def wrapper(func):
@@ -142,6 +145,7 @@ if not USE_PYTEST:
 
     def slow(func):
         func._slow = True
+
         def func_wrapper():
             func()
 

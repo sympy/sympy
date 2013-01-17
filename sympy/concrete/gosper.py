@@ -6,6 +6,7 @@ from sympy.polys import Poly, parallel_poly_from_expr, factor
 from sympy.solvers import solve
 from sympy.simplify import hypersimp
 
+
 def gosper_normal(f, g, n, polys=True):
     r"""
     Compute the Gosper's normal form of ``f`` and ``g``.
@@ -41,7 +42,8 @@ def gosper_normal(f, g, n, polys=True):
     (1/4, n + 3/2, n + 1/4)
 
     """
-    (p, q), opt = parallel_poly_from_expr((f, g), n, field=True, extension=True)
+    (p, q), opt = parallel_poly_from_expr(
+        (f, g), n, field=True, extension=True)
 
     a, A = p.LC(), p.monic()
     b, B = q.LC(), q.monic()
@@ -64,7 +66,7 @@ def gosper_normal(f, g, n, polys=True):
         A = A.quo(d)
         B = B.quo(d.shift(-i))
 
-        for j in xrange(1, i+1):
+        for j in xrange(1, i + 1):
             C *= d.shift(-j)
 
     A = A.mul_ground(Z)
@@ -75,6 +77,7 @@ def gosper_normal(f, g, n, polys=True):
         C = C.as_expr()
 
     return A, B, C
+
 
 def gosper_term(f, n):
     r"""
@@ -151,6 +154,7 @@ def gosper_term(f, n):
     else:
         return B.as_expr()*x/C.as_expr()
 
+
 def gosper_sum(f, k):
     r"""
     Gosper's hypergeometric summation algorithm.
@@ -203,6 +207,6 @@ def gosper_sum(f, k):
     if indefinite:
         result = f*g
     else:
-        result = (f*(g+1)).subs(k, b) - (f*g).subs(k, a)
+        result = (f*(g + 1)).subs(k, b) - (f*g).subs(k, a)
 
     return factor(result)

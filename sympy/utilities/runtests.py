@@ -21,7 +21,7 @@ import re
 import linecache
 from fnmatch import fnmatch
 from timeit import default_timer as clock
-import doctest as pdoctest # avoid clashing with our doctest() function
+import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
 import re as pre
 import random
@@ -42,12 +42,13 @@ IS_WINDOWS = (os.name == 'nt')
 class Skipped(Exception):
     pass
 
+
 def _indent(s, indent=4):
     """
     Add the given number of space characters to the beginning of
-    every non-blank line in `s`, and return the result.
-    If the string `s` is Unicode, it is encoded using the stdout
-    encoding and the `backslashreplace` error handler.
+    every non-blank line in ``s``, and return the result.
+    If the string ``s`` is Unicode, it is encoded using the stdout
+    encoding and the ``backslashreplace`` error handler.
     """
     # After a 2to3 run the below code is bogus, so wrap it with a version check
     if sys.version_info[0] < 3:
@@ -59,6 +60,8 @@ def _indent(s, indent=4):
 pdoctest._indent = _indent
 
 # ovverride reporter to maintain windows and python3
+
+
 def _report_failure(self, out, test, example, got):
     """
     Report that the given example failed.
@@ -70,11 +73,6 @@ def _report_failure(self, out, test, example, got):
 if IS_PYTHON_3 and IS_WINDOWS:
     DocTestRunner.report_failure = _report_failure
 
-
-def sys_normcase(f):
-    if sys_case_insensitive:
-        return f.lower()
-    return f
 
 def convert_to_native_paths(lst):
     """
@@ -89,10 +87,11 @@ def convert_to_native_paths(lst):
         if sys.platform == "win32":
             pos = rv.find(':')
             if pos != -1:
-                if rv[pos+1] != '\\':
-                    rv = rv[:pos+1] + '\\' + rv[pos+1:]
+                if rv[pos + 1] != '\\':
+                    rv = rv[:pos + 1] + '\\' + rv[pos + 1:]
         newlst.append(sys_normcase(rv))
     return newlst
+
 
 def get_sympy_dir():
     """
@@ -109,9 +108,16 @@ def get_sympy_dir():
                         os.path.isdir(sympy_dir.upper()))
     return sys_normcase(sympy_dir)
 
+
+def sys_normcase(f):
+    if sys_case_insensitive:  # global defined after call to get_sympy_dir()
+        return f.lower()
+    return f
+
+
 def isgeneratorfunction(object):
     """
-    Return true if the object is a user-defined generator function.
+    Return True if the object is a user-defined generator function.
 
     Generator function objects provides same attributes as functions.
 
@@ -121,9 +127,10 @@ def isgeneratorfunction(object):
     """
     CO_GENERATOR = 0x20
     if (inspect.isfunction(object) or inspect.ismethod(object)) and \
-        object.func_code.co_flags & CO_GENERATOR:
+            object.func_code.co_flags & CO_GENERATOR:
         return True
     return False
+
 
 def setup_pprint():
     from sympy import pprint_use_unicode, init_printing
@@ -134,9 +141,10 @@ def setup_pprint():
     # hook our nice, hash-stable strprinter
     init_printing(pretty_print=False)
 
+
 def run_in_subprocess_with_hash_randomization(function, function_args=(),
     function_kwargs={}, command=sys.executable,
-    module='sympy.utilities.runtests', force=False):
+        module='sympy.utilities.runtests', force=False):
     """
     Run a function in a Python subprocess with hash randomization enabled.
 
@@ -170,14 +178,15 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
     3.1.5, and 3.2.3, and is enabled by default in all Python versions after
     and including 3.3.0.
 
-    Example
-    =======
+    Examples
+    ========
 
     >>> from sympy.utilities.runtests import (
     ... run_in_subprocess_with_hash_randomization)
     >>> # run the core tests in verbose mode
     >>> run_in_subprocess_with_hash_randomization("_test",
-    ... function_args=("core",), function_kwargs={'verbose': True}) #doctest: +SKIP
+    ... function_args=("core",),
+    ... function_kwargs={'verbose': True}) # doctest: +SKIP
     # Will return 0 if sys.executable supports hash randomization and tests
     # pass, 1 if they fail, and False if it does not support hash
     # randomization.
@@ -196,13 +205,14 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
 
     hash_seed = os.getenv("PYTHONHASHSEED")
     if not hash_seed:
-        os.environ["PYTHONHASHSEED"] = str(random.randrange(100000000))
+        os.environ["PYTHONHASHSEED"] = str(random.randrange(2**32))
     else:
         if not force:
             return False
     # Now run the command
     commandstring = ("import sys; from %s import %s;sys.exit(%s(*%s, **%s))" %
-                     (module, function, function, repr(function_args), repr(function_kwargs)))
+                     (module, function, function, repr(function_args),
+                     repr(function_kwargs)))
 
     try:
         return subprocess.call([command, "-R", "-c", commandstring])
@@ -214,8 +224,9 @@ def run_in_subprocess_with_hash_randomization(function, function_args=(),
         else:
             os.environ["PYTHONHASHSEED"] = hash_seed
 
+
 def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
-    doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet':True}):
+                  doctest_kwargs={}, examples_args=(), examples_kwargs={'quiet': True}):
     """
     Run all tests.
 
@@ -226,14 +237,14 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
     This is what ``setup.py test`` uses.
 
     You can pass arguments and keyword arguments to the test functions that
-    support them (for now, test,  doctest, and the examples).  See the docstrings of those
-    functions for a description of the available options.
+    support them (for now, test,  doctest, and the examples). See the
+    docstrings of those functions for a description of the available options.
 
     For example, to run the solvers tests with colors turned off:
 
     >>> from sympy.utilities.runtests import run_all_tests
-
-    >>> run_all_tests(test_args=("solvers",), test_kwargs={"colors:False"}) # doctest: +SKIP
+    >>> run_all_tests(test_args=("solvers",),
+    ... test_kwargs={"colors:False"}) # doctest: +SKIP
 
     """
     tests_successful = True
@@ -253,7 +264,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
         # Examples
         print
         sys.path.append("examples")
-        from all import run_examples # examples/all.py
+        from all import run_examples  # examples/all.py
         if not run_examples(*examples_args, **examples_kwargs):
             tests_successful = False
 
@@ -261,8 +272,10 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
         if not (sys.platform == "win32" or sys.version_info[0] == 3):
             # run Sage tests; Sage currently doesn't support Windows or Python 3
             dev_null = open(os.devnull, 'w')
-            if subprocess.call("sage -v", shell=True, stdout=dev_null, stderr=dev_null) == 0:
-                if subprocess.call("sage -python bin/test sympy/external/tests/test_sage.py", shell=True) != 0:
+            if subprocess.call("sage -v", shell=True, stdout=dev_null,
+                               stderr=dev_null) == 0:
+                if subprocess.call("sage -python bin/test "
+                                   "sympy/external/tests/test_sage.py", shell=True) != 0:
                     tests_successful = False
 
         if tests_successful:
@@ -275,6 +288,7 @@ def run_all_tests(test_args=(), test_kwargs={}, doctest_args=(),
         print("DO *NOT* COMMIT!")
         sys.exit(1)
 
+
 def test(*paths, **kwargs):
     """
     Run tests in the specified test_*.py files.
@@ -285,9 +299,9 @@ def test(*paths, **kwargs):
 
     Notes:
 
-       * if sort=False, tests are run in random order (not default).
-       * paths can be entered in native system format or in unix,
-         forward-slash format.
+    - If sort=False, tests are run in random order (not default).
+    - Paths can be entered in native system format or in unix,
+      forward-slash format.
 
     **Explanation of test results**
 
@@ -360,7 +374,7 @@ def test(*paths, **kwargs):
     Force colors, even when the output is not to a terminal (this is useful,
     e.g., if you are piping to ``less -r`` and you still want colors)
 
-    >>> sympy.test(force_colors=False    # doctest: +SKIP
+    >>> sympy.test(force_colors=False)    # doctest: +SKIP
 
     The traceback verboseness can be set to "short" or "no" (default is
     "short")
@@ -389,7 +403,7 @@ def test(*paths, **kwargs):
     Python using
 
     >>> import os
-    >>> os,environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
+    >>> os.environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
 
     Or from the command line using
 
@@ -408,6 +422,7 @@ def test(*paths, **kwargs):
         if ret is not False:
             return not bool(ret)
     return not bool(_test(*paths, **kwargs))
+
 
 def _test(*paths, **kwargs):
     """
@@ -431,7 +446,8 @@ def _test(*paths, **kwargs):
         seed = random.randrange(100000000)
     timeout = kwargs.get("timeout", False)
     slow = kwargs.get("slow", False)
-    r = PyTestReporter(verbose=verbose, tb=tb, colors=colors, force_colors=force_colors)
+    r = PyTestReporter(verbose=verbose, tb=tb, colors=colors,
+        force_colors=force_colors)
     t = SymPyTests(r, kw, post_mortem, seed)
 
     # Disable warnings for external modules
@@ -456,16 +472,18 @@ def _test(*paths, **kwargs):
 
     return int(not t.test(sort=sort, timeout=timeout, slow=slow))
 
+
 def doctest(*paths, **kwargs):
     """
-    Runs doctests in all \*py files in the sympy directory which match
-    any of the given strings in `paths` or all tests if paths=[].
+    Runs doctests in all \*.py files in the sympy directory which match
+    any of the given strings in ``paths`` or all tests if paths=[].
 
-    Note:
-       o paths can be entered in native system format or in unix,
-         forward-slash format.
-       o files that are on the blacklist can be tested by providing
-         their path; they are only excluded if no paths are given.
+    Notes:
+
+    - Paths can be entered in native system format or in unix,
+      forward-slash format.
+    - Files that are on the blacklist can be tested by providing
+      their path; they are only excluded if no paths are given.
 
     Examples
     ========
@@ -473,16 +491,19 @@ def doctest(*paths, **kwargs):
     >>> import sympy
 
     Run all tests:
+
     >>> sympy.doctest() # doctest: +SKIP
 
     Run one file:
+
     >>> sympy.doctest("sympy/core/basic.py") # doctest: +SKIP
-    >>> sympy.doctest("polynomial.txt") # doctest: +SKIP
+    >>> sympy.doctest("polynomial.rst") # doctest: +SKIP
 
     Run all tests in sympy/functions/ and some particular file:
+
     >>> sympy.doctest("/functions", "basic.py") # doctest: +SKIP
 
-    Run any file having polynomial in its name, doc/src/modules/polynomial.txt,
+    Run any file having polynomial in its name, doc/src/modules/polynomial.rst,
     sympy/functions/special/polynomials.py, and sympy/polys/polynomial.py:
 
     >>> sympy.doctest("polynomial") # doctest: +SKIP
@@ -498,6 +519,7 @@ def doctest(*paths, **kwargs):
             return not bool(ret)
     return not bool(_doctest(*paths, **kwargs))
 
+
 def _doctest(*paths, **kwargs):
     """
     Internal function that actually runs the doctests.
@@ -512,23 +534,27 @@ def _doctest(*paths, **kwargs):
     verbose = kwargs.get("verbose", False)
     blacklist = kwargs.get("blacklist", [])
     blacklist.extend([
-                    "doc/src/modules/mpmath", # needs to be fixed upstream
-                    "sympy/mpmath", # needs to be fixed upstream
-                    "doc/src/modules/plotting.txt", # generates live plots
-                    # "sympy/plotting", # generates live plots
-                    "sympy/plotting/pygletplot", # generates live plots
-                    "sympy/utilities/compilef.py", # needs tcc
-                    "sympy/utilities/autowrap.py", # needs installed compiler
-                    "sympy/galgebra/GA.py", # needs numpy
-                    "sympy/galgebra/latex_ex.py", # needs numpy
-                    "sympy/conftest.py", # needs py.test
-                    "sympy/utilities/benchmarking.py", # needs py.test
-                    "examples/advanced/autowrap_integrators.py", # needs numpy
-                    "examples/advanced/autowrap_ufuncify.py", # needs numpy
-                    "examples/intermediate/mplot2d.py", # needs numpy and matplotlib
-                    "examples/intermediate/mplot3d.py", # needs numpy and matplotlib
-                    "examples/intermediate/sample.py", # needs numpy
-                    ])
+        "doc/src/modules/mpmath",  # needs to be fixed upstream
+        "sympy/mpmath",  # needs to be fixed upstream
+        "doc/src/modules/plotting.rst",  # generates live plots
+        # "sympy/plotting", # generates live plots
+        "sympy/plotting/pygletplot",  # generates live plots
+        "sympy/statistics",                # prints a deprecation
+        "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
+        "sympy/utilities/compilef.py",  # needs tcc
+        "sympy/utilities/autowrap.py",  # needs installed compiler
+        "sympy/galgebra/GA.py",  # needs numpy
+        "sympy/galgebra/latex_ex.py",  # needs numpy
+        "sympy/conftest.py",  # needs py.test
+        "sympy/utilities/benchmarking.py",  # needs py.test
+        "examples/advanced/autowrap_integrators.py",  # needs numpy
+        "examples/advanced/autowrap_ufuncify.py",  # needs numpy
+        "examples/intermediate/mplot2d.py",
+        # needs numpy and matplotlib
+        "examples/intermediate/mplot3d.py",
+        # needs numpy and matplotlib
+        "examples/intermediate/sample.py",  # needs numpy
+    ])
     blacklist = convert_to_native_paths(blacklist)
 
     # Disable warnings for external modules
@@ -543,7 +569,7 @@ def _doctest(*paths, **kwargs):
     test_files.extend(t.get_test_files('examples', init_only=False))
 
     not_blacklisted = [f for f in test_files
-                         if not any(b in f for b in blacklist)]
+                       if not any(b in f for b in blacklist)]
     if len(paths) == 0:
         t._testfiles.extend(not_blacklisted)
     else:
@@ -567,17 +593,17 @@ def _doctest(*paths, **kwargs):
 
     # N.B.
     # --------------------------------------------------------------------
-    # Here we test *.txt files at or below doc/src. Code from these must
+    # Here we test *.rst files at or below doc/src. Code from these must
     # be self supporting in terms of imports since there is no importing
     # of necessary modules by doctest.testfile. If you try to pass *.py
     # files through this they might fail because they will lack the needed
     # imports and smarter parsing that can be done with source code.
     #
-    test_files = t.get_test_files('doc/src', '*.txt', init_only=False)
+    test_files = t.get_test_files('doc/src', '*.rst', init_only=False)
     test_files.sort()
 
     not_blacklisted = [f for f in test_files
-                            if not any(b in f for b in blacklist)]
+                       if not any(b in f for b in blacklist)]
 
     if len(paths) == 0:
         matched = not_blacklisted
@@ -585,8 +611,8 @@ def _doctest(*paths, **kwargs):
         # Take only what was requested as long as it's not on the blacklist.
         # Paths were already made native in *py tests so don't repeat here.
         # There's no chance of having a *py file slip through since we
-        # only have *txt files in test_files.
-        matched =  []
+        # only have *rst files in test_files.
+        matched = []
         for f in not_blacklisted:
             basename = os.path.basename(f)
             for p in paths:
@@ -596,42 +622,47 @@ def _doctest(*paths, **kwargs):
 
     setup_pprint()
     first_report = True
-    for txt_file in matched:
-        if not os.path.isfile(txt_file):
+    for rst_file in matched:
+        if not os.path.isfile(rst_file):
             continue
         old_displayhook = sys.displayhook
         try:
-            # out = pdoctest.testfile(txt_file, module_relative=False, encoding='utf-8',
+            # out = pdoctest.testfile(
+            #    rst_file, module_relative=False, encoding='utf-8',
             #    optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE)
-            out = sympytestfile(txt_file, module_relative=False, encoding='utf-8',
-                optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE \
-                            | pdoctest.IGNORE_EXCEPTION_DETAIL)
+            out = sympytestfile(
+                rst_file, module_relative=False, encoding='utf-8',
+                optionflags=pdoctest.ELLIPSIS | pdoctest.NORMALIZE_WHITESPACE |
+                pdoctest.IGNORE_EXCEPTION_DETAIL)
         finally:
             # make sure we return to the original displayhook in case some
             # doctest has changed that
             sys.displayhook = old_displayhook
 
-        txtfailed, tested = out
+        rstfailed, tested = out
         if tested:
-            failed = txtfailed or failed
+            failed = rstfailed or failed
             if first_report:
                 first_report = False
-                msg = 'txt doctests start'
-                lhead = '='*((r.terminal_width - len(msg))//2 - 1)
-                rhead = '='*(r.terminal_width - 1 - len(msg) - len(lhead) - 1)
-                print ' '.join([lhead, msg, rhead])
-                print
+                msg = 'rst doctests start'
+                if not t._testfiles:
+                    r.start(msg=msg)
+                else:
+                    r.write_center(msg)
+                    print
             # use as the id, everything past the first 'sympy'
-            file_id = txt_file[txt_file.find('sympy') + len('sympy') + 1:]
-            print file_id, # get at least the name out so it is know who is being tested
-            wid = r.terminal_width - len(file_id) - 1 #update width
+            file_id = rst_file[rst_file.find('sympy') + len('sympy') + 1:]
+            print file_id,
+                # get at least the name out so it is know who is being tested
+            wid = r.terminal_width - len(file_id) - 1  # update width
             test_file = '[%s]' % (tested)
-            report = '[%s]' % (txtfailed or 'OK')
-            print ''.join([test_file,' '*(wid-len(test_file)-len(report)), report])
+            report = '[%s]' % (rstfailed or 'OK')
+            print ''.join(
+                [test_file, ' '*(wid - len(test_file) - len(report)), report])
 
     # the doctests for *py will have printed this message already if there was
     # a failure, so now only print it if there was intervening reporting by
-    # testing the *txt as evidenced by first_report no longer being True.
+    # testing the *rst as evidenced by first_report no longer being True.
     if not first_report and failed:
         print
         print("DO *NOT* COMMIT!")
@@ -640,11 +671,12 @@ def _doctest(*paths, **kwargs):
 
 # The Python 2.5 doctest runner uses a tuple, but in 2.6+, it uses a namedtuple
 # (which doesn't exist in 2.5-)
-if sys.version_info[:2] > (2,5):
+if sys.version_info[:2] > (2, 5):
     from collections import namedtuple
     SymPyTestResults = namedtuple('TestResults', 'failed attempted')
 else:
     SymPyTestResults = lambda a, b: (a, b)
+
 
 def sympytestfile(filename, module_relative=True, name=None, package=None,
              globs=None, verbose=None, report=True, optionflags=0,
@@ -653,69 +685,69 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
     """
     Test examples in the given file.  Return (#failures, #tests).
 
-    Optional keyword arg "module_relative" specifies how filenames
+    Optional keyword arg ``module_relative`` specifies how filenames
     should be interpreted:
 
-      - If "module_relative" is True (the default), then "filename"
-         specifies a module-relative path.  By default, this path is
-         relative to the calling module's directory; but if the
-         "package" argument is specified, then it is relative to that
-         package.  To ensure os-independence, "filename" should use
-         "/" characters to separate path segments, and should not
-         be an absolute path (i.e., it may not begin with "/").
+    - If ``module_relative`` is True (the default), then ``filename``
+      specifies a module-relative path.  By default, this path is
+      relative to the calling module's directory; but if the
+      ``package`` argument is specified, then it is relative to that
+      package.  To ensure os-independence, ``filename`` should use
+      "/" characters to separate path segments, and should not
+      be an absolute path (i.e., it may not begin with "/").
 
-      - If "module_relative" is False, then "filename" specifies an
-        os-specific path.  The path may be absolute or relative (to
-        the current working directory).
+    - If ``module_relative`` is False, then ``filename`` specifies an
+      os-specific path.  The path may be absolute or relative (to
+      the current working directory).
 
-    Optional keyword arg "name" gives the name of the test; by default
+    Optional keyword arg ``name`` gives the name of the test; by default
     use the file's basename.
 
-    Optional keyword argument "package" is a Python package or the
+    Optional keyword argument ``package`` is a Python package or the
     name of a Python package whose directory should be used as the
     base directory for a module relative filename.  If no package is
     specified, then the calling module's directory is used as the base
     directory for module relative filenames.  It is an error to
-    specify "package" if "module_relative" is False.
+    specify ``package`` if ``module_relative`` is False.
 
-    Optional keyword arg "globs" gives a dict to be used as the globals
+    Optional keyword arg ``globs`` gives a dict to be used as the globals
     when executing examples; by default, use {}.  A copy of this dict
     is actually used for each docstring, so that each docstring's
     examples start with a clean slate.
 
-    Optional keyword arg "extraglobs" gives a dictionary that should be
+    Optional keyword arg ``extraglobs`` gives a dictionary that should be
     merged into the globals that are used to execute examples.  By
     default, no extra globals are used.
 
-    Optional keyword arg "verbose" prints lots of stuff if true, prints
+    Optional keyword arg ``verbose`` prints lots of stuff if true, prints
     only failures if false; by default, it's true iff "-v" is in sys.argv.
 
-    Optional keyword arg "report" prints a summary at the end when true,
+    Optional keyword arg ``report`` prints a summary at the end when true,
     else prints nothing at the end.  In verbose mode, the summary is
     detailed, else very brief (in fact, empty if all tests passed).
 
-    Optional keyword arg "optionflags" or's together module constants,
+    Optional keyword arg ``optionflags`` or's together module constants,
     and defaults to 0.  Possible values (see the docs for details):
 
-        DONT_ACCEPT_TRUE_FOR_1
-        DONT_ACCEPT_BLANKLINE
-        NORMALIZE_WHITESPACE
-        ELLIPSIS
-        SKIP
-        IGNORE_EXCEPTION_DETAIL
-        REPORT_UDIFF
-        REPORT_CDIFF
-        REPORT_NDIFF
-        REPORT_ONLY_FIRST_FAILURE
+    - DONT_ACCEPT_TRUE_FOR_1
+    - DONT_ACCEPT_BLANKLINE
+    - NORMALIZE_WHITESPACE
+    - ELLIPSIS
+    - SKIP
+    - IGNORE_EXCEPTION_DETAIL
+    - REPORT_UDIFF
+    - REPORT_CDIFF
+    - REPORT_NDIFF
+    - REPORT_ONLY_FIRST_FAILURE
 
-    Optional keyword arg "raise_on_error" raises an exception on the
+    Optional keyword arg ``raise_on_error`` raises an exception on the
     first unexpected exception or failure. This allows failures to be
     post-mortem debugged.
 
-    Optional keyword arg "parser" specifies a DocTestParser (or
+    Optional keyword arg ``parser`` specifies a DocTestParser (or
     subclass) that should be used to extract tests from the files.
 
-    Optional keyword arg "encoding" specifies an encoding that should
+    Optional keyword arg ``encoding`` specifies an encoding that should
     be used to convert the file to unicode.
 
     Advanced tomfoolery:  testmod runs methods of a local instance of
@@ -732,11 +764,13 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
     # Relativize the path
     if not IS_PYTHON_3:
-        text, filename = pdoctest._load_testfile(filename, package, module_relative)
+        text, filename = pdoctest._load_testfile(
+            filename, package, module_relative)
         if encoding is not None:
             text = text.decode(encoding)
     else:
-        text, filename = pdoctest._load_testfile(filename, package, module_relative, encoding)
+        text, filename = pdoctest._load_testfile(
+            filename, package, module_relative, encoding)
 
     # If no name was given, then use the file's name.
     if name is None:
@@ -770,6 +804,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
         pdoctest.master.merge(runner)
 
     return SymPyTestResults(runner.failures, runner.tries)
+
 
 class SymPyTests(object):
 
@@ -809,10 +844,10 @@ class SymPyTests(object):
     def test_file(self, filename, sort=True, timeout=False, slow=False):
         clear_cache()
         self._count += 1
-        gl = {'__file__':filename}
+        gl = {'__file__': filename}
         random.seed(self._seed)
         try:
-            if IS_PYTHON_3 and IS_WINDOWS:
+            if IS_PYTHON_3:
                 with open(filename, encoding="utf8") as f:
                     source = f.read()
                 c = compile(source, filename, 'exec')
@@ -838,11 +873,10 @@ class SymPyTests(object):
             # that are defined in the testing file or in the file where
             # is defined the XFAIL decorator
             funcs = [gl[f] for f in gl.keys() if f.startswith("test_") and
-                                                 (inspect.isfunction(gl[f])
-                                                    or inspect.ismethod(gl[f])) and
-                                                 (inspect.getsourcefile(gl[f]) == filename or
-                                                   inspect.getsourcefile(gl[f]) == pytestfile or
-                                                   inspect.getsourcefile(gl[f]) == pytestfile2)]
+                (inspect.isfunction(gl[f]) or inspect.ismethod(gl[f])) and
+                (inspect.getsourcefile(gl[f]) == filename or
+                 inspect.getsourcefile(gl[f]) == pytestfile or
+                 inspect.getsourcefile(gl[f]) == pytestfile2)]
             if slow:
                 funcs = [f for f in funcs if getattr(f, '_slow', False)]
             # Sorting of XFAILed functions isn't fixed yet :-(
@@ -886,7 +920,7 @@ class SymPyTests(object):
                     raise
             except Exception:
                 if timeout:
-                    signal.alarm(0) # Disable the alarm. It could not be handled before.
+                    signal.alarm(0)  # Disable the alarm. It could not be handled before.
                 t, v, tr = sys.exc_info()
                 if t is AssertionError:
                     self._reporter.test_fail((t, v, tr))
@@ -907,13 +941,13 @@ class SymPyTests(object):
         self._reporter.leaving_filename()
 
     def _timeout(self, function, timeout):
-        def callback(x,y):
+        def callback(x, y):
             signal.alarm(0)
             raise Skipped("Timeout")
         signal.signal(signal.SIGALRM, callback)
-        signal.alarm(timeout) # Set an alarm with a given timeout
+        signal.alarm(timeout)  # Set an alarm with a given timeout
         function()
-        signal.alarm(0) # Disable the alarm
+        signal.alarm(0)  # Disable the alarm
 
     def matches(self, x):
         """
@@ -925,10 +959,10 @@ class SymPyTests(object):
             return True
         return x.__name__.find(self._kw) != -1
 
-    def get_test_files(self, dir, pat = 'test_*.py'):
+    def get_test_files(self, dir, pat='test_*.py'):
         """
         Returns the list of test_*.py (default) files at or below directory
-        `dir` relative to the sympy home directory.
+        ``dir`` relative to the sympy home directory.
         """
         dir = os.path.join(self._root_dir, convert_to_native_paths([dir])[0])
 
@@ -937,6 +971,7 @@ class SymPyTests(object):
             g.extend([os.path.join(path, f) for f in files if fnmatch(f, pat)])
 
         return [sys_normcase(gi) for gi in g]
+
 
 class SymPyDocTests(object):
 
@@ -968,7 +1003,7 @@ class SymPyDocTests(object):
 
         from StringIO import StringIO
 
-        rel_name = filename[len(self._root_dir)+1:]
+        rel_name = filename[len(self._root_dir) + 1:]
         dirname, file = os.path.split(filename)
         module = rel_name.replace(os.sep, '.')[:-3]
 
@@ -976,7 +1011,7 @@ class SymPyDocTests(object):
             # Examples files do not have __init__.py files,
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
-            module = file[:-3] # remove ".py"
+            module = file[:-3]  # remove ".py"
         setup_pprint()
         try:
             module = pdoctest._normalize_module(module)
@@ -1003,8 +1038,9 @@ class SymPyDocTests(object):
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
-            runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS | \
-                    pdoctest.NORMALIZE_WHITESPACE | pdoctest.IGNORE_EXCEPTION_DETAIL)
+            runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
+                    pdoctest.NORMALIZE_WHITESPACE |
+                    pdoctest.IGNORE_EXCEPTION_DETAIL)
             old = sys.stdout
             new = StringIO()
             sys.stdout = new
@@ -1033,10 +1069,10 @@ class SymPyDocTests(object):
 
     def get_test_files(self, dir, pat='*.py', init_only=True):
         """
-        Returns the list of *py files (default) from which docstrings
-        will be tested which are at or below directory `dir`. By default,
+        Returns the list of \*.py files (default) from which docstrings
+        will be tested which are at or below directory ``dir``. By default,
         only those that have an __init__.py in their parent directory
-        and do not start with `test_` will be included.
+        and do not start with ``test_`` will be included.
         """
         def importable(x):
             """
@@ -1064,6 +1100,7 @@ class SymPyDocTests(object):
 
         return [sys_normcase(gi) for gi in g]
 
+
 class SymPyDocTestFinder(DocTestFinder):
     """
     A class used to extract the DocTests that are relevant to a given
@@ -1082,7 +1119,7 @@ class SymPyDocTestFinder(DocTestFinder):
     def _find(self, tests, obj, name, module, source_lines, globs, seen):
         """
         Find tests for the given object and any contained objects, and
-        add them to `tests`.
+        add them to ``tests``.
         """
         if self._verbose:
             print 'Finding tests in %s' % name
@@ -1114,14 +1151,16 @@ class SymPyDocTestFinder(DocTestFinder):
                         # and just appears to come from a different module.
                         pat = r'\s*(def|class)\s+%s\s*\(' % rawname
                         PAT = pre.compile(pat)
-                        in_module = any(PAT.match(line) for line in source_lines)
+                        in_module = any(
+                            PAT.match(line) for line in source_lines)
                     if in_module:
                         try:
                             valname = '%s.%s' % (name, rawname)
-                            self._find(tests, val, valname, module, source_lines, globs, seen)
+                            self._find(tests, val, valname, module,
+                                source_lines, globs, seen)
                         except KeyboardInterrupt:
                             raise
-                        except ValueError, msg:
+                        except ValueError:
                             raise
                         except Exception:
                             pass
@@ -1155,14 +1194,15 @@ class SymPyDocTestFinder(DocTestFinder):
 
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
-                     inspect.isclass(val) or
-                     isinstance(val, property)):
+                    inspect.isclass(val) or
+                        isinstance(val, property)):
                     in_module = self._from_module(module, val)
                     if not in_module:
                         # "double check" again
                         pat = r'\s*(def|class)\s+%s\s*\(' % valname
                         PAT = pre.compile(pat)
-                        in_module = any(PAT.match(line) for line in source_lines)
+                        in_module = any(PAT.match(line) for line in
+                            source_lines)
                     if in_module:
                         valname = '%s.%s' % (name, valname)
                         self._find(tests, val, valname, module, source_lines,
@@ -1195,10 +1235,10 @@ class SymPyDocTestFinder(DocTestFinder):
             # if None, then _find_lineno couldn't find the docstring.
             # But IT IS STILL THERE.  Likely it was decorated or something
             # (i.e., @property docstrings have lineno == None)
-            # TODO: Write our own _find_lineno that is smarter in this regard
+            # TODO: Write our own _find_lineno that is smarter in this regard.
             # Until then, just give it a dummy lineno.  This is just used for
-            # sorting the tests, so the only bad effect is that they will appear
-            # last instead of the order that they really are in the file.
+            # sorting the tests, so the only bad effect is that they will
+            # appear last instead of in the order that they appear in the file.
             # lineno is also used to report the offending line of a failing
             # doctest, which is another reason to fix this.  See issue 1947.
             lineno = 0
@@ -1217,12 +1257,13 @@ class SymPyDocTestFinder(DocTestFinder):
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
 
+
 class SymPyDocTestRunner(DocTestRunner):
     """
     A class used to run DocTest test cases, and accumulate statistics.
-    The `run` method is used to process a single DocTest case.  It
-    returns a tuple `(f, t)`, where `t` is the number of test cases
-    tried, and `f` is the number of test cases that failed.
+    The ``run`` method is used to process a single DocTest case.  It
+    returns a tuple ``(f, t)``, where ``t`` is the number of test cases
+    tried, and ``f`` is the number of test cases that failed.
 
     Modified from the doctest version to not reset the sys.displayhook (see
     issue 2041).
@@ -1232,23 +1273,23 @@ class SymPyDocTestRunner(DocTestRunner):
 
     def run(self, test, compileflags=None, out=None, clear_globs=True):
         """
-        Run the examples in `test`, and display the results using the
-        writer function `out`.
+        Run the examples in ``test``, and display the results using the
+        writer function ``out``.
 
-        The examples are run in the namespace `test.globs`.  If
-        `clear_globs` is true (the default), then this namespace will
+        The examples are run in the namespace ``test.globs``.  If
+        ``clear_globs`` is true (the default), then this namespace will
         be cleared after the test runs, to help with garbage
         collection.  If you would like to examine the namespace after
-        the test completes, then use `clear_globs=False`.
+        the test completes, then use ``clear_globs=False``.
 
-        `compileflags` gives the set of flags that should be used by
+        ``compileflags`` gives the set of flags that should be used by
         the Python compiler when running the examples.  If not
         specified, then it will default to the set of future-import
-        flags that apply to `globs`.
+        flags that apply to ``globs``.
 
         The output of each example is checked using
-        `SymPyDocTestRunner.check_output`, and the results are formatted by
-        the `SymPyDocTestRunner.report_*` methods.
+        ``SymPyDocTestRunner.check_output``, and the results are
+        formatted by the ``SymPyDocTestRunner.report_*`` methods.
         """
         self.test = test
 
@@ -1291,18 +1332,21 @@ SymPyDocTestRunner._SymPyDocTestRunner__run = DocTestRunner._DocTestRunner__run
 SymPyDocTestRunner._SymPyDocTestRunner__record_outcome = \
     DocTestRunner._DocTestRunner__record_outcome
 
+
 class Reporter(object):
     """
     Parent class for all reporters.
     """
     pass
 
+
 class PyTestReporter(Reporter):
     """
     Py.test like reporter. Should produce output identical to py.test.
     """
 
-    def __init__(self, verbose=False, tb="short", colors=True, force_colors=False):
+    def __init__(self, verbose=False, tb="short", colors=True,
+                 force_colors=False):
         self._verbose = verbose
         self._tb_style = tb
         self._colors = colors
@@ -1334,7 +1378,8 @@ class PyTestReporter(Reporter):
             if sys.platform == "win32":
                 # Windows support is based on:
                 #
-                #  http://code.activestate.com/recipes/440694-determine-size-of-console-window-on-windows/
+                #  http://code.activestate.com/recipes/
+                #  440694-determine-size-of-console-window-on-windows/
 
                 from ctypes import windll, create_string_buffer
 
@@ -1344,16 +1389,19 @@ class PyTestReporter(Reporter):
 
                 if res:
                     import struct
-                    (_, _, _, _, _, left, _, right, _, _, _) = struct.unpack("hhhhHhhhhhh", csbi.raw)
+                    (_, _, _, _, _, left, _, right, _, _, _) = \
+                        struct.unpack("hhhhHhhhhhh", csbi.raw)
                     return right - left
                 else:
                     return self._default_width
 
             if hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
-                return self._default_width # leave PIPEs alone
+                return self._default_width  # leave PIPEs alone
 
             try:
-                process = subprocess.Popen(['stty', '-a'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                process = subprocess.Popen(['stty', '-a'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
                 stdout = process.stdout.read()
                 if sys.version_info[0] > 2:
                     stdout = stdout.decode("utf-8")
@@ -1366,8 +1414,8 @@ class PyTestReporter(Reporter):
                 # 2) OS X    -> 80 columns
                 # 3) Solaris -> columns = 80
 
-                re_linux   = r"columns\s+(?P<columns>\d+);"
-                re_osx     = r"(?P<columns>\d+)\s*columns;"
+                re_linux = r"columns\s+(?P<columns>\d+);"
+                re_osx = r"(?P<columns>\d+)\s*columns;"
                 re_solaris = r"columns\s+=\s+(?P<columns>\d+);"
 
                 for regex in (re_linux, re_osx, re_solaris):
@@ -1388,39 +1436,41 @@ class PyTestReporter(Reporter):
 
         return width
 
-    def write(self, text, color="", align="left", width=None, force_colors=False):
+    def write(self, text, color="", align="left", width=None,
+              force_colors=False):
         """
         Prints a text on the screen.
 
         It uses sys.stdout.write(), so no readline library is necessary.
 
-        +-------+-------------------------------------------------------------+
-        | color | choose from the colors below, "" means default color        |
-        +-------+-------------------------------------------------------------+
-        | align | left/right, left is a normal print, right is aligned on the |
-        |       | right hand side of the screen, filled with " " if necessary |
-        +-------+-------------------------------------------------------------+
-        | width | the screen width                                            |
-        +-------+-------------------------------------------------------------+
+        Parameters
+        ==========
+
+        color : choose from the colors below, "" means default color
+        align : "left"/"right", "left" is a normal print, "right" is aligned on
+                the right-hand side of the screen, filled with spaces if
+                necessary
+        width : the screen width
 
         """
         color_templates = (
-            ("Black"       , "0;30"),
-            ("Red"         , "0;31"),
-            ("Green"       , "0;32"),
-            ("Brown"       , "0;33"),
-            ("Blue"        , "0;34"),
-            ("Purple"      , "0;35"),
-            ("Cyan"        , "0;36"),
-            ("LightGray"   , "0;37"),
-            ("DarkGray"    , "1;30"),
-            ("LightRed"    , "1;31"),
-            ("LightGreen"  , "1;32"),
-            ("Yellow"      , "1;33"),
-            ("LightBlue"   , "1;34"),
-            ("LightPurple" , "1;35"),
-            ("LightCyan"   , "1;36"),
-            ("White"       , "1;37"),  )
+            ("Black", "0;30"),
+            ("Red", "0;31"),
+            ("Green", "0;32"),
+            ("Brown", "0;33"),
+            ("Blue", "0;34"),
+            ("Purple", "0;35"),
+            ("Cyan", "0;36"),
+            ("LightGray", "0;37"),
+            ("DarkGray", "1;30"),
+            ("LightRed", "1;31"),
+            ("LightGreen", "1;32"),
+            ("Yellow", "1;33"),
+            ("LightBlue", "1;34"),
+            ("LightPurple", "1;35"),
+            ("LightCyan", "1;36"),
+            ("White", "1;37"),
+        )
 
         colors = {}
 
@@ -1433,38 +1483,46 @@ class PyTestReporter(Reporter):
             width = self.terminal_width
 
         if align == "right":
-            if self._write_pos+len(text) > width:
+            if self._write_pos + len(text) > width:
                 # we don't fit on the current line, create a new line
                 self.write("\n")
-            self.write(" "*(width-self._write_pos-len(text)))
+            self.write(" "*(width - self._write_pos - len(text)))
 
-        if not self._force_colors and hasattr(sys.stdout, 'isatty') and not sys.stdout.isatty():
+        if not self._force_colors and hasattr(sys.stdout, 'isatty') and not \
+                sys.stdout.isatty():
             # the stdout is not a terminal, this for example happens if the
             # output is piped to less, e.g. "bin/test | less". In this case,
             # the terminal control sequences would be printed verbatim, so
             # don't use any colors.
             color = ""
-        if sys.platform == "win32":
+        elif sys.platform == "win32":
             # Windows consoles don't support ANSI escape sequences
+            color = ""
+        elif not self._colors:
             color = ""
 
         if self._line_wrap:
             if text[0] != "\n":
                 sys.stdout.write("\n")
 
+        # Avoid UnicodeEncodeError when printing out test failures
         if IS_PYTHON_3 and IS_WINDOWS:
             text = text.encode('raw_unicode_escape').decode('utf8', 'ignore')
+        elif IS_PYTHON_3 and not sys.stdout.encoding.lower().startswith('utf'):
+            text = text.encode(sys.stdout.encoding, 'backslashreplace'
+                              ).decode(sys.stdout.encoding)
 
         if color == "":
             sys.stdout.write(text)
         else:
-            sys.stdout.write("%s%s%s" % (c_color % colors[color], text, c_normal))
+            sys.stdout.write("%s%s%s" %
+                (c_color % colors[color], text, c_normal))
         sys.stdout.flush()
         l = text.rfind("\n")
         if l == -1:
             self._write_pos += len(text)
         else:
-            self._write_pos = len(text)-l-1
+            self._write_pos = len(text) - l - 1
         self._line_wrap = self._write_pos >= width
         self._write_pos %= width
 
@@ -1472,9 +1530,9 @@ class PyTestReporter(Reporter):
         width = self.terminal_width
         if text != "":
             text = " %s " % text
-        idx = (width-len(text)) // 2
-        t = delim*idx + text + delim*(width-idx-len(text))
-        self.write(t+"\n")
+        idx = (width - len(text)) // 2
+        t = delim*idx + text + delim*(width - idx - len(text))
+        self.write(t + "\n")
 
     def write_exception(self, e, val, tb):
         t = traceback.extract_tb(tb)
@@ -1485,12 +1543,13 @@ class PyTestReporter(Reporter):
         t = traceback.format_exception_only(e, val)
         self.write("".join(t))
 
-    def start(self, seed=None):
-        self.write_center("test process starts")
+    def start(self, seed=None, msg="test process starts"):
+        self.write_center(msg)
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:         %s  (%s)\n" % (executable, python_version))
+        self.write("executable:         %s  (%s)\n" %
+            (executable, python_version))
         from .misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
@@ -1501,13 +1560,9 @@ class PyTestReporter(Reporter):
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION
         self.write("hash randomization: ")
-        if HASH_RANDOMIZATION:
-            hash_seed = os.getenv("PYTHONHASHSEED")
-            if hash_seed:
-                self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
-            else:
-                # This should not happen.
-                self.write("on (PYTHONHASHSEED not set)\n")
+        hash_seed = os.getenv("PYTHONHASHSEED")
+        if HASH_RANDOMIZATION and (hash_seed == "random" or int(hash_seed)):
+            self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
         else:
             self.write("off\n")
         self.write('\n')
@@ -1519,6 +1574,7 @@ class PyTestReporter(Reporter):
         global text, linelen
         text = "tests finished: %d passed, " % self._passed
         linelen = len(text)
+
         def add_text(mytext):
             global text, linelen
             """Break new text if too long."""
@@ -1541,7 +1597,6 @@ class PyTestReporter(Reporter):
         if len(self._exceptions) > 0:
             add_text("%d exceptions, " % len(self._exceptions))
         add_text("in %.2f seconds" % (self._t_end - self._t_start))
-
 
         if len(self._xpassed) > 0:
             self.write_center("xpassed tests", "_")
@@ -1582,25 +1637,24 @@ class PyTestReporter(Reporter):
 
         self.write_center(text)
         ok = len(self._failed) == 0 and len(self._exceptions) == 0 and \
-                len(self._failed_doctest) == 0
+            len(self._failed_doctest) == 0
         if not ok:
             self.write("DO *NOT* COMMIT!\n")
         return ok
 
     def entering_filename(self, filename, n):
-        rel_name = filename[len(self._root_dir)+1:]
+        rel_name = filename[len(self._root_dir) + 1:]
         self._active_file = rel_name
         self._active_file_error = False
         self.write(rel_name)
         self.write("[%d] " % n)
 
     def leaving_filename(self):
-        if self._colors:
-            self.write(" ")
-            if self._active_file_error:
-                self.write("[FAIL]", "Red", align="right")
-            else:
-                self.write("[OK]", "Green", align="right")
+        self.write(" ")
+        if self._active_file_error:
+            self.write("[FAIL]", "Red", align="right")
+        else:
+            self.write("[OK]", "Green", align="right")
         self.write("\n")
         if self._verbose:
             self.write("\n")
@@ -1608,7 +1662,7 @@ class PyTestReporter(Reporter):
     def entering_test(self, f):
         self._active_f = f
         if self._verbose:
-            self.write("\n"+f.__name__+" ")
+            self.write("\n" + f.__name__ + " ")
 
     def test_xfail(self):
         self._xfailed += 1
@@ -1648,9 +1702,12 @@ class PyTestReporter(Reporter):
             message = str(v)
         self._skipped += 1
         char = "s"
-        if message == "KeyboardInterrupt": char = "K"
-        elif message == "Timeout": char = "T"
-        elif message == "Slow": char = "w"
+        if message == "KeyboardInterrupt":
+            char = "K"
+        elif message == "Timeout":
+            char = "T"
+        elif message == "Slow":
+            char = "w"
         self.write(char, "Blue")
         if self._verbose:
             self.write(" - ", "Blue")
@@ -1663,12 +1720,11 @@ class PyTestReporter(Reporter):
 
     def import_error(self, filename, exc_info):
         self._exceptions.append((filename, None, exc_info))
-        rel_name = filename[len(self._root_dir)+1:]
+        rel_name = filename[len(self._root_dir) + 1:]
         self.write(rel_name)
         self.write("[?]   Failed to import", "Red")
-        if self._colors:
-            self.write(" ")
-            self.write("[FAIL]", "Red", align="right")
+        self.write(" ")
+        self.write("[FAIL]", "Red", align="right")
         self.write("\n")
 
 sympy_dir = get_sympy_dir()
