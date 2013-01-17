@@ -1047,11 +1047,9 @@ def _trigpats():
     return _trigpat
 
 
-def _trigsimp(expr, deep=False, numbers=False):
+def _trigsimp(expr, deep=False):
     """recursive helper for trigsimp"""
     if not expr.has(C.TrigonometricFunction, C.HyperbolicFunction):
-        return expr
-    elif not numbers and expr.is_number:
         return expr
 
     if _trigpat is None:
@@ -1077,10 +1075,11 @@ def _trigsimp(expr, deep=False, numbers=False):
                         ok = ok2.subs(res)
                         if not ok.is_positive:
                             continue
-                    # if "a" contains any of sin("b"), cos("b"), tan("b"), cot("b"),
-                    # sinh("b"), cosh("b"), tanh("b") or coth("b),
-                    # skip the simplification:
-                    if res[a].has(C.TrigonometricFunction, C.HyperbolicFunction):
+                    # if "a" contains any of sin("b"), cos("b"), tan("b"),
+                    # cot("b"), sinh("b"), cosh("b"), tanh("b") or
+                    # coth("b) then skip the simplification:
+                    if res[a].has(C.TrigonometricFunction,
+                            C.HyperbolicFunction):
                         continue
                     # simplify and finish:
                     expr = simp.subs(res)
@@ -1118,8 +1117,6 @@ def _trigsimp(expr, deep=False, numbers=False):
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
         for pattern, result, ex in artifacts:
-            if expr.is_number and numbers is False:
-                break
             if not _dotrig(expr, pattern):
                 continue
             # Substitute a new wild that excludes some function(s)
@@ -1131,7 +1128,8 @@ def _trigsimp(expr, deep=False, numbers=False):
 
             m = expr.match(pattern)
             while m is not None:
-                if m[a_t] == 0 or -m[a_t] in m[c].args or m[a_t] + m[c] == 0:
+                if m[a_t] == 0 or \
+                        -m[a_t] in m[c].args or m[a_t] + m[c] == 0:
                     break
                 if d in m.keys() and m[a_t]*m[d] + m[c] == 0:
                     break
