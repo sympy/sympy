@@ -5,7 +5,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
-    expand_multinomial, FunctionClass, expand_power_base, symbols)
+    expand_multinomial, FunctionClass, expand_power_base, symbols, igcd)
 
 from sympy.core.compatibility import iterable, reduce, default_sort_key
 from sympy.core.numbers import Float
@@ -1358,7 +1358,7 @@ def trigsimp(expr, **opts):
 
     >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
     >>> trigsimp(e)
-    (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
+    (-sin(x) + 1)/cos(x) - cos(x)/(sin(x) - 1)
     >>> trigsimp(e, method="groebner")
     2/cos(x)
 
