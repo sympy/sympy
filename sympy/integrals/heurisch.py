@@ -10,7 +10,7 @@ from sympy.core.compatibility import permutations
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
-from sympy.functions import sqrt, erf
+from sympy.functions import sqrt, erf, erfi
 
 from sympy.solvers import solve
 
@@ -197,14 +197,17 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
                         M = g.args[0].match(a*x**2)
 
                         if M is not None:
-                            terms.add(erf(sqrt(-M[a])*x))
+                            if M[a].is_positive:
+                                terms.add(erfi(sqrt(M[a])*x))
+                            else: # M[a].is_negative or unknown
+                                terms.add(erf(sqrt(-M[a])*x))
 
                         M = g.args[0].match(a*x**2 + b*x + c)
 
                         if M is not None:
                             if M[a].is_positive:
                                 terms.add(sqrt(pi/4*(-M[a]))*exp(M[c] - M[b]**2/(4*M[a]))*
-                                          erf(-sqrt(-M[a])*x + M[b]/(2*sqrt(-M[a]))))
+                                          erfi(sqrt(M[a])*x + M[b]/(2*sqrt(M[a]))))
                             elif M[a].is_negative:
                                 terms.add(sqrt(pi/4*(-M[a]))*exp(M[c] - M[b]**2/(4*M[a]))*
                                           erf(sqrt(-M[a])*x - M[b]/(2*sqrt(-M[a]))))
@@ -213,7 +216,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3):
 
                         if M is not None:
                             if M[a].is_positive:
-                                terms.add(-I*erf(I*(sqrt(M[a])*log(x) + 1/(2*sqrt(M[a])))))
+                                terms.add(erfi(sqrt(M[a])*log(x) + 1/(2*sqrt(M[a]))))
                             if M[a].is_negative:
                                 terms.add(erf(sqrt(-M[a])*log(x) - 1/(2*sqrt(-M[a]))))
 
