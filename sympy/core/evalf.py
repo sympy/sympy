@@ -383,12 +383,10 @@ def add_terms(terms, prec, target_prec):
     new_terms = [C.Float._new(t[0], 1) for t in terms]
     if (S.NaN in new_terms or S.Infinity in new_terms
         or S.NegativeInfinity in new_terms):
-        new_sum = S.Zero
-        for t in new_terms:
-            new_sum = new_sum + t
-        result = evalf(new_sum, prec+4, {})
-        r = result[0], result[2]
-        return r
+        from sympy import Add
+        r = Add(*new_terms)
+        r = evalf(r, prec+4, {})
+        return r[0], r[2]
 
     for x, accuracy in terms:
         sign, man, exp, bc = x
@@ -503,13 +501,13 @@ def evalf_mul(v, prec, options):
     complex_factors = []
 
     terms = [evalf(arg, prec + 10, options) for arg in v.args]
+    # C already imported on top but python gived UnboundLocalError
     from core import C
     terms = [C.Float._new(t[0], prec) for t in terms if t[0] is not None]
     if (S.NaN in terms or S.Infinity in terms
         or S.NegativeInfinity in terms):
-        new_mul = S.One
-        for t in terms:
-            new_mul *=  t
+        from sympy import Mul
+        new_mul = Mul(*terms)
         return evalf(new_mul, prec+4, {})
 
     for i, arg in enumerate(args):
