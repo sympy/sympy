@@ -378,7 +378,9 @@ def add_terms(terms, prec, target_prec):
         return terms[0]
     working_prec = 2*prec
     sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
-    new_terms = [C.Float._new(t[0], prec) for t in terms]
+    # using 1 for precision since we just want to calculate
+    # nan, inf and -inf properly
+    new_terms = [C.Float._new(t[0], 1) for t in terms]
     if (S.NaN in new_terms or S.Infinity in new_terms
         or S.NegativeInfinity in new_terms):
         new_sum = S.Zero
