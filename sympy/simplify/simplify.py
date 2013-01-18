@@ -13,7 +13,6 @@ from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
 
-from sympy.logic import simplify_logic
 from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
 from sympy.utilities.iterables import flatten, has_variety
 
