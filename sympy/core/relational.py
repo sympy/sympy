@@ -197,6 +197,10 @@ class Relational(Boolean, Expr, EvalfMixin):
     def _eval_relation_doit(cls, lhs, rhs):
         return cls._eval_relation(lhs, rhs)
 
+    def _eval_simplify(self, ratio, measure):
+        return self.__class__(self.lhs.simplify(ratio=ratio),
+                              self.rhs.simplify(ratio=ratio))
+
 
 class Equality(Relational):
 
