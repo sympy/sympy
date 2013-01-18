@@ -717,35 +717,60 @@ def _multiset_histogram(n):
 
 
 def nP(n, k=None, replacement=False):
-    """Return the number of permutations of n items (entered as string,
-    integer or sequence) taken k at a time.
+    """Return the number of permutations of ``n`` items taken ``k`` at a time.
+
+    Possible values for ``n``::
+        integer - set of length ``n``
+        sequence - converted to a multiset internally
+        multiset - {element: multiplicity}
 
     If ``k`` is None then the total of all permutations of length 0
-    through ``n`` will be returned.
+    through the number of items represented by ``n`` will be returned.
+
+    If ``replacement`` is True then a given item can appear more than once
+    in the ``k`` items. (For example, for 'ab' permutations of 2 would
+    include 'aa', 'ab', 'ba' and 'bb'.) The multiplicity of elements in
+    ``n`` is ignored when ``replacement`` is True but the total number
+    of elements is considered since no element can appear more times than
+    the number of elements in ``n``.
 
     Examples
     ========
 
     >>> from sympy.functions.combinatorial.numbers import nP
+    >>> from sympy.utilities.iterables import multiset_permutations, multiset
     >>> nP(3, 2)
     6
-    >>> nP('abc', 2)
-    6
+    >>> nP('abc', 2) == nP(multiset('abc'), 2) == 6
+    True
     >>> nP('aab', 2)
     3
     >>> nP([1, 2, 2], 2)
     3
     >>> [nP(3, i) for i in range(4)]
     [1, 3, 6, 6]
+    >>> nP(3) == sum(_)
+    True
+
+    When ``replacement`` is True, each item can have multiplicity
+    equal to the length represented by ``n``:
+
+    >>> nP('aabc', replacement=True)
+    121
+    >>> [len(list(multiset_permutations('aaaabbbbcccc', i))) for i in range(5)]
+    [1, 3, 9, 27, 81]
     >>> sum(_)
-    16
-    >>> nP(3, -3)
-    16
+    121
 
     References
     ==========
 
     http://en.wikipedia.org/wiki/Permutation
+
+    See Also
+    ========
+    sympy.utilities.iterables.multiset_permutations
+
     """
     try:
         n = as_int(n)
@@ -920,7 +945,7 @@ def nC(n, k=None, replacement=False):
 
     See Also
     ========
-    multiset_combinations
+    sympy.utilities.iterables.multiset_combinations
     """
     from sympy.functions.combinatorial.factorials import binomial
     from sympy.core.mul import prod
@@ -963,22 +988,22 @@ def stirling(n, k, d=None, kind=2):
     { } = 1;  { } = { } = 0; {     } = j*{ } + {     }
     {0}       {0}   {k}      {  k  }     {k}   {k - 1}
 
-    where j = n for Stirling numbers of the first kind and k for Stirling
-    numbers of the second kind.
+    where ``j`` = ``n`` for Stirling numbers of the first kind and ``k``
+    for Stirling numbers of the second kind.
 
-    The first kind of Stirling number counts the number of permutations of n
-    distinct items that have k cycles; the second kind counts the ways in
-    which n distinct items can be partitioned into k parts. If d is given,
-    the "reduced Stirling number of the second kind" is returned:
-    ``S^d(n, k) = S(n - d + 1, k - d + 1)`` with ``n >= k >= d``. (This
-    is the number of ways to partition n integers into k groups with no
-    pairwise difference less than d.)
+    The first kind of Stirling number counts the number of permutations of
+    ``n`` distinct items that have ``k`` cycles; the second kind counts the
+    ways in which ``n`` distinct items can be partitioned into ``k`` parts.
+    If ``d`` is given, the "reduced Stirling number of the second kind" is
+    returned: ``S^{d}(n, k) = S(n - d + 1, k - d + 1)`` with ``n >= k >= d``.
+    (This counts the ways to partition ``n`` consecutive integers into
+    ``k`` groups with no pairwise difference less than ``d``. See example
+    below.)
 
     Examples
     ========
 
-    >>> from sympy.functions.combinatorial.numbers import stirling
-    >>> from sympy import bell
+    >>> from sympy.functions.combinatorial.numbers import stirling, bell
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.utilities.iterables import multiset_partitions, permutations
 
@@ -1054,13 +1079,21 @@ def _nT(n, k):
 
 
 def nT(n, k=None):
-    """Return the number of k-sized partitions of n items. If n is an integer
-    it is interpreted as n identical items; n can also be entered as
-    a multiset, or sequence. To indicate n different items, pass range(n)
-    for n.
+    """Return the number of ``k``-sized partitions of ``n`` items.
 
-    If ``k`` is None the total number of ways to partion ``n`` will be
-    returned.
+    Possible values for ``n``::
+        integer - ``n`` identical items
+        sequence - converted to a multiset internally
+        multiset - {element: multiplicity}
+
+    Note: the convention for ``nT`` is different than that of ``nC`` and``nP`` in that
+    here an integer indicates ``n`` *identical* items instead of a set of
+    length ``n``; this is in keepng with the ``partitions`` function which
+    treats its integer-``n`` input like a list of ``n`` 1s. One can use
+    ``range(n)`` for ``n`` to indicate ``n`` distinct items.
+
+    If ``k`` is None then the total number of ways to partition the elements
+    represented in ``n`` will be returned.
 
     Examples
     ========
@@ -1071,36 +1104,37 @@ def nT(n, k=None):
 
     >>> [nT('aabbc', i) for i in range(1, 7)]
     [1, 8, 11, 5, 1, 0]
-    >>> [nT('aabbc', -i) for i in range(1, 7)]
-    [1, 9, 20, 25, 26, 26]
-    >>> nT('aabbc')
-    26
-    >>> [nT("mississippi", i) for i in range(1,12)]
+    >>> nT('aabbc') == sum(_)
+    True
+
+    (TODO The following can be activated with >>> when
+    taocp_multiset_permutation is in place.)
+    >> [nT("mississippi", i) for i in range(1, 12)]
     [1, 74, 609, 1521, 1768, 1224, 579, 197, 50, 9, 1]
 
     Partitions when all items are identical:
 
     >>> [nT(5, i) for i in range(1, 6)]
     [1, 2, 2, 1, 1]
-    >>> [nT(5, -i) for i in range(1, 6)]
-    [1, 3, 5, 6, 7]
-    >>> nT(5)
-    7
+    >>> nT('1'*5) == sum(_)
+    True
 
     When all items are different:
 
-    >>> n = range(5)
-    >>> [nT(n, i) for i in range(1, 6)]
+    >>> [nT(range(5), i) for i in range(1, 6)]
     [1, 15, 25, 10, 1]
-    >>> [nT(n, -i) for i in range(1, 6)]
-    [1, 16, 41, 51, 52]
-    >>> nT(n)
-    52
+    >>> nT(range(5)) == sum(_)
+    True
 
     References
     ==========
 
     * http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
+
+    See Also
+    ========
+    sympy.utilities.iterables.partitions
+    sympy.utilities.iterables.multiset_partitions
 
     """
     from sympy.utilities.iterables import multiset_partitions
