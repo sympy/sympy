@@ -120,7 +120,6 @@ class Pow(Expr):
 
     def _eval_power(self, other):
         from sympy.functions.elementary.exponential import log
-        from sympy.core.evalf import evalf
 
         b, e = self.as_base_exp()
         b_nneg = b.is_nonnegative
