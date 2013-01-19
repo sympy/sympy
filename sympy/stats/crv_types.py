@@ -986,12 +986,12 @@ def FisherZ(name, d1, d2):
 # Frechet distribution ---------------------------------------------------------
 
 class FrechetPSpace(SingleContinuousPSpace):
-    def __new__(cls, name, a, s=0, m=0):
+    def __new__(cls, name, a, s=1, m=0):
         a = sympify(a)
         s = sympify(s)
         m = sympify(m)
         x = Symbol(name)
-        pdf = a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)-a)
+        pdf = a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)**(-a))
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(m, oo))
         return obj
 
@@ -1032,7 +1032,7 @@ def Frechet(name, a, s=1, m=0):
     >>> X = Frechet("x", a, s, m)
 
     >>> density(X)
-    Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-a - (_x - m)/s)/s)
+    Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-((_x - m)/s)**(-a))/s)
 
     References
     ==========

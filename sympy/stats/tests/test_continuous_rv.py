@@ -269,7 +269,7 @@ def test_frechet():
     m = Symbol("m", real=True)
 
     X = Frechet("x", a, s, m)
-    assert density(X) == Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-a - (_x - m)/s)/s)
+    assert density(X) == Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-((_x - m)/s)**(-a))/s)
 
 def test_gamma():
     k = Symbol("k", positive=True)
