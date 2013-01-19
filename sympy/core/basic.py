@@ -1046,6 +1046,8 @@ class Basic(object):
         """
         if self in rule:
             return rule[self]
+        if self.is_Atom:
+            return self
         elif rule:
             args = tuple([arg.xreplace(rule) for arg in self.args])
             if not _aresame(args, self.args):
@@ -1220,6 +1222,9 @@ class Basic(object):
         mapping = {}
 
         def rec_replace(expr):
+            if not isinstance(expr, Basic):
+                return expr
+
             args, construct = [], False
 
             for arg in expr.args:
@@ -1601,6 +1606,9 @@ class preorder_traversal(object):
         be passed along to ordered() as the only key(s) to use to sort the
         arguments; if ``key`` is simply True then the default keys of ordered
         will be used.
+    parent : function
+        Extra condition for when the traversal should stop.
+        For example ``lambda arg: isinstance(arg, Expr)``
 
     Yields
     ======
@@ -1625,16 +1633,17 @@ class preorder_traversal(object):
     [z*(x + y), z, x + y, x, y]
 
     """
-    def __init__(self, node, keys=None):
+    def __init__(self, node, keys=None, parent=lambda x: isinstance(x, Basic)):
         self._skip_flag = False
         self._pt = self._preorder_traversal(node, keys)
+        self.parent = parent
 
     def _preorder_traversal(self, node, keys):
         yield node
         if self._skip_flag:
             self._skip_flag = False
             return
-        if isinstance(node, Basic):
+        if self.parent(node):
             args = node.args
             if keys:
                 if keys != True:
