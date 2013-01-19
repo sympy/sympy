@@ -71,15 +71,16 @@ def patternify(expr, *wilds, **kwargs):
             type(s)))
     return subs(dict(zip(wilds, vars)))(expr)
 
-def deconstruct(s):
+def deconstruct(s, wilds=()):
     """ Turn a SymPy object into a Compound """
-    if isinstance(s, ExprWild):
+    if isinstance(s, ExprWild) or s in wilds:
         return Variable(s)
     if isinstance(s, (Variable, CondVariable)):
         return s
     if not isinstance(s, Basic) or s.is_Atom:
         return s
-    return Compound(s.__class__, tuple(map(deconstruct, s.args)))
+    return Compound(s.__class__,
+                    tuple(deconstruct(arg, wilds) for arg in s.args))
 
 def construct(t):
     """ Turn a Compound into a SymPy object """
@@ -121,12 +122,14 @@ def unify(x, y, s=None, **kwargs):
     >>> len(list(unify(expr, pattern, {})))
     12
     """
+    wilds = kwargs.get('wilds', ())
+    decons = lambda x: deconstruct(x, wilds)
     s = s or {}
-    s = dict((deconstruct(k), deconstruct(v)) for k, v in s.items())
+    s = dict((decons(k), decons(v)) for k, v in s.items())
 
-    ds = core.unify(deconstruct(x), deconstruct(y), s,
-                                                is_associative=is_associative,
-                                                is_commutative=is_commutative,
-                                                **kwargs)
+    ds = core.unify(decons(x), decons(y), s,
+                                     is_associative=is_associative,
+                                     is_commutative=is_commutative,
+                                     **kwargs)
     for d in ds:
         yield dict((construct(k), construct(v)) for k, v in d.items())

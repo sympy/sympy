@@ -1,17 +1,27 @@
 from sympy.unify.rewrite import rewriterule
-from sympy import Wild, sin, cos
+from sympy import Wild, sin, cos, Basic
 from sympy.abc import x, y, z
 from sympy.core.compatibility import next
 
 p, q = Wild('p'), Wild('q')
 
 def test_simple():
+    rl = rewriterule(Basic(p, 1), Basic(p, 2))
+    assert list(rl(Basic(3, 1))) == [Basic(3, 2)]
+
     p1 = p**2
     p2 = p**3
     rl = rewriterule(p1, p2)
 
     expr = x**2
     assert list(rl(expr)) == [x**3]
+
+def test_simple_wilds():
+    rl = rewriterule(Basic(x, 1), Basic(x, 2), wilds=(x,))
+    assert list(rl(Basic(3, 1))) == [Basic(3, 2)]
+
+    rl = rewriterule(x**2, x**3, wilds=(x,))
+    assert list(rl(y**2)) == [y**3]
 
 def test_moderate():
     p1 = p**2 + q**3

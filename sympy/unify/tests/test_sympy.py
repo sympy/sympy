@@ -11,6 +11,13 @@ def test_deconstruct():
     expected = Compound(Basic, (1, 2, 3))
     assert deconstruct(expr) == expected
 
+    assert deconstruct(1) == 1
+    assert deconstruct(x) == x
+    assert deconstruct(x, wilds=(x,)) == Variable(x)
+    assert deconstruct(Add(1, x, evaluate=False)) == Compound(Add, (1, x))
+    assert deconstruct(Add(1, x, evaluate=False), wilds=(x,)) == \
+              Compound(Add, (1, Variable(x)))
+
 def test_construct():
     expr     = Compound(Basic, (1, 2, 3))
     expected = Basic(1, 2, 3)
@@ -28,6 +35,9 @@ def test_unify():
     pattern = Basic(a, b, c)
     assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
     assert list(unify(expr, pattern))     == [{a: 1, b: 2, c: 3}]
+
+def test_unify_wilds():
+    assert list(unify(Basic(1, 2), Basic(1, x), {}, wilds=(x,))) == [{x: 2}]
 
 def test_s_input():
     expr = Basic(1, 2)
