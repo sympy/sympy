@@ -44,7 +44,7 @@ from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
                    Symbol, log, besseli)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
-from crv import SingleContinuousPSpace
+from crv import SingleContinuousPSpace, ContinuousDensity
 from sympy.core.decorators import _sympifyit
 import random
 
@@ -1608,6 +1608,14 @@ def Nakagami(name, mu, omega):
 #-------------------------------------------------------------------------------
 # Normal distribution ----------------------------------------------------------
 
+class NormalDensity(ContinuousDensity):
+
+    mean = property(lambda self: self.args[0])
+    std  = property(lambda self: self.args[1])
+
+    def pdf(self, x):
+        return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
+
 
 class NormalPSpace(SingleContinuousPSpace):
     def __new__(cls, name, mean, std):
@@ -1616,9 +1624,9 @@ class NormalPSpace(SingleContinuousPSpace):
         _value_check(std > 0, "Standard deviation must be positive")
 
         x = Symbol(name)
-        pdf = exp(-(x - mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
+        density = NormalDensity(mean, std)
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        obj = SingleContinuousPSpace.__new__(cls, x, density)
         obj.mean = mean
         obj.std = std
         obj.variance = std**2

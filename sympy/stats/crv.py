@@ -12,7 +12,8 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
         ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
-        Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda)
+        Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
+        Basic)
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy.polys.polyerrors import PolynomialError
 import random
@@ -145,6 +146,11 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
+class ContinuousDensity(Basic):
+    def __call__(self, *args):
+        return self.pdf(*args)
+
+
 class ContinuousPSpace(PSpace):
     """
     A Continuous Probability Space
@@ -166,19 +172,23 @@ class ContinuousPSpace(PSpace):
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
-        return self.domain.integrate(self.density * expr,
+        return self.domain.integrate(self.pdf * expr,
                 domain_symbols, **kwargs)
 
     def compute_density(self, expr, **kwargs):
         # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
-            density = self.domain.integrate(self.density, set(rs.symbol
+            density = self.domain.integrate(self.pdf , set(rs.symbol
                 for rs in self.values - frozenset((expr,))), **kwargs)
             return Lambda(expr.symbol, density)
 
         z = Dummy('z', real=True, bounded=True)
         return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
+
+    @property
+    def pdf(self):
+        return self.density(*self.domain.symbols)
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):
@@ -235,7 +245,7 @@ class ContinuousPSpace(PSpace):
         condition = condition.subs(dict((rv, rv.symbol) for rv in self.values))
 
         domain = ConditionalContinuousDomain(self.domain, condition)
-        density = self.density
+        density = self.pdf
         if normalize:
             density = density / domain.integrate(density, **kwargs)
 
@@ -292,8 +302,8 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     A collection of independent continuous probability spaces
     """
     @property
-    def density(self):
-        return Mul(*[space.density for space in self.spaces])
+    def pdf(self):
+        return Mul(*[space.pdf for space in self.spaces])
 
 
 def _reduce_inequalities(conditions, var, **kwargs):
