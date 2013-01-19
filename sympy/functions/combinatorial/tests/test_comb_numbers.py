@@ -222,6 +222,45 @@ def test_nC_nP_nT():
     assert [sum(1 for p in perms if Permutation(p).cycles == i)
             for i in range(5)] == [0, 6, 11, 6, 1] == [
             stirling(4, i, kind=1) for i in range(5)]
+    # http://oeis.org/A008275
+    assert [stirling(n, k, signed=1)
+        for n in range(10) for k in range(1, n + 1)] == [
+            1, -1,
+            1, 2, -3,
+            1, -6, 11, -6,
+            1, 24, -50, 35, -10,
+            1, -120, 274, -225, 85, -15,
+            1, 720, -1764, 1624, -735, 175, -21,
+            1, -5040, 13068, -13132, 6769, -1960, 322, -28,
+            1, 40320, -109584, 118124, -67284, 22449, -4536, 546, -36, 1]
+    # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    assert  [stirling(n, k, kind=1)
+        for n in range(10) for k in range(n+1)] == [
+            1,
+            0, 1,
+            0, 1, 1,
+            0, 2, 3, 1,
+            0, 6, 11, 6, 1,
+            0, 24, 50, 35, 10, 1,
+            0, 120, 274, 225, 85, 15, 1,
+            0, 720, 1764, 1624, 735, 175, 21, 1,
+            0, 5040, 13068, 13132, 6769, 1960, 322, 28, 1,
+            0, 40320, 109584, 118124, 67284, 22449, 4536, 546, 36, 1]
+    # http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+    assert [stirling(n, k, kind=2)
+        for n in range(10) for k in range(n+1)] == [
+            1,
+            0, 1,
+            0, 1, 1,
+            0, 1, 3, 1,
+            0, 1, 7, 6, 1,
+            0, 1, 15, 25, 10, 1,
+            0, 1, 31, 90, 65, 15, 1,
+            0, 1, 63, 301, 350, 140, 21, 1,
+            0, 1, 127, 966, 1701, 1050, 266, 28, 1,
+            0, 1, 255, 3025, 7770, 6951, 2646, 462, 36, 1]
+    assert stirling(3, 4, kind=1) == stirling(3, 4, kind=1) == 0
+    raises(ValueError, lambda: stirling(-2, 2))
 
     def delta(p):
         if len(p) == 1:

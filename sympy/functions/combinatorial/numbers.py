@@ -11,6 +11,7 @@ from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
 from sympy.core.compatibility import as_int
 from sympy.core.cache import cacheit
+from sympy.functions.combinatorial.factorials import factorial
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
@@ -978,8 +979,50 @@ def nC(n, k=None, replacement=False):
 
 
 @cacheit
-def stirling(n, k, d=None, kind=2):
-    """Return Stirling number S(n, k) of the first or second kind.
+def _stirling1(n, k):
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+    n1 = n - 1
+
+    # some special values
+    if n == k:
+        return S.One
+    elif k == 1:
+        return factorial(n1)
+    elif k == n1:
+        return C.binomial(n, 2)
+    elif k == n - 2:
+        return (3*n - 1)*C.binomial(n, 3)/4
+    elif k == n - 3:
+        return C.binomial(n, 2)*C.binomial(n, 4)
+
+    # general recurrence
+    return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
+
+
+@cacheit
+def _stirling2(n, k):
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+    n1 = n - 1
+
+    # some special values
+    if k == n1:
+        return C.binomial(n, 2)
+    elif k == 2:
+        return 2**n1 - 1
+
+    # general recurrence
+    return k*_stirling2(n1, k) + _stirling2(n1, k - 1)
+
+
+def stirling(n, k, d=None, kind=2, signed=False):
+    """Return Stirling number S(n, k) of the first or second (default) kind.
+
     The sum of all Stirling numbers of the second kind for k = 1
     through n is bell(n). The recurrence relationship for these numbers
     is::
@@ -988,8 +1031,10 @@ def stirling(n, k, d=None, kind=2):
     { } = 1;  { } = { } = 0; {     } = j*{ } + {     }
     {0}       {0}   {k}      {  k  }     {k}   {k - 1}
 
-    where ``j`` = ``n`` for Stirling numbers of the first kind and ``k``
-    for Stirling numbers of the second kind.
+    where ``j`` is::
+        ``n`` for Stirling numbers of the first kind
+        ``-n`` for signed Stirling numbers of the first kind
+        ``k`` for Stirling numbers of the second kind
 
     The first kind of Stirling number counts the number of permutations of
     ``n`` distinct items that have ``k`` cycles; the second kind counts the
@@ -1000,6 +1045,9 @@ def stirling(n, k, d=None, kind=2):
     ``k`` groups with no pairwise difference less than ``d``. See example
     below.)
 
+    To obtain the signed Stirling numbers of the first kind, use keyword
+    ``signed=True``. This keyword is ignored if ``kind`` = 2.
+
     Examples
     ========
 
@@ -1007,7 +1055,7 @@ def stirling(n, k, d=None, kind=2):
     >>> from sympy.combinatorics import Permutation
     >>> from sympy.utilities.iterables import multiset_partitions, permutations
 
-    First kind:
+    First kind (unsigned by default):
 
     >>> [stirling(6, i, kind=1) for i in range(7)]
     [0, 120, 274, 225, 85, 15, 1]
@@ -1016,6 +1064,11 @@ def stirling(n, k, d=None, kind=2):
     [0, 6, 11, 6, 1]
     >>> [stirling(4, i, kind=1) for i in range(5)]
     [0, 6, 11, 6, 1]
+
+    First kind (signed):
+
+    >>> [stirling(4, i, kind=1, signed=True) for i in range(5)]
+    [0, -6, 11, -6, 1]
 
     Second kind:
 
@@ -1053,20 +1106,25 @@ def stirling(n, k, d=None, kind=2):
     """
     # TODO: make this a class like bell()
 
-    # assert n >= k
+    n = as_int(n)
+    k = as_int(k)
+    if n < 0:
+        raise ValueError('n must be nonnegative')
+    if k > n:
+        return S.Zero
     if d:
         # assert k >= d
         # kind is ignored -- only kind=2 is supported
-        return stirling(n - d + 1, k - d + 1)
-    if n == k == 0:
-        return S.One
-    if 0 in (n, k):
-        return S.Zero
-    n1 = n - 1
-    if kind not in (1, 2):
+        return _stirling2(n - d + 1, k - d + 1)
+    elif signed:
+        return (-1)**(n - k)*_stirling1(n, k)
+
+    if kind == 1:
+        return _stirling1(n, k)
+    elif kind == 2:
+        return _stirling2(n, k)
+    else:
         raise ValueError('kind must be 1 or 2, not %s' % k)
-    return (n1 if kind == 1 else k)*stirling(n1, k, kind=kind) + \
-        stirling(n1, k - 1, kind=kind)
 
 
 @cacheit
