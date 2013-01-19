@@ -3100,12 +3100,12 @@ def _real_to_rational(expr, tolerance=None):
     for r in p.atoms(C.Float):
         oldr = r
         if reduce_num is not None:
-            newr = nsimplify(r, rational=False)
-            newr = Rational(newr).limit_denominator(reduce_num)
-        elif tolerance is not None and tolerance >=1 and r.is_integer is False:
-            newr = nsimplify(tolerance*round(r/tolerance), rational=False)
+            # newr = nsimplify(r, rational=False)
+            newr = Rational(r).limit_denominator(reduce_num)
+        elif tolerance is not None and tolerance >=1 and r.is_Integer is False:
+            newr = Rational(tolerance*round(r/tolerance)).limit_denominator(int(tolerance))
         else:
-            newr = nsimplify(r, rational=False)
+            newr = nsimplify(r)
         if not newr.is_Rational or r.is_finite and not newr.is_finite:
             if newr < 0:
                 newr = -r
