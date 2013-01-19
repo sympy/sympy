@@ -2979,6 +2979,8 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     from the input expression by doing this.
     """
 
+    original_expr = expr = sympify(expr)
+
     try:
         return expr._eval_simplify(ratio=ratio, measure=measure)
     except AttributeError:
@@ -2987,19 +2989,10 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
 
-    original_expr = expr = sympify(expr)
-
     expr = signsimp(expr)
 
     if not isinstance(expr, Basic):  # XXX: temporary hack
         return expr
-
-    if isinstance(expr, Atom):
-        return expr
-
-    if isinstance(expr, C.Relational):
-        return expr.__class__(simplify(expr.lhs, ratio=ratio),
-                              simplify(expr.rhs, ratio=ratio))
 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
