@@ -9,9 +9,17 @@ Beta
 BetaPrime
 Cauchy
 Chi
+ChiNoncentral
+ChiSquared
 Dagum
+Erlang
 Exponential
+FDistribution
+FisherZ
+Frechet
 Gamma
+GammaInverse
+Kumaraswamy
 Laplace
 Logistic
 LogNormal
@@ -19,19 +27,23 @@ Maxwell
 Nakagami
 Normal
 Pareto
+QuadraticU
+RaisedCosine
 Rayleigh
 StudentT
 Triangular
 Uniform
 UniformSum
+VonMises
 Weibull
 WignerSemicircle
 """
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
                    Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
-                   Symbol, log)
+                   Symbol, log, besseli)
 from sympy import beta as beta_fn
+from sympy import cos, exp, besseli
 from crv import SingleContinuousPSpace
 from sympy.core.decorators import _sympifyit
 import random
@@ -45,9 +57,17 @@ __all__ = ['ContinuousRV',
 'BetaPrime',
 'Cauchy',
 'Chi',
+'ChiNoncentral',
+'ChiSquared',
 'Dagum',
+'Erlang',
 'Exponential',
+'FDistribution',
+'FisherZ',
+'Frechet',
 'Gamma',
+'GammaInverse',
+'Kumaraswamy',
 'Laplace',
 'Logistic',
 'LogNormal',
@@ -55,11 +75,14 @@ __all__ = ['ContinuousRV',
 'Nakagami',
 'Normal',
 'Pareto',
+'QuadraticU',
+'RaisedCosine',
 'Rayleigh',
 'StudentT',
 'Triangular',
 'Uniform',
 'UniformSum',
+'VonMises',
 'Weibull',
 'WignerSemicircle'
 ]
@@ -488,6 +511,128 @@ def Chi(name, k):
     return ChiPSpace(name, k).value
 
 #-------------------------------------------------------------------------------
+# Non-central Chi distribution -------------------------------------------------
+
+
+class ChiNoncentralPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, k, l):
+        k = sympify(k)
+        l = sympify(l)
+        x = Symbol(name)
+        pdf = exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
+        return obj
+
+
+def ChiNoncentral(name, k, l):
+    r"""
+    Create a continuous random variable with a non-central Chi distribution.
+
+    The density of the non-central Chi distribution is given by
+
+    .. math::
+        f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
+                {(\lambda x)^{k/2}} I_{k/2-1}(\lambda x)
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    k : `k` > 0 the number of degrees of freedom
+    l : Shift parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ChiNoncentral, density, E, std
+    >>> from sympy import Symbol, simplify
+
+    >>> k = Symbol("k", integer=True)
+    >>> l = Symbol("l")
+
+    >>> X = ChiNoncentral("x", k, l)
+
+    >>> density(X)
+    Lambda(_x, _x**k*l*(_x*l)**(-k/2)*exp(-_x**2/2 - l**2/2)*besseli(k/2 - 1, _x*l))
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
+    """
+
+    return ChiNoncentralPSpace(name, k, l).value
+
+#-------------------------------------------------------------------------------
+# Chi squared distribution -----------------------------------------------------
+
+
+class ChiSquaredPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, k):
+        k = sympify(k)
+        x = Symbol(name)
+        pdf = 1/(2**(k/2)*gamma(k/2))*x**(k/2 - 1)*exp(-x/2)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        return obj
+
+
+def ChiSquared(name, k):
+    r"""
+    Create a continuous random variable with a Chi-squared distribution.
+
+    The density of the Chi-squared distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{2^{\frac{k}{2}}\Gamma\left(\frac{k}{2}\right)}
+                x^{\frac{k}{2}-1} e^{-\frac{x}{2}}
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    k : Integer, `k` > 0 the number of degrees of freedom
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ChiSquared, density, E, variance
+    >>> from sympy import Symbol, simplify, combsimp, expand_func
+
+    >>> k = Symbol("k", integer=True, positive=True)
+
+    >>> X = ChiSquared("x", k)
+
+    >>> density(X)
+    Lambda(_x, 2**(-k/2)*_x**(k/2 - 1)*exp(-_x/2)/gamma(k/2))
+
+    >>> combsimp(E(X))
+    k
+
+    >>> simplify(expand_func(variance(X)))
+    2*k
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Chi_squared_distribution
+    [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
+    """
+
+    return ChiSquaredPSpace(name, k).value
+
+#-------------------------------------------------------------------------------
 # Dagum distribution -----------------------------------------------------------
 
 
@@ -546,6 +691,72 @@ def Dagum(name, p, a, b):
     """
 
     return DagumPSpace(name, p, a, b).value
+
+#-------------------------------------------------------------------------------
+# Erlang distribution ----------------------------------------------------------
+
+def Erlang(name, k, l):
+    r"""
+    Create a continuous random variable with an Erlang distribution.
+
+    The density of the Erlang distribution is given by
+
+    .. math::
+        f(x) := \frac{\lambda^k x^{k-1} e^{-\lambda x}}{(k-1)!}
+
+    with :math:`x \in [0,\infty]`.
+
+    Parameters
+    ==========
+
+    k : Integer
+    l : Real number, :math:`\lambda` > 0 the rate
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Erlang, density, cdf, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> k = Symbol("k", integer=True, positive=True)
+    >>> l = Symbol("l", positive=True)
+
+    >>> X = Erlang("x", k, l)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /    k - 1  k  -x*l\
+          |   x     *l *e    |
+    Lambda|x, ---------------|
+          \       gamma(k)   /
+
+    >>> C = cdf(X, meijerg=True)
+    >>> pprint(C, use_unicode=False)
+          /   /  k*lowergamma(k, 0)   k*lowergamma(k, z*l)            \
+    Lambda|z, |- ------------------ + --------------------  for z >= 0|
+          |   <     gamma(k + 1)          gamma(k + 1)                |
+          |   |                                                       |
+          \   \                     0                       otherwise /
+
+    >>> simplify(E(X))
+    k/l
+
+    >>> simplify(variance(X))
+    (gamma(k)*gamma(k + 2) - gamma(k + 1)**2)/(l**2*gamma(k)**2)
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Erlang_distribution
+    [2] http://mathworld.wolfram.com/ErlangDistribution.html
+    """
+
+    return GammaPSpace(name, k, 1/l).value
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
@@ -634,6 +845,202 @@ def Exponential(name, rate):
     """
 
     return ExponentialPSpace(name, rate).value
+
+#-------------------------------------------------------------------------------
+# F distribution ---------------------------------------------------------------
+
+class FDistributionPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, d1, d2):
+        d1 = sympify(d1)
+        d2 = sympify(d2)
+        x = Symbol(name)
+        pdf = (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
+               / (x * beta_fn(d1/2, d2/2)))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        return obj
+
+def FDistribution(name, d1, d2):
+    r"""
+    Create a continuous random variable with a F distribution.
+
+    The density of the F distribution is given by
+
+    .. math::
+        f(x) := \frac{\sqrt{\frac{(d_1 x)^{d_1} d_2^{d_2}}
+                {(d_1 x + d_2)^{d_1 + d_2}}}}
+                {x \mathrm{B} \left(\frac{d_1}{2}, \frac{d_2}{2}\right)}
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    d1 : `d1` > 0 a parameter
+    d2 : `d2` > 0 a parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import FDistribution, density
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> d1 = Symbol("d1", positive=True)
+    >>> d2 = Symbol("d2", positive=True)
+
+    >>> X = FDistribution("x", d1, d2)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /     d2                                                 \
+          |     --    ______________________________               |
+          |     2    /       d1            -d1 - d2       /d1   d2\|
+          |   d2  *\/  (x*d1)  *(x*d1 + d2)         *gamma|-- + --||
+          |                                               \2    2 /|
+    Lambda|x, -----------------------------------------------------|
+          |                          /d1\      /d2\                |
+          |                   x*gamma|--|*gamma|--|                |
+          \                          \2 /      \2 /                /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/F-distribution
+    [2] http://mathworld.wolfram.com/F-Distribution.html
+    """
+
+    return FDistributionPSpace(name, d1, d2).value
+
+#-------------------------------------------------------------------------------
+# Fisher Z distribution --------------------------------------------------------
+
+class FisherZPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, d1, d2):
+        d1 = sympify(d1)
+        d2 = sympify(d2)
+        x = Symbol(name)
+        pdf = (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
+               exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
+        return obj
+
+def FisherZ(name, d1, d2):
+    r"""
+    Create a Continuous Random Variable with an Fisher's Z distribution.
+
+    The density of the Fisher's Z distribution is given by
+
+    .. math::
+        f(x) := \frac{2d_1^{d_1/2} d_2^{d_2/2}} {\mathrm{B}(d_1/2, d_2/2)}
+                \frac{e^{d_1z}}{\left(d_1e^{2z}+d_2\right)^{\left(d_1+d_2\right)/2}}
+
+    Parameters
+    ==========
+
+    d1 : `d1` > 0, degree of freedom
+    d2 : `d2` > 0, degree of freedom
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import FisherZ, density
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> d1 = Symbol("d1", positive=True)
+    >>> d2 = Symbol("d2", positive=True)
+
+    >>> X = FisherZ("x", d1, d2)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /                               d1   d2                     \
+          |       d1   d2               - -- - --                     |
+          |       --   --                 2    2                      |
+          |       2    2  /    2*x     \           x*d1      /d1   d2\|
+          |   2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --||
+          |                                                  \2    2 /|
+    Lambda|x, --------------------------------------------------------|
+          |                          /d1\      /d2\                   |
+          |                     gamma|--|*gamma|--|                   |
+          \                          \2 /      \2 /                   /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+    [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
+    """
+
+    return FisherZPSpace(name, d1, d2).value
+
+#-------------------------------------------------------------------------------
+# Frechet distribution ---------------------------------------------------------
+
+class FrechetPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, a, s=0, m=0):
+        a = sympify(a)
+        s = sympify(s)
+        m = sympify(m)
+        x = Symbol(name)
+        pdf = a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)-a)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(m, oo))
+        return obj
+
+def Frechet(name, a, s=1, m=0):
+    r"""
+    Create a continuous random variable with a Frechet distribution.
+
+    The density of the Frechet distribution is given by
+
+    .. math::
+        f(x) := \frac{\alpha}{s} \left(\frac{x-m}{s}\right)^{-1-\alpha}
+                 e^{-(\frac{x-m}{s})^{-\alpha}}
+
+    with :math:`x \geq m`.
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`a \in \left(0, \infty\right)` the shape
+    s : Real number, :math:`s \in \left(0, \infty\right)` the scale
+    m : Real number, :math:`m \in \left(-\infty, \infty\right)` the minimum
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Frechet, density, E, std
+    >>> from sympy import Symbol, simplify
+
+    >>> a = Symbol("a", positive=True)
+    >>> s = Symbol("s", positive=True)
+    >>> m = Symbol("m", real=True)
+
+    >>> X = Frechet("x", a, s, m)
+
+    >>> density(X)
+    Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-a - (_x - m)/s)/s)
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+    """
+
+    return FrechetPSpace(name, a, s, m).value
 
 #-------------------------------------------------------------------------------
 # Gamma distribution -----------------------------------------------------------
@@ -729,6 +1136,141 @@ def Gamma(name, k, theta):
     """
 
     return GammaPSpace(name, k, theta).value
+
+#-------------------------------------------------------------------------------
+# Inverse Gamma distribution ---------------------------------------------------
+
+class GammaInversePSpace(SingleContinuousPSpace):
+    def __new__(cls, name, a, b):
+        a = sympify(a)
+        b = sympify(b)
+        _value_check(a > 0, "alpha must be positive")
+        _value_check(b > 0, "beta must be positive")
+        x = Symbol(name)
+        pdf = b**a/gamma(a) * x**(-a-1) * exp(-b/x)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        obj.a = a
+        obj.b = b
+        return obj
+
+def GammaInverse(name, a, b):
+    r"""
+    Create a continuous random variable with an inverse Gamma distribution.
+
+    The density of the inverse Gamma distribution is given by
+
+    .. math::
+        f(x) := \frac{\beta^\alpha}{\Gamma(\alpha)} x^{-\alpha - 1}
+                \exp\left(\frac{-\beta}{x}\right)
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    a : Real number, `a` > 0 a shape
+    b : Real number, `b` > 0 a scale
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GammaInverse, density, cdf, E, variance
+    >>> from sympy import Symbol, pprint
+
+    >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
+
+    >>> X = GammaInverse("x", a, b)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /               -b\
+          |               --|
+          |    -a - 1  a  x |
+          |   x      *b *e  |
+    Lambda|x, --------------|
+          \      gamma(a)   /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
+    """
+
+    return GammaInversePSpace(name, a, b).value
+
+#-------------------------------------------------------------------------------
+# Kumaraswamy distribution -----------------------------------------------------
+
+class KumaraswamyPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, a, b):
+        a, b = sympify(a), sympify(b)
+
+        _value_check(a > 0, "a must be positive")
+        _value_check(b > 0, "b must be positive")
+
+        x = Symbol(name)
+        pdf = a * b * x**(a-1) * (1-x**a)**(b-1)
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 1))
+        obj.a = a
+        obj.b = b
+        return obj
+
+def Kumaraswamy(name, a, b):
+    r"""
+    Create a Continuous Random Variable with a Kumaraswamy distribution.
+
+    The density of the Kumaraswamy distribution is given by
+
+    .. math::
+        f(x) := a b x^{a-1} (1-x^a)^{b-1}
+
+    with :math:`x \in [0,1]`.
+
+    Parameters
+    ==========
+
+    a : Real number, `a` > 0 a shape
+    b : Real number, `b` > 0 a shape
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Kumaraswamy, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
+
+    >>> X = Kumaraswamy("x", a, b)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /                        b - 1\
+          |    a - 1     /   a    \     |
+    Lambda\x, x     *a*b*\- x  + 1/     /
+
+    >>> simplify(E(X, meijerg=True))
+    gamma(1 + 1/a)*gamma(b + 1)/gamma(b + 1 + 1/a)
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
+    """
+
+    return KumaraswamyPSpace(name, a, b).value
 
 #-------------------------------------------------------------------------------
 # Laplace distribution ---------------------------------------------------------
@@ -1221,6 +1763,148 @@ def Pareto(name, xm, alpha):
     return ParetoPSpace(name, xm, alpha).value
 
 #-------------------------------------------------------------------------------
+# QuadraticU distribution ------------------------------------------------------
+
+class QuadraticUPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, a, b):
+        a, b = sympify(a), sympify(b)
+        alpha = 12 / (b-a)**3
+        beta = (a+b) / 2
+
+        x = Symbol(name)
+        pdf = Piecewise(
+                (alpha * (x-beta)**2, And(a<=x, x<=b)),
+                (S.Zero, True))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(a, b))
+        obj.a = a
+        obj.b = b
+        return obj
+
+def QuadraticU(name, a, b):
+    r"""
+    Create a Continuous Random Variable with a U-quadratic distribution.
+
+    The density of the U-quadratic distribution is given by
+
+    .. math::
+        f(x) := \alpha (x-\beta)^2
+
+    with :math:`x \in [a,b]`.
+
+    Parameters
+    ==========
+
+    a : Real number
+    b : Real number, :math:`a < b`
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import QuadraticU, density, E, variance
+    >>> from sympy import Symbol, simplify, factor, pprint
+
+    >>> a = Symbol("a", real=True)
+    >>> b = Symbol("b", real=True)
+
+    >>> X = QuadraticU("x", a, b)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /   /              2                         \
+          |   |   /    a   b\                          |
+          |   |12*|x - - - -|                          |
+          |   |   \    2   2/                          |
+    Lambda|x, <---------------  for And(x <= b, a <= x)|
+          |   |           3                            |
+          |   |   (-a + b)                             |
+          |   |                                        |
+          \   \       0                otherwise       /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
+    """
+
+    return QuadraticUPSpace(name, a, b).value
+
+#-------------------------------------------------------------------------------
+# RaisedCosine distribution ----------------------------------------------------
+
+class RaisedCosinePSpace(SingleContinuousPSpace):
+    def __new__(cls, name, mu, s):
+        mu, s = sympify(mu), sympify(s)
+
+        _value_check(s > 0, "s must be positive")
+
+        x = Symbol(name)
+        pdf = Piecewise(
+                ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
+                (S.Zero, True))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(mu-s, mu+s))
+        obj.mu = mu
+        obj.s = s
+        return obj
+
+def RaisedCosine(name, mu, s):
+    r"""
+    Create a Continuous Random Variable with a raised cosine distribution.
+
+    The density of the raised cosine distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{2s}\left(1+\cos\left(\frac{x-\mu}{s}\pi\right)\right)
+
+    with :math:`x \in [\mu-s,\mu+s]`.
+
+    Parameters
+    ==========
+
+    mu : Real number
+    s : Real number, `s` > 0
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import RaisedCosine, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> mu = Symbol("mu", real=True)
+    >>> s = Symbol("s", positive=True)
+
+    >>> X = RaisedCosine("x", mu, s)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /   /   /pi*(x - mu)\                                       \
+          |   |cos|-----------| + 1                                   |
+          |   |   \     s     /                                       |
+    Lambda|x, <--------------------  for And(x <= mu + s, mu - s <= x)|
+          |   |        2*s                                            |
+          |   |                                                       |
+          \   \         0                        otherwise            /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
+    """
+
+    return RaisedCosinePSpace(name, mu, s).value
+
+#-------------------------------------------------------------------------------
 # Rayleigh distribution --------------------------------------------------------
 
 
@@ -1592,6 +2276,72 @@ def UniformSum(name, n):
     """
 
     return UniformSumPSpace(name, n).value
+
+#-------------------------------------------------------------------------------
+# VonMises distribution --------------------------------------------------------
+
+class VonMisesPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, mu, k):
+        mu, k = sympify(mu), sympify(k)
+
+        _value_check(k > 0, "k must be positive")
+
+        x = Symbol(name)
+        pdf = exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
+
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 2*pi))
+        obj.mu = mu
+        obj.k = k
+        return obj
+
+def VonMises(name, mu, k):
+    r"""
+    Create a Continuous Random Variable with a von Mises distribution.
+
+    The density of the von Mises distribution is given by
+
+    .. math::
+        f(x) := \frac{e^{\kappa\cos(x-\mu)}}{2\pi I_0(\kappa)}
+
+    with :math:`x \in [0,2\pi]`.
+
+    Parameters
+    ==========
+
+    mu : Real number, measure of location
+    k : Real number, measure of concentration
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import VonMises, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> mu = Symbol("mu")
+    >>> k = Symbol("k", positive=True)
+
+    >>> X = VonMises("x", mu, k)
+
+    >>> D = density(X)
+    >>> pprint(D, use_unicode=False)
+          /      k*cos(x - mu)  \
+          |     e               |
+    Lambda|x, ------------------|
+          \   2*pi*besseli(0, k)/
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Von_Mises_distribution
+    [2] http://mathworld.wolfram.com/vonMisesDistribution.html
+    """
+
+    return VonMisesPSpace(name, mu, k).value
 
 #-------------------------------------------------------------------------------
 # Weibull distribution ---------------------------------------------------------
