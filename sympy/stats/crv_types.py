@@ -10,6 +10,7 @@ BetaPrime
 Cauchy
 Chi
 ChiNoncentral
+ChiSquared
 Dagum
 Erlang
 Exponential
@@ -57,6 +58,7 @@ __all__ = ['ContinuousRV',
 'Cauchy',
 'Chi',
 'ChiNoncentral',
+'ChiSquared',
 'Dagum',
 'Erlang',
 'Exponential',
@@ -511,6 +513,7 @@ def Chi(name, k):
 #-------------------------------------------------------------------------------
 # Non-central Chi distribution -------------------------------------------------
 
+
 class ChiNoncentralPSpace(SingleContinuousPSpace):
     def __new__(cls, name, k, l):
         k = sympify(k)
@@ -519,6 +522,7 @@ class ChiNoncentralPSpace(SingleContinuousPSpace):
         pdf = exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
         obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
         return obj
+
 
 def ChiNoncentral(name, k, l):
     r"""
@@ -564,6 +568,69 @@ def ChiNoncentral(name, k, l):
     """
 
     return ChiNoncentralPSpace(name, k, l).value
+
+#-------------------------------------------------------------------------------
+# Chi squared distribution -----------------------------------------------------
+
+
+class ChiSquaredPSpace(SingleContinuousPSpace):
+    def __new__(cls, name, k):
+        k = sympify(k)
+        x = Symbol(name)
+        pdf = 1/(2**(k/2)*gamma(k/2))*x**(k/2 - 1)*exp(-x/2)
+        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
+        return obj
+
+
+def ChiSquared(name, k):
+    r"""
+    Create a continuous random variable with a Chi-squared distribution.
+
+    The density of the Chi-squared distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{2^{\frac{k}{2}}\Gamma\left(\frac{k}{2}\right)}
+                x^{\frac{k}{2}-1} e^{-\frac{x}{2}}
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    k : Integer, `k` > 0 the number of degrees of freedom
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ChiSquared, density, E, std
+    >>> from sympy import Symbol, simplify, combsimp
+
+    >>> k = Symbol("k", integer=True)
+
+    >>> X = ChiSquared("x", k)
+
+    >>> density(X)
+    Lambda(_x, 2**(-k/2)*_x**(k/2 - 1)*exp(-_x/2)/gamma(k/2))
+
+    >>> combsimp(E(X))
+    k
+
+    >>> simplify(expand_func(variance(X)))
+    >>> 2*k
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Chi_squared_distribution
+    [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
+    """
+
+    return ChiSquaredPSpace(name, k).value
 
 #-------------------------------------------------------------------------------
 # Dagum distribution -----------------------------------------------------------

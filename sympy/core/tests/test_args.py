@@ -701,6 +701,11 @@ def test_sympy__stats__crv_types__ChiNoncentralPSpace():
     assert _test_args(ChiNoncentralPSpace('X', 1,1))
 
 
+def test_sympy__stats__crv_types__ChiSquaredPSpace():
+    from sympy.stats.crv_types import ChiSquaredPSpace
+    assert _test_args(ChiSquaredPSpace('X', 1))
+
+
 def test_sympy__stats__crv_types__DagumPSpace():
     from sympy.stats.crv_types import DagumPSpace
     assert _test_args(DagumPSpace('X', 1, 1, 1))

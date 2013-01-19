@@ -1,11 +1,11 @@
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral,
-                         Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet,
-                         Gamma, GammaInverse, Kumaraswamy, Laplace, Logistic, LogNormal,
-                         Maxwell, Nakagami, Normal, Pareto, QuadraticU, RaisedCosine,
-                         Rayleigh, StudentT, Triangular, Uniform, UniformSum, VonMises,
-                         Weibull, WignerSemicircle)
+                         Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiSquared,
+                         ChiNoncentral, Dagum, Erlang, Exponential, FDistribution, FisherZ,
+                         Frechet, Gamma, GammaInverse, Kumaraswamy, Laplace, Logistic,
+                         LogNormal, Maxwell, Nakagami, Normal, Pareto, QuadraticU,
+                         RaisedCosine, Rayleigh, StudentT, Triangular, Uniform, UniformSum,
+                         VonMises, Weibull, WignerSemicircle)
 
 from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
@@ -210,6 +210,13 @@ def test_chi_noncentral():
     X = ChiNoncentral("x", k, l)
     assert density(X) == (Lambda(_x, _x**k*l*(_x*l)**(-k/2)*
                           exp(-_x**2/2 - l**2/2)*besseli(k/2 - 1, _x*l)))
+
+def test_chi_squared():
+    k = Symbol("k", integer=True)
+
+    X = ChiSquared('x', k)
+    assert density(X) == (Lambda(_x,
+                          2**(-k/2)*_x**(k/2 - 1)*exp(-_x/2)/gamma(k/2)))
 
 def test_dagum():
     p = Symbol("p", positive=True)

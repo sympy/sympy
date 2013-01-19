@@ -26,6 +26,7 @@ Continuous Types
 .. autofunction:: Cauchy
 .. autofunction:: Chi
 .. autofunction:: ChiNoncentral
+.. autofunction:: ChiSquared
 .. autofunction:: Dagum
 .. autofunction:: Erlang
 .. autofunction:: Exponential
