@@ -3100,23 +3100,22 @@ def _real_to_rational(expr, tolerance=None):
     for r in p.atoms(C.Float):
         oldr = r
         if reduce_num is not None:
-            # newr = nsimplify(r, rational=False)
-            newr = Rational(r).limit_denominator(reduce_num)
+            r = Rational(r).limit_denominator(reduce_num)
         elif tolerance is not None and tolerance >=1 and r.is_Integer is False:
-            newr = Rational(tolerance*round(r/tolerance)).limit_denominator(int(tolerance))
+            r = Rational(tolerance*round(r/tolerance)).limit_denominator(int(tolerance))
         else:
-            newr = nsimplify(r)
-        if not newr.is_Rational or r.is_finite and not newr.is_finite:
-            if newr < 0:
-                newr = -r
-                d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
-                newr = -Rational(str(newr/d))*d
-            elif newr > 0:
-                d = Pow(10, int((mpmath.log(r)/mpmath.log(10))))
-                newr = Rational(str(r/d))*d
+            r = nsimplify(r, rational=False)
+        if not r.is_Rational or oldr.is_finite and not r.is_finite:
+            if oldr < 0:
+                oldr = -oldr
+                d = Pow(10, int((mpmath.log(oldr)/mpmath.log(10))))
+                r = -Rational(str(oldr/d))*d
+            elif oldr > 0:
+                d = Pow(10, int((mpmath.log(oldr)/mpmath.log(10))))
+                r = Rational(str(oldr/d))*d
             else:
-                newr = Integer(0)
-        reps[oldr] = newr
+                r = Integer(0)
+        reps[oldr] = r
     return p.subs(reps, simultaneous=True)
 
 
