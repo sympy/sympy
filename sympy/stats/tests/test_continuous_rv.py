@@ -1,14 +1,18 @@
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, Dagum,
-                         Exponential, Gamma, Laplace, Logistic, LogNormal,
-                         Maxwell, Nakagami, Normal, Pareto, Rayleigh,
-                         StudentT, Triangular, Uniform, UniformSum, Weibull,
-                         WignerSemicircle)
+                         Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiSquared,
+                         ChiNoncentral, Dagum, Erlang, Exponential, FDistribution, FisherZ,
+                         Frechet, Gamma, GammaInverse, Kumaraswamy, Laplace, Logistic,
+                         LogNormal, Maxwell, Nakagami, Normal, Pareto, QuadraticU,
+                         RaisedCosine, Rayleigh, StudentT, Triangular, Uniform, UniformSum,
+                         VonMises, Weibull, WignerSemicircle)
+
 from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, Lambda, factorial, binomial,
-                   floor)
+                   Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
+                   Piecewise, Integral, sin, cos, besseli, Lambda, factorial,
+                   binomial, floor)
+
 from sympy.utilities.pytest import raises, XFAIL
 
 oo = S.Infinity
@@ -199,6 +203,20 @@ def test_chi():
     assert density(X) == (Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)
                           *exp(-_x**2/2)/gamma(k/2)))
 
+def test_chi_noncentral():
+    k = Symbol("k", integer=True)
+    l = Symbol("l")
+
+    X = ChiNoncentral("x", k, l)
+    assert density(X) == (Lambda(_x, _x**k*l*(_x*l)**(-k/2)*
+                          exp(-_x**2/2 - l**2/2)*besseli(k/2 - 1, _x*l)))
+
+def test_chi_squared():
+    k = Symbol("k", integer=True)
+
+    X = ChiSquared('x', k)
+    assert density(X) == (Lambda(_x,
+                          2**(-k/2)*_x**(k/2 - 1)*exp(-_x/2)/gamma(k/2)))
 
 def test_dagum():
     p = Symbol("p", positive=True)
@@ -209,6 +227,12 @@ def test_dagum():
     assert density(X) == Lambda(_x,
                                 a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
 
+def test_erlang():
+    k = Symbol("k", integer=True, positive=True)
+    l = Symbol("l", positive=True)
+
+    X = Erlang("x", k, l)
+    assert density(X) == Lambda(_x, _x**(k - 1)*l**k*exp(-_x*l)/gamma(k))
 
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, bounded=True)
@@ -223,6 +247,29 @@ def test_exponential():
 
     assert where(X <= 1).set == Interval(0, 1)
 
+def test_f_distribution():
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=True)
+
+    X = FDistribution("x", d1, d2)
+    assert density(X) == (Lambda(_x, d2**(d2/2)*sqrt((_x*d1)**d1*(_x*d1 + d2)**(-d1 - d2))*
+                          gamma(d1/2 + d2/2)/(_x*gamma(d1/2)*gamma(d2/2))))
+
+def test_fisher_z():
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=True)
+
+    X = FisherZ("x", d1, d2)
+    assert density(X) == (Lambda(_x, 2*d1**(d1/2)*d2**(d2/2)*(d1*exp(2*_x) + d2)**(-d1/2 - d2/2)*
+                          exp(_x*d1)*gamma(d1/2 + d2/2)/(gamma(d1/2)*gamma(d2/2))))
+
+def test_frechet():
+    a = Symbol("a", positive=True)
+    s = Symbol("s", positive=True)
+    m = Symbol("m", real=True)
+
+    X = Frechet("x", a, s, m)
+    assert density(X) == Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-a - (_x - m)/s)/s)
 
 def test_gamma():
     k = Symbol("k", positive=True)
@@ -244,6 +291,19 @@ def test_gamma():
     # The following is too slow
     # assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
+def test_gamma_inverse():
+    a = Symbol("a", positive=True)
+    b = Symbol("b", positive=True)
+
+    X = GammaInverse("x", a, b)
+    assert density(X) == Lambda(_x, _x**(-a - 1)*b**a*exp(-b/_x)/gamma(a))
+
+def test_kumaraswamy():
+    a = Symbol("a", positive=True)
+    b = Symbol("b", positive=True)
+
+    X = Kumaraswamy("x", a, b)
+    assert density(X) == Lambda(_x, _x**(a - 1)*a*b*(-_x**a + 1)**(b - 1))
 
 def test_laplace():
     mu = Symbol("mu")
@@ -252,7 +312,6 @@ def test_laplace():
     X = Laplace('x', mu, b)
     assert density(X) == Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
 
-
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
@@ -260,7 +319,6 @@ def test_logistic():
     X = Logistic('x', mu, s)
     assert density(X) == Lambda(_x,
                                 exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
-
 
 def test_lognormal():
     mean = Symbol('mu', real=True, bounded=True)
@@ -287,7 +345,6 @@ def test_lognormal():
 
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
     assert density(X) == Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
-
 
 def test_maxwell():
     a = Symbol("a", positive=True)
@@ -338,6 +395,15 @@ def test_pareto_numeric():
     # Skewness tests too slow. Try shortcutting function?
 
 
+def test_raised_cosine():
+    mu = Symbol("mu", real=True)
+    s = Symbol("s", positive=True)
+
+    X = RaisedCosine("x", mu, s)
+    assert density(X) == (Lambda(_x, Piecewise(((cos(pi*(_x - mu)/s) + 1)/(2*s),
+                          And(_x <= mu + s, mu - s <= _x)), (0, True))))
+
+
 def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
 
@@ -370,6 +436,15 @@ def test_triangular():
                  (0, True)))
 
 
+@XFAIL
+def test_quadratic_u():
+    a = Symbol("a", real=True)
+    b = Symbol("b", real=True)
+
+    X = QuadraticU("x", a, b)
+    assert density(X) == (Lambda(_x, Piecewise((12*(_x - a/2 - b/2)**2/(-a + b)**3,
+                          And(_x <= b, a <= _x)), (0, True))))
+
 def test_uniform():
     l = Symbol('l', real=True, bounded=True)
     w = Symbol('w', positive=True, bounded=True)
@@ -394,6 +469,14 @@ def test_uniformsum():
     X = UniformSum('x', n)
     assert density(X) == (Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)
                         *binomial(n, _k), (_k, 0, floor(_x)))/factorial(n - 1)))
+
+
+def test_von_mises():
+    mu = Symbol("mu")
+    k = Symbol("k", positive=True)
+
+    X = VonMises("x", mu, k)
+    assert density(X) == Lambda(_x, exp(k*cos(_x - mu))/(2*pi*besseli(0, k)))
 
 
 def test_weibull():
