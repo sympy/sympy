@@ -607,10 +607,10 @@ def ChiSquared(name, k):
     Examples
     ========
 
-    >>> from sympy.stats import ChiSquared, density, E, std
-    >>> from sympy import Symbol, simplify, combsimp
+    >>> from sympy.stats import ChiSquared, density, E, variance
+    >>> from sympy import Symbol, simplify, combsimp, expand_func
 
-    >>> k = Symbol("k", integer=True)
+    >>> k = Symbol("k", integer=True, positive=True)
 
     >>> X = ChiSquared("x", k)
 
@@ -621,7 +621,7 @@ def ChiSquared(name, k):
     k
 
     >>> simplify(expand_func(variance(X)))
-    >>> 2*k
+    2*k
 
     References
     ==========
