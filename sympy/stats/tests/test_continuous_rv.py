@@ -1,5 +1,5 @@
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
-                         given, pspace, cdf, ContinuousRV, sample
+                         given, pspace, cdf, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral,
                          Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet,
                          Gamma, GammaInverse, Kumaraswamy, Laplace, Logistic, LogNormal,
