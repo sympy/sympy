@@ -519,6 +519,20 @@ def probability(condition, given_condition=None, numsamples=None, **kwargs):
     return pspace(condition).probability(condition, **kwargs)
 
 
+class Density(Basic):
+    expr      = property(lambda self: self.args[0])
+
+    @property
+    def condition(self):
+        if len(self.args) > 1:
+            return self.args[1]
+        else:
+            return None
+
+    def doit(self):
+        return density(self.expr, self.condition)
+
+
 def density(expr, condition=None, **kwargs):
     """
     Probability density of a random expression

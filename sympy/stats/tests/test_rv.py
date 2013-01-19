@@ -3,7 +3,7 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
 from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
-from sympy.stats.rv import ProductPSpace, rs_swap
+from sympy.stats.rv import ProductPSpace, rs_swap, Density
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -151,3 +151,8 @@ def test_normality():
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
+
+def test_Density():
+    X = Die('X', 6)
+    d = Density(X)
+    assert d.doit() == density(X)
