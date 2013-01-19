@@ -2,7 +2,7 @@ from sympy import Add, Basic, symbols, Mul, And
 from sympy import Wild as ExprWild
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
-        is_commutative, patternify)
+        is_commutative)
 from sympy.abc import w, x, y, z, n, m, k
 from sympy.utilities.pytest import XFAIL
 
@@ -96,28 +96,13 @@ def test_hard_match():
     pattern = sin(p) + cos(p)**2
     assert list(unify(expr, pattern, {})) == [{p: x}]
 
-def test_patternify():
-    assert deconstruct(patternify(x + y, x)) in (
-            Compound(Add, (Variable(x), y)), Compound(Add, (y, Variable(x))))
-    pattern = patternify(x**2 + y**2, x)
-    assert list(unify(pattern, w**2 + y**2, {})) == [{x: w}]
-
 def test_matrix():
     from sympy import MatrixSymbol
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 2, 2)
     Z = MatrixSymbol('Z', 2, 3)
-    p = patternify(X, 'X', n)
-    assert list(unify(p, Y, {})) == [{'X': 'Y', n: 2}]
-    assert list(unify(p, Z, {})) == []
-
-def test_wilds_in_wilds():
-    from sympy import MatrixSymbol, MatMul
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, k)
-    pattern = patternify(A*B, 'A', n, m, B) # note that m is in B as well
-    assert deconstruct(pattern) == Compound(MatMul, (Compound(MatrixSymbol,
-        (Variable('A'), Variable(n), Variable(m))), Variable(B)))
+    assert list(unify(X, Y, {}, wilds=[n, 'X'])) == [{'X': 'Y', n: 2}]
+    assert list(unify(X, Z, {}, wilds=[n, 'X'])) == []
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
@@ -133,25 +118,20 @@ def test_FiniteSet_commutivity():
     a, b, c, x, y = symbols('a,b,c,x,y')
     s = FiniteSet(a, b, c)
     t = FiniteSet(x, y)
-    pattern = patternify(t, x, y)
-    assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, pattern))
+    wilds = (x, y)
+    assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, t, wilds=wilds))
 
 def test_FiniteSet_complex():
     from sympy import FiniteSet
     a, b, c, x, y, z = symbols('a,b,c,x,y,z')
     expr = FiniteSet(Basic(1, x), y, Basic(x, z))
+    pattern = FiniteSet(a, Basic(x, b))
+    wilds = a, b
     expected = tuple([{b: 1, a: FiniteSet(y, Basic(x, z))},
                       {b: z, a: FiniteSet(y, Basic(1, x))}])
-    pattern = patternify(FiniteSet(a, Basic(x, b)), a, b)
-    assert iterdicteq(unify(expr, pattern), expected)
-
-def test_patternify_with_types():
-    a, b, c, x, y = symbols('a,b,c,x,y')
-    pattern = patternify(x + y, x, y, types={x: Mul})
-    expr = a*b + c
-    assert list(unify(expr, pattern)) == [{x: a*b, y: c}]
+    assert iterdicteq(unify(expr, pattern, wilds=wilds), expected)
 
 @XFAIL
 def test_and():
-    pattern = patternify(And(x, y), x, y)
-    str(list(unify((x>0) & (z<3), pattern)))
+    wilds = x, y
+    str(list(unify((x>0) & (z<3), pattern, wilds=wilds)))

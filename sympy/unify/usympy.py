@@ -41,36 +41,6 @@ def mk_matchtype(typ):
                 isinstance(x, Compound) and issubclass(x.op, typ))
     return matchtype
 
-
-def patternify(expr, *wilds, **kwargs):
-    """ Create a matching pattern from an expression
-
-    Example
-    =======
-
-    >>> from sympy import symbols, sin, cos, Mul
-    >>> from sympy.unify.usympy import patternify
-    >>> a, b, c, x, y = symbols('a b c x y')
-
-    >>> # Search for anything of the form sin(foo)**2 + cos(foo)**2
-    >>> pattern = patternify(sin(x)**2 + cos(x)**2, x)
-
-    >>> # Search for any two things added to c. Note that here c is not a wild
-    >>> pattern = patternify(a + b + c, a, b)
-
-    >>> # Search for two things added together, one must be a Mul
-    >>> pattern = patternify(a + b, a, b, types={a: Mul})
-    """
-    from sympy.rules.tools import subs
-    types = kwargs.get('types', {})
-    vars = [CondVariable(wild, mk_matchtype(types[wild]))
-                if wild in types else Variable(wild)
-                for wild in wilds]
-    if any(expr.has(cls) for cls in illegal):
-        raise NotImplementedError("Unification not supported on type %s"%(
-            type(s)))
-    return subs(dict(zip(wilds, vars)))(expr)
-
 def deconstruct(s, wilds=()):
     """ Turn a SymPy object into a Compound """
     if isinstance(s, ExprWild) or s in wilds:
@@ -109,7 +79,7 @@ def unify(x, y, s=None, **kwargs):
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Wild
+    >>> from sympy import Wild, Basic
     >>> from sympy.abc import x, y, z
     >>> from sympy.core.compatibility import next
     >>> expr = 2*x + y + z
@@ -121,6 +91,11 @@ def unify(x, y, s=None, **kwargs):
     >>> pattern = Wild('p') + Wild('q')
     >>> len(list(unify(expr, pattern, {})))
     12
+
+    Wilds may be specified directly in the call to unify
+
+    >>> next(unify(Basic(1, 2), Basic(1, x), wilds=[x]))
+    {x: 2}
     """
     wilds = kwargs.get('wilds', ())
     decons = lambda x: deconstruct(x, wilds)
