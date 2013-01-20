@@ -956,9 +956,9 @@ class Integral(Expr):
         # Some valid methods:
         # - poly       (we KNOW its a polynomial)
         # - rational   (we KNOW its a rational)
-        # - risch      (Full risch as far as implemented)
-        # - heurisch   (Risch-Norman, "parallel" risch)
-        # - meijerg    (Meijger-G ansatz)
+        # - risch      (Full Risch as far as implemented)
+        # - heurisch   (Risch-Norman, "parallel" Risch)
+        # - meijerg    (Meijer-G ansatz)
         # - heuristics (Various heuristics)
         # - ...
         valid_methods = ("poly", "rational", "risch", "heurisch", "meijerg")
@@ -983,7 +983,7 @@ class Integral(Expr):
                 method.append("meijerg")
 
 
-        # TODO: Various preprocessing steps
+        # TODO: Various preprocessing steps. Really do this here?
 
         # # Piecewise antiderivatives need to call special integrate.
         # if f.func is Piecewise:
@@ -994,7 +994,7 @@ class Integral(Expr):
         #     return f*x
 
 
-        # Try the requested methods one after the other until we succeed
+        # Try the requested methods one after the other until we succeed or no more methods left to try
         for alg in method:
 
             print(" Current method is: "+str(alg))
@@ -1002,7 +1002,10 @@ class Integral(Expr):
             failed = False
 
             # TODO: Each method should not just return but see if the result is usable
-            #       and then decide if to continue the loop
+            #       and then decide if to continue the loop. Each method could provide
+            #       more advanced diagnostics what failed and do better method selection.
+            #       We need to improve the measure of failure, sometimes leaving an Integral
+            #       in the result is perfectly fine.
 
             if alg == "risch":
 
@@ -1070,20 +1073,21 @@ class Integral(Expr):
                     _debug('NotImplementedError from meijerint_definite')
                     failed = True
 
+                    # TODO: I think there exists more flavours of meijerg
+                    #       handling definite problems better?
 
-            # What is the outcome?
+            # What is the outcome of our efforts?
             if integral is not None and integral.has(Integral):
                 failed = True
 
             if failed:
-                print("  failed")
+                print("  failed!")
             else:
                 print("  we did it!")
                 print(50*"-")
                 return integral
 
-
-        # None of the methods returns a good result
+        # None of the methods returns a good result, recurse up
         print(50*"-")
         return None
 
