@@ -60,12 +60,15 @@ class SingleDomain(RandomDomain):
     """
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
-        symbols = FiniteSet(symbol)
-        return RandomDomain.__new__(cls, symbols, set)
+        return Basic.__new__(cls, symbol, set)
 
     @property
     def symbol(self):
-        return tuple(self.symbols)[0]
+        return self.args[0]
+
+    @property
+    def symbols(self):
+        return FiniteSet(self.symbol)
 
     def __contains__(self, other):
         if len(other) != 1:
@@ -86,16 +89,19 @@ class ConditionalDomain(RandomDomain):
     def __new__(cls, fulldomain, condition):
         condition = condition.subs(dict((rs, rs.symbol)
             for rs in random_symbols(condition)))
-        return RandomDomain.__new__(
-            cls, fulldomain.symbols, fulldomain, condition)
+        return Basic.__new__(cls, fulldomain, condition)
+
+    @property
+    def symbols(self):
+        return self.fulldomain.symbols
 
     @property
     def fulldomain(self):
-        return self.args[1]
+        return self.args[0]
 
     @property
     def condition(self):
-        return self.args[2]
+        return self.args[1]
 
     @property
     def set(self):
@@ -165,7 +171,7 @@ class SinglePSpace(PSpace):
         return tuple(self.values)[0]
 
 
-class RandomSymbol(Symbol):
+class RandomSymbol(Expr):
     """
     Random Symbols represent ProbabilitySpaces in SymPy Expressions
     In principle they can take on any value that their symbol can take on
@@ -193,12 +199,11 @@ class RandomSymbol(Symbol):
 
     is_bounded = True
     is_finite = True
+    is_Atom = True
+    is_Symbol = True
 
-    def __new__(cls, *args):
-        obj = Basic.__new__(cls)
-        obj.pspace = args[0]
-        obj.symbol = args[1]
-        return obj
+    pspace = property(lambda self: self.args[0])
+    symbol = property(lambda self: self.args[1])
 
     @property
     def name(self):
@@ -210,6 +215,10 @@ class RandomSymbol(Symbol):
 
     def _hashable_content(self):
         return self.pspace, self.symbol
+
+    @property
+    def free_symbols(self):
+        return set([self])
 
 
 class ProductPSpace(PSpace):
@@ -239,14 +248,25 @@ class ProductPSpace(PSpace):
             from sympy.stats.crv import ProductContinuousPSpace
             cls = ProductContinuousPSpace
 
-        obj = Basic.__new__(cls, symbols, FiniteSet(*spaces))
-        obj.rs_space_dict = rs_space_dict
+        obj = Basic.__new__(cls, *FiniteSet(*spaces))
 
         return obj
 
     @property
+    def rs_space_dict(self):
+        d = {}
+        for space in self.spaces:
+            for value in space.values:
+                d[value] = space
+        return d
+
+    @property
+    def symbols(self):
+        return FiniteSet(val.symbol for val in self.rs_space_dict.keys())
+
+    @property
     def spaces(self):
-        return self.args[1]
+        return FiniteSet(*self.args)
 
     @property
     def values(self):
@@ -295,11 +315,6 @@ class ProductDomain(RandomDomain):
                 domains2.extend(domain.domains)
         domains2 = FiniteSet(domains2)
 
-        sym_domain_dict = {}
-        for domain in domains2:
-            for symbol in domain.symbols:
-                sym_domain_dict[symbol] = domain
-
         if all(domain.is_Finite for domain in domains2):
             from sympy.stats.frv import ProductFiniteDomain
             cls = ProductFiniteDomain
@@ -307,13 +322,24 @@ class ProductDomain(RandomDomain):
             from sympy.stats.crv import ProductContinuousDomain
             cls = ProductContinuousDomain
 
-        obj = RandomDomain.__new__(cls, symbols, domains2)
-        obj.sym_domain_dict = sym_domain_dict
-        return obj
+        return Basic.__new__(cls, *domains2)
+
+    @property
+    def sym_domain_dict(self):
+        d = {}
+        for domain in self.domains:
+            for symbol in domain.symbols:
+                d[symbol] = domain
+        return d
+
+    @property
+    def symbols(self):
+        return FiniteSet(sym for domain in self.domains
+                             for sym    in domain.symbols)
 
     @property
     def domains(self):
-        return self.args[1]
+        return self.args
 
     @property
     def set(self):

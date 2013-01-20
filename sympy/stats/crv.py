@@ -37,11 +37,6 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
 
     Represented using a single symbol and interval.
     """
-    def __new__(cls, symbol, set):
-        assert symbol.is_Symbol
-        symbols = FiniteSet(symbol)
-        return RandomDomain.__new__(cls, symbols, set)
-
     def integrate(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols

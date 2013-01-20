@@ -26,14 +26,13 @@ class FiniteDomain(RandomDomain):
     """
     is_Finite = True
 
-    def __new__(cls, elements):
-        elements = FiniteSet(*elements)
-        symbols = FiniteSet(sym for sym, val in elements)
-        return RandomDomain.__new__(cls, symbols, elements)
+    @property
+    def symbols(self):
+        return FiniteSet(sym for sym, val in self.elements)
 
     @property
     def elements(self):
-        return self.args[1]
+        return self.args[0]
 
     @property
     def dict(self):
@@ -57,19 +56,26 @@ class SingleFiniteDomain(FiniteDomain):
     """
 
     def __new__(cls, symbol, set):
-        return RandomDomain.__new__(cls, (symbol, ), FiniteSet(*set))
+        if not isinstance(set, FiniteSet):
+            set = FiniteSet(*set)
+        return Basic.__new__(cls, symbol, set)
 
     @property
     def symbol(self):
+        return self.args[0]
         return tuple(self.symbols)[0]
 
     @property
-    def elements(self):
-        return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
+    def symbols(self):
+        return FiniteSet(self.symbol)
 
     @property
     def set(self):
         return self.args[1]
+
+    @property
+    def elements(self):
+        return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
 
     def __iter__(self):
         return (frozenset(((self.symbol, elem),)) for elem in self.set)
@@ -142,6 +148,24 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
 
+class SingleFiniteDensity(Basic):
+    def __new__(cls, *args):
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args)
+
+    @property
+    @cacheit
+    def density(self):
+        return dict((k, self.pdf(k)) for k in self.set)
+
+    def pdf(self, x):
+        return self.density.get(x, 0)
+
+    @property
+    def set(self):
+        return self.density.keys()
+
+
 #=============================================
 #=========  Probability Space  ===============
 #=============================================
@@ -155,6 +179,14 @@ class FinitePSpace(PSpace):
     """
 
     is_Finite = True
+
+    @property
+    def domain(self):
+        return self.args[0]
+
+    @property
+    def density(self):
+        return self.args[1]
 
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
@@ -251,15 +283,23 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     This class is implemented by many of the standard FiniteRV types such as
     Die, Bernoulli, Coin, etc....
     """
+    symbol =  property(lambda self: self.args[0])
+    density = property(lambda self: self.args[1])
+    def __new__(cls, symbol, density):
+        symbol = sympify(symbol)
+        return Basic.__new__(cls, symbol, density)
 
-    @classmethod
-    def fromdict(cls, name, density):
-        symbol = Symbol(name)
-        domain = SingleFiniteDomain(symbol, frozenset(density.keys()))
-        density = dict((frozenset(((symbol, val),)), prob)
-                for val, prob in density.items())
-        density = Dict(density)
-        return FinitePSpace.__new__(cls, domain, density)
+    @property
+    def domain(self):
+        return SingleFiniteDomain(self.symbol, self.density.set)
+
+    @property
+    @cacheit
+    def _density(self):
+        return dict((frozenset(((self.symbol, val),)), prob)
+                    for val, prob in self.density.density.items())
+
+
 
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
