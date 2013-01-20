@@ -371,13 +371,26 @@ def add_terms(terms, prec, target_prec):
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
+    from sympy.core.core import C
     terms = [t for t in terms if not iszero(t)]
     if not terms:
         return None, None
     elif len(terms) == 1:
         return terms[0]
+
+    special = []
+    for t in terms:
+        arg = C.Float._new(t[0], 1)
+        if arg in (S.NaN, S.Infinity, S.NegativeInfinity):
+            special.append(arg)
+    if special:
+        from sympy.core.add import Add
+        rv = evalf(Add(*special), prec + 4, {})
+        return rv[0], rv[2]
+
     working_prec = 2*prec
     sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
+
     for x, accuracy in terms:
         sign, man, exp, bc = x
         if sign:
@@ -461,6 +474,7 @@ def evalf_add(v, prec, options):
 
 
 def evalf_mul(v, prec, options):
+    from sympy.core.core import C
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -489,6 +503,21 @@ def evalf_mul(v, prec, options):
     direction = 0
     args.append(S.One)
     complex_factors = []
+
+    # see if any argument is NaN or oo and thus warrants a special return
+    special = []
+    for arg in args:
+        arg = evalf(arg, prec, options)
+        if arg[0] is None:
+            continue
+        arg = C.Float._new(arg[0], 1)
+        if arg in (S.NaN, S.Infinity, S.NegativeInfinity):
+            special.append(arg)
+    if special:
+        from sympy.core.mul import Mul
+        special = Mul(*special)
+        return evalf(special, prec + 4, {})
+
     for i, arg in enumerate(args):
         if i != last and pure_complex(arg):
             args[-1] = (args[-1]*arg).expand()
