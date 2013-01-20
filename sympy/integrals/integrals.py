@@ -950,6 +950,10 @@ class Integral(Expr):
              this can be deleted.
 
         """
+        if type(method) is str:
+            method = [method]
+
+
         print(50*"=")
         print("Methods are: "+str(method))
 
@@ -963,6 +967,8 @@ class Integral(Expr):
         # - ...
 
         # TODO: Replace method selection by static list assignment once we removed the other flags
+        print("Old flags are: "+str((risch, meijerg)))
+
         if method is None:
             method = []
             if risch is True:
