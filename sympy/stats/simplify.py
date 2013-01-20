@@ -5,13 +5,15 @@ from sympy.rules.branch import multiplex, exhaust
 from sympy import Symbol
 
 x, y, z, n, m = map(Symbol, 'xyznm')
-rr_data = [
-        (Density(Normal(x, 0, 1)**2), Density(ChiSquared(x, 1)), [x]),
-        (Density(Normal(x, 0, 1)**2 + z), Density(ChiSquared(x, 1) + z), [x,z]),
-        (Density(ChiSquared(x, m) + ChiSquared(y, n)),
-            Density(ChiSquared(x, n+m)), [x, y, n, m])
-        ]
+density_equivalences = [
+    (Normal(x, 0, 1)**2, ChiSquared(x, 1), [x]),
+    (Normal(x, 0, 1)**2 + z, ChiSquared(x, 1) + z, [x, z]),
+    (ChiSquared(x, m) + ChiSquared(y, n), ChiSquared(x, n+m), [x, y, n, m])
+]
 
-rrs = [rewriterule(src, tgt, wilds) for src, tgt, wilds in rr_data]
+density_rrs = [rewriterule(Density(src), Density(tgt), wilds)
+                    for src, tgt, wilds in density_equivalences]
+
+rrs = density_rrs + []
 
 statsimp = exhaust(multiplex(*rrs))
