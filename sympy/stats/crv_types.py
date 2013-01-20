@@ -1825,7 +1825,7 @@ def QuadraticU(name, a, b):
     [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
     """
 
-    return rv(name, QuadraicUDensity, (a, b))
+    return rv(name, QuadraticUDensity, (a, b))
 
 #-------------------------------------------------------------------------------
 # RaisedCosine distribution ----------------------------------------------------
