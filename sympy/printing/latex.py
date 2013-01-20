@@ -971,6 +971,7 @@ class LatexPrinter(Printer):
             name += "_{%s}" % " ".join(subs)
 
         return name
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Relational(self, expr):
         if self._settings['itex']:
