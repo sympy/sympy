@@ -1396,6 +1396,8 @@ class Basic(object):
            2*Integral(x, x)
 
         """
+        if not isinstance(self, Basic) or self.is_Atom:
+            return self
         if hints.get('deep', True):
             terms = [ term.doit(**hints) for term in self.args ]
             return self.func(*terms)
