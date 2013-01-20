@@ -994,12 +994,12 @@ class FrechetDensity(SingleContinuousDensity):
     m = property(lambda self: self.args[2])
     set   = property(lambda self: Interval(0, oo))
 
-    def __new__(cls, name, a, s=0, m=0):
+    def __new__(cls, a, s=1, m=0):
         return Basic.__new__(cls, a, s, m)
 
     def pdf(self, x):
         a, s, m = self.a, self.s, self.m
-        return a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)-a)
+        return a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)**(-a))
 
 def Frechet(name, a, s=1, m=0):
     r"""
@@ -1038,7 +1038,7 @@ def Frechet(name, a, s=1, m=0):
     >>> X = Frechet("x", a, s, m)
 
     >>> density(X)
-    Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-a - (_x - m)/s)/s)
+    Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-((_x - m)/s)**(-a))/s)
 
     References
     ==========
