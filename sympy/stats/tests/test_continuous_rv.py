@@ -13,7 +13,7 @@ from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Piecewise, Integral, sin, cos, besseli, Lambda, factorial,
                    binomial, floor)
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises, XFAIL, slow
 
 oo = S.Infinity
 
@@ -77,6 +77,7 @@ def test_multiple_normal():
     assert variance(X, Eq(X + Y, 0)) == S.Half
 
 
+@slow
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, bounded=True)
     s1, s2 = symbols('sigma1 sigma2', real=True, bounded=True, positive=True)
