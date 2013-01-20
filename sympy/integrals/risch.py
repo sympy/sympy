@@ -1530,7 +1530,8 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
         elif case == 'base':
             # XXX: We can't call ratint() directly here because it doesn't
             # handle polynomials correctly.
-            ans = integrate(fa.as_expr()/fd.as_expr(), DE.x, risch=False)
+            # We know it's a polynomial, isn't it?
+            ans = integrate(fa.as_expr()/fd.as_expr(), DE.x, risch=False, method="poly")
             b = False
             i = S(0)
         else:
