@@ -950,48 +950,125 @@ class Integral(Expr):
              this can be deleted.
 
         """
-        from sympy.integrals.risch import risch_integrate
+        print(50*"=")
+        print("Methods are: "+str(method))
 
-        if risch:
-            try:
-                return risch_integrate(f, x)
-            except NotImplementedError:
-                return None
+        # Some valid methods:
+        # - poly       (we KNOW its a polynomial)
+        # - rational   (we KNOW its a rational)
+        # - risch      (Full risch as far as implemented)
+        # - heurisch   (Risch-Norman, "parallel" risch)
+        # - meijerg    (Meijger-G ansatz)
+        # - heuristics (Various heuristics)
+        # - ...
 
-        # if it is a poly(x) then let the polynomial integrate itself (fast)
-        #
-        # It is important to make this check first, otherwise the other code
-        # will return a sympy expression instead of a Polynomial.
-        #
-        # see Polynomial for details.
-        if isinstance(f, Poly) and not meijerg:
-            return f.integrate(x)
+        # TODO: Replace method selection by static list assignment once we removed the other flags
+        if method is None:
+            method = []
+            if risch is True:
+                method.append("risch")
+            elif meijerg is True:
+                method.append("meijerg")
 
-        # Piecewise antiderivatives need to call special integrate.
-        if f.func is Piecewise:
-            return f._eval_integral(x)
 
-        # let's cut it short if `f` does not depend on `x`
-        if not f.has(x):
-            return f*x
+        # TODO: Various preprocessing steps
 
-        # try to convert to poly(x) and then integrate if successful (fast)
-        poly = f.as_poly(x)
+        # # Piecewise antiderivatives need to call special integrate.
+        # if f.func is Piecewise:
+        #     return f._eval_integral(x)
 
-        if poly is not None and not meijerg:
-            return poly.integrate().as_expr()
+        # # let's cut it short if `f` does not depend on `x`
+        # if not f.has(x):
+        #     return f*x
 
-        if risch is not False:
-            try:
-                result, i = risch_integrate(f, x, separate_integral=True)
-            except NotImplementedError:
-                pass
-            else:
-                if i:
-                    # There was a nonelementary integral. Try integrating it.
-                    return result + i.doit(risch=False)
+
+        # Try the requested methods one after the other until we succeed
+        for alg in method:
+
+            print(" Current method is: "+str(alg))
+            integral = None
+            failed = False
+
+            # TODO: Each method should not just return but see if the result is usable
+            #       and then decide if to continue the loop
+
+            if alg == "risch":
+
+                from sympy.integrals.risch import risch_integrate
+                try:
+                    integral = risch_integrate(f, x)
+                except NotImplementedError:
+                    failed = True
+
+                # try:
+                #     result, i = risch_integrate(f, x, separate_integral=True)
+                # except NotImplementedError:
+                #     pass
+                # else:
+                #     if i:
+                #         # There was a nonelementary integral. Try integrating it.
+                #         return result + i.doit(risch=False)
+                #     else:
+                #         return result
+
+
+            if alg == "heurisch":
+
+                try:
+                    integral = heurisch(f, x, hints=[])
+                except PolynomialError:
+                    # XXX: this exception means there is a bug in the
+                    # implementation of heuristic Risch integration
+                    # algorithm.
+                    failed = True
+
+
+            if alg == "poly":
+                # if it is a poly(x) then let the polynomial integrate itself (fast)
+                #
+                # It is important to make this check first, otherwise the other code
+                # will return a sympy expression instead of a Polynomial.
+                #
+                # see Polynomial for details.
+                if isinstance(f, Poly):
+                    integral = f.integrate(x)
+
+                # try to convert to poly(x) and then integrate if successful (fast)
+                poly = f.as_poly(x)
+
+                if poly is not None:
+                    integral = poly.integrate().as_expr()
                 else:
-                    return result
+                    failed = True
+
+
+            if alg == "meijerg":
+
+                # rewrite using G functions
+                try:
+                    integral = meijerint_indefinite(f, x)
+                except NotImplementedError:
+                    from sympy.integrals.meijerint import _debug
+                    _debug('NotImplementedError from meijerint_definite')
+                    failed = True
+
+
+            # What is the outcome?
+            if integral is not None and integral.has(Integral):
+                failed = True
+
+            if not failed:
+                return integral
+
+
+        # None of the methods returns a good result
+        return None
+
+
+        # TODO: Do some post-processing and retry integration
+
+
+
 
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
@@ -1005,133 +1082,123 @@ class Integral(Expr):
         # because maybe the integral is a sum of an elementary part and a
         # nonelementary part (like erf(x) + exp(x)).  risch_integrate() is
         # quite fast, so this is acceptable.
-        parts = []
-        args = Add.make_args(f)
-        for g in args:
-            coeff, g = g.as_independent(x)
+        # parts = []
+        # args = Add.make_args(f)
+        # for g in args:
+        #     coeff, g = g.as_independent(x)
 
-            # g(x) = const
-            if g is S.One and not meijerg:
-                parts.append(coeff*x)
-                continue
+        #     # g(x) = const
+        #     if g is S.One and not meijerg:
+        #         parts.append(coeff*x)
+        #         continue
 
-            # g(x) = expr + O(x**n)
-            order_term = g.getO()
+        #     # g(x) = expr + O(x**n)
+        #     order_term = g.getO()
 
-            if order_term is not None:
-                h = self._eval_integral(g.removeO(), x)
+        #     if order_term is not None:
+        #         h = self._eval_integral(g.removeO(), x)
 
-                if h is not None:
-                    h_order_expr = self._eval_integral(order_term.expr, x)
+        #         if h is not None:
+        #             h_order_expr = self._eval_integral(order_term.expr, x)
 
-                    if h_order_expr is not None:
-                        h_order_term = order_term.func(
-                            h_order_expr, *order_term.variables)
-                        parts.append(coeff*(h + h_order_term))
-                        continue
+        #             if h_order_expr is not None:
+        #                 h_order_term = order_term.func(
+        #                     h_order_expr, *order_term.variables)
+        #                 parts.append(coeff*(h + h_order_term))
+        #                 continue
 
-                # NOTE: if there is O(x**n) and we fail to integrate then there is
-                # no point in trying other methods because they will fail anyway.
-                return None
+        #         # NOTE: if there is O(x**n) and we fail to integrate then there is
+        #         # no point in trying other methods because they will fail anyway.
+        #         return None
 
-            #               c
-            # g(x) = (a*x+b)
-            if g.is_Pow and not g.exp.has(x) and not meijerg:
-                a = Wild('a', exclude=[x])
-                b = Wild('b', exclude=[x])
+        #     #               c
+        #     # g(x) = (a*x+b)
+        #     if g.is_Pow and not g.exp.has(x) and not meijerg:
+        #         a = Wild('a', exclude=[x])
+        #         b = Wild('b', exclude=[x])
 
-                M = g.base.match(a*x + b)
+        #         M = g.base.match(a*x + b)
 
-                if M is not None:
-                    if g.exp == -1:
-                        h = C.log(g.base)
-                    else:
-                        h = g.base**(g.exp + 1) / (g.exp + 1)
+        #         if M is not None:
+        #             if g.exp == -1:
+        #                 h = C.log(g.base)
+        #             else:
+        #                 h = g.base**(g.exp + 1) / (g.exp + 1)
 
-                    parts.append(coeff * h / M[a])
-                    continue
+        #             parts.append(coeff * h / M[a])
+        #             continue
 
-            #        poly(x)
-            # g(x) = -------
-            #        poly(x)
-            if g.is_rational_function(x) and not meijerg:
-                parts.append(coeff * ratint(g, x))
-                continue
+        #     #        poly(x)
+        #     # g(x) = -------
+        #     #        poly(x)
+        #     if g.is_rational_function(x) and not meijerg:
+        #         parts.append(coeff * ratint(g, x))
+        #         continue
 
-            if not meijerg:
-                # g(x) = Mul(trig)
-                h = trigintegrate(g, x)
-                if h is not None:
-                    parts.append(coeff * h)
-                    continue
+        #     if not meijerg:
+        #         # g(x) = Mul(trig)
+        #         h = trigintegrate(g, x)
+        #         if h is not None:
+        #             parts.append(coeff * h)
+        #             continue
 
-                # g(x) has at least a DiracDelta term
-                h = deltaintegrate(g, x)
-                if h is not None:
-                    parts.append(coeff * h)
-                    continue
+        #         # g(x) has at least a DiracDelta term
+        #         h = deltaintegrate(g, x)
+        #         if h is not None:
+        #             parts.append(coeff * h)
+        #             continue
 
-                # Try risch again.
-                if risch is not False:
-                    try:
-                        h, i = risch_integrate(g, x, separate_integral=True)
-                    except NotImplementedError:
-                        h = None
-                    else:
-                        if i:
-                            h = h + i.doit(risch=False)
+        #         # Try risch again.
+        #         if risch is not False:
+        #             try:
+        #                 h, i = risch_integrate(g, x, separate_integral=True)
+        #             except NotImplementedError:
+        #                 h = None
+        #             else:
+        #                 if i:
+        #                     h = h + i.doit(risch=False)
 
-                        parts.append(coeff*h)
-                        continue
+        #                 parts.append(coeff*h)
+        #                 continue
 
-                # fall back to heurisch
-                try:
-                    h = heurisch(g, x, hints=[])
-                except PolynomialError:
-                    # XXX: this exception means there is a bug in the
-                    # implementation of heuristic Risch integration
-                    # algorithm.
-                    h = None
-            else:
-                h = None
+        #         # fall back to heurisch
+        #         try:
+        #             h = heurisch(g, x, hints=[])
+        #         except PolynomialError:
+        #             # XXX: this exception means there is a bug in the
+        #             # implementation of heuristic Risch integration
+        #             # algorithm.
+        #             h = None
+        #     else:
+        #         h = None
 
-            if meijerg is not False and h is None:
-                # rewrite using G functions
-                try:
-                    h = meijerint_indefinite(g, x)
-                except NotImplementedError:
-                    from sympy.integrals.meijerint import _debug
-                    _debug('NotImplementedError from meijerint_definite')
-                    res = None
-                if h is not None:
-                    parts.append(coeff * h)
-                    continue
 
-            # if we failed maybe it was because we had
-            # a product that could have been expanded,
-            # so let's try an expansion of the whole
-            # thing before giving up; we don't try this
-            # out the outset because there are things
-            # that cannot be solved unless they are
-            # NOT expanded e.g., x**x*(1+log(x)). There
-            # should probably be a checker somewhere in this
-            # routine to look for such cases and try to do
-            # collection on the expressions if they are already
-            # in an expanded form
-            if not h and len(args) == 1:
-                f = f.expand(mul=True, deep=False)
-                if f.is_Add:
-                    # Note: risch will be identical on the expanded
-                    # expression, but maybe it will be able to pick out parts,
-                    # like x*(exp(x) + erf(x)).
-                    return self._eval_integral(f, x, meijerg=meijerg, risch=risch)
 
-            if h is not None:
-                parts.append(coeff * h)
-            else:
-                return None
+        #     # if we failed maybe it was because we had
+        #     # a product that could have been expanded,
+        #     # so let's try an expansion of the whole
+        #     # thing before giving up; we don't try this
+        #     # out the outset because there are things
+        #     # that cannot be solved unless they are
+        #     # NOT expanded e.g., x**x*(1+log(x)). There
+        #     # should probably be a checker somewhere in this
+        #     # routine to look for such cases and try to do
+        #     # collection on the expressions if they are already
+        #     # in an expanded form
+        #     if not h and len(args) == 1:
+        #         f = f.expand(mul=True, deep=False)
+        #         if f.is_Add:
+        #             # Note: risch will be identical on the expanded
+        #             # expression, but maybe it will be able to pick out parts,
+        #             # like x*(exp(x) + erf(x)).
+        #             return self._eval_integral(f, x, meijerg=meijerg, risch=risch)
 
-        return Add(*parts)
+        #     if h is not None:
+        #         parts.append(coeff * h)
+        #     else:
+        #         return None
+
+        # return Add(*parts)
 
     def _eval_lseries(self, x):
         for term in self.function.lseries(x):
