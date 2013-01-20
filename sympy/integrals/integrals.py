@@ -953,10 +953,6 @@ class Integral(Expr):
         if type(method) is str:
             method = [method]
 
-
-        print(50*"=")
-        print("Methods are: "+str(method))
-
         # Some valid methods:
         # - poly       (we KNOW its a polynomial)
         # - rational   (we KNOW its a rational)
@@ -965,6 +961,16 @@ class Integral(Expr):
         # - meijerg    (Meijger-G ansatz)
         # - heuristics (Various heuristics)
         # - ...
+        valid_methods = ("poly", "rational", "risch", "heurisch", "meijerg")
+
+        invalid = filter(lambda m: m not in valid_methods, method)
+
+        if not len(invalid) == 0:
+            raise ValueError("Invalid integration methods given: "+str(invalid))
+
+
+        print(50*"=")
+        print("Methods are: "+str(method))
 
         # TODO: Replace method selection by static list assignment once we removed the other flags
         print("Old flags are: "+str((risch, meijerg)))
@@ -1048,6 +1054,12 @@ class Integral(Expr):
                     failed = True
 
 
+            if alg == "rational":
+                # Which algorithm to call for rational functions?
+                # For the moment, call heurisch and hope the best
+                integral = integrate(f, x, method="heurisch")
+
+
             if alg == "meijerg":
 
                 # rewrite using G functions
@@ -1063,11 +1075,16 @@ class Integral(Expr):
             if integral is not None and integral.has(Integral):
                 failed = True
 
-            if not failed:
+            if failed:
+                print("  failed")
+            else:
+                print("  we did it!")
+                print(50*"-")
                 return integral
 
 
         # None of the methods returns a good result
+        print(50*"-")
         return None
 
 
