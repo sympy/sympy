@@ -24,6 +24,15 @@ def rv(name, cls, *args):
     return SingleFinitePSpace(name, density).value
 
 class FiniteDensityHandmade(SingleFiniteDensity):
+    @property
+    def density(self):
+        return self.args[0]
+
+    def __new__(cls, density):
+        density = Dict(density)
+        return Basic.__new__(cls, density)
+
+def FiniteRV(name, density):
     """
     Create a Finite Random Variable given a dict representing the density.
 
@@ -39,41 +48,9 @@ class FiniteDensityHandmade(SingleFiniteDensity):
     >>> P(X>=2)
     0.700000000000000
     """
-    @property
-    def density(self):
-        return self.args[0]
-
-    def __new__(cls, density):
-        density = Dict(density)
-        return Basic.__new__(cls, density)
-
-def FiniteRV(name, density):
     return rv(name, FiniteDensityHandmade, density)
 
 class DiscreteUniformDensity(SingleFiniteDensity):
-    """
-    Create a Finite Random Variable representing a discrete uniform
-    distribution.
-
-    This class is for internal use.
-
-    Create DiscreteUniform Random Symbols using DiscreteUniform function
-
-    Examples
-    ========
-
-    >>> from sympy.stats import DiscreteUniform, density
-    >>> from sympy import symbols
-
-    >>> X = DiscreteUniform('X', symbols('a b c')) # equally likely over a, b, c
-    >>> density(X)
-    {a: 1/3, b: 1/3, c: 1/3}
-
-    >>> Y = DiscreteUniform('Y', range(5)) # distribution over a range
-    >>> density(Y)
-    {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
-    """
-
     items = property(lambda self: self.args)
     p     = property(lambda self: Rational(1, len(self.items)))
 
@@ -119,23 +96,6 @@ def DiscreteUniform(name, items):
 
 
 class DieDensity(SingleFiniteDensity):
-    """
-    Create a Finite Random Variable representing a fair die.
-
-    This class is for internal use.
-
-    Create Dice Random Symbols using Die function
-
-    >>> from sympy.stats import Die, density
-
-    >>> D6 = Die('D6', 6) # Six sided Die
-    >>> density(D6)
-    {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
-
-    >>> D4 = Die('D4', 4) # Four sided Die
-    >>> density(D4)
-    {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
-    """
     sides = property(lambda self: self.args[0])
 
     @property
@@ -171,26 +131,6 @@ def Die(name, sides=6):
 
 
 class BernoulliDensity(SingleFiniteDensity):
-    """
-    Create a Finite Random Variable representing a Bernoulli process.
-
-    Returns a RandomSymbol.
-
-    This class is for internal use.
-
-    Create Bernoulli Random Symbols using Bernoulli function.
-
-    >>> from sympy.stats import Bernoulli, density
-    >>> from sympy import S
-
-    >>> X = Bernoulli('X', S(3)/4) # 1-0 Bernoulli variable, probability = 3/4
-    >>> density(X)
-    {0: 1/4, 1: 3/4}
-
-    >>> X = Bernoulli('X', S.Half, 'Heads', 'Tails') # A fair coin toss
-    >>> density(X)
-    {Heads: 1/2, Tails: 1/2}
-    """
     p = property(lambda self: self.args[0])
     succ = property(lambda self: self.args[1])
     fail = property(lambda self: self.args[2])
@@ -245,23 +185,6 @@ def Coin(name, p=S.Half):
 
 
 class BinomialDensity(SingleFiniteDensity):
-    """
-    Create a Finite Random Variable representing a binomial distribution.
-
-    This class is for internal use.
-
-    Create Binomial Random Symbols using Binomial function.
-
-    Examples
-    ========
-
-    >>> from sympy.stats import Binomial, density
-    >>> from sympy import S
-
-    >>> X = Binomial('X', 4, S.Half) # Four "coin flips"
-    >>> density(X)
-    {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
-    """
     n = property(lambda self: self.args[0])
     p = property(lambda self: self.args[1])
     succ = property(lambda self: self.args[2])
@@ -296,23 +219,6 @@ def Binomial(name, n, p, succ=1, fail=0):
 
 
 class HypergeometricDensity(SingleFiniteDensity):
-    """
-    Create a Finite Random Variable representing a hypergeometric distribution.
-
-    This class is for internal use.
-
-    Create Hypergeometric Random Symbols using Hypergeometric function.
-
-    Examples
-    ========
-
-    >>> from sympy.stats import Hypergeometric, density
-    >>> from sympy import S
-
-    >>> X = Hypergeometric('X', 10, 5, 3) # 10 marbles, 5 white (success), 3 draws
-    >>> density(X)
-    {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
-    """
     N = property(lambda self: self.args[0])
     m = property(lambda self: self.args[1])
     n = property(lambda self: self.args[2])
