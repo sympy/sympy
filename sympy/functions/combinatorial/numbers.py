@@ -1046,7 +1046,7 @@ def stirling(n, k, d=None, kind=2, signed=False):
     below.)
 
     To obtain the signed Stirling numbers of the first kind, use keyword
-    ``signed=True``. This keyword is ignored if ``kind`` = 2.
+    ``signed=True``. Using this keyword automatically sets ``kind`` to 1.
 
     Examples
     ========
@@ -1067,7 +1067,7 @@ def stirling(n, k, d=None, kind=2, signed=False):
 
     First kind (signed):
 
-    >>> [stirling(4, i, kind=1, signed=True) for i in range(5)]
+    >>> [stirling(4, i, signed=True) for i in range(5)]
     [0, -6, 11, -6, 1]
 
     Second kind:
