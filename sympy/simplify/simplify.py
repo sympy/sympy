@@ -3106,13 +3106,13 @@ def _real_to_rational(expr, tolerance=None):
         else:
             r = nsimplify(r, rational=False)
         if not r.is_Rational or oldr.is_finite and not r.is_finite:
-            if oldr < 0:
-                oldr = -oldr
-                d = Pow(10, int((mpmath.log(oldr)/mpmath.log(10))))
-                r = -Rational(str(oldr/d))*d
-            elif oldr > 0:
-                d = Pow(10, int((mpmath.log(oldr)/mpmath.log(10))))
-                r = Rational(str(oldr/d))*d
+            if r < 0:
+                r = -r
+                d = Pow(10, int((mpmath.log(r)/mpmath.log(10))))
+                r = -Rational(str(r/d))*d
+            elif r > 0:
+                d = Pow(10, int((mpmath.log(r)/mpmath.log(10))))
+                r = Rational(str(r/d))*d
             else:
                 r = Integer(0)
         reps[oldr] = r
