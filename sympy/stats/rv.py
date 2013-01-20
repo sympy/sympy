@@ -138,7 +138,7 @@ class PSpace(Basic):
 
     @property
     def values(self):
-        return frozenset(RandomSymbol(self, sym.name) for sym in self.domain.symbols)
+        return frozenset(RandomSymbol(self, sym) for sym in self.domain.symbols)
 
     @property
     def symbols(self):
@@ -199,12 +199,11 @@ class RandomSymbol(Expr):
 
     is_bounded = True
     is_finite = True
-    is_Atom = True
     is_Symbol = True
 
     pspace = property(lambda self: self.args[0])
-    name   = property(lambda self: self.args[1])
-    symbol = property(lambda self: Symbol(self.name))
+    symbol = property(lambda self: self.args[1])
+    name   = property(lambda self: self.symbol.name)
 
     @property
     def is_commutative(self):
