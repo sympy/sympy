@@ -1539,6 +1539,84 @@ def _trigsimp(expr, deep=False):
         return __trigsimp(expr, deep)
     return expr
 
+def replace_mul_fpowxgpow(expr, f, g, rbase, rexp, h, rbaseh, rexph, exclude=None):
+    """
+    Replace f(b_)**c_*g(rbase(b_))**(rexp(c_)) with h(rbaseh(b))**rexph(c)
+
+    Parameters
+    ==========
+
+    expr : expression
+    f, g : SymPy functions of one variable (e.g. sin, cos)
+    rbase : function
+    rexp : function
+    rbaseh : function
+    rexph : function
+    exclude : function
+
+    Notes
+    =====
+
+    If the expression in not a multiplication, or it is not commutative,
+    or ``f`` and ``g`` are the same function, it returns ``expr``.
+
+    ``exclude`` is a function ``exclude(f, g, base, exp)`` testing
+    if the match ``base, exp`` is acceptable
+    """
+    if not expr.is_Mul:
+        return expr
+    if f == g:
+        return expr
+    if not expr.is_commutative:
+        return expr
+    args = expr.args
+    base_exp = []
+    for x in args:
+        if x.is_Pow:
+            base_exp.append((x.base, x.exp))
+        else:
+            base_exp.append((x, S.One))
+    a0 = []
+    a1 = []
+    a2 = []
+    for base, exp in base_exp:
+        if base.__class__ is f:
+            a1.append((base, exp))
+        elif base.__class__ is g:
+            a2.append((base, exp))
+        else:
+            a0.append((base, exp))
+    b1 = [(x.args[0], y) for x, y  in a1]
+    b2 = [(rbase(x.args[0]), rexp(y)) for x, y  in a2]
+    b12 = set(b1) & set(b2)
+    m = ()
+    while b12:
+        m = b12.pop()
+        if exclude and exclude(f, g, m[0], m[1]):
+            m = ()
+            continue
+    if not m:
+        return expr
+
+    i = b1.index(m)
+    j = b2.index(m)
+    a1[i] = (h(rbaseh(m[0])), rexph(m[1]))
+    a2 = a2[:i] + a2[i + 1:]
+    a = a0 + a1 + a2
+    a = [base**exp for base, exp in a]
+    return Mul(*a)
+
+_idn = lambda x: x
+_midn = lambda x: -x
+
+
+def _exclude_div(f, g, base, exp):
+    if not exp.is_integer:
+        if not f(base).is_positive or not g(base).is_positive:
+            return True
+    else:
+        return False
+
 
 @cacheit
 def __trigsimp(expr, deep=False):
@@ -1555,7 +1633,34 @@ def __trigsimp(expr, deep=False):
             com, nc = expr.args_cnc()
             expr = _trigsimp(Mul._from_args(com), deep)*Mul._from_args(nc)
         else:
-            for pattern, simp, ok1, ok2 in matchers_division:
+            for i, (pattern, simp, ok1, ok2) in enumerate(matchers_division):
+                if i == 0:
+                     expr = replace_mul_fpowxgpow(expr, sin, cos, _idn, _midn, tan, _idn, _idn, _exclude_div)
+                elif i == 1:
+                     expr = replace_mul_fpowxgpow(expr, tan, cos, _idn, _idn, sin, _idn, _idn, _exclude_div)
+                elif i == 2:
+                     expr = replace_mul_fpowxgpow(expr, cot, sin, _idn, _idn, cos, _idn, _idn, _exclude_div)
+                elif i == 3:
+                     expr = replace_mul_fpowxgpow(expr, tan, sin, _idn, _midn, cos, _idn, _midn, _exclude_div)
+                elif i == 4:
+                     expr = replace_mul_fpowxgpow(expr, cot, cos, _idn, _midn, sin, _idn, _midn, _exclude_div)
+                elif i == 5:
+                     expr = replace_mul_fpowxgpow(expr, cot, tan, _idn, _idn, _idn, _idn, _idn, _exclude_div)
+                elif i == 8:
+                     expr = replace_mul_fpowxgpow(expr, sinh, cosh, _idn, _midn, tanh, _idn, _idn, _exclude_div)
+                elif i == 9:
+                     expr = replace_mul_fpowxgpow(expr, tanh, cosh, _idn, _idn, sinh, _idn, _idn, _exclude_div)
+
+                elif i == 10:
+                    expr = replace_mul_fpowxgpow(expr, coth, sinh, _idn, _idn, cosh, _idn, _idn, _exclude_div)
+                elif i == 11:
+                    expr = replace_mul_fpowxgpow(expr, tanh, sinh, _idn, _midn, cosh, _idn, _midn, _exclude_div)
+                elif i == 12:
+                    expr = replace_mul_fpowxgpow(expr, coth, cosh, _idn, _midn, sinh, _idn, _midn, _exclude_div)
+                elif i == 13:
+                    expr = replace_mul_fpowxgpow(expr, coth, tanh, _idn, _idn, _idn, _idn, _idn, _exclude_div)
+                continue
+
                 if not _dotrig(expr, pattern):
                     continue
                 res = expr.match(pattern)
