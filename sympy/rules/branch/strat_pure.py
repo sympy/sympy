@@ -1,4 +1,5 @@
 """ Generic SymPy-Independent Strategies """
+import itertools
 
 def exhaust(brule):
     """ Apply a branching rule repeatedly until it has no effect """
@@ -13,18 +14,25 @@ def exhaust(brule):
             yield expr
     return exhaust_brl
 
+def onaction(brule, fn):
+    def onaction_brl(expr):
+        for result in brule(expr):
+            if result != expr:
+                fn(brule, expr, result)
+            yield result
+    return onaction_brl
+
 def debug(brule, file=None):
     """ Print the input and output expressions at each rule application """
     if not file:
         from sys import stdout
         file = stdout
-    def debug_brl(expr):
-        for result in brule(expr):
-            if result != expr:
-                file.write("Rule: %s\n"%brule.func_name)
-                file.write("In: %s\nOut: %s\n\n"%(expr, result))
-            yield result
-    return debug_brl
+
+    def write(brl, expr, result):
+        file.write("Rule: %s\n"%brl.func_name)
+        file.write("In: %s\nOut: %s\n\n"%(expr, result))
+
+    return onaction(brule, write)
 
 def multiplex(*brules):
     """ Multiplex many branching rules into one """
@@ -46,6 +54,13 @@ def condition(cond, brule):
             pass
     return conditioned_brl
 
+def sfilter(pred, brule):
+    """ Yield only those results which satisfy the predicate """
+    def filtered_brl(expr):
+        for x in itertools.ifilter(pred, brule(expr)):
+            yield x
+    return filtered_brl
+
 def notempty(brule):
     def notempty_brl(expr):
         yielded = False
@@ -55,3 +70,19 @@ def notempty(brule):
         if not yielded:
             yield expr
     return notempty_brl
+
+def chain(*brules):
+    """
+    Compose a sequence of brules so that they apply to the expr sequentially
+    """
+    def chain_brl(expr):
+        if not brules:
+            yield expr
+            raise StopIteration()
+
+        head, tail = brules[0], brules[1:]
+        for nexpr in head(expr):
+            for nnexpr in chain(*tail)(nexpr):
+                yield nnexpr
+
+    return chain_brl

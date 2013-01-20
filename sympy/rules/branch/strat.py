@@ -1,4 +1,5 @@
-from strat_pure import exhaust, multiplex, debug, notempty, condition
+from strat_pure import (exhaust, multiplex, debug, notempty, condition, chain,
+        onaction, sfilter)
 from traverse import top_down
 
 def canon(*rules):
