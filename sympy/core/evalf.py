@@ -371,22 +371,25 @@ def add_terms(terms, prec, target_prec):
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
+    from sympy.core.core import C
     terms = [t for t in terms if not iszero(t)]
     if not terms:
         return None, None
     elif len(terms) == 1:
         return terms[0]
+
+    special = []
+    for t in terms:
+        arg = C.Float._new(t[0], 1)
+        if arg in (S.NaN, S.Infinity, S.NegativeInfinity):
+            special.append(arg)
+    if special:
+        from sympy.core.add import Add
+        rv = evalf(Add(*special), prec + 4, {})
+        return rv[0], rv[2]
+
     working_prec = 2*prec
     sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
-    # using 1 for precision since we just want to calculate
-    # nan, inf and -inf properly
-    new_terms = [C.Float._new(t[0], 1) for t in terms]
-    if (S.NaN in new_terms or S.Infinity in new_terms
-        or S.NegativeInfinity in new_terms):
-        from sympy import Add
-        r = Add(*new_terms)
-        r = evalf(r, prec+4, {})
-        return r[0], r[2]
 
     for x, accuracy in terms:
         sign, man, exp, bc = x
@@ -471,6 +474,7 @@ def evalf_add(v, prec, options):
 
 
 def evalf_mul(v, prec, options):
+    from sympy.core.core import C
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -500,15 +504,19 @@ def evalf_mul(v, prec, options):
     args.append(S.One)
     complex_factors = []
 
-    terms = [evalf(arg, prec + 10, options) for arg in v.args]
-    # C already imported on top but python gived UnboundLocalError
-    from core import C
-    terms = [C.Float._new(t[0], prec) for t in terms if t[0] is not None]
-    if (S.NaN in terms or S.Infinity in terms
-        or S.NegativeInfinity in terms):
-        from sympy import Mul
-        new_mul = Mul(*terms)
-        return evalf(new_mul, prec+4, {})
+    # see if any argument is NaN or oo and thus warrants a special return
+    special = []
+    for arg in args:
+        arg = evalf(arg, prec, options)
+        if arg[0] is None:
+            continue
+        arg = C.Float._new(arg[0], 1)
+        if arg in (S.NaN, S.Infinity, S.NegativeInfinity):
+            special.append(arg)
+    if special:
+        from sympy.core.mul import Mul
+        special = Mul(*special)
+        return evalf(special, prec + 4, {})
 
     for i, arg in enumerate(args):
         if i != last and pure_complex(arg):
