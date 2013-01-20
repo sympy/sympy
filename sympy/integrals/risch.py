@@ -1531,7 +1531,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
             # XXX: We can't call ratint() directly here because it doesn't
             # handle polynomials correctly.
             # We know it's a polynomial, isn't it?
-            ans = integrate(fa.as_expr()/fd.as_expr(), DE.x, risch=False, method="poly")
+            ans = integrate(fa.as_expr()/fd.as_expr(), DE.x, risch=False, method=["poly","rational"])
             b = False
             i = S(0)
         else:
