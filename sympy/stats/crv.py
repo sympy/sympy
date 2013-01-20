@@ -151,6 +151,63 @@ class ContinuousDensity(Basic):
         return self.pdf(*args)
 
 
+class SingleContinuousDensity(ContinuousDensity):
+
+    set = Interval(-oo, oo)
+
+    @staticmethod
+    def check(*args):
+        pass
+
+    def sample(self):
+        icdf = self._inverse_cdf_expression()
+        return icdf(random.uniform(0, 1))
+
+    @cacheit
+    def _inverse_cdf_expression(self):
+        """
+        Inverse of the CDF
+
+        See Also
+        ========
+        sample
+        """
+        x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
+        # Invert CDF
+        try:
+            inverse_cdf = solve(self.cdf(x) - z, x)
+        except NotImplementedError:
+            inverse_cdf = None
+        if not inverse_cdf or len(inverse_cdf) != 1:
+            raise NotImplementedError("Could not invert CDF")
+
+        return Lambda(z, inverse_cdf[0])
+
+    @property
+    @cacheit
+    def cdf(self, **kwargs):
+        if not self.set.is_Interval:
+            raise ValueError(
+                "CDF not well defined on multivariate expressions")
+
+        x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
+        left_bound = self.set.start
+
+        # CDF is integral of PDF from left bound to z
+        cdf = integrate(self(x), (x, left_bound, z), **kwargs)
+        # CDF Ensure that CDF left of left_bound is zero
+        cdf = Piecewise((cdf, z >= left_bound), (0, True))
+        return Lambda(z, cdf)
+
+
+class ContinuousDensityHandmade(SingleContinuousDensity):
+    pdf = property(lambda self: self.args[0])
+    set = property(lambda self: self.args[1])
+
+    def __new__(cls, pdf, set=Interval(-oo, oo)):
+        return Basic.__new__(cls, pdf, set)
+
+
 class ContinuousPSpace(PSpace):
     """
     A Continuous Probability Space
@@ -225,9 +282,10 @@ class ContinuousPSpace(PSpace):
         # by computing a density handled by density computation
         except NotImplementedError:
             expr = condition.lhs - condition.rhs
-            density = self.compute_density(expr, **kwargs)
+            density = ContinuousDensityHandmade(
+                            self.compute_density(expr, **kwargs))
             # Turn problem into univariate case
-            space = SingleContinuousPSpace(z, density(z))
+            space = SingleContinuousPSpace(z, density)
             return space.probability(condition.__class__(space.value, 0))
 
     def where(self, condition):
@@ -259,33 +317,25 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     This class is commonly implemented by the various ContinuousRV types
     such as Normal, Exponential, Uniform, etc....
     """
-    def __new__(cls, symbol, density, set=Interval(-oo, oo)):
-        domain = SingleContinuousDomain(sympify(symbol), set)
-        obj = ContinuousPSpace.__new__(cls, domain, density)
-        obj._cdf = None
-        return obj
+    def __new__(cls, symbol, density):
+        symbol = sympify(symbol)
+        return Basic.__new__(cls, symbol, density)
 
-    @cacheit
-    def _inverse_cdf_expression(self):
-        """
-        Inverse of the CDF
+    @property
+    def symbol(self):
+        return self.args[0]
 
-        See Also
-        ========
-        compute_cdf
-        sample
-        """
-        d = self.compute_cdf(self.value)
-        x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
-        # Invert CDF
-        try:
-            inverse_cdf = solve(d(x) - z, x)
-        except NotImplementedError:
-            inverse_cdf = None
-        if not inverse_cdf or len(inverse_cdf) != 1:
-            raise NotImplementedError("Could not invert CDF")
+    @property
+    def density(self):
+        return self.args[1]
 
-        return Lambda(z, inverse_cdf[0])
+    @property
+    def set(self):
+        return self.density.set
+
+    @property
+    def domain(self):
+        return SingleContinuousDomain(sympify(self.symbol), self.set)
 
     def sample(self):
         """
@@ -293,8 +343,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        icdf = self._inverse_cdf_expression()
-        return {self.value: icdf(random.uniform(0, 1))}
+        return {self.value: self.density.sample()}
 
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
