@@ -1059,9 +1059,9 @@ class Poly(Expr):
         n, k = len(f.gens), len(gens)
 
         if f.gens[:k] == gens:
-            _gens, front = f.gens[n - k:], True
+            _gens, front = f.gens[k:], True
         elif f.gens[-k:] == gens:
-            _gens, front = f.gens[:n - k], False
+            _gens, front = f.gens[:-k], False
         else:
             raise NotImplementedError(
                 "can only eject front or back generators")

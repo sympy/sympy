@@ -389,6 +389,13 @@ def solve(f, *symbols, **flags):
             other functions that contain that pattern; this is only
             needed if the pattern is inside of some invertible function
             like cos, exp, ....
+        'minimal=True (default is False)'
+            instructs solve to try to find a particular solution to a linear
+            system with as many zeros as possible; this is very expensive
+        'quick=True (default is False)'
+            when using minimal=True, use a fast heuristic instead to find a
+            solution with many zeros (instead of using the very slow method
+            guaranteed to find the largest number of zeros possible)
 
     Examples
     ========
@@ -1304,7 +1311,10 @@ def _solve_system(exprs, symbols, **flags):
                         matrix[i, m] = -coeff
 
             # returns a dictionary ({symbols: values}) or None
-            result = solve_linear_system(matrix, *symbols, **flags)
+            if flags.pop('minimal', False):
+                result = minsolve_linear_system(matrix, *symbols, **flags)
+            else:
+                result = solve_linear_system(matrix, *symbols, **flags)
             if result:
                 # it doesn't need to be checked but we need to see
                 # that it didn't set any denominators to 0
@@ -1592,6 +1602,87 @@ def solve_linear(lhs, rhs=0, symbols=[], exclude=[]):
     if n.is_Symbol:  # there was no valid solution
         n = d = S.Zero
     return n, d  # should we cancel now?
+
+
+def minsolve_linear_system(system, *symbols, **flags):
+    r"""
+    Find a particular solution to a linear system.
+
+    In particular, try to find a solution with the minimal possible number
+    of non-zero variables. This is a very computationally hard prolem.
+    If ``quick=True``, a heuristic is used. Otherwise a naive algorithm with
+    exponential complexity is used.
+    """
+    quick = flags.get('quick', False)
+    # Check if there are any non-zero solutions at all
+    s0 = solve_linear_system(system, *symbols, **flags)
+    if not s0 or all(v == 0 for v in s0.itervalues()):
+        return s0
+    if quick:
+        # We just solve the system and try to heuristically find a nice
+        # solution.
+        s = solve_linear_system(system, *symbols)
+        def update(determined, solution):
+            delete = []
+            for k, v in solution.iteritems():
+                solution[k] = v.subs(determined)
+                if not solution[k].free_symbols:
+                    delete.append(k)
+                    determined[k] = solution[k]
+            for k in delete:
+                del solution[k]
+        determined = {}
+        update(determined, s)
+        while s:
+            # NOTE sort by default_sort_key to get deterministic result
+            k = max((k for k in s.itervalues()),
+                    key=lambda x: (len(x.free_symbols), default_sort_key(x)))
+            x = max(k.free_symbols, key=default_sort_key)
+            if len(k.free_symbols) != 1:
+                determined[x] = S(0)
+            else:
+                val = solve(k)[0]
+                if val == 0 and all(v.subs(x, val) == 0 for v in s.itervalues()):
+                    determined[x] = S(1)
+                else:
+                    determined[x] = val
+            update(determined, s)
+        return determined
+    else:
+        # We try to select n variables which we want to be non-zero.
+        # All others will be assumed zero. We try to solve the modified system.
+        # If there is a non-trivial solution, just set the free variables to
+        # one. If we do this for increasing n, trying all combinations of
+        # variables, we will find an optimal solution.
+        # We speed up slightly by starting at one less than the number of
+        # variables the quick method manages.
+        from sympy.core.compatibility import combinations
+        from sympy.utilities.misc import debug
+        N = len(symbols)
+        bestsol = minsolve_linear_system(system, *symbols, **{'quick': True})
+        n0 = len([x for x in bestsol.itervalues() if x != 0])
+        for n in range(n0 - 1, 1, -1):
+            debug('minsolve: %s' % n)
+            thissol = None
+            for nonzeros in combinations(range(N), n):
+                subm = Matrix([system.col(i).T for i in nonzeros] + [system.col(-1).T]).T
+                s = solve_linear_system(subm, *[symbols[i] for i in nonzeros])
+                if s and not all(v == 0 for v in s.itervalues()):
+                    subs = [(symbols[v], S(1)) for v in nonzeros]
+                    for k, v in s.iteritems():
+                        s[k] = v.subs(subs)
+                    for sym in symbols:
+                        if sym not in s:
+                            if list(symbols).index(sym) in nonzeros:
+                                s[sym] = S(1)
+                            else:
+                                s[sym] = S(0)
+                    thissol = s
+                    break
+            if thissol is None:
+                break
+            bestsol = thissol
+        return bestsol
 
 
 def solve_linear_system(system, *symbols, **flags):

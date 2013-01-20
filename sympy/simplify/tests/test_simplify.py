@@ -63,13 +63,13 @@ def test_ratsimpmodprime():
     b = x + y**2 - y - 1
     F = [x*y - 1]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (x - y - 1)/(x - y)
+        (1 + y - x)/(y - x)
 
     a = 5*x**3 + 21*x**2 + 4*x*y + 23*x + 12*y + 15
     b = 7*x**3 - y*x**2 + 31*x**2 + 2*x*y + 15*y + 37*x + 21
     F = [x**2 + y**2 - 1]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (3*x + 4*y + 5)/(5*x + 5*y + 7)
+        (1 + 5*y - 5*x)/(8*y - 6*x)
 
     a = x*y - x - 2*y + 4
     b = x + y**2 - 2*y
@@ -77,6 +77,9 @@ def test_ratsimpmodprime():
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
         Rational(2, 5)
 
+    # Test a bug where denominators would be dropped
+    assert ratsimpmodprime(x, [y - 2*x], order='lex') == \
+        y/2
 
 def test_trigsimp1():
     x, y = symbols('x,y')
@@ -354,6 +357,44 @@ def test_tan_cot2():
     assert trigsimp(tan(x) - 1/cot(x)) == 0
     assert trigsimp(3*tanh(x)**7 - 2/coth(x)**7) == tanh(x)**7
 
+def test_trigsimp_groebner():
+    from sympy.simplify.simplify import trigsimp_groebner
+
+    ex = (4*sin(x)*cos(x) + 12*sin(x) + 5*cos(x)**3
+          + 21*cos(x)**2 + 23*cos(x) + 15) \
+       / (-sin(x)*cos(x)**2 + 2*sin(x)*cos(x) + 15*sin(x)
+          + 7*cos(x)**3 + 31*cos(x)**2 + 37*cos(x) + 21)
+    resnum = (5*sin(x) - 5*cos(x) + 1)
+    resdenom = (8*sin(x) - 6*cos(x))
+    results = [resnum/resdenom, (-resnum)/(-resdenom)]
+    assert trigsimp_groebner(ex) in results
+    assert trigsimp_groebner(sin(x)/cos(x), hints=[tan]) == tan(x)
+
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1),
+                    method='groebner') == 2/cos(x)
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1),
+                    method='groebner', polynomial=True) == 2/cos(x)
+
+    # Test quick=False works
+    assert trigsimp_groebner(ex, hints=[2]) in results
+
+    # test "I"
+    assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)
+
+    # test hyperbolic / sums
+    assert trigsimp_groebner((tanh(x)+tanh(y))/(1+tanh(x)*tanh(y)),
+                             hints=[(tanh,x,y)]) == tanh(x + y)
+
+    # test "deep"
+    expr = sin(2*x).expand(trig=True)
+    assert trigsimp(atan(expr), method='groebner', deep=False, hints=[2]) == \
+           atan(expr)
+    assert trigsimp(atan(expr), method='groebner', deep=True, hints=[2]) == \
+           atan(sin(2*x))
+    assert trigsimp(atan(atan(expr)), method='groebner', deep=True, hints=[2]) == \
+           atan(atan(sin(2*x)))
+    assert trigsimp(2**(expr), method='groebner', deep=True, hints=[2]) == \
+           2**sin(2*x)
 
 @XFAIL
 def test_factorial_simplify():

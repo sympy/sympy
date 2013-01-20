@@ -1054,10 +1054,17 @@ def test_exclude():
             Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
             R: Vplus/(C*s*(V1 - 2*Vplus))}]
 
-
 def test_high_order_roots():
     s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
+
+def test_minsolve_linear_system():
+    def count(dic):
+        return len([x for x in dic.itervalues() if x == 0])
+    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) == 3
+    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) == 3
+    assert count(solve([x + y + z, y + z + a], minimal=True, quick=True)) == 1
+    assert count(solve([x + y + z, y + z + a], minimal=True, quick=False)) == 2
 
 def test_real_roots():
     # cf. issue 3551
