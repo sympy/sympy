@@ -928,5 +928,7 @@ def rv_subs(expr, symbols=None):
     """
     if symbols is None:
         symbols = random_symbols(expr)
+    if not symbols:
+        return expr
     swapdict = dict([(rv, rv.symbol) for rv in symbols])
-    return expr.subs(swapdict)
+    return expr.xreplace(swapdict)

@@ -110,6 +110,8 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     """
 
     def __new__(cls, domain, condition):
+        if condition is True:
+            return domain
         cond = rv_subs(condition)
         # Check that we aren't passed a condition like die1 == z
         # where 'z' is a symbol that we don't know about
@@ -119,10 +121,12 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
                 condition, tuple(cond.free_symbols - domain.free_symbols)) +
                 "Will be unable to iterate using this condition")
 
-        return ConditionalDomain.__new__(cls, domain, condition)
+        return Basic.__new__(cls, domain, cond)
+
+
 
     def _test(self, elem):
-        val = self.condition.subs(dict(elem))
+        val = self.condition.xreplace(dict(elem))
         if val in [True, False]:
             return val
         elif val.is_Equality:
