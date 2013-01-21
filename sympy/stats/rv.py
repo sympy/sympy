@@ -542,7 +542,7 @@ def probability(condition, given_condition=None, numsamples=None, **kwargs):
 
 
 class Density(Basic):
-    expr      = property(lambda self: self.args[0])
+    expr = property(lambda self: self.args[0])
 
     @property
     def condition(self):
@@ -551,8 +551,12 @@ class Density(Basic):
         else:
             return None
 
-    def doit(self):
-        return density(self.expr, self.condition)
+    def doit(self, **kwargs):
+        expr, condition = self.expr, self.condition
+        if condition is not None:
+            # Recompute on new conditional expr
+            expr = given(expr, condition, **kwargs)
+        return pspace(expr).compute_density(expr, **kwargs)
 
 
 def density(expr, condition=None, **kwargs):
@@ -582,12 +586,7 @@ def density(expr, condition=None, **kwargs):
     >>> density(X)
     Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
     """
-    if condition is not None:  # If there is a condition
-        # Recompute on new conditional expr
-        return density(given(expr, condition, **kwargs), **kwargs)
-
-    # Otherwise pass work off to the ProbabilitySpace
-    return pspace(expr).compute_density(expr, **kwargs)
+    return Density(expr, condition).doit(**kwargs)
 
 
 def cdf(expr, condition=None, **kwargs):
