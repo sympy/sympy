@@ -1,6 +1,7 @@
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiSquared,
+                         Arcsin, Benini, Beta, BetaPrime, Cauchy,
+                         Chi, ChiSquared,
                          ChiNoncentral, Dagum, Erlang, Exponential, FDistribution, FisherZ,
                          Frechet, Gamma, GammaInverse, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto, QuadraticU,
@@ -12,6 +13,8 @@ from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Piecewise, Integral, sin, cos, besseli, Lambda, factorial,
                    binomial, floor)
+
+from sympy.stats.crv_types import NormalDistribution
 
 from sympy.utilities.pytest import raises, XFAIL, slow
 
@@ -563,3 +566,9 @@ def test_unevaluated():
 def test_probability_unevaluated():
     T = Normal('T', 30, 3)
     assert type(P(T > 33, evaluate=False)) == Integral
+
+def test_NormalDistribution():
+    nd = NormalDistribution(0, 1)
+    x = Symbol('x')
+    assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.One/2
+    assert isinstance(nd.sample(), float) or nd.sample().is_Number

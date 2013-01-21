@@ -178,9 +178,8 @@ class SingleContinuousDistribution(ContinuousDistribution):
 
         return Lambda(z, inverse_cdf[0])
 
-    @property
     @cacheit
-    def cdf(self, **kwargs):
+    def compute_cdf(self, **kwargs):
         if not self.set.is_Interval:
             raise ValueError(
                 "CDF not well defined on multivariate expressions")
@@ -193,6 +192,9 @@ class SingleContinuousDistribution(ContinuousDistribution):
         # CDF Ensure that CDF left of left_bound is zero
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
+
+    def cdf(self, x, **kwargs):
+        return self.compute_cdf(**kwargs)(x)
 
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
