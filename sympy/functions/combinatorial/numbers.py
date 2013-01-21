@@ -1117,6 +1117,7 @@ def stirling(n, k, d=None, kind=2, signed=False):
         # kind is ignored -- only kind=2 is supported
         return _stirling2(n - d + 1, k - d + 1)
     elif signed:
+        # kind is ignored -- only kind=1 is supported
         return (-1)**(n - k)*_stirling1(n, k)
 
     if kind == 1:
