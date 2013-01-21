@@ -3097,25 +3097,27 @@ def _real_to_rational(expr, tolerance=None):
     reduce_num = None
     if tolerance is not None and tolerance < 1:
         reduce_num = ceiling(1/tolerance)
-    for r in p.atoms(C.Float):
-        oldr = r
+    for float in p.atoms(C.Float):
         if reduce_num is not None:
-            r = Rational(r).limit_denominator(reduce_num)
-        elif tolerance is not None and tolerance >=1 and r.is_Integer is False:
-            r = Rational(tolerance*round(r/tolerance)).limit_denominator(int(tolerance))
+            r = Rational(float).limit_denominator(reduce_num)
+        elif (tolerance is not None and tolerance >= 1 and
+                float.is_Integer is False):
+            r = Rational(tolerance*round(float/tolerance)
+                ).limit_denominator(int(tolerance))
         else:
-            r = nsimplify(r, rational=False)
-        if not r.is_Rational or oldr.is_finite and not r.is_finite:
-            if r < 0:
-                r = -r
-                d = Pow(10, int((mpmath.log(r)/mpmath.log(10))))
-                r = -Rational(str(r/d))*d
-            elif r > 0:
-                d = Pow(10, int((mpmath.log(r)/mpmath.log(10))))
-                r = Rational(str(r/d))*d
-            else:
-                r = Integer(0)
-        reps[oldr] = r
+            r = nsimplify(float, rational=False)
+            # e.g. log(3).n() -> log(3) instead of a Rational
+            if not r.is_Rational:
+                if float < 0:
+                    float = -float
+                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
+                    r = -Rational(str(float/d))*d
+                elif float > 0:
+                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
+                    r = Rational(str(float/d))*d
+                else:
+                    r = Integer(0)
+        reps[float] = r
     return p.subs(reps, simultaneous=True)
 
 
