@@ -1,7 +1,9 @@
 from sympy.stats import Normal, ChiSquared
-from sympy.stats.rv import Density
+from sympy.stats.crv import ContinuousDistribution
+from sympy.stats.rv import Density, RandomSymbol
 from sympy.unify import rewriterule
-from sympy.rules.branch import multiplex, exhaust
+from sympy.rules.branch import multiplex, exhaust, chain, yieldify
+from sympy.rules import rebuild
 from sympy import Symbol
 
 x, y, z, n, m = map(Symbol, 'xyznm')
@@ -19,14 +21,12 @@ expression_equivalences = [
 def unpack_Density(d):
     if (isinstance(d, Density) and
         isinstance(d.expr, RandomSymbol) and
-        isinstance(d.expr.pspace.density, Distribution)):
-        return d.expr.pspace.density
-    else:
-        return d
+        isinstance(d.expr.pspace.density, ContinuousDistribution)):
+        yield d.expr.pspace.density
 
 expression_rrs = [rewriterule(Density(src), Density(tgt), wilds)
                     for src, tgt, wilds in expression_equivalences]
 
 rrs = expression_rrs + [unpack_Density]
 
-statsimp = exhaust(multiplex(*rrs))
+statsimp = chain(exhaust(multiplex(*rrs)), yieldify(rebuild))
