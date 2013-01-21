@@ -1586,19 +1586,23 @@ def _replace_mul_fpowxgpow(expr, f, g, rbase, rexp, h, rbaseh, rexph, exclude=No
     b1 = [(x.args[0], y) for x, y  in a1]
     b2 = [(rbase(x.args[0]), rexp(y)) for x, y in a2]
     b12 = set(b1) & set(b2)
-    jhit = []
+    hit = False
     while b12:
         m = b12.pop()
         if exclude and exclude(f, g, m[0], m[1]):
             continue
         else:
-            jhit.append(b2.index(m))
-            a1[b1.index(m)] = (h(rbaseh(m[0])), rexph(m[1]))
+            i1 = b1.index(m)
+            b1[i1] = None
+            a1[i1] = (h(rbaseh(m[0])), rexph(m[1]))
 
-    if not jhit:
+            i2 = b2.index(m)
+            b2[i2] = a2[i2] = None
+            hit = True
+
+    if not hit:
         return expr
-    for j in reversed(sorted(jhit)):
-        a2.pop(j)
+    a2 = filter(None, a2)
     return Mul(*[base**exp for base, exp in (a0 + a1 + a2)])
 
 
@@ -1654,7 +1658,7 @@ def _match_div_rewrite(expr, i):
         expr = _replace_mul_fpowxgpow(expr, coth, tanh,
             _idn, _idn, _idn, _idn, _idn, _exclude_div)
     else:
-        pass
+        return None
     return expr
 
 
@@ -1682,10 +1686,18 @@ def __trigsimp(expr, deep=False):
             expr = _trigsimp(Mul._from_args(com), deep)*Mul._from_args(nc)
         else:
             for i, (pattern, simp, ok1, ok2) in enumerate(matchers_division):
-                expr = _match_div_rewrite(expr, i)
-
                 if not _dotrig(expr, pattern):
                     continue
+
+                newexpr = _match_div_rewrite(expr, i)
+                if newexpr is not None:
+                    if newexpr != expr:
+                        expr = newexpr
+                        break
+                    else:
+                        continue
+
+                # use SymPy matching instead
                 res = expr.match(pattern)
                 if res and res.get(c, 0):
                     if not res[c].is_integer:
