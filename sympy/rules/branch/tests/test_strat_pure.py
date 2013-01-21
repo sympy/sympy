@@ -1,5 +1,5 @@
 from sympy.rules.branch.strat_pure import (exhaust, debug, multiplex,
-        condition, notempty, chain, onaction, sfilter)
+        condition, notempty, chain, onaction, sfilter, yieldify)
 
 
 def posdec(x):
@@ -91,3 +91,8 @@ def test_onaction():
 
     list(onaction(ident, record)(2))
     assert L == [(2, 3)]
+
+def test_yieldify():
+    inc = lambda x: x + 1
+    yinc = yieldify(inc)
+    assert list(yinc(3)) == [4]

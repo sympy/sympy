@@ -86,3 +86,9 @@ def chain(*brules):
                 yield nnexpr
 
     return chain_brl
+
+def yieldify(rl):
+    """ Turn a rule into a branching rule """
+    def brl(expr):
+        yield rl(expr)
+    return brl
