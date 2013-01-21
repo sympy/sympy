@@ -1,5 +1,5 @@
 from sympy.stats.simplify import (statsimp, rrs, expression_rrs,
-        unpack_Density, expression_equivalences)
+        unpack_Density, rv_eqs)
 from sympy.stats import Normal, ChiSquared
 from sympy.stats.crv_types import (ChiSquaredDistribution, NormalDistribution,
         Normal)
@@ -10,7 +10,7 @@ from sympy.rules import rebuild
 
 from sympy.unify import unify, rewriterule
 
-expr_rrs = map(rewriterule, *zip(*expression_equivalences))
+expr_rrs = map(rewriterule, *zip(*rv_eqs))
 exprsimp = exhaust(multiplex(yieldify(rebuild), *expr_rrs))
 
 x, y = map(Symbol, 'xy')

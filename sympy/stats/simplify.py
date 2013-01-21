@@ -9,18 +9,20 @@ from sympy import Symbol, Dummy
 
 x, y, z, n, m = map(Symbol, 'xyznm')
 
-z = Dummy('z')
-
 # Equivalences of random expressions under density. E.g.
 # Density(Normal(x, 0, 1)) == Density(StandardNormal(y))
 # We add the `Density` in these patterns later
-expression_equivalences = [
+_rv_eqs = (
     (Normal(x, 0, 1)**2, ChiSquared(x, 1), [x]),
-    (Normal(x, 0, 1)**2 + z, ChiSquared(x, 1) + z, [x, z]),
     (ChiSquared(x, m) + ChiSquared(y, n), ChiSquared(x, n+m), [x, y, n, m]),
-    (ChiSquared(x, m) + ChiSquared(y, n) + z, ChiSquared(x, n+m) + z,
-        [x, y, n, m, z])
-]
+)
+
+z = Dummy('z')
+def additive_eq(src, tgt, wilds):
+    """ (X -> Y) -> (X + z -> Y + z) """
+    return (src + z, tgt + z, tuple(wilds) + (z,))
+
+rv_eqs = _rv_eqs + tuple(map(additive_eq, *zip(*_rv_eqs)))
 
 def unpack_Density(d):
     if (isinstance(d, Density) and
@@ -29,7 +31,7 @@ def unpack_Density(d):
         yield d.expr.pspace.density
 
 expression_rrs = [rewriterule(Density(src), Density(tgt), wilds)
-                    for src, tgt, wilds in expression_equivalences]
+                    for src, tgt, wilds in rv_eqs]
 
 rrs = expression_rrs + [unpack_Density]
 
