@@ -196,6 +196,8 @@ class SingleContinuousDistribution(ContinuousDistribution):
     def cdf(self, x, **kwargs):
         return self.compute_cdf(**kwargs)(x)
 
+    def expectation(self, expr, var, **kwargs):
+        return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
     pdf = property(lambda self: self.args[0])
@@ -342,6 +344,37 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         """
         return {self.value: self.density.sample()}
 
+    def integrate(self, expr, rvs=None, **kwargs):
+        rvs = rvs or (self.value,)
+        if self.value not in rvs:
+            return expr
+
+        expr = expr.subs(dict((rv, rv.symbol) for rv in rvs))
+
+        x = self.value.symbol
+        try:
+            return self.density.expectation(expr, x, **kwargs)
+        except:
+            return integrate(expr * self.pdf, (x, self.set), **kwargs)
+
+    def compute_cdf(self, expr, **kwargs):
+        if expr == self.value:
+            return self.density.compute_cdf(**kwargs)
+        else:
+            return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
+        if not self.domain.set.is_Interval:
+            raise ValueError(
+                "CDF not well defined on multivariate expressions")
+
+        d = self.compute_density(expr, **kwargs)
+        x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
+        left_bound = self.domain.set.start
+
+        # CDF is integral of PDF from left bound to z
+        cdf = integrate(d(x), (x, left_bound, z), **kwargs)
+        # CDF Ensure that CDF left of left_bound is zero
+        cdf = Piecewise((cdf, z >= left_bound), (0, True))
+        return Lambda(z, cdf)
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """

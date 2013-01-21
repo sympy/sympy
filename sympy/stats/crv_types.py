@@ -2072,7 +2072,7 @@ def Triangular(name, a, b, c):
     Examples
     ========
 
-    i>>> from sympy.stats import Triangular, density, E
+    >>> from sympy.stats import Triangular, density, E
     >>> from sympy import Symbol
 
     >>> a = Symbol("a")
@@ -2112,17 +2112,17 @@ class UniformDistribution(SingleContinuousDistribution):
             (S.One/(right - left), And(left <= x, x <= right)),
             (S.Zero, True))
 
-    def compute_cdf(self, expr, **kwargs):
+    def compute_cdf(self, **kwargs):
         from sympy import Lambda, Min
         z = Dummy('z', real=True, bounded=True)
-        result = SingleContinuousPSpace.compute_cdf(self, expr, **kwargs)
+        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)
         result = result(z).subs({Min(z, self.right): z,
                                  Min(z, self.left, self.right): self.left})
         return Lambda(z, result)
 
-    def integrate(self, expr, rvs=None, **kwargs):
+    def expectation(self, expr, var, **kwargs):
         from sympy import Max, Min
-        result = SingleContinuousPSpace.integrate(self, expr, rvs, **kwargs)
+        result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
         result = result.subs({Max(self.left, self.right): self.right,
                               Min(self.left, self.right): self.left})
         return result

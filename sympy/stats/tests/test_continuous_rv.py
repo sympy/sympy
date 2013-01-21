@@ -572,3 +572,6 @@ def test_NormalDistribution():
     x = Symbol('x')
     assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.One/2
     assert isinstance(nd.sample(), float) or nd.sample().is_Number
+    assert nd.expectation(1, x) == 1
+    assert nd.expectation(x, x) == 0
+    assert nd.expectation(x**2, x) == 1
