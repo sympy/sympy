@@ -529,10 +529,9 @@ def test_sympy__stats__crv__ProductContinuousPSpace():
     assert _test_args(ProductContinuousPSpace(A, B))
 
 
-@XFAIL # abstract class
+@SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
-
 
 
 def test_sympy__stats__rv__RandomDomain():
@@ -606,11 +605,6 @@ def test_sympy__stats__frv_types__BernoulliDistribution():
     assert _test_args(BernoulliDistribution(S.Half, 0, 1))
 
 
-def test_sympy__stats__frv_types__CoinDistribution():
-    from sympy.stats.frv_types import CoinDistribution
-    assert _test_args(CoinDistribution(S.Half))
-
-
 def test_sympy__stats__frv_types__BinomialDistribution():
     from sympy.stats.frv_types import BinomialDistribution
     assert _test_args(BinomialDistribution(5, S.Half, 1, 0))
@@ -666,6 +660,31 @@ def test_sympy__stats__frv__ProductFinitePSpace():
     xp = SingleFinitePSpace(Symbol('x'), die)
     yp = SingleFinitePSpace(Symbol('y'), die)
     assert _test_args(ProductFinitePSpace(xp, yp))
+
+@SKIP("abstract class")
+def test_sympy__stats__frv__SingleFiniteDistribution():
+    pass
+
+@SKIP("abstract class")
+def test_sympy__stats__crv__ContinuousDistribution():
+    pass
+
+
+def test_sympy__stats__frv_types__FiniteDistributionHandmade():
+    from sympy.stats.frv_types import FiniteDistributionHandmade
+    assert _test_args(FiniteDistributionHandmade({1: 1}))
+
+
+def test_sympy__stats__crv__ContinuousDistributionHandmade():
+    from sympy.stats.crv import ContinuousDistributionHandmade
+    from sympy import Symbol, Interval
+    assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
+                                                     Interval(0, 2)))
+
+def test_sympy__stats__rv__Density():
+    from sympy.stats.rv import Density
+    from sympy.stats.crv_types import Normal
+    assert _test_args(Density(Normal('x', 0, 1)))
 
 
 def test_sympy__stats__crv_types__ArcsinDistribution():
