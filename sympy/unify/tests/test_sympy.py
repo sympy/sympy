@@ -1,5 +1,4 @@
-from sympy import Add, Basic, symbols, Mul, And
-from sympy import Wild as ExprWild
+from sympy import Add, Basic, symbols, Mul, And, Symbol
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
         is_commutative)
@@ -31,20 +30,20 @@ def test_nested():
 
 def test_unify():
     expr = Basic(1, 2, 3)
-    a, b, c = map(ExprWild, 'abc')
+    a, b, c = map(Symbol, 'abc')
     pattern = Basic(a, b, c)
-    assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
-    assert list(unify(expr, pattern))     == [{a: 1, b: 2, c: 3}]
+    assert list(unify(expr, pattern, {}, (a, b, c))) == [{a: 1, b: 2, c: 3}]
+    assert list(unify(expr, pattern, wilds=(a, b, c))) == [{a: 1, b: 2, c: 3}]
 
 def test_unify_wilds():
     assert list(unify(Basic(1, 2), Basic(1, x), {}, wilds=(x,))) == [{x: 2}]
 
 def test_s_input():
     expr = Basic(1, 2)
-    a, b = map(ExprWild, 'ab')
+    a, b = map(Symbol, 'ab')
     pattern = Basic(a, b)
-    assert list(unify(expr, pattern, {})) == [{a: 1, b: 2}]
-    assert list(unify(expr, pattern, {a: 5})) == []
+    assert list(unify(expr, pattern, {}, (a, b))) == [{a: 1, b: 2}]
+    assert list(unify(expr, pattern, {a: 5}, (a, b))) == []
 
 def iterdicteq(a, b):
     a = tuple(a)
@@ -53,10 +52,10 @@ def iterdicteq(a, b):
 
 def test_unify_commutative():
     expr = Add(1, 2, 3, evaluate=False)
-    a, b, c = map(ExprWild, 'abc')
+    a, b, c = map(Symbol, 'abc')
     pattern = Add(a, b, c, evaluate=False)
 
-    result  = tuple(unify(expr, pattern, {}))
+    result  = tuple(unify(expr, pattern, {}, (a, b, c)))
     expected = ({a: 1, b: 2, c: 3},
                 {a: 1, b: 3, c: 2},
                 {a: 2, b: 1, c: 3},
@@ -68,12 +67,12 @@ def test_unify_commutative():
 
 def test_unify_iter():
     expr = Add(1, 2, 3, evaluate=False)
-    a, b, c = map(ExprWild, 'abc')
+    a, b, c = map(Symbol, 'abc')
     pattern = Add(a, c, evaluate=False)
     assert is_associative(deconstruct(pattern))
     assert is_commutative(deconstruct(pattern))
 
-    result   = list(unify(expr, pattern, {}))
+    result   = list(unify(expr, pattern, {}, (a, c)))
     expected = [{a: 1, c: Add(2, 3, evaluate=False)},
                 {a: 1, c: Add(3, 2, evaluate=False)},
                 {a: 2, c: Add(1, 3, evaluate=False)},
@@ -92,9 +91,9 @@ def test_unify_iter():
 def test_hard_match():
     from sympy import sin, cos
     expr = sin(x) + cos(x)**2
-    p, q = map(ExprWild, 'pq')
+    p, q = map(Symbol, 'pq')
     pattern = sin(p) + cos(p)**2
-    assert list(unify(expr, pattern, {})) == [{p: x}]
+    assert list(unify(expr, pattern, {}, (p, q))) == [{p: x}]
 
 def test_matrix():
     from sympy import MatrixSymbol

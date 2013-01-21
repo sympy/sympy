@@ -5,7 +5,6 @@ See sympy.unify.core for algorithmic docstring """
 
 
 from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
-from sympy.core import Wild as ExprWild
 from sympy.matrices import MatAdd, MatMul, MatrixExpr
 from sympy.core.sets import Union, Intersection, FiniteSet
 from sympy.core.operations import AssocOp, LatticeOp
@@ -43,7 +42,7 @@ def mk_matchtype(typ):
 
 def deconstruct(s, wilds=()):
     """ Turn a SymPy object into a Compound """
-    if isinstance(s, ExprWild) or s in wilds:
+    if s in wilds:
         return Variable(s)
     if isinstance(s, (Variable, CondVariable)):
         return s
@@ -72,32 +71,35 @@ def rebuild(s):
     """
     return construct(deconstruct(s))
 
-def unify(x, y, s=None, **kwargs):
+def unify(x, y, s=None, wilds=(), **kwargs):
     """ Structural unification of two expressions/patterns
 
     Examples
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Wild, Basic
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import Basic
+    >>> from sympy.abc import x, y, z, p, q
     >>> from sympy.core.compatibility import next
+
+    >>> next(unify(Basic(1, 2), Basic(1, x), wilds=[x]))
+    {x: 2}
+
     >>> expr = 2*x + y + z
-    >>> pattern = 2*Wild('p') + Wild('q')
-    >>> next(unify(expr, pattern, {}))
-    {p_: x, q_: y + z}
+    >>> pattern = 2*p +q
+    >>> next(unify(expr, pattern, {}, wilds=(p, q)))
+    {p: x, q: y + z}
+
+    Unification supports commutative and associative matching
 
     >>> expr = x + y + z
-    >>> pattern = Wild('p') + Wild('q')
-    >>> len(list(unify(expr, pattern, {})))
+    >>> pattern = p + q
+    >>> len(list(unify(expr, pattern, {}, wilds=(p, q))))
     12
 
     Wilds may be specified directly in the call to unify
 
-    >>> next(unify(Basic(1, 2), Basic(1, x), wilds=[x]))
-    {x: 2}
     """
-    wilds = kwargs.get('wilds', ())
     decons = lambda x: deconstruct(x, wilds)
     s = s or {}
     s = dict((decons(k), decons(v)) for k, v in s.items())
