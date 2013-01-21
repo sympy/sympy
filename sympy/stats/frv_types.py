@@ -12,7 +12,7 @@ Binomial
 Hypergeometric
 """
 
-from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDensity)
+from sympy.stats.frv import (SingleFinitePSpace, SingleFiniteDistribution)
 from sympy import (S, sympify, Rational, binomial, cacheit, Symbol, Integer,
         Dict, Basic)
 
@@ -23,7 +23,7 @@ def rv(name, cls, *args):
     density = cls(*args)
     return SingleFinitePSpace(name, density).value
 
-class FiniteDensityHandmade(SingleFiniteDensity):
+class FiniteDistributionHandmade(SingleFiniteDistribution):
     @property
     def density(self):
         return self.args[0]
@@ -48,9 +48,9 @@ def FiniteRV(name, density):
     >>> P(X>=2)
     0.700000000000000
     """
-    return rv(name, FiniteDensityHandmade, density)
+    return rv(name, FiniteDistributionHandmade, density)
 
-class DiscreteUniformDensity(SingleFiniteDensity):
+class DiscreteUniformDistribution(SingleFiniteDistribution):
     items = property(lambda self: self.args)
     p     = property(lambda self: Rational(1, len(self.items)))
 
@@ -92,10 +92,10 @@ def DiscreteUniform(name, items):
     {0: 1/5, 1: 1/5, 2: 1/5, 3: 1/5, 4: 1/5}
 
     """
-    return rv(name, DiscreteUniformDensity, *items)
+    return rv(name, DiscreteUniformDistribution, *items)
 
 
-class DieDensity(SingleFiniteDensity):
+class DieDistribution(SingleFiniteDistribution):
     sides = property(lambda self: self.args[0])
 
     @property
@@ -127,10 +127,10 @@ def Die(name, sides=6):
     {1: 1/4, 2: 1/4, 3: 1/4, 4: 1/4}
     """
 
-    return rv(name, DieDensity, sides)
+    return rv(name, DieDistribution, sides)
 
 
-class BernoulliDensity(SingleFiniteDensity):
+class BernoulliDistribution(SingleFiniteDistribution):
     p = property(lambda self: self.args[0])
     succ = property(lambda self: self.args[1])
     fail = property(lambda self: self.args[2])
@@ -159,7 +159,7 @@ def Bernoulli(name, p, succ=1, fail=0):
     {Heads: 1/2, Tails: 1/2}
     """
 
-    return rv(name, BernoulliDensity, p, succ, fail)
+    return rv(name, BernoulliDistribution, p, succ, fail)
 
 
 def Coin(name, p=S.Half):
@@ -181,10 +181,10 @@ def Coin(name, p=S.Half):
     >>> density(C2)
     {H: 3/5, T: 2/5}
     """
-    return rv(name, BernoulliDensity, p, 'H', 'T')
+    return rv(name, BernoulliDistribution, p, 'H', 'T')
 
 
-class BinomialDensity(SingleFiniteDensity):
+class BinomialDistribution(SingleFiniteDistribution):
     n = property(lambda self: self.args[0])
     p = property(lambda self: self.args[1])
     succ = property(lambda self: self.args[2])
@@ -215,10 +215,10 @@ def Binomial(name, n, p, succ=1, fail=0):
     {0: 1/16, 1: 1/4, 2: 3/8, 3: 1/4, 4: 1/16}
     """
 
-    return rv(name, BinomialDensity, n, p, succ, fail)
+    return rv(name, BinomialDistribution, n, p, succ, fail)
 
 
-class HypergeometricDensity(SingleFiniteDensity):
+class HypergeometricDistribution(SingleFiniteDistribution):
     N = property(lambda self: self.args[0])
     m = property(lambda self: self.args[1])
     n = property(lambda self: self.args[2])
@@ -256,4 +256,4 @@ def Hypergeometric(name, N, m, n):
     >>> density(X)
     {0: 1/12, 1: 5/12, 2: 5/12, 3: 1/12}
     """
-    return rv(name, HypergeometricDensity, N, m, n)
+    return rv(name, HypergeometricDistribution, N, m, n)

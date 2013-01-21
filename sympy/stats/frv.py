@@ -152,7 +152,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
 
-class SingleFiniteDensity(Basic):
+class SingleFiniteDistribution(Basic):
     def __new__(cls, *args):
         args = map(sympify, args)
         return Basic.__new__(cls, *args)

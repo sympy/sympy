@@ -44,8 +44,8 @@ from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
                    Symbol, log, besseli, Lambda, Basic)
 from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
-from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDensity,
-        ContinuousDensityHandmade)
+from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
+        ContinuousDistributionHandmade)
 from sympy.core.decorators import _sympifyit
 import random
 
@@ -129,14 +129,14 @@ def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     1/2
     """
     pdf = Lambda(symbol, density)
-    density = ContinuousDensityHandmade(pdf, set)
-    return SingleContinuousPSpace(symbol, density).value
+    dist = ContinuousDistributionHandmade(pdf, set)
+    return SingleContinuousPSpace(symbol, dist).value
 
-def rv(symbol, densitycls, args):
+def rv(symbol, cls, args):
     args = map(sympify, args)
-    density = densitycls(*args)
-    density.check(*args)
-    return SingleContinuousPSpace(symbol, density).value
+    dist = cls(*args)
+    dist.check(*args)
+    return SingleContinuousPSpace(symbol, dist).value
 
 ########################################
 # Continuous Probability Distributions #
@@ -146,7 +146,7 @@ def rv(symbol, densitycls, args):
 # Arcsin distribution ----------------------------------------------------------
 
 
-class ArcsinDensity(SingleContinuousDensity):
+class ArcsinDistribution(SingleContinuousDistribution):
     a = property(lambda self: self.args[0])
     b = property(lambda self: self.args[1])
 
@@ -195,13 +195,13 @@ def Arcsin(name, a=0, b=1):
     [1] http://en.wikipedia.org/wiki/Arcsine_distribution
     """
 
-    return rv(name, ArcsinDensity, (a, b))
+    return rv(name, ArcsinDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
 # Benini distribution ----------------------------------------------------------
 
 
-class BeniniDensity(SingleContinuousDensity):
+class BeniniDistribution(SingleContinuousDistribution):
     alpha = property(lambda self: self.args[0])
     beta  = property(lambda self: self.args[1])
     sigma = property(lambda self: self.args[2])
@@ -263,13 +263,13 @@ def Benini(name, alpha, beta, sigma):
     [1] http://en.wikipedia.org/wiki/Benini_distribution
     """
 
-    return rv(name, BeniniDensity, (alpha, beta, sigma))
+    return rv(name, BeniniDistribution, (alpha, beta, sigma))
 
 #-------------------------------------------------------------------------------
 # Beta distribution ------------------------------------------------------------
 
 
-class BetaDensity(SingleContinuousDensity):
+class BetaDistribution(SingleContinuousDistribution):
     alpha = property(lambda self: self.args[0])
     beta  = property(lambda self: self.args[1])
     set   = property(lambda self: Interval(0, 1))
@@ -340,13 +340,13 @@ def Beta(name, alpha, beta):
     [2] http://mathworld.wolfram.com/BetaDistribution.html
     """
 
-    return rv(name, BetaDensity, (alpha, beta))
+    return rv(name, BetaDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Beta prime distribution ------------------------------------------------------
 
 
-class BetaPrimeDensity(SingleContinuousDensity):
+class BetaPrimeDistribution(SingleContinuousDistribution):
     alpha = property(lambda self: self.args[0])
     beta  = property(lambda self: self.args[1])
     set   = property(lambda self: Interval(0, oo))
@@ -403,13 +403,13 @@ def BetaPrime(name, alpha, beta):
     [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
     """
 
-    return rv(name, BetaPrimeDensity, (alpha, beta))
+    return rv(name, BetaPrimeDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Cauchy distribution ----------------------------------------------------------
 
 
-class CauchyDensity(SingleContinuousDensity):
+class CauchyDistribution(SingleContinuousDistribution):
     x0    = property(lambda self: self.args[0])
     gamma = property(lambda self: self.args[1])
 
@@ -459,13 +459,13 @@ def Cauchy(name, x0, gamma):
     [2] http://mathworld.wolfram.com/CauchyDistribution.html
     """
 
-    return rv(name, CauchyDensity, (x0, gamma))
+    return rv(name, CauchyDistribution, (x0, gamma))
 
 #-------------------------------------------------------------------------------
 # Chi distribution -------------------------------------------------------------
 
 
-class ChiDensity(SingleContinuousDensity):
+class ChiDistribution(SingleContinuousDistribution):
     k = property(lambda self: self.args[0])
     set   = property(lambda self: Interval(0, oo))
 
@@ -514,13 +514,13 @@ def Chi(name, k):
     [2] http://mathworld.wolfram.com/ChiDistribution.html
     """
 
-    return rv(name, ChiDensity, (k,))
+    return rv(name, ChiDistribution, (k,))
 
 #-------------------------------------------------------------------------------
 # Non-central Chi distribution -------------------------------------------------
 
 
-class ChiNoncentralDensity(SingleContinuousDensity):
+class ChiNoncentralDistribution(SingleContinuousDistribution):
     k = property(lambda self: self.args[0])
     l = property(lambda self: self.args[1])
     set = property(lambda self: Interval(0, oo))
@@ -573,13 +573,13 @@ def ChiNoncentral(name, k, l):
     [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
     """
 
-    return rv(name, ChiNoncentralDensity, (k, l))
+    return rv(name, ChiNoncentralDistribution, (k, l))
 
 #-------------------------------------------------------------------------------
 # Chi squared distribution -----------------------------------------------------
 
 
-class ChiSquaredDensity(SingleContinuousDensity):
+class ChiSquaredDistribution(SingleContinuousDistribution):
     k = property(lambda self: self.args[0])
     set = property(lambda self: Interval(0, oo))
 
@@ -636,13 +636,13 @@ def ChiSquared(name, k):
     [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
     """
 
-    return rv(name, ChiSquaredDensity, (k, ))
+    return rv(name, ChiSquaredDistribution, (k, ))
 
 #-------------------------------------------------------------------------------
 # Dagum distribution -----------------------------------------------------------
 
 
-class DagumDensity(SingleContinuousDensity):
+class DagumDistribution(SingleContinuousDistribution):
     p = property(lambda self: self.args[0])
     a = property(lambda self: self.args[1])
     b = property(lambda self: self.args[2])
@@ -697,7 +697,7 @@ def Dagum(name, p, a, b):
     [1] http://en.wikipedia.org/wiki/Dagum_distribution
     """
 
-    return rv(name, DagumDensity, (p, a, b))
+    return rv(name, DagumDistribution, (p, a, b))
 
 #-------------------------------------------------------------------------------
 # Erlang distribution ----------------------------------------------------------
@@ -763,13 +763,13 @@ def Erlang(name, k, l):
     [2] http://mathworld.wolfram.com/ErlangDistribution.html
     """
 
-    return rv(name, GammaDensity, (k, 1/l))
+    return rv(name, GammaDistribution, (k, 1/l))
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
 
 
-class ExponentialDensity(SingleContinuousDensity):
+class ExponentialDistribution(SingleContinuousDistribution):
     rate = property(lambda self: self.args[0])
     set  = property(lambda self: Interval(0, oo))
 
@@ -849,12 +849,12 @@ def Exponential(name, rate):
     [2] http://mathworld.wolfram.com/ExponentialDistribution.html
     """
 
-    return rv(name, ExponentialDensity, (rate, ))
+    return rv(name, ExponentialDistribution, (rate, ))
 
 #-------------------------------------------------------------------------------
 # F distribution ---------------------------------------------------------------
 
-class FDistributionDensity(SingleContinuousDensity):
+class FDistributionDistribution(SingleContinuousDistribution):
     d1  = property(lambda self: self.args[0])
     d2  = property(lambda self: self.args[1])
     set = property(lambda self: Interval(0, oo))
@@ -918,12 +918,12 @@ def FDistribution(name, d1, d2):
     [2] http://mathworld.wolfram.com/F-Distribution.html
     """
 
-    return rv(name, FDistributionDensity, (d1, d2))
+    return rv(name, FDistributionDistribution, (d1, d2))
 
 #-------------------------------------------------------------------------------
 # Fisher Z distribution --------------------------------------------------------
 
-class FisherZDensity(SingleContinuousDensity):
+class FisherZDistribution(SingleContinuousDistribution):
     d1 = property(lambda self: self.args[0])
     d2 = property(lambda self: self.args[1])
 
@@ -984,12 +984,12 @@ def FisherZ(name, d1, d2):
     [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
     """
 
-    return rv(name, FisherZDensity, (d1, d2))
+    return rv(name, FisherZDistribution, (d1, d2))
 
 #-------------------------------------------------------------------------------
 # Frechet distribution ---------------------------------------------------------
 
-class FrechetDensity(SingleContinuousDensity):
+class FrechetDistribution(SingleContinuousDistribution):
     a = property(lambda self: self.args[0])
     s = property(lambda self: self.args[1])
     m = property(lambda self: self.args[2])
@@ -1047,13 +1047,13 @@ def Frechet(name, a, s=1, m=0):
     [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
     """
 
-    return rv(name, FrechetDensity, (a, s, m))
+    return rv(name, FrechetDistribution, (a, s, m))
 
 #-------------------------------------------------------------------------------
 # Gamma distribution -----------------------------------------------------------
 
 
-class GammaDensity(SingleContinuousDensity):
+class GammaDistribution(SingleContinuousDistribution):
     k     = property(lambda self: self.args[0])
     theta = property(lambda self: self.args[1])
     set   = property(lambda self: Interval(0, oo))
@@ -1141,12 +1141,12 @@ def Gamma(name, k, theta):
     [2] http://mathworld.wolfram.com/GammaDistribution.html
     """
 
-    return rv(name, GammaDensity, (k, theta))
+    return rv(name, GammaDistribution, (k, theta))
 
 #-------------------------------------------------------------------------------
 # Inverse Gamma distribution ---------------------------------------------------
 
-class GammaInverseDensity(SingleContinuousDensity):
+class GammaInverseDistribution(SingleContinuousDistribution):
     a   = property(lambda self: self.args[0])
     b   = property(lambda self: self.args[1])
     set = property(lambda self: Interval(0, oo))
@@ -1209,12 +1209,12 @@ def GammaInverse(name, a, b):
     [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
     """
 
-    return rv(name, GammaInverseDensity, (a, b))
+    return rv(name, GammaInverseDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
 # Kumaraswamy distribution -----------------------------------------------------
 
-class KumaraswamyDensity(SingleContinuousDensity):
+class KumaraswamyDistribution(SingleContinuousDistribution):
     a   = property(lambda self: self.args[0])
     b   = property(lambda self: self.args[1])
     set = property(lambda self: Interval(0, oo))
@@ -1277,13 +1277,13 @@ def Kumaraswamy(name, a, b):
     [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
     """
 
-    return rv(name, KumaraswamyDensity, (a, b))
+    return rv(name, KumaraswamyDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
 # Laplace distribution ---------------------------------------------------------
 
 
-class LaplaceDensity(SingleContinuousDensity):
+class LaplaceDistribution(SingleContinuousDistribution):
     mu = property(lambda self: self.args[0])
     b  = property(lambda self: self.args[1])
 
@@ -1333,13 +1333,13 @@ def Laplace(name, mu, b):
     [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
 
-    return rv(name, LaplaceDensity, (mu, b))
+    return rv(name, LaplaceDistribution, (mu, b))
 
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
 
 
-class LogisticDensity(SingleContinuousDensity):
+class LogisticDistribution(SingleContinuousDistribution):
     mu = property(lambda self: self.args[0])
     s  = property(lambda self: self.args[1])
 
@@ -1389,13 +1389,13 @@ def Logistic(name, mu, s):
     [2] http://mathworld.wolfram.com/LogisticDistribution.html
     """
 
-    return rv(name, LogisticDensity, (mu, s))
+    return rv(name, LogisticDistribution, (mu, s))
 
 #-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------
 
 
-class LogNormalDensity(SingleContinuousDensity):
+class LogNormalDistribution(SingleContinuousDistribution):
     mean = property(lambda self: self.args[0])
     std  = property(lambda self: self.args[1])
     set  = property(lambda self: Interval(0, oo))
@@ -1466,13 +1466,13 @@ def LogNormal(name, mean, std):
     [2] http://mathworld.wolfram.com/LogNormalDistribution.html
     """
 
-    return rv(name, LogNormalDensity, (mean, std))
+    return rv(name, LogNormalDistribution, (mean, std))
 
 #-------------------------------------------------------------------------------
 # Maxwell distribution ---------------------------------------------------------
 
 
-class MaxwellDensity(SingleContinuousDensity):
+class MaxwellDistribution(SingleContinuousDistribution):
     a   = property(lambda self: self.args[0])
     set = property(lambda self: Interval(0, oo))
 
@@ -1528,13 +1528,13 @@ def Maxwell(name, a):
     [2] http://mathworld.wolfram.com/MaxwellDistribution.html
     """
 
-    return rv(name, MaxwellDensity, (a, ))
+    return rv(name, MaxwellDistribution, (a, ))
 
 #-------------------------------------------------------------------------------
 # Nakagami distribution --------------------------------------------------------
 
 
-class NakagamiDensity(SingleContinuousDensity):
+class NakagamiDistribution(SingleContinuousDistribution):
     mu    = property(lambda self: self.args[0])
     omega = property(lambda self: self.args[1])
     set   = property(lambda self: Interval(0, oo))
@@ -1604,13 +1604,13 @@ def Nakagami(name, mu, omega):
     [1] http://en.wikipedia.org/wiki/Nakagami_distribution
     """
 
-    return rv(name, NakagamiDensity, (mu, omega))
+    return rv(name, NakagamiDistribution, (mu, omega))
 
 #-------------------------------------------------------------------------------
 # Normal distribution ----------------------------------------------------------
 
 
-class NormalDensity(SingleContinuousDensity):
+class NormalDistribution(SingleContinuousDistribution):
     mean = property(lambda self: self.args[0])
     std  = property(lambda self: self.args[1])
 
@@ -1689,13 +1689,13 @@ def Normal(name, mean, std):
     [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
-    return rv(name, NormalDensity, (mean, std))
+    return rv(name, NormalDistribution, (mean, std))
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------
 
 
-class ParetoDensity(SingleContinuousDensity):
+class ParetoDistribution(SingleContinuousDistribution):
     xm    = property(lambda self: self.args[0])
     alpha = property(lambda self: self.args[1])
     set   = property(lambda self: Interval(self.xm, oo))
@@ -1756,12 +1756,12 @@ def Pareto(name, xm, alpha):
     [2] http://mathworld.wolfram.com/ParetoDistribution.html
     """
 
-    return rv(name, ParetoDensity, (xm, alpha))
+    return rv(name, ParetoDistribution, (xm, alpha))
 
 #-------------------------------------------------------------------------------
 # QuadraticU distribution ------------------------------------------------------
 
-class QuadraticUDensity(SingleContinuousDensity):
+class QuadraticUDistribution(SingleContinuousDistribution):
     a   = property(lambda self: self.args[0])
     b   = property(lambda self: self.args[1])
     set = property(lambda self: Interval(self.a, self.b))
@@ -1825,12 +1825,12 @@ def QuadraticU(name, a, b):
     [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
     """
 
-    return rv(name, QuadraticUDensity, (a, b))
+    return rv(name, QuadraticUDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
 # RaisedCosine distribution ----------------------------------------------------
 
-class RaisedCosineDensity(SingleContinuousDensity):
+class RaisedCosineDistribution(SingleContinuousDistribution):
     mu  = property(lambda self: self.args[0])
     s   = property(lambda self: self.args[1])
     set = property(lambda self: Interval(self.mu - self.s, self.mu + self.s))
@@ -1894,13 +1894,13 @@ def RaisedCosine(name, mu, s):
     [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
     """
 
-    return rv(name, RaisedCosineDensity, (mu, s))
+    return rv(name, RaisedCosineDistribution, (mu, s))
 
 #-------------------------------------------------------------------------------
 # Rayleigh distribution --------------------------------------------------------
 
 
-class RayleighDensity(SingleContinuousDensity):
+class RayleighDistribution(SingleContinuousDistribution):
     sigma = property(lambda self: self.args[0])
     set   = property(lambda self: Interval(0, oo))
 
@@ -1956,13 +1956,13 @@ def Rayleigh(name, sigma):
     [2] http://mathworld.wolfram.com/RayleighDistribution.html
     """
 
-    return rv(name, RayleighDensity, (sigma, ))
+    return rv(name, RayleighDistribution, (sigma, ))
 
 #-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------
 
 
-class StudentTDensity(SingleContinuousDensity):
+class StudentTDistribution(SingleContinuousDistribution):
     nu = property(lambda self: self.args[0])
 
     def pdf(self, x):
@@ -2022,13 +2022,13 @@ def StudentT(name, nu):
     [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
-    return rv(name, StudentTDensity, (nu, ))
+    return rv(name, StudentTDistribution, (nu, ))
 
 #-------------------------------------------------------------------------------
 # Triangular distribution ------------------------------------------------------
 
 
-class TriangularDensity(SingleContinuousDensity):
+class TriangularDistribution(SingleContinuousDistribution):
     a = property(lambda self: self.args[0])
     b = property(lambda self: self.args[1])
     c = property(lambda self: self.args[2])
@@ -2072,7 +2072,7 @@ def Triangular(name, a, b, c):
     Examples
     ========
 
-    >>> from sympy.stats import Triangular, density, E
+    i>>> from sympy.stats import Triangular, density, E
     >>> from sympy import Symbol
 
     >>> a = Symbol("a")
@@ -2096,13 +2096,13 @@ def Triangular(name, a, b, c):
     [2] http://mathworld.wolfram.com/TriangularDistribution.html
     """
 
-    return rv(name, TriangularDensity, (a, b, c))
+    return rv(name, TriangularDistribution, (a, b, c))
 
 #-------------------------------------------------------------------------------
 # Uniform distribution ---------------------------------------------------------
 
 
-class UniformDensity(SingleContinuousDensity):
+class UniformDistribution(SingleContinuousDistribution):
     left  = property(lambda self: self.args[0])
     right = property(lambda self: self.args[1])
 
@@ -2189,13 +2189,13 @@ def Uniform(name, left, right):
     [2] http://mathworld.wolfram.com/UniformDistribution.html
     """
 
-    return rv(name, UniformDensity, (left, right))
+    return rv(name, UniformDistribution, (left, right))
 
 #-------------------------------------------------------------------------------
 # UniformSum distribution ------------------------------------------------------
 
 
-class UniformSumDensity(SingleContinuousDensity):
+class UniformSumDistribution(SingleContinuousDistribution):
     n   = property(lambda self: self.args[0])
     set = property(lambda self: Interval(0, self.n))
 
@@ -2260,12 +2260,12 @@ def UniformSum(name, n):
     [2] http://mathworld.wolfram.com/UniformSumDistribution.html
     """
 
-    return rv(name, UniformSumDensity, (n, ))
+    return rv(name, UniformSumDistribution, (n, ))
 
 #-------------------------------------------------------------------------------
 # VonMises distribution --------------------------------------------------------
 
-class VonMisesDensity(SingleContinuousDensity):
+class VonMisesDistribution(SingleContinuousDistribution):
     mu  = property(lambda self: self.args[0])
     k   = property(lambda self: self.args[1])
     set = property(lambda self: Interval(0, 2*pi))
@@ -2326,13 +2326,13 @@ def VonMises(name, mu, k):
     [2] http://mathworld.wolfram.com/vonMisesDistribution.html
     """
 
-    return rv(name, VonMisesDensity, (mu, k))
+    return rv(name, VonMisesDistribution, (mu, k))
 
 #-------------------------------------------------------------------------------
 # Weibull distribution ---------------------------------------------------------
 
 
-class WeibullDensity(SingleContinuousDensity):
+class WeibullDistribution(SingleContinuousDistribution):
     alpha = property(lambda self: self.args[0])
     beta  = property(lambda self: self.args[1])
     set   = property(lambda self: Interval(0, oo))
@@ -2402,13 +2402,13 @@ def Weibull(name, alpha, beta):
 
     """
 
-    return rv(name, WeibullDensity, (alpha, beta))
+    return rv(name, WeibullDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Wigner semicircle distribution -----------------------------------------------
 
 
-class WignerSemicircleDensity(SingleContinuousDensity):
+class WignerSemicircleDistribution(SingleContinuousDistribution):
     R   = property(lambda self: self.args[0])
     set = property(lambda self: Interval(-self.R, self.R))
 
@@ -2461,4 +2461,4 @@ def WignerSemicircle(name, R):
     [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
     """
 
-    return rv(name, WignerSemicircleDensity, (R,))
+    return rv(name, WignerSemicircleDistribution, (R,))

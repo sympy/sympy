@@ -141,12 +141,12 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                 "Set of Conditional Domain not Implemented")
 
 
-class ContinuousDensity(Basic):
+class ContinuousDistribution(Basic):
     def __call__(self, *args):
         return self.pdf(*args)
 
 
-class SingleContinuousDensity(ContinuousDensity):
+class SingleContinuousDistribution(ContinuousDistribution):
 
     set = Interval(-oo, oo)
 
@@ -195,7 +195,7 @@ class SingleContinuousDensity(ContinuousDensity):
         return Lambda(z, cdf)
 
 
-class ContinuousDensityHandmade(SingleContinuousDensity):
+class ContinuousDistributionHandmade(SingleContinuousDistribution):
     pdf = property(lambda self: self.args[0])
     set = property(lambda self: self.args[1])
 
@@ -277,7 +277,7 @@ class ContinuousPSpace(PSpace):
         # by computing a density handled by density computation
         except NotImplementedError:
             expr = condition.lhs - condition.rhs
-            density = ContinuousDensityHandmade(
+            density = ContinuousDistributionHandmade(
                             self.compute_density(expr, **kwargs))
             # Turn problem into univariate case
             space = SingleContinuousPSpace(z, density)
