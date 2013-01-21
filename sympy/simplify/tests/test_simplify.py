@@ -1044,7 +1044,13 @@ def test_nsimplify():
         factor(-3.0*z**2*(z**2)**(-2.5) + 3*(z**2)**(-1.5))).atoms(Float)
     e = x**0.0
     assert e.is_Pow and nsimplify(x**0.0) == 1
-
+    assert nsimplify(3.333333, tolerance=0.1, rational=True) == Rational(10, 3)
+    assert nsimplify(3.333333, tolerance=0.01, rational=True) == Rational(10, 3)
+    assert nsimplify(3.666666, tolerance=0.1, rational=True) == Rational(11, 3)
+    assert nsimplify(3.666666, tolerance=0.01, rational=True) == Rational(11, 3)
+    assert nsimplify(33, tolerance=10, rational=True) == Rational(33)
+    assert nsimplify(33.33, tolerance=10, rational=True) == Rational(30)
+    assert nsimplify(37.76, tolerance=10, rational=True) == Rational(40)
 
 def test_extract_minus_sign():
     x = Symbol("x")

@@ -14,10 +14,10 @@ from sympy.core.numbers import Float
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
-
 from sympy.functions import (
     gamma, exp, sqrt, log, root, exp_polar,
     sin, cos, tan, cot, sinh, cosh, tanh, coth)
+from sympy.functions.elementary.integers import ceiling
 
 from sympy.utilities.iterables import flatten, has_variety
 
@@ -3781,7 +3781,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     return expr
 
 
-def _real_to_rational(expr):
+def _real_to_rational(expr, tolerance=None):
     """
     Replace all reals in expr with rationals.
 
@@ -3794,19 +3794,30 @@ def _real_to_rational(expr):
     """
     p = expr
     reps = {}
-    for r in p.atoms(C.Float):
-        newr = nsimplify(r, rational=False)
-        if not newr.is_Rational or r.is_finite and not newr.is_finite:
-            if newr < 0:
-                newr = -r
-                d = Pow(10, int((mpmath.log(newr)/mpmath.log(10))))
-                newr = -Rational(str(newr/d))*d
-            elif newr > 0:
-                d = Pow(10, int((mpmath.log(r)/mpmath.log(10))))
-                newr = Rational(str(r/d))*d
-            else:
-                newr = Integer(0)
-        reps[r] = newr
+    reduce_num = None
+    if tolerance is not None and tolerance < 1:
+        reduce_num = ceiling(1/tolerance)
+    for float in p.atoms(C.Float):
+        if reduce_num is not None:
+            r = Rational(float).limit_denominator(reduce_num)
+        elif (tolerance is not None and tolerance >= 1 and
+                float.is_Integer is False):
+            r = Rational(tolerance*round(float/tolerance)
+                ).limit_denominator(int(tolerance))
+        else:
+            r = nsimplify(float, rational=False)
+            # e.g. log(3).n() -> log(3) instead of a Rational
+            if not r.is_Rational:
+                if float < 0:
+                    float = -float
+                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
+                    r = -Rational(str(float/d))*d
+                elif float > 0:
+                    d = Pow(10, int((mpmath.log(float)/mpmath.log(10))))
+                    r = Rational(str(float/d))*d
+                else:
+                    r = Integer(0)
+        reps[float] = r
     return p.subs(reps, simultaneous=True)
 
 
@@ -3852,7 +3863,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     """
     expr = sympify(expr)
     if rational or expr.free_symbols:
-        return _real_to_rational(expr)
+        return _real_to_rational(expr, tolerance)
 
     # sympy's default tolarance for Rationals is 15; other numbers may have
     # lower tolerances set, so use them to pick the largest tolerance if none

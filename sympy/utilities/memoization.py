@@ -1,3 +1,6 @@
+from sympy.core.decorators import wraps
+
+
 def recurrence_memo(initial):
     """
     Memo decorator for sequences defined by recurrence

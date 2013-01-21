@@ -66,7 +66,7 @@ this will generate isympy.1 in the current directory. -->
 			</author>
 		</authorgroup>
 		<copyright>
-			<year>2012</year>
+			<year>2013</year>
 			<holder>SymPy Development Team</holder>
 		</copyright>
 		<legalnotice>
@@ -193,7 +193,7 @@ this will generate isympy.1 in the current directory. -->
                           'ipython' or 'python'</para>
 				</listitem>
 			</varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-p <replaceable class="parameter">ENCODING</replaceable></option></term>
 				<term><option>--pretty=<replaceable class="parameter">ENCODING</replaceable></option></term>
 				<listitem>
@@ -205,7 +205,7 @@ this will generate isympy.1 in the current directory. -->
                     'ascii' or 'no'.</para>
 				</listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-t <replaceable class="parameter">TYPE</replaceable></option></term>
 				<term><option>--types=<replaceable class="parameter">TYPE</replaceable></option></term>
 				<listitem>
@@ -230,7 +230,7 @@ this will generate isympy.1 in the current directory. -->
                     'python' or 'sympy'.</para>
 				</listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-o <replaceable class="parameter">ORDER</replaceable></option></term>
 				<term><option>--order=<replaceable class="parameter">ORDER</replaceable></option></term>
 				<listitem>
@@ -249,7 +249,7 @@ this will generate isympy.1 in the current directory. -->
                     'rev-grlex', 'grevlex', 'rev-grevlex', 'old', or 'none'.</para>
 				</listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-q</option></term>
 				<term><option>--quiet</option></term>
 				<listitem>
@@ -258,7 +258,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-d</option></term>
 				<term><option>--doctest</option></term>
 				<listitem>
@@ -268,7 +268,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-C</option></term>
 				<term><option>--no-cache</option></term>
 				<listitem>
@@ -284,7 +284,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-a</option></term>
 				<term><option>--auto</option></term>
 				<listitem>
@@ -319,7 +319,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-D</option></term>
 				<term><option>--debug</option></term>
 				<listitem>
@@ -330,7 +330,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term>-- <replaceable class="parameter">PYTHONOPTIONS</replaceable></term>
 				<listitem>
                     <para>
@@ -349,7 +349,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-h</option></term>
 				<term><option>--help</option></term>
 				<listitem>
@@ -358,7 +358,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-v</option></term>
 				<term><option>--version</option></term>
 				<listitem>
@@ -402,4 +402,3 @@ this will generate isympy.1 in the current directory. -->
 			</citerefentry></para>
 	</refsect1>
 </refentry>
-

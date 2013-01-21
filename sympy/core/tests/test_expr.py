@@ -1390,9 +1390,9 @@ def test_equals():
 
 
 def test_random():
-    from sympy import posify
+    from sympy import posify, lucas
     assert posify(x)[0]._random() is not None
-    assert S('-pi*Abs(1/log(n!)) + 1')._random(2, -2, 0, -1, 0) is None
+    assert lucas(n)._random(2, -2, 0, -1, 1) is None
 
 
 def test_round():
