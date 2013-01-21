@@ -1460,6 +1460,8 @@ def _trigpats():
     d = Wild('d', commutative=False)
 
     # for the simplifications like sinh/cosh -> tanh:
+    # DO NOT REORDER THE FIRST 14 since these are assumed to be in this
+    # order in _match_div_rewrite.
     matchers_division = (
         (a*sin(b)**c/cos(b)**c, a*tan(b)**c, sin(b), cos(b)),
         (a*tan(b)**c*cos(b)**c, a*sin(b)**c, sin(b), cos(b)),
@@ -1476,6 +1478,7 @@ def _trigpats():
         (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c, S.One, S.One),
         (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c, S.One, S.One),
         (a*coth(b)**c*tanh(b)**c, a, S.One, S.One),
+
         (c*(tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)), tanh(a + b)*c, S.One, S.One),
     )
 
@@ -1532,15 +1535,9 @@ def _trigpats():
     return _trigpat
 
 
-def _trigsimp(expr, deep=False):
-    # protect the cache from non-trig patterns; we only allow
-    # trig patterns to enter the cache
-    if expr.has(*_trigs):
-        return __trigsimp(expr, deep)
-    return expr
+def _replace_mul_fpowxgpow(expr, f, g, rbase, rexp, h, rbaseh, rexph, exclude=None):
+    """Helper for _match_div_rewrite.
 
-def replace_mul_fpowxgpow(expr, f, g, rbase, rexp, h, rbaseh, rexph, exclude=None):
-    """
     Replace f(b_)**c_*g(rbase(b_))**(rexp(c_)) with h(rbaseh(b))**rexph(c)
 
     Parameters
@@ -1606,16 +1603,69 @@ def replace_mul_fpowxgpow(expr, f, g, rbase, rexp, h, rbaseh, rexph, exclude=Non
     a = [base**exp for base, exp in a]
     return Mul(*a)
 
+
 _idn = lambda x: x
 _midn = lambda x: -x
 
 
 def _exclude_div(f, g, base, exp):
+    """helper for _match_div_rewrite"""
     if not exp.is_integer:
         if not f(base).is_positive or not g(base).is_positive:
             return True
     else:
         return False
+
+
+def _match_div_rewrite(expr, i):
+    """helper for __trigsimp"""
+    if i == 0:
+         expr = _replace_mul_fpowxgpow(expr, sin, cos,
+            _idn, _midn, tan, _idn, _idn, _exclude_div)
+    elif i == 1:
+         expr = _replace_mul_fpowxgpow(expr, tan, cos,
+            _idn, _idn, sin, _idn, _idn, _exclude_div)
+    elif i == 2:
+         expr = _replace_mul_fpowxgpow(expr, cot, sin,
+            _idn, _idn, cos, _idn, _idn, _exclude_div)
+    elif i == 3:
+         expr = _replace_mul_fpowxgpow(expr, tan, sin,
+            _idn, _midn, cos, _idn, _midn, _exclude_div)
+    elif i == 4:
+         expr = _replace_mul_fpowxgpow(expr, cot, cos,
+            _idn, _midn, sin, _idn, _midn, _exclude_div)
+    elif i == 5:
+         expr = _replace_mul_fpowxgpow(expr, cot, tan,
+            _idn, _idn, _idn, _idn, _idn, _exclude_div)
+    elif i == 8:
+         expr = _replace_mul_fpowxgpow(expr, sinh, cosh,
+            _idn, _midn, tanh, _idn, _idn, _exclude_div)
+    elif i == 9:
+         expr = _replace_mul_fpowxgpow(expr, tanh, cosh,
+            _idn, _idn, sinh, _idn, _idn, _exclude_div)
+    elif i == 10:
+        expr = _replace_mul_fpowxgpow(expr, coth, sinh,
+            _idn, _idn, cosh, _idn, _idn, _exclude_div)
+    elif i == 11:
+        expr = _replace_mul_fpowxgpow(expr, tanh, sinh,
+            _idn, _midn, cosh, _idn, _midn, _exclude_div)
+    elif i == 12:
+        expr = _replace_mul_fpowxgpow(expr, coth, cosh,
+            _idn, _midn, sinh, _idn, _midn, _exclude_div)
+    elif i == 13:
+        expr = _replace_mul_fpowxgpow(expr, coth, tanh,
+            _idn, _idn, _idn, _idn, _idn, _exclude_div)
+    else:
+        pass
+    return expr
+
+
+def _trigsimp(expr, deep=False):
+    # protect the cache from non-trig patterns; we only allow
+    # trig patterns to enter the cache
+    if expr.has(*_trigs):
+        return __trigsimp(expr, deep)
+    return expr
 
 
 @cacheit
@@ -1634,32 +1684,7 @@ def __trigsimp(expr, deep=False):
             expr = _trigsimp(Mul._from_args(com), deep)*Mul._from_args(nc)
         else:
             for i, (pattern, simp, ok1, ok2) in enumerate(matchers_division):
-                if i == 0:
-                     expr = replace_mul_fpowxgpow(expr, sin, cos, _idn, _midn, tan, _idn, _idn, _exclude_div)
-                elif i == 1:
-                     expr = replace_mul_fpowxgpow(expr, tan, cos, _idn, _idn, sin, _idn, _idn, _exclude_div)
-                elif i == 2:
-                     expr = replace_mul_fpowxgpow(expr, cot, sin, _idn, _idn, cos, _idn, _idn, _exclude_div)
-                elif i == 3:
-                     expr = replace_mul_fpowxgpow(expr, tan, sin, _idn, _midn, cos, _idn, _midn, _exclude_div)
-                elif i == 4:
-                     expr = replace_mul_fpowxgpow(expr, cot, cos, _idn, _midn, sin, _idn, _midn, _exclude_div)
-                elif i == 5:
-                     expr = replace_mul_fpowxgpow(expr, cot, tan, _idn, _idn, _idn, _idn, _idn, _exclude_div)
-                elif i == 8:
-                     expr = replace_mul_fpowxgpow(expr, sinh, cosh, _idn, _midn, tanh, _idn, _idn, _exclude_div)
-                elif i == 9:
-                     expr = replace_mul_fpowxgpow(expr, tanh, cosh, _idn, _idn, sinh, _idn, _idn, _exclude_div)
-
-                elif i == 10:
-                    expr = replace_mul_fpowxgpow(expr, coth, sinh, _idn, _idn, cosh, _idn, _idn, _exclude_div)
-                elif i == 11:
-                    expr = replace_mul_fpowxgpow(expr, tanh, sinh, _idn, _midn, cosh, _idn, _midn, _exclude_div)
-                elif i == 12:
-                    expr = replace_mul_fpowxgpow(expr, coth, cosh, _idn, _midn, sinh, _idn, _midn, _exclude_div)
-                elif i == 13:
-                    expr = replace_mul_fpowxgpow(expr, coth, tanh, _idn, _idn, _idn, _idn, _idn, _exclude_div)
-                continue
+                expr = _match_div_rewrite(expr, i)
 
                 if not _dotrig(expr, pattern):
                     continue
