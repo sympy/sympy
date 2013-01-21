@@ -6,21 +6,21 @@ from sympy.core.compatibility import next
 p, q = Symbol('p'), Symbol('q')
 
 def test_simple():
-    rl = rewriterule(Basic(p, 1), Basic(p, 2), wilds=(p,))
+    rl = rewriterule(Basic(p, 1), Basic(p, 2), variables=(p,))
     assert list(rl(Basic(3, 1))) == [Basic(3, 2)]
 
     p1 = p**2
     p2 = p**3
-    rl = rewriterule(p1, p2, wilds=(p,))
+    rl = rewriterule(p1, p2, variables=(p,))
 
     expr = x**2
     assert list(rl(expr)) == [x**3]
 
-def test_simple_wilds():
-    rl = rewriterule(Basic(x, 1), Basic(x, 2), wilds=(x,))
+def test_simple_variables():
+    rl = rewriterule(Basic(x, 1), Basic(x, 2), variables=(x,))
     assert list(rl(Basic(3, 1))) == [Basic(3, 2)]
 
-    rl = rewriterule(x**2, x**3, wilds=(x,))
+    rl = rewriterule(x**2, x**3, variables=(x,))
     assert list(rl(y**2)) == [y**3]
 
 def test_moderate():

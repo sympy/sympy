@@ -40,16 +40,16 @@ def mk_matchtype(typ):
                 isinstance(x, Compound) and issubclass(x.op, typ))
     return matchtype
 
-def deconstruct(s, wilds=()):
+def deconstruct(s, variables=()):
     """ Turn a SymPy object into a Compound """
-    if s in wilds:
+    if s in variables:
         return Variable(s)
     if isinstance(s, (Variable, CondVariable)):
         return s
     if not isinstance(s, Basic) or s.is_Atom:
         return s
     return Compound(s.__class__,
-                    tuple(deconstruct(arg, wilds) for arg in s.args))
+                    tuple(deconstruct(arg, variables) for arg in s.args))
 
 def construct(t):
     """ Turn a Compound into a SymPy object """
@@ -71,7 +71,7 @@ def rebuild(s):
     """
     return construct(deconstruct(s))
 
-def unify(x, y, s=None, wilds=(), **kwargs):
+def unify(x, y, s=None, variables=(), **kwargs):
     """ Structural unification of two expressions/patterns
 
     Examples
@@ -82,25 +82,25 @@ def unify(x, y, s=None, wilds=(), **kwargs):
     >>> from sympy.abc import x, y, z, p, q
     >>> from sympy.core.compatibility import next
 
-    >>> next(unify(Basic(1, 2), Basic(1, x), wilds=[x]))
+    >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))
     {x: 2}
 
     >>> expr = 2*x + y + z
     >>> pattern = 2*p +q
-    >>> next(unify(expr, pattern, {}, wilds=(p, q)))
+    >>> next(unify(expr, pattern, {}, variables=(p, q)))
     {p: x, q: y + z}
 
     Unification supports commutative and associative matching
 
     >>> expr = x + y + z
     >>> pattern = p + q
-    >>> len(list(unify(expr, pattern, {}, wilds=(p, q))))
+    >>> len(list(unify(expr, pattern, {}, variables=(p, q))))
     12
 
     Wilds may be specified directly in the call to unify
 
     """
-    decons = lambda x: deconstruct(x, wilds)
+    decons = lambda x: deconstruct(x, variables)
     s = s or {}
     s = dict((decons(k), decons(v)) for k, v in s.items())
 

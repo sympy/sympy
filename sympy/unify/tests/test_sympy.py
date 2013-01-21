@@ -12,9 +12,9 @@ def test_deconstruct():
 
     assert deconstruct(1) == 1
     assert deconstruct(x) == x
-    assert deconstruct(x, wilds=(x,)) == Variable(x)
+    assert deconstruct(x, variables=(x,)) == Variable(x)
     assert deconstruct(Add(1, x, evaluate=False)) == Compound(Add, (1, x))
-    assert deconstruct(Add(1, x, evaluate=False), wilds=(x,)) == \
+    assert deconstruct(Add(1, x, evaluate=False), variables=(x,)) == \
               Compound(Add, (1, Variable(x)))
 
 def test_construct():
@@ -33,10 +33,11 @@ def test_unify():
     a, b, c = map(Symbol, 'abc')
     pattern = Basic(a, b, c)
     assert list(unify(expr, pattern, {}, (a, b, c))) == [{a: 1, b: 2, c: 3}]
-    assert list(unify(expr, pattern, wilds=(a, b, c))) == [{a: 1, b: 2, c: 3}]
+    assert list(unify(expr, pattern, variables=(a, b, c))) == \
+            [{a: 1, b: 2, c: 3}]
 
-def test_unify_wilds():
-    assert list(unify(Basic(1, 2), Basic(1, x), {}, wilds=(x,))) == [{x: 2}]
+def test_unify_variables():
+    assert list(unify(Basic(1, 2), Basic(1, x), {}, variables=(x,))) == [{x: 2}]
 
 def test_s_input():
     expr = Basic(1, 2)
@@ -100,8 +101,8 @@ def test_matrix():
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 2, 2)
     Z = MatrixSymbol('Z', 2, 3)
-    assert list(unify(X, Y, {}, wilds=[n, 'X'])) == [{'X': 'Y', n: 2}]
-    assert list(unify(X, Z, {}, wilds=[n, 'X'])) == []
+    assert list(unify(X, Y, {}, variables=[n, 'X'])) == [{'X': 'Y', n: 2}]
+    assert list(unify(X, Z, {}, variables=[n, 'X'])) == []
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
@@ -117,26 +118,26 @@ def test_FiniteSet_commutivity():
     a, b, c, x, y = symbols('a,b,c,x,y')
     s = FiniteSet(a, b, c)
     t = FiniteSet(x, y)
-    wilds = (x, y)
-    assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, t, wilds=wilds))
+    variables = (x, y)
+    assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, t, variables=variables))
 
 def test_FiniteSet_complex():
     from sympy import FiniteSet
     a, b, c, x, y, z = symbols('a,b,c,x,y,z')
     expr = FiniteSet(Basic(1, x), y, Basic(x, z))
     pattern = FiniteSet(a, Basic(x, b))
-    wilds = a, b
+    variables = a, b
     expected = tuple([{b: 1, a: FiniteSet(y, Basic(x, z))},
                       {b: z, a: FiniteSet(y, Basic(1, x))}])
-    assert iterdicteq(unify(expr, pattern, wilds=wilds), expected)
+    assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
 @XFAIL
 def test_and():
-    wilds = x, y
-    str(list(unify((x>0) & (z<3), pattern, wilds=wilds)))
+    variables = x, y
+    str(list(unify((x>0) & (z<3), pattern, variables=variables)))
 
 def test_Union():
     from sympy import Interval
     assert list(unify(Interval(0, 1) + Interval(10, 11),
                       Interval(0, 1) + Interval(12, 13),
-                      wilds=(Interval(12, 13),)))
+                      variables=(Interval(12, 13),)))
