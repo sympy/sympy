@@ -144,3 +144,15 @@ def flatten(expr):
         else:
             args.append(arg)
     return new(expr.__class__, *args)
+
+def rebuild(expr):
+    """ Rebuild a SymPy tree
+
+    This function recursively calls constructors in the expression tree.
+    This forces canonicalization and removes ugliness introduced by the use of
+    Basic.__new__
+    """
+    try:
+        return type(expr)(*map(rebuild, expr.args))
+    except:
+        return expr
