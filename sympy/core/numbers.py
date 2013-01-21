@@ -1344,6 +1344,8 @@ class Rational(Number):
         if other.is_real and other.is_number and not isinstance(other, Rational):
             other = other.evalf()
         if isinstance(other, Number):
+            if other is S.NaN:
+                return None
             if isinstance(other, Float):
                 return bool(mlib.mpf_le(
                     self._as_mpf_val(other._prec), other._mpf_))
