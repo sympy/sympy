@@ -1,6 +1,6 @@
 from sympy import (
     Abs, acos, acosh, Add, adjoint, asin, asinh, atan, Ci, conjugate, cos,
-    Derivative, diff, DiracDelta, E, exp, erf, EulerGamma, factor, Function,
+    Derivative, diff, DiracDelta, E, exp, erf, erfi, EulerGamma, factor, Function,
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
@@ -716,11 +716,11 @@ def test_issue2068():
 def test_issue_1791():
     z = Symbol('z', positive=True)
     assert integrate(exp(-log(x)**2), x) == \
-        sqrt(pi)*erf(-S(1)/2 + log(x))*exp(S(1)/4)/2
+        sqrt(pi)*exp(S(1)/4)*erf(log(x)-S(1)/2)/2
     assert integrate(exp(log(x)**2), x) == \
-        -I*sqrt(pi)*exp(-S(1)/4)*erf(I*log(x) + I/2)/2
-    assert integrate(exp(-z*log(x)**2), x) == sqrt(pi)*erf(sqrt(z)*log(x)
-        - 1/(2*sqrt(z)))*exp(S(1)/(4*z))/(2*sqrt(z))
+        sqrt(pi)*exp(-S(1)/4)*erfi(log(x)+S(1)/2)/2
+    assert integrate(exp(-z*log(x)**2), x) == \
+        sqrt(pi)*exp(1/(4*z))*erf(sqrt(z)*log(x) - 1/(2*sqrt(z)))/(2*sqrt(z))
 
 
 def test_issue_1277():
@@ -743,9 +743,9 @@ def test_issue_1100():
 def test_issue_841():
     a, b, c, d = symbols('a:d', positive=True, bounded=True)
     assert integrate(exp(-x**2 + I*c*x), x) == \
-        sqrt(pi)*erf(x - I*c/2)*exp(-c**S(2)/4)/2
-    assert integrate(exp(a*x**2 + b*x + c), x) == I*sqrt(pi)*erf(-I*x*sqrt(a)
-        - I*b/(2*sqrt(a)))*exp(c)*exp(-b**2/(4*a))/(2*sqrt(a))
+        -sqrt(pi)*exp(-c**2/4)*erf(I*c/2 - x)/2
+    assert integrate(exp(a*x**2 + b*x + c), x) == \
+        sqrt(pi)*exp(c)*exp(-b**2/(4*a))*erfi(sqrt(a)*x + b/(2*sqrt(a)))/(2*sqrt(a))
 
 
 def test_issue_2314():
