@@ -2194,7 +2194,7 @@ class Permutation(Basic):
 
         See Also
         ========
-        sympy.functions.combinatorial.stirling
+        sympy.functions.combinatorial.numbers.stirling
         """
         return len(self.full_cyclic_form)
 
