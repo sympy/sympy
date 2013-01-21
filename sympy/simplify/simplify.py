@@ -1365,7 +1365,7 @@ def trigsimp(expr, **opts):
 
     >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
     >>> trigsimp(e)
-    (-sin(x) + 1)/cos(x) - cos(x)/(sin(x) - 1)
+    -(sin(x) - 1)/cos(x) - cos(x)/(sin(x) - 1)
     >>> trigsimp(e, method="groebner")
     2/cos(x)
 
