@@ -216,9 +216,9 @@ def test_trigsimp_issues():
 
     # issue 2849
     assert trigsimp(diff(integrate(cos(x)/sin(x)**3, x), x)) == \
-            cos(x)/sin(x)**3
+        cos(x)/sin(x)**3
     assert trigsimp(diff(integrate(sin(x)/cos(x)**3, x), x)) == \
-            sin(x)/cos(x)**3
+        sin(x)/cos(x)**3
 
     # check integer exponents
     e = sin(x)**y/cos(x)**y
@@ -228,7 +228,9 @@ def test_trigsimp_issues():
 
     # check for multiple patterns
     assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
-           tan(x)**-2*tan(y)**-2
+        tan(x)**-2*tan(y)**-2
+    assert trigsimp(cos(x)/sin(x)*cos(x+y)/sin(x+y)) == \
+        1/(tan(x)*tan(x + y))
 
 
 def test_trigsimp_assumptions():

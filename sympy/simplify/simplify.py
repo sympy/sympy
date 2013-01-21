@@ -1584,24 +1584,22 @@ def _replace_mul_fpowxgpow(expr, f, g, rbase, rexp, h, rbaseh, rexph, exclude=No
         else:
             a0.append((base, exp))
     b1 = [(x.args[0], y) for x, y  in a1]
-    b2 = [(rbase(x.args[0]), rexp(y)) for x, y  in a2]
+    b2 = [(rbase(x.args[0]), rexp(y)) for x, y in a2]
     b12 = set(b1) & set(b2)
-    m = ()
+    jhit = []
     while b12:
         m = b12.pop()
         if exclude and exclude(f, g, m[0], m[1]):
-            m = ()
             continue
-    if not m:
-        return expr
+        else:
+            jhit.append(b2.index(m))
+            a1[b1.index(m)] = (h(rbaseh(m[0])), rexph(m[1]))
 
-    i = b1.index(m)
-    j = b2.index(m)
-    a1[i] = (h(rbaseh(m[0])), rexph(m[1]))
-    a2 = a2[:i] + a2[i + 1:]
-    a = a0 + a1 + a2
-    a = [base**exp for base, exp in a]
-    return Mul(*a)
+    if not jhit:
+        return expr
+    for j in reversed(sorted(jhit)):
+        a2.pop(j)
+    return Mul(*[base**exp for base, exp in (a0 + a1 + a2)])
 
 
 _idn = lambda x: x
