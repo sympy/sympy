@@ -221,6 +221,8 @@ class ContinuousPSpace(PSpace):
     """
 
     is_Continuous = True
+    domain       = property(lambda self: self.args[0])
+    distribution = property(lambda self: self.args[1])
 
     def integrate(self, expr, rvs=None, **kwargs):
         if rvs is None:
@@ -239,16 +241,18 @@ class ContinuousPSpace(PSpace):
         # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
-            density = self.domain.integrate(self.pdf , set(rs.symbol
+            pdf = self.domain.integrate(self.pdf , set(rs.symbol
                 for rs in self.values - frozenset((expr,))), **kwargs)
-            return Lambda(expr.symbol, density)
+            return ContinuousDistributionHandmade(
+                    Lambda(expr.symbol, pdf))
 
         z = Dummy('z', real=True, bounded=True)
-        return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
+        return ContinuousDistributionHandmade(
+                Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs)))
 
     @property
     def pdf(self):
-        return self.density(*self.domain.symbols)
+        return self.distribution.pdf(*self.domain.symbols)
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):
@@ -285,10 +289,10 @@ class ContinuousPSpace(PSpace):
         # by computing a density handled by density computation
         except NotImplementedError:
             expr = condition.lhs - condition.rhs
-            density = ContinuousDistributionHandmade(
+            distribution = ContinuousDistributionHandmade(
                             self.compute_density(expr, **kwargs))
             # Turn problem into univariate case
-            space = SingleContinuousPSpace(z, density)
+            space = SingleContinuousPSpace(z, distribution)
             return space.probability(condition.__class__(space.value, 0))
 
     def where(self, condition):
@@ -306,11 +310,12 @@ class ContinuousPSpace(PSpace):
         condition = condition.subs(dict((rv, rv.symbol) for rv in self.values))
 
         domain = ConditionalContinuousDomain(self.domain, condition)
-        density = self.pdf
         if normalize:
-            density = density / domain.integrate(density, **kwargs)
+            pdf = self.pdf / domain.integrate(self.pdf, **kwargs)
+            distribution = ContinuousDistributionHandmade(
+                    Lambda(domain.symbols, pdf))
 
-        return ContinuousPSpace(domain, density)
+        return ContinuousPSpace(domain, distribution)
 
 
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
@@ -320,21 +325,21 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     This class is commonly implemented by the various ContinuousRV types
     such as Normal, Exponential, Uniform, etc....
     """
-    def __new__(cls, symbol, density):
+    def __new__(cls, symbol, distribution):
         symbol = sympify(symbol)
-        return Basic.__new__(cls, symbol, density)
+        return Basic.__new__(cls, symbol, distribution)
 
     @property
     def symbol(self):
         return self.args[0]
 
     @property
-    def density(self):
+    def distribution(self):
         return self.args[1]
 
     @property
     def set(self):
-        return self.density.set
+        return self.distribution.set
 
     @property
     def domain(self):
@@ -346,7 +351,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        return {self.value: self.density.sample()}
+        return {self.value: self.distribution.sample()}
 
     def integrate(self, expr, rvs=None, **kwargs):
         rvs = rvs or (self.value,)
@@ -357,13 +362,13 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.density.expectation(expr, x, **kwargs)
+            return self.distribution.expectation(expr, x, **kwargs)
         except:
             return integrate(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
-            return self.density.compute_cdf(**kwargs)
+            return self.distribution.compute_cdf(**kwargs)
         else:
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 
