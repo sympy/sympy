@@ -194,6 +194,32 @@ def test_evalf_bugs():
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
+    #3561. Also NaN != mpmath.nan
+    # In this order:
+    # 0*nan, 0/nan, 0*inf, 0/inf
+    # 0+nan, 0-nan, 0+inf, 0-inf
+    # >>> n = Some Number
+    # n*nan, n/nan, n*inf, n/inf
+    # n+nan, n-nan, n+inf, n-inf
+    assert (0*sin(oo)).n() == S.Zero
+    assert (0/sin(oo)).n() == S.Zero
+    assert (0*E**(oo)).n() == S.NaN
+    assert (0/E**(oo)).n() == S.Zero
+
+    assert (0+sin(oo)).n() == S.NaN
+    assert (0-sin(oo)).n() == S.NaN
+    assert (0+E**(oo)).n() == S.Infinity
+    assert (0-E**(oo)).n() == S.NegativeInfinity
+
+    assert (5*sin(oo)).n() == S.NaN
+    assert (5/sin(oo)).n() == S.NaN
+    assert (5*E**(oo)).n() == S.Infinity
+    assert (5/E**(oo)).n() == S.Zero
+
+    assert (5+sin(oo)).n() == S.NaN
+    assert (5-sin(oo)).n() == S.NaN
+    assert (5+E**(oo)).n() == S.Infinity
+    assert (5-E**(oo)).n() == S.NegativeInfinity
 
 
 def test_evalf_integer_parts():
