@@ -5,15 +5,28 @@ from sympy.rules.branch import multiplex, exhaust
 from sympy import Symbol
 
 x, y, z, n, m = map(Symbol, 'xyznm')
-density_equivalences = [
+
+
+# Equivalences of random expressions under density. E.g.
+# Density(Normal(x, 0, 1)) == Density(StandardNormal(y))
+# We add the `Density` in these patterns later
+expression_equivalences = [
     (Normal(x, 0, 1)**2, ChiSquared(x, 1), [x]),
     (Normal(x, 0, 1)**2 + z, ChiSquared(x, 1) + z, [x, z]),
     (ChiSquared(x, m) + ChiSquared(y, n), ChiSquared(x, n+m), [x, y, n, m])
 ]
 
-density_rrs = [rewriterule(Density(src), Density(tgt), wilds)
-                    for src, tgt, wilds in density_equivalences]
+def unpack_Density(d):
+    if (isinstance(d, Density) and
+        isinstance(d.expr, RandomSymbol) and
+        isinstance(d.expr.pspace.density, Distribution)):
+        return d.expr.pspace.density
+    else:
+        return d
 
-rrs = density_rrs + []
+expression_rrs = [rewriterule(Density(src), Density(tgt), wilds)
+                    for src, tgt, wilds in expression_equivalences]
+
+rrs = expression_rrs + [unpack_Density]
 
 statsimp = exhaust(multiplex(*rrs))
