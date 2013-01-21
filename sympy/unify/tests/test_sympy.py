@@ -134,3 +134,9 @@ def test_FiniteSet_complex():
 def test_and():
     wilds = x, y
     str(list(unify((x>0) & (z<3), pattern, wilds=wilds)))
+
+def test_Union():
+    from sympy import Interval
+    assert list(unify(Interval(0, 1) + Interval(10, 11),
+                      Interval(0, 1) + Interval(12, 13),
+                      wilds=(Interval(12, 13),)))
