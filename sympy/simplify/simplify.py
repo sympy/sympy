@@ -1365,7 +1365,7 @@ def trigsimp(expr, **opts):
 
     >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
     >>> trigsimp(e)
-    -(sin(x) - 1)/cos(x) - cos(x)/(sin(x) - 1)
+    (-sin(x) + 1)/cos(x) - cos(x)/(sin(x) - 1)
     >>> trigsimp(e, method="groebner")
     2/cos(x)
 
@@ -1703,15 +1703,20 @@ def __trigsimp(expr, deep=False):
         if args != expr.args:
             expr = Add(*args)
             expr = min(expr, expand(expr), key=count_ops)
-
         if expr.is_Add:
             for pattern, result in matchers_add:
                 if not _dotrig(expr, pattern):
                     continue
                 res = expr.match(pattern)
-                if res is not None:
-                    expr = result.subs(res)
-                    break
+                # if "d" contains any trig or hyperbolic funcs with
+                # argument "a" or "b" then skip the simplification;
+                # this isn't perfect -- see tests
+                if res is None or not (a in res and b in res) or any(
+                    w.args[0] in (res[a], res[b]) for w in res[d].atoms(
+                        C.TrigonometricFunction, C.HyperbolicFunction)):
+                    continue
+                expr = result.subs(res)
+                break
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
