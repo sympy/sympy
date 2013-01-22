@@ -221,8 +221,8 @@ class ContinuousPSpace(PSpace):
     """
 
     is_Continuous = True
-    domain       = property(lambda self: self.args[0])
-    distribution = property(lambda self: self.args[1])
+    domain  = property(lambda self: self.args[0])
+    density = property(lambda self: self.args[1])
 
     def integrate(self, expr, rvs=None, **kwargs):
         if rvs is None:
@@ -243,16 +243,14 @@ class ContinuousPSpace(PSpace):
             # Marginalize all other random symbols out of the density
             pdf = self.domain.integrate(self.pdf , set(rs.symbol
                 for rs in self.values - frozenset((expr,))), **kwargs)
-            return ContinuousDistributionHandmade(
-                    Lambda(expr.symbol, pdf))
+            return Lambda(expr.symbol, pdf)
 
         z = Dummy('z', real=True, bounded=True)
-        return ContinuousDistributionHandmade(
-                Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs)))
+        return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
 
     @property
     def pdf(self):
-        return self.distribution.pdf(*self.domain.symbols)
+        return self.density(*self.domain.symbols)
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):
@@ -288,11 +286,13 @@ class ContinuousPSpace(PSpace):
         # Other cases can be turned into univariate case
         # by computing a density handled by density computation
         except NotImplementedError:
+            from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            distribution = ContinuousDistributionHandmade(
-                            self.compute_density(expr, **kwargs))
+            dens = density(expr, **kwargs)
+            if not isinstance(dens, ContinuousDistribution):
+                dens = ContinuousDistributionHandmade(dens)
             # Turn problem into univariate case
-            space = SingleContinuousPSpace(z, distribution)
+            space = SingleContinuousPSpace(z, dens)
             return space.probability(condition.__class__(space.value, 0))
 
     def where(self, condition):
@@ -312,10 +312,9 @@ class ContinuousPSpace(PSpace):
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
             pdf = self.pdf / domain.integrate(self.pdf, **kwargs)
-            distribution = ContinuousDistributionHandmade(
-                    Lambda(domain.symbols, pdf))
+            density = Lambda(domain.symbols, pdf)
 
-        return ContinuousPSpace(domain, distribution)
+        return ContinuousPSpace(domain, density)
 
 
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
