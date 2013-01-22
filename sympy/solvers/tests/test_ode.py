@@ -2,7 +2,7 @@ from __future__ import division
 
 
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
-                   erf, exp, Function, I, Integral, LambertW, log, O, pi,
+                   erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
                    Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
                    Piecewise, symbols)
 x, y, z = symbols('x:z', real=True)
@@ -271,8 +271,8 @@ def test_old_ode_tests():
 def test_1st_linear():
     # Type: first order linear form f'(x)+p(x)f(x)=q(x)
     eq = Eq(f(x).diff(x) + x*f(x), x**2)
-    sol = Eq(f(x), exp(-x**2/2)*(sqrt(2)*sqrt(pi)*I*erf(I*x/sqrt(2))/2
-    + x*exp(x**2/2) + C1))
+    sol = Eq(f(x), (C1 + x*exp(x**2/2)
+                    - sqrt(2)*sqrt(pi)*erfi(sqrt(2)*x/2)/2)*exp(-x**2/2))
     assert dsolve(eq, hint='1st_linear') == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
