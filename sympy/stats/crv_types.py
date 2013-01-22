@@ -252,12 +252,12 @@ def Benini(name, alpha, beta, sigma):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                                                              2       
+                                                              2
     /                  /  z  \\             /  z  \            /  z  \
     |        2*beta*log|-----||  - alpha*log|-----| - beta*log |-----|
     |alpha             \sigma/|             \sigma/            \sigma/
-    |----- + -----------------|*e                                     
-    \  z             z        /                                       
+    |----- + -----------------|*e
+    \  z             z        /
 
     References
     ==========
@@ -325,10 +325,10 @@ def Beta(name, alpha, beta):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-     alpha - 1         beta - 1                    
+     alpha - 1         beta - 1
     z         *(-z + 1)        *gamma(alpha + beta)
     -----------------------------------------------
-                gamma(alpha)*gamma(beta)           
+                gamma(alpha)*gamma(beta)
 
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
@@ -395,10 +395,10 @@ def BetaPrime(name, alpha, beta):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-     alpha - 1        -alpha - beta                    
+     alpha - 1        -alpha - beta
     z         *(z + 1)             *gamma(alpha + beta)
     ---------------------------------------------------
-                  gamma(alpha)*gamma(beta)             
+                  gamma(alpha)*gamma(beta)
 
     References
     ==========
@@ -748,17 +748,17 @@ def Erlang(name, k, l):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
      k  k - 1  -l*z
-    l *z     *e    
+    l *z     *e
     ---------------
-        gamma(k)   
+        gamma(k)
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /  k*lowergamma(k, 0)   k*lowergamma(k, l*z)            
+    /  k*lowergamma(k, 0)   k*lowergamma(k, l*z)
     |- ------------------ + --------------------  for z >= 0
-    <     gamma(k + 1)          gamma(k + 1)                
-    |                                                       
-    \                     0                       otherwise 
+    <     gamma(k + 1)          gamma(k + 1)
+    |
+    \                     0                       otherwise
 
     >>> simplify(E(X))
     k/l
@@ -913,15 +913,15 @@ def FDistribution(name, d1, d2):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-      d2                                                 
-      --    ______________________________               
+      d2
+      --    ______________________________
       2    /       d1            -d1 - d2       /d1   d2\
     d2  *\/  (d1*z)  *(d1*z + d2)         *gamma|-- + --|
                                                 \2    2 /
     -----------------------------------------------------
-                           /d1\      /d2\                
-                    z*gamma|--|*gamma|--|                
-                           \2 /      \2 /                
+                           /d1\      /d2\
+                    z*gamma|--|*gamma|--|
+                           \2 /      \2 /
 
     References
     ==========
@@ -979,16 +979,16 @@ def FisherZ(name, d1, d2):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                                d1   d2                     
-        d1   d2               - -- - --                     
-        --   --                 2    2                      
+                                d1   d2
+        d1   d2               - -- - --
+        --   --                 2    2
         2    2  /    2*z     \           d1*z      /d1   d2\
     2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --|
                                                    \2    2 /
     --------------------------------------------------------
-                           /d1\      /d2\                   
-                      gamma|--|*gamma|--|                   
-                           \2 /      \2 /                   
+                           /d1\      /d2\
+                      gamma|--|*gamma|--|
+                           \2 /      \2 /
 
     References
     ==========
@@ -1122,22 +1122,22 @@ def Gamma(name, k, theta):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-                      -z 
+                      -z
                     -----
          -k  k - 1  theta
-    theta  *z     *e     
+    theta  *z     *e
     ---------------------
-           gamma(k)      
+           gamma(k)
 
     >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    /                                   /     z  \            
-    |                       k*lowergamma|k, -----|            
-    |  k*lowergamma(k, 0)               \   theta/            
+    /                                   /     z  \
+    |                       k*lowergamma|k, -----|
+    |  k*lowergamma(k, 0)               \   theta/
     <- ------------------ + ----------------------  for z >= 0
-    |     gamma(k + 1)           gamma(k + 1)                 
-    |                                                         
-    \                      0                        otherwise 
+    |     gamma(k + 1)           gamma(k + 1)
+    |
+    \                      0                        otherwise
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
@@ -1215,10 +1215,10 @@ def GammaInverse(name, a, b):
     >>> pprint(D, use_unicode=False)
                 -b
                 --
-     a  -a - 1  z 
-    b *z      *e  
+     a  -a - 1  z
+    b *z      *e
     --------------
-       gamma(a)   
+       gamma(a)
 
     References
     ==========
@@ -1283,8 +1283,8 @@ def Kumaraswamy(name, a, b):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
                          b - 1
-         a - 1 /   a    \     
-    a*b*z     *\- z  + 1/     
+         a - 1 /   a    \
+    a*b*z     *\- z  + 1/
 
 
     References
@@ -1464,14 +1464,14 @@ def LogNormal(name, mean, std):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
                           2
-           -(-mu + log(z)) 
+           -(-mu + log(z))
            ----------------
-                      2    
-      ___      2*sigma     
-    \/ 2 *e                
+                      2
+      ___      2*sigma
+    \/ 2 *e
     -----------------------
-            ____           
-        2*\/ pi *sigma*z   
+            ____
+        2*\/ pi *sigma*z
 
 
     >>> X = LogNormal('x', 0, 1) # Mean 0, standard deviation 1
@@ -1603,12 +1603,12 @@ def Nakagami(name, mu, omega):
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
                                     2
-                               -mu*z 
+                               -mu*z
                                ------
-        mu      -mu  2*mu - 1  omega 
-    2*mu  *omega   *z        *e      
+        mu      -mu  2*mu - 1  omega
+    2*mu  *omega   *z        *e
     ---------------------------------
-                gamma(mu)            
+                gamma(mu)
 
     >>> simplify(E(X, meijerg=True))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
@@ -1684,12 +1684,12 @@ def Normal(name, mean, std):
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-            /  ___          \             /  ___          \    
-            |\/ 2 *(-mu + z)|             |\/ 2 *(-mu + z)|    
+            /  ___          \             /  ___          \
+            |\/ 2 *(-mu + z)|             |\/ 2 *(-mu + z)|
     - mu*erf|---------------| - mu + z*erf|---------------| + z
-            \    2*sigma    /             \    2*sigma    /    
+            \    2*sigma    /             \    2*sigma    /
     -----------------------------------------------------------
-                            2*(-mu + z)                        
+                            2*(-mu + z)
 
     >>> simplify(skewness(X))
     0
@@ -1833,15 +1833,15 @@ def QuadraticU(name, a, b):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-    /                2                         
-    |   /  a   b    \                          
-    |12*|- - - - + z|                          
-    |   \  2   2    /                          
+    /                2
+    |   /  a   b    \
+    |12*|- - - - + z|
+    |   \  2   2    /
     <-----------------  for And(a <= z, z <= b)
-    |            3                             
-    |    (-a + b)                              
-    |                                          
-    \        0                 otherwise       
+    |            3
+    |    (-a + b)
+    |
+    \        0                 otherwise
 
     References
     ==========
@@ -1905,13 +1905,13 @@ def RaisedCosine(name, mu, s):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-    /   /pi*(-mu + z)\                                       
-    |cos|------------| + 1                                   
-    |   \     s      /                                       
+    /   /pi*(-mu + z)\
+    |cos|------------| + 1
+    |   \     s      /
     <---------------------  for And(z <= mu + s, mu - s <= z)
-    |         2*s                                            
-    |                                                        
-    \          0                        otherwise            
+    |         2*s
+    |
+    \          0                        otherwise
 
     References
     ==========
@@ -2030,17 +2030,17 @@ def StudentT(name, nu):
 
     >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-              nu   1              
-            - -- - -              
-              2    2              
-    /     2\                      
+              nu   1
+            - -- - -
+              2    2
+    /     2\
     |    z |              /nu   1\
     |1 + --|        *gamma|-- + -|
     \    nu/              \2    2/
     ------------------------------
-         ____   ____      /nu\    
-       \/ pi *\/ nu *gamma|--|    
-                          \2 /    
+         ____   ____      /nu\
+       \/ pi *\/ nu *gamma|--|
+                          \2 /
 
     References
     ==========
@@ -2110,19 +2110,19 @@ def Triangular(name, a, b, c):
     >>> X = Triangular("x", a,b,c)
 
     >>> pprint(density(X)(z), use_unicode=False)
-    /    -2*a + 2*z                           
+    /    -2*a + 2*z
     |-----------------  for And(a <= z, z < c)
-    |(-a + b)*(-a + c)                        
-    |                                         
-    |       2                                 
-    |     ------              for z = c       
-    <     -a + b                              
-    |                                         
-    |   2*b - 2*z                             
+    |(-a + b)*(-a + c)
+    |
+    |       2
+    |     ------              for z = c
+    <     -a + b
+    |
+    |   2*b - 2*z
     |----------------   for And(z <= b, c < z)
-    |(-a + b)*(b - c)                         
-    |                                         
-    \        0                otherwise       
+    |(-a + b)*(b - c)
+    |
+    \        0                otherwise
 
     References
     ==========
