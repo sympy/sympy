@@ -1655,13 +1655,14 @@ def dmp_eject(f, u, K, front=False):
     """
     f, h = dmp_to_dict(f, u), {}
 
+    n = len(K.gens)
     v = u - len(K.gens) + 1
 
     for monom, c in f.iteritems():
         if front:
-            g_monom, f_monom = monom[:v], monom[v:]
+            g_monom, f_monom = monom[:n], monom[n:]
         else:
-            f_monom, g_monom = monom[:v], monom[v:]
+            g_monom, f_monom = monom[-n:], monom[:-n]
 
         if f_monom in h:
             h[f_monom][g_monom] = c

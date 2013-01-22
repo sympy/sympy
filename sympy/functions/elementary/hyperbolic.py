@@ -120,6 +120,27 @@ class sinh(HyperbolicFunction):
             re, im = self.args[0].as_real_imag()
         return (sinh(re)*C.cos(im), cosh(re)*C.sin(im))
 
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+    def _eval_expand_trig(self, deep=True, **hints):
+        if deep:
+            arg = self.args[0].expand(deep, **hints)
+        else:
+            arg = self.args[0]
+        x = None
+        if arg.is_Add: # TODO, implement more if deep stuff here
+            x, y = arg.as_two_terms()
+        else:
+            coeff, terms = arg.as_coeff_Mul(rational=True)
+            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
+                x = terms
+                y = (coeff - 1)*x
+        if x is not None:
+            return (sinh(x)*cosh(y) + sinh(y)*cosh(x)).expand(trig=True)
+        return sinh(arg)
+
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) - C.exp(-arg)) / 2
 
@@ -250,6 +271,27 @@ class cosh(HyperbolicFunction):
             re, im = self.args[0].as_real_imag()
 
         return (cosh(re)*C.cos(im), sinh(re)*C.sin(im))
+
+    def _eval_expand_complex(self, deep=True, **hints):
+        re_part, im_part = self.as_real_imag(deep=deep, **hints)
+        return re_part + im_part*S.ImaginaryUnit
+
+    def _eval_expand_trig(self, deep=True, **hints):
+        if deep:
+            arg = self.args[0].expand(deep, **hints)
+        else:
+            arg = self.args[0]
+        x = None
+        if arg.is_Add: # TODO, implement more if deep stuff here
+            x, y = arg.as_two_terms()
+        else:
+            coeff, terms = arg.as_coeff_Mul(rational=True)
+            if coeff is not S.One and coeff.is_Integer and terms is not S.One:
+                x = terms
+                y = (coeff - 1)*x
+        if x is not None:
+            return (cosh(x)*cosh(y) + sinh(x)*sinh(y)).expand(trig=True)
+        return cosh(arg)
 
     def _eval_rewrite_as_exp(self, arg):
         return (C.exp(arg) + C.exp(-arg)) / 2

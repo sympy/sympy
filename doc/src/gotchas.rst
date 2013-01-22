@@ -66,9 +66,10 @@ equation reduces to 0.
     >>> from sympy import simplify, cos, sin, expand
     >>> simplify((x + 1)**2 - (x**2 + 2*x + 1))
     0
-    >>> simplify(sin(2*x) - 2*sin(x)*cos(x))
-    -2*sin(x)*cos(x) + sin(2*x)
-    >>> expand(sin(2*x) - 2*sin(x)*cos(x), trig=True)
+    >>> eq = sin(2*x) - 2*sin(x)*cos(x)
+    >>> simplify(eq)
+    0
+    >>> expand(eq, trig=True)
     0
 
 .. note::

@@ -2,7 +2,7 @@ from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     kinetic_energy, dynamicsymbols, inertia,
                                     potential_energy, Lagrangian)
-from sympy import symbols, pi, sin, cos, simplify, expand
+from sympy import symbols, pi, sin, cos, tan, simplify, expand
 
 
 def test_disc_on_an_incline_plane():
@@ -133,12 +133,12 @@ def test_dub_pen():
     lm = LagrangesMethod(L, [q1, q2])
     lm.form_lagranges_equations()
 
-    assert expand(l*m*(2*g*sin(q1) + l*sin(q1)*sin(q2)*q2dd
+    assert simplify(l*m*(2*g*sin(q1) + l*sin(q1)*sin(q2)*q2dd
         + l*sin(q1)*cos(q2)*q2d**2 - l*sin(q2)*cos(q1)*q2d**2
-        + l*cos(q1)*cos(q2)*q2dd + 2*l*q1dd) - (simplify(lm.eom[0]))) == 0
-    assert expand((l*m*(g*sin(q2) + l*sin(q1)*sin(q2)*q1dd
+        + l*cos(q1)*cos(q2)*q2dd + 2*l*q1dd) - lm.eom[0]) == 0
+    assert simplify(l*m*(g*sin(q2) + l*sin(q1)*sin(q2)*q1dd
         - l*sin(q1)*cos(q2)*q1d**2 + l*sin(q2)*cos(q1)*q1d**2
-        + l*cos(q1)*cos(q2)*q1dd + l*q2dd)) - (simplify(lm.eom[1]))) == 0
+        + l*cos(q1)*cos(q2)*q1dd + l*q2dd) - lm.eom[1]) == 0
 
 
 def test_rolling_disc():
@@ -183,7 +183,8 @@ def test_rolling_disc():
     l.form_lagranges_equations()
     RHS = l.rhs()
     RHS.simplify()
+
     assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
-    assert (RHS[4] == (-4*g*sin(q2) + 5*r*sin(q2)*cos(q2)*q1d**2
+    assert (RHS[4].simplify() == (-4*g*sin(q2) + 5*r*sin(q2)*cos(q2)*q1d**2
         + 6*r*cos(q2)*q1d*q3d)/(5*r))
     assert RHS[5] == (5*sin(q2)**2*q1d + 6*sin(q2)*q3d - q1d)*q2d/cos(q2)
