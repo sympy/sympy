@@ -684,7 +684,7 @@ class Interval(Set, EvalfMixin):
 
     @property
     def free_symbols(self):
-        return set((self.start, self.end))
+        return self.start.free_symbols | self.end.free_symbols
 
 class Union(Set, EvalfMixin):
     """
