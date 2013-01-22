@@ -1469,8 +1469,10 @@ def _trigpats():
         (a*tan(b)**c/sin(b)**c, a/cos(b)**c, sin(b), cos(b)),
         (a*cot(b)**c/cos(b)**c, a/sin(b)**c, sin(b), cos(b)),
         (a*cot(b)**c*tan(b)**c, a, sin(b), cos(b)),
-        (a*(cos(b) + 1)**c*(cos(b) - 1)**c, a*(-sin(b)**2)**c, cos(b) + 1, cos(b) - 1),
-        (a*(sin(b) + 1)**c*(sin(b) - 1)**c, a*(-cos(b)**2)**c, sin(b) + 1, sin(b) - 1),
+        (a*(cos(b) + 1)**c*(cos(b) - 1)**c,
+            a*(-sin(b)**2)**c, cos(b) + 1, cos(b) - 1),
+        (a*(sin(b) + 1)**c*(sin(b) - 1)**c,
+            a*(-cos(b)**2)**c, sin(b) + 1, sin(b) - 1),
 
         (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c, S.One, S.One),
         (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c, S.One, S.One),
@@ -1479,7 +1481,8 @@ def _trigpats():
         (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c, S.One, S.One),
         (a*coth(b)**c*tanh(b)**c, a, S.One, S.One),
 
-        (c*(tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)), tanh(a + b)*c, S.One, S.One),
+        (c*(tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)),
+            tanh(a + b)*c, S.One, S.One),
     )
 
     matchers_add = (
@@ -1603,6 +1606,7 @@ def _match_div_rewrite(expr, i):
     elif i == 5:
          expr = _replace_mul_fpowxgpow(expr, cot, tan,
             _idn, _idn, _idn)
+    # i in (6, 7) is skipped
     elif i == 8:
          expr = _replace_mul_fpowxgpow(expr, sinh, cosh,
             _midn, tanh, _idn)
@@ -1671,11 +1675,10 @@ def __trigsimp(expr, deep=False):
                         ok = ok2.subs(res)
                         if not ok.is_positive:
                             continue
-                    # if "a" contains any of sin("b"), cos("b"), tan("b"),
-                    # cot("b"), sinh("b"), cosh("b"), tanh("b") or
-                    # coth("b) then skip the simplification:
-                    if res[a].has(C.TrigonometricFunction,
-                            C.HyperbolicFunction):
+                    # if "a" contains any of trig or hyperbolic funcs with
+                    # argument "b" then skip the simplification
+                    if any(w.args[0] == res[b] for w in res[a].atoms(
+                            C.TrigonometricFunction, C.HyperbolicFunction)):
                         continue
                     # simplify and finish:
                     expr = simp.subs(res)

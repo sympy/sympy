@@ -232,6 +232,13 @@ def test_trigsimp_issues():
     assert trigsimp(cos(x)/sin(x)*cos(x+y)/sin(x+y)) == \
         1/(tan(x)*tan(x + y))
 
+    eq = cos(2)*(cos(3) + 1)**2/(cos(3) - 1)**2
+    # use exclusion
+    assert trigsimp(eq) == eq
+    # but not unnecessarily
+    assert trigsimp(cos(2)*(cos(3) + 1)**2*(cos(3) - 1)**2) == \
+        cos(2)*sin(3)**4
+
 
 def test_trigsimp_assumptions():
     from random import random, randint
