@@ -11,8 +11,9 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
 from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, cos, besseli, Lambda, factorial,
-                   binomial, floor)
+                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
+                   floor)
+
 
 from sympy.stats.crv_types import NormalDistribution
 
@@ -20,7 +21,7 @@ from sympy.utilities.pytest import raises, XFAIL, slow
 
 oo = S.Infinity
 
-_z = Dummy("z")
+z = Symbol("z")
 x = Symbol('x')
 
 
@@ -279,8 +280,10 @@ def test_gamma():
 
     X = Gamma('x', k, theta)
     assert density(X)(x) == x**(k - 1)*theta**(-k)*exp(-x/theta)/gamma(k)
-    assert cdf(X, meijerg=True) == Lambda(_z, Piecewise(
-                                          (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), _z >= 0), (0, True)))
+    assert cdf(X, meijerg=True)(z) == Piecewise(
+            (-k*lowergamma(k, 0)/gamma(k + 1) +
+                k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
+            (0, True))
     assert variance(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
            theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
 
