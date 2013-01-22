@@ -380,6 +380,9 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     def pdf(self):
         return Mul(*[space.pdf for space in self.spaces])
 
+    @property
+    def distribution(self):
+        raise NotImplementedError()
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
