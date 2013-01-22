@@ -1046,8 +1046,6 @@ class Basic(object):
         """
         if self in rule:
             return rule[self]
-        if self.is_Atom:
-            return self
         elif rule:
             args = tuple([arg.xreplace(rule) for arg in self.args])
             if not _aresame(args, self.args):
@@ -1222,9 +1220,6 @@ class Basic(object):
         mapping = {}
 
         def rec_replace(expr):
-            if not isinstance(expr, Basic):
-                return expr
-
             args, construct = [], False
 
             for arg in expr.args:
@@ -1396,8 +1391,6 @@ class Basic(object):
            2*Integral(x, x)
 
         """
-        if not isinstance(self, Basic) or self.is_Atom:
-            return self
         if hints.get('deep', True):
             terms = [ term.doit(**hints) for term in self.args ]
             return self.func(*terms)
