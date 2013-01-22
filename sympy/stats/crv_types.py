@@ -183,11 +183,12 @@ def Arcsin(name, a=0, b=1):
 
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
+    >>> z = Symbol("z")
 
     >>> X = Arcsin("x", a, b)
 
-    >>> density(X)
-    Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
+    >>> density(X)(z)
+    1/(pi*sqrt((-a + z)*(b - z)))
 
     References
     ==========
@@ -245,17 +246,18 @@ def Benini(name, alpha, beta, sigma):
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
     >>> sigma = Symbol("sigma", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Benini("x", alpha, beta, sigma)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                                                             2       \
-          |   /                  /  x  \\             /  x  \            /  x  \|
-          |   |        2*beta*log|-----||  - alpha*log|-----| - beta*log |-----||
-          |   |alpha             \sigma/|             \sigma/            \sigma/|
-    Lambda|x, |----- + -----------------|*e                                     |
-          \   \  x             x        /                                       /
+                                                              2       
+    /                  /  z  \\             /  z  \            /  z  \
+    |        2*beta*log|-----||  - alpha*log|-----| - beta*log |-----|
+    |alpha             \sigma/|             \sigma/            \sigma/
+    |----- + -----------------|*e                                     
+    \  z             z        /                                       
 
     References
     ==========
@@ -317,15 +319,16 @@ def Beta(name, alpha, beta):
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Beta("x", alpha, beta)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /    alpha - 1         beta - 1                    \
-          |   x         *(-x + 1)        *gamma(alpha + beta)|
-    Lambda|x, -----------------------------------------------|
-          \               gamma(alpha)*gamma(beta)           /
+     alpha - 1         beta - 1                    
+    z         *(-z + 1)        *gamma(alpha + beta)
+    -----------------------------------------------
+                gamma(alpha)*gamma(beta)           
 
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
@@ -386,15 +389,16 @@ def BetaPrime(name, alpha, beta):
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = BetaPrime("x", alpha, beta)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /    alpha - 1        -alpha - beta                    \
-          |   x         *(x + 1)             *gamma(alpha + beta)|
-    Lambda|x, ---------------------------------------------------|
-          \                 gamma(alpha)*gamma(beta)             /
+     alpha - 1        -alpha - beta                    
+    z         *(z + 1)             *gamma(alpha + beta)
+    ---------------------------------------------------
+                  gamma(alpha)*gamma(beta)             
 
     References
     ==========
@@ -446,11 +450,12 @@ def Cauchy(name, x0, gamma):
 
     >>> x0 = Symbol("x0")
     >>> gamma = Symbol("gamma", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Cauchy("x", x0, gamma)
 
-    >>> density(X)
-    Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
+    >>> density(X)(z)
+    1/(pi*gamma*(1 + (-x0 + z)**2/gamma**2))
 
     References
     ==========
@@ -501,11 +506,12 @@ def Chi(name, k):
     >>> from sympy import Symbol, simplify
 
     >>> k = Symbol("k", integer=True)
+    >>> z = Symbol("z")
 
     >>> X = Chi("x", k)
 
-    >>> density(X)
-    Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)*exp(-_x**2/2)/gamma(k/2))
+    >>> density(X)(z)
+    2**(-k/2 + 1)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
 
     References
     ==========
@@ -561,11 +567,12 @@ def ChiNoncentral(name, k, l):
 
     >>> k = Symbol("k", integer=True)
     >>> l = Symbol("l")
+    >>> z = Symbol("z")
 
     >>> X = ChiNoncentral("x", k, l)
 
-    >>> density(X)
-    Lambda(_x, _x**k*l*(_x*l)**(-k/2)*exp(-_x**2/2 - l**2/2)*besseli(k/2 - 1, _x*l))
+    >>> density(X)(z)
+    l*z**k*(l*z)**(-k/2)*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)
 
     References
     ==========
@@ -617,11 +624,12 @@ def ChiSquared(name, k):
     >>> from sympy import Symbol, simplify, combsimp, expand_func
 
     >>> k = Symbol("k", integer=True, positive=True)
+    >>> z = Symbol("z")
 
     >>> X = ChiSquared("x", k)
 
-    >>> density(X)
-    Lambda(_x, 2**(-k/2)*_x**(k/2 - 1)*exp(-_x/2)/gamma(k/2))
+    >>> density(X)(z)
+    2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)
 
     >>> combsimp(E(X))
     k
@@ -685,11 +693,12 @@ def Dagum(name, p, a, b):
     >>> p = Symbol("p", positive=True)
     >>> b = Symbol("b", positive=True)
     >>> a = Symbol("a", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Dagum("x", p, a, b)
 
-    >>> density(X)
-    Lambda(_x, a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
+    >>> density(X)(z)
+    a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     References
     ==========
@@ -732,23 +741,24 @@ def Erlang(name, k, l):
 
     >>> k = Symbol("k", integer=True, positive=True)
     >>> l = Symbol("l", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Erlang("x", k, l)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /    k - 1  k  -x*l\
-          |   x     *l *e    |
-    Lambda|x, ---------------|
-          \       gamma(k)   /
+     k  k - 1  -l*z
+    l *z     *e    
+    ---------------
+        gamma(k)   
 
-    >>> C = cdf(X, meijerg=True)
+    >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-          /   /  k*lowergamma(k, 0)   k*lowergamma(k, z*l)            \
-    Lambda|z, |- ------------------ + --------------------  for z >= 0|
-          |   <     gamma(k + 1)          gamma(k + 1)                |
-          |   |                                                       |
-          \   \                     0                       otherwise /
+    /  k*lowergamma(k, 0)   k*lowergamma(k, l*z)            
+    |- ------------------ + --------------------  for z >= 0
+    <     gamma(k + 1)          gamma(k + 1)                
+    |                                                       
+    \                     0                       otherwise 
 
     >>> simplify(E(X))
     k/l
@@ -813,14 +823,15 @@ def Exponential(name, rate):
     >>> from sympy import Symbol
 
     >>> l = Symbol("lambda", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Exponential("x", l)
 
-    >>> density(X)
-    Lambda(_x, lambda*exp(-_x*lambda))
+    >>> density(X)(z)
+    lambda*exp(-lambda*z)
 
-    >>> cdf(X)
-    Lambda(_z, Piecewise((1 - exp(-_z*lambda), _z >= 0), (0, True)))
+    >>> cdf(X)(z)
+    Piecewise((1 - exp(-lambda*z), z >= 0), (0, True))
 
     >>> E(X)
     1/lambda
@@ -833,8 +844,8 @@ def Exponential(name, rate):
 
     >>> X = Exponential('x', 10)
 
-    >>> density(X)
-    Lambda(_x, 10*exp(-10*_x))
+    >>> density(X)(z)
+    10*exp(-10*z)
 
     >>> E(X)
     1/10
@@ -896,20 +907,21 @@ def FDistribution(name, d1, d2):
 
     >>> d1 = Symbol("d1", positive=True)
     >>> d2 = Symbol("d2", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = FDistribution("x", d1, d2)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /     d2                                                 \
-          |     --    ______________________________               |
-          |     2    /       d1            -d1 - d2       /d1   d2\|
-          |   d2  *\/  (x*d1)  *(x*d1 + d2)         *gamma|-- + --||
-          |                                               \2    2 /|
-    Lambda|x, -----------------------------------------------------|
-          |                          /d1\      /d2\                |
-          |                   x*gamma|--|*gamma|--|                |
-          \                          \2 /      \2 /                /
+      d2                                                 
+      --    ______________________________               
+      2    /       d1            -d1 - d2       /d1   d2\
+    d2  *\/  (d1*z)  *(d1*z + d2)         *gamma|-- + --|
+                                                \2    2 /
+    -----------------------------------------------------
+                           /d1\      /d2\                
+                    z*gamma|--|*gamma|--|                
+                           \2 /      \2 /                
 
     References
     ==========
@@ -961,21 +973,22 @@ def FisherZ(name, d1, d2):
 
     >>> d1 = Symbol("d1", positive=True)
     >>> d2 = Symbol("d2", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = FisherZ("x", d1, d2)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                               d1   d2                     \
-          |       d1   d2               - -- - --                     |
-          |       --   --                 2    2                      |
-          |       2    2  /    2*x     \           x*d1      /d1   d2\|
-          |   2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --||
-          |                                                  \2    2 /|
-    Lambda|x, --------------------------------------------------------|
-          |                          /d1\      /d2\                   |
-          |                     gamma|--|*gamma|--|                   |
-          \                          \2 /      \2 /                   /
+                                d1   d2                     
+        d1   d2               - -- - --                     
+        --   --                 2    2                      
+        2    2  /    2*z     \           d1*z      /d1   d2\
+    2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --|
+                                                   \2    2 /
+    --------------------------------------------------------
+                           /d1\      /d2\                   
+                      gamma|--|*gamma|--|                   
+                           \2 /      \2 /                   
 
     References
     ==========
@@ -1036,11 +1049,12 @@ def Frechet(name, a, s=1, m=0):
     >>> a = Symbol("a", positive=True)
     >>> s = Symbol("s", positive=True)
     >>> m = Symbol("m", real=True)
+    >>> z = Symbol("z")
 
     >>> X = Frechet("x", a, s, m)
 
-    >>> density(X)
-    Lambda(_x, a*((_x - m)/s)**(-a - 1)*exp(-((_x - m)/s)**(-a))/s)
+    >>> density(X)(z)
+    a*((-m + z)/s)**(-a - 1)*exp(-((-m + z)/s)**(-a))/s
 
     References
     ==========
@@ -1102,27 +1116,28 @@ def Gamma(name, k, theta):
 
     >>> k = Symbol("k", positive=True)
     >>> theta = Symbol("theta", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Gamma("x", k, theta)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                     -x \
-          |                   -----|
-          |    k - 1      -k  theta|
-          |   x     *theta  *e     |
-    Lambda|x, ---------------------|
-          \          gamma(k)      /
+                      -z 
+                    -----
+         -k  k - 1  theta
+    theta  *z     *e     
+    ---------------------
+           gamma(k)      
 
-    >>> C = cdf(X, meijerg=True)
+    >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-          /   /                                   /     z  \            \
-          |   |                       k*lowergamma|k, -----|            |
-          |   |  k*lowergamma(k, 0)               \   theta/            |
-    Lambda|z, <- ------------------ + ----------------------  for z >= 0|
-          |   |     gamma(k + 1)           gamma(k + 1)                 |
-          |   |                                                         |
-          \   \                      0                        otherwise /
+    /                                   /     z  \            
+    |                       k*lowergamma|k, -----|            
+    |  k*lowergamma(k, 0)               \   theta/            
+    <- ------------------ + ----------------------  for z >= 0
+    |     gamma(k + 1)           gamma(k + 1)                 
+    |                                                         
+    \                      0                        otherwise 
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
@@ -1192,17 +1207,18 @@ def GammaInverse(name, a, b):
 
     >>> a = Symbol("a", positive=True)
     >>> b = Symbol("b", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = GammaInverse("x", a, b)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /               -b\
-          |               --|
-          |    -a - 1  a  x |
-          |   x      *b *e  |
-    Lambda|x, --------------|
-          \      gamma(a)   /
+                -b
+                --
+     a  -a - 1  z 
+    b *z      *e  
+    --------------
+       gamma(a)   
 
     References
     ==========
@@ -1260,17 +1276,16 @@ def Kumaraswamy(name, a, b):
 
     >>> a = Symbol("a", positive=True)
     >>> b = Symbol("b", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Kumaraswamy("x", a, b)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                        b - 1\
-          |    a - 1     /   a    \     |
-    Lambda\x, x     *a*b*\- x  + 1/     /
+                         b - 1
+         a - 1 /   a    \     
+    a*b*z     *\- z  + 1/     
 
-    >>> simplify(E(X, meijerg=True))
-    gamma(1 + 1/a)*gamma(b + 1)/gamma(b + 1 + 1/a)
 
     References
     ==========
@@ -1321,11 +1336,12 @@ def Laplace(name, mu, b):
 
     >>> mu = Symbol("mu")
     >>> b = Symbol("b", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Laplace("x", mu, b)
 
-    >>> density(X)
-    Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
+    >>> density(X)(z)
+    exp(-Abs(-mu + z)/b)/(2*b)
 
     References
     ==========
@@ -1377,11 +1393,12 @@ def Logistic(name, mu, s):
 
     >>> mu = Symbol("mu", real=True)
     >>> s = Symbol("s", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Logistic("x", mu, s)
 
-    >>> density(X)
-    Lambda(_x, exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
+    >>> density(X)(z)
+    exp((mu - z)/s)/(s*(exp((mu - z)/s) + 1)**2)
 
     References
     ==========
@@ -1440,25 +1457,27 @@ def LogNormal(name, mean, std):
 
     >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = LogNormal("x", mu, sigma)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                         2\
-          |          -(-mu + log(x)) |
-          |          ----------------|
-          |                     2    |
-          |     ___      2*sigma     |
-          |   \/ 2 *e                |
-    Lambda|x, -----------------------|
-          |             ____         |
-          \       2*x*\/ pi *sigma   /
+                          2
+           -(-mu + log(z)) 
+           ----------------
+                      2    
+      ___      2*sigma     
+    \/ 2 *e                
+    -----------------------
+            ____           
+        2*\/ pi *sigma*z   
+
 
     >>> X = LogNormal('x', 0, 1) # Mean 0, standard deviation 1
 
-    >>> density(X)
-    Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
+    >>> density(X)(z)
+    sqrt(2)*exp(-log(z)**2/2)/(2*sqrt(pi)*z)
 
     References
     ==========
@@ -1510,11 +1529,12 @@ def Maxwell(name, a):
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Maxwell("x", a)
 
-    >>> density(X)
-    Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/(sqrt(pi)*a**3))
+    >>> density(X)(z)
+    sqrt(2)*z**2*exp(-z**2/(2*a**2))/(sqrt(pi)*a**3)
 
     >>> E(X)
     2*sqrt(2)*a/sqrt(pi)
@@ -1576,18 +1596,19 @@ def Nakagami(name, mu, omega):
 
     >>> mu = Symbol("mu", positive=True)
     >>> omega = Symbol("omega", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Nakagami("x", mu, omega)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                                2   \
-          |                              -x *mu|
-          |                              ------|
-          |      2*mu - 1   mu      -mu  omega |
-          |   2*x        *mu  *omega   *e      |
-    Lambda|x, ---------------------------------|
-          \               gamma(mu)            /
+                                    2
+                               -mu*z 
+                               ------
+        mu      -mu  2*mu - 1  omega 
+    2*mu  *omega   *z        *e      
+    ---------------------------------
+                gamma(mu)            
 
     >>> simplify(E(X, meijerg=True))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
@@ -1654,28 +1675,28 @@ def Normal(name, mean, std):
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Normal("x", mu, sigma)
 
-    >>> density(X)
-    Lambda(_x, sqrt(2)*exp(-(_x - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
+    >>> density(X)(z)
+    sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
 
-    >>> C = simplify(cdf(X)) # it needs a little more help...
-    >>> C = C.func(C.args[0], together(factor(C.args[1]), deep=True))
+    >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-              /      /  ___         \    \
-              |      |\/ 2 *(z - mu)|    |
-              |   erf|--------------|    |
-              |      \   2*sigma    /   1|
-        Lambda|z, ------------------- + -|
-              \            2            2/
+            /  ___          \             /  ___          \    
+            |\/ 2 *(-mu + z)|             |\/ 2 *(-mu + z)|    
+    - mu*erf|---------------| - mu + z*erf|---------------| + z
+            \    2*sigma    /             \    2*sigma    /    
+    -----------------------------------------------------------
+                            2*(-mu + z)                        
 
     >>> simplify(skewness(X))
     0
 
     >>> X = Normal("x", 0, 1) # Mean 0, standard deviation 1
-    >>> density(X)
-    Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
+    >>> density(X)(z)
+    sqrt(2)*exp(-z**2/2)/(2*sqrt(pi))
 
     >>> E(2*X + 1)
     1
@@ -1744,11 +1765,12 @@ def Pareto(name, xm, alpha):
 
     >>> xm = Symbol("xm", positive=True)
     >>> beta = Symbol("beta", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Pareto("x", xm, beta)
 
-    >>> density(X)
-    Lambda(_x, _x**(-beta - 1)*beta*xm**beta)
+    >>> density(X)(z)
+    beta*xm**beta*z**(-beta - 1)
 
     References
     ==========
@@ -1805,20 +1827,21 @@ def QuadraticU(name, a, b):
 
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
+    >>> z = Symbol("z")
 
     >>> X = QuadraticU("x", a, b)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /   /              2                         \
-          |   |   /    a   b\                          |
-          |   |12*|x - - - -|                          |
-          |   |   \    2   2/                          |
-    Lambda|x, <---------------  for And(x <= b, a <= x)|
-          |   |           3                            |
-          |   |   (-a + b)                             |
-          |   |                                        |
-          \   \       0                otherwise       /
+    /                2                         
+    |   /  a   b    \                          
+    |12*|- - - - + z|                          
+    |   \  2   2    /                          
+    <-----------------  for And(a <= z, z <= b)
+    |            3                             
+    |    (-a + b)                              
+    |                                          
+    \        0                 otherwise       
 
     References
     ==========
@@ -1876,18 +1899,19 @@ def RaisedCosine(name, mu, s):
 
     >>> mu = Symbol("mu", real=True)
     >>> s = Symbol("s", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = RaisedCosine("x", mu, s)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /   /   /pi*(x - mu)\                                       \
-          |   |cos|-----------| + 1                                   |
-          |   |   \     s     /                                       |
-    Lambda|x, <--------------------  for And(x <= mu + s, mu - s <= x)|
-          |   |        2*s                                            |
-          |   |                                                       |
-          \   \         0                        otherwise            /
+    /   /pi*(-mu + z)\                                       
+    |cos|------------| + 1                                   
+    |   \     s      /                                       
+    <---------------------  for And(z <= mu + s, mu - s <= z)
+    |         2*s                                            
+    |                                                        
+    \          0                        otherwise            
 
     References
     ==========
@@ -1938,11 +1962,12 @@ def Rayleigh(name, sigma):
     >>> from sympy import Symbol, simplify
 
     >>> sigma = Symbol("sigma", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Rayleigh("x", sigma)
 
-    >>> density(X)
-    Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
+    >>> density(X)(z)
+    z*exp(-z**2/(2*sigma**2))/sigma**2
 
     >>> E(X)
     sqrt(2)*sqrt(pi)*sigma/2
@@ -1999,22 +2024,23 @@ def StudentT(name, nu):
     >>> from sympy import Symbol, simplify, pprint
 
     >>> nu = Symbol("nu", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = StudentT("x", nu)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /             nu   1              \
-          |           - -- - -              |
-          |             2    2              |
-          |   / 2    \                      |
-          |   |x     |              /nu   1\|
-          |   |-- + 1|        *gamma|-- + -||
-          |   \nu    /              \2    2/|
-    Lambda|x, ------------------------------|
-          |        ____   ____      /nu\    |
-          |      \/ pi *\/ nu *gamma|--|    |
-          \                         \2 /    /
+              nu   1              
+            - -- - -              
+              2    2              
+    /     2\                      
+    |    z |              /nu   1\
+    |1 + --|        *gamma|-- + -|
+    \    nu/              \2    2/
+    ------------------------------
+         ____   ____      /nu\    
+       \/ pi *\/ nu *gamma|--|    
+                          \2 /    
 
     References
     ==========
@@ -2074,21 +2100,29 @@ def Triangular(name, a, b, c):
     ========
 
     >>> from sympy.stats import Triangular, density, E
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a")
     >>> b = Symbol("b")
     >>> c = Symbol("c")
+    >>> z = Symbol("z")
 
     >>> X = Triangular("x", a,b,c)
 
-    >>> density(X)
-    Lambda(_x, Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)),
-                        And(_x < c, a <= _x)),
-                        (2/(-a + b), _x == c),
-                        ((-2*_x + 2*b)/((-a + b)*(b - c)),
-                        And(_x <= b, c < _x)),
-                        (0, True)))
+    >>> pprint(density(X)(z), use_unicode=False)
+    /    -2*a + 2*z                           
+    |-----------------  for And(a <= z, z < c)
+    |(-a + b)*(-a + c)                        
+    |                                         
+    |       2                                 
+    |     ------              for z = c       
+    <     -a + b                              
+    |                                         
+    |   2*b - 2*z                             
+    |----------------   for And(z <= b, c < z)
+    |(-a + b)*(b - c)                         
+    |                                         
+    \        0                otherwise       
 
     References
     ==========
@@ -2165,14 +2199,15 @@ def Uniform(name, left, right):
 
     >>> a = Symbol("a")
     >>> b = Symbol("b")
+    >>> z = Symbol("z")
 
     >>> X = Uniform("x", a, b)
 
-    >>> density(X)
-    Lambda(_x, Piecewise((1/(-a + b), And(_x <= b, a <= _x)), (0, True)))
+    >>> density(X)(z)
+    Piecewise((1/(-a + b), And(a <= z, z <= b)), (0, True))
 
-    >>> cdf(X)
-    Lambda(_z, _z/(-a + b) - a/(-a + b))
+    >>> cdf(X)(z)
+    -a/(-a + b) + z/(-a + b)
 
     >>> simplify(E(X))
     a/2 + b/2
@@ -2238,21 +2273,22 @@ def UniformSum(name, n):
     >>> from sympy import Symbol, pprint
 
     >>> n = Symbol("n", integer=True)
+    >>> z = Symbol("z")
 
     >>> X = UniformSum("x", n)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /   floor(x)                        \
-          |     ___                           |
-          |     \  `                          |
-          |      \         k         n - 1 /n\|
-          |       )    (-1) *(-k + x)     *| ||
-          |      /                         \k/|
-          |     /__,                          |
-          |    k = 0                          |
-    Lambda|x, --------------------------------|
-          \               (n - 1)!            /
+    floor(z)
+      ___
+      \  `
+       \         k         n - 1 /n\
+        )    (-1) *(-k + z)     *| |
+       /                         \k/
+      /__,
+     k = 0
+    --------------------------------
+                (n - 1)!
 
     References
     ==========
@@ -2310,15 +2346,17 @@ def VonMises(name, mu, k):
 
     >>> mu = Symbol("mu")
     >>> k = Symbol("k", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = VonMises("x", mu, k)
 
-    >>> D = density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /      k*cos(x - mu)  \
-          |     e               |
-    Lambda|x, ------------------|
-          \   2*pi*besseli(0, k)/
+         k*cos(mu - z)
+        e
+    ------------------
+    2*pi*besseli(0, k)
+
 
     References
     ==========
@@ -2383,11 +2421,12 @@ def Weibull(name, alpha, beta):
 
     >>> l = Symbol("lambda", positive=True)
     >>> k = Symbol("k", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = Weibull("x", l, k)
 
-    >>> density(X)
-    Lambda(_x, k*(_x/lambda)**(k - 1)*exp(-(_x/lambda)**k)/lambda)
+    >>> density(X)(z)
+    k*(z/lambda)**(k - 1)*exp(-(z/lambda)**k)/lambda
 
     >>> simplify(E(X))
     lambda*gamma(1 + 1/k)
@@ -2446,11 +2485,12 @@ def WignerSemicircle(name, R):
     >>> from sympy import Symbol, simplify
 
     >>> R = Symbol("R", positive=True)
+    >>> z = Symbol("z")
 
     >>> X = WignerSemicircle("x", R)
 
-    >>> density(X)
-    Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
+    >>> density(X)(z)
+    2*sqrt(R**2 - z**2)/(pi*R**2)
 
     >>> E(X)
     0
