@@ -521,14 +521,6 @@ class binomial(CombinatorialFunction):
                                 result *= prime**exp
 
                     return C.Integer(result)
-                else:
-                    result = n - k + 1
-
-                    for i in xrange(2, k + 1):
-                        result *= n - k + i
-                        result /= i
-
-                    return result
         elif k.is_negative:
             return S.Zero
         elif (n - k).simplify().is_negative:
@@ -538,6 +530,32 @@ class binomial(CombinatorialFunction):
 
             if d.is_Integer:
                 return cls.eval(n, d)
+
+    def _eval_expand_func(self, **hints):
+        """
+        Function to expand binomial(n,k) when m is positive integer 
+        Also,
+        n is self.args[0] and k is self.args[1] while using binomial(n, k)
+        """
+
+        if self.args[0].is_Number:
+            return binomial(*self.args)
+
+        k = self.args[1]
+        if k.is_Integer:
+            if k == S.Zero:
+                return S.One
+            elif k < 0:
+                return S.Zero
+            else:
+                n = self.args[0]
+                result = n - k + 1
+                for i in xrange(2, k + 1):
+                    result *= n - k + i
+                    result /= i
+                return result
+        else:
+            return binomial(*self.args)
 
     def _eval_rewrite_as_factorial(self, n, k):
         return C.factorial(n)/(C.factorial(k)*C.factorial(n - k))
