@@ -1,8 +1,7 @@
-from sympy import Add, Basic, symbols, Mul, And
-from sympy import Wild as ExprWild
+from sympy import Add, Basic, symbols, Mul, And, Symbol
 from sympy.unify.core import Compound, Variable
 from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
-        is_commutative, patternify)
+        is_commutative)
 from sympy.abc import w, x, y, z, n, m, k
 from sympy.utilities.pytest import XFAIL
 
@@ -10,6 +9,13 @@ def test_deconstruct():
     expr     = Basic(1, 2, 3)
     expected = Compound(Basic, (1, 2, 3))
     assert deconstruct(expr) == expected
+
+    assert deconstruct(1) == 1
+    assert deconstruct(x) == x
+    assert deconstruct(x, variables=(x,)) == Variable(x)
+    assert deconstruct(Add(1, x, evaluate=False)) == Compound(Add, (1, x))
+    assert deconstruct(Add(1, x, evaluate=False), variables=(x,)) == \
+              Compound(Add, (1, Variable(x)))
 
 def test_construct():
     expr     = Compound(Basic, (1, 2, 3))
@@ -24,17 +30,21 @@ def test_nested():
 
 def test_unify():
     expr = Basic(1, 2, 3)
-    a, b, c = map(ExprWild, 'abc')
+    a, b, c = map(Symbol, 'abc')
     pattern = Basic(a, b, c)
-    assert list(unify(expr, pattern, {})) == [{a: 1, b: 2, c: 3}]
-    assert list(unify(expr, pattern))     == [{a: 1, b: 2, c: 3}]
+    assert list(unify(expr, pattern, {}, (a, b, c))) == [{a: 1, b: 2, c: 3}]
+    assert list(unify(expr, pattern, variables=(a, b, c))) == \
+            [{a: 1, b: 2, c: 3}]
+
+def test_unify_variables():
+    assert list(unify(Basic(1, 2), Basic(1, x), {}, variables=(x,))) == [{x: 2}]
 
 def test_s_input():
     expr = Basic(1, 2)
-    a, b = map(ExprWild, 'ab')
+    a, b = map(Symbol, 'ab')
     pattern = Basic(a, b)
-    assert list(unify(expr, pattern, {})) == [{a: 1, b: 2}]
-    assert list(unify(expr, pattern, {a: 5})) == []
+    assert list(unify(expr, pattern, {}, (a, b))) == [{a: 1, b: 2}]
+    assert list(unify(expr, pattern, {a: 5}, (a, b))) == []
 
 def iterdicteq(a, b):
     a = tuple(a)
@@ -43,10 +53,10 @@ def iterdicteq(a, b):
 
 def test_unify_commutative():
     expr = Add(1, 2, 3, evaluate=False)
-    a, b, c = map(ExprWild, 'abc')
+    a, b, c = map(Symbol, 'abc')
     pattern = Add(a, b, c, evaluate=False)
 
-    result  = tuple(unify(expr, pattern, {}))
+    result  = tuple(unify(expr, pattern, {}, (a, b, c)))
     expected = ({a: 1, b: 2, c: 3},
                 {a: 1, b: 3, c: 2},
                 {a: 2, b: 1, c: 3},
@@ -58,12 +68,12 @@ def test_unify_commutative():
 
 def test_unify_iter():
     expr = Add(1, 2, 3, evaluate=False)
-    a, b, c = map(ExprWild, 'abc')
+    a, b, c = map(Symbol, 'abc')
     pattern = Add(a, c, evaluate=False)
     assert is_associative(deconstruct(pattern))
     assert is_commutative(deconstruct(pattern))
 
-    result   = list(unify(expr, pattern, {}))
+    result   = list(unify(expr, pattern, {}, (a, c)))
     expected = [{a: 1, c: Add(2, 3, evaluate=False)},
                 {a: 1, c: Add(3, 2, evaluate=False)},
                 {a: 2, c: Add(1, 3, evaluate=False)},
@@ -82,32 +92,17 @@ def test_unify_iter():
 def test_hard_match():
     from sympy import sin, cos
     expr = sin(x) + cos(x)**2
-    p, q = map(ExprWild, 'pq')
+    p, q = map(Symbol, 'pq')
     pattern = sin(p) + cos(p)**2
-    assert list(unify(expr, pattern, {})) == [{p: x}]
-
-def test_patternify():
-    assert deconstruct(patternify(x + y, x)) in (
-            Compound(Add, (Variable(x), y)), Compound(Add, (y, Variable(x))))
-    pattern = patternify(x**2 + y**2, x)
-    assert list(unify(pattern, w**2 + y**2, {})) == [{x: w}]
+    assert list(unify(expr, pattern, {}, (p, q))) == [{p: x}]
 
 def test_matrix():
     from sympy import MatrixSymbol
     X = MatrixSymbol('X', n, n)
     Y = MatrixSymbol('Y', 2, 2)
     Z = MatrixSymbol('Z', 2, 3)
-    p = patternify(X, 'X', n)
-    assert list(unify(p, Y, {})) == [{'X': 'Y', n: 2}]
-    assert list(unify(p, Z, {})) == []
-
-def test_wilds_in_wilds():
-    from sympy import MatrixSymbol, MatMul
-    A = MatrixSymbol('A', n, m)
-    B = MatrixSymbol('B', m, k)
-    pattern = patternify(A*B, 'A', n, m, B) # note that m is in B as well
-    assert deconstruct(pattern) == Compound(MatMul, (Compound(MatrixSymbol,
-        (Variable('A'), Variable(n), Variable(m))), Variable(B)))
+    assert list(unify(X, Y, {}, variables=[n, 'X'])) == [{'X': 'Y', n: 2}]
+    assert list(unify(X, Z, {}, variables=[n, 'X'])) == []
 
 def test_non_frankenAdds():
     # the is_commutative property used to fail because of Basic.__new__
@@ -123,25 +118,26 @@ def test_FiniteSet_commutivity():
     a, b, c, x, y = symbols('a,b,c,x,y')
     s = FiniteSet(a, b, c)
     t = FiniteSet(x, y)
-    pattern = patternify(t, x, y)
-    assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, pattern))
+    variables = (x, y)
+    assert {x: FiniteSet(a, c), y: b} in tuple(unify(s, t, variables=variables))
 
 def test_FiniteSet_complex():
     from sympy import FiniteSet
     a, b, c, x, y, z = symbols('a,b,c,x,y,z')
     expr = FiniteSet(Basic(1, x), y, Basic(x, z))
+    pattern = FiniteSet(a, Basic(x, b))
+    variables = a, b
     expected = tuple([{b: 1, a: FiniteSet(y, Basic(x, z))},
                       {b: z, a: FiniteSet(y, Basic(1, x))}])
-    pattern = patternify(FiniteSet(a, Basic(x, b)), a, b)
-    assert iterdicteq(unify(expr, pattern), expected)
-
-def test_patternify_with_types():
-    a, b, c, x, y = symbols('a,b,c,x,y')
-    pattern = patternify(x + y, x, y, types={x: Mul})
-    expr = a*b + c
-    assert list(unify(expr, pattern)) == [{x: a*b, y: c}]
+    assert iterdicteq(unify(expr, pattern, variables=variables), expected)
 
 @XFAIL
 def test_and():
-    pattern = patternify(And(x, y), x, y)
-    str(list(unify((x>0) & (z<3), pattern)))
+    variables = x, y
+    str(list(unify((x>0) & (z<3), pattern, variables=variables)))
+
+def test_Union():
+    from sympy import Interval
+    assert list(unify(Interval(0, 1) + Interval(10, 11),
+                      Interval(0, 1) + Interval(12, 13),
+                      variables=(Interval(12, 13),)))
