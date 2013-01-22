@@ -144,6 +144,22 @@ def test_preorder_traversal():
         [z*(x + y), z, x + y, x, y]
 
 
+def test_preorder_traversal_include():
+    assert set(preorder_traversal(Basic(1,2,3,4,5),
+        include=lambda x: isinstance(x, Basic) or x > 3)) == \
+                set((Basic(1,2,3,4,5), 4, 5))
+
+def test_preorder_traversal_parent():
+    class SterileBasic(Basic): pass
+    a = Basic()
+    b = Basic()
+    c = Basic(a)
+    d = SterileBasic(b)
+    e = Basic(c, d)
+    assert set(preorder_traversal(e,
+                    parent=lambda x: not isinstance(x, SterileBasic))) ==\
+                            set((a, c, d, e))
+
 def test_sorted_args():
     x = symbols('x')
     assert b21._sorted_args == b21.args
