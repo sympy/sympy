@@ -24,9 +24,7 @@ def rv(name, cls, *args):
     return SingleFinitePSpace(name, density).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
-    @property
-    def density(self):
-        return self.args[0]
+    density = property(lambda self: self.args[0])
 
     def __new__(cls, density):
         density = Dict(density)

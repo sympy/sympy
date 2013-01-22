@@ -181,16 +181,10 @@ class FinitePSpace(PSpace):
 
     Represents the probabilities of a finite number of events.
     """
+    domain =  property(lambda self: self.args[0])
+    density = property(lambda self: self.args[1])
 
     is_Finite = True
-
-    @property
-    def domain(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
 
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
@@ -289,6 +283,7 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     """
     symbol =  property(lambda self: self.args[0])
     density = property(lambda self: self.args[1])
+
     def __new__(cls, symbol, density):
         symbol = sympify(symbol)
         return Basic.__new__(cls, symbol, density)
@@ -302,8 +297,6 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     def _density(self):
         return dict((frozenset(((self.symbol, val),)), prob)
                     for val, prob in self.density.density.items())
-
-
 
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):

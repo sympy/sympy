@@ -322,11 +322,8 @@ class ProductDomain(RandomDomain):
 
     @property
     def sym_domain_dict(self):
-        d = {}
-        for domain in self.domains:
-            for symbol in domain.symbols:
-                d[symbol] = domain
-        return d
+        return dict((symbol, domain) for domain in self.domains
+                                     for symbol in domain.symbols)
 
     @property
     def symbols(self):
