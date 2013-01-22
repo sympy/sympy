@@ -5,7 +5,6 @@ See sympy.unify.core for algorithmic docstring """
 
 
 from sympy.core import Basic, Expr, Tuple, Add, Mul, Pow, FiniteSet
-from sympy.core import Wild as ExprWild
 from sympy.matrices import MatAdd, MatMul, MatrixExpr
 from sympy.core.sets import Union, Intersection, FiniteSet
 from sympy.core.operations import AssocOp, LatticeOp
@@ -41,45 +40,16 @@ def mk_matchtype(typ):
                 isinstance(x, Compound) and issubclass(x.op, typ))
     return matchtype
 
-
-def patternify(expr, *wilds, **kwargs):
-    """ Create a matching pattern from an expression
-
-    Example
-    =======
-
-    >>> from sympy import symbols, sin, cos, Mul
-    >>> from sympy.unify.usympy import patternify
-    >>> a, b, c, x, y = symbols('a b c x y')
-
-    >>> # Search for anything of the form sin(foo)**2 + cos(foo)**2
-    >>> pattern = patternify(sin(x)**2 + cos(x)**2, x)
-
-    >>> # Search for any two things added to c. Note that here c is not a wild
-    >>> pattern = patternify(a + b + c, a, b)
-
-    >>> # Search for two things added together, one must be a Mul
-    >>> pattern = patternify(a + b, a, b, types={a: Mul})
-    """
-    from sympy.rules.tools import subs
-    types = kwargs.get('types', {})
-    vars = [CondVariable(wild, mk_matchtype(types[wild]))
-                if wild in types else Variable(wild)
-                for wild in wilds]
-    if any(expr.has(cls) for cls in illegal):
-        raise NotImplementedError("Unification not supported on type %s"%(
-            type(s)))
-    return subs(dict(zip(wilds, vars)))(expr)
-
-def deconstruct(s):
+def deconstruct(s, variables=()):
     """ Turn a SymPy object into a Compound """
-    if isinstance(s, ExprWild):
+    if s in variables:
         return Variable(s)
     if isinstance(s, (Variable, CondVariable)):
         return s
     if not isinstance(s, Basic) or s.is_Atom:
         return s
-    return Compound(s.__class__, tuple(map(deconstruct, s.args)))
+    return Compound(s.__class__,
+                    tuple(deconstruct(arg, variables) for arg in s.args))
 
 def construct(t):
     """ Turn a Compound into a SymPy object """
@@ -101,32 +71,42 @@ def rebuild(s):
     """
     return construct(deconstruct(s))
 
-def unify(x, y, s=None, **kwargs):
+def unify(x, y, s=None, variables=(), **kwargs):
     """ Structural unification of two expressions/patterns
 
     Examples
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Wild
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import Basic
+    >>> from sympy.abc import x, y, z, p, q
     >>> from sympy.core.compatibility import next
+
+    >>> next(unify(Basic(1, 2), Basic(1, x), variables=[x]))
+    {x: 2}
+
     >>> expr = 2*x + y + z
-    >>> pattern = 2*Wild('p') + Wild('q')
-    >>> next(unify(expr, pattern, {}))
-    {p_: x, q_: y + z}
+    >>> pattern = 2*p +q
+    >>> next(unify(expr, pattern, {}, variables=(p, q)))
+    {p: x, q: y + z}
+
+    Unification supports commutative and associative matching
 
     >>> expr = x + y + z
-    >>> pattern = Wild('p') + Wild('q')
-    >>> len(list(unify(expr, pattern, {})))
+    >>> pattern = p + q
+    >>> len(list(unify(expr, pattern, {}, variables=(p, q))))
     12
-    """
-    s = s or {}
-    s = dict((deconstruct(k), deconstruct(v)) for k, v in s.items())
 
-    ds = core.unify(deconstruct(x), deconstruct(y), s,
-                                                is_associative=is_associative,
-                                                is_commutative=is_commutative,
-                                                **kwargs)
+    Wilds may be specified directly in the call to unify
+
+    """
+    decons = lambda x: deconstruct(x, variables)
+    s = s or {}
+    s = dict((decons(k), decons(v)) for k, v in s.items())
+
+    ds = core.unify(decons(x), decons(y), s,
+                                     is_associative=is_associative,
+                                     is_commutative=is_commutative,
+                                     **kwargs)
     for d in ds:
         yield dict((construct(k), construct(v)) for k, v in d.items())
