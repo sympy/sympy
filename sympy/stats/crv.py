@@ -147,6 +147,18 @@ class ContinuousDistribution(Basic):
 
 
 class SingleContinuousDistribution(ContinuousDistribution):
+    """ Continuous distribution of a single variable
+
+    Serves as superclass for Normal/Exponential/UniformDistribution etc....
+
+    Represented by parameters for each of the specific classes.  E.g
+    NormalDistribution is represented by a mean and standard deviation.
+
+    Provides methods for pdf, cdf, and sampling
+
+    See Also:
+        sympy.stats.crv_types.*
+    """
 
     set = Interval(-oo, oo)
 
@@ -159,17 +171,15 @@ class SingleContinuousDistribution(ContinuousDistribution):
         pass
 
     def sample(self):
+        """ A random realization from the distribution """
         icdf = self._inverse_cdf_expression()
         return icdf(random.uniform(0, 1))
 
     @cacheit
     def _inverse_cdf_expression(self):
-        """
-        Inverse of the CDF
+        """ Inverse of the CDF
 
-        See Also
-        ========
-        sample
+        Used by sample
         """
         x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
         # Invert CDF
@@ -184,23 +194,26 @@ class SingleContinuousDistribution(ContinuousDistribution):
 
     @cacheit
     def compute_cdf(self, **kwargs):
-        if not self.set.is_Interval:
-            raise ValueError(
-                "CDF not well defined on multivariate expressions")
+        """ Compute the CDF from the PDF
 
+        Returns a Lambda
+        """
         x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
         left_bound = self.set.start
 
         # CDF is integral of PDF from left bound to z
-        cdf = integrate(self(x), (x, left_bound, z), **kwargs)
+        pdf = self.pdf(x)
+        cdf = integrate(pdf, (x, left_bound, z), **kwargs)
         # CDF Ensure that CDF left of left_bound is zero
         cdf = Piecewise((cdf, z >= left_bound), (0, True))
         return Lambda(z, cdf)
 
     def cdf(self, x, **kwargs):
+        """ Cumulative density function """
         return self.compute_cdf(**kwargs)(x)
 
     def expectation(self, expr, var, **kwargs):
+        """ Expectation of expression over distribution """
         return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
@@ -212,12 +225,11 @@ class ContinuousDistributionHandmade(SingleContinuousDistribution):
 
 
 class ContinuousPSpace(PSpace):
-    """
-    A Continuous Probability Space
+    """ Continuous Probability Space
 
     Represents the likelihood of an event space defined over a continuum.
 
-    Represented with a set of symbols and a probability density function.
+    Represented with a ContinuousDomain and a PDF (Lambda-Like)
     """
 
     is_Continuous = True
@@ -319,10 +331,12 @@ class ContinuousPSpace(PSpace):
 
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     """
-    A continuous probability space over a single univariate domain
+    A continuous probability space over a single univariate variable
 
-    This class is commonly implemented by the various ContinuousRV types
-    such as Normal, Exponential, Uniform, etc....
+    These consist of a Symbol and a SingleContinuousDistribution
+
+    This class is normally accessed through the various random variable
+    functions, Normal, Exponential, Uniform, etc....
     """
     def __new__(cls, symbol, distribution):
         symbol = sympify(symbol)
