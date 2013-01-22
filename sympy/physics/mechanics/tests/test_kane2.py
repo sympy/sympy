@@ -4,13 +4,19 @@ from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                      dot, cross)
 
 def test_aux_dep():
-    """
-    This test is to compare the results of general active forces Fr and general
-    inertia forces Fr_star as well as Fr_star_steady in steady turning condition
-    calculated from "mannual" derivation with Kane' method.
-    """
+    # This test is about rolling disc dynamics, comparing the results found
+    # with KanesMethod to those found when deriving the equations "manually"
+    # with SymPy.
+    # The terms Fr, Fr*, and Fr*_steady are all compared between the two
+    # methods. Here, Fr*_steady refers to the generalized inertia forces for an
+    # equilibrium configuration.
+    # Note: comparing to the test of test_rolling_disc() in test_kane.py, this
+    # test also tests auxiliary speeds and configuration and motion constraints
+    #, seen in  the generalized dependent coordinates q[3], and depend speeds
+    # u[3], u[4] and u[5].
 
-    # Mannual derivation of Fr, Fr_star, Fr_star_steady.
+
+    # First, mannual derivation of Fr, Fr_star, Fr_star_steady.
 
     # Symbols for time and constant parameters.
     # Symbols for contact forces: Fx, Fy, Fz.
@@ -21,7 +27,7 @@ def test_aux_dep():
     # q[0] -- yaw
     # q[1] -- lean
     # q[2] -- spin
-    # q[3] -- dot(-r*B.z, A.z) -- distance from ground plane to disc center in 
+    # q[3] -- dot(-r*B.z, A.z) -- distance from ground plane to disc center in
     #         A.z direction
     # Generalized speeds and their time derivatives:
     # u[0] -- disc angular velocity component, disc fixed x direction
@@ -38,9 +44,11 @@ def test_aux_dep():
     qd = [qi.diff(t) for qi in q]
     u = dynamicsymbols('u:6')
     ud = [ui.diff(t) for ui in u]
-    ud_zero = {udi : 0 for udi in ud}
+    #ud_zero = {udi : 0 for udi in ud}
+    ud_zero = dict(zip(ud, [0.]*len(ud)))
     ua = dynamicsymbols('ua:3')
-    ua_zero = {uai : 0 for uai in ua}
+    #ua_zero = {uai : 0 for uai in ua}
+    ua_zero = dict(zip(ua, [0.]*len(ua)))
 
     # Reference frames:
     # Yaw intermediate frame: A.
@@ -99,7 +107,8 @@ def test_aux_dep():
     a_o_n = v_o_n.diff(t, A) + cross(A.ang_vel_in(N), v_o_n)
     f_a = Matrix([dot(O.acc(N) - a_o_n, ai) for ai in A])
 
-    # Solve for constraint equations in the form of u_dependent = A_rs * [u_i; u_aux].
+    # Solve for constraint equations in the form of
+    #                           u_dependent = A_rs * [u_i; u_aux].
     # First, obtain constraint coefficient matrix:  M_v * [u; ua] = 0;
     # Second, taking u[0], u[1], u[2] as independent,
     #         taking u[3], u[4], u[5] as dependent,
@@ -117,7 +126,8 @@ def test_aux_dep():
     A_rs = - M_v_d.inv() * M_v_i_aux
 
     u_dep = A_rs[:, :3] * Matrix(u[:3])
-    u_dep_dict = {udi : u_depi[0] for udi, u_depi in zip(u[3:], u_dep.tolist())}
+    u_dep_dict = dict(zip(u[3:], u_dep))
+    #u_dep_dict = {udi : u_depi[0] for udi, u_depi in zip(u[3:], u_dep.tolist())}
 
     # Active forces: F_O acting on point O; F_P acting on point P.
     # Generalized active forces (unconstrained): Fr_u = F_point * pv_point.
@@ -146,7 +156,7 @@ def test_aux_dep():
             .subs(steady_conditions).subs({q[3]: -r*cos(q[1])}).expand()
 
 
-    # Here goes with KanesMethod command directly for fr, frstar and frstar_steady.
+    # Second, using KaneMethod in mechanics for fr, frstar and frstar_steady.
 
     # Rigid Bodies: disc, with inertia I_C_O.
     iner_tuple = (I_C_O, O)
@@ -158,11 +168,11 @@ def test_aux_dep():
     F_p = (P, F_P)
     forceList = [F_o,  F_p]
 
-    # Kanes Method.
+    # KanesMethod.
     kane = KanesMethod(
-        N, q_ind= q[:3], u_ind= u[:3], kd_eqs=kindiffs, 
-        q_dependent=q[3:], configuration_constraints = f_c, 
-        u_dependent=u[3:], velocity_constraints= f_v, 
+        N, q_ind= q[:3], u_ind= u[:3], kd_eqs=kindiffs,
+        q_dependent=q[3:], configuration_constraints = f_c,
+        u_dependent=u[3:], velocity_constraints= f_v,
         u_auxiliary=ua
         )
 
@@ -174,11 +184,11 @@ def test_aux_dep():
 
 
     # Test
-    from sympy import trigsimp, simplify
-
-    # FIRST try Fr_c == fr;
+    # First try Fr_c == fr;
     # Second try Fr_star_c == frstar;
     # Third try Fr_star_steady == frstar_steady.
+    # Both signs are checked in case the equations were found with an inverse
+    # sign.
     assert ((Matrix(Fr_c).expand() == fr.expand()) or
              (Matrix(Fr_c).expand() == (-fr).expand()))
 
@@ -187,3 +197,27 @@ def test_aux_dep():
 
     assert ((Matrix(Fr_star_steady).expand() == frstar_steady.expand()) or
              (Matrix(Fr_star_steady).expand() == (-frstar_steady).expand()))
+
+
+def test_mat_inv_mul():
+    # Just a quick test to check that KanesMethod._mat_inv_mul works as
+    # intended. Uses SymPy generated primes as matrix entries, so each entry in
+    # each matrix should be symbolic and unique, allowing proper comparison.
+    # Checks _mat_inv_mul against Matrix.inv / Matrix.__mul__.
+    from sympy import Matrix, prime
+    from sympy.physics.mechanics import ReferenceFrame, KanesMethod
+
+    # Just need to create an instance of KanesMethod to get to _mat_inv_mul
+    mat_inv_mul = KanesMethod(ReferenceFrame('N'), [1], [1])._mat_inv_mul
+
+    # going to form 3 matrices
+    # 1 n x n
+    # different n x n
+    # 1 n x 2n
+    n = 3
+    m1 = Matrix(n, n, lambda i, j: prime(i * n + j + 2))
+    m2 = Matrix(n, n, lambda i, j: prime(i * n + j + 5))
+    m3 = Matrix(n, n, lambda i, j: prime(i + j * n + 2))
+
+    assert mat_inv_mul(m1, m2) == m1.inv() * m2
+    assert mat_inv_mul(m1, m3) == m1.inv() * m3
