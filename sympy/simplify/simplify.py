@@ -3851,11 +3851,12 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
         return _real_to_rational(expr, tolerance)
 
     # sympy's default tolarance for Rationals is 15; other numbers may have
-    # lower tolerances set, so use them to pick the largest tolerance if none
+    # lower tolerances set, so use them to pick the largest tolerance if None
     # was given
-    tolerance = tolerance or 10**-min([15] +
-                                     [mpmath.libmp.libmpf.prec_to_dps(n._prec)
-                                     for n in expr.atoms(Float)])
+    if tolerance is None:
+        tolerance = 10**-min([15] +
+             [mpmath.libmp.libmpf.prec_to_dps(n._prec)
+             for n in expr.atoms(Float)])
 
     prec = 30
     bprec = int(prec*3.33)
@@ -3871,8 +3872,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     exprval = expr.evalf(prec, chop=True)
     re, im = exprval.as_real_imag()
 
-    # Must be numerical
-    if not ((re.is_Float or re.is_Integer) and (im.is_Float or im.is_Integer)):
+    # safety check to make sure that this evaluated to a number
+    if not (re.is_Number and im.is_Number):
         return expr
 
     def nsimplify_real(x):
