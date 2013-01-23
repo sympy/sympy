@@ -1,4 +1,4 @@
-from sympy import Matrix, zeros, ones, Integer, Expr
+from sympy import Matrix, zeros, ones, Integer
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,
@@ -117,6 +117,6 @@ num = matrix_zeros(4, format='numpy')
 sci = matrix_zeros(4, format='scipy.sparse')
 
 def test_matrix_zeros():
-    assert isinstance(sym, Matrix) == True
-    assert isinstance(num, numpy_ndarray) == True
-    assert isinstance(sci, scipy_sparse_matrix) == True
+    assert isinstance(sym, Matrix)
+    assert isinstance(num, numpy_ndarray)
+    assert isinstance(sci, scipy_sparse_matrix)
