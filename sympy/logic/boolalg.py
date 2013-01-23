@@ -407,8 +407,38 @@ def distribute_and_over_or(expr):
     else:
         return expr
 
+def distribute_or_over_and(expr):
+    """
+    Given a sentence s consisting of conjunctions and disjunctions
+    of literals, return an equivalent sentence in DNF.
 
-def to_cnf(expr):
+    Note that the output is NOT simplified.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import distribute_or_over_and, And, Or, Not
+    >>> from sympy.abc import A, B, C
+    >>> distribute_and_over_or(And(Or(Not(w), y), z))
+    Or(And(Not(w), z), And(y, z))
+    """
+    if expr.func is And:
+        for arg in expr.args:
+            if arg.func is Or:
+                conj = arg
+                break
+        else:
+            return expr
+        rest = And(*[a for a in expr.args if a is not conj])
+        return Or(*map(distribute_or_over_and,
+                   [And(c, rest) for c in conj.args]))
+    elif expr.func is Or:
+        return Or(*map(distribute_or_over_and, expr.args))
+    else:
+        return expr
+
+
+def to_cnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
@@ -422,15 +452,41 @@ def to_cnf(expr):
     And(Or(D, Not(A)), Or(D, Not(B)))
 
     """
+    #Call simplify_logic if simplification is required
+    if simplify:
+        return distribute_and_over_or(simplify_logic(expr))
     # Don't convert unless we have to
     if is_cnf(expr):
         return expr
 
     expr = sympify(expr)
-    if not isinstance(expr, BooleanFunction):
-        return expr
     expr = eliminate_implications(expr)
     return distribute_and_over_or(expr)
+
+def to_dnf(expr, simplify=False):
+    """
+    Convert a propositional logical sentence s to disjunctive normal form.
+    That is, of the form ((A & ~B & ...) | (B & C & ...) | ...)
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import to_dnf
+    >>> from sympy.abc import A, B, D
+    >>> to_dnf(B & (A | C))
+    Or(And(A, B), And(B, C))
+
+    """
+    #Call simplify_logic if simplification is required
+    if simplify:
+        return distribute_or_over_and(simplify_logic(expr))
+    # Don't convert unless we have to
+    if is_dnf(expr):
+        return expr
+
+    expr = sympify(expr)
+    expr = eliminate_implications(expr)
+    return distribute_or_over_and(expr)
 
 
 def is_cnf(expr):
@@ -451,6 +507,10 @@ def is_cnf(expr):
 
     """
     expr = sympify(expr)
+
+    # Special case of an Atom
+    if expr.is_Atom:
+        return True
 
     # Special case of a single disjunction
     if expr.func is Or:
@@ -478,6 +538,68 @@ def is_cnf(expr):
             if not cls.args[0].is_Atom:
                 return False
         elif cls.func is not Or:
+            return False
+        for lit in cls.args:
+            if lit.func is Not:
+                if not lit.args[0].is_Atom:
+                    return False
+            else:
+                if not lit.is_Atom:
+                    return False
+
+    return True
+
+def is_dnf(expr):
+    """
+    Test whether or not an expression is in disjunctive normal form.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import is_dnf
+    >>> from sympy.abc import A, B, C
+    >>> is_dnf(A | B | C)
+    True
+    >>> is_dnf(A & B & C)
+    True
+    >>> is_dnf((A & B) | C)
+    True
+    >>> is_dnf(A & (B | C))
+    False
+
+    """
+    expr = sympify(expr)
+    
+    # Special case of an Atom
+    if expr.is_Atom:
+        return True
+
+    # Special case of a single conjunction
+    if expr.func is And:
+        for lit in expr.args:
+            if lit.func is Not:
+                if not lit.args[0].is_Atom:
+                    return False
+            else:
+                if not lit.is_Atom:
+                    return False
+        return True
+
+    # Special case of a single negation
+    if expr.func is Not:
+        if not expr.args[0].is_Atom:
+            return False
+
+    if expr.func is not Or:
+        return False
+
+    for cls in expr.args:
+        if cls.is_Atom:
+            continue
+        if cls.func is Not:
+            if not cls.args[0].is_Atom:
+                return False
+        elif cls.func is not And:
             return False
         for lit in cls.args:
             if lit.func is Not:
