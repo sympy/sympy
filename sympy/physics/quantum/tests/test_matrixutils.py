@@ -1,8 +1,8 @@
-from sympy import Matrix, zeros, ones, Integer
+from sympy import Matrix, zeros, ones, Integer, Expr
 
 from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse, matrix_tensor_product,
-    matrix_to_zero
+    matrix_to_zero, matrix_zeros, numpy_ndarray, scipy_sparse_matrix
 )
 
 from sympy.external import import_module
@@ -110,3 +110,13 @@ def test_to_scipy_sparse():
     assert np.linalg.norm((to_scipy_sparse(m) - result).todense()) == 0.0
 
 epsilon = .000001
+
+
+sym = matrix_zeros(4, format='sympy')
+num = matrix_zeros(4, format='numpy')
+sci = matrix_zeros(4, format='scipy.sparse')
+
+def test_matrix_zeros():
+    assert isinstance(sym, Matrix) == True
+    assert isinstance(num, numpy_ndarray) == True
+    assert isinstance(sci, scipy_sparse_matrix) == True

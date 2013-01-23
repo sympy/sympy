@@ -3,6 +3,7 @@
 from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
+from scipy.sparse import csr_matrix, lil_matrix
 
 __all__ = [
     'numpy_ndarray',
@@ -16,7 +17,8 @@ __all__ = [
     'to_sympy',
     'to_numpy',
     'to_scipy_sparse',
-    'matrix_tensor_product'
+    'matrix_tensor_product',
+    'matrix_zeros'
 ]
 
 # Conditionally define the base classes for numpy and scipy.sparse arrays
@@ -269,6 +271,32 @@ def matrix_eye(n, **options):
     elif format == 'scipy.sparse':
         return _scipy_sparse_eye(n)
     raise NotImplementedError('Invalid format: %r' % format)
+
+
+def _numpy_zeros(n):
+    """numpy verson of zeros."""
+    if not np:
+        raise ImportError
+    return np.zeros((n, n))
+
+
+def _scipy_sparse_zeros(n):
+    """scipy.sparse verson of zeros."""
+    if not sparse:
+        raise ImportError
+    return lil_matrix((n, n))
+
+
+def matrix_zeros(n, **options):
+    """"Get a zeros matrix for a given format."""
+    format = options.get('format', 'sympy')
+    if format == 'sympy':
+        return zeros(n)
+    elif format == 'numpy':
+        return _numpy_zeros(n)
+    elif format == 'scipy.sparse':
+        return _scipy_sparse_zeros(n)
+    raise NotImplementedError('Invaild format: %r' % format)
 
 
 def _numpy_matrix_to_zero(e):
