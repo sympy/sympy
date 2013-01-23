@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
-    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix
+    Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval
 from sympy.abc import x, y
 from sympy.core.sympify import sympify, _sympify, SympifyError
 from sympy.core.decorators import _sympifyit
@@ -433,20 +433,18 @@ def test_geometry():
 
 
 def test_no_autosimplify_into_Mul():
-    s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
-
-    def clean(s):
-        return ''.join(str(s).split())
+    s =   '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
     assert -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) == -1
     # sympification should not allow the constant to enter a Mul
     # or else the structure can change dramatically
     ss = S(s)
-    assert ss != 1 and ss.simplify() == -1
+    assert ss != -1 and ss.simplify() == -1
     s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'.replace(
         'x', '_kern')
     ss = S(s)
-    assert ss != 1 and ss.simplify() == -1
-
+    assert ss != -1 and ss.simplify() == -1
+    # issue 3588
+    assert sympify('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
 
 def test_issue_3441_3453():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
