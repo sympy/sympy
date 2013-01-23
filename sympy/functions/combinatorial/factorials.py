@@ -521,6 +521,13 @@ class binomial(CombinatorialFunction):
                                 result *= prime**exp
 
                     return C.Integer(result)
+                elif n.is_Number:
+                    result = n - k + 1
+                    for i in xrange(2, k + 1):
+                        result *= n - k + i
+                        result /= i
+                    return result
+
         elif k.is_negative:
             return S.Zero
         elif (n - k).simplify().is_negative:
@@ -533,15 +540,18 @@ class binomial(CombinatorialFunction):
 
     def _eval_expand_func(self, **hints):
         """
-        Function to expand binomial(n,k) when m is positive integer 
+        Function to expand binomial(n,k) when m is positive integer
         Also,
         n is self.args[0] and k is self.args[1] while using binomial(n, k)
         """
-
-        if self.args[0].is_Number:
+        n = self.args[0]
+        if n.is_Number:
             return binomial(*self.args)
 
         k = self.args[1]
+        if k.is_Add and n in k:
+            k = n - k
+
         if k.is_Integer:
             if k == S.Zero:
                 return S.One
