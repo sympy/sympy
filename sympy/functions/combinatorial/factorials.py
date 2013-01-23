@@ -435,10 +435,23 @@ class binomial(CombinatorialFunction):
        For the sake of convenience for negative 'k' this function
        will return zero no matter what valued is the other argument.
 
+       The binomial coeffient will not be expanded by default when
+       'n' is a symbol. In order to expand C(n, k), where 'n' is a
+       symbol whereas 'k' is a number, either of the following ways
+       exist:
+       1. Operate method expand on binomial with argument func=True.
+       2. Use the expand_func function and pass the binomial to it.
+
+       In the first case, the binomial coefficient will be expanded
+       and the correspoding polynomial will be obtained. In the second
+       case, the expasion will not expand the polynomial and this
+       method must be preferred unless otherwise required. See
+       the examples below for more information.
+
        Examples
        ========
 
-       >>> from sympy import Symbol, Rational, binomial
+       >>> from sympy import Symbol, Rational, binomial, expand_func
        >>> n = Symbol('n', integer=True)
 
        >>> binomial(15, 8)
@@ -462,6 +475,12 @@ class binomial(CombinatorialFunction):
        -5/128
 
        >>> binomial(n, 3)
+       binomial(n, 3)
+
+       >>> binomial(n, 3).expand(func=True)
+       n**3/6 - n**2/2 + n/3
+
+       >>> expand_func(binomial(n, 3))
        n*(n - 2)*(n - 1)/6
 
     """
