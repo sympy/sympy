@@ -1081,6 +1081,8 @@ def test_nsimplify():
     assert nsimplify(33, tolerance=10, rational=True) == Rational(33)
     assert nsimplify(33.33, tolerance=10, rational=True) == Rational(30)
     assert nsimplify(37.76, tolerance=10, rational=True) == Rational(40)
+    assert nsimplify(-203.1) == -S(2031)/10
+
 
 def test_extract_minus_sign():
     x = Symbol("x")

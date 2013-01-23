@@ -3782,6 +3782,7 @@ def _real_to_rational(expr, tolerance=None):
     if tolerance is not None and tolerance < 1:
         reduce_num = ceiling(1/tolerance)
     for float in p.atoms(C.Float):
+        key = float
         if reduce_num is not None:
             r = Rational(float).limit_denominator(reduce_num)
         elif (tolerance is not None and tolerance >= 1 and
@@ -3801,7 +3802,7 @@ def _real_to_rational(expr, tolerance=None):
                     r = Rational(str(float/d))*d
                 else:
                     r = Integer(0)
-        reps[float] = r
+        reps[key] = r
     return p.subs(reps, simultaneous=True)
 
 
