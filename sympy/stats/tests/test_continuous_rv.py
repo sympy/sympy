@@ -438,7 +438,6 @@ def test_triangular():
                  (0, True))
 
 
-@XFAIL
 def test_quadratic_u():
     a = Symbol("a", real=True)
     b = Symbol("b", real=True)
