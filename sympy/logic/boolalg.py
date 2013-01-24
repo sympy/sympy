@@ -392,20 +392,7 @@ def distribute_and_over_or(expr):
     >>> distribute_and_over_or(Or(A, And(Not(B), Not(C))))
     And(Or(A, Not(B)), Or(A, Not(C)))
     """
-    if expr.func is Or:
-        for arg in expr.args:
-            if arg.func is And:
-                conj = arg
-                break
-        else:
-            return expr
-        rest = Or(*[a for a in expr.args if a is not conj])
-        return And(*map(distribute_and_over_or,
-                   [Or(c, rest) for c in conj.args]))
-    elif expr.func is And:
-        return And(*map(distribute_and_over_or, expr.args))
-    else:
-        return expr
+    return _distribute(expr, And, Or)
 
 def distribute_or_over_and(expr):
     """
@@ -419,21 +406,31 @@ def distribute_or_over_and(expr):
 
     >>> from sympy.logic.boolalg import distribute_or_over_and, And, Or, Not
     >>> from sympy.abc import A, B, C
-    >>> distribute_and_over_or(And(Or(Not(w), y), z))
+    >>> distribute_or_over_and(And(Or(Not(w), y), z))
     Or(And(Not(w), z), And(y, z))
     """
-    if expr.func is And:
+    return _distribute(expr, Or, And)
+
+def _distribute(expr, function1, function2):
+    """
+    Distributes function1 over function2.
+    """
+    if function1 == And:
+        procedure = distribute_and_over_or
+    else:
+        procedure = distribute_or_over_and
+    if expr.func is function2:
         for arg in expr.args:
-            if arg.func is Or:
+            if arg.func is function1:
                 conj = arg
                 break
         else:
             return expr
-        rest = And(*[a for a in expr.args if a is not conj])
-        return Or(*map(distribute_or_over_and,
-                   [And(c, rest) for c in conj.args]))
-    elif expr.func is Or:
-        return Or(*map(distribute_or_over_and, expr.args))
+        rest = function2(*[a for a in expr.args if a is not conj])
+        return function1(*map(procedure,
+                   [function2(c, rest) for c in conj.args]))
+    elif expr.func is function1:
+        return function1(*map(procedure, expr.args))
     else:
         return expr
 
@@ -452,6 +449,9 @@ def to_cnf(expr, simplify=False):
     And(Or(D, Not(A)), Or(D, Not(B)))
 
     """
+    expr = sympify(expr)
+    if not isinstance(expr, BooleanFunction):
+        return expr
     #Call simplify_logic if simplification is required
     if simplify:
         return distribute_and_over_or(simplify_logic(expr))
@@ -459,9 +459,9 @@ def to_cnf(expr, simplify=False):
     if is_cnf(expr):
         return expr
 
-    expr = sympify(expr)
     expr = eliminate_implications(expr)
     return distribute_and_over_or(expr)
+
 
 def to_dnf(expr, simplify=False):
     """
@@ -477,6 +477,9 @@ def to_dnf(expr, simplify=False):
     Or(And(A, B), And(B, C))
 
     """
+    expr = sympify(expr)
+    if not isinstance(expr, BooleanFunction):
+        return expr
     #Call simplify_logic if simplification is required
     if simplify:
         return distribute_or_over_and(simplify_logic(expr))
@@ -484,7 +487,6 @@ def to_dnf(expr, simplify=False):
     if is_dnf(expr):
         return expr
 
-    expr = sympify(expr)
     expr = eliminate_implications(expr)
     return distribute_or_over_and(expr)
 
@@ -506,48 +508,8 @@ def is_cnf(expr):
     False
 
     """
-    expr = sympify(expr)
+    return _is_form(expr, And, Or)
 
-    # Special case of an Atom
-    if expr.is_Atom:
-        return True
-
-    # Special case of a single disjunction
-    if expr.func is Or:
-        for lit in expr.args:
-            if lit.func is Not:
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
-        return True
-
-    # Special case of a single negation
-    if expr.func is Not:
-        if not expr.args[0].is_Atom:
-            return False
-
-    if expr.func is not And:
-        return False
-
-    for cls in expr.args:
-        if cls.is_Atom:
-            continue
-        if cls.func is Not:
-            if not cls.args[0].is_Atom:
-                return False
-        elif cls.func is not Or:
-            return False
-        for lit in cls.args:
-            if lit.func is Not:
-                if not lit.args[0].is_Atom:
-                    return False
-            else:
-                if not lit.is_Atom:
-                    return False
-
-    return True
 
 def is_dnf(expr):
     """
@@ -568,6 +530,14 @@ def is_dnf(expr):
     False
 
     """
+    return _is_form(expr, Or, And)
+
+
+def _is_form(expr, function1, function2):
+    """
+    Test whether or not an expression is of the required form.
+
+    """
     expr = sympify(expr)
     
     # Special case of an Atom
@@ -575,7 +545,7 @@ def is_dnf(expr):
         return True
 
     # Special case of a single conjunction
-    if expr.func is And:
+    if expr.func is function2:
         for lit in expr.args:
             if lit.func is Not:
                 if not lit.args[0].is_Atom:
@@ -590,7 +560,7 @@ def is_dnf(expr):
         if not expr.args[0].is_Atom:
             return False
 
-    if expr.func is not Or:
+    if expr.func is not function1:
         return False
 
     for cls in expr.args:
@@ -599,7 +569,7 @@ def is_dnf(expr):
         if cls.func is Not:
             if not cls.args[0].is_Atom:
                 return False
-        elif cls.func is not And:
+        elif cls.func is not function2:
             return False
         for lit in cls.args:
             if lit.func is Not:
