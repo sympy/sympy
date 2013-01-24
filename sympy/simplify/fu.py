@@ -14,6 +14,7 @@ DESTIME2006/DES_contribs/Fu/simplification.pdf
 from sympy.simplify.simplify import simplify, powsimp, ratsimp, combsimp
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin, tan, cot
+from sympy.core.compatibility import ordered
 from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.function import expand_mul
@@ -48,6 +49,10 @@ def TR2(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR2
+    >>> from sympy.abc import x
+    >>> from sympy import tan, cot
     >>> TR2(tan(x))
     sin(x)/cos(x)
     >>> TR2(cot(x))
@@ -64,6 +69,11 @@ def TR3(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR3
+    >>> from sympy.abc import x, y
+    >>> from sympy import pi
+    >>> from sympy import cos
     >>> TR3(cos(y-x*(y-x)))
     cos(x*(x - y) + y)
     >>> cos(pi/2+x)
@@ -89,6 +99,10 @@ def TR4(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR4
+    >>> from sympy import pi
+    >>> from sympy import cos, sin, tan, cot
     >>> for s in (0, pi/6, pi/4, pi/3, pi/2):
     ...    for f in (cos, sin, tan, cot):
     ...      print f(s),
@@ -109,6 +123,10 @@ def TR5(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR5
+    >>> from sympy.abc import x
+    >>> from sympy import sin
     >>> TR5(sin(x)**2)
     -cos(x)**2 + 1
     >>> TR5(sin(x)**4)
@@ -116,6 +134,7 @@ def TR5(rv):
     >>> TR5(sin(x)**6)
     sin(x)**6
     """
+    # XXX should this do all even powers?
     rv = rv.replace(
         lambda x: x.is_Pow and x.base.func == sin and x.exp in (2, 4),
         lambda x: (1 - cos(x.base.args[0])**2)**(x.exp//2))
@@ -127,6 +146,10 @@ def TR6(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR6
+    >>> from sympy.abc import x
+    >>> from sympy import cos
     >>> TR6(cos(x)**4)
     (-sin(x)**2 + 1)**2
     >>> TR6(cos(x)**2)
@@ -145,6 +168,10 @@ def TR7(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR7
+    >>> from sympy.abc import x
+    >>> from sympy import cos
     >>> TR7(cos(x)**2)
     cos(2*x)/2 + 1/2
     >>> TR7(cos(x)**2 + 1)
@@ -163,22 +190,29 @@ def TR8(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import *
+    >>> from sympy import cos, sin
     >>> TR8(cos(2)*cos(3))
     cos(5)/2 + cos(1)/2
     >>> TR8(cos(2)*sin(3))
     sin(5)/2 - sin(1)/2
     >>> TR8(sin(2)*sin(3))
     -cos(5)/2 + cos(1)/2
+    >>> TR8(cos(2)*cos(3)*cos(4)*cos(5))
+    (cos(5)/2 + cos(1)/2)*(cos(9)/2 + cos(1)/2)
+    >>> TR8(cos(2)*cos(3)*cos(4)*cos(5)*cos(6))
+    (cos(1)/2 + cos(7)/2)*(cos(11)/2 + cos(1)/2)*cos(2)
     """
     if not rv.is_Mul:
         return rv.replace(lambda x: x.is_Mul, lambda x: TR8(x))
     args = {cos: [], sin: [], None: []}
-    for a in Mul.make_args(rv):
+    for a in ordered(Mul.make_args(rv)):
         if a.func in (cos, sin):
             args[a.func].append(a.args[0])
         else:
             args[None].append(a)
-    c = args[cos]  # do these need to be ordered?
+    c = args[cos]
     s = args[sin]
     if not (c and s or len(c) > 1 or len(s) > 1):
         return rv
@@ -208,6 +242,9 @@ def TR9(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR9
+    >>> from sympy import cos, sin
     >>> TR9(cos(1)+cos(2))
     2*cos(1/2)*cos(3/2)
     >>> TR9(cos(1)-cos(2))
@@ -255,6 +292,10 @@ def TR10(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR10
+    >>> from sympy.abc import a, b, c
+    >>> from sympy import cos, sin
     >>> TR10(cos(a+b))
     -sin(a)*sin(b) + cos(a)*cos(b)
     >>> TR10(sin(a+b))
@@ -267,7 +308,9 @@ def TR10(rv):
     f = rv.func
     arg = rv.args[0]  # should expand_mul be used?
     if arg.is_Add:
-        a, b = arg.as_two_terms()
+        args = list(ordered(arg.args))
+        a = args.pop()
+        b = Add(*args)
         if b.is_Add:
             if f == sin:
                 return sin(a)*TR10(cos(b)) + cos(a)*TR10(sin(b))
@@ -286,6 +329,9 @@ def TR10i(rv, first=True):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR10i
+    >>> from sympy import cos, sin
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
     cos(2)
     >>> TR10i(cos(1)*cos(3) - sin(1)*sin(3))
@@ -352,6 +398,9 @@ def TR11(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR11
+    >>> from sympy import cos, sin
     >>> TR11(sin(2))
     2*sin(1)*cos(1)
     >>> TR11(sin(4))
@@ -383,6 +432,10 @@ def TR12(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR12
+    >>> from sympy.abc import x, y
+    >>> from sympy import tan
     >>> from sympy.simplify.fu import TR12
     >>> TR12(tan(x + y))
     (tan(x) + tan(y))/(-tan(x)*tan(y) + 1)
@@ -405,6 +458,9 @@ def TR13(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import TR13
+    >>> from sympy import tan, cot
     >>> TR13(tan(3)*tan(2))
     -(tan(2) + tan(3))*cot(5) + 1
     >>> TR13(cot(3)*cot(2))
@@ -413,12 +469,12 @@ def TR13(rv):
     if not rv.is_Mul:
         return rv.replace(lambda x: x.is_Mul, lambda x: TR13(x))
     args = {tan: [], cot: [], None: []}
-    for a in Mul.make_args(rv):
+    for a in ordered(Mul.make_args(rv)):
         if a.func in (tan, cot):
             args[a.func].append(a.args[0])
         else:
             args[None].append(a)
-    t = args[tan]  # do these need to be ordered?
+    t = args[tan]
     c = args[cot]
     if len(t) < 2 and len(c) < 2:
         return rv
@@ -443,6 +499,10 @@ def L(rv):
     """
     Examples
     ========
+
+    >>> from sympy.simplify.fu import L
+    >>> from sympy.abc import x
+    >>> from sympy import cos, sin
     >>> L(cos(x)+sin(x))
     2
     """
@@ -549,13 +609,18 @@ def fu(rv):
 
     Examples
     ========
-    >>> from sympy.simplify.simplify import fu
+
+    >>> from sympy.simplify.fu import fu
+    >>> from sympy import cos, sin, pi
     >>> a = sin(50)**2 + cos(50)**2 + sin(pi/6)
     >>> fu(a)
     3/2
-    >>> a = sin(100)**4 - cos(50)**2 + sin(50)**2 + 2*cos(100)**2
+
+    (This is slow -- about 15 seconds)
+    >>> a = sin(3)**4 - cos(2)**2 + sin(2)**2 + 2*cos(3)**2
     >>> fu(a)
-    2 - 2*cos(50)**2 + cos(100)**4
+    -8*cos(1)**4 + cos(3)**4 + 8*cos(1)**2
+
     """
     rv = sympify(rv)
     rv = TR0(rv)
