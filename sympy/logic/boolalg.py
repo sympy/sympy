@@ -392,7 +392,7 @@ def distribute_and_over_or(expr):
     >>> distribute_and_over_or(Or(A, And(Not(B), Not(C))))
     And(Or(A, Not(B)), Or(A, Not(C)))
     """
-    return _distribute(expr, And, Or)
+    return _distribute((expr, And, Or))
 
 def distribute_or_over_and(expr):
     """
@@ -409,30 +409,27 @@ def distribute_or_over_and(expr):
     >>> distribute_or_over_and(And(Or(Not(A), B), C))
     Or(And(B, C), And(C, Not(A)))
     """
-    return _distribute(expr, Or, And)
+    return _distribute((expr, Or, And))
 
-def _distribute(expr, function1, function2):
+
+def _distribute(info):
     """
-    Distributes function1 over function2.
+    Distributes info[1] over info[2] with respect to info[0].
     """
-    if function1 == And:
-        procedure = distribute_and_over_or
-    else:
-        procedure = distribute_or_over_and
-    if expr.func is function2:
-        for arg in expr.args:
-            if arg.func is function1:
+    if info[0].func is info[2]:
+        for arg in info[0].args:
+            if arg.func is info[1]:
                 conj = arg
                 break
         else:
-            return expr
-        rest = function2(*[a for a in expr.args if a is not conj])
-        return function1(*map(procedure,
-                   [function2(c, rest) for c in conj.args]))
-    elif expr.func is function1:
-        return function1(*map(procedure, expr.args))
+            return info[0]
+        rest = info[2](*[a for a in info[0].args if a is not conj])
+        return info[1](*map(_distribute,
+                   [(info[2](c, rest), info[1], info[2]) for c in conj.args]))
+    elif info[0].func is info[1]:
+        return info[1](*map(_distribute, [(x, info[1], info[2]) for x in info[0].args]))
     else:
-        return expr
+        return info[0]
 
 
 def to_cnf(expr, simplify=False):
