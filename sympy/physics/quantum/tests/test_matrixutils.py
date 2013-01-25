@@ -112,11 +112,21 @@ def test_to_scipy_sparse():
 epsilon = .000001
 
 
-sym = matrix_zeros(4, format='sympy')
-num = matrix_zeros(4, format='numpy')
-sci = matrix_zeros(4, format='scipy.sparse')
+sym = matrix_zeros(4, 4, format='sympy')
+num = matrix_zeros(4, 4, format='numpy')
+sci = matrix_zeros(4, 4, format='scipy.sparse')
 
-def test_matrix_zeros():
+def test_matrix_zeros_sympy():
     assert isinstance(sym, Matrix)
+
+def test_matrix_zeros_numpy():
+    if not np:
+        skip("numpy not installed or Python too old.")
     assert isinstance(num, numpy_ndarray)
+
+def test_matrix_zeros_scipy():
+    if not np:
+        skip("numpy not installed or Python too old.")
+    if not scipy:
+        skip("scipy not installed.")
     assert isinstance(sci, scipy_sparse_matrix)
