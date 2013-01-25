@@ -435,18 +435,10 @@ class binomial(CombinatorialFunction):
        For the sake of convenience for negative 'k' this function
        will return zero no matter what valued is the other argument.
 
-       The binomial coeffient will not be expanded by default when
-       'n' is a symbol. In order to expand C(n, k), where 'n' is a
-       symbol whereas 'k' is a number, either of the following ways
-       exist:
-       1. Operate method expand on binomial with argument func=True.
-       2. Use the expand_func function and pass the binomial to it.
-
-       In the first case, the binomial coefficient will be expanded
-       and the correspoding polynomial will be obtained. In the second
-       case, the expasion will not expand the polynomial and this
-       method must be preferred unless otherwise required. See
-       the examples below for more information.
+       To expand the binomial when n is a symbol, use either
+       expand_func() or expand(func=True). The former will keep the
+       polynomial in factored form while the latter will expand the
+       polynomial itself. See examples for details.
 
        Examples
        ========
