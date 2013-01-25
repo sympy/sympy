@@ -522,6 +522,7 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations):
     # keep autosimplification from joining Integer or
     # minus sign into an Add of a Mul; this modification doesn't
     # prevent the 2-arg Mul from becoming an Add, however.
+    # XXX Remove this hack once issue 1497 has been resolved.
     hit = False
     if '(' in s:
         kern = '_kern'
@@ -545,16 +546,16 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations):
             expr = eval(
                 code, global_dict, local_dict)  # take local objects in preference
             break
-        except ValueError:
+        except:  # the kern might cause unknown errors, so use bare except
             if hit:
-                s = olds  # maybe it didn't like the kern
+                s = olds  # maybe it didn't like the kern; use un-kerned s
                 hit = False
                 continue
 
-            # try again, either allowing the expr to succeed or fail with the
-            # original error
+            # allow the expr to fail with whatever error was raised
             expr = eval(
                 code, global_dict, local_dict)
+            break
 
     if not hit:
         return expr
