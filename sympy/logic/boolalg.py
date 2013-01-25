@@ -406,8 +406,8 @@ def distribute_or_over_and(expr):
 
     >>> from sympy.logic.boolalg import distribute_or_over_and, And, Or, Not
     >>> from sympy.abc import A, B, C
-    >>> distribute_or_over_and(And(Or(Not(w), y), z))
-    Or(And(Not(w), z), And(y, z))
+    >>> distribute_or_over_and(And(Or(Not(A), B), C))
+    Or(And(B, C), And(C, Not(A)))
     """
     return _distribute(expr, Or, And)
 
@@ -472,7 +472,7 @@ def to_dnf(expr, simplify=False):
     ========
 
     >>> from sympy.logic.boolalg import to_dnf
-    >>> from sympy.abc import A, B, D
+    >>> from sympy.abc import A, B, C, D
     >>> to_dnf(B & (A | C))
     Or(And(A, B), And(B, C))
 
