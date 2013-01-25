@@ -3544,7 +3544,7 @@ def signsimp(expr, evaluate=True):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops):
+def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     """
     Simplifies the given expression.
 
@@ -3729,7 +3729,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
-    if expr.has(C.TrigonometricFunction) or expr.has(C.HyperbolicFunction):
+    if expr.has(C.TrigonometricFunction) and not fu or expr.has(C.HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
     if expr.has(C.log):

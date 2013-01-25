@@ -26,7 +26,7 @@ from sympy.core.exprtools import factor_terms
 #--Trying to simplify the expression, combine things like 3*x + 2*x, etc.
 
 def TR0(rv):
-    rv = simplify(rv)
+    rv = simplify(rv, fu=True)  # disable calls to trigsimp
     rv = powsimp(rv)
     rv = ratsimp(rv)
     rv = combsimp(rv)
