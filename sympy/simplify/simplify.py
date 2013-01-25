@@ -24,6 +24,7 @@ from sympy.utilities.iterables import flatten, has_variety
 from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.simplify.simplify_utils import replace_add_fgfg
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, lcm, gcd)
@@ -1452,6 +1453,30 @@ def _dotrig(a, b):
         a.has(C.TrigonometricFunction) and b.has(C.TrigonometricFunction) or
         a.has(C.HyperbolicFunction) and b.has(C.HyperbolicFunction))
 
+def TR10_inv(expr, full=True):
+    """
+    Inverse of Sum or difference of angles
+    sin(x)*cos(y) + cos(x)*sin(y) -> sin(x + y)
+    sin(x)*cos(y) - cos(x)*sin(y) -> sin(x - y)
+
+    cos(x)*cos(y) - sin(x)*sin(y) -> cos(x + y)   TODO
+    cos(x)*cos(y) + sin(x)*sin(y) -> cos(x - y)
+    """
+    def h1(x, y, sign):
+        return sign*cos(x - sign*y)
+    def h2(x, y, sign):
+        return sin(x + sign*y)
+    def h3(x, y, sign):
+        return sign*cosh(x + sign*y)
+    def h4(x, y, sign):
+        return sinh(x + sign*y)
+
+    expr = _mexpand(expr)
+    # sin(a)*cos(b) + cos(a)*sin(b) -> sin(a + b)
+    res = replace_add_fgfg(expr, sin, cos, h1, h2, full)
+    res = replace_add_fgfg(res, sinh, cosh, h3, h4, full)
+    return res
+
 
 _trigpat = None
 def _trigpats():
@@ -1704,19 +1729,7 @@ def __trigsimp(expr, deep=False):
             expr = Add(*args)
             expr = min(expr, expand(expr), key=count_ops)
         if expr.is_Add:
-            for pattern, result in matchers_add:
-                if not _dotrig(expr, pattern):
-                    continue
-                res = expr.match(pattern)
-                # if "d" contains any trig or hyperbolic funcs with
-                # argument "a" or "b" then skip the simplification;
-                # this isn't perfect -- see tests
-                if res is None or not (a in res and b in res) or any(
-                    w.args[0] in (res[a], res[b]) for w in res[d].atoms(
-                        C.TrigonometricFunction, C.HyperbolicFunction)):
-                    continue
-                expr = result.subs(res)
-                break
+            expr = TR10_inv(expr)
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
