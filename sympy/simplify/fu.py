@@ -17,7 +17,7 @@ from sympy.functions.elementary.trigonometric import cos, sin, tan, cot
 from sympy.core.compatibility import ordered
 from sympy.core.core import C
 from sympy.core.mul import Mul
-from sympy.core.function import expand_mul
+from sympy.core.function import expand_mul, count_ops
 from sympy.core.add import Add
 from sympy.core.symbol import Wild
 from sympy.core.exprtools import factor_terms
@@ -191,7 +191,7 @@ def TR8(rv):
     Examples
     ========
 
-    >>> from sympy.simplify.fu import *
+    >>> from sympy.simplify.fu import TR8
     >>> from sympy import cos, sin
     >>> TR8(cos(2)*cos(3))
     cos(5)/2 + cos(1)/2
@@ -401,7 +401,7 @@ def TR11(rv):
 
     >>> from sympy.simplify.fu import TR11
     >>> from sympy import cos, sin
-    >>> from sympy.abc import *
+    >>> from sympy.abc import x
     >>> TR11(sin(2*x))
     2*sin(x)*cos(x)
     >>> TR11(sin(4*x))
@@ -636,12 +636,14 @@ def fu(rv):
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = RL1(rv)
-        if(L(rv1) < L(rv)):
+        if (L(rv1) < L(rv)):
             rv = rv1
 
     rv = TR0(rv)
     rv = TR2(rv)
     rv = TR0(rv)
     if rv.has(sin, cos):
-        rv = RL2(rv)
+        rv1 = RL2(rv)
+        rv2 = TR8(rv1)
+        rv = min(ordered([rv, rv1, rv2], keys=(L, count_ops), default=False))
     return rv
