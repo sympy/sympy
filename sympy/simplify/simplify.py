@@ -1365,7 +1365,7 @@ def trigsimp(expr, **opts):
 
     >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
     >>> trigsimp(e)
-    -(sin(x) - 1)/cos(x) - cos(x)/(sin(x) - 1)
+    (-sin(x) + 1)/cos(x) - cos(x)/(sin(x) - 1)
     >>> trigsimp(e, method="groebner")
     2/cos(x)
 
@@ -1703,15 +1703,20 @@ def __trigsimp(expr, deep=False):
         if args != expr.args:
             expr = Add(*args)
             expr = min(expr, expand(expr), key=count_ops)
-
         if expr.is_Add:
             for pattern, result in matchers_add:
                 if not _dotrig(expr, pattern):
                     continue
                 res = expr.match(pattern)
-                if res is not None:
-                    expr = result.subs(res)
-                    break
+                # if "d" contains any trig or hyperbolic funcs with
+                # argument "a" or "b" then skip the simplification;
+                # this isn't perfect -- see tests
+                if res is None or not (a in res and b in res) or any(
+                    w.args[0] in (res[a], res[b]) for w in res[d].atoms(
+                        C.TrigonometricFunction, C.HyperbolicFunction)):
+                    continue
+                expr = result.subs(res)
+                break
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
@@ -3777,6 +3782,7 @@ def _real_to_rational(expr, tolerance=None):
     if tolerance is not None and tolerance < 1:
         reduce_num = ceiling(1/tolerance)
     for float in p.atoms(C.Float):
+        key = float
         if reduce_num is not None:
             r = Rational(float).limit_denominator(reduce_num)
         elif (tolerance is not None and tolerance >= 1 and
@@ -3796,7 +3802,7 @@ def _real_to_rational(expr, tolerance=None):
                     r = Rational(str(float/d))*d
                 else:
                     r = Integer(0)
-        reps[float] = r
+        reps[key] = r
     return p.subs(reps, simultaneous=True)
 
 
@@ -3845,11 +3851,12 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
         return _real_to_rational(expr, tolerance)
 
     # sympy's default tolarance for Rationals is 15; other numbers may have
-    # lower tolerances set, so use them to pick the largest tolerance if none
+    # lower tolerances set, so use them to pick the largest tolerance if None
     # was given
-    tolerance = tolerance or 10**-min([15] +
-                                     [mpmath.libmp.libmpf.prec_to_dps(n._prec)
-                                     for n in expr.atoms(Float)])
+    if tolerance is None:
+        tolerance = 10**-min([15] +
+             [mpmath.libmp.libmpf.prec_to_dps(n._prec)
+             for n in expr.atoms(Float)])
 
     prec = 30
     bprec = int(prec*3.33)
@@ -3865,8 +3872,8 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     exprval = expr.evalf(prec, chop=True)
     re, im = exprval.as_real_imag()
 
-    # Must be numerical
-    if not ((re.is_Float or re.is_Integer) and (im.is_Float or im.is_Integer)):
+    # safety check to make sure that this evaluated to a number
+    if not (re.is_Number and im.is_Number):
         return expr
 
     def nsimplify_real(x):
