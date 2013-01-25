@@ -454,7 +454,12 @@ def to_cnf(expr, simplify=False):
         return expr
     #Call simplify_logic if simplification is required
     if simplify:
-        return distribute_and_over_or(simplify_logic(expr))
+        simplified_expr = distribute_and_over_or(simplify_logic(expr))
+        if len(simplified_expr.args) < len(to_cnf(expr).args):
+            return simplified_expr
+        else:
+            return to_cnf(expr)
+
     # Don't convert unless we have to
     if is_cnf(expr):
         return expr
@@ -482,7 +487,12 @@ def to_dnf(expr, simplify=False):
         return expr
     #Call simplify_logic if simplification is required
     if simplify:
-        return distribute_or_over_and(simplify_logic(expr))
+        simplified_expr = distribute_or_over_and(simplify_logic(expr))
+        if len(simplified_expr.args) < len(to_dnf(expr).args):
+            return simplified_expr
+        else:
+            return to_dnf(expr)
+
     # Don't convert unless we have to
     if is_dnf(expr):
         return expr
@@ -539,7 +549,7 @@ def _is_form(expr, function1, function2):
 
     """
     expr = sympify(expr)
-    
+
     # Special case of an Atom
     if expr.is_Atom:
         return True
