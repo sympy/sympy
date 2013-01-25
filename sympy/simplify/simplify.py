@@ -1456,11 +1456,11 @@ def _dotrig(a, b):
 def TR10_inv(expr, full=True):
     """
     Inverse of Sum or difference of angles
-    sin(x)*cos(y) + cos(x)*sin(y) -> sin(x + y)
-    sin(x)*cos(y) - cos(x)*sin(y) -> sin(x - y)
 
-    cos(x)*cos(y) - sin(x)*sin(y) -> cos(x + y)   TODO
-    cos(x)*cos(y) + sin(x)*sin(y) -> cos(x - y)
+    sin(x)*cos(y) + sign*cos(x)*sin(y) -> sin(x + sign*y)
+    cos(x)*cos(y) + sign*sin(x)*sin(y) -> cos(x - sign*y)
+    sinh(x)*cosh(y) + sign*cosh(x)*sinh(y) -> sinh(x + sign*y)
+    cosh(x)*cosh(y) + sign*sinh(x)*sinh(y) -> cosh(x + sign*y)
     """
     def h1(x, y, sign):
         return sign*cos(x - sign*y)

@@ -1,6 +1,6 @@
 from sympy import S, sin, cos, tan, cot, Add
 from sympy.abc import x, y, z, a, b, c
-from sympy.simplify.simplify_utils import fg_sub, fg_factor, replace_add_fgfg
+from sympy.simplify.simplify_utils import replace_add_fgfg
 from sympy.simplify.simplify import TR10_inv
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.compatibility import ordered
@@ -52,6 +52,11 @@ def test_TR10_inv():
     expr = _mexpand(TR10(expr1))
     res = TR10_inv(expr)
     assert expr1e == res
+    
+    expr = _mexpand(expr/cos(c))
+    expr1e = _mexpand(expr1e/cos(c))
+    res = TR10_inv(expr)
+    assert expr1e == res
 
     expr1 = (11*sin(a + b) + 11*sin(b + 4) + sin(b + c) + 15*cos(a - 3) + \
             20*cos(b - 4) + 4*sin(7) + 31*cos(1)) * \
@@ -62,7 +67,3 @@ def test_TR10_inv():
     assert len(expr.args) == 144 and len(expr1e.args) == 49
     res = TR10_inv(expr)
     assert expr1e == res
-
-    expr = sin(y)*cos(1)/cos(y) + sin(1)
-    res = TR10_inv(expr)
-    assert res == sin(y + 1)/cos(y)

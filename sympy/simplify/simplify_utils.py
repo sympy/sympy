@@ -55,9 +55,14 @@ def _replace_add_get_a(expr, f, g):
     a.sort(key=lambda y: abs(y[0])) # assume coefficients differ at most by sign
     return a
 
-def fg_sub(p1, p2):
+def fg_div(p1, p2):
     """
-    subtract two polynomials
+    division of two monomial terms
+
+    Parameters
+    ==========
+
+    p1, p2 : dictionaries with items ``(pos_i, exp_i)``
     """
     p = {}
     for k, v in p1.iteritems():
@@ -74,7 +79,31 @@ def fg_sub(p1, p2):
 
 def fg_factor(p1, p2):
     """
-    factor the terms with minimum exponent between two polynomials
+    factor the terms with minimum exponent between two monomial
+
+    Parameters
+    ==========
+
+    p1, p2 : dictionaries with items ``(pos_i, exp_i)``
+
+    Notes
+    =====
+
+    In ``replace_add_fgfg(expr, f, g, h1, h2)`` a term
+    ``f(x_1)**e_1*...f(x_k)**e_k``
+    is represented internally by a dictionary
+    ``{x_1:e_1, ..., x_k:e_k}``
+    Comparing two terms one collects a common factor, and then
+    sees if the two terms can be replaced with one term containing
+    ``h1`` or ``h2``.
+    If all exponents ``e_i`` are non-negative, the factored term
+    is the monomial gcd.
+
+    See Also
+    ========
+
+    sympy.polys.monomialtools.monomial_gcd
+
     """
     fact = {}
     for k1, e1 in p1.iteritems():
@@ -92,12 +121,22 @@ def fg_factor(p1, p2):
             if e2 < 0:
                 fact[k2] = e2
 
-    p1 = fg_sub(p1, fact)
-    p2 = fg_sub(p2, fact)
+    p1 = fg_div(p1, fact)
+    p2 = fg_div(p2, fact)
     return p1, p2, fact
 
-def replace_add_fgfg(expr, f, g, h1, h2, full=False):
-    """
+def replace_add_fgfg(expr, f, g, h1, h2, full=True):
+    """Inverse of sum or difference of arguments
+
+    Parameters
+    ==========
+
+    f, g, h1, h2 : SymPy functions
+    full : if True continue to replace till possible
+
+    Notes
+    =====
+
     replace f(x)*f(y) + sign*g(y)*g(x) with h1(x, y, sign)
     replace f(x)*g(y) + sign*f(y)*g(x) with h2(x, y, sign)
     """
@@ -117,7 +156,7 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=False):
             pos_a.append(i)
     if pos_a[-1] != len(a):
         pos_a.append(len(a))
-    # convert to sets
+    # convert to dicts, see docstring of fg_factor
     a_dicts = [[dict(y), dict(z)] for x, y, z in a]
     found = []
     used = set()
@@ -143,12 +182,16 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=False):
                 # f(x)*g(y) + sign*f(y)*g(x) -> h2(x, y, sign)
                 # there must be two common terms, with exponent 1
                 # f(x)*f(y) + sign*g(x)*g(y) -> h1(x, y, sign)
+                # terms with two ``f`` or two ``g``
                 if len(b1a) + len(b2a) != 2:
                     continue
                 if len(c1a) + len(c2a) != 2:
                     continue
                 if b1a != c2a or b2a != c1a:
                     continue
+                # The replacement is done only if ``x`` and ``y``
+                # are different, so that the exponents ``exx``
+                # are equal to 1.
                 if b1a and any(exx != 1 for exx in b1a.values()):
                     continue
                 if b2a and any(exx != 1 for exx in b2a.values()):
@@ -191,4 +234,3 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=False):
         return res
     else:
         return expr
-
