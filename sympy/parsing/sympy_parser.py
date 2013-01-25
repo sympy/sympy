@@ -519,54 +519,15 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations):
     global_dict = {}
     exec 'from sympy import *' in global_dict
 
-    # keep autosimplification from joining Integer or
-    # minus sign into an Add of a Mul; this modification doesn't
-    # prevent the 2-arg Mul from becoming an Add, however.
-    # XXX Remove this hack once issue 1497 has been resolved.
-    hit = False
-    if '(' in s:
-        kern = '_kern'
-        while kern in s:
-            kern += "_"
-        olds = s
-        s = re.sub(r'(\d *\*|-) *\(', r'\1%s*(' % kern, s)
-        hit = kern in s
+    tokens = []
+    input_code = StringIO(s.strip())
+    for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
+        tokens.append((toknum, tokval))
 
-    for i in range(2):
-        tokens = []
-        input_code = StringIO(s.strip())
-        for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
-            tokens.append((toknum, tokval))
+    for transform in transformations:
+        tokens = transform(tokens, local_dict, global_dict)
 
-        for transform in transformations:
-            tokens = transform(tokens, local_dict, global_dict)
+    code = untokenize(tokens)
 
-        code = untokenize(tokens)
-        try:
-            expr = eval(
-                code, global_dict, local_dict)  # take local objects in preference
-            break
-        except:  # the kern might cause unknown errors, so use bare except
-            if hit:
-                s = olds  # maybe it didn't like the kern; use un-kerned s
-                hit = False
-                continue
-
-            # allow the expr to fail with whatever error was raised
-            expr = eval(
-                code, global_dict, local_dict)
-            break
-
-    if not hit:
-        return expr
-    rep = {C.Symbol(kern): 1}
-
-    def _clear(expr):
-        if hasattr(expr, 'xreplace'):
-            return expr.xreplace(rep)
-        elif isinstance(expr, (list, tuple, set)):
-            return type(expr)([_clear(e) for e in expr])
-        if hasattr(expr, 'subs'):
-            return expr.subs(rep)
-        return expr
-    return _clear(expr)
+    return eval(
+        code, global_dict, local_dict)  # take local objects in preference

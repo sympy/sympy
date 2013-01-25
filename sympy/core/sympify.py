@@ -276,3 +276,49 @@ def _sympify(a):
        see: sympify
     """
     return sympify(a, strict=True)
+
+
+def kernS(s):
+    """Use a hack to try keep autosimplification from joining Integer or
+    minus sign into an Add of a Mul; this modification doesn't
+    prevent the 2-arg Mul from becoming an Add, however. If use of the
+    hack fails, the un-hacked string will be passed to sympify...and you
+    get what you get.
+
+    XXX This hack should not be necessary once issue 1497 has been resolved.
+    """
+    import re
+    from sympy.core.symbol import Symbol
+
+    hit = False
+    if '(' in s:
+        kern = '_kern'
+        while kern in s:
+            kern += "_"
+        olds = s
+        s = re.sub(r'(\d *\*|-) *\(', r'\1%s*(' % kern, s)
+        hit = kern in s
+
+    for i in range(2):
+        try:
+            expr = sympify(s)
+            break
+        except:  # the kern might cause unknown errors, so use bare except
+            if hit:
+                s = olds  # maybe it didn't like the kern; use un-kerned s
+                hit = False
+                continue
+            expr = sympify(s)  # let original error raise
+
+    if not hit:
+        return expr
+
+    rep = {Symbol(kern): 1}
+    if hasattr(expr, 'xreplace'):
+        return expr.xreplace(rep)
+    elif isinstance(expr, (list, tuple, set)):
+        return type(expr)([_clear(e) for e in expr])
+    if hasattr(expr, 'subs'):
+        return expr.subs(rep)
+    # hope that kern is not there anymore
+    return expr

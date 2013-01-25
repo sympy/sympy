@@ -2,7 +2,7 @@ from __future__ import with_statement
 from sympy import Symbol, exp, Integer, Float, sin, cos, log, Poly, Lambda, \
     Function, I, S, sqrt, srepr, Rational, Tuple, Matrix, Interval
 from sympy.abc import x, y
-from sympy.core.sympify import sympify, _sympify, SympifyError
+from sympy.core.sympify import sympify, _sympify, SympifyError, kernS
 from sympy.core.decorators import _sympifyit
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.utilities.decorator import conserve_mpmath_dps
@@ -432,19 +432,23 @@ def test_geometry():
     assert L == Line((0, 1), (1, 0)) and type(L) == Line
 
 
-def test_no_autosimplify_into_Mul():
+def test_kernS():
     s =   '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'
+    # when 1497 is fixed, this no longer should pass: the expression
+    # should be unchanged
     assert -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x))) == -1
     # sympification should not allow the constant to enter a Mul
     # or else the structure can change dramatically
-    ss = S(s)
+    ss = kernS(s)
     assert ss != -1 and ss.simplify() == -1
     s = '-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))'.replace(
         'x', '_kern')
-    ss = S(s)
+    ss = kernS(s)
     assert ss != -1 and ss.simplify() == -1
     # issue 3588
-    assert sympify('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
+    assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
+    assert kernS('_kern') == Symbol('_kern')
+
 
 def test_issue_3441_3453():
     assert S('[[1/3,2], (2/5,)]') == [[Rational(1, 3), 2], (Rational(2, 5),)]
