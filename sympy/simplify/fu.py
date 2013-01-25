@@ -401,20 +401,29 @@ def TR11(rv):
 
     >>> from sympy.simplify.fu import TR11
     >>> from sympy import cos, sin
-    >>> TR11(sin(2))
-    2*sin(1)*cos(1)
-    >>> TR11(sin(4))
-    4*(-sin(1)**2 + cos(1)**2)*sin(1)*cos(1)
+    >>> from sympy.abc import *
+    >>> TR11(sin(2*x))
+    2*sin(x)*cos(x)
+    >>> TR11(sin(4*x))
+    4*(-sin(x)**2 + cos(x)**2)*sin(x)*cos(x)
+
+    >>> TR11(cos(2*x))
+    -sin(x)**2 + cos(x)**2
+    >>> TR11(cos(4*x))
+    -4*sin(x)**2*cos(x)**2 + (-sin(x)**2 + cos(x)**2)**2
+
+    If the arguments are simply integers, no change is made:
 
     >>> TR11(cos(2))
-    -sin(1)**2 + cos(1)**2
-    >>> TR11(cos(4))
-    -4*sin(1)**2*cos(1)**2 + (-sin(1)**2 + cos(1)**2)**2
+    cos(2)
+
     """
     if rv.func not in (cos, sin):
         return rv.replace(
             lambda x: x.func in (sin, cos),
             lambda x: TR11(x))
+    if rv.args[0].is_Number:
+        return rv
     c, m = rv.args[0].as_coeff_Mul()
     if c % 2 == 0:
         arg = c//2*m
