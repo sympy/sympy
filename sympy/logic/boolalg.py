@@ -551,7 +551,7 @@ def _is_form(expr, function1, function2):
     if expr.is_Atom:
         return True
 
-    # Special case of a single conjunction
+    # Special case of a single expression of function2
     if expr.func is function2:
         for lit in expr.args:
             if lit.func is Not:
