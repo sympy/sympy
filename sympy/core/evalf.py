@@ -1273,6 +1273,9 @@ class EvalfMixin(object):
         try:
             result = evalf(self, prec + 4, options)
         except NotImplementedError:
+            # Make sure subs has occured
+            if subs is not None:
+                self = self.subs(subs)
             # Fall back to the ordinary evalf
             v = self._eval_evalf(prec)
             if v is None:
