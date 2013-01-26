@@ -345,23 +345,6 @@ you don't have to worry about this problem:
     >>> S("22/7")
     22/7
 
-    There are some times when autosimplification during sympification
-    may result in an expression that is very different (in appearance)
-    from what you enter. In this case (until such autosimplification is
-    no longer done) you can use the ``kernS`` function for these special
-    cases.
-
-    >>> from sympy.core.sympify import kernS
-    >>> -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))
-    -1
-    >>> S('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
-    -1
-    >>> kernS('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
-    -1 + 2*(-x + 1/x)/(x*(x - 1/x)**2) + 2/(x*(x - 1/x))
-
-    In the last expression, the result is not exactly the same as the
-    entered string, but it is a lot closer.
-
 
 Also, if you do not use :command:`isympy`, you could use ``from
 __future__ import division`` to prevent the ``/`` sign from performing

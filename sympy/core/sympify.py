@@ -24,9 +24,9 @@ converter = {}  # See sympify docstring.
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
-    Converts an arbitrary expression to a type that can be used inside sympy.
+    Converts an arbitrary expression to a type that can be used inside SymPy.
 
-    For example, it will convert python ints into instance of sympy.Rational,
+    For example, it will convert Python ints into instance of sympy.Rational,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
     expressions which inherit from Basic. This can be useful in cooperation
     with SAGE.
@@ -38,7 +38,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - booleans, including ``None`` (will leave them unchanged)
        - lists, sets or tuples containing any of the above
 
-    If the argument is already a type that sympy understands, it will do
+    If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
     function to ensure you are working with the correct type.
 
@@ -163,6 +163,28 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     >>> sympify(MyList2())
     [1]
     [2]
+
+    Notes
+    =====
+
+    There are some times when autosimplification during sympification
+    may result in an expression that is very different (in appearance)
+    from what you enter. In this case (until such autosimplification is
+    no longer done) you can use the ``kernS`` function for these special
+    cases.
+
+    >>> from sympy.core.sympify import kernS
+    >>> from sympy.abc import x
+    >>> -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))
+    -1
+    >>> sympify('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
+    -1
+    >>> kernS('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
+    -1 + 2*(-x + 1/x)/(x*(x - 1/x)**2) + 2/(x*(x - 1/x))
+
+    In the last expression, the result is not exactly the same as the
+    entered string, but it is a lot closer.
+
 
     """
     try:
