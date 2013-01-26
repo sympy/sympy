@@ -400,23 +400,23 @@ def symbols(names, **args):
                 substart = 0
                 subend = 0
                 if match is not None:
-                  subname, substart, subend, subsuffix = match.groups()
-                  subend = letters.index(subend)
-                  if substart not in string.digits:
-                    subend = subend + 1
-                  substart = letters.index(substart)
-                  subname=subname.replace('(', '')
-                  subsuffix=subsuffix.replace(')', '')
+                    subname, substart, subend, subsuffix = match.groups()
+                    subend = letters.index(subend)
+                    if substart not in string.digits:
+                        subend = subend + 1
+                    substart = letters.index(substart)
+                    subname=subname.replace('(', '')
+                    subsuffix=subsuffix.replace(')', '')
                 end = letters.index(end)
                 if start not in string.digits:
-                  end = end + 1
+                    end = end + 1
                 start = letters.index(start)
                 if substart!=0 or subend!=0:
                     for subname in xrange(start, end):
                         for subsubname in xrange(substart, subend):
-                          symbol = cls(name + letters[subname] + letters[subsubname]
+                            symbol = cls(name + letters[subname] + letters[subsubname]
                                    + subsuffix, **args)
-                          result.append(symbol)
+                            result.append(symbol)
                     seq = True
                     continue
                 else:
