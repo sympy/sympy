@@ -52,7 +52,7 @@ def test_TR10_inv():
     expr = _mexpand(TR10(expr1))
     res = TR10_inv(expr)
     assert expr1e == res
-    
+
     expr = _mexpand(expr/cos(c))
     expr1e = _mexpand(expr1e/cos(c))
     res = TR10_inv(expr)

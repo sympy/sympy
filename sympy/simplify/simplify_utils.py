@@ -3,6 +3,12 @@ from sympy.core import (Mul, Add, S)
 def _splitfg(expr, f, g):
     """
     util function for ``_replace_add_get_a``
+
+    Notes
+    =====
+
+    ``expr = c1*f(x11)**e11*f(x12)**e12*...*g(x21)**e21*g(x22)**e22``
+    This function gives ``(c1, {x11:e11, x12:e12,...}, {x21:e21, x22:e22,...})
     """
     args = expr.args
     base_exp = []
@@ -11,51 +17,67 @@ def _splitfg(expr, f, g):
             base_exp.append((x.base, x.exp))
         else:
             base_exp.append((x, S.One))
-    a0, a1, a2 = [], [], []
-    for base, exp in base_exp:
+    a0, a1, a2 = [], {}, {}
+    for i, (base, exp) in enumerate(base_exp):
         if base.__class__ is f:
-            a1.append((base, exp))
+            a1[base.args[0]] = exp
         elif base.__class__ is g:
-            a2.append((base, exp))
+            a2[base.args[0]] = exp
         else:
-            a0.append((base, exp))
-    a0 = Mul(*[base**exp for base, exp in a0])
-    a1 = [(x.args[0], y) for x, y in a1]
-    a2 = [(x.args[0], y) for x, y in a2]
+            a0.append(args[i])
+    a0 = Mul(*a0)
     return a0, a1, a2
 
-def _replace_add_get_a(expr, f, g):
+def _replace_add_get_a(args, f, g):
     """
     util function for ``replace_add_fgfg``
+
+    Notes
+    =====
+
+    ``args = (c1*f(x11)**e11*f(x12)**e12*...*g(x21)**e21*g(x22)**e22*..., ...)``
+    This function gives
+    ``([[c1, {x11:e11, x12:e12,...}, {x21:e21, x22:e22,...}],...], ``
+
+    Examples
+    ========
+    >>> from sympy import sin, cos
+    >>> from sympy.abc import x, y
+    >>> from sympy.simplify.simplify_utils import _replace_add_get_a
+    >>> args = (2*sin(x)**2 * cos(x)**2, cos(x))
+    >>> _replace_add_get_a(args, sin, cos)
+    [[2, {x: 2}, {x: 2}], [1, {}, {x: 1}]]
     """
-    args = expr.args
     a = []
     # separate each addend into a part without products of f and g
     # at top level, in a part with powers of f and a part with powers of g
     for x in args:
         if not x.is_Mul:
             if x.__class__ is f:
-                v = [S.One, [(x.args[0], 1)], []]
+                v = [S.One, {x.args[0]:1}, {}]
             elif x.__class__ is g:
-                v = [S.One, [], [(x.args[0], 1)]]
+                v = [S.One, {}, {x.args[0]:1}]
             elif x.is_Pow:
                 x, expx = x.base, x.exp
                 if x.__class__ is f:
-                    v = [S.One, [(x.args[0], expx)], []]
+                    v = [S.One, {x.args[0]: expx}, {}]
                 elif x.__class__ is g:
-                    v = [S.One, [], [(x.args[0], expx)]]
+                    v = [S.One, {}, {x.args[0]: expx}]
                 else:
-                    v = [x, [], []]
+                    v = [x, {}, {}]
             else:
-                v = [x, [], []]
+                v = [x, {}, {}]
             a.append(v)
             continue
+        # with f=sin, g=cos
+        # exp(x)*cos(x) -> [[exp(x), [], [(x, 1)]]]
+        # sin(x)**2*cos(x)**2 -> [[1, [], [(x, 1)]], [1, [(x, 2)], [(x, 2)]]]
+        # [[c1, [{x11:e11, x12:e12,...}, {x21:e21, x22:e22,...}]],...]
         a0, a1, a2 = _splitfg(x, f, g)
         a.append([a0, a1, a2])
-    a.sort(key=lambda y: abs(y[0])) # assume coefficients differ at most by sign
     return a
 
-def fg_div(p1, p2):
+def _fg_div(p1, p2):
     """
     division of two monomial terms
 
@@ -77,7 +99,7 @@ def fg_div(p1, p2):
             p[k] = -v
     return p
 
-def fg_factor(p1, p2):
+def _fg_factor(p1, p2):
     """
     factor the terms with minimum exponent between two monomial
 
@@ -121,8 +143,8 @@ def fg_factor(p1, p2):
             if e2 < 0:
                 fact[k2] = e2
 
-    p1 = fg_div(p1, fact)
-    p2 = fg_div(p2, fact)
+    p1 = _fg_div(p1, fact)
+    p2 = _fg_div(p2, fact)
     return p1, p2, fact
 
 def replace_add_fgfg(expr, f, g, h1, h2, full=True):
@@ -144,20 +166,24 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=True):
         return expr
     if f == g:
         return expr
-    a = _replace_add_get_a(expr, f, g)
+    a  = _replace_add_get_a(expr.args, f, g)
+    # Matching can occur only for terms with the same coefficient modulo the sign.
+    # Sort ``a`` according to the absolute value of the coefficients,
+    # reorder args accordingly
+    a = zip(a, expr.args)
+    a.sort(key=lambda y: abs(y[0][0]))
+    a, args = ([x[0] for x in a], [x[1] for x in a])
     # separate `a` in regions indexed by pos_a
     pos_a = []
     prev = S.Zero
-    i = 0
-    # TODO filter also with len(a1), len(a2)
     for i, (a0, a1, a2) in enumerate(a):
         if abs(a0) != abs(prev):
             prev = a0
             pos_a.append(i)
     if pos_a[-1] != len(a):
         pos_a.append(len(a))
-    # convert to dicts, see docstring of fg_factor
-    a_dicts = [[dict(y), dict(z)] for x, y, z in a]
+    # convert to dicts, see docstring of _fg_factor
+    a_dicts = [x[1:] for x in a]
     found = []
     used = set()
     pos0 = 0
@@ -177,8 +203,8 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=True):
                 b1, b2 = a_dicts[i]
                 c1, c2 = a_dicts[j]
                 # factor the common terms
-                b1a, c1a, fact1 = fg_factor(b1, c1)
-                b2a, c2a, fact2 = fg_factor(b2, c2)
+                b1a, c1a, fact1 = _fg_factor(b1, c1)
+                b2a, c2a, fact2 = _fg_factor(b2, c2)
                 # f(x)*g(y) + sign*f(y)*g(x) -> h2(x, y, sign)
                 # there must be two common terms, with exponent 1
                 # f(x)*f(y) + sign*g(x)*g(y) -> h1(x, y, sign)
@@ -211,7 +237,6 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=True):
                     r = Mul(sign, a[i][0], fv, gv, hv)
                 else:
                     # f(x)*g(y) + sign*g(x)*f(h) -> h2(x, y, sign)
-
                     x = b1a.keys()[0]
                     y = b2a.keys()[0]
                     hv = h2(x, y, sign)
@@ -222,11 +247,7 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=True):
                 break # end j loop
         pos0 = pos1
     if found:
-        a_new = [a[i] for i in range(len(a)) if i not in used]
-        if a_new:
-            x0, x1, x2 = a_new[0]
-        a_new = [Mul(*[x0, Mul(*[f(xx)**yy for xx, yy in x1]),
-                 Mul(*[g(xx)**yy for xx, yy in x2])]) for x0, x1, x2 in a_new]
+        a_new = [args[i] for i in range(len(args)) if i not in used]
         a_new += found
         res = Add(*a_new)
         if full == True:
