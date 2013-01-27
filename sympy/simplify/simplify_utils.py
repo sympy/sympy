@@ -1,4 +1,6 @@
 from sympy.core import (Mul, Add, S)
+from sympy.utilities.misc import debug
+
 
 def _splitfg(expr, f, g):
     """
@@ -147,20 +149,23 @@ def _fg_factor(p1, p2):
     p2 = _fg_div(p2, fact)
     return p1, p2, fact
 
-def replace_add_fgfg(expr, f, g, h1, h2, full=True):
+def replace_add_fgfg(expr, f, g, h1, h2, h3, full=True):
     """Inverse of sum or difference of arguments
 
     Parameters
     ==========
 
-    f, g, h1, h2 : SymPy functions
+    f, g, h1, h2, h3 : SymPy functions (or None in the case of ``h3``)
     full : if True continue to replace till possible
 
     Notes
     =====
 
-    replace f(x)*f(y) + sign*g(y)*g(x) with h1(x, y, sign)
-    replace f(x)*g(y) + sign*f(y)*g(x) with h2(x, y, sign)
+    replace ``f(x)*f(y) + sign*g(y)*g(x) with h1(x, y, sign)``
+    replace ``f(x)*g(y) + sign*f(y)*g(x) with h2(x, y, sign)``
+
+    if ``h3`` is not None:
+    replace ``f(x) + sign*g(x)``           with ``h3(x, y, sign)``
     """
     if not expr.is_Add:
         return expr
@@ -209,10 +214,15 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=True):
                 # there must be two common terms, with exponent 1
                 # f(x)*f(y) + sign*g(x)*g(y) -> h1(x, y, sign)
                 # terms with two ``f`` or two ``g``
-                if len(b1a) + len(b2a) != 2:
+                n1 = len(b1a) + len(b2a)
+                if n1 not in (1, 2):
                     continue
-                if len(c1a) + len(c2a) != 2:
+                n2 = len(c1a) + len(c2a)
+                if n2 not in (1, 2):
                     continue
+                if n1 == 1 and not h3:
+                    continue
+
                 if b1a != c2a or b2a != c1a:
                     continue
                 # The replacement is done only if ``x`` and ``y``
@@ -225,22 +235,35 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=True):
                 # collect common terms
                 fv = Mul(*[f(xx)**yy for xx, yy in fact1.items()])
                 gv = Mul(*[g(xx)**yy for xx, yy in fact2.items()])
-                if len(b1a) == 2:
-                    # f(x)*f(y) + sign*g(x)*g(y) -> h1(x, y, sign)
-                    x, y = b1a.keys()
-                    hv = h1(x, y, sign)
-                    r = Mul(a[i][0], fv, gv, hv)
-                elif len(b2a) == 2:
-                    # g(x)*g(y) + sign*f(x)*f(y) -> sign*h1(x, y, sign)
-                    x, y = b2a.keys()
-                    hv = h1(x, y, sign)
-                    r = Mul(sign, a[i][0], fv, gv, hv)
-                else:
-                    # f(x)*g(y) + sign*g(x)*f(h) -> h2(x, y, sign)
-                    x = b1a.keys()[0]
-                    y = b2a.keys()[0]
-                    hv = h2(x, y, sign)
-                    r = Mul(a[i][0], fv, gv, hv)
+                if n1 == 2:
+                    if len(b1a) == 2:
+                        # f(x)*f(y) + sign*g(x)*g(y) -> h1(x, y, sign)
+                        x, y = b1a.keys()
+                        hv = h1(x, y, sign)
+                        r = Mul(a[i][0], fv, gv, hv)
+                    elif len(b2a) == 2:
+                        # g(x)*g(y) + sign*f(x)*f(y) -> sign*h1(x, y, sign)
+                        x, y = b2a.keys()
+                        hv = h1(x, y, sign)
+                        r = Mul(sign, a[i][0], fv, gv, hv)
+                    else:
+                        # f(x)*g(y) + sign*g(x)*f(h) -> h2(x, y, sign)
+                        x = b1a.keys()[0]
+                        y = b2a.keys()[0]
+                        hv = h2(x, y, sign)
+                        r = Mul(a[i][0], fv, gv, hv)
+                elif n1 == 1:
+                    if len(b1a) == 1:
+                        # f(x) + sign*g(x) -> h3(x, sign)
+                        x = b1a.keys()[0]
+                        hv = h3(x, sign)
+                        r = Mul(a[i][0], fv, gv, hv)
+                    else:
+                        # g(x) + sign*f(x) -> sign*h3(x, sign)
+                        x = b2a.keys()[0]
+                        hv = sign*h3(x, sign)
+                        r = Mul(sign, a[i][0], fv, gv, hv)
+                debug('%s + %s -> %s' %(args[i], args[j], r))
                 found.append(r)
                 used.add(i)
                 used.add(j)
@@ -251,7 +274,7 @@ def replace_add_fgfg(expr, f, g, h1, h2, full=True):
         a_new += found
         res = Add(*a_new)
         if full == True:
-            res = replace_add_fgfg(res, f, g, h1, h2, full)
+            res = replace_add_fgfg(res, f, g, h1, h2, h3, full)
         return res
     else:
         return expr

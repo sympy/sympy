@@ -1,9 +1,10 @@
-from sympy import S, sin, cos, tan, cot, Add
+from sympy import S, C, sin, cos, tan, cot, exp, Add
 from sympy.abc import x, y, z, a, b, c
 from sympy.simplify.simplify_utils import replace_add_fgfg
 from sympy.simplify.simplify import TR10_inv
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.compatibility import ordered
+from sympy.core.numbers import pi
 
 def _mexpand(expr):
     return expand_mul(expand_multinomial(expr))
@@ -67,3 +68,12 @@ def test_TR10_inv():
     assert len(expr.args) == 144 and len(expr1e.args) == 49
     res = TR10_inv(expr)
     assert expr1e == res
+
+    expr = _mexpand((sin(1) + cos(1) + sin(2) + cos(2))*(sin(3) + cos(3)))
+    res = TR10_inv(expr)
+    # res can take a few different forms, so we do the following test
+    res1 = _mexpand(res.rewrite((sin,cos),exp).expand())
+    expr1 = _mexpand(expr.rewrite((sin,cos),exp).expand())
+    assert res1 == expr1
+    assert expr.count(C.TrigonometricFunction) == 16
+    assert res.count(C.TrigonometricFunction) == 4

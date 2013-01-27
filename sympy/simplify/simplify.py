@@ -10,7 +10,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
     iterable, reduce, default_sort_key, set_union)
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, pi
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
@@ -1457,10 +1457,11 @@ def TR10_inv(expr, full=True):
     """
     Inverse of Sum or difference of angles
 
-    sin(x)*cos(y) + sign*cos(x)*sin(y) -> sin(x + sign*y)
-    cos(x)*cos(y) + sign*sin(x)*sin(y) -> cos(x - sign*y)
-    sinh(x)*cosh(y) + sign*cosh(x)*sinh(y) -> sinh(x + sign*y)
-    cosh(x)*cosh(y) + sign*sinh(x)*sinh(y) -> cosh(x + sign*y)
+    ``sin(x)*cos(y) + sign*cos(x)*sin(y) -> sin(x + sign*y)``
+    ``cos(x)*cos(y) + sign*sin(x)*sin(y) -> cos(x - sign*y)``
+    ``sinh(x)*cosh(y) + sign*cosh(x)*sinh(y) -> sinh(x + sign*y)``
+    ``cosh(x)*cosh(y) + sign*sinh(x)*sinh(y) -> cosh(x + sign*y)``
+    ``sin(x) + sign*cos(x)                   -> sqrt(2)*sin(x + sign*pi/4)``
     """
     def h1(x, y, sign):
         return sign*cos(x - sign*y)
@@ -1470,11 +1471,12 @@ def TR10_inv(expr, full=True):
         return sign*cosh(x + sign*y)
     def h4(x, y, sign):
         return sinh(x + sign*y)
-
+    def h5(x, sign):
+        return sqrt(2)*sin(x + sign*pi/4)
     expr = _mexpand(expr)
     # sin(a)*cos(b) + cos(a)*sin(b) -> sin(a + b)
-    res = replace_add_fgfg(expr, sin, cos, h1, h2, full)
-    res = replace_add_fgfg(res, sinh, cosh, h3, h4, full)
+    res = replace_add_fgfg(expr, sin, cos, h1, h2, h5, full)
+    res = replace_add_fgfg(res, sinh, cosh, h3, h4, None, full)
     return res
 
 
