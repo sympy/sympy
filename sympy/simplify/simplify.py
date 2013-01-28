@@ -1641,6 +1641,7 @@ def _trigsimp(expr, deep=False):
 @cacheit
 def __trigsimp(expr, deep=False):
     """recursive helper for trigsimp"""
+    from sympy.simplify.simplify_utils import TR10_inv
 
     if _trigpat is None:
         _trigpats()
@@ -1707,16 +1708,18 @@ def __trigsimp(expr, deep=False):
             for pattern, result in matchers_add:
                 if not _dotrig(expr, pattern):
                     continue
-                res = expr.match(pattern)
-                # if "d" contains any trig or hyperbolic funcs with
-                # argument "a" or "b" then skip the simplification;
-                # this isn't perfect -- see tests
-                if res is None or not (a in res and b in res) or any(
-                    w.args[0] in (res[a], res[b]) for w in res[d].atoms(
-                        C.TrigonometricFunction, C.HyperbolicFunction)):
-                    continue
-                expr = result.subs(res)
-                break
+                expr = TR10_inv(expr)
+                if expr.has(C.HyperbolicFunction):
+                    res = expr.match(pattern)
+                    # if "d" contains any trig or hyperbolic funcs with
+                    # argument "a" or "b" then skip the simplification;
+                    # this isn't perfect -- see tests
+                    if res is None or not (a in res and b in res) or any(
+                        w.args[0] in (res[a], res[b]) for w in res[d].atoms(
+                            C.TrigonometricFunction, C.HyperbolicFunction)):
+                        continue
+                    expr = result.subs(res)
+                    break
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
