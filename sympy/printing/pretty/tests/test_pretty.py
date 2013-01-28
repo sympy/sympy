@@ -3776,14 +3776,14 @@ def test_expint():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert upretty(where(X > 0)) == u"Domain: 0 < x₁"
+    assert upretty(where(X > 0)) == u"Domain: x₁ > 0"
 
     D = Die('d1', 6)
     assert upretty(where(D > 4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert upretty(pspace(Tuple(A, B)).domain) == u'Domain: 0 ≤ a ∧ 0 ≤ b'
+    assert upretty(pspace(Tuple(A, B)).domain) == u'Domain: a ≥ 0 ∧ b ≥ 0'
 
 
 def test_PrettyPoly():
