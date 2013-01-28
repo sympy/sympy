@@ -174,9 +174,12 @@ def replace_add_fgfg(expr, f, g, h1, h2, h3, full=True):
     a  = _replace_add_get_a(expr.args, f, g)
     # Matching can occur only for terms with the same coefficient modulo the sign.
     # Sort ``a`` according to the absolute value of the coefficients,
-    # reorder args accordingly
+    # to group terms by them;
+    # the rest of the sorting is to get a unique ordering when the keys
+    # can be sorted.
+    # Reorder args accordingly
     a = zip(a, expr.args)
-    a.sort(key=lambda y: abs(y[0][0]))
+    a.sort(key=lambda y: (abs(y[0][0]), sorted(list(y[0][1])), sorted(list(y[0][2]))))
     a, args = ([x[0] for x in a], [x[1] for x in a])
     # separate `a` in regions indexed by pos_a
     pos_a = []

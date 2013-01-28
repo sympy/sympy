@@ -71,9 +71,4 @@ def test_TR10_inv():
 
     expr = _mexpand((sin(1) + cos(1) + sin(2) + cos(2))*(sin(3) + cos(3)))
     res = TR10_inv(expr)
-    # res can take a few different forms, so we do the following test
-    res1 = _mexpand(res.rewrite((sin,cos),exp).expand())
-    expr1 = _mexpand(expr.rewrite((sin,cos),exp).expand())
-    assert res1 == expr1
-    assert expr.count(C.TrigonometricFunction) == 16
-    assert res.count(C.TrigonometricFunction) == 4
+    assert res == 2*sin(pi/4 + 1)*sin(pi/4 + 3) + 2*sin(pi/4 + 2)*sin(pi/4 + 3)
