@@ -305,7 +305,8 @@ def test_to_cnf():
     assert to_cnf(A & (B | C) | ~A & (B | C), True) == B | C
 
     assert to_cnf(Equivalent(A, B)) == And(Or(A, Not(B)), Or(B, Not(A)))
-    assert to_cnf(Equivalent(A, B & C)) == (~A | B) & (~A | C) & (~B | ~C | A)
+    assert to_cnf(Equivalent(A, B & C)) == \
+           (~A | B) & (~A | C) & (~B | ~C | A)
     assert to_cnf(Equivalent(A, B | C), True) == \
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
 
@@ -315,9 +316,10 @@ def test_to_dnf():
     assert to_dnf(~(B | C)) == And(Not(B), Not(C))
     assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
     assert to_dnf(A >> B) == (~A) | B
-    assert to_dnf(A >> (B & C)) == ~A | (B & C)
+    assert to_dnf(A >> (B & C)) == (~A) | (B & C)
 
-    assert to_dnf(Equivalent(A, B), True) == Or(And(A, B), And(Not(A), Not(B)))
+    assert to_dnf(Equivalent(A, B), True) == \
+           Or(And(A, B), And(Not(A), Not(B)))
     assert to_dnf(Equivalent(A, B & C), True) == \
            Or(And(A, B, C), And(Not(A), Not(B)), And(Not(A), Not(C)))
 

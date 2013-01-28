@@ -427,7 +427,8 @@ def _distribute(info):
         return info[1](*map(_distribute,
                    [(info[2](c, rest), info[1], info[2]) for c in conj.args]))
     elif info[0].func is info[1]:
-        return info[1](*map(_distribute, [(x, info[1], info[2]) for x in info[0].args]))
+        return info[1](*map(_distribute,
+                            [(x, info[1], info[2]) for x in info[0].args]))
     else:
         return info[0]
 
@@ -449,7 +450,7 @@ def to_cnf(expr, simplify=False):
     expr = sympify(expr)
     if not isinstance(expr, BooleanFunction):
         return expr
-    #Call simplify_logic if simplification is required
+
     if simplify:
         simplified_expr = distribute_and_over_or(simplify_logic(expr))
         if len(simplified_expr.args) < len(to_cnf(expr).args):
@@ -482,7 +483,7 @@ def to_dnf(expr, simplify=False):
     expr = sympify(expr)
     if not isinstance(expr, BooleanFunction):
         return expr
-    #Call simplify_logic if simplification is required
+
     if simplify:
         simplified_expr = distribute_or_over_and(simplify_logic(expr))
         if len(simplified_expr.args) < len(to_dnf(expr).args):
