@@ -394,6 +394,7 @@ def distribute_and_over_or(expr):
     """
     return _distribute((expr, And, Or))
 
+
 def distribute_or_over_and(expr):
     """
     Given a sentence s consisting of conjunctions and disjunctions
