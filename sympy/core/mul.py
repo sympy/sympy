@@ -816,16 +816,10 @@ class Mul(Expr, AssocOp):
         return lhs/rhs
 
     def as_powers_dict(self):
-        d = defaultdict(list)
+        d = defaultdict(int)
         for term in self.args:
             b, e = term.as_base_exp()
-            d[b].append(e)
-        for b, e in d.iteritems():
-            if len(e) == 1:
-                e = e[0]
-            else:
-                e = Add(*e)
-            d[b] = e
+            d[b] += e
         return d
 
     def as_numer_denom(self):

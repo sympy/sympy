@@ -7,14 +7,14 @@ from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer
+from sympy.core.numbers import Rational, Integer, Number
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations)
+        variations, ordered)
 
 from collections import defaultdict
 
@@ -74,19 +74,64 @@ class Factors(object):
     __slots__ = ['factors', 'gens']
 
     def __init__(self, factors=None):  # Factors
-        if factors is None:
+        """Initialize Factors from dict (or defaultdict of type int).
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x
+        >>> e = 2*x**3
+        >>> Factors(e)
+        Factors({2: 1, x: 3})
+        >>> Factors(e.as_powers_dict())
+        Factors({2: 1, x: 3})
+        >>> f = _
+        >>> f.factors  # underlying dictionary
+        {2: 1, x: 3}
+        >>> f.gens  # base of each factor
+        frozenset([2, x])
+        >>> Factors(0)
+        Factors({0: 1})
+
+        """
+        if factors is None or factors == 1:
             factors = {}
+        elif factors is S.Zero or factors == 0:
+            factors = {S.Zero: S.One}
+        elif isinstance(factors, Number) and factors < 0 and not factors is S.NegativeOne:
+            factors = {-factors: S.One, S.NegativeOne: S.One}
+        elif isinstance(factors, Expr):
+            factors = dict(factors.as_powers_dict())
 
         self.factors = factors
-        self.gens = frozenset(factors.keys())
+        try:
+            self.gens = frozenset(factors.keys())
+        except AttributeError:
+            raise TypeError('expecting Expr or dictionary')
 
     def __hash__(self):  # Factors
-        return hash((tuple(self.factors), self.gens))
+        keys = tuple(ordered(self.factors.keys()))
+        values = [self.factors[k] for k in keys]
+        return hash((keys, values))
 
     def __repr__(self):  # Factors
-        return "Factors(%s)" % self.factors
+        return "Factors({%s})" % ', '.join(
+            ['%s: %s' % (k, v) for k, v in ordered(self.factors.items())])
 
     def as_expr(self):  # Factors
+        """Return the underlying expression.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> Factors((x*y**2).as_powers_dict()).as_expr()
+        x*y**2
+
+        """
+
         args = []
         for factor, exp in self.factors.iteritems():
             if exp != 1:
@@ -98,8 +143,30 @@ class Factors(object):
         return Mul(*args)
 
     def normal(self, other):  # Factors
+        """Return unique Factors of self and other.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.normal(b)
+        (Factors({y: 1}), Factors({z: -1}))
+        >>> a.normal(a)
+        (Factors({}), Factors({}))
+
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+        if other == ZERO:
+            return Factors(), Factors(S.Zero)
+
         self_factors = dict(self.factors)
         other_factors = dict(other.factors)
+        if self_factors == other_factors:
+            return Factors(), Factors()
 
         for factor, self_exp in self.factors.iteritems():
             try:
@@ -123,6 +190,24 @@ class Factors(object):
         return Factors(self_factors), Factors(other_factors)
 
     def mul(self, other):  # Factors
+        """Return Factors of ``self * other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.mul(b)
+        Factors({x: 2, y: 3, z: -1})
+        >>> a*b
+        Factors({x: 2, y: 3, z: -1})
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+        if ZERO in (self, other):
+            return Factors(S.Zero)
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -133,15 +218,52 @@ class Factors(object):
                     del factors[factor]
                     continue
 
+                if factor is S.NegativeOne:
+                    if not exp % 2:
+                        del factors[factor]
+                        continue
+                    exp = S.One
+
             factors[factor] = exp
 
         return Factors(factors)
 
     def div(self, other):  # Factors
+        """Return two Factors of ``divmod(self, other)``
+        such that ``self = other(quo + rem)``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.div(b)
+        (Factors({y: 1}), Factors({z: -1}))
+        >>> q, r = a.div(a)
+        >>> a*q, a*r
+        (Factors({x: 1, y: 2}), Factors({0: 1}))
+
+        The ``/`` operator only gives the quotient:
+
+        >>> a/b
+        Factors({y: 1})
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if other == ZERO:
+                raise ZeroDivisionError
+            if self == ZERO:
+                return Factors(S.Zero)
         quo, rem = dict(self.factors), {}
 
         for factor, exp in other.factors.iteritems():
             if factor in quo:
+                if factor is S.NegativeOne:
+                    del quo[factor]
+                    continue
+
                 exp = quo[factor] - exp
 
                 if exp <= 0:
@@ -157,27 +279,95 @@ class Factors(object):
 
             rem[factor] = exp
 
+        rem = rem or S.Zero
+
         return Factors(quo), Factors(rem)
 
     def quo(self, other):  # Factors
+        """Return quotient Factors of ``self / other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.quo(b)  # same as a/b
+        Factors({y: 1})
+        """
         return self.div(other)[0]
 
     def rem(self, other):  # Factors
+        """Return remainder Factors of ``self / other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.rem(b)
+        Factors({z: -1})
+        >>> a.rem(a)
+        Factors({0: 1})
+        """
         return self.div(other)[1]
 
     def pow(self, other):  # Factors
+        """Return self raised to a non-negative integer power.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> a**2
+        Factors({x: 2, y: 4})
+
+        """
+        if isinstance(other, Factors):
+            other = other.as_expr()
+            if other.is_Integer:
+                other = int(other)
         if isinstance(other, SYMPY_INTS) and other >= 0:
             factors = {}
 
             if other:
                 for factor, exp in self.factors.iteritems():
                     factors[factor] = exp*other
+                    if factor is S.NegativeOne:
+                        if factors[factor] % 2 == 1:
+                            factors[factor] = S.One
+                        else:
+                            del factors[factor]
 
             return Factors(factors)
         else:
             raise ValueError("expected non-negative integer, got %s" % other)
 
     def gcd(self, other):  # Factors
+        """Return Factors of ``gcd(self, other)``. The keys are
+        the intersection of factors with the minimum exponent for
+        each factor.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.gcd(b)
+        Factors({x: 1, y: 1})
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if other == ZERO:
+                return Factors(self.factors)
+
         factors = {}
 
         for factor, exp in self.factors.iteritems():
@@ -188,6 +378,25 @@ class Factors(object):
         return Factors(factors)
 
     def lcm(self, other):  # Factors
+        """Return Factors of ``lcm(self, other)`` which are
+        the union of factors with the maximum exponent for
+        each factor.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.lcm(b)
+        Factors({x: 1, y: 2, z: -1})
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if ZERO in (self, other):
+                return Factors(S.Zero)
+
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -199,42 +408,32 @@ class Factors(object):
         return Factors(factors)
 
     def __mul__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.mul(other)
-        else:
-            return NotImplemented
+        return self.mul(other)
 
     def __divmod__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.div(other)
-        else:
-            return NotImplemented
+        return self.div(other)
 
     def __div__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.quo(other)
-        else:
-            return NotImplemented
+        return self.quo(other)
 
     __truediv__ = __div__
 
     def __mod__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.rem(other)
-        else:
-            return NotImplemented
+        return self.rem(other)
 
     def __pow__(self, other):  # Factors
-        if isinstance(other, SYMPY_INTS):
-            return self.pow(other)
-        else:
-            return NotImplemented
+        return self.pow(other)
 
     def __eq__(self, other):  # Factors
+        if not isinstance(other, Factors):
+            other = Factors(other)
         return self.factors == other.factors
 
     def __ne__(self, other):  # Factors
         return not self.__eq__(other)
+
+
+ZERO = Factors(0)
 
 
 class Term(object):

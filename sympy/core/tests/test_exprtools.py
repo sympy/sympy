@@ -17,7 +17,7 @@ def test_decompose_power():
 
 
 def test_Factors():
-    assert Factors() == Factors({})
+    assert Factors() == Factors({}) == Factors(1)
 
     assert Factors().as_expr() == S.One
     assert Factors({x: 2, y: 3, sin(x): 4}).as_expr() == x**2*y**3*sin(x)**4
