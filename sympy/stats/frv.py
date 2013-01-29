@@ -203,10 +203,10 @@ class FinitePSpace(PSpace):
         return ConditionalFiniteDomain(self.domain, condition)
 
     def compute_density(self, expr):
-        expr = expr.subs(dict(((rs, rs.symbol) for rs in self.values)))
+        expr = expr.xreplace(dict(((rs, rs.symbol) for rs in self.values)))
         d = {}
         for elem in self.domain:
-            val = expr.subs(dict(elem))
+            val = expr.xreplace(dict(elem))
             prob = self.prob_of(elem)
             d[val] = d.get(val, 0) + prob
         return d

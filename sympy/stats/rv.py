@@ -87,7 +87,7 @@ class ConditionalDomain(RandomDomain):
     sympy.stats.frv.ConditionalFiniteDomain
     """
     def __new__(cls, fulldomain, condition):
-        condition = condition.subs(dict((rs, rs.symbol)
+        condition = condition.xreplace(dict((rs, rs.symbol)
             for rs in random_symbols(condition)))
         return Basic.__new__(cls, fulldomain, condition)
 
@@ -443,7 +443,7 @@ def given(expr, condition=None, **kwargs):
     # That point to the new conditional space
     swapdict = rs_swap(fullspace.values, space.values)
     # Swap random variables in the expression
-    expr = expr.subs(swapdict)
+    expr = expr.xreplace(swapdict)
     return expr
 
 
@@ -766,13 +766,13 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
         d = ps.sample()  # a dictionary that maps RVs to values
 
         if condition is not None:  # Check that these values satisfy the condition
-            gd = condition.subs(d)
+            gd = condition.xreplace(d)
             if not isinstance(gd, bool):
                 raise ValueError("Conditions must not contain free symbols")
             if gd is False:  # If the values don't satisfy then try again
                 continue
 
-        yield expr.subs(d)
+        yield expr.xreplace(d)
 
         count += 1
 

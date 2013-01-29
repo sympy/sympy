@@ -242,7 +242,7 @@ class ContinuousPSpace(PSpace):
         else:
             rvs = frozenset(rvs)
 
-        expr = expr.subs(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
@@ -319,7 +319,7 @@ class ContinuousPSpace(PSpace):
 
     def conditional_space(self, condition, normalize=True, **kwargs):
 
-        condition = condition.subs(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
 
         domain = ConditionalContinuousDomain(self.domain, condition)
         if normalize:
@@ -371,7 +371,7 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         if self.value not in rvs:
             return expr
 
-        expr = expr.subs(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
 
         x = self.value.symbol
         try:
