@@ -235,9 +235,9 @@ class FinitePSpace(PSpace):
 
     def integrate(self, expr, rvs=None):
         rvs = rvs or self.values
-        expr = expr.subs(dict((rs, rs.symbol) for rs in rvs))
-        return sum(expr.subs(dict(elem)) * self.prob_of(elem)
-                for elem in self.domain)
+        expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
+        return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
+                for elem in self.domain])
 
     def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
