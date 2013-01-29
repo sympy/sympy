@@ -560,10 +560,11 @@ class SHOKet(SHOState, Ket):
 
     Vector representation of a numerical state ket:
 
-        >>> from sympy.physics.quantum.sho1d import SHOKet
+        >>> from sympy.physics.quantum.sho1d import SHOKet, NumberOp
         >>> from sympy.physics.quantum.represent import represent
 
         >>> k = SHOKet(3)
+        >>> N = NumberOp('N')
         >>> represent(k, basis=N, ndim=4)
         [0]
         [0]
@@ -630,10 +631,11 @@ class SHOBra(SHOState, Bra):
 
     Vector representation of a numerical state bra:
 
-        >>> from sympy.physics.quantum.sho1d import SHOBra
+        >>> from sympy.physics.quantum.sho1d import SHOBra, NumberOp
         >>> from sympy.physics.quantum.represent import represent
 
-        >>> b = SHOKet(3)
+        >>> b = SHOBra(3)
+        >>> N = NumberOp('N')
         >>> represent(b, basis=N, ndim=4)
         [0, 0, 0, 1]
 

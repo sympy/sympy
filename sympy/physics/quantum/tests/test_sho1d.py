@@ -56,7 +56,7 @@ def test_RaisingOp():
 
     if not np:
         skip("numpy not installed or Python too old.")
-    
+
     ad_rep_numpy = represent(ad, basis=N, ndim=4, format='numpy')
     for i in range(ndim - 1):
         assert ad_rep_numpy[i + 1,i] == float(sqrt(i + 1))
