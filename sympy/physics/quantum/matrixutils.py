@@ -3,7 +3,6 @@
 from sympy import Matrix, I, Expr, Integer
 from sympy.matrices import eye, zeros
 from sympy.external import import_module
-from scipy.sparse import csr_matrix, lil_matrix, spmatrix
 
 __all__ = [
     'numpy_ndarray',
@@ -286,9 +285,9 @@ def _scipy_sparse_zeros(m, n, **options):
     if not sparse:
         raise ImportError
     if spmatrix == 'lil':
-        return lil_matrix((m, n))
+        return sparse.lil_matrix((m, n))
     elif spmatrix == 'csr':
-        return csr_matrix((m, n))
+        return sparse.csr_matrix((m, n))
 
 
 def matrix_zeros(m, n, **options):

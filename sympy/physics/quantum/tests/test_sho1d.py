@@ -10,6 +10,8 @@ from sympy.physics.quantum.cartesian import X, Px
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import ComplexSpace
 from sympy.physics.quantum.represent import represent
+from sympy.external import import_module
+from sympy.utilities.pytest import skip
 
 from sympy.physics.quantum.sho1d import (RaisingOp, LoweringOp,
                                         SHOKet, SHOBra,
@@ -29,9 +31,10 @@ omega = Symbol('omega')
 m = Symbol('m')
 ndim = Integer(4)
 
+np = import_module('numpy', min_python_version=(2, 6))
+scipy = import_module('scipy', __import__kwargs={'fromlist': ['sparse']})
+
 ad_rep_sympy = represent(ad, basis=N, ndim=4, format='sympy')
-ad_rep_numpy = represent(ad, basis=N, ndim=4, format='numpy')
-ad_rep_scipy = represent(ad, basis=N, ndim=4, format='scipy.sparse', spmatrix='lil')
 a_rep = represent(a, basis=N, ndim=4, format='sympy')
 N_rep = represent(N, basis=N, ndim=4, format='sympy')
 H_rep = represent(H, basis=N, ndim=4, format='sympy')
@@ -50,10 +53,25 @@ def test_RaisingOp():
     assert ad.hilbert_space == ComplexSpace(S.Infinity)
     for i in range(ndim - 1):
         assert ad_rep_sympy[i + 1,i] == sqrt(i + 1)
+
+    if not np:
+        skip("numpy not installed or Python too old.")
+    
+    ad_rep_numpy = represent(ad, basis=N, ndim=4, format='numpy')
     for i in range(ndim - 1):
         assert ad_rep_numpy[i + 1,i] == float(sqrt(i + 1))
+
+    if not np:
+        skip("numpy not installed or Python too old.")
+    if not scipy:
+        skip("scipy not installed.")
+    else:
+        sparse = scipy.sparse
+        
+    ad_rep_scipy = represent(ad, basis=N, ndim=4, format='scipy.sparse', spmatrix='lil')
     for i in range(ndim - 1):
         assert ad_rep_scipy[i + 1,i] == float(sqrt(i + 1))
+
     assert ad_rep_numpy.dtype == 'float64'
     assert ad_rep_scipy.dtype == 'float64'
 
