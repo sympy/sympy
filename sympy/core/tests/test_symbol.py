@@ -339,41 +339,38 @@ def test_symbols():
     assert symbols('aa:d,x:z') == (aa, ab, ac, ad, x, y, z)
     assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
 
-    a0 = Symbol('a0')
-    a1 = Symbol('a1')
-    a2 = Symbol('a2')
-    a3 = Symbol('a3')
-    a00 = Symbol('a00')
-    a01 = Symbol('a01')
-    a10 = Symbol('a10')
-    a11 = Symbol('a11')
-    a12 = Symbol('a12')
-    a13 = Symbol('a13')
-    aa0 = Symbol('aa0')
-    aa1 = Symbol('aa1')
-    ab0 = Symbol('ab0')
-    ab1 = Symbol('ab1')
-    ac0 = Symbol('ac0')
-    ac1 = Symbol('ac1')
-    aaa = Symbol('aaa')
-    aab = Symbol('aab')
-    aba = Symbol('aba')
-    abb = Symbol('abb')
-    aaz = Symbol('aaz')
-    abz = Symbol('abz')
-    acz = Symbol('acz')
-    b1 = Symbol('b1')
-    b2 = Symbol('b2')
-    b3 = Symbol('b3')
 
-    assert symbols('a(0:4)') == (a0, a1, a2, a3)
-    assert symbols('a(2:4),b(1:3)') == (a2, a3, b1, b2)
-    assert symbols('a1(2:4)') == (a12, a13)
-    assert symbols(('a(0:2)(0:2)')) == (a00, a01, a10, a11)
-    assert symbols(('a(a:c)z')) == (aaz, abz, acz)
-    assert symbols(('a(a:z)z')) == symbols(('aa:zz'))
-    assert symbols('a(a:c)(0:2)') == (aa0, aa1, ab0, ab1, ac0, ac1)
-    assert symbols('a(a:b)(a:b)') == (aaa, aab, aba, abb)
+    # issue 3576
+    def sym(s):
+        return str(symbols(s))
+    assert sym('a0:4') == '(a0, a1, a2, a3)'
+    assert sym('a2:4,b1:3') == '(a2, a3, b1, b2)'
+    assert sym('a1(2:4)') == '(a12, a13)'
+    assert sym(('a0:2.0:2')) == '(a0.0, a0.1, a1.0, a1.1)'
+    assert sym(('aa:cz')) == '(aaz, abz, acz)'
+    assert sym('aa:c0:2') == '(aa0, aa1, ab0, ab1, ac0, ac1)'
+    assert sym('aa:ba:b') == '(aaa, aab, aba, abb)'
+    assert sym('a:3b') == '(a0b, a1b, a2b)'
+    assert sym('a-1:3b') == '(a-1b, a-2b)'
+    assert sym('a:2\,:2' + chr(0)) == '(a0,0%s, a0,1%s, a1,0%s, a1,1%s)' % (
+        (chr(0),)*4)
+    assert sym('x(:a:3)') == '(x(a0), x(a1), x(a2))'
+    assert sym('x(:c):1') == '(xa0, xb0, xc0)'
+    assert sym('x((:a)):3') == '(x(a)0, x(a)1, x(a)2)'
+    assert sym('x(:a:3') == '(x(a0, x(a1, x(a2)'
+    assert sym(':2') == '(0, 1)'
+    assert sym(':b') == '(a, b)'
+    assert sym(':b:2') == '(a0, a1, b0, b1)'
+    assert sym(':2:2') == '(00, 01, 10, 11)'
+    assert sym(':b:b') == '(aa, ab, ba, bb)'
+
+    raises(ValueError, lambda: symbols(':'))
+    raises(ValueError, lambda: symbols('a:'))
+    raises(ValueError, lambda: symbols('::'))
+    raises(ValueError, lambda: symbols('a::'))
+    raises(ValueError, lambda: symbols(':a:'))
+    raises(ValueError, lambda: symbols('::a'))
+
 
 def test_call():
     f = Symbol('f')
