@@ -74,11 +74,35 @@ class Factors(object):
     __slots__ = ['factors', 'gens']
 
     def __init__(self, factors=None):  # Factors
-        if factors is None:
+        """Initialize Factors from dict (or defaultdict of type int).
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x
+        >>> e = 2*x**3
+        >>> Factors(e)
+        Factors({x: 3, 2: 1})
+        >>> Factors(e.as_powers_dict())
+        Factors(defaultdict(<type 'int'>, {x: 3, 2: 1}))
+        >>> f = _
+        >>> f.factors  # underlying dictionary
+        {2: 1, x: 3}
+        >>> f.gens  # base of each factor
+        frozenset([2, x])
+
+        """
+        if factors is None or factors == 1:
             factors = {}
+        elif isinstance(factors, Expr):
+            factors = dict(factors.as_powers_dict())
 
         self.factors = factors
-        self.gens = frozenset(factors.keys())
+        try:
+            self.gens = frozenset(factors.keys())
+        except AttributeError:
+            raise TypeError('expecting Expr or dictionary')
 
     def __hash__(self):  # Factors
         return hash((tuple(self.factors), self.gens))
@@ -87,6 +111,18 @@ class Factors(object):
         return "Factors(%s)" % self.factors
 
     def as_expr(self):  # Factors
+        """Return the underlying expression.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> Factors((x*y**2).as_powers_dict()).as_expr()
+        x*y**2
+
+        """
+
         args = []
         for factor, exp in self.factors.iteritems():
             if exp != 1:
@@ -98,6 +134,19 @@ class Factors(object):
         return Mul(*args)
 
     def normal(self, other):  # Factors
+        """Return unique Factors of self and other.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.normal(b)
+        (Factors({y: 1}), Factors({z: -1}))
+
+        """
         self_factors = dict(self.factors)
         other_factors = dict(other.factors)
 
@@ -123,6 +172,20 @@ class Factors(object):
         return Factors(self_factors), Factors(other_factors)
 
     def mul(self, other):  # Factors
+        """Return Factors of ``self * other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.mul(b)
+        Factors({x: 2, z: -1, y: 3})
+        >>> a*b
+        Factors({z: -1, y: 3, x: 2})
+        """
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -138,6 +201,24 @@ class Factors(object):
         return Factors(factors)
 
     def div(self, other):  # Factors
+        """Return quotient and remainder Factors of ``self / other``
+        such that ``self = other(quo + rem)``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.div(b)
+        (Factors({y: 1}), Factors({z: -1}))
+
+        The ``/`` operator only give the quotient:
+
+        >>> a/b
+        Factors({y: 1})
+        """
         quo, rem = dict(self.factors), {}
 
         for factor, exp in other.factors.iteritems():
@@ -160,12 +241,48 @@ class Factors(object):
         return Factors(quo), Factors(rem)
 
     def quo(self, other):  # Factors
+        """Return quotient Factors of ``self / other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.quo(b)  # same as a/b
+        Factors({y: 1})
+        """
         return self.div(other)[0]
 
     def rem(self, other):  # Factors
+        """Return remainder Factors of ``self / other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.rem(b)
+        Factors({z: -1})
+        """
         return self.div(other)[1]
 
     def pow(self, other):  # Factors
+        """Return self raised to a non-negative integer power.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> a**2
+        Factors({x: 2, y: 4})
+
+        """
         if type(other) is int and other >= 0:
             factors = {}
 
@@ -178,6 +295,20 @@ class Factors(object):
             raise ValueError("expected non-negative integer, got %s" % other)
 
     def gcd(self, other):  # Factors
+        """Return Factors of ``gcd(self, other)``. The keys are
+        the intersection of factors with the minimum exponent for
+        each factor.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.gcd(b)
+        Factors({x: 1, y: 1})
+        """
         factors = {}
 
         for factor, exp in self.factors.iteritems():
@@ -188,6 +319,20 @@ class Factors(object):
         return Factors(factors)
 
     def lcm(self, other):  # Factors
+        """Return Factors of ``lcm(self, other)`` which are
+        the union of factors with the maximum exponent for
+        each factor.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.lcm(b)
+        Factors({x: 1, z: -1, y: 2})
+        """
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
