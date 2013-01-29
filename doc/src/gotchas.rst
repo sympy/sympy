@@ -345,6 +345,7 @@ you don't have to worry about this problem:
     >>> S("22/7")
     22/7
 
+
 Also, if you do not use :command:`isympy`, you could use ``from
 __future__ import division`` to prevent the ``/`` sign from performing
 `integer division <http://en.wikipedia.org/wiki/Integer_division>`_.

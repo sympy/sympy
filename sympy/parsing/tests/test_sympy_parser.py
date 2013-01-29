@@ -17,7 +17,6 @@ def test_sympy_parser():
         'x!': factorial(x),
         '3.[3]': Rational(10, 3),
         '10!': 3628800,
-        '(_kern)': Symbol('_kern'),
         '-(2)': -Integer(2),
         '[-1, -2, 3]': [Integer(-1), Integer(-2), Integer(3)]
     }

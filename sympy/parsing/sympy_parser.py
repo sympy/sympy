@@ -519,17 +519,6 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations):
     global_dict = {}
     exec 'from sympy import *' in global_dict
 
-    # keep autosimplification from joining Integer or
-    # minus sign into a Mul; this modification doesn't
-    # prevent the 2-arg Mul from becoming an Add, however.
-    hit = False
-    if '(' in s:
-        kern = '_kern'
-        while kern in s:
-            kern += "_"
-        s = re.sub(r'(\d *\*|-) *\(', r'\1%s*(' % kern, s)
-        hit = kern in s
-
     tokens = []
     input_code = StringIO(s.strip())
     for toknum, tokval, _, _, _ in generate_tokens(input_code.readline):
@@ -539,19 +528,6 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations):
         tokens = transform(tokens, local_dict, global_dict)
 
     code = untokenize(tokens)
-    expr = eval(
+
+    return eval(
         code, global_dict, local_dict)  # take local objects in preference
-
-    if not hit:
-        return expr
-    rep = {C.Symbol(kern): 1}
-
-    def _clear(expr):
-        if hasattr(expr, 'xreplace'):
-            return expr.xreplace(rep)
-        elif isinstance(expr, (list, tuple, set)):
-            return type(expr)([_clear(e) for e in expr])
-        if hasattr(expr, 'subs'):
-            return expr.subs(rep)
-        return expr
-    return _clear(expr)
