@@ -141,3 +141,14 @@ def test_Union():
     assert list(unify(Interval(0, 1) + Interval(10, 11),
                       Interval(0, 1) + Interval(12, 13),
                       variables=(Interval(12, 13),)))
+
+def test_is_commutative():
+    assert is_commutative(deconstruct(x+y))
+    assert is_commutative(deconstruct(x*y))
+
+def test_commutative_in_commutative():
+    from sympy.abc import a,b,c,d
+    from sympy import sin, cos
+    eq = sin(3)*sin(4)*sin(5) + 4*cos(3)*cos(4)
+    pat = a*cos(b)*cos(c) + d*sin(b)*sin(c)
+    assert next(unify(eq, pat, variables=(a,b,c,d)))
