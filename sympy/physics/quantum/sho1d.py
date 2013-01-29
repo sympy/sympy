@@ -587,18 +587,19 @@ class SHOKet(SHOState, Ket):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
-        spmatrix = options.get('spmatrix', 'csr')
+        options['spmatrix'] = 'lil'
         vector = matrix_zeros(ndim_info, 1, **options)
         if isinstance(self.n, Integer):
             if self.n >= ndim_info:
                 return ValueError("N-Dimension too small")
             value = Integer(1)
             if format == 'scipy.sparse':
-                value = float(value)
-                vector[float(self.n), 0] = value
+                vector[int(self.n), 0] = 1.0
                 vector = vector.tocsr()
+            elif format == 'numpy':
+                vector[int(self.n), 0] = 1.0
             else:
-                vector[self.n, 0] = value
+                vector[self.n, 0] = Integer(1)
             return vector
         else:
             return ValueError("Not Numerical State")
@@ -651,18 +652,18 @@ class SHOBra(SHOState, Bra):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
-        spmatrix = options.get('spmatrix', 'csr')
+        opitons['spmatrix'] = 'lil'
         vector = matrix_zeros(1, ndim_info, **options)
         if isinstance(self.n, Integer):
             if self.n >= ndim_info:
                 return ValueError("N-Dimension too small")
-            value = Integer(1)
             if format == 'scipy.sparse':
-                value = float(value)
-                vector[0, float(self.n)] = value
+                vector[0, int(self.n)] = 1.0
                 vector = vector.tocsr()
+            elif format == 'numpy':
+                vector[0, int(self.n)] = 1.0
             else:
-                vector[0, self.n] = value
+                vector[0, self.n] = Integer(1)
             return vector
         else:
             return ValueError("Not Numerical State")

@@ -272,22 +272,24 @@ def matrix_eye(n, **options):
     raise NotImplementedError('Invalid format: %r' % format)
 
 
-def _numpy_zeros(m, n):
+def _numpy_zeros(m, n, **options):
     """numpy verson of zeros."""
+    dtype = options.get('dtype', 'float64')
     if not np:
         raise ImportError
-    return np.zeros((m, n))
+    return np.zeros((m, n), dtype=dtype)
 
 
 def _scipy_sparse_zeros(m, n, **options):
     """scipy.sparse verson of zeros."""
     spmatrix = options.get('spmatrix', 'csr')
+    dtype = options.get('dtype', 'float64')
     if not sparse:
         raise ImportError
     if spmatrix == 'lil':
-        return sparse.lil_matrix((m, n))
+        return sparse.lil_matrix((m, n), dtype=dtype)
     elif spmatrix == 'csr':
-        return sparse.csr_matrix((m, n))
+        return sparse.csr_matrix((m, n), dtype=dtype)
 
 
 def matrix_zeros(m, n, **options):
@@ -298,7 +300,7 @@ def matrix_zeros(m, n, **options):
     if format == 'sympy':
         return zeros(m, n)
     elif format == 'numpy':
-        return _numpy_zeros(m, n)
+        return _numpy_zeros(m, n, **options)
     elif format == 'scipy.sparse':
         return _scipy_sparse_zeros(m, n, **options)
     raise NotImplementedError('Invaild format: %r' % format)
