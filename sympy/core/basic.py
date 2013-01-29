@@ -1601,13 +1601,6 @@ class preorder_traversal(object):
         be passed along to ordered() as the only key(s) to use to sort the
         arguments; if ``key`` is simply True then the default keys of ordered
         will be used.
-    parent : function
-        Extra condition for when the traversal should stop.
-        For example ``lambda arg: isinstance(arg, Expr)``
-        Defaults to ``lambda arg: isinstance(arg, Basic)``
-    include : function
-        Traversal should only yield items that match this condition
-        Defaults to ``lambda arg: True``
 
     Yields
     ======
@@ -1632,34 +1625,29 @@ class preorder_traversal(object):
     [z*(x + y), z, x + y, x, y]
 
     """
-    def __init__(self, node, keys=None,
-                 include=lambda x: True,
-                 parent=lambda x: isinstance(x, Basic)):
+    def __init__(self, node, keys=None):
         self._skip_flag = False
         self._pt = self._preorder_traversal(node, keys)
-        self.include = include
-        self.parent = parent
 
     def _preorder_traversal(self, node, keys):
-        if self.include(node):
-            yield node
-            if self._skip_flag:
-                self._skip_flag = False
-                return
-            if self.parent(node):
-                args = node.args
-                if keys:
-                    if keys != True:
-                        args = ordered(args, keys, default=False)
-                    else:
-                        args = ordered(args)
-                for arg in args:
-                    for subtree in self._preorder_traversal(arg, keys):
-                        yield subtree
-            elif iterable(node):
-                for item in node:
-                    for subtree in self._preorder_traversal(item, keys):
-                        yield subtree
+        yield node
+        if self._skip_flag:
+            self._skip_flag = False
+            return
+        if isinstance(node, Basic):
+            args = node.args
+            if keys:
+                if keys != True:
+                    args = ordered(args, keys, default=False)
+                else:
+                    args = ordered(args)
+            for arg in args:
+                for subtree in self._preorder_traversal(arg, keys):
+                    yield subtree
+        elif iterable(node):
+            for item in node:
+                for subtree in self._preorder_traversal(item, keys):
+                    yield subtree
 
     def skip(self):
         """

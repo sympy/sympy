@@ -80,7 +80,7 @@ def denoms(eq, symbols=None):
     dens = set()
     if not symbols or not eq.has(*symbols):
         return dens
-    pt = preorder_traversal(eq, parent=lambda x: isinstance(x, Expr))
+    pt = preorder_traversal(eq)
     for e in pt:
         if _ispow(e):
             n, d = e.as_numer_denom()
