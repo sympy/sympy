@@ -1,6 +1,6 @@
 from sympy import symbols, sympify, Dummy
 from sympy.logic.boolalg import (
-    And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
+    And, Boolean, Equivalent, ITE, Implies,DoubleImplies, Nand, Nor, Not, Or, POSform,
     SOPform, Xor, conjuncts, disjuncts,
     distribute_and_over_or, eliminate_implications, is_cnf,
     simplify_logic, to_cnf, to_int_repr, bool_equal
@@ -123,6 +123,13 @@ def test_Implies():
     assert Implies(False, False) is True
     assert A >> B == B << A
 
+def test_DoubleImplies():
+
+    raises(ValueError, lambda: Implies(A, B, C))
+    assert DoubleImplies(True, True) is True
+    assert DoubleImplies(True, False) is False
+    assert DoubleImplies(False, True) is False
+    assert DoubleImplies(False, False) is True
 
 def test_Equivalent():
 
