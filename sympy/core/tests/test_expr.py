@@ -171,6 +171,26 @@ def test_relational():
     assert (x - 2 < x - 3) is False
 
 
+def test_relational_assumptions():
+    from sympy import Lt, Gt, Le, Ge
+    m1 = Symbol("m1", nonnegative=False)
+    m2 = Symbol("m2", positive=False)
+    m3 = Symbol("m3", nonpositive=False)
+    m4 = Symbol("m4", negative=False)
+    assert (m1 < 0) == Lt(m1, 0)
+    assert (m2 <= 0) == Le(m2, 0)
+    assert (m3 > 0) == Gt(m3, 0)
+    assert (m4 >= 0) == Ge(m4, 0)
+    m1 = Symbol("m1", nonnegative=False, real=True)
+    m2 = Symbol("m2", positive=False, real=True)
+    m3 = Symbol("m3", nonpositive=False, real=True)
+    m4 = Symbol("m4", negative=False, real=True)
+    assert (m1 < 0) is True
+    assert (m2 <= 0) is True
+    assert (m3 > 0) is True
+    assert (m4 >= 0) is True
+
+
 def test_relational_noncommutative():
     from sympy import Lt, Gt, Le, Ge
     A, B = symbols('A,B', commutative=False)
