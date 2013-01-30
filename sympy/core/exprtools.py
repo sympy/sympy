@@ -91,10 +91,14 @@ class Factors(object):
         {2: 1, x: 3}
         >>> f.gens  # base of each factor
         frozenset([2, x])
+        >>> Factors(0)
+        Factors({0: 1})
 
         """
         if factors is None or factors == 1:
             factors = {}
+        elif factors is S.Zero or factors == 0:
+            factors = {S.Zero: S.One}
         elif isinstance(factors, Expr):
             factors = dict(factors.as_powers_dict())
 
@@ -145,10 +149,19 @@ class Factors(object):
         >>> b = Factors((x*y/z).as_powers_dict())
         >>> a.normal(b)
         (Factors({y: 1}), Factors({z: -1}))
+        >>> a.normal(a)
+        (Factors({}), Factors({}))
 
         """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+        if other == ZERO:
+            return Factors(), Factors(S.Zero)
+
         self_factors = dict(self.factors)
         other_factors = dict(other.factors)
+        if self_factors == other_factors:
+            return Factors(), Factors()
 
         for factor, self_exp in self.factors.iteritems():
             try:
@@ -186,6 +199,10 @@ class Factors(object):
         >>> a*b
         Factors({z: -1, y: 3, x: 2})
         """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+        if ZERO in (self, other):
+            return Factors(S.Zero)
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -201,7 +218,7 @@ class Factors(object):
         return Factors(factors)
 
     def div(self, other):  # Factors
-        """Return quotient and remainder Factors of ``self / other``
+        """Return two Factors of ``divmod(self, other)``
         such that ``self = other(quo + rem)``.
 
         Examples
@@ -213,12 +230,21 @@ class Factors(object):
         >>> b = Factors((x*y/z).as_powers_dict())
         >>> a.div(b)
         (Factors({y: 1}), Factors({z: -1}))
+        >>> q, r = a.div(a)
+        >>> a*q, a*r
+        (Factors({x: 1, y: 2}), Factors({0: 1}))
 
         The ``/`` operator only give the quotient:
 
         >>> a/b
         Factors({y: 1})
         """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if other == ZERO:
+                raise ZeroDivisionError
+            if self == ZERO:
+                return Factors(S.Zero)
         quo, rem = dict(self.factors), {}
 
         for factor, exp in other.factors.iteritems():
@@ -237,6 +263,8 @@ class Factors(object):
                 exp = -exp
 
             rem[factor] = exp
+
+        rem = rem or S.Zero
 
         return Factors(quo), Factors(rem)
 
@@ -267,6 +295,8 @@ class Factors(object):
         >>> b = Factors((x*y/z).as_powers_dict())
         >>> a.rem(b)
         Factors({z: -1})
+        >>> a.rem(a)
+        Factors({0: 1})
         """
         return self.div(other)[1]
 
@@ -283,6 +313,10 @@ class Factors(object):
         Factors({x: 2, y: 4})
 
         """
+        if isinstance(other, Factors):
+            other = other.as_expr()
+            if other.is_Integer:
+                other = int(other)
         if type(other) is int and other >= 0:
             factors = {}
 
@@ -309,6 +343,11 @@ class Factors(object):
         >>> a.gcd(b)
         Factors({x: 1, y: 1})
         """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if other == ZERO:
+                return Factors(self.factors)
+
         factors = {}
 
         for factor, exp in self.factors.iteritems():
@@ -333,6 +372,11 @@ class Factors(object):
         >>> a.lcm(b)
         Factors({x: 1, z: -1, y: 2})
         """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if ZERO in (self, other):
+                return Factors(S.Zero)
+
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -344,42 +388,32 @@ class Factors(object):
         return Factors(factors)
 
     def __mul__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.mul(other)
-        else:
-            return NotImplemented
+        return self.mul(other)
 
     def __divmod__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.div(other)
-        else:
-            return NotImplemented
+        return self.div(other)
 
     def __div__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.quo(other)
-        else:
-            return NotImplemented
+        return self.quo(other)
 
     __truediv__ = __div__
 
     def __mod__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.rem(other)
-        else:
-            return NotImplemented
+        return self.rem(other)
 
     def __pow__(self, other):  # Factors
-        if type(other) is int:
-            return self.pow(other)
-        else:
-            return NotImplemented
+        return self.pow(other)
 
     def __eq__(self, other):  # Factors
+        if not isinstance(other, Factors):
+            other = Factors(other)
         return self.factors == other.factors
 
     def __ne__(self, other):  # Factors
         return not self.__eq__(other)
+
+
+ZERO = Factors(0)
 
 
 class Term(object):
