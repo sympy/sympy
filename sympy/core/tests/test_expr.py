@@ -189,6 +189,22 @@ def test_relational_assumptions():
     assert (m2 <= 0) is True
     assert (m3 > 0) is True
     assert (m4 >= 0) is True
+    m1 = Symbol("m1", negative=True)
+    m2 = Symbol("m2", nonpositive=True)
+    m3 = Symbol("m3", positive=True)
+    m4 = Symbol("m4", nonnegative=True)
+    assert (m1 < 0) is True
+    assert (m2 <= 0) is True
+    assert (m3 > 0) is True
+    assert (m4 >= 0) is True
+    m1 = Symbol("m1", negative=False)
+    m2 = Symbol("m2", nonpositive=False)
+    m3 = Symbol("m3", positive=False)
+    m4 = Symbol("m4", nonnegative=False)
+    assert (m1 < 0) is False
+    assert (m2 <= 0) is False
+    assert (m3 > 0) is False
+    assert (m4 >= 0) is False
 
 
 def test_relational_noncommutative():
