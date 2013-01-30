@@ -267,6 +267,36 @@ class Implies(BooleanFunction):
         else:
             return Basic.__new__(cls, *args)
 
+class DoubleImplies(BooleanFunction):
+    """
+
+    A Double implies B is equivalent to (A^B)v(!Av!B)
+    """
+    @classmethod
+    def eval(cls, *args):
+        """
+        Logical implication.
+
+        Accepts two Boolean arguments; A and B.
+        Returns False if A is True and B is False or
+        A is False and B is True
+        Returns True otherwise.
+        """
+        try:
+            A, B = args
+        except ValueError:
+            raise ValueError(
+                "%d operand(s) used for an Implies "
+                "(pairs are required): %s" % (len(args), str(args)))
+        if A is True or A is False or B is True or B is False:
+            return Or(And(A,B),And(Not(A),Not(B)))
+        else:
+            return Basic.__new__(cls, *args)
+
+
+
+
+
 
 class Equivalent(BooleanFunction):
     """
