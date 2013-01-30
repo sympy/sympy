@@ -14,7 +14,7 @@ from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations)
+        variations, ordered)
 
 from collections import defaultdict
 
@@ -83,9 +83,9 @@ class Factors(object):
         >>> from sympy.abc import x
         >>> e = 2*x**3
         >>> Factors(e)
-        Factors({x: 3, 2: 1})
+        Factors({2: 1, x: 3})
         >>> Factors(e.as_powers_dict())
-        Factors(defaultdict(<type 'int'>, {x: 3, 2: 1}))
+        Factors({2: 1, x: 3})
         >>> f = _
         >>> f.factors  # underlying dictionary
         {2: 1, x: 3}
@@ -109,10 +109,13 @@ class Factors(object):
             raise TypeError('expecting Expr or dictionary')
 
     def __hash__(self):  # Factors
-        return hash((tuple(self.factors), self.gens))
+        keys = tuple(ordered(self.factors.keys()))
+        values = [self.factors[k] for k in keys]
+        return hash((keys, values))
 
     def __repr__(self):  # Factors
-        return "Factors(%s)" % self.factors
+        return "Factors({%s})" % ', '.join(
+            ['%s: %s' % (k, v) for k, v in ordered(self.factors.items())])
 
     def as_expr(self):  # Factors
         """Return the underlying expression.
@@ -195,9 +198,9 @@ class Factors(object):
         >>> a = Factors((x*y**2).as_powers_dict())
         >>> b = Factors((x*y/z).as_powers_dict())
         >>> a.mul(b)
-        Factors({x: 2, z: -1, y: 3})
+        Factors({x: 2, y: 3, z: -1})
         >>> a*b
-        Factors({z: -1, y: 3, x: 2})
+        Factors({x: 2, y: 3, z: -1})
         """
         if not isinstance(other, Factors):
             other = Factors(other)
@@ -370,7 +373,7 @@ class Factors(object):
         >>> a = Factors((x*y**2).as_powers_dict())
         >>> b = Factors((x*y/z).as_powers_dict())
         >>> a.lcm(b)
-        Factors({x: 1, z: -1, y: 2})
+        Factors({x: 1, y: 2, z: -1})
         """
         if not isinstance(other, Factors):
             other = Factors(other)
