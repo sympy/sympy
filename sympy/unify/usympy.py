@@ -31,8 +31,8 @@ def is_commutative(x):
         return False
     if sympy_commutative(x.op):
         return True
-    if isinstance(x.op, Expr):
-        return _build(x).is_commutative
+    if issubclass(x.op, Mul):
+        return all(construct(arg).is_commutative for arg in x.args)
 
 def mk_matchtype(typ):
     def matchtype(x):
