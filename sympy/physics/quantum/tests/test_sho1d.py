@@ -67,7 +67,7 @@ def test_RaisingOp():
         skip("scipy not installed.")
     else:
         sparse = scipy.sparse
-        
+
     ad_rep_scipy = represent(ad, basis=N, ndim=4, format='scipy.sparse', spmatrix='lil')
     for i in range(ndim - 1):
         assert ad_rep_scipy[i + 1,i] == float(sqrt(i + 1))
