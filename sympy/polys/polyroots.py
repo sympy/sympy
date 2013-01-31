@@ -690,6 +690,8 @@ def roots(f, *gens, **flags):
             result += roots_cubic(f)
         elif n == 4 and quartics:
             result += roots_quartic(f)
+        elif n == 5 and quintics:
+            result += roots_quintic(f)
 
         return result
 
