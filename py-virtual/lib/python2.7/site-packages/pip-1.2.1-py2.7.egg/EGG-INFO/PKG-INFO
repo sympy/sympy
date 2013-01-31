@@ -1,0 +1,707 @@
+Metadata-Version: 1.1
+Name: pip
+Version: 1.2.1
+Summary: pip installs packages. Python packages. An easy_install replacement
+Home-page: http://www.pip-installer.org
+Author: The pip developers
+Author-email: python-virtualenv@groups.google.com
+License: MIT
+Description: pip
+        ===
+        
+        `pip` is a tool for installing and managing Python packages, such as
+        those found in the `Python Package Index`_. It's a replacement for
+        easy_install_.
+        ::
+        
+            $ pip install simplejson
+            [... progress report ...]
+            Successfully installed simplejson
+        
+        .. _`Python Package Index`: http://pypi.python.org/pypi
+        .. _easy_install: http://peak.telecommunity.com/DevCenter/EasyInstall
+        
+        Upgrading a package::
+        
+            $ pip install --upgrade simplejson
+            [... progress report ...]
+            Successfully installed simplejson
+        
+        Removing a package::
+        
+            $ pip uninstall simplejson
+            Uninstalling simplejson:
+              /home/me/env/lib/python2.7/site-packages/simplejson
+              /home/me/env/lib/python2.7/site-packages/simplejson-2.2.1-py2.7.egg-info
+            Proceed (y/n)? y
+              Successfully uninstalled simplejson
+        
+        .. comment: 
+        
+        The main website for pip is `www.pip-installer.org
+        <http://www.pip-installer.org>`_. You can also install
+        the `in-development version <https://github.com/pypa/pip/tarball/develop#egg=pip-dev>`_
+        of pip with ``easy_install pip==dev``.
+        
+        
+        
+        Community
+        ---------
+        
+        The homepage for pip is at `pip-installer.org <http://www.pip-installer.org/>`_.
+        Bugs can be filed in the `pip issue tracker
+        <https://github.com/pypa/pip/issues/>`_.  Discussion happens on the
+        `virtualenv email group
+        <http://groups.google.com/group/python-virtualenv?hl=en>`_.
+        
+        
+        ====
+        News
+        ====
+        
+        Changelog
+        =========
+        
+        Next release (1.3) schedule
+        ---------------------------
+        
+        Beta and final releases planned for the end of 2012.
+        
+        1.2.1 (2012-09-06)
+        ------------------
+        
+        * Fixed a regression introduced in 1.2 about raising an exception when
+          not finding any files to uninstall in the current environment. Thanks for
+          the fix, Marcus Smith.
+        
+        1.2 (2012-09-01)
+        ----------------
+        
+        * **Dropped support for Python 2.4** The minimum supported Python version is
+          now Python 2.5.
+        
+        * Fixed issue #605 - pypi mirror support broken on some DNS responses. Thanks
+          philwhin.
+        
+        * Fixed issue #355 - pip uninstall removes files it didn't install. Thanks
+          pjdelport.
+        
+        * Fixed issues #493, #494, #440, and #573 related to improving support for the
+          user installation scheme. Thanks Marcus Smith.
+        
+        * Write failure log to temp file if default location is not writable. Thanks
+          andreigc.
+        
+        * Pull in submodules for git editable checkouts. Fixes #289 and #421. Thanks
+          Hsiaoming Yang and Markus Hametner.
+        
+        * Use a temporary directory as the default build location outside of a
+          virtualenv. Fixes issues #339 and #381. Thanks TC01.
+        
+        * Added support for specifying extras with local editables. Thanks Nick
+          Stenning.
+        
+        * Added ``--egg`` flag to request egg-style rather than flat installation. Refs
+          issue #3. Thanks Kamal Bin Mustafa.
+        
+        * Fixed issue #510 - prevent e.g. ``gmpy2-2.0.tar.gz`` from matching a request
+          to ``pip install gmpy``; sdist filename must begin with full project name
+          followed by a dash. Thanks casevh for the report.
+        
+        * Fixed issue #504 - allow package URLS to have querystrings. Thanks W.
+          Trevor King.
+        
+        * Fixed issue #58 - pip freeze now falls back to non-editable format rather
+          than blowing up if it can't determine the origin repository of an editable.
+          Thanks Rory McCann.
+        
+        * Added a `__main__.py` file to enable `python -m pip` on Python versions
+          that support it. Thanks Alexey Luchko.
+        
+        * Fixed issue #487 - upgrade from VCS url of project that does exist on
+          index. Thanks Andrew Knapp for the report.
+        
+        * Fixed issue #486 - fix upgrade from VCS url of project with no distribution
+          on index.  Thanks Andrew Knapp for the report.
+        
+        * Fixed issue #427 - clearer error message on a malformed VCS url. Thanks
+          Thomas Fenzl.
+        
+        * Added support for using any of the built in guaranteed algorithms in
+          ``hashlib`` as a checksum hash.
+        
+        * Fixed issue #321 - Raise an exception if current working directory can't be
+          found or accessed.
+        
+        * Fixed issue #82 - Removed special casing of the user directory and use the
+          Python default instead.
+        
+        * Fixed #436 - Only warn about version conflicts if there is actually one.
+          This re-enables using ``==dev`` in requirements files.
+        
+        * Moved tests to be run on Travis CI: http://travis-ci.org/pypa/pip
+        
+        * Added a better help formatter.
+        
+        1.1 (2012-02-16)
+        ----------------
+        
+        * Fixed issue #326 - don't crash when a package's setup.py emits UTF-8 and
+          then fails. Thanks Marc Abramowitz.
+        
+        * Added ``--target`` option for installing directly to arbitrary directory.
+          Thanks Stavros Korokithakis.
+        
+        * Added support for authentication with Subversion repositories. Thanks
+          Qiangning Hong.
+        
+        * Fixed issue #315 - ``--download`` now downloads dependencies as well.
+          Thanks Qiangning Hong.
+        
+        * Errors from subprocesses will display the current working directory.
+          Thanks Antti Kaihola.
+        
+        * Fixed issue #369 - compatibility with Subversion 1.7. Thanks Qiangning
+          Hong. Note that setuptools remains incompatible with Subversion 1.7; to
+          get the benefits of pip's support you must use Distribute rather than
+          setuptools.
+        
+        * Fixed issue #57 - ignore py2app-generated OS X mpkg zip files in finder.
+          Thanks Rene Dudfield.
+        
+        * Fixed issue #182 - log to ~/Library/Logs/ by default on OS X framework
+          installs. Thanks Dan Callahan for report and patch.
+        
+        * Fixed issue #310 - understand version tags without minor version ("py3")
+          in sdist filenames. Thanks Stuart Andrews for report and Olivier Girardot for
+          patch.
+        
+        * Fixed issue #7 - Pip now supports optionally installing setuptools
+          "extras" dependencies; e.g. "pip install Paste[openid]". Thanks Matt Maker
+          and Olivier Girardot.
+        
+        * Fixed issue #391 - freeze no longer borks on requirements files with
+          --index-url or --find-links. Thanks Herbert Pfennig.
+        
+        * Fixed issue #288 - handle symlinks properly. Thanks lebedov for the patch.
+        
+        * Fixed issue #49 - pip install -U no longer reinstalls the same versions of
+          packages. Thanks iguananaut for the pull request.
+        
+        * Removed ``-E``/``--environment`` option and ``PIP_RESPECT_VIRTUALENV``;
+          both use a restart-in-venv mechanism that's broken, and neither one is
+          useful since every virtualenv now has pip inside it.  Replace ``pip -E
+          path/to/venv install Foo`` with ``virtualenv path/to/venv &&
+          path/to/venv/pip install Foo``.
+        
+        * Fixed issue #366 - pip throws IndexError when it calls `scraped_rel_links`
+        
+        * Fixed issue #22 - pip search should set and return a userful shell status code
+        
+        * Fixed issue #351 and #365 - added global ``--exists-action`` command line
+          option to easier script file exists conflicts, e.g. from editable
+          requirements from VCS that have a changed repo URL.
+        
+        
+        1.0.2 (2011-07-16)
+        ------------------
+        
+        * Fixed docs issues.
+        * Fixed issue #295 - Reinstall a package when using the ``install -I`` option
+        * Fixed issue #283 - Finds a Git tag pointing to same commit as origin/master
+        * Fixed issue #279 - Use absolute path for path to docs in setup.py
+        * Fixed issue #314 - Correctly handle exceptions on Python3.
+        * Fixed issue #320 - Correctly parse ``--editable`` lines in requirements files
+        
+        1.0.1 (2011-04-30)
+        ------------------
+        
+        * Start to use git-flow.
+        * Fixed issue #274 - `find_command` should not raise AttributeError
+        * Fixed issue #273 - respect Content-Disposition header. Thanks Bradley Ayers.
+        * Fixed issue #233 - pathext handling on Windows.
+        * Fixed issue #252 - svn+svn protocol.
+        * Fixed issue #44 - multiple CLI searches.
+        * Fixed issue #266 - current working directory when running setup.py clean.
+        
+        1.0 (2011-04-04)
+        ----------------
+        
+        * Added Python 3 support! Huge thanks to Vinay Sajip, Vitaly Babiy, Kelsey
+          Hightower, and Alex Gronholm, among others.
+        
+        * Download progress only shown on a real TTY. Thanks Alex Morega.
+        
+        * Fixed finding of VCS binaries to not be fooled by same-named directories.
+          Thanks Alex Morega.
+        
+        * Fixed uninstall of packages from system Python for users of Debian/Ubuntu
+          python-setuptools package (workaround until fixed in Debian and Ubuntu).
+        
+        * Added `get-pip.py <https://raw.github.com/pypa/pip/master/contrib/get-pip.py>`_
+          installer. Simply download and execute it, using the Python interpreter of
+          your choice::
+        
+            $ curl -O https://raw.github.com/pypa/pip/master/contrib/get-pip.py
+            $ python get-pip.py
+        
+          This may have to be run as root.
+        
+          .. note::
+        
+              Make sure you have `distribute <http://pypi.python.org/pypi/distribute>`_
+              installed before using the installer!
+        
+        0.8.3
+        -----
+        
+        * Moved main repository to Github: https://github.com/pypa/pip
+        
+        * Transferred primary maintenance from Ian to Jannis Leidel, Carl Meyer, Brian Rosner
+        
+        * Fixed issue #14 - No uninstall-on-upgrade with URL package. Thanks Oliver Tonnhofer
+        
+        * Fixed issue #163 - Egg name not properly resolved. Thanks Igor Sobreira
+        
+        * Fixed issue #178 - Non-alphabetical installation of requirements. Thanks Igor Sobreira
+        
+        * Fixed issue #199 - Documentation mentions --index instead of --index-url. Thanks Kelsey Hightower
+        
+        * Fixed issue #204 - rmtree undefined in mercurial.py. Thanks Kelsey Hightower
+        
+        * Fixed bug in Git vcs backend that would break during reinstallation.
+        
+        * Fixed bug in Mercurial vcs backend related to pip freeze and branch/tag resolution.
+        
+        * Fixed bug in version string parsing related to the suffix "-dev".
+        
+        0.8.2
+        -----
+        
+        * Avoid redundant unpacking of bundles (from pwaller)
+        
+        * Fixed issue #32, #150, #161 - Fixed checking out the correct
+          tag/branch/commit when updating an editable Git requirement.
+        
+        * Fixed issue #49 - Added ability to install version control requirements
+          without making them editable, e.g.::
+        
+            pip install git+https://github.com/pypa/pip/
+        
+        * Fixed issue #175 - Correctly locate build and source directory on Mac OS X.
+        
+        * Added ``git+https://`` scheme to Git VCS backend.
+        
+        0.8.1
+        -----
+        
+        * Added global --user flag as shortcut for --install-option="--user". From
+          Ronny Pfannschmidt.
+        
+        * Added support for `PyPI mirrors <http://pypi.python.org/mirrors>`_ as
+          defined in `PEP 381 <http://www.python.org/dev/peps/pep-0381/>`_, from
+          Jannis Leidel.
+        
+        * Fixed issue #138 - Git revisions ignored. Thanks John-Scott Atlakson.
+        
+        * Fixed issue #95 - Initial editable install of github package from a tag fails. Thanks John-Scott Atlakson.
+        
+        * Fixed issue #107 - Can't install if a directory in cwd has the same name as the package you're installing.
+        
+        * Fixed issue #39 - --install-option="--prefix=~/.local" ignored with -e.
+          Thanks Ronny Pfannschmidt and Wil Tan.
+        
+        
+        
+        0.8
+        ---
+        
+        * Track which ``build/`` directories pip creates, never remove directories
+          it doesn't create.  From Hugo Lopes Tavares.
+        
+        * Pip now accepts file:// index URLs. Thanks Dave Abrahams.
+        
+        * Various cleanup to make test-running more consistent and less fragile.
+          Thanks Dave Abrahams.
+        
+        * Real Windows support (with passing tests). Thanks Dave Abrahams.
+        
+        * ``pip-2.7`` etc. scripts are created (Python-version specific scripts)
+        
+        * ``contrib/build-standalone`` script creates a runnable ``.zip`` form of
+          pip, from Jannis Leidel
+        
+        * Editable git repos are updated when reinstalled
+        
+        * Fix problem with ``--editable`` when multiple ``.egg-info/`` directories
+          are found.
+        
+        * A number of VCS-related fixes for ``pip freeze``, from Hugo Lopes Tavares.
+        
+        * Significant test framework changes, from Hugo Lopes Tavares.
+        
+        0.7.2
+        -----
+        
+        * Set zip_safe=False to avoid problems some people are encountering where
+          pip is installed as a zip file.
+        
+        0.7.1
+        -----
+        
+        * Fixed opening of logfile with no directory name. Thanks Alexandre Conrad.
+        
+        * Temporary files are consistently cleaned up, especially after
+          installing bundles, also from Alex Conrad.
+        
+        * Tests now require at least ScriptTest 1.0.3.
+        
+        0.7
+        ---
+        
+        * Fixed uninstallation on Windows
+        * Added ``pip search`` command.
+        * Tab-complete names of installed distributions for ``pip uninstall``.
+        * Support tab-completion when there is a global-option before the
+          subcommand.
+        * Install header files in standard (scheme-default) location when installing
+          outside a virtualenv. Install them to a slightly more consistent
+          non-standard location inside a virtualenv (since the standard location is
+          a non-writable symlink to the global location).
+        * pip now logs to a central location by default (instead of creating
+          ``pip-log.txt`` all over the place) and constantly overwrites the
+          file in question. On Unix and Mac OS X this is ``'$HOME/.pip/pip.log'``
+          and on Windows it's ``'%HOME%\\pip\\pip.log'``. You are still able to
+          override this location with the ``$PIP_LOG_FILE`` environment variable.
+          For a complete (appended) logfile use the separate ``'--log'`` command line
+          option.
+        * Fixed an issue with Git that left an editable packge as a checkout of a
+          remote branch, even if the default behaviour would have been fine, too.
+        * Fixed installing from a Git tag with older versions of Git.
+        * Expand "~" in logfile and download cache paths.
+        * Speed up installing from Mercurial repositories by cloning without
+          updating the working copy multiple times.
+        * Fixed installing directly from directories (e.g.
+          ``pip install path/to/dir/``).
+        * Fixed installing editable packages with ``svn+ssh`` URLs.
+        * Don't print unwanted debug information when running the freeze command.
+        * Create log file directory automatically. Thanks Alexandre Conrad.
+        * Make test suite easier to run successfully. Thanks Dave Abrahams.
+        * Fixed "pip install ." and "pip install .."; better error for directory
+          without setup.py. Thanks Alexandre Conrad.
+        * Support Debian/Ubuntu "dist-packages" in zip command. Thanks duckx.
+        * Fix relative --src folder. Thanks Simon Cross.
+        * Handle missing VCS with an error message. Thanks Alexandre Conrad.
+        * Added --no-download option to install; pairs with --no-install to separate
+          download and installation into two steps. Thanks Simon Cross.
+        * Fix uninstalling from requirements file containing -f, -i, or
+          --extra-index-url.
+        * Leftover build directories are now removed. Thanks Alexandre Conrad.
+        
+        0.6.3
+        -----
+        
+        * Fixed import error on Windows with regard to the backwards compatibility
+          package
+        
+        0.6.2
+        -----
+        
+        * Fixed uninstall when /tmp is on a different filesystem.
+        
+        * Fixed uninstallation of distributions with namespace packages.
+        
+        0.6.1
+        -----
+        
+        * Added support for the ``https`` and ``http-static`` schemes to the
+          Mercurial and ``ftp`` scheme to the Bazaar backend.
+        
+        * Fixed uninstallation of scripts installed with easy_install.
+        
+        * Fixed an issue in the package finder that could result in an
+          infinite loop while looking for links.
+        
+        * Fixed issue with ``pip bundle`` and local files (which weren't being
+          copied into the bundle), from Whit Morriss.
+        
+        0.6
+        ---
+        
+        * Add ``pip uninstall`` and uninstall-before upgrade (from Carl
+          Meyer).
+        
+        * Extended configurability with config files and environment variables.
+        
+        * Allow packages to be upgraded, e.g., ``pip install Package==0.1``
+          then ``pip install Package==0.2``.
+        
+        * Allow installing/upgrading to Package==dev (fix "Source version does not
+          match target version" errors).
+        
+        * Added command and option completion for bash and zsh.
+        
+        * Extended integration with virtualenv by providing an option to
+          automatically use an active virtualenv and an option to warn if no active
+          virtualenv is found.
+        
+        * Fixed a bug with pip install --download and editable packages, where
+          directories were being set with 0000 permissions, now defaults to 755.
+        
+        * Fixed uninstallation of easy_installed console_scripts.
+        
+        * Fixed uninstallation on Mac OS X Framework layout installs
+        
+        * Fixed bug preventing uninstall of editables with source outside venv.
+        
+        * Creates download cache directory if not existing.
+        
+        0.5.1
+        -----
+        
+        * Fixed a couple little bugs, with git and with extensions.
+        
+        0.5
+        ---
+        
+        * Added ability to override the default log file name (``pip-log.txt``)
+          with the environmental variable ``$PIP_LOG_FILE``.
+        
+        * Made the freeze command print installed packages to stdout instead of
+          writing them to a file. Use simple redirection (e.g.
+          ``pip freeze > stable-req.txt``) to get a file with requirements.
+        
+        * Fixed problem with freezing editable packages from a Git repository.
+        
+        * Added support for base URLs using ``<base href='...'>`` when parsing
+          HTML pages.
+        
+        * Fixed installing of non-editable packages from version control systems.
+        
+        * Fixed issue with Bazaar's bzr+ssh scheme.
+        
+        * Added --download-dir option to the install command to retrieve package
+          archives. If given an editable package it will create an archive of it.
+        
+        * Added ability to pass local file and directory paths to ``--find-links``,
+          e.g. ``--find-links=file:///path/to/my/private/archive``
+        
+        * Reduced the amount of console log messages when fetching a page to find a
+          distribution was problematic. The full messages can be found in pip-log.txt.
+        
+        * Added ``--no-deps`` option to install ignore package dependencies
+        
+        * Added ``--no-index`` option to ignore the package index (PyPI) temporarily
+        
+        * Fixed installing editable packages from Git branches.
+        
+        * Fixes freezing of editable packages from Mercurial repositories.
+        
+        * Fixed handling read-only attributes of build files, e.g. of Subversion and
+          Bazaar on Windows.
+        
+        * When downloading a file from a redirect, use the redirected
+          location's extension to guess the compression (happens specifically
+          when redirecting to a bitbucket.org tip.gz file).
+        
+        * Editable freeze URLs now always use revision hash/id rather than tip or
+          branch names which could move.
+        
+        * Fixed comparison of repo URLs so incidental differences such as
+          presence/absence of final slashes or quoted/unquoted special
+          characters don't trigger "ignore/switch/wipe/backup" choice.
+        
+        * Fixed handling of attempt to checkout editable install to a
+          non-empty, non-repo directory.
+        
+        0.4
+        ---
+        
+        * Make ``-e`` work better with local hg repositories
+        
+        * Construct PyPI URLs the exact way easy_install constructs URLs (you
+          might notice this if you use a custom index that is
+          slash-sensitive).
+        
+        * Improvements on Windows (from `Ionel Maries Cristian
+          <http://ionelmc.wordpress.com/>`_).
+        
+        * Fixed problem with not being able to install private git repositories.
+        
+        * Make ``pip zip`` zip all its arguments, not just the first.
+        
+        * Fix some filename issues on Windows.
+        
+        * Allow the ``-i`` and ``--extra-index-url`` options in requirements
+          files.
+        
+        * Fix the way bundle components are unpacked and moved around, to make
+          bundles work.
+        
+        * Adds ``-s`` option to allow the access to the global site-packages if a
+          virtualenv is to be created.
+        
+        * Fixed support for Subversion 1.6.
+        
+        0.3.1
+        -----
+        
+        * Improved virtualenv restart and various path/cleanup problems on win32.
+        
+        * Fixed a regression with installing from svn repositories (when not
+          using ``-e``).
+        
+        * Fixes when installing editable packages that put their source in a
+          subdirectory (like ``src/``).
+        
+        * Improve ``pip -h``
+        
+        0.3
+        ---
+        
+        * Added support for editable packages created from Git, Mercurial and Bazaar
+          repositories and ability to freeze them. Refactored support for version
+          control systems.
+        
+        * Do not use ``sys.exit()`` from inside the code, instead use a
+          return.  This will make it easier to invoke programmatically.
+        
+        * Put the install record in ``Package.egg-info/installed-files.txt``
+          (previously they went in
+          ``site-packages/install-record-Package.txt``).
+        
+        * Fix a problem with ``pip freeze`` not including ``-e svn+`` when an
+          svn structure is peculiar.
+        
+        * Allow ``pip -E`` to work with a virtualenv that uses a different
+          version of Python than the parent environment.
+        
+        * Fixed Win32 virtualenv (``-E``) option.
+        
+        * Search the links passed in with ``-f`` for packages.
+        
+        * Detect zip files, even when the file doesn't have a ``.zip``
+          extension and it is served with the wrong Content-Type.
+        
+        * Installing editable from existing source now works, like ``pip
+          install -e some/path/`` will install the package in ``some/path/``.
+          Most importantly, anything that package requires will also be
+          installed by pip.
+        
+        * Add a ``--path`` option to ``pip un/zip``, so you can avoid zipping
+          files that are outside of where you expect.
+        
+        * Add ``--simulate`` option to ``pip zip``.
+        
+        0.2.1
+        -----
+        
+        * Fixed small problem that prevented using ``pip.py`` without actually
+          installing pip.
+        
+        * Fixed ``--upgrade``, which would download and appear to install
+          upgraded packages, but actually just reinstall the existing package.
+        
+        * Fixed Windows problem with putting the install record in the right
+          place, and generating the ``pip`` script with Setuptools.
+        
+        * Download links that include embedded spaces or other unsafe
+          characters (those characters get %-encoded).
+        
+        * Fixed use of URLs in requirement files, and problems with some blank
+          lines.
+        
+        * Turn some tar file errors into warnings.
+        
+        0.2
+        ---
+        
+        * Renamed to ``pip``, and to install you now do ``pip install
+          PACKAGE``
+        
+        * Added command ``pip zip PACKAGE`` and ``pip unzip PACKAGE``.  This
+          is particularly intended for Google App Engine to manage libraries
+          to stay under the 1000-file limit.
+        
+        * Some fixes to bundles, especially editable packages and when
+          creating a bundle using unnamed packages (like just an svn
+          repository without ``#egg=Package``).
+        
+        0.1.4
+        -----
+        
+        * Added an option ``--install-option`` to pass options to pass
+          arguments to ``setup.py install``
+        
+        * ``.svn/`` directories are no longer included in bundles, as these
+          directories are specific to a version of svn -- if you build a
+          bundle on a system with svn 1.5, you can't use the checkout on a
+          system with svn 1.4.  Instead a file ``svn-checkout.txt`` is
+          included that notes the original location and revision, and the
+          command you can use to turn it back into an svn checkout.  (Probably
+          unpacking the bundle should, maybe optionally, recreate this
+          information -- but that is not currently implemented, and it would
+          require network access.)
+        
+        * Avoid ambiguities over project name case, where for instance
+          MyPackage and mypackage would be considered different packages.
+          This in particular caused problems on Macs, where ``MyPackage/`` and
+          ``mypackage/`` are the same directory.
+        
+        * Added support for an environmental variable
+          ``$PIP_DOWNLOAD_CACHE`` which will cache package downloads, so
+          future installations won't require large downloads.  Network access
+          is still required, but just some downloads will be avoided when
+          using this.
+        
+        0.1.3
+        -----
+        
+        * Always use ``svn checkout`` (not ``export``) so that
+          ``tag_svn_revision`` settings give the revision of the package.
+        
+        * Don't update checkouts that came from ``.pybundle`` files.
+        
+        0.1.2
+        -----
+        
+        * Improve error text when there are errors fetching HTML pages when
+          seeking packages.
+        
+        * Improve bundles: include empty directories, make them work with
+          editable packages.
+        
+        * If you use ``-E env`` and the environment ``env/`` doesn't exist, a
+          new virtual environment will be created.
+        
+        * Fix ``dependency_links`` for finding packages.
+        
+        0.1.1
+        -----
+        
+        * Fixed a NameError exception when running pip outside of a
+          virtualenv environment.
+        
+        * Added HTTP proxy support (from Prabhu Ramachandran)
+        
+        * Fixed use of ``hashlib.md5`` on python2.5+ (also from Prabhu
+          Ramachandran)
+        
+        0.1
+        ---
+        
+        * Initial release
+        
+Keywords: easy_install distutils setuptools egg virtualenv
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: Programming Language :: Python :: 2
+Classifier: Programming Language :: Python :: 2.5
+Classifier: Programming Language :: Python :: 2.6
+Classifier: Programming Language :: Python :: 2.7
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.1
+Classifier: Programming Language :: Python :: 3.2

@@ -418,7 +418,6 @@ def roots_quintic(f):
     # Now we have various Res values. Each will be a list of five
     # values. We have to pick one r value from those five for each Res
     u, v = quintic.uv(theta, d)
-
     testplus = (u + v*delta*sqrt(5)).n()
     testminus = (u - v*delta*sqrt(5)).n()
 
@@ -452,6 +451,39 @@ def roots_quintic(f):
 
     result = [x1, x2, x3, x4, x5]
     return result
+
+
+def roots_rational(f):
+    """Returns a list of rational roots of a polynomial."""
+    domain = f.get_domain()
+
+    if domain.is_QQ:
+        _, f = f.clear_denoms()
+    elif domain.is_ZZ:
+        f = f.set_domain('QQ')
+    else:
+        return []
+
+    LC_divs = divisors(int(f.LC()))
+    EC_divs = divisors(int(f.EC()))
+
+    if not f.eval(S.Zero):
+        zeros = [S.Zero]
+    else:
+        zeros = []
+
+    for p in LC_divs:
+        for q in EC_divs:
+            zero = Rational(p, q)
+
+            if not f.eval(zero):
+                zeros.append(zero)
+
+            if not f.eval(-zero):
+                zeros.append(-zero)
+
+    return sorted(zeros, key=default_sort_key)
+>>>>>>> Solvable quintic - implemented
 
 
 def _integer_basis(poly):
