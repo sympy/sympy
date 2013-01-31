@@ -167,11 +167,11 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     Notes
     =====
 
-    There are some times when autosimplification during sympification
-    may result in an expression that is very different (in appearance)
-    from what you enter. In this case (until such autosimplification is
-    no longer done) you can use the ``kernS`` function for these special
-    cases.
+    Sometimes autosimplification during sympification results in expressions
+    that are very different in structure than what was entered. Until such
+    autosimplification is no longer done, the ``kernS`` function might be of
+    some use. In the example below you can see how an expression reduces to
+    -1 by autosimplification, but does not do so when ``kernS`` is used.
 
     >>> from sympy.core.sympify import kernS
     >>> from sympy.abc import x
@@ -184,7 +184,6 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     In the last expression, the result is not exactly the same as the
     entered string, but it is a lot closer.
-
 
     """
     try:

@@ -12,8 +12,6 @@ import unicodedata
 from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
-UNSPLITTABLE_TOKEN_NAMES = []
-
 
 def _token_splittable(token):
     """
@@ -24,8 +22,6 @@ def _token_splittable(token):
     expressions like 'xyz' into 'x*y*z'.
     """
     if '_' in token:
-        return False
-    elif token in UNSPLITTABLE_TOKEN_NAMES:
         return False
     else:
         try:
