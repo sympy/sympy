@@ -337,7 +337,7 @@ def roots_quintic(f):
     if not f.is_irreducible:
         return result
 
-    f20 = quintic.getf20()
+    f20 = quintic.f20
     # Check if f20 has linear factors over domain Z
     if f20.is_irreducible:
         return result
@@ -353,7 +353,7 @@ def roots_quintic(f):
     delta = sqrt(d)
     # zeta = a fifth root of unity
     zeta = cos(2*pi/5) + I*sin(2*pi/5)
-    T = quintic.getT(theta, d)
+    T = quintic.T(theta, d)
 
     alpha = T['1'] + T['2']*delta
     alpha_bar = T['1'] - T['2']*delta
@@ -363,7 +363,7 @@ def roots_quintic(f):
     disc = alpha**2 - 4*beta
     disc_bar = alpha_bar**2 - 4*beta_bar
 
-    l0 = quintic.getl0(theta)
+    l0 = quintic.l0(theta)
 
     l1 = simplify((-alpha + sqrt(disc)) / S(2))
     l4 = simplify((-alpha - sqrt(disc)) / S(2))
@@ -371,7 +371,7 @@ def roots_quintic(f):
     l2 = simplify((-alpha_bar + sqrt(disc_bar)) / S(2))
     l3 = simplify((-alpha_bar - sqrt(disc_bar)) / S(2))
 
-    order = quintic.getOrder(theta, d)
+    order = quintic.order(theta, d)
     test = (order*delta) - ( (l1 - l4)*(l2 - l3) )
     # Comparing floats
     if Abs(test.n()) > S(0.00001):
@@ -402,7 +402,7 @@ def roots_quintic(f):
     Res[3] = solve_five(sol**5 - R3, sol)
     Res[4] = solve_five(sol**5 - R4, sol)
 
-    for i in range(1, 5, 1):
+    for i in range(1, 5):
         for j, root in enumerate(Res[i]):
             Res[i][j] = simplify(root)
 
@@ -411,7 +411,7 @@ def roots_quintic(f):
         if Abs(im(r1*root)) < S(0.00001):
             r4 = root
             break
-    u, v = quintic.getuv(theta, d)
+    u, v = quintic.uv(theta, d)
 
     testplus = (u + v*delta*sqrt(5)).n()
     testminus = (u - v*delta*sqrt(5)).n()

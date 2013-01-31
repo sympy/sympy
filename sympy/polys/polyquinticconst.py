@@ -1,3 +1,13 @@
+"""
+Solving solvable quintics - An implementation of DS Dummit's paper
+
+Paper :
+http://www.ams.org/journals/mcom/1991-57-195/S0025-5718-1991-1079014-X/S0025-5718-1991-1079014-X.pdf
+
+Mathematica notebook:
+http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
+
+"""
 from sympy.core import S
 from sympy.polys.polytools import Poly
 from sympy.abc import x
@@ -6,14 +16,15 @@ class PolyQuintic(object):
     """Special functions for solvable quintics"""
     def __init__(self, poly):
         self.p, self.q, self.r, self.s = poly.all_coeffs()[2:]
-        self.F = self.getF()
 
-    def getf20(self):
+    @property
+    def f20(self):
         p, q, r, s = self.p, self.q, self.r, self.s
         f20=q**8-13*p*q**6*r+p**5*q**2*r**2+65*p**2*q**4*r**2-4*p**6*r**3-128*p**3*q**2*r**3+17*q**4*r**3+48*p**4*r**4-16*p*q**2*r**4-192*p**2*r**5+256*r**6-4*p**5*q**3*s-12*p**2*q**5*s+18*p**6*q*r*s+12*p**3*q**3*r*s-124*q**5*r*s+196*p**4*q*r**2*s+590*p*q**3*r**2*s-160*p**2*q*r**3*s-1600*q*r**4*s-27*p**7*s**2-150*p**4*q**2*s**2-125*p*q**4*s**2-99*p**5*r*s**2-725*p**2*q**2*r*s**2+1200*p**3*r**2*s**2+3250*q**2*r**2*s**2-2000*p*r**3*s**2-1250*p*q*r*s**3+3125*p**2*s**4-9375*r*s**4-(2*p*q**6-19*p**2*q**4*r+51*p**3*q**2*r**2-3*q**4*r**2-32*p**4*r**3-76*p*q**2*r**3+256*p**2*r**4-512*r**5+31*p**3*q**3*s+58*q**5*s-117*p**4*q*r*s-105*p*q**3*r*s-260*p**2*q*r**2*s+2400*q*r**3*s+108*p**5*s**2+325*p**2*q**2*s**2-525*p**3*r*s**2-2750*q**2*r*s**2+500*p*r**2*s**2-625*p*q*s**3+3125*s**4)*x+(p**2*q**4-6*p**3*q**2*r-8*q**4*r+9*p**4*r**2+76*p*q**2*r**2-136*p**2*r**3+400*r**4-50*p*q**3*s+90*p**2*q*r*s-1400*q*r**2*s+625*q**2*s**2+500*p*r*s**2)*x**2-(2*q**4-21*p*q**2*r+40*p**2*r**2-160*r**3+15*p**2*q*s+400*q*r*s-125*p*s**2)*x**3+(2*p*q**2-6*p**2*r+40*r**2-50*q*s)*x**4+8*r*x**5+x**6
         return Poly(f20)
 
-    def getb(self):
+    @property
+    def b(self):
         p, q, r, s = self.p, self.q, self.r, self.s
         b = ( [], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0], [0,0,0,0,0,0],)
 
@@ -67,8 +78,8 @@ class PolyQuintic(object):
 
         return b
 
-
-    def geto(self):
+    @property
+    def o(self):
         p, q, r, s = self.p, self.q, self.r, self.s
         o = [0]*6
 
@@ -86,8 +97,8 @@ class PolyQuintic(object):
 
         return o
 
-
-    def geta(self):
+    @property
+    def a(self):
         p, q, r, s = self.p, self.q, self.r, self.s
         a = [0]*6
 
@@ -105,8 +116,8 @@ class PolyQuintic(object):
 
         return a
 
-
-    def getc(self):
+    @property
+    def c(self):
         p, q, r, s = self.p, self.q, self.r, self.s
         c = [0]*6
 
@@ -124,24 +135,24 @@ class PolyQuintic(object):
 
         return c
 
-
-    def getF(self):
+    @property
+    def F(self):
         p, q, r, s = self.p, self.q, self.r, self.s
         F = 4*p**6*q**6 + 59*p**3*q**8 + 216*q**10 - 36*p**7*q**4*r - 623*p**4*q**6*r - 2610*p*q**8*r + 81*p**8*q**2*r**2 + 2015*p**5*q**4*r**2 + 10825*p**2*q**6*r**2 - 1800*p**6*q**2*r**3 - 17500*p**3*q**4*r**3 + 625*q**6*r**3 + 10000*p**4*q**2*r**4 + 108*p**8*q**3*s + 1584*p**5*q**5*s + 5700*p**2*q**7*s - 486*p**9*q*r*s - 9720*p**6*q**3*r*s - 45050*p**3*q**5*r*s - 9000*q**7*r*s + 10800*p**7*q*r**2*s + 92500*p**4*q**3*r**2*s + 32500*p*q**5*r**2*s - 60000*p**5*q*r**3*s - 50000*p**2*q**3*r**3*s + 729*p**10*s**2 + 12150*p**7*q**2*s**2 + 60000*p**4*q**4*s**2 + 93750*p*q**6*s**2 - 18225*p**8*r*s**2 - 175500*p**5*q**2*r*s**2 - 478125*p**2*q**4*r*s**2 + 135000*p**6*r**2*s**2 + 850000*p**3*q**2*r**2*s**2 + 15625*q**4*r**2*s**2 - 250000*p**4*r**3*s**2 + 225000*p**3*q**3*s**3 + 175000*q**5*s**3 - 1012500*p**4*q*r*s**3 - 1187500*p*q**3*r*s**3 + 1250000*p**2*q*r**2*s**3 + 928125*p**5*s**4 + 1875000*p**2*q**2*s**4 - 2812500*p**3*r*s**4 - 390625*q**2*r*s**4 - 9765625*s**6
         return F
 
 
-    def getl0(self, theta):
+    def l0(self, theta):
         p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
-        a = self.geta()
+        a = self.a
         l0 = (a[0] + a[1]*theta + a[2]*theta**2 + a[3]*theta**3 + a[4]*theta**4 + a[5]*theta**5)/ F
         return l0
 
 
-    def getT(self, theta, d):
+    def T(self, theta, d):
         p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
         T = {}
-        b = self.getb()
+        b = self.b
 
         T['1'] = -(b[1][0] + b[1][1]*theta + b[1][2]*theta**2 + b[1][3]*theta**3 + b[1][4]*theta**4 + b[1][5]*theta*5 )/(2*F)
         T['2'] = (b[2][0] + b[2][1]*theta + b[2][2]*theta**2 + b[2][3]*theta**3 + b[2][4]*theta**4 + b[2][5]*theta*5 )/(2*d*F)
@@ -150,15 +161,15 @@ class PolyQuintic(object):
         return T
 
 
-    def getOrder(self, theta, d):
+    def order(self, theta, d):
         p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
-        o = self.geto()
+        o = self.o
         order = (o[0] + o[1]*theta + o[2]*theta**2 + o[3]*theta**3 + o[4]*theta**4 + o[5]*theta**5)/(d*F)
         return order
 
 
-    def getuv(self, theta, d):
-        c = self.getc()
+    def uv(self, theta, d):
+        c = self.c
         u = S(-25*self.q/2)
         v = (c[0] + c[1]*theta + c[2]*theta**2 + c[3]*theta**3 + c[4]*theta**4 + c[5]*theta**5)/(2*d*self.F)
         return u, v
