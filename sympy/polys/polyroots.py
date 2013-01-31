@@ -1,16 +1,17 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
-from sympy.core.symbol import Dummy
-from sympy.core import S, I
+from sympy.core.symbol import Dummy, Symbol
+from sympy.core import S, I, pi
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
 from sympy.ntheory import divisors, isprime, nextprime
-from sympy.functions import exp, sqrt
+from sympy.functions import exp, sqrt, re, im, Abs, cos, sin
 
-from sympy.polys.polytools import Poly, cancel, factor, gcd_list
+from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
+from sympy.polys.polyquinticconst import PolyQuintic
 
 from sympy.simplify import simplify
 from sympy.utilities import default_sort_key
@@ -312,6 +313,141 @@ def roots_cyclotomic(f, factor=False):
 
     return sorted(roots, key=default_sort_key)
 
+
+def roots_quintic(f):
+    """
+    Calulate exact roots of a solvable quintic
+    """
+    result = None
+    coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
+
+    # Eqn must me of the for x^5 + px^3 + qx^2 + rx + s
+    if coeff_4:
+        return result
+
+    if coeff_5 != 1:
+        l = [p/coeff_5, q/coeff_5, r/coeff_5, s/coeff_5]
+        for coeff in l:
+            if not coeff.is_integer:
+                return result
+        f = Poly(f/coeff_5)
+    quintic = PolyQuintic(f)
+
+    # Eqn standardised. Algo for solving starts here
+    if not f.is_irreducible:
+        return result
+
+    f20 = quintic.getf20()
+    # Check if f20 has linear factors over domain Z
+    if f20.is_irreducible:
+        return result
+
+    # Now, we know that f is solvable
+    f20_factors = f20.factor_list()
+    for factor in f20_factors[1]:
+        poly = factor[0]
+        if poly.is_linear:
+            theta = poly.root(0)
+            break
+    d = discriminant(f)
+    delta = sqrt(d)
+    # zeta = a fifth root of unity
+    zeta = cos(2*pi/5) + I*sin(2*pi/5)
+    T = quintic.getT(theta, d)
+
+    alpha = T['1'] + T['2']*delta
+    alpha_bar = T['1'] - T['2']*delta
+    beta = T['3'] + T['4']*delta
+    beta_bar = T['3'] - T['4']*delta
+
+    disc = alpha**2 - 4*beta
+    disc_bar = alpha_bar**2 - 4*beta_bar
+
+    l0 = quintic.getl0(theta)
+
+    l1 = simplify((-alpha + sqrt(disc)) / S(2))
+    l4 = simplify((-alpha - sqrt(disc)) / S(2))
+
+    l2 = simplify((-alpha_bar + sqrt(disc_bar)) / S(2))
+    l3 = simplify((-alpha_bar - sqrt(disc_bar)) / S(2))
+
+    order = quintic.getOrder(theta, d)
+    test = (order*delta) - ( (l1 - l4)*(l2 - l3) )
+    # Comparing floats
+    if Abs(test.n()) > S(0.00001):
+        temp = l2
+        l2 = l3
+        l3 = temp
+
+    # Now we have correct order of l's
+    R1 = l0 + l1*zeta + l2*zeta**2 + l3*zeta**3 + l4*zeta**4
+    R2 = l0 + l3*zeta + l1*zeta**2 + l4*zeta**3 + l2*zeta**4
+    R3 = l0 + l2*zeta + l4*zeta**2 + l1*zeta**3 + l3*zeta**4
+    R4 = l0 + l4*zeta + l3*zeta**2 + l2*zeta**3 + l1*zeta**4
+
+    Res = [None]*5
+    sol = Symbol('sol')
+
+    # Simplifying improves performace a lot for exact expressions
+    R1 = simplify(R1)
+    R2 = simplify(R2)
+    R3 = simplify(R3)
+    R4 = simplify(R4)
+
+    # Solve imported here. Causing problems if imported as 'solve'
+    # and hence the changed name
+    from sympy.solvers.solvers import solve as solve_five
+    Res[1] = solve_five(sol**5 - R1, sol)
+    Res[2] = solve_five(sol**5 - R2, sol)
+    Res[3] = solve_five(sol**5 - R3, sol)
+    Res[4] = solve_five(sol**5 - R4, sol)
+
+    for i in range(1, 5, 1):
+        for j, root in enumerate(Res[i]):
+            Res[i][j] = simplify(root)
+
+    r1 = Res[1][0]
+    for root in Res[4]:
+        if Abs(im(r1*root)) < S(0.00001):
+            r4 = root
+            break
+    u, v = quintic.getuv(theta, d)
+
+    testplus = (u + v*delta*sqrt(5)).n()
+    testminus = (u - v*delta*sqrt(5)).n()
+
+    # Evaluated numbers suffixed with _n
+    # We will use evaluated numbers for calculation. Much faster.
+    r1_n = r1.n()
+    r4_n = r4.n()
+    r2 = r3 = None
+
+    for r2temp in Res[2]:
+        for r3temp in Res[3]:
+            # Again storig away exact number and using
+            # evaluated numbers in computations
+            r2temp_n = r2temp.n()
+            r3temp_n = r3temp.n()
+
+            if( Abs(r1_n*r2temp_n**2 + r4_n*r3temp_n**2 - testplus) < S(0.00001) and
+                Abs(r3temp_n*r1_n**2 + r2temp_n*r4_n**2 - testminus) < S(0.00001) ):
+                r2 = r2temp
+                r3 = r3temp
+                break
+        if r2:
+            break
+
+    # Now, we have r's so we can get roots
+    x1 = S(r1 + r2 + r3 + r4)/5
+    x2 = S(r1*zeta**4 + r2*zeta**3 + r3*zeta**2 + r4*zeta)/5
+    x3 = S(r1*zeta**3 + r2*zeta + r3*zeta**4 + r4*zeta**2)/5
+    x4 = S(r1*zeta**2 + r2*zeta**4 + r3*zeta + r4*zeta**3)/5
+    x5 = S(r1*zeta + r2*zeta**2 + r3*zeta**3 + r4*zeta**4)/5
+
+    soln = [x1, x2, x3, x4, x5]
+    return soln
+
+
 def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers. """
     monoms, coeffs = zip(*poly.terms())
@@ -468,6 +604,7 @@ def roots(f, *gens, **flags):
     auto = flags.pop('auto', True)
     cubics = flags.pop('cubics', True)
     quartics = flags.pop('quartics', True)
+    quintics = flags.pop('quintics', False)
     multiple = flags.pop('multiple', False)
     filter = flags.pop('filter', None)
     predicate = flags.pop('predicate', None)
