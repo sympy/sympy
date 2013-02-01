@@ -12,8 +12,6 @@ import unicodedata
 from sympy.core.basic import Basic, C
 
 _re_repeated = re.compile(r"^(\d*)\.(\d*)\[(\d+)\]$")
-UNSPLITTABLE_TOKEN_NAMES = ['_kern']
-
 
 def _token_splittable(token):
     """
@@ -24,8 +22,6 @@ def _token_splittable(token):
     expressions like 'xyz' into 'x*y*z'.
     """
     if '_' in token:
-        return False
-    elif token in UNSPLITTABLE_TOKEN_NAMES:
         return False
     else:
         try:
@@ -325,8 +321,8 @@ def implicit_multiplication_application(result, local_dict, global_dict):
     >>> from sympy.parsing.sympy_parser import (parse_expr,
     ... standard_transformations, implicit_multiplication_application)
     >>> parse_expr("10sin**2 x**2 + 3xyz + tan theta",
-    ... transformations=standard_transformations +
-    ... (implicit_multiplication_application,))
+    ... transformations=(standard_transformations +
+    ... (implicit_multiplication_application,)))
     3*x*y*z + 10*sin(x**2)**2 + tan(theta)
 
     """
@@ -346,18 +342,27 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 def auto_symbol(tokens, local_dict, global_dict):
     """Inserts calls to ``Symbol`` for undefined variables."""
     result = []
-    for toknum, tokval in tokens:
-        if toknum == NAME:
-            name = tokval
+    prevTok = (None, None)
+
+    tokens.append((None, None))  # so zip traverses all tokens
+    for tok, nextTok in zip(tokens, tokens[1:]):
+        tokNum, tokVal = tok
+        nextTokNum, nextTokVal = nextTok
+        if tokNum == NAME:
+            name = tokVal
 
             if (name in ['True', 'False', 'None']
                 or iskeyword(name)
-                    or name in local_dict):
+                or name in local_dict
+                # Don't convert attribute access
+                or (prevTok[0] == OP and prevTok[1] == '.')
+                # Don't convert keyword arguments
+                or (prevTok[0] == OP and prevTok[1] in ('(', ',')
+                    and nextTokNum == OP and nextTokVal == '=')):
                 result.append((NAME, name))
                 continue
             elif name in global_dict:
                 obj = global_dict[name]
-
                 if isinstance(obj, (Basic, type)) or callable(obj):
                     result.append((NAME, name))
                     continue
@@ -369,7 +374,9 @@ def auto_symbol(tokens, local_dict, global_dict):
                 (OP, ')'),
             ])
         else:
-            result.append((toknum, tokval))
+            result.append((tokNum, tokVal))
+
+        prevTok = (tokNum, tokVal)
 
     return result
 
@@ -401,7 +408,7 @@ def factorial_notation(tokens, local_dict, global_dict):
 
 
 def convert_xor(tokens, local_dict, global_dict):
-    """Treats XOR, '^', as exponentiation, '**'."""
+    """Treats XOR, ``^``, as exponentiation, ``**``."""
     result = []
     for toknum, tokval in tokens:
         if toknum == OP:
@@ -477,7 +484,7 @@ def auto_number(tokens, local_dict, global_dict):
 
 
 def rationalize(tokens, local_dict, global_dict):
-    """Converts floats into ``Rational``s. Run AFTER ``auto_number``."""
+    """Converts floats into ``Rational``. Run AFTER ``auto_number``."""
     result = []
     passed_float = False
     for toknum, tokval in tokens:
@@ -494,41 +501,18 @@ def rationalize(tokens, local_dict, global_dict):
 
     return result
 
+#: Standard transformations for :func:`parse_expr`.
+#: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
+#: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
 standard_transformations = (auto_symbol, auto_number, factorial_notation)
 
 
-def parse_expr(s, local_dict=None, transformations=standard_transformations):
+def stringify_expr(s, local_dict, global_dict, transformations):
     """
-    Converts the string ``s`` to a SymPy expression, in ``local_dict``
+    Converts the string ``s`` to Python code, in ``local_dict``
 
-    Examples
-    ========
-
-    >>> from sympy.parsing.sympy_parser import parse_expr
-
-    >>> parse_expr("1/2")
-    1/2
-    >>> type(_)
-    <class 'sympy.core.numbers.Half'>
-
+    Generally, ``parse_expr`` should be used.
     """
-
-    if local_dict is None:
-        local_dict = {}
-
-    global_dict = {}
-    exec 'from sympy import *' in global_dict
-
-    # keep autosimplification from joining Integer or
-    # minus sign into a Mul; this modification doesn't
-    # prevent the 2-arg Mul from becoming an Add, however.
-    hit = False
-    if '(' in s:
-        kern = '_kern'
-        while kern in s:
-            kern += "_"
-        s = re.sub(r'(\d *\*|-) *\(', r'\1%s*(' % kern, s)
-        hit = kern in s
 
     tokens = []
     input_code = StringIO(s.strip())
@@ -538,20 +522,76 @@ def parse_expr(s, local_dict=None, transformations=standard_transformations):
     for transform in transformations:
         tokens = transform(tokens, local_dict, global_dict)
 
-    code = untokenize(tokens)
+    return untokenize(tokens)
+
+
+def eval_expr(code, local_dict, global_dict):
+    """
+    Evaluate Python code generated by ``stringify_expr``.
+
+    Generally, ``parse_expr`` should be used.
+    """
     expr = eval(
         code, global_dict, local_dict)  # take local objects in preference
 
-    if not hit:
-        return expr
-    rep = {C.Symbol(kern): 1}
+    return expr
 
-    def _clear(expr):
-        if hasattr(expr, 'xreplace'):
-            return expr.xreplace(rep)
-        elif isinstance(expr, (list, tuple, set)):
-            return type(expr)([_clear(e) for e in expr])
-        if hasattr(expr, 'subs'):
-            return expr.subs(rep)
-        return expr
-    return _clear(expr)
+
+def parse_expr(s, local_dict=None, transformations=standard_transformations,
+               global_dict=None):
+    """Converts the string ``s`` to a SymPy expression, in ``local_dict``
+
+    Parameters
+    ==========
+
+    s : str
+        The string to parse.
+
+    local_dict : dict, optional
+        A dictionary of local variables to use when parsing.
+
+    global_dict : dict, optional
+        A dictionary of global variables. By default, this is initialized
+        with ``from sympy import *``; provide this parameter to override
+        this behavior (for instance, to parse ``"Q & S"``).
+
+    transformations : tuple, optional
+        A tuple of transformation functions used to modify the tokens of the
+        parsed expression before evaluation. The default transformations
+        convert numeric literals into their SymPy equivalents, convert
+        undefined variables into SymPy symbols, and allow the use of standard
+        mathematical factorial notation (e.g. ``x!``).
+
+
+    Examples
+    ========
+
+    >>> from sympy.parsing.sympy_parser import parse_expr
+    >>> parse_expr("1/2")
+    1/2
+    >>> type(_)
+    <class 'sympy.core.numbers.Half'>
+    >>> from sympy.parsing.sympy_parser import standard_transformations,\\
+    ... implicit_multiplication_application
+    >>> transformations = (standard_transformations +
+    ...     (implicit_multiplication_application,))
+    >>> parse_expr("2x", transformations=transformations)
+    2*x
+
+    See Also
+    ========
+
+    stringify_expr, eval_expr, standard_transformations,
+    implicit_multiplication_application
+
+    """
+
+    if local_dict is None:
+        local_dict = {}
+
+    if global_dict is None:
+        global_dict = {}
+        exec 'from sympy import *' in global_dict
+
+    code = stringify_expr(s, local_dict, global_dict, transformations)
+    return eval_expr(code, local_dict, global_dict)
