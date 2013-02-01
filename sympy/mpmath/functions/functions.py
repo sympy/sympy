@@ -197,7 +197,13 @@ def powm1(ctx, x, y):
     if magy + mag(lnx) < -ctx.prec:
         return lnx*y + (lnx*y)**2/2
     # TODO: accurately eval the smaller of the real/imag part
-    return ctx.sum_accurately(lambda: iter([x**y, -1]), 1)
+    w = ctx.sum_accurately(lambda: iter([x**y, -1]), 1)
+    if sympify(w).is_complex:
+        if(ctx.re(w) <= ctx._im(w)):
+            ctx.w = ctx._re(w) 
+        else:
+            ctx.w = ctx._im(w)
+    return w             	  
 
 @defun
 def _rootof1(ctx, k, n):
