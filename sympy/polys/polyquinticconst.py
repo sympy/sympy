@@ -154,10 +154,10 @@ class PolyQuintic(object):
         T = {}
         b = self.b
 
-        T['1'] = -(b[1][0] + b[1][1]*theta + b[1][2]*theta**2 + b[1][3]*theta**3 + b[1][4]*theta**4 + b[1][5]*theta*5 )/(2*F)
-        T['2'] = (b[2][0] + b[2][1]*theta + b[2][2]*theta**2 + b[2][3]*theta**3 + b[2][4]*theta**4 + b[2][5]*theta*5 )/(2*d*F)
-        T['3'] = (b[3][0] + b[3][1]*theta + b[3][2]*theta**2 + b[3][3]*theta**3 + b[3][4]*theta**4 + b[3][5]*theta*5 )/(2*F)
-        T['4'] = (b[4][0] + b[4][1]*theta + b[4][2]*theta**2 + b[4][3]*theta**3 + b[4][4]*theta**4 + b[4][5]*theta*5 )/(2*d*F)
+        T['1'] = -(b[1][0] + b[1][1]*theta + b[1][2]*theta**2 + b[1][3]*theta**3 + b[1][4]*theta**4 + b[1][5]*theta**5 )/(2*F)
+        T['2'] = (b[2][0] + b[2][1]*theta + b[2][2]*theta**2 + b[2][3]*theta**3 + b[2][4]*theta**4 + b[2][5]*theta**5 )/(2*d*F)
+        T['3'] = (b[3][0] + b[3][1]*theta + b[3][2]*theta**2 + b[3][3]*theta**3 + b[3][4]*theta**4 + b[3][5]*theta**5 )/(2*F)
+        T['4'] = (b[4][0] + b[4][1]*theta + b[4][2]*theta**2 + b[4][3]*theta**3 + b[4][4]*theta**4 + b[4][5]*theta**5 )/(2*d*F)
         return T
 
 

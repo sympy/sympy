@@ -354,6 +354,7 @@ def roots_quintic(f):
     # zeta = a fifth root of unity
     zeta = cos(2*pi/5) + I*sin(2*pi/5)
     T = quintic.T(theta, d)
+    tol = S(1e-10)
 
     alpha = T['1'] + T['2']*delta
     alpha_bar = T['1'] - T['2']*delta
@@ -374,7 +375,9 @@ def roots_quintic(f):
     order = quintic.order(theta, d)
     test = (order*delta) - ( (l1 - l4)*(l2 - l3) )
     # Comparing floats
-    if Abs(test.n()) > S(0.00001):
+    # Problems importing on top
+    from sympy.utilities.randtest import comp
+    if not comp(test, 0, tol):
         temp = l2
         l2 = l3
         l3 = temp
@@ -408,9 +411,10 @@ def roots_quintic(f):
 
     r1 = Res[1][0]
     for root in Res[4]:
-        if Abs(im(r1*root)) < S(0.00001):
+        if comp(im(r1*root), 0, tol):
             r4 = root
             break
+
     u, v = quintic.uv(theta, d)
 
     testplus = (u + v*delta*sqrt(5)).n()
@@ -429,8 +433,8 @@ def roots_quintic(f):
             r2temp_n = r2temp.n()
             r3temp_n = r3temp.n()
 
-            if( Abs(r1_n*r2temp_n**2 + r4_n*r3temp_n**2 - testplus) < S(0.00001) and
-                Abs(r3temp_n*r1_n**2 + r2temp_n*r4_n**2 - testminus) < S(0.00001) ):
+            if( comp( r1_n*r2temp_n**2 + r4_n*r3temp_n**2 - testplus, 0, tol) and
+                comp( r3temp_n*r1_n**2 + r2temp_n*r4_n**2 - testminus, 0, tol ) ):
                 r2 = r2temp
                 r3 = r3temp
                 break
