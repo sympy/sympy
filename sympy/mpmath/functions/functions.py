@@ -1,4 +1,5 @@
 from ..libmp.backend import xrange
+from sympy.core.sympify import sympify
 
 class SpecialFunctions(object):
     """
@@ -168,6 +169,12 @@ def expm1(ctx, x):
     if ctx.mag(x) < -ctx.prec:
         return x + 0.5*x**2
     # TODO: accurately eval the smaller of the real/imag parts
+    if sympify(x).is_complex:
+        #x = im(x) if(im(x)>re(x)) else re(x)
+        if(ctx._re(x)>=ctx._im(x)):
+            ctx.x = ctx._re(x)
+        else:
+            ctx.x = ctx._im(x)   
     return ctx.sum_accurately(lambda: iter([ctx.exp(x),-1]),1)
 
 @defun_wrapped
