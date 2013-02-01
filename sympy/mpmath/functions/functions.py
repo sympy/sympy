@@ -1,4 +1,5 @@
 from ..libmp.backend import xrange
+from sympy.core.sympify import sympify
 
 class SpecialFunctions(object):
     """
@@ -168,6 +169,12 @@ def expm1(ctx, x):
     if ctx.mag(x) < -ctx.prec:
         return x + 0.5*x**2
     # TODO: accurately eval the smaller of the real/imag parts
+    if sympify(x).is_complex:
+        #x = im(x) if(im(x)>re(x)) else re(x)
+        if(ctx._re(x)<=ctx._im(x)):
+            ctx.x = ctx._re(x)
+        else:
+            ctx.x = ctx._im(x)   
     return ctx.sum_accurately(lambda: iter([ctx.exp(x),-1]),1)
 
 @defun_wrapped
@@ -190,7 +197,13 @@ def powm1(ctx, x, y):
     if magy + mag(lnx) < -ctx.prec:
         return lnx*y + (lnx*y)**2/2
     # TODO: accurately eval the smaller of the real/imag part
-    return ctx.sum_accurately(lambda: iter([x**y, -1]), 1)
+    w = ctx.sum_accurately(lambda: iter([x**y, -1]), 1)
+    if sympify(w).is_complex:
+        if(ctx.re(w) <= ctx._im(w)):
+            ctx.w = ctx._re(w) 
+        else:
+            ctx.w = ctx._im(w)
+    return w             	  
 
 @defun
 def _rootof1(ctx, k, n):
