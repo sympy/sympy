@@ -413,6 +413,7 @@ def roots_quintic(f):
         if comp(im(r1*root), 0, tol):
             r4 = root
             break
+
     u, v = quintic.uv(theta, d)
 
     # Now we have various Res values. Each will be a list of five
