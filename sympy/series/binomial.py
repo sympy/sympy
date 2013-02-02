@@ -1,12 +1,21 @@
 from sympy.core import Mul, Add, Pow, sympify
 from sympy.core.symbol import symbols, Symbol
+from sympy import expand
 
 
-def binomial_expand(function):
+def _give_variables(args, variable):
+    if variable not in args:
+        variable = args[0]
+    args_list = list(args)
+    args_list.remove(variable)
+    return [variable, Add(*args_list)]
+
+
+def binomial_expand(expr, variable = None):
     """
-    Returns a valid binomial expansion of an expression, if there is any.
-    Otherwise, returns the function itself. The output is according to
-    that given by WolframAlpha, for functions with non-integer values.
+    Returns a valid binomial expansion of an expression, in terms of
+    'variable', if there is any.
+    Otherwise, returns the function itself.
     Output depends on the value of exponent.
 
     Examples
@@ -21,39 +30,28 @@ def binomial_expand(function):
         0.02972025*x**5 + O(x**6)
 
     """
-    function = sympify(function).evalf()
-    if function.is_Pow:
-        xin, yin = symbols('xin,yin')
-        if not(function.base.is_Add):
-            return function
-        exp = function.exp
-        args_list = list(function.base.args)
-        req = args_list.pop(1)
-        other = Add(*args_list)
-        args_list = list((((1 + xin) ** exp).series()).args)
-        i = 0
-        for i in range(len(args_list)):
-            if args_list[i].is_Mul or args_list[i].is_Pow:
-                args_list[i] = args_list[i].subs(xin, (xin / yin))
-            i += 1
-        i = 0
-        for i in range(len(args_list)):
-            if args_list[i].is_Mul:
-                temp = list(args_list[i].args)
-                j = 0
-                for j in range(len(temp)):
-                    if temp[j].is_Pow:
-                        if temp[j].base == yin:
-                            new = Pow(yin, (temp[j].exp + exp))
-                            temp[j] = new
-                    j += 1
-                args_list[i] = Mul(*temp)
-                i += 1
+    expr = sympify(expr).evalf()
+    if expr.is_Pow:
+        if expr.base.is_Add:
+            if type(expr.exp) == int:
+                return expand(expr)
+            elif type(expr.exp) == float:
+                if variable not in args:
+                    variable = args[0]
+                args_list = list(args)
+                args_list.remove(variable)
+                variable2 = Add(*args_list)
+                xin, yin = symbols('xin,yin')
+                return series((xin + yin) ** expr.exp, yin).subs(
+                    xin, variable).subs(yin, variable2).expand().n(3).evalf()
             else:
-                args_list[i] = (args_list[i] * (other ** exp)).evalf()
-                i += 1
-        step1 = ((Add(*args_list)).subs(xin, req))
-        step2 = (step1.subs(yin, other))
-        return step2.expand()
+                return expr
+        else:
+            return expr
     else:
-        return function
+        return expr
+        
+        
+    
+    
+    
