@@ -4,8 +4,9 @@ from sympy.unify.usympy import unify
 from sympy.unify.usympy import rebuild
 from sympy.rules.tools import subs
 from sympy import Expr
+from sympy.assumptions import Q, ask
 
-def rewriterule(source, target, variables=(), condition=None):
+def rewriterule(source, target, variables=(), condition=None, assume=None):
     """ Rewrite rule
 
     Transform expressions that match source into expressions that match target
@@ -23,14 +24,28 @@ def rewriterule(source, target, variables=(), condition=None):
     >>> rl = rewriterule(x + y, x**y, [x, y], lambda x, y: x.is_integer)
     >>> list(rl(z + 3))
     [3**z]
+
+    Use ``assume`` to specify additional requirements using new assumptions.
+
+    >>> rl = rewriterule(x + y, x**y, [x, y], assume=Q.integer(x))
+    >>> list(rl(z + 3))
+    [3**z]
+
+    Assumptions for the local context are provided at rule runtime
+
+    >>> list(rl(y + z, Q.integer(z)))
+    [z**y]
     """
 
-    def rewrite_rl(expr):
+    def rewrite_rl(expr, assumptions=True):
         for match in unify(source, expr, {}, variables=variables):
-            if (condition is None or
-                condition(*[match.get(var, var) for var in variables]) == True):
-                expr2 = subs(match)(target)
-                if isinstance(expr2, Expr):
-                    expr2 = rebuild(expr2)
-                yield expr2
+            if (condition and
+                not condition(*[match.get(var, var) for var in variables])):
+                continue
+            if (assume and not ask(assume.xreplace(match), assumptions)):
+                continue
+            expr2 = subs(match)(target)
+            if isinstance(expr2, Expr):
+                expr2 = rebuild(expr2)
+            yield expr2
     return rewrite_rl
