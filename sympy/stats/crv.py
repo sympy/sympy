@@ -166,8 +166,8 @@ class SingleContinuousDistribution(ContinuousDistribution):
         try:
             return self.args[self._argnames.index(attr)]
         except ValueError:
-            raise AttributeError("%s object has not attribute %s" % (
-                str(type(self)), attr))
+            raise AttributeError("'%s' object has not attribute '%s'" % (
+                type(self).__name__, attr))
 
     def __new__(cls, *args):
         args = map(sympify, args)
