@@ -1,15 +1,7 @@
 from sympy.core import Mul, Add, Pow, sympify
 from sympy.core.symbol import symbols, Symbol
 from sympy import expand
-
-
-def _give_variables(args, variable):
-    if variable not in args:
-        variable = args[0]
-    args_list = list(args)
-    args_list.remove(variable)
-    return [variable, Add(*args_list)]
-
+from order import Order
 
 def binomial_expand(expr, variable=None, n=6):
     """
@@ -43,7 +35,8 @@ def binomial_expand(expr, variable=None, n=6):
             args_list.remove(variable)
             variable2 = Add(*args_list)
             xin, yin = symbols('xin,yin')
-            temp = series((xin + yin) ** expr.exp, xin, n).expand().subs(xin, variable).subs(yin, variable2)
+            temp = series((xin + yin) ** expr.exp, xin).expand().removeO()
+            temp = temp.subs(xin, variable).subs(yin, variable2)
             return temp
         else:
             return expr
