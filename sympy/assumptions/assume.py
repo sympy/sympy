@@ -191,8 +191,6 @@ def assume(*assumptions):
     ...     ask(Q.integer(x + y))
     True
     """
-
-    global global_assumptions
     old_global_assumptions = global_assumptions.copy()
     global_assumptions.update(assumptions)
     yield
