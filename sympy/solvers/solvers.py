@@ -1229,7 +1229,6 @@ def _solve(f, *symbols, **flags):
                 quintics = flags.get('quintics', False)
                 if poly.degree() > 2:
                     flags['simplify'] = flags.get('simplify', False)
-                    quintics = flags.get('quintics', False)
                 soln = roots(poly, cubics=True, quartics=True,
                              quintics=quintics).keys()
                 if not soln:
