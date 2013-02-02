@@ -193,5 +193,7 @@ def assume(*assumptions):
     """
     old_global_assumptions = global_assumptions.copy()
     global_assumptions.update(assumptions)
-    yield
-    global_assumptions.intersection_update(old_global_assumptions)
+    try:
+        yield
+    finally:
+        global_assumptions.intersection_update(old_global_assumptions)
