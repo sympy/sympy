@@ -147,8 +147,7 @@ def rv(symbol, cls, args):
 
 
 class ArcsinDistribution(SingleContinuousDistribution):
-    a = property(lambda self: self.args[0])
-    b = property(lambda self: self.args[1])
+    _argnames = ('a', 'b')
 
     def pdf(self, x):
         return 1/(pi*sqrt((x - self.a)*(self.b - x)))
@@ -203,9 +202,7 @@ def Arcsin(name, a=0, b=1):
 
 
 class BeniniDistribution(SingleContinuousDistribution):
-    alpha = property(lambda self: self.args[0])
-    beta  = property(lambda self: self.args[1])
-    sigma = property(lambda self: self.args[2])
+    _argnames = ('alpha', 'beta', 'sigma')
     set   = property(lambda self: Interval(self.sigma, oo))
 
     def pdf(self, x):
@@ -272,8 +269,7 @@ def Benini(name, alpha, beta, sigma):
 
 
 class BetaDistribution(SingleContinuousDistribution):
-    alpha = property(lambda self: self.args[0])
-    beta  = property(lambda self: self.args[1])
+    _argnames = ('alpha', 'beta')
     set   = property(lambda self: Interval(0, 1))
 
     @staticmethod
@@ -350,8 +346,8 @@ def Beta(name, alpha, beta):
 
 
 class BetaPrimeDistribution(SingleContinuousDistribution):
-    alpha = property(lambda self: self.args[0])
-    beta  = property(lambda self: self.args[1])
+
+    _argnames = ('alpha', 'beta')
     set   = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -414,8 +410,7 @@ def BetaPrime(name, alpha, beta):
 
 
 class CauchyDistribution(SingleContinuousDistribution):
-    x0    = property(lambda self: self.args[0])
-    gamma = property(lambda self: self.args[1])
+    _argnames = ('x0', 'gamma')
 
     def pdf(self, x):
         return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
@@ -471,7 +466,7 @@ def Cauchy(name, x0, gamma):
 
 
 class ChiDistribution(SingleContinuousDistribution):
-    k = property(lambda self: self.args[0])
+    _argnames = ('k',)
     set   = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -527,8 +522,7 @@ def Chi(name, k):
 
 
 class ChiNoncentralDistribution(SingleContinuousDistribution):
-    k = property(lambda self: self.args[0])
-    l = property(lambda self: self.args[1])
+    _argnames = ('k', 'l')
     set = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -587,7 +581,7 @@ def ChiNoncentral(name, k, l):
 
 
 class ChiSquaredDistribution(SingleContinuousDistribution):
-    k = property(lambda self: self.args[0])
+    _argnames = ('k',)
     set = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -651,9 +645,7 @@ def ChiSquared(name, k):
 
 
 class DagumDistribution(SingleContinuousDistribution):
-    p = property(lambda self: self.args[0])
-    a = property(lambda self: self.args[1])
-    b = property(lambda self: self.args[2])
+    _argnames = ('p', 'a', 'b')
 
     def pdf(self, x):
         p, a, b = self.p, self.a, self.b
@@ -780,7 +772,7 @@ def Erlang(name, k, l):
 
 
 class ExponentialDistribution(SingleContinuousDistribution):
-    rate = property(lambda self: self.args[0])
+    _argnames = ('rate',)
     set  = property(lambda self: Interval(0, oo))
 
     @staticmethod
@@ -866,8 +858,7 @@ def Exponential(name, rate):
 # F distribution ---------------------------------------------------------------
 
 class FDistributionDistribution(SingleContinuousDistribution):
-    d1  = property(lambda self: self.args[0])
-    d2  = property(lambda self: self.args[1])
+    _argnames = ('d1', 'd2')
     set = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -936,8 +927,7 @@ def FDistribution(name, d1, d2):
 # Fisher Z distribution --------------------------------------------------------
 
 class FisherZDistribution(SingleContinuousDistribution):
-    d1 = property(lambda self: self.args[0])
-    d2 = property(lambda self: self.args[1])
+    _argnames = ('d1', 'd2')
 
     def pdf(self, x):
         d1, d2 = self.d1, self.d2
@@ -1003,9 +993,7 @@ def FisherZ(name, d1, d2):
 # Frechet distribution ---------------------------------------------------------
 
 class FrechetDistribution(SingleContinuousDistribution):
-    a = property(lambda self: self.args[0])
-    s = property(lambda self: self.args[1])
-    m = property(lambda self: self.args[2])
+    _argnames = ('a', 's', 'm')
     set   = property(lambda self: Interval(0, oo))
 
     def __new__(cls, a, s=1, m=0):
@@ -1069,8 +1057,7 @@ def Frechet(name, a, s=1, m=0):
 
 
 class GammaDistribution(SingleContinuousDistribution):
-    k     = property(lambda self: self.args[0])
-    theta = property(lambda self: self.args[1])
+    _argnames = ('k', 'theta')
     set   = property(lambda self: Interval(0, oo))
 
     @staticmethod
@@ -1163,8 +1150,7 @@ def Gamma(name, k, theta):
 # Inverse Gamma distribution ---------------------------------------------------
 
 class GammaInverseDistribution(SingleContinuousDistribution):
-    a   = property(lambda self: self.args[0])
-    b   = property(lambda self: self.args[1])
+    _argnames = ('a', 'b')
     set = property(lambda self: Interval(0, oo))
 
     @staticmethod
@@ -1232,8 +1218,7 @@ def GammaInverse(name, a, b):
 # Kumaraswamy distribution -----------------------------------------------------
 
 class KumaraswamyDistribution(SingleContinuousDistribution):
-    a   = property(lambda self: self.args[0])
-    b   = property(lambda self: self.args[1])
+    _argnames = ('a', 'b')
     set = property(lambda self: Interval(0, oo))
 
     @staticmethod
@@ -1300,8 +1285,7 @@ def Kumaraswamy(name, a, b):
 
 
 class LaplaceDistribution(SingleContinuousDistribution):
-    mu = property(lambda self: self.args[0])
-    b  = property(lambda self: self.args[1])
+    _argnames = ('mu', 'b')
 
     def pdf(self, x):
         mu, b = self.mu, self.b
@@ -1357,8 +1341,7 @@ def Laplace(name, mu, b):
 
 
 class LogisticDistribution(SingleContinuousDistribution):
-    mu = property(lambda self: self.args[0])
-    s  = property(lambda self: self.args[1])
+    _argnames = ('mu', 's')
 
     def pdf(self, x):
         mu, s = self.mu, self.s
@@ -1414,8 +1397,7 @@ def Logistic(name, mu, s):
 
 
 class LogNormalDistribution(SingleContinuousDistribution):
-    mean = property(lambda self: self.args[0])
-    std  = property(lambda self: self.args[1])
+    _argnames = ('mean', 'std')
     set  = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -1493,7 +1475,7 @@ def LogNormal(name, mean, std):
 
 
 class MaxwellDistribution(SingleContinuousDistribution):
-    a   = property(lambda self: self.args[0])
+    _argnames = ('a',)
     set = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -1556,8 +1538,7 @@ def Maxwell(name, a):
 
 
 class NakagamiDistribution(SingleContinuousDistribution):
-    mu    = property(lambda self: self.args[0])
-    omega = property(lambda self: self.args[1])
+    _argnames = ('mu', 'omega')
     set   = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -1633,8 +1614,7 @@ def Nakagami(name, mu, omega):
 
 
 class NormalDistribution(SingleContinuousDistribution):
-    mean = property(lambda self: self.args[0])
-    std  = property(lambda self: self.args[1])
+    _argnames = ('mean', 'std')
 
     @staticmethod
     def check(mean, std):
@@ -1718,8 +1698,7 @@ def Normal(name, mean, std):
 
 
 class ParetoDistribution(SingleContinuousDistribution):
-    xm    = property(lambda self: self.args[0])
-    alpha = property(lambda self: self.args[1])
+    _argnames = ('xm', 'alpha')
     set   = property(lambda self: Interval(self.xm, oo))
 
     @staticmethod
@@ -1785,8 +1764,7 @@ def Pareto(name, xm, alpha):
 # QuadraticU distribution ------------------------------------------------------
 
 class QuadraticUDistribution(SingleContinuousDistribution):
-    a   = property(lambda self: self.args[0])
-    b   = property(lambda self: self.args[1])
+    _argnames = ('a', 'b')
     set = property(lambda self: Interval(self.a, self.b))
 
     def pdf(self, x):
@@ -1855,8 +1833,7 @@ def QuadraticU(name, a, b):
 # RaisedCosine distribution ----------------------------------------------------
 
 class RaisedCosineDistribution(SingleContinuousDistribution):
-    mu  = property(lambda self: self.args[0])
-    s   = property(lambda self: self.args[1])
+    _argnames = ('mu', 's')
     set = property(lambda self: Interval(self.mu - self.s, self.mu + self.s))
 
     @staticmethod
@@ -1926,7 +1903,7 @@ def RaisedCosine(name, mu, s):
 
 
 class RayleighDistribution(SingleContinuousDistribution):
-    sigma = property(lambda self: self.args[0])
+    _argnames = ('sigma',)
     set   = property(lambda self: Interval(0, oo))
 
     def pdf(self, x):
@@ -1989,7 +1966,7 @@ def Rayleigh(name, sigma):
 
 
 class StudentTDistribution(SingleContinuousDistribution):
-    nu = property(lambda self: self.args[0])
+    _argnames = ('nu',)
 
     def pdf(self, x):
         nu = self.nu
@@ -2056,9 +2033,7 @@ def StudentT(name, nu):
 
 
 class TriangularDistribution(SingleContinuousDistribution):
-    a = property(lambda self: self.args[0])
-    b = property(lambda self: self.args[1])
-    c = property(lambda self: self.args[2])
+    _argnames = ('a', 'b', 'c')
 
     def pdf(self, x):
         a, b, c = self.a, self.b, self.c
@@ -2138,8 +2113,7 @@ def Triangular(name, a, b, c):
 
 
 class UniformDistribution(SingleContinuousDistribution):
-    left  = property(lambda self: self.args[0])
-    right = property(lambda self: self.args[1])
+    _argnames = ('left', 'right')
 
     def pdf(self, x):
         left, right = self.left, self.right
@@ -2232,7 +2206,7 @@ def Uniform(name, left, right):
 
 
 class UniformSumDistribution(SingleContinuousDistribution):
-    n   = property(lambda self: self.args[0])
+    _argnames = ('n')
     set = property(lambda self: Interval(0, self.n))
 
     def pdf(self, x):
@@ -2303,8 +2277,7 @@ def UniformSum(name, n):
 # VonMises distribution --------------------------------------------------------
 
 class VonMisesDistribution(SingleContinuousDistribution):
-    mu  = property(lambda self: self.args[0])
-    k   = property(lambda self: self.args[1])
+    _argnames = ('mu', 'k')
     set = property(lambda self: Interval(0, 2*pi))
 
     @staticmethod
@@ -2372,8 +2345,7 @@ def VonMises(name, mu, k):
 
 
 class WeibullDistribution(SingleContinuousDistribution):
-    alpha = property(lambda self: self.args[0])
-    beta  = property(lambda self: self.args[1])
+    _argnames = ('alpha', 'beta')
     set   = property(lambda self: Interval(0, oo))
 
     @staticmethod
@@ -2449,7 +2421,7 @@ def Weibull(name, alpha, beta):
 
 
 class WignerSemicircleDistribution(SingleContinuousDistribution):
-    R   = property(lambda self: self.args[0])
+    _argnames = ('R',)
     set = property(lambda self: Interval(-self.R, self.R))
 
     def pdf(self, x):

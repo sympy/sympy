@@ -162,6 +162,13 @@ class SingleContinuousDistribution(ContinuousDistribution):
 
     set = Interval(-oo, oo)
 
+    def __getattr__(self, attr):
+        try:
+            return self.args[self._argnames.index(attr)]
+        except ValueError:
+            raise AttributeError("%s object has not attribute %s" % (
+                str(type(self)), attr))
+
     def __new__(cls, *args):
         args = map(sympify, args)
         return Basic.__new__(cls, *args)

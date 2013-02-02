@@ -571,3 +571,6 @@ def test_NormalDistribution():
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
     assert nd.expectation(x**2, x) == 1
+
+def test_getattr():
+    raises(AttributeError, lambda: Normal('X', 0, 1).foo)
