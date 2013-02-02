@@ -12,10 +12,10 @@ def rewriterule(source, target, variables=(), condition=None, assume=None):
     Transform expressions that match source into expressions that match target
     treating all `variables` as wilds.
 
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import w, x, y, z
     >>> from sympy.unify.rewrite import rewriterule
     >>> rl = rewriterule(x + y, x**y, [x, y])
-    >>> list(rl(z + 3))
+    >>> sorted(rl(z + 3))
     [3**z, z**3]
 
     Use ``condition`` to specify additional requirements.  Inputs are taken in
@@ -27,14 +27,15 @@ def rewriterule(source, target, variables=(), condition=None, assume=None):
 
     Use ``assume`` to specify additional requirements using new assumptions.
 
+    >>> from sympy.assumptions import Q
     >>> rl = rewriterule(x + y, x**y, [x, y], assume=Q.integer(x))
     >>> list(rl(z + 3))
     [3**z]
 
     Assumptions for the local context are provided at rule runtime
 
-    >>> list(rl(y + z, Q.integer(z)))
-    [z**y]
+    >>> list(rl(w + z, Q.integer(z)))
+    [z**w]
     """
 
     def rewrite_rl(expr, assumptions=True):
