@@ -473,6 +473,10 @@ class polygamma(Function):
                                 return S.Infinity
                             else:
                                 return S.Zero
+                    elif z is S.NegativeInfinity:
+                        if n.is_Number:
+                            if n is S.Zero:
+                                return S.Infinity
                     elif z.is_Integer:
                         if z.is_nonpositive:
                             return S.ComplexInfinity
@@ -481,6 +485,12 @@ class polygamma(Function):
                                 return -S.EulerGamma + C.harmonic(z - 1, 1)
                             elif n.is_odd:
                                 return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z)
+
+                t = z.extract_multiplicatively(S.ImaginaryUnit)
+                if t == S.Infinity or t == S.NegativeInfinity:
+                    if n.is_Number:
+                        if n is S.Zero:
+                            return S.Infinity
 
         if n == 0 and z.is_Rational:
             # Split z as n + p/q with p < q
