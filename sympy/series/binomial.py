@@ -11,10 +11,10 @@ def _give_variables(args, variable):
     return [variable, Add(*args_list)]
 
 
-def binomial_expand(expr, variable = None):
+def binomial_expand(expr, variable=None, n=6):
     """
     Returns a valid binomial expansion of an expression, in terms of
-    'variable', if there is any.
+    'variable', if there is any. expr must be Pow.
     Otherwise, returns the function itself.
     Output depends on the value of exponent.
 
@@ -30,22 +30,21 @@ def binomial_expand(expr, variable = None):
         0.02972025*x**5 + O(x**6)
 
     """
-    expr = sympify(expr).evalf()
+    expr = sympify(expr)
     if expr.is_Pow:
-        if expr.base.is_Add:
-            if type(expr.exp) == int:
-                return expand(expr)
-            elif type(expr.exp) == float:
-                if variable not in args:
-                    variable = args[0]
-                args_list = list(args)
-                args_list.remove(variable)
-                variable2 = Add(*args_list)
-                xin, yin = symbols('xin,yin')
-                return series((xin + yin) ** expr.exp, yin).subs(
-                    xin, variable).subs(yin, variable2).expand().n(3).evalf()
-            else:
-                return expr
+        if not(expr.base.is_Add):
+            return expr
+        if expr.exp.is_Integer:
+            return expand(expr)
+        elif expr.exp.is_Float:
+            if variable not in expr.base.args:
+                variable = expr.base.args[0]
+            args_list = list(expr.base.args)
+            args_list.remove(variable)
+            variable2 = Add(*args_list)
+            xin, yin = symbols('xin,yin')
+            temp = series((xin + yin) ** expr.exp, xin, n).expand().subs(xin, variable).subs(yin, variable2)
+            return temp
         else:
             return expr
     else:
