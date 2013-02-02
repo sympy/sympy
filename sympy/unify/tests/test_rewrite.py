@@ -1,7 +1,8 @@
 from sympy.unify.rewrite import rewriterule
-from sympy import sin, cos, Basic, Symbol
+from sympy import sin, cos, Basic, Symbol, S
 from sympy.abc import x, y, z
 from sympy.core.compatibility import next
+from sympy.rules.rl import rebuild
 
 p, q = Symbol('p'), Symbol('q')
 
@@ -43,3 +44,21 @@ def test_Exprs_ok():
     rl = rewriterule(p+q, q+p, (p, q))
     next(rl(x+y)).is_commutative
     str(next(rl(x+y)))
+
+def test_condition_simple():
+    rl = rewriterule(x, x+1, [x], lambda x: x < 10)
+    assert not list(rl(S(15)))
+    assert rebuild(next(rl(S(5)))) == 6
+
+
+def test_condition_multiple():
+    rl = rewriterule(x + y, x**y, [x,y], lambda x, y: x.is_integer)
+
+    a = Symbol('a')
+    b = Symbol('b', integer=True)
+    expr = a + b
+    assert list(rl(expr)) == [b**a]
+
+    c = Symbol('c', integer=True)
+    d = Symbol('d', integer=True)
+    assert set(rl(c + d)) == set([c**d, d**c])
