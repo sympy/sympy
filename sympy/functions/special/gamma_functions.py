@@ -1,8 +1,9 @@
-from sympy.core import Add, S, C, sympify, oo, pi
+from sympy.core import Add, S, C, sympify, oo, pi, Dummy
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from error_functions import erf
 from sympy.core import Dummy, Rational
+from sympy.functions.elementary.trigonometric import sin, cos, cot
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -482,22 +483,31 @@ class polygamma(Function):
                                 return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z)
 
         if n == 0 and z.is_Rational:
-            # TODO actually *any* n/m can be done, but that is messy
-            lookup = {S(1)/2: -2*log(2) - S.EulerGamma,
-                      S(1)/3: -S.Pi/2/sqrt(3) - 3*log(3)/2 - S.EulerGamma,
-                      S(1)/4: -S.Pi/2 - 3*log(2) - S.EulerGamma,
-                      S(3)/4: -3*log(2) - S.EulerGamma + S.Pi/2,
-                      S(2)/3: -3*log(3)/2 + S.Pi/2/sqrt(3) - S.EulerGamma}
-            if z > 0:
-                n = floor(z)
-                z0 = z - n
-                if z0 in lookup:
-                    return lookup[z0] + Add(*[1/(z0 + k) for k in range(n)])
-            elif z < 0:
-                n = floor(1 - z)
-                z0 = z + n
-                if z0 in lookup:
-                    return lookup[z0] - Add(*[1/(z0 - 1 - k) for k in range(n)])
+            # Split z as n + p/q with p < q
+            p, q = z.as_numer_denom()
+            n = p // q
+            p = p - n*q
+
+            b = floor((q-1)*S.Half)
+            if b >= 1:
+                k = Dummy("k")
+                s = 2*C.Sum(cos((2*pi*k*p)/q)*log(sin((k*pi)/q)), (k, 1, b)).doit()
+            else:
+                s = 0
+
+            if n is S.Zero:
+                return (s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+
+            elif n.is_positive:
+                l = Dummy("l")
+                return (q*C.Sum(S.One/(p+l*q), (l,0,n-1)).doit()
+                        + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+
+            elif n.is_negative:
+                n = -n
+                l = Dummy("l")
+                return (q*C.Sum(S.One/(-p+(l+1)*q), (l,0,n-1)).doit()
+                        + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
 
         # TODO n == 1 also can do some rational z
 
