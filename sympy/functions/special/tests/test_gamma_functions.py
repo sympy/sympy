@@ -166,6 +166,9 @@ def test_polygamma():
     assert polygamma(n, nan) == nan
 
     assert polygamma(0, oo) == oo
+    assert polygamma(0, -oo) == oo
+    assert polygamma(0, I*oo) == oo
+    assert polygamma(0, -I*oo) == oo
     assert polygamma(1, oo) == 0
     assert polygamma(5, oo) == 0
 
@@ -177,7 +180,14 @@ def test_polygamma():
     assert polygamma(0, 0) == zoo
 
     assert polygamma(0, 1) == -EulerGamma
+    assert polygamma(0, 3) == -EulerGamma + Rational(3,2)
     assert polygamma(0, 7) == Rational(49, 20) - EulerGamma
+    assert polygamma(0, S(1)/3) == -log(6) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3)/2)
+    assert polygamma(0, S(5)/3) == -log(6) - EulerGamma - log(sqrt(3)/2) + sqrt(3)*pi/6 + Rational(3,2)
+    assert polygamma(0, S(19)/3) == -log(6) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3)/2) + Rational(35649,7280)
+    assert polygamma(0, -S(1)/3) == -log(6) - EulerGamma - log(sqrt(3)/2) + sqrt(3)*pi/6 + 3
+    assert polygamma(0, -S(5)/3) == -log(6) - sqrt(3)*pi/6 - EulerGamma - log(sqrt(3)/2) + Rational(21,10)
+    assert polygamma(0, -S(19)/3) == -log(6) - EulerGamma - log(sqrt(3)/2) + sqrt(3)*pi/6 + Rational(699171,138320)
 
     assert polygamma(1, 1) == pi**2/6
     assert polygamma(1, 2) == pi**2/6 - 1
@@ -194,13 +204,28 @@ def test_polygamma():
         return abs(polygamma(0, x.n()).n() - r.n()).n() < 1e-10
     assert t(1, 2)
     assert t(3, 2)
+    assert t(4, 2)
+    assert t(5, 2)
+    assert t(6, 2)
+    assert t(7, 2)
+    assert t(8, 2)
     assert t(-1, 2)
-    assert t(1, 4)
-    assert t(-3, 4)
+    assert t(-3, 2)
+    assert t(-5, 2)
+    assert t(-7, 2)
     assert t(1, 3)
-    assert t(4, 3)
-    assert t(3, 4)
     assert t(2, 3)
+    assert t(4, 3)
+    assert t(5, 3)
+    assert t(6, 3)
+    assert t(7, 3)
+    assert t(8, 3)
+    assert t(-1, 3)
+    assert t(-2, 3)
+    assert t(-4, 3)
+    assert t(-5, 3)
+    assert t(-7, 3)
+    assert t(-8, 3)
 
     assert polygamma(0, x).rewrite(zeta) == polygamma(0, x)
     assert polygamma(1, x).rewrite(zeta) == zeta(2, x)
