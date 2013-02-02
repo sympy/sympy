@@ -435,10 +435,15 @@ class binomial(CombinatorialFunction):
        For the sake of convenience for negative 'k' this function
        will return zero no matter what valued is the other argument.
 
+       To expand the binomial when n is a symbol, use either
+       expand_func() or expand(func=True). The former will keep the
+       polynomial in factored form while the latter will expand the
+       polynomial itself. See examples for details.
+
        Examples
        ========
 
-       >>> from sympy import Symbol, Rational, binomial
+       >>> from sympy import Symbol, Rational, binomial, expand_func
        >>> n = Symbol('n', integer=True)
 
        >>> binomial(15, 8)
@@ -462,6 +467,12 @@ class binomial(CombinatorialFunction):
        -5/128
 
        >>> binomial(n, 3)
+       binomial(n, 3)
+
+       >>> binomial(n, 3).expand(func=True)
+       n**3/6 - n**2/2 + n/3
+
+       >>> expand_func(binomial(n, 3))
        n*(n - 2)*(n - 1)/6
 
     """
@@ -521,14 +532,13 @@ class binomial(CombinatorialFunction):
                                 result *= prime**exp
 
                     return C.Integer(result)
-                else:
+                elif n.is_Number:
                     result = n - k + 1
-
                     for i in xrange(2, k + 1):
                         result *= n - k + i
                         result /= i
-
                     return result
+
         elif k.is_negative:
             return S.Zero
         elif (n - k).simplify().is_negative:
@@ -538,6 +548,35 @@ class binomial(CombinatorialFunction):
 
             if d.is_Integer:
                 return cls.eval(n, d)
+
+    def _eval_expand_func(self, **hints):
+        """
+        Function to expand binomial(n,k) when m is positive integer
+        Also,
+        n is self.args[0] and k is self.args[1] while using binomial(n, k)
+        """
+        n = self.args[0]
+        if n.is_Number:
+            return binomial(*self.args)
+
+        k = self.args[1]
+        if k.is_Add and n in k:
+            k = n - k
+
+        if k.is_Integer:
+            if k == S.Zero:
+                return S.One
+            elif k < 0:
+                return S.Zero
+            else:
+                n = self.args[0]
+                result = n - k + 1
+                for i in xrange(2, k + 1):
+                    result *= n - k + i
+                    result /= i
+                return result
+        else:
+            return binomial(*self.args)
 
     def _eval_rewrite_as_factorial(self, n, k):
         return C.factorial(n)/(C.factorial(k)*C.factorial(n - k))
