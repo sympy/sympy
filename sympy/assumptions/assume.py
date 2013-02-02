@@ -181,8 +181,7 @@ class Predicate(Boolean):
 def assume(*assumptions):
     """ Context manager for assumptions
 
-    >>> from sympy.assumptions.assume import assume
-    >>> from sympy.assumptions.ask import Q, ask
+    >>> from sympy.assumptions import assume, Q, ask
     >>> from sympy.abc import x, y
 
     >>> ask(Q.integer(x + y))  # Returns None
