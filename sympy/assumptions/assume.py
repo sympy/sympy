@@ -3,6 +3,7 @@ from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
+from contextlib import contextmanager
 
 
 class AssumptionsContext(set):
@@ -175,3 +176,24 @@ class Predicate(Boolean):
                         raise ValueError('incompatible resolutors')
                 break
         return res
+
+@contextmanager
+def assume(*assumptions):
+    """ Context manager for assumptions
+
+    >>> from sympy.assumptions.assume import assume
+    >>> from sympy.assumptions.ask import Q, ask
+    >>> from sympy.abc import x, y
+
+    >>> ask(Q.integer(x + y))  # Returns None
+
+    >>> with assume(Q.integer(x), Q.integer(y)):
+    ...     ask(Q.integer(x + y))
+    True
+    """
+
+    global global_assumptions
+    old_global_assumptions = global_assumptions.copy()
+    global_assumptions.update(assumptions)
+    yield
+    global_assumptions.intersection_update(old_global_assumptions)
