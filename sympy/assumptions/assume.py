@@ -181,6 +181,7 @@ class Predicate(Boolean):
 def assume(*assumptions):
     """ Context manager for assumptions
 
+    >>> from __future__ import with_statement
     >>> from sympy.assumptions import assume, Q, ask
     >>> from sympy.abc import x, y
 

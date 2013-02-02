@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from sympy.assumptions import ask, Q
 from sympy.assumptions.assume import assume
 from sympy.abc import x, y
