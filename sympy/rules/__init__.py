@@ -25,7 +25,7 @@ rules.strat      - some conglomerate strategies that do depend on SymPy
 
 import rl
 import traverse
-from rl import rm_id, unpack, flatten, sort, glom, distribute
+from rl import rm_id, unpack, flatten, sort, glom, distribute, rebuild
 from util import new
 from strat import (canon, condition, debug, typed, chain, null_safe, do_one,
         exhaust)

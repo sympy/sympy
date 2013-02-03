@@ -1,3 +1,3 @@
 import traverse
 from strat import (canon, condition, debug, multiplex, exhaust, notempty,
-        chain, onaction, sfilter)
+        chain, onaction, sfilter, yieldify)
