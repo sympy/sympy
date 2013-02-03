@@ -197,3 +197,21 @@ def assuming(*assumptions):
         yield
     finally:
         global_assumptions.intersection_update(old_global_assumptions)
+
+def assume(*assumptions):
+    """ Assume a set of facts
+
+    Example
+
+    from sympy.assumptions.assume import assume
+    from sympy import Q, ask
+    from sympy.abc import x
+
+    print ask(Q.integer(x))
+    None
+
+    assume(Q.integer(x))
+    print ask(Q.integer(x))
+    True
+    """
+    global_assumptions.update(assumptions)
