@@ -414,6 +414,8 @@ def roots_quintic(f):
             r4 = root
             break
 
+    # Now we have various Res values. Each will be a list of five
+    # values. We have to pick one r value from those five for each Res
     u, v = quintic.uv(theta, d)
 
     # Now we have various Res values. Each will be a list of five
