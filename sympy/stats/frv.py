@@ -182,10 +182,15 @@ class FinitePSpace(PSpace):
 
     Represents the probabilities of a finite number of events.
     """
-    domain =  property(lambda self: self.args[0])
-    density = property(lambda self: self.args[1])
-
     is_Finite = True
+
+    @property
+    def domain(self):
+        return self.args[0]
+
+    @property
+    def density(self):
+        return self.args[0]
 
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
@@ -282,16 +287,21 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     This class is implemented by many of the standard FiniteRV types such as
     Die, Bernoulli, Coin, etc....
     """
-    symbol =  property(lambda self: self.args[0])
-    density = property(lambda self: self.args[1])
+    @property
+    def symbol(self):
+        return self.args[0]
 
-    def __new__(cls, symbol, density):
-        symbol = sympify(symbol)
-        return Basic.__new__(cls, symbol, density)
+    @property
+    def density(self):
+        return self.args[1]
 
     @property
     def domain(self):
         return SingleFiniteDomain(self.symbol, self.density.set)
+
+    def __new__(cls, symbol, density):
+        symbol = sympify(symbol)
+        return Basic.__new__(cls, symbol, density)
 
     @property
     @cacheit
