@@ -185,10 +185,11 @@ def assuming(*assumptions):
     >>> from sympy.assumptions import assuming, Q, ask
     >>> from sympy.abc import x, y
 
-    >>> ask(Q.integer(x + y))  # Returns None
+    >>> print ask(Q.integer(x + y))
+    None
 
-    >>> with assuming(Q.integer(x), Q.integer(y)):
-    ...     ask(Q.integer(x + y))
+    >>> with assuming(Q.integer(x), Q.integer(y)):  #doctest: +SKIP
+    ...     print ask(Q.integer(x + y))
     True
 
     See Also:
