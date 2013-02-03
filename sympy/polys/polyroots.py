@@ -328,7 +328,7 @@ def roots_quintic(f):
     if coeff_5 != 1:
         l = [p/coeff_5, q/coeff_5, r/coeff_5, s/coeff_5]
         for coeff in l:
-            if not coeff.is_integer:
+            if not coeff.is_rational:
                 return result
         f = Poly(f/coeff_5)
     quintic = PolyQuintic(f)
