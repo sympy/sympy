@@ -4,6 +4,7 @@ from sympy.unify.usympy import (deconstruct, construct, unify, is_associative,
         is_commutative)
 from sympy.abc import w, x, y, z, n, m, k
 from sympy.utilities.pytest import XFAIL
+from sympy.core.compatibility import next
 
 def test_deconstruct():
     expr     = Basic(1, 2, 3)
