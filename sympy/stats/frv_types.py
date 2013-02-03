@@ -24,7 +24,9 @@ def rv(name, cls, *args):
     return SingleFinitePSpace(name, density).value
 
 class FiniteDistributionHandmade(SingleFiniteDistribution):
-    density = property(lambda self: self.args[0])
+    @property
+    def density(self):
+        return self.args[0]
 
     def __new__(cls, density):
         density = Dict(density)
@@ -49,8 +51,13 @@ def FiniteRV(name, density):
     return rv(name, FiniteDistributionHandmade, density)
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
-    items = property(lambda self: self.args)
-    p     = property(lambda self: Rational(1, len(self.items)))
+    @property
+    def items(self):
+        return self.args
+
+    @property
+    def p(self):
+        return Rational(1, len(self.items))
 
     @property
     @cacheit
@@ -94,7 +101,7 @@ def DiscreteUniform(name, items):
 
 
 class DieDistribution(SingleFiniteDistribution):
-    sides = property(lambda self: self.args[0])
+    _argnames = ('sides',)
 
     @property
     def set(self):
@@ -129,9 +136,7 @@ def Die(name, sides=6):
 
 
 class BernoulliDistribution(SingleFiniteDistribution):
-    p = property(lambda self: self.args[0])
-    succ = property(lambda self: self.args[1])
-    fail = property(lambda self: self.args[2])
+    _argnames = ('p', 'succ', 'fail')
 
     @property
     @cacheit
@@ -183,10 +188,7 @@ def Coin(name, p=S.Half):
 
 
 class BinomialDistribution(SingleFiniteDistribution):
-    n = property(lambda self: self.args[0])
-    p = property(lambda self: self.args[1])
-    succ = property(lambda self: self.args[2])
-    fail = property(lambda self: self.args[3])
+    _argnames = ('n', 'p', 'succ', 'fail')
 
     @property
     @cacheit
@@ -217,9 +219,7 @@ def Binomial(name, n, p, succ=1, fail=0):
 
 
 class HypergeometricDistribution(SingleFiniteDistribution):
-    N = property(lambda self: self.args[0])
-    m = property(lambda self: self.args[1])
-    n = property(lambda self: self.args[2])
+    _argnames = ('N', 'm', 'n')
 
     @property
     @cacheit

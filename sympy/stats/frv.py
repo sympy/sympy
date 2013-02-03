@@ -12,7 +12,8 @@ from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple)
 from sympy.core.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
-        PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs)
+        PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
+        NamedArgsMixin)
 from sympy.core.compatibility import product
 from sympy.core.containers import Dict
 import random
@@ -152,7 +153,7 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
 
-class SingleFiniteDistribution(Basic):
+class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def __new__(cls, *args):
         args = map(sympify, args)
         return Basic.__new__(cls, *args)
