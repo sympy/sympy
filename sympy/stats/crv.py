@@ -9,7 +9,8 @@ sympy.stats.frv
 """
 
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
+        NamedArgsMixin)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
         Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
@@ -146,7 +147,7 @@ class ContinuousDistribution(Basic):
         return self.pdf(*args)
 
 
-class SingleContinuousDistribution(ContinuousDistribution):
+class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
     """ Continuous distribution of a single variable
 
     Serves as superclass for Normal/Exponential/UniformDistribution etc....
@@ -161,13 +162,6 @@ class SingleContinuousDistribution(ContinuousDistribution):
     """
 
     set = Interval(-oo, oo)
-
-    def __getattr__(self, attr):
-        try:
-            return self.args[self._argnames.index(attr)]
-        except ValueError:
-            raise AttributeError("'%s' object has not attribute '%s'" % (
-                type(self).__name__, attr))
 
     def __new__(cls, *args):
         args = map(sympify, args)

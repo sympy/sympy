@@ -924,3 +924,11 @@ def rv_subs(expr, symbols=None):
         return expr
     swapdict = dict([(rv, rv.symbol) for rv in symbols])
     return expr.xreplace(swapdict)
+
+class NamedArgsMixin(object):
+    def __getattr__(self, attr):
+        try:
+            return self.args[self._argnames.index(attr)]
+        except ValueError:
+            raise AttributeError("'%s' object has not attribute '%s'" % (
+                type(self).__name__, attr))
