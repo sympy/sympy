@@ -318,6 +318,7 @@ def roots_quintic(f):
     """
     Calulate exact roots of a solvable quintic
     """
+    simplify = lambda x: x
     result = []
     coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
 
@@ -327,9 +328,8 @@ def roots_quintic(f):
 
     if coeff_5 != 1:
         l = [p/coeff_5, q/coeff_5, r/coeff_5, s/coeff_5]
-        for coeff in l:
-            if not coeff.is_rational:
-                return result
+        if not all(coeff.is_Rational for coeff in l):
+            return result
         f = Poly(f/coeff_5)
     quintic = PolyQuintic(f)
 
@@ -343,16 +343,15 @@ def roots_quintic(f):
         return result
 
     # Now, we know that f is solvable
-    f20_factors = f20.factor_list()
-    for factor in f20_factors[1]:
-        poly = factor[0]
-        if poly.is_linear:
-            theta = poly.root(0)
+    for factor in f20.factor_list()[1]:
+        if factor[0].is_linear:
+            theta = factor[0].root(0)
             break
     d = discriminant(f)
     delta = sqrt(d)
     # zeta = a fifth root of unity
-    zeta = cos(2*pi/5) + I*sin(2*pi/5)
+    zeta1, zeta2, zeta3, zeta4 = quintic.zeta
+    import pdb;pdb.set_trace()
     T = quintic.T(theta, d)
     tol = S(1e-10)
     alpha = T['1'] + T['2']*delta
@@ -382,10 +381,10 @@ def roots_quintic(f):
         l3 = temp
 
     # Now we have correct order of l's
-    R1 = l0 + l1*zeta + l2*zeta**2 + l3*zeta**3 + l4*zeta**4
-    R2 = l0 + l3*zeta + l1*zeta**2 + l4*zeta**3 + l2*zeta**4
-    R3 = l0 + l2*zeta + l4*zeta**2 + l1*zeta**3 + l3*zeta**4
-    R4 = l0 + l4*zeta + l3*zeta**2 + l2*zeta**3 + l1*zeta**4
+    R1 = l0 + l1*zeta1 + l2*zeta2 + l3*zeta3 + l4*zeta4
+    R2 = l0 + l3*zeta1 + l1*zeta2 + l4*zeta3 + l2*zeta4
+    R3 = l0 + l2*zeta1 + l4*zeta2 + l1*zeta3 + l3*zeta4
+    R4 = l0 + l4*zeta1 + l3*zeta2 + l2*zeta3 + l1*zeta4
 
     Res = [None]*5
     sol = Symbol('sol')
@@ -403,10 +402,6 @@ def roots_quintic(f):
     Res[2] = solve_five(sol**5 - R2, sol)
     Res[3] = solve_five(sol**5 - R3, sol)
     Res[4] = solve_five(sol**5 - R4, sol)
-
-    for i in range(1, 5):
-        for j, root in enumerate(Res[i]):
-            Res[i][j] = simplify(root)
 
     r1 = Res[1][0]
     for root in Res[4]:
@@ -447,10 +442,10 @@ def roots_quintic(f):
 
     # Now, we have r's so we can get roots
     x1 = S(r1 + r2 + r3 + r4)/5
-    x2 = S(r1*zeta**4 + r2*zeta**3 + r3*zeta**2 + r4*zeta)/5
-    x3 = S(r1*zeta**3 + r2*zeta + r3*zeta**4 + r4*zeta**2)/5
-    x4 = S(r1*zeta**2 + r2*zeta**4 + r3*zeta + r4*zeta**3)/5
-    x5 = S(r1*zeta + r2*zeta**2 + r3*zeta**3 + r4*zeta**4)/5
+    x2 = S(r1*zeta4 + r2*zeta3 + r3*zeta2 + r4*zeta1)/5
+    x3 = S(r1*zeta3 + r2*zeta1 + r3*zeta4 + r4*zeta2)/5
+    x4 = S(r1*zeta2 + r2*zeta4 + r3*zeta1 + r4*zeta3)/5
+    x5 = S(r1*zeta1 + r2*zeta2 + r3*zeta3 + r4*zeta4)/5
 
     result = [x1, x2, x3, x4, x5]
     return result
