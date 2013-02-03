@@ -926,6 +926,8 @@ def rv_subs(expr, symbols=None):
     return expr.xreplace(swapdict)
 
 class NamedArgsMixin(object):
+    _argnames = ()
+
     def __getattr__(self, attr):
         try:
             return self.args[list(self._argnames).index(attr)]

@@ -167,3 +167,8 @@ def test_NamedArgsMixin():
     assert a.bar == 2
 
     raises(AttributeError, lambda: a.baz)
+
+    class Bar(Basic, NamedArgsMixin):
+        pass
+
+    raises(AttributeError, lambda: Bar(1, 2).foo)
