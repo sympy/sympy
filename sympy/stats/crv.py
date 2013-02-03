@@ -224,8 +224,11 @@ class SingleContinuousDistribution(ContinuousDistribution):
         return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
 
 class ContinuousDistributionHandmade(SingleContinuousDistribution):
-    pdf = property(lambda self: self.args[0])
-    set = property(lambda self: self.args[1])
+    _argnames = ('pdf',)
+
+    @property
+    def set(self):
+        return self.args[1]
 
     def __new__(cls, pdf, set=Interval(-oo, oo)):
         return Basic.__new__(cls, pdf, set)
@@ -240,8 +243,18 @@ class ContinuousPSpace(PSpace):
     """
 
     is_Continuous = True
-    domain  = property(lambda self: self.args[0])
-    density = property(lambda self: self.args[1])
+
+    @property
+    def domain(self):
+        return self.args[0]
+
+    @property
+    def density(self):
+        return self.args[1]
+
+    @property
+    def pdf(self):
+        return self.density(*self.domain.symbols)
 
     def integrate(self, expr, rvs=None, **kwargs):
         if rvs is None:
@@ -266,10 +279,6 @@ class ContinuousPSpace(PSpace):
 
         z = Dummy('z', real=True, bounded=True)
         return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
-
-    @property
-    def pdf(self):
-        return self.density(*self.domain.symbols)
 
     @cacheit
     def compute_cdf(self, expr, **kwargs):
