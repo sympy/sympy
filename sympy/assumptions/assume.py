@@ -251,5 +251,3 @@ def retract(*assumptions):
         assuming
     """
     global_assumptions.difference_update(assumptions)
-
-
