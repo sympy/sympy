@@ -318,7 +318,7 @@ def roots_quintic(f):
     """
     Calulate exact roots of a solvable quintic
     """
-    result = None
+    result = []
     coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
 
     # Eqn must me of the for x^5 + px^3 + qx^2 + rx + s
@@ -415,6 +415,8 @@ def roots_quintic(f):
             r4 = root
             break
 
+    # Now we have various Res values. Each will be a list of five
+    # values. We have to pick one r value from those five for each Res
     u, v = quintic.uv(theta, d)
 
     testplus = (u + v*delta*sqrt(5)).n()
@@ -428,7 +430,7 @@ def roots_quintic(f):
 
     for r2temp in Res[2]:
         for r3temp in Res[3]:
-            # Again storig away exact number and using
+            # Again storing away the exact number and using
             # evaluated numbers in computations
             r2temp_n = r2temp.n()
             r3temp_n = r3temp.n()
@@ -448,8 +450,8 @@ def roots_quintic(f):
     x4 = S(r1*zeta**2 + r2*zeta**4 + r3*zeta + r4*zeta**3)/5
     x5 = S(r1*zeta + r2*zeta**2 + r3*zeta**3 + r4*zeta**4)/5
 
-    soln = [x1, x2, x3, x4, x5]
-    return soln
+    result = [x1, x2, x3, x4, x5]
+    return result
 
 
 def _integer_basis(poly):
