@@ -203,15 +203,41 @@ def assume(*assumptions):
 
     Example
 
-    from sympy.assumptions.assume import assume
-    from sympy import Q, ask
-    from sympy.abc import x
+    >>> from sympy.assumptions.assume import assume, retract
+    >>> from sympy import Q, ask
+    >>> from sympy.abc import x
 
-    print ask(Q.integer(x))
+    >>> print ask(Q.integer(x))
     None
 
-    assume(Q.integer(x))
-    print ask(Q.integer(x))
+    >>> assume(Q.integer(x))
+    >>> print ask(Q.integer(x))
     True
+
+    >>> retract(Q.integer(x))
+    >>> print ask(Q.integer(x))
+    None
     """
     global_assumptions.update(assumptions)
+
+def retract(*assumptions):
+    """ Retract facts from the global assumptions
+
+    >>> from sympy.assumptions.assume import assume, retract
+    >>> from sympy import Q, ask
+    >>> from sympy.abc import x
+
+    >>> print ask(Q.integer(x))
+    None
+
+    >>> assume(Q.integer(x))
+    >>> print ask(Q.integer(x))
+    True
+
+    >>> retract(Q.integer(x))
+    >>> print ask(Q.integer(x))
+    None
+    """
+    global_assumptions.difference_update(assumptions)
+
+
