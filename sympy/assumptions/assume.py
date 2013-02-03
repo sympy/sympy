@@ -190,6 +190,10 @@ def assuming(*assumptions):
     >>> with assuming(Q.integer(x), Q.integer(y)):
     ...     ask(Q.integer(x + y))
     True
+
+    See Also:
+        assume
+        retract
     """
     old_global_assumptions = global_assumptions.copy()
     global_assumptions.update(assumptions)
@@ -217,6 +221,10 @@ def assume(*assumptions):
     >>> retract(Q.integer(x))
     >>> print ask(Q.integer(x))
     None
+
+    See Also:
+        retract
+        assuming
     """
     global_assumptions.update(assumptions)
 
@@ -237,6 +245,10 @@ def retract(*assumptions):
     >>> retract(Q.integer(x))
     >>> print ask(Q.integer(x))
     None
+
+    See Also:
+        assume
+        assuming
     """
     global_assumptions.difference_update(assumptions)
 
