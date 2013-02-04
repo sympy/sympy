@@ -3,6 +3,7 @@ from sympy.core.cache import cacheit
 from sympy.core.singleton import S
 from sympy.logic.boolalg import Boolean
 from sympy.utilities.source import get_class
+from contextlib import contextmanager
 
 
 class AssumptionsContext(set):
@@ -175,3 +176,79 @@ class Predicate(Boolean):
                         raise ValueError('incompatible resolutors')
                 break
         return res
+
+@contextmanager
+def assuming(*assumptions):
+    """ Context manager for assumptions
+
+    >>> from __future__ import with_statement
+    >>> from sympy.assumptions import assuming, Q, ask
+    >>> from sympy.abc import x, y
+
+    >>> print ask(Q.integer(x + y))
+    None
+
+    >>> with assuming(Q.integer(x), Q.integer(y)):  #doctest: +SKIP
+    ...     print ask(Q.integer(x + y))
+    True
+
+    See Also:
+        assume
+        retract
+    """
+    old_global_assumptions = global_assumptions.copy()
+    global_assumptions.update(assumptions)
+    try:
+        yield
+    finally:
+        global_assumptions.intersection_update(old_global_assumptions)
+
+def assume(*assumptions):
+    """ Assume a set of facts
+
+    Example
+
+    >>> from sympy.assumptions.assume import assume, retract
+    >>> from sympy import Q, ask
+    >>> from sympy.abc import x
+
+    >>> print ask(Q.integer(x))
+    None
+
+    >>> assume(Q.integer(x))
+    >>> print ask(Q.integer(x))
+    True
+
+    >>> retract(Q.integer(x))
+    >>> print ask(Q.integer(x))
+    None
+
+    See Also:
+        retract
+        assuming
+    """
+    global_assumptions.update(assumptions)
+
+def retract(*assumptions):
+    """ Retract facts from the global assumptions
+
+    >>> from sympy.assumptions.assume import assume, retract
+    >>> from sympy import Q, ask
+    >>> from sympy.abc import x
+
+    >>> print ask(Q.integer(x))
+    None
+
+    >>> assume(Q.integer(x))
+    >>> print ask(Q.integer(x))
+    True
+
+    >>> retract(Q.integer(x))
+    >>> print ask(Q.integer(x))
+    None
+
+    See Also:
+        assume
+        assuming
+    """
+    global_assumptions.difference_update(assumptions)

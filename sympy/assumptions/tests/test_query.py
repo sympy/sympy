@@ -3,6 +3,7 @@ from sympy.assumptions import (ask, AssumptionsContext, global_assumptions, Q,
                                register_handler, remove_handler)
 from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
                                    known_facts_dict, single_fact_lookup)
+from sympy.assumptions.assume import assume, retract
 from sympy.assumptions.handlers import AskHandler
 from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
 from sympy.functions import Abs, cos, exp, im, log, re, sign, sin, sqrt
@@ -1777,3 +1778,10 @@ def test_Add_queries():
     assert ask(Q.even(Add(S(2), S(2), evaluate=0))) is True
     assert ask(Q.prime(Add(S(2), S(2), evaluate=0))) is False
     assert ask(Q.integer(Add(S(2), S(2), evaluate=0))) is True
+
+def test_assume_retract():
+    assert not ask(Q.integer(x))
+    assume(Q.integer(x))
+    assert ask(Q.integer(x))
+    retract(Q.integer(x))
+    assert not ask(Q.integer(x))
