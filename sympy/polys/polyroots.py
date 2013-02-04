@@ -313,8 +313,12 @@ def roots_cyclotomic(f, factor=False):
     return sorted(roots, key=default_sort_key)
 
 
-def roots_rational(f):
-    """Returns a list of rational roots of a polynomial."""
+def roots_rational(f, integer=False):
+    """
+    Returns a list of rational roots of a polynomial.
+
+    If integer=True, only return integer solutions.
+    """
     domain = f.get_domain()
 
     if domain.is_QQ:
@@ -324,7 +328,11 @@ def roots_rational(f):
     else:
         return []
 
-    LC_divs = divisors(int(f.LC()))
+
+    if integer:
+        LC_divs = [1]
+    else:
+        LC_divs = divisors(int(f.LC()))
     EC_divs = divisors(int(f.EC()))
 
     if not f.eval(S.Zero):

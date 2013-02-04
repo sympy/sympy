@@ -158,6 +158,9 @@ def test_roots_rational():
     assert roots_rational(Poly((x - 4)*(x - 5)*(x - 2), x)) == [2, 4, 5]
     assert roots_rational(Poly((2*x - 3)*(x - 7)*(x**2 + 2), x)) == [S(3)/2, 7]
 
+    assert roots_rational(Poly(x*(x - 4)*(2*x - 3), x), integer=True) == [0, 4]
+    assert roots_rational(Poly((x**2 + 2)*(x + 3)*(2*x**2/5 + x), x)) == [-3, -S(5)/2, 0]
+    assert roots_rational(Poly((x**2 + 2)*(x + 3)*(2*x**2/5 + x), x), integer=True) == [-3, 0]
 
 def test_roots_preprocessing():
     f = a*y*x**2 + y - b
