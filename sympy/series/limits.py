@@ -50,8 +50,11 @@ def limit(e, z, z0, dir="+"):
         return e
 
     # gruntz fails on factorials but works with the gamma function
-    # if no factorial term is present, e should remain unchanged
-    e = e.rewrite(factorial, gamma)
+    # If no factorial term is present, e should remain unchanged.
+    # factorial is defined to be zero for negative inputs (which
+    # differs from gamma) so only rewrite for positive z0.
+    if z0 >= 0:
+        e = e.rewrite(factorial, gamma)
 
     if e.func is tan:
         # discontinuity at odd multiples of pi/2; 0 at even
