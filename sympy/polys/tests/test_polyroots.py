@@ -8,7 +8,7 @@ from sympy.polys import Poly, cyclotomic_poly, intervals, nroots
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, roots_rational, preprocess_roots, roots)
+    roots_binomial, preprocess_roots, roots)
 
 a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
@@ -143,24 +143,6 @@ def test_roots_binomial():
 
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])
-
-
-def test_roots_rational():
-    assert roots_rational(Poly(x**2 - 1, x)) == [-S.One, S.One]
-    assert roots_rational(Poly(x**2 - x, x)) == [S.Zero, S.One]
-
-    assert roots_rational(Poly(x**2 - x/2, x)) == [S.Zero, S(1)/2]
-    assert roots_rational(Poly(2*x**2 - x, x)) == [S.Zero, S(1)/2]
-
-    assert roots_rational(Poly(t*x**2 - x, x)) == []
-
-    assert roots_rational(Poly((x**5-3*x**3+17)*(x-3), x)) == [3]
-    assert roots_rational(Poly((x - 4)*(x - 5)*(x - 2), x)) == [2, 4, 5]
-    assert roots_rational(Poly((2*x - 3)*(x - 7)*(x**2 + 2), x)) == [S(3)/2, 7]
-
-    assert roots_rational(Poly(x*(x - 4)*(2*x - 3), x), integer=True) == [0, 4]
-    assert roots_rational(Poly((x**2 + 2)*(x + 3)*(2*x**2/5 + x), x)) == [-3, -S(5)/2, 0]
-    assert roots_rational(Poly((x**2 + 2)*(x + 3)*(2*x**2/5 + x), x), integer=True) == [-3, 0]
 
 def test_roots_preprocessing():
     f = a*y*x**2 + y - b
