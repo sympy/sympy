@@ -328,19 +328,19 @@ def roots_rational(f):
     EC_divs = divisors(int(f.EC()))
 
     if not f.eval(S.Zero):
-        zeros = [S.Zero]
+        zeros = set([S.Zero])
     else:
-        zeros = []
+        zeros = set([])
 
-    for p in LC_divs:
-        for q in EC_divs:
+    for p in EC_divs:
+        for q in LC_divs:
             zero = Rational(p, q)
 
             if not f.eval(zero):
-                zeros.append(zero)
+                zeros.add(zero)
 
             if not f.eval(-zero):
-                zeros.append(-zero)
+                zeros.add(-zero)
 
     return sorted(zeros, key=default_sort_key)
 

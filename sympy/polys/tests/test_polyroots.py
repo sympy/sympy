@@ -149,10 +149,14 @@ def test_roots_rational():
     assert roots_rational(Poly(x**2 - 1, x)) == [-S.One, S.One]
     assert roots_rational(Poly(x**2 - x, x)) == [S.Zero, S.One]
 
-    assert roots_rational(Poly(x**2 - x/2, x)) == [S.Zero]
-    assert roots_rational(Poly(2*x**2 - x, x)) == [S.Zero]
+    assert roots_rational(Poly(x**2 - x/2, x)) == [S.Zero, S(1)/2]
+    assert roots_rational(Poly(2*x**2 - x, x)) == [S.Zero, S(1)/2]
 
     assert roots_rational(Poly(t*x**2 - x, x)) == []
+
+    assert roots_rational(Poly((x**5-3*x**3+17)*(x-3), x)) == [3]
+    assert roots_rational(Poly((x - 4)*(x - 5)*(x - 2), x)) == [2, 4, 5]
+    assert roots_rational(Poly((2*x - 3)*(x - 7)*(x**2 + 2), x)) == [S(3)/2, 7]
 
 
 def test_roots_preprocessing():
