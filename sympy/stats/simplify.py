@@ -31,8 +31,7 @@ def unpack_Density(d):
         isinstance(d.expr.pspace.density, ContinuousDistribution)):
         yield d.expr.pspace.density
 
-expression_rrs = [rewriterule(src, tgt, wilds)
-                    for src, tgt, wilds in rv_eqs]
+expression_rrs = map(rewriterule, *zip(*rv_eqs))
 
 rrs = expression_rrs + [unpack_Density]
 
