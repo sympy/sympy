@@ -376,3 +376,4 @@ def test_factorial():
     # see Stirling's approximation:
     # http://en.wikipedia.org/wiki/Stirling's_approximation
     assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
+    assert limit(f, x, -oo) == factorial(-oo)
