@@ -197,4 +197,5 @@ def assuming(*assumptions):
     try:
         yield
     finally:
-        global_assumptions.intersection_update(old_global_assumptions)
+        global_assumptions.clear()
+        global_assumptions.update(old_global_assumptions)
