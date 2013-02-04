@@ -16,7 +16,8 @@ class AssumptionsContext(set):
     Examples
     ========
 
-        >>> from sympy import global_assumptions, AppliedPredicate, Q
+        >>> from sympy import AppliedPredicate, Q
+        >>> from sympy.assumptions.assume import global_assumptions
         >>> global_assumptions
         AssumptionsContext()
         >>> from sympy.abc import x
