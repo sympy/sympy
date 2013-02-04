@@ -42,6 +42,6 @@ def test_unpack_Density():
 def test_unify():
     assert tuple(unify(NormalDistribution(0, 1), NormalDistribution(0, 1)))
     assert tuple(unify(Normal(x, 0, 1), Normal(x, 0, 1)))
-    assert tuple(unify(Normal(y, 0, 1), Normal(x, 0, 1), wilds=[x]))
+    assert tuple(unify(Normal(y, 0, 1), Normal(x, 0, 1), variables=[x]))
     assert list(unify(Normal(x, 0, 1), Normal(y, 0, 1),
-                      {}, wilds=[y])) == [{y: x}]
+                      {}, variables=[y])) == [{y: x}]
