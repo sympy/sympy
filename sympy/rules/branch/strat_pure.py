@@ -1,5 +1,6 @@
 """ Generic SymPy-Independent Strategies """
-import itertools
+import itertools as it
+from sympy.rules.branch.util import unique, interleave, fnmap
 
 def exhaust(brule):
     """ Apply a branching rule repeatedly until it has no effect """
@@ -36,14 +37,7 @@ def debug(brule, file=None):
 
 def multiplex(*brules):
     """ Multiplex many branching rules into one """
-    def multiplex_brl(expr):
-        seen = set([])
-        for brl in brules:
-            for nexpr in brl(expr):
-                if nexpr not in seen:
-                    seen.add(nexpr)
-                    yield nexpr
-    return multiplex_brl
+    return lambda expr: unique(interleave(fnmap(brules, expr)))
 
 def condition(cond, brule):
     """ Only apply branching rule if condition is true """
@@ -57,7 +51,7 @@ def condition(cond, brule):
 def sfilter(pred, brule):
     """ Yield only those results which satisfy the predicate """
     def filtered_brl(expr):
-        for x in itertools.ifilter(pred, brule(expr)):
+        for x in it.ifilter(pred, brule(expr)):
             yield x
     return filtered_brl
 
