@@ -109,6 +109,7 @@ class StrPrinter(Printer):
     def _print_Dict(self, expr):
         return self._print_dict(expr)
 
+
     def _print_RandomDomain(self, d):
         try:
             return 'Domain: ' + self._print(d.as_boolean())
@@ -542,6 +543,7 @@ class StrPrinter(Printer):
     def _print_Symbol(self, expr):
         return expr.name
     _print_MatrixSymbol = _print_Symbol
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Identity(self, expr):
         return "I"

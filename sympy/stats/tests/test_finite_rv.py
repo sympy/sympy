@@ -4,7 +4,7 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
         given, independent, dependent, where, FiniteRV, pspace, cdf)
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 oo = S.Infinity
 
@@ -177,6 +177,7 @@ def test_binomial_numeric():
                 assert Eq(P(Eq(X, k)), binomial(n, k)*p**k*(1 - p)**(n - k))
 
 
+@slow
 def test_binomial_symbolic():
     n = 10  # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)

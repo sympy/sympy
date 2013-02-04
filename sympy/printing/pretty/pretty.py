@@ -60,6 +60,7 @@ class PrettyPrinter(Printer):
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)
         return prettyForm(symb)
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Float(self, e):
         # we will use StrPrinter's Float printer, but we need to handle the

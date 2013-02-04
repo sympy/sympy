@@ -8,3 +8,6 @@ def test_subs():
     expr   = Basic(a, Basic(b, c), Basic(d, Basic(e)))
     result = Basic(d, Basic(b, c), Basic(a, Basic(f)))
     assert subs(mapping)(expr) == result
+
+def test_subs_empty():
+    assert subs({})(Basic(1, 2)) == Basic(1, 2)
