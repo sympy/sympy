@@ -399,7 +399,6 @@ class RootOf(Expr):
             func = lambdify(self.poly.gen, self.expr)
 
             interval = self._get_interval()
-            refined = False
 
             while True:
                 if self.is_real:
@@ -433,12 +432,8 @@ class RootOf(Expr):
                             raise ValueError("Root not in the interval.")
                 except ValueError:
                     interval = interval.refine()
-                    refined = True
                     continue
                 else:
-                    if refined:
-                        self._set_interval(interval)
-
                     break
         finally:
             mp.prec = _prec

@@ -181,6 +181,15 @@ def test_RootOf_evalf():
     assert re.epsilon_eq(Float("+1.272897223922499190910"))
     assert im.epsilon_eq(Float("+0.719798681483861386681"))
 
+def test_RootOf_evalf_caching_bug():
+    r = RootOf(x**5 - 5*x + 12, 1)
+    r.n()
+    a = r._get_interval()
+    r = RootOf(x**5 - 5*x + 12, 1)
+    r.n()
+    b = r._get_interval()
+    assert a == b
+
 def test_RootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
     assert Poly(x**5 + x + 1).real_roots(radicals=False) == [RootOf(
