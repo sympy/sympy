@@ -1,4 +1,4 @@
-from sympy.unify.rewrite import crl, rewriterules
+from sympy.unify.rewrites import crl, rewriterules
 from sympy import *
 from sympy.abc import x, y, z
 from sympy.unify.usympy import construct, deconstruct
@@ -46,3 +46,12 @@ def test_rewriterules_sympy_nested():
 
     assert list(f('a')) == ['a']
     assert list(f(Basic(1, Basic(4)))) == [Basic(3, Basic(4))]
+
+def test_strategy():
+    from sympy.rules.branch import multiplex
+    pat1 = Basic(1, Basic(x)), Basic(2, Basic(x)), [x], None
+    pat2 = Basic(2, Basic(x)), Basic(3, Basic(x)), [x], None
+    strategy = lambda rules: multiplex(*rules)
+    f = rewriterules(*zip(pat1, pat2), strategy=strategy)
+
+    assert list(f(Basic(1, Basic(4)))) == [Basic(2, Basic(4))]
