@@ -1,4 +1,5 @@
-from sympy.unify.core import Compound, Variable, CondVariable, allcombinations
+from sympy.unify.core import (Compound, Variable, CondVariable, allcombinations,
+        reify)
 from sympy.unify import core
 from sympy.core.compatibility import next
 
@@ -34,6 +35,12 @@ def test_ops():
             [{x:b, y:c}]
     assert list(unify(C('Add', (C('Mul', (1,2)), b,c)), C('Add', (x,y,c)), {})) == \
             [{x: C('Mul', (1,2)), y:b}]
+
+def test_reify():
+    assert reify(1, {2: 3}) == 1
+    assert reify(2, {2: 3}) == 3
+
+    assert reify(Compound('Add', (2, 4)), {2: 3}) == Compound('Add', (3, 4))
 
 def test_associative():
     c1 = C('Add', (1,2,3))

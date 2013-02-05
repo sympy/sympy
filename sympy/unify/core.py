@@ -25,7 +25,7 @@ class Compound(object):
     """
     def __init__(self, op, args):
         self.op = op
-        self.args = args
+        self.args = tuple(args)
 
     def __eq__(self, other):
         return (type(self) == type(other) and self.op == other.op and
@@ -71,6 +71,13 @@ class CondVariable(object):
 
     def __str__(self):
         return "CondVariable(%s)" % str(self.arg)
+
+def reify(x, s):
+    if x in s:
+        return s[x]
+    if isinstance(x, Compound):
+        return Compound(reify(x.op, s), [reify(arg, s) for arg in x.args])
+    return x
 
 def unify(x, y, s=None, **fns):
     """ Unify two expressions
