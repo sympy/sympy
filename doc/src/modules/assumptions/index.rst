@@ -43,6 +43,7 @@ object from module sympy.assumptions. You can then clear global assumptions
 with global_assumptions.clear()::
 
      >>> from sympy import *
+     >>> from sympy.assumptions.assume import global_assumptions
      >>> x = Symbol('x')
      >>> global_assumptions.add(Q.positive(x))
      >>> ask(Q.positive(x))
