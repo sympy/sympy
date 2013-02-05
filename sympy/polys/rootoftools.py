@@ -477,10 +477,8 @@ class RootOf(Expr):
             raise NotImplementedError("eval_rational() only works for real polynomials so far")
         func = lambdify(self.poly.gen, self.expr)
         interval = self._get_interval()
-        a = interval.a
-        b = interval.b
-        a = Rational(a.p, a.q)
-        b = Rational(b.p, b.q)
+        a = Rational(str(interval.a))
+        b = Rational(str(interval.b))
         # This is needed due to the bug #3364:
         a, b = min(a, b), max(a, b)
         return bisect(func, a, b, tol)
