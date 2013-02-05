@@ -409,17 +409,27 @@ class RootOf(Expr):
 
                 try:
                     root = findroot(func, x0)
+                    # If the (real or complex) root is not in the 'interval',
+                    # then keep refining the interval. This happens if findroot
+                    # accidentally finds a different root outside of this
+                    # interval because our initial estimate 'x0' was not close
+                    # enough.
                     if self.is_real:
                         a = mpf(str(interval.a))
                         b = mpf(str(interval.b))
                         # This is needed due to the bug #3364:
                         a, b = min(a, b), max(a, b)
                         if not (a < root < b):
-                            # If the root is not in the interval (a, b), we
-                            # keep refining the interval. This happens if
-                            # findroot accidentally finds a root in different
-                            # interval, because our initial estimate was not
-                            # close enough.
+                            raise ValueError("Root not in the interval.")
+                    else:
+                        ax = mpf(str(interval.ax))
+                        bx = mpf(str(interval.bx))
+                        ay = mpf(str(interval.ay))
+                        by = mpf(str(interval.by))
+                        # This is needed due to the bug #3364:
+                        ax, bx = min(ax, bx), max(ax, bx)
+                        ay, by = min(ay, by), max(ay, by)
+                        if not (ax < root.real < bx and ay < root.imag < by):
                             raise ValueError("Root not in the interval.")
                 except ValueError:
                     interval = interval.refine()
