@@ -162,6 +162,25 @@ def test_RootOf_evalf():
              "0.86113631159405258",
              ]
 
+    re = RootOf(x**5 - 5*x + 12, 0).evalf(n=20)
+    assert re.epsilon_eq(Float("-1.84208596619025438271"))
+
+    re, im = RootOf(x**5 - 5*x + 12, 1).evalf(n=20).as_real_imag()
+    assert re.epsilon_eq(Float("-0.351854240827371999559"))
+    assert im.epsilon_eq(Float("-1.709561043370328882010"))
+
+    re, im = RootOf(x**5 - 5*x + 12, 2).evalf(n=20).as_real_imag()
+    assert re.epsilon_eq(Float("-0.351854240827371999559"))
+    assert im.epsilon_eq(Float("+1.709561043370328882010"))
+
+    re, im = RootOf(x**5 - 5*x + 12, 3).evalf(n=20).as_real_imag()
+    assert re.epsilon_eq(Float("+1.272897223922499190910"))
+    assert im.epsilon_eq(Float("-0.719798681483861386681"))
+
+    re, im = RootOf(x**5 - 5*x + 12, 4).evalf(n=20).as_real_imag()
+    assert re.epsilon_eq(Float("+1.272897223922499190910"))
+    assert im.epsilon_eq(Float("+0.719798681483861386681"))
+
 def test_RootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
     assert Poly(x**5 + x + 1).real_roots(radicals=False) == [RootOf(
