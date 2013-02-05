@@ -232,3 +232,13 @@ def index(it, ind):
     [20, 30, 10]
     """
     return type(it)([it[i] for i in ind])
+
+# Functions to define tree traversals over Compounds
+def is_leaf(x):
+    return not isinstance(x, Compound)
+def children(x):
+    return x.args
+def new(op, *args):
+    return Compound(op, args)
+def op(x):
+    return x.op
