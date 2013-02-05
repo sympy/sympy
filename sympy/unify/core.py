@@ -36,6 +36,7 @@ class Compound(object):
 
     def __str__(self):
         return "%s[%s]" % (str(self.op), ', '.join(map(str, self.args)))
+    __repr__ = __str__
 
 class Variable(object):
     """ A Wild token """
@@ -50,6 +51,7 @@ class Variable(object):
 
     def __str__(self):
         return "Variable(%s)" % str(self.arg)
+    __repr__ = __str__
 
 class CondVariable(object):
     """ A wild token that matches conditionally
@@ -71,6 +73,7 @@ class CondVariable(object):
 
     def __str__(self):
         return "CondVariable(%s)" % str(self.arg)
+    __repr__ = __str__
 
 def reify(x, s):
     if x in s:
