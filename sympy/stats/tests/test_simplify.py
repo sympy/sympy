@@ -1,5 +1,4 @@
-from sympy.stats.simplify import (statsimp, rrs, expression_rrs,
-        unpack_Density, rv_eqs)
+from sympy.stats.simplify import statsimp, unpack_Density, exprrule
 from sympy.stats import Normal, ChiSquared, LogNormal
 from sympy.stats.crv_types import (ChiSquaredDistribution, NormalDistribution,
         Normal)
@@ -8,30 +7,27 @@ from sympy import Symbol, simplify, log
 from sympy.rules.branch import exhaust, multiplex, chain, yieldify
 from sympy.rules import rebuild
 
-from sympy.unify import unify, rewriterule
+from sympy.unify import unify
 
-expr_rrs = map(rewriterule, *zip(*rv_eqs))
-exprsimp = exhaust(multiplex(yieldify(rebuild), *expr_rrs))
 
 x, y = map(Symbol, 'xy')
 
 def test_chisquared():
     X = Normal('x', 0, 1)
-    assert next(exprsimp(X**2)).pspace.density == ChiSquaredDistribution(1)
+    assert next(exprrule(X**2)).pspace.density == ChiSquaredDistribution(1)
     assert next(statsimp(Density(X**2))) == ChiSquaredDistribution(1)
 
 def test_chisquared_two_degrees():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
-    assert next(exprsimp(X**2 + Y**2)).pspace.density == ChiSquaredDistribution(2)
+    assert rebuild(next(exprrule(X**2 + Y**2))).pspace.density == \
+            ChiSquaredDistribution(2)
     assert next(statsimp(Density(X**2 + Y**2))) == ChiSquaredDistribution(2)
 
 def test_chisquared_three_degrees():
     X = Normal('X', 0, 1)
     Y = Normal('Y', 0, 1)
     Z = Normal('Z', 0, 1)
-    assert next(exprsimp(X**2 + Y**2 + Z**2)).pspace.density ==\
-            ChiSquaredDistribution(3)
     assert next(statsimp(Density(X**2 + Y**2 + Z**2))) == \
             ChiSquaredDistribution(3)
 
@@ -48,7 +44,12 @@ def test_unify():
 
 def test_lognormal():
     mu, sigma = Symbol('mu', real=True), Symbol('sigma', positive=True)
-    assert next(exprsimp(log(Normal('X', mu, sigma)))) == \
+    assert next(exprrule(log(Normal('X', mu, sigma)))) == \
             LogNormal('X', mu, sigma)
-    assert next(exprsimp(log(Normal('X', mu, sigma)) + 1)) == \
+    assert next(exprrule(log(Normal('X', mu, sigma)) + 1)) == \
             LogNormal('X', mu, sigma) + 1
+
+def test_exprrule():
+    assert next(exprrule(Normal(y, 0, 1)**2)) == ChiSquared(y, 1)
+    assert next(exprrule(2*Normal(y, 0, 1)**2)) == 2*ChiSquared(y, 1)
+    assert next(exprrule(Density(Normal(y, 0, 1)**2))) == Density(ChiSquared(y, 1))
