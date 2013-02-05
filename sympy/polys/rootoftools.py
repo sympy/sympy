@@ -399,6 +399,16 @@ class RootOf(Expr):
             func = lambdify(self.poly.gen, self.expr)
 
             interval = self._get_interval()
+            if not self.is_real:
+                # For complex intervals, we need to keep refining until the
+                # imaginary interval is disjunct with other roots, that is,
+                # until both ends get refined.
+                ay = interval.ay
+                by = interval.by
+                while True:
+                    interval = interval.refine()
+                    if interval.ay != ay and interval.by != by:
+                        break
 
             while True:
                 if self.is_real:
