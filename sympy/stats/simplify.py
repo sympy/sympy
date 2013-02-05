@@ -1,4 +1,4 @@
-from sympy.stats import Normal, ChiSquared
+from sympy.stats import Normal, ChiSquared, LogNormal
 from sympy.stats.crv import ContinuousDistribution
 from sympy.stats.rv import Density, RandomSymbol
 from sympy.unify import rewriterule
@@ -6,9 +6,12 @@ from sympy.rules.branch import (multiplex, exhaust, chain, yieldify, debug,
         condition)
 from sympy.rules.branch.traverse import top_down
 from sympy.rules import rebuild, flatten
-from sympy import Symbol, Dummy, factor
+from sympy import Symbol, Dummy, factor, log, Abs
 
 x, y, z, n, m = map(Symbol, 'xyznm')
+r = Symbol('r', real=True)
+
+mu, sigma = Symbol('mu', real=True), Symbol('sigma', positive=True)
 
 # Equivalences of random expressions under density. E.g.
 # Density(Normal(x, 0, 1)) == Density(StandardNormal(y))
@@ -16,6 +19,9 @@ x, y, z, n, m = map(Symbol, 'xyznm')
 _rv_eqs = (
     (Normal(x, 0, 1)**2, ChiSquared(x, 1), [x]),
     (ChiSquared(x, m) + ChiSquared(y, n), ChiSquared(x, n+m), [x, y, n, m]),
+    (log(Normal(x, mu, sigma)), LogNormal(x, mu, sigma), [x, mu, sigma]),
+    (Normal(x, mu, sigma) + y, Normal(x, mu + y, sigma), [x, y, mu, sigma]),
+    (Normal(x, mu, sigma) * r, Normal(x, mu, sigma*Abs(r)), [x, r, mu, sigma]),
 )
 
 z = Dummy('z')

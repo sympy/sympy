@@ -1,10 +1,10 @@
 from sympy.stats.simplify import (statsimp, rrs, expression_rrs,
         unpack_Density, rv_eqs)
-from sympy.stats import Normal, ChiSquared
+from sympy.stats import Normal, ChiSquared, LogNormal
 from sympy.stats.crv_types import (ChiSquaredDistribution, NormalDistribution,
         Normal)
 from sympy.stats.rv import Density, pspace
-from sympy import Symbol, simplify
+from sympy import Symbol, simplify, log
 from sympy.rules.branch import exhaust, multiplex, chain, yieldify
 from sympy.rules import rebuild
 
@@ -45,3 +45,10 @@ def test_unify():
     assert tuple(unify(Normal(y, 0, 1), Normal(x, 0, 1), variables=[x]))
     assert list(unify(Normal(x, 0, 1), Normal(y, 0, 1),
                       {}, variables=[y])) == [{y: x}]
+
+def test_lognormal():
+    mu, sigma = Symbol('mu', real=True), Symbol('sigma', positive=True)
+    assert next(exprsimp(log(Normal('X', mu, sigma)))) == \
+            LogNormal('X', mu, sigma)
+    assert next(exprsimp(log(Normal('X', mu, sigma)) + 1)) == \
+            LogNormal('X', mu, sigma) + 1

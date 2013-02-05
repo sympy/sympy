@@ -1634,7 +1634,7 @@ class NormalDistribution(SingleContinuousDistribution):
 
     @staticmethod
     def check(mean, std):
-        _value_check(std > 0, "Standard deviation must be positive")
+        _value_check(std >= 0, "Standard deviation must be positive")
 
     def pdf(self, x):
         return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
