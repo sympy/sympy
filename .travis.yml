@@ -11,10 +11,6 @@ matrix:
       env: TEST_GMPY="true"
     - python: 3.3
       env: TEST_GMPY="true"
-    - python: 2.7
-      env: TEST_RST="true"
-    - python: 3.3
-      env: TEST_RST="true"
   # Below we list *exact* builds that are allowed to fail. Once they are fixed,
   # you can remove the appropriate test from below (you still need to keep it
   # above in order to be tested at all).
