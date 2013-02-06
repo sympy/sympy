@@ -353,10 +353,10 @@ def roots_quintic(f):
     zeta1, zeta2, zeta3, zeta4 = quintic.zeta
     T = quintic.T(theta, d)
     tol = S(1e-10)
-    alpha = T['1'] + T['2']*delta
-    alpha_bar = T['1'] - T['2']*delta
-    beta = T['3'] + T['4']*delta
-    beta_bar = T['3'] - T['4']*delta
+    alpha = T[1] + T[2]*delta
+    alpha_bar = T[1] - T[2]*delta
+    beta = T[3] + T[4]*delta
+    beta_bar = T[3] - T[4]*delta
 
     disc = alpha**2 - 4*beta
     disc_bar = alpha_bar**2 - 4*beta_bar
