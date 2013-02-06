@@ -1731,14 +1731,17 @@ def __trigsimp(expr, deep=False):
             result = result.subs(a, a_t)
 
             m = expr.match(pattern)
-            while m is not None:
+            was = None
+            while m and was != expr:
+                was = expr
                 if m[a_t] == 0 or \
                         -m[a_t] in m[c].args or m[a_t] + m[c] == 0:
                     break
-                if d in m.keys() and m[a_t]*m[d] + m[c] == 0:
+                if d in m and m[a_t]*m[d] + m[c] == 0:
                     break
                 expr = result.subs(m)
                 m = expr.match(pattern)
+                m.setdefault(c, S.Zero)
 
     elif expr.is_Mul or expr.is_Pow or deep and expr.args:
         expr = expr.func(*[_trigsimp(a, deep) for a in expr.args])

@@ -262,6 +262,10 @@ def test_trigsimp_issues():
     assert trigsimp(cos(2)*(cos(3) + 1)**2*(cos(3) - 1)**2) == \
         cos(2)*sin(3)**4
 
+    # issue 3690; this generates an expression that formerly caused
+    # trigsimp to hang
+    assert cot(x).equals(tan(x)) is False
+
 
 def test_trigsimp_assumptions():
     from random import random, randint
