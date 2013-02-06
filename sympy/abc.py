@@ -38,7 +38,7 @@ def clashing():
 
     ns = {}
     exec 'from sympy import *' in ns
-
+    import pdb;pdb.set_trace()
     clash1 = {}
     clash2 = {}
     while ns:

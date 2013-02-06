@@ -12,8 +12,9 @@ from sympy.polys.polytools import Poly, cancel, factor, gcd_list, discriminant
 from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
 from sympy.polys.polyquinticconst import PolyQuintic
+from sympy.polys.rationaltools import together
 
-from sympy.simplify import simplify
+from sympy.simplify import simplify, powsimp
 from sympy.utilities import default_sort_key
 
 from sympy.core.compatibility import reduce
@@ -318,7 +319,6 @@ def roots_quintic(f):
     """
     Calulate exact roots of a solvable quintic
     """
-    simplify = lambda x: x
     result = []
     coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
 
@@ -351,7 +351,6 @@ def roots_quintic(f):
     delta = sqrt(d)
     # zeta = a fifth root of unity
     zeta1, zeta2, zeta3, zeta4 = quintic.zeta
-    import pdb;pdb.set_trace()
     T = quintic.T(theta, d)
     tol = S(1e-10)
     alpha = T['1'] + T['2']*delta
@@ -371,7 +370,7 @@ def roots_quintic(f):
     l3 = simplify((-alpha_bar - sqrt(disc_bar)) / S(2))
 
     order = quintic.order(theta, d)
-    test = (order*delta) - ( (l1 - l4)*(l2 - l3) )
+    test = (order*delta.n()) - ( (l1.n() - l4.n())*(l2.n() - l3.n()) )
     # Comparing floats
     # Problems importing on top
     from sympy.utilities.randtest import comp
@@ -387,13 +386,14 @@ def roots_quintic(f):
     R4 = l0 + l4*zeta1 + l3*zeta2 + l2*zeta3 + l1*zeta4
 
     Res = [None]*5
+    Res_n = [None, [None]*5, [None]*5, [None]*5, [None]*5]
     sol = Symbol('sol')
 
     # Simplifying improves performace a lot for exact expressions
-    R1 = simplify(R1)
-    R2 = simplify(R2)
-    R3 = simplify(R3)
-    R4 = simplify(R4)
+    R1 = _quintic_simplify(R1)
+    R2 = _quintic_simplify(R2)
+    R3 = _quintic_simplify(R3)
+    R4 = _quintic_simplify(R4)
 
     # Solve imported here. Causing problems if imported as 'solve'
     # and hence the changed name
@@ -403,15 +403,22 @@ def roots_quintic(f):
     Res[3] = solve_five(sol**5 - R3, sol)
     Res[4] = solve_five(sol**5 - R4, sol)
 
+    for i in range(1, 5):
+        for j in range(5):
+            Res[i][j] = _quintic_simplify(Res[i][j])
+            Res_n[i][j] = Res[i][j].n()
     r1 = Res[1][0]
-    for root in Res[4]:
-        if comp(im(r1*root), 0, tol):
-            r4 = root
+    r1_n = Res_n[1][0]
+
+    for i in range(5):
+        if comp(im(r1_n*Res_n[4][i]), 0, tol):
+            r4 = Res[4][i]
             break
 
     # Now we have various Res values. Each will be a list of five
     # values. We have to pick one r value from those five for each Res
     u, v = quintic.uv(theta, d)
+    sqrt5 = math.sqrt(5)
 
     # Now we have various Res values. Each will be a list of five
     # values. We have to pick one r value from those five for each Res
@@ -421,21 +428,20 @@ def roots_quintic(f):
 
     # Evaluated numbers suffixed with _n
     # We will use evaluated numbers for calculation. Much faster.
-    r1_n = r1.n()
     r4_n = r4.n()
     r2 = r3 = None
 
-    for r2temp in Res[2]:
-        for r3temp in Res[3]:
+    for i in range(5):
+        r2temp_n = Res_n[2][i]
+        for j in range(5):
             # Again storing away the exact number and using
             # evaluated numbers in computations
-            r2temp_n = r2temp.n()
-            r3temp_n = r3temp.n()
+            r3temp_n = Res_n[3][j]
 
             if( comp( r1_n*r2temp_n**2 + r4_n*r3temp_n**2 - testplus, 0, tol) and
                 comp( r3temp_n*r1_n**2 + r2temp_n*r4_n**2 - testminus, 0, tol ) ):
-                r2 = r2temp
-                r3 = r3temp
+                r2 = Res[2][i]
+                r3 = Res[3][j]
                 break
         if r2:
             break
@@ -450,6 +456,11 @@ def roots_quintic(f):
     result = [x1, x2, x3, x4, x5]
     return result
 
+
+def _quintic_simplify(expr):
+    expr = powsimp(expr)
+    expr = cancel(expr)
+    return together(expr)
 
 def roots_rational(f):
     """Returns a list of rational roots of a polynomial."""
