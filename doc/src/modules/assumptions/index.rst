@@ -37,18 +37,17 @@ Q is a class in sympy.assumptions holding known predicates.
 See documentation for the logic module for a complete list of valid boolean
 expressions.
 
-You can also define global assumptions so you don't have to pass that argument
-each time to function ask(). This is done by using the global_assumptions
-object from module sympy.assumptions. You can then clear global assumptions
-with global_assumptions.clear()::
+You can also define a context so you don't have to pass that argument
+each time to function ask(). This is done by using the assuming context manager
+from module sympy.assumptions. ::
 
      >>> from sympy import *
      >>> x = Symbol('x')
-     >>> global_assumptions.add(Q.positive(x))
-     >>> ask(Q.positive(x))
+     >>> y = Symbol('y')
+     >>> facts = Q.positive(x), Q.positive(y)
+     >>> with assuming(*facts):
+     ...     print ask(Q.positive(2*x + y))
      True
-     >>> global_assumptions.clear()
-
 
 Supported predicates
 ====================
