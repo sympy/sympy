@@ -235,28 +235,32 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
         dif = self - other
-        if dif.is_negative is not dif.is_nonnegative is not None:
+        if dif.is_nonnegative is not None and \
+                dif.is_nonnegative is not dif.is_negative:
             return dif.is_nonnegative
         return C.GreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
         dif = self - other
-        if dif.is_positive is not dif.is_nonpositive is not None:
+        if dif.is_nonpositive is not None and \
+                dif.is_nonpositive is not dif.is_positive:
             return dif.is_nonpositive
         return C.LessThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
         dif = self - other
-        if dif.is_nonpositive is not dif.is_positive is not None:
+        if dif.is_positive is not None and \
+                dif.is_positive is not dif.is_nonpositive:
             return dif.is_positive
         return C.StrictGreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
         dif = self - other
-        if dif.is_nonnegative is not dif.is_negative is not None:
+        if dif.is_negative is not None and \
+                dif.is_negative is not dif.is_nonnegative:
             return dif.is_negative
         return C.StrictLessThan(self, other)
 
