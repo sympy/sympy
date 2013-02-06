@@ -312,39 +312,6 @@ def roots_cyclotomic(f, factor=False):
 
     return sorted(roots, key=default_sort_key)
 
-
-def roots_rational(f):
-    """Returns a list of rational roots of a polynomial."""
-    domain = f.get_domain()
-
-    if domain.is_QQ:
-        _, f = f.clear_denoms()
-    elif domain.is_ZZ:
-        f = f.set_domain('QQ')
-    else:
-        return []
-
-    LC_divs = divisors(int(f.LC()))
-    EC_divs = divisors(int(f.EC()))
-
-    if not f.eval(S.Zero):
-        zeros = [S.Zero]
-    else:
-        zeros = []
-
-    for p in LC_divs:
-        for q in EC_divs:
-            zero = Rational(p, q)
-
-            if not f.eval(zero):
-                zeros.append(zero)
-
-            if not f.eval(-zero):
-                zeros.append(-zero)
-
-    return sorted(zeros, key=default_sort_key)
-
-
 def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers. """
     monoms, coeffs = zip(*poly.terms())
