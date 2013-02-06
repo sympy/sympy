@@ -492,8 +492,6 @@ def roots_rational(f):
                 zeros.append(-zero)
 
     return sorted(zeros, key=default_sort_key)
->>>>>>> Solvable quintic - implemented
-
 
 def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers. """
