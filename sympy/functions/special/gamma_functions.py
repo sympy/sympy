@@ -1,12 +1,14 @@
-from sympy.core import Add, S, C, sympify, oo, pi, Dummy
+from sympy.core import Add, S, C, sympify, oo, pi, I, Dummy
 from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from error_functions import erf
 from sympy.core import Dummy, Rational
 from sympy.functions.elementary.trigonometric import sin, cos, cot
-from sympy.functions.elementary.exponential import log
-from sympy.functions.elementary.integers import floor
+from sympy.functions.elementary.exponential import exp, log
+from sympy.functions.elementary.integers import floor, ceiling
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import im, re
+from sympy.functions.special.zeta_functions import polylog
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.combinatorial.numbers import harmonic
@@ -492,34 +494,57 @@ class polygamma(Function):
                         if n is S.Zero:
                             return S.Infinity
 
-        if n == 0 and z.is_Rational:
-            # Split z as n + p/q with p < q
-            p, q = z.as_numer_denom()
-            n = p // q
-            p = p - n*q
+        # GOOD CODE
+        # if n == 0 and z.is_Rational:
+        #     # Split z as n + p/q with p < q
+        #     p, q = z.as_numer_denom()
+        #     n = p // q
+        #     p = p - n*q
 
-            b = floor((q-1)*S.Half)
-            if b >= 1:
-                k = Dummy("k")
-                s = 2*C.Sum(cos((2*pi*k*p)/q)*log(sin((k*pi)/q)), (k, 1, b)).doit()
-            else:
-                s = 0
+        #     b = floor((q-1)*S.Half)
+        #     if b >= 1:
+        #         k = Dummy("k")
+        #         s = 2*C.Sum(cos((2*pi*k*p)/q)*log(sin((k*pi)/q)), (k, 1, b)).doit()
+        #     else:
+        #         s = 0
 
-            if n is S.Zero:
-                return (s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+        #     if n is S.Zero:
+        #         return (s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
 
-            elif n.is_positive:
-                l = Dummy("l")
-                return (q*C.Sum(S.One/(p+l*q), (l,0,n-1)).doit()
-                        + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+        #     elif n.is_positive:
+        #         l = Dummy("l")
+        #         return (q*C.Sum(S.One/(p+l*q), (l,0,n-1)).doit()
+        #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
 
-            elif n.is_negative:
-                n = -n
-                l = Dummy("l")
-                return (q*C.Sum(S.One/(-p+(l+1)*q), (l,0,n-1)).doit()
-                        + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+        #     elif n.is_negative:
+        #         n = -n
+        #         l = Dummy("l")
+        #         return (q*C.Sum(S.One/(-p+(l+1)*q), (l,0,n-1)).doit()
+        #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
 
-        # TODO n == 1 also can do some rational z
+            if n >= 0 and z.is_Rational:
+                # Split z as n + p/q with p < q
+                p, q = z.as_numer_denom()
+                zn = p // q
+                p = p - zn*q
+
+                if zn == 0 and 1 <= p and p < q:
+                    k = Dummy("k")
+
+                    if n == 0:
+                        w = exp(2*pi*I/q)
+                        b = q - 1
+                        s = C.Sum( cos((2*pi*k*p)/q) * re(polylog(1, w**k)) +
+                                   sin((2*pi*k*p)/q) * im(polylog(1, w**k)), (k, 1, b)).doit()
+                        return - S.EulerGamma - log(q) - s
+
+                    elif n >= 1:
+                        w = exp(2*pi*I/q)
+                        b = q
+                        s = C.Sum( cos((2*pi*k*p)/q) * re(polylog(n+1, w**k)) +
+                                   sin((2*pi*k*p)/q) * im(polylog(n+1, w**k)), (k, 1, b)).doit()
+                        return S.NegativeOne**(n+1) * C.factorial(n) * q**n * s
+
 
     def _eval_expand_func(self, **hints):
         n, z = self.args
