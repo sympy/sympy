@@ -149,13 +149,11 @@ class PolyQuintic(object):
         F = 4*p**6*q**6 + 59*p**3*q**8 + 216*q**10 - 36*p**7*q**4*r - 623*p**4*q**6*r - 2610*p*q**8*r + 81*p**8*q**2*r**2 + 2015*p**5*q**4*r**2 + 10825*p**2*q**6*r**2 - 1800*p**6*q**2*r**3 - 17500*p**3*q**4*r**3 + 625*q**6*r**3 + 10000*p**4*q**2*r**4 + 108*p**8*q**3*s + 1584*p**5*q**5*s + 5700*p**2*q**7*s - 486*p**9*q*r*s - 9720*p**6*q**3*r*s - 45050*p**3*q**5*r*s - 9000*q**7*r*s + 10800*p**7*q*r**2*s + 92500*p**4*q**3*r**2*s + 32500*p*q**5*r**2*s - 60000*p**5*q*r**3*s - 50000*p**2*q**3*r**3*s + 729*p**10*s**2 + 12150*p**7*q**2*s**2 + 60000*p**4*q**4*s**2 + 93750*p*q**6*s**2 - 18225*p**8*r*s**2 - 175500*p**5*q**2*r*s**2 - 478125*p**2*q**4*r*s**2 + 135000*p**6*r**2*s**2 + 850000*p**3*q**2*r**2*s**2 + 15625*q**4*r**2*s**2 - 250000*p**4*r**3*s**2 + 225000*p**3*q**3*s**3 + 175000*q**5*s**3 - 1012500*p**4*q*r*s**3 - 1187500*p*q**3*r*s**3 + 1250000*p**2*q*r**2*s**3 + 928125*p**5*s**4 + 1875000*p**2*q**2*s**4 - 2812500*p**3*r*s**4 - 390625*q**2*r*s**4 - 9765625*s**6
         return F
 
-
     def l0(self, theta):
         p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
         a = self.a
         l0 = Poly(a, x).eval(theta)/F
         return l0
-
 
     def T(self, theta, d):
         p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
@@ -168,20 +166,17 @@ class PolyQuintic(object):
         T[4] = Poly(b[4], x).eval(theta)/(2*d*F)
         return T
 
-
     def order(self, theta, d):
         p, q, r, s, F = self.p, self.q, self.r, self.s, self.F
         o = self.o
         order = Poly(o, x).eval(theta)/(d*F)
         return N(order)
 
-
     def uv(self, theta, d):
         c = self.c
         u = S(-25*self.q/2)
         v = Poly(c, x).eval(theta)/(2*d*self.F)
         return N(u), N(v)
-
 
     @property
     def zeta(self):
