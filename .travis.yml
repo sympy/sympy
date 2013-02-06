@@ -5,6 +5,24 @@ python:
   - 2.7
   - 3.2
   - 3.3
+matrix:
+  include:
+    - python: 2.7
+      env: TEST_GMPY="true"
+    - python: 3.3
+      env: TEST_GMPY="true"
+  # Below we list *exact* builds that are allowed to fail. Once they are fixed,
+  # you can remove the appropriate test from below (you still need to keep it
+  # above in order to be tested at all).
+  allow_failures:
+    - python: 2.7
+      env: TEST_GMPY="true"
+    - python: 3.3
+      env: TEST_GMPY="true"
+before_install:
+  - if [ "${TEST_GMPY}" == "true" ]; then
+      pip install "gmpy==1.16";
+    fi
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then python bin/use2to3; cd py3k-sympy; fi
   - python setup.py install
