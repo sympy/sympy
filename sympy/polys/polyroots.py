@@ -13,7 +13,6 @@ from sympy.polys.specialpolys import cyclotomic_poly
 from sympy.polys.polyerrors import PolynomialError, GeneratorsNeeded, DomainError
 from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.rationaltools import together
-
 from sympy.simplify import simplify, powsimp
 from sympy.utilities import default_sort_key
 
