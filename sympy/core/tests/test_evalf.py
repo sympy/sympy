@@ -194,6 +194,7 @@ def test_evalf_bugs():
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
+    assert cos(x).n(subs={x: 1+I}) == cos(x).subs(x, 1+I).n()
     #3561. Also NaN != mpmath.nan
     # In this order:
     # 0*nan, 0/nan, 0*inf, 0/inf
