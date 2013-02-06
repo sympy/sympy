@@ -1,9 +1,24 @@
 from sympy.unify.usympy import construct, deconstruct
-from sympy.unify.core import unify, reify, Variable
+from sympy.unify.core import reify, Variable, Compound
+from sympy.unify import core as ucore
 from sympy.rules.tools import subs
 from sympy.rules.branch import exhaust, multiplex
 import functools
 import itertools as it
+
+from sympy import Add, MatAdd, MatMul, Union, Intersection, FiniteSet
+from sympy.core.operations import AssocOp
+
+comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet)
+def is_commutative(x):
+    return isinstance(x, Compound) and x.op in comm_ops
+
+assoc_ops = (AssocOp, MatAdd, MatMul, Union, Intersection, FiniteSet)
+def is_associative(x):
+    return isinstance(x, Compound) and any(issubclass(x.op, aop) for aop in assoc_ops)
+
+unify = functools.partial(ucore.unify, is_associative=is_associative,
+                                       is_commutative=is_commutative)
 
 def crl(source, target, variables, condition=None, unify=unify, reify=reify):
     """ Conditional rewrite rule """
@@ -12,6 +27,7 @@ def crl(source, target, variables, condition=None, unify=unify, reify=reify):
             if not condition or condition(*map(match.get, variables, variables)):
                 yield reify(target, match)
     return f
+
 
 def rewriterules(sources, targets, variabless, conditions,
         construct=construct,

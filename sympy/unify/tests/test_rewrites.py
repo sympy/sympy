@@ -55,3 +55,15 @@ def test_strategy():
     f = rewriterules(*zip(pat1, pat2), strategy=strategy)
 
     assert list(f(Basic(1, Basic(4)))) == [Basic(2, Basic(4))]
+
+def test_many_sympy_rules():
+    a,b,c,d,e,f,g,h,i,j,k = map(Symbol, 'abcdefghijk')
+    x, y, z = map(Dummy, 'xyz')
+    patterns = [
+        (x +  y, x, [x, y], None),
+        (x ** y, y, [x, y], None)
+        ]
+    rl = rewriterules(*zip(*patterns))
+    expr = a + b**c + d*e + f**(g+1) + i + j + k
+
+    assert next(rl(expr)).is_Atom
