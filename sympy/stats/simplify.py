@@ -6,13 +6,13 @@ from sympy.rules.branch import (multiplex, exhaust, chain, yieldify, debug,
         condition)
 from sympy.rules.branch.traverse import top_down
 from sympy.rules import rebuild, flatten
-from sympy import Symbol, Dummy, factor, log, Abs
+from sympy import Dummy, factor, log, Abs
 import functools
 
-x, y, z, n, m = map(Symbol, 'xyznm')
-r = Symbol('r', real=True)
+x, y, z, n, m = map(Dummy, 'xyznm')
+r = Dummy('r', real=True)
 
-mu, sigma = Symbol('mu', real=True), Symbol('sigma', positive=True)
+mu, sigma = Dummy('mu', real=True), Dummy('sigma', positive=True)
 
 # Equivalences of random expressions under density. E.g.
 # Density(Normal(x, 0, 1)) == Density(StandardNormal(y))
