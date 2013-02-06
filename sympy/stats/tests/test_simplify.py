@@ -44,9 +44,9 @@ def test_unify():
 
 def test_lognormal():
     mu, sigma = Symbol('mu', real=True), Symbol('sigma', positive=True)
-    assert next(exprrule(log(Normal('X', mu, sigma)))) == \
+    assert rebuild(next(exprrule(log(Normal('X', mu, sigma))))) == \
             LogNormal('X', mu, sigma)
-    assert next(exprrule(log(Normal('X', mu, sigma)) + 1)) == \
+    assert rebuild(next(exprrule(log(Normal('X', mu, sigma)) + 1))) == \
             LogNormal('X', mu, sigma) + 1
 
 def test_exprrule():
@@ -57,3 +57,6 @@ def test_exprrule():
 def test_normal():
     assert rebuild(next(exprrule(Normal(y, 2, 5) + 2))) == Normal(y, 2+2, 5)
     assert rebuild(next(exprrule(Normal(y, 2, 5) * 3))) == Normal(y, 2, 5*3)
+
+    X = Normal(x, 2, 3)
+    assert next(statsimp(Density(X*2 + 1))) == NormalDistribution(3, 6)
