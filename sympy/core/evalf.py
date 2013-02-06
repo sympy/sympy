@@ -698,9 +698,9 @@ def evalf_pow(v, prec, options):
 #----------------------------------------------------------------------------#
 def evalf_trig(v, prec, options):
     """
-    This function handles sin and cos of real arguments.
+    This function handles sin and cos of complex arguments.
 
-    TODO: should also handle tan and complex arguments.
+    TODO: should also handle tan of complex arguments.
     """
     if v.func is C.cos:
         func = mpf_cos
@@ -714,7 +714,9 @@ def evalf_trig(v, prec, options):
     xprec = prec + 20
     re, im, re_acc, im_acc = evalf(arg, xprec, options)
     if im:
-        raise NotImplementedError
+        if 'subs' in options:
+            v = v.subs(options['subs'])
+        return evalf(v._eval_evalf(prec), prec, options)
     if not re:
         if v.func is C.cos:
             return fone, None, prec, None
