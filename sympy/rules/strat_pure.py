@@ -112,8 +112,8 @@ def minimize(*rules, **kwargs):
         return min([rule(expr) for rule in rules], key=objective)
     return minrule
 
-stratdict = {list: chain, tuple: minimize}
-def treesearch(tree, stratdict=stratdict):
+join = {list: chain, tuple: minimize}
+def treesearch(tree, join=join):
     """ Transform call-tree into function
 
     Each node in the tree can be a
@@ -137,13 +137,13 @@ def treesearch(tree, stratdict=stratdict):
     0
 
     By default this function uses the strategies ``chain`` and ``minimize``.
-    These can be changed with the stratdict keyword
+    These can be changed with the join keyword
 
     >>> from functools import partial
     >>> from sympy.rules import chain, minimize
     >>> maximize = partial(minimize, objective=lambda x: -x)
     >>> d = {list: chain, tuple: maximize}
-    >>> fn = treesearch(tree, stratdict=d)
+    >>> fn = treesearch(tree, join=d)
     >>> fn(4)  # highest value comes from the dec then double
     6
     >>> fn(1)  # highest value comes from the inc
@@ -152,8 +152,8 @@ def treesearch(tree, stratdict=stratdict):
 
     if callable(tree):
         return tree
-    for typ, strat in stratdict.iteritems():
+    for typ, strat in join.iteritems():
         if type(tree) == typ:
-            return strat(*map(partial(treesearch, stratdict=stratdict), tree))
+            return strat(*map(partial(treesearch, join=join), tree))
     raise TypeError("Type of tree %s not found in known types:\n\t%s"%(
-                str(type(tree)), "{" + ", ".join(map(str, stratdict.keys()))))
+                str(type(tree)), "{" + ", ".join(map(str, join.keys()))))

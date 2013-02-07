@@ -92,8 +92,8 @@ def test_treesearch():
     assert treesearch(tree)(1) == 0
 
     maximize = partial(minimize, objective=lambda x: -x)
-    d = {list: chain, tuple: maximize}
-    fn = treesearch(tree, stratdict=d)
+    join = {list: chain, tuple: maximize}
+    fn = treesearch(tree, join=join)
     assert fn(4) == 6  # highest value comes from the dec then double
     assert fn(1) == 2  # highest value comes from the inc
 
@@ -101,5 +101,5 @@ def test_treesearch():
     lowest = treesearch(tree)
     assert lowest(10) == 8
 
-    highest = treesearch(tree, stratdict=d)
+    highest = treesearch(tree, join=join)
     assert highest(10) == 12
