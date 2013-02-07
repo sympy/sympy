@@ -177,6 +177,8 @@ from sympy.core.exprtools import Factors
 from sympy.core.rules import Transform
 from sympy.core.basic import S
 from sympy.core.numbers import Integer
+from sympy.rules import minimize, chain
+from sympy.rules.strat_pure import identity
 
 
 def TR0(rv):
@@ -887,97 +889,30 @@ def L(rv):
     """
     return S(rv.count(C.TrigonometricFunction))
 
+_CTR1 = [TR5, TR0], [TR6, TR0], [identity]
 
-def CTR1(rv):
-    #--------Combination transformation rule 1 : ---------------------
-    rv1 = TR5(rv)
-    rv1 = TR0(rv1)
-    rv2 = TR6(rv)
-    rv2 = TR0(rv2)
-    if( (L(rv1) < L(rv)) and (L(rv1) <= L(rv2)) ):
-       return rv1
-    elif( (L(rv2) < L(rv)) and (L(rv2) <= L(rv1)) ):
-       return rv2
-    else:
-        return rv
+_CTR2 = [TR11, TR5, TR0], [TR11, TR6, TR0], [TR11, TR0]
+
+_CTR3 = [TR8, TR0], [TR8, TR10i, TR0], [identity]
+
+_CTR4 = [TR4, TR0], [identity]
 
 
-def CTR2(rv):
-    #--------Combination transformation rule 2: ---------------------
-    rv11 = TR11(rv)
-    rv1 = TR5(rv11)
-    rv2 = TR6(rv11)
-    rv1 = TR0(rv1)
-    rv2 = TR0(rv2)
-    rv3 = TR0(rv11)
-    if( (L(rv1) < L(rv3)) and (L(rv1) <= L(rv2)) ):
-        return rv1
-    elif( (L(rv2) < L(rv3)) and (L(rv2) <= L(rv1)) ):
-        return rv2
-    else:
-        return rv3
+def CTRstrat(lists):
+    return minimize(*[chain(*list) for list in lists], objective=L)
+
+CTR1, CTR2, CTR3, CTR4 = map(CTRstrat, (_CTR1, _CTR2, _CTR3, _CTR4))
+
+_RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0]
+
+_RL2 = [TR4, TR3, TR10, TR4, TR3, TR11, TR5, TR7, TR11, TR4, CTR3, TR0, CTR1,
+        TR9, CTR2, TR4, TR9, TR0, TR9, CTR4]
 
 
-def CTR3(rv):
-    #--------Combination transformation rule 3: ---------------------
-    rv8 = TR8(rv)
-    rv1 = TR0(rv8)  # 8, 0
-    rv2 = TR10i(rv8)  #8, 10i, 0
-    rv2 = TR0(rv2)
-    if( (L(rv2) < L(rv)) ):
-        return rv2
-    elif( (L(rv1) < L(rv)) ):
-        return rv1
-    else:
-        return rv
+def RLstrat(rls):
+    return chain(*rls)
 
-
-def CTR4(rv):
-    #--------Combination transformation rule 4: ---------------------
-    rv1 = TR4(rv)
-    rv1 = TR0(rv1)
-    if( (L(rv1) < L(rv)) ):
-        return rv1
-    else:
-        return rv
-
-
-def RL1(rv):
-    #-------------Rule list 1-------------------------
-    rv = TR4(rv)
-    rv = TR3(rv)
-    rv = TR4(rv)
-    rv = TR12(rv)
-    rv = TR4(rv)
-    rv = TR13(rv)
-    rv = TR4(rv)
-    rv = TR0(rv)
-    return rv
-
-
-def RL2(rv):
-    #-------------Rule list 2-------------------------
-    rv = TR4(rv)
-    rv = TR3(rv)
-    rv = TR10(rv)
-    rv = TR4(rv)
-    rv = TR3(rv)
-    rv = TR11(rv)
-    rv = TR5(rv)
-    rv = TR7(rv)
-    rv = TR11(rv)
-    rv = TR4(rv)
-    rv = CTR3(rv)
-    rv = TR0(rv)
-    rv = CTR1(rv)
-    rv = TR9(rv)
-    rv = CTR2(rv)
-    rv = TR4(rv)
-    rv = TR9(rv)
-    rv = TR0(rv)
-    rv = TR9(rv)
-    rv = CTR4(rv)
-    return rv
+RL1, RL2 = map(RLstrat, (_RL1, _RL2))
 
 
 def fu(rv):
