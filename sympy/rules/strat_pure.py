@@ -110,3 +110,49 @@ def minimize(*rules, **kwargs):
     def minrule(expr):
         return min([rule(expr) for rule in rules], key=objective)
     return minrule
+
+stratdict = {list: chain, tuple: minimize}
+def treesearch(tree, stratdict=stratdict):
+    """ Transform call-tree into function
+
+    Each node in the tree can be a
+
+    function - returned
+    list     - all trees within list are chained together
+    tuple    - optimal value from within tuple is returned
+
+    Example
+
+    >>> from sympy.rules import treesearch
+    >>> inc    = lambda x: x + 1
+    >>> dec    = lambda x: x - 1
+    >>> double = lambda x: 2*x
+
+    >>> tree = (inc, [dec, double]) # either inc or dec-then-double
+    >>> fn = treesearch(tree)
+    >>> fn(4)  # lowest value comes from the inc
+    5
+    >>> fn(1)  # lowest value comes from dec then double
+    0
+
+    By default this function uses the strategies ``chain`` and ``minimize``.
+    These can be changed with the stratdict keyword
+
+    >>> from functools import partial
+    >>> from sympy.rules import chain, minimize
+    >>> maximize = partial(minimize, objective=lambda x: -x)
+    >>> d = {list: chain, tuple: maximize}
+    >>> fn = treesearch(tree, stratdict=d)
+    >>> fn(4)  # highest value comes from the dec then double
+    6
+    >>> fn(1)  # highest value comes from the inc
+    2
+    """
+
+    if callable(tree):
+        return tree
+    for typ, strat in stratdict.iteritems():
+        if type(tree) == typ:
+            return strat(*map(treesearch, tree))
+    raise TypeError("Type of tree %s not found in known types:\n\t%s"%(
+                str(type(tree)), "{" + ", ".join(map(str, stratdict.keys()))))
