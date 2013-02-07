@@ -408,7 +408,7 @@ class Mul(Expr, AssocOp):
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
-                g = _rgcd(bi, bj)
+                g = bi.gcd(bj)
                 if g is not S.One:
                     # 4**r1*6**r2 -> 2**(r1+r2)  *  2**r1 *  3**r2
                     # this might have a gcd with something else
@@ -1490,9 +1490,7 @@ def _keep_coeff(coeff, factors, clear=True):
     else:
         return coeff*factors
 
-from numbers import Rational, igcd, ilcm, Integer
-def _rgcd(a, b):
-    return Rational(Integer(igcd(a.p, b.p)), Integer(ilcm(a.q, b.q)))
 
+from numbers import Rational
 from power import Pow
 from add import Add
