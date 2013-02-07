@@ -26,10 +26,10 @@ def test_ccode_sqrt():
 
 
 def test_ccode_Pow():
-    assert ccode(x**3) == "pow(x, 3)"
-    assert ccode(x**(y**3)) == "pow(x, pow(y, 3))"
+    assert ccode(x**3) == "pow(x, 3.0)"
+    assert ccode(x**(y**3)) == "pow(x, pow(y, 3.0))"
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
-        "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
+        "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2.0) + y)"
     assert ccode(x**-1.0) == '1.0/x'
 
 
@@ -41,22 +41,22 @@ def test_ccode_constants_mathh():
 
 
 def test_ccode_constants_other():
-    assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2*GoldenRatio"
+    assert ccode(2*GoldenRatio) == "double const GoldenRatio = 1.61803398874989;\n2.0*GoldenRatio"
     assert ccode(
-        2*Catalan) == "double const Catalan = 0.915965594177219;\n2*Catalan"
-    assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2*EulerGamma"
+        2*Catalan) == "double const Catalan = 0.915965594177219;\n2.0*Catalan"
+    assert ccode(2*EulerGamma) == "double const EulerGamma = 0.577215664901533;\n2.0*EulerGamma"
 
 
 def test_ccode_Rational():
     assert ccode(Rational(3, 7)) == "3.0/7.0"
-    assert ccode(Rational(18, 9)) == "2"
+    assert ccode(Rational(18, 9)) == "2.0"
     assert ccode(Rational(3, -7)) == "-3.0/7.0"
     assert ccode(Rational(-3, -7)) == "3.0/7.0"
 
 
 def test_ccode_Integer():
-    assert ccode(Integer(67)) == "67"
-    assert ccode(Integer(-1)) == "-1"
+    assert ccode(Integer(67)) == "67.0"
+    assert ccode(Integer(-1)) == "-1.0"
 
 
 def test_ccode_functions():
@@ -66,16 +66,16 @@ def test_ccode_functions():
 def test_ccode_inline_function():
     x = symbols('x')
     g = implemented_function('g', Lambda(x, 2*x))
-    assert ccode(g(x)) == "2*x"
+    assert ccode(g(x)) == "2.0*x"
     g = implemented_function('g', Lambda(x, 2*x/Catalan))
     assert ccode(
-        g(x)) == "double const Catalan = %s;\n2*x/Catalan" % Catalan.n()
+        g(x)) == "double const Catalan = %s;\n2.0*x/Catalan" % Catalan.n()
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert ccode(g(A[i]), assign_to=A[i]) == (
         "for (int i=0; i<n; i++){\n"
-        "   A[i] = (1 + A[i])*(2 + A[i])*A[i];\n"
+        "   A[i] = (1.0 + A[i])*(2.0 + A[i])*A[i];\n"
         "}"
     )
 
@@ -99,11 +99,11 @@ def test_ccode_Piecewise():
     p = ccode(Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
-if (x < 1) {
+if (x < 1.0) {
    x
 }
 else {
-   pow(x, 2)
+   pow(x, 2.0)
 }\
 """
     assert p == s
@@ -113,11 +113,11 @@ def test_ccode_Piecewise_deep():
     p = ccode(2*Piecewise((x, x < 1), (x**2, True)))
     s = \
 """\
-2*if (x < 1) {
+2.0*if (x < 1.0) {
    x
 }
 else {
-   pow(x, 2)
+   pow(x, 2.0)
 }\
 """
     assert p == s
