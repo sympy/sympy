@@ -1,6 +1,6 @@
 __all__ = ['ReferenceFrame', 'Vector', 'Dyadic', 'dynamicsymbols',
            'MechanicsStrPrinter', 'MechanicsPrettyPrinter',
-           'MechanicsLatexPrinter', 'CoordinateFrame']
+           'MechanicsLatexPrinter']
 
 from sympy import (
     Matrix, Symbol, sin, cos, eye, trigsimp, diff, sqrt, sympify,
@@ -1057,76 +1057,6 @@ class ReferenceFrame(object):
     def z(self):
         """The basis Vector for the ReferenceFrame, in the z direction. """
         return self._z
-
-
-class CoordinateFrame(ReferenceFrame):
-    """
-    Class defining a co-ordinate frame in 3-dimensional space with a unique origin.
-    Has all the properties of ReferenceFrame.
-    """
-    def __init__(self, name, indices=None, latexs=None):
-        """
-        Constructor for CoordinateFrame class.
-        Calls ReferenceFrame's constructor and defines a new origin paramater
-        for the object.
-        """
-
-        ReferenceFrame.__init__(self, name, indices,latexs)
-        from sympy.physics.mechanics import Point
-        self._origin = Point(name + '_origin')
-
-    def create_point(self, pointname, x, y, z):
-        """
-        Returns Point at [x, y, z] with respect to the CoordinateFrame's origin
-        and names it to 'pointname'.
-        """
-        from sympy.physics.mechanics import Point
-        temp = Point(pointname)
-        temp.set_pos(self._origin, x * self._x + y * self._y + z * self._z)
-        return temp
-
-    def get_origin(self):
-        """The origin of the CoordinateFrame."""
-        return self._origin
-
-    def shift_origin_to(self, neworigin):
-        """Shift the origin of the CoordinateFrame to neworigin."""
-        self._origin = neworigin
-
-    def get_point_coordinates(self, point):
-        """Returns the co-ordinates of 'point' in the CoordinateFrame, if possible.
-
-        Examples
-        ========
-        >>> from sympy.physics.mechanics import CoordinateFrame, Point
-        >>> N = CoordinateFrame('N')
-        >>> p = N.create_point('p', 1, 2, 3)
-        >>> N.get_point_coordinates(p)
-        [1, 2, 3]
-        >>> o = N.get_origin()
-        >>> N.shift_origin_to(p)
-        >>> N.get_point_coordinates(p)
-        [0, 0, 0]
-        >>> N.get_point_coordinates(o)
-        [-1, -2, -3]
-
-        """
-        pos_vector = point.pos_from(self._origin)
-        if pos_vector == 0:
-            return [0, 0, 0]
-        pos_vector = pos_vector.express(self)
-        return self.components_of(pos_vector)
-
-    def orientnew(self, newname, rot_type, amounts, rot_order='', indices=None,
-                  latexs=None):
-        """
-        Creates a new CoordinateFrame oriented with respect to this Frame.
-        Calls ReferenceFrame's orientnew method and shifts the new CoordinateFrame's
-        origin to the this frame.
-        """
-        newframe = ReferenceFrame.orientnew(self, newname, rot_type, amounts, rot_order, indices, latexs)
-        newframe.shift_origin_to(self._origin)
-        return newframe
 
 
 class Vector(object):

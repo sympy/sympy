@@ -1,4 +1,4 @@
-__all__ = ['Point']
+__all__ = ['Point', 'ReferencePoint']
 
 from sympy.physics.mechanics.essential import _check_frame, _check_vector
 
@@ -441,3 +441,69 @@ class Point(object):
             raise ValueError('Velocity of point ' + self.name + ' has not been'
                              ' defined in ReferenceFrame ' + frame.name)
         return self._vel_dict[frame]
+
+
+class ReferencePoint(Point):
+    """
+    Class defining a reference Point that can be used to define or refer to
+    other points with respect to itself.
+    """
+    def __init__(self, name):
+        """
+        Constructor for ReferencePoint class.
+        """
+        Point.__init__(self, name)
+
+    def create_point(self, name, frame, components):
+        """
+        Returns a Point at coordinates given by 'components' with respect
+        to self and the ReferenceFrame specified by 'frame'.
+        The Point returned has all the velocities and accelerations defined
+        for this ReferencePoint.
+
+        Examples
+        ========
+        >>> from sympy.physics.mechanics import ReferencePoint, ReferenceFrame
+        >>> R = ReferenceFrame('R')
+        >>> o = ReferencePoint('o')
+        >>> o.set_vel(R, R.x)
+        >>> p = o.create_point('p', R, [1, 2, 3])
+        >>> p.pos_from(o)
+        R.x + 2*R.y + 3*R.z
+        >>> p.vel(R)
+        R.x
+
+        """  
+        if not (len(components) == 3):
+            raise ValueError('Three components are required for definition.')
+        pos_vector = components[0] * frame.x + components[1] * frame.y \
+                     + components[2] * frame.z
+        temp = Point(name)
+        temp.set_pos(self, pos_vector)
+        temp._vel_dict = self._vel_dict
+        temp._acc_dict = self._acc_dict
+        return temp
+
+    def get_point_coordinates(self, point, frame):
+        """
+        Return coordinates of a Point with respect to self and 'frame'.
+
+        Examples
+        ========
+        >>> from sympy.physics.mechanics import ReferencePoint, ReferenceFrame\
+            , Point
+        >>> R = ReferenceFrame('R')
+        >>> o = ReferencePoint('o')
+        >>> p = o.create_point('p', R, [1,2,3])
+        >>> q = Point('q')
+        >>> q.set_pos(p, R.x + R.y + R.z)
+        >>> o.get_point_coordinates(q, R)
+        [2, 3, 4]
+        >>> o.get_point_coordinates(o, R)
+        [0, 0, 0]
+        
+        """
+        pos_vector = point.pos_from(self)
+        if pos_vector == 0:
+            return [0, 0, 0]
+        return frame.components_of(pos_vector.express(frame))

@@ -5,18 +5,6 @@ from sympy.physics.mechanics import Vector, ReferenceFrame, CoordinateFrame, dot
 Vector.simp = True
 A = ReferenceFrame('A')
 
-def test_coordinate():
-    """Test the functioning of CoordinateFrame"""
-    N = CoordinateFrame('N')
-    p = Point('p')
-    p.set_pos(N.get_origin(), 1 * N.x + 2 * N.y + 3 * N.z)
-    assert N.get_point_coordinates(p) == [1, 2, 3]
-    q = N.create_point('q', 1, 2, 3)
-    assert p.pos_from(q) == 0
-    N.shift_origin_to(p)
-    assert N.get_point_coordinates(q) == [0, 0, 0]
-
-
 def test_dyadic():
     d1 = A.x | A.x
     d2 = A.y | A.y
