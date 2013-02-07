@@ -1,6 +1,7 @@
 """Implementation of :class:`Domain` class. """
 
 from sympy.core import Basic, sympify
+from sympy.core.compatibility import SYMPY_INTS
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
@@ -88,11 +89,11 @@ class Domain(object):
                 if K1.of_type(a):
                     return a
 
-                if type(a) is int:
+                if isinstance(a, SYMPY_INTS):
                     return K1(a)
 
-                if type(a) is long:
-                    return K1(a)
+                #if type(a) is long:
+                #    return K1(a)
 
                 if K1.is_Numerical and getattr(a, 'is_ground', False):
                     return K1.convert(a.LC())

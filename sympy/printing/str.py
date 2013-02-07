@@ -461,7 +461,7 @@ class StrPrinter(Printer):
         return '%s/%s' % (expr.numerator, expr.denominator)
 
     def _print_mpq(self, expr):
-        return '%s/%s' % (expr.numer(), expr.denom())
+        return '%s/%s' % (expr.numerator, expr.denominator)
 
     def _print_Float(self, expr):
         prec = expr._prec

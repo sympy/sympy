@@ -1,7 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence
+from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
@@ -166,7 +166,7 @@ class Factors(object):
         return self.div(other)[1]
 
     def pow(self, other):  # Factors
-        if type(other) is int and other >= 0:
+        if isinstance(other, SYMPY_INTS) and other >= 0:
             factors = {}
 
             if other:
@@ -225,7 +225,7 @@ class Factors(object):
             return NotImplemented
 
     def __pow__(self, other):  # Factors
-        if type(other) is int:
+        if isinstance(other, SYMPY_INTS):
             return self.pow(other)
         else:
             return NotImplemented
@@ -335,7 +335,7 @@ class Term(object):
     __truediv__ = __div__
 
     def __pow__(self, other):  # Term
-        if type(other) is int:
+        if isinstance(other, SYMPY_INTS):
             return self.pow(other)
         else:
             return NotImplemented

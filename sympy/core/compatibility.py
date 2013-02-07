@@ -744,3 +744,59 @@ try:
 except NameError:
     def next(x):
         return x.next()
+
+# If HAS_GMPY is 0, no supported version of gmpy is available. Otherwise,
+# HAS_GMPY contains the major version number of gmpy; i.e. 1 for gmpy, and
+# 2 for gmpy2.
+
+# Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
+# For example, int(gmpy.mpz(2**256)) would raise OverflowError.
+# See issue 1881.
+
+# Minimum version of gmpy changed to 1.13 to allow a single code base to also
+# work with gmpy2.
+
+HAS_GMPY = 0
+
+try:
+    import gmpy2 as gmpy
+    if gmpy.version() >= '2.0.0b4':
+            HAS_GMPY = 2
+except ImportError:
+    pass
+
+try:
+    import gmpy
+    if gmpy.version() >= '1.13':
+        HAS_GMPY = 1
+except ImportError:
+    pass
+
+def _getenv(key, default=None):
+    from os import getenv
+    return getenv(key, default)
+
+GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
+
+if GROUND_TYPES == 'auto':
+    if HAS_GMPY:
+        GROUND_TYPES = 'gmpy'
+    else:
+        GROUND_TYPES = 'python'
+
+if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
+    from warnings import warn
+    warn("gmpy library is not installed, switching to 'python' ground types")
+    GROUND_TYPES = 'python'
+
+# SYMPY_INTS is a tuple containing the base types for valid integer types.
+
+import sys
+
+if sys.version_info[0] == 2:
+    SYMPY_INTS = (int, long)
+else:
+    SYMPY_INTS = (int,)
+
+if GROUND_TYPES == 'gmpy':
+    SYMPY_INTS += (type(gmpy.mpz(0)),)
