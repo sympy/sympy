@@ -122,6 +122,15 @@ def treesearch(tree, join=join):
     list     - all trees within list are chained together
     tuple    - optimal value from within tuple is returned
 
+    Textual example
+    ---------------
+
+    Text:
+    Try either ``expand`` then ``simplify`` or try ``factor`` then ``foosimp``.
+
+    Code:
+    tree = ([expand, simplify], [factor, foosimp])
+
     Example
 
     >>> from sympy.rules import treesearch
