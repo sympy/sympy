@@ -1641,7 +1641,7 @@ def _trigsimp(expr, deep=False):
 @cacheit
 def __trigsimp(expr, deep=False):
     """recursive helper for trigsimp"""
-    from sympy.simplify.simplify_utils import TR10_inv
+    from sympy.simplify.fu import TR10i
 
     if _trigpat is None:
         _trigpats()
@@ -1708,7 +1708,7 @@ def __trigsimp(expr, deep=False):
             for pattern, result in matchers_add:
                 if not _dotrig(expr, pattern):
                     continue
-                expr = TR10_inv(expr)
+                expr = TR10i(expr)
                 if expr.has(C.HyperbolicFunction):
                     res = expr.match(pattern)
                     # if "d" contains any trig or hyperbolic funcs with
