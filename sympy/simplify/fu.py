@@ -904,14 +904,12 @@ def CTR1(rv):
 
 def CTR2(rv):
     #--------Combination transformation rule 2: ---------------------
-    rv1 = TR11(rv)
-    rv1 = TR5(rv1)
-    rv2 = TR11(rv)
-    rv2 = TR6(rv2)
-    rv3 = TR11(rv)
+    rv11 = TR11(rv)
+    rv1 = TR5(rv11)
+    rv2 = TR6(rv11)
     rv1 = TR0(rv1)
     rv2 = TR0(rv2)
-    rv3 = TR0(rv3)
+    rv3 = TR0(rv11)
     if( (L(rv1) < L(rv3)) and (L(rv1) <= L(rv2)) ):
         return rv1
     elif( (L(rv2) < L(rv3)) and (L(rv2) <= L(rv1)) ):
@@ -922,10 +920,9 @@ def CTR2(rv):
 
 def CTR3(rv):
     #--------Combination transformation rule 3: ---------------------
-    rv1 = TR8(rv)
-    rv1 = TR0(rv1)
-    rv2 = TR8(rv)
-    rv2 = TR10i(rv2)
+    rv8 = TR8(rv)
+    rv1 = TR0(rv8)  # 8, 0
+    rv2 = TR10i(rv8)  #8, 10i, 0
     rv2 = TR0(rv2)
     if( (L(rv2) < L(rv)) ):
         return rv2
