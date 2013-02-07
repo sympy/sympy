@@ -113,7 +113,7 @@ def minimize(*rules, **kwargs):
     return minrule
 
 join = {list: chain, tuple: minimize}
-def treesearch(tree, join=join):
+def treesearch(tree, join=join, objective=None):
     """ Transform call-tree into function
 
     Each node in the tree can be a
@@ -146,18 +146,31 @@ def treesearch(tree, join=join):
     0
 
     By default this function uses the strategies ``chain`` and ``minimize``.
-    These can be changed with the join keyword
+    These can be changed with the ``objective`` keyword
 
-    >>> from functools import partial
-    >>> from sympy.rules import chain, minimize
-    >>> maximize = partial(minimize, objective=lambda x: -x)
-    >>> d = {list: chain, tuple: maximize}
-    >>> fn = treesearch(tree, join=d)
+    >>> fn = treesearch(tree, objective=lambda x: -x)
     >>> fn(4)  # highest value comes from the dec then double
     6
     >>> fn(1)  # highest value comes from the inc
     2
+
+    The adventurous can change the strategies used on various types
+
+    >>> from sympy.rules import chain, minimize
+    >>> from functools import partial
+    >>> maximize = partial(minimize, objective=lambda x: -x)
+
+    >>> join = {list: chain, tuple: maximize}
+    >>> fn = treesearch(tree, join=join)
+    >>> fn(4)  # highest value comes from the dec then double
+    6
+
+    This allows the introduction of new types into the tree (e.g. sets) and
+    potentially wildly different strategies (e.g. parallel minimize)
     """
+    if objective != None:
+        join = join.copy()
+        join[tuple] = partial(minimize, objective=objective)
 
     if callable(tree):
         return tree
