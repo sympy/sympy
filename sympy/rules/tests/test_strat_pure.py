@@ -96,3 +96,10 @@ def test_treesearch():
     fn = treesearch(tree, stratdict=d)
     assert fn(4) == 6  # highest value comes from the dec then double
     assert fn(1) == 2  # highest value comes from the inc
+
+    tree = (inc, dec, (inc, dec, ([inc, inc], [dec, dec])))
+    lowest = treesearch(tree)
+    assert lowest(10) == 8
+
+    highest = treesearch(tree, stratdict=d)
+    assert highest(10) == 12

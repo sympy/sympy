@@ -1,4 +1,5 @@
 """ Generic SymPy-Independent Strategies """
+from functools import partial
 
 def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
@@ -153,6 +154,6 @@ def treesearch(tree, stratdict=stratdict):
         return tree
     for typ, strat in stratdict.iteritems():
         if type(tree) == typ:
-            return strat(*map(treesearch, tree))
+            return strat(*map(partial(treesearch, stratdict=stratdict), tree))
     raise TypeError("Type of tree %s not found in known types:\n\t%s"%(
                 str(type(tree)), "{" + ", ".join(map(str, stratdict.keys()))))
