@@ -9,11 +9,7 @@ from simplify import (collect, rcollect, separate, radsimp, ratsimp, fraction,
     logcombine, separatevars, numer, denom, powdenest, posify, polarify,
     unpolarify, collect_const, signsimp, besselsimp, ratsimpmodprime)
 
-from fu import (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10,
-    TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L, fu)
-FU = dict(zip('TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L'.split(', '),
-              (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L)))
-del           (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L)
+from fu import FU, fu
 
 from sqrtdenest import sqrtdenest
 

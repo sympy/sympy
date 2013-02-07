@@ -179,6 +179,7 @@ from sympy.core.basic import S
 from sympy.core.numbers import Integer
 from sympy.rules import minimize, chain, debug
 from sympy.rules.strat_pure import identity
+from sympy import SYMPY_DEBUG
 
 
 def TR0(rv):
@@ -889,8 +890,9 @@ def L(rv):
     """
     return S(rv.count(C.TrigonometricFunction))
 
-#TR0,TR1,TR2,TR3,TR4,TR5,TR6,TR7,TR8,TR9,TR10,TR11,TR12,TR13 = map(debug,
-#        (TR0,TR1,TR2,TR3,TR4,TR5,TR6,TR7,TR8,TR9,TR10,TR11,TR12,TR13))
+if SYMPY_DEBUG:
+    TR0,TR1,TR2,TR3,TR4,TR5,TR6,TR7,TR8,TR9,TR10,TR11,TR12,TR13 = map(debug,
+            (TR0,TR1,TR2,TR3,TR4,TR5,TR6,TR7,TR8,TR9,TR10,TR11,TR12,TR13))
 
 _CTR1 = [TR5, TR0], [TR6, TR0], [identity]
 
@@ -947,9 +949,8 @@ def fu(rv):
         rv1 = RL1(rv)
         if (L(rv1) < L(rv)):
             rv = rv1
-
-    rv = TR0(rv)
-    rv = TR2(rv)
+    if rv.has(tan, cot):
+        rv = TR2(rv)
     rv = TR0(rv)
     if rv.has(sin, cos):
         rv1 = RL2(rv)
@@ -1001,3 +1002,7 @@ def process_common_addends(rv, do, key2=None):
         rv = Add(*args)
 
     return rv
+
+
+FU = dict(zip('TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L'.split(', '),
+              (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L)))
