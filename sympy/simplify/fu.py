@@ -770,6 +770,8 @@ def TR11(rv):
     2*sin(x)*cos(x)
     >>> TR11(sin(4*x))
     4*(-sin(x)**2 + cos(x)**2)*sin(x)*cos(x)
+    >>> TR11(sin(4*x/3))
+    4*(-sin(x/3)**2 + cos(x/3)**2)*sin(x/3)*cos(x/3)
 
     >>> TR11(cos(2*x))
     -sin(x)**2 + cos(x)**2
@@ -787,8 +789,8 @@ def TR11(rv):
         return rv
 
     c, m = rv.args[0].as_coeff_Mul()
-    if c % 2 == 0:
-        arg = c//2*m
+    if c.p % 2 == 0:
+        arg = c.p//2*m/c.q
         c = TR11(cos(arg))
         s = TR11(sin(arg))
         if rv.func == sin:
