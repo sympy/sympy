@@ -405,10 +405,8 @@ class RootOf(Expr):
                 # until both ends get refined.
                 ay = interval.ay
                 by = interval.by
-                while True:
+                while interval.ay == ay or interval.by == by:
                     interval = interval.refine()
-                    if interval.ay != ay and interval.by != by:
-                        break
 
             while True:
                 if self.is_real:
