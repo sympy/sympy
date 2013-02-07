@@ -736,7 +736,8 @@ def factor_nc(expr):
     from sympy.simplify.simplify import powsimp
     from sympy.polys import gcd, factor
 
-    def _mexpand(expr):
+    def _pemexpand(expr):
+        "Expand with the minimal set of hints necessary to check the result."
         return expr.expand(deep=True, mul=True, power_exp=True,
             power_base=False, basic=False, multinomial=True, log=False)
 
@@ -881,10 +882,10 @@ def factor_nc(expr):
                     else:
                         ncfac.append(f)
             pre_mid = g*Mul(*cfac)*l
-            target = _mexpand(expr/c)
+            target = _pemexpand(expr/c)
             for s in variations(ncfac, len(ncfac)):
                 ok = pre_mid*Mul(*s)*r
-                if _mexpand(ok) == target:
+                if _pemexpand(ok) == target:
                     return _keep_coeff(c, ok)
 
         # mid was an Add that didn't factor successfully
