@@ -1,4 +1,4 @@
-from sympy.unify.rewrites import crl, rewriterules
+from sympy.unify.rewrites import crl, rewriterules, types, ops
 from sympy import *
 from sympy.abc import x, y, z
 from sympy.unify.usympy import construct, deconstruct
@@ -61,9 +61,19 @@ def test_many_sympy_rules():
     x, y, z = map(Dummy, 'xyz')
     patterns = [
         (x +  y, x, [x, y], None),
+        (x *  y, y, [x, y], None),
         (x ** y, y, [x, y], None)
         ]
     rl = rewriterules(*zip(*patterns))
     expr = a + b**c + d*e + f**(g+1) + i + j + k
 
     assert next(rl(expr)).is_Atom
+
+def test_types():
+    expr = Symbol('x') + Symbol('y') * 2
+    assert types(expr) == set([Symbol, Add, Mul, Integer])
+
+def test_ops():
+    from sympy.rules.util import is_leaf, children, op
+    expr = Symbol('x') + Symbol('y') * 2
+    assert ops(expr, op, children, is_leaf) == set([Symbol, Add, Mul, Integer])

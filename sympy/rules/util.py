@@ -12,6 +12,8 @@ def is_leaf(x):
 def children(x):
     return x.args
 
+op = type
+
 def count(tup):
     return dict((k, len(v)) for k,v in groupby((lambda x: x), tup).items())
 

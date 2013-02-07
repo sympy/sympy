@@ -6,7 +6,7 @@ from sympy.rules.branch import exhaust, multiplex
 import functools
 import itertools as it
 
-from sympy import Add, MatAdd, MatMul, Union, Intersection, FiniteSet
+from sympy import Add, MatAdd, MatMul, Union, Intersection, FiniteSet, Dummy
 from sympy.core.operations import AssocOp
 
 comm_ops = (Add, MatAdd, Union, Intersection, FiniteSet)
@@ -28,7 +28,6 @@ def crl(source, target, variables, condition=None, unify=unify, reify=reify):
                 yield reify(target, match)
     return f
 
-
 def rewriterules(sources, targets, variabless, conditions,
         construct=construct,
         deconstruct=deconstruct,
@@ -48,9 +47,18 @@ def rewriterules(sources, targets, variabless, conditions,
 
     return lambda expr: it.imap(construct, strategy(rules)(deconstruct(expr)))
 
+badtypes = set([Dummy])
 def types(expr):
     return set([type(expr)]).union(
-            reduce(set.union, map(types, expr.args), set()))
+            reduce(set.union, map(types, expr.args), set())) - badtypes
+
+def ops(expr, op, children, is_leaf):
+    if is_leaf(expr):
+        return set([op(expr)])
+    return set([op(expr)]).union(
+            reduce(set.union,
+                   [ops(c, op, children, is_leaf) for c in children(expr)],
+                   set())) - badtypes
 
 def fn_deconstruct(fn, construct=construct):
     if not fn:
