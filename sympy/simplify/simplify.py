@@ -1369,7 +1369,7 @@ def trigsimp(expr, **opts):
 
     >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
     >>> trigsimp(e)
-    -sin(x)/cos(x) + 1/cos(x) + cos(x)/(-sin(x) + 1)
+    (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
     >>> trigsimp(e, method="groebner")
     2/cos(x)
 
@@ -1414,7 +1414,9 @@ def trigsimp(expr, **opts):
     else:
         result = trigsimpfunc(expr, deep)
 
-    return result
+    if _trig_count(result) <= _trig_count(expr):
+        return result
+    return expr
 
 
 def TR10_inv(expr, full=True):
@@ -1571,6 +1573,9 @@ _identity_v[9] = (sinh, _gsinh_sum)
 _identity_v[10] = (cosh, _gcosh_sum)
 _identity_v[11] = (tanh, _gtanh_sum)
 
+def _trig_count(expr):
+    return expr.count(C.TrigonometricFunction) + \
+           expr.count(C.HyperbolicFunction)
 
 @cacheit
 def __trigsimp(expr, deep=False, to_tan=False, use_factor=False):
@@ -1653,7 +1658,7 @@ def __trigsimp(expr, deep=False, to_tan=False, use_factor=False):
         new = new.replace(cot, lambda x: cos(x)/sin(x))
         if new != expr:
             new = __trigsimp(new, deep, False, use_factor)
-        if new.count(C.TrigonometricFunction) < expr.count(C.TrigonometricFunction):
+        if _trig_count(new) < _trig_count(expr):
             expr = new
         # see if rewriting the expression in terms of ``exp``
         # one gets an expression independent from ``exp``
