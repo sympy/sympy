@@ -119,19 +119,26 @@ def treesearch(tree, join=join, objective=None):
     Each node in the tree can be a
 
     function - returned
-    list     - all trees within list are chained together
-    tuple    - optimal value from within tuple is returned
+    list     - a sequence of chained operations
+    tuple    - a selection among operations
 
-    Textual example
-    ---------------
+    Textual examples
+    ----------------
 
-    Text:
-    Try either ``expand`` then ``simplify`` or try ``factor`` then ``foosimp``.
+    Text: Run f, then run g, e.g. g(f(x))
+    Code: ``[f, g]``
 
-    Code:
-    tree = ([expand, simplify], [factor, foosimp])
+    Text: Run either f or g, whichever is better
+    Code: ``(f, g)``
+
+    Textx: Run either f or g, whichever is better, then run h
+    Code: ``[(f, g), h]``
+
+    Text: Try either expand then simplify or try factor then foosimp.
+    Code: ``([expand, simplify], [factor, foosimp])``
 
     Example
+    -------
 
     >>> from sympy.rules import treesearch
     >>> inc    = lambda x: x + 1
@@ -167,6 +174,15 @@ def treesearch(tree, join=join, objective=None):
 
     This allows the introduction of new types into the tree (e.g. sets) and
     potentially wildly different strategies (e.g. parallel minimize)
+
+    Greediness
+    ----------
+
+    This is a greedy algorithm.  In the example:
+
+        [(a, b), c]  # do either a or b, then do c
+
+    the choice between running ``a`` or ``b`` is made without foresight to c
     """
     if objective != None:
         join = join.copy()
