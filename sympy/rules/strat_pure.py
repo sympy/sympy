@@ -114,9 +114,9 @@ def minimize(*rules, **kwargs):
 
 join = {list: chain, tuple: minimize}
 def treeexec(tree, join):
-    """ Apply strategies onto recursive containers (tree)
+    """ Apply functions onto recursive containers (tree)
 
-    join - a dictionary to define strategic actions on container types
+    join - a dictionary mapping container types to functions
       e.g. ``{list: chain, tuple: minimize}``
 
     Keys are containers/iterables.  Values are functions [a] -> a.
@@ -125,6 +125,14 @@ def treeexec(tree, join):
     --------
 
     >>> from sympy.rules import treeexec
+    >>> tree = ([3, 3], [4, 1])
+    >>> treeexec(tree, {list: min, tuple: max})
+    3
+
+    >>> from sympy import Add, Mul
+    >>> treeexec(tree, {list: Add, tuple: Mul})
+    30
+
     >>> inc    = lambda x: x + 1
     >>> dec    = lambda x: x - 1
     >>> double = lambda x: 2*x
@@ -132,24 +140,21 @@ def treeexec(tree, join):
 
     >>> from sympy.rules import chain, minimize
     >>> from functools import partial
-    >>> maximize = partial(minimize, objective=lambda x: -x)
+    >>> absminimize = partial(minimize, objective=lambda x: abs(x))
 
-    >>> join = {list: chain, tuple: maximize}
-    >>> fn = treeexec(tree, join=join)
-    >>> fn(4)  # highest value comes from the dec then double
-    6
+    >>> fn = treeexec(tree, {list: chain, tuple: absminimize})
+    >>> fn(1)  # 2 or 0,     0 is lower magnitude
+    0
+    >>> fn(-5) # -4 or -12, -4 is lower magnitude
+    -4
 
     One can introduce new container types into the tree (e.g. sets) and
     potentially use wildly different strategies (e.g. parallel minimize)
     """
-    if callable(tree):
-        return tree
-    for typ, strat in join.iteritems():
+    for typ, fn in join.iteritems():
         if type(tree) == typ:
-            return strat(*map(partial(treeexec, join=join), tree))
-
-    raise TypeError("Type of tree %s not found in known types:\n\t%s"%(
-                str(type(tree)), "{" + ", ".join(map(str, join.keys()))))
+            return fn(*map(partial(treeexec, join=join), tree))
+    return tree
 
 def greedyexec(tree, objective=identity):
     """ Execute a strategic tree.  Select alternatives greedily

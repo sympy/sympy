@@ -80,6 +80,9 @@ def test_minimize():
     assert rl(4) == 5
 
 def test_treeexec():
+    tree = ([3, 3], [4, 1], 2)
+    assert treeexec(tree, {list: min, tuple: max}) == 3
+
     join = {list: chain, tuple: minimize}
     inc = lambda x: x + 1
     dec = lambda x: x - 1
