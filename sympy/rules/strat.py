@@ -1,5 +1,5 @@
 from strat_pure import (exhaust, memoize, condition, chain, debug, tryit,
-        null_safe, do_one, switch, minimize, treesearch)
+        null_safe, do_one, switch, minimize, treeexec, greedyexec)
 from traverse import bottom_up, top_down
 
 def canon(*rules):
