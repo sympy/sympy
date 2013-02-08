@@ -9,7 +9,7 @@ the separate 'factorials' module.
 
 from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.cache import cacheit
 from sympy.functions.combinatorial.factorials import factorial
 
@@ -787,7 +787,7 @@ def _nP(n, k=None, replacement=False):
 
     if k == 0:
         return 1
-    if type(n) is int:  # n different items
+    if isinstance(n, SYMPY_INTS):  # n different items
         # assert n >= 0
         if k is None:
             return sum(_nP(n, i, replacement) for i in range(n + 1))
@@ -951,7 +951,7 @@ def nC(n, k=None, replacement=False):
     from sympy.functions.combinatorial.factorials import binomial
     from sympy.core.mul import prod
 
-    if type(n) is int:
+    if isinstance(n, SYMPY_INTS):
         if k is None:
             if not replacement:
                 return 2**n
@@ -1198,7 +1198,7 @@ def nT(n, k=None):
     """
     from sympy.utilities.iterables import multiset_partitions
 
-    if type(n) is int:
+    if isinstance(n, SYMPY_INTS):
         # assert n >= 0
         # all the same
         if k is None:
