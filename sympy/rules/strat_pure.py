@@ -112,7 +112,6 @@ def minimize(*rules, **kwargs):
         return min([rule(expr) for rule in rules], key=objective)
     return minrule
 
-join = {list: chain, tuple: minimize}
 def treeexec(tree, join):
     """ Apply functions onto recursive containers (tree)
 
@@ -129,32 +128,15 @@ def treeexec(tree, join):
     >>> treeexec(tree, {list: min, tuple: max})
     3
 
-    >>> from sympy import Add, Mul
-    >>> treeexec(tree, {list: Add, tuple: Mul})
+    >>> add = lambda *args: sum(args)
+    >>> mul = lambda *args: reduce(lambda a, b: a*b, args, 1)
+    >>> treeexec(tree, {list: add, tuple: mul})
     30
-
-    >>> inc    = lambda x: x + 1
-    >>> dec    = lambda x: x - 1
-    >>> double = lambda x: 2*x
-    >>> tree = (inc, [dec, double]) # either inc or dec-then-double
-
-    >>> from sympy.rules import chain, minimize
-    >>> from functools import partial
-    >>> absminimize = partial(minimize, objective=lambda x: abs(x))
-
-    >>> fn = treeexec(tree, {list: chain, tuple: absminimize})
-    >>> fn(1)  # 2 or 0,     0 is lower magnitude
-    0
-    >>> fn(-5) # -4 or -12, -4 is lower magnitude
-    -4
-
-    One can introduce new container types into the tree (e.g. sets) and
-    potentially use wildly different strategies (e.g. parallel minimize)
     """
-    for typ, fn in join.iteritems():
-        if type(tree) == typ:
-            return fn(*map(partial(treeexec, join=join), tree))
-    return tree
+    if type(tree) in join:
+        return join[type(tree)](*map(partial(treeexec, join=join), tree))
+    else:
+        return tree
 
 def greedyexec(tree, objective=identity):
     """ Execute a strategic tree.  Select alternatives greedily
