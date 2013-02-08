@@ -10,7 +10,6 @@ from sympy import (
     symbols, sympify, tan, tanh, trigsimp, Wild, Basic)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
-from sympy.simplify.simplify import _trigpats
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, k
@@ -135,6 +134,13 @@ def test_trigsimp1a():
     assert trigsimp(tanh(2)*cos(3)*exp(2)/sinh(2)) == cos(3)*exp(2)/cosh(2)
     assert trigsimp(coth(2)*cos(3)*exp(2)/cosh(2)) == cos(3)*exp(2)/sinh(2)
     assert trigsimp(coth(2)*cos(3)*exp(2)*tanh(2)) == cos(3)*exp(2)*2
+
+    assert trigsimp(sin(2*x)/sin(x)) == 2*cos(x)
+    assert trigsimp(sin(1)*sin(2*x)**2/sin(x)**2) == 4*sin(1)*cos(x)**2
+    assert trigsimp(sin(2*x)**2/sin(x)) == 2*cos(x)*sin(2*x)
+    assert trigsimp(sin(x)**2/sin(2*x)**2) == 1/(4*cos(x)**2)
+    assert trigsimp(cos(y)*tan(x) - sin(y)) == sin(x - y)/cos(x)
+    assert trigsimp(sin(x)*cos(y)*cot(y) - sin(x)/sin(y)) == -sin(x)*sin(y)
 
 def test_trigsimp2():
     x, y = symbols('x,y')
@@ -262,47 +268,7 @@ def test_trigsimp_issues():
     assert trigsimp(cos(2)*(cos(3) + 1)**2*(cos(3) - 1)**2) == \
         cos(2)*sin(3)**4
 
-    # issue 3690; this generates an expression that formerly caused
-    # trigsimp to hang
-    assert cot(x).equals(tan(x)) is False
 
-
-def test_trigsimp_assumptions():
-    from random import random, randint
-    from sympy.utilities.iterables import flatten
-    from sympy.utilities.randtest import (
-        test_numerically, random_complex_number, comp)
-
-    a, b, c, d, matchers_division, matchers_add, \
-    matchers_identity, artifacts = _trigpats()
-
-    # check that these are always valid
-    pats = [artifacts, matchers_add, matchers_identity]
-    for i, p in enumerate(flatten(pats, 1)):
-        o, n = p[:2]
-        try:
-            assert test_numerically(o, n, list(o.free_symbols))
-        except:
-            print o,n
-
-    # check that these are valid if the bases are positive or
-    # exponents are integers
-    for i, p in enumerate(matchers_division):
-        o, n = p[:2]
-        f = o.free_symbols
-        reps = dict(zip(f, [random_complex_number() for fi in f]))
-        # integer exponent
-        save = reps.pop(c)
-        reps[c] = randint(1, 10)
-        try:
-            assert comp(o.subs(reps), n.subs(reps), 1e-6)
-        except:
-            print i, o, n, reps
-
-        # real argument
-        reps[c] = save
-        reps[b] = 1  # sin and cos are both positive at b = 1
-        assert comp(o.subs(reps), n.subs(reps), 1e-6)
 
 
 def test_trigsimp_issue_2515():
