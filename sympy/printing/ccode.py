@@ -258,7 +258,7 @@ def ccode(expr, assign_to=None, **settings):
         >>> from sympy import ccode, symbols, Rational, sin
         >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))
-        '8*sqrt(2)*pow(tau, 7.0/2.0)'
+        '8.0*sqrt(2.0)*pow(tau, 7.0/2.0)'
         >>> ccode(sin(x), assign_to="s")
         's = sin(x);'
 
