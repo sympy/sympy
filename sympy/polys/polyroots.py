@@ -363,11 +363,11 @@ def roots_quintic(f):
 
     l0 = quintic.l0(theta)
 
-    l1 = simplify((-alpha + sqrt(disc)) / S(2))
-    l4 = simplify((-alpha - sqrt(disc)) / S(2))
+    l1 = _quintic_simplify((-alpha + sqrt(disc)) / S(2))
+    l4 = _quintic_simplify((-alpha - sqrt(disc)) / S(2))
 
-    l2 = simplify((-alpha_bar + sqrt(disc_bar)) / S(2))
-    l3 = simplify((-alpha_bar - sqrt(disc_bar)) / S(2))
+    l2 = _quintic_simplify((-alpha_bar + sqrt(disc_bar)) / S(2))
+    l3 = _quintic_simplify((-alpha_bar - sqrt(disc_bar)) / S(2))
 
     order = quintic.order(theta, d)
     test = (order*delta.n()) - ( (l1.n() - l4.n())*(l2.n() - l3.n()) )
@@ -385,7 +385,7 @@ def roots_quintic(f):
     R3 = l0 + l2*zeta1 + l4*zeta2 + l1*zeta3 + l3*zeta4
     R4 = l0 + l4*zeta1 + l3*zeta2 + l2*zeta3 + l1*zeta4
 
-    Res = [None]*5
+    Res = [None, [None]*5, [None]*5, [None]*5, [None]*5]
     Res_n = [None, [None]*5, [None]*5, [None]*5, [None]*5]
     sol = Symbol('sol')
 
@@ -398,15 +398,23 @@ def roots_quintic(f):
     # Solve imported here. Causing problems if imported as 'solve'
     # and hence the changed name
     from sympy.solvers.solvers import solve as solve_five
-    Res[1] = solve_five(sol**5 - R1, sol)
-    Res[2] = solve_five(sol**5 - R2, sol)
-    Res[3] = solve_five(sol**5 - R3, sol)
-    Res[4] = solve_five(sol**5 - R4, sol)
+    from sympy.abc import a, b
+    sol_five = solve_five( sol**5 - a - I*b, sol)
+    R1 = R1.as_real_imag()
+    R2 = R2.as_real_imag()
+    R3 = R3.as_real_imag()
+    R4 = R4.as_real_imag()
+
+    for i, root in enumerate(sol_five):
+        Res[1][i] = _quintic_simplify(root.subs({ a: R1[0], b: R1[1] }))
+        Res[2][i] = _quintic_simplify(root.subs({ a: R2[0], b: R2[1] }))
+        Res[3][i] = _quintic_simplify(root.subs({ a: R3[0], b: R3[1] }))
+        Res[4][i] = _quintic_simplify(root.subs({ a: R4[0], b: R4[1] }))
 
     for i in range(1, 5):
         for j in range(5):
-            Res[i][j] = _quintic_simplify(Res[i][j])
             Res_n[i][j] = Res[i][j].n()
+            Res[i][j] = _quintic_simplify(Res[i][j])
     r1 = Res[1][0]
     r1_n = Res_n[1][0]
 
@@ -447,11 +455,11 @@ def roots_quintic(f):
             break
 
     # Now, we have r's so we can get roots
-    x1 = S(r1 + r2 + r3 + r4)/5
-    x2 = S(r1*zeta4 + r2*zeta3 + r3*zeta2 + r4*zeta1)/5
-    x3 = S(r1*zeta3 + r2*zeta1 + r3*zeta4 + r4*zeta2)/5
-    x4 = S(r1*zeta2 + r2*zeta4 + r3*zeta1 + r4*zeta3)/5
-    x5 = S(r1*zeta1 + r2*zeta2 + r3*zeta3 + r4*zeta4)/5
+    x1 = (r1 + r2 + r3 + r4)/5
+    x2 = (r1*zeta4 + r2*zeta3 + r3*zeta2 + r4*zeta1)/5
+    x3 = (r1*zeta3 + r2*zeta1 + r3*zeta4 + r4*zeta2)/5
+    x4 = (r1*zeta2 + r2*zeta4 + r3*zeta1 + r4*zeta3)/5
+    x5 = (r1*zeta1 + r2*zeta2 + r3*zeta3 + r4*zeta4)/5
 
     result = [x1, x2, x3, x4, x5]
     return result
