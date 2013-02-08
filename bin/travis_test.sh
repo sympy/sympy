@@ -15,4 +15,4 @@ if not (t1 and t2):
 EOF
 
 cd ..
-bin/doctest doc
+bin/doctest doc/
