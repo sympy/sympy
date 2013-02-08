@@ -338,7 +338,6 @@ def test_symbols():
     assert symbols('aa:d') == (aa, ab, ac, ad)
     assert symbols('aa:d,x:z') == (aa, ab, ac, ad, x, y, z)
     assert symbols(('aa:d','x:z')) == ((aa, ab, ac, ad), (x, y, z))
-    
     a0 = Symbol('a0')
     a1 = Symbol('a1')
     a2 = Symbol('a2')
