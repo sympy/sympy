@@ -1,5 +1,6 @@
 """ Generic SymPy-Independent Strategies """
 import itertools
+from sympy.rules.util import treeexec
 
 def exhaust(brule):
     """ Apply a branching rule repeatedly until it has no effect """
@@ -92,3 +93,12 @@ def yieldify(rl):
     def brl(expr):
         yield rl(expr)
     return brl
+
+def allexec(tree):
+    """ Execute a strategic tree.  Return all possibilities.
+
+    Returns a lazy iterator
+
+    See sympy.rules.greedyexec for details on input
+    """
+    return treeexec(tree, {list: chain, tuple: multiplex}, leaf=yieldify)
