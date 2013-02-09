@@ -1,5 +1,6 @@
 """ Generic SymPy-Independent Strategies """
 from functools import partial
+from sympy.rules.util import treeexec
 
 def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
@@ -111,32 +112,6 @@ def minimize(*rules, **kwargs):
     def minrule(expr):
         return min([rule(expr) for rule in rules], key=objective)
     return minrule
-
-def treeexec(tree, join):
-    """ Apply functions onto recursive containers (tree)
-
-    join - a dictionary mapping container types to functions
-      e.g. ``{list: chain, tuple: minimize}``
-
-    Keys are containers/iterables.  Values are functions [a] -> a.
-
-    Examples
-    --------
-
-    >>> from sympy.rules import treeexec
-    >>> tree = ([3, 3], [4, 1])
-    >>> treeexec(tree, {list: min, tuple: max})
-    3
-
-    >>> add = lambda *args: sum(args)
-    >>> mul = lambda *args: reduce(lambda a, b: a*b, args, 1)
-    >>> treeexec(tree, {list: add, tuple: mul})
-    30
-    """
-    if type(tree) in join:
-        return join[type(tree)](*map(partial(treeexec, join=join), tree))
-    else:
-        return tree
 
 def greedyexec(tree, objective=identity):
     """ Execute a strategic tree.  Select alternatives greedily
