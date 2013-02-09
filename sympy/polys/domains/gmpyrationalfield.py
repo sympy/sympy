@@ -4,7 +4,7 @@ from sympy.polys.domains.rationalfield import RationalField
 
 from sympy.polys.domains.groundtypes import (
     GMPYRationalType, SymPyRationalType,
-    gmpy_numer, gmpy_denom, gmpy_factorial,
+    gmpy_numer, gmpy_denom, gmpy_factorial, gmpy_qdiv,
 )
 
 from sympy.polys.polyerrors import CoercionFailed
@@ -70,11 +70,11 @@ class GMPYRationalField(RationalField):
 
     def exquo(self, a, b):
         """Exact quotient of `a` and `b`, implies `__div__`.  """
-        return GMPYRationalType(a.qdiv(b))
+        return GMPYRationalType(gmpy_qdiv(a, b))
 
     def quo(self, a, b):
         """Quotient of `a` and `b`, implies `__div__`. """
-        return GMPYRationalType(a.qdiv(b))
+        return GMPYRationalType(gmpy_qdiv(a, b))
 
     def rem(self, a, b):
         """Remainder of `a` and `b`, implies nothing.  """
@@ -82,15 +82,15 @@ class GMPYRationalField(RationalField):
 
     def div(self, a, b):
         """Division of `a` and `b`, implies `__div__`. """
-        return GMPYRationalType(a.qdiv(b)), self.zero
+        return GMPYRationalType(gmpy_qdiv(a, b)), self.zero
 
     def numer(self, a):
         """Returns numerator of `a`. """
-        return gmpy_numer(a)
+        return a.numerator
 
     def denom(self, a):
         """Returns denominator of `a`. """
-        return gmpy_denom(a)
+        return a.denominator
 
     def factorial(self, a):
         """Returns factorial of `a`. """

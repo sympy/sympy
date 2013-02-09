@@ -71,8 +71,8 @@ class GMPYIntegerRing(IntegerRing):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert GMPY ``mpq`` to GMPY's ``mpz``. """
-        if a.denom() == 1:
-            return a.numer()
+        if a.denominator == 1:
+            return a.numerator
 
     def from_RR_sympy(K1, a, K0):
         """Convert SymPy's ``Float`` to GMPY's ``mpz``. """
