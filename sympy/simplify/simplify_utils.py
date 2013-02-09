@@ -317,7 +317,7 @@ def _match22(expr, f):
         return None
     if S.One not in args:
         return None
-    i = args.index(S.One)
+    i = list(args).index(S.One)
     b = args[1 - i]
     if not b.is_Mul:
         return None
