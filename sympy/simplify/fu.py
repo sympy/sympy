@@ -307,8 +307,30 @@ def TR4(rv):
     return rv
 
 
+def _TR56(rv, f, g, all):
+    """Helper for TR5 and TR6 to replace f**2 with 1 - g**2 with the
+    option to replace f**(2**e) with (1 - g**2)**e if all is True.
+    """
+    rv = bottom_up(rv, lambda x: _TR56(x, f, g, all))
+
+    if not (rv.is_Pow and rv.base.func == f):
+        return rv
+    if rv.exp == 2:
+        return 1 - g(rv.base.args[0])**2
+    if not all:
+        return rv
+    else:
+        if rv.exp == 4:
+            e = 2
+        else:
+            p = perfect_power(rv.exp, [2])
+            if not p:
+                return rv
+            e = p[1]
+        return (1 - g(rv.base.args[0])**2)**e
+
 def TR5(rv):
-    """Replacement of sin**2 or sin**4 factors.
+    """Replacement of sin**2 with 1 - cos(x)**2
 
     Examples
     ========
@@ -319,19 +341,13 @@ def TR5(rv):
     >>> TR5(sin(x)**2)
     -cos(x)**2 + 1
     >>> TR5(sin(x)**4)
-    (-cos(x)**2 + 1)**2
-    >>> TR5(sin(x)**6)
-    sin(x)**6
+    sin(x)**4
     """
-    # XXX should this do all even powers? all those that are powers of 2?
-    rv = bottom_up(rv, TR5)
-    if not (rv.is_Pow and rv.base.func == sin and rv.exp in (2, 4)):
-        return rv
-    return (1 - cos(rv.base.args[0])**2)**(rv.exp//2)
+    return _TR56(rv, sin, cos, False)
 
 
 def TR6(rv):
-    """Replacement of cos**2 or cos**4 factors.
+    """Replacement of cos**2 with 1 - sin(x)**2.
 
     Examples
     ========
@@ -339,17 +355,12 @@ def TR6(rv):
     >>> from sympy.simplify.fu import TR6
     >>> from sympy.abc import x
     >>> from sympy import cos
-    >>> TR6(cos(x)**4)
-    (-sin(x)**2 + 1)**2
     >>> TR6(cos(x)**2)
     -sin(x)**2 + 1
-    >>> TR6(cos(x)**6)
-    cos(x)**6
+    >>> TR6(cos(x)**4)
+    cos(x)**4
     """
-    rv = bottom_up(rv, TR6)
-    if not (rv.is_Pow and rv.base.func == cos and rv.exp in (2, 4)):
-        return rv
-    return (1 - sin(rv.base.args[0])**2)**(rv.exp//2)
+    return _TR56(rv, cos, sin, False)
 
 
 def TR7(rv):
