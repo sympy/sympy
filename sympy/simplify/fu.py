@@ -165,18 +165,18 @@ from collections import defaultdict
 
 from sympy.simplify.simplify import simplify, powsimp, ratsimp, combsimp
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import cos, sin, tan, cot
+from sympy.functions.elementary.trigonometric import cos, sin, tan, cot, sqrt
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.core.compatibility import ordered
 from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.function import expand_mul, count_ops
 from sympy.core.add import Add
-from sympy.core.symbol import Wild
+from sympy.core.symbol import Dummy
 from sympy.core.exprtools import Factors
 from sympy.core.rules import Transform
 from sympy.core.basic import S
-from sympy.core.numbers import Integer
+from sympy.core.numbers import Integer, pi
 from sympy.rules import minimize, chain, debug
 from sympy.rules.strat_pure import identity
 from sympy import SYMPY_DEBUG
@@ -279,6 +279,12 @@ def TR3(rv):
 
 def TR4(rv):
     """Identify values of special angles.
+
+        a=  0   pi/6        pi/4        pi/3        pi/2
+    ----------------------------------------------------
+    cos(a)  0   1/2         sqrt(2)/2   sqrt(3)/2   1
+    sin(a)  1   sqrt(3)/2   sqrt(2)/2   1/2         0
+    tan(a)  0   sqt(3)/3    1           sqrt(3)     --
 
     Examples
     ========
@@ -618,7 +624,7 @@ def TR10i(rv):
     ========
 
     >>> from sympy.simplify.fu import TR10i
-    >>> from sympy import cos, sin
+    >>> from sympy import cos, sin, pi
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
     cos(2)
     >>> TR10i(cos(1)*cos(3) - sin(1)*sin(3))
@@ -638,6 +644,25 @@ def TR10i(rv):
     >>> eq = (cos(2)*cos(3)+sin(2)*(cos(1)*sin(2)+cos(2)*sin(1)))*cos(5) + sin(1)*sin(5)
     >>> TR10i(eq) == TR10i(eq.expand()) == cos(4)
     True
+
+    >>> c = cos(x); s = sin(x); h = sin(y); r = cos(y)
+    >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
+    ...   for a in ((c*r, s*h), (c*h,s*r)):
+    ...    args = zip(si, a)
+    ...    ex = Add(*[Mul(*ai) for ai in args])
+    ...    if ex - TR10i(ex).expand(trig=1) or TR10i(ex).is_Add:
+    ...        print 'fail'
+    ...
+
+    >>> c = cos(x); s = sin(x); h = sin(pi/6); r = cos(pi/6)
+    >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
+    ...   for a in ((c*r, s*h), (c*h,s*r)):
+    ...    args = zip(si, a)
+    ...    ex = Add(*[Mul(*ai) for ai in args])
+    ...    t=TR10i(ex)
+    ...    if ex - t.expand(trig=1) or t.is_Add:
+    ...     print 'fail'
+    ...
     """
     rv = bottom_up(rv, TR10i)
     if not rv.is_Add:
@@ -659,7 +684,7 @@ def TR10i(rv):
             if not a.is_Mul:
                 return
             if a.args[0].is_Integer:
-                if a.args[0] is not S.NegativeOne:  # gcd already removed
+                if a.args[0] is not S.NegativeOne:  # gcd already removed so if one term has it the other must not or they must have unmatching integers
                     return
                 a = -a
                 n = -1
@@ -679,16 +704,46 @@ def TR10i(rv):
             a, b = [Factors(i) for i in rv.args]
             A = a
             a, b = a.normal(b)
-            gcd = A.div(a)[0]
-            if gcd.is_one:
-                return  # there was no gcd
+            gcd = A.div(a)[0].as_expr()
+            if abs(gcd) == 1:
+                # if the coefficient in front of 1 term is sqrt(3) time the other,
+                # cos(pi/6) and sin(pi/6) can be used to combine the terms
+                #
+                #                a +             b
+                #             na*A +          nb*B
+                #       nb(na/nb*A +             B)
+                #      nb(sqrt(3)A +             B)
+                #  2nb(sqrt(3)/2*A +           B/2)
+                #  2nb(cos(pi/6)*A +   sin(pi/6)*B)
+                # nb(2*cos(pi/6)*A + 2*sin(pi/6)*B)
+                #
+                a, b = rv.args
+                na, nb = [i.as_independent(cos, sin)[0] for i in rv.args]
+                if abs(nb/na) == sqrt(3):
+                    na, nb = nb, na
+                    a, b = b, a
+                if abs(na/nb) == sqrt(3):  # a = sqrt(3*n)*f ; b = sqrt(n)*g   gcd*(a+b) = gcd*(sqrt(3*n)*f + sqrt(n)*g)) = gcd*sqrt(n)*(sqrt(3)*f+g)
+                    d = Dummy('pi/6')
+                    gcd = nb
+                    a *= 2/nb/sqrt(3)*cos(d)  # leave to 2s so there is a gcd this time
+                    b *= 2/nb*sin(d)
+                    o = ok2(a + b)
+                    if o is None:
+                        return
+                    g, o1, o2 = o
+                    rep = {cos(d): cos(pi/6, evaluate=False), sin(d): sin(pi/6, evaluate=False)}
+                    o1 = [o1[0]] + [i.subs(rep) for i in o1[1:]]
+                    o2 = [o2[0]] + [i.subs(rep) for i in o2[1:]]
+                    gcd *= g
+                    return gcd, o1, o2
+
             o1 = ok(a.as_expr())
             if not o1:
                 return
             o2 = ok(b.as_expr())
             if not o2:
                 return
-            return gcd.as_expr(), o1, o2
+            return gcd, o1, o2
 
         if len(rv.args) != 2:
             args = list(ordered(rv.args))
@@ -745,8 +800,10 @@ def TR10i(rv):
             if c1.func == sin:
                 c1, c2 = c2, c1
                 s1, s2 = s2, s1
+                n1, n2 = n2, n1
             a, b = c1.args[0], s1.args[0]
             aa, bb = c2.args[0], s2.args[0]
+            gcd = n1*gcd
             if not (a == aa and b == bb):
                 return rv
             if n1 == n2:
@@ -759,11 +816,12 @@ def TR10i(rv):
                 c2, s2 = s2, c2
             a, b = c1.args[0], s1.args[0]
             aa, bb = c2.args[0], s2.args[0]
+            gcd = n1*gcd
             if not (a == bb and b == aa):
                 return rv
             if n1 == n2:
                 return gcd*sin(a + b)
-            return gcd*n1*sin(b - a)
+            return gcd*sin(b - a)
         return rv
 
     return process_common_addends(rv, do, lambda x: tuple(ordered(x.free_symbols)))
