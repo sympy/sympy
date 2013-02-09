@@ -9,12 +9,13 @@ http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 """
 from __future__ import division
-from sympy.core import S
+from sympy.core import S, Symbol
 from sympy.core.numbers import I
 from sympy.polys.polytools import Poly
 from sympy.core.evalf import N
-from sympy.abc import x
 from sympy.functions import sqrt
+
+x = Symbol('x')
 
 class PolyQuintic(object):
     """Special functions for solvable quintics"""

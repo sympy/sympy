@@ -322,7 +322,7 @@ def roots_quintic(f):
     result = []
     coeff_5, coeff_4, p, q, r, s = f.all_coeffs()
 
-    # Eqn must me of the for x^5 + px^3 + qx^2 + rx + s
+    # Eqn must be of the form x^5 + px^3 + qx^2 + rx + s
     if coeff_4:
         return result
 
@@ -460,12 +460,13 @@ def roots_quintic(f):
     x3 = (r1*zeta3 + r2*zeta1 + r3*zeta4 + r4*zeta2)/5
     x4 = (r1*zeta2 + r2*zeta4 + r3*zeta1 + r4*zeta3)/5
     x5 = (r1*zeta1 + r2*zeta2 + r3*zeta3 + r4*zeta4)/5
+    result = [x1, x2, x3, x4, x5]
 
     # Now check if solutions are distinct
 
     result_n = []
     for root in result:
-        result.append(root.n(5))
+        result_n.append(root.n(5))
     result_n = sorted(result_n)
 
     prev_entry = None

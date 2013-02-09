@@ -1226,7 +1226,7 @@ def _solve(f, *symbols, **flags):
                 # by default since the results are quite long. Perhaps one
                 # could base this decision on a certain critical length of the
                 # roots.
-                quintics = flags.get('quintics', False)
+                quintics = flags.get('quintics', True)
                 if poly.degree() > 2:
                     flags['simplify'] = flags.get('simplify', False)
                 soln = roots(poly, cubics=True, quartics=True,

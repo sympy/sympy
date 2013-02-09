@@ -8,7 +8,7 @@ from sympy.polys import Poly, cyclotomic_poly, intervals, nroots
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, preprocess_roots, roots)
+    roots_binomial, roots_quintic, preprocess_roots, roots)
 
 a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
@@ -199,6 +199,27 @@ def test_roots_preprocessing():
         809735812500*x**3 - 10673859375000*x**2 + 63529101562500* \
         x - 135006591796875
 
+def test_quintics():
+    f = Poly(x**5 + 15*x + 12, x)
+    s = roots_quintic(f)
+    soln = [
+        1.55919098913088 - 1.41297967386832*I,
+        -1.16885627308425 + 1.45103836960044*I,
+        1.55919098913088 + 1.41297967386832*I,
+        -1.16885627308425 - 1.45103836960044*I,
+        -0.780669432093258 - 0.e-23*I
+    ]
+    for i, root in enumerate(s):
+        s[i] = root.n()
+
+    flag = False
+    for root in s:
+        flag = False
+        for chk_root in soln:
+            diff = root.n() - chk_root
+            if abs(diff) < S(1.e-10):
+                flag = True
+    assert flag
 
 def test_roots():
     assert roots(1, x) == {}
