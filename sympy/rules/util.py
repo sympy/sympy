@@ -6,7 +6,7 @@ new = Basic.__new__
 def is_leaf(x):
     return not isinstance(x, Basic) or x.is_Atom
 
-def treeexec(tree, join):
+def treeexec(tree, join, leaf=lambda x: x):
     """ Apply functions onto recursive containers (tree)
 
     join - a dictionary mapping container types to functions
@@ -28,9 +28,8 @@ def treeexec(tree, join):
     30
     """
     if type(tree) in join:
-        return join[type(tree)](*map(partial(treeexec, join=join), tree))
-    if 'leaf' in join:
-        return join['leaf'](tree)
+        return join[type(tree)](*map(partial(treeexec, join=join, leaf=leaf),
+                                     tree))
     else:
-        return tree
+        return leaf(tree)
 
