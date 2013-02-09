@@ -7,9 +7,9 @@ from sympy import (
     Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
     Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
-    symbols, sympify, tan, tanh, trigsimp, Wild, Basic)
+    symbols, sympify, tan, tanh, sec, csc, trigsimp, Wild, Basic)
 from sympy.core.mul import _keep_coeff
-from sympy.simplify.simplify import fraction_expand
+from sympy.simplify.simplify import fraction_expand, _mexpand
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, k
@@ -135,12 +135,19 @@ def test_trigsimp1a():
     assert trigsimp(coth(2)*cos(3)*exp(2)/cosh(2)) == cos(3)*exp(2)/sinh(2)
     assert trigsimp(coth(2)*cos(3)*exp(2)*tanh(2)) == cos(3)*exp(2)*2
 
-    assert trigsimp(sin(2*x)/sin(x)) == 2*cos(x)
-    assert trigsimp(sin(1)*sin(2*x)**2/sin(x)**2) == 4*sin(1)*cos(x)**2
-    assert trigsimp(sin(2*x)**2/sin(x)) == 2*cos(x)*sin(2*x)
-    assert trigsimp(sin(x)**2/sin(2*x)**2) == 1/(4*cos(x)**2)
+    assert trigsimp(sin(2*x)*csc(x)) == 2*cos(x)
+    assert trigsimp(sin(1)*sin(2*x)**2*csc(x)**2) == 4*sin(1)*cos(x)**2
+    assert trigsimp(sin(2*x)**2*csc(x)) == 2*cos(x)*sin(2*x)
+    assert trigsimp(sin(x)**2*csc(2*x)**2) == 1/(4*cos(x)**2)
+    assert trigsimp(sinh(1)*cosh(x)**2 - sinh(1)*sinh(x)**2) == sinh(1)
     assert trigsimp(cos(y)*tan(x) - sin(y)) == sin(x - y)/cos(x)
-    assert trigsimp(sin(x)*cos(y)*cot(y) - sin(x)/sin(y)) == -sin(x)*sin(y)
+    assert trigsimp(sin(x)*cos(y)*cot(y) - sin(x)*csc(y)) == -sin(x)*sin(y)
+
+    expr = (sin(x) + cos(x)*cot(x) - csc(x))
+    assert trigsimp(expr) == 0
+    expr1 = _mexpand(expr**2)
+    assert trigsimp(expr1, use_factor=True) == 0
+
 
 def test_trigsimp2():
     x, y = symbols('x,y')

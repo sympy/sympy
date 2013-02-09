@@ -1374,7 +1374,7 @@ def trigsimp(expr, **opts):
     2/cos(x)
 
     """
-    from sympy import tan
+    from sympy import tan, sec, csc
 
     if not expr.has(*_trigs):
         return expr
@@ -1382,6 +1382,7 @@ def trigsimp(expr, **opts):
     recursive = opts.pop('recursive', False)
     deep = opts.pop('deep', False)
     method = opts.pop('method', 'matching')
+    use_factor = opts.pop('use_factor', False)
 
     def groebnersimp(ex, deep, **opts):
         def traverse(e):
@@ -1396,13 +1397,15 @@ def trigsimp(expr, **opts):
         return trigsimp_groebner(ex, **opts)
 
     trigsimpfunc = {
-        'matching': (lambda x, d: _trigsimp(x, d)),
+        'matching': (lambda x, d: _trigsimp(x, d, use_factor=use_factor)),
         'groebner': (lambda x, d: groebnersimp(x, d, **opts)),
         'combined': (lambda x, d: _trigsimp(groebnersimp(x,
                                        d, polynomial=True, hints=[2, tan]),
                                    d))
                    }[method]
 
+    expr = expr.replace(csc, lambda x: 1/sin(x))
+    expr = expr.replace(sec, lambda x: 1/cos(x))
     if recursive:
         w, g = cse(expr)
         g = trigsimpfunc(g[0], deep)
