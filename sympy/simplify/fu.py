@@ -982,7 +982,7 @@ _CTR4 = [TR4, TR0], [identity]
 
 
 def CTRstrat(lists):
-    return minimize(*[chain(*list) for list in lists], objective=L)
+    return minimize(*[chain(*list) for list in lists], objective=lambda x: (L(x), x.count_ops()))
 
 CTR1, CTR2, CTR3, CTR4 = map(CTRstrat, (_CTR1, _CTR2, _CTR3, _CTR4))
 
