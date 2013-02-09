@@ -122,19 +122,22 @@ in the following sum:
 ... cos(y)*cos(z))
 >>> args = expr.args
 
-Although ``TR10i`` currently returns the best result, though the full
-Fu algoirthm gives a different result (which can be simplified a little
-more with single application of TR9):
+Serendipitously, fu gives the best result:
 
->>> TR10i(expr)
-sin(x + y)*sin(x + z) + cos(y - z)
 >>> fu(expr)
--cos(x)**2*cos(y + z) + 3*cos(y - z)/2 + cos(y + z)/2 + cos(-2*x + y + z)/4 - cos(2*x + y + z)/4
->>> TR9(_)
+3*cos(y - z)/2 - cos(2*x + y + z)/2
+
+But if different terms were combined, a less-optimal result might be
+obtained, requiring some additional work to get better simplification,
+but still less than optimal. The following shows an alternative form
+of ``expr`` that resists optimal simplification since the initial
+step taken leads to a dead end:
+
+>>> TR9(-cos(x)**2*cos(y + z) + 3*cos(y - z)/2 +
+...     cos(y + z)/2 + cos(-2*x + y + z)/4 - cos(2*x + y + z)/4)
 sin(2*x)*sin(y + z)/2 - cos(x)**2*cos(y + z) + 3*cos(y - z)/2 + cos(y + z)/2
 
-The order in which terms are combined at each step can lead to a dead-end
-short of the optimal expression:
+Here is a smaller expression that exhibits the same behavior:
 
 >>> a = sin(x)*sin(z)*cos(x)*cos(y) + sin(x)*sin(y)*cos(x)*cos(z)
 >>> TR10i(a)
@@ -635,7 +638,9 @@ def TR10i(rv):
     ========
 
     >>> from sympy.simplify.fu import TR10i
-    >>> from sympy import cos, sin, pi
+    >>> from sympy import cos, sin, pi, Add, Mul
+    >>> from sympy.abc import x, y
+
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
     cos(2)
     >>> TR10i(cos(1)*cos(3) - sin(1)*sin(3))
@@ -661,7 +666,7 @@ def TR10i(rv):
     ...   for a in ((c*r, s*h), (c*h,s*r)):
     ...    args = zip(si, a)
     ...    ex = Add(*[Mul(*ai) for ai in args])
-    ...    if ex - TR10i(ex).expand(trig=1) or TR10i(ex).is_Add:
+    ...    if ex - TR10i(ex).expand(trig=True) or TR10i(ex).is_Add:
     ...        print 'fail'
     ...
 
@@ -671,7 +676,7 @@ def TR10i(rv):
     ...    args = zip(si, a)
     ...    ex = Add(*[Mul(*ai) for ai in args])
     ...    t=TR10i(ex)
-    ...    if ex - t.expand(trig=1) or t.is_Add:
+    ...    if ex - t.expand(trig=True) or t.is_Add:
     ...     print 'fail'
     ...
     """
@@ -717,6 +722,7 @@ def TR10i(rv):
             a, b = a.normal(b)
             gcd = A.div(a)[0].as_expr()
             if abs(gcd) == 1:
+                # cos(pi/6) and sin(pi/6) can be used to combine the terms
                 # if the coefficient in front of 1 term is sqrt(3) time the other,
                 # cos(pi/6) and sin(pi/6) can be used to combine the terms
                 #
@@ -782,6 +788,27 @@ def TR10i(rv):
             return rv
 
         # two-arg Add
+
+        # if the args are in the form A*(cos(x) +/- sin(x)) then values of
+        # cos(pi/4) and sin(pi/4) can be introduced to induce a change
+        if first:
+            a, b = [Factors(i) for i in rv.args]
+            na, nb = [i.as_expr() for i in a.quo(S(-1)).normal(b.quo(S(-1)))]
+            if all(i.func in (cos, sin) for i in (na, nb)):
+                if na.func != nb.func and na.args[0] == nb.args[0]:
+                    ca = a.div(na)[0].quo(S(-1))
+                    cb = b.div(nb)[0].quo(S(-1))
+                    if ca == cb:
+                        gcd = ca.as_expr()
+                        # cos(x) + sin(x) -> cos(x)*cos(pi/4) + sin(x)*sin(pi/4)
+                        a, b = na, nb
+                        was = rv
+                        rv = gcd*sqrt(2)*do((a*a.func(pi/4, evaluate=False) + b*b.func(pi/4, evaluate=False)), first=False)
+                        from sympy.utilities.randtest import test_numerically as tn
+                        if not tn(was, rv):
+                            print was, rv
+                        return rv
+
         # arg 1
         gcd = S.One
         o1 = ok(rv.args[0])
@@ -978,7 +1005,7 @@ _CTR2 = [TR11, TR5, TR0], [TR11, TR6, TR0], [TR11, TR0]
 
 _CTR3 = [TR8, TR0], [TR8, TR10i, TR0], [identity]
 
-_CTR4 = [TR4, TR0], [identity]
+_CTR4 = [TR4, TR10i], [identity]
 
 
 def CTRstrat(lists):
@@ -1006,36 +1033,77 @@ def fu(rv):
     ========
 
     >>> from sympy.simplify.fu import fu
-    >>> from sympy import cos, sin, pi
-    >>> a = sin(50)**2 + cos(50)**2 + sin(pi/6)
-    >>> fu(a)
-    3/2
+    >>> from sympy import cos, sin, tan, pi, S, sqrt
+    >>> from sympy.abc import x, y, a, b
 
-    >>> a = sin(3)**4 - cos(2)**2 + sin(2)**2 + 2*cos(3)**2
-    >>> fu(a)  # -8*cos(1)**4 + cos(3)**4 + 8*cos(1)**2
-    cos(6)**2/4 + cos(6)/2 - cos(4) + 5/4
+    >>> fu(sin(50)**2 + cos(50)**2 + sin(pi/6))
+    3/2
+    >>> fu(sqrt(6)*cos(x) + sqrt(2)*sin(x))
+    2*sqrt(2)*sin(x + pi/3)
+
+    CTR1 example
+
+    >>> eq = sin(x)**4 - cos(y)**2 + sin(y)**2 + 2*cos(x)**2
+    >>> fu(eq)  # should be cos(x)**4 - 2*cos(y)**2 + 2
+    sin(x)**4 + 2*cos(x)**2 - 2*cos(y)**2 + 1
+
+    CTR2 example
+
+    >>> fu(S.Half - cos(2*x)/2)
+    sin(x)**2
+
+    CTR3 example
+
+    >>> fu(sin(a)*(cos(b) - sin(b)) + cos(a)*(sin(b) + cos(b)))
+    sqrt(2)*sin(a + b + pi/4)
+
+    CTR4 example
+
+    >>> fu(sqrt(3)*cos(x)/2 + sin(x)/2)
+    sin(x + pi/3)
+
+    Example 1
+
+    >>> fu(1-sin(2*x)**2/4-sin(y)**2-cos(x)**4)
+    -sin(2*x)**2/4 - sin(y)**2 - cos(x)**4 + 1
+
+    Example 2
+
+    >>> fu(cos(4*pi/9))
+    sin(pi/18)
+    >>> fu(cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9))  # this should go to 1/16
+    cos(pi/9)*cos(2*pi/9)*cos(4*pi/9)/2
+    >>> _ == S(1)/16
+    True
+
+    Example 3
+
+    >>> fu(tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18))
+    -sqrt(3)
 
     References
     ==========
     http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
     DESTIME2006/DES_contribs/Fu/simplification.pdf
     """
+    was = rv
     rv = sympify(rv)
     rv = TR0(rv)
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = RL1(rv)
-        if (L(rv1) < L(rv)):
+        if (_L(rv1) < _L(rv)):
             rv = rv1
-    if rv.has(tan, cot):
-        rv = TR2(rv)
+        if rv.has(tan, cot):
+            rv = TR2(rv)
     rv = TR0(rv)
     if rv.has(sin, cos):
         rv1 = RL2(rv)
         rv2 = TR8(rv1)
-        rv = ordered([rv, rv1, rv2], keys=(L, count_ops), default=False).next()
+        rv = ordered([was, rv, rv1, rv2], keys=(L, count_ops), default=False).next()
     return rv
 
+_L = lambda x: (L(x), x.count_ops())
 
 def bottom_up(rv, F):
     """Apply ``F`` to all expressions in an expression tree from the
