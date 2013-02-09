@@ -596,7 +596,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 poly += coeff * Z**i
 
         for z in roots(poly, Z).iterkeys():
-            if not z.is_real or z.is_zero:
+            if z.is_real == False or z.is_zero:
                 continue
 
             C = rsolve_poly([ polys[i]*z**i for i in xrange(r + 1) ], 0, n)
