@@ -419,6 +419,91 @@ class Sum(AddWithLimits,ExprWithIntLimits):
 
         return Sum(e * self.function, *limits)
 
+    def findrecur(self, F=Dummy('F'), n=None):
+        """
+        Find a recurrence formula for the summand of the sum.
+
+        Given a sum `f(n) = \sum_k F(n, k)`, where `F(n, k)` is
+        doubly hypergeometric (that's, both `F(n + 1, k)/F(n, k)`
+        and `F(n, k + 1)/F(n, k)` are rational functions of `n` and `k`),
+        we find a recurrence for the summand `F(n, k)` of the form
+
+            .. math:: \sum_{i=0}^I\sum_{j=0}^J a_{i,j}F(n - j, k - i) = 0
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Function, factorial, oo
+        >>> from sympy.concrete import Sum
+        >>> n, k = symbols('n, k', integer=True)
+        >>> s = Sum(factorial(n)/(factorial(k)*factorial(n - k)), (k, 0, oo))
+        >>> s.findrecur()
+        -F(n, k) + F(n - 1, k) + F(n - 1, k - 1)
+
+        Notes
+        =====
+
+        We use Sister Celine's algorithm, see [1]_.
+
+        References
+        ==========
+
+        .. [1] M. Petkovsek, H. S. Wilf, D. Zeilberger, A = B, 1996, Ch. 4.
+
+        """
+        from sympy import Function, expand_func, gamma, factor, Mul
+        from sympy.polys import together
+        from sympy.simplify import collect
+
+        if len(self.variables) > 1:
+            raise ValueError
+        else:
+            if self.limits[0][1:] != (S.Zero, S.Infinity):
+                raise ValueError
+            k = self.variables[0]
+
+        if not n:
+            try:
+                n = (self.function.free_symbols - set([k])).pop()
+            except KeyError:
+                raise ValueError
+
+        a = Function('a')
+        def f(i, j):
+            return self.function.subs([(n, i), (k, j)])
+        I, J, step = 0, 1, 1
+        y, x, sols = S.Zero, [], {}
+
+        while not any(v for a, v in sols.items()):
+            if step%2 != 0:
+                dy = sum(a(I, j)*f(n - j, k - I)/f(n, k) for j in xrange(J))
+                dx = [a(I, j) for j in xrange(J)]
+                I += 1
+            else:
+                dy = sum(a(i, J)*f(n - J, k - i)/f(n, k) for i in xrange(I))
+                dx = [a(i, J) for i in xrange(I)]
+                J += 1
+            step += 1
+            y += expand_func(dy.rewrite(gamma))
+            x += dx
+
+            t = together(y)
+            numer = t.as_numer_denom()[0]
+            numer = Mul(*[t for t in factor(numer).as_coeff_mul()[1] if t.has(a)])
+
+            if not numer.is_rational_function(n, k):
+                raise ValueError()
+
+            z = collect(numer, k)
+            eq = z.as_poly(k).all_coeffs()
+            sols = dict(solve(eq, *x))
+
+        y = sum(a(i, j)*F(n - j, k - i) for i in xrange(I) for j in xrange(J))
+        y = y.subs(sols).subs(map(lambda a: (a, 1), x))
+
+        return y if y else None
+
+
 def summation(f, *symbols, **kwargs):
     r"""
     Compute the summation of f with respect to symbols.

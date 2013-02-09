@@ -771,6 +771,29 @@ def test_reverse_order():
         Sum(x*y, (x, b + 1, a - 1), (y, 6, 1))
 
 
+def test_findrecur():
+    a, x, y = symbols("a, x, y")
+    n, k = symbols("n, k", integer=True)
+    F = symbols("F", cls=Function)
+
+    f = Sum(factorial(n)/(factorial(k)*factorial(n - k)), (k, 0, oo))
+    g = Sum(k*factorial(n)/(factorial(k)*factorial(n - k)), (k, 0, oo))
+    fa = Sum((-1)**k*binomial(n, k)*binomial(2*n - 2*k, n + a), (k, 0, oo))
+    fb = Sum(binomial(x, k)*binomial(y, n - k), (k, 0, oo))
+
+    assert f.findrecur(F) == -F(n, k) + F(n - 1, k) + F(n - 1, k - 1)
+    assert (Sum(binomial(n, k), (k, 0, oo)).findrecur(F) ==
+            -F(n, k) + F(n - 1, k) + F(n - 1, k - 1))
+    assert (g.findrecur(F) == (-1 + 1/n)*F(n, k) + F(n - 1, k) +
+            F(n - 1, k - 1))
+    assert (fa.findrecur(F, n) == F(n - 2, k - 1) -
+            (2*n - 1)*F(n - 1, k)/(2*n - 2) -
+            (a**2 - n**2)*F(n, k)/(4*n*(n - 1)))
+    assert (fb.findrecur(F, n) == -n*F(n, k)/(-n + x + y + 2) +
+            (-n + x + 1)*F(n - 1, k - 1)/(-n + x + y + 2) +
+            (-n + y + 1)*F(n - 1, k)/(-n + x + y + 2) + F(n - 2, k - 1))
+
+
 def test_issue_7097():
     assert sum(x**n/n for n in range(1, 401)) == summation(x**n/n, (n, 1, 400))
 
