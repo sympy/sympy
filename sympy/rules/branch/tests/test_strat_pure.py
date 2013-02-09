@@ -1,6 +1,5 @@
 from sympy.rules.branch.strat_pure import (exhaust, debug, multiplex,
-        condition, notempty, chain, onaction, sfilter, yieldify, allexec,
-        exhaustiveexec)
+        condition, notempty, chain, onaction, sfilter, yieldify)
 
 def posdec(x):
     if x > 0:
@@ -96,24 +95,3 @@ def test_yieldify():
     inc = lambda x: x + 1
     yinc = yieldify(inc)
     assert list(yinc(3)) == [4]
-
-def test_allexec():
-    inc = lambda x: x+1
-    dec = lambda x: x-1
-    double = lambda x: x*2
-    square = lambda x: x**2
-
-    assert set(allexec(inc)(3)) == set([inc(3)])
-    assert set(allexec((inc, dec))(3)) == set([2, 4])
-    assert set(allexec([inc, dec])(3)) == set([3])
-    assert set(allexec((inc, [dec, double]))(4)) == set([5, 6])
-
-def test_exhaustiveexec():
-    inc = lambda x: x+1
-    dec = lambda x: x-1
-    square = lambda x: x**2
-    tree = [(inc, dec), square]
-    fn = exhaustiveexec(tree, lambda x: -x)
-
-    assert fn(2) == (2 + 1)**2
-    assert fn(-2) == (-2 - 1)**2

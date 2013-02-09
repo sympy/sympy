@@ -1,5 +1,5 @@
 from sympy.rules.strat_pure import (null_safe, exhaust, memoize, condition,
-        chain, tryit, do_one, debug, switch, minimize, treeexec, greedyexec)
+        chain, tryit, do_one, debug, switch, minimize)
 from functools import partial
 
 def test_null_safe():
@@ -78,39 +78,3 @@ def test_minimize():
 
     rl = minimize(inc, dec, objective=lambda x: -x)
     assert rl(4) == 5
-
-def test_treeexec_strategies():
-    join = {list: chain, tuple: minimize}
-    inc = lambda x: x + 1
-    dec = lambda x: x - 1
-    double = lambda x: 2*x
-
-    assert treeexec(inc, join) == inc
-    assert treeexec((inc, dec), join)(5) == minimize(inc, dec)(5)
-    assert treeexec([inc, dec], join)(5) == chain(inc, dec)(5)
-    tree = (inc, [dec, double]) # either inc or dec-then-double
-    assert treeexec(tree, join)(5) == 6
-    assert treeexec(tree, join)(1) == 0
-
-    maximize = partial(minimize, objective=lambda x: -x)
-    join = {list: chain, tuple: maximize}
-    fn = treeexec(tree, join)
-    assert fn(4) == 6  # highest value comes from the dec then double
-    assert fn(1) == 2  # highest value comes from the inc
-
-def test_greedyexec():
-    inc = lambda x: x + 1
-    dec = lambda x: x - 1
-    double = lambda x: 2*x
-    tree = (inc, [dec, double]) # either inc or dec-then-double
-
-    fn = greedyexec(tree, objective=lambda x: -x)
-    assert fn(4) == 6  # highest value comes from the dec then double
-    assert fn(1) == 2  # highest value comes from the inc
-
-    tree = (inc, dec, (inc, dec, ([inc, inc], [dec, dec])))
-    lowest = greedyexec(tree)
-    assert lowest(10) == 8
-
-    highest = greedyexec(tree, objective=lambda x: -x)
-    assert highest(10) == 12

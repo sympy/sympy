@@ -1,0 +1,115 @@
+from functools import partial
+from sympy.rules import chain, minimize
+import sympy.rules.branch as branch
+from sympy.rules.branch import yieldify
+
+identity = lambda x: x
+
+def treeexec(tree, join, leaf=identity):
+    """ Apply functions onto recursive containers (tree)
+
+    join - a dictionary mapping container types to functions
+      e.g. ``{list: chain, tuple: minimize}``
+
+    Keys are containers/iterables.  Values are functions [a] -> a.
+
+    Examples
+    --------
+
+    >>> from sympy.rules.tree import treeexec
+    >>> tree = ([3, 3], [4, 1])
+    >>> treeexec(tree, {list: min, tuple: max})
+    3
+
+    >>> add = lambda *args: sum(args)
+    >>> mul = lambda *args: reduce(lambda a, b: a*b, args, 1)
+    >>> treeexec(tree, {list: add, tuple: mul})
+    30
+    """
+    if type(tree) in join:
+        return join[type(tree)](*map(partial(treeexec, join=join, leaf=leaf),
+                                     tree))
+    else:
+        return leaf(tree)
+
+def greedyexec(tree, objective=identity):
+    """ Execute a strategic tree.  Select alternatives greedily
+
+    Trees
+    -----
+
+    Nodes in a tree can be either
+
+    function - a leaf
+    list     - a sequence of chained operations
+    tuple    - a selection among operations
+
+    Textual examples
+    ----------------
+
+    Text: Run f, then run g, e.g. ``lambda x: g(f(x))``
+    Code: ``[f, g]``
+
+    Text: Run either f or g, whichever minimizes the objective
+    Code: ``(f, g)``
+
+    Textx: Run either f or g, whichever is better, then run h
+    Code: ``[(f, g), h]``
+
+    Text: Either expand then simplify or try factor then foosimp. Finally print
+    Code: ``[([expand, simplify], [factor, foosimp]), print]``
+
+    Objective
+    ---------
+
+    "Better" is determined by the objective keyword.  This function makes
+    choices to minimize the objective.  It defaults to the identity.
+
+    Example
+    -------
+
+    >>> from sympy.rules.tree import greedyexec
+    >>> inc    = lambda x: x + 1
+    >>> dec    = lambda x: x - 1
+    >>> double = lambda x: 2*x
+
+    >>> tree = (inc, [dec, double]) # either inc or dec-then-double
+    >>> fn = greedyexec(tree)
+    >>> fn(4)  # lowest value comes from the inc
+    5
+    >>> fn(1)  # lowest value comes from dec then double
+    0
+
+    This funcion selects between options in a tuple.  The result is chosen that
+    minimizes the objective function.
+
+    >>> fn = greedyexec(tree, objective=lambda x: -x)  # maximize
+    >>> fn(4)  # highest value comes from the dec then double
+    6
+    >>> fn(1)  # highest value comes from the inc
+    2
+
+    Greediness
+    ----------
+
+    This is a greedy algorithm.  In the example:
+
+        [(a, b), c]  # do either a or b, then do c
+
+    the choice between running ``a`` or ``b`` is made without foresight to c
+    """
+    optimize = partial(minimize, objective=objective)
+    return treeexec(tree, {list: chain, tuple: optimize})
+
+def allexec(tree):
+    """ Execute a strategic tree.  Return all possibilities.
+
+    Returns a lazy iterator
+
+    See sympy.rules.greedyexec for details on input
+    """
+    return treeexec(tree, {list: branch.chain, tuple: branch.multiplex},
+                    leaf=yieldify)
+
+def exhaustiveexec(tree, objective=identity):
+    return lambda expr: min(*tuple(allexec(tree)(expr)), key=objective)
