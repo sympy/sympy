@@ -102,3 +102,6 @@ def allexec(tree):
     See sympy.rules.greedyexec for details on input
     """
     return treeexec(tree, {list: chain, tuple: multiplex}, leaf=yieldify)
+
+def exhaustiveexec(tree, objective=lambda x: x):
+    return lambda expr: min(*tuple(allexec(tree)(expr)), key=objective)
