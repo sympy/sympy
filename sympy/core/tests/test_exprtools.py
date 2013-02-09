@@ -43,6 +43,7 @@ def test_Factors():
 
     assert a.normal(b) == (Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
 
+    assert Factors(sqrt(2)*x).as_expr() == sqrt(2)*x
 
 def test_Term():
     a = Term(4*x*y**2/z/t**3)

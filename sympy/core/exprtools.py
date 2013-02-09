@@ -94,6 +94,18 @@ class Factors(object):
         >>> Factors(0)
         Factors({0: 1})
 
+        Notes
+        =====
+
+        Although a dictionary can be passed, no checking will be done to
+        ensure that -1 is split from Rationals. This will then affect
+        gcd and normal caclulations, for example.
+
+        >>> Factors(-2*x).factors
+        {-1: 1, 2: 1, x: 1}
+        >>> Factors((-2*x).as_powers_dict()).factors
+        {-2: 1, x: 1}
+
         """
         if factors is None or factors == 1:
             factors = {}
@@ -102,7 +114,10 @@ class Factors(object):
         elif isinstance(factors, Number) and factors < 0 and not factors is S.NegativeOne:
             factors = {-factors: S.One, S.NegativeOne: S.One}
         elif isinstance(factors, Expr):
-            factors = dict(factors.as_powers_dict())
+            c, nc = factors.args_cnc()
+            factors = dict(Mul(*c, evaluate=False).as_powers_dict())
+            if nc:
+                factors[Mul(*nc, evaluate=False)] = S.One
 
         self.factors = factors
         try:
@@ -155,7 +170,12 @@ class Factors(object):
         for factor, exp in self.factors.iteritems():
             if exp != 1:
                 b, e = factor.as_base_exp()
-                e = _keep_coeff(Integer(exp), e)
+                if isinstance(exp, int):
+                    e = _keep_coeff(Integer(exp), e)
+                elif isinstance(exp, Rational):
+                    e = _keep_coeff(exp, e)
+                else:
+                    raise ValueError('should only have int or Rational in Factors')
                 args.append(b**e)
             else:
                 args.append(factor)
@@ -169,10 +189,10 @@ class Factors(object):
 
         >>> from sympy.core.exprtools import Factors
         >>> from sympy.abc import x, y, z
-        >>> a = Factors((x*y**2).as_powers_dict())
-        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a = Factors(2*x*y**2)
+        >>> b = Factors(-2*x*y/z)
         >>> a.normal(b)
-        (Factors({y: 1}), Factors({z: -1}))
+        (Factors({y: 1}), Factors({-1: 1, z: -1}))
         >>> a.normal(a)
         (Factors({}), Factors({}))
 
