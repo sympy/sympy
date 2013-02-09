@@ -29,6 +29,8 @@ def treeexec(tree, join):
     """
     if type(tree) in join:
         return join[type(tree)](*map(partial(treeexec, join=join), tree))
+    if 'leaf' in join:
+        return join['leaf'](tree)
     else:
         return tree
 
