@@ -1,6 +1,6 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
-from sympy.core.symbol import Dummy, Symbol
+from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
@@ -343,9 +343,9 @@ def roots_quintic(f):
         return result
 
     # Now, we know that f is solvable
-    for factor in f20.factor_list()[1]:
-        if factor[0].is_linear:
-            theta = factor[0].root(0)
+    for _factor in f20.factor_list()[1]:
+        if _factor[0].is_linear:
+            theta = _factor[0].root(0)
             break
     d = discriminant(f)
     delta = sqrt(d)
@@ -398,8 +398,10 @@ def roots_quintic(f):
     # Solve imported here. Causing problems if imported as 'solve'
     # and hence the changed name
     from sympy.solvers.solvers import solve as solve_five
-    from sympy.abc import a, b
+    a, b = symbols('a b', cls=Dummy)
     sol_five = solve_five( sol**5 - a - I*b, sol)
+    for i in range(5):
+        sol_five[i] = factor(sol_five[i])
     R1 = R1.as_real_imag()
     R2 = R2.as_real_imag()
     R3 = R3.as_real_imag()
@@ -423,8 +425,6 @@ def roots_quintic(f):
             r4 = Res[4][i]
             break
 
-    # Now we have various Res values. Each will be a list of five
-    # values. We have to pick one r value from those five for each Res
     u, v = quintic.uv(theta, d)
     sqrt5 = math.sqrt(5)
 
@@ -461,7 +461,21 @@ def roots_quintic(f):
     x4 = (r1*zeta2 + r2*zeta4 + r3*zeta1 + r4*zeta3)/5
     x5 = (r1*zeta1 + r2*zeta2 + r3*zeta3 + r4*zeta4)/5
 
-    result = [x1, x2, x3, x4, x5]
+    # Now check if solutions are distinct
+
+    result_n = []
+    for root in result:
+        result.append(root.n(5))
+    result_n = sorted(result_n)
+
+    prev_entry = None
+    for r in result_n:
+        if r == prev_entry:
+            # Roots are identical. Abort. Return []
+            # and fall back to usual solve
+            return []
+        prev_entry = r
+
     return result
 
 
