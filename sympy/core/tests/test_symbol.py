@@ -373,7 +373,6 @@ def test_symbols():
     assert symbols(('a(a:z)z')) == symbols(('aa:zz'))
     assert symbols('a(a:c)(0:2)') == (aa0, aa1, ab0, ab1, ac0, ac1)
     assert symbols('a(a:b)(a:b)') == (aaa, aab, aba, abb)
-    
 def test_call():
     f = Symbol('f')
     assert f(2)
