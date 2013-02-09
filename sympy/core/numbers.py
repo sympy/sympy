@@ -71,7 +71,7 @@ def _as_integer_ratio(p):
     else:
         q = 1
         p *= 2**expt
-    return p, q
+    return int(p), int(q)
 
 
 def _decimal_to_Rational_prec(dec):
@@ -516,7 +516,7 @@ class Float(Number):
     >>> def show(f): # binary rep of Float
     ...     from sympy import Mul, Pow
     ...     s, m, e, b = f._mpf_
-    ...     v = Mul(m, Pow(2, e, evaluate=False), evaluate=False)
+    ...     v = Mul(int(m), Pow(2, int(e), evaluate=False), evaluate=False)
     ...     print '%s at prec=%s' % (v, f._prec)
     ...
     >>> t = Float('0.3', 3)
@@ -574,7 +574,7 @@ class Float(Number):
                 num = '-0.' + num[2:]
         elif isinstance(num, float) and num == 0:
             num = '0'
-        elif isinstance(num, (int, long, Integer)):
+        elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
