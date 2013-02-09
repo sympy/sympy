@@ -256,12 +256,21 @@ def TR3(rv):
     from sympy.simplify.simplify import signsimp
 
     # Negative argument (already automatic for funcs like sin(-x) -> -sin(x)
-    # but more complicated expressions can use it, too).
+    # but more complicated expressions can use it, too). Also, trig angles
+    # between pi/4 and pi/2 are not reduced to an angle between 0 and pi/4.
     rv = bottom_up(rv, TR3)
     if not isinstance(rv, C.TrigonometricFunction):
         return rv
-    return rv.func(signsimp(rv.args[0]))
-
+    rv = rv.func(signsimp(rv.args[0]))
+    if S.Pi/4 < rv.args[0] < S.Pi/2:
+        fmap = {cos: sin, sin: cos, tan: cot, cot: tan}
+        try:
+            fmap[sec] = csc
+            fmap[csc] = sec
+        except:
+            pass
+        rv = fmap[rv.func](S.Pi/2 - rv.args[0])
+    return rv
     #The following are automatically handled
     #Argument of type: pi/2 +/- angle
     #Argument of type: pi +/- angle
