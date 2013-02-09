@@ -38,14 +38,10 @@ if not USE_PYTEST:
         ...
         AssertionError: DID NOT RAISE
 
-        (Python 2.5's doctest cannot support with statements due to a bug in
-        its __import__ handling. That's why the following examples are
-        excluded from doctesting; the doctest: annotations can go once SymPy
-        stops Python 2.5 support.)
-
-        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        >>> from __future__ import with_statement
+        >>> with raises(ZeroDivisionError):
         ...     n = 1/0
-        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        >>> with raises(ZeroDivisionError):
         ...     n = 1/2
         Traceback (most recent call last):
         ...
@@ -54,7 +50,7 @@ if not USE_PYTEST:
         Note that you cannot test multiple statements via
         ``with raises``:
 
-        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        >>> with raises(ZeroDivisionError):
         ...     n = 1/0    # will execute and raise, aborting the ``with``
         ...     n = 9999/0 # never executed
 
@@ -65,7 +61,7 @@ if not USE_PYTEST:
         To test multiple statements, you'll need a separate ``with``
         for each:
 
-        >>> with raises(ZeroDivisionError): # doctest: +SKIP
+        >>> with raises(ZeroDivisionError):
         ...     n = 1/0    # will execute and raise
         ... with raises(ZeroDivisionError):
         ...     n = 9999/0 # will also execute and raise

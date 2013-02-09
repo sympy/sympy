@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import inspect
 from sympy.core.cache import cacheit
 from sympy.core.singleton import S
@@ -189,7 +190,7 @@ def assuming(*assumptions):
     >>> print ask(Q.integer(x + y))
     None
 
-    >>> with assuming(Q.integer(x), Q.integer(y)):  #doctest: +SKIP
+    >>> with assuming(Q.integer(x), Q.integer(y)):
     ...     print ask(Q.integer(x + y))
     True
     """

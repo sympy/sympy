@@ -1295,6 +1295,8 @@ class SymPyDocTestRunner(DocTestRunner):
 
         if compileflags is None:
             compileflags = pdoctest._extract_future_flags(test.globs)
+            # Always enable with statement, for Python 2.5
+            compileflags |= with_statement.compiler_flag
 
         save_stdout = sys.stdout
         if out is None:
