@@ -5,7 +5,7 @@ from sympy import SYMPY_DEBUG
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
-    expand_multinomial, FunctionClass, expand_power_base, symbols, igcd)
+    expand_multinomial, FunctionClass, expand_power_base, symbols, igcd, I)
 
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
@@ -1578,6 +1578,32 @@ def _trig_count(expr):
     return expr.count(C.TrigonometricFunction) + \
            expr.count(C.HyperbolicFunction)
 
+def _expand_mul_exp(expr):
+    if expr.__class__ is exp:
+        y = expr.args[0]
+        return cosh(y) + sinh(y)
+    if not expr.is_Mul:
+        return expr
+    a = []
+    for x in expr.args:
+        if x.__class__ == exp:
+            y = x.args[0]
+            a.append(cosh(y) + sinh(y))
+        else:
+            a.append(x)
+    return Mul(*a).expand(basic=True)
+
+def _expand_exp(expr):
+    """
+    replace ``exp(x)`` with ``cosh(x) + sinh(x)`` for any ``x``
+    """
+    if expr.is_Mul:
+        return _expand_mul_exp(expr)
+    elif expr.is_Add:
+        a = [_expand_mul_exp(x) for x in expr.args]
+        return Add(*a)
+    return expr
+
 @cacheit
 def __trigsimp(expr, deep=False, to_tan=False):
     """recursive helper for trigsimp"""
@@ -1665,10 +1691,12 @@ def __trigsimp(expr, deep=False, to_tan=False):
         # one gets an expression independent from ``exp``
         n, d = expr.as_numer_denom()
         n = n.rewrite(exp, deep=deep)
-        n = n.expand(basic=True)
+        n = _mexpand(n)
+        n = _expand_exp(n)
         fnew = n/d
-        if not (fnew.atoms(exp) - e):
-            return fnew
+        if _trig_count(fnew) < _trig_count(expr):
+            if not (fnew.atoms(exp) - e):
+                return fnew
     return expr
 
 

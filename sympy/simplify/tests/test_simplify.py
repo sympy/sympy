@@ -193,6 +193,9 @@ def test_1562():
     assert trigsimp(-2*cos(x)**2 + cos(x)**4 - sin(x)**4) == -1
     eq = (- sin(x)**3/4)*cos(x) + (cos(x)**3/4)*sin(x) - sin(2*x)*cos(2*x)/8
     assert trigsimp(eq) == 0
+    eq = (- sin(x)**3/4)*cos(x) + (cos(x)**3/4)*sin(x) - sin(2*x)*cos(2*x)/8 +\
+            sin(x)
+    assert trigsimp(eq) == sin(x)
 
 
 def test_1395():
