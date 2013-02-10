@@ -32,7 +32,7 @@ def treeapply(tree, join, leaf=identity):
     else:
         return leaf(tree)
 
-def greedy(tree, objective=identity):
+def greedy(tree, objective=identity, **kwargs):
     """ Execute a strategic tree.  Select alternatives greedily
 
     Trees
@@ -99,9 +99,9 @@ def greedy(tree, objective=identity):
     the choice between running ``a`` or ``b`` is made without foresight to c
     """
     optimize = partial(minimize, objective=objective)
-    return treeapply(tree, {list: chain, tuple: optimize})
+    return treeapply(tree, {list: chain, tuple: optimize}, **kwargs)
 
-def allresults(tree):
+def allresults(tree, leaf=yieldify):
     """ Execute a strategic tree.  Return all possibilities.
 
     Returns a lazy iterator
@@ -109,7 +109,8 @@ def allresults(tree):
     See sympy.rules.greedy for details on input
     """
     return treeapply(tree, {list: branch.chain, tuple: branch.multiplex},
-                    leaf=yieldify)
+                     leaf=leaf)
 
-def brute(tree, objective=identity):
-    return lambda expr: min(*tuple(allresults(tree)(expr)), key=objective)
+def brute(tree, objective=identity, **kwargs):
+    return lambda expr: min(*tuple(allresults(tree)(expr), **kwargs),
+                            key=objective)
