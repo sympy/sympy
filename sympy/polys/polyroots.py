@@ -397,17 +397,17 @@ def roots_quintic(f):
 
     # Solve imported here. Causing problems if imported as 'solve'
     # and hence the changed name
-    from sympy.solvers.solvers import solve as solve_five
+    from sympy.solvers.solvers import solve as _solve
     a, b = symbols('a b', cls=Dummy)
-    sol_five = solve_five( sol**5 - a - I*b, sol)
+    _sol = _solve( sol**5 - a - I*b, sol)
     for i in range(5):
-        sol_five[i] = factor(sol_five[i])
+        _sol[i] = factor(_sol[i])
     R1 = R1.as_real_imag()
     R2 = R2.as_real_imag()
     R3 = R3.as_real_imag()
     R4 = R4.as_real_imag()
 
-    for i, root in enumerate(sol_five):
+    for i, root in enumerate(_sol):
         Res[1][i] = _quintic_simplify(root.subs({ a: R1[0], b: R1[1] }))
         Res[2][i] = _quintic_simplify(root.subs({ a: R2[0], b: R2[1] }))
         Res[3][i] = _quintic_simplify(root.subs({ a: R3[0], b: R3[1] }))
