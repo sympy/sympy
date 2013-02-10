@@ -125,3 +125,5 @@ any order and any precision:
 .. autofunction:: sympy.integrals.quadrature.gauss_legendre
 
 .. autofunction:: sympy.integrals.quadrature.gauss_laguerre
+
+.. autofunction:: sympy.integrals.quadrature.gauss_hermite

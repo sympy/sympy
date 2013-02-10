@@ -8,27 +8,24 @@ def gauss_legendre(n, n_digits):
     r"""
     Computes the Gauss-Legendre quadrature [1] points and weights.
 
+    The Gauss-Legendre quadrature approximates the integral:
+
+    .. math::
+        \int_{-1}^1 f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
+
     Parameters
     ==========
 
     n : the order of quadrature
 
-    n_digits : number of significant digits of the points and weights to
-               return
+    n_digits : number of significant digits of the points and weights to return
 
     Returns
     =======
 
-    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats
-
-    The Gauss-Legendre quadrature approximates the integral:
-
-    .. math::
-
-        \int_{-1}^1 f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
-
-    The points `x_i` and weights `w_i` are returned as ``(x, w)`` tuple of
-    lists.
+    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats.
+             The points `x_i` and weights `w_i` are returned as ``(x, w)``
+             tuple of lists.
 
     Examples
     ========
@@ -63,27 +60,24 @@ def gauss_laguerre(n, n_digits):
     r"""
     Computes the Gauss-Laguerre quadrature [1] points and weights.
 
+    The Gauss-Laguerre quadrature approximates the integral:
+
+    .. math::
+        \int_0^{\infty} e^{-x} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
+
     Parameters
     ==========
 
     n : the order of quadrature
 
-    n_digits : number of significant digits of the points and weights to
-               return
+    n_digits : number of significant digits of the points and weights to return
 
     Returns
     =======
 
-    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats
-
-    The Gauss-Laguerre quadrature approximates the integral:
-
-    .. math::
-
-        \int_0^{\infty} e^{-x} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
-
-    The points `x_i` and weights `w_i` are returned as ``(x, w)`` tuple of
-    lists.
+    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats.
+             The points `x_i` and weights `w_i` are returned as ``(x, w)``
+             tuple of lists.
 
     Examples
     ========
@@ -118,27 +112,24 @@ def gauss_hermite(n, n_digits):
     r"""
     Computes the Gauss-Hermite quadrature [1] points and weights.
 
+    The Gauss-Hermite quadrature approximates the integral:
+
+    .. math::
+        \int_{-\infty}^{\infty} e^{-x^2} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
+
     Parameters
     ==========
 
     n : the order of quadrature
 
-    n_digits : number of significant digits of the points and weights to
-               return
+    n_digits : number of significant digits of the points and weights to return
 
     Returns
     =======
 
-    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats
-
-    The Gauss-Hermite quadrature approximates the integral:
-
-    .. math::
-
-        \int_{-\infty}^{\infty} e^{-x^2} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
-
-    The points `x_i` and weights `w_i` are returned as ``(x, w)`` tuple of
-    lists.
+    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats.
+             The points `x_i` and weights `w_i` are returned as ``(x, w)``
+             tuple of lists.
 
     Examples
     ========
