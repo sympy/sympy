@@ -1,6 +1,7 @@
 """Implementation of RootOf class and related tools. """
 
-from sympy.core import S, Expr, Integer, Float, I, Add, Lambda, symbols, sympify
+from sympy.core import (S, Expr, Integer, Float, I, Add, Lambda, symbols,
+        sympify, Rational)
 
 from sympy.polys.polytools import Poly, PurePoly, factor
 from sympy.polys.rationaltools import together
@@ -398,7 +399,14 @@ class RootOf(Expr):
             func = lambdify(self.poly.gen, self.expr)
 
             interval = self._get_interval()
-            refined = False
+            if not self.is_real:
+                # For complex intervals, we need to keep refining until the
+                # imaginary interval is disjunct with other roots, that is,
+                # until both ends get refined.
+                ay = interval.ay
+                by = interval.by
+                while interval.ay == ay or interval.by == by:
+                    interval = interval.refine()
 
             while True:
                 if self.is_real:
@@ -408,20 +416,70 @@ class RootOf(Expr):
 
                 try:
                     root = findroot(func, x0)
+                    # If the (real or complex) root is not in the 'interval',
+                    # then keep refining the interval. This happens if findroot
+                    # accidentally finds a different root outside of this
+                    # interval because our initial estimate 'x0' was not close
+                    # enough.
+                    if self.is_real:
+                        a = mpf(str(interval.a))
+                        b = mpf(str(interval.b))
+                        # This is needed due to the bug #3364:
+                        a, b = min(a, b), max(a, b)
+                        if not (a < root < b):
+                            raise ValueError("Root not in the interval.")
+                    else:
+                        ax = mpf(str(interval.ax))
+                        bx = mpf(str(interval.bx))
+                        ay = mpf(str(interval.ay))
+                        by = mpf(str(interval.by))
+                        # This is needed due to the bug #3364:
+                        ax, bx = min(ax, bx), max(ax, bx)
+                        ay, by = min(ay, by), max(ay, by)
+                        if not (ax < root.real < bx and ay < root.imag < by):
+                            raise ValueError("Root not in the interval.")
                 except ValueError:
                     interval = interval.refine()
-                    refined = True
                     continue
                 else:
-                    if refined:
-                        self._set_interval(interval)
-
                     break
         finally:
             mp.prec = _prec
 
         return Float._new(root.real._mpf_, prec) + I*Float._new(root.imag._mpf_, prec)
 
+    def eval_rational(self, tol):
+        """
+        Returns a Rational approximation to ``self`` with the tolerance ``tol``.
+
+        This method uses bisection, which is very robust and it will always
+        converge. The returned Rational instance will be at most 'tol' from the
+        exact root.
+
+        The following example first obtains Rational approximation to 1e-7
+        accuracy for all roots of the 4-th order Legendre polynomial, and then
+        evaluates it to 5 decimal digits (so all digits will be correct
+        including rounding):
+
+        >>> from sympy import S, legendre_poly, Symbol
+        >>> x = Symbol("x")
+        >>> p = legendre_poly(4, x, polys=True)
+        >>> roots = [r.eval_rational(S(1)/10**7) for r in p.real_roots()]
+        >>> roots = [str(r.n(5)) for r in roots]
+        >>> roots
+        ['-0.86114', '-0.33998', '0.33998', '0.86114']
+
+        """
+
+        if not self.is_real:
+            raise NotImplementedError("eval_rational() only works for real polynomials so far")
+        func = lambdify(self.poly.gen, self.expr)
+        interval = self._get_interval()
+        a = Rational(str(interval.a))
+        b = Rational(str(interval.b))
+        # This is needed due to the bug #3364:
+        a, b = min(a, b), max(a, b)
+        return bisect(func, a, b, tol)
 
 class RootSum(Expr):
     """Represents a sum of all roots of a univariate polynomial. """
@@ -623,3 +681,37 @@ class RootSum(Expr):
         var, expr = self.fun.args
         func = Lambda(var, expr.diff(x))
         return self.new(self.poly, func, self.auto)
+
+def bisect(f, a, b, tol):
+    """
+    Implements bisection. This function is used in RootOf.eval_rational() and
+    it needs to be robust.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> from sympy.polys.rootoftools import bisect
+    >>> bisect(lambda x: x**2-1, -10, 0, S(1)/10**2)
+    -1025/1024
+    >>> bisect(lambda x: x**2-1, -10, 0, S(1)/10**4)
+    -131075/131072
+
+    """
+    a = sympify(a)
+    b = sympify(b)
+    fa = f(a)
+    fb = f(b)
+    if fa * fb >= 0:
+        raise ValueError("bisect: f(a) and f(b) must have opposite signs")
+    while (b-a > tol):
+        c = (a+b)/2
+        fc = f(c)
+        if (fc == 0): return c # We need to make sure f(c) is not zero below
+        if (fa * fc < 0):
+            b = c
+            fb = fc
+        else:
+            a = c
+            fa = fc
+    return (a+b)/2
