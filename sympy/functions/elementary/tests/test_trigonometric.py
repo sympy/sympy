@@ -915,3 +915,9 @@ def test_tancot_rewrite_sqrt():
                         c1 = cot(x).rewrite(sqrt)
                         assert not c1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
                         assert 1e-10 > abs( cot(float(x)) - float(c1) )
+
+def test_sec():
+    assert sec(x).diff(x) == tan(x)*sec(x)
+
+def test_csc():
+    assert csc(x).diff(x) == -cot(x)*csc(x)
