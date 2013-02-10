@@ -208,6 +208,11 @@ def test_quintics():
     for root in s:
         assert tn(f.eval(root.n()), 0)
 
+    f = Poly(x**5 - 5*x + 12)
+    s = roots_quintic(f)
+    for root in s:
+        assert tn(f.eval(root.n()), 0)
+
     f = Poly(x**5 - 15*x**3 - 5*x**2 + 10*x + 20)
     s = roots_quintic(f)
     for root in s:
