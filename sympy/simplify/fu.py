@@ -1,5 +1,5 @@
 """
-Implementation of the trigsimp algorithm by Fu et al
+Implementation of the trigsimp algorithm by Fu et al.
 
 The idea behind the ``fu`` algorithm is to use a sequence of rules, applied
 in what is heuristically known to be a smart order, to select a simpler
@@ -310,30 +310,64 @@ def TR4(rv):
     return rv
 
 
-def _TR56(rv, f, g, all):
-    """Helper for TR5 and TR6 to replace f**2 with 1 - g**2 with the
-    option to replace f**(2**e) with (1 - g**2)**e if all is True.
-    """
-    rv = bottom_up(rv, lambda x: _TR56(x, f, g, all))
+def _TR56(rv, f, g, max, pow):
+    """Helper for TR5 and TR6 to replace f**2 with 1 - g**2
 
+    Options
+    =======
+
+    max :   controls size of exponent that can appear on f
+            e.g. if max=4 then f**4 will be changed to (1 - g**2)**2
+            and (if pow is False) then f**6 will be changed to (1 - g**2)**3
+    pow :   controls whether the exponent must be a perfect power of 2
+            e.g. if pow=True (and max >= 6) then f**6 will not be changed
+            but f**8 will be changed to (1 - g**2)**4
+
+    >>> from sympy.simplify.fu import _TR56 as T
+    >>> from sympy.abc import x
+    >>> from sympy import sin, cos
+    >>> T(sin(x)**3, sin, cos, 4, False)
+    sin(x)**3
+    >>> T(sin(x)**6, sin, cos, 6, False)
+    (-cos(x)**2 + 1)**3
+    >>> T(sin(x)**6, sin, cos, 6, True)
+    sin(x)**6
+    >>> T(sin(x)**8, sin, cos, 10, True)
+    (-cos(x)**2 + 1)**4
+    """
+    from sympy.ntheory.factor_ import perfect_power
+
+    rv = bottom_up(rv, lambda x: _TR56(x, f, g, max, pow))
+
+    # I'm not sure if this transformation should target all even powers
+    # or only those expressible as powers of 2. Also, should it only
+    # make the changes in powers that appear in sums -- making an isolated
+    # change is not going to allow a simplification as far as I can tell.
     if not (rv.is_Pow and rv.base.func == f):
+        return rv
+
+    if rv.exp < 0:
+        return rv  # or return 1/_TR56(1/rv, f, g, max)
+    if rv.exp > max:
         return rv
     if rv.exp == 2:
         return 1 - g(rv.base.args[0])**2
-    if not all:
-        return rv
     else:
         if rv.exp == 4:
             e = 2
+        elif not pow:
+            if rv.exp % 2:
+                return rv
+            e = rv.exp//2
         else:
-            p = perfect_power(rv.exp, [2])
+            p = perfect_power(rv.exp)
             if not p:
                 return rv
-            e = p[1]
+            e = rv.exp//2
         return (1 - g(rv.base.args[0])**2)**e
 
 def TR5(rv):
-    """Replacement of sin**2 with 1 - cos(x)**2
+    """Replacement of sin**2 with 1 - cos(x)**2.
 
     Examples
     ========
@@ -343,10 +377,12 @@ def TR5(rv):
     >>> from sympy import sin
     >>> TR5(sin(x)**2)
     -cos(x)**2 + 1
+    >>> TR5(sin(x)**-2)  # unchanged
+    sin(x)**(-2)
     >>> TR5(sin(x)**4)
-    sin(x)**4
+    (-cos(x)**2 + 1)**2
     """
-    return _TR56(rv, sin, cos, False)
+    return _TR56(rv, sin, cos, max=4, pow=False)
 
 
 def TR6(rv):
@@ -360,10 +396,12 @@ def TR6(rv):
     >>> from sympy import cos
     >>> TR6(cos(x)**2)
     -sin(x)**2 + 1
+    >>> TR6(cos(x)**-2)  #unchanged
+    cos(x)**(-2)
     >>> TR6(cos(x)**4)
-    cos(x)**4
+    (-sin(x)**2 + 1)**2
     """
-    return _TR56(rv, cos, sin, False)
+    return _TR56(rv, cos, sin, max=4, pow=False)
 
 
 def TR7(rv):
@@ -1015,14 +1053,25 @@ CTR1, CTR2, CTR3, CTR4 = map(CTRstrat, (_CTR1, _CTR2, _CTR3, _CTR4))
 
 _RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0]
 
-_RL2 = [TR4, TR3, TR10, TR4, TR3, TR11, TR5, TR7, TR11, TR4, CTR3, TR0, CTR1,
-        TR9, CTR2, TR4, TR9, TR0, TR9, CTR4]
+
+# XXX it's a little unclear how this one is to be implemented
+# see Fu paper of reference, page 7. What is the Union symbol refering to?
+# The diagram shows all these as one chain of transformations, but the
+# the text refers to them being applied independently. Also a break
+# if L starts to increase has not been implemented.
+_RL2 = [
+    [TR4, TR3, TR10, TR4, TR3, TR11],
+    [TR5, TR7, TR11, TR4],
+    [CTR3, TR0, CTR1, TR9, CTR2, TR4, TR9, TR0, TR9, CTR4],
+    [identity],
+    ]
 
 
 def RLstrat(rls):
     return chain(*rls)
 
-RL1, RL2 = map(RLstrat, (_RL1, _RL2))
+RL1 = RLstrat(_RL1)
+RL2 = CTRstrat(_RL2)
 
 
 def fu(rv):
@@ -1044,8 +1093,8 @@ def fu(rv):
     CTR1 example
 
     >>> eq = sin(x)**4 - cos(y)**2 + sin(y)**2 + 2*cos(x)**2
-    >>> fu(eq)  # should be cos(x)**4 - 2*cos(y)**2 + 2
-    sin(x)**4 + 2*cos(x)**2 - 2*cos(y)**2 + 1
+    >>> fu(eq)
+    cos(x)**4 - 2*cos(y)**2 + 2
 
     CTR2 example
 
@@ -1065,16 +1114,14 @@ def fu(rv):
     Example 1
 
     >>> fu(1-sin(2*x)**2/4-sin(y)**2-cos(x)**4)
-    -sin(2*x)**2/4 - sin(y)**2 - cos(x)**4 + 1
+    -cos(x)**2 + cos(y)**2
 
     Example 2
 
     >>> fu(cos(4*pi/9))
     sin(pi/18)
-    >>> fu(cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9))  # this should go to 1/16
-    cos(pi/9)*cos(2*pi/9)*cos(4*pi/9)/2
-    >>> _ == S(1)/16
-    True
+    >>> fu(cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9))
+    1/16
 
     Example 3
 
