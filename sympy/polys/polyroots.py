@@ -375,9 +375,7 @@ def roots_quintic(f):
     # Problems importing on top
     from sympy.utilities.randtest import comp
     if not comp(test, 0, tol):
-        temp = l2
-        l2 = l3
-        l3 = temp
+        l2, l3 = l3, l2
 
     # Now we have correct order of l's
     R1 = l0 + l1*zeta1 + l2*zeta2 + l3*zeta3 + l4*zeta4
