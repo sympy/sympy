@@ -146,7 +146,7 @@ def test_trigsimp1a():
     expr = (sin(x) + cos(x)*cot(x) - csc(x))
     assert trigsimp(expr) == 0
     expr1 = _mexpand(expr**2)
-    assert trigsimp(expr1, use_factor=True) == 0
+    assert trigsimp(expr1) == 0
 
 
 def test_trigsimp2():

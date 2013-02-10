@@ -1382,7 +1382,6 @@ def trigsimp(expr, **opts):
     recursive = opts.pop('recursive', False)
     deep = opts.pop('deep', False)
     method = opts.pop('method', 'matching')
-    use_factor = opts.pop('use_factor', False)
 
     def groebnersimp(ex, deep, **opts):
         def traverse(e):
@@ -1397,7 +1396,7 @@ def trigsimp(expr, **opts):
         return trigsimp_groebner(ex, **opts)
 
     trigsimpfunc = {
-        'matching': (lambda x, d: _trigsimp(x, d, use_factor=use_factor)),
+        'matching': (lambda x, d: _trigsimp(x, d)),
         'groebner': (lambda x, d: groebnersimp(x, d, **opts)),
         'combined': (lambda x, d: _trigsimp(groebnersimp(x,
                                        d, polynomial=True, hints=[2, tan]),
@@ -1531,7 +1530,7 @@ def _match_div_rewrite(expr, i):
     return expr
 
 
-def _trigsimp(expr, deep=False, to_tan=True, use_factor=False):
+def _trigsimp(expr, deep=False, to_tan=True):
     """
     matching trigsimp
 
@@ -1541,12 +1540,11 @@ def _trigsimp(expr, deep=False, to_tan=True, use_factor=False):
     expr :
     deep : Apply trigsimp inside all objects with arguments
     to_tan : use tan, cot, tanh, coth
-    use_factor : use ``factor`` instead of ``_mexpand``
     """
     # protect the cache from non-trig patterns; we only allow
     # trig patterns to enter the cache
     if expr.has(*_trigs):
-        return __trigsimp(expr, deep, to_tan, use_factor)
+        return __trigsimp(expr, deep, to_tan)
     return expr
 
 _gsin = lambda x: (1 - cos(x)**2)
@@ -1581,14 +1579,14 @@ def _trig_count(expr):
            expr.count(C.HyperbolicFunction)
 
 @cacheit
-def __trigsimp(expr, deep=False, to_tan=False, use_factor=False):
+def __trigsimp(expr, deep=False, to_tan=False):
     """recursive helper for trigsimp"""
 
     if expr.is_Mul:
         # do some simplifications like sin(x)/cos(x) -> tan(x):
         if not expr.is_commutative:
             com, nc = expr.args_cnc()
-            expr = _trigsimp(Mul._from_args(com), deep, to_tan, use_factor)*Mul._from_args(nc)
+            expr = _trigsimp(Mul._from_args(com), deep, to_tan)*Mul._from_args(nc)
         else:
             for i in range(18):
                 if i <= 9:
@@ -1620,7 +1618,7 @@ def __trigsimp(expr, deep=False, to_tan=False, use_factor=False):
                 term = Mul._from_args(com)
             else:
                 nc = S.One
-            term = _trigsimp(term, deep, to_tan, use_factor)
+            term = _trigsimp(term, deep, to_tan)
             for i in range(len(_identity_v)):
                 fx, gx = _identity_v[i]
                 if i in (0, 1, 2, 6, 7, 8):
@@ -1651,7 +1649,7 @@ def __trigsimp(expr, deep=False, to_tan=False, use_factor=False):
         expr = replace_add1(expr, sinh, cosh, -1, tanh, coth)
 
     elif expr.is_Mul or expr.is_Pow or deep and expr.args:
-        expr = expr.func(*[_trigsimp(a, deep, to_tan, use_factor) for a in expr.args])
+        expr = expr.func(*[_trigsimp(a, deep, to_tan) for a in expr.args])
 
     if expr.has(*_trigs):
         e = expr.atoms(exp)
@@ -1660,16 +1658,15 @@ def __trigsimp(expr, deep=False, to_tan=False, use_factor=False):
         new = expr.replace(tan, lambda x: sin(x)/cos(x))
         new = new.replace(cot, lambda x: cos(x)/sin(x))
         if new != expr:
-            new = __trigsimp(new, deep, False, use_factor)
+            new = __trigsimp(new, deep, False)
         if _trig_count(new) < _trig_count(expr):
             expr = new
         # see if rewriting the expression in terms of ``exp``
         # one gets an expression independent from ``exp``
-        new = new.rewrite(exp, deep=deep)
-        if use_factor:
-            fnew = factor(new)
-        else:
-            fnew = _mexpand(new)
+        n, d = expr.as_numer_denom()
+        n = n.rewrite(exp)
+        n = n.expand(basic=True)
+        fnew = n/d
         if not (fnew.atoms(exp) - e):
             return fnew
     return expr
