@@ -74,3 +74,5 @@ def test_brute():
 
     assert fn(2) == (2 + 1)**2
     assert fn(-2) == (-2 - 1)**2
+
+    assert brute(inc)(1) == 2

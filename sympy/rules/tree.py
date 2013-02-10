@@ -112,5 +112,5 @@ def allresults(tree, leaf=yieldify):
                      leaf=leaf)
 
 def brute(tree, objective=identity, **kwargs):
-    return lambda expr: min(*tuple(allresults(tree)(expr), **kwargs),
+    return lambda expr: min(tuple(allresults(tree, **kwargs)(expr)),
                             key=objective)
