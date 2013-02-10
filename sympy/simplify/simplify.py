@@ -1652,7 +1652,6 @@ def __trigsimp(expr, deep=False, to_tan=False):
         expr = expr.func(*[_trigsimp(a, deep, to_tan) for a in expr.args])
 
     if expr.has(*_trigs):
-        e = expr.atoms(exp)
         # if there are `tan` and `cot` express them in terms of `sin` and
         # `cos` to see if it simplifies
         new = expr.replace(tan, lambda x: sin(x)/cos(x))
@@ -1661,10 +1660,11 @@ def __trigsimp(expr, deep=False, to_tan=False):
             new = __trigsimp(new, deep, False)
         if _trig_count(new) < _trig_count(expr):
             expr = new
+        e = expr.atoms(exp)
         # see if rewriting the expression in terms of ``exp``
         # one gets an expression independent from ``exp``
         n, d = expr.as_numer_denom()
-        n = n.rewrite(exp)
+        n = n.rewrite(exp, deep=deep)
         n = n.expand(basic=True)
         fnew = n/d
         if not (fnew.atoms(exp) - e):
