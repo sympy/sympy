@@ -1,5 +1,7 @@
-from sympy.core import S, Dummy
-from sympy.polys.orthopolys import legendre_poly, laguerre_poly
+from sympy.core import S, Dummy, pi
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.polys.orthopolys import legendre_poly, laguerre_poly, hermite_poly
 from sympy.polys.rootoftools import RootOf
 
 def gauss_legendre(n, n_digits):
@@ -110,4 +112,60 @@ def gauss_laguerre(n, n_digits):
             r = r.eval_rational(S(1)/10**(n_digits+2))
         xi.append(r.n(n_digits))
         w.append((r/((n+1)**2 * p1.subs(x, r)**2)).n(n_digits))
+    return xi, w
+
+def gauss_hermite(n, n_digits):
+    r"""
+    Computes the Gauss-Hermite quadrature [1] points and weights.
+
+    Parameters
+    ==========
+
+    n : the order of quadrature
+
+    n_digits : number of significant digits of the points and weights to
+               return
+
+    Returns
+    =======
+
+    (x, w) : the ``x`` and ``w`` are lists of points and weights as Floats
+
+    The Gauss-Hermite quadrature approximates the integral:
+
+    .. math::
+
+        \int_{-\infty}^{\infty} e^{-x^2} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
+
+    The points `x_i` and weights `w_i` are returned as ``(x, w)`` tuple of
+    lists.
+
+    Examples
+    ========
+
+    >>> from sympy.integrals.quadrature import gauss_hermite
+    >>> x, w = gauss_hermite(3, 5)
+    >>> x
+    [-1.2247, 0, 1.2247]
+    >>> w
+    [0.29541, 1.1816, 0.29541]
+
+    >>> x, w = gauss_hermite(6, 5)
+    >>> x
+    [-2.3506, -1.3358, -0.43608, 0.43608, 1.3358, 2.3506]
+    >>> w
+    [0.00453, 0.15707, 0.72463, 0.72463, 0.15707, 0.00453]
+
+    [1] http://en.wikipedia.org/wiki/Gauss-Hermite_Quadrature
+    """
+    x = Dummy("x")
+    p  = hermite_poly(n, x, polys=True)
+    p1 = hermite_poly(n-1, x, polys=True)
+    xi = []
+    w  = []
+    for r in p.real_roots():
+        if isinstance(r, RootOf):
+            r = r.eval_rational(S(1)/10**(n_digits+2))
+        xi.append(r.n(n_digits))
+        w.append(((2**(n-1) * factorial(n) * sqrt(pi))/(n**2 * p1.subs(x, r)**2)).n(n_digits))
     return xi, w
