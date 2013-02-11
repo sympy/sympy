@@ -170,7 +170,8 @@ from sympy.simplify.simplify import simplify, powsimp, ratsimp, combsimp
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin, tan, cot, sec, csc, sqrt
 from sympy.functions.elementary.hyperbolic import cosh, sinh
-from sympy.core.compatibility import ordered
+from sympy.core.compatibility import ordered, combinations
+# ordered = lambda x, *y: iter(x)  # uncomment to not use canonicalization
 from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.function import expand_mul, count_ops
@@ -183,6 +184,7 @@ from sympy.core.numbers import Integer, pi
 from sympy.rules import minimize, chain, debug
 from sympy.rules.strat_pure import identity
 from sympy import SYMPY_DEBUG
+from sympy.ntheory.factor_ import perfect_power
 
 
 def TR0(rv):
@@ -344,7 +346,6 @@ def _TR56(rv, f, g, max, pow):
     >>> T(sin(x)**8, sin, cos, 10, True)
     (-cos(x)**2 + 1)**4
     """
-    from sympy.ntheory.factor_ import perfect_power
 
     rv = bottom_up(rv, lambda x: _TR56(x, f, g, max, pow))
 
@@ -574,25 +575,21 @@ def TR9(rv):
         split = trig_split(*args)
         if not split:
             return rv
-        gcd, n1, n2, f, g = split
-        if not all(i.func in (cos, sin) for i in (f, g)):
-            return rv
+        gcd, n1, n2, a, b, iscos = split
 
         # application of rule if possible
-        if f.func == g.func:
-            a, b = f.args[0], g.args[0]
-            if f.func == cos:
-                if n1 == n2:
-                    return gcd*n1*2*cos((a + b)/2)*cos((a - b)/2)
-                if n1 < 0:
-                    a, b = b, a
-                return -2*gcd*sin((a + b)/2)*sin((a - b)/2)
-            else:
-                if n1 == n2:
-                    return gcd*n1*2*sin((a + b)/2)*cos((a - b)/2)
-                if n1 < 0:
-                    a, b = b, a
-                return 2*gcd*cos((a + b)/2)*sin((a - b)/2)
+        if iscos:
+            if n1 == n2:
+                return gcd*n1*2*cos((a + b)/2)*cos((a - b)/2)
+            if n1 < 0:
+                a, b = b, a
+            return -2*gcd*sin((a + b)/2)*sin((a - b)/2)
+        else:
+            if n1 == n2:
+                return gcd*n1*2*sin((a + b)/2)*cos((a - b)/2)
+            if n1 < 0:
+                a, b = b, a
+            return 2*gcd*cos((a + b)/2)*sin((a - b)/2)
         return rv
 
     return process_common_addends(rv, do)  # DON'T sift by free symbols
@@ -647,6 +644,7 @@ def TR10i(rv):
     ========
 
     >>> from sympy.simplify.fu import TR10i
+    >>> from sympy.simplify.simplify_utils import TR10i
     >>> from sympy import cos, sin, pi, Add, Mul, sqrt, Symbol
     >>> from sympy.abc import x, y
 
@@ -671,6 +669,14 @@ def TR10i(rv):
     True
     >>> TR10i(sqrt(2)*cos(x)*x + sqrt(6)*sin(x)*x)
     2*sqrt(2)*x*sin(x + pi/6)
+    >>> TR10i(cos(x)/sqrt(6) + sin(x)/sqrt(2) + cos(x)/sqrt(6)/3 + sin(x)/sqrt(2)/3)
+    4*sqrt(6)*sin(x + pi/6)/9
+    >>> TR10i(cos(x)/sqrt(6) + sin(x)/sqrt(2) + cos(y)/sqrt(6)/3 + sin(y)/sqrt(2)/3)
+    sqrt(6)*sin(x + pi/6)/3 + sqrt(6)*sin(y + pi/6)/9
+    >>> TR10i(cos(x) + sqrt(3)*sin(x) + 2*sqrt(3)*cos(x + pi/6))
+    4*sin(x + pi/3)
+    >>> TR10i(cos(x) + sqrt(3)*sin(x) + 2*sqrt(3)*cos(x + pi/6) + sin(x + pi/3))
+    5*sin(x + pi/3)
 
     >>> A = Symbol('A', commutative=False)
     >>> TR10i(sqrt(2)*cos(x)*A + sqrt(6)*sin(x)*A)
@@ -679,23 +685,28 @@ def TR10i(rv):
 
     >>> c = cos(x); s = sin(x); h = sin(y); r = cos(y)
     >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
-    ...   for a in ((c*r, s*h), (c*h,s*r)):
+    ...   for a in ((c*r, s*h), (c*h,s*r)): # explit
     ...    args = zip(si, a)
     ...    ex = Add(*[Mul(*ai) for ai in args])
-    ...    if ex - TR10i(ex).expand(trig=True) or TR10i(ex).is_Add:
-    ...        print 'fail'
+    ...    t = TR10i(ex)
+    ...    if ex - t.expand(trig=True) or t.is_Add:
+    ...        print 'fail', ex
     ...
 
     >>> c = cos(x); s = sin(x); h = sin(pi/6); r = cos(pi/6)
     >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
-    ...   for a in ((c*r, s*h), (c*h,s*r)):
+    ...   for a in ((c*r, s*h), (c*h,s*r)): # induced
     ...    args = zip(si, a)
     ...    ex = Add(*[Mul(*ai) for ai in args])
-    ...    t=TR10i(ex)
+    ...    t = TR10i(ex)
     ...    if ex - t.expand(trig=True) or t.is_Add:
-    ...     print 'fail'
+    ...     print 'fail', ex
     ...
     """
+    global _ROOT2, _ROOT3, _invROOT3
+    if _ROOT2 is None:
+        _roots()
+
     rv = bottom_up(rv, TR10i)
     if not rv.is_Add:
         return rv
@@ -738,29 +749,61 @@ def TR10i(rv):
             return rv
 
         # two-arg Add
-        split = trig_split(*args, induce=True)
+        split = trig_split(*args, two=True)
         if not split:
             return rv
-        gcd, n1, n2, f, g = split
-        c1, s1 = f.args
-        c2, s2 = g.args
+        gcd, n1, n2, a, b, same = split
 
         # identify and get c1 to be cos then apply rule if possible
-        if c1.func == s1.func:  # coscos, sinsin
-            a, b = c1.args[0], s1.args[0]
+        if same:  # coscos, sinsin
             gcd = n1*gcd
             if n1 == n2:
                 return gcd*cos(a - b)
             return gcd*cos(a + b)
         else:  #cossin, cossin
-            a, b = c1.args[0], s1.args[0]
             gcd = n1*gcd
             if n1 == n2:
                 return gcd*sin(a + b)
             return gcd*sin(b - a)
         return rv
 
-    return process_common_addends(rv, do, lambda x: tuple(ordered(x.free_symbols)))
+    rv = process_common_addends(rv, do, lambda x: tuple(ordered(x.free_symbols)))
+    while rv.is_Add:
+        # need to check for induceable pairs in ratios of sqrt(3):1
+        byrad = defaultdict(list)
+        for a in rv.args:
+            hit = 0
+            if a.is_Mul:
+                for ai in a.args:
+                    if ai.is_Pow and ai.exp is S.Half and ai.base.is_Integer:
+                        byrad[ai].append(a)
+                        hit = 1
+                        break
+            if not hit:
+                byrad[S.One].append(a)
+
+        args = []
+        for (a, b) in combinations(byrad, 2):
+            if a/b in (_ROOT3, _invROOT3):
+                for i in range(len(byrad[a])):
+                    if byrad[a][i] is None:
+                        continue
+                    for j in range(len(byrad[b])):
+                        if byrad[b][j] is None:
+                            continue
+                        was = Add(byrad[a][i] + byrad[b][j])
+                        new = do(was)
+                        if new != was:
+                            args.append(new)
+                            byrad[a][i] = None
+                            byrad[b][j] = None
+                            break
+        if args:
+            rv = Add(*(args + [Add(*filter(None, v)) for v in byrad.values()]))
+        else:
+            break
+
+    return rv
 
 
 def TR11(rv):
@@ -1023,19 +1066,27 @@ def bottom_up(rv, F):
     return rv
 
 
-def process_common_addends(rv, do, key2=None):
-    """Apply ``do`` to addends of ``rv`` that share at least a common
-    absolute value of their coefficient and the value of key2 when applied
-    to the argument.
+def process_common_addends(rv, do, key2=None, key1=True):
+    """Apply ``do`` to addends of ``rv`` that (if key1=True) share at least
+    a common absolute value of their coefficient and the value of key2 when
+    applied to the argument. If key1 is False key2 must be supplied and will
+    be the only key applied.
     """
+
     # collect by absolute value of coefficient and key2
     absc = defaultdict(list)
-    for a in rv.args:
-        c, a = a.as_coeff_Mul()
-        if c < 0:
-            c = -c
-            a = -a  # put the sign on `a`
-        absc[(c, key2(a) if key2 else 1)].append(a)
+    if key1:
+        for a in rv.args:
+            c, a = a.as_coeff_Mul()
+            if c < 0:
+                c = -c
+                a = -a  # put the sign on `a`
+            absc[(c, key2(a) if key2 else 1)].append(a)
+    elif key2:
+        for a in rv.args:
+            absc[(S.One, key2(a))].append(a)
+    else:
+        raise ValueError('must have at least one key')
 
     args = []
     hit = False
@@ -1060,41 +1111,67 @@ def process_common_addends(rv, do, key2=None):
 FU = dict(zip('TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L'.split(', '),
               (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L)))
 
-def trig_split(a, b, induce=False):
-    """
+
+def _roots():
+    global _ROOT2, _ROOT3, _invROOT3
+    _ROOT2, _ROOT3 = sqrt(2), sqrt(3)
+    _invROOT3 = 1/_ROOT3
+_ROOT2 = None
+
+
+def trig_split(a, b, two=False):
+    """Return the gcd, s1, s2, a1, a2, bool where
+
+    If two is False (default) then::
+        a + b = gcd*(s1*f(a1) + s2*f(a2)) where f = cos if bool else sin
+    else:
+        if bool, a + b was +/- cos(a1)*cos(a2) +/- sin(a1)*sin(a2) and equals
+            n1*gcd*cos(a - b) if n1 == n2 else
+            n1*gcd*cos(a + b)
+        else a + b was +/- cos(a1)*sin(a2) +/- sin(a1)*cos(a2) and equals
+            n1*gcd*sin(a + b) if n1 = n2 else
+            n1*gcd*sin(b - a)
+
+    Examples
+    ========
     >>> from sympy.simplify.fu import trig_split
     >>> from sympy.abc import x, y, z
     >>> from sympy import cos, sin, sqrt
 
     >>> trig_split(cos(x), cos(y))
-    (1, 1, 1, cos(x), cos(y))
+    (1, 1, 1, x, y, True)
     >>> trig_split(2*cos(x), -2*cos(y))
-    (2, 1, -1, cos(x), cos(y))
+    (2, 1, -1, x, y, True)
     >>> trig_split(cos(x)*sin(y), cos(y)*sin(y))
-    (sin(y), 1, 1, cos(x), cos(y))
-    >>> trig_split(cos(x)*cos(y), sin(x)*sin(y))
-    (1, 1, 1, cos(x)*cos(y), sin(x)*sin(y))
+    (sin(y), 1, 1, x, y, True)
 
-    >>> trig_split(cos(x), -sqrt(3)*sin(x), induce=1)
-    (2, 1, -1, sin(pi/6)*cos(x), sin(x)*cos(pi/6))
-    >>> trig_split(cos(x), sin(x), induce=1)
-    (sqrt(2), 1, 1, sin(pi/4)*cos(x), sin(x)*cos(pi/4))
-    >>> trig_split(cos(x), -sin(x), induce=1)
-    (sqrt(2), 1, -1, sin(pi/4)*cos(x), sin(x)*cos(pi/4))
-    >>> trig_split(sqrt(2)*cos(x), -sqrt(6)*sin(x), induce=1)
-    (2*sqrt(2), 1, -1, sin(pi/6)*cos(x), sin(x)*cos(pi/6))
-    >>> trig_split(-sqrt(6)*cos(x), -sqrt(2)*sin(x), induce=1)
-    (-2*sqrt(2), 1, 1, cos(pi/6)*cos(x), sin(pi/6)*sin(x))
-    >>> trig_split(-sqrt(6)*cos(x)*sin(y), -sqrt(2)*sin(x)*sin(y), induce=1)
-    (-2*sqrt(2)*sin(y), 1, 1, cos(pi/6)*cos(x), sin(pi/6)*sin(x))
+    >>> trig_split(cos(x), -sqrt(3)*sin(x), two=True)
+    (2, 1, -1, x, pi/6, False)
+    >>> trig_split(cos(x), sin(x), two=True)
+    (sqrt(2), 1, 1, x, pi/4, False)
+    >>> trig_split(cos(x), -sin(x), two=True)
+    (sqrt(2), 1, -1, x, pi/4, False)
+    >>> trig_split(sqrt(2)*cos(x), -sqrt(6)*sin(x), two=True)
+    (2*sqrt(2), 1, -1, x, pi/6, False)
+    >>> trig_split(-sqrt(6)*cos(x), -sqrt(2)*sin(x), two=True)
+    (-2*sqrt(2), 1, 1, x, pi/3, False)
+    >>> trig_split(cos(x)/sqrt(6), sin(x)/sqrt(2), two=True)
+    (sqrt(6)/3, 1, 1, x, pi/6, False)
+    >>> trig_split(-sqrt(6)*cos(x)*sin(y), -sqrt(2)*sin(x)*sin(y), two=True)
+    (-2*sqrt(2)*sin(y), 1, 1, x, pi/3, False)
 
     >>> trig_split(cos(x), sin(x))
     >>> trig_split(cos(x), sin(z))
     >>> trig_split(2*cos(x), -sin(x))
     >>> trig_split(cos(x), -sqrt(3)*sin(x))
     >>> trig_split(cos(x)*cos(y), sin(x)*sin(z))
-    >>> trig_split(-sqrt(6)*cos(x), sqrt(2)*sin(x)*sin(y), induce=1)
+    >>> trig_split(cos(x)*cos(y), sin(x)*sin(y))
+    >>> trig_split(-sqrt(6)*cos(x), sqrt(2)*sin(x)*sin(y), two=True)
     """
+    global _ROOT2, _ROOT3, _invROOT3
+    if _ROOT2 is None:
+        _roots()
+
     a, b = [Factors(i) for i in (a, b)]
     ua, ub = a.normal(b)
     gcd = a.gcd(b).as_expr()
@@ -1108,72 +1185,123 @@ def trig_split(a, b, induce=False):
         n2 = -1
     else:
         n1 = n2 = 1
+    a, b = [i.as_expr() for i in (ua, ub)]
 
+    def pow_cos_sin(a, two):
+        """Return ``a`` as a tuple (r, c, s) such that ``a = (r or 1)*(c or 1)*(s or 1)``.
 
-    def fallback(n1, n2):
-        if induce:
-            def remove_num_pow(u):
-                v = S.One
-                for k in u.factors:
-                    if k.is_Number:
-                        v = k**u.factors[k]
-                        return v, u.quo(v)
-                return v, u
-            va, ua1 = remove_num_pow(ua)
-            vb, ub1 = remove_num_pow(ub)
-            if len(ua1.factors) == 1 and len(ub1.factors) == 1 and ua1.factors.values()[0] == ub1.factors.values()[0] == 1:
-                c, s = [i.factors.keys()[0] for i in ua1, ub1]
-                if not all(i.func in (cos, sin) for i in (c, s)) or c.args[0] != s.args[0]:
-                    return None
-                if c.func == sin:
-                    c, s = s, c
-                    va, vb = vb, va
-                    n1, n2 = n2, n1
-                if va == vb == 1:
-                    return gcd*sqrt(2), n1, n2, c*s.func(pi/4, evaluate=False), s*c.func(pi/4, evaluate=False)
-                if va/vb == sqrt(3):
-                    return gcd*vb*2, n1, n2, c*cos(pi/6, evaluate=False), s*sin(pi/6, evaluate=False)
-                elif vb/va == sqrt(3):
-                    return gcd*va*2, n1, n2, c*sin(pi/6, evaluate=False), s*cos(pi/6, evaluate=False)
+        Three arguments are returned (radical, c-factor1, s-factor) as
+        long as the conditions set by ``two`` are met; otherwise None is
+        returned. If ``two`` is True there will be one or two non-None
+        values in the tuple: c and s or c and r or s and r or s or c with c
+        being a cosine function, if possible, else a sine and s being a sine
+        function, if possible, else oosine. If ``two`` is False then there
+        will only be a c or s term in the tuple.
 
-    la = len(ua.factors)
-    lb = len(ub.factors)
-    if not all(i in (1, 2) for i in [la, lb]):
-        return None
-    if 1 in (la, lb) and induce:
-        return fallback(n1, n2)
-    if not all(p == 1 for i in (ua, ub) for p in i.factors.values()):
-        return fallback(n1, n2)
+        ``two`` also require that either two cos and/or sin be present (with
+        the condition that if the functions are the same the arguments are
+        different or vice versa) or that a single cosine or a single sine
+        be present with an optional radical.
 
-    def sep(u):
-        c = S.One
-        s = S.One
-        for k in u.factors:
-            if k.func == cos:
-                c *= k
-            elif k.func == sin:
-                s *= k
+        If the above conditions dictated by ``two`` are not met then None
+        is returned.
+        """
+        c = s = None
+        co = S.One
+        if a.is_Mul:
+            co, a = a.as_coeff_Mul()
+            if len(a.args) > 2 or not two:
+                return None
+            if a.is_Mul:
+                args = list(a.args)
+            else:
+                args = [a]
+            a = args.pop(0)
+            if a.func is cos:
+                c = a
+            elif a.func is sin:
+                s = a
+            elif a.is_Pow and a.exp is S.Half:  # autoeval doesn't allow -1/2
+                co *= a
             else:
                 return None
-        if c is S.One:
-            return s
-        elif s is S.One:
-            return c
-        else:
-            return Mul(c, s, evaluate=False)
-    a, b = [sep(i) for i in ua, ub]
+            if args:
+                b = args[0]
+                if b.func is cos:
+                    if c:
+                        s = b
+                    else:
+                        c = b
+                elif b.func is sin:
+                    if s:
+                        c = b
+                    else:
+                        s = b
+                elif b.is_Pow and b.exp is S.Half:
+                    co *= b
+                else:
+                    return None
+            return co if co is not S.One else None, c, s
+        elif a.func is cos:
+            c = a
+        elif a.func is sin:
+            s = a
+        if c is None and s is None:
+            return
+        co = co if co is not S.One else None
+        if not two and co:
+            return None
+        return co, c, s
 
-    if None in (a, b):
-        return None
-    if a.is_Mul and b.is_Mul:
-        if set(ai.args[0] for ai in Mul.make_args(a)) != set(ai.args[0] for ai in Mul.make_args(b)):
-            return None
-    elif not a.is_Mul and not b.is_Mul:
-        if a.func != b.func:
-            return None
-    else:
-        return None
-    if Mul.make_args(a)[0].func == sin:
-        a, b = b, a
+    # get the parts
+    m = pow_cos_sin(a, two)
+    if m is None:
+        return
+    coa, ca, sa = m
+    m = pow_cos_sin(b, two)
+    if m is None:
+        return
+    cob, cb, sb = m
+
+    # check them
+    if (not ca) and cb:
+        coa, ca, sa, cob, cb, sb = cob, cb, sb, coa, ca, sa
         n1, n2 = n2, n1
-    return gcd, n1, n2, a, b
+    if two is False:  # need cos(x) and cos(y) or sin(x) and sin(y)
+        if ca and sa or cb and sb:
+            return
+        c = ca or sa
+        s = cb or sb
+        if c.func is not s.func:
+            return None
+        return gcd, n1, n2, c.args[0], s.args[0], c.func is cos
+    else:
+        if not coa and not cob:
+            if (ca and cb and sa and sb):
+                if not ((ca.func is sa.func) is (cb.func is sb.func)):
+                    return
+                args = set([j.args for j in (ca, sa)])
+                if not all(i.args in args for i in (cb, sb)):
+                    return
+                return gcd, n1, n2, ca.args[0], sa.args[0], ca.func is sa.func
+        if ca and sa or cb and sb:
+            return
+        c = ca or sa
+        s = cb or sb
+        if c.args != s.args:
+            return
+        if c.func is s.func:
+            return
+        if not coa:
+            coa = S.One
+        if not cob:
+            cob = S.One
+        if coa is cob:
+            gcd *= _ROOT2
+            return gcd, n1, n2, c.args[0], pi/4, False
+        elif coa/cob == _ROOT3:
+            gcd *= 2*cob
+            return gcd, n1, n2, c.args[0], pi/3, False
+        elif coa/cob == _invROOT3:
+            gcd *= 2*coa
+            return gcd, n1, n2, c.args[0], pi/6, False
