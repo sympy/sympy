@@ -182,6 +182,7 @@ def test_xreplace():
 
 def test_factor_nc():
     x, y = symbols('x,y')
+    k = symbols('k', integer=True)
     n, m, o = symbols('n,m,o', commutative=False)
 
     # mul and multinomial expansion is needed
@@ -235,6 +236,9 @@ def test_factor_nc():
     # issue 3435
     assert (2*n + 2*m).factor() == 2*(n + m)
 
+    # issue 3602
+    assert factor_nc(n**k + n**(k + 1)) == n**k*(1 + n)
+    assert factor_nc((m*n)**k + (m*n)**(k + 1)) == (1 + m*n)*(m*n)**k
 
 def test_issue_3261():
     a, b = symbols("a b")
