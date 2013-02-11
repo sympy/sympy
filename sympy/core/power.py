@@ -646,7 +646,6 @@ class Pow(Expr):
 
         return Piecewise(*result)
 
-
     def as_real_imag(self, deep=True, **hints):
         from sympy.polys.polytools import poly
 
