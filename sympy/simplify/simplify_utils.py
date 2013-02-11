@@ -468,7 +468,7 @@ def replace_add_gen(expr, f, g, h1, h2, h3, sgn, rule, full=True, to_tan=True):
     ``expr`` is a sum of terms with ``f`` and ``g`` factors;
     the replacement rule has a pattern which is a sum or difference
     of monomials in ``f`` and ``g`` with coefficient ``1``.
-    It is therefore possible to collect the terms of expr in groups
+    It is therefore possible to collect the terms of ``expr`` in groups
     which have the same coefficient (the part independent from ``f``
     and ``g``) apart the sign.
     """
@@ -501,8 +501,8 @@ def replace_add_gen(expr, f, g, h1, h2, h3, sgn, rule, full=True, to_tan=True):
                 b1a, c1a, fact1 = _fg_factor(b1, c1)
                 b2a, c2a, fact2 = _fg_factor(b2, c2)
 
-                res = rule(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2,
-                        sgn, sign, to_tan)
+                res = rule(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1,
+                           fact2, sgn, sign, to_tan)
                 if res is None:
                     continue
                 fv, gv, hv = res
@@ -525,6 +525,17 @@ def replace_add_gen(expr, f, g, h1, h2, h3, sgn, rule, full=True, to_tan=True):
 def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, sign, to_tan):
     """
     rule function for replace_add1
+
+    Replace:
+    ``1 - sgn*f(x)**2            -> g(x)**2``
+    ``1 - g(x)**2           -> sgn*f(x)**2``
+
+    If ``to_tan`` is ``True``,
+    use the replacements ``f(x)/g(x) -> h1(x)``, ``g(x)/f(x) -> h2(x)``
+    in cases like
+    ``f(x)**e1*g(x)**e2*(f(x)**2 - 1) -> -sgn*h2(x)**-e1*g(x)**e3``
+    when ``e1 < 0`` and ``e3 = e1 + e2 + 2 >= 0``
+
     """
 
     # 1 - sgn*f(x)**2            -> g(x)**2
@@ -545,7 +556,7 @@ def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, 
         if b1a:
             # 1 - sgn*f(x)**2       -> g(x)**2
             # f(x)**2 - 1 = - sgn*g(x)**2
-            # f(x)**e1*g**e2*(f(x)**2 - 1) -> -sgn*f(x)**e1*g**(e2 + 2)
+            # f(x)**e1*g(x)**e2*(f(x)**2 - 1) -> -sgn*f(x)**e1*g(x)**(e2 + 2)
             x, e = b1a.items()[0]
             if e != 2:
                 return None
@@ -776,7 +787,14 @@ def replace_add1(expr, f, g, sgn, h1, h2, full=True, to_tan=True):
     h1(x) = f(x)/g(x), h2(x) = g(x)/f(x) used in cases like
             1/f(x)**2 - 1         -> sgn*g(x)**2
 
-    f, g are sin, cos or sinh, cosh
+
+    If ``to_tan`` is ``True``,
+    use the replacements ``f(x)/g(x) -> h1(x)``, ``g(x)/f(x) -> h2(x)``
+    in cases like
+    ``f(x)**e1*g(x)**e2*(f(x)**2 - 1) -> -sgn*h2(x)**-e1*g(x)**e3``
+    when ``e1 < 0`` and ``e3 = e1 + e2 + 2 >= 0``
+
+    ``f, g`` are ``sin, cos`` or ``sinh, cosh``
     """
     rule = _rule_replace_add1
     expr = replace_add_gen(expr, f, g, h1, h2, None, sgn, rule, full, to_tan)

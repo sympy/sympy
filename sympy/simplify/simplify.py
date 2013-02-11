@@ -1451,6 +1451,7 @@ def TR10_inv(expr, full=True):
 
 _idn = lambda x: x
 _midn = lambda x: -x
+_one = lambda x: S.One
 
 _g2sin = lambda x: 2*cos(x)
 _g2sinh = lambda x: 2*cosh(x)
@@ -1484,7 +1485,7 @@ def _match_div_rewrite(expr, i):
         expr = replace_mul_fpowxgpow(expr, cot, cos, _midn, sin, _midn)
     elif i == 5:
         # cot(b)**c*tan(b)**c -> 1
-        expr = replace_mul_fpowxgpow(expr, cot, tan, _idn, _idn, _idn)
+        expr = replace_mul_fpowxgpow(expr, cot, tan, _idn, _one, _idn)
     elif i == 6:
         # ((cos(b) + 1)**c*(cos(b) - 1)**c -> -sin(b)**2)**c
         expr = replace_mul_fpowxgpow(expr, cos, cos, _idn, \
@@ -1516,14 +1517,14 @@ def _match_div_rewrite(expr, i):
         expr = replace_mul_fpowxgpow(expr, coth, cosh, _midn, sinh, _midn)
     elif i == 15:
         # coth(b)**c*tanh(b)**c -> 1
-        expr = replace_mul_fpowxgpow(expr, coth, tanh, _idn, _idn, _idn)
+        expr = replace_mul_fpowxgpow(expr, coth, tanh, _idn, _one, _idn)
     elif i == 16:
         # (tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)) -> tanh(a + b)
         expr = replace_mul_fpowxgpow(expr, tanh, tanh, _midn, \
             lambda x, y: tanh(x + y), _idn, _match21, _match22, hargs=2)
     elif i == 17:
         #return expr
-        # sin(2*x)**c/sin(x)**c -> (2*cos(x))**c
+        # sinh(2*x)**c/sinh(x)**c -> (2*cosh(x))**c
         expr = replace_mul_f2(expr, sinh, _g2sinh)
     else:
         return None
