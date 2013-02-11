@@ -627,6 +627,27 @@ class Pow(Expr):
         else:
             return result
 
+
+    def _eval_expand_nonint(self, **hints):
+        from sympy.series.series import series
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        base = self.base
+        exp = self.exp
+        
+        result = []
+        if len(base.args) != 2 or not exp.is_Number:
+            return Pow(base, exp)
+
+        for arg in base.args:
+            other_arg = [value for value in base.args if value != arg].pop()
+            if arg.is_Symbol:
+                result.append((series(self, arg), abs(arg/other_arg) < 1))
+        
+        return Piecewise(*result)
+
+
+
     def as_real_imag(self, deep=True, **hints):
         from sympy.polys.polytools import poly
 
