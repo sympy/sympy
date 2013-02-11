@@ -752,14 +752,16 @@ def TR10i(rv):
             if all(f.func in (cos, sin) for f in (c, s)):
                 return n, c, s
 
-        def ok2(rv):
+        def ok2(rv, first=True):
             # see if a gcd can be pulled out of the two args and if so, return both ``ok`` values
             # or None if either ``ok`` fails
-            a, b = [Factors(i) for i in rv.args]
-            A = a
-            a, b = a.normal(b)
-            gcd = A.div(a)[0].as_expr()
-            if abs(gcd) == 1:
+            if first:
+                a, b = [Factors(i) for i in rv.args]
+                A = a
+                a, b = a.normal(b)
+                gcd = A.div(a)[0].as_expr()
+                a, b = [i.as_expr() for i in (a, b)]
+            else:
                 # cos(pi/6) and sin(pi/6) can be used to combine the terms
                 # if the coefficient in front of 1 term is sqrt(3) time the other,
                 # cos(pi/6) and sin(pi/6) can be used to combine the terms
@@ -791,14 +793,24 @@ def TR10i(rv):
                     o2 = [o2[0]] + [i.subs(rep) for i in o2[1:]]
                     gcd *= g
                     return gcd, o1, o2
+                return None
 
-            o1 = ok(a.as_expr())
-            if not o1:
-                return
-            o2 = ok(b.as_expr())
-            if not o2:
-                return
-            return gcd, o1, o2
+            o1 = ok(a)
+            o2 = ok(b)
+            if o2:
+                if o1 is None:  # both have to succeed
+                    return None
+                return gcd, o1, o2
+            elif not o1:  # both failed
+                if first:
+                    o = ok2(a + b, first=False)
+                    if not o:
+                        return None
+                    g, o1, o2 = o
+                    gcd *= g
+                    return gcd, o1, o2
+                else:
+                    return None
 
         if len(rv.args) != 2:
             args = list(ordered(rv.args))
