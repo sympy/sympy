@@ -6,14 +6,14 @@ in what is heuristically known to be a smart order, to select a simpler
 expression that is equivalent to the input.
 
 There are 15 transform rules (TR0 - TR10, TR10i, TR11 - TR13) in which a
-single rule is applied to the expression tree. The following are not
+single rule is applied to the expression tree. The following are just
 mnemonic in nature; see the docstrings for examples.
 
     TR0 - non-trig simplification
     TR1 - sec, csc -> 1/cos, 1/sin
     TR2 - tan, cot -> sin/cos and cos/sin
-    TR3 - sign simplification of arguments
-    TR4 - special angle values
+    TR3 - angle canonicalization
+    TR4 - replace functions at special angles with values
     TR5 - sin**2(a) -> (1 - cos(a)**2) and sin(a)**4 to the square of the same
     TR6 - cos**2(a) -> (1 - sin(a)**2) and cos(a)**4 to the square of the same
     TR7 - cos(a)**2 -> cos(2*a)
@@ -38,14 +38,14 @@ of trigonometric funcions that appear in the expression.
 Other than TR0, re-writing of expressions is not done by the transformations.
 e.g. TR10i finds pairs of terms in a sum that are in the form like
 ``cos(x)*cos(y) + sin(x)*sin(y)``. Such expression are targeted in a bottom-up
-traversal of the expression, but if they don't appear no manipulation to make
-them appear is attempted, being left instead to the user. For example,
+traversal of the expression, but no manipulation to make
+them appear is attempted. For example,
 
     Set-up for examples below:
 
     >>> from sympy.simplify.fu import fu, L, TR9, TR10i
     >>> from sympy import factor, sin, cos
-    >>> from sympy.abc import x, y, z, A
+    >>> from sympy.abc import x, y, z, a
     >>> from time import time
 
 >>> eq = cos(x + y)/cos(x)
@@ -63,17 +63,17 @@ cos(x + y)/cos(x)
 There is one exception, however. In TR10i and TR9 terms are recognized even
 when they are each multiplied by a common factor:
 
->>> fu(A*cos(x)*cos(y) + A*sin(x)*sin(y))
-A*cos(x - y)
+>>> fu(a*cos(x)*cos(y) + a*sin(x)*sin(y))
+a*cos(x - y)
 
 Factoring with ``factor_terms`` is used but it it "JIT"-like, being delayed
 until it is deemed necessary. Furthermore, if the factoring does not
 help with the simplification, it is not retained, so
-``A*cos(x)*cos(y) + A*sin(x)*sin(z)`` does not become the factored
+``a*cos(x)*cos(y) + a*sin(x)*sin(z)`` does not become the factored
 (but unsimplified in the trigonometric sense) expression:
 
->>> fu(A*cos(x)*cos(y) + A*sin(x)*sin(z))
-A*sin(x)*sin(z) + A*cos(x)*cos(y)
+>>> fu(a*cos(x)*cos(y) + a*sin(x)*sin(z))
+a*sin(x)*sin(z) + a*cos(x)*cos(y)
 
 In some cases factoring might be a good idea, but the user is left
 to make that decision. For example:
@@ -89,7 +89,7 @@ In the expanded state, there are nearly 1000 trig functions
 932
 
 If the expression where factored first, this would take time but the
-resulting expression would be factored very quickly:
+resulting expression would be ransformed very quickly:
 
 >>> def clock(f, n=2):
 ...    t=time(); f(); return round(time()-t, n)
@@ -99,8 +99,8 @@ resulting expression would be factored very quickly:
 >>> clock(lambda: TR10i(expr), 3)  # doctest: +SKIP
 0.016
 
-If the unexpanded expression is used, the time takes longer but
-not as long as the combined factoring and simplification times:
+If the unexpanded expression is used, the transformation takes longer but
+not as long as it took to factor it and then transform it:
 
 >>> clock(lambda: TR10i(expr), 2)  # doctest: +SKIP
 0.28
@@ -108,8 +108,8 @@ not as long as the combined factoring and simplification times:
 So neither expansion nor fatoring is used in ``TR10i``: if the
 expression is already factored (or partially factored) then expansion
 with ``trig=True`` would destroy what is already known and take
-longer; if the expression is expanded, factoring may be more time
-consuming than the algorithm itself.
+longer; if the expression is expanded, factoring may take longer than
+simply applying the transformation itself.
 
 Although the algorithms should be canonical, always giving the same
 result, they may not yield the best result. This, in general, is
@@ -130,8 +130,8 @@ Serendipitously, fu gives the best result:
 But if different terms were combined, a less-optimal result might be
 obtained, requiring some additional work to get better simplification,
 but still less than optimal. The following shows an alternative form
-of ``expr`` that resists optimal simplification since the initial
-step taken leads to a dead end:
+of ``expr`` that resists optimal simplification once a given step
+is taken since it leads to a dead end:
 
 >>> TR9(-cos(x)**2*cos(y + z) + 3*cos(y - z)/2 +
 ...     cos(y + z)/2 + cos(-2*x + y + z)/4 - cos(2*x + y + z)/4)
@@ -450,7 +450,7 @@ def TR8(rv):
         return rv
 
     args = {cos: [], sin: [], None: []}
-    for a in ordered(Mul.make_args(rv)):
+    for a in ordered(rv.args):
         if a.func in (cos, sin):
             args[a.func].append(a.args[0])
         else:
@@ -532,36 +532,12 @@ def TR9(rv):
         # combining, for example, the x and y term instead of the y and z term
         # in something like cos(x) + cos(y) + cos(z).
 
-        def ok(a):
-            # return ``s, f`` if ``a`` is ``s*f(a)`` where ``f`` is ``cos`` or ``sin``,
-            # else return None.
-            if not (a.func in (cos, sin) or (a.is_Mul and (-a).func in (cos, sin))):
-                return
-            n = 1
-            if a.is_Mul:
-                n = -1
-                a = -a
-            return n, a
 
-        def ok2(rv):
-            # see if a gcd can be pulled out of the two args and if so, return both ``ok`` values
-            # or None if either ``ok`` fails
-            a, b = [Factors(i) for i in rv.args]
-            A = a
-            a, b = a.normal(b)
-            gcd = A.div(a)[0]
-            if gcd.is_one:
-                return  # there was no gcd
-            o1 = ok(a.as_expr())
-            if not o1:
-                return
-            o2 = ok(b.as_expr())
-            if not o2:
-                return
-            return gcd.as_expr(), o1, o2
+        if not rv.is_Add:
+            return rv
 
-        if len(rv.args) != 2:
-            args = list(ordered(rv.args))
+        args = list(ordered(rv.args))
+        if len(args) != 2:
             hit = False
             for i in range(len(args)):
                 ai = args[i]
@@ -586,29 +562,12 @@ def TR9(rv):
             return rv
 
         # two-arg Add
-        # arg 1
-        gcd = S.One
-        o1 = ok(rv.args[0])
-        if o1:
-            n1, f = o1
-        # arg 2
-        o2 = ok(rv.args[1])
-        if o2:
-            if not o1:
-                return rv  # both must succeed
-            n2, g = o2
-        elif o1:
-            return rv  # both must succeed
-        else:  # both failed
-            if first:
-                o = ok2(rv)
-                if not o:
-                    return rv
-            else:
-                return rv
-            gcd, o1, o2 = o
-            n1, f = o1
-            n2, g = o2
+        split = trig_split(*args)
+        if not split:
+            return rv
+        gcd, n1, n2, f, g = split
+        if not all(i.func in (cos, sin) for i in (f, g)):
+            return rv
 
         # application of rule if possible
         if f.func == g.func:
@@ -630,7 +589,7 @@ def TR9(rv):
     return process_common_addends(rv, do)  # DON'T sift by free symbols
 
 
-def TR10(rv):
+def TR10(rv, first=True):
     """Separate sums in ``cos`` and ``sin``.
 
     Examples
@@ -653,14 +612,17 @@ def TR10(rv):
     f = rv.func
     arg = rv.args[0]
     if arg.is_Add:
-        args = list(ordered(arg.args))
+        if first:
+            args = list(ordered(arg.args))
+        else:
+            args = list(arg.args)
         a = args.pop()
-        b = Add(*args)
+        b = Add._from_args(args)
         if b.is_Add:
             if f == sin:
-                return sin(a)*TR10(cos(b)) + cos(a)*TR10(sin(b))
+                return sin(a)*TR10(cos(b), first=False) + cos(a)*TR10(sin(b), first=False)
             else:
-                return cos(a)*TR10(cos(b)) - sin(a)*TR10(sin(b))
+                return cos(a)*TR10(cos(b), first=False) - sin(a)*TR10(sin(b), first=False)
         else:
             if f == sin:
                 return sin(a)*cos(b) + cos(a)*sin(b)
@@ -676,7 +638,7 @@ def TR10i(rv):
     ========
 
     >>> from sympy.simplify.fu import TR10i
-    >>> from sympy import cos, sin, pi, Add, Mul
+    >>> from sympy import cos, sin, pi, Add, Mul, sqrt, Symbol
     >>> from sympy.abc import x, y
 
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
@@ -698,6 +660,13 @@ def TR10i(rv):
     >>> eq = (cos(2)*cos(3)+sin(2)*(cos(1)*sin(2)+cos(2)*sin(1)))*cos(5) + sin(1)*sin(5)
     >>> TR10i(eq) == TR10i(eq.expand()) == cos(4)
     True
+    >>> TR10i(sqrt(2)*cos(x)*x + sqrt(6)*sin(x)*x)
+    2*sqrt(2)*x*sin(x + pi/6)
+
+    >>> A = Symbol('A', commutative=False)
+    >>> TR10i(sqrt(2)*cos(x)*A + sqrt(6)*sin(x)*A)
+    2*sqrt(2)*sin(x + pi/6)*A
+
 
     >>> c = cos(x); s = sin(x); h = sin(y); r = cos(y)
     >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
@@ -731,89 +700,11 @@ def TR10i(rv):
         # a gcd extractable and the remaining two terms will have the above
         # structure -- all pairs must be checked to find the ones that work.
 
-        def ok(a):
-            # return ``s, f, g`` if ``a`` is ``s*f(a)*g(b)`` where ``f`` and
-            # ``g`` are ``cos`` and/or ``sin`` else return None; ``c`` will be
-            # cos unless both ``f`` and ``g`` are ``sin``.
-            if not a.is_Mul:
-                return
-            if a.args[0].is_Integer:
-                if a.args[0] is not S.NegativeOne:  # gcd already removed so if one term has it the other must not or they must have unmatching integers
-                    return
-                a = -a
-                n = -1
-            else:
-                n = 1
-            if not a.is_Mul or len(a.args) != 2:
-                return
-            c, s = a.args
-            if c.func == sin:
-                c, s = c, s
-            if all(f.func in (cos, sin) for f in (c, s)):
-                return n, c, s
+        if not rv.is_Add:
+            return rv
 
-        def ok2(rv, first=True):
-            # see if a gcd can be pulled out of the two args and if so, return both ``ok`` values
-            # or None if either ``ok`` fails
-            if first:
-                a, b = [Factors(i) for i in rv.args]
-                A = a
-                a, b = a.normal(b)
-                gcd = A.div(a)[0].as_expr()
-                a, b = [i.as_expr() for i in (a, b)]
-            else:
-                # cos(pi/6) and sin(pi/6) can be used to combine the terms
-                # if the coefficient in front of 1 term is sqrt(3) time the other,
-                # cos(pi/6) and sin(pi/6) can be used to combine the terms
-                #
-                #                a +             b
-                #             na*A +          nb*B
-                #       nb(na/nb*A +             B)
-                #      nb(sqrt(3)A +             B)
-                #  2nb(sqrt(3)/2*A +           B/2)
-                #  2nb(cos(pi/6)*A +   sin(pi/6)*B)
-                # nb(2*cos(pi/6)*A + 2*sin(pi/6)*B)
-                #
-                a, b = rv.args
-                na, nb = [i.as_independent(cos, sin)[0] for i in rv.args]
-                if abs(nb/na) == sqrt(3):
-                    na, nb = nb, na
-                    a, b = b, a
-                if abs(na/nb) == sqrt(3):  # a = sqrt(3*n)*f ; b = sqrt(n)*g   gcd*(a+b) = gcd*(sqrt(3*n)*f + sqrt(n)*g)) = gcd*sqrt(n)*(sqrt(3)*f+g)
-                    d = Dummy('pi/6')
-                    gcd = nb
-                    a *= 2/nb/sqrt(3)*cos(d)  # leave to 2s so there is a gcd this time
-                    b *= 2/nb*sin(d)
-                    o = ok2(a + b)
-                    if o is None:
-                        return
-                    g, o1, o2 = o
-                    rep = {cos(d): cos(pi/6, evaluate=False), sin(d): sin(pi/6, evaluate=False)}
-                    o1 = [o1[0]] + [i.subs(rep) for i in o1[1:]]
-                    o2 = [o2[0]] + [i.subs(rep) for i in o2[1:]]
-                    gcd *= g
-                    return gcd, o1, o2
-                return None
-
-            o1 = ok(a)
-            o2 = ok(b)
-            if o2:
-                if o1 is None:  # both have to succeed
-                    return None
-                return gcd, o1, o2
-            elif not o1:  # both failed
-                if first:
-                    o = ok2(a + b, first=False)
-                    if not o:
-                        return None
-                    g, o1, o2 = o
-                    gcd *= g
-                    return gcd, o1, o2
-                else:
-                    return None
-
-        if len(rv.args) != 2:
-            args = list(ordered(rv.args))
+        args = list(ordered(rv.args))
+        if len(args) != 2:
             hit = False
             for i in range(len(args)):
                 ai = args[i]
@@ -838,75 +729,23 @@ def TR10i(rv):
             return rv
 
         # two-arg Add
-
-        # if the args are in the form A*(cos(x) +/- sin(x)) then values of
-        # cos(pi/4) and sin(pi/4) can be introduced to induce a change
-        if first:
-            a, b = [Factors(i) for i in rv.args]
-            na, nb = [i.as_expr() for i in a.quo(S(-1)).normal(b.quo(S(-1)))]
-            if all(i.func in (cos, sin) for i in (na, nb)):
-                if na.func != nb.func and na.args[0] == nb.args[0]:
-                    ca = a.div(na)[0].quo(S(-1))
-                    cb = b.div(nb)[0].quo(S(-1))
-                    if ca == cb:
-                        gcd = ca.as_expr()
-                        # cos(x) + sin(x) -> cos(x)*cos(pi/4) + sin(x)*sin(pi/4)
-                        a, b = na, nb
-                        was = rv
-                        rv = gcd*sqrt(2)*do((a*a.func(pi/4, evaluate=False) + b*b.func(pi/4, evaluate=False)), first=False)
-                        from sympy.utilities.randtest import test_numerically as tn
-                        if not tn(was, rv):
-                            print was, rv
-                        return rv
-
-        # arg 1
-        gcd = S.One
-        o1 = ok(rv.args[0])
-        if o1:
-            n1, c1, s1 = o1
-        # arg 2
-        o2 = ok(rv.args[1])
-        if o2:
-            if o1 is None:  # both have to succeed
-                return rv
-            n2, c2, s2 = o2
-        elif o1:
-            return rv  # both have to succeed
-        else:  # both failed
-            if first:
-                o = ok2(rv)
-                if not o:
-                    return rv
-            else:
-                return rv
-            gcd, o1, o2 = o
-            n1, c1, s1 = o1
-            n2, c2, s2 = o2
+        split = trig_split(*args, induce=True)
+        if not split:
+            return rv
+        gcd, n1, n2, f, g = split
+        c1, s1 = f.args
+        c2, s2 = g.args
 
         # identify and get c1 to be cos then apply rule if possible
-        if c1.func == s1.func and c2.func == s2.func and c1.func != c2.func:
-            if c1.func == sin:
-                c1, c2 = c2, c1
-                s1, s2 = s2, s1
-                n1, n2 = n2, n1
+        if c1.func == s1.func:  # coscos, sinsin
             a, b = c1.args[0], s1.args[0]
-            aa, bb = c2.args[0], s2.args[0]
             gcd = n1*gcd
-            if not (a == aa and b == bb):
-                return rv
             if n1 == n2:
                 return gcd*cos(a - b)
             return gcd*cos(a + b)
-        elif c1.func != s1.func and c2.func != s2.func:
-            if c1.func == sin:
-                c1, s1 = s1, c1
-            if c2.func == sin:
-                c2, s2 = s2, c2
+        else:  #cossin, cossin
             a, b = c1.args[0], s1.args[0]
-            aa, bb = c2.args[0], s2.args[0]
             gcd = n1*gcd
-            if not (a == bb and b == aa):
-                return rv
             if n1 == n2:
                 return gcd*sin(a + b)
             return gcd*sin(b - a)
@@ -1211,3 +1050,121 @@ def process_common_addends(rv, do, key2=None):
 
 FU = dict(zip('TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L'.split(', '),
               (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L)))
+
+def trig_split(a, b, induce=False):
+    """
+    >>> from sympy.simplify.fu import trig_split
+    >>> from sympy.abc import x, y, z
+    >>> from sympy import cos, sin, sqrt
+
+    >>> trig_split(cos(x), cos(y))
+    (1, 1, 1, cos(x), cos(y))
+    >>> trig_split(2*cos(x), -2*cos(y))
+    (2, 1, -1, cos(x), cos(y))
+    >>> trig_split(cos(x)*sin(y), cos(y)*sin(y))
+    (sin(y), 1, 1, cos(x), cos(y))
+    >>> trig_split(cos(x)*cos(y), sin(x)*sin(y))
+    (1, 1, 1, cos(x)*cos(y), sin(x)*sin(y))
+
+    >>> trig_split(cos(x), -sqrt(3)*sin(x), induce=1)
+    (2, 1, -1, sin(pi/6)*cos(x), sin(x)*cos(pi/6))
+    >>> trig_split(cos(x), sin(x), induce=1)
+    (sqrt(2), 1, 1, sin(pi/4)*cos(x), sin(x)*cos(pi/4))
+    >>> trig_split(cos(x), -sin(x), induce=1)
+    (sqrt(2), 1, -1, sin(pi/4)*cos(x), sin(x)*cos(pi/4))
+    >>> trig_split(sqrt(2)*cos(x), -sqrt(6)*sin(x), induce=1)
+    (2*sqrt(2), 1, -1, sin(pi/6)*cos(x), sin(x)*cos(pi/6))
+    >>> trig_split(-sqrt(6)*cos(x), -sqrt(2)*sin(x), induce=1)
+    (-2*sqrt(2), 1, 1, cos(pi/6)*cos(x), sin(pi/6)*sin(x))
+    >>> trig_split(-sqrt(6)*cos(x)*sin(y), -sqrt(2)*sin(x)*sin(y), induce=1)
+    (-2*sqrt(2)*sin(y), 1, 1, cos(pi/6)*cos(x), sin(pi/6)*sin(x))
+
+    >>> trig_split(cos(x), sin(x))
+    >>> trig_split(cos(x), sin(z))
+    >>> trig_split(2*cos(x), -sin(x))
+    >>> trig_split(cos(x), -sqrt(3)*sin(x))
+    >>> trig_split(cos(x)*cos(y), sin(x)*sin(z))
+    >>> trig_split(-sqrt(6)*cos(x), sqrt(2)*sin(x)*sin(y), induce=1)
+    """
+    a, b = [Factors(i) for i in (a, b)]
+    ua, ub = a.normal(b)
+    gcd = a.gcd(b).as_expr()
+    if S.NegativeOne in ua.factors:
+        ua = ua.quo(S.NegativeOne)
+        n1 = -1
+        n2 = 1
+    elif S.NegativeOne in ub.factors:
+        ub = ub.quo(S.NegativeOne)
+        n1 = 1
+        n2 = -1
+    else:
+        n1 = n2 = 1
+
+
+    def fallback(n1, n2):
+        if induce:
+            def remove_num_pow(u):
+                v = S.One
+                for k in u.factors:
+                    if k.is_Number:
+                        v = k**u.factors[k]
+                        return v, u.quo(v)
+                return v, u
+            va, ua1 = remove_num_pow(ua)
+            vb, ub1 = remove_num_pow(ub)
+            if len(ua1.factors) == 1 and len(ub1.factors) == 1 and ua1.factors.values()[0] == ub1.factors.values()[0] == 1:
+                c, s = [i.factors.keys()[0] for i in ua1, ub1]
+                if not all(i.func in (cos, sin) for i in (c, s)) or c.args[0] != s.args[0]:
+                    return None
+                if c.func == sin:
+                    c, s = s, c
+                    va, vb = vb, va
+                    n1, n2 = n2, n1
+                if va == vb == 1:
+                    return gcd*sqrt(2), n1, n2, c*s.func(pi/4, evaluate=False), s*c.func(pi/4, evaluate=False)
+                if va/vb == sqrt(3):
+                    return gcd*vb*2, n1, n2, c*cos(pi/6, evaluate=False), s*sin(pi/6, evaluate=False)
+                elif vb/va == sqrt(3):
+                    return gcd*va*2, n1, n2, c*sin(pi/6, evaluate=False), s*cos(pi/6, evaluate=False)
+
+    la = len(ua.factors)
+    lb = len(ub.factors)
+    if not all(i in (1, 2) for i in [la, lb]):
+        return None
+    if 1 in (la, lb) and induce:
+        return fallback(n1, n2)
+    if not all(p == 1 for i in (ua, ub) for p in i.factors.values()):
+        return fallback(n1, n2)
+
+    def sep(u):
+        c = S.One
+        s = S.One
+        for k in u.factors:
+            if k.func == cos:
+                c *= k
+            elif k.func == sin:
+                s *= k
+            else:
+                return None
+        if c is S.One:
+            return s
+        elif s is S.One:
+            return c
+        else:
+            return Mul(c, s, evaluate=False)
+    a, b = [sep(i) for i in ua, ub]
+
+    if None in (a, b):
+        return None
+    if a.is_Mul and b.is_Mul:
+        if set(ai.args[0] for ai in Mul.make_args(a)) != set(ai.args[0] for ai in Mul.make_args(b)):
+            return None
+    elif not a.is_Mul and not b.is_Mul:
+        if a.func != b.func:
+            return None
+    else:
+        return None
+    if Mul.make_args(a)[0].func == sin:
+        a, b = b, a
+        n1, n2 = n2, n1
+    return gcd, n1, n2, a, b
