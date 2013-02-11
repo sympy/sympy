@@ -7,7 +7,7 @@ from sympy.polys.rootoftools import RootOf
 
 def gauss_legendre(n, n_digits):
     r"""
-    Computes the Gauss-Legendre quadrature [1] points and weights.
+    Computes the Gauss-Legendre quadrature [1]_ points and weights.
 
     The Gauss-Legendre quadrature approximates the integral:
 
@@ -43,7 +43,15 @@ def gauss_legendre(n, n_digits):
     >>> w
     [0.34786, 0.65215, 0.65215, 0.34786]
 
-    [1] http://en.wikipedia.org/wiki/Gaussian_quadrature
+    See Also
+    ========
+
+    gauss_laguerre, gauss_gen_laguerre, gauss_hermite
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Gaussian_quadrature
     """
     x = Dummy("x")
     p = legendre_poly(n, x, polys=True)
@@ -59,7 +67,7 @@ def gauss_legendre(n, n_digits):
 
 def gauss_laguerre(n, n_digits):
     r"""
-    Computes the Gauss-Laguerre quadrature [1] points and weights.
+    Computes the Gauss-Laguerre quadrature [1]_ points and weights.
 
     The Gauss-Laguerre quadrature approximates the integral:
 
@@ -95,7 +103,15 @@ def gauss_laguerre(n, n_digits):
     >>> w
     [0.45896, 0.417, 0.11337, 0.010399, 0.00026102, 8.9855e-7]
 
-    [1] http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
+    See Also
+    ========
+
+    gauss_legendre, gauss_gen_laguerre, gauss_hermite
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
     """
     x = Dummy("x")
     p  = laguerre_poly(n, x, polys=True)
@@ -111,7 +127,7 @@ def gauss_laguerre(n, n_digits):
 
 def gauss_hermite(n, n_digits):
     r"""
-    Computes the Gauss-Hermite quadrature [1] points and weights.
+    Computes the Gauss-Hermite quadrature [1]_ points and weights.
 
     The Gauss-Hermite quadrature approximates the integral:
 
@@ -148,7 +164,15 @@ def gauss_hermite(n, n_digits):
     >>> w
     [0.00453, 0.15707, 0.72463, 0.72463, 0.15707, 0.00453]
 
-    [1] http://en.wikipedia.org/wiki/Gauss-Hermite_Quadrature
+    See Also
+    ========
+
+    gauss_legendre, gauss_laguerre, gauss_gen_laguerre
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Gauss-Hermite_Quadrature
     """
     x = Dummy("x")
     p  = hermite_poly(n, x, polys=True)
@@ -164,12 +188,12 @@ def gauss_hermite(n, n_digits):
 
 def gauss_gen_laguerre(n, alpha, n_digits):
     r"""
-    Computes the generalized Gauss-Laguerre quadrature [1] points and weights.
+    Computes the generalized Gauss-Laguerre quadrature [1]_ points and weights.
 
     The generalized Gauss-Laguerre quadrature approximates the integral:
 
     .. math::
-        \int_{0}^\infty x^{-\alpha} e^{-x} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
+        \int_{0}^\infty x^{\alpha} e^{-x} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
 
     The nodes `x_i` of an order `n` quadrature rule are the roots of `L^{\alpha}_n`
     and the weights `w_i` are given by:
@@ -209,6 +233,14 @@ def gauss_gen_laguerre(n, alpha, n_digits):
     [0.97851, 2.9904, 6.3193, 11.712]
     >>> w
     [0.53087, 0.67721, 0.11895, 0.0023152]
+
+    See Also
+    ========
+
+    gauss_legendre, gauss_laguerre, gauss_hermite
+
+    References
+    ==========
 
     .. [1] http://en.wikipedia.org/wiki/Gauss%E2%80%93Laguerre_quadrature
     """
