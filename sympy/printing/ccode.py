@@ -136,9 +136,6 @@ class CCodePrinter(CodePrinter):
         p, q = int(expr.p), int(expr.q)
         return '%d.0/%d.0' % (p, q)
 
-    def _print_Integer(self,expr):
-        return '%d.0' % int(expr)
-
     def _print_Indexed(self, expr):
         # calculate index for 1d array
         dims = expr.shape
