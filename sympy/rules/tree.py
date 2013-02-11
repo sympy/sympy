@@ -17,6 +17,7 @@ def treeapply(tree, join, leaf=identity):
     --------
 
     >>> from sympy.rules.tree import treeapply
+    >>> from sympy.core.compatibility import reduce
     >>> tree = ([3, 3], [4, 1])
     >>> treeapply(tree, {list: min, tuple: max})
     3
