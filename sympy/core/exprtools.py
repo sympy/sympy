@@ -74,13 +74,14 @@ class Factors(object):
     __slots__ = ['factors', 'gens']
 
     def __init__(self, factors=None):  # Factors
-        """Initialize Factors from dict (or defaultdict of type int).
+        """Initialize Factors from dict or expr.
 
         Examples
         ========
 
         >>> from sympy.core.exprtools import Factors
         >>> from sympy.abc import x
+        >>> from sympy import I
         >>> e = 2*x**3
         >>> Factors(e)
         Factors({2: 1, x: 3})
@@ -93,13 +94,15 @@ class Factors(object):
         frozenset([2, x])
         >>> Factors(0)
         Factors({0: 1})
+        >>> Factors(I)
+        Factors({I: 1})
 
         Notes
         =====
 
         Although a dictionary can be passed, no checking will be done to
         ensure that -1 is split from Rationals. This will then affect
-        gcd and normal caclulations, for example.
+        gcd and normal caclulations:
 
         >>> Factors(-2*x).factors
         {-1: 1, 2: 1, x: 1}
@@ -118,6 +121,19 @@ class Factors(object):
             factors = dict(Mul(*c, evaluate=False).as_powers_dict())
             if nc:
                 factors[Mul(*nc, evaluate=False)] = S.One
+
+        # sanitizing
+        if factors.get(S.NegativeOne, S.One) is not S.One:
+            e = factors.pop(S.NegativeOne)
+            factors[S.ImaginaryUnit] = 1
+            if e > S.One:
+                factors[S.NegativeOne] = S.One
+            elif e is not S.Half:
+                raise ValueError('unanticipated value for exponent of -1')
+        #for k, v in factors.iteritems():
+        #    if not (isinstance(v, int) or v.is_Integer or k.is_positive):
+        #        factors.pop(k)
+        #        factors[k**v] = S.One
 
         self.factors = factors
         try:
@@ -175,7 +191,7 @@ class Factors(object):
                 elif isinstance(exp, Rational):
                     e = _keep_coeff(exp, e)
                 else:
-                    raise ValueError('should only have int or Rational in Factors')
+                    e *= exp
                 args.append(b**e)
             else:
                 args.append(factor)
