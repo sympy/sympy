@@ -277,6 +277,7 @@ def test_expand_nonint():
             0.0205078125*b**6/a**6 + 0.01611328125*b**7/a**7) + O(b**6),
             Abs(b/a) < 1))
         assert s.expand(nonint=True) == piecewise
+
     s = (a + b)**(S(1)/2)
     piecewise = Piecewise((sqrt(b)*(33*a**7/(2048*b**7) - 21*a**6/(1024*b**6) +
         7*a**5/(256*b**5) - 5*a**4/(128*b**4) + a**3/(16*b**3) - a**2/(8*b**2) +
@@ -289,12 +290,11 @@ def test_expand_nonint():
         assert s.expand(nonint=True) == piecewise
     except AssertionError:
         piecewise = Piecewise((sqrt(a)*(1 + b/(2*a) -
-        b**2/(8*a**2) + b**3/(16*a**3) - 5*b**4/(128*a**4) +
-        7*b**5/(256*a**5) - 21*b**6/(1024*a**6) + 33*b**7/(2048*a**7)) +
-        O(b**6), Abs(b/a) < 1), (sqrt(b)*(33*a**7/(2048*b**7) - 21*a**6/(1024*b**6) +
-        7*a**5/(256*b**5) - 5*a**4/(128*b**4) + a**3/(16*b**3) - a**2/(8*b**2) +
-        a/(2*b) + 1) + O(a**6), Abs(a/b) < 1))
-
+            b**2/(8*a**2) + b**3/(16*a**3) - 5*b**4/(128*a**4) +
+            7*b**5/(256*a**5) - 21*b**6/(1024*a**6) + 33*b**7/(2048*a**7)) +
+            O(b**6), Abs(b/a) < 1), (sqrt(b)*(33*a**7/(2048*b**7) - 21*a**6/(1024*b**6) +
+            7*a**5/(256*b**5) - 5*a**4/(128*b**4) + a**3/(16*b**3) - a**2/(8*b**2) +
+            a/(2*b) + 1) + O(a**6), Abs(a/b) < 1))
         assert s.expand(nonint=True) == piecewise
 
     s = (a + b)**2

@@ -643,7 +643,6 @@ class Pow(Expr):
             other_arg = [value for value in base.args if value != arg].pop()
             if arg.is_Symbol:
                 result.append((series(self, arg), abs(arg/other_arg) < 1))
-
         return Piecewise(*result)
 
     def as_real_imag(self, deep=True, **hints):
