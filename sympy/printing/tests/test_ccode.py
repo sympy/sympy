@@ -31,7 +31,7 @@ def test_ccode_Pow():
     assert ccode(1/(g(x)*3.5)**(x - y**x)/(x**2 + y)) == \
         "pow(3.5*g(x), -x + pow(y, x))/(pow(x, 2) + y)"
     assert ccode(x**-1.0) == '1.0/x'
-    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0/3.0)'
+    assert ccode(x**Rational(2, 3)) == 'pow(x, 2.0L/3.0L)'
 
 
 def test_ccode_constants_mathh():
@@ -49,12 +49,12 @@ def test_ccode_constants_other():
 
 
 def test_ccode_Rational():
-    assert ccode(Rational(3, 7)) == "3.0/7.0"
+    assert ccode(Rational(3, 7)) == "3.0L/7.0L"
     assert ccode(Rational(18, 9)) == "2"
-    assert ccode(Rational(3, -7)) == "-3.0/7.0"
-    assert ccode(Rational(-3, -7)) == "3.0/7.0"
-    assert ccode(x + Rational(3, 7)) == "x + 3.0/7.0"
-    assert ccode(Rational(3, 7)*x) == "(3.0/7.0)*x"
+    assert ccode(Rational(3, -7)) == "-3.0L/7.0L"
+    assert ccode(Rational(-3, -7)) == "3.0L/7.0L"
+    assert ccode(x + Rational(3, 7)) == "x + 3.0L/7.0L"
+    assert ccode(Rational(3, 7)*x) == "(3.0L/7.0L)*x"
 
 
 def test_ccode_Integer():
