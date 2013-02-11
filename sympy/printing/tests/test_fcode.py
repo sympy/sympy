@@ -36,13 +36,17 @@ def test_fcode_Pow():
                  assign_to='y',
                  source_format='free',
                  human=True) == 'y = x**(-2.0d0)'  # 2823
+    assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
 
 
 def test_fcode_Rational():
+    x = symbols('x')
     assert fcode(Rational(3, 7)) == "      3.0d0/7.0d0"
     assert fcode(Rational(18, 9)) == "      2"
     assert fcode(Rational(3, -7)) == "      -3.0d0/7.0d0"
     assert fcode(Rational(-3, -7)) == "      3.0d0/7.0d0"
+    assert fcode(x + Rational(3, 7)) == "      x + 3.0d0/7.0d0"
+    assert fcode(Rational(3, 7)*x) == "      (3.0d0/7.0d0)*x"
 
 
 def test_fcode_Integer():
