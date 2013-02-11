@@ -14,6 +14,12 @@ def gauss_legendre(n, n_digits):
     .. math::
         \int_{-1}^1 f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
 
+    The nodes `x_i` of an order `n` quadrature rule are the roots of `P_n`
+    and the weights `w_i` are given by:
+
+    .. math::
+        w_i = \frac{2}{\left(1-x_i^2\right) \left(P'_n(x_i)\right)^2}
+
     Parameters
     ==========
 
@@ -74,6 +80,13 @@ def gauss_laguerre(n, n_digits):
     .. math::
         \int_0^{\infty} e^{-x} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
 
+
+    The nodes `x_i` of an order `n` quadrature rule are the roots of `L_n`
+    and the weights `w_i` are given by:
+
+    .. math::
+        w_i = \frac{x_i}{(n+1)^2 \left(L_{n+1}(x_i)\right)^2}
+
     Parameters
     ==========
 
@@ -133,6 +146,12 @@ def gauss_hermite(n, n_digits):
 
     .. math::
         \int_{-\infty}^{\infty} e^{-x^2} f(x)\,dx \approx \sum_{i=1}^n w_i f(x_i)
+
+    The nodes `x_i` of an order `n` quadrature rule are the roots of `H_n`
+    and the weights `w_i` are given by:
+
+    .. math::
+        w_i = \frac{2^{n-1} n! \sqrt{\pi}}{n^2 \left(H_{n-1}(x_i)\right)^2}
 
     Parameters
     ==========
