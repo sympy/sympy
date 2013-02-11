@@ -168,7 +168,7 @@ from collections import defaultdict
 
 from sympy.simplify.simplify import simplify, powsimp, ratsimp, combsimp
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import cos, sin, tan, cot, sqrt
+from sympy.functions.elementary.trigonometric import cos, sin, tan, cot, sec, csc, sqrt
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.core.compatibility import ordered
 from sympy.core.core import C
@@ -198,17 +198,23 @@ def TR0(rv):
 
 
 def TR1(rv):
-    """Replace sec, csc with 1/cos, 1/sin"""
-    try:
-        rv = bottom_up(rv, TR1)
-        if rv.func == sec:
-            a = rv.args[0]
-            return S.One/cos(a)
-        elif rv.func == csc:
-            a = rv.args[0]
-            return S.One/sin(a)
-    except:
-        pass
+    """Replace sec, csc with 1/cos, 1/sin
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import TR1, sec, csc
+    >>> from sympy.abc import x
+    >>> TR1(2*csc(x) + sec(x))
+    1/cos(x) + 2/sin(x)
+    """
+    rv = bottom_up(rv, TR1)
+    if rv.func == sec:
+        a = rv.args[0]
+        return S.One/cos(a)
+    elif rv.func == csc:
+        a = rv.args[0]
+        return S.One/sin(a)
     return rv
 
 
@@ -255,6 +261,14 @@ def TR3(rv):
     -sin(x)
     >>> cos(30*pi/2 + x)
     -cos(x)
+
+    >>> from sympy.utilities.randtest import test_numerically
+    >>> from sympy import cos, sin, tan, cot, csc, sec
+    >>> for f in (cos, sin, tan, cot, csc, sec):
+    ...   i = f(3*pi/7)
+    ...   j = TR3(i)
+    ...   assert test_numerically(i, j) and i.func != j.func
+    ...
     """
     from sympy.simplify.simplify import signsimp
 
@@ -266,12 +280,7 @@ def TR3(rv):
         return rv
     rv = rv.func(signsimp(rv.args[0]))
     if S.Pi/4 < rv.args[0] < S.Pi/2:
-        fmap = {cos: sin, sin: cos, tan: cot, cot: tan}
-        try:
-            fmap[sec] = csc
-            fmap[csc] = sec
-        except:
-            pass
+        fmap = {cos: sin, sin: cos, tan: cot, cot: tan, sec: csc, csc: sec}
         rv = fmap[rv.func](S.Pi/2 - rv.args[0])
     return rv
     #The following are automatically handled

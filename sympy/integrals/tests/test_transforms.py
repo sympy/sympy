@@ -499,8 +499,9 @@ def test_laplace_transform():
         ((-sin(s**2/(2*pi))*fresnels(s/pi) + sin(s**2/(2*pi))/2 -
             cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
     assert laplace_transform(fresnelc(t), t, s) == \
-        ((sin(s**2/(2*pi))*fresnelc(s/pi) - sin(s**2/(2*pi))/2 -
-            cos(s**2/(2*pi))*fresnels(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
+        (sqrt(2)*(sqrt(2)*sin(s**2/(2*pi))*fresnelc(s/pi) -
+        sqrt(2)*cos(s**2/(2*pi))*fresnels(s/pi) + cos(s**2/(2*pi) +
+        pi/4))/(2*s), 0, True)
 
 
 def test_inverse_laplace_transform():
