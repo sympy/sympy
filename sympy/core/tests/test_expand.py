@@ -277,7 +277,6 @@ def test_expand_nonint():
             0.0205078125*b**6/a**6 + 0.01611328125*b**7/a**7) + O(b**6),
             Abs(b/a) < 1))
         assert s.expand(nonint=True) == piecewise
-
     s = (a + b)**(S(1)/2)
     piecewise = Piecewise((sqrt(b)*(33*a**7/(2048*b**7) - 21*a**6/(1024*b**6) +
         7*a**5/(256*b**5) - 5*a**4/(128*b**4) + a**3/(16*b**3) - a**2/(8*b**2) +
