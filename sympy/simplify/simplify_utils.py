@@ -449,7 +449,7 @@ def replace_mul_f2(expr, f, g):
     return Mul(*args)
 
 ################ replacement function acting on sum of functions ##########
-def replace_add_gen(expr, f, g, h1, h2, h3, sgn, rule, full=True):
+def replace_add_gen(expr, f, g, h1, h2, h3, sgn, rule, full=True, to_tan=True):
     """
     helper function for replace_add_fgfg, replace_add1, replace_add2
 
@@ -502,7 +502,7 @@ def replace_add_gen(expr, f, g, h1, h2, h3, sgn, rule, full=True):
                 b2a, c2a, fact2 = _fg_factor(b2, c2)
 
                 res = rule(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2,
-                        sgn, sign)
+                        sgn, sign, to_tan)
                 if res is None:
                     continue
                 fv, gv, hv = res
@@ -517,12 +517,12 @@ def replace_add_gen(expr, f, g, h1, h2, h3, sgn, rule, full=True):
         a_new += found
         res = Add(*a_new)
         if full == True:
-            res = replace_add_gen(res, f, g, h1, h2, h3, sgn, rule, full)
+            res = replace_add_gen(res, f, g, h1, h2, h3, sgn, rule, full, to_tan)
         return res
     else:
         return expr
 
-def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, sign):
+def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, sign, to_tan):
     """
     rule function for replace_add1
     """
@@ -555,11 +555,13 @@ def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, 
                 if (ex1 >= 0 and ex2 >= 0) or (ex1 <= 0 and ex2 <= 0):
                     op = 1
                     hv = g(x)**2
-                elif ex1 < 0 and ex2 > 0:
+                elif to_tan and ex1 < 0 and ex2 > 0:
                     op = 2
                     hv = -sgn*h2(x)**-ex1 * g(x)**(ex1 + ex2)
                 else:
-                    assert ex1 > 0 and ex2 < 0
+                    #assert ex1 > 0 and ex2 < 0
+                    if not to_tan:
+                        return None
                     op = 2
                     hv = -sgn*h1(x)**-ex2 * f(x)**(ex1 + ex2)
             else:
@@ -577,12 +579,14 @@ def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, 
                 if (ex1 >= 0 and ex2 >= 0) or (ex1 <= 0 and ex2 <= 0):
                     op = 1
                     hv = -sgn*f(x)**2
-                elif ex1 < 0 and ex2 > 0:
+                elif to_tan and ex1 < 0 and ex2 > 0:
                     # f(x)**ex1*g**ex2 = h2(x)**-ex1 * g**(ex1 + ex2)
                     op = 2
                     hv = -sgn*h2(x)**-ex1 * g(x)**(ex1 + ex2)
                 else:
                     # ex1 > 0 and ex2 < 0:
+                    if not to_tan:
+                        return None
                     op = 2
                     hv = -sgn*h1(x)**-ex2 * f(x)**(ex1 + ex2)
             else:
@@ -602,11 +606,13 @@ def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, 
                 if (ex1 >= 0 and ex2 >= 0) or (ex1 <= 0 and ex2 <= 0):
                     op = 1
                     hv = g(x)**2
-                elif ex1 < 0 and ex2 > 0:
+                elif to_tan and ex1 < 0 and ex2 > 0:
                     op = 2
                     hv = h2(x)**-ex1 * g(x)**(ex1 + ex2)
                 else:
-                    assert ex1 > 0 and ex2 < 0
+                    #assert ex1 > 0 and ex2 < 0
+                    if not to_tan:
+                        return None
                     op = 2
                     hv = h1(x)**-ex2 * f(x)**(ex1 + ex2)
             else:
@@ -624,11 +630,13 @@ def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, 
                 if (ex1 >= 0 and ex2 >= 0) or (ex1 <= 0 and ex2 <= 0):
                     op = 1
                     hv = sgn*f(x)**2
-                elif ex1 < 0 and ex2 > 0:
+                elif to_tan and ex1 < 0 and ex2 > 0:
                     op = 2
                     hv = sgn*h2(x)**-ex1 * g(x)**(ex1 + ex2)
                 else:
-                    assert ex1 > 0 and ex2 < 0
+                    #assert ex1 > 0 and ex2 < 0
+                    if not to_tan:
+                        return None
                     op = 2
                     hv = sgn*h1(x)**-ex2 * f(x)**(ex1 + ex2)
 
@@ -642,7 +650,7 @@ def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, 
         gv = Mul(*[g(xx)**yy for xx, yy in fact2.items() if xx != x])
     return fv, gv, hv
 
-def _rule_replace_add2(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, sign):
+def _rule_replace_add2(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, sign, to_tan):
     """
     helper function for replace_add2
     """
@@ -683,7 +691,7 @@ def _rule_replace_add2(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, 
     return fv, gv, hv
 
 
-def _rule_replace_add_fgfg(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgs, sign):
+def _rule_replace_add_fgfg(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgs, sign, to_tan):
     """
     helper function for replace_add_fgfg
     """
@@ -738,7 +746,7 @@ def _rule_replace_add_fgfg(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, s
             hv = h3(x, sign)
     return fv, gv, hv
 
-def replace_add_fgfg(expr, f, g, h1, h2, h3, full=True):
+def replace_add_fgfg(expr, f, g, h1, h2, h3, full=True, to_tan=True):
     """
     Inverse of sum or difference of arguments
 
@@ -758,10 +766,10 @@ def replace_add_fgfg(expr, f, g, h1, h2, h3, full=True):
     replace ``f(x) + sign*g(x)``           with ``h3(x, y, sign)``
     """
     rule = _rule_replace_add_fgfg
-    expr = replace_add_gen(expr, f, g, h1, h2, h3, None, rule, True)
+    expr = replace_add_gen(expr, f, g, h1, h2, h3, None, rule, full)
     return expr
 
-def replace_add1(expr, f, g, sgn, h1, h2, full=True):
+def replace_add1(expr, f, g, sgn, h1, h2, full=True, to_tan=True):
     """
     replace 1 - sgn*f(x)**2       -> g(x)**2
     replace 1 - g(x)**2           -> sgn*f(x)**2
@@ -771,7 +779,7 @@ def replace_add1(expr, f, g, sgn, h1, h2, full=True):
     f, g are sin, cos or sinh, cosh
     """
     rule = _rule_replace_add1
-    expr = replace_add_gen(expr, f, g, h1, h2, None, sgn, rule, True)
+    expr = replace_add_gen(expr, f, g, h1, h2, None, sgn, rule, full, to_tan)
     return expr
 
 def replace_add2(expr, f, g, sgn, full=True):
@@ -779,5 +787,5 @@ def replace_add2(expr, f, g, sgn, full=True):
     Replace f(x)**2 + sgn*g(x)**2 -> 1
     """
     rule = _rule_replace_add2
-    expr = replace_add_gen(expr, f, g, None, None, None, sgn, rule, True)
+    expr = replace_add_gen(expr, f, g, None, None, None, sgn, rule, full)
     return expr

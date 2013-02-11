@@ -1607,7 +1607,6 @@ def _expand_exp(expr):
 @cacheit
 def __trigsimp(expr, deep=False, to_tan=False):
     """recursive helper for trigsimp"""
-
     if expr.is_Mul:
         # do some simplifications like sin(x)/cos(x) -> tan(x):
         if not expr.is_commutative:
@@ -1671,8 +1670,8 @@ def __trigsimp(expr, deep=False, to_tan=False):
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
-        expr = replace_add1(expr, sin, cos, 1, tan, cot)
-        expr = replace_add1(expr, sinh, cosh, -1, tanh, coth)
+        expr = replace_add1(expr, sin, cos, 1, tan, cot, to_tan=to_tan)
+        expr = replace_add1(expr, sinh, cosh, -1, tanh, coth, to_tan=to_tan)
 
     elif expr.is_Mul or expr.is_Pow or deep and expr.args:
         expr = expr.func(*[_trigsimp(a, deep, to_tan) for a in expr.args])
