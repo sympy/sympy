@@ -27,11 +27,11 @@ def treeapply(tree, join, leaf=identity):
     >>> treeapply(tree, {list: add, tuple: mul})
     30
     """
-    if type(tree) in join:
-        return join[type(tree)](*map(partial(treeapply, join=join, leaf=leaf),
-                                     tree))
-    else:
-        return leaf(tree)
+    for typ in join:
+        if isinstance(tree, typ):
+            return join[typ](*map(partial(treeapply, join=join, leaf=leaf),
+                                  tree))
+    return leaf(tree)
 
 def greedy(tree, objective=identity, **kwargs):
     """ Execute a strategic tree.  Select alternatives greedily
