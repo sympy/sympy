@@ -17,13 +17,16 @@ def treeapply(tree, join, leaf=identity):
     --------
 
     >>> from sympy.rules.tree import treeapply
-    >>> from sympy.core.compatibility import reduce
     >>> tree = ([3, 3], [4, 1])
     >>> treeapply(tree, {list: min, tuple: max})
     3
 
     >>> add = lambda *args: sum(args)
-    >>> mul = lambda *args: reduce(lambda a, b: a*b, args, 1)
+    >>> def mul(*args):
+    ...     total = 1
+    ...     for arg in args:
+    ...         total *= arg
+    ...     return total
     >>> treeapply(tree, {list: add, tuple: mul})
     30
     """
