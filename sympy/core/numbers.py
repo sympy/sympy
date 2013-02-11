@@ -11,6 +11,7 @@ import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from sympy.mpmath.ctx_mp import mpnumeric
 from sympy.mpmath.libmp.libmpf import (
+    finf as _mpf_inf, fninf as _mpf_ninf,
     fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize)
 
 import decimal
@@ -193,8 +194,6 @@ class Number(AtomicExpr):
       Rational(1) + sqrt(Rational(2))
     """
     is_commutative = True
-    is_bounded = True
-    is_finite = True
     is_number = True
 
     __slots__ = []
@@ -285,6 +284,12 @@ class Number(AtomicExpr):
             return -new
         return self  # there is no other possibility
 
+    def _eval_is_bounded(self):
+        return True
+
+    def _eval_is_finite(self):
+        return True
+
     @classmethod
     def class_key(cls):
         return 1, 0, 'Number'
@@ -373,10 +378,6 @@ class Number(AtomicExpr):
         return super(Number, self).__hash__()
 
     def is_constant(self, *wrt, **flags):
-        return True
-
-    @property
-    def is_number(self):
         return True
 
     def as_coeff_mul(self, *deps):
@@ -559,9 +560,8 @@ class Float(Number):
     """
     __slots__ = ['_mpf_', '_prec']
 
+    is_rational = True
     is_real = True
-    is_irrational = False
-    is_integer = False
 
     is_Float = True
 
@@ -708,24 +708,38 @@ class Float(Number):
     def _as_mpf_op(self, prec):
         return self._mpf_, max(prec, self._prec)
 
-    def _eval_is_positive(self):
-        return self.num > 0
+    def _eval_is_bounded(self):
+        if self._mpf_ in (_mpf_inf, _mpf_ninf):
+            return False
+        return True
+
+    def _eval_is_finite(self):
+        if self._mpf_ in (_mpf_inf, _mpf_ninf, _mpf_zero):
+            return False
+        return True
+
+    def _eval_is_integer(self):
+        return self._mpf_ == _mpf_zero
 
     def _eval_is_negative(self):
+        if self._mpf_ == _mpf_ninf:
+            return True
+        if self._mpf_ == _mpf_inf:
+            return False
         return self.num < 0
 
+    def _eval_is_positive(self):
+        if self._mpf_ == _mpf_inf:
+            return True
+        if self._mpf_ == _mpf_ninf:
+            return False
+        return self.num > 0
+
+    def _eval_is_zero(self):
+        return self._mpf_ == _mpf_zero
+
     def __nonzero__(self):
-        # do not base answer on `man` alone:
-        # >>> mpf('0')._mpf_
-        # (0, 0L, 0, 0)
-        # >>> mpf('nan')._mpf_
-        # (0, 0L, -123, -1)
-        # >>> mpf('inf')._mpf_
-        # (0, 0L, -456, -2)
-        # >>> mpf('-inf')._mpf_
-        # (1, 0L, -789, -3)
-        sign, man, expt, bc = self._mpf_
-        return not (man == 0 and bc == 0)
+        return self._mpf_ != _mpf_zero
 
     def __neg__(self):
         return Float._new(mlib.mpf_neg(self._mpf_), self._prec)
@@ -801,6 +815,8 @@ class Float(Number):
         return Float._new(mlib.mpf_abs(self._mpf_), self._prec)
 
     def __int__(self):
+        if self._mpf_ == _mpf_zero:
+            return 0
         return int(mlib.to_int(self._mpf_))  # uses round_fast = round_down
 
     def __eq__(self, other):

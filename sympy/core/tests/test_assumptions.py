@@ -355,10 +355,6 @@ def test_neg_symbol_positive():
     assert x.is_nonpositive is True
     assert x.is_negative is True
     assert x.is_nonnegative is False
-
-
-def test_neg_symbol_positive2():
-    x = -Symbol('x', positive=True)
     assert x.is_zero is False
     assert x.is_nonzero is True
 
@@ -381,6 +377,88 @@ def test_neg_symbol_nonpositive():
     assert x.is_nonnegative is True
     assert x.is_zero is None
     assert x.is_nonzero is None
+
+
+def test_symbol_falsepositive():
+    x = Symbol('x', positive=False)
+    assert x.is_positive is False
+    assert x.is_nonpositive is None
+    assert x.is_negative is None
+    assert x.is_nonnegative is None
+    assert x.is_zero is None
+    assert x.is_nonzero is None
+
+
+@XFAIL
+def test_neg_symbol_falsepositive():
+    x = -Symbol('x', positive=False)
+    assert x.is_positive is None
+    assert x.is_nonpositive is None
+    assert x.is_negative is False  # this currently returns None
+    assert x.is_nonnegative is None
+    assert x.is_zero is None
+    assert x.is_nonzero is None
+
+
+def test_symbol_falsepositive_real():
+    x = Symbol('x', positive=False, real=True)
+    assert x.is_positive is False
+    assert x.is_nonpositive is True
+    assert x.is_negative is None
+    assert x.is_nonnegative is None
+    assert x.is_zero is None
+    assert x.is_nonzero is None
+
+
+def test_neg_symbol_falsepositive_real():
+    x = -Symbol('x', positive=False, real=True)
+    assert x.is_positive is None
+    assert x.is_nonpositive is None
+    assert x.is_negative is False
+    assert x.is_nonnegative is True
+    assert x.is_zero is None
+    assert x.is_nonzero is None
+
+
+def test_symbol_falsenonnegative():
+    x = Symbol('x', nonnegative=False)
+    assert x.is_positive is False
+    assert x.is_nonpositive is None
+    assert x.is_negative is None
+    assert x.is_nonnegative is False
+    assert x.is_zero is False
+    assert x.is_nonzero is True
+
+
+@XFAIL
+def test_neg_symbol_falsenonnegative():
+    x = -Symbol('x', nonnegative=False)
+    assert x.is_positive is None
+    assert x.is_nonpositive is False  # this currently returns None
+    assert x.is_negative is False  # this currently returns None
+    assert x.is_nonnegative is None
+    assert x.is_zero is False  # this currently returns None
+    assert x.is_nonzero is True  # this currently returns None
+
+
+def test_symbol_falsenonnegative_real():
+    x = Symbol('x', nonnegative=False, real=True)
+    assert x.is_positive is False
+    assert x.is_nonpositive is True
+    assert x.is_negative is True
+    assert x.is_nonnegative is False
+    assert x.is_zero is False
+    assert x.is_nonzero is True
+
+
+def test_neg_symbol_falsenonnegative_real():
+    x = -Symbol('x', nonnegative=False, real=True)
+    assert x.is_positive is True
+    assert x.is_nonpositive is False
+    assert x.is_negative is False
+    assert x.is_nonnegative is True
+    assert x.is_zero is False
+    assert x.is_nonzero is True
 
 
 def test_prime():
