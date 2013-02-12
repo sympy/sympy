@@ -1367,12 +1367,12 @@ def trigsimp(expr, **opts):
     Using `method="groebner"` (or `"combined"`) can sometimes lead to a lot
     more simplification:
 
-    >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
+    >>> e = (-sin(x) + 1)**2/cos(x)**2 + 2 + cos(x)**2/(-sin(x) + 1)**2
     >>> trigsimp(e)
-    (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
-    >>> trigsimp(e, method="groebner")
-    2/cos(x)
-
+    (-sin(x) + 1)**2/cos(x)**2 + 2 + cos(x)**2/(-sin(x) + 1)**2
+    >>> r = trigsimp(e, method="groebner")
+    >>> r in (4/cos(x)**2, 4/(-sin(x)**2 + 1))
+    True
     """
     from sympy import tan, sec, csc
 
@@ -1687,13 +1687,14 @@ def __trigsimp(expr, deep=False, to_tan=False):
         if _trig_count(new) < _trig_count(expr):
             expr = new
         e = expr.atoms(exp)
-        # see if rewriting the expression in terms of ``exp``
-        # one gets an expression independent from ``exp``
+        # see if rewriting the expression in terms of ``exp`` and back
+        # one gets a simpler expression
         n, d = expr.as_numer_denom()
+        n = _mexpand(n)
         n = n.rewrite(exp, deep=deep)
         n = _mexpand(n)
         n = _expand_exp(n)
-        fnew = n/d
+        fnew = together(n/d)
         if _trig_count(fnew) < _trig_count(expr):
             if not (fnew.atoms(exp) - e):
                 return fnew

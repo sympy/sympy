@@ -147,6 +147,7 @@ def test_trigsimp1a():
     assert trigsimp(expr) == 0
     expr1 = _mexpand(expr**2)
     assert trigsimp(expr1) == 0
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)) == 2/cos(x)
 
 
 def test_trigsimp2():
