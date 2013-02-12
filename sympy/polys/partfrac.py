@@ -24,9 +24,13 @@ def apart(f, x=None, full=False, **options):
     >>> from sympy.polys.partfrac import apart
     >>> from sympy.abc import x, y
 
+    By default, using the undetermined coefficients method:
     >>> apart(y/(x + 2)/(x + 1), x)
     -y/(x + 2) + y/(x + 1)
 
+    You can choose the other algorithm by setting full=True:
+    >>> apart(y/(x + 2)/(x + 1), x, 1)
+    -y/(x + 2) + y/(x + 1)
     """
     allowed_flags(options, [])
 
