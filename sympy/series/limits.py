@@ -53,7 +53,7 @@ def limit(e, z, z0, dir="+"):
     # If no factorial term is present, e should remain unchanged.
     # factorial is defined to be zero for negative inputs (which
     # differs from gamma) so only rewrite for positive z0.
-    if z0 >= 0:
+    if z0.is_positive:
         e = e.rewrite(factorial, gamma)
 
     if e.func is tan:
