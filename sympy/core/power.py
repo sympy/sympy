@@ -627,14 +627,20 @@ class Pow(Expr):
         else:
             return result
 
-
-    def _eval_expand_nonint(self, **hints):
+    def as_piecewise(self):
+        """
+        Return a binomial expr like (a + b)**n, where n is not an integer,
+        as a Piecewise function.
+        """
         from sympy.series.series import series
         from sympy.functions.elementary.piecewise import Piecewise
 
         base = self.base
         exp = self.exp
-        
+
+        if exp.is_Integer:
+            return self
+
         result = []
         if len(base.args) != 2 or not exp.is_Number:
             return Pow(base, exp)
