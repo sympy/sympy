@@ -1584,7 +1584,7 @@ def _replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph):
 
 _idn = lambda x: x
 _midn = lambda x: -x
-
+_one = lambda x: S.One
 
 def _match_div_rewrite(expr, i):
     """helper for __trigsimp"""
@@ -1605,7 +1605,7 @@ def _match_div_rewrite(expr, i):
             _midn, sin, _midn)
     elif i == 5:
          expr = _replace_mul_fpowxgpow(expr, cot, tan,
-            _idn, _idn, _idn)
+            _idn, _one, _idn)
     # i in (6, 7) is skipped
     elif i == 8:
          expr = _replace_mul_fpowxgpow(expr, sinh, cosh,
@@ -1624,7 +1624,7 @@ def _match_div_rewrite(expr, i):
             _midn, sinh, _midn)
     elif i == 13:
         expr = _replace_mul_fpowxgpow(expr, coth, tanh,
-            _idn, _idn, _idn)
+            _idn, _one, _idn)
     else:
         return None
     return expr
