@@ -644,7 +644,7 @@ def TR10i(rv):
     ========
 
     >>> from sympy.simplify.fu import TR10i
-    >>> from sympy.simplify.simplify_utils import TR10i
+    >>> from sympy.simplify.simplify.fu import TR10i
     >>> from sympy import cos, sin, pi, Add, Mul, sqrt, Symbol
     >>> from sympy.abc import x, y
 
@@ -768,8 +768,10 @@ def TR10i(rv):
         return rv
 
     rv = process_common_addends(rv, do, lambda x: tuple(ordered(x.free_symbols)))
+
+    # need to check for induceable pairs in ratio of sqrt(3):1 that appeared
+    # in different lists when sorting by coefficient
     while rv.is_Add:
-        # need to check for induceable pairs in ratios of sqrt(3):1
         byrad = defaultdict(list)
         for a in rv.args:
             hit = 0
@@ -782,22 +784,25 @@ def TR10i(rv):
             if not hit:
                 byrad[S.One].append(a)
 
+        # no need to check all pairs -- just check for the onees
+        # that have the right ratio
         args = []
-        for (a, b) in combinations(byrad, 2):
-            if a/b in (_ROOT3, _invROOT3):
-                for i in range(len(byrad[a])):
-                    if byrad[a][i] is None:
-                        continue
-                    for j in range(len(byrad[b])):
-                        if byrad[b][j] is None:
+        for a in byrad:
+            for b in [_ROOT3*a, _invROOT3]:
+                if b in byrad:
+                    for i in range(len(byrad[a])):
+                        if byrad[a][i] is None:
                             continue
-                        was = Add(byrad[a][i] + byrad[b][j])
-                        new = do(was)
-                        if new != was:
-                            args.append(new)
-                            byrad[a][i] = None
-                            byrad[b][j] = None
-                            break
+                        for j in range(len(byrad[b])):
+                            if byrad[b][j] is None:
+                                continue
+                            was = Add(byrad[a][i] + byrad[b][j])
+                            new = do(was)
+                            if new != was:
+                                args.append(new)
+                                byrad[a][i] = None
+                                byrad[b][j] = None
+                                break
         if args:
             rv = Add(*(args + [Add(*filter(None, v)) for v in byrad.values()]))
         else:
