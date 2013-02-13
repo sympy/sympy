@@ -25,7 +25,7 @@ class Compound(object):
     """
     def __init__(self, op, args):
         self.op = op
-        self.args = args
+        self.args = tuple(args)
 
     def __eq__(self, other):
         return (type(self) == type(other) and self.op == other.op and
@@ -36,6 +36,7 @@ class Compound(object):
 
     def __str__(self):
         return "%s[%s]" % (str(self.op), ', '.join(map(str, self.args)))
+    __repr__ = __str__
 
 class Variable(object):
     """ A Wild token """
@@ -50,6 +51,7 @@ class Variable(object):
 
     def __str__(self):
         return "Variable(%s)" % str(self.arg)
+    __repr__ = __str__
 
 class CondVariable(object):
     """ A wild token that matches conditionally
@@ -71,6 +73,14 @@ class CondVariable(object):
 
     def __str__(self):
         return "CondVariable(%s)" % str(self.arg)
+    __repr__ = __str__
+
+def reify(x, s):
+    if x in s:
+        return s[x]
+    if isinstance(x, Compound):
+        return Compound(reify(x.op, s), [reify(arg, s) for arg in x.args])
+    return x
 
 def unify(x, y, s=None, **fns):
     """ Unify two expressions
@@ -222,3 +232,13 @@ def index(it, ind):
     [20, 30, 10]
     """
     return type(it)([it[i] for i in ind])
+
+# Functions to define tree traversals over Compounds
+def is_leaf(x):
+    return not isinstance(x, Compound)
+def children(x):
+    return x.args
+def new(op, *args):
+    return Compound(op, args)
+def op(x):
+    return x.op

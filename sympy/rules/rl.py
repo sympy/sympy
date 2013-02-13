@@ -152,7 +152,7 @@ def rebuild(expr):
     This forces canonicalization and removes ugliness introduced by the use of
     Basic.__new__
     """
-    try:
+    if isinstance(expr, Basic) and not expr.is_Atom:
         return type(expr)(*map(rebuild, expr.args))
-    except:
+    else:
         return expr
