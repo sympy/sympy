@@ -25,5 +25,5 @@ ImmutableDenseMatrix = ImmutableMatrix
 
 from expressions import (Block, BlockDiagMatrix, BlockMatrix, FunctionMatrix,
         Identity, Inverse, MatAdd, MatMul, MatPow, MatrixExpr, MatrixSymbol,
-        Trace, Transpose, ZeroMatrix, block_collapse, matrix_symbols, Adjoint,
-        hadamard_product, HadamardProduct)
+        Trace, Transpose, ZeroMatrix, blockcut, block_collapse, matrix_symbols,
+        Adjoint, hadamard_product, HadamardProduct)
