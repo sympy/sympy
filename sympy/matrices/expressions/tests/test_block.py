@@ -14,4 +14,6 @@ def test_entry():
     assert B[0,0] == X[a, c]
     assert B[k,l] == X[a+k, c+l]
 
-
+def test_on_diag():
+    assert not Block(X, (a, b), (c, d)).on_diag
+    assert Block(X, (a, b), (a, b)).on_diag

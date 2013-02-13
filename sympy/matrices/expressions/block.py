@@ -12,3 +12,7 @@ class Block(MatrixExpr):
 
     def _entry(self, i, j):
         return self.parent._entry(i + self.rowbounds[0], j + self.colbounds[0])
+
+    @property
+    def on_diag(self):
+        return self.rowbounds == self.colbounds
