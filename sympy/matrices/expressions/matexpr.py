@@ -1,6 +1,6 @@
 from functools import wraps
 
-from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic
+from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import SympifyError
 from sympy.functions import transpose, conjugate, adjoint
@@ -182,7 +182,7 @@ class MatrixExpr(Basic):
 
     def valid_index(self, i, j):
         def is_valid(idx):
-            return isinstance(idx, (int, Integer, Symbol))
+            return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
                 0 <= i < self.rows and 0 <= j < self.cols)
 
