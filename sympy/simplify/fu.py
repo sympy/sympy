@@ -525,6 +525,18 @@ def TR9(rv):
     >>> TR9(cos(3) + cos(3)*cos(2))
     cos(3) + cos(2)*cos(3)
 
+    >>> from sympy.abc import x
+    >>> from sympy import Add, Mul
+    >>> c = cos(x); s = sin(x)
+    >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
+    ...   for a in ((c, s), (s, c)):
+    ...    args = zip(si, a)
+    ...    ex = Add(*[Mul(*ai) for ai in args])
+    ...    t = TR9(ex)
+    ...    if (a[0].func == a[1].func and (ex - t.expand(trig=True) or t.is_Add)
+    ...         or a[1].func != a[0].func and ex != t):
+    ...        print 'fail', ex
+    ...
     """
     rv = bottom_up(rv, TR9)
     if not rv.is_Add:
@@ -644,7 +656,6 @@ def TR10i(rv):
     ========
 
     >>> from sympy.simplify.fu import TR10i
-    >>> from sympy.simplify.simplify.fu import TR10i
     >>> from sympy import cos, sin, pi, Add, Mul, sqrt, Symbol
     >>> from sympy.abc import x, y
 
@@ -674,9 +685,9 @@ def TR10i(rv):
     >>> TR10i(cos(x)/sqrt(6) + sin(x)/sqrt(2) + cos(y)/sqrt(6)/3 + sin(y)/sqrt(2)/3)
     sqrt(6)*sin(x + pi/6)/3 + sqrt(6)*sin(y + pi/6)/9
     >>> TR10i(cos(x) + sqrt(3)*sin(x) + 2*sqrt(3)*cos(x + pi/6))
-    4*sin(x + pi/3)
-    >>> TR10i(cos(x) + sqrt(3)*sin(x) + 2*sqrt(3)*cos(x + pi/6) + sin(x + pi/3))
-    5*sin(x + pi/3)
+    4*cos(x)
+    >>> TR10i(cos(x) + sqrt(3)*sin(x) + 2*sqrt(3)*cos(x + pi/6) + 4*sin(x))
+    4*sqrt(2)*sin(x + pi/4)
 
     >>> A = Symbol('A', commutative=False)
     >>> TR10i(sqrt(2)*cos(x)*A + sqrt(6)*sin(x)*A)
@@ -685,7 +696,7 @@ def TR10i(rv):
 
     >>> c = cos(x); s = sin(x); h = sin(y); r = cos(y)
     >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
-    ...   for a in ((c*r, s*h), (c*h,s*r)): # explit
+    ...   for a in ((c*r, s*h), (c*h,s*r)): # explicit 2-args
     ...    args = zip(si, a)
     ...    ex = Add(*[Mul(*ai) for ai in args])
     ...    t = TR10i(ex)
@@ -749,7 +760,7 @@ def TR10i(rv):
             return rv
 
         # two-arg Add
-        split = trig_split(*args, two=True)
+        split = trig_split(*args, **dict(two=True))
         if not split:
             return rv
         gcd, n1, n2, a, b, same = split
@@ -806,6 +817,7 @@ def TR10i(rv):
         if args:
             rv = Add(*(args + [Add(*filter(None, v)) for v in byrad.values()]))
         else:
+            rv = do(rv)  # final pass to resolve any new unduceable pairs
             break
 
     return rv
@@ -1269,7 +1281,7 @@ def trig_split(a, b, two=False):
     cob, cb, sb = m
 
     # check them
-    if (not ca) and cb:
+    if (not ca) and cb or ca and ca.func is sin:
         coa, ca, sa, cob, cb, sb = cob, cb, sb, coa, ca, sa
         n1, n2 = n2, n1
     if two is False:  # need cos(x) and cos(y) or sin(x) and sin(y)
