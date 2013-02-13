@@ -21,7 +21,12 @@ def _free_symbols(function, limits):
 
 
 class Sum(Expr):
-    """Represents unevaluated summation."""
+    """Represents unevaluated summation.
+    For example, Sum(i,(i,2,10))
+    represents the summation of the sequence 2,3,4,...,9,10
+
+    deep
+    """
 
     __slots__ = ['is_commutative']
 
@@ -136,7 +141,12 @@ class Sum(Expr):
     def doit(self, **hints):
         #if not hints.get('sums', True):
         #    return self
-        f = self.function
+
+        if hints.get('deep', True):
+            f = self.function.doit(**hints)
+        else:
+            f = self.function
+
         for limit in self.limits:
             i, a, b = limit
             dif = b - a
