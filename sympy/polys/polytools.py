@@ -1860,7 +1860,8 @@ class Poly(Expr):
 
     def nth(f, *N):
         """
-        Returns the ``n``-th coefficient of ``f``.
+        Returns the ``n``-th coefficient of ``f`` where ``N`` are the
+        exponents of the generators in the term of interest.
 
         Examples
         ========
@@ -1872,7 +1873,10 @@ class Poly(Expr):
         2
         >>> Poly(x**3 + 2*x*y**2 + y**2, x, y).nth(1, 2)
         2
-
+        >>> Poly(4*sqrt(x)*y)
+        Poly(4*y*sqrt(x), y, sqrt(x), domain='ZZ')
+        >>> _.nth(1, 1)
+        4
         """
         if hasattr(f.rep, 'nth'):
             result = f.rep.nth(*map(int, N))

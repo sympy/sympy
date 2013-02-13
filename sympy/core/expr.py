@@ -959,9 +959,8 @@ class Expr(Basic, EvalfMixin):
 
     def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient from the term containing "x**n" or None if
-        there is no such term. If ``n`` is zero then all terms independent of
-        x will be returned.
+        Returns the coefficient from the term(s) containing "x**n" or None. If ``n``
+        is zero then all terms independent of ``x`` will be returned.
 
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
@@ -969,7 +968,11 @@ class Expr(Basic, EvalfMixin):
         See Also
         ========
 
-        as_coefficient
+        as_coefficient: separate the expression into a coefficient and factor
+        as_coeff_Add: separate the additive constant from an expression
+        as_coeff_Mul: separate the multiplicative constant from an expression
+        as_independent: separate x-dependent terms/factors from others
+        sympy.polys.polytools.nth: efficiently find the single coefficient of a monomial in Poly
 
         Examples
         ========
@@ -1061,13 +1064,6 @@ class Expr(Basic, EvalfMixin):
         >>> (n*m + x*m*n).coeff(m*n, right=1)
         1
 
-        See Also
-        ========
-
-        as_coeff_Add: a method to separate the additive constant from an expression
-        as_coeff_Mul: a method to separate the multiplicative constant from an expression
-        as_independent: a method to separate x dependent terms/factors from others
-
         """
         x = sympify(x)
         if not isinstance(x, Basic):
@@ -1077,6 +1073,9 @@ class Expr(Basic, EvalfMixin):
 
         if not x:
             return S.Zero
+
+        if self.is_Poly:
+            self = self.as_expr()
 
         if x == self:
             if n == 1:
@@ -1274,7 +1273,7 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import E, pi, sin, I, symbols
+        >>> from sympy import E, pi, sin, I, symbols, Poly
         >>> from sympy.abc import x, y
 
         >>> E.as_coefficient(E)
@@ -1283,9 +1282,29 @@ class Expr(Basic, EvalfMixin):
         2
         >>> (2*sin(E)*E).as_coefficient(E)
 
+        Two terms have E in them so a sum is returned. (If one were
+        desiring the coefficient of the term exactly matching E then
+        the constant from the returned expression could be selected.
+        Or, for greater precision, the nth method of Poly can be used
+        to indicate the desired term from which the coefficient is
+        desired.  XXX add note about new Poly method that accepts expr to describe momomial)
+
         >>> (2*E + x*E).as_coefficient(E)
         x + 2
+        >>> _.args[0]  # just want the exact match
+        2
+        >>> Poly(2*E + x*E)
+        Poly(x*E + 2*E, x, E, domain='ZZ')
+        >>> _.nth(0,1)
+        2
+
+        Since the following cannot be written as a product containing
+        E as a factor, None is returned. (If the coefficient 2*x is
+        desired then the ``coeff`` method should be used.)
+
         >>> (2*E*x + x).as_coefficient(E)
+        >>> (2*E*x + x).coeff(E)
+        2*x
 
         >>> (E*(x + 1) + x).as_coefficient(E)
 
