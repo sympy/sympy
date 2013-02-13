@@ -1,7 +1,8 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-from sympy.core import S, C, Symbol, Mul, Tuple
-from sympy.polys.polyutils import PicklableWithSlots
+from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify
+from sympy.core.compatibility import iterable
+from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import cythonized
 from sympy.polys.polyerrors import ExactQuotientFailed
 
@@ -521,8 +522,15 @@ class Monomial(PicklableWithSlots):
 
     __slots__ = ['exponents', 'gens']
 
-    def __init__(self, exponents, gens=None):
-        self.exponents = tuple(exponents)
+    def __init__(self, monom, gens=None):
+        if not iterable(monom):
+            rep, gens = dict_from_expr(sympify(monom), gens=gens)
+            if len(rep) == 1 and rep.values()[0] == 1:
+                monom = rep.keys()[0]
+            else:
+                raise ValueError("Expected a monomial got %s" % monom)
+
+        self.exponents = tuple(map(int, monom))
         self.gens = gens
 
     def rebuild(self, exponents, gens=None):

@@ -1827,6 +1827,37 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'EC')
 
+    def coeff(f, monom):
+        """
+        Returns the coefficient of the given monomial of ``f``.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, exp
+        >>> from sympy.abc import x, y
+
+        >>> p = Poly(24*x*y*exp(8) + 23*x, x, y)
+
+        >>> p.coeff(x)
+        23
+        >>> p.coeff(y)
+        0
+        >>> p.coeff(x*y)
+        24*exp(8)
+
+        Note that ``Expr.coeff()`` behaves differently::
+
+        >>> p.as_expr().coeff(x)
+        24*y*exp(8) + 23
+        >>> p.as_expr().coeff(y)
+        24*x*exp(8)
+        >>> p.as_expr().coeff(x*y)
+        24*exp(8)
+
+        """
+        return f.nth(*Monomial(monom, f.gens).exponents)
+
     def nth(f, *N):
         """
         Returns the ``n``-th coefficient of ``f``.
