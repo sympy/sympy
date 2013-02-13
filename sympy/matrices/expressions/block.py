@@ -1,5 +1,22 @@
 from sympy.matrices.expressions.matexpr  import MatrixExpr
 from sympy import Tuple, Basic
+from sympy.functions.elementary.integers import floor
+
+def normalize(i, parentsize):
+    if isinstance(i, slice):
+        i = (i.start, i.stop, i.step)
+    if not isinstance(i, (tuple, list, Tuple)):
+        return (i, i+1, 1)
+    i = list(i)
+    if len(i) == 2:
+        i.append(1)
+    if i[0] == None:
+        i[0] = 0
+    if i[1] == None:
+        i[1] = parentsize
+    if i[2] == None:
+        i[2] = 1
+    return tuple(i)
 
 class Block(MatrixExpr):
     """ A block of a Matrix Expression
@@ -20,32 +37,26 @@ class Block(MatrixExpr):
     [6, 7]
     """
     parent = property(lambda self: self.args[0])
-    rowbounds = property(lambda self: self.args[1])
-    colbounds = property(lambda self: self.args[2])
+    rowslice = property(lambda self: self.args[1])
+    colslice = property(lambda self: self.args[2])
 
-    def __new__(cls, parent, rowbounds, colbounds):
-        if not isinstance(rowbounds, (tuple, list, Tuple)):
-            rowbounds = rowbounds, rowbounds + 1
-        if not isinstance(colbounds, (tuple, list, Tuple)):
-            colbounds = colbounds, colbounds + 1
-        if rowbounds[0] == None:
-            rowbounds = 0, rowbounds[1]
-        if rowbounds[1] == None:
-            rowbounds = rowbounds[0], parent.shape[0]
-        if colbounds[0] == None:
-            colbounds = 0, colbounds[1]
-        if colbounds[1] == None:
-            colbounds = colbounds[0], parent.shape[1]
-        return Basic.__new__(cls, parent, Tuple(*rowbounds), Tuple(*colbounds))
+    def __new__(cls, parent, rowslice, colslice):
+        rowslice = normalize(rowslice, parent.shape[0])
+        colslice = normalize(colslice, parent.shape[1])
+        return Basic.__new__(cls, parent, Tuple(*rowslice), Tuple(*colslice))
 
     @property
     def shape(self):
-        return (self.rowbounds[1] - self.rowbounds[0],
-                self.colbounds[1] - self.colbounds[0])
+        rows = self.rowslice[1] - self.rowslice[0]
+        rows = rows if self.rowslice[2] == 1 else floor(rows/self.rowslice[2])
+        cols = self.colslice[1] - self.colslice[0]
+        cols = cols if self.colslice[2] == 1 else floor(cols/self.colslice[2])
+        return rows, cols
 
     def _entry(self, i, j):
-        return self.parent._entry(i + self.rowbounds[0], j + self.colbounds[0])
+        return self.parent._entry(i*self.rowslice[2] + self.rowslice[0],
+                                  j*self.colslice[2] + self.colslice[0])
 
     @property
     def on_diag(self):
-        return self.rowbounds == self.colbounds
+        return self.rowslice == self.colslice
