@@ -4,6 +4,7 @@ import os
 import time
 from subprocess import Popen, check_call, PIPE, STDOUT
 import tempfile
+import shutil
 
 from latex import latex
 
@@ -117,101 +118,104 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
         latex_string = latex(expr, mode='inline', **latex_settings)
 
     cwd = os.getcwd()
-    os.chdir(tempfile.gettempdir())
 
-    p = Popen(['latex', '-halt-on-error'], stdin=PIPE, stdout=PIPE)
+    try:
+        tmp_dir = tempfile.mkdtemp()
+        os.chdir(tmp_dir)
 
-    _, perr = p.communicate(format % latex_string)
-    if p.returncode != 0:
-        raise SystemError("Failed to generate DVI output: %s", perr)
+        p = Popen(['latex', '-halt-on-error'], stdin=PIPE, stdout=PIPE)
 
-    for ext in ['aux', 'log']:
-        os.remove("texput." + ext)
+        _, perr = p.communicate(format % latex_string)
+        if p.returncode != 0:
+            raise SystemError("Failed to generate DVI output: %s", perr)
 
-    if output != "dvi":
-        command = {
-            "ps": "dvips -o texput.ps texput.dvi",
-            "pdf": "dvipdf texput.dvi texput.pdf",
-            "png": "dvipng -T tight -z 9 " +
-            "--truecolor -o texput.png texput.dvi",
-        }
+        if output != "dvi":
+            command = {
+                "ps": "dvips -o texput.ps texput.dvi",
+                "pdf": "dvipdf texput.dvi texput.pdf",
+                "png": "dvipng -T tight -z 9 " +
+                "--truecolor -o texput.png texput.dvi",
+            }
 
-        try:
-            p = Popen(command[output].split(), stdin=PIPE, stdout=PIPE)
-            _, perr = p.communicate()
-            if p.returncode != 0:
-                raise SystemError("Failed to generate %s output: %s" %
-                                  (output, perr))
+            try:
+                p = Popen(command[output].split(), stdin=PIPE, stdout=PIPE)
+                _, perr = p.communicate()
+                if p.returncode != 0:
+                    raise SystemError("Failed to generate %s output: %s" %
+                                      (output, perr))
+            except KeyError:
+                raise SystemError("Invalid output format: %s" % output)
+
+        src = "texput.%s" % (output)
+        src_file = None
+
+        if viewer == "file":
+            src_file = open(src, 'rb')
+        elif viewer == "pyglet":
+            try:
+                from pyglet import window, image, gl
+                from pyglet.window import key
+            except ImportError:
+                raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+
+            if output == "png":
+                from pyglet.image.codecs.png import PNGImageDecoder
+                img = image.load(src, decoder=PNGImageDecoder())
             else:
-                os.remove("texput.dvi")
-        except KeyError:
-            raise SystemError("Invalid output format: %s" % output)
+                raise SystemError("pyglet preview works only for 'png' files.")
 
-    src = "texput.%s" % (output)
-    src_file = None
+            offset = 25
 
-    if viewer == "file":
-        src_file = open(src, 'rb')
-    elif viewer == "pyglet":
-        try:
-            from pyglet import window, image, gl
-            from pyglet.window import key
-        except ImportError:
-            raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+            win = window.Window(
+                width=img.width + 2*offset,
+                height=img.height + 2*offset,
+                caption="sympy",
+                resizable=False
+            )
 
-        if output == "png":
-            from pyglet.image.codecs.png import PNGImageDecoder
-            img = image.load(src, decoder=PNGImageDecoder())
+            win.set_vsync(False)
+
+            try:
+                def on_close():
+                    win.has_exit = True
+
+                win.on_close = on_close
+
+                def on_key_press(symbol, modifiers):
+                    if symbol in [key.Q, key.ESCAPE]:
+                        on_close()
+
+                win.on_key_press = on_key_press
+
+                def on_expose():
+                    gl.glClearColor(1.0, 1.0, 1.0, 1.0)
+                    gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+
+                    img.blit(
+                        (win.width - img.width) / 2,
+                        (win.height - img.height) / 2
+                    )
+
+                win.on_expose = on_expose
+
+                while not win.has_exit:
+                    win.dispatch_events()
+                    win.flip()
+            except KeyboardInterrupt:
+                pass
+
+            win.close()
         else:
-            raise SystemError("pyglet preview works only for 'png' files.")
-
-        offset = 25
-
-        win = window.Window(
-            width=img.width + 2*offset,
-            height=img.height + 2*offset,
-            caption="sympy",
-            resizable=False
-        )
-
-        win.set_vsync(False)
-
+            with open(os.devnull, 'wb') as devnull:
+                check_call([viewer, src], stdout=devnull, stderr=STDOUT)
+            time.sleep(2)  # wait for the viewer to read data
+    finally:
         try:
-            def on_close():
-                win.has_exit = True
+            shutil.rmtree(tmp_dir) # delete directory
+        except OSError, e:
+            if e.errno != 2: # code 2 - no such file or directory
+                raise
 
-            win.on_close = on_close
-
-            def on_key_press(symbol, modifiers):
-                if symbol in [key.Q, key.ESCAPE]:
-                    on_close()
-
-            win.on_key_press = on_key_press
-
-            def on_expose():
-                gl.glClearColor(1.0, 1.0, 1.0, 1.0)
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
-                img.blit(
-                    (win.width - img.width) / 2,
-                    (win.height - img.height) / 2
-                )
-
-            win.on_expose = on_expose
-
-            while not win.has_exit:
-                win.dispatch_events()
-                win.flip()
-        except KeyboardInterrupt:
-            pass
-
-        win.close()
-    else:
-        with open(os.devnull, 'wb') as devnull:
-            check_call([viewer, src], stdout=devnull, stderr=STDOUT)
-        time.sleep(2)  # wait for the viewer to read data
-
-    os.remove(src)
     os.chdir(cwd)
 
     if src_file is not None:
