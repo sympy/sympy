@@ -28,6 +28,14 @@ class Block(MatrixExpr):
             rowbounds = rowbounds, rowbounds + 1
         if not isinstance(colbounds, (tuple, list, Tuple)):
             colbounds = colbounds, colbounds + 1
+        if rowbounds[0] == None:
+            rowbounds = 0, rowbounds[1]
+        if rowbounds[1] == None:
+            rowbounds = rowbounds[0], parent.shape[0]
+        if colbounds[0] == None:
+            colbounds = 0, colbounds[1]
+        if colbounds[1] == None:
+            colbounds = colbounds[0], parent.shape[1]
         return Basic.__new__(cls, parent, Tuple(*rowbounds), Tuple(*colbounds))
 
     @property

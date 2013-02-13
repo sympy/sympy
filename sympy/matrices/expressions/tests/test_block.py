@@ -23,3 +23,9 @@ def test_on_diag():
 def test_inputs():
     assert Block(X, 1, (2, 5)) == Block(X, (1, 2), (2, 5))
     assert Block(X, 1, (2, 5)).shape == (1, 3)
+
+def test_slicing():
+    assert X[1:5, 2:4] == Block(X, (1, 5), (2, 4))
+    assert X[1, 2:4] == Block(X, 1, (2, 4))
+    assert X[1:5, :].shape == (4, X.shape[1])
+    assert X[:, 1:5].shape == (X.shape[0], 4)

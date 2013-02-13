@@ -190,8 +190,15 @@ class MatrixExpr(Basic):
         if isinstance(key, tuple) and len(key) == 2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
-                raise NotImplementedError(
-                    "Slicing is not implemented for %s" % self.__class__.__name__)
+                if not isinstance(i, slice):
+                    i = slice(i, i+1, None)
+                if not isinstance(j, slice):
+                    i = slice(j, j+1, None)
+                if j.step not in (1, None) or i.step not in (1, None):
+                    raise NotImplementedError(
+                        "Slicing with steps is not implemented")
+                from sympy.matrices.expressions.block import Block
+                return Block(self, (i.start, i.stop), (j.start, j.stop))
             i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
                 return self._entry(i, j)
