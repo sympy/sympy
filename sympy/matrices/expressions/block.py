@@ -1,4 +1,5 @@
 from sympy.matrices.expressions.matexpr  import MatrixExpr
+from sympy import Tuple, Basic
 
 class Block(MatrixExpr):
     """ A block of a Matrix Expression
@@ -18,10 +19,16 @@ class Block(MatrixExpr):
     [2, 3]
     [6, 7]
     """
-
     parent = property(lambda self: self.args[0])
     rowbounds = property(lambda self: self.args[1])
     colbounds = property(lambda self: self.args[2])
+
+    def __new__(cls, parent, rowbounds, colbounds):
+        if not isinstance(rowbounds, (tuple, list, Tuple)):
+            rowbounds = rowbounds, rowbounds + 1
+        if not isinstance(colbounds, (tuple, list, Tuple)):
+            colbounds = colbounds, colbounds + 1
+        return Basic.__new__(cls, parent, Tuple(*rowbounds), Tuple(*colbounds))
 
     @property
     def shape(self):
