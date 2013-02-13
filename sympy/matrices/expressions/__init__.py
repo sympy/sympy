@@ -1,5 +1,6 @@
 """ A module which handles Matrix Expressions """
 
+from block import Block
 from blockmatrix import BlockMatrix, BlockDiagMatrix, block_collapse
 from funcmatrix import FunctionMatrix
 from inverse import Inverse
