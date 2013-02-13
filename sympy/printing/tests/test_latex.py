@@ -653,6 +653,8 @@ def test_latex_MatrixSlice():
     from sympy.matrices.expressions import MatrixSymbol
     assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
             r'X\left[:5, 1:9:2\right]'
+    assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
+            r'X\left[5, :5:2\right]'
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where

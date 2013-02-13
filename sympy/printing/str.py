@@ -223,11 +223,15 @@ class StrPrinter(Printer):
         _print_MatrixBase
 
     def _print_MatrixSlice(self, expr):
-        def strslice(s):
-            index = str(s[0]) if s[0] else ''
-            index += ':%s'%s[1]
-            index += ':%s'%self._print(s[2]) if s[2] != 1 else ''
-            return index
+        def strslice(x):
+            x = list(x)
+            if x[2] == 1:
+                del x[2]
+            if x[1] == x[0] + 1:
+                del x[1]
+            if x[0] == 0:
+                x[0] = ''
+            return ':'.join(map(self._print, x))
         return (self._print(expr.parent) + '[' +
                 strslice(expr.rowslice) + ', ' +
                 strslice(expr.colslice) + ']')
