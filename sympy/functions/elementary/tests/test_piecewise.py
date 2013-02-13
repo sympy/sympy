@@ -411,7 +411,7 @@ def test_piecewise_evaluate():
 
 
 def test_piecewise_nonint_binomial():
-    a, b = symbols('a b') 
+    a, b = symbols('a b')
     s = (a + b)**0.5
 
     piecewise = Piecewise((a**0.5*(1 + 0.5*b/a - 0.125*b**2/a**2 +
