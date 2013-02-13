@@ -29,7 +29,7 @@ def apart(f, x=None, full=False, **options):
     -y/(x + 2) + y/(x + 1)
 
     You can choose the other algorithm by setting full=True:
-    >>> apart(y/(x + 2)/(x + 1), x, 1)
+    >>> apart(y/(x + 2)/(x + 1), x, full=True)
     -y/(x + 2) + y/(x + 1)
     """
     allowed_flags(options, [])
