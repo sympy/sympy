@@ -1,4 +1,4 @@
-from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace
+from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace, Block
 from sympy.utilities.pytest import XFAIL
 
 X = MatrixSymbol('X', 2, 2)
@@ -94,3 +94,19 @@ def test_non_trivial_implies():
     assert ask(Q.triangular(X), Q.lower_triangular(X))
     assert ask(Q.triangular(X+Y), Q.lower_triangular(X) &
                Q.lower_triangular(Y))
+
+def test_Block():
+    X = MatrixSymbol('X', 4, 4)
+    B = Block(X, (1, 3), (1, 3))
+    C = Block(X, (0, 3), (1, 3))
+    assert ask(Q.symmetric(B), Q.symmetric(X))
+    assert ask(Q.invertible(B), Q.invertible(X))
+    assert ask(Q.diagonal(B), Q.diagonal(X))
+    assert ask(Q.orthogonal(B), Q.orthogonal(X))
+    assert ask(Q.upper_triangular(B), Q.upper_triangular(X))
+
+    assert not ask(Q.symmetric(C), Q.symmetric(X))
+    assert not ask(Q.invertible(C), Q.invertible(X))
+    assert not ask(Q.diagonal(C), Q.diagonal(X))
+    assert not ask(Q.orthogonal(C), Q.orthogonal(X))
+    assert not ask(Q.upper_triangular(C), Q.upper_triangular(X))
