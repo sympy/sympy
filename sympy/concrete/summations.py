@@ -22,10 +22,7 @@ def _free_symbols(function, limits):
 
 class Sum(Expr):
     """Represents unevaluated summation.
-    For example, Sum(i,(i,2,10))
-    represents the summation of the sequence 2,3,4,...,9,10
 
-    deep
     """
 
     __slots__ = ['is_commutative']
