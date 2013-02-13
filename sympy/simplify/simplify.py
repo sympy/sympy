@@ -27,7 +27,7 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.simplify_utils import replace_add_fgfg, \
     replace_mul_fpowxgpow, _match11, _match12, _match21, _match22, \
     replace_add1, replace_mul_f1, replace_mul_fapb, replace_mul_f2, \
-    replace_add2
+    replace_add2, replace_mul_fpowf2
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, lcm, gcd)
@@ -1498,7 +1498,9 @@ def _match_div_rewrite(expr, i):
         # sin(2*x)**c/sin(x)**c -> (2*cos(x))**c
         expr = replace_mul_f2(expr, sin, _g2sin)
     elif i == 9:
-        # empty space
+        # (tan(a) + tan(b))/(1 - tan(a)*tan(b)) -> tan(a + b)
+        expr = replace_mul_fpowf2(expr, tan, _midn, -1, \
+                lambda sign, x, y: tan(x + sign*y), _match21, _match22)
         return expr
     elif i == 10:
         # sinh(b)**c/cosh(b)**c -> tanh(b)**c
@@ -1520,8 +1522,8 @@ def _match_div_rewrite(expr, i):
         expr = replace_mul_fpowxgpow(expr, coth, tanh, _idn, _one, _idn)
     elif i == 16:
         # (tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)) -> tanh(a + b)
-        expr = replace_mul_fpowxgpow(expr, tanh, tanh, _midn, \
-            lambda x, y: tanh(x + y), _idn, _match21, _match22, hargs=2)
+        expr = replace_mul_fpowf2(expr, tanh, _midn, 1, \
+                lambda sign, x, y: tanh(x + sign*y), _match21, _match22)
     elif i == 17:
         #return expr
         # sinh(2*x)**c/sinh(x)**c -> (2*cosh(x))**c
@@ -1630,7 +1632,6 @@ def __trigsimp(expr, deep=False, to_tan=False):
                 if newexpr != expr:
                     expr = newexpr
                     break
-
     # cos(x)**2 + sin(x)**2 -> 1
     expr = replace_add2(expr, cos, sin, 1)
     # cosh(x)**2 - sinh(x)**2 -> 1

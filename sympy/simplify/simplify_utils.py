@@ -1,5 +1,5 @@
 from collections import defaultdict
-
+from sympy.core.compatibility import ordered
 from sympy.core import (Mul, Add, S)
 from sympy.utilities.misc import debug
 
@@ -90,7 +90,10 @@ def _splitfg(expr, f, g):
     ``expr = c1*f(x11)**e11*f(x12)**e12*...*g(x21)**e21*g(x22)**e22``
     This function gives ``(c1, {x11:e11, x12:e12,...}, {x21:e21, x22:e22,...})
     """
-    args = expr.args
+    if not expr.is_Mul:
+        args = [expr]
+    else:
+        args = expr.args
     base_exp = []
     for x in args:
         if x.is_Pow:
@@ -184,7 +187,7 @@ def _get_args_fg(expr, f, g):
 
 
 ################ replacement function acting on product of functions ##########
-def replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph, mf=None, mg=None, hargs=1):
+def replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph, mf=None, mg=None):
     """Helper for _match_div_rewrite.
 
     Parameters
@@ -193,7 +196,6 @@ def replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph, mf=None, mg=None, hargs=1)
     f, g : SymPy functions
     rexp, h, rexph : functions
     mf, mg : functions, if not None
-    hargs : number of arguments of ``h``
 
     Notes
     =====
@@ -220,24 +222,18 @@ def replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph, mf=None, mg=None, hargs=1)
     for x in expr.args:
         if x.is_Pow:
             b, e = x.as_base_exp()
-            if b.is_positive or e.is_integer:
-                m = mf(b, f)
-                if m is not None:
-                    fargs[m] += e
-                    continue
-                m = mg(b, g)
-                if m is not None:
-                    gargs[m] += e
-                    continue
+        else:
+            b, e = x, S.One
 
-        m = mf(x, f)
-        if m is not None:
-            fargs[m] += 1
-            continue
-        m = mg(x, g)
-        if m is not None:
-            gargs[m] += 1
-            continue
+        if e.is_integer or b.is_positive:
+            m = mf(b, f)
+            if m is not None:
+                fargs[m] += e
+                continue
+            m = mg(b, g)
+            if m is not None:
+                gargs[m] += e
+                continue
 
         args.append(x)
 
@@ -248,10 +244,7 @@ def replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph, mf=None, mg=None, hargs=1)
         fe = fargs.pop(key)
         ge = gargs.pop(key)
         if fe == rexp(ge):
-            if hargs > 1:
-                args.append(h(*key)**rexph(fe))
-            else:
-                args.append(h(key)**rexph(fe))
+            args.append(h(key)**rexph(fe))
             hit = True
         else:
             fargs[key] = fe
@@ -264,6 +257,56 @@ def replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph, mf=None, mg=None, hargs=1)
     while gargs:
         key, e = gargs.popitem()
         args.append(g(key)**e)
+    return Mul(*args)
+
+def replace_mul_fpowf2(expr, f, rexp, sgn, h, mn, md):
+    """
+    replace ``(f(x) + sign*f(y))**e1*(1 - sgn*sign*f(x)*f(y))**e2``
+    with ``h(sign, x, y)**e1`` where ``e2 = rexp(e1)``
+    """
+    nargs = defaultdict(list)
+    dargs = defaultdict(list)
+    args = []
+    for i, x in enumerate(expr.args):
+        if x.is_Pow:
+            b, e = x.as_base_exp()
+        else:
+            b, e = x, S.One
+
+        if e.is_integer or b.is_positive:
+            m = mn(b, f)
+            if m is not None:
+                nargs[m[1:]].append((i, m[0], e))
+                continue
+            m = md(b, f)
+            if m is not None:
+                coeff, sign, x1, x2 = m
+                t = (sgn*sign, x1, x2)
+                dargs[t].append((i, coeff, e))
+                continue
+
+        args.append(x)
+
+    common = set(nargs) & set(dargs)
+    hit = False
+    while common:
+        key = common.pop()
+        a1 = nargs.pop(key)
+        a2 = dargs.pop(key)
+        e1 = Add(*[x[2] for x in a1])
+        e2 = Add(*[x[2] for x in a2])
+        if e1 == rexp(e2):
+            c1 = Mul(*[x[1]**x[2] for x in a1])
+            c2 = Mul(*[x[1]**x[2] for x in a2])
+            args.append(c1*c2*h(*key)**e1)
+            hit = True
+        else:
+            for i, c, e in a1:
+                args.append(expr.args[i])
+            for i, c, e in a2:
+                args.append(expr.args[i])
+    if not hit:
+        return expr
     return Mul(*args)
 
 def _match1(expr, f, sign):
@@ -292,7 +335,8 @@ def _match12(expr, f):
 
 def _match21(expr, f):
     """
-    match ``f(x1) + f(x2)``; return ``(x1, x2)``
+    match ``c1*f(x1) + c2*f(x2)``; return ``(c1, sign, x1, x2)``
+    if ``c2 = sign*c1``, else return ``None``
     """
     if not expr.is_Add:
         return None
@@ -300,35 +344,61 @@ def _match21(expr, f):
     if not len(args) == 2:
         return None
     a, b = args
-    if a.__class__ is not f or b.__class__ is not f:
+    sa = _splitfg(a, f, None)
+    sb = _splitfg(b, f, None)
+    sign = sa[0]/sb[0]
+    if sign not in (S.One, -S.One):
         return None
-    v = [a.args[0], b.args[0]]
-    v.sort()
-    return tuple(v)
+    d1 = sa[1]
+    d2 = sb[1]
+    if len(d1) != 1 or len(d2) != 1:
+        return None
+    x1, e1 = d1.items()[0]
+    x2, e2 = d2.items()[0]
+    if e1 != 1 or e2 != 1:
+        return None
+    a = [x1, x2]
+    #a1 = ordered(a)
+    #a1 = sorted(a)
+    a1 = list(ordered(a))
+    if a == a1:
+        return (sa[0], sign, x1, x2)
+    else:
+        return (sb[0], sign, x2, x1)
 
 def _match22(expr, f):
     """
-    match ``1/(1 + f(x1)*f(x2))``
+    match ``(a + sign*f(x1)*f(x2)``, return ``(a, sign, x1, x2)``
+    or ``None``
     """
     if not expr.is_Add:
         return None
     args = expr.args
     if not len(args) == 2:
         return None
-    if S.One not in args:
+    a, b = args
+    sa = _splitfg(a, f, None)
+    sb = _splitfg(b, f, None)
+    if not sb[1]:
+        sa, sb = sb, sa
+    if sa[1]:
         return None
-    i = list(args).index(S.One)
-    b = args[1 - i]
-    if not b.is_Mul:
+    sign = sa[0]/sb[0]
+    if sign not in (S.One, -S.One):
         return None
-    if len(b.args) != 2:
+    d2 = sb[1]
+    if len(d2) != 2:
         return None
-    a, b = b.args
-    if a.__class__ is not f or b.__class__ is not f:
+    (x1, e1), (x2, e2) = d2.items()
+    if e1 != 1 or e2 != 1:
         return None
-    v = [a.args[0], b.args[0]]
-    v.sort()
-    return tuple(v)
+    a = [x1, x2]
+    #a1 = sorted(a)
+    a1 = list(ordered(a))
+    if a == a1:
+        return (sa[0], sign, x1, x2)
+    else:
+        return (sa[0], sign, x2, x1)
 
 def replace_mul_f1(expr, f, g):
     """
@@ -352,7 +422,7 @@ def replace_mul_f1(expr, f, g):
             continue
         basex = basex.args[0]
         if expx == 2:
-           r = g(basex)
+            r = g(basex)
         elif expx == 3:
             r = g(basex)
         else:
@@ -421,7 +491,7 @@ def replace_mul_f2(expr, f, g):
     for x in expr.args:
         if x.is_Pow:
             b, e = x.as_base_exp()
-            if b.is_positive or e.is_integer:
+            if e.is_integer or b.is_positive:
                 if b.__class__ is f:
                     fargs[b.args[0]] += e
                     continue

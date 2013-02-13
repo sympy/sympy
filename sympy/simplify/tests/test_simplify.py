@@ -149,6 +149,14 @@ def test_trigsimp1a():
     assert trigsimp(expr1) == 0
     assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)) == 2/cos(x)
 
+    tx, ty = tan(x), tan(y)
+    res = trigsimp((tx + ty)/(1 - tx*ty))
+    assert trigsimp((tx + ty)/(1 - tx*ty)) == tan(x + y)
+    res = trigsimp((2*tx + 2*ty)/(1 - tx*ty))
+    assert trigsimp((2*tx + 2*ty)/(1 - tx*ty)) == 2*tan(x + y)
+    assert trigsimp((tx + ty)/(2 - 2*tx*ty)) == tan(x + y)/2
+    assert trigsimp((2*tx - 2*ty)/(1 + tx*ty)) == 2*tan(x - y)
+    assert trigsimp((tx - ty)**2/(2 + 2*tx*ty)**2) == tan(x - y)**2/4
 
 def test_trigsimp2():
     x, y = symbols('x,y')
