@@ -3,15 +3,12 @@
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
     powsimp, Lambda, sin, cos, pi, I, Interval, re, im)
 from sympy.utilities.pytest import raises
-from sympy.utilities.randtest import test_numerically as tn
 
 from sympy.polys import Poly, cyclotomic_poly, intervals, nroots
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, roots_quintic, preprocess_roots, roots)
-
-from sympy.polys.rootoftools import RootOf
+    roots_binomial, preprocess_roots, roots)
 
 a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
@@ -202,21 +199,6 @@ def test_roots_preprocessing():
         809735812500*x**3 - 10673859375000*x**2 + 63529101562500* \
         x - 135006591796875
 
-def test_quintics():
-    f = Poly(x**5 - 110*x**3 - 55*x**2 + 2310*x + 979)
-    s = roots_quintic(f)
-    for root in s:
-        assert tn(f.eval(root.n()), 0)
-
-    f = Poly(x**5 - 5*x + 12)
-    s = roots_quintic(f)
-    for root in s:
-        assert tn(f.eval(root.n()), 0)
-
-    f = Poly(x**5 - 15*x**3 - 5*x**2 + 10*x + 20)
-    s = roots_quintic(f)
-    for root in s:
-        assert s.func == RootOf
 
 def test_roots():
     assert roots(1, x) == {}
