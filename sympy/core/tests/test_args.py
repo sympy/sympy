@@ -1644,11 +1644,11 @@ def test_sympy__matrices__immutable__ImmutableSparseMatrix():
     assert _test_args(ImmutableSparseMatrix([[1, 2], [3, 4]]))
 
 
-def test_sympy__matrices__expressions__block__Block():
-    from sympy.matrices.expressions.block import Block
+def test_sympy__matrices__expressions__slice__MatrixSlice():
+    from sympy.matrices.expressions.slice import MatrixSlice
     from sympy.matrices.expressions import MatrixSymbol
     X = MatrixSymbol('X', 4, 4)
-    assert _test_args(Block(X, (0, 2), (0, 2)))
+    assert _test_args(MatrixSlice(X, (0, 2), (0, 2)))
 
 
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():

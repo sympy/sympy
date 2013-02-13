@@ -9,7 +9,7 @@ from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.trace import Trace
-from sympy.matrices.expressions.block import Block
+from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices import Matrix, eye
 
@@ -390,6 +390,6 @@ def blockcut(expr, rowsizes, colsizes):
 
     rowbounds = bounds(rowsizes)
     colbounds = bounds(colsizes)
-    return BlockMatrix([[Block(expr, rowbound, colbound)
+    return BlockMatrix([[MatrixSlice(expr, rowbound, colbound)
                          for colbound in colbounds]
                          for rowbound in rowbounds])

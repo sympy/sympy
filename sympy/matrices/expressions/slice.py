@@ -18,12 +18,12 @@ def normalize(i, parentsize):
         i[2] = 1
     return tuple(i)
 
-class Block(MatrixExpr):
-    """ A block of a Matrix Expression
+class MatrixSlice(MatrixExpr):
+    """ A MatrixSlice of a Matrix Expression
 
     Examples
 
-    >>> from sympy import Block, ImmutableMatrix
+    >>> from sympy import MatrixSlice, ImmutableMatrix
     >>> M = ImmutableMatrix(4, 4, range(16))
     >>> print M
     [ 0,  1,  2,  3]
@@ -31,7 +31,7 @@ class Block(MatrixExpr):
     [ 8,  9, 10, 11]
     [12, 13, 14, 15]
 
-    >>> B = Block(M, (0, 2), (2, 4))
+    >>> B = MatrixSlice(M, (0, 2), (2, 4))
     >>> print ImmutableMatrix(B)
     [2, 3]
     [6, 7]

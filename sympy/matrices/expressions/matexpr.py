@@ -190,8 +190,8 @@ class MatrixExpr(Basic):
         if isinstance(key, tuple) and len(key) == 2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
-                from sympy.matrices.expressions.block import Block
-                return Block(self, i, j)
+                from sympy.matrices.expressions.slice import MatrixSlice
+                return MatrixSlice(self, i, j)
             i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
                 return self._entry(i, j)
