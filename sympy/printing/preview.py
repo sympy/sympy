@@ -2,6 +2,7 @@ from __future__ import with_statement
 
 import os
 import time
+from subprocess import Popen, check_call, PIPE, STDOUT
 import tempfile
 
 from latex import latex
@@ -115,38 +116,38 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
 
-    tmp = tempfile.mktemp()
-
-    with open(tmp + ".tex", "w") as tex:
-        tex.write(format % latex_string)
-
     cwd = os.getcwd()
     os.chdir(tempfile.gettempdir())
 
-    if os.system("latex -halt-on-error %s.tex" % tmp) != 0:
-        raise SystemError("Failed to generate DVI output.")
+    p = Popen(['latex', '-halt-on-error'], stdin=PIPE, stdout=PIPE)
 
-    os.remove(tmp + ".tex")
-    os.remove(tmp + ".aux")
-    os.remove(tmp + ".log")
+    _, perr = p.communicate(format % latex_string)
+    if p.returncode != 0:
+        raise SystemError("Failed to generate DVI output: %s", perr)
+
+    for ext in ['aux', 'log']:
+        os.remove("texput." + ext)
 
     if output != "dvi":
         command = {
-            "ps": "dvips -o %s.ps %s.dvi",
-            "pdf": "dvipdf %s.dvi %s.pdf",
+            "ps": "dvips -o texput.ps texput.dvi",
+            "pdf": "dvipdf texput.dvi texput.pdf",
             "png": "dvipng -T tight -z 9 " +
-            "--truecolor -o %s.png %s.dvi",
+            "--truecolor -o texput.png texput.dvi",
         }
 
         try:
-            if os.system(command[output] % (tmp, tmp)) != 0:
-                raise SystemError("Failed to generate '%s' output." % output)
+            p = Popen(command[output].split(), stdin=PIPE, stdout=PIPE)
+            _, perr = p.communicate()
+            if p.returncode != 0:
+                raise SystemError("Failed to generate %s output: %s" %
+                                  (output, perr))
             else:
-                os.remove(tmp + ".dvi")
+                os.remove("texput.dvi")
         except KeyError:
             raise SystemError("Invalid output format: %s" % output)
 
-    src = "%s.%s" % (tmp, output)
+    src = "texput.%s" % (output)
     src_file = None
 
     if viewer == "file":
@@ -206,7 +207,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
 
         win.close()
     else:
-        os.system("%s %s &> /dev/null &" % (viewer, src))
+        with open(os.devnull, 'wb') as devnull:
+            check_call([viewer, src], stdout=devnull, stderr=STDOUT)
         time.sleep(2)  # wait for the viewer to read data
 
     os.remove(src)
