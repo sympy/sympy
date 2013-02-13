@@ -1023,6 +1023,17 @@ class LatexPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+
+    def _print_MatrixSlice(self, expr):
+        def latexslice(s):
+            index = self._print(s[0]) if s[0] else ''
+            index += ':%s'%self._print(s[1])
+            index += ':%s'%self._print(s[2]) if s[2] != 1 else ''
+            return index
+        return (self._print(expr.parent) + r'\left[' +
+                latexslice(expr.rowslice) + ', ' +
+                latexslice(expr.colslice) + r'\right]')
+
     def _print_BlockMatrix(self, expr):
         return self._print(expr.blocks)
 

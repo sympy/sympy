@@ -222,6 +222,16 @@ class StrPrinter(Printer):
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
 
+    def _print_MatrixSlice(self, expr):
+        def strslice(s):
+            index = str(s[0]) if s[0] else ''
+            index += ':%s'%s[1]
+            index += ':%s'%self._print(s[2]) if s[2] != 1 else ''
+            return index
+        return (self._print(expr.parent) + '[' +
+                strslice(expr.rowslice) + ', ' +
+                strslice(expr.colslice) + ']')
+
     def _print_DeferredVector(self, expr):
         return expr.name
 
