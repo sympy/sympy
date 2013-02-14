@@ -1,5 +1,6 @@
 from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace, MatrixSlice
 from sympy.utilities.pytest import XFAIL
+from sympy.assumptions import assuming
 
 X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)

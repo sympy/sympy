@@ -3,6 +3,7 @@ from sympy.matrices.expressions import MatrixSymbol
 from sympy.abc import a, b, c, d, k, l, m, n
 from sympy.utilities.pytest import raises
 from sympy.functions.elementary.integers import floor
+from sympy.assumptions import assuming, Q
 
 X = MatrixSymbol('X', n, m)
 Y = MatrixSymbol('Y', m, k)
@@ -42,3 +43,9 @@ def test_exceptions():
     raises(IndexError, lambda: X[0:12, 2])
     raises(IndexError, lambda: X[0:9, 22])
     raises(IndexError, lambda: X[-1:5, 2])
+
+def test_symmetry():
+    X = MatrixSymbol('x', 10, 10)
+    Y = X[:5, 5:]
+    with assuming(Q.symmetric(X)):
+        assert Y.T == X[5:, :5]

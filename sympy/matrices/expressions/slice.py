@@ -1,6 +1,7 @@
 from sympy.matrices.expressions.matexpr  import MatrixExpr
 from sympy import Tuple, Basic
 from sympy.functions.elementary.integers import floor
+from sympy.assumptions import Q, ask
 
 def normalize(i, parentsize):
     if isinstance(i, slice):
@@ -67,3 +68,9 @@ class MatrixSlice(MatrixExpr):
     @property
     def on_diag(self):
         return self.rowslice == self.colslice
+
+    def _eval_transpose(self):
+        if ask(Q.symmetric(self.parent)):
+            return MatrixSlice(self.parent, self.colslice, self.rowslice)
+        else:
+            return super(MatrixSlice, self)._eval_transpose()
