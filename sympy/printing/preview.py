@@ -1,15 +1,20 @@
 from __future__ import with_statement
 
 import os
+from os.path import isabs
 import time
 from subprocess import Popen, check_call, PIPE, STDOUT
 import tempfile
 import shutil
+from cStringIO import StringIO
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 from latex import latex
 
 
-def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_settings):
+def preview(expr, output='png', viewer=None, euler=True, packages=(),
+            filename=None, outputbuffer=None, formatstr=None, dvioptions=None,
+            **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
@@ -94,7 +99,17 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
     else:
-        if viewer not in special and not pexpect.which(viewer):
+        if viewer == "file":
+            if filename is None:
+                SymPyDeprecationWarning("Using viewer=\"file\" without a "
+                    "specified filename will be deprecated in future versions "
+                    "of SymPy."
+                ).warn()
+        elif viewer == "StringIO":
+            if outputbuffer is None:
+                raise ValueError("outputbuffer has to be a StringIO "
+                                 "compatible object if viewer=\"StringIO\"")
+        elif viewer not in special and not pexpect.which(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
     actual_packages = packages + ("amsmath", "amsfonts")
@@ -103,42 +118,56 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
     package_includes = "\n".join(["\\usepackage{%s}" % p
                                   for p in actual_packages])
 
-    format = r"""\documentclass[12pt]{article}
-                 %s
-                 \begin{document}
-                 \pagestyle{empty}
-                 %s
-                 \vfill
-                 \end{document}
-              """ % (package_includes, "%s")
+    if formatstr is None:
+        formatstr = r"""\documentclass[12pt]{article}
+                        %s
+                        \begin{document}
+                        \pagestyle{empty}
+                        %s
+                        \vfill
+                        \end{document}
+                     """ % (package_includes, "%s")
+    else:
+        formatstr = formatstr % (package_includes, "%s")
 
     if isinstance(expr, str):
         latex_string = expr
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
 
-    cwd = os.getcwd()
-
     try:
+        cwd = os.getcwd()
         tmp_dir = tempfile.mkdtemp()
         os.chdir(tmp_dir)
 
         p = Popen(['latex', '-halt-on-error'], stdin=PIPE, stdout=PIPE)
 
-        _, perr = p.communicate(format % latex_string)
+        _, perr = p.communicate(formatstr % latex_string)
         if p.returncode != 0:
             raise SystemError("Failed to generate DVI output: %s", perr)
 
         if output != "dvi":
-            command = {
-                "ps": "dvips -o texput.ps texput.dvi",
-                "pdf": "dvipdf texput.dvi texput.pdf",
-                "png": "dvipng -T tight -z 9 " +
-                "--truecolor -o texput.png texput.dvi",
+            defaultoptions = {
+                "ps": [],
+                "pdf": [],
+                "png": ["-T", "tight", "-z", "9", "--truecolor"]
+            }
+
+            command_end = {
+                "ps": ["-o", "texput.ps", "texput.dvi"],
+                "pdf": ["texput.dvi", "texput.pdf"],
+                "png": ["-o", "texput.png", "texput.dvi"]
             }
 
             try:
-                p = Popen(command[output].split(), stdin=PIPE, stdout=PIPE)
+                cmd = ["dvi" + output]
+                if dvioptions is not None:
+                    cmd.extend(dvioptions)
+                else:
+                    cmd.extend(defaultoptions[output])
+                cmd.extend(command_end[output])
+
+                p = Popen(cmd, stdin=PIPE, stdout=PIPE)
                 _, perr = p.communicate()
                 if p.returncode != 0:
                     raise SystemError("Failed to generate %s output: %s" %
@@ -147,10 +176,21 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
                 raise SystemError("Invalid output format: %s" % output)
 
         src = "texput.%s" % (output)
-        src_file = None
 
         if viewer == "file":
-            src_file = open(src, 'rb')
+            if filename is None:
+                buffer = StringIO()
+                with open(src, 'rb') as fh:
+                    buffer.write(fh.read())
+                return buffer
+            else:
+                if not isabs(filename):
+                    raise ValueError("Provided filename has to be an absolute "
+                                     "path")
+                os.rename(src, filename)
+        elif viewer == "StringIO":
+            with open(src, 'rb') as fh:
+                outputbuffer.write(fh.read())
         elif viewer == "pyglet":
             try:
                 from pyglet import window, image, gl
@@ -210,13 +250,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
                 check_call([viewer, src], stdout=devnull, stderr=STDOUT)
             time.sleep(2)  # wait for the viewer to read data
     finally:
+        os.chdir(cwd)
         try:
             shutil.rmtree(tmp_dir) # delete directory
         except OSError, e:
             if e.errno != 2: # code 2 - no such file or directory
                 raise
-
-    os.chdir(cwd)
-
-    if src_file is not None:
-        return src_file
