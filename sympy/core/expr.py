@@ -1285,17 +1285,19 @@ class Expr(Basic, EvalfMixin):
         Two terms have E in them so a sum is returned. (If one were
         desiring the coefficient of the term exactly matching E then
         the constant from the returned expression could be selected.
-        Or, for greater precision, the nth method of Poly can be used
-        to indicate the desired term from which the coefficient is
-        desired.  XXX add note about new Poly method that accepts expr to describe momomial)
+        Or, for greater precision, a method of Poly can be used to
+        indicate the desired term from which the coefficient is
+        desired.
 
         >>> (2*E + x*E).as_coefficient(E)
         x + 2
         >>> _.args[0]  # just want the exact match
         2
-        >>> Poly(2*E + x*E)
+        >>> p = Poly(2*E + x*E); p
         Poly(x*E + 2*E, x, E, domain='ZZ')
-        >>> _.nth(0,1)
+        >>> p.monomial_coeff(E)
+        2
+        >>> p.nth(0,1)
         2
 
         Since the following cannot be written as a product containing
