@@ -25,9 +25,10 @@ from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.simplify_utils import replace_add_fgfg, \
-    replace_mul_fpowxgpow, _match11, _match12, _match21, _match22, \
+    replace_mul_fpowxgpow, _match_f_plus_1, _match_f_minus_1, \
+    _match_f1_flus_f2, _match_ff_plus_1, \
     replace_add1, replace_mul_f1, replace_mul_fapb, replace_mul_f2, \
-    replace_add2, replace_mul_fpowf2
+    replace_add2, replace_mul_fpowf2, _replace_mult_morrie
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, lcm, gcd)
@@ -1489,18 +1490,18 @@ def _match_div_rewrite(expr, i):
     elif i == 6:
         # ((cos(b) + 1)**c*(cos(b) - 1)**c -> -sin(b)**2)**c
         expr = replace_mul_fpowxgpow(expr, cos, cos, _idn, \
-          lambda x: -sin(x)**2, _idn, _match11, _match12)
+          lambda x: -sin(x)**2, _idn, _match_f_plus_1, _match_f_minus_1)
     elif i == 7:
         # (sin(b) + 1)**c*(sin(b) - 1)**c -> (-cos(b)**2)**c
         expr = replace_mul_fpowxgpow(expr, sin, sin, _idn, \
-          lambda x: -cos(x)**2, _idn, _match11, _match12)
+          lambda x: -cos(x)**2, _idn, _match_f_plus_1, _match_f_minus_1)
     elif i == 8:
         # sin(2*x)**c/sin(x)**c -> (2*cos(x))**c
         expr = replace_mul_f2(expr, sin, _g2sin)
     elif i == 9:
         # (tan(a) + tan(b))/(1 - tan(a)*tan(b)) -> tan(a + b)
         expr = replace_mul_fpowf2(expr, tan, _midn, -1, \
-                lambda sign, x, y: tan(x + sign*y), _match21, _match22)
+                lambda sign, x, y: tan(x + sign*y), _match_f1_flus_f2, _match_ff_plus_1)
         return expr
     elif i == 10:
         # sinh(b)**c/cosh(b)**c -> tanh(b)**c
@@ -1523,7 +1524,7 @@ def _match_div_rewrite(expr, i):
     elif i == 16:
         # (tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)) -> tanh(a + b)
         expr = replace_mul_fpowf2(expr, tanh, _midn, 1, \
-                lambda sign, x, y: tanh(x + sign*y), _match21, _match22)
+                lambda sign, x, y: tanh(x + sign*y), _match_f1_flus_f2, _match_ff_plus_1)
     elif i == 17:
         #return expr
         # sinh(2*x)**c/sinh(x)**c -> (2*cosh(x))**c
@@ -1616,6 +1617,9 @@ def __trigsimp(expr, deep=False, to_tan=False):
             com, nc = expr.args_cnc()
             expr = _trigsimp(Mul._from_args(com), deep, to_tan)*Mul._from_args(nc)
         else:
+            #print 'DB10 expr=', expr
+            expr = _replace_mult_morrie(expr)
+            #print 'DB10a expr=', expr
             for i in range(18):
                 if i <= 9:
                     if not expr.has(C.TrigonometricFunction):

@@ -1,6 +1,7 @@
 from collections import defaultdict
 from sympy.core.compatibility import ordered
 from sympy.core import (Mul, Add, S)
+from sympy.functions import cos, sin
 from sympy.utilities.misc import debug
 
 ############### polynomial operations ################
@@ -309,7 +310,7 @@ def replace_mul_fpowf2(expr, f, rexp, sgn, h, mn, md):
         return expr
     return Mul(*args)
 
-def _match1(expr, f, sign):
+def __match_f_plus_sign(expr, f, sign):
     """match (sign + f(x)); return ``x`` is found, else None
     """
     if not expr.is_Add:
@@ -327,13 +328,13 @@ def _match1(expr, f, sign):
         return None
     return b.args[0]
 
-def _match11(expr, f):
-    return _match1(expr, f, 1)
-def _match12(expr, f):
-    return _match1(expr, f, -1)
+def _match_f_plus_1(expr, f):
+    return __match_f_plus_sign(expr, f, 1)
+def _match_f_minus_1(expr, f):
+    return __match_f_plus_sign(expr, f, -1)
 
 
-def _match21(expr, f):
+def _match_f1_flus_f2(expr, f):
     """
     match ``c1*f(x1) + c2*f(x2)``; return ``(c1, sign, x1, x2)``
     if ``c2 = sign*c1``, else return ``None``
@@ -366,7 +367,7 @@ def _match21(expr, f):
     else:
         return (sb[0], sign, x2, x1)
 
-def _match22(expr, f):
+def _match_ff_plus_1(expr, f):
     """
     match ``(a + sign*f(x1)*f(x2)``, return ``(a, sign, x1, x2)``
     or ``None``
@@ -877,3 +878,41 @@ def replace_add2(expr, f, g, sgn, full=True):
     rule = _rule_replace_add2
     expr = replace_add_gen(expr, f, g, None, None, None, sgn, rule, full)
     return expr
+
+def _replace_mult_morrie(expr):
+    """
+    ``cos(x)*cos(2*x)*...*cos(2**(k-1)*x) -> sin(2**k*x)/(2**k*sin(x))``
+
+    see http://en.wikipedia.org/wiki/Morrie%27s_law
+    """
+    if not expr.is_Mul:
+        return expr
+    #print 'DB0 expr=', expr
+    c, d, _ = _splitfg(expr, cos, None)
+    keys = d.keys()
+    items = sorted(d.items())
+    ks = sorted(keys)
+    #print 'DB1 ks=', ks, c
+    n = len(ks)
+    used = set()
+    args = [c]
+    for i in range(n):
+        if i in used:
+            continue
+        a = ks[i]
+        e = d[a]
+        v = [i]
+        a1 = 2*a
+        for j in range(i + 1, n):
+            if j in used:
+                continue
+            if a1 == ks[j] and d[a1] == e:
+                v.append(j)
+                a1 *= 2
+        if len(v) > 2:
+            nv = len(v)
+            used = used | set(v)
+            args.append((sin(2**nv*a)/(2**nv*sin(a))**e))
+        else:
+            args.append(cos(a)**e)
+    return Mul(*args)
