@@ -766,10 +766,6 @@ GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
 
 HAS_GMPY = 0
 
-gmpy = import_module('gmpy', min_module_version='1.03',
-    module_version_attr='version', module_version_attr_call_args=())
-
-
 if GROUND_TYPES != 'python':
 
     # Don't try to import gmpy2 if ground types is set to gmpy1. This is
