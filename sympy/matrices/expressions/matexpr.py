@@ -1,6 +1,6 @@
 from functools import wraps
 
-from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic
+from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import SympifyError
 from sympy.functions import transpose, conjugate, adjoint
@@ -182,16 +182,19 @@ class MatrixExpr(Basic):
 
     def valid_index(self, i, j):
         def is_valid(idx):
-            return isinstance(idx, (int, Integer, Symbol))
+            return isinstance(idx, (int, Integer, Symbol, Expr))
         return (is_valid(i) and is_valid(j) and
                 0 <= i < self.rows and 0 <= j < self.cols)
 
     def __getitem__(self, key):
+        if not isinstance(key, tuple):
+            from sympy.matrices.expressions.slice import MatrixSlice
+            return MatrixSlice(self, key, (0, None, 1))
         if isinstance(key, tuple) and len(key) == 2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):
-                raise NotImplementedError(
-                    "Slicing is not implemented for %s" % self.__class__.__name__)
+                from sympy.matrices.expressions.slice import MatrixSlice
+                return MatrixSlice(self, i, j)
             i, j = sympify(i), sympify(j)
             if self.valid_index(i, j) is not False:
                 return self._entry(i, j)
