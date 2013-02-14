@@ -19,7 +19,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
     If the expr argument is an expression, it will be exported to LaTeX and
-    then compiled using available the TeX distribution.  The first argument,
+    then compiled using the available TeX distribution.  The first argument,
     'expr', may also be a LaTeX string.  The function will then run the
     appropriate viewer for the given output format or use the user defined
     one. By default png output is generated.
@@ -56,11 +56,32 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     This will skip auto-detection and will run user specified
     'superior-dvi-viewer'. If 'view' fails to find it on your system it will
-    gracefully raise an exception. You may also enter 'file' for the viewer
-    argument. Doing so will cause this function to return a file object in
-    read-only mode.
+    gracefully raise an exception. Currently this depends on pexpect, which
+    is not available for windows.
 
-    Currently this depends on pexpect, which is not available for windows.
+    You may also enter 'file' for the viewer argument. Doing so will cause
+    this function to return a file object in read-only mode, if 'filename'
+    is unset. However, if it was set, then 'preview' writes the genereted
+    file to this filename instead.
+
+    There is also support for writing to a StringIO like object, which needs
+    to be passed to the 'outputbuffer' argument.
+
+    >>> obj = StringIO()
+    >>> preview(x + y, output='png', viewer='StringIO',
+                outputbuffer=obj) # doctest: +SKIP
+
+    The template for the LaTeX code, which is processed by the LaTeX
+    interpreter can customized with the 'formatstr' argument. This can be
+    used, e.g., to set a differnt font size or use a diffent documentclass.
+
+    >>> fmt =r"\documentclass[10pt]{extarticle}%s\begin{document}%s\end{document}"
+    >>> preview(x + y, output='png', formatstr=fmt) # doctest: +SKIP
+
+    If the value of 'output' is different from 'dvi' then DVI options can be
+    set by using the 'dvioptions' argument. These options have to be in the
+    form of a list of strings (see subprocess.Popen) and they are passed to
+    the 'dvi' + output conversion tool.
 
     Additional keyword args will be passed to the latex call, e.g., the
     symbol_names flag.
