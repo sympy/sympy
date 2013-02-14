@@ -27,7 +27,7 @@ from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.simplify_utils import replace_add_fgfg, \
     replace_mul_fpowxgpow, _match_f_plus_1, _match_f_minus_1, \
     _match_f1_flus_f2, _match_ff_plus_1, \
-    replace_add1, replace_mul_f1, replace_mul_fapb, replace_mul_f2, \
+    replace_add1, replace_mul_f1, replace_mul_fapb, replace_mul_f2g, \
     replace_add2, replace_mul_fpowf2, _replace_mult_morrie
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
@@ -1497,38 +1497,46 @@ def _match_div_rewrite(expr, i):
           lambda x: -cos(x)**2, _idn, _match_f_plus_1, _match_f_minus_1)
     elif i == 8:
         # sin(2*x)**c/sin(x)**c -> (2*cos(x))**c
-        expr = replace_mul_f2(expr, sin, _g2sin)
+        # sin(2*x)**c/cos(x)**c -> (2*sin(x))**c
+        expr = replace_mul_f2g(expr, sin, cos)
     elif i == 9:
         # (tan(a) + tan(b))/(1 - tan(a)*tan(b)) -> tan(a + b)
         expr = replace_mul_fpowf2(expr, tan, _midn, -1, \
                 lambda sign, x, y: tan(x + sign*y), _match_f1_flus_f2, _match_ff_plus_1)
         return expr
     elif i == 10:
+        return expr
+    elif i == 11:
+        return expr
+    elif i == 12:
+        return expr
+
+    elif i == 13:
         # sinh(b)**c/cosh(b)**c -> tanh(b)**c
         expr = replace_mul_fpowxgpow(expr, sinh, cosh, _midn, tanh, _idn)
-    elif i == 11:
+    elif i == 14:
         # tanh(b)**c*cosh(b)**c -> sinh(b)**c
         expr = replace_mul_fpowxgpow(expr, tanh, cosh, _idn, sinh, _idn)
-    elif i == 12:
+    elif i == 15:
         # coth(b)**c*sinh(b)**c -> cosh(b)**c
         expr = replace_mul_fpowxgpow(expr, coth, sinh, _idn, cosh, _idn)
-    elif i == 13:
+    elif i == 16:
         # tanh(b)**c/sinh(b)**c -> 1/cosh(b)**c
         expr = replace_mul_fpowxgpow(expr, tanh, sinh, _midn, cosh, _midn)
-    elif i == 14:
+    elif i == 17:
         # coth(b)**c/cosh(b)**c -> 1/sinh(b)**c
         expr = replace_mul_fpowxgpow(expr, coth, cosh, _midn, sinh, _midn)
-    elif i == 15:
+    elif i == 18:
         # coth(b)**c*tanh(b)**c -> 1
         expr = replace_mul_fpowxgpow(expr, coth, tanh, _idn, _one, _idn)
-    elif i == 16:
+    elif i == 19:
         # (tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)) -> tanh(a + b)
         expr = replace_mul_fpowf2(expr, tanh, _midn, 1, \
                 lambda sign, x, y: tanh(x + sign*y), _match_f1_flus_f2, _match_ff_plus_1)
-    elif i == 17:
+    elif i == 20:
         #return expr
         # sinh(2*x)**c/sinh(x)**c -> (2*cosh(x))**c
-        expr = replace_mul_f2(expr, sinh, _g2sinh)
+        expr = replace_mul_f2g(expr, sinh, cosh)
     else:
         return None
     return expr
@@ -1608,6 +1616,28 @@ def _expand_exp(expr):
         return Add(*a)
     return expr
 
+def __artifact1(expr):
+    if expr.is_Pow:
+        b, e = expr.as_base_exp()
+        if not b.is_Add or len(b.args) != 2:
+            return expr
+    elif expr.is_Add:
+        b = expr
+        e = S.One
+    else:
+        return expr
+    b = replace_add1(b, sin, cos, 1, tan, cot, to_tan=False)
+    return b**e
+
+def _artefact1(expr):
+    """
+    replace ``(a - a*cos(x)**2)**c -> (a**sin(x)**2)**c``
+    """
+    if not expr.is_Mul:
+        return expr
+    a = [__artifact1(x) for x in expr.args]
+    return Mul(*a)
+
 @cacheit
 def __trigsimp(expr, deep=False, to_tan=False):
     """recursive helper for trigsimp"""
@@ -1617,20 +1647,20 @@ def __trigsimp(expr, deep=False, to_tan=False):
             com, nc = expr.args_cnc()
             expr = _trigsimp(Mul._from_args(com), deep, to_tan)*Mul._from_args(nc)
         else:
-            #print 'DB10 expr=', expr
             expr = _replace_mult_morrie(expr)
-            #print 'DB10a expr=', expr
-            for i in range(18):
-                if i <= 9:
+            expr = _artefact1(expr)
+
+            for i in range(21):
+                if i <= 12:
                     if not expr.has(C.TrigonometricFunction):
                         continue
                 else:
                     if not expr.has(C.HyperbolicFunction):
                         continue
                 if not to_tan:
-                    if i in (0, 10):
+                    if i in (0, 13):
                         continue
-                if not to_tan and i not in (6,7,8,9,17):
+                if not to_tan and i not in (9,10,11,12,20):
                     continue
                 newexpr = _match_div_rewrite(expr, i)
                 if newexpr != expr:

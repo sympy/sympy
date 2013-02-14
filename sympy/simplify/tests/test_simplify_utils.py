@@ -1,6 +1,6 @@
-from sympy import S, C, sin, cos, tan, cot, exp, Add
+from sympy import S, C, sin, cos, tan, cot, exp, Add, sinh, cosh
 from sympy.abc import x, y, z, a, b, c
-from sympy.simplify.simplify_utils import replace_add_fgfg
+from sympy.simplify.simplify_utils import replace_add_fgfg, replace_mul_f2g
 from sympy.simplify.simplify import TR10_inv
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.compatibility import ordered
@@ -72,3 +72,26 @@ def test_TR10_inv():
     expr = _mexpand((sin(1) + cos(1) + sin(2) + cos(2))*(sin(3) + cos(3)))
     res = TR10_inv(expr)
     assert res == 2*sin(pi/4 + 1)*sin(pi/4 + 3) + 2*sin(pi/4 + 2)*sin(pi/4 + 3)
+
+def test_replace_mul_f2g():
+    rep = lambda x: replace_mul_f2g(x, sin, cos)
+    assert rep(sin(x)*cos(x)) == sin(2*x)/2
+    assert rep(sin(2*x)/sin(x)) == 2*cos(x)
+    assert rep(sin(2*x)/cos(x)) == 2*sin(x)
+    assert rep(sin(2*x)**2/sin(x)) == 2*sin(2*x)*cos(x)
+    assert rep(sin(x)**2*cos(x)**2/sin(2*x)) == sin(2*x)/4
+    assert rep(cos(x)*cos(2*x)/sin(4*x)) == 1/(4*sin(x))
+    assert rep(cos(x)*cos(2*x)/(sin(x)*sin(4*x))) == 1/(4*sin(x)**2)
+    assert rep(sinh(1)*sin(4*x)/(cos(x)*cos(2*x))) == 4*sinh(1)*sin(x)
+    assert rep(cos(2*x)/(sin(x)*cos(x)*sin(4*x))) == 1/sin(2*x)**2
+
+    rep = lambda x: replace_mul_f2g(x, sinh, cosh)
+    assert rep(sinh(x)*cosh(x)) == sinh(2*x)/2
+    assert rep(sinh(2*x)/sinh(x)) == 2*cosh(x)
+    assert rep(sinh(2*x)/cosh(x)) == 2*sinh(x)
+    assert rep(sinh(2*x)**2/sinh(x)) == 2*sinh(2*x)*cosh(x)
+    assert rep(sinh(x)**2*cosh(x)**2/sinh(2*x)) == sinh(2*x)/4
+    assert rep(cosh(x)*cosh(2*x)/sinh(4*x)) == 1/(4*sinh(x))
+    assert rep(cosh(x)*cosh(2*x)/(sinh(x)*sinh(4*x))) == 1/(4*sinh(x)**2)
+    assert rep(sinh(1)*sinh(4*x)/(cosh(x)*cosh(2*x))) == 4*sinh(1)*sinh(x)
+    assert rep(cosh(2*x)/(sinh(x)*cosh(x)*sinh(4*x))) == 1/sinh(2*x)**2

@@ -481,42 +481,111 @@ def replace_mul_fapb(expr, f, g):
 
     return expr
 
-def replace_mul_f2(expr, f, g):
-    """
-    replace f(2*x)**c/f(x)**c with g(x)**c
 
-    ``f`` is ``sin`` or ``sinh``
+def replace_mul_f2g(expr, f, g):
     """
+    replace ``f(2*x)**c/g(x)**c --> (2*f(x))**c``
+    ``f(2*x)**c/f(x)**c --> (2*g(x))**c``
+    """
+    c, d1, d2 = _splitfg(expr, f, g)
+    args = [c]
+    coeff = 1
     fargs = defaultdict(int)
-    args = []
-    for x in expr.args:
-        if x.is_Pow:
-            b, e = x.as_base_exp()
-            if e.is_integer or b.is_positive:
-                if b.__class__ is f:
-                    fargs[b.args[0]] += e
-                    continue
-        if x.__class__ is f:
-            fargs[x.args[0]] += 1
-            continue
+    gargs = defaultdict(int)
+    for b, e in d1.items():
+        if e.is_integer:
+            fargs[b] = e
+        else:
+            args.append(f(b)**e)
+    for b, e in d2.items():
+        if e.is_integer:
+            gargs[b] = e
+        else:
+            args.append(g(b)**e)
+    changed = True
+    hit = False
+    while changed:
+        changed = False
+        common = set(fargs.keys()) & set([2*k for k in gargs.keys()])
+        while common:
+            key = common.pop()
+            key2 = key/2
+            fe = fargs.pop(key)
+            ge = gargs.pop(key2)
+            if fe == -ge:
+                fargs[key2] += fe
+                coeff *= 2**fe
+                changed = True
+                hit = True
+                break
+            elif key2 in fargs:
+                fargs[key2] += fe
+                gargs[key2] = ge + fe
+                coeff *= 2**fe
+                changed = True
+                hit = True
+                break
+            else:
+                fargs[key] = fe
+                gargs[key2] = ge
+        common = set(fargs.keys()) & set(gargs.keys())
+        while common:
+            # f(x)*g(x) -> f(2*x)/2
+            key = common.pop()
+            fe = fargs.pop(key)
+            ge = gargs.pop(key)
+            if fe == ge:
+                fargs[2*key] += fe
+                coeff *= 2**-fe
+                changed = True
+                hit = True
+                break
+            else:
+                fargs[key] = fe
+                gargs[key] = ge
+        for key, e in fargs.items():
+            key2 = key/2
+            if key2 in fargs:
+                e2 = fargs[key2]
+                if e2 == -e:
+                    fargs.pop(key)
+                    fargs.pop(key2)
+                    gargs[key2] += e
+                    coeff *= 2**e
+                    changed = True
+                    hit = True
+                    break
+                elif e2*e < 0:
+                    if e < -e2:
+                        # sin(2*x)**2/sin(x)**3 = 4*cos(x)**2/sin(x)
+                        fargs.pop(key)
+                        fargs[key2] += e
+                        gargs[key2] += e
+                        coeff *= 2**e
+                        changed = True
+                        hit = True
+                        break
+                    else:
+                        # sin(2*x)**3/sin(x)**2 = 4*cos(x)**2*sin(2*x)
+                        fargs[key] += e2
+                        fargs.pop(key2)
+                        gargs[key2] -= e2
+                        coeff *= 2**-e2
+                        changed = True
+                        hit = True
+                        break
 
-        args.append(x)
-    for x, e1 in fargs.items():
-        if 2*x in fargs:
-            e2 = fargs[2*x]
-            if e1 == -e2:
-                args.append(g(x)**e2)
-                break
-            elif e1 < 0 and e2 > -e1:
-                args.append(g(x)**(e2 + e1)*f(2*x)**-e1)
-                break
-    else:
+
+
+    if not hit:
         return expr
-    del fargs[x]
-    del fargs[2*x]
+    args.append(coeff)
     while fargs:
         key, e = fargs.popitem()
         args.append(f(key)**e)
+    while gargs:
+        key, e = gargs.popitem()
+        args.append(g(key)**e)
     return Mul(*args)
 
 ################ replacement function acting on sum of functions ##########
@@ -887,12 +956,10 @@ def _replace_mult_morrie(expr):
     """
     if not expr.is_Mul:
         return expr
-    #print 'DB0 expr=', expr
     c, d, _ = _splitfg(expr, cos, None)
     keys = d.keys()
     items = sorted(d.items())
     ks = sorted(keys)
-    #print 'DB1 ks=', ks, c
     n = len(ks)
     used = set()
     args = [c]
