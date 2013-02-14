@@ -204,18 +204,22 @@ def test_solve_polynomial_cv_2():
 
 
 def test_quintics():
-    f = x**5 - 110*x**3 - 55*x**2 + 2310*x + 979
-    s = solve(f, check=False)
-    for root in s:
-        res = f.subs(x, root.n()).n()
-        assert tn(res, 0)
+    def test1():
+        f = x**5 - 110*x**3 - 55*x**2 + 2310*x + 979
+        s = solve(f, check=False)
+        for root in s:
+            res = f.subs(x, root.n()).n()
+            assert tn(res, 0)
 
-    f = x**5 - 5*x + 12
-    s = solve(f, check=False)
-    for root in s:
-        res = f.subs(x, root.n()).n()
-        assert tn(res, 0)
+    def test2():
+        f = x**5 + 15*x + 12
+        s = solve(f, check=False)
+        for root in s:
+            res = f.subs(x, root.n()).n()
+            assert tn(res, 0)
 
+    test1()
+    test2()
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = solve(f)
     for root in s:
