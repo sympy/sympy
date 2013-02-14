@@ -73,15 +73,15 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     The template for the LaTeX code, which is processed by the LaTeX
     interpreter can customized with the 'formatstr' argument. This can be
-    used, e.g., to set a differnt font size or use a diffent documentclass.
+    used, e.g., to set a differnt font size or use a differnt documentclass.
 
     >>> fmt =r"\documentclass[10pt]{extarticle}%s\begin{document}%s\end{document}"
     >>> preview(x + y, output='png', formatstr=fmt) # doctest: +SKIP
 
-    If the value of 'output' is different from 'dvi' then DVI options can be
-    set by using the 'dvioptions' argument. These options have to be in the
-    form of a list of strings (see subprocess.Popen) and they are passed to
-    the 'dvi' + output conversion tool.
+    If the value of 'output' is different from 'dvi' then command line
+    options can be set ('dvioptions' argument) for the execution of the
+    'dvi'+output conversion tool. These options have to be in the form of a
+    list of strings (see subprocess.Popen).
 
     Additional keyword args will be passed to the latex call, e.g., the
     symbol_names flag.
