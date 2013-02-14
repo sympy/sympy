@@ -35,3 +35,10 @@ def test_slicing():
     assert X[:, 1:5].shape == (X.shape[0], 4)
 
     assert X[::2, ::2].shape == (floor(n/2), floor(m/2))
+    assert X[2] == MatrixSlice(X, 2, (0, m))
+
+def test_exceptions():
+    X = MatrixSymbol('x', 10, 20)
+    raises(IndexError, lambda: X[0:12, 2])
+    raises(IndexError, lambda: X[0:9, 22])
+    raises(IndexError, lambda: X[-1:5, 2])

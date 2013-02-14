@@ -187,6 +187,9 @@ class MatrixExpr(Basic):
                 0 <= i < self.rows and 0 <= j < self.cols)
 
     def __getitem__(self, key):
+        if not isinstance(key, tuple):
+            from sympy.matrices.expressions.slice import MatrixSlice
+            return MatrixSlice(self, key, (0, None, 1))
         if isinstance(key, tuple) and len(key) == 2:
             i, j = key
             if isinstance(i, slice) or isinstance(j, slice):

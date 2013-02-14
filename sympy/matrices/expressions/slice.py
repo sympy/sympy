@@ -43,6 +43,13 @@ class MatrixSlice(MatrixExpr):
     def __new__(cls, parent, rowslice, colslice):
         rowslice = normalize(rowslice, parent.shape[0])
         colslice = normalize(colslice, parent.shape[1])
+        if not (len(rowslice) == len(colslice) == 3):
+            raise IndexError()
+        if ((0 > rowslice[0]) == True or
+            (parent.shape[0] < rowslice[1]) == True or
+            (0 > colslice[0]) == True or
+            (parent.shape[1] < colslice[1]) == True):
+            raise IndexError()
         return Basic.__new__(cls, parent, Tuple(*rowslice), Tuple(*colslice))
 
     @property
