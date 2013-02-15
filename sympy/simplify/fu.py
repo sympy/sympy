@@ -171,7 +171,6 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import cos, sin, tan, cot, sec, csc, sqrt
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.core.compatibility import ordered, combinations
-# ordered = lambda x, *y: iter(x)  # uncomment to not use canonicalization
 from sympy.core.core import C
 from sympy.core.mul import Mul
 from sympy.core.function import expand_mul, count_ops
@@ -211,10 +210,10 @@ def TR1(rv):
     1/cos(x) + 2/sin(x)
     """
     rv = bottom_up(rv, TR1)
-    if rv.func == sec:
+    if rv.func is sec:
         a = rv.args[0]
         return S.One/cos(a)
-    elif rv.func == csc:
+    elif rv.func is csc:
         a = rv.args[0]
         return S.One/sin(a)
     return rv
@@ -238,10 +237,10 @@ def TR2(rv):
 
     """
     rv = bottom_up(rv, TR2)
-    if rv.func == tan:
+    if rv.func is tan:
         a = rv.args[0]
         return sin(a)/cos(a)
-    elif rv.func == cot:
+    elif rv.func is cot:
         a = rv.args[0]
         return cos(a)/sin(a)
     return rv
@@ -967,7 +966,8 @@ _CTR4 = [TR4, TR10i], [identity]
 
 
 def CTRstrat(lists):
-    return minimize(*[chain(*list) for list in lists], objective=lambda x: (L(x), x.count_ops()))
+    return minimize(*[chain(*list) for list in lists],
+        **dict(objective=lambda x: (L(x), x.count_ops())))
 
 CTR1, CTR2, CTR3, CTR4 = map(CTRstrat, (_CTR1, _CTR2, _CTR3, _CTR4))
 
@@ -977,7 +977,7 @@ _RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0]
 # XXX it's a little unclear how this one is to be implemented
 # see Fu paper of reference, page 7. What is the Union symbol refering to?
 # The diagram shows all these as one chain of transformations, but the
-# the text refers to them being applied independently. Also a break
+# text refers to them being applied independently. Also, a break
 # if L starts to increase has not been implemented.
 _RL2 = [
     [TR4, TR3, TR10, TR4, TR3, TR11],
@@ -996,7 +996,7 @@ RL2 = CTRstrat(_RL2)
 
 def fu(rv):
     """Attempt to simplify expression by using transformation rules given
-    in the Fu et al algorithm.
+    in the algorithm by Fu et al.
 
     Examples
     ========
@@ -1207,12 +1207,12 @@ def trig_split(a, b, two=False):
     def pow_cos_sin(a, two):
         """Return ``a`` as a tuple (r, c, s) such that ``a = (r or 1)*(c or 1)*(s or 1)``.
 
-        Three arguments are returned (radical, c-factor1, s-factor) as
+        Three arguments are returned (radical, c-factor, s-factor) as
         long as the conditions set by ``two`` are met; otherwise None is
         returned. If ``two`` is True there will be one or two non-None
         values in the tuple: c and s or c and r or s and r or s or c with c
-        being a cosine function, if possible, else a sine and s being a sine
-        function, if possible, else oosine. If ``two`` is False then there
+        being a cosine function (if possible) else a sine, and s being a sine
+        function (if possible) else oosine. If ``two`` is False then there
         will only be a c or s term in the tuple.
 
         ``two`` also require that either two cos and/or sin be present (with
