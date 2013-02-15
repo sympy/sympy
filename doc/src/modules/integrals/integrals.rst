@@ -133,3 +133,5 @@ any order and any precision:
 .. autofunction:: sympy.integrals.quadrature.gauss_chebyshev_t
 
 .. autofunction:: sympy.integrals.quadrature.gauss_chebyshev_u
+
+.. autofunction:: sympy.integrals.quadrature.gauss_jacobi
