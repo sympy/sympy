@@ -7,17 +7,26 @@ def normalize(i, parentsize):
     if isinstance(i, slice):
         i = (i.start, i.stop, i.step)
     if not isinstance(i, (tuple, list, Tuple)):
-        return (i, i+1, 1)
+        if i < 0:
+            i += parentsize
+        i = (i, i+1, 1)
     i = list(i)
     if len(i) == 2:
         i.append(1)
-    if i[0] == None:
-        i[0] = 0
-    if i[1] == None:
-        i[1] = parentsize
-    if i[2] == None:
-        i[2] = 1
-    return tuple(i)
+    start, stop, step = i
+    start = start or 0
+    if stop == None:
+        stop = parentsize
+    if start < 0:
+        start += parentsize
+    if stop < 0:
+        stop += parentsize
+    step = step or 1
+
+    if (stop - start) * step < 1:
+        raise IndexError()
+
+    return (start, stop, step)
 
 class MatrixSlice(MatrixExpr):
     """ A MatrixSlice of a Matrix Expression
