@@ -1640,13 +1640,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         >>> expand(log(x*(y + z)))
         log(x) + log(y + z)
 
-      Here, we see that ``log`` was applied before ``mul``.  To get the log
+      Here, we see that ``log`` was applied before ``mul``.  To get the mul
       expanded form, either of the following will work::
 
-        >>> expand_log(log(x*(y + z)))
-        log(x) + log(y + z)
-        >>> expand(log(x*(y + z)), mul=False)
-        log(x) + log(y + z)
+        >>> expand_mul(log(x*(y + z)))
+        log(x*y + x*z)
+        >>> expand(log(x*(y + z)), log=False)
+        log(x*y + x*z)
 
       A similar thing can happen with the ``power_base`` hint::
 

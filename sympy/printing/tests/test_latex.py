@@ -649,6 +649,12 @@ def test_matMul():
     assert l._print_MatMul(-2*A*(A + 2*B)) in [r'-2 A \left(A + 2 B\right)',
         r'-2 A \left(2 B + A\right)']
 
+def test_latex_MatrixSlice():
+    from sympy.matrices.expressions import MatrixSymbol
+    assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
+            r'X\left[:5, 1:9:2\right]'
+    assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
+            r'X\left[5, :5:2\right]'
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
