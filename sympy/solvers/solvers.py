@@ -1388,7 +1388,7 @@ def _solve_system(exprs, symbols, **flags):
         for eq in ordered(failed, lambda _: len(_ok_syms(_))):
             newresult = []
             bad_results = []
-            got_s = None
+            got_s = set([])
             u = Dummy()
             for r in result:
                 # update eq with everything that is known so far
@@ -1424,6 +1424,9 @@ def _solve_system(exprs, symbols, **flags):
                     if do_simplify:
                         flags['simplify'] = False  # for checksol's sake
                     for sol in soln:
+                        if got_s and any([ss in sol.free_symbols for ss in got_s]):
+                            # sol depends on previously solved symbols: discard it
+                            continue
                         if check:
                             # check that it satisfies *other* equations
                             ok = False
@@ -1446,13 +1449,12 @@ def _solve_system(exprs, symbols, **flags):
                         newresult.append(rnew)
                     if simplify_flag is not None:
                         flags['simplify'] = simplify_flag
-                    got_s = s
-                    break
-                else:
+                    got_s.add(s)
+                if not got_s:
                     raise NotImplementedError('could not solve %s' % eq2)
             if got_s:
                 result = newresult
-                solved_syms.add(got_s)
+                solved_syms.union(got_s)
             for b in bad_results:
                 result.remove(b)
         # if there is only one result should we return just the dictionary?

@@ -322,6 +322,13 @@ def test_tsolve():
     assert solve(z**x - y, x) == [log(y)/log(z)]
     # issue #1405
     assert solve(2**x - 10, x) == [log(10)/log(2)]
+    # issue
+    assert solve([x**y - 1]) == [{x: 1}, {y: 0}]
+
+
+@XFAIL
+def test_currently_does_not_work():
+    assert solve(x**y - 1) == [{x: 1}, {y: 0}]
 
 
 def test_solve_for_functions_derivatives():
