@@ -775,7 +775,7 @@ def _rule_replace_add1(f, g, h1, h2, h3, b1a, b2a, c1a, c2a, fact1, fact2, sgn, 
             # 1 - g(x)**2           -> sgn*f(x)**2
             # f(x)**e1*g**e2*(1 - g(x)**2) -> sgn*f(x)**(e1 + 2)*g**e2
             if sign == -1:
-                ex1 = fact1[x] + 2if x in fact1 else 2
+                ex1 = fact1[x] + 2 if x in fact1 else 2
                 ex2 = fact2[x] if x in fact2 else 0
 
                 if (ex1 >= 0 and ex2 >= 0) or (ex1 <= 0 and ex2 <= 0):
@@ -948,15 +948,26 @@ def replace_add2(expr, f, g, sgn, full=True):
     expr = replace_add_gen(expr, f, g, None, None, None, sgn, rule, full)
     return expr
 
-def _replace_mult_morrie(expr):
+def _replace_mult_morrie(expr, f, g):
     """
-    ``cos(x)*cos(2*x)*...*cos(2**(k-1)*x) -> sin(2**k*x)/(2**k*sin(x))``
+    ``f(x)*f(2*x)*...*f(2**(k-1)*x) -> g(2**k*x)/(2**k*g(x))``
+
+    where ``f, g`` are ``cos, sin`` or ``cosh, sinh``
 
     see http://en.wikipedia.org/wiki/Morrie%27s_law
+
+    TODO: for rational angles this can be improved; e.g.
+    ``cos(pi/7)*cos(2*pi/7)*cos(4*pi/7)``
+    is not simplified because ``cos(4*pi/7)`` is converted to ``-cos(3*pi/7)``
+    and
+    ``cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9) -> 1/16``
+    but replacing ``cos(4*pi/9)`` with the equivalent ``sin(pi/18)``
+    it is not simplified.
+
     """
     if not expr.is_Mul:
         return expr
-    c, d, _ = _splitfg(expr, cos, None)
+    c, d, _ = _splitfg(expr, f, None)
     keys = d.keys()
     items = sorted(d.items())
     ks = sorted(keys)
@@ -979,7 +990,7 @@ def _replace_mult_morrie(expr):
         if len(v) > 2:
             nv = len(v)
             used = used | set(v)
-            args.append((sin(2**nv*a)/(2**nv*sin(a))**e))
+            args.append((g(2**nv*a)/(2**nv*g(a))**e))
         else:
-            args.append(cos(a)**e)
+            args.append(f(a)**e)
     return Mul(*args)

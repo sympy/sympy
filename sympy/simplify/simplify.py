@@ -1647,7 +1647,7 @@ def __trigsimp(expr, deep=False, to_tan=False):
             com, nc = expr.args_cnc()
             expr = _trigsimp(Mul._from_args(com), deep, to_tan)*Mul._from_args(nc)
         else:
-            expr = _replace_mult_morrie(expr)
+            expr = _replace_mult_morrie(expr, cos, sin)
             expr = _artefact1(expr)
 
             for i in range(21):
