@@ -1,4 +1,4 @@
-""" SymPy interface to Unificaiton engine
+""" SymPy interface to Unification engine
 
 See sympy.unify for module level docstring
 See sympy.unify.core for algorithmic docstring """
@@ -78,7 +78,7 @@ def unify(x, y, s=None, variables=(), **kwargs):
     ========
 
     >>> from sympy.unify.usympy import unify
-    >>> from sympy import Basic
+    >>> from sympy import Basic, cos
     >>> from sympy.abc import x, y, z, p, q
     >>> from sympy.core.compatibility import next
 
@@ -86,7 +86,7 @@ def unify(x, y, s=None, variables=(), **kwargs):
     {x: 2}
 
     >>> expr = 2*x + y + z
-    >>> pattern = 2*p +q
+    >>> pattern = 2*p + q
     >>> next(unify(expr, pattern, {}, variables=(p, q)))
     {p: x, q: y + z}
 
@@ -97,7 +97,23 @@ def unify(x, y, s=None, variables=(), **kwargs):
     >>> len(list(unify(expr, pattern, {}, variables=(p, q))))
     12
 
-    Wilds may be specified directly in the call to unify
+    Symbols not indicated to be variables are treated as literal,
+    else they are wild-like and match anything in an sub-expression like
+    that in which they appear.
+
+    >>> expr = x*y*z + 3
+    >>> pattern = x*y + 3
+    >>> next(unify(expr, pattern, {}, variables=[x, y]))
+    {x: y, y: x*z}
+
+    The x and y of the pattern above were in a Mul and matched factors
+    in the Mul of expr. Here, the match produces no results because
+    a Symbol cannot match a Mul.
+
+    >>> expr = x*y + 3
+    >>> pattern = x + 3
+    >>> len(list(unify(expr, pattern, {}, variables=[x])))
+    0
 
     """
     decons = lambda x: deconstruct(x, variables)
