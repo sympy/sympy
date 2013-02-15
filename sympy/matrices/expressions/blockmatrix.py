@@ -9,6 +9,7 @@ from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.matrices import Matrix, eye
 
@@ -360,3 +361,35 @@ def bc_matmul(expr):
         else:
             i+=1
     return MatMul(factor, *matrices).doit()
+
+def bounds(sizes):
+    """ Convert sequence of numbers into pairs of low-high pairs
+
+    >>> from sympy.matrices.expressions.blockmatrix import bounds
+    >>> bounds((1, 10, 50))
+    [(0, 1), (1, 11), (11, 61)]
+    """
+    low = 0
+    rv = []
+    for size in sizes:
+        rv.append((low, low + size))
+        low += size
+    return rv
+
+def blockcut(expr, rowsizes, colsizes):
+    """ Cut a matrix expression into Blocks
+
+    >>> from sympy import ImmutableMatrix, blockcut
+    >>> M = ImmutableMatrix(4, 4, range(16))
+    >>> B = blockcut(M, (1, 3), (1, 3))
+    >>> type(B).__name__
+    'BlockMatrix'
+    >>> ImmutableMatrix(B.blocks[0, 1])
+    [1, 2, 3]
+    """
+
+    rowbounds = bounds(rowsizes)
+    colbounds = bounds(colsizes)
+    return BlockMatrix([[MatrixSlice(expr, rowbound, colbound)
+                         for colbound in colbounds]
+                         for rowbound in rowbounds])
