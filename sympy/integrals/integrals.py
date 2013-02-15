@@ -629,7 +629,7 @@ class Integral(Expr):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
-        x**3/log(x) - x/log(x)
+        Piecewise((2, x == 1), (x**3/log(x) - x/log(x), True))
 
         See Also
         ========

@@ -438,6 +438,8 @@ def test_integrate_DiracDelta():
 def test_integrate_returns_piecewise():
     assert integrate(x**y, x) == Piecewise(
         (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
+    assert integrate(x**y, y) == Piecewise(
+        (y, Eq(x, 1)), (x**y/log(x), True))
 
 
 def test_subs1():

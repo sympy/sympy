@@ -29,11 +29,12 @@ from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
 
-from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
+from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan, Piecewise
 
 from sympy.integrals import Integral, integrate
 
@@ -335,6 +336,9 @@ class DifferentialExtension(object):
                 else:
                     # i in numpows
                     newterm = new
+                # We have to be careful if the base is S.One!
+                if i.base != x:
+                    newterm = Piecewise((S.One, Eq(i.base, S.One)), (newterm, True))
                 # TODO: Just put it in self.Tfuncs
                 self.backsubs.append((new, old))
                 self.newf = self.newf.xreplace({old: newterm})
