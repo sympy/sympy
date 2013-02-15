@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from sympy.core import Dummy, Wild, S
-from sympy.core.numbers import Rational, Integer
-from sympy.functions import binomial, sin, cos, tan, sec, csc, cot
-from sympy.core.cache import cacheit
+from sympy.core import cacheit, Dummy, Eq, Integer, Rational, S, Wild
+from sympy.functions import binomial, sin, cos, tan, sec, csc, cot, Piecewise
 
 # TODO sin(a*x)*cos(b*x) -> sin((a+b)x) + sin((a-b)x) ?
 
@@ -66,6 +64,7 @@ def trigintegrate(f, x):
         return x
 
     a = M[a]
+    aa = Dummy('a')
 
     if n.is_odd or m.is_odd:
         u = _u
@@ -81,16 +80,18 @@ def trigintegrate(f, x):
         if n_:
             ff = -(1 - u**2)**((n - 1)/2) * u**m
             uu = cos(a*x)
+            zz = S.Zero
 
         #  n      m       u=S   n         (m-1)/2
         # S(x) * C(x) dx  -->  u  * (1-u^2)       du
         elif m_:
             ff = u**n * (1 - u**2)**((m - 1)/2)
             uu = sin(a*x)
+            zz = x
 
         fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
-        return fx / a
+        return Piecewise((zz, Eq(aa, 0)), (fx / a, True)).subs(aa, a)
 
     # n & m are both even
     #
@@ -216,7 +217,7 @@ def trigintegrate(f, x):
                 res = (Rational(-1, m + 1) * cos(x)**(m + 1) * sin(x)**(n - 1) +
                        Rational(n - 1, m + 1) *
                        integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
-    return res.subs(x, a*x) / a
+    return Piecewise((x, Eq(aa, 0)), (res.subs(x, a*x) / a, True)).subs(aa, a)
 
 
 def _sin_pow_integrate(n, x):

@@ -225,11 +225,13 @@ def test_issue519():
 
 
 def test_issue524():
-    assert integrate(cos((n + 1) * x), x) == sin(x*(n + 1)) / (n + 1)
-    assert integrate(cos((n - 1) * x), x) == sin(x*(n - 1)) / (n - 1)
-
-    assert integrate(cos((n + 1) * x) + cos((n - 1) * x), x) == \
-        sin(x*(n + 1)) / (n + 1) + sin(x*(n - 1)) / (n - 1)
+    assert integrate(cos((n + 1)*x), x) == Piecewise(
+        (x, Eq(n, -1)), (sin((n + 1)*x)/(n + 1), True))
+    assert integrate(cos((n - 1)*x), x) == Piecewise(
+        (x, Eq(n,  1)), (sin((n - 1)*x)/(n - 1), True))
+    assert integrate(cos((n + 1)*x) + cos((n - 1)*x), x) == \
+        Piecewise((x, Eq(n, -1)), (sin((n + 1)*x)/(n + 1), True)) + \
+        Piecewise((x, Eq(n, 1)), (sin((n - 1)*x)/(n - 1), True))
 
 
 def test_issue565():

@@ -1,8 +1,8 @@
-from sympy import Symbol, Rational, sin, cos, tan, csc, sec, cot
+from sympy.core import Eq, Rational, Symbol
+from sympy.functions import sin, cos, tan, csc, sec, cot, log, Piecewise
 from sympy.integrals.trigonometry import trigintegrate
-from sympy.functions.elementary.exponential import log
+
 x = Symbol('x')
-y = Symbol('y')
 
 
 def test_trigintegrate_odd():
@@ -16,6 +16,11 @@ def test_trigintegrate_odd():
     assert trigintegrate(sin(3*x), x) == -cos(3*x)/3
     assert trigintegrate(cos(3*x), x) == sin(3*x)/3
 
+    y = Symbol('y')
+    assert trigintegrate(sin(y*x), x) == Piecewise((0, Eq(y, 0)), (-cos(y*x)/y, True))
+    assert trigintegrate(cos(y*x), x) == Piecewise((x, Eq(y, 0)), (sin(y*x)/y, True))
+
+    y = Symbol('y', positive=True)
     assert trigintegrate(sin(y*x), x) == -cos(y*x)/y
     assert trigintegrate(cos(y*x), x) == sin(y*x)/y
 
