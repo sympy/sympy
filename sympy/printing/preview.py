@@ -67,8 +67,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     There is also support for writing to a StringIO like object, which needs
     to be passed to the 'outputbuffer' argument.
 
-    >>> obj = StringIO()
-    >>> preview(x + y, output='png', viewer='StringIO',
+    >>> obj = StringIO() # doctest: +SKIP
+    >>> preview(x + y, output='png', viewer='StringIO', \
                 outputbuffer=obj) # doctest: +SKIP
 
     The template for the LaTeX code, which is processed by the LaTeX
