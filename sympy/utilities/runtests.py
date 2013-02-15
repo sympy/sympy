@@ -809,7 +809,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 class SymPyTests(object):
 
     def __init__(self, reporter, kw="", post_mortem=False,
-                 seed=random.random()):
+                 seed=None):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -817,7 +817,7 @@ class SymPyTests(object):
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
-        self._seed = seed
+        self._seed = seed if seed is not None else random.random()
 
     def test(self, sort=False, timeout=False, slow=False):
         """
