@@ -1,5 +1,5 @@
 from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Interval)
+                        oo, Tuple, Interval, Eq)
 
 from sympy.core.symbol import Dummy
 from sympy.core.compatibility import is_sequence
@@ -1042,10 +1042,10 @@ class Integral(Expr):
                 M = g.base.match(a*x + b)
 
                 if M is not None:
-                    if g.exp == -1:
-                        h = C.log(g.base)
-                    else:
-                        h = g.base**(g.exp + 1) / (g.exp + 1)
+                    h1 = C.log(g.base)
+                    h2 = g.base**(g.exp + 1) / (g.exp + 1)
+                    e = Dummy('e')
+                    h = Piecewise((h1, Eq(e, -1)), (h2, True)).subs(e, g.exp)
 
                     parts.append(coeff * h / M[a])
                     continue

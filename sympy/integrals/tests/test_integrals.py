@@ -435,6 +435,11 @@ def test_integrate_DiracDelta():
         DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == 1
 
 
+def test_integrate_returns_piecewise():
+    assert integrate(x**y, x) == Piecewise(
+        (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
+
+
 def test_subs1():
     e = Integral(exp(x - y), x)
     assert e.subs(y, 3) == Integral(exp(x - 3), x)
