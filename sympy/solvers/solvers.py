@@ -48,6 +48,7 @@ from sympy.assumptions import Q, ask
 
 from types import GeneratorType
 from collections import defaultdict
+import warnings
 
 
 def _ispow(e):

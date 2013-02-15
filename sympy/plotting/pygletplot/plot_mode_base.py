@@ -5,6 +5,7 @@ from color_scheme import ColorScheme
 from sympy.core import S
 from sympy.core.compatibility import is_sequence
 from time import sleep
+import warnings
 
 from sympy.core.compatibility import callable
 
@@ -113,7 +114,7 @@ class PlotModeBase(PlotMode):
                 e = self._get_lambda_evaluator()
                 return e
             except:
-                print ("\nWarning: creating lambda evaluator failed. "
+                warnings.warn("\nWarning: creating lambda evaluator failed. "
                        "Falling back on sympy subs evaluator.")
         return self._get_sympy_evaluator()
 
