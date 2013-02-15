@@ -118,9 +118,9 @@ class Factors(object):
             factors = {-factors: S.One, S.NegativeOne: S.One}
         elif isinstance(factors, Expr):
             c, nc = factors.args_cnc()
-            factors = dict(Mul(*c, evaluate=False).as_powers_dict())
+            factors = dict(Mul(*c, **dict(evaluate=False)).as_powers_dict())
             if nc:
-                factors[Mul(*nc, evaluate=False)] = S.One
+                factors[Mul(*nc, **dict(evaluate=False))] = S.One
 
         # sanitizing
         if factors.get(S.NegativeOne, S.One) is not S.One:
