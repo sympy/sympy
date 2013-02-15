@@ -1296,6 +1296,14 @@ def integrate_hyperexponential(a, d, DE, z=None):
 
     ret = ((g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
         qd.as_expr()).subs(s) + residue_reduce_to_basic(g2, DE, z))
+    if DE.x not in qd.as_expr().subs(s).free_symbols:
+        aa = Dummy('a')
+        ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
+            Piecewise(
+                (DE.x, Eq(aa, 0)),
+                ((qa.as_expr()/qd.as_expr()).subs(s), True)
+            ).subs(aa, qd.as_expr().subs(s)) +
+            residue_reduce_to_basic(g2, DE, z))
 
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
