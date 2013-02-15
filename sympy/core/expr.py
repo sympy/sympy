@@ -972,7 +972,8 @@ class Expr(Basic, EvalfMixin):
         as_coeff_Add: separate the additive constant from an expression
         as_coeff_Mul: separate the multiplicative constant from an expression
         as_independent: separate x-dependent terms/factors from others
-        sympy.polys.polytools.nth: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.nth: like coeff_monomial but powers of monomial terms are used
 
         Examples
         ========
@@ -1265,11 +1266,6 @@ class Expr(Basic, EvalfMixin):
         of 'expr' and 'expr'-free coefficient. If such separation
         is not possible it will return None.
 
-        See Also
-        ========
-
-        coeff
-
         Examples
         ========
 
@@ -1295,7 +1291,7 @@ class Expr(Basic, EvalfMixin):
         2
         >>> p = Poly(2*E + x*E); p
         Poly(x*E + 2*E, x, E, domain='ZZ')
-        >>> p.monomial_coeff(E)
+        >>> p.coeff_monomial(E)
         2
         >>> p.nth(0,1)
         2
@@ -1313,6 +1309,17 @@ class Expr(Basic, EvalfMixin):
         >>> (2*pi*I).as_coefficient(pi*I)
         2
         >>> (2*I).as_coefficient(pi*I)
+
+        See Also
+        ========
+
+        coeff: return sum of terms have a given factor
+        as_coeff_Add: separate the additive constant from an expression
+        as_coeff_Mul: separate the multiplicative constant from an expression
+        as_independent: separate x-dependent terms/factors from others
+        sympy.polys.polytools.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.nth: like coeff_monomial but powers of monomial terms are used
+
 
         """
 

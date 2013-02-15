@@ -1827,7 +1827,7 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'EC')
 
-    def monomial_coeff(f, monom):
+    def coeff_monomial(f, monom):
         """
         Returns the coefficient ``monom`` in ``f`` if there, else None.
 
@@ -1839,11 +1839,11 @@ class Poly(Expr):
 
         >>> p = Poly(24*x*y*exp(8) + 23*x, x, y)
 
-        >>> p.monomial_coeff(x)
+        >>> p.coeff_monomial(x)
         23
-        >>> p.monomial_coeff(y)
+        >>> p.coeff_monomial(y)
         0
-        >>> p.monomial_coeff(x*y)
+        >>> p.coeff_monomial(x*y)
         24*exp(8)
 
         Note that ``Expr.coeff()`` behaves differently, collecting terms
