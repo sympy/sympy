@@ -268,7 +268,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         else:
             with open(os.devnull, 'wb') as devnull:
                 check_call([viewer, src], stdout=devnull, stderr=STDOUT)
-            time.sleep(2)  # wait for the viewer to read data
     finally:
         os.chdir(cwd)
         try:
