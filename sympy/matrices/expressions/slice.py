@@ -51,6 +51,8 @@ class MatrixSlice(MatrixExpr):
             (0 > colslice[0]) == True or
             (parent.shape[1] < colslice[1]) == True):
             raise IndexError()
+        if isinstance(parent, MatrixSlice):
+            return mat_slice_of_slice(parent, rowslice, colslice)
         return Basic.__new__(cls, parent, Tuple(*rowslice), Tuple(*colslice))
 
     @property
@@ -74,3 +76,32 @@ class MatrixSlice(MatrixExpr):
             return MatrixSlice(self.parent, self.colslice, self.rowslice)
         else:
             return super(MatrixSlice, self)._eval_transpose()
+
+
+def slice_of_slice(s, t):
+    start1, stop1, step1 = s
+    start2, stop2, step2 = t
+
+    start = start1 + start2*step1
+    step = step1 * step2
+    stop = start1 + step1*stop2
+
+    if stop > stop1:
+        raise IndexError()
+
+    return start, stop, step
+
+
+def mat_slice_of_slice(parent, rowslice, colslice):
+    """ Collapse nested matrix slices
+
+    >>> from sympy import MatrixSymbol
+    >>> X = MatrixSymbol('X', 10, 10)
+    >>> X[:, 1:5][5:8, :]
+    X[5:8, 1:5]
+    >>> X[1:9:2, 2:6][1:3, 2]
+    X[3:7:2, 4]
+    """
+    row = slice_of_slice(parent.rowslice, rowslice)
+    col = slice_of_slice(parent.colslice, colslice)
+    return MatrixSlice(parent.parent, row, col)
