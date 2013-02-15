@@ -1,6 +1,7 @@
-from sympy import S, C, sin, cos, tan, cot, exp, Add, sinh, cosh
+from sympy import S, C, sin, cos, tan, cot, exp, Add, sinh, cosh, tanh
 from sympy.abc import x, y, z, a, b, c
-from sympy.simplify.simplify_utils import replace_add_fgfg, replace_mul_f2g
+from sympy.simplify.simplify_utils import replace_add_fgfg, replace_mul_f2g, \
+  _replace_mult_morrie, replace_mul_fpowf2, _match_f1_plus_f2, _match_ff_plus_1
 from sympy.simplify.simplify import TR10_inv
 from sympy.core.function import expand_multinomial, expand_mul
 from sympy.core.compatibility import ordered
@@ -95,3 +96,40 @@ def test_replace_mul_f2g():
     assert rep(cosh(x)*cosh(2*x)/(sinh(x)*sinh(4*x))) == 1/(4*sinh(x)**2)
     assert rep(sinh(1)*sinh(4*x)/(cosh(x)*cosh(2*x))) == 4*sinh(1)*sinh(x)
     assert rep(cosh(2*x)/(sinh(x)*cosh(x)*sinh(4*x))) == 1/sinh(2*x)**2
+
+
+def test_replace_mul_fpowf2():
+    rep = lambda expr: replace_mul_fpowf2(expr, tan, -1, \
+        lambda sign, x, y: tan(x + sign*y), _match_f1_plus_f2, _match_ff_plus_1)
+
+    tx, ty = tan(x), tan(y)
+    t = tx*ty
+    for s in (-1, 1):
+        assert rep((2*tx - s*2*ty)**3/(1 + s*t)**3) == 8*(tan(x - s*y))**3
+        assert rep((2*tx-s*2*ty)*(tx-s*ty)**2/(1+s*t)**3) == 2*(tan(x-s*y))**3
+        assert rep((2*tx - s*2*ty)**2/(1 + s*t)) == 4*tan(x - s*y)*(tx - s*ty)
+        assert rep((2*tx - s*2*ty)/(1 + s*t)**2) == 2*tan(x - s*y)/(1 + s*t)
+    for expr in [(2*tx + 2*ty)**3/(1 + t)**3, (2*tx + 2*ty)**2/(1 + t), \
+            (2*tx + 2*ty)/(1 + t)**2, (2*tx + 2*ty)*(1 - t), \
+            (2*tx + 2*ty**2)/(1 + t), ]:
+        assert rep(expr) is expr
+
+    rep = lambda expr:  replace_mul_fpowf2(expr, tanh, 1, \
+      lambda sign, x, y: tanh(x + sign*y), _match_f1_plus_f2, _match_ff_plus_1)
+
+    tx, ty = tanh(x), tanh(y)
+    t = tx*ty
+    for s in (-1, 1):
+        assert rep((2*tx + s*2*ty)**3/(1 + s*t)**3) == 8*(tanh(x + s*y))**3
+        assert rep((2*tx+s*2*ty)*(tx+s*ty)**2/(1+s*t)**3) == 2*(tanh(x+s*y))**3
+        assert rep((2*tx + s*2*ty)**2/(1 + s*t)) == 4*tanh(x + s*y)*(tx + s*ty)
+        res = rep((2*tx + s*2*ty)/(1 + s*t)**2)
+        expr = (2*tx + s*2*ty)/(1 + s*t)**2
+        assert rep((2*tx + s*2*ty)/(1 + s*t)**2) == 2*tanh(x + s*y)/(1 + s*t)
+    for expr in [(2*tx + 2*ty)**3/(1 - t)**3, (2*tx + 2*ty)**2/(1 - t), \
+            (2*tx + 2*ty)/(1 - t)**2, (2*tx + 2*ty)*(1 + t), \
+            (2*tx + 2*ty**2)/(1 + t), ]:
+        assert rep(expr) is expr
+
+def test_vars():
+    assert _replace_mult_morrie(S.One, cos, sin) == 1

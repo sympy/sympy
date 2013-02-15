@@ -260,10 +260,16 @@ def replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph, mf=None, mg=None):
         args.append(g(key)**e)
     return Mul(*args)
 
-def replace_mul_fpowf2(expr, f, rexp, sgn, h, mn, md):
+def replace_mul_fpowf2(expr, f, sgn, h, mn, md):
     """
-    replace ``(f(x) + sign*f(y))**e1*(1 - sgn*sign*f(x)*f(y))**e2``
-    with ``h(sign, x, y)**e1`` where ``e2 = rexp(e1)``
+    replace ``(f(x) + sign*f(y))/(1 - sgn*sign*f(x)*f(y))``
+    with ``h(sign, x, y)``
+
+    Notes
+    =====
+
+    ``mn(b, f)`` returns ``(c, sign, x, y)`` for ``b = c*f(x) + sign*c*f(y)``
+    ``md(b, f)`` returns ``(c, sign, x, y)`` for ``b = c + sign*f(x)*f(y)``
     """
     nargs = defaultdict(list)
     dargs = defaultdict(list)
@@ -294,13 +300,20 @@ def replace_mul_fpowf2(expr, f, rexp, sgn, h, mn, md):
         key = common.pop()
         a1 = nargs.pop(key)
         a2 = dargs.pop(key)
-        e1 = Add(*[x[2] for x in a1])
-        e2 = Add(*[x[2] for x in a2])
-        if e1 == rexp(e2):
-            c1 = Mul(*[x[1]**x[2] for x in a1])
-            c2 = Mul(*[x[1]**x[2] for x in a2])
-            args.append(c1*c2*h(*key)**e1)
+        sign, x, y = key
+        e1 = Add(*[w[2] for w in a1])
+        e2 = Add(*[w[2] for w in a2])
+        c1 = Mul(*[w[1]**w[2] for w in a1])
+        c2 = Mul(*[w[1]**w[2] for w in a2])
+        args.append(c1*c2)
+        if e1*e2 < 0:
             hit = True
+            if e1 <= -e2:
+                args.append(h(*key)**e1)
+                args.append((S.One + sgn*sign*f(x)*f(y))**(e1 + e2))
+            else:
+                args.append(h(*key)**-e2)
+                args.append((f(x) + sign*f(y))**(e1 + e2))
         else:
             for i, c, e in a1:
                 args.append(expr.args[i])
@@ -334,7 +347,7 @@ def _match_f_minus_1(expr, f):
     return __match_f_plus_sign(expr, f, -1)
 
 
-def _match_f1_flus_f2(expr, f):
+def _match_f1_plus_f2(expr, f):
     """
     match ``c1*f(x1) + c2*f(x2)``; return ``(c1, sign, x1, x2)``
     if ``c2 = sign*c1``, else return ``None``
@@ -359,8 +372,6 @@ def _match_f1_flus_f2(expr, f):
     if e1 != 1 or e2 != 1:
         return None
     a = [x1, x2]
-    #a1 = ordered(a)
-    #a1 = sorted(a)
     a1 = list(ordered(a))
     if a == a1:
         return (sa[0], sign, x1, x2)
@@ -574,9 +585,6 @@ def replace_mul_f2g(expr, f, g):
                         changed = True
                         hit = True
                         break
-
-
-
     if not hit:
         return expr
     args.append(coeff)

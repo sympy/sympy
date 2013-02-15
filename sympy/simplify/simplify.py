@@ -26,7 +26,7 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 from sympy.simplify.simplify_utils import replace_add_fgfg, \
     replace_mul_fpowxgpow, _match_f_plus_1, _match_f_minus_1, \
-    _match_f1_flus_f2, _match_ff_plus_1, \
+    _match_f1_plus_f2, _match_ff_plus_1, \
     replace_add1, replace_mul_f1, replace_mul_fapb, replace_mul_f2g, \
     replace_add2, replace_mul_fpowf2, _replace_mult_morrie
 
@@ -1501,8 +1501,8 @@ def _match_div_rewrite(expr, i):
         expr = replace_mul_f2g(expr, sin, cos)
     elif i == 9:
         # (tan(a) + tan(b))/(1 - tan(a)*tan(b)) -> tan(a + b)
-        expr = replace_mul_fpowf2(expr, tan, _midn, -1, \
-                lambda sign, x, y: tan(x + sign*y), _match_f1_flus_f2, _match_ff_plus_1)
+        expr = replace_mul_fpowf2(expr, tan, -1, \
+                lambda sign, x, y: tan(x + sign*y), _match_f1_plus_f2, _match_ff_plus_1)
         return expr
     elif i == 10:
         return expr
@@ -1531,8 +1531,8 @@ def _match_div_rewrite(expr, i):
         expr = replace_mul_fpowxgpow(expr, coth, tanh, _idn, _one, _idn)
     elif i == 19:
         # (tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)) -> tanh(a + b)
-        expr = replace_mul_fpowf2(expr, tanh, _midn, 1, \
-                lambda sign, x, y: tanh(x + sign*y), _match_f1_flus_f2, _match_ff_plus_1)
+        expr = replace_mul_fpowf2(expr, tanh, 1, \
+                lambda sign, x, y: tanh(x + sign*y), _match_f1_plus_f2, _match_ff_plus_1)
     elif i == 20:
         #return expr
         # sinh(2*x)**c/sinh(x)**c -> (2*cosh(x))**c

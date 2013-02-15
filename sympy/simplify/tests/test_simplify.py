@@ -122,6 +122,7 @@ def test_trigsimp1():
     assert trigsimp(log(e), deep=True) == log(2)
 
 def test_trigsimp1a():
+    assert trigsimp(cos(1)*sin(2)*sin(3)/cos(3)) == cos(1)*sin(2)*tan(3)
     assert trigsimp(sin(2)**2*cos(3)*exp(2)/cos(2)**2) == tan(2)**2*cos(3)*exp(2)
     assert trigsimp(tan(2)**2*cos(3)*exp(2)*cos(2)**2) == sin(2)**2*cos(3)*exp(2)
     assert trigsimp(cot(2)*cos(3)*exp(2)*sin(2)) == cos(3)*exp(2)*cos(2)
