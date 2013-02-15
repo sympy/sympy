@@ -1,5 +1,6 @@
 from sympy.rules.strat_pure import (null_safe, exhaust, memoize, condition,
-        chain, tryit, do_one, debug, switch)
+        chain, tryit, do_one, debug, switch, minimize)
+from functools import partial
 
 def test_null_safe():
     def rl(expr):
@@ -68,3 +69,12 @@ def test_switch():
     assert rl(3) == 4
     assert rl(4) == 3
     assert rl(5) == 5
+
+def test_minimize():
+    inc = lambda x: x + 1
+    dec = lambda x: x - 1
+    rl = minimize(inc, dec)
+    assert rl(4) == 3
+
+    rl = minimize(inc, dec, objective=lambda x: -x)
+    assert rl(4) == 5

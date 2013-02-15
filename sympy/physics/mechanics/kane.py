@@ -178,8 +178,8 @@ class KanesMethod(object):
 
         r1, c1 = A.shape
         r2, c2 = B.shape
-        temp1 = Matrix(r1, c1, lambda i, j: Symbol('x' + str(j + r1 * i)))
-        temp2 = Matrix(r2, c2, lambda i, j: Symbol('y' + str(j + r2 * i)))
+        temp1 = Matrix(r1, c1, lambda i, j: Symbol('x' + str(j) + str(r1 * i)))
+        temp2 = Matrix(r2, c2, lambda i, j: Symbol('y' + str(j) + str(r2 * i)))
         for i in range(len(temp1)):
             if A[i] == 0:
                 temp1[i] = 0
@@ -290,16 +290,16 @@ class KanesMethod(object):
             p = o - m  # number of independent speeds
             # For a reminder, form of non-holonomic constraints is:
             # B u + C = 0
-            B = self._k_nh[:m, :]
-            C = self._f_nh[:m, 0]
+            B = self._k_nh[:, :]
+            C = self._f_nh[:, 0]
 
             # We partition B into indenpendent and dependent columns
             # Ars is then -Bdep.inv() * Bind, and it relates depedent speeds to
             # independent speeds as: udep = Ars uind, neglecting the C term here.
             self._depB = B
             self._depC = C
-            mr1 = B[:m, :p]
-            ml1 = B[:m, p:o]
+            mr1 = B[:, :p]
+            ml1 = B[:, p:o]
             self._Ars = - self._mat_inv_mul(ml1, mr1)
 
     def kindiffdict(self):
@@ -560,8 +560,14 @@ class KanesMethod(object):
         fr = self._form_fr(FL)
         frstar = self._form_frstar(BL)
         if self._uaux != []:
-            km = KanesMethod(self._inertial, self._q, self._uaux,
+            if self._udep == []:
+                km = KanesMethod(self._inertial, self._q, self._uaux,
                              u_auxiliary=self._uaux)
+            else:
+                km = KanesMethod(self._inertial, self._q, self._uaux,
+                u_auxiliary=self._uaux, u_dependent=self._udep,
+                velocity_constraints=(self._k_nh * Matrix(self._u) + self._f_nh))
+            self._km = km
             fraux = km._form_fr(FL)
             frstaraux = km._form_frstar(BL)
             self._aux_eq = fraux + frstaraux

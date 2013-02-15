@@ -8,8 +8,10 @@ from sympy.physics.quantum.qexpr import QExpr
 from sympy.physics.quantum.cartesian import X, Px
 from sympy.functions.special.tensor_functions import KroneckerDelta
 from sympy.physics.quantum.hilbert import ComplexSpace
+from sympy.physics.quantum.matrixutils import matrix_zeros
+from sympy.physics.quantum.represent import represent
 
-#-------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 
 class SHOOp(Operator):
     """A base class for the SHO Operators.
@@ -35,7 +37,8 @@ class RaisingOp(SHOOp):
 
     When a^dagger acts on a state it raises the state up by one. Taking
     the adjoint of a^dagger returns 'a', the Lowering Operator. a^dagger
-    be rewritten in terms of postion and momentum.
+    can be rewritten in terms of postion and momentum. We can represent
+    a^dagger as a matrix, which will be its default basis.
 
     Parameters
     ==========
@@ -84,6 +87,17 @@ class RaisingOp(SHOOp):
         >>> qapply(ad*k)
         sqrt(k + 1)*|k + 1>
 
+    Matrix Representation
+
+        >>> from sympy.physics.quantum.sho1d import RaisingOp
+        >>> from sympy.physics.quantum.represent import represent
+        >>> ad = RaisingOp('a')
+        >>> represent(ad, basis=N, ndim=4, format='sympy')
+        [0,       0,       0, 0]
+        [1,       0,       0, 0]
+        [0, sqrt(2),       0, 0]
+        [0,       0, sqrt(3), 0]
+
     """
 
     def _eval_rewrite_as_xp(self, *args):
@@ -103,9 +117,34 @@ class RaisingOp(SHOOp):
         temp = ket.n + Integer(1)
         return sqrt(temp)*SHOKet(temp)
 
-    #---------------------------------------------------------------------
+    def _represent_default_basis(self, **options):
+        return self._represent_NumberOp(None, **options)
+
+    def _represent_XOp(self, basis, **options):
+        # This logic is good but the underlying positon
+        # representation logic is broken.
+        # temp = self.rewrite('xp').doit()
+        # result = represent(temp, basis=X)
+        # return result
+        raise NotImplementedError('Position representation is not implemented')
+
+    def _represent_NumberOp(self, basis, **options):
+        ndim_info = options.get('ndim', 4)
+        format = options.get('format','sympy')
+        spmatrix = options.get('spmatrix', 'csr')
+        matrix = matrix_zeros(ndim_info, ndim_info, **options)
+        for i in range(ndim_info - 1):
+            value = sqrt(i + 1)
+            if format == 'scipy.sparse':
+                value = float(value)
+            matrix[i + 1, i] = value
+        if format == 'scipy.sparse':
+            matrix = matrix.tocsr()
+        return matrix
+
+    #--------------------------------------------------------------------------
     # Printing Methods
-    #---------------------------------------------------------------------
+    #--------------------------------------------------------------------------
 
     def _print_contents(self, printer, *args):
         arg0 = printer._print(self.args[0], *args)
@@ -126,7 +165,8 @@ class LoweringOp(SHOOp):
 
     When 'a' acts on a state it lowers the state up by one. Taking
     the adjoint of 'a' returns a^dagger, the Raising Operator. 'a'
-    be rewritten in terms of position and momentum.
+    can be rewritten in terms of position and momentum. We can
+    represent 'a' as a matrix, which will be its default basis.
 
     Parameters
     ==========
@@ -185,6 +225,17 @@ class LoweringOp(SHOOp):
         >>> qapply(a*k)
         0
 
+    Matrix Representation
+
+        >>> from sympy.physics.quantum.sho1d import LoweringOp
+        >>> from sympy.physics.quantum.represent import represent
+        >>> a = LoweringOp('a')
+        >>> represent(a, basis=N, ndim=4, format='sympy')
+        [0, 1,       0,       0]
+        [0, 0, sqrt(2),       0]
+        [0, 0,       0, sqrt(3)]
+        [0, 0,       0,       0]
+
     """
 
     def _eval_rewrite_as_xp(self, *args):
@@ -207,6 +258,31 @@ class LoweringOp(SHOOp):
         else:
             return sqrt(ket.n)*SHOKet(temp)
 
+    def _represent_default_basis(self, **options):
+        return self._represent_NumberOp(None, **options)
+
+    def _represent_XOp(self, basis, **options):
+        # This logic is good but the underlying positon
+        # representation logic is broken.
+        # temp = self.rewrite('xp').doit()
+        # result = represent(temp, basis=X)
+        # return result
+        raise NotImplementedError('Position representation is not implemented')
+
+    def _represent_NumberOp(self, basis, **options):
+        ndim_info = options.get('ndim', 4)
+        format = options.get('format', 'sympy')
+        spmatrix = options.get('spmatrix', 'csr')
+        matrix = matrix_zeros(ndim_info, ndim_info, **options)
+        for i in range(ndim_info - 1):
+            value = sqrt(i + 1)
+            if format == 'scipy.sparse':
+                value = float(value)
+            matrix[i,i + 1] = value
+        if format == 'scipy.sparse':
+            matrix = matrix.tocsr()
+        return matrix
+
 
 class NumberOp(SHOOp):
     """The Number Operator is simply a^dagger*a
@@ -214,7 +290,8 @@ class NumberOp(SHOOp):
     It is often useful to write a^dagger*a as simply the Number Operator
     because the Number Operator commutes with the Hamiltonian. And can be
     expressed using the Number Operator. Also the Number Operator can be
-    applied to states.
+    applied to states. We can represent the Number Operator as a matrix,
+    which will be its default basis.
 
     Parameters
     ==========
@@ -227,13 +304,15 @@ class NumberOp(SHOOp):
     ========
 
     Create a Number Operator and rewrite it in terms of the ladder
-    operators and Hamiltonian:
+    operators, position and momentum operators, and Hamiltonian:
 
         >>> from sympy.physics.quantum.sho1d import NumberOp
 
         >>> N = NumberOp('N')
         >>> N().rewrite('a').doit()
         RaisingOp(a)*a
+        >>> N().rewrite('xp').doit()
+        -1/2 + (m**2*omega**2*X**2 + Px**2)/(2*hbar*m*omega)
         >>> N().rewrite('H').doit()
         -1/2 + H/(hbar*omega)
 
@@ -264,10 +343,25 @@ class NumberOp(SHOOp):
         >>> qapply(N*k)
         k*|k>
 
+    Matrix Representation
+
+        >>> from sympy.physics.quantum.sho1d import NumberOp
+        >>> from sympy.physics.quantum.represent import represent
+        >>> N = NumberOp('N')
+        >>> represent(N, basis=N, ndim=4, format='sympy')
+        [0, 0, 0, 0]
+        [0, 1, 0, 0]
+        [0, 0, 2, 0]
+        [0, 0, 0, 3]
+
     """
 
     def _eval_rewrite_as_a(self, *args):
         return ad*a
+
+    def _eval_rewrite_as_xp(self, *args):
+        return (Integer(1)/(Integer(2)*m*hbar*omega))*(Px**2 + (
+            m*omega*X)**2) - Integer(1)/Integer(2)
 
     def _eval_rewrite_as_H(self, *args):
         return H/(hbar*omega) - Integer(1)/Integer(2)
@@ -284,13 +378,39 @@ class NumberOp(SHOOp):
     def _eval_commutator_LoweringOp(self, other):
         return Integer(-1)*other
 
+    def _represent_default_basis(self, **options):
+        return self._represent_NumberOp(None, **options)
+
+    def _represent_XOp(self, basis, **options):
+        # This logic is good but the underlying positon
+        # representation logic is broken.
+        # temp = self.rewrite('xp').doit()
+        # result = represent(temp, basis=X)
+        # return result
+        raise NotImplementedError('Position representation is not implemented')
+
+    def _represent_NumberOp(self, basis, **options):
+        ndim_info = options.get('ndim', 4)
+        format = options.get('format', 'sympy')
+        spmatrix = options.get('spmatrix', 'csr')
+        matrix = matrix_zeros(ndim_info, ndim_info, **options)
+        for i in range(ndim_info):
+            value = i
+            if format == 'scipy.sparse':
+                value = float(value)
+            matrix[i,i] = value
+        if format == 'scipy.sparse':
+            matrix = matrix.tocsr()
+        return matrix
+
 
 class Hamiltonian(SHOOp):
     """The Hamiltonian Operator.
 
     The Hamiltonian is used to solve the time-independent Schrodinger
     equation. The Hamiltonian can be expressed using the ladder operators,
-    as well as by position and momentum.
+    as well as by position and momentum. We can represent the Hamiltonian
+    Operator as a matrix, which will be its default basis.
 
     Parameters
     ==========
@@ -335,6 +455,18 @@ class Hamiltonian(SHOOp):
         >>> qapply(H*k)
         hbar*k*omega*|k> + hbar*omega*|k>/2
 
+    Matrix Representation
+
+        >>> from sympy.physics.quantum.sho1d import Hamiltonian
+        >>> from sympy.physics.quantum.represent import represent
+
+        >>> H = Hamiltonian('H')
+        >>> represent(H, basis=N, ndim=4, format='sympy')
+        [hbar*omega/2,              0,              0,              0]
+        [           0, 3*hbar*omega/2,              0,              0]
+        [           0,              0, 5*hbar*omega/2,              0]
+        [           0,              0,              0, 7*hbar*omega/2]
+
     """
 
     def _eval_rewrite_as_a(self, *args):
@@ -352,7 +484,32 @@ class Hamiltonian(SHOOp):
     def _eval_commutator_NumberOp(self, other):
         return Integer(0)
 
-#-------------------------------------------------------------------------
+    def _represent_default_basis(self, **options):
+        return self._represent_NumberOp(None, **options)
+
+    def _represent_XOp(self, basis, **options):
+        # This logic is good but the underlying positon
+        # representation logic is broken.
+        # temp = self.rewrite('xp').doit()
+        # result = represent(temp, basis=X)
+        # return result
+        raise NotImplementedError('Position representation is not implemented')
+
+    def _represent_NumberOp(self, basis, **options):
+        ndim_info = options.get('ndim', 4)
+        format = options.get('format', 'sympy')
+        spmatrix = options.get('spmatrix', 'csr')
+        matrix = matrix_zeros(ndim_info, ndim_info, **options)
+        for i in range(ndim_info):
+            value = i + Integer(1)/Integer(2)
+            if format == 'scipy.sparse':
+                value = float(value)
+            matrix[i,i] = value
+        if format == 'scipy.sparse':
+            matirx = matrix.tocsr()
+        return hbar*omega*matrix
+
+#------------------------------------------------------------------------------
 
 class SHOState(State):
     """State class for SHO states"""
@@ -401,6 +558,19 @@ class SHOKet(SHOState, Ket):
         >>> InnerProduct(b,k).doit()
         KroneckerDelta(k, b)
 
+    Vector representation of a numerical state ket:
+
+        >>> from sympy.physics.quantum.sho1d import SHOKet, NumberOp
+        >>> from sympy.physics.quantum.represent import represent
+
+        >>> k = SHOKet(3)
+        >>> N = NumberOp('N')
+        >>> represent(k, basis=N, ndim=4)
+        [0]
+        [0]
+        [0]
+        [1]
+
     """
 
     @classmethod
@@ -410,6 +580,29 @@ class SHOKet(SHOState, Ket):
     def _eval_innerproduct_SHOBra(self, bra, **hints):
         result = KroneckerDelta(self.n, bra.n)
         return result
+
+    def _represent_default_basis(self, **options):
+        return self._represent_NumberOp(None, **options)
+
+    def _represent_NumberOp(self, basis, **options):
+        ndim_info = options.get('ndim', 4)
+        format = options.get('format', 'sympy')
+        options['spmatrix'] = 'lil'
+        vector = matrix_zeros(ndim_info, 1, **options)
+        if isinstance(self.n, Integer):
+            if self.n >= ndim_info:
+                return ValueError("N-Dimension too small")
+            value = Integer(1)
+            if format == 'scipy.sparse':
+                vector[int(self.n), 0] = 1.0
+                vector = vector.tocsr()
+            elif format == 'numpy':
+                vector[int(self.n), 0] = 1.0
+            else:
+                vector[self.n, 0] = Integer(1)
+            return vector
+        else:
+            return ValueError("Not Numerical State")
 
 
 class SHOBra(SHOState, Bra):
@@ -437,11 +630,43 @@ class SHOBra(SHOState, Bra):
         >>> b.dual_class()
         <class 'sympy.physics.quantum.sho1d.SHOKet'>
 
+    Vector representation of a numerical state bra:
+
+        >>> from sympy.physics.quantum.sho1d import SHOBra, NumberOp
+        >>> from sympy.physics.quantum.represent import represent
+
+        >>> b = SHOBra(3)
+        >>> N = NumberOp('N')
+        >>> represent(b, basis=N, ndim=4)
+        [0, 0, 0, 1]
+
     """
 
     @classmethod
     def dual_class(self):
         return SHOKet
+
+    def _represent_default_basis(self, **options):
+        return self._represent_NumberOp(None, **options)
+
+    def _represent_NumberOp(self, basis, **options):
+        ndim_info = options.get('ndim', 4)
+        format = options.get('format', 'sympy')
+        opitons['spmatrix'] = 'lil'
+        vector = matrix_zeros(1, ndim_info, **options)
+        if isinstance(self.n, Integer):
+            if self.n >= ndim_info:
+                return ValueError("N-Dimension too small")
+            if format == 'scipy.sparse':
+                vector[0, int(self.n)] = 1.0
+                vector = vector.tocsr()
+            elif format == 'numpy':
+                vector[0, int(self.n)] = 1.0
+            else:
+                vector[0, self.n] = Integer(1)
+            return vector
+        else:
+            return ValueError("Not Numerical State")
 
 
 ad = RaisingOp('a')
