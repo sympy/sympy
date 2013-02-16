@@ -165,6 +165,7 @@ def test_trigsimp1a():
         sin(8*x)*cos(1)
     expr = 32*cos(pi/11)*cos(2*pi/11)*cos(4*pi/11)*cos(8*pi/11)*cos(16*pi/11)
     assert trigsimp(expr) == 1
+    assert trigsimp(cosh(x/9)*cosh(2*x/9)*cosh(4*x/9)*cosh(8*x/9)) == sinh(16*x/9)/(16*sinh(x/9))
 
 def test_trigsimp2():
     x, y = symbols('x,y')

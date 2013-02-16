@@ -1470,79 +1470,80 @@ def _match_div_rewrite(expr, i):
     and be grouped in the same way.
     """
     if i == 0:
+        expr = _artefact1(expr, sin, cos, 1, tan, cot)
+    elif i == 1:
+        expr = _replace_mult_morrie(expr, cos, sin)
+    elif i == 2:
         # sin(b)**c/cos(b)**c -> tan(b)**c
         expr = replace_mul_fpowxgpow(expr, sin, cos, _midn, tan, _idn)
-    elif i == 1:
+    elif i == 3:
         # tan(b)**c*cos(b)**c -> sin(b)**c
         expr = replace_mul_fpowxgpow(expr, tan, cos, _idn, sin, _idn)
-    elif i == 2:
+    elif i == 4:
         # cot(b)**c*sin(b)**c -> cos(b)**c
         expr = replace_mul_fpowxgpow(expr, cot, sin, _idn, cos, _idn)
-    elif i == 3:
+    elif i == 5:
         # tan(b)**c/sin(b)**c -> 1/cos(b)**c
         expr = replace_mul_fpowxgpow(expr, tan, sin, _midn, cos, _midn)
-    elif i == 4:
+    elif i == 6:
         # cot(b)**c/cos(b)**c -> 1/sin(b)**c
         expr = replace_mul_fpowxgpow(expr, cot, cos, _midn, sin, _midn)
-    elif i == 5:
+    elif i == 7:
         # cot(b)**c*tan(b)**c -> 1
         expr = replace_mul_fpowxgpow(expr, cot, tan, _idn, _one, _idn)
-    elif i == 6:
+    elif i == 8:
         # ((cos(b) + 1)**c*(cos(b) - 1)**c -> -sin(b)**2)**c
         expr = replace_mul_fpowxgpow(expr, cos, cos, _idn, \
           lambda x: -sin(x)**2, _idn, _match_f_plus_1, _match_f_minus_1)
-    elif i == 7:
+    elif i == 9:
         # (sin(b) + 1)**c*(sin(b) - 1)**c -> (-cos(b)**2)**c
         expr = replace_mul_fpowxgpow(expr, sin, sin, _idn, \
           lambda x: -cos(x)**2, _idn, _match_f_plus_1, _match_f_minus_1)
-    elif i == 8:
+    elif i == 10:
         # sin(2*x)**c/sin(x)**c -> (2*cos(x))**c
         # sin(2*x)**c/cos(x)**c -> (2*sin(x))**c
         expr = replace_mul_f2g(expr, sin, cos)
-    elif i == 9:
+    elif i == 11:
         # (tan(a) + tan(b))/(1 - tan(a)*tan(b)) -> tan(a + b)
         expr = replace_mul_fpowf2(expr, tan, -1, \
                 lambda sign, x, y: tan(x + sign*y), _match_f1_plus_f2, _match_ff_plus_1)
-        return expr
-    elif i == 10:
-        return expr
-    elif i == 11:
-        return expr
     elif i == 12:
         return expr
 
     elif i == 13:
+        expr = _replace_mult_morrie(expr, cosh, sinh)
+    elif i == 14:
         # sinh(b)**c/cosh(b)**c -> tanh(b)**c
         expr = replace_mul_fpowxgpow(expr, sinh, cosh, _midn, tanh, _idn)
-    elif i == 14:
+    elif i == 15:
         # tanh(b)**c*cosh(b)**c -> sinh(b)**c
         expr = replace_mul_fpowxgpow(expr, tanh, cosh, _idn, sinh, _idn)
-    elif i == 15:
+    elif i == 16:
         # coth(b)**c*sinh(b)**c -> cosh(b)**c
         expr = replace_mul_fpowxgpow(expr, coth, sinh, _idn, cosh, _idn)
-    elif i == 16:
+    elif i == 17:
         # tanh(b)**c/sinh(b)**c -> 1/cosh(b)**c
         expr = replace_mul_fpowxgpow(expr, tanh, sinh, _midn, cosh, _midn)
-    elif i == 17:
+    elif i == 18:
         # coth(b)**c/cosh(b)**c -> 1/sinh(b)**c
         expr = replace_mul_fpowxgpow(expr, coth, cosh, _midn, sinh, _midn)
-    elif i == 18:
+    elif i == 19:
         # coth(b)**c*tanh(b)**c -> 1
         expr = replace_mul_fpowxgpow(expr, coth, tanh, _idn, _one, _idn)
-    elif i == 19:
+    elif i == 20:
         # (tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)) -> tanh(a + b)
         expr = replace_mul_fpowf2(expr, tanh, 1, \
                 lambda sign, x, y: tanh(x + sign*y), _match_f1_plus_f2, _match_ff_plus_1)
-    elif i == 20:
+    elif i == 21:
         #return expr
         # sinh(2*x)**c/sinh(x)**c -> (2*cosh(x))**c
         expr = replace_mul_f2g(expr, sinh, cosh)
-    else:
-        return None
+    elif i == 22:
+        expr = _artefact1(expr, sinh, cosh, -1, tanh, coth)
     return expr
 
 
-def _trigsimp(expr, deep=False, to_tan=True):
+def _trigsimp(expr, deep=False, with_tan=True):
     """
     matching trigsimp
 
@@ -1551,12 +1552,12 @@ def _trigsimp(expr, deep=False, to_tan=True):
 
     expr :
     deep : Apply trigsimp inside all objects with arguments
-    to_tan : use tan, cot, tanh, coth
+    with_tan : use rules with tan, cot, tanh, coth
     """
     # protect the cache from non-trig patterns; we only allow
     # trig patterns to enter the cache
     if expr.has(*_trigs):
-        return __trigsimp(expr, deep, to_tan)
+        return __trigsimp(expr, deep, with_tan)
     return expr
 
 _gsin = lambda x: (1 - cos(x)**2)
@@ -1616,7 +1617,7 @@ def _expand_exp(expr):
         return Add(*a)
     return expr
 
-def __artifact1(expr):
+def __artifact1(expr, f, g, sgn, h1, h2):
     if expr.is_Pow:
         b, e = expr.as_base_exp()
         if not b.is_Add or len(b.args) != 2:
@@ -1626,41 +1627,36 @@ def __artifact1(expr):
         e = S.One
     else:
         return expr
-    b = replace_add1(b, sin, cos, 1, tan, cot, to_tan=False)
+    b = replace_add1(b, f, g, sgn, h1, h2, with_tan=False)
     return b**e
 
-def _artefact1(expr):
+def _artefact1(expr, f, g, sgn, h1, h2):
     """
     replace ``(a - a*cos(x)**2)**c -> (a**sin(x)**2)**c``
     """
     if not expr.is_Mul:
         return expr
-    a = [__artifact1(x) for x in expr.args]
+    a = [__artifact1(x, f, g, sgn, h1, h2) for x in expr.args]
     return Mul(*a)
 
 @cacheit
-def __trigsimp(expr, deep=False, to_tan=False):
+def __trigsimp(expr, deep=False, with_tan=False):
     """recursive helper for trigsimp"""
     if expr.is_Mul:
         # do some simplifications like sin(x)/cos(x) -> tan(x):
         if not expr.is_commutative:
             com, nc = expr.args_cnc()
-            expr = _trigsimp(Mul._from_args(com), deep, to_tan)*Mul._from_args(nc)
+            expr = _trigsimp(Mul._from_args(com), deep, with_tan)*Mul._from_args(nc)
         else:
-            expr = _replace_mult_morrie(expr, cos, sin)
-            expr = _artefact1(expr)
 
-            for i in range(21):
+            for i in range(23):
                 if i <= 12:
                     if not expr.has(C.TrigonometricFunction):
                         continue
                 else:
                     if not expr.has(C.HyperbolicFunction):
                         continue
-                if not to_tan:
-                    if i in (0, 13):
-                        continue
-                if not to_tan and i not in (9,10,11,12,20):
+                if not with_tan and i not in (0,1,8,9,10,13,21,22):
                     continue
                 newexpr = _match_div_rewrite(expr, i)
                 if newexpr != expr:
@@ -1679,17 +1675,17 @@ def __trigsimp(expr, deep=False, to_tan=False):
                 term = Mul._from_args(com)
             else:
                 nc = S.One
-            term = _trigsimp(term, deep, to_tan)
+            term = _trigsimp(term, deep, with_tan)
             for i in range(len(_identity_v)):
                 fx, gx = _identity_v[i]
                 if i in (0, 1, 2, 6, 7, 8):
                     # simplification like `a*sin(b)**2 -> a - a*cos(b)**2`
-                    if not to_tan:
+                    if not with_tan:
                         if i not in (0, 6):
                             continue
                     term1 = replace_mul_f1(term, fx, gx)
                 else:
-                    if not to_tan:
+                    if not with_tan:
                         if i in (5, 11):
                             continue
                     # like `a*sin(b + c) -> a*(sin(b)*cos(c) + sin(c)*cos(b))`
@@ -1706,11 +1702,11 @@ def __trigsimp(expr, deep=False, to_tan=False):
 
         # Reduce any lingering artifacts, such as sin(x)**2 changing
         # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
-        expr = replace_add1(expr, sin, cos, 1, tan, cot, to_tan=to_tan)
-        expr = replace_add1(expr, sinh, cosh, -1, tanh, coth, to_tan=to_tan)
+        expr = replace_add1(expr, sin, cos, 1, tan, cot, with_tan=with_tan)
+        expr = replace_add1(expr, sinh, cosh, -1, tanh, coth, with_tan=with_tan)
 
     elif expr.is_Mul or expr.is_Pow or deep and expr.args:
-        expr = expr.func(*[_trigsimp(a, deep, to_tan) for a in expr.args])
+        expr = expr.func(*[_trigsimp(a, deep, with_tan) for a in expr.args])
 
     if expr.has(*_trigs):
         # if there are `tan` and `cot` express them in terms of `sin` and

@@ -111,7 +111,8 @@ def test_replace_mul_fpowf2():
         assert rep((2*tx - s*2*ty)/(1 + s*t)**2) == 2*tan(x - s*y)/(1 + s*t)
     for expr in [(2*tx + 2*ty)**3/(1 + t)**3, (2*tx + 2*ty)**2/(1 + t), \
             (2*tx + 2*ty)/(1 + t)**2, (2*tx + 2*ty)*(1 - t), \
-            (2*tx + 2*ty**2)/(1 + t), ]:
+            (2*tx + 2*ty**2)/(1 + t), (2*tx + 2*ty**2)/(1 + t + tx), \
+            (2*tx + 2*ty**2)/(1 + tx*ty**2)]:
         assert rep(expr) is expr
 
     rep = lambda expr:  replace_mul_fpowf2(expr, tanh, 1, \
