@@ -100,6 +100,7 @@ def dotprint(expr, **kwargs):
     >>> dotprint(x+2) # doctest: +SKIP
     """
 
+    styles = kwargs.pop('styles', styles)
     graphstyle.update(kwargs)
 
     stack = [expr]
@@ -107,7 +108,7 @@ def dotprint(expr, **kwargs):
     edges = []
     while stack:
         e = stack.pop()
-        nodes.append(dotnode(e))
+        nodes.append(dotnode(e, styles))
         edges.extend(dotedges(e))
         if isinstance(e, Basic):
             stack.extend(e.args)
