@@ -156,12 +156,10 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         latex_string = latex(expr, mode='inline', **latex_settings)
 
     try:
-        cwd = os.getcwd()
-        tmp_dir = tempfile.mkdtemp()
-        os.chdir(tmp_dir)
+        workdir = tempfile.mkdtemp()
 
-        p = Popen(['latex', '-halt-on-error'], stdin=PIPE, stdout=PIPE)
-
+        p = Popen(['latex', '-halt-on-error'], cwd=workdir, stdin=PIPE,
+                  stdout=PIPE)
         _, perr = p.communicate(formatstr % latex_string)
         if p.returncode != 0:
             raise SystemError("Failed to generate DVI output: %s", perr)
@@ -179,21 +177,18 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 "png": ["-o", "texput.png", "texput.dvi"]
             }
 
+            cmd = ["dvi" + output]
             try:
-                cmd = ["dvi" + output]
                 if dvioptions is not None:
                     cmd.extend(dvioptions)
                 else:
                     cmd.extend(defaultoptions[output])
                 cmd.extend(command_end[output])
-
-                p = Popen(cmd, stdin=PIPE, stdout=PIPE)
-                _, perr = p.communicate()
-                if p.returncode != 0:
-                    raise SystemError("Failed to generate %s output: %s" %
-                                      (output, perr))
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
+
+            with open(os.devnull, 'w') as devnull:
+                check_call(cmd, cwd=workdir, stdout=devnull, stderr=STDOUT)
 
         src = "texput.%s" % (output)
 
@@ -266,12 +261,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             win.close()
         else:
-            with open(os.devnull, 'wb') as devnull:
-                check_call([viewer, src], stdout=devnull, stderr=STDOUT)
+            with open(os.devnull, 'w') as devnull:
+                check_call([viewer, src], cwd=workdir, stdout=devnull,
+                           stderr=STDOUT)
     finally:
-        os.chdir(cwd)
         try:
-            shutil.rmtree(tmp_dir) # delete directory
+            shutil.rmtree(workdir) # delete directory
         except OSError, e:
             if e.errno != 2: # code 2 - no such file or directory
                 raise
