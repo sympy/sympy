@@ -119,6 +119,25 @@ class Factors(object):
         return "Factors({%s})" % ', '.join(
             ['%s: %s' % (k, v) for k, v in ordered(self.factors.items())])
 
+    @property
+    def is_zero(self):
+        """
+        >>> from sympy.core.exprtools import Factors
+        >>> Factors(1).div(Factors(1))[1].is_zero
+        True
+        """
+        f = self.factors
+        return len(f) == 1 and S.Zero in f
+
+    @property
+    def is_one(self):
+        """
+        >>> from sympy.core.exprtools import Factors
+        >>> Factors(1).is_one
+        True
+        """
+        return not self.factors
+
     def as_expr(self):  # Factors
         """Return the underlying expression.
 
@@ -160,7 +179,7 @@ class Factors(object):
         """
         if not isinstance(other, Factors):
             other = Factors(other)
-        if other == ZERO:
+        if other.is_zero:
             return Factors(), Factors(S.Zero)
 
         self_factors = dict(self.factors)
@@ -206,7 +225,7 @@ class Factors(object):
         """
         if not isinstance(other, Factors):
             other = Factors(other)
-        if ZERO in (self, other):
+        if any(f.is_zero for f in (self, other)):
             return Factors(S.Zero)
         factors = dict(self.factors)
 
@@ -229,8 +248,17 @@ class Factors(object):
         return Factors(factors)
 
     def div(self, other):  # Factors
-        """Return two Factors of ``divmod(self, other)``
-        such that ``self = other(quo + rem)``.
+        """Return the result of ``divmod(self, other)`` as two Factors,
+        ``quo`` and ``rem`` such that ``self = other*(quo + rem)``.
+
+        Notes
+        =====
+
+        If there is no remainder, the factors will not be empty, it will
+        be {0: 1}; the empty factors corresponds to {1: 1}. This is similar
+        to the result of string.find returning 0 for a hit and -1 for a
+        non-hit. (Normally {} and 0 mean "null" but with Factors and find
+        they have different semantics.)
 
         Examples
         ========
@@ -252,9 +280,9 @@ class Factors(object):
         """
         if not isinstance(other, Factors):
             other = Factors(other)
-            if other == ZERO:
+            if other.is_zero:
                 raise ZeroDivisionError
-            if self == ZERO:
+            if self.is_zero:
                 return Factors(S.Zero)
         quo, rem = dict(self.factors), {}
 
@@ -365,7 +393,7 @@ class Factors(object):
         """
         if not isinstance(other, Factors):
             other = Factors(other)
-            if other == ZERO:
+            if other.is_zero:
                 return Factors(self.factors)
 
         factors = {}
@@ -394,7 +422,7 @@ class Factors(object):
         """
         if not isinstance(other, Factors):
             other = Factors(other)
-            if ZERO in (self, other):
+            if any(f.is_zero for f in (self, other)):
                 return Factors(S.Zero)
 
         factors = dict(self.factors)
@@ -431,9 +459,6 @@ class Factors(object):
 
     def __ne__(self, other):  # Factors
         return not self.__eq__(other)
-
-
-ZERO = Factors(0)
 
 
 class Term(object):
