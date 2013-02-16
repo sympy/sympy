@@ -147,9 +147,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                         %s
                         \vfill
                         \end{document}
-                     """ % (package_includes, "%s")
-    else:
-        formatstr = formatstr % (package_includes, "%s")
+                     """
+    formatstr = formatstr % (package_includes, "%s")
 
     if isinstance(expr, str):
         latex_string = expr
