@@ -121,5 +121,5 @@ def dotprint(expr, **kwargs):
             stack.extend(e.args)
 
     return template%{'graphstyle': attrprint(graphstyle, delimiter='\n'),
-                     'nodes': '\n'.join(nodes),
-                     'edges': '\n'.join(edges)}
+                     'nodes': '\n'.join(sorted(set(nodes), key=len)),
+                     'edges': '\n'.join(sorted(set(edges), key=len))}
