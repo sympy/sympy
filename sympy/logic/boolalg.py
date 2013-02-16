@@ -125,7 +125,7 @@ class Not(BooleanFunction):
     is_Not = True
 
     @classmethod
-    def eval(cls, *args):
+    def eval(cls, args):
         """
         Logical Not function (negation)
 
@@ -148,18 +148,15 @@ class Not(BooleanFunction):
         >>> Not(And(And(True, x), Or(x, False)))
         Not(x)
         """
-        if len(args) > 1:
-            raise ValueError("Not can have only 1 argument")
-        arg = args[0]
-        if arg in (0, 1):  # includes True and False, too
-            return not bool(arg)
+        if args in (0, 1):  # includes True and False, too
+            return not bool(args)
         # apply De Morgan Rules
-        if arg.func is And:
-            return Or(*[Not(a) for a in arg.args])
-        if arg.func is Or:
-            return And(*[Not(a) for a in arg.args])
-        if arg.func is Not:
-            return arg.args[0]
+        if args.func is And:
+            return Or(*[Not(a) for a in args.args])
+        if args.func is Or:
+            return And(*[Not(a) for a in args.args])
+        if args.func is Not:
+            return args.args[0]
 
 
 class Nand(BooleanFunction):

@@ -72,6 +72,8 @@ def test_Xor():
 
 
 def test_Not():
+
+    raises(TypeError, lambda: Not(True, False))
     assert Not(True) is False
     assert Not(False) is True
     assert Not(0) is True
