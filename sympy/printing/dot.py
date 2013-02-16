@@ -37,14 +37,22 @@ def styleof(expr, styles=styles):
             style.update(sty)
     return style
 
+def attrprint(d, delimiter=', '):
+    """ Print a dictionary of attributes
+
+    >>> from sympy.printing.dot import attrprint
+    >>> print attrprint({'color': 'blue', 'shape': 'ellipse'})
+    "color"="blue", "shape"="ellipse"
+    """
+    return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
 
 def dotnode(expr, styles=styles):
     """ String defining a node
 
     >>> from sympy.printing.dot import dotnode
     >>> from sympy.abc import x
-    >>> dotnode(x)      # doctest: +SKIP
-    '"Symbol(x)" ["color"="black", "shape"="ellipse", "label"="x"]'
+    >>> print dotnode(x)
+    "Symbol(x)" ["color"="black", "label"="x", "shape"="ellipse"];
     """
     style = styleof(expr, styles)
 
@@ -53,8 +61,7 @@ def dotnode(expr, styles=styles):
     else:
         label = str(expr)
     style['label'] = label
-    stylestring = ', '.join('"%s"="%s"'%item for item in style.items())
-    return '"%s" [%s]' % (purestr(expr), stylestring)
+    return '"%s" [%s];' % (purestr(expr), attrprint(style))
 
 
 def dotedges(expr):
@@ -100,7 +107,7 @@ def dotprint(expr, **kwargs):
     >>> dotprint(x+2) # doctest: +SKIP
     """
 
-    styles = kwargs.pop('styles', styles)
+    s = kwargs.pop('styles', styles)
     graphstyle.update(kwargs)
 
     stack = [expr]
@@ -108,13 +115,11 @@ def dotprint(expr, **kwargs):
     edges = []
     while stack:
         e = stack.pop()
-        nodes.append(dotnode(e, styles))
+        nodes.append(dotnode(e, s))
         edges.extend(dotedges(e))
         if isinstance(e, Basic):
             stack.extend(e.args)
 
-    graphstyles = ['%s=%s;'%item for item in graphstyle.items()]
-
-    return template%{'graphstyle': '\n'.join(graphstyles),
+    return template%{'graphstyle': attrprint(graphstyle, delimiter='\n'),
                      'nodes': '\n'.join(nodes),
                      'edges': '\n'.join(edges)}
