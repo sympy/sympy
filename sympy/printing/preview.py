@@ -1,7 +1,7 @@
 from __future__ import with_statement
 
 import os
-from os.path import isabs
+from os.path import isabs, join
 import time
 from subprocess import Popen, check_call, PIPE, STDOUT
 import tempfile
@@ -196,16 +196,16 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if viewer == "file":
             if filename is None:
                 buffer = StringIO()
-                with open(src, 'rb') as fh:
+                with open(join(workdir, src), 'rb') as fh:
                     buffer.write(fh.read())
                 return buffer
             else:
                 if not isabs(filename):
                     raise ValueError("Provided filename has to be an absolute "
                                      "path")
-                os.rename(src, filename)
+                shutil.move(join(workdir,src), filename)
         elif viewer == "StringIO":
-            with open(src, 'rb') as fh:
+            with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())
         elif viewer == "pyglet":
             try:
@@ -216,7 +216,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             if output == "png":
                 from pyglet.image.codecs.png import PNGImageDecoder
-                img = image.load(src, decoder=PNGImageDecoder())
+                img = image.load(join(workdir, src), decoder=PNGImageDecoder())
             else:
                 raise SystemError("pyglet preview works only for 'png' files.")
 
