@@ -1,4 +1,3 @@
-import pydot
 from sympy import Basic, Expr, Symbol, Integer, Rational, Float
 
 styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
