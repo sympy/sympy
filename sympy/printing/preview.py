@@ -136,8 +136,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     actual_packages = packages + ("amsmath", "amsfonts")
     if euler:
         actual_packages += ("euler",)
-    package_includes = "\n".join(["\\usepackage{%s}" % p
-                                  for p in actual_packages])
+    package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
+                                         for p in actual_packages])
 
     if formatstr is None:
         formatstr = r"""\documentclass[12pt]{article}
