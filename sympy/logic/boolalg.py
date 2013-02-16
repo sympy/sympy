@@ -152,11 +152,11 @@ class Not(BooleanFunction):
             return not bool(arg)
         # apply De Morgan Rules
         if arg.func is And:
-            return Or(*[Not(a) for a in arg.arg])
+            return Or(*[Not(a) for a in arg.args])
         if arg.func is Or:
-            return And(*[Not(a) for a in arg.arg])
+            return And(*[Not(a) for a in arg.args])
         if arg.func is Not:
-            return arg.arg[0]
+            return arg.args[0]
 
 
 class Nand(BooleanFunction):
