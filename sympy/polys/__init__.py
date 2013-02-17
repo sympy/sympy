@@ -99,7 +99,7 @@ from orthopolys import (
 )
 
 from partfrac import (
-    apart,
+    apart, apart_structured, assemble_partfrac_full
 )
 
 from polyoptions import Options

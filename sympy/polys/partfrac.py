@@ -178,3 +178,166 @@ def apart_full_decomposition(P, Q):
             partial += RootSum(D, func, auto=False)
 
     return partial
+
+
+def apart_structured(f, x=None, **options):
+    """
+    Compute partial fraction decomposition of a rational function
+    and return the result in structured form.
+
+    Given a rational function ``f`` compute partial fraction decomposition
+    of ``f``. Two algorithms are available: one is based on undetermined
+    coefficients method and the other is Bronstein's full partial fraction
+    decomposition algorithm.
+
+    Examples
+    ========
+
+    >>> from sympy.polys.partfrac import apart_structured, assemble_partfrac_full
+    >>> from sympy.abc import x, y
+
+    >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
+    >>> pfd = apart_structured(f)
+    >>> pfd
+    (1,
+    Poly(0, x, domain='ZZ'),
+    [(Poly(x - 2, x, domain='ZZ'), Lambda(_a, 4), 1),
+    (Poly(x**2 - 1, x, domain='ZZ'), Lambda(_a, -3*_a - 6), 2),
+    (Poly(x + 1, x, domain='ZZ'), Lambda(_a, -4), 1)])
+
+    >>> assemble_partfrac_full(pfd, x)
+    -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
+
+    See also
+    ========
+
+    apart
+    """
+    allowed_flags(options, [])
+
+    f = sympify(f)
+
+    if f.is_Atom:
+        return f
+    else:
+        P, Q = f.as_numer_denom()
+
+    options = set_defaults(options, extension=True)
+    (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
+
+    if P.is_multivariate:
+        raise NotImplementedError(
+            "multivariate partial fraction decomposition")
+
+    common, P, Q = P.cancel(Q)
+
+    poly, P = P.div(Q, auto=True)
+    P, Q = P.rat_clear_denoms(Q)
+
+    if Q.degree() <= 1:
+        polypart = P/Q
+        partial = (common, polypart, ())
+    else:
+        polypart = poly
+        rationalpart = apart_full_decomposition_structured(P, Q)
+        partial = (common, polypart, rationalpart)
+
+    return partial
+
+
+# This could supersede the above full decomposition function
+def apart_full_decomposition_structured(P, Q):
+    f, x, U = P/Q, P.gen, []
+
+    u = Function('u')(x)
+    a = Dummy('a')
+
+    partial = []
+
+    for d, n in Q.sqf_list_include(all=True):
+        b = d.as_expr()
+        U += [ u.diff(x, n - 1) ]
+
+        h = cancel(f*b**n) / u**n
+
+        H, subs = [h], []
+
+        for j in range(1, n):
+            H += [ H[-1].diff(x) / j ]
+
+        for j in range(1, n + 1):
+            subs += [ (U[j - 1], b.diff(x, j) / j) ]
+
+        for j in range(0, n):
+            P, Q = cancel(H[j]).as_numer_denom()
+
+            for i in range(0, j + 1):
+                P = P.subs(*subs[j - i])
+
+            Q = Q.subs(*subs[0])
+
+            P = Poly(P, x)
+            Q = Poly(Q, x)
+
+            G = P.gcd(d)
+            D = d.quo(G)
+
+            B, g = Q.half_gcdex(D)
+            b = (P * B.quo(g)).rem(D)
+
+            numer = b.as_expr()
+            denom = (x - a)**(n - j)
+
+            part = (D, Lambda(a, numer.subs(x,a)), n-j)
+            partial.append(part)
+
+    return partial
+
+
+# This could be called internally from apart(...) to get unstructured result
+def assemble_partfrac_full(partial_structured, x):
+    r"""Reassemble a full partial fraction decomposition
+    from a structured result.
+
+    Examples
+    ========
+
+    This example is taken from Bronstein's original paper.
+
+    >>> from sympy.polys.partfrac import apart_structured, assemble_partfrac_full
+    >>> from sympy.abc import x, y
+
+    >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
+    >>> pfd = apart_structured(f)
+    >>> pfd
+    (1,
+    Poly(0, x, domain='ZZ'),
+    [(Poly(x - 2, x, domain='ZZ'), Lambda(_a, 4), 1),
+    (Poly(x**2 - 1, x, domain='ZZ'), Lambda(_a, -3*_a - 6), 2),
+    (Poly(x + 1, x, domain='ZZ'), Lambda(_a, -4), 1)])
+
+    >>> assemble_partfrac_full(pfd, x)
+    -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
+
+    See also
+    ========
+
+    apart
+    """
+    # What is the best way to get x from the data given?
+
+    # Common factor
+    common = partial_structured[0]
+
+    # Polynomial part
+    polypart = partial_structured[1]
+    pfd = polypart.as_expr()
+
+    # Rational parts
+    for poly, nf, ex in partial_structured[2]:
+        a, nu = nf.args
+        func = Lambda(a, nu/(x-a[0])**ex)
+        # We need an option to disallow resolution of rootsums even in quadratic case if desired
+        pfd += RootSum(poly, func, auto=False)
+
+    return common*pfd
