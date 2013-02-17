@@ -234,13 +234,9 @@ def apart_structured(f, x=None, **options):
     poly, P = P.div(Q, auto=True)
     P, Q = P.rat_clear_denoms(Q)
 
-    if Q.degree() <= 1:
-        polypart = P/Q
-        partial = (common, polypart, ())
-    else:
-        polypart = poly
-        rationalpart = apart_full_decomposition_structured(P, Q)
-        partial = (common, polypart, rationalpart)
+    polypart = poly
+    rationalpart = apart_full_decomposition_structured(P, Q)
+    partial = (common, polypart, rationalpart)
 
     return partial
 
