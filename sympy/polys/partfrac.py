@@ -334,10 +334,17 @@ def assemble_partfrac_full(partial_structured, x):
     pfd = polypart.as_expr()
 
     # Rational parts
-    for poly, nf, ex in partial_structured[2]:
-        a, nu = nf.args
-        func = Lambda(a, nu/(x-a[0])**ex)
-        # We need an option to disallow resolution of rootsums even in quadratic case if desired
-        pfd += RootSum(poly, func, auto=False)
+    for r, nf, ex in partial_structured[2]:
+        if isinstance(r, Poly):
+            # Assemble in case the roots are given implicitely by a polynomials
+            a, nu = nf.args
+            func = Lambda(a, nu/(x-a[0])**ex)
+            # We need an option to disallow resolution of rootsums even in quadratic case if desired
+            pfd += RootSum(r, func, auto=False)
+        else:
+            # Assemble in case the roots are given explicitely by a list of algebraic numbers
+            for root in r:
+                # Handles only linear denominators
+                pfd += nf(root)/(x-root)**ex
 
     return common*pfd
