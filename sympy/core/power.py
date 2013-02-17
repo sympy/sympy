@@ -946,7 +946,7 @@ class Pow(Expr):
                         arg = _c*arg
                     res.append(arg)
                 bs = Add(*res)
-                rv = (bs**e).series(x).subs(_c, O(1)).getO()
+                rv = (bs**e).series(x).subs(_c, O(1))
                 rv += order
                 return rv
 
