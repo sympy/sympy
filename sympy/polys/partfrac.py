@@ -247,6 +247,7 @@ def apart_full_decomposition_structured(P, Q):
 
     u = Function('u')(x)
     a = Dummy('a')
+    w = Dummy('w')
 
     partial = []
 
@@ -284,10 +285,11 @@ def apart_full_decomposition_structured(P, Q):
             numer = b.as_expr()
             denom = (x - a)**(n - j)
 
+            Dw = D.subs(x, w)
             nf = Lambda(a, numer.subs(x,a))
             df = Lambda(a, (x - a))
 
-            part = (D, nf, df, n-j)
+            part = (Dw, nf, df, n-j)
             partial.append(part)
 
     return partial
