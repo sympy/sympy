@@ -193,6 +193,8 @@ def apart_structured(f, x=None, **options):
     Examples
     ========
 
+    This example is taken from Bronstein's original paper.
+
     >>> from sympy.polys.partfrac import apart_structured, assemble_partfrac_full
     >>> from sympy.abc import x, y
 
@@ -201,11 +203,11 @@ def apart_structured(f, x=None, **options):
     >>> pfd
     (1,
     Poly(0, x, domain='ZZ'),
-    [(Poly(x - 2, x, domain='ZZ'), Lambda(_a, 4), 1),
-    (Poly(x**2 - 1, x, domain='ZZ'), Lambda(_a, -3*_a - 6), 2),
-    (Poly(x + 1, x, domain='ZZ'), Lambda(_a, -4), 1)])
+    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
+    (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
+    (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
 
-    >>> assemble_partfrac_full(pfd, x)
+    >>> assemble_partfrac_full(pfd)
     -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
     See also
@@ -313,11 +315,11 @@ def assemble_partfrac_full(partial_structured):
     >>> pfd
     (1,
     Poly(0, x, domain='ZZ'),
-    [(Poly(x - 2, x, domain='ZZ'), Lambda(_a, 4), 1),
-    (Poly(x**2 - 1, x, domain='ZZ'), Lambda(_a, -3*_a - 6), 2),
-    (Poly(x + 1, x, domain='ZZ'), Lambda(_a, -4), 1)])
+    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
+    (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
+    (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
 
-    >>> assemble_partfrac_full(pfd, x)
+    >>> assemble_partfrac_full(pfd)
     -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
     See also
