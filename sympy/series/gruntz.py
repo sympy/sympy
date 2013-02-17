@@ -517,7 +517,7 @@ def calculate_series(e, x, skip_abs=False, logx=None):
 
     This is a place that fails most often, so it is in its own function.
     """
-    n = 6
+    n = 1
     while 1:
         series = e.nseries(x, n=n, logx=logx)
         if not series.has(O):

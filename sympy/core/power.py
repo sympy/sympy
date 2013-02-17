@@ -935,6 +935,21 @@ class Pow(Expr):
                 return ((Pow(lt, e) * Pow((bs/lt).expand(), e).nseries(
                     x, n=nuse, logx=logx)).expand() + order)
 
+            if bs.is_Add:
+                from sympy import O
+                # So, bs + O() == terms
+                _c = Symbol('_c')
+                res = []
+                for arg in bs.args:
+                    if arg.is_Order:
+                        arg = arg.expr()
+                        arg = _c*arg
+                    res.append(arg)
+                bs = Add(*res)
+                rv = (bs**e).series(x).subs(_c, O(1)).getO()
+                rv += order
+                return rv
+
             rv = bs**e
             if terms != bs:
                 rv += order
