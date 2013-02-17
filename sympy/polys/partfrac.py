@@ -288,14 +288,17 @@ def apart_full_decomposition_structured(P, Q):
             numer = b.as_expr()
             denom = (x - a)**(n - j)
 
-            part = (D, Lambda(a, numer.subs(x,a)), n-j)
+            nf = Lambda(a, numer.subs(x,a))
+            df = Lambda(a, (x - a))
+
+            part = (D, nf, df, n-j)
             partial.append(part)
 
     return partial
 
 
 # This could be called internally from apart(...) to get unstructured result
-def assemble_partfrac_full(partial_structured, x):
+def assemble_partfrac_full(partial_structured):
     r"""Reassemble a full partial fraction decomposition
     from a structured result.
 
@@ -324,8 +327,6 @@ def assemble_partfrac_full(partial_structured, x):
 
     apart
     """
-    # What is the best way to get x from the data given?
-
     # Common factor
     common = partial_structured[0]
 
@@ -334,17 +335,20 @@ def assemble_partfrac_full(partial_structured, x):
     pfd = polypart.as_expr()
 
     # Rational parts
-    for r, nf, ex in partial_structured[2]:
+    for r, nf, df, ex in partial_structured[2]:
         if isinstance(r, Poly):
             # Assemble in case the roots are given implicitely by a polynomials
-            a, nu = nf.args
-            func = Lambda(a, nu/(x-a[0])**ex)
+            an, nu = nf.args
+            ad, de = df.args
+            # Hack to make dummies equal
+            de = de.subs(ad[0], an[0])
+            func = Lambda(an, nu/de**ex)
             # We need an option to disallow resolution of rootsums even in quadratic case if desired
             pfd += RootSum(r, func, auto=False)
         else:
             # Assemble in case the roots are given explicitely by a list of algebraic numbers
             for root in r:
                 # Handles only linear denominators
-                pfd += nf(root)/(x-root)**ex
+                pfd += nf(root)/df(root)**ex
 
     return common*pfd
