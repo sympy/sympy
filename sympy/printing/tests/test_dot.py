@@ -39,3 +39,8 @@ def test_dotprint():
     assert all(e in text for e in dotedges(x+2))
     assert all(n in text for n in map(dotnode, (x, Integer(2), x+2)))
     assert 'digraph' in text
+
+def test_dotprint_depth():
+    text = dotprint(3*x+2, depth=1)
+    assert dotnode(3*x+2) in text
+    assert dotnode(x) not in text

@@ -54,6 +54,8 @@ def dotnode(expr, styles=styles):
     >>> print dotnode(x)
     "Symbol(x)" ["color"="black", "label"="x", "shape"="ellipse"];
     """
+    if hasattr(expr, 'dotnode'):
+        return expr.dotnode(styles)
     style = styleof(expr, styles)
 
     if isinstance(expr, Basic) and not expr.is_Atom:
@@ -73,6 +75,8 @@ def dotedges(expr):
     "Add(Integer(2), Symbol(x))" -> "Integer(2)";
     "Add(Integer(2), Symbol(x))" -> "Symbol(x)";
     """
+    if hasattr(expr, 'dotedges'):
+        return expr.dotedges()
     if not isinstance(expr, Basic):
         return []
     else:
@@ -108,17 +112,20 @@ def dotprint(expr, **kwargs):
     """
 
     s = kwargs.pop('styles', styles)
+    atom = kwargs.pop('atom', lambda x: not isinstance(x, Basic))
+    maxdepth = kwargs.pop('depth', None)
+
     graphstyle.update(kwargs)
 
-    stack = [expr]
     nodes = []
     edges = []
-    while stack:
-        e = stack.pop()
+    def traverse(e, depth):
         nodes.append(dotnode(e, s))
+        if maxdepth and depth >= maxdepth:
+            return
         edges.extend(dotedges(e))
-        if isinstance(e, Basic):
-            stack.extend(e.args)
+        [traverse(arg, depth+1) for arg in e.args if not atom(e)]
+    traverse(expr, 0)
 
     return template%{'graphstyle': attrprint(graphstyle, delimiter='\n'),
                      'nodes': '\n'.join(sorted(set(nodes), key=len)),
