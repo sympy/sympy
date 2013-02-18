@@ -1560,7 +1560,7 @@ class PyTestReporter(Reporter):
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION
         self.write("hash randomization: ")
-        hash_seed = os.getenv("PYTHONHASHSEED")
+        hash_seed = os.getenv("PYTHONHASHSEED") or '0'
         if HASH_RANDOMIZATION and (hash_seed == "random" or int(hash_seed)):
             self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
         else:
