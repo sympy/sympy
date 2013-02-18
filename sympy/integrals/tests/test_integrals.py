@@ -442,6 +442,8 @@ def test_integrate_returns_piecewise():
         (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
     assert integrate(x**y, y) == Piecewise(
         (y, Eq(x, 1)), (x**y/log(x), True))
+    assert integrate(exp(x*y), y) == Piecewise(
+        (y, Eq(x, 0)), (exp(x*y)/x, True))
 
 
 def test_subs1():

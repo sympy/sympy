@@ -29,7 +29,7 @@ from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
-from sympy.core.relational import Eq
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
@@ -1294,16 +1294,18 @@ def integrate_hyperexponential(a, d, DE, z=None):
 
     i = pp.nth(0, 0)
 
-    ret = ((g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
-        qd.as_expr()).subs(s) + residue_reduce_to_basic(g2, DE, z))
+    ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
+        + residue_reduce_to_basic(g2, DE, z))
+
     if DE.x not in qd.as_expr().subs(s).free_symbols:
+        # We have to be careful if the exponent is S.Zero!
         aa = Dummy('a')
-        ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
-            Piecewise(
+        ret += Piecewise(
                 (DE.x, Eq(aa, 0)),
                 ((qa.as_expr()/qd.as_expr()).subs(s), True)
-            ).subs(aa, qd.as_expr().subs(s)) +
-            residue_reduce_to_basic(g2, DE, z))
+            ).subs(aa, qd.as_expr().subs(s))
+    else:
+        ret += (qa.as_expr()/qd.as_expr()).subs(s)
 
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
