@@ -324,23 +324,42 @@ def replace_mul_fpowf2(expr, f, sgn, h, mn, md):
         return expr
     return Mul(*args)
 
-def __match_f_plus_sign(expr, f, sign):
-    """match (sign + f(x)); return ``x`` is found, else None
+def _match_f_plus_s(expr, f):
+    """match (s*c + c*f(x1)**e1*f(x2)**e2*...)
+    where ``a`` and ``s`` do not contain ``f``
+    return ``c, s, {x1:e1, x2:e2}`` is found, else None
     """
     if not expr.is_Add:
         return None
     args = expr.args
     if not len(args) == 2:
         return None
-    if args[0] == sign:
-        b = args[1]
-    elif args[1] == sign:
-        b = args[0]
+    a, b = args
+    sa = _splitfg(a, f, None)
+    sb = _splitfg(b, f, None)
+    if not sb[1]:
+        sa, sb = sb, sa
+    if sa[1]:
+        return None
+    s = sa[0]/sb[0]
+    return sb[0], s, sb[1]
+
+def __match_f_plus_sign(expr, f, sign):
+    """match (sign + f(x)); return ``x`` is found, else None
+    TODO: change this to match ``(sign*c + c*f(x))**e``
+    """
+    m = _match_f_plus_s(expr, f)
+    if not m:
+        return None
+    c, s, d = m
+    if not s == sign or len(d) != 1 or d.values()[0] != 1:
+        return None
+    if c != 1:
+        return None
+    if s == sign:
+        return d.keys()[0]
     else:
         return None
-    if b.__class__ is not f:
-        return None
-    return b.args[0]
 
 def _match_f_plus_1(expr, f):
     return __match_f_plus_sign(expr, f, 1)
@@ -379,27 +398,18 @@ def _match_f1_plus_f2(expr, f):
     else:
         return (sb[0], sign, x2, x1)
 
+
 def _match_ff_plus_1(expr, f):
     """
-    match ``(a + sign*f(x1)*f(x2)``, return ``(a, sign, x1, x2)``
+    match ``(a + sign*a*f(x1)*f(x2)``, return ``(a, sign, x1, x2)``
     or ``None``
     """
-    if not expr.is_Add:
+    m = _match_f_plus_s(expr, f)
+    if not m:
         return None
-    args = expr.args
-    if not len(args) == 2:
+    c, sign, d2 = m
+    if not sign in (S.One, -S.One):
         return None
-    a, b = args
-    sa = _splitfg(a, f, None)
-    sb = _splitfg(b, f, None)
-    if not sb[1]:
-        sa, sb = sb, sa
-    if sa[1]:
-        return None
-    sign = sa[0]/sb[0]
-    if sign not in (S.One, -S.One):
-        return None
-    d2 = sb[1]
     if len(d2) != 2:
         return None
     (x1, e1), (x2, e2) = d2.items()
@@ -408,9 +418,10 @@ def _match_ff_plus_1(expr, f):
     a = [x1, x2]
     a1 = list(ordered(a))
     if a == a1:
-        return (sa[0], sign, x1, x2)
+        return (c*sign, sign, x1, x2)
     else:
-        return (sa[0], sign, x2, x1)
+        return (c*sign, sign, x2, x1)
+
 
 def replace_mul_f1(expr, f, g):
     """
@@ -485,10 +496,12 @@ def replace_mul_fapb(expr, f, g):
     return expr
 
 
-def replace_mul_f2g(expr, f, g):
+def replace_mul_f2g(expr, f, g, h1, h2, with_tan):
     """
     replace ``f(2*x)**c/g(x)**c --> (2*f(x))**c``
     ``f(2*x)**c/f(x)**c --> (2*g(x))**c``
+    ``f(2*x)**c/g(x)**(2*c) --> (2*h1(x))**c`` if ``with_tan is True``
+    ``g(x)**(2*c)/f(2*x)**c --> (2/h2(x))**c`` if ``with_tan is True``
     """
     c, d1, d2 = _splitfg(expr, f, g)
     args = [c]
@@ -519,6 +532,15 @@ def replace_mul_f2g(expr, f, g):
                 fargs[key2] += fe
                 coeff *= 2**fe
                 changed = True
+                hit = True
+                break
+            elif with_tan and ge == -2*fe:
+                # f(2*x)**(2*e2) * g(x)**e2 = (2*h(x))**e2
+                coeff *= 2**fe
+                if fe > 0:
+                    args.append((h1(key2))**fe)
+                else:
+                    args.append(h2(key2)**-fe)
                 hit = True
                 break
             elif key2 in fargs:

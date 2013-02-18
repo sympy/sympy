@@ -167,6 +167,16 @@ def test_trigsimp1a():
     assert trigsimp(expr) == 1
     assert trigsimp(cosh(x/9)*cosh(2*x/9)*cosh(4*x/9)*cosh(8*x/9)) == sinh(16*x/9)/(16*sinh(x/9))
 
+    assert trigsimp(sin(2*x)/cos(x)**2) == 2*tan(x)
+    assert trigsimp(sin(x)/cos(x/2)**2) == 2*tan(x/2)
+    assert trigsimp(sin(x)**2/cos(x/2)**4) == 4*tan(x/2)**2
+    assert trigsimp(cos(x/2)**2/sin(x)) == cot(x/2)/2
+    assert trigsimp(sinh(2*x)/cosh(x)**2) == 2*tanh(x)
+    assert trigsimp(sinh(x)/cosh(x/2)**2) == 2*tanh(x/2)
+    assert trigsimp(sinh(x)**2/cosh(x/2)**4) == 4*tanh(x/2)**2
+    assert trigsimp(cosh(x/2)**2/sinh(x)) == coth(x/2)/2
+
+
 def test_trigsimp2():
     x, y = symbols('x,y')
     assert trigsimp(cos(x)**2*sin(y)**2 + cos(x)**2*cos(y)**2 + sin(x)**2,

@@ -1327,7 +1327,17 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
 
 _trigs = (C.TrigonometricFunction, C.HyperbolicFunction)
 
-
+def trigreduce(expr):
+    """
+    rewrite a product of ``sin, cos`` as a finite Fourier sum
+    """
+    n, d = expr.as_numer_denom()
+    n = _mexpand(n)
+    n = n.rewrite(exp)
+    n = _mexpand(n)
+    n = _expand_exp(n)
+    fnew = together(n/d)
+    return fnew
 def trigsimp(expr, **opts):
     """
     reduces expression by using known trig identities
@@ -1457,7 +1467,7 @@ _one = lambda x: S.One
 _g2sin = lambda x: 2*cos(x)
 _g2sinh = lambda x: 2*cosh(x)
 
-def _match_div_rewrite(expr, i):
+def _match_div_rewrite(expr, i, with_tan):
     """
     helper for __trigsimp
 
@@ -1502,7 +1512,7 @@ def _match_div_rewrite(expr, i):
     elif i == 10:
         # sin(2*x)**c/sin(x)**c -> (2*cos(x))**c
         # sin(2*x)**c/cos(x)**c -> (2*sin(x))**c
-        expr = replace_mul_f2g(expr, sin, cos)
+        expr = replace_mul_f2g(expr, sin, cos, tan, cot, with_tan)
     elif i == 11:
         # (tan(a) + tan(b))/(1 - tan(a)*tan(b)) -> tan(a + b)
         expr = replace_mul_fpowf2(expr, tan, -1, \
@@ -1537,7 +1547,7 @@ def _match_div_rewrite(expr, i):
     elif i == 21:
         #return expr
         # sinh(2*x)**c/sinh(x)**c -> (2*cosh(x))**c
-        expr = replace_mul_f2g(expr, sinh, cosh)
+        expr = replace_mul_f2g(expr, sinh, cosh, tanh, coth, with_tan)
     elif i == 22:
         expr = _artefact1(expr, sinh, cosh, -1, tanh, coth)
     return expr
@@ -1658,7 +1668,7 @@ def __trigsimp(expr, deep=False, with_tan=False):
                         continue
                 if not with_tan and i not in (0,1,8,9,10,13,21,22):
                     continue
-                newexpr = _match_div_rewrite(expr, i)
+                newexpr = _match_div_rewrite(expr, i, with_tan)
                 if newexpr != expr:
                     expr = newexpr
                     break
@@ -1720,6 +1730,7 @@ def __trigsimp(expr, deep=False, with_tan=False):
         e = expr.atoms(exp)
         # see if rewriting the expression in terms of ``exp`` and back
         # one gets a simpler expression
+        fnew = trigreduce(expr)
         n, d = expr.as_numer_denom()
         n = _mexpand(n)
         n = n.rewrite(exp, deep=deep)
