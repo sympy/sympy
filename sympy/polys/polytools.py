@@ -1692,6 +1692,7 @@ class Poly(Expr):
 
         """
         j = f._gen_to_level(gen)
+
         if hasattr(f.rep, 'degree'):
             return f.rep.degree(j)
         else:  # pragma: no cover
@@ -3952,21 +3953,29 @@ def degree(f, *gens, **args):
     1
 
     """
-    if len(gens) == 0:
+    if len(gens) is 0:
         gens_present = False
     else:
         gens_present = True
 
-    if f.is_polynomial():
-        if len(f.free_symbols) == 1: 
+    polynomial=False
+
+    try:
+        polynomial = f.is_polynomial()
+    except:
+        pass
+
+    if f is polynomial:
+        if len(f.free_symbols) is 1: 
             sym = f.free_symbols.pop()
             if gens_present:
-                if sym == gens[0]:
+                if sym is gens[0]:
                     return -f.subs(sym, 1/sym).leadterm(sym)[1]
             else:
                 return -f.subs(sym, 1/sym).leadterm(sym)[1]
-                            
+
     options.allowed_flags(args, ['gen', 'polys'])
+
     try:
         F, opt = poly_from_expr(f, *gens, **args)
     except PolificationFailed, exc:
