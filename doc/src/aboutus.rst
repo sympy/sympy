@@ -239,6 +239,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Stefen Yin: Fixes to the mechanics module
 #. Thomas Hisch: Addition to .gitignore
 #. Matthew Hoff: Addition to quantum module
+#. Madeleine Ball: Bug fix
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
