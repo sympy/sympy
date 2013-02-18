@@ -168,7 +168,8 @@ from collections import defaultdict
 
 from sympy.simplify.simplify import simplify, powsimp, ratsimp, combsimp
 from sympy.core.sympify import sympify
-from sympy.functions.elementary.trigonometric import cos, sin, tan, cot, sec, csc, sqrt
+from sympy.functions.elementary.trigonometric import (
+    cos, sin, tan, cot, sec, csc, sqrt)
 from sympy.functions.elementary.hyperbolic import cosh, sinh
 from sympy.core.compatibility import ordered, combinations
 from sympy.core.core import C
@@ -263,13 +264,6 @@ def TR3(rv):
     >>> cos(30*pi/2 + x)
     -cos(x)
 
-    >>> from sympy.utilities.randtest import test_numerically
-    >>> from sympy import cos, sin, tan, cot, csc, sec
-    >>> for f in (cos, sin, tan, cot, csc, sec):
-    ...   i = f(3*pi/7)
-    ...   j = TR3(i)
-    ...   assert test_numerically(i, j) and i.func != j.func
-    ...
     """
     from sympy.simplify.simplify import signsimp
 
@@ -375,6 +369,7 @@ def _TR56(rv, f, g, max, pow):
             e = rv.exp//2
         return (1 - g(rv.base.args[0])**2)**e
 
+
 def TR5(rv):
     """Replacement of sin**2 with 1 - cos(x)**2.
 
@@ -449,10 +444,6 @@ def TR8(rv):
     sin(5)/2 + sin(1)/2
     >>> TR8(sin(2)*sin(3))
     -cos(5)/2 + cos(1)/2
-    >>> TR8(cos(2)*cos(3)*cos(4)*cos(5))  # (cos(5)/2 + cos(1)/2)*(cos(9)/2 + cos(1)/2)
-    cos(4)/4 + cos(10)/8 + cos(8)/8 + cos(14)/8 + cos(1)**2/4 + cos(6)/8
-    >>> TR8(cos(2)*cos(3)*cos(4)*cos(5)*cos(6))  # (cos(1)/2 + cos(7)/2)*(cos(11)/2 + cos(1)/2)*cos(2)
-    cos(10)/8 + cos(16)/16 + cos(4)/16 + cos(1)**2*cos(2)/4 + cos(2)/16 + cos(8)/8 + cos(14)/16 + cos(20)/16 + cos(12)/16 + cos(6)/8
     """
     rv = bottom_up(rv, TR8)
     if not rv.is_Mul:
@@ -462,6 +453,11 @@ def TR8(rv):
     for a in ordered(rv.args):
         if a.func in (cos, sin):
             args[a.func].append(a.args[0])
+        elif (a.is_Pow and a.exp.is_Integer and a.exp > 0 and a.base.func in
+                (cos, sin)):
+            # XXX this is ok but pathological expression could be handled more
+            # efficiently as in TRmorrie
+            args[a.base.func].extend([a.base.args[0]]*a.exp)
         else:
             args[None].append(a)
     c = args[cos]
@@ -503,18 +499,8 @@ def TR9(rv):
     >>> from sympy import cos, sin
     >>> TR9(cos(1) + cos(2))
     2*cos(1/2)*cos(3/2)
-    >>> TR9(cos(1) - cos(2))
-    2*sin(1/2)*sin(3/2)
-    >>> TR9(sin(1) - sin(2))
-    -2*sin(1/2)*cos(3/2)
-    >>> TR9(sin(1) + sin(2))
-    2*sin(3/2)*cos(1/2)
     >>> TR9(cos(1) + 2*sin(1) + 2*sin(2))
     cos(1) + 4*sin(3/2)*cos(1/2)
-    >>> TR9(cos(4) + cos(2) + 2*cos(1)*cos(3))
-    4*cos(1)*cos(3)
-    >>> TR9((cos(4) + cos(2))/cos(3)/2 + cos(3))
-    2*cos(1)*cos(2)
 
     If no change is made by TR9, no re-arrangement of the
     expression will be made. For example, though factoring
@@ -524,18 +510,6 @@ def TR9(rv):
     >>> TR9(cos(3) + cos(3)*cos(2))
     cos(3) + cos(2)*cos(3)
 
-    >>> from sympy.abc import x
-    >>> from sympy import Add, Mul
-    >>> c = cos(x); s = sin(x)
-    >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
-    ...   for a in ((c, s), (s, c)):
-    ...    args = zip(si, a)
-    ...    ex = Add(*[Mul(*ai) for ai in args])
-    ...    t = TR9(ex)
-    ...    if (a[0].func == a[1].func and (ex - t.expand(trig=True) or t.is_Add)
-    ...         or a[1].func != a[0].func and ex != t):
-    ...        print 'fail', ex
-    ...
     """
     rv = bottom_up(rv, TR9)
     if not rv.is_Add:
@@ -601,7 +575,6 @@ def TR9(rv):
             if n1 < 0:
                 a, b = b, a
             return 2*gcd*cos((a + b)/2)*sin((a - b)/2)
-        return rv
 
     return process_common_addends(rv, do)  # DON'T sift by free symbols
 
@@ -637,9 +610,11 @@ def TR10(rv, first=True):
         b = Add._from_args(args)
         if b.is_Add:
             if f == sin:
-                return sin(a)*TR10(cos(b), first=False) + cos(a)*TR10(sin(b), first=False)
+                return sin(a)*TR10(cos(b), first=False) + \
+                    cos(a)*TR10(sin(b), first=False)
             else:
-                return cos(a)*TR10(cos(b), first=False) - sin(a)*TR10(sin(b), first=False)
+                return cos(a)*TR10(cos(b), first=False) - \
+                    sin(a)*TR10(sin(b), first=False)
         else:
             if f == sin:
                 return sin(a)*cos(b) + cos(a)*sin(b)
@@ -660,58 +635,11 @@ def TR10i(rv):
 
     >>> TR10i(cos(1)*cos(3) + sin(1)*sin(3))
     cos(2)
-    >>> TR10i(cos(1)*cos(3) - sin(1)*sin(3))
-    cos(4)
-    >>> TR10i(cos(1)*sin(3) - sin(1)*cos(3))
-    sin(2)
-    >>> TR10i(cos(1)*sin(3) + sin(1)*cos(3))
-    sin(4)
-    >>> TR10i(cos(1)*sin(3) + sin(1)*cos(3) + 7)
-    sin(4) + 7
     >>> TR10i(cos(1)*sin(3) + sin(1)*cos(3) + cos(3))
     cos(3) + sin(4)
-    >>> TR10i(2*cos(1)*sin(3) + 2*sin(1)*cos(3)+cos(3))
-    2*sin(4) + cos(3)
-    >>> TR10i(cos(2)*cos(3)+sin(2)*(cos(1)*sin(2)+cos(2)*sin(1)))
-    cos(1)
-    >>> eq = (cos(2)*cos(3)+sin(2)*(cos(1)*sin(2)+cos(2)*sin(1)))*cos(5) + sin(1)*sin(5)
-    >>> TR10i(eq) == TR10i(eq.expand()) == cos(4)
-    True
     >>> TR10i(sqrt(2)*cos(x)*x + sqrt(6)*sin(x)*x)
     2*sqrt(2)*x*sin(x + pi/6)
-    >>> TR10i(cos(x)/sqrt(6) + sin(x)/sqrt(2) + cos(x)/sqrt(6)/3 + sin(x)/sqrt(2)/3)
-    4*sqrt(6)*sin(x + pi/6)/9
-    >>> TR10i(cos(x)/sqrt(6) + sin(x)/sqrt(2) + cos(y)/sqrt(6)/3 + sin(y)/sqrt(2)/3)
-    sqrt(6)*sin(x + pi/6)/3 + sqrt(6)*sin(y + pi/6)/9
-    >>> TR10i(cos(x) + sqrt(3)*sin(x) + 2*sqrt(3)*cos(x + pi/6))
-    4*cos(x)
-    >>> TR10i(cos(x) + sqrt(3)*sin(x) + 2*sqrt(3)*cos(x + pi/6) + 4*sin(x))
-    4*sqrt(2)*sin(x + pi/4)
 
-    >>> A = Symbol('A', commutative=False)
-    >>> TR10i(sqrt(2)*cos(x)*A + sqrt(6)*sin(x)*A)
-    2*sqrt(2)*sin(x + pi/6)*A
-
-
-    >>> c = cos(x); s = sin(x); h = sin(y); r = cos(y)
-    >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
-    ...   for a in ((c*r, s*h), (c*h,s*r)): # explicit 2-args
-    ...    args = zip(si, a)
-    ...    ex = Add(*[Mul(*ai) for ai in args])
-    ...    t = TR10i(ex)
-    ...    if ex - t.expand(trig=True) or t.is_Add:
-    ...        print 'fail', ex
-    ...
-
-    >>> c = cos(x); s = sin(x); h = sin(pi/6); r = cos(pi/6)
-    >>> for si in ((1,1),(1,-1),(-1,1),(-1,-1)):
-    ...   for a in ((c*r, s*h), (c*h,s*r)): # induced
-    ...    args = zip(si, a)
-    ...    ex = Add(*[Mul(*ai) for ai in args])
-    ...    t = TR10i(ex)
-    ...    if ex - t.expand(trig=True) or t.is_Add:
-    ...     print 'fail', ex
-    ...
     """
     global _ROOT2, _ROOT3, _invROOT3
     if _ROOT2 is None:
@@ -775,7 +703,6 @@ def TR10i(rv):
             if n1 == n2:
                 return gcd*sin(a + b)
             return gcd*sin(b - a)
-        return rv
 
     rv = process_common_addends(rv, do, lambda x: tuple(ordered(x.free_symbols)))
 
@@ -838,11 +765,6 @@ def TR11(rv):
     >>> TR11(sin(4*x/3))
     4*(-sin(x/3)**2 + cos(x/3)**2)*sin(x/3)*cos(x/3)
 
-    >>> TR11(cos(2*x))
-    -sin(x)**2 + cos(x)**2
-    >>> TR11(cos(4*x))
-    (-sin(x)**2 + cos(x)**2)**2 - 4*sin(x)**2*cos(x)**2
-
     If the arguments are simply integers, no change is made:
 
     >>> TR11(cos(2))
@@ -865,7 +787,7 @@ def TR11(rv):
     return rv
 
 
-def TR12(rv):
+def TR12(rv, first=True):
     """Separate sums in ``tan``.
 
     Examples
@@ -882,11 +804,16 @@ def TR12(rv):
     if not rv.func == tan:
         return rv
 
-    arg = rv.args[0]  # should expand_mul be used?
+    arg = rv.args[0]
     if arg.is_Add:
-        a, b = arg.as_two_terms()
+        if first:
+            args = list(ordered(arg.args))
+        else:
+            args = list(arg.args)
+        a = args.pop()
+        b = Add._from_args(args)
         if b.is_Add:
-            tb = TR12(tan(b))
+            tb = TR12(tan(b), first=False)
         else:
             tb = tan(b)
         return (tan(a) + tb)/(1 - tan(a)*tb)
@@ -934,7 +861,7 @@ def TR13(rv):
         t2 = c.pop()
         args.append(1 + (cot(t1) + cot(t2))*cot(t1 + t2))
     if c:
-        args.append(cot(t.pop()))
+        args.append(cot(c.pop()))
     return Mul(*args)
 
 
@@ -953,8 +880,9 @@ def L(rv):
     return S(rv.count(C.TrigonometricFunction))
 
 if SYMPY_DEBUG:
-    TR0,TR1,TR2,TR3,TR4,TR5,TR6,TR7,TR8,TR9,TR10,TR11,TR12,TR13 = map(debug,
-            (TR0,TR1,TR2,TR3,TR4,TR5,TR6,TR7,TR8,TR9,TR10,TR11,TR12,TR13))
+    (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13
+    )= map(debug,
+    (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13))
 
 _CTR1 = [TR5, TR0], [TR6, TR0], [identity]
 
@@ -1072,6 +1000,7 @@ def fu(rv):
 
 _L = lambda x: (L(x), x.count_ops())
 
+
 def bottom_up(rv, F):
     """Apply ``F`` to all expressions in an expression tree from the
     bottom up.
@@ -1085,8 +1014,8 @@ def bottom_up(rv, F):
 
 def process_common_addends(rv, do, key2=None, key1=True):
     """Apply ``do`` to addends of ``rv`` that (if key1=True) share at least
-    a common absolute value of their coefficient and the value of key2 when
-    applied to the argument. If key1 is False key2 must be supplied and will
+    a common absolute value of their coefficient and the value of ``key2`` when
+    applied to the argument. If ``key1`` is False ``key2`` must be supplied and will
     be the only key applied.
     """
 
@@ -1111,7 +1040,7 @@ def process_common_addends(rv, do, key2=None, key1=True):
         v = absc[k]
         c, _ = k
         if len(v) > 1:
-            e = Add(*v)
+            e = Add(*v, evaluate=False)
             new = do(e)
             if new != e:
                 e = new
@@ -1266,8 +1195,6 @@ def trig_split(a, b, two=False):
         if c is None and s is None:
             return
         co = co if co is not S.One else None
-        if not two and co:
-            return None
         return co, c, s
 
     # get the parts
@@ -1284,9 +1211,7 @@ def trig_split(a, b, two=False):
     if (not ca) and cb or ca and ca.func is sin:
         coa, ca, sa, cob, cb, sb = cob, cb, sb, coa, ca, sa
         n1, n2 = n2, n1
-    if two is False:  # need cos(x) and cos(y) or sin(x) and sin(y)
-        if ca and sa or cb and sb:
-            return
+    if not two:  # need cos(x) and cos(y) or sin(x) and sin(y)
         c = ca or sa
         s = cb or sb
         if c.func is not s.func:
@@ -1301,13 +1226,12 @@ def trig_split(a, b, two=False):
                 if not all(i.args in args for i in (cb, sb)):
                     return
                 return gcd, n1, n2, ca.args[0], sa.args[0], ca.func is sa.func
-        if ca and sa or cb and sb:
+        if ca and sa or cb and sb or \
+            two and (ca is None and sa is None or cb is None and sb is None):
             return
         c = ca or sa
         s = cb or sb
         if c.args != s.args:
-            return
-        if c.func is s.func:
             return
         if not coa:
             coa = S.One
