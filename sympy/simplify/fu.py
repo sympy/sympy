@@ -12,6 +12,7 @@ mnemonic in nature; see the docstrings for examples.
     TR0 - non-trig simplification
     TR1 - sec, csc -> 1/cos, 1/sin
     TR2 - tan, cot -> sin/cos and cos/sin
+    TR2i - tan or sin <- sin/cos and cos/sin
     TR3 - angle canonicalization
     TR4 - replace functions at special angles with values
     TR5 - sin**2(a) -> (1 - cos(a)**2) and sin(a)**4 to the square of the same
@@ -245,6 +246,88 @@ def TR2(rv):
         a = rv.args[0]
         return cos(a)/sin(a)
     return rv
+
+
+def TR2i(rv):
+    """Converts ratios involving sin and cos as follows::
+        sin(x)/cos(x) -> tan(x)
+        sin(x)/cos(x/2) -> 2*sin(x/2)
+        sin(x)/(cos(x) + 1) -> tan(x/2)
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import TR2i
+    >>> from sympy.abc import x, a
+    >>> from sympy import sin, cos
+    >>> TR2i(sin(x)/cos(x))
+    tan(x)
+    >>> TR2i(sin(x)/cos(x/2))
+    2*sin(x/2)
+
+    Powers of the numerator and denominator are also recognized
+
+    >>> TR2i(sin(x)**2/(cos(x) + 1)**2)
+    tan(x/2)**2
+
+    The transformation does not take place unless assumptions allow
+    (i.e. the base must be positive or the exponent must be an integer
+    for both numerator and denominator)
+
+    >>> TR2i(sin(x)**a/(cos(x) + 1)**a)
+    sin(x)**a/(cos(x) + 1)**a
+
+    """
+    rv = bottom_up(rv, TR2i)
+    if not rv.is_Mul:
+        return rv
+
+    n, d = rv.as_numer_denom()
+    n = n.as_powers_dict()
+    d = d.as_powers_dict()
+    t = []
+    for k in n:
+        if not (n[k].is_integer or k.is_positive):
+            continue
+        if k.func is sin:
+            a = cos(k.args[0], evaluate=False)
+            if a in d and d[a] == n[k] and (d[a].is_integer or a.is_positive):
+                t.append(tan(k.args[0])**n[k])
+                n[k] = d[a] = None
+            else:
+                a1 = 1 + a
+                if a1 in d and d[a1] == n[k] and (
+                        d[a1].is_integer or a1.is_positive):
+                    t.append((tan(k.args[0]/2))**n[k])
+                    n[k] = d[a1] = None
+                else:
+                    a = cos(k.args[0]/2, evaluate=False)
+                    if a in d and d[a] == n[k] and (
+                            d[a].is_integer or a.is_positive):
+                        t.append((2*sin(k.args[0]/2))**n[k])
+                        n[k] = d[a] = None
+        elif k.func is cos:
+            a = sin(k.args[0], evaluate=False)
+            if a in d and d[a] == n[k] and (d[a].is_integer or a.is_positive):
+                t.append(tan(k.args[0])**-n[k])
+                n[k] = d[a] = None
+            else:
+                a = sin(k.args[0]*2, evaluate=False)
+                if a in d and d[a] == n[k] and (
+                        d[a].is_integer or a.is_positive):
+                    t.append((2*sin(k.args[0]))**-n[k])
+                    n[k] = d[a] = None
+        elif k.is_Add and len(k.args) == 2 and k.args[0] is S.One and \
+                k.args[1].func is cos:
+            a = sin(k.args[1].args[0], evaluate=False)
+            if a in d and d[a] == n[k] and (d[a].is_integer or a.is_positive):
+                t.append(tan(a.args[0]/2)**-n[k])
+                n[k] = d[a] = None
+
+    if not t:
+        return rv
+    return Mul(*(t + [b**e for b, e in n.iteritems() if e]))/\
+        Mul(*[b**e for b, e in d.iteritems() if e])
 
 
 def TR3(rv):
@@ -760,6 +843,8 @@ def TR11(rv):
     >>> from sympy.abc import x
     >>> TR11(sin(2*x))
     2*sin(x)*cos(x)
+    >>> TR11(cos(2*x))
+    -sin(x)**2 + cos(x)**2
     >>> TR11(sin(4*x))
     4*(-sin(x)**2 + cos(x)**2)*sin(x)*cos(x)
     >>> TR11(sin(4*x/3))
