@@ -1829,7 +1829,7 @@ class Poly(Expr):
 
     def coeff_monomial(f, monom):
         """
-        Returns the coefficient ``monom`` in ``f`` if there, else None.
+        Returns the coefficient of ``monom`` in ``f`` if there, else None.
 
         Examples
         ========
@@ -1856,6 +1856,10 @@ class Poly(Expr):
         >>> p.coeff(x*y)
         24*exp(8)
 
+        See Also
+        ========
+
+        nth: more efficient query using exponents of the monomial's generators
         """
         return f.nth(*Monomial(monom, f.gens).exponents)
 
