@@ -25,6 +25,7 @@ mnemonic in nature; see the docstrings for examples.
     TR11 - f(2*m*a) -> 2*f(m*a)*g(m*a);             f and g are sin or cos
     TR12 - tan(a + b) -> (tan sum)/(tan product)
     TR13 - f(a)*f(b) -> 1 +/- (f(a)+f(b))*g(a+b);   f = tan or cot
+    TRmorrie - prod(cos(x*2**i), (i, 0, k - 1)) -> sin(2**k*x)/(2**k*sin(x))
 
 There are 4 combination transforms (CTR1 - CTR4) in which a seqence of
 transformations are applied and the simplest expression is selected from
@@ -948,6 +949,93 @@ def TR13(rv):
     if c:
         args.append(cot(c.pop()))
     return Mul(*args)
+
+
+def TRmorrie(rv):
+    """Returns cos(x)*cos(2*x)*...*cos(2**(k-1)*x) -> sin(2**k*x)/(2**k*sin(x))
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import TRmorrie, TR8
+    >>> from sympy.abc import x
+    >>> from sympy import Mul, cos
+    >>> TRmorrie(cos(x)*cos(2*x))
+    sin(4*x)/(4*sin(x))
+    >>> TRmorrie(7*Mul(*[cos(x) for x in range(10)]))
+    7*sin(12)*sin(16)*cos(5)*cos(7)*cos(9)/(64*sin(1)*sin(3))
+
+    Sometimes autosimplification will cause a power to be
+    not recognized. e.g. in the following, cos(4*pi/7) automatically
+    simplifies to -cos(3*pi/7) so only 2 of the 3 terms are
+    recognized:
+
+    >>> TRmorrie(cos(pi/7)*cos(2*pi/7)*cos(4*pi/7))
+    -sin(3*pi/7)*cos(3*pi/7)/(4*sin(pi/7))
+
+    A touch by TR8 resolves the expression to a Rational
+
+    >>> TR8(_)
+    -1/8
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Morrie%27s_law
+
+    """
+    rv = bottom_up(rv, TR13)
+    if not rv.is_Mul:
+        return rv
+    args = defaultdict(list)
+    coss = {}
+    other = []
+    for c in rv.args:
+        b, e = c.as_base_exp()
+        if e.is_Integer and b.func is cos:
+            co, a = b.args[0].as_coeff_Mul()
+            args[a].append(co)
+            coss[b] = e
+        else:
+            other.append(c)
+    if not args:
+        return rv
+    new = []
+    for a in args:
+        c = args[a]
+        c.sort()
+        no = []
+        while c:
+            k = 0
+            cc = ci = c[0]
+            while cc in c:
+                k += 1
+                cc *= 2
+            if k > 1:
+                newarg = sin(2**k*ci*a)/2**k/sin(ci*a)
+                # see how many times this can be taken
+                take = 0
+                ccs = []
+                for i in range(k):
+                    cc /= 2
+                    key = cos(a*cc, evaluate=False)
+                    ccs.append(cc)
+                    take = max(coss[key], take)
+                # update exponent counts
+                for i in range(k):
+                    cc = ccs.pop()
+                    key = cos(a*cc, evaluate=False)
+                    coss[key] -= take
+                    if not coss[key]:
+                        c.remove(cc)
+                new.append(newarg**take)
+            else:
+                no.append(c.pop(0))
+        c[:] = no
+    if new:
+        rv = Mul(*(new + other + [
+            cos(k*a, evaluate=False) for a in args for k in args[a]]))
+    return rv
 
 
 def L(rv):
