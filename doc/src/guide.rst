@@ -523,7 +523,7 @@ with us on the mailinglist_ and we'll help you get your patch accepted.
 
 .. _issues:             http://code.google.com/p/sympy/issues/list
 .. _mailinglist:        http://groups.google.com/group/sympy
-.. _SymPyDevelopment:   http://code.google.com/p/sympy/wiki/SymPyDevelopment
+.. _SymPyDevelopment:   https://github.com/sympy/sympy/wiki/old-wiki-Sympy-Development
 
 Please read our excellent `SymPy Patches Tutorial
 <https://github.com/sympy/sympy/wiki/Development-workflow>`_ at our
