@@ -1,5 +1,5 @@
 import rl
-from strat import do_one
+from core import do_one, exhaust, switch
 from traverse import top_down
 
 def subs(d):
@@ -19,3 +19,26 @@ def subs(d):
         return top_down(do_one(*map(rl.subs, *zip(*d.items()))))
     else:
         return lambda x: x
+
+def canon(*rules):
+    """ Strategy for canonicalization
+
+    Apply each rule in a bottom_up fashion through the tree.
+    Do each one in turn.
+    Keep doing this until there is no change.
+    """
+    return exhaust(top_down(exhaust(do_one(*rules))))
+
+def typed(ruletypes):
+    """ Apply rules based on the expression type
+
+    inputs:
+        ruletypes -- a dict mapping {Type: rule}
+
+    >>> from sympy.rules import rm_id, typed
+    >>> from sympy import Add, Mul
+    >>> rm_zeros = rm_id(lambda x: x==0)
+    >>> rm_ones  = rm_id(lambda x: x==1)
+    >>> remove_idents = typed({Add: rm_zeros, Mul: rm_ones})
+    """
+    return switch(type, ruletypes)

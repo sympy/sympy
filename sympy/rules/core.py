@@ -1,6 +1,8 @@
 """ Generic SymPy-Independent Strategies """
 from functools import partial
 
+identity = lambda x: x
+
 def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
     def exhaustive_rl(expr):

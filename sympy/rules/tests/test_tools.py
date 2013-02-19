@@ -1,4 +1,5 @@
-from sympy.rules.tools import subs
+from sympy.rules.tools import subs, typed
+from sympy.rules.rl import rm_id
 from sympy import Basic
 
 def test_subs():
@@ -11,3 +12,15 @@ def test_subs():
 
 def test_subs_empty():
     assert subs({})(Basic(1, 2)) == Basic(1, 2)
+
+def test_typed():
+    class A(Basic):
+        pass
+    class B(Basic):
+        pass
+    rmzeros = rm_id(lambda x: x == 0)
+    rmones  = rm_id(lambda x: x == 1)
+    remove_something = typed({A: rmzeros, B: rmones})
+
+    assert remove_something(A(0, 1)) == A(1)
+    assert remove_something(B(0, 1)) == B(0)
