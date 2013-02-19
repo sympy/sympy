@@ -43,6 +43,12 @@ def test_erf():
     assert erf(z).rewrite('uppergamma') == sqrt(z**2)*erf(sqrt(z**2))/z
     assert erf(z).rewrite('erfc') == S.One - erfc(z)
     assert erf(z).rewrite('erfi') == -I*erfi(I*z)
+    assert erf(z).rewrite('fresnels') == (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
+        I*fresnels(z*(1 - I)/sqrt(pi)))
+    assert erf(z).rewrite('fresnelc') == (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
+        I*fresnels(z*(1 - I)/sqrt(pi)))
+    assert erf(z).rewrite('hyper') == 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
+    assert erf(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
 
     assert limit(exp(x)*exp(x**2)*(erf(x + 1/exp(x)) - erf(x)), x, oo) == \
         2/sqrt(pi)
@@ -102,6 +108,12 @@ def test_erfc():
 
     assert erfc(z).rewrite('erf') == 1 - erf(z)
     assert erfc(z).rewrite('erfi') == 1 + I*erfi(I*z)
+    assert erfc(z).rewrite('fresnels') == 1 - (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
+        I*fresnels(z*(1 - I)/sqrt(pi)))
+    assert erfc(z).rewrite('fresnelc') == 1 - (1 + I)*(fresnelc(z*(1 - I)/sqrt(pi)) -
+        I*fresnels(z*(1 - I)/sqrt(pi)))
+    assert erfc(z).rewrite('hyper') == 1 - 2*z*hyper([S.Half], [3*S.Half], -z**2)/sqrt(pi)
+    assert erfc(z).rewrite('meijerg') == 1 - z*meijerg([S.Half], [], [0], [-S.Half], z**2)/sqrt(pi)
 
     assert erfc(x).as_real_imag() == \
         ((erfc(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
@@ -140,6 +152,12 @@ def test_erfi():
 
     assert erfi(z).rewrite('erf') == -I*erf(I*z)
     assert erfi(z).rewrite('erfc') == I*erfc(I*z) - I
+    assert erfi(z).rewrite('fresnels') == (1 - I)*(fresnelc(z*(1 + I)/sqrt(pi)) -
+        I*fresnels(z*(1 + I)/sqrt(pi)))
+    assert erfi(z).rewrite('fresnelc') == (1 - I)*(fresnelc(z*(1 + I)/sqrt(pi)) -
+        I*fresnels(z*(1 + I)/sqrt(pi)))
+    assert erfi(z).rewrite('hyper') == 2*z*hyper([S.Half], [3*S.Half], z**2)/sqrt(pi)
+    assert erfi(z).rewrite('meijerg') == z*meijerg([S.Half], [], [0], [-S.Half], -z**2)/sqrt(pi)
 
     assert erfi(x).as_real_imag() == \
         ((erfi(re(x) - I*re(x)*Abs(im(x))/Abs(re(x)))/2 +
@@ -171,7 +189,10 @@ def test_erf2():
     assert erf2(-x, -y) == -erf2(x,y)
     assert erf2(-x,  y) == erf(y) + erf(x)
     assert erf2( x, -y) == -erf(y) - erf(x)
-
+    assert erf2(x, y).rewrite('fresnels') == erf(y).rewrite(fresnels)-erf(x).rewrite(fresnels)
+    assert erf2(x, y).rewrite('fresnelc') == erf(y).rewrite(fresnelc)-erf(x).rewrite(fresnelc)
+    assert erf2(x, y).rewrite('hyper') == erf(y).rewrite(hyper)-erf(x).rewrite(hyper)
+    assert erf2(x, y).rewrite('meijerg') == erf(y).rewrite(meijerg)-erf(x).rewrite(meijerg)
 
     assert erf2(I, 0).is_real is False
     assert erf2(0, 0).is_real is True

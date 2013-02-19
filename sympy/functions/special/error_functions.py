@@ -127,6 +127,20 @@ class erf(Function):
     def _eval_rewrite_as_uppergamma(self, z):
         return sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
+    def _eval_rewrite_as_fresnels(self, z):
+        arg = (1-S.ImaginaryUnit)*z/sqrt(pi)
+        return (1+S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+
+    def _eval_rewrite_as_fresnelc(self, z):
+        arg = (1-S.ImaginaryUnit)*z/sqrt(pi)
+        return (1+S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
+
+    def _eval_rewrite_as_hyper(self, z):
+        return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
+
     def _eval_rewrite_as_tractable(self, z):
         return S.One - _erfs(z)*C.exp(-z**2)
 
@@ -144,7 +158,7 @@ class erf(Function):
         else:
             return self.func(arg)
 
-    def _as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -282,6 +296,20 @@ class erfc(Function):
     def _eval_rewrite_as_erfi(self, z):
         return S.One + I*erfi(I*z)
 
+    def _eval_rewrite_as_fresnels(self, z):
+        arg = (1-S.ImaginaryUnit)*z/sqrt(pi)
+        return 1 - (1+S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+
+    def _eval_rewrite_as_fresnelc(self, z):
+        arg = (1-S.ImaginaryUnit)*z/sqrt(pi)
+        return 1 - (1+S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return 1 - z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
+
+    def _eval_rewrite_as_hyper(self, z):
+        return 1 - 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
+
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
 
@@ -290,7 +318,7 @@ class erfc(Function):
         else:
             return self.func(arg)
 
-    def _as_real_imag(self, deep=True, **hints):
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -423,7 +451,21 @@ class erfi(Function):
     def _eval_rewrite_as_erfc(self, z):
         return I*erfc(I*z) - I
 
-    def _as_real_imag(self, deep=True, **hints):
+    def _eval_rewrite_as_fresnels(self, z):
+        arg = (1+S.ImaginaryUnit)*z/sqrt(pi)
+        return (1-S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+
+    def _eval_rewrite_as_fresnelc(self, z):
+        arg = (1+S.ImaginaryUnit)*z/sqrt(pi)
+        return (1-S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+
+    def _eval_rewrite_as_meijerg(self, z):
+        return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], -z**2)
+
+    def _eval_rewrite_as_hyper(self, z):
+        return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], z**2)
+
+    def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
             if deep:
                 hints['complex'] = False
@@ -542,6 +584,22 @@ class erf2(Function):
 
     def _eval_rewrite_as_erfi(self, x, y):
         return I*(erfi(I*x)-erfi(I*y))
+
+    def _eval_rewrite_as_fresnels(self, x, y):
+        #arg2 = (1-S.ImaginaryUnit)*y/sqrt(pi)
+        #arg1 = (1-S.ImaginaryUnit)*x/sqrt(pi)
+        #return (1+S.ImaginaryUnit)*(fresnelc(arg2)-I*fresnels(arg2)-
+            #(fresnelc(arg1)-I*fresnels(arg1)))
+        return erf(y).rewrite(fresnels)-erf(x).rewrite(fresnels)
+
+    def _eval_rewrite_as_fresnelc(self, x, y):
+        return erf(y).rewrite(fresnelc)-erf(x).rewrite(fresnelc)
+
+    def _eval_rewrite_as_meijerg(self, x, y):
+        return erf(y).rewrite(meijerg)-erf(x).rewrite(meijerg)
+
+    def _eval_rewrite_as_hyper(self, x, y):
+        return erf(y).rewrite(hyper)-erf(x).rewrite(hyper)
 
 class erfinv(Function):
     r"""
