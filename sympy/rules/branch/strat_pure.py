@@ -71,6 +71,18 @@ def notempty(brule):
             yield expr
     return notempty_brl
 
+def do_one(*brules):
+    """ Execute one of the branching rules """
+    def do_one_brl(expr):
+        yielded = False
+        for brl in brules:
+            for nexpr in brl(expr):
+                yielded = True
+                yield nexpr
+            if yielded:
+                raise StopIteration()
+    return do_one_brl
+
 def chain(*brules):
     """
     Compose a sequence of brules so that they apply to the expr sequentially
