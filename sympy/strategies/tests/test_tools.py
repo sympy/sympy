@@ -1,5 +1,5 @@
-from sympy.rules.tools import subs, typed
-from sympy.rules.rl import rm_id
+from sympy.strategies.tools import subs, typed
+from sympy.strategies.rl import rm_id
 from sympy import Basic
 
 def test_subs():

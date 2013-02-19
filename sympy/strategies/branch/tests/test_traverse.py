@@ -1,6 +1,6 @@
 from sympy import Basic, symbols, Symbol, S
-from sympy.rules.branch.traverse import top_down, sall
-from sympy.rules.branch.core import do_one, identity
+from sympy.strategies.branch.traverse import top_down, sall
+from sympy.strategies.branch.core import do_one, identity
 
 def inc(x):
     if isinstance(x, int):

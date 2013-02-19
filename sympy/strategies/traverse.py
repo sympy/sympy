@@ -1,6 +1,6 @@
 """ Strategies to Traverse a Tree """
 from util import new, is_leaf
-from sympy.rules.core import chain, do_one
+from sympy.strategies.core import chain, do_one
 
 def top_down(rule):
     """ Apply a rule down a tree running it on the top nodes first """

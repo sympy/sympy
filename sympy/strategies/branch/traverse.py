@@ -1,6 +1,6 @@
 """ Branching Strategies to Traverse a Tree """
 
-from sympy.rules.util import new, is_leaf
+from sympy.strategies.util import new, is_leaf
 from core import chain, identity, do_one
 from sympy.core.compatibility import product
 

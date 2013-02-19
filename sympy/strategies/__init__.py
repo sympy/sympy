@@ -17,10 +17,10 @@ the work of mathematical programming from algorithmic programming.
 
 Submodules
 
-rules.rl         - some fundamental rules
-rules.strat_pure - generic non-SymPy specific strategies
-rules.traverse   - strategies that traverse a SymPy tree
-rules.strat      - some conglomerate strategies that do depend on SymPy
+strategies.rl         - some fundamental rules
+strategies.core       - generic non-SymPy specific strategies
+strategies.traverse   - strategies that traverse a SymPy tree
+strategies.tools      - some conglomerate strategies that do depend on SymPy
 """
 
 import rl

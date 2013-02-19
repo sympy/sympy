@@ -97,7 +97,7 @@ identity = lambda x: x
 def minimize(*rules, **kwargs):
     """ Select result of rules that minimizes objective
 
-    >>> from sympy.rules import minimize
+    >>> from sympy.strategies import minimize
     >>> inc = lambda x: x + 1
     >>> dec = lambda x: x - 1
     >>> rl = minimize(inc, dec)

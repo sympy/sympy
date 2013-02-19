@@ -1,4 +1,4 @@
-from sympy.rules.traverse import (top_down, bottom_up, sall, top_down_once,
+from sympy.strategies.traverse import (top_down, bottom_up, sall, top_down_once,
         bottom_up_once)
 from sympy import Basic, symbols, Symbol, S
 
