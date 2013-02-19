@@ -1430,5 +1430,5 @@ def test_nth_order_linear_euler_eq_homogeneous():
 
 def test_issue_1996():
     f = Function('f')
-    raises(ValueError, lambda: dsolve(f(x).diff(x)**2 , f(x) , 'seperable'))
+    raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'seperable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
