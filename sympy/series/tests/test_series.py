@@ -110,4 +110,4 @@ def test_x_is_base_detection():
 
 def test_sin_power():
     e = sin(x)**1.2
-    assert e.series(x, n=8).removeO() == calculate_series(e, x)
+    assert calculate_series(e, x) == x**1.2

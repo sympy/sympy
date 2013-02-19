@@ -938,15 +938,15 @@ class Pow(Expr):
             if bs.is_Add:
                 from sympy import O
                 # So, bs + O() == terms
-                _c = Symbol('_c')
+                c = Dummy('c')
                 res = []
                 for arg in bs.args:
                     if arg.is_Order:
                         arg = arg.expr()
-                        arg = _c*arg
+                        arg = c*arg
                     res.append(arg)
                 bs = Add(*res)
-                rv = (bs**e).series(x).subs(_c, O(1))
+                rv = (bs**e).series(x).subs(c, O(1))
                 rv += order
                 return rv
 
