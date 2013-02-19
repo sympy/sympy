@@ -162,7 +162,7 @@ def test_rsolve():
 
     assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
     assert rsolve(
-        f, y(n), {y(3): 6, y(4): -24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
+        f, y(n), {y(3): 6, y(4): -24}) == -n*(n - 1)*(n - 2)*(-1)**(-n)
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
