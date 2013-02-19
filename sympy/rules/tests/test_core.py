@@ -1,4 +1,4 @@
-from sympy.rules.strat_pure import (null_safe, exhaust, memoize, condition,
+from sympy.rules.core import (null_safe, exhaust, memoize, condition,
         chain, tryit, do_one, debug, switch, minimize)
 from functools import partial
 
