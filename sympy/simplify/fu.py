@@ -1053,9 +1053,12 @@ def L(rv):
     return S(rv.count(C.TrigonometricFunction))
 
 if SYMPY_DEBUG:
-    (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13
+    (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
+    TR2i, TRmorrie
     )= map(debug,
-    (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13))
+    (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
+    TR2i, TRmorrie
+    ))
 
 _CTR1 = [TR5, TR0], [TR6, TR0], [identity]
 
@@ -1227,8 +1230,11 @@ def process_common_addends(rv, do, key2=None, key1=True):
     return rv
 
 
-FU = dict(zip('TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L'.split(', '),
-              (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11, TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L)))
+FU = dict(zip('''
+    TR0 TR1 TR2 TR3 TR4 TR5 TR6 TR7 TR8 TR9 TR10 TR10i TR11
+    TR12 TR13 CTR1 CTR2 CTR3 CTR4 RL1 RL2 L TR2i TRmorrie'''.split(),
+    (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11,
+    TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L, TR2i, TRmorrie)))
 
 
 def _roots():
