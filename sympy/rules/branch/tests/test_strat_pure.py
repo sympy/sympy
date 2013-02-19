@@ -1,5 +1,6 @@
 from sympy.rules.branch.strat_pure import (exhaust, debug, multiplex,
-        condition, notempty, chain, onaction, sfilter, yieldify, do_one)
+        condition, notempty, chain, onaction, sfilter, yieldify, do_one,
+        identity)
 
 def posdec(x):
     if x > 0:
@@ -22,9 +23,6 @@ even = lambda x: x%2 == 0
 
 def inc(x):
     yield x + 1
-
-def ident(x):
-    yield x
 
 def one_to_n(n):
     for i in range(n):
@@ -88,7 +86,7 @@ def test_onaction():
     list(onaction(inc, record)(2))
     assert L == [(2, 3)]
 
-    list(onaction(ident, record)(2))
+    list(onaction(identity, record)(2))
     assert L == [(2, 3)]
 
 def test_yieldify():
