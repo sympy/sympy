@@ -227,3 +227,4 @@ if __name__ == '__main__':
     mapf(testit, tasks)
     t2 = clock()
     print("Cumulative wall time:", t2-t1)
+

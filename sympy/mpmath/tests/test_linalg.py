@@ -247,3 +247,4 @@ def test_exp_pade():
         mp.dps = dps
         assert norm(d, inf).ae(0)
     mp.dps = 15
+

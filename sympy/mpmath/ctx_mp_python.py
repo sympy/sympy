@@ -1126,3 +1126,4 @@ class PythonMPContext:
                 return ctx.mag(x)
             else:
                 raise TypeError("requires an mpf/mpc")
+

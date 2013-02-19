@@ -574,3 +574,4 @@ class LinearAlgebraMethods(object):
             for j in range(len(c)):
                 r[j, i] = c[j]
         return r
+
