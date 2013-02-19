@@ -673,6 +673,12 @@ def solve(f, *symbols, **flags):
         # top level so that the appropriate strategy gets selected.
         f[i] = piecewise_fold(f[i])
 
+        # if we have a Matrix, we need to iterate over its elements again
+        if f[i].is_Matrix:
+            bare_f = False
+            f.extend(list(f[i]))
+            f[i] = S.Zero
+
     # preprocess symbol(s)
     ###########################################################################
     if not symbols:

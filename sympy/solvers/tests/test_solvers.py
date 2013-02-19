@@ -371,6 +371,17 @@ def test_issue626():
     assert solve(e, f(x).diff(x)) in [[(2 - x)/f(x)], [-((x - 2)/f(x))]]
 
 
+def test_issue771():
+    a, b, c, d = symbols('a b c d')
+    A = Matrix(2, 2, [a, b, c, d])
+    B = Matrix(2, 2, [0, 2, -3, 0])
+    C = Matrix(2, 2, [1, 2, 3, 4])
+
+    assert solve(A*B - C, [a, b, c, d]) == {a: 1, b: -S(1)/3, c: 2, d: -1}
+    assert solve([A*B - C], [a, b, c, d]) == {a: 1, b: -S(1)/3, c: 2, d: -1}
+    assert solve(Eq(A*B, C), [a, b, c, d]) == {a: 1, b: -S(1)/3, c: 2, d: -1}
+
+
 def test_solve_linear():
     w = Wild('w')
     assert solve_linear(x, x) == (0, 1)
