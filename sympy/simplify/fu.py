@@ -276,7 +276,7 @@ def TR2i(rv):
     for both numerator and denominator)
 
     >>> TR2i(sin(x)**a/(cos(x) + 1)**a)
-    sin(x)**a/(cos(x) + 1)**a
+    (cos(x) + 1)**(-a)*sin(x)**a
 
     """
     rv = bottom_up(rv, TR2i)
@@ -788,7 +788,8 @@ def TR10i(rv):
                 return gcd*sin(a + b)
             return gcd*sin(b - a)
 
-    rv = process_common_addends(rv, do, lambda x: tuple(ordered(x.free_symbols)))
+    rv = process_common_addends(
+        rv, do, lambda x: tuple(ordered(x.free_symbols)))
 
     # need to check for induceable pairs in ratio of sqrt(3):1 that appeared
     # in different lists when sorting by coefficient
@@ -959,7 +960,7 @@ def TRmorrie(rv):
 
     >>> from sympy.simplify.fu import TRmorrie, TR8
     >>> from sympy.abc import x
-    >>> from sympy import Mul, cos
+    >>> from sympy import Mul, cos, pi
     >>> TRmorrie(cos(x)*cos(2*x))
     sin(4*x)/(4*sin(x))
     >>> TRmorrie(7*Mul(*[cos(x) for x in range(10)]))
@@ -1118,7 +1119,7 @@ def fu(rv):
 
     >>> eq = sin(x)**4 - cos(y)**2 + sin(y)**2 + 2*cos(x)**2
     >>> fu(eq)
-    cos(x)**4 - 2*cos(y)**2 + 2
+    cos(x)**4 - cos(2*y) + 1
 
     CTR2 example
 
@@ -1171,7 +1172,8 @@ def fu(rv):
     if rv.has(sin, cos):
         rv1 = RL2(rv)
         rv2 = TR8(rv1)
-        rv = ordered([was, rv, rv1, rv2], keys=(L, count_ops), default=False).next()
+        rv = ordered(
+            [was, rv, rv1, rv2],keys=(L, count_ops), default=False).next()
     return rv
 
 _L = lambda x: (L(x), x.count_ops())
@@ -1191,8 +1193,8 @@ def bottom_up(rv, F):
 def process_common_addends(rv, do, key2=None, key1=True):
     """Apply ``do`` to addends of ``rv`` that (if key1=True) share at least
     a common absolute value of their coefficient and the value of ``key2`` when
-    applied to the argument. If ``key1`` is False ``key2`` must be supplied and will
-    be the only key applied.
+    applied to the argument. If ``key1`` is False ``key2`` must be supplied and
+    will be the only key applied.
     """
 
     # collect by absolute value of coefficient and key2
@@ -1313,7 +1315,8 @@ def trig_split(a, b, two=False):
     a, b = [i.as_expr() for i in (ua, ub)]
 
     def pow_cos_sin(a, two):
-        """Return ``a`` as a tuple (r, c, s) such that ``a = (r or 1)*(c or 1)*(s or 1)``.
+        """Return ``a`` as a tuple (r, c, s) such that
+        ``a = (r or 1)*(c or 1)*(s or 1)``.
 
         Three arguments are returned (radical, c-factor, s-factor) as
         long as the conditions set by ``two`` are met; otherwise None is
