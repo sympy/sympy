@@ -1,4 +1,4 @@
-from strat_pure import (exhaust, multiplex, debug, notempty, condition, chain,
+from core import (exhaust, multiplex, debug, notempty, condition, chain,
         onaction, sfilter, yieldify, do_one, identity)
 from traverse import top_down
 

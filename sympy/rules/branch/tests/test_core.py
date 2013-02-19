@@ -1,4 +1,4 @@
-from sympy.rules.branch.strat_pure import (exhaust, debug, multiplex,
+from sympy.rules.branch.core import (exhaust, debug, multiplex,
         condition, notempty, chain, onaction, sfilter, yieldify, do_one,
         identity)
 

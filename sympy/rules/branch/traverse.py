@@ -1,7 +1,7 @@
 """ Branching Strategies to Traverse a Tree """
 
 from sympy.rules.util import new, is_leaf
-from strat_pure import chain, identity, do_one
+from core import chain, identity, do_one
 from sympy.core.compatibility import product
 
 def top_down(brule):

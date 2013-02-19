@@ -1,3 +1,4 @@
 import traverse
-from strat import (canon, condition, debug, multiplex, exhaust, notempty,
+from core import (condition, debug, multiplex, exhaust, notempty,
         chain, onaction, sfilter, yieldify, do_one, identity)
+from tools import canon
