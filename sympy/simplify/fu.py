@@ -5,26 +5,26 @@ The idea behind the ``fu`` algorithm is to use a sequence of rules, applied
 in what is heuristically known to be a smart order, to select a simpler
 expression that is equivalent to the input.
 
-There are 15 transform rules (TR0 - TR10, TR10i, TR11 - TR13) in which a
-single rule is applied to the expression tree. The following are just
-mnemonic in nature; see the docstrings for examples.
+There are transform rules in which a single rule is applied to the
+expression tree. The following are just mnemonic in nature; see the
+docstrings for examples.
 
-    TR0 - non-trig simplification
-    TR1 - sec, csc -> 1/cos, 1/sin
-    TR2 - tan, cot -> sin/cos and cos/sin
-    TR2i - tan or sin <- sin/cos and cos/sin
+    TR0 - simplify expression
+    TR1 - sec-csc to cos-sin
+    TR2 - tan-cot to sin-cos ratio
+    TR2i - sin-cos ratio to tan or sin
     TR3 - angle canonicalization
-    TR4 - replace functions at special angles with values
-    TR5 - sin**2(a) -> (1 - cos(a)**2) and sin(a)**4 to the square of the same
-    TR6 - cos**2(a) -> (1 - sin(a)**2) and cos(a)**4 to the square of the same
-    TR7 - cos(a)**2 -> cos(2*a)
-    TR8 - f(a)*g(b) -> f(a+b) + g(a-b);             f and g are sin or cos
-    TR9 - f(a)*g(b) <- f(a+b) + g(a-b);             f and g are sin or cos
-    TR10 - f(a+b) -> f(a)*g(b) + g(a)*f(b);         f and g are sin or cos
-    TR10i - f(a+b) <- f(a)*g(b) + g(a)*f(b);        f and g are sin or cos
-    TR11 - f(2*m*a) -> 2*f(m*a)*g(m*a);             f and g are sin or cos
-    TR12 - tan(a + b) -> (tan sum)/(tan product)
-    TR13 - f(a)*f(b) -> 1 +/- (f(a)+f(b))*g(a+b);   f = tan or cot
+    TR4 - functions at special angles
+    TR5 - powers of sin to powers of cos
+    TR6 - powers of cos to powers of sin
+    TR7 - lower cos power
+    TR8 - sin-cos products to sums
+    TR9 - sin-cos sum to products
+    TR10 - expand sin-cos of sums
+    TR10i - collect sin-cos arguments into sums
+    TR11 - double angle to single angle
+    TR12 - rewrite tan of sum
+    TR13 - rewrite product of tan or cot
     TRmorrie - prod(cos(x*2**i), (i, 0, k - 1)) -> sin(2**k*x)/(2**k*sin(x))
 
 There are 4 combination transforms (CTR1 - CTR4) in which a seqence of
@@ -40,13 +40,13 @@ of trigonometric funcions that appear in the expression.
 Other than TR0, re-writing of expressions is not done by the transformations.
 e.g. TR10i finds pairs of terms in a sum that are in the form like
 ``cos(x)*cos(y) + sin(x)*sin(y)``. Such expression are targeted in a bottom-up
-traversal of the expression, but no manipulation to make
-them appear is attempted. For example,
+traversal of the expression, but no manipulation to make them appear is
+attempted. For example,
 
     Set-up for examples below:
 
-    >>> from sympy.simplify.fu import fu, L, TR9, TR10i
-    >>> from sympy import factor, sin, cos
+    >>> from sympy.simplify.fu import fu, L, TR9, TR10i, TR11
+    >>> from sympy import factor, sin, cos, powsimp
     >>> from sympy.abc import x, y, z, a
     >>> from time import time
 
@@ -62,8 +62,18 @@ the transformation is successful:
 >>> TR10i(_.normal())
 cos(x + y)/cos(x)
 
-There is one exception, however. In TR10i and TR9 terms are recognized even
-when they are each multiplied by a common factor:
+TR11's behavior is similar. It rewrites double angles as smaller angles but
+doesn't do any simplification of the result.
+
+>>> TR11(sin(2)**a*cos(1)**(-a), 1)
+(2*sin(1)*cos(1))**a*cos(1)**(-a)
+>>> powsimp(_)
+(2*sin(1))**a
+
+The temptation is to try make these TR rules "smarter" but that should really
+be done at a higher level; the TR rules should try maintain the "do one thing
+well" principle.  There is one exception, however. In TR10i and TR9 terms are
+recognized even when they are each multiplied by a common factor:
 
 >>> fu(a*cos(x)*cos(y) + a*sin(x)*sin(y))
 a*cos(x - y)
@@ -85,13 +95,13 @@ to make that decision. For example:
 ... 14*cos(y - z))*(9*sin(2*y) + 12*sin(y + z) + 10*cos(x - y) + 2*cos(y -
 ... z) + 18)).expand(trig=True).expand()
 
-In the expanded state, there are nearly 1000 trig functions
+In the expanded state, there are nearly 1000 trig functions:
 
 >>> L(expr)
 932
 
 If the expression where factored first, this would take time but the
-resulting expression would be ransformed very quickly:
+resulting expression would be transformed very quickly:
 
 >>> def clock(f, n=2):
 ...    t=time(); f(); return round(time()-t, n)
@@ -107,7 +117,7 @@ not as long as it took to factor it and then transform it:
 >>> clock(lambda: TR10i(expr), 2)  # doctest: +SKIP
 0.28
 
-So neither expansion nor fatoring is used in ``TR10i``: if the
+So neither expansion nor factoring is used in ``TR10i``: if the
 expression is already factored (or partially factored) then expansion
 with ``trig=True`` would destroy what is already known and take
 longer; if the expression is expanded, factoring may take longer than
@@ -164,6 +174,9 @@ References
 ==========
 http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
 DESTIME2006/DES_contribs/Fu/simplification.pdf
+
+http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
+
 """
 
 from collections import defaultdict
@@ -252,7 +265,6 @@ def TR2(rv):
 def TR2i(rv):
     """Converts ratios involving sin and cos as follows::
         sin(x)/cos(x) -> tan(x)
-        sin(x)/cos(x/2) -> 2*sin(x/2)
         sin(x)/(cos(x) + 1) -> tan(x/2)
 
     Examples
@@ -263,8 +275,6 @@ def TR2i(rv):
     >>> from sympy import sin, cos
     >>> TR2i(sin(x)/cos(x))
     tan(x)
-    >>> TR2i(sin(x)/cos(x/2))
-    2*sin(x/2)
 
     Powers of the numerator and denominator are also recognized
 
@@ -301,23 +311,11 @@ def TR2i(rv):
                         d[a1].is_integer or a1.is_positive):
                     t.append((tan(k.args[0]/2))**n[k])
                     n[k] = d[a1] = None
-                else:
-                    a = cos(k.args[0]/2, evaluate=False)
-                    if a in d and d[a] == n[k] and (
-                            d[a].is_integer or a.is_positive):
-                        t.append((2*sin(k.args[0]/2))**n[k])
-                        n[k] = d[a] = None
         elif k.func is cos:
             a = sin(k.args[0], evaluate=False)
             if a in d and d[a] == n[k] and (d[a].is_integer or a.is_positive):
                 t.append(tan(k.args[0])**-n[k])
                 n[k] = d[a] = None
-            else:
-                a = sin(k.args[0]*2, evaluate=False)
-                if a in d and d[a] == n[k] and (
-                        d[a].is_integer or a.is_positive):
-                    t.append((2*sin(k.args[0]))**-n[k])
-                    n[k] = d[a] = None
         elif k.is_Add and len(k.args) == 2 and k.args[0] is S.One and \
                 k.args[1].func is cos:
             a = sin(k.args[1].args[0], evaluate=False)
@@ -834,14 +832,16 @@ def TR10i(rv):
     return rv
 
 
-def TR11(rv):
-    """Function of double angle to product.
+def TR11(rv, base=None):
+    """Function of double angle to product. The ``base`` argument can be used
+    to indicate what is the un-doubled argument, e.g. if 3*pi/7 is the base then
+    cosine and sine functions with argument 6*pi/7 will be replaced.
 
     Examples
     ========
 
     >>> from sympy.simplify.fu import TR11
-    >>> from sympy import cos, sin
+    >>> from sympy import cos, sin, pi
     >>> from sympy.abc import x
     >>> TR11(sin(2*x))
     2*sin(x)*cos(x)
@@ -852,25 +852,60 @@ def TR11(rv):
     >>> TR11(sin(4*x/3))
     4*(-sin(x/3)**2 + cos(x/3)**2)*sin(x/3)*cos(x/3)
 
-    If the arguments are simply integers, no change is made:
+    If the arguments are simply integers, no change is made
+    unless a base is provided:
 
     >>> TR11(cos(2))
     cos(2)
+    >>> TR11(cos(4), 2)
+    -sin(2)**2 + cos(2)**2
+
+    There is a subtle issue here in that autosimplification will convert
+    some higher angles to lower angles
+
+    >>> cos(6*pi/7) + cos(3*pi/7)
+    -cos(pi/7) + cos(3*pi/7)
+
+    The 6*pi/7 angle is now pi/7 but can be targeted with TR11 by supplying
+    the 3*pi/7 base:
+
+    >>> TR11(_, 3*pi/7)
+    -sin(3*pi/7)**2 + cos(3*pi/7)**2 + cos(3*pi/7)
 
     """
-    rv = bottom_up(rv, TR11)
-    if not (rv.func in (sin, cos) and not rv.args[0].is_Number):
+    rv = bottom_up(rv, lambda x: TR11(x, base))
+    if not rv.func in (cos, sin):
         return rv
 
-    c, m = rv.args[0].as_coeff_Mul()
-    if c.p % 2 == 0:
-        arg = c.p//2*m/c.q
-        c = TR11(cos(arg))
-        s = TR11(sin(arg))
-        if rv.func == sin:
-            rv = 2*s*c
-        else:
-            rv = c**2 - s**2
+    if base:
+        f = rv.func
+        t = f(base*2)
+        co = S.One
+        if t.is_Mul:
+            co, t = t.as_coeff_Mul()
+        if not t.func in (cos, sin):
+            return rv
+        if rv.args[0] == t.args[0]:
+            c = cos(base)
+            s = sin(base)
+            if f is cos:
+                return (c**2 - s**2)/co
+            else:
+                return 2*c*s/co
+        return rv
+
+    elif not rv.args[0].is_Number:
+        # make a change if the leading coefficient's numerator is
+        # divisible by 2
+        c, m = rv.args[0].as_coeff_Mul()
+        if c.p % 2 == 0:
+            arg = c.p//2*m/c.q
+            c = TR11(cos(arg))
+            s = TR11(sin(arg))
+            if rv.func == sin:
+                rv = 2*s*c
+            else:
+                rv = c**2 - s**2
     return rv
 
 
@@ -926,6 +961,7 @@ def TR13(rv):
     if not rv.is_Mul:
         return rv
 
+    # XXX handle products of powers? or let power-reducing handle it?
     args = {tan: [], cot: [], None: []}
     for a in ordered(Mul.make_args(rv)):
         if a.func in (tan, cot):
@@ -958,7 +994,7 @@ def TRmorrie(rv):
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TRmorrie, TR8
+    >>> from sympy.simplify.fu import TRmorrie, TR8, TR3
     >>> from sympy.abc import x
     >>> from sympy import Mul, cos, pi
     >>> TRmorrie(cos(x)*cos(2*x))
@@ -978,6 +1014,31 @@ def TRmorrie(rv):
 
     >>> TR8(_)
     -1/8
+
+    In this case, if eq is unsimplified, the answer is obtained
+    directly:
+
+    >>> eq = cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)
+    >>> TRmorrie(eq)
+    1/16
+
+    But if angles are made canonical with TR3 then the answer
+    is not simplified without further work:
+
+    >>> TR3(eq)
+    sin(pi/18)*cos(pi/9)*cos(2*pi/9)/2
+    >>> TRmorrie(_)
+    sin(pi/18)*sin(4*pi/9)/(8*sin(pi/9))
+    >>> TR8(_)
+    cos(7*pi/18)/(16*sin(pi/9))
+    >>> TR3(_)
+    1/16
+
+    The original expression would have resolve to 1/16 directly with TR8,
+    however:
+
+    >>> TR8(eq)
+    1/16
 
     References
     ==========

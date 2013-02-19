@@ -28,21 +28,8 @@ def test_TR2i():
 
     assert TR2i(sin(x)/cos(x)) == tan(x)
     assert TR2i(sin(x)*sin(y)/cos(x)) == tan(x)*sin(y)
-    assert TR2i(sin(x)/cos(x/2)) == 2*sin(x/2)
     assert TR2i(1/(sin(x)/cos(x))) == 1/tan(x)
     assert TR2i(1/(sin(x)*sin(y)/cos(x))) == 1/tan(x)/sin(y)
-    assert TR2i(1/(sin(x)/cos(x/2))) == 1/(2*sin(x/2))
-    assert TR2i(sin(1)**a*cos(S.Half)**(-a)) == (2*sin(S.Half))**a
-    assert TR2i(sin(2)**a*cos(1)**(-a)) == (2*sin(1))**a
-    assert TR2i(sin(4)**a*cos(2)**(-a)) == sin(4)**a*cos(2)**(-a)
-    assert TR2i(sin(5)**a*cos(5*S.Half)**(-a)) == sin(5)**a*cos(5*S.Half)**(-a)
-    assert TR2i(sin(1)**(-a)*cos(S.Half)**a) == (2*sin(S.Half))**(-a)
-    assert TR2i(sin(2)**(-a)*cos(1)**a) == (2*sin(1))**(-a)
-    assert TR2i(sin(4)**(-a)*cos(2)**a) == sin(4)**(-a)*cos(2)**a
-    assert TR2i(sin(5)**(-a)*cos(5*S.Half)**a) == sin(5)**(-a)*cos(5*S.Half)**a
-    i = symbols('i', integer=True)
-    assert TR2i(sin(5)**(-i)*cos(5*S.Half)**i) == (2*sin(5*S.Half))**(-i)
-    assert TR2i(sin(5)**(i)*cos(5*S.Half)**-i) == (2*sin(5*S.Half))**i
 
     assert TR2i(sin(1)/(cos(1) + 1)) == tan(S.Half)
     assert TR2i(sin(2)/(cos(2) + 1)) == tan(1)
@@ -61,6 +48,7 @@ def test_TR2i():
     assert TR2i((cos(4) + 1)**a*sin(4)**(-a)) == (cos(4) + 1)**a*sin(4)**(-a)
     assert TR2i((cos(5) + 1)**a*sin(5)**(-a)) == (cos(5) + 1)**a*sin(5)**(-a)
 
+    i = symbols('i', integer=True)
     assert TR2i(((cos(5) + 1)**i*sin(5)**(-i))) == tan(5*S.Half)**(-i)
     assert TR2i(1/((cos(5) + 1)**i*sin(5)**(-i))) == tan(5*S.Half)**i
 
@@ -217,6 +205,11 @@ def test_TR11():
         (-sin(x)**2 + cos(x)**2)**2 - 4*sin(x)**2*cos(x)**2
 
     assert TR11(cos(2)) == cos(2)
+
+    assert TR11(cos(3*pi/7), 2*pi/7) == -cos(2*pi/7)**2 + sin(2*pi/7)**2
+    assert TR11(cos(4), 2) == -sin(2)**2 + cos(2)**2
+    assert TR11(cos(6), 2) == cos(6)
+    assert TR11(sin(x)/cos(x/2), x/2) == 2*sin(x/2)
 
 
 def test_TR12():
