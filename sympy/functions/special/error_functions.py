@@ -128,18 +128,21 @@ class erf(Function):
         return sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
 
     def _eval_rewrite_as_fresnels(self, z):
-        arg = (1-S.ImaginaryUnit)*z/sqrt(pi)
-        return (1+S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+        arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
+        return (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_fresnelc(self, z):
-        arg = (1-S.ImaginaryUnit)*z/sqrt(pi)
-        return (1+S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+        arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
+        return (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z):
         return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
 
     def _eval_rewrite_as_hyper(self, z):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
+
+    def _eval_rewrite_as_expint(self, z):
+        return sqrt(z**2)/z - z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     def _eval_rewrite_as_tractable(self, z):
         return S.One - _erfs(z)*C.exp(-z**2)
@@ -297,18 +300,24 @@ class erfc(Function):
         return S.One + I*erfi(I*z)
 
     def _eval_rewrite_as_fresnels(self, z):
-        arg = (1-S.ImaginaryUnit)*z/sqrt(pi)
-        return 1 - (1+S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+        arg = (S.One - S.ImaginaryUnit)*z/sqrt(pi)
+        return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_fresnelc(self, z):
-        arg = (1-S.ImaginaryUnit)*z/sqrt(pi)
-        return 1 - (1+S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+        arg = (S.One-S.ImaginaryUnit)*z/sqrt(pi)
+        return S.One - (S.One + S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z):
-        return 1 - z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
+        return S.One - z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], z**2)
 
     def _eval_rewrite_as_hyper(self, z):
-        return 1 - 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
+        return S.One - 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], -z**2)
+
+    def _eval_rewrite_as_uppergamma(self, z):
+        return S.One - sqrt(z**2)/z*(S.One - C.uppergamma(S.Half, z**2)/sqrt(S.Pi))
+
+    def _eval_rewrite_as_expint(self, z):
+        return S.One - sqrt(z**2)/z + z*expint(S.Half, z**2)/sqrt(S.Pi)
 
     def _eval_as_leading_term(self, x):
         arg = self.args[0].as_leading_term(x)
@@ -452,18 +461,24 @@ class erfi(Function):
         return I*erfc(I*z) - I
 
     def _eval_rewrite_as_fresnels(self, z):
-        arg = (1+S.ImaginaryUnit)*z/sqrt(pi)
-        return (1-S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+        arg = (S.One + S.ImaginaryUnit)*z/sqrt(pi)
+        return (S.One - S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_fresnelc(self, z):
-        arg = (1+S.ImaginaryUnit)*z/sqrt(pi)
-        return (1-S.ImaginaryUnit)*(fresnelc(arg)-I*fresnels(arg))
+        arg = (S.One + S.ImaginaryUnit)*z/sqrt(pi)
+        return (S.One - S.ImaginaryUnit)*(fresnelc(arg) - I*fresnels(arg))
 
     def _eval_rewrite_as_meijerg(self, z):
         return z/sqrt(pi)*meijerg([S.Half], [], [0], [-S.Half], -z**2)
 
     def _eval_rewrite_as_hyper(self, z):
         return 2*z/sqrt(pi)*hyper([S.Half], [3*S.Half], z**2)
+
+    def _eval_rewrite_as_uppergamma(self, z):
+        return sqrt(-z**2)/z*(C.uppergamma(S.Half, -z**2)/sqrt(S.Pi) - S.One)
+
+    def _eval_rewrite_as_expint(self, z):
+        return sqrt(-z**2)/z - z*expint(S.Half, -z**2)/sqrt(S.Pi)
 
     def as_real_imag(self, deep=True, **hints):
         if self.args[0].is_real:
@@ -590,16 +605,23 @@ class erf2(Function):
         #arg1 = (1-S.ImaginaryUnit)*x/sqrt(pi)
         #return (1+S.ImaginaryUnit)*(fresnelc(arg2)-I*fresnels(arg2)-
             #(fresnelc(arg1)-I*fresnels(arg1)))
-        return erf(y).rewrite(fresnels)-erf(x).rewrite(fresnels)
+        return erf(y).rewrite(fresnels) - erf(x).rewrite(fresnels)
 
     def _eval_rewrite_as_fresnelc(self, x, y):
-        return erf(y).rewrite(fresnelc)-erf(x).rewrite(fresnelc)
+        return erf(y).rewrite(fresnelc) - erf(x).rewrite(fresnelc)
 
     def _eval_rewrite_as_meijerg(self, x, y):
-        return erf(y).rewrite(meijerg)-erf(x).rewrite(meijerg)
+        return erf(y).rewrite(meijerg) - erf(x).rewrite(meijerg)
 
     def _eval_rewrite_as_hyper(self, x, y):
-        return erf(y).rewrite(hyper)-erf(x).rewrite(hyper)
+        return erf(y).rewrite(hyper) - erf(x).rewrite(hyper)
+
+    def _eval_rewrite_as_uppergamma(self, x, y):
+        return (sqrt(y**2)/y*(S.One - C.uppergamma(S.Half, y**2)/sqrt(S.Pi)) -
+            sqrt(x**2)/x*(S.One - C.uppergamma(S.Half, x**2)/sqrt(S.Pi)))
+
+    def _eval_rewrite_as_expint(self, x, y):
+        return erf(y).rewrite(expint) - erf(x).rewrite(expint)
 
 class erfinv(Function):
     r"""
