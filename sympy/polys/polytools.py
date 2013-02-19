@@ -3958,12 +3958,7 @@ def degree(f, *gens, **args):
     else:
         gens_present = True
 
-    polynomial=False
-
-    try:
-        polynomial = f.is_polynomial()
-    except:
-        pass
+    polynomial = isinstance(f, Expr) and f.is_polynomial()
 
     if f is polynomial:
         if len(f.free_symbols) is 1: 
