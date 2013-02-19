@@ -1,5 +1,6 @@
 from sympy import Basic, symbols, Symbol, S
-from sympy.rules.branch.traverse import top_down
+from sympy.rules.branch.traverse import top_down, sall
+from sympy.rules.branch.strat_pure import do_one, identity
 
 def inc(x):
     if isinstance(x, int):
@@ -30,3 +31,16 @@ def test_top_down_harder_function():
     brl = top_down(split5)
 
     assert set(brl(expr)) == expected
+
+def test_sall():
+    expr     = Basic(1, 2)
+    expected = Basic(2, 3)
+    brl = sall(inc)
+
+    assert list(brl(expr)) == [expected]
+
+    expr     = Basic(1, 2, Basic(3, 4))
+    expected = Basic(2, 3, Basic(3, 4))
+    brl = sall(do_one(inc, identity))
+
+    assert list(brl(expr)) == [expected]
