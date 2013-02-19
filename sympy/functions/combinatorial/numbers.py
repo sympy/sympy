@@ -7,7 +7,11 @@ Factorials, binomial coefficients and related functions are located in
 the separate 'factorials' module.
 """
 
-from sympy import Function, S, Symbol, Rational, oo, Integer, C, Add, expand_mul
+from sympy.core.function import Function, expand_mul
+from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
+from sympy.core.compatibility import as_int
+from sympy.core.cache import cacheit
+from sympy.functions.combinatorial.factorials import factorial
 
 from sympy.mpmath import bernfrac
 from sympy.mpmath.libmp import ifib as _ifib
@@ -389,8 +393,9 @@ class bell(Function):
         s = S.Zero
         a = S.One
         for m in xrange(1, n - k + 2):
-            s += a*bell._bell_incomplete_poly(n - m, k - 1, symbols)*symbols[m - 1]
-            a = a*(n - m)/m
+            s += a * bell._bell_incomplete_poly(
+                n - m, k - 1, symbols) * symbols[m - 1]
+            a = a * (n - m) / m
         return expand_mul(s)
 
     @classmethod
@@ -667,3 +672,572 @@ class catalan(Function):
 
     def _eval_evalf(self, prec):
         return self.rewrite(C.gamma).evalf(prec)
+
+#######################################################################
+###
+### Functions for enumerating partitions, permutations and combinations
+###
+#######################################################################
+
+
+class _MultisetHistogram(tuple):
+    pass
+
+
+_N = -1
+_ITEMS = -2
+_M = slice(None, _ITEMS)
+
+
+def _multiset_histogram(n):
+    """Return tuple used in permutation and combination counting. Input
+    is a dictionary giving items with counts as values or a sequence of
+    items (which need not be sorted).
+
+    The data is stored in a class deriving from tuple so it is easily
+    recognized and so it can be converted easily to a list.
+    """
+    if type(n) is dict:  # item: count
+        if not all(isinstance(v, int) and v >= 0 for v in n.values()):
+            raise ValueError
+        tot = sum(n.values())
+        items = sum(1 for k in n if n[k] > 0)
+        return _MultisetHistogram([n[k] for k in n if n[k] > 0] + [items, tot])
+    else:
+        n = list(n)
+        s = set(n)
+        if len(s) == len(n):
+            n = [1]*len(n)
+            n.extend([len(n), len(n)])
+            return _MultisetHistogram(n)
+        m = dict(zip(s, range(len(s))))
+        d = dict(zip(range(len(s)), [0]*len(s)))
+        for i in n:
+            d[m[i]] += 1
+        return _multiset_histogram(d)
+
+
+def nP(n, k=None, replacement=False):
+    """Return the number of permutations of ``n`` items taken ``k`` at a time.
+
+    Possible values for ``n``::
+        integer - set of length ``n``
+        sequence - converted to a multiset internally
+        multiset - {element: multiplicity}
+
+    If ``k`` is None then the total of all permutations of length 0
+    through the number of items represented by ``n`` will be returned.
+
+    If ``replacement`` is True then a given item can appear more than once
+    in the ``k`` items. (For example, for 'ab' permutations of 2 would
+    include 'aa', 'ab', 'ba' and 'bb'.) The multiplicity of elements in
+    ``n`` is ignored when ``replacement`` is True but the total number
+    of elements is considered since no element can appear more times than
+    the number of elements in ``n``.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import nP
+    >>> from sympy.utilities.iterables import multiset_permutations, multiset
+    >>> nP(3, 2)
+    6
+    >>> nP('abc', 2) == nP(multiset('abc'), 2) == 6
+    True
+    >>> nP('aab', 2)
+    3
+    >>> nP([1, 2, 2], 2)
+    3
+    >>> [nP(3, i) for i in range(4)]
+    [1, 3, 6, 6]
+    >>> nP(3) == sum(_)
+    True
+
+    When ``replacement`` is True, each item can have multiplicity
+    equal to the length represented by ``n``:
+
+    >>> nP('aabc', replacement=True)
+    121
+    >>> [len(list(multiset_permutations('aaaabbbbcccc', i))) for i in range(5)]
+    [1, 3, 9, 27, 81]
+    >>> sum(_)
+    121
+
+    References
+    ==========
+
+    http://en.wikipedia.org/wiki/Permutation
+
+    See Also
+    ========
+    sympy.utilities.iterables.multiset_permutations
+
+    """
+    try:
+        n = as_int(n)
+    except ValueError:
+        return Integer(_nP(_multiset_histogram(n), k, replacement))
+    return Integer(_nP(n, k, replacement))
+
+
+@cacheit
+def _nP(n, k=None, replacement=False):
+    from sympy.functions.combinatorial.factorials import factorial
+    from sympy.core.mul import prod
+
+    if k == 0:
+        return 1
+    if type(n) is int:  # n different items
+        # assert n >= 0
+        if k is None:
+            return sum(_nP(n, i, replacement) for i in range(n + 1))
+        elif replacement:
+            return n**k
+        elif k > n:
+            return 0
+        elif k == n:
+            return factorial(k)
+        elif k == 1:
+            return n
+        else:
+            # assert k >= 0
+            return _product(n - k + 1, n)
+    elif isinstance(n, _MultisetHistogram):
+        if k is None:
+            return sum(_nP(n, i, replacement) for i in range(n[_N] + 1))
+        elif replacement:
+            return n[_ITEMS]**k
+        elif k == n[_N]:
+            return factorial(k)/prod([factorial(i) for i in n[_M] if i > 1])
+        elif k > n[_N]:
+            return 0
+        elif k == 1:
+            return n[_ITEMS]
+        else:
+            # assert k >= 0
+            tot = 0
+            n = list(n)
+            for i in range(len(n[_M])):
+                if not n[i]:
+                    continue
+                n[_N] -= 1
+                if n[i] == 1:
+                    n[i] = 0
+                    n[_ITEMS] -= 1
+                    tot += _nP(_MultisetHistogram(n), k - 1)
+                    n[_ITEMS] += 1
+                    n[i] = 1
+                else:
+                    n[i] -= 1
+                    tot += _nP(_MultisetHistogram(n), k - 1)
+                    n[i] += 1
+                n[_N] += 1
+            return tot
+
+
+@cacheit
+def _AOP_product(n):
+    """for n = (m1, m2, .., mk) return the coefficients of the polynomial,
+    prod(sum(x**i for i in range(nj + 1)) for nj in n); i.e. the coefficients
+    of the product of AOPs (all-one polynomials) or order given in n.  The
+    resulting coefficient corresponding to x**r is the number of r-length
+    combinations of sum(n) elements with multiplicities given in n.
+    The coefficients are given as a default dictionary (so if a query is made
+    for a key that is not present, 0 will be returned).
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import _AOP_product
+    >>> from sympy.abc import x
+    >>> n = (2, 2, 3)  # e.g. aabbccc
+    >>> prod = ((x**2 + x + 1)*(x**2 + x + 1)*(x**3 + x**2 + x + 1)).expand()
+    >>> c = _AOP_product(n); dict(c)
+    {0: 1, 1: 3, 2: 6, 3: 8, 4: 8, 5: 6, 6: 3, 7: 1}
+    >>> [c[i] for i in range(8)] == [prod.coeff(x, i) for i in range(8)]
+    True
+
+    The generating poly used here is the same as that listed in
+    http://tinyurl.com/cep849r, but in a refactored form.
+
+    """
+    from collections import defaultdict
+
+    n = list(n)
+    ord = sum(n)
+    need = (ord + 2)//2
+    rv = [1]*(n.pop() + 1)
+    rv.extend([0]*(need - len(rv)))
+    rv = rv[:need]
+    while n:
+        ni = n.pop()
+        N = ni + 1
+        was = rv[:]
+        for i in range(1, min(N, len(rv))):
+            rv[i] += rv[i - 1]
+        for i in range(N, need):
+            rv[i] += rv[i - 1] - was[i - N]
+    rev = list(reversed(rv))
+    if ord % 2:
+        rv = rv + rev
+    else:
+        rv[-1:] = rev
+    d = defaultdict(int)
+    for i in range(len(rv)):
+        d[i] = rv[i]
+    return d
+
+
+def nC(n, k=None, replacement=False):
+    """Return the number of combinations of ``n`` items taken ``k`` at a time.
+
+    Possible values for ``n``::
+        integer - set of length ``n``
+        sequence - converted to a multiset internally
+        multiset - {element: multiplicity}
+
+    If ``k`` is None then the total of all combinations of length 0
+    through the number of items represented in ``n`` will be returned.
+
+    If ``replacement`` is True then a given item can appear more than once
+    in the ``k`` items. (For example, for 'ab' sets of 2 would include 'aa',
+    'ab', and 'bb'.) The multiplicity of elements in ``n`` is ignored when
+    ``replacement`` is True but the total number of elements is considered
+    since no element can appear more times than the number of elements in
+    ``n``.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import nC
+    >>> from sympy.utilities.iterables import multiset_combinations
+    >>> nC(3, 2)
+    3
+    >>> nC('abc', 2)
+    3
+    >>> nC('aab', 2)
+    2
+
+    When ``replacement`` is True, each item can have multiplicity
+    equal to the length represented by ``n``:
+
+    >>> nC('aabc', replacement=True)
+    35
+    >>> [len(list(multiset_combinations('aaaabbbbcccc', i))) for i in range(5)]
+    [1, 3, 6, 10, 15]
+    >>> sum(_)
+    35
+
+    If there are ``k`` items with multiplicities ``m_1, m_2, ..., m_k``
+    then the total of all combinations of length 0 hrough ``k`` is the
+    product, ``(m_1 + 1)*(m_2 + 1)*...*(m_k + 1)``. When the multiplicity
+    of each item is 1 (i.e., k unique items) then there are 2**k
+    combinations. For example, if there are 4 unique items, the total number
+    of combinations is 16:
+
+    >>> sum(nC(4, i) for i in range(5))
+    16
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Combination
+    * http://tinyurl.com/cep849r
+
+    See Also
+    ========
+    sympy.utilities.iterables.multiset_combinations
+    """
+    from sympy.functions.combinatorial.factorials import binomial
+    from sympy.core.mul import prod
+
+    if type(n) is int:
+        if k is None:
+            if not replacement:
+                return 2**n
+            return sum(nC(n, i, replacement) for i in range(n + 1))
+        assert k >= 0
+        if replacement:
+            return binomial(n + k - 1, k)
+        return binomial(n, k)
+    if isinstance(n, _MultisetHistogram):
+        N = n[_N]
+        if k is None:
+            if not replacement:
+                return prod(m + 1 for m in n[_M])
+            return sum(nC(n, i, replacement) for i in range(N + 1))
+        elif replacement:
+            return nC(n[_ITEMS], k, replacement)
+        # assert k >= 0
+        elif k in (1, N - 1):
+            return n[_ITEMS]
+        elif k in (0, N):
+            return 1
+        return _AOP_product(tuple(n[_M]))[k]
+    else:
+        return nC(_multiset_histogram(n), k, replacement)
+
+
+@cacheit
+def _stirling1(n, k):
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+    n1 = n - 1
+
+    # some special values
+    if n == k:
+        return S.One
+    elif k == 1:
+        return factorial(n1)
+    elif k == n1:
+        return C.binomial(n, 2)
+    elif k == n - 2:
+        return (3*n - 1)*C.binomial(n, 3)/4
+    elif k == n - 3:
+        return C.binomial(n, 2)*C.binomial(n, 4)
+
+    # general recurrence
+    return n1*_stirling1(n1, k) + _stirling1(n1, k - 1)
+
+
+@cacheit
+def _stirling2(n, k):
+    if n == k == 0:
+        return S.One
+    if 0 in (n, k):
+        return S.Zero
+    n1 = n - 1
+
+    # some special values
+    if k == n1:
+        return C.binomial(n, 2)
+    elif k == 2:
+        return 2**n1 - 1
+
+    # general recurrence
+    return k*_stirling2(n1, k) + _stirling2(n1, k - 1)
+
+
+def stirling(n, k, d=None, kind=2, signed=False):
+    """Return Stirling number S(n, k) of the first or second (default) kind.
+
+    The sum of all Stirling numbers of the second kind for k = 1
+    through n is bell(n). The recurrence relationship for these numbers
+    is::
+
+    {0}       {n}   {0}      {n + 1}     {n}   {  n  }
+    { } = 1;  { } = { } = 0; {     } = j*{ } + {     }
+    {0}       {0}   {k}      {  k  }     {k}   {k - 1}
+
+    where ``j`` is::
+        ``n`` for Stirling numbers of the first kind
+        ``-n`` for signed Stirling numbers of the first kind
+        ``k`` for Stirling numbers of the second kind
+
+    The first kind of Stirling number counts the number of permutations of
+    ``n`` distinct items that have ``k`` cycles; the second kind counts the
+    ways in which ``n`` distinct items can be partitioned into ``k`` parts.
+    If ``d`` is given, the "reduced Stirling number of the second kind" is
+    returned: ``S^{d}(n, k) = S(n - d + 1, k - d + 1)`` with ``n >= k >= d``.
+    (This counts the ways to partition ``n`` consecutive integers into
+    ``k`` groups with no pairwise difference less than ``d``. See example
+    below.)
+
+    To obtain the signed Stirling numbers of the first kind, use keyword
+    ``signed=True``. Using this keyword automatically sets ``kind`` to 1.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import stirling, bell
+    >>> from sympy.combinatorics import Permutation
+    >>> from sympy.utilities.iterables import multiset_partitions, permutations
+
+    First kind (unsigned by default):
+
+    >>> [stirling(6, i, kind=1) for i in range(7)]
+    [0, 120, 274, 225, 85, 15, 1]
+    >>> perms = list(permutations(range(4)))
+    >>> [sum(Permutation(p).cycles == i for p in perms) for i in range(5)]
+    [0, 6, 11, 6, 1]
+    >>> [stirling(4, i, kind=1) for i in range(5)]
+    [0, 6, 11, 6, 1]
+
+    First kind (signed):
+
+    >>> [stirling(4, i, signed=True) for i in range(5)]
+    [0, -6, 11, -6, 1]
+
+    Second kind:
+
+    >>> [stirling(10, i) for i in range(12)]
+    [0, 1, 511, 9330, 34105, 42525, 22827, 5880, 750, 45, 1, 0]
+    >>> sum(_) == bell(10)
+    True
+    >>> len(list(multiset_partitions(range(4), 2))) == stirling(4, 2)
+    True
+
+    Reduced second kind:
+
+    >>> from sympy import subsets, oo
+    >>> def delta(p):
+    ...    if len(p) == 1:
+    ...        return oo
+    ...    return min(abs(i[0] - i[1]) for i in subsets(p, 2))
+    >>> parts = multiset_partitions(range(5), 3)
+    >>> d = 2
+    >>> sum(1 for p in parts if all(delta(i) >= d for i in p))
+    7
+    >>> stirling(5, 3, 2)
+    7
+
+    References
+    ==========
+
+    * http://en.wikipedia.org/wiki/Stirling_numbers_of_the_first_kind
+    * http://en.wikipedia.org/wiki/Stirling_numbers_of_the_second_kind
+
+    See Also
+    ========
+    sympy.utilities.iterables.multiset_partitions
+
+    """
+    # TODO: make this a class like bell()
+
+    n = as_int(n)
+    k = as_int(k)
+    if n < 0:
+        raise ValueError('n must be nonnegative')
+    if k > n:
+        return S.Zero
+    if d:
+        # assert k >= d
+        # kind is ignored -- only kind=2 is supported
+        return _stirling2(n - d + 1, k - d + 1)
+    elif signed:
+        # kind is ignored -- only kind=1 is supported
+        return (-1)**(n - k)*_stirling1(n, k)
+
+    if kind == 1:
+        return _stirling1(n, k)
+    elif kind == 2:
+        return _stirling2(n, k)
+    else:
+        raise ValueError('kind must be 1 or 2, not %s' % k)
+
+
+@cacheit
+def _nT(n, k):
+    """Return the partitions of ``n`` items into ``k`` parts. This
+    is used by ``nT`` for the case when ``n`` is an integer."""
+    if k == 0:
+        return 1 if k == n else 0
+    return sum(_nT(n - k, j) for j in range(min(k, n - k) + 1))
+
+
+def nT(n, k=None):
+    """Return the number of ``k``-sized partitions of ``n`` items.
+
+    Possible values for ``n``::
+        integer - ``n`` identical items
+        sequence - converted to a multiset internally
+        multiset - {element: multiplicity}
+
+    Note: the convention for ``nT`` is different than that of ``nC`` and``nP`` in that
+    here an integer indicates ``n`` *identical* items instead of a set of
+    length ``n``; this is in keepng with the ``partitions`` function which
+    treats its integer-``n`` input like a list of ``n`` 1s. One can use
+    ``range(n)`` for ``n`` to indicate ``n`` distinct items.
+
+    If ``k`` is None then the total number of ways to partition the elements
+    represented in ``n`` will be returned.
+
+    Examples
+    ========
+
+    >>> from sympy.functions.combinatorial.numbers import nT
+
+    Partitions of the given multiset:
+
+    >>> [nT('aabbc', i) for i in range(1, 7)]
+    [1, 8, 11, 5, 1, 0]
+    >>> nT('aabbc') == sum(_)
+    True
+
+    (TODO The following can be activated with >>> when
+    taocp_multiset_permutation is in place.)
+    >> [nT("mississippi", i) for i in range(1, 12)]
+    [1, 74, 609, 1521, 1768, 1224, 579, 197, 50, 9, 1]
+
+    Partitions when all items are identical:
+
+    >>> [nT(5, i) for i in range(1, 6)]
+    [1, 2, 2, 1, 1]
+    >>> nT('1'*5) == sum(_)
+    True
+
+    When all items are different:
+
+    >>> [nT(range(5), i) for i in range(1, 6)]
+    [1, 15, 25, 10, 1]
+    >>> nT(range(5)) == sum(_)
+    True
+
+    References
+    ==========
+
+    * http://undergraduate.csse.uwa.edu.au/units/CITS7209/partition.pdf
+
+    See Also
+    ========
+    sympy.utilities.iterables.partitions
+    sympy.utilities.iterables.multiset_partitions
+
+    """
+    from sympy.utilities.iterables import multiset_partitions
+
+    if type(n) is int:
+        # assert n >= 0
+        # all the same
+        if k is None:
+            return sum(_nT(n, k) for k in range(1, n + 1))
+        return _nT(n, k)
+    if not isinstance(n, _MultisetHistogram):
+        try:
+            # if n contains hashable items there is some
+            # quick handling that can be done
+            u = len(set(n))
+            if u == 1:
+                return nT(len(n), k)
+            elif u == len(n):
+                n = range(u)
+            raise TypeError
+        except TypeError:
+            n = _multiset_histogram(n)
+    N = n[_N]
+    if k is None and N == 1:
+        return 1
+    if k in (1, N):
+        return 1
+    if k == 2 or N == 2 and k is None:
+        m, r = divmod(N, 2)
+        rv = sum(nC(n, i) for i in range(1, m + 1))
+        if not r:
+            rv -= nC(n, m)//2
+        if k is None:
+            rv += 1  # for k == 1
+        return rv
+    if N == n[_ITEMS]:
+        # all distinct
+        if k is None:
+            return bell(N)
+        return stirling(N, k)
+    if k is None:
+        return sum(nT(n, k) for k in range(1, N + 1))
+    tot = 0
+    for p in multiset_partitions(
+            [i for i, j in enumerate(n[_M]) for ii in range(j)]):
+        tot += len(p) == k
+    return tot

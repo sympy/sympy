@@ -156,6 +156,18 @@ def test_rsolve():
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
+    a,b,c = symbols('a,b,c')
+
+    assert rsolve(Eq(y(n + 1), a*y(n)), y(n)).simplify() == C0*a**n
+    assert rsolve(Eq(y(n + 1), a*y(n)), y(n), {y(1): a}).simplify() == a**n
+
+    f = y(n) - a*y(n-2)
+
+    assert rsolve(f,y(n)) == C0*a**(n/2) + C1*(-sqrt(a))**n
+    assert rsolve(f,y(n), \
+            {y(1): sqrt(a)*(a + b), y(2): a*(a - b)}).simplify() == \
+            a**(n/2)*((-1)**(n + 1)*b + a)
+
 
 def test_rsolve_raises():
     x = Function('x')

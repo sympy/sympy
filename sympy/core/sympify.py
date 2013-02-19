@@ -24,9 +24,9 @@ converter = {}  # See sympify docstring.
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
-    Converts an arbitrary expression to a type that can be used inside sympy.
+    Converts an arbitrary expression to a type that can be used inside SymPy.
 
-    For example, it will convert python ints into instance of sympy.Rational,
+    For example, it will convert Python ints into instance of sympy.Rational,
     floats into instances of sympy.Float, etc. It is also able to coerce symbolic
     expressions which inherit from Basic. This can be useful in cooperation
     with SAGE.
@@ -38,7 +38,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
        - booleans, including ``None`` (will leave them unchanged)
        - lists, sets or tuples containing any of the above
 
-    If the argument is already a type that sympy understands, it will do
+    If the argument is already a type that SymPy understands, it will do
     nothing but return that value. This can be used at the beginning of a
     function to ensure you are working with the correct type.
 
@@ -164,6 +164,27 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     [1]
     [2]
 
+    Notes
+    =====
+
+    Sometimes autosimplification during sympification results in expressions
+    that are very different in structure than what was entered. Until such
+    autosimplification is no longer done, the ``kernS`` function might be of
+    some use. In the example below you can see how an expression reduces to
+    -1 by autosimplification, but does not do so when ``kernS`` is used.
+
+    >>> from sympy.core.sympify import kernS
+    >>> from sympy.abc import x
+    >>> -1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))
+    -1
+    >>> sympify('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
+    -1
+    >>> kernS('-1 - 2*(-(-x + 1/x)/(x*(x - 1/x)**2) - 1/(x*(x - 1/x)))')
+    -1 + 2*(-x + 1/x)/(x*(x - 1/x)**2) + 2/(x*(x - 1/x))
+
+    In the last expression, the result is not exactly the same as the
+    entered string, but it is a lot closer.
+
     """
     try:
         cls = a.__class__
@@ -243,9 +264,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
 
     try:
         a = a.replace('\n', '')
-        expr = parse_expr(a, locals or {}, transformations)
-    except (TokenError, SyntaxError):
-        raise SympifyError('could not parse %r' % a)
+        expr = parse_expr(a, local_dict=locals, transformations=transformations)
+    except (TokenError, SyntaxError), exc:
+        raise SympifyError('could not parse %r' % a, exc)
 
     return expr
 
@@ -276,3 +297,108 @@ def _sympify(a):
        see: sympify
     """
     return sympify(a, strict=True)
+
+
+def kernS(s):
+    """Use a hack to try keep autosimplification from joining Integer or
+    minus sign into an Add of a Mul; this modification doesn't
+    prevent the 2-arg Mul from becoming an Add, however.
+
+    Examples
+    ========
+
+    >>> from sympy.core.sympify import kernS
+    >>> from sympy.abc import x, y, z
+
+    The 2-arg Mul allows a leading Integer to be distributed and kernS does
+    not prevent that:
+
+    >>> 2*(x + y) == kernS('2*(x + y)') == 2*x + 2*y
+    True
+
+    But a Mul with more than 2 args need not have the leading Integer
+    distributed and the kernS version of S will keep that distribution
+    from occuring:
+
+    >>> 2*(x  + y)*z  # the first two arguments undergo the distribution
+    z*(2*x + 2*y)
+    >>> 2*z*(x + y)  # in this form, the Add is not multiplied by an Integer
+    2*z*(x + y)
+    >>> kernS('2*(x + y)*z')  # kernS will stop the distribution in this case
+    2*z*(x + y)
+
+    >>> kernS('E**-(x)')
+    exp(-x)
+
+    If use of the hack fails, the un-hacked string will be passed to sympify...
+    and you get what you get.
+
+    XXX This hack should not be necessary once issue 1497 has been resolved.
+    """
+    import re
+    from sympy.core.symbol import Symbol
+
+    hit = False
+    if '(' in s:
+        if s.count('(') != s.count(")"):
+            raise SympifyError('unmatch laft parentheses')
+
+        kern = '_kern'
+        while kern in s:
+            kern += "_"
+        lparen = 'kern_2'
+        while lparen in s:
+            lparen += "_"
+        olds = s
+        s = re.sub(r'(\d *\*|-) *\(', r'\1(%s*%s' % (kern, lparen), s)
+
+        hit = kern in s
+        if hit:
+            # close parentheses after kerns; if this fails there is
+            # either an error in this parsing or in the original string
+            i = 0
+            close = []
+            while True:
+                i = s.find(kern,  i)
+                if i == -1:
+                    break
+                count = 1  # for the one before the kern
+                for j in range(i + 1, len(s)):
+                    c = s[j]
+                    if c == "(":
+                        count += 1
+                    elif c == ")":
+                        count -= 1
+                    else:
+                        continue
+                    if count == 0:
+                        close.append(j)
+                        i += len(kern)  # continue from the last kern
+                        break
+            for i in reversed(close):
+                s = ')'.join([s[:i], s[i:]])
+            s = s.replace(lparen, "(")
+
+    for i in range(2):
+        try:
+            expr = sympify(s)
+            break
+        except:  # the kern might cause unknown errors, so use bare except
+            if hit:
+                s = olds  # maybe it didn't like the kern; use un-kerned s
+                hit = False
+                continue
+            expr = sympify(s)  # let original error raise
+
+    if not hit:
+        return expr
+
+    rep = {Symbol(kern): 1}
+    if hasattr(expr, 'xreplace'):
+        return expr.xreplace(rep)
+    elif isinstance(expr, (list, tuple, set)):
+        return type(expr)([_clear(e) for e in expr])
+    if hasattr(expr, 'subs'):
+        return expr.subs(rep)
+    # hope that kern is not there anymore
+    return expr

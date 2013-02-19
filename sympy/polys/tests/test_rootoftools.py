@@ -2,6 +2,7 @@
 
 from sympy.polys.polytools import Poly
 from sympy.polys.rootoftools import RootOf, RootSum
+from sympy.polys.orthopolys import legendre_poly
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -152,6 +153,42 @@ def test_RootOf_evalf():
     assert re.epsilon_eq(Float("0.60670583138111481707"))
     assert im.epsilon_eq(Float("1.45061224918844152650"))
 
+    p = legendre_poly(4, x, polys=True)
+    roots = [str(r.n(17)) for r in p.real_roots()]
+    assert roots == [
+            "-0.86113631159405258",
+            "-0.33998104358485626",
+             "0.33998104358485626",
+             "0.86113631159405258",
+             ]
+
+    re = RootOf(x**5 - 5*x + 12, 0).evalf(n=20)
+    assert re.epsilon_eq(Float("-1.84208596619025438271"))
+
+    re, im = RootOf(x**5 - 5*x + 12, 1).evalf(n=20).as_real_imag()
+    assert re.epsilon_eq(Float("-0.351854240827371999559"))
+    assert im.epsilon_eq(Float("-1.709561043370328882010"))
+
+    re, im = RootOf(x**5 - 5*x + 12, 2).evalf(n=20).as_real_imag()
+    assert re.epsilon_eq(Float("-0.351854240827371999559"))
+    assert im.epsilon_eq(Float("+1.709561043370328882010"))
+
+    re, im = RootOf(x**5 - 5*x + 12, 3).evalf(n=20).as_real_imag()
+    assert re.epsilon_eq(Float("+1.272897223922499190910"))
+    assert im.epsilon_eq(Float("-0.719798681483861386681"))
+
+    re, im = RootOf(x**5 - 5*x + 12, 4).evalf(n=20).as_real_imag()
+    assert re.epsilon_eq(Float("+1.272897223922499190910"))
+    assert im.epsilon_eq(Float("+0.719798681483861386681"))
+
+def test_RootOf_evalf_caching_bug():
+    r = RootOf(x**5 - 5*x + 12, 1)
+    r.n()
+    a = r._get_interval()
+    r = RootOf(x**5 - 5*x + 12, 1)
+    r.n()
+    b = r._get_interval()
+    assert a == b
 
 def test_RootOf_real_roots():
     assert Poly(x**5 + x + 1).real_roots() == [RootOf(x**3 - x**2 + 1, 0)]
@@ -176,6 +213,21 @@ def test_RootOf_all_roots():
         RootOf(x**3 - x**2 + 1, 2),
     ]
 
+def test_RootOf_eval_rational():
+    p = legendre_poly(4, x, polys=True)
+    roots = [r.eval_rational(S(1)/10**20) for r in p.real_roots()]
+    for r in roots:
+        assert isinstance(r, Rational)
+    # All we know is that the Rational instance will be at most 1/10^20 from
+    # the exact root. So if we evaluate to 17 digits, it must be exactly equal
+    # to:
+    roots = [str(r.n(17)) for r in roots]
+    assert roots == [
+            "-0.86113631159405258",
+            "-0.33998104358485626",
+             "0.33998104358485626",
+             "0.86113631159405258",
+             ]
 
 def test_RootSum___new__():
     f = x**3 + x + 3

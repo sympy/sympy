@@ -63,6 +63,10 @@ def test_mod():
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
 
+    s = S.Zero
+
+    assert s % float(1) == S.Zero
+
     # No rounding required since these numbers can be represented
     # exactly.
     assert Rational(3, 4) % Float(1.1) == 0.75
@@ -342,6 +346,27 @@ def test_Float():
     assert Float((0, 0L, -456, -2)) == Float('inf') == Float('+inf')
     assert Float((1, 0L, -789, -3)) == Float('-inf')
 
+    assert Float('+inf').is_bounded is False
+    assert Float('+inf').is_finite is False
+    assert Float('+inf').is_negative is False
+    assert Float('+inf').is_positive is True
+    assert Float('+inf').is_unbounded is True
+    assert Float('+inf').is_zero is False
+
+    assert Float('-inf').is_bounded is False
+    assert Float('-inf').is_finite is False
+    assert Float('-inf').is_negative is True
+    assert Float('-inf').is_positive is False
+    assert Float('-inf').is_unbounded is True
+    assert Float('-inf').is_zero is False
+
+    assert Float('0.0').is_bounded is True
+    assert Float('0.0').is_finite is False
+    assert Float('0.0').is_negative is False
+    assert Float('0.0').is_positive is False
+    assert Float('0.0').is_unbounded is False
+    assert Float('0.0').is_zero is True
+
     # do not automatically evalf
     def teq(a):
         assert (a.evalf() == a) is False
@@ -599,6 +624,10 @@ def test_Infinity_inequations():
     assert oo > pi
     assert not (oo < pi)
     assert exp(-3) < oo
+
+    assert Float('+inf') > pi
+    assert not (Float('+inf') < pi)
+    assert exp(-3) < Float('+inf')
 
 
 def test_NaN():

@@ -1,6 +1,7 @@
 from sympy.abc import t, w, x, y, z
-from sympy.assumptions import (ask, AssumptionsContext, global_assumptions, Q,
-                               register_handler, remove_handler)
+from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
+        remove_handler)
+from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
                                    known_facts_dict, single_fact_lookup)
 from sympy.assumptions.handlers import AskHandler

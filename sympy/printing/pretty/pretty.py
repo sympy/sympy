@@ -60,6 +60,7 @@ class PrettyPrinter(Printer):
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)
         return prettyForm(symb)
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Float(self, e):
         # we will use StrPrinter's Float printer, but we need to handle the
@@ -617,6 +618,31 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+    def _print_MatrixSlice(self, m):
+        # XXX works only for applied functions
+
+        prettyFunc = self._print(m.parent)
+        def ppslice(x):
+            x = list(x)
+            if x[2] == 1:
+                del x[2]
+            if x[1] == x[0] + 1:
+                del x[1]
+            if x[0] == 0:
+                x[0] = ''
+            return prettyForm(*self._print_seq(x, delimiter=':'))
+        prettyArgs = self._print_seq((ppslice(m.rowslice),
+            ppslice(m.colslice)), delimiter=', ').parens(left='[', right=']')[0]
+
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+
+        return pform
+
     def _print_Transpose(self, expr):
         pform = self._print(expr.arg)
         from sympy.matrices import MatrixSymbol
@@ -1152,7 +1178,7 @@ class PrettyPrinter(Printer):
             if n is S.One and d.is_Atom and not e.is_Integer:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
-                return prettyForm("1")/self._print(b)**self._print(-e)
+                return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=0))
 
         # None of the above special forms, do a standard power
         return self._print(b)**self._print(e)

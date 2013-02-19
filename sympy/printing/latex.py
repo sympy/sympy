@@ -971,6 +971,7 @@ class LatexPrinter(Printer):
             name += "_{%s}" % " ".join(subs)
 
         return name
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Relational(self, expr):
         if self._settings['itex']:
@@ -1021,6 +1022,21 @@ class LatexPrinter(Printer):
         return out_str % r"\\".join(lines)
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
+
+
+    def _print_MatrixSlice(self, expr):
+        def latexslice(x):
+            x = list(x)
+            if x[2] == 1:
+                del x[2]
+            if x[1] == x[0] + 1:
+                del x[1]
+            if x[0] == 0:
+                x[0] = ''
+            return ':'.join(map(self._print, x))
+        return (self._print(expr.parent) + r'\left[' +
+                latexslice(expr.rowslice) + ', ' +
+                latexslice(expr.colslice) + r'\right]')
 
     def _print_BlockMatrix(self, expr):
         return self._print(expr.blocks)

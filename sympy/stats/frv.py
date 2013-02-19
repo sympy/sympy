@@ -12,7 +12,8 @@ from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
         And, Or, Tuple)
 from sympy.core.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
-        PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs)
+        PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
+        NamedArgsMixin)
 from sympy.core.compatibility import product
 from sympy.core.containers import Dict
 import random
@@ -26,14 +27,13 @@ class FiniteDomain(RandomDomain):
     """
     is_Finite = True
 
-    def __new__(cls, elements):
-        elements = FiniteSet(*elements)
-        symbols = FiniteSet(sym for sym, val in elements)
-        return RandomDomain.__new__(cls, symbols, elements)
+    @property
+    def symbols(self):
+        return FiniteSet(sym for sym, val in self.elements)
 
     @property
     def elements(self):
-        return self.args[1]
+        return self.args[0]
 
     @property
     def dict(self):
@@ -57,19 +57,26 @@ class SingleFiniteDomain(FiniteDomain):
     """
 
     def __new__(cls, symbol, set):
-        return RandomDomain.__new__(cls, (symbol, ), FiniteSet(*set))
+        if not isinstance(set, FiniteSet):
+            set = FiniteSet(*set)
+        return Basic.__new__(cls, symbol, set)
 
     @property
     def symbol(self):
+        return self.args[0]
         return tuple(self.symbols)[0]
 
     @property
-    def elements(self):
-        return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
+    def symbols(self):
+        return FiniteSet(self.symbol)
 
     @property
     def set(self):
         return self.args[1]
+
+    @property
+    def elements(self):
+        return FiniteSet(frozenset(((self.symbol, elem), )) for elem in self.set)
 
     def __iter__(self):
         return (frozenset(((self.symbol, elem),)) for elem in self.set)
@@ -104,6 +111,8 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     """
 
     def __new__(cls, domain, condition):
+        if condition is True:
+            return domain
         cond = rv_subs(condition)
         # Check that we aren't passed a condition like die1 == z
         # where 'z' is a symbol that we don't know about
@@ -113,10 +122,12 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
                 condition, tuple(cond.free_symbols - domain.free_symbols)) +
                 "Will be unable to iterate using this condition")
 
-        return ConditionalDomain.__new__(cls, domain, condition)
+        return Basic.__new__(cls, domain, cond)
+
+
 
     def _test(self, elem):
-        val = self.condition.subs(dict(elem))
+        val = self.condition.xreplace(dict(elem))
         if val in [True, False]:
             return val
         elif val.is_Equality:
@@ -142,6 +153,24 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)
 
+class SingleFiniteDistribution(Basic, NamedArgsMixin):
+    def __new__(cls, *args):
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args)
+
+    @property
+    @cacheit
+    def density(self):
+        return dict((k, self.pdf(k)) for k in self.set)
+
+    def pdf(self, x):
+        return self.density.get(x, 0)
+
+    @property
+    def set(self):
+        return self.density.keys()
+
+
 #=============================================
 #=========  Probability Space  ===============
 #=============================================
@@ -153,8 +182,15 @@ class FinitePSpace(PSpace):
 
     Represents the probabilities of a finite number of events.
     """
-
     is_Finite = True
+
+    @property
+    def domain(self):
+        return self.args[0]
+
+    @property
+    def density(self):
+        return self.args[0]
 
     def __new__(cls, domain, density):
         density = dict((sympify(key), sympify(val))
@@ -173,10 +209,10 @@ class FinitePSpace(PSpace):
         return ConditionalFiniteDomain(self.domain, condition)
 
     def compute_density(self, expr):
-        expr = expr.subs(dict(((rs, rs.symbol) for rs in self.values)))
+        expr = expr.xreplace(dict(((rs, rs.symbol) for rs in self.values)))
         d = {}
         for elem in self.domain:
-            val = expr.subs(dict(elem))
+            val = expr.xreplace(dict(elem))
             prob = self.prob_of(elem)
             d[val] = d.get(val, 0) + prob
         return d
@@ -205,9 +241,9 @@ class FinitePSpace(PSpace):
 
     def integrate(self, expr, rvs=None):
         rvs = rvs or self.values
-        expr = expr.subs(dict((rs, rs.symbol) for rs in rvs))
-        return sum(expr.subs(dict(elem)) * self.prob_of(elem)
-                for elem in self.domain)
+        expr = expr.xreplace(dict((rs, rs.symbol) for rs in rvs))
+        return sum([expr.xreplace(dict(elem)) * self.prob_of(elem)
+                for elem in self.domain])
 
     def probability(self, condition):
         cond_symbols = frozenset(rs.symbol for rs in random_symbols(condition))
@@ -251,15 +287,27 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     This class is implemented by many of the standard FiniteRV types such as
     Die, Bernoulli, Coin, etc....
     """
+    @property
+    def symbol(self):
+        return self.args[0]
 
-    @classmethod
-    def fromdict(cls, name, density):
-        symbol = Symbol(name)
-        domain = SingleFiniteDomain(symbol, frozenset(density.keys()))
-        density = dict((frozenset(((symbol, val),)), prob)
-                for val, prob in density.items())
-        density = Dict(density)
-        return FinitePSpace.__new__(cls, domain, density)
+    @property
+    def density(self):
+        return self.args[1]
+
+    @property
+    def domain(self):
+        return SingleFiniteDomain(self.symbol, self.density.set)
+
+    def __new__(cls, symbol, density):
+        symbol = sympify(symbol)
+        return Basic.__new__(cls, symbol, density)
+
+    @property
+    @cacheit
+    def _density(self):
+        return dict((frozenset(((self.symbol, val),)), prob)
+                    for val, prob in self.density.density.items())
 
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):

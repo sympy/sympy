@@ -1,5 +1,5 @@
-Integrals
-==========
+Symbolic Integrals
+==================
 
 .. module:: sympy.integrals
 
@@ -115,3 +115,13 @@ Class Integral represents an unevaluated integral and has some methods that help
 TODO and Bugs
 -------------
 There are still lots of functions that sympy does not know how to integrate. For bugs related to this module, see http://code.google.com/p/sympy/issues/list?q=label:Integration
+
+Numeric Integrals
+=================
+
+SymPy has functions to calculate points and weights for Gaussian quadrature of
+any order and any precision:
+
+.. autofunction:: sympy.integrals.quadrature.gauss_legendre
+
+.. autofunction:: sympy.integrals.quadrature.gauss_laguerre

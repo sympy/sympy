@@ -1,4 +1,5 @@
 """ Generic SymPy-Independent Strategies """
+from functools import partial
 
 def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
@@ -90,3 +91,23 @@ def switch(key, ruledict):
     return switch_rl
 
 identity = lambda x: x
+
+def minimize(*rules, **kwargs):
+    """ Select result of rules that minimizes objective
+
+    >>> from sympy.rules import minimize
+    >>> inc = lambda x: x + 1
+    >>> dec = lambda x: x - 1
+    >>> rl = minimize(inc, dec)
+    >>> rl(4)
+    3
+
+    >>> rl = minimize(inc, dec, objective=lambda x: -x)  # maximize
+    >>> rl(4)
+    5
+    """
+
+    objective = kwargs.get('objective', identity)
+    def minrule(expr):
+        return min([rule(expr) for rule in rules], key=objective)
+    return minrule

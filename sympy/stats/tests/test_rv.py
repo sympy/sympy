@@ -1,9 +1,9 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum)
+        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic)
 from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
-from sympy.stats.rv import ProductPSpace, rs_swap
+from sympy.stats.rv import ProductPSpace, rs_swap, Density, NamedArgsMixin
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -151,3 +151,24 @@ def test_normality():
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
+
+def test_Density():
+    X = Die('X', 6)
+    d = Density(X)
+    assert d.doit() == density(X)
+
+def test_NamedArgsMixin():
+    class Foo(Basic, NamedArgsMixin):
+        _argnames = 'foo', 'bar'
+
+    a = Foo(1, 2)
+
+    assert a.foo == 1
+    assert a.bar == 2
+
+    raises(AttributeError, lambda: a.baz)
+
+    class Bar(Basic, NamedArgsMixin):
+        pass
+
+    raises(AttributeError, lambda: Bar(1, 2).foo)

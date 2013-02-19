@@ -299,6 +299,7 @@ def test_multiset_combinations():
     assert [''.join(i) for i in list(multiset_combinations(M, 30))] == []
     assert list(multiset_combinations([[1], [2, 3]], 2)) == [[[1], [2, 3]]]
     assert len(list(multiset_combinations('a', 3))) == 0
+    assert len(list(multiset_combinations('a', 0))) == 1
     assert list(multiset_combinations('abc', 1)) == [['a'], ['b'], ['c']]
 
 
@@ -310,6 +311,8 @@ def test_multiset_permutations():
     assert list(multiset_permutations([0, 0, 0], 2)) == [[0, 0]]
     assert list(multiset_permutations([0, 2, 1], 2)) == [
         [0, 1], [0, 2], [1, 0], [1, 2], [2, 0], [2, 1]]
+    assert len(list(multiset_permutations('a', 0))) == 1
+    assert len(list(multiset_permutations('a', 3))) == 0
 
     def test():
         for i in range(1, 7):

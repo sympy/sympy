@@ -1,9 +1,9 @@
-from sympy import symbols, sympify, Dummy
+from sympy import symbols, sympify, Dummy, simplify
 from sympy.logic.boolalg import (
     And, Boolean, Equivalent, ITE, Implies, Nand, Nor, Not, Or, POSform,
-    SOPform, Xor, conjuncts, disjuncts,
-    distribute_and_over_or, eliminate_implications, is_cnf,
-    simplify_logic, to_cnf, to_int_repr, bool_equal
+    SOPform, Xor, conjuncts, disjuncts, distribute_or_over_and,
+    distribute_and_over_or, eliminate_implications, is_cnf, is_dnf,
+    simplify_logic, to_cnf, to_dnf, to_int_repr, bool_equal
 )
 from sympy.utilities.pytest import raises
 
@@ -178,6 +178,11 @@ def test_simplification():
     assert POSform('x', [[0]], [[1]]) is True
     assert POSform('x', [], []) is False
 
+    #check working of simplify
+    assert simplify('(A & B) | (A & C)') == sympify('And(A, Or(B, C))')
+    assert simplify(And(x, Not(x))) == False
+    assert simplify(Or(x, Not(x))) == True
+
 
 def test_bool_equal():
     """
@@ -288,6 +293,7 @@ def test_disjuncts():
 def test_distribute():
 
     assert distribute_and_over_or(Or(And(A, B), C)) == And(Or(A, C), Or(B, C))
+    assert distribute_or_over_and(And(A, Or(B, C))) == Or(And(A, B), And(A, C))
 
 
 def test_to_cnf():
@@ -296,11 +302,26 @@ def test_to_cnf():
     assert to_cnf((A & B) | C) == And(Or(A, C), Or(B, C))
     assert to_cnf(A >> B) == (~A) | B
     assert to_cnf(A >> (B & C)) == (~A | B) & (~A | C)
+    assert to_cnf(A & (B | C) | ~A & (B | C), True) == B | C
 
     assert to_cnf(Equivalent(A, B)) == And(Or(A, Not(B)), Or(B, Not(A)))
-    assert to_cnf(Equivalent(A, B & C)) == (~A | B) & (~A | C) & (~B | ~C | A)
-    assert to_cnf(Equivalent(A, B | C)) == \
+    assert to_cnf(Equivalent(A, B & C)) == \
+           (~A | B) & (~A | C) & (~B | ~C | A)
+    assert to_cnf(Equivalent(A, B | C), True) == \
         And(Or(Not(B), A), Or(Not(C), A), Or(B, C, Not(A)))
+
+
+def test_to_dnf():
+
+    assert to_dnf(~(B | C)) == And(Not(B), Not(C))
+    assert to_dnf(A & (B | C)) == Or(And(A, B), And(A, C))
+    assert to_dnf(A >> B) == (~A) | B
+    assert to_dnf(A >> (B & C)) == (~A) | (B & C)
+
+    assert to_dnf(Equivalent(A, B), True) == \
+           Or(And(A, B), And(Not(A), Not(B)))
+    assert to_dnf(Equivalent(A, B & C), True) == \
+           Or(And(A, B, C), And(Not(A), Not(B)), And(Not(A), Not(C)))
 
 
 def test_to_int_repr():
@@ -320,10 +341,20 @@ def test_to_int_repr():
 
 def test_is_cnf():
     x, y, z = symbols('x,y,z')
+    assert is_cnf(x) is True
     assert is_cnf(x | y | z) is True
     assert is_cnf(x & y & z) is True
     assert is_cnf((x | y) & z) is True
     assert is_cnf((x & y) | z) is False
+
+
+def test_is_dnf():
+    x, y, z = symbols('x,y,z')
+    assert is_dnf(x) is True
+    assert is_dnf(x | y | z) is True
+    assert is_dnf(x & y & z) is True
+    assert is_dnf((x & y) | z) is True
+    assert is_dnf((x | y) & z) is False
 
 
 def test_ITE():

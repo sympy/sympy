@@ -12,8 +12,9 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
     bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
     sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart, sqrtdenest,
-    factorial2, powdenest, Mul, S, mpmath, ZZ, Poly)
+    factorial2, powdenest, Mul, S, mpmath, ZZ, Poly, expand_func)
 
+from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
@@ -235,7 +236,7 @@ def test_F1():
 
 
 def test_F2():
-    assert binomial(n, 3) == n*(n - 1)*(n - 2)/6
+    assert expand_func(binomial(n, 3)) == n*(n - 1)*(n - 2)/6
 
 
 @XFAIL
@@ -263,9 +264,8 @@ def test_F7():
     assert npartitions(4) == 5
 
 
-@XFAIL
 def test_F8():
-    raise NotImplementedError("S1(5,2) == -50; Stirling numbers")
+    assert stirling(5, 2, signed=True) == -50  # if signed, then kind=1
 
 
 def test_F9():

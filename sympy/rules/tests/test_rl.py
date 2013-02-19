@@ -1,4 +1,5 @@
-from sympy.rules.rl import rm_id, glom, flatten, unpack, sort, distribute, subs
+from sympy.rules.rl import (rm_id, glom, flatten, unpack, sort, distribute,
+        subs, rebuild)
 from sympy import Basic
 
 def test_rm_id():
@@ -51,3 +52,8 @@ def test_subs():
     rl = subs(1, 2)
     assert rl(1) == 2
     assert rl(3) == 3
+
+def test_rebuild():
+    from sympy import Add
+    expr = Basic.__new__(Add, 1, 2)
+    assert rebuild(expr) == 3

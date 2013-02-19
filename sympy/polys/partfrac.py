@@ -24,8 +24,15 @@ def apart(f, x=None, full=False, **options):
     >>> from sympy.polys.partfrac import apart
     >>> from sympy.abc import x, y
 
+    By default, using the undetermined coefficients method:
     >>> apart(y/(x + 2)/(x + 1), x)
     -y/(x + 2) + y/(x + 1)
+
+    You can choose the other algorithm by setting full=True:
+    >>> apart(y/(x**2 + x + 1), x)
+    y/(x**2 + x + 1)
+    >>> apart(y/(x**2 + x + 1), x, full=True)
+    RootSum(x**2 + x + 1, Lambda(_a, (-2*_a*y/3 - y/3)/(-_a + x)))
 
     """
     allowed_flags(options, [])

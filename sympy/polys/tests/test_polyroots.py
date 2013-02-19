@@ -8,7 +8,7 @@ from sympy.polys import Poly, cyclotomic_poly, intervals, nroots
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, roots_rational, preprocess_roots, roots)
+    roots_binomial, preprocess_roots, roots)
 
 a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
@@ -143,17 +143,6 @@ def test_roots_binomial():
 
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])
-
-
-def test_roots_rational():
-    assert roots_rational(Poly(x**2 - 1, x)) == [-S.One, S.One]
-    assert roots_rational(Poly(x**2 - x, x)) == [S.Zero, S.One]
-
-    assert roots_rational(Poly(x**2 - x/2, x)) == [S.Zero]
-    assert roots_rational(Poly(2*x**2 - x, x)) == [S.Zero]
-
-    assert roots_rational(Poly(t*x**2 - x, x)) == []
-
 
 def test_roots_preprocessing():
     f = a*y*x**2 + y - b

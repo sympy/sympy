@@ -109,6 +109,7 @@ class StrPrinter(Printer):
     def _print_Dict(self, expr):
         return self._print_dict(expr)
 
+
     def _print_RandomDomain(self, d):
         try:
             return 'Domain: ' + self._print(d.as_boolean())
@@ -220,6 +221,20 @@ class StrPrinter(Printer):
         _print_ImmutableMatrix = \
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
+
+    def _print_MatrixSlice(self, expr):
+        def strslice(x):
+            x = list(x)
+            if x[2] == 1:
+                del x[2]
+            if x[1] == x[0] + 1:
+                del x[1]
+            if x[0] == 0:
+                x[0] = ''
+            return ':'.join(map(self._print, x))
+        return (self._print(expr.parent) + '[' +
+                strslice(expr.rowslice) + ', ' +
+                strslice(expr.colslice) + ']')
 
     def _print_DeferredVector(self, expr):
         return expr.name
@@ -542,6 +557,7 @@ class StrPrinter(Printer):
     def _print_Symbol(self, expr):
         return expr.name
     _print_MatrixSymbol = _print_Symbol
+    _print_RandomSymbol = _print_Symbol
 
     def _print_Identity(self, expr):
         return "I"

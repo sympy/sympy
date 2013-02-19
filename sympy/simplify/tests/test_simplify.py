@@ -10,6 +10,7 @@ from sympy import (
     symbols, sympify, tan, tanh, trigsimp, Wild, Basic)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import fraction_expand
+from sympy.simplify.simplify import _trigpats
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, k
@@ -62,13 +63,13 @@ def test_ratsimpmodprime():
     b = x + y**2 - y - 1
     F = [x*y - 1]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (x - y - 1)/(x - y)
+        (1 + y - x)/(y - x)
 
     a = 5*x**3 + 21*x**2 + 4*x*y + 23*x + 12*y + 15
     b = 7*x**3 - y*x**2 + 31*x**2 + 2*x*y + 15*y + 37*x + 21
     F = [x**2 + y**2 - 1]
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
-        (3*x + 4*y + 5)/(5*x + 5*y + 7)
+        (1 + 5*y - 5*x)/(8*y - 6*x)
 
     a = x*y - x - 2*y + 4
     b = x + y**2 - 2*y
@@ -76,6 +77,9 @@ def test_ratsimpmodprime():
     assert ratsimpmodprime(a/b, F, x, y, order='lex') == \
         Rational(2, 5)
 
+    # Test a bug where denominators would be dropped
+    assert ratsimpmodprime(x, [y - 2*x], order='lex') == \
+        y/2
 
 def test_trigsimp1():
     x, y = symbols('x,y')
@@ -91,6 +95,7 @@ def test_trigsimp1():
     assert trigsimp(1/sin(x)**2 - cot(x)**2) == 1
 
     assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
+    # TODO is 3*cos(x)/2 + 7/2 is nicer for the following?
     assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 3*cos(x/2)**2 + 2
 
     assert trigsimp(sin(x)/cos(x)) == tan(x)
@@ -117,6 +122,19 @@ def test_trigsimp1():
     e = 2*sin(x)**2 + 2*cos(x)**2
     assert trigsimp(log(e), deep=True) == log(2)
 
+def test_trigsimp1a():
+    assert trigsimp(sin(2)**2*cos(3)*exp(2)/cos(2)**2) == tan(2)**2*cos(3)*exp(2)
+    assert trigsimp(tan(2)**2*cos(3)*exp(2)*cos(2)**2) == sin(2)**2*cos(3)*exp(2)
+    assert trigsimp(cot(2)*cos(3)*exp(2)*sin(2)) == cos(3)*exp(2)*cos(2)
+    assert trigsimp(tan(2)*cos(3)*exp(2)/sin(2)) == cos(3)*exp(2)/cos(2)
+    assert trigsimp(cot(2)*cos(3)*exp(2)/cos(2)) == cos(3)*exp(2)/sin(2)
+    assert trigsimp(cot(2)*cos(3)*exp(2)*tan(2)) == cos(3)*exp(2)*2
+    assert trigsimp(sinh(2)*cos(3)*exp(2)/cosh(2)) == tanh(2)*cos(3)*exp(2)
+    assert trigsimp(tanh(2)*cos(3)*exp(2)*cosh(2)) == sinh(2)*cos(3)*exp(2)
+    assert trigsimp(coth(2)*cos(3)*exp(2)*sinh(2)) == cosh(2)*cos(3)*exp(2)
+    assert trigsimp(tanh(2)*cos(3)*exp(2)/sinh(2)) == cos(3)*exp(2)/cosh(2)
+    assert trigsimp(coth(2)*cos(3)*exp(2)/cosh(2)) == cos(3)*exp(2)/sinh(2)
+    assert trigsimp(coth(2)*cos(3)*exp(2)*tanh(2)) == cos(3)*exp(2)*2
 
 def test_trigsimp2():
     x, y = symbols('x,y')
@@ -150,6 +168,141 @@ def test_trigsimp3():
     assert trigsimp(cos(x)**10/sin(x)**10) == 1/tan(x)**10
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
+
+
+def test_1562():
+    a, x, y = symbols('a x y')
+    eq = -4*sin(x)**4 + 4*cos(x)**4 - 8*cos(x)**2
+    assert trigsimp(eq) == -4
+    n = sin(x)**6 + 4*sin(x)**4*cos(x)**2 + 5*sin(x)**2*cos(x)**4 + 2*cos(x)**6
+    d = -sin(x)**2 - 2*cos(x)**2
+    assert simplify(n/d) == -1
+    assert trigsimp(-2*cos(x)**2 + cos(x)**4 - sin(x)**4) == -1
+    eq = (- sin(x)**3/4)*cos(x) + (cos(x)**3/4)*sin(x) - sin(2*x)*cos(2*x)/8
+    assert trigsimp(eq) == 0
+
+
+def test_1395():
+    a, b = symbols('a b')
+    eq = sin(a)**2*sin(b)**2 + cos(a)**2*cos(b)**2*tan(a)**2 + cos(a)**2
+    assert trigsimp(eq) == 1
+
+
+@XFAIL
+def test_2849():
+    a, x, y = symbols('a x y')
+    # this needs to be factored and then not be rejected because of
+    # the test at line 1680 in simplify.py (as of this commit date)
+    assert trigsimp(diff(integrate(cos(x)/sin(x)**7, x), x)) == \
+           cos(x)/sin(x)**7
+
+
+def test_1676():
+    a, x, y = symbols('a x y')
+    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)) == sin(x + y)
+    assert trigsimp(sin(x)*cos(y)+cos(x)*sin(y)+3) == sin(x + y) + 3
+
+
+def test_1181():
+    a, x, y = symbols('a x y')
+    assert trigsimp(cos(x)**2 + cos(y)**2*sin(x)**2 + sin(y)**2*sin(x)**2) == 1
+    assert trigsimp(a**2*sin(x)**2 + a**2*cos(y)**2*cos(x)**2 + a**2*cos(x)**2*sin(y)**2) == a**2
+    assert trigsimp(a**2*cos(y)**2*sin(x)**2 + a**2*sin(y)**2*sin(x)**2) == a**2*sin(x)**2
+
+
+@XFAIL
+def test_111f():
+    assert trigsimp(sin(2)*sin(3) + cos(2)*cos(3) + cos(2)) == cos(1) + cos(2)
+
+
+def test_111():
+    eqs = (sin(2)*cos(3) + sin(3)*cos(2),
+        -sin(2)*sin(3) + cos(2)*cos(3),
+        sin(2)*cos(3) - sin(3)*cos(2),
+        sin(2)*sin(3) + cos(2)*cos(3),
+        sinh(2)*cosh(3) + sinh(3)*cosh(2),
+        sinh(2)*sinh(3) + cosh(2)*cosh(3))
+    assert [trigsimp(e) for e in eqs] == [
+        sin(5),
+        cos(5),
+        -sin(1),
+        cos(1),
+        sinh(5),
+        cosh(5)]
+
+
+def test_trigsimp_issues():
+    a, x, y = symbols('a x y')
+
+    # 1526 - factor_terms works, too
+    assert trigsimp(sin(x)**3 + cos(x)**2*sin(x)) == sin(x)
+
+    # issue 2849
+    assert trigsimp(diff(integrate(cos(x)/sin(x)**3, x), x)) == \
+        cos(x)/sin(x)**3
+    assert trigsimp(diff(integrate(sin(x)/cos(x)**3, x), x)) == \
+        sin(x)/cos(x)**3
+
+    # check integer exponents
+    e = sin(x)**y/cos(x)**y
+    assert trigsimp(e) == e
+    assert trigsimp(e.subs(y,2)) == tan(x)**2
+    assert trigsimp(e.subs(x,1)) == tan(1)**y
+
+    # check for multiple patterns
+    assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
+        tan(x)**-2*tan(y)**-2
+    assert trigsimp(cos(x)/sin(x)*cos(x+y)/sin(x+y)) == \
+        1/(tan(x)*tan(x + y))
+
+    eq = cos(2)*(cos(3) + 1)**2/(cos(3) - 1)**2
+    # use exclusion
+    assert trigsimp(eq) == eq
+    # but not unnecessarily
+    assert trigsimp(cos(2)*(cos(3) + 1)**2*(cos(3) - 1)**2) == \
+        cos(2)*sin(3)**4
+
+    # issue 3690; this generates an expression that formerly caused
+    # trigsimp to hang
+    assert cot(x).equals(tan(x)) is False
+
+
+def test_trigsimp_assumptions():
+    from random import random, randint
+    from sympy.utilities.iterables import flatten
+    from sympy.utilities.randtest import (
+        test_numerically, random_complex_number, comp)
+
+    a, b, c, d, matchers_division, matchers_add, \
+    matchers_identity, artifacts = _trigpats()
+
+    # check that these are always valid
+    pats = [artifacts, matchers_add, matchers_identity]
+    for i, p in enumerate(flatten(pats, 1)):
+        o, n = p[:2]
+        try:
+            assert test_numerically(o, n, list(o.free_symbols))
+        except:
+            print o,n
+
+    # check that these are valid if the bases are positive or
+    # exponents are integers
+    for i, p in enumerate(matchers_division):
+        o, n = p[:2]
+        f = o.free_symbols
+        reps = dict(zip(f, [random_complex_number() for fi in f]))
+        # integer exponent
+        save = reps.pop(c)
+        reps[c] = randint(1, 10)
+        try:
+            assert comp(o.subs(reps), n.subs(reps), 1e-6)
+        except:
+            print i, o, n, reps
+
+        # real argument
+        reps[c] = save
+        reps[b] = 1  # sin and cos are both positive at b = 1
+        assert comp(o.subs(reps), n.subs(reps), 1e-6)
 
 
 def test_trigsimp_issue_2515():
@@ -253,6 +406,44 @@ def test_tan_cot2():
     assert trigsimp(tan(x) - 1/cot(x)) == 0
     assert trigsimp(3*tanh(x)**7 - 2/coth(x)**7) == tanh(x)**7
 
+def test_trigsimp_groebner():
+    from sympy.simplify.simplify import trigsimp_groebner
+
+    ex = (4*sin(x)*cos(x) + 12*sin(x) + 5*cos(x)**3
+          + 21*cos(x)**2 + 23*cos(x) + 15) \
+       / (-sin(x)*cos(x)**2 + 2*sin(x)*cos(x) + 15*sin(x)
+          + 7*cos(x)**3 + 31*cos(x)**2 + 37*cos(x) + 21)
+    resnum = (5*sin(x) - 5*cos(x) + 1)
+    resdenom = (8*sin(x) - 6*cos(x))
+    results = [resnum/resdenom, (-resnum)/(-resdenom)]
+    assert trigsimp_groebner(ex) in results
+    assert trigsimp_groebner(sin(x)/cos(x), hints=[tan]) == tan(x)
+
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1),
+                    method='groebner') == 2/cos(x)
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1),
+                    method='groebner', polynomial=True) == 2/cos(x)
+
+    # Test quick=False works
+    assert trigsimp_groebner(ex, hints=[2]) in results
+
+    # test "I"
+    assert trigsimp_groebner(sin(I*x)/cos(I*x), hints=[tanh]) == I*tanh(x)
+
+    # test hyperbolic / sums
+    assert trigsimp_groebner((tanh(x)+tanh(y))/(1+tanh(x)*tanh(y)),
+                             hints=[(tanh,x,y)]) == tanh(x + y)
+
+    # test "deep"
+    expr = sin(2*x).expand(trig=True)
+    assert trigsimp(atan(expr), method='groebner', deep=False, hints=[2]) == \
+           atan(expr)
+    assert trigsimp(atan(expr), method='groebner', deep=True, hints=[2]) == \
+           atan(sin(2*x))
+    assert trigsimp(atan(atan(expr)), method='groebner', deep=True, hints=[2]) == \
+           atan(atan(sin(2*x)))
+    assert trigsimp(2**(expr), method='groebner', deep=True, hints=[2]) == \
+           2**sin(2*x)
 
 @XFAIL
 def test_factorial_simplify():
@@ -292,7 +483,7 @@ def test_simplify():
     assert simplify(e) == 1 + y
 
     e = (2 * (1/n - cos(n * pi)/n))/pi
-    assert simplify(e) == 2*((1 - 1*cos(pi*n))/(pi*n))
+    assert simplify(e) == 2*((-cos(pi*n) + 1)/(pi*n))
 
     e = integrate(1/(x**3 + 1), x).diff(x)
     assert simplify(e) == 1/(x**3 + 1)
@@ -887,6 +1078,18 @@ def test_nsimplify():
         factor(-3.0*z**2*(z**2)**(-2.5) + 3*(z**2)**(-1.5))).atoms(Float)
     e = x**0.0
     assert e.is_Pow and nsimplify(x**0.0) == 1
+    assert nsimplify(3.333333, tolerance=0.1, rational=True) == Rational(10, 3)
+    assert nsimplify(3.333333, tolerance=0.01, rational=True) == Rational(10, 3)
+    assert nsimplify(3.666666, tolerance=0.1, rational=True) == Rational(11, 3)
+    assert nsimplify(3.666666, tolerance=0.01, rational=True) == Rational(11, 3)
+    assert nsimplify(33, tolerance=10, rational=True) == Rational(33)
+    assert nsimplify(33.33, tolerance=10, rational=True) == Rational(30)
+    assert nsimplify(37.76, tolerance=10, rational=True) == Rational(40)
+    assert nsimplify(-203.1) == -S(2031)/10
+    assert nsimplify(.2, tolerance=0) == S.One/5
+    assert nsimplify(-.2, tolerance=0) == -S.One/5
+    assert nsimplify(.2222, tolerance=0) == S(1111)/5000
+    assert nsimplify(-.2222, tolerance=0) == -S(1111)/5000
 
 
 def test_extract_minus_sign():
