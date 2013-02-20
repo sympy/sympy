@@ -371,7 +371,6 @@ def symbols(names, **args):
                 continue
 
             match = _re_var_range.match(name)
-
             if match is not None:
                 name, start, end = match.groups()
 
@@ -387,21 +386,45 @@ def symbols(names, **args):
                 seq = True
                 continue
 
-            match = _re_var_scope.match(name)
+            letters = list(string.ascii_lowercase + string.ascii_uppercase
+                        + string.digits)
 
+            match = _re_var_scope.match(name)
             if match is not None:
                 name, start, end, suffix = match.groups()
-                letters = list(string.ascii_lowercase + string.ascii_uppercase
-                        + string.digits)
-                start = letters.index(start)
+
+                name=name.replace('(', '')
+                suffix=suffix.replace(')', '')
+
+                match = _re_var_scope.match(suffix)
+                substart = 0
+                subend = 0
+                if match is not None:
+                    subname, substart, subend, subsuffix = match.groups()
+                    subend = letters.index(subend)
+                    if substart not in string.digits:
+                        subend = subend + 1
+                    substart = letters.index(substart)
+                    subname=subname.replace('(', '')
+                    subsuffix=subsuffix.replace(')', '')
                 end = letters.index(end)
-
-                for subname in xrange(start, end + 1):
-                    symbol = cls(name + letters[subname] + suffix, **args)
-                    result.append(symbol)
-
-                seq = True
-                continue
+                if start not in string.digits:
+                    end = end + 1
+                start = letters.index(start)
+                if substart!=0 or subend!=0:
+                    for subname in xrange(start, end):
+                        for subsubname in xrange(substart, subend):
+                            symbol = cls(name + letters[subname] + letters[subsubname]
+                                   + subsuffix, **args)
+                            result.append(symbol)
+                    seq = True
+                    continue
+                else:
+                    for subname in xrange(start, end):
+                        symbol = cls(name + letters[subname] + suffix, **args)
+                        result.append(symbol)
+                    seq = True
+                    continue
 
             raise ValueError(
                 "'%s' is not a valid symbol range specification" % name)
