@@ -111,3 +111,8 @@ class SingleDiscretePSpace(SinglePSpace):
             return self.distribution.compute_cdf(**kwargs)
         else:
             raise NotImplementedError()
+
+    def compute_density(self, expr, **kwargs):
+        if expr == self.value:
+            return self.distribution
+        raise NotImplementedError()
