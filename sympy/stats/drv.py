@@ -1,15 +1,12 @@
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit)
+        Piecewise, S, cacheit, solve)
 from sympy.stats.rv import NamedArgsMixin
 import random
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
-    """ Continuous distribution of a single variable
+    """ Discrete distribution of a single variable
 
-    Serves as superclass for Normal/Exponential/UniformDistribution etc....
-
-    Represented by parameters for each of the specific classes.  E.g
-    NormalDistribution is represented by a mean and standard deviation.
+    Serves as superclass for PoissonDistribution etc....
 
     Provides methods for pdf, cdf, and sampling
 
@@ -30,7 +27,7 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     def sample(self):
         """ A random realization from the distribution """
         icdf = self._inverse_cdf_expression()
-        return icdf(random.uniform(0, 1))
+        return floor(icdf(random.uniform(0, 1)))
 
     @cacheit
     def _inverse_cdf_expression(self):
