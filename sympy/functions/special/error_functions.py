@@ -68,6 +68,16 @@ class erf(Function):
     >>> erf(-4*I).evalf(30)
     -1296959.73071763923152794095062*I
 
+    See Also
+    ========
+
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erf2: Bivariate error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse bivariate error function.
+
     References
     ==========
 
@@ -97,6 +107,15 @@ class erf(Function):
                 return S.NegativeOne
             elif arg is S.Zero:
                 return S.Zero
+
+        if arg.func is erfinv:
+             return arg.args[0]
+
+        if arg.func is erfcinv:
+            return S.One - arg.args[0]
+
+        if (arg.func is erf2inv) and (arg.args[0] is S.Zero):
+            return arg.args[1]
 
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
         if t is S.Infinity or t is S.NegativeInfinity:
@@ -233,6 +252,16 @@ class erfc(Function):
     >>> erfc(4*I).evalf(30)
     1.0 - 1296959.73071763923152794095062*I
 
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfi: Imaginary error function.
+    erf2: Bivariate error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse bivariate error function.
+
     References
     ==========
 
@@ -259,6 +288,9 @@ class erfc(Function):
                 return S.Zero
             elif arg is S.Zero:
                 return S.One
+
+        if arg.func is erfcinv:
+            return arg.args[0]
 
         t = arg.extract_multiplicatively(S.ImaginaryUnit)
         if t is S.Infinity or t is S.NegativeInfinity:
@@ -396,6 +428,16 @@ class erfi(Function):
     >>> erfi(-2*I).evalf(30)
     -0.995322265018952734162069256367*I
 
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erf2: Bivariate error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse bivariate error function.
+
     References
     ==========
 
@@ -429,8 +471,15 @@ class erfi(Function):
             return -cls(-z)
 
         nz = z.extract_multiplicatively(I)
-        if nz is S.Infinity:
-            return I
+        if nz is not None:
+            if nz is S.Infinity:
+                return I
+            if nz.func is erfinv:
+                return I*nz.args[0]
+            if nz.func is erfcinv:
+                return I*(S.One - nz.args[0])
+            if (nz.func is erf2inv) and (nz.args[0] is S.Zero):
+                return I*nz.args[1]
 
     @staticmethod
     @cacheit
@@ -546,6 +595,16 @@ class erf2(Function):
     >>> diff(erf2(x, y), y)
     2*exp(-y**2)/sqrt(pi)
 
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse bivariate error function.
+
     References
     ==========
 
@@ -576,6 +635,8 @@ class erf2(Function):
         elif ((x is I or x is N or x is O) or (y is I or y is N or y is O)):
             return erf(y) - erf(x)
 
+        if (y.func is erf2inv) and (y.args[0] == x):
+            return y.args[1]
 
         #Try to pull out -1 factor
         sign_x = x.could_extract_minus_sign()
@@ -650,6 +711,22 @@ class erfinv(Function):
     >>> diff(erfinv(x), x)
     sqrt(pi)*exp(erfinv(x)**2)/2
 
+    We can numerically evaluate the error function to arbitrary precision
+    on [-1, 1]
+
+    >>> erfinv(0.2).evalf(30)
+    0.179143454621291692285822705344
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erf2: Bivariate error function.
+    erfcinv: Inverse Complementary error function.
+    erf2inv: Inverse bivariate error function.
+
     References:
 
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf/
@@ -673,6 +750,14 @@ class erfinv(Function):
         elif z is S.One:
             return S.Infinity
 
+        if (z.func is erf) and z.args[0].is_real :
+            return z.args[0]
+
+        nz = z.extract_multiplicatively(-1)
+        if nz is not None:
+            x = nz.args[0]
+            if (nz.func is erf) and x.is_real :
+                return -nz.args[0]
 
     def _eval_rewrite_as_erfcinv(self, z):
        return erfcinv(1-z)
@@ -704,6 +789,16 @@ class erfcinv (Function):
     >>> from sympy import diff
     >>> diff(erfcinv(x), x)
     -sqrt(pi)*exp(erfcinv(x)**2)/2
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erf2: Bivariate error function.
+    erfinv: Inverse error function.
+    erf2inv: Inverse bivariate error function.
 
     References:
 
@@ -766,6 +861,16 @@ class erf2inv(Function):
     exp(-x**2 + erf2inv(x, y)**2)
     >>> diff(erf2inv(x, y), y)
     sqrt(pi)*exp(erf2inv(x, y)**2)/2
+
+    See Also
+    ========
+
+    erf: Gaussian error function.
+    erfc: Complementary error function.
+    erfi: Imaginary error function.
+    erf2: Bivariate error function.
+    erfinv: Inverse error function.
+    erfcinv: Inverse complementary error function.
 
     References:
 

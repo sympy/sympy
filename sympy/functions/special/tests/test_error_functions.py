@@ -32,6 +32,11 @@ def test_erf():
     assert erf(-x*y) == -erf(x*y)
     assert erf(-x - y) == -erf(x + y)
 
+    assert erf(erfinv(x)) == x
+    assert erf(erfcinv(x)) == 1 - x
+    assert erf(erf2inv(0, x)) == x
+    assert erf(erf2inv(0, erf(erfcinv(1 - erf(erfinv(x)))))) == x
+
     assert erf(I).is_real is False
     assert erf(0).is_real is True
 
@@ -98,6 +103,7 @@ def test_erfc():
     assert erfc(-I*oo) == oo*I
 
     assert erfc(-x) == S(2) - erfc(x)
+    assert erfc(erfcinv(x)) == x
 
     assert erfc(I).is_real is False
     assert erfc(0).is_real is True
@@ -148,6 +154,10 @@ def test_erfi():
 
     assert erfi(-x) == -erfi(x)
 
+    assert erfi(I*erfinv(x)) == I*x
+    assert erfi(I*erfcinv(x)) == I*(1 - x)
+    assert erfi(I*erf2inv(0, x)) == I*x
+
     assert erfi(I).is_real is False
     assert erfi(0).is_real is True
 
@@ -191,6 +201,7 @@ def test_erf2():
     assert erf2( oo,  y) ==  erf(y) - 1
     assert erf2(  x, oo) ==  1 - erf(x)
     assert erf2(  x,-oo) == -1 - erf(x)
+    assert erf2(x, erf2inv(x, y)) == y
 
     assert erf2(-x, -y) == -erf2(x,y)
     assert erf2(-x,  y) == erf(y) + erf(x)
@@ -218,9 +229,15 @@ def test_erfinv():
     assert erfinv(1) == S.Infinity
     assert erfinv(nan) == S.NaN
 
+    assert erfinv(erf(w)) == w
+    assert erfinv(erf(-w)) == -w
+
     assert erfinv(x).diff() == sqrt(pi)*exp(erfinv(x)**2)/2
 
     assert erfinv(z).rewrite('erfcinv') == erfcinv(1-z)
+
+def test_erfinv_evalf():
+    assert abs( erfinv(Float(0.2)) - 0.179143454621292 ) < 1E-13
 
 def test_erfcinv():
     assert erfcinv(1) == 0
