@@ -3,6 +3,7 @@
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
@@ -285,7 +286,7 @@ def gf_from_dict(f, p, K):
     """
     n, h = max(f.iterkeys()), []
 
-    if type(n) is int:
+    if isinstance(n, SYMPY_INTS):
         for k in xrange(n, -1, -1):
             h.append(f.get(k, K.zero) % p)
     else:

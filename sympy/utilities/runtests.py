@@ -1554,8 +1554,15 @@ class PyTestReporter(Reporter):
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
         self.write("cache:              %s\n" % USE_CACHE)
-        from sympy.polys.domains import GROUND_TYPES
-        self.write("ground types:       %s\n" % GROUND_TYPES)
+        from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
+        version = ''
+        if GROUND_TYPES =='gmpy':
+            if HAS_GMPY == 1:
+                import gmpy
+            elif HAS_GMPY == 2:
+                import gmpy2 as gmpy
+            version = gmpy.version()
+        self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION

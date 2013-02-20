@@ -9,6 +9,7 @@ from sympy.utilities.decorator import conserve_mpmath_dps
 from sympy.geometry import Point, Line
 from sympy.functions.combinatorial.factorials import factorial, factorial2
 from sympy.abc import _clash, _clash1, _clash2
+from sympy.core.compatibility import HAS_GMPY
 
 from sympy import mpmath
 
@@ -76,11 +77,12 @@ def test_sympify_Fraction():
 
 
 def test_sympify_gmpy():
-    try:
-        import gmpy
-    except ImportError:
-        pass
-    else:
+    if HAS_GMPY:
+        if HAS_GMPY == 2:
+            import gmpy2 as gmpy
+        elif HAS_GMPY == 1:
+            import gmpy
+
         value = sympify(gmpy.mpz(1000001))
         assert value == Integer(1000001) and type(value) is Integer
 
