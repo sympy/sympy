@@ -1076,13 +1076,13 @@ def TRmorrie(rv):
             if k > 1:
                 newarg = sin(2**k*ci*a)/2**k/sin(ci*a)
                 # see how many times this can be taken
-                take = 0
+                take = None
                 ccs = []
                 for i in range(k):
                     cc /= 2
                     key = cos(a*cc, evaluate=False)
                     ccs.append(cc)
-                    take = max(coss[key], take)
+                    take = min(coss[key], take or coss[key])
                 # update exponent counts
                 for i in range(k):
                     cc = ccs.pop()

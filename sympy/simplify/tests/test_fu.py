@@ -113,7 +113,8 @@ def test_TR9():
     assert TR9(cos(1) + 2*sin(1) + 2*sin(2)) == cos(1) + 4*sin(b)*cos(a)
     assert TR9(cos(4) + cos(2) + 2*cos(1)*cos(3)) == 4*cos(1)*cos(3)
     assert TR9((cos(4) + cos(2))/cos(3)/2 + cos(3)) == 2*cos(1)*cos(2)
-    assert TR9(cos(3)+cos(4)+cos(5)+cos(6)) == 4*cos(S(1)/2)*cos(1)*cos(S(9)/2)
+    assert TR9(cos(3) + cos(4) + cos(5) + cos(6)) == \
+        4*cos(S(1)/2)*cos(1)*cos(S(9)/2)
     assert TR9(cos(3) + cos(3)*cos(2)) == cos(3) + cos(2)*cos(3)
     assert TR9(-cos(y) + cos(x*y)) == -2*sin(x*y/2 - y/2)*sin(x*y/2 + y/2)
     assert TR9(-sin(y) + sin(x*y)) == 2*sin(x*y/2 - y/2)*cos(x*y/2 + y/2)
@@ -147,8 +148,10 @@ def test_TR10i():
     assert TR10i(cos(1)*sin(3) + sin(1)*cos(3)) == sin(4)
     assert TR10i(cos(1)*sin(3) + sin(1)*cos(3) + 7) == sin(4) + 7
     assert TR10i(cos(1)*sin(3) + sin(1)*cos(3) + cos(3)) == cos(3) + sin(4)
-    assert TR10i(2*cos(1)*sin(3) + 2*sin(1)*cos(3)+cos(3)) == 2*sin(4) + cos(3)
-    assert TR10i(cos(2)*cos(3)+sin(2)*(cos(1)*sin(2)+cos(2)*sin(1))) == cos(1)
+    assert TR10i(2*cos(1)*sin(3) + 2*sin(1)*cos(3) + cos(3)) == \
+        2*sin(4) + cos(3)
+    assert TR10i(cos(2)*cos(3) + sin(2)*(cos(1)*sin(2) + cos(2)*sin(1))) == \
+        cos(1)
     eq = (cos(2)*cos(3) + sin(2)*(
         cos(1)*sin(2) + cos(2)*sin(1)))*cos(5) + sin(1)*sin(5)
     assert TR10i(eq) == TR10i(eq.expand()) == cos(4)
@@ -251,12 +254,14 @@ def test_fu():
 
     assert fu(sqrt(3)*cos(x)/2 + sin(x)/2) == sin(x + pi/3)
 
-    assert fu(1-sin(2*x)**2/4-sin(y)**2-cos(x)**4) == -cos(x)**2 + cos(y)**2
+    assert fu(1 - sin(2*x)**2/4 - sin(y)**2 - cos(x)**4) == \
+        -cos(x)**2 + cos(y)**2
 
     assert fu(cos(4*pi/9)) == sin(pi/18)
     assert fu(cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)) == S(1)/16
 
-    assert fu(tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18)) == \
+    assert fu(
+        tan(7*pi/18) + tan(5*pi/18) - sqrt(3)*tan(5*pi/18)*tan(7*pi/18)) == \
         -sqrt(3)
 
     assert fu(tan(1)*tan(2)) == tan(1)*tan(2)
@@ -298,7 +303,8 @@ def test_trig_split():
     assert trig_split(cos(x), -sqrt(3)*sin(x)) is None
     assert trig_split(cos(x)*cos(y), sin(x)*sin(z)) is None
     assert trig_split(cos(x)*cos(y), sin(x)*sin(y)) is None
-    assert trig_split(-sqrt(6)*cos(x), sqrt(2)*sin(x)*sin(y), two=True) is None
+    assert trig_split(-sqrt(6)*cos(x), sqrt(2)*sin(x)*sin(y), two=True) is \
+        None
 
     assert trig_split(sqrt(3)*sqrt(x), cos(3), two=True) is None
     assert trig_split(sqrt(3)*root(x, 3), sin(3)*cos(2), two=True) is None
@@ -312,3 +318,5 @@ def test_TRmorrie():
     assert TRmorrie(2*x) == 2*x
     e = cos(pi/7)*cos(2*pi/7)*cos(4*pi/7)
     assert TR8(TRmorrie(e)) == -S(1)/8
+    e = Mul(*[cos(2**i*pi/17) for i in range(1, 17)])
+    assert TR8(TR3(TRmorrie(e))) == S(1)/65536
