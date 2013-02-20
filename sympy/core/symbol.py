@@ -449,9 +449,9 @@ def symbols(names, **args):
                         split[i] = [str(c) for c in range(a, b)]
                     else:
                         a = a or 'a'
-                        split[i] = [string.letters[c] for c in range(
-                            string.letters.index(a),
-                            string.letters.index(b) + 1)]  # inclusive
+                        split[i] = [string.ascii_letters[c] for c in range(
+                            string.ascii_letters.index(a),
+                            string.ascii_letters.index(b) + 1)]  # inclusive
                     if not split[i]:
                         break
                 else:
