@@ -450,6 +450,13 @@ def given(expr, condition=None, **kwargs):
     if not random_symbols(condition) or pspace_independent(expr, condition):
         return expr
 
+    condsymbols = random_symbols(condition)
+    if (isinstance(condition, Equality) and len(condsymbols) == 1 and
+        not isinstance(pspace(expr).domain, ConditionalDomain)):
+        rv = tuple(condsymbols)[0]
+        results = solve(condition, rv)
+        return sum(expr.subs(rv, res) for res in results)
+
     # Get full probability space of both the expression and the condition
     fullspace = pspace(Tuple(expr, condition))
     # Build new space given the condition
