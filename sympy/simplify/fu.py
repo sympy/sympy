@@ -1279,7 +1279,7 @@ def process_common_addends(rv, do, key2=None, key1=True):
         v = absc[k]
         c, _ = k
         if len(v) > 1:
-            e = Add(*v, evaluate=False)
+            e = Add(*v, **dict(evaluate=False))
             new = do(e)
             if new != e:
                 e = new
