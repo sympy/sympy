@@ -5,7 +5,7 @@ from singleton import S, Singleton
 from expr import Expr, AtomicExpr
 from decorators import _sympifyit, deprecated, call_highest_priority
 from cache import cacheit, clear_cache
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, HAS_GMPY, SYMPY_INTS
 import sympy.mpmath as mpmath
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
@@ -72,7 +72,7 @@ def _as_integer_ratio(p):
     else:
         q = 1
         p *= 2**expt
-    return p, q
+    return int(p), int(q)
 
 
 def _decimal_to_Rational_prec(dec):
@@ -517,7 +517,7 @@ class Float(Number):
     >>> def show(f): # binary rep of Float
     ...     from sympy import Mul, Pow
     ...     s, m, e, b = f._mpf_
-    ...     v = Mul(m, Pow(2, e, evaluate=False), evaluate=False)
+    ...     v = Mul(int(m), Pow(2, int(e), evaluate=False), evaluate=False)
     ...     print '%s at prec=%s' % (v, f._prec)
     ...
     >>> t = Float('0.3', 3)
@@ -574,7 +574,7 @@ class Float(Number):
                 num = '-0.' + num[2:]
         elif isinstance(num, float) and num == 0:
             num = '0'
-        elif isinstance(num, (int, long, Integer)):
+        elif isinstance(num, (SYMPY_INTS, Integer)):
             num = str(num)  # faster than mlib.from_int
         elif isinstance(num, mpmath.mpf):
             num = num._mpf_
@@ -1058,7 +1058,7 @@ class Rational(Number):
                 if isinstance(p, (float, Float)):
                     return Rational(*_as_integer_ratio(p))
 
-            if not isinstance(p, (int, long, Rational)):
+            if not isinstance(p, SYMPY_INTS + (Rational,)):
                 raise TypeError('invalid input: %s' % p)
             q = S.One
         else:
@@ -2713,13 +2713,18 @@ except ImportError:
     pass
 
 try:
-    import gmpy
+    if HAS_GMPY == 2:
+        import gmpy2 as gmpy
+    elif HAS_GMPY == 1:
+        import gmpy
+    else:
+        raise ImportError
 
     def sympify_mpz(x):
         return Integer(long(x))
 
     def sympify_mpq(x):
-        return Rational(long(x.numer()), long(x.denom()))
+        return Rational(long(x.numerator), long(x.denominator))
 
     converter[type(gmpy.mpz(1))] = sympify_mpz
     converter[type(gmpy.mpq(1, 2))] = sympify_mpq
