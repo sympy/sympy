@@ -12,8 +12,10 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify
+from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
+        sympify, Equality, solve, Lambda, DiracDelta)
 from sympy.core.sets import FiniteSet, ProductSet
+from sympy.abc import x
 
 
 class RandomDomain(Basic):
@@ -565,6 +567,8 @@ class Density(Basic):
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
+        if not random_symbols(expr):
+            return Lambda(x, DiracDelta(x-expr))
         return pspace(expr).compute_density(expr, **kwargs)
 
 
