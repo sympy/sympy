@@ -215,7 +215,7 @@ def DihedralGroup(n):
     else:
         G._is_nilpotent = False
     G._is_abelian = False
-    G._is_soluble = True
+    G._is_solvable = True
     G._degree = n
     G._is_transitive = True
     G._order = 2*n
