@@ -185,6 +185,10 @@ class SinglePSpace(PSpace):
     def distribution(self):
         return self.args[1]
 
+    @property
+    def pdf(self):
+        return self.distribution.pdf(self.symbol)
+
 
 class RandomSymbol(Expr):
     """

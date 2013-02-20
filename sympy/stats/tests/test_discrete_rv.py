@@ -1,7 +1,7 @@
 from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
         Poisson)
 from sympy.abc import x
-from sympy import S
+from sympy import S, Sum
 from sympy.stats import E, variance, density
 
 def test_PoissonDistribution():
@@ -17,6 +17,8 @@ def test_Poisson():
     assert E(x) == l
     assert variance(x) == l
     assert density(x) == PoissonDistribution(l)
+    assert isinstance(E(x, evaluate=False), Sum)
+    assert isinstance(E(2*x, evaluate=False), Sum)
 
 def test_GeometricDistribution():
     p = S.One / 5

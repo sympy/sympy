@@ -1,5 +1,5 @@
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
-        Piecewise, S, cacheit, solve)
+        Piecewise, S, cacheit, solve, Sum)
 from sympy.stats.rv import NamedArgsMixin, SinglePSpace
 import random
 
@@ -70,7 +70,12 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         """ Expectation of expression over distribution """
         # return summation(expr * self.pdf(var), (var, self.set), **kwargs)
         # TODO: support discrete sets with non integer stepsizes
-        return summation(expr * self.pdf(var),
+        evaluate = kwargs.pop('evaluate', True)
+        if evaluate:
+            return summation(expr * self.pdf(var),
+                         (var, self.set.inf, self.set.sup), **kwargs)
+        else:
+            return Sum(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
 
     def __call__(self, *args):
@@ -106,8 +111,13 @@ class SingleDiscretePSpace(SinglePSpace):
         try:
             return self.distribution.expectation(expr, x, **kwargs)
         except:
-            return summation(expr * self.pdf, (x, self.set.inf, self.set.sup),
-                             **kwargs)
+            evaluate = kwargs.pop('evaluate', True)
+            if evaluate:
+                return summation(expr * self.pdf, (x, self.set.inf, self.set.sup),
+                        **kwargs)
+            else:
+                return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
+                        **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
