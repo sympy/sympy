@@ -73,6 +73,9 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         return summation(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
 
+    def __call__(self, *args):
+        return self.pdf(*args)
+
 class SingleDiscretePSpace(SinglePSpace):
     """ Discrete probability space over a single univariate variable """
 
