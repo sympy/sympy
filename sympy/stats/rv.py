@@ -202,9 +202,16 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
+    def __new__(cls, pspace, symbol):
+        assert isinstance(symbol, Symbol)
+        assert isinstance(pspace, PSpace)
+        return Basic.__new__(cls, pspace, symbol)
+
     is_bounded = True
     is_finite = True
     is_Symbol = True
+
+    _diff_wrt = True
 
     pspace = property(lambda self: self.args[0])
     symbol = property(lambda self: self.args[1])

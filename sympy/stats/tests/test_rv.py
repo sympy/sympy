@@ -70,6 +70,11 @@ def test_RandomSymbol():
     assert X.name == X.symbol.name
 
 
+def test_RandomSymbol_diff()
+    X = Normal('x', 0, 1)
+    assert (2*X).diff(X)
+
+
 def test_overlap():
     X = Normal('x', 0, 1)
     Y = Normal('x', 0, 2)
