@@ -21,8 +21,7 @@ from sympy.utilities.pytest import raises, XFAIL, slow
 
 oo = S.Infinity
 
-z = Symbol("z")
-x = Symbol('x')
+x, y, z = map(Symbol, 'xyz')
 
 
 def test_single_normal():
@@ -590,3 +589,8 @@ def test_random_parameters_given():
     meas = Normal('T', mu, 1)
     assert given(meas, Eq(mu, 5)) == Normal('T', 5, 1)
 
+def test_conjugate_priors():
+    mu = Normal('mu', 2, 3)
+    x = Normal('x', mu, 1)
+    assert isinstance(simplify(density(mu, Eq(x, y), evaluate=False)(z)),
+            Integral)
