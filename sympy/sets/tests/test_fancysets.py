@@ -27,7 +27,7 @@ def test_naturals():
 def test_naturals0():
     N = S.Naturals0
     assert 0 in N
-    assert next(iter(N)) == 0
+    assert iter(N).next() == 0
 
 def test_integers():
     Z = S.Integers
