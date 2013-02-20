@@ -295,22 +295,22 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
         return self.args[0]
 
     @property
-    def density(self):
+    def distribution(self):
         return self.args[1]
 
     @property
     def domain(self):
-        return SingleFiniteDomain(self.symbol, self.density.set)
+        return SingleFiniteDomain(self.symbol, self.distribution.set)
 
-    def __new__(cls, symbol, density):
+    def __new__(cls, symbol, distribution):
         symbol = sympify(symbol)
-        return Basic.__new__(cls, symbol, density)
+        return Basic.__new__(cls, symbol, distribution)
 
     @property
     @cacheit
     def _density(self):
         return dict((frozenset(((self.symbol, val),)), prob)
-                    for val, prob in self.density.density.items())
+                    for val, prob in self.distribution.density.items())
 
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
