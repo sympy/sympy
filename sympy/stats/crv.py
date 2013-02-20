@@ -389,7 +389,11 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         try:
             return self.distribution.expectation(expr, x, **kwargs)
         except:
-            return integrate(expr * self.pdf, (x, self.set), **kwargs)
+            evaluate = kwargs.pop('evaluate', True)
+            if evaluate:
+                return integrate(expr * self.pdf, (x, self.set), **kwargs)
+            else:
+                return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:

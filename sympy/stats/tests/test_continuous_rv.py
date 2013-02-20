@@ -563,6 +563,12 @@ def test_probability_unevaluated():
     T = Normal('T', 30, 3)
     assert type(P(T > 33, evaluate=False)) == Integral
 
+def test_density_unevaluated():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 2)
+    assert isinstance(density(X+Y, evaluate=False)(z), Integral)
+
+
 def test_NormalDistribution():
     nd = NormalDistribution(0, 1)
     x = Symbol('x')
