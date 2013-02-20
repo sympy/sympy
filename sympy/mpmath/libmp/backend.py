@@ -61,7 +61,7 @@ if 'MPMATH_NOGMPY' not in os.environ:
                 import gmpy
             except ImportError:
                 raise ImportError
-        if gmpy.version() >= '1.03':
+        if gmpy.version() >= '1.13':
             BACKEND = 'gmpy'
             MPZ = gmpy.mpz
     except:

@@ -365,7 +365,7 @@ def test_polys():
     for c in (PythonRationalField, PythonRationalField()):
         check(c)
 
-    from sympy.polys.domains import HAS_GMPY
+    from sympy.core.compatibility import HAS_GMPY
 
     if HAS_GMPY:
         from sympy.polys.domains import GMPYIntegerRing, GMPYRationalField

@@ -21,6 +21,8 @@ matrix:
       env: TEST_GMPY="true"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
+      sudo apt-get update -qq;
+      sudo apt-get install -qq libgmp-dev;
       pip install "gmpy==1.16";
     fi
 install:
