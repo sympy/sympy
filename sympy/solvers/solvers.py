@@ -52,7 +52,7 @@ from collections import defaultdict
 
 def _ispow(e):
     """Return True if e is a Pow or is exp."""
-    return e.is_Pow or e.func is exp
+    return isinstance(e, Expr) and (e.is_Pow or e.func is exp)
 
 
 def denoms(eq, symbols=None):
