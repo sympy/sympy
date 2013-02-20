@@ -241,6 +241,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
 #. Mary Clark: Improvements to the group theory module
+#. Rishabh Dixit: Fix in logic module
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
