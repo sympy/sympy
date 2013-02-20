@@ -1,6 +1,8 @@
-from sympy.stats.drv_types import PoissonDistribution, GeometricDistribution
+from sympy.stats.drv_types import (PoissonDistribution, GeometricDistribution,
+        Poisson)
 from sympy.abc import x
 from sympy import S
+from sympy.stats import E, variance, density
 
 def test_PoissonDistribution():
     l = 3
@@ -8,6 +10,13 @@ def test_PoissonDistribution():
     assert abs(p.cdf(10).evalf() - 1) < .001
     assert p.expectation(x, x) == l
     assert p.expectation(x**2, x) - p.expectation(x, x)**2 == l
+
+def test_Poisson():
+    l = 3
+    x = Poisson('x', l)
+    assert E(x) == l
+    assert variance(x) == l
+    assert density(x) == PoissonDistribution(l)
 
 def test_GeometricDistribution():
     p = S.One / 5

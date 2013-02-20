@@ -1,6 +1,6 @@
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
         Piecewise, S, cacheit, solve)
-from sympy.stats.rv import NamedArgsMixin
+from sympy.stats.rv import NamedArgsMixin, SinglePSpace
 import random
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
@@ -72,3 +72,42 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         # TODO: support discrete sets with non integer stepsizes
         return summation(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
+
+class SingleDiscretePSpace(SinglePSpace):
+    """ Discrete probability space over a single univariate variable """
+
+    @property
+    def set(self):
+        return self.distribution.set
+
+    @property
+    def domain(self):
+        raise NotImplementedError()
+
+    def sample(self):
+        """
+        Internal sample method
+
+        Returns dictionary mapping RandomSymbol to realization value.
+        """
+        return {self.value: self.distribution.sample()}
+
+    def integrate(self, expr, rvs=None, **kwargs):
+        rvs = rvs or (self.value,)
+        if self.value not in rvs:
+            return expr
+
+        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+
+        x = self.value.symbol
+        try:
+            return self.distribution.expectation(expr, x, **kwargs)
+        except:
+            return summation(expr * self.pdf, (x, self.set.inf, self.set.sup),
+                             **kwargs)
+
+    def compute_cdf(self, expr, **kwargs):
+        if expr == self.value:
+            return self.distribution.compute_cdf(**kwargs)
+        else:
+            raise NotImplementedError()
