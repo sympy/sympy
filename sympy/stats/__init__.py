@@ -62,3 +62,6 @@ from crv_types import (
     WignerSemicircle
 )
 __all__.extend(crv_types.__all__)
+
+from drv_types import (Geometric, Poisson)
+__all__.extend(drv_types.__all__)
