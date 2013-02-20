@@ -165,6 +165,11 @@ class SinglePSpace(PSpace):
     Represents the probabilities of a set of random events that can be
     attributed to a single variable/symbol.
     """
+    def __new__(cls, symbol, distribution):
+        symbol = sympify(symbol)
+        if not isinstance(symbol, Symbol):
+            raise ValueError()
+        return Basic.__new__(cls, symbol, distribution)
 
     @property
     def value(self):
