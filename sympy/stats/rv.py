@@ -175,7 +175,15 @@ class SinglePSpace(PSpace):
 
     @property
     def value(self):
-        return tuple(self.values)[0]
+        return RandomSymbol(self, self.symbol)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def distribution(self):
+        return self.args[1]
 
 
 class RandomSymbol(Expr):
@@ -958,3 +966,13 @@ class NamedArgsMixin(object):
         except ValueError:
             raise AttributeError("'%s' object has not attribute '%s'" % (
                 type(self).__name__, attr))
+
+def _value_check(condition, message):
+    """
+    Check a condition on input value.
+
+    Raises ValueError with message if condition is not True
+    """
+    if condition is not True:
+        raise ValueError(message)
+
