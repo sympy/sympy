@@ -14,7 +14,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
         Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
-        Basic)
+        Basic, Symbol)
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy.polys.polyerrors import PolynomialError
 import random
@@ -267,8 +267,10 @@ class ContinuousPSpace(PSpace):
         # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
-            pdf = self.domain.integrate(self.pdf , set(rs.symbol
-                for rs in self.values - frozenset((expr,))), **kwargs)
+            randomsymbols = tuple(set(self.values) - frozenset([expr]))
+            symbols = tuple(rs.symbol for rs in randomsymbols)
+            pdf = self.pdf.subs(dict(zip(randomsymbols, symbols)))
+            pdf = self.domain.integrate(pdf, symbols, **kwargs)
             return Lambda(expr.symbol, pdf)
 
         z = Dummy('z', real=True, bounded=True)

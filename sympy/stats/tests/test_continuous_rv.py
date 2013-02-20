@@ -571,3 +571,10 @@ def test_NormalDistribution():
     assert nd.expectation(1, x) == 1
     assert nd.expectation(x, x) == 0
     assert nd.expectation(x**2, x) == 1
+
+def test_random_parameters():
+    mu = Normal('mu', 2, 3)
+    meas = Normal('T', mu, 1)
+    assert density(meas, evaluate=False)(z)
+    #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
+    #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
