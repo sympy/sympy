@@ -979,4 +979,3 @@ def _value_check(condition, message):
     """
     if condition is not True:
         raise ValueError(message)
-
