@@ -1075,9 +1075,6 @@ class Expr(Basic, EvalfMixin):
         if not x:
             return S.Zero
 
-        if self.is_Poly:
-            self = self.as_expr()
-
         if x == self:
             if n == 1:
                 return S.One

@@ -1274,9 +1274,8 @@ def test_Poly_coeff():
     assert p.coeff_monomial(y) == 0
     assert p.coeff_monomial(x*y) == 24*exp(8)
 
-    assert p.coeff(x) == 24*y*exp(8) + 23
-    assert p.coeff(y) == 24*x*exp(8)
-    assert p.coeff(x*y) == 24*exp(8)
+    assert p.as_expr().coeff(x) == 24*y*exp(8) + 23
+    raises(NotImplementedError, lambda: p.coeff(x))
 
     raises(ValueError, lambda: Poly(x + 1).coeff_monomial(0))
     raises(ValueError, lambda: Poly(x + 1).coeff_monomial(3*x))

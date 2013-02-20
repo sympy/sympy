@@ -1050,7 +1050,6 @@ def test_coeff():
     assert (n*m + o*m*n).coeff(m*n, right=1) == 1
     assert (n*m + n*m*n).coeff(n*m, right=1) == 1 + n  # = n*m*(n + 1)
 
-    assert Poly(x + x*y).coeff(x) == 1 + y
 
 def test_coeff2():
     r, kappa = symbols('r, kappa')

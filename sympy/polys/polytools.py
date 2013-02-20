@@ -756,6 +756,12 @@ class Poly(Expr):
         >>> Poly(x**3 + 2*x + 3, x).coeffs()
         [1, 2, 3]
 
+        See Also
+        ========
+        all_coeffs
+        coeff_monomial
+        nth
+
         """
         return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order) ]
 
@@ -772,6 +778,9 @@ class Poly(Expr):
         >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).monoms()
         [(2, 0), (1, 2), (1, 1), (0, 1)]
 
+        See Also
+        ========
+        all_monoms
         """
         return f.rep.monoms(order=order)
 
@@ -788,6 +797,9 @@ class Poly(Expr):
         >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).terms()
         [((2, 0), 1), ((1, 2), 2), ((1, 1), 1), ((0, 1), 3)]
 
+        See Also
+        ========
+        all_terms
         """
         return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order) ]
 
@@ -819,6 +831,10 @@ class Poly(Expr):
 
         >>> Poly(x**3 + 2*x - 1, x).all_monoms()
         [(3,), (2,), (1,), (0,)]
+
+        See Also
+        ========
+        all_terms
 
         """
         return f.rep.all_monoms()
@@ -1847,13 +1863,14 @@ class Poly(Expr):
         24*exp(8)
 
         Note that ``Expr.coeff()`` behaves differently, collecting terms
-        if possible::
+        if possible; the Poly must be converted to an Expr to use that
+        method, however::
 
-        >>> p.coeff(x)
+        >>> p.as_expr().coeff(x)
         24*y*exp(8) + 23
-        >>> p.coeff(y)
+        >>> p.as_expr().coeff(y)
         24*x*exp(8)
-        >>> p.coeff(x*y)
+        >>> p.as_expr().coeff(x*y)
         24*exp(8)
 
         See Also
@@ -1882,6 +1899,10 @@ class Poly(Expr):
         Poly(4*y*sqrt(x), y, sqrt(x), domain='ZZ')
         >>> _.nth(1, 1)
         4
+
+        See Also
+        ========
+        coeff_monomial
         """
         if hasattr(f.rep, 'nth'):
             result = f.rep.nth(*map(int, N))
@@ -1889,6 +1910,18 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'nth')
 
         return f.rep.dom.to_sympy(result)
+
+    def coeff(f, x, n=1, right=False):
+        # the semantics of coeff_monomial and Expr.coeff are different;
+        # if someone is working with a Poly, they should be aware of the
+        # differences and chose the method best suited for the query.
+        # Alternatively, a pure-polys method could be written here but
+        # at this time the right keyword would be ignored because Poly
+        # doesn't work with non-commutatives. Also,
+        raise NotImplementedError(
+            'Either convert to Expr with `as_expr` method '
+            'to use Expr\'s coeff method or else use the '
+            '`coeff_monomial` method of Polys.')
 
     def LM(f, order=None):
         """
