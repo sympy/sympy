@@ -62,6 +62,7 @@ def trigintegrate(f, x):
     n, m = M[n], M[m]
     if n is S.Zero and m is S.Zero:
         return x
+    zz = x if n is S.Zero else S.Zero
 
     a = M[a]
     aa = Dummy('a')
@@ -80,14 +81,12 @@ def trigintegrate(f, x):
         if n_:
             ff = -(1 - u**2)**((n - 1)/2) * u**m
             uu = cos(a*x)
-            zz = S.Zero
 
         #  n      m       u=S   n         (m-1)/2
         # S(x) * C(x) dx  -->  u  * (1-u^2)       du
         elif m_:
             ff = u**n * (1 - u**2)**((m - 1)/2)
             uu = sin(a*x)
-            zz = x
 
         fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
@@ -217,7 +216,7 @@ def trigintegrate(f, x):
                 res = (Rational(-1, m + 1) * cos(x)**(m + 1) * sin(x)**(n - 1) +
                        Rational(n - 1, m + 1) *
                        integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
-    return Piecewise((x, Eq(aa, 0)), (res.subs(x, a*x) / a, True)).subs(aa, a)
+    return Piecewise((zz, Eq(aa, 0)), (res.subs(x, a*x) / a, True)).subs(aa, a)
 
 
 def _sin_pow_integrate(n, x):

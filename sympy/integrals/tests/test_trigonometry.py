@@ -17,8 +17,16 @@ def test_trigintegrate_odd():
     assert trigintegrate(cos(3*x), x) == sin(3*x)/3
 
     y = Symbol('y')
-    assert trigintegrate(sin(y*x), x) == Piecewise((0, Eq(y, 0)), (-cos(y*x)/y, True))
-    assert trigintegrate(cos(y*x), x) == Piecewise((x, Eq(y, 0)), (sin(y*x)/y, True))
+    assert trigintegrate(sin(y*x), x) == \
+        Piecewise((0, Eq(y, 0)), (-cos(y*x)/y, True))
+    assert trigintegrate(cos(y*x), x) == \
+        Piecewise((x, Eq(y, 0)), (sin(y*x)/y, True))
+    assert trigintegrate(sin(y*x)**2, x) == \
+        Piecewise((0, Eq(y, 0)), ((x*y/2 - sin(x*y)*cos(x*y)/2)/y, True))
+    assert trigintegrate(sin(y*x)*cos(y*x), x) == \
+        Piecewise((0, Eq(y, 0)), (sin(x*y)**2/(2*y), True))
+    assert trigintegrate(cos(y*x)**2, x) == \
+        Piecewise((x, Eq(y, 0)), ((x*y/2 + sin(x*y)*cos(x*y)/2)/y, True))
 
     y = Symbol('y', positive=True)
     assert trigintegrate(sin(y*x), x) == -cos(y*x)/y
