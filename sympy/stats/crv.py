@@ -269,8 +269,7 @@ class ContinuousPSpace(PSpace):
             # Marginalize all other random symbols out of the density
             randomsymbols = tuple(set(self.values) - frozenset([expr]))
             symbols = tuple(rs.symbol for rs in randomsymbols)
-            pdf = self.pdf.subs(dict(zip(randomsymbols, symbols)))
-            pdf = self.domain.integrate(pdf, symbols, **kwargs)
+            pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
             return Lambda(expr.symbol, pdf)
 
         z = Dummy('z', real=True, bounded=True)
@@ -407,7 +406,8 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """
     @property
     def pdf(self):
-        return Mul(*[space.pdf for space in self.spaces])
+        p = Mul(*[space.pdf for space in self.spaces])
+        return p.subs({rv: rv.symbol for rv in self.values})
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
