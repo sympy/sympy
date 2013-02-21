@@ -25,6 +25,7 @@ from sympy.utilities import default_sort_key
 from sympy.utilities.misc import find_executable
 
 from sympy.printing.latex import accepted_latex_functions
+from sympy.printing.preview import preview
 
 
 def debug(txt):
@@ -169,7 +170,6 @@ class LatexPrinter(Printer):
                '\\newcommand{\\ddt}[1]{\\bfrac{d{#1}}{dt}}\n' \
                '\\newcommand{\\R}{\\dagger}\n' \
                '\\begin{document}\n'
-    postscript = '\\end{document}\n'
 
     @staticmethod
     def latex_bases():
@@ -1159,32 +1159,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
                 line = i.next()
             except StopIteration:
                 break
-    body = LatexPrinter.preamble + body + LatexPrinter.postscript
-
-    with open(filename, 'w') as latex_file:
-        latex_file.write(body)
-
-    latex_str = None
-    xdvi_str = None
-
-    if find_executable('latex') is not None:
-        latex_str = 'latex'
-
-    if find_executable('xdvi') is not None:
-        xdvi_str = 'xdvi'
-
-    if find_executable('yap') is not None:
-        xdvi_str = 'yap'
-
-    if latex_str is not None and xdvi_str is not None:
-        if debug:  # Display latex excution output for debugging purposes
-            os.system(latex_str + ' ' + filename[:-4])
-        else:  # Works for Linux don't know about Windows
-            if sys.platform.startswith('linux'):
-                os.system(latex_str + ' ' + filename[:-4] + ' > /dev/null')
-            else:
-                os.system(latex_str + ' ' + filename[:-4] + ' > NUL')
-        os.system(xdvi_str + ' ' + filename[:-4] + ' &')
+    preview(body, output='dvi', preamble=LatexPrinter.preamble)
     LatexPrinter.LaTeX_flg = False
     return
 
