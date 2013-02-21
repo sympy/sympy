@@ -1253,6 +1253,36 @@ def test_Poly_EC():
     assert Poly(x*y**7 + 2*x**2*y**3).EC('grlex') == 2
 
 
+def test_Poly_coeff():
+    assert Poly(0, x).coeff(1) == 0
+    assert Poly(0, x).coeff(x) == 0
+
+    assert Poly(1, x).coeff(1) == 1
+    assert Poly(1, x).coeff(x) == 0
+
+    assert Poly(x**8, x).coeff(1) == 0
+    assert Poly(x**8, x).coeff(x**7) == 0
+    assert Poly(x**8, x).coeff(x**8) == 1
+    assert Poly(x**8, x).coeff(x**9) == 0
+
+    assert Poly(3*x*y**2 + 1, x, y).coeff(1) == 1
+    assert Poly(3*x*y**2 + 1, x, y).coeff(x*y**2) == 3
+
+    p = Poly(24*x*y*exp(8) + 23*x, x, y)
+
+    assert p.coeff(x) == 23
+    assert p.coeff(y) == 0
+    assert p.coeff(x*y) == 24*exp(8)
+
+    assert p.as_expr().coeff(x) == 24*y*exp(8) + 23
+    assert p.as_expr().coeff(y) == 24*x*exp(8)
+    assert p.as_expr().coeff(x*y) == 24*exp(8)
+
+    raises(ValueError, lambda: Poly(x + 1).coeff(0))
+    raises(ValueError, lambda: Poly(x + 1).coeff(3*x))
+    raises(ValueError, lambda: Poly(x + 1).coeff(3*x*y))
+
+
 def test_Poly_nth():
     assert Poly(0, x).nth(0) == 0
     assert Poly(0, x).nth(1) == 0
@@ -1265,8 +1295,8 @@ def test_Poly_nth():
     assert Poly(x**8, x).nth(8) == 1
     assert Poly(x**8, x).nth(9) == 0
 
-    assert Poly(3*x*y**2 + 1).nth(0, 0) == 1
-    assert Poly(3*x*y**2 + 1).nth(1, 2) == 3
+    assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
+    assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
 
 
 def test_Poly_LM():
