@@ -4,7 +4,7 @@ from sympy import (
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple, nan, And, Eq
+    Tuple, nan, And, Eq, Or
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -442,8 +442,24 @@ def test_integrate_returns_piecewise():
         (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
     assert integrate(x**y, y) == Piecewise(
         (y, Eq(x, 1)), (x**y/log(x), True))
-    assert integrate(exp(x*y), y) == Piecewise(
-        (y, Eq(x, 0)), (exp(x*y)/x, True))
+    assert integrate(exp(n*x), x) == Piecewise(
+        (x, Eq(n, 0)), (exp(n*x)/n, True))
+    assert integrate(x**(n*y), x) == Piecewise(
+        (log(x), Eq(n, -1/y)), (x**(n*y + 1)/(n*y + 1), True))
+    assert integrate(x**(n*y), y) == Piecewise(
+        (y, Or(Eq(n, 0), Eq(x, 1))), (x**(n*y)/(n*log(x)), True))
+    assert integrate(cos(n*x), x) == Piecewise(
+        (x, Eq(n, 0)), (sin(n*x)/n, True))
+    assert integrate(cos(n*x)**2, x) == Piecewise(
+        (x, Eq(n, 0)), ((n*x/2 + sin(n*x)*cos(n*x)/2)/n, True))
+    assert integrate(x*cos(n*x), x) == Piecewise(
+        (x**2/2, Eq(n, 0)), (x*sin(n*x)/n + cos(n*x)/n**2, True))
+    assert integrate(sin(n*x), x) == Piecewise(
+        (0, Eq(n, 0)), (-cos(n*x)/n, True))
+    assert integrate(sin(n*x)**2, x) == Piecewise(
+        (0, Eq(n, 0)), ((n*x/2 - sin(n*x)*cos(n*x)/2)/n, True))
+    assert integrate(x*sin(n*x), x) == Piecewise(
+        (0, Eq(n, 0)), (-x*cos(n*x)/n + sin(n*x)/n**2, True))
 
 
 def test_subs1():
