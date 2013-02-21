@@ -466,6 +466,9 @@ def given(expr, condition=None, **kwargs):
     if not random_symbols(condition) or pspace_independent(expr, condition):
         return expr
 
+    if isinstance(condition, RandomSymbol):
+        condition = Eq(condition, condition.symbol)
+
     condsymbols = random_symbols(condition)
     if (isinstance(condition, Equality) and len(condsymbols) == 1 and
         not isinstance(pspace(expr).domain, ConditionalDomain)):
