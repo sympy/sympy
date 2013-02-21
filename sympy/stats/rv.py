@@ -233,6 +233,9 @@ class RandomSymbol(Expr):
     symbol = property(lambda self: self.args[1])
     name   = property(lambda self: self.symbol.name)
 
+    is_positive = property(lambda self: self.symbol.is_positive)
+    is_integer = property(lambda self: self.symbol.is_integer)
+
     @property
     def is_commutative(self):
         return self.symbol.is_commutative
