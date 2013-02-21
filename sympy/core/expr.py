@@ -959,7 +959,7 @@ class Expr(Basic, EvalfMixin):
 
     def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient from the term(s) containing "x**n" or None. If ``n``
+        Returns the coefficient from the term(s) containing ``x**n`` or None. If ``n``
         is zero then all terms independent of ``x`` will be returned.
 
         When x is noncommutative, the coeff to the left (default) or right of x
@@ -1280,7 +1280,7 @@ class Expr(Basic, EvalfMixin):
         the constant from the returned expression could be selected.
         Or, for greater precision, a method of Poly can be used to
         indicate the desired term from which the coefficient is
-        desired.
+        desired.)
 
         >>> (2*E + x*E).as_coefficient(E)
         x + 2
@@ -1294,7 +1294,7 @@ class Expr(Basic, EvalfMixin):
         2
 
         Since the following cannot be written as a product containing
-        E as a factor, None is returned. (If the coefficient 2*x is
+        E as a factor, None is returned. (If the coefficient ``2*x`` is
         desired then the ``coeff`` method should be used.)
 
         >>> (2*E*x + x).as_coefficient(E)

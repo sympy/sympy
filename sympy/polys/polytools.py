@@ -781,6 +781,7 @@ class Poly(Expr):
         See Also
         ========
         all_monoms
+ 
         """
         return f.rep.monoms(order=order)
 
@@ -800,6 +801,7 @@ class Poly(Expr):
         See Also
         ========
         all_terms
+
         """
         return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order) ]
 
@@ -935,7 +937,7 @@ class Poly(Expr):
 
     def as_expr(f, *gens):
         """
-        Convert a polynomial an expression.
+        Convert a Poly instance to an Expr instance.
 
         Examples
         ========
@@ -1864,7 +1866,7 @@ class Poly(Expr):
 
         Note that ``Expr.coeff()`` behaves differently, collecting terms
         if possible; the Poly must be converted to an Expr to use that
-        method, however::
+        method, however:
 
         >>> p.as_expr().coeff(x)
         24*y*exp(8) + 23
@@ -1875,8 +1877,8 @@ class Poly(Expr):
 
         See Also
         ========
-
         nth: more efficient query using exponents of the monomial's generators
+
         """
         return f.nth(*Monomial(monom, f.gens).exponents)
 
@@ -1903,6 +1905,7 @@ class Poly(Expr):
         See Also
         ========
         coeff_monomial
+
         """
         if hasattr(f.rep, 'nth'):
             result = f.rep.nth(*map(int, N))
@@ -1916,8 +1919,8 @@ class Poly(Expr):
         # if someone is working with a Poly, they should be aware of the
         # differences and chose the method best suited for the query.
         # Alternatively, a pure-polys method could be written here but
-        # at this time the right keyword would be ignored because Poly
-        # doesn't work with non-commutatives. Also,
+        # at this time the ``right`` keyword would be ignored because Poly
+        # doesn't work with non-commutatives.
         raise NotImplementedError(
             'Either convert to Expr with `as_expr` method '
             'to use Expr\'s coeff method or else use the '
