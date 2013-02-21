@@ -159,34 +159,29 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     components
     """
     from sympy import And, Basic, Eq, Piecewise
+
     f = sympify(f)
-    r = (x,)
-    r0 = (x,)
+    if not f.has(x):
+        return f*x
+
     res = _heurisch(f, x, rewrite, hints, mappings, retries, degree_offset)
     if not isinstance(res, Basic):
         return res
-    if res.free_symbols == f.free_symbols:
-        try:
-            slns = solve(res.as_numer_denom()[1], dict=True, exclude=r0)
-        except NotImplementedError:
-            slns = []
-        if not slns:
-            return res
-    n, d = _heurisch(f, x, rewrite, hints, mappings, retries, degree_offset).as_numer_denom()
+    n, d = res.as_numer_denom()
     try:
-        slns = solve(d, dict=True, exclude=r0)
+        slns = solve(d, dict=True, exclude=(x,))
     except NotImplementedError:
         slns = []
+    if not slns:
+        return res
     if len(slns) > 1:
         eqs = []
         for sub_dict in slns:
             eqs.extend([Eq(key, value) for key, value in sub_dict.iteritems()])
-        slns = solve(eqs, dict=True, exclude=r0) + slns
+        slns = solve(eqs, dict=True, exclude=(x,)) + slns
     pairs = []
     for sub_dict in slns:
         expr = _heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries, degree_offset)
-
-
         cond = And(*[Eq(key, value) for key, value in sub_dict.iteritems()])
         pairs.append((expr, cond))
     pairs.append((_heurisch(f, x, rewrite, hints, mappings, retries, degree_offset), True))
@@ -194,13 +189,13 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
 
 
 def _heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_offset=0):
+    if not f.has(x):
+        return f*x
+
     if not f.is_Add:
         indep, f = f.as_independent(x)
     else:
         indep = S.One
-
-    if not f.has(x):
-        return indep * f * x
 
     rewritables = {
         (sin, cos, cot): tan,
