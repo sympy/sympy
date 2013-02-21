@@ -9,6 +9,7 @@ import shutil
 from cStringIO import StringIO
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import find_executable
 from latex import latex
 
 
@@ -104,6 +105,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         else:
             # sorted in order from most pretty to most ugly
             # very discussable, but indeed 'gv' looks awful :)
+            # TODO add candidates for windows to list
             candidates = {
                 "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
                 "ps": [ "evince", "okular", "gsview", "gv" ],
@@ -112,7 +114,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             try:
                 for candidate in candidates[output]:
-                    if pexpect.which(candidate):
+                    if find_executable(candidate):
                         viewer = candidate
                         break
                 else:
@@ -130,7 +132,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             if outputbuffer is None:
                 raise ValueError("outputbuffer has to be a StringIO "
                                  "compatible object if viewer=\"StringIO\"")
-        elif viewer not in special and not pexpect.which(viewer):
+        elif viewer not in special and not find_executable(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
     actual_packages = packages + ("amsmath", "amsfonts")
