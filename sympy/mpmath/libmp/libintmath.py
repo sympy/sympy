@@ -298,8 +298,12 @@ def sqrt_fixed(x, prec):
 sqrt_fixed2 = sqrt_fixed
 
 if BACKEND == 'gmpy':
-    isqrt_small = isqrt_fast = isqrt = gmpy.sqrt
-    sqrtrem = gmpy.sqrtrem
+    if gmpy.version() >= "2":
+        isqrt_small = isqrt_fast = isqrt = gmpy.isqrt
+        sqrtrem = gmpy.isqrt_rem
+    else:
+        isqrt_small = isqrt_fast = isqrt = gmpy.sqrt
+        sqrtrem = gmpy.sqrtrem
 elif BACKEND == 'sage':
     isqrt_small = isqrt_fast = isqrt = \
         getattr(sage_utils, "isqrt", lambda n: MPZ(n).isqrt())

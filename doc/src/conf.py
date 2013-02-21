@@ -97,7 +97,23 @@ html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../logo/SymPy-Favicon.ico'
-html_theme_options = {'collapsiblesidebar': True}
+# See http://sphinx-doc.org/theming.html#builtin-themes.
+html_theme_options = {
+    'collapsiblesidebar': True,
+    'relbarbgcolor': '#2f441e',
+    'sidebarbgcolor': '#3b5526',
+    'sidebarbtncolor': '#4F663C',
+    'sidebarlinkcolor': '#81B953',
+    'linkcolor': '#4F663C',
+    'visitedlinkcolor': '#293b1b',
+    'headtextcolor': '#2f441e',
+    'footerbgcolor': '#293b1b',
+    'headlinkcolor': '#AAAAAA',
+    'sidebartextcolor': '#DDDDDD',
+    'footertextcolor': '#DDDDDD',
+    'relbartextcolor': '#DDDDDD',
+    'relbarlinkcolor': '#81B953',
+}
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.

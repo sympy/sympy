@@ -38,7 +38,7 @@ def test_slicing():
     assert X[:, 1:5].shape == (X.shape[0], 4)
 
     assert X[::2, ::2].shape == (floor(n/2), floor(m/2))
-    assert X[2] == MatrixSlice(X, 2, (0, m))
+    assert X[2, :] == MatrixSlice(X, 2, (0, m))
 
 def test_exceptions():
     X = MatrixSymbol('x', 10, 20)
@@ -51,3 +51,14 @@ def test_symmetry():
     Y = X[:5, 5:]
     with assuming(Q.symmetric(X)):
         assert Y.T == X[5:, :5]
+
+def test_slice_of_slice():
+    X = MatrixSymbol('x', 10, 10)
+    assert X[2, :][:, 3][0, 0] == X[2, 3]
+    assert X[:5, :5][:4, :4] == X[:4, :4]
+    assert X[1:5, 2:6][1:3, 2] == X[2:4, 4]
+    assert X[1:9:2, 2:6][1:3, 2] == X[3:7:2, 4]
+
+def test_negative_index():
+    X = MatrixSymbol('x', 10, 10)
+    assert X[-1, :] == X[9, :]

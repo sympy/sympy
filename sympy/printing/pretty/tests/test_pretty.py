@@ -3804,6 +3804,25 @@ def test_issue_3186():
     assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
 
 
+def test_issue_3640():
+    ascii_str = \
+"""\
+  1  \n\
+-----\n\
+  ___\n\
+\/ x \
+"""
+    ucode_str = \
+u"""\
+  1  \n\
+─────\n\
+  ___\n\
+╲╱ x \
+"""
+    assert pretty(1/sqrt(x)) == ascii_str
+    assert upretty(1/sqrt(x)) == ucode_str
+
+
 def test_complicated_symbol_unchanged():
     for symb_name in ["dexpr2_d1tau", "dexpr2^d1tau"]:
         assert pretty(Symbol(symb_name)) == symb_name
