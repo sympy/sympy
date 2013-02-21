@@ -1025,24 +1025,6 @@ class ReferenceFrame(object):
         self._ang_vel_dict.update({otherframe: value})
         otherframe._ang_vel_dict.update({self: -value})
 
-    def components_of(self, vector):
-        """
-        Returns the list of X, Y and Z components of a vector, if possible,
-        in this frame.
-
-        Examples
-        ========
-
-        >>> from sympy.physics.mechanics import ReferenceFrame
-        >>> N = ReferenceFrame('N')
-        >>> v = 3 * N.x + 4 * N.y
-        >>> N.components_of(v)
-        [3, 4, 0]
-
-        """
-
-        return [vector & self.x, vector & self.y, vector & self.z]
-
     @property
     def x(self):
         """The basis Vector for the ReferenceFrame, in the x direction. """
@@ -1948,3 +1930,22 @@ def dynamicsymbols(names, level=0):
 
 dynamicsymbols._t = Symbol('t')
 dynamicsymbols._str = '\''
+
+
+def measure_numbers(vector, frame):
+    """
+    Returns the list of X, Y and Z components of a Vector if
+    defined in a ReferenceFrame.
+
+    Examples
+    ========
+
+    >>> from sympy.physics.mechanics import ReferenceFrame, measure_numbers
+    >>> N = ReferenceFrame('N')
+    >>> v = 3 * N.x + 4 * N.y
+    >>> measure_numbers(v, N)
+    [3, 4, 0]
+
+    """
+
+    return [vector & frame.x, vector & frame.y, vector & frame.z]
