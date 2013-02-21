@@ -1,6 +1,6 @@
 from sympy import (Basic, sympify, symbols, Dummy, Lambda, summation,
         Piecewise, S, cacheit, solve, Sum)
-from sympy.stats.rv import NamedArgsMixin, SinglePSpace
+from sympy.stats.rv import NamedArgsMixin, SinglePSpace, SingleDomain
 import random
 
 class SingleDiscreteDistribution(Basic, NamedArgsMixin):
@@ -81,6 +81,9 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
     def __call__(self, *args):
         return self.pdf(*args)
 
+class SingleDiscreteDomain(SingleDomain):
+    pass
+
 class SingleDiscretePSpace(SinglePSpace):
     """ Discrete probability space over a single univariate variable """
 
@@ -90,7 +93,7 @@ class SingleDiscretePSpace(SinglePSpace):
 
     @property
     def domain(self):
-        raise NotImplementedError()
+        return SingleDiscreteDomain(self.symbol, self.set)
 
     def sample(self):
         """
