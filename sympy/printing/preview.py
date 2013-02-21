@@ -14,7 +14,7 @@ from latex import latex
 
 
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
-            filename=None, outputbuffer=None, formatstr=None, dvioptions=None,
+            filename=None, outputbuffer=None, preamble=None, dvioptions=None,
             **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
@@ -72,12 +72,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> preview(x + y, output='png', viewer='StringIO',
     ...         outputbuffer=obj) # doctest: +SKIP
 
-    The template for the LaTeX code, which is processed by the LaTeX
-    interpreter can customized with the 'formatstr' argument. This can be
-    used, e.g., to set a differnt font size or use a differnt documentclass.
+    The LaTeX preamble can be customized by setting the 'preamble' keyword
+    argument. This can be used, e.g., to set a different font size, use a
+    custom documentclass or import certain set of LaTeX packages.
 
-    >>> fmt =r"\documentclass[10pt]{extarticle}%s\begin{document}%s\end{document}"
-    >>> preview(x + y, output='png', formatstr=fmt) # doctest: +SKIP
+    >>> preamble = "\\documentclass[10pt]{article}\n"
+    ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
+    >>> preview(x + y, output='png', preamble=preamble) # doctest: +SKIP
 
     If the value of 'output' is different from 'dvi' then command line
     options can be set ('dvioptions' argument) for the execution of the
@@ -129,22 +130,24 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         elif viewer not in special and not find_executable(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
-    actual_packages = packages + ("amsmath", "amsfonts")
-    if euler:
-        actual_packages += ("euler",)
-    package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
-                                         for p in actual_packages])
 
-    if formatstr is None:
-        formatstr = r"""\documentclass[12pt]{article}
-                        %s
-                        \begin{document}
+    if preamble is None:
+        actual_packages = packages + ("amsmath", "amsfonts")
+        if euler:
+            actual_packages += ("euler",)
+        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
+                                             for p in actual_packages])
+
+        preamble = r"""\documentclass[12pt]{article}
                         \pagestyle{empty}
                         %s
-                        \vfill
-                        \end{document}
-                     """
-    formatstr = formatstr % (package_includes, "%s")
+                        \begin{document}
+                     """ % (package_includes)
+    else:
+        if len(packages) > 0:
+            raise ValueError("The \"packages\" keyword must not be set if a "
+                             "custom LaTeX preamble was specified")
+    latex_main = preamble + '\n%s\n' + r"\end{document}"
 
     if isinstance(expr, str):
         latex_string = expr
@@ -156,7 +159,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
         p = Popen(['latex', '-halt-on-error'], cwd=workdir, stdin=PIPE,
                   stdout=PIPE)
-        _, perr = p.communicate(formatstr % latex_string)
+        _, perr = p.communicate(latex_main % latex_string)
         if p.returncode != 0:
             raise SystemError("Failed to generate DVI output: %s", perr)
 
