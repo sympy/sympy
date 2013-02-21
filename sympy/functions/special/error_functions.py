@@ -754,8 +754,7 @@ class erfinv(Function):
             return z.args[0]
 
         nz = z.extract_multiplicatively(-1)
-        if nz is not None and ((nz.func is erf) and x.is_real):
-            x = nz.args[0]
+        if nz is not None and ((nz.func is erf) and (nz.args[0]).is_real):
             return -nz.args[0]
 
     def _eval_rewrite_as_erfcinv(self, z):
