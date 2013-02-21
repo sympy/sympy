@@ -237,7 +237,7 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 # "default", "all", "best", and "all_Integral" meta-hints should not be
 # included in this list, but "_best" and "_Integral" hints should be included.
 allhints = (
-    "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
+    "direct", "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
     "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
     "1st_homogeneous_coeff_subs_dep_div_indep",
     "nth_linear_constant_coeff_homogeneous",
@@ -495,9 +495,14 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         eq = eq.lhs - eq.rhs
 
     # preprocess the equation and find func if not given
+    # if given equation is a direct derivative then don't preprocess
     if prep or func is None:
-        eq, func = preprocess(eq, func)
-        prep = False
+        if isinstance(eq, Derivative):
+            tmp, func = preprocess(eq, func)
+            prep = True
+        else:
+            eq, func = preprocess(eq, func)
+            prep = False
 
     # Magic that should only be used internally.  Prevents classify_ode from
     # being called more than it needs to be by passing its results through
@@ -534,6 +539,8 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         else:
             raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
+    if hints['default'] == 'direct' and hint != 'default':
+        eq = tmp
     if hint == 'default':
         return dsolve(eq, func, hint=hints['default'], simplify=simplify,
                       prep=prep, classify=False, order=hints['order'],
@@ -581,13 +588,19 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
     # attempt to solve for func, and apply any other hint specific simplifications
     if simplify:
-        rv = odesimp(solvefunc(eq, func, order=hints['order'],
-            match=hints[hint]), func, hints['order'], hint)
+        if hint == 'direct':
+            rv = solvefunc(eq, func, order=hints['order'], match=hints[hint])
+        else:
+            rv = odesimp(solvefunc(eq, func, order=hints['order'],
+                match=hints[hint]), func, hints['order'], hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
-        r = hints[hint]
-        r['simplify'] = False  # Some hints can take advantage of this option
-        rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
+        if hint == 'direct':
+            rv = solvefunc(eq, func, order=hints['order'], match=hints[hint])
+        else:
+            r = hints[hint]
+            r['simplify'] = False  # Some hints can take advantage of this option
+            rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
     return rv
 
@@ -706,6 +719,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     """
     prep = kwargs.pop('prep', True)
     from sympy import expand
+    matching_hints = {}
 
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " +
@@ -714,6 +728,16 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         eq, func_ = preprocess(eq, func)
         if func is None:
             func = func_
+
+    if isinstance(eq, Derivative) and func.args == eq.variables:
+        r = {}
+        matching_hints['direct'] = r
+
+    if isinstance(eq, Equality):
+        lhs = eq.lhs
+        if eq.rhs == 0 and isinstance(lhs, Derivative) and func.args == lhs.variables:
+            r = {}
+            matching_hints['direct'] = r
     x = func.args[0]
     f = func.func
     y = Dummy('y')
@@ -724,7 +748,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
-    matching_hints = {"order": order}
+    matching_hints["order"] = order
 
     if not order:
         if dict:
@@ -1878,6 +1902,34 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
+def ode_direct(eq, func, order, match):
+    r'''
+    Solves equations when the given eq is in the form of a derivative.
+    Suppose the input is given in the form of d(g(x)*F(x))/dx = 0, where
+    g(x) is a known function, then the derivative would be of the form of
+    a polynomial depending on the order of the equation divided by g(x)
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Derivative
+    >>> from sympy.solvers import ode
+    >>> from sympy.abc import x
+    >>> f = Function('f')(x)
+    >>> d = Derivative(x*f, x, x, x)
+    >>> dsolve(d, f)
+    f(x) == C1/x + C2 + C3*x
+
+    '''
+    equation = 0
+    original_fun = eq.args[0]
+    fun_remainder = original_fun / func
+    variable = eq.args[1]
+    generator = numbered_symbols(prefix='C' , start = 1)
+    symbols = [generator.next() for i in range(order)]
+    for i in range(len(symbols)):
+        equation = equation + (symbols[i]*variable **i / fun_remainder)
+    return Eq(func, equation)
 
 # FIXME: replace the general solution in the docstring with
 # dsolve(equation, hint='1st_exact_Integral').  You will need to be able
