@@ -45,7 +45,7 @@ def Poisson(name, lamda):
     ========
 
     >>> from sympy.stats import Poisson, density, E, variance
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, simplify
 
     >>> rate = Symbol("lambda", positive=True)
     >>> z = Symbol("z")
@@ -58,7 +58,7 @@ def Poisson(name, lamda):
     >>> E(X)
     lambda
 
-    >>> variance(X)
+    >>> simplify(variance(X))
     lambda
 
     References
