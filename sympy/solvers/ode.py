@@ -538,8 +538,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
             raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
         else:
             raise NotImplementedError("dsolve: Cannot solve " + str(eq))
-
-    if hints['default'] == 'direct' and hint != 'default':
+    if hints['default'] == 'direct' and hint != 'default' and hint != 'direct':
         eq = tmp
     if hint == 'default':
         return dsolve(eq, func, hint=hints['default'], simplify=simplify,
@@ -721,6 +720,20 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     from sympy import expand
     matching_hints = {}
 
+    #Checking if it is a direct derivative
+    if func is None:
+        tmp, func = preprocess(eq, func)
+
+    if isinstance(eq, Derivative) and func.args[0] == eq.variables[0]:
+        r = {}
+        matching_hints['direct'] = r
+
+    if isinstance(eq, Equality):
+        lhs = eq.lhs
+        if eq.rhs == 0 and isinstance(lhs, Derivative) and func.args[0] == eq.variables[0]:
+            r = {}
+            matching_hints['direct'] = r
+
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " +
             "of one variable")
@@ -728,16 +741,6 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         eq, func_ = preprocess(eq, func)
         if func is None:
             func = func_
-
-    if isinstance(eq, Derivative) and func.args == eq.variables:
-        r = {}
-        matching_hints['direct'] = r
-
-    if isinstance(eq, Equality):
-        lhs = eq.lhs
-        if eq.rhs == 0 and isinstance(lhs, Derivative) and func.args == lhs.variables:
-            r = {}
-            matching_hints['direct'] = r
     x = func.args[0]
     f = func.func
     y = Dummy('y')
