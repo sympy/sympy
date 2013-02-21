@@ -128,7 +128,7 @@ class Not(BooleanFunction):
     is_Not = True
 
     @classmethod
-    def eval(cls, *args):
+    def eval(cls, arg):
         """
         Logical Not function (negation)
 
@@ -148,20 +148,9 @@ class Not(BooleanFunction):
         True
         >>> Not(Or(True, False))
         False
-
-        If multiple statements are given, returns an array of each result
-
-        >>> Not(True, False)
-        [False, True]
-        >>> Not(True and False, True or False, True)
-        [True, False, False]
-
         >>> Not(And(And(True, x), Or(x, False)))
         Not(x)
         """
-        if len(args) > 1:
-            return map(cls, args)
-        arg = args[0]
         if arg in (0, 1):  # includes True and False, too
             return not bool(arg)
         # apply De Morgan Rules
