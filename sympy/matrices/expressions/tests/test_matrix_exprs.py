@@ -187,3 +187,9 @@ def test_invariants():
             MatPow(X, 0)]
     for obj in objs:
         assert obj == obj.__class__(*obj.args)
+
+def test_indexing():
+    A = MatrixSymbol('A', n, m)
+    A[1, 2]
+    A[l, k]
+    A[l+1, k+1]

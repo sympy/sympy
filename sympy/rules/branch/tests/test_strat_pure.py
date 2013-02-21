@@ -1,7 +1,6 @@
 from sympy.rules.branch.strat_pure import (exhaust, debug, multiplex,
         condition, notempty, chain, onaction, sfilter, yieldify)
 
-
 def posdec(x):
     if x > 0:
         yield x-1

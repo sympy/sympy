@@ -52,25 +52,7 @@ RR_mpmath = MPmathRealDomain
 
 from pythonrationaltype import PythonRationalType
 
-from groundtypes import HAS_GMPY
-
-
-def _getenv(key, default=None):
-    from os import getenv
-    return getenv(key, default)
-
-GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
-
-if GROUND_TYPES == 'auto':
-    if HAS_GMPY:
-        GROUND_TYPES = 'gmpy'
-    else:
-        GROUND_TYPES = 'python'
-
-if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
-    from warnings import warn
-    warn("gmpy library is not installed, switching to 'python' ground types")
-    GROUND_TYPES = 'python'
+from sympy.core.compatibility import GROUND_TYPES
 
 _GROUND_TYPES_MAP = {
     'gmpy': (FF_gmpy, ZZ_gmpy(), QQ_gmpy()),

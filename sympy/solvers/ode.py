@@ -529,7 +529,12 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
 
     if not hints['default']:
         # classify_ode will set hints['default'] to None if no hints match.
-        raise NotImplementedError("dsolve: Cannot solve " + str(eq))
+        if hint not in allhints and hint != 'default':
+            raise ValueError("Hint not recognized: " + hint)
+        elif hint not in hints['ordered_hints'] and hint != 'default':
+            raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
+        else:
+            raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
     if hint == 'default':
         return dsolve(eq, func, hint=hints['default'], simplify=simplify,

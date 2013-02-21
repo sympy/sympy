@@ -42,6 +42,13 @@ class AskSymmetricHandler(CommonHandler):
         return ask(Q.symmetric(expr.arg), assumptions)
     Inverse = Transpose
 
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if not expr.on_diag:
+            return None
+        else:
+            return ask(Q.symmetric(expr.parent), assumptions)
+
 
 class AskInvertibleHandler(CommonHandler):
     """
@@ -84,6 +91,12 @@ class AskInvertibleHandler(CommonHandler):
     def Inverse(expr, assumptions):
         return True
 
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if not expr.on_diag:
+            return None
+        else:
+            return ask(Q.invertible(expr.parent), assumptions)
 
 class AskOrthogonalHandler(CommonHandler):
     """
@@ -125,6 +138,12 @@ class AskOrthogonalHandler(CommonHandler):
         return ask(Q.orthogonal(expr.arg), assumptions)
     Inverse = Transpose
 
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if not expr.on_diag:
+            return None
+        else:
+            return ask(Q.orthogonal(expr.parent), assumptions)
 
 class AskPositiveDefiniteHandler(CommonHandler):
     """
@@ -166,6 +185,12 @@ class AskPositiveDefiniteHandler(CommonHandler):
         return ask(Q.positive_definite(expr.arg), assumptions)
     Inverse = Transpose
 
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if not expr.on_diag:
+            return None
+        else:
+            return ask(Q.positive_definite(expr.parent), assumptions)
 
 class AskUpperTriangularHandler(CommonHandler):
     """
@@ -200,6 +225,12 @@ class AskUpperTriangularHandler(CommonHandler):
     def Inverse(expr, assumptions):
         return ask(Q.upper_triangular(expr.arg), assumptions)
 
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if not expr.on_diag:
+            return None
+        else:
+            return ask(Q.upper_triangular(expr.parent), assumptions)
 
 class AskLowerTriangularHandler(CommonHandler):
     """
@@ -234,6 +265,12 @@ class AskLowerTriangularHandler(CommonHandler):
     def Inverse(expr, assumptions):
         return ask(Q.lower_triangular(expr.arg), assumptions)
 
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if not expr.on_diag:
+            return None
+        else:
+            return ask(Q.lower_triangular(expr.parent), assumptions)
 
 class AskDiagonalHandler(CommonHandler):
     """
@@ -267,3 +304,10 @@ class AskDiagonalHandler(CommonHandler):
     @staticmethod
     def Inverse(expr, assumptions):
         return ask(Q.diagonal(expr.arg), assumptions)
+
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if not expr.on_diag:
+            return None
+        else:
+            return ask(Q.diagonal(expr.parent), assumptions)

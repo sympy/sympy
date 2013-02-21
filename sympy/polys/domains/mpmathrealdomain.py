@@ -37,7 +37,7 @@ class MPmathRealDomain(RealDomain):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return MPmathRealType(int(a.numer())) / int(a.denom())
+        return MPmathRealType(int(a.numerator)) / int(a.denominator)
 
     def from_RR_sympy(K1, a, K0):
         """Convert a SymPy `Float` object to `dtype`. """
