@@ -781,7 +781,7 @@ class Poly(Expr):
         See Also
         ========
         all_monoms
- 
+
         """
         return f.rep.monoms(order=order)
 
@@ -2242,11 +2242,14 @@ class Poly(Expr):
             result = f.rep.eval(a, j)
         except CoercionFailed:
             if not auto:
-                raise DomainError(
-                    "can't evaluate at %s in %s" % (a, f.rep.dom))
+                raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
             else:
-                domain, [a] = construct_domain([a])
-                f = f.set_domain(domain)
+                a_domain, [a] = construct_domain([a])
+                new_domain = f.get_domain().unify(a_domain, gens=f.gens)
+
+                f = f.set_domain(new_domain)
+                a = new_domain.convert(a, a_domain)
+
                 result = f.rep.eval(a, j)
 
         return f.per(result, remove=j)
