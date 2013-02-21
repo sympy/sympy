@@ -407,7 +407,7 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     @property
     def pdf(self):
         p = Mul(*[space.pdf for space in self.spaces])
-        return p.subs({rv: rv.symbol for rv in self.values})
+        return p.subs(dict((rv, rv.symbol) for rv in self.values))
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
