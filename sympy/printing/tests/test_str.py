@@ -17,7 +17,7 @@ from sympy.utilities.pytest import raises
 from sympy.printing import sstr, sstrrepr, StrPrinter
 from sympy.core.trace import Tr
 
-x, y, z, w = symbols('x,y,z,w')
+a, x, y, z, w = symbols('a,x,y,z,w')
 d = Dummy('d')
 
 
@@ -310,22 +310,26 @@ def test_Poly():
 
     assert str(Poly(x - 1, x)) == "Poly(x - 1, x, domain='ZZ')"
 
-    assert str(
-        Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
-    assert str(
-        Poly(x**2 - 1 + y, x)) == "Poly(x**2 + y - 1, x, domain='ZZ[y]')"
+    assert str(Poly(x**2 + 1 + y, x)) == "Poly(x**2 + y + 1, x, domain='ZZ[y]')"
+    assert str(Poly(x**2 - 1 + y, x)) == "Poly(x**2 + y - 1, x, domain='ZZ[y]')"
 
     assert str(Poly(x**2 + I*x, x)) == "Poly(x**2 + I*x, x, domain='EX')"
     assert str(Poly(x**2 - I*x, x)) == "Poly(x**2 - I*x, x, domain='EX')"
 
-    assert str(Poly(-x*y*z + x*y - 1, x, y, z)
-               ) == "Poly(-x*y*z + x*y - 1, x, y, z, domain='ZZ')"
+    assert str(Poly(-x*y*z + x*y - 1, x, y, z)) == \
+        "Poly(-x*y*z + x*y - 1, x, y, z, domain='ZZ')"
     assert str(Poly(-w*x**21*y**7*z + (1 + w)*z**3 - 2*x*z + 1, x, y, z)) == \
         "Poly(-w*x**21*y**7*z - 2*x*z + (w + 1)*z**3 + 1, x, y, z, domain='ZZ[w]')"
 
     assert str(Poly(x**2 + 1, x, modulus=2)) == "Poly(x**2 + 1, x, modulus=2)"
-    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)
-               ) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
+    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)) == \
+        "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
+
+    assert str(Poly(2**(2*x), 2**x)) == "Poly((2**x)**2, 2**x, domain='ZZ')"
+    assert str(Poly((x + 1)**2, (x + 1), expand=False)) == "Poly((x + 1)**2, x + 1, domain='ZZ')"
+
+    assert str(Poly(a*x*sqrt(3), x, sqrt(3))) == \
+        "Poly(a*x*sqrt(3), x, sqrt(3), domain='ZZ[a]')"
 
 
 def test_Pow():

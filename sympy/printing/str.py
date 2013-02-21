@@ -366,7 +366,8 @@ class StrPrinter(Printer):
         return 'pi'
 
     def _print_Poly(self, expr):
-        terms, gens = [], [ self._print(s) for s in expr.gens ]
+        ATOM_PREC = PRECEDENCE["Atom"] - 1
+        terms, gens = [], [ self.parenthesize(s, ATOM_PREC) for s in expr.gens ]
 
         for monom, coeff in expr.terms():
             s_monom = []
@@ -422,7 +423,7 @@ class StrPrinter(Printer):
 
         format += ")"
 
-        return format % (' '.join(terms), ', '.join(gens))
+        return format % (' '.join(terms), ', '.join([ self._print(s) for s in expr.gens ]))
 
     def _print_ProductSet(self, p):
         return ' x '.join(self._print(set) for set in p.sets)

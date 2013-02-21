@@ -1,5 +1,6 @@
 """A module providing information about the necessity of brackets"""
 
+from sympy.core.singleton import S
 from sympy.core.function import _coeff_isneg
 
 # Default precedence values for some basic types
@@ -65,11 +66,18 @@ def precedence_Float(item):
         return PRECEDENCE["Add"]
     return PRECEDENCE["Atom"]
 
+
+def precedence_Pow(item):
+    if item.exp is S.Half:
+        return PRECEDENCE["Atom"]
+    return PRECEDENCE["Pow"]
+
 PRECEDENCE_FUNCTIONS = {
     "Integer": precedence_Integer,
     "Mul": precedence_Mul,
     "Rational": precedence_Rational,
     "Float": precedence_Float,
+    "Pow": precedence_Pow,
 }
 
 
