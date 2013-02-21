@@ -57,8 +57,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     This will skip auto-detection and will run user specified
     'superior-dvi-viewer'. If 'view' fails to find it on your system it will
-    gracefully raise an exception. Currently this depends on pexpect, which
-    is not available for windows.
+    gracefully raise an exception.
 
     You may also enter 'file' for the viewer argument. Doing so will cause
     this function to return a file object in read-only mode, if 'filename'
@@ -92,11 +91,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'}) # doctest: +SKIP
 
     """
-
-    # we don't want to depend on anything not in the
-    # standard library with SymPy by default
-    import pexpect
-
     special = [ 'pyglet' ]
 
     if viewer is None:
