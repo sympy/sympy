@@ -9,7 +9,7 @@ sympy.stats.crv
 """
 
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
-        And, Or, Tuple, Piecewise, Eq)
+        And, Or, Tuple, Piecewise, Eq, Lambda)
 from sympy.core.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
@@ -180,6 +180,8 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     items = property(lambda self: self.density.items)
     __iter__ = property(lambda self: self.density.__iter__)
     __getitem__ = property(lambda self: self.density.__getitem__)
+
+    __call__ = pdf
 
 
 #=============================================
