@@ -9,7 +9,7 @@ def treeapply(tree, join, leaf=identity):
     """ Apply functions onto recursive containers (tree)
 
     join - a dictionary mapping container types to functions
-      e.g. ``{list: chain, tuple: minimize}``
+      e.g. ``{list: minimize, tuple: chain}``
 
     Keys are containers/iterables.  Values are functions [a] -> a.
 
@@ -17,9 +17,9 @@ def treeapply(tree, join, leaf=identity):
     --------
 
     >>> from sympy.rules.tree import treeapply
-    >>> tree = ([3, 3], [4, 1])
-    >>> treeapply(tree, {list: min, tuple: max})
-    3
+    >>> tree = [(3, 2), (4, 1)]
+    >>> treeapply(tree, {list: max, tuple: min})
+    2
 
     >>> add = lambda *args: sum(args)
     >>> def mul(*args):
@@ -27,8 +27,8 @@ def treeapply(tree, join, leaf=identity):
     ...     for arg in args:
     ...         total *= arg
     ...     return total
-    >>> treeapply(tree, {list: add, tuple: mul})
-    30
+    >>> treeapply(tree, {list: mul, tuple: add})
+    25
     """
     for typ in join:
         if isinstance(tree, typ):
@@ -45,23 +45,23 @@ def greedy(tree, objective=identity, **kwargs):
     Nodes in a tree can be either
 
     function - a leaf
-    list     - a sequence of chained operations
-    tuple    - a selection among operations
+    list     - a selection among operations
+    tuple    - a sequence of chained operations
 
     Textual examples
     ----------------
 
     Text: Run f, then run g, e.g. ``lambda x: g(f(x))``
-    Code: ``[f, g]``
-
-    Text: Run either f or g, whichever minimizes the objective
     Code: ``(f, g)``
 
+    Text: Run either f or g, whichever minimizes the objective
+    Code: ``[f, g]``
+
     Textx: Run either f or g, whichever is better, then run h
-    Code: ``[(f, g), h]``
+    Code: ``([f, g], h)``
 
     Text: Either expand then simplify or try factor then foosimp. Finally print
-    Code: ``[([expand, simplify], [factor, foosimp]), print]``
+    Code: ``([(expand, simplify), (factor, foosimp)], print)``
 
     Objective
     ---------
@@ -77,7 +77,7 @@ def greedy(tree, objective=identity, **kwargs):
     >>> dec    = lambda x: x - 1
     >>> double = lambda x: 2*x
 
-    >>> tree = (inc, [dec, double]) # either inc or dec-then-double
+    >>> tree = [inc, (dec, double)] # either inc or dec-then-double
     >>> fn = greedy(tree)
     >>> fn(4)  # lowest value comes from the inc
     5
@@ -98,12 +98,12 @@ def greedy(tree, objective=identity, **kwargs):
 
     This is a greedy algorithm.  In the example:
 
-        [(a, b), c]  # do either a or b, then do c
+        ([a, b], c)  # do either a or b, then do c
 
     the choice between running ``a`` or ``b`` is made without foresight to c
     """
     optimize = partial(minimize, objective=objective)
-    return treeapply(tree, {list: chain, tuple: optimize}, **kwargs)
+    return treeapply(tree, {list: optimize, tuple: chain}, **kwargs)
 
 def allresults(tree, leaf=yieldify):
     """ Execute a strategic tree.  Return all possibilities.
@@ -115,17 +115,17 @@ def allresults(tree, leaf=yieldify):
 
     This is an exhaustive algorithm.  In the example
 
-        [(a, b), (c, d)]
+        ([a, b], [c, d])
 
     All of the results from
 
-        [a, c], [b, c], [a, d], [b, d]
+        (a, c), (b, c), (a, d), (b, d)
 
     are returned.  This can lead to combinatorial blowup.
 
     See sympy.rules.greedy for details on input
     """
-    return treeapply(tree, {list: branch.chain, tuple: branch.multiplex},
+    return treeapply(tree, {list: branch.multiplex, tuple: branch.chain},
                      leaf=leaf)
 
 def brute(tree, objective=identity, **kwargs):

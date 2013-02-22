@@ -41,13 +41,13 @@ def test_greedy():
     inc = lambda x: x + 1
     dec = lambda x: x - 1
     double = lambda x: 2*x
-    tree = (inc, [dec, double]) # either inc or dec-then-double
+    tree = [inc, (dec, double)] # either inc or dec-then-double
 
     fn = greedy(tree, objective=lambda x: -x)
     assert fn(4) == 6  # highest value comes from the dec then double
     assert fn(1) == 2  # highest value comes from the inc
 
-    tree = (inc, dec, (inc, dec, ([inc, inc], [dec, dec])))
+    tree = [inc, dec, [inc, dec, [(inc, inc), (dec, dec)]]]
     lowest = greedy(tree)
     assert lowest(10) == 8
 
@@ -61,15 +61,15 @@ def test_allresults():
     square = lambda x: x**2
 
     assert set(allresults(inc)(3)) == set([inc(3)])
-    assert set(allresults((inc, dec))(3)) == set([2, 4])
-    assert set(allresults([inc, dec])(3)) == set([3])
-    assert set(allresults((inc, [dec, double]))(4)) == set([5, 6])
+    assert set(allresults([inc, dec])(3)) == set([2, 4])
+    assert set(allresults((inc, dec))(3)) == set([3])
+    assert set(allresults([inc, (dec, double)])(4)) == set([5, 6])
 
 def test_brute():
     inc = lambda x: x+1
     dec = lambda x: x-1
     square = lambda x: x**2
-    tree = [(inc, dec), square]
+    tree = ([inc, dec], square)
     fn = brute(tree, lambda x: -x)
 
     assert fn(2) == (2 + 1)**2
