@@ -13,7 +13,7 @@ def rm_id(isid):
 
     isid - fn :: x -> Bool  --- whether or not this element is an identity
 
-    >>> from sympy.rules import rm_id
+    >>> from sympy.strategies import rm_id
     >>> from sympy import Basic
     >>> remove_zeros = rm_id(lambda x: x==0)
     >>> remove_zeros(Basic(1, 0, 2))
@@ -40,7 +40,7 @@ def rm_id(isid):
 def glom(key, count, combine):
     """ Create a rule to conglomerate identical args
 
-    >>> from sympy.rules import glom
+    >>> from sympy.strategies import glom
     >>> from sympy import Add
     >>> from sympy.abc import x
 
@@ -75,7 +75,7 @@ def glom(key, count, combine):
 def sort(key):
     """ Create a rule to sort by a key function
 
-    >>> from sympy.rules import sort
+    >>> from sympy.strategies import sort
     >>> from sympy import Basic
     >>> sort_rl = sort(str)
     >>> sort_rl(Basic(3, 1, 2))
@@ -91,7 +91,7 @@ def distribute(A, B):
 
     where A, B are container types
 
-    >>> from sympy.rules import distribute
+    >>> from sympy.strategies import distribute
     >>> from sympy import Add, Mul, symbols
     >>> x, y = symbols('x,y')
     >>> dist = distribute(Mul, Add)
@@ -124,7 +124,7 @@ def subs(a, b):
 def unpack(expr):
     """ Rule to unpack singleton args
 
-    >>> from sympy.rules import unpack
+    >>> from sympy.strategies import unpack
     >>> from sympy import Basic
     >>> unpack(Basic(2))
     2

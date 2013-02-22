@@ -1,6 +1,24 @@
-from strat_pure import (exhaust, memoize, condition, chain, debug, tryit,
-        null_safe, do_one, switch, minimize)
-from traverse import bottom_up, top_down
+import rl
+from core import do_one, exhaust, switch
+from traverse import top_down
+
+def subs(d):
+    """ Full simultaneous exact substitution
+
+    Example
+    =======
+
+    >>> from sympy.strategies.tools import subs
+    >>> from sympy import Basic
+    >>> mapping = {1: 4, 4: 1, Basic(5): Basic(6, 7)}
+    >>> expr = Basic(1, Basic(2, 3), Basic(4, Basic(5)))
+    >>> subs(mapping)(expr)
+    Basic(4, Basic(2, 3), Basic(1, Basic(6, 7)))
+    """
+    if d:
+        return top_down(do_one(*map(rl.subs, *zip(*d.items()))))
+    else:
+        return lambda x: x
 
 def canon(*rules):
     """ Strategy for canonicalization
@@ -17,7 +35,7 @@ def typed(ruletypes):
     inputs:
         ruletypes -- a dict mapping {Type: rule}
 
-    >>> from sympy.rules import rm_id, typed
+    >>> from sympy.strategies import rm_id, typed
     >>> from sympy import Add, Mul
     >>> rm_zeros = rm_id(lambda x: x==0)
     >>> rm_ones  = rm_id(lambda x: x==1)

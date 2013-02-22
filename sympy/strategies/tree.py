@@ -1,7 +1,7 @@
 from functools import partial
-from sympy.rules import chain, minimize
-import sympy.rules.branch as branch
-from sympy.rules.branch import yieldify
+from sympy.strategies import chain, minimize
+import sympy.strategies.branch as branch
+from sympy.strategies.branch import yieldify
 
 identity = lambda x: x
 
@@ -16,7 +16,7 @@ def treeapply(tree, join, leaf=identity):
     Examples
     --------
 
-    >>> from sympy.rules.tree import treeapply
+    >>> from sympy.strategies.tree import treeapply
     >>> tree = [(3, 2), (4, 1)]
     >>> treeapply(tree, {list: max, tuple: min})
     2
@@ -72,7 +72,7 @@ def greedy(tree, objective=identity, **kwargs):
     Example
     -------
 
-    >>> from sympy.rules.tree import greedy
+    >>> from sympy.strategies.tree import greedy
     >>> inc    = lambda x: x + 1
     >>> dec    = lambda x: x - 1
     >>> double = lambda x: 2*x
@@ -123,7 +123,7 @@ def allresults(tree, leaf=yieldify):
 
     are returned.  This can lead to combinatorial blowup.
 
-    See sympy.rules.greedy for details on input
+    See sympy.strategies.greedy for details on input
     """
     return treeapply(tree, {list: branch.multiplex, tuple: branch.chain},
                      leaf=leaf)
