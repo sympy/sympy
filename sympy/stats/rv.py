@@ -488,7 +488,7 @@ def given(expr, condition=None, **kwargs):
     return expr
 
 
-def expectation(expr, condition=None, numsamples=None, **kwargs):
+def expectation(expr, condition=None, numsamples=None, evaluate=True, **kwargs):
     """
     Returns the expected value of a random expression
 
@@ -522,22 +522,28 @@ def expectation(expr, condition=None, numsamples=None, **kwargs):
     if not random_symbols(expr):  # expr isn't random?
         return expr
     if numsamples:  # Computing by monte carlo sampling?
-        return sampling_E(expr, condition, numsamples=numsamples, **kwargs)
+        return sampling_E(expr, condition, numsamples=numsamples)
 
     # Create new expr and recompute E
     if condition is not None:  # If there is a condition
-        return expectation(given(expr, condition, **kwargs), **kwargs)
+        return expectation(given(expr, condition), evaluate=evaluate)
 
     # A few known statements for efficiency
 
     if expr.is_Add:  # We know that E is Linear
-        return Add(*[expectation(arg, **kwargs) for arg in expr.args])
+        return Add(*[expectation(arg, evaluate=evaluate)
+                     for arg in expr.args])
 
     # Otherwise case is simple, pass work off to the ProbabilitySpace
-    return pspace(expr).integrate(expr, **kwargs)
+    result = pspace(expr).integrate(expr)
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit(**kwargs)
+    else:
+        return result
 
 
-def probability(condition, given_condition=None, numsamples=None, **kwargs):
+def probability(condition, given_condition=None, numsamples=None,
+                evaluate=True, **kwargs):
     """
     Probability that a condition is true, optionally given a second condition
 
@@ -576,7 +582,11 @@ def probability(condition, given_condition=None, numsamples=None, **kwargs):
         return probability(given(condition, given_condition, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
-    return pspace(condition).probability(condition, **kwargs)
+    result = pspace(condition).probability(condition, **kwargs)
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
 
 
 class Density(Basic):
@@ -589,7 +599,7 @@ class Density(Basic):
         else:
             return None
 
-    def doit(self, **kwargs):
+    def doit(self, evaluate=True, **kwargs):
         expr, condition = self.expr, self.condition
         if condition is not None:
             # Recompute on new conditional expr
@@ -599,10 +609,15 @@ class Density(Basic):
         if (isinstance(expr, RandomSymbol) and
             hasattr(expr.pspace, 'distribution')):
             return expr.pspace.distribution
-        return pspace(expr).compute_density(expr, **kwargs)
+        result = pspace(expr).compute_density(expr, **kwargs)
+
+        if evaluate and hasattr(result, 'doit'):
+            return result.doit()
+        else:
+            return result
 
 
-def density(expr, condition=None, **kwargs):
+def density(expr, condition=None, evaluate=True, **kwargs):
     """
     Probability density of a random expression
 
@@ -629,10 +644,10 @@ def density(expr, condition=None, **kwargs):
     >>> density(X)
     Lambda(x, sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)))
     """
-    return Density(expr, condition).doit(**kwargs)
+    return Density(expr, condition).doit(evaluate=evaluate, **kwargs)
 
 
-def cdf(expr, condition=None, **kwargs):
+def cdf(expr, condition=None, evaluate=True, **kwargs):
     """
     Cumulative Distribution Function of a random expression.
 
@@ -667,7 +682,12 @@ def cdf(expr, condition=None, **kwargs):
         return cdf(given(expr, condition, **kwargs), **kwargs)
 
     # Otherwise pass work off to the ProbabilitySpace
-    return pspace(expr).compute_cdf(expr, **kwargs)
+    result = pspace(expr).compute_cdf(expr, **kwargs)
+
+    if evaluate and hasattr(result, 'doit'):
+        return result.doit()
+    else:
+        return result
 
 
 def where(condition, given_condition=None, **kwargs):

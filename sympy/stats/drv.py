@@ -66,11 +66,10 @@ class SingleDiscreteDistribution(Basic, NamedArgsMixin):
         """ Cumulative density function """
         return self.compute_cdf(**kwargs)(x)
 
-    def expectation(self, expr, var, **kwargs):
+    def expectation(self, expr, var, evaluate=True, **kwargs):
         """ Expectation of expression over distribution """
         # return summation(expr * self.pdf(var), (var, self.set), **kwargs)
         # TODO: support discrete sets with non integer stepsizes
-        evaluate = kwargs.pop('evaluate', True)
         if evaluate:
             return summation(expr * self.pdf(var),
                          (var, self.set.inf, self.set.sup), **kwargs)
@@ -112,15 +111,11 @@ class SingleDiscretePSpace(SinglePSpace):
 
         x = self.value.symbol
         try:
-            return self.distribution.expectation(expr, x, **kwargs)
+            return self.distribution.expectation(expr, x, evaluate=False,
+                    **kwargs)
         except:
-            evaluate = kwargs.pop('evaluate', True)
-            if evaluate:
-                return summation(expr * self.pdf, (x, self.set.inf, self.set.sup),
-                        **kwargs)
-            else:
-                return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
-                        **kwargs)
+            return Sum(expr * self.pdf, (x, self.set.inf, self.set.sup),
+                    **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
