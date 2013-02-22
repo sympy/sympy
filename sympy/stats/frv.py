@@ -20,7 +20,11 @@ import random
 
 class FiniteDensity(dict):
     def __call__(self, item):
-        return self[sympify(item)]
+        item = sympify(item)
+        if item in self:
+            return self[item]
+        else:
+            return 0
 
 class FiniteDomain(RandomDomain):
     """
