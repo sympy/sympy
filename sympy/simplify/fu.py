@@ -982,7 +982,7 @@ def TR13(rv):
     while len(t) > 1:
         t1 = t.pop()
         t2 = t.pop()
-        args.append(1 - (tan(t1) + tan(t2))*cot(t1 + t2))
+        args.append(1 - (tan(t1) + tan(t2))/tan(t1 + t2))
     if t:
         args.append(tan(t.pop()))
     while len(c) > 1:
