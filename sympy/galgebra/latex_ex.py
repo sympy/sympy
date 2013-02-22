@@ -1157,7 +1157,7 @@ def xdvi(filename='tmplatex.tex', debug=False):
                 line = i.next()
             except StopIteration:
                 break
-    preview(body, output='dvi', ouputTexFile=filename,
+    preview(body, output='dvi', outputTexFile=filename,
             preamble=LatexPrinter.preamble)
     LatexPrinter.LaTeX_flg = False
     return
