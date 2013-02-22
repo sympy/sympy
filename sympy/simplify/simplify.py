@@ -1441,6 +1441,13 @@ def trigsimp(expr, **opts):
     else:
         result = trigsimpfunc(expr, deep)
 
+    if opts.get('compare', False):
+        f = futrig(old)
+        if f != result:
+            print
+            print old
+            print '\tfu:',f
+            print '\ttrigsimp:', result
     return result
 
 
@@ -4142,3 +4149,53 @@ def besselsimp(expr):
     expr = expr.replace(besseli, expander(besseli))
 
     return expr
+
+
+def futrig(e, h=True):
+    from sympy.strategies.tree import greedy
+    from sympy.strategies.core import identity
+    from sympy.simplify.fu import (
+        TR1, TR2, TR3, TR2i, TR14, TR5, TR10, L, TR10i,
+        TR8, TR6, TR15, TR16, as_trig)
+
+    Lops = lambda x: (L(x), x.count_ops())
+
+    #  XXX this needs to be fixed
+    '''
+    tree = (
+        TR3,  # canonical angles
+        TR1,  # sec-cos -> sin-cos
+        TR2,  # tan-cot -> sin-cos
+        TR2i,  # sin-cos ratio -> tan
+        TR14,  # factored identities
+        TR5,  #sin-pow -> cos_pow
+        TR10,  #sin-cos of sums -> sin-cos prod
+        [identity, expand],
+        TR10i,  # sin-cos products > sin-cos of sums
+        TR8,  # sin-cos products -> sin-cos of sums
+        )
+    e = greedy(e, objective=Lops)(e)
+    '''
+    e = TR3(e)  # angles canonical
+    e = TR1(e)  # sec-csc -> sin-cos
+    e = TR2(e)  # tan-cot -> sin-cos
+    e = factor(e)
+    # matchersdivision
+    e = TR2i(e) # sin-cos ratios to tan
+    #e = min(TR2(e), e, key=Lops)
+    e = TR14(e) # factored identities
+    # identity
+    e = TR5(e)  # sin-powers -> cos-powers
+    e = TR10(e) # sin-cos of sums -> sin-cos prod
+    e = min(_mexpand(e), e, key=L)
+    # matchers add
+    e = TR10i(e)
+    e = min(e, TR8(e), key=Lops)
+
+    # artifacts
+    for f in (TR6, TR15, TR16):
+        e = min(min(f(e), _mexpand(f(e)), key=Lops), e, key=Lops)
+    if h:
+        e, f = as_trig(e)
+        e = f(futrig(e, False))
+    return e
