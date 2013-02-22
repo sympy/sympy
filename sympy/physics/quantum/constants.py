@@ -1,6 +1,7 @@
 """Constants (like hbar) related to quantum mechanics."""
 
 from sympy.core.numbers import NumberSymbol
+from sympy.core.singleton import Singleton
 from sympy.printing.pretty.stringpict import prettyForm
 import sympy.mpmath.libmp as mlib
 
@@ -34,6 +35,7 @@ class HBar(NumberSymbol):
     is_negative = False
     is_irrational = True
 
+    __metaclass__ = Singleton
     __slots__ = []
 
     def _as_mpf_val(self, prec):
