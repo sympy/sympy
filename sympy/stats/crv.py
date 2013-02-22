@@ -233,6 +233,7 @@ class ContinuousPSpace(PSpace):
     """
 
     is_Continuous = True
+    is_real = True
 
     @property
     def domain(self):

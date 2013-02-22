@@ -85,6 +85,7 @@ class SingleDiscreteDomain(SingleDomain):
 
 class SingleDiscretePSpace(SinglePSpace):
     """ Discrete probability space over a single univariate variable """
+    is_real = True
 
     @property
     def set(self):

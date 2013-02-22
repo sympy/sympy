@@ -129,6 +129,7 @@ class PSpace(Basic):
 
     is_Finite = None
     is_Continuous = None
+    is_real = None
 
     @property
     def domain(self):
@@ -235,6 +236,7 @@ class RandomSymbol(Expr):
 
     is_positive = property(lambda self: self.symbol.is_positive)
     is_integer = property(lambda self: self.symbol.is_integer)
+    is_real = property(lambda self: self.symbol.is_real or self.pspace.is_real)
 
     @property
     def is_commutative(self):
