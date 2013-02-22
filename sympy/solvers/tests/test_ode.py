@@ -1323,10 +1323,11 @@ def test_1686():
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # 1765
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
-    assert classify_ode(eq, f(x)) == (
+    assert classify_ode(eq, f(x)) == ('1st_exact',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
+        '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
 
@@ -1432,3 +1433,21 @@ def test_issue_1996():
     f = Function('f')
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
+
+def test_exact_enhancement():
+    f = Function('f')(x)
+    d = Derivative(f, x)
+    eq = f/x**2 + ((f*x - 1)/x)*d
+    sol = dsolve(eq, f)
+    rhs = [eq.rhs for eq in sol]
+    assert rhs == [(-sqrt(C1*x**2 + 1) + 1)/x, (sqrt(C1*x**2 + 1) + 1)/x]
+
+    eq = (x*f - 1) + d*(x**2 - x*f)
+    rhs = [sol.rhs for sol in dsolve(eq, f)]
+    assert rhs[0] == x - sqrt(C1 + x**2 - 2*log(x))
+    assert rhs[1] == x + sqrt(C1 + x**2 - 2*log(x))
+
+    eq = (x + 2)*sin(f) + d*x*cos(f)
+    rhs = [sol.rhs for sol in dsolve(eq, f)]
+    assert rhs[0] == acos(-sqrt(C1*exp(-2*x)/x**4 + 1))
+    assert rhs[1] == acos(sqrt(C1*exp(-2*x)/x**4 + 1))
