@@ -6,7 +6,6 @@ import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')
 
-import os
 import types
 import StringIO
 
@@ -22,7 +21,6 @@ import numpy
 
 from sympy.core.compatibility import cmp_to_key
 from sympy.utilities import default_sort_key
-from sympy.utilities.misc import find_executable
 
 from sympy.printing.latex import accepted_latex_functions
 from sympy.printing.preview import preview
@@ -1159,7 +1157,8 @@ def xdvi(filename='tmplatex.tex', debug=False):
                 line = i.next()
             except StopIteration:
                 break
-    preview(body, output='dvi', preamble=LatexPrinter.preamble)
+    preview(body, output='dvi', ouputTexFile=filename,
+            preamble=LatexPrinter.preamble)
     LatexPrinter.LaTeX_flg = False
     return
 

@@ -2,7 +2,6 @@ from __future__ import with_statement
 
 import os
 from os.path import isabs, join
-import time
 from subprocess import Popen, check_call, PIPE, STDOUT
 import tempfile
 import shutil
@@ -15,7 +14,7 @@ from latex import latex
 
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
-            **latex_settings):
+            outputTexFile=None, **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
@@ -76,7 +75,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     argument. This can be used, e.g., to set a different font size, use a
     custom documentclass or import certain set of LaTeX packages.
 
-    >>> preamble = "\\documentclass[10pt]{article}\n"
+    >>> preamble = "\\documentclass[10pt]{article}\n" \
     ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
     >>> preview(x + y, output='png', preamble=preamble) # doctest: +SKIP
 
@@ -90,6 +89,15 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     >>> phidd = Symbol('phidd')
     >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'}) # doctest: +SKIP
+
+    For post-processing the generated TeX File can be written to a file by
+    passing the desired filename to the 'outputTexFile' keyword
+    argument. To write the TeX code to a file named
+    "sample.tex" and run the default png viewer to display the resulting
+    bitmap, do
+
+    >>> preview(x+y, output='png', outputTexFile="sample.tex") # doctest: +SKIP
+
 
     """
     special = [ 'pyglet' ]
@@ -139,15 +147,16 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                                              for p in actual_packages])
 
         preamble = r"""\documentclass[12pt]{article}
-                        \pagestyle{empty}
-                        %s
-                        \begin{document}
-                     """ % (package_includes)
+\pagestyle{empty}
+%s
+
+\begin{document}
+""" % (package_includes)
     else:
         if len(packages) > 0:
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
-    latex_main = preamble + '\n%s\n' + r"\end{document}"
+    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
     if isinstance(expr, str):
         latex_string = expr
@@ -157,11 +166,15 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     try:
         workdir = tempfile.mkdtemp()
 
-        p = Popen(['latex', '-halt-on-error'], cwd=workdir, stdin=PIPE,
-                  stdout=PIPE)
-        _, perr = p.communicate(latex_main % latex_string)
-        if p.returncode != 0:
-            raise SystemError("Failed to generate DVI output: %s", perr)
+        with open(join(workdir, 'texput.tex'), 'w') as fh:
+            fh.write(latex_main % latex_string)
+
+        if outputTexFile is not None:
+            shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
+
+        with open(os.devnull, 'w') as devnull:
+            check_call(['latex', '-halt-on-error', 'texput.tex'], cwd=workdir,
+                       stdout=devnull, stderr=STDOUT)
 
         if output != "dvi":
             defaultoptions = {
@@ -170,7 +183,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 "png": ["-T", "tight", "-z", "9", "--truecolor"]
             }
 
-            command_end = {
+            commandend = {
                 "ps": ["-o", "texput.ps", "texput.dvi"],
                 "pdf": ["texput.dvi", "texput.pdf"],
                 "png": ["-o", "texput.png", "texput.dvi"]
@@ -182,7 +195,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     cmd.extend(dvioptions)
                 else:
                     cmd.extend(defaultoptions[output])
-                cmd.extend(command_end[output])
+                cmd.extend(commandend[output])
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
 
@@ -198,9 +211,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     buffer.write(fh.read())
                 return buffer
             else:
-                if not isabs(filename):
-                    raise ValueError("Provided filename has to be an absolute "
-                                     "path")
                 shutil.move(join(workdir,src), filename)
         elif viewer == "StringIO":
             with open(join(workdir, src), 'rb') as fh:
