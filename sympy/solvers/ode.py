@@ -730,7 +730,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
 
     if isinstance(eq, Equality):
         lhs = eq.lhs
-        if eq.rhs == 0 and isinstance(lhs, Derivative) and func.args[0] == eq.variables[0]:
+        if eq.rhs == 0 and isinstance(lhs, Derivative) and func.args[0] == lhs.variables[0]:
             r = {}
             matching_hints['direct'] = r
 
@@ -1916,7 +1916,7 @@ def ode_direct(eq, func, order, match):
     ========
 
     >>> from sympy import Function, Derivative
-    >>> from sympy.solvers import ode
+    >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
     >>> f = Function('f')(x)
     >>> d = Derivative(x*f, x, x, x)
