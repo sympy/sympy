@@ -104,8 +104,8 @@ class FiniteField(Field, SimpleDomain):
 
     def from_QQ_gmpy(K1, a, K0=None):
         """Convert GMPY's ``mpq`` to ``dtype``. """
-        if a.denom() == 1:
-            return K1.from_ZZ_gmpy(a.numer())
+        if a.denominator == 1:
+            return K1.from_ZZ_gmpy(a.numerator)
 
     def from_RR_sympy(K1, a, K0=None):
         """Convert SymPy's ``Float`` to ``dtype``. """

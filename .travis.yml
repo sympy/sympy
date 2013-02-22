@@ -11,16 +11,10 @@ matrix:
       env: TEST_GMPY="true"
     - python: 3.3
       env: TEST_GMPY="true"
-  # Below we list *exact* builds that are allowed to fail. Once they are fixed,
-  # you can remove the appropriate test from below (you still need to keep it
-  # above in order to be tested at all).
-  allow_failures:
-    - python: 2.7
-      env: TEST_GMPY="true"
-    - python: 3.3
-      env: TEST_GMPY="true"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
+      sudo apt-get update -qq;
+      sudo apt-get install -qq libgmp-dev;
       pip install "gmpy==1.16";
     fi
 install:

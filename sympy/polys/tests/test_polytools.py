@@ -1253,6 +1253,35 @@ def test_Poly_EC():
     assert Poly(x*y**7 + 2*x**2*y**3).EC('grlex') == 2
 
 
+def test_Poly_coeff():
+    assert Poly(0, x).coeff_monomial(1) == 0
+    assert Poly(0, x).coeff_monomial(x) == 0
+
+    assert Poly(1, x).coeff_monomial(1) == 1
+    assert Poly(1, x).coeff_monomial(x) == 0
+
+    assert Poly(x**8, x).coeff_monomial(1) == 0
+    assert Poly(x**8, x).coeff_monomial(x**7) == 0
+    assert Poly(x**8, x).coeff_monomial(x**8) == 1
+    assert Poly(x**8, x).coeff_monomial(x**9) == 0
+
+    assert Poly(3*x*y**2 + 1, x, y).coeff_monomial(1) == 1
+    assert Poly(3*x*y**2 + 1, x, y).coeff_monomial(x*y**2) == 3
+
+    p = Poly(24*x*y*exp(8) + 23*x, x, y)
+
+    assert p.coeff_monomial(x) == 23
+    assert p.coeff_monomial(y) == 0
+    assert p.coeff_monomial(x*y) == 24*exp(8)
+
+    assert p.as_expr().coeff(x) == 24*y*exp(8) + 23
+    raises(NotImplementedError, lambda: p.coeff(x))
+
+    raises(ValueError, lambda: Poly(x + 1).coeff_monomial(0))
+    raises(ValueError, lambda: Poly(x + 1).coeff_monomial(3*x))
+    raises(ValueError, lambda: Poly(x + 1).coeff_monomial(3*x*y))
+
+
 def test_Poly_nth():
     assert Poly(0, x).nth(0) == 0
     assert Poly(0, x).nth(1) == 0
@@ -1265,8 +1294,8 @@ def test_Poly_nth():
     assert Poly(x**8, x).nth(8) == 1
     assert Poly(x**8, x).nth(9) == 0
 
-    assert Poly(3*x*y**2 + 1).nth(0, 0) == 1
-    assert Poly(3*x*y**2 + 1).nth(1, 2) == 3
+    assert Poly(3*x*y**2 + 1, x, y).nth(0, 0) == 1
+    assert Poly(3*x*y**2 + 1, x, y).nth(1, 2) == 3
 
 
 def test_Poly_LM():
@@ -1453,9 +1482,17 @@ def test_Poly_eval():
     Poly(x + 1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
     raises(ValueError, lambda: Poly(x*y + y, x, y).eval((6, 7, 8)))
-    raises(
-        DomainError, lambda: Poly(x + 1, domain='ZZ').eval(S(1)/2, auto=False))
+    raises(DomainError, lambda: Poly(x + 1, domain='ZZ').eval(S(1)/2, auto=False))
 
+    # issue 3245
+    alpha = Symbol('alpha')
+    result = (2*alpha*z - 2*alpha + z**2 + 3)/(z**2 - 2*z + 1)
+
+    f = Poly(x**2 + (alpha - 1)*x - alpha + 1, x, domain='ZZ[alpha]')
+    assert f.eval((z + 1)/(z - 1)) == result
+
+    g = Poly(x**2 + (alpha - 1)*x - alpha + 1, x, y, domain='ZZ[alpha]')
+    assert g.eval((z + 1)/(z - 1)) == Poly(result, y, domain='ZZ(alpha,z)')
 
 def test_Poly___call__():
     f = Poly(2*x*y + 3*x + y + 2*z)

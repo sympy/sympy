@@ -1179,10 +1179,7 @@ class PrettyPrinter(Printer):
             if n is S.One and d.is_Atom and not e.is_Integer:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
-                if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
-                    return prettyForm("1") / \
-                        prettyForm(*self._print(b).parens())**self._print(-e)
-                return prettyForm("1")/self._print(b)**self._print(-e)
+                return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=False))
 
         # None of the above special forms, do a standard power
         if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
