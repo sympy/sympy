@@ -781,7 +781,7 @@ class Poly(Expr):
         See Also
         ========
         all_monoms
- 
+
         """
         return f.rep.monoms(order=order)
 
