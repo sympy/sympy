@@ -607,7 +607,8 @@ class Density(Basic):
         if not random_symbols(expr):
             return Lambda(x, DiracDelta(x-expr))
         if (isinstance(expr, RandomSymbol) and
-            hasattr(expr.pspace, 'distribution')):
+            hasattr(expr.pspace, 'distribution') and
+            isinstance(pspace(expr), SinglePSpace)):
             return expr.pspace.distribution
         result = pspace(expr).compute_density(expr, **kwargs)
 
