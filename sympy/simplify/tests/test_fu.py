@@ -1,11 +1,11 @@
 from sympy import (
     Add, Mul, S, Symbol, cos, cot, csc, pi, sec, sin, sqrt, tan, root,
-    powsimp, symbols)
+    powsimp, symbols, sinh, cosh)
 from sympy.abc import a, b, c, x, y, z
 from sympy.simplify.fu import (
     L, TR1, sec, csc, TR10, TR10i, TR11, TR12, TR13, TR2, TR3, TR5, TR6,
     TR7, TR8, TR9, _TR56 as T, TR2i, TRmorrie, fu, trig_split,
-    process_common_addends)
+    process_common_addends, TR14, TR15, TR16, as_trig)
 from sympy.utilities.randtest import test_numerically
 
 
@@ -320,3 +320,23 @@ def test_TRmorrie():
     assert TR8(TRmorrie(e)) == -S(1)/8
     e = Mul(*[cos(2**i*pi/17) for i in range(1, 17)])
     assert TR8(TR3(TRmorrie(e))) == S(1)/65536
+
+
+def test_TR14():
+    assert TR14((cos(x) - 1)*(cos(x) + 1)) ==  -sin(x)**2
+    assert TR14((sin(x) - 1)*(sin(x) + 1)) == -cos(x)**2
+    p1 = (cos(x) + 1)*(cos(x) - 1)
+    p2 = (cos(y) - 1)*2*(cos(y) + 1)
+    p3 = (3*(cos(y) - 1))*(3*(cos(y) + 1))
+    assert TR14(p1*p2*p3*(x - 1)) == -18*((x - 1)*sin(x)**2*sin(y)**4)
+
+
+def test_TR15_16():
+    assert TR15(1 - 1/sin(x)**2) == -cot(x)**2
+    assert TR16(1 - 1/cos(x)**2) == -tan(x)**2
+
+
+def test_as_trig():
+    eq = sinh(x)**2 + cosh(x)**2
+    t, f = as_trig(eq)
+    assert f(fu(t)) == cosh(2*x)

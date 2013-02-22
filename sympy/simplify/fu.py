@@ -200,8 +200,8 @@ from sympy.core.exprtools import Factors
 from sympy.core.rules import Transform
 from sympy.core.basic import S
 from sympy.core.numbers import Integer, pi, I
-from sympy.rules import minimize, chain, debug
-from sympy.rules.strat_pure import identity
+from sympy.strategies import minimize, chain, debug
+from sympy.strategies.core import identity
 from sympy import SYMPY_DEBUG
 from sympy.ntheory.factor_ import perfect_power
 
