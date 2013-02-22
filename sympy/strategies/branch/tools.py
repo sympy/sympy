@@ -1,5 +1,5 @@
-from strat_pure import (exhaust, multiplex, debug, notempty, condition, chain,
-        onaction, sfilter, yieldify)
+from core import (exhaust, multiplex, debug, notempty, condition, chain,
+        onaction, sfilter, yieldify, do_one, identity)
 from traverse import top_down
 
 def canon(*rules):

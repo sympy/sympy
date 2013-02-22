@@ -1,4 +1,4 @@
-from sympy.rules.rl import (rm_id, glom, flatten, unpack, sort, distribute,
+from sympy.strategies.rl import (rm_id, glom, flatten, unpack, sort, distribute,
         subs, rebuild)
 from sympy import Basic
 

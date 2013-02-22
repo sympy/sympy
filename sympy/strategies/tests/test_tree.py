@@ -1,4 +1,4 @@
-from sympy.rules.tree import (treeapply, treeapply, greedy, allresults,
+from sympy.strategies.tree import (treeapply, treeapply, greedy, allresults,
         brute)
 from functools import partial
 
@@ -18,7 +18,7 @@ def test_treeapply_leaf():
            treeapply(treep1, {list: min, tuple: max})
 
 def test_treeapply_strategies():
-    from sympy.rules import chain, minimize
+    from sympy.strategies import chain, minimize
     join = {list: chain, tuple: minimize}
     inc = lambda x: x + 1
     dec = lambda x: x - 1
