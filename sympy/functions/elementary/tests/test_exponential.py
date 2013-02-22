@@ -1,6 +1,6 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-        sin, cos, sinh, cosh, exp_polar, re)
+        sin, cos, sinh, cosh, exp_polar, re, Function)
 
 
 def test_exp_values():
@@ -352,3 +352,11 @@ def test_polar():
 
     # Compare exp(1.0*pi*I).
     assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
+
+def test_log_product():
+    from sympy.abc import i, j, n, m
+    from sympy.concrete import Product, Sum
+    f, g = Function('f'), Function('g')
+    assert log(Product(f(i), (i, 1, n))) == Sum(log(f(i)), (i, 1, n))
+    assert log(Product(f(i)*g(j), (i, 1, n), (j, 1, m))) == \
+            Sum(log(f(i)*g(j)), (i, 1, n), (j, 1, m))
