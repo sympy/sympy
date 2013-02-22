@@ -244,6 +244,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Rishabh Dixit: Fix in logic module
 #. Manoj Kumar: Bug fix
 #. Akshit Agarwal: improvements to range handling in symbols
+#. CJ Carey: Fix for limits of factorials
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
