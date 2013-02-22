@@ -39,9 +39,14 @@ def test_piecewise():
 
     # More subs tests
     p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
+    p3 = Piecewise((1, Eq(x, 0)), (1/x, True))
+    p4 = Piecewise((1, Eq(x, 0)), (2, 1/x>2))
     assert p2.subs(x, 2) == 1
     assert p2.subs(x, 4) == -1
     assert p2.subs(x, 10) == 0
+    assert p3.subs(x, 0.0) == 1
+    assert p4.subs(x, 0.0) == 1
+
 
     f, g, h = symbols('f,g,h', cls=Function)
     pf = Piecewise((f(x), x < -1), (f(x) + h(x) + 2, x <= 1))

@@ -420,7 +420,6 @@ class Piecewise(Function):
         from sympy import checksol, solve
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-            e = e._subs(old, new)
 
             if isinstance(c, bool):
                 pass
@@ -442,7 +441,11 @@ class Piecewise(Function):
                     except NotImplementedError:
                         pass
 
+            if not c is False:
+                e = e._subs(old, new)
             args[i] = e, c
+            if c is True:
+                return Piecewise(*args)
 
         return Piecewise(*args)
 

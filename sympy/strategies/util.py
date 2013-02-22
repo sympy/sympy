@@ -4,5 +4,3 @@ new = Basic.__new__
 
 def is_leaf(x):
     return not isinstance(x, Basic) or x.is_Atom
-
-identity = lambda x: x
