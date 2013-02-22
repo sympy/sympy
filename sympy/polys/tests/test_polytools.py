@@ -1482,9 +1482,17 @@ def test_Poly_eval():
     Poly(x + 1, domain='ZZ').eval(sqrt(2)) == sqrt(2) + 1
 
     raises(ValueError, lambda: Poly(x*y + y, x, y).eval((6, 7, 8)))
-    raises(
-        DomainError, lambda: Poly(x + 1, domain='ZZ').eval(S(1)/2, auto=False))
+    raises(DomainError, lambda: Poly(x + 1, domain='ZZ').eval(S(1)/2, auto=False))
 
+    # issue 3245
+    alpha = Symbol('alpha')
+    result = (2*alpha*z - 2*alpha + z**2 + 3)/(z**2 - 2*z + 1)
+
+    f = Poly(x**2 + (alpha - 1)*x - alpha + 1, x, domain='ZZ[alpha]')
+    assert f.eval((z + 1)/(z - 1)) == result
+
+    g = Poly(x**2 + (alpha - 1)*x - alpha + 1, x, y, domain='ZZ[alpha]')
+    assert g.eval((z + 1)/(z - 1)) == Poly(result, y, domain='ZZ(alpha,z)')
 
 def test_Poly___call__():
     f = Poly(2*x*y + 3*x + y + 2*z)
