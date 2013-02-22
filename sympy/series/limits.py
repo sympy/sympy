@@ -1,5 +1,5 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
-from sympy.functions import tan, cot
+from sympy.functions import tan, cot, factorial, gamma
 from gruntz import gruntz
 
 
@@ -48,6 +48,13 @@ def limit(e, z, z0, dir="+"):
 
     if not e.has(z):
         return e
+
+    # gruntz fails on factorials but works with the gamma function
+    # If no factorial term is present, e should remain unchanged.
+    # factorial is defined to be zero for negative inputs (which
+    # differs from gamma) so only rewrite for positive z0.
+    if z0.is_positive:
+        e = e.rewrite(factorial, gamma)
 
     if e.func is tan:
         # discontinuity at odd multiples of pi/2; 0 at even
