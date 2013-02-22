@@ -439,6 +439,9 @@ def test_solve_inequalities():
     assert solve(system, assume=Q.real(x)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 
+    # issue 3528, 3448
+    assert solve((x - 3)/(x - 2) < 0, x, assume=Q.real(x)) == And(Lt(2, x), Lt(x, 3))
+    assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == Lt(x, -1)
 
 def test_issue_1694():
     assert solve(1/x) == []
