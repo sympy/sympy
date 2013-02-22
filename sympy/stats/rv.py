@@ -634,15 +634,16 @@ def density(expr, condition=None, evaluate=True, **kwargs):
     >>> from sympy.stats import density, Die, Normal
     >>> from sympy import Symbol
 
+    >>> x = Symbol('x')
     >>> D = Die('D', 6)
-    >>> X = Normal('x', 0, 1)
+    >>> X = Normal(x, 0, 1)
 
     >>> density(D).dict
     {1: 1/6, 2: 1/6, 3: 1/6, 4: 1/6, 5: 1/6, 6: 1/6}
     >>> density(2*D).dict
     {2: 1/6, 4: 1/6, 6: 1/6, 8: 1/6, 10: 1/6, 12: 1/6}
-    >>> density(X)
-    Lambda(x, sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)))
+    >>> density(X)(x)
+    sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
     """
     return Density(expr, condition).doit(evaluate=evaluate, **kwargs)
 
