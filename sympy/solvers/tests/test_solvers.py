@@ -1145,3 +1145,8 @@ def test_issue_3545():
     assert solve(eq, q) == [
         m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4,
         m**2/2 + sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4]
+
+
+def test_issue_3653():
+    assert solve([a**2 + a, a - b], [a, b]) == [(-1, -1), (0, 0)]
+    assert solve([a**2 + a*c, a - b], [a, b]) == [(0, 0), (-c, -c)]

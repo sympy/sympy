@@ -2360,7 +2360,8 @@ def _invert(eq, *symbols, **kwargs):
 
         # if it's a two-term Add with rhs = 0 and two powers we can get the
         # dependent terms together, e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
-        if lhs.is_Add and not rhs and len(lhs.args) == 2:
+        if lhs.is_Add and not rhs and len(lhs.args) == 2 and \
+                not lhs.is_polynomial(*symbols):
             a, b = lhs.as_two_terms()
             ai, ad = a.as_independent(*symbols)
             bi, bd = b.as_independent(*symbols)
