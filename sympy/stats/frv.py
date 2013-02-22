@@ -26,6 +26,10 @@ class FiniteDensity(dict):
         else:
             return 0
 
+    @property
+    def dict(self):
+        return dict(self)
+
 class FiniteDomain(RandomDomain):
     """
     A domain with discrete finite support
@@ -167,23 +171,23 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
 
     @property
     @cacheit
-    def density(self):
+    def dict(self):
         return dict((k, self.pdf(k)) for k in self.set)
 
     @property
     def pdf(self):
         x = Symbol('x')
         return Lambda(x, Piecewise(*(
-            [(v, Eq(k, x)) for k, v in self.density.items()] + [(0, True)])))
+            [(v, Eq(k, x)) for k, v in self.dict.items()] + [(0, True)])))
 
     @property
     def set(self):
-        return self.density.keys()
+        return self.dict.keys()
 
-    values = property(lambda self: self.density.values)
-    items = property(lambda self: self.density.items)
-    __iter__ = property(lambda self: self.density.__iter__)
-    __getitem__ = property(lambda self: self.density.__getitem__)
+    values = property(lambda self: self.dict.values)
+    items = property(lambda self: self.dict.items)
+    __iter__ = property(lambda self: self.dict.__iter__)
+    __getitem__ = property(lambda self: self.dict.__getitem__)
 
     __call__ = pdf
 
@@ -312,7 +316,7 @@ class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     @cacheit
     def _density(self):
         return dict((frozenset(((self.symbol, val),)), prob)
-                    for val, prob in self.distribution.density.items())
+                    for val, prob in self.distribution.dict.items())
 
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
