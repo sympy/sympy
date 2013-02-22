@@ -9,7 +9,7 @@ sympy.stats.crv
 """
 
 from sympy import (And, Eq, Basic, S, Expr, Symbol, cacheit, sympify, Mul, Add,
-        And, Or, Tuple)
+        And, Or, Tuple, Piecewise, Eq)
 from sympy.core.sets import FiniteSet
 from sympy.stats.rv import (RandomDomain, ProductDomain, ConditionalDomain,
         PSpace, ProductPSpace, SinglePSpace, random_symbols, sumsets, rv_subs,
@@ -166,12 +166,20 @@ class SingleFiniteDistribution(Basic, NamedArgsMixin):
     def density(self):
         return dict((k, self.pdf(k)) for k in self.set)
 
-    def pdf(self, x):
-        return self.density.get(x, 0)
+    @property
+    def pdf(self):
+        x = Symbol('x')
+        return Lambda(x, Piecewise(*(
+            [(v, Eq(k, x)) for k, v in self.density.items()] + [(0, True)])))
 
     @property
     def set(self):
         return self.density.keys()
+
+    values = property(lambda self: self.density.values)
+    items = property(lambda self: self.density.items)
+    __iter__ = property(lambda self: self.density.__iter__)
+    __getitem__ = property(lambda self: self.density.__getitem__)
 
 
 #=============================================

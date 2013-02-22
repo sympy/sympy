@@ -52,12 +52,8 @@ def FiniteRV(name, density):
 
 class DiscreteUniformDistribution(SingleFiniteDistribution):
     @property
-    def items(self):
-        return self.args
-
-    @property
     def p(self):
-        return Rational(1, len(self.items))
+        return Rational(1, len(self.args))
 
     @property
     @cacheit
@@ -66,10 +62,10 @@ class DiscreteUniformDistribution(SingleFiniteDistribution):
 
     @property
     def set(self):
-        return self.items
+        return self.args
 
     def pdf(self, x):
-        if x in self.items:
+        if x in self.args:
             return self.p
         else:
             return S.Zero
