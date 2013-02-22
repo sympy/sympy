@@ -815,6 +815,34 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 if r[d] != 0 and simplify(r[d].diff(y)) == simplify(r[e].diff(x)):
                     matching_hints["1st_exact"] = r
                     matching_hints["1st_exact_Integral"] = r
+                # The following few conditions try to convert a non-exact
+                # differential equation into an exact one.
+                # References : Differential equations with applications
+                # and historical notes - George E. Simmons
+                # If (dP/dy - dQ/dx) / Q = f(x)
+                # then exp(integral(f(x))*equation becomes exact
+                numerator = simplify(r[d].diff(y)) - simplify(r[e].diff(x))
+                if r[d] != 0 and numerator/r[e]:
+                    factor = simplify(numerator/r[e])
+                    variable = factor.atoms(Symbol)
+                    if x in variable and len(variable) == 1:
+                        factor = exp(C.Integral(factor).doit())
+                        r[d] = simplify(factor * r[d])
+                        r[e] = simplify(factor * r[e])
+                        matching_hints["1st_exact"] = r
+                        matching_hints["1st_exact_Integral"] = r
+                # If (dP/dy - dQ/dx) / -P = f(y)
+                # then exp(integral(f(y))*equation becomes exact
+                if r[d] != 0 and -(numerator/r[d]):
+                    factor = simplify(-numerator/r[d])
+                    variable = factor.atoms(Symbol)
+                    if y in variable and len(variable) == 1:
+                        factor = exp(C.Integral(factor).doit())
+                        r[d] = simplify(factor * r[d])
+                        r[e] = simplify(factor * r[e])
+                        matching_hints["1st_exact"] = r
+                        matching_hints["1st_exact_Integral"] = r
+
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
                 # like f(2*x).diff(x).  See issue 1525 and issue 1620.
