@@ -25,15 +25,21 @@ def apart(f, x=None, full=False, **options):
     >>> from sympy.abc import x, y
 
     By default, using the undetermined coefficients method:
+
     >>> apart(y/(x + 2)/(x + 1), x)
     -y/(x + 2) + y/(x + 1)
 
-    You can choose the other algorithm by setting full=True:
+    You can choose Bronstein's algorithm by setting ``full=True``:
+
     >>> apart(y/(x**2 + x + 1), x)
     y/(x**2 + x + 1)
     >>> apart(y/(x**2 + x + 1), x, full=True)
     RootSum(x**2 + x + 1, Lambda(_a, (-2*_a*y/3 - y/3)/(-_a + x)))
 
+    See Also
+    ========
+
+    apart_list, assemble_partfrac_list
     """
     allowed_flags(options, [])
 
@@ -180,26 +186,61 @@ def apart_full_decomposition(P, Q):
     return partial
 
 
-def apart_structured(f, x=None, **options):
+def apart_list(f, x=None, **options):
     """
     Compute partial fraction decomposition of a rational function
     and return the result in structured form.
 
-    Given a rational function ``f`` compute partial fraction decomposition
-    of ``f``. Two algorithms are available: one is based on undetermined
-    coefficients method and the other is Bronstein's full partial fraction
-    decomposition algorithm.
+    Given a rational function ``f`` compute the partial fraction decomposition
+    of ``f``. Only Bronstein's full partial fraction decomposition algorithm
+    is supported by this method. The return value is highly structured and
+    perfectly suited for further algorithmic treatment rather than beeing
+    human-readable. On top level the function returns a list of three elements:
+
+    * The first item is the common part, free of the variable `x` used for
+      decomposition. (It is an element of the base field `K`.)
+
+    * The second item is the polynomial part of the decomposition. This can be
+      the zero polynomial. (It is an element of `K[x]`.)
+
+    * The third part itself is a list of quadruples. Each quadruple
+      has the following elements in this order:
+
+      - The (not necessarily irreducible) polynomial `D` whose roots `w_i` appear
+        in the linear denominator of a bunch of related fraction terms. (This item
+        can also be a list of explicit roots.)
+
+      - The numerator of the fraction, written as a function of the root `w`
+
+      - The linear denominator of the fraction *excluding its power exponent*,
+        written as a function of the root `w`.
+
+      - The power to which the denominator has to be raised.
+
+    On can always rebuild a plain expression by using the function ``assemble_partfrac_list``.
 
     Examples
     ========
 
-    This example is taken from Bronstein's original paper.
+    >>> from sympy.polys.partfrac import apart_list, assemble_partfrac_list
+    >>> from sympy.abc import x, y
 
-    >>> from sympy.polys.partfrac import apart_structured, assemble_partfrac_full
+    >>> pfd = apart_list(y/(x**2 + x + 1), x)
+    >>> pfd
+    (1,
+    Poly(0, x, domain='ZZ[y]'),
+    [(Poly(_w**2 + _w + 1, _w, domain='ZZ[y]'),
+    Lambda(_a, -2*_a*y/3 - y/3),
+    Lambda(_a, -_a + x),
+    1)])
+
+    This example is taken from Bronstein's original paper:
+
+    >>> from sympy.polys.partfrac import apart_list, assemble_partfrac_list
     >>> from sympy.abc import x, y
 
     >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
-    >>> pfd = apart_structured(f)
+    >>> pfd = apart_list(f)
     >>> pfd
     (1,
     Poly(0, x, domain='ZZ'),
@@ -207,13 +248,13 @@ def apart_structured(f, x=None, **options):
     (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
     (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
 
-    >>> assemble_partfrac_full(pfd)
+    >>> assemble_partfrac_list(pfd)
     -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
     See also
     ========
 
-    apart
+    apart, assemble_partfrac_list
     """
     allowed_flags(options, [])
 
@@ -237,14 +278,30 @@ def apart_structured(f, x=None, **options):
     P, Q = P.rat_clear_denoms(Q)
 
     polypart = poly
-    rationalpart = apart_full_decomposition_structured(P, Q)
-    partial = (common, polypart, rationalpart)
+    rationalpart = apart_list_full_decomposition(P, Q)
 
-    return partial
+    return (common, polypart, rationalpart)
 
 
-# This could supersede the above full decomposition function
-def apart_full_decomposition_structured(P, Q):
+def apart_list_full_decomposition(P, Q):
+    """
+    Bronstein's full partial fraction decomposition algorithm.
+
+    Given a univariate rational function ``f``, performing only GCD
+    operations over the algebraic closure of the initial ground domain
+    of definition, compute full partial fraction decomposition with
+    fractions having linear denominators.
+
+    Note that no factorization of the initial denominator of ``f`` is
+    performed. The final decomposition is formed in terms of a sum of
+    :class:`RootSum` instances.
+
+    References
+    ==========
+
+    1. [Bronstein93]_
+
+    """
     f, x, U = P/Q, P.gen, []
 
     u = Function('u')(x)
@@ -284,34 +341,30 @@ def apart_full_decomposition_structured(P, Q):
             B, g = Q.half_gcdex(D)
             b = (P * B.quo(g)).rem(D)
 
-            numer = b.as_expr()
-            denom = (x - a)**(n - j)
-
             Dw = D.subs(x, w)
-            nf = Lambda(a, numer.subs(x,a))
-            df = Lambda(a, (x - a))
+            numer = Lambda(a, b.as_expr().subs(x, a))
+            denom = Lambda(a, (x - a))
+            exponent = n-j
 
-            part = (Dw, nf, df, n-j)
-            partial.append(part)
+            partial.append((Dw, numer, denom, exponent))
 
     return partial
 
 
-# This could be called internally from apart(...) to get unstructured result
-def assemble_partfrac_full(partial_structured):
+def assemble_partfrac_list(partial_list):
     r"""Reassemble a full partial fraction decomposition
-    from a structured result.
+    from a structured result obtained by the function ``apart_list``.
 
     Examples
     ========
 
-    This example is taken from Bronstein's original paper.
+    This example is taken from Bronstein's original paper:
 
-    >>> from sympy.polys.partfrac import apart_structured, assemble_partfrac_full
+    >>> from sympy.polys.partfrac import apart_list, assemble_partfrac_list
     >>> from sympy.abc import x, y
 
     >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
-    >>> pfd = apart_structured(f)
+    >>> pfd = apart_list(f)
     >>> pfd
     (1,
     Poly(0, x, domain='ZZ'),
@@ -319,23 +372,23 @@ def assemble_partfrac_full(partial_structured):
     (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
     (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
 
-    >>> assemble_partfrac_full(pfd)
+    >>> assemble_partfrac_list(pfd)
     -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
     See also
     ========
 
-    apart
+    apart, apart_list
     """
     # Common factor
-    common = partial_structured[0]
+    common = partial_list[0]
 
     # Polynomial part
-    polypart = partial_structured[1]
+    polypart = partial_list[1]
     pfd = polypart.as_expr()
 
     # Rational parts
-    for r, nf, df, ex in partial_structured[2]:
+    for r, nf, df, ex in partial_list[2]:
         if isinstance(r, Poly):
             # Assemble in case the roots are given implicitely by a polynomials
             an, nu = nf.args
