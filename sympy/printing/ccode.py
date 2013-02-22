@@ -134,7 +134,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d.0/%d.0' % (p, q)
+        return '%d.0L/%d.0L' % (p, q)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -255,7 +255,7 @@ def ccode(expr, assign_to=None, **settings):
         >>> from sympy import ccode, symbols, Rational, sin
         >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))
-        '8*sqrt(2)*pow(tau, 7.0/2.0)'
+        '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
         >>> ccode(sin(x), assign_to="s")
         's = sin(x);'
 
