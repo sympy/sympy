@@ -534,3 +534,9 @@ def test_risch_integrate():
     assert risch_integrate(log(x**x), x) == x*log(x**x)/2 - x**2/4
     assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
     assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2
+
+def test_NonElementaryIntegral():
+    assert isinstance(risch_integrate(exp(x**2), x), NonElementaryIntegral)
+    assert isinstance(risch_integrate(x**x*log(x), x), NonElementaryIntegral)
+    # Make sure methods of Integral still give back a NonElementaryIntegral
+    assert isinstance(NonElementaryIntegral(x**x*t0, x).subs(t0, log(x)), NonElementaryIntegral)
