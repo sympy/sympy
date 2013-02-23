@@ -270,7 +270,14 @@ class Piecewise(Function):
         # Finally run through the intervals and sum the evaluation.
         ret_fun = 0
         for int_a, int_b, expr in int_expr:
-            ret_fun += expr._eval_interval(sym, Max(a, int_a), Min(b, int_b))
+            if isinstance(expr, Piecewise):
+                # If we still have a Piecewise by now, _sort_expr_cond would
+                # already have determined that its conditions are independent
+                # of the integration variable, thus we just use substitution.
+                ret_fun += piecewise_fold(
+                    expr.subs(sym, Min(b, int_b)) - expr.subs(sym, Max(a, int_a)))
+            else:
+                ret_fun += expr._eval_interval(sym, Max(a, int_a), Min(b, int_b))
         return mul * ret_fun
 
     def _sort_expr_cond(self, sym, a, b, targetcond=None):
@@ -292,6 +299,7 @@ class Piecewise(Function):
         expr_cond = []
         or_cond = False
         or_intervals = []
+        independent_expr_cond = []
         for expr, cond in self.args:
             if isinstance(cond, Or):
                 for cond2 in sorted(cond.args, key=default_sort_key):
@@ -302,8 +310,12 @@ class Piecewise(Function):
                 break
         for expr, cond in expr_cond:
             if cond is True:
-                default = expr
+                independent_expr_cond.append((expr, cond))
+                default = Piecewise(*independent_expr_cond)
                 break
+            if sym not in cond.free_symbols:
+                independent_expr_cond.append((expr, cond))
+                continue
             elif isinstance(cond, Equality):
                 continue
             elif isinstance(cond, And):

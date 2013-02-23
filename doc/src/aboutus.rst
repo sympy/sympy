@@ -246,6 +246,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Akshit Agarwal: improvements to range handling in symbols
 #. CJ Carey: Fix for limits of factorials
 #. Patrick Lacasse: Fix for Piecewise.subs
+#. Ananya H: Bug fix
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
@@ -259,10 +260,10 @@ Financial and Infrastructure Support
   financial support from Google in various years through the `Google Summer of
   Code <http://www.google-melange.com/>`_ program by providing stipends:
 
-  * in 2007 for 5 students (`GSoC 2007 <http://code.google.com/p/sympy/wiki/GSoC2007>`_)
-  * in 2008 for 1 student (`GSoC 2008 <http://code.google.com/p/sympy/wiki/GSoC2008>`_)
-  * in 2009 for 5 students (`GSoC 2009 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
-  * in 2010 for 5 students (`GSoC 2010 <http://code.google.com/p/sympy/wiki/GSoC2010>`_)
+  * in 2007 for 5 students (`GSoC 2007 <https://github.com/sympy/sympy/wiki/GSoC-2007-Report>`_)
+  * in 2008 for 1 student (`GSoC 2008 <https://github.com/sympy/sympy/wiki/GSoC-2008-report>`_)
+  * in 2009 for 5 students (`GSoC 2009 <https://github.com/sympy/sympy/wiki/GSoC-2009-report>`_)
+  * in 2010 for 5 students (`GSoC 2010 <https://github.com/sympy/sympy/wiki/GSoC-2010-report>`_)
   * in 2011 for 9 students (`GSoC 2011 <https://github.com/sympy/sympy/wiki/Gsoc-2011-report>`_)
   * in 2012 for 6 students (`GSoC 2012 <https://github.com/sympy/sympy/wiki/Gsoc-2012-report>`_)
 

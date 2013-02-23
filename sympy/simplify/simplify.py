@@ -2244,7 +2244,8 @@ def _polarify(eq, lift, pause=False):
             limits.append((var,) + rest)
         return Integral(*((func,) + tuple(limits)))
     else:
-        return eq.func(*[_polarify(arg, lift, pause=pause) for arg in eq.args])
+        return eq.func(*[_polarify(arg, lift, pause=pause)
+                         if isinstance(arg, Expr) else arg for arg in eq.args])
 
 
 def polarify(eq, subs=True, lift=False):
