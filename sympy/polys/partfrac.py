@@ -34,7 +34,7 @@ def apart(f, x=None, full=False, **options):
     >>> apart(y/(x**2 + x + 1), x)
     y/(x**2 + x + 1)
     >>> apart(y/(x**2 + x + 1), x, full=True)
-    RootSum(x**2 + x + 1, Lambda(_a, (-2*_a*y/3 - y/3)/(-_a + x)))
+    RootSum(_w**2 + _w + 1, Lambda(_a, (-2*_a*y/3 - y/3)/(-_a + x)))
 
     See Also
     ========
@@ -139,51 +139,7 @@ def apart_full_decomposition(P, Q):
     1. [Bronstein93]_
 
     """
-    f, x, U = P/Q, P.gen, []
-
-    u = Function('u')(x)
-    a = Dummy('a')
-
-    partial = S(0)
-
-    for d, n in Q.sqf_list_include(all=True):
-        b = d.as_expr()
-        U += [ u.diff(x, n - 1) ]
-
-        h = cancel(f*b**n) / u**n
-
-        H, subs = [h], []
-
-        for j in range(1, n):
-            H += [ H[-1].diff(x) / j ]
-
-        for j in range(1, n + 1):
-            subs += [ (U[j - 1], b.diff(x, j) / j) ]
-
-        for j in range(0, n):
-            P, Q = cancel(H[j]).as_numer_denom()
-
-            for i in range(0, j + 1):
-                P = P.subs(*subs[j - i])
-
-            Q = Q.subs(*subs[0])
-
-            P = Poly(P, x)
-            Q = Poly(Q, x)
-
-            G = P.gcd(d)
-            D = d.quo(G)
-
-            B, g = Q.half_gcdex(D)
-            b = (P * B.quo(g)).rem(D)
-
-            numer = b.as_expr()
-            denom = (x - a)**(n - j)
-
-            func = Lambda(a, numer.subs(x, a)/denom)
-            partial += RootSum(D, func, auto=False)
-
-    return partial
+    return assemble_partfrac_list(apart_list(P/Q, P.gens[0]))
 
 
 def apart_list(f, x=None, **options):
