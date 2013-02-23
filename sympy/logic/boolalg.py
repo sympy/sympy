@@ -612,7 +612,7 @@ def eliminate_implications(expr):
 
 
 @deprecated(
-    useinstead="sympify", issue=2947, deprecated_since_version="0.7.3")
+    useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a SymPy expression
