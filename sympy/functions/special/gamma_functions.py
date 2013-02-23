@@ -513,9 +513,9 @@ class polygamma(Function):
         return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z - 1)
 
     def _eval_rewrite_as_harmonic(self, n, z):
-        if n.is_Integer:
+        if n.is_integer:
             if n == S.Zero:
-                return harmonic(z-1) - EulerGamma
+                return harmonic(z - 1) - EulerGamma
             else:
                 return S.NegativeOne**(n+1) * C.factorial(n) * (C.zeta(n+1) - harmonic(z-1, n+1))
 
