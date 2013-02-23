@@ -18,6 +18,9 @@ from sympy.core.compatibility import product
 from sympy.core.containers import Dict
 import random
 
+class FiniteDensity(dict):
+    def __call__(self, item):
+        return self[sympify(item)]
 
 class FiniteDomain(RandomDomain):
     """
@@ -210,7 +213,7 @@ class FinitePSpace(PSpace):
 
     def compute_density(self, expr):
         expr = expr.xreplace(dict(((rs, rs.symbol) for rs in self.values)))
-        d = {}
+        d = FiniteDensity()
         for elem in self.domain:
             val = expr.xreplace(dict(elem))
             prob = self.prob_of(elem)

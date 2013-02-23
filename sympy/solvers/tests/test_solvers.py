@@ -7,7 +7,7 @@ from sympy.abc import a, b, c, d, k, h, p, x, y, z, t
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
-from sympy.solvers.solvers import _invert, unrad, checksol, posify
+from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow
 
 from sympy.utilities.pytest import XFAIL, raises, skip
 
@@ -1124,3 +1124,8 @@ def test_issue_3506():
     assert solve(5**(x/2) - 2**(x/3)) == [0]
     b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
     assert solve(5**(x/2) - 2**(3/x)) == [-b, b]
+
+def test__ispow():
+    assert _ispow(x**2)
+    assert not _ispow(x)
+    assert not _ispow(True)
