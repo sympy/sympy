@@ -1239,7 +1239,7 @@ def _solve(f, *symbols, **flags):
             if len(poly.gens) > 1:
                 poly = Poly(poly, gens[0])
 
-            # if we haven't tried tsolve yet, do so now
+            # if we haven't tried _tsolve yet, do so now
             if not flags.pop('tsolve', False):
                 # for cubics and quartics, if the flag wasn't set, DON'T do it
                 # by default since the results are quite long. Perhaps one
@@ -1982,7 +1982,7 @@ def _generate_patterns():
     """
     Generates patterns for transcendental equations.
 
-    This is lazily calculated (called) in the tsolve() function and stored in
+    This is lazily calculated (called) in the _tsolve() function and stored in
     the patterns global variable.
     """
 
@@ -2011,16 +2011,6 @@ def _generate_patterns():
         (_a*(_b*_x + _c)**_d + _e*_f**(_g*_x + _h),
             -_c/_b - _d*LambertW(-tmp2*_g*log(_f)/_b/_d)/_g/log(_f))
     ]
-
-
-def tsolve(eq, sym):
-    SymPyDeprecationWarning(
-        feature="tsolve()",
-        useinstead="solve()",
-        issue=3385,
-        deprecated_since_version="0.7.2",
-    ).warn()
-    return _tsolve(eq, sym)
 
 
 def _tsolve(eq, sym, **flags):
