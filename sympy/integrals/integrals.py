@@ -195,7 +195,7 @@ class Integral(AddWithLimits):
         # if there are no surviving symbols then the result is a number
         return len(isyms) == 0
 
-    def transform(self, x, u, inverse=False):
+    def transform(self, x, u):
         r"""
         Performs a change of variables from `x` to `u` using the relationship
         given by `x` and `u` which will define the transformations `f` and `F`
@@ -208,9 +208,6 @@ class Integral(AddWithLimits):
         2) If `u` is a Symbol then `x` will be interpreted as some function,
            F(x), with inverse f(u). This is commonly referred to as
            u-substitution.
-
-        The `inverse` option will reverse `x` and `u`. It is a deprecated option
-        since `x` and `u` can just be passed in reverse order.
 
         Once f and F have been identified, the transformation is made as
         follows:
@@ -301,20 +298,6 @@ class Integral(AddWithLimits):
         variables : Lists the integration variables
         as_dummy : Replace integration variables with dummy ones
         """
-
-        if inverse:
-            # when this is removed, update the docstring
-            from sympy.utilities.exceptions import SymPyDeprecationWarning
-            SymPyDeprecationWarning(
-                feature="transform(x, f(x), inverse=True)",
-                useinstead="transform(f(x), x)",
-                issue=6479, deprecated_since_version="0.7.2",
-            ).warn()
-            # in the old style x and u contained the same variable so
-            # don't worry about using the old-style feature with the
-            # new style input...but it will still work:
-            # i.transform(x, u).transform(x, u, inverse=True) -> i
-            x, u = u, x
 
         d = Dummy('d')
 
