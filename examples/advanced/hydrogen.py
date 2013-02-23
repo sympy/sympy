@@ -18,11 +18,11 @@ def main():
 
     print "Normalization:"
     i = Integral(R_nl(1, 0, 1, r)**2 * r**2, (r, 0, oo))
-    print pretty(i)," = ",i.doit
+    print pretty(i), " = ", i.doit()
     i = Integral(R_nl(2, 0, 1, r)**2 * r**2, (r, 0, oo))
-    print pretty(i)," = ",i.doit()
+    print pretty(i), " = " , i.doit()
     i = Integral(R_nl(2, 1, 1, r)**2 * r**2, (r, 0, oo))
-    print pretty(i)," = ",i.doit()
+    print pretty(i), " = ", i.doit()
 
 if __name__ == '__main__':
     main()
