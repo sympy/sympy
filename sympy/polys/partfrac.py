@@ -222,22 +222,38 @@ def apart_list(f, x=None, **options):
     Examples
     ========
 
-    >>> from sympy.polys.partfrac import apart_list, assemble_partfrac_list
-    >>> from sympy.abc import x, y
+    A first example:
 
-    >>> pfd = apart_list(y/(x**2 + x + 1), x)
+    >>> from sympy.polys.partfrac import apart_list, assemble_partfrac_list
+    >>> from sympy.abc import x, t
+
+    >>> f = (2*x**3 - 2*x) / (x**2 - 2*x + 1)
+    >>> pfd = apart_list(f)
     >>> pfd
     (1,
-    Poly(0, x, domain='ZZ[y]'),
-    [(Poly(_w**2 + _w + 1, _w, domain='ZZ[y]'),
-    Lambda(_a, -2*_a*y/3 - y/3),
+    Poly(2*x + 4, x, domain='ZZ'),
+    [(Poly(_w - 1, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1)])
+
+    Second example:
+
+    >>> f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
+    >>> apart_list(f)
+    (-1,
+    Poly(2/3, x, domain='QQ'),
+    [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
+
+    Another example, showing symbolic parameters:
+
+    >>> pfd = apart_list(t/(x**2 + x + t), x)
+    >>> pfd
+    (1,
+    Poly(0, x, domain='ZZ[t]'),
+    [(Poly(_w**2 + _w + t, _w, domain='ZZ[t]'),
+    Lambda(_a, -2*_a*t/(4*t - 1) - t/(4*t - 1)),
     Lambda(_a, -_a + x),
     1)])
 
     This example is taken from Bronstein's original paper:
-
-    >>> from sympy.polys.partfrac import apart_list, assemble_partfrac_list
-    >>> from sympy.abc import x, y
 
     >>> f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
     >>> pfd = apart_list(f)
@@ -375,6 +391,31 @@ def assemble_partfrac_list(partial_list):
     >>> assemble_partfrac_list(pfd)
     -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
+    If we happen to know some roots we can provide them easily inside the structure:
+
+    >>> pfd = apart_list(2/(x**2-2))
+    >>> pfd
+    (1,
+    Poly(0, x, domain='ZZ'),
+    [(Poly(_w**2 - 2, _w, domain='ZZ'),
+    Lambda(_a, _a/2),
+    Lambda(_a, -_a + x),
+    1)])
+
+    >>> pfda = assemble_partfrac_list(pfd)
+    >>> pfda
+    RootSum(_w**2 - 2, Lambda(_a, _a/(-_a + x)))/2
+
+    >>> pfda.doit()
+    -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))
+
+    >>> from sympy import Dummy, Poly, Lambda, sqrt
+    >>> a = Dummy("a")
+    >>> pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2),-sqrt(2)], Lambda(a, a/2), Lambda(a, -a + x), 1)])
+
+    >>> assemble_partfrac_list(pfd)
+    -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))
+
     See also
     ========
 
@@ -391,17 +432,15 @@ def assemble_partfrac_list(partial_list):
     for r, nf, df, ex in partial_list[2]:
         if isinstance(r, Poly):
             # Assemble in case the roots are given implicitely by a polynomials
-            an, nu = nf.args
-            ad, de = df.args
-            # Hack to make dummies equal
+            an, nu = nf.variables, nf.expr
+            ad, de = df.variables, df.expr
+            # Hack to make dummies equal because Lambda created new Dummies
             de = de.subs(ad[0], an[0])
             func = Lambda(an, nu/de**ex)
-            # We need an option to disallow resolution of rootsums even in quadratic case if desired
-            pfd += RootSum(r, func, auto=False)
+            pfd += RootSum(r, func, auto=False, quadratic=False)
         else:
             # Assemble in case the roots are given explicitely by a list of algebraic numbers
             for root in r:
-                # Handles only linear denominators
                 pfd += nf(root)/df(root)**ex
 
     return common*pfd
