@@ -480,7 +480,6 @@ class log(Function):
     @classmethod
     def eval(cls, arg, base=None):
         from sympy import unpolarify
-        from sympy.concrete import Sum, Product
         arg = sympify(arg)
 
         if base is not None:
@@ -530,8 +529,6 @@ class log(Function):
             return arg.args[0]
         elif arg.func is exp_polar:
             return unpolarify(arg.exp)
-        elif isinstance(arg, Product):
-            return Sum(log(arg.function), *arg.limits)
         #don't autoexpand Pow or Mul (see the issue 252):
         elif not arg.is_Add:
             coeff = arg.as_coefficient(S.ImaginaryUnit)
@@ -573,6 +570,7 @@ class log(Function):
 
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify
+        from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         arg = self.args[0]
         if arg.is_Mul:
@@ -598,6 +596,8 @@ class log(Function):
                     return unpolarify(e) * a._eval_expand_log(**hints)
                 else:
                     return unpolarify(e) * a
+        elif isinstance(arg, Product):
+            return Sum(log(arg.function), *arg.limits)
 
         return self.func(arg)
 
