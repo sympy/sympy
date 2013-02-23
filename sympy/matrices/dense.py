@@ -523,15 +523,7 @@ class DenseMatrix(MatrixBase):
     @classmethod
     def zeros(cls, r, c=None):
         """Return an r x c matrix of zeros, square if c is omitted."""
-        if is_sequence(r):
-            SymPyDeprecationWarning(
-                feature="The syntax zeros([%i, %i])" % tuple(r),
-                useinstead="zeros(%i, %i)." % tuple(r),
-                issue=6480, deprecated_since_version="0.7.2",
-            ).warn()
-            r, c = r
-        else:
-            c = r if c is None else c
+        c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
         return cls._new(r, c, [cls._sympify(0)]*r*c)
@@ -1247,15 +1239,7 @@ def ones(r, c=None):
     """
     from .dense import Matrix
 
-    if is_sequence(r):
-        SymPyDeprecationWarning(
-            feature="The syntax ones([%i, %i])" % tuple(r),
-            useinstead="ones(%i, %i)." % tuple(r),
-            issue=6480, deprecated_since_version="0.7.2",
-        ).warn()
-        r, c = r
-    else:
-        c = r if c is None else c
+    c = r if c is None else c
     r = as_int(r)
     c = as_int(c)
     return Matrix(r, c, [S.One]*r*c)
