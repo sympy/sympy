@@ -626,9 +626,9 @@ def compile_rule(s):
     ========
 
     >>> from sympy.logic.boolalg import compile_rule
-    >>> compile_rule('A & B')
+    >>> compile_rule('A & B') # doctest: +SKIP
     And(A, B)
-    >>> compile_rule('(~B & ~C)|A')
+    >>> compile_rule('(~B & ~C)|A') # doctest: +SKIP
     Or(A, And(Not(B), Not(C)))
     """
     import re
