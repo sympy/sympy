@@ -454,6 +454,7 @@ class harmonic(Function):
 
     >>> from sympy import Symbol, digamma, polygamma
     >>> n = Symbol("n")
+    >>> m = Symbol("m")
 
     >>> harmonic(n).rewrite(digamma)
     polygamma(0, n + 1) + EulerGamma
@@ -463,6 +464,9 @@ class harmonic(Function):
 
     >>> harmonic(n,3).rewrite(polygamma)
     polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+
+    >>> harmonic(n,m).rewrite(polygamma)
+    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/(m - 1)!
 
     Integer offsets in the argument can be pulled out:
 

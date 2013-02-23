@@ -1,7 +1,7 @@
-from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, \
-    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, \
-    binomial, gamma, sqrt, hyper, log, polygamma, diff, \
-    Expr, sympify
+from sympy import (bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo,
+    zoo, pi, I, bell, fibonacci, lucas, euler, catalan,
+    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, diff,
+    Expr, sympify, expand_func, EulerGamma, factorial)
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -84,6 +84,19 @@ def test_harmonic():
     assert harmonic(10, 0) == 10
     assert harmonic(oo, 1) == zoo
     assert harmonic(oo, 2) == (pi**2)/6
+
+    n = Symbol("n")
+    m = Symbol("m")
+
+    assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(trigamma) ==  polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
+
+    assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+
+    assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
+    assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
 
 def test_euler():
