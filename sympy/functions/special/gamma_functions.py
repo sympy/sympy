@@ -532,7 +532,10 @@ class polygamma(Function):
         return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
-        return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z - 1)
+        if n >= S.One:
+            return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z)
+        else:
+            return self
 
     def _eval_rewrite_as_harmonic(self, n, z):
         if n.is_integer:

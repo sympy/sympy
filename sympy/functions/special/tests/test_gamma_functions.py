@@ -200,6 +200,10 @@ def test_polygamma():
     assert t(3, 4)
     assert t(2, 3)
 
+    assert polygamma(0, x).rewrite(zeta) == polygamma(0, x)
+    assert polygamma(1, x).rewrite(zeta) == zeta(2, x)
+    assert polygamma(2, x).rewrite(zeta) == -2*zeta(3, x)
+
     assert polygamma(3, 7*x).diff(x) == 7*polygamma(4, 7*x)
 
     assert polygamma(0, x).rewrite(harmonic) == harmonic(x - 1) - EulerGamma
