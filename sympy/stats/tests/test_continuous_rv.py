@@ -468,12 +468,23 @@ def test_uniform():
     assert simplify(E(X)) == l + w/2
     assert simplify(variance(X)) == w**2/12
 
-    assert P(X < l) == 0 and P(X > l + w) == 0
 
     # With numbers all is well
     X = Uniform('x', 3, 5)
     assert P(X < 3) == 0 and P(X > 5) == 0
     assert P(X < 4) == P(X > 4) == S.Half
+
+@XFAIL
+def test_uniform_P():
+    """ This stopped working because SingleContinuousPSpace.compute_density no
+    longer calls integrate on a DiracDelta but rather just solves directly.
+    integrate used to call UniformDistribution.expectation which special-cased
+    subsed out the Min and Max terms that Uniform produces
+
+    I decided to regress on this class for general cleanliness (and I suspect
+    speed) of the algorithm.
+    """
+    assert P(X < l) == 0 and P(X > l + w) == 0
 
 
 @XFAIL

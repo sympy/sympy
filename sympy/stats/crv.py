@@ -378,6 +378,19 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         else:
             return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 
+    def compute_density(self, expr, **kwargs):
+        # http://en.wikipedia.org/wiki/Random_variable#Functions_of_random_variables
+        if expr == self.value:
+            return self.density
+        y = Dummy('y')
+        gs = solve(expr - y, self.value)
+        if not gs:
+            raise ValueError("Can not solve %s for %s"%(expr, self.value))
+        fx = self.compute_density(self.value)
+        fy = sum(fx(g(y)) * abs(g(y).diff(y)) for g in gs)
+        return Lambda(y, fy)
+
+
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """
     A collection of independent continuous probability spaces
