@@ -478,6 +478,22 @@ class harmonic(Function):
     >>> expand_func(harmonic(n-4))
     harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
+    Some limits can be computed as well:
+
+    >>> from sympy import limit, oo
+
+    >>> limit(harmonic(n), n, oo)
+    oo
+
+    >>> limit(harmonic(n, 2), n, oo)
+    pi**2/6
+
+    >>> limit(harmonic(n, 3), n, oo)
+    -polygamma(2, 1)/2
+
+    >>> limit(harmonic(m, n), m, oo)
+    zeta(n)
+
     References
     ==========
 
@@ -536,6 +552,10 @@ class harmonic(Function):
                     return Add(*result)
 
         return self
+
+    def _eval_rewrite_as_tractable(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return self.rewrite(polygamma).rewrite("tractable", deep=True)
 
 
 #----------------------------------------------------------------------------#

@@ -98,6 +98,8 @@ def test_harmonic():
     assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
+    assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
+
 
 def test_euler():
     assert euler(0) == 1
