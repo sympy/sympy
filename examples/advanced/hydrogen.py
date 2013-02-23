@@ -1,8 +1,11 @@
+
+#!/usr/bin/env python
+
 """
 This example shows how to work with the Hydrogen radial wavefunctions.
 """
 
-from sympy import var, pprint, Integral, oo, Eq
+from sympy import var,pretty,pprint, Integral, oo, Eq
 from sympy.physics.hydrogen import R_nl
 
 
@@ -16,11 +19,20 @@ def main():
 
     print "Normalization:"
     i = Integral(R_nl(1, 0, 1, r)**2 * r**2, (r, 0, oo))
-    pprint(str(-i.doit())+" + "+str(i)+" =0")
+    print pretty(i),
+    print " = "+str(i.doit())	
+
     i = Integral(R_nl(2, 0, 1, r)**2 * r**2, (r, 0, oo))
-    pprint(str(-i.doit())+" + "+str(i)+" =0")
+    print pretty(i),
+    print " = "+str(i.doit())	
+
     i = Integral(R_nl(2, 1, 1, r)**2 * r**2, (r, 0, oo))
-    pprint(str(-i.doit())+" + "+str(i)+" =0")
+    print pretty(i),
+    print " = "+str(i.doit())	
 
 if __name__ == '__main__':
     main()
+
+
+
+
