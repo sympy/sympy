@@ -3,11 +3,13 @@ from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from error_functions import erf
 from sympy.core import Dummy, Rational
+from sympy.core.numbers import EulerGamma
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
+from sympy.functions.combinatorial.numbers import harmonic
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -509,6 +511,13 @@ class polygamma(Function):
 
     def _eval_rewrite_as_zeta(self, n, z):
         return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z - 1)
+
+    def _eval_rewrite_as_harmonic(self, n, z):
+        if n.is_Integer:
+            if n == S.Zero:
+                return harmonic(z-1) - EulerGamma
+            else:
+                return S.NegativeOne**(n+1) * C.factorial(n) * (C.zeta(n+1) - harmonic(z-1, n+1))
 
 
 class loggamma(Function):
