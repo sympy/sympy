@@ -14,7 +14,7 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
         Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
-        Basic)
+        Basic, Symbol)
 from sympy.solvers.inequalities import reduce_poly_inequalities
 from sympy.polys.polyerrors import PolynomialError
 import random
@@ -267,8 +267,9 @@ class ContinuousPSpace(PSpace):
         # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
-            pdf = self.domain.integrate(self.pdf , set(rs.symbol
-                for rs in self.values - frozenset((expr,))), **kwargs)
+            randomsymbols = tuple(set(self.values) - frozenset([expr]))
+            symbols = tuple(rs.symbol for rs in randomsymbols)
+            pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
             return Lambda(expr.symbol, pdf)
 
         z = Dummy('z', real=True, bounded=True)
@@ -387,7 +388,11 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
         try:
             return self.distribution.expectation(expr, x, **kwargs)
         except:
-            return integrate(expr * self.pdf, (x, self.set), **kwargs)
+            evaluate = kwargs.pop('evaluate', True)
+            if evaluate:
+                return integrate(expr * self.pdf, (x, self.set), **kwargs)
+            else:
+                return Integral(expr * self.pdf, (x, self.set), **kwargs)
 
     def compute_cdf(self, expr, **kwargs):
         if expr == self.value:
@@ -401,7 +406,8 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """
     @property
     def pdf(self):
-        return Mul(*[space.pdf for space in self.spaces])
+        p = Mul(*[space.pdf for space in self.spaces])
+        return p.subs(dict((rv, rv.symbol) for rv in self.values))
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:

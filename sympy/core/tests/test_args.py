@@ -560,11 +560,9 @@ def test_sympy__stats__rv__PSpace():
     assert _test_args(PSpace(D, die))
 
 
+@SKIP("abstract Class")
 def test_sympy__stats__rv__SinglePSpace():
-    from sympy.stats.rv import SinglePSpace, RandomDomain
-    from sympy import Dict, FiniteSet
-    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3, 4, 5, 6))
-    assert _test_args(SinglePSpace(D, die))
+    pass
 
 
 def test_sympy__stats__rv__RandomSymbol():

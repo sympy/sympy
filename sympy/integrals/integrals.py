@@ -385,7 +385,7 @@ class Integral(Expr):
             reps[x] = xab[0]
             limits[i] = xab
         f = f.subs(reps)
-        return Integral(f, *limits)
+        return self.func(f, *limits)
 
     def transform(self, x, u, inverse=False):
         r"""
@@ -617,7 +617,7 @@ class Integral(Expr):
             else:
                 newlimits.append(xab)
 
-        return Integral(newfunc, *newlimits)
+        return self.func(newfunc, *newlimits)
 
     def doit(self, **hints):
         """
@@ -788,12 +788,12 @@ class Integral(Expr):
 
     def _eval_adjoint(self):
         if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return Integral(self.function.adjoint(), *self.limits)
+            return self.func(self.function.adjoint(), *self.limits)
         return None
 
     def _eval_conjugate(self):
         if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return Integral(self.function.conjugate(), *self.limits)
+            return self.func(self.function.conjugate(), *self.limits)
         return None
 
     def _eval_derivative(self, sym):
@@ -850,7 +850,7 @@ class Integral(Expr):
             x = limit[0]
 
         if limits:  # f is the argument to an integral
-            f = Integral(f, *tuple(limits))
+            f = self.func(f, *tuple(limits))
 
         # assemble the pieces
         def _do(f, ab):
@@ -860,7 +860,7 @@ class Integral(Expr):
             if isinstance(f, Integral):
                 limits = [(x, x) if (len(l) == 1 and l[0] == x) else l
                           for l in f.limits]
-                f = Integral(f.function, *limits)
+                f = self.func(f.function, *limits)
             return f.subs(x, ab)*dab_dsym
         rv = 0
         if b is not None:
@@ -878,7 +878,7 @@ class Integral(Expr):
             # while differentiating
             u = Dummy('u')
             arg = f.subs(x, u).diff(sym).subs(u, x)
-            rv += Integral(arg, Tuple(x, a, b))
+            rv += self.func(arg, Tuple(x, a, b))
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None):
@@ -1232,11 +1232,11 @@ class Integral(Expr):
             dummies.add(xab[0])
         if not dummies.intersection(old_atoms):
             integrand = integrand.subs(old, new)
-        return Integral(integrand, *limits)
+        return self.func(integrand, *limits)
 
     def _eval_transpose(self):
         if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return Integral(self.function.transpose(), *self.limits)
+            return self.func(self.function.transpose(), *self.limits)
         return None
 
     def as_sum(self, n, method="midpoint"):

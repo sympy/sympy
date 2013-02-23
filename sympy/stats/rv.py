@@ -12,8 +12,10 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify
+from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
+        sympify, Equality, solve, Lambda, DiracDelta)
 from sympy.core.sets import FiniteSet, ProductSet
+from sympy.abc import x
 
 
 class RandomDomain(Basic):
@@ -165,6 +167,11 @@ class SinglePSpace(PSpace):
     Represents the probabilities of a set of random events that can be
     attributed to a single variable/symbol.
     """
+    def __new__(cls, symbol, distribution):
+        symbol = sympify(symbol)
+        if not isinstance(symbol, Symbol):
+            raise ValueError()
+        return Basic.__new__(cls, symbol, distribution)
 
     @property
     def value(self):
@@ -197,9 +204,17 @@ class RandomSymbol(Expr):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
+    def __new__(cls, pspace, symbol):
+        assert isinstance(symbol, Symbol)
+        assert isinstance(pspace, PSpace)
+        return Basic.__new__(cls, pspace, symbol)
+
     is_bounded = True
     is_finite = True
     is_Symbol = True
+    is_Atom = True
+
+    _diff_wrt = True
 
     pspace = property(lambda self: self.args[0])
     symbol = property(lambda self: self.args[1])
@@ -435,6 +450,13 @@ def given(expr, condition=None, **kwargs):
     if not random_symbols(condition) or pspace_independent(expr, condition):
         return expr
 
+    condsymbols = random_symbols(condition)
+    if (isinstance(condition, Equality) and len(condsymbols) == 1 and
+        not isinstance(pspace(expr).domain, ConditionalDomain)):
+        rv = tuple(condsymbols)[0]
+        results = solve(condition, rv)
+        return sum(expr.subs(rv, res) for res in results)
+
     # Get full probability space of both the expression and the condition
     fullspace = pspace(Tuple(expr, condition))
     # Build new space given the condition
@@ -553,6 +575,8 @@ class Density(Basic):
         if condition is not None:
             # Recompute on new conditional expr
             expr = given(expr, condition, **kwargs)
+        if not random_symbols(expr):
+            return Lambda(x, DiracDelta(x-expr))
         return pspace(expr).compute_density(expr, **kwargs)
 
 
