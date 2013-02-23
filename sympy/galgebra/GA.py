@@ -61,12 +61,6 @@ def is_quasi_unit_numpy_array(array):
         return(False)
 
 
-@deprecated(value="This function is no longer needed.", issue=3379,
-            deprecated_since_version="0.7.2")
-def set_main(main_program):
-    pass
-
-
 def plist(lst):
     if type(lst) == list:
         for x in lst:
@@ -195,12 +189,6 @@ def make_scalars(symnamelst):
         tmp = MV(s, 'scalar')
         scalar_lst.append(tmp)
     return(scalar_lst)
-
-
-@deprecated(useinstead="sympy.symbols()", issue=3379,
-            deprecated_since_version="0.7.2")
-def make_symbols(symnamelst):
-    return sympy.symbols(symnamelst)
 
 
 def israt(numstr):
