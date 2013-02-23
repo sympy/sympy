@@ -3,7 +3,6 @@ from sympy.core.function import Function, ArgumentIndexError
 from zeta_functions import zeta
 from error_functions import erf
 from sympy.core import Dummy, Rational
-from sympy.core.numbers import EulerGamma
 from sympy.functions.elementary.exponential import log
 from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
@@ -364,7 +363,7 @@ class polygamma(Function):
 
     We can rewrite polygamma functions in terms of harmonic numbers:
 
-    >>> from sympy import polygamma, harmonic, EulerGamma, Symbol
+    >>> from sympy import polygamma, harmonic, Symbol
     >>> x = Symbol("x")
 
     >>> polygamma(0, x).rewrite(harmonic)
@@ -540,7 +539,7 @@ class polygamma(Function):
     def _eval_rewrite_as_harmonic(self, n, z):
         if n.is_integer:
             if n == S.Zero:
-                return harmonic(z - 1) - EulerGamma
+                return harmonic(z - 1) - S.EulerGamma
             else:
                 return S.NegativeOne**(n+1) * C.factorial(n) * (C.zeta(n+1) - harmonic(z-1, n+1))
 
