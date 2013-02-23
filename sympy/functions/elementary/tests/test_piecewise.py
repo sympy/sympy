@@ -240,6 +240,12 @@ def test_piecewise_integrate_symbolic_conditions():
     assert integrate(p5, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
 
 
+def test_piecewise_integrate_independent_conditions():
+    p = Piecewise((0, Eq(y, 0)), (x*y, True))
+    assert integrate(p, (x, 1, 3)) == \
+        Piecewise((0, Eq(y, 0)), (4*y, True))
+
+
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
