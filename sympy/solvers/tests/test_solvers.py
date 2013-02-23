@@ -245,7 +245,7 @@ def test_linear_systemLU():
 # in such a way that a different branch is chosen
 
 
-def test_tsolve():
+def test_solve_transcendental():
     assert solve(exp(x) - 3, x) == [log(3)]
     assert set(solve((a*x + b)*(exp(x) - 3), x)) == set([-b/a, log(3)])
     assert solve(cos(x) - y, x) == [acos(y)]
@@ -867,7 +867,7 @@ def test_issue_2015():
 
 
 def test_misc():
-    # make sure that the right variables is picked up in tsolve
+    # make sure that the right variables is picked up in _tsolve
     raises(NotImplementedError, lambda: solve((exp(x) + 1)**x))
 
 
