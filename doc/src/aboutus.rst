@@ -246,6 +246,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Akshit Agarwal: improvements to range handling in symbols
 #. CJ Carey: Fix for limits of factorials
 #. Patrick Lacasse: Fix for Piecewise.subs
+#. Ananya H: Bug fix
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
