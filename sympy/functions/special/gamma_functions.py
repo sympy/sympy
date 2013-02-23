@@ -359,13 +359,35 @@ class uppergamma(Function):
 class polygamma(Function):
     """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
 
-       See Also
-       ========
+    Examples
+    ========
 
-       gamma, digamma, trigamma
+    We can rewrite polygamma functions in terms of harmonic numbers:
 
-    Reference:
-        http://en.wikipedia.org/wiki/Polygamma_function
+    >>> from sympy import polygamma, harmonic, EulerGamma, Symbol
+    >>> x = Symbol("x")
+
+    >>> polygamma(0, x).rewrite(harmonic)
+    harmonic(x - 1) - EulerGamma
+
+    >>> polygamma(2, x).rewrite(harmonic)
+    2*harmonic(x - 1, 3) - 2*zeta(3)
+
+    >>> ni = Symbol("n", integer=True)
+    >>> polygamma(ni, x).rewrite(harmonic)
+    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*n!
+
+    See Also
+    ========
+
+    gamma, digamma, trigamma
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Polygamma_function
+    .. [2] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
+    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
 
     nargs = 2
