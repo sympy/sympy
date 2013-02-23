@@ -538,13 +538,14 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
             raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
         else:
             raise NotImplementedError("dsolve: Cannot solve " + str(eq))
-    if hints['default'] == 'direct' and hint != 'default' and hint != 'direct':
-        eq = tmp
+
     if hint == 'default':
         return dsolve(eq, func, hint=hints['default'], simplify=simplify,
                       prep=prep, classify=False, order=hints['order'],
                       match=hints[hints['default']])
-    elif hint in ('all', 'all_Integral', 'best'):
+    if isinstance(eq, Derivative) and hint != 'direct' :
+        eq = tmp
+    if hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         failedhints = {}
         gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
@@ -587,20 +588,14 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
     # attempt to solve for func, and apply any other hint specific simplifications
     if simplify:
-        if hint == 'direct':
-            rv = solvefunc(eq, func, order=hints['order'], match=hints[hint])
-        else:
-            rv = odesimp(solvefunc(eq, func, order=hints['order'],
+        rv = odesimp(solvefunc(eq, func, order=hints['order'],
                 match=hints[hint]), func, hints['order'], hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
-        if hint == 'direct':
-            rv = solvefunc(eq, func, order=hints['order'], match=hints[hint])
-        else:
-            r = hints[hint]
-            r['simplify'] = False  # Some hints can take advantage of this option
-            rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
-            match=hints[hint]), func, hints['order'], hint)
+        r = hints[hint]
+        r['simplify'] = False  # Some hints can take advantage of this option
+        rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
+        match=hints[hint]), func, hints['order'], hint)
     return rv
 
 
@@ -720,23 +715,27 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     from sympy import expand
     matching_hints = {}
 
-    #Checking if it is a direct derivative
-    if func is None:
-        tmp, func = preprocess(eq, func)
+    if func and len(func.args) != 1:
+        raise ValueError("dsolve() and classify_ode() only work with functions " + "of one variable")
 
+
+    #Checking if it is a direct derivative
     if isinstance(eq, Derivative) and func.args[0] == eq.variables[0]:
-        r = {}
-        matching_hints['direct'] = r
+        if func is None:
+            tmp, func = preprocess(eq, func)
+        if len(eq.atoms(Derivative)) == 1:
+            r = {}
+            matching_hints['direct'] = r
 
     if isinstance(eq, Equality):
         lhs = eq.lhs
         if eq.rhs == 0 and isinstance(lhs, Derivative) and func.args[0] == lhs.variables[0]:
-            r = {}
-            matching_hints['direct'] = r
+            if func is None:
+                tmp, func = preprocess(lhs, func)
+            if len(eq.atoms(Derivative)) == 1:
+                r = {}
+                matching_hints['direct'] = r
 
-    if func and len(func.args) != 1:
-        raise ValueError("dsolve() and classify_ode() only work with functions " +
-            "of one variable")
     if prep or func is None:
         eq, func_ = preprocess(eq, func)
         if func is None:

@@ -1432,33 +1432,6 @@ def test_issue_1996():
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-def test_almost_linear():
-    from sympy import Ei
-    our_hint = 'almost_linear'
-    f = Function('f')
-    d = f(x).diff(x)
-    eq = x**2*f(x)**2*d + f(x)**3 + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 - exp(-3/x))*exp(3/x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)
-
-    eq = x*f(x)*d + 2*x*f(x)**2 + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 - 2*Ei(4*x))*exp(-4*x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)
-
-    eq = x*d + x*f(x) + 1
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 - Ei(x))*exp(-x)
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)
-    assert our_hint in classify_ode(eq, f(x))
-
-    eq = x*exp(f(x))*d + exp(f(x)) + 3*x
-    sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 - 3*x**2/2)/x
-    assert checkodesol(eq, sol, order=1, solve_for_func=False)
 
 def test_exact_enhancement():
     f = Function('f')(x)
@@ -1477,4 +1450,3 @@ def test_exact_enhancement():
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs[0] == acos(-sqrt(C1*exp(-2*x)/x**4 + 1))
     assert rhs[1] == acos(sqrt(C1*exp(-2*x)/x**4 + 1))
-
