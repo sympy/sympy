@@ -5,9 +5,11 @@ from sympy.polys.partfrac import (
     apart_undetermined_coeffs,
     apart_full_decomposition,
     apart,
+    apart_list_full_decomposition,
+    apart_list, assemble_partfrac_list
 )
 
-from sympy import S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda, factor, together
+from sympy import S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda, Dummy, factor, together, sqrt
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, a, b, c
 
@@ -109,3 +111,35 @@ def test_apart_undetermined_coeffs():
     r = 1/((x + b)*(a - b)) + 1/((x + a)*(b - a))
 
     assert apart_undetermined_coeffs(p, q) == r
+
+
+def test_apart_list():
+    _w = Dummy("w")
+    _a = Dummy("a")
+
+    f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
+    assert apart_list(f) == (-1, Poly(S(2)/3, x, domain='QQ'),
+                             [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
+
+    assert apart_list(2/(x**2-2)) == (1,
+                                      Poly(0, x, domain='ZZ'),
+                                      [(Poly(_w**2 - 2, _w, domain='ZZ'),
+                                        Lambda(_a, _a/2),
+                                        Lambda(_a, -_a + x), 1)])
+
+    f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
+    assert apart_list(f) == (1,
+                             Poly(0, x, domain='ZZ'),
+                             [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
+                              (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
+                              (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
+
+
+def test_assemble_partfrac_list():
+    f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
+    pfd = apart_list(f)
+    assert assemble_partfrac_list(pfd) == -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
+
+    _a = Dummy("a")
+    pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2),-sqrt(2)], Lambda(_a, _a/2), Lambda(_a, -_a + x), 1)])
+    assert assemble_partfrac_list(pfd) == -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))
