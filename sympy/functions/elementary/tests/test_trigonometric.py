@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd)
+        Float, Pow, gcd, sec, csc, cot)
 
 from sympy.utilities.pytest import XFAIL, slow
 
