@@ -355,7 +355,7 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     Solves any (supported) kind of ordinary differential equation.
 
@@ -390,10 +390,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
             hint. Note that the solution may contain more arbitrary
             constants than the order of the ODE with this option
             enabled.
-
-        ``prep``, when False and when ``func`` is given, will skip the
-            preprocessing step where the equation is cleaned up so it
-            is ready for solving.
 
     **Hints**
 
@@ -490,6 +486,8 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     >>> # a simpler result in this case.
 
     """
+    prep = kwargs.pop('prep', True)
+
     # TODO: Implement initial conditions
     # See issue 1621.  We first need a way to represent things like f'(0).
     if isinstance(eq, Equality):
