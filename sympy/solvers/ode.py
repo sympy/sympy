@@ -698,7 +698,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-    ('separable', '1st_linear', '1st_homogeneous_coeff_best',
+    ('direct', 'separable', '1st_linear', '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     'nth_linear_constant_coeff_homogeneous', 'separable_Integral',

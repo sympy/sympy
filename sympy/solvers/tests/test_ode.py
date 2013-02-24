@@ -1427,6 +1427,7 @@ def test_nth_order_linear_euler_eq_homogeneous():
     assert dsolve(eq, y(t), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
+
 def test_issue_1996():
     f = Function('f')
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
