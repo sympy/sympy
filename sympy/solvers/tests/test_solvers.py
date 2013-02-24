@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Wild, acos,
     asin, atan, atanh, cos, cosh, diff, exp, expand, im, log, pi, re, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh)
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t
+from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
@@ -1085,17 +1085,22 @@ def test_exclude():
             Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
             R: Vplus/(C*s*(V1 - 2*Vplus))}]
 
+
 def test_high_order_roots():
     s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
 
+
 def test_minsolve_linear_system():
     def count(dic):
         return len([x for x in dic.itervalues() if x == 0])
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) == 3
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) == 3
+    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) \
+        == 3
+    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) \
+        == 3
     assert count(solve([x + y + z, y + z + a], minimal=True, quick=True)) == 1
     assert count(solve([x + y + z, y + z + a], minimal=True, quick=False)) == 2
+
 
 def test_real_roots():
     # cf. issue 3551
@@ -1116,6 +1121,7 @@ def test_overdetermined():
     assert solve(eqs, x, manual=True) == [(S.Half,)]
     assert solve(eqs, x, manual=True, check=False) == [(S.Half/2,), (S.Half,)]
 
+
 def test_issue_3506():
     x = symbols('x')
     assert solve(4**(x/2) - 2**(x/3)) == [0]
@@ -1125,7 +1131,22 @@ def test_issue_3506():
     b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
     assert solve(5**(x/2) - 2**(3/x)) == [-b, b]
 
+
 def test__ispow():
     assert _ispow(x**2)
     assert not _ispow(x)
     assert not _ispow(True)
+
+
+def test_issue_3545():
+    eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
+    4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
+    4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
+    assert solve(eq, q) == [
+        m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4,
+        m**2/2 + sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4]
+
+
+def test_issue_3653():
+    assert solve([a**2 + a, a - b], [a, b]) == [(-1, -1), (0, 0)]
+    assert solve([a**2 + a*c, a - b], [a, b]) == [(0, 0), (-c, -c)]

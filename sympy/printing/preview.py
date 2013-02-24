@@ -1,18 +1,25 @@
 from __future__ import with_statement
 
 import os
-import time
+from os.path import isabs, join
+from subprocess import Popen, check_call, PIPE, STDOUT
 import tempfile
+import shutil
+from cStringIO import StringIO
 
+from sympy.utilities.exceptions import SymPyDeprecationWarning
+from sympy.utilities.misc import find_executable
 from latex import latex
 
 
-def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_settings):
+def preview(expr, output='png', viewer=None, euler=True, packages=(),
+            filename=None, outputbuffer=None, preamble=None, dvioptions=None,
+            outputTexFile=None, **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
     If the expr argument is an expression, it will be exported to LaTeX and
-    then compiled using available the TeX distribution.  The first argument,
+    then compiled using the available TeX distribution.  The first argument,
     'expr', may also be a LaTeX string.  The function will then run the
     appropriate viewer for the given output format or use the user defined
     one. By default png output is generated.
@@ -49,11 +56,33 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
 
     This will skip auto-detection and will run user specified
     'superior-dvi-viewer'. If 'view' fails to find it on your system it will
-    gracefully raise an exception. You may also enter 'file' for the viewer
-    argument. Doing so will cause this function to return a file object in
-    read-only mode.
+    gracefully raise an exception.
 
-    Currently this depends on pexpect, which is not available for windows.
+    You may also enter 'file' for the viewer argument. Doing so will cause
+    this function to return a file object in read-only mode, if 'filename'
+    is unset. However, if it was set, then 'preview' writes the genereted
+    file to this filename instead.
+
+    There is also support for writing to a StringIO like object, which needs
+    to be passed to the 'outputbuffer' argument.
+
+    >>> from StringIO import StringIO
+    >>> obj = StringIO()
+    >>> preview(x + y, output='png', viewer='StringIO',
+    ...         outputbuffer=obj) # doctest: +SKIP
+
+    The LaTeX preamble can be customized by setting the 'preamble' keyword
+    argument. This can be used, e.g., to set a different font size, use a
+    custom documentclass or import certain set of LaTeX packages.
+
+    >>> preamble = "\\documentclass[10pt]{article}\n" \
+    ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
+    >>> preview(x + y, output='png', preamble=preamble) # doctest: +SKIP
+
+    If the value of 'output' is different from 'dvi' then command line
+    options can be set ('dvioptions' argument) for the execution of the
+    'dvi'+output conversion tool. These options have to be in the form of a
+    list of strings (see subprocess.Popen).
 
     Additional keyword args will be passed to the latex call, e.g., the
     symbol_names flag.
@@ -61,12 +90,16 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
     >>> phidd = Symbol('phidd')
     >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'}) # doctest: +SKIP
 
+    For post-processing the generated TeX File can be written to a file by
+    passing the desired filename to the 'outputTexFile' keyword
+    argument. To write the TeX code to a file named
+    "sample.tex" and run the default png viewer to display the resulting
+    bitmap, do
+
+    >>> preview(x+y, output='png', outputTexFile="sample.tex") # doctest: +SKIP
+
+
     """
-
-    # we don't want to depend on anything not in the
-    # standard library with SymPy by default
-    import pexpect
-
     special = [ 'pyglet' ]
 
     if viewer is None:
@@ -75,6 +108,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
         else:
             # sorted in order from most pretty to most ugly
             # very discussable, but indeed 'gv' looks awful :)
+            # TODO add candidates for windows to list
             candidates = {
                 "dvi": [ "evince", "okular", "kdvi", "xdvi" ],
                 "ps": [ "evince", "okular", "gsview", "gv" ],
@@ -83,7 +117,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
 
             try:
                 for candidate in candidates[output]:
-                    if pexpect.which(candidate):
+                    if find_executable(candidate):
                         viewer = candidate
                         break
                 else:
@@ -92,125 +126,156 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(), **latex_se
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
     else:
-        if viewer not in special and not pexpect.which(viewer):
+        if viewer == "file":
+            if filename is None:
+                SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
+                    "specified filename ", last_supported_version="0.7.3",
+                    use_instead="viewer=\"file\" and filename=\"desiredname\"")
+        elif viewer == "StringIO":
+            if outputbuffer is None:
+                raise ValueError("outputbuffer has to be a StringIO "
+                                 "compatible object if viewer=\"StringIO\"")
+        elif viewer not in special and not find_executable(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
-    actual_packages = packages + ("amsmath", "amsfonts")
-    if euler:
-        actual_packages += ("euler",)
-    package_includes = "\n".join(["\\usepackage{%s}" % p
-                                  for p in actual_packages])
 
-    format = r"""\documentclass[12pt]{article}
-                 %s
-                 \begin{document}
-                 \pagestyle{empty}
-                 %s
-                 \vfill
-                 \end{document}
-              """ % (package_includes, "%s")
+    if preamble is None:
+        actual_packages = packages + ("amsmath", "amsfonts")
+        if euler:
+            actual_packages += ("euler",)
+        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
+                                             for p in actual_packages])
+
+        preamble = r"""\documentclass[12pt]{article}
+\pagestyle{empty}
+%s
+
+\begin{document}
+""" % (package_includes)
+    else:
+        if len(packages) > 0:
+            raise ValueError("The \"packages\" keyword must not be set if a "
+                             "custom LaTeX preamble was specified")
+    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
 
     if isinstance(expr, str):
         latex_string = expr
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
 
-    tmp = tempfile.mktemp()
+    try:
+        workdir = tempfile.mkdtemp()
 
-    with open(tmp + ".tex", "w") as tex:
-        tex.write(format % latex_string)
+        with open(join(workdir, 'texput.tex'), 'w') as fh:
+            fh.write(latex_main % latex_string)
 
-    cwd = os.getcwd()
-    os.chdir(tempfile.gettempdir())
+        if outputTexFile is not None:
+            shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
-    if os.system("latex -halt-on-error %s.tex" % tmp) != 0:
-        raise SystemError("Failed to generate DVI output.")
+        with open(os.devnull, 'w') as devnull:
+            check_call(['latex', '-halt-on-error', 'texput.tex'], cwd=workdir,
+                       stdout=devnull, stderr=STDOUT)
 
-    os.remove(tmp + ".tex")
-    os.remove(tmp + ".aux")
-    os.remove(tmp + ".log")
+        if output != "dvi":
+            defaultoptions = {
+                "ps": [],
+                "pdf": [],
+                "png": ["-T", "tight", "-z", "9", "--truecolor"]
+            }
 
-    if output != "dvi":
-        command = {
-            "ps": "dvips -o %s.ps %s.dvi",
-            "pdf": "dvipdf %s.dvi %s.pdf",
-            "png": "dvipng -T tight -z 9 " +
-            "--truecolor -o %s.png %s.dvi",
-        }
+            commandend = {
+                "ps": ["-o", "texput.ps", "texput.dvi"],
+                "pdf": ["texput.dvi", "texput.pdf"],
+                "png": ["-o", "texput.png", "texput.dvi"]
+            }
 
-        try:
-            if os.system(command[output] % (tmp, tmp)) != 0:
-                raise SystemError("Failed to generate '%s' output." % output)
+            cmd = ["dvi" + output]
+            try:
+                if dvioptions is not None:
+                    cmd.extend(dvioptions)
+                else:
+                    cmd.extend(defaultoptions[output])
+                cmd.extend(commandend[output])
+            except KeyError:
+                raise SystemError("Invalid output format: %s" % output)
+
+            with open(os.devnull, 'w') as devnull:
+                check_call(cmd, cwd=workdir, stdout=devnull, stderr=STDOUT)
+
+        src = "texput.%s" % (output)
+
+        if viewer == "file":
+            if filename is None:
+                buffer = StringIO()
+                with open(join(workdir, src), 'rb') as fh:
+                    buffer.write(fh.read())
+                return buffer
             else:
-                os.remove(tmp + ".dvi")
-        except KeyError:
-            raise SystemError("Invalid output format: %s" % output)
+                shutil.move(join(workdir,src), filename)
+        elif viewer == "StringIO":
+            with open(join(workdir, src), 'rb') as fh:
+                outputbuffer.write(fh.read())
+        elif viewer == "pyglet":
+            try:
+                from pyglet import window, image, gl
+                from pyglet.window import key
+            except ImportError:
+                raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
 
-    src = "%s.%s" % (tmp, output)
-    src_file = None
+            if output == "png":
+                from pyglet.image.codecs.png import PNGImageDecoder
+                img = image.load(join(workdir, src), decoder=PNGImageDecoder())
+            else:
+                raise SystemError("pyglet preview works only for 'png' files.")
 
-    if viewer == "file":
-        src_file = open(src, 'rb')
-    elif viewer == "pyglet":
-        try:
-            from pyglet import window, image, gl
-            from pyglet.window import key
-        except ImportError:
-            raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+            offset = 25
 
-        if output == "png":
-            from pyglet.image.codecs.png import PNGImageDecoder
-            img = image.load(src, decoder=PNGImageDecoder())
+            win = window.Window(
+                width=img.width + 2*offset,
+                height=img.height + 2*offset,
+                caption="sympy",
+                resizable=False
+            )
+
+            win.set_vsync(False)
+
+            try:
+                def on_close():
+                    win.has_exit = True
+
+                win.on_close = on_close
+
+                def on_key_press(symbol, modifiers):
+                    if symbol in [key.Q, key.ESCAPE]:
+                        on_close()
+
+                win.on_key_press = on_key_press
+
+                def on_expose():
+                    gl.glClearColor(1.0, 1.0, 1.0, 1.0)
+                    gl.glClear(gl.GL_COLOR_BUFFER_BIT)
+
+                    img.blit(
+                        (win.width - img.width) / 2,
+                        (win.height - img.height) / 2
+                    )
+
+                win.on_expose = on_expose
+
+                while not win.has_exit:
+                    win.dispatch_events()
+                    win.flip()
+            except KeyboardInterrupt:
+                pass
+
+            win.close()
         else:
-            raise SystemError("pyglet preview works only for 'png' files.")
-
-        offset = 25
-
-        win = window.Window(
-            width=img.width + 2*offset,
-            height=img.height + 2*offset,
-            caption="sympy",
-            resizable=False
-        )
-
-        win.set_vsync(False)
-
+            with open(os.devnull, 'w') as devnull:
+                check_call([viewer, src], cwd=workdir, stdout=devnull,
+                           stderr=STDOUT)
+    finally:
         try:
-            def on_close():
-                win.has_exit = True
-
-            win.on_close = on_close
-
-            def on_key_press(symbol, modifiers):
-                if symbol in [key.Q, key.ESCAPE]:
-                    on_close()
-
-            win.on_key_press = on_key_press
-
-            def on_expose():
-                gl.glClearColor(1.0, 1.0, 1.0, 1.0)
-                gl.glClear(gl.GL_COLOR_BUFFER_BIT)
-
-                img.blit(
-                    (win.width - img.width) / 2,
-                    (win.height - img.height) / 2
-                )
-
-            win.on_expose = on_expose
-
-            while not win.has_exit:
-                win.dispatch_events()
-                win.flip()
-        except KeyboardInterrupt:
-            pass
-
-        win.close()
-    else:
-        os.system("%s %s &> /dev/null &" % (viewer, src))
-        time.sleep(2)  # wait for the viewer to read data
-
-    os.remove(src)
-    os.chdir(cwd)
-
-    if src_file is not None:
-        return src_file
+            shutil.rmtree(workdir) # delete directory
+        except OSError, e:
+            if e.errno != 2: # code 2 - no such file or directory
+                raise

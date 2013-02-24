@@ -32,7 +32,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     with SAGE.
 
     It currently accepts as arguments:
-       - any object defined in sympy (except matrices [TODO])
+       - any object defined in sympy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave them unchanged)
