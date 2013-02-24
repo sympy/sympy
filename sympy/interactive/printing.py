@@ -31,14 +31,14 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
                            forecolor, backcolor, fontsize, mode):
     """Setup printing in IPython interactive session. """
 
-    preamble = "\\documentclass[12pt]{article}\n" \
+    preamble = "\\documentclass[%s]{article}\n" \
                "\\pagestyle{empty}\n" \
                "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
     if euler:
         addpackages = '\\usepackage{euler}'
     else:
         addpackages = ''
-    preamble = preamble % (addpackages)
+    preamble = preamble % (fontsize, addpackages)
 
     imagesize = 'tight'
     offset = "0cm,0cm"
