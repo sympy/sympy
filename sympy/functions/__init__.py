@@ -39,7 +39,7 @@ from sympy.functions.special.polynomials import (legendre, assoc_legendre,
         hermite, chebyshevt, chebyshevu, chebyshevu_root, chebyshevt_root,
         laguerre, assoc_laguerre, gegenbauer, jacobi, jacobi_normalized)
 from sympy.functions.special.spherical_harmonics import Ylm, Zlm
-from sympy.functions.special.elliptic_integrals import (ellipticeinc,
-		ellipticfinc, ellipticpiinc, elliptick, elliptice, ellipticpi)
+from sympy.functions.special.elliptic_integrals import (elliptic_k,
+        elliptic_f, elliptic_e, elliptic_pi)
 
 ln = log
