@@ -21,6 +21,8 @@ class SympifyError(ValueError):
 
 converter = {}  # See sympify docstring.
 
+class CantSympify(object):
+    pass
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
@@ -206,6 +208,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
                 return converter[superclass](a)
             except KeyError:
                 continue
+
+    if isinstance(a, CantSympify):
+        raise SympifyError(a)
 
     try:
         return a._sympy_()
