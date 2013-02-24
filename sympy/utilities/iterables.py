@@ -549,14 +549,6 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     sym : Symbol
         The subscripted symbols.
     """
-    if 'dummy' in assumptions:
-        SymPyDeprecationWarning(
-            feature="'dummy=True' to create numbered Dummy symbols",
-            useinstead="cls=Dummy",
-            issue=3378, deprecated_since_version="0.7.0",
-        ).warn()
-        if assumptions.pop('dummy'):
-            cls = C.Dummy
 
     if cls is None:
         # We can't just make the default cls=C.Symbol because it isn't
