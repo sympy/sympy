@@ -115,12 +115,9 @@ def test_apart_undetermined_coeffs():
 
 
 def test_apart_list():
-
     from sympy.utilities.iterables import numbered_symbols
 
     w0, w1, w2 = Symbol("w0"), Symbol("w1"), Symbol("w2")
-
-    _w = Dummy("w")
     _a = Dummy("a")
 
     f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
@@ -147,7 +144,6 @@ def test_assemble_partfrac_list():
     pfd = apart_list(f)
     assert assemble_partfrac_list(pfd) == -4/(x + 1) - 3/(x + 1)**2 - 9/(x - 1)**2 + 4/(x - 2)
 
-    _a = Dummy("a")
-    pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2),-sqrt(2)], Lambda(_a, _a/2), Lambda(_a, -_a + x), 1)])
-
-    assert assemble_partfrac_list(pfd) == -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))
+    a = Dummy("a")
+    pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2),-sqrt(2)], Lambda(a, a/2), Lambda(a, -a + x), 1)])
+    assert assemble_partfrac_list(pfd) == -1/(sqrt(2)*(x + sqrt(2))) + 1/(sqrt(2)*(x - sqrt(2)))
