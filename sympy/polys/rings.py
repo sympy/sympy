@@ -1,0 +1,871 @@
+from copy import copy
+
+from sympy.core import Symbol, symbols
+from sympy.core.sympify import CantSympify
+from sympy.core.compatibility import is_sequence
+from sympy.polys.monomialtools import monomial_mul, monomial_ldiv, monomial_pow, monomial_min, lex
+from sympy.polys.compatibility import IPolys
+
+def ring(sgens, domain, order=lex):
+    """Construct new polynomial ring returning (ring, x1, ..., xn). """
+    _ring = PolyRing(sgens, domain, order)
+    return (_ring,) + _ring.gens
+
+def xring(sgens, domain, order=lex):
+    """Construct new polynomial ring returning (ring, (x1, ..., xn)). """
+    _ring = PolyRing(sgens, domain, order)
+    return (_ring, _ring.gens)
+
+class PolyRing(IPolys):
+    def __init__(self, sgens, domain, order):
+        if not is_sequence(sgens, include=(basestring, Symbol)) or not sgens:
+            raise ValueError('expecting a string, Symbol or an ordered iterable')
+
+        if isinstance(sgens, basestring):
+            sgens = [s.name for s in symbols(sgens, seq=True)]
+        elif isinstance(sgens, Symbol):
+            sgens = sgens.name
+        elif isinstance(sgens[0], Symbol):
+            sgens = [s.name for s in sgens]
+
+        self.sgens = tuple(sgens)
+        self.ngens = len(sgens)
+        self.domain = domain
+        self.order = order
+
+        self.gens_dict = dict(zip(self.sgens, xrange(self.ngens)))
+        self.zero_monom = (0,)*self.ngens
+
+        self.gens = self._gens()
+
+    def _gens(self):
+        """Return a list of polynomial generators. """
+        one = self.domain.one
+        _gens = []
+        for i in xrange(self.ngens):
+            expv = self.monomial_basis(i)
+            poly = PolyElement(self)
+            poly[expv] = one
+            _gens.append(poly)
+        return tuple(_gens)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return "Polynomial ring in %s over %s" % (self.sgens, self.domain)
+
+    def __eq__(self, other):
+        return self.ngens == other.ngens and \
+               self.domain == other.domain and \
+               self.order == other.order
+
+    def monomial_basis(self, i):
+        """Return the ith-basis element. """
+        basis = [0]*self.ngens
+        basis[i] = 1
+        return tuple(basis)
+
+    def domain_new(self, element):
+        return self.domain.convert(element)
+
+    def ground_new(self, element):
+        element = self.domain_new(element)
+        poly = PolyElement(self)
+        if element:
+            poly[self.zero_monom] = element
+        return poly
+
+    def ring_new(self, element):
+        if isinstance(element, basestring):
+            raise NotImplementedError("parsing")
+        elif isinstance(element, PolyElement):
+            raise NotImplementedError("conversion")
+        else:
+            return self.ground_new(element)
+
+    __call__ = ring_new
+
+    def from_dict(self, d):
+        poly = PolyElement(self)
+        for k, v in d.iteritems():
+            poly[k] = self.domain_new(v)
+        poly.strip_zero()
+        return poly
+
+    def _drop(self, gen):
+        if isinstance(gen, int):
+            i = gen
+            if 0 < i and i < self.ngens:
+                raise ValueError("invalid generator index")
+        else:
+            if gen not in self.gens:
+                raise ValueError("invalid generator")
+            else:
+                i = self.gens.index(gen)
+
+        if self.ngens == 1:
+            raise ValueError("univariate polynomial") # TODO: return ground domain
+        else:
+            sgens = list(self.sgens)
+            del sgens[i]
+            return i, self.__class__(sgens, self.domain, self.order)
+
+    def drop(self, gen):
+        return self._drop(gen)[1]
+
+    def __getitem__(self, key):
+        return self.__class__(self.sgens[key], self.domain, self.order)
+
+    def to_ground(self):
+        ground = getattr(self.domain, "dom", None) # TODO: use CompositeDomain
+        if ground is not None:
+            return self.__class__(self.sgens, ground, self.order)
+        else:
+            raise ValueError("%s is not a composite domain" % self.domain)
+
+class PolyElement(dict, CantSympify):
+    def __init__(self, ring):
+        self.ring = ring
+        dict.__init__(self)
+
+    def copy(self):
+        """Return a copy of polynomial self.
+
+        Polynomials are mutable; if one is interested in preserving
+        a polynomial, and one plans to use inplace operations, one
+        can copy the polynomial
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> R, x, y = ring('x, y', QQ)
+        >>> p = (x + y)**2
+        >>> p1 = p.copy()
+        >>> p2 = p
+        >>> p[R.zero_monom] = 3
+        >>> p
+        x**2 + 2*x*y + y**2 + 3
+        >>> p1
+        x**2 + 2*x*y + y**2
+        >>> p2
+        x**2 + 2*x*y + y**2 + 3
+
+        """
+        return copy(self)
+
+    def strip_zero(self):
+        """Eliminate monomials with zero coefficient. """
+        zero = self.ring.domain.zero
+        for k, v in list(self.items()):
+            if v == zero:
+                del self[k]
+
+    def variables(self):
+        """Return the tuple of the indices of the variables in self.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y, z = ring('x, y, z', QQ)
+        >>> p = x + y**2 + x*y
+        >>> p.variables()
+        (0, 1)
+
+        """
+        indices = []
+        for expv in self:
+            for i, e in enumerate(expv):
+                if e and i not in indices:
+                    indices.append(i)
+        indices.sort()
+        return tuple(indices)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        if not self:
+            return "0"
+        ring = self.ring
+        sgens = ring.sgens
+        ngens = ring.ngens
+        zm = ring.zero_monom
+        sexpvs = []
+        expvs = list(self.keys())
+        expvs.sort(key=ring.order, reverse=True)
+        for expv in expvs:
+            coeff = self[expv]
+            if ring.domain.is_positive(coeff):
+                sexpvs.append(' + ')
+            else:
+                sexpvs.append(' - ')
+            if ring.domain.is_negative(coeff):
+                coeff = -coeff
+            if coeff != 1 or expv == zm:
+                scoeff = str(coeff)
+            else:
+                scoeff = ''
+            sexpv = []
+            for i in xrange(ngens):
+                exp = expv[i]
+                if not exp:
+                    continue
+                if exp != 1:
+                    sexpv.append('%s**%d' % (sgens[i], exp))
+                else:
+                    sexpv.append('%s' % sgens[i])
+            if scoeff:
+                sexpv = [scoeff] + sexpv
+            sexpvs.append('*'.join(sexpv))
+        if sexpvs[0] in [" + ", " - "]:
+            head = sexpvs.pop(0)
+            if head == " - ":
+                sexpvs.insert(0, "-")
+        return ''.join(sexpvs)
+
+    def __eq__(p1, p2):
+        """Equality test for polynomials.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p1 = (x + y)**2 + (x - y)**2
+        >>> p1 == 4*x*y
+        False
+        >>> p1 == 2*(x**2 + y**2)
+        True
+
+        """
+        if not p2 or p2 == 0:
+            return not p1
+        ring1 = p1.ring
+        if isinstance(p2, PolyElement):
+            return dict.__eq__(p1, p2)
+        else:
+            zm = ring1.zero_monom
+            if zm not in p1 or len(p1) > 1:
+                return False
+            return p1[zm] == p2 # ring1.domain_new(p2)
+
+    def drop(self, gen):
+        i, ring = self.ring._drop(gen)
+        poly = PolyElement(ring)
+        for k, v in self.iteritems():
+            if k[i] == 0:
+                K = list(k)
+                del K[i]
+                poly[tuple(K)] = v
+            else:
+                raise ValueError("can't drop %s" % gen)
+        return poly
+
+    def to_dense(self):
+        from sympy.polys.densebasic import dmp_from_dict
+        return dmp_from_dict(self, self.ring.ngens-1, self.ring.domain)
+
+    def __neg__(self):
+        return self*(-1)
+
+    def __pos__(self):
+        return self
+
+    def __add__(p1, p2):
+        """Add two polynomials.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y = ring('x, y', QQ)
+        >>> (x + y)**2 + (x - y)**2
+        2*x**2 + 2*y**2
+
+        """
+        if not p2:
+            return p1.copy()
+        ring1 = p1.ring
+        zm = ring1.zero_monom
+        if isinstance(p2, PolyElement):
+            if ring1 == p2.ring:
+                p = PolyElement(ring1)
+                for k, v in p1.iteritems():
+                    if k in p2:
+                        r = v + p2[k]
+                        if r:
+                            p[k] = r
+                    else:
+                        p[k] = v
+                for k, v in p2.iteritems():
+                    if k not in p1:
+                        p[k] = v
+                return p
+            elif p2.ring.__class__ == ring1.domain.__class__ and p2.ring == ring1.domain:
+                p = p1.copy()
+                if zm not in list(p1.keys()):
+                    p[zm] = ring1.domain_new(p2)
+                else:
+                    if p2 == -p[zm]:
+                        del p[zm]
+                    else:
+                        p[zm] += p2
+                return p
+            elif ring1.__class__ == p2.ring.domain.__class__ and ring1 == p2.ring.domain:
+                return p2 + p1
+            else:
+                raise ValueError('cannot sum p1 and p2')
+        # assume p2 in a number
+        else:
+            p = p1.copy()
+            cp2 = ring1.domain_new(p2)
+            if not cp2:
+                return p
+            if zm not in list(p1.keys()):
+                p[zm] = cp2
+            else:
+                if p2 == -p[zm]:
+                    del p[zm]
+                else:
+                    p[zm] += cp2
+            return p
+
+    def __radd__(p1, n):
+        # assume n is in p1.ring.domain
+        p = p1.copy()
+        if not n:
+            return p
+        ring = p1.ring
+        zm = ring.zero_monom
+        if zm not in list(p1.keys()):
+            p[zm] = ring.domain_new(n)
+        else:
+            if n == -p[zm]:
+                del p[zm]
+            else:
+                p[zm] += n
+        return p
+
+    def __sub__(p1, p2):
+        """Subtract polynomial p2 from p1.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p1 = x + y**2
+        >>> p2 = x*y + y**2
+        >>> p1 - p2
+        -x*y + x
+
+        """
+        if not p2:
+            return p1.copy()
+        ring1 = p1.ring
+        mz = ring1.zero_monom
+        p = PolyElement(ring1)
+        if isinstance(p2, PolyElement):
+            if ring1 == p2.ring:
+                for k in p1:
+                    if k in p2:
+                        r = p1[k] - p2[k]
+                        if r:
+                            p[k] = r
+                    else:
+                        p[k] = p1[k]
+                for k in p2:
+                    if k not in p1:
+                        p[k] = -p2[k]
+                return p
+            elif p2.ring.__class__ == ring1.domain.__class__ and p2.ring == ring1.domain:
+                p = p1.copy()
+                if mz not in list(p1.keys()):
+                    p[mz] = -ring1.domain_new(p2)
+                else:
+                    if p2 == p[mz]:
+                        del p[mz]
+                    else:
+                        p[mz] -= p2
+                return p
+            else:
+                raise ValueError('cannot coerce p2')
+        # assume p2 in a number
+        else:
+            p2 = ring1.domain_new(p2)
+            p = copy(p1)
+            if mz not in list(p1.keys()):
+                p[mz] = -p2
+            else:
+                if p2 == p[mz]:
+                    del p[mz]
+                else:
+                    p[mz] -= p2
+            return p
+
+    def __rsub__(p1, n):
+        """n - p1 with n convertible to the coefficient domain.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p = x + y
+        >>> 4 - p
+        -x - y + 4
+
+        """
+        p = PolyElement(p1.ring)
+        for expv in p1:
+            p[expv] = -p1[expv]
+        p += n
+        return p
+
+    def __mul__(p1, p2):
+        """Multiply two polynomials.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p1 = x + y
+        >>> p2 = x - y
+        >>> p1*p2
+        x**2 - y**2
+
+        """
+        ring1 = p1.ring
+        p = PolyElement(ring1)
+        if not p2:
+            return p
+        if isinstance(p2, PolyElement):
+            if ring1 == p2.ring:
+                get = p.get
+                p2it = p2.items()
+                for exp1, v1 in p1.iteritems():
+                    for exp2, v2 in p2it:
+                        exp = monomial_mul(exp1, exp2)
+                        p[exp] = get(exp, 0) + v1*v2
+                p.strip_zero()
+                return p
+            ring2 = p2.ring
+            if ring2.__class__ != ring1.domain.__class__ or ring2 != ring1.domain:
+                if ring1.__class__ == ring2.domain.__class__ and ring1 == ring2.domain:
+                    p = PolyElement(p2.ring)
+                    for exp2, v2 in p2.iteritems():
+                        p[exp2] = p1*v2
+                    return p
+                else:
+                    raise ValueError('p1 and p2 must have the same ring')
+        # assume p2 in a number
+        p2 = ring1.domain_new(p2)
+        for exp1, v1 in p1.iteritems():
+            v = v1*p2
+            if v:
+                p[exp1] = v
+        return p
+
+    def __rmul__(p1, p2):
+        """p2 * p1 with p2 in the coefficient domain of p1.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p = x + y
+        >>> 4 * p
+        4*x + 4*y
+
+        """
+        p = PolyElement(p1.ring)
+        if not isinstance(p2, PolyElement):
+            if not p2:
+                return p
+        p2 = p.ring.domain_new(p2)
+        for exp1, v1 in p1.iteritems():
+            v = p2*v1
+            if v:
+                p[exp1] = v
+        return p
+
+    def __pow__(self, n):
+        """raise polynomial to power `n`
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p = x + y**2
+        >>> p**3
+        x**3 + 3*x**2*y**2 + 3*x*y**4 + y**6
+
+        """
+        ring = self.ring
+        n = int(n)
+        if n < 0:
+            if (len(self) == 1):
+                p = PolyElement(ring)
+                k, v = list(self.items())[0]
+                kn = monomial_pow(k, n)
+                p[kn] = v**n
+                return p
+            raise ValueError('n >= 0 is required')
+        if n == 0:
+            if self:
+                return ring(1)
+            else:
+                raise ValueError
+        elif len(self) == 1:
+            p = PolyElement(ring)
+            k, v = list(self.items())[0]
+            # treat case abs(v) = 1 separately to deal with the case
+            # in which n is too large to be allowed in v**n
+            kn = monomial_pow(k, n)
+            if v == 1:
+                p[kn] = v
+            elif v == -1:
+                if n % 2 == 0:
+                    p[kn] = -v
+                else:
+                    p[kn] = v
+            else:
+                p[kn] = v**n
+            return p
+        elif n == 1:
+            return copy(self)
+        elif n == 2:
+            return self.square()
+        elif n == 3:
+            return self*self.square()
+        # TODO if ring.SR then use in some cases multinomial coefficients
+        if ring.ngens == 1 and n >= 20 and ring.domain in (ZZ, QQ):
+            return self.pow_miller(n)
+        p = ring(1)
+        while 1:
+            if n&1:
+                p = p*self
+                n -= 1
+                if not n:
+                    break
+            self = self.square()
+            n = n // 2
+        return p
+
+    def square(self):
+        """square of a polynomial
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import QQ
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p = x + y**2
+        >>> p.square()
+        x**2 + 2*x*y**2 + y**4
+        """
+        ring = self.ring
+        #if not ring.commuting:
+        #   return self*self
+        p = PolyElement(ring)
+        get = p.get
+        keys = self.keys()
+        for i in range(len(keys)):
+            k1 = keys[i]
+            pk = self[k1]
+            for j in range(i):
+                k2 = keys[j]
+                exp = monomial_mul(k1, k2)
+                p[exp] = get(exp, 0) + pk*self[k2]
+        p = p.imul_num(2)
+        get = p.get
+        for k, v in self.iteritems():
+            k2 = monomial_mul(k, k)
+            p[k2] = get(k2, 0) + v**2
+        p.strip_zero()
+        return p
+
+    def __truediv__(p1, p2):
+        """division by a term in the coefficient domain or
+        exact division by a polynomial
+
+        Examples
+        ========
+
+        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.rings import ring
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p1 = (x**2 + x + y)*(x**2 - y**2)
+        >>> p2 = x + y
+        >>> p3 = p1/p2
+        >>> p4 = (x**2 + x + y)*(x - y)
+        >>> p3 == p4
+        True
+
+        """
+        ring1 = p1.ring
+        if isinstance(p2, PolyElement):
+            if ring1 == p2.ring:
+                if len(p2) == 1:
+                    m = p2.keys()[0]
+                    p = ring1(0)
+                    c = p2.values()[0]
+                    for k, v in p1.iteritems():
+                        k1 = monomial_ldiv(k, m)
+                        p[tuple(k1)] = v/c
+                    return p
+                q, r = p1.div([p2])
+                if r:
+                    raise NotImplementedError('__div__ performs only division without remainder')
+                return q[0]
+            elif p2.ring.__class__ == ring1.domain.__class__ and p2.ring == ring1.domain:
+                zm = p2.ring.zero_monom
+                p = PolyElement(ring1)
+                # if p is not a constant, not implemented
+                if p2.keys() != [zm]:
+                    raise NotImplementedError
+                else:
+                    p2 = p2[zm]
+            else:
+                raise NotImplementedError('cannot divide p1 by p2')
+        # assume p2 in a number
+        p = PolyElement(ring1)
+        if not p2:
+            raise ZeroDivisionError
+        for exp1, v in p1.iteritems():
+            p[exp1] = v/p2
+        return p
+
+    __div__ = __truediv__
+
+    def div(self, fv):
+        """Division algorithm, see [CLO] p64.
+
+        fv array of polynomials
+           return qv, r such that
+           self = sum(fv[i]*qv[i]) + r
+
+        All polynomials are required not to be Laurent polynomials.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import QQ
+        >>> _, x, y = ring('x, y', QQ)
+        >>> f = x**3
+        >>> f0 = x - y**2
+        >>> f1 = x - y
+        >>> qv, r = f.div((f0, f1))
+        >>> qv[0]
+        x**2 + x*y**2 + y**4
+        >>> qv[1]
+        0
+        >>> r
+        y**6
+
+        TODO restrict to positive exponents
+        """
+        ring = self.ring
+        if not self:
+            return [], PolyElement(ring)
+        for f in fv:
+            if f.ring != ring:
+                raise ValueError('self and f must have the same ring')
+        gens = ring.gens
+        #if self.is_laurent(*gens):
+        #    raise NotImplementedError('self is a Laurent polynomial')
+        # if any(p.is_laurent(*gens) for p in fv):
+        #    raise NotImplementedError('there is a Laurent polynomial in fv')
+        s = len(fv)
+        qv = [PolyElement(ring) for i in range(s)]
+        p = self.copy()
+        r = PolyElement(ring)
+        expvs = [fx.leading_expv() for fx in fv]
+        rn = range(ring.ngens)
+        while p:
+            i = 0
+            divoccurred = 0
+            while i < s and divoccurred == 0:
+                expv = p.leading_expv()
+                expv1 = monomial_ldiv(expv, expvs[i])
+                if all(expv1[j] >= 0 for j in rn):
+                    c = p[expv]/fv[i][expvs[i]]
+                    qv[i] = qv[i].iadd_mon((expv1, c))
+                    p = p.iadd_p_mon(fv[i], (expv1, -c))
+                    divoccurred = 1
+                else:
+                    i += 1
+            if not divoccurred:
+                expv =  p.leading_expv()
+                r = r.iadd_mon((expv, p[expv]))
+                del p[expv]
+        if expv == ring.zero_monom:
+            r += p
+        return qv, r
+
+    def iadd_mon(self, mc):
+        """add to self the monomial coeff*x0**i0*x1**i1*...
+        unless self is a generator -- then just return the sum of the two.
+
+        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import QQ
+
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p = x**4 + 2*y
+        >>> m = (1, 2)
+        >>> p1 = p.iadd_mon((m, 5))
+        >>> p1
+        x**4 + 5*x*y**2 + 2*y
+        >>> p1 is p
+        True
+        >>> p = x
+        >>> p1 = p.iadd_mon((m, 5))
+        >>> p1
+        5*x*y**2 + x
+        >>> p1 is p
+        False
+
+        """
+        if self in self.ring.gens:
+            self = self.copy()
+        expv, coeff = mc
+        if expv in self:
+            self[expv] += coeff
+            if self[expv] == 0:
+                del self[expv]
+        else:
+            self[expv] = coeff
+        return self
+
+    def iadd_p_mon(self, p, mc):
+        """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)
+        unless self is a generator -- then just return the sum of the two.
+
+        mc is a tuple, (monom, coeff), where monomial is (i0, i1, ...)
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import QQ
+
+        >>> _, x, y, z = ring('x, y, z', QQ)
+        >>> p1 = x**4 + 2*y
+        >>> p2 = y + z
+        >>> m = (1, 2, 3)
+        >>> p1 = p1.iadd_p_mon(p2, (m, 3))
+        >>> p1
+        x**4 + 3*x*y**3*z**3 + 3*x*y**2*z**4 + 2*y
+
+        """
+        p1 = self
+        p2 = p
+        if p1 in p1.ring.gens:
+            p1 = p1.copy()
+        (m, c) = mc
+        get = p1.get
+        c = p1.ring.domain_new(c)
+        for k, v in p2.iteritems():
+            ka = monomial_mul(k, m)
+            p1[ka] = get(ka, 0) + v*c
+        p1.strip_zero()
+        return p1
+
+    def leading_expv(self):
+        """leading monomial tuple according to the monomial ordering
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import QQ
+        >>> _, x, y, z = ring('x, y, z', QQ)
+        >>> p = x**4 + x**3*y + x**2*z**2 + z**7
+        >>> p.leading_expv()
+        (4, 0, 0)
+
+        """
+        if self:
+            order = self.ring.order
+            return max(self, key=lambda m: order(m))
+        else:
+            return None
+
+    def leading_term(self):
+        """leading term according to the monomial ordering
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import QQ
+
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p = (x + y)**4
+        >>> p1 = p.leading_term()
+        >>> p1
+        x**4
+
+        """
+        p = PolyElement(self.ring)
+        expv = self.leading_expv()
+        if expv:
+            p[expv] = self[expv]
+        return p
+
+    def imul_num(p, c):
+        """multiply inplace the polynomial p by an element in the
+        coefficient ring, provided p is not one of the generators;
+        else multiply not inplace
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import QQ
+
+        >>> _, x, y = ring('x, y', QQ)
+        >>> p = x + y**2
+        >>> p1 = p.imul_num(3)
+        >>> p1
+        3*x + 3*y**2
+        >>> p1 is p
+        True
+        >>> p = x
+        >>> p1 = p.imul_num(3)
+        >>> p1
+        3*x
+        >>> p1 is p
+        False
+
+        """
+        if p in p.ring.gens:
+            return p*c
+        if not c:
+            p.clear()
+            return
+        for exp in p:
+            p[exp] *= c
+        return p

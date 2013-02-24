@@ -108,3 +108,5 @@ import polycontext as ctx
 from agca import (
     homomorphism
 )
+
+from rings import ring

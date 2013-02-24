@@ -377,6 +377,9 @@ class StrPrinter(Printer):
     def _print_Pi(self, expr):
         return 'pi'
 
+    def _print_PolyElement(self, element):
+        return element.__str__()
+
     def _print_Poly(self, expr):
         terms, gens = [], [ self._print(s) for s in expr.gens ]
 

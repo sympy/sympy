@@ -1619,7 +1619,7 @@ class ANP(PicklableWithSlots):
         else:
             try:
                 return f.add(f.per(g))
-            except TypeError:
+            except (CoercionFailed, TypeError):
                 return NotImplemented
 
     def __radd__(f, g):
@@ -1631,7 +1631,7 @@ class ANP(PicklableWithSlots):
         else:
             try:
                 return f.sub(f.per(g))
-            except TypeError:
+            except (CoercionFailed, TypeError):
                 return NotImplemented
 
     def __rsub__(f, g):
@@ -1643,7 +1643,7 @@ class ANP(PicklableWithSlots):
         else:
             try:
                 return f.mul(f.per(g))
-            except TypeError:
+            except (CoercionFailed, TypeError):
                 return NotImplemented
 
     def __rmul__(f, g):
@@ -1664,7 +1664,7 @@ class ANP(PicklableWithSlots):
         else:
             try:
                 return f.quo(f.per(g))
-            except TypeError:
+            except (CoercionFailed, TypeError):
                 return NotImplemented
 
     __truediv__ = __div__

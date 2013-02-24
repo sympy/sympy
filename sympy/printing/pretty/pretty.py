@@ -1364,6 +1364,9 @@ class PrettyPrinter(Printer):
 
     _print_frozenset = _print_set
 
+    def _print_PolyElement(self, element):
+        return prettyForm(element.__str__())
+
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:
             return self._print(expr.as_poly().as_expr())

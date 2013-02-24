@@ -397,13 +397,37 @@ def monomial_div(A, B):
     `x*y**2*z**2` does not divide `x**3*y**4*z`.
 
     """
-    C = [ a - b for a, b in zip(A, B) ]
+    C = monomial_ldiv(A, B)
 
     if all(c >= 0 for c in C):
         return tuple(C)
     else:
         return None
 
+def monomial_ldiv(A, B):
+    """
+    Division of tuples representing monomials.
+
+    Lets divide `x**3*y**4*z` by `x*y**2`::
+
+        >>> from sympy.polys.monomialtools import monomial_ldiv
+
+        >>> monomial_ldiv((3, 4, 1), (1, 2, 0))
+        (2, 2, 1)
+
+    which gives `x**2*y**2*z`.
+
+        >>> monomial_ldiv((3, 4, 1), (1, 2, 2))
+        (2, 2, -1)
+
+    which gives `x**2*y**2*z**-1`.
+
+    """
+    return tuple([ a - b for a, b in zip(A, B) ])
+
+def monomial_pow(A, n):
+    """Return the n-th pow of the monomial. """
+    return tuple([ a*n for a in A ])
 
 @cythonized("a,b")
 def monomial_gcd(A, B):
