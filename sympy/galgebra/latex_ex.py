@@ -6,7 +6,6 @@ import sys
 #if sys.version.find('Stackless') >= 0:
 #    sys.path.append('/usr/lib/python2.5/site-packages')
 
-import os
 import types
 import StringIO
 
@@ -24,45 +23,12 @@ from sympy.core.compatibility import cmp_to_key
 from sympy.utilities import default_sort_key
 
 from sympy.printing.latex import accepted_latex_functions
+from sympy.printing.preview import preview
 
 
 def debug(txt):
     sys.stderr.write(txt + '\n')
     return
-
-
-def find_executable(executable, path=None):
-    """Try to find 'executable' in the directories listed in 'path' (a
-    string listing directories separated by 'os.pathsep'; defaults to
-    os.environ['PATH']).  Returns the complete filename or None if not
-    found
-    """
-    if path is None:
-        path = os.environ['PATH']
-    paths = path.split(os.pathsep)
-    extlist = ['']
-    if os.name == 'os2':
-        (base, ext) = os.path.splitext(executable)
-        # executable files on OS/2 can have an arbitrary extension, but
-        # .exe is automatically appended if no dot is present in the name
-        if not ext:
-            executable = executable + ".exe"
-    elif sys.platform == 'win32':
-        pathext = os.environ['PATHEXT'].lower().split(os.pathsep)
-        (base, ext) = os.path.splitext(executable)
-        if ext.lower() not in pathext:
-            extlist = pathext
-    for ext in extlist:
-        execname = executable + ext
-        if os.path.isfile(execname):
-            return execname
-        else:
-            for p in paths:
-                f = os.path.join(p, execname)
-                if os.path.isfile(f):
-                    return f
-    else:
-        return None
 
 
 def len_cmp(str1, str2):
@@ -202,7 +168,6 @@ class LatexPrinter(Printer):
                '\\newcommand{\\ddt}[1]{\\bfrac{d{#1}}{dt}}\n' \
                '\\newcommand{\\R}{\\dagger}\n' \
                '\\begin{document}\n'
-    postscript = '\\end{document}\n'
 
     @staticmethod
     def latex_bases():
@@ -1192,32 +1157,8 @@ def xdvi(filename='tmplatex.tex', debug=False):
                 line = i.next()
             except StopIteration:
                 break
-    body = LatexPrinter.preamble + body + LatexPrinter.postscript
-
-    with open(filename, 'w') as latex_file:
-        latex_file.write(body)
-
-    latex_str = None
-    xdvi_str = None
-
-    if find_executable('latex') is not None:
-        latex_str = 'latex'
-
-    if find_executable('xdvi') is not None:
-        xdvi_str = 'xdvi'
-
-    if find_executable('yap') is not None:
-        xdvi_str = 'yap'
-
-    if latex_str is not None and xdvi_str is not None:
-        if debug:  # Display latex excution output for debugging purposes
-            os.system(latex_str + ' ' + filename[:-4])
-        else:  # Works for Linux don't know about Windows
-            if sys.platform.startswith('linux'):
-                os.system(latex_str + ' ' + filename[:-4] + ' > /dev/null')
-            else:
-                os.system(latex_str + ' ' + filename[:-4] + ' > NUL')
-        os.system(xdvi_str + ' ' + filename[:-4] + ' &')
+    preview(body, output='dvi', outputTexFile=filename,
+            preamble=LatexPrinter.preamble)
     LatexPrinter.LaTeX_flg = False
     return
 
