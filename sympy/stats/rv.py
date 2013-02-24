@@ -167,15 +167,28 @@ class SinglePSpace(PSpace):
     Represents the probabilities of a set of random events that can be
     attributed to a single variable/symbol.
     """
-    def __new__(cls, symbol, distribution):
-        symbol = sympify(symbol)
-        if not isinstance(symbol, Symbol):
-            raise ValueError()
-        return Basic.__new__(cls, symbol, distribution)
+    def __new__(cls, s, distribution):
+        if isinstance(s, str):
+            s = Symbol(s)
+        if not isinstance(s, Symbol):
+            raise TypeError("s should have been string or Symbol")
+        return Basic.__new__(cls, s, distribution)
 
     @property
     def value(self):
-        return tuple(self.values)[0]
+        return RandomSymbol(self, self.symbol)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def distribution(self):
+        return self.args[1]
+
+    @property
+    def pdf(self):
+        return self.distribution.pdf(self.symbol)
 
 
 class RandomSymbol(Expr):
@@ -958,3 +971,12 @@ class NamedArgsMixin(object):
         except ValueError:
             raise AttributeError("'%s' object has not attribute '%s'" % (
                 type(self).__name__, attr))
+
+def _value_check(condition, message):
+    """
+    Check a condition on input value.
+
+    Raises ValueError with message if condition is not True
+    """
+    if condition is not True:
+        raise ValueError(message)
