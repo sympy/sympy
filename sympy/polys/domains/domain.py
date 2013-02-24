@@ -1,7 +1,7 @@
 """Implementation of :class:`Domain` class. """
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import SYMPY_INTS
+from sympy.core.compatibility import SYMPY_INTS, is_sequence
 
 from sympy.polys.polyerrors import (
     UnificationFailed,
@@ -98,10 +98,11 @@ class Domain(object):
                 if K1.is_Numerical and getattr(a, 'is_ground', False):
                     return K1.convert(a.LC())
 
-                a = sympify(a)
+                if not is_sequence(a):
+                    a = sympify(a)
 
-                if isinstance(a, Basic):
-                    return K1.from_sympy(a)
+                    if isinstance(a, Basic):
+                        return K1.from_sympy(a)
             except (TypeError, ValueError):
                 pass
 
