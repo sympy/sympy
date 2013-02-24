@@ -312,6 +312,10 @@ def test_Poly__new__():
     assert Poly([a, b, c], x) == f
     assert Poly((a, b, c), x) == f
 
+    f = Poly({}, x, y, z)
+
+    assert f.gens == (x, y, z) and f.as_expr() == 0
+
     assert Poly(Poly(a*x + b*y, x, y), x) == Poly(a*x + b*y, x)
 
     assert Poly(3*x**2 + 2*x + 1, domain='ZZ').all_coeffs() == [3, 2, 1]
