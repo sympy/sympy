@@ -237,7 +237,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Prasoon Shukla: Bug fixes
 #. Sergey B Kirpichev: Bug fixes
 #. Stefen Yin: Fixes to the mechanics module
-#. Thomas Hisch: Addition to .gitignore
+#. Thomas Hisch: Improvements to the printing module
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
 #. Mary Clark: Improvements to the group theory module

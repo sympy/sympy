@@ -1501,10 +1501,10 @@ class MatrixBase(object):
         if not is_sequence(b):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        if not (self.rows == 1 and self.cols == 3 or
+        if not ((self.rows == 1 and self.cols == 3 or
                 self.rows == 3 and self.cols == 1) and \
                 (b.rows == 1 and b.cols == 3 or
-                b.rows == 3 and b.cols == 1):
+                b.rows == 3 and b.cols == 1)):
             raise ShapeError("Dimensions incorrect for cross product.")
         else:
             return self._new(1, 3, ((self[1]*b[2] - self[2]*b[1]),
