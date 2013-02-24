@@ -1920,7 +1920,7 @@ def ode_direct(eq, func, order, match):
     >>> f = Function('f')(x)
     >>> d = Derivative(x*f, x, x, x)
     >>> dsolve(d, f)
-    f(x) == C1/x + C2 + C3*x
+    f(x) == C1 + C2/x + C3*x
 
     '''
     equation = 0
