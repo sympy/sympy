@@ -9,7 +9,8 @@ from sympy.polys.partfrac import (
     apart_list, assemble_partfrac_list
 )
 
-from sympy import S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda, Dummy, factor, together, sqrt
+from sympy import (S, Poly, E, pi, I, Matrix, Eq, RootSum, Lambda,
+                   Symbol, Dummy, factor, together, sqrt)
 from sympy.utilities.pytest import raises
 from sympy.abc import x, y, a, b, c
 
@@ -114,25 +115,31 @@ def test_apart_undetermined_coeffs():
 
 
 def test_apart_list():
+
+    from sympy.utilities.iterables import numbered_symbols
+
+    w0, w1, w2 = Symbol("w0"), Symbol("w1"), Symbol("w2")
+
     _w = Dummy("w")
     _a = Dummy("a")
 
     f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
-    assert apart_list(f) == (-1, Poly(S(2)/3, x, domain='QQ'),
-                             [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
+    assert apart_list(f, x, dummies=numbered_symbols("w")) == (-1,
+        Poly(S(2)/3, x, domain='QQ'),
+        [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
 
-    assert apart_list(2/(x**2-2)) == (1,
+    assert apart_list(2/(x**2-2), x, dummies=numbered_symbols("w")) == (1,
                                       Poly(0, x, domain='ZZ'),
-                                      [(Poly(_w**2 - 2, _w, domain='ZZ'),
+                                      [(Poly(w0**2 - 2, w0, domain='ZZ'),
                                         Lambda(_a, _a/2),
                                         Lambda(_a, -_a + x), 1)])
 
     f = 36 / (x**5 - 2*x**4 - 2*x**3 + 4*x**2 + x - 2)
-    assert apart_list(f) == (1,
+    assert apart_list(f, x, dummies=numbered_symbols("w")) == (1,
                              Poly(0, x, domain='ZZ'),
-                             [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
-                              (Poly(_w**2 - 1, _w, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
-                              (Poly(_w + 1, _w, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
+                             [(Poly(w0 - 2, w0, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1),
+                              (Poly(w1**2 - 1, w1, domain='ZZ'), Lambda(_a, -3*_a - 6), Lambda(_a, -_a + x), 2),
+                              (Poly(w2 + 1, w2, domain='ZZ'), Lambda(_a, -4), Lambda(_a, -_a + x), 1)])
 
 
 def test_assemble_partfrac_list():
@@ -142,4 +149,5 @@ def test_assemble_partfrac_list():
 
     _a = Dummy("a")
     pfd = (1, Poly(0, x, domain='ZZ'), [([sqrt(2),-sqrt(2)], Lambda(_a, _a/2), Lambda(_a, -_a + x), 1)])
+
     assert assemble_partfrac_list(pfd) == -sqrt(2)/(2*(x + sqrt(2))) + sqrt(2)/(2*(x - sqrt(2)))

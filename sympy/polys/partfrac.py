@@ -142,7 +142,7 @@ def apart_full_decomposition(P, Q):
     return assemble_partfrac_list(apart_list(P/Q, P.gens[0]))
 
 
-def apart_list(f, x=None, **options):
+def apart_list(f, x=None, dummies=None, **options):
     """
     Compute partial fraction decomposition of a rational function
     and return the result in structured form.
@@ -250,12 +250,21 @@ def apart_list(f, x=None, **options):
     P, Q = P.rat_clear_denoms(Q)
 
     polypart = poly
-    rationalpart = apart_list_full_decomposition(P, Q)
+
+    if dummies is None:
+        def dummies(name):
+            d = Dummy(name)
+            while True:
+                yield d
+
+        dummies = dummies("w")
+
+    rationalpart = apart_list_full_decomposition(P, Q, dummies)
 
     return (common, polypart, rationalpart)
 
 
-def apart_list_full_decomposition(P, Q):
+def apart_list_full_decomposition(P, Q, dummygen):
     """
     Bronstein's full partial fraction decomposition algorithm.
 
@@ -278,7 +287,6 @@ def apart_list_full_decomposition(P, Q):
 
     u = Function('u')(x)
     a = Dummy('a')
-    w = Dummy('w')
 
     partial = []
 
@@ -313,7 +321,7 @@ def apart_list_full_decomposition(P, Q):
             B, g = Q.half_gcdex(D)
             b = (P * B.quo(g)).rem(D)
 
-            Dw = D.subs(x, w)
+            Dw = D.subs(x, dummygen.next())
             numer = Lambda(a, b.as_expr().subs(x, a))
             denom = Lambda(a, (x - a))
             exponent = n-j
