@@ -42,13 +42,11 @@ def dup_sturm(f, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import QQ
-    >>> from sympy.polys.rootisolation import dup_sturm
+    >>> from sympy.polys import ring, QQ
+    >>> R, x = ring("x", QQ)
 
-    >>> f = QQ.map([1, -2, 1, -3])
-
-    >>> dup_sturm(f, QQ)
-    [[1/1, -2/1, 1/1, -3/1], [3/1, -4/1, 1/1], [2/9, 25/9], [-2079/4]]
+    >>> R.dup_sturm(x**3 - 2*x**2 + x - 3)
+    [x**3 - 2*x**2 + x - 3, 3*x**2 - 4*x + 1, 2/9*x + 25/9, -2079/4]
 
     References
     ==========

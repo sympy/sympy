@@ -9,12 +9,11 @@ from sympy.polys.polyclasses import (
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.specialpolys import f_4
 
-from sympy.polys.polyerrors import (
-    ExactQuotientFailed,
-)
+from sympy.polys.polyerrors import ExactQuotientFailed
 
 from sympy.utilities.pytest import raises
 
+f_4 = f_4.to_dense()
 
 def test_DMP___init__():
     f = DMP([[0], [], [0, 1, 2], [3]], ZZ)

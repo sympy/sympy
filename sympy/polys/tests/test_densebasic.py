@@ -47,6 +47,13 @@ from sympy.polys.domains import ZZ, QQ
 from sympy.core.singleton import S
 from sympy.utilities.pytest import raises
 
+f_0 = f_0.to_dense()
+f_1 = f_1.to_dense()
+f_2 = f_2.to_dense()
+f_3 = f_3.to_dense()
+f_4 = f_4.to_dense()
+f_5 = f_5.to_dense()
+f_6 = f_6.to_dense()
 
 def test_dup_LC():
     assert dup_LC([], ZZ) == 0

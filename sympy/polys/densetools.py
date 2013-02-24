@@ -388,15 +388,15 @@ def dmp_eval_tail(f, A, u, K):
     Examples
     ========
 
-    >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.densetools import dmp_eval_tail
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> f = ZZ.map([[2, 3], [1, 2]])
+    >>> f = 2*x*y + 3*x + y + 2
 
-    >>> dmp_eval_tail(f, (2, 2), 1, ZZ)
+    >>> R.dmp_eval_tail(f, [2])
+    7*x + 4
+    >>> R.dmp_eval_tail(f, [2, 2])
     18
-    >>> dmp_eval_tail(f, (2,), 1, ZZ)
-    [7, 4]
 
     """
     if not A:
