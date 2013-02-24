@@ -503,11 +503,11 @@ def dup_zz_factor_sqf(f, K):
     if n <= 0:
         return cont, []
     elif n == 1:
-        return cont, [(g, 1)]
+        return cont, [g]
 
     if query('USE_IRREDUCIBLE_IN_FACTOR'):
         if dup_zz_irreducible_p(g, K):
-            return cont, [(g, 1)]
+            return cont, [g]
 
     factors = None
 
