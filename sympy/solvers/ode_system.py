@@ -5,7 +5,8 @@ from sympy.core.containers import Tuple
 from sympy.core.function import AppliedUndef, Derivative, Function, Lambda
 from sympy.core.relational import Eq
 from sympy.core.symbol import Symbol, IntConst
-from sympy.matrices.matrices import Matrix, MatrixError
+from sympy.matrices import Matrix
+from sympy.matrices.matrices import MatrixError
 from sympy.utilities import numbered_symbols
 
 
