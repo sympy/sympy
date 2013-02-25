@@ -37,9 +37,8 @@ from sympy.polys.distributedpolys import (
     sdp_from_dict, sdp_div,
 )
 
-from sympy.polys.groebnertools import (
-    sdp_groebner, matrix_fglm,
-)
+from sympy.polys.groebnertools import sdp_groebner
+from sympy.polys.fglmtools import matrix_fglm
 
 from sympy.polys.monomialtools import (
     Monomial, monomial_key,

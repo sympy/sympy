@@ -9,17 +9,11 @@ from sympy.polys.groebnertools import (
     lbp, lbp_cmp, lbp_key, critical_pair,
     cp_cmp, cp_key, is_rewritable_or_comparable,
     Sign, Polyn, Num, s_poly, f5_reduce,
-    _basis, _representing_matrices,
-    matrix_fglm,
 )
 
-from sympy.polys.monomialtools import (
-    lex, grlex, grevlex,
-)
-
-from sympy.polys.polyerrors import (
-    ExactQuotientFailed, DomainError,
-)
+from sympy.polys.fglmtools import _representing_matrices
+from sympy.polys.monomialtools import lex, grlex, grevlex
+from sympy.polys.polyerrors import ExactQuotientFailed, DomainError
 
 from sympy.polys.domains import ZZ, QQ
 
