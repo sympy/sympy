@@ -1432,3 +1432,12 @@ def test_issue_1996():
     f = Function('f')
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
+
+def test_exact_enhancement():
+    f = Function('f')(x)
+    d = Derivative(f, x)
+    eq = f/x**2 + ((f*x - 1)/x)*d
+    rhs = dsolve(eq, f)
+    assert rhs = [f(x) == (-sqrt(C1*x**2 + 1) + 1)/x, f(x) == (sqrt(C1*x**2 + 1) + 1)/x]
+    eq = (3*x**2 - f**2)*d - (2*x*f)
+    assert dsolve(eq, f)[0] == (C1*x**2)**(1/3)
