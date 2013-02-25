@@ -237,7 +237,8 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 # "default", "all", "best", and "all_Integral" meta-hints should not be
 # included in this list, but "_best" and "_Integral" hints should be included.
 allhints = (
-    "direct", "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
+    "derivative_factored", "separable", "1st_exact", "1st_linear",
+    "Bernoulli", "Riccati_special_minus2",
     "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
     "1st_homogeneous_coeff_subs_dep_div_indep",
     "nth_linear_constant_coeff_homogeneous",
@@ -495,7 +496,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         eq = eq.lhs - eq.rhs
 
     # preprocess the equation and find func if not given
-    # if given equation is a direct derivative then don't preprocess
+    # if given equation is an instance of Derivative then don't preprocess
     if prep or func is None:
         if isinstance(eq, Derivative):
             tmp, func = preprocess(eq, func)
@@ -543,7 +544,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         return dsolve(eq, func, hint=hints['default'], simplify=simplify,
                       prep=prep, classify=False, order=hints['order'],
                       match=hints[hints['default']])
-    if isinstance(eq, Derivative) and hint != 'direct' :
+    if isinstance(eq, Derivative) and hint != 'derivative_factored' :
         eq = tmp
     if hint in ('all', 'all_Integral', 'best'):
         retdict = {}
@@ -595,7 +596,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         r = hints[hint]
         r['simplify'] = False  # Some hints can take advantage of this option
         rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
-        match=hints[hint]), func, hints['order'], hint)
+            match=hints[hint]), func, hints['order'], hint)
     return rv
 
 
@@ -698,7 +699,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-    ('direct', 'separable', '1st_linear', '1st_homogeneous_coeff_best',
+    ('derivative_factored', 'separable', '1st_linear',
+    '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     'nth_linear_constant_coeff_homogeneous', 'separable_Integral',
@@ -716,25 +718,26 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     matching_hints = {}
 
     if func and len(func.args) != 1:
-        raise ValueError("dsolve() and classify_ode() only work with functions " + "of one variable")
+        raise ValueError("dsolve() and classify_ode() only work with functions " +
+            "of one variable")
 
 
-    #Checking if it is a direct derivative
-    if isinstance(eq, Derivative) and func.args[0] == eq.variables[0]:
+    #Checking if it is derivative factored
+    if isinstance(eq, Derivative):
         if func is None:
             tmp, func = preprocess(eq, func)
-        if len(eq.atoms(Derivative)) == 1:
+        if len(eq.atoms(Derivative)) == 1 and func.args[0] == eq.variables[0]:
             r = {}
-            matching_hints['direct'] = r
+            matching_hints['derivative_factored'] = r
 
     if isinstance(eq, Equality):
         lhs = eq.lhs
-        if eq.rhs == 0 and isinstance(lhs, Derivative) and func.args[0] == lhs.variables[0]:
+        if eq.rhs == 0 and isinstance(lhs, Derivative):
             if func is None:
                 tmp, func = preprocess(lhs, func)
-            if len(eq.atoms(Derivative)) == 1:
+            if len(eq.atoms(Derivative)) == 1 and func.args[0] == lhs.variables[0]:
                 r = {}
-                matching_hints['direct'] = r
+                matching_hints['derivative_factored'] = r
 
     if prep or func is None:
         eq, func_ = preprocess(eq, func)
@@ -1904,25 +1907,33 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
-def ode_direct(eq, func, order, match):
+def ode_derivative_factored(eq, func, order, match):
     r'''
-    Solves equations when the given eq is in the form of a derivative.
-    Suppose the input is given in the form of d(g(x)*F(x))/dx = 0, where
-    g(x) is a known function, then the derivative would be of the form of
-    a polynomial depending on the order of the equation divided by g(x)
+    Solves differential equations when the given eq is in the form of a derivative.
+
+    The differential equation is of the form of d^n(g(x)*F(x))/dx^n = 0, where
+    g(x) is a known function, the function F(x) would be a polynomial of degree n
+    divided by the function g(x)
 
     Examples
     ========
 
-    >>> from sympy import Function, Derivative
+    >>> from sympy import Function, Derivative, pprint
     >>> from sympy.solvers.ode import dsolve
     >>> from sympy.abc import x
-    >>> f = Function('f')(x)
-    >>> d = Derivative(x*f, x, x, x)
-    >>> dsolve(d, f)
-    f(x) == C1 + C2/x + C3*x
+    >>> f = Function('f')
+    >>> d = Derivative(x*f(x), x, x, x)
+    >>> pprint(dsolve(d, f(x)))
+                C2
+    f(x) = C1 + -- + C3*x
+                x
 
     '''
+
+    # TODO: solve and classify nested derivatives also under this hint.
+    # That is, differential equations like Derivative(x*Derivative(f(x), x), x)
+    # should also be classified under this hint.
+
     equation = 0
     original_fun = eq.args[0]
     fun_remainder = original_fun / func

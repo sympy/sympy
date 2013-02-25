@@ -75,13 +75,13 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
-        '1st_linear_Integral', 'almost_linear', 'almost_linear_Integral', 'best', 'best_hint', 'default',
+        '1st_linear_Integral', 'best', 'best_hint', 'default',
         'nth_linear_euler_eq_homogeneous', 'order',
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
     '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
     '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
-    'almost_linear_Integral', 'best', 'best_hint', 'default', 'nth_linear_euler_eq_homogeneous',
+    'best', 'best_hint', 'default', 'nth_linear_euler_eq_homogeneous',
     'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
     assert a['order'] == ode_order(eq, f(x))
@@ -135,10 +135,10 @@ def test_dsolve_options():
 
 def test_classify_ode():
     assert classify_ode(f(x).diff(x, 2), f(x)) == \
-        ('nth_linear_constant_coeff_homogeneous', 'Liouville',
+        ('derivative_factored', 'nth_linear_constant_coeff_homogeneous', 'Liouville',
             'Liouville_Integral')
     assert classify_ode(f(x), f(x)) == ()
-    assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('separable',
+    assert classify_ode(Eq(f(x).diff(x), 0), f(x)) == ('derivative_factored', 'separable',
         '1st_linear', '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
@@ -1451,3 +1451,30 @@ def test_exact_enhancement():
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs[0] == acos(-sqrt(C1*exp(-2*x)/x**4 + 1))
     assert rhs[1] == acos(sqrt(C1*exp(-2*x)/x**4 + 1))
+
+
+def test_derivative_factored():
+    f = Function('f')
+    eq = Derivative(x * f(x) , x , x, x)
+    sol = dsolve(eq).rhs
+    assert sol == C1 + C2/x + C3*x
+    assert classify_ode(Derivative(x * f(x) , x , x, x) , f(x)) == ('derivative_factored',)
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    eq = Derivative(x**2 * f(x), x)
+    sol = dsolve(eq).rhs
+    assert sol ==  C1/x**2
+    assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
+
+    assert dsolve(Derivative(x*Derivative(f(x), x), x) , f(x)).rhs == C1 + C2*log(x)
+    assert classify_ode(Derivative(x**2 * f(x)) , f(x)) == ('derivative_factored', 'separable',
+    '1st_exact', '1st_linear', '1st_homogeneous_coeff_best',
+    '1st_homogeneous_coeff_subs_indep_div_dep', '1st_homogeneous_coeff_subs_dep_div_indep',
+    'separable_Integral', '1st_exact_Integral', '1st_linear_Integral',
+    '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
+    '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
+
+    eq = Derivative(sin(x) * f(x) , x)
+    assert dsolve(Derivative(sin(x) * f(x) , x)).rhs ==  C1/sin(x)
+    sol = dsolve(Derivative(sin(x) * f(x) , x)).rhs
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
