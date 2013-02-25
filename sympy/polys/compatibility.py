@@ -164,7 +164,6 @@ from sympy.polys.densetools import dup_sign_variations
 from sympy.polys.densetools import dup_clear_denoms
 from sympy.polys.densetools import dmp_clear_denoms
 from sympy.polys.densetools import dup_revert
-from sympy.polys.densetools import dmp_revert
 from sympy.polys.euclidtools import dup_half_gcdex
 from sympy.polys.euclidtools import dmp_half_gcdex
 from sympy.polys.euclidtools import dup_gcdex
@@ -289,12 +288,18 @@ from sympy.polys.sqfreetools import dup_gff_list
 from sympy.polys.sqfreetools import dmp_gff_list
 
 class IPolys(object):
-    def to_dense(self, element):
+    def wrap(self, element):
         from sympy.polys.rings import PolyElement
-        if isinstance(element, PolyElement) and element.ring == self:
-            return element.to_dense()
+        if isinstance(element, PolyElement):
+            if element.ring == self:
+                return element
+            else:
+                raise NotImplementedError("domain conversions")
         else:
-            return self.ground_new(element).to_dense()
+            return self.ground_new(element)
+
+    def to_dense(self, element):
+        return self.wrap(element).to_dense()
 
     def from_dense(self, element):
         return self.from_dict(dmp_to_dict(element, self.ngens-1, self.domain))
@@ -302,15 +307,15 @@ class IPolys(object):
     def dup_add_term(self, f, c, i):
         return self.from_dense(dup_add_term(self.to_dense(f), c, i, self.domain))
     def dmp_add_term(self, f, c, i):
-        return self.from_dense(dmp_add_term(self.to_dense(f), c, i, self.ngens-1, self.domain))
+        return self.from_dense(dmp_add_term(self.to_dense(f), self.wrap(c).drop(0).to_dense(), i, self.ngens-1, self.domain))
     def dup_sub_term(self, f, c, i):
         return self.from_dense(dup_sub_term(self.to_dense(f), c, i, self.domain))
     def dmp_sub_term(self, f, c, i):
-        return self.from_dense(dmp_sub_term(self.to_dense(f), c, i, self.ngens-1, self.domain))
+        return self.from_dense(dmp_sub_term(self.to_dense(f), self.wrap(c).drop(0).to_dense(), i, self.ngens-1, self.domain))
     def dup_mul_term(self, f, c, i):
         return self.from_dense(dup_mul_term(self.to_dense(f), c, i, self.domain))
     def dmp_mul_term(self, f, c, i):
-        return self.from_dense(dmp_mul_term(self.to_dense(f), c, i, self.ngens-1, self.domain))
+        return self.from_dense(dmp_mul_term(self.to_dense(f), self.wrap(c).drop(0).to_dense(), i, self.ngens-1, self.domain))
 
     def dup_add_ground(self, f, c):
         return self.from_dense(dup_add_ground(self.to_dense(f), c, self.domain))
@@ -535,22 +540,36 @@ class IPolys(object):
     def dmp_slice(f, m, n, u, K):
     def dmp_slice_in(f, m, n, j, u, K):
     def dup_random(n, a, b, K):
-    def dup_integrate(f, m, K):
-    def dmp_integrate(f, m, u, K):
-    def dmp_integrate_in(f, m, j, u, K):
     """
+
+    def dup_integrate(self, f, m):
+        return self.from_dense(dup_integrate(self.to_dense(f), m, self.domain))
+    def dmp_integrate(self, f, m):
+        return self.from_dense(dmp_integrate(self.to_dense(f), m, self.ngens-1, self.domain))
+
 
     def dup_diff(self, f, m):
         return self.from_dense(dup_diff(self.to_dense(f), m, self.domain))
     def dmp_diff(self, f, m):
         return self.from_dense(dmp_diff(self.to_dense(f), m, self.ngens-1, self.domain))
 
-    """
-    def dmp_diff_in(f, m, j, u, K):
-    def dup_eval(f, a, K):
-    def dmp_eval(f, a, u, K):
-    def dmp_eval_in(f, a, j, u, K):
-    """
+    def dmp_diff_in(self, f, m, j):
+        return self.from_dense(dmp_diff_in(self.to_dense(f), m, j, self.ngens-1, self.domain))
+    def dmp_integrate_in(self, f, m, j):
+        return self.from_dense(dmp_integrate_in(self.to_dense(f), m, j, self.ngens-1, self.domain))
+
+    def dup_eval(self, f, a):
+        return dup_eval(self.to_dense(f), a, self.domain)
+    def dmp_eval(self, f, a):
+        result = dmp_eval(self.to_dense(f), a, self.ngens-1, self.domain)
+        return self.drop(0).from_dense(result)
+
+    def dmp_eval_in(self, f, a, j):
+        result = dmp_eval_in(self.to_dense(f), a, j, self.ngens-1, self.domain)
+        return self.drop(j).from_dense(result)
+    def dmp_diff_eval_in(self, f, m, a, j):
+        result = dmp_diff_eval_in(self.to_dense(f), m, a, j, self.ngens-1, self.domain)
+        return self.drop(j).from_dense(result)
 
     def dmp_eval_tail(self, f, A):
         result = dmp_eval_tail(self.to_dense(f), A, self.ngens-1, self.domain)
@@ -559,32 +578,66 @@ class IPolys(object):
         else:
             return result
 
-    """
-    def dmp_diff_eval_in(f, m, a, j, u, K):
-    def dup_trunc(f, p, K):
-    def dmp_trunc(f, p, u, K):
-    def dmp_ground_trunc(f, p, u, K):
-    def dup_monic(f, K):
-    def dmp_ground_monic(f, u, K):
-    def dmp_ground_content(f, u, K):
-    def dmp_ground_primitive(f, u, K):
-    def dup_extract(f, g, K):
-    def dmp_ground_extract(f, g, u, K):
-    def dup_real_imag(f, K):
-    def dup_mirror(f, K):
-    def dup_scale(f, a, K):
-    def dup_shift(f, a, K):
-    def dup_transform(f, p, q, K):
-    def dup_compose(f, g, K):
-    def dmp_compose(f, g, u, K):
-    def dup_decompose(f, K):
-    def dmp_lift(f, u, K):
-    def dup_sign_variations(f, K):
-    def dup_clear_denoms(f, K0, K1=None, convert=False):
-    def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
-    def dup_revert(f, n, K):
-    def dmp_revert(f, g, u, K):
-    """
+    def dup_trunc(self, f, p):
+        return self.from_dense(dup_trunc(self.to_dense(f), p, self.domain))
+    def dmp_trunc(self, f, g):
+        return self.from_dense(dmp_trunc(self.to_dense(f), self.drop(0).to_dense(g), self.ngens-1, self.domain))
+    def dmp_ground_trunc(self, f, p):
+        return self.from_dense(dmp_ground_trunc(self.to_dense(f), p, self.ngens-1, self.domain))
+
+    def dup_monic(self, f):
+        return self.from_dense(dup_monic(self.to_dense(f), self.domain))
+    def dmp_ground_monic(self, f):
+        return self.from_dense(dmp_ground_monic(self.to_dense(f), self.ngens-1, self.domain))
+
+    def dup_extract(self, f, g):
+        c, F, G = dup_extract(self.to_dense(f), self.to_dense(g), self.domain)
+        return (c, self.from_dense(F), self.from_dense(G))
+    def dmp_ground_extract(self, f, g):
+        c, F, G = dmp_ground_extract(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
+        return (c, self.from_dense(F), self.from_dense(G))
+
+    def dup_real_imag(self, f):
+        p, q = dup_real_imag(self.wrap(f).drop(1).to_dense(), self.domain)
+        return (self.from_dense(p), self.from_dense(q))
+
+    def dup_mirror(self, f):
+        return self.from_dense(dup_mirror(self.to_dense(f), self.domain))
+    def dup_scale(self, f, a):
+        return self.from_dense(dup_scale(self.to_dense(f), a, self.domain))
+    def dup_shift(self, f, a):
+        return self.from_dense(dup_shift(self.to_dense(f), a, self.domain))
+    def dup_transform(self, f, p, q):
+        return self.from_dense(dup_transform(self.to_dense(f), self.to_dense(p), self.to_dense(q), self.domain))
+
+    def dup_compose(self, f, g):
+        return self.from_dense(dup_compose(self.to_dense(f), self.to_dense(g), self.domain))
+    def dmp_compose(self, f, g):
+        return self.from_dense(dmp_compose(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain))
+
+    def dup_decompose(self, f):
+        components = dup_decompose(self.to_dense(f), self.domain)
+        return map(self.from_dense, components)
+
+    def dmp_lift(self, f):
+        result = dmp_lift(self.to_dense(f), self.ngens-1, self.domain)
+        return self.to_ground().from_dense(result)
+
+    def dup_sign_variations(self, f):
+        return dup_sign_variations(self.to_dense(f), self.domain)
+
+    def dup_clear_denoms(self, f, convert=False):
+        c, F = dup_clear_denoms(self.to_dense(f), self.domain, convert=convert)
+        # TODO: convert
+        return (c, self.from_dense(F))
+    def dmp_clear_denoms(self, f, convert=False):
+        c, F = dmp_clear_denoms(self.to_dense(f), self.ngens-1, self.domain, convert=convert)
+        # TODO: convert
+        return (c, self.from_dense(F))
+
+    def dup_revert(self, f, n):
+        return self.from_dense(dup_revert(self.to_dense(f), n, self.domain))
+
     def dup_half_gcdex(self, f, g):
         s, h = dup_half_gcdex(self.to_dense(f), self.to_dense(g), self.domain)
         return (self.from_dense(s), self.from_dense(h))
@@ -723,7 +776,6 @@ class IPolys(object):
     def dup_content(self, f):
         cont = dup_content(self.to_dense(f), self.domain)
         return cont
-
     def dup_primitive(self, f):
         cont, prim = dup_primitive(self.to_dense(f), self.domain)
         return cont, self.from_dense(prim)
@@ -740,6 +792,13 @@ class IPolys(object):
             return (self.drop(0).from_dense(cont), self.from_dense(prim))
         else:
             return (cont, self.from_dense(prim))
+
+    def dmp_ground_content(self, f):
+        cont = dmp_ground_content(self.to_dense(f), self.ngens-1, self.domain)
+        return cont
+    def dmp_ground_primitive(self, f):
+        cont, prim = dmp_ground_primitive(self.to_dense(f), self.ngens-1, self.domain)
+        return (cont, self.from_dense(prim))
 
     def dup_cancel(self, f, g, include=True):
         result = dup_cancel(self.to_dense(f), self.to_dense(g), self.domain, include=include)

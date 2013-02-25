@@ -96,7 +96,7 @@ class PolyRing(IPolys):
     def _drop(self, gen):
         if isinstance(gen, int):
             i = gen
-            if 0 < i and i < self.ngens:
+            if not (0 <= i and i < self.ngens):
                 raise ValueError("invalid generator index")
         else:
             if gen not in self.gens:
