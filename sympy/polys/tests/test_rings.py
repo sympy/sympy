@@ -116,33 +116,33 @@ def test_PolyElement_rem():
     g = x - 3
     r = -123
 
-    assert f.rem([g]) == r
+    assert f.rem([g]) == f.div([g])[1] == r
 
     R, x,y = ring("x,y", ZZ, grlex)
 
     f = 4*x**2*y - 2*x*y + 4*x - 2*y + 8
 
-    assert f.rem([R(2)]) == 0
-    assert f.rem([2*y]) == 4*x + 8
+    assert f.rem([R(2)]) == f.div([R(2)])[1] == 0
+    assert f.rem([2*y]) == f.div([2*y])[1] == 4*x + 8
 
     f = x - 1
     g = y - 1
 
-    assert f.rem([g]) == f
+    assert f.rem([g]) == f.div([g])[1] == f
 
     f = x*y**2 + 1
     G = [x*y + 1, y + 1]
     r = 2
 
-    assert f.rem(G) == r
+    assert f.rem(G) == f.div(G)[1] == r
 
     f = x**2*y + x*y**2 + y**2
     G = [x*y - 1, y**2 - 1]
     r = x + y + 1
 
-    assert f.rem(G) == r
+    assert f.rem(G) == f.div(G)[1] == r
 
     G = [y**2 - 1, x*y - 1]
     r = 2*x + 1
 
-    assert f.rem(G) == r
+    assert f.rem(G) == f.div(G)[1] == r

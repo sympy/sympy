@@ -764,8 +764,47 @@ class PolyElement(dict, CantSympify):
     def quo(f, fv):
         return f.div(fv)[0]
 
-    def rem(f, fv):
-        return f.div(fv)[1]
+    def rem(f, G):
+        domain = f.ring.domain
+        order = f.ring.order
+        r = PolyElement(f.ring)
+        ltf = f.LT
+        f = f.copy()
+        get = f.get
+        while f:
+            for g in G:
+                tq = term_div(ltf, g.LT, domain)
+                if tq is not None:
+                    m, c = tq
+                    for mg, cg in g.terms():
+                        m1 = monomial_mul(mg, m)
+                        c1 = get(m1, 0) - c*cg
+                        if not c1:
+                            del f[m1]
+                        else:
+                            f[m1] = c1
+                    if f:
+                        if order == lex:
+                            ltm = max(f)
+                        else:
+                            ltm = max(f, key=lambda mx: order(mx))
+                        ltf = ltm, f[ltm]
+
+                    break
+            else:
+                ltm, ltc = ltf
+                if ltm in r:
+                    r[ltm] += ltc
+                else:
+                    r[ltm] = ltc
+                del f[ltm]
+                if f:
+                    if order == lex:
+                        ltm = max(f)
+                    else:
+                        ltm = max(f, key=lambda mx: order(mx))
+                    ltf = ltm, f[ltm]
+        return r
 
     def iadd_mon(self, mc):
         """add to self the monomial coeff*x0**i0*x1**i1*...
