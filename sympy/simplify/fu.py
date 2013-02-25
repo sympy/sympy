@@ -23,8 +23,9 @@ docstrings for examples.
     TR10 - expand sin-cos of sums
     TR10i - collect sin-cos arguments into sums
     TR11 - double angle to single angle
-    TR12 - rewrite tan of sum
-    TR13 - rewrite product of tan or cot
+    TR12 - expand tan of sum
+    TR12i - restore tan of sum
+    TR13 - expand product of tan or cot
     TRmorrie - prod(cos(x*2**i), (i, 0, k - 1)) -> sin(2**k*x)/(2**k*sin(x))
     TR14 - factored powers of sin or cos to cos or sin power
     TR15 - negative powers of sin to cot power
@@ -948,6 +949,108 @@ def TR12(rv, first=True):
     return rv
 
 
+def TR12i(rv):
+    """Combine tan arguments as
+    (tan(y) + tan(x))/(tan(x)*tan(y) - 1) -> -tan(x + y)
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import TR12i
+    >>> from sympy import tan
+    >>> from sympy.abc import a, b, c
+    >>> a, b, c = [tan(i) for i in (a, b, c)]
+    >>> TR12i((a + b)/(-a*b + 1))
+    tan(a + b)
+    >>> TR12i((a + b)/(a*b - 1))
+    -tan(a + b)
+    >>> TR12i((-a - b)/(a*b - 1))
+    -tan(a + b)
+    >>> TR12i(((a + b)/(-a*b + 1)**2*(-3*a - 3*c)/(2*(a*c - 1))).expand())
+    -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
+    """
+    from sympy import factor, fraction, factor_terms
+
+    rv = bottom_up(rv, TR12i)
+
+    n, d = rv.as_numer_denom()
+    if not d.args or not n.args:
+        return rv
+
+    dok = {}
+    def ok(di):
+        m = as_f_sign_1(di)
+        if m:
+            g, f, s = m
+            if s is S.NegativeOne and f.is_Mul and len(f.args) == 2 and all(fi.func is tan for fi in f.args):
+                return g, f
+    dargs = list(Mul.make_args(d))
+    for i, di in enumerate(dargs):
+        m = ok(di)
+        if m:
+            g, t = m
+            s = Add(*[_.args[0] for _ in t.args])
+            dok[s] = S.One
+            dargs[i] = g
+            continue
+        if di.is_Add:
+            di = factor(di)
+            if di.is_Mul:
+                dargs.extend(di.args)
+                dargs[i] = S.One
+        elif di.is_Pow and (di.exp.is_integer or di.base.is_positive):
+            m = ok(di.base)
+            if m:
+                g, t = m
+                s = Add(*[_.args[0] for _ in t.args])
+                dok[s] = di.exp
+                dargs[i] = g**di.exp
+    if not dok:
+        return rv
+
+    def ok(ni):
+        if ni.is_Add and len(ni.args) == 2:
+            a, b = ni.args
+            if a.func is tan and b.func is tan:
+                return a, b
+    nargs = list(Mul.make_args(factor_terms(n)))
+    hit = False
+    for i, di in enumerate(nargs):
+        m = ok(di)
+        if not m:
+            m = ok(-di)
+            if m:
+                nargs[i] = S.NegativeOne
+        if not m:
+            if di.is_Add:
+                di = factor(di)
+                if di.is_Mul:
+                    nargs.extend(di.args)
+                    nargs[i] = S.One
+                continue
+            elif di.is_Pow and (di.exp.is_integer or di.base.is_positive):
+                m = ok(di.base)
+                if not m:
+                    continue
+            else:
+                continue
+        hit = True
+        s = Add(*[_.args[0] for _ in m])
+        ed = dok[s]
+        newed = ed.extract_additively(S.One)
+        if newed is not None:
+            if newed:
+                dok[s] = newed
+            else:
+                dok.pop(s)
+        nargs[i] = -tan(s)
+
+    if hit:
+       rv = Mul(*nargs)/Mul(*dargs)/Mul(*[(Add(*[tan(a) for a in i.args]) - 1)**e for i, e in dok.iteritems()])
+
+    return rv
+
+
 def TR13(rv):
     """Change products of ``tan`` or ``cot``.
 
@@ -1667,7 +1770,8 @@ def trig_split(a, b, two=False):
 
 def as_f_sign_1(e):
     """If ``e`` is a sum that can be written as ``g*(a + s)`` where
-    ``s`` is ``+/-1``, return ``g``, ``a``, and ``s``.
+    ``s`` is ``+/-1``, return ``g``, ``a``, and ``s`` where ``a`` does
+    not have a leading negative coefficient.
 
     Examples
     ========
@@ -1687,6 +1791,15 @@ def as_f_sign_1(e):
     """
     if not e.is_Add or len(e.args) != 2:
         return
+    # exact match
+    a, b = e.args
+    if a in (S.NegativeOne, S.One):
+        g = S.One
+        if b.is_Mul and b.args[0].is_Number and b.args[0] < 0:
+            a, b = -a, -b
+            g = -g
+        return g, b, a
+    # gcd match
     a, b = [Factors(i) for i in e.args]
     ua, ub = a.normal(b)
     gcd = a.gcd(b).as_expr()
