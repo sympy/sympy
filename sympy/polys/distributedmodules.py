@@ -32,10 +32,6 @@ from sympy.polys.monomialtools import (
     monomial_mul, monomial_lcm, monomial_div, monomial_deg, monomial_divides
 )
 
-from sympy.polys.distributedpolys import (
-    sdp_LC, sdp_from_dict, sdp_to_dict, sdp_add, sdp_strip
-)
-
 from sympy.polys.polytools import Poly
 from sympy.polys.polyutils import parallel_dict_from_expr
 from sympy import S, sympify
@@ -148,9 +144,17 @@ def sdm_monomial_divides(A, B):
 
 # The actual distributed modules code.
 
-# These can be re-used without change:
-sdm_LC = sdp_LC
-sdm_to_dict = sdp_to_dict
+def sdm_LC(f, K):
+    """Returns the leading coeffcient of ``f``. """
+    if not f:
+        return K.zero
+    else:
+        return f[0][1]
+
+
+def sdm_to_dict(f):
+    """Make a dictionary from a distributed polynomial. """
+    return dict(f)
 
 
 def sdm_from_dict(d, O):
@@ -165,7 +169,17 @@ def sdm_from_dict(d, O):
     >>> sdm_from_dict(dic, lex)
     [((1, 1, 0), 1/1), ((1, 0, 0), 2/1)]
     """
-    return sdp_strip(sdp_from_dict(d, O))
+    return sdm_strip(sdm_sort(d.items(), O))
+
+
+def sdm_sort(f, O):
+    """Sort terms in ``f`` using the given monomial order ``O``. """
+    return sorted(f, key=lambda term: O(term[0]), reverse=True)
+
+
+def sdm_strip(f):
+    """Remove terms with zero coefficients from ``f`` in ``K[X]``. """
+    return [ (monom, coeff) for monom, coeff in f if coeff ]
 
 
 def sdm_add(f, g, O, K):
@@ -202,8 +216,20 @@ def sdm_add(f, g, O, K):
     >>> sdm_add([((1, 0, 1), QQ(1))], [((1, 1, 0), QQ(1))], lex, QQ)
     [((1, 1, 0), 1/1), ((1, 0, 1), 1/1)]
     """
-    # send 0 for u (3rd parameter) since it is not needed
-    return sdp_add(f, g, 0, O, K)
+    h = dict(f)
+
+    for monom, c in g:
+        if monom in h:
+            coeff = h[monom] + c
+
+            if not coeff:
+                del h[monom]
+            else:
+                h[monom] = coeff
+        else:
+            h[monom] = c
+
+    return sdm_from_dict(h, O)
 
 
 def sdm_LM(f):
