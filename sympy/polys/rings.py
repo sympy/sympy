@@ -693,7 +693,9 @@ class PolyElement(dict, CantSympify):
         if not p2:
             raise ZeroDivisionError
         for exp1, v in p1.iteritems():
-            p[exp1] = v/p2
+            coeff = v/p2
+            if coeff:
+                p[exp1] = coeff
         return p
 
     __div__ = __truediv__

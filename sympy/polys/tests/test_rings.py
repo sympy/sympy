@@ -36,6 +36,13 @@ def test_PolyElement_leading_term():
     assert (QQ(1,2)*x).leading_term == QQ(1,2)*x
     assert (QQ(1,4)*x*y + QQ(1,2)*x).leading_term == QQ(1,4)*x*y
 
+def test_PolyElement___div__():
+    R, x,y,z = ring("x,y,z", ZZ)
+    assert len(list((x**2/3 + y**3/4 + z**4/5).terms())) == 0
+
+    R, x,y,z = ring("x,y,z", QQ)
+    assert len(list((x**2/3 + y**3/4 + z**4/5).terms())) == 3
+
 def test_PolyElement_pow():
     R, x = ring("x", ZZ, grlex)
     f = 2*x + 3
