@@ -827,8 +827,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                     variable = factor.atoms(Symbol)
                     if x in variable and len(variable) == 1:
                         factor = exp(C.Integral(factor).doit())
-                        r[d] = simplify(factor * r[d])
-                        r[e] = simplify(factor * r[e])
+                        r[d] = factor * r[d]
+                        r[e] = factor * r[e]
                         matching_hints["1st_exact"] = r
                         matching_hints["1st_exact_Integral"] = r
                 # If (dP/dy - dQ/dx) / -P = f(y)
@@ -838,8 +838,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                     variable = factor.atoms(Symbol)
                     if y in variable and len(variable) == 1:
                         factor = exp(C.Integral(factor).doit())
-                        r[d] = simplify(factor * r[d])
-                        r[e] = simplify(factor * r[e])
+                        r[d] = factor * r[d]
+                        r[e] = factor * r[e]
                         matching_hints["1st_exact"] = r
                         matching_hints["1st_exact_Integral"] = r
 
