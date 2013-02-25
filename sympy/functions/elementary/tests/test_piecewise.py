@@ -300,7 +300,7 @@ def test_piecewise_fold():
     assert integrate(
         piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
 
-@XFAIL
+
 def test_piecewise_cond():
     p = Piecewise((0, Piecewise((cos(x) < 0, x < 1),
         (1/x > 0, x >= 1))), (1, True))

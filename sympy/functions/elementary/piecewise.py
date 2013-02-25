@@ -97,10 +97,19 @@ class Piecewise(Function):
             cond = pair.cond
             if cond is False:
                 continue
-            if not isinstance(cond, (bool, Relational, Boolean)):
-                raise TypeError(
-                    "Cond %s is of type %s, but must be a Relational,"
-                    " Boolean, or a built-in bool." % (cond, type(cond)))
+
+            def is_valid_cond(cond):
+                if isinstance(cond, (bool, Relational, Boolean)):
+                    return True
+                return isinstance(cond, Piecewise) and all(is_valid_cond(c)
+                    for e, c in cond.args)
+
+            if not is_valid_cond(cond):
+                from sympy.utilities.misc import filldedent
+                raise TypeError(filldedent("""
+                    Cond %s is of type %s, but must be a Relational, Boolean,
+                    a built-in bool or a Piecewise with all it's pieces
+                    satisfying this requiement.""" % (cond, type(cond))))
             newargs.append(pair)
             if cond is True:
                 break
