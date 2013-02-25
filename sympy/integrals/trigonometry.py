@@ -23,7 +23,7 @@ def _pat_sincos(x):
 _u = Dummy('u')
 
 
-def trigintegrate(f, x):
+def trigintegrate(f, x, conds='piecewise'):
     """Integrate f = Mul(trig) over x
 
        >>> from sympy import Symbol, sin, cos, tan, sec, csc, cot
@@ -90,7 +90,9 @@ def trigintegrate(f, x):
 
         fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
-        return Piecewise((zz, Eq(aa, 0)), (fx / a, True)).subs(aa, a)
+        if conds == 'piecewise':
+            return Piecewise((zz, Eq(aa, 0)), (fx / a, True)).subs(aa, a)
+        return fx / a
 
     # n & m are both even
     #
@@ -216,7 +218,9 @@ def trigintegrate(f, x):
                 res = (Rational(-1, m + 1) * cos(x)**(m + 1) * sin(x)**(n - 1) +
                        Rational(n - 1, m + 1) *
                        integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
-    return Piecewise((zz, Eq(aa, 0)), (res.subs(x, a*x) / a, True)).subs(aa, a)
+    if conds == 'piecewise':
+        return Piecewise((zz, Eq(aa, 0)), (res.subs(x, a*x) / a, True)).subs(aa, a)
+    return res.subs(x, a*x) / a
 
 
 def _sin_pow_integrate(n, x):

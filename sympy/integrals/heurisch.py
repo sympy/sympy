@@ -83,6 +83,49 @@ def _symbols(name, n):
     return lsyms[:n]
 
 
+def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_offset=0):
+    """
+    A wrapper around the heurisch integration algorithm.
+
+    This method takes the result from heurisch and checks for poles in the
+    denominator. For each of these poles, the integral is reevaluated, and
+    the final integration result is given in terms of a Piecewise.
+
+    See Also
+    ========
+
+    heurisch
+    """
+    from sympy import And, Basic, Eq, Piecewise
+
+    f = sympify(f)
+    if not f.has(x):
+        return f*x
+
+    res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset)
+    if not isinstance(res, Basic):
+        return res
+    n, d = res.as_numer_denom()
+    try:
+        slns = solve(d, dict=True, exclude=(x,))
+    except NotImplementedError:
+        slns = []
+    if not slns:
+        return res
+    if len(slns) > 1:
+        eqs = []
+        for sub_dict in slns:
+            eqs.extend([Eq(key, value) for key, value in sub_dict.iteritems()])
+        slns = solve(eqs, dict=True, exclude=(x,)) + slns
+    pairs = []
+    for sub_dict in slns:
+        expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries, degree_offset)
+        cond = And(*[Eq(key, value) for key, value in sub_dict.iteritems()])
+        pairs.append((expr, cond))
+    pairs.append((heurisch(f, x, rewrite, hints, mappings, retries, degree_offset), True))
+    return Piecewise(*pairs)
+
+
 def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_offset=0):
     """
     Compute indefinite integral using heuristic Risch algorithm.
@@ -158,37 +201,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     sympy.integrals.integrals.Integral
     components
     """
-    from sympy import And, Basic, Eq, Piecewise
-
     f = sympify(f)
-    if not f.has(x):
-        return f*x
-
-    res = _heurisch(f, x, rewrite, hints, mappings, retries, degree_offset)
-    if not isinstance(res, Basic):
-        return res
-    n, d = res.as_numer_denom()
-    try:
-        slns = solve(d, dict=True, exclude=(x,))
-    except NotImplementedError:
-        slns = []
-    if not slns:
-        return res
-    if len(slns) > 1:
-        eqs = []
-        for sub_dict in slns:
-            eqs.extend([Eq(key, value) for key, value in sub_dict.iteritems()])
-        slns = solve(eqs, dict=True, exclude=(x,)) + slns
-    pairs = []
-    for sub_dict in slns:
-        expr = _heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries, degree_offset)
-        cond = And(*[Eq(key, value) for key, value in sub_dict.iteritems()])
-        pairs.append((expr, cond))
-    pairs.append((_heurisch(f, x, rewrite, hints, mappings, retries, degree_offset), True))
-    return Piecewise(*pairs)
-
-
-def _heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_offset=0):
     if not f.has(x):
         return f*x
 
@@ -306,7 +319,7 @@ def _heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_
             break
     else:
         if not rewrite:
-            result = _heurisch(f, x, rewrite=True, hints=hints)
+            result = heurisch(f, x, rewrite=True, hints=hints)
 
             if result is not None:
                 return indep*result
@@ -489,7 +502,7 @@ def _heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_
         return indep * antideriv
     else:
         if retries >= 0:
-            result = _heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries - 1)
+            result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries - 1)
 
             if result is not None:
                 return indep*result

@@ -157,7 +157,7 @@ class DifferentialExtension(object):
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, conds='piecewise'):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -337,7 +337,7 @@ class DifferentialExtension(object):
                     # i in numpows
                     newterm = new
                 # We have to be careful if the base is S.One!
-                if i.base != x:
+                if conds == 'piecewise' and i.base != x:
                     newterm = Piecewise((S.One, Eq(i.base, S.One)), (newterm, True))
                 # TODO: Just put it in self.Tfuncs
                 self.backsubs.append((new, old))
@@ -1256,7 +1256,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     return (qa, qd, b)
 
 
-def integrate_hyperexponential(a, d, DE, z=None):
+def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     """
     Integration of hyperexponential functions.
 
@@ -1297,7 +1297,7 @@ def integrate_hyperexponential(a, d, DE, z=None):
     ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
         + residue_reduce_to_basic(g2, DE, z))
 
-    if DE.x not in qd.as_expr().subs(s).free_symbols:
+    if conds == 'piecewise' and DE.x not in qd.as_expr().subs(s).free_symbols:
         # We have to be careful if the exponent is S.Zero!
         aa = Dummy('a')
         ret += Piecewise(
@@ -1422,7 +1422,7 @@ class NonElementaryIntegral(Integral):
     pass
 
 
-def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False):
+def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False, conds='piecewise'):
     r"""
     The Risch Integration Algorithm.
 
@@ -1526,7 +1526,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
     """
     f = S(f)
 
-    DE = extension or DifferentialExtension(f, x, handle_first=handle_first)
+    DE = extension or DifferentialExtension(f, x, handle_first=handle_first, conds=conds)
     fa, fd = DE.fa, DE.fd
 
     result = S(0)
@@ -1538,7 +1538,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
 
         fa, fd = fa.cancel(fd, include=True)
         if case == 'exp':
-            ans, i, b = integrate_hyperexponential(fa, fd, DE)
+            ans, i, b = integrate_hyperexponential(fa, fd, DE, conds=conds)
         elif case == 'primitive':
             ans, i, b = integrate_primitive(fa, fd, DE)
         elif case == 'base':
