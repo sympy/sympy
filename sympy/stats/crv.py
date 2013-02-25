@@ -349,17 +349,6 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     This class is normally accessed through the various random variable
     functions, Normal, Exponential, Uniform, etc....
     """
-    def __new__(cls, symbol, distribution):
-        symbol = sympify(symbol)
-        return Basic.__new__(cls, symbol, distribution)
-
-    @property
-    def symbol(self):
-        return self.args[0]
-
-    @property
-    def distribution(self):
-        return self.args[1]
 
     @property
     def set(self):

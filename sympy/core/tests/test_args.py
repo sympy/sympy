@@ -455,6 +455,9 @@ def test_sympy__sets__fancysets__Naturals():
     from sympy.sets.fancysets import Naturals
     assert _test_args(Naturals())
 
+def test_sympy__sets__fancysets__Naturals0():
+    from sympy.sets.fancysets import Naturals0
+    assert _test_args(Naturals0())
 
 def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
@@ -528,11 +531,18 @@ def test_sympy__stats__crv__ProductContinuousPSpace():
     B = SingleContinuousPSpace(y, nd)
     assert _test_args(ProductContinuousPSpace(A, B))
 
-
 @SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
+def test_sympy__stats__drv__SingleDiscretePSpace():
+    from sympy.stats.drv import SingleDiscretePSpace
+    from sympy.stats.drv_types import PoissonDistribution
+    assert _test_args(SingleDiscretePSpace(x, PoissonDistribution(1)))
+
+@SKIP("abstract class")
+def test_sympy__stats__drv__SingleDiscreteDistribution():
+    pass
 
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
@@ -846,6 +856,13 @@ def test_sympy__stats__crv_types__WignerSemicircleDistribution():
     from sympy.stats.crv_types import WignerSemicircleDistribution
     assert _test_args(WignerSemicircleDistribution(1))
 
+def test_sympy__stats__drv_types__PoissonDistribution():
+    from sympy.stats.drv_types import PoissonDistribution
+    assert _test_args(PoissonDistribution(1))
+
+def test_sympy__stats__drv_types__GeometricDistribution():
+    from sympy.stats.drv_types import GeometricDistribution
+    assert _test_args(GeometricDistribution(.5))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy

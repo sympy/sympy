@@ -280,7 +280,7 @@ class FinitePSpace(PSpace):
         assert False, "We should never have gotten to this point"
 
 
-class SingleFinitePSpace(FinitePSpace, SinglePSpace):
+class SingleFinitePSpace(SinglePSpace, FinitePSpace):
     """
     A single finite probability space
 
@@ -291,26 +291,14 @@ class SingleFinitePSpace(FinitePSpace, SinglePSpace):
     Die, Bernoulli, Coin, etc....
     """
     @property
-    def symbol(self):
-        return self.args[0]
-
-    @property
-    def density(self):
-        return self.args[1]
-
-    @property
     def domain(self):
-        return SingleFiniteDomain(self.symbol, self.density.set)
-
-    def __new__(cls, symbol, density):
-        symbol = sympify(symbol)
-        return Basic.__new__(cls, symbol, density)
+        return SingleFiniteDomain(self.symbol, self.distribution.set)
 
     @property
     @cacheit
     def _density(self):
         return dict((frozenset(((self.symbol, val),)), prob)
-                    for val, prob in self.density.density.items())
+                    for val, prob in self.distribution.density.items())
 
 
 class ProductFinitePSpace(ProductPSpace, FinitePSpace):
