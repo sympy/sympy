@@ -1,0 +1,148 @@
+"""Test sparse polynomials. """
+
+from sympy.polys.rings import ring
+from sympy.polys.domains import ZZ, QQ
+from sympy.polys.monomialtools import lex, grlex
+
+from sympy.utilities.pytest import raises
+
+def test_PolyElement_LC():
+    R, x, y = ring("x,y", QQ, lex)
+    assert R(0).LC == QQ(0)
+    assert (QQ(1,2)*x).LC == QQ(1, 2)
+    assert (QQ(1,4)*x*y + QQ(1,2)*x).LC == QQ(1, 4)
+
+def test_PolyElement_LM():
+    R, x, y = ring("x,y", QQ, lex)
+    assert R(0).LM == (0, 0)
+    assert (QQ(1,2)*x).LM == (1, 0)
+    assert (QQ(1,4)*x*y + QQ(1,2)*x).LM == (1, 1)
+
+def test_PolyElement_LT():
+    R, x, y = ring("x,y", QQ, lex)
+    assert R(0).LT == ((0, 0), QQ(0))
+    assert (QQ(1,2)*x).LT == ((1, 0), QQ(1, 2))
+    assert (QQ(1,4)*x*y + QQ(1,2)*x).LT == ((1, 1), QQ(1, 4))
+
+def test_PolyElement_leading_monom():
+    R, x, y = ring("x,y", QQ, lex)
+    assert R(0).leading_monom == 0
+    assert (QQ(1,2)*x).leading_monom == x
+    assert (QQ(1,4)*x*y + QQ(1,2)*x).leading_monom == x*y
+
+def test_PolyElement_leading_term():
+    R, x, y = ring("x,y", QQ, lex)
+    assert R(0).leading_term == 0
+    assert (QQ(1,2)*x).leading_term == QQ(1,2)*x
+    assert (QQ(1,4)*x*y + QQ(1,2)*x).leading_term == QQ(1,4)*x*y
+
+def test_PolyElement_pow():
+    R, x = ring("x", ZZ, grlex)
+    f = 2*x + 3
+
+    assert f**0 == 1
+    assert f**1 == f
+
+    assert f**2 == 4*x**2 + 12*x + 9
+    assert f**3 == 8*x**3 + 36*x**2 + 54*x + 27
+    assert f**4 == 16*x**4 + 96*x**3 + 216*x**2 + 216*x + 81
+    assert f**5 == 32*x**5 + 240*x**4 + 720*x**3 + 1080*x**2 + 810*x + 243
+
+    R, x,y,z = ring("x,y,z", ZZ, grlex)
+    f = x**3*y - 2*x*y**2 - 3*z + 1
+    g = x**6*y**2 - 4*x**4*y**3 - 6*x**3*y*z + 2*x**3*y + 4*x**2*y**4 + 12*x*y**2*z - 4*x*y**2 + 9*z**2 - 6*z + 1
+
+    assert f**2 == g
+
+    raises(ValueError, lambda: f**-2)
+
+def test_PolyElement_div():
+    R, x = ring("x", ZZ, grlex)
+
+    f = x**3 - 12*x**2 - 42
+    g = x - 3
+
+    q = x**2 - 9*x - 27
+    r = -123
+
+    assert f.div([g]) == ([q], r)
+
+    R, x = ring("x", ZZ, grlex)
+    f = x**2 + 2*x + 2
+    assert f.div([R(1)]) == ([f], 0)
+
+    R, x = ring("x", QQ, grlex)
+    f = x**2 + 2*x + 2
+    assert f.div([R(2)]) == ([QQ(1,2)*x**2 + x + 1], 0)
+
+    R, x,y = ring("x,y", ZZ, grlex)
+    f = 4*x**2*y - 2*x*y + 4*x - 2*y + 8
+
+    assert f.div([R(2)]) == ([2*x**2*y - x*y + 2*x - y + 4], 0)
+    assert f.div([2*y]) == ([2*x**2 - x - 1], 4*x + 8)
+
+    f = x - 1
+    g = y - 1
+
+    assert f.div([g]) == ([0], f)
+
+    f = x*y**2 + 1
+    G = [x*y + 1, y + 1]
+
+    Q = [y, -1]
+    r = 2
+
+    assert f.div(G) == (Q, r)
+
+    f = x**2*y + x*y**2 + y**2
+    G = [x*y - 1, y**2 - 1]
+
+    Q = [x + y, 1]
+    r = x + y + 1
+
+    assert f.div(G) == (Q, r)
+
+    G = [y**2 - 1, x*y - 1]
+
+    Q = [x + 1, x]
+    r = 2*x + 1
+
+    assert f.div(G) == (Q, r)
+
+def test_PolyElement_rem():
+    R, x = ring("x", ZZ, grlex)
+
+    f = x**3 - 12*x**2 - 42
+    g = x - 3
+    r = -123
+
+    assert f.rem([g]) == r
+
+    R, x,y = ring("x,y", ZZ, grlex)
+
+    f = 4*x**2*y - 2*x*y + 4*x - 2*y + 8
+
+    assert f.rem([R(2)]) == 0
+    assert f.rem([2*y]) == 4*x + 8
+
+    f = x - 1
+    g = y - 1
+
+    assert f.rem([g]) == f
+
+    f = x*y**2 + 1
+    G = [x*y + 1, y + 1]
+    r = 2
+
+    assert f.rem(G) == r
+
+    f = x**2*y + x*y**2 + y**2
+    G = [x*y - 1, y**2 - 1]
+    r = x + y + 1
+
+    assert f.rem(G) == r
+
+    G = [y**2 - 1, x*y - 1]
+    r = 2*x + 1
+
+    assert f.rem(G) == r
