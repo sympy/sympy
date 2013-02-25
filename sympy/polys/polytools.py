@@ -33,11 +33,9 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_list,
 )
 
-from sympy.polys.distributedpolys import (
-    sdp_from_dict, sdp_div,
-)
+from sympy.polys.distributedpolys import sdp_from_dict
 
-from sympy.polys.groebnertools import sdp_groebner
+from sympy.polys.groebnertools import groebner as sdp_groebner
 from sympy.polys.fglmtools import matrix_fglm
 
 from sympy.polys.monomialtools import (
@@ -5796,13 +5794,14 @@ def reduced(f, G, *gens, **args):
         opt = opt.clone(dict(domain=domain.get_field()))
         retract = True
 
+    from sympy.polys.rings import xring
+    _ring, _ = xring(opt.gens, opt.domain, opt.order)
+
     for i, poly in enumerate(polys):
         poly = poly.set_domain(opt.domain).rep.to_dict()
-        polys[i] = sdp_from_dict(poly, opt.order)
+        polys[i] = _ring.from_dict(poly)
 
-    level = len(opt.gens) - 1
-
-    Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
+    Q, r = polys[0].div(polys[1:])
 
     Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
     r = Poly._from_dict(dict(r), opt)
@@ -5910,18 +5909,17 @@ class GroebnerBasis(Basic):
         if domain.has_assoc_Field:
             opt.domain = domain.get_field()
         else:
-            raise DomainError(
-                "can't compute a Groebner basis over %s" % opt.domain)
+            raise DomainError("can't compute a Groebner basis over %s" % opt.domain)
+
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, opt.order)
 
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, opt.order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        G = sdp_groebner(
-            polys, level, opt.order, opt.domain, method=opt.method)
-        G = [ Poly._from_dict(dict(g), opt) for g in G ]
+        G = sdp_groebner(polys, _ring, method=opt.method)
+        G = [ Poly._from_dict(g, opt) for g in G ]
 
         if not domain.has_Field:
             G = [ g.clear_denoms(convert=True)[1] for g in G ]
@@ -6130,13 +6128,14 @@ class GroebnerBasis(Basic):
             opt = opt.clone(dict(domain=domain.get_field()))
             retract = True
 
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, opt.order)
+
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, opt.order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
+        Q, r = polys[0].div(polys[1:])
 
         Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
         r = Poly._from_dict(dict(r), opt)

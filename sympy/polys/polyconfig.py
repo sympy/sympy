@@ -18,7 +18,7 @@ _default_config = {
     'GF_IRRED_METHOD':            'rabin',
     'GF_FACTOR_METHOD':           'zassenhaus',
 
-    'GB_METHOD':                  'buchberger',
+    'GROEBNER':                   'buchberger',
 }
 
 _current_config = {}

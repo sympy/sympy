@@ -3,7 +3,7 @@ from copy import copy
 from sympy.core import Symbol, symbols
 from sympy.core.sympify import CantSympify
 from sympy.core.compatibility import is_sequence
-from sympy.polys.monomialtools import monomial_mul, monomial_ldiv, monomial_pow, monomial_min, lex
+from sympy.polys.monomialtools import monomial_mul, monomial_ldiv, monomial_pow, monomial_min, lex, term_div
 from sympy.polys.compatibility import IPolys
 
 def ring(sgens, domain, order=lex):
@@ -53,12 +53,15 @@ class PolyRing(IPolys):
         return self.__str__()
 
     def __str__(self):
-        return "Polynomial ring in %s over %s" % (self.sgens, self.domain)
+        return "Polynomial ring in %s over %s with %s order" % (", ".join(self.sgens), self.domain, self.order)
 
     def __eq__(self, other):
         return self.ngens == other.ngens and \
                self.domain == other.domain and \
                self.order == other.order
+
+    def clone(self, domain=None, order=None):
+        return self.__class__(self.sgens, domain or self.domain, order or self.order)
 
     def monomial_basis(self, i):
         """Return the ith-basis element. """
@@ -69,11 +72,15 @@ class PolyRing(IPolys):
     def domain_new(self, element):
         return self.domain.convert(element)
 
-    def ground_new(self, element):
-        element = self.domain_new(element)
+    def ground_new(self, coeff):
+        return self.term_new(self.zero_monom, coeff)
+
+    def term_new(self, monom, coeff):
+        element = self.domain_new(coeff)
         poly = PolyElement(self)
         if element:
-            poly[self.zero_monom] = element
+            poly[monom] = coeff
+        poly.strip_zero()
         return poly
 
     def ring_new(self, element):
@@ -85,6 +92,16 @@ class PolyRing(IPolys):
             return self.ground_new(element)
 
     __call__ = ring_new
+
+    @property
+    def zero(self):
+        return PolyElement(self)
+
+    @property
+    def one(self):
+        poly = PolyElement(self)
+        poly[self.zero_monom] = self.domain.one
+        return poly
 
     def from_dict(self, d):
         poly = PolyElement(self)
@@ -125,9 +142,9 @@ class PolyRing(IPolys):
             raise ValueError("%s is not a composite domain" % self.domain)
 
 class PolyElement(dict, CantSympify):
-    def __init__(self, ring):
+    def __init__(self, ring, init=[]):
         self.ring = ring
-        dict.__init__(self)
+        dict.__init__(self, init)
 
     def copy(self):
         """Return a copy of polynomial self.
@@ -155,6 +172,26 @@ class PolyElement(dict, CantSympify):
 
         """
         return copy(self)
+
+    def set_ring(self, new):
+        if self.ring.ngens != new.ngens:
+            raise NotImplementedError
+        else:
+            return PolyElement(new, [ (k, new.domain_new(v)) for k, v in self.items() ])
+
+    def clear_denoms(self):
+        domain = self.ring.domain
+        denom = domain.denom
+
+        ground_ring = domain.get_ring()
+        common = ground_ring.one
+        lcm = ground_ring.lcm
+
+        for coeff in self.values():
+            common = lcm(common, denom(coeff))
+
+        poly = PolyElement(self.ring, [ (k, v*common) for k, v in self.items() ])
+        return common, poly
 
     def strip_zero(self):
         """Eliminate monomials with zero coefficient. """
@@ -683,6 +720,7 @@ class PolyElement(dict, CantSympify):
         TODO restrict to positive exponents
         """
         ring = self.ring
+        domain = ring.domain
         if not self:
             return [], PolyElement(ring)
         for f in fv:
@@ -698,15 +736,18 @@ class PolyElement(dict, CantSympify):
         p = self.copy()
         r = PolyElement(ring)
         expvs = [fx.leading_expv() for fx in fv]
-        rn = range(ring.ngens)
+        # rn = range(ring.ngens)
         while p:
             i = 0
             divoccurred = 0
             while i < s and divoccurred == 0:
                 expv = p.leading_expv()
-                expv1 = monomial_ldiv(expv, expvs[i])
-                if all(expv1[j] >= 0 for j in rn):
-                    c = p[expv]/fv[i][expvs[i]]
+                term = term_div((expv, p[expv]), (expvs[i], fv[i][expvs[i]]), domain)
+                if term is not None:
+                    expv1, c = term
+                # expv1 = monomial_ldiv(expv, expvs[i])
+                # if all(expv1[j] >= 0 for j in rn):
+                #     c = p[expv]/fv[i][expvs[i]]
                     qv[i] = qv[i].iadd_mon((expv1, c))
                     p = p.iadd_p_mon(fv[i], (expv1, -c))
                     divoccurred = 1
@@ -719,6 +760,12 @@ class PolyElement(dict, CantSympify):
         if expv == ring.zero_monom:
             r += p
         return qv, r
+
+    def quo(f, fv):
+        return f.div(fv)[0]
+
+    def rem(f, fv):
+        return f.div(fv)[1]
 
     def iadd_mon(self, mc):
         """add to self the monomial coeff*x0**i0*x1**i1*...
@@ -813,8 +860,32 @@ class PolyElement(dict, CantSympify):
         else:
             return None
 
+    @property
+    def LM(self):
+        expv = self.leading_expv()
+        if expv is None:
+            return self.ring.zero_monom
+        else:
+            return expv
+
+    @property
+    def LT(self):
+        expv = self.leading_expv()
+        if expv is None:
+            return (self.ring.zero_monom, self.ring.domain.zero)
+        else:
+            return (expv, self._get_coeff(expv))
+
+    @property
+    def LC(self):
+        return self._get_coeff(self.leading_expv())
+
+    def _get_coeff(self, expv):
+        return self.get(expv, self.ring.domain.zero)
+
+    @property
     def leading_term(self):
-        """leading term according to the monomial ordering
+        """Leading term according to the monomial ordering.
 
         Examples
         ========
@@ -824,8 +895,7 @@ class PolyElement(dict, CantSympify):
 
         >>> _, x, y = ring('x, y', QQ)
         >>> p = (x + y)**4
-        >>> p1 = p.leading_term()
-        >>> p1
+        >>> p.leading_term
         x**4
 
         """
@@ -869,3 +939,33 @@ class PolyElement(dict, CantSympify):
         for exp in p:
             p[exp] *= c
         return p
+
+    def mul_term(f, term):
+        monom, coeff = term
+
+        if not f or not coeff:
+            return PolyElement(f.ring)
+
+        terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.iteritems() ]
+        return PolyElement(f.ring, terms)
+
+    def mul_monom(f, monom):
+        terms = [ (monomial_mul(f_monom, monom), f_coeff) for f_monom, f_coeff in f.iteritems() ]
+        return PolyElement(f.ring, terms)
+
+    def monic(f):
+        """Divides all coefficients by the leading coefficient. """
+        if not f:
+            return f
+
+        lc = f.LC
+        domain = f.ring.domain
+
+        if domain.is_one(lc):
+            return f
+        else:
+            return PolyElement(f.ring, [ (monom, domain.quo(coeff, lc)) for monom, coeff in f.items() ])
+
+    @property
+    def freeze(self):
+        return tuple(self.items())
