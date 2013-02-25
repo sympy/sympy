@@ -1,6 +1,7 @@
 from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 from sympy.utilities.pytest import raises
+from sympy.abc import a, b, c
 
 y = Function('y')
 n, k = symbols('n,k', integer=True)
@@ -62,6 +63,10 @@ def test_rsolve_hyper():
     assert rsolve_hyper([-1, 1], 1 + n, n).expand() == C0 + n**2/2 + n/2
 
     assert rsolve_hyper([-1, 1], 3*(n + n**2), n).expand() == C0 + n**3 - n
+
+    assert rsolve_hyper([-a, 1],0,n).expand() == C0*a**n
+
+    assert rsolve_hyper([-a, 0, 1],0,n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(n/2)
 
     assert rsolve_hyper([1,1,1], 0, n).expand() == \
         C0*(-S(1)/2 - sqrt(3)*I/2)**n + C1*(-S(1)/2 + sqrt(3)*I/2)**n
@@ -159,15 +164,9 @@ def test_rsolve():
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
-    a,b,c = symbols('a,b,c')
-
-    assert rsolve(Eq(y(n + 1), a*y(n)), y(n)).simplify() == C0*a**n
     assert rsolve(Eq(y(n + 1), a*y(n)), y(n), {y(1): a}).simplify() == a**n
 
-    f = y(n) - a*y(n-2)
-
-    assert rsolve(f,y(n)) == C0*a**(n/2) + C1*(-sqrt(a))**n
-    assert rsolve(f,y(n), \
+    assert rsolve(y(n) - a*y(n-2),y(n), \
             {y(1): sqrt(a)*(a + b), y(2): a*(a - b)}).simplify() == \
             a**(n/2)*((-1)**(n + 1)*b + a)
 
