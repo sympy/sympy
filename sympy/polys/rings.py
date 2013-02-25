@@ -60,8 +60,8 @@ class PolyRing(IPolys):
                self.domain == other.domain and \
                self.order == other.order
 
-    def clone(self, domain=None, order=None):
-        return self.__class__(self.sgens, domain or self.domain, order or self.order)
+    def clone(self, sgens=None, domain=None, order=None):
+        return self.__class__(sgens or self.sgens, domain or self.domain, order or self.order)
 
     def monomial_basis(self, i):
         """Return the ith-basis element. """
@@ -110,6 +110,9 @@ class PolyRing(IPolys):
         poly.strip_zero()
         return poly
 
+    def from_terms(self, terms):
+        return self.from_dict(dict(terms))
+
     def _drop(self, gen):
         if isinstance(gen, int):
             i = gen
@@ -145,6 +148,10 @@ class PolyElement(dict, CantSympify):
     def __init__(self, ring, init=[]):
         self.ring = ring
         dict.__init__(self, init)
+
+    @property
+    def freeze(self):
+        return tuple(self.items())
 
     def copy(self):
         """Return a copy of polynomial self.
@@ -1020,8 +1027,29 @@ class PolyElement(dict, CantSympify):
         if domain.is_one(lc):
             return f
         else:
-            return PolyElement(f.ring, [ (monom, domain.quo(coeff, lc)) for monom, coeff in f.items() ])
+            quo = domain.quo
+            terms = [ (monom, quo(coeff, lc)) for monom, coeff in f.items() ]
+            return PolyElement(f.ring, terms)
 
-    @property
-    def freeze(self):
-        return tuple(self.items())
+    def primitive(f):
+        """Returns content and a primitive polynomial. """
+        domain = f.ring.domain
+        cont = f.content()
+
+        if cont == domain.one:
+            return cont, f
+        else:
+            quo = domain.quo
+            terms = [ (monom, quo(coeff, cont)) for monom, coeff in f.items() ]
+            return cont, PolyElement(f.ring, terms)
+
+    def content(f):
+        """Returns GCD of polynomial's coefficients. """
+        domain = f.ring.domain
+        cont = domain.zero
+        gcd = domain.gcd
+
+        for coeff in f.coeffs():
+            cont = gcd(cont, coeff)
+
+        return cont
