@@ -62,14 +62,6 @@ class Symbol(AtomicExpr, Boolean):
 
         """
 
-        if 'dummy' in assumptions:
-            SymPyDeprecationWarning(
-                feature="Symbol('x', dummy=True)",
-                useinstead="Dummy() or symbols(..., cls=Dummy)",
-                issue=3378, deprecated_since_version="0.7.0",
-            ).warn()
-            if assumptions.pop('dummy'):
-                return Dummy(name, **assumptions)
         if assumptions.get('zero', False):
             return S.Zero
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
