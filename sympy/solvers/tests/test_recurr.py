@@ -1,4 +1,4 @@
-from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols
+from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 from sympy.utilities.pytest import raises
 
@@ -62,6 +62,9 @@ def test_rsolve_hyper():
     assert rsolve_hyper([-1, 1], 1 + n, n).expand() == C0 + n**2/2 + n/2
 
     assert rsolve_hyper([-1, 1], 3*(n + n**2), n).expand() == C0 + n**3 - n
+
+    assert rsolve_hyper([1,1,1], 0, n).expand() == \
+        C0*(-S(1)/2 - sqrt(3)*I/2)**n + C1*(-S(1)/2 + sqrt(3)*I/2)**n
 
 
 def recurrence_term(c, f):
