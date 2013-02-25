@@ -1779,18 +1779,19 @@ def _handle_Integral(expr, func, order, hint):
     from sympy.functions.elementary.piecewise import Piecewise, piecewise_fold
     x = func.args[0]
     f = func.func
-    def remove_x0_y0(expr):
-        if expr.has(Piecewise):
-            return Piecewise(
-                *[(remove_x0_y0(e), c) for e, c in piecewise_fold(expr).args])
-        return expr.as_independent(x0, y0, as_Add=True)[0]
     if hint == "1st_exact":
         global exactvars
         x0 = exactvars['x0']
         y0 = exactvars['y0']
         y = exactvars['y']
         tmpsol = expr.lhs.doit()
-        sol = remove_x0_y0(tmpsol)
+        if tmpsol.has(Piecewise):
+            tmpsol = piecewise_fold(tmpsol)
+        if isinstance(tmpsol, Piecewise):
+            sol = Piecewise(*[(e.as_independent(x0, y0, as_Add=True)[0], c)
+                              for e, c in tmpsol.args])
+        else:
+            sol = tmpsol.as_independent(x0, y0, as_Add=True)[0]
         assert sol != 0
         sol = Eq(sol.subs(y, f(x)), expr.rhs)  # expr.rhs == C1
         del exactvars
