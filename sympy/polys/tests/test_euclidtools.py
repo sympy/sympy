@@ -4,11 +4,12 @@ from sympy.polys.rings import ring
 from sympy.polys.domains import ZZ, QQ, RR
 
 from sympy.polys.specialpolys import (
-    f_4, f_5, f_6,
+    f_polys,
     dmp_fateman_poly_F_1,
     dmp_fateman_poly_F_2,
     dmp_fateman_poly_F_3)
 
+f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 
 def test_dup_gcdex():
     R, x = ring("x", QQ)

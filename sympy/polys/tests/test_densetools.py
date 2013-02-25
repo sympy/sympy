@@ -42,7 +42,7 @@ from sympy.polys.polyerrors import (
 )
 
 from sympy.polys.specialpolys import (
-    f_0, f_1, f_2, f_3, f_4, f_5, f_6,
+    f_polys,
     dmp_fateman_poly_F_1,
     dmp_fateman_poly_F_2,
     dmp_fateman_poly_F_3,
@@ -56,13 +56,7 @@ from sympy.abc import x
 
 from sympy.utilities.pytest import raises
 
-f_0 = f_0.to_dense()
-f_1 = f_1.to_dense()
-f_2 = f_2.to_dense()
-f_3 = f_3.to_dense()
-f_4 = f_4.to_dense()
-f_5 = f_5.to_dense()
-f_6 = f_6.to_dense()
+f_0, f_1, f_2, f_3, f_4, f_5, f_6 = [ f.to_dense() for f in f_polys() ]
 
 def test_dup_integrate():
     assert dup_integrate([], 1, QQ) == []

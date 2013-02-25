@@ -4,11 +4,11 @@ from sympy.polys.rings import ring
 from sympy.polys.domains import FF, ZZ, QQ
 from sympy.polys.polyclasses import DMP
 from sympy.polys.polyerrors import DomainError
-
-from sympy.polys.specialpolys import (f_0, f_1, f_2, f_3, f_4, f_5, f_6)
+from sympy.polys.specialpolys import f_polys
 
 from sympy.utilities.pytest import raises
 
+f_0, f_1, f_2, f_3, f_4, f_5, f_6 = f_polys()
 
 def test_dup_sqf():
     R, x = ring("x", ZZ)
