@@ -33,9 +33,7 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_list,
 )
 
-from sympy.polys.distributedpolys import sdp_from_dict
-
-from sympy.polys.groebnertools import groebner as sdp_groebner
+from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.fglmtools import matrix_fglm
 
 from sympy.polys.monomialtools import (
@@ -5918,7 +5916,7 @@ class GroebnerBasis(Basic):
             poly = poly.set_domain(opt.domain).rep.to_dict()
             polys[i] = _ring.from_dict(poly)
 
-        G = sdp_groebner(polys, _ring, method=opt.method)
+        G = _groebner(polys, _ring, method=opt.method)
         G = [ Poly._from_dict(g, opt) for g in G ]
 
         if not domain.has_Field:
@@ -6073,13 +6071,14 @@ class GroebnerBasis(Basic):
             order=dst_order,
         ))
 
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, src_order)
+
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, src_order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        G = matrix_fglm(polys, level, src_order, dst_order, opt.domain)
+        G = matrix_fglm(polys, _ring, dst_order)
         G = [ Poly._from_dict(dict(g), opt) for g in G ]
 
         if not domain.has_Field:

@@ -884,6 +884,14 @@ class PolyElement(dict, CantSympify):
         return self.get(expv, self.ring.domain.zero)
 
     @property
+    def leading_monom(self):
+        p = PolyElement(self.ring)
+        expv = self.leading_expv()
+        if expv:
+            p[expv] = self.ring.one
+        return p
+
+    @property
     def leading_term(self):
         """Leading term according to the monomial ordering.
 
@@ -904,6 +912,15 @@ class PolyElement(dict, CantSympify):
         if expv:
             p[expv] = self[expv]
         return p
+
+    def coeffs(self):
+        return self.itervalues()
+
+    def monoms(self):
+        return self.iterkeys()
+
+    def terms(self):
+        return self.iteritems()
 
     def imul_num(p, c):
         """multiply inplace the polynomial p by an element in the
