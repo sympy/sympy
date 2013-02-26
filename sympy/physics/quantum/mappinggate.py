@@ -1,6 +1,6 @@
 """Mapping Quantum Gates"""
 
-from sympy import Integer
+from sympy import Integer, conjugate, Add
 from sympy.core.containers import Dict
 from sympy.core.basic import Basic
 from sympy.physics.quantum import Dagger
@@ -18,8 +18,11 @@ class MappingGate(Gate):
     ==========
 
     args : tuple
+        
         The list of initial state and final state pairs. There must be an even
-        number of arguments so every initial state has a final state.
+        number of arguments so every initial state has a final state. The initial
+        and final states can be separated by a scalar. If no scalar is given, 1 is
+        assumed.
 
     """
 
@@ -28,17 +31,20 @@ class MappingGate(Gate):
         temp = {}
         for arg in args:
             i = Qubit(arg[0])
-            f = Qubit(arg[1])
-            #parts = split_qexpr_parts(f)
-            #f = Qubit(parts[1])
-            #scalar = parts[0]
+            if len(arg) == 2:
+                scalar = Integer(1)
+                f = Qubit(arg[1])
+            elif len(arg) == 3:
+                scalar = arg[1]
+                f = Qubit(arg[2])
+            else:
+                raise ValueError('Too many scalar arguments')
             if i.nqubits != f.nqubits:
                 raise ValueError('Number of qubits for each state do not match')
-            temp[i] = f
+            temp[i] = scalar*f
             #temp[Dagger(i)] = conjugate(scalar)*Dagger(f)
         new_args = Dict(temp)
-        print new_args
-        return new_args
+        return (new_args,)
 
     @classmethod
     def _eval_hilbert_space(cls, args):
@@ -47,16 +53,20 @@ class MappingGate(Gate):
     @property
     def size(self):
         """Total number of initial and final state pairs"""
-        return int(len(self.args)/2)
+        return int(len(self.args[0])/2)
+
+    @property
+    def mapping(self):
+        return self.args[0]
 
     @property
     def nqubits(self):
         """Gives the dimension of the matrix representation"""
-        return self.args[0].nqubits
+        return self.args[0].args[0].args[0].nqubits
 
     def get_final_state(self, qubit):
         i = Qubit(qubit)
-        f = self.args.get(i, None)
+        f = self.mapping.get(i, None)
         if f is None:
             return i
         else:
@@ -68,23 +78,29 @@ class MappingGate(Gate):
     def _eval_rewrite_as_op(self, *args):
         terms = []
         for i in range(2**self.nqubits):
-            init = Qubit(IntQubit(i))
-            fin = self.get_final_state(init)
-            term[i] = fin*Dagger(init)
+            temp = bin(i)[2:]
+            string = (self.nqubits - len(temp))*'0' + temp
+            initial = Qubit(string)
+            fin = self.get_final_state(initial)
+            terms.append(fin*Dagger(initial))
         return Add(*terms)
 
     def _represent_default_basis(self, **options):
         return self._represent_ZGate(None, **options)
 
-    def _represent_ZGate(self, basis, *args, **options):
+    def _represent_ZGate(self, basis, **options):
         format = options.get('format','sympy')
         spmatrix = options.get('spmatrix', 'csr')
         matrix = matrix_eye(2**self.nqubits, **options)
-        for i, f in self.args.items():
+        for i, f in self.mapping.items():
             col = IntQubit(i).as_int()
-            row = IntQubit(f).as_int()
+            terms = split_qexpr_parts(f)
+            if len(terms[0]) == 1:
+                row = IntQubit(*terms[1]).as_int()
+                scalar = terms[0]
+            else:
+                row = IntQubit(*terms[0]).as_int()
+                scalar = Integer(1)
             matrix[col, col] = Integer(0)
-            matrix[row, col] = f
-        if format == 'scipy.sparse':
-            matrix = matrix.tocsr()
+            matrix[row, col] = scalar
         return matrix
