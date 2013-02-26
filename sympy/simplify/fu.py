@@ -1446,17 +1446,17 @@ def L(rv):
 
 if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i
     )= map(debug,
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i
     ))
 
 _CTR1 = [TR5, TR0], [TR6, TR0], [identity]
 
 _CTR2 = [TR11, TR5, TR0], [TR11, TR6, TR0], [TR11, TR0]
 
-_CTR3 = [TR8, TR0], [TR8, TR10i, TR0], [identity]
+_CTR3 = [TRmorrie, TR8, TR0], [TRmorrie, TR8, TR10i, TR0], [identity]
 
 _CTR4 = [TR4, TR10i], [identity]
 
@@ -1478,7 +1478,7 @@ _RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0]
 _RL2 = [
     [TR4, TR3, TR10, TR4, TR3, TR11],
     [TR5, TR7, TR11, TR4],
-    [CTR3, TR0, CTR1, TR9, CTR2, TR4, TR9, TR0, TR9, CTR4],
+    [CTR3, CTR1, TR9, CTR2, TR4, TR9, TR9, CTR4],
     [identity],
     ]
 
@@ -1551,7 +1551,6 @@ def fu(rv):
     """
     was = rv
     rv = sympify(rv)
-    rv = TR0(rv)
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = RL1(rv)
@@ -1559,10 +1558,9 @@ def fu(rv):
             rv = rv1
         if rv.has(tan, cot):
             rv = TR2(rv)
-    rv = TR0(rv)
     if rv.has(sin, cos):
         rv1 = RL2(rv)
-        rv2 = TR8(rv1)
+        rv2 = TR8(TRmorrie(rv1))
         rv = ordered(
             [was, rv, rv1, rv2],keys=(L, count_ops), default=False).next()
     return rv

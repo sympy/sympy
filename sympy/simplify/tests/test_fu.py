@@ -264,6 +264,9 @@ def test_fu():
 
     assert fu(tan(1)*tan(2)) == tan(1)*tan(2)
 
+    expr = Mul(*[cos(2**i) for i in range(10)])
+    assert fu(expr) == sin(1024)/(1024*sin(1))
+
 
 def test_process_common_addends():
     # this tests that the args are not evaluated as they are given to do
