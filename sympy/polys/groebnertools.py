@@ -533,7 +533,7 @@ def f5_reduce(f, B):
     >>> g = lbp(sig((0, 0, 0), 2), x, 2)
 
     >>> Polyn(f).rem([Polyn(g)])
-    0
+    0/1
     >>> f5_reduce(f, [g])
     (((1, 1, 1), 4), x, 3)
 

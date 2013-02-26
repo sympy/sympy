@@ -628,7 +628,7 @@ def test_dmp_factor_list():
                             (DMP([ZZ(1)], ZZ)*x + DMP([ZZ(1), ZZ(0)], ZZ), 1)])
 
     R, x, y = ring("x,y", QQ['t'])
-    f = DMP([QQ(1, 2), QQ(0)], ZZ)*x**2 + DMP([QQ(1, 2), QQ(0), QQ(0)], ZZ)*x
+    f = DMP([QQ(1, 2), QQ(0)], QQ)*x**2 + DMP([QQ(1, 2), QQ(0), QQ(0)], QQ)*x
 
     assert R.dmp_factor_list(f) == \
         (DMP([QQ(1, 2)], QQ), [(DMP([QQ(1), QQ(0)], QQ), 1),

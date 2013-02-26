@@ -163,9 +163,9 @@ class PolyElement(dict, CantSympify):
         Examples
         ========
 
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
-        >>> R, x, y = ring('x, y', QQ)
+        >>> R, x, y = ring('x, y', ZZ)
         >>> p = (x + y)**2
         >>> p1 = p.copy()
         >>> p2 = p
@@ -213,9 +213,9 @@ class PolyElement(dict, CantSympify):
         Examples
         ========
 
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
-        >>> _, x, y, z = ring('x, y, z', QQ)
+        >>> _, x, y, z = ring('x, y, z', ZZ)
         >>> p = x + y**2 + x*y
         >>> p.variables()
         (0, 1)
@@ -233,8 +233,9 @@ class PolyElement(dict, CantSympify):
         return self.__str__()
 
     def __str__(self):
+        from sympy.printing import sstr
         if not self:
-            return "0"
+            return sstr(self.ring.domain.zero)
         ring = self.ring
         sgens = ring.sgens
         ngens = ring.ngens
@@ -251,7 +252,7 @@ class PolyElement(dict, CantSympify):
             if ring.domain.is_negative(coeff):
                 coeff = -coeff
             if coeff != 1 or expv == zm:
-                scoeff = str(coeff)
+                scoeff = sstr(coeff)
             else:
                 scoeff = ''
             sexpv = []
@@ -278,9 +279,9 @@ class PolyElement(dict, CantSympify):
         Examples
         ========
 
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
-        >>> _, x, y = ring('x, y', QQ)
+        >>> _, x, y = ring('x, y', ZZ)
         >>> p1 = (x + y)**2 + (x - y)**2
         >>> p1 == 4*x*y
         False
@@ -327,9 +328,9 @@ class PolyElement(dict, CantSympify):
         Examples
         ========
 
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
-        >>> _, x, y = ring('x, y', QQ)
+        >>> _, x, y = ring('x, y', ZZ)
         >>> (x + y)**2 + (x - y)**2
         2*x**2 + 2*y**2
 
@@ -403,9 +404,9 @@ class PolyElement(dict, CantSympify):
         Examples
         ========
 
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
-        >>> _, x, y = ring('x, y', QQ)
+        >>> _, x, y = ring('x, y', ZZ)
         >>> p1 = x + y**2
         >>> p2 = x*y + y**2
         >>> p1 - p2
@@ -461,9 +462,9 @@ class PolyElement(dict, CantSympify):
         Examples
         ========
 
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
-        >>> _, x, y = ring('x, y', QQ)
+        >>> _, x, y = ring('x, y', ZZ)
         >>> p = x + y
         >>> 4 - p
         -x - y + 4
@@ -527,9 +528,9 @@ class PolyElement(dict, CantSympify):
         Examples
         ========
 
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
-        >>> _, x, y = ring('x, y', QQ)
+        >>> _, x, y = ring('x, y', ZZ)
         >>> p = x + y
         >>> 4 * p
         4*x + 4*y
@@ -552,9 +553,9 @@ class PolyElement(dict, CantSympify):
         Examples
         ========
 
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
         >>> from sympy.polys.rings import ring
-        >>> _, x, y = ring('x, y', QQ)
+        >>> _, x, y = ring('x, y', ZZ)
         >>> p = x + y**2
         >>> p**3
         x**3 + 3*x**2*y**2 + 3*x*y**4 + y**6
@@ -618,8 +619,8 @@ class PolyElement(dict, CantSympify):
         ========
 
         >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import QQ
-        >>> _, x, y = ring('x, y', QQ)
+        >>> from sympy.polys.domains import ZZ
+        >>> _, x, y = ring('x, y', ZZ)
         >>> p = x + y**2
         >>> p.square()
         x**2 + 2*x*y**2 + y**4
@@ -713,8 +714,8 @@ class PolyElement(dict, CantSympify):
         ========
 
         >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import QQ
-        >>> _, x, y = ring('x, y', QQ)
+        >>> from sympy.polys.domains import ZZ
+        >>> _, x, y = ring('x, y', ZZ)
         >>> f = x**3
         >>> f0 = x - y**2
         >>> f1 = x - y
@@ -825,9 +826,9 @@ class PolyElement(dict, CantSympify):
         ========
 
         >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
 
-        >>> _, x, y = ring('x, y', QQ)
+        >>> _, x, y = ring('x, y', ZZ)
         >>> p = x**4 + 2*y
         >>> m = (1, 2)
         >>> p1 = p.iadd_mon((m, 5))
@@ -864,9 +865,9 @@ class PolyElement(dict, CantSympify):
         ========
 
         >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
 
-        >>> _, x, y, z = ring('x, y, z', QQ)
+        >>> _, x, y, z = ring('x, y, z', ZZ)
         >>> p1 = x**4 + 2*y
         >>> p2 = y + z
         >>> m = (1, 2, 3)
@@ -985,13 +986,13 @@ class PolyElement(dict, CantSympify):
         >>> p = x + y**2
         >>> p1 = p.imul_num(3)
         >>> p1
-        3*x + 3*y**2
+        3/1*x + 3/1*y**2
         >>> p1 is p
         True
         >>> p = x
         >>> p1 = p.imul_num(3)
         >>> p1
-        3*x
+        3/1*x
         >>> p1 is p
         False
 

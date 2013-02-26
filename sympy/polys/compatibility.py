@@ -628,12 +628,14 @@ class IPolys(object):
 
     def dup_clear_denoms(self, f, convert=False):
         c, F = dup_clear_denoms(self.to_dense(f), self.domain, convert=convert)
-        # TODO: convert
-        return (c, self.from_dense(F))
+        if convert: ring = self.clone(domain=self.domain.get_ring())
+        else: ring = self
+        return (c, ring.from_dense(F))
     def dmp_clear_denoms(self, f, convert=False):
         c, F = dmp_clear_denoms(self.to_dense(f), self.ngens-1, self.domain, convert=convert)
-        # TODO: convert
-        return (c, self.from_dense(F))
+        if convert: ring = self.clone(domain=self.domain.get_ring())
+        else: ring = self
+        return (c, ring.from_dense(F))
 
     def dup_revert(self, f, n):
         return self.from_dense(dup_revert(self.to_dense(f), n, self.domain))

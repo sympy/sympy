@@ -86,7 +86,7 @@ def dmp_integrate(f, m, u, K):
     >>> R, x,y = ring("x,y", QQ)
 
     >>> R.dmp_integrate(x + 2*y, 1)
-    1/2*x**2 + 2*x*y
+    1/2*x**2 + 2/1*x*y
     >>> R.dmp_integrate(x + 2*y, 2)
     1/6*x**3 + x**2*y
 
@@ -133,7 +133,7 @@ def dmp_integrate_in(f, m, j, u, K):
     >>> R, x,y = ring("x,y", QQ)
 
     >>> R.dmp_integrate_in(x + 2*y, 1, 0)
-    1/2*x**2 + 2*x*y
+    1/2*x**2 + 2/1*x*y
     >>> R.dmp_integrate_in(x + 2*y, 1, 1)
     x*y + y**2
 
@@ -574,7 +574,7 @@ def dmp_ground_monic(f, u, K):
     >>> f = 3*x**2*y + 8*x**2 + 5*x*y + 6*x + 2*y + 3
 
     >>> R.dmp_ground_monic(f)
-    x**2*y + 8/3*x**2 + 5/3*x*y + 2*x + 2/3*y + 1
+    x**2*y + 8/3*x**2 + 5/3*x*y + 2/1*x + 2/3*y + 1/1
 
     """
     if not u:
@@ -698,7 +698,7 @@ def dup_primitive(f, K):
     >>> f = 6*x**2 + 8*x + 12
 
     >>> R.dup_primitive(f)
-    (2/1, 3*x**2 + 4*x + 6)
+    (2/1, 3/1*x**2 + 4/1*x + 6/1)
 
     """
     if not f:
@@ -732,7 +732,7 @@ def dmp_ground_primitive(f, u, K):
     >>> f = 2*x*y + 6*x + 4*y + 12
 
     >>> R.dmp_ground_primitive(f)
-    (2/1, x*y + 3*x + 2*y + 6)
+    (2/1, x*y + 3/1*x + 2/1*y + 6/1)
 
     """
     if not u:
@@ -1143,7 +1143,7 @@ def dmp_lift(f, u, K):
     >>> f = x**2 + K([QQ(1), QQ(0)])*x + K([QQ(2), QQ(0)])
 
     >>> R.dmp_lift(f)
-    x**8 + 2*x**6 + 9*x**4 - 8*x**2 + 16
+    x**8 + 2/1*x**6 + 9/1*x**4 - 8/1*x**2 + 16/1
 
     """
     if not K.is_Algebraic:
@@ -1209,7 +1209,7 @@ def dup_clear_denoms(f, K0, K1=None, convert=False):
     >>> f = QQ(1,2)*x + QQ(1,3)
 
     >>> R.dup_clear_denoms(f, convert=False)
-    (6, 3*x + 2)
+    (6, 3/1*x + 2/1)
     >>> R.dup_clear_denoms(f, convert=True)
     (6, 3*x + 2)
 
@@ -1265,7 +1265,7 @@ def dmp_clear_denoms(f, u, K0, K1=None, convert=False):
     >>> f = QQ(1,2)*x + QQ(1,3)*y + 1
 
     >>> R.dmp_clear_denoms(f, convert=False)
-    (6, 3*x + 2*y + 6)
+    (6, 3/1*x + 2/1*y + 6/1)
     >>> R.dmp_clear_denoms(f, convert=True)
     (6, 3*x + 2*y + 6)
 
@@ -1308,7 +1308,7 @@ def dup_revert(f, n, K):
     >>> f = -QQ(1,720)*x**6 + QQ(1,24)*x**4 - QQ(1,2)*x**2 + 1
 
     >>> R.dup_revert(f, 8)
-    61/720*x**6 + 5/24*x**4 + 1/2*x**2 + 1
+    61/720*x**6 + 5/24*x**4 + 1/2*x**2 + 1/1
 
     """
     g = [K.revert(dup_TC(f, K))]

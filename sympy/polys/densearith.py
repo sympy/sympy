@@ -320,7 +320,7 @@ def dup_quo_ground(f, c, K):
 
     >>> R, x = ring("x", QQ)
     >>> R.dup_quo_ground(3*x**2 + 2, QQ(2))
-    3/2*x**2 + 1
+    3/2*x**2 + 1/1
 
     """
     if not c:
@@ -372,7 +372,7 @@ def dup_exquo_ground(f, c, K):
     >>> R, x = ring("x", QQ)
 
     >>> R.dup_exquo_ground(x**2 + 2, QQ(2))
-    1/2*x**2 + 1
+    1/2*x**2 + 1/1
 
     """
     if not c:
@@ -1424,7 +1424,7 @@ def dup_ff_div(f, g, K):
     >>> R, x = ring("x", QQ)
 
     >>> R.dup_ff_div(x**2 + 1, 2*x - 4)
-    (1/2*x + 1, 5)
+    (1/2*x + 1/1, 5/1)
 
     """
     df = dup_degree(f)
@@ -1473,7 +1473,7 @@ def dmp_ff_div(f, g, u, K):
     >>> R, x,y = ring("x,y", QQ)
 
     >>> R.dmp_ff_div(x**2 + x*y, 2*x + 2)
-    (1/2*x + 1/2*y - 1/2, -y + 1)
+    (1/2*x + 1/2*y - 1/2, -y + 1/1)
 
     """
     if not u:
@@ -1530,7 +1530,7 @@ def dup_div(f, g, K):
 
     >>> R, x = ring("x", QQ)
     >>> R.dup_div(x**2 + 1, 2*x - 4)
-    (1/2*x + 1, 5)
+    (1/2*x + 1/1, 5/1)
 
     """
     if K.has_Field or not K.is_Exact:
@@ -1554,7 +1554,7 @@ def dup_rem(f, g, K):
 
     >>> R, x = ring("x", QQ)
     >>> R.dup_rem(x**2 + 1, 2*x - 4)
-    5
+    5/1
 
     """
     return dup_div(f, g, K)[1]
@@ -1575,7 +1575,7 @@ def dup_quo(f, g, K):
 
     >>> R, x = ring("x", QQ)
     >>> R.dup_quo(x**2 + 1, 2*x - 4)
-    1/2*x + 1
+    1/2*x + 1/1
 
     """
     return dup_div(f, g, K)[0]
@@ -1624,7 +1624,7 @@ def dmp_div(f, g, u, K):
 
     >>> R, x,y = ring("x,y", QQ)
     >>> R.dmp_div(x**2 + x*y, 2*x + 2)
-    (1/2*x + 1/2*y - 1/2, -y + 1)
+    (1/2*x + 1/2*y - 1/2, -y + 1/1)
 
     """
     if K.has_Field or not K.is_Exact:
@@ -1649,7 +1649,7 @@ def dmp_rem(f, g, u, K):
 
     >>> R, x,y = ring("x,y", QQ)
     >>> R.dmp_rem(x**2 + x*y, 2*x + 2)
-    -y + 1
+    -y + 1/1
 
     """
     return dmp_div(f, g, u, K)[1]
