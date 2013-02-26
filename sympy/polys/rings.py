@@ -122,7 +122,7 @@ class PolyRing(IPolys):
             if gen not in self.gens:
                 raise ValueError("invalid generator")
             else:
-                i = self.gens.index(gen)
+                i = list(self.gens).index(gen)
 
         if self.ngens == 1:
             raise ValueError("univariate polynomial") # TODO: return ground domain
