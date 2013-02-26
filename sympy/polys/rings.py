@@ -665,6 +665,7 @@ class PolyElement(dict, CantSympify):
 
         """
         ring1 = p1.ring
+        ground_quo = ring1.domain.quo
         if isinstance(p2, PolyElement):
             if ring1 == p2.ring:
                 if len(p2) == 1:
@@ -673,7 +674,7 @@ class PolyElement(dict, CantSympify):
                     c = p2.values()[0]
                     for k, v in p1.iteritems():
                         k1 = monomial_ldiv(k, m)
-                        p[tuple(k1)] = v/c
+                        p[tuple(k1)] = ground_quo(v, c)
                     return p
                 q, r = p1.div([p2])
                 if r:
@@ -694,7 +695,7 @@ class PolyElement(dict, CantSympify):
         if not p2:
             raise ZeroDivisionError
         for exp1, v in p1.iteritems():
-            coeff = v/p2
+            coeff = ground_quo(v, p2)
             if coeff:
                 p[exp1] = coeff
         return p
@@ -757,7 +758,7 @@ class PolyElement(dict, CantSympify):
                     expv1, c = term
                 # expv1 = monomial_ldiv(expv, expvs[i])
                 # if all(expv1[j] >= 0 for j in rn):
-                #     c = p[expv]/fv[i][expvs[i]]
+                #     c = p[expv]/fv[i][expvs[i]]        # XXX: ground_quo
                     qv[i] = qv[i].iadd_mon((expv1, c))
                     p = p.iadd_p_mon(fv[i], (expv1, -c))
                     divoccurred = 1
@@ -980,19 +981,19 @@ class PolyElement(dict, CantSympify):
         ========
 
         >>> from sympy.polys.rings import ring
-        >>> from sympy.polys.domains import QQ
+        >>> from sympy.polys.domains import ZZ
 
-        >>> _, x, y = ring('x, y', QQ)
+        >>> _, x, y = ring('x, y', ZZ)
         >>> p = x + y**2
         >>> p1 = p.imul_num(3)
         >>> p1
-        3/1*x + 3/1*y**2
+        3*x + 3*y**2
         >>> p1 is p
         True
         >>> p = x
         >>> p1 = p.imul_num(3)
         >>> p1
-        3/1*x
+        3*x
         >>> p1 is p
         False
 
