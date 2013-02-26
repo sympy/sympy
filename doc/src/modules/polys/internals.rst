@@ -459,6 +459,9 @@ manual for usage.
 .. autofunction:: is_groebner
 .. autofunction:: is_minimal
 .. autofunction:: is_reduced
+
+.. currentmodule:: sympy.polys.fglmtools
+
 .. autofunction:: matrix_fglm
 
 Groebner basis algorithms for modules are also provided:
