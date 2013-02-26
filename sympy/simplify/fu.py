@@ -17,15 +17,15 @@ docstrings for examples.
     TR4 - functions at special angles
     TR5 - powers of sin to powers of cos
     TR6 - powers of cos to powers of sin
-    TR7 - lower cos power
-    TR8 - sin-cos products to sums
-    TR9 - sin-cos sum to products
-    TR10 - expand sin-cos of sums
-    TR10i - collect sin-cos arguments into sums
-    TR11 - double angle to single angle
-    TR12 - expand tan of sum
-    TR12i - restore tan of sum
-    TR13 - expand product of tan or cot
+    TR7 - reduce cos power (increase angle)
+    TR8 - expand products of sin-cos to sums
+    TR9 - contract sums of sin-cos to products
+    TR10 - separate sin-cos arguments
+    TR10i - collect sin-cos arguments
+    TR11 - reduce double angles
+    TR12 - separate tan arguments
+    TR12i - collect tan arguments
+    TR13 - expand product of tan-cot
     TRmorrie - prod(cos(x*2**i), (i, 0, k - 1)) -> sin(2**k*x)/(2**k*sin(x))
     TR14 - factored powers of sin or cos to cos or sin power
     TR15 - negative powers of sin to cot power
@@ -301,39 +301,81 @@ def TR2i(rv):
         return rv
 
     n, d = rv.as_numer_denom()
+    if n.is_Atom or d.is_Atom:
+        return rv
+
+    def ok(k, e):
+        # initial filtering of factors
+        return (
+            (e.is_integer or k.is_positive) and (
+            k.func in (sin, cos) or (
+            k.is_Add and
+            len(k.args) >= 2 and
+            any(any(ai.func is cos or ai.is_Pow and ai.base is cos
+            for ai in Mul.make_args(a)) for a in k.args))))
+
     n = n.as_powers_dict()
+    ndone = [k**n.pop(k) for k in n.keys() if not ok(k, n[k])]
+    if not n:
+        return rv
+
     d = d.as_powers_dict()
+    ddone = [(k, d.pop(k)) for k in d.keys() if not ok(k, d[k])]
+    if not d:
+        return rv
+
+    # factoring if necessary
+    def factorize(d, ddone):
+        newk = []
+        for k in d:
+            if k.is_Add and len(k.args) > 2:
+                knew = factor(k)
+                if knew != k:
+                    newk.append((k, knew))
+        if newk:
+            for i, (k, knew) in enumerate(newk):
+                del d[k]
+                newk[i] = knew
+            newk = Mul(*newk).as_powers_dict()
+            for k in newk:
+                if ok(k, d[k]):
+                    d[k] += newk[k]
+                else:
+                    ddone.append((k, d[k]))
+            del newk
+    factorize(n, ndone)
+    factorize(d, ddone)
+
+    # joining
     t = []
     for k in n:
-        if not (n[k].is_integer or k.is_positive):
-            continue
         if k.func is sin:
             a = cos(k.args[0], evaluate=False)
-            if a in d and d[a] == n[k] and (d[a].is_integer or a.is_positive):
+            if a in d and d[a] == n[k]:
                 t.append(tan(k.args[0])**n[k])
                 n[k] = d[a] = None
             else:
                 a1 = 1 + a
-                if a1 in d and d[a1] == n[k] and (
-                        d[a1].is_integer or a1.is_positive):
+                if a1 in d and d[a1] == n[k]:
                     t.append((tan(k.args[0]/2))**n[k])
                     n[k] = d[a1] = None
         elif k.func is cos:
             a = sin(k.args[0], evaluate=False)
-            if a in d and d[a] == n[k] and (d[a].is_integer or a.is_positive):
+            if a in d and d[a] == n[k]:
                 t.append(tan(k.args[0])**-n[k])
                 n[k] = d[a] = None
-        elif k.is_Add and len(k.args) == 2 and k.args[0] is S.One and \
-                k.args[1].func is cos:
+        elif k.is_Add and k.args[1].func is cos:
             a = sin(k.args[1].args[0], evaluate=False)
             if a in d and d[a] == n[k] and (d[a].is_integer or a.is_positive):
                 t.append(tan(a.args[0]/2)**-n[k])
                 n[k] = d[a] = None
 
-    if not t:
-        return rv
-    return Mul(*(t + [b**e for b, e in n.iteritems() if e]))/\
-        Mul(*[b**e for b, e in d.iteritems() if e])
+    if t:
+        rv = Mul(*(t + [b**e for b, e in n.iteritems() if e]))/\
+            Mul(*[b**e for b, e in d.iteritems() if e])
+        rv *= Mul(*[b**e for b, e in ndone])/Mul(*[b**e for b, e in ddone])
+
+    return rv
 
 
 def TR3(rv):
