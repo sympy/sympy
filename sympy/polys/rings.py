@@ -1,9 +1,13 @@
+"""Sparse polynomial rings. """
+
 from copy import copy
 
 from sympy.core import Symbol, symbols
+from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify
 from sympy.core.compatibility import is_sequence
 from sympy.polys.monomialtools import monomial_mul, monomial_ldiv, monomial_pow, monomial_min, lex, term_div
+from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 
 def ring(sgens, domain, order=lex):
@@ -59,6 +63,9 @@ class PolyRing(IPolys):
         return self.ngens == other.ngens and \
                self.domain == other.domain and \
                self.order == other.order
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def clone(self, sgens=None, domain=None, order=None):
         return self.__class__(sgens or self.sgens, domain or self.domain, order or self.order)
@@ -732,8 +739,15 @@ class PolyElement(dict, CantSympify):
         """
         ring = self.ring
         domain = ring.domain
+        ret_single = False
+        if isinstance(fv, PolyElement):
+            ret_single = True
+            fv = [fv]
         if not self:
-            return [], PolyElement(ring)
+            if ret_single:
+                return ring.zero, ring.zero
+            else:
+                return [], ring.zero
         for f in fv:
             if f.ring != ring:
                 raise ValueError('self and f must have the same ring')
@@ -770,7 +784,13 @@ class PolyElement(dict, CantSympify):
                 del p[expv]
         if expv == ring.zero_monom:
             r += p
-        return qv, r
+        if ret_single:
+            if not qv:
+                return ring.zero, r
+            else:
+                return qv[0], r
+        else:
+            return qv, r
 
     def quo(f, fv):
         return f.div(fv)[0]
@@ -1024,28 +1044,13 @@ class PolyElement(dict, CantSympify):
         """Divides all coefficients by the leading coefficient. """
         if not f:
             return f
-
-        lc = f.LC
-        domain = f.ring.domain
-
-        if domain.is_one(lc):
-            return f
         else:
-            quo = domain.quo
-            terms = [ (monom, quo(coeff, lc)) for monom, coeff in f.items() ]
-            return PolyElement(f.ring, terms)
+            return f.quo_ground(f.LC)
 
     def primitive(f):
         """Returns content and a primitive polynomial. """
-        domain = f.ring.domain
         cont = f.content()
-
-        if cont == domain.one:
-            return cont, f
-        else:
-            quo = domain.quo
-            terms = [ (monom, quo(coeff, cont)) for monom, coeff in f.items() ]
-            return cont, PolyElement(f.ring, terms)
+        return cont, f.quo_ground(cont)
 
     def content(f):
         """Returns GCD of polynomial's coefficients. """
@@ -1057,3 +1062,185 @@ class PolyElement(dict, CantSympify):
             cont = gcd(cont, coeff)
 
         return cont
+
+    def mul_ground(f, x):
+        if not x:
+            return f.ring.zero
+
+        terms = [ (monom, coeff*x) for monom, coeff in f.terms() ]
+        return PolyElement(f.ring, terms)
+
+    def quo_ground(f, x):
+        domain = f.ring.domain
+
+        if not x:
+            raise ZeroDivisionError('polynomial division')
+        if not f or x == domain.one:
+            return f
+
+        if domain.has_Field or not domain.is_Exact:
+            quo = domain.quo
+            terms = [ (monom, quo(coeff, x)) for monom, coeff in f.terms() ]
+        else:
+            terms = [ (monom, coeff // x) for monom, coeff in f.terms() ]
+
+        return PolyElement(f.ring, terms)
+
+    def trunc_ground(f, p):
+        if f.ring.domain.is_ZZ:
+            terms = []
+
+            for monom, coeff in f.terms():
+                coeff = coeff % p
+
+                if coeff > p // 2:
+                    coeff = coeff - p
+
+                terms.append((monom, coeff))
+        else:
+            terms = [ (monom, coeff % p) for monom, coeff in f.terms() ]
+
+        poly = PolyElement(f.ring, terms)
+        poly.strip_zero()
+        return poly
+
+    def extract_ground(f, g):
+        fc = f.content()
+        gc = g.content()
+
+        gcd = f.ring.domain.gcd(fc, gc)
+
+        f = f.quo_ground(gcd)
+        g = g.quo_ground(gcd)
+
+        return gcd, f, g
+
+    def evaluate(f, x):
+        if f.ring.ngens == 1:
+            result = f.ring.domain.zero
+
+            for (i,), coeff in f.terms():
+                result += coeff*x**i
+
+            return result
+        else:
+            poly = PolyElement(f.ring[1:])
+
+            for monom, coeff in f.terms():
+                i, monom = monom[0], monom[1:]
+                coeff = coeff*x**i
+
+                if monom in poly:
+                    coeff = coeff + poly[monom]
+
+                    if coeff:
+                        poly[monom] = coeff
+                    else:
+                        del poly[monom]
+                else:
+                    poly[monom] = coeff
+
+            return poly
+
+    def max_norm(f):
+        if not f:
+            return f.ring.domain.zero
+        else:
+            ground_abs = f.ring.domain.abs
+            return max([ ground_abs(coeff) for coeff in f.coeffs() ])
+
+    def deflate(f, *G):
+        ring = f.ring
+        polys = [f] + list(G)
+
+        J = [0]*ring.ngens
+
+        for p in polys:
+            for monom in p.monoms():
+                for i, m in enumerate(monom):
+                    J[i] = igcd(J[i], m)
+
+        for i, b in enumerate(J):
+            if not b:
+                J[i] = 1
+
+        J = tuple(J)
+
+        if all(b == 1 for b in J):
+            return J, polys
+
+        H = []
+
+        for p in polys:
+            h = PolyElement(ring)
+
+            for I, coeff in p.terms():
+                N = [ i // j for i, j in zip(I, J) ]
+                h[tuple(N)] = coeff
+
+            H.append(h)
+
+        return J, H
+
+    def inflate(f, J):
+        poly = f.ring.zero
+
+        for I, coeff in f.terms():
+            N = [ i*j for i, j in zip(I, J) ]
+            poly[tuple(N)] = coeff
+
+        return poly
+
+    def gcd(f, g):
+        one, zero = f.ring.one, f.ring.zero
+
+        if not f and not g:
+            return zero, zero, zero
+        elif not f:
+            if g.LC >= 0:
+                return g, zero, one
+            else:
+                return -g, zero, -one
+        elif not g:
+            if f.LC >= 0:
+                return f, one, zero
+            else:
+                return -f, -one, zero
+
+        J, (f, g) = f.deflate(g)
+        h = f._gcd(g)
+
+        return h.inflate(J)
+
+    def _gcd(f, g):
+        ring = f.ring
+
+        if ring.domain.is_QQ:
+            return f._gcd_QQ(g)
+        elif ring.domain.is_ZZ:
+            return f._gcd_ZZ(g)
+        else: # TODO: don't use dense representation (port PRS algorithms)
+            return ring.from_dense(ring.dmp_gcd(f.to_dense(), g.to_dense()))
+
+    def _gcd_ZZ(f, g):
+        return heugcd(f, g)[0]
+
+    def _gcd_QQ(f, g):
+        ring = f.ring
+        new_ring = ring.clone(domain=ring.domain.get_ring())
+
+        cf, f = f.clear_denoms(f)
+        cg, g = g.clear_denoms(g)
+
+        f = f.set_ring(new_ring)
+        g = g.set_ring(new_ring)
+
+        h, cff, cfg = f._gcd_ZZ()
+
+        h = h.set_ring(ring)
+        c, h = h.LC, h.monic()
+
+        cff = cff.set_ring(ring).mul_ground(ring.domain.quo(c, cf))
+        cfg = cfg.set_ring(ring).mul_ground(ring.domain.quo(c, cg))
+
+        return h, cff, cfg

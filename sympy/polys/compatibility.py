@@ -1029,3 +1029,10 @@ class IPolys(object):
         return dup_isolate_all_roots_sqf(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, fast=fast, blackbox=blackbox)
     def dup_isolate_all_roots(self, f, eps=None, inf=None, sup=None, fast=False):
         return dup_isolate_all_roots(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, fast=fast)
+
+    def fateman_poly_F_1(self):
+        return tuple(map(self.from_dense, dmp_fateman_poly_F_1(self.ngens-1, self.domain)))
+    def fateman_poly_F_2(self):
+        return tuple(map(self.from_dense, dmp_fateman_poly_F_2(self.ngens-1, self.domain)))
+    def fateman_poly_F_3(self):
+        return tuple(map(self.from_dense, dmp_fateman_poly_F_3(self.ngens-1, self.domain)))
