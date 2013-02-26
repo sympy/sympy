@@ -197,7 +197,7 @@ from sympy.core.power import Pow
 from sympy.core.function import expand_mul, count_ops
 from sympy.core.add import Add
 from sympy.core.symbol import Dummy
-from sympy.core.exprtools import Factors
+from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.rules import Transform
 from sympy.core.basic import S
 from sympy.core.numbers import Integer, pi, I
@@ -560,14 +560,14 @@ def TR7(rv):
     return (1 + cos(2*rv.base.args[0]))/2
 
 
-def TR8(rv):
+def TR8(rv, first=True):
     """Converting products of ``cos`` and/or ``sin`` to a sum or
     difference of ``cos`` and or ``sin`` terms.
 
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TR8
+    >>> from sympy.simplify.fu import TR8, TR7
     >>> from sympy import cos, sin
     >>> TR8(cos(2)*cos(3))
     cos(5)/2 + cos(1)/2
@@ -576,12 +576,26 @@ def TR8(rv):
     >>> TR8(sin(2)*sin(3))
     -cos(5)/2 + cos(1)/2
     """
-    rv = bottom_up(rv, TR8)
-    if not rv.is_Mul:
+    rv = bottom_up(rv, lambda x: TR8(x, first=first))
+    if not (
+        rv.is_Mul or
+        rv.is_Pow and
+        rv.base.func in (cos, sin) and
+        (rv.exp.is_integer or rv.base.is_positive)):
+        return rv
+
+    if first:
+        n, d = [expand_mul(i) for i in rv.as_numer_denom()]
+        newn = TR8(n, first=False)
+        newd = TR8(d, first=False)
+        if newn != n or newd != d:
+            rv = gcd_terms(newn/newd)
+            if rv.is_Mul and rv.args[0].is_Rational and len(rv.args) == 2 and rv.args[1].is_Add:
+                rv = Mul(*rv.as_coeff_Mul())
         return rv
 
     args = {cos: [], sin: [], None: []}
-    for a in ordered(rv.args):
+    for a in ordered(Mul.make_args(rv)):
         if a.func in (cos, sin):
             args[a.func].append(a.args[0])
         elif (a.is_Pow and a.exp.is_Integer and a.exp > 0 and a.base.func in
@@ -595,8 +609,8 @@ def TR8(rv):
     s = args[sin]
     if not (c and s or len(c) > 1 or len(s) > 1):
         return rv
+
     args = args[None]
-    len0 = len(args)
     n = min(len(c), len(s))
     for i in range(n):
         a1 = s.pop()
@@ -614,10 +628,7 @@ def TR8(rv):
         args.append((-cos(a1 + a2) + cos(a1 - a2))/2)
     if s:
         args.append(sin(s.pop()))
-    rv = Mul(*args)
-    if len(args) - len0 > 1:
-        rv = TR8(expand_mul(rv))
-    return rv
+    return TR8(expand_mul(Mul(*args)))
 
 
 def TR9(rv):
@@ -1499,7 +1510,7 @@ def fu(rv):
 
     >>> eq = sin(x)**4 - cos(y)**2 + sin(y)**2 + 2*cos(x)**2
     >>> fu(eq)
-    cos(x)**4 - cos(2*y) + 1
+    cos(x)**4 - 2*cos(y)**2 + 2
 
     CTR2 example
 

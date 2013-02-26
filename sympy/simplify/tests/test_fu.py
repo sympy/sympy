@@ -243,7 +243,7 @@ def test_fu():
 
 
     eq = sin(x)**4 - cos(y)**2 + sin(y)**2 + 2*cos(x)**2
-    assert fu(eq) == cos(x)**4 - cos(2*y) + 1
+    assert fu(eq) == cos(x)**4 - 2*cos(y)**2 + 2
 
     assert fu(S.Half - cos(2*x)/2) == sin(x)**2
 
