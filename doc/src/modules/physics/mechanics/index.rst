@@ -39,21 +39,22 @@ methods: Kane's method and Lagrange's method. This module facilitates the
 formulation of equations of motion, which can then be solved (integrated) using
 generic ordinary differential equation (ODE) solvers.
 
-The process of generating equations of motion entails:
+The approach to a particular class of dynamics problems, that of forward
+dynamics, has the following steps:
 
 1.  describing the system's geometry and configuration,
 2.  specifying the way the system can move, including constraints on its motion
 3.  describing the external forces and moments on the system,
 4.  combining the above information according to Newton's second law
     (:math:`\mathbf{F}=m\mathbf{a}`), and
-5.  organizing the resulting equations so that they can be numerically
-    integrated to obtain the system's trajectory through time.
+5.  organizing the resulting equations so that they can be integrated to obtain
+    the system's trajectory through time.
 
 Together with the rest of :mod:`SymPy`, this module performs steps 4 and 5,
-provided that the user can perform 1 through 3 for the module.  That is to say,
+provided that the user can perform 1 through 3 for the module. That is to say,
 the user must provide a complete representation of the free
 body diagrams that themselves represent the system, with which this code can
-provide equations of motion in a form amenable to numerical integration.  Step
+provide equations of motion in a form amenable to numerical integration. Step
 5 above amounts to arduous algebra for even fairly simple multi-body systems.
 Thus, it is tempting to use a symbolic math package, such as Sympy, to
 perform this step. It is for this reason that this module is a part of Sympy.
