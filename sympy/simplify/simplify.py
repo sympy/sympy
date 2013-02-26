@@ -1441,7 +1441,7 @@ def trigsimp(expr, **opts):
     else:
         result = trigsimpfunc(expr, deep)
 
-    if opts.get('compare', False):
+    if opts.get('compare', True):
         f = futrig(old)
         if f != result:
             print
