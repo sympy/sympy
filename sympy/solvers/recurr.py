@@ -760,7 +760,11 @@ def rsolve(f, y, init=None):
 
         if type(init) is list:
             for i in xrange(0, len(init)):
-                eq = solution.subs(n, i) - init[i]
+                try:
+                    s = solution.limit(n, i)
+                except:
+                    s = solution.subs(n, i)
+                eq = s - init[i]
                 equations.append(eq)
         else:
             for k, v in init.iteritems():
@@ -773,7 +777,11 @@ def rsolve(f, y, init=None):
                         raise ValueError(
                             "Integer or term expected, got '%s'" % k)
 
-                eq = solution.subs(n, i) - v
+                try:
+                    s = solution.limit(n, i)
+                except:
+                    s = solution.subs(n, i)
+                eq = s - v
                 equations.append(eq)
 
         result = solve(equations, *symbols)
