@@ -570,6 +570,7 @@ class log(Function):
 
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify
+        from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         arg = self.args[0]
         if arg.is_Mul:
@@ -595,6 +596,9 @@ class log(Function):
                     return unpolarify(e) * a._eval_expand_log(**hints)
                 else:
                     return unpolarify(e) * a
+        elif isinstance(arg, Product):
+            if arg.function.is_positive:
+                return Sum(log(arg.function), *arg.limits)
 
         return self.func(arg)
 
