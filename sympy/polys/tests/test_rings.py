@@ -1,6 +1,6 @@
 """Test sparse polynomials. """
 
-from sympy.polys.rings import ring
+from sympy.polys.rings import ring, xring
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.monomialtools import lex, grlex
 
@@ -153,3 +153,32 @@ def test_PolyElement_rem():
     r = 2*x + 1
 
     assert f.rem(G) == f.div(G)[1] == r
+
+def test_PolyElement_deflate():
+    R, x = ring("x", ZZ)
+
+    assert (2*x**2).deflate(x**4 + 4*x**2 + 1) == ((2,), [2*x, x**2 + 4*x + 1])
+
+    R, x,y = ring("x,y", ZZ)
+
+    assert R(0).deflate(R(0)) == ((1, 1), [0, 0])
+    assert R(1).deflate(R(0)) == ((1, 1), [1, 0])
+    assert R(1).deflate(R(2)) == ((1, 1), [1, 2])
+    assert R(1).deflate(2*y) == ((1, 1), [1, 2*y])
+    assert (2*y).deflate(2*y) == ((1, 1), [2*y, 2*y])
+    assert R(2).deflate(2*y**2) == ((1, 2), [2, 2*y])
+    assert (2*y**2).deflate(2*y**2) == ((1, 2), [2*y, 2*y])
+
+    f = x**4*y**2 + x**2*y + 1
+    g = x**2*y**3 + x**2*y + 1
+
+    assert f.deflate(g) == ((2, 1), [x**2*y**2 + x*y + 1, x*y**3 + x*y + 1])
+
+def test_PolyElement_diff():
+    R, X = xring("x:11", QQ)
+
+    f = QQ(288,5)*X[0]**8*X[1]**6*X[4]**3*X[10]**2 + 8*X[0]**2*X[2]**3*X[4]**3 +2*X[0]**2 - 2*X[1]**2
+
+    assert f.diff(X[0]) == QQ(2304,5)*X[0]**7*X[1]**6*X[4]**3*X[10]**2 + 16*X[0]*X[2]**3*X[4]**3 + 4*X[0]
+    assert f.diff(X[4]) == QQ(864,5)*X[0]**8*X[1]**6*X[4]**2*X[10]**2 + 24*X[0]**2*X[2]**3*X[4]**2
+    assert f.diff(X[10]) == QQ(576,5)*X[0]**8*X[1]**6*X[4]**3*X[10]

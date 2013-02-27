@@ -1312,3 +1312,28 @@ class PolyElement(dict, CantSympify):
         q = q.mul_ground(cq)
 
         return p, q
+
+    def diff(f, x):
+        """Computes partial derivative in ``x``.
+
+        Examples
+        ========
+
+        >>> from sympy.polys.rings import ring
+        >>> from sympy.polys.domains import ZZ
+
+        >>> _, x, y = ring("x,y", ZZ)
+        >>> p = x + x**2*y**3
+        >>> p.diff(x)
+        2*x*y**3 + 1
+
+        """
+        ring = f.ring
+        i = ring.gens.index(x)
+        m = ring.monomial_basis(i)
+        g = ring.zero
+        for expv, coeff in f.terms():
+            if expv[i]:
+                e = monomial_ldiv(expv, m)
+                g[e] = coeff*expv[i]
+        return g
