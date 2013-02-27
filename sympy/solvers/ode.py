@@ -762,7 +762,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         reduced_eq = eq
 
     if order == 1:
-
+        
         # Linear case: a(x)*y'+b(x)*y+c(x) == 0
         if eq.is_Add:
             ind, dep = reduced_eq.as_independent(f)
