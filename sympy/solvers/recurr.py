@@ -771,7 +771,7 @@ def rsolve(f, y, init=None):
                     raise ValueError("Integer or term expected, got '%s'" % k)
             try:
                 eq = solution.limit(n, i) - v
-            except:
+            except NotImplementedError:
                 eq = solution.subs(n, i) - v
             equations.append(eq)
 
