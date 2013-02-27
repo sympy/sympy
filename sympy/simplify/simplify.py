@@ -3923,7 +3923,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     return _real_to_rational(expr)
 
 
-def logcombine(expr, force=False, first=True):
+def logcombine(expr, force=False):
     """
     Takes logarithms and combines them using the following rules:
 
@@ -3965,53 +3965,17 @@ def logcombine(expr, force=False, first=True):
     posify: replace all symbols with symbols having positive assumptions
 
     """
-    if first:
-        rv = bottom_up(expr, lambda x: logcombine(x, force))
-    else:
-        rv = expr
+    rv = bottom_up(expr, lambda x: logcombine(x, force))
 
     if not (rv.is_Add or rv.is_Mul):
-        # XXX this should not be here -- no other simplification works
-        # across the sides of Eq, do they?
-        if isinstance(rv, Equality):
-            diff = rv.lhs + logcombine(-rv.rhs, force, first=False)
-            new = logcombine(diff, force, first=False)
-            if new != diff:
-                rv = Equality(new, S.Zero)
         return rv
 
     def gooda(a):
         return a.is_real or force and a.is_real is not False
+
     def goodlog(l):
         a = l.args[0]
         return a.is_positive or force and a.is_nonpositive is not False
-
-    # only expand the terms that contain a log
-    if first:
-        def haslog(a):
-            if a.func is log:
-                return True
-            if a.is_Mul or a.is_Add:
-                return any(haslog(ai) for ai in a.args)
-            return False
-        withlog = []
-        without = []
-        for a in rv.args:
-            if haslog(a):
-                withlog.append(a)
-            else:
-                without.append(a)
-        if without:
-            if rv.is_Add:
-                return Add(
-                    logcombine(
-                        expand_mul(Add(*withlog), deep=False),
-                        force, first=False),
-                    Add(*without))
-            else:
-                return logcombine(
-                    Mul(*without)*expand_mul(Mul(*withlog), deep=False),
-                    force, first=False)
 
     other = []
     logs = []
@@ -4058,15 +4022,19 @@ def logcombine(expr, force=False, first=True):
         else:
             other.append(c*l)
 
-    # logs that have the same coefficient can combine
+    # logs that have the same coefficient can multiply
     for k in log1.keys():
-        log1[Mul(*k)] = log(logcombine(Mul(*[l.args[0]**Mul(*c) for c, l in log1.pop(k)]), force=force, first=False))
+        log1[Mul(*k)] = log(logcombine(Mul(*[
+            l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
+            force=force))
+
     # logs that have oppositely signed coefficients can divide
     for k in ordered(log1.keys()):
         if -k in log1:
             other.append(k*log1[k].args[0]/log1[-k].args[0])
         else:
             other.append(k*log1[k])
+
     return Add(*other)
 
 
