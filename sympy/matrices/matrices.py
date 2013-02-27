@@ -76,6 +76,7 @@ class MatrixBase(object):
     is_Matrix = True
     is_Identity = None
     _class_priority = 3
+    _sympify = staticmethod(sympify)
 
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
@@ -140,7 +141,7 @@ class MatrixBase(object):
             operation = args[2]
             flat_list = []
             for i in range(rows):
-                flat_list.extend([sympify(operation(sympify(i), j))
+                flat_list.extend([cls._sympify(operation(cls._sympify(i), j))
                     for j in range(cols)])
 
         # Matrix(2, 2, [1, 2, 3, 4])
@@ -148,7 +149,7 @@ class MatrixBase(object):
             flat_list = args[2]
             if len(flat_list) != rows*cols:
                 raise ValueError('List length should be equal to rows*columns')
-            flat_list = map(lambda i: sympify(i), flat_list)
+            flat_list = map(lambda i: cls._sympify(i), flat_list)
 
         # Matrix(numpy.ones((2, 2)))
         elif len(args) == 1 and hasattr(args[0], "__array__"):  # pragma: no cover
@@ -158,13 +159,13 @@ class MatrixBase(object):
             arr = args[0].__array__()
             if len(arr.shape) == 2:
                 rows, cols = arr.shape[0], arr.shape[1]
-                flat_list = map(lambda i: sympify(i), arr.ravel())
+                flat_list = map(lambda i: cls._sympify(i), arr.ravel())
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
                 rows, cols = 1, arr.shape[0]
                 flat_list = [S.Zero]*cols
                 for i in range(len(arr)):
-                    flat_list[i] = sympify(arr[i])
+                    flat_list[i] = cls._sympify(arr[i])
                 return rows, cols, flat_list
             else:
                 raise NotImplementedError(
@@ -192,7 +193,7 @@ class MatrixBase(object):
             if rows:
                 if not is_sequence(in_mat[0]):
                     cols = 1
-                    flat_list = map(lambda i: sympify(i), in_mat)
+                    flat_list = map(lambda i: cls._sympify(i), in_mat)
                     return rows, cols, flat_list
                 cols = ncol.pop()
             else:
@@ -200,7 +201,7 @@ class MatrixBase(object):
             flat_list = []
             for j in range(rows):
                 for i in range(cols):
-                    flat_list.append(sympify(in_mat[j][i]))
+                    flat_list.append(cls._sympify(in_mat[j][i]))
 
         # Matrix()
         elif len(args) == 0:
@@ -276,7 +277,7 @@ class MatrixBase(object):
                            slice(j, j + value.cols))
                 self.copyin_matrix(key, value)
             else:
-                return i, j, sympify(value)
+                return i, j, self._sympify(value)
             return
 
     def copy(self):

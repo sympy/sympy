@@ -5,7 +5,6 @@ from sympy.core.containers import Dict
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core.sympify import sympify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from matrices import MatrixBase, ShapeError, a2idx
@@ -50,7 +49,7 @@ class SparseMatrix(MatrixBase):
                 op = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = sympify(op(i, j))
+                        value = self._sympify(op(i, j))
                         if value:
                             self._smat[(i, j)] = value
             elif isinstance(args[2], (dict, Dict)):
@@ -67,7 +66,7 @@ class SparseMatrix(MatrixBase):
                 flat_list = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = sympify(flat_list[i*self.cols + j])
+                        value = self._sympify(flat_list[i*self.cols + j])
                         if value:
                             self._smat[(i, j)] = value
         else:
@@ -1050,6 +1049,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
     def _new(cls, *args, **kwargs):
         return cls(*args)
 
+    def as_mutable(self):
+        return self.copy()
+
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
 
@@ -1436,6 +1438,6 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         if not value:
             self._smat = {}
         else:
-            v = sympify(value)
+            v = self._sympify(value)
             self._smat = dict([((i, j), v)
                 for i in range(self.rows) for j in range(self.cols)])

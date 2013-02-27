@@ -511,14 +511,14 @@ class DenseMatrix(MatrixBase):
             c = r if c is None else c
         r = as_int(r)
         c = as_int(c)
-        return cls._new(r, c, [S.Zero]*r*c)
+        return cls._new(r, c, [cls._sympify(0)]*r*c)
 
     @classmethod
     def eye(cls, n):
         """Return an n x n identity matrix."""
         n = as_int(n)
-        mat = [S.Zero]*n*n
-        mat[::n + 1] = [S.One]*n
+        mat = [cls._sympify(0)]*n*n
+        mat[::n + 1] = [cls._sympify(1)]*n
         return cls._new(n, n, mat)
 
     ############################
@@ -527,39 +527,39 @@ class DenseMatrix(MatrixBase):
 
     @call_highest_priority('__radd__')
     def __add__(self, other):
-        return MatrixBase.__add__(self, _force_mutable(other))
+        return super(DenseMatrix, self).__add__(_force_mutable(other))
 
     @call_highest_priority('__add__')
     def __radd__(self, other):
-        return MatrixBase.__radd__(self, _force_mutable(other))
+        return super(DenseMatrix, self).__radd__(_force_mutable(other))
 
     @call_highest_priority('__rsub__')
     def __sub__(self, other):
-        return MatrixBase.__sub__(self, _force_mutable(other))
+        return super(DenseMatrix, self).__sub__(_force_mutable(other))
 
     @call_highest_priority('__sub__')
     def __rsub__(self, other):
-        return MatrixBase.__rsub__(self, _force_mutable(other))
+        return super(DenseMatrix, self).__rsub__(_force_mutable(other))
 
     @call_highest_priority('__rmul__')
     def __mul__(self, other):
-        return MatrixBase.__mul__(self, _force_mutable(other))
+        return super(DenseMatrix, self).__mul__(_force_mutable(other))
 
     @call_highest_priority('__mul__')
     def __rmul__(self, other):
-        return MatrixBase.__rmul__(self, _force_mutable(other))
+        return super(DenseMatrix, self).__rmul__(_force_mutable(other))
 
     @call_highest_priority('__div__')
     def __div__(self, other):
-        return MatrixBase.__div__(self, _force_mutable(other))
+        return super(DenseMatrix, self).__div__(_force_mutable(other))
 
     @call_highest_priority('__truediv__')
     def __truediv__(self, other):
-        return MatrixBase.__truediv__(self, _force_mutable(other))
+        return super(DenseMatrix, self).__truediv__(_force_mutable(other))
 
     @call_highest_priority('__rpow__')
     def __pow__(self, other):
-        return MatrixBase.__pow__(self, other)
+        return super(DenseMatrix, self).__pow__(other)
 
     @call_highest_priority('__pow__')
     def __rpow__(self, other):
@@ -583,8 +583,7 @@ def _force_mutable(x):
 class MutableDenseMatrix(DenseMatrix, MatrixBase):
     @classmethod
     def _new(cls, *args, **kwargs):
-        rows, cols, flat_list = MatrixBase._handle_creation_inputs(
-            *args, **kwargs)
+        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
         self = object.__new__(cls)
         self.rows = rows
         self.cols = cols
@@ -593,6 +592,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
 
     def __new__(cls, *args, **kwargs):
         return cls._new(*args, **kwargs)
+
+    def as_mutable(self):
+        return self.copy()
 
     def __setitem__(self, key, value):
         """
