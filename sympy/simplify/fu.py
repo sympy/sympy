@@ -1695,15 +1695,15 @@ def trig_split(a, b, two=False):
     a, b = [Factors(i) for i in (a, b)]
     ua, ub = a.normal(b)
     gcd = a.gcd(b).as_expr()
+    n1 = n2 = 1
     if S.NegativeOne in ua.factors:
         ua = ua.quo(S.NegativeOne)
-        n1 = -1
-        n2 = 1
-    elif S.NegativeOne in ub.factors:
+        n1 = -n1
+    if S.NegativeOne in ub.factors:
         ub = ub.quo(S.NegativeOne)
-        n1 = 1
-        n2 = -1
-    else:
+        n2 = -n2
+    if n1 == n2 == -1:
+        gcd = -gcd
         n1 = n2 = 1
     a, b = [i.as_expr() for i in (ua, ub)]
 
