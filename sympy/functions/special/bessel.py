@@ -153,8 +153,13 @@ class besselj(BesselBase):
             return besselj(nnu, z)
 
     def _eval_expand_func(self, **hints):
-        if self.order.is_Rational and self.order.q == 2:
+        nu = self.order
+        if (nu + S.Half).is_integer:
             return self._eval_rewrite_as_jn(*self.args, **{'expand': True})
+        elif nu.is_integer and (nu - 1).is_positive:
+            z = self.argument
+            return (-besselj(nu - 2, z)._eval_expand_func() +
+                    2*(nu - 1)*besselj(nu - 1, z)._eval_expand_func()/z)
         return self
 
     def _eval_rewrite_as_besseli(self, nu, z):
@@ -211,8 +216,13 @@ class bessely(BesselBase):
                 return S(-1)**nu*bessely(-nu, z)
 
     def _eval_expand_func(self, **hints):
-        if self.order.is_Rational and self.order.q == 2:
+        nu = self.order
+        if (nu + S.Half).is_integer:
             return self._eval_rewrite_as_yn(*self.args, **{'expand': True})
+        elif nu.is_integer and (nu - 1).is_positive:
+            z = self.argument
+            return (-bessely(nu - 2, z)._eval_expand_func() +
+                    2*(nu - 1)*bessely(nu - 1, z)._eval_expand_func()/z)
         return self
 
 
@@ -276,6 +286,16 @@ class besseli(BesselBase):
         from sympy import polar_lift, exp
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
+    def _eval_expand_func(self, **hints):
+        nu = self.order
+        if (nu + S.Half).is_integer:
+            return expand_func(self._eval_rewrite_as_besselj(*self.args))
+        if nu.is_integer and (nu - 1).is_positive:
+            z = self.argument
+            return (besseli(nu - 2, z)._eval_expand_func() -
+                    2*(nu - 1)*besseli(nu - 1, z)._eval_expand_func()/z)
+        return self
+
 
 class besselk(BesselBase):
     r"""
@@ -309,6 +329,14 @@ class besselk(BesselBase):
 
     _a = S.One
     _b = -S.One
+
+    def _eval_expand_func(self, **hints):
+        nu = self.order
+        if nu.is_integer and (nu - 1).is_positive:
+            z = self.argument
+            return (besselk(nu - 2, z)._eval_expand_func() -
+                    2*(nu - 1)*besselk(nu - 1, z)._eval_expand_func()/z)
+        return self
 
 
 class hankel1(BesselBase):
