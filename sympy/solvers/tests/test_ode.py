@@ -511,29 +511,28 @@ def test_1st_homogeneous_coeff_ode():
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     eq8 = x + f(x) - (x - f(x))*f(x).diff(x)
-    sol1a = Eq(f(x)*sin(f(x)/x), C1)
-    sol1b = Eq(sqrt(cos(f(x)/x)**2 - 1)*f(x), C1)
-    sol2 = Eq(x*sqrt(1 + cos(f(x)/x))/sqrt(-1 + cos(f(x)/x)), C1)
+    sol1 = Eq(log(x), C1 + log(x/(f(x)*sin(f(x)/x))))
+    sol2 = Eq(log(x), C1 + log(sqrt(cos(f(x)/x) - 1)/sqrt(cos(f(x)/x) + 1)))
     # See test_1st_homogeneous_coeff_ode_check3 below for why these are both valid
-    sol3a = Eq(f(x), x*exp(1 - LambertW(C1*x)))
-    sol3b = Eq(f(x), C1*LambertW(C2*x))
-    sol3bs = constant_renumber(sol3b, 'C', 1, 2)
-    sol4 = Eq(log(C1*f(x)) + 2*exp(x/f(x)), 0)
-    #sol5 = Eq(log(C1*x*sqrt(1/x)*sqrt(f(x))) + x**2/(2*f(x)**2), 0)
-    sol5 = Eq(log(C1*x*sqrt(f(x)/x)) + x**2/(2*f(x)**2), 0)
-    sol6 = Eq(-exp(-f(x)/x)*sin(f(x)/x)/2 + log(C1*x) -
-            cos(f(x)/x)*exp(-f(x)/x)/2, 0)
-    sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
-    sol8 = Eq(-atan(f(x)/x) + log(C1*x*sqrt(1 + f(x)**2/x**2)), 0)
-    assert dsolve(eq1, hint='1st_homogeneous_coeff_subs_dep_div_indep') in \
-        [sol1a, sol1b]
+    sol3 = Eq(log(f(x)), C1 + log(log(f(x)/x) - 1))
+    sol4 = Eq(log(f(x)), C1 - 2*exp(x/f(x)))
+
+    sol5 = Eq(log(x), C1 - x**2/(2*f(x)**2) + log(1/sqrt(f(x)/x)))
+    sol6 = Eq(log(x),
+        C1 + exp(-f(x)/x)*sin(f(x)/x)/2 + exp(-f(x)/x)*cos(f(x)/x)/2)
+    sol7 = Eq(log(f(x)), C1 - 2*sqrt(-x/f(x) + 1))
+    sol8 = Eq(log(x), C1 + log(1/sqrt(1 + f(x)**2/x**2)) + atan(f(x)/x))
+    assert dsolve(eq1, hint='1st_homogeneous_coeff_subs_dep_div_indep') == \
+        sol1
     # indep_div_dep actually has a simpler solution for eq2,
     # but it runs too slow
-    assert dsolve(eq2, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol2
-    assert dsolve(eq3, hint='1st_homogeneous_coeff_best') in [sol3a, sol3bs]
+    assert dsolve(eq2, hint='1st_homogeneous_coeff_subs_dep_div_indep') == \
+        sol2
+    assert dsolve(eq3, hint='1st_homogeneous_coeff_best') == sol3
     assert dsolve(eq4, hint='1st_homogeneous_coeff_best') == sol4
     assert dsolve(eq5, hint='1st_homogeneous_coeff_best') == sol5
-    assert dsolve(eq6, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol6
+    assert dsolve(eq6, hint='1st_homogeneous_coeff_subs_dep_div_indep') == \
+        sol6
     assert dsolve(eq7, hint='1st_homogeneous_coeff_best') == sol7
     assert dsolve(eq8, hint='1st_homogeneous_coeff_best') == sol8
     # checks are below
@@ -678,8 +677,9 @@ def test_1st_homogeneous_coeff_ode3():
     # test_homogeneous_order_ode1_sol above. It has to compare string
     # expressions because u2 is a dummy variable.
     eq = f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x)
-    sol = Eq(Piecewise((-acosh(f(x)/x), 1 < abs(f(x)**2/x**2)),
-                       (I*asin(f(x)/x), True)) + log(C1*f(x)), 0)
+    sol = Eq(log(f(x)), C1 - Piecewise(
+            (-acosh(f(x)/x), abs(f(x)**2)/x**2 > 1),
+            (I*asin(f(x)/x), True)))
     assert dsolve(eq, hint='1st_homogeneous_coeff_subs_indep_div_dep') == sol
 
 

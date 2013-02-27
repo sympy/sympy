@@ -983,18 +983,20 @@ def odesimp(eq, func, order, hint):
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     ... simplify=False)
     >>> pprint(eq)
-                  x
-                     ----
-                     f(x)
-                       /
-                      |
-           /f(x)\     |  /  1         1     \
-        log|----| -   |  |- -- - -----------| d(u2) = 0
-           \ C1 /     |  |  u2     2    /1 \|
-                      |  |       u2 *sin|--||
-                      |  \              \u2//
-                      |
-                     /
+                            x
+                           ----
+                           f(x)
+                             /
+                            |
+                            |   /      /1 \    \
+                            |  -|u2*sin|--| + 1|
+                            |   \      \u2/    /
+    log(f(x)) = log(C1) +   |  ----------------- d(u2)
+                            |       2    /1 \
+                            |     u2 *sin|--|
+                            |            \u2/
+                            |
+                           /
 
     >>> pprint(odesimp(eq, f(x), 1,
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
@@ -1942,13 +1944,13 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_best', simplify=False))
-                   /    2    \
-                   | 3*x     |
-                log|----- + 1|
-                   | 2       |
-       /f(x)\      \f (x)    /
-    log|----| + -------------- = 0
-       \ C1 /         3
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
 
     References
     ==========
@@ -2009,16 +2011,16 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
          \ x  /    \ x  / dx
         >>> pprint(dsolve(genform, f(x),
         ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
-                     f(x)
-                     ----
-                      x
+                       f(x)
+                       ----
+                        x
+                         /
+                        |
+                        |       -h(u1)
+        log(x) = C1 +   |  ---------------- d(u1)
+                        |  u1*h(u1) + g(u1)
+                        |
                        /
-                      |
-                      |       -h(u1)
-        log(C1*x) -   |  ---------------- d(u1) = 0
-                      |  u1*h(u1) + g(u1)
-                      |
-                     /
 
     Where u1*h(u1) + g(u1) != 0 and x != 0.
 
@@ -2033,13 +2035,13 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                     /          3   \
-                     |3*f(x)   f (x)|
-                  log|------ + -----|
-                     |  x         3 |
-           /x \      \           x  /
-        log|--| + ------------------- = 0
-           \C1/            3
+                          /          3   \
+                          |3*f(x)   f (x)|
+                       log|------ + -----|
+                          |  x         3 |
+                          \           x  /
+    log(x) = log(C1) - -------------------
+                                3
 
     References
     ==========
@@ -2121,12 +2123,14 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
-          ___________
-         /     2
-        /   3*x
-       /   ----- + 1 *f(x) = C1
-    3 /     2
-    \/     f (x)
+                        /        1        \
+    log(f(x)) = C1 + log|-----------------|
+                        |      ___________|
+                        |     /     2     |
+                        |    /   3*x      |
+                        |   /   ----- + 1 |
+                        |3 /     2        |
+                        \\/     f (x)     /
 
     References
     ==========
