@@ -91,14 +91,11 @@ class MonomialOrder(object):
     alias = None
     is_global = None
 
-    def key(self, monomial):
-        raise NotImplementedError
-
     def __str__(self):
         return self.alias
 
     def __call__(self, monomial):
-        return self.key(monomial)
+        raise NotImplementedError
 
     def __eq__(self, other):
         return self.__class__ == other.__class__
@@ -116,7 +113,7 @@ class LexOrder(MonomialOrder):
     alias = 'lex'
     is_global = True
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         return monomial
 
 
@@ -126,7 +123,7 @@ class GradedLexOrder(MonomialOrder):
     alias = 'grlex'
     is_global = True
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         return (sum(monomial), monomial)
 
 
@@ -136,7 +133,7 @@ class ReversedGradedLexOrder(MonomialOrder):
     alias = 'grevlex'
     is_global = True
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
 
 
@@ -187,7 +184,7 @@ class ProductOrder(MonomialOrder):
     def __init__(self, *args):
         self.args = args
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
 
     def __str__(self):
@@ -236,14 +233,14 @@ class InverseOrder(MonomialOrder):
     def __str__(self):
         return "i" + str(self.O)
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         from sympy.core.compatibility import iterable
 
         def inv(l):
             if iterable(l):
                 return tuple(inv(x) for x in l)
             return -l
-        return inv(self.O.key(monomial))
+        return inv(self.O(monomial))
 
     @property
     def is_global(self):
