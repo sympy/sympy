@@ -30,6 +30,7 @@ docstrings for examples.
     TR14 - factored powers of sin or cos to cos or sin power
     TR15 - negative powers of sin to cot power
     TR16 - negative powers of cos to tan power
+    TR17 - negative powers of tan to cot
 
 There are 4 combination transforms (CTR1 - CTR4) in which a seqence of
 transformations are applied and the simplest expression is selected from
@@ -447,8 +448,8 @@ def TR4(rv):
     return rv
 
 
-def _TR56(rv, f, g, max, pow):
-    """Helper for TR5 and TR6 to replace f**2 with 1 - g**2
+def _TR56(rv, f, g, h, max, pow):
+    """Helper for TR5 and TR6 to replace f**2 with h(g**2)
 
     Options
     =======
@@ -473,7 +474,7 @@ def _TR56(rv, f, g, max, pow):
     (-cos(x)**2 + 1)**4
     """
 
-    rv = bottom_up(rv, lambda x: _TR56(x, f, g, max, pow))
+    rv = bottom_up(rv, lambda x: _TR56(x, f, g, h, max, pow))
 
     # I'm not sure if this transformation should target all even powers
     # or only those expressible as powers of 2. Also, should it only
@@ -487,7 +488,7 @@ def _TR56(rv, f, g, max, pow):
     if rv.exp > max:
         return rv
     if rv.exp == 2:
-        return 1 - g(rv.base.args[0])**2
+        return h(g(rv.base.args[0])**2)
     else:
         if rv.exp == 4:
             e = 2
@@ -500,7 +501,7 @@ def _TR56(rv, f, g, max, pow):
             if not p:
                 return rv
             e = rv.exp//2
-        return (1 - g(rv.base.args[0])**2)**e
+        return h(g(rv.base.args[0])**2)**e
 
 
 def TR5(rv):
@@ -519,7 +520,7 @@ def TR5(rv):
     >>> TR5(sin(x)**4)
     (-cos(x)**2 + 1)**2
     """
-    return _TR56(rv, sin, cos, max=4, pow=False)
+    return _TR56(rv, sin, cos, lambda x: 1 - x, max=4, pow=False)
 
 
 def TR6(rv):
@@ -538,7 +539,7 @@ def TR6(rv):
     >>> TR6(cos(x)**4)
     (-sin(x)**2 + 1)**2
     """
-    return _TR56(rv, cos, sin, max=4, pow=False)
+    return _TR56(rv, cos, sin, lambda x: 1 - x, max=4, pow=False)
 
 
 def TR7(rv):
@@ -1401,11 +1402,10 @@ def TR15(rv):
         return rv
 
     ia = 1/rv
-    a = _TR56(ia, sin, cot, max=4, pow=False)
+    a = _TR56(ia, sin, cot, lambda x: 1 + x, max=4, pow=False)
     if a != ia:
-        rv = 2 - a
+        rv = a
     return rv
-
 
 def TR16(rv):
     """Convert cos(x)*-2 to 1 + tan(x)**2
@@ -1425,9 +1425,33 @@ def TR16(rv):
         return rv
 
     ia = 1/rv
-    a = _TR56(ia, cos, tan, max=4, pow=False)
+    a = _TR56(ia, cos, tan, lambda x: 1 + x, max=4, pow=False)
     if a != ia:
-        rv = 2 - a
+        rv = a
+    return rv
+
+
+def TR17(rv):
+    """Convert tan(x)*-2 to cot(x)**2
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import TR17
+    >>> from sympy.abc import x
+    >>> from sympy import cos, sin
+    >>> TR17(1 - 1/tan(x)**2)
+    1 - cot(x)**2
+
+    """
+    rv = bottom_up(rv, TR17)
+    if not (isinstance(rv, Pow) and rv.base.func is tan):
+        return rv
+
+    ia = 1/rv
+    a = _TR56(ia, tan, cot, lambda x: x, max=4, pow=False)
+    if a != ia:
+        rv = a
     return rv
 
 
@@ -1450,10 +1474,10 @@ def L(rv):
 
 if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16, TR12i
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR17
     )= map(debug,
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16, TR12i
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR17
     ))
 
 _CTR1 = [TR5, TR0], [TR6, TR0], [identity]
@@ -1627,9 +1651,11 @@ def process_common_addends(rv, do, key2=None, key1=True):
 
 FU = dict(zip('''
     TR0 TR1 TR2 TR3 TR4 TR5 TR6 TR7 TR8 TR9 TR10 TR10i TR11
-    TR12 TR13 CTR1 CTR2 CTR3 CTR4 RL1 RL2 L TR2i TRmorrie'''.split(),
+    TR12 TR13 CTR1 CTR2 CTR3 CTR4 RL1 RL2 L TR2i TRmorrie TR12i
+    TR14 TR15 TR16 TR17'''.split(),
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11,
-    TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L, TR2i, TRmorrie)))
+    TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L, TR2i, TRmorrie, TR12i,
+    TR14, TR15, TR16, TR17)))
 
 
 def _roots():

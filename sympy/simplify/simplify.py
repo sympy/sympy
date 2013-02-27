@@ -4156,9 +4156,10 @@ def futrig(e, h=True):
     from sympy.strategies.core import identity
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR14, TR5, TR10, L, TR10i,
-        TR8, TR6, TR15, TR16, as_trig)
+        TR8, TR6, TR15, TR16, TR17, as_trig, TR5, TRmorrie)
+    from sympy.core.compatibility import ordered, _nodes
 
-    Lops = lambda x: (L(x), x.count_ops())
+    Lops = lambda x: (L(x), x.count_ops(), _nodes(x))
 
     #  XXX this needs to be fixed
     '''
@@ -4170,7 +4171,8 @@ def futrig(e, h=True):
         TR14,  # factored identities
         TR5,  #sin-pow -> cos_pow
         TR10,  #sin-cos of sums -> sin-cos prod
-        [identity, expand],
+        [identity, expand_mul],
+        TRmorrie,
         TR10i,  # sin-cos products > sin-cos of sums
         TR8,  # sin-cos products -> sin-cos of sums
         )
@@ -4193,8 +4195,10 @@ def futrig(e, h=True):
     e = min(e, TR8(e), key=Lops)
 
     # artifacts
-    for f in (TR6, TR15, TR16):
-        e = min(min(f(e), _mexpand(f(e)), key=Lops), e, key=Lops)
+    e = min(e, TR2i(TR2(e)), key=Lops)
+    e = min(expand_mul(TR5(e)), expand_mul(TR15(e)), key=Lops)
+    e = min(expand_mul(TR6(e)), expand_mul(TR16(e)), key=Lops)
+    e = TR17(e)
     if h:
         e, f = as_trig(e)
         e = f(futrig(e, False))
