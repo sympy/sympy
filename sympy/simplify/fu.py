@@ -203,8 +203,10 @@ from sympy.core.basic import S
 from sympy.core.numbers import Integer, pi, I
 from sympy.strategies import minimize, chain, debug
 from sympy.strategies.core import identity
-from sympy import SYMPY_DEBUG
+from sympy.polys.polytools import factor
 from sympy.ntheory.factor_ import perfect_power
+
+from sympy import SYMPY_DEBUG
 
 
 # ================== Fu-like tools ===========================
@@ -315,7 +317,7 @@ def TR2i(rv):
             for ai in Mul.make_args(a)) for a in k.args))))
 
     n = n.as_powers_dict()
-    ndone = [k**n.pop(k) for k in n.keys() if not ok(k, n[k])]
+    ndone = [(k, n.pop(k)) for k in n.keys() if not ok(k, n[k])]
     if not n:
         return rv
 
@@ -1025,6 +1027,8 @@ def TR12i(rv):
     from sympy import factor, fraction, factor_terms
 
     rv = bottom_up(rv, TR12i)
+    if not (rv.is_Add or rv.is_Mul or rv.is_Pow):
+        return rv
 
     n, d = rv.as_numer_denom()
     if not d.args or not n.args:
