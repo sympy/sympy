@@ -827,7 +827,7 @@ class PolyElement(dict, CantSympify):
                         if order is lex:
                             ltm = max(f)
                         else:
-                            ltm = max(f, key=lambda mx: order(mx))
+                            ltm = max(f, key=order)
                         ltf = ltm, f[ltm]
 
                     break
@@ -842,7 +842,7 @@ class PolyElement(dict, CantSympify):
                     if order is lex:
                         ltm = max(f)
                     else:
-                        ltm = max(f, key=lambda mx: order(mx))
+                        ltm = max(f, key=order)
                     ltf = ltm, f[ltm]
         return r
 
@@ -935,7 +935,7 @@ class PolyElement(dict, CantSympify):
         """
         if self:
             order = self.ring.order
-            return max(self, key=lambda m: order(m))
+            return max(self, key=order)
         else:
             return None
 
