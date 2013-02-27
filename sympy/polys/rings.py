@@ -91,10 +91,13 @@ class PolyRing(IPolys):
         return poly
 
     def ring_new(self, element):
-        if isinstance(element, basestring):
+        if isinstance(element, PolyElement):
+            if self == element.ring:
+                return element
+            else:
+                raise NotImplementedError("conversion")
+        elif isinstance(element, basestring):
             raise NotImplementedError("parsing")
-        elif isinstance(element, PolyElement):
-            raise NotImplementedError("conversion")
         else:
             return self.ground_new(element)
 
@@ -240,7 +243,13 @@ class PolyElement(dict, CantSympify):
         return self.__str__()
 
     def __str__(self):
-        from sympy.printing import sstr
+        return self.str()
+
+    def str(self, detailed=True):
+        if detailed:
+            from sympy.printing import sstr
+        else:
+            sstr = str
         if not self:
             return sstr(self.ring.domain.zero)
         ring = self.ring
@@ -815,7 +824,7 @@ class PolyElement(dict, CantSympify):
                         else:
                             f[m1] = c1
                     if f:
-                        if order == lex:
+                        if order is lex:
                             ltm = max(f)
                         else:
                             ltm = max(f, key=lambda mx: order(mx))
@@ -830,7 +839,7 @@ class PolyElement(dict, CantSympify):
                     r[ltm] = ltc
                 del f[ltm]
                 if f:
-                    if order == lex:
+                    if order is lex:
                         ltm = max(f)
                     else:
                         ltm = max(f, key=lambda mx: order(mx))
@@ -1191,7 +1200,7 @@ class PolyElement(dict, CantSympify):
 
         return poly
 
-    def gcd(f, g):
+    def cofactors(f, g):
         one, zero = f.ring.one, f.ring.zero
 
         if not f and not g:
@@ -1208,9 +1217,12 @@ class PolyElement(dict, CantSympify):
                 return -f, -one, zero
 
         J, (f, g) = f.deflate(g)
-        h = f._gcd(g)
+        h, cff, cfg = f._gcd(g)
 
-        return h.inflate(J)
+        return (h.inflate(J), cff.inflate(J), cfg.inflate(J))
+
+    def gcd(f, g):
+        return f.cofactors(g)[0]
 
     def _gcd(f, g):
         ring = f.ring
@@ -1220,10 +1232,10 @@ class PolyElement(dict, CantSympify):
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else: # TODO: don't use dense representation (port PRS algorithms)
-            return ring.from_dense(ring.dmp_gcd(f.to_dense(), g.to_dense()))
+            return map(ring.from_dense, ring.dmp_inner_gcd(f.to_dense(), g.to_dense()))
 
     def _gcd_ZZ(f, g):
-        return heugcd(f, g)[0]
+        return heugcd(f, g)
 
     def _gcd_QQ(f, g):
         ring = f.ring
@@ -1244,3 +1256,53 @@ class PolyElement(dict, CantSympify):
         cfg = cfg.set_ring(ring).mul_ground(ring.domain.quo(c, cg))
 
         return h, cff, cfg
+
+    def cancel(f, g):
+        """
+        Cancel common factors in a rational function ``f/g``.
+
+        Examples
+        ========
+
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x,y = ring("x,y", ZZ)
+
+        >>> (2*x**2 - 2).cancel(x**2 - 2*x + 1)
+        (2*x + 2, x - 1)
+
+        """
+        ring = f.ring
+        new_ring = None
+        domain = ring.domain
+
+        if domain.has_Field and domain.has_assoc_Ring:
+            new_ring = f.ring.clone(domain=domain.get_ring())
+
+            cq, f = f.clear_denoms()
+            cp, g = g.clear_denoms()
+
+            f = f.set_ring(new_ring)
+            g = g.set_ring(new_ring)
+        else:
+            cp = cq = domain.one
+
+        _, p, q = f.cofactors(g)
+
+        if new_ring is not None:
+            p = p.set_ring(ring)
+            q = q.set_ring(ring)
+
+        p_neg = p.LC < 0
+        q_neg = q.LC < 0
+
+        if p_neg and q_neg:
+            p, q = -p, -q
+        elif p_neg:
+            cp, p = -cp, -p
+        elif q_neg:
+            cp, q = -cp, -q
+
+        p = p.mul_ground(cp)
+        q = q.mul_ground(cq)
+
+        return p, q
