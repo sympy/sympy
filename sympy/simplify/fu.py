@@ -12,7 +12,7 @@ docstrings for examples.
     TR0 - simplify expression
     TR1 - sec-csc to cos-sin
     TR2 - tan-cot to sin-cos ratio
-    TR2i - sin-cos ratio to tan or sin
+    TR2i - sin-cos ratio to tan
     TR3 - angle canonicalization
     TR4 - functions at special angles
     TR5 - powers of sin to powers of cos
@@ -271,10 +271,10 @@ def TR2(rv):
     return rv
 
 
-def TR2i(rv):
+def TR2i(rv, half=False):
     """Converts ratios involving sin and cos as follows::
         sin(x)/cos(x) -> tan(x)
-        sin(x)/(cos(x) + 1) -> tan(x/2)
+        sin(x)/(cos(x) + 1) -> tan(x/2) if half=True
 
     Examples
     ========
@@ -287,7 +287,7 @@ def TR2i(rv):
 
     Powers of the numerator and denominator are also recognized
 
-    >>> TR2i(sin(x)**2/(cos(x) + 1)**2)
+    >>> TR2i(sin(x)**2/(cos(x) + 1)**2, half=True)
     tan(x/2)**2
 
     The transformation does not take place unless assumptions allow
@@ -310,7 +310,7 @@ def TR2i(rv):
         # initial filtering of factors
         return (
             (e.is_integer or k.is_positive) and (
-            k.func in (sin, cos) or (
+            k.func in (sin, cos) or (half and
             k.is_Add and
             len(k.args) >= 2 and
             any(any(ai.func is cos or ai.is_Pow and ai.base is cos
@@ -331,7 +331,7 @@ def TR2i(rv):
         newk = []
         for k in d:
             if k.is_Add and len(k.args) > 2:
-                knew = factor(k)
+                knew = factor(k) if half else factor_terms(k)
                 if knew != k:
                     newk.append((k, knew))
         if newk:
@@ -356,7 +356,7 @@ def TR2i(rv):
             if a in d and d[a] == n[k]:
                 t.append(tan(k.args[0])**n[k])
                 n[k] = d[a] = None
-            else:
+            elif half:
                 a1 = 1 + a
                 if a1 in d and d[a1] == n[k]:
                     t.append((tan(k.args[0]/2))**n[k])
@@ -366,7 +366,7 @@ def TR2i(rv):
             if a in d and d[a] == n[k]:
                 t.append(tan(k.args[0])**-n[k])
                 n[k] = d[a] = None
-        elif k.is_Add and k.args[1].func is cos:
+        elif half and k.is_Add and k.args[0] is S.One and k.args[1].func is cos:
             a = sin(k.args[1].args[0], evaluate=False)
             if a in d and d[a] == n[k] and (d[a].is_integer or a.is_positive):
                 t.append(tan(a.args[0]/2)**-n[k])
