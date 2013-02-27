@@ -53,6 +53,7 @@ def heugcd(f, g):
     assert f.ring == g.ring and f.ring.domain.is_ZZ
 
     ring = f.ring
+    x0 = ring.gens[0]
     domain = ring.domain
 
     gcd, f, g = f.extract_ground(g)
@@ -67,8 +68,8 @@ def heugcd(f, g):
                   g_norm // abs(g.LC)) + 2)
 
     for i in xrange(0, HEU_GCD_MAX):
-        ff = f.evaluate(x) # in X[0]
-        gg = g.evaluate(x) # in X[0]
+        ff = f.evaluate(x0, x)
+        gg = g.evaluate(x0, x)
 
         if ff and gg:
             if ring.ngens == 1:

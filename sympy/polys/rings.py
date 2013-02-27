@@ -1130,33 +1130,6 @@ class PolyElement(dict, CantSympify):
 
         return gcd, f, g
 
-    def evaluate(f, x):
-        if f.ring.ngens == 1:
-            result = f.ring.domain.zero
-
-            for (i,), coeff in f.terms():
-                result += coeff*x**i
-
-            return result
-        else:
-            poly = PolyElement(f.ring[1:])
-
-            for monom, coeff in f.terms():
-                i, monom = monom[0], monom[1:]
-                coeff = coeff*x**i
-
-                if monom in poly:
-                    coeff = coeff + poly[monom]
-
-                    if coeff:
-                        poly[monom] = coeff
-                    else:
-                        del poly[monom]
-                else:
-                    poly[monom] = coeff
-
-            return poly
-
     def max_norm(f):
         if not f:
             return f.ring.domain.zero
@@ -1337,3 +1310,79 @@ class PolyElement(dict, CantSympify):
                 e = monomial_ldiv(expv, m)
                 g[e] = coeff*expv[i]
         return g
+
+    def evaluate(f, x, a=None):
+        if isinstance(x, list) and a is None:
+            (X, a), x = x[0], x[1:]
+            f = f.evaluate(X, a)
+            if not x:
+                return f
+            else:
+                x = [ (Y.drop(X), a) for (Y, a) in x ]
+                return f.evaluate(x)
+
+        ring = f.ring
+        i = ring.gens.index(x)
+
+        if ring.ngens == 1:
+            result = ring.domain.zero
+
+            for (n,), coeff in f.terms():
+                result += coeff*a**n
+
+            return result
+        else:
+            poly = PolyElement(ring[1:])
+
+            for monom, coeff in f.terms():
+                n, monom = monom[i], monom[:i] + monom[i+1:]
+                coeff = coeff*a**n
+
+                if monom in poly:
+                    coeff = coeff + poly[monom]
+
+                    if coeff:
+                        poly[monom] = coeff
+                    else:
+                        del poly[monom]
+                else:
+                    if coeff:
+                        poly[monom] = coeff
+
+            return poly
+
+    def subs(f, x, a=None):
+        if isinstance(x, list) and a is None:
+            for X, a in x:
+                f = f.subs(X, a)
+            return f
+
+        ring = f.ring
+        i = ring.gens.index(x)
+
+        if ring.ngens == 1:
+            result = ring.domain.zero
+
+            for (n,), coeff in f.terms():
+                result += coeff*a**n
+
+            return ring.ground_new(result)
+        else:
+            poly = PolyElement(ring)
+
+            for monom, coeff in f.terms():
+                n, monom = monom[i], monom[:i] + (0,) + monom[i+1:]
+                coeff = coeff*a**n
+
+                if monom in poly:
+                    coeff = coeff + poly[monom]
+
+                    if coeff:
+                        poly[monom] = coeff
+                    else:
+                        del poly[monom]
+                else:
+                    if coeff:
+                        poly[monom] = coeff
+
+            return poly

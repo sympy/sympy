@@ -49,6 +49,10 @@ class FracElement(CantSympify):
     def new(f, numer, denom):
         return f.raw_new(*numer.cancel(denom))
 
+    def to_poly(f):
+        assert f.denom == 1
+        return f.numer
+
     def __repr__(self):
         return self.__str__()
 
@@ -147,3 +151,18 @@ class FracElement(CantSympify):
             return f.raw_new(f.numer**n, f.denom**n)
         else:
             return f.raw_new(f.denom**-n, f.numer**-n)
+
+    def diff(f, x):
+        if isinstance(x, list) and a is None:
+            x = [ X.to_poly() for X in x ]
+        else:
+            x = x.to_poly()
+        return f.new(f.numer.diff(x)*f.denom - f.numer*f.denom.diff(x), f.denom**2)
+
+    def subs(f, x, a=None):
+        if isinstance(x, list) and a is None:
+            x = [ (X.to_poly(), a) for X, a in x ]
+            return f.new(f.numer.subs(x), f.denom.subs(x))
+        else:
+            x = x.to_poly()
+            return f.new(f.numer.subs(x, a), f.denom.subs(x, a))
