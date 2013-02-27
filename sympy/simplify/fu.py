@@ -1471,7 +1471,7 @@ def CTRstrat(lists):
 
 CTR1, CTR2, CTR3, CTR4 = map(CTRstrat, (_CTR1, _CTR2, _CTR3, _CTR4))
 
-_RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0]
+_RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4]
 
 
 # XXX it's a little unclear how this one is to be implemented
@@ -1566,8 +1566,8 @@ def fu(rv):
         rv1 = RL2(rv)
         rv2 = TR8(TRmorrie(rv1))
         rv = ordered(
-            [was, rv, rv1, rv2],keys=(L, count_ops), default=False).next()
-    return rv
+            [was, rv, rv1, rv2], keys=(L, count_ops), default=False).next()
+    return min(TR2i(rv), rv, key=lambda x: (L(x), x.count_ops()))
 
 _L = lambda x: (L(x), x.count_ops())
 
