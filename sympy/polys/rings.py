@@ -212,9 +212,8 @@ class PolyElement(dict, CantSympify):
 
     def strip_zero(self):
         """Eliminate monomials with zero coefficient. """
-        zero = self.ring.domain.zero
         for k, v in list(self.items()):
-            if v == zero:
+            if not v:
                 del self[k]
 
     def variables(self):
@@ -782,14 +781,14 @@ class PolyElement(dict, CantSympify):
                 # expv1 = monomial_ldiv(expv, expvs[i])
                 # if all(expv1[j] >= 0 for j in rn):
                 #     c = p[expv]/fv[i][expvs[i]]        # XXX: ground_quo
-                    qv[i] = qv[i].iadd_mon((expv1, c))
-                    p = p.iadd_p_mon(fv[i], (expv1, -c))
+                    qv[i] = qv[i]._iadd_monom((expv1, c))
+                    p = p._iadd_poly_monom(fv[i], (expv1, -c))
                     divoccurred = 1
                 else:
                     i += 1
             if not divoccurred:
                 expv =  p.leading_expv()
-                r = r.iadd_mon((expv, p[expv]))
+                r = r._iadd_monom((expv, p[expv]))
                 del p[expv]
         if expv == ring.zero_monom:
             r += p
@@ -846,7 +845,7 @@ class PolyElement(dict, CantSympify):
                     ltf = ltm, f[ltm]
         return r
 
-    def iadd_mon(self, mc):
+    def _iadd_monom(self, mc):
         """add to self the monomial coeff*x0**i0*x1**i1*...
         unless self is a generator -- then just return the sum of the two.
 
@@ -861,13 +860,13 @@ class PolyElement(dict, CantSympify):
         >>> _, x, y = ring('x, y', ZZ)
         >>> p = x**4 + 2*y
         >>> m = (1, 2)
-        >>> p1 = p.iadd_mon((m, 5))
+        >>> p1 = p._iadd_monom((m, 5))
         >>> p1
         x**4 + 5*x*y**2 + 2*y
         >>> p1 is p
         True
         >>> p = x
-        >>> p1 = p.iadd_mon((m, 5))
+        >>> p1 = p._iadd_monom((m, 5))
         >>> p1
         5*x*y**2 + x
         >>> p1 is p
@@ -877,15 +876,18 @@ class PolyElement(dict, CantSympify):
         if self in self.ring.gens:
             self = self.copy()
         expv, coeff = mc
-        if expv in self:
-            self[expv] += coeff
-            if self[expv] == 0:
-                del self[expv]
-        else:
+        c = self.get(expv)
+        if c is None:
             self[expv] = coeff
+        else:
+            c += coeff
+            if c:
+                self[expv] = c
+            else:
+                del self[expv]
         return self
 
-    def iadd_p_mon(self, p, mc):
+    def _iadd_poly_monom(p1, p2, mc):
         """add to self the product of (p)*(coeff*x0**i0*x1**i1*...)
         unless self is a generator -- then just return the sum of the two.
 
@@ -901,22 +903,23 @@ class PolyElement(dict, CantSympify):
         >>> p1 = x**4 + 2*y
         >>> p2 = y + z
         >>> m = (1, 2, 3)
-        >>> p1 = p1.iadd_p_mon(p2, (m, 3))
+        >>> p1 = p1._iadd_poly_monom(p2, (m, 3))
         >>> p1
         x**4 + 3*x*y**3*z**3 + 3*x*y**2*z**4 + 2*y
 
         """
-        p1 = self
-        p2 = p
         if p1 in p1.ring.gens:
             p1 = p1.copy()
         (m, c) = mc
         get = p1.get
-        c = p1.ring.domain_new(c)
+        zero = p1.ring.domain.zero
         for k, v in p2.iteritems():
             ka = monomial_mul(k, m)
-            p1[ka] = get(ka, 0) + v*c
-        p1.strip_zero()
+            coeff = get(ka, zero) + v*c
+            if coeff:
+                p1[ka] = coeff
+            else:
+                del p1[ka]
         return p1
 
     def leading_expv(self):
