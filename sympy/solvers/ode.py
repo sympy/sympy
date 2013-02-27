@@ -812,7 +812,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
             try:
-                if r[d] != 0 and simplify(r[d].diff(y)) == simplify(r[e].diff(x)):
+                numerator = simplify(r[d].diff(y)) - simplify(r[e].diff(x))
+                if r[d] != 0 and numerator == 0:
                     matching_hints["1st_exact"] = r
                     matching_hints["1st_exact_Integral"] = r
                 # The following few conditions try to convert a non-exact
@@ -821,7 +822,6 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 # and historical notes - George E. Simmons
                 # If (dP/dy - dQ/dx) / Q = f(x)
                 # then exp(integral(f(x))*equation becomes exact
-                numerator = simplify(r[d].diff(y)) - simplify(r[e].diff(x))
                 if r[d] != 0 and numerator/r[e]:
                     factor = simplify(numerator/r[e])
                     variable = factor.atoms(Symbol)

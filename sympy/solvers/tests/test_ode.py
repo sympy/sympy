@@ -1437,7 +1437,16 @@ def test_exact_enhancement():
     f = Function('f')(x)
     d = Derivative(f, x)
     eq = f/x**2 + ((f*x - 1)/x)*d
-    rhs = dsolve(eq, f)
-    assert rhs == [f(x) == (-sqrt(C1*x**2 + 1) + 1)/x, f(x) == (sqrt(C1*x**2 + 1) + 1)/x]
-    eq = (3*x**2 - f**2)*d - (2*x*f)
-    assert dsolve(eq, f)[0] == (C1*x**2)**(1/3)
+    sol = dsolve(eq, f)
+    rhs = [eq.rhs for eq in sol]
+    assert rhs == [(-sqrt(C1*x**2 + 1) + 1)/x, (sqrt(C1*x**2 + 1) + 1)/x)
+
+    eq = (x*f - 1) + d*(x**2 - x*f)
+    rhs = [sol.rhs for sol in dsolve(eq, f)]
+    assert rhs[0] == x - sqrt(C1 + x**2 - 2*log(x)) 
+    assert rhs[1] == x + sqrt(C1 + x**2 - 2*log(x))
+
+    eq = (x + 2)*sin(f) + d*x*cos(f)
+    rhs = [sol.rhs for sol in dsolve(eq, f)] 
+    assert rhs[0] == acos(-sqrt(C1*exp(-2*x)/x**4 + 1))
+    assert rhs[1] == acos(sqrt(C1*exp(-2*x)/x**4 + 1))
