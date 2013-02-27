@@ -861,6 +861,17 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                         and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
 
+        # If f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0 where l'(y) = g(y)
+        # then substituting u = l(y) gives a linear differential equation
+        # See Table II of the paper "Symbolic Integration: The Stormy
+        # Decade by Joel Moses
+        l = Wild('l')    
+        n = Wild('n' ,exclude = [df])
+        m = Wild('m', exclude = [f(x), df])
+        match = collect(eq, df, evaluate=True).match(l*f(x).diff(x) + m + n)
+        match['l'].args
+        match['n'].args          
+
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
         # See Goldstein and Braun, "Advanced Methods for the Solution of
