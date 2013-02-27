@@ -4,6 +4,7 @@ from sympy import S, pi, I
 from sympy.core.function import Function, ArgumentIndexError
 from sympy.functions.elementary.trigonometric import sin, cos
 from sympy.functions.elementary.miscellaneous import sqrt
+from sympy.functions.elementary.complexes import re, im
 
 # TODO
 # o Airy Ai and Bi functions
@@ -129,11 +130,23 @@ class besselj(BesselBase):
 
     @classmethod
     def eval(cls, nu, z):
-        if nu.is_Integer:
-            if nu < 0:
-                return S(-1)**nu*besselj(-nu, z)
-            if z.could_extract_minus_sign():
-                return S(-1)**nu*besselj(nu, -z)
+        if z.is_zero:
+            if nu.is_zero:
+                return S.One
+            elif (nu.is_integer and nu.is_zero is False) or re(nu).is_positive:
+                return S.Zero
+            elif re(nu).is_negative and not (nu.is_integer is True):
+                return S.ComplexInfinity
+            elif nu.is_imaginary:
+                return S.NaN
+        if z is S.Infinity or (z is S.NegativeInfinity):
+            return S.Zero
+
+        if z.could_extract_minus_sign():
+            return (z)**nu*(-z)**(-nu)*besselj(nu, -z)
+        if nu.is_integer:
+            if nu.could_extract_minus_sign():
+                return S(-1)**(-nu)*besselj(-nu, z)
             newz = z.extract_multiplicatively(I)
             if newz:  # NOTE we don't want to change the function if z==0
                 return I**(nu)*besseli(nu, newz)
@@ -211,9 +224,19 @@ class bessely(BesselBase):
 
     @classmethod
     def eval(cls, nu, z):
-        if nu.is_Integer:
-            if nu < 0:
-                return S(-1)**nu*bessely(-nu, z)
+        if z.is_zero:
+            if nu.is_zero:
+                return S.NegativeInfinity
+            elif re(nu).is_zero is False:
+                return S.ComplexInfinity
+            elif re(nu).is_zero:
+                return S.NaN
+        if z is S.Infinity or z is S.NegativeInfinity:
+            return S.Zero
+
+        if nu.is_integer:
+            if nu.could_extract_minus_sign():
+                return S(-1)**(-nu)*bessely(-nu, z)
 
     def _eval_expand_func(self, **hints):
         nu = self.order
@@ -263,7 +286,24 @@ class besseli(BesselBase):
 
     @classmethod
     def eval(cls, nu, z):
-        if nu.is_Integer:
+        if z.is_zero:
+            if nu.is_zero:
+                return S.One
+            elif (nu.is_integer and nu.is_zero is False) or re(nu).is_positive:
+                return S.Zero
+            elif re(nu).is_negative and not (nu.is_integer is True):
+                return S.ComplexInfinity
+            elif nu.is_imaginary:
+                return S.NaN
+        if z.is_imaginary:
+            if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+                return S.Zero
+
+        if z.could_extract_minus_sign():
+            return (z)**nu*(-z)**(-nu)*besseli(nu, -z)
+        if nu.is_integer:
+            if nu.could_extract_minus_sign():
+                return besseli(-nu, z)
             newz = z.extract_multiplicatively(I)
             if newz:  # NOTE we don't want to change the function if z==0
                 return I**(-nu)*besselj(nu, -newz)
@@ -329,6 +369,23 @@ class besselk(BesselBase):
 
     _a = S.One
     _b = -S.One
+
+    @classmethod
+    def eval(cls, nu, z):
+        if z.is_zero:
+            if nu.is_zero:
+                return S.Infinity
+            elif re(nu).is_zero is False:
+                return S.ComplexInfinity
+            elif re(nu).is_zero:
+                return S.NaN
+        if z.is_imaginary:
+            if im(z) is S.Infinity or im(z) is S.NegativeInfinity:
+                return S.Zero
+
+        if nu.is_integer:
+            if nu.could_extract_minus_sign():
+                return besselk(-nu, z)
 
     def _eval_expand_func(self, **hints):
         nu = self.order
