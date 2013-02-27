@@ -935,7 +935,10 @@ class PolyElement(dict, CantSympify):
         """
         if self:
             order = self.ring.order
-            return max(self, key=order)
+            if order is lex:
+                return max(self)
+            else:
+                return max(self, key=order)
         else:
             return None
 
