@@ -6,7 +6,8 @@ from sympy.core import Symbol, symbols
 from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify
 from sympy.core.compatibility import is_sequence
-from sympy.polys.monomialtools import monomial_mul, monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex, term_div
+from sympy.polys.monomialtools import (monomial_mul, monomial_div,
+        monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex, term_div)
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 
@@ -318,16 +319,18 @@ class PolyElement(dict, CantSympify):
         True
 
         """
-        if not p2 or p2 == 0:
+        if not p2:
             return not p1
-        ring1 = p1.ring
-        if isinstance(p2, PolyElement):
+        elif isinstance(p2, PolyElement):
             return dict.__eq__(p1, p2)
         else:
-            zm = ring1.zero_monom
-            if zm not in p1 or len(p1) > 1:
+            if len(p1) > 1:
                 return False
-            return p1[zm] == p2 # ring1.domain_new(p2)
+            else:
+                return p1.get(p1.ring.zero_monom) == p2
+
+    def __ne__(p1, p2):
+        return not p1.__eq__(p2)
 
     def drop(self, gen):
         i, ring = self.ring._drop(gen)
@@ -783,13 +786,34 @@ class PolyElement(dict, CantSympify):
         p = self.copy()
         r = PolyElement(ring)
         expvs = [fx.leading_expv() for fx in fv]
-        # rn = range(ring.ngens)
+        zm = ring.zero_monom
+        domain_quo = domain.quo
+        if domain.has_Field:
+            def term_div(a_lm, a_lc, b_lm, b_lc):
+                if b_lm == zm: # apparently this is a very common case
+                    monom = a_lm
+                else:
+                    monom = monomial_div(a_lm, b_lm)
+                if monom is not None:
+                    return monom, domain_quo(a_lc, b_lc)
+                else:
+                    return None
+        else:
+            def term_div(a_lm, a_lc, b_lm, b_lc):
+                if b_lm == zm: # apparently this is a very common case
+                    monom = a_lm
+                else:
+                    monom = monomial_div(a_lm, b_lm)
+                if not (monom is None or a_lc % b_lc):
+                    return monom, domain_quo(a_lc, b_lc)
+                else:
+                    return None
         while p:
             i = 0
             divoccurred = 0
             while i < s and divoccurred == 0:
                 expv = p.leading_expv()
-                term = term_div((expv, p[expv]), (expvs[i], fv[i][expvs[i]]), domain)
+                term = term_div(expv, p[expv], expvs[i], fv[i][expvs[i]])
                 if term is not None:
                     expv1, c = term
                 # expv1 = monomial_ldiv(expv, expvs[i])
@@ -804,7 +828,7 @@ class PolyElement(dict, CantSympify):
                 expv =  p.leading_expv()
                 r = r._iadd_monom((expv, p[expv]))
                 del p[expv]
-        if expv == ring.zero_monom:
+        if expv == zm:
             r += p
         if ret_single:
             if not qv:
