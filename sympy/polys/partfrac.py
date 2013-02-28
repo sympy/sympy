@@ -192,13 +192,20 @@ def apart_list(f, x=None, dummies=None, **options):
     Poly(2*x + 4, x, domain='ZZ'),
     [(Poly(_w - 1, _w, domain='ZZ'), Lambda(_a, 4), Lambda(_a, -_a + x), 1)])
 
+    >>> assemble_partfrac_list(pfd)
+    2*x + 4 + 4/(x - 1)
+
     Second example:
 
     >>> f = (-2*x - 2*x**2) / (3*x**2 - 6*x)
-    >>> apart_list(f)
+    >>> pfd = apart_list(f)
+    >>> pfd
     (-1,
     Poly(2/3, x, domain='QQ'),
     [(Poly(_w - 2, _w, domain='ZZ'), Lambda(_a, 2), Lambda(_a, -_a + x), 1)])
+
+    >>> assemble_partfrac_list(pfd)
+    -2/3 - 2/(x - 2)
 
     Another example, showing symbolic parameters:
 
@@ -210,6 +217,9 @@ def apart_list(f, x=None, dummies=None, **options):
     Lambda(_a, -2*_a*t/(4*t - 1) - t/(4*t - 1)),
     Lambda(_a, -_a + x),
     1)])
+
+    >>> assemble_partfrac_list(pfd)
+    RootSum(_w**2 + _w + t, Lambda(_a, (-2*_a*t/(4*t - 1) - t/(4*t - 1))/(-_a + x)))
 
     This example is taken from Bronstein's original paper:
 
@@ -229,6 +239,12 @@ def apart_list(f, x=None, dummies=None, **options):
     ========
 
     apart, assemble_partfrac_list
+
+    References
+    ==========
+
+    1. [Bronstein93]_
+
     """
     allowed_flags(options, [])
 
