@@ -150,11 +150,11 @@ def apart_list(f, x=None, dummies=None, **options):
     Given a rational function ``f`` compute the partial fraction decomposition
     of ``f``. Only Bronstein's full partial fraction decomposition algorithm
     is supported by this method. The return value is highly structured and
-    perfectly suited for further algorithmic treatment rather than beeing
-    human-readable. On top level the function returns a list of three elements:
+    perfectly suited for further algorithmic treatment rather than being
+    human-readable. The function returns a tuple holding three elements:
 
-    * The first item is the common part, free of the variable `x` used for
-      decomposition. (It is an element of the base field `K`.)
+    * The first item is the common coefficient, free of the variable `x` used
+      for decomposition. (It is an element of the base field `K`.)
 
     * The second item is the polynomial part of the decomposition. This can be
       the zero polynomial. (It is an element of `K[x]`.)
@@ -164,7 +164,9 @@ def apart_list(f, x=None, dummies=None, **options):
 
       - The (not necessarily irreducible) polynomial `D` whose roots `w_i` appear
         in the linear denominator of a bunch of related fraction terms. (This item
-        can also be a list of explicit roots.)
+        can also be a list of explicit roots. However, at the moment ``apart_list``
+        never returns a result this way, but the related ``assemble_partfrac_list``
+        function accepts this format as input.)
 
       - The numerator of the fraction, written as a function of the root `w`
 
