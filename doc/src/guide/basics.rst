@@ -13,6 +13,9 @@ division, exponentiation).
 
 Suppose we want to construct an expression for `x + 1`::
 
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True, no_global=True)
+
     >>> x = Symbol('x')
 
     >>> x + 1
@@ -119,90 +122,90 @@ and :class:`Pow`, and work the following way:
 
 * ``x - y`` uses :class:`Add` and :class:`Mul` classes, and ``__sub__`` method::
 
-    >>> x - y
+    >>> e = x - y; e
     x - y
-    >>> type(_)
+    >>> type(e)
     <class 'sympy.core.add.Add'>
-    >>> __.args
-    (-y, x)
-    >>> type(_[0])
+    >>> sorted(e.args, key=default_sort_key)
+    [x, -y]
+    >>> type(_[1])
     <class 'sympy.core.mul.Mul'>
 
-    >>> x.__sub__(y)
+    >>> e = x.__sub__(y); e
     x - y
-    >>> type(_)
+    >>> type(e)
     <class 'sympy.core.add.Add'>
-    >>> __.args
-    (-y, x)
-    >>> type(_[0])
+    >>> sorted(e.args, key=default_sort_key)
+    [x, -y]
+    >>> type(_[1])
     <class 'sympy.core.mul.Mul'>
 
-    >>> Add(x, -y))
+    >>> e = Add(x, -y); e
     x - y
-    >>> type(_)
+    >>> type(e)
     <class 'sympy.core.add.Add'>
-    >>> __.args
-    (-y, x)
-    >>> type(_[0])
+    >>> sorted(e.args, key=default_sort_key)
+    [x, -y]
+    >>> type(_[1])
     <class 'sympy.core.mul.Mul'>
 
 * ``x*y`` uses :class:`Mul` class and ``__mul__`` method::
 
     >>> x*y
-    x*y
+    x⋅y
     >>> type(_)
     <class 'sympy.core.mul.Mul'>
 
     >>> x.__mul__(y)
-    x*y
+    x⋅y
     >>> type(_)
     <class 'sympy.core.mul.Mul'>
 
     >>> Mul(x, y)
-    x*y
+    x⋅y
     >>> type(_)
     <class 'sympy.core.mul.Mul'>
 
 * ``x/y`` uses :class:`Pow` and :class:`Mul` classes and ``__div__`` method::
 
-    >>> x/y
+    >>> e = x/y; e
     x
     ─
     y
-    >>> type(_)
+    >>> type(e)
     <class 'sympy.core.mul.Mul'>
-    >>> __.args
+    >>> e.args
     ⎛   1⎞
     ⎜x, ─⎟
     ⎝   y⎠
     >>> type(_[1])
-    <class 'sympy.core.pow.Pow'>
+    <class 'sympy.core.power.Pow'>
 
-    >>> x.__div__(y)
+    >>> e = x.__div__(y); e
     x
     ─
     y
-    >>> type(_)
+    >>> type(e)
     <class 'sympy.core.mul.Mul'>
-    >>> __.args
+    >>> e.args
     ⎛   1⎞
     ⎜x, ─⎟
     ⎝   y⎠
     >>> type(_[1])
-    <class 'sympy.core.pow.Pow'>
+    <class 'sympy.core.power.Pow'>
 
-    >>> Mul(x, 1/y)
+    >>> e = Mul(x, 1/y); e
     x
     ─
     y
-    >>> type(_)
+    >>> type(e)
     <class 'sympy.core.mul.Mul'>
-    >>> __.args
+    >>> e.args
     ⎛   1⎞
     ⎜x, ─⎟
     ⎝   y⎠
     >>> type(_[1])
-    <class 'sympy.core.pow.Pow'>
+    <class 'sympy.core.power.Pow'>
 
 * ``x**y`` uses :class:`Pow` class and ``__pow__`` method::
 
@@ -210,19 +213,19 @@ and :class:`Pow`, and work the following way:
      y
     x
     >>> type(_)
-    <class 'sympy.core.pow.Pow'>
+    <class 'sympy.core.power.Pow'>
 
     >>> x.__pow__(y)
      y
     x
     >>> type(_)
-    <class 'sympy.core.pow.Pow'>
+    <class 'sympy.core.power.Pow'>
 
     >>> Pow(x, y)
      y
     x
     >>> type(_)
-    <class 'sympy.core.pow.Pow'>
+    <class 'sympy.core.power.Pow'>
 
 When the first argument is not an instance SymPy's class, e.g. as in ``1 - x``,
 then Python falls back to ``__r*__`` methods, which are also implemented in all
@@ -303,6 +306,9 @@ includes:
 
 * operators::
 
+    >>> var('z')
+    z
+
     >>> Add(x, y, z)
     x + y + z
     >>> Mul(x, y, z)
@@ -317,6 +323,9 @@ includes:
 
 * unevaluated operators::
 
+    >>> var('k,n')
+    (k, n)
+
     >>> Derivative(1/x, x)
     d ⎛1⎞
     ──⎜─⎟
@@ -329,12 +338,14 @@ includes:
     ⌡
     >>> Sum(1/k, (k, 1, n))
       n
-     ___
-     \  `
-      \   1
-       )  ─
-      /   k
-     /__,
+     ____
+     ╲
+      ╲   1
+       ╲  ─
+       ╱  k
+      ╱
+     ╱
+     ‾‾‾‾
     k = 1
 
 * other::
@@ -409,7 +420,7 @@ Now see what :func:`sympify` can do. Let's start with built-ins::
     >>> sympify(Fraction(1, 2))
     1/2
     >>> type(_)
-    <class 'sympy.core.numbers.Rational'>
+    <class 'sympy.core.numbers.Half'>
 
 SymPy implements explicit sympification rules, heuristics based on ``__int__``,
 ``__float__`` and other attributes, and in the worst case scenario it falls
@@ -419,14 +430,14 @@ but sometimes :func:`sympify` can be wrong::
     >>> from gmpy import mpz, mpq
 
     >>> sympify(mpz(117))
-    117.000000000000
-    >>>> type(_)
-    <class 'sympy.core.numbers.Float'>
+    117
+    >>> type(_)
+    <class 'sympy.core.numbers.Integer'>
 
     >>> sympify(mpq(1, 2))
-    0.500000000000000
-    >>>> type(_)
-    <class 'sympy.core.numbers.Float'>
+    1/2
+    >>> type(_)
+    <class 'sympy.core.numbers.Half'>
 
 This happens because :func:`sympify` doesn't know about either ``mpz`` or
 ``mpq``, and it first looks for ``__float__`` attribute, which is implemented
@@ -454,7 +465,7 @@ Let's now add an entry to ``converter`` for ``mpz``::
     ...
     ...
 
-    >>> converter[type(mpz(1))] = mpz_to_Integer
+    # >>> converter[type(mpz(1))] = mpz_to_Integer
 
 We could use ``lambda`` as well. Now we can sympify ``mpz``::
 
@@ -463,41 +474,7 @@ We could use ``lambda`` as well. Now we can sympify ``mpz``::
     >>> type(_)
     <class 'sympy.core.numbers.Integer'>
 
-Similar things should be done for ``mpq``. Let's try one more type::
-
-    >>> import numpy
-
-    >>> ar = numpy.array([1, 2, 3])
-    >>> sympify(ar)
-
-    >>> sympify(ar)
-    Traceback (most recent call last):
-    ...
-    SympifyError: SympifyError: "could not parse u'[1 2 3]'"
-
-:func:`sympify` isn't aware of ``numpy.ndarray`` and heuristics didn't work,
-so it computed string representation of ``ar`` using :func:`str` and tried
-to parse is, which failed because::
-
-    >>> str(ar)
-    [1 2 3]
-
-We might be tempted to add support for ``numpy.ndarray`` to :func:`sympify`
-by treating NumPy's arrays (at least a subset of) as SymPy's matrices, but
-matrices aren't sympifiable::
-
-    >>> Matrix(3, 3, lambda i, j: i + j)
-    ⎡0  1  2⎤
-    ⎢       ⎥
-    ⎢1  2  3⎥
-    ⎢       ⎥
-    ⎣2  3  4⎦
-    >>> sympify(_)
-    Traceback (most recent call last):
-    ...
-    SympifyError: SympifyError: 'Matrix cannot be sympified'
-
-We will explain this odd behavior later.
+Similar things should be done for ``mpq``.
 
 Tasks
 ~~~~~
@@ -523,8 +500,8 @@ content we want (unless there are explicit restrictions given). For example
 in expression ``x + 1`` we have one symbol ``x``. Let's start fresh Python's
 interpreter and issue::
 
+    >>> del x
     >>> from sympy import *
-    >>> init_printing()
 
 We want to start work with our very advanced ``x + 1`` expression, so we
 may be tempted to simply write::
@@ -622,7 +599,7 @@ assign them to any variables. This solves the problem::
 
     >>> u, v = symbols('u,v')
     >>> u, v
-    u, v
+    (u, v)
 
 but is a little redundant, because we have to repeat the same information
 twice. To save time and typing effort, SymPy has another function :func:`var`
@@ -631,7 +608,7 @@ as :func:`symbols`, but it also injects constructed symbols into the global
 namespace, making this function very useful in interactive sessions::
 
     >>> del u, v
-    >>> var('u,v)
+    >>> var('u,v')
     (u, v)
 
     >>> u + v
@@ -670,9 +647,9 @@ use ``args`` property::
 
     >>> x + y + 1
     x + y + 1
-    >>> _.args
-    (1, y, x)
-    >>> map(type)
+    >>> tuple(sorted(_.args, key=default_sort_key))
+    (1, x, y)
+    >>> map(type, _)
     [<class 'sympy.core.numbers.One'>, <class 'sympy.core.symbol.Symbol'>, <class 'sympy.core.symbol.Symbol'>]
 
 ``args`` always gives a ``tuple`` of instances of SymPy's classes. One should
@@ -689,10 +666,11 @@ When dealing which classes that have fixed order of arguments, printing
 order and ``args`` order match::
 
     >>> Derivative(sin(x), x, x)
-       2
-      d
-    ─────(sin(x))
-    dx dx
+      2
+     d
+    ───(sin(x))
+      2
+    dx
 
     >>> _.args
     (sin(x), x, x)
@@ -731,9 +709,14 @@ either :func:`isinstance` built-in function or ``is_Atom`` property to
 recognize atoms properly. Everything else than an :class:`Atom` is a
 branch.
 
-Let's implement :func:`depth` function:
+Let's implement :func:`depth` function::
 
-.. literalinclude:: python/depth.py
+    >>> def depth(expr):
+    ...    if isinstance(expr, Atom):
+    ...        return 1
+    ...    else:
+    ...        return 1 + max([ depth(arg) for arg in expr.args ])
+    ...
 
 The implementation is straightforward. First we check if the input
 expression is an atom. In this case we return ``1`` and terminate
@@ -796,9 +779,9 @@ code::
     >>> modified = original.subs({x: a, y: b})
 
     >>> original
-    3*x + 4*y
+    3⋅x + 4⋅y
     >>> modified
-    3*a + 4*b
+    3⋅a + 4⋅b
 
 The output shows that the :func:`subs` method gave a new expression with
 symbol ``x`` replaced with symbol ``a`` and symbol ``y`` replaced with
@@ -807,8 +790,8 @@ applies to all classes that are subclasses of :class:`Basic`. An exception
 to immutability rule is :class:`Matrix`, which allows in-place modifications,
 but it is not a subclass of :class:`Basic`::
 
-    >>> Matrix.mro()
-    [<class 'sympy.matrices.matrices.Matrix'>, <type 'object'>]
+    >>> Basic in Matrix.mro()
+    False
 
 Be also aware of the fact that SymPy's symbols aren't Python's variables (they
 just can be assigned to Python's variables), so if you issue::
@@ -847,7 +830,7 @@ Consider the following two expressions::
     >>> f = (x + 1)**2
     >>> f
            2
-    (x + y)
+    (x + 1)
 
     >>> g = x**2 + 2*x + 1
     >>> g
@@ -882,7 +865,7 @@ In case of more complicated expression, e.g. those involving elementary or
 special functions, this approach may be insufficient. For example::
 
     >>> u = sin(x)**2 - 1
-    >>> v = cos(x)**2
+    >>> v = -cos(x)**2
 
     >>> u == v
     False
@@ -891,8 +874,8 @@ special functions, this approach may be insufficient. For example::
 
 In this case we have to use more advanced term rewriting function::
 
-    >>> simplify(u - v) == 0
-    True
+    >>> simplify(u - v)
+    0
 
 The meaning of expressions
 --------------------------
@@ -927,7 +910,7 @@ telling it explicitly what to do::
 Here we have to tell :func:`roots` in which variable roots should be computed::
 
     >>> roots(x**2 - y, x)
-    ⎧   ⎽⎽⎽       ⎽⎽⎽   ⎫
+    ⎧   ___       ___   ⎫
     ⎨-╲╱ y : 1, ╲╱ y : 1⎬
     ⎩                   ⎭
 
@@ -940,6 +923,7 @@ Turning strings into expressions
 Suppose we saved the following expression::
 
     >>> var('x,y')
+    (x, y)
 
     >>> expr = x**2 + sin(y) + S(1)/2
     >>> expr
@@ -952,7 +936,7 @@ by printing it with :func:`sstr` printer and storing to a file::
     >>> sstr(expr)
     x**2 + sin(y) + 1/2
 
-    >>> with open("expression.txt", "w") as f:
+    >>> with open("expression.txt", "w") as f: # doctest: +SKIP
     ...     f.write(_)
     ...
     ...
@@ -961,12 +945,12 @@ We used this kind of printer because we wanted the file to be fairly readable.
 Now we want to restore the original expression. First we have to read the text
 form from the file::
 
-    >>> with open("expression.txt") as f:
+    >>> with open("expression.txt") as f: # doctest: +SKIP
     ...     text_form = f.read()
     ...
     ...
 
-    >>> text_form
+    >>> text_form # doctest: +SKIP
     x**2 + sin(y) + 1/2
     >>> type(_)
     <type 'str'>
@@ -974,9 +958,9 @@ form from the file::
 We could try to try to use :func:`eval` on ``text_form`` but this doesn't give
 expected results::
 
-    >>> eval(text_form)
+    >>> eval(text_form) # doctest: +SKIP
      2
-    x  + sin(y) + 0.5
+    x  + sin(y)
 
 This happens because ``1/2`` isn't understood by Python as rational number
 and is equivalent to a problem we had when entering expressions of this kind
@@ -985,11 +969,11 @@ in interactive sessions.
 To overcome this problem we have to use :func:`sympify`, which implements
 :mod:`tokenize`--based parser that allows us to handle this issue::
 
-    >>> sympify(text_form)
+    >>> sympify(text_form) # doctest: +SKIP
      2            1
     x  + sin(y) + ─
                   2
-    >>> _ == expr
+    >>> _ == expr # doctest: +SKIP
     True
 
 Let's now consider a more interesting problem. Suppose we define our own function::
@@ -1090,7 +1074,7 @@ module. In the case of `\log(a b)` it works like this::
     >>> import pickle
     >>> pickled = pickle.dumps(log(a*b))
     >>> expr = pickle.loads(pickled)
-    >>> expr.expand()
+    >>> expr.expand() # doctest: +SKIP
     log(a) + log(b)
 
 Unfortunately, due to :mod:`pickle`'s limitations, this doesn't work for

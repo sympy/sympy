@@ -95,12 +95,15 @@ Let's now focus on a particular `k`--coloring where `k = 3`. In this case:
 
 Using SymPy's built--in multivariate polynomial factorization routine::
 
-    >>> var('xi, xj')
-    (xi, xj)
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True, no_global=True)
 
-    >>> factor(xi**3 - xj**3)
-              ⎛  2             2⎞
-    (xi - xj)⋅⎝xi  + xi⋅xj + xj ⎠
+    >>> var('_xi, _xj')
+    (_xi, _xj)
+
+    >>> factor(_xi**3 - _xj**3)
+                ⎛   2                2⎞
+    (_xi - _xj)⋅⎝_xi  + _xi⋅_xj + _xj ⎠
 
 we derive the set of equations `F_{\mathcal{G}}` describing an admissible
 `3`--coloring of a graph:
@@ -275,7 +278,8 @@ by extending `F_{\mathcal{G}}` with `x_3^2 + x_3 x_4 + x_4^2` and recomputing th
 |groebner| basis::
 
     >>> groebner(F3 + Fg + [x3**2 + x3*x4 + x4**2], *V, order='lex')
-    [1]
+    GroebnerBasis([1], x₁, x₂, x₃, x₄, x₅, x₆, x₇, x₈, x₉, x₁₀, x₁₁, x₁₂, domain=ℤ
+    , order=lex)
 
 We got the trivial |groebner| basis as the result, so the graph `\mathcal{G'}`
 isn't `3`--colorable. We could continue this discussion and ask, for example,
@@ -291,7 +295,7 @@ properties of roots of unity. Let's construct the `k`--th root of unity, where
     >>> zeta = exp(2*pi*I/3).expand(complex=True)
 
     >>> zeta
-            ⎽⎽⎽
+            ___
       1   ╲╱ 3 ⋅ⅈ
     - ─ + ───────
       2      2
@@ -301,12 +305,12 @@ Altogether we consider three roots of unity in this example::
     >>> zeta**0
     1
     >>> zeta**1
-            ⎽⎽⎽
+            ___
       1   ╲╱ 3 ⋅ⅈ
     - ─ + ───────
       2      2
     >>> expand(zeta**2)
-            ⎽⎽⎽
+            ___
       1   ╲╱ 3 ⋅ⅈ
     - ─ - ───────
       2      2
@@ -320,14 +324,18 @@ Alternatively, we could obtain all `k`--th roots of unity by factorization
 of `x^3 - 1` over an algebraic number field or by computing its roots via
 radicals::
 
+    >>> var('x')
+    x
+
     >>> factor(x**3 - 1, extension=zeta)
-            ⎛          ⎽⎽⎽  ⎞ ⎛          ⎽⎽⎽  ⎞
+            ⎛          ___  ⎞ ⎛          ___  ⎞
             ⎜    1   ╲╱ 3 ⋅ⅈ⎟ ⎜    1   ╲╱ 3 ⋅ⅈ⎟
     (x - 1)⋅⎜x + ─ - ───────⎟⋅⎜x + ─ + ───────⎟
             ⎝    2      2   ⎠ ⎝    2      2   ⎠
 
-    >>> roots(x**3 - 1, multiple=True)
-    ⎡           ⎽⎽⎽            ⎽⎽⎽  ⎤
+    >>> R = roots(x**3 - 1, multiple=True)
+    >>> R
+    ⎡           ___            ___  ⎤
     ⎢     1   ╲╱ 3 ⋅ⅈ    1   ╲╱ 3 ⋅ⅈ⎥
     ⎢1, - ─ - ───────, - ─ + ───────⎥
     ⎣     2      2       2      2   ⎦
@@ -353,10 +361,9 @@ fixed order, those variables and the previously computed roots of unity::
     >>> var('red,green,blue')
     (red, green, blue)
 
-    >>> colors = zip(__, _)
+    >>> colors = zip(R, _)
     >>> colors
-
-    ⎡          ⎛        ⎽⎽⎽         ⎞  ⎛        ⎽⎽⎽        ⎞⎤
+    ⎡          ⎛        ___         ⎞  ⎛        ___        ⎞⎤
     ⎢          ⎜  1   ╲╱ 3 ⋅ⅈ       ⎟  ⎜  1   ╲╱ 3 ⋅ⅈ      ⎟⎥
     ⎢(1, red), ⎜- ─ - ───────, green⎟, ⎜- ─ + ───────, blue⎟⎥
     ⎣          ⎝  2      2          ⎠  ⎝  2      2         ⎠⎦
@@ -370,7 +377,7 @@ Let's look at `G`::
     >>> groups = sorted(sift(G, key).items(), reverse=True)
 
     >>> for _, group in groups:
-    ...     pprint(group)
+    ...     pprint(group, use_unicode=True)
     ...
     ⎡   3    ⎤
     ⎣x₁₂  - 1⎦
@@ -454,15 +461,18 @@ terms of those algebraic numbers, possibly even in a non--simplified form.
 To overcome this difficulty we will use previously defined mapping between
 roots of unity and literal colors and substitute symbols for numbers::
 
+    >>> colors = dict(colors)
+
     >>> for coloring in colorings:
-    ...     print [ color.expand(complex=True).subs(colors) for color in coloring ]
+    ...     print [ colors[color.expand(complex=True)] for color in coloring ]
     ...
-    [blue, green, red, red, blue, green, red, blue, green, blue, green, red]
     [green, blue, red, red, green, blue, red, green, blue, green, blue, red]
-    [green, red, blue, blue, green, red, blue, green, red, green, red, blue]
+    [blue, green, red, red, blue, green, red, blue, green, blue, green, red]
+    [red, green, blue, blue, red, green, blue, red, green, red, green, blue]
     [blue, red, green, green, blue, red, green, blue, red, blue, red, green]
     [red, blue, green, green, red, blue, green, red, blue, red, blue, green]
-    [red, green, blue, blue, red, green, blue, red, green, red, green, blue]
+    [green, red, blue, blue, green, red, blue, green, red, green, red, blue]
+
 
 This is the result we were looking for, but a few words of explanation
 are needed. :func:`solve` may return unsimplified results so we may need

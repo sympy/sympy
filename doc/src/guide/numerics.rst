@@ -11,6 +11,9 @@ uses the mpmath library for this purpose.
 Let's start from something simple and find numerical approximation to `\pi`.
 Normally SymPy represents `\pi` as a symbolic entity::
 
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True, no_global=True)
+
     >>> pi
     π
     >>> type(_)
@@ -63,6 +66,9 @@ Note that in SymPy, ``exp(1)`` is denoted by capital :exp:``E``
 
 Symbolic entities are ignored::
 
+    >>> var('x')
+    x
+
     >>> pi*x
     π⋅x
     >>> _.evalf()
@@ -79,7 +85,7 @@ Built-in functions :func:`float` and :func:`complex` take advantage of
     >>> float(pi*I)
     Traceback (most recent call last):
     ...
-    ValueError: Symbolic value, can't compute
+    TypeError: can't convert complex to float
 
     >>> complex(pi*I)
     3.14159265359j
@@ -120,7 +126,7 @@ because if we try to construct a :class:`Float` this way, we will still get
 zero::
 
     >>> Float(3.14e-400)
-    0
+    0.0
 
 The only way to fix this is to pass a string argument to :class:`Float`.
 
@@ -172,7 +178,7 @@ little by evaluating `f(x)` for sufficiently small arguments.
 Let's start with arguments of the form `x = 10^{-k}`::
 
     >>> f.subs(x, 10**-1).evalf()
-    0.00114216521536353 + 0.00159920801047526⋅ⅈ
+    0.00114216521536352 + 0.00159920801047525⋅ⅈ
     >>> f.subs(x, 10**-2).evalf()
     0.000191087007486009
     >>> f.subs(x, 10**-3).evalf()
@@ -180,7 +186,7 @@ Let's start with arguments of the form `x = 10^{-k}`::
     >>> f.subs(x, 10**-4).evalf()
     1.24646630615307e-5
     >>> f.subs(x, 10**-5).evalf()
-    2.73214471781554e-6
+    2.73214471781553e-6
     >>> f.subs(x, 10**-6).evalf()
     6.14631623897124e-7
     >>> f.subs(x, 10**-7).evalf()
@@ -192,11 +198,13 @@ We obtained a decreasing sequence values which suggests that the limit
 is zero. Let's now try points of the form `x = 10^{-10^k}`::
 
     >>> f.subs(x, 10**-10**1).evalf()
-    2.17686941815359e-9
+    2.17686941815358e-9
     >>> f.subs(x, 10**-10**2).evalf()
     4.87036575966825e-48
     >>> f.subs(x, 10**-10**3).evalf()
-    +inf
+    Traceback (most recent call last):
+    ...
+    ZeroDivisionError
 
 For `x = 10^{-10^3}` we got a very peculiar value. This happened because::
 
@@ -214,21 +222,21 @@ Instead we can use either exact numbers or SymPy's floating point numbers::
 Let's continue with SymPy's floating point numbers::
 
     >>> f.subs(x, Float(10.0)**-10**1).evalf()
-    2.17686941815359e-9
+    2.17686941815358e-9
     >>> f.subs(x, Float(10.0)**-10**2).evalf()
     4.87036575966825e-48
     >>> f.subs(x, Float(10.0)**-10**3).evalf()
     1.56972853078736e-284
     >>> f.subs(x, Float(10.0)**-10**4).evalf()
-    3.42160969045530e-1641
+    3.42160969046405e-1641
     >>> f.subs(x, Float(10.0)**-10**5).evalf()
-    1.06692865269193e-7836
+    1.06692865271920e-7836
     >>> f.subs(x, Float(10.0)**-10**6).evalf()
     4.40959214078817e-12540
     >>> f.subs(x, Float(10.0)**-10**7).evalf()
     1.11148303902275e+404157
     >>> f.subs(x, Float(10.0)**-10**8).evalf()
-    8.63427256445142e+8443082
+    8.63427300590158e+8443082
 
 This time the sequence of values is rapidly decreasing, but only until
 a sufficiently small numer where `f` has an inflexion point. After that,

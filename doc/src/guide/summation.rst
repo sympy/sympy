@@ -19,6 +19,12 @@ resulting values together.
 
 Let's consider the following polynomial and rational function::
 
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True, no_global=True)
+
+    >>> var('z')
+    z
+
     >>> f = z**5 + z + 3
     >>> f
      5
@@ -50,7 +56,7 @@ can be done by using :func:`nroots`::
     >>> R = nroots(f)
 
     >>> for ri, r in zip(numbered_symbols('r'), R):
-    ...     pprint(Eq(ri, r))
+    ...     pprint(Eq(ri, r), use_unicode=True)
     ...
     r₀ = -1.13299756588507
     r₁ = -0.47538075666955 - 1.12970172509541⋅ⅈ
@@ -61,7 +67,7 @@ can be done by using :func:`nroots`::
 We can substitute those roots for `z` in `g` and add together::
 
     >>> sum([ g.subs(z, r) for r in R ]).evalf(chop=True)
-    -0.333333333333332
+    -0.333333333333333
 
 It was necessary to evaluate this sum with :func:`evalf`, because otherwise
 we would get an unsimplified result. The additional parameter ``chop=True`` was
@@ -88,7 +94,7 @@ We can obtain all roots using list comprehensions::
     >>> R = [ RootOf(f, i) for i in xrange(degree(f)) ]
 
     >>> for r in R:
-    ...     pprint(r)
+    ...     pprint(r, use_unicode=True)
     ...
           ⎛ 5           ⎞
     RootOf⎝z  + z + 3, 0⎠
@@ -112,13 +118,12 @@ capable of simplifying expressions with :class:`RootOf`::
     >>> isinstance(G, Add)
     True
 
-    >>> _ = simplify(G)
-    >>> isinstance(_, Add)
+    >>> isinstance(simplify(G), Add)
     True
 
 We can, however, evaluate sums of :class:`RootOf`'s using :func:`evalf`::
 
-    >>> G.evalf()
+    >>> G.evalf(chop=True)
     -0.333333333333333
 
     >>> nsimplify(_)
@@ -168,11 +173,13 @@ kind can be generated using :func:`viete`::
     >>> V = viete(f, R, z)
 
     >>> for lhs, rhs in V:
-    ....     pprint(Eq(lhs, rhs))
-    ....
+    ...     pprint(Eq(lhs, rhs), use_unicode=True)
+    ...
     r₀ + r₁ + r₂ + r₃ + r₄ = 0
-    r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄ = 0
-    r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄ = 0
+    r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄
+    = 0
+    r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r
+    ₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄ = 0
     r₀⋅r₁⋅r₂⋅r₃ + r₀⋅r₁⋅r₂⋅r₄ + r₀⋅r₁⋅r₃⋅r₄ + r₀⋅r₂⋅r₃⋅r₄ + r₁⋅r₂⋅r₃⋅r₄ = 1
     r₀⋅r₁⋅r₂⋅r₃⋅r₄ = -3
 
@@ -205,6 +212,7 @@ The choice of `g` allowed us to recognize Viete formulas very easily in
 Let's modify `g` a little::
 
     >>> g = 1/(z + 2)
+    >>> g
       1
     ─────
     z + 2
@@ -217,16 +225,18 @@ Now let's repeat the procedure for the new `g`::
     >>> q = expand(denom(G))
 
     >>> p
-    r₀⋅r₁⋅r₂⋅r₃ + r₀⋅r₁⋅r₂⋅r₄ + 4⋅r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃⋅r₄ + 4⋅r₀⋅r₁⋅r₃ + 4⋅r₀⋅r₁⋅r₄ + 12⋅r₀⋅r₁ + r₀⋅r₂⋅r₃⋅r₄ + \
-    4⋅r₀⋅r₂⋅r₃ + 4⋅r₀⋅r₂⋅r₄ + 12⋅r₀⋅r₂ + 4⋅r₀⋅r₃⋅r₄ + 12⋅r₀⋅r₃ + 12⋅r₀⋅r₄ + 32⋅r₀ + r₁⋅r₂⋅r₃⋅r₄ + 4⋅r₁⋅r₂⋅r₃ + \
-    4⋅r₁⋅r₂⋅r₄ + 12⋅r₁⋅r₂ + 4⋅r₁⋅r₃⋅r₄ + 12⋅r₁⋅r₃ + 12⋅r₁⋅r₄ + 32⋅r₁ + 4⋅r₂⋅r₃⋅r₄ + 12⋅r₂⋅r₃ + 12⋅r₂⋅r₄ + 32⋅r₂ + \
-    12⋅r₃⋅r₄ + 32⋅r₃ + 32⋅r₄ + 80
+    r₀⋅r₁⋅r₂⋅r₃ + r₀⋅r₁⋅r₂⋅r₄ + 4⋅r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃⋅r₄ + 4⋅r₀⋅r₁⋅r₃ + 4⋅r₀⋅r₁⋅r₄
+     + 12⋅r₀⋅r₁ + r₀⋅r₂⋅r₃⋅r₄ + 4⋅r₀⋅r₂⋅r₃ + 4⋅r₀⋅r₂⋅r₄ + 12⋅r₀⋅r₂ + 4⋅r₀⋅r₃⋅r₄ +
+    12⋅r₀⋅r₃ + 12⋅r₀⋅r₄ + 32⋅r₀ + r₁⋅r₂⋅r₃⋅r₄ + 4⋅r₁⋅r₂⋅r₃ + 4⋅r₁⋅r₂⋅r₄ + 12⋅r₁⋅r₂
+     + 4⋅r₁⋅r₃⋅r₄ + 12⋅r₁⋅r₃ + 12⋅r₁⋅r₄ + 32⋅r₁ + 4⋅r₂⋅r₃⋅r₄ + 12⋅r₂⋅r₃ + 12⋅r₂⋅r₄
+     + 32⋅r₂ + 12⋅r₃⋅r₄ + 32⋅r₃ + 32⋅r₄ + 80
 
     >>> q
-    r₀⋅r₁⋅r₂⋅r₃⋅r₄ + 2⋅r₀⋅r₁⋅r₂⋅r₃ + 2⋅r₀⋅r₁⋅r₂⋅r₄ + 4⋅r₀⋅r₁⋅r₂ + 2⋅r₀⋅r₁⋅r₃⋅r₄ + 4⋅r₀⋅r₁⋅r₃ + 4⋅r₀⋅r₁⋅r₄ + \
-    8⋅r₀⋅r₁ + 2⋅r₀⋅r₂⋅r₃⋅r₄ + 4⋅r₀⋅r₂⋅r₃ + 4⋅r₀⋅r₂⋅r₄ + 8⋅r₀⋅r₂ + 4⋅r₀⋅r₃⋅r₄ + 8⋅r₀⋅r₃ + 8⋅r₀⋅r₄ + 16⋅r₀ + \
-    2⋅r₁⋅r₂⋅r₃⋅r₄ + 4⋅r₁⋅r₂⋅r₃ + 4⋅r₁⋅r₂⋅r₄ + 8⋅r₁⋅r₂ + 4⋅r₁⋅r₃⋅r₄ + 8⋅r₁⋅r₃ + 8⋅r₁⋅r₄ + 16⋅r₁ + 4⋅r₂⋅r₃⋅r₄ + \
-    8⋅r₂⋅r₃ + 8⋅r₂⋅r₄ + 16⋅r₂ + 8⋅r₃⋅r₄ + 16⋅r₃ + 16⋅r₄ + 32
+    r₀⋅r₁⋅r₂⋅r₃⋅r₄ + 2⋅r₀⋅r₁⋅r₂⋅r₃ + 2⋅r₀⋅r₁⋅r₂⋅r₄ + 4⋅r₀⋅r₁⋅r₂ + 2⋅r₀⋅r₁⋅r₃⋅r₄ +
+    4⋅r₀⋅r₁⋅r₃ + 4⋅r₀⋅r₁⋅r₄ + 8⋅r₀⋅r₁ + 2⋅r₀⋅r₂⋅r₃⋅r₄ + 4⋅r₀⋅r₂⋅r₃ + 4⋅r₀⋅r₂⋅r₄ +
+    8⋅r₀⋅r₂ + 4⋅r₀⋅r₃⋅r₄ + 8⋅r₀⋅r₃ + 8⋅r₀⋅r₄ + 16⋅r₀ + 2⋅r₁⋅r₂⋅r₃⋅r₄ + 4⋅r₁⋅r₂⋅r₃
+    + 4⋅r₁⋅r₂⋅r₄ + 8⋅r₁⋅r₂ + 4⋅r₁⋅r₃⋅r₄ + 8⋅r₁⋅r₃ + 8⋅r₁⋅r₄ + 16⋅r₁ + 4⋅r₂⋅r₃⋅r₄ +
+     8⋅r₂⋅r₃ + 8⋅r₂⋅r₄ + 16⋅r₂ + 8⋅r₃⋅r₄ + 16⋅r₃ + 16⋅r₄ + 32
 
 This doesn't look that familiar anymore. Let's try to apply Viete formulas
 to the numerator and denominator::
@@ -249,11 +259,13 @@ implemented in :func:`symmetrize`::
     (16⋅s₁ + 8⋅s₂ + 4⋅s₃ + 2⋅s₄ + s₅ + 32, 0)
 
     >>> for s, poly in mapping:
-    ...     pprint(Eq(s, poly))
+    ...     pprint(Eq(s, poly), use_unicode=True)
     ...
     s₁ = r₀ + r₁ + r₂ + r₃ + r₄
-    s₂ = r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄
-    s₃ = r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄
+    s₂ = r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r
+    ₃⋅r₄
+    s₃ = r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r
+    ₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄
     s₄ = r₀⋅r₁⋅r₂⋅r₃ + r₀⋅r₁⋅r₂⋅r₄ + r₀⋅r₁⋅r₃⋅r₄ + r₀⋅r₂⋅r₃⋅r₄ + r₁⋅r₂⋅r₃⋅r₄
     s₅ = r₀⋅r₁⋅r₂⋅r₃⋅r₄
 
@@ -264,7 +276,7 @@ Remainders are always zero for symmetric inputs.
 
 We can zip this mapping and Viete formulas together, obtaining::
 
-    >>> [ (s, c) for (s, _), (_, c) in zip(mapping, V) ]
+    >>> [ (s, c) for (s, __), (__, c) in zip(mapping, V) ]
     [(s₁, 0), (s₂, 0), (s₃, 0), (s₄, 1), (s₅, -3)]
 
 Now we can take head of ``P`` and ``Q`` and perform substitution::
@@ -283,7 +295,7 @@ Let's verify this result using :class:`RootSum`::
 
 The numerical approach also works in this case::
 
-    >>> sum([ g.subs(z, r) for r in Poly(f).all_roots() ]).evalf()
+    >>> sum([ g.subs(z, r) for r in Poly(f).all_roots() ]).evalf(chop=True)
     2.61290322580645
 
     >>> nsimplify(_)

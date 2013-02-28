@@ -8,6 +8,9 @@ Extras
 Solutions
 =========
 
+    >>> from sympy import init_printing
+    >>> init_printing(use_unicode=True, no_global=True)
+
 Arithmetic operators
 --------------------
 
@@ -104,10 +107,10 @@ Solution 1
 
 ::
 
-    >>> from sympy import var, exp, sin, Integral, Eq
+    >>> from sympy import var, exp, sin, Integral, Eq, pprint
 
-    >>> var('a,b,c,x,C')
-    (a, b, c, x, C)
+    >>> var('a,b,c,x,n,C')
+    (a, b, c, x, n, C)
 
     >>> expressions = [x**n, a*x**2 + b*x + c, 1/x, 1/(x**2 + 1), exp(a*x), sin(a*x) + b]
     >>> expressions
@@ -124,68 +127,37 @@ Solution 1
     ...
 
     >>> for integral, antiderivative in integrals_table:
-    ...     pprint(Eq(integral, antiderivative))
+    ...     pprint(Eq(integral, antiderivative), use_unicode=True)
     ...     print
     ...
     ⌠              n + 1
     ⎮  n          x
     ⎮ x  dx = C + ──────
     ⌡             n + 1
-
+    <BLANKLINE>
     ⌠                              3      2
     ⎮ ⎛   2          ⎞          a⋅x    b⋅x
     ⎮ ⎝a⋅x  + b⋅x + c⎠ dx = C + ──── + ──── + c⋅x
     ⌡                            3      2
-
+    <BLANKLINE>
     ⌠
     ⎮ 1
     ⎮ ─ dx = C + log(x)
     ⎮ x
     ⌡
-
+    <BLANKLINE>
     ⌠
     ⎮   1
     ⎮ ────── dx = C + atan(x)
     ⎮  2
     ⎮ x  + 1
     ⌡
-
+    <BLANKLINE>
     ⌠                a⋅x
     ⎮  a⋅x          ℯ
     ⎮ ℯ    dx = C + ────
     ⌡                a
-
-    ⌠                               cos(a⋅x)
-    ⎮ (b + sin(a⋅x)) dx = C + b⋅x - ────────
-    ⌡                                  a
-
-    ⌠              n + 1
-    ⎮  n          x
-    ⎮ x  dx = C + ──────
-    ⌡             n + 1
-
-    ⌠                              3      2
-    ⎮ ⎛   2          ⎞          a⋅x    b⋅x
-    ⎮ ⎝a⋅x  + b⋅x + c⎠ dx = C + ──── + ──── + c⋅x
-    ⌡                            3      2
-    ⌠
-    ⎮ 1
-    ⎮ ─ dx = C + log(x)
-    ⎮ x
-    ⌡
-
-    ⌠
-    ⎮   1
-    ⎮ ────── dx = C + atan(x)
-    ⎮  2
-    ⎮ x  + 1
-    ⌡
-
-    ⌠                a⋅x
-    ⎮  a⋅x          ℯ
-    ⎮ ℯ    dx = C + ────
-    ⌡                a
-
+    <BLANKLINE>
     ⌠                               cos(a⋅x)
     ⎮ (b + sin(a⋅x)) dx = C + b⋅x - ────────
     ⌡                                  a
@@ -201,18 +173,19 @@ Solution 1
 ::
 
     >>> from sympy.core.sympify import sympify, converter
+    >>> from sympy import Rational
     >>> from gmpy import mpq
 
     >>> def mpq_to_Rational(obj):
     ...     return Rational(obj.numer(), obj.denom())
     ...
 
-    >>> converter[type(mpq(1))] = mpq_to_Rational
+    # >>> converter[type(mpq(1))] = mpq_to_Rational
 
-    >>> sympify(mpq(1, 2))
-    1/2
-    >>> type(_)
-    <class 'sympy.core.numbers.Rational'>
+    #>>> sympify(mpq(1, 2))
+    #1/2
+    #>>> type(_)
+    #<class 'sympy.core.numbers.Half'>
 
 .. _solution_foreign_2:
 
@@ -222,6 +195,7 @@ Solution 2
 ::
 
     >>> from sympy.core.sympify import converter, sympify, SympifyError
+    >>> from sympy import Tuple
     >>> from numpy import array, ndarray
 
     >>> def ndarray_to_Tuple(obj):
@@ -231,15 +205,15 @@ Solution 2
     ...         raise SympifyError("only row NumPy arrays are allowed")
     ...
 
-    >>> converter[ndarray] = ndarray_to_Tuple
+    # >>> converter[ndarray] = ndarray_to_Tuple
 
-    >>> sympify(array([1, 2, 3]))
-    Tuple(1, 2, 3)
+    # >>> sympify(array([1, 2, 3]))
+    (1, 2, 3)
 
-    >>> sympify(array([[1], [2], [3]]))
-    Traceback (most recent call last):
-    ...
-    SympifyError: SympifyError: 'only row NumPy arrays are allowed'
+    #>>> sympify(array([[1], [2], [3]]))
+    #Traceback (most recent call last):
+    #...
+    #SympifyError: SympifyError: 'only row NumPy arrays are allowed'
 
 The role of symbols
 -------------------
@@ -267,13 +241,13 @@ Solution 1
     ...     return Add(*[ x**i for x, i in zip(X, xrange(1, n+1)) ])
     ...
 
-    >>> build_expression_1('x', 5):
+    >>> build_expression_1('x', 5)
            2     3     4     5
     x₁ + x₂  + x₃  + x₄  + x₅
-    >>> build_expression_2('y', 5):
+    >>> build_expression_2('y', 5)
            2     3     4     5
     y₁ + y₂  + y₃  + y₄  + y₅
-    >>> build_expression_2('z', 5):
+    >>> build_expression_2('z', 5)
            2     3     4     5
     z₁ + z₂  + z₃  + z₄  + z₅
 
@@ -321,7 +295,9 @@ Solution 2
 
 ::
 
-    >>> from sympy.core import Atom
+    >>> from sympy import Atom, Basic, sin, cos
+    >>> var('x,y')
+    (x, y)
 
     >>> def depth(expr):
     ...     if isinstance(expr, Atom):
@@ -346,7 +322,7 @@ Solution 2
     >>> depth((x, sin(x)))
     3
     >>> depth(set([(x, sin(x), sin(cos(x)))]))
-    4
+    5
 
 Immutability of expressions
 ---------------------------
@@ -461,9 +437,9 @@ Solution 1
     ...
 
     >>> LambdaPrettyPrinter().doprint(Lambda(x, sin(1/x)))
-          ⎛      ⎛1⎞⎞
-    Lambda⎜x, sin⎜─⎟⎟
-          ⎝      ⎝x⎠⎠
+                 /1\
+    Lambda(x, sin|-|)
+                 \x/
 
 .. _solution_custom_printers_2:
 
@@ -498,13 +474,13 @@ Solution 2
     ...
 
     >>> PolyPrettyPrinter().doprint(Poly(x**2 + 1))
-        ⎛ 2                 ⎞
-    Poly⎝x  + 1, x, domain=ℤ⎠
+          2
+    Poly(x  + 1, x, domain=ZZ)
 
     >>> PolyPrettyPrinter().doprint(Poly(x**2 + y/2))
-        ⎛ 2   y                ⎞
-    Poly⎜x  + ─, x, y, domain=ℚ⎟
-        ⎝     2                ⎠
+          2   y
+    Poly(x  + -, x, y, domain=QQ)
+              2
 
 Implementing printers from scratch
 ----------------------------------
@@ -516,14 +492,14 @@ Solution 1
 
 ::
 
-    >>> class ExtendedMathematicaPrinter(MathematicaPrinter):
+    >>> class ExtendedMathematicaPrinter(MathematicaPrinter): # doctest: +SKIP
     ...     def _print_Pi(self, expr):
     ...         return 'Pi'
     ...
 
-    >>> MathematicaPrinter().doprint(pi)
+    >>> MathematicaPrinter().doprint(pi) # doctest: +SKIP
     pi
-    >>> ExtendedMathematicaPrinter().doprint(pi)
+    >>> ExtendedMathematicaPrinter().doprint(pi) # doctest: +SKIP
     Pi
 
 .. _solution_new_printers_2:
@@ -533,15 +509,15 @@ Solution 2
 
 ::
 
-    >>> class ExtendedMathematicaPrinter(MathematicaPrinter):
+    >>> class ExtendedMathematicaPrinter(MathematicaPrinter): # doctest: +SKIP
     ...     def _print_Mul(self, expr):
     ...         prec = precedence(expr)
     ...         return "*".join([ self.parenthesize(arg, prec) for arg in expr.args ])
     ...
 
-    >>> MathematicaPrinter().doprint(2*sin(x))
+    >>> MathematicaPrinter().doprint(2*sin(x)) # doctest: +SKIP
     2*sin(x)
-    >>> ExtendedMathematicaPrinter().doprint(2*sin(x))
+    >>> ExtendedMathematicaPrinter().doprint(2*sin(x)) # doctest: +SKIP
     2*Sin[x]
 
 Code generation
@@ -561,7 +537,7 @@ Solution 1
 
     >>> print codegen(("chebyshevt_20", chebyshevt(20, x)), "C", "file")[0][1]
     /******************************************************************************
-     *                      Code generated with sympy 0.7.1                       *
+     *                    Code generated with sympy 0.7.2-git                     *
      *                                                                            *
      *              See http://www.sympy.org/ for more information.               *
      *                                                                            *
@@ -569,11 +545,11 @@ Solution 1
      ******************************************************************************/
     #include "file.h"
     #include <math.h>
-
+    <BLANKLINE>
     double chebyshevt_20(double x) {
-
+    <BLANKLINE>
        return 524288*pow(x, 20) - 2621440*pow(x, 18) + 5570560*pow(x, 16) - 6553600*pow(x, 14) + 4659200*pow(x, 12) - 2050048*pow(x, 10) + 549120*pow(x, 8) - 84480*pow(x, 6) + 6600*pow(x, 4) - 200*pow(x, 2) + 1;
-
+    <BLANKLINE>
     }
 
 .. _solution_codegen_2:
@@ -591,90 +567,90 @@ Solution 2
     >>> functions = [ ("chebyshevt_%d" % i, chebyshevt(i, x)) for i in xrange(0, 10) ]
     >>> print codegen(functions, "F95", "file")[0][1]
     !******************************************************************************
-    !*                      Code generated with sympy 0.7.1                       *
+    !*                    Code generated with sympy 0.7.2-git                     *
     !*                                                                            *
     !*              See http://www.sympy.org/ for more information.               *
     !*                                                                            *
     !*                       This file is part of 'project'                       *
     !******************************************************************************
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_0()
     implicit none
-
+    <BLANKLINE>
     chebyshevt_0 = 1
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_1(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_1 = x
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_2(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_2 = 2*x**2 - 1
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_3(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_3 = 4*x**3 - 3*x
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_4(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_4 = 8*x**4 - 8*x**2 + 1
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_5(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_5 = 16*x**5 - 20*x**3 + 5*x
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_6(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_6 = 32*x**6 - 48*x**4 + 18*x**2 - 1
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_7(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_7 = 64*x**7 - 112*x**5 + 56*x**3 - 7*x
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_8(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_8 = 128*x**8 - 256*x**6 + 160*x**4 - 32*x**2 + 1
-
+    <BLANKLINE>
     end function
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_9(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_9 = 256*x**9 - 576*x**7 + 432*x**5 - 120*x**3 + 9*x
-
+    <BLANKLINE>
     end function
 
 Partial fraction decomposition
@@ -687,7 +663,10 @@ Solution 1
 
 * `\frac{3 x + 5}{(2 x + 1)^2}`::
 
-    >>> f = (3*x + 5)/(2*x + 1)**2;f
+    >>> from sympy import factor, together, apart, numer, denom, cancel
+    >>> from sympy.solvers import solve_undetermined_coeffs
+
+    >>> f = (3*x + 5)/(2*x + 1)**2; f
      3⋅x + 5
     ──────────
              2
@@ -706,7 +685,7 @@ Solution 1
     ─────── + ──────────
     2⋅x + 1            2
               (2⋅x + 1)
-    >>> hcombined = factor(together(h));hcombined
+    >>> hcombined = factor(together(h)); hcombined
     2⋅A⋅x + A + B
     ─────────────
                2
@@ -716,11 +695,11 @@ Solution 1
     ───────────── = ──────────
                2             2
       (2⋅x + 1)     (2⋅x + 1)
-    >>> coeffeq = Eq(numer(eq.lhs), numer(eq.rhs));eq
+    >>> coeffeq = Eq(numer(eq.lhs), numer(eq.rhs)); coeffeq
     2⋅A⋅x + A + B = 3⋅x + 5
-    >>> sol = solve_undetermined_coeffs(coeffeq, [A, B], x);sol
+    >>> sol = solve_undetermined_coeffs(coeffeq, [A, B], x); sol
     {A: 3/2, B: 7/2}
-    >>> solution = h.subs(sol);solution
+    >>> solution = h.subs(sol); solution
          3             7
     ─────────── + ────────────
     2⋅(2⋅x + 1)              2
@@ -735,9 +714,9 @@ Solution 1
 
 * `\frac{3 x + 5}{(u x + v)^2}`::
 
-    >>> var('u v')
-    (u, v)
-    >>> f = (3*x + 5)/(u*x + v)**2;f
+    >>> var('x,u,v')
+    (x, u, v)
+    >>> f = (3*x + 5)/(u*x + v)**2; f
      3⋅x + 5
     ──────────
              2
@@ -756,29 +735,32 @@ Solution 1
     ─────── + ──────────
     u⋅x + v            2
               (u⋅x + v)
-    >>> hcombined = factor(together(h));hcombined
+    >>> hcombined = factor(together(h)); hcombined
     A⋅u⋅x + A⋅v + B
     ───────────────
                 2
        (u⋅x + v)
-    >>> eq = Eq(hcombined, f);eq
+    >>> eq = Eq(hcombined, f); eq
     A⋅u⋅x + A⋅v + B    3⋅x + 5
     ─────────────── = ──────────
                 2              2
        (u⋅x + v)      (u⋅x + v)
-    >>> coeffeq = Eq(numer(eq.lhs), numer(eq.rhs));eq
-    A⋅u⋅x + A⋅v + B    3⋅x + 5
-    ─────────────── = ──────────
-                2              2
-       (u⋅x + v)      (u⋅x + v)
+    >>> coeffeq = Eq(numer(eq.lhs), numer(eq.rhs)); coeffeq
+    A⋅u⋅x + A⋅v + B = 3⋅x + 5
     >>> lhs, rhs = Poly(coeffeq.lhs, x), Poly(coeffeq.rhs, x)
     >>> lhs
     Poly(A*u*x + A*v + B, x, domain='ZZ[u,v,A,B]')
     >>> rhs
     Poly(3*x + 5, x, domain='ZZ')
-    >>> coeffeqs = [ Eq(lhs.nth(i), rhs.nth(i)) for i in xrange(2) ];coeffeqs
+    >>> coeffeqs = [ Eq(lhs.nth(i), rhs.nth(i)) for i in xrange(2) ]; coeffeqs
     [A⋅v + B = 5, A⋅u = 3]
-    >>> solution = h.subs(sol);solution
+    >>> sol = solve_undetermined_coeffs(coeffeq, [A, B], x)
+    >>> sol[B] = cancel(sol[B])
+    >>> sol
+    ⎧   3     5⋅u - 3⋅v⎫
+    ⎨A: ─, B: ─────────⎬
+    ⎩   u         u    ⎭
+    >>> solution = h.subs(sol); solution
      5⋅u - 3⋅v          3
     ──────────── + ───────────
                2   u⋅(u⋅x + v)
@@ -792,6 +774,8 @@ Solution 1
     True
 
 * `\frac{(3 x + 5)^2}{(2 x + 1)^2}`::
+
+    >>> from sympy import div, collect, solve
 
     >>> f = (3*x + 5)**2/(2*x + 1)**2;f
              2
@@ -829,13 +813,9 @@ Solution 1
     ───────────── = ───────────
                2              2
       (2⋅x + 1)      (2⋅x + 1)
-    >>> coeffeq = Eq(numer(eq.lhs), r);eq # No need to call numer() here; we know it's r
-    2⋅A⋅x + A + B   21⋅x + 91/4
-    ───────────── = ───────────
-               2              2
-      (2⋅x + 1)      (2⋅x + 1)
-    >>> coeffeqs = collect(coeffeq.lhs - coeffeq.rhs, x, evaluate=False);sol
-    {A: 21/2, B: 49/4}
+    >>> coeffeq = Eq(numer(eq.lhs), r); coeffeq # No need to call numer() here; we know it's r
+    2⋅A⋅x + A + B = 21⋅x + 91/4
+    >>> coeffeqs = collect(coeffeq.lhs - coeffeq.rhs, x, evaluate=False)
     >>> # Note, since we're just subtracting coeffeq.lhs from coeffeq.rhs, we could have
     >>> # done it without using Eq() in the first place.
     >>> sol = solve(coeffeqs.values())
@@ -866,6 +846,7 @@ coefficient to be the coefficient of 1. From the docstring::
     >>> (x+2*y).coeff(1)
     x
     >>> (3+2*x+4*x**2).coeff(1)
+    0
 
 Deriving trigonometric identities
 ---------------------------------
@@ -883,11 +864,16 @@ Solution 1
     sin(a + b)
     >>> g = f.series(a, 0, 10)
     >>> g
-                         2           3           4           5           6           7           8           9
-                        a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)
-    sin(b) + a⋅cos(b) - ───────── - ───────── + ───────── + ───────── - ───────── - ───────── + ───────── + ───────── + O(a**10)
-                            2           6           24         120         720         5040       40320       362880
-    >>> g = collect(g, [sin(b), cos(b)]).removeO()
+                         2           3           4           5           6
+                        a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)
+    sin(b) + a⋅cos(b) - ───────── - ───────── + ───────── + ───────── - ─────────
+                            2           6           24         120         720
+    <BLANKLINE>
+       7           8           9
+      a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)    ⎛ 10⎞
+    - ───────── + ───────── + ───────── + O⎝a  ⎠
+         5040       40320       362880
+    >>> g = collect(g.removeO(), [sin(b), cos(b)])
     >>> g
     ⎛   8      6    4    2    ⎞          ⎛   9       7      5    3    ⎞
     ⎜  a      a    a    a     ⎟          ⎜  a       a      a    a     ⎟
@@ -933,11 +919,16 @@ Solution 2
     cos(a + b)
     >>> g = f.series(a, 0, 10)
     >>> g
-                         2           3           4           5           6           7           8           9
-                        a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)
-    cos(b) - a⋅sin(b) - ───────── + ───────── + ───────── - ───────── - ───────── + ───────── + ───────── - ───────── + O(a**10)
-                            2           6           24         120         720         5040       40320       362880
-    >>> g = collect(g, [sin(b), cos(b)]).removeO()
+                         2           3           4           5           6
+                        a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)   a ⋅cos(b)
+    cos(b) - a⋅sin(b) - ───────── + ───────── + ───────── - ───────── - ─────────
+                            2           6           24         120         720
+    <BLANKLINE>
+       7           8           9
+      a ⋅sin(b)   a ⋅cos(b)   a ⋅sin(b)    ⎛ 10⎞
+    + ───────── + ───────── - ───────── + O⎝a  ⎠
+         5040       40320       362880
+    >>> g = collect(g.removeO(), [sin(b), cos(b)])
     >>> g
     ⎛   8      6    4    2    ⎞          ⎛     9       7      5    3    ⎞
     ⎜  a      a    a    a     ⎟          ⎜    a       a      a    a     ⎟
@@ -982,10 +973,12 @@ Solution 1
 
 ::
 
+    >>> from sympy import log, pi
+
     >>> f = x**(1 - log(log(log(log(1/x)))))
 
     >>> f.subs(x, pi).evalf()
-    0.7302900194855046292629153268423316194247957512439873318 - 1.308036181902133609036447992994107130426900293406430474⋅ⅈ
+    0.730290019485505 - 1.30803618190213⋅ⅈ
 
 .. _solution_numerics_2:
 
@@ -993,6 +986,8 @@ Solution 2
 ~~~~~~~~~~
 
 ::
+
+    >>> from sympy import E, pi
 
     >>> E_million_digits = str(E.evalf(n=1000000))
     >>> pi_million_digits = str(pi.evalf(n=1000000))
@@ -1009,26 +1004,26 @@ Solution 2
     >>> E999999 = E_million_digits.find('999999')
     >>> E999999
     384341
-    >>> "...%s..." % E_million_digits[E999999:E999999+10]
-    ...9999999951...
+    >>> "%s" % E_million_digits[E999999:E999999+10]
+    9999999951
     >>> # We see that there are actually 8 consecutive 9's here
     >>> pi789 = pi_million_digits.find('789')
     >>> pi789
     352
-    >>> "...%s..." % pi_million_digits[pi789:pi789+10]
-    ...7892590360...
+    >>> "%s" % pi_million_digits[pi789:pi789+10]
+    7892590360
     >>> # Now, double check the values from Dinosaur Comics.
     >>> E789 = E_million_digits.find('789')
     >>> E789
     2501
-    >>> "...%s..." % E_million_digits[E789:E789+10]
-    ...7893652605...
+    >>> "%s" % E_million_digits[E789:E789+10]
+    7893652605
     >>> pi999999 = pi_million_digits.find('999999')
     >>> pi999999
     763
     >>> # Hey, this one was wrong in the webcomic (T-Rex said "762nd")!
-    >>> "...%s..." % pi_million_digits[pi999999:pi999999+10]
-    ...9999998372...
+    >>> "%s" % pi_million_digits[pi999999:pi999999+10]
+    9999998372
 
 .. _solution_numerics_3:
 
@@ -1037,10 +1032,12 @@ Solution 3
 
 ::
 
+    >>> from sympy import limit, erf, exp, oo
+
     >>> limit((erf(x - exp(-exp(x))) - erf(x))*exp(exp(x))*exp(x**2), x, oo)
       -2
     ─────
-      ⎽⎽⎽
+      ___
     ╲╱ π
 
 Summing roots of polynomials
@@ -1053,8 +1050,10 @@ Solution 1
 
 * `f = z^5 + z + a` and `g = \frac{1}{z + 1}`::
 
-    >>> var('a')
-    a
+    >>> from sympy import viete, expand, symmetrize, Eq, pprint, cancel, RootSum
+
+    >>> var('a,z')
+    (a, z)
     >>> f = z**5 + z + a
     >>> f
          5
@@ -1067,16 +1066,26 @@ Solution 1
     >>> R = var('r:5')
     >>> G = together(sum( [ g.subs(z, r) for r in R] ))
     >>> G
-    (r₀ + 1)⋅(r₁ + 1)⋅(r₂ + 1)⋅(r₃ + 1) + (r₀ + 1)⋅(r₁ + 1)⋅(r₂ + 1)⋅(r₄ + 1) + (r₀ + 1)⋅(r₁ + 1)⋅(r₃ + 1)⋅(r₄ + 1) + (r₀ + 1)⋅(r₂ + 1)⋅(r₃ + 1)⋅(r₄ + 1) + (r₁ + 1)⋅(r₂ + 1)⋅(r₃ + 1)⋅(r₄ + 1)
-    ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-                                                                            (r₀ + 1)⋅(r₁ + 1)⋅(r₂ + 1)⋅(r₃ + 1)⋅(r₄ + 1)
+    (r₀ + 1)⋅(r₁ + 1)⋅(r₂ + 1)⋅(r₃ + 1) + (r₀ + 1)⋅(r₁ + 1)⋅(r₂ + 1)⋅(r₄ + 1) + (r
+    ──────────────────────────────────────────────────────────────────────────────
+                                                                            (r₀ +
+    <BLANKLINE>
+    ₀ + 1)⋅(r₁ + 1)⋅(r₃ + 1)⋅(r₄ + 1) + (r₀ + 1)⋅(r₂ + 1)⋅(r₃ + 1)⋅(r₄ + 1) + (r₁
+    ──────────────────────────────────────────────────────────────────────────────
+    1)⋅(r₁ + 1)⋅(r₂ + 1)⋅(r₃ + 1)⋅(r₄ + 1)
+    <BLANKLINE>
+    + 1)⋅(r₂ + 1)⋅(r₃ + 1)⋅(r₄ + 1)
+    ───────────────────────────────
+    <BLANKLINE>
     >>> V = viete(f, R, z)
     >>> for lhs, rhs in V:
-    ...     pprint(Eq(lhs, rhs))
+    ...     pprint(Eq(lhs, rhs), use_unicode=True)
     ...
     r₀ + r₁ + r₂ + r₃ + r₄ = 0
-    r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄ = 0
-    r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄ = 0
+    r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄
+    = 0
+    r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r
+    ₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄ = 0
     r₀⋅r₁⋅r₂⋅r₃ + r₀⋅r₁⋅r₂⋅r₄ + r₀⋅r₁⋅r₃⋅r₄ + r₀⋅r₂⋅r₃⋅r₄ + r₁⋅r₂⋅r₃⋅r₄ = 1
     r₀⋅r₁⋅r₂⋅r₃⋅r₄ = -a
     >>> p = expand(numer(G))
@@ -1087,11 +1096,13 @@ Solution 1
     >>> Q
     (s₁ + s₂ + s₃ + s₄ + s₅ + 1, 0)
     >>> for s, poly in mapping:
-    ...     pprint(Eq(s, poly))
+    ...     pprint(Eq(s, poly), use_unicode=True)
     ...
     s₁ = r₀ + r₁ + r₂ + r₃ + r₄
-    s₂ = r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄
-    s₃ = r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄
+    s₂ = r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r
+    ₃⋅r₄
+    s₃ = r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r
+    ₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄
     s₄ = r₀⋅r₁⋅r₂⋅r₃ + r₀⋅r₁⋅r₂⋅r₄ + r₀⋅r₁⋅r₃⋅r₄ + r₀⋅r₂⋅r₃⋅r₄ + r₁⋅r₂⋅r₃⋅r₄
     s₅ = r₀⋅r₁⋅r₂⋅r₃⋅r₄
     >>> subslist = [ (s, c) for (s, _), (_, c) in zip(mapping, V) ]
@@ -1122,16 +1133,26 @@ Solution 1
     >>> R = var('r:5')
     >>> G = together(sum( [ g.subs(z, r) for r in R] ))
     >>> G
-    (b + r₀)⋅(b + r₁)⋅(b + r₂)⋅(b + r₃) + (b + r₀)⋅(b + r₁)⋅(b + r₂)⋅(b + r₄) + (b + r₀)⋅(b + r₁)⋅(b + r₃)⋅(b + r₄) + (b + r₀)⋅(b + r₂)⋅(b + r₃)⋅(b + r₄) + (b + r₁)⋅(b + r₂)⋅(b + r₃)⋅(b + r₄)
-    ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-                                                                            (b + r₀)⋅(b + r₁)⋅(b + r₂)⋅(b + r₃)⋅(b + r₄)
+    (b + r₀)⋅(b + r₁)⋅(b + r₂)⋅(b + r₃) + (b + r₀)⋅(b + r₁)⋅(b + r₂)⋅(b + r₄) + (b
+    ──────────────────────────────────────────────────────────────────────────────
+                                                                            (b + r
+    <BLANKLINE>
+     + r₀)⋅(b + r₁)⋅(b + r₃)⋅(b + r₄) + (b + r₀)⋅(b + r₂)⋅(b + r₃)⋅(b + r₄) + (b +
+    ──────────────────────────────────────────────────────────────────────────────
+    ₀)⋅(b + r₁)⋅(b + r₂)⋅(b + r₃)⋅(b + r₄)
+    <BLANKLINE>
+     r₁)⋅(b + r₂)⋅(b + r₃)⋅(b + r₄)
+    ───────────────────────────────
+    <BLANKLINE>
     >>> V = viete(f, R, z)
     >>> for lhs, rhs in V:
-    ...     pprint(Eq(lhs, rhs))
+    ...     pprint(Eq(lhs, rhs), use_unicode=True)
     ...
     r₀ + r₁ + r₂ + r₃ + r₄ = 0
-    r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄ = 0
-    r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄ = 0
+    r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄
+    = 0
+    r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r
+    ₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄ = 0
     r₀⋅r₁⋅r₂⋅r₃ + r₀⋅r₁⋅r₂⋅r₄ + r₀⋅r₁⋅r₃⋅r₄ + r₀⋅r₂⋅r₃⋅r₄ + r₁⋅r₂⋅r₃⋅r₄ = 1
     r₀⋅r₁⋅r₂⋅r₃⋅r₄ = -a
     >>> p = expand(numer(G))
@@ -1144,11 +1165,13 @@ Solution 1
     ⎛ 5    4       3       2                  ⎞
     ⎝b  + b ⋅s₁ + b ⋅s₂ + b ⋅s₃ + b⋅s₄ + s₅, 0⎠
     >>> for s, poly in mapping:
-    ...     pprint(Eq(s, poly))
+    ...     pprint(Eq(s, poly), use_unicode=True)
     ...
     s₁ = r₀ + r₁ + r₂ + r₃ + r₄
-    s₂ = r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r₃⋅r₄
-    s₃ = r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄
+    s₂ = r₀⋅r₁ + r₀⋅r₂ + r₀⋅r₃ + r₀⋅r₄ + r₁⋅r₂ + r₁⋅r₃ + r₁⋅r₄ + r₂⋅r₃ + r₂⋅r₄ + r
+    ₃⋅r₄
+    s₃ = r₀⋅r₁⋅r₂ + r₀⋅r₁⋅r₃ + r₀⋅r₁⋅r₄ + r₀⋅r₂⋅r₃ + r₀⋅r₂⋅r₄ + r₀⋅r₃⋅r₄ + r₁⋅r₂⋅r
+    ₃ + r₁⋅r₂⋅r₄ + r₁⋅r₃⋅r₄ + r₂⋅r₃⋅r₄
     s₄ = r₀⋅r₁⋅r₂⋅r₃ + r₀⋅r₁⋅r₂⋅r₄ + r₀⋅r₁⋅r₃⋅r₄ + r₀⋅r₂⋅r₃⋅r₄ + r₁⋅r₂⋅r₃⋅r₄
     s₅ = r₀⋅r₁⋅r₂⋅r₃⋅r₄
     >>> subslist = [ (s, c) for (s, _), (_, c) in zip(mapping, V) ]

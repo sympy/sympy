@@ -21,6 +21,10 @@ Standard
 
 This is what ``str(expression)`` returns and it looks like this::
 
+    >>> from sympy import *
+    >>> var('x')
+    x
+
     >>> print x**2
     x**2
     >>> print 1/x
@@ -41,18 +45,18 @@ for generating low-level textual representation of expressions. To get
 this kind of representation you have to use:func:`srepr` ::
 
     >>> srepr(x**2)
-    Pow(Symbol('x'), Integer(2))
+    "Pow(Symbol('x'), Integer(2))"
 
     >>> srepr(1/x)
-    Pow(Symbol('x'), Integer(-1))
+    "Pow(Symbol('x'), Integer(-1))"
 
     >>> srepr(Integral(x**2, x))
-    Integral(Pow(Symbol('x'), Integer(2)), Tuple(Symbol('x')))
+    "Integral(Pow(Symbol('x'), Integer(2)), Tuple(Symbol('x')))"
 
 :func:`repr` gives the same result as :func:`str`::
 
     >>> repr(x**2)
-    x**2
+    'x**2'
 
 Note that :func:`repr` is also not aware of global configuration.
 
@@ -112,17 +116,17 @@ LaTeX printing
 ::
 
     >>> latex(x**2)
-    x^{2}
+    'x^{2}'
     >>> latex(x**2, mode='inline')
-    $x^{2}$
+    '$x^{2}$'
     >>> latex(x**2, mode='equation')
-    \begin{equation}x^{2}\end{equation}
+    '\\begin{equation}x^{2}\\end{equation}'
     >>> latex(x**2, mode='equation*')
-    \begin{equation*}x^{2}\end{equation*}
+    '\\begin{equation*}x^{2}\\end{equation*}'
     >>> latex(1/x)
-    \frac{1}{x}
+    '\\frac{1}{x}'
     >>> latex(Integral(x**2, x))
-    \int x^{2}\,dx
+    '\\int x^{2}\\, dx'
 
 MathML printing
 ~~~~~~~~~~~~~~~
@@ -142,7 +146,7 @@ Printing with Pyglet
 
 This allows for printing expressions in a separate GUI window. Issue::
 
-    >>> preview(x**2 + Integral(x**2, x) + 1/x)
+    >>> preview(x**2 + Integral(x**2, x) + 1/x) # doctest: +SKIP
 
 and a Pyglet window with the LaTeX rendered expression will popup:
 
@@ -166,7 +170,7 @@ is to modify ``sys.displayhook``::
 
     >>> 1/x
     1
-    ─
+    -
     x
 
     >>> sys.displayhook = oldhook
@@ -192,15 +196,37 @@ a different way and subclass :class:`PrettyPrinter` and implement ``_print_Poly`
 in the new class.
 
 Let's call the new pretty printer :class:`PolyPrettyPrinter`. It's implementation
-looks like this:
+looks like this::
 
-.. literalinclude:: python/pretty_poly.py
+    >>> from sympy.printing.pretty.pretty import PrettyPrinter
+    >>> from sympy.printing.pretty.stringpict import prettyForm
+
+    >>> class PolyPrettyPrinter(PrettyPrinter):
+    ...    """This printer prints polynomials nicely. """
+    ...
+    ...    def _print_Poly(self, poly):
+    ...        expr = poly.as_expr()
+    ...        gens = list(poly.gens)
+    ...        domain = poly.get_domain()
+    ...
+    ...        pform_head = prettyForm('Poly')
+    ...        pform_tail = self._print_seq([expr] + gens + [domain], '(', ')')
+    ...
+    ...        pform = prettyForm(*pform_head.right(pform_tail))
+    ...        return pform
+
+    >>> def pretty_poly(expr, **settings):
+    ...    """Pretty-print polynomials nicely. """
+    ...    p = PolyPrettyPrinter(settings)
+    ...    s = p.doprint(expr)
+    ...
+    ...    return s
 
 Using :func:`pretty_poly` allows us to print polynomials in 2D and Unicode::
 
-    >>> pretty_poly(Poly(x**2 + 1))
-        ⎛ 2          ⎞
-    Poly⎝x  + 1, x, ℤ⎠
+    >>> print pretty_poly(Poly(x**2 + 1), use_unicode=True)
+          2
+    Poly(x  + 1, x, ℤ)
 
 We can use techniques from previous section to make this new pretty printer
 the default for all inputs.
@@ -246,29 +272,29 @@ and compositions of all of those. A prototype implementation is as follows:
 
 Before we explain this code, let's see what it can do::
 
-    >>> mathematica(S(1)/2)
+    >>> mathematica(S(1)/2) # doctest: +SKIP
     1/2
-    >>> mathematica(x)
+    >>> mathematica(x) # doctest: +SKIP
     x
 
-    >>> mathematica(x**2)
+    >>> mathematica(x**2) # doctest: +SKIP
     x^2
 
-    >>> mathematica(f(x))
+    >>> mathematica(f(x)) # doctest: +SKIP
     f[x]
-    >>> mathematica(sin(x))
+    >>> mathematica(sin(x)) # doctest: +SKIP
     Sin[x]
-    >>> mathematica(asin(x))
+    >>> mathematica(asin(x)) # doctest: +SKIP
     ArcSin[x]
 
-    >>> mathematica(sin(x**2))
+    >>> mathematica(sin(x**2)) # doctest: +SKIP
     Sin[x^2]
-    >>> mathematica(sin(x**(S(1)/2)))
+    >>> mathematica(sin(x**(S(1)/2))) # doctest: +SKIP
     Sin[x^(1/2)]
 
 However, as we didn't include support for :class:`Add`, this doesn't work::
 
-    >>> mathematica(x**2 + 1)
+    >>> mathematica(x**2 + 1) # doctest: +SKIP
     x**2 + 1
 
 and very many other classes of expressions are printed improperly. If we
@@ -303,21 +329,21 @@ C programming language and ``F95`` for Fortran, and file name::
 
     >>> print codegen(("chebyshevt_20", chebyshevt(20, x)), "F95", "file")[0][1]
     !******************************************************************************
-    !*                      Code generated with sympy 0.7.1                       *
+    !*                    Code generated with sympy 0.7.2-git                     *
     !*                                                                            *
     !*              See http://www.sympy.org/ for more information.               *
     !*                                                                            *
     !*                       This file is part of 'project'                       *
     !******************************************************************************
-
+    <BLANKLINE>
     REAL*8 function chebyshevt_20(x)
     implicit none
     REAL*8, intent(in) :: x
-
+    <BLANKLINE>
     chebyshevt_20 = 524288*x**20 - 2621440*x**18 + 5570560*x**16 - 6553600*x &
           **14 + 4659200*x**12 - 2050048*x**10 + 549120*x**8 - 84480*x**6 + &
           6600*x**4 - 200*x**2 + 1
-
+    <BLANKLINE>
     end function
 
 In this example we generated Fortran code for function ``chebyshevt_20`` which

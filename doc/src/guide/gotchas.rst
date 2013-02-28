@@ -28,6 +28,9 @@ be anyway unusual for Python to make ``/`` return a rational number.
 To construct a rational number in SymPy, one can use :class:`Rational`
 class::
 
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True, no_global=True)
+
     >>> r = Rational(1, 3)
     >>> r
     1/3
@@ -79,9 +82,10 @@ of the differences is lack of implied multiplication, to which Mathematica
 users may be accustomed::
 
     >>> var('x')
+    x
 
     >>> 2*x
-    2*x
+    2⋅x
 
     >>> 2x
     Traceback (most recent call last):
@@ -137,6 +141,7 @@ values and/or for constructing equalities, but with SymPy you have to use
 of :class:`Eq` class, in boolean context, collapse to ``==``::
 
     >>> var('x,y')
+    (x, y)
 
     >>> x == y
     False
@@ -172,7 +177,7 @@ Note that we can't write simply ``Float(10)``, because SymPy automatically
 converts this to an instance of :class:`Integer` class and thus::
 
     >>> type(Float(10)**-1000)
-    <class 'sympy.core.numbers.Rational'>
+    <class 'sympy.core.numbers.Float'>
 
 Of course we could issue::
 
@@ -196,101 +201,14 @@ of the problems of floating point numbers, like rounding errors.
 This is especially the case for exponents::
 
     >>> factor(x**2.0 - 1)
-    x**2.0 - 1
+     2.0
+    x    - 1
 
     >>> factor(x**2 - 1)
-    (x - 1)*(x + 1)
+    (x - 1)⋅(x + 1)
 
 The first expression is not factored because the factorization only
-holds for the exponent of `2` *exactly*. This problem can also come
-up when using floating point coefficients::
-
-    >>> solve([2*x + y**2, y - x], [x, y])
-    [(-2, -2), (0, 0)]
-
-    >>> solve([2.0*x + y**2, y - x], [x, y])
-    Traceback (most recent call last):
-    ...
-    DomainError: can't compute a Groebner basis over RR
-
-Here, the algorithm for solving systems of polynomial equations relies
-on computing a |groebner| basis (see the :ref:`groebner-bases` section
-below for more information on these). But the algorithm for computing
-this currently does not support floating point coefficients, so
-:func:`solve` fails in that case.
-
-How to deal with limited recursion depth
-----------------------------------------
-
-Very often algorithms in symbolic mathematics and computer algebra are
-highly recursive in nature. This can be a problem even for relatively
-small inputs in SymPy, because Python interpreters set a limit on the
-depth of recursion. Suppose we want to compute, manipulate and print the
-following function composition:
-
-.. math::
-
-    \underbrace{(f \circ f \circ \ldots \circ f)}_{1000}(x)
-
-Computing this isn't a problem::
-
-    >>> f = Function('f')
-    >>> x = Symbol('x')
-
-    >>> u = x
-
-    >>> for i in xrange(1000):
-    ...     u = f(x)
-    ...
-
-    >>> type(u)
-    f
-
-However, if we try to get the number of all subexpressions of ``u`` that
-contain ``f``, we get the following error::
-
-    >>> len(u.find(f))
-    Traceback (most recent call last):
-    ...
-    RuntimeError: maximum recursion depth exceeded while calling a Python object
-
-The same happens when we try to print ``u``::
-
-    >>> len([ c for c in str(u) if c == 'f' ])
-    Traceback (most recent call last):
-    ...
-    RuntimeError: maximum recursion depth exceeded while calling a Python object
-
-Python provides, at least partially, a solution to this problem by
-allowing the user to relax the limit on recursion depth::
-
-    >>> import sys
-    >>> sys.setrecursionlimit(1050)
-
-    >>> len(u.find(f))
-    1000
-
-To print ``u`` we have to relax the limit even more::
-
-    >>> len([ c for c in str(u) if c == 'f' ])
-    Traceback (most recent call last):
-    ...
-    RuntimeError: maximum recursion depth exceeded while calling a Python object
-
-    >>> sys.setrecursionlimit(5500)
-
-    >>> len([ c for c in str(u) if c == 'f' ])
-    1000
-
-This should be a warning about the fact that often it is possible to
-perform computations with highly nested expressions, but it is not
-possible to print those expressions without relaxing the recursion depth
-limit. SymPy never uses ``sys.setrecursionlimit`` automatically, so
-it's users responsibility to relax the limit whenever needed.
-
-Unless you are using a highly nested expression like the one above, you
-generally won't encounter this problem, as the default limit of 1000 is
-generally high enough for the most common expressions.
+holds for the exponent of `2` *exactly*.
 
 Expression caching and its consequences
 ---------------------------------------

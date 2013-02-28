@@ -11,6 +11,9 @@ scratch using Taylor series expansions and a little symbolic manipulation.
 
 Let's start with definition of symbols and the expression in consideration::
 
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True, no_global=True)
+
     >>> var('a,b')
     (a, b)
 
@@ -21,21 +24,20 @@ Let's start with definition of symbols and the expression in consideration::
 Now let's expand `f` as a power series with respect to `b` around 0::
 
     >>> f.series(b, 0, 10)
-                         2           3           4           5           6           7           8           9
-                        b ⋅sin(a)   b ⋅cos(a)   b ⋅sin(a)   b ⋅cos(a)   b ⋅sin(a)   b ⋅cos(a)   b ⋅sin(a)   b ⋅cos(a)
-    sin(a) + b⋅cos(a) - ───────── - ───────── + ───────── + ───────── - ───────── - ───────── + ───────── + ───────── + O(b**10)
-                            2           6           24         120         720         5040       40320       362880
+                         2           3           4           5           6
+                        b ⋅sin(a)   b ⋅cos(a)   b ⋅sin(a)   b ⋅cos(a)   b ⋅sin(a)
+    sin(a) + b⋅cos(a) - ───────── - ───────── + ───────── + ───────── - ─────────
+                            2           6           24         120         720
+    <BLANKLINE>
+       7           8           9
+      b ⋅cos(a)   b ⋅sin(a)   b ⋅cos(a)    ⎛ 10⎞
+    - ───────── + ───────── + ───────── + O⎝b  ⎠
+         5040       40320       362880
 
 This isn't very readable but we can clearly see a pattern around `\sin(a)`
 and `\cos(a)`. Let's collect terms with respect to those two expressions::
 
-    >>> collect(_, [sin(a), cos(a)])
-    ⎛   9       7      5    3    ⎞          ⎛   8      6    4    2    ⎞
-    ⎜  b       b      b    b     ⎟          ⎜  b      b    b    b     ⎟
-    ⎜────── - ──── + ─── - ── + b⎟⋅cos(a) + ⎜───── - ─── + ── - ── + 1⎟⋅sin(a) + O(b**10)
-    ⎝362880   5040   120   6     ⎠          ⎝40320   720   24   2     ⎠
-
-    >>> _.removeO()
+    >>> collect(_.removeO(), [sin(a), cos(a)])
     ⎛   8      6    4    2    ⎞          ⎛   9       7      5    3    ⎞
     ⎜  b      b    b    b     ⎟          ⎜  b       b      b    b     ⎟
     ⎜───── - ─── + ── - ── + 1⎟⋅sin(a) + ⎜────── - ──── + ─── - ── + b⎟⋅cos(a)
@@ -48,8 +50,8 @@ in `b` around 0 and remove the order term::
 
     >>> sin(b).series(b, 0, 10)
          3     5     7       9
-        b     b     b       b
-    b - ── + ─── - ──── + ────── + O(b**10)
+        b     b     b       b       ⎛ 10⎞
+    b - ── + ─── - ──── + ────── + O⎝b  ⎠
         6    120   5040   362880
 
     >>> _.removeO()
@@ -73,8 +75,8 @@ Now let's repeat this procedure for `\cos(b)`::
 
     >>> cos(b).series(b, 0, 10)
          2    4     6      8
-        b    b     b      b
-    1 - ── + ── - ─── + ───── + O(b**10)
+        b    b     b      b      ⎛ 10⎞
+    1 - ── + ── - ─── + ───── + O⎝b  ⎠
         2    24   720   40320
 
     >>> _.removeO()

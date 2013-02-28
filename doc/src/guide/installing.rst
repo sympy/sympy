@@ -82,7 +82,7 @@ Python 3 by default and you have to translate it:
     Type "help", "copyright", "credits" or "license" for more information.
     >>> import sympy
     >>> sympy.__version__
-    '0.7.1-git'
+    '0.7.2-git'
     >>>
 
 Make sure you run ``use2to3`` under Python 3.2, because Python 3.0 and 3.1
@@ -106,7 +106,7 @@ just the banner and prompt look differently, for example:
     >>> x = sympy.Symbol('x')
     >>> sympy.integrate(3*x**2)
     x**3
-    >>> sympy.init_printing()
+    >>> sympy.init_printing(use_unicode=True, no_global=True)
     >>> sympy.integrate(3*x**2)
      3
     x

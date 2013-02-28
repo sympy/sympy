@@ -85,9 +85,10 @@ Clearing denominators in the above expression and putting all terms on the
 left hand side of the equation, we derive a general polynomial describing the
 first condition. This can be literally translated into Python::
 
-    def parallel(A1, A2, B1, B2):
-        """Line [A1, A2] is parallel to line [B1, B2]. """
-        return (A2.y - A1.y)*(B2.x - B1.x) - (B2.y - B1.y)*(A2.x - A1.x)
+    >>> def parallel(A1, A2, B1, B2):
+    ...    """Line [A1, A2] is parallel to line [B1, B2]. """
+    ...    return (A2.y - A1.y)*(B2.x - B1.x) - (B2.y - B1.y)*(A2.x - A1.x)
+    ...
 
 assuming that ``A1``, ``A2``, ``B1`` and ``B2`` are instances of :class:`Point`
 class. In the case of our rhombus, we will take advantage of the fixed coordinate
@@ -96,17 +97,20 @@ approach can be used to derive polynomial representation of the other conditions
 and the conclusion. To construct `\mathcal{H}` and `g` we will use the following
 functions::
 
-    def distance(A1, A2):
-        """The squared distance between points A1 and A2. """
-        return (A2.x - A1.x)**2 + (A2.y - A1.y)**2
+    >>> def distance(A1, A2):
+    ...    """The squared distance between points A1 and A2. """
+    ...    return (A2.x - A1.x)**2 + (A2.y - A1.y)**2
+    ...
 
-    def equal(A1, A2, B1, B2):
-        """Lines [A1, A2] and [B1, B2] are of the same width. """
-        return distance(A1, A2) - distance(B1, B2)
+    >>> def equal(A1, A2, B1, B2):
+    ...    """Lines [A1, A2] and [B1, B2] are of the same width. """
+    ...    return distance(A1, A2) - distance(B1, B2)
+    ...
 
-    def perpendicular(A1, A2, B1, B2):
-        """Line [A1, A2] is perpendicular to line [B1, B2]. """
-        return (A2.x - A1.x)*(B2.x - B1.x) + (A2.y - A1.y)*(B2.y - B1.y)
+    >>> def perpendicular(A1, A2, B1, B2):
+    ...    """Line [A1, A2] is perpendicular to line [B1, B2]. """
+    ...    return (A2.x - A1.x)*(B2.x - B1.x) + (A2.y - A1.y)*(B2.y - B1.y)
+    ...
 
 The non--degeneracy statement requires a few words of comment. Many theorems
 in geometry are true only in the non--degenerative case and false or undefined
@@ -121,6 +125,9 @@ is positive. This gives us a non--degeneracy condition `x_B y_C - a`.
 
 With all this knowledge we are ready to prove the main theorem. First, let's
 declare variables::
+
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True, no_global=True)
 
     >>> var('x_B, x_C, y_C, x_D, a')
     (x_B, x_C, y_C, x_D, a)
@@ -143,7 +150,7 @@ Using the previously defined functions we can formulate the hypothesis::
 
 and compute its |groebner| basis::
 
-    >>> G = groebner([f1, h2, h3], *V, order='grlex')
+    >>> G = groebner([h1, h2, h3], *V, order='grlex')
 
 We had to specify the variables of the problem explicitly in
 :func:`groebner`, because otherwise it would treat `a` also as a

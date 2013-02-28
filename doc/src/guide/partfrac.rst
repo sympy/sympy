@@ -30,6 +30,12 @@ the polynomial part of `f` and reduce the degree of `p`.
 
 Suppose we would like to compute partial fraction decomposition of::
 
+    >>> from sympy import *
+    >>> init_printing(use_unicode=True, no_global=True)
+
+    >>> var('x')
+    x
+
     >>> f = 1/(x**2*(x**2 + 1))
     >>> f
          1
@@ -125,7 +131,7 @@ Let's now visually compare the last expression with `f`::
 
     >>> Eq(_, f)
                3            2
-    a⋅x + b + x ⋅(a + c) + x ⋅(b + d)        1
+    A⋅x + B + x ⋅(A + C) + x ⋅(B + D)        1
     ───────────────────────────────── = ───────────
                 2 ⎛ 2    ⎞               2 ⎛ 2    ⎞
                x ⋅⎝x  + 1⎠              x ⋅⎝x  + 1⎠
@@ -136,7 +142,7 @@ denominators are equal so we will proceed only with numerators::
     >>> eq = Eq(numer(_.lhs), numer(_.rhs))
     >>> eq
                3            2
-    a⋅x + b + x ⋅(a + c) + x ⋅(b + d) = 1
+    A⋅x + B + x ⋅(A + C) + x ⋅(B + D) = 1
 
 To solve this equation, we use :func:`solve_undetermined_coeffs`::
 
@@ -166,19 +172,19 @@ First we have to extract coefficients of `x` of both sides of the equation::
 Now we can use :func:`Poly.nth` to obtain coefficients of `x`::
 
     >>> [ Eq(lhs.nth(i), rhs.nth(i)) for i in xrange(4) ]
-    [b = 1, a = 0, b + d = 0, a + c = 0]
+    [B = 1, A = 0, B + D = 0, A + C = 0]
 
 Solving this system of linear equations gives the same solution set as
 previously::
 
     >>> solve(_)
-    {a: 0, b: 1, c: 0, d: -1}
+    {A: 0, B: 1, C: 0, D: -1}
 
     >>> f.subs(_)
-        1      1
-    - ────── + ──
-       2        2
-      x  + 1   x
+         1
+    ───────────
+     2 ⎛ 2    ⎞
+    x ⋅⎝x  + 1⎠
 
 There are several other ways we can approach undetermined coefficients
 method. For example we could use :func:`collect` for this::
@@ -201,10 +207,10 @@ little trick with :class:`Symbol` and visually present solution to partial
 fraction decomposition of `f`::
 
     >>> Eq(Symbol('apart')(f), f.subs(_))
-         ⎛     1     ⎞       1      1
-    apart⎜───────────⎟ = - ────── + ──
-         ⎜ 2 ⎛ 2    ⎞⎟      2        2
-         ⎝x ⋅⎝x  + 1⎠⎠     x  + 1   x
+         ⎛     1     ⎞        1
+    apart⎜───────────⎟ = ───────────
+         ⎜ 2 ⎛ 2    ⎞⎟    2 ⎛ 2    ⎞
+         ⎝x ⋅⎝x  + 1⎠⎠   x ⋅⎝x  + 1⎠
 
 Tasks
 -----
