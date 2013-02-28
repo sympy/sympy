@@ -6,7 +6,7 @@ from sympy.core import Symbol, symbols
 from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify
 from sympy.core.compatibility import is_sequence
-from sympy.polys.monomialtools import monomial_mul, monomial_ldiv, monomial_pow, monomial_min, lex, term_div
+from sympy.polys.monomialtools import monomial_mul, monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex, term_div
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 
@@ -98,11 +98,10 @@ class PolyRing(IPolys):
         return self.term_new(self.zero_monom, coeff)
 
     def term_new(self, monom, coeff):
-        element = self.domain_new(coeff)
+        coeff = self.domain_new(coeff)
         poly = PolyElement(self)
-        if element:
+        if coeff:
             poly[monom] = coeff
-        poly.strip_zero()
         return poly
 
     def ring_new(self, element):
@@ -1195,20 +1194,21 @@ class PolyElement(dict, CantSympify):
         return poly
 
     def cofactors(f, g):
-        one, zero = f.ring.one, f.ring.zero
-
         if not f and not g:
+            zero = f.ring.zero
             return zero, zero, zero
         elif not f:
-            if g.LC >= 0:
-                return g, zero, one
-            else:
-                return -g, zero, -one
+            h, cff, cfg = f._gcd_zero(g)
+            return h, cff, cfg
         elif not g:
-            if f.LC >= 0:
-                return f, one, zero
-            else:
-                return -f, -one, zero
+            h, cfg, cff = g._gcd_zero(f)
+            return h, cff, cfg
+        elif len(f) == 1:
+            h, cff, cfg = f._gcd_monom(g)
+            return h, cff, cfg
+        elif len(g) == 1:
+            h, cfg, cff = g._gcd_monom(f)
+            return h, cff, cfg
 
         J, (f, g) = f.deflate(g)
         h, cff, cfg = f._gcd(g)
@@ -1217,6 +1217,27 @@ class PolyElement(dict, CantSympify):
 
     def gcd(f, g):
         return f.cofactors(g)[0]
+
+    def _gcd_zero(f, g):
+        one, zero = f.ring.one, f.ring.zero
+        if g.LC >= 0:
+            return g, zero, one
+        else:
+            return -g, zero, -one
+
+    def _gcd_monom(f, g):
+        ring = f.ring
+        ground_gcd = ring.domain.gcd
+        ground_quo = ring.domain.quo
+        mf, cf = list(f.terms())[0]
+        _mgcd, _cgcd = mf, cf
+        for mg, cg in g.terms():
+            _mgcd = monomial_gcd(_mgcd, mg)
+            _cgcd = ground_gcd(_cgcd, cg)
+        h = PolyElement(ring, [(_mgcd, _cgcd)])
+        cff = PolyElement(ring, [(monomial_ldiv(mf, _mgcd), ground_quo(cf, _cgcd))])
+        cfg = PolyElement(ring, [(monomial_ldiv(mg, _mgcd), ground_quo(cg, _cgcd)) for mg, cg in g.terms()])
+        return h, cff, cfg
 
     def _gcd(f, g):
         ring = f.ring
