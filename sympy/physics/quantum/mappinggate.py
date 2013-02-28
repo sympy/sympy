@@ -1,6 +1,6 @@
 """Mapping Quantum Gates"""
 
-from sympy import Integer, conjugate, Add
+from sympy import Integer, conjugate, Add, Mul
 from sympy.core.containers import Dict
 from sympy.core.basic import Basic
 from sympy.physics.quantum import Dagger
@@ -18,11 +18,73 @@ class MappingGate(Gate):
     ==========
 
     args : tuple
-        
-        The list of initial state and final state pairs. There must be an even
-        number of arguments so every initial state has a final state. The initial
-        and final states can be separated by a scalar. If no scalar is given, 1 is
-        assumed.
+
+        arg[0] = initial state
+        arg[1] = scalar or final state
+        arg[2] = None or final state
+
+        The list of initial state and final state pairs. The final states are to be
+        multiplied by some scalar. If no scalar is given, 1 is assumed.
+
+    Examples
+    ========
+
+    Creating a Mapping Gate and checking its arguments and properties. Getting final state from
+    initial state.
+
+        >>> from sympy.physics.quantum.mappinggate import MappingGate
+        >>> from sympy import I
+        >>> M = MappingGate(('00', I, '11'), ('01', '10'), ('10', '01'), ('11', -I,
+        '00'))
+        >>> M.args
+        ({|00>: I*|11>, |01>: |10>, |10>: |01>, |11>: -I*|00>},)
+        >>> M.nqubits
+        2
+        >>> M.mapping[Qubit('00')]
+        I*|11>
+        >>> M.get_final_state('00')
+        I*|11>
+
+    Using qapply on initial states returns the final states.
+
+        >>> from sympy.physics.quantum.mappinggate import MappingGate
+        >>> from sympy import I
+        >>> from sympy.physics.quantum.qapply import qapply
+        >>> from sympy.physics.quantum.qubit import Qubit
+        >>> M = MappingGate(('00', I, '11'), ('01', '10'), ('10', '01'), ('11', -I,
+        '00'))
+        >>> q = Qubit('00') + Qubit('01')
+        >>> qapply(M*q)
+        |10> + I*|11>
+
+    The MappingGate can be rewritten as an outer product of states. We will show two
+    examples: one where all four states are given and one where only one state is
+    given. If not all initial states are specified they return themselves as final
+    states.
+
+        >>> from sympy.physics.quantum.mappinggate import MappingGate
+        >>> from sympy import I
+        >>> M = MappingGate(('00', I, '11'), ('01', '10'), ('10', '01'), ('11', -I,
+        '00'))
+        >>> M.rewrite('op')
+        |01><10| + |10><01| - I*|00>*<11| + I*|11>*<00|
+        >>> M = MappingGate(('00', -1, '00'))
+        >>> M.rewrite('op')
+        |01><01| + |10><10| + |11><11| - |00>*<00|
+
+    The MappingGate is also expressed as a matrix where the rows and columns
+    represent the Qubits.
+
+        >>> from sympy.physics.quantum.mappinggate import MappingGate
+        >>> from sympy.physics.quantum.represent import represent
+        >>> from sympy import I
+        >>> M = MappingGate(('00', I, '11'), ('01', '10'), ('10', '01'), ('11', -I,
+        '00'))
+        >>> represent(M)
+        [0, 0, 0, -I]
+        [0, 0, 1,  0]
+        [0, 1, 0,  0]
+        [I, 0, 0,  0]
 
     """
 
@@ -51,11 +113,6 @@ class MappingGate(Gate):
         pass
 
     @property
-    def size(self):
-        """Total number of initial and final state pairs"""
-        return int(len(self.args[0])/2)
-
-    @property
     def mapping(self):
         return self.args[0]
 
@@ -65,6 +122,8 @@ class MappingGate(Gate):
         return self.args[0].args[0].args[0].nqubits
 
     def get_final_state(self, qubit):
+        """Returns the final state for a given initial state, if initial state is
+        not mapped to a final state the initial state is returned."""
         i = Qubit(qubit)
         f = self.mapping.get(i, None)
         if f is None:
@@ -95,12 +154,12 @@ class MappingGate(Gate):
         for i, f in self.mapping.items():
             col = IntQubit(i).as_int()
             terms = split_qexpr_parts(f)
-            if len(terms[0]) == 1:
-                row = IntQubit(*terms[1]).as_int()
-                scalar = terms[0]
-            else:
+            if len(terms[1]) == 0:
                 row = IntQubit(*terms[0]).as_int()
                 scalar = Integer(1)
+            else:
+                row = IntQubit(*terms[1]).as_int()
+                scalar = Mul(*terms[0])
             matrix[col, col] = Integer(0)
             matrix[row, col] = scalar
         return matrix
