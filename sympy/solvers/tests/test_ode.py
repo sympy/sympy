@@ -511,17 +511,15 @@ def test_1st_homogeneous_coeff_ode():
     eq6 = x*exp(f(x)/x) - f(x)*sin(f(x)/x) + x*sin(f(x)/x)*f(x).diff(x)
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     eq8 = x + f(x) - (x - f(x))*f(x).diff(x)
-    sol1 = Eq(log(x), C1 + log(x/(f(x)*sin(f(x)/x))))
+    sol1 = Eq(log(x), C1 - log(f(x)*sin(f(x)/x)/x))
     sol2 = Eq(log(x), C1 + log(sqrt(cos(f(x)/x) - 1)/sqrt(cos(f(x)/x) + 1)))
-    # See test_1st_homogeneous_coeff_ode_check3 below for why these are both valid
     sol3 = Eq(log(f(x)), C1 + log(log(f(x)/x) - 1))
     sol4 = Eq(log(f(x)), C1 - 2*exp(x/f(x)))
-
-    sol5 = Eq(log(x), C1 - x**2/(2*f(x)**2) + log(1/sqrt(f(x)/x)))
+    sol5 = Eq(log(x), C1 - x**2/(2*f(x)**2) - log(sqrt(f(x)/x)))
     sol6 = Eq(log(x),
         C1 + exp(-f(x)/x)*sin(f(x)/x)/2 + exp(-f(x)/x)*cos(f(x)/x)/2)
     sol7 = Eq(log(f(x)), C1 - 2*sqrt(-x/f(x) + 1))
-    sol8 = Eq(log(x), C1 + log(1/sqrt(1 + f(x)**2/x**2)) + atan(f(x)/x))
+    sol8 = Eq(log(x), C1 - log(sqrt(1 + f(x)**2/x**2)) + atan(f(x)/x))
     assert dsolve(eq1, hint='1st_homogeneous_coeff_subs_dep_div_indep') == \
         sol1
     # indep_div_dep actually has a simpler solution for eq2,

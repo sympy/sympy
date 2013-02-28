@@ -3627,11 +3627,11 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> g = log(a) + log(b) + log(a)*log(1/b)
     >>> h = simplify(g)
     >>> h
-    log(a*b**(log(1/a) + 1))
+    log(a*b**(-log(a) + 1))
     >>> count_ops(g)
     8
     >>> count_ops(h)
-    6
+    5
 
     So you can see that ``h`` is simpler than ``g`` using the count_ops metric.
     However, we may not like how ``simplify`` (in this case, using
@@ -3642,7 +3642,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> print count_ops(g, visual=True)
     2*ADD + DIV + 4*LOG + MUL
     >>> print count_ops(h, visual=True)
-    ADD + DIV + 2*LOG + MUL + POW
+    2*LOG + MUL + POW + SUB
 
     >>> from sympy import Symbol, S
     >>> def my_measure(expr):
@@ -3655,7 +3655,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> my_measure(g)
     8
     >>> my_measure(h)
-    15
+    14
     >>> 15./8 > 1.7 # 1.7 is the default ratio
     True
     >>> simplify(g, measure=my_measure)
@@ -3971,9 +3971,13 @@ def logcombine(expr, force=False):
         return rv
 
     def gooda(a):
-        return a.is_real or force and a.is_real is not False
+        # bool to tell whether the leading ``a`` in ``a*log(x)``
+        # could appear as log(x**a)
+        return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
+            (a.is_real or force and a.is_real is not False))
 
     def goodlog(l):
+        # bool to tell whether log ``l``'s argument can combine with others
         a = l.args[0]
         return a.is_positive or force and a.is_nonpositive is not False
 
@@ -3990,7 +3994,10 @@ def logcombine(expr, force=False):
             co = []
             lo = []
             for ai in a.args:
-                if ai.func is log and goodlog(ai):
+                if ai.is_Rational and ai < 0:
+                    ot.append(S.NegativeOne)
+                    co.append(-ai)
+                elif ai.func is log and goodlog(ai):
                     lo.append(ai)
                 elif gooda(ai):
                     co.append(ai)
@@ -4010,15 +4017,19 @@ def logcombine(expr, force=False):
 
     # collapse multi-logs as far as possible in a canonical way
     # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
+    # -- in this case, it's unambiguous, but if it were were a log(c) in
+    # each term then it's arbitrary whether they are grouped by log(a) or
+    # by log(c). So for now, just leave this alone; it's probably better to
+    # let the user decide
     for o, e, l in logs:
         l = list(ordered(l))
-        arg = log(l.pop(0).args[0]**Mul(*e))
-        while l and gooda(arg):
+        e = log(l.pop(0).args[0]**Mul(*e))
+        while l:
             li = l.pop(0)
-            arg = log(li.args[0]**arg)
-        c, l = Mul(*o), arg*Mul(*l)
-        if not l:
-            log1[(c,)] = [], [l]
+            e = log(li.args[0]**e)
+        c, l = Mul(*o), e
+        if l.func is log:  # it should be, but check to be sure
+            log1[(c,)].append(([], l))
         else:
             other.append(c*l)
 
@@ -4030,10 +4041,17 @@ def logcombine(expr, force=False):
 
     # logs that have oppositely signed coefficients can divide
     for k in ordered(log1.keys()):
+        if not k in log1:  # already popped as -k
+            continue
         if -k in log1:
-            other.append(k*log1[k].args[0]/log1[-k].args[0])
+            # figure out which has the minus sign; the one with
+            # more op counts should be the one
+            num, den = k, -k
+            if num.count_ops() > den.count_ops():
+                num, den = den, num
+            other.append(num*log(log1.pop(num).args[0]/log1.pop(den).args[0]))
         else:
-            other.append(k*log1[k])
+            other.append(k*log1.pop(k))
 
     return Add(*other)
 
