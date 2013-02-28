@@ -1,12 +1,12 @@
 from sympy import (
-    Add, Mul, S, Symbol, cos, cot, csc, pi, sec, sin, sqrt, tan, root,
-    powsimp, symbols, sinh, cosh)
-from sympy.abc import a, b, c, x, y, z
+    Add, Mul, S, Symbol, cos, cot, csc, pi, I, sec, sin, sqrt, tan, root,
+    powsimp, symbols, sinh, cosh, tanh, coth)
 from sympy.simplify.fu import (
-    L, TR1, sec, csc, TR10, TR10i, TR11, TR12, TR13, TR2, TR3, TR5, TR6,
-    TR7, TR8, TR9, _TR56 as T, TR2i, TRmorrie, fu, trig_split,
-    process_common_addends, TR14, TR15, TR16, as_trig)
+    L, TR1, TR10, TR10i, TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
+    TR17, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
+    as_trig, csc, fu, process_common_addends, sec, trig_split, as_f_sign_1)
 from sympy.utilities.randtest import test_numerically
+from sympy.abc import a, b, c, x, y, z
 
 
 def test_TR1():
@@ -324,8 +324,64 @@ def test_TRmorrie():
     assert TR8(TR3(TRmorrie(e))) == S(1)/65536
 
 
+def test_as_trig():
+    from sympy.simplify.fu import _osborne, _osbornei
+
+    eq = sinh(x)**2 + cosh(x)**2
+    t, f = as_trig(eq)
+    assert f(fu(t)) == cosh(2*x)
+    assert _osborne(cosh(x)) == cos(x)
+    assert _osborne(sinh(x)) == I*sin(x)
+    assert _osborne(tanh(x)) == I*tan(x)
+    assert _osborne(coth(x)) == cot(x)/I
+    assert _osbornei(cos(x)) == cosh(x)
+    assert _osbornei(sin(x)) == sinh(x)/I
+    assert _osbornei(tan(x)) == tanh(x)/I
+    assert _osbornei(cot(x)) == coth(x)*I
+    assert _osbornei(sec(x)) == 1/cosh(x)
+    assert _osbornei(csc(x)) == I/sinh(x)
+
+
+def test_TR12i():
+    ta, tb, tc = [tan(i) for i in (a, b, c)]
+    assert TR12i((ta + tb)/(-ta*tb + 1)) == tan(a + b)
+    assert TR12i((ta + tb)/(ta*tb - 1)) == -tan(a + b)
+    assert TR12i((-ta - tb)/(ta*tb - 1)) == tan(a + b)
+    eq = (ta + tb)/(-ta*tb + 1)**2*(-3*ta - 3*tc)/(2*(ta*tc - 1))
+    assert TR12i(eq.expand()) == \
+        -3*tan(a + b)*tan(a + c)/(tan(a) + tan(b) - 1)/2
+    assert TR12i(tan(x)/sin(x)) == tan(x)/sin(x)
+    eq = (ta + cos(2))/(-ta*tb + 1)
+    assert TR12i(eq) == eq
+    eq = (ta + tb + 2)**2/(-ta*tb + 1)
+    assert TR12i(eq) == eq
+    eq = ta/(-ta*tb + 1)
+    assert TR12i(eq) == eq
+    eq = (((ta + tb)*(a + 1)).expand())**2/(ta*tb - 1)
+    assert TR12i(eq) == -(a + 1)**2*tan(a + b)
+
+
 def test_TR14():
-    assert TR14((cos(x) - 1)*(cos(x) + 1)) ==  -sin(x)**2
+    eq = (cos(x) - 1)*(cos(x) + 1)
+    ans = -sin(x)**2
+    assert TR14(eq) == ans
+    assert TR14(1/eq) == 1/ans
+    assert TR14((cos(x) - 1)**2*(cos(x) + 1)**2) == ans**2
+    assert TR14((cos(x) - 1)**2*(cos(x) + 1)**3) == ans**2*(cos(x) + 1)
+    assert TR14((cos(x) - 1)**3*(cos(x) + 1)**2) == ans**2*(cos(x) - 1)
+    eq = (cos(x) - 1)**y*(cos(x) + 1)**y
+    assert TR14(eq) == eq
+    eq = (cos(x) - 2)**y*(cos(x) + 1)
+    assert TR14(eq) == eq
+    eq = (tan(x) - 2)**2*(cos(x) + 1)
+    assert TR14(eq) == eq
+    i = symbols('i', integer=True)
+    assert TR14((cos(x) - 1)**i*(cos(x) + 1)**i) == ans**i
+    assert TR14((sin(x) - 1)**i*(sin(x) + 1)**i) == (-cos(x)**2)**i
+    # could use extraction in this case
+    eq = (cos(x) - 1)**(i + 1)*(cos(x) + 1)**i
+    assert TR14(eq) in [(cos(x) - 1)*ans**i, eq]
+
     assert TR14((sin(x) - 1)*(sin(x) + 1)) == -cos(x)**2
     p1 = (cos(x) + 1)*(cos(x) - 1)
     p2 = (cos(y) - 1)*2*(cos(y) + 1)
@@ -333,12 +389,17 @@ def test_TR14():
     assert TR14(p1*p2*p3*(x - 1)) == -18*((x - 1)*sin(x)**2*sin(y)**4)
 
 
-def test_TR15_16():
+def test_TR15_16_17():
     assert TR15(1 - 1/sin(x)**2) == -cot(x)**2
     assert TR16(1 - 1/cos(x)**2) == -tan(x)**2
+    assert TR17(1 - 1/tan(x)**2) == 1 - cot(x)**2
 
 
-def test_as_trig():
-    eq = sinh(x)**2 + cosh(x)**2
-    t, f = as_trig(eq)
-    assert f(fu(t)) == cosh(2*x)
+def test_as_f_sign_1():
+    assert as_f_sign_1(x + 1) == (1, x, 1)
+    assert as_f_sign_1(x - 1) == (1, x, -1)
+    assert as_f_sign_1(-x + 1) == (-1, x, -1)
+    assert as_f_sign_1(-x - 1) == (-1, x, 1)
+    assert as_f_sign_1(2*x + 2) == (2, x, 1)
+    assert as_f_sign_1(x*y - y) == (y, x, -1)
+    assert as_f_sign_1(-x*y + y) == (-y, x, -1)

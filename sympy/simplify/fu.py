@@ -1015,14 +1015,15 @@ def TR12i(rv):
     >>> from sympy.simplify.fu import TR12i
     >>> from sympy import tan
     >>> from sympy.abc import a, b, c
-    >>> a, b, c = [tan(i) for i in (a, b, c)]
-    >>> TR12i((a + b)/(-a*b + 1))
+    >>> ta, tb, tc = [tan(i) for i in (a, b, c)]
+    >>> TR12i((ta + tb)/(-ta*tb + 1))
     tan(a + b)
-    >>> TR12i((a + b)/(a*b - 1))
+    >>> TR12i((ta + tb)/(ta*tb - 1))
     -tan(a + b)
-    >>> TR12i((-a - b)/(a*b - 1))
-    -tan(a + b)
-    >>> TR12i(((a + b)/(-a*b + 1)**2*(-3*a - 3*c)/(2*(a*c - 1))).expand())
+    >>> TR12i((-ta - tb)/(ta*tb - 1))
+    tan(a + b)
+    >>> eq = (ta + tb)/(-ta*tb + 1)**2*(-3*ta - 3*tc)/(2*(ta*tc - 1))
+    >>> TR12i(eq.expand())
     -3*tan(a + b)*tan(a + c)/(2*(tan(a) + tan(b) - 1))
     """
     from sympy import factor, fraction, factor_terms
@@ -1040,7 +1041,8 @@ def TR12i(rv):
         m = as_f_sign_1(di)
         if m:
             g, f, s = m
-            if s is S.NegativeOne and f.is_Mul and len(f.args) == 2 and all(fi.func is tan for fi in f.args):
+            if s is S.NegativeOne and f.is_Mul and len(f.args) == 2 and all(
+                    fi.func is tan for fi in f.args):
                 return g, f
     dargs = list(Mul.make_args(d))
     for i, di in enumerate(dargs):
@@ -1063,6 +1065,11 @@ def TR12i(rv):
                 s = Add(*[_.args[0] for _ in t.args])
                 dok[s] = di.exp
                 dargs[i] = g**di.exp
+            else:
+                di = factor(di)
+                if di.is_Mul:
+                    dargs.extend(di.args)
+                    dargs[i] = S.One
     if not dok:
         return rv
 
@@ -1073,25 +1080,33 @@ def TR12i(rv):
                 return a, b
     nargs = list(Mul.make_args(factor_terms(n)))
     hit = False
-    for i, di in enumerate(nargs):
-        m = ok(di)
+    for i, ni in enumerate(nargs):
+        m = ok(ni)
         if not m:
-            m = ok(-di)
+            m = ok(-ni)
             if m:
                 nargs[i] = S.NegativeOne
-        if not m:
-            if di.is_Add:
-                di = factor(di)
-                if di.is_Mul:
-                    nargs.extend(di.args)
-                    nargs[i] = S.One
-                continue
-            elif di.is_Pow and (di.exp.is_integer or di.base.is_positive):
-                m = ok(di.base)
-                if not m:
-                    continue
             else:
-                continue
+                if ni.is_Add:
+                    ni = factor(ni)
+                    if ni.is_Mul:
+                        nargs.extend(ni.args)
+                        nargs[i] = S.One
+                    continue
+                elif ni.is_Pow and (ni.exp.is_integer or ni.base.is_positive):
+                    m = ok(ni.base)
+                    if m:
+                        nargs[i] = S.One
+                    else:
+                        ni = factor(ni)
+                        if ni.is_Mul:
+                            nargs.extend(ni.args)
+                            nargs[i] = S.One
+                        continue
+                else:
+                    continue
+        else:
+            nargs[i] = S.One
         hit = True
         s = Add(*[_.args[0] for _ in m])
         ed = dok[s]
@@ -1101,10 +1116,11 @@ def TR12i(rv):
                 dok[s] = newed
             else:
                 dok.pop(s)
-        nargs[i] = -tan(s)
+        nargs[i] *= -tan(s)
 
     if hit:
-       rv = Mul(*nargs)/Mul(*dargs)/Mul(*[(Add(*[tan(a) for a in i.args]) - 1)**e for i, e in dok.iteritems()])
+        rv = Mul(*nargs)/Mul(*dargs)/Mul(*[(Add(*[
+            tan(a) for a in i.args]) - 1)**e for i, e in dok.iteritems()])
 
     return rv
 
@@ -1346,13 +1362,14 @@ def TR14(rv, first=True):
                         take = min(A[e], B[e])
 
                         # reinsert any remainder
-                        if A[e] != take:
-                            rem = [A[i] for i in keys]
-                            rem[-1] -= take
-                            process.insert(0, rem)
-                        elif B[e] != take:
+                        # the B will likely sort after A so check it first
+                        if B[e] != take:
                             rem = [B[i] for i in keys]
-                            rem[-1] -= take
+                            rem[e] -= take
+                            process.insert(0, rem)
+                        elif A[e] != take:
+                            rem = [A[i] for i in keys]
+                            rem[e] -= take
                             process.insert(0, rem)
 
                         if A[f].func is cos:
@@ -1725,12 +1742,9 @@ def trig_split(a, b, two=False):
     if S.NegativeOne in ua.factors:
         ua = ua.quo(S.NegativeOne)
         n1 = -n1
-    if S.NegativeOne in ub.factors:
+    elif S.NegativeOne in ub.factors:
         ub = ub.quo(S.NegativeOne)
         n2 = -n2
-    if n1 == n2 == -1:
-        gcd = -gcd
-        n1 = n2 = 1
     a, b = [i.as_expr() for i in (ua, ub)]
 
     def pow_cos_sin(a, two):
