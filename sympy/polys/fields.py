@@ -7,13 +7,28 @@ from sympy.polys.rings import PolyRing
 
 def field(sgens, domain, order=lex):
     """Construct new rational function field returning (field, x1, ..., xn). """
-    _ring = FracField(sgens, domain, order)
-    return (_ring,) + _ring.gens
+    _field = FracField(sgens, domain, order)
+    return (_field,) + _field.gens
 
 def xfield(sgens, domain, order=lex):
     """Construct new rational function field returning (field, (x1, ..., xn)). """
-    _ring = FracField(sgens, domain, order)
-    return (_ring, _ring.gens)
+    _field = FracField(sgens, domain, order)
+    return (_field, _field.gens)
+
+def vfield(sgens, domain, order=lex):
+    """Construct new rational function field and inject generators into global namespace. """
+    from inspect import currentframe
+    frame = currentframe().f_back
+
+    try:
+        _field = FracField(sgens, domain, order)
+
+        for name, gen in zip(_field.sgens, _field.gens):
+            frame.f_globals[name] = gen
+    finally:
+        del frame  # break cyclic dependencies as stated in inspect docs
+
+    return (_field, _field.gens)
 
 class FracField(object):
     def __init__(self, sgens, domain, order):

@@ -20,6 +20,21 @@ def xring(sgens, domain, order=lex):
     _ring = PolyRing(sgens, domain, order)
     return (_ring, _ring.gens)
 
+def vring(sgens, domain, order=lex):
+    """Construct new polynomial ring and inject generators into global namespace. """
+    from inspect import currentframe
+    frame = currentframe().f_back
+
+    try:
+        _ring = PolyRing(sgens, domain, order)
+
+        for name, gen in zip(_ring.sgens, _ring.gens):
+            frame.f_globals[name] = gen
+    finally:
+        del frame  # break cyclic dependencies as stated in inspect docs
+
+    return (_ring, _ring.gens)
+
 class PolyRing(IPolys):
     def __init__(self, sgens, domain, order):
         if not is_sequence(sgens, include=(basestring, Symbol)) or not sgens:
