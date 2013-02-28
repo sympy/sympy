@@ -1113,6 +1113,215 @@ def _set_partitions(n):
         p[i] += 1
         yield nc, q
 
+# classes, and functions to support enumeration of  multiset partitions.
+
+#  cInternal class for the multiset partition implementations: A (c,u,v)
+# triple on the stack.  Knuth instead makes c, u, and v separate
+# arrays.
+
+class PartComponent(object):
+    """Internal class used in support of the multiset partitions
+    enumerators and the associated visitor functions.
+
+    Represents one component of one part of the current partition.
+
+    A stack of these, plus an auxiliary  frame array, f, represents
+    a partition of the multiset.
+
+    Knuth's psuedocode makes c, u, and v separate arrays.
+    """
+
+    __slots__ = ('c', 'u', 'v')
+    def __init__(self):
+        self.c = 0   # Component number
+        self.u = 0   # The as yet unpartitioned amount in component c
+                     # *before* it allocated by this triple
+        self.v = 0   # Amount of c component in the current part
+                     # (v<=u).  An invariant of the representation is
+                     # that the next higher triple for this component
+                     # (if there is one) will have a value of u-v in
+                     # its u attribute.
+    def __repr__(self):
+        "for debug/algorithm animation purposes"
+        return  'c:%d u:%d v:%d' % (self.c,self.u,self.v)
+    def __eq__(self,other):
+        """Define  value oriented equality, which is useful for testers"""
+        return (isinstance(other, self.__class__) and
+                self.c == other.c and
+                self.u == other.u and
+                self.v == other.v)
+    def __ne__(self, other):
+        """Defined for consistency with __eq__"""
+        return not self.__eq__(other)
+
+
+# This code tries to be a faithful implementation of algorithm
+# 7.1.2.5M in Volume 4A, Combinatoral Algorithms, Part 1, of The Art
+# of Computer Programming, by Donald Knuth.  This includes using
+# (mostly) the same variable names, etc.  This makes for rather
+# low-level Python.
+
+# Changes from Knuth's psuedocode include
+# - use PartComponent struct/object instead of 3 arrays
+# - make the function a generator
+# - map (with some difficulty) the GOTOs to Python control structures.
+# - Knuth uses 1-based numbering for components, this code is 0-based
+# - renamed variable l to lpart.
+# - flag variable x takes on values True/False instead of 1/0
+#
+def _multiset_partitions_taocp(multiplicities):
+
+    """Enumerates partions of a multiset.
+
+    Input: List of multiplicities of the components of the multiset.
+
+    Users will most likely want to call multiset_partitions() instead,
+    which dispatches to this and other routines, depending on which
+    special cases it detects.
+
+    Yields: internal datastructure, which can be processed (with the
+    various visitor functions) to give partitions of this multiset.
+    For the (usual) case where partitions of a multiset with specific
+    elements is desired, the elements must be supplied to the visitor
+    which interprets the internal datastructure.
+
+    Usage
+    =====
+    XXX -todo
+
+    """
+
+    # Important variables.
+    # m is the number of components, i.e., number of distinct elements
+    m = len(multiplicities)
+    # n is the cardinality, total number of elements whether or not distinct
+    n = sum(multiplicities)
+
+    # The main data structure, f segments pstack into parts.  See
+    # list_visitor() for example code indicating how this internal
+    # state corresponds to a partition.
+
+    # Note: allocation of space for stack is conservative.  Knuth's
+    # exercise 7.2.1.5.68 gives some indication of how to tighten this
+    # bound, but this is not implemented.
+    pstack = [PartComponent() for i in xrange(n*m+1)]
+    f = [0] * (n+1)
+
+    # Step M1 in Knuth (Initialize)
+    # Initial state - entire multiset in one part.
+    for j in xrange(m):
+        ps = pstack[j]
+        ps.c = j
+        ps.u = multiplicities[j]
+        ps.v = multiplicities[j]
+
+    # Other variables
+    f[0] = 0
+    a = 0
+    lpart = 0
+    f[1] = m
+    b = m # in general, current stack frame is from a to b-1
+
+    while True:
+        while True:
+            # Step M2 (Subtract v from u)
+            j = a
+            k = b
+            x = False
+            while j<b:
+                pstack[k].u =  pstack[j].u - pstack[j].v
+                if  pstack[k].u == 0:
+                    x = True
+                elif not x:
+                    pstack[k].c = pstack[j].c
+                    pstack[k].v = min(pstack[j].v, pstack[k].u)
+                    x = pstack[k].u < pstack[j].v
+                    k = k+1
+                else:  # x is True
+                    pstack[k].c = pstack[j].c
+                    pstack[k].v = pstack[k].u
+                    k = k+1
+                j = j+1
+                # Note: x is True iff v has changed
+
+            # Step M3 (Push if nonzero.)
+            if k>b:
+                a = b
+                b = k
+                lpart = lpart+1
+                f[lpart+1] = b
+                # Return to M2
+            else:
+                break # Continue to M4
+
+        # M4  Visit a partition
+        state = [f, lpart, pstack]
+        yield state
+
+        # M5 (Decrease v)
+        while True:
+            j = b-1
+            while (pstack[j].v == 0):
+                j = j - 1
+            if j == a and pstack[j].v == 1:
+                # M6 (Backtrack)
+                if lpart==0 :
+                    return
+                lpart = lpart-1
+                b = a
+                a = f[lpart]
+                # Return to M5
+            else:
+                pstack[j].v = pstack[j].v -1
+                for k in xrange(j+1, b):
+                    pstack[k].v = pstack[k].u
+                break # GOTO M2
+
+# Visitor functions for multiset partitions
+
+# This one is a candidate for making externally visible.  Enumerating
+# and counting (factorum numerorum) the factorings of an integer are
+# important problems in their own right.
+#
+def factoring_visitor(state, primes):
+    """Use with multiset_partitions_taocp to enumerate factorings of an int.
+
+    If the input to multiset_partitions_taocp is exponents of the
+    prime factorization of an integer, and this visitor gets, as its
+    second argument, the primes themselves, this visitor will convert
+    the partition visited into a list of factors of the original
+    integer.
+
+    Examples
+    ========
+
+    To enumerate the factorings of 24:
+    list(factoring_visitor(p, [2,3]) for
+         p in _multiset_partitions_taocp([3, 1]))
+    """
+    f, lpart, pstack = state
+    factoring = []
+    for i in xrange(lpart+1):
+        factor = 1
+        for ps in pstack[f[i]:f[i+1]]:
+            if ps.v > 0:
+                factor *= primes[ps.c] ** ps.v
+        factoring.append(factor)
+    return factoring
+
+def list_visitor(state, components):
+    "Creates a list of lists to represent the partitions"
+    f, lpart, pstack = state
+
+    partition = []
+    for i in xrange(lpart+1):
+        part = []
+        for ps in pstack[f[i]:f[i+1]]:
+            if ps.v > 0:
+                part.extend([components[ps.c]] * ps.v)
+        partition.append(part)
+
+    return partition
 
 def multiset_partitions(multiset, m=None):
     """
@@ -1195,14 +1404,21 @@ def multiset_partitions(multiset, m=None):
     sympy.functions.combinatorial.numbers.nT
     """
 
+    # This function looks at the supplied input and dispatches to
+    # several special-case routines as they apply.
     if type(multiset) is int:
         n = multiset
         if m and m > n:
             return
-        multiset = list(range(multiset))
+        multiset = list(range(n))
         if m == 1:
             yield [multiset[:]]
             return
+
+        # XX - todo.  If m is not None, it *might* be faster to use
+        # the range enumerator for multisets.  If not selecting for
+        # partitions of a particular size (m is None) the
+        # _set_partitions code is much faster.
         for nc, q in _set_partitions(n):
             if m is None or nc == m:
                 rv = [[] for i in range(nc)]
@@ -1215,6 +1431,8 @@ def multiset_partitions(multiset, m=None):
         multiset = [multiset]
 
     if not has_variety(multiset):
+        # Only one component, repeated n times.  The resulting
+        # partitions correspond to partitions of integer n.
         n = len(multiset)
         if m and m > n:
             return
@@ -1237,33 +1455,42 @@ def multiset_partitions(multiset, m=None):
             yield [multiset[:]]
             return
 
-        # if there are repeated elements, sort them and define the
-        # canon dictionary that will be used to create the cache key
-        # in case elements of the multiset are not hashable
-        cache = set()
-        canon = {}  # {physical position: position where it appeared first}
-        for i, mi in enumerate(multiset):
-            canon.setdefault(i, canon.get(i, multiset.index(mi)))
-        if len(set(canon.values())) != n:
-            canon = {}
-            for i, mi in enumerate(multiset):
-                canon.setdefault(i, canon.get(i, multiset.index(mi)))
+        # Split the information into in the multiset into two lists -
+        # one of the elements themselves, and one (of the same length)
+        # giving the number of repeats for the corresponding element.
+        multiplicities = []
+        elements = []
+
+        # multiset is already sorted, so it is sufficient to test for
+        # equality with the most recent element.
+        for elem in multiset:
+            if elements and elements[-1] == elem:
+                multiplicities[-1] += 1
+            else:
+                elements.append(elem)
+                multiplicities.append(1)
+
+        if len(elements) < len(multiset):
+            # General case - multiset with more than one distinct element
+            # and at least one element repeated more than once.
+            for  state in _multiset_partitions_taocp(multiplicities):
+                if m:
+                    # TODO - use enum_range() of object version
+                    f, lpart, pstack = state
+                    if m == lpart+1:
+                        yield list_visitor(state, elements)
+                else:
+                    yield list_visitor(state, elements)
         else:
-            canon = None
-
-        for nc, q in _set_partitions(n):
-            if m is None or nc == m:
-                rv = [[] for i in range(nc)]
-                for i in range(n):
-                    rv[q[i]].append(i)
-                if canon:
-                    canonical = tuple(
-                        sorted([tuple([canon[i] for i in j]) for j in rv]))
-                    if canonical in cache:
-                        continue
-                    cache.add(canonical)
-
-                yield [[multiset[j] for j in i] for i in rv]
+            # Set partitions case - no repeated elements. Pretty much
+            # same as int argument case above, with same TODO for
+            # m not None
+            for nc, q in _set_partitions(n):
+                if m is None or nc == m:
+                    rv = [[] for i in range(nc)]
+                    for i in range(n):
+                        rv[q[i]].append(i)
+                    yield [[multiset[j] for j in i] for i in rv]
 
 
 def partitions(n, m=None, k=None, size=False):
