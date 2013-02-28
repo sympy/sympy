@@ -462,6 +462,9 @@ def test_solve_undetermined_coeffs():
     (c + 1)*b*x + (c + 1)*2*c*x + (c + 1)**2)/(c + 1), [a, b, c], x) == \
         {a: -2, b: 2, c: -1}
 
+    A, B, u, v = symbols("A, B, u, v")
+    assert solve_undetermined_coeffs(Eq(A*u*x + A*v + B, 3*x + 5), [A, B], x) == \
+        {A: 3/u, B: 5 - 3*v/u}
 
 def test_solve_inequalities():
     system = [Lt(x**2 - 2, 0), Gt(x**2 - 1, 0)]

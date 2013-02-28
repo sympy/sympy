@@ -1988,8 +1988,8 @@ def solve_undetermined_coeffs(equ, coeffs, sym, **flags):
         equ = equ.lhs - equ.rhs
 
     equ = cancel(equ).as_numer_denom()[0]
-
-    system = collect(equ.expand(), sym, evaluate=False).values()
+    terms = collect(equ.expand(), sym, evaluate=False)
+    system = list(ordered(terms.values()))
 
     if not any(equ.has(sym) for equ in system):
         # consecutive powers in the input expressions have
