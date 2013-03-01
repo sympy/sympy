@@ -592,7 +592,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     return rv
 
 
-def classify_ode(eq, func=None, dict=False, prep=True):
+def classify_ode(eq, func=None, dict=False, **kwargs):
     """
     Returns a tuple of possible dsolve() classifications for an ODE.
 
@@ -608,9 +608,6 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     hint:match expression terms. This is intended for internal use by
     dsolve().  Note that because dictionaries are ordered arbitrarily,
     this will most likely not be in the same order as the tuple.
-
-    If ``prep`` is False or ``func`` is None then the equation
-    will be preprocessed to put it in standard form for classification.
 
     You can get help on different hints by doing help(ode.ode_hintname),
     where hintname is the name of the hint without "_Integral".
@@ -707,6 +704,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
     """
+    prep = kwargs.pop('prep', True)
     from sympy import expand
 
     if func and len(func.args) != 1:
