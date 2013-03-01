@@ -869,8 +869,11 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         n = Wild('n' ,exclude = [df])
         m = Wild('m', exclude = [f(x), df])
         match = collect(eq, df, evaluate=True).match(l*f(x).diff(x) + m + n)
-        match['l'].args
-        match['n'].args          
+        factor = simplify(match[n].diff(f(x))/match[l])
+        if not factor.has(f(x)):
+            print C.Integral(factor/(match[n]/match[l]), f(x))
+            #print exp(C.Integral((match[n]/match[l])/factor , f(x)))
+            
 
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
