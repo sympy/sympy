@@ -900,9 +900,6 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
     smoothness, smoothness_p, divisors
 
     """
-    if (not isinstance(n, Mul) and not isinstance(n, dict)
-       and not S(n).is_integer):
-        raise ValueError('input must be an integer')
     factordict = {}
     if visual and not isinstance(n, Mul) and not isinstance(n, dict):
         factordict = factorint(n, limit=limit, use_trial=use_trial,
@@ -944,7 +941,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     assert use_trial or use_rho or use_pm1
 
-    n = int(n)
+    n = as_int(n)
     if limit:
         limit = int(limit)
 
