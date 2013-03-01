@@ -255,10 +255,13 @@ class sign(Function):
                 ai2 = -S.ImaginaryUnit * ai
                 if ai.is_negative:
                     is_neg = not is_neg
-                elif ai.is_imaginary and ai2.is_positive:
+                elif ai.is_positive:
+                    pass
+                elif ai.is_imaginary and ai2.is_comparable:
                     is_imag = not is_imag
-                elif ai.is_negative is None or \
-                        (ai.is_imaginary is None or ai2.is_positive is None):
+                    if ai2.is_negative:
+                        is_neg = not is_neg
+                else:
                     unk.append(ai)
             if c is S.One and len(unk) == len(args):
                 return None
