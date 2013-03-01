@@ -43,7 +43,7 @@ def load_ipython_extension(ip):
     # Use extension manager to track loaded status if available
     # This is currently in IPython 0.14.dev
     if hasattr(ip.extension_manager, 'loaded'):
-        loaded = 'sympy.interactive.ipythonprinting' not in ip.extension_manager.loaded
+        loaded = 'sympy.interactive.ipythonprinting' in ip.extension_manager.loaded
     else:
         loaded = _loaded
 

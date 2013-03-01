@@ -233,7 +233,11 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, use_latex=Non
 
     if ip:
         try:
-            from IPython.zmq.zmqshell import ZMQInteractiveShell
+            import IPython
+            if IPython.__version__ >= '1.0':
+                from IPython.kernel.zmq.zmqshell import ZMQInteractiveShell
+            else:
+                from IPython.zmq.zmqshell import ZMQInteractiveShell
         except ImportError:
             pass
         else:
