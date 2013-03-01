@@ -270,6 +270,10 @@ def test_piecewise_solve():
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
     assert solve(g, x) == [5]
 
+    g = Piecewise(((x - 5)**5, x >= 2),
+                  (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
+    assert solve(g, x) == [5]
+
 # See issue 1253 (enhance the solver to handle inequalities).
 
 
