@@ -1077,24 +1077,25 @@ def _solve(f, *symbols, **flags):
 
     elif f.is_Piecewise:
         result = set()
-        for expr, cond in f.args:
+        for n, (expr, cond) in enumerate(f.args):
             candidates = _solve(expr, *symbols)
-            if cond is True:
-                # Only include solutions that do not match the condition
-                # of any of the other pieces.
-                for candidate in candidates:
+
+            for candidate in candidates:
+                if candidate in result:
+                    continue
+                if cond is True or cond.subs(symbol, candidate):
+                    # Only include solutions that do not match the condition
+                    # of any previous pieces.
                     matches_other_piece = False
-                    for other_expr, other_cond in f.args:
-                        if other_cond is True:
+                    for other_n, (other_expr, other_cond) in enumerate(f.args):
+                        if other_n == n:
+                            break
+                        if other_cond is False:
                             continue
-                        if bool(other_cond.subs(symbol, candidate)):
+                        if other_cond.subs(symbol, candidate):
                             matches_other_piece = True
                             break
                     if not matches_other_piece:
-                        result.add(candidate)
-            else:
-                for candidate in candidates:
-                    if bool(cond.subs(symbol, candidate)):
                         result.add(candidate)
         check = False
     else:

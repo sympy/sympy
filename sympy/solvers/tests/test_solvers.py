@@ -329,7 +329,8 @@ def test_tsolve():
     assert solve([x**y - 1]) == [{x: 1}, {y: 0}]
     assert solve(x*y*(x**2 - y**2)) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
     assert solve([x*y*(x**2 - y**2)]) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
-
+    #issue #1640
+    assert solve(exp(log(5)*x) - 2**x, x) == [0]
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')

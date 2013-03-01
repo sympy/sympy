@@ -281,7 +281,7 @@ How to create a new function with one variable::
             if arg.is_negative:
                 return S.NegativeOne
             if isinstance(arg, Basic.Mul):
-                coeff, terms = arg.as_coeff_terms()
+                coeff, terms = arg.as_coeff_mul()
                 if not isinstance(coeff, Basic.One):
                     return cls(coeff) * cls(Basic.Mul(*terms))
 
