@@ -17,12 +17,12 @@ In physics, mechanics describes conditions of rest (statics) or motion
 (dynamics). There are a few common steps to all mechanics problems. First, an
 idealized representation of a system is described. Next, we use physical laws
 to generate equations that define the system's behavior. Then, we solve these
-equations, in multiple possible ways. Finally, we extract information from
-these equations and solutions. The current scope of the module is multi-body
-dynamics: the motion of systems composed of multiple particles and/or rigid
-bodies. For example, this module could be used to understand the motion of a
-double pendulum, planets, robotic manipulators, bicycles, and any other system
-of rigid bodies that may fascinate us.
+equations, sometimes analytically but usually numerically. Finally, we extract
+information from these equations and solutions. The current scope of the module
+is multi-body dynamics: the motion of systems of multiple particles and/or
+rigid bodies. For example, this module could be used to understand the motion
+of a double pendulum, planets, robotic manipulators, bicycles, and any
+other system of rigid bodies that may fascinate us.
 
 Often, the objective in multi-body dynamics is to obtain the trajectory of a
 system of rigid bodies through time. The challenge for this task is to first
@@ -56,7 +56,7 @@ the user must provide a complete representation of the free
 body diagrams that themselves represent the system, with which this code can
 provide equations of motion in a form amenable to numerical integration. Step
 5 above amounts to arduous algebra for even fairly simple multi-body systems.
-Thus, it is tempting to use a symbolic math package, such as Sympy, to
+Thus, it is desirable to use a symbolic math package, such as Sympy, to
 perform this step. It is for this reason that this module is a part of Sympy.
 Step 4 amounts to this specific module, sympy.physics.mechanics.
 
