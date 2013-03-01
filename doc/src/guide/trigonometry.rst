@@ -9,7 +9,7 @@ Let's assume that we need a formula for `\sin(a + b)` in terms of `\sin(a)`,
 know how to get it easily with SymPy. We will derive this formula from
 scratch using Taylor series expansions and a little symbolic manipulation.
 
-Let's start with definition of symbols and the expression in consideration::
+Let's start with definition of symbols and the expression under consideration::
 
     >>> from sympy import *
     >>> init_printing(use_unicode=True, no_global=True)
@@ -60,8 +60,7 @@ in `b` around 0 and remove the order term::
     ────── - ──── + ─── - ── + b
     362880   5040   120   6
 
-This is clearly the second subexpression, so let's substitute it for
-`\sin(b)`::
+This is clearly the second subexpression, so let's replace it with `\sin(b)`::
 
     >>> g.subs(_, sin(b))
     ⎛   8      6    4    2    ⎞
@@ -88,7 +87,7 @@ Now let's repeat this procedure for `\cos(b)`::
     >>> h.subs(_, cos(b))
     sin(a)⋅cos(b) + sin(b)⋅cos(a)
 
-This gave us a formula for `\sin(a + b)`::
+This is the familiar formula for `\sin(a + b)`::
 
     >>> Eq(f, _)
     sin(a + b) = sin(a)⋅cos(b) + sin(b)⋅cos(a)
