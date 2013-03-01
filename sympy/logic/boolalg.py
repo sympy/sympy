@@ -612,24 +612,14 @@ def eliminate_implications(expr):
 
 
 @deprecated(
-    useinstead="sympify", issue=2947, deprecated_since_version="0.7.3")
+    useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a SymPy expression
     A rule is a string of the form "symbol1 & symbol2 | ..."
 
-    Note: this is nearly the same as sympifying the expression, but
-    this function converts all variables to Symbols -- there are no
-    special function names recognized.
+    Note: This function is deprecated.  Use sympify() instead.
 
-    Examples
-    ========
-
-    >>> from sympy.logic.boolalg import compile_rule
-    >>> compile_rule('A & B')
-    And(A, B)
-    >>> compile_rule('(~B & ~C)|A')
-    Or(A, And(Not(B), Not(C)))
     """
     import re
     return sympify(re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)', r'Symbol("\1")', s))
