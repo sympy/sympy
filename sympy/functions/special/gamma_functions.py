@@ -182,11 +182,11 @@ class lowergamma(Function):
         #    lowergamma(s, exp(2*I*pi*n)*x) = exp(2*pi*I*n*a)*lowergamma(a, x)
         from sympy import unpolarify, I, factorial, exp
         nx, n = x.extract_branch_factor()
-        if a.is_integer and a > 0:
+        if a.is_integer and a.is_positive:
             nx = unpolarify(x)
             if nx != x:
                 return lowergamma(a, nx)
-        elif a.is_integer and a <= 0:
+        elif a.is_integer and a.is_nonpositive:
             if n != 0:
                 return 2*pi*I*n*(-1)**(-a)/factorial(-a) + lowergamma(a, nx)
         elif n != 0:

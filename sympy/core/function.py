@@ -1207,10 +1207,8 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         if len(args) != self.nargs:
-            from sympy.utilities.misc import filldedent
-            raise TypeError(filldedent('''
-                %s takes %d arguments (%d given)
-                ''' % (self, self.nargs, len(args))))
+            raise TypeError('%s takes %d arguments (%d given)' %
+                    (self, self.nargs, len(args)))
         return self.expr.xreplace(dict(zip(self.variables, args)))
 
     def __eq__(self, other):
