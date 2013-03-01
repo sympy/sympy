@@ -40,7 +40,7 @@ class::
 
     >>> int(r)
     0
-    >>> float(r)
+    >>> float(r) # doctest: +SKIP
     0.333333333333
 
     >>> r.evalf()

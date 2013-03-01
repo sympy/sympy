@@ -361,7 +361,7 @@ fixed order, those variables and the previously computed roots of unity::
     >>> var('red,green,blue')
     (red, green, blue)
 
-    >>> colors = zip(R, _)
+    >>> colors = list(zip(R, _))
     >>> colors
     ⎡          ⎛        ___         ⎞  ⎛        ___        ⎞⎤
     ⎢          ⎜  1   ╲╱ 3 ⋅ⅈ       ⎟  ⎜  1   ╲╱ 3 ⋅ⅈ      ⎟⎥
@@ -464,7 +464,7 @@ roots of unity and literal colors and substitute symbols for numbers::
     >>> colors = dict(colors)
 
     >>> for coloring in colorings:
-    ...     print [ colors[color.expand(complex=True)] for color in coloring ]
+    ...     print([ colors[color.expand(complex=True)] for color in coloring ])
     ...
     [green, blue, red, red, green, blue, red, green, blue, green, blue, red]
     [blue, green, red, red, blue, green, red, blue, green, blue, green, red]

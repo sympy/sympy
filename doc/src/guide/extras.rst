@@ -25,11 +25,11 @@ Solution 1
 
     >>> x = Symbol('x')
 
-    >>> Add(*[ x**i for i in xrange(0, 10+1) ])
+    >>> Add(*[ x**i for i in range(0, 10+1) ])
      10    9    8    7    6    5    4    3    2
     x   + x  + x  + x  + x  + x  + x  + x  + x  + x + 1
 
-    >>> sum([ x**i for i in xrange(0, 10+1) ])
+    >>> sum([ x**i for i in range(0, 10+1) ])
      10    9    8    7    6    5    4    3    2
     x   + x  + x  + x  + x  + x  + x  + x  + x  + x + 1
 
@@ -38,7 +38,7 @@ Solution 1
     x   + x  + x  + x  + x  + x  + x  + x  + x  + x + 1
 
     >>> def build_poly_1(n):
-    ...     return Add(*[ x**i for i in xrange(0, n+1) ])
+    ...     return Add(*[ x**i for i in range(0, n+1) ])
     ...
 
     >>> build_poly_1(1)
@@ -52,9 +52,9 @@ Solution 1
 
     >>> def build_poly_2(n):
     ...     if n > 0:
-    ...         return Add(*[ x**i for i in xrange(0, n+1) ])
+    ...         return Add(*[ x**i for i in range(0, n+1) ])
     ...     else:
-    ...         return Add(*[ x**i for i in xrange(0, n-1, -1) ])
+    ...         return Add(*[ x**i for i in range(0, n-1, -1) ])
     ...
 
     >>> build_poly_2(1)
@@ -128,36 +128,30 @@ Solution 1
 
     >>> for integral, antiderivative in integrals_table:
     ...     pprint(Eq(integral, antiderivative), use_unicode=True)
-    ...     print
     ...
     ⌠              n + 1
     ⎮  n          x
     ⎮ x  dx = C + ──────
     ⌡             n + 1
-    <BLANKLINE>
     ⌠                              3      2
     ⎮ ⎛   2          ⎞          a⋅x    b⋅x
     ⎮ ⎝a⋅x  + b⋅x + c⎠ dx = C + ──── + ──── + c⋅x
     ⌡                            3      2
-    <BLANKLINE>
     ⌠
     ⎮ 1
     ⎮ ─ dx = C + log(x)
     ⎮ x
     ⌡
-    <BLANKLINE>
     ⌠
     ⎮   1
     ⎮ ────── dx = C + atan(x)
     ⎮  2
     ⎮ x  + 1
     ⌡
-    <BLANKLINE>
     ⌠                a⋅x
     ⎮  a⋅x          ℯ
     ⎮ ℯ    dx = C + ────
     ⌡                a
-    <BLANKLINE>
     ⌠                               cos(a⋅x)
     ⎮ (b + sin(a⋅x)) dx = C + b⋅x - ────────
     ⌡                                  a
@@ -172,20 +166,20 @@ Solution 1
 
 ::
 
-    >>> from sympy.core.sympify import sympify, converter
-    >>> from sympy import Rational
-    >>> from gmpy import mpq
+    >>> from sympy.core.sympify import sympify, converter # doctest: +SKIP
+    >>> from sympy import Rational # doctest: +SKIP
+    >>> from gmpy import mpq # doctest: +SKIP
 
     >>> def mpq_to_Rational(obj):
     ...     return Rational(obj.numer(), obj.denom())
     ...
 
-    # >>> converter[type(mpq(1))] = mpq_to_Rational
+    >>> converter[type(mpq(1))] = mpq_to_Rational # doctest: +SKIP
 
-    #>>> sympify(mpq(1, 2))
-    #1/2
-    #>>> type(_)
-    #<class 'sympy.core.numbers.Half'>
+    >>> sympify(mpq(1, 2)) # doctest: +SKIP
+    1/2
+    >>> type(_) # doctest: +SKIP
+    <class 'sympy.core.numbers.Half'>
 
 .. _solution_foreign_2:
 
@@ -194,9 +188,9 @@ Solution 2
 
 ::
 
-    >>> from sympy.core.sympify import converter, sympify, SympifyError
-    >>> from sympy import Tuple
-    >>> from numpy import array, ndarray
+    >>> from sympy.core.sympify import converter, sympify, SympifyError # doctest: +SKIP
+    >>> from sympy import Tuple # doctest: +SKIP
+    >>> from numpy import array, ndarray # doctest: +SKIP
 
     >>> def ndarray_to_Tuple(obj):
     ...     if len(obj.shape) == 1:
@@ -205,15 +199,15 @@ Solution 2
     ...         raise SympifyError("only row NumPy arrays are allowed")
     ...
 
-    # >>> converter[ndarray] = ndarray_to_Tuple
+    >>> converter[ndarray] = ndarray_to_Tuple # doctest: +SKIP
 
-    # >>> sympify(array([1, 2, 3]))
+    >>> sympify(array([1, 2, 3])) # doctest: +SKIP
     (1, 2, 3)
 
-    #>>> sympify(array([[1], [2], [3]]))
-    #Traceback (most recent call last):
-    #...
-    #SympifyError: SympifyError: 'only row NumPy arrays are allowed'
+    >>> sympify(array([[1], [2], [3]])) # doctest: +SKIP
+    Traceback (most recent call last):
+    ...
+    SympifyError: SympifyError: 'only row NumPy arrays are allowed'
 
 The role of symbols
 -------------------
@@ -228,17 +222,17 @@ Solution 1
     >>> from sympy import Add, Symbol, symbols, numbered_symbols
 
     >>> def build_expression_1(name, n):
-    ...     return Add(*[ Symbol('%s_%d' % (name, i))**i for i in xrange(1, n+1) ])
+    ...     return Add(*[ Symbol('%s_%d' % (name, i))**i for i in range(1, n+1) ])
     ...
 
     >>> def build_expression_2(name, n):
     ...     X = symbols('%s1:%d' % (name, n+1))
-    ...     return Add(*[ x**i for x, i in zip(X, xrange(1, n+1)) ])
+    ...     return Add(*[ x**i for x, i in zip(X, range(1, n+1)) ])
     ...
 
     >>> def build_expression_3(name, n):
     ...     X = numbered_symbols(name, start=1)
-    ...     return Add(*[ x**i for x, i in zip(X, xrange(1, n+1)) ])
+    ...     return Add(*[ x**i for x, i in zip(X, range(1, n+1)) ])
     ...
 
     >>> build_expression_1('x', 5)
@@ -375,7 +369,7 @@ Solution 1
 
     >>> expr = x**x
 
-    >>> for i in xrange(3):
+    >>> for i in range(3):
     ...     expr = (expr.base**expr.base)**(expr.exp**expr.exp)
     ...
 
@@ -535,7 +529,7 @@ Solution 1
 
     >>> x = Symbol('x')
 
-    >>> print codegen(("chebyshevt_20", chebyshevt(20, x)), "C", "file")[0][1]
+    >>> print(codegen(("chebyshevt_20", chebyshevt(20, x)), "C", "file")[0][1])
     /******************************************************************************
      *                    Code generated with sympy 0.7.2-git                     *
      *                                                                            *
@@ -564,8 +558,8 @@ Solution 2
 
     >>> x = Symbol('x')
 
-    >>> functions = [ ("chebyshevt_%d" % i, chebyshevt(i, x)) for i in xrange(0, 10) ]
-    >>> print codegen(functions, "F95", "file")[0][1]
+    >>> functions = [ ("chebyshevt_%d" % i, chebyshevt(i, x)) for i in range(0, 10) ]
+    >>> print(codegen(functions, "F95", "file")[0][1])
     !******************************************************************************
     !*                    Code generated with sympy 0.7.2-git                     *
     !*                                                                            *
@@ -752,7 +746,7 @@ Solution 1
     Poly(A*u*x + A*v + B, x, domain='ZZ[u,v,A,B]')
     >>> rhs
     Poly(3*x + 5, x, domain='ZZ')
-    >>> coeffeqs = [ Eq(lhs.nth(i), rhs.nth(i)) for i in xrange(2) ]; coeffeqs
+    >>> coeffeqs = [ Eq(lhs.nth(i), rhs.nth(i)) for i in range(2) ]; coeffeqs
     [A⋅v + B = 5, A⋅u = 3]
     >>> sol = solve_undetermined_coeffs(coeffeq, [A, B], x)
     >>> sol[B] = cancel(sol[B])

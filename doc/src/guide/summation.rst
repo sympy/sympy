@@ -91,7 +91,7 @@ using :class:`RootOf`::
 
 We can obtain all roots using list comprehensions::
 
-    >>> R = [ RootOf(f, i) for i in xrange(degree(f)) ]
+    >>> R = [ RootOf(f, i) for i in range(degree(f)) ]
 
     >>> for r in R:
     ...     pprint(r, use_unicode=True)

@@ -381,8 +381,8 @@ SymPy internally expects that all objects it works with are instances of
 subclasses of :class:`Basic` class. So why ``x + 1`` works without raising
 an exception? The number ``1`` is not a SymPy's type, but::
 
-    >>> type(1)
-    <type 'int'>
+    >>> type(1) is int
+    True
 
 it's a built-in type. SymPy implements :func:`sympify` function for the task
 of converting foreign types to SymPy's types (yes, Python's built-in types
@@ -395,8 +395,8 @@ Python's types, e.g.::
 
     >>> Poly(x**2 + y).degree(y)
     1
-    >>> type(_)
-    <type 'int'>
+    >>> type(_) == int
+    True
 
 Now see what :func:`sympify` can do. Let's start with built-ins::
 
@@ -427,16 +427,16 @@ SymPy implements explicit sympification rules, heuristics based on ``__int__``,
 back to parsing string representation of an object. This usually works fine,
 but sometimes :func:`sympify` can be wrong::
 
-    >>> from gmpy import mpz, mpq
+    >>> from gmpy import mpz, mpq # doctest: +SKIP
 
-    >>> sympify(mpz(117))
+    >>> sympify(mpz(117)) # doctest: +SKIP
     117
-    >>> type(_)
+    >>> type(_) # doctest: +SKIP
     <class 'sympy.core.numbers.Integer'>
 
-    >>> sympify(mpq(1, 2))
+    >>> sympify(mpq(1, 2)) # doctest: +SKIP
     1/2
-    >>> type(_)
+    >>> type(_) # doctest: +SKIP
     <class 'sympy.core.numbers.Half'>
 
 This happens because :func:`sympify` doesn't know about either ``mpz`` or
@@ -447,31 +447,31 @@ is to add a new entry to ``converter`` dictionary. ``converter`` takes types
 as keys and sympification functions as values. Before we extend this ``dict``,
 we have to resolve a little problem with ``mpz``::
 
-    >>> mpz
+    >>> mpz # doctest: +SKIP
     <built-in function mpz>
 
 which isn't a type but a function. We can use a little trick here and take
 the type of some ``mpz`` object::
 
-    >>> type(mpz(1))
+    >>> type(mpz(1)) # doctest: +SKIP
     <type 'mpz'>
 
 Let's now add an entry to ``converter`` for ``mpz``::
 
-    >>> from sympy.core.sympify import converter
+    >>> from sympy.core.sympify import converter # doctest: +SKIP
 
     >>> def mpz_to_Integer(obj):
     ...     return Integer(int(obj))
     ...
     ...
 
-    # >>> converter[type(mpz(1))] = mpz_to_Integer
+    # >>> converter[type(mpz(1))] = mpz_to_Integer # doctest: +SKIP
 
 We could use ``lambda`` as well. Now we can sympify ``mpz``::
 
-    >>> sympify(mpz(117))
+    >>> sympify(mpz(117)) # doctest: +SKIP
     117
-    >>> type(_)
+    >>> type(_) # doctest: +SKIP
     <class 'sympy.core.numbers.Integer'>
 
 Similar things should be done for ``mpq``.
@@ -622,10 +622,10 @@ generator::
 
     >>> X = numbered_symbols('x')
 
-    >>> X.next()
+    >>> next(X)
     x₀
 
-    >>> [ X.next() for i in xrange(5) ]
+    >>> [ next(X) for i in range(5) ]
     [x₁, x₂, x₃, x₄, x₅]
 
 Tasks
@@ -649,7 +649,7 @@ use ``args`` property::
     x + y + 1
     >>> tuple(sorted(_.args, key=default_sort_key))
     (1, x, y)
-    >>> map(type, _)
+    >>> list(map(type, _))
     [<class 'sympy.core.numbers.One'>, <class 'sympy.core.symbol.Symbol'>, <class 'sympy.core.symbol.Symbol'>]
 
 ``args`` always gives a ``tuple`` of instances of SymPy's classes. One should
@@ -952,8 +952,8 @@ form from the file::
 
     >>> text_form # doctest: +SKIP
     x**2 + sin(y) + 1/2
-    >>> type(_)
-    <type 'str'>
+    >>> type(_) is str # doctest: +SKIP
+    True
 
 We could try to try to use :func:`eval` on ``text_form`` but this doesn't give
 expected results::

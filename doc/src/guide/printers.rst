@@ -25,11 +25,11 @@ This is what ``str(expression)`` returns and it looks like this::
     >>> var('x')
     x
 
-    >>> print x**2
+    >>> print(x**2)
     x**2
-    >>> print 1/x
+    >>> print(1/x)
     1/x
-    >>> print Integral(x**2, x)
+    >>> print(Integral(x**2, x))
     Integral(x**2, x)
 
 Note that :func:`str` is by design not aware of global configuration,
@@ -99,13 +99,13 @@ Python printing
 
 ::
 
-    >>> print python(x**2)
+    >>> print(python(x**2))
     x = Symbol('x')
     e = x**2
-    >>> print python(1/x)
+    >>> print(python(1/x))
     x = Symbol('x')
     e = 1/x
-    >>> print python(Integral(x**2, x))
+    >>> print(python(Integral(x**2, x)))
     x = Symbol('x')
     e = Integral(x**2, x)
 
@@ -136,9 +136,9 @@ MathML printing
     >>> from sympy.printing.mathml import mathml
     >>> from sympy import Integral, latex
     >>> from sympy.abc import x
-    >>> print mathml(x**2)
+    >>> print(mathml(x**2))
     <apply><power/><ci>x</ci><cn>2</cn></apply>
-    >>> print mathml(1/x)
+    >>> print(mathml(1/x))
     <apply><power/><ci>x</ci><cn>-1</cn></apply>
 
 Printing with Pyglet
@@ -224,7 +224,7 @@ looks like this::
 
 Using :func:`pretty_poly` allows us to print polynomials in 2D and Unicode::
 
-    >>> print pretty_poly(Poly(x**2 + 1), use_unicode=True)
+    >>> print(pretty_poly(Poly(x**2 + 1), use_unicode=True))
           2
     Poly(x  + 1, x, ℤ)
 
@@ -327,7 +327,7 @@ C programming language and ``F95`` for Fortran, and file name::
 
     >>> from sympy.utilities.codegen import codegen
 
-    >>> print codegen(("chebyshevt_20", chebyshevt(20, x)), "F95", "file")[0][1]
+    >>> print(codegen(("chebyshevt_20", chebyshevt(20, x)), "F95", "file")[0][1])
     !******************************************************************************
     !*                    Code generated with sympy 0.7.2-git                     *
     !*                                                                            *

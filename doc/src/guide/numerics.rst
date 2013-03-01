@@ -77,20 +77,20 @@ Symbolic entities are ignored::
 Built-in functions :func:`float` and :func:`complex` take advantage of
 :func:`evalf`::
 
-    >>> float(pi)
+    >>> float(pi) # doctest: +SKIP
     3.14159265359
-    >>> type(_)
-    <type 'float'>
+    >>> type(_) == float # doctest: +SKIP
+    True
 
     >>> float(pi*I)
     Traceback (most recent call last):
     ...
     TypeError: can't convert complex to float
 
-    >>> complex(pi*I)
+    >>> complex(pi*I) # doctest: +SKIP
     3.14159265359j
-    >>> type(_)
-    <type 'complex'>
+    >>> type(_) == complex # doctest: +SKIP
+    True
 
 The base type for computing with floating point numbers in SymPy is
 :class:`Float`. It allows for several flavors of initialization and
@@ -98,8 +98,8 @@ keeps track of precision::
 
     >>> 2.0
     2.0
-    >>> type(_)
-    <type 'float'>
+    >>> type(_) == float
+    True
 
     >>> Float(2.0)
     2.00000000000000

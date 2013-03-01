@@ -171,7 +171,7 @@ First we have to extract coefficients of `x` of both sides of the equation::
 
 Now we can use :func:`Poly.nth` to obtain coefficients of `x`::
 
-    >>> [ Eq(lhs.nth(i), rhs.nth(i)) for i in xrange(4) ]
+    >>> [ Eq(lhs.nth(i), rhs.nth(i)) for i in range(4) ]
     [B = 1, A = 0, B + D = 0, A + C = 0]
 
 Solving this system of linear equations gives the same solution set as
