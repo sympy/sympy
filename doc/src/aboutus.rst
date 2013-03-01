@@ -247,6 +247,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. CJ Carey: Fix for limits of factorials
 #. Patrick Lacasse: Fix for Piecewise.subs
 #. Ananya H: Bug fix
+#. Tarang Patel: added test for issue 1640
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
