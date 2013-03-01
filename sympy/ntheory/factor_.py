@@ -941,7 +941,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     assert use_trial or use_rho or use_pm1
 
-    n = int(n)
+    n = as_int(n)
     if limit:
         limit = int(limit)
 
