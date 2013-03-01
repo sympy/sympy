@@ -1570,26 +1570,6 @@ class Expr(Basic, EvalfMixin):
         # a -> b ** e
         return self, S.One
 
-    def as_coeff_terms(self, *deps):
-        """
-        This method is deprecated. Use .as_coeff_mul() instead.
-        """
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
-        SymPyDeprecationWarning(feature="as_coeff_terms()",
-                                useinstead="as_coeff_mul()", issue=3377,
-                                deprecated_since_version="0.7.0").warn()
-        return self.as_coeff_mul(*deps)
-
-    def as_coeff_factors(self, *deps):
-        """
-        This method is deprecated.  Use .as_coeff_add() instead.
-        """
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
-        SymPyDeprecationWarning(feature="as_coeff_factors()",
-                                useinstead="as_coeff_add()", issue=3377,
-                                deprecated_since_version="0.7.0").warn()
-        return self.as_coeff_add(*deps)
-
     def as_coeff_mul(self, *deps):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
 
