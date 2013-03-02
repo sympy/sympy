@@ -14,8 +14,8 @@ from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
         Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
-        Basic, Symbol)
-from sympy.solvers.inequalities import reduce_poly_inequalities
+        Basic)
+from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
 import random
 
@@ -112,7 +112,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     for i, limit in enumerate(limits):
                         if limit[0] == symbol:
                             # Make condition into an Interval like [0, oo]
-                            cintvl = reduce_poly_inequalities_wrap(
+                            cintvl = reduce_rational_inequalities_wrap(
                                 cond, symbol)
                             # Make limit into an Interval like [-oo, oo]
                             lintvl = Interval(limit[1], limit[2])
@@ -135,7 +135,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     @property
     def set(self):
         if len(self.symbols) == 1:
-            return (self.fulldomain.set & reduce_poly_inequalities_wrap(
+            return (self.fulldomain.set & reduce_rational_inequalities_wrap(
                 self.condition, tuple(self.symbols)[0]))
         else:
             raise NotImplementedError(
@@ -324,7 +324,7 @@ class ContinuousPSpace(PSpace):
             raise NotImplementedError(
                 "Multiple continuous random variables not supported")
         rv = tuple(rvs)[0]
-        interval = reduce_poly_inequalities_wrap(condition, rv)
+        interval = reduce_rational_inequalities_wrap(condition, rv)
         interval = interval.intersect(self.domain.set)
         return SingleContinuousDomain(rv.symbol, interval)
 
@@ -400,12 +400,12 @@ class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
-        return reduce_poly_inequalities(conditions, var, **kwargs)
+        return reduce_rational_inequalities(conditions, var, **kwargs)
     except PolynomialError:
         raise ValueError("Reduction of condition failed %s\n" % conditions[0])
 
 
-def reduce_poly_inequalities_wrap(condition, var):
+def reduce_rational_inequalities_wrap(condition, var):
     if condition.is_Relational:
         return _reduce_inequalities([[condition]], var, relational=False)
     if condition.__class__ is Or:
