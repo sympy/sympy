@@ -1362,7 +1362,7 @@ class PolyElement(dict, CantSympify):
 
         """
         ring = f.ring
-        i = ring.gens.index(x)
+        i = list(ring.gens).index(x)
         m = ring.monomial_basis(i)
         g = ring.zero
         for expv, coeff in f.terms():
@@ -1382,7 +1382,7 @@ class PolyElement(dict, CantSympify):
                 return f.evaluate(x)
 
         ring = f.ring
-        i = ring.gens.index(x)
+        i = list(ring.gens).index(x)
 
         if ring.ngens == 1:
             result = ring.domain.zero
@@ -1418,7 +1418,7 @@ class PolyElement(dict, CantSympify):
             return f
 
         ring = f.ring
-        i = ring.gens.index(x)
+        i = list(ring.gens).index(x)
 
         if ring.ngens == 1:
             result = ring.domain.zero
