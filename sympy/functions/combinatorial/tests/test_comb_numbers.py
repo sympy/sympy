@@ -85,6 +85,13 @@ def test_harmonic():
     assert harmonic(oo, 1) == zoo
     assert harmonic(oo, 2) == (pi**2)/6
 
+    n = Symbol("n")
+    m = Symbol("m")
+
+    _k = Dummy("k")
+    assert harmonic(n).rewrite(Sum) == Sum(1/_k, (_k, 1, n))
+    assert harmonic(n, m).rewrite(Sum) == Sum(_k**(-m), (_k, 1, n))
+
 
 @XFAIL
 def test_harmonic_rewrite_sum():
