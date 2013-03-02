@@ -251,18 +251,19 @@ class sign(Function):
             unk = []
             is_imag = c.is_imaginary
             is_neg = c.is_negative
-            for ai in args:
-                ai2 = -S.ImaginaryUnit * ai
-                if ai.is_negative:
+            for a in args:
+                if a.is_negative:
                     is_neg = not is_neg
-                elif ai.is_positive:
+                elif a.is_positive:
                     pass
-                elif ai.is_imaginary and ai2.is_comparable:
-                    is_imag = not is_imag
-                    if ai2.is_negative:
-                        is_neg = not is_neg
                 else:
-                    unk.append(ai)
+                    ai = im(a)
+                    if a.is_imaginary and ai.is_comparable:  # i.e. a = I*real
+                        is_imag = not is_imag
+                        if ai.is_negative:
+                            is_neg = not is_neg
+                    else:
+                        unk.append(a)
             if c is S.One and len(unk) == len(args):
                 return None
             return (S.NegativeOne if is_neg else S.One) \
