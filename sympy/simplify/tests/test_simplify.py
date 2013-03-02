@@ -1136,6 +1136,8 @@ def test_logcombine_1():
     assert logcombine((2 + I)*log(x), force=True) == (2 + I)*log(x)
     assert logcombine((x**2 + log(x) - log(y))/(x*y), force=True) == \
         (x**2 + log(x/y))/(x*y)
+    # the following could also give log(z*x**log(y**2)), what we
+    # are testing is that a canonical result is obtained
     assert logcombine(log(x)*2*log(y) + log(z), force=True) == \
         log(z*y**log(x**2))
     assert logcombine((x*y + sqrt(x**4 + y**4) + log(x) - log(y))/(pi*x**Rational(2, 3)*

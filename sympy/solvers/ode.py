@@ -1080,7 +1080,7 @@ def odesimp(eq, func, order, hint):
         if hint.startswith("1st_homogeneous_coeff"):
             for j, eqi in enumerate(eq):
                 newi = logcombine(eqi, force=True)
-                if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
+                if newi.lhs.func is log and newi.rhs == 0:
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
