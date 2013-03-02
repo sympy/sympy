@@ -107,7 +107,6 @@ class besselj(BesselBase):
 
     bessely, besseli, besselk
 
-
     References
     ==========
 
@@ -117,6 +116,7 @@ class besselj(BesselBase):
     - Luke, Y. L. (1969), The Special Functions and Their Approximations,
       Volume 1
     - http://en.wikipedia.org/wiki/Bessel_function
+    - http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
     """
 
     _a = S.One
@@ -211,6 +211,11 @@ class bessely(BesselBase):
 
     besselj, besseli, besselk
 
+    References
+    ==========
+
+    - http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
+
     """
 
     _a = S.One
@@ -278,6 +283,11 @@ class besseli(BesselBase):
     ========
 
     besselj, bessely, besselk
+
+    References
+    ==========
+
+    - http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
 
     """
 
@@ -365,6 +375,11 @@ class besselk(BesselBase):
 
     besselj, besseli, bessely
 
+    References
+    ==========
+
+    - http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
+
     """
 
     _a = S.One
@@ -423,6 +438,11 @@ class hankel1(BesselBase):
 
     hankel2, besselj, bessely
 
+    References
+    ==========
+
+    - http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
+
     """
 
     _a = S.One
@@ -456,6 +476,11 @@ class hankel2(BesselBase):
     ========
 
     hankel1, besselj, bessely
+
+    References
+    ==========
+
+    - http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
 
     """
 
