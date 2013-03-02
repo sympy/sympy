@@ -1,7 +1,7 @@
-from sympy import (bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo,
-    zoo, pi, I, bell, fibonacci, lucas, euler, catalan,
-    binomial, gamma, sqrt, hyper, log, digamma, trigamma, polygamma, diff,
-    Expr, sympify, expand_func, EulerGamma, factorial)
+from sympy import (bernoulli, Symbol, symbols, Dummy, Sum, harmonic, Rational, oo,
+    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, binomial, gamma, sqrt,
+    hyper, log, digamma, trigamma, polygamma, diff, Expr, sympify, expand_func,
+    EulerGamma, factorial)
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -99,6 +99,10 @@ def test_harmonic():
     assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
 
     assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
+
+    _k = Dummy("k")
+    assert harmonic(n).rewrite(Sum) == Sum(1/_k, (_k, 1, n))
+    assert harmonic(n, m).rewrite(Sum) == Sum(_k**(-m), (_k, 1, n))
 
 
 def test_euler():
