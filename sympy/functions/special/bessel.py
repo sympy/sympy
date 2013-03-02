@@ -52,6 +52,10 @@ class BesselBase(Function):
         return self._b/2 * self.__class__(self.order - 1, self.argument) \
             - self._a/2 * self.__class__(self.order + 1, self.argument) \
 
+    def _eval_conjugate(self):
+        z = self.argument
+        if (z.is_real and z.is_negative) is False:
+            return self.__class__(self.order.conjugate(), z.conjugate())
 
 
 class besselj(BesselBase):
@@ -448,6 +452,11 @@ class hankel1(BesselBase):
     _a = S.One
     _b = S.One
 
+    def _eval_conjugate(self):
+        z = self.argument
+        if (z.is_real and z.is_negative) is False:
+            return hankel2(self.order.conjugate(), z.conjugate())
+
 
 class hankel2(BesselBase):
     r"""
@@ -486,6 +495,11 @@ class hankel2(BesselBase):
 
     _a = S.One
     _b = S.One
+
+    def _eval_conjugate(self):
+        z = self.argument
+        if (z.is_real and z.is_negative) is False:
+            return hankel1(self.order.conjugate(), z.conjugate())
 
 from sympy.polys.orthopolys import spherical_bessel_fn as fn
 

@@ -192,6 +192,36 @@ def test_bessel_eval():
     assert besselj(3, I*z) == -I*besseli(3, z)
 
 
+def test_conjugate():
+    from sympy import conjugate, I, Symbol
+    n, z, x = Symbol('n'), Symbol('z', real=False), Symbol('x', real=True)
+    y, t = Symbol('y', real=True, positive=True), Symbol('t', negative=True)
+
+    for f in [besseli, besselj, besselk, bessely, jn, yn, hankel1, hankel2]:
+        assert f(n, -1).conjugate() != f(conjugate(n), -1)
+        assert f(n, x).conjugate() != f(conjugate(n), x)
+        assert f(n, t).conjugate() != f(conjugate(n), t)
+
+    for f in [besseli, besselj, besselk, bessely, jn, yn]:
+        assert f(n, 1 + I).conjugate() == f(conjugate(n), 1 - I)
+        assert f(n, 0).conjugate() == f(conjugate(n), 0)
+        assert f(n, 1).conjugate() == f(conjugate(n), 1)
+        assert f(n, z).conjugate() == f(conjugate(n), conjugate(z))
+        assert f(n, y).conjugate() == f(conjugate(n), y)
+
+    assert hankel1(n, 1 + I).conjugate() == hankel2(conjugate(n), 1 - I)
+    assert hankel1(n, 0).conjugate() == hankel2(conjugate(n), 0)
+    assert hankel1(n, 1).conjugate() == hankel2(conjugate(n), 1)
+    assert hankel1(n, y).conjugate() == hankel2(conjugate(n), y)
+    assert hankel1(n, z).conjugate() == hankel2(conjugate(n), conjugate(z))
+
+    assert hankel2(n, 1 + I).conjugate() == hankel1(conjugate(n), 1 - I)
+    assert hankel2(n, 0).conjugate() == hankel1(conjugate(n), 0)
+    assert hankel2(n, 1).conjugate() == hankel1(conjugate(n), 1)
+    assert hankel2(n, y).conjugate() == hankel1(conjugate(n), y)
+    assert hankel2(n, z).conjugate() == hankel1(conjugate(n), conjugate(z))
+
+
 def test_branching():
     from sympy import exp_polar, polar_lift, Symbol, I, exp
     assert besselj(polar_lift(k), x) == besselj(k, x)
