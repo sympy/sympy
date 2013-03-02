@@ -74,8 +74,16 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
-    def __call__(self, *args):
-        # (x+Lambda(y, 2*y))(z) -> x+2*z
+    def rcall(self, *args):
+        """Apply on the argument recursively through the expression tree.
+
+        This method is used to simulate a common abuse of notation for
+        operators. For instance in SymPy the the following will not work:
+
+        ``(x+Lambda(y, 2*y))(z) == x+2*z``,
+
+        however you can use ``(x+Lambda(y, 2*y)).rcall(z) == x+2*z``.
+        """
         return Expr._recursive_call(self, args)
 
     @staticmethod

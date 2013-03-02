@@ -20,9 +20,9 @@ def test_R2():
     point_p = R2_p.point([r0, theta0])
 
     # r**2 = x**2 + y**2
-    assert (R2.r**2 - R2.x**2 - R2.y**2)(point_r) == 0
-    assert trigsimp( (R2.r**2 - R2.x**2 - R2.y**2)(point_p) ) == 0
-    assert trigsimp(R2.e_r(R2.x**2 + R2.y**2)(point_p).doit()) == 2*r0
+    assert (R2.r**2 - R2.x**2 - R2.y**2).rcall(point_r) == 0
+    assert trigsimp( (R2.r**2 - R2.x**2 - R2.y**2).rcall(point_p) ) == 0
+    assert trigsimp(R2.e_r(R2.x**2 + R2.y**2).rcall(point_p).doit()) == 2*r0
 
     # polar->rect->polar == Id
     a, b = symbols('a b', positive=True)
@@ -65,7 +65,7 @@ def test_commutator():
 def test_differential():
     xdy = R2.x*R2.dy
     dxdy = Differential(xdy)
-    assert xdy(None) == xdy
+    assert xdy.rcall(None) == xdy
     assert dxdy(R2.e_x, R2.e_y) == 1
     assert dxdy(R2.e_x, R2.x*R2.e_y) == R2.x
     assert Differential(dxdy) == 0
