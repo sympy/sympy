@@ -255,7 +255,7 @@ allhints = (
 
 
 def preprocess(expr, func=None, hint='_Integral'):
-    """Prepare expr for solving by fmaking sure that differentiation
+    """Prepare expr for solving by making sure that differentiation
     is done so that only func remains in unevaluated derivatives and
     (if hint doesn't end with _Integral) that doit is applied to all
     other derivatives. If hint is None, don't do any differentiation.
@@ -482,6 +482,9 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
     ...     hint='1st_exact')
     f(x) == acos(C1/cos(x))
+    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
+    ...     hint='almost_linear')
+    f(x) == C1/sqrt(sin(x)**2 - 1) 
     >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
     ... hint='best')
     f(x) == acos(C1/cos(x))
@@ -867,25 +870,27 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         # then substituting u = l(y) gives a linear differential equation
         # See Table II of the paper "Symbolic Integration: The Stormy
         # Decade by Joel Moses
-        a = Wild('a')    
+        a = Wild('a')
         b = Wild('b' ,exclude = [df])
         c = Wild('c', exclude = [f(x), df])
         match = collect(eq, df, evaluate=True).match(a*f(x).diff(x) + b + c)
-        factor = simplify(match[b].diff(f(x))/match[a])
-        if not factor.has(f(x)) and factor:
-            if len(match[b].args) == 1 or isinstance(match[b], Pow):            
-                u = match[b]
-            else:
-                largs = [u for u in match[b].args if u.has(f(x))]
-                u = reduce(lambda x, y: x*y, largs)
-            udiff = u.diff(f(x))
-            match = eq.match(udiff*a*f(x).diff(x) + b*u + c)
-            r = {'a':a, 'b':b, 'c':c}
-            r[a] = match[a]
-            r[b] = match[b]
-            r[c] = match[c]
-            matching_hints["almost_linear"] = r
-            matching_hints["almost_linear_Integral"] = r
+        if match:
+            factor = simplify(match[b].diff(f(x))/match[a])
+            if not factor.has(f(x)) and factor:
+                if len(match[b].args) == 1 or isinstance(match[b], Pow):
+                    u = match[b]
+                else:
+                    largs = [u for u in match[b].args if u.has(f(x))]
+                    u = reduce(lambda x, y: x*y, largs)
+                udiff = u.diff(f(x))
+                match = collect(eq, [df, f(x)], evaluate=True).match(udiff*a*f(x).diff(x) + b*u + c)
+                if match:
+                    r2 = {'a':a, 'b':b, 'c':c}
+                    r2[a] = match[a]
+                    r2[b] = match[b]
+                    r2[c] = match[c]
+                    matching_hints["almost_linear"] = r2
+                    matching_hints["almost_linear_Integral"] = r2
 
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
@@ -2697,20 +2702,21 @@ def ode_almost_linear(eq, func, order, match):
     r"""
     Solves an almost linear equation.
 
-    This is an equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) 
+    This is an equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x)
     where l'(y) = g(y).
 
-    If we substitute u(y) = l(y), we obtain a linear differential 
+    If we substitute u(y) = l(y), we obtain a linear differential
     equation.
 
     Since ode_1st_linear, has already been implemented, and the
-    coefficients have been modified to the required form in 
-    classify_ode, just passing eq, func, order and match to 
+    coefficients have been modified to the required form in
+    classify_ode, just passing eq, func, order and match to
     ode_1st_linear will give the required output.
 
     Examples
     ========
     >>> from sympy import Function, Derivative, pprint
+    >>> from sympy.solvers.ode import dsolve, classify_ode
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> d = f(x).diff(x)
@@ -2719,16 +2725,16 @@ def ode_almost_linear(eq, func, order, match):
     ('Bernoulli', 'almost_linear', 'Bernoulli_Integral',     'almost_linear_Integral')
     >>> dsolve(eq, f(x), hint='almost_linear')
     f(x) == (C1 - 2*Ei(4*x))*exp(-4*x)
-    >>> pprint(dsolve(eq, f(x), hint='almost_linear')) 
+    >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
                              -4*x
-    f(x) = (C1 - 2*Ei(4*x))*e  
+    f(x) = (C1 - 2*Ei(4*x))*e
 
     References
     ==========
     Symbolic Integration - The Stormy Decade by Moses
     Table 2
     """
-    return ode_1st_linear(eq, func, order, match)    
+    return ode_1st_linear(eq, func, order, match)
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     r"""
