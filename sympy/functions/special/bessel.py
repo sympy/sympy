@@ -126,12 +126,6 @@ class besselj(BesselBase):
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_jn(self, nu, z, expand=False):
-        jn_part = jn(nu - S('1/2'), self.argument)
-        if expand:
-            jn_part = jn_part._eval_expand_func()
-        return sqrt(2*z/pi) * jn_part
-
     @classmethod
     def eval(cls, nu, z):
         if z.is_zero:
@@ -169,6 +163,16 @@ class besselj(BesselBase):
         if nu != nnu:
             return besselj(nnu, z)
 
+    def _eval_rewrite_as_besseli(self, nu, z):
+        from sympy import polar_lift, exp
+        return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
+
+    def _eval_rewrite_as_jn(self, nu, z, expand=False):
+        jn_part = jn(nu - S('1/2'), self.argument)
+        if expand:
+            jn_part = jn_part._eval_expand_func()
+        return sqrt(2*z/pi) * jn_part
+
     def _eval_expand_func(self, **hints):
         nu = self.order
         if (nu + S.Half).is_integer:
@@ -178,10 +182,6 @@ class besselj(BesselBase):
             return (-besselj(nu - 2, z)._eval_expand_func() +
                     2*(nu - 1)*besselj(nu - 1, z)._eval_expand_func()/z)
         return self
-
-    def _eval_rewrite_as_besseli(self, nu, z):
-        from sympy import polar_lift, exp
-        return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
 
 class bessely(BesselBase):
@@ -225,12 +225,6 @@ class bessely(BesselBase):
     _a = S.One
     _b = S.One
 
-    def _eval_rewrite_as_yn(self, nu, z, expand=False):
-        yn_part = yn(nu - S('1/2'), self.argument)
-        if expand:
-            yn_part = yn_part._eval_expand_func()
-        return sqrt(2*z/pi) * yn_part
-
     @classmethod
     def eval(cls, nu, z):
         if z.is_zero:
@@ -246,6 +240,12 @@ class bessely(BesselBase):
         if nu.is_integer:
             if nu.could_extract_minus_sign():
                 return S(-1)**(-nu)*bessely(-nu, z)
+
+    def _eval_rewrite_as_yn(self, nu, z, expand=False):
+        yn_part = yn(nu - S('1/2'), self.argument)
+        if expand:
+            yn_part = yn_part._eval_expand_func()
+        return sqrt(2*z/pi) * yn_part
 
     def _eval_expand_func(self, **hints):
         nu = self.order
