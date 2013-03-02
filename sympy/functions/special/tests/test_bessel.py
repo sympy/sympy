@@ -1,6 +1,6 @@
 from sympy import jn, yn, symbols, sin, cos, pi, S, jn_zeros, besselj, \
     bessely, besseli, besselk, hankel1, hankel2, expand_func, \
-    latex, sqrt
+    latex, sqrt, sinh
 from sympy.functions.special.bessel import fn
 from sympy.utilities.pytest import raises, skip
 from sympy.utilities.randtest import \
@@ -40,15 +40,26 @@ def test_rewrite():
         exp(I*n*pi/2)*besseli(n, polar_lift(-I)*z)
     nu = randcplx()
     assert tn(besselj(nu, z), besselj(nu, z).rewrite(besseli), z)
+    assert tn(besselj(nu, z), besselj(nu, z).rewrite(bessely), z)
     assert tn(besseli(nu, z), besseli(nu, z).rewrite(besselj), z)
+    assert tn(besseli(nu, z), besseli(nu, z).rewrite(bessely), z)
+    assert tn(bessely(nu, z), bessely(nu, z).rewrite(besselj), z)
+    assert tn(bessely(nu, z), bessely(nu, z).rewrite(besseli), z)
+    assert tn(besselk(nu, z), besselk(nu, z).rewrite(besselj), z)
+    assert tn(besselk(nu, z), besselk(nu, z).rewrite(besseli), z)
+    assert tn(besselk(nu, z), besselk(nu, z).rewrite(bessely), z)
 
 
 def test_expand():
-    from sympy import Symbol, exp, exp_polar, I
+    from sympy import besselsimp, Symbol, exp, exp_polar, I
 
     assert expand_func(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
     assert expand_func(
         bessely(S(1)/2, z)) == -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+
+    # XXX: teach sin/cos to work around arguments like
+    # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
+    assert besselsimp(besseli(S(1)/2, z)) == sqrt(2)*sinh(z)/(sqrt(pi)*sqrt(z))
 
     assert expand_func(besseli(2, x)) == \
         besseli(0, x) - 2*besseli(1, x)/x

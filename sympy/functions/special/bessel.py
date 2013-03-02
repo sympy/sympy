@@ -1,8 +1,8 @@
 """Bessel type functions"""
 
 from sympy import S, pi, I
-from sympy.core.function import Function, ArgumentIndexError
-from sympy.functions.elementary.trigonometric import sin, cos
+from sympy.core.function import Function, ArgumentIndexError, expand_func
+from sympy.functions.elementary.trigonometric import sin, cos, csc, cot
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.complexes import re, im
 
@@ -167,6 +167,10 @@ class besselj(BesselBase):
         from sympy import polar_lift, exp
         return exp(I*pi*nu/2)*besseli(nu, polar_lift(-I)*z)
 
+    def _eval_rewrite_as_bessely(self, nu, z):
+        if nu.is_integer is False:
+            return csc(pi*nu)*bessely(-nu, z) - cot(pi*nu)*bessely(nu, z)
+
     def _eval_rewrite_as_jn(self, nu, z, expand=False):
         jn_part = jn(nu - S('1/2'), self.argument)
         if expand:
@@ -240,6 +244,15 @@ class bessely(BesselBase):
         if nu.is_integer:
             if nu.could_extract_minus_sign():
                 return S(-1)**(-nu)*bessely(-nu, z)
+
+    def _eval_rewrite_as_besselj(self, nu, z):
+        if nu.is_integer is False:
+            return csc(pi*nu)*(cos(pi*nu)*besselj(nu, z) - besselj(-nu, z))
+
+    def _eval_rewrite_as_besseli(self, nu, z):
+        aj = self._eval_rewrite_as_besselj(*self.args)
+        if aj:
+            return aj.rewrite(besseli)
 
     def _eval_rewrite_as_yn(self, nu, z, expand=False):
         yn_part = yn(nu - S('1/2'), self.argument)
@@ -340,6 +353,11 @@ class besseli(BesselBase):
         from sympy import polar_lift, exp
         return exp(-I*pi*nu/2)*besselj(nu, polar_lift(I)*z)
 
+    def _eval_rewrite_as_bessely(self, nu, z):
+        aj = self._eval_rewrite_as_besselj(*self.args)
+        if aj:
+            return aj.rewrite(bessely)
+
     def _eval_expand_func(self, **hints):
         nu = self.order
         if (nu + S.Half).is_integer:
@@ -405,6 +423,20 @@ class besselk(BesselBase):
         if nu.is_integer:
             if nu.could_extract_minus_sign():
                 return besselk(-nu, z)
+
+    def _eval_rewrite_as_besseli(self, nu, z):
+        if nu.is_integer is False:
+            return pi*csc(pi*nu)*(besseli(-nu, z) - besseli(nu, z))/2
+
+    def _eval_rewrite_as_besselj(self, nu, z):
+        ai = self._eval_rewrite_as_besseli(*self.args)
+        if ai:
+            return ai.rewrite(besselj)
+
+    def _eval_rewrite_as_bessely(self, nu, z):
+        aj = self._eval_rewrite_as_besselj(*self.args)
+        if aj:
+            return aj.rewrite(bessely)
 
     def _eval_expand_func(self, **hints):
         nu = self.order
