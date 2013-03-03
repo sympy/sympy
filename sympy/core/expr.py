@@ -82,7 +82,12 @@ class Expr(Basic, EvalfMixin):
 
         ``(x+Lambda(y, 2*y))(z) == x+2*z``,
 
-        however you can use ``(x+Lambda(y, 2*y)).rcall(z) == x+2*z``.
+        however you can use
+
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x,y,z
+        >>> (x + Lambda(y, 2*y)).rcall(z)
+        x + 2*z
         """
         return Expr._recursive_call(self, args)
 
