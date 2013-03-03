@@ -272,7 +272,10 @@ class polylog(Function):
         if z == 1:
             return zeta(s)
         elif z == -1:
-            return dirichlet_eta(s)
+            # This does not work for s=1: (2**(S.One-s) - S.One) * zeta(s)
+            # http://functions.wolfram.com/ZetaFunctionsandPolylogarithms/PolyLog/03/01/01/01/0005/
+            # does NOT give any restrictions on s.
+            return -dirichlet_eta(s)
         elif z == 0:
             return 0
 
@@ -286,6 +289,8 @@ class polylog(Function):
         return z*lerchphi(z, s, 1)
 
     def _eval_expand_func(self, **hints):
+        # Consider implementing formula given at
+        # http://functions.wolfram.com/ZetaFunctionsandPolylogarithms/PolyLog/03/01/01/01/0006/
         from sympy import log, expand_mul, Dummy, exp_polar, I
         s, z = self.args
         if s == 1:
@@ -478,7 +483,7 @@ class dirichlet_eta(Function):
 
     For :math:`Re(s) > 0`, this function is defined as
 
-    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^n}{n^s}.
+    .. math:: \eta(s) = \sum_{n=1}^\infty \frac{(-1)^{n-1}}{n^s}.
 
     It admits a unique analytic continuation to all of :math:`\mathbb{C}`.
     It is an entire, unbranched function.
