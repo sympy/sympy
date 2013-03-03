@@ -65,13 +65,13 @@ class fibonacci(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Fibonacci_number
-    * http://mathworld.wolfram.com/FibonacciNumber.html
+    .. [1] http://en.wikipedia.org/wiki/Fibonacci_number
+    .. [2] http://mathworld.wolfram.com/FibonacciNumber.html
 
     See Also
     ========
 
-    lucas
+    bell, bernoulli, catalan, euler, harmonic, lucas
     """
 
     @staticmethod
@@ -120,12 +120,13 @@ class lucas(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Lucas_number
+    .. [1] http://en.wikipedia.org/wiki/Lucas_number
+    .. [2] http://mathworld.wolfram.com/LucasNumber.html
 
     See Also
     ========
 
-    fibonacci
+    bell, bernoulli, catalan, euler, fibonacci, harmonic
     """
 
     @classmethod
@@ -206,13 +207,15 @@ class bernoulli(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Bernoulli_number
-    * http://en.wikipedia.org/wiki/Bernoulli_polynomial
+    .. [1] http://en.wikipedia.org/wiki/Bernoulli_number
+    .. [2] http://en.wikipedia.org/wiki/Bernoulli_polynomial
+    .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
+    .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
 
     See Also
     ========
 
-    euler, bell
+    bell, catalan, euler, fibonacci, harmonic, lucas
     """
 
     # Calculates B_n for positive even n
@@ -339,14 +342,14 @@ class bell(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Bell_number
-    * http://mathworld.wolfram.com/BellNumber.html
-    * http://mathworld.wolfram.com/BellPolynomial.html
+    .. [1] http://en.wikipedia.org/wiki/Bell_number
+    .. [2] http://mathworld.wolfram.com/BellNumber.html
+    .. [3] http://mathworld.wolfram.com/BellPolynomial.html
 
     See Also
     ========
 
-    euler, bernoulli
+    bernoulli, catalan, euler, fibonacci, harmonic, lucas
     """
 
     @staticmethod
@@ -420,23 +423,21 @@ class harmonic(Function):
     r"""
     Harmonic numbers
 
-    The nth harmonic number is given by 1 + 1/2 + 1/3 + ... + 1/n.
+    The nth harmonic number is given by `\operatorname{H}_{n} =
+    1 + \frac{1}{2} + \frac{1}{3} + \ldots + \frac{1}{n}`.
 
-    More generally::
+    More generally:
 
-                   n
-                  ___
-                 \       -m
-          H    =  )     k   .
-           n,m   /___
-                 k = 1
+    .. math:: \operatorname{H}_{n,m} = \sum_{k=1}^{n} \frac{1}{k^m}
 
-    As n -> oo, H_{n,m} -> zeta(m) (the Riemann zeta function)
+    As `n \rightarrow \infty`, `\operatorname{H}_{n,m} \rightarrow \zeta(m)`,
+    the Riemann zeta function.
 
-    * harmonic(n) gives the nth harmonic number, H_n
+    * ``harmonic(n)`` gives the nth harmonic number, `\operatorname{H}_n`
 
-    * harmonic(n, m) gives the nth generalized harmonic number
-      of order m, H_{n,m}, where harmonic(n) == harmonic(n, 1)
+    * ``harmonic(n, m)`` gives the nth generalized harmonic number
+      of order `m`, `\operatorname{H}_{n,m}`, where
+      ``harmonic(n) == harmonic(n, 1)``
 
     Examples
     ========
@@ -450,10 +451,15 @@ class harmonic(Function):
     >>> harmonic(oo, 2)
     pi**2/6
 
+    >>> from sympy import Symbol, Sum
+    >>> n = Symbol("n")
+
+    >>> harmonic(n).rewrite(Sum)
+    Sum(1/_k, (_k, 1, n))
+
     We can rewrite harmonic numbers in terms of polygamma functions:
 
-    >>> from sympy import Symbol, digamma, polygamma
-    >>> n = Symbol("n")
+    >>> from sympy import digamma, polygamma
     >>> m = Symbol("m")
 
     >>> harmonic(n).rewrite(digamma)
@@ -500,6 +506,11 @@ class harmonic(Function):
     .. [1] http://en.wikipedia.org/wiki/Harmonic_number
     .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
     .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
+
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, lucas
     """
 
     # Generate one memoized Harmonic number-generating function for each
@@ -535,6 +546,12 @@ class harmonic(Function):
     def _eval_rewrite_as_trigamma(self, n, m=1):
         from sympy.functions.special.gamma_functions import polygamma
         return self.rewrite(polygamma)
+
+    def _eval_rewrite_as_Sum(self, n, m=None):
+        k = C.Dummy("k", integer=True)
+        if m is None:
+            m = S.One
+        return C.Sum(k**(-m), (k, 1, n))
 
     def _eval_expand_func(self, **hints):
         n = self.args[0]
@@ -596,15 +613,15 @@ class euler(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Euler_numbers
-    * http://mathworld.wolfram.com/EulerNumber.html
-    * http://en.wikipedia.org/wiki/Alternating_permutation
-    * http://mathworld.wolfram.com/AlternatingPermutation.html
+    .. [1] http://en.wikipedia.org/wiki/Euler_numbers
+    .. [2] http://mathworld.wolfram.com/EulerNumber.html
+    .. [3] http://en.wikipedia.org/wiki/Alternating_permutation
+    .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
 
     See Also
     ========
 
-    bernoulli, bell
+    bell, bernoulli, catalan, fibonacci, harmonic, lucas
     """
 
     nargs = 1
@@ -720,13 +737,15 @@ class catalan(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Catalan_number
-    * http://mathworld.wolfram.com/CatalanNumber.html
-    * http://geometer.org/mathcircles/catalan.pdf
+    .. [1] http://en.wikipedia.org/wiki/Catalan_number
+    .. [2] http://mathworld.wolfram.com/CatalanNumber.html
+    .. [3] http://functions.wolfram.com/GammaBetaErf/CatalanNumber/
+    .. [4] http://geometer.org/mathcircles/catalan.pdf
 
     See Also
     ========
 
+    bell, bernoulli, euler, fibonacci, harmonic, lucas
     sympy.functions.combinatorial.factorials.binomial
     """
 
