@@ -463,8 +463,32 @@ class polygamma(Function):
                 if z != nz:
                     return polygamma(n, nz)
 
+                if z.is_Rational:
+                    # Split z as n + p/q with p < q
+                    p, q = z.as_numer_denom()
+                    zn = p // q
+                    p = p - zn*q
+
+                    if zn == 0 and 1 <= p and p < q:
+                        k = Dummy("k")
+
+                        if n == 0:
+                            w = exp(2*pi*I/q)
+                            b = q - 1
+                            s = C.Sum( cos((2*pi*k*p)/q) * re(polylog(1, w**k)) +
+                                       sin((2*pi*k*p)/q) * im(polylog(1, w**k)), (k, 1, b)).doit()
+                            return - S.EulerGamma - log(q) - s
+
+                        elif n >= 1:
+                            w = exp(2*pi*I/q)
+                            b = q
+                            s = C.Sum( cos((2*pi*k*p)/q) * re(polylog(n+1, w**k)) +
+                                       sin((2*pi*k*p)/q) * im(polylog(n+1, w**k)), (k, 1, b)).doit()
+                            return S.NegativeOne**(n+1) * C.factorial(n) * q**n * s
+
             if n == -1:
                 return loggamma(z)
+
             else:
                 if z.is_Number:
                     if z is S.NaN:
@@ -521,30 +545,6 @@ class polygamma(Function):
         #         l = Dummy("l")
         #         return (q*C.Sum(S.One/(-p+(l+1)*q), (l,0,n-1)).doit()
         #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
-
-            if n >= 0 and z.is_Rational:
-                # Split z as n + p/q with p < q
-                p, q = z.as_numer_denom()
-                zn = p // q
-                p = p - zn*q
-
-                if zn == 0 and 1 <= p and p < q:
-                    k = Dummy("k")
-
-                    if n == 0:
-                        w = exp(2*pi*I/q)
-                        b = q - 1
-                        s = C.Sum( cos((2*pi*k*p)/q) * re(polylog(1, w**k)) +
-                                   sin((2*pi*k*p)/q) * im(polylog(1, w**k)), (k, 1, b)).doit()
-                        return - S.EulerGamma - log(q) - s
-
-                    elif n >= 1:
-                        w = exp(2*pi*I/q)
-                        b = q
-                        s = C.Sum( cos((2*pi*k*p)/q) * re(polylog(n+1, w**k)) +
-                                   sin((2*pi*k*p)/q) * im(polylog(n+1, w**k)), (k, 1, b)).doit()
-                        return S.NegativeOne**(n+1) * C.factorial(n) * q**n * s
-
 
     def _eval_expand_func(self, **hints):
         n, z = self.args
