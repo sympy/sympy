@@ -469,6 +469,10 @@ class polygamma(Function):
                     zn = p // q
                     p = p - zn*q
 
+                    # Expansion formulae taken from
+                    # "Values of the polygamma functions at rational arguments"
+                    # by Junesang Choi and Djurdje Cvijovic
+                    # J. Phys. A: Math. Theor. 40 (2007) 15019–15028
                     if zn == 0 and 1 <= p and p < q:
                         k = Dummy("k")
 
