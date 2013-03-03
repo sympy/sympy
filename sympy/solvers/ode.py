@@ -814,43 +814,36 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             try:
                 if r[d] != 0:
                     numerator = simplify(r[d].diff(y) - r[e].diff(x))
-                    if numerator == 0:
-                        matching_hints["1st_exact"] = r
-                        matching_hints["1st_exact_Integral"] = r
                     # The following few conditions try to convert a non-exact
                     # differential equation into an exact one.
                     # References : Differential equations with applications
                     # and historical notes - George E. Simmons
-                    # If (dP/dy - dQ/dx) / Q = f(x)
-                    # then exp(integral(f(x))*equation becomes exact
-                    elif numerator:
+
+                    if numerator:
+                        # If (dP/dy - dQ/dx) / Q = f(x)
+                        # then exp(integral(f(x))*equation becomes exact
                         factor = simplify(numerator/r[e])
                         variables = factor.free_symbols
-                        if len(variables) == 1:
-                            variable = variables.pop()
-                            if x == variable:
-                                factor = exp(C.Integral(factor).doit())
-                                r[d] = factor * r[d]
-                                r[e] = factor * r[e]
-                                matching_hints["1st_exact"] = r
-                                matching_hints["1st_exact_Integral"] = r
-                            else:
-                                factor = None
+                        if len(variables) == 1 and x == variables.pop():
+                            factor = exp(C.Integral(factor).doit())
+                            r[d] *= factor
+                            r[e] *= factor
+                            matching_hints["1st_exact"] = r
+                            matching_hints["1st_exact_Integral"] = r
                         else:
-                            factor = None
-                    # If (dP/dy - dQ/dx) / -P = f(y)
-                    # then exp(integral(f(y))*equation becomes exact
-                        if factor is None:
+                            # If (dP/dy - dQ/dx) / -P = f(y)
+                            # then exp(integral(f(y))*equation becomes exact
                             factor = simplify(-numerator/r[d])
                             variables = factor.free_symbols
-                            if len(variables) == 1:
-                                variable = variables.pop()
-                                if y == variable:
-                                    factor = exp(C.Integral(factor).doit())
-                                    r[d] = factor * r[d]
-                                    r[e] = factor * r[e]
-                                    matching_hints["1st_exact"] = r
-                                    matching_hints["1st_exact_Integral"] = r
+                            if len(variables) == 1 and y == variables.pop():
+                                factor = exp(C.Integral(factor).doit())
+                                r[d] *= factor
+                                r[e] *= factor
+                                matching_hints["1st_exact"] = r
+                                matching_hints["1st_exact_Integral"] = r
+                    else:
+                        matching_hints["1st_exact"] = r
+                        matching_hints["1st_exact_Integral"] = r
 
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
