@@ -450,11 +450,56 @@ class harmonic(Function):
     >>> harmonic(oo, 2)
     pi**2/6
 
+    We can rewrite harmonic numbers in terms of polygamma functions:
+
+    >>> from sympy import Symbol, digamma, polygamma
+    >>> n = Symbol("n")
+    >>> m = Symbol("m")
+
+    >>> harmonic(n).rewrite(digamma)
+    polygamma(0, n + 1) + EulerGamma
+
+    >>> harmonic(n).rewrite(polygamma)
+    polygamma(0, n + 1) + EulerGamma
+
+    >>> harmonic(n,3).rewrite(polygamma)
+    polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+
+    >>> harmonic(n,m).rewrite(polygamma)
+    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/(m - 1)!
+
+    Integer offsets in the argument can be pulled out:
+
+    >>> from sympy import expand_func
+
+    >>> expand_func(harmonic(n+4))
+    harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
+
+    >>> expand_func(harmonic(n-4))
+    harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
+
+    Some limits can be computed as well:
+
+    >>> from sympy import limit, oo
+
+    >>> limit(harmonic(n), n, oo)
+    oo
+
+    >>> limit(harmonic(n, 2), n, oo)
+    pi**2/6
+
+    >>> limit(harmonic(n, 3), n, oo)
+    -polygamma(2, 1)/2
+
+    >>> limit(harmonic(m, n), m, oo)
+    zeta(n)
+
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Harmonic_number
-
+    .. [1] http://en.wikipedia.org/wiki/Harmonic_number
+    .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
+    .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
     """
 
     # Generate one memoized Harmonic number-generating function for each
@@ -478,6 +523,40 @@ class harmonic(Function):
                     return prev[-1] + S.One / n**m
                 cls._functions[m] = f
             return cls._functions[m](int(n))
+
+    def _eval_rewrite_as_polygamma(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return S.NegativeOne**m/factorial(m - 1) * (polygamma(m - 1, 1) - polygamma(m - 1, n + 1))
+
+    def _eval_rewrite_as_digamma(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return self.rewrite(polygamma)
+
+    def _eval_rewrite_as_trigamma(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return self.rewrite(polygamma)
+
+    def _eval_expand_func(self, **hints):
+        n = self.args[0]
+        m = self.args[1] if len(self.args) == 2 else 1
+
+        if m == S.One:
+            if n.is_Add:
+                off = n.args[0]
+                nnew = n - off
+                if off.is_Integer and off.is_positive:
+                    result = [S.One/(nnew + i) for i in xrange(off, 0, -1)] + [harmonic(nnew)]
+                    return Add(*result)
+                elif off.is_Integer and off.is_negative:
+                    result = [-S.One/(nnew + i) for i in xrange(0, off, -1)] + [harmonic(nnew)]
+                    return Add(*result)
+
+        return self
+
+    def _eval_rewrite_as_tractable(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return self.rewrite(polygamma).rewrite("tractable", deep=True)
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
