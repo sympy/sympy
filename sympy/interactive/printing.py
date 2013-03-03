@@ -50,37 +50,30 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
     # print "DVIOPTIONS", dvioptions
     # print "PREAMBLE", preamble
 
-    def _print_pretty(arg, p, cycle):
+    def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
         p.text(stringify_func(arg))
 
     def _preview_wrapper(o):
-        buffer = StringIO()
-        preview(o, output='png', viewer='StringIO', outputbuffer=buffer, outputTexFile='tmp.tex',
+        exprbuffer = StringIO()
+        preview(o, output='png', viewer='StringIO', outputbuffer=exprbuffer,
                 preamble=preamble, dvioptions=dvioptions)
-        # with open('tmp.tex', 'r') as fh:
-        #     for line in fh.readlines():
-        #         print line,
-        bin_data = buffer.getvalue()
-        # from base64 import encodestring
-        # print
-        # print "bin_data", encodestring(bin_data)
-        return bin_data
+        return exprbuffer.getvalue()
 
-    def _print_png(o):
+    def _print_latex_png(o):
+        s = latex(o, mode=mode)
+        return _preview_wrapper(s)
+
+    #not used
+    def _print_latex_inline_png(o):
         """
         A function to display sympy expressions using inline style LaTeX in PNG.
         """
         s = latex(o, mode='inline')
-        print "png", s
         return _preview_wrapper(s)
 
-    def _print_custom_png(o):
-        s = latex(o, mode=mode)
-        print "custompng", s
-        return _preview_wrapper(s)
-
-    def _print_display_png(o):
+    #not used
+    def _print_latex_display_png(o):
         """
         A function to display sympy expression using display style LaTeX in PNG.
         """
@@ -102,7 +95,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
             return True
         return False
 
-    def _print_latex(o):
+    def _print_latex_text(o):
         """
         A function to generate the latex representation of sympy expressions.
         """
@@ -139,38 +132,40 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
         for cls in [object, str, dict] + printable_containers:
-            plaintext_formatter.for_type(cls, _print_pretty)
+            plaintext_formatter.for_type(cls, _print_plain)
 
         plaintext_formatter.for_type_by_name(
-            'sympy.core.basic', 'Basic', _print_pretty
+            'sympy.core.basic', 'Basic', _print_plain
         )
         plaintext_formatter.for_type_by_name(
-            'sympy.matrices.mutable', 'Matrix', _print_pretty
+            'sympy.matrices.mutable', 'Matrix', _print_plain
         )
 
+        png_formatter = ip.display_formatter.formatters['image/png']
+        latex_formatter = ip.display_formatter.formatters['text/latex']
+        latex_formatter.enabled = False #Disabled until IPython problems are resolved
         if render_latex:
-            png_formatter = ip.display_formatter.formatters['image/png']
-            png_formatter.for_type(str, _print_png)
             png_formatter.for_type_by_name(
-                'sympy.core.basic', 'Basic', _print_custom_png
+                'sympy.core.basic', 'Basic', _print_latex_png
             )
             png_formatter.for_type_by_name(
-                'sympy.matrices.matrices', 'MatrixBase', _print_custom_png
+                'sympy.matrices.matrices', 'MatrixBase', _print_latex_png
             )
 
             for cls in [dict, int, long, float] + printable_containers:
-                png_formatter.for_type(cls, _print_custom_png)
+                png_formatter.for_type(cls, _print_latex_png)
+            png_formatter.enabled = True
 
-            # WHO USES/NEEDS THE LATEX FORMATTER ?
-            # latex_formatter = ip.display_formatter.formatters['text/latex']
-            # latex_formatter.for_type_by_name(
-            #     'sympy.core.basic', 'Basic', _print_latex
-            # )
-            # latex_formatter.for_type_by_name(
-            #     'sympy.matrices.matrices', 'MatrixBase', _print_latex
-            # )
-            # for cls in printable_containers:
-            #     latex_formatter.for_type(cls, _print_latex)
+            latex_formatter.for_type_by_name(
+                'sympy.core.basic', 'Basic', _print_latex_text
+            )
+            latex_formatter.for_type_by_name(
+                'sympy.matrices.matrices', 'MatrixBase', _print_latex_text
+            )
+            for cls in printable_containers:
+                latex_formatter.for_type(cls, _print_latex_text)
+        else:
+            png_formatter.enabled = False
     else:
         ip.set_hook('result_display', _result_display)
 
