@@ -290,6 +290,13 @@ def _function_exponents(tokens, local_dict, global_dict):
 
 
 def split_symbols(tokens, local_dict, global_dict):
+    """
+    Splits symbol names for implicit multiplication.
+
+    Intended to let expressions like ``xyz`` be parsed as ``x*y*z``. Does
+    not split Greek character names, so ``theta`` will *not* become
+    ``t*h*e*t*a``.
+    """
     result = []
     split = False
     for tok in tokens:
@@ -315,27 +322,7 @@ def split_symbols(tokens, local_dict, global_dict):
 
 
 def implicit_multiplication(result, local_dict, global_dict):
-    """Allows a slightly relaxed syntax.
-
-    - Parentheses for single-argument method calls are optional.
-
-    - Multiplication is implicit.
-
-    - Symbol names can be split (i.e. spaces are not needed between
-      symbols).
-
-    - Functions can be exponentiated.
-
-    Example:
-
-    >>> from sympy.parsing.sympy_parser import (parse_expr,
-    ... standard_transformations, implicit_multiplication_application)
-    >>> parse_expr("10sin**2 x**2 + 3xyz + tan theta",
-    ... transformations=(standard_transformations +
-    ... (implicit_multiplication_application,)))
-    3*x*y*z + 10*sin(x**2)**2 + tan(theta)
-
-    """
+    """Makes the multiplication operator optional in most cases."""
     # These are interdependent steps, so we don't expose them separately
     for step in (_group_parentheses(implicit_multiplication),
                  _apply_functions,
@@ -347,6 +334,7 @@ def implicit_multiplication(result, local_dict, global_dict):
 
 
 def function_exponents(result, local_dict, global_dict):
+    """Allows functions to be exponentiated, e.g. sin**2(x)."""
     for step in (_group_parentheses(_function_exponents),
                  _apply_functions,
                  _function_exponents):
@@ -357,6 +345,7 @@ def function_exponents(result, local_dict, global_dict):
 
 
 def implicit_application(result, local_dict, global_dict):
+    """Makes parentheses optional in some cases for function calls."""
     for step in (_group_parentheses(implicit_application),
                  _apply_functions,
                  _implicit_application,):
