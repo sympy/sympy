@@ -1,4 +1,4 @@
-from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I
+from sympy import Eq, factorial, Function, Lambda, rf, S, sqrt, symbols, I, expand_func, binomial, gamma
 from sympy.solvers.recurr import rsolve, rsolve_hyper, rsolve_poly, rsolve_ratio
 from sympy.utilities.pytest import raises
 from sympy.abc import a, b, c
@@ -66,9 +66,9 @@ def test_rsolve_hyper():
 
     assert rsolve_hyper([-a, 1],0,n).expand() == C0*a**n
 
-    assert rsolve_hyper([-a, 0, 1],0,n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(n/2)
+    assert rsolve_hyper([-a, 0, 1], 0, n).expand() == (-1)**n*C1*a**(n/2) + C0*a**(n/2)
 
-    assert rsolve_hyper([1,1,1], 0, n).expand() == \
+    assert rsolve_hyper([1, 1, 1], 0, n).expand() == \
         C0*(-S(1)/2 - sqrt(3)*I/2)**n + C1*(-S(1)/2 + sqrt(3)*I/2)**n
 
 
@@ -169,6 +169,12 @@ def test_rsolve():
     assert rsolve(y(n) - a*y(n-2),y(n), \
             {y(1): sqrt(a)*(a + b), y(2): a*(a - b)}).simplify() == \
             a**(n/2)*((-1)**(n + 1)*b + a)
+
+    f = (-16*n**2 + 32*n - 12)*y(n - 1) + (4*n**2 - 12*n + 9)*y(n)
+
+    assert expand_func(rsolve(f, y(n), \
+        {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
+        4**n*n*(8*n**3 - 4*n**2 - 2*n + 1)/12
 
 
 def test_rsolve_raises():

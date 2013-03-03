@@ -756,25 +756,24 @@ def rsolve(f, y, init=None):
         init = None
 
     if symbols and init is not None:
+        if type(init) is list:
+            init = dict([(i, init[i]) for i in xrange(len(init))])
+
         equations = []
 
-        if type(init) is list:
-            for i in xrange(0, len(init)):
-                eq = solution.subs(n, i) - init[i]
-                equations.append(eq)
-        else:
-            for k, v in init.iteritems():
-                try:
-                    i = int(k)
-                except TypeError:
-                    if k.is_Function and k.func == y.func:
-                        i = int(k.args[0])
-                    else:
-                        raise ValueError(
-                            "Integer or term expected, got '%s'" % k)
-
+        for k, v in init.iteritems():
+            try:
+                i = int(k)
+            except TypeError:
+                if k.is_Function and k.func == y.func:
+                    i = int(k.args[0])
+                else:
+                    raise ValueError("Integer or term expected, got '%s'" % k)
+            try:
+                eq = solution.limit(n, i) - v
+            except NotImplementedError:
                 eq = solution.subs(n, i) - v
-                equations.append(eq)
+            equations.append(eq)
 
         result = solve(equations, *symbols)
 
