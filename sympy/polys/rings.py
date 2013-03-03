@@ -5,7 +5,6 @@ from copy import copy
 from sympy.core.symbol import Symbol, symbols
 from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify
-from sympy.core.compatibility import is_sequence
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomialtools import (monomial_mul, monomial_div,
     monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex, term_div)
@@ -39,15 +38,16 @@ def vring(sgens, domain, order=lex):
 
 class PolyRing(IPolys):
     def __init__(self, sgens, domain, order):
-        if not is_sequence(sgens, include=(basestring, Symbol)) or not sgens:
-            raise ValueError('expecting a string, Symbol or an ordered iterable')
-
         if isinstance(sgens, basestring):
             sgens = [s.name for s in symbols(sgens, seq=True)]
         elif isinstance(sgens, Symbol):
             sgens = sgens.name
-        elif isinstance(sgens[0], Symbol):
+        elif sgens and isinstance(sgens[0], basestring):
+            pass
+        elif sgens and isinstance(sgens[0], Symbol):
             sgens = [s.name for s in sgens]
+        else:
+            raise ValueError("expected a string, Symbol or a non-empty sequence of stings or Symbols")
 
         self.sgens = tuple(sgens)
         self.ngens = len(sgens)

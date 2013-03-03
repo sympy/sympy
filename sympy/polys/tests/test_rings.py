@@ -1,10 +1,19 @@
 """Test sparse polynomials. """
 
-from sympy.polys.rings import ring, xring
+from sympy.polys.rings import ring, xring, PolyRing
 from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.monomialtools import lex, grlex
 
 from sympy.utilities.pytest import raises
+from sympy.core import Symbol
+
+def test_PolyRing___init__():
+    x, y, z = map(Symbol, "xyz")
+
+    assert len(PolyRing("x,y,z", ZZ, lex).gens) == 3
+    assert len(PolyRing(x, ZZ, lex).gens) == 1
+    assert len(PolyRing(("x", "y", "z"), ZZ, lex).gens) == 3
+    assert len(PolyRing((x, y, z), ZZ, lex).gens) == 3
 
 def test_PolyElement___eq__():
     R, x, y = ring("x,y", ZZ, lex)
