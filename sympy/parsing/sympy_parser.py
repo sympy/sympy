@@ -28,7 +28,9 @@ def _token_splittable(token):
             return not unicodedata.lookup('GREEK SMALL LETTER ' + token)
         except KeyError:
             pass
-    return True
+    if len(token) > 1:
+        return True
+    return False
 
 
 def _add_factorial_tokens(name, result):
@@ -102,45 +104,46 @@ def _flatten(result):
             result2.append(tok)
     return result2
 
+def _group_parentheses(recursor):
+    def _inner(tokens, local_dict, global_dict):
+        """Group tokens between parentheses with ParenthesisGroup.
 
-def _group_parentheses(tokens, local_dict, global_dict):
-    """Group tokens between parentheses with ParenthesisGroup.
+        Also processes those tokens recursively.
 
-    Also processes those tokens recursively.
+        """
+        result = []
+        stacks = []
+        stacklevel = 0
+        for token in tokens:
+            if token[0] == OP:
+                if token[1] == '(':
+                    stacks.append(ParenthesisGroup([]))
+                    stacklevel += 1
+                elif token[1] == ')':
+                    stacks[-1].append(token)
+                    stack = stacks.pop()
 
-    """
-    result = []
-    stacks = []
-    stacklevel = 0
-    for token in tokens:
-        if token[0] == OP:
-            if token[1] == '(':
-                stacks.append(ParenthesisGroup([]))
-                stacklevel += 1
-            elif token[1] == ')':
+                    if len(stacks) > 0:
+                        # We don't recurse here since the upper-level stack
+                        # would reprocess these tokens
+                        stacks[-1].extend(stack)
+                    else:
+                        # Recurse here to handle nested parentheses
+                        # Strip off the outer parentheses to avoid an infinite loop
+                        inner = stack[1:-1]
+                        inner = recursor(inner,
+                                         local_dict,
+                                         global_dict)
+                        parenGroup = [stack[0]] + inner + [stack[-1]]
+                        result.append(ParenthesisGroup(parenGroup))
+                    stacklevel -= 1
+                    continue
+            if stacklevel:
                 stacks[-1].append(token)
-                stack = stacks.pop()
-
-                if len(stacks) > 0:
-                    # We don't recurse here since the upper-level stack
-                    # would reprocess these tokens
-                    stacks[-1].extend(stack)
-                else:
-                    # Recurse here to handle nested parentheses
-                    # Strip off the outer parentheses to avoid an infinite loop
-                    inner = stack[1:-1]
-                    inner = implicit_multiplication_application(inner,
-                                                                local_dict,
-                                                                global_dict)
-                    parenGroup = [stack[0]] + inner + [stack[-1]]
-                    result.append(ParenthesisGroup(parenGroup))
-                stacklevel -= 1
-                continue
-        if stacklevel:
-            stacks[-1].append(token)
-        else:
-            result.append(token)
-    return result
+            else:
+                result.append(token)
+        return result
+    return _inner
 
 
 def _apply_functions(tokens, local_dict, global_dict):
@@ -165,24 +168,6 @@ def _apply_functions(tokens, local_dict, global_dict):
         else:
             symbol = None
             result.append(tok)
-    return result
-
-
-def _split_symbols(tokens, local_dict, global_dict):
-    result = []
-    for tok in tokens:
-        if isinstance(tok, AppliedFunction):
-            if tok.function[1] == 'Symbol' and len(tok.args) == 3:
-                # Middle token, get value, strip quotes
-                symbol = tok.args[1][1][1:-1]
-                if _token_splittable(symbol):
-                    for char in symbol:
-                        result.append(AppliedFunction(
-                            tok.function,
-                            [(OP, '('), (NAME, str(repr(char))), (OP, ')')]
-                        ))
-                    continue
-        result.append(tok)
     return result
 
 
@@ -262,7 +247,7 @@ def _implicit_application(tokens, local_dict, global_dict):
                 result.append((OP, '('))
                 appendParen += 1
         elif appendParen:
-            if nextTok[0] == OP and nextTok[1] in ('^', '**'):
+            if nextTok[0] == OP and nextTok[1] in ('^', '**', '*'):
                 skip = 1
                 continue
             if skip:
@@ -304,7 +289,32 @@ def _function_exponents(tokens, local_dict, global_dict):
     return result
 
 
-def implicit_multiplication_application(result, local_dict, global_dict):
+def split_symbols(tokens, local_dict, global_dict):
+    result = []
+    split = False
+    for tok in tokens:
+        if tok[0] == NAME and tok[1] == 'Symbol':
+            split = True
+        elif split and tok[0] == NAME:
+            symbol = tok[1][1:-1]
+            if _token_splittable(symbol):
+                for char in symbol:
+                    result.extend([(NAME, "'{}'".format(char)), (OP, ')'),
+                                   (NAME, 'Symbol'), (OP, '(')])
+                # Delete the last three tokens: get rid of the extraneous
+                # Symbol( we just added, and also get rid of the last )
+                # because the closing parenthesis of the original Symbol is
+                # still there
+                del result[-3:]
+                split = False
+                continue
+            else:
+                split = False
+        result.append(tok)
+    return result
+
+
+def implicit_multiplication(result, local_dict, global_dict):
     """Allows a slightly relaxed syntax.
 
     - Parentheses for single-argument method calls are optional.
@@ -327,12 +337,29 @@ def implicit_multiplication_application(result, local_dict, global_dict):
 
     """
     # These are interdependent steps, so we don't expose them separately
-    for step in (_group_parentheses,
+    for step in (_group_parentheses(implicit_multiplication),
                  _apply_functions,
-                 _split_symbols,
-                 _function_exponents,
-                 _implicit_application,
                  _implicit_multiplication):
+        result = step(result, local_dict, global_dict)
+
+    result = _flatten(result)
+    return result
+
+
+def function_exponents(result, local_dict, global_dict):
+    for step in (_group_parentheses(_function_exponents),
+                 _apply_functions,
+                 _function_exponents):
+        result = step(result, local_dict, global_dict)
+
+    result = _flatten(result)
+    return result
+
+
+def implicit_application(result, local_dict, global_dict):
+    for step in (_group_parentheses(implicit_application),
+                 _apply_functions,
+                 _implicit_application,):
         result = step(result, local_dict, global_dict)
 
     result = _flatten(result)
