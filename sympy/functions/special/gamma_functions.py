@@ -464,31 +464,49 @@ class polygamma(Function):
                     return polygamma(n, nz)
 
                 if z.is_Rational:
-                    # Split z as n + p/q with p < q
+                    # Split z as zn + p/q with p < q
                     p, q = z.as_numer_denom()
                     zn = p // q
                     p = p - zn*q
+                    k = Dummy("k")
 
                     # Expansion formulae taken from
                     # "Values of the polygamma functions at rational arguments"
                     # by Junesang Choi and Djurdje Cvijovic
-                    # J. Phys. A: Math. Theor. 40 (2007) 15019–15028
-                    if zn == 0 and 1 <= p and p < q:
-                        k = Dummy("k")
-
+                    # J. Phys. A: Math. Theor. 40 (2007) 15019-15028
+                    if zn == 0 and 1 <= p and p <= q:
                         if n == 0:
                             w = exp(2*pi*I/q)
                             b = q - 1
-                            s = C.Sum( cos((2*pi*k*p)/q) * re(polylog(1, w**k)) +
-                                       sin((2*pi*k*p)/q) * im(polylog(1, w**k)), (k, 1, b)).doit()
+                            s = C.Sum( exp(-(2*pi*I*k*p)/q) * polylog(1, w**k), (k, 1, b)).doit()
                             return - S.EulerGamma - log(q) - s
 
                         elif n >= 1:
                             w = exp(2*pi*I/q)
-                            b = q
-                            s = C.Sum( cos((2*pi*k*p)/q) * re(polylog(n+1, w**k)) +
-                                       sin((2*pi*k*p)/q) * im(polylog(n+1, w**k)), (k, 1, b)).doit()
+                            b = q - 1
+                            s = C.Sum( exp(-(2*pi*I*k*p)/q) * polylog(n+1, w**k), (k, 0, b)).doit()
                             return S.NegativeOne**(n+1) * C.factorial(n) * q**n * s
+
+                    # elif zn > 0:
+                    #     b = floor((q-1)*S.Half)
+                    #     if b >= 1:
+                    #         s = 2*C.Sum(cos((2*pi*k*p)/q)*log(sin((k*pi)/q)), (k, 1, b)).doit()
+                    #     else:
+                    #         s = 0
+
+                    #     if zn is S.Zero:
+                    #         return (s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+
+                    #     elif zn.is_positive:
+                    #         l = Dummy("l")
+                    #         return (q*C.Sum(S.One/(p+l*q), (l,0,zn-1)).doit()
+                    #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+
+                    #     elif zn.is_negative:
+                    #         zn = -zn
+                    #         l = Dummy("l")
+                    #         return (q*C.Sum(S.One/(-p+(l+1)*q), (l,0,zn-1)).doit()
+                    #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
 
             if n == -1:
                 return loggamma(z)
@@ -522,33 +540,6 @@ class polygamma(Function):
                         if n is S.Zero:
                             return S.Infinity
 
-        # GOOD CODE
-        # if n == 0 and z.is_Rational:
-        #     # Split z as n + p/q with p < q
-        #     p, q = z.as_numer_denom()
-        #     n = p // q
-        #     p = p - n*q
-
-        #     b = floor((q-1)*S.Half)
-        #     if b >= 1:
-        #         k = Dummy("k")
-        #         s = 2*C.Sum(cos((2*pi*k*p)/q)*log(sin((k*pi)/q)), (k, 1, b)).doit()
-        #     else:
-        #         s = 0
-
-        #     if n is S.Zero:
-        #         return (s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
-
-        #     elif n.is_positive:
-        #         l = Dummy("l")
-        #         return (q*C.Sum(S.One/(p+l*q), (l,0,n-1)).doit()
-        #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
-
-        #     elif n.is_negative:
-        #         n = -n
-        #         l = Dummy("l")
-        #         return (q*C.Sum(S.One/(-p+(l+1)*q), (l,0,n-1)).doit()
-        #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
 
     def _eval_expand_func(self, **hints):
         n, z = self.args
