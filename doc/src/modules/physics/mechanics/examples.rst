@@ -168,8 +168,8 @@ represent the constraint forces in those directions. ::
   >>> from sympy import signsimp, factor_terms
   >>> mprint(KM.auxiliary_eqs.applyfunc(lambda w: factor_terms(signsimp(w))))
   [                                                   m*r*(u1*u3 + u2') - f1]
-  [      m*r*((u1**2 + u2**2)*sin(q2) + (u2*u3 + u3*q3' - u1')*cos(q2)) - f2]
-  [g*m - m*r*((u1**2 + u2**2)*cos(q2) - (u2*u3 + u3*q3' - u1')*sin(q2)) - f3]
+  [      m*r*(u1**2 + u2**2)*sin(q2) + m*r*(u2*u3 + u3*q3' - u1')*cos(q2) - f2]
+  [g*m - m*r*(u1**2 + u2**2)*cos(q2) + m*r*(u2*u3 + u3*q3' - u1')*sin(q2) - f3]
 
 The Bicycle
 ===========
@@ -569,9 +569,9 @@ accelerations(q double dots) with the ``rhs`` method. ::
   [                                                                                                                                 g*m*r*sin(q2) - 5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q1'/4 - m*r**2*cos(q2)*q1'*q3'/4 + 5*m*r**2*q2''/4]
   [                                                            m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')/4 + m*r**2*(2*sin(q2)*q1'' + 2*cos(q2)*q1'*q2' + 2*q3'')/2 + m*r**2*sin(q2)*q1''/4 + m*r**2*cos(q2)*q1'*q2'/4 + m*r**2*q3''/4]
   >>> l.rhs()
-  [                                                                                                                                                                                                                             q1']
-  [                                                                                                                                                                                                                             q2']
-  [                                                                                                                                                                                                                             q3']
-  [(24*sin(q2)**2/(m*r**2*(5*sin(q2)**2 + 1)*cos(q2)**2) + 4/(m*r**2*(5*sin(q2)**2 + 1)))*(-5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 - 5*m*r**2*sin(q2)*cos(q2)*q1'*q2'/4 - m*r**2*cos(q2)*q2'*q3'/4) + 6*sin(q2)*q1'*q2'/cos(q2)]
-  [                                                                                                                           4*(-g*m*r*sin(q2) + 5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q1'/4 + m*r**2*cos(q2)*q1'*q3'/4)/(5*m*r**2)]
-  [                                               -(5*sin(q2)**2 + 1)*q1'*q2'/cos(q2) - 4*(-5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 - 5*m*r**2*sin(q2)*cos(q2)*q1'*q2'/4 - m*r**2*cos(q2)*q2'*q3'/4)*sin(q2)/(m*r**2*cos(q2)**2)]
+  [                                                                                                                                                                                                                                                                                                                         q1']
+  [                                                                                                                                                                                                                                                                                                                         q2']
+  [                                                                                                                                                                                                                                                                                                                         q3']
+  [(4/(m*r**2*(-5*cos(q2)**2 + 6)) + 24*sin(q2)**2/(m*r**2*(1 + 6*sin(q2)**2/(5*cos(q2)**2 - 6))*(-5*cos(q2)**2 + 6)**2))*(-5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 - 5*m*r**2*sin(q2)*cos(q2)*q1'*q2'/4 - m*r**2*cos(q2)*q2'*q3'/4) + 6*sin(q2)*cos(q2)*q1'*q2'/((1 + 6*sin(q2)**2/(5*cos(q2)**2 - 6))*(-5*cos(q2)**2 + 6))]
+  [                                                                                                                                                                                                                       4*(-g*m*r*sin(q2) + 5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q1'/4 + m*r**2*cos(q2)*q1'*q3'/4)/(5*m*r**2)]
+  [                                                                         -cos(q2)*q1'*q2'/(1 + 6*sin(q2)**2/(5*cos(q2)**2 - 6)) - 4*(-5*m*r**2*(sin(q2)*q1' + q3')*cos(q2)*q2'/4 - 5*m*r**2*sin(q2)*cos(q2)*q1'*q2'/4 - m*r**2*cos(q2)*q2'*q3'/4)*sin(q2)/(m*r**2*(1 + 6*sin(q2)**2/(5*cos(q2)**2 - 6))*(-5*cos(q2)**2 + 6))]

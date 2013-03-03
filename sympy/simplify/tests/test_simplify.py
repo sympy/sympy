@@ -7,10 +7,9 @@ from sympy import (
     Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
     Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
-    symbols, sympify, tan, tanh, trigsimp, Wild, Basic)
+    symbols, sympify, tan, tanh, sec, csc, trigsimp, Wild, Basic)
 from sympy.core.mul import _keep_coeff
-from sympy.simplify.simplify import fraction_expand
-from sympy.simplify.simplify import _trigpats
+from sympy.simplify.simplify import fraction_expand, _mexpand
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, k
@@ -123,18 +122,60 @@ def test_trigsimp1():
     assert trigsimp(log(e), deep=True) == log(2)
 
 def test_trigsimp1a():
+    assert trigsimp(cos(1)*sin(2)*sin(3)/cos(3)) == cos(1)*sin(2)*tan(3)
     assert trigsimp(sin(2)**2*cos(3)*exp(2)/cos(2)**2) == tan(2)**2*cos(3)*exp(2)
     assert trigsimp(tan(2)**2*cos(3)*exp(2)*cos(2)**2) == sin(2)**2*cos(3)*exp(2)
     assert trigsimp(cot(2)*cos(3)*exp(2)*sin(2)) == cos(3)*exp(2)*cos(2)
     assert trigsimp(tan(2)*cos(3)*exp(2)/sin(2)) == cos(3)*exp(2)/cos(2)
     assert trigsimp(cot(2)*cos(3)*exp(2)/cos(2)) == cos(3)*exp(2)/sin(2)
-    assert trigsimp(cot(2)*cos(3)*exp(2)*tan(2)) == cos(3)*exp(2)*2
+    assert trigsimp(cot(2)*cos(3)*exp(2)*tan(2)) == cos(3)*exp(2)
     assert trigsimp(sinh(2)*cos(3)*exp(2)/cosh(2)) == tanh(2)*cos(3)*exp(2)
     assert trigsimp(tanh(2)*cos(3)*exp(2)*cosh(2)) == sinh(2)*cos(3)*exp(2)
     assert trigsimp(coth(2)*cos(3)*exp(2)*sinh(2)) == cosh(2)*cos(3)*exp(2)
     assert trigsimp(tanh(2)*cos(3)*exp(2)/sinh(2)) == cos(3)*exp(2)/cosh(2)
     assert trigsimp(coth(2)*cos(3)*exp(2)/cosh(2)) == cos(3)*exp(2)/sinh(2)
-    assert trigsimp(coth(2)*cos(3)*exp(2)*tanh(2)) == cos(3)*exp(2)*2
+    assert trigsimp(coth(2)*cos(3)*exp(2)*tanh(2)) == cos(3)*exp(2)
+
+    assert trigsimp(sin(2*x)*csc(x)) == 2*cos(x)
+    assert trigsimp(sin(1)*sin(2*x)**2*csc(x)**2) == 4*sin(1)*cos(x)**2
+    assert trigsimp(sin(2*x)**2*csc(x)) == 2*cos(x)*sin(2*x)
+    assert trigsimp(sin(x)**2*csc(2*x)**2) == 1/(4*cos(x)**2)
+    assert trigsimp(sinh(1)*cosh(x)**2 - sinh(1)*sinh(x)**2) == sinh(1)
+    assert trigsimp(cos(y)*tan(x) - sin(y)) == sin(x - y)/cos(x)
+    assert trigsimp(sin(x)*cos(y)*cot(y) - sin(x)*csc(y)) == -sin(x)*sin(y)
+
+    expr = (sin(x) + cos(x)*cot(x) - csc(x))
+    assert trigsimp(expr) == 0
+    expr1 = _mexpand(expr**2)
+    assert trigsimp(expr1) == 0
+    assert trigsimp((-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)) == 2/cos(x)
+
+    tx, ty = tan(x), tan(y)
+    res = trigsimp((tx + ty)/(1 - tx*ty))
+    assert trigsimp((tx + ty)/(1 - tx*ty)) == tan(x + y)
+    res = trigsimp((2*tx + 2*ty)/(1 - tx*ty))
+    assert trigsimp((2*tx + 2*ty)/(1 - tx*ty)) == 2*tan(x + y)
+    assert trigsimp((tx + ty)/(2 - 2*tx*ty)) == tan(x + y)/2
+    assert trigsimp((2*tx - 2*ty)/(1 + tx*ty)) == 2*tan(x - y)
+    assert trigsimp((tx - ty)**2/(2 + 2*tx*ty)**2) == tan(x - y)**2/4
+
+    expr = cos(pi/9)*cos(2*pi/9)*cos(3*pi/9)*cos(4*pi/9)
+    assert trigsimp(expr) == S.One/16
+    assert trigsimp(128*expr*cos(x)*cos(2*x)*cos(4*x)*sin(x)*cos(1)) == \
+        sin(8*x)*cos(1)
+    expr = 32*cos(pi/11)*cos(2*pi/11)*cos(4*pi/11)*cos(8*pi/11)*cos(16*pi/11)
+    assert trigsimp(expr) == 1
+    assert trigsimp(cosh(x/9)*cosh(2*x/9)*cosh(4*x/9)*cosh(8*x/9)) == sinh(16*x/9)/(16*sinh(x/9))
+
+    assert trigsimp(sin(2*x)/cos(x)**2) == 2*tan(x)
+    assert trigsimp(sin(x)/cos(x/2)**2) == 2*tan(x/2)
+    assert trigsimp(sin(x)**2/cos(x/2)**4) == 4*tan(x/2)**2
+    assert trigsimp(cos(x/2)**2/sin(x)) == cot(x/2)/2
+    assert trigsimp(sinh(2*x)/cosh(x)**2) == 2*tanh(x)
+    assert trigsimp(sinh(x)/cosh(x/2)**2) == 2*tanh(x/2)
+    assert trigsimp(sinh(x)**2/cosh(x/2)**4) == 4*tanh(x/2)**2
+    assert trigsimp(cosh(x/2)**2/sinh(x)) == coth(x/2)/2
+
 
 def test_trigsimp2():
     x, y = symbols('x,y')
@@ -180,6 +221,9 @@ def test_1562():
     assert trigsimp(-2*cos(x)**2 + cos(x)**4 - sin(x)**4) == -1
     eq = (- sin(x)**3/4)*cos(x) + (cos(x)**3/4)*sin(x) - sin(2*x)*cos(2*x)/8
     assert trigsimp(eq) == 0
+    eq = (- sin(x)**3/4)*cos(x) + (cos(x)**3/4)*sin(x) - sin(2*x)*cos(2*x)/8 +\
+            sin(x)
+    assert trigsimp(eq) == sin(x)
 
 
 def test_1395():
@@ -262,47 +306,7 @@ def test_trigsimp_issues():
     assert trigsimp(cos(2)*(cos(3) + 1)**2*(cos(3) - 1)**2) == \
         cos(2)*sin(3)**4
 
-    # issue 3690; this generates an expression that formerly caused
-    # trigsimp to hang
-    assert cot(x).equals(tan(x)) is False
 
-
-def test_trigsimp_assumptions():
-    from random import random, randint
-    from sympy.utilities.iterables import flatten
-    from sympy.utilities.randtest import (
-        test_numerically, random_complex_number, comp)
-
-    a, b, c, d, matchers_division, matchers_add, \
-    matchers_identity, artifacts = _trigpats()
-
-    # check that these are always valid
-    pats = [artifacts, matchers_add, matchers_identity]
-    for i, p in enumerate(flatten(pats, 1)):
-        o, n = p[:2]
-        try:
-            assert test_numerically(o, n, list(o.free_symbols))
-        except:
-            print o,n
-
-    # check that these are valid if the bases are positive or
-    # exponents are integers
-    for i, p in enumerate(matchers_division):
-        o, n = p[:2]
-        f = o.free_symbols
-        reps = dict(zip(f, [random_complex_number() for fi in f]))
-        # integer exponent
-        save = reps.pop(c)
-        reps[c] = randint(1, 10)
-        try:
-            assert comp(o.subs(reps), n.subs(reps), 1e-6)
-        except:
-            print i, o, n, reps
-
-        # real argument
-        reps[c] = save
-        reps[b] = 1  # sin and cos are both positive at b = 1
-        assert comp(o.subs(reps), n.subs(reps), 1e-6)
 
 
 def test_trigsimp_issue_2515():
