@@ -119,60 +119,59 @@ At this point it is sufficient to compute the |groebner| basis `G` of
 Let's see how this procedure works for a particular graph:
 
 .. tikz:: The graph `\mathcal{G}(V, E)`.
-    :libs: arrows, automata, backgrounds, decorations
 
-    \begin{tikzpicture}[scale=2.0]
-        \tikzstyle{edge}=[draw=black,thick,-]
-        \tikzstyle{node}=[circle,thick,draw=black,fill=white,minimum size=20pt,inner sep=0pt]
+    [scale=2.0]
 
-        \def\x{0.382683}
-        \def\y{0.923879}
+    \tikzstyle{edge}=[draw=black,thick,-]
+    \tikzstyle{node}=[circle,thick,draw=black,fill=white,minimum size=20pt,inner sep=0pt]
 
-        \def\X{1.5}
-        \def\Y{1.7}
+    \def\x{0.382683}
+    \def\y{0.923879}
 
-        \node[node] (x1)  at (-\X, \Y) {$1$};
-        \node[node] (x2)  at ( \X, \Y) {$2$};
-        \node[node] (x3)  at ( \X,-\Y) {$3$};
-        \node[node] (x4)  at (-\X,-\Y) {$4$};
-        \node[node] (x5)  at (-\x, \y) {$5$};
-        \node[node] (x6)  at ( \x, \y) {$6$};
-        \node[node] (x7)  at ( \y, \x) {$7$};
-        \node[node] (x8)  at ( \y,-\x) {$8$};
-        \node[node] (x9)  at ( \x,-\y) {$9$};
-        \node[node] (x10) at (-\x,-\y) {$10$};
-        \node[node] (x11) at (-\y,-\x) {$11$};
-        \node[node] (x12) at (-\y, \x) {$12$};
+    \def\X{1.5}
+    \def\Y{1.7}
 
-        \path[edge] (x1) -- (x2);
-        \path[edge] (x1) -- (x4);
-        \path[edge] (x1) -- (x6);
-        \path[edge] (x1) -- (x12);
+    \node[node] (x1)  at (-\X, \Y) {$1$};
+    \node[node] (x2)  at ( \X, \Y) {$2$};
+    \node[node] (x3)  at ( \X,-\Y) {$3$};
+    \node[node] (x4)  at (-\X,-\Y) {$4$};
+    \node[node] (x5)  at (-\x, \y) {$5$};
+    \node[node] (x6)  at ( \x, \y) {$6$};
+    \node[node] (x7)  at ( \y, \x) {$7$};
+    \node[node] (x8)  at ( \y,-\x) {$8$};
+    \node[node] (x9)  at ( \x,-\y) {$9$};
+    \node[node] (x10) at (-\x,-\y) {$10$};
+    \node[node] (x11) at (-\y,-\x) {$11$};
+    \node[node] (x12) at (-\y, \x) {$12$};
 
-        \path[edge] (x2) -- (x3);
-        \path[edge] (x2) -- (x5);
-        \path[edge] (x2) -- (x7);
+    \path[edge] (x1) -- (x2);
+    \path[edge] (x1) -- (x4);
+    \path[edge] (x1) -- (x6);
+    \path[edge] (x1) -- (x12);
 
-        \path[edge] (x3) -- (x8);
-        \path[edge] (x3) -- (x10);
+    \path[edge] (x2) -- (x3);
+    \path[edge] (x2) -- (x5);
+    \path[edge] (x2) -- (x7);
 
-        \path[edge] (x4) -- (x9);
-        \path[edge] (x4) -- (x11);
+    \path[edge] (x3) -- (x8);
+    \path[edge] (x3) -- (x10);
 
-        \path[edge] (x5) -- (x6);
-        \path[edge] (x6) -- (x7);
-        \path[edge] (x7) -- (x8);
-        \path[edge] (x8) -- (x9);
-        \path[edge] (x9) -- (x10);
-        \path[edge] (x10) -- (x11);
-        \path[edge] (x11) -- (x12);
-        \path[edge] (x12) -- (x5);
+    \path[edge] (x4) -- (x9);
+    \path[edge] (x4) -- (x11);
 
-        \path[edge] (x5) -- (x9);
-        \path[edge] (x6) -- (x10);
-        \path[edge] (x7) -- (x11);
-        \path[edge] (x8) -- (x12);
-    \end{tikzpicture}
+    \path[edge] (x5) -- (x6);
+    \path[edge] (x6) -- (x7);
+    \path[edge] (x7) -- (x8);
+    \path[edge] (x8) -- (x9);
+    \path[edge] (x9) -- (x10);
+    \path[edge] (x10) -- (x11);
+    \path[edge] (x11) -- (x12);
+    \path[edge] (x12) -- (x5);
+
+    \path[edge] (x5) -- (x9);
+    \path[edge] (x6) -- (x10);
+    \path[edge] (x7) -- (x11);
+    \path[edge] (x8) -- (x12);
 
 `\mathcal{G}(V, E)` has 12 vertices and 23 edges. We ask if the graph is
 `3`--colorable. Let's first encode `V` and `E` using Python's built--in
@@ -213,64 +212,63 @@ The answer is that the graph `\mathcal{G}` is `3`--colorable. A sample coloring
 is shown on the following figure:
 
 .. tikz:: A sample `3`--coloring of the graph `\mathcal{G}(V, E)`.
-    :libs: arrows, automata, backgrounds, decorations
 
-    \begin{tikzpicture}[scale=2.0]
-        \tikzstyle{edge}=[draw=black,thick,-]
-        \tikzstyle{node}=[circle,thick,draw=black,fill=white,minimum size=20pt,inner sep=0pt]
+    [scale=2.0]
 
-        \tikzstyle{red}=[text=black,fill=red]
-        \tikzstyle{green}=[text=black,fill=green]
-        \tikzstyle{blue}=[text=white,fill=blue]
+    \tikzstyle{edge}=[draw=black,thick,-]
+    \tikzstyle{node}=[circle,thick,draw=black,fill=white,minimum size=20pt,inner sep=0pt]
 
-        \def\x{0.382683}
-        \def\y{0.923879}
+    \tikzstyle{red}=[text=black,fill=red]
+    \tikzstyle{green}=[text=black,fill=green]
+    \tikzstyle{blue}=[text=white,fill=blue]
 
-        \def\X{1.5}
-        \def\Y{1.7}
+    \def\x{0.382683}
+    \def\y{0.923879}
 
-        \node[node,blue]  (x1)  at (-\X, \Y) {$1$};
-        \node[node,green] (x2)  at ( \X, \Y) {$2$};
-        \node[node,red]   (x3)  at ( \X,-\Y) {$3$};
-        \node[node,red]   (x4)  at (-\X,-\Y) {$4$};
-        \node[node,blue]  (x5)  at (-\x, \y) {$5$};
-        \node[node,green] (x6)  at ( \x, \y) {$6$};
-        \node[node,red]   (x7)  at ( \y, \x) {$7$};
-        \node[node,blue]  (x8)  at ( \y,-\x) {$8$};
-        \node[node,green] (x9)  at ( \x,-\y) {$9$};
-        \node[node,blue]  (x10) at (-\x,-\y) {$10$};
-        \node[node,green] (x11) at (-\y,-\x) {$11$};
-        \node[node,red]   (x12) at (-\y, \x) {$12$};
+    \def\X{1.5}
+    \def\Y{1.7}
 
-        \path[edge] (x1) -- (x2);
-        \path[edge] (x1) -- (x4);
-        \path[edge] (x1) -- (x6);
-        \path[edge] (x1) -- (x12);
+    \node[node,blue]  (x1)  at (-\X, \Y) {$1$};
+    \node[node,green] (x2)  at ( \X, \Y) {$2$};
+    \node[node,red]   (x3)  at ( \X,-\Y) {$3$};
+    \node[node,red]   (x4)  at (-\X,-\Y) {$4$};
+    \node[node,blue]  (x5)  at (-\x, \y) {$5$};
+    \node[node,green] (x6)  at ( \x, \y) {$6$};
+    \node[node,red]   (x7)  at ( \y, \x) {$7$};
+    \node[node,blue]  (x8)  at ( \y,-\x) {$8$};
+    \node[node,green] (x9)  at ( \x,-\y) {$9$};
+    \node[node,blue]  (x10) at (-\x,-\y) {$10$};
+    \node[node,green] (x11) at (-\y,-\x) {$11$};
+    \node[node,red]   (x12) at (-\y, \x) {$12$};
 
-        \path[edge] (x2) -- (x3);
-        \path[edge] (x2) -- (x5);
-        \path[edge] (x2) -- (x7);
+    \path[edge] (x1) -- (x2);
+    \path[edge] (x1) -- (x4);
+    \path[edge] (x1) -- (x6);
+    \path[edge] (x1) -- (x12);
 
-        \path[edge] (x3) -- (x8);
-        \path[edge] (x3) -- (x10);
+    \path[edge] (x2) -- (x3);
+    \path[edge] (x2) -- (x5);
+    \path[edge] (x2) -- (x7);
 
-        \path[edge] (x4) -- (x9);
-        \path[edge] (x4) -- (x11);
+    \path[edge] (x3) -- (x8);
+    \path[edge] (x3) -- (x10);
 
-        \path[edge] (x5) -- (x6);
-        \path[edge] (x6) -- (x7);
-        \path[edge] (x7) -- (x8);
-        \path[edge] (x8) -- (x9);
-        \path[edge] (x9) -- (x10);
-        \path[edge] (x10) -- (x11);
-        \path[edge] (x11) -- (x12);
-        \path[edge] (x12) -- (x5);
+    \path[edge] (x4) -- (x9);
+    \path[edge] (x4) -- (x11);
 
-        \path[edge] (x5) -- (x9);
-        \path[edge] (x6) -- (x10);
-        \path[edge] (x7) -- (x11);
-        \path[edge] (x8) -- (x12);
-    \end{tikzpicture}
+    \path[edge] (x5) -- (x6);
+    \path[edge] (x6) -- (x7);
+    \path[edge] (x7) -- (x8);
+    \path[edge] (x8) -- (x9);
+    \path[edge] (x9) -- (x10);
+    \path[edge] (x10) -- (x11);
+    \path[edge] (x11) -- (x12);
+    \path[edge] (x12) -- (x5);
+
+    \path[edge] (x5) -- (x9);
+    \path[edge] (x6) -- (x10);
+    \path[edge] (x7) -- (x11);
+    \path[edge] (x8) -- (x12);
 
 Suppose we add an edge between vertices `i = 3` and `j = 4`. Is the new graph
 still `3`--colorable? To check this it is sufficient to construct `F_{\mathcal{G'}}`

@@ -37,7 +37,7 @@
 
     Author: Christoph Reller <christoph.reller@gmail.com>
     Version: 0.4.1
-"""    
+"""
 
 import tempfile
 import posixpath
@@ -58,7 +58,7 @@ try:
     from sphinx.util.osutil import ensuredir, ENOENT, EPIPE
 except:
     from sphinx.util import ensuredir, ENOENT, EPIPE
-    
+
 from sphinx.util.compat import Directive
 
 class TikzExtError(SphinxError):
@@ -123,7 +123,7 @@ def render_tikz(self,tikz,libs='',stringsubst=False):
 
     if hasattr(self.builder, '_tikz_warned'):
         return None
-    
+
     ensuredir(path.dirname(outfn))
     curdir = getcwd()
 
@@ -228,7 +228,7 @@ def render_tikz(self,tikz,libs='',stringsubst=False):
         pnm_args = []
         if self.builder.config.tikz_transparent:
             pnm_args = ['-transparent', 'white']
-    
+
         try:
             p2 = Popen(['pnmtopng'] + pnm_args, stdin=p1.stdout,
                        stdout=PIPE, stderr=PIPE)
@@ -240,7 +240,7 @@ def render_tikz(self,tikz,libs='',stringsubst=False):
             self.builder._tikz_warned = True
             chdir(curdir)
             return None
-    
+
         pngdata, stderr2 = p2.communicate()
         dummy, stderr1 = p1.communicate()
         if p1.returncode != 0:

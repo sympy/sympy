@@ -32,32 +32,29 @@ i.e. it does not collapse into a line or a point.
 Let's consider the following rhombus:
 
 .. tikz:: A rhombus in a fixed coordinate system.
-    :libs: calc, arrows, automata, backgrounds, decorations
 
-    \begin{tikzpicture}[scale=1.0]
-        \coordinate (A) at (0,0);
-        \coordinate (B) at (4,0);
-        \coordinate (D) at ($(A)!1!45:(B)$);
-        \coordinate (C) at ($(D) + (4,0)$);
+    \coordinate (A) at (0,0);
+    \coordinate (B) at (4,0);
+    \coordinate (D) at ($(A)!1!45:(B)$);
+    \coordinate (C) at ($(D) + (4,0)$);
 
-        \draw[solid] (A) -- (B) -- (C) -- (D) -- cycle;
+    \draw[solid] (A) -- (B) -- (C) -- (D) -- cycle;
 
-        \draw[dashed] (A) -- (C);
-        \draw[dashed] (B) -- (D);
+    \draw[dashed] (A) -- (C);
+    \draw[dashed] (B) -- (D);
 
-        \coordinate (E) at (intersection of A--C and B--D) {};
+    \coordinate (E) at (intersection of A--C and B--D) {};
 
-        \node [below] at (A) {$A(0, 0)$};
-        \node [below] at (B) {$B(x_B, 0)$};
-        \node [above] at (C) {$C(x_C, y_C)$};
-        \node [above] at (D) {$D(x_D, y_C)$};
+    \node [below] at (A) {$A(0, 0)$};
+    \node [below] at (B) {$B(x_B, 0)$};
+    \node [above] at (C) {$C(x_C, y_C)$};
+    \node [above] at (D) {$D(x_D, y_C)$};
 
-        \fill[black] (A) circle (2pt);
-        \fill[black] (B) circle (2pt);
-        \fill[black] (C) circle (2pt);
-        \fill[black] (D) circle (2pt);
-        \fill[black] (E) circle (2pt);
-    \end{tikzpicture}
+    \fill[black] (A) circle (2pt);
+    \fill[black] (B) circle (2pt);
+    \fill[black] (C) circle (2pt);
+    \fill[black] (D) circle (2pt);
+    \fill[black] (E) circle (2pt);
 
 This geometric entity consists of four points `A`, `B`, `C` and `D`. To
 setup a fixed coordinate system, without loss of generality, we can assume

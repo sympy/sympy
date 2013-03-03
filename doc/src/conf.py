@@ -157,6 +157,8 @@ htmlhelp_basename = 'SymPydoc'
 latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
                     'SymPy Development Team', 'manual', True)]
 
+tikz_tikzlibraries = "calc,arrows,automata,backgrounds,decorations"
+
 # Additional stuff for the LaTeX preamble.
 # Tweaked to work with XeTeX.
 latex_elements = {
@@ -172,7 +174,10 @@ latex_elements = {
     'fontpkg':   '',
     'inputenc':  '',
     'utf8extra': '',
-    'preamble':  ''
+    'preamble': r'''
+\usepackage{tikz}
+\usetikzlibrary{%(tikz_libraries)s}
+''' % { 'tikz_libraries': tikz_tikzlibraries },
 }
 
 # SymPy logo on title page
