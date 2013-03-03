@@ -15,6 +15,8 @@ def test_PolyRing___init__():
     assert len(PolyRing(("x", "y", "z"), ZZ, lex).gens) == 3
     assert len(PolyRing((x, y, z), ZZ, lex).gens) == 3
 
+    raises(ValueError, lambda: PolyRing([], ZZ, lex))
+
 def test_PolyElement___eq__():
     R, x, y = ring("x,y", ZZ, lex)
 
@@ -312,3 +314,44 @@ def test_PolyElement_cofactors():
 
     assert f.cofactors(g) == (h, f/h, g/h)
     assert g.cofactors(f) == (h, g/h, f/h)
+
+def test_PolyElement_gcd():
+    R, x, y = ring("x,y", QQ)
+
+    f = QQ(1,2)*x**2 + x + QQ(1,2)
+    g = QQ(1,2)*x + QQ(1,2)
+
+    assert f.gcd(g) == x + 1
+
+def test_PolyElement_cancel():
+    R, x, y = ring("x,y", ZZ)
+
+    f = 2*x**3 + 4*x**2 + 2*x
+    g = 3*x**2 + 3*x
+    F = 2*x + 2
+    G = 3
+
+    assert f.cancel(g) == (F, G)
+
+    assert (-f).cancel(g) == (-F, G)
+    assert f.cancel(-g) == (-F, G)
+
+    R, x, y = ring("x,y", QQ)
+
+    f = QQ(1,2)*x**3 + x**2 + QQ(1,2)*x
+    g = QQ(1,3)*x**2 + QQ(1,3)*x
+    F = 3*x + 3
+    G = 2
+
+    assert f.cancel(g) == (F, G)
+
+    assert (-f).cancel(g) == (-F, G)
+    assert f.cancel(-g) == (-F, G)
+
+def test_PolyElement_max_norm():
+    R, x, y = ring("x,y", ZZ)
+
+    assert R(0).max_norm() == 0
+    assert R(1).max_norm() == 1
+
+    assert (x**3 + 4*x**2 + 2*x + 3).max_norm() == 4
