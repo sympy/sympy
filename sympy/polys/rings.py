@@ -7,7 +7,7 @@ from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomialtools import (monomial_mul, monomial_div,
-    monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex, term_div)
+    monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex)
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 
@@ -65,7 +65,7 @@ class PolyRing(IPolys):
         _gens = []
         for i in xrange(self.ngens):
             expv = self.monomial_basis(i)
-            poly = PolyElement(self)
+            poly = self.zero
             poly[expv] = one
             _gens.append(poly)
         return tuple(_gens)
@@ -101,7 +101,7 @@ class PolyRing(IPolys):
 
     def term_new(self, monom, coeff):
         coeff = self.domain_new(coeff)
-        poly = PolyElement(self)
+        poly = self.zero
         if coeff:
             poly[monom] = coeff
         return poly
@@ -129,13 +129,13 @@ class PolyRing(IPolys):
 
     @property
     def one(self):
-        poly = PolyElement(self)
+        poly = self.zero
         poly[self.zero_monom] = self.domain.one
         return poly
 
     def from_dict(self, d):
         domain_new = self.domain_new
-        poly = PolyElement(self)
+        poly = self.zero
 
         for monom, coeff in d.iteritems():
             coeff = domain_new(coeff)
@@ -345,7 +345,7 @@ class PolyElement(dict, CantSympify):
 
     def drop(self, gen):
         i, ring = self.ring._drop(gen)
-        poly = PolyElement(ring)
+        poly = ring.zero
         for k, v in self.iteritems():
             if k[i] == 0:
                 K = list(k)
@@ -380,40 +380,24 @@ class PolyElement(dict, CantSympify):
         """
         if not p2:
             return p1.copy()
-        ring1 = p1.ring
-        zm = ring1.zero_monom
-        if isinstance(p2, PolyElement):
-            if ring1 == p2.ring:
-                p = PolyElement(ring1)
-                for k, v in p1.iteritems():
-                    if k in p2:
-                        r = v + p2[k]
-                        if r:
-                            p[k] = r
-                    else:
-                        p[k] = v
-                for k, v in p2.iteritems():
-                    if k not in p1:
-                        p[k] = v
-                return p
-            elif p2.ring.__class__ == ring1.domain.__class__ and p2.ring == ring1.domain:
-                p = p1.copy()
-                if zm not in list(p1.keys()):
-                    p[zm] = ring1.domain_new(p2)
+        ring = p1.ring
+        zm = ring.zero_monom
+        if isinstance(p2, PolyElement) and ring == p2.ring:
+            p = ring.zero
+            for k, v in p1.iteritems():
+                if k in p2:
+                    r = v + p2[k]
+                    if r:
+                        p[k] = r
                 else:
-                    if p2 == -p[zm]:
-                        del p[zm]
-                    else:
-                        p[zm] += p2
-                return p
-            elif ring1.__class__ == p2.ring.domain.__class__ and ring1 == p2.ring.domain:
-                return p2 + p1
-            else:
-                raise ValueError('cannot sum p1 and p2')
-        # assume p2 in a number
+                    p[k] = v
+            for k, v in p2.iteritems():
+                if k not in p1:
+                    p[k] = v
+            return p
         else:
             p = p1.copy()
-            cp2 = ring1.domain_new(p2)
+            cp2 = ring.domain_new(p2)
             if not cp2:
                 return p
             if zm not in list(p1.keys()):
@@ -426,7 +410,6 @@ class PolyElement(dict, CantSympify):
             return p
 
     def __radd__(p1, n):
-        # assume n is in p1.ring.domain
         p = p1.copy()
         if not n:
             return p
@@ -458,37 +441,23 @@ class PolyElement(dict, CantSympify):
         """
         if not p2:
             return p1.copy()
-        ring1 = p1.ring
-        mz = ring1.zero_monom
-        p = PolyElement(ring1)
-        if isinstance(p2, PolyElement):
-            if ring1 == p2.ring:
-                for k in p1:
-                    if k in p2:
-                        r = p1[k] - p2[k]
-                        if r:
-                            p[k] = r
-                    else:
-                        p[k] = p1[k]
-                for k in p2:
-                    if k not in p1:
-                        p[k] = -p2[k]
-                return p
-            elif p2.ring.__class__ == ring1.domain.__class__ and p2.ring == ring1.domain:
-                p = p1.copy()
-                if mz not in list(p1.keys()):
-                    p[mz] = -ring1.domain_new(p2)
+        ring = p1.ring
+        mz = ring.zero_monom
+        p = ring.zero
+        if isinstance(p2, PolyElement) and ring == p2.ring:
+            for k in p1:
+                if k in p2:
+                    r = p1[k] - p2[k]
+                    if r:
+                        p[k] = r
                 else:
-                    if p2 == p[mz]:
-                        del p[mz]
-                    else:
-                        p[mz] -= p2
-                return p
-            else:
-                raise ValueError('cannot coerce p2')
-        # assume p2 in a number
+                    p[k] = p1[k]
+            for k in p2:
+                if k not in p1:
+                    p[k] = -p2[k]
+            return p
         else:
-            p2 = ring1.domain_new(p2)
+            p2 = ring.domain_new(p2)
             p = copy(p1)
             if mz not in list(p1.keys()):
                 p[mz] = -p2
@@ -513,7 +482,7 @@ class PolyElement(dict, CantSympify):
         -x - y + 4
 
         """
-        p = PolyElement(p1.ring)
+        p = p1.ring.zero
         for expv in p1:
             p[expv] = -p1[expv]
         p += n
@@ -534,36 +503,26 @@ class PolyElement(dict, CantSympify):
         x**2 - y**2
 
         """
-        ring1 = p1.ring
-        p = PolyElement(ring1)
+        ring = p1.ring
+        p = ring.zero
         if not p2:
             return p
-        if isinstance(p2, PolyElement):
-            if ring1 == p2.ring:
-                get = p.get
-                p2it = p2.items()
-                for exp1, v1 in p1.iteritems():
-                    for exp2, v2 in p2it:
-                        exp = monomial_mul(exp1, exp2)
-                        p[exp] = get(exp, 0) + v1*v2
-                p.strip_zero()
-                return p
-            ring2 = p2.ring
-            if ring2.__class__ != ring1.domain.__class__ or ring2 != ring1.domain:
-                if ring1.__class__ == ring2.domain.__class__ and ring1 == ring2.domain:
-                    p = PolyElement(p2.ring)
-                    for exp2, v2 in p2.iteritems():
-                        p[exp2] = p1*v2
-                    return p
-                else:
-                    raise ValueError('p1 and p2 must have the same ring')
-        # assume p2 in a number
-        p2 = ring1.domain_new(p2)
-        for exp1, v1 in p1.iteritems():
-            v = v1*p2
-            if v:
-                p[exp1] = v
-        return p
+        if isinstance(p2, PolyElement) and ring == p2.ring:
+            get = p.get
+            p2it = p2.items()
+            for exp1, v1 in p1.iteritems():
+                for exp2, v2 in p2it:
+                    exp = monomial_mul(exp1, exp2)
+                    p[exp] = get(exp, 0) + v1*v2
+            p.strip_zero()
+            return p
+        else:
+            p2 = ring.domain_new(p2)
+            for exp1, v1 in p1.iteritems():
+                v = v1*p2
+                if v:
+                    p[exp1] = v
+            return p
 
     def __rmul__(p1, p2):
         """p2 * p1 with p2 in the coefficient domain of p1.
@@ -579,7 +538,7 @@ class PolyElement(dict, CantSympify):
         4*x + 4*y
 
         """
-        p = PolyElement(p1.ring)
+        p = p1.ring.zero
         if not isinstance(p2, PolyElement):
             if not p2:
                 return p
@@ -608,7 +567,7 @@ class PolyElement(dict, CantSympify):
         n = int(n)
         if n < 0:
             if (len(self) == 1):
-                p = PolyElement(ring)
+                p = ring.zero
                 k, v = list(self.items())[0]
                 kn = monomial_pow(k, n)
                 p[kn] = v**n
@@ -620,7 +579,7 @@ class PolyElement(dict, CantSympify):
             else:
                 raise ValueError
         elif len(self) == 1:
-            p = PolyElement(ring)
+            p = ring.zero
             k, v = list(self.items())[0]
             # treat case abs(v) = 1 separately to deal with the case
             # in which n is too large to be allowed in v**n
@@ -694,9 +653,7 @@ class PolyElement(dict, CantSympify):
         x**2 + 2*x*y**2 + y**4
         """
         ring = self.ring
-        #if not ring.commuting:
-        #   return self*self
-        p = PolyElement(ring)
+        p = ring.zero
         get = p.get
         keys = self.keys()
         for i in range(len(keys)):
@@ -732,43 +689,56 @@ class PolyElement(dict, CantSympify):
         True
 
         """
-        ring1 = p1.ring
-        ground_quo = ring1.domain.quo
-        if isinstance(p2, PolyElement):
-            if ring1 == p2.ring:
-                if len(p2) == 1:
-                    m = p2.keys()[0]
-                    p = ring1(0)
-                    c = p2.values()[0]
-                    for k, v in p1.iteritems():
-                        k1 = monomial_ldiv(k, m)
-                        p[tuple(k1)] = ground_quo(v, c)
-                    return p
-                q, r = p1.div([p2])
-                if r:
-                    raise NotImplementedError('__div__ performs only division without remainder')
-                return q[0]
-            elif p2.ring.__class__ == ring1.domain.__class__ and p2.ring == ring1.domain:
-                zm = p2.ring.zero_monom
-                p = PolyElement(ring1)
-                # if p is not a constant, not implemented
-                if p2.keys() != [zm]:
-                    raise NotImplementedError
-                else:
-                    p2 = p2[zm]
+        ring = p1.ring
+        ground_quo = ring.domain.quo
+        if isinstance(p2, PolyElement) and ring == p2.ring:
+            if len(p2) == 1:
+                p = ring.zero
+                p2_monom, p2_coeff = list(p2.terms())[0]
+                for monom, coeff in p1.iteritems():
+                    monom = monomial_ldiv(monom, p2_monom)
+                    p[monom] = ground_quo(coeff, p2_coeff)
+                return p
             else:
-                raise NotImplementedError('cannot divide p1 by p2')
-        # assume p2 in a number
-        p = PolyElement(ring1)
-        if not p2:
+                return p1.quo(p2)
+        elif not p2:
             raise ZeroDivisionError
-        for exp1, v in p1.iteritems():
-            coeff = ground_quo(v, p2)
-            if coeff:
-                p[exp1] = coeff
-        return p
+        else:
+            p = ring.zero
+            for monom, coeff in p1.iteritems():
+                coeff = ground_quo(coeff, p2)
+                if coeff:
+                    p[monom] = coeff
+            return p
 
     __div__ = __truediv__
+
+    def _term_div(self):
+        zm = self.ring.zero_monom
+        domain_quo = self.ring.domain.quo
+
+        if self.ring.domain.has_Field:
+            def term_div((a_lm, a_lc), (b_lm, b_lc)):
+                if b_lm == zm: # apparently this is a very common case
+                    monom = a_lm
+                else:
+                    monom = monomial_div(a_lm, b_lm)
+                if monom is not None:
+                    return monom, domain_quo(a_lc, b_lc)
+                else:
+                    return None
+        else:
+            def term_div((a_lm, a_lc), (b_lm, b_lc)):
+                if b_lm == zm: # apparently this is a very common case
+                    monom = a_lm
+                else:
+                    monom = monomial_div(a_lm, b_lm)
+                if not (monom is None or a_lc % b_lc):
+                    return monom, domain_quo(a_lc, b_lc)
+                else:
+                    return None
+
+        return term_div
 
     def div(self, fv):
         """Division algorithm, see [CLO] p64.
@@ -813,48 +783,20 @@ class PolyElement(dict, CantSympify):
             if f.ring != ring:
                 raise ValueError('self and f must have the same ring')
         gens = ring.gens
-        #if self.is_laurent(*gens):
-        #    raise NotImplementedError('self is a Laurent polynomial')
-        # if any(p.is_laurent(*gens) for p in fv):
-        #    raise NotImplementedError('there is a Laurent polynomial in fv')
         s = len(fv)
-        qv = [PolyElement(ring) for i in range(s)]
+        qv = [ring.zero for i in range(s)]
         p = self.copy()
-        r = PolyElement(ring)
+        r = ring.zero
+        term_div = self._term_div()
         expvs = [fx.leading_expv() for fx in fv]
-        zm = ring.zero_monom
-        domain_quo = domain.quo
-        if domain.has_Field:
-            def term_div(a_lm, a_lc, b_lm, b_lc):
-                if b_lm == zm: # apparently this is a very common case
-                    monom = a_lm
-                else:
-                    monom = monomial_div(a_lm, b_lm)
-                if monom is not None:
-                    return monom, domain_quo(a_lc, b_lc)
-                else:
-                    return None
-        else:
-            def term_div(a_lm, a_lc, b_lm, b_lc):
-                if b_lm == zm: # apparently this is a very common case
-                    monom = a_lm
-                else:
-                    monom = monomial_div(a_lm, b_lm)
-                if not (monom is None or a_lc % b_lc):
-                    return monom, domain_quo(a_lc, b_lc)
-                else:
-                    return None
         while p:
             i = 0
             divoccurred = 0
             while i < s and divoccurred == 0:
                 expv = p.leading_expv()
-                term = term_div(expv, p[expv], expvs[i], fv[i][expvs[i]])
+                term = term_div((expv, p[expv]), (expvs[i], fv[i][expvs[i]]))
                 if term is not None:
                     expv1, c = term
-                # expv1 = monomial_ldiv(expv, expvs[i])
-                # if all(expv1[j] >= 0 for j in rn):
-                #     c = p[expv]/fv[i][expvs[i]]        # XXX: ground_quo
                     qv[i] = qv[i]._iadd_monom((expv1, c))
                     p = p._iadd_poly_monom(fv[i], (expv1, -c))
                     divoccurred = 1
@@ -864,7 +806,7 @@ class PolyElement(dict, CantSympify):
                 expv =  p.leading_expv()
                 r = r._iadd_monom((expv, p[expv]))
                 del p[expv]
-        if expv == zm:
+        if expv == ring.zero_monom:
             r += p
         if ret_single:
             if not qv:
@@ -880,13 +822,14 @@ class PolyElement(dict, CantSympify):
     def rem(f, G):
         domain = f.ring.domain
         order = f.ring.order
-        r = PolyElement(f.ring)
+        r = f.ring.zero
+        term_div = f._term_div()
         ltf = f.LT
         f = f.copy()
         get = f.get
         while f:
             for g in G:
-                tq = term_div(ltf, g.LT, domain)
+                tq = term_div(ltf, g.LT)
                 if tq is not None:
                     m, c = tq
                     for mg, cg in g.terms():
@@ -1044,7 +987,7 @@ class PolyElement(dict, CantSympify):
 
     @property
     def leading_monom(self):
-        p = PolyElement(self.ring)
+        p = self.ring.zero
         expv = self.leading_expv()
         if expv:
             p[expv] = self.ring.one
@@ -1066,7 +1009,7 @@ class PolyElement(dict, CantSympify):
         x**4
 
         """
-        p = PolyElement(self.ring)
+        p = self.ring.zero
         expv = self.leading_expv()
         if expv:
             p[expv] = self[expv]
@@ -1120,7 +1063,7 @@ class PolyElement(dict, CantSympify):
         monom, coeff = term
 
         if not f or not coeff:
-            return PolyElement(f.ring)
+            return f.ring.zero
 
         terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.iteritems() ]
         return PolyElement(f.ring, terms)
@@ -1234,7 +1177,7 @@ class PolyElement(dict, CantSympify):
         H = []
 
         for p in polys:
-            h = PolyElement(ring)
+            h = ring.zero
 
             for I, coeff in p.terms():
                 N = [ i // j for i, j in zip(I, J) ]
@@ -1428,7 +1371,7 @@ class PolyElement(dict, CantSympify):
 
             return result
         else:
-            poly = PolyElement(ring[1:])
+            poly = ring[1:].zero
 
             for monom, coeff in f.terms():
                 n, monom = monom[i], monom[:i] + monom[i+1:]
@@ -1464,7 +1407,7 @@ class PolyElement(dict, CantSympify):
 
             return ring.ground_new(result)
         else:
-            poly = PolyElement(ring)
+            poly = ring.zero
 
             for monom, coeff in f.terms():
                 n, monom = monom[i], monom[:i] + (0,) + monom[i+1:]
