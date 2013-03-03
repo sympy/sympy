@@ -1310,13 +1310,13 @@ class PolyElement(dict, CantSympify):
         ring = f.ring
         new_ring = ring.clone(domain=ring.domain.get_ring())
 
-        cf, f = f.clear_denoms(f)
-        cg, g = g.clear_denoms(g)
+        cf, f = f.clear_denoms()
+        cg, g = g.clear_denoms()
 
         f = f.set_ring(new_ring)
         g = g.set_ring(new_ring)
 
-        h, cff, cfg = f._gcd_ZZ()
+        h, cff, cfg = f._gcd_ZZ(g)
 
         h = h.set_ring(ring)
         c, h = h.LC, h.monic()

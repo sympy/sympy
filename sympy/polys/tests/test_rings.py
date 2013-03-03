@@ -1,7 +1,7 @@
 """Test sparse polynomials. """
 
 from sympy.polys.rings import ring, xring
-from sympy.polys.domains import ZZ, QQ
+from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.monomialtools import lex, grlex
 
 from sympy.utilities.pytest import raises
@@ -210,3 +210,96 @@ def test_PolyElement_diff():
     assert f.diff(X[0]) == QQ(2304,5)*X[0]**7*X[1]**6*X[4]**3*X[10]**2 + 16*X[0]*X[2]**3*X[4]**3 + 4*X[0]
     assert f.diff(X[4]) == QQ(864,5)*X[0]**8*X[1]**6*X[4]**2*X[10]**2 + 24*X[0]**2*X[2]**3*X[4]**2
     assert f.diff(X[10]) == QQ(576,5)*X[0]**8*X[1]**6*X[4]**3*X[10]
+
+def test_PolyElement_clear_denoms():
+    R, x,y = ring("x,y", QQ)
+
+    assert R(1).clear_denoms() == (ZZ(1), 1)
+    assert R(7).clear_denoms() == (ZZ(1), 7)
+
+    assert R(QQ(7,3)).clear_denoms() == (3, 7)
+    assert R(QQ(7,3)).clear_denoms() == (3, 7)
+
+    assert (3*x**2 + x).clear_denoms() == (1, 3*x**2 + x)
+    assert (x**2 + QQ(1,2)*x).clear_denoms() == (2, 2*x**2 + x)
+
+def test_PolyElement_cofactors():
+    R, x, y = ring("x,y", ZZ)
+
+    f, g = R(0), R(0)
+    assert f.cofactors(g) == (0, 0, 0)
+
+    f, g = R(2), R(0)
+    assert f.cofactors(g) == (2, 1, 0)
+
+    f, g = R(-2), R(0)
+    assert f.cofactors(g) == (2, -1, 0)
+
+    f, g = R(0), R(-2)
+    assert f.cofactors(g) == (2, 0, -1)
+
+    f, g = R(0), 2*x + 4
+    assert f.cofactors(g) == (2*x + 4, 0, 1)
+
+    f, g = 2*x + 4, R(0)
+    assert f.cofactors(g) == (2*x + 4, 1, 0)
+
+    f, g = R(2), R(2)
+    assert f.cofactors(g) == (2, 1, 1)
+
+    f, g = R(-2), R(2)
+    assert f.cofactors(g) == (2, -1, 1)
+
+    f, g = R(2), R(-2)
+    assert f.cofactors(g) == (2, 1, -1)
+
+    f, g = R(-2), R(-2)
+    assert f.cofactors(g) == (2, -1, -1)
+
+    f, g = x**2 + 2*x + 1, R(1)
+    assert f.cofactors(g) == (1, x**2 + 2*x + 1, 1)
+
+    f, g = x**2 + 2*x + 1, R(2)
+    assert f.cofactors(g) == (1, x**2 + 2*x + 1, 2)
+
+    f, g = 2*x**2 + 4*x + 2, R(2)
+    assert f.cofactors(g) == (2, x**2 + 2*x + 1, 1)
+
+    f, g = R(2), 2*x**2 + 4*x + 2
+    assert f.cofactors(g) == (2, 1, x**2 + 2*x + 1)
+
+    f, g = 2*x**2 + 4*x + 2, x + 1
+    assert f.cofactors(g) == (x + 1, 2*x + 2, 1)
+
+    f, g = x + 1, 2*x**2 + 4*x + 2
+    assert f.cofactors(g) == (x + 1, 1, 2*x + 2)
+
+    R, x, y, z, t = ring("x,y,z,t", ZZ)
+
+    f, g = t**2 + 2*t + 1, 2*t + 2
+    assert f.cofactors(g) == (t + 1, t + 1, 2)
+
+    f, g = z**2*t**2 + 2*z**2*t + z**2 + z*t + z, t**2 + 2*t + 1
+    h, cff, cfg = t + 1, z**2*t + z**2 + z, t + 1
+
+    assert f.cofactors(g) == (h, cff, cfg)
+    assert g.cofactors(f) == (h, cfg, cff)
+
+    R, x, y = ring("x,y", QQ)
+
+    f = QQ(1,2)*x**2 + x + QQ(1,2)
+    g = QQ(1,2)*x + QQ(1,2)
+
+    h = x + 1
+
+    assert f.cofactors(g) == (h, g, QQ(1,2))
+    assert g.cofactors(f) == (h, QQ(1,2), g)
+
+    R, x, y = ring("x,y", RR)
+
+    f = 2.1*x*y**2 - 2.1*x*y + 2.1*x
+    g = 2.1*x**3
+    h = 1.0*x
+
+    assert f.cofactors(g) == (h, f/h, g/h)
+    assert g.cofactors(f) == (h, g/h, f/h)
