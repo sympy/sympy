@@ -205,8 +205,8 @@ def test_eval_trace():
     k1 = TestTimeDepKet(0, 0.5)
     k2 = TestTimeDepKet(0, 1)
     d = Density([k1, 0.5], [k2, 0.5])
-    assert d.doit() == (0.5 * OuterProduct(k1, k1.dual()) +
-                        0.5 * OuterProduct(k2, k2.dual()))
+    assert d.doit() == (0.5 * OuterProduct(k1, k1.dual) +
+                        0.5 * OuterProduct(k2, k2.dual))
 
     t = Tr(d)
     assert t.doit() == 1
