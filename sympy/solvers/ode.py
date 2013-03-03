@@ -823,7 +823,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                     # and historical notes - George E. Simmons
                     # If (dP/dy - dQ/dx) / Q = f(x)
                     # then exp(integral(f(x))*equation becomes exact
-                    if numerator:
+                    elif numerator:
                         factor = simplify(numerator/r[e])
                         variables = factor.free_symbols
                         if len(variables) == 1:
@@ -834,18 +834,23 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                                 r[e] = factor * r[e]
                                 matching_hints["1st_exact"] = r
                                 matching_hints["1st_exact_Integral"] = r
+                            else:
+                                factor = None
+                        else:
+                            factor = None
                     # If (dP/dy - dQ/dx) / -P = f(y)
                     # then exp(integral(f(y))*equation becomes exact
-                        factor = simplify(-numerator/r[d])
-                        variables = factor.free_symbols
-                        if len(variables) == 1:
-                            variable = variables.pop()
-                            if y == variable:
-                                factor = exp(C.Integral(factor).doit())
-                                r[d] = factor * r[d]
-                                r[e] = factor * r[e]
-                                matching_hints["1st_exact"] = r
-                                matching_hints["1st_exact_Integral"] = r
+                        if factor is None:
+                            factor = simplify(-numerator/r[d])
+                            variables = factor.free_symbols
+                            if len(variables) == 1:
+                                variable = variables.pop()
+                                if y == variable:
+                                    factor = exp(C.Integral(factor).doit())
+                                    r[d] = factor * r[d]
+                                    r[e] = factor * r[e]
+                                    matching_hints["1st_exact"] = r
+                                    matching_hints["1st_exact_Integral"] = r
 
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
