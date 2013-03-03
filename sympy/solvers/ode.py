@@ -239,13 +239,16 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 allhints = (
     "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
     "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
-    "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
+    "1st_homogeneous_coeff_subs_dep_div_indep",
+"almost_linear",
+"nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
     "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
     "Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
     "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
+"almost_linear_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "Liouville_Integral"
 )
@@ -480,6 +483,9 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     ...     hint='1st_exact')
     f(x) == acos(C1/cos(x))
     >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
+    ...     hint='almost_linear')
+    f(x) == C1/sqrt(sin(x)**2 - 1)
+    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
     ... hint='best')
     f(x) == acos(C1/cos(x))
     >>> # Note that even though separable is the default, 1st_exact produces
@@ -520,7 +526,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
                            {'default': hint,
                             hint: kwargs['match'],
                             'order': kwargs['order']})
-
     if hints['order'] == 0:
         raise ValueError(
             str(eq) + " is not a differential equation in " + str(func))
@@ -860,6 +865,32 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
                         and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
+
+        # If f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0 where l'(y) = g(y)
+        # then substituting u = l(y) gives a linear differential equation
+        # See Table II of the paper "Symbolic Integration: The Stormy
+        # Decade by Joel Moses
+        a = Wild('a')
+        b = Wild('b' ,exclude = [df])
+        c = Wild('c', exclude = [f(x), df])
+        match = collect(eq, df, evaluate=True).match(a*f(x).diff(x) + b + c)
+        if match:
+            factor = simplify(match[b].diff(f(x))/match[a])
+            if not factor.has(f(x)) and factor:
+                if len(match[b].args) == 1 or isinstance(match[b], Pow):
+                    u = match[b]
+                else:
+                    largs = [u for u in match[b].args if u.has(f(x))]
+                    u = reduce(lambda x, y: x*y, largs)
+                udiff = u.diff(f(x))
+                match = collect(eq, [df, f(x)], evaluate=True).match(udiff*a*f(x).diff(x) + b*u + c)
+                if match:
+                    r2 = {'a':a, 'b':b, 'c':c}
+                    r2[a] = match[a]
+                    r2[b] = match[b]
+                    r2[c] = match[c]
+                    matching_hints["almost_linear"] = r2
+                    matching_hints["almost_linear_Integral"] = r2
 
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
@@ -2669,6 +2700,43 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     else:
         raise ValueError('Unknown value for key "returns".')
 
+def ode_almost_linear(eq, func, order, match):
+    r"""
+    Solves an almost linear equation.
+
+    This is an equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x)
+    where l'(y) = g(y).
+
+    If we substitute u(y) = l(y), we obtain a linear differential
+    equation.
+
+    Since ode_1st_linear, has already been implemented, and the
+    coefficients have been modified to the required form in
+    classify_ode, just passing eq, func, order and match to
+    ode_1st_linear will give the required output.
+
+    Examples
+    ========
+    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> d = f(x).diff(x)
+    >>> eq = x*f(x)*d + 2*x*f(x)**2 + 1
+    >>> classify_ode(eq, f(x))
+    ('Bernoulli', 'almost_linear', 'Bernoulli_Integral',     'almost_linear_Integral')
+    >>> dsolve(eq, f(x), hint='almost_linear')
+    f(x) == (C1 - 2*Ei(4*x))*exp(-4*x)
+    >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
+                             -4*x
+    f(x) = (C1 - 2*Ei(4*x))*e
+
+    References
+    ==========
+    Symbolic Integration - The Stormy Decade by Moses
+    Table 2
+    """
+    return ode_1st_linear(eq, func, order, match)
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     r"""
