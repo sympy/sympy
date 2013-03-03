@@ -484,7 +484,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     f(x) == acos(C1/cos(x))
     >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
     ...     hint='almost_linear')
-    f(x) == C1/sqrt(sin(x)**2 - 1) 
+    f(x) == C1/sqrt(sin(x)**2 - 1)
     >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
     ... hint='best')
     f(x) == acos(C1/cos(x))
