@@ -40,7 +40,7 @@ class FracField(object):
         return tuple([ FracElement(self, gen) for gen in self.ring.gens ])
 
     def __repr__(self):
-        return self.__str__()
+        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.ring.sgens), repr(self.ring.domain), repr(self.ring.order))
 
     def __str__(self):
         return "Rational function field in %s over %s with %s order" % (", ".join(self.ring.sgens), self.ring.domain, self.ring.order)
@@ -69,7 +69,11 @@ class FracElement(CantSympify):
         return f.numer
 
     def __repr__(self):
-        return self.__str__()
+        numer_terms = list(self.numer.terms())
+        numer_terms.sort(key=self.field.ring.order, reverse=True)
+        denom_terms = list(self.denom.terms())
+        denom_terms.sort(key=self.field.ring.order, reverse=True)
+        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.field), repr(numer_terms), repr(denom_terms))
 
     def __str__(self):
         n, d = self.numer, self.denom

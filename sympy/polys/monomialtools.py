@@ -91,6 +91,9 @@ class MonomialOrder(object):
     alias = None
     is_global = None
 
+    def __repr__(self):
+        return self.__class__.__name__ + "()"
+
     def __str__(self):
         return self.alias
 
@@ -187,9 +190,13 @@ class ProductOrder(MonomialOrder):
     def __call__(self, monomial):
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
 
+    def __repr__(self):
+        from sympy.core import Tuple
+        return self.__class__.__name__ + repr(Tuple(*[x[0] for x in self.args]))
+
     def __str__(self):
         from sympy.core import Tuple
-        return "ProductOrder" + str(Tuple(*[x[0] for x in self.args]))
+        return self.__class__.__name__ + str(Tuple(*[x[0] for x in self.args]))
 
     def __eq__(self, other):
         if not isinstance(other, ProductOrder):

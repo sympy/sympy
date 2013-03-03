@@ -71,7 +71,7 @@ class PolyRing(IPolys):
         return tuple(_gens)
 
     def __repr__(self):
-        return self.__str__()
+        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.sgens), repr(self.domain), repr(self.order))
 
     def __str__(self):
         return "Polynomial ring in %s over %s with %s order" % (", ".join(self.sgens), self.domain, self.order)
@@ -114,6 +114,10 @@ class PolyRing(IPolys):
                 raise NotImplementedError("conversion")
         elif isinstance(element, basestring):
             raise NotImplementedError("parsing")
+        elif isinstance(element, dict):
+            return self.from_dict(element)
+        elif isinstance(element, list):
+            return self.from_terms(element)
         else:
             return self.ground_new(element)
 
@@ -259,7 +263,9 @@ class PolyElement(dict, CantSympify):
         return tuple(indices)
 
     def __repr__(self):
-        return self.__str__()
+        terms = list(self.terms())
+        terms.sort(key=self.ring.order, reverse=True)
+        return "%s(%s, %s)" % (self.__class__.__name__, repr(self.ring), repr(terms))
 
     def __str__(self):
         return self.str()
