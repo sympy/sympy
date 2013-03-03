@@ -78,16 +78,16 @@ def test_PolyElement_pow():
     assert f**0 == 1
     assert f**1 == f
 
-    assert f**2 == 4*x**2 + 12*x + 9
-    assert f**3 == 8*x**3 + 36*x**2 + 54*x + 27
-    assert f**4 == 16*x**4 + 96*x**3 + 216*x**2 + 216*x + 81
-    assert f**5 == 32*x**5 + 240*x**4 + 720*x**3 + 1080*x**2 + 810*x + 243
+    assert f**2 == f._pow_generic(2) == f._pow_multinomial(2) == 4*x**2 + 12*x + 9
+    assert f**3 == f._pow_generic(3) == f._pow_multinomial(3) == 8*x**3 + 36*x**2 + 54*x + 27
+    assert f**4 == f._pow_generic(4) == f._pow_multinomial(4) == 16*x**4 + 96*x**3 + 216*x**2 + 216*x + 81
+    assert f**5 == f._pow_generic(5) == f._pow_multinomial(5) == 32*x**5 + 240*x**4 + 720*x**3 + 1080*x**2 + 810*x + 243
 
     R, x,y,z = ring("x,y,z", ZZ, grlex)
     f = x**3*y - 2*x*y**2 - 3*z + 1
     g = x**6*y**2 - 4*x**4*y**3 - 6*x**3*y*z + 2*x**3*y + 4*x**2*y**4 + 12*x*y**2*z - 4*x*y**2 + 9*z**2 - 6*z + 1
 
-    assert f**2 == g
+    assert f**2 == f._pow_generic(2) == f._pow_multinomial(2) == g
 
     raises(ValueError, lambda: f**-2)
 

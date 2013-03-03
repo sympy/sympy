@@ -2,12 +2,13 @@
 
 from copy import copy
 
-from sympy.core import Symbol, symbols
+from sympy.core.symbol import Symbol, symbols
 from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify
 from sympy.core.compatibility import is_sequence
+from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomialtools import (monomial_mul, monomial_div,
-        monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex, term_div)
+    monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex, term_div)
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 
@@ -129,10 +130,14 @@ class PolyRing(IPolys):
         return poly
 
     def from_dict(self, d):
+        domain_new = self.domain_new
         poly = PolyElement(self)
-        for k, v in d.iteritems():
-            poly[k] = self.domain_new(v)
-        poly.strip_zero()
+
+        for monom, coeff in d.iteritems():
+            coeff = domain_new(coeff)
+            if coeff:
+                poly[monom] = coeff
+
         return poly
 
     def from_terms(self, terms):
@@ -625,24 +630,49 @@ class PolyElement(dict, CantSympify):
                 p[kn] = v**n
             return p
         elif n == 1:
-            return copy(self)
+            return self.copy()
         elif n == 2:
             return self.square()
         elif n == 3:
             return self*self.square()
-        # TODO if ring.SR then use in some cases multinomial coefficients
-        if ring.ngens == 1 and n >= 20 and ring.domain in (ZZ, QQ):
-            return self.pow_miller(n)
-        p = ring(1)
-        while 1:
-            if n&1:
+        elif len(self) <= 5: # TODO: use an actuall density measure
+            return self._pow_multinomial(n)
+        else:
+            return self._pow_generic(n)
+
+    def _pow_generic(self, n):
+        p = self.ring.one
+
+        while True:
+            if n & 1:
                 p = p*self
                 n -= 1
                 if not n:
                     break
+
             self = self.square()
             n = n // 2
+
         return p
+
+    def _pow_multinomial(self, n):
+        multinomials = multinomial_coefficients(len(self), n).items()
+        zero_monom = self.ring.zero_monom
+        terms = list(self.terms())
+        poly = self.ring.zero
+
+        for multinomial, multinomial_coeff in multinomials:
+            product_monom = zero_monom
+            product_coeff = multinomial_coeff
+
+            for exp, (monom, coeff) in zip(multinomial, terms):
+                if exp:
+                    product_monom = [ a + b*exp for a, b in zip(product_monom, monom) ]
+                    product_coeff *= coeff**exp
+
+            poly[tuple(product_monom)] = product_coeff
+
+        return poly
 
     def square(self):
         """square of a polynomial
