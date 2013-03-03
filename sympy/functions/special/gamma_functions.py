@@ -457,19 +457,57 @@ class polygamma(Function):
         n, z = map(sympify, (n, z))
         from sympy import unpolarify
 
-        if n.is_integer:
-            if n.is_nonnegative:
-                nz = unpolarify(z)
-                if z != nz:
-                    return polygamma(n, nz)
+        if n.is_nonnegative:
+            nz = unpolarify(z)
+            if z != nz:
+                return polygamma(n, nz)
 
+        if n.is_integer:
+            if n.is_zero and z.is_integer and z.is_negative:
+                return S.ComplexInfinity
+
+            # Expansions for the diagamma function psi_0 at
+            # general rational arguments psi_0(m + p/q)
+            if n.is_zero and z.is_Rational:
+                # Split z as zn + p/q with p < q
+                p, q = z.as_numer_denom()
+                zn = p // q
+                p = p - zn*q
+
+                if n.is_nonnegative and p.is_positive and q.is_positive and p < q:
+                    b = floor((q-1)*S.Half)
+                    k = Dummy("k")
+
+                    if b >= 1:
+                        s = 2*C.Sum(cos((2*pi*k*p)/q) * log(sin((k*pi)/q)), (k, 1, b)).doit()
+                    else:
+                        s = 0
+
+                    if zn.is_zero:
+                        return (s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+
+                    elif zn.is_positive:
+                        l = Dummy("l")
+                        return (q*C.Sum(S.One/(p+l*q), (l,0,zn-1)).doit()
+                                + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+
+                    elif zn.is_negative:
+                        zn = -zn
+                        l = Dummy("l")
+                        return (q*C.Sum(S.One/(-p+(l+1)*q), (l,0,zn-1)).doit()
+                                + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+
+            # Expansions for the polygamma function psi_k at
+            # some special rational arguments psi_k(p/q)
+            # with 0 < p < q
+            elif n.is_positive:
                 if z.is_Rational:
                     # Split z as zn + p/q with p < q
                     p, q = z.as_numer_denom()
                     zn = p // q
                     p = p - zn*q
-                    k = Dummy("k")
 
+                    k = Dummy("k")
                     # Expansion formulae taken from
                     # "Values of the polygamma functions at rational arguments"
                     # by Junesang Choi and Djurdje Cvijovic
@@ -480,35 +518,23 @@ class polygamma(Function):
                             b = q - 1
                             s = C.Sum( exp(-(2*pi*I*k*p)/q) * polylog(1, w**k), (k, 1, b)).doit()
                             return - S.EulerGamma - log(q) - s
-
                         elif n >= 1:
                             w = exp(2*pi*I/q)
                             b = q - 1
                             s = C.Sum( exp(-(2*pi*I*k*p)/q) * polylog(n+1, w**k), (k, 0, b)).doit()
                             return S.NegativeOne**(n+1) * C.factorial(n) * q**n * s
 
-                    # elif zn > 0:
-                    #     b = floor((q-1)*S.Half)
-                    #     if b >= 1:
-                    #         s = 2*C.Sum(cos((2*pi*k*p)/q)*log(sin((k*pi)/q)), (k, 1, b)).doit()
-                    #     else:
-                    #         s = 0
+                else:
+                    if z is S.One:
+                        return (-1)**(n + 1) * C.factorial(n) * zeta(n + 1)
 
-                    #     if zn is S.Zero:
-                    #         return (s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+                    elif z is S.Half:
+                        return (-1)**(n + 1) * C.factorial(n) * (2**(n + 1) - 1) * zeta(n + 1)
 
-                    #     elif zn.is_positive:
-                    #         l = Dummy("l")
-                    #         return (q*C.Sum(S.One/(p+l*q), (l,0,zn-1)).doit()
-                    #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
+                    elif re(z) > 0:
+                        return (-1)**(n + 1) * C.factorial(n) * zeta(n + 1, z)
 
-                    #     elif zn.is_negative:
-                    #         zn = -zn
-                    #         l = Dummy("l")
-                    #         return (q*C.Sum(S.One/(-p+(l+1)*q), (l,0,zn-1)).doit()
-                    #                 + s - pi/2*cot((p*pi)/q) - log(2*q) - S.EulerGamma)
-
-            if n == -1:
+            elif n == -1:
                 return loggamma(z)
 
             else:
@@ -539,6 +565,10 @@ class polygamma(Function):
                     if n.is_Number:
                         if n is S.Zero:
                             return S.Infinity
+
+        else:
+            # TODO: General expansion for half-integer n
+            pass
 
 
     def _eval_expand_func(self, **hints):
