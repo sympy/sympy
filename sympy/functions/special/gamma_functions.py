@@ -457,6 +457,9 @@ class polygamma(Function):
         n, z = map(sympify, (n, z))
         from sympy import unpolarify
 
+        if n is S.NaN or z is S.NaN:
+            return S.NaN
+
         if n.is_nonnegative:
             nz = unpolarify(z)
             if z != nz:
@@ -539,9 +542,7 @@ class polygamma(Function):
 
             else:
                 if z.is_Number:
-                    if z is S.NaN:
-                        return S.NaN
-                    elif z is S.Infinity:
+                    if z is S.Infinity:
                         if n.is_Number:
                             if n is S.Zero:
                                 return S.Infinity
