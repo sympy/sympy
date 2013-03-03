@@ -942,8 +942,7 @@ class Pow(Expr):
                 res = []
                 for arg in bs.args:
                     if arg.is_Order:
-                        arg = arg.expr()
-                        arg = c*arg
+                        arg = c*arg.expr
                     res.append(arg)
                 bs = Add(*res)
                 rv = (bs**e).series(x).subs(c, O(1))
