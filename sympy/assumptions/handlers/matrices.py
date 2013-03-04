@@ -145,6 +145,34 @@ class AskOrthogonalHandler(CommonHandler):
         else:
             return ask(Q.orthogonal(expr.parent), assumptions)
 
+
+class AskFullRankHandler(CommonHandler):
+    """
+    Handler for key 'fullrank'
+    """
+    @staticmethod
+    def MatMul(expr, assumptions):
+        if all(ask(Q.fullrank(arg), assumptions) for arg in expr.args):
+            return True
+
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+
+    @staticmethod
+    def ZeroMatrix(expr, assumptions):
+        return False
+
+    @staticmethod
+    def Transpose(expr, assumptions):
+        return ask(Q.fullrank(expr.arg), assumptions)
+    Inverse = Transpose
+
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if ask(Q.orthogonal(expr.parent), assumptions):
+            return True
+
 class AskPositiveDefiniteHandler(CommonHandler):
     """
     Handler for key 'positive_definite'
@@ -155,7 +183,9 @@ class AskPositiveDefiniteHandler(CommonHandler):
         if (all(ask(Q.positive_definite(arg), assumptions)
                 for arg in mmul.args) and factor > 0):
             return True
-        if len(mmul.args) >= 2 and mmul.args[0] == mmul.args[-1].T:
+        if (len(mmul.args) >= 2
+                and mmul.args[0] == mmul.args[-1].T
+                and ask(Q.fullrank(mmul.args[0]), assumptions)):
             return ask(Q.positive_definite(
                 MatMul(*mmul.args[1:-1])), assumptions)
 
