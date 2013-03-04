@@ -285,6 +285,10 @@ def function_exponents(tokens, local_dict, global_dict):
             # only want to stop after hitting )
             if tok[0] == nextTok[0] == OP and tok[1] == ')' and nextTok[1] == '(':
                 consuming_exponent = False
+            # if implicit multiplication was used, we may have )*( instead
+            if tok[0] == nextTok[0] == OP and tok[1] == '*' and nextTok[1] == '(':
+                consuming_exponent = False
+                del exponent[-1]
             continue
         elif exponent and not consuming_exponent:
             if tok[0] == OP:
@@ -525,6 +529,10 @@ def rationalize(tokens, local_dict, global_dict):
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
 standard_transformations = (auto_symbol, auto_number, factorial_notation)
+
+
+implicit_multiplication_application = (split_symbols, implicit_multiplication,
+                                       implicit_application, function_exponents)
 
 
 def stringify_expr(s, local_dict, global_dict, transformations):
