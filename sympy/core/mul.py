@@ -1438,12 +1438,14 @@ def prod(a, start=1):
     return reduce(operator.mul, a, start)
 
 
-def _keep_coeff(coeff, factors, clear=True):
+def _keep_coeff(coeff, factors, clear=True, sign=False):
     """Return ``coeff*factors`` unevaluated if necessary.
 
-    If clear is False, do not keep the coefficient as a factor
+    If ``clear`` is False, do not keep the coefficient as a factor
     if it can be distributed on a single factor such that one or
     more terms will still have integer coefficients.
+
+    If ``sign`` is True, allow a coefficient of -1 to remain factored out.
 
     Examples
     ========
@@ -1458,6 +1460,10 @@ def _keep_coeff(coeff, factors, clear=True):
     x/2 + 1
     >>> _keep_coeff(S.Half, (x + 2)*y, clear=False)
     y*(x + 2)/2
+    >>> _keep_coeff(S(-1), x + y)
+    -x - y
+    >>> _keep_coeff(S(-1), x + y, sign=True)
+    -(x + y)
     """
 
     if not coeff.is_Number:
@@ -1467,7 +1473,7 @@ def _keep_coeff(coeff, factors, clear=True):
             return coeff*factors
     if coeff is S.One:
         return factors
-    elif coeff is S.NegativeOne:  # don't keep sign?
+    elif coeff is S.NegativeOne and not sign:
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
