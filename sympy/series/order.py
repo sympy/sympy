@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
+from sympy.core import Basic, S, sympify, Expr, Rational, Symbol, Dummy, Wild
 from sympy.core import Add, Mul
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp_to_key
@@ -134,6 +134,31 @@ class Order(Expr):
                 terms = expr.as_coeff_mul(*symbols)[1]
                 s = set(symbols)
                 expr = Mul(*[t for t in terms if s & t.free_symbols])
+
+                if len(symbols) == 1:
+                    # The definition of O(f(x)) symbol explicitly stated that
+                    # the argument of f(x) is irrelevant.  That's why we can
+                    # combine some power exponents (only "on top" of the
+                    # expression tree for f(x)), e.g.:
+                    # x**p * (-x)**q -> x**(p+q) for real p, q.
+                    x = symbols[0]
+                    d = Dummy("x", positive=True)
+                    q, r = Wild("q", exclude=[x]), Wild("r", exclude=[x])
+
+                    terms = []
+                    for t in expr.as_coeff_mul(*symbols)[1]:
+                        for p in [x**q, (-x)**q, ((x)**r)**q,
+                                  (-(x)**r)**q, (-(-x)**r)**q]:
+                            m = t.match(p)
+                            # XXX: Wild() can't handle assumption yet -
+                            # that's why we need this ugly check for is_real.
+                            if m and all(v.xreplace(m).is_real for v in [q, r]):
+                                terms.append((d**(q*r)).xreplace(m).subs(r, S.One))
+                                break
+                        else:
+                            terms.append(t)
+
+                    expr = Mul(*terms).subs(d, x)
 
         if expr is S.Zero:
             return expr
