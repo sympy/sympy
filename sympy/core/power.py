@@ -925,6 +925,10 @@ class Pow(Expr):
                     'expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
+
+            if e.is_real and e > 0:
+                nuse = int(n/e)
+
             bs = b._eval_nseries(x, n=nuse, logx=logx)
             terms = bs.removeO()
             if terms.is_Add:
