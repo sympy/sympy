@@ -269,23 +269,38 @@ def _implicit_application(tokens, local_dict, global_dict):
     return result
 
 
-def _function_exponents(tokens, local_dict, global_dict):
-    """Preprocess functions raised to powers."""
+def function_exponents(tokens, local_dict, global_dict):
+    """Allows functions to be exponentiated, e.g. cos**2(x)."""
     result = []
-    need_exponent = False
+    exponent = []
+    consuming_exponent = False
+    level = 0
+
     for tok, nextTok in zip(tokens, tokens[1:]):
+        if tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**':
+            consuming_exponent = True
+        elif consuming_exponent:
+            exponent.append(tok)
+
+            # only want to stop after hitting )
+            if tok[0] == nextTok[0] == OP and tok[1] == ')' and nextTok[1] == '(':
+                consuming_exponent = False
+            continue
+        elif exponent and not consuming_exponent:
+            if tok[0] == OP:
+                if tok[1] == '(':
+                    level += 1
+                elif tok[1] == ')':
+                    level -= 1
+            if level == 0:
+                result.append(tok)
+                result.extend(exponent)
+                exponent = []
+                continue
         result.append(tok)
-        if (tok[0] == NAME and nextTok[0] == OP
-                and nextTok[1] in ('**', '^')):
-            if getattr(global_dict.get(tok[1]), 'is_Function', False):
-                result[-1] = AppliedFunction(tok, [])
-                need_exponent = True
-        elif need_exponent:
-            del result[-1]
-            result[-1].exponent.append(tok)
-            if isinstance(tok, AppliedFunction):
-                need_exponent = False
     result.append(tokens[-1])
+    if exponent:
+        result.extend(exponent)
     return result
 
 
@@ -327,17 +342,6 @@ def implicit_multiplication(result, local_dict, global_dict):
     for step in (_group_parentheses(implicit_multiplication),
                  _apply_functions,
                  _implicit_multiplication):
-        result = step(result, local_dict, global_dict)
-
-    result = _flatten(result)
-    return result
-
-
-def function_exponents(result, local_dict, global_dict):
-    """Allows functions to be exponentiated, e.g. sin**2(x)."""
-    for step in (_group_parentheses(_function_exponents),
-                 _apply_functions,
-                 _function_exponents):
         result = step(result, local_dict, global_dict)
 
     result = _flatten(result)
