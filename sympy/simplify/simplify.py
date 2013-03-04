@@ -1371,6 +1371,7 @@ def trigsimp(expr, **opts):
 
     """
     from sympy import tan
+    from sympy.simplify.fu import fu
 
     old = expr
     first = opts.pop('first', True)
@@ -1423,6 +1424,8 @@ def trigsimp(expr, **opts):
         return trigsimp_groebner(ex, **opts)
 
     trigsimpfunc = {
+        'futrig': (lambda x, d: futrig(x)),
+        'fu': (lambda x, d: fu(x)),
         'matching': (lambda x, d: _trigsimp(x, d)),
         'groebner': (lambda x, d: groebnersimp(x, d, **opts)),
         'combined': (lambda x, d: _trigsimp(groebnersimp(x,
@@ -1441,13 +1444,14 @@ def trigsimp(expr, **opts):
     else:
         result = trigsimpfunc(expr, deep)
 
-    if opts.get('compare', True):
+    if opts.get('compare', False):
         f = futrig(old)
         if f != result:
             print
-            print old
-            print '\tfu:',f
+            print 'original: ', old
+            print '\t  futrig:', f
             print '\ttrigsimp:', result
+
     return result
 
 
@@ -4151,55 +4155,101 @@ def besselsimp(expr):
     return expr
 
 
-def futrig(e, h=True):
+def futrig(e, **kwargs):
+    """Return simplified ``e`` using Fu-like transformations that mimic
+    the trigsimp algorithm. This is not the "Fu" algorithm. This is
+    mainly experimental and can be accessed through trigsimp by using
+    the ``method='futrig'`` option.
+
+    Examples
+    ========
+
+    >>> from sympy import trigsimp, tan, sinh, tanh
+    >>> from sympy.simplify.simplify import futrig
+    >>> from sympy.abc import x
+    >>> trigsimp(1/tan(x)**2, method='futrig')
+    cot(x)**2
+    >>> trigsimp(1/tan(x)**2, method='fu')
+    tan(x)**(-2)
+    >>> trigsimp(1/tan(x)**2)
+    tan(x)**(-2)
+
+    >>> futrig(sinh(x)/tanh(x))
+    cosh(x)
+
+    """
     from sympy.strategies.tree import greedy
     from sympy.strategies.core import identity
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR14, TR5, TR10, L, TR10i,
-        TR8, TR6, TR15, TR16, TR17, as_trig, TR5, TRmorrie)
+        TR8, TR6, TR15, TR16, TR17, as_trig, TR5, TRmorrie, TR11, TR14)
     from sympy.core.compatibility import ordered, _nodes
 
     Lops = lambda x: (L(x), x.count_ops(), _nodes(x))
 
-    #  XXX this needs to be fixed
-    '''
-    tree = (
-        TR3,  # canonical angles
-        TR1,  # sec-cos -> sin-cos
-        TR2,  # tan-cot -> sin-cos
-        TR2i,  # sin-cos ratio -> tan
-        TR14,  # factored identities
-        TR5,  #sin-pow -> cos_pow
-        TR10,  #sin-cos of sums -> sin-cos prod
-        [identity, expand_mul],
-        TRmorrie,
-        TR10i,  # sin-cos products > sin-cos of sums
-        TR8,  # sin-cos products -> sin-cos of sums
-        )
-    e = greedy(e, objective=Lops)(e)
-    '''
-    e = TR3(e)  # angles canonical
-    e = TR1(e)  # sec-csc -> sin-cos
-    e = TR2(e)  # tan-cot -> sin-cos
-    e = factor(e)
-    # matchersdivision
-    e = TR2i(e) # sin-cos ratios to tan
-    #e = min(TR2(e), e, key=Lops)
-    e = TR14(e) # factored identities
-    # identity
-    e = TR5(e)  # sin-powers -> cos-powers
-    e = TR10(e) # sin-cos of sums -> sin-cos prod
-    e = min(_mexpand(e), e, key=L)
-    # matchers add
-    e = TR10i(e)
-    e = min(e, TR8(e), key=Lops)
+    hyper = kwargs.pop('hyper', True) and e.has(C.HyperbolicFunction)
 
-    # artifacts
-    e = min(e, TR2i(TR2(e)), key=Lops)
-    e = min(expand_mul(TR5(e)), expand_mul(TR15(e)), key=Lops)
-    e = min(expand_mul(TR6(e)), expand_mul(TR16(e)), key=Lops)
-    e = TR17(e)
-    if h:
+    if 0:
+        if e.has(C.TrigonometricFunction):
+            e = TR3(e)  # angles canonical
+            e = TR1(e)  # sec-csc -> sin-cos
+            e = TR2(e)  # tan-cot -> sin-cos
+            # matchersdivision
+            e = TR2i(e)  # sin-cos ratios to tan
+            e = TR14(e)
+            # identity
+            e = TR5(e)  # sin-powers -> cos-powers
+            e = TR10(e)  # sin-cos of sums -> sin-cos prod
+            e = TR11(e)  # reduce double angles
+            e = factor(e)
+            e = TR14(e)  # factored powers of identities
+            e = min(e, _mexpand(e), key=Lops)
+            # matchers add
+            e = TRmorrie(e)  # special products of sin-cos
+            e = TR10i(e)  # product of sin-cos collected
+            e = min(e, TR8(e), key=Lops)  # products as sums
+
+            # artifacts
+            e = min(e, TR2i(TR2(e)), key=Lops)  # tan->sin-cos->tan
+            e = min(expand_mul(TR5(e)),
+                expand_mul(TR15(e)), key=Lops)  # pos/neg powers of sin
+            e = min(expand_mul(TR6(e)),
+                expand_mul(TR16(e)), key=Lops)  # pos/neg powers of cos
+            e = TR17(e)  # tan -> cot
+            e = min(e, TR2i(e), key=Lops)
+
+    else:
+        de = True  # not sure if deep is necessary
+        if e.has(C.TrigonometricFunction):
+            tree = [identity,
+                (
+                TR3,  # canonical angles
+                TR1,  # sec-cos -> sin-cos
+                TR2,  # tan-cot -> sin-cos
+                TR2i,  # sin-cos ratio -> tan
+                TR14,  # factored identities
+                TR5,  # sin-pow -> cos_pow
+                TR10,  # sin-cos of sums -> sin-cos prod
+                TR11,  # reduce double angles
+                factor,
+                TR14,  # factored powers of identities
+                [identity, lambda x: _mexpand(x)],
+                TRmorrie,
+                TR10i,  # sin-cos products > sin-cos of sums
+                [identity, TR8],  # sin-cos products -> sin-cos of sums
+                [identity, lambda x: TR2i(TR2(x))],  # tan -> sin-cos -> tan
+                [
+                    lambda x: expand_mul(TR5(x), deep=de),
+                    lambda x: expand_mul(TR15(x), deep=de)], # pos/neg powers of sin
+                [
+                    lambda x: expand_mul(TR6(x), deep=de),
+                    lambda x: expand_mul(TR16(x), deep=de)], # pos/neg powers of cos
+                TR17,  # tan -> cot
+                [identity, TR2i],  # sin-cos ratio to tan
+                )]
+            e = greedy(tree, objective=Lops)(e)
+
+    if hyper:
         e, f = as_trig(e)
-        e = f(futrig(e, False))
+        e = f(futrig(e, hyper=False))
     return e

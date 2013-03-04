@@ -455,22 +455,23 @@ def _TR56(rv, f, g, h, max, pow):
     =======
 
     max :   controls size of exponent that can appear on f
-            e.g. if max=4 then f**4 will be changed to (1 - g**2)**2
-            and (if pow is False) then f**6 will be changed to (1 - g**2)**3
+            e.g. if max=4 then f**4 will be changed to h(g**2)**2
+            and (if pow is False) then f**6 will be changed to h(g**2)**3
     pow :   controls whether the exponent must be a perfect power of 2
             e.g. if pow=True (and max >= 6) then f**6 will not be changed
-            but f**8 will be changed to (1 - g**2)**4
+            but f**8 will be changed to h(g**2)**4
 
     >>> from sympy.simplify.fu import _TR56 as T
     >>> from sympy.abc import x
     >>> from sympy import sin, cos
-    >>> T(sin(x)**3, sin, cos, 4, False)
+    >>> h = lambda x: 1 - x
+    >>> T(sin(x)**3, sin, cos, h, 4, False)
     sin(x)**3
-    >>> T(sin(x)**6, sin, cos, 6, False)
+    >>> T(sin(x)**6, sin, cos, h, 6, False)
     (-cos(x)**2 + 1)**3
-    >>> T(sin(x)**6, sin, cos, 6, True)
+    >>> T(sin(x)**6, sin, cos, h, 6, True)
     sin(x)**6
-    >>> T(sin(x)**8, sin, cos, 10, True)
+    >>> T(sin(x)**8, sin, cos, h, 10, True)
     (-cos(x)**2 + 1)**4
     """
 
@@ -1456,9 +1457,9 @@ def TR17(rv):
 
     >>> from sympy.simplify.fu import TR17
     >>> from sympy.abc import x
-    >>> from sympy import cos, sin
+    >>> from sympy import tan
     >>> TR17(1 - 1/tan(x)**2)
-    1 - cot(x)**2
+    -cot(x)**2 + 1
 
     """
     rv = bottom_up(rv, TR17)
@@ -1512,7 +1513,10 @@ def CTRstrat(lists):
 
 CTR1, CTR2, CTR3, CTR4 = map(CTRstrat, (_CTR1, _CTR2, _CTR3, _CTR4))
 
-_RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4]
+# expand_mul was formerly TR0 but that is very expensive to use
+# and perhaps not necessary. Also, if fu acted from the bottom up
+# then expand_mul could use the deep=False option
+_RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, expand_mul]
 
 
 # XXX it's a little unclear how this one is to be implemented
