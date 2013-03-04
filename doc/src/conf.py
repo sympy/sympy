@@ -161,23 +161,23 @@ tikz_tikzlibraries = "calc,arrows,automata,backgrounds,decorations"
 
 # Additional stuff for the LaTeX preamble.
 # Tweaked to work with XeTeX.
+# tikz must be imported before other libraries, otherwise it will give lots of warnings
 latex_elements = {
     'babel':     '',
     'fontenc': r'''
+\usepackage{tikz}
+\usetikzlibrary{%(tikz_libraries)s}
 \usepackage{amssymb}
 \usepackage{fontspec}
 \defaultfontfeatures{Mapping=tex-text}
 \setmainfont{DejaVu Serif}
 \setsansfont{DejaVu Sans}
 \setmonofont{DejaVu Sans Mono}
-''',
+''' % { 'tikz_libraries': tikz_tikzlibraries },
     'fontpkg':   '',
     'inputenc':  '',
     'utf8extra': '',
-    'preamble': r'''
-\usepackage{tikz}
-\usetikzlibrary{%(tikz_libraries)s}
-''' % { 'tikz_libraries': tikz_tikzlibraries },
+    'preamble': '',
 }
 
 # SymPy logo on title page
