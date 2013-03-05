@@ -1340,17 +1340,24 @@ def trigsimp(expr, **opts):
 
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
-    'groebner' and 'combined'. If 'matching', simplify the expression
-    recursively by pattern matching. If 'groebner', apply an experimental
-    groebner basis algorithm. In this case further options are forwarded to
-    ``trigsimp_groebner``, please refer to its docstring. If 'combined', first
-    run the groebner basis algorithm with small default parameters, then run
-    the 'matching' algorithm.
+    'groebner', 'combined', 'fu' and 'futrig'. If 'matching', simplify the
+    expression recursively by pattern matching. If 'groebner', apply an
+    experimental groebner basis algorithm. In this case further options
+    are forwarded to ``trigsimp_groebner``, please refer to its docstring.
+    If 'combined', first run the groebner basis algorithm with small
+    default parameters, then run the 'matching' algorithm. 'fu' runs the
+    collection of trigonometric transformations described by Fu, et al.
+    (see the `fu` docstring) while `futrig` runs a subset of Fu-transforms
+    that mimic the behavior of `trigsimp`.
+
+    compare:
+    - show input and output from `trigsimp` and `futrig` when different,
+    but returns the `trigsimp` value.
 
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh
+    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh, tan
     >>> from sympy.abc import x, y
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
@@ -1368,6 +1375,13 @@ def trigsimp(expr, **opts):
     (-sin(x) + 1)/cos(x) - cos(x)/(sin(x) - 1)
     >>> trigsimp(e, method="groebner")
     2/cos(x)
+
+    >>> trigsimp(1/tan(x)**2, compare=True)
+    <BLANKLINE>
+    original:  tan(x)**(-2)
+              futrig: cot(x)**2
+            trigsimp: tan(x)**(-2)
+    tan(x)**(-2)
 
     """
     from sympy import tan
