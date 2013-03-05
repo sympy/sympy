@@ -193,7 +193,7 @@ class KanesMethod(object):
         return temp3.subs(dict(zip(temp1, A))).subs(dict(zip(temp2, B)))
 
     def _coords(self, qind, qdep=[], coneqs=[]):
-        """Supply all the generalized coordiantes in a list.
+        """Supply all the generalized coordinates in a list.
 
         If some coordinates are dependent, supply them as part of qdep. Their
         dependent nature will only show up in the linearization process though.

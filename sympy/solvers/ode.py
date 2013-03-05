@@ -240,15 +240,13 @@ allhints = (
     "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
     "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
     "1st_homogeneous_coeff_subs_dep_div_indep",
-"almost_linear",
-"nth_linear_constant_coeff_homogeneous",
+    "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
     "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
     "Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
     "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
-"almost_linear_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "Liouville_Integral"
 )
@@ -482,9 +480,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
     ...     hint='1st_exact')
     f(x) == acos(C1/cos(x))
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ...     hint='almost_linear')
-    f(x) == C1/sqrt(sin(x)**2 - 1)
     >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
     ... hint='best')
     f(x) == acos(C1/cos(x))
@@ -817,9 +812,39 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
             try:
-                if r[d] != 0 and simplify(r[d].diff(y)) == simplify(r[e].diff(x)):
-                    matching_hints["1st_exact"] = r
-                    matching_hints["1st_exact_Integral"] = r
+                if r[d] != 0:
+                    numerator = simplify(r[d].diff(y) - r[e].diff(x))
+                    # The following few conditions try to convert a non-exact
+                    # differential equation into an exact one.
+                    # References : Differential equations with applications
+                    # and historical notes - George E. Simmons
+
+                    if numerator:
+                        # If (dP/dy - dQ/dx) / Q = f(x)
+                        # then exp(integral(f(x))*equation becomes exact
+                        factor = simplify(numerator/r[e])
+                        variables = factor.free_symbols
+                        if len(variables) == 1 and x == variables.pop():
+                            factor = exp(C.Integral(factor).doit())
+                            r[d] *= factor
+                            r[e] *= factor
+                            matching_hints["1st_exact"] = r
+                            matching_hints["1st_exact_Integral"] = r
+                        else:
+                            # If (dP/dy - dQ/dx) / -P = f(y)
+                            # then exp(integral(f(y))*equation becomes exact
+                            factor = simplify(-numerator/r[d])
+                            variables = factor.free_symbols
+                            if len(variables) == 1 and y == variables.pop():
+                                factor = exp(C.Integral(factor).doit())
+                                r[d] *= factor
+                                r[e] *= factor
+                                matching_hints["1st_exact"] = r
+                                matching_hints["1st_exact_Integral"] = r
+                    else:
+                        matching_hints["1st_exact"] = r
+                        matching_hints["1st_exact_Integral"] = r
+
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
                 # like f(2*x).diff(x).  See issue 1525 and issue 1620.
@@ -865,33 +890,6 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
                         and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
-
-        # If f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0 where l'(y) = g(y)
-        # then substituting u = l(y) gives a linear differential equation
-        # See Table II of the paper "Symbolic Integration: The Stormy
-        # Decade by Joel Moses
-        a = Wild('a')
-        b = Wild('b' ,exclude = [df])
-        c = Wild('c', exclude = [f(x), df])
-        match = collect(eq, df, evaluate=True).match(a*f(x).diff(x) + b + c)
-        if match:
-            factor = simplify(match[b].diff(f(x))/match[a])
-            if not factor.has(f(x)) and factor:
-                if len(match[b].args) == 1 or isinstance(match[b], Pow):
-                    u = match[b]
-                else:
-                    largs = [u for u in match[b].args if u.has(f(x))]
-                    u = reduce(lambda x, y: x*y, largs)
-                udiff = u.diff(f(x))
-                match = collect(eq, [df, f(x)], evaluate=True).match(udiff*a*f(x).diff(x) + b*u + c)
-                if match:
-                    r2 = {'a':a, 'b':b, 'c':c}
-                    r2[a] = match[a]
-                    r2[b] = match[b]
-                    r2[c] = match[c]
-                    matching_hints["almost_linear"] = r2
-                    matching_hints["almost_linear_Integral"] = r2
-
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
         # See Goldstein and Braun, "Advanced Methods for the Solution of
@@ -1012,18 +1010,20 @@ def odesimp(eq, func, order, hint):
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     ... simplify=False)
     >>> pprint(eq)
-                  x
-                     ----
-                     f(x)
-                       /
-                      |
-           /f(x)\     |  /  1         1     \
-        log|----| -   |  |- -- - -----------| d(u2) = 0
-           \ C1 /     |  |  u2     2    /1 \|
-                      |  |       u2 *sin|--||
-                      |  \              \u2//
-                      |
-                     /
+                            x
+                           ----
+                           f(x)
+                             /
+                            |
+                            |   /      /1 \    \
+                            |  -|u2*sin|--| + 1|
+                            |   \      \u2/    /
+    log(f(x)) = log(C1) +   |  ----------------- d(u2)
+                            |       2    /1 \
+                            |     u2 *sin|--|
+                            |            \u2/
+                            |
+                           /
 
     >>> pprint(odesimp(eq, f(x), 1,
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
@@ -1107,7 +1107,7 @@ def odesimp(eq, func, order, hint):
         if hint.startswith("1st_homogeneous_coeff"):
             for j, eqi in enumerate(eq):
                 newi = logcombine(eqi, force=True)
-                if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
+                if newi.lhs.func is log and newi.rhs == 0:
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
@@ -1971,13 +1971,13 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_best', simplify=False))
-                   /    2    \
-                   | 3*x     |
-                log|----- + 1|
-                   | 2       |
-       /f(x)\      \f (x)    /
-    log|----| + -------------- = 0
-       \ C1 /         3
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
 
     References
     ==========
@@ -2038,16 +2038,16 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
          \ x  /    \ x  / dx
         >>> pprint(dsolve(genform, f(x),
         ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
-                     f(x)
-                     ----
-                      x
+                       f(x)
+                       ----
+                        x
+                         /
+                        |
+                        |       -h(u1)
+        log(x) = C1 +   |  ---------------- d(u1)
+                        |  u1*h(u1) + g(u1)
+                        |
                        /
-                      |
-                      |       -h(u1)
-        log(C1*x) -   |  ---------------- d(u1) = 0
-                      |  u1*h(u1) + g(u1)
-                      |
-                     /
 
     Where u1*h(u1) + g(u1) != 0 and x != 0.
 
@@ -2062,13 +2062,13 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                     /          3   \
-                     |3*f(x)   f (x)|
-                  log|------ + -----|
-                     |  x         3 |
-           /x \      \           x  /
-        log|--| + ------------------- = 0
-           \C1/            3
+                          /          3   \
+                          |3*f(x)   f (x)|
+                       log|------ + -----|
+                          |  x         3 |
+                          \           x  /
+    log(x) = log(C1) - -------------------
+                                3
 
     References
     ==========
@@ -2150,12 +2150,12 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
-          ___________
-         /     2
-        /   3*x
-       /   ----- + 1 *f(x) = C1
-    3 /     2
-    \/     f (x)
+                        /      ___________\
+                        |     /     2     |
+                        |    /   3*x      |
+    log(f(x)) = C1 - log|   /   ----- + 1 |
+                        |3 /     2        |
+                        \\/     f (x)     /
 
     References
     ==========
@@ -2698,43 +2698,6 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     else:
         raise ValueError('Unknown value for key "returns".')
 
-def ode_almost_linear(eq, func, order, match):
-    r"""
-    Solves an almost linear equation.
-
-    This is an equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x)
-    where l'(y) = g(y).
-
-    If we substitute u(y) = l(y), we obtain a linear differential
-    equation.
-
-    Since ode_1st_linear, has already been implemented, and the
-    coefficients have been modified to the required form in
-    classify_ode, just passing eq, func, order and match to
-    ode_1st_linear will give the required output.
-
-    Examples
-    ========
-    >>> from sympy import Function, Derivative, pprint
-    >>> from sympy.solvers.ode import dsolve, classify_ode
-    >>> from sympy.abc import x
-    >>> f = Function('f')
-    >>> d = f(x).diff(x)
-    >>> eq = x*f(x)*d + 2*x*f(x)**2 + 1
-    >>> classify_ode(eq, f(x))
-    ('Bernoulli', 'almost_linear', 'Bernoulli_Integral',     'almost_linear_Integral')
-    >>> dsolve(eq, f(x), hint='almost_linear')
-    f(x) == (C1 - 2*Ei(4*x))*exp(-4*x)
-    >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
-                             -4*x
-    f(x) = (C1 - 2*Ei(4*x))*e
-
-    References
-    ==========
-    Symbolic Integration - The Stormy Decade by Moses
-    Table 2
-    """
-    return ode_1st_linear(eq, func, order, match)
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     r"""

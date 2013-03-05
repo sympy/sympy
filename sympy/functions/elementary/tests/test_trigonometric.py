@@ -1,7 +1,7 @@
 from sympy import (symbols, Symbol, nan, oo, zoo, I, sinh, sin, acot, pi, atan,
         acos, Rational, sqrt, asin, acot, cot, coth, E, S, tan, tanh, cos,
         cosh, atan2, exp, log, asinh, acoth, atanh, O, cancel, Matrix, re, im,
-        Float, Pow, gcd)
+        Float, Pow, gcd, sec, csc, cot)
 
 from sympy.utilities.pytest import XFAIL, slow
 
@@ -915,3 +915,9 @@ def test_tancot_rewrite_sqrt():
                         c1 = cot(x).rewrite(sqrt)
                         assert not c1.has(cot, tan), "fails for %d*pi/%d" % (i, n)
                         assert 1e-10 > abs( cot(float(x)) - float(c1) )
+
+def test_sec():
+    assert sec(x).diff(x) == tan(x)*sec(x)
+
+def test_csc():
+    assert csc(x).diff(x) == -cot(x)*csc(x)

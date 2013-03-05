@@ -1,4 +1,4 @@
-from sympy.core import C, Add, Mul, Pow
+from sympy.core import C, Add, Mul, Pow, S
 from sympy.core.mul import _keep_coeff
 from sympy.printing.str import StrPrinter
 from sympy.tensor import get_indices, get_contraction_structure
