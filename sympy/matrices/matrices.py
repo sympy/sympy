@@ -2459,6 +2459,12 @@ class MatrixBase(object):
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
+        
+    def rank(self, simplified=False, iszerofunc=_iszero,
+        simplify=False):
+        row_reduced = self.rref()[-1]
+        rank = len(row_reduced)
+        return rank
 
     def nullspace(self, simplified=False, simplify=False):
         """Returns list of vectors (Matrix objects) that span nullspace of self
