@@ -2,7 +2,6 @@
 
 from sympy import Integer, conjugate, Add, Mul
 from sympy.core.containers import Dict
-from sympy.core.basic import Basic
 from sympy.physics.quantum import Dagger
 from sympy.physics.quantum.gate import Gate
 from sympy.physics.quantum.qubit import Qubit, IntQubit
