@@ -218,19 +218,18 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
 
 def _implicit_application(tokens, local_dict, global_dict):
-    """Adds parentheses as needed after functions.
-
-    Also processes functions raised to powers."""
+    """Adds parentheses as needed after functions."""
     result = []
     appendParen = 0  # number of closing parentheses to add
-    skip = False  # number of tokens to delay before adding a ')' (to
-                  # capture **, ^, etc.)
-    exponent = None
+    skip = 0  # number of tokens to delay before adding a ')' (to
+              # capture **, ^, etc.)
+    exponentSkip = False  # skipping tokens before inserting parentheses to
+                          # work with function exponentiation
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (tok[0] == NAME and
             nextTok[0] != OP and
-                nextTok[0] != ENDMARKER):
+            nextTok[0] != ENDMARKER):
             func = global_dict.get(tok[1])
             is_Function = getattr(func, 'is_Function', False)
             if (is_Function or
@@ -238,14 +237,26 @@ def _implicit_application(tokens, local_dict, global_dict):
                     isinstance(nextTok, AppliedFunction)):
                 result.append((OP, '('))
                 appendParen += 1
-        elif isinstance(tok, AppliedFunction) and not tok.args:
-            # This occurs when we had a function raised to a power - it has
-            # no arguments
-            result[-1] = tok.function
-            exponent = tok.exponent
-            if nextTok[0] != OP and nextTok[1] != '(':
-                result.append((OP, '('))
-                appendParen += 1
+        # name followed by exponent - function exponentiation
+        elif (tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**'):
+            func = global_dict.get(tok[1])
+            is_Function = getattr(func, 'is_Function', False)
+            if (is_Function or
+                (callable(func) and not hasattr(func, 'is_Function'))):
+                exponentSkip = True
+        elif exponentSkip:
+            # if the last token added was an applied function (i.e. the
+            # power of the function exponent) OR a multiplication (as
+            # implicit multiplication would have added an extraneous
+            # multiplication)
+            if (isinstance(tok, AppliedFunction)
+                or tok[0] == OP and tok[1] == '*'):
+                # don't add anything if the next token is a multiplication
+                # or if there's already a parenthesis
+                if not (nextTok[0] == OP and nextTok[1] in ('*', '(')):
+                    result.append((OP, '('))
+                    appendParen += 1
+                    exponentSkip = False
         elif appendParen:
             if nextTok[0] == OP and nextTok[1] in ('^', '**', '*'):
                 skip = 1
@@ -255,16 +266,11 @@ def _implicit_application(tokens, local_dict, global_dict):
                 continue
             result.append((OP, ')'))
             appendParen -= 1
-            if exponent and not appendParen:
-                result.extend(exponent)
-                exponent = None
 
     result.append(tokens[-1])
 
     if appendParen:
         result.extend([(OP, ')')] * appendParen)
-    if exponent:
-        result.extend(exponent)
 
     return result
 

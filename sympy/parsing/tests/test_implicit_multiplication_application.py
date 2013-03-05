@@ -38,7 +38,7 @@ def test_implicit_multiplication_application():
         '(factorial)': 'factorial'
     }
     transformations = standard_transformations + (convert_xor,)
-    transformations2 = transformations + (implicit_multiplication_application,)
+    transformations2 = transformations + implicit_multiplication_application
     for e in d:
         implicit = parse_expr(e, transformations=transformations2)
         normal = parse_expr(d[e], transformations=transformations)
