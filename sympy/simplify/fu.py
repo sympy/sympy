@@ -31,6 +31,7 @@ docstrings for examples.
     TR15 - negative powers of sin to cot power
     TR16 - negative powers of cos to tan power
     TR17 - negative powers of tan to cot
+    TR22 - tan-cot powers to negative powers of cos-sin
 
 There are 4 combination transforms (CTR1 - CTR4) in which a seqence of
 transformations are applied and the simplest expression is selected from
@@ -1473,6 +1474,30 @@ def TR17(rv):
     return rv
 
 
+def TR22(rv):
+    """Convert tan(x)**2 to sec(x)**2 - 1 and cot(x)**2 to csc(x)**2 - 1
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.fu import TR22
+    >>> from sympy.abc import x
+    >>> from sympy import tan, cot
+    >>> TR22(1 + tan(x)**2)
+    sec(x)**2
+    >>> TR22(1 + cot(x)**2)
+    csc(x)**2
+
+    """
+    rv = bottom_up(rv, TR22)
+    if not (isinstance(rv, Pow) and rv.base.func in (cot, tan)):
+        return rv
+
+    rv = _TR56(rv, tan, sec, lambda x: x - 1, max=4, pow=False)
+    rv = _TR56(rv, cot, csc, lambda x: x - 1, max=4, pow=False)
+    return rv
+
+
 def L(rv):
     """Return count of trigonometric functions in expression.
 
@@ -1492,11 +1517,10 @@ def L(rv):
 
 if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR17
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR17, TR22
     )= map(debug,
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR17
-    ))
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR17, TR22))
 
 _CTR1 = [TR5, TR0], [TR6, TR0], [identity]
 
@@ -1673,10 +1697,10 @@ def process_common_addends(rv, do, key2=None, key1=True):
 FU = dict(zip('''
     TR0 TR1 TR2 TR3 TR4 TR5 TR6 TR7 TR8 TR9 TR10 TR10i TR11
     TR12 TR13 CTR1 CTR2 CTR3 CTR4 RL1 RL2 L TR2i TRmorrie TR12i
-    TR14 TR15 TR16 TR17'''.split(),
+    TR14 TR15 TR16 TR17 TR22'''.split(),
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11,
     TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L, TR2i, TRmorrie, TR12i,
-    TR14, TR15, TR16, TR17)))
+    TR14, TR15, TR16, TR17, TR22)))
 
 
 def _roots():

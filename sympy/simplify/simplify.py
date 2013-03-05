@@ -4182,12 +4182,13 @@ def futrig(e, **kwargs):
     from sympy.strategies.core import identity
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR14, TR5, TR10, L, TR10i,
-        TR8, TR6, TR15, TR16, TR17, as_trig, TR5, TRmorrie, TR11, TR14)
+        TR8, TR6, TR15, TR16, TR17, as_trig, TR5, TRmorrie, TR11, TR14, TR22)
     from sympy.core.compatibility import ordered, _nodes
 
-    Lops = lambda x: (L(x), x.count_ops(), _nodes(x))
+    Lops = lambda x: (L(x), x.count_ops(), _nodes(x), len(x.args))
 
     hyper = kwargs.pop('hyper', True) and e.has(C.HyperbolicFunction)
+    ewas = e
 
     if 0:
         if e.has(C.TrigonometricFunction):
@@ -4196,13 +4197,13 @@ def futrig(e, **kwargs):
             e = TR2(e)  # tan-cot -> sin-cos
             # matchersdivision
             e = TR2i(e)  # sin-cos ratios to tan
-            e = TR14(e)
+            e = TR14(e)  # factored powers of identities
             # identity
             e = TR5(e)  # sin-powers -> cos-powers
             e = TR10(e)  # sin-cos of sums -> sin-cos prod
             e = TR11(e)  # reduce double angles
             e = factor(e)
-            e = TR14(e)  # factored powers of identities
+            e = TR14(e)
             e = min(e, _mexpand(e), key=Lops)
             # matchers add
             e = TRmorrie(e)  # special products of sin-cos
@@ -4217,7 +4218,8 @@ def futrig(e, **kwargs):
                 expand_mul(TR16(e)), key=Lops)  # pos/neg powers of cos
             e = TR17(e)  # tan -> cot
             e = min(e, TR2i(e), key=Lops)
-
+            e = min(e, expand_mul(TR1(TR22(e))), key=Lops)  # tan-cot -> sec-csc
+            e = min(e, ewas, key=Lops)
     else:
         de = True  # not sure if deep is necessary
         if e.has(C.TrigonometricFunction):
@@ -4246,6 +4248,7 @@ def futrig(e, **kwargs):
                     lambda x: expand_mul(TR16(x), deep=de)], # pos/neg powers of cos
                 TR17,  # tan -> cot
                 [identity, TR2i],  # sin-cos ratio to tan
+                [identity, lambda x: expand_mul(TR1(TR22(x)), deep=de)],  # tan-cot to sec, csc
                 )]
             e = greedy(tree, objective=Lops)(e)
 
