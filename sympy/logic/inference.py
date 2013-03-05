@@ -25,7 +25,9 @@ def is_literal(expr):
 
     """
 
-    if expr.is_Symbol:
+    if expr == True or expr == False:
+        return True
+    elif expr.is_Symbol:
         return True
     elif expr.is_Not:
         return is_literal(expr.args[0])
@@ -49,13 +51,14 @@ def literal_symbol(literal):
 
     """
 
-    if literal.func is Not:
+    if literal == True or literal == False:
+        return literal
+    elif literal.is_Symbol:
+        return literal
+    elif literal.is_Not:
         return literal_symbol(literal.args[0])
     else:
-        if len(literal.args) > 0:
-            raise ValueError("Argument must be a literal")
-        else:
-            return literal
+        raise ValueError("Argument must be literal.")
 
 
 def satisfiable(expr, algorithm="dpll2"):
