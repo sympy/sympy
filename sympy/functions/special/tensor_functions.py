@@ -429,7 +429,6 @@ class KroneckerDelta(Function):
         else:
             return 0
 
-    
     def __eq__(self, other):
         '''
         To make KroneckerDelta canonicalize, __eq__method is overriden
