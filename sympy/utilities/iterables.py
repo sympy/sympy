@@ -1125,8 +1125,8 @@ class PartComponent(object):
 
     Represents one component of one part of the current partition.
 
-    A stack of these, plus an auxiliary  frame array, f, represents
-    a partition of the multiset.
+    A stack of these, plus an auxiliary frame array, f, represents a
+    partition of the multiset.
 
     Knuth's psuedocode makes c, u, and v separate arrays.
     """
@@ -1135,7 +1135,7 @@ class PartComponent(object):
     def __init__(self):
         self.c = 0   # Component number
         self.u = 0   # The as yet unpartitioned amount in component c
-                     # *before* it allocated by this triple
+                     # *before* it is allocated by this triple
         self.v = 0   # Amount of c component in the current part
                      # (v<=u).  An invariant of the representation is
                      # that the next higher triple for this component
@@ -1187,7 +1187,7 @@ def _multiset_partitions_taocp(multiplicities):
 
     Usage
     =====
-    XXX -todo
+    XXX -todo, also Examples
 
     """
 
@@ -1204,7 +1204,7 @@ def _multiset_partitions_taocp(multiplicities):
     # Note: allocation of space for stack is conservative.  Knuth's
     # exercise 7.2.1.5.68 gives some indication of how to tighten this
     # bound, but this is not implemented.
-    pstack = [PartComponent() for i in xrange(n*m+1)]
+    pstack = [PartComponent() for i in xrange(n * m + 1)]
     f = [0] * (n+1)
 
     # Step M1 in Knuth (Initialize)
@@ -1220,7 +1220,7 @@ def _multiset_partitions_taocp(multiplicities):
     a = 0
     lpart = 0
     f[1] = m
-    b = m # in general, current stack frame is from a to b-1
+    b = m # in general, current stack frame is from a to b - 1
 
     while True:
         while True:
@@ -1228,7 +1228,7 @@ def _multiset_partitions_taocp(multiplicities):
             j = a
             k = b
             x = False
-            while j<b:
+            while j < b:
                 pstack[k].u =  pstack[j].u - pstack[j].v
                 if  pstack[k].u == 0:
                     x = True
@@ -1236,19 +1236,19 @@ def _multiset_partitions_taocp(multiplicities):
                     pstack[k].c = pstack[j].c
                     pstack[k].v = min(pstack[j].v, pstack[k].u)
                     x = pstack[k].u < pstack[j].v
-                    k = k+1
+                    k = k + 1
                 else:  # x is True
                     pstack[k].c = pstack[j].c
                     pstack[k].v = pstack[k].u
-                    k = k+1
-                j = j+1
+                    k = k + 1
+                j = j + 1
                 # Note: x is True iff v has changed
 
             # Step M3 (Push if nonzero.)
             if k>b:
                 a = b
                 b = k
-                lpart = lpart+1
+                lpart = lpart + 1
                 f[lpart+1] = b
                 # Return to M2
             else:
@@ -1265,15 +1265,15 @@ def _multiset_partitions_taocp(multiplicities):
                 j = j - 1
             if j == a and pstack[j].v == 1:
                 # M6 (Backtrack)
-                if lpart==0 :
+                if lpart == 0 :
                     return
-                lpart = lpart-1
+                lpart = lpart - 1
                 b = a
                 a = f[lpart]
                 # Return to M5
             else:
-                pstack[j].v = pstack[j].v -1
-                for k in xrange(j+1, b):
+                pstack[j].v = pstack[j].v - 1
+                for k in xrange(j + 1, b):
                     pstack[k].v = pstack[k].u
                 break # GOTO M2
 
@@ -1295,9 +1295,13 @@ def factoring_visitor(state, primes):
     Examples
     ========
 
-    To enumerate the factorings of 24:
-    list(factoring_visitor(p, [2,3]) for
-         p in _multiset_partitions_taocp([3, 1]))
+    #To enumerate the factorings of 24:
+    >>> from sympy.utilities.iterables import \
+    ...     factoring_visitor, _multiset_partitions_taocp
+    >>> list(factoring_visitor(p, [2,3]) for
+    ...     p in _multiset_partitions_taocp([3, 1]))
+    ...
+    [[24], [8, 3], [12, 2], [4, 6], [4, 2, 3], [6, 2, 2], [2, 2, 2, 3]]
     """
     f, lpart, pstack = state
     factoring = []
@@ -1460,24 +1464,18 @@ def multiset_partitions(multiset, m=None):
         # giving the number of repeats for the corresponding element.
         multiplicities = []
         elements = []
-
-        # multiset is already sorted, so it is sufficient to test for
-        # equality with the most recent element.
-        for elem in multiset:
-            if elements and elements[-1] == elem:
-                multiplicities[-1] += 1
-            else:
-                elements.append(elem)
-                multiplicities.append(1)
+        for elem, ct in group(multiset, False):
+            elements.append(elem)
+            multiplicities.append(ct)
 
         if len(elements) < len(multiset):
             # General case - multiset with more than one distinct element
             # and at least one element repeated more than once.
-            for  state in _multiset_partitions_taocp(multiplicities):
+            for state in _multiset_partitions_taocp(multiplicities):
                 if m:
                     # TODO - use enum_range() of object version
                     f, lpart, pstack = state
-                    if m == lpart+1:
+                    if m == lpart + 1:
                         yield list_visitor(state, elements)
                 else:
                     yield list_visitor(state, elements)
