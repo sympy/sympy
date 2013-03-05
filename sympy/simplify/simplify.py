@@ -4182,7 +4182,8 @@ def futrig(e, **kwargs):
     from sympy.strategies.core import identity
     from sympy.simplify.fu import (
         TR1, TR2, TR3, TR2i, TR14, TR5, TR10, L, TR10i,
-        TR8, TR6, TR15, TR16, TR17, as_trig, TR5, TRmorrie, TR11, TR14, TR22)
+        TR8, TR6, TR15, TR16, TR17, as_trig, TR5, TRmorrie, TR11, TR14, TR22,
+        TR12)
     from sympy.core.compatibility import ordered, _nodes
 
     Lops = lambda x: (L(x), x.count_ops(), _nodes(x), len(x.args))
@@ -4194,9 +4195,12 @@ def futrig(e, **kwargs):
         if e.has(C.TrigonometricFunction):
             e = TR3(e)  # angles canonical
             e = TR1(e)  # sec-csc -> sin-cos
+            e = TR12(e)  # expand tan of sum
+            e = factor(e)
             e = TR2(e)  # tan-cot -> sin-cos
             # matchersdivision
             e = TR2i(e)  # sin-cos ratios to tan
+            e = factor(e.normal())
             e = TR14(e)  # factored powers of identities
             # identity
             e = TR5(e)  # sin-powers -> cos-powers
@@ -4219,6 +4223,7 @@ def futrig(e, **kwargs):
             e = TR17(e)  # tan -> cot
             e = min(e, TR2i(e), key=Lops)
             e = min(e, expand_mul(TR1(TR22(e))), key=Lops)  # tan-cot -> sec-csc
+            e = min(e, factor_terms(TR12(e)), key=Lops)
             e = min(e, ewas, key=Lops)
     else:
         de = True  # not sure if deep is necessary
@@ -4227,15 +4232,18 @@ def futrig(e, **kwargs):
                 (
                 TR3,  # canonical angles
                 TR1,  # sec-cos -> sin-cos
+                TR12,  # expand tan of sum
+                factor,
                 TR2,  # tan-cot -> sin-cos
                 TR2i,  # sin-cos ratio -> tan
+                lambda x: factor(x.normal()),
                 TR14,  # factored identities
                 TR5,  # sin-pow -> cos_pow
                 TR10,  # sin-cos of sums -> sin-cos prod
                 TR11,  # reduce double angles
                 factor,
                 TR14,  # factored powers of identities
-                [identity, lambda x: _mexpand(x)],
+                [identity, _mexpand],
                 TRmorrie,
                 TR10i,  # sin-cos products > sin-cos of sums
                 [identity, TR8],  # sin-cos products -> sin-cos of sums
@@ -4249,6 +4257,7 @@ def futrig(e, **kwargs):
                 TR17,  # tan -> cot
                 [identity, TR2i],  # sin-cos ratio to tan
                 [identity, lambda x: expand_mul(TR1(TR22(x)), deep=de)],  # tan-cot to sec, csc
+                [identity, lambda x: factor_terms(TR12(x))],
                 )]
             e = greedy(tree, objective=Lops)(e)
 

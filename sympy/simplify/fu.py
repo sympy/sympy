@@ -187,7 +187,8 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 
 from collections import defaultdict
 
-from sympy.simplify.simplify import simplify, powsimp, ratsimp, combsimp
+from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
+    _mexpand)
 from sympy.core.sympify import sympify
 from sympy.functions.elementary.trigonometric import (
     cos, sin, tan, cot, sec, csc, sqrt)
@@ -217,12 +218,9 @@ def TR0(rv):
     """Simplification of rational polynomials, trying to simplify
     the expression, e.g. combine things like 3*x + 2*x, etc....
     """
-    rv = simplify(rv, fu=True)  # disable calls to trigsimp
-    rv = powsimp(rv)
-    rv = ratsimp(rv)
-    rv = combsimp(rv)
-    rv = expand_mul(rv)
-    return rv
+    # although it would be nice to use cancel, it doesn't work
+    # with noncommutatives
+    return rv.normal().factor().expand()
 
 
 def TR1(rv):
@@ -1537,10 +1535,7 @@ def CTRstrat(lists):
 
 CTR1, CTR2, CTR3, CTR4 = map(CTRstrat, (_CTR1, _CTR2, _CTR3, _CTR4))
 
-# expand_mul was formerly TR0 but that is very expensive to use
-# and perhaps not necessary. Also, if fu acted from the bottom up
-# then expand_mul could use the deep=False option
-_RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, expand_mul]
+_RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0]
 
 
 # XXX it's a little unclear how this one is to be implemented
@@ -2026,6 +2021,8 @@ def as_trig(rv):
 
     http://en.wikipedia.org/wiki/Hyperbolic_function
     """
+    from sympy.simplify.simplify import signsimp
+
     # mask of trig functions
     trigs = rv.atoms(C.TrigonometricFunction)
     reps = [(t, Dummy()) for t in trigs]
@@ -2034,4 +2031,4 @@ def as_trig(rv):
     # get inversion substitutions in place
     reps = [(v, k) for k, v in reps]
 
-    return _osborne(masked), lambda x: _osbornei(x).xreplace(dict(reps))
+    return _osborne(masked), lambda x: signsimp(_osbornei(x).xreplace(dict(reps)))
