@@ -2460,6 +2460,24 @@ class MatrixBase(object):
             pivot += 1
         return self._new(r), pivotlist
 
+    def rank(self, simplified=False, iszerofunc=_iszero,
+        simplify=False):
+        """
+        Returns the rank of a matrix
+
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x
+        >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
+        >>> m.rank()
+        2
+        >>> n = Matrix(3, 3, range(1, 10))
+        >>> n.rank()
+        2
+        """
+        row_reduced = self.rref(simplified=simplified, iszerofunc=iszerofunc, simplify=simplify)
+        rank = len(row_reduced[-1])
+        return rank
+
     def nullspace(self, simplified=False, simplify=False):
         """Returns list of vectors (Matrix objects) that span nullspace of self
         """
