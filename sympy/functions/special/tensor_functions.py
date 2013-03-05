@@ -1,7 +1,7 @@
 from sympy.core.function import Function, C
 from sympy.core import S, Integer
 from sympy.core.mul import prod
-from sympy.utilities.iterables import has_dups
+from sympy.utilities.iterables import (has_dups, minlex)
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -428,3 +428,19 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
+
+    
+    def __eq__(self, other):
+        '''
+        To make KroneckerDelta canonicalize, __eq__method is overriden
+        simply swap the parameters using minlex wouldn't work because
+        KroneckerDelta.preferred_index() depends on the order of inputs
+        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
+        >>> from sympy import (Dummy, symbols)
+        >>> p, q, r, s = symbols('p q r s', cls=Dummy)
+        >>> KroneckerDelta(q, p) == KroneckerDelta(p, q)
+        True
+        '''
+        if type(self) is not type(other):
+            return False
+        return minlex(self.args) == minlex(other.args)
