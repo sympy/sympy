@@ -170,6 +170,12 @@ class KroneckerDelta(Function):
         if j.assumptions0.get("below_fermi") and \
                 i.assumptions0.get("above_fermi"):
             return S.Zero
+        # to make KroneckerDelta canonical
+        # following lines will check if inputs are in order
+        # if not, will return KroneckerDelta with correct order
+        sorted_args = minlex((i, j))
+        if i is not sorted_args[0]:
+            return cls(j, i)
 
     @property
     def is_above_fermi(self):
@@ -428,18 +434,3 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
-
-    def __eq__(self, other):
-        '''
-        To make KroneckerDelta canonicalize, __eq__method is overriden
-        simply swap the parameters using minlex wouldn't work because
-        KroneckerDelta.preferred_index() depends on the order of inputs
-        >>> from sympy.functions.special.tensor_functions import KroneckerDelta
-        >>> from sympy import (Dummy, symbols)
-        >>> p, q, r, s = symbols('p q r s', cls=Dummy)
-        >>> KroneckerDelta(q, p) == KroneckerDelta(p, q)
-        True
-        '''
-        if type(self) is not type(other):
-            return False
-        return minlex(self.args) == minlex(other.args)
