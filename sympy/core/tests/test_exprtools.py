@@ -174,6 +174,10 @@ def test_factor_terms():
     assert factor_terms((1/(x**3 + x**2) + 2/x**2)*y) == \
         y*(2 + 1/(x + 1))/x**2
 
+    assert factor_terms(-x - y) == Mul(-1, x + y, evaluate=False)
+    # if not True, then processes for this in factor_terms is not necessary
+    assert gcd_terms(-x - y) == -x - y
+
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)

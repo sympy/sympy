@@ -773,7 +773,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     return terms.func(*[handle(i) for i in terms.args])
 
 
-def factor_terms(expr, radical=False, clear=False, fraction=False):
+def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -787,6 +787,9 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
 
     If fraction=True (default is False) then a common denominator will be
     constructed for the expression.
+
+    If sign=True (default) then even if the only factor in common is a -1,
+    it will be removed from the expression.
 
     Examples
     ========
@@ -815,6 +818,16 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
     y*(x + 2)/2
     >>> factor_terms(x*y/2 + y, clear=False) == _
     True
+
+    If a -1 is all that can be factored out, to *not* factor it out, the
+    flag ``sign`` must be False:
+
+    >>> factor_terms(-x - y)
+    -(x + y)
+    >>> factor_terms(-x - y, sign=False)
+    -x - y
+    >>> factor_terms(-2*x - 2*y, sign=False)
+    -2*(x + y)
 
     See Also
     ========
@@ -849,6 +862,10 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         isprimitive=True,
         clear=clear,
         fraction=fraction) for a in Add.make_args(p)]
+        # get a common negative (if there) which gcd_terms does not remove
+        if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+            cont = -cont
+            list_args = [-a for a in list_args]
         p = Add._from_args(list_args)  # gcd_terms will fix up ordering
     elif p.args:
         p = p.func(
@@ -857,7 +874,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         isprimitive=True,
         clear=clear,
         fraction=fraction)
-    return _keep_coeff(cont, p, clear=clear)
+    return _keep_coeff(cont, p, clear=clear, sign=sign)
 
 
 def _mask_nc(eq):
