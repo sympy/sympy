@@ -1433,6 +1433,7 @@ def test_issue_1996():
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def test_almost_linear():
     from sympy import Ei
     our_hint = 'almost_linear'
@@ -1458,7 +1459,7 @@ def test_almost_linear():
     sol = dsolve(eq, f(x), hint = 'almost_linear')
     assert sol.rhs == (C1 - 3*x**2/2)/x
     assert checkodesol(eq, sol, order=1, solve_for_func=False)
-=======
+
 def test_exact_enhancement():
     f = Function('f')(x)
     d = Derivative(f, x)
@@ -1476,4 +1477,4 @@ def test_exact_enhancement():
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs[0] == acos(-sqrt(C1*exp(-2*x)/x**4 + 1))
     assert rhs[1] == acos(sqrt(C1*exp(-2*x)/x**4 + 1))
->>>>>>> upstrea/master
+
