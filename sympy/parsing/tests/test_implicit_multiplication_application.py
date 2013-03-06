@@ -35,11 +35,13 @@ def test_implicit_multiplication_application():
         'x_2': 'Symbol("x_2")',
         'sin^2 x**2': 'sin(x**2)**2',  # function raised to a power
         'sin**3(x)': 'sin(x)**3',
-        '(factorial)': 'factorial'
+        '(factorial)': 'factorial',
+        'tan 3x': 'tan(3*x)'
     }
     transformations = standard_transformations + (convert_xor,)
-    transformations2 = transformations + implicit_multiplication_application
+    transformations2 = transformations + (implicit_multiplication_application,)
     for e in d:
         implicit = parse_expr(e, transformations=transformations2)
         normal = parse_expr(d[e], transformations=transformations)
+        print e, implicit, normal
         assert(implicit == normal)

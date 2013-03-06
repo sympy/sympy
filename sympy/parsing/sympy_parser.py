@@ -275,8 +275,17 @@ def _implicit_application(tokens, local_dict, global_dict):
     return result
 
 
-def function_exponents(tokens, local_dict, global_dict):
-    """Allows functions to be exponentiated, e.g. cos**2(x)."""
+def function_exponentiation(tokens, local_dict, global_dict):
+    """Allows functions to be exponentiated, e.g. ``cos**2(x)``.
+
+    Example:
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, function_exponentiation)
+    >>> transformations = standard_transformations + (function_exponentiation,)
+    >>> parse_expr('sin**4(x)', transformations=transformations)
+    sin(x)**4
+    """
     result = []
     exponent = []
     consuming_exponent = False
@@ -315,12 +324,12 @@ def function_exponents(tokens, local_dict, global_dict):
 
 
 def split_symbols(tokens, local_dict, global_dict):
-    """
-    Splits symbol names for implicit multiplication.
+    """Splits symbol names for implicit multiplication.
 
     Intended to let expressions like ``xyz`` be parsed as ``x*y*z``. Does
     not split Greek character names, so ``theta`` will *not* become
-    ``t*h*e*t*a``.
+    ``t*h*e*t*a``. Generally this should be used with
+    ``implicit_multiplication``.
     """
     result = []
     split = False
@@ -347,7 +356,19 @@ def split_symbols(tokens, local_dict, global_dict):
 
 
 def implicit_multiplication(result, local_dict, global_dict):
-    """Makes the multiplication operator optional in most cases."""
+    """Makes the multiplication operator optional in most cases.
+
+    Use this before :func:`implicit_application`, otherwise expressions like
+    ``sin 2x`` will be parsed as ``x * sin(2)`` rather than ``sin(2*x)``.
+
+    Example:
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, implicit_multiplication)
+    >>> transformations = standard_transformations + (implicit_multiplication,)
+    >>> parse_expr('3 x y', transformations=transformations)
+    3*x*y
+    """
     # These are interdependent steps, so we don't expose them separately
     for step in (_group_parentheses(implicit_multiplication),
                  _apply_functions,
@@ -359,13 +380,54 @@ def implicit_multiplication(result, local_dict, global_dict):
 
 
 def implicit_application(result, local_dict, global_dict):
-    """Makes parentheses optional in some cases for function calls."""
+    """Makes parentheses optional in some cases for function calls.
+
+    Use this after :func:`implicit_multiplication`, otherwise expressions
+    like ``sin 2x`` will be parsed as ``x * sin(2)`` rather than
+    ``sin(2*x)``.
+
+    Example:
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, implicit_application)
+    >>> transformations = standard_transformations + (implicit_application,)
+    >>> parse_expr('cot z + csc z', transformations=transformations)
+    csc(z) + cot(z)
+    """
     for step in (_group_parentheses(implicit_application),
                  _apply_functions,
                  _implicit_application,):
         result = step(result, local_dict, global_dict)
 
     result = _flatten(result)
+    return result
+
+def implicit_multiplication_application(result, local_dict, global_dict):
+    """Allows a slightly relaxed syntax.
+
+    - Parentheses for single-argument method calls are optional.
+
+    - Multiplication is implicit.
+
+    - Symbol names can be split (i.e. spaces are not needed between
+      symbols).
+
+    - Functions can be exponentiated.
+
+    Example:
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, implicit_multiplication_application)
+    >>> parse_expr("10sin**2 x**2 + 3xyz + tan theta",
+    ... transformations=(standard_transformations +
+    ... (implicit_multiplication_application,)))
+    3*x*y*z + 10*sin(x**2)**2 + tan(theta)
+
+    """
+    for step in (split_symbols, implicit_multiplication,
+                 implicit_application, function_exponentiation):
+        result = step(result, local_dict, global_dict)
+
     return result
 
 
@@ -535,10 +597,6 @@ def rationalize(tokens, local_dict, global_dict):
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
 #: datatypes and allows the use of standard factorial notation (e.g. ``x!``).
 standard_transformations = (auto_symbol, auto_number, factorial_notation)
-
-
-implicit_multiplication_application = (split_symbols, implicit_multiplication,
-                                       implicit_application, function_exponents)
 
 
 def stringify_expr(s, local_dict, global_dict, transformations):
