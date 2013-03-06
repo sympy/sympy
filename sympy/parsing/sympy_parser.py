@@ -340,7 +340,7 @@ def split_symbols(tokens, local_dict, global_dict):
             symbol = tok[1][1:-1]
             if _token_splittable(symbol):
                 for char in symbol:
-                    result.extend([(NAME, "'{}'".format(char)), (OP, ')'),
+                    result.extend([(NAME, "'%s'" % char), (OP, ')'),
                                    (NAME, 'Symbol'), (OP, '(')])
                 # Delete the last three tokens: get rid of the extraneous
                 # Symbol( we just added, and also get rid of the last )
