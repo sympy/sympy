@@ -47,6 +47,8 @@ applied in the order given.
 
 .. autofunction:: sympy.parsing.sympy_parser.split_symbols
 
+.. autofunction:: sympy.parsing.sympy_parser.split_symbols_custom
+
 .. autofunction:: sympy.parsing.sympy_parser.implicit_multiplication
 
 .. autofunction:: sympy.parsing.sympy_parser.implicit_application

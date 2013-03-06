@@ -323,36 +323,45 @@ def function_exponentiation(tokens, local_dict, global_dict):
     return result
 
 
-def split_symbols(tokens, local_dict, global_dict):
-    """Splits symbol names for implicit multiplication.
-
-    Intended to let expressions like ``xyz`` be parsed as ``x*y*z``. Does
-    not split Greek character names, so ``theta`` will *not* become
-    ``t*h*e*t*a``. Generally this should be used with
-    ``implicit_multiplication``.
+def split_symbols_custom(predicate):
     """
-    result = []
-    split = False
-    for tok in tokens:
-        if tok[0] == NAME and tok[1] == 'Symbol':
-            split = True
-        elif split and tok[0] == NAME:
-            symbol = tok[1][1:-1]
-            if _token_splittable(symbol):
-                for char in symbol:
-                    result.extend([(NAME, "'%s'" % char), (OP, ')'),
-                                   (NAME, 'Symbol'), (OP, '(')])
-                # Delete the last three tokens: get rid of the extraneous
-                # Symbol( we just added, and also get rid of the last )
-                # because the closing parenthesis of the original Symbol is
-                # still there
-                del result[-3:]
-                split = False
-                continue
-            else:
-                split = False
-        result.append(tok)
-    return result
+    Creates a transformation that splits symbol names.
+
+    ``predicate`` should return True if the symbol name is to be split.
+    """
+    def _split_symbols(tokens, local_dict, global_dict):
+        result = []
+        split = False
+        for tok in tokens:
+            if tok[0] == NAME and tok[1] == 'Symbol':
+                split = True
+            elif split and tok[0] == NAME:
+                symbol = tok[1][1:-1]
+                if predicate(symbol):
+                    for char in symbol:
+                        result.extend([(NAME, "'%s'" % char), (OP, ')'),
+                                       (NAME, 'Symbol'), (OP, '(')])
+                    # Delete the last three tokens: get rid of the extraneous
+                    # Symbol( we just added, and also get rid of the last )
+                    # because the closing parenthesis of the original Symbol is
+                    # still there
+                    del result[-3:]
+                    split = False
+                    continue
+                else:
+                    split = False
+            result.append(tok)
+        return result
+    return _split_symbols
+
+
+#: Splits symbol names for implicit multiplication.
+#:
+#: Intended to let expressions like ``xyz`` be parsed as ``x*y*z``. Does not
+#: split Greek character names, so ``theta`` will *not* become
+#: ``t*h*e*t*a``. Generally this should be used with
+#: ``implicit_multiplication``.
+split_symbols = split_symbols_custom(_token_splittable)
 
 
 def implicit_multiplication(result, local_dict, global_dict):
