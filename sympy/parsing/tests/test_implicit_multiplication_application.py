@@ -43,5 +43,4 @@ def test_implicit_multiplication_application():
     for e in d:
         implicit = parse_expr(e, transformations=transformations2)
         normal = parse_expr(d[e], transformations=transformations)
-        print e, implicit, normal
         assert(implicit == normal)
