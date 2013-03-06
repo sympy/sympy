@@ -2,11 +2,62 @@ from sympy.parsing.sympy_parser import (
     parse_expr,
     standard_transformations,
     convert_xor,
-    implicit_multiplication_application
+    implicit_multiplication_application,
+    implicit_multiplication,
+    implicit_application,
+    function_exponentiation,
+    split_symbols
 )
 
 
-def test_implicit_multiplication_application():
+def test_implicit_multiplication():
+    d = {
+        '5x': '5*x',
+        'abc': 'a*b*c',
+        '3sin(x)': '3*sin(x)',
+        '(x+1)(x+2)': '(x+1)*(x+2)',
+        '(5 x**2)sin(x)': '(5*x**2)*sin(x)',
+        '2 sin(x) cos(x)': '2*sin(x)*cos(x)'
+    }
+    transformations = standard_transformations + (convert_xor,)
+    transformations2 = transformations + (split_symbols,
+                                          implicit_multiplication)
+    for e in d:
+        implicit = parse_expr(e, transformations=transformations2)
+        normal = parse_expr(d[e], transformations=transformations)
+        assert(implicit == normal)
+
+
+def test_implicit_application():
+    d = {
+        'factorial': 'factorial',
+        'sin x': 'sin(x)',
+        'tan y**3': 'tan(y**3)',
+        'cos 2*x': 'cos(2*x)',
+        '(cot)': 'cot'
+    }
+    transformations = standard_transformations + (convert_xor,)
+    transformations2 = transformations + (implicit_application,)
+    for e in d:
+        implicit = parse_expr(e, transformations=transformations2)
+        normal = parse_expr(d[e], transformations=transformations)
+        assert(implicit == normal)
+
+
+def test_function_exponentiation():
+    d = {
+        'sin**2(x)': 'sin(x)**2',
+        'exp^y(z)': 'exp(z)^y'
+    }
+    transformations = standard_transformations + (convert_xor,)
+    transformations2 = transformations + (function_exponentiation,)
+    for e in d:
+        implicit = parse_expr(e, transformations=transformations2)
+        normal = parse_expr(d[e], transformations=transformations)
+        assert(implicit == normal)
+
+
+def test_all_implicit_steps():
     d = {
         '2x': '2*x',  # implicit multiplication
         'x y': 'x*y',
