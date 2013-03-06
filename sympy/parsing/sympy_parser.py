@@ -324,10 +324,26 @@ def function_exponentiation(tokens, local_dict, global_dict):
 
 
 def split_symbols_custom(predicate):
-    """
-    Creates a transformation that splits symbol names.
+    """Creates a transformation that splits symbol names.
 
     ``predicate`` should return True if the symbol name is to be split.
+
+    For instance, to retain the default behavior but avoid splitting certain
+    symbol names, a predicate like this would work:
+
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr, _token_splittable,
+    ... standard_transformations, implicit_multiplication,
+    ... split_symbols_custom)
+    >>> def can_split(symbol):
+    ...     if symbol not in ('list', 'of', 'unsplittable', 'names'):
+    ...             return _token_splittable(symbol)
+    ...     return False
+    ...
+    >>> transformation = split_symbols_custom(can_split)
+    >>> parse_expr('unsplittable', transformations=standard_transformations +
+    ... (transformation, implicit_multiplication))
+    unsplittable
     """
     def _split_symbols(tokens, local_dict, global_dict):
         result = []
