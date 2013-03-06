@@ -399,7 +399,7 @@ class SHOKet(SHOState, Ket):
         >>> k = SHOKet('k')
         >>> b = SHOBra('b')
         >>> InnerProduct(b,k).doit()
-        KroneckerDelta(k, b)
+        KroneckerDelta(b, k)
 
     """
 
