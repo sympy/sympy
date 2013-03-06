@@ -13,15 +13,15 @@ from sympy.utilities.pytest import raises
 
 def test_literal():
     A, B = symbols('A,B')
-    assert is_literal(True) == True
-    assert is_literal(False) == True
-    assert is_literal(A) == True
-    assert is_literal(~A) == True
-    assert is_literal(Or(A, B)) == False
-    assert literal_symbol(True) == True
-    assert literal_symbol(False) == False
-    assert literal_symbol(A) == A
-    assert literal_symbol(~A) == A
+    assert is_literal(True) is True
+    assert is_literal(False) is True
+    assert is_literal(A) is True
+    assert is_literal(~A) is True
+    assert is_literal(Or(A, B)) is False
+    assert literal_symbol(True) is True
+    assert literal_symbol(False) is False
+    assert literal_symbol(A) is A
+    assert literal_symbol(~A) is A
 
 
 def test_find_pure_symbol():

@@ -7,8 +7,7 @@ from sympy.core.sympify import sympify
 
 def is_literal(expr):
     """
-    Returns true if expr is a literal.
-    Else, returns false.
+    Returns True if expr is a literal, else False.
 
     Examples
     ========
@@ -25,14 +24,12 @@ def is_literal(expr):
 
     """
 
-    if expr == True or expr == False:
+    try:
+        literal_symbol(expr)
         return True
-    elif expr.is_Symbol:
-        return True
-    elif expr.is_Not:
-        return is_literal(expr.args[0])
-    else:
+    except (ValueError):
         return False
+
 
 def literal_symbol(literal):
     """
@@ -51,14 +48,17 @@ def literal_symbol(literal):
 
     """
 
-    if literal == True or literal == False:
+    if literal is True or literal is False:
         return literal
-    elif literal.is_Symbol:
-        return literal
-    elif literal.is_Not:
-        return literal_symbol(literal.args[0])
-    else:
-        raise ValueError("Argument must be literal.")
+    try:
+        if literal.is_Symbol:
+            return literal
+        if literal.is_Not:
+            return literal_symbol(literal.args[0])
+        else:
+            raise ValueError
+    except (AttributeError, ValueError):
+        raise ValueError("Argument must be a boolean literal.")
 
 
 def satisfiable(expr, algorithm="dpll2"):
