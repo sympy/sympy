@@ -301,7 +301,6 @@ def test_piecewise_fold():
         piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
 
 
-@XFAIL
 def test_piecewise_fold_piecewise_in_cond():
     p1 = Piecewise((cos(x), x < 0), (0, True))
     p2 = Piecewise((0, Eq(p1, 0)), (p1 / Abs(p1), True))
@@ -316,9 +315,6 @@ def test_piecewise_fold_piecewise_in_cond():
     r1 = 1 < Piecewise((1, x < 1), (3, True))
     assert(piecewise_fold(r1) == Not(x < 1))
 
-
-@XFAIL
-def test_piecewise_fold_piecewise_in_cond_3():
     p5 = Piecewise((1, x < 0), (3, True))
     p6 = Piecewise((1, x < 1), (3, True))
     p7 = piecewise_fold(Piecewise((1, p5 < p6), (0, True)))
