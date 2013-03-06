@@ -2470,12 +2470,12 @@ class MatrixBase(object):
         >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
         >>> m.rank()
         2
-        >>> n = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+        >>> n = Matrix(3, 3, range(1, 10))
         >>> n.rank()
         2
         """
-        row_reduced = self.rref(simplified=simplified, iszerofunc=iszerofunc, simplify=simplify)[-1]
-        rank = len(row_reduced)
+        row_reduced = self.rref(simplified=simplified, iszerofunc=iszerofunc, simplify=simplify)
+        rank = len(row_reduced[-1])
         return rank
 
     def nullspace(self, simplified=False, simplify=False):
