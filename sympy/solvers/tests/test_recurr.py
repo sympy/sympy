@@ -71,6 +71,8 @@ def test_rsolve_hyper():
     assert rsolve_hyper([1, 1, 1], 0, n).expand() == \
         C0*(-S(1)/2 - sqrt(3)*I/2)**n + C1*(-S(1)/2 + sqrt(3)*I/2)**n
 
+    assert rsolve_hyper([1, -2*n/a - 2/a, 1], 0, n) == None
+
 
 def recurrence_term(c, f):
     """Compute RHS of recurrence in f(n) with coefficients in c."""
