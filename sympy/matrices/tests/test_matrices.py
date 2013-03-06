@@ -2127,7 +2127,7 @@ def test_rank():
     from sympy.abc import x
     m = Matrix([[1, 2], [x, 1 - 1/x]])
     assert m.rank() == 2
-    n = Matrix([[1,2,3],[4,5,6],[7,8,9]])
+    n = Matrix(3, 3, range(1, 10))
     assert n.rank() == 2
-    p = Matrix([[0,0,0],[0,0,0],[0,0,0]])
+    p = Matrix([[0,0,0], [0,0,0], [0,0,0]])
     assert p.rank() == 0
