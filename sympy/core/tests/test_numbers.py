@@ -620,7 +620,6 @@ def test_Infinity_2():
     assert abs(S.ComplexInfinity) == oo
 
 
-@XFAIL
 def test_Mul_Infinity_Zero():
     assert 0*Float('inf') == nan
     assert 0*Float('-inf') == nan

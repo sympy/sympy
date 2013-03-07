@@ -1835,15 +1835,6 @@ class Zero(IntegerConstant):
     def __neg__():
         return S.Zero
 
-    @_sympifyit('other', NotImplemented)
-    @call_highest_priority('__rmul__')
-    def __mul__(self, other):
-        if other is S.NaN or \
-            other is S.NegativeInfinity or \
-            other is S.Infinity or \
-                other is S.ComplexInfinity:
-            return S.NaN
-        return S.Zero
 
     def _eval_power(self, expt):
         if expt.is_positive:
