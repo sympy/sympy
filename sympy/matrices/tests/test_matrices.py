@@ -2129,5 +2129,5 @@ def test_rank():
     assert m.rank() == 2
     n = Matrix(3, 3, range(1, 10))
     assert n.rank() == 2
-    p = Matrix([[0,0,0], [0,0,0], [0,0,0]])
+    p = zeros(3)
     assert p.rank() == 0
