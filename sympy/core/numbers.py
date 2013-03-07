@@ -767,7 +767,7 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __div__(self, other):
-        if isinstance(other, Number):
+        if isinstance(other, Number) and other != 0:
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_div(self._mpf_, rhs, prec, rnd), prec)
         return Number.__div__(self, other)
@@ -795,6 +795,11 @@ class Float(Number):
         (-p)**r -> exp(r*log(-p)) -> exp(r*(log(p) + I*Pi)) ->
                   -> p**r*(sin(Pi*r) + cos(Pi*r)*I)
         """
+        if self == 0:
+            if expt.is_positive:
+                return S.Zero
+            if expt.is_negative:
+                return Float('inf')
         if isinstance(expt, Number):
             if isinstance(expt, Integer):
                 prec = self._prec

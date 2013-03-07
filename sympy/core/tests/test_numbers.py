@@ -639,7 +639,6 @@ def test_Mul_Infinity_Zero():
     assert Float('-inf')*Float(0) == nan
 
 
-@XFAIL
 def test_Div_By_Zero():
     assert 1/S(0) == oo
     assert 1/Float(0) == Float('inf')
