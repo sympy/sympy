@@ -126,14 +126,10 @@ class Factors(object):
         if factors.get(S.NegativeOne, S.One) is not S.One:
             e = factors.pop(S.NegativeOne)
             factors[S.ImaginaryUnit] = 1
-            if e > S.One:
+            if e == S(3)/2:
                 factors[S.NegativeOne] = S.One
             elif e is not S.Half:
                 raise ValueError('unanticipated value for exponent of -1')
-        #for k, v in factors.iteritems():
-        #    if not (isinstance(v, int) or v.is_Integer or k.is_positive):
-        #        factors.pop(k)
-        #        factors[k**v] = S.One
 
         self.factors = factors
         try:
@@ -789,7 +785,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     constructed for the expression.
 
     If sign=True (default) then even if the only factor in common is a -1,
-    it will be removed from the expression.
+    it will be factored out of the expression.
 
     Examples
     ========
