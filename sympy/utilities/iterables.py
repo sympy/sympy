@@ -1245,7 +1245,7 @@ def _multiset_partitions_taocp(multiplicities):
                 # Note: x is True iff v has changed
 
             # Step M3 (Push if nonzero.)
-            if k>b:
+            if k > b:
                 a = b
                 b = k
                 lpart = lpart + 1
