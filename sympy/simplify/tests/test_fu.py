@@ -3,8 +3,9 @@ from sympy import (
     powsimp, symbols, sinh, cosh, tanh, coth)
 from sympy.simplify.fu import (
     L, TR1, TR10, TR10i, TR11, TR12, TR12i, TR13, TR14, TR15, TR16,
-    TR17, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
-    as_trig, csc, fu, process_common_addends, sec, trig_split, as_f_sign_1)
+    TR111, TR2, TR2i, TR3, TR5, TR6, TR7, TR8, TR9, TRmorrie, _TR56 as T,
+    hyper_as_trig, csc, fu, process_common_addends, sec, trig_split,
+    as_f_sign_1)
 from sympy.utilities.randtest import test_numerically
 from sympy.abc import a, b, c, x, y, z
 
@@ -324,11 +325,11 @@ def test_TRmorrie():
     assert TR8(TR3(TRmorrie(e))) == S(1)/65536
 
 
-def test_as_trig():
+def test_hyper_as_trig():
     from sympy.simplify.fu import _osborne, _osbornei
 
     eq = sinh(x)**2 + cosh(x)**2
-    t, f = as_trig(eq)
+    t, f = hyper_as_trig(eq)
     assert f(fu(t)) == cosh(2*x)
     assert _osborne(cosh(x)) == cos(x)
     assert _osborne(sinh(x)) == I*sin(x)
@@ -392,7 +393,7 @@ def test_TR14():
 def test_TR15_16_17():
     assert TR15(1 - 1/sin(x)**2) == -cot(x)**2
     assert TR16(1 - 1/cos(x)**2) == -tan(x)**2
-    assert TR17(1 - 1/tan(x)**2) == 1 - cot(x)**2
+    assert TR111(1 - 1/tan(x)**2) == 1 - cot(x)**2
 
 
 def test_as_f_sign_1():

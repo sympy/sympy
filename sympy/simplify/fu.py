@@ -30,8 +30,8 @@ docstrings for examples.
     TR14 - factored powers of sin or cos to cos or sin power
     TR15 - negative powers of sin to cot power
     TR16 - negative powers of cos to tan power
-    TR17 - negative powers of tan to cot
-    TR22 - tan-cot powers to negative powers of cos-sin
+    TR22 - tan-cot powers to negative powers of sec-csc functions
+    TR111 - negative sin-cos-tan powers to csc-sec-cot
 
 There are 4 combination transforms (CTR1 - CTR4) in which a seqence of
 transformations are applied and the simplest expression is selected from
@@ -454,8 +454,7 @@ def _TR56(rv, f, g, h, max, pow):
     =======
 
     max :   controls size of exponent that can appear on f
-            e.g. if max=4 then f**4 will be changed to h(g**2)**2
-            and (if pow is False) then f**6 will be changed to h(g**2)**3
+            e.g. if max=4 then f**4 will be changed to h(g**2)**2.
     pow :   controls whether the exponent must be a perfect power of 2
             e.g. if pow=True (and max >= 6) then f**6 will not be changed
             but f**8 will be changed to h(g**2)**4
@@ -484,7 +483,7 @@ def _TR56(rv, f, g, h, max, pow):
         return rv
 
     if rv.exp < 0:
-        return rv  # or return 1/_TR56(1/rv, f, g, max)
+        return rv
     if rv.exp > max:
         return rv
     if rv.exp == 2:
@@ -1448,27 +1447,32 @@ def TR16(rv):
     return rv
 
 
-def TR17(rv):
-    """Convert tan(x)*-2 to cot(x)**2
+def TR111(rv):
+    """Convert f(x)**-i to g(x)**i where either ``i`` is an integer
+    or the base is positive and f, g are: tan, cot; sin, csc; or cos, sec.
 
     Examples
     ========
 
-    >>> from sympy.simplify.fu import TR17
+    >>> from sympy.simplify.fu import TR111
     >>> from sympy.abc import x
     >>> from sympy import tan
-    >>> TR17(1 - 1/tan(x)**2)
+    >>> TR111(1 - 1/tan(x)**2)
     -cot(x)**2 + 1
 
     """
-    rv = bottom_up(rv, TR17)
-    if not (isinstance(rv, Pow) and rv.base.func is tan):
+    rv = bottom_up(rv, TR111)
+    if not (
+        isinstance(rv, Pow) and
+        (rv.base.is_positive or rv.exp.is_integer and rv.exp.is_negative)):
         return rv
 
-    ia = 1/rv
-    a = _TR56(ia, tan, cot, lambda x: x, max=4, pow=False)
-    if a != ia:
-        rv = a
+    if rv.base.func is tan:
+        return cot(rv.base.args[0])**-rv.exp
+    elif rv.base.func is sin:
+        return csc(rv.base.args[0])**-rv.exp
+    elif rv.base.func is cos:
+        return sec(rv.base.args[0])**-rv.exp
     return rv
 
 
@@ -1515,10 +1519,10 @@ def L(rv):
 
 if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR17, TR22
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22
     )= map(debug,
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
-    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR17, TR22))
+    TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22))
 
 _CTR1 = [TR5, TR0], [TR6, TR0], [identity]
 
@@ -1692,10 +1696,10 @@ def process_common_addends(rv, do, key2=None, key1=True):
 FU = dict(zip('''
     TR0 TR1 TR2 TR3 TR4 TR5 TR6 TR7 TR8 TR9 TR10 TR10i TR11
     TR12 TR13 CTR1 CTR2 CTR3 CTR4 RL1 RL2 L TR2i TRmorrie TR12i
-    TR14 TR15 TR16 TR17 TR22'''.split(),
+    TR14 TR15 TR16 TR111 TR22'''.split(),
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11,
     TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L, TR2i, TRmorrie, TR12i,
-    TR14, TR15, TR16, TR17, TR22)))
+    TR14, TR15, TR16, TR111, TR22)))
 
 
 def _roots():
@@ -1995,24 +1999,24 @@ def _osbornei(e):
         raise NotImplementedError('unhandled %s' % rv.func)
 
 
-def as_trig(rv):
+def hyper_as_trig(rv):
     """Return an expression containing hyperbolic functions in terms
     of trigonometric functions. Any trigonometric functions initially
     present are replaced with Dummy symbols and the function to undo
     the masking and the conversion back to hyperbolics is also returned. It
     should always be true that::
 
-        t, f = as_trig(expr)
+        t, f = hyper_as_trig(expr)
         expr == f(t)
 
     Examples
     ========
 
-    >>> from sympy.simplify.fu import as_trig, fu
+    >>> from sympy.simplify.fu import hyper_as_trig, fu
     >>> from sympy.abc import x
     >>> from sympy import cosh, sinh
     >>> eq = sinh(x)**2 + cosh(x)**2
-    >>> t, f = as_trig(eq)
+    >>> t, f = hyper_as_trig(eq)
     >>> f(fu(t))
     cosh(2*x)
 
