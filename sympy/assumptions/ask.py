@@ -39,6 +39,7 @@ class Q:
     triangular = Predicate('triangular')
     unit_triangular = Predicate('unit_triangular')
     fullrank = Predicate('fullrank')
+    square = Predicate('square')
 
 
 def _extract_facts(expr, symbol):
@@ -267,6 +268,7 @@ _handlers = [
     ("lower_triangular",  "matrices.AskLowerTriangularHandler"),
     ("diagonal",          "matrices.AskDiagonalHandler"),
     ("fullrank",          "matrices.AskFullRankHandler"),
+    ("square",            "matrices.AskSquareHandler"),
 ]
 for name, value in _handlers:
     register_handler(name, _val_template % value)
@@ -303,6 +305,9 @@ known_facts = And(
     Implies(Q.diagonal, Q.symmetric),
     Implies(Q.unit_triangular, Q.triangular),
     Implies(Q.invertible, Q.fullrank),
+    Implies(Q.invertible, Q.square),
+    Implies(Q.symmetric, Q.square),
+    Implies(Q.fullrank & Q.square, Q.invertible),
 )
 
 from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf

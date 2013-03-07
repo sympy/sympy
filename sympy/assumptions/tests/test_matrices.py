@@ -6,6 +6,10 @@ X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)
 Z = MatrixSymbol('Z', 2, 2)
 
+def test_square():
+    assert ask(Q.square(X))
+    assert not ask(Q.square(Y))
+    assert ask(Q.square(Y*Y.T))
 
 def test_invertible():
     assert ask(Q.invertible(X), Q.invertible(X))
@@ -18,6 +22,11 @@ def test_invertible():
     assert ask(Q.invertible(X.I)) is True
     assert ask(Q.invertible(Identity(3))) is True
     assert ask(Q.invertible(ZeroMatrix(3, 3))) is False
+    assert ask(Q.invertible(X), Q.fullrank(X) & Q.square(X))
+
+@XFAIL
+def test_invertible_fullrank():
+    assert ask(Q.invertible(X), Q.fullrank(X))
 
 
 def test_symmetric():

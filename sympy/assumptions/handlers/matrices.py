@@ -7,6 +7,15 @@ from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 from sympy.matrices.expressions import MatMul
 
+class AskSquareHandler(CommonHandler):
+    """
+    Handler for key 'square'
+    """
+
+    @staticmethod
+    def MatrixExpr(expr, assumptions):
+        return expr.shape[0] == expr.shape[1]
+
 
 class AskSymmetricHandler(CommonHandler):
     """
