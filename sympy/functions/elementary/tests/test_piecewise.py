@@ -410,52 +410,6 @@ def test_piecewise_evaluate():
     assert all(isinstance(i, Basic) for i in p.args)
 
 
-def test_piecewise_nonint_binomial():
-    a, b = symbols('a b')
-    s = (a + b)**0.5
-
-    piecewise = Piecewise((a**0.5*(1 + 0.5*b/a - 0.125*b**2/a**2 +
-        0.0625*b**3/a**3 - 0.0390625*b**4/a**4 + 0.02734375*b**5/a**5 -
-        0.0205078125*b**6/a**6 + 0.01611328125*b**7/a**7) + O(b**6), Abs(b/a) <
-        1), (b**0.5*(0.01611328125*a**7/b**7 -
-        0.0205078125*a**6/b**6 + 0.02734375*a**5/b**5 - 0.0390625*a**4/b**4 +
-        0.0625*a**3/b**3 - 0.125*a**2/b**2 + 0.5*a/b + 1) + O(a**6), Abs(a/b) <
-        1))
-    try:
-        assert s.as_piecewise() == piecewise
-    except AssertionError:
-        piecewise = Piecewise((b**0.5*(0.01611328125*a**7/b**7 -
-            0.0205078125*a**6/b**6 + 0.02734375*a**5/b**5 - 0.0390625*a**4/b**4
-            + 0.0625*a**3/b**3 - 0.125*a**2/b**2 + 0.5*a/b + 1) + O(a**6),
-            Abs(a/b) < 1), (a**0.5*(1 + 0.5*b/a - 0.125*b**2/a**2 +
-            0.0625*b**3/a**3 - 0.0390625*b**4/a**4 + 0.02734375*b**5/a**5 -
-            0.0205078125*b**6/a**6 + 0.01611328125*b**7/a**7) + O(b**6),
-            Abs(b/a) < 1))
-        assert s.as_piecewise() == piecewise
-
-    s = (a + b)**(S(1)/2)
-    piecewise = Piecewise((sqrt(b)*(33*a**7/(2048*b**7) - 21*a**6/(1024*b**6) +
-        7*a**5/(256*b**5) - 5*a**4/(128*b**4) + a**3/(16*b**3) - a**2/(8*b**2) +
-        a/(2*b) + 1) + O(a**6), Abs(a/b) < 1), (sqrt(a)*(1 + b/(2*a) -
-        b**2/(8*a**2) + b**3/(16*a**3) - 5*b**4/(128*a**4) +
-        7*b**5/(256*a**5) - 21*b**6/(1024*a**6) + 33*b**7/(2048*a**7)) +
-        O(b**6), Abs(b/a) < 1))
-
-    try:
-        assert s.as_piecewise() == piecewise
-    except AssertionError:
-        piecewise = Piecewise((sqrt(a)*(1 + b/(2*a) -
-        b**2/(8*a**2) + b**3/(16*a**3) - 5*b**4/(128*a**4) +
-        7*b**5/(256*a**5) - 21*b**6/(1024*a**6) + 33*b**7/(2048*a**7)) +
-        O(b**6), Abs(b/a) < 1), (sqrt(b)*(33*a**7/(2048*b**7) - 21*a**6/(1024*b**6) +
-        7*a**5/(256*b**5) - 5*a**4/(128*b**4) + a**3/(16*b**3) - a**2/(8*b**2) +
-        a/(2*b) + 1) + O(a**6), Abs(a/b) < 1))
-
-        assert s.as_piecewise() == piecewise
-
-    s = (a + b)**2
-    assert s.as_piecewise() == s
-
 def test_removeO():
     p = Piecewise((x**2 + O(x**3), x<1), (x**3 + O(x**4), x>=1))
     assert p.removeO() == Piecewise((x**2, x < 1), (x**3, x >= 1))
