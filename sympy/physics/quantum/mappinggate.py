@@ -114,11 +114,11 @@ class MappingGate(Gate):
             temp = {}
             for i, f in args[0].items():
                 terms = split_qexpr_parts(f)
-                temp[i] = f
                 if len(terms[1]) == 0:
                     temp[f] = i
                 else:
                     temp[terms[1][0]] = conjugate(Mul(*terms[0]))*i
+                temp[i] = f
             new_args = Dict(temp)
         else:
             temp = {}
@@ -134,8 +134,8 @@ class MappingGate(Gate):
                     raise ValueError('Too many scalar arguments')
                 if i.nqubits != f.nqubits:
                     raise ValueError('Number of qubits for each state do not match')
-                temp[i] = scalar*f
                 temp[f] = conjugate(scalar)*i
+                temp[i] = scalar*f
             new_args = Dict(temp)
         return (new_args,)
 
