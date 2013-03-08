@@ -22,6 +22,29 @@ class SympifyError(ValueError):
 converter = {}  # See sympify docstring.
 
 class CantSympify(object):
+    """
+    Mix in this trait to a class to disallow sympification of its instances.
+
+    Example
+    =======
+
+    >>> from sympy.core.sympify import sympify, CantSympify
+
+    >>> class Something(dict):
+    ...     pass
+    ...
+    >>> sympify(Something())
+    {}
+
+    >>> class Something(dict, CantSympify):
+    ...     pass
+    ...
+    >>> sympify(Something())
+    Traceback (most recent call last):
+    ...
+    SympifyError: SympifyError: {}
+
+    """
     pass
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
