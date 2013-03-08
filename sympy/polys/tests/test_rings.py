@@ -18,9 +18,9 @@ def test_PolyRing___init__():
     raises(ValueError, lambda: PolyRing([], ZZ, lex))
 
 def test_PolyRing___repr__():
-    assert repr(ring("x", ZZ, lex)[0]) == "PolyRing(('x',), ZZ, LexOrder())"
-    assert repr(ring("x,y", QQ, grlex)[0]) == "PolyRing(('x', 'y'), QQ, GradedLexOrder())"
-    assert repr(ring("x,y,z", ZZ["t"], lex)[0]) == "PolyRing(('x', 'y', 'z'), ZZ[t], LexOrder())"
+    assert repr(ring("x", ZZ, lex)[0]) == "PolyRing((x,), ZZ, LexOrder())"
+    assert repr(ring("x,y", QQ, grlex)[0]) == "PolyRing((x, y), QQ, GradedLexOrder())"
+    assert repr(ring("x,y,z", ZZ["t"], lex)[0]) == "PolyRing((x, y, z), ZZ[t], LexOrder())"
 
 def test_PolyRing___str__():
     assert str(ring("x", ZZ, lex)[0]) == "Polynomial ring in x over ZZ with lex order"
@@ -29,7 +29,7 @@ def test_PolyRing___str__():
 
 def test_PolyElement___repr__():
     R, x, y = ring("x,y", ZZ_python())
-    assert repr(3*x**2*y + 1) == "PolyElement(PolyRing(('x', 'y'), ZZ, LexOrder()), [((2, 1), 3), ((0, 0), 1)])"
+    assert repr(3*x**2*y + 1) == "PolyElement(PolyRing((x, y), ZZ, LexOrder()), [((2, 1), 3), ((0, 0), 1)])"
 
 def test_PolyElement___str__():
     R, x, y = ring("x,y", ZZ_python())

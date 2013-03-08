@@ -5,25 +5,25 @@ from sympy.polys.monomialtools import lex
 from sympy.polys.polyerrors import ExactQuotientFailed
 from sympy.polys.rings import PolyRing
 
-def field(sgens, domain, order=lex):
+def field(symbols, domain, order=lex):
     """Construct new rational function field returning (field, x1, ..., xn). """
-    _field = FracField(sgens, domain, order)
+    _field = FracField(symbols, domain, order)
     return (_field,) + _field.gens
 
-def xfield(sgens, domain, order=lex):
+def xfield(symbols, domain, order=lex):
     """Construct new rational function field returning (field, (x1, ..., xn)). """
-    _field = FracField(sgens, domain, order)
+    _field = FracField(symbols, domain, order)
     return (_field, _field.gens)
 
-def vfield(sgens, domain, order=lex):
+def vfield(symbols, domain, order=lex):
     """Construct new rational function field and inject generators into global namespace. """
     from inspect import currentframe
     frame = currentframe().f_back
 
     try:
-        _field = FracField(sgens, domain, order)
+        _field = FracField(symbols, domain, order)
 
-        for name, gen in zip(_field.sgens, _field.gens):
+        for name, gen in zip(_field.symbols, _field.gens):
             frame.f_globals[name] = gen
     finally:
         del frame  # break cyclic dependencies as stated in inspect docs
@@ -31,8 +31,8 @@ def vfield(sgens, domain, order=lex):
     return (_field, _field.gens)
 
 class FracField(object):
-    def __init__(self, sgens, domain, order):
-        self.ring = PolyRing(sgens, domain, order)
+    def __init__(self, symbols, domain, order):
+        self.ring = PolyRing(symbols, domain, order)
         self.gens = self._gens()
 
     def _gens(self):
@@ -40,10 +40,10 @@ class FracField(object):
         return tuple([ FracElement(self, gen) for gen in self.ring.gens ])
 
     def __repr__(self):
-        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.ring.sgens), repr(self.ring.domain), repr(self.ring.order))
+        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.ring.symbols), repr(self.ring.domain), repr(self.ring.order))
 
     def __str__(self):
-        return "Rational function field in %s over %s with %s order" % (", ".join(self.ring.sgens), self.ring.domain, self.ring.order)
+        return "Rational function field in %s over %s with %s order" % (", ".join(map(str, self.ring.symbols)), self.ring.domain, self.ring.order)
 
 class FracElement(CantSympify):
     """Sparse rational function. """

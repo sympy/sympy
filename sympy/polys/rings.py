@@ -2,61 +2,63 @@
 
 from copy import copy
 
-from sympy.core.symbol import Symbol, symbols
+from sympy.core.symbol import symbols as _symbols
+from sympy.core.expr import Expr
 from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify
+from sympy.core.compatibility import is_sequence
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomialtools import (monomial_mul, monomial_div,
     monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex)
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 
-def ring(sgens, domain, order=lex):
+def ring(symbols, domain, order=lex):
     """Construct new polynomial ring returning (ring, x1, ..., xn). """
-    _ring = PolyRing(sgens, domain, order)
+    _ring = PolyRing(symbols, domain, order)
     return (_ring,) + _ring.gens
 
-def xring(sgens, domain, order=lex):
+def xring(symbols, domain, order=lex):
     """Construct new polynomial ring returning (ring, (x1, ..., xn)). """
-    _ring = PolyRing(sgens, domain, order)
+    _ring = PolyRing(symbols, domain, order)
     return (_ring, _ring.gens)
 
-def vring(sgens, domain, order=lex):
+def vring(symbols, domain, order=lex):
     """Construct new polynomial ring and inject generators into global namespace. """
     from inspect import currentframe
     frame = currentframe().f_back
 
     try:
-        _ring = PolyRing(sgens, domain, order)
+        _ring = PolyRing(symbols, domain, order)
 
-        for name, gen in zip(_ring.sgens, _ring.gens):
+        for name, gen in zip(_ring.symbols, _ring.gens):
             frame.f_globals[name] = gen
     finally:
         del frame  # break cyclic dependencies as stated in inspect docs
 
     return (_ring, _ring.gens)
 
-class PolyRing(IPolys):
-    def __init__(self, sgens, domain, order):
-        if isinstance(sgens, basestring):
-            sgens = [s.name for s in symbols(sgens, seq=True)]
-        elif isinstance(sgens, Symbol):
-            sgens = sgens.name
-        elif sgens and isinstance(sgens[0], basestring):
-            pass
-        elif sgens and isinstance(sgens[0], Symbol):
-            sgens = [s.name for s in sgens]
-        else:
-            raise ValueError("expected a string, Symbol or a non-empty sequence of stings or Symbols")
+def _parse_symbols(symbols):
+    if isinstance(symbols, basestring):
+        return _symbols(symbols, seq=True)
+    elif isinstance(symbols, Expr):
+        return (symbols,)
+    elif is_sequence(symbols) and symbols:
+        if all(isinstance(s, basestring) for s in symbols):
+            return _symbols(symbols)
+        elif all(isinstance(s, Expr) for s in symbols):
+            return symbols
 
-        self.sgens = tuple(sgens)
-        self.ngens = len(sgens)
+    raise ValueError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
+
+class PolyRing(IPolys):
+    def __init__(self, symbols, domain, order):
+        self.symbols = tuple(_parse_symbols(symbols))
+        self.ngens = len(self.symbols)
         self.domain = domain
         self.order = order
 
-        self.gens_dict = dict(zip(self.sgens, xrange(self.ngens)))
         self.zero_monom = (0,)*self.ngens
-
         self.gens = self._gens()
 
     def _gens(self):
@@ -71,10 +73,10 @@ class PolyRing(IPolys):
         return tuple(_gens)
 
     def __repr__(self):
-        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.sgens), repr(self.domain), repr(self.order))
+        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.symbols), repr(self.domain), repr(self.order))
 
     def __str__(self):
-        return "Polynomial ring in %s over %s with %s order" % (", ".join(self.sgens), self.domain, self.order)
+        return "Polynomial ring in %s over %s with %s order" % (", ".join(map(str, self.symbols)), self.domain, self.order)
 
     def __eq__(self, other):
         return self.ngens == other.ngens and \
@@ -84,8 +86,8 @@ class PolyRing(IPolys):
     def __ne__(self, other):
         return not self.__eq__(other)
 
-    def clone(self, sgens=None, domain=None, order=None):
-        return self.__class__(sgens or self.sgens, domain or self.domain, order or self.order)
+    def clone(self, symbols=None, domain=None, order=None):
+        return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)
 
     def monomial_basis(self, i):
         """Return the ith-basis element. """
@@ -161,20 +163,20 @@ class PolyRing(IPolys):
         if self.ngens == 1:
             raise ValueError("univariate polynomial") # TODO: return ground domain
         else:
-            sgens = list(self.sgens)
-            del sgens[i]
-            return i, self.__class__(sgens, self.domain, self.order)
+            symbols = list(self.symbols)
+            del symbols[i]
+            return i, self.__class__(symbols, self.domain, self.order)
 
     def drop(self, gen):
         return self._drop(gen)[1]
 
     def __getitem__(self, key):
-        return self.__class__(self.sgens[key], self.domain, self.order)
+        return self.__class__(self.symbols[key], self.domain, self.order)
 
     def to_ground(self):
         ground = getattr(self.domain, "dom", None) # TODO: use CompositeDomain
         if ground is not None:
-            return self.__class__(self.sgens, ground, self.order)
+            return self.__class__(self.symbols, ground, self.order)
         else:
             raise ValueError("%s is not a composite domain" % self.domain)
 
@@ -278,7 +280,7 @@ class PolyElement(dict, CantSympify):
         if not self:
             return sstr(self.ring.domain.zero)
         ring = self.ring
-        sgens = ring.sgens
+        symbols = ring.symbols
         ngens = ring.ngens
         zm = ring.zero_monom
         sexpvs = []
@@ -301,10 +303,11 @@ class PolyElement(dict, CantSympify):
                 exp = expv[i]
                 if not exp:
                     continue
+                symbol = sstr(symbols[i])
                 if exp != 1:
-                    sexpv.append('%s**%d' % (sgens[i], exp))
+                    sexpv.append('%s**%d' % (symbol, exp))
                 else:
-                    sexpv.append('%s' % sgens[i])
+                    sexpv.append('%s' % symbol)
             if scoeff:
                 sexpv = [scoeff] + sexpv
             sexpvs.append('*'.join(sexpv))

@@ -7,9 +7,9 @@ from sympy.polys.monomialtools import lex, grlex
 from sympy.utilities.pytest import raises
 
 def test_FracField___repr__():
-    assert repr(field("x", ZZ, lex)[0]) == "FracField(('x',), ZZ, LexOrder())"
-    assert repr(field("x,y", QQ, grlex)[0]) == "FracField(('x', 'y'), QQ, GradedLexOrder())"
-    assert repr(field("x,y,z", ZZ["t"], lex)[0]) == "FracField(('x', 'y', 'z'), ZZ[t], LexOrder())"
+    assert repr(field("x", ZZ, lex)[0]) == "FracField((x,), ZZ, LexOrder())"
+    assert repr(field("x,y", QQ, grlex)[0]) == "FracField((x, y), QQ, GradedLexOrder())"
+    assert repr(field("x,y,z", ZZ["t"], lex)[0]) == "FracField((x, y, z), ZZ[t], LexOrder())"
 
 def test_FracField___str__():
     assert str(field("x", ZZ, lex)[0]) == "Rational function field in x over ZZ with lex order"
@@ -18,7 +18,7 @@ def test_FracField___str__():
 
 def test_FracElement___repr__():
     F, x, y = field("x,y", ZZ_python())
-    assert repr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField(('x', 'y'), ZZ, LexOrder()), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"
+    assert repr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField((x, y), ZZ, LexOrder()), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"
 
 def test_FracElement___str__():
     F, x, y = field("x,y", ZZ_python())

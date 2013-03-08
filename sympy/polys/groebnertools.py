@@ -3,7 +3,7 @@
 from sympy.polys.monomialtools import monomial_mul, monomial_div, monomial_lcm, monomial_divides, term_div, lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
-
+from sympy.core.symbol import Dummy
 
 def groebner(seq, ring, method=None):
     """
@@ -813,7 +813,8 @@ def groebner_lcm(f, g):
     g_terms = [ ((0,) + monom, coeff) for monom, coeff in g.terms() ] \
             + [ ((1,) + monom,-coeff) for monom, coeff in g.terms() ]
 
-    t_ring = ring.clone(sgens=("_t",) + ring.sgens, order=lex)
+    t = Dummy("t")
+    t_ring = ring.clone(symbols=(t,) + ring.symbols, order=lex)
 
     F = t_ring.from_terms(f_terms)
     G = t_ring.from_terms(g_terms)
