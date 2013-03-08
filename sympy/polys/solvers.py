@@ -2,11 +2,11 @@
 
 from sympy.matrices import Matrix, zeros
 
+class RawMatrix(Matrix):
+    _sympify = staticmethod(lambda x: x)
+
 def solve_lin_sys(eqs, xs, field):
     """Solve a system of linear equations. """
-
-    class RawMatrix(Matrix):
-        _sympify = staticmethod(lambda x: x)
 
     # transform from equations to matrix form
     S = [ (x, 0) for x in xs ]
