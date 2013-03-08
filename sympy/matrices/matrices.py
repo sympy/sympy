@@ -71,8 +71,7 @@ class DeferredVector(Symbol):
 class MatrixBase(object):
 
     # Added just for numpy compatibility
-    # TODO: investigate about __array_priority__
-    __array_priority__ = 10.0
+    __array_priority__ = 11
 
     is_Matrix = True
     is_Identity = None
