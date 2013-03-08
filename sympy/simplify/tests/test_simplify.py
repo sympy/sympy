@@ -245,13 +245,25 @@ def test_trigsimp_issues():
         1/(tan(x)*tan(x + y))
 
     eq = cos(2)*(cos(3) + 1)**2/(cos(3) - 1)**2
-    assert trigsimp(eq) == eq.factor()  # factor wants to make denom (-1 + cos(3))**2
+    assert trigsimp(eq) == eq.factor()  # factor makes denom (-1 + cos(3))**2
     assert trigsimp(cos(2)*(cos(3) + 1)**2*(cos(3) - 1)**2) == \
         cos(2)*sin(3)**4
 
     # issue 3690; this generates an expression that formerly caused
     # trigsimp to hang
     assert cot(x).equals(tan(x)) is False
+
+    # nan or the unchanged expression is ok, but not sin(1)
+    z = cos(x)**2 + sin(x)**2 - 1
+    z1 = tan(x)**2 - 1/cot(x)**2
+    n = (1 + z1/z)
+    assert trigsimp(sin(n)) != sin(1)
+    eq = x*(n - 1) - x*n
+    assert trigsimp(eq) is S.NaN
+    assert trigsimp(eq, recursive=True) is S.NaN
+    assert trigsimp(1).is_Integer
+
+    assert trigsimp(-sin(x)**4 - 2*sin(x)**2*cos(x)**2 - cos(x)**4) == -1
 
 
 def test_trigsimp_issue_2515():

@@ -1344,11 +1344,6 @@ def trigsimp(expr, **opts):
     Notes
     =====
 
-    recursive:
-    - Use common subexpression elimination (cse()) and apply
-    trigsimp recursively (this is quite expensive if the
-    expression is large)
-
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
     'groebner', 'combined', and 'fu'. If 'matching', simplify the
@@ -1381,8 +1376,10 @@ def trigsimp(expr, **opts):
     """
     from sympy.simplify.fu import fu
 
+    expr = sympify(expr)
+
     opts.pop('deep', None)  # this is ignored
-    recursive = opts.pop('recursive', False)
+    recursive = opts.pop('recursive', None)  # this is ignored
     method = opts.pop('method', 'matching')
 
     def groebnersimp(ex, **opts):
@@ -1403,18 +1400,7 @@ def trigsimp(expr, **opts):
                                polynomial=True, hints=[2, tan])))
                    }[method]
 
-    if recursive:
-        w, g = cse(expr)
-        g = trigsimpfunc(g[0])
-
-        for sub in reversed(w):
-            g = g.subs(sub[0], sub[1])
-            g = trigsimpfunc(g)
-        result = g
-    else:
-        result = trigsimpfunc(expr)
-
-    return result
+    return trigsimpfunc(expr)
 
 
 def collect_sqrt(expr, evaluate=True):
@@ -3720,14 +3706,27 @@ def logcombine(expr, force=False):
     return Add(*other)
 
 
-def bottom_up(rv, F):
+def bottom_up(rv, F, last=False, atoms=False, nonbasic=False):
     """Apply ``F`` to all expressions in an expression tree from the
-    bottom up.
+    bottom up. If ``last`` is True, apply ``F`` to the rebuilt object;
+    if ``atoms`` is True, apply ``F`` even if there are no args; if
+    ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
     """
-    if rv.args:
-        args = tuple([F(a) for a in rv.args])
-        if args != rv.args:
-            rv = rv.func(*args)
+    try:
+        if rv.args:
+            args = tuple([F(a) for a in rv.args])
+            if args != rv.args:
+                rv = rv.func(*args)
+    except AttributeError:
+        if nonbasic:
+            try:
+                return F(rv)
+            except TypeError:
+                return rv
+
+    if last or atoms:
+        rv = F(rv)
+
     return rv
 
 
@@ -3850,6 +3849,7 @@ def futrig(e, **kwargs):
     """
     from sympy.simplify.fu import hyper_as_trig
 
+    e = sympify(e)
     if not isinstance(e, Basic):
         return e
     if not e.args:
@@ -3881,7 +3881,7 @@ def futrig(e, **kwargs):
         elif nhas:
             e = _futrig(n, **kwargs)/d
         elif dhas:
-            e = _futrig(d, **kwargs)*n
+            e = n/_futrig(d, **kwargs)
         else:
             e = n/d
 
@@ -3926,7 +3926,7 @@ def _futrig(e, **kwargs):
         TR14,  # factored identities
         TR5,  # sin-pow -> cos_pow
         TR10,  # sin-cos of sums -> sin-cos prod
-        TR11,  # reduce double angles
+        TR11, TR6, # reduce double angles and rewrite cos pows
         lambda x: _eapply(factor, x, trigs),
         TR14,  # factored powers of identities
         [identity, lambda x: _eapply(_mexpand, x, trigs)],

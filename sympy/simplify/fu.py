@@ -959,7 +959,7 @@ def TR11(rv, base=None):
     elif not rv.args[0].is_Number:
         # make a change if the leading coefficient's numerator is
         # divisible by 2
-        c, m = rv.args[0].as_coeff_Mul()
+        c, m = rv.args[0].as_coeff_Mul(rational=True)
         if c.p % 2 == 0:
             arg = c.p//2*m/c.q
             c = TR11(cos(arg))
