@@ -3850,40 +3850,15 @@ def futrig(e, **kwargs):
     from sympy.simplify.fu import hyper_as_trig
 
     e = sympify(e)
+
     if not isinstance(e, Basic):
         return e
+
     if not e.args:
         return e
 
     old = e
-
-    # check for special forms: powers and rational expressions
-    if e.is_Pow:
-        # handle base alone in case we get 0**x
-        b, ex = e.as_base_exp()
-        if b.has(C.TrigonometricFunction):
-            b = _futrig(b, **kwargs)
-        if ex is not S.NegativeOne and ex.has(C.TrigonometricFunction):
-            ex = b**_futrig(ex, **kwargs)
-        # is one more pass necessary for a simple power?
-        e = b**ex  # or _futrig(b**ex, **kargs)
-
-    else:
-        # handle d alone in case we get x/0
-        n, d = e.as_numer_denom()
-        if d is not S.One and d.has(C.TrigonometricFunction):
-            d = _futrig(d, **kwargs)
-
-        nhas = n.has(C.TrigonometricFunction)
-        dhas = d.has(C.TrigonometricFunction)
-        if nhas and dhas:
-            e = _futrig(n/d, **kwargs)
-        elif nhas:
-            e = _futrig(n, **kwargs)/d
-        elif dhas:
-            e = n/_futrig(d, **kwargs)
-        else:
-            e = n/d
+    e = bottom_up(e, lambda x: _futrig(x, **kwargs), last=True)
 
     if kwargs.pop('hyper', True) and e.has(C.HyperbolicFunction):
         e, f = hyper_as_trig(e)
@@ -3896,8 +3871,7 @@ def futrig(e, **kwargs):
 
 
 def _futrig(e, **kwargs):
-    """Helper for futrig that assumes ``e`` has trigonometric subexpressions
-    that might be simplified."""
+    """Helper for futrig."""
     from sympy.strategies.tree import greedy
     from sympy.strategies.core import identity
     from sympy.simplify.fu import (
@@ -3905,6 +3879,9 @@ def _futrig(e, **kwargs):
         TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, TR14, TR22,
         TR12)
     from sympy.core.compatibility import ordered, _nodes
+
+    if not e.has(C.TrigonometricFunction):
+        return e
 
     if e.is_Mul:
         coeff, e = e.as_independent(C.TrigonometricFunction)

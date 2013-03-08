@@ -426,7 +426,7 @@ def test_simplify():
     assert simplify(e) == 1 + y
 
     e = (2 * (1/n - cos(n * pi)/n))/pi
-    assert simplify(e) == (-2*cos(pi*n) + 2)/(pi*n)
+    assert simplify(e) == 2*((-cos(pi*n) + 1)/(pi*n))
 
     e = integrate(1/(x**3 + 1), x).diff(x)
     assert simplify(e) == 1/(x**3 + 1)

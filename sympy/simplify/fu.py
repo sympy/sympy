@@ -896,8 +896,8 @@ def TR10i(rv):
 
 def TR11(rv, base=None):
     """Function of double angle to product. The ``base`` argument can be used
-    to indicate what is the un-doubled argument, e.g. if 3*pi/7 is the base then
-    cosine and sine functions with argument 6*pi/7 will be replaced.
+    to indicate what is the un-doubled argument, e.g. if 3*pi/7 is the base
+    then cosine and sine functions with argument 6*pi/7 will be replaced.
 
     Examples
     ========

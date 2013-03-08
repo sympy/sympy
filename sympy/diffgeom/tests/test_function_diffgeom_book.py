@@ -97,11 +97,11 @@ def test_functional_diffgeom_ch4():
     s_field_p = f(R2.r, R2.theta)
     df = Differential(s_field_p)
     assert trigsimp(df(R2.e_x).rcall(p_p).doit()) == (
-        r0*cos(theta0)*Derivative(f(r0, theta0), r0) -
-        sin(theta0)*Derivative(f(r0, theta0), theta0))/r0
+        cos(theta0)*Derivative(f(r0, theta0), r0) -
+        sin(theta0)*Derivative(f(r0, theta0), theta0)/r0)
     assert trigsimp(df(R2.e_y).rcall(p_p).doit()) == (
-        r0*sin(theta0)*Derivative(f(r0, theta0), r0) +
-        cos(theta0)*Derivative(f(r0, theta0), theta0))/r0
+        sin(theta0)*Derivative(f(r0, theta0), r0) +
+        cos(theta0)*Derivative(f(r0, theta0), theta0)/r0)
 
     assert R2.dx(R2.e_x).rcall(p_r) == 1
     assert R2.dx(R2.e_x) == 1
