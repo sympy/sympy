@@ -3854,22 +3854,36 @@ def futrig(e, **kwargs):
         return e
     if not e.args:
         return e
+
     old = e
-    n, d = e.as_numer_denom()
-    if d is not S.One:
-        # handle top and bottom so terms are not factored
-        # out until we are done
-        if n.has(C.TrigonometricFunction):
-            n = _futrig(n, **kwargs)
-        if d.has(C.TrigonometricFunction):
+
+    # check for special forms: powers and rational expressions
+    if e.is_Pow:
+        # handle base alone in case we get 0**x
+        b, ex = e.as_base_exp()
+        if b.has(C.TrigonometricFunction):
+            b = _futrig(b, **kwargs)
+        if ex is not S.NegativeOne and ex.has(C.TrigonometricFunction):
+            ex = b**_futrig(ex, **kwargs)
+        # is one more pass necessary for a simple power?
+        e = b**ex  # or _futrig(b**ex, **kargs)
+
+    else:
+        # handle d alone in case we get x/0
+        n, d = e.as_numer_denom()
+        if d is not S.One and d.has(C.TrigonometricFunction):
             d = _futrig(d, **kwargs)
-        n = n/d
 
-    # n is now the new ratio or same as e (when d = 1)
-    e = n
-    if e.has(C.TrigonometricFunction):
-        e = _futrig(e, **kwargs)
-
+        nhas = n.has(C.TrigonometricFunction)
+        dhas = d.has(C.TrigonometricFunction)
+        if nhas and dhas:
+            e = _futrig(n/d, **kwargs)
+        elif nhas:
+            e = _futrig(n, **kwargs)/d
+        elif dhas:
+            e = _futrig(d, **kwargs)*n
+        else:
+            e = n/d
 
     if kwargs.pop('hyper', True) and e.has(C.HyperbolicFunction):
         e, f = hyper_as_trig(e)
