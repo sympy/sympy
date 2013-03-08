@@ -415,11 +415,11 @@ Now see what :func:`sympify` can do. Let's start with built-ins::
     >>> type(_)
     <class 'sympy.core.numbers.Float'>
 
-    >>> from fractions import Fraction
+    >>> from fractions import Fraction # doctest: +SKIP
 
-    >>> sympify(Fraction(1, 2))
+    >>> sympify(Fraction(1, 2)) # doctest: +SKIP
     1/2
-    >>> type(_)
+    >>> type(_) # doctest: +SKIP
     <class 'sympy.core.numbers.Half'>
 
 SymPy implements explicit sympification rules, heuristics based on ``__int__``,
@@ -622,10 +622,10 @@ generator::
 
     >>> X = numbered_symbols('x')
 
-    >>> next(X)
+    >>> next(X) # doctest: +SKIP
     x₀
 
-    >>> [ next(X) for i in range(5) ]
+    >>> [ next(X) for i in range(5) ] # doctest: +SKIP
     [x₁, x₂, x₃, x₄, x₅]
 
 Tasks

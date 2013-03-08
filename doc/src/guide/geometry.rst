@@ -147,13 +147,13 @@ Using the previously defined functions we can formulate the hypothesis::
 
 and compute its |groebner| basis::
 
-    >>> G = groebner([h1, h2, h3], *V, order='grlex')
+    >>> G = groebner([h1, h2, h3], V, order='grlex')
 
 We had to specify the variables of the problem explicitly in
 :func:`groebner`, because otherwise it would treat `a` also as a
 variable, which we don't want. Now we can verify the theorem::
 
-    >>> reduced(perpendicular(A, C, B, D), G, *V, order='grlex')[1]
+    >>> reduced(perpendicular(A, C, B, D), G, V, order='grlex')[1]
     0
 
 The remainder vanished, which proves that `AC \bot BD`. Although, the theorem

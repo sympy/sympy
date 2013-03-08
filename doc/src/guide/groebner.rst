@@ -200,7 +200,7 @@ Everything is set following the theoretical introduction, so now we can
 compute the |groebner| basis of `F_3 \cup F_{\mathcal{G}}` with respect
 to *lexicographic* ordering of terms::
 
-    >>> G = groebner(F3 + Fg, *V, order='lex')
+    >>> G = groebner(F3 + Fg, V, order='lex')
 
 We know that if the constructed system of polynomial equations has a solution
 then `G` should be non--trivial, which can be easily verified::
@@ -275,7 +275,7 @@ still `3`--colorable? To check this it is sufficient to construct `F_{\mathcal{G
 by extending `F_{\mathcal{G}}` with `x_3^2 + x_3 x_4 + x_4^2` and recomputing the
 |groebner| basis::
 
-    >>> groebner(F3 + Fg + [x3**2 + x3*x4 + x4**2], *V, order='lex')
+    >>> groebner(F3 + Fg + [x3**2 + x3*x4 + x4**2], V, order='lex')
     GroebnerBasis([1], x₁, x₂, x₃, x₄, x₅, x₆, x₇, x₈, x₉, x₁₀, x₁₁, x₁₂, domain=ℤ
     , order=lex)
 
@@ -445,7 +445,7 @@ Based on this analysis it is straightforward to enumerate all six color
 assignments, however we can make this process fully automatic. Let's solve
 the |groebner| basis `G`::
 
-    >>> colorings = solve(G, *V)
+    >>> colorings = solve(G, V)
 
     >>> len(colorings)
     6
