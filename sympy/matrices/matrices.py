@@ -1501,10 +1501,10 @@ class MatrixBase(object):
         if not is_sequence(b):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        if not (self.rows == 1 and self.cols == 3 or
+        if not ((self.rows == 1 and self.cols == 3 or
                 self.rows == 3 and self.cols == 1) and \
                 (b.rows == 1 and b.cols == 3 or
-                b.rows == 3 and b.cols == 1):
+                b.rows == 3 and b.cols == 1)):
             raise ShapeError("Dimensions incorrect for cross product.")
         else:
             return self._new(1, 3, ((self[1]*b[2] - self[2]*b[1]),
@@ -2459,6 +2459,24 @@ class MatrixBase(object):
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
+
+    def rank(self, simplified=False, iszerofunc=_iszero,
+        simplify=False):
+        """
+        Returns the rank of a matrix
+
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x
+        >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
+        >>> m.rank()
+        2
+        >>> n = Matrix(3, 3, range(1, 10))
+        >>> n.rank()
+        2
+        """
+        row_reduced = self.rref(simplified=simplified, iszerofunc=iszerofunc, simplify=simplify)
+        rank = len(row_reduced[-1])
+        return rank
 
     def nullspace(self, simplified=False, simplify=False):
         """Returns list of vectors (Matrix objects) that span nullspace of self

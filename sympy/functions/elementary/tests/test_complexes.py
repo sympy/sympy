@@ -137,6 +137,9 @@ def test_sign():
     assert sign(-3*I) == -I
     assert sign(0) == 0
     assert sign(nan) == nan
+    assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
+    assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
+    assert sign(2 + 2*I).simplify() == sign(1 + I)
 
     x = Symbol('x')
     assert sign(x).is_bounded is True

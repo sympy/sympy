@@ -46,6 +46,7 @@ from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
+from sympy.stats.rv import _value_check
 from sympy.core.decorators import _sympifyit
 import random
 
@@ -88,15 +89,6 @@ __all__ = ['ContinuousRV',
 'WignerSemicircle'
 ]
 
-
-def _value_check(condition, message):
-    """
-    Check a condition on input value.
-
-    Raises ValueError with message if condition is not True
-    """
-    if condition is not True:
-        raise ValueError(message)
 
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):

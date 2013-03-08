@@ -713,6 +713,12 @@ class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. 
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/(cos(arg)*sin(arg))
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return tan(self.args[0])*sec(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
 
 class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. see cos, sin, tan.
 
@@ -721,6 +727,12 @@ class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. 
 
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/(sin(arg)*cos(arg))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -cot(self.args[0])*csc(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
 
 
 class tan(TrigonometricFunction):

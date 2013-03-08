@@ -39,9 +39,14 @@ def test_piecewise():
 
     # More subs tests
     p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
+    p3 = Piecewise((1, Eq(x, 0)), (1/x, True))
+    p4 = Piecewise((1, Eq(x, 0)), (2, 1/x>2))
     assert p2.subs(x, 2) == 1
     assert p2.subs(x, 4) == -1
     assert p2.subs(x, 10) == 0
+    assert p3.subs(x, 0.0) == 1
+    assert p4.subs(x, 0.0) == 1
+
 
     f, g, h = symbols('f,g,h', cls=Function)
     pf = Piecewise((f(x), x < -1), (f(x) + h(x) + 2, x <= 1))
@@ -235,6 +240,12 @@ def test_piecewise_integrate_symbolic_conditions():
     assert integrate(p5, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
 
 
+def test_piecewise_integrate_independent_conditions():
+    p = Piecewise((0, Eq(y, 0)), (x*y, True))
+    assert integrate(p, (x, 1, 3)) == \
+        Piecewise((0, Eq(y, 0)), (4*y, True))
+
+
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
@@ -257,6 +268,10 @@ def test_piecewise_solve():
     assert solve(g, x) == [5]
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
+    assert solve(g, x) == [5]
+
+    g = Piecewise(((x - 5)**5, x >= 2),
+                  (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
     assert solve(g, x) == [5]
 
 # See issue 1253 (enhance the solver to handle inequalities).

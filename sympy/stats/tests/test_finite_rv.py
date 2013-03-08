@@ -5,6 +5,7 @@ from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
         given, independent, dependent, where, FiniteRV, pspace, cdf)
 from sympy.utilities.pytest import raises, slow
+from sympy.abc import p
 
 oo = S.Infinity
 
@@ -216,3 +217,8 @@ def test_FiniteRV():
 
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
+
+def test_density_call():
+    x = Bernoulli('x', p)
+    d = density(x)
+    assert d(0) == 1 - p

@@ -512,7 +512,12 @@ class Function(Application, Expr):
         arg = self.args[0]
         l = []
         g = None
-        for i in xrange(n + 2):
+        # try to predict a number of terms needed
+        nterms = n + 2
+        cf = C.Order(arg.as_leading_term(x), x).getn()
+        if cf != 0:
+            nterms = int(nterms / cf)
+        for i in xrange(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -1202,10 +1207,8 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         if len(args) != self.nargs:
-            from sympy.utilities.misc import filldedent
-            raise TypeError(filldedent('''
-                %s takes %d arguments (%d given)
-                ''' % (self, self.nargs, len(args))))
+            raise TypeError('%s takes %d arguments (%d given)' %
+                    (self, self.nargs, len(args)))
         return self.expr.xreplace(dict(zip(self.variables, args)))
 
     def __eq__(self, other):

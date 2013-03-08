@@ -355,7 +355,7 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     Solves any (supported) kind of ordinary differential equation.
 
@@ -390,10 +390,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
             hint. Note that the solution may contain more arbitrary
             constants than the order of the ODE with this option
             enabled.
-
-        ``prep``, when False and when ``func`` is given, will skip the
-            preprocessing step where the equation is cleaned up so it
-            is ready for solving.
 
     **Hints**
 
@@ -490,6 +486,8 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     >>> # a simpler result in this case.
 
     """
+    prep = kwargs.pop('prep', True)
+
     # TODO: Implement initial conditions
     # See issue 1621.  We first need a way to represent things like f'(0).
     if isinstance(eq, Equality):
@@ -594,7 +592,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     return rv
 
 
-def classify_ode(eq, func=None, dict=False, prep=True):
+def classify_ode(eq, func=None, dict=False, **kwargs):
     """
     Returns a tuple of possible dsolve() classifications for an ODE.
 
@@ -610,9 +608,6 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     hint:match expression terms. This is intended for internal use by
     dsolve().  Note that because dictionaries are ordered arbitrarily,
     this will most likely not be in the same order as the tuple.
-
-    If ``prep`` is False or ``func`` is None then the equation
-    will be preprocessed to put it in standard form for classification.
 
     You can get help on different hints by doing help(ode.ode_hintname),
     where hintname is the name of the hint without "_Integral".
@@ -709,6 +704,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
     """
+    prep = kwargs.pop('prep', True)
     from sympy import expand
 
     if func and len(func.args) != 1:
@@ -816,9 +812,39 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
             try:
-                if r[d] != 0 and simplify(r[d].diff(y)) == simplify(r[e].diff(x)):
-                    matching_hints["1st_exact"] = r
-                    matching_hints["1st_exact_Integral"] = r
+                if r[d] != 0:
+                    numerator = simplify(r[d].diff(y) - r[e].diff(x))
+                    # The following few conditions try to convert a non-exact
+                    # differential equation into an exact one.
+                    # References : Differential equations with applications
+                    # and historical notes - George E. Simmons
+
+                    if numerator:
+                        # If (dP/dy - dQ/dx) / Q = f(x)
+                        # then exp(integral(f(x))*equation becomes exact
+                        factor = simplify(numerator/r[e])
+                        variables = factor.free_symbols
+                        if len(variables) == 1 and x == variables.pop():
+                            factor = exp(C.Integral(factor).doit())
+                            r[d] *= factor
+                            r[e] *= factor
+                            matching_hints["1st_exact"] = r
+                            matching_hints["1st_exact_Integral"] = r
+                        else:
+                            # If (dP/dy - dQ/dx) / -P = f(y)
+                            # then exp(integral(f(y))*equation becomes exact
+                            factor = simplify(-numerator/r[d])
+                            variables = factor.free_symbols
+                            if len(variables) == 1 and y == variables.pop():
+                                factor = exp(C.Integral(factor).doit())
+                                r[d] *= factor
+                                r[e] *= factor
+                                matching_hints["1st_exact"] = r
+                                matching_hints["1st_exact_Integral"] = r
+                    else:
+                        matching_hints["1st_exact"] = r
+                        matching_hints["1st_exact_Integral"] = r
+
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
                 # like f(2*x).diff(x).  See issue 1525 and issue 1620.
@@ -985,18 +1011,20 @@ def odesimp(eq, func, order, hint):
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     ... simplify=False)
     >>> pprint(eq)
-                  x
-                     ----
-                     f(x)
-                       /
-                      |
-           /f(x)\     |  /  1         1     \
-        log|----| -   |  |- -- - -----------| d(u2) = 0
-           \ C1 /     |  |  u2     2    /1 \|
-                      |  |       u2 *sin|--||
-                      |  \              \u2//
-                      |
-                     /
+                            x
+                           ----
+                           f(x)
+                             /
+                            |
+                            |   /      /1 \    \
+                            |  -|u2*sin|--| + 1|
+                            |   \      \u2/    /
+    log(f(x)) = log(C1) +   |  ----------------- d(u2)
+                            |       2    /1 \
+                            |     u2 *sin|--|
+                            |            \u2/
+                            |
+                           /
 
     >>> pprint(odesimp(eq, f(x), 1,
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
@@ -1080,7 +1108,7 @@ def odesimp(eq, func, order, hint):
         if hint.startswith("1st_homogeneous_coeff"):
             for j, eqi in enumerate(eq):
                 newi = logcombine(eqi, force=True)
-                if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
+                if newi.lhs.func is log and newi.rhs == 0:
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
@@ -1944,13 +1972,13 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_best', simplify=False))
-                   /    2    \
-                   | 3*x     |
-                log|----- + 1|
-                   | 2       |
-       /f(x)\      \f (x)    /
-    log|----| + -------------- = 0
-       \ C1 /         3
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
 
     References
     ==========
@@ -2011,16 +2039,16 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
          \ x  /    \ x  / dx
         >>> pprint(dsolve(genform, f(x),
         ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
-                     f(x)
-                     ----
-                      x
+                       f(x)
+                       ----
+                        x
+                         /
+                        |
+                        |       -h(u1)
+        log(x) = C1 +   |  ---------------- d(u1)
+                        |  u1*h(u1) + g(u1)
+                        |
                        /
-                      |
-                      |       -h(u1)
-        log(C1*x) -   |  ---------------- d(u1) = 0
-                      |  u1*h(u1) + g(u1)
-                      |
-                     /
 
     Where u1*h(u1) + g(u1) != 0 and x != 0.
 
@@ -2035,13 +2063,13 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                     /          3   \
-                     |3*f(x)   f (x)|
-                  log|------ + -----|
-                     |  x         3 |
-           /x \      \           x  /
-        log|--| + ------------------- = 0
-           \C1/            3
+                          /          3   \
+                          |3*f(x)   f (x)|
+                       log|------ + -----|
+                          |  x         3 |
+                          \           x  /
+    log(x) = log(C1) - -------------------
+                                3
 
     References
     ==========
@@ -2123,12 +2151,12 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
-          ___________
-         /     2
-        /   3*x
-       /   ----- + 1 *f(x) = C1
-    3 /     2
-    \/     f (x)
+                        /      ___________\
+                        |     /     2     |
+                        |    /   3*x      |
+    log(f(x)) = C1 - log|   /   ----- + 1 |
+                        |3 /     2        |
+                        \\/     f (x)     /
 
     References
     ==========
@@ -2439,11 +2467,11 @@ def ode_Liouville(eq, func, order, match):
         >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
         ... h(x)*diff(f(x),x), 0)
         >>> pprint(genform)
-                        2                    2
-                d                d          d
-        g(f(x))*--(f(x))  + h(x)*--(f(x)) + ---(f(x)) = 0
-                dx               dx           2
-                                            dx
+                          2                    2
+                /d       \         d          d
+        g(f(x))*|--(f(x))|  + h(x)*--(f(x)) + ---(f(x)) = 0
+                \dx      /         dx           2
+                                              dx
         >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
                                           f(x)
                   /                     /

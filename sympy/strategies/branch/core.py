@@ -1,6 +1,9 @@
 """ Generic SymPy-Independent Strategies """
 import itertools
 
+def identity(x):
+    yield x
+
 def exhaust(brule):
     """ Apply a branching rule repeatedly until it has no effect """
     def exhaust_brl(expr):
@@ -70,6 +73,18 @@ def notempty(brule):
         if not yielded:
             yield expr
     return notempty_brl
+
+def do_one(*brules):
+    """ Execute one of the branching rules """
+    def do_one_brl(expr):
+        yielded = False
+        for brl in brules:
+            for nexpr in brl(expr):
+                yielded = True
+                yield nexpr
+            if yielded:
+                raise StopIteration()
+    return do_one_brl
 
 def chain(*brules):
     """

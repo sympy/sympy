@@ -1,5 +1,5 @@
 from sympy.core import Tuple, Basic, Add
-from sympy.rules import typed, canon, debug, do_one, unpack
+from sympy.strategies import typed, canon, debug, do_one, unpack
 from sympy.functions import transpose
 from sympy.utilities import sift
 

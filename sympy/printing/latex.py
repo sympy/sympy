@@ -275,6 +275,10 @@ class LatexPrinter(Printer):
             and expr.exp.is_Rational \
                 and expr.exp.q != 1:
             base, p, q = self._print(expr.base), expr.exp.p, expr.exp.q
+            if expr.base.is_Function:
+                return self._print(expr.base, "%s/%s" % (p, q))
+            if self._needs_brackets(expr.base):
+                return r"\left(%s\right)^{%s/%s}" % (base, p, q)
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_Function:
             # Things like 1/x

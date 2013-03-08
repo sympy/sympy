@@ -1,6 +1,8 @@
 """ Generic SymPy-Independent Strategies """
 from functools import partial
 
+identity = lambda x: x
+
 def exhaust(rule):
     """ Apply a rule repeatedly until it has no effect """
     def exhaustive_rl(expr):
@@ -95,7 +97,7 @@ identity = lambda x: x
 def minimize(*rules, **kwargs):
     """ Select result of rules that minimizes objective
 
-    >>> from sympy.rules import minimize
+    >>> from sympy.strategies import minimize
     >>> inc = lambda x: x + 1
     >>> dec = lambda x: x - 1
     >>> rl = minimize(inc, dec)

@@ -2400,7 +2400,6 @@ zoo = S.ComplexInfinity
 
 
 class NumberSymbol(AtomicExpr):
-    __metaclass__ = Singleton
 
     is_commutative = True
     is_bounded = True

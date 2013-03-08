@@ -280,6 +280,10 @@ def test_Sum_doit():
         3*Integral(a**2)
     assert summation(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
 
+    # test nested sum evaluation
+    S = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
+    assert 0 == (S.doit() - n*(n+1)*(n-1)).factor()
+
 
 def test_Product_doit():
     assert Product(n*Integral(a**2), (n, 1, 3)).doit() == 2 * a**9 / 9
