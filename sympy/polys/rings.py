@@ -72,6 +72,14 @@ class PolyRing(IPolys):
             _gens.append(poly)
         return tuple(_gens)
 
+    _hash = None
+
+    def __hash__(self):
+        _hash = self._hash
+        if _hash is None:
+            self._hash = _hash = hash((self.symbols, self.domain, self.order))
+        return _hash
+
     def __repr__(self):
         return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.symbols), repr(self.domain), repr(self.order))
 
@@ -185,9 +193,18 @@ class PolyElement(dict, CantSympify):
         self.ring = ring
         dict.__init__(self, init)
 
-    @property
-    def freeze(self):
-        return tuple(self.items())
+    _hash = None
+
+    def __hash__(self):
+        # XXX: This computes a hash of a dictionary, but currently we don't
+        # protect dictionary from being changed so any use site modifications
+        # will make hashing go wrong. Use this feature with caution until we
+        # figure out how to make a safe API without compromising speed of this
+        # low-level class.
+        _hash = self._hash
+        if _hash is None:
+            self._hash = _hash = hash((self.ring, frozenset(self.items())))
+        return _hash
 
     def copy(self):
         """Return a copy of polynomial self.

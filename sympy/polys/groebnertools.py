@@ -100,11 +100,11 @@ def _buchberger(f, ring):
         else:
             h = h.monic()
 
-            if not h.freeze in I:
-                I[h.freeze] = len(f)
+            if not h in I:
+                I[h] = len(f)
                 f.append(h)
 
-            return h.LM, I[h.freeze]
+            return h.LM, I[h]
 
     def update(G, B, ih):
         # update G using the set of critical pairs B and h
@@ -204,7 +204,7 @@ def _buchberger(f, ring):
     CP = set()        # set of pairs of indices of critical pairs
 
     for i, h in enumerate(f):
-        I[h.freeze] = i
+        I[h] = i
         F.add(i)
 
     #####################################
@@ -213,7 +213,7 @@ def _buchberger(f, ring):
     while F:
         # select p with minimum monomial according to the monomial ordering
         h = min([f[x] for x in F], key=lambda f: order(f.LM))
-        ih = I[h.freeze]
+        ih = I[h]
         F.remove(ih)
         G, CP = update(G, CP, ih)
 

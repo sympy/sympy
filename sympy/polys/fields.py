@@ -43,6 +43,14 @@ class FracField(object):
         """Return a list of polynomial generators. """
         return tuple([ FracElement(self, gen) for gen in self.ring.gens ])
 
+    _hash = None
+
+    def __hash__(self):
+        _hash = self._hash
+        if _hash is None:
+            self._hash = _hash = hash((self.symbols, self.domain, self.order))
+        return _hash
+
     def __repr__(self):
         return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.symbols), repr(self.domain), repr(self.order))
 
@@ -71,6 +79,14 @@ class FracElement(CantSympify):
     def to_poly(f):
         assert f.denom == 1
         return f.numer
+
+    _hash = None
+
+    def __hash__(self):
+        _hash = self._hash
+        if _hash is None:
+            self._hash = _hash = hash((self.field, self.numer, self.denom))
+        return _hash
 
     def __repr__(self):
         numer_terms = list(self.numer.terms())

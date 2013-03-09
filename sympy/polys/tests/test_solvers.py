@@ -19,7 +19,7 @@ def test_solve_lin_sys_1():
          n: e*j*l*o*q/(d*e*i*l + d*e*i*m + d*e*i*o + d*e*j*l + d*e*j*m + d*e*j*o + d*e*l*m + d*e*l*o + d*g*i*l + d*g*i*m + d*g*i*o + d*g*j*l + d*g*j*m + d*g*j*o + d*g*l*m + d*g*l*o + d*i*j*l + d*i*j*m + d*i*j*o + d*j*l*m + d*j*l*o + e*g*i*l + e*g*i*m + e*g*i*o + e*g*j*l + e*g*j*m + e*g*j*o + e*g*l*m + e*g*l*o + e*i*j*l + e*i*j*m + e*i*j*o + e*j*l*m + e*j*l*o),
     }
 
-    assert solve_lin_sys(eqs, [c,f,h,k,n,b], F) == sol
+    assert solve_lin_sys(eqs, [c,f,h,k,n,b]) == sol
 
 @slow
 def test_solve_lin_sys_2():
@@ -34,4 +34,4 @@ def test_solve_lin_sys_2():
         n: (j*e*r*o*q*l)/(l*q*d*e*o + l*q*d*g*o + l*q*e*g*o + i*j*d*o*q + i*j*e*o*q + j*d*e*o*q + g*j*d*o*q + g*j*e*o*q + g*i*e*o*q + i*d*e*o*q + g*i*d*o*q + g*i*d*o*p + g*i*d*m*q + g*i*d*m*p + g*i*d*m*o + g*i*d*l*q + g*i*d*l*p + g*i*d*l*o + g*e*l*m*p + g*e*l*o*p + g*j*e*l*q + g*e*l*m*o + g*j*e*m*p + g*j*e*m*o + d*e*l*m*p + d*e*l*m*o + i*d*e*m*p + g*j*e*l*p + g*j*e*l*o + d*e*l*o*p + i*j*d*l*o + i*j*e*o*p + i*j*e*m*q + i*j*d*m*q + i*j*d*m*p + i*j*d*m*o + i*j*d*l*q + i*j*d*l*p + i*j*e*m*p + i*j*e*m*o + i*j*e*l*q + i*j*e*l*p + i*j*e*l*o + i*d*e*m*q + i*d*e*m*o + i*d*e*l*q + i*d*e*l*p + j*d*l*o*p + j*d*e*l*o + g*j*d*o*p + g*j*d*m*q + g*j*d*m*p + g*j*d*m*o + g*j*d*l*q + g*j*d*l*p + g*j*d*l*o + g*j*e*o*p + g*j*e*m*q + g*d*l*o*p + g*d*l*m*p + g*d*l*m*o + j*d*e*m*p + i*d*e*o*p + j*e*o*q*l + j*e*o*p*l + j*e*m*q*l + j*d*e*o*p + j*d*e*m*q + i*j*d*o*p + g*i*e*o*p + j*d*e*m*o + j*d*e*l*q + j*d*e*l*p + j*e*m*p*l + j*e*m*o*l + g*i*e*m*q + g*i*e*m*p + g*i*e*m*o + g*i*e*l*q + g*i*e*l*p + g*i*e*l*o + j*d*l*o*q + j*d*l*m*q + j*d*l*m*p + j*d*l*m*o + i*d*e*l*o + l*m*q*d*e + l*m*q*d*g + l*m*q*e*g),
     }
 
-    assert solve_lin_sys(eqs, [c,f,h,k,n,b], F) == sol
+    assert solve_lin_sys(eqs, [c,f,h,k,n,b]) == sol

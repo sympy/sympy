@@ -16,6 +16,14 @@ def test_FracField___str__():
     assert str(field("x,y", QQ, grlex)[0]) == "Rational function field in x, y over QQ with grlex order"
     assert str(field("x,y,z", ZZ["t"], lex)[0]) == "Rational function field in x, y, z over ZZ[t] with lex order"
 
+def test_FracField___hash__():
+    F, x, y, z = field("x,y,z", QQ)
+    assert hash(F)
+
+def test_FracElement___hash__():
+    F, x, y, z = field("x,y,z", QQ)
+    assert hash(x*y/z)
+
 def test_FracElement___repr__():
     F, x, y = field("x,y", ZZ_python())
     assert repr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField((x, y), ZZ, LexOrder()), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"

@@ -5,7 +5,7 @@ from sympy.matrices import Matrix, zeros
 class RawMatrix(Matrix):
     _sympify = staticmethod(lambda x: x)
 
-def solve_lin_sys(eqs, xs, field):
+def solve_lin_sys(eqs, xs):
     """Solve a system of linear equations. """
 
     # transform from equations to matrix form
