@@ -73,10 +73,10 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
 
     elif score < 100:
         score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
-            (c_color % colors["White"], c_normal, c_color % colors["Red"], score, total_doctests, total_members, c_normal)
+            (c_color % colors["Brown"], c_normal, c_color % colors["Red"], score, total_doctests, total_members, c_normal)
     else:
         score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
-            (c_color % colors["White"], c_normal, c_color % colors["Green"], score, total_doctests, total_members, c_normal)
+            (c_color % colors["Brown"], c_normal, c_color % colors["Green"], score, total_doctests, total_members, c_normal)
 
     if sphinx:
         if no_color:
