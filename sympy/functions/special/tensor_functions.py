@@ -1,7 +1,7 @@
 from sympy.core.function import Function, C
 from sympy.core import S, Integer
 from sympy.core.mul import prod
-from sympy.utilities.iterables import (has_dups, minlex, default_sort_key)
+from sympy.utilities.iterables import (has_dups, default_sort_key)
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
