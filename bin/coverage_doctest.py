@@ -533,7 +533,7 @@ if __name__ == "__main__":
 
     parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
             default=False)
-    parser.add_option("--no-color", action="store_true", dest="no_color",
+    parser.add_option("--no-colors", action="store_true", dest="no_color",
             help="use no colors", default=False)
     parser.add_option("--no-sphinx", action="store_false", dest="sphinx",
             help="don't report Sphinx coverage", default=True)
