@@ -296,7 +296,7 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
         if sphinx:
             in_sphinx = find_sphinx(c_name + name, mod_path)
 
-    if add_md or add_mdt or add_idt or in_sphinx:
+    if add_md or add_mdt or add_idt or not in_sphinx:
         try:
             line_no = inspect.getsourcelines(obj)[1]
         except IOError:
@@ -311,7 +311,7 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
             f_mdt.append(full_name)
         elif add_idt:
             f_idt.append(full_name)
-        if in_sphinx:
+        if not in_sphinx:
             sph.append(full_name)
 
     return f_doctest, function
@@ -356,7 +356,7 @@ def process_class(c_name, obj, c_sk, c_md, c_mdt, c_idt, c_has_doctest,
     if sphinx:
         in_sphinx = find_sphinx(c_name, mod_path)
 
-    if in_sphinx:
+    if not in_sphinx:
         sph.append(full_name)
 
     return c_dt, c, source
