@@ -94,7 +94,10 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
         print module_path
         print '-'*70
     else:
-        print "%s: %s %s" % (module_path, score_string, sphinx_score_string)
+        if sphinx:
+            print "%s: %s %s" % (module_path, score_string, sphinx_score_string)
+        else:
+            print "%s: %s" % (module_path, score_string)
 
     if verbose:
         print_header('CLASSES', '*')
@@ -365,7 +368,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     except Exception, a:
         # Most likely cause, absence of __init__
         print "%s could not be loaded due to %s." % (module_path, repr(a))
-        return 0, 0
+        return 0, 0, 0
 
     c_skipped = []
     c_md = []
@@ -474,8 +477,8 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
             sphinx_score = 100
         sphinx_score = int(sphinx_score)
     else:
-        total_sphinx = None
-        sphinx_score = None
+        total_sphinx = 0
+        sphinx_score = 0
 
     # Sort functions/classes by line number
     c_md = sorted(c_md, key=lambda x: int(x.split()[1][:-1]))
@@ -491,23 +494,24 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
                    sphinx_score, total_sphinx, verbose=verbose,
                    no_color=no_color, sphinx=sphinx)
 
-    return total_doctests, total_members
+    return total_doctests, total_sphinx, total_members
 
 
 def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
     if os.path.isdir(file):
-        doctests, num_functions = 0, 0
+        doctests, total_sphinx, num_functions = 0, 0, 0
         for F in os.listdir(file):
-            _doctests, _num_functions = go(sympy_top, '%s/%s' % (file, F),
+            _doctests, _total_sphinx,  _num_functions = go(sympy_top, '%s/%s' % (file, F),
                 verbose=verbose, no_color=no_color, exact=False, sphinx=sphinx)
             doctests += _doctests
+            total_sphinx += _total_sphinx
             num_functions += _num_functions
-        return doctests, num_functions
+        return doctests, total_sphinx, num_functions
     if (not (file.endswith('.py') or file.endswith('.pyx')) or
         file.endswith('__init__.py') or
         not exact and ('test_' in file or 'bench_' in file)):
 
-        return 0, 0
+        return 0, 0, 0
     if not os.path.exists(file):
         print "File %s does not exist." % file
         sys.exit(1)
@@ -549,28 +553,47 @@ if __name__ == "__main__":
         print 'DOCTEST COVERAGE for %s' % (file)
         print '='*70
         print
-        doctests, num_functions = go(sympy_top, file, verbose=options.verbose,
+        doctests, total_sphinx, num_functions = go(sympy_top, file, verbose=options.verbose,
             no_color=options.no_color, sphinx=options.sphinx)
         if num_functions == 0:
             score = 100
+            sphinx_score = 100
         else:
             score = 100 * float(doctests) / num_functions
             score = int(score)
+            if options.sphinx:
+                sphinx_score = 100 * float(total_sphinx) / num_functions
+                sphinx_score = int(sphinx_score)
         print
         print '='*70
 
         if options.no_color:
-            print "TOTAL SCORE for %s: %s%% (%s of %s)" % \
+            print "TOTAL DOCTEST SCORE for %s: %s%% (%s of %s)" % \
                 (get_mod_name(file, sympy_top), score, doctests, num_functions)
 
         elif score < 100:
-            print "TOTAL SCORE for %s: %s%s%% (%s of %s)%s" % \
+            print "TOTAL DOCTEST SCORE for %s: %s%s%% (%s of %s)%s" % \
                 (get_mod_name(file, sympy_top), c_color % (colors["Red"]),
                 score, doctests, num_functions, c_normal)
 
         else:
-            print "TOTAL SCORE for %s: %s%s%% (%s of %s)%s" % \
+            print "TOTAL DOCTEST SCORE for %s: %s%s%% (%s of %s)%s" % \
                 (get_mod_name(file, sympy_top), c_color % (colors["Green"]),
                 score, doctests, num_functions, c_normal)
+
+        if options.sphinx:
+            if options.no_color:
+                print "TOTAL SPHINX SCORE for %s: %s%% (%s of %s)" % \
+                    (get_mod_name(file, sympy_top), sphinx_score, total_sphinx, num_functions)
+
+            elif sphinx_score < 100:
+                print "TOTAL SPHINX SCORE for %s: %s%s%% (%s of %s)%s" % \
+                    (get_mod_name(file, sympy_top), c_color % (colors["Red"]),
+                    sphinx_score, total_sphinx, num_functions, c_normal)
+
+            else:
+                print "TOTAL SPHINX SCORE for %s: %s%s%% (%s of %s)%s" % \
+                    (get_mod_name(file, sympy_top), c_color % (colors["Green"]),
+                    sphinx_score, total_sphinx, num_functions, c_normal)
 
         print
