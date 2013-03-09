@@ -72,8 +72,12 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
             total_members)
 
     elif score < 100:
-        score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
-            (c_color % colors["Brown"], c_normal, c_color % colors["Red"], score, total_doctests, total_members, c_normal)
+        if score < 50:
+            score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
+                (c_color % colors["Brown"], c_normal, c_color % colors["LightRed"], score, total_doctests, total_members, c_normal)
+        else:
+            score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
+                (c_color % colors["Brown"], c_normal, c_color % colors["Red"], score, total_doctests, total_members, c_normal)
     else:
         score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
             (c_color % colors["Brown"], c_normal, c_color % colors["Green"], score, total_doctests, total_members, c_normal)
@@ -83,11 +87,15 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
             sphinx_score_string = "Sphinx: %s%% (%s of %s)" % (sphinx_score,
                 total_sphinx, total_members)
         elif sphinx_score < 100:
-            sphinx_score_string = "%sSphinx:%s %s%s%% (%s of %s)%s" % \
-                (c_color % colors["LightCyan"], c_normal, c_color % colors["Red"], sphinx_score, total_sphinx, total_members, c_normal)
+            if sphinx_score < 50:
+                sphinx_score_string = "%sSphinx:%s %s%s%% (%s of %s)%s" % \
+                    (c_color % colors["DarkGray"], c_normal, c_color % colors["LightRed"], sphinx_score, total_sphinx, total_members, c_normal)
+            else:
+                sphinx_score_string = "%sSphinx:%s %s%s%% (%s of %s)%s" % \
+                    (c_color % colors["DarkGray"], c_normal, c_color % colors["Red"], sphinx_score, total_sphinx, total_members, c_normal)
         else:
             sphinx_score_string = "%sSphinx:%s %s%s%% (%s of %s)%s" % \
-                (c_color % colors["LightCyan"], c_normal, c_color % colors["Green"], sphinx_score, total_sphinx, total_members, c_normal)
+                (c_color % colors["DarkGray"], c_normal, c_color % colors["Green"], sphinx_score, total_sphinx, total_members, c_normal)
 
     if verbose:
         print '\n' + '-'*70
