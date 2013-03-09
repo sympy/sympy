@@ -1,7 +1,7 @@
 from sympy.core.function import Function, C
 from sympy.core import S, Integer
 from sympy.core.mul import prod
-from sympy.utilities.iterables import (has_dups, minlex)
+from sympy.utilities.iterables import (has_dups, default_sort_key)
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
@@ -173,8 +173,7 @@ class KroneckerDelta(Function):
         # to make KroneckerDelta canonical
         # following lines will check if inputs are in order
         # if not, will return KroneckerDelta with correct order
-        sorted_args = minlex((i, j))
-        if i is not sorted_args[0]:
+        if i is not min(i, j, key=default_sort_key):
             return cls(j, i)
 
     @property

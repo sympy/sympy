@@ -1666,8 +1666,8 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    -KroneckerDelta(p, i)*CreateFermion(q) +
-     KroneckerDelta(q, i)*CreateFermion(p)
+    -KroneckerDelta(i, p)*CreateFermion(q) +
+     KroneckerDelta(i, q)*CreateFermion(p)
 
     """
 
@@ -1936,12 +1936,12 @@ class NO(Expr):
         >>> from sympy import symbols, Dummy
         >>> p,q = symbols('p,q', cls=Dummy)
         >>> print fill(str(NO(Fd(p)*F(q)).doit()))
-        KroneckerDelta(_p, _a)*KroneckerDelta(_q,
-        _a)*CreateFermion(_a)*AnnihilateFermion(_a) + KroneckerDelta(_p,
-        _a)*KroneckerDelta(_q, _i)*CreateFermion(_a)*AnnihilateFermion(_i) -
-        KroneckerDelta(_p, _i)*KroneckerDelta(_q,
-        _a)*AnnihilateFermion(_a)*CreateFermion(_i) - KroneckerDelta(_p,
-        _i)*KroneckerDelta(_q, _i)*AnnihilateFermion(_i)*CreateFermion(_i)
+        KroneckerDelta(_a, _p)*KroneckerDelta(_a,
+        _q)*CreateFermion(_a)*AnnihilateFermion(_a) + KroneckerDelta(_a,
+        _p)*KroneckerDelta(_i, _q)*CreateFermion(_a)*AnnihilateFermion(_i) -
+        KroneckerDelta(_a, _q)*KroneckerDelta(_i,
+        _p)*AnnihilateFermion(_a)*CreateFermion(_i) - KroneckerDelta(_i,
+        _p)*KroneckerDelta(_i, _q)*AnnihilateFermion(_i)*CreateFermion(_i)
         """
         if kw_args.get("remove_brackets", True):
             return self._remove_brackets()
@@ -2129,9 +2129,9 @@ def contraction(a, b):
     the fermi surface:
 
     >>> contraction(Fd(p),F(q))
-    KroneckerDelta(p, q)*KroneckerDelta(q, _i)
+    KroneckerDelta(_i, q)*KroneckerDelta(p, q)
     >>> contraction(F(p),Fd(q))
-    KroneckerDelta(p, q)*KroneckerDelta(q, _a)
+    KroneckerDelta(_a, q)*KroneckerDelta(p, q)
 
     Two creators or two annihilators always vanishes:
 
@@ -2293,9 +2293,9 @@ def evaluate_deltas(e):
     imply a loss of information:
 
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(q))
-    f(_q)*KroneckerDelta(_p, _i)
+    f(_q)*KroneckerDelta(_i, _p)
     >>> evaluate_deltas(KroneckerDelta(i,p)*f(i))
-    f(_i)*KroneckerDelta(_p, _i)
+    f(_i)*KroneckerDelta(_i, _p)
     """
 
     # We treat Deltas only in mul objects
