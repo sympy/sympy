@@ -67,6 +67,12 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                    sphinx=True):
     """ Prints details (depending on verbose) of a module """
 
+    doctest_color = "Brown"
+    sphinx_color = "DarkGray"
+    less_100_color = "Red"
+    less_50_color = "LightRed"
+    equal_100_color = "Green"
+
     if no_color:
         score_string = "Doctests: %s%% (%s of %s)" % (score, total_doctests,
             total_members)
@@ -74,29 +80,34 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
     elif score < 100:
         if score < 50:
             score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
-                (c_color % colors["Brown"], c_normal, c_color % colors["LightRed"], score, total_doctests, total_members, c_normal)
+                (c_color % colors[doctest_color], c_normal, c_color % colors[less_50_color], score, total_doctests, total_members, c_normal)
         else:
             score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
-                (c_color % colors["Brown"], c_normal, c_color % colors["Red"], score, total_doctests, total_members, c_normal)
+                (c_color % colors[doctest_color], c_normal, c_color % colors[less_100_color], score, total_doctests, total_members, c_normal)
     else:
         score_string = "%sDoctests:%s %s%s%% (%s of %s)%s" % \
-            (c_color % colors["Brown"], c_normal, c_color % colors["Green"], score, total_doctests, total_members, c_normal)
+            (c_color % colors[doctest_color], c_normal, c_color % colors[equal_100_color], score, total_doctests, total_members, c_normal)
 
     if sphinx:
         if no_color:
             sphinx_score_string = "Sphinx: %s%% (%s of %s)" % (sphinx_score,
-                total_sphinx, total_members)
+                total_members - total_sphinx, total_members)
         elif sphinx_score < 100:
             if sphinx_score < 50:
                 sphinx_score_string = "%sSphinx:%s %s%s%% (%s of %s)%s" % \
-                    (c_color % colors["DarkGray"], c_normal, c_color % colors["LightRed"], sphinx_score, total_sphinx, total_members, c_normal)
+                    (c_color % colors[sphinx_color], c_normal, c_color %
+                     colors[less_50_color], sphinx_score, total_members - total_sphinx,
+                     total_members, c_normal)
             else:
                 sphinx_score_string = "%sSphinx:%s %s%s%% (%s of %s)%s" % \
-                    (c_color % colors["DarkGray"], c_normal, c_color % colors["Red"], sphinx_score, total_sphinx, total_members, c_normal)
+                    (c_color % colors[sphinx_color], c_normal, c_color %
+                     colors[less_100_color], sphinx_score, total_members -
+                     total_sphinx, total_members, c_normal)
         else:
             sphinx_score_string = "%sSphinx:%s %s%s%% (%s of %s)%s" % \
-                (c_color % colors["DarkGray"], c_normal, c_color % colors["Green"], sphinx_score, total_sphinx, total_members, c_normal)
-
+                (c_color % colors[sphinx_color], c_normal, c_color %
+                 colors[equal_100_color], sphinx_score, total_members -
+                 total_sphinx, total_members, c_normal)
     if verbose:
         print '\n' + '-'*70
         print module_path
@@ -128,6 +139,10 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                 for md in c_idt:
                     print '  * ' + md
                 print '\n    Use \"# indirect doctest\" in the docstring to supress this warning'
+            if c_sph:
+                print_header('Not imported into Sphinx', '-')
+                for md in c_sph:
+                    print '  * ' + md
 
         print_header('FUNCTIONS', '*')
         if not f:
@@ -146,10 +161,16 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
                 for md in f_idt:
                     print '  * ' + md
                 print '\n    Use \"# indirect doctest\" in the docstring to supress this warning'
+            if f_sph:
+                print_header('Not imported into Sphinx', '-')
+                for md in f_sph:
+                    print '  * ' + md
 
     if verbose:
         print '\n' + '-'*70
-        print "SCORE: %s" % (score_string)
+        print score_string
+        if sphinx:
+            print sphinx_score_string
         print '-'*70
 
 
@@ -264,20 +285,18 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
     add_md = False
     add_mdt = False
     add_idt = False
-    in_sphinx = False
+    in_sphinx = True
     f_doctest = False
     function = False
 
     if inspect.isclass(b_obj):
         obj = getattr(b_obj, name)
+        obj_name = c_name + '.' + name
     else:
         obj = b_obj
+        obj_name = name
 
-    # Check function for various categories
-    if inspect.isclass(b_obj):
-        full_name = _get_arg_list(c_name + '.' + name, obj)
-    else:
-        full_name = _get_arg_list(name, obj)
+    full_name = _get_arg_list(name, obj)
 
     if name.startswith('_'):
         f_sk.append(full_name)
@@ -294,7 +313,7 @@ def process_function(name, c_name, b_obj, mod_path, f_sk, f_md, f_mdt, f_idt,
         function = True
 
         if sphinx:
-            in_sphinx = find_sphinx(c_name + name, mod_path)
+            in_sphinx = find_sphinx(obj_name, mod_path)
 
     if add_md or add_mdt or add_idt or not in_sphinx:
         try:
@@ -480,7 +499,7 @@ def coverage(module_path, verbose=False, no_color=False, sphinx=True):
     if sphinx:
         total_sphinx = len(c_sph) + len(f_sph)
         if total_members:
-            sphinx_score = 100 * float(total_sphinx) / total_members
+            sphinx_score = 100 - 100 * float(total_sphinx) / total_members
         else:
             sphinx_score = 100
         sphinx_score = int(sphinx_score)
@@ -570,7 +589,7 @@ if __name__ == "__main__":
             score = 100 * float(doctests) / num_functions
             score = int(score)
             if options.sphinx:
-                sphinx_score = 100 * float(total_sphinx) / num_functions
+                sphinx_score = 100 - 100 * float(total_sphinx) / num_functions
                 sphinx_score = int(sphinx_score)
         print
         print '='*70
@@ -592,16 +611,17 @@ if __name__ == "__main__":
         if options.sphinx:
             if options.no_color:
                 print "TOTAL SPHINX SCORE for %s: %s%% (%s of %s)" % \
-                    (get_mod_name(file, sympy_top), sphinx_score, total_sphinx, num_functions)
+                    (get_mod_name(file, sympy_top), sphinx_score,
+                     num_functions - total_sphinx, num_functions)
 
             elif sphinx_score < 100:
                 print "TOTAL SPHINX SCORE for %s: %s%s%% (%s of %s)%s" % \
                     (get_mod_name(file, sympy_top), c_color % (colors["Red"]),
-                    sphinx_score, total_sphinx, num_functions, c_normal)
+                    sphinx_score, num_functions - total_sphinx, num_functions, c_normal)
 
             else:
                 print "TOTAL SPHINX SCORE for %s: %s%s%% (%s of %s)%s" % \
                     (get_mod_name(file, sympy_top), c_color % (colors["Green"]),
-                    sphinx_score, total_sphinx, num_functions, c_normal)
+                    sphinx_score, num_functions - total_sphinx, num_functions, c_normal)
 
         print
