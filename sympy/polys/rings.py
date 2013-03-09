@@ -31,12 +31,12 @@ def vring(symbols, domain, order=lex):
     try:
         _ring = PolyRing(symbols, domain, order)
 
-        for name, gen in zip(_ring.symbols, _ring.gens):
-            frame.f_globals[name] = gen
+        for sym, gen in zip(_ring.symbols, _ring.gens):
+            frame.f_globals[sym.name] = gen
     finally:
         del frame  # break cyclic dependencies as stated in inspect docs
 
-    return (_ring, _ring.gens)
+    return _ring
 
 def _parse_symbols(symbols):
     if isinstance(symbols, basestring):

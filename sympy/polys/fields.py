@@ -23,16 +23,20 @@ def vfield(symbols, domain, order=lex):
     try:
         _field = FracField(symbols, domain, order)
 
-        for name, gen in zip(_field.symbols, _field.gens):
-            frame.f_globals[name] = gen
+        for sym, gen in zip(_field.symbols, _field.gens):
+            frame.f_globals[sym.name] = gen
     finally:
         del frame  # break cyclic dependencies as stated in inspect docs
 
-    return (_field, _field.gens)
+    return _field
 
 class FracField(object):
     def __init__(self, symbols, domain, order):
         self.ring = PolyRing(symbols, domain, order)
+        self.symbols = self.ring.symbols
+        self.ngens = len(self.symbols)
+        self.domain = self.ring.domain
+        self.order = self.ring.order
         self.gens = self._gens()
 
     def _gens(self):
@@ -40,10 +44,10 @@ class FracField(object):
         return tuple([ FracElement(self, gen) for gen in self.ring.gens ])
 
     def __repr__(self):
-        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.ring.symbols), repr(self.ring.domain), repr(self.ring.order))
+        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.symbols), repr(self.domain), repr(self.order))
 
     def __str__(self):
-        return "Rational function field in %s over %s with %s order" % (", ".join(map(str, self.ring.symbols)), self.ring.domain, self.ring.order)
+        return "Rational function field in %s over %s with %s order" % (", ".join(map(str, self.symbols)), self.domain, self.order)
 
 class FracElement(CantSympify):
     """Sparse rational function. """
@@ -70,9 +74,9 @@ class FracElement(CantSympify):
 
     def __repr__(self):
         numer_terms = list(self.numer.terms())
-        numer_terms.sort(key=self.field.ring.order, reverse=True)
+        numer_terms.sort(key=self.field.order, reverse=True)
         denom_terms = list(self.denom.terms())
-        denom_terms.sort(key=self.field.ring.order, reverse=True)
+        denom_terms.sort(key=self.field.order, reverse=True)
         return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.field), repr(numer_terms), repr(denom_terms))
 
     def __str__(self):
