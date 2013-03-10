@@ -2,8 +2,8 @@
 
 from copy import copy
 
-from sympy.core.symbol import symbols as _symbols
 from sympy.core.expr import Expr
+from sympy.core.symbol import symbols as _symbols
 from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify
 from sympy.core.compatibility import is_sequence
@@ -129,6 +129,8 @@ class PolyRing(IPolys):
             return self.from_dict(element)
         elif isinstance(element, list):
             return self.from_terms(element)
+        elif isinstance(element, Expr):
+            raise NotImplementedError("expressions")
         else:
             return self.ground_new(element)
 
@@ -188,6 +190,13 @@ class PolyRing(IPolys):
             return self.__class__(self.symbols, ground, self.order)
         else:
             raise ValueError("%s is not a composite domain" % self.domain)
+
+    def to_domain(self):
+        return PolynomialRingNG(self)
+
+    def to_field(self):
+        from sympy.polys.fields import FracField
+        return FracField(self.symbols, self.domain, self.order)
 
 class PolyElement(dict, CantSympify):
     def __init__(self, ring, init=[]):

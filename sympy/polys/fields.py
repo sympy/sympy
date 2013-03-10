@@ -2,10 +2,10 @@
 
 from copy import copy
 
+from sympy.core.expr import Expr
 from sympy.core.sympify import CantSympify
 from sympy.polys.monomialtools import lex
 from sympy.polys.polyerrors import ExactQuotientFailed
-from sympy.polys.rings import PolyRing
 
 def field(symbols, domain, order=lex):
     """Construct new rational function field returning (field, x1, ..., xn). """
@@ -34,6 +34,7 @@ def vfield(symbols, domain, order=lex):
 
 class FracField(object):
     def __init__(self, symbols, domain, order):
+        from sympy.polys.rings import PolyRing
         self.ring = PolyRing(symbols, domain, order)
         self.symbols = self.ring.symbols
         self.ngens = len(self.symbols)
@@ -58,6 +59,51 @@ class FracField(object):
 
     def __str__(self):
         return "Rational function field in %s over %s with %s order" % (", ".join(map(str, self.symbols)), self.domain, self.order)
+
+    def new(self, numer, denom=None):
+        return FracElement(self, numer, denom)
+
+    def domain_new(self, element):
+        return self.domain.convert(element)
+
+    def ground_new(self, element):
+        return self.new(self.ring.ground_new(element))
+
+    def field_new(self, element):
+        if isinstance(element, FracElement):
+            if self == element.field:
+                return element
+            else:
+                raise NotImplementedError("conversion")
+        elif isinstance(element, PolyElement):
+            if self.ring == element.ring:
+                return self.new(element)
+            else:
+                raise NotImplementedError("conversion")
+        elif isinstance(element, basestring):
+            raise NotImplementedError("parsing")
+        elif isinstance(element, Expr):
+            raise NotImplementedError("expressions")
+        else:
+            return self.ground_new(element)
+
+    __call__ = field_new
+
+    @property
+    def zero(self):
+        return self.new(self.ring.zero)
+
+    @property
+    def one(self):
+        return self.new(self.ring.one)
+
+    def to_domain(self):
+        from sympy.polys.domains.fractionfield import FractionFieldNG
+        return FractionFieldNG(self)
+
+    def to_ring(self):
+        from sympy.polys.rings import PolyRing
+        return PolyRing(self.symbols, self.domain, self.order)
 
 class FracElement(CantSympify):
     """Sparse rational function. """
