@@ -233,5 +233,5 @@ def time_eqs_165x165():
 
 def time_solve_lin_sys_165x165():
     eqs = eqs_165x165()
-    sol = solve_lin_sys(eqs, R_165.gens)
+    sol = solve_lin_sys(eqs, R_165)
     assert sol == sol_165x165()
