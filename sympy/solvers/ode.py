@@ -2298,7 +2298,7 @@ def homogeneous_order(eq, *symbols):
                 else:
                     return None
         else:
-            if homogeneous_order(arg , *tuple(symset)) == S.Zero:
+            if homogeneous_order(arg, *tuple(symset)) == S.Zero:
                 return S.Zero
             else:
                 return None
