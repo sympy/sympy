@@ -54,9 +54,9 @@ def test_rsolve_hyper():
         [2*n*(n + 1), -n**2 - 3*n + 2, n - 1], 0, n) == C1*factorial(n) + C0*2**n
 
     assert rsolve_hyper(
-        [n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == 0
+        [n + 2, -(2*n + 3)*(17*n**2 + 51*n + 39), n + 1], 0, n) == None
 
-    assert rsolve_hyper([-n - 1, -1, 1], 0, n) == 0
+    assert rsolve_hyper([-n - 1, -1, 1], 0, n) == None
 
     assert rsolve_hyper([-1, 1], n, n).expand() == C0 + n**2/2 - n/2
 
