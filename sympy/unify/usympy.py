@@ -98,8 +98,7 @@ def unify(x, y, s=None, variables=(), **kwargs):
     12
 
     Symbols not indicated to be variables are treated as literal,
-    else they are wild-like and match anything in an sub-expression like
-    that in which they appear.
+    else they are wild-like and match anything in a sub-expression.
 
     >>> expr = x*y*z + 3
     >>> pattern = x*y + 3
@@ -107,13 +106,12 @@ def unify(x, y, s=None, variables=(), **kwargs):
     {x: y, y: x*z}
 
     The x and y of the pattern above were in a Mul and matched factors
-    in the Mul of expr. Here, the match produces no results because
-    a Symbol cannot match a Mul.
+    in the Mul of expr. Here, a single symbol matches an entire term:
 
     >>> expr = x*y + 3
-    >>> pattern = x + 3
-    >>> len(list(unify(expr, pattern, {}, variables=[x])))
-    0
+    >>> pattern = p + 3
+    >>> next(unify(expr, pattern, {}, variables=[p]))
+    {p: x*y}
 
     """
     decons = lambda x: deconstruct(x, variables)
