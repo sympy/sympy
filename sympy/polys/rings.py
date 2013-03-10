@@ -1005,6 +1005,18 @@ class PolyElement(dict, CantSympify):
     def _get_coeff(self, expv):
         return self.get(expv, self.ring.domain.zero)
 
+    def coeff(self, element):
+        if element == 1:
+            return self._get_coeff(self.ring.zero_monom)
+        elif isinstance(element, PolyElement):
+            terms = list(element.terms())
+            if len(terms) == 1:
+                monom, coeff = terms[0]
+                if coeff == self.ring.domain.one:
+                    return self._get_coeff(monom)
+
+        raise ValueError("expected a monomial, got %s" % element)
+
     @property
     def leading_monom(self):
         p = self.ring.zero
