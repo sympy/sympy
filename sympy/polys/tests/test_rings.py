@@ -1,6 +1,7 @@
 """Test sparse polynomials. """
 
 from sympy.polys.rings import ring, xring, PolyRing
+from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ, RR, ZZ_python
 from sympy.polys.monomialtools import lex, grlex
 
@@ -138,12 +139,108 @@ def test_PolyElement_leading_term():
     assert (QQ(1,2)*x).leading_term == QQ(1,2)*x
     assert (QQ(1,4)*x*y + QQ(1,2)*x).leading_term == QQ(1,4)*x*y
 
+def test_PolyElement___add__():
+    Rt, t = ring("t", ZZ)
+    Ruv, u,v = ring("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+
+    assert dict(x + 3*y) == {(1, 0, 0): 1, (0, 1, 0): 3}
+
+    assert dict(u + x) == dict(x + u) == {(1, 0, 0): 1, (0, 0, 0): u}
+    assert dict(u + x*y) == dict(x*y + u) == {(1, 1, 0): 1, (0, 0, 0): u}
+    assert dict(u + x*y + z) == dict(x*y + z + u) == {(1, 1, 0): 1, (0, 0, 1): 1, (0, 0, 0): u}
+
+    assert dict(u*x + x) == dict(x + u*x) == {(1, 0, 0): u + 1}
+    assert dict(u*x + x*y) == dict(x*y + u*x) == {(1, 1, 0): 1, (1, 0, 0): u}
+    assert dict(u*x + x*y + z) == dict(x*y + z + u*x) == {(1, 1, 0): 1, (0, 0, 1): 1, (1, 0, 0): u}
+
+    raises(TypeError, lambda: t + x)
+    raises(TypeError, lambda: x + t)
+    raises(TypeError, lambda: t + u)
+    raises(TypeError, lambda: u + t)
+
+    Fuv, u,v = field("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Fuv.to_domain())
+
+    assert dict(u + x) == dict(x + u) == {(1, 0, 0): 1, (0, 0, 0): u}
+
+def test_PolyElement___sub__():
+    Rt, t = ring("t", ZZ)
+    Ruv, u,v = ring("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+
+    assert dict(x - 3*y) == {(1, 0, 0): 1, (0, 1, 0): -3}
+
+    assert dict(-u + x) == dict(x - u) == {(1, 0, 0): 1, (0, 0, 0): -u}
+    assert dict(-u + x*y) == dict(x*y - u) == {(1, 1, 0): 1, (0, 0, 0): -u}
+    assert dict(-u + x*y + z) == dict(x*y + z - u) == {(1, 1, 0): 1, (0, 0, 1): 1, (0, 0, 0): -u}
+
+    assert dict(-u*x + x) == dict(x - u*x) == {(1, 0, 0): -u + 1}
+    assert dict(-u*x + x*y) == dict(x*y - u*x) == {(1, 1, 0): 1, (1, 0, 0): -u}
+    assert dict(-u*x + x*y + z) == dict(x*y + z - u*x) == {(1, 1, 0): 1, (0, 0, 1): 1, (1, 0, 0): -u}
+
+    raises(TypeError, lambda: t - x)
+    raises(TypeError, lambda: x - t)
+    raises(TypeError, lambda: t - u)
+    raises(TypeError, lambda: u - t)
+
+    Fuv, u,v = field("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Fuv.to_domain())
+
+    assert dict(-u + x) == dict(x - u) == {(1, 0, 0): 1, (0, 0, 0): -u}
+
+def test_PolyElement___mul__():
+    Rt, t = ring("t", ZZ)
+    Ruv, u,v = ring("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+
+    assert dict(u*x) == dict(x*u) == {(1, 0, 0): u}
+
+    assert dict(2*u*x + z) == dict(x*2*u + z) == {(1, 0, 0): 2*u, (0, 0, 1): 1}
+    assert dict(u*2*x + z) == dict(2*x*u + z) == {(1, 0, 0): 2*u, (0, 0, 1): 1}
+    assert dict(2*u*x + z) == dict(x*2*u + z) == {(1, 0, 0): 2*u, (0, 0, 1): 1}
+    assert dict(u*x*2 + z) == dict(x*u*2 + z) == {(1, 0, 0): 2*u, (0, 0, 1): 1}
+
+    assert dict(2*u*x*y + z) == dict(x*y*2*u + z) == {(1, 1, 0): 2*u, (0, 0, 1): 1}
+    assert dict(u*2*x*y + z) == dict(2*x*y*u + z) == {(1, 1, 0): 2*u, (0, 0, 1): 1}
+    assert dict(2*u*x*y + z) == dict(x*y*2*u + z) == {(1, 1, 0): 2*u, (0, 0, 1): 1}
+    assert dict(u*x*y*2 + z) == dict(x*y*u*2 + z) == {(1, 1, 0): 2*u, (0, 0, 1): 1}
+
+    assert dict(2*u*y*x + z) == dict(y*x*2*u + z) == {(1, 1, 0): 2*u, (0, 0, 1): 1}
+    assert dict(u*2*y*x + z) == dict(2*y*x*u + z) == {(1, 1, 0): 2*u, (0, 0, 1): 1}
+    assert dict(2*u*y*x + z) == dict(y*x*2*u + z) == {(1, 1, 0): 2*u, (0, 0, 1): 1}
+    assert dict(u*y*x*2 + z) == dict(y*x*u*2 + z) == {(1, 1, 0): 2*u, (0, 0, 1): 1}
+
+    assert dict(3*u*(x + y) + z) == dict((x + y)*3*u + z) == {(1, 0, 0): 3*u, (0, 1, 0): 3*u, (0, 0, 1): 1}
+
+    raises(TypeError, lambda: t*x + z)
+    raises(TypeError, lambda: x*t + z)
+    raises(TypeError, lambda: t*u + z)
+    raises(TypeError, lambda: u*t + z)
+
+    Fuv, u,v = field("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Fuv.to_domain())
+
+    assert dict(u*x) == dict(x*u) == {(1, 0, 0): u}
+
 def test_PolyElement___div__():
     R, x,y,z = ring("x,y,z", ZZ)
     assert len(list((x**2/3 + y**3/4 + z**4/5).terms())) == 0
 
     R, x,y,z = ring("x,y,z", QQ)
     assert len(list((x**2/3 + y**3/4 + z**4/5).terms())) == 3
+
+    Rt, t = ring("t", ZZ)
+    Ruv, u,v = ring("u,v", ZZ)
+    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+
+    assert dict((u**2*x + u)/u) == {(1, 0, 0): u, (0, 0, 0): 1}
+    raises(TypeError, lambda: u/(u**2*x + u))
+
+    raises(TypeError, lambda: t/x)
+    raises(TypeError, lambda: x/t)
+    raises(TypeError, lambda: t/u)
+    raises(TypeError, lambda: u/t)
 
 def test_PolyElement_pow():
     R, x = ring("x", ZZ, grlex)

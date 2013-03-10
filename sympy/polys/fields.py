@@ -4,6 +4,7 @@ from copy import copy
 
 from sympy.core.expr import Expr
 from sympy.core.sympify import CantSympify
+from sympy.polys.rings import PolyElement
 from sympy.polys.monomialtools import lex
 from sympy.polys.polyerrors import ExactQuotientFailed
 
@@ -187,9 +188,11 @@ class FracElement(CantSympify):
 
     def __add__(f, g):
         """Add rational functions ``f`` and ``g``. """
-        if isinstance(g, FracElement):
+        if isinstance(g, FracElement) and f.field == g.field:
             numer = f.numer*g.denom + f.denom*g.numer
             denom = f.denom*g.denom
+        elif isinstance(g, PolyElement) and f.field != g.ring:
+            return NotImplemented
         else:
             numer = f.numer + f.denom*g
             denom = f.denom
@@ -203,9 +206,11 @@ class FracElement(CantSympify):
 
     def __sub__(f, g):
         """Subtract rational functions ``f`` and ``g``. """
-        if isinstance(g, FracElement):
+        if isinstance(g, FracElement) and f.field == g.field:
             numer = f.numer*g.denom - f.denom*g.numer
             denom = f.denom*g.denom
+        elif isinstance(g, PolyElement) and f.field != g.ring:
+            return NotImplemented
         else:
             numer = f.numer - f.denom*g
             denom = f.denom
@@ -219,8 +224,10 @@ class FracElement(CantSympify):
 
     def __mul__(f, g):
         """Multiply rational functions ``f`` and ``g``. """
-        if isinstance(g, FracElement):
+        if isinstance(g, FracElement) and f.field == g.field:
             return f.new(f.numer*g.numer, f.denom*g.denom)
+        elif isinstance(g, PolyElement) and f.field != g.ring:
+            return NotImplemented
         else:
             return f.new(f.numer*g, f.denom)
 

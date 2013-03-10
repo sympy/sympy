@@ -13,6 +13,8 @@ from sympy.polys.monomialtools import (monomial_mul, monomial_div,
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict
+from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.domains.polynomialring import PolynomialRingNG
 
 def ring(symbols, domain, order=lex):
     """Construct new polynomial ring returning (ring, x1, ..., xn). """
@@ -420,22 +422,33 @@ class PolyElement(dict, CantSympify):
             return p1.copy()
         ring = p1.ring
         zm = ring.zero_monom
-        if isinstance(p2, PolyElement) and ring == p2.ring:
-            p = ring.zero
-            for k, v in p1.iteritems():
-                if k in p2:
-                    r = v + p2[k]
-                    if r:
-                        p[k] = r
-                else:
-                    p[k] = v
-            for k, v in p2.iteritems():
-                if k not in p1:
-                    p[k] = v
-            return p
+        if isinstance(p2, PolyElement):
+            if ring == p2.ring:
+                p = ring.zero
+                for k, v in p1.iteritems():
+                    if k in p2:
+                        r = v + p2[k]
+                        if r:
+                            p[k] = r
+                    else:
+                        p[k] = v
+                for k, v in p2.iteritems():
+                    if k not in p1:
+                        p[k] = v
+                return p
+            elif isinstance(ring.domain, PolynomialRingNG) and ring.domain.ring == p2.ring:
+                pass
+            elif isinstance(p2.ring.domain, PolynomialRingNG) and p2.ring.domain.ring == ring:
+                return p2.__radd__(p1)
+            else:
+                return NotImplemented
+
+        try:
+            cp2 = ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
         else:
             p = p1.copy()
-            cp2 = ring.domain_new(p2)
             if not cp2:
                 return p
             if zm not in list(p1.keys()):
@@ -482,20 +495,31 @@ class PolyElement(dict, CantSympify):
         ring = p1.ring
         mz = ring.zero_monom
         p = ring.zero
-        if isinstance(p2, PolyElement) and ring == p2.ring:
-            for k in p1:
-                if k in p2:
-                    r = p1[k] - p2[k]
-                    if r:
-                        p[k] = r
-                else:
-                    p[k] = p1[k]
-            for k in p2:
-                if k not in p1:
-                    p[k] = -p2[k]
-            return p
-        else:
+        if isinstance(p2, PolyElement):
+            if ring == p2.ring:
+                for k in p1:
+                    if k in p2:
+                        r = p1[k] - p2[k]
+                        if r:
+                            p[k] = r
+                    else:
+                        p[k] = p1[k]
+                for k in p2:
+                    if k not in p1:
+                        p[k] = -p2[k]
+                return p
+            elif isinstance(ring.domain, PolynomialRingNG) and ring.domain.ring == p2.ring:
+                pass
+            elif isinstance(p2.ring.domain, PolynomialRingNG) and p2.ring.domain.ring == ring:
+                return p2.__rsub__(p1)
+            else:
+                return NotImplemented
+
+        try:
             p2 = ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
             p = copy(p1)
             if mz not in list(p1.keys()):
                 p[mz] = -p2
@@ -545,17 +569,28 @@ class PolyElement(dict, CantSympify):
         p = ring.zero
         if not p2:
             return p
-        if isinstance(p2, PolyElement) and ring == p2.ring:
-            get = p.get
-            p2it = p2.items()
-            for exp1, v1 in p1.iteritems():
-                for exp2, v2 in p2it:
-                    exp = monomial_mul(exp1, exp2)
-                    p[exp] = get(exp, 0) + v1*v2
-            p.strip_zero()
-            return p
-        else:
+        if isinstance(p2, PolyElement):
+            if ring == p2.ring:
+                get = p.get
+                p2it = p2.items()
+                for exp1, v1 in p1.iteritems():
+                    for exp2, v2 in p2it:
+                        exp = monomial_mul(exp1, exp2)
+                        p[exp] = get(exp, 0) + v1*v2
+                p.strip_zero()
+                return p
+            elif isinstance(ring.domain, PolynomialRingNG) and ring.domain.ring == p2.ring:
+                pass
+            elif isinstance(p2.ring.domain, PolynomialRingNG) and p2.ring.domain.ring == ring:
+                return p2.__rmul__(p1)
+            else:
+                return NotImplemented
+
+        try:
             p2 = ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
             for exp1, v1 in p1.iteritems():
                 v = v1*p2
                 if v:
@@ -749,7 +784,7 @@ class PolyElement(dict, CantSympify):
                     p[monom] = coeff
             return p
 
-    __div__ = __truediv__
+    __floordiv__ = __div__ = __truediv__
 
     def _term_div(self):
         zm = self.ring.zero_monom
