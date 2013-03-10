@@ -543,7 +543,8 @@ def go(sympy_top, file, verbose=False, no_color=False, exact=True, sphinx=True):
         return doctests, total_sphinx, num_functions
     if (not (file.endswith('.py') or file.endswith('.pyx')) or
         file.endswith('__init__.py') or
-        not exact and ('test_' in file or 'bench_' in file)):
+        not exact and ('test_' in file or 'bench_' in file or
+        any(name in file for name in skip_paths))):
 
         return 0, 0, 0
     if not os.path.exists(file):
@@ -562,7 +563,7 @@ if __name__ == "__main__":
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
 
-    # TODO: Skip mpmath
+    skip_paths = ['mpmath']
 
     usage = "usage: ./bin/doctest_coverage.py PATHS"
 
