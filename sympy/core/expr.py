@@ -607,9 +607,11 @@ class Expr(Basic, EvalfMixin):
             try:
                 # check to see that we can get a value
                 n2 = self._eval_evalf(2)
+                if n2 is None:
+                    raise AttributeError
+                if n2._prec == 1:  # no significance
+                    raise AttributeError
             except AttributeError:
-                n2 = None
-            if n2 is None:
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
@@ -629,9 +631,11 @@ class Expr(Basic, EvalfMixin):
             try:
                 # check to see that we can get a value
                 n2 = self._eval_evalf(2)
+                if n2 is None:
+                    raise AttributeError
+                if n2._prec == 1:  # no significance
+                    raise AttributeError
             except AttributeError:
-                n2 = None
-            if n2 is None:
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
