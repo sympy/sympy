@@ -1296,7 +1296,7 @@ def _solve(f, *symbols, **flags):
                         # roots.
                         if poly.degree() > 2:
                             flags['simplify'] = flags.get('simplify', False)
-                        soln = roots(poly, cubics=True, quartics=True, 
+                        soln = roots(poly, cubics=True, quartics=True,
                                                         quintics=True).keys()
                         if not soln:
                             soln = poly.all_roots()

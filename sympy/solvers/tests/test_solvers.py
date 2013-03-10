@@ -11,7 +11,7 @@ from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow
 
 from sympy.polys.rootoftools import RootOf
 
-from sympy.utilities.pytest import XFAIL, raises, skip
+from sympy.utilities.pytest import slow, XFAIL, raises, skip
 from sympy.utilities.randtest import test_numerically as tn
 
 
@@ -203,23 +203,28 @@ def test_solve_polynomial_cv_2():
          [ Rational(1, 2) - I*sqrt(3)/2, Rational(1, 2) + I*sqrt(3)/2]]
 
 
-def test_quintics():
-    def test1():
-        f = x**5 - 110*x**3 - 55*x**2 + 2310*x + 979
-        s = solve(f, check=False)
-        for root in s:
-            res = f.subs(x, root.n()).n()
-            assert tn(res, 0)
+def test_quintics_1():
+    f = x**5 - 110*x**3 - 55*x**2 + 2310*x + 979
+    s = solve(f, check=False)
+    for root in s:
+        res = f.subs(x, root.n()).n()
+        assert tn(res, 0)
 
-    def test2():
-        f = x**5 + 15*x + 12
-        s = solve(f, check=False)
-        for root in s:
-            res = f.subs(x, root.n()).n()
-            assert tn(res, 0)
+    f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
+    s = solve(f)
+    for root in s:
+        assert root.func == RootOf
 
-    test1()
-    test2()
+
+@XFAIL
+@slow
+def test_quintics_2():
+    f = x**5 + 15*x + 12
+    s = solve(f, check=False)
+    for root in s:
+        res = f.subs(x, root.n()).n()
+        assert tn(res, 0)
+
     f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
     s = solve(f)
     for root in s:
