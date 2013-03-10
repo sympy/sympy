@@ -2,27 +2,29 @@
 
 """
 Program to test that all methods/functions have at least one example
-doctest.
-
+doctest.  Also checks if docstrings are imported into Sphinx. For this to
+work, the Sphinx docs need to be built first.  Use "cd doc; make html" to
+build the Sphinx docs.
 
 Usage:
 
-bin/coverage_doctest.py sympy/core
+./bin/coverage_doctest.py sympy/core
 
 or
 
-bin/coverage_doctest.py sympy/core/basic.py
+./bin/coverage_doctest.py sympy/core/basic.py
 
+If no arguments are given, all files in sympy/ are checked.
 """
 
 from __future__ import with_statement
 
 import os
-import re
 import sys
+import re
 import string
 import inspect
-from optparse import OptionParser
+from argparse import ArgumentParser, RawDescriptionHelpFormatter
 from HTMLParser import HTMLParser
 
 # Load color templates, used from sympy/utilities/runtests.py
@@ -266,7 +268,7 @@ def find_sphinx(name, mod_path, found={}):
 
     doc_path = mod_path.split('.')
     doc_path[-1] += '.html'
-    sphinx_path = os.path.join('doc', '_build', 'html', '_modules', *doc_path)
+    sphinx_path = os.path.join(sympy_top, 'doc', '_build', 'html', '_modules', *doc_path)
     if not os.path.exists(sphinx_path):
         return False
     with open(sphinx_path) as f:
@@ -560,46 +562,53 @@ if __name__ == "__main__":
     if os.path.isdir(sympy_dir):
         sys.path.insert(0, sympy_top)
 
-    usage = "usage: ./bin/doctest_coverage.py PATH"
+    # TODO: Skip mpmath
 
-    parser = OptionParser(
+    usage = "usage: ./bin/doctest_coverage.py PATHS"
+
+    parser = ArgumentParser(
         description=__doc__,
         usage=usage,
+        formatter_class=RawDescriptionHelpFormatter,
     )
 
-    parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
+    parser.add_argument("path", nargs='*', default=[os.path.join(sympy_top, 'sympy')])
+    parser.add_argument("-v", "--verbose", action="store_true", dest="verbose",
             default=False)
-    parser.add_option("--no-colors", action="store_true", dest="no_color",
+    parser.add_argument("--no-colors", action="store_true", dest="no_color",
             help="use no colors", default=False)
-    parser.add_option("--no-sphinx", action="store_false", dest="sphinx",
+    parser.add_argument("--no-sphinx", action="store_false", dest="sphinx",
             help="don't report Sphinx coverage", default=True)
 
-    options, args = parser.parse_args()
+    args = parser.parse_args()
 
-    # If no arguments, then run script on sympy/
-    if len(args) == 0:
-        args = [os.path.join(sympy_top, 'sympy')]
+    if args.sphinx and not os.path.exists(os.path.join(sympy_top, 'doc', '_build', 'html')):
+        print """
+Cannot check Sphinx coverage without a documentation build. To build the
+docs, run "cd doc; make html".  To skip checking Sphinx coverage, pass --no-sphinx.
+"""
+        sys.exit(1)
 
-    for file in args:
+    for file in args.path:
         file = os.path.normpath(file)
         print 'DOCTEST COVERAGE for %s' % (file)
         print '='*70
         print
-        doctests, total_sphinx, num_functions = go(sympy_top, file, verbose=options.verbose,
-            no_color=options.no_color, sphinx=options.sphinx)
+        doctests, total_sphinx, num_functions = go(sympy_top, file, verbose=args.verbose,
+            no_color=args.no_color, sphinx=args.sphinx)
         if num_functions == 0:
             score = 100
             sphinx_score = 100
         else:
             score = 100 * float(doctests) / num_functions
             score = int(score)
-            if options.sphinx:
+            if args.sphinx:
                 sphinx_score = 100 - 100 * float(total_sphinx) / num_functions
                 sphinx_score = int(sphinx_score)
         print
         print '='*70
 
-        if options.no_color:
+        if args.no_color:
             print "TOTAL DOCTEST SCORE for %s: %s%% (%s of %s)" % \
                 (get_mod_name(file, sympy_top), score, doctests, num_functions)
 
@@ -613,8 +622,8 @@ if __name__ == "__main__":
                 (get_mod_name(file, sympy_top), c_color % (colors["Green"]),
                 score, doctests, num_functions, c_normal)
 
-        if options.sphinx:
-            if options.no_color:
+        if args.sphinx:
+            if args.no_color:
                 print "TOTAL SPHINX SCORE for %s: %s%% (%s of %s)" % \
                     (get_mod_name(file, sympy_top), sphinx_score,
                      num_functions - total_sphinx, num_functions)
