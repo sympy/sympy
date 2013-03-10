@@ -1,6 +1,6 @@
-from sympy.rules.branch.strat_pure import (exhaust, debug, multiplex,
-        condition, notempty, chain, onaction, sfilter, yieldify)
-
+from sympy.strategies.branch.core import (exhaust, debug, multiplex,
+        condition, notempty, chain, onaction, sfilter, yieldify, do_one,
+        identity)
 
 def posdec(x):
     if x > 0:
@@ -23,9 +23,6 @@ even = lambda x: x%2 == 0
 
 def inc(x):
     yield x + 1
-
-def ident(x):
-    yield x
 
 def one_to_n(n):
     for i in range(n):
@@ -89,10 +86,19 @@ def test_onaction():
     list(onaction(inc, record)(2))
     assert L == [(2, 3)]
 
-    list(onaction(ident, record)(2))
+    list(onaction(identity, record)(2))
     assert L == [(2, 3)]
 
 def test_yieldify():
     inc = lambda x: x + 1
     yinc = yieldify(inc)
     assert list(yinc(3)) == [4]
+
+def test_do_one():
+    def bad(expr):
+        raise ValueError()
+        yield False
+
+    assert list(do_one(inc)(3)) == [4]
+    assert list(do_one(inc, bad)(3)) == [4]
+    assert list(do_one(inc, posdec)(3)) == [4]

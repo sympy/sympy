@@ -9,7 +9,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
-    iterable, reduce, default_sort_key, set_union)
+    iterable, reduce, default_sort_key, set_union, ordered)
 from sympy.core.numbers import Float
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
@@ -2244,7 +2244,8 @@ def _polarify(eq, lift, pause=False):
             limits.append((var,) + rest)
         return Integral(*((func,) + tuple(limits)))
     else:
-        return eq.func(*[_polarify(arg, lift, pause=pause) for arg in eq.args])
+        return eq.func(*[_polarify(arg, lift, pause=pause)
+                         if isinstance(arg, Expr) else arg for arg in eq.args])
 
 
 def polarify(eq, subs=True, lift=False):
@@ -3626,11 +3627,11 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> g = log(a) + log(b) + log(a)*log(1/b)
     >>> h = simplify(g)
     >>> h
-    log(a*b**(log(1/a) + 1))
+    log(a*b**(-log(a) + 1))
     >>> count_ops(g)
     8
     >>> count_ops(h)
-    6
+    5
 
     So you can see that ``h`` is simpler than ``g`` using the count_ops metric.
     However, we may not like how ``simplify`` (in this case, using
@@ -3641,7 +3642,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> print count_ops(g, visual=True)
     2*ADD + DIV + 4*LOG + MUL
     >>> print count_ops(h, visual=True)
-    ADD + DIV + 2*LOG + MUL + POW
+    2*LOG + MUL + POW + SUB
 
     >>> from sympy import Symbol, S
     >>> def my_measure(expr):
@@ -3654,7 +3655,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     >>> my_measure(g)
     8
     >>> my_measure(h)
-    15
+    14
     >>> 15./8 > 1.7 # 1.7 is the default ratio
     True
     >>> simplify(g, measure=my_measure)
@@ -3926,149 +3927,144 @@ def logcombine(expr, force=False):
     """
     Takes logarithms and combines them using the following rules:
 
-    - log(x)+log(y) == log(x*y)
-    - a*log(x) == log(x**a)
+    - log(x) + log(y) == log(x*y) if both are not negative
+    - a*log(x) == log(x**a) if x is positive and a is real
 
-    These identities are only valid if x and y are positive and if a is real,
-    so the function will not combine the terms unless the arguments have the
-    proper assumptions on them.  Use logcombine(func, force=True) to
-    automatically assume that the arguments of logs are positive and that
-    coefficients are real.  Note that this will not change any assumptions
-    already in place, so if the coefficient is imaginary or the argument
-    negative, combine will still not combine the equations.  Change the
-    assumptions on the variables to make them combine.
+    If ``force`` is True then the assumptions above will be assumed to hold if
+    there is no assumption already in place on a quantity. For example, if
+    ``a`` is imaginary or the argument negative, force will not perform a
+    combination but if ``a`` is a symbol with no assumptions the change will
+    take place.
 
     Examples
     ========
 
-    >>> from sympy import Symbol, symbols, log, logcombine
+    >>> from sympy import Symbol, symbols, log, logcombine, I
     >>> from sympy.abc import a, x, y, z
-    >>> logcombine(a*log(x)+log(y)-log(z))
+    >>> logcombine(a*log(x) + log(y) - log(z))
     a*log(x) + log(y) - log(z)
-    >>> logcombine(a*log(x)+log(y)-log(z), force=True)
+    >>> logcombine(a*log(x) + log(y) - log(z), force=True)
     log(x**a*y/z)
     >>> x,y,z = symbols('x,y,z', positive=True)
     >>> a = Symbol('a', real=True)
-    >>> logcombine(a*log(x)+log(y)-log(z))
+    >>> logcombine(a*log(x) + log(y) - log(z))
     log(x**a*y/z)
 
+    The transformation is limited to factors and/or terms that
+    contain logs, so the result depends on the initial state of
+    expansion:
+
+    >>> eq = (2 + 3*I)*log(x)
+    >>> logcombine(eq, force=True) == eq
+    True
+    >>> logcombine(eq.expand(), force=True)
+    log(x**2) + I*log(x**3)
+
+    See Also
+    ========
+    posify: replace all symbols with symbols having positive assumptions
+
     """
-    # Try to make (a+bi)*log(x) == a*log(x)+bi*log(x).  This needs to be a
-    # separate function call to avoid infinite recursion.
-    expr = expand_mul(expr)
-    return _logcombine(expr, force)
+    rv = bottom_up(expr, lambda x: logcombine(x, force))
 
+    if not (rv.is_Add or rv.is_Mul):
+        return rv
 
-def _logcombine(expr, force=False):
-    """
-    Does the main work for logcombine, it's a separate function to avoid an
-    infinite recursion. See the docstrings of logcombine() for help.
-    """
-    def _getlogargs(expr):
-        """
-        Returns the arguments of the logarithm in an expression.
+    def gooda(a):
+        # bool to tell whether the leading ``a`` in ``a*log(x)``
+        # could appear as log(x**a)
+        return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
+            (a.is_real or force and a.is_real is not False))
 
-        Examples
-        ========
+    def goodlog(l):
+        # bool to tell whether log ``l``'s argument can combine with others
+        a = l.args[0]
+        return a.is_positive or force and a.is_nonpositive is not False
 
-        _getlogargs(a*log(x*y))
-        x*y
-        """
-        if expr.func is log:
-            return [expr.args[0]]
+    other = []
+    logs = []
+    log1 = defaultdict(list)
+    for a in Add.make_args(rv):
+        if a.func is log and goodlog(a):
+            log1[()].append(([], a))
+        elif not a.is_Mul:
+            other.append(a)
         else:
-            args = []
-            for i in expr.args:
-                if i.func is log:
-                    args.append(_getlogargs(i))
-            return flatten(args)
-        return None
-
-    if expr.is_Number or expr.is_NumberSymbol or type(expr) == C.Integral:
-        return expr
-
-    if isinstance(expr, Equality):
-        retval = Equality(_logcombine(expr.lhs - expr.rhs, force),
-        Integer(0))
-        # If logcombine couldn't do much with the equality, try to make it like
-        # it was.  Hopefully extract_additively won't become smart enough to
-        # take logs apart :)
-        right = retval.lhs.extract_additively(expr.lhs)
-        if right:
-            return Equality(expr.lhs, _logcombine(-right, force))
-        else:
-            return retval
-
-    if expr.is_Add:
-        argslist = 1
-        notlogs = 0
-        coeflogs = 0
-        for i in expr.args:
-            if i.func is log:
-                if (i.args[0].is_positive or (force and not
-                i.args[0].is_nonpositive)):
-                    argslist *= _logcombine(i.args[0], force)
+            ot = []
+            co = []
+            lo = []
+            for ai in a.args:
+                if ai.is_Rational and ai < 0:
+                    ot.append(S.NegativeOne)
+                    co.append(-ai)
+                elif ai.func is log and goodlog(ai):
+                    lo.append(ai)
+                elif gooda(ai):
+                    co.append(ai)
                 else:
-                    notlogs += i
-            elif i.is_Mul and any(
-                map(lambda t: getattr(t, 'func', False) == log,
-            i.args)):
-                largs = _getlogargs(i)
-                assert len(largs) != 0
-                loglargs = 1
-                for j in largs:
-                    loglargs *= log(j)
-
-                if all(getattr(t, 'is_positive') for t in largs) \
-                    and getattr(i.extract_multiplicatively(loglargs), 'is_real', False) \
-                    or (force
-                        and not all(getattr(t, 'is_nonpositive') for t in largs)
-                        and not getattr(i.extract_multiplicatively(loglargs),
-                        'is_real') is False):
-
-                    coeflogs += _logcombine(i, force)
-                else:
-                    notlogs += i
-            elif i.has(log):
-                notlogs += _logcombine(i, force)
+                    ot.append(ai)
+            if len(lo) > 1:
+                logs.append((ot, co, lo))
+            elif lo:
+                log1[tuple(ot)].append((co, lo[0]))
             else:
-                notlogs += i
-        if notlogs + log(argslist) + coeflogs == expr:
-            return expr
+                other.append(a)
+
+    # if there is only one log at each coefficient and none have
+    # an exponent to place inside the log then there is nothing to do
+    if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):
+        return rv
+
+    # collapse multi-logs as far as possible in a canonical way
+    # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
+    # -- in this case, it's unambiguous, but if it were were a log(c) in
+    # each term then it's arbitrary whether they are grouped by log(a) or
+    # by log(c). So for now, just leave this alone; it's probably better to
+    # let the user decide
+    for o, e, l in logs:
+        l = list(ordered(l))
+        e = log(l.pop(0).args[0]**Mul(*e))
+        while l:
+            li = l.pop(0)
+            e = log(li.args[0]**e)
+        c, l = Mul(*o), e
+        if l.func is log:  # it should be, but check to be sure
+            log1[(c,)].append(([], l))
         else:
-            alllogs = _logcombine(log(argslist) + coeflogs, force)
-            return notlogs + alllogs
+            other.append(c*l)
 
-    if expr.is_Mul:
-        a = Wild('a')
-        x = Wild('x')
-        coef = expr.match(a*log(x))
-        if coef \
-            and (coef[a].is_real
-                or expr.is_Number
-                or expr.is_NumberSymbol
-                or type(coef[a]) in (int, float)
-                or (force
-                and not coef[a].is_imaginary)) \
-            and (coef[a].func != log
-                or force
-                or (not getattr(coef[a], 'is_real') is False
-                    and getattr(x, 'is_positive'))):
+    # logs that have the same coefficient can multiply
+    for k in log1.keys():
+        log1[Mul(*k)] = log(logcombine(Mul(*[
+            l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
+            force=force))
 
-            return log(coef[x]**coef[a])
+    # logs that have oppositely signed coefficients can divide
+    for k in ordered(log1.keys()):
+        if not k in log1:  # already popped as -k
+            continue
+        if -k in log1:
+            # figure out which has the minus sign; the one with
+            # more op counts should be the one
+            num, den = k, -k
+            if num.count_ops() > den.count_ops():
+                num, den = den, num
+            other.append(num*log(log1.pop(num).args[0]/log1.pop(den).args[0]))
         else:
-            return _logcombine(expr.args[0], force)*reduce(lambda x, y:
-             _logcombine(x, force)*_logcombine(y, force),
-                expr.args[1:], S.One)
+            other.append(k*log1.pop(k))
 
-    if expr.is_Function:
-        return expr.func(*map(lambda t: _logcombine(t, force), expr.args))
+    return Add(*other)
 
-    if expr.is_Pow:
-        return _logcombine(expr.args[0], force) ** \
-            _logcombine(expr.args[1], force)
 
-    return expr
+def bottom_up(rv, F):
+    """Apply ``F`` to all expressions in an expression tree from the
+    bottom up.
+    """
+    if rv.args:
+        args = tuple([F(a) for a in rv.args])
+        if args != rv.args:
+            rv = rv.func(*args)
+    return rv
 
 
 def besselsimp(expr):

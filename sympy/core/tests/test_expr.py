@@ -171,6 +171,42 @@ def test_relational():
     assert (x - 2 < x - 3) is False
 
 
+def test_relational_assumptions():
+    from sympy import Lt, Gt, Le, Ge
+    m1 = Symbol("m1", nonnegative=False)
+    m2 = Symbol("m2", positive=False)
+    m3 = Symbol("m3", nonpositive=False)
+    m4 = Symbol("m4", negative=False)
+    assert (m1 < 0) == Lt(m1, 0)
+    assert (m2 <= 0) == Le(m2, 0)
+    assert (m3 > 0) == Gt(m3, 0)
+    assert (m4 >= 0) == Ge(m4, 0)
+    m1 = Symbol("m1", nonnegative=False, real=True)
+    m2 = Symbol("m2", positive=False, real=True)
+    m3 = Symbol("m3", nonpositive=False, real=True)
+    m4 = Symbol("m4", negative=False, real=True)
+    assert (m1 < 0) is True
+    assert (m2 <= 0) is True
+    assert (m3 > 0) is True
+    assert (m4 >= 0) is True
+    m1 = Symbol("m1", negative=True)
+    m2 = Symbol("m2", nonpositive=True)
+    m3 = Symbol("m3", positive=True)
+    m4 = Symbol("m4", nonnegative=True)
+    assert (m1 < 0) is True
+    assert (m2 <= 0) is True
+    assert (m3 > 0) is True
+    assert (m4 >= 0) is True
+    m1 = Symbol("m1", negative=False)
+    m2 = Symbol("m2", nonpositive=False)
+    m3 = Symbol("m3", positive=False)
+    m4 = Symbol("m4", nonnegative=False)
+    assert (m1 < 0) is False
+    assert (m2 <= 0) is False
+    assert (m3 > 0) is False
+    assert (m4 >= 0) is False
+
+
 def test_relational_noncommutative():
     from sympy import Lt, Gt, Le, Ge
     A, B = symbols('A,B', commutative=False)
@@ -543,14 +579,17 @@ def test_as_independent():
 def test_call():
     # See the long history of this in issues 1927 and 2006.
 
+    raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
+    raises(TypeError, lambda: sin(x)(1))
+
     # No effect as there are no callables
-    assert sin(x)(1) == sin(x)
-    assert (1 + sin(x))(1) == 1 + sin(x)
+    assert sin(x).rcall(1) == sin(x)
+    assert (1 + sin(x)).rcall(1) == 1 + sin(x)
 
     # Effect in the pressence of callables
     l = Lambda(x, 2*x)
-    assert (l + x)(y) == 2*y + x
-    assert (x**l)(2) == x**4
+    assert (l + x).rcall(y) == 2*y + x
+    assert (x**l).rcall(2) == x**4
     # TODO UndefinedFunction does not subclass Expr
     #f = Function('f')
     #assert (2*f)(x) == 2*f(x)

@@ -1,13 +1,27 @@
 """For more tests on satisfiability, see test_dimacs"""
 
 from sympy import symbols
-from sympy.logic.boolalg import Equivalent, Implies
-from sympy.logic.inference import pl_true, satisfiable, PropKB
+from sympy.logic.boolalg import Or, Equivalent, Implies
+from sympy.logic.inference import is_literal, literal_symbol, \
+     pl_true, satisfiable, PropKB
 from sympy.logic.algorithms.dpll import dpll, dpll_satisfiable, \
     find_pure_symbol, find_unit_clause, unit_propagate, \
     find_pure_symbol_int_repr, find_unit_clause_int_repr, \
     unit_propagate_int_repr
 from sympy.utilities.pytest import raises
+
+
+def test_literal():
+    A, B = symbols('A,B')
+    assert is_literal(True) is True
+    assert is_literal(False) is True
+    assert is_literal(A) is True
+    assert is_literal(~A) is True
+    assert is_literal(Or(A, B)) is False
+    assert literal_symbol(True) is True
+    assert literal_symbol(False) is False
+    assert literal_symbol(A) is A
+    assert literal_symbol(~A) is A
 
 
 def test_find_pure_symbol():

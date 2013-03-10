@@ -55,12 +55,20 @@ def test_latex_basic():
     assert latex(sqrt(x)**3, itex=True) == r"x^{\frac{3}{2}}"
     assert latex(x**Rational(3, 4)) == r"x^{\frac{3}{4}}"
     assert latex(x**Rational(3, 4), fold_frac_powers=True) == "x^{3/4}"
+    assert latex((x + 1)**Rational(3, 4)) == \
+        r"\left(x + 1\right)^{\frac{3}{4}}"
+    assert latex((x + 1)**Rational(3, 4), fold_frac_powers=True) == \
+        r"\left(x + 1\right)^{3/4}"
 
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
 
     assert latex(1/sin(x)) == r"\frac{1}{\sin{\left (x \right )}}"
     assert latex(sin(x)**-1) == r"\frac{1}{\sin{\left (x \right )}}"
+    assert latex(sin(x)**Rational(3, 2)) == \
+        r"\sin^{\frac{3}{2}}{\left (x \right )}"
+    assert latex(sin(x)**Rational(3, 2), fold_frac_powers=True) == \
+        r"\sin^{3/2}{\left (x \right )}"
 
     assert latex(~x) == r"\neg x"
     assert latex(x & y) == r"x \wedge y"
@@ -450,7 +458,8 @@ def test_latex_KroneckerDelta():
     assert latex(KroneckerDelta(x, y)) == r"\delta_{x y}"
     assert latex(KroneckerDelta(x, y)**2) == r"\left(\delta_{x y}\right)^{2}"
     assert latex(KroneckerDelta(x, y + 1)) == r"\delta_{x, y + 1}"
-    assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{x + 1, y}"
+    # issue 3479
+    assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{y, x + 1}"
 
 
 def test_latex_LeviCivita():
@@ -649,6 +658,12 @@ def test_matMul():
     assert l._print_MatMul(-2*A*(A + 2*B)) in [r'-2 A \left(A + 2 B\right)',
         r'-2 A \left(2 B + A\right)']
 
+def test_latex_MatrixSlice():
+    from sympy.matrices.expressions import MatrixSymbol
+    assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
+            r'X\left[:5, 1:9:2\right]'
+    assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
+            r'X\left[5, :5:2\right]'
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where

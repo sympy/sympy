@@ -512,7 +512,12 @@ class Function(Application, Expr):
         arg = self.args[0]
         l = []
         g = None
-        for i in xrange(n + 2):
+        # try to predict a number of terms needed
+        nterms = n + 2
+        cf = C.Order(arg.as_leading_term(x), x).getn()
+        if cf != 0:
+            nterms = int(nterms / cf)
+        for i in xrange(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -1202,10 +1207,8 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         if len(args) != self.nargs:
-            from sympy.utilities.misc import filldedent
-            raise TypeError(filldedent('''
-                %s takes %d arguments (%d given)
-                ''' % (self, self.nargs, len(args))))
+            raise TypeError('%s takes %d arguments (%d given)' %
+                    (self, self.nargs, len(args)))
         return self.expr.xreplace(dict(zip(self.variables, args)))
 
     def __eq__(self, other):
@@ -1640,13 +1643,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         >>> expand(log(x*(y + z)))
         log(x) + log(y + z)
 
-      Here, we see that ``log`` was applied before ``mul``.  To get the log
+      Here, we see that ``log`` was applied before ``mul``.  To get the mul
       expanded form, either of the following will work::
 
-        >>> expand_log(log(x*(y + z)))
-        log(x) + log(y + z)
-        >>> expand(log(x*(y + z)), mul=False)
-        log(x) + log(y + z)
+        >>> expand_mul(log(x*(y + z)))
+        log(x*y + x*z)
+        >>> expand(log(x*(y + z)), log=False)
+        log(x*y + x*z)
 
       A similar thing can happen with the ``power_base`` hint::
 

@@ -8,7 +8,7 @@ from sympy.core.evalf import bitcount
 from sympy.core.numbers import igcd
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, SYMPY_INTS
 from primetest import isprime
 from generate import sieve, primerange, nextprime
 from sympy.core.singleton import S
@@ -170,7 +170,7 @@ def trailing(n):
 
     # 2**m is quick for z up through 2**30
     z = bitcount(n) - 1
-    if type(z) is int:
+    if isinstance(z, SYMPY_INTS):
         if n == 1 << z:
             return z
 
@@ -941,7 +941,7 @@ def factorint(n, limit=None, use_trial=True, use_rho=True, use_pm1=True,
 
     assert use_trial or use_rho or use_pm1
 
-    n = int(n)
+    n = as_int(n)
     if limit:
         limit = int(limit)
 

@@ -17,7 +17,7 @@ def _token_splittable(token):
     """
     Predicate for whether a token name can be split into multiple tokens.
 
-    A token is splittable if it does not contain an underscore charater and
+    A token is splittable if it does not contain an underscore character and
     it is not the name of a Greek letter. This is used to implicitly convert
     expressions like 'xyz' into 'x*y*z'.
     """

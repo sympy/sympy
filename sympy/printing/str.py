@@ -222,6 +222,20 @@ class StrPrinter(Printer):
         _print_ImmutableDenseMatrix = \
         _print_MatrixBase
 
+    def _print_MatrixSlice(self, expr):
+        def strslice(x):
+            x = list(x)
+            if x[2] == 1:
+                del x[2]
+            if x[1] == x[0] + 1:
+                del x[1]
+            if x[0] == 0:
+                x[0] = ''
+            return ':'.join(map(self._print, x))
+        return (self._print(expr.parent) + '[' +
+                strslice(expr.rowslice) + ', ' +
+                strslice(expr.colslice) + ']')
+
     def _print_DeferredVector(self, expr):
         return expr.name
 
@@ -338,6 +352,18 @@ class StrPrinter(Printer):
             if len(trim) < len(full):
                 use = trim
             return 'Permutation(%s)' % use
+
+    def _print_TensorIndex(self, expr):
+        return expr._pretty()
+
+    def _print_TensorHead(self, expr):
+        return expr._pretty()
+
+    def _print_TensMul(self, expr):
+        return expr._pretty()
+
+    def _print_TensAdd(self, expr):
+        return expr._pretty()
 
     def _print_PermutationGroup(self, expr):
         p = ['    %s' % str(a) for a in expr.args]
@@ -462,7 +488,7 @@ class StrPrinter(Printer):
         return '%s/%s' % (expr.numerator, expr.denominator)
 
     def _print_mpq(self, expr):
-        return '%s/%s' % (expr.numer(), expr.denom())
+        return '%s/%s' % (expr.numerator, expr.denominator)
 
     def _print_Float(self, expr):
         prec = expr._prec

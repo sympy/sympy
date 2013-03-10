@@ -618,6 +618,31 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+    def _print_MatrixSlice(self, m):
+        # XXX works only for applied functions
+
+        prettyFunc = self._print(m.parent)
+        def ppslice(x):
+            x = list(x)
+            if x[2] == 1:
+                del x[2]
+            if x[1] == x[0] + 1:
+                del x[1]
+            if x[0] == 0:
+                x[0] = ''
+            return prettyForm(*self._print_seq(x, delimiter=':'))
+        prettyArgs = self._print_seq((ppslice(m.rowslice),
+            ppslice(m.colslice)), delimiter=', ').parens(left='[', right=']')[0]
+
+        pform = prettyForm(
+            binding=prettyForm.FUNC, *stringPict.next(prettyFunc, prettyArgs))
+
+        # store pform parts so it can be reassembled e.g. when powered
+        pform.prettyFunc = prettyFunc
+        pform.prettyArgs = prettyArgs
+
+        return pform
+
     def _print_Transpose(self, expr):
         pform = self._print(expr.arg)
         from sympy.matrices import MatrixSymbol
@@ -1144,7 +1169,8 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Pow(self, power):
-        from sympy import fraction
+        from sympy.physics.quantum import Operator
+        from sympy.simplify.simplify import fraction
         b, e = power.as_base_exp()
         if power.is_commutative:
             if e is S.NegativeOne:
@@ -1153,9 +1179,11 @@ class PrettyPrinter(Printer):
             if n is S.One and d.is_Atom and not e.is_Integer:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
-                return prettyForm("1")/self._print(b)**self._print(-e)
+                return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=False))
 
         # None of the above special forms, do a standard power
+        if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
+            return prettyForm(*self._print(b).parens())**self._print(e)
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):

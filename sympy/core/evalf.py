@@ -2,14 +2,16 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
+from sympy.core.compatibility import SYMPY_INTS
 import sympy.mpmath.libmp as libmp
 from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
 from sympy.mpmath import inf as mpmath_inf
-from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp,
-        from_rational, fhalf, fnan, fnone, fone, fzero, mpf_abs, mpf_add,
+from sympy.mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
+        fnan, fnone, fone, fzero, mpf_abs, mpf_add,
         mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
         mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
         mpf_sqrt, normalize, round_nearest, to_int, to_str)
+from sympy.mpmath.libmp import bitcount as mpmath_bitcount
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpc import _infs_nan
 from sympy.mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
@@ -25,6 +27,9 @@ from containers import Tuple
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
+
+def bitcount(n):
+    return mpmath_bitcount(int(n))
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
@@ -147,7 +152,7 @@ def scaled_zero(mag, sign=1):
     """
     if type(mag) is tuple and len(mag) == 4 and iszero(mag, scaled=True):
         return (mag[0][0],) + mag[1:]
-    elif type(mag) is int:
+    elif isinstance(mag, SYMPY_INTS):
         if sign not in [-1, 1]:
             raise ValueError('sign must be +/-1')
         rv, p = mpf_shift(fone, mag), -1
@@ -383,7 +388,7 @@ def add_terms(terms, prec, target_prec):
     special = []
     for t in terms:
         arg = C.Float._new(t[0], 1)
-        if arg in (S.NaN, S.Infinity, S.NegativeInfinity):
+        if arg is S.NaN or arg.is_unbounded:
             special.append(arg)
     if special:
         from sympy.core.add import Add
@@ -493,7 +498,7 @@ def evalf_mul(v, prec, options):
         if arg[0] is None:
             continue
         arg = C.Float._new(arg[0], 1)
-        if arg in (S.NaN, S.Infinity, S.NegativeInfinity):
+        if arg is S.NaN or arg.is_unbounded:
             special.append(arg)
     if special:
         from sympy.core.mul import Mul

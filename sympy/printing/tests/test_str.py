@@ -646,3 +646,8 @@ def test_MatMul_MatAdd():
     from sympy import MatrixSymbol
     assert str(2*(MatrixSymbol("X", 2, 2) + MatrixSymbol("Y", 2, 2))) == \
         "2*(X + Y)"
+
+def test_MatrixSlice():
+    from sympy.matrices.expressions import MatrixSymbol
+    assert str(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == 'X[:5, 1:9:2]'
+    assert str(MatrixSymbol('X', 10, 10)[5, :5:2]) == 'X[5, :5:2]'

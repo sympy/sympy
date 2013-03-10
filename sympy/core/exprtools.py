@@ -1,7 +1,7 @@
 """Tools for manipulating of large commutative expressions. """
 
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence
+from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
@@ -166,7 +166,7 @@ class Factors(object):
         return self.div(other)[1]
 
     def pow(self, other):  # Factors
-        if type(other) is int and other >= 0:
+        if isinstance(other, SYMPY_INTS) and other >= 0:
             factors = {}
 
             if other:
@@ -225,7 +225,7 @@ class Factors(object):
             return NotImplemented
 
     def __pow__(self, other):  # Factors
-        if type(other) is int:
+        if isinstance(other, SYMPY_INTS):
             return self.pow(other)
         else:
             return NotImplemented
@@ -335,7 +335,7 @@ class Term(object):
     __truediv__ = __div__
 
     def __pow__(self, other):  # Term
-        if type(other) is int:
+        if isinstance(other, SYMPY_INTS):
             return self.pow(other)
         else:
             return NotImplemented
@@ -733,8 +733,13 @@ def factor_nc(expr):
     >>> factor_nc(((x + A)*(x + B)).expand())
     (x + A)*(x + B)
     """
-    from sympy.simplify.simplify import _mexpand
+    from sympy.simplify.simplify import powsimp
     from sympy.polys import gcd, factor
+
+    def _pemexpand(expr):
+        "Expand with the minimal set of hints necessary to check the result."
+        return expr.expand(deep=True, mul=True, power_exp=True,
+            power_base=False, basic=False, multinomial=True, log=False)
 
     expr = sympify(expr)
     if not isinstance(expr, Expr) or not expr.args:
@@ -854,7 +859,7 @@ def factor_nc(expr):
         unrep1 = [(v, k) for k, v in rep1]
         unrep1.reverse()
         new_mid, r2, _ = _mask_nc(mid.subs(rep1))
-        new_mid = factor(new_mid)
+        new_mid = powsimp(factor(new_mid))
 
         new_mid = new_mid.subs(r2).subs(unrep1)
 
@@ -872,13 +877,15 @@ def factor_nc(expr):
                     cfac.append(f)
                 else:
                     b, e = f.as_base_exp()
-                    assert e.is_Integer
-                    ncfac.extend([b]*e)
+                    if e.is_Integer:
+                        ncfac.extend([b]*e)
+                    else:
+                        ncfac.append(f)
             pre_mid = g*Mul(*cfac)*l
-            target = _mexpand(expr/c)
+            target = _pemexpand(expr/c)
             for s in variations(ncfac, len(ncfac)):
                 ok = pre_mid*Mul(*s)*r
-                if _mexpand(ok) == target:
+                if _pemexpand(ok) == target:
                     return _keep_coeff(c, ok)
 
         # mid was an Add that didn't factor successfully

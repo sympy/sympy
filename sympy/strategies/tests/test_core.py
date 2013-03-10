@@ -1,5 +1,6 @@
-from sympy.rules.strat_pure import (null_safe, exhaust, memoize, condition,
-        chain, tryit, do_one, debug, switch)
+from sympy.strategies.core import (null_safe, exhaust, memoize, condition,
+        chain, tryit, do_one, debug, switch, minimize)
+from functools import partial
 
 def test_null_safe():
     def rl(expr):
@@ -68,3 +69,20 @@ def test_switch():
     assert rl(3) == 4
     assert rl(4) == 3
     assert rl(5) == 5
+
+def test_minimize():
+    inc = lambda x: x + 1
+    dec = lambda x: x - 1
+    rl = minimize(inc, dec)
+    assert rl(4) == 3
+
+    rl = minimize(inc, dec, objective=lambda x: -x)
+    assert rl(4) == 5
+
+def test_do_one():
+    rl1 = lambda x: 2 if x == 1 else x
+    rl2 = lambda x: 3 if x == 2 else x
+
+    rule = do_one(rl1, rl2)
+    assert rule(1) == 2
+    assert rule(rule(1)) == 3
