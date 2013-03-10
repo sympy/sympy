@@ -237,9 +237,11 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 # "default", "all", "best", and "all_Integral" meta-hints should not be
 # included in this list, but "_best" and "_Integral" hints should be included.
 allhints = (
-    "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
+    "derivative_factored", "separable", "1st_exact", "1st_linear",
+    "Bernoulli", "Riccati_special_minus2",
     "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
-    "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
+    "1st_homogeneous_coeff_subs_dep_div_indep",
+    "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
@@ -494,9 +496,14 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         eq = eq.lhs - eq.rhs
 
     # preprocess the equation and find func if not given
+    # if given equation is an instance of Derivative then don't preprocess
     if prep or func is None:
-        eq, func = preprocess(eq, func)
-        prep = False
+        if isinstance(eq, Derivative):
+            tmp, func = preprocess(eq, func)
+            prep = True
+        else:
+            eq, func = preprocess(eq, func)
+            prep = False
 
     # Magic that should only be used internally.  Prevents classify_ode from
     # being called more than it needs to be by passing its results through
@@ -520,7 +527,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
                            {'default': hint,
                             hint: kwargs['match'],
                             'order': kwargs['order']})
-
     if hints['order'] == 0:
         raise ValueError(
             str(eq) + " is not a differential equation in " + str(func))
@@ -538,7 +544,9 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         return dsolve(eq, func, hint=hints['default'], simplify=simplify,
                       prep=prep, classify=False, order=hints['order'],
                       match=hints[hints['default']])
-    elif hint in ('all', 'all_Integral', 'best'):
+    if isinstance(eq, Derivative) and hint != 'derivative_factored' :
+        eq = tmp
+    if hint in ('all', 'all_Integral', 'best'):
         retdict = {}
         failedhints = {}
         gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
@@ -582,7 +590,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     # attempt to solve for func, and apply any other hint specific simplifications
     if simplify:
         rv = odesimp(solvefunc(eq, func, order=hints['order'],
-            match=hints[hint]), func, hints['order'], hint)
+                match=hints[hint]), func, hints['order'], hint)
     else:
         # We still want to integrate (you can disable it separately with the hint)
         r = hints[hint]
@@ -691,7 +699,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> classify_ode(Eq(f(x).diff(x), 0), f(x))
-    ('separable', '1st_linear', '1st_homogeneous_coeff_best',
+    ('derivative_factored', 'separable', '1st_linear',
+    '1st_homogeneous_coeff_best',
     '1st_homogeneous_coeff_subs_indep_div_dep',
     '1st_homogeneous_coeff_subs_dep_div_indep',
     'nth_linear_constant_coeff_homogeneous', 'separable_Integral',
@@ -706,10 +715,30 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     """
     prep = kwargs.pop('prep', True)
     from sympy import expand
+    matching_hints = {}
 
     if func and len(func.args) != 1:
         raise ValueError("dsolve() and classify_ode() only work with functions " +
             "of one variable")
+
+
+    #Checking if it is derivative factored
+    if isinstance(eq, Derivative):
+        if func is None:
+            tmp, func = preprocess(eq, func)
+        if len(eq.atoms(Derivative)) == 1 and func.args[0] == eq.variables[0]:
+            r = {}
+            matching_hints['derivative_factored'] = r
+
+    if isinstance(eq, Equality):
+        lhs = eq.lhs
+        if eq.rhs == 0 and isinstance(lhs, Derivative):
+            if func is None:
+                tmp, func = preprocess(lhs, func)
+            if len(eq.atoms(Derivative)) == 1 and func.args[0] == lhs.variables[0]:
+                r = {}
+                matching_hints['derivative_factored'] = r
+
     if prep or func is None:
         eq, func_ = preprocess(eq, func)
         if func is None:
@@ -724,7 +753,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
-    matching_hints = {"order": order}
+    matching_hints["order"] = order
 
     if not order:
         if dict:
@@ -890,7 +919,6 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
                         and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
-
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
         # See Goldstein and Braun, "Advanced Methods for the Solution of
@@ -1879,6 +1907,42 @@ def ode_order(expr, func):
             order = max(order, ode_order(arg, func))
         return order
 
+def ode_derivative_factored(eq, func, order, match):
+    r'''
+    Solves differential equations when the given eq is in the form of a derivative.
+
+    The differential equation is of the form of d^n(g(x)*F(x))/dx^n = 0, where
+    g(x) is a known function, the function F(x) would be a polynomial of degree n
+    divided by the function g(x)
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy.solvers.ode import dsolve
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> d = Derivative(x*f(x), x, x, x)
+    >>> pprint(dsolve(d, f(x)))
+                C2
+    f(x) = C1 + -- + C3*x
+                x
+
+    '''
+
+    # TODO: solve and classify nested derivatives also under this hint.
+    # That is, differential equations like Derivative(x*Derivative(f(x), x), x)
+    # should also be classified under this hint.
+
+    equation = 0
+    original_fun = eq.args[0]
+    fun_remainder = original_fun / func
+    variable = eq.args[1]
+    generator = numbered_symbols(prefix='C' , start = 1)
+    symbols = [generator.next() for i in range(order)]
+    for i in range(len(symbols)):
+        equation = equation + (symbols[i]*variable **i / fun_remainder)
+    return Eq(func, equation)
 
 # FIXME: replace the general solution in the docstring with
 # dsolve(equation, hint='1st_exact_Integral').  You will need to be able
