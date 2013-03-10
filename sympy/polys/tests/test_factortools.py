@@ -636,7 +636,7 @@ def test_dmp_factor_list():
                                (DMP([QQ(1)], QQ)*x + DMP([QQ(1), QQ(0)], QQ), 1)])
 
     R, x, y = ring("x,y", FF(2))
-    raises(DomainError, lambda: R.dmp_factor_list(x**2 + y**2))
+    raises(NotImplementedError, lambda: R.dmp_factor_list(x**2 + y**2))
 
     R, x, y = ring("x,y", EX)
     raises(DomainError, lambda: R.dmp_factor_list(EX(sin(1))))

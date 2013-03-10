@@ -188,7 +188,7 @@ def dup_gf_sqf_part(f, K):
 
 def dmp_gf_sqf_part(f, K):
     """Compute square-free part of ``f`` in ``GF(p)[X]``. """
-    raise DomainError('multivariate polynomials over %s' % K)
+    raise NotImplementedError('multivariate polynomials over finite fields')
 
 
 def dup_sqf_part(f, K):
@@ -274,7 +274,7 @@ def dup_gf_sqf_list(f, K, all=False):
 
 def dmp_gf_sqf_list(f, u, K, all=False):
     """Compute square-free decomposition of ``f`` in ``GF(p)[X]``. """
-    raise DomainError('multivariate polynomials over %s' % K)
+    raise NotImplementedError('multivariate polynomials over finite fields')
 
 
 @cythonized("i")

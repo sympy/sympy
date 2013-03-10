@@ -68,67 +68,10 @@ from sympy.polys.densebasic import dup_TC
 from sympy.polys.densebasic import dmp_TC
 from sympy.polys.densebasic import dmp_ground_LC
 from sympy.polys.densebasic import dmp_ground_TC
-from sympy.polys.densebasic import dmp_true_LT
 from sympy.polys.densebasic import dup_degree
 from sympy.polys.densebasic import dmp_degree
 from sympy.polys.densebasic import dmp_degree_in
-from sympy.polys.densebasic import dmp_degree_list
-from sympy.polys.densebasic import dup_strip
-from sympy.polys.densebasic import dmp_strip
-from sympy.polys.densebasic import dmp_validate
-from sympy.polys.densebasic import dup_reverse
-from sympy.polys.densebasic import dup_copy
-from sympy.polys.densebasic import dmp_copy
-from sympy.polys.densebasic import dup_to_tuple
-from sympy.polys.densebasic import dmp_to_tuple
-from sympy.polys.densebasic import dup_normal
-from sympy.polys.densebasic import dmp_normal
-from sympy.polys.densebasic import dup_convert
-from sympy.polys.densebasic import dmp_convert
-from sympy.polys.densebasic import dup_from_sympy
-from sympy.polys.densebasic import dmp_from_sympy
-from sympy.polys.densebasic import dup_nth
-from sympy.polys.densebasic import dmp_nth
-from sympy.polys.densebasic import dmp_ground_nth
-from sympy.polys.densebasic import dmp_zero_p
-from sympy.polys.densebasic import dmp_zero
-from sympy.polys.densebasic import dmp_one_p
-from sympy.polys.densebasic import dmp_one
-from sympy.polys.densebasic import dmp_ground_p
-from sympy.polys.densebasic import dmp_ground
-from sympy.polys.densebasic import dmp_zeros
-from sympy.polys.densebasic import dmp_grounds
-from sympy.polys.densebasic import dmp_negative_p
-from sympy.polys.densebasic import dmp_positive_p
-from sympy.polys.densebasic import dup_from_dict
-from sympy.polys.densebasic import dup_from_raw_dict
-from sympy.polys.densebasic import dmp_from_dict
-from sympy.polys.densebasic import dup_to_dict
-from sympy.polys.densebasic import dup_to_raw_dict
 from sympy.polys.densebasic import dmp_to_dict
-from sympy.polys.densebasic import dmp_swap
-from sympy.polys.densebasic import dmp_permute
-from sympy.polys.densebasic import dmp_nest
-from sympy.polys.densebasic import dmp_raise
-from sympy.polys.densebasic import dup_deflate
-from sympy.polys.densebasic import dmp_deflate
-from sympy.polys.densebasic import dup_multi_deflate
-from sympy.polys.densebasic import dmp_multi_deflate
-from sympy.polys.densebasic import dup_inflate
-from sympy.polys.densebasic import dmp_inflate
-from sympy.polys.densebasic import dmp_exclude
-from sympy.polys.densebasic import dmp_include
-from sympy.polys.densebasic import dmp_inject
-from sympy.polys.densebasic import dmp_eject
-from sympy.polys.densebasic import dup_terms_gcd
-from sympy.polys.densebasic import dmp_terms_gcd
-from sympy.polys.densebasic import dmp_list_terms
-from sympy.polys.densebasic import dup_apply_pairs
-from sympy.polys.densebasic import dmp_apply_pairs
-from sympy.polys.densebasic import dup_slice
-from sympy.polys.densebasic import dmp_slice
-from sympy.polys.densebasic import dmp_slice_in
-from sympy.polys.densebasic import dup_random
 from sympy.polys.densetools import dup_integrate
 from sympy.polys.densetools import dmp_integrate
 from sympy.polys.densetools import dmp_integrate_in
@@ -223,7 +166,6 @@ from sympy.polys.factortools import dup_zz_cyclotomic_factor
 from sympy.polys.factortools import dup_zz_factor_sqf
 from sympy.polys.factortools import dup_zz_factor
 from sympy.polys.factortools import dmp_zz_wang_non_divisors
-from sympy.polys.factortools import dmp_zz_wang_test_points
 from sympy.polys.factortools import dmp_zz_wang_lead_coeffs
 from sympy.polys.factortools import dup_zz_diophantine
 from sympy.polys.factortools import dmp_zz_diophantine
@@ -240,15 +182,6 @@ from sympy.polys.factortools import dmp_factor_list
 from sympy.polys.factortools import dmp_factor_list_include
 from sympy.polys.factortools import dup_irreducible_p
 from sympy.polys.factortools import dmp_irreducible_p
-from sympy.polys.orthopolys import dup_jacobi
-from sympy.polys.orthopolys import dup_gegenbauer
-from sympy.polys.orthopolys import dup_chebyshevt
-from sympy.polys.orthopolys import dup_chebyshevu
-from sympy.polys.orthopolys import dup_hermite
-from sympy.polys.orthopolys import dup_legendre
-from sympy.polys.orthopolys import dup_laguerre
-from sympy.polys.orthopolys import dup_spherical_bessel_fn
-from sympy.polys.orthopolys import dup_spherical_bessel_fn_minus
 from sympy.polys.rootisolation import dup_sturm
 from sympy.polys.rootisolation import dup_root_upper_bound
 from sympy.polys.rootisolation import dup_root_lower_bound
@@ -288,6 +221,30 @@ from sympy.polys.sqfreetools import dup_gff_list
 from sympy.polys.sqfreetools import dmp_gff_list
 
 class IPolys(object):
+    symbols = None
+    ngens = None
+    domain = None
+    order = None
+    gens = None
+
+    def drop(self, gen):
+        pass
+
+    def clone(self, symbols=None, domain=None, order=None):
+        pass
+
+    def to_ground(self):
+        pass
+
+    def ground_new(self, element):
+        pass
+
+    def domain_new(self, element):
+        pass
+
+    def from_dict(self, d):
+        pass
+
     def wrap(self, element):
         from sympy.polys.rings import PolyElement
         if isinstance(element, PolyElement):
@@ -459,7 +416,7 @@ class IPolys(object):
     def dmp_LC(self, f):
         LC = dmp_LC(self.to_dense(f), self.domain)
         if isinstance(LC, list):
-            return self.drop(0).from_dense(LC)
+            return self[1:].from_dense(LC)
         else:
             return LC
     def dup_TC(self, f):
@@ -467,7 +424,7 @@ class IPolys(object):
     def dmp_TC(self, f):
         TC = dmp_TC(self.to_dense(f), self.domain)
         if isinstance(TC, list):
-            return self.drop(0).from_dense(TC)
+            return self[1:].from_dense(TC)
         else:
             return TC
 
@@ -482,71 +439,10 @@ class IPolys(object):
         return dmp_degree(self.to_dense(f), self.ngens-1)
     def dmp_degree_in(self, f, j):
         return dmp_degree_in(self.to_dense(f), j, self.ngens-1)
-    """
-    def dmp_degree_list(f, u):
-    def dup_strip(f):
-    def dmp_strip(f, u):
-    def dmp_validate(f, K=None):
-    def dup_reverse(f):
-    def dup_copy(f):
-    def dmp_copy(f, u):
-    def dup_to_tuple(f):
-    def dmp_to_tuple(f, u):
-    def dup_normal(f, K):
-    def dmp_normal(f):
-    def dup_convert(f, K0, K1):
-    def dmp_convert(f, u, K0, K1):
-    def dup_from_sympy(f, K):
-    def dmp_from_sympy(f, u, K):
-    def dup_nth(f, n, K):
-    def dmp_nth(f, n, u, K):
-    def dmp_ground_nth(f, N, u, K):
-    def dmp_zero_p(f, u):
-    def dmp_zero(u):
-    def dmp_one_p(f, u, K):
-    def dmp_one(u, K):
-    def dmp_ground_p(f, c, u):
-    def dmp_ground(c, u):
-    def dmp_zeros(n, u, K):
-    def dmp_grounds(c, n, u):
-    def dmp_negative_p(f, u, K):
-    def dmp_positive_p(f, u, K):
-    def dup_from_dict(f, K):
-    def dup_from_raw_dict(f, K):
-    def dmp_from_dict(f, u, K):
-    def dup_to_dict(f, K=None, zero=False):
-    def dup_to_raw_dict(f, K=None, zero=False):
-    def dmp_to_dict(f, u, K=None, zero=False):
-    def dmp_swap(f, i, j, u, K):
-    def dmp_permute(f, P, u, K):
-    def dmp_nest(f, l, K):
-    def dmp_raise(f, l, u, K):
-    def dup_deflate(f, K):
-    def dmp_deflate(f, u, K):
-    def dup_multi_deflate(polys, K):
-    def dmp_multi_deflate(polys, u, K):
-    def dup_inflate(f, m, K):
-    def dmp_inflate(f, M, u, K):
-    def dmp_exclude(f, u, K):
-    def dmp_include(f, J, u, K):
-    def dmp_inject(f, u, K, front=False):
-    def dmp_eject(f, u, K, front=False):
-    def dup_terms_gcd(f, K):
-    def dmp_terms_gcd(f, u, K):
-    def dmp_list_terms(f, u, K, order=None):
-    def dup_apply_pairs(f, g, h, args, K):
-    def dmp_apply_pairs(f, g, h, args, u, K):
-    def dup_slice(f, m, n, K):
-    def dmp_slice(f, m, n, u, K):
-    def dmp_slice_in(f, m, n, j, u, K):
-    def dup_random(n, a, b, K):
-    """
-
     def dup_integrate(self, f, m):
         return self.from_dense(dup_integrate(self.to_dense(f), m, self.domain))
     def dmp_integrate(self, f, m):
         return self.from_dense(dmp_integrate(self.to_dense(f), m, self.ngens-1, self.domain))
-
 
     def dup_diff(self, f, m):
         return self.from_dense(dup_diff(self.to_dense(f), m, self.domain))
@@ -562,7 +458,7 @@ class IPolys(object):
         return dup_eval(self.to_dense(f), a, self.domain)
     def dmp_eval(self, f, a):
         result = dmp_eval(self.to_dense(f), a, self.ngens-1, self.domain)
-        return self.drop(0).from_dense(result)
+        return self[1:].from_dense(result)
 
     def dmp_eval_in(self, f, a, j):
         result = dmp_eval_in(self.to_dense(f), a, j, self.ngens-1, self.domain)
@@ -581,7 +477,7 @@ class IPolys(object):
     def dup_trunc(self, f, p):
         return self.from_dense(dup_trunc(self.to_dense(f), p, self.domain))
     def dmp_trunc(self, f, g):
-        return self.from_dense(dmp_trunc(self.to_dense(f), self.drop(0).to_dense(g), self.ngens-1, self.domain))
+        return self.from_dense(dmp_trunc(self.to_dense(f), self[1:].to_dense(g), self.ngens-1, self.domain))
     def dmp_ground_trunc(self, f, p):
         return self.from_dense(dmp_ground_trunc(self.to_dense(f), p, self.ngens-1, self.domain))
 
@@ -628,13 +524,17 @@ class IPolys(object):
 
     def dup_clear_denoms(self, f, convert=False):
         c, F = dup_clear_denoms(self.to_dense(f), self.domain, convert=convert)
-        if convert: ring = self.clone(domain=self.domain.get_ring())
-        else: ring = self
+        if convert:
+            ring = self.clone(domain=self.domain.get_ring())
+        else:
+            ring = self
         return (c, ring.from_dense(F))
     def dmp_clear_denoms(self, f, convert=False):
         c, F = dmp_clear_denoms(self.to_dense(f), self.ngens-1, self.domain, convert=convert)
-        if convert: ring = self.clone(domain=self.domain.get_ring())
-        else: ring = self
+        if convert:
+            ring = self.clone(domain=self.domain.get_ring())
+        else:
+            ring = self
         return (c, ring.from_dense(F))
 
     def dup_revert(self, f, n):
@@ -690,24 +590,24 @@ class IPolys(object):
         return (res, map(self.from_dense, prs))
     def dmp_prs_resultant(self, f, g):
         res, prs = dmp_prs_resultant(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
-        return (self.drop(0).from_dense(res), map(self.from_dense, prs))
+        return (self[1:].from_dense(res), map(self.from_dense, prs))
 
     def dmp_zz_modular_resultant(self, f, g, p):
         res = dmp_zz_modular_resultant(self.to_dense(f), self.to_dense(g), self.domain_new(p), self.ngens-1, self.domain)
-        return self.drop(0).from_dense(res)
+        return self[1:].from_dense(res)
     def dmp_zz_collins_resultant(self, f, g):
         res = dmp_zz_collins_resultant(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
-        return self.drop(0).from_dense(res)
+        return self[1:].from_dense(res)
     def dmp_qq_collins_resultant(self, f, g):
         res = dmp_qq_collins_resultant(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain)
-        return self.drop(0).from_dense(res)
+        return self[1:].from_dense(res)
 
     def dup_resultant(self, f, g): #, includePRS=False):
         return dup_resultant(self.to_dense(f), self.to_dense(g), self.domain) #, includePRS=includePRS)
     def dmp_resultant(self, f, g): #, includePRS=False):
         res = dmp_resultant(self.to_dense(f), self.to_dense(g), self.ngens-1, self.domain) #, includePRS=includePRS)
         if isinstance(res, list):
-            return self.drop(0).from_dense(res)
+            return self[1:].from_dense(res)
         else:
             return res
 
@@ -716,7 +616,7 @@ class IPolys(object):
     def dmp_discriminant(self, f):
         disc = dmp_discriminant(self.to_dense(f), self.ngens-1, self.domain)
         if isinstance(disc, list):
-            return self.drop(0).from_dense(disc)
+            return self[1:].from_dense(disc)
         else:
             return disc
 
@@ -785,13 +685,13 @@ class IPolys(object):
     def dmp_content(self, f):
         cont = dmp_content(self.to_dense(f), self.ngens-1, self.domain)
         if isinstance(cont, list):
-            return self.drop(0).from_dense(cont)
+            return self[1:].from_dense(cont)
         else:
             return cont
     def dmp_primitive(self, f):
         cont, prim = dmp_primitive(self.to_dense(f), self.ngens-1, self.domain)
         if isinstance(cont, list):
-            return (self.drop(0).from_dense(cont), self.from_dense(prim))
+            return (self[1:].from_dense(cont), self.from_dense(prim))
         else:
             return (cont, self.from_dense(prim))
 
@@ -994,9 +894,9 @@ class IPolys(object):
         factors = dmp_gff_list(self.to_dense(f), self.ngens-1, self.domain)
         return [ (self.from_dense(g), k) for g, k in factors ]
 
-    def dup_root_upper_bound(f, K):
+    def dup_root_upper_bound(self, f):
         return dup_root_upper_bound(self.to_dense(f), self.domain)
-    def dup_root_lower_bound(f, K):
+    def dup_root_lower_bound(self, f):
         return dup_root_lower_bound(self.to_dense(f), self.domain)
 
     def dup_step_refine_real_root(self, f, M, fast=False):

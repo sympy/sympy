@@ -3,7 +3,6 @@
 from sympy.polys.rings import ring
 from sympy.polys.domains import FF, ZZ, QQ
 from sympy.polys.polyclasses import DMP
-from sympy.polys.polyerrors import DomainError
 from sympy.polys.specialpolys import f_polys
 
 from sympy.utilities.pytest import raises
@@ -136,7 +135,7 @@ def test_dmp_sqf():
     assert R.dmp_sqf_list_include(f) == [(-1, 1), (x - 1, 2)]
 
     R, x, y = ring("x,y", FF(2))
-    raises(DomainError, lambda: R.dmp_sqf_list(y**2 + 1))
+    raises(NotImplementedError, lambda: R.dmp_sqf_list(y**2 + 1))
 
 
 def test_dup_gff_list():
