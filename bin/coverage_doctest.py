@@ -53,11 +53,14 @@ c_normal = '\033[0m'
 c_color = '\033[%sm'
 
 
-def print_header(name, underline=None, overline=None):
+def print_header(name, underline=None, color=None):
 
     print
-    print name
-    if underline:
+    if color:
+        print "%s%s%s" % (c_color % colors[color], name, c_normal)
+    else:
+        print name
+    if underline and not color:
         print underline*len(name)
 
 
@@ -72,6 +75,8 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
     less_100_color = "Red"
     less_50_color = "LightRed"
     equal_100_color = "Green"
+    big_header_color = "LightPurple"
+    small_header_color = "Purple"
 
     if no_color:
         score_string = "Doctests: %s%% (%s of %s)" % (score, total_doctests,
@@ -119,50 +124,50 @@ def print_coverage(module_path, c, c_md, c_mdt, c_idt, c_sph, f, f_md, f_mdt,
             print "%s: %s" % (module_path, score_string)
 
     if verbose:
-        print_header('CLASSES', '*')
+        print_header('CLASSES', '*', not no_color and big_header_color)
         if not c:
             print_header('No classes found!')
 
         else:
             if c_md:
-                print_header('Missing docstrings', '-')
+                print_header('Missing docstrings', '-', not no_color and small_header_color)
                 for md in c_md:
                     print '  * ' + md
             if c_mdt:
-                print_header('Missing doctests', '-')
+                print_header('Missing doctests', '-', not no_color and small_header_color)
                 for md in c_mdt:
                     print '  * ' + md
             if c_idt:
                 # Use "# indirect doctest" in the docstring to
                 # supress this warning.
-                print_header('Indirect doctests', '-')
+                print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in c_idt:
                     print '  * ' + md
                 print '\n    Use \"# indirect doctest\" in the docstring to supress this warning'
             if c_sph:
-                print_header('Not imported into Sphinx', '-')
+                print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in c_sph:
                     print '  * ' + md
 
-        print_header('FUNCTIONS', '*')
+        print_header('FUNCTIONS', '*', not no_color and big_header_color)
         if not f:
             print_header('No functions found!')
         else:
             if f_md:
-                print_header('Missing docstrings', '-')
+                print_header('Missing docstrings', '-', not no_color and small_header_color)
                 for md in f_md:
                     print '  * ' + md
             if f_mdt:
-                print_header('Missing doctests', '-')
+                print_header('Missing doctests', '-', not no_color and small_header_color)
                 for md in f_mdt:
                     print '  * ' + md
             if f_idt:
-                print_header('Indirect doctests', '-')
+                print_header('Indirect doctests', '-', not no_color and small_header_color)
                 for md in f_idt:
                     print '  * ' + md
                 print '\n    Use \"# indirect doctest\" in the docstring to supress this warning'
             if f_sph:
-                print_header('Not imported into Sphinx', '-')
+                print_header('Not imported into Sphinx', '-', not no_color and small_header_color)
                 for md in f_sph:
                     print '  * ' + md
 
