@@ -75,14 +75,16 @@ def test_dsolve_options():
         '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear',
-        '1st_linear_Integral', 'best', 'best_hint', 'default',
+        '1st_linear_Integral', 'almost_linear', 'almost_linear_Integral',
+        'best', 'best_hint', 'default',
         'nth_linear_euler_eq_homogeneous', 'order',
         'separable', 'separable_Integral']
     Integral_keys = ['1st_exact_Integral',
-    '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
-    '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
-    'best', 'best_hint', 'default', 'nth_linear_euler_eq_homogeneous',
-    'order', 'separable_Integral']
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
+        '1st_homogeneous_coeff_subs_indep_div_dep_Integral', '1st_linear_Integral',
+        'almost_linear_Integral', 'best', 'best_hint', 'default',
+        'nth_linear_euler_eq_homogeneous',
+        'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
     assert a['order'] == ode_order(eq, f(x))
     assert a['best'] == Eq(f(x), C1/x)
@@ -152,10 +154,19 @@ def test_classify_ode():
     a = classify_ode(Eq(f(x).diff(x) + f(x), x), f(x))
     b = classify_ode(f(x).diff(x)*f(x) + f(x)*f(x) - x*f(x), f(x))
     c = classify_ode(f(x).diff(x)/f(x) + f(x)/f(x) - x/f(x), f(x))
-    assert a == b == c != ()
+    assert a == ('1st_linear',
+        'Bernoulli',
+        'almost_linear',
+        'nth_linear_constant_coeff_undetermined_coefficients',
+        'nth_linear_constant_coeff_variation_of_parameters',
+        '1st_linear_Integral',
+        'Bernoulli_Integral',
+        'almost_linear_Integral',
+        'nth_linear_constant_coeff_variation_of_parameters_Integral')
+    assert b == c != ()
     assert classify_ode(
         2*x*f(x)*f(x).diff(x) + (1 + x)*f(x)**2 - exp(x), f(x)
-    ) == ('Bernoulli', 'Bernoulli_Integral')
+    ) == ('Bernoulli', 'almost_linear', 'Bernoulli_Integral', 'almost_linear_Integral')
     assert 'Riccati_special_minus2' in \
         classify_ode(2*f(x).diff(x) + f(x)**2 - f(x)/x + 3*x**(-2), f(x))
     raises(ValueError, lambda: classify_ode(x + f(x, y).diff(x).diff(
@@ -1314,10 +1325,10 @@ def test_unexpanded_Liouville_ODE():
 def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
-    assert classify_ode(eq, f(x)) == ('1st_linear',
+    assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
     'nth_linear_constant_coeff_undetermined_coefficients',
     'nth_linear_constant_coeff_variation_of_parameters',
-    '1st_linear_Integral',
+    '1st_linear_Integral', 'almost_linear_Integral',
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # 1765
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
@@ -1427,10 +1438,45 @@ def test_nth_order_linear_euler_eq_homogeneous():
     assert dsolve(eq, y(t), hint=our_hint).rhs in (sol, sols)
     assert checkodesol(eq, sol, order=2, solve_for_func=False)[0]
 
+
 def test_issue_1996():
     f = Function('f')
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'separable'))
     raises(ValueError, lambda: dsolve(f(x).diff(x)**2, f(x), 'fdsjf'))
+
+
+def test_almost_linear():
+    from sympy import Ei
+    from sympy.abc import A
+    our_hint = 'almost_linear'
+    f = Function('f')
+    d = f(x).diff(x)
+    eq = x**2*f(x)**2*d + f(x)**3 + 1
+    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    assert sol[0].rhs == (C1*exp(3/x) - 1)**(1/3)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = x*f(x)*d + 2*x*f(x)**2 + 1
+    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    assert sol[0].rhs == -sqrt((C1 - 2*Ei(4*x))*exp(-4*x))
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = x*d + x*f(x) + 1
+    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    assert sol.rhs == (C1 - Ei(x))*exp(-x)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+    assert our_hint in classify_ode(eq, f(x))
+
+    eq = x*exp(f(x))*d + exp(f(x)) + 3*x
+    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    assert sol.rhs == log(C1/x - 3*x) - log(2)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
+    sol = dsolve(eq, f(x), hint = 'almost_linear')
+    assert sol.rhs == (C1 + (-A*x + A - x - 1)*exp(x)/(A + 1))*exp(-x)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
 
 def test_exact_enhancement():
     f = Function('f')(x)
