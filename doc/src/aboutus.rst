@@ -250,6 +250,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Tarang Patel: added test for issue 1640
 #. Christopher Dembia: improvements to mecahanics documentation
 #. Benjamin Fishbein: added rank method to Matrix
+#. Sean Ge: made KroneckerDelta arguments canonically ordered
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
