@@ -5,7 +5,7 @@ from sympy.polys.domains import ZZ, QQ, RR, ZZ_python
 from sympy.polys.monomialtools import lex, grlex
 
 from sympy.utilities.pytest import raises
-from sympy.core import Symbol
+from sympy.core import Symbol, symbols
 
 def test_PolyRing___init__():
     x, y, z = map(Symbol, "xyz")
@@ -70,6 +70,24 @@ def test_PolyElement___eq__():
 
     assert ((x*y - x*y) != 1) == True
     assert (1 != (x*y - x*y)) == True
+
+def test_PolyElement_as_expr():
+    R, x, y, z = ring("x,y,z", ZZ)
+    f = 3*x**2*y - x*y*z + 7*z**3 + 1
+
+    X, Y, Z = R.symbols
+    g = 3*X**2*Y - X*Y*Z + 7*Z**3 + 1
+
+    assert f != g
+    assert f.as_expr() == g
+
+    X, Y, Z = symbols("x,y,z")
+    g = 3*X**2*Y - X*Y*Z + 7*Z**3 + 1
+
+    assert f != g
+    assert f.as_expr(X, Y, Z) == g
+
+    raises(ValueError, lambda: f.as_expr(X))
 
 def test_PolyElement_coeff():
     R, x, y, z = ring("x,y,z", ZZ, lex)

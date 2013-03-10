@@ -5,6 +5,7 @@ from sympy.polys.domains import ZZ, QQ, RR, ZZ_python
 from sympy.polys.monomialtools import lex, grlex
 
 from sympy.utilities.pytest import raises
+from sympy.core import Symbol, symbols
 
 def test_FracField___repr__():
     assert repr(field("x", ZZ, lex)[0]) == "FracField((x,), ZZ, LexOrder())"
@@ -31,6 +32,24 @@ def test_FracElement___repr__():
 def test_FracElement___str__():
     F, x, y = field("x,y", ZZ_python())
     assert str((3*x**2*y + 1)/(x - y**2)) == "(3*x**2*y + 1)/(x - y**2)"
+
+def test_FracElement_as_expr():
+    F, x, y, z = field("x,y,z", ZZ)
+    f = (3*x**2*y - x*y*z)/(7*z**3 + 1)
+
+    X, Y, Z = F.symbols
+    g = (3*X**2*Y - X*Y*Z)/(7*Z**3 + 1)
+
+    assert f != g
+    assert f.as_expr() == g
+
+    X, Y, Z = symbols("x,y,z")
+    g = (3*X**2*Y - X*Y*Z)/(7*Z**3 + 1)
+
+    assert f != g
+    assert f.as_expr(X, Y, Z) == g
+
+    raises(ValueError, lambda: f.as_expr(X))
 
 def test_FracElement___neg__():
     F, x,y = field("x,y", QQ)

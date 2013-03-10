@@ -1,5 +1,7 @@
 """Sparse rational function fields. """
 
+from copy import copy
+
 from sympy.core.sympify import CantSympify
 from sympy.polys.monomialtools import lex
 from sympy.polys.polyerrors import ExactQuotientFailed
@@ -88,6 +90,12 @@ class FracElement(CantSympify):
             self._hash = _hash = hash((self.field, self.numer, self.denom))
         return _hash
 
+    def copy(self):
+        return copy(self)
+
+    def as_expr(self, *symbols):
+        return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
+
     def __repr__(self):
         numer_terms = list(self.numer.terms())
         numer_terms.sort(key=self.field.order, reverse=True)
@@ -110,7 +118,10 @@ class FracElement(CantSympify):
         return sn + "/" + sd
 
     def __eq__(f, g):
-        return f.numer == g.numer and f.denom == g.denom
+        if isinstance(g, FracElement):
+            return f.numer == g.numer and f.denom == g.denom
+        else:
+            return f.numer == g and f.denom == 1
 
     def __bool__(f):
         return bool(f.numer)

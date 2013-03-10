@@ -12,6 +12,7 @@ from sympy.polys.monomialtools import (monomial_mul, monomial_div,
     monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex)
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
+from sympy.polys.polyutils import expr_from_dict
 
 def ring(symbols, domain, order=lex):
     """Construct new polynomial ring returning (ring, x1, ..., xn). """
@@ -233,11 +234,19 @@ class PolyElement(dict, CantSympify):
         """
         return copy(self)
 
-    def set_ring(self, new):
-        if self.ring.ngens != new.ngens:
+    def set_ring(self, new_ring):
+        if self.ring.ngens != new_ring.ngens:
             raise NotImplementedError
         else:
-            return PolyElement(new, [ (k, new.domain_new(v)) for k, v in self.items() ])
+            return PolyElement(new_ring, [ (k, new_ring.domain_new(v)) for k, v in self.items() ])
+
+    def as_expr(self, *symbols):
+        if symbols and len(symbols) != self.ring.ngens:
+            raise ValueError("not enough symbols, expected %s got %s" % (self.ring.ngens, len(symbols)))
+        else:
+            symbols = self.ring.symbols
+
+        return expr_from_dict(self, *symbols)
 
     def clear_denoms(self):
         domain = self.ring.domain
