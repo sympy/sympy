@@ -21,7 +21,7 @@ def solve_lin_sys(eqs, ring):
     eqs = M
 
     # solve by row-reduction
-    eschelon, pivots = eqs.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
+    echelon, pivots = eqs.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
 
     # construct the returnable form of the solutions
     if pivots[-1] == len(xs):
@@ -30,6 +30,6 @@ def solve_lin_sys(eqs, ring):
     sols = {}
     for i, p in enumerate(pivots):
         vect = RawMatrix([ [-x] for x in xs[p+1:] ] + [[1]])
-        sols[xs[p]] = (eschelon[i, p+1:]*vect)[0]
+        sols[xs[p]] = (echelon[i, p+1:]*vect)[0]
 
     return sols
