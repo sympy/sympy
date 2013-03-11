@@ -1,11 +1,19 @@
-from sympy import (S, ceiling, floor, Dummy, Poly, resultant, quo, rem, Abs,
-                   Add, cancel, monomials, apart_list, Lambda,
-                   factorial, polygamma, RootSum, Mul, gruntz)
+"""This module implements tools for summation of rational functions. """
 
+from sympy.core import Add, Mul, Dummy, S
 from sympy.core.sympify import sympify
-
-from sympy.solvers.solvers import solve
+from sympy.core.function import Lambda
 from sympy.simplify.simplify import simplify
+from sympy.functions.elementary.integers import floor, ceiling
+from sympy.functions.elementary.complexes import Abs
+from sympy.functions.combinatorial.factorials import factorial
+from sympy.functions.special.gamma_functions import polygamma
+from sympy.polys.monomialtools import monomials
+from sympy.polys.polytools import Poly, quo, rem, resultant, cancel
+from sympy.polys.partfrac import apart_list
+from sympy.polys.rootoftools import RootSum
+from sympy.solvers.solvers import solve
+from sympy.series import gruntz
 
 
 def integer_roots(p):
