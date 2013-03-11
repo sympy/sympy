@@ -1896,6 +1896,8 @@ def test_DeferredVector():
     assert str(DeferredVector("vector")[4]) == "vector[4]"
     assert sympify(DeferredVector("d")) == DeferredVector("d")
 
+def test_DeferredVector_Matrix():
+    raises(TypeError, lambda: Matrix(DeferredVector("V")))
 
 def test_GramSchmidt():
     R = Rational
@@ -1964,7 +1966,7 @@ def test_invertible_check():
     # sometimes a singular matrix will have a pivot vector shorter than
     # the number of rows in a matrix...
     assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
-    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
+    aaises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
     # ... but sometimes it won't, so that is an insufficient test of
     # whether something is invertible.
     m = Matrix([
