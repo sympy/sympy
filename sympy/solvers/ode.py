@@ -2293,15 +2293,16 @@ def homogeneous_order(eq, *symbols):
         arg = eq.args[0]
         if arg.is_Add:
             for i in arg.args:
-                if homogeneous_order(i, *tuple(symset)) == S.Zero:
-                    return S.Zero
-                else:
+                if homogeneous_order(i, *tuple(symset)) != S.Zero:
                     return None
+            return S.Zero
+
+
         else:
-            if homogeneous_order(arg, *tuple(symset)) == S.Zero:
-                return S.Zero
-            else:
+            if homogeneous_order(arg, *tuple(symset)) != S.Zero:
                 return None
+            else:
+                return S.Zero
 
     # make the replacement of x with x*t and see if t can be factored out
     t = Dummy('t', positive=True)  # It is sufficient that t > 0
