@@ -4,7 +4,7 @@ from sympy import sqrt
 
 __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'pspace',
         'sample_iter', 'variance', 'std', 'skewness', 'covariance', 'dependent',
-        'independent', 'random_symbols']
+        'independent', 'random_symbols', 'correlation', 'moment', 'cmoment']
 
 
 def variance(X, condition=None, **kwargs):
@@ -88,10 +88,98 @@ def covariance(X, Y, condition=None, **kwargs):
 
 
 def skewness(X, condition=None, **kwargs):
+    """
+    Measure of the asymmetry of the probability distribution
 
+    Positive skew indicates that most of the values lie to the right of the mean
+
+    skewness(X) = E( ((X - E(X))/sigma)**3 )
+    
+    Examples
+    ========
+
+    >>> from sympy.stats import skewness, Exponential, Normal
+    >>> from sympy import Symbol
+    >>> X = Normal('X', 0, 1)
+    >>> skewness(X)
+    0
+    >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
+    >>> Y = Exponential('Y', rate)
+    >>> skewness(Y)
+    2
+    """
     mu = expectation(X, condition, **kwargs)
     sigma = std(X, condition, **kwargs)
     return expectation( ((X - mu)/sigma) ** 3, condition, **kwargs)
+
+
+def correlation(X, Y, condition=None, **kwargs):
+    """
+    Correlation of two random expressions, also known as correlation coefficient or Pearson's correlation
+
+    The normalized expectation that the two variables will rise and fall together
+
+    Correlation(X,Y) = E( (X-E(X)) * (Y-E(Y)) / (sigma(X) * sigma(Y)) )
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Exponential, correlation
+    >>> from sympy import Symbol
+
+    >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
+    >>> X = Exponential('X', rate)
+    >>> Y = Exponential('Y', rate)
+
+    >>> correlation(X, X)
+    1
+    >>> correlation(X, Y)
+    0
+    >>> correlation(X, Y + rate*X)
+    1/sqrt(-(1 + 1/lambda)**2 + 2 + 2/lambda + 2/lambda**2)
+    """
+    return covariance(X, Y, condition, **kwargs)/(std(X, condition, **kwargs) * std(Y, condition, **kwargs))
+
+
+def moment(X, n, c=0, condition=None, **kwargs):
+    """
+    Return the nth moment of the random expression about c i.e. E(X**n)
+    Default value of c is 0.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Die, moment, E
+    >>> X = Die('X', 6)
+    >>> moment(X, 1, 6)
+    -5/2
+    >>> moment(X, 2)
+    91/6
+    >>> moment(X, 1) == E(X)
+    True
+    """
+    return expectation((X - c)**n, condition, **kwargs)
+
+
+def cmoment(X, n, condition=None, **kwargs):
+    """
+    Return the nth central moment of the random expression about its mean i.e. E((X - E(X))**n)
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Die, cmoment, variance
+    >>> X = Die('X', 6)
+    >>> cmoment(X, 3)
+    0
+    >>> cmoment(X, 2)
+    35/12
+    >>> cmoment(X, 2) == variance(X)
+    True
+    """
+    mu = expectation(X, condition=None, **kwargs)
+    return expectation((X - mu)**n, condition, **kwargs)
+
 
 P = probability
 E = expectation

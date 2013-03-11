@@ -41,7 +41,7 @@ __all__ = []
 import rv_interface
 from rv_interface import (
     cdf, covariance, density, dependent, E, given, independent, P, pspace,
-    random_symbols, sample, sample_iter, skewness, std, variance, where,
+    random_symbols, sample, sample_iter, skewness, std, variance, where, correlation, moment, cmoment,
 )
 __all__.extend(rv_interface.__all__)
 

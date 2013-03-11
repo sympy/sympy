@@ -3,7 +3,7 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         factor)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
-        given, independent, dependent, where, FiniteRV, pspace, cdf)
+        given, independent, dependent, where, FiniteRV, pspace, cdf, correlation, moment, cmoment)
 from sympy.utilities.pytest import raises, slow
 from sympy.abc import p
 
@@ -29,7 +29,7 @@ def test_discreteuniform():
     # Numeric
     assert E(Y) == S('-1/2')
     assert variance(Y) == S('33/4')
-    assert skewness(Y) == 0
+
     for x in range(-5, 5):
         assert P(Eq(Y, x)) == S('1/10')
         assert P(Y <= x) == S(x + 6)/10
@@ -48,21 +48,23 @@ def test_dice():
     assert E(X + Y) == 7
     assert E(X + X) == 7
     assert E(a*X + b) == a*E(X) + b
-    assert variance(X + Y) == variance(X) + variance(Y)
-    assert variance(X + X) == 4 * variance(X)
+    assert variance(X + Y) == variance(X) + variance(Y) == cmoment(X + Y, 2)
+    assert variance(X + X) == 4 * variance(X) == cmoment(X + X, 2)
     assert covariance(X, Y) == S.Zero
     assert covariance(X, X + Y) == variance(X)
     assert density(Eq(cos(X*S.Pi), 1))[True] == S.Half
-
+    assert correlation(X, X + Y + Z) == sqrt(3)/3
+    assert correlation(X, X - Y - Z) == sqrt(3)/3
+    assert correlation(X, X*X) == 7*sqrt(11505)/767
     assert P(X > 3) == S.Half
     assert P(2*X > 6) == S.Half
     assert P(X > Y) == S(5)/12
     assert P(Eq(X, Y)) == P(Eq(X, 1))
 
-    assert E(X, X > 3) == 5
-    assert E(X, Y > 3) == E(X)
+    assert E(X, X > 3) == 5 == moment(X, 1, 0, X > 3)
+    assert E(X, Y > 3) == E(X) == moment(X, 1, 0, Y > 3)
     assert E(X + Y, Eq(X, Y)) == E(2*X)
-    assert E(X + Y - Z, 2*X > Y + 1) == S(49)/12
+    assert E(X + Y - Z, 2*X > Y + 1) == S(49)/12 == moment(X + Y - Z, 1, 0, 2*X > Y + 1)
 
     assert P(X > 3, X > 3) == S.One
     assert P(X > Y, Eq(Y, 6)) == S.Zero
@@ -183,8 +185,8 @@ def test_binomial_symbolic():
     n = 10  # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)
     X = Binomial('X', n, p)
-    assert simplify(E(X)) == n*p
-    assert simplify(variance(X)) == n*p*(1 - p)
+    assert simplify(E(X)) == n*p == simplify(moment(X, 1))
+    assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
     assert factor(simplify(skewness(X))) == factor((1-2*p)/sqrt(n*p*(1-p)))
 
     # Test ability to change success/failure winnings

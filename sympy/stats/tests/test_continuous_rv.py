@@ -6,7 +6,7 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          Frechet, Gamma, GammaInverse, Kumaraswamy, Laplace, Logistic,
                          LogNormal, Maxwell, Nakagami, Normal, Pareto, QuadraticU,
                          RaisedCosine, Rayleigh, StudentT, Triangular, Uniform, UniformSum,
-                         VonMises, Weibull, WignerSemicircle)
+                         VonMises, Weibull, WignerSemicircle, correlation, moment, cmoment)
 
 from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
@@ -75,7 +75,14 @@ def test_multiple_normal():
     assert variance(X + X) == 4
     assert covariance(X, Y) == 0
     assert covariance(2*X + Y, -X) == -2*variance(X)
-
+    assert skewness(X) == 0
+    assert skewness(X + Y) == 0
+    assert correlation(X, Y) == 0
+    assert correlation(X, X + Y) == sqrt(2)/2
+    assert moment(X, 2) == 1
+    assert cmoment(X, 3) == 0
+    assert moment(X + Y, 4) == 12
+    assert cmoment(X, 2) == variance(X)
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
 
@@ -285,6 +292,7 @@ def test_gamma():
             (0, True))
     assert variance(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
            theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
+    assert E(X) == moment(X, 1)
 
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
     X = Gamma('x', k, theta)
