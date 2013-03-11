@@ -1366,9 +1366,33 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 i, j = k
                 self[i + rlo, j + clo] = value[i, j]
 
+    def zip_row_op(self, i, k, f):
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], self[k, j])``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> M = SparseMatrix.eye(3)*2
+        >>> M[0, 1] = -1
+        >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
+        [2, -1, 0]
+        [4,  0, 0]
+        [0,  0, 2]
+
+        See Also
+        ========
+        row
+        row_op
+        col_op
+
+        """
+        self.row_op(i, lambda v, j: f(v, self[k, j]))
+
     def row_op(self, i, f):
-        """In-place operation on row i using two-arg functor whose args are
-        interpreted as (self[i, j], j) for j in range(self.cols).
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], j)``.
 
         Examples
         ========
@@ -1380,6 +1404,13 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         [2, -1, 0]
         [4,  0, 0]
         [0,  0, 2]
+
+        See Also
+        ========
+        row
+        zip_row_op
+        col_op
+
         """
         for j in range(self.cols):
             v = self._smat.get((i, j), S.Zero)

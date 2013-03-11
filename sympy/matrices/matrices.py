@@ -1107,21 +1107,23 @@ class MatrixBase(object):
         LUdecomposition
         """
         if rhs.rows != self.rows:
-            raise ShapeError(
-                "`self` and `rhs` must have the same number of rows.")
+            raise ShapeError("`self` and `rhs` must have the same number of rows.")
 
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
         n = self.rows
         b = rhs.permuteFwd(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in range(n):
-            for j in range(i):
-                b.row_op(i, lambda x, k: x - b[j, k]*A[i, j])
+        for i in xrange(n):
+            for j in xrange(i):
+                scale = A[i, j]
+                b.zip_row_op(i, j, lambda x, y: x - y*scale)
         # backward substitution
-        for i in range(n - 1, -1, -1):
-            for j in range(i + 1, n):
-                b.row_op(i, lambda x, k: x - b[j, k]*A[i, j])
-            b.row_op(i, lambda x, k: x / A[i, i])
+        for i in xrange(n - 1, -1, -1):
+            for j in xrange(i + 1, n):
+                scale = A[i, j]
+                b.zip_row_op(i, j, lambda x, y: x - y*scale)
+            scale = A[i, i]
+            b.row_op(i, lambda x, _: x/scale)
         return rhs.__class__(b)
 
     def LUdecomposition(self, iszerofunc=_iszero):
@@ -2435,13 +2437,13 @@ class MatrixBase(object):
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
         pivotlist = []
-        for i in range(r.cols):
+        for i in xrange(r.cols):
             if pivot == r.rows:
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
             if iszerofunc(r[pivot, i]):
-                for k in range(pivot, r.rows):
+                for k in xrange(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
@@ -2451,11 +2453,11 @@ class MatrixBase(object):
                 r.row_swap(pivot, k)
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
-            for j in range(r.rows):
+            for j in xrange(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
-                r.row_op(j, lambda x, k: x - scale*r[pivot, k])
+                r.zip_row_op(j, pivot, lambda x, y: x - scale*y)
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist

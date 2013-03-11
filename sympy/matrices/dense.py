@@ -715,13 +715,41 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         copyin_matrix
         """
         if not is_sequence(value):
-            raise TypeError(
-                "`value` must be an ordered iterable, not %s." % type(value))
+            raise TypeError("`value` must be an ordered iterable, not %s." % type(value))
         return self.copyin_matrix(key, Matrix(value))
 
+    def zip_row_op(self, i, k, f):
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], self[k, j])``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import eye
+        >>> M = eye(3)
+        >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
+        [1, 0, 0]
+        [2, 1, 0]
+        [0, 0, 1]
+
+        See Also
+        ========
+        row
+        row_op
+        col_op
+
+        """
+        i0 = i*self.cols
+        k0 = k*self.cols
+
+        ri = self._mat[i0: i0 + self.cols]
+        rk = self._mat[k0: k0 + self.cols]
+
+        self._mat[i0: i0 + self.cols] = [ f(x, y) for x, y in zip(ri, rk) ]
+
     def row_op(self, i, f):
-        """In-place operation on row i using two-arg functor whose args are
-        interpreted as (self[i, j], j).
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], j)``.
 
         Examples
         ========
@@ -736,11 +764,13 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         See Also
         ========
         row
+        zip_row_op
         col_op
+
         """
         i0 = i*self.cols
-        self._mat[i0: i0 + self.cols] = map(lambda t: f(*t),
-            zip(self._mat[i0: i0 + self.cols], range(self.cols)))
+        ri = self._mat[i0: i0 + self.cols]
+        self._mat[i0: i0 + self.cols] = [ f(x, j) for x, j in zip(ri, range(self.cols)) ]
 
     def col_op(self, j, f):
         """In-place operation on col j using two-arg functor whose args are
