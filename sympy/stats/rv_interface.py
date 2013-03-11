@@ -51,9 +51,7 @@ def variance(X, condition=None, **kwargs):
     >>> simplify(variance(B))
     p*(-p + 1)
     """
-    mu = expectation(X, condition=None, **kwargs)
-    return (moment(X, 2, 0, condition, **kwargs) -
-    moment(X, 1, 0, condition, **kwargs)**2)
+    return cmoment(X, 2, condition, **kwargs)
 
 
 def standard_deviation(X, condition=None, **kwargs):
@@ -66,13 +64,13 @@ def standard_deviation(X, condition=None, **kwargs):
     ========
 
     >>> from sympy.stats import Bernoulli, std
-    >>> from sympy import Symbol
+    >>> from sympy import Symbol, simplify
 
     >>> p = Symbol('p')
     >>> B = Bernoulli('B', p, 1, 0)
 
-    >>> std(B)
-    sqrt(-p**2 + p)
+    >>> simplify(std(B))
+    sqrt(p*(-p + 1))
     """
     return sqrt(variance(X, condition, **kwargs))
 std = standard_deviation
@@ -135,7 +133,7 @@ def correlation(X, Y, condition=None, **kwargs):
     >>> correlation(X, Y)
     0
     >>> correlation(X, Y + rate*X)
-    1/sqrt(-(1 + 1/lambda)**2 + 2 + 2/lambda + 2/lambda**2)
+    1/sqrt(1 + lambda**(-2))
     """
     return covariance(X, Y, condition, **kwargs)/(std(X, condition, **kwargs)
      * std(Y, condition, **kwargs))
@@ -158,7 +156,7 @@ def cmoment(X, n, condition=None, **kwargs):
     >>> cmoment(X, 2) == variance(X)
     True
     """
-    mu = expectation(X, condition=None, **kwargs)
+    mu = expectation(X, condition, **kwargs)
     return moment(X, n, mu, condition, **kwargs)
 
 
@@ -184,9 +182,8 @@ def skewness(X, condition=None, **kwargs):
     >>> skewness(Y)
     2
     """
-    mu = expectation(X, condition, **kwargs)
     sigma = std(X, condition, **kwargs)
-    return (1/sigma)**3*moment(X, 3, mu, condition, **kwargs)
+    return (1/sigma)**3*cmoment(X, 3, condition, **kwargs)
 
 
 P = probability
