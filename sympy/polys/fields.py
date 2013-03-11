@@ -1,7 +1,5 @@
 """Sparse rational function fields. """
 
-from copy import copy
-
 from sympy.core.expr import Expr
 from sympy.core.sympify import CantSympify
 from sympy.polys.rings import PolyElement
@@ -138,7 +136,7 @@ class FracElement(CantSympify):
         return _hash
 
     def copy(self):
-        return copy(self)
+        return FracElement(self.field, self.numer.copy(), self.denom.copy())
 
     def as_expr(self, *symbols):
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)

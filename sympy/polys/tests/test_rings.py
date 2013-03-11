@@ -72,6 +72,16 @@ def test_PolyElement___eq__():
     assert ((x*y - x*y) != 1) == True
     assert (1 != (x*y - x*y)) == True
 
+def test_PolyElement_copy():
+    R, x, y, z = ring("x,y,z", ZZ)
+
+    f = x*y + 3*z
+    g = f.copy()
+
+    assert f == g
+    g[(1, 1, 1)] = 7
+    assert f != g
+
 def test_PolyElement_as_expr():
     R, x, y, z = ring("x,y,z", ZZ)
     f = 3*x**2*y - x*y*z + 7*z**3 + 1

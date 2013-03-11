@@ -33,6 +33,16 @@ def test_FracElement___str__():
     F, x, y = field("x,y", ZZ_python())
     assert str((3*x**2*y + 1)/(x - y**2)) == "(3*x**2*y + 1)/(x - y**2)"
 
+def test_FracElement_copy():
+    F, x, y, z = field("x,y,z", ZZ)
+
+    f = x*y/3*z
+    g = f.copy()
+
+    assert f == g
+    g.numer[(1, 1, 1)] = 7
+    assert f != g
+
 def test_FracElement_as_expr():
     F, x, y, z = field("x,y,z", ZZ)
     f = (3*x**2*y - x*y*z)/(7*z**3 + 1)

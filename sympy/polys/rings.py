@@ -1,7 +1,5 @@
 """Sparse polynomial rings. """
 
-from copy import copy
-
 from sympy.core.expr import Expr
 from sympy.core.symbol import symbols as _symbols
 from sympy.core.numbers import igcd
@@ -223,7 +221,7 @@ class PolyElement(dict, CantSympify):
 
         Polynomials are mutable; if one is interested in preserving
         a polynomial, and one plans to use inplace operations, one
-        can copy the polynomial
+        can copy the polynomial. This method makes a shallow copy.
 
         Examples
         ========
@@ -243,7 +241,7 @@ class PolyElement(dict, CantSympify):
         x**2 + 2*x*y + y**2 + 3
 
         """
-        return copy(self)
+        return PolyElement(self.ring, self)
 
     def set_ring(self, new_ring):
         if self.ring.ngens != new_ring.ngens:
@@ -539,7 +537,7 @@ class PolyElement(dict, CantSympify):
         except CoercionFailed:
             return NotImplemented
         else:
-            p = copy(p1)
+            p = p1.copy()
             zm = ring.zero_monom
             if zm not in list(p1.keys()):
                 p[zm] = -p2
