@@ -421,21 +421,30 @@ class PolyElement(dict, CantSympify):
         if not p2:
             return p1.copy()
         ring = p1.ring
-        zm = ring.zero_monom
         if isinstance(p2, PolyElement):
             if ring == p2.ring:
-                p = ring.zero
-                for k, v in p1.iteritems():
-                    if k in p2:
-                        r = v + p2[k]
-                        if r:
-                            p[k] = r
+                if len(p2) == 1:
+                    p = p1.copy()
+                    [(m, c)] = p2.items()
+                    nc = p.get(m, ring.domain.zero) + c
+                    if nc:
+                        p[m] = nc
                     else:
-                        p[k] = v
-                for k, v in p2.iteritems():
-                    if k not in p1:
-                        p[k] = v
-                return p
+                        del p[m]
+                    return p
+                else:
+                    p = ring.zero
+                    for k, v in p1.iteritems():
+                        if k in p2:
+                            r = v + p2[k]
+                            if r:
+                                p[k] = r
+                        else:
+                            p[k] = v
+                    for k, v in p2.iteritems():
+                        if k not in p1:
+                            p[k] = v
+                    return p
             elif isinstance(ring.domain, PolynomialRingNG) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRingNG) and p2.ring.domain.ring == ring:
@@ -451,6 +460,7 @@ class PolyElement(dict, CantSympify):
             p = p1.copy()
             if not cp2:
                 return p
+            zm = ring.zero_monom
             if zm not in list(p1.keys()):
                 p[zm] = cp2
             else:
@@ -493,21 +503,30 @@ class PolyElement(dict, CantSympify):
         if not p2:
             return p1.copy()
         ring = p1.ring
-        mz = ring.zero_monom
-        p = ring.zero
         if isinstance(p2, PolyElement):
             if ring == p2.ring:
-                for k in p1:
-                    if k in p2:
-                        r = p1[k] - p2[k]
-                        if r:
-                            p[k] = r
+                if len(p2) == 1:
+                    p = p1.copy()
+                    [(m, c)] = p2.items()
+                    nc = p.get(m, ring.domain.zero) - c
+                    if nc:
+                        p[m] = nc
                     else:
-                        p[k] = p1[k]
-                for k in p2:
-                    if k not in p1:
-                        p[k] = -p2[k]
-                return p
+                        del p[m]
+                    return p
+                else:
+                    p = ring.zero
+                    for k, v in p1.iteritems():
+                        if k in p2:
+                            r = v - p2[k]
+                            if r:
+                                p[k] = r
+                        else:
+                            p[k] = v
+                    for k, v in p2.iteritems():
+                        if k not in p1:
+                            p[k] = -v
+                    return p
             elif isinstance(ring.domain, PolynomialRingNG) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRingNG) and p2.ring.domain.ring == ring:
@@ -521,13 +540,14 @@ class PolyElement(dict, CantSympify):
             return NotImplemented
         else:
             p = copy(p1)
-            if mz not in list(p1.keys()):
-                p[mz] = -p2
+            zm = ring.zero_monom
+            if zm not in list(p1.keys()):
+                p[zm] = -p2
             else:
-                if p2 == p[mz]:
-                    del p[mz]
+                if p2 == p[zm]:
+                    del p[zm]
                 else:
-                    p[mz] -= p2
+                    p[zm] -= p2
             return p
 
     def __rsub__(p1, n):
