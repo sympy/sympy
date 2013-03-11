@@ -1966,7 +1966,7 @@ def test_invertible_check():
     # sometimes a singular matrix will have a pivot vector shorter than
     # the number of rows in a matrix...
     assert Matrix([[1, 2], [1, 2]]).rref() == (Matrix([[1, 2], [0, 0]]), [0])
-    aaises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
+    raises(ValueError, lambda: Matrix([[1, 2], [1, 2]]).inv())
     # ... but sometimes it won't, so that is an insufficient test of
     # whether something is invertible.
     m = Matrix([
