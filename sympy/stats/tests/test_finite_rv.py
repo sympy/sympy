@@ -3,7 +3,8 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         factor)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
-        given, independent, dependent, where, FiniteRV, pspace, cdf, correlation, moment, cmoment)
+        given, independent, dependent, where, FiniteRV, pspace, cdf,
+        correlation, moment, cmoment, smoment)
 from sympy.utilities.pytest import raises, slow
 from sympy.abc import p
 
@@ -57,6 +58,9 @@ def test_dice():
     assert correlation(X, X + Y + Z) == sqrt(3)/3
     assert correlation(X, X - Y - Z) == sqrt(3)/3
     assert correlation(X, X*X) == 7*sqrt(11505)/767
+    assert smoment(X + Y, 4) == S(414)/175
+    assert smoment(X - Y*Y + 1, 2) == 1
+    assert smoment(X*X - 6*Y + 2, 3) == skewness(X*X - 6*Y + 2)
     assert P(X > 3) == S.Half
     assert P(2*X > 6) == S.Half
     assert P(X > Y) == S(5)/12

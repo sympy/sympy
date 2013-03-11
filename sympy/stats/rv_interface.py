@@ -11,7 +11,7 @@ __all__ = ['P', 'E', 'density', 'where', 'given', 'sample', 'cdf', 'pspace',
 
 def moment(X, n, c=0, condition=None, **kwargs):
     """
-    Return the nth moment of the random expression about c i.e. E((X-c)**n)
+    Return the nth moment of a random expression about c i.e. E((X-c)**n)
     Default value of c is 0.
 
     Examples
@@ -101,7 +101,6 @@ def covariance(X, Y, condition=None, **kwargs):
     >>> covariance(X, Y + rate*X)
     1/lambda
     """
-
     return expectation(
         (X - expectation(X, condition, **kwargs)) *
         (Y - expectation(Y, condition, **kwargs)),
@@ -141,7 +140,7 @@ def correlation(X, Y, condition=None, **kwargs):
 
 def cmoment(X, n, condition=None, **kwargs):
     """
-    Return the nth central moment of the random expression about its mean
+    Return the nth central moment of a random expression about its mean
     i.e. E((X - E(X))**n)
 
     Examples
@@ -159,6 +158,25 @@ def cmoment(X, n, condition=None, **kwargs):
     mu = expectation(X, condition, **kwargs)
     return moment(X, n, mu, condition, **kwargs)
 
+
+def smoment(X, n, condition=None, **kwargs):
+    """
+    Return the nth Standardized moment of a random expression i.e.
+    E( ((X - mu)/sigma(X))**n )
+
+    Examples
+    ========
+    >>> from sympy.stats import skewness, Exponential, smoment
+    >>> from sympy import Symbol
+    >>> rate = Symbol('lambda', positive=True, real=True, bounded = True)
+    >>> Y = Exponential('Y', rate)
+    >>> smoment(Y, 4)
+    9
+    >>> smoment(Y, 3) == skewness(Y)
+    True
+    """
+    sigma = std(X, condition, **kwargs)
+    return (1/sigma)**n*cmoment(X, n, condition, **kwargs)
 
 def skewness(X, condition=None, **kwargs):
     """
@@ -182,8 +200,7 @@ def skewness(X, condition=None, **kwargs):
     >>> skewness(Y)
     2
     """
-    sigma = std(X, condition, **kwargs)
-    return (1/sigma)**3*cmoment(X, 3, condition, **kwargs)
+    return smoment(X, 3, condition, **kwargs)
 
 
 P = probability
