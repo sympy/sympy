@@ -6,12 +6,15 @@ from sympy.parsing.sympy_parser import (
     implicit_multiplication,
     implicit_application,
     function_exponentiation,
-    split_symbols
+    split_symbols,
+    split_symbols_custom,
+    _token_splittable
 )
+from sympy.utilities.pytest import raises
 
 
 def test_implicit_multiplication():
-    d = {
+    cases = {
         '5x': '5*x',
         'abc': 'a*b*c',
         '3sin(x)': '3*sin(x)',
@@ -22,43 +25,98 @@ def test_implicit_multiplication():
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (split_symbols,
                                           implicit_multiplication)
-    for e in d:
-        implicit = parse_expr(e, transformations=transformations2)
-        normal = parse_expr(d[e], transformations=transformations)
+    for case in cases:
+        implicit = parse_expr(case, transformations=transformations2)
+        normal = parse_expr(cases[case], transformations=transformations)
         assert(implicit == normal)
+
+    application = ['sin x', 'cos 2*x', 'sin cos x']
+    for case in application:
+        raises(SyntaxError,
+               lambda: parse_expr(case, transformations=transformations2))
+    raises(TypeError,
+           lambda: parse_expr('sin**2(x)', transformations=transformations2))
 
 
 def test_implicit_application():
-    d = {
+    cases = {
         'factorial': 'factorial',
         'sin x': 'sin(x)',
         'tan y**3': 'tan(y**3)',
         'cos 2*x': 'cos(2*x)',
-        '(cot)': 'cot'
+        '(cot)': 'cot',
+        'sin cos tan x': 'sin(cos(tan(x)))'
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (implicit_application,)
-    for e in d:
-        implicit = parse_expr(e, transformations=transformations2)
-        normal = parse_expr(d[e], transformations=transformations)
+    for case in cases:
+        implicit = parse_expr(case, transformations=transformations2)
+        normal = parse_expr(cases[case], transformations=transformations)
         assert(implicit == normal)
+
+    multiplication = ['x y', 'x sin x', '2x']
+    for case in multiplication:
+        raises(SyntaxError,
+               lambda: parse_expr(case, transformations=transformations2))
+    raises(TypeError,
+           lambda: parse_expr('sin**2(x)', transformations=transformations2))
+
 
 
 def test_function_exponentiation():
-    d = {
+    cases = {
         'sin**2(x)': 'sin(x)**2',
         'exp^y(z)': 'exp(z)^y'
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (function_exponentiation,)
-    for e in d:
-        implicit = parse_expr(e, transformations=transformations2)
-        normal = parse_expr(d[e], transformations=transformations)
+    for case in cases:
+        implicit = parse_expr(case, transformations=transformations2)
+        normal = parse_expr(cases[case], transformations=transformations)
         assert(implicit == normal)
+
+    other_implicit = ['x y', 'x sin x', '2x', 'sin x',
+                      'cos 2*x', 'sin cos x']
+    for case in other_implicit:
+        raises(SyntaxError,
+               lambda: parse_expr(case, transformations=transformations2))
+
+
+def test_symbol_splitting():
+    # By default Greek letter names should not be split (lambda is a keyword
+    # so skip it)
+    transformations = standard_transformations + (split_symbols,)
+    greek_letters = ('alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
+                     'eta', 'theta', 'iota', 'kappa', 'mu', 'nu', 'xi',
+                     'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
+                     'phi', 'chi', 'psi', 'omega')
+
+    for letter in greek_letters:
+        assert(parse_expr(letter, transformations=transformations) ==
+               parse_expr(letter))
+
+    # Make sure custom splitting works
+    def can_split(symbol):
+        if symbol not in ('unsplittable', 'names'):
+            return _token_splittable(symbol)
+        return False
+    transformations = standard_transformations
+    transformations += (split_symbols_custom(can_split),
+                        implicit_multiplication)
+
+    assert(parse_expr('unsplittable', transformations=transformations) ==
+           parse_expr('unsplittable'))
+    assert(parse_expr('names', transformations=transformations) ==
+           parse_expr('names'))
+    assert(parse_expr('xy', transformations=transformations) ==
+           parse_expr('x*y'))
+    for letter in greek_letters:
+        assert(parse_expr(letter, transformations=transformations) ==
+               parse_expr(letter))
 
 
 def test_all_implicit_steps():
-    d = {
+    cases = {
         '2x': '2*x',  # implicit multiplication
         'x y': 'x*y',
         'xy': 'x*y',
@@ -91,7 +149,7 @@ def test_all_implicit_steps():
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (implicit_multiplication_application,)
-    for e in d:
-        implicit = parse_expr(e, transformations=transformations2)
-        normal = parse_expr(d[e], transformations=transformations)
+    for case in cases:
+        implicit = parse_expr(case, transformations=transformations2)
+        normal = parse_expr(cases[case], transformations=transformations)
         assert(implicit == normal)
