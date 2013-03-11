@@ -2122,3 +2122,12 @@ def test_simplify():
     from sympy import simplify, sin, cos
     assert simplify(ImmutableMatrix([[sin(x)**2 + cos(x)**2]])) == \
                     ImmutableMatrix([[1]])
+
+def test_rank():
+    from sympy.abc import x
+    m = Matrix([[1, 2], [x, 1 - 1/x]])
+    assert m.rank() == 2
+    n = Matrix(3, 3, range(1, 10))
+    assert n.rank() == 2
+    p = zeros(3)
+    assert p.rank() == 0

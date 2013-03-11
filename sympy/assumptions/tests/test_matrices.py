@@ -6,6 +6,10 @@ X = MatrixSymbol('X', 2, 2)
 Y = MatrixSymbol('Y', 2, 3)
 Z = MatrixSymbol('Z', 2, 2)
 
+def test_square():
+    assert ask(Q.square(X))
+    assert not ask(Q.square(Y))
+    assert ask(Q.square(Y*Y.T))
 
 def test_invertible():
     assert ask(Q.invertible(X), Q.invertible(X))
@@ -18,6 +22,11 @@ def test_invertible():
     assert ask(Q.invertible(X.I)) is True
     assert ask(Q.invertible(Identity(3))) is True
     assert ask(Q.invertible(ZeroMatrix(3, 3))) is False
+    assert ask(Q.invertible(X), Q.fullrank(X) & Q.square(X))
+
+@XFAIL
+def test_invertible_fullrank():
+    assert ask(Q.invertible(X), Q.fullrank(X))
 
 
 def test_symmetric():
@@ -44,6 +53,16 @@ def test_orthogonal():
     assert ask(Q.invertible(X), Q.orthogonal(X))
     assert not ask(Q.orthogonal(X + Z), Q.orthogonal(X) & Q.orthogonal(Z))
 
+def test_fullrank():
+    assert ask(Q.fullrank(X), Q.fullrank(X))
+    assert ask(Q.fullrank(X.T), Q.fullrank(X)) is True
+    assert ask(Q.fullrank(X)) is None
+    assert ask(Q.fullrank(Y)) is None
+    assert ask(Q.fullrank(X*Z), Q.fullrank(X) & Q.fullrank(Z)) is True
+    assert ask(Q.fullrank(Identity(3))) is True
+    assert ask(Q.fullrank(ZeroMatrix(3, 3))) is False
+    assert ask(Q.invertible(X), ~Q.fullrank(X)) == False
+
 
 def test_positive_definite():
     assert ask(Q.positive_definite(X), Q.positive_definite(X))
@@ -55,7 +74,8 @@ def test_positive_definite():
             Q.positive_definite(X) & Q.positive_definite(Z)) is True
     assert ask(Q.positive_definite(X), Q.orthogonal(X))
     assert ask(Q.positive_definite(Y.T*X*Y),
-            Q.positive_definite(X) & Q.orthogonal(Y)) is True
+            Q.positive_definite(X) & Q.fullrank(Y)) is True
+    assert not ask(Q.positive_definite(Y.T*X*Y), Q.positive_definite(X))
     assert ask(Q.positive_definite(Identity(3))) is True
     assert ask(Q.positive_definite(ZeroMatrix(3, 3))) is False
     assert ask(Q.positive_definite(X + Z), Q.positive_definite(X) &
