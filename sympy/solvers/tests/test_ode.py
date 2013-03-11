@@ -1495,3 +1495,33 @@ def test_exact_enhancement():
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs[0] == acos(-sqrt(C1*exp(-2*x)/x**4 + 1))
     assert rhs[1] == acos(sqrt(C1*exp(-2*x)/x**4 + 1))
+
+
+def test_separable_reduced():
+    f = Function('f')
+    df = f(x).diff(x)
+    eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    '1st_linear_Integral', 'separable_reduced_Integral')
+
+    eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    '1st_linear_Integral', 'separable_reduced_Integral')
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
+    assert sol.rhs == C1 + log(x)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = df + (f(x) / (x**4*f(x) - x))
+    assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
+    '1st_linear_Integral', 'separable_reduced_Integral')
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol.lhs == log(x**3*f(x))/4 + log(x**3*f(x) - S(4)/3)/12
+    assert sol.rhs == C1 + log(x)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = x*df + f(x)*(x**2*f(x))
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert sol.lhs == log(x**2*f(x))/2 - log(x**2*f(x) - 2)/2
+    assert sol.rhs == C1 + log(x)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]

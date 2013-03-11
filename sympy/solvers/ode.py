@@ -241,14 +241,14 @@ allhints = (
     "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
     "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
     "1st_homogeneous_coeff_subs_dep_div_indep", "almost_linear",
-    "nth_linear_constant_coeff_homogeneous",
+    "separable_reduced", "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
     "Liouville", "separable_Integral", "1st_exact_Integral",
     "1st_linear_Integral", "Bernoulli_Integral",
     "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
-    "almost_linear_Integral",
+    "almost_linear_Integral", "separable_reduced_Integral",
     "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "Liouville_Integral"
@@ -919,6 +919,31 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 r2[c] = match[c]
                 matching_hints["almost_linear"] = r2
                 matching_hints["almost_linear_Integral"] = r2
+
+        match = collect(expand(eq), [df], evaluate = True).match(a*df + b)
+        t = Dummy('t')
+        if match:
+            r3 = {'t': t}
+            factor = simplify(x/f(x)*match[b]/match[a])
+            # Check first if factor can be represented in the form of x*y
+            testxy = factor.subs(x*f(x), t)
+            if len(testxy.free_symbols) == 1 and t in testxy.free_symbols:
+                r3.update({'power': 1, 'u': testxy})
+                matching_hints["separable_reduced"] = r3
+                matching_hints["separable_reduced_Integral"] = r3
+            # Try representing factor in terms of x^n*y where n is lowest power of x in factor
+            else:
+                power = S.Zero
+                for i in factor.atoms(Pow):
+                    if i.args[0] == x:
+                        if i.args[1] > power:
+                            power = i.args[1]
+                if power:
+                    test = factor.subs(x**power, t/f(x))
+                    if len(test.free_symbols) == 1 and t in test.free_symbols:
+                        r3.update({'power': power, 'u': test})
+                        matching_hints["separable_reduced"] = r3
+                        matching_hints["separable_reduced_Integral"] = r3
 
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
@@ -2788,6 +2813,54 @@ def ode_almost_linear(eq, func, order, match):
     # ode_1st_linear will give the required output.
     return ode_1st_linear(eq, func, order, match)
 
+def ode_separable_reduced(eq, func, order, match):
+    r"""
+    Solves an equation that can be reduced to the separable form.
+
+    The general form of this equation is y' + (y/x)*H(x^n*y) = 0
+    This can be solved by substituting u(y) = (x^n * y)
+
+    The equation then reduces to the separable form
+    u'*(1/(u*(power - H(u)))) - (1/x) = 0 (see the docstring of ode_separable())
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> d = f(x).diff(x)
+    >>> eq = (x - x**2*f(x))*d - f(x)
+    >>> dsolve(eq, hint = 'separable_reduced')
+    [f(x) == (-sqrt(C1*x**2 + 1) + 1)/x, f(x) == (sqrt(C1*x**2 + 1) + 1)/x]
+    >>> pprint(dsolve(eq, hint = 'separable_reduced'))
+                 ___________                ___________
+                /     2                    /     2
+            - \/  C1*x  + 1  + 1         \/  C1*x  + 1  + 1
+    [f(x) = --------------------, f(x) = ------------------]
+                     x                           x
+
+
+    References
+    ==========
+
+    - Joel Moses, "Symbolic Integration - The Stormy Decade",
+        Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    """
+
+    # Arguments are passed in a way so that they are coherent with the ode_separable function
+    x = func.args[0]
+    f = func.func
+    y = Dummy('y')
+    u = match['u'].subs(match['t'], y)
+    ycoeff = 1/(y*(match['power'] - u))
+    m1 = {y: 1, x: -1/x, 'coeff': 1}
+    m2 = {y: ycoeff, x: 1, 'coeff': 1}
+    r = {'m1': m1, 'm2': m2, 'y': y, 'hint': x**match['power']*f(x)}
+    return ode_separable(eq, func, order, r)
+
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     r"""
     Solves an nth order linear homogeneous differential equation with
@@ -3408,6 +3481,7 @@ def ode_separable(eq, func, order, match):
     f = func.func
     C1 = Symbol('C1')
     r = match  # {'m1':m1, 'm2':m2, 'y':y}
+    u = r.get('hint', f(x))  # Try getting u from separable_reduced function, else get f(x)
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
-        (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
+        (r['y'], None, u)), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x) + C1)
