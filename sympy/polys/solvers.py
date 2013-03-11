@@ -7,6 +7,7 @@ class RawMatrix(Matrix):
 
 def solve_lin_sys(eqs, ring):
     """Solve a system of linear equations. """
+    assert ring.domain.has_Field
 
     # transform from equations to matrix form
     xs = ring.gens
@@ -23,9 +24,12 @@ def solve_lin_sys(eqs, ring):
     eschelon, pivots = eqs.rref(iszerofunc=lambda x: not x, simplify=lambda x: x)
 
     # construct the returnable form of the solutions
-    p = len(pivots)
-    if p > len(xs):
+    if pivots[-1] == len(xs):
         return None
 
-    sols = eschelon[:p, p:]*RawMatrix([ [x] for x in xs[p:] ] + [[1]])
-    return dict(zip(xs, sols))
+    sols = {}
+    for i, p in enumerate(pivots):
+        vect = RawMatrix([ [-x] for x in xs[p+1:] ] + [[1]])
+        sols[xs[p]] = (eschelon[i, p+1:]*vect)[0]
+
+    return sols

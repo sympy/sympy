@@ -2,12 +2,46 @@
 
 from sympy.polys.rings import ring
 from sympy.polys.fields import field
-from sympy.polys.domains import ZZ
+from sympy.polys.domains import ZZ, QQ
 from sympy.polys.solvers import solve_lin_sys
 
 from sympy.utilities.pytest import slow
 
-def test_solve_lin_sys_1():
+def test_solve_lin_sys_3x3_inf():
+    domain, x1,x2,x3 = ring("x1,x2,x3", QQ)
+    eqs = [x1 - x2 + 2*x3 - 1, 2*x1 + x2 + x3 - 8, x1 + x2 - 5]
+    sol = {x1: -x3 + 3, x2: x3 + 2}
+    assert solve_lin_sys(eqs, domain) == sol
+
+def test_solve_lin_sys_3x4_none():
+    domain, x1,x2,x3,x4 = ring("x1,x2,x3,x4", QQ)
+    eqs = [2*x1 + x2 + 7*x3 - 7*x4 - 2, -3*x1 + 4*x2 - 5*x3 - 6*x4 - 3, x1 + x2 + 4*x3 - 5*x4 - 2]
+    assert solve_lin_sys(eqs, domain) == None
+
+def test_solve_lin_sys_4x7_inf():
+    domain, x1,x2,x3,x4,x5,x6,x7 = ring("x1,x2,x3,x4,x5,x6,x7", QQ)
+    eqs = [x1 + 4*x2 - x4 + 7*x6 - 9*x7 - 3,
+           2*x1 + 8*x2 - x3 + 3*x4 + 9*x5 - 13*x6 + 7*x7 - 9,
+           2*x3 - 3*x4 - 4*x5 + 12*x6 - 8*x7 - 1,
+           -x1 - 4*x2 + 2*x3 + 4*x4 + 8*x5 - 31*x6 + 37*x7 - 4]
+    sol = {x1: 4 - 4*x2 - 2*x5 - x6 + 3*x7,
+           x3: 2 - x5 + 3*x6 - 5*x7,
+           x4: 1 - 2*x5 + 6*x6 - 6*x7}
+    assert solve_lin_sys(eqs, domain) == sol
+
+def test_solve_lin_sys_5x5_inf():
+    domain, x1,x2,x3,x4,x5 = ring("x1,x2,x3,x4,x5", QQ)
+    eqs = [x1 - x2 - 2*x3 + x4 + 11*x5 - 13,
+           x1 - x2 + x3 + x4 + 5*x5 - 16,
+           2*x1 - 2*x2 + x4 + 10*x5 - 21,
+           2*x1 - 2*x2 - x3 + 3*x4 + 20*x5 - 38,
+           2*x1 - 2*x2 + x3 + x4 + 8*x5 - 22]
+    sol = {x1: 6 + x2 - 3*x5,
+           x3: 1 + 2*x5,
+           x4: 9 - 4*x5}
+    assert solve_lin_sys(eqs, domain) == sol
+
+def test_solve_lin_sys_6x6_1():
     ground, d,r,e,g,i,j,l,o,m,p,q = field("d,r,e,g,i,j,l,o,m,p,q", ZZ)
     domain, c,f,h,k,n,b = ring("c,f,h,k,n,b", ground.to_domain())
 
@@ -23,7 +57,7 @@ def test_solve_lin_sys_1():
 
     assert solve_lin_sys(eqs, domain) == sol
 
-def test_solve_lin_sys_2():
+def test_solve_lin_sys_6x6_2():
     ground, d,r,e,g,i,j,l,o,m,p,q = field("d,r,e,g,i,j,l,o,m,p,q", ZZ)
     domain, c,f,h,k,n,b = ring("c,f,h,k,n,b", ground.to_domain())
 
