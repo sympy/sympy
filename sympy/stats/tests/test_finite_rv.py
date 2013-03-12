@@ -52,15 +52,15 @@ def test_dice():
     assert E(a*X + b) == a*E(X) + b
     assert variance(X + Y) == variance(X) + variance(Y) == cmoment(X + Y, 2)
     assert variance(X + X) == 4 * variance(X) == cmoment(X + X, 2)
+    assert cmoment(X, 0) == 1
+    assert cmoment(4*X, 3) == 64*cmoment(X, 3)
     assert covariance(X, Y) == S.Zero
     assert covariance(X, X + Y) == variance(X)
     assert density(Eq(cos(X*S.Pi), 1))[True] == S.Half
-    assert correlation(X, X + Y + Z) == sqrt(3)/3
-    assert correlation(X, X - Y - Z) == sqrt(3)/3
-    assert correlation(X, X*X) == 7*sqrt(11505)/767
-    assert smoment(X + Y, 4) == S(414)/175
-    assert smoment(X - Y*Y + 1, 2) == 1
-    assert smoment(X*X - 6*Y + 2, 3) == skewness(X*X - 6*Y + 2)
+    assert correlation(X, Y) == 0
+    assert correlation(X, Y) == correlation(Y, X)
+    assert smoment(X + Y, 3) == skewness(X + Y)
+    assert smoment(X, 0) == 1
     assert P(X > 3) == S.Half
     assert P(2*X > 6) == S.Half
     assert P(X > Y) == S(5)/12
@@ -69,7 +69,8 @@ def test_dice():
     assert E(X, X > 3) == 5 == moment(X, 1, 0, X > 3)
     assert E(X, Y > 3) == E(X) == moment(X, 1, 0, Y > 3)
     assert E(X + Y, Eq(X, Y)) == E(2*X)
-    assert E(X + Y - Z, 2*X > Y + 1) == S(49)/12 == moment(X + Y - Z, 1, 0, 2*X > Y + 1)
+    assert moment(X, 0) == 1
+    assert moment(5*X, 2) == 25*moment(X, 2)
 
     assert P(X > 3, X > 3) == S.One
     assert P(X > Y, Eq(Y, 6)) == S.Zero

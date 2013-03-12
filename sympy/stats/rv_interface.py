@@ -172,6 +172,8 @@ def smoment(X, n, condition=None, **kwargs):
     >>> Y = Exponential('Y', rate)
     >>> smoment(Y, 4)
     9
+    >>> smoment(Y, 4) == smoment(3*Y, 4)
+    True
     >>> smoment(Y, 3) == skewness(Y)
     True
     """

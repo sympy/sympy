@@ -81,7 +81,7 @@ def test_multiple_normal():
     assert skewness(X) == 0
     assert skewness(X + Y) == 0
     assert correlation(X, Y) == 0
-    assert correlation(X, X + Y) == sqrt(2)/2
+    assert correlation(X, X + Y) == correlation(X, X - Y)
     assert moment(X, 2) == 1
     assert cmoment(X, 3) == 0
     assert moment(X + Y, 4) == 12
@@ -255,7 +255,8 @@ def test_exponential():
     assert variance(X) == 1/rate**2
     assert skewness(X) == 2
     assert skewness(X) == smoment(X, 3)
-    assert smoment(2*X*X + X + 3, 2) == 1
+    assert smoment(2*X, 4) == smoment(X, 4)
+    assert moment(X, 3) == 3*2*1/rate**3
     assert P(X > 0) == S(1)
     assert P(X > 1) == exp(-rate)
     assert P(X > 10) == exp(-10*rate)
