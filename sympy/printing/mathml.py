@@ -4,7 +4,6 @@ A MathML printer.
 
 from sympy import sympify, S, Mul
 from sympy.core.function import _coeff_isneg
-from sympy.simplify import fraction
 from printer import Printer
 from conventions import split_super_sub
 
@@ -86,6 +85,7 @@ class MathMLPrinter(Printer):
             x.appendChild(self._print_Mul(-expr))
             return x
 
+        from sympy.simplify import fraction
         numer, denom = fraction(expr)
 
         if denom is not S.One:

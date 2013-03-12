@@ -11,8 +11,6 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
-from sympy.polys.polyerrors import PolynomialError
-
 from sympy.utilities import default_sort_key
 
 
@@ -429,6 +427,8 @@ class StrPrinter(Printer):
                 terms[0] = '-' + terms[0]
 
         format = expr.__class__.__name__ + "(%s, %s"
+
+        from sympy.polys.polyerrors import PolynomialError
 
         try:
             format += ", modulus=%s" % expr.get_modulus()

@@ -6,7 +6,6 @@ from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from printer import Printer
 from conventions import split_super_sub
-from sympy.simplify import fraction
 from sympy.core.sympify import SympifyError
 
 import sympy.mpmath.libmp as mlib
@@ -177,6 +176,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
+        from sympy.simplify import fraction
         numer, denom = fraction(tail, exact=True)
         separator = self._settings['mul_symbol_latex']
 
