@@ -1254,7 +1254,7 @@ class Integral(Expr):
         Examples
         ========
 
-        >>> from sympy import sin
+        >>> from sympy import sin, sqrt
         >>> from sympy.abc import x
         >>> from sympy.integrals import Integral
         >>> e = Integral(sin(x), (x, 3, 7))
@@ -1290,14 +1290,25 @@ class Integral(Expr):
         >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
         True
 
-        The approximate nature of the result can be seen by comparing the
-        result with the analytical result:
+        All but the trapexoid method may be used when dealing with a function
+        with a discontinuity. Here, the discontinuity at x = 0 can be avoided
+        by using the midpoint or right-hand method:
 
-        >>> e.as_sum(20).n()
-        -1.74680463668089
-        >>> e.doit().n()
-        -1.74389475094375
+        >>> e = Integral(1/sqrt(x), (x, 0, 1))
+        >>> e.as_sum(5).n(4)
+        1.730
+        >>> e.as_sum(10).n(4)
+        1.809
+        >>> e.doit().n(4)  # the actual value is 2
+        2.000
 
+        The left- or trapezoid method will encounter the discontinuity and
+        return oo:
+
+        >>> e.as_sum(5, 'left')
+        oo
+        >>> e.as_sum(5, 'trapezoid')
+        oo
 
         See Also
         ========
