@@ -549,3 +549,21 @@ def test_principal_branch():
     assert principal_branch(x, -4).func is principal_branch
     assert principal_branch(x, -oo).func is principal_branch
     assert principal_branch(x, zoo).func is principal_branch
+
+
+def test_issue_3068_3052():
+    n = pi**1000
+    i = int(n)
+    assert sign(n - i) == 1
+    assert abs(n - i) == n - i
+
+
+@XFAIL
+def test_issue_3068X():
+    eps = pi**-1500
+    big = pi**1000
+    one = cos(x)**2 + sin(x)**2
+    e = big*one - big + eps
+    assert sign(simplify(e)) == 1
+    for xi in (111, 11, 1, S(1)/10):
+        assert sign(e.subs(x, xi)) == 1

@@ -252,11 +252,5 @@ def test_issue_3109():
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
     assert sqrt(exp(3*I)) == exp(3*I/2)
     assert sqrt(-sqrt(3)*(1 + 2*I)) == sqrt(sqrt(3))*sqrt(-1 - 2*I)
-
-
-@XFAIL
-def test_issue_3109_fail():
-    from sympy import root, Rational
-    I = S.ImaginaryUnit
     assert sqrt(exp(5*I)) == -exp(5*I/2)
     assert root(exp(5*I), 3).exp == Rational(1, 3)
