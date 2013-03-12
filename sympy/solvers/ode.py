@@ -936,12 +936,9 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 matching_hints["separable_reduced_Integral"] = r3
             # Try representing factor in terms of x^n*y where n is lowest power of x in factor
             else:
-                power = S.Zero
-                for i in factor.atoms(Pow):
-                    if i.args[0] == x:
-                        if i.args[1] > power:
-                            power = i.args[1]
-                if power:
+                powerlist = [i.args[1] for i in factor.atoms(Pow) if i.args[0] == x and i.args[1] > S.Zero]
+                if powerlist:
+                    power = min(powerlist)
                     test = factor.subs(x**power, t/f(x))
                     free = test.free_symbols
                     if len(free) == 1 and free.pop() == t:
