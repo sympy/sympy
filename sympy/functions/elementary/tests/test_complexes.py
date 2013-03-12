@@ -1,7 +1,7 @@
 from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo,
+    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar,
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -215,6 +215,8 @@ def test_sign():
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
+    # evaluate what can be evaluated
+    assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
 
 def test_as_real_imag():
     n = pi**1000
@@ -551,15 +553,12 @@ def test_principal_branch():
     assert principal_branch(x, zoo).func is principal_branch
 
 
+@XFAIL
 def test_issue_3068_3052():
     n = pi**1000
     i = int(n)
     assert sign(n - i) == 1
     assert abs(n - i) == n - i
-
-
-@XFAIL
-def test_issue_3068X():
     eps = pi**-1500
     big = pi**1000
     one = cos(x)**2 + sin(x)**2

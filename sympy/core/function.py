@@ -367,6 +367,26 @@ class Function(Application, Expr):
         #     we be more intelligent about it?
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
+            def bad(m):
+                from sympy.mpmath import mpf, mpc
+                # the precision of an mpf value is the last element
+                # if that is 1 (and m[1] is not 1 which would indicate a
+                # power of 2), then the eval failed; so check that none of
+                # the arguments failed to compute to a finite precision.
+                # Note: An mpc value has two parts, the re and imag tuple;
+                # check each of those parts, too. Anything else is allowed to
+                # pass
+                if isinstance(m, mpf):
+                    m = m._mpf_
+                    return m[1] !=1 and m[-1] == 1
+                elif isinstance(m, mpc):
+                    m, n = m._mpc_
+                    return m[1] !=1 and m[-1] == 1 and \
+                        n[1] !=1 and n[-1] == 1
+                else:
+                    return False
+            if any(bad(a) for a in args):
+                raise ValueError  # one or more args failed to compute with significance
         except ValueError:
             return
 
