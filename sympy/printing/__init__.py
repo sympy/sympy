@@ -14,3 +14,4 @@ from repr import srepr
 from tree import print_tree
 from str import StrPrinter, sstr, sstrrepr
 from tableform import TableForm
+from defaults import DefaultPrinting
