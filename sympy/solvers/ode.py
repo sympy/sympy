@@ -898,6 +898,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                         and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
 
+        # Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
         a = Wild('a')
         b = Wild('b', exclude = [df])
         c = Wild('c')
@@ -920,14 +921,16 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 matching_hints["almost_linear"] = r2
                 matching_hints["almost_linear_Integral"] = r2
 
-        match = collect(expand(eq), [df], evaluate = True).match(a*df + b)
+        # Equation of the form y' + (y/x)*H(x^n*y) = 0 that can be reduced to separable form
+        match = collect(expand(reduced_eq), [df], evaluate = True).match(a*df + b)
         t = Dummy('t')
         if match:
             r3 = {'t': t}
             factor = simplify(x/f(x)*match[b]/match[a])
             # Check first if factor can be represented in the form of x*y
             testxy = factor.subs(x*f(x), t)
-            if len(testxy.free_symbols) == 1 and t in testxy.free_symbols:
+            free = testxy.free_symbols
+            if len(free) == 1 and free.pop() == t:
                 r3.update({'power': 1, 'u': testxy})
                 matching_hints["separable_reduced"] = r3
                 matching_hints["separable_reduced_Integral"] = r3
@@ -940,7 +943,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                             power = i.args[1]
                 if power:
                     test = factor.subs(x**power, t/f(x))
-                    if len(test.free_symbols) == 1 and t in test.free_symbols:
+                    free = test.free_symbols
+                    if len(free) == 1 and free.pop() == t:
                         r3.update({'power': power, 'u': test})
                         matching_hints["separable_reduced"] = r3
                         matching_hints["separable_reduced_Integral"] = r3
@@ -2815,13 +2819,35 @@ def ode_almost_linear(eq, func, order, match):
 
 def ode_separable_reduced(eq, func, order, match):
     r"""
-    Solves an equation that can be reduced to the separable form.
+    Solves a differential equation that can be reduced to the separable form.
 
     The general form of this equation is y' + (y/x)*H(x^n*y) = 0
     This can be solved by substituting u(y) = (x^n * y)
 
     The equation then reduces to the separable form
     u'*(1/(u*(power - H(u)))) - (1/x) = 0 (see the docstring of ode_separable())
+
+    The general solution is
+
+        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy.abc import x, n
+        >>> f, g = map(Function, ['f', 'g'])
+        >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
+        >>> pprint(genform)
+                         / n     \
+        d          f(x)*g\x *f(x)/
+        --(f(x)) + ---------------
+        dx                x
+        >>> pprint(dsolve(genform, hint = 'separable_reduced'))
+         n
+        x *f(x)
+          /
+         |
+         |         1
+         |    ------------ dy = C1 + log(x)
+         |    y*(n - g(y))
+         |
+         /
 
 
     Examples
