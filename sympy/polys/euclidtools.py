@@ -69,7 +69,7 @@ def dup_half_gcdex(f, g, K):
     >>> g = x**3 + x**2 - 4*x - 4
 
     >>> R.dup_half_gcdex(f, g)
-    (-1/5*x + 3/5, x + 1/1)
+    (-1/5*x + 3/5, x + 1)
 
     """
     if not (K.has_Field or not K.is_Exact):
@@ -121,7 +121,7 @@ def dup_gcdex(f, g, K):
     >>> g = x**3 + x**2 - 4*x - 4
 
     >>> R.dup_gcdex(f, g)
-    (-1/5*x + 3/5, 1/5*x**2 - 6/5*x + 2/1, x + 1/1)
+    (-1/5*x + 3/5, 1/5*x**2 - 6/5*x + 2, x + 1)
 
     """
     s, h = dup_half_gcdex(f, g, K)
@@ -213,13 +213,13 @@ def dup_euclidean_prs(f, g, K):
     >>> prs = R.dup_euclidean_prs(f, g)
 
     >>> prs[0]
-    x**8 + x**6 - 3/1*x**4 - 3/1*x**3 + 8/1*x**2 + 2/1*x - 5/1
+    x**8 + x**6 - 3*x**4 - 3*x**3 + 8*x**2 + 2*x - 5
     >>> prs[1]
-    3/1*x**6 + 5/1*x**4 - 4/1*x**2 - 9/1*x + 21/1
+    3*x**6 + 5*x**4 - 4*x**2 - 9*x + 21
     >>> prs[2]
     -5/9*x**4 + 1/9*x**2 - 1/3
     >>> prs[3]
-    -117/25*x**2 - 9/1*x + 441/25
+    -117/25*x**2 - 9*x + 441/25
     >>> prs[4]
     233150/19773*x - 102500/6591
     >>> prs[5]
@@ -796,7 +796,7 @@ def dmp_qq_collins_resultant(f, g, u, K0):
     >>> g = 2*x*y + x + 3
 
     >>> R.dmp_qq_collins_resultant(f, g)
-    -2/1*y**2 - 7/3*y + 5/6
+    -2*y**2 - 7/3*y + 5/6
 
     """
     n = dmp_degree(f, u)
@@ -1075,7 +1075,7 @@ def dup_ff_prs_gcd(f, g, K):
     >>> R, x = ring("x", QQ)
 
     >>> R.dup_ff_prs_gcd(x**2 - 1, x**2 - 3*x + 2)
-    (x - 1/1, x + 1/1, x - 2/1)
+    (x - 1, x + 1, x - 2)
 
     """
     result = _dup_ff_trivial_gcd(f, g, K)
@@ -1452,7 +1452,7 @@ def dup_qq_heu_gcd(f, g, K0):
     >>> g = QQ(1,2)*x**2 + x
 
     >>> R.dup_qq_heu_gcd(f, g)
-    (x + 2/1, 1/2*x + 3/4, 1/2*x)
+    (x + 2, 1/2*x + 3/4, 1/2*x)
 
     """
     result = _dup_ff_trivial_gcd(f, g, K0)
@@ -1502,7 +1502,7 @@ def dmp_qq_heu_gcd(f, g, u, K0):
     >>> g = QQ(1,2)*x**2 + x*y
 
     >>> R.dmp_qq_heu_gcd(f, g)
-    (x + 2/1*y, 1/4*x + 1/2*y, 1/2*x)
+    (x + 2*y, 1/4*x + 1/2*y, 1/2*x)
 
     """
     result = _dmp_ff_trivial_gcd(f, g, u, K0)
@@ -1699,7 +1699,7 @@ def dup_ff_lcm(f, g, K):
     >>> g = QQ(1,2)*x**2 + x
 
     >>> R.dup_ff_lcm(f, g)
-    x**3 + 7/2*x**2 + 3/1*x
+    x**3 + 7/2*x**2 + 3*x
 
     """
     h = dup_quo(dup_mul(f, g, K),
@@ -1772,7 +1772,7 @@ def dmp_ff_lcm(f, g, u, K):
     >>> g = QQ(1,2)*x**2 + x*y
 
     >>> R.dmp_ff_lcm(f, g)
-    x**3 + 4/1*x**2*y + 4/1*x*y**2
+    x**3 + 4*x**2*y + 4*x*y**2
 
     """
     h = dmp_quo(dmp_mul(f, g, u, K),

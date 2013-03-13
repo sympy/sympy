@@ -287,7 +287,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         >>> f = R.convert(x + 2*y)
         >>> g = R.convert(x * y)
         >>> R._vector_to_sdm([f, g], lex)
-        [((1, 1, 1), 1/1), ((0, 1, 0), 1/1), ((0, 0, 1), 2/1)]
+        [((1, 1, 1), 1), ((0, 1, 0), 1), ((0, 0, 1), 2)]
         """
         return _vector_to_sdm_helper(v, order)
 
@@ -352,8 +352,8 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
         >>> f = R.convert((x + 2*y) / (1 + x))
         >>> g = R.convert(x * y)
         >>> R._vector_to_sdm([f, g], ilex)
-        [((0, 0, 1), 2/1), ((0, 1, 0), 1/1), ((1, 1, 1), 1/1), ((1,
-          2, 1), 1/1)]
+        [((0, 0, 1), 2), ((0, 1, 0), 1), ((1, 1, 1), 1), ((1,
+          2, 1), 1)]
         """
         # NOTE this is quite inefficient...
         u = self.one.numer()

@@ -167,7 +167,7 @@ def sdm_from_dict(d, O):
     >>> from sympy.polys import QQ, lex
     >>> dic = {(1, 1, 0): QQ(1), (1, 0, 0): QQ(2), (0, 1, 0): QQ(0)}
     >>> sdm_from_dict(dic, lex)
-    [((1, 1, 0), 1/1), ((1, 0, 0), 2/1)]
+    [((1, 1, 0), 1), ((1, 0, 0), 2)]
     """
     return sdm_strip(sdm_sort(d.items(), O))
 
@@ -199,7 +199,7 @@ def sdm_add(f, g, O, K):
     >>> from sympy.polys.distributedmodules import sdm_add
     >>> from sympy.polys import lex, QQ
     >>> sdm_add([((1, 1, 1), QQ(1))], [((2, 0, 0), QQ(1))], lex, QQ)
-    [((2, 0, 0), 1/1), ((1, 1, 1), 1/1)]
+    [((2, 0, 0), 1), ((1, 1, 1), 1)]
 
     `(xy f_1) + (-xy f_1)` = 0`
 
@@ -209,12 +209,12 @@ def sdm_add(f, g, O, K):
     `(f_1) + (2f_1) = 3f_1`
 
     >>> sdm_add([((1, 0, 0), QQ(1))], [((1, 0, 0), QQ(2))], lex, QQ)
-    [((1, 0, 0), 3/1)]
+    [((1, 0, 0), 3)]
 
     `(yf_1) + (xf_1) = xf_1 + yf_1`
 
     >>> sdm_add([((1, 0, 1), QQ(1))], [((1, 1, 0), QQ(1))], lex, QQ)
-    [((1, 1, 0), 1/1), ((1, 0, 1), 1/1)]
+    [((1, 1, 0), 1), ((1, 0, 1), 1)]
     """
     h = dict(f)
 
@@ -263,7 +263,7 @@ def sdm_LT(f):
     >>> from sympy.polys import QQ, lex
     >>> dic = {(1, 2, 3): QQ(1), (4, 0, 0): QQ(2), (4, 0, 1): QQ(3)}
     >>> sdm_LT(sdm_from_dict(dic, lex))
-    ((4, 0, 1), 3/1)
+    ((4, 0, 1), 3)
     """
     return f[0]
 
@@ -293,13 +293,13 @@ def sdm_mul_term(f, term, O, K):
     `(x) (f_1) = xf_1`
 
     >>> sdm_mul_term([((1, 0, 0), QQ(1))], ((1, 0), QQ(1)), lex, QQ)
-    [((1, 1, 0), 1/1)]
+    [((1, 1, 0), 1)]
 
     `(2xy) (3x f_1 + 4y f_2) = 8xy^2 f_2 + 6x^2y f_1`
 
     >>> f = [((2, 0, 1), QQ(4)), ((1, 1, 0), QQ(3))]
     >>> sdm_mul_term(f, ((1, 1), QQ(2)), lex, QQ)
-    [((2, 1, 2), 8/1), ((1, 2, 1), 6/1)]
+    [((2, 1, 2), 8), ((1, 2, 1), 6)]
     """
     X, c = term
 
@@ -351,7 +351,7 @@ def sdm_from_vector(vec, O, K, **opts):
     >>> from sympy.abc import x, y, z
     >>> from sympy.polys import QQ, lex
     >>> sdm_from_vector([x**2+y**2, 2*z], lex, QQ)
-    [((1, 0, 0, 1), 2/1), ((0, 2, 0, 0), 1/1), ((0, 0, 2, 0), 1/1)]
+    [((1, 0, 0, 1), 2), ((0, 2, 0, 0), 1), ((0, 0, 2, 0), 1)]
     """
     dics, gens = parallel_dict_from_expr(sympify(vec), **opts)
     dic = {}
@@ -424,7 +424,7 @@ def sdm_spoly(f, g, O, K, phantom=None):
     >>> sdm_spoly(f, h, lex, QQ)
     []
     >>> sdm_spoly(f, g, lex, QQ)
-    [((1, 2, 1), 1/1)]
+    [((1, 2, 1), 1)]
     """
     if not f or not g:
         return sdm_zero()

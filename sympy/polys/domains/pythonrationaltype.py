@@ -16,7 +16,7 @@ class PythonRationalType(PicklableWithSlots):
     >>> from sympy.polys.domains import PythonRationalType
 
     >>> PythonRationalType(1)
-    1/1
+    1
     >>> PythonRationalType(2, 3)
     2/3
     >>> PythonRationalType(14, 10)
@@ -58,7 +58,10 @@ class PythonRationalType(PicklableWithSlots):
         return "%s(%d, %d)" % (self.__class__.__name__, self.p, self.q)
 
     def __str__(self):
-        return "%d/%d" % (self.p, self.q)
+        if self.q == 1:
+            return str(self.p)
+        else:
+            return "%d/%d" % (self.p, self.q)
 
     def __int__(self):
         return int(float(self.p)/self.q)

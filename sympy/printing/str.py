@@ -544,13 +544,22 @@ class StrPrinter(Printer):
         return str(expr)
 
     def _print_Rational(self, expr):
-        return '%s/%s' % (expr.p, expr.q)
+        if expr.q == 1:
+            return str(expr.p)
+        else:
+            return "%s/%s" % (expr.p, expr.q)
 
     def _print_Fraction(self, expr):
-        return '%s/%s' % (expr.numerator, expr.denominator)
+        if expr.denominator == 1:
+            return str(expr.numerator)
+        else:
+            return "%s/%s" % (expr.numerator, expr.denominator)
 
     def _print_mpq(self, expr):
-        return '%s/%s' % (expr.numerator, expr.denominator)
+        if expr.denominator == 1:
+            return str(expr.numerator)
+        else:
+            return "%s/%s" % (expr.numerator, expr.denominator)
 
     def _print_Float(self, expr):
         prec = expr._prec
