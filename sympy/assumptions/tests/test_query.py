@@ -1778,3 +1778,9 @@ def test_Add_queries():
     assert ask(Q.even(Add(S(2), S(2), evaluate=0))) is True
     assert ask(Q.prime(Add(S(2), S(2), evaluate=0))) is False
     assert ask(Q.integer(Add(S(2), S(2), evaluate=0))) is True
+
+
+@XFAIL
+def test_positive():
+    with assuming(Q.positive(x + 1)):
+        assert not ask(Q.positive(x))
