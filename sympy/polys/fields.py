@@ -5,6 +5,8 @@ from sympy.core.sympify import CantSympify
 from sympy.polys.rings import PolyElement
 from sympy.polys.monomialtools import lex
 from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.polys.domains.fractionfield import FractionFieldNG
+from sympy.printing.defaults import DefaultPrinting
 
 def field(symbols, domain, order=lex):
     """Construct new rational function field returning (field, x1, ..., xn). """
@@ -31,7 +33,7 @@ def vfield(symbols, domain, order=lex):
 
     return _field
 
-class FracField(object):
+class FracField(DefaultPrinting):
     def __init__(self, symbols, domain, order):
         from sympy.polys.rings import PolyRing
         self.ring = PolyRing(symbols, domain, order)
@@ -53,11 +55,11 @@ class FracField(object):
             self._hash = _hash = hash((self.symbols, self.domain, self.order))
         return _hash
 
-    def __repr__(self):
-        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.symbols), repr(self.domain), repr(self.order))
+    def __eq__(self, other):
+        return isinstance(other, FracField) and self.ring == other.ring
 
-    def __str__(self):
-        return "Rational function field in %s over %s with %s order" % (", ".join(map(str, self.symbols)), self.domain, self.order)
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def new(self, numer, denom=None):
         return FracElement(self, numer, denom)
@@ -104,13 +106,13 @@ class FracField(object):
         from sympy.polys.rings import PolyRing
         return PolyRing(self.symbols, self.domain, self.order)
 
-class FracElement(CantSympify):
+class FracElement(CantSympify, DefaultPrinting):
     """Sparse rational function. """
 
     def __init__(self, field, numer, denom=None):
         if denom is not None:
             if denom == numer.ring.zero:
-                raise ExactQuotientFailed(numer, denom, numer.ring.domain)
+                raise ZeroDivisionError
         else:
             denom = numer.ring.one
 
@@ -141,40 +143,19 @@ class FracElement(CantSympify):
     def as_expr(self, *symbols):
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
 
-    def __repr__(self):
-        numer_terms = list(self.numer.terms())
-        numer_terms.sort(key=self.field.order, reverse=True)
-        denom_terms = list(self.denom.terms())
-        denom_terms.sort(key=self.field.order, reverse=True)
-        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.field), repr(numer_terms), repr(denom_terms))
-
-    def __str__(self):
-        n, d = self.numer, self.denom
-        sn, sd = n.str(False), d.str(False)
-
-        if d == d.ring.one:
-            return sn
-
-        if len(n) > 1:
-            sn = "(" + sn + ")"
-        if len(d) > 1:
-            sd = "(" + sd + ")"
-
-        return sn + "/" + sd
-
     def __eq__(f, g):
         if isinstance(g, FracElement):
             return f.numer == g.numer and f.denom == g.denom
         else:
             return f.numer == g and f.denom == 1
 
+    def __ne__(f, g):
+        return not f.__eq__(g)
+
     def __bool__(f):
         return bool(f.numer)
 
     __nonzero__ = __bool__
-
-    def __ne__(f, g):
-        return not f.__eq__(g)
 
     def __pos__(f):
         """Negate all cefficients in ``f``. """
@@ -186,16 +167,21 @@ class FracElement(CantSympify):
 
     def __add__(f, g):
         """Add rational functions ``f`` and ``g``. """
-        if isinstance(g, FracElement) and f.field == g.field:
-            numer = f.numer*g.denom + f.denom*g.numer
-            denom = f.denom*g.denom
-        elif isinstance(g, PolyElement) and f.field != g.ring:
-            return NotImplemented
-        else:
-            numer = f.numer + f.denom*g
-            denom = f.denom
+        field = f.field
 
-        return f.new(numer, denom)
+        if isinstance(g, FracElement):
+            if f.field == g.field:
+                return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
+            elif isinstance(field.domain, FractionFieldNG) and field.domain.field == g.field:
+                pass
+            elif isinstance(g.field.domain, FractionFieldNG) and g.field.domain.field == field:
+                return g.__radd__(f)
+            else:
+                return NotImplemented
+        elif isinstance(g, PolyElement) and field.ring != g.ring:
+            return g.__radd__(f)
+
+        return f.new(f.numer + f.denom*g, f.denom)
 
     def __radd__(f, c):
         numer = f.numer + f.denom*c
@@ -204,16 +190,21 @@ class FracElement(CantSympify):
 
     def __sub__(f, g):
         """Subtract rational functions ``f`` and ``g``. """
-        if isinstance(g, FracElement) and f.field == g.field:
-            numer = f.numer*g.denom - f.denom*g.numer
-            denom = f.denom*g.denom
-        elif isinstance(g, PolyElement) and f.field != g.ring:
-            return NotImplemented
-        else:
-            numer = f.numer - f.denom*g
-            denom = f.denom
+        field = f.field
 
-        return f.new(numer, denom)
+        if isinstance(g, FracElement):
+            if f.field == g.field:
+                return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
+            elif isinstance(field.domain, FractionFieldNG) and field.domain.field == g.field:
+                pass
+            elif isinstance(g.field.domain, FractionFieldNG) and g.field.domain.field == field:
+                return g.__rsub__(f)
+            else:
+                return NotImplemented
+        elif isinstance(g, PolyElement) and field.ring != g.ring:
+            return g.__rsub__(f)
+
+        return f.new(f.numer - f.denom*g, f.denom)
 
     def __rsub__(f, c):
         numer = -f.numer + f.denom*c
@@ -222,22 +213,42 @@ class FracElement(CantSympify):
 
     def __mul__(f, g):
         """Multiply rational functions ``f`` and ``g``. """
-        if isinstance(g, FracElement) and f.field == g.field:
-            return f.new(f.numer*g.numer, f.denom*g.denom)
-        elif isinstance(g, PolyElement) and f.field != g.ring:
-            return NotImplemented
-        else:
-            return f.new(f.numer*g, f.denom)
+        field = f.field
+
+        if isinstance(g, FracElement):
+            if field == g.field:
+                return f.new(f.numer*g.numer, f.denom*g.denom)
+            elif isinstance(field.domain, FractionFieldNG) and field.domain.field == g.field:
+                pass
+            elif isinstance(g.field.domain, FractionFieldNG) and g.field.domain.field == field:
+                return g.__rmul__(f)
+            else:
+                return NotImplemented
+        elif isinstance(g, PolyElement) and field.ring != g.ring:
+            return g.__rmul__(f)
+
+        return f.new(f.numer*g, f.denom)
 
     def __rmul__(f, c):
         return f.new(f.numer*c, f.denom)
 
     def __truediv__(f, g):
         """Computes quotient of fractions ``f`` and ``g``. """
+        field = f.field
+
         if isinstance(g, FracElement):
-            return f.new(f.numer*g.denom, f.denom*g.numer)
-        else:
-            return f.new(f.numer, f.denom*g)
+            if field == g.field:
+                return f.new(f.numer*g.denom, f.denom*g.numer)
+            elif isinstance(field.domain, FractionFieldNG) and field.domain.field == g.field:
+                pass
+            elif isinstance(g.field.domain, FractionFieldNG) and g.field.domain.field == field:
+                return g.__rtruediv__(f)
+            else:
+                return NotImplemented
+        elif isinstance(g, PolyElement) and field.ring != g.ring:
+            return g.__rtruediv__(f)
+
+        return f.new(f.numer, f.denom*g)
 
     __div__ = __truediv__
 
@@ -248,10 +259,13 @@ class FracElement(CantSympify):
 
     def __pow__(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
-        if n >= 0:
-            return f.raw_new(f.numer**n, f.denom**n)
+        if isinstance(n, int):
+            if n >= 0:
+                return f.raw_new(f.numer**n, f.denom**n)
+            else:
+                return f.raw_new(f.denom**-n, f.numer**-n)
         else:
-            return f.raw_new(f.denom**-n, f.numer**-n)
+            return NotImplemented
 
     def diff(f, x):
         if isinstance(x, list) and a is None:

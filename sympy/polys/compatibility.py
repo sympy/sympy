@@ -200,9 +200,6 @@ from sympy.polys.rootisolation import dup_count_complex_roots
 from sympy.polys.rootisolation import dup_isolate_complex_roots_sqf
 from sympy.polys.rootisolation import dup_isolate_all_roots_sqf
 from sympy.polys.rootisolation import dup_isolate_all_roots
-from sympy.polys.specialpolys import dmp_fateman_poly_F_1
-from sympy.polys.specialpolys import dmp_fateman_poly_F_2
-from sympy.polys.specialpolys import dmp_fateman_poly_F_3
 from sympy.polys.sqfreetools import dup_sqf_p
 from sympy.polys.sqfreetools import dmp_sqf_p
 from sympy.polys.sqfreetools import dup_sqf_norm
@@ -931,8 +928,11 @@ class IPolys(object):
         return dup_isolate_all_roots(self.to_dense(f), self.domain, eps=eps, inf=inf, sup=sup, fast=fast)
 
     def fateman_poly_F_1(self):
+        from sympy.polys.specialpolys import dmp_fateman_poly_F_1
         return tuple(map(self.from_dense, dmp_fateman_poly_F_1(self.ngens-1, self.domain)))
     def fateman_poly_F_2(self):
+        from sympy.polys.specialpolys import dmp_fateman_poly_F_2
         return tuple(map(self.from_dense, dmp_fateman_poly_F_2(self.ngens-1, self.domain)))
     def fateman_poly_F_3(self):
+        from sympy.polys.specialpolys import dmp_fateman_poly_F_3
         return tuple(map(self.from_dense, dmp_fateman_poly_F_3(self.ngens-1, self.domain)))

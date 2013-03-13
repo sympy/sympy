@@ -1,21 +1,11 @@
 """Test sparse rational functions. """
 
 from sympy.polys.fields import field
-from sympy.polys.domains import ZZ, QQ, RR, ZZ_python
+from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.monomialtools import lex, grlex
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
-
-def test_FracField___repr__():
-    assert repr(field("x", ZZ, lex)[0]) == "FracField((x,), ZZ, LexOrder())"
-    assert repr(field("x,y", QQ, grlex)[0]) == "FracField((x, y), QQ, GradedLexOrder())"
-    assert repr(field("x,y,z", ZZ["t"], lex)[0]) == "FracField((x, y, z), ZZ[t], LexOrder())"
-
-def test_FracField___str__():
-    assert str(field("x", ZZ, lex)[0]) == "Rational function field in x over ZZ with lex order"
-    assert str(field("x,y", QQ, grlex)[0]) == "Rational function field in x, y over QQ with grlex order"
-    assert str(field("x,y,z", ZZ["t"], lex)[0]) == "Rational function field in x, y, z over ZZ[t] with lex order"
 
 def test_FracField___hash__():
     F, x, y, z = field("x,y,z", QQ)
@@ -24,14 +14,6 @@ def test_FracField___hash__():
 def test_FracElement___hash__():
     F, x, y, z = field("x,y,z", QQ)
     assert hash(x*y/z)
-
-def test_FracElement___repr__():
-    F, x, y = field("x,y", ZZ_python())
-    assert repr((3*x**2*y + 1)/(x - y**2)) == "FracElement(FracField((x, y), ZZ, LexOrder()), [((2, 1), 3), ((0, 0), 1)], [((1, 0), 1), ((0, 2), -1)])"
-
-def test_FracElement___str__():
-    F, x, y = field("x,y", ZZ_python())
-    assert str((3*x**2*y + 1)/(x - y**2)) == "(3*x**2*y + 1)/(x - y**2)"
 
 def test_FracElement_copy():
     F, x, y, z = field("x,y,z", ZZ)
@@ -87,6 +69,13 @@ def test_FracElement___mul__():
 
     f, g = 1/x, 1/y
     assert f*g == g*f == 1/(x*y)
+
+    Fuv, u,v = field("u,v", ZZ);
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+
+    f = ((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)
+    assert dict(f.numer) == {(1, 1, 0, 0): u + 1, (0, 0, 0, 0): 1}
+    assert dict(f.denom) == {(0, 0, 1, 0): v - 1, (0, 0, 0, 1): -u*v, (0, 0, 0, 0): -1}
 
 def test_FracElement___div__():
     F, x,y = field("x,y", QQ)

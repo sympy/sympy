@@ -13,6 +13,7 @@ from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.domains.polynomialring import PolynomialRingNG
+from sympy.printing.defaults import DefaultPrinting
 
 def ring(symbols, domain, order=lex):
     """Construct new polynomial ring returning (ring, x1, ..., xn). """
@@ -52,7 +53,7 @@ def _parse_symbols(symbols):
 
     raise ValueError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-class PolyRing(IPolys):
+class PolyRing(IPolys, DefaultPrinting):
     def __init__(self, symbols, domain, order):
         self.symbols = tuple(_parse_symbols(symbols))
         self.ngens = len(self.symbols)
@@ -81,14 +82,9 @@ class PolyRing(IPolys):
             self._hash = _hash = hash((self.symbols, self.domain, self.order))
         return _hash
 
-    def __repr__(self):
-        return "%s(%s, %s, %s)" % (self.__class__.__name__, repr(self.symbols), repr(self.domain), repr(self.order))
-
-    def __str__(self):
-        return "Polynomial ring in %s over %s with %s order" % (", ".join(map(str, self.symbols)), self.domain, self.order)
-
     def __eq__(self, other):
-        return self.ngens == other.ngens and \
+        return isinstance(other, PolyRing) and \
+               self.ngens == other.ngens and \
                self.domain == other.domain and \
                self.order == other.order
 
@@ -104,8 +100,8 @@ class PolyRing(IPolys):
         basis[i] = 1
         return tuple(basis)
 
-    def domain_new(self, element):
-        return self.domain.convert(element)
+    def domain_new(self, element, orig_domain=None):
+        return self.domain.convert(element, orig_domain)
 
     def ground_new(self, coeff):
         return self.term_new(self.zero_monom, coeff)
@@ -198,7 +194,7 @@ class PolyRing(IPolys):
         from sympy.polys.fields import FracField
         return FracField(self.symbols, self.domain, self.order)
 
-class PolyElement(dict, CantSympify):
+class PolyElement(dict, CantSympify, DefaultPrinting):
     def __init__(self, ring, init=[]):
         self.ring = ring
         dict.__init__(self, init)
@@ -247,7 +243,9 @@ class PolyElement(dict, CantSympify):
         if self.ring.ngens != new_ring.ngens:
             raise NotImplementedError
         else:
-            return PolyElement(new_ring, [ (k, new_ring.domain_new(v)) for k, v in self.items() ])
+            orig_domain = self.ring.domain
+            domain_new = new_ring.domain_new
+            return PolyElement(new_ring, [ (k, domain_new(v, orig_domain)) for k, v in self.items() ])
 
     def as_expr(self, *symbols):
         if symbols and len(symbols) != self.ring.ngens:
@@ -299,59 +297,6 @@ class PolyElement(dict, CantSympify):
         indices.sort()
         return tuple(indices)
 
-    def __repr__(self):
-        terms = list(self.terms())
-        terms.sort(key=self.ring.order, reverse=True)
-        return "%s(%s, %s)" % (self.__class__.__name__, repr(self.ring), repr(terms))
-
-    def __str__(self):
-        return self.str()
-
-    def str(self, detailed=True):
-        if detailed:
-            from sympy.printing import sstr
-        else:
-            sstr = str
-        if not self:
-            return sstr(self.ring.domain.zero)
-        ring = self.ring
-        symbols = ring.symbols
-        ngens = ring.ngens
-        zm = ring.zero_monom
-        sexpvs = []
-        expvs = list(self.keys())
-        expvs.sort(key=ring.order, reverse=True)
-        for expv in expvs:
-            coeff = self[expv]
-            if ring.domain.is_positive(coeff):
-                sexpvs.append(' + ')
-            else:
-                sexpvs.append(' - ')
-            if ring.domain.is_negative(coeff):
-                coeff = -coeff
-            if coeff != 1 or expv == zm:
-                scoeff = sstr(coeff)
-            else:
-                scoeff = ''
-            sexpv = []
-            for i in xrange(ngens):
-                exp = expv[i]
-                if not exp:
-                    continue
-                symbol = sstr(symbols[i])
-                if exp != 1:
-                    sexpv.append('%s**%d' % (symbol, exp))
-                else:
-                    sexpv.append('%s' % symbol)
-            if scoeff:
-                sexpv = [scoeff] + sexpv
-            sexpvs.append('*'.join(sexpv))
-        if sexpvs[0] in [" + ", " - "]:
-            head = sexpvs.pop(0)
-            if head == " - ":
-                sexpvs.insert(0, "-")
-        return ''.join(sexpvs)
-
     def __eq__(p1, p2):
         """Equality test for polynomials.
 
@@ -396,6 +341,30 @@ class PolyElement(dict, CantSympify):
     def to_dense(self):
         from sympy.polys.densebasic import dmp_from_dict
         return dmp_from_dict(self, self.ring.ngens-1, self.ring.domain)
+
+    @property
+    def is_generator(self):
+        return self in self.ring.gens
+
+    @property
+    def is_term(self):
+        return len(self) == 1
+
+    @property
+    def is_negative(self):
+        return self.ring.domain.is_negative(self.LC)
+
+    @property
+    def is_positive(self):
+        return self.ring.domain.is_positive(self.LC)
+
+    @property
+    def is_nonnegative(self):
+        return self.ring.domain.is_nonnegative(self.LC)
+
+    @property
+    def is_nonpositive(self):
+        return self.ring.domain.is_nonpositive(self.LC)
 
     def __neg__(self):
         return self*(-1)
@@ -804,6 +773,12 @@ class PolyElement(dict, CantSympify):
 
     __floordiv__ = __div__ = __truediv__
 
+    def __mod__(self, other):
+        return self.rem(other)
+
+    def __divmod__(self, other):
+        return self.div(other)
+
     def _term_div(self):
         zm = self.ring.zero_monom
         domain_quo = self.ring.domain.quo
@@ -907,10 +882,12 @@ class PolyElement(dict, CantSympify):
         else:
             return qv, r
 
-    def quo(f, fv):
-        return f.div(fv)[0]
+    def quo(f, G):
+        return f.div(G)[0]
 
     def rem(f, G):
+        if isinstance(G, PolyElement):
+            G = [G]
         domain = f.ring.domain
         order = f.ring.order
         r = f.ring.zero
@@ -1299,6 +1276,24 @@ class PolyElement(dict, CantSympify):
 
         return poly
 
+    def lcm(f, g):
+        domain = f.ring.domain
+
+        if not domain.has_Field:
+            fc, f = f.primitive()
+            gc, g = g.primitive()
+            c = domain.lcm(fc, gc)
+
+        h = (f*g).quo(f.gcd(g))
+
+        if not domain.has_Field:
+            return h.mul_ground(c)
+        else:
+            return h.monic()
+
+    def gcd(f, g):
+        return f.cofactors(g)[0]
+
     def cofactors(f, g):
         if not f and not g:
             zero = f.ring.zero
@@ -1321,12 +1316,9 @@ class PolyElement(dict, CantSympify):
 
         return (h.inflate(J), cff.inflate(J), cfg.inflate(J))
 
-    def gcd(f, g):
-        return f.cofactors(g)[0]
-
     def _gcd_zero(f, g):
         one, zero = f.ring.one, f.ring.zero
-        if g.LC >= 0:
+        if g.is_nonnegative:
             return g, zero, one
         else:
             return -g, zero, -one
@@ -1353,7 +1345,7 @@ class PolyElement(dict, CantSympify):
         elif ring.domain.is_ZZ:
             return f._gcd_ZZ(g)
         else: # TODO: don't use dense representation (port PRS algorithms)
-            return map(ring.from_dense, ring.dmp_inner_gcd(f.to_dense(), g.to_dense()))
+            return ring.dmp_inner_gcd(f, g)
 
     def _gcd_ZZ(f, g):
         return heugcd(f, g)
@@ -1397,7 +1389,7 @@ class PolyElement(dict, CantSympify):
         domain = ring.domain
 
         if domain.has_Field and domain.has_assoc_Ring:
-            new_ring = f.ring.clone(domain=domain.get_ring())
+            new_ring = ring.clone(domain=domain.get_ring())
 
             cq, f = f.clear_denoms()
             cp, g = g.clear_denoms()
@@ -1413,8 +1405,8 @@ class PolyElement(dict, CantSympify):
             p = p.set_ring(ring)
             q = q.set_ring(ring)
 
-        p_neg = p.LC < 0
-        q_neg = q.LC < 0
+        p_neg = p.is_negative
+        q_neg = q.is_negative
 
         if p_neg and q_neg:
             p, q = -p, -q

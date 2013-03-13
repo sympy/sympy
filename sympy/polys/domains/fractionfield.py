@@ -279,14 +279,14 @@ class FractionFieldNG(Field, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_PolynomialRing(K1, a, K0):
+    def from_PolynomialRingNG(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
-        if K1.field.ring == K0:
+        if K1.field.ring == K0.ring:
             return K1.field.field_new(a)
         else:
             return # TODO
 
-    def from_FractionField(K1, a, K0):
+    def from_FractionFieldNG(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
         if K1 == K0:
             return a
@@ -309,31 +309,27 @@ class FractionFieldNG(Field, CompositeDomain):
 
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """
-        return self.dom.is_positive(a.LC)
+        return self.dom.is_positive(a.numer.LC)
 
     def is_negative(self, a):
         """Returns True if `LC(a)` is negative. """
-        return self.dom.is_negative(a.LC)
+        return self.dom.is_negative(a.numer.LC)
 
     def is_nonpositive(self, a):
         """Returns True if `LC(a)` is non-positive. """
-        return self.dom.is_nonpositive(a.LC)
+        return self.dom.is_nonpositive(a.numer.LC)
 
     def is_nonnegative(self, a):
         """Returns True if `LC(a)` is non-negative. """
-        return self.dom.is_nonnegative(a.LC)
+        return self.dom.is_nonnegative(a.numer.LC)
 
-    def gcdex(self, a, b):
-        """Extended GCD of `a` and `b`. """
-        return a.gcdex(b)
+    def numer(self, a):
+        """Returns numerator of ``a``. """
+        return a.numer
 
-    def gcd(self, a, b):
-        """Returns GCD of `a` and `b`. """
-        return a.gcd(b)
-
-    def lcm(self, a, b):
-        """Returns LCM of `a` and `b`. """
-        return a.lcm(b)
+    def denom(self, a):
+        """Returns denominator of ``a``. """
+        return a.denom
 
     def factorial(self, a):
         """Returns factorial of `a`. """

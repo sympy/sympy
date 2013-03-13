@@ -525,17 +525,17 @@ class PolynomialRingNG(Ring, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_PolynomialRing(K1, a, K0):
+    def from_PolynomialRingNG(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         if K1 == K0:
             return a
         else:
             return # TODO
 
-    def from_FractionField(K1, a, K0):
+    def from_FractionFieldNG(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
-        if K1 == K0.field.ring and K0.denom(a) == 1:
-            return K1.rin.ring_new(K0.numer(a))
+        if K1.ring == K0.field.ring and K0.denom(a) == 1:
+            return K1.ring.ring_new(K0.numer(a))
         else:
             return # TODO
 
