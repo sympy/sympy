@@ -302,6 +302,24 @@ def lambdastr(args, expr, printer=None):
     'lambda x,y,z: ([z, y, x])'
 
     """
+    # Transforming everything to strings.
+    from sympy.matrices import DeferredVector
+    from sympy import Dummy, sympify
+
+    # Transform args
+    if isinstance(args, str):
+        dummies = args
+        dummies_dict = {}
+    elif iterable(args, exclude=DeferredVector):
+        dummies = [Dummy() for i in args]
+        dummies_dict = dict(zip(args, dummies))
+        dummies = ",".join(str(a) for a in dummies)
+    else:
+        dummies = Dummy()
+        dummies_dict = {args : dummies}
+        dummies = str(dummies)
+
+    # Transform expr
     if printer is not None:
         if inspect.isfunction(printer):
             lambdarepr = printer
@@ -314,17 +332,26 @@ def lambdastr(args, expr, printer=None):
         #XXX: This has to be done here because of circular imports
         from sympy.printing.lambdarepr import lambdarepr
 
-    # Transform everything to strings.
-    from sympy.matrices import DeferredVector
-    expr = lambdarepr(expr)
-    if isinstance(args, str):
+    if isinstance(expr, str):
         pass
-    elif iterable(args, exclude=DeferredVector):
-        args = ",".join(str(a) for a in args)
     else:
-        args = str(args)
+        def sub_iterable(expr):
+            try:
+                expr = sympify(expr).subs(dummies_dict)
+            except:
+                if isinstance(expr, dict):
+                    k = [sub_iterable(sympify(a)) for a in expr.keys()]
+                    v = [sub_iterable(sympify(a)) for a in expr.values()]
+                    expr = dict(zip(k, v))
+                elif isinstance(expr, tuple):
+                    expr = tuple([sub_iterable(sympify(a)) for a in expr])
+                elif isinstance(expr, list):
+                    expr = [sub_iterable(sympify(a)) for a in expr]
+            return expr
+        expr = sub_iterable(expr)
 
-    return "lambda %s: (%s)" % (args, expr)
+    expr = lambdarepr(expr)
+    return "lambda %s: (%s)" % (dummies, expr)
 
 
 def _imp_namespace(expr, namespace=None):
