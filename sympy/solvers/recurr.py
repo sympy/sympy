@@ -621,8 +621,11 @@ def rsolve_hyper(coeffs, f, n, **hints):
     kernel.sort(key=default_sort_key)
     sk = zip(symbols, kernel)
 
-    for C, ker in sk:
-        result += C * ker
+    if sk:
+        for C, ker in sk:
+            result += C * ker
+    else:
+        return None
 
     if hints.get('symbols', False):
         return (result, [s for s, k in sk])
