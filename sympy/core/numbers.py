@@ -545,17 +545,14 @@ class Float(Number):
     -5.00000000000000
 
     An actual mpf tuple also contains the number of bits in c as the last
-    element of the tuple, but this is not needed for instantiation:
+    element of the tuple:
 
     >>> _._mpf_
     (1, 5, 0, 3)
 
-    That last value can be used to create the corresponding Float, however,
-    by passing the tuple and prec='' to Float to copy the precision from the
-    mpf tuple:
-
-    >>> Float(pi.n(5)._mpf_, '')
-    3.1416
+    This is not needed for instantiation and is not the same thing as the
+    precision. The mpf tuple and the precision are two separate quantities
+    that Float tracks.
 
     """
     __slots__ = ['_mpf_', '_prec']
@@ -580,12 +577,9 @@ class Float(Number):
             num = num._mpf_
 
         if prec == '':
-            if type(num) is tuple and len(num) == 4:
-                return Float._new(num, num[-1])
-            elif not isinstance(num, basestring):
+            if not isinstance(num, basestring):
                 raise ValueError('The null string can only be used when '
-                'the number to Float is passed as a string or is a tuple '
-                'with length of 4.')
+                'the number to Float is passed as a string or an integer.')
             ok = None
             if _literal_float(num):
                 try:
@@ -665,7 +659,7 @@ class Float(Number):
                 ok = _mpf_zero
             else:
                 ok = (sign % 2, long(man), expt, bc)
-        elif expt < 0:
+        elif expt < 0 or bc == 1 and man != 1:
             # this is the non-hack normalization
             ok = mpf_normalize(sign, man, expt, bc, _prec, rnd)
         else:
