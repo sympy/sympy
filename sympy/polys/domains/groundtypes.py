@@ -13,7 +13,7 @@ from __builtin__ import (
     complex as PythonComplexType,
 )
 
-from pythonrationaltype import PythonRationalType
+from pythonrational import PythonRational
 
 from sympy.core.numbers import (
     igcdex as python_gcdex,

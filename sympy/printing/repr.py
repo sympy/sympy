@@ -93,9 +93,6 @@ class ReprPrinter(Printer):
     def _print_NaN(self, expr):
         return "nan"
 
-    def _print_Rational(self, expr):
-        return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
-
     def _print_Mul(self, expr, order=None):
         terms = expr.args
         if self.order != 'old':
@@ -105,6 +102,12 @@ class ReprPrinter(Printer):
 
         args = map(self._print, args)
         return "Mul(%s)" % ", ".join(args)
+
+    def _print_Rational(self, expr):
+        return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
+
+    def _print_PythonRational(self, expr):
+        return "%s(%d, %d)" % (expr.__class__.__name__, expr.p, expr.q)
 
     def _print_Fraction(self, expr):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))

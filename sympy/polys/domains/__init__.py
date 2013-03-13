@@ -50,7 +50,7 @@ QQ_gmpy = GMPYRationalField
 
 RR_mpmath = MPmathRealDomain
 
-from pythonrationaltype import PythonRationalType
+from pythonrational import PythonRational
 
 from sympy.core.compatibility import GROUND_TYPES
 

@@ -1,11 +1,9 @@
-"""Tests for classes defining properties of ground domains, e.g. ZZ, QQ,
-ZZ[x] ... """
+"""Tests for classes defining properties of ground domains, e.g. ZZ, QQ, ZZ[x] ... """
 
 from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
 from sympy.abc import x, y, z
 
-from sympy.polys.domains import (
-    ZZ, QQ, RR, FF, PythonRationalType as Q, ZZ_sympy, QQ_sympy,
+from sympy.polys.domains import (ZZ, QQ, RR, FF, ZZ_sympy, QQ_sympy,
     RR_mpmath, PolynomialRing, FractionField, EX)
 
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
@@ -22,7 +20,6 @@ from sympy.polys.polyclasses import DMP, DMF
 from sympy.utilities.pytest import raises, XFAIL
 
 ALG = QQ.algebraic_field(sqrt(2) + sqrt(3))
-
 
 def test_Domain__unify():
     assert ZZ.unify(ZZ) == ZZ
@@ -528,155 +525,6 @@ def test_PolynomialRing__from_FractionField():
 
     assert ZZ[x].from_FractionField(f, ZZ[x]) is None
     assert ZZ[x].from_FractionField(g, ZZ[x]) == DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
-
-
-def test_PythonRationalType__init__():
-    assert Q(0).p == 0
-    assert Q(0).q == 1
-    assert Q(0, 1).p == 0
-    assert Q(0, 1).q == 1
-    assert Q(0, -1).p == 0
-    assert Q(0, -1).q == 1
-
-    assert Q(1).p == 1
-    assert Q(1).q == 1
-    assert Q(1, 1).p == 1
-    assert Q(1, 1).q == 1
-    assert Q(-1, -1).p == 1
-    assert Q(-1, -1).q == 1
-
-    assert Q(-1).p == -1
-    assert Q(-1).q == 1
-    assert Q(-1, 1).p == -1
-    assert Q(-1, 1).q == 1
-    assert Q( 1, -1).p == -1
-    assert Q( 1, -1).q == 1
-
-    assert Q(1, 2).p == 1
-    assert Q(1, 2).q == 2
-    assert Q(3, 4).p == 3
-    assert Q(3, 4).q == 4
-
-    assert Q(2, 2).p == 1
-    assert Q(2, 2).q == 1
-    assert Q(2, 4).p == 1
-    assert Q(2, 4).q == 2
-
-
-def test_PythonRationalType__hash__():
-    assert hash(Q(0)) == hash(0)
-    assert hash(Q(1)) == hash(1)
-    assert hash(Q(117)) == hash(117)
-
-
-def test_PythonRationalType__int__():
-    assert int(Q(-1, 4)) == 0
-    assert int(Q( 1, 4)) == 0
-    assert int(Q(-5, 4)) == -1
-    assert int(Q( 5, 4)) == 1
-
-
-def test_PythonRationalType__float__():
-    assert float(Q(-1, 2)) == -0.5
-    assert float(Q( 1, 2)) == 0.5
-
-
-def test_PythonRationalType__abs__():
-    assert abs(Q(-1, 2)) == Q(1, 2)
-    assert abs(Q( 1, 2)) == Q(1, 2)
-
-
-def test_PythonRationalType__pos__():
-    assert +Q(-1, 2) == Q(-1, 2)
-    assert +Q( 1, 2) == Q( 1, 2)
-
-
-def test_PythonRationalType__neg__():
-    assert -Q(-1, 2) == Q( 1, 2)
-    assert -Q( 1, 2) == Q(-1, 2)
-
-
-def test_PythonRationalType__add__():
-    assert Q(-1, 2) + Q( 1, 2) == Q(0)
-    assert Q( 1, 2) + Q(-1, 2) == Q(0)
-
-    assert Q(1, 2) + Q(1, 2) == Q(1)
-    assert Q(1, 2) + Q(3, 2) == Q(2)
-    assert Q(3, 2) + Q(1, 2) == Q(2)
-    assert Q(3, 2) + Q(3, 2) == Q(3)
-
-    assert 1 + Q(1, 2) == Q(3, 2)
-    assert Q(1, 2) + 1 == Q(3, 2)
-
-
-def test_PythonRationalType__sub__():
-    assert Q(-1, 2) - Q( 1, 2) == Q(-1)
-    assert Q( 1, 2) - Q(-1, 2) == Q( 1)
-
-    assert Q(1, 2) - Q(1, 2) == Q( 0)
-    assert Q(1, 2) - Q(3, 2) == Q(-1)
-    assert Q(3, 2) - Q(1, 2) == Q( 1)
-    assert Q(3, 2) - Q(3, 2) == Q( 0)
-
-    assert 1 - Q(1, 2) == Q( 1, 2)
-    assert Q(1, 2) - 1 == Q(-1, 2)
-
-
-def test_PythonRationalType__mul__():
-    assert Q(-1, 2) * Q( 1, 2) == Q(-1, 4)
-    assert Q( 1, 2) * Q(-1, 2) == Q(-1, 4)
-
-    assert Q(1, 2) * Q(1, 2) == Q(1, 4)
-    assert Q(1, 2) * Q(3, 2) == Q(3, 4)
-    assert Q(3, 2) * Q(1, 2) == Q(3, 4)
-    assert Q(3, 2) * Q(3, 2) == Q(9, 4)
-
-    assert 2 * Q(1, 2) == Q(1)
-    assert Q(1, 2) * 2 == Q(1)
-
-
-def test_PythonRationalType__div__():
-    assert Q(-1, 2) / Q( 1, 2) == Q(-1)
-    assert Q( 1, 2) / Q(-1, 2) == Q(-1)
-
-    assert Q(1, 2) / Q(1, 2) == Q(1)
-    assert Q(1, 2) / Q(3, 2) == Q(1, 3)
-    assert Q(3, 2) / Q(1, 2) == Q(3)
-    assert Q(3, 2) / Q(3, 2) == Q(1)
-
-    assert 2 / Q(1, 2) == Q(4)
-    assert Q(1, 2) / 2 == Q(1, 4)
-
-    raises(ZeroDivisionError, lambda: Q(1, 2) / Q(0))
-    raises(ZeroDivisionError, lambda: Q(1, 2) / 0)
-
-
-def test_PythonRationalType__pow__():
-    assert Q(1)**10 == Q(1)
-    assert Q(2)**10 == Q(1024)
-
-    assert Q(1)**(-10) == Q(1)
-    assert Q(2)**(-10) == Q(1, 1024)
-
-
-def test_PythonRationalType__eq__():
-    assert (Q(1, 2) == Q(1, 2)) is True
-    assert (Q(1, 2) != Q(1, 2)) is False
-
-    assert (Q(1, 2) == Q(1, 3)) is False
-    assert (Q(1, 2) != Q(1, 3)) is True
-
-
-def test_PythonRationalType__lt_le_gt_ge__():
-    assert (Q(1, 2) < Q(1, 4)) is False
-    assert (Q(1, 2) <= Q(1, 4)) is False
-    assert (Q(1, 2) > Q(1, 4)) is True
-    assert (Q(1, 2) >= Q(1, 4)) is True
-
-    assert (Q(1, 4) < Q(1, 2)) is True
-    assert (Q(1, 4) <= Q(1, 2)) is True
-    assert (Q(1, 4) > Q(1, 2)) is False
-    assert (Q(1, 4) >= Q(1, 2)) is False
 
 
 def test_sympy_of_type():
