@@ -1609,9 +1609,91 @@ def test_positive():
     assert ask(Q.positive(Abs(x)), Q.positive(x)) is True
 
 
+def test_Positive_transitive():
+    # x greater than 1 or lesser than -1
+    assert ask(Q.positive(x), Q.is_true(x > 1)) is True
+    assert ask(Q.positive(x), Q.is_true(x >= 1)) is True
+    assert ask(Q.positive(x), Q.is_true(-x < -1)) is True
+    assert ask(Q.positive(x), Q.is_true(-x <= -1)) is True
+    assert ask(Q.positive(x), Q.positive(x - 1)) is True
+    assert ask(Q.positive(x), Q.negative(1 - x)) is True
+    assert ask(Q.positive(x), Q.is_true(-x > 1)) is False
+    assert ask(Q.positive(x), Q.is_true(-x >= 1)) is False
+    assert ask(Q.positive(x), Q.is_true(x < -1)) is False
+    assert ask(Q.positive(x), Q.is_true(x <= -1)) is False
+    assert ask(Q.positive(x), Q.positive(-1 - x)) is False
+    assert ask(Q.positive(x), Q.negative(x + 1)) is False
+
+    # x greater or lesser than 0
+    assert ask(Q.positive(x), Q.is_true(x > 0)) is True
+    assert ask(Q.positive(x), Q.is_true(x >= 0)) is None
+    assert ask(Q.positive(x), Q.is_true(-x < 0)) is True
+    assert ask(Q.positive(x), Q.is_true(-x <= 0)) is None
+    assert ask(Q.positive(x), Q.positive(x)) is True
+    assert ask(Q.positive(x), Q.negative(-x)) is True
+    assert ask(Q.positive(x), Q.is_true(-x > 0)) is False
+    assert ask(Q.positive(x), Q.is_true(-x >= 0)) is None
+    assert ask(Q.positive(x), Q.is_true(x < 0)) is False
+    assert ask(Q.positive(x), Q.is_true(x <= 0)) is None
+    assert ask(Q.positive(x), Q.positive(-x)) is False
+    assert ask(Q.positive(x), Q.negative(x)) is False
+
+    # x greater than -1 or lesser than 1
+    assert ask(Q.positive(x), Q.is_true(x > -1)) is None
+    assert ask(Q.positive(x), Q.is_true(x >= -1)) is None
+    assert ask(Q.positive(x), Q.is_true(x < 1)) is None
+    assert ask(Q.positive(x), Q.is_true(x <= 1)) is None
+    assert ask(Q.positive(x), Q.positive(x + 1)) is None
+    assert ask(Q.positive(x), Q.negative(x - 1)) is None
+
+    # May have more than one assumptions.
+    assert ask(Q.positive(x), Q.real(z) & Q.is_true(x > 1) & Q.is_true(y > 0)) is True
+
+    # Sum of all positive or all negative terms.
+    assert ask(Q.positive(x + 2), Q.is_true(x > 1)) is True
+    assert ask(Q.positive(x + 2), Q.is_true(x >= 1)) is True
+    assert ask(Q.positive(x + 2), Q.is_true(-x < -1)) is True
+    assert ask(Q.positive(x + 2), Q.is_true(-x <= -1)) is True
+    assert ask(Q.positive(x + 2), Q.positive(x - 1)) is True
+    assert ask(Q.positive(x + 2), Q.negative(1 - x)) is True
+    assert ask(Q.positive(x - 2), Q.is_true(-x > 1)) is False
+    assert ask(Q.positive(x - 2), Q.is_true(-x >= 1)) is False
+    assert ask(Q.positive(x - 2), Q.is_true(x < -1)) is False
+    assert ask(Q.positive(x - 2), Q.is_true(x <= -1)) is False
+    assert ask(Q.positive(x - 2), Q.positive(-1 - x)) is False
+    assert ask(Q.positive(x - 2), Q.negative(x + 1)) is False
+
+    # Sum of positive and negative terms.
+    assert ask(Q.positive(x - 2), Q.is_true(x > 3)) is True
+    assert ask(Q.positive(x - 2), Q.is_true(x >= 3)) is True
+    assert ask(Q.positive(x - 2), Q.is_true(-x < -3)) is True
+    assert ask(Q.positive(x - 2), Q.is_true(-x <= -3)) is True
+    assert ask(Q.positive(x - 2), Q.positive(x - 3)) is True
+    assert ask(Q.positive(x - 2), Q.negative(3 - x)) is True
+
+    # Product.
+    assert ask(Q.positive(2*x), Q.is_true(x > 1)) is True
+    assert ask(Q.positive(2*x), Q.is_true(x >= 1)) is True
+    assert ask(Q.positive(2*x), Q.is_true(-x < -1)) is True
+    assert ask(Q.positive(2*x), Q.is_true(-x <= -1)) is True
+    assert ask(Q.positive(2*x), Q.positive(x - 1)) is True
+    assert ask(Q.positive(2*x), Q.negative(1 - x)) is True
+    assert ask(Q.positive(2*x), Q.is_true(-x > 1)) is False
+    assert ask(Q.positive(2*x), Q.is_true(-x >= 1)) is False
+    assert ask(Q.positive(2*x), Q.is_true(x < -1)) is False
+    assert ask(Q.positive(2*x), Q.is_true(x <= -1)) is False
+    assert ask(Q.positive(2*x), Q.positive(-1 - x)) is False
+    assert ask(Q.positive(2*x), Q.negative(x + 1)) is False
+
+    # Assumptions on two different symbols.
+    assert ask(Q.positive(x + y), Q.is_true(x - 2 > 0) & Q.is_true(y - 1 > 0)) is True
+
+
 @XFAIL
 def test_positive_xfail():
     assert ask(Q.positive(1/(1 + x**2)), Q.real(x)) is True
+    assert ask(Q.positive(x + y), Q.is_true(x - 2 > 0) & Q.is_true(y + 1 > 0)) is True
+    assert ask(Q.positive(x + 1), Q.is_true(x**2 - 1 < 0) & Q.real(x)) is True
 
 
 def test_real():
@@ -1859,10 +1941,6 @@ def test_Add_queries():
     assert ask(Q.prime(Add(S(2), S(2), evaluate=0))) is False
     assert ask(Q.integer(Add(S(2), S(2), evaluate=0))) is True
 
-
-def test_positive():
-    with assuming(Q.positive(x + 1)):
-        assert not ask(Q.positive(x))
 
 def test_issue_2322():
     raises(TypeError, lambda: ask(pi/log(x), Q.real))
