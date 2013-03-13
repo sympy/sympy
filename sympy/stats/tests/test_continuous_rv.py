@@ -2,11 +2,14 @@ from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample,
                          Arcsin, Benini, Beta, BetaPrime, Cauchy,
                          Chi, ChiSquared,
-                         ChiNoncentral, Dagum, Erlang, Exponential, FDistribution, FisherZ,
-                         Frechet, Gamma, GammaInverse, Kumaraswamy, Laplace, Logistic,
-                         LogNormal, Maxwell, Nakagami, Normal, Pareto, QuadraticU,
-                         RaisedCosine, Rayleigh, StudentT, Triangular, Uniform, UniformSum,
-                         VonMises, Weibull, WignerSemicircle)
+                         ChiNoncentral, Dagum, Erlang, Exponential,
+                         FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
+                         Kumaraswamy, Laplace, Logistic,
+                         LogNormal, Maxwell, Nakagami, Normal, Pareto,
+                         QuadraticU, RaisedCosine, Rayleigh, StudentT,
+                         Triangular, Uniform, UniformSum, VonMises, Weibull,
+                         WignerSemicircle, correlation, moment, cmoment,
+                         smoment)
 
 from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
@@ -75,7 +78,16 @@ def test_multiple_normal():
     assert variance(X + X) == 4
     assert covariance(X, Y) == 0
     assert covariance(2*X + Y, -X) == -2*variance(X)
-
+    assert skewness(X) == 0
+    assert skewness(X + Y) == 0
+    assert correlation(X, Y) == 0
+    assert correlation(X, X + Y) == correlation(X, X - Y)
+    assert moment(X, 2) == 1
+    assert cmoment(X, 3) == 0
+    assert moment(X + Y, 4) == 12
+    assert cmoment(X, 2) == variance(X)
+    assert smoment(X*X, 2) == 1
+    assert smoment(X + Y, 3) == skewness(X + Y)
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
 
@@ -242,6 +254,9 @@ def test_exponential():
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
     assert skewness(X) == 2
+    assert skewness(X) == smoment(X, 3)
+    assert smoment(2*X, 4) == smoment(X, 4)
+    assert moment(X, 3) == 3*2*1/rate**3
     assert P(X > 0) == S(1)
     assert P(X > 1) == exp(-rate)
     assert P(X > 10) == exp(-10*rate)
@@ -283,8 +298,8 @@ def test_gamma():
             (-k*lowergamma(k, 0)/gamma(k + 1) +
                 k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
             (0, True))
-    assert variance(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
-           theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
+    # assert simplify(variance(X)) == k*theta**2  # handled numerically below
+    assert E(X) == moment(X, 1)
 
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
     X = Gamma('x', k, theta)
