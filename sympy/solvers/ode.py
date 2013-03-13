@@ -206,7 +206,7 @@ anything is broken, one of those tests will surely fail.
 from collections import defaultdict
 
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import iterable, is_sequence, set_union
+from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import Derivative, AppliedUndef, diff, expand_mul
@@ -923,28 +923,25 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
 
         # Equation of the form y' + (y/x)*H(x^n*y) = 0 that can be reduced to separable form
         match = collect(expand(reduced_eq), [df], evaluate = True).match(a*df + b)
-        t = Dummy('t')
         if match:
+            t = Dummy('t')
             r3 = {'t': t}
             factor = simplify(x/f(x)*match[b]/match[a])
-            # Check first if factor can be represented in the form of x*y
-            testxy = factor.subs(x*f(x), t)
-            free = testxy.free_symbols
-            if len(free) == 1 and free.pop() == t:
-                r3.update({'power': 1, 'u': testxy})
-                matching_hints["separable_reduced"] = r3
-                matching_hints["separable_reduced_Integral"] = r3
             # Try representing factor in terms of x^n*y where n is lowest power of x in factor
-            else:
-                powerlist = [i.args[1] for i in factor.atoms(Pow) if i.args[0] == x and i.args[1] > S.Zero]
-                if powerlist:
-                    power = min(powerlist)
-                    test = factor.subs(x**power, t/f(x))
-                    free = test.free_symbols
-                    if len(free) == 1 and free.pop() == t:
-                        r3.update({'power': power, 'u': test})
-                        matching_hints["separable_reduced"] = r3
-                        matching_hints["separable_reduced_Integral"] = r3
+            # Removing terms like sqrt(2)*3 from factor.atoms(Mul)
+            powerlist = [i for i in ordered(factor.atoms(Mul)) if i.free_symbols]
+            if powerlist:
+                u = Dummy('u')
+                power = powerlist[0].as_independent(f(x))[0].as_base_exp()[1]
+                # Solving for x, and substituting x in terms of (t/f(x))^(1/power)
+                factor = factor.subs(f(x), u)  # Dummy substitution for f(x)
+                sub = solve(x**power*u - t, x)
+                test = factor.subs(x, sub[0])
+                free = test.free_symbols
+                if len(free) == 1 and free.pop() == t:
+                    r3.update({'power': power, 'u': test})
+                    matching_hints["separable_reduced"] = r3
+                    matching_hints["separable_reduced_Integral"] = r3
 
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
