@@ -2290,19 +2290,7 @@ def homogeneous_order(eq, *symbols):
 
     # assuming order of a nested function can only be equal to zero
     if isinstance(eq, Function):
-        arg = eq.args[0]
-        if arg.is_Add:
-            for i in arg.args:
-                if homogeneous_order(i, *tuple(symset)) != S.Zero:
-                    return None
-            return S.Zero
-
-
-        else:
-            if homogeneous_order(arg, *tuple(symset)) != S.Zero:
-                return None
-            else:
-                return S.Zero
+        return None if homogeneous_order(eq.args[0], *tuple(symset)) != 0 else S.Zero
 
     # make the replacement of x with x*t and see if t can be factored out
     t = Dummy('t', positive=True)  # It is sufficient that t > 0
