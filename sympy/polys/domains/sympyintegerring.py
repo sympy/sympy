@@ -1,7 +1,7 @@
 """Implementaton of :class:`SymPyIntegerRing` class. """
 
 from sympy.polys.domains.integerring import IntegerRing
-from sympy.polys.domains.groundtypes import (SymPyIntegerType,
+from sympy.polys.domains.groundtypes import (SymPyInteger,
     python_factorial, python_gcd, python_gcdex, python_lcm, python_sqrt)
 
 from sympy.polys.polyerrors import CoercionFailed
@@ -10,7 +10,7 @@ from sympy.polys.polyerrors import CoercionFailed
 class SymPyIntegerRing(IntegerRing):
     """Integer ring based on SymPy's ``Integer`` type. """
 
-    dtype = SymPyIntegerType
+    dtype = SymPyInteger
     zero = dtype(0)
     one = dtype(1)
     alias = 'ZZ_sympy'
@@ -48,22 +48,22 @@ class SymPyIntegerRing(IntegerRing):
         if a.is_Integer:
             return a
         elif a.is_Float and int(a) == a:
-            return SymPyIntegerType(int(a))
+            return SymPyInteger(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
 
     def from_FF_python(K1, a, K0):
         """Convert ``ModularInteger(int)`` to SymPy's ``Integer``. """
-        return SymPyIntegerType(a.to_int())
+        return SymPyInteger(a.to_int())
 
     def from_ZZ_python(K1, a, K0):
         """Convert Python's ``int`` to SymPy's ``Integer``. """
-        return SymPyIntegerType(a)
+        return SymPyInteger(a)
 
     def from_QQ_python(K1, a, K0):
         """Convert Python's ``Fraction`` to SymPy's ``Integer``. """
         if a.denominator == 1:
-            return SymPyIntegerType(a.numerator)
+            return SymPyInteger(a.numerator)
 
     def from_FF_sympy(K1, a, K0):
         """Convert ``ModularInteger(Integer)`` to SymPy's ``Integer``. """
@@ -76,51 +76,51 @@ class SymPyIntegerRing(IntegerRing):
     def from_QQ_sympy(K1, a, K0):
         """Convert SymPy's ``Rational`` to SymPy's ``Integer``. """
         if a.q == 1:
-            return SymPyIntegerType(a.p)
+            return SymPyInteger(a.p)
 
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to SymPy's ``Integer``. """
-        return SymPyIntegerType(int(a.to_int()))
+        return SymPyInteger(int(a.to_int()))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert GMPY's ``mpz`` to SymPy's ``Integer``. """
-        return SymPyIntegerType(int(a))
+        return SymPyInteger(int(a))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert GMPY's ``mpq`` to SymPy's ``Integer``. """
         if a.denom() == 1:
-            return SymPyIntegerType(int(a.numer()))
+            return SymPyInteger(int(a.numer()))
 
     def from_RR_sympy(K1, a, K0):
         """Convert SymPy's ``Float`` to SymPy's ``Integer``. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
-            return SymPyIntegerType(p)
+            return SymPyInteger(p)
 
     def from_RR_mpmath(K1, a, K0):
         """Convert mpmath's ``mpf`` to SymPy's ``Integer``. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
-            return SymPyIntegerType(p)
+            return SymPyInteger(p)
 
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
-        return map(SymPyIntegerType, python_gcdex(int(a), int(b)))
+        return map(SymPyInteger, python_gcdex(int(a), int(b)))
 
     def gcd(self, a, b):
         """Compute GCD of ``a`` and ``b``. """
-        return SymPyIntegerType(python_gcd(int(a), int(b)))
+        return SymPyInteger(python_gcd(int(a), int(b)))
 
     def lcm(self, a, b):
         """Compute LCM of ``a`` and ``b``. """
-        return SymPyIntegerType(python_lcm(int(a), int(b)))
+        return SymPyInteger(python_lcm(int(a), int(b)))
 
     def sqrt(self, a):
         """Compute square root of ``a``. """
-        return SymPyIntegerType(python_sqrt(int(a)))
+        return SymPyInteger(python_sqrt(int(a)))
 
     def factorial(self, a):
         """Compute factorial of ``a``. """
-        return SymPyIntegerType(python_factorial(int(a)))
+        return SymPyInteger(python_factorial(int(a)))

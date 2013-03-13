@@ -1,7 +1,7 @@
 """Implementaton of :class:`SymPyRationalField` class. """
 
 from sympy.polys.domains.rationalfield import RationalField
-from sympy.polys.domains.groundtypes import SymPyIntegerType
+from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.groundtypes import SymPyRational
 
 from sympy.polys.polyerrors import CoercionFailed
@@ -90,8 +90,8 @@ class SymPyRationalField(RationalField):
 
     def numer(self, a):
         """Returns numerator of `a`. """
-        return SymPyIntegerType(a.p)
+        return SymPyInteger(a.p)
 
     def denom(self, a):
         """Returns denominator of `a`. """
-        return SymPyIntegerType(a.q)
+        return SymPyInteger(a.q)

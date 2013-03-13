@@ -2,7 +2,7 @@
 
 from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.domains.groundtypes import SymPyRealType
+from sympy.polys.domains.groundtypes import SymPyReal
 
 from sympy.polys.polyerrors import DomainError, CoercionFailed
 
@@ -18,8 +18,8 @@ class RealDomain(CharacteristicZero, SimpleDomain):  # XXX: should be a field
     is_Numerical = True
 
     _convert_excludes = [
-        SymPyRealType('+inf'),
-        SymPyRealType('-inf'),
+        SymPyReal('+inf'),
+        SymPyReal('-inf'),
     ]
 
     def as_integer_ratio(self, a, **args):
@@ -121,7 +121,7 @@ class RealDomain(CharacteristicZero, SimpleDomain):  # XXX: should be a field
 
     def to_sympy(self, a):
         """Convert ``a`` to SymPy number. """
-        return SymPyRealType(a)
+        return SymPyReal(a)
 
     def from_sympy(self, a):
         """Convert SymPy's number to ``dtype``. """

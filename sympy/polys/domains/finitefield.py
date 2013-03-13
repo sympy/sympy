@@ -2,7 +2,7 @@
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
-from sympy.polys.domains.groundtypes import SymPyIntegerType
+from sympy.polys.domains.groundtypes import SymPyInteger
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import CoercionFailed
@@ -57,7 +57,7 @@ class FiniteField(Field, SimpleDomain):
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
-        return SymPyIntegerType(int(a))
+        return SymPyInteger(int(a))
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to SymPy's ``Integer``. """
