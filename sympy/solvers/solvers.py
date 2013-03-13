@@ -2033,7 +2033,7 @@ def solve_linear_system_LU(matrix, syms):
     return solutions
 
 _x = Dummy('x')
-_a, _b, _c, _d, _e, _f, _g, _h = [Wild(t, exclude=[_x]) for t in 'abcdefgh']
+_a, _b, _c, _d, _e, _f, _g, _h = [Wild(_t, exclude=[_x]) for _t in 'abcdefgh']
 _patterns = None
 
 
