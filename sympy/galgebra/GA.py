@@ -163,17 +163,24 @@ def diagpq(p, q=0):
     """
     n = p + q
     D = []
-    rn = range(n)
-    for i in rn:
-        for j in rn:
-            if i == j:
-                if i < p:
-                    D.append('1 ')
-                else:
-                    D.append('-1 ')
-            else:
-                D.append('0 ')
+    for i in xrange(p):
+        D.append(i*'0 ' +'1 '+ (n-i-1)*'0 ')
+    for i in xrange(p,n):
+        D.append(i*'0 ' +'-1 '+ (n-i-1)*'0 ')
     return ','.join(D)
+
+def arbitrary_metric(n):
+    """
+    Return string equivalent metric tensor for arbitrary signature.
+    """
+    return ','.join(n*[n*'# '])
+
+def arbitrary_metric_conformal(n):
+    """
+    Return string equivalent metric tensor for arbitrary signature (n+1,1).
+    """
+    str1 = ','.join(n*[n*'# '+'0 0'])
+    return ','.join([str1,n*'0 '+'1 0',n*'0 '+'0 -1'])
 
 
 def make_scalars(symnamelst):
