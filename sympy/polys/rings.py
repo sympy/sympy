@@ -1144,6 +1144,8 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
 
         if not f or not coeff:
             return f.ring.zero
+        elif monom == f.ring.zero_monom:
+            return f.mul_ground(coeff)
 
         terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.iteritems() ]
         return PolyElement(f.ring, terms)
@@ -1520,3 +1522,35 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
                         poly[monom] = coeff
 
             return poly
+
+    def compose(f, x, a=None):
+        ring = f.ring
+        poly = ring.zero
+        gens_map = dict(zip(ring.gens, range(ring.ngens)))
+
+        if a is not None:
+            replacements = [(x, a)]
+        else:
+            if isinstance(x, list):
+                replacements = list(x)
+            elif isinstance(x, dict):
+                replacements = sorted(x.items(), key=lambda (k, _): gens_map[k])
+            else:
+                raise ValueError("expected a generator, value pair a sequence of such pairs")
+
+        for k, (x, g) in enumerate(replacements):
+            replacements[k] = (gens_map[x], g)
+
+        for monom, coeff in f.terms():
+            monom = list(monom)
+            subpoly = ring.one
+
+            for i, g in replacements:
+                n, monom[i] = monom[i], 0
+                if n:
+                    subpoly *= g**n
+
+            subpoly = subpoly.mul_term((tuple(monom), coeff))
+            poly += subpoly
+
+        return poly

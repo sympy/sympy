@@ -234,3 +234,9 @@ def time_solve_lin_sys_165x165():
     eqs = eqs_165x165()
     sol = solve_lin_sys(eqs, R_165)
     assert sol == sol_165x165()
+
+def time_verify_sol_165x165():
+    eqs = eqs_165x165()
+    sol = sol_165x165()
+    zeros = [ eq.compose(sol) for eq in eqs ]
+    assert all([ zero == 0 for zero in zeros ])

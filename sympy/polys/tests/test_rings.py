@@ -1,6 +1,6 @@
 """Test sparse polynomials. """
 
-from sympy.polys.rings import ring, xring, PolyRing
+from sympy.polys.rings import ring, xring, PolyRing, PolyElement
 from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.monomialtools import lex, grlex
@@ -507,3 +507,40 @@ def test_PolyElement_max_norm():
     assert R(1).max_norm() == 1
 
     assert (x**3 + 4*x**2 + 2*x + 3).max_norm() == 4
+
+def test_PolyElement_evaluate():
+    R, x = ring("x", ZZ)
+    r = (x**3 + 4*x**2 + 2*x + 3).evaluate(x, 0)
+    assert r == 3 and not isinstance(r, PolyElement)
+
+    R, x, y, z = ring("x,y,z", ZZ)
+    r = (x**3 + 4*x**2 + 2*x + 3).evaluate(x, 0)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R[1:]
+    r = (x**3 + 4*x**2 + 2*x + 3).evaluate([(x, 0), (y, 0)])
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R[2:]
+
+def test_PolyElement_subs():
+    R, x = ring("x", ZZ)
+    r = (x**3 + 4*x**2 + 2*x + 3).subs(x, 0)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+
+    R, x, y, z = ring("x,y,z", ZZ)
+    r = (x**3 + 4*x**2 + 2*x + 3).subs(x, 0)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+    r = (x**3 + 4*x**2 + 2*x + 3).subs([(x, 0), (y, 0)])
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+
+def test_PolyElement_compose():
+    R, x = ring("x", ZZ)
+    r = (x**3 + 4*x**2 + 2*x + 3).compose(x, 0)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+
+    R, x, y, z = ring("x,y,z", ZZ)
+    r = (x**3 + 4*x**2 + 2*x + 3).compose(x, 0)
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+    r = (x**3 + 4*x**2 + 2*x + 3).compose([(x, 0), (y, 0)])
+    assert r == 3 and isinstance(r, PolyElement) and r.ring == R
+
+    r = (x**3 + 4*x**2 + 2*x*y*z + 3).compose(x, y*z**2 - 1)
+    q = (y*z**2 - 1)**3 + 4*(y*z**2 - 1)**2 + 2*(y*z**2 - 1)*y*z + 3
+    assert r == q and isinstance(r, PolyElement) and r.ring == R
