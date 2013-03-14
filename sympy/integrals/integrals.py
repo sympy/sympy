@@ -1243,58 +1243,72 @@ class Integral(Expr):
         """
         Approximates the integral by a sum.
 
-        method ... one of: left, right, midpoint
+        method ... one of: left, right, midpoint, trapezoid
 
-        This is basically just the rectangle method [1], the only difference is
-        where the function value is taken in each interval.
+        These are all basically the rectangle method [1], the only difference
+        is where the function value is taken in each interval to define the
+        rectangle.
 
         [1] http://en.wikipedia.org/wiki/Rectangle_method
 
-        **method = midpoint**:
-
-        Uses the n-order midpoint rule to evaluate the integral.
-
-        Midpoint rule uses rectangles approximation for the given area (e.g.
-        definite integral) of the function with heights equal to the point on
-        the curve exactly in the middle of each interval (thus midpoint
-        method). See [1] for more information.
-
         Examples
         ========
 
-        >>> from sympy import sqrt
+        >>> from sympy import sin, sqrt
         >>> from sympy.abc import x
         >>> from sympy.integrals import Integral
-        >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
+        >>> e = Integral(sin(x), (x, 3, 7))
         >>> e
-        Integral(sqrt(x**3 + 1), (x, 2, 10))
-        >>> e.as_sum(4, method="midpoint")
-        4*sqrt(7) + 6*sqrt(14) + 4*sqrt(86) + 2*sqrt(730)
-        >>> e.as_sum(4, method="midpoint").n()
-        124.164447891310
-        >>> e.n()
-        124.616199194723
+        Integral(sin(x), (x, 3, 7))
 
-        **method=left**:
+        For demonstration purposes, this interval will only be split into 2
+        regions, bounded by [3, 5] and [5, 7].
 
-        Uses the n-order rectangle rule to evaluate the integral, at each
-        interval the function value is taken at the left hand side of the
-        interval.
+        The left-hand rule uses function evaluations at the left of each
+        interval:
 
-        Examples
-        ========
+        >>> e.as_sum(2, 'left')
+        2*sin(5) + 2*sin(3)
 
-        >>> from sympy import sqrt
-        >>> from sympy.abc import x
-        >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
-        >>> e
-        Integral(sqrt(x**3 + 1), (x, 2, 10))
-        >>> e.as_sum(4, method="left")
-        6 + 2*sqrt(65) + 2*sqrt(217) + 6*sqrt(57)
-        >>> e.as_sum(4, method="left").n()
-        96.8853618335341
-        >>> e.n()
-        124.616199194723
+        The midpoint rule uses evaluations at the center of each interval:
+
+        >>> e.as_sum(2, 'midpoint')
+        2*sin(4) + 2*sin(6)
+
+        The right-hand rule uses function evaluations at the right of each
+        interval:
+
+        >>> e.as_sum(2, 'right')
+        2*sin(5) + 2*sin(7)
+
+        The trapezoid rule uses function evaluations on both sides of the
+        intervals. This is equivalent to taking the average of the left and
+        right hand rule results:
+
+        >>> e.as_sum(2, 'trapezoid')
+        2*sin(5) + sin(3) + sin(7)
+        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
+        True
+
+        All but the trapexoid method may be used when dealing with a function
+        with a discontinuity. Here, the discontinuity at x = 0 can be avoided
+        by using the midpoint or right-hand method:
+
+        >>> e = Integral(1/sqrt(x), (x, 0, 1))
+        >>> e.as_sum(5).n(4)
+        1.730
+        >>> e.as_sum(10).n(4)
+        1.809
+        >>> e.doit().n(4)  # the actual value is 2
+        2.000
+
+        The left- or trapezoid method will encounter the discontinuity and
+        return oo:
+
+        >>> e.as_sum(5, 'left')
+        oo
+        >>> e.as_sum(5, 'trapezoid')
+        oo
 
         See Also
         ========
@@ -1314,6 +1328,18 @@ class Integral(Expr):
             raise NotImplementedError("Infinite summation not yet implemented")
         sym, lower_limit, upper_limit = limit
         dx = (upper_limit - lower_limit)/n
+
+        if method == 'trapezoid':
+            l = self.function.subs(sym, lower_limit)
+            r = self.function.subs(sym, upper_limit)
+            result = (l + r)/2
+            for i in range(1, n):
+                x = lower_limit + i*dx
+                result += self.function.subs(sym, x)
+            return result*dx
+        elif method not in ('left', 'right', 'midpoint'):
+            raise NotImplementedError("Unknown method %s" % method)
+
         result = 0
         for i in range(n):
             if method == "midpoint":
@@ -1322,8 +1348,6 @@ class Integral(Expr):
                 xi = lower_limit + i*dx
             elif method == "right":
                 xi = lower_limit + i*dx + dx
-            else:
-                raise NotImplementedError("Unknown method %s" % method)
             result += self.function.subs(sym, xi)
         return result*dx
 
