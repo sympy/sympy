@@ -297,7 +297,6 @@ fields.
 .. autofunction:: gf_strip
 .. autofunction:: gf_trunc
 .. autofunction:: gf_normal
-.. autofunction:: gf_convert
 .. autofunction:: gf_from_dict
 .. autofunction:: gf_to_dict
 .. autofunction:: gf_from_int_poly
