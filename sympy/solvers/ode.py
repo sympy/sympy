@@ -248,8 +248,8 @@ allhints = (
     "Liouville", "separable_Integral", "1st_exact_Integral",
     "1st_linear_Integral", "Bernoulli_Integral",
     "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
-    "almost_linear_Integral", "separable_reduced_Integral",
     "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
+    "almost_linear_Integral", "separable_reduced_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "Liouville_Integral"
 )
@@ -924,22 +924,22 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         # Equation of the form y' + (y/x)*H(x^n*y) = 0 that can be reduced to separable form
         match = collect(expand(reduced_eq), [df], evaluate = True).match(a*df + b)
         if match:
-            t = Dummy('t')
-            r3 = {'t': t}
             factor = simplify(x/f(x)*match[b]/match[a])
             # Try representing factor in terms of x^n*y where n is lowest power of x in factor
             # Removing terms like sqrt(2)*3 from factor.atoms(Mul)
-            powerlist = [i for i in ordered(factor.atoms(Mul)) if i.free_symbols]
-            if powerlist:
-                u = Dummy('u')
-                power = powerlist[0].as_independent(f(x))[0].as_base_exp()[1]
-                # Solving for x, and substituting x in terms of (t/f(x))^(1/power)
-                factor = factor.subs(f(x), u)  # Dummy substitution for f(x)
-                sub = solve(x**power*u - t, x)
-                test = factor.subs(x, sub[0])
+            for mul in ordered(factor.atoms(Mul)):
+                u = None
+                if mul.has(x):
+                    _, u = mul.as_independent(x, f(x))
+                    break
+            if u and u.has(f(x)):
+                t = Dummy('t')
+                r3 = {'t': t}
+                xpart, ypart = u.as_independent(f(x))
+                test = factor.subs(((u, t), (1/u, 1/t)))
                 free = test.free_symbols
                 if len(free) == 1 and free.pop() == t:
-                    r3.update({'power': power, 'u': test})
+                    r3.update({'power': xpart.as_base_exp()[1], 'u': test})
                     matching_hints["separable_reduced"] = r3
                     matching_hints["separable_reduced_Integral"] = r3
 
@@ -2832,7 +2832,7 @@ def ode_separable_reduced(eq, func, order, match):
         d          f(x)*g\x *f(x)/
         --(f(x)) + ---------------
         dx                x
-        >>> pprint(dsolve(genform, hint = 'separable_reduced'))
+        >>> pprint(dsolve(genform, hint='separable_reduced'))
          n
         x *f(x)
           /
@@ -2853,9 +2853,9 @@ def ode_separable_reduced(eq, func, order, match):
     >>> f = Function('f')
     >>> d = f(x).diff(x)
     >>> eq = (x - x**2*f(x))*d - f(x)
-    >>> dsolve(eq, hint = 'separable_reduced')
+    >>> dsolve(eq, hint='separable_reduced')
     [f(x) == (-sqrt(C1*x**2 + 1) + 1)/x, f(x) == (sqrt(C1*x**2 + 1) + 1)/x]
-    >>> pprint(dsolve(eq, hint = 'separable_reduced'))
+    >>> pprint(dsolve(eq, hint='separable_reduced'))
                  ___________                ___________
                 /     2                    /     2
             - \/  C1*x  + 1  + 1         \/  C1*x  + 1  + 1

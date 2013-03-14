@@ -181,14 +181,16 @@ def test_classify_ode():
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
+        'separable_reduced',
         'nth_linear_constant_coeff_undetermined_coefficients',
         'nth_linear_constant_coeff_variation_of_parameters',
         'separable_Integral', '1st_exact_Integral',
         '1st_linear_Integral',
         'Bernoulli_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-       '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
-       'nth_linear_constant_coeff_variation_of_parameters_Integral')
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
+        'separable_reduced_Integral',
+        'nth_linear_constant_coeff_variation_of_parameters_Integral')
     #     w/o f(x) given
     assert classify_ode(diff(f(x) + x, x) + diff(f(x), x)) == ans
     #     w/ f(x) and prep=True
