@@ -317,13 +317,13 @@ def test_Add_Mul_is_integer():
 
     assert (2*k).is_integer is True
     assert (-k).is_integer is True
-    assert (k/3).is_integer is False
+    assert (k/3).is_integer is None
     assert (x*k*n).is_integer is None
 
     assert (k + n).is_integer is True
     assert (k + x).is_integer is None
     assert (k + n*x).is_integer is None
-    assert (k + n/3).is_integer is False
+    assert (k + n/3).is_integer is None
 
     assert ((1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
@@ -360,9 +360,9 @@ def test_Mul_is_even_odd():
     assert (3*x).is_even is None
     assert (3*x).is_odd is None
 
-    assert (k/3).is_integer is False
-    assert (k/3).is_even is False
-    assert (k/3).is_odd is False
+    assert (k/3).is_integer is None
+    assert (k/3).is_even is None
+    assert (k/3).is_odd is None
 
     assert (2*n).is_even is True
     assert (2*n).is_odd is False
