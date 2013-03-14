@@ -620,6 +620,36 @@ def test_Infinity_2():
     assert abs(S.ComplexInfinity) == oo
 
 
+def test_Mul_Infinity_Zero():
+    assert 0*Float('inf') == nan
+    assert 0*Float('-inf') == nan
+    assert 0*Float('inf') == nan
+    assert 0*Float('-inf') == nan
+    assert Float('inf')*0 == nan
+    assert Float('-inf')*0 == nan
+    assert Float('inf')*0 == nan
+    assert Float('-inf')*0 == nan
+    assert Float(0)*Float('inf') == nan
+    assert Float(0)*Float('-inf') == nan
+    assert Float(0)*Float('inf') == nan
+    assert Float(0)*Float('-inf') == nan
+    assert Float('inf')*Float(0) == nan
+    assert Float('-inf')*Float(0) == nan
+    assert Float('inf')*Float(0) == nan
+    assert Float('-inf')*Float(0) == nan
+
+
+def test_Div_By_Zero():
+    assert 1/S(0) == oo
+    assert 1/Float(0) == Float('inf')
+    assert 0/S(0) == nan
+    assert 0/Float(0) == nan
+    assert S(0)/0 == nan
+    assert Float(0)/0 == nan
+    assert -1/S(0) == -oo
+    assert -1/Float(0) == Float('-inf')
+
+
 def test_Infinity_inequations():
     assert oo > pi
     assert not (oo < pi)

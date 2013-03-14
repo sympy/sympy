@@ -325,7 +325,7 @@ def Beta(name, alpha, beta):
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
 
-    >>> simplify(variance(X, meijerg=True))
+    >>> simplify(variance(X, meijerg=True))  #doctest: +SKIP
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
@@ -1102,7 +1102,7 @@ def Gamma(name, k, theta):
     ========
 
     >>> from sympy.stats import Gamma, density, cdf, E, variance
-    >>> from sympy import Symbol, pprint
+    >>> from sympy import Symbol, pprint, simplify
 
     >>> k = Symbol("k", positive=True)
     >>> theta = Symbol("theta", positive=True)
@@ -1132,13 +1132,14 @@ def Gamma(name, k, theta):
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
 
-    >>> V = variance(X)
+    >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
-           2      2                     -k      k + 1
-      theta *gamma (k + 1)   theta*theta  *theta     *gamma(k + 2)
-    - -------------------- + -------------------------------------
-                2                           gamma(k)
-           gamma (k)
+         2 /                             2       \
+    theta *\gamma(k)*gamma(k + 2) - gamma (k + 1)/
+    ----------------------------------------------
+                           2
+                      gamma (k)
+
 
     References
     ==========

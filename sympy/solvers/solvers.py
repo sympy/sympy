@@ -34,11 +34,13 @@ from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, Poly, together, factor
+from sympy.polys import roots, cancel, Poly, together, factor, RootOf
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
 from sympy.utilities.misc import filldedent
+from sympy.utilities.iterables import uniq
+
 from sympy.mpmath import findroot
 
 from sympy.solvers.polysys import solve_poly_system
@@ -1241,14 +1243,18 @@ def _solve(f, *symbols, **flags):
                     # by default since the results are quite long. Perhaps one
                     # could base this decision on a certain critical length of the
                     # roots.
-                    if poly.degree() > 2:
+                    deg = poly.degree()
+                    if deg > 2:
                         flags['simplify'] = flags.get('simplify', False)
 
                     soln = roots(poly, cubics=True, quartics=True,
                                                     quintics=True).keys()
-                    if not soln:
-                        soln = poly.all_roots()
-                        check = False  # RootOf instances can not be checked
+                    if len(soln) < deg:
+                        try:
+                            # get all_roots if possible
+                            soln = uniq(poly.all_roots())
+                        except NotImplementedError:
+                            pass
 
                     # We now know what the values of p are equal to. Now find out
                     # how they are related to the original x, e.g. if p**2 = cos(x)
@@ -1281,7 +1287,7 @@ def _solve(f, *symbols, **flags):
                 if len(poly.gens) > 1:
                     poly = Poly(poly, gens[0])
 
-                # if we haven't tried tsolve yet, do so now
+                # if we aren't on the tsolve-pass, use roots
                 if not flags.pop('tsolve', False):
                     flags['tsolve'] = True
                     if poly.degree() == 1 and (
@@ -1294,13 +1300,18 @@ def _solve(f, *symbols, **flags):
                         # by default since the results are quite long. Perhaps one
                         # could base this decision on a certain critical length of the
                         # roots.
-                        if poly.degree() > 2:
+                        deg = poly.degree()
+                        if deg > 2:
                             flags['simplify'] = flags.get('simplify', False)
                         soln = roots(poly, cubics=True, quartics=True,
                                                         quintics=True).keys()
-                        if not soln:
-                            soln = poly.all_roots()
-                            check = False  # RootOf instances can not be checked
+
+                        if len(soln) < deg:
+                            try:
+                                # get all_roots if possible
+                                soln = uniq(poly.all_roots())
+                            except NotImplementedError:
+                                pass
                         gen = poly.gen
                         if gen != symbol:
                             u = Dummy()
@@ -1330,11 +1341,11 @@ def _solve(f, *symbols, **flags):
     if check:
         # reject any result that makes any denom. affirmatively 0;
         # if in doubt, keep it
-        result = [s for s in result if
+        result = [s for s in result if isinstance(s, RootOf) or
                   all(not checksol(den, {symbol: s}, **flags)
                     for den in dens)]
         # keep only results if the check is not False
-        result = [r for r in result if
+        result = [r for r in result if isinstance(r, RootOf) or
                   checksol(f_num, {symbol: r}, **flags) is not False]
     return result
 
@@ -2025,7 +2036,7 @@ def solve_linear_system_LU(matrix, syms):
     return solutions
 
 _x = Dummy('x')
-_a, _b, _c, _d, _e, _f, _g, _h = [Wild(t, exclude=[_x]) for t in 'abcdefgh']
+_a, _b, _c, _d, _e, _f, _g, _h = [Wild(_t, exclude=[_x]) for _t in 'abcdefgh']
 _patterns = None
 
 
