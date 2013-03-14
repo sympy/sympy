@@ -391,6 +391,17 @@ def test_Mul_is_even_odd():
     assert (m/2).is_integer is True
 
 
+def test_Mul_is_rational():
+    x = Symbol('x')
+    n = Symbol('n', integer=True)
+    m = Symbol('m', integer=True)
+
+    assert (n/m).is_rational is True
+    assert (x/pi).is_rational is None
+    assert (x/n).is_rational is None
+    assert (n/pi).is_rational is False
+
+
 def test_Add_is_even_odd():
     x = Symbol('x', integer=True)
 
