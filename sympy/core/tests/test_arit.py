@@ -385,6 +385,11 @@ def test_Mul_is_even_odd():
     assert (k*m*x).is_even is True
     assert (k*m*x).is_odd is False
 
+    # issue 3692:
+    assert (x/2).is_integer is None
+    assert (k/2).is_integer is False
+    assert (m/2).is_integer is True
+
 
 def test_Add_is_even_odd():
     x = Symbol('x', integer=True)
