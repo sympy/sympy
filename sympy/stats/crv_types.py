@@ -755,7 +755,7 @@ def Erlang(name, k, l):
     k/l
 
     >>> simplify(variance(X))
-    (gamma(k)*gamma(k + 2) - gamma(k + 1)**2)/(l**2*gamma(k)**2)
+    k/l**2
 
     References
     ==========
@@ -1134,11 +1134,8 @@ def Gamma(name, k, theta):
 
     >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
-         2 /                             2       \
-    theta *\gamma(k)*gamma(k + 2) - gamma (k + 1)/
-    ----------------------------------------------
-                           2
-                      gamma (k)
+           2
+    k*theta
 
 
     References
@@ -1605,10 +1602,11 @@ def Nakagami(name, mu, omega):
 
     >>> V = simplify(variance(X, meijerg=True))
     >>> pprint(V, use_unicode=False)
-          /                               2          \
-    omega*\gamma(mu)*gamma(mu + 1) - gamma (mu + 1/2)/
-    --------------------------------------------------
-                 gamma(mu)*gamma(mu + 1)
+          /          2                  2        \
+    omega*\- mu*gamma (mu + 1/2) + gamma (mu + 1)/
+    ----------------------------------------------
+                         2
+                    gamma (mu + 1)
 
     References
     ==========

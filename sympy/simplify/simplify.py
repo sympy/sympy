@@ -19,7 +19,7 @@ from sympy.functions import (
     sin, cos, tan, cot, sinh, cosh, tanh, coth)
 from sympy.functions.elementary.integers import ceiling
 
-from sympy.utilities.iterables import flatten, has_variety
+from sympy.utilities.iterables import flatten, has_variety, sift
 
 from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -2792,7 +2792,6 @@ def combsimp(expr):
     as_gamma = not expr.has(factorial, binomial)
 
     class rf(Function):
-
         @classmethod
         def eval(cls, a, b):
             if b.is_Integer:
@@ -2870,26 +2869,80 @@ def combsimp(expr):
 
     expr = expr.replace(binomial, rule)
 
-    def rule_gamma(expr):
+    def rule_gamma(expr, level=0):
         """ Simplify products of gamma functions further. """
 
         if expr.is_Atom:
             return expr
 
-        expr = expr.func(*[rule_gamma(x) for x in expr.args])
+        def gamma_rat(x):
+            # helper to simplify ratios of gammas
+            was = x.count(gamma)
+            xx = x.replace(gamma, lambda n: rf(1, (n - 1).expand()
+                ).replace(rf, lambda a, b: gamma(a + b)/gamma(a)))
+            if xx.count(gamma) < was:
+                x = xx
+            return x
+
+        def gamma_factor(x):
+            # return True if there is a gamma factors in shallow args
+            if x.func is gamma:
+                return True
+            if x.is_Add or x.is_Mul:
+                return any(gamma_factor(xi) for xi in x.args)
+            if x.is_Pow and (x.exp.is_integer or x.base.is_positive):
+                return gamma_factor(x.base)
+            return False
+
+        if level == 0:
+            expr = expr.func(*[rule_gamma(x, level + 1) for x in expr.args])
+            level += 1
+
+
         if not expr.is_Mul:
             return expr
 
+        if level == 1:
+            args, nc = expr.args_cnc()
+            if not args:
+                return expr
+            if nc:
+                return rule_gamma(Mul._from_args(args), level + 1)*Mul._from_args(nc)
+            level += 1
+
+        if level == 2:
+            # do pure gamma pieces first, not factor absorbtion
+            sifted = sift(expr.args, gamma_factor)
+            gamma_ind = Mul(*sifted.pop(False, []))
+            d = Mul(*sifted.pop(True, []))
+            assert not sifted
+
+            nd, dd = d.as_numer_denom()
+            for ipass in range(2):
+                args = list(ordered(Mul.make_args(nd)))
+                for i, ni in enumerate(args):
+                    if ni.is_Add:
+                        ni, dd = Add(*[
+                            rule_gamma(gamma_rat(a/dd), level + 1) for a in ni.args]
+                            ).as_numer_denom()
+                        args[i] = ni
+                        if not dd.has(gamma):
+                            break
+                nd = Mul(*args)
+                if ipass ==  0 and not gamma_factor(nd):
+                    break
+                nd, dd = dd, nd  # now process in reversed order
+            expr = gamma_ind*nd/dd
+            if not (expr.is_Mul and (gamma_factor(dd) or gamma_factor(nd))):
+                return expr
+            level += 1
+
         numer_gammas = []
         denom_gammas = []
+        numer_others = []
         denom_others = []
-        newargs, numer_others = expr.args_cnc()
 
-        # order newargs canonically
-        cexpr = expr.func(*newargs)
-        newargs = list(cexpr._sorted_args) if not cexpr.is_Atom else [cexpr]
-        del cexpr
-
+        newargs = list(ordered(expr.args))
         while newargs:
             arg = newargs.pop()
             b, e = arg.as_base_exp()
@@ -2908,6 +2961,8 @@ def combsimp(expr):
                         denom_others.extend([b]*n)
             else:
                 numer_others.append(arg)
+
+        # =========== level 2 work: pure gamma manipulation =========
 
         # Try to reduce the number of gamma factors by applying the
         # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
@@ -2938,6 +2993,40 @@ def combsimp(expr):
                     new.append(g1)
             # /!\ updating IN PLACE
             gammas[:] = new
+
+        # Try to reduce the number of gammas by using the duplication
+        # theorem to cancel an upper and lower.
+        # e.g. gamma(2*s)/gamma(s) = gamma(s)*gamma(s+1/2)*C/gamma(s)
+        # (in principle this can also be done with with factors other than two,
+        #  but two is special in that we need only matching numer and denom, not
+        #  several in numer).
+        for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
+                                denom_others),
+                               (denom_gammas, numer_gammas, denom_others,
+                                numer_others)]:
+
+            while True:
+                for x in ng:
+                    for y in dg:
+                        n = x - 2*y
+                        if n.is_Integer:
+                            break
+                    else:
+                        continue
+                    break
+                else:
+                    break
+                ng.remove(x)
+                dg.remove(y)
+                if n > 0:
+                    for k in xrange(n):
+                        no.append(2*y + k)
+                elif n < 0:
+                    for k in xrange(-n):
+                        do.append(2*y - 1 - k)
+                ng.append(y + S(1)/2)
+                no.append(2**(2*y - 1))
+                do.append(sqrt(S.Pi))
 
         # Try to reduce the number of gamma factors by applying the
         # multiplication theorem.
@@ -3025,133 +3114,108 @@ def combsimp(expr):
                                 (denom_gammas, denom_others, numer_others)]:
             _mult_thm(l, numer, denom)
 
-        # Try to reduce the number of gammas by using the duplication
-        # theorem to cancel an upper and lower.
-        # e.g. gamma(2*s)/gamma(s) = gamma(s)*gamma(s+1/2)*C/gamma(s)
-        # (in principle this can also be done with with factors other than two,
-        # but two is special in that we need only matching numer and denom,
-        # not several in numer).
-        for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
-                                denom_others),
-                               (denom_gammas, numer_gammas, denom_others,
-                                numer_others)]:
+        # =========== level 3 work: factor absorbtion =========
 
-            while True:
-                for x in ng:
-                    for y in dg:
-                        n = x - 2*y
-                        if n.is_Integer:
-                            break
-                    else:
+        if level == 3:
+            # Try to absorb factors into the gammas.
+            # This code (in particular repeated calls to find_fuzzy) can be very
+            # slow.
+            def find_fuzzy(l, x):
+                if not l:
+                    return
+                S1, T1 = compute_ST(x)
+                for y in l:
+                    S2, T2 = inv[y]
+                    if T1 != T2 or (not S1.intersection(S2) and
+                                    (S1 != set() or S2 != set())):
                         continue
-                    break
-                else:
-                    break
-                ng.remove(x)
-                dg.remove(y)
-                if n > 0:
-                    for k in xrange(n):
-                        no.append(2*y + k)
-                elif n < 0:
-                    for k in xrange(-n):
-                        do.append(2*y - 1 - k)
-                ng.append(y + S(1)/2)
-                no.append(2**(2*y - 1))
-                do.append(sqrt(S.Pi))
+                    # XXX we want some simplification (e.g. cancel or
+                    # simplify) but no matter what it's slow.
+                    a = len(cancel(x/y).free_symbols)
+                    b = len(x.free_symbols)
+                    c = len(y.free_symbols)
+                    # TODO is there a better heuristic?
+                    if a == 0 and (b > 0 or c > 0):
+                        return y
 
-        # Try to absorb factors into the gammas.
-        # This code (in particular repeated calls to find_fuzzy) can be very
-        # slow.
+            # We thus try to avoid expensive calls by building the following
+            # "invariants": For every factor or gamma function argument
+            #   - the set of free symbols S
+            #   - the set of functional components T
+            # We will only try to absorb if T1==T2 and (S1 intersect S2 != emptyset
+            # or S1 == S2 == emptyset)
+            inv = {}
 
-        def find_fuzzy(l, x):
-            S1, T1 = compute_ST(x)
-            for y in l:
-                S2, T2 = inv[y]
-                if T1 != T2 or (not S1.intersection(S2) and
-                                (S1 != set() or S2 != set())):
-                    continue
-                # XXX we want some simplification (e.g. cancel or
-                # simplify) but no matter what it's slow.
-                a = len(cancel(x/y).free_symbols)
-                b = len(x.free_symbols)
-                c = len(y.free_symbols)
-                # TODO is there a better heuristic?
-                if a == 0 and (b > 0 or c > 0):
-                    return y
+            def compute_ST(expr):
+                from sympy import Function, Pow
+                if expr in inv:
+                    return inv[expr]
+                return (expr.free_symbols, expr.atoms(Function).union(
+                        set(e.exp for e in expr.atoms(Pow))))
 
-        # We thus try to avoid expensive calls by building the following
-        # "invariants": For every factor or gamma function argument
-        #   - the set of free symbols S
-        #   - the set of functional components T
-        # We will only try to absorb if T1==T2 and (S1 intersect S2 != emptyset
-        # or S1 == S2 == emptyset)
-        inv = {}
+            def update_ST(expr):
+                inv[expr] = compute_ST(expr)
+            for expr in numer_gammas + denom_gammas + numer_others + denom_others:
+                update_ST(expr)
 
-        def compute_ST(expr):
-            from sympy import Function, Pow
-            if expr in inv:
-                return inv[expr]
-            return (expr.free_symbols, expr.atoms(Function).union(
-                    set(e.exp for e in expr.atoms(Pow))))
+            for gammas, numer, denom in [(
+                numer_gammas, numer_others, denom_others),
+                    (denom_gammas, denom_others, numer_others)]:
+                new = []
+                while gammas:
+                    g = gammas.pop()
+                    cont = True
+                    while cont:
+                        cont = False
+                        y = find_fuzzy(numer, g)
+                        if y is not None:
+                            numer.remove(y)
+                            if y != g:
+                                numer.append(y/g)
+                                update_ST(y/g)
+                            g += 1
+                            cont = True
+                        y = find_fuzzy(numer, 1/(g - 1))
+                        if y is not None:
+                            numer.remove(y)
+                            if y != 1/(g - 1):
+                                numer.append((g - 1)*y)
+                                update_ST((g - 1)*y)
+                            g -= 1
+                            cont = True
+                        y = find_fuzzy(denom, 1/g)
+                        if y is not None:
+                            denom.remove(y)
+                            if y != 1/g:
+                                denom.append(y*g)
+                                update_ST(y*g)
+                            g += 1
+                            cont = True
+                        y = find_fuzzy(denom, g - 1)
+                        if y is not None:
+                            denom.remove(y)
+                            if y != g - 1:
+                                numer.append((g - 1)/y)
+                                update_ST((g - 1)/y)
+                            g -= 1
+                            cont = True
+                    new.append(g)
+                # /!\ updating IN PLACE
+                gammas[:] = new
 
-        def update_ST(expr):
-            inv[expr] = compute_ST(expr)
-        for expr in numer_gammas + denom_gammas + numer_others + denom_others:
-            update_ST(expr)
-
-        for gammas, numer, denom in [(
-            numer_gammas, numer_others, denom_others),
-                (denom_gammas, denom_others, numer_others)]:
-            new = []
-            while gammas:
-                g = gammas.pop()
-                cont = True
-                while cont:
-                    cont = False
-                    y = find_fuzzy(numer, g)
-                    if y is not None:
-                        numer.remove(y)
-                        if y != g:
-                            numer.append(y/g)
-                            update_ST(y/g)
-                        g += 1
-                        cont = True
-                    y = find_fuzzy(numer, 1/(g - 1))
-                    if y is not None:
-                        numer.remove(y)
-                        if y != 1/(g - 1):
-                            numer.append((g - 1)*y)
-                            update_ST((g - 1)*y)
-                        g -= 1
-                        cont = True
-                    y = find_fuzzy(denom, 1/g)
-                    if y is not None:
-                        denom.remove(y)
-                        if y != 1/g:
-                            denom.append(y*g)
-                            update_ST(y*g)
-                        g += 1
-                        cont = True
-                    y = find_fuzzy(denom, g - 1)
-                    if y is not None:
-                        denom.remove(y)
-                        if y != g - 1:
-                            numer.append((g - 1)/y)
-                            update_ST((g - 1)/y)
-                        g -= 1
-                        cont = True
-                new.append(g)
-            # /!\ updating IN PLACE
-            gammas[:] = new
+        # =========== rebuild expr ==================================
 
         return C.Mul(*[gamma(g) for g in numer_gammas]) \
             / C.Mul(*[gamma(g) for g in denom_gammas]) \
             * C.Mul(*numer_others) / C.Mul(*denom_others)
 
     # (for some reason we cannot use Basic.replace in this case)
-    expr = rule_gamma(expr)
+    was = factor(expr)
+    expr = rule_gamma(was)
+    if expr != was:
+        expr = factor(expr)
 
-    return factor(expr)
+    return expr
 
 
 def signsimp(expr, evaluate=True):
@@ -3499,15 +3563,15 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     Examples
     ========
 
-        >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
-        >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-        -2 + 2*GoldenRatio
-        >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-        1/2 - I*sqrt(sqrt(5)/10 + 1/4)
-        >>> nsimplify(I**I, [pi])
-        exp(-pi/2)
-        >>> nsimplify(pi, tolerance=0.01)
-        22/7
+    >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
+    >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
+    -2 + 2*GoldenRatio
+    >>> nsimplify((1/(exp(3*pi*I/5)+1)))
+    1/2 - I*sqrt(sqrt(5)/10 + 1/4)
+    >>> nsimplify(I**I, [pi])
+    exp(-pi/2)
+    >>> nsimplify(pi, tolerance=0.01)
+    22/7
 
     See Also
     ========
