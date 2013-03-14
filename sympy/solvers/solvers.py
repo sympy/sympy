@@ -1244,7 +1244,8 @@ def _solve(f, *symbols, **flags):
                     if poly.degree() > 2:
                         flags['simplify'] = flags.get('simplify', False)
 
-                    soln = roots(poly, cubics=True, quartics=True).keys()
+                    soln = roots(poly, cubics=True, quartics=True,
+                                                    quintics=True).keys()
                     if not soln:
                         soln = poly.all_roots()
                         check = False  # RootOf instances can not be checked
@@ -1295,7 +1296,8 @@ def _solve(f, *symbols, **flags):
                         # roots.
                         if poly.degree() > 2:
                             flags['simplify'] = flags.get('simplify', False)
-                        soln = roots(poly, cubics=True, quartics=True).keys()
+                        soln = roots(poly, cubics=True, quartics=True,
+                                                        quintics=True).keys()
                         if not soln:
                             soln = poly.all_roots()
                             check = False  # RootOf instances can not be checked
