@@ -54,7 +54,9 @@ def _parse_symbols(symbols):
     raise ValueError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
 class PolyRing(IPolys, DefaultPrinting):
+
     def __init__(self, symbols, domain, order):
+        self.dtype = PolyElement
         self.symbols = tuple(_parse_symbols(symbols))
         self.ngens = len(self.symbols)
         self.domain = domain
@@ -134,7 +136,7 @@ class PolyRing(IPolys, DefaultPrinting):
 
     @property
     def zero(self):
-        return PolyElement(self)
+        return self.dtype(self)
 
     @property
     def one(self):
@@ -199,6 +201,9 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
         self.ring = ring
         dict.__init__(self, init)
 
+    def new(self, init):
+        return self.__class__(self.ring, init)
+
     _hash = None
 
     def __hash__(self):
@@ -237,7 +242,7 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
         x**2 + 2*x*y + y**2 + 3
 
         """
-        return PolyElement(self.ring, self)
+        return self.new(self)
 
     def set_ring(self, new_ring):
         if self.ring.ngens != new_ring.ngens:
@@ -245,7 +250,7 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
         else:
             orig_domain = self.ring.domain
             domain_new = new_ring.domain_new
-            return PolyElement(new_ring, [ (k, domain_new(v, orig_domain)) for k, v in self.items() ])
+            return self.__class__(new_ring, [ (k, domain_new(v, orig_domain)) for k, v in self.items() ])
 
     def as_expr(self, *symbols):
         if symbols and len(symbols) != self.ring.ngens:
@@ -266,7 +271,7 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
         for coeff in self.values():
             common = lcm(common, denom(coeff))
 
-        poly = PolyElement(self.ring, [ (k, v*common) for k, v in self.items() ])
+        poly = self.new([ (k, v*common) for k, v in self.items() ])
         return common, poly
 
     def strip_zero(self):
@@ -345,6 +350,10 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
     @property
     def is_generator(self):
         return self in self.ring.gens
+
+    @property
+    def is_ground(self):
+        return not self or (len(self) == 1 and self.ring.zero_monom in self)
 
     @property
     def is_term(self):
@@ -1148,11 +1157,11 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
             return f.mul_ground(coeff)
 
         terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.iteritems() ]
-        return PolyElement(f.ring, terms)
+        return f.new(terms)
 
     def mul_monom(f, monom):
         terms = [ (monomial_mul(f_monom, monom), f_coeff) for f_monom, f_coeff in f.iteritems() ]
-        return PolyElement(f.ring, terms)
+        return f.new(terms)
 
     def monic(f):
         """Divides all coefficients by the leading coefficient. """
@@ -1182,7 +1191,7 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
             return f.ring.zero
 
         terms = [ (monom, coeff*x) for monom, coeff in f.terms() ]
-        return PolyElement(f.ring, terms)
+        return f.new(terms)
 
     def quo_ground(f, x):
         domain = f.ring.domain
@@ -1198,7 +1207,7 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
         else:
             terms = [ (monom, coeff // x) for monom, coeff in f.terms() ]
 
-        return PolyElement(f.ring, terms)
+        return f.new(terms)
 
     def trunc_ground(f, p):
         if f.ring.domain.is_ZZ:
@@ -1214,7 +1223,7 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
         else:
             terms = [ (monom, coeff % p) for monom, coeff in f.terms() ]
 
-        poly = PolyElement(f.ring, terms)
+        poly = f.new(terms)
         poly.strip_zero()
         return poly
 
@@ -1334,9 +1343,9 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
         for mg, cg in g.terms():
             _mgcd = monomial_gcd(_mgcd, mg)
             _cgcd = ground_gcd(_cgcd, cg)
-        h = PolyElement(ring, [(_mgcd, _cgcd)])
-        cff = PolyElement(ring, [(monomial_ldiv(mf, _mgcd), ground_quo(cf, _cgcd))])
-        cfg = PolyElement(ring, [(monomial_ldiv(mg, _mgcd), ground_quo(cg, _cgcd)) for mg, cg in g.terms()])
+        h = f.new([(_mgcd, _cgcd)])
+        cff = f.new([(monomial_ldiv(mf, _mgcd), ground_quo(cf, _cgcd))])
+        cfg = f.new([(monomial_ldiv(mg, _mgcd), ground_quo(cg, _cgcd)) for mg, cg in g.terms()])
         return h, cff, cfg
 
     def _gcd(f, g):

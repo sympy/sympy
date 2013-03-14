@@ -456,9 +456,7 @@ class PolynomialRingNG(Ring, CompositeDomain):
     has_assoc_Field        = True
 
     def __init__(self, ring):
-        from sympy.polys.rings import PolyElement
-
-        self.dtype = PolyElement
+        self.dtype = ring.dtype
         self.ring  = ring
 
         self.zero = ring.zero

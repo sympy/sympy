@@ -34,9 +34,11 @@ def vfield(symbols, domain, order=lex):
     return _field
 
 class FracField(DefaultPrinting):
+
     def __init__(self, symbols, domain, order):
         from sympy.polys.rings import PolyRing
         self.ring = PolyRing(symbols, domain, order)
+        self.dtype = FracElement
         self.symbols = self.ring.symbols
         self.ngens = len(self.symbols)
         self.domain = self.ring.domain
@@ -45,7 +47,7 @@ class FracField(DefaultPrinting):
 
     def _gens(self):
         """Return a list of polynomial generators. """
-        return tuple([ FracElement(self, gen) for gen in self.ring.gens ])
+        return tuple([ self.dtype(self, gen) for gen in self.ring.gens ])
 
     _hash = None
 
@@ -62,7 +64,7 @@ class FracField(DefaultPrinting):
         return not self.__eq__(other)
 
     def new(self, numer, denom=None):
-        return FracElement(self, numer, denom)
+        return self.dtype(self, numer, denom)
 
     def domain_new(self, element):
         return self.domain.convert(element)
@@ -121,7 +123,7 @@ class FracElement(CantSympify, DefaultPrinting):
         self.denom = field.ring(denom)
 
     def raw_new(f, numer, denom):
-        return FracElement(f.field, numer, denom)
+        return f.__class__(f.field, numer, denom)
     def new(f, numer, denom):
         return f.raw_new(*numer.cancel(denom))
 
@@ -138,7 +140,7 @@ class FracElement(CantSympify, DefaultPrinting):
         return _hash
 
     def copy(self):
-        return FracElement(self.field, self.numer.copy(), self.denom.copy())
+        return self.raw_new(self.numer.copy(), self.denom.copy())
 
     def as_expr(self, *symbols):
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
