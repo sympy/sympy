@@ -1660,7 +1660,7 @@ def test_algebraic():
     assert ask(Q.algebraic(oo)) is False
     assert ask(Q.algebraic(-oo)) is False
 
-    assert ask(Q.algebraic(2.47)) is False
+    assert ask(Q.algebraic(2.47)) is True
 
 
 def test_global():

@@ -495,10 +495,7 @@ class AskAlgebraicHandler(CommonHandler):
     def Rational(expr, assumptions):
         return expr.q != 0
 
-    Number = staticmethod(CommonHandler.AlwaysFalse)
-
-    ImaginaryUnit, AlgebraicNumber = [staticmethod(CommonHandler.AlwaysTrue)]*2
-
+    Float, ImaginaryUnit, AlgebraicNumber = [staticmethod(CommonHandler.AlwaysTrue)]*3
 
     @staticmethod
     def exp(expr, assumptions):
