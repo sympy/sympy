@@ -29,6 +29,7 @@ import subprocess
 import signal
 
 from sympy.core.cache import clear_cache
+from sympy.utilities.misc import find_executable
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -542,19 +543,41 @@ def _doctest(*paths, **kwargs):
         "sympy/statistics",                # prints a deprecation
         "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
         "sympy/utilities/compilef.py",  # needs tcc
-        "sympy/utilities/autowrap.py",  # needs installed compiler
-        "sympy/galgebra/GA.py",  # needs numpy
-        "sympy/galgebra/latex_ex.py",  # needs numpy
-        "sympy/conftest.py",  # needs py.test
-        "sympy/utilities/benchmarking.py",  # needs py.test
-        "examples/advanced/autowrap_integrators.py",  # needs numpy
-        "examples/advanced/autowrap_ufuncify.py",  # needs numpy
-        "examples/intermediate/mplot2d.py",
-        # needs numpy and matplotlib
-        "examples/intermediate/mplot3d.py",
-        # needs numpy and matplotlib
-        "examples/intermediate/sample.py",  # needs numpy
+        "sympy/utilities/autowrap.py"  # needs installed compiler
     ])
+
+    try:
+        import numpy
+    except ImportError:
+        blacklist.extend([
+            "sympy/galgebra/GA.py",
+            "sympy/galgebra/latex_ex.py",
+            "examples/advanced/autowrap_integrators.py",
+            "examples/advanced/autowrap_ufuncify.py"
+            "examples/intermediate/sample.py"
+        ])
+    else:
+        try:
+            import matplotlib
+        except ImportError:
+            blacklist.extend([
+                "examples/intermediate/mplot2d.py",
+                "examples/intermediate/mplot3d.py"
+            ])
+
+    try:
+        import pytest
+    except ImportError:
+        blacklist.extend([
+            "sympy/conftest.py",
+            "sympy/utilities/benchmarking.py"
+        ])
+
+    if not (find_executable('latex') and find_executable('dvipng')):
+        blacklist.extend([
+            "sympy/printing/preview.py"
+        ])
+
     blacklist = convert_to_native_paths(blacklist)
 
     # Disable warnings for external modules

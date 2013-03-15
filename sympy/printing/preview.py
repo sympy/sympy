@@ -69,7 +69,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> from StringIO import StringIO
     >>> obj = StringIO()
     >>> preview(x + y, output='png', viewer='StringIO',
-    ...         outputbuffer=obj) # doctest: +SKIP
+    ...         outputbuffer=obj)
 
     The LaTeX preamble can be customized by setting the 'preamble' keyword
     argument. This can be used, e.g., to set a different font size, use a
