@@ -497,6 +497,8 @@ class AskAlgebraicHandler(CommonHandler):
 
     Float, ImaginaryUnit, AlgebraicNumber = [staticmethod(CommonHandler.AlwaysTrue)]*3
 
+    Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2
+
     @staticmethod
     def exp(expr, assumptions):
         x = expr.args[0]
