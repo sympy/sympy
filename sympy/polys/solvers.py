@@ -26,10 +26,13 @@ def solve_lin_sys(eqs, ring):
     # construct the returnable form of the solutions
     if pivots[-1] == len(xs):
         return None
+    elif len(pivots) == len(xs):
+        sol = [ ring.ground_new(s) for s in echelon[:, -1] ]
+        return dict(zip(xs, sol))
+    else:
+        sols = {}
+        for i, p in enumerate(pivots):
+            vect = RawMatrix([ [-x] for x in xs[p+1:] ] + [[ring.one]])
+            sols[xs[p]] = (echelon[i, p+1:]*vect)[0]
 
-    sols = {}
-    for i, p in enumerate(pivots):
-        vect = RawMatrix([ [-x] for x in xs[p+1:] ] + [[1]])
-        sols[xs[p]] = (echelon[i, p+1:]*vect)[0]
-
-    return sols
+        return sols

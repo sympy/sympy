@@ -7,15 +7,44 @@ from sympy.polys.solvers import solve_lin_sys
 
 from sympy.utilities.pytest import slow
 
+def test_solve_lin_sys_2x2_one():
+    domain, x1,x2 = ring("x1,x2", QQ)
+    eqs = [x1 + x2 - 5,
+           2*x1 - x2]
+    sol = {x1: QQ(5, 3), x2: QQ(10, 3)}
+    _sol = solve_lin_sys(eqs, domain)
+    assert _sol == sol and all(isinstance(s, domain.dtype) for s in _sol)
+
+def test_solve_lin_sys_2x4_none():
+    domain, x1,x2 = ring("x1,x2", QQ)
+    eqs = [x1 - 1,
+           x1 - x2,
+           x1 - 2*x2,
+           x2 - 1]
+    assert solve_lin_sys(eqs, domain) == None
+
+def test_solve_lin_sys_3x4_one():
+    domain, x1,x2,x3 = ring("x1,x2,x3", QQ)
+    eqs = [x1 + 2*x2 + 3*x3,
+           2*x1 - x2 + x3,
+           3*x1 + x2 + x3,
+           5*x2 + 2*x3]
+    sol = {x1: 0, x2: 0, x3: 0}
+    assert solve_lin_sys(eqs, domain) == sol
+
 def test_solve_lin_sys_3x3_inf():
     domain, x1,x2,x3 = ring("x1,x2,x3", QQ)
-    eqs = [x1 - x2 + 2*x3 - 1, 2*x1 + x2 + x3 - 8, x1 + x2 - 5]
+    eqs = [x1 - x2 + 2*x3 - 1,
+           2*x1 + x2 + x3 - 8,
+           x1 + x2 - 5]
     sol = {x1: -x3 + 3, x2: x3 + 2}
     assert solve_lin_sys(eqs, domain) == sol
 
 def test_solve_lin_sys_3x4_none():
     domain, x1,x2,x3,x4 = ring("x1,x2,x3,x4", QQ)
-    eqs = [2*x1 + x2 + 7*x3 - 7*x4 - 2, -3*x1 + 4*x2 - 5*x3 - 6*x4 - 3, x1 + x2 + 4*x3 - 5*x4 - 2]
+    eqs = [2*x1 + x2 + 7*x3 - 7*x4 - 2,
+           -3*x1 + 4*x2 - 5*x3 - 6*x4 - 3,
+           x1 + x2 + 4*x3 - 5*x4 - 2]
     assert solve_lin_sys(eqs, domain) == None
 
 def test_solve_lin_sys_4x7_inf():
