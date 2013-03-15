@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
-    cos, exp,
+    cos, exp, Abs, Not
 )
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -299,6 +299,35 @@ def test_piecewise_fold():
     p = 4*p1 + 2*p2
     assert integrate(
         piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
+
+
+def test_piecewise_fold_piecewise_in_cond():
+    p1 = Piecewise((cos(x), x < 0), (0, True))
+    p2 = Piecewise((0, Eq(p1, 0)), (p1 / Abs(p1), True))
+    p3 = piecewise_fold(p2)
+    assert(p2.subs(x, -pi/2) == 0.0)
+    assert(p2.subs(x, 1) == 0.0)
+    assert(p2.subs(x, -pi/4) == 1.0)
+    p4 = Piecewise((0, Eq(p1, 0)), (1,True))
+    assert(piecewise_fold(p4) == Piecewise(
+        (0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))), (1, True)))
+
+    r1 = 1 < Piecewise((1, x < 1), (3, True))
+    assert(piecewise_fold(r1) == Not(x < 1))
+
+    p5 = Piecewise((1, x < 0), (3, True))
+    p6 = Piecewise((1, x < 1), (3, True))
+    p7 = piecewise_fold(Piecewise((1, p5 < p6), (0, True)))
+    assert(Piecewise((1, And(Not(x < 1), x < 0)), (0, True)))
+
+
+@XFAIL
+def test_piecewise_fold_piecewise_in_cond_2():
+    p1 = Piecewise((cos(x), x < 0), (0, True))
+    p2 = Piecewise((0, Eq(p1, 0)), (1 / p1, True))
+    p3 = Piecewise((0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))),
+        (1 / cos(x), True))
+    assert(piecewise_fold(p2) == p3)
 
 
 def test_piecewise_fold_expand():
