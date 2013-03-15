@@ -1207,6 +1207,8 @@ def test_rational():
     assert ask(Q.rational(2/x), Q.odd(x)) is True
     assert ask(Q.rational(2/x), Q.irrational(x)) is False
 
+    assert ask(Q.rational(x), ~Q.algebraic(x)) is False
+
     # with multiple symbols
     assert ask(Q.rational(x*y), Q.irrational(x) & Q.irrational(y)) is None
     assert ask(Q.rational(y/x), Q.rational(x) & Q.rational(y)) is True
