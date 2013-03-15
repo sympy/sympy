@@ -792,23 +792,14 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
         ground_quo = ring.domain.quo
         if isinstance(p2, PolyElement) and ring == p2.ring:
             if len(p2) == 1:
-                p = ring.zero
-                p2_monom, p2_coeff = list(p2.terms())[0]
-                for monom, coeff in p1.iteritems():
-                    monom = monomial_ldiv(monom, p2_monom)
-                    p[monom] = ground_quo(coeff, p2_coeff)
-                return p
+                term = list(p2.terms())[0]
+                return p1.quo_term(term)
             else:
                 return p1.quo(p2)
         elif not p2:
             raise ZeroDivisionError
         else:
-            p = ring.zero
-            for monom, coeff in p1.iteritems():
-                coeff = ground_quo(coeff, p2)
-                if coeff:
-                    p[monom] = coeff
-            return p
+            return p1.quo_ground(p2)
 
     __floordiv__ = __div__ = __truediv__
 
@@ -820,9 +811,10 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
 
     def _term_div(self):
         zm = self.ring.zero_monom
-        domain_quo = self.ring.domain.quo
+        domain = self.ring.domain
+        domain_quo = domain.quo
 
-        if self.ring.domain.has_Field:
+        if domain.has_Field or not domain.is_Exact:
             def term_div((a_lm, a_lc), (b_lm, b_lc)):
                 if b_lm == zm: # apparently this is a very common case
                     monom = a_lm
@@ -1235,9 +1227,24 @@ class PolyElement(dict, CantSympify, DefaultPrinting):
             quo = domain.quo
             terms = [ (monom, quo(coeff, x)) for monom, coeff in f.terms() ]
         else:
-            terms = [ (monom, coeff // x) for monom, coeff in f.terms() ]
+            terms = [ (monom, coeff // x) for monom, coeff in f.terms() if not (coeff % x) ]
 
         return f.new(terms)
+
+    def quo_term(f, term):
+        monom, coeff = term
+
+        if not coeff:
+            raise ZeroDivisionError
+        elif not f:
+            return f.ring.zero
+        elif monom == f.ring.zero_monom:
+            return f.quo_ground(coeff)
+
+        term_div = f._term_div()
+
+        terms = [ term_div(t, term) for t in f.terms() ]
+        return f.new([ t for t in terms if t is not None ])
 
     def trunc_ground(f, p):
         if f.ring.domain.is_ZZ:
