@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
-    cos, exp,
+    cos, exp, O, Abs, S, sqrt
 )
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -423,3 +423,8 @@ def test_piecewise_evaluate():
     assert p != x
     assert p.is_Piecewise
     assert all(isinstance(i, Basic) for i in p.args)
+
+
+def test_removeO():
+    p = Piecewise((x**2 + O(x**3), x<1), (x**3 + O(x**4), x>=1))
+    assert p.removeO() == Piecewise((x**2, x < 1), (x**3, x >= 1))

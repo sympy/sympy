@@ -1100,6 +1100,42 @@ class Pow(Expr):
 
         return e.equals(0)
 
+    def series(self, *args, **kwargs):
+        """
+        Series expansion of a Pow. In case of binomial raised to non-integer
+        power, returns a Piecewise result.
+
+        See the docstring of Expr.series() for complete details.
+        """
+        from sympy.functions.elementary.piecewise import Piecewise
+
+        base = self.base
+        exp = self.exp
+
+        if exp.is_Integer:
+            return super(Pow, self).series(*args, **kwargs)
+
+        result = []
+        if not (base.is_Add and len(base.args) == 2 and exp.is_Number):
+            return super(Pow, self).series(*args, **kwargs)
+
+        super_obj = super(Pow, self)
+        for arg in base.args:
+            other_arg = [value for value in base.args if value != arg].pop()
+            if arg.is_Symbol:
+                # import pdb;pdb.set_trace()
+                result.append((super_obj.series(arg), abs(arg/other_arg) < 1))
+        return Piecewise(*result)
+
+    def expand(self, *args, **kwargs):
+        """
+        Expand a Pow term. For a binomial raised to non-integer power, use
+        Pow.series() to get a Pieceiwse result.
+
+        See the docstring of expand() for complete details.
+        """
+        return super(Pow, self).expand(*args, **kwargs)
+
 from add import Add
 from numbers import Integer
 from mul import Mul, _keep_coeff

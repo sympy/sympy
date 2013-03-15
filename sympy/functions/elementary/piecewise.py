@@ -175,6 +175,14 @@ class Piecewise(Function):
             newargs.append((e, c))
         return Piecewise(*newargs)
 
+    def removeO(self):
+        args = self.args
+        result = []
+        for arg in args:
+            function = arg.expr
+            result.append((function.removeO(), arg.cond))
+        return Piecewise(*result)
+
     def _eval_as_leading_term(self, x):
         for e, c in self.args:
             if c is True or c.subs(x, 0) is True:

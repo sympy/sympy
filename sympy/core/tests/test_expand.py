@@ -1,5 +1,5 @@
 from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
-    cos, sin, Mul, Pow, cse, O)
+    cos, sin, Mul, Pow, cse, O, series, Piecewise, Abs)
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.utilities.pytest import raises
 from sympy.core.function import expand_power_base
