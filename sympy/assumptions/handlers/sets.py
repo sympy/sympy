@@ -3,7 +3,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 """
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
-from sympy import I
+from sympy import I, S
 
 
 class AskIntegerHandler(CommonHandler):
@@ -498,6 +498,28 @@ class AskAlgebraicHandler(CommonHandler):
     Number = staticmethod(CommonHandler.AlwaysFalse)
 
     ImaginaryUnit, AlgebraicNumber = [staticmethod(CommonHandler.AlwaysTrue)]*2
+
+
+    @staticmethod
+    def exp(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.algebraic(x), assumptions):
+            return ask(~Q.nonzero(x), assumptions)
+
+    @staticmethod
+    def cot(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.algebraic(x), assumptions):
+            return False
+
+    @staticmethod
+    def log(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.algebraic(x), assumptions):
+            return ask(~Q.nonzero(x - 1), assumptions)
+
+    sin, cos, tan, asin, atan = [exp]*5
+    acos, acot = log, cot
 
 
 #### Helper methods

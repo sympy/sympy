@@ -6,7 +6,8 @@ from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
                                    known_facts_dict, single_fact_lookup)
 from sympy.assumptions.handlers import AskHandler
 from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
-from sympy.functions import Abs, cos, exp, im, log, re, sign, sin, sqrt
+from sympy.functions import (Abs, cos, exp, im, log, re, sign, sin, sqrt,
+        tan, atan, acos, asin, cot, acot)
 from sympy.logic import Equivalent, Implies, Xor, And, to_cnf, Not
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.assumptions.assume import assuming
@@ -1632,8 +1633,26 @@ def test_algebraic():
     assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/31)))) is True
     assert ask(Q.algebraic((1 + I*sqrt(3)**(S(17)/pi)))) is False
 
-    assert ask(Q.algebraic(sin(7))) is None
-    assert ask(Q.algebraic(sqrt(sin(7)))) is None
+    for f in [exp, sin, tan, asin, atan, cos]:
+        assert ask(Q.algebraic(f(7))) is False
+        assert ask(Q.algebraic(f(7, evaluate=False))) is False
+        assert ask(Q.algebraic(f(0, evaluate=False))) is True
+        assert ask(Q.algebraic(f(x)), Q.algebraic(x)) is None
+        assert ask(Q.algebraic(f(x)), Q.algebraic(x) & Q.nonzero(x)) is False
+
+    for g in [log, acos]:
+        assert ask(Q.algebraic(g(7))) is False
+        assert ask(Q.algebraic(g(7, evaluate=False))) is False
+        assert ask(Q.algebraic(g(1, evaluate=False))) is True
+        assert ask(Q.algebraic(g(x)), Q.algebraic(x)) is None
+        assert ask(Q.algebraic(g(x)), Q.algebraic(x) & Q.nonzero(x - 1)) is False
+
+    for h in [cot, acot]:
+        assert ask(Q.algebraic(h(7))) is False
+        assert ask(Q.algebraic(h(7, evaluate=False))) is False
+        assert ask(Q.algebraic(h(x)), Q.algebraic(x)) is False
+
+    assert ask(Q.algebraic(sqrt(sin(7)))) is False
     assert ask(Q.algebraic(sqrt(y + I*sqrt(7)))) is None
 
     assert ask(Q.algebraic(oo)) is False
