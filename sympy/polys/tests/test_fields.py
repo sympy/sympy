@@ -6,6 +6,7 @@ from sympy.polys.monomialtools import lex, grlex
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
+from sympy import sqrt
 
 def test_FracField___hash__():
     F, x, y, z = field("x,y,z", QQ)
@@ -42,6 +43,37 @@ def test_FracElement_as_expr():
     assert f.as_expr(X, Y, Z) == g
 
     raises(ValueError, lambda: f.as_expr(X))
+
+def test_FracElement_from_expr():
+    x, y, z = symbols("x,y,z")
+    F, X, Y, Z = field((x, y, z), ZZ)
+
+    f = F.from_expr(1)
+    assert f == 1 and isinstance(f, F.dtype)
+
+    f = F.from_expr(x)
+    assert f == X and isinstance(f, F.dtype)
+
+    f = F.from_expr(1/x)
+    assert f == 1/X and isinstance(f, F.dtype)
+
+    f = F.from_expr(x*y*z)
+    assert f == X*Y*Z and isinstance(f, F.dtype)
+
+    f = F.from_expr(x*y/z)
+    assert f == X*Y/Z and isinstance(f, F.dtype)
+
+    f = F.from_expr(x*y*z + x*y + x)
+    assert f == X*Y*Z + X*Y + X and isinstance(f, F.dtype)
+
+    f = F.from_expr((x*y*z + x*y + x)/(x*y + 7))
+    assert f == (X*Y*Z + X*Y + X)/(X*Y + 7) and isinstance(f, F.dtype)
+
+    f = F.from_expr(x**3*y*z + x**2*y**7 + 1)
+    assert f == X**3*Y*Z + X**2*Y**7 + 1 and isinstance(f, F.dtype)
+
+    raises(ValueError, lambda: F.from_expr(2**x))
+    raises(ValueError, lambda: F.from_expr(7*x + sqrt(2)))
 
 def test_FracElement___neg__():
     F, x,y = field("x,y", QQ)

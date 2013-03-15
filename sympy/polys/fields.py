@@ -1,10 +1,10 @@
 """Sparse rational function fields. """
 
 from sympy.core.expr import Expr
-from sympy.core.sympify import CantSympify
+from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.rings import PolyElement
 from sympy.polys.monomialtools import lex
-from sympy.polys.polyerrors import ExactQuotientFailed
+from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
 from sympy.polys.domains.fractionfield import FractionFieldNG
 from sympy.printing.defaults import DefaultPrinting
 
@@ -86,11 +86,41 @@ class FracField(DefaultPrinting):
         elif isinstance(element, basestring):
             raise NotImplementedError("parsing")
         elif isinstance(element, Expr):
-            raise NotImplementedError("expressions")
+            return self.from_expr(element)
         else:
             return self.ground_new(element)
 
     __call__ = field_new
+
+    @staticmethod
+    def _rebuild_expr(expr, mapping, domain):
+        from operator import add, mul
+
+        def _rebuild(expr):
+            generator = mapping.get(expr)
+
+            if generator is not None:
+                return generator
+            elif expr.is_Add:
+                return reduce(add, map(_rebuild, expr.args))
+            elif expr.is_Mul:
+                return reduce(mul, map(_rebuild, expr.args))
+            elif expr.is_Pow and expr.exp.is_Integer:
+                return _rebuild(expr.base)**int(expr.exp)
+            else:
+                return domain.convert(expr)
+
+        return _rebuild(sympify(expr))
+
+    def from_expr(self, expr):
+        mapping = dict(zip(self.symbols, self.gens))
+
+        try:
+            frac = self._rebuild_expr(expr, mapping, self.domain)
+        except CoercionFailed:
+            raise ValueError("expected an expression convertible to a rational function in %s, got %s" % (self, expr))
+        else:
+            return self.field_new(frac)
 
     @property
     def zero(self):

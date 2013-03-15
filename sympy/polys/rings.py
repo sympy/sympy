@@ -3,7 +3,7 @@
 from sympy.core.expr import Expr
 from sympy.core.symbol import symbols as _symbols
 from sympy.core.numbers import igcd
-from sympy.core.sympify import CantSympify
+from sympy.core.sympify import CantSympify, sympify
 from sympy.core.compatibility import is_sequence
 from sympy.ntheory.multinomial import multinomial_coefficients
 from sympy.polys.monomialtools import (monomial_mul, monomial_div,
@@ -53,7 +53,7 @@ def _parse_symbols(symbols):
 
     raise ValueError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
-class PolyRing(IPolys, DefaultPrinting):
+class PolyRing(DefaultPrinting, IPolys):
 
     def __init__(self, symbols, domain, order):
         self.dtype = PolyElement
@@ -128,11 +128,41 @@ class PolyRing(IPolys, DefaultPrinting):
         elif isinstance(element, list):
             return self.from_terms(element)
         elif isinstance(element, Expr):
-            raise NotImplementedError("expressions")
+            return self.from_expr(element)
         else:
             return self.ground_new(element)
 
     __call__ = ring_new
+
+    @staticmethod
+    def _rebuild_expr(expr, mapping, domain):
+        from operator import add, mul
+
+        def _rebuild(expr):
+            generator = mapping.get(expr)
+
+            if generator is not None:
+                return generator
+            elif expr.is_Add:
+                return reduce(add, map(_rebuild, expr.args))
+            elif expr.is_Mul:
+                return reduce(mul, map(_rebuild, expr.args))
+            elif expr.is_Pow and expr.exp.is_Integer and expr.exp >= 0:
+                return _rebuild(expr.base)**int(expr.exp)
+            else:
+                return domain.convert(expr)
+
+        return _rebuild(sympify(expr))
+
+    def from_expr(self, expr):
+        mapping = dict(zip(self.symbols, self.gens))
+
+        try:
+            poly = self._rebuild_expr(expr, mapping, self.domain)
+        except CoercionFailed:
+            raise ValueError("expected an expression convertible to a polynomial in %s, got %s" % (self, expr))
+        else:
+            return self.ring_new(poly)
 
     @property
     def zero(self):

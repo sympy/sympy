@@ -7,6 +7,7 @@ from sympy.polys.monomialtools import lex, grlex
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
+from sympy import sqrt
 
 def test_PolyRing___init__():
     x, y, z = map(Symbol, "xyz")
@@ -81,6 +82,29 @@ def test_PolyElement_as_expr():
     assert f.as_expr(X, Y, Z) == g
 
     raises(ValueError, lambda: f.as_expr(X))
+
+def test_PolyElement_from_expr():
+    x, y, z = symbols("x,y,z")
+    R, X, Y, Z = ring((x, y, z), ZZ)
+
+    f = R.from_expr(1)
+    assert f == 1 and isinstance(f, R.dtype)
+
+    f = R.from_expr(x)
+    assert f == X and isinstance(f, R.dtype)
+
+    f = R.from_expr(x*y*z)
+    assert f == X*Y*Z and isinstance(f, R.dtype)
+
+    f = R.from_expr(x*y*z + x*y + x)
+    assert f == X*Y*Z + X*Y + X and isinstance(f, R.dtype)
+
+    f = R.from_expr(x**3*y*z + x**2*y**7 + 1)
+    assert f == X**3*Y*Z + X**2*Y**7 + 1 and isinstance(f, R.dtype)
+
+    raises(ValueError, lambda: R.from_expr(1/x))
+    raises(ValueError, lambda: R.from_expr(2**x))
+    raises(ValueError, lambda: R.from_expr(7*x + sqrt(2)))
 
 def test_PolyElement_coeff():
     R, x, y, z = ring("x,y,z", ZZ, lex)
