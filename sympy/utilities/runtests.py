@@ -567,6 +567,7 @@ def _doctest(*paths, **kwargs):
 
     try:
         import pytest
+        import py
     except ImportError:
         blacklist.extend([
             "sympy/conftest.py",
