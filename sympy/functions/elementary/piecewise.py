@@ -2,7 +2,7 @@ from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import And, Boolean, Or
+from sympy.logic.boolalg import And, Boolean, Or, Not
 from sympy.core.compatibility import default_sort_key
 
 
@@ -533,12 +533,28 @@ def piecewise_fold(expr):
         return ExprCondPair(*new_args)
     piecewise_args = []
     for n, arg in enumerate(new_args):
-        if arg.func is Piecewise:
+        if isinstance(arg, Piecewise):
             piecewise_args.append(n)
     if len(piecewise_args) > 0:
         n = piecewise_args[0]
         new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n + 1:])), c)
                     for e, c in new_args[n].args]
+        if isinstance(expr, Boolean):
+            # If expr is Boolean, we must return some kind of PiecewiseBoolean.
+            # This is constructed by means of Or, And and Not.
+            # piecewise_fold(0 < Piecewise( (sin(x), x<0), (cos(x), True)))
+            # can't return Piecewise((0 < sin(x), x < 0), (0 < cos(x), True))
+            # but instead Or(And(x < 0, 0 < sin(x)), And(0 < cos(x), Not(x<0)))
+            other = True
+            rtn = False
+            for e, c in new_args:
+                rtn = Or(rtn, And(other, c, e))
+                other = And(other, Not(c))
+            if len(piecewise_args) > 1:
+                return piecewise_fold(rtn)
+            return rtn
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
-    return Piecewise(*new_args)
+        return Piecewise(*new_args)
+    else:
+        return expr.func(*new_args)
