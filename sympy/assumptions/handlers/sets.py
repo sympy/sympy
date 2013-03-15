@@ -123,6 +123,27 @@ class AskRationalHandler(CommonHandler):
     ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
         [staticmethod(CommonHandler.AlwaysFalse)]*6
 
+    @staticmethod
+    def exp(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.rational(x), assumptions):
+            return ask(~Q.nonzero(x), assumptions)
+
+    @staticmethod
+    def cot(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.rational(x), assumptions):
+            return False
+
+    @staticmethod
+    def log(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.rational(x), assumptions):
+            return ask(~Q.nonzero(x - 1), assumptions)
+
+    sin, cos, tan, asin, atan = [exp]*5
+    acos, acot = log, cot
+
 
 class AskIrrationalHandler(CommonHandler):
 

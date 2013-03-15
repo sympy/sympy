@@ -1217,6 +1217,25 @@ def test_rational():
     assert ask(Q.rational(y/x), Q.odd(x) & Q.rational(y)) is True
     assert ask(Q.rational(y/x), Q.irrational(x) & Q.rational(y)) is False
 
+    for f in [exp, sin, tan, asin, atan, cos]:
+        assert ask(Q.rational(f(7))) is False
+        assert ask(Q.rational(f(7, evaluate=False))) is False
+        assert ask(Q.rational(f(0, evaluate=False))) is True
+        assert ask(Q.rational(f(x)), Q.rational(x)) is None
+        assert ask(Q.rational(f(x)), Q.rational(x) & Q.nonzero(x)) is False
+
+    for g in [log, acos]:
+        assert ask(Q.rational(g(7))) is False
+        assert ask(Q.rational(g(7, evaluate=False))) is False
+        assert ask(Q.rational(g(1, evaluate=False))) is True
+        assert ask(Q.rational(g(x)), Q.rational(x)) is None
+        assert ask(Q.rational(g(x)), Q.rational(x) & Q.nonzero(x - 1)) is False
+
+    for h in [cot, acot]:
+        assert ask(Q.rational(h(7))) is False
+        assert ask(Q.rational(h(7, evaluate=False))) is False
+        assert ask(Q.rational(h(x)), Q.rational(x)) is False
+
 
 def test_hermitian():
     assert ask(Q.hermitian(x)) is None
