@@ -30,6 +30,7 @@ import signal
 
 from sympy.core.cache import clear_cache
 from sympy.utilities.misc import find_executable
+from sympy.external import import_module
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -546,9 +547,7 @@ def _doctest(*paths, **kwargs):
         "sympy/utilities/autowrap.py"  # needs installed compiler
     ])
 
-    try:
-        import numpy
-    except ImportError:
+    if import_module('numpy') is None:
         blacklist.extend([
             "sympy/galgebra/GA.py",
             "sympy/galgebra/latex_ex.py",
@@ -557,22 +556,25 @@ def _doctest(*paths, **kwargs):
             "examples/intermediate/sample.py"
         ])
     else:
-        try:
-            import matplotlib
-        except ImportError:
+        if import_module('matplotlib') is None:
             blacklist.extend([
                 "examples/intermediate/mplot2d.py",
                 "examples/intermediate/mplot3d.py"
             ])
 
-    try:
-        import pytest
-        import py
-    except ImportError:
-        blacklist.extend([
-            "sympy/conftest.py",
-            "sympy/utilities/benchmarking.py"
-        ])
+    # pytest = import_module('pytest')
+    # py = import_module('py')
+    # if py is None or pytest is None:
+    #     blacklist.extend([
+    #         "sympy/conftest.py",
+    #         "sympy/utilities/benchmarking.py"
+    #     ])
+
+    # blacklist these modules until issue 1741 is resolved
+    blacklist.extend([
+        "sympy/conftest.py",
+        "sympy/utilities/benchmarking.py"
+    ])
 
     if not (find_executable('latex') and find_executable('dvipng')):
         blacklist.extend([
