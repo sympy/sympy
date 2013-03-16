@@ -103,33 +103,24 @@ def _remove_multiple_delta(expr):
         return expr.func(*map(_remove_multiple_delta, expr.args))
     if not expr.is_Mul:
         return expr
-    seen = {}
+    eqs = []
     newargs = []
     for arg in expr.args:
         if isinstance(arg, KroneckerDelta):
-            for x in arg.free_symbols:
-                if _is_simple_delta(arg, x):
-                    value = solve(arg.args[0] - arg.args[1], x)[0].subs(seen)
-                    if value.is_Integer:
-                        if x in seen.keys() and seen[x] != value:
-                            return S.Zero
-                        seen[x] = value
-    for arg in expr.args:
-        if isinstance(arg, KroneckerDelta):
-            for x in arg.free_symbols:
-                if _is_simple_delta(arg, x):
-                    value = solve(arg.args[0] - arg.args[1], x)[0].subs(seen)
-                    if value.is_Integer:
-                        if x in seen.keys() and seen[x] != value:
-                            return S.Zero
-                        newargs.append(KroneckerDelta(x, value))
-                    else:
-                        newargs.append(arg)
+            eqs.append(arg.args[0] - arg.args[1])
         else:
             newargs.append(arg)
-    expr2 = expr.func(*newargs)
-    if expr != expr2:
-        return _remove_multiple_delta(expr2)
+    if not eqs:
+        return expr
+    solns = solve(eqs, dict=True)
+    if len(solns) == 0:
+        return S.Zero
+    elif len(solns) == 1:
+        for key in solns[0].keys():
+            newargs.append(KroneckerDelta(key, solns[0][key]))
+        expr2 = expr.func(*newargs)
+        if expr != expr2:
+            return _remove_multiple_delta(expr2)
     return expr
 
 
