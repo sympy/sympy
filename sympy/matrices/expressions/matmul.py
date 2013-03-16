@@ -1,6 +1,6 @@
 from sympy.core import Mul, Add, Basic, sympify
 from sympy.functions import transpose, adjoint
-from sympy.rules import (rm_id, unpack, condition, debug, flatten, exhaust,
+from sympy.strategies import (rm_id, unpack, condition, debug, flatten, exhaust,
         do_one, new)
 from sympy.matrices.expressions.matexpr import (MatrixExpr, ShapeError,
         Identity, ZeroMatrix)
@@ -134,13 +134,13 @@ def xxinv(mul):
 def remove_ids(mul):
     """ Remove Identities from a MatMul
 
-    This is a modified version of sympy.rules.rm_id.
+    This is a modified version of sympy.strategies.rm_id.
     This is necesssary because MatMul may contain both MatrixExprs and Exprs
     as args.
 
     See Also
     --------
-        sympy.rules.rm_id
+        sympy.strategies.rm_id
     """
     # Separate Exprs from MatrixExprs in args
     factor, mmul = mul.as_coeff_mmul()

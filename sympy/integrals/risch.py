@@ -507,7 +507,7 @@ class DifferentialExtension(object):
                 if dummy:
                     i = Dummy("i")
                 else:
-                    i = Symbol('i', dummy=True)
+                    i = Symbol('i')
                 self.Tfuncs = self.Tfuncs + [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(
                         dict((exp(exparg), self.t**p) for exparg, p in others))
@@ -558,10 +558,10 @@ class DifferentialExtension(object):
                 self.L_K.append(len(self.T) - 1)
                 self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
                     expand=False))
-                if dummy:  # XXX aren't these both the same thing?
+                if dummy:
                     i = Dummy("i")
                 else:
-                    i = Symbol('i', dummy=True)
+                    i = Symbol('i')
                 self.Tfuncs = self.Tfuncs + [Lambda(i, log(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace({log(arg): self.t})
                 new_extension = True

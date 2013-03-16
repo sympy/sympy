@@ -57,7 +57,7 @@ class RaisingOp(SHOOp):
         >>> from sympy.physics.quantum import Dagger
 
         >>> ad = RaisingOp('a')
-        >>> ad().rewrite('xp').doit()
+        >>> ad.rewrite('xp').doit()
         sqrt(2)*(m*omega*X - I*Px)/(2*sqrt(hbar)*sqrt(m*omega))
 
         >>> Dagger(ad)
@@ -185,7 +185,7 @@ class LoweringOp(SHOOp):
         >>> from sympy.physics.quantum import Dagger
 
         >>> a = LoweringOp('a')
-        >>> a().rewrite('xp').doit()
+        >>> a.rewrite('xp').doit()
         sqrt(2)*(m*omega*X + I*Px)/(2*sqrt(hbar)*sqrt(m*omega))
 
         >>> Dagger(a)
@@ -309,11 +309,11 @@ class NumberOp(SHOOp):
         >>> from sympy.physics.quantum.sho1d import NumberOp
 
         >>> N = NumberOp('N')
-        >>> N().rewrite('a').doit()
+        >>> N.rewrite('a').doit()
         RaisingOp(a)*a
-        >>> N().rewrite('xp').doit()
+        >>> N.rewrite('xp').doit()
         -1/2 + (m**2*omega**2*X**2 + Px**2)/(2*hbar*m*omega)
-        >>> N().rewrite('H').doit()
+        >>> N.rewrite('H').doit()
         -1/2 + H/(hbar*omega)
 
     Take the Commutator of the Number Operator with other Operators:
@@ -428,11 +428,11 @@ class Hamiltonian(SHOOp):
         >>> from sympy.physics.quantum.sho1d import Hamiltonian
 
         >>> H = Hamiltonian('H')
-        >>> H().rewrite('a').doit()
+        >>> H.rewrite('a').doit()
         hbar*omega*(1/2 + RaisingOp(a)*a)
-        >>> H().rewrite('xp').doit()
+        >>> H.rewrite('xp').doit()
         (m**2*omega**2*X**2 + Px**2)/(2*m)
-        >>> H().rewrite('N').doit()
+        >>> H.rewrite('N').doit()
         hbar*omega*(1/2 + N)
 
     Take the Commutator of the Hamiltonian and the Number Operator:
@@ -556,7 +556,7 @@ class SHOKet(SHOState, Ket):
         >>> k = SHOKet('k')
         >>> b = SHOBra('b')
         >>> InnerProduct(b,k).doit()
-        KroneckerDelta(k, b)
+        KroneckerDelta(b, k)
 
     Vector representation of a numerical state ket:
 

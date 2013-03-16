@@ -21,7 +21,32 @@ def _free_symbols(function, limits):
 
 
 class Sum(Expr):
-    """Represents unevaluated summation."""
+    """Represents unevaluated summation.
+
+    Sum represents a finite or infinite series, with the first argument being
+    the general form of terms in the series, and the second argument being
+    (dummy_variable, start, end), with dummy_variable taking all integer values
+    from start to end.  In accordance with long-standing mathematical
+    convention, the end term is included in the summation.
+
+    >>> from sympy.abc import k, m, n, x
+    >>> from sympy import Sum, factorial, oo
+    >>> Sum(k,(k,1,m))
+    Sum(k, (k, 1, m))
+    >>> Sum(k,(k,1,m)).doit()
+    m**2/2 + m/2
+    >>> Sum(k**2,(k,1,m))
+    Sum(k**2, (k, 1, m))
+    >>> Sum(k**2,(k,1,m)).doit()
+    m**3/3 + m**2/2 + m/6
+    >>> Sum(x**k,(k,0,oo))
+    Sum(x**k, (k, 0, oo))
+    >>> Sum(x**k,(k,0,oo)).doit()
+    (-x**oo + 1)/(-x + 1)
+    >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
+    exp(x)
+
+    """
 
     __slots__ = ['is_commutative']
 
@@ -136,7 +161,12 @@ class Sum(Expr):
     def doit(self, **hints):
         #if not hints.get('sums', True):
         #    return self
-        f = self.function
+
+        if hints.get('deep', True):
+            f = self.function.doit(**hints)
+        else:
+            f = self.function
+
         for limit in self.limits:
             i, a, b = limit
             dif = b - a

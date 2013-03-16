@@ -455,6 +455,9 @@ def test_sympy__sets__fancysets__Naturals():
     from sympy.sets.fancysets import Naturals
     assert _test_args(Naturals())
 
+def test_sympy__sets__fancysets__Naturals0():
+    from sympy.sets.fancysets import Naturals0
+    assert _test_args(Naturals0())
 
 def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
@@ -528,11 +531,18 @@ def test_sympy__stats__crv__ProductContinuousPSpace():
     B = SingleContinuousPSpace(y, nd)
     assert _test_args(ProductContinuousPSpace(A, B))
 
-
 @SKIP("abstract class")
 def test_sympy__stats__crv__SingleContinuousDistribution():
     pass
 
+def test_sympy__stats__drv__SingleDiscretePSpace():
+    from sympy.stats.drv import SingleDiscretePSpace
+    from sympy.stats.drv_types import PoissonDistribution
+    assert _test_args(SingleDiscretePSpace(x, PoissonDistribution(1)))
+
+@SKIP("abstract class")
+def test_sympy__stats__drv__SingleDiscreteDistribution():
+    pass
 
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
@@ -560,11 +570,9 @@ def test_sympy__stats__rv__PSpace():
     assert _test_args(PSpace(D, die))
 
 
+@SKIP("abstract Class")
 def test_sympy__stats__rv__SinglePSpace():
-    from sympy.stats.rv import SinglePSpace, RandomDomain
-    from sympy import Dict, FiniteSet
-    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3, 4, 5, 6))
-    assert _test_args(SinglePSpace(D, die))
+    pass
 
 
 def test_sympy__stats__rv__RandomSymbol():
@@ -848,6 +856,13 @@ def test_sympy__stats__crv_types__WignerSemicircleDistribution():
     from sympy.stats.crv_types import WignerSemicircleDistribution
     assert _test_args(WignerSemicircleDistribution(1))
 
+def test_sympy__stats__drv_types__PoissonDistribution():
+    from sympy.stats.drv_types import PoissonDistribution
+    assert _test_args(PoissonDistribution(1))
+
+def test_sympy__stats__drv_types__GeometricDistribution():
+    from sympy.stats.drv_types import GeometricDistribution
+    assert _test_args(GeometricDistribution(.5))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -2509,6 +2524,14 @@ def test_sympy__simplify__cse_opts__Neg():
     from sympy.simplify.cse_opts import Neg
     assert _test_args(Neg())
 
+def test_sympy__simplify__hyperexpand__Hyper_Function():
+    from sympy.simplify.hyperexpand import Hyper_Function
+    assert _test_args(Hyper_Function([2], [1]))
+
+def test_sympy__simplify__hyperexpand__G_Function():
+    from sympy.simplify.hyperexpand import G_Function
+    assert _test_args(G_Function([2], [1], [], []))
+
 
 def test_sympy__tensor__indexed__Idx():
     from sympy.tensor.indexed import Idx
@@ -2526,6 +2549,67 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A', shape=(x, y)))
     assert _test_args(IndexedBase('A', 1))
     assert _test_args(IndexedBase('A')[0, 1])
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorIndexType():
+    from sympy.tensor.tensor import TensorIndexType
+    from sympy import Symbol
+    assert _test_args(TensorIndexType('Lorentz', metric=False))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorSymmetry():
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    assert _test_args(TensorSymmetry(get_symmetric_group_sgs(2)))
+
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorType():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorType
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    assert _test_args(TensorType([Lorentz], sym))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorHead():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, TensorHead
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    assert _test_args(TensorHead('p', S1, 0))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorIndex():
+    from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    assert _test_args(TensorIndex('i', Lorentz))
+
+@SKIP("abstract class")
+def test_sympy__tensor__tensor__TensExpr():
+    pass
+
+def test_sympy__tensor__tensor__TensAdd():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensAdd
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    p, q = S1('p,q')
+    t1 = p(a)
+    t2 = q(a)
+    assert _test_args(TensAdd(t1, t2))
+
+
+def test_sympy__tensor__tensor__TensMul():
+    from sympy.core import S
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    p = S1('p')
+    free, dum =  TensMul.from_indices(a)
+    assert _test_args(TensMul(S.One, [p], free, dum))
+
 
 
 @XFAIL

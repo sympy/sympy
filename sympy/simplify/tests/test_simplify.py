@@ -128,13 +128,13 @@ def test_trigsimp1a():
     assert trigsimp(cot(2)*cos(3)*exp(2)*sin(2)) == cos(3)*exp(2)*cos(2)
     assert trigsimp(tan(2)*cos(3)*exp(2)/sin(2)) == cos(3)*exp(2)/cos(2)
     assert trigsimp(cot(2)*cos(3)*exp(2)/cos(2)) == cos(3)*exp(2)/sin(2)
-    assert trigsimp(cot(2)*cos(3)*exp(2)*tan(2)) == cos(3)*exp(2)*2
+    assert trigsimp(cot(2)*cos(3)*exp(2)*tan(2)) == cos(3)*exp(2)
     assert trigsimp(sinh(2)*cos(3)*exp(2)/cosh(2)) == tanh(2)*cos(3)*exp(2)
     assert trigsimp(tanh(2)*cos(3)*exp(2)*cosh(2)) == sinh(2)*cos(3)*exp(2)
     assert trigsimp(coth(2)*cos(3)*exp(2)*sinh(2)) == cosh(2)*cos(3)*exp(2)
     assert trigsimp(tanh(2)*cos(3)*exp(2)/sinh(2)) == cos(3)*exp(2)/cosh(2)
     assert trigsimp(coth(2)*cos(3)*exp(2)/cosh(2)) == cos(3)*exp(2)/sinh(2)
-    assert trigsimp(coth(2)*cos(3)*exp(2)*tanh(2)) == cos(3)*exp(2)*2
+    assert trigsimp(coth(2)*cos(3)*exp(2)*tanh(2)) == cos(3)*exp(2)
 
 def test_trigsimp2():
     x, y = symbols('x,y')
@@ -1132,38 +1132,32 @@ def test_logcombine_1():
     assert logcombine(cos(-2*log(z) + b*log(w))) in [cos(log(w**b/z**2)),
                                                    cos(log(z**2/w**b))]
     assert logcombine(log(log(x) - log(y)) - log(z), force=True) == \
-        log(log((x/y)**(1/z)))
-    assert logcombine((2 + I)*log(x), force=True) == I*log(x) + log(x**2)
+        log(log(x/y)/z)
+    assert logcombine((2 + I)*log(x), force=True) == (2 + I)*log(x)
     assert logcombine((x**2 + log(x) - log(y))/(x*y), force=True) == \
-        log(x**(1/(x*y))*y**(-1/(x*y))) + x/y
+        (x**2 + log(x/y))/(x*y)
+    # the following could also give log(z*x**log(y**2)), what we
+    # are testing is that a canonical result is obtained
     assert logcombine(log(x)*2*log(y) + log(z), force=True) == \
         log(z*y**log(x**2))
     assert logcombine((x*y + sqrt(x**4 + y**4) + log(x) - log(y))/(pi*x**Rational(2, 3)*
-        sqrt(y)**3), force=True) == \
-        log(x**(1/(pi*x**Rational(2, 3)*sqrt(y)**3))*y**(-1/(pi*
-        x**Rational(2, 3)*sqrt(y)**3))) + sqrt(x**4 + y**4)/(pi*
-        x**Rational(2, 3)*sqrt(y)**3) + x**Rational(1, 3)/(pi*sqrt(y))
-    assert logcombine(Eq(log(x), -2*log(y)), force=True) == \
-        Eq(log(x*y**2), Integer(0))
-    assert logcombine(Eq(y, x*acos(-log(x/y))), force=True) == \
-        Eq(y, x*acos(log(y/x)))
+            sqrt(y)**3), force=True) == (
+            x*y + sqrt(x**4 + y**4) + log(x/y))/(pi*x**(S(2)/3)*y**(S(3)/2))
     assert logcombine(gamma(-log(x/y))*acos(-log(x/y)), force=True) == \
-        acos(log(y/x))*gamma(log(y/x))
-    assert logcombine((2 + 3*I)*log(x), force=True) == \
-        log(x**2) + 3*I*log(x)
-    assert logcombine(Eq(y, -log(x)), force=True) == Eq(y, log(1/x))
+        acos(-log(x/y))*gamma(-log(x/y))
+
+    assert logcombine(2*log(z)*log(w)*log(x) + log(z) + log(w)) == \
+        log(z**log(w**2))*log(x) + log(w*z)
+    assert logcombine(3*log(w) + 3*log(z)) == log(w**3*z**3)
+    assert logcombine(x*(y + 1) + log(2) + log(3)) == x*(y + 1) + log(6)
+    assert logcombine((x + y)*log(w) + (-x - y)*log(3)) == (x + y)*log(w/3)
 
 
-@XFAIL
 def test_logcombine_complex_coeff():
-    # TODO: Make the expand() call in logcombine smart enough so that both
-    # these hold.
-    assert logcombine(Integral((sin(x**2) + cos(x**3))/x, x), force=True) == \
-        Integral((sin(x**2) + cos(x**3))/x, x)
-    assert logcombine(
-        Integral((sin(x**2) + cos(x**3))/x, x) + (2 + 3*I)*log(x),
-        force=True) == log(x**2) + 3*I*log(x) + \
-        Integral((sin(x**2) + cos(x**3))/x, x)
+    i = Integral((sin(x**2) + cos(x**3))/x, x)
+    assert logcombine(i, force=True) == i
+    assert logcombine(i + 2*log(x), force=True) == \
+        i + log(x**2)
 
 
 def test_posify():

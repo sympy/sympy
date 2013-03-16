@@ -46,6 +46,7 @@ from sympy import beta as beta_fn
 from sympy import cos, exp, besseli
 from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
         ContinuousDistributionHandmade)
+from sympy.stats.rv import _value_check
 from sympy.core.decorators import _sympifyit
 import random
 
@@ -88,15 +89,6 @@ __all__ = ['ContinuousRV',
 'WignerSemicircle'
 ]
 
-
-def _value_check(condition, message):
-    """
-    Check a condition on input value.
-
-    Raises ValueError with message if condition is not True
-    """
-    if condition is not True:
-        raise ValueError(message)
 
 
 def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
@@ -333,7 +325,7 @@ def Beta(name, alpha, beta):
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
 
-    >>> simplify(variance(X, meijerg=True))
+    >>> simplify(variance(X, meijerg=True))  #doctest: +SKIP
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
@@ -1110,7 +1102,7 @@ def Gamma(name, k, theta):
     ========
 
     >>> from sympy.stats import Gamma, density, cdf, E, variance
-    >>> from sympy import Symbol, pprint
+    >>> from sympy import Symbol, pprint, simplify
 
     >>> k = Symbol("k", positive=True)
     >>> theta = Symbol("theta", positive=True)
@@ -1140,13 +1132,14 @@ def Gamma(name, k, theta):
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
 
-    >>> V = variance(X)
+    >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
-           2      2                     -k      k + 1
-      theta *gamma (k + 1)   theta*theta  *theta     *gamma(k + 2)
-    - -------------------- + -------------------------------------
-                2                           gamma(k)
-           gamma (k)
+         2 /                             2       \
+    theta *\gamma(k)*gamma(k + 2) - gamma (k + 1)/
+    ----------------------------------------------
+                           2
+                      gamma (k)
+
 
     References
     ==========

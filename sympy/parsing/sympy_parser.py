@@ -17,7 +17,7 @@ def _token_splittable(token):
     """
     Predicate for whether a token name can be split into multiple tokens.
 
-    A token is splittable if it does not contain an underscore charater and
+    A token is splittable if it does not contain an underscore character and
     it is not the name of a Greek letter. This is used to implicitly convert
     expressions like 'xyz' into 'x*y*z'.
     """
@@ -28,7 +28,9 @@ def _token_splittable(token):
             return not unicodedata.lookup('GREEK SMALL LETTER ' + token)
         except KeyError:
             pass
-    return True
+    if len(token) > 1:
+        return True
+    return False
 
 
 def _add_factorial_tokens(name, result):
@@ -102,45 +104,46 @@ def _flatten(result):
             result2.append(tok)
     return result2
 
+def _group_parentheses(recursor):
+    def _inner(tokens, local_dict, global_dict):
+        """Group tokens between parentheses with ParenthesisGroup.
 
-def _group_parentheses(tokens, local_dict, global_dict):
-    """Group tokens between parentheses with ParenthesisGroup.
+        Also processes those tokens recursively.
 
-    Also processes those tokens recursively.
+        """
+        result = []
+        stacks = []
+        stacklevel = 0
+        for token in tokens:
+            if token[0] == OP:
+                if token[1] == '(':
+                    stacks.append(ParenthesisGroup([]))
+                    stacklevel += 1
+                elif token[1] == ')':
+                    stacks[-1].append(token)
+                    stack = stacks.pop()
 
-    """
-    result = []
-    stacks = []
-    stacklevel = 0
-    for token in tokens:
-        if token[0] == OP:
-            if token[1] == '(':
-                stacks.append(ParenthesisGroup([]))
-                stacklevel += 1
-            elif token[1] == ')':
+                    if len(stacks) > 0:
+                        # We don't recurse here since the upper-level stack
+                        # would reprocess these tokens
+                        stacks[-1].extend(stack)
+                    else:
+                        # Recurse here to handle nested parentheses
+                        # Strip off the outer parentheses to avoid an infinite loop
+                        inner = stack[1:-1]
+                        inner = recursor(inner,
+                                         local_dict,
+                                         global_dict)
+                        parenGroup = [stack[0]] + inner + [stack[-1]]
+                        result.append(ParenthesisGroup(parenGroup))
+                    stacklevel -= 1
+                    continue
+            if stacklevel:
                 stacks[-1].append(token)
-                stack = stacks.pop()
-
-                if len(stacks) > 0:
-                    # We don't recurse here since the upper-level stack
-                    # would reprocess these tokens
-                    stacks[-1].extend(stack)
-                else:
-                    # Recurse here to handle nested parentheses
-                    # Strip off the outer parentheses to avoid an infinite loop
-                    inner = stack[1:-1]
-                    inner = implicit_multiplication_application(inner,
-                                                                local_dict,
-                                                                global_dict)
-                    parenGroup = [stack[0]] + inner + [stack[-1]]
-                    result.append(ParenthesisGroup(parenGroup))
-                stacklevel -= 1
-                continue
-        if stacklevel:
-            stacks[-1].append(token)
-        else:
-            result.append(token)
-    return result
+            else:
+                result.append(token)
+        return result
+    return _inner
 
 
 def _apply_functions(tokens, local_dict, global_dict):
@@ -165,24 +168,6 @@ def _apply_functions(tokens, local_dict, global_dict):
         else:
             symbol = None
             result.append(tok)
-    return result
-
-
-def _split_symbols(tokens, local_dict, global_dict):
-    result = []
-    for tok in tokens:
-        if isinstance(tok, AppliedFunction):
-            if tok.function[1] == 'Symbol' and len(tok.args) == 3:
-                # Middle token, get value, strip quotes
-                symbol = tok.args[1][1][1:-1]
-                if _token_splittable(symbol):
-                    for char in symbol:
-                        result.append(AppliedFunction(
-                            tok.function,
-                            [(OP, '('), (NAME, str(repr(char))), (OP, ')')]
-                        ))
-                    continue
-        result.append(tok)
     return result
 
 
@@ -233,19 +218,18 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
 
 def _implicit_application(tokens, local_dict, global_dict):
-    """Adds parentheses as needed after functions.
-
-    Also processes functions raised to powers."""
+    """Adds parentheses as needed after functions."""
     result = []
     appendParen = 0  # number of closing parentheses to add
-    skip = False  # number of tokens to delay before adding a ')' (to
-                  # capture **, ^, etc.)
-    exponent = None
+    skip = 0  # number of tokens to delay before adding a ')' (to
+              # capture **, ^, etc.)
+    exponentSkip = False  # skipping tokens before inserting parentheses to
+                          # work with function exponentiation
     for tok, nextTok in zip(tokens, tokens[1:]):
         result.append(tok)
         if (tok[0] == NAME and
             nextTok[0] != OP and
-                nextTok[0] != ENDMARKER):
+            nextTok[0] != ENDMARKER):
             func = global_dict.get(tok[1])
             is_Function = getattr(func, 'is_Function', False)
             if (is_Function or
@@ -253,16 +237,28 @@ def _implicit_application(tokens, local_dict, global_dict):
                     isinstance(nextTok, AppliedFunction)):
                 result.append((OP, '('))
                 appendParen += 1
-        elif isinstance(tok, AppliedFunction) and not tok.args:
-            # This occurs when we had a function raised to a power - it has
-            # no arguments
-            result[-1] = tok.function
-            exponent = tok.exponent
-            if nextTok[0] != OP and nextTok[1] != '(':
-                result.append((OP, '('))
-                appendParen += 1
+        # name followed by exponent - function exponentiation
+        elif (tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**'):
+            func = global_dict.get(tok[1])
+            is_Function = getattr(func, 'is_Function', False)
+            if (is_Function or
+                (callable(func) and not hasattr(func, 'is_Function'))):
+                exponentSkip = True
+        elif exponentSkip:
+            # if the last token added was an applied function (i.e. the
+            # power of the function exponent) OR a multiplication (as
+            # implicit multiplication would have added an extraneous
+            # multiplication)
+            if (isinstance(tok, AppliedFunction)
+                or tok[0] == OP and tok[1] == '*'):
+                # don't add anything if the next token is a multiplication
+                # or if there's already a parenthesis
+                if not (nextTok[0] == OP and nextTok[1] in ('*', '(')):
+                    result.append((OP, '('))
+                    appendParen += 1
+                    exponentSkip = False
         elif appendParen:
-            if nextTok[0] == OP and nextTok[1] in ('^', '**'):
+            if nextTok[0] == OP and nextTok[1] in ('^', '**', '*'):
                 skip = 1
                 continue
             if skip:
@@ -270,39 +266,166 @@ def _implicit_application(tokens, local_dict, global_dict):
                 continue
             result.append((OP, ')'))
             appendParen -= 1
-            if exponent and not appendParen:
-                result.extend(exponent)
-                exponent = None
 
     result.append(tokens[-1])
 
     if appendParen:
         result.extend([(OP, ')')] * appendParen)
+
+    return result
+
+
+def function_exponentiation(tokens, local_dict, global_dict):
+    """Allows functions to be exponentiated, e.g. ``cos**2(x)``.
+
+    Example:
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, function_exponentiation)
+    >>> transformations = standard_transformations + (function_exponentiation,)
+    >>> parse_expr('sin**4(x)', transformations=transformations)
+    sin(x)**4
+    """
+    result = []
+    exponent = []
+    consuming_exponent = False
+    level = 0
+
+    for tok, nextTok in zip(tokens, tokens[1:]):
+        if tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**':
+            consuming_exponent = True
+        elif consuming_exponent:
+            exponent.append(tok)
+
+            # only want to stop after hitting )
+            if tok[0] == nextTok[0] == OP and tok[1] == ')' and nextTok[1] == '(':
+                consuming_exponent = False
+            # if implicit multiplication was used, we may have )*( instead
+            if tok[0] == nextTok[0] == OP and tok[1] == '*' and nextTok[1] == '(':
+                consuming_exponent = False
+                del exponent[-1]
+            continue
+        elif exponent and not consuming_exponent:
+            if tok[0] == OP:
+                if tok[1] == '(':
+                    level += 1
+                elif tok[1] == ')':
+                    level -= 1
+            if level == 0:
+                result.append(tok)
+                result.extend(exponent)
+                exponent = []
+                continue
+        result.append(tok)
+    result.append(tokens[-1])
     if exponent:
         result.extend(exponent)
-
     return result
 
 
-def _function_exponents(tokens, local_dict, global_dict):
-    """Preprocess functions raised to powers."""
-    result = []
-    need_exponent = False
-    for tok, nextTok in zip(tokens, tokens[1:]):
-        result.append(tok)
-        if (tok[0] == NAME and nextTok[0] == OP
-                and nextTok[1] in ('**', '^')):
-            if getattr(global_dict.get(tok[1]), 'is_Function', False):
-                result[-1] = AppliedFunction(tok, [])
-                need_exponent = True
-        elif need_exponent:
-            del result[-1]
-            result[-1].exponent.append(tok)
-            if isinstance(tok, AppliedFunction):
-                need_exponent = False
-    result.append(tokens[-1])
+def split_symbols_custom(predicate):
+    """Creates a transformation that splits symbol names.
+
+    ``predicate`` should return True if the symbol name is to be split.
+
+    For instance, to retain the default behavior but avoid splitting certain
+    symbol names, a predicate like this would work:
+
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr, _token_splittable,
+    ... standard_transformations, implicit_multiplication,
+    ... split_symbols_custom)
+    >>> def can_split(symbol):
+    ...     if symbol not in ('list', 'of', 'unsplittable', 'names'):
+    ...             return _token_splittable(symbol)
+    ...     return False
+    ...
+    >>> transformation = split_symbols_custom(can_split)
+    >>> parse_expr('unsplittable', transformations=standard_transformations +
+    ... (transformation, implicit_multiplication))
+    unsplittable
+    """
+    def _split_symbols(tokens, local_dict, global_dict):
+        result = []
+        split = False
+        for tok in tokens:
+            if tok[0] == NAME and tok[1] == 'Symbol':
+                split = True
+            elif split and tok[0] == NAME:
+                symbol = tok[1][1:-1]
+                if predicate(symbol):
+                    for char in symbol:
+                        result.extend([(NAME, "'%s'" % char), (OP, ')'),
+                                       (NAME, 'Symbol'), (OP, '(')])
+                    # Delete the last three tokens: get rid of the extraneous
+                    # Symbol( we just added, and also get rid of the last )
+                    # because the closing parenthesis of the original Symbol is
+                    # still there
+                    del result[-3:]
+                    split = False
+                    continue
+                else:
+                    split = False
+            result.append(tok)
+        return result
+    return _split_symbols
+
+
+#: Splits symbol names for implicit multiplication.
+#:
+#: Intended to let expressions like ``xyz`` be parsed as ``x*y*z``. Does not
+#: split Greek character names, so ``theta`` will *not* become
+#: ``t*h*e*t*a``. Generally this should be used with
+#: ``implicit_multiplication``.
+split_symbols = split_symbols_custom(_token_splittable)
+
+
+def implicit_multiplication(result, local_dict, global_dict):
+    """Makes the multiplication operator optional in most cases.
+
+    Use this before :func:`implicit_application`, otherwise expressions like
+    ``sin 2x`` will be parsed as ``x * sin(2)`` rather than ``sin(2*x)``.
+
+    Example:
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, implicit_multiplication)
+    >>> transformations = standard_transformations + (implicit_multiplication,)
+    >>> parse_expr('3 x y', transformations=transformations)
+    3*x*y
+    """
+    # These are interdependent steps, so we don't expose them separately
+    for step in (_group_parentheses(implicit_multiplication),
+                 _apply_functions,
+                 _implicit_multiplication):
+        result = step(result, local_dict, global_dict)
+
+    result = _flatten(result)
     return result
 
+
+def implicit_application(result, local_dict, global_dict):
+    """Makes parentheses optional in some cases for function calls.
+
+    Use this after :func:`implicit_multiplication`, otherwise expressions
+    like ``sin 2x`` will be parsed as ``x * sin(2)`` rather than
+    ``sin(2*x)``.
+
+    Example:
+
+    >>> from sympy.parsing.sympy_parser import (parse_expr,
+    ... standard_transformations, implicit_application)
+    >>> transformations = standard_transformations + (implicit_application,)
+    >>> parse_expr('cot z + csc z', transformations=transformations)
+    csc(z) + cot(z)
+    """
+    for step in (_group_parentheses(implicit_application),
+                 _apply_functions,
+                 _implicit_application,):
+        result = step(result, local_dict, global_dict)
+
+    result = _flatten(result)
+    return result
 
 def implicit_multiplication_application(result, local_dict, global_dict):
     """Allows a slightly relaxed syntax.
@@ -326,16 +449,10 @@ def implicit_multiplication_application(result, local_dict, global_dict):
     3*x*y*z + 10*sin(x**2)**2 + tan(theta)
 
     """
-    # These are interdependent steps, so we don't expose them separately
-    for step in (_group_parentheses,
-                 _apply_functions,
-                 _split_symbols,
-                 _function_exponents,
-                 _implicit_application,
-                 _implicit_multiplication):
+    for step in (split_symbols, implicit_multiplication,
+                 implicit_application, function_exponentiation):
         result = step(result, local_dict, global_dict)
 
-    result = _flatten(result)
     return result
 
 

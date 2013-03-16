@@ -3804,6 +3804,27 @@ def test_issue_3186():
     assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
 
 
+def test_issue_3260():
+    assert pretty(Integral(x**2, x)**2) == \
+"""\
+          2
+/  /     \ \n\
+| |      | \n\
+| |  2   | \n\
+| | x  dx| \n\
+| |      | \n\
+\/       / \
+"""
+    assert upretty(Integral(x**2, x)**2) == \
+u"""\
+         2
+⎛⌠      ⎞ \n\
+⎜⎮  2   ⎟ \n\
+⎜⎮ x  dx⎟ \n\
+⎝⌡      ⎠ \
+"""
+
+
 def test_issue_3640():
     ascii_str = \
 """\

@@ -2,14 +2,18 @@ from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Wild, acos,
     asin, atan, atanh, cos, cosh, diff, exp, expand, im, log, pi, re, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh)
-from sympy.abc import a, b, c, d, k, h, p, x, y, z, t
+    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
+    RootOf)
+from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
-from sympy.solvers.solvers import _invert, unrad, checksol, posify
+from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow
 
-from sympy.utilities.pytest import XFAIL, raises, skip
+from sympy.polys.rootoftools import RootOf
+
+from sympy.utilities.pytest import slow, XFAIL, raises, skip
+from sympy.utilities.randtest import test_numerically as tn
 
 
 def NS(e, n=15, **options):
@@ -200,6 +204,34 @@ def test_solve_polynomial_cv_2():
          [ Rational(1, 2) - I*sqrt(3)/2, Rational(1, 2) + I*sqrt(3)/2]]
 
 
+def test_quintics_1():
+    f = x**5 - 110*x**3 - 55*x**2 + 2310*x + 979
+    s = solve(f, check=False)
+    for root in s:
+        res = f.subs(x, root.n()).n()
+        assert tn(res, 0)
+
+    f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
+    s = solve(f)
+    for root in s:
+        assert root.func == RootOf
+
+
+@XFAIL
+@slow
+def test_quintics_2():
+    f = x**5 + 15*x + 12
+    s = solve(f, check=False)
+    for root in s:
+        res = f.subs(x, root.n()).n()
+        assert tn(res, 0)
+
+    f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
+    s = solve(f)
+    for root in s:
+        assert root.func == RootOf
+
+
 def test_solve_rational():
     """Test solve for rational functions"""
     assert solve( ( x - y**3 )/( (y**2)*sqrt(1 - y**2) ), x) == [y**3]
@@ -329,7 +361,8 @@ def test_tsolve():
     assert solve([x**y - 1]) == [{x: 1}, {y: 0}]
     assert solve(x*y*(x**2 - y**2)) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
     assert solve([x*y*(x**2 - y**2)]) == [{x: 0}, {x: -y}, {x: y}, {y: 0}]
-
+    #issue #1640
+    assert solve(exp(log(5)*x) - 2**x, x) == [0]
 
 def test_solve_for_functions_derivatives():
     t = Symbol('t')
@@ -439,6 +472,9 @@ def test_solve_inequalities():
     assert solve(system, assume=Q.real(x)) == \
         Or(And(Lt(-sqrt(2), x), Lt(x, -1)), And(Lt(1, x), Lt(x, sqrt(2))))
 
+    # issue 3528, 3448
+    assert solve((x - 3)/(x - 2) < 0, x, assume=Q.real(x)) == And(Lt(2, x), Lt(x, 3))
+    assert solve(x/(x + 1) > 1, x, assume=Q.real(x)) == Lt(x, -1)
 
 def test_issue_1694():
     assert solve(1/x) == []
@@ -1085,17 +1121,22 @@ def test_exclude():
             Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
             R: Vplus/(C*s*(V1 - 2*Vplus))}]
 
+
 def test_high_order_roots():
     s = x**5 + 4*x**3 + 3*x**2 + S(7)/4
     assert set(solve(s)) == set(Poly(s*4, domain='ZZ').all_roots())
 
+
 def test_minsolve_linear_system():
     def count(dic):
         return len([x for x in dic.itervalues() if x == 0])
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) == 3
-    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) == 3
+    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=True)) \
+        == 3
+    assert count(solve([x + y + z, y + z + a + t], minimal=True, quick=False)) \
+        == 3
     assert count(solve([x + y + z, y + z + a], minimal=True, quick=True)) == 1
     assert count(solve([x + y + z, y + z + a], minimal=True, quick=False)) == 2
+
 
 def test_real_roots():
     # cf. issue 3551
@@ -1116,6 +1157,7 @@ def test_overdetermined():
     assert solve(eqs, x, manual=True) == [(S.Half,)]
     assert solve(eqs, x, manual=True, check=False) == [(S.Half/2,), (S.Half,)]
 
+
 def test_issue_3506():
     x = symbols('x')
     assert solve(4**(x/2) - 2**(x/3)) == [0]
@@ -1124,3 +1166,30 @@ def test_issue_3506():
     assert solve(5**(x/2) - 2**(x/3)) == [0]
     b = sqrt(6)*sqrt(log(2))/sqrt(log(5))
     assert solve(5**(x/2) - 2**(3/x)) == [-b, b]
+
+
+def test__ispow():
+    assert _ispow(x**2)
+    assert not _ispow(x)
+    assert not _ispow(True)
+
+
+def test_issue_3545():
+    eq = -sqrt((m - q)**2 + (-m/(2*q) + S(1)/2)**2) + sqrt((-m**2/2 - sqrt(
+    4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2 + (m**2/2 - m - sqrt(
+    4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4)**2)
+    assert solve(eq, q) == [
+        m**2/2 - sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4,
+        m**2/2 + sqrt(4*m**4 - 4*m**2 + 8*m + 1)/4 - S(1)/4]
+
+
+def test_issue_3653():
+    assert solve([a**2 + a, a - b], [a, b]) == [(-1, -1), (0, 0)]
+    assert solve([a**2 + a*c, a - b], [a, b]) == [(0, 0), (-c, -c)]
+
+
+def test_issue_3693():
+    assert solve(x*(x-1)**2*(x+1)*(x**6-x+1)) == [
+    -1, 0, 1, RootOf(x**6 - x + 1, 0), RootOf(x**6 - x + 1, 1),
+    RootOf(x**6 - x + 1, 2), RootOf(x**6 - x + 1, 3), RootOf(x**6 - x + 1, 4),
+    RootOf(x**6 - x + 1, 5)]
