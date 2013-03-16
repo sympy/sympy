@@ -212,6 +212,25 @@ def test_integrate_hyperexponential():
     assert integrate_hyperexponential(Poly(x, t), Poly(t + 1, t), DE) == \
         (0, NonElementaryIntegral(x/(1 + exp(x)), x), False)
 
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0), Poly(2*x*t1, t1)],
+        'Tfuncs': [log, Lambda(i, exp(i**2))]})
+    assert integrate_hyperexponential(Poly((8*x**7 - 12*x**5 + 6*x**3 - x)*t1**4 +
+    (8*t0*x**7 - 8*t0*x**6 - 4*t0*x**5 + 2*t0*x**3 + 2*t0*x**2 - t0*x +
+    24*x**8 - 36*x**6 - 4*x**5 + 22*x**4 + 4*x**3 - 7*x**2 - x + 1)*t1**3
+    + (8*t0*x**8 - 4*t0*x**6 - 16*t0*x**5 - 2*t0*x**4 + 12*t0*x**3 +
+    t0*x**2 - 2*t0*x + 24*x**9 - 36*x**7 - 8*x**6 + 22*x**5 + 12*x**4 -
+    7*x**3 - 6*x**2 + x + 1)*t1**2 + (8*t0*x**8 - 8*t0*x**6 - 16*t0*x**5 +
+    6*t0*x**4 + 10*t0*x**3 - 2*t0*x**2 - t0*x + 8*x**10 - 12*x**8 - 4*x**7
+    + 2*x**6 + 12*x**5 + 3*x**4 - 9*x**3 - x**2 + 2*x)*t1 + 8*t0*x**7 -
+    12*t0*x**6 - 4*t0*x**5 + 8*t0*x**4 - t0*x**2 - 4*x**7 + 4*x**6 +
+    4*x**5 - 4*x**4 - x**3 + x**2, t1), Poly((8*x**7 - 12*x**5 + 6*x**3 -
+    x)*t1**4 + (24*x**8 + 8*x**7 - 36*x**6 - 12*x**5 + 18*x**4 + 6*x**3 -
+    3*x**2 - x)*t1**3 + (24*x**9 + 24*x**8 - 36*x**7 - 36*x**6 + 18*x**5 +
+    18*x**4 - 3*x**3 - 3*x**2)*t1**2 + (8*x**10 + 24*x**9 - 12*x**8 -
+    36*x**7 + 6*x**6 + 18*x**5 - x**4 - 3*x**3)*t1 + 8*x**10 - 12*x**8 +
+    6*x**6 - x**4, t1), DE) == \
+        ((x*log(x) - log(x))/-((x + exp(x**2))*(2*x**2 - 1)),
+        NonElementaryIntegral(exp(x**2)/(exp(x**2) + 1), x), False)
 
 def test_integrate_hyperexponential_polynomial():
     # Without proper cancellation within integrate_hyperexponential_polynomial(),
@@ -257,6 +276,12 @@ def test_integrate_primitive():
     assert integrate_primitive(Poly(t2, t2), Poly(t1, t2), DE) == \
         (0, NonElementaryIntegral(log(log(x))/log(x), x), False)
 
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0)],
+        'Tfuncs': [log]})
+    assert integrate_primitive(Poly(x**2*t0**3 + (3*x**2 + x)*t0**2 + (3*x**2
+    + 2*x)*t0 + x**2 + x, t0), Poly(x**2*t0**4 + 4*x**2*t0**3 + 6*x**2*t0**2 +
+    4*x**2*t0 + x**2, t0), DE) == \
+        (-1/(log(x) + 1), NonElementaryIntegral(1/(log(x) + 1), x), False)
 
 def test_integrate_hypertangent_polynomial():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
