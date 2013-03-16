@@ -354,10 +354,16 @@ class LatexPrinter(Printer):
 
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
+        is_partial = len(expr.free_symbols) > 1
+        if is_partial:
+            diff_symbol = r'\partial'
+        else:
+            diff_symbol = r'd'
+
 
         if dim == 1:
-            tex = r"\frac{\partial}{\partial %s}" % \
-                self._print(expr.variables[0])
+            tex = r"\frac{%s}{%s %s}" % (diff_symbol, diff_symbol,
+                self._print(expr.variables[0]))
         else:
             multiplicity, i, tex = [], 1, ""
             current = expr.variables[0]
@@ -373,11 +379,11 @@ class LatexPrinter(Printer):
 
             for x, i in multiplicity:
                 if i == 1:
-                    tex += r"\partial %s" % self._print(x)
+                    tex += diff_symbol + (r" %s" % self._print(x))
                 else:
-                    tex += r"\partial^{%s} %s" % (i, self._print(x))
+                    tex += diff_symbol + (r" %s^{%s}" % (self._print(x), i))
 
-            tex = r"\frac{\partial^{%s}}{%s} " % (dim, tex)
+            tex = r"\frac{" + diff_symbol + (r"^{%s}}{%s} " % (dim, tex))
 
         if isinstance(expr.expr, C.AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(expr.expr))

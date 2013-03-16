@@ -285,11 +285,37 @@ def test_latex_brackets():
 
 
 def test_latex_derivatives():
+    # regular "d" for ordinary derivatives
     assert latex(diff(x**3, x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x} x^{3}"
+        r"\frac{d}{d x} x^{3}"
     assert latex(diff(sin(x) + x**2, x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
+        r"\frac{d}{d x}\left(x^{2} + \sin{\left (x \right )}\right)"
+    assert latex(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False)) == \
+        r"\frac{d^{2}}{d x^{2}} \left(x^{2} + \sin{\left (x \right )}\right)"
+    assert latex(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
+        r"\frac{d^{3}}{d x^{3}} \left(x^{2} + \sin{\left (x \right )}\right)"
 
+    # \partial for partial derivatives
+    assert latex(diff(sin(x * y), x, evaluate=False)) == \
+        r"\frac{\partial}{\partial x} \sin{\left (x y \right )}"
+    assert latex(diff(sin(x * y) + x**2, x, evaluate=False)) == \
+        r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x y \right )}\right)"
+    assert latex(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
+        r"\frac{\partial^{2}}{\partial x^{2}} \left(x^{2} + \sin{\left (x y \right )}\right)"
+    assert latex(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
+        r"\frac{\partial^{3}}{\partial x^{3}} \left(x^{2} + \sin{\left (x y \right )}\right)"
+
+    # mixed partial derivatives
+    f = Function("f")
+    assert latex(diff(diff(f(x,y), x, evaluate=False), y, evaluate=False)) == \
+        r"\frac{\partial^{2}}{\partial x\partial y}  " + latex(f(x,y))
+
+    assert latex(diff(diff(diff(f(x,y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
+        r"\frac{\partial^{3}}{\partial x^{2}\partial y}  " + latex(f(x,y))
+
+    # use ordinary d when one of the variables has been integrated out
+    assert latex(diff(Integral(exp(-x * y), (x, 0, oo)), y, evaluate=False)) == \
+        r"\frac{d}{d y} \int_{0}^{\infty} e^{- x y}\, dx"
 
 def test_latex_subs():
     assert latex(Subs(x*y, (
