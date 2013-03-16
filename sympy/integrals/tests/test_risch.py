@@ -13,7 +13,7 @@ from sympy.utilities.pytest import raises
 
 from sympy.abc import x, t, nu, z, a, y
 t0, t1, t2 = symbols('t:3')
-
+i = Symbol('i')
 
 def test_gcdex_diophantine():
     assert gcdex_diophantine(Poly(x**4 - 2*x**3 - 6*x**2 + 12*x + 15),
@@ -170,7 +170,7 @@ def test_integrate_hyperexponential():
     a = Poly((1 + 2*t1 + t1**2 + 2*t1**3)*t**2 + (1 + t1**2)*t + 1 + t1**2, t)
     d = Poly(1, t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1 + t1**2, t1),
-        Poly(t*(1 + t1**2), t)], 'Tfuncs': [tan, lambda x: exp(tan(x))]})
+        Poly(t*(1 + t1**2), t)], 'Tfuncs': [tan, Lambda(i, exp(tan(i)))]})
     assert integrate_hyperexponential(a, d, DE) == \
         (exp(2*tan(x))*tan(x) + exp(tan(x)), 1 + t1**2, True)
         # exp(2*tan(x))*tan(x) + tan(x) + exp(tan(x))
@@ -181,7 +181,7 @@ def test_integrate_hyperexponential():
     a = Poly(t, t)
     d = Poly(1, t)
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(2*x*t, t)],
-        'Tfuncs': [lambda x: exp(x**2)]})
+        'Tfuncs': [Lambda(i, exp(x**2))]})
 
     assert integrate_hyperexponential(a, d, DE) == \
         (0, NonElementaryIntegral(exp(x**2), x), False)
@@ -195,11 +195,11 @@ def test_integrate_hyperexponential():
         (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) + log(1 + exp(2*x)), -1, True)
         # -(55 - 50*exp(x))/(25 + 125*exp(2*x)) - x + log(1 + exp(2*x))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0), Poly(t0*t, t)],
-        'Tfuncs': [exp, lambda x: exp(exp(x))]})
+        'Tfuncs': [exp, Lambda(i, exp(exp(i)))]})
     assert integrate_hyperexponential(Poly(2*t0*t**2, t), Poly(1, t), DE) == (exp(2*exp(x)), 0, True)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0), Poly(-t0*t, t)],
-        'Tfuncs': [exp, lambda x: exp(-exp(x))]})
+        'Tfuncs': [exp, Lambda(i, exp(-exp(i)))]})
     assert integrate_hyperexponential(Poly(-27*exp(9) - 162*t0*exp(9) +
     27*x*t0*exp(9), t), Poly((36*exp(18) + x**2*exp(18) - 12*x*exp(18))*t, t), DE) == \
         (27*exp(exp(x))/(-6*exp(9) + x*exp(9)), 0, True)
@@ -248,12 +248,12 @@ def test_integrate_primitive():
     assert integrate_primitive(Poly(x, t), Poly(t, t), DE) == (0, NonElementaryIntegral(x/log(x), x), False)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x + 1), t2)],
-        'Tfuncs': [log, lambda x: log(x + 1)]})
+        'Tfuncs': [log, Lambda(i, log(i + 1))]})
     assert integrate_primitive(Poly(t1, t2), Poly(t2, t2), DE) == \
         (0, NonElementaryIntegral(log(x)/log(1 + x), x), False)
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t1), Poly(1/(x*t1), t2)],
-        'Tfuncs': [log, lambda x: log(log(x))]})
+        'Tfuncs': [log, Lambda(i, log(log(i)))]})
     assert integrate_primitive(Poly(t2, t2), Poly(t1, t2), DE) == \
         (0, NonElementaryIntegral(log(log(x))/log(x), x), False)
 
@@ -288,7 +288,6 @@ def test_integer_powers():
 
 
 def test_DifferentialExtension_exp():
-    i = Symbol('i')
     assert DifferentialExtension(exp(x) + exp(x**2), x, dummy=False)._important_attrs == \
         (Poly(t1 + t0, t1), Poly(1, t1), [Poly(1, x,), Poly(t0, t0),
         Poly(2*x*t1, t1)], [x, t0, t1], [Lambda(i, exp(i)),
@@ -331,7 +330,6 @@ def test_DifferentialExtension_exp():
 
 
 def test_DifferentialExtension_log():
-    i = Symbol('i')
     assert DifferentialExtension(log(x)*log(x + 1)*log(2*x**2 + 2*x), x,
         dummy=False)._important_attrs == \
         (Poly(t0*t1**2 + (t0*log(2) + t0**2)*t1, t1), Poly(1, t1),
@@ -346,7 +344,6 @@ def test_DifferentialExtension_log():
 
 
 def test_DifferentialExtension_symlog():
-    i = Symbol('i')
     assert DifferentialExtension(log(x**x), x, dummy=False)._important_attrs == \
         (Poly(x*t0, t0), Poly(1, t0), [Poly(1, x), Poly(1/x, t0)], [x, t0],
         [Lambda(i, log(i))], [(x*log(x), log(x**x))], [], [], [1], [x])
@@ -359,7 +356,6 @@ def test_DifferentialExtension_symlog():
 
 
 def test_DifferentialExtension_handle_first():
-    i = Symbol('i')
     assert DifferentialExtension(exp(x)*log(x), x, handle_first='log',
     dummy=False)._important_attrs == \
         (Poly(t0*t1, t1), Poly(1, t1), [Poly(1, x), Poly(1/x, t0),
@@ -436,7 +432,6 @@ def test_DifferentialExtension_extension_flag():
 
 def test_DifferentialExtension_misc():
     # Odd ends
-    i = Symbol('i')
     assert DifferentialExtension(sin(y)*exp(x), x, dummy=False)._important_attrs == \
         (Poly(sin(y)*t0, t0, domain='ZZ[sin(y)]'), Poly(1, t0, domain='ZZ'),
         [Poly(1, x, domain='ZZ'), Poly(t0, t0, domain='ZZ')], [x, t0],
@@ -457,7 +452,6 @@ def test_DifferentialExtension_misc():
 
 def test_DifferentialExtension_Rothstein():
     # Rothstein's integral
-    i = Symbol('i')
     f = (2581284541*exp(x) + 1757211400)/(39916800*exp(3*x) +
     119750400*exp(x)**2 + 119750400*exp(x) + 39916800)*exp(1/(exp(x) + 1) - 10*x)
     assert DifferentialExtension(f, x, dummy=False)._important_attrs == \
