@@ -460,7 +460,7 @@ def ufuncify(args, expr, **kwargs):
     >>> from sympy.abc import x, y, z
     >>> f = ufuncify([x, y], y + x**2)             # doctest: +SKIP
     >>> f([1, 2, 3], 2)                            # doctest: +SKIP
-    [2.  5.  10.]
+    array([  3.,   6.,  11. ])
 
     """
     y = C.IndexedBase(C.Dummy('y'))
