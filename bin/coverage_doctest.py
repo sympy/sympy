@@ -590,6 +590,8 @@ docs, run "cd doc; make html".  To skip checking Sphinx coverage, pass --no-sphi
 """
         sys.exit(1)
 
+    full_coverage = True
+
     for file in args.path:
         file = os.path.normpath(file)
         print 'DOCTEST COVERAGE for %s' % (file)
@@ -603,9 +605,14 @@ docs, run "cd doc; make html".  To skip checking Sphinx coverage, pass --no-sphi
         else:
             score = 100 * float(doctests) / num_functions
             score = int(score)
+            if doctests < num_functions:
+                full_coverage = False
+
             if args.sphinx:
                 sphinx_score = 100 - 100 * float(total_sphinx) / num_functions
                 sphinx_score = int(sphinx_score)
+                if total_sphinx > 0:
+                    full_coverage = False
         print
         print '='*70
 
@@ -640,3 +647,4 @@ docs, run "cd doc; make html".  To skip checking Sphinx coverage, pass --no-sphi
                     sphinx_score, num_functions - total_sphinx, num_functions, c_normal)
 
         print
+        sys.exit(not full_coverage)
