@@ -141,18 +141,6 @@ class Domain(object):
         """Convert a Python ``Fraction`` object to ``dtype``. """
         return None
 
-    def from_FF_sympy(K1, a, K0):
-        """Convert ``ModularInteger(Integer)`` to ``dtype``. """
-        return None
-
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy ``Integer`` object to ``dtype``. """
-        return None
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy ``Rational`` object to ``dtype``. """
-        return None
-
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to ``dtype``. """
         return None
@@ -163,10 +151,6 @@ class Domain(object):
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
-        return None
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy ``Float`` object to ``dtype``. """
         return None
 
     def from_RR_mpmath(K1, a, K0):

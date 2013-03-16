@@ -3,7 +3,7 @@
 from sympy import S, sqrt, sin, oo, nan, Poly, Integer, Rational
 from sympy.abc import x, y, z
 
-from sympy.polys.domains import (ZZ, QQ, RR, FF, ZZ_sympy, QQ_sympy,
+from sympy.polys.domains import (ZZ, QQ, RR, FF,
     RR_mpmath, PolynomialRing, FractionField, EX)
 
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
@@ -525,20 +525,6 @@ def test_PolynomialRing__from_FractionField():
 
     assert ZZ[x].from_FractionField(f, ZZ[x]) is None
     assert ZZ[x].from_FractionField(g, ZZ[x]) == DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
-
-
-def test_sympy_of_type():
-    assert ZZ_sympy().of_type(Integer(1))
-    assert ZZ_sympy().of_type(Integer(0))
-    assert ZZ_sympy().of_type(Integer(-1))
-    assert ZZ_sympy().of_type(Integer(2))
-    assert not ZZ_sympy().of_type(Rational(1, 2))
-    assert QQ_sympy().of_type(Rational(1))
-    assert QQ_sympy().of_type(Rational(-1))
-    assert QQ_sympy().of_type(Rational(0))
-    assert QQ_sympy().of_type(Rational(2))
-    assert QQ_sympy().of_type(Rational(1, 2))
-    assert QQ_sympy().of_type(Rational(3, 2))
 
 
 def test_FF_of_type():

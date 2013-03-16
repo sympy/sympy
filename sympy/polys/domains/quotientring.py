@@ -151,11 +151,8 @@ class QuotientRing(Ring):
         return K1(K1.ring.convert(a, K0))
 
     from_QQ_python = from_ZZ_python
-    from_ZZ_sympy = from_ZZ_python
-    from_QQ_sympy = from_ZZ_python
     from_ZZ_gmpy = from_ZZ_python
     from_QQ_gmpy = from_ZZ_python
-    from_RR_sympy = from_ZZ_python
     from_RR_mpmath = from_ZZ_python
     from_GlobalPolynomialRing = from_ZZ_python
     from_FractionField = from_ZZ_python

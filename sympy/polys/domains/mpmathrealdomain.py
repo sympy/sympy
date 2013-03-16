@@ -23,14 +23,6 @@ class MPmathRealDomain(RealDomain):
         """Convert a Python `Fraction` object to `dtype`. """
         return MPmathReal(a.numerator) / a.denominator
 
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
-        return MPmathReal(a.p)
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
-        return MPmathReal(a.p) / a.q
-
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY `mpz` object to `dtype`. """
         return MPmathReal(int(a))
@@ -38,10 +30,6 @@ class MPmathRealDomain(RealDomain):
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
         return MPmathReal(int(a.numerator)) / int(a.denominator)
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Float` object to `dtype`. """
-        return MPmathReal(a)
 
     def from_RR_mpmath(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """

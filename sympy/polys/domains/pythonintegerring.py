@@ -47,19 +47,6 @@ class PythonIntegerRing(IntegerRing):
         if a.denominator == 1:
             return a.numerator
 
-    def from_FF_sympy(K1, a, K0):
-        """Convert ``ModularInteger(Integer)`` to Python's ``int``. """
-        return a.to_int().p
-
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert SymPy's ``Integer`` to Python's ``int``. """
-        return a.p
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert SymPy's ``Rational`` to Python's ``int``. """
-        if a.q == 1:
-            return a.p
-
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to Python's ``int``. """
         return PythonInteger(a.to_int())
@@ -72,13 +59,6 @@ class PythonIntegerRing(IntegerRing):
         """Convert GMPY's ``mpq`` to Python's ``int``. """
         if a.denom() == 1:
             return PythonInteger(a.numer())
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert SymPy's ``Float`` to Python's ``int``. """
-        p, q = K0.as_integer_ratio(a)
-
-        if q == 1:
-            return PythonInteger(p)
 
     def from_RR_mpmath(K1, a, K0):
         """Convert mpmath's ``mpf`` to Python's ``int``. """

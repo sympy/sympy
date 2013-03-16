@@ -108,15 +108,12 @@ Implementation Domains
 **********************
 
 .. autoclass:: PythonFiniteField
-.. autoclass:: SymPyFiniteField
 .. autoclass:: GMPYFiniteField
 
 .. autoclass:: PythonIntegerRing
-.. autoclass:: SymPyIntegerRing
 .. autoclass:: GMPYIntegerRing
 
 .. autoclass:: PythonRationalField
-.. autoclass:: SymPyRationalField
 .. autoclass:: GMPYRationalField
 
 .. autoclass:: MPmathRealDomain

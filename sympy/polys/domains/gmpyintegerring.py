@@ -48,19 +48,6 @@ class GMPYIntegerRing(IntegerRing):
         if a.denominator == 1:
             return GMPYInteger(a.numerator)
 
-    def from_FF_sympy(K1, a, K0):
-        """Convert ``ModularInteger(Integer)`` to GMPY's ``mpz``. """
-        return GMPYInteger(a.to_int().p)
-
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert SymPy's ``Integer`` to GMPY's ``mpz``. """
-        return GMPYInteger(a.p)
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert SymPy's ``Rational`` to GMPY's ``mpz``. """
-        if a.q == 1:
-            return GMPYInteger(a.p)
-
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to GMPY's ``mpz``. """
         return a.to_int()
@@ -73,13 +60,6 @@ class GMPYIntegerRing(IntegerRing):
         """Convert GMPY ``mpq`` to GMPY's ``mpz``. """
         if a.denominator == 1:
             return a.numerator
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert SymPy's ``Float`` to GMPY's ``mpz``. """
-        p, q = K0.as_integer_ratio(a)
-
-        if q == 1:
-            return GMPYInteger(p)
 
     def from_RR_mpmath(K1, a, K0):
         """Convert mpmath's ``mpf`` to GMPY's ``mpz``. """

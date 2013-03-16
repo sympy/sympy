@@ -44,14 +44,6 @@ class GMPYRationalField(RationalField):
         """Convert a Python `Fraction` object to `dtype`. """
         return GMPYRational(a.numerator, a.denominator)
 
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
-        return GMPYRational(a.p)
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
-        return GMPYRational(a.p, a.q)
-
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY `mpz` object to `dtype`. """
         return GMPYRational(a)
@@ -59,10 +51,6 @@ class GMPYRationalField(RationalField):
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
         return a
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Float` object to `dtype`. """
-        return GMPYRational(*K0.as_integer_ratio(a))
 
     def from_RR_mpmath(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """

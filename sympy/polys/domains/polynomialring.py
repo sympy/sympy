@@ -81,24 +81,12 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         """Convert a Python `Fraction` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY `mpz` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_mpmath(K1, a, K0):
@@ -499,24 +487,12 @@ class PolynomialRingNG(Ring, CompositeDomain):
         """Convert a Python `Fraction` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY `mpz` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_RR_mpmath(K1, a, K0):

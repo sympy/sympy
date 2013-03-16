@@ -81,19 +81,6 @@ class FiniteField(Field, SimpleDomain):
         if a.denominator == 1:
             return K1.from_ZZ_python(a.numerator)
 
-    def from_FF_sympy(K1, a, K0=None):
-        """Convert ``ModularInteger(Integer)`` to ``dtype``. """
-        return K1.dtype(K1.dom.from_ZZ_sympy(a.val, K0.dom))
-
-    def from_ZZ_sympy(K1, a, K0=None):
-        """Convert SymPy's ``Integer`` to ``dtype``. """
-        return K1.dtype(K1.dom.from_ZZ_sympy(a, K0))
-
-    def from_QQ_sympy(K1, a, K0=None):
-        """Convert SymPy's ``Rational`` to ``dtype``. """
-        if a.q == 1:
-            return K1.from_ZZ_python(a.p)
-
     def from_FF_gmpy(K1, a, K0=None):
         """Convert ``ModularInteger(mpz)`` to ``dtype``. """
         return K1.dtype(K1.dom.from_ZZ_gmpy(a.val, K0.dom))
@@ -106,13 +93,6 @@ class FiniteField(Field, SimpleDomain):
         """Convert GMPY's ``mpq`` to ``dtype``. """
         if a.denominator == 1:
             return K1.from_ZZ_gmpy(a.numerator)
-
-    def from_RR_sympy(K1, a, K0=None):
-        """Convert SymPy's ``Float`` to ``dtype``. """
-        p, q = K0.as_integer_ratio(a)
-
-        if q == 1:
-            return K1.dtype(self.dom.dtype(p))
 
     def from_RR_mpmath(K1, a, K0):
         """Convert mpmath's ``mpf`` to ``dtype``. """
