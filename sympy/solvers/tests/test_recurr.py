@@ -178,6 +178,10 @@ def test_rsolve():
         {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
         4**n*n*(8*n**3 - 4*n**2 - 2*n + 1)/12
 
+    assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
+            (C0*((sqrt(-a**2 + 1) - 1)/a)**n +
+             C1*((-sqrt(-a**2 + 1) - 1)/a)**n)).simplify() == 0
+
 
 def test_rsolve_raises():
     x = Function('x')
