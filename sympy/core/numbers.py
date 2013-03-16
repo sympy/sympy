@@ -1411,6 +1411,24 @@ class Rational(Number):
                          for i in sorted(f.items())])
             return Mul(*args, **{'evaluate': False})
 
+    @_sympifyit('other', NotImplemented)
+    def gcd(self, other):
+        if isinstance(other, Rational):
+            if other is S.Zero:
+                return other
+            return Rational(
+                Integer(igcd(self.p, other.p)),
+                Integer(ilcm(self.q, other.q)))
+        return Number.gcd(self, other)
+
+    @_sympifyit('other', NotImplemented)
+    def lcm(self, other):
+        if isinstance(other, Rational):
+            return Rational(
+                self.p*other.p//igcd(self.p, other.p),
+                igcd(self.q, other.q))
+        return Number.lcm(self, other)
+
     def as_numer_denom(self):
         return Integer(self.p), Integer(self.q)
 
@@ -1437,6 +1455,7 @@ class Rational(Number):
                 return self, S.One
             return -self, S.NegativeOne
         return S.One, self
+
 
 # int -> Integer
 _intcache = {}

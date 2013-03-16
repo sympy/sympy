@@ -499,8 +499,9 @@ def test_laplace_transform():
         ((-sin(s**2/(2*pi))*fresnels(s/pi) + sin(s**2/(2*pi))/2 -
             cos(s**2/(2*pi))*fresnelc(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
     assert laplace_transform(fresnelc(t), t, s) == \
-        ((sin(s**2/(2*pi))*fresnelc(s/pi) - sin(s**2/(2*pi))/2 -
-            cos(s**2/(2*pi))*fresnels(s/pi) + cos(s**2/(2*pi))/2)/s, 0, True)
+        (sqrt(2)*(sqrt(2)*sin(s**2/(2*pi))*fresnelc(s/pi) -
+        sqrt(2)*cos(s**2/(2*pi))*fresnels(s/pi) + cos(s**2/(2*pi) +
+        pi/4))/(2*s), 0, True)
 
 
 def test_inverse_laplace_transform():
@@ -658,7 +659,7 @@ def test_cosine_transform():
     assert inverse_cosine_transform(1/sqrt(w), w, t) == 1/sqrt(t)
 
     assert cosine_transform(1/(
-        a**2 + t**2), t, w) == sqrt(2)*sqrt(pi)*(-sinh(a*w) + cosh(a*w))/(2*a)
+        a**2 + t**2), t, w) == -sqrt(2)*sqrt(pi)*(sinh(a*w) - cosh(a*w))/(2*a)
 
     assert cosine_transform(t**(
         -a), t, w) == 2**(-a + S(1)/2)*w**(a - 1)*gamma((-a + 1)/2)/gamma(a/2)
@@ -671,7 +672,7 @@ def test_cosine_transform():
         sqrt(2)*a/(sqrt(pi)*(a**2 + w**2)), w, t) == -sinh(a*t) + cosh(a*t)
 
     assert cosine_transform(exp(-a*sqrt(t))*cos(a*sqrt(
-        t)), t, w) == a*(-sinh(a**2/(2*w)) + cosh(a**2/(2*w)))/(2*w**(S(3)/2))
+        t)), t, w) == -a*(sinh(a**2/(2*w)) - cosh(a**2/(2*w)))/(2*w**(S(3)/2))
 
     assert cosine_transform(1/(a + t), t, w) == -sqrt(
         2)*((2*Si(a*w) - pi)*sin(a*w) + 2*cos(a*w)*Ci(a*w))/(2*sqrt(pi))

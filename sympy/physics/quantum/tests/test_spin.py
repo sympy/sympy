@@ -3360,7 +3360,7 @@ def test_rotation_small_d():
     assert Rotation.d(S(
         3)/2, S(3)/2, S(3)/2, beta).doit() == (3*cos(beta/2) + cos(3*beta/2))/4
     assert Rotation.d(S(3)/2, S(
-        3)/2, S(1)/2, beta).doit() == sqrt(3)*(-sin(beta/2) - sin(3*beta/2))/4
+        3)/2, S(1)/2, beta).doit() == -sqrt(3)*(sin(beta/2) + sin(3*beta/2))/4
     assert Rotation.d(S(3)/2, S(
         3)/2, -S(1)/2, beta).doit() == sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4
     assert Rotation.d(S(3)/2, S(
@@ -3380,7 +3380,7 @@ def test_rotation_small_d():
     assert Rotation.d(S(3)/2, -S(
         1)/2, -S(1)/2, beta).doit() == (cos(beta/2) + 3*cos(3*beta/2))/4
     assert Rotation.d(S(3)/2, -S(
-        1)/2, -S(3)/2, beta).doit() == sqrt(3)*(-sin(beta/2) - sin(3*beta/2))/4
+        1)/2, -S(3)/2, beta).doit() == -sqrt(3)*(sin(beta/2) + sin(3*beta/2))/4
     assert Rotation.d(S(
         3)/2, -S(3)/2, S(3)/2, beta).doit() == (3*sin(beta/2) - sin(3*beta/2))/4
     assert Rotation.d(S(3)/2, -S(
@@ -3391,29 +3391,29 @@ def test_rotation_small_d():
         3)/2, -S(3)/2, beta).doit() == (3*cos(beta/2) + cos(3*beta/2))/4
     # j = 2
     assert Rotation.d(2, 2, 2, beta).doit() == (3 + 4*cos(beta) + cos(2*beta))/8
-    assert Rotation.d(2, 2, 1, beta).doit() == (-2*sin(beta) - sin(2*beta))/4
-    assert Rotation.d(2, 2, 0, beta).doit() == sqrt(6)*(1 - cos(2*beta))/8
-    assert Rotation.d(2, 2, -1, beta).doit() == (-2*sin(beta) + sin(2*beta))/4
+    assert Rotation.d(2, 2, 1, beta).doit() == -((cos(beta) + 1)*sin(beta))/2
+    assert Rotation.d(2, 2, 0, beta).doit() == sqrt(6)*sin(beta)**2/4
+    assert Rotation.d(2, 2, -1, beta).doit() == (cos(beta) - 1)*sin(beta)/2
     assert Rotation.d(2, 2, -2, beta).doit() == (3 - 4*cos(beta) + cos(2*beta))/8
-    assert Rotation.d(2, 1, 2, beta).doit() == (2*sin(beta) + sin(2*beta))/4
+    assert Rotation.d(2, 1, 2, beta).doit() == (cos(beta) + 1)*sin(beta)/2
     assert Rotation.d(2, 1, 1, beta).doit() == (cos(beta) + cos(2*beta))/2
     assert Rotation.d(2, 1, 0, beta).doit() == -sqrt(6)*sin(2*beta)/4
     assert Rotation.d(2, 1, -1, beta).doit() == (cos(beta) - cos(2*beta))/2
-    assert Rotation.d(2, 1, -2, beta).doit() == (-2*sin(beta) + sin(2*beta))/4
-    assert Rotation.d(2, 0, 2, beta).doit() == sqrt(6)*(1 - cos(2*beta))/8
+    assert Rotation.d(2, 1, -2, beta).doit() == (cos(beta) - 1)*sin(beta)/2
+    assert Rotation.d(2, 0, 2, beta).doit() == sqrt(6)*sin(beta)**2/4
     assert Rotation.d(2, 0, 1, beta).doit() == sqrt(6)*sin(2*beta)/4
     assert Rotation.d(2, 0, 0, beta).doit() == (1 + 3*cos(2*beta))/4
     assert Rotation.d(2, 0, -1, beta).doit() == -sqrt(6)*sin(2*beta)/4
-    assert Rotation.d(2, 0, -2, beta).doit() == sqrt(6)*(1 - cos(2*beta))/8
+    assert Rotation.d(2, 0, -2, beta).doit() == sqrt(6)*sin(beta)**2/4
     assert Rotation.d(2, -1, 2, beta).doit() == (2*sin(beta) - sin(2*beta))/4
     assert Rotation.d(2, -1, 1, beta).doit() == (cos(beta) - cos(2*beta))/2
     assert Rotation.d(2, -1, 0, beta).doit() == sqrt(6)*sin(2*beta)/4
     assert Rotation.d(2, -1, -1, beta).doit() == (cos(beta) + cos(2*beta))/2
-    assert Rotation.d(2, -1, -2, beta).doit() == (-2*sin(beta) - sin(2*beta))/4
+    assert Rotation.d(2, -1, -2, beta).doit() == -((cos(beta) + 1)*sin(beta))/2
     assert Rotation.d(2, -2, 2, beta).doit() == (3 - 4*cos(beta) + cos(2*beta))/8
     assert Rotation.d(2, -2, 1, beta).doit() == (2*sin(beta) - sin(2*beta))/4
-    assert Rotation.d(2, -2, 0, beta).doit() == sqrt(6)*(1 - cos(2*beta))/8
-    assert Rotation.d(2, -2, -1, beta).doit() == (2*sin(beta) + sin(2*beta))/4
+    assert Rotation.d(2, -2, 0, beta).doit() == sqrt(6)*sin(beta)**2/4
+    assert Rotation.d(2, -2, -1, beta).doit() == (cos(beta) + 1)*sin(beta)/2
     assert Rotation.d(2, -2, -2, beta).doit() == (3 + 4*cos(beta) + cos(2*beta))/8
     # Numerical tests
     # j = 1/2
@@ -3509,7 +3509,7 @@ def test_rotation_d():
     assert Rotation.D(S(3)/2, S(3)/2, S(3)/2, alpha, beta, gamma).doit() == \
         (3*cos(beta/2) + cos(3*beta/2))/4*exp(-3*I*alpha/2)*exp(-3*I*gamma/2)
     assert Rotation.D(S(3)/2, S(3)/2, S(1)/2, alpha, beta, gamma).doit() == \
-        sqrt(3)*(-sin(beta/2) - sin(3*beta/2))/4*exp(-3*I*alpha/2)*exp(-I*gamma/2)
+        -sqrt(3)*(sin(beta/2) + sin(3*beta/2))/4*exp(-3*I*alpha/2)*exp(-I*gamma/2)
     assert Rotation.D(S(3)/2, S(3)/2, -S(1)/2, alpha, beta, gamma).doit() == \
         sqrt(3)*(cos(beta/2) - cos(3*beta/2))/4*exp(-3*I*alpha/2)*exp(I*gamma/2)
     assert Rotation.D(S(3)/2, S(3)/2, -S(3)/2, alpha, beta, gamma).doit() == \
@@ -3529,7 +3529,7 @@ def test_rotation_d():
     assert Rotation.D(S(3)/2, -S(1)/2, -S(1)/2, alpha, beta, gamma).doit() == \
         (cos(beta/2) + 3*cos(3*beta/2))/4*exp(I*alpha/2)*exp(I*gamma/2)
     assert Rotation.D(S(3)/2, -S(1)/2, -S(3)/2, alpha, beta, gamma).doit() == \
-        sqrt(3)*(-sin(beta/2) - sin(3*beta/2))/4*exp(I*alpha/2)*exp(3*I*gamma/2)
+        -sqrt(3)*(sin(beta/2) + sin(3*beta/2))/4*exp(I*alpha/2)*exp(3*I*gamma/2)
     assert Rotation.D(S(3)/2, -S(3)/2, S(3)/2, alpha, beta, gamma).doit() == \
         (3*sin(beta/2) - sin(3*beta/2))/4*exp(3*I*alpha/2)*exp(-3*I*gamma/2)
     assert Rotation.D(S(3)/2, -S(3)/2, S(1)/2, alpha, beta, gamma).doit() == \
@@ -3542,15 +3542,15 @@ def test_rotation_d():
     assert Rotation.D(2, 2, 2, alpha, beta, gamma).doit() == \
         (3 + 4*cos(beta) + cos(2*beta))/8*exp(-2*I*alpha)*exp(-2*I*gamma)
     assert Rotation.D(2, 2, 1, alpha, beta, gamma).doit() == \
-        (-2*sin(beta) - sin(2*beta))/4*exp(-2*I*alpha)*exp(-I*gamma)
+        -((cos(beta) + 1)*exp(-2*I*alpha)*exp(-I*gamma)*sin(beta))/2
     assert Rotation.D(2, 2, 0, alpha, beta, gamma).doit() == \
-        sqrt(6)*(1 - cos(2*beta))/8*exp(-2*I*alpha)
+        sqrt(6)*sin(beta)**2/4*exp(-2*I*alpha)
     assert Rotation.D(2, 2, -1, alpha, beta, gamma).doit() == \
-        (-2*sin(beta) + sin(2*beta))/4*exp(-2*I*alpha)*exp(I*gamma)
+        (cos(beta) - 1)*sin(beta)/2*exp(-2*I*alpha)*exp(I*gamma)
     assert Rotation.D(2, 2, -2, alpha, beta, gamma).doit() == \
         (3 - 4*cos(beta) + cos(2*beta))/8*exp(-2*I*alpha)*exp(2*I*gamma)
     assert Rotation.D(2, 1, 2, alpha, beta, gamma).doit() == \
-        (2*sin(beta) + sin(2*beta))/4*exp(-I*alpha)*exp(-2*I*gamma)
+        (cos(beta) + 1)*sin(beta)/2*exp(-I*alpha)*exp(-2*I*gamma)
     assert Rotation.D(2, 1, 1, alpha, beta, gamma).doit() == \
         (cos(beta) + cos(2*beta))/2*exp(-I*alpha)*exp(-I*gamma)
     assert Rotation.D(2, 1, 0, alpha, beta, gamma).doit() == -sqrt(6)* \
@@ -3558,9 +3558,9 @@ def test_rotation_d():
     assert Rotation.D(2, 1, -1, alpha, beta, gamma).doit() == \
         (cos(beta) - cos(2*beta))/2*exp(-I*alpha)*exp(I*gamma)
     assert Rotation.D(2, 1, -2, alpha, beta, gamma).doit() == \
-        (-2*sin(beta) + sin(2*beta))/4*exp(-I*alpha)*exp(2*I*gamma)
+        (cos(beta) - 1)*sin(beta)/2*exp(-I*alpha)*exp(2*I*gamma)
     assert Rotation.D(2, 0, 2, alpha, beta, gamma).doit() == \
-        sqrt(6)*(1 - cos(2*beta))/8*exp(-2*I*gamma)
+        sqrt(6)*sin(beta)**2/4*exp(-2*I*gamma)
     assert Rotation.D(2, 0, 1, alpha, beta, gamma).doit() == sqrt(6)* \
         sin(2*beta)/4*exp(-I*gamma)
     assert Rotation.D(
@@ -3568,7 +3568,7 @@ def test_rotation_d():
     assert Rotation.D(2, 0, -1, alpha, beta, gamma).doit() == -sqrt(6)* \
         sin(2*beta)/4*exp(I*gamma)
     assert Rotation.D(2, 0, -2, alpha, beta, gamma).doit() == \
-        sqrt(6)*(1 - cos(2*beta))/8*exp(2*I*gamma)
+        sqrt(6)*sin(beta)**2/4*exp(2*I*gamma)
     assert Rotation.D(2, -1, 2, alpha, beta, gamma).doit() == \
         (2*sin(beta) - sin(2*beta))/4*exp(I*alpha)*exp(-2*I*gamma)
     assert Rotation.D(2, -1, 1, alpha, beta, gamma).doit() == \
@@ -3578,15 +3578,15 @@ def test_rotation_d():
     assert Rotation.D(2, -1, -1, alpha, beta, gamma).doit() == \
         (cos(beta) + cos(2*beta))/2*exp(I*alpha)*exp(I*gamma)
     assert Rotation.D(2, -1, -2, alpha, beta, gamma).doit() == \
-        (-2*sin(beta) - sin(2*beta))/4*exp(I*alpha)*exp(2*I*gamma)
+        -((cos(beta) + 1)*sin(beta))/2*exp(I*alpha)*exp(2*I*gamma)
     assert Rotation.D(2, -2, 2, alpha, beta, gamma).doit() == \
         (3 - 4*cos(beta) + cos(2*beta))/8*exp(2*I*alpha)*exp(-2*I*gamma)
     assert Rotation.D(2, -2, 1, alpha, beta, gamma).doit() == \
         (2*sin(beta) - sin(2*beta))/4*exp(2*I*alpha)*exp(-I*gamma)
     assert Rotation.D(2, -2, 0, alpha, beta, gamma).doit() == \
-        sqrt(6)*(1 - cos(2*beta))/8*exp(2*I*alpha)
+        sqrt(6)*sin(beta)**2/4*exp(2*I*alpha)
     assert Rotation.D(2, -2, -1, alpha, beta, gamma).doit() == \
-        (2*sin(beta) + sin(2*beta))/4*exp(2*I*alpha)*exp(I*gamma)
+        (cos(beta) + 1)*sin(beta)/2*exp(2*I*alpha)*exp(I*gamma)
     assert Rotation.D(2, -2, -2, alpha, beta, gamma).doit() == \
         (3 + 4*cos(beta) + cos(2*beta))/8*exp(2*I*alpha)*exp(2*I*gamma)
     # Numerical tests

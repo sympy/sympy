@@ -1595,7 +1595,7 @@ def cosine_transform(f, x, k, **hints):
     >>> cosine_transform(exp(-a*x), x, k)
     sqrt(2)*a/(sqrt(pi)*(a**2 + k**2))
     >>> cosine_transform(exp(-a*sqrt(x))*cos(a*sqrt(x)), x, k)
-    a*(-sinh(a**2/(2*k)) + cosh(a**2/(2*k)))/(2*k**(3/2))
+    -a*(sinh(a**2/(2*k)) - cosh(a**2/(2*k)))/(2*k**(3/2))
 
     See Also
     ========
