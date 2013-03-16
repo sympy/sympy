@@ -1449,7 +1449,7 @@ def test_issue_1996():
 
 def test_almost_linear():
     from sympy import Ei
-    from sympy.abc import A
+    A = Symbol('A', positive=True)
     our_hint = 'almost_linear'
     f = Function('f')
     d = f(x).diff(x)
