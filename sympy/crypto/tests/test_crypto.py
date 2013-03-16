@@ -155,15 +155,21 @@ def test_rsa_private_key():
 
 
 def test_encipher_rsa():
-    assert encipher_rsa(2,2,1,2)==2
-    assert encipher_rsa(2,3,1,2)==2
-    assert encipher_rsa(5,3,3,2)==8
+    puk = rsa_public_key(2,2,1)
+    assert encipher_rsa(2,puk)==2
+    puk = rsa_public_key(2,3,1)
+    assert encipher_rsa(2,puk)==2
+    puk = rsa_public_key(5,3,3)
+    assert encipher_rsa(2,puk)==8
 
 
 def test_decipher_rsa():
-    assert decipher_rsa(2,2,1,2)==2
-    assert decipher_rsa(2,3,1,2)==2
-    assert decipher_rsa(5,3,3,8)==2
+    prk = rsa_private_key(2,2,1)
+    assert decipher_rsa(2,prk)==2
+    prk = rsa_private_key(2,3,1)
+    assert decipher_rsa(2,prk)==2
+    prk = rsa_private_key(5,3,3)
+    assert decipher_rsa(8,prk)==2
 
 
 def test_kid_rsa_public_key():
