@@ -65,9 +65,17 @@ class TheanoPrinter(Printer):
     """ Code printer for Theano computations """
     printmethod = "_theano"
 
+    cache = dict()
+
     def _print_Symbol(self, s, dtypes={}):
         dtype = dtypes.get(s, 'floatX')
-        return Scalar(dtype)(s.name)
+        key = (s.name, dtype, type(s))
+        if key in self.cache:
+            return self.cache[key]
+        else:
+            value = Scalar(dtype)(s.name)
+            self.cache[key] = value
+            return value
 
     def _print_Expr(self, expr, dtypes={}):
         op = mapping[type(expr)]
@@ -79,8 +87,14 @@ class TheanoPrinter(Printer):
 
     def _print_MatrixSymbol(self, X, dtypes={}):
         dtype = dtypes.get(s, 'floatX')
-        shape = [self._print(d, dtypes) for d in X.shape]
-        return tt.Tensor(dtype, (False, False))(X.name)
+        # shape = [self._print(d, dtypes) for d in X.shape]
+        key = (X.name, dtype, type(s))
+        if key in self.cache:
+            return self.cache[key]
+        else:
+            value = tt.Tensor(dtype, (False, False))(X.name)
+            self.cache[key] = value
+            return value
 
     def _print_MatrixExpr(self, expr, dtypes={}):
         op = mapping[type(expr)]

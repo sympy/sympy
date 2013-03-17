@@ -59,3 +59,9 @@ def test_MatMul():
     Z = sympy.MatrixSymbol('X', 4, 4)
     expr = X*Y*Z
     assert isinstance(theano_code(expr).owner.op, tt.Dot)
+
+def test_symbols_are_created_once():
+    expr = x**x
+    comp = theano_code(expr)
+
+    assert theq(comp, xt**xt)
