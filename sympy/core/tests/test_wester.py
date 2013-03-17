@@ -10,9 +10,10 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     binomial, rf, pi, gamma, igcd, factorint, nsimplify, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
-    bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart, sqrtdenest,
-    factorial2, powdenest, Mul, S, mpmath, ZZ, Poly, expand_func)
+    bernoulli, hyper, hyperexpand, asin, assoc_legendre, Function, re, im, 
+    DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
+    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
+    Poly, expand_func)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -626,9 +627,9 @@ def test_J13():
     assert chebyshevt(a, -1) == (-1)**a
 
 
-@XFAIL
 def test_J14():
-    raise NotImplementedError("F(R(1,2),R(1,2),R(3,2),z**2) == asin(z)/z; F(.) is hypergeometric function")
+    p = hyper([S(1)/2, S(1)/2], [S(3)/2], z**2)
+    assert hyperexpand(p) == asin(z)/z
 
 
 @XFAIL
