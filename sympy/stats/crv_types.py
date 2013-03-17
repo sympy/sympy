@@ -1602,11 +1602,10 @@ def Nakagami(name, mu, omega):
 
     >>> V = simplify(variance(X, meijerg=True))
     >>> pprint(V, use_unicode=False)
-          /          2                  2        \
-    omega*\- mu*gamma (mu + 1/2) + gamma (mu + 1)/
-    ----------------------------------------------
-                         2
-                    gamma (mu + 1)
+          /                               2          \
+    omega*\gamma(mu)*gamma(mu + 1) - gamma (mu + 1/2)/
+    --------------------------------------------------
+                 gamma(mu)*gamma(mu + 1)
 
     References
     ==========

@@ -384,7 +384,9 @@ def test_nakagami():
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
            *gamma(mu + S.Half)/gamma(mu + 1))
     assert simplify(variance(X, meijerg=True)) == (
-        omega*(-mu*gamma(mu + S.Half)**2 + gamma(mu + 1)**2)/gamma(mu + 1)**2)
+        omega*(gamma(mu)*gamma(mu + 1) - gamma(mu + S.Half)**2)/
+        (gamma(mu)*gamma(mu + 1)))
+
 
 def test_pareto():
     xm, beta = symbols('xm beta', positive=True, bounded=True)
