@@ -83,6 +83,9 @@ class FracField(DefaultPrinting):
                 return self.new(element)
             else:
                 raise NotImplementedError("conversion")
+        elif isinstance(element, tuple) and len(element) == 2:
+            numer, denom = map(self.ring.ring_new, element)
+            return self.new(numer, denom)
         elif isinstance(element, basestring):
             raise NotImplementedError("parsing")
         elif isinstance(element, Expr):
