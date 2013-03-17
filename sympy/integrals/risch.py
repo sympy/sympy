@@ -157,7 +157,7 @@ class DifferentialExtension(object):
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, conds='piecewise'):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -336,9 +336,6 @@ class DifferentialExtension(object):
                 else:
                     # i in numpows
                     newterm = new
-                # We have to be careful if the base is S.One!
-                if conds == 'piecewise' and i.base != x:
-                    newterm = Piecewise((S.One, Eq(i.base, S.One)), (newterm, True))
                 # TODO: Just put it in self.Tfuncs
                 self.backsubs.append((new, old))
                 self.newf = self.newf.xreplace({old: newterm})
@@ -1526,7 +1523,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
     """
     f = S(f)
 
-    DE = extension or DifferentialExtension(f, x, handle_first=handle_first, conds=conds)
+    DE = extension or DifferentialExtension(f, x, handle_first=handle_first)
     fa, fd = DE.fa, DE.fd
 
     result = S(0)
