@@ -253,6 +253,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Sean Ge: made KroneckerDelta arguments canonically ordered
 #. Ankit Agrawal: Statistical moments
 #. Amit Jamadagni: qapply Rotation to spin states
+#. Björn Dahlgren: Documentation fix
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
