@@ -1,9 +1,41 @@
 from sympy.printing.theanocode import theano_code
-from sympy import Symbol
+import sympy
 import theano
+ts = theano.scalar
+sy = sympy
+
+from sympy.abc import x, y, z, a, b, c
+
+xt, yt, zt = map(ts.Scalar('floatX'), 'xyz')
+
+def theq(a, b):
+    """ theano equality """
+    astr = theano.printing.debugprint(a, file='str')
+    bstr = theano.printing.debugprint(b, file='str')
+
+    if not astr == bstr:
+        print
+        print astr
+        print bstr
+
+    return astr == bstr
 
 def test_symbol():
-    xs = Symbol('x')
-    xt = theano_code(xs)
-    assert isinstance(xt, theano.scalar.ScalarVariable)
-    assert xt.name == xs.name
+    xt = theano_code(x)
+    assert isinstance(xt, ts.ScalarVariable)
+    assert xt.name == x.name
+
+def test_add():
+    expr = x + y
+    comp = theano_code(expr)
+    assert comp.owner.op == theano.scalar.add
+
+def test_trig():
+    assert theq(theano_code(sympy.sin(x)), ts.sin(xt))
+    assert theq(theano_code(sympy.tan(x)), ts.tan(xt))
+
+def test_many():
+    expr = sy.exp(x**2 + sy.cos(y)) * sy.log(2*z)
+    comp = theano_code(expr)
+    expected = ts.exp(xt**2 + ts.cos(yt)) * ts.log(2*zt)
+    assert theq(comp, expected)
