@@ -1530,6 +1530,9 @@ if SYMPY_DEBUG:
     TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22))
 
 
+# tuples are chains  --  (f, g) -> lambda x: g(f(x))
+# lists are choices  --  [f, g] -> lambda x: min(f(x), g(x), key=objective)
+
 _CTR1 = [(TR5, TR0), (TR6, TR0), identity]
 
 _CTR2 = (TR11, [(TR5, TR0), (TR6, TR0), TR0])
