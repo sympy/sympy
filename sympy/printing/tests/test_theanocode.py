@@ -39,3 +39,9 @@ def test_many():
     comp = theano_code(expr)
     expected = ts.exp(xt**2 + ts.cos(yt)) * ts.log(2*zt)
     assert theq(comp, expected)
+
+def test_dtype():
+    assert theano_code(x, {x: 'float32'}).type.dtype == 'float32'
+    assert theano_code(x, {x: 'float64'}).type.dtype == 'float64'
+    assert theano_code(x+1, {x: 'float32'}).type.dtype == 'float32'
+    assert theano_code(x+y, {x: 'float64', y: 'float32'}).type.dtype == 'float64'

@@ -76,9 +76,9 @@ class TheanoPrinter(Printer):
     def _print_Number(self, n, dtypes={}):
         return eval(str(n))
 
-    def doprint(self, expr):
+    def doprint(self, expr, dtypes={}):
         """Returns printer's representation for expr (as a string)"""
-        return self._print(expr)
+        return self._print(expr, dtypes)
 
-def theano_code(expr, **settings):
-    return TheanoPrinter(settings).doprint(expr)
+def theano_code(expr, dtypes={}, **settings):
+    return TheanoPrinter(settings).doprint(expr, dtypes)
