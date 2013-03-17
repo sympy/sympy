@@ -1563,7 +1563,7 @@ RL1 = strat(_RL1)
 RL2 = strat(_RL2)
 
 
-def fu(rv):
+def fu(rv, objective=lambda x: (L(x), x.count_ops())):
     """Attempt to simplify expression by using transformation rules given
     in the algorithm by Fu et al.
 
@@ -1622,23 +1622,23 @@ def fu(rv):
     http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
     DESTIME2006/DES_contribs/Fu/simplification.pdf
     """
+    RL1 = greedy(_RL1, objective)
+    RL2 = greedy(_RL2, objective)
+
     was = rv
     rv = sympify(rv)
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = RL1(rv)
-        if (_L(rv1) < _L(rv)):
+        if (objective(rv1) < objective(rv)):
             rv = rv1
         if rv.has(tan, cot):
             rv = TR2(rv)
     if rv.has(sin, cos):
         rv1 = RL2(rv)
         rv2 = TR8(TRmorrie(rv1))
-        rv = ordered(
-            [was, rv, rv1, rv2], keys=(L, count_ops), default=False).next()
-    return min(TR2i(rv), rv, key=lambda x: (L(x), x.count_ops()))
-
-_L = lambda x: (L(x), x.count_ops())
+        rv = min([was, rv, rv1, rv2], key=objective)
+    return min(TR2i(rv), rv, key=objective)
 
 
 def bottom_up(rv, F):
