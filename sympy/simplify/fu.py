@@ -1552,7 +1552,7 @@ RL2 = [
     ]
 
 
-def fu(rv, objective=lambda x: (L(x), x.count_ops())):
+def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     """Attempt to simplify expression by using transformation rules given
     in the algorithm by Fu et al.
 
@@ -1611,23 +1611,23 @@ def fu(rv, objective=lambda x: (L(x), x.count_ops())):
     http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
     DESTIME2006/DES_contribs/Fu/simplification.pdf
     """
-    fRL1 = greedy(RL1, objective)
-    fRL2 = greedy(RL2, objective)
+    fRL1 = greedy(RL1, measure)
+    fRL2 = greedy(RL2, measure)
 
     was = rv
     rv = sympify(rv)
     rv = TR1(rv)
     if rv.has(tan, cot):
         rv1 = fRL1(rv)
-        if (objective(rv1) < objective(rv)):
+        if (measure(rv1) < measure(rv)):
             rv = rv1
         if rv.has(tan, cot):
             rv = TR2(rv)
     if rv.has(sin, cos):
         rv1 = fRL2(rv)
         rv2 = TR8(TRmorrie(rv1))
-        rv = min([was, rv, rv1, rv2], key=objective)
-    return min(TR2i(rv), rv, key=objective)
+        rv = min([was, rv, rv1, rv2], key=measure)
+    return min(TR2i(rv), rv, key=measure)
 
 
 def bottom_up(rv, F):
