@@ -1,8 +1,8 @@
 from __future__ import with_statement
 
 import os
-from os.path import isabs, join
-from subprocess import Popen, check_call, PIPE, STDOUT
+from os.path import join
+from subprocess import check_call, STDOUT
 import tempfile
 import shutil
 from cStringIO import StringIO
