@@ -1529,6 +1529,7 @@ if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
     TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22))
 
+
 _CTR1 = [(TR5, TR0), (TR6, TR0), identity]
 
 _CTR2 = (TR11, [(TR5, TR0), (TR6, TR0), TR0])
@@ -1550,7 +1551,7 @@ _RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
 _RL2 = [
     (TR4, TR3, TR10, TR4, TR3, TR11),
     (TR5, TR7, TR11, TR4),
-    (CTR3, CTR1, TR9, CTR2, TR4, TR9, TR9, CTR4),
+    (_CTR3, _CTR1, TR9, _CTR2, TR4, TR9, TR9, _CTR4),
     identity,
     ]
 
