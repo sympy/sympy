@@ -53,6 +53,8 @@ def test_IntQubit():
     assert IntQubit(3).dual_class() == IntQubitBra
     assert IntQubitBra(3).dual_class() == IntQubit
 
+    assert IntQubit(5)._eval_innerproduct_IntQubitBra(IntQubitBra(5)) == Integer(1)
+    assert IntQubit(4)._eval_innerproduct_IntQubitBra(IntQubitBra(5)) == Integer(0)
     raises(ValueError, lambda: IntQubit(4, 1))
 
 

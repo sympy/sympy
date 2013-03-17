@@ -375,6 +375,8 @@ class IntQubit(IntQubitState, Qubit):
     def dual_class(self):
         return IntQubitBra
 
+    def _eval_innerproduct_IntQubitBra(self, bra, **hints):
+        return Qubit._eval_innerproduct_QubitBra(self, bra)
 
 class IntQubitBra(IntQubitState, QubitBra):
     """A qubit bra that store integers as binary numbers in qubit values."""
