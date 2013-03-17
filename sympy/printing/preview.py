@@ -13,8 +13,8 @@ from latex import latex
 
 from sympy.utilities import depends_on
 
-@depends_on(exe=('latex', 'dvipng'), disable_viewers=('evince',
-                                                      'superior-dvi-viewer'))
+@depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
+            disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
             outputTexFile=None, **latex_settings):
@@ -39,11 +39,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> from sympy import symbols, preview, Symbol
     >>> x, y = symbols("x,y")
 
-    >>> preview(x + y, output='png') # doctest: +SKIP
+    >>> preview(x + y, output='png')
 
     This will choose 'pyglet' by default. To select a different one, do
 
-    >>> preview(x + y, output='png', viewer='gimp') # doctest: +SKIP
+    >>> preview(x + y, output='png', viewer='gimp')
 
     The 'png' format is considered special. For all other formats the rules
     are slightly different. As an example we will take 'dvi' output format. If
@@ -80,7 +80,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     >>> preamble = "\\documentclass[10pt]{article}\n" \
     ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
-    >>> preview(x + y, output='dvi', preamble=preamble)
+    >>> preview(x + y, output='png', preamble=preamble)
 
     If the value of 'output' is different from 'dvi' then command line
     options can be set ('dvioptions' argument) for the execution of the
@@ -91,7 +91,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     symbol_names flag.
 
     >>> phidd = Symbol('phidd')
-    >>> preview(phidd, output='dvi', symbol_names={phidd:r'\ddot{\varphi}'})
+    >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
 
     For post-processing the generated TeX File can be written to a file by
     passing the desired filename to the 'outputTexFile' keyword
@@ -99,7 +99,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x+y, output='dvi', outputTexFile="sample.tex")
+    >>> preview(x+y, outputTexFile="sample.tex")
 
 
     """

@@ -1275,7 +1275,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # check if there are external dependencies which need to be met
         if hasattr(obj, '_doctest_dependencies'):
-            exe, moduledeps, viewers = obj._doctest_dependencies
+            exe, moduledeps, viewers, pyglet = obj._doctest_dependencies
             if exe is not None:
                 for ex in exe:
                     found = find_executable(ex)
@@ -1306,6 +1306,21 @@ class SymPyDocTestFinder(DocTestFinder):
                     # make the file executable
                     os.chmod(os.path.join(tempdir, viewer),
                              stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
+            if pyglet:
+                # monkey-patch pyglet s.t. it does not open a window during
+                # doctesting
+                import pyglet
+                class DummyWindow(object):
+                    def __init__(self, *args, **kwargs):
+                        self.has_exit=True
+
+                    def set_vsync(self, x):
+                        pass
+
+                    def close(self):
+                        pass
+
+                pyglet.window.Window = DummyWindow
 
         # Return a DocTest for this object.
         if module is None:
