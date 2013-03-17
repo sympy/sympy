@@ -5,63 +5,63 @@ import theano
 import sympy
 
 Scalar = theano.scalar.Scalar
-s = theano.scalar
+ts = theano.scalar
 tt = theano.tensor
 
 
-mapping = {sympy.Add: s.add,
-           sympy.Mul: s.mul,
-#           sympy.Sub: s.sub,
-#           sympy.Mul(x, Pow(y, -1)): s.true_div,  # int_div,
-           #sympy.Mod: s.mod, # master branch
+mapping = {sympy.Add: ts.add,
+           sympy.Mul: ts.mul,
+#           sympy.Sub: ts.sub,
+#           sympy.Mul(x, Pow(y, -1)): ts.true_div,  # int_div,
+           #sympy.Mod: ts.mod, # master branch
            #clip,  # second,
            #identity,
            #cast,
-           sympy.Abs: s.abs_,
-           sympy.sign: s.sgn,
-           sympy.ceiling: s.ceil,
-           sympy.floor: s.floor,
+           sympy.Abs: ts.abs_,
+           sympy.sign: ts.sgn,
+           sympy.ceiling: ts.ceil,
+           sympy.floor: ts.floor,
 #           round_half_to_even, round_half_away_from_zero,
-           #lambda x: sympy.Mul(x, -1): s.neg,
-           #lambda x: sympy.Pow(x, -1): s.inv,
-           sympy.log: s.log,
-           #lambda x: log(1 + p): s.log1p,
+           #lambda x: sympy.Mul(x, -1): ts.neg,
+           #lambda x: sympy.Pow(x, -1): ts.inv,
+           sympy.log: ts.log,
+           #lambda x: log(1 + p): ts.log1p,
            #log2, log10,
-           sympy.exp: s.exp,
+           sympy.exp: ts.exp,
            #exp2,
-           #lambda x: sympy.Mul(x, x): s.sqr,
-           sympy.sqrt: s.sqrt,
-           sympy.cos: s.cos,
-           sympy.acos: s.arccos,
-           sympy.sin: s.sin,
-           sympy.asin: s.arcsin,
-           sympy.tan: s.tan,
-           sympy.atan: s.arctan,
-           sympy.atan2: s.arctan2,
-           sympy.cosh: s.cosh,
-           sympy.acosh: s.arccosh,
-           sympy.sinh: s.sinh,
-           sympy.asinh: s.arcsinh,
-           sympy.tanh: s.tanh,
-           sympy.atanh: s.arctanh,
-           sympy.re: s.real,
-           sympy.im: s.imag,
-           sympy.arg: s.angle,
-           sympy.erf: s.erf,
-           sympy.gamma: s.gamma,
-           sympy.loggamma: s.gammaln,
-           sympy.Pow: s.pow,
-           sympy.Eq: s.eq,
-           sympy.Gt: s.gt,
-           sympy.Lt: s.lt,
-           sympy.Le: s.le,
-           sympy.Ge: s.ge,
+           #lambda x: sympy.Mul(x, x): ts.sqr,
+           sympy.sqrt: ts.sqrt,
+           sympy.cos: ts.cos,
+           sympy.acos: ts.arccos,
+           sympy.sin: ts.sin,
+           sympy.asin: ts.arcsin,
+           sympy.tan: ts.tan,
+           sympy.atan: ts.arctan,
+           sympy.atan2: ts.arctan2,
+           sympy.cosh: ts.cosh,
+           sympy.acosh: ts.arccosh,
+           sympy.sinh: ts.sinh,
+           sympy.asinh: ts.arcsinh,
+           sympy.tanh: ts.tanh,
+           sympy.atanh: ts.arctanh,
+           sympy.re: ts.real,
+           sympy.im: ts.imag,
+           sympy.arg: ts.angle,
+           sympy.erf: ts.erf,
+           sympy.gamma: ts.gamma,
+           sympy.loggamma: ts.gammaln,
+           sympy.Pow: ts.pow,
+           sympy.Eq: ts.eq,
+           sympy.Gt: ts.gt,
+           sympy.Lt: ts.lt,
+           sympy.Le: ts.le,
+           sympy.Ge: ts.ge,
 #           switch,
-           sympy.Max: s.maximum,  # Sympy accept >2 inputs, Theano only 2
-           sympy.Min: s.minimum,  # Sympy accept >2 inputs, Theano only 2
+           sympy.Max: ts.maximum,  # Sympy accept >2 inputs, Theano only 2
+           sympy.Min: ts.minimum,  # Sympy accept >2 inputs, Theano only 2
 
-           sympy.MatAdd: tt.Elemwise(s.add),
-           sympy.HadamardProduct: tt.Elemwise(s.mul),
+           sympy.MatAdd: tt.Elemwise(ts.add),
+           sympy.HadamardProduct: tt.Elemwise(ts.mul),
 
 }# Implement factorial
 
@@ -90,9 +90,9 @@ class TheanoPrinter(Printer):
         return eval(str(n))
 
     def _print_MatrixSymbol(self, X, dtypes={}):
-        dtype = dtypes.get(s, 'floatX')
+        dtype = dtypes.get(X, 'floatX')
         # shape = [self._print(d, dtypes) for d in X.shape]
-        key = (X.name, dtype, type(s))
+        key = (X.name, dtype, type(X))
         if key in self.cache:
             return self.cache[key]
         else:
