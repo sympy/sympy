@@ -1518,10 +1518,6 @@ def L(rv):
 
 # ============== end of basic Fu-like tools =====================
 
-objective = lambda x: (L(x), x.count_ops())
-strat = partial(greedy, objective=objective)
-
-
 if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
     TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22
@@ -1541,8 +1537,6 @@ _CTR3 = [(TRmorrie, TR8, TR0), (TRmorrie, TR8, TR10i, TR0), identity]
 
 _CTR4 = [(TR4, TR10i), identity]
 
-CTR1, CTR2, CTR3, CTR4 = map(strat, (_CTR1, _CTR2, _CTR3, _CTR4))
-
 _RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
 
 
@@ -1557,10 +1551,6 @@ _RL2 = [
     (_CTR3, _CTR1, TR9, _CTR2, TR4, TR9, TR9, _CTR4),
     identity,
     ]
-
-
-RL1 = strat(_RL1)
-RL2 = strat(_RL2)
 
 
 def fu(rv, objective=lambda x: (L(x), x.count_ops())):
@@ -1696,10 +1686,10 @@ def process_common_addends(rv, do, key2=None, key1=True):
 
 FU = dict(zip('''
     TR0 TR1 TR2 TR3 TR4 TR5 TR6 TR7 TR8 TR9 TR10 TR10i TR11
-    TR12 TR13 CTR1 CTR2 CTR3 CTR4 RL1 RL2 L TR2i TRmorrie TR12i
+    TR12 TR13 L TR2i TRmorrie TR12i
     TR14 TR15 TR16 TR111 TR22'''.split(),
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11,
-    TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L, TR2i, TRmorrie, TR12i,
+    TR12, TR13, L, TR2i, TRmorrie, TR12i,
     TR14, TR15, TR16, TR111, TR22)))
 
 
