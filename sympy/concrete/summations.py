@@ -160,8 +160,6 @@ class Sum(Expr):
 
     def doit(self, **hints):
         from sympy.functions import Piecewise
-        #if not hints.get('sums', True):
-        #    return self
 
         if hints.get('deep', True):
             f = self.function.doit(**hints)
