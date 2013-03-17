@@ -1,11 +1,17 @@
-from sympy.printing.theanocode import theano_code
-import sympy
-import theano
-ts = theano.scalar
-tt = theano.tensor
-sy = sympy
+from sympy.external import import_module
 
+theano = import_module('theano')
+if theano:
+    ts = theano.scalar
+    tt = theano.tensor
+else:
+    #bin/test will not execute any tests now
+    disabled = True
+
+import sympy
+sy = sympy
 from sympy.abc import x, y, z, a, b, c
+from sympy.printing.theanocode import theano_code
 
 xt, yt, zt = map(ts.Scalar('floatX'), 'xyz')
 
