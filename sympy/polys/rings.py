@@ -226,7 +226,7 @@ class PolyRing(DefaultPrinting, IPolys):
         from sympy.polys.fields import FracField
         return FracField(self.symbols, self.domain, self.order)
 
-class PolyElement(dict, CantSympify, DefaultPrinting):
+class PolyElement(DefaultPrinting, CantSympify, dict):
     def __init__(self, ring, init=[]):
         self.ring = ring
         dict.__init__(self, init)
