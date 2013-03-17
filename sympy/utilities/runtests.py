@@ -543,8 +543,8 @@ def _doctest(*paths, **kwargs):
         "sympy/plotting/pygletplot",  # generates live plots
         "sympy/statistics",                # prints a deprecation
         "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py",  # needs tcc
-        "sympy/utilities/autowrap.py"  # needs installed compiler
+        "sympy/utilities/compilef.py"  # needs tcc
+
     ])
 
     if import_module('numpy') is None:
