@@ -580,11 +580,6 @@ def _doctest(*paths, **kwargs):
         "sympy/utilities/benchmarking.py"
     ])
 
-    if not (find_executable('latex') and find_executable('dvipng')):
-        blacklist.extend([
-            "sympy/printing/preview.py"
-        ])
-
     blacklist = convert_to_native_paths(blacklist)
 
     # Disable warnings for external modules
