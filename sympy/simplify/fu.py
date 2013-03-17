@@ -186,7 +186,6 @@ http://www.sosmath.com/trig/Trig5/trig5/pdf/pdf.html gives a formula sheet.
 """
 
 from collections import defaultdict
-from functools import partial
 
 from sympy.simplify.simplify import (simplify, powsimp, ratsimp, combsimp,
     _mexpand)
