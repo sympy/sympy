@@ -503,8 +503,10 @@ def _TR56(rv, f, g, h, max, pow):
         return h(g(rv.base.args[0])**2)**e
 
 
-def TR5(rv):
+def TR5(rv, max=4, pow=False):
     """Replacement of sin**2 with 1 - cos(x)**2.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -519,11 +521,13 @@ def TR5(rv):
     >>> TR5(sin(x)**4)
     (-cos(x)**2 + 1)**2
     """
-    return _TR56(rv, sin, cos, lambda x: 1 - x, max=4, pow=False)
+    return _TR56(rv, sin, cos, lambda x: 1 - x, max=max, pow=pow)
 
 
-def TR6(rv):
+def TR6(rv, max=4, pow=False):
     """Replacement of cos**2 with 1 - sin(x)**2.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -538,7 +542,7 @@ def TR6(rv):
     >>> TR6(cos(x)**4)
     (-sin(x)**2 + 1)**2
     """
-    return _TR56(rv, cos, sin, lambda x: 1 - x, max=4, pow=False)
+    return _TR56(rv, cos, sin, lambda x: 1 - x, max=max, pow=pow)
 
 
 def TR7(rv):
@@ -1400,8 +1404,10 @@ def TR14(rv, first=True):
     return rv
 
 
-def TR15(rv):
-    """Convert sin(x)*-2 to 1 + cot(x)**2
+def TR15(rv, max=4, pow=False):
+    """Convert sin(x)*-2 to 1 + cot(x)**2.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -1418,13 +1424,15 @@ def TR15(rv):
         return rv
 
     ia = 1/rv
-    a = _TR56(ia, sin, cot, lambda x: 1 + x, max=4, pow=False)
+    a = _TR56(ia, sin, cot, lambda x: 1 + x, max=max, pow=pow)
     if a != ia:
         rv = a
     return rv
 
-def TR16(rv):
-    """Convert cos(x)*-2 to 1 + tan(x)**2
+def TR16(rv, max=4, pow=False):
+    """Convert cos(x)*-2 to 1 + tan(x)**2.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -1441,7 +1449,7 @@ def TR16(rv):
         return rv
 
     ia = 1/rv
-    a = _TR56(ia, cos, tan, lambda x: 1 + x, max=4, pow=False)
+    a = _TR56(ia, cos, tan, lambda x: 1 + x, max=max, pow=pow)
     if a != ia:
         rv = a
     return rv
@@ -1476,8 +1484,10 @@ def TR111(rv):
     return rv
 
 
-def TR22(rv):
-    """Convert tan(x)**2 to sec(x)**2 - 1 and cot(x)**2 to csc(x)**2 - 1
+def TR22(rv, max=4, pow=False):
+    """Convert tan(x)**2 to sec(x)**2 - 1 and cot(x)**2 to csc(x)**2 - 1.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -1495,8 +1505,8 @@ def TR22(rv):
     if not (isinstance(rv, Pow) and rv.base.func in (cot, tan)):
         return rv
 
-    rv = _TR56(rv, tan, sec, lambda x: x - 1, max=4, pow=False)
-    rv = _TR56(rv, cot, csc, lambda x: x - 1, max=4, pow=False)
+    rv = _TR56(rv, tan, sec, lambda x: x - 1, max=max, pow=pow)
+    rv = _TR56(rv, cot, csc, lambda x: x - 1, max=max, pow=pow)
     return rv
 
 
