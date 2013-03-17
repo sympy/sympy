@@ -598,9 +598,10 @@ def test_J7():
     raise NotImplementedError("jv(R(-5,2), pi/2) == 12/(pi**2)")
 
 
-@XFAIL
 def test_J8():
-    raise NotImplementedError("jv(R(3,2), z) == sqrt(2/(pi*z))*(sin(z)/z - cos(z))")
+    p = besselj(R(3,2), z)
+    q = (sin(z)/z - cos(z))/sqrt(pi*z/2)                                    
+    assert simplify(expand_func(p) -q) == 0
 
 
 def test_J9():
