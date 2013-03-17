@@ -7,6 +7,8 @@ import sympy
 Scalar = theano.scalar.Scalar
 ts = theano.scalar
 tt = theano.tensor
+from theano import sandbox
+from theano.sandbox import linalg as tlinalg
 
 
 mapping = {sympy.Add: ts.add,
@@ -62,8 +64,9 @@ mapping = {sympy.Add: ts.add,
 
            sympy.MatAdd: tt.Elemwise(ts.add),
            sympy.HadamardProduct: tt.Elemwise(ts.mul),
-
-}# Implement factorial
+           sympy.Trace: tlinalg.trace,
+           sympy.Inverse: tlinalg.matrix_inverse,
+}
 
 class TheanoPrinter(Printer):
     """ Code printer for Theano computations """
