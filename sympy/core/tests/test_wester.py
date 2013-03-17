@@ -593,9 +593,8 @@ def test_J6():
     assert mpmath.besselj(2, 1 + 1j).ae(mpc('0.04157988694396212', '0.24739764151330632'))
 
 
-@XFAIL
 def test_J7():
-    raise NotImplementedError("jv(R(-5,2), pi/2) == 12/(pi**2)")
+    assert expand_func(besselj(R(-5,2), pi/2)) == 12/(pi**2)
 
 
 def test_J8():
