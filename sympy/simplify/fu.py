@@ -1556,6 +1556,10 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     """Attempt to simplify expression by using transformation rules given
     in the algorithm by Fu et al.
 
+    :func:`fu` will try to minimize the objective function ``measure``.
+    By default this first minimizes the number of trig terms and then minimizes
+    the number of total operations.
+
     Examples
     ========
 
@@ -1605,6 +1609,12 @@ def fu(rv, measure=lambda x: (L(x), x.count_ops())):
 
     >>> fu(tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18))
     -sqrt(3)
+
+    Objective function example
+    >>> fu(sin(x)/cos(x))  # default objective function
+    tan(x)
+    >>> fu(sin(x)/cos(x), measure=lambda x: -x.count_ops()) # maximize op count
+    sin(x)/cos(x)
 
     References
     ==========
