@@ -26,8 +26,8 @@ from mpmathrealdomain import MPmathRealDomain
 
 from algebraicfield import AlgebraicField
 
-from polynomialring import PolynomialRing
-from fractionfield import FractionField
+from old_polynomialring import PolynomialRing
+from old_fractionfield import FractionField
 
 from expressiondomain import ExpressionDomain
 
