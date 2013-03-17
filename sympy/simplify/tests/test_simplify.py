@@ -1487,6 +1487,13 @@ def test_combsimp_gamma():
     A, B = symbols('A B', commutative=False)
     assert combsimp(e*B*A) == combsimp(e)*B*A
 
+    # check iteration
+    assert combsimp(gamma(2*k)/gamma(k)*gamma(-k - R(1, 2))) == (
+        -2**(2*k + 1)*sqrt(pi)/(2*((2*k + 1)*cos(pi*k))))
+    assert combsimp(
+        gamma(k)*gamma(k + R(1, 3))*gamma(k + R(2, 3))/gamma(3*k/2)) == (
+        3*2**(3*k + 1)*3**(-3*k - S.Half)*sqrt(pi)*gamma(3*k/2 + S.Half)/2)
+
 
 def test_polarify():
     from sympy import polar_lift, polarify

@@ -2894,6 +2894,7 @@ def combsimp(expr):
                 return gamma_factor(x.base)
             return False
 
+        # recursion step
         if level == 0:
             expr = expr.func(*[rule_gamma(x, level + 1) for x in expr.args])
             level += 1
@@ -2902,6 +2903,7 @@ def combsimp(expr):
         if not expr.is_Mul:
             return expr
 
+        # non-commutative step
         if level == 1:
             args, nc = expr.args_cnc()
             if not args:
@@ -2910,8 +2912,8 @@ def combsimp(expr):
                 return rule_gamma(Mul._from_args(args), level + 1)*Mul._from_args(nc)
             level += 1
 
+        # pure gamma handling, not factor absorbtion
         if level == 2:
-            # do pure gamma pieces first, not factor absorbtion
             sifted = sift(expr.args, gamma_factor)
             gamma_ind = Mul(*sifted.pop(False, []))
             d = Mul(*sifted.pop(True, []))
@@ -2936,6 +2938,14 @@ def combsimp(expr):
             if not (expr.is_Mul and (gamma_factor(dd) or gamma_factor(nd))):
                 return expr
             level += 1
+
+        # iteration until constant
+        if level == 3:
+            while True:
+                was = expr
+                expr = rule_gamma(expr, 4)
+                if expr == was:
+                    return expr
 
         numer_gammas = []
         denom_gammas = []
@@ -2995,11 +3005,10 @@ def combsimp(expr):
             gammas[:] = new
 
         # Try to reduce the number of gammas by using the duplication
-        # theorem to cancel an upper and lower.
-        # e.g. gamma(2*s)/gamma(s) = gamma(s)*gamma(s+1/2)*C/gamma(s)
-        # (in principle this can also be done with with factors other than two,
-        #  but two is special in that we need only matching numer and denom, not
-        #  several in numer).
+        # theorem to cancel an upper and lower: gamma(2*s)/gamma(s) =
+        # 2**(2*s + 1)/(4*sqrt(pi))*gamma(s + 1/2). Although this could
+        # be done with higher argument ratios like gamma(3*x)/gamma(x),
+        # this would not reduce the number of gammas as in this case.
         for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
                                 denom_others),
                                (denom_gammas, numer_gammas, denom_others,
@@ -3029,8 +3038,21 @@ def combsimp(expr):
                 do.append(sqrt(S.Pi))
 
         # Try to reduce the number of gamma factors by applying the
-        # multiplication theorem.
-
+        # multiplication theorem (used when n gammas with args differing
+        # by 1/n mod 1 are encountered).
+        #
+        # run of 2 with args differing by 1/2
+        #
+        # >>> combsimp(gamma(x)*gamma(x+S.Half))
+        # 2*sqrt(2)*2**(-2*x - 1/2)*sqrt(pi)*gamma(2*x)
+        #
+        # run of 3 args differing by 1/3 (mod 1)
+        #
+        # >>> combsimp(gamma(x)*gamma(x+S(1)/3)*gamma(x+S(2)/3))
+        # 6*3**(-3*x - 1/2)*pi*gamma(3*x)
+        # >>> combsimp(gamma(x)*gamma(x+S(1)/3)*gamma(x+S(5)/3))
+        # 2*3**(-3*x - 1/2)*pi*(3*x + 2)*gamma(3*x)
+        #
         def _run(coeffs):
             # find runs in coeffs such that the difference in terms (mod 1)
             # of t1, t2, ..., tn is 1/n
@@ -3116,8 +3138,9 @@ def combsimp(expr):
 
         # =========== level 3 work: factor absorbtion =========
 
-        if level == 3:
-            # Try to absorb factors into the gammas.
+        if level >= 2:
+            # Try to absorb factors into the gammas: x*gamma(x) -> gamma(x + 1)
+            # and gamma(x)/(x - 1) -> gamma(x - 1)
             # This code (in particular repeated calls to find_fuzzy) can be very
             # slow.
             def find_fuzzy(l, x):
