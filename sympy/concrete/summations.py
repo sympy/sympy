@@ -42,7 +42,7 @@ class Sum(Expr):
     >>> Sum(x**k,(k,0,oo))
     Sum(x**k, (k, 0, oo))
     >>> Sum(x**k,(k,0,oo)).doit()
-    (-x**oo + 1)/(-x + 1)
+    Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
     >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
     exp(x)
 
@@ -159,6 +159,7 @@ class Sum(Expr):
         return self.function.is_zero or not self.free_symbols
 
     def doit(self, **hints):
+        from sympy.functions import Piecewise
         #if not hints.get('sums', True):
         #    return self
 
@@ -178,9 +179,13 @@ class Sum(Expr):
                 return self
 
         if hints.get('deep', True):
-            return f.doit(**hints)
-        else:
-            return f
+            # eval_sum could return partially unevaluated
+            # result with Piecewise.  In this case we won't
+            # doit() recursively.
+            if not isinstance(f, Piecewise):
+                return f.doit(**hints)
+
+        return f
 
     def _eval_adjoint(self):
         return Sum(self.function.adjoint(), *self.limits)
@@ -505,23 +510,22 @@ def eval_sum_symbolic(f, limits):
                 else:
                     return C.harmonic(b, abs(n)) - C.harmonic(a - 1, abs(n))
 
-    # Geometric terms
-    c1 = C.Wild('c1', exclude=[i])
-    c2 = C.Wild('c2', exclude=[i])
-    c3 = C.Wild('c3', exclude=[i])
-
-    e = f.match(c1**(c2*i + c3))
-
-    if e is not None:
-        c1 = c1.subs(e)
-        c2 = c2.subs(e)
-        c3 = c3.subs(e)
-
-        # TODO: more general limit handling
-        return c1**c3 * (c1**(a*c2) - c1**(c2 + b*c2)) / (1 - c1**c2)
-
     if not (a.has(S.Infinity, S.NegativeInfinity) or
             b.has(S.Infinity, S.NegativeInfinity)):
+        # Geometric terms
+        c1 = C.Wild('c1', exclude=[i])
+        c2 = C.Wild('c2', exclude=[i])
+        c3 = C.Wild('c3', exclude=[i])
+
+        e = f.match(c1**(c2*i + c3))
+
+        if e is not None:
+            c1 = c1.subs(e)
+            c2 = c2.subs(e)
+            c3 = c3.subs(e)
+
+            return c1**c3 * (c1**(a*c2) - c1**(c2 + b*c2)) / (1 - c1**c2)
+
         r = gosper_sum(f, (i, a, b))
 
         if not r in (None, S.NaN):
@@ -614,4 +618,12 @@ def eval_sum_hyper(f, (i, a, b)):
     # Now b == oo, a != -oo
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
+        r, c = res
+        if c is False:
+            if r.is_number:
+                if f.is_positive or f.is_zero:
+                    return S.Infinity
+                elif f.is_negative:
+                    return S.NegativeInfinity
+            return None
         return Piecewise(res, (Sum(f, (i, a, b)), True))
