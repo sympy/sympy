@@ -1529,15 +1529,15 @@ if SYMPY_DEBUG:
 # tuples are chains  --  (f, g) -> lambda x: g(f(x))
 # lists are choices  --  [f, g] -> lambda x: min(f(x), g(x), key=objective)
 
-_CTR1 = [(TR5, TR0), (TR6, TR0), identity]
+CTR1 = [(TR5, TR0), (TR6, TR0), identity]
 
-_CTR2 = (TR11, [(TR5, TR0), (TR6, TR0), TR0])
+CTR2 = (TR11, [(TR5, TR0), (TR6, TR0), TR0])
 
-_CTR3 = [(TRmorrie, TR8, TR0), (TRmorrie, TR8, TR10i, TR0), identity]
+CTR3 = [(TRmorrie, TR8, TR0), (TRmorrie, TR8, TR10i, TR0), identity]
 
-_CTR4 = [(TR4, TR10i), identity]
+CTR4 = [(TR4, TR10i), identity]
 
-_RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
+RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
 
 
 # XXX it's a little unclear how this one is to be implemented
@@ -1545,10 +1545,10 @@ _RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
 # The diagram shows all these as one chain of transformations, but the
 # text refers to them being applied independently. Also, a break
 # if L starts to increase has not been implemented.
-_RL2 = [
+RL2 = [
     (TR4, TR3, TR10, TR4, TR3, TR11),
     (TR5, TR7, TR11, TR4),
-    (_CTR3, _CTR1, TR9, _CTR2, TR4, TR9, TR9, _CTR4),
+    (CTR3, CTR1, TR9, CTR2, TR4, TR9, TR9, CTR4),
     identity,
     ]
 
@@ -1612,20 +1612,20 @@ def fu(rv, objective=lambda x: (L(x), x.count_ops())):
     http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
     DESTIME2006/DES_contribs/Fu/simplification.pdf
     """
-    RL1 = greedy(_RL1, objective)
-    RL2 = greedy(_RL2, objective)
+    fRL1 = greedy(RL1, objective)
+    fRL2 = greedy(RL2, objective)
 
     was = rv
     rv = sympify(rv)
     rv = TR1(rv)
     if rv.has(tan, cot):
-        rv1 = RL1(rv)
+        rv1 = fRL1(rv)
         if (objective(rv1) < objective(rv)):
             rv = rv1
         if rv.has(tan, cot):
             rv = TR2(rv)
     if rv.has(sin, cos):
-        rv1 = RL2(rv)
+        rv1 = fRL2(rv)
         rv2 = TR8(TRmorrie(rv1))
         rv = min([was, rv, rv1, rv2], key=objective)
     return min(TR2i(rv), rv, key=objective)
