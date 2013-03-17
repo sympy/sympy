@@ -2090,7 +2090,7 @@ class Expr(Basic, EvalfMixin):
         returns False for expressions that are "polynomials" with symbolic
         exponents.  Thus, you should be able to apply polynomial algorithms to
         expressions for which this returns True, and Poly(expr, \*syms) should
-        work only if and only if expr.is_polynomial(\*syms) returns True. The
+        work if and only if expr.is_polynomial(\*syms) returns True. The
         polynomial does not have to be in expanded form.  If no symbols are
         given, all free symbols in the expression will be used.
 

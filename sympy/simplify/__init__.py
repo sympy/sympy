@@ -1,4 +1,4 @@
-"""The module helps converting sympy expressions into shorter forms of them.
+"""The module helps converting SymPy expressions into shorter forms of them.
 
 for example:
 the expression E**(pi*I) will be converted into -1
@@ -8,6 +8,8 @@ from simplify import (collect, rcollect, separate, radsimp, ratsimp, fraction,
     simplify, trigsimp, powsimp, combsimp, hypersimp, hypersimilar, nsimplify,
     logcombine, separatevars, numer, denom, powdenest, posify, polarify,
     unpolarify, collect_const, signsimp, besselsimp, ratsimpmodprime)
+
+from fu import FU, fu
 
 from sqrtdenest import sqrtdenest
 

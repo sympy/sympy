@@ -408,7 +408,7 @@ class Mul(Expr, AssocOp):
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
-                g = _rgcd(bi, bj)
+                g = bi.gcd(bj)
                 if g is not S.One:
                     # 4**r1*6**r2 -> 2**(r1+r2)  *  2**r1 *  3**r2
                     # this might have a gcd with something else
@@ -816,16 +816,10 @@ class Mul(Expr, AssocOp):
         return lhs/rhs
 
     def as_powers_dict(self):
-        d = defaultdict(list)
+        d = defaultdict(int)
         for term in self.args:
             b, e = term.as_base_exp()
-            d[b].append(e)
-        for b, e in d.iteritems():
-            if len(e) == 1:
-                e = e[0]
-            else:
-                e = Add(*e)
-            d[b] = e
+            d[b] += e
         return d
 
     def as_numer_denom(self):
@@ -1444,12 +1438,14 @@ def prod(a, start=1):
     return reduce(operator.mul, a, start)
 
 
-def _keep_coeff(coeff, factors, clear=True):
+def _keep_coeff(coeff, factors, clear=True, sign=False):
     """Return ``coeff*factors`` unevaluated if necessary.
 
-    If clear is False, do not keep the coefficient as a factor
+    If ``clear`` is False, do not keep the coefficient as a factor
     if it can be distributed on a single factor such that one or
     more terms will still have integer coefficients.
+
+    If ``sign`` is True, allow a coefficient of -1 to remain factored out.
 
     Examples
     ========
@@ -1464,6 +1460,10 @@ def _keep_coeff(coeff, factors, clear=True):
     x/2 + 1
     >>> _keep_coeff(S.Half, (x + 2)*y, clear=False)
     y*(x + 2)/2
+    >>> _keep_coeff(S(-1), x + y)
+    -x - y
+    >>> _keep_coeff(S(-1), x + y, sign=True)
+    -(x + y)
     """
 
     if not coeff.is_Number:
@@ -1473,7 +1473,7 @@ def _keep_coeff(coeff, factors, clear=True):
             return coeff*factors
     if coeff is S.One:
         return factors
-    elif coeff is S.NegativeOne:  # don't keep sign?
+    elif coeff is S.NegativeOne and not sign:
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
@@ -1496,9 +1496,7 @@ def _keep_coeff(coeff, factors, clear=True):
     else:
         return coeff*factors
 
-from numbers import Rational, igcd, ilcm, Integer
-def _rgcd(a, b):
-    return Rational(Integer(igcd(a.p, b.p)), Integer(ilcm(a.q, b.q)))
 
+from numbers import Rational
 from power import Pow
 from add import Add

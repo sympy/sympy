@@ -141,13 +141,14 @@ expand_fraction = fraction_expand
 
 def separate(expr, deep=False, force=False):
     """
-    Deprecated wrapper around ``expand_power_base()``.  Use that function instead.
+    Deprecated wrapper for ``expand_power_base()``.  Use that function instead.
     """
     from sympy.utilities.exceptions import SymPyDeprecationWarning
     SymPyDeprecationWarning(
         feature="separate()", useinstead="expand_power_base()", issue=3383,
         deprecated_since_version="0.7.2", value="Note: in separate() deep "
-        "defaults to False, whereas in expand_power_base(), deep defaults to True.",
+        "defaults to False, whereas in expand_power_base(), "
+        "deep defaults to True.",
     ).warn()
     return expand_power_base(sympify(expr), deep=deep, force=force)
 
@@ -249,10 +250,11 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
         >>> collect(a*x**7 + b*x**7, x**7, exact=True)
         x**7*(a + b)
 
-    You can also apply this function to differential equations, where derivatives
-    of arbitrary order can be collected. Note that if you collect with respect
-    to a function or a derivative of a function, all derivatives of that function
-    will also be collected. Use ``exact=True`` to prevent this from happening::
+    You can also apply this function to differential equations, where
+    derivatives of arbitrary order can be collected. Note that if you
+    collect with respect to a function or a derivative of a function, all
+    derivatives of that function will also be collected. Use
+    ``exact=True`` to prevent this from happening::
 
         >>> from sympy import Derivative as D, collect, Function
         >>> f = Function('f') (x)
@@ -286,6 +288,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
               to call :func:`expand` prior to calling this function.
 
     """
+
     def make_expression(terms):
         product = []
 
@@ -449,7 +452,9 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     if evaluate:
         if expr.is_Mul:
-            return Mul(*[ collect(term, syms, func, True, exact, distribute_order_term) for term in expr.args ])
+            return Mul(*[
+                collect(term, syms, func, True, exact, distribute_order_term)
+                for term in expr.args])
         elif expr.is_Pow:
             b = collect(
                 expr.base, syms, func, True, exact, distribute_order_term)
@@ -458,7 +463,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
     if iterable(syms):
         syms = [expand_power_base(i, deep=False) for i in syms]
     else:
-        syms = [ expand_power_base(syms, deep=False) ]
+        syms = [expand_power_base(syms, deep=False)]
 
     expr = sympify(expr)
     order_term = None
@@ -521,7 +526,7 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
 
     if func is not None:
         collected = dict(
-            [ (key, func(val)) for key, val in collected.iteritems() ])
+            [(key, func(val)) for key, val in collected.iteritems()])
 
     if evaluate:
         return Add(*[key*val for key, val in collected.iteritems()])
@@ -548,7 +553,7 @@ def rcollect(expr, *vars):
     if expr.is_Atom or not expr.has(*vars):
         return expr
     else:
-        expr = expr.__class__(*[ rcollect(arg, *vars) for arg in expr.args ])
+        expr = expr.__class__(*[rcollect(arg, *vars) for arg in expr.args])
 
         if expr.is_Add:
             return collect(expr, vars)
@@ -741,12 +746,13 @@ def ratsimpmodprime(expr, G, *gens, **args):
 
     >>> from sympy.simplify.simplify import ratsimpmodprime
     >>> from sympy.abc import x, y
-    >>> ratsimpmodprime((x + y**5 + y)/(x - y), [x*y**5 - x - y], x, y, order='lex')
+    >>> eq = (x + y**5 + y)/(x - y)
+    >>> ratsimpmodprime(eq, [x*y**5 - x - y], x, y, order='lex')
     (x**2 + x*y + x + y)/(x**2 - x*y)
 
-    If ``polynomial`` is False, the algorithm computes a rational simplification
-    which minimizes the sum of the total degrees of the numerator and the
-    denominator.
+    If ``polynomial`` is False, the algorithm computes a rational
+    simplification which minimizes the sum of the total degrees of
+    the numerator and the denominator.
 
     If ``polynomial`` is True, this function just brings numerator and
     denominator into a canonical form. This is much faster, but has
@@ -804,7 +810,8 @@ def ratsimpmodprime(expr, G, *gens, **args):
             m = [0]*len(opt.gens)
             for i in mi:
                 m[i] += 1
-            if all([monomial_div(m, lmg) is None for lmg in leading_monomials]):
+            if all([monomial_div(m, lmg) is None for lmg in
+                    leading_monomials]):
                 S.append(m)
 
         return [Monomial(s).as_expr(*opt.gens) for s in S] + staircase(n - 1)
@@ -906,7 +913,8 @@ def ratsimpmodprime(expr, G, *gens, **args):
     if polynomial:
         return (num/denom).cancel()
 
-    c, d, allsol = _ratsimpmodprime(Poly(num, opt.gens), Poly(denom, opt.gens), [])
+    c, d, allsol = _ratsimpmodprime(
+        Poly(num, opt.gens), Poly(denom, opt.gens), [])
     if not quick and allsol:
         debug('Looking for best minimal solution. Got: %s' % len(allsol))
         newsol = []
@@ -921,6 +929,7 @@ def ratsimpmodprime(expr, G, *gens, **args):
     r = Rational(cn, dn)
 
     return (c*r.q)/(d*r.p)
+
 
 def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                       polynomial=False):
@@ -1050,9 +1059,9 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     #
     # One crucial point is that all *other* generators really should behave
     # like indeterminates. In particular if (say) "I" is one of them, then
-    # in fact I**2 + 1 = 0 and we may and will compute non-sensical expressions.
-    # However, we can work with a dummy and add the relation I**2 + 1 = 0 to
-    # our ideal, then substitute back in the end.
+    # in fact I**2 + 1 = 0 and we may and will compute non-sensical
+    # expressions. However, we can work with a dummy and add the relation
+    # I**2 + 1 = 0 to our ideal, then substitute back in the end.
     #
     # Now regarding trigonometric generators. We split them into groups,
     # according to the argument of the trigonometric functions. We want to
@@ -1068,9 +1077,9 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     #     By the geometric primality condition, this is still prime.
     # (3) Add further inter-group relations which preserve primality.
     #
-    # Step (1) works as follows. We will isolate common factors in the argument,
-    # so that all our generators are of the form sin(n*x), cos(n*x) or tan(n*x),
-    # with n an integer. Suppose first there are no tan terms.
+    # Step (1) works as follows. We will isolate common factors in the
+    # argument, so that all our generators are of the form sin(n*x), cos(n*x)
+    # or tan(n*x), with n an integer. Suppose first there are no tan terms.
     # The ideal [sin(x)**2 + cos(x)**2 - 1] is geometrically prime, since
     # X**2 + Y**2 - 1 is irreducible over CC.
     # Now, if we have a generator sin(n*x), than we can, using trig identities,
@@ -1083,7 +1092,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
     # sin(n*x).) It is not obvious, but it seems that this preserves geometric
     # primality.
     # XXX A real proof would be nice. HELP!
-    #     Sketch that <S**2 + C**2 - 1, C*T - S> is a prime ideal of CC[S, C, T]:
+    #     Sketch that <S**2 + C**2 - 1, C*T - S> is a prime ideal of
+    #     CC[S, C, T]:
     #     - it suffices to show that the projective closure in CP**3 is
     #       irreducible
     #     - using the half-angle substitutions, we can express sin(x), tan(x),
@@ -1117,7 +1127,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
             elif iterable(e):
                 iterables.append((e[0], e[1:]))
                 # XXX sin(x+2y)?
-                # Note: we go through polys so e.g. sin(-x) -> -sin(x) -> sin(x)
+                # Note: we go through polys so e.g.
+                # sin(-x) -> -sin(x) -> sin(x)
                 gens.extend(parallel_poly_from_expr(
                     [e[0](x) for x in e[1:]] + [e[0](Add(*e[1:]))])[1].gens)
             else:
@@ -1137,8 +1148,9 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         I = []
         y = Dummy('y')
         for fn, coeff in terms:
-            for c, s, t, rel in ([cos, sin, tan, cos(x)**2 + sin(x)**2 - 1],
-                                 [cosh, sinh, tanh, cosh(x)**2 - sinh(x)**2 - 1]):
+            for c, s, t, rel in (
+                    [cos, sin, tan, cos(x)**2 + sin(x)**2 - 1],
+                    [cosh, sinh, tanh, cosh(x)**2 - sinh(x)**2 - 1]):
                 if coeff == 1 and fn in [c, s]:
                     I.append(rel)
                 elif fn == t:
@@ -1185,12 +1197,12 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
         res = [] # the ideal
 
         for key, val in trigdict.iteritems():
-            # We have now assembeled a dictionary. Its keys are common arguments
-            # in trigonometric expressions, and values are lists of pairs
-            # (fn, coeff). x0, (fn, coeff) in trigdict means that we need to deal
-            # with fn(coeff*x0). We take the rational gcd of the coeffs, call
-            # it ``gcd``. We then use x = x0/gcd as "base symbol", all other
-            # arguments are integral multiples thereof.
+            # We have now assembeled a dictionary. Its keys are common
+            # arguments in trigonometric expressions, and values are lists of
+            # pairs (fn, coeff). x0, (fn, coeff) in trigdict means that we
+            # need to deal with fn(coeff*x0). We take the rational gcd of the
+            # coeffs, call it ``gcd``. We then use x = x0/gcd as "base symbol",
+            # all other arguments are integral multiples thereof.
             # We will build an ideal which works with sin(x), cos(x).
             # If hint tan is provided, also work with tan(x). Moreover, if
             # n > 1, also work with sin(k*x) for k <= n, and similarly for cos
@@ -1241,7 +1253,8 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                 iterables.extend([(sinh, args), (cosh, args)])
             else:
                 dummys = symbols('d:%i' % len(args), cls=Dummy)
-                expr = fn(Add(*dummys)).expand(trig=True).subs(zip(dummys, args))
+                expr = fn(
+                    Add(*dummys)).expand(trig=True).subs(zip(dummys, args))
                 res.append(fn(Add(*args)) - expr)
 
         if myI in gens:
@@ -1316,8 +1329,9 @@ def trigsimp_groebner(expr, hints=[], quick=False, order="grlex",
                                      gens=gens, quick=quick, domain=ZZ)
                      for monom, coeff in num.terms()])
     else:
-        return ratsimpmodprime(expr, list(G), order=order, gens=freegens+gens,
-                               quick=quick, domain=ZZ, polynomial=polynomial).subs(subs)
+        return ratsimpmodprime(
+            expr, list(G), order=order, gens=freegens+gens,
+            quick=quick, domain=ZZ, polynomial=polynomial).subs(subs)
 
 
 _trigs = (C.TrigonometricFunction, C.HyperbolicFunction)
@@ -1330,87 +1344,58 @@ def trigsimp(expr, **opts):
     Notes
     =====
 
-    deep:
-    - Apply trigsimp inside all objects with arguments
-
-    recursive:
-    - Use common subexpression elimination (cse()) and apply
-    trigsimp recursively (this is quite expensive if the
-    expression is large)
-
     method:
     - Determine the method to use. Valid choices are 'matching' (default),
-    'groebner' and 'combined'. If 'matching', simplify the expression
-    recursively by pattern matching. If 'groebner', apply an experimental
-    groebner basis algorithm. In this case further options are forwarded to
-    ``trigsimp_groebner``, please refer to its docstring. If 'combined', first
-    run the groebner basis algorithm with small default parameters, then run
-    the 'matching' algorithm.
+    'groebner', 'combined', and 'fu'. If 'matching', simplify the
+    expression recursively by targeting common patterns. If 'groebner', apply
+    an experimental groebner basis algorithm. In this case further options
+    are forwarded to ``trigsimp_groebner``, please refer to its docstring.
+    If 'combined', first run the groebner basis algorithm with small
+    default parameters, then run the 'matching' algorithm. 'fu' runs the
+    collection of trigonometric transformations described by Fu, et al.
+    (see the `fu` docstring).
+
 
     Examples
     ========
 
-    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh
+    >>> from sympy import trigsimp, sin, cos, log
     >>> from sympy.abc import x, y
     >>> e = 2*sin(x)**2 + 2*cos(x)**2
     >>> trigsimp(e)
     2
+
+    Simplification occurs wherever trigonometric functions are located.
+
     >>> trigsimp(log(e))
-    log(2*sin(x)**2 + 2*cos(x)**2)
-    >>> trigsimp(log(e), deep=True)
     log(2)
 
-    Using `method="groebner"` (or `"combined"`) can sometimes lead to a lot
-    more simplification:
+    Using `method="groebner"` (or `"combined"`) might lead to greater
+    simplification.
 
-    >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
-    >>> trigsimp(e)
-    (-sin(x) + 1)/cos(x) - cos(x)/(sin(x) - 1)
-    >>> trigsimp(e, method="groebner")
-    2/cos(x)
+    The old trigsimp routine can be accessed as with method 'old'.
+
+    >>> from sympy import coth, tanh
+    >>> t = 3*tanh(x)**7 - 2/coth(x)**7
+    >>> trigsimp(t, method='old') == t
+    True
+    >>> trigsimp(t)
+    tanh(x)**7
 
     """
-    from sympy import tan
+    from sympy.simplify.fu import fu
 
-    old = expr
-    first = opts.pop('first', True)
-    if first:
-        if not expr.has(*_trigs):
-            return expr
+    expr = sympify(expr)
 
-        trigsyms = set_union(*[t.free_symbols for t in expr.atoms(*_trigs)])
-        if len(trigsyms) > 1:
-            d = separatevars(expr)
-            if d.is_Mul:
-                d = separatevars(d, dict=True) or d
-            if isinstance(d, dict):
-                expr = 1
-                for k, v in d.iteritems():
-                    # remove hollow factoring
-                    was = v
-                    v = expand_mul(v)
-                    opts['first'] = False
-                    vnew = trigsimp(v, **opts)
-                    if vnew == v:
-                        vnew = was
-                    expr *= vnew
-                old = expr
-            else:
-                if d.is_Add:
-                    for s in trigsyms:
-                        r, e = expr.as_independent(s)
-                        if r:
-                            opts['first'] = False
-                            expr = r + trigsimp(e, **opts)
-                            if not expr.is_Add:
-                                break
-                    old = expr
+    old = opts.pop('old', False)
+    if not old:
+        opts.pop('deep', None)
+        recursive = opts.pop('recursive', None)
+        method = opts.pop('method', 'matching')
+    else:
+        method = 'old'
 
-    recursive = opts.pop('recursive', False)
-    deep = opts.pop('deep', False)
-    method = opts.pop('method', 'matching')
-
-    def groebnersimp(ex, deep, **opts):
+    def groebnersimp(ex, **opts):
         def traverse(e):
             if e.is_Atom:
                 return e
@@ -1418,351 +1403,18 @@ def trigsimp(expr, **opts):
             if e.is_Function or e.is_Pow:
                 args = [trigsimp_groebner(x, **opts) for x in args]
             return e.func(*args)
-        if deep:
-            ex = traverse(ex)
-        return trigsimp_groebner(ex, **opts)
+        return trigsimp_groebner(traverse(ex), **opts)
 
     trigsimpfunc = {
-        'matching': (lambda x, d: _trigsimp(x, d)),
-        'groebner': (lambda x, d: groebnersimp(x, d, **opts)),
-        'combined': (lambda x, d: _trigsimp(groebnersimp(x,
-                                       d, polynomial=True, hints=[2, tan]),
-                                   d))
+        'fu': (lambda x: fu(x)),
+        'matching': (lambda x: futrig(x)),
+        'groebner': (lambda x: groebnersimp(x, **opts)),
+        'combined': (lambda x: futrig(groebnersimp(x,
+                               polynomial=True, hints=[2, tan]))),
+        'old': lambda x: trigsimp_old(x, **opts),
                    }[method]
 
-    if recursive:
-        w, g = cse(expr)
-        g = trigsimpfunc(g[0], deep)
-
-        for sub in reversed(w):
-            g = g.subs(sub[0], sub[1])
-            g = trigsimpfunc(g, deep)
-        result = g
-    else:
-        result = trigsimpfunc(expr, deep)
-
-    return result
-
-
-def _dotrig(a, b):
-    """Helper to tell whether ``a`` and ``b`` have the same sorts
-    of symbols in them -- no need to test hyperbolic patterns against
-    expressions that have no hyperbolics in them."""
-    return a.func == b.func and (
-        a.has(C.TrigonometricFunction) and b.has(C.TrigonometricFunction) or
-        a.has(C.HyperbolicFunction) and b.has(C.HyperbolicFunction))
-
-
-_trigpat = None
-def _trigpats():
-    global _trigpat
-    a, b, c = symbols('a b c', cls=Wild)
-    d = Wild('d', commutative=False)
-
-    # for the simplifications like sinh/cosh -> tanh:
-    # DO NOT REORDER THE FIRST 14 since these are assumed to be in this
-    # order in _match_div_rewrite.
-    matchers_division = (
-        (a*sin(b)**c/cos(b)**c, a*tan(b)**c, sin(b), cos(b)),
-        (a*tan(b)**c*cos(b)**c, a*sin(b)**c, sin(b), cos(b)),
-        (a*cot(b)**c*sin(b)**c, a*cos(b)**c, sin(b), cos(b)),
-        (a*tan(b)**c/sin(b)**c, a/cos(b)**c, sin(b), cos(b)),
-        (a*cot(b)**c/cos(b)**c, a/sin(b)**c, sin(b), cos(b)),
-        (a*cot(b)**c*tan(b)**c, a, sin(b), cos(b)),
-        (a*(cos(b) + 1)**c*(cos(b) - 1)**c,
-            a*(-sin(b)**2)**c, cos(b) + 1, cos(b) - 1),
-        (a*(sin(b) + 1)**c*(sin(b) - 1)**c,
-            a*(-cos(b)**2)**c, sin(b) + 1, sin(b) - 1),
-
-        (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c, S.One, S.One),
-        (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c, S.One, S.One),
-        (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c, S.One, S.One),
-        (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c, S.One, S.One),
-        (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c, S.One, S.One),
-        (a*coth(b)**c*tanh(b)**c, a, S.One, S.One),
-
-        (c*(tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)),
-            tanh(a + b)*c, S.One, S.One),
-    )
-
-    matchers_add = (
-        (c*sin(a)*cos(b) + c*cos(a)*sin(b) + d, sin(a + b)*c + d),
-        (c*cos(a)*cos(b) - c*sin(a)*sin(b) + d, cos(a + b)*c + d),
-        (c*sin(a)*cos(b) - c*cos(a)*sin(b) + d, sin(a - b)*c + d),
-        (c*cos(a)*cos(b) + c*sin(a)*sin(b) + d, cos(a - b)*c + d),
-        (c*sinh(a)*cosh(b) + c*sinh(b)*cosh(a) + d, sinh(a + b)*c + d),
-        (c*cosh(a)*cosh(b) + c*sinh(a)*sinh(b) + d, cosh(a + b)*c + d),
-    )
-
-    # for cos(x)**2 + sin(x)**2 -> 1
-    matchers_identity = (
-        (a*sin(b)**2, a - a*cos(b)**2),
-        (a*tan(b)**2, a*(1/cos(b))**2 - a),
-        (a*cot(b)**2, a*(1/sin(b))**2 - a),
-        (a*sin(b + c), a*(sin(b)*cos(c) + sin(c)*cos(b))),
-        (a*cos(b + c), a*(cos(b)*cos(c) - sin(b)*sin(c))),
-        (a*tan(b + c), a*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
-
-        (a*sinh(b)**2, a*cosh(b)**2 - a),
-        (a*tanh(b)**2, a - a*(1/cosh(b))**2),
-        (a*coth(b)**2, a + a*(1/sinh(b))**2),
-        (a*sinh(b + c), a*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
-        (a*cosh(b + c), a*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
-        (a*tanh(b + c), a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
-
-    )
-
-    # Reduce any lingering artifacts, such as sin(x)**2 changing
-    # to 1-cos(x)**2 when sin(x)**2 was "simpler"
-    artifacts = (
-        (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
-        (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
-        (a - a*(1/sin(b))**2 + c, -a*cot(b)**2 + c, sin),
-
-        (a - a*cosh(b)**2 + c, -a*sinh(b)**2 + c, cosh),
-        (a - a*(1/cosh(b))**2 + c, a*tanh(b)**2 + c, cosh),
-        (a + a*(1/sinh(b))**2 + c, a*coth(b)**2 + c, sinh),
-
-        # same as above but with noncommutative prefactor
-        (a*d - a*d*cos(b)**2 + c, a*d*sin(b)**2 + c, cos),
-        (a*d - a*d*(1/cos(b))**2 + c, -a*d*tan(b)**2 + c, cos),
-        (a*d - a*d*(1/sin(b))**2 + c, -a*d*cot(b)**2 + c, sin),
-
-        (a*d - a*d*cosh(b)**2 + c, -a*d*sinh(b)**2 + c, cosh),
-        (a*d - a*d*(1/cosh(b))**2 + c, a*d*tanh(b)**2 + c, cosh),
-        (a*d + a*d*(1/sinh(b))**2 + c, a*d*coth(b)**2 + c, sinh),
-    )
-
-    _trigpat = (a, b, c, d, matchers_division, matchers_add,
-        matchers_identity, artifacts)
-    return _trigpat
-
-
-def _replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph):
-    """Helper for _match_div_rewrite.
-
-    Replace f(b_)**c_*g(b_)**(rexp(c_)) with h(b)**rexph(c) if f(b_)
-    and g(b_) are both positive or if c_ is an integer.
-    """
-    # assert expr.is_Mul and expr.is_commutative and f != g
-    fargs = defaultdict(int)
-    gargs = defaultdict(int)
-    args = []
-    for x in expr.args:
-        if x.is_Pow or x.func in (f, g):
-            b, e = x.as_base_exp()
-            if b.is_positive or e.is_integer:
-                if b.func == f:
-                    fargs[b.args[0]] += e
-                    continue
-                elif b.func == g:
-                    gargs[b.args[0]] += e
-                    continue
-        args.append(x)
-    common = set(fargs) & set(gargs)
-    hit = False
-    while common:
-        key = common.pop()
-        fe = fargs.pop(key)
-        ge = gargs.pop(key)
-        if fe == rexp(ge):
-            args.append(h(key)**rexph(fe))
-            hit = True
-        else:
-            fargs[key] = fe
-            gargs[key] = ge
-    if not hit:
-        return expr
-    while fargs:
-        key, e = fargs.popitem()
-        args.append(f(key)**e)
-    while gargs:
-        key, e = gargs.popitem()
-        args.append(g(key)**e)
-    return Mul(*args)
-
-
-_idn = lambda x: x
-_midn = lambda x: -x
-_one = lambda x: S.One
-
-def _match_div_rewrite(expr, i):
-    """helper for __trigsimp"""
-    if i == 0:
-         expr = _replace_mul_fpowxgpow(expr, sin, cos,
-            _midn, tan, _idn)
-    elif i == 1:
-         expr = _replace_mul_fpowxgpow(expr, tan, cos,
-            _idn, sin, _idn)
-    elif i == 2:
-         expr = _replace_mul_fpowxgpow(expr, cot, sin,
-            _idn, cos, _idn)
-    elif i == 3:
-         expr = _replace_mul_fpowxgpow(expr, tan, sin,
-            _midn, cos, _midn)
-    elif i == 4:
-         expr = _replace_mul_fpowxgpow(expr, cot, cos,
-            _midn, sin, _midn)
-    elif i == 5:
-         expr = _replace_mul_fpowxgpow(expr, cot, tan,
-            _idn, _one, _idn)
-    # i in (6, 7) is skipped
-    elif i == 8:
-         expr = _replace_mul_fpowxgpow(expr, sinh, cosh,
-            _midn, tanh, _idn)
-    elif i == 9:
-         expr = _replace_mul_fpowxgpow(expr, tanh, cosh,
-            _idn, sinh, _idn)
-    elif i == 10:
-        expr = _replace_mul_fpowxgpow(expr, coth, sinh,
-            _idn, cosh, _idn)
-    elif i == 11:
-        expr = _replace_mul_fpowxgpow(expr, tanh, sinh,
-            _midn, cosh, _midn)
-    elif i == 12:
-        expr = _replace_mul_fpowxgpow(expr, coth, cosh,
-            _midn, sinh, _midn)
-    elif i == 13:
-        expr = _replace_mul_fpowxgpow(expr, coth, tanh,
-            _idn, _one, _idn)
-    else:
-        return None
-    return expr
-
-
-def _trigsimp(expr, deep=False):
-    # protect the cache from non-trig patterns; we only allow
-    # trig patterns to enter the cache
-    if expr.has(*_trigs):
-        return __trigsimp(expr, deep)
-    return expr
-
-
-@cacheit
-def __trigsimp(expr, deep=False):
-    """recursive helper for trigsimp"""
-
-    if _trigpat is None:
-        _trigpats()
-    a, b, c, d, matchers_division, matchers_add, \
-    matchers_identity, artifacts = _trigpat
-
-    if expr.is_Mul:
-        # do some simplifications like sin/cos -> tan:
-        if not expr.is_commutative:
-            com, nc = expr.args_cnc()
-            expr = _trigsimp(Mul._from_args(com), deep)*Mul._from_args(nc)
-        else:
-            for i, (pattern, simp, ok1, ok2) in enumerate(matchers_division):
-                if not _dotrig(expr, pattern):
-                    continue
-
-                newexpr = _match_div_rewrite(expr, i)
-                if newexpr is not None:
-                    if newexpr != expr:
-                        expr = newexpr
-                        break
-                    else:
-                        continue
-
-                # use SymPy matching instead
-                res = expr.match(pattern)
-                if res and res.get(c, 0):
-                    if not res[c].is_integer:
-                        ok = ok1.subs(res)
-                        if not ok.is_positive:
-                            continue
-                        ok = ok2.subs(res)
-                        if not ok.is_positive:
-                            continue
-                    # if "a" contains any of trig or hyperbolic funcs with
-                    # argument "b" then skip the simplification
-                    if any(w.args[0] == res[b] for w in res[a].atoms(
-                            C.TrigonometricFunction, C.HyperbolicFunction)):
-                        continue
-                    # simplify and finish:
-                    expr = simp.subs(res)
-                    break  # process below
-
-    if expr.is_Add:
-        args = []
-        for term in expr.args:
-            if not term.is_commutative:
-                com, nc = term.args_cnc()
-                nc = Mul._from_args(nc)
-                term = Mul._from_args(com)
-            else:
-                nc = S.One
-            term = _trigsimp(term, deep)
-            for pattern, result in matchers_identity:
-                res = term.match(pattern)
-                if res is not None:
-                    term = result.subs(res)
-                    break
-            args.append(term*nc)
-        if args != expr.args:
-            expr = Add(*args)
-            expr = min(expr, expand(expr), key=count_ops)
-        if expr.is_Add:
-            for pattern, result in matchers_add:
-                if not _dotrig(expr, pattern):
-                    continue
-                res = expr.match(pattern)
-                # if "d" contains any trig or hyperbolic funcs with
-                # argument "a" or "b" then skip the simplification;
-                # this isn't perfect -- see tests
-                if res is None or not (a in res and b in res) or any(
-                    w.args[0] in (res[a], res[b]) for w in res[d].atoms(
-                        C.TrigonometricFunction, C.HyperbolicFunction)):
-                    continue
-                expr = result.subs(res)
-                break
-
-        # Reduce any lingering artifacts, such as sin(x)**2 changing
-        # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
-        for pattern, result, ex in artifacts:
-            if not _dotrig(expr, pattern):
-                continue
-            # Substitute a new wild that excludes some function(s)
-            # to help influence a better match. This is because
-            # sometimes, for example, 'a' would match sec(x)**2
-            a_t = Wild('a', exclude=[ex])
-            pattern = pattern.subs(a, a_t)
-            result = result.subs(a, a_t)
-
-            m = expr.match(pattern)
-            was = None
-            while m and was != expr:
-                was = expr
-                if m[a_t] == 0 or \
-                        -m[a_t] in m[c].args or m[a_t] + m[c] == 0:
-                    break
-                if d in m and m[a_t]*m[d] + m[c] == 0:
-                    break
-                expr = result.subs(m)
-                m = expr.match(pattern)
-                m.setdefault(c, S.Zero)
-
-    elif expr.is_Mul or expr.is_Pow or deep and expr.args:
-        expr = expr.func(*[_trigsimp(a, deep) for a in expr.args])
-
-    try:
-        if not expr.has(*_trigs):
-            raise TypeError
-        e = expr.atoms(exp)
-        new = expr.rewrite(exp, deep=deep)
-        if new == e:
-            raise TypeError
-        fnew = factor(new)
-        if fnew != new:
-            new = sorted([new, factor(new)], key=count_ops)[0]
-        # if all exp that were introduced disappeared then accept it
-        if not (new.atoms(exp) - e):
-            expr = new
-    except TypeError:
-        pass
-
-    return expr
+    return trigsimpfunc(expr)
 
 
 def collect_sqrt(expr, evaluate=True):
@@ -1804,8 +1456,9 @@ def collect_sqrt(expr, evaluate=True):
     vars = set()
     for a in Add.make_args(expr):
         for m in a.args_cnc()[0]:
-            if m.is_number and (m.is_Pow and m.exp.is_Rational and m.exp.q == 2 or
-                                m is S.ImaginaryUnit):
+            if m.is_number and (
+                    m.is_Pow and m.exp.is_Rational and m.exp.q == 2 or
+                    m is S.ImaginaryUnit):
                 vars.add(m)
     vars = list(vars)
     if not evaluate:
@@ -2394,7 +2047,8 @@ def _denest_pow(eq):
                             b.is_positive):
         return eq
 
-    # denest eq which is either pos**e or Pow**e or Mul**e or Mul(b1**e1, b2**e2)
+    # denest eq which is either pos**e or Pow**e or Mul**e or
+    # Mul(b1**e1, b2**e2)
 
     # handle polar numbers specially
     polars, nonpolars = [], []
@@ -2443,6 +2097,7 @@ def _denest_pow(eq):
     # fractions, terms_gcd(x+x*y/2) -> x*(y + 2)/2 and we don't want the 1/2;
     # gcd won't pull out numerators from a fraction: gcd(3*x, 9*x/2) -> x but
     # we want 3*x. Neither work with noncommutatives.
+
     def nc_gcd(aa, bb):
         a, b = [i.as_coeff_Mul() for i in [aa, bb]]
         c = gcd(a[0], b[0]).as_numer_denom()[0]
@@ -2578,7 +2233,8 @@ def powdenest(eq, force=False, polar=False):
         return unpolarify(powdenest(unpolarify(eq, exponents_only=True)), rep)
 
     new = powsimp(sympify(eq))
-    return new.xreplace(Transform(_denest_pow, filter=lambda m: m.is_Pow or m.func is exp))
+    return new.xreplace(Transform(
+        _denest_pow, filter=lambda m: m.is_Pow or m.func is exp))
 
 _y = Dummy('y')
 
@@ -2676,7 +2332,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     expr = sympify(expr)
 
-    if not isinstance(expr, Basic) or expr.is_Atom or expr in (exp_polar(0), exp_polar(1)):
+    if not isinstance(expr, Basic) or expr.is_Atom or expr in (
+            exp_polar(0), exp_polar(1)):
         return expr
 
     if deep or expr.is_Add or expr.is_Mul and _y not in expr.args:
@@ -2741,8 +2398,10 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
         # ==============================================================
         # check for Mul bases of Rational powers that can be combined with
-        # separated bases, e.g. x*sqrt(x*y)*sqrt(x*sqrt(x*y)) -> (x*sqrt(x*y))**(3/2)
+        # separated bases, e.g. x*sqrt(x*y)*sqrt(x*sqrt(x*y)) ->
+        # (x*sqrt(x*y))**(3/2)
         # ---------------- helper functions
+
         def ratq(x):
             '''Return Rational part of x's exponent as it appears in the bkey.
             '''
@@ -2814,7 +2473,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 qstart = qlcm
 
                 bb = []  # list of factors
-                ee = []  # (factor's exponent, current value of that exponent in common_b)
+                ee = []  # (factor's expo. and it's current value in common_b)
                 for bi in Mul.make_args(b):
                     bib, bie = bkey(bi)
                     if bib not in common_b or common_b[bib] < bie:
@@ -2844,13 +2503,14 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         common_b[base] += min1*qstart*exponent
                 if (last  # no more radicals in base
                     or len(common_b) == 1  # nothing left to join with
-                    or all(k[1] == 1 for k in common_b)  # no radicals left in common_b
+                    or all(k[1] == 1 for k in common_b)  # no rad's in common_b
                         ):
                     break
                 # see what we can exponentiate base by to remove any radicals
                 # so we know what to search for
-                # e.g. if base were x**(1/2)*y**(1/3) then we should exponentiate
-                # by 6 and look for powers of x and y in the ratio of 2 to 3
+                # e.g. if base were x**(1/2)*y**(1/3) then we should
+                # exponentiate by 6 and look for powers of x and y in the ratio
+                # of 2 to 3
                 qlcm = lcm([ratq(bi) for bi in Mul.make_args(bstart)])
                 if qlcm == 1:
                     break  # we are done
@@ -2983,8 +2643,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                     c_powers[b].append(e)
                 # here is a new joined base
                 new_base = Mul(*(nonneg + neg))
-                # if there are positive parts they will just get separated again
-                # unless some change is made
+                # if there are positive parts they will just get separated
+                # again unless some change is made
 
                 def _terms(e):
                     # return the number of terms of this expression
@@ -3132,6 +2792,7 @@ def combsimp(expr):
     as_gamma = not expr.has(factorial, binomial)
 
     class rf(Function):
+
         @classmethod
         def eval(cls, a, b):
             if b.is_Integer:
@@ -3368,8 +3029,8 @@ def combsimp(expr):
         # theorem to cancel an upper and lower.
         # e.g. gamma(2*s)/gamma(s) = gamma(s)*gamma(s+1/2)*C/gamma(s)
         # (in principle this can also be done with with factors other than two,
-        #  but two is special in that we need only matching numer and denom, not
-        #  several in numer).
+        # but two is special in that we need only matching numer and denom,
+        # not several in numer).
         for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
                                 denom_others),
                                (denom_gammas, numer_gammas, denom_others,
@@ -3401,6 +3062,7 @@ def combsimp(expr):
         # Try to absorb factors into the gammas.
         # This code (in particular repeated calls to find_fuzzy) can be very
         # slow.
+
         def find_fuzzy(l, x):
             S1, T1 = compute_ST(x)
             for y in l:
@@ -3544,7 +3206,7 @@ def signsimp(expr, evaluate=True):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops):
+def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     """
     Simplifies the given expression.
 
@@ -3618,7 +3280,8 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     that some choices, such as ``lambda expr: len(str(expr))`` may appear to be
     good metrics, but have other problems (in this case, the measure function
     may slow down simplify too much for very large expressions).  If you don't
-    know what a good metric would be, the default, ``count_ops``, is a good one.
+    know what a good metric would be, the default, ``count_ops``, is a good
+    one.
 
     For example:
 
@@ -3635,8 +3298,8 @@ def simplify(expr, ratio=1.7, measure=count_ops):
 
     So you can see that ``h`` is simpler than ``g`` using the count_ops metric.
     However, we may not like how ``simplify`` (in this case, using
-    ``logcombine``) has created the ``b**(log(1/a) + 1)`` term.  A simple way to
-    reduce this would be to give more weight to powers as operations in
+    ``logcombine``) has created the ``b**(log(1/a) + 1)`` term.  A simple way
+    to reduce this would be to give more weight to powers as operations in
     ``count_ops``.  We can do this by using the ``visual=True`` option:
 
     >>> print count_ops(g, visual=True)
@@ -3729,7 +3392,8 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     if expr.has(BesselBase):
         expr = besselsimp(expr)
 
-    if expr.has(C.TrigonometricFunction) or expr.has(C.HyperbolicFunction):
+    if expr.has(C.TrigonometricFunction) and not fu or expr.has(
+            C.HyperbolicFunction):
         expr = trigsimp(expr, deep=True)
 
     if expr.has(C.log):
@@ -4056,14 +3720,27 @@ def logcombine(expr, force=False):
     return Add(*other)
 
 
-def bottom_up(rv, F):
+def bottom_up(rv, F, last=False, atoms=False, nonbasic=False):
     """Apply ``F`` to all expressions in an expression tree from the
-    bottom up.
+    bottom up. If ``last`` is True, apply ``F`` to the rebuilt object;
+    if ``atoms`` is True, apply ``F`` even if there are no args; if
+    ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
     """
-    if rv.args:
-        args = tuple([F(a) for a in rv.args])
-        if args != rv.args:
-            rv = rv.func(*args)
+    try:
+        if rv.args:
+            args = tuple([F(a) for a in rv.args])
+            if args != rv.args:
+                rv = rv.func(*args)
+    except AttributeError:
+        if nonbasic:
+            try:
+                return F(rv)
+            except TypeError:
+                return rv
+
+    if last or atoms:
+        rv = F(rv)
+
     return rv
 
 
@@ -4115,10 +3792,12 @@ def besselsimp(expr):
         return tofunc
 
     ifactors = [I, exp_polar(I*pi/2), exp_polar(-I*pi/2)]
-    expr = expr.replace(besselj, replacer(besselj,
-                                          torewrite(besselj, besseli), ifactors))
-    expr = expr.replace(besseli, replacer(besseli,
-                                          torewrite(besseli, besselj), ifactors))
+    expr = expr.replace(
+        besselj, replacer(besselj,
+        torewrite(besselj, besseli), ifactors))
+    expr = expr.replace(
+        besseli, replacer(besseli,
+        torewrite(besseli, besselj), ifactors))
 
     minusfactors = [-1, exp_polar(I*pi)]
     expr = expr.replace(
@@ -4132,10 +3811,602 @@ def besselsimp(expr):
         def repl(nu, z):
             if (nu % 1) != S(1)/2:
                 return fro(nu, z)
-            return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(func=True)).subs(z0, z)
+            return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
+                func=True)).subs(z0, z)
         return repl
 
     expr = expr.replace(besselj, expander(besselj))
     expr = expr.replace(besseli, expander(besseli))
 
     return expr
+
+
+def _is_Expr(e):
+    """_eapply helper to tell whether ``e`` and all its args
+    are Exprs."""
+    if not isinstance(e, Expr):
+        return False
+    return all(_is_Expr(i) for i in e.args)
+
+
+def _eapply(func, e, cond=None):
+    """Apply ``func`` to ``e`` if all args are Exprs else only
+    apply it to those args that *are* Exprs."""
+    if not isinstance(e, Expr):
+        return e
+    if _is_Expr(e) or not e.args:
+        return func(e)
+    return e.func(*[
+        _eapply(func, ei) if (cond is None or cond(ei)) else ei
+        for ei in e.args])
+
+
+def futrig(e, **kwargs):
+    """Return simplified ``e`` using Fu-like transformations.
+    This is not the "Fu" algorithm. This is called by default
+    from ``trigsimp``. By default, hyperbolics subexpressions
+    will be simplified, but this can be disabled by setting
+    ``hyper=False``.
+
+    Examples
+    ========
+
+    >>> from sympy import trigsimp, tan, sinh, tanh
+    >>> from sympy.simplify.simplify import futrig
+    >>> from sympy.abc import x
+    >>> trigsimp(1/tan(x)**2)
+    tan(x)**(-2)
+
+    >>> futrig(sinh(x)/tanh(x))
+    cosh(x)
+
+    """
+    from sympy.simplify.fu import hyper_as_trig
+
+    e = sympify(e)
+
+    if not isinstance(e, Basic):
+        return e
+
+    if not e.args:
+        return e
+
+    old = e
+    e = bottom_up(e, lambda x: _futrig(x, **kwargs), last=True)
+
+    if kwargs.pop('hyper', True) and e.has(C.HyperbolicFunction):
+        e, f = hyper_as_trig(e)
+        e = f(_futrig(e))
+
+    if e != old and e.is_Mul and e.args[0].is_Rational:
+        # redistribute leading coeff on 2-arg Add
+        e = Mul(*e.as_coeff_Mul())
+    return e
+
+
+def _futrig(e, **kwargs):
+    """Helper for futrig."""
+    from sympy.strategies.tree import greedy
+    from sympy.strategies.core import identity
+    from sympy.simplify.fu import (
+        TR1, TR2, TR3, TR2i, TR14, TR5, TR10, L, TR10i,
+        TR8, TR6, TR15, TR16, TR111, TR5, TRmorrie, TR11, TR14, TR22,
+        TR12)
+    from sympy.core.compatibility import ordered, _nodes
+
+    if not e.has(C.TrigonometricFunction):
+        return e
+
+    if e.is_Mul:
+        coeff, e = e.as_independent(C.TrigonometricFunction)
+    else:
+        coeff = S.One
+
+    Lops = lambda x: (L(x), x.count_ops(), _nodes(x), len(x.args), x.is_Add)
+    trigs = lambda x: x.has(C.TrigonometricFunction)
+
+    tree = [identity,
+        (
+        TR3,  # canonical angles
+        TR1,  # sec-csc -> cos-sin
+        TR12,  # expand tan of sum
+        lambda x: _eapply(factor, x, trigs),
+        TR2,  # tan-cot -> sin-cos
+        TR2i,  # sin-cos ratio -> tan
+        lambda x: _eapply(lambda i: factor(i.normal()), x, trigs),
+        TR14,  # factored identities
+        TR5,  # sin-pow -> cos_pow
+        TR10,  # sin-cos of sums -> sin-cos prod
+        TR11, TR6, # reduce double angles and rewrite cos pows
+        lambda x: _eapply(factor, x, trigs),
+        TR14,  # factored powers of identities
+        [identity, lambda x: _eapply(_mexpand, x, trigs)],
+        TRmorrie,
+        TR10i,  # sin-cos products > sin-cos of sums
+        [identity, TR8],  # sin-cos products -> sin-cos of sums
+        [identity, lambda x: TR2i(TR2(x))],  # tan -> sin-cos -> tan
+        [
+            lambda x: _eapply(expand_mul, TR5(x), trigs),
+            lambda x: _eapply(
+                expand_mul, TR15(x), trigs)], # pos/neg powers of sin
+        [
+            lambda x:  _eapply(expand_mul, TR6(x), trigs),
+            lambda x:  _eapply(
+                expand_mul, TR16(x), trigs)], # pos/neg powers of cos
+        TR111,  # tan, sin, cos to neg power -> cot, csc, sec
+        [identity, TR2i],  # sin-cos ratio to tan
+        [identity, lambda x: _eapply(
+            expand_mul, TR22(x), trigs)],  # tan-cot to sec-csc
+        TR1, TR2, TR2i,
+        [identity, lambda x: _eapply(
+            factor_terms, TR12(x), trigs)],  # expand tan of sum
+        )]
+    e = greedy(tree, objective=Lops)(e)
+
+    return coeff*e
+
+#-------------------- the old trigsimp routines ---------------------
+_trigs = (C.TrigonometricFunction, C.HyperbolicFunction)
+
+
+def trigsimp_old(expr, **opts):
+    """
+    reduces expression by using known trig identities
+
+    Notes
+    =====
+
+    deep:
+    - Apply trigsimp inside all objects with arguments
+
+    recursive:
+    - Use common subexpression elimination (cse()) and apply
+    trigsimp recursively (this is quite expensive if the
+    expression is large)
+
+    method:
+    - Determine the method to use. Valid choices are 'matching' (default),
+    'groebner', 'combined', 'fu' and 'futrig'. If 'matching', simplify the
+    expression recursively by pattern matching. If 'groebner', apply an
+    experimental groebner basis algorithm. In this case further options
+    are forwarded to ``trigsimp_groebner``, please refer to its docstring.
+    If 'combined', first run the groebner basis algorithm with small
+    default parameters, then run the 'matching' algorithm. 'fu' runs the
+    collection of trigonometric transformations described by Fu, et al.
+    (see the `fu` docstring) while `futrig` runs a subset of Fu-transforms
+    that mimic the behavior of `trigsimp`.
+
+    compare:
+    - show input and output from `trigsimp` and `futrig` when different,
+    but returns the `trigsimp` value.
+
+    Examples
+    ========
+
+    >>> from sympy import trigsimp, sin, cos, log, cosh, sinh, tan, cot
+    >>> from sympy.abc import x, y
+    >>> e = 2*sin(x)**2 + 2*cos(x)**2
+    >>> trigsimp(e, old=True)
+    2
+    >>> trigsimp(log(e), old=True)
+    log(2*sin(x)**2 + 2*cos(x)**2)
+    >>> trigsimp(log(e), deep=True, old=True)
+    log(2)
+
+    Using `method="groebner"` (or `"combined"`) can sometimes lead to a lot
+    more simplification:
+
+    >>> e = (-sin(x) + 1)/cos(x) + cos(x)/(-sin(x) + 1)
+    >>> trigsimp(e, old=True)
+    (-sin(x) + 1)/cos(x) - cos(x)/(sin(x) - 1)
+    >>> trigsimp(e, method="groebner", old=True)
+    2/cos(x)
+
+    >>> trigsimp(1/cot(x)**2, compare=True, old=True)
+          futrig: tan(x)**2
+    cot(x)**(-2)
+
+    """
+    from sympy import tan
+    from sympy.simplify.fu import fu
+
+    old = expr
+    first = opts.pop('first', True)
+    if first:
+        if not expr.has(*_trigs):
+            return expr
+
+        trigsyms = set_union(*[t.free_symbols for t in expr.atoms(*_trigs)])
+        if len(trigsyms) > 1:
+            d = separatevars(expr)
+            if d.is_Mul:
+                d = separatevars(d, dict=True) or d
+            if isinstance(d, dict):
+                expr = 1
+                for k, v in d.iteritems():
+                    # remove hollow factoring
+                    was = v
+                    v = expand_mul(v)
+                    opts['first'] = False
+                    vnew = trigsimp(v, **opts)
+                    if vnew == v:
+                        vnew = was
+                    expr *= vnew
+                old = expr
+            else:
+                if d.is_Add:
+                    for s in trigsyms:
+                        r, e = expr.as_independent(s)
+                        if r:
+                            opts['first'] = False
+                            expr = r + trigsimp(e, **opts)
+                            if not expr.is_Add:
+                                break
+                    old = expr
+
+    recursive = opts.pop('recursive', False)
+    deep = opts.pop('deep', False)
+    method = opts.pop('method', 'matching')
+
+    def groebnersimp(ex, deep, **opts):
+        def traverse(e):
+            if e.is_Atom:
+                return e
+            args = [traverse(x) for x in e.args]
+            if e.is_Function or e.is_Pow:
+                args = [trigsimp_groebner(x, **opts) for x in args]
+            return e.func(*args)
+        if deep:
+            ex = traverse(ex)
+        return trigsimp_groebner(ex, **opts)
+
+    trigsimpfunc = {
+        'matching': (lambda x, d: _trigsimp(x, d)),
+        'groebner': (lambda x, d: groebnersimp(x, d, **opts)),
+        'combined': (lambda x, d: _trigsimp(groebnersimp(x,
+                                       d, polynomial=True, hints=[2, tan]),
+                                   d))
+                   }[method]
+
+    if recursive:
+        w, g = cse(expr)
+        g = trigsimpfunc(g[0], deep)
+
+        for sub in reversed(w):
+            g = g.subs(sub[0], sub[1])
+            g = trigsimpfunc(g, deep)
+        result = g
+    else:
+        result = trigsimpfunc(expr, deep)
+
+    if opts.get('compare', False):
+        f = futrig(old)
+        if f != result:
+            print '\tfutrig:', f
+
+    return result
+
+
+def _dotrig(a, b):
+    """Helper to tell whether ``a`` and ``b`` have the same sorts
+    of symbols in them -- no need to test hyperbolic patterns against
+    expressions that have no hyperbolics in them."""
+    return a.func == b.func and (
+        a.has(C.TrigonometricFunction) and b.has(C.TrigonometricFunction) or
+        a.has(C.HyperbolicFunction) and b.has(C.HyperbolicFunction))
+
+
+_trigpat = None
+def _trigpats():
+    global _trigpat
+    a, b, c = symbols('a b c', cls=Wild)
+    d = Wild('d', commutative=False)
+
+    # for the simplifications like sinh/cosh -> tanh:
+    # DO NOT REORDER THE FIRST 14 since these are assumed to be in this
+    # order in _match_div_rewrite.
+    matchers_division = (
+        (a*sin(b)**c/cos(b)**c, a*tan(b)**c, sin(b), cos(b)),
+        (a*tan(b)**c*cos(b)**c, a*sin(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c*sin(b)**c, a*cos(b)**c, sin(b), cos(b)),
+        (a*tan(b)**c/sin(b)**c, a/cos(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c/cos(b)**c, a/sin(b)**c, sin(b), cos(b)),
+        (a*cot(b)**c*tan(b)**c, a, sin(b), cos(b)),
+        (a*(cos(b) + 1)**c*(cos(b) - 1)**c,
+            a*(-sin(b)**2)**c, cos(b) + 1, cos(b) - 1),
+        (a*(sin(b) + 1)**c*(sin(b) - 1)**c,
+            a*(-cos(b)**2)**c, sin(b) + 1, sin(b) - 1),
+
+        (a*sinh(b)**c/cosh(b)**c, a*tanh(b)**c, S.One, S.One),
+        (a*tanh(b)**c*cosh(b)**c, a*sinh(b)**c, S.One, S.One),
+        (a*coth(b)**c*sinh(b)**c, a*cosh(b)**c, S.One, S.One),
+        (a*tanh(b)**c/sinh(b)**c, a/cosh(b)**c, S.One, S.One),
+        (a*coth(b)**c/cosh(b)**c, a/sinh(b)**c, S.One, S.One),
+        (a*coth(b)**c*tanh(b)**c, a, S.One, S.One),
+
+        (c*(tanh(a) + tanh(b))/(1 + tanh(a)*tanh(b)),
+            tanh(a + b)*c, S.One, S.One),
+    )
+
+    matchers_add = (
+        (c*sin(a)*cos(b) + c*cos(a)*sin(b) + d, sin(a + b)*c + d),
+        (c*cos(a)*cos(b) - c*sin(a)*sin(b) + d, cos(a + b)*c + d),
+        (c*sin(a)*cos(b) - c*cos(a)*sin(b) + d, sin(a - b)*c + d),
+        (c*cos(a)*cos(b) + c*sin(a)*sin(b) + d, cos(a - b)*c + d),
+        (c*sinh(a)*cosh(b) + c*sinh(b)*cosh(a) + d, sinh(a + b)*c + d),
+        (c*cosh(a)*cosh(b) + c*sinh(a)*sinh(b) + d, cosh(a + b)*c + d),
+    )
+
+    # for cos(x)**2 + sin(x)**2 -> 1
+    matchers_identity = (
+        (a*sin(b)**2, a - a*cos(b)**2),
+        (a*tan(b)**2, a*(1/cos(b))**2 - a),
+        (a*cot(b)**2, a*(1/sin(b))**2 - a),
+        (a*sin(b + c), a*(sin(b)*cos(c) + sin(c)*cos(b))),
+        (a*cos(b + c), a*(cos(b)*cos(c) - sin(b)*sin(c))),
+        (a*tan(b + c), a*((tan(b) + tan(c))/(1 - tan(b)*tan(c)))),
+
+        (a*sinh(b)**2, a*cosh(b)**2 - a),
+        (a*tanh(b)**2, a - a*(1/cosh(b))**2),
+        (a*coth(b)**2, a + a*(1/sinh(b))**2),
+        (a*sinh(b + c), a*(sinh(b)*cosh(c) + sinh(c)*cosh(b))),
+        (a*cosh(b + c), a*(cosh(b)*cosh(c) + sinh(b)*sinh(c))),
+        (a*tanh(b + c), a*((tanh(b) + tanh(c))/(1 + tanh(b)*tanh(c)))),
+
+    )
+
+    # Reduce any lingering artifacts, such as sin(x)**2 changing
+    # to 1-cos(x)**2 when sin(x)**2 was "simpler"
+    artifacts = (
+        (a - a*cos(b)**2 + c, a*sin(b)**2 + c, cos),
+        (a - a*(1/cos(b))**2 + c, -a*tan(b)**2 + c, cos),
+        (a - a*(1/sin(b))**2 + c, -a*cot(b)**2 + c, sin),
+
+        (a - a*cosh(b)**2 + c, -a*sinh(b)**2 + c, cosh),
+        (a - a*(1/cosh(b))**2 + c, a*tanh(b)**2 + c, cosh),
+        (a + a*(1/sinh(b))**2 + c, a*coth(b)**2 + c, sinh),
+
+        # same as above but with noncommutative prefactor
+        (a*d - a*d*cos(b)**2 + c, a*d*sin(b)**2 + c, cos),
+        (a*d - a*d*(1/cos(b))**2 + c, -a*d*tan(b)**2 + c, cos),
+        (a*d - a*d*(1/sin(b))**2 + c, -a*d*cot(b)**2 + c, sin),
+
+        (a*d - a*d*cosh(b)**2 + c, -a*d*sinh(b)**2 + c, cosh),
+        (a*d - a*d*(1/cosh(b))**2 + c, a*d*tanh(b)**2 + c, cosh),
+        (a*d + a*d*(1/sinh(b))**2 + c, a*d*coth(b)**2 + c, sinh),
+    )
+
+    _trigpat = (a, b, c, d, matchers_division, matchers_add,
+        matchers_identity, artifacts)
+    return _trigpat
+
+
+def _replace_mul_fpowxgpow(expr, f, g, rexp, h, rexph):
+    """Helper for _match_div_rewrite.
+
+    Replace f(b_)**c_*g(b_)**(rexp(c_)) with h(b)**rexph(c) if f(b_)
+    and g(b_) are both positive or if c_ is an integer.
+    """
+    # assert expr.is_Mul and expr.is_commutative and f != g
+    fargs = defaultdict(int)
+    gargs = defaultdict(int)
+    args = []
+    for x in expr.args:
+        if x.is_Pow or x.func in (f, g):
+            b, e = x.as_base_exp()
+            if b.is_positive or e.is_integer:
+                if b.func == f:
+                    fargs[b.args[0]] += e
+                    continue
+                elif b.func == g:
+                    gargs[b.args[0]] += e
+                    continue
+        args.append(x)
+    common = set(fargs) & set(gargs)
+    hit = False
+    while common:
+        key = common.pop()
+        fe = fargs.pop(key)
+        ge = gargs.pop(key)
+        if fe == rexp(ge):
+            args.append(h(key)**rexph(fe))
+            hit = True
+        else:
+            fargs[key] = fe
+            gargs[key] = ge
+    if not hit:
+        return expr
+    while fargs:
+        key, e = fargs.popitem()
+        args.append(f(key)**e)
+    while gargs:
+        key, e = gargs.popitem()
+        args.append(g(key)**e)
+    return Mul(*args)
+
+
+_idn = lambda x: x
+_midn = lambda x: -x
+_one = lambda x: S.One
+
+def _match_div_rewrite(expr, i):
+    """helper for __trigsimp"""
+    if i == 0:
+         expr = _replace_mul_fpowxgpow(expr, sin, cos,
+            _midn, tan, _idn)
+    elif i == 1:
+         expr = _replace_mul_fpowxgpow(expr, tan, cos,
+            _idn, sin, _idn)
+    elif i == 2:
+         expr = _replace_mul_fpowxgpow(expr, cot, sin,
+            _idn, cos, _idn)
+    elif i == 3:
+         expr = _replace_mul_fpowxgpow(expr, tan, sin,
+            _midn, cos, _midn)
+    elif i == 4:
+         expr = _replace_mul_fpowxgpow(expr, cot, cos,
+            _midn, sin, _midn)
+    elif i == 5:
+         expr = _replace_mul_fpowxgpow(expr, cot, tan,
+            _idn, _one, _idn)
+    # i in (6, 7) is skipped
+    elif i == 8:
+         expr = _replace_mul_fpowxgpow(expr, sinh, cosh,
+            _midn, tanh, _idn)
+    elif i == 9:
+         expr = _replace_mul_fpowxgpow(expr, tanh, cosh,
+            _idn, sinh, _idn)
+    elif i == 10:
+        expr = _replace_mul_fpowxgpow(expr, coth, sinh,
+            _idn, cosh, _idn)
+    elif i == 11:
+        expr = _replace_mul_fpowxgpow(expr, tanh, sinh,
+            _midn, cosh, _midn)
+    elif i == 12:
+        expr = _replace_mul_fpowxgpow(expr, coth, cosh,
+            _midn, sinh, _midn)
+    elif i == 13:
+        expr = _replace_mul_fpowxgpow(expr, coth, tanh,
+            _idn, _one, _idn)
+    else:
+        return None
+    return expr
+
+
+def _trigsimp(expr, deep=False):
+    # protect the cache from non-trig patterns; we only allow
+    # trig patterns to enter the cache
+    if expr.has(*_trigs):
+        return __trigsimp(expr, deep)
+    return expr
+
+
+@cacheit
+def __trigsimp(expr, deep=False):
+    """recursive helper for trigsimp"""
+    from sympy.simplify.fu import TR10i
+
+    if _trigpat is None:
+        _trigpats()
+    a, b, c, d, matchers_division, matchers_add, \
+    matchers_identity, artifacts = _trigpat
+
+    if expr.is_Mul:
+        # do some simplifications like sin/cos -> tan:
+        if not expr.is_commutative:
+            com, nc = expr.args_cnc()
+            expr = _trigsimp(Mul._from_args(com), deep)*Mul._from_args(nc)
+        else:
+            for i, (pattern, simp, ok1, ok2) in enumerate(matchers_division):
+                if not _dotrig(expr, pattern):
+                    continue
+
+                newexpr = _match_div_rewrite(expr, i)
+                if newexpr is not None:
+                    if newexpr != expr:
+                        expr = newexpr
+                        break
+                    else:
+                        continue
+
+                # use SymPy matching instead
+                res = expr.match(pattern)
+                if res and res.get(c, 0):
+                    if not res[c].is_integer:
+                        ok = ok1.subs(res)
+                        if not ok.is_positive:
+                            continue
+                        ok = ok2.subs(res)
+                        if not ok.is_positive:
+                            continue
+                    # if "a" contains any of trig or hyperbolic funcs with
+                    # argument "b" then skip the simplification
+                    if any(w.args[0] == res[b] for w in res[a].atoms(
+                            C.TrigonometricFunction, C.HyperbolicFunction)):
+                        continue
+                    # simplify and finish:
+                    expr = simp.subs(res)
+                    break  # process below
+
+    if expr.is_Add:
+        args = []
+        for term in expr.args:
+            if not term.is_commutative:
+                com, nc = term.args_cnc()
+                nc = Mul._from_args(nc)
+                term = Mul._from_args(com)
+            else:
+                nc = S.One
+            term = _trigsimp(term, deep)
+            for pattern, result in matchers_identity:
+                res = term.match(pattern)
+                if res is not None:
+                    term = result.subs(res)
+                    break
+            args.append(term*nc)
+        if args != expr.args:
+            expr = Add(*args)
+            expr = min(expr, expand(expr), key=count_ops)
+        if expr.is_Add:
+            for pattern, result in matchers_add:
+                if not _dotrig(expr, pattern):
+                    continue
+                expr = TR10i(expr)
+                if expr.has(C.HyperbolicFunction):
+                    res = expr.match(pattern)
+                    # if "d" contains any trig or hyperbolic funcs with
+                    # argument "a" or "b" then skip the simplification;
+                    # this isn't perfect -- see tests
+                    if res is None or not (a in res and b in res) or any(
+                        w.args[0] in (res[a], res[b]) for w in res[d].atoms(
+                            C.TrigonometricFunction, C.HyperbolicFunction)):
+                        continue
+                    expr = result.subs(res)
+                    break
+
+        # Reduce any lingering artifacts, such as sin(x)**2 changing
+        # to 1 - cos(x)**2 when sin(x)**2 was "simpler"
+        for pattern, result, ex in artifacts:
+            if not _dotrig(expr, pattern):
+                continue
+            # Substitute a new wild that excludes some function(s)
+            # to help influence a better match. This is because
+            # sometimes, for example, 'a' would match sec(x)**2
+            a_t = Wild('a', exclude=[ex])
+            pattern = pattern.subs(a, a_t)
+            result = result.subs(a, a_t)
+
+            m = expr.match(pattern)
+            was = None
+            while m and was != expr:
+                was = expr
+                if m[a_t] == 0 or \
+                        -m[a_t] in m[c].args or m[a_t] + m[c] == 0:
+                    break
+                if d in m and m[a_t]*m[d] + m[c] == 0:
+                    break
+                expr = result.subs(m)
+                m = expr.match(pattern)
+                m.setdefault(c, S.Zero)
+
+    elif expr.is_Mul or expr.is_Pow or deep and expr.args:
+        expr = expr.func(*[_trigsimp(a, deep) for a in expr.args])
+
+    try:
+        if not expr.has(*_trigs):
+            raise TypeError
+        e = expr.atoms(exp)
+        new = expr.rewrite(exp, deep=deep)
+        if new == e:
+            raise TypeError
+        fnew = factor(new)
+        if fnew != new:
+            new = sorted([new, factor(new)], key=count_ops)[0]
+        # if all exp that were introduced disappeared then accept it
+        if not (new.atoms(exp) - e):
+            expr = new
+    except TypeError:
+        pass
+
+    return expr
+#------------------- end of old trigsimp routines --------------------
