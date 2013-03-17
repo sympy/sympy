@@ -60,6 +60,13 @@ def test_MatMul():
     expr = X*Y*Z
     assert isinstance(theano_code(expr).owner.op, tt.Dot)
 
+def test_MatAdd():
+    X = sympy.MatrixSymbol('X', 4, 4)
+    Y = sympy.MatrixSymbol('X', 4, 4)
+    Z = sympy.MatrixSymbol('X', 4, 4)
+    expr = X+Y+Z
+    assert isinstance(theano_code(expr).owner.op, tt.Elemwise)
+
 def test_symbols_are_created_once():
     expr = x**x
     comp = theano_code(expr)

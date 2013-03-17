@@ -59,6 +59,10 @@ mapping = {sympy.Add: s.add,
 #           switch,
            sympy.Max: s.maximum,  # Sympy accept >2 inputs, Theano only 2
            sympy.Min: s.minimum,  # Sympy accept >2 inputs, Theano only 2
+
+           sympy.MatAdd: tt.Elemwise(s.add),
+           sympy.HadamardProduct: tt.Elemwise(s.mul),
+
 }# Implement factorial
 
 class TheanoPrinter(Printer):
