@@ -1049,8 +1049,7 @@ class Integral(Expr):
                     else:
                         h1 = C.log(g.base)
                         h2 = g.base**(g.exp + 1) / (g.exp + 1)
-                        e = Dummy('e')
-                        h = Piecewise((h1, Eq(e, -1)), (h2, True)).subs(e, g.exp)
+                        h = Piecewise((h1, Eq(g.exp, -1)), (h2, True))
 
                     parts.append(coeff * h / M[a])
                     continue

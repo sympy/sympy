@@ -1476,7 +1476,8 @@ def test_almost_linear():
 
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == (C1 + (-A*x + A - x - 1)*exp(x)/(A + 1))*exp(-x)
+    assert sol.rhs == (C1 + Piecewise(
+        (x, Eq(A + 1, 0)), ((-A*x + A - x - 1)*exp(x)/(A + 1), True)))*exp(-x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 

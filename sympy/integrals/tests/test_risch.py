@@ -244,7 +244,7 @@ def test_integrate_hyperexponential_returns_piecewise():
     a, b = symbols('a b')
     DE = DifferentialExtension(a**x, x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
-        (x, Eq(a, 1)), (exp(x*log(a))/log(a), True)), 0, True)
+        (x, Eq(log(a), 0)), (exp(x*log(a))/log(a), True)), 0, True)
     DE = DifferentialExtension(a**(b*x), x)
     assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
         (x, Eq(b*log(a), 0)), (exp(b*x*log(a))/(b*log(a)), True)), 0, True)

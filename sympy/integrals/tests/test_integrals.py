@@ -213,8 +213,9 @@ def test_issue536():
 def test_integrate_linearterm_pow():
     # check integrate((a*x+b)^c, x)  --  #400
     y = Symbol('y', positive=True)
-    assert integrate(x**y, x) == x**(y + 1)/(y + 1)
-    assert integrate((exp(y)*x + 1/y)**(1 + sin(y)), x) == \
+    # TODO: Remove conds='none' below, let the assumption take care of it.
+    assert integrate(x**y, x, conds='none') == x**(y + 1)/(y + 1)
+    assert integrate((exp(y)*x + 1/y)**(1 + sin(y)), x, conds='none') == \
         exp(-y)*(exp(y)*x + 1/y)**(2 + sin(y)) / (2 + sin(y))
 
 
@@ -226,12 +227,12 @@ def test_issue519():
 
 def test_issue524():
     assert integrate(cos((n + 1)*x), x) == Piecewise(
-        (x, Eq(n, -1)), (sin((n + 1)*x)/(n + 1), True))
+        (x, Eq(n + 1, 0)), (sin((n + 1)*x)/(n + 1), True))
     assert integrate(cos((n - 1)*x), x) == Piecewise(
-        (x, Eq(n,  1)), (sin((n - 1)*x)/(n - 1), True))
+        (x, Eq(n - 1, 0)), (sin((n - 1)*x)/(n - 1), True))
     assert integrate(cos((n + 1)*x) + cos((n - 1)*x), x) == \
-        Piecewise((x, Eq(n, -1)), (sin((n + 1)*x)/(n + 1), True)) + \
-        Piecewise((x, Eq(n, 1)), (sin((n - 1)*x)/(n - 1), True))
+        Piecewise((x, Eq(n + 1, 0)), (sin((n + 1)*x)/(n + 1), True)) + \
+        Piecewise((x, Eq(n - 1, 0)), (sin((n - 1)*x)/(n - 1), True))
 
 
 def test_issue565():
@@ -445,7 +446,7 @@ def test_integrate_returns_piecewise():
     assert integrate(exp(n*x), x) == Piecewise(
         (x, Eq(n, 0)), (exp(n*x)/n, True))
     assert integrate(x**(n*y), x) == Piecewise(
-        (log(x), Eq(n, -1/y)), (x**(n*y + 1)/(n*y + 1), True))
+        (log(x), Eq(n*y, -1)), (x**(n*y + 1)/(n*y + 1), True))
     assert integrate(x**(n*y), y) == Piecewise(
         (y, Eq(n*log(x), 0)), (x**(n*y)/(n*log(x)), True))
     assert integrate(cos(n*x), x) == Piecewise(
@@ -779,7 +780,8 @@ def test_issue_1428():
 
 def test_issue_1100():
     ypos = Symbol('y', positive=True)
-    assert integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo)) == \
+    # TODO: Remove conds='none' below, let the assumption take care of it.
+    assert integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo), conds='none') == \
         Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
 
 

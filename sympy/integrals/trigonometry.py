@@ -65,7 +65,6 @@ def trigintegrate(f, x, conds='piecewise'):
     zz = x if n is S.Zero else S.Zero
 
     a = M[a]
-    aa = Dummy('a')
 
     if n.is_odd or m.is_odd:
         u = _u
@@ -91,7 +90,7 @@ def trigintegrate(f, x, conds='piecewise'):
         fi = integrate(ff, u)  # XXX cyclic deps
         fx = fi.subs(u, uu)
         if conds == 'piecewise':
-            return Piecewise((zz, Eq(aa, 0)), (fx / a, True)).subs(aa, a)
+            return Piecewise((zz, Eq(a, 0)), (fx / a, True))
         return fx / a
 
     # n & m are both even
@@ -219,7 +218,7 @@ def trigintegrate(f, x, conds='piecewise'):
                        Rational(n - 1, m + 1) *
                        integrate(cos(x)**(m + 2)*sin(x)**(n - 2), x))
     if conds == 'piecewise':
-        return Piecewise((zz, Eq(aa, 0)), (res.subs(x, a*x) / a, True)).subs(aa, a)
+        return Piecewise((zz, Eq(a, 0)), (res.subs(x, a*x) / a, True))
     return res.subs(x, a*x) / a
 
 
