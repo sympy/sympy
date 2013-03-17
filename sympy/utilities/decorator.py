@@ -84,10 +84,10 @@ def conserve_mpmath_dps(func):
     return func_wrapper
 
 
-def depends_on(exe=None, modules=None):
+def depends_on(exe=None, modules=None, disable_viewers=None):
     """Adds metadata about the depenencies which need to be met for doctesting
     the docstrings of the decorated objects."""
     def depends_on_deco(fn):
-        fn._doctest_dependencies = (exe, modules)
+        fn._doctest_dependencies = (exe, modules, disable_viewers)
         return fn
     return depends_on_deco

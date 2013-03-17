@@ -27,6 +27,7 @@ import re as pre
 import random
 import subprocess
 import signal
+import stat
 
 from sympy.core.cache import clear_cache
 from sympy.utilities.misc import find_executable
@@ -1274,7 +1275,7 @@ class SymPyDocTestFinder(DocTestFinder):
 
         # check if there are external dependencies which need to be met
         if hasattr(obj, '_doctest_dependencies'):
-            exe, moduledeps = obj._doctest_dependencies
+            exe, moduledeps, viewers = obj._doctest_dependencies
             if exe is not None:
                 for ex in exe:
                     found = find_executable(ex)
@@ -1288,6 +1289,23 @@ class SymPyDocTestFinder(DocTestFinder):
                     print "EXTMODULE %s found %s" %(extmod, found)
                     if found is None:
                         return None
+            if viewers is not None:
+                import tempfile
+                tempdir = tempfile.mkdtemp()
+                os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
+
+                vw = '#!/usr/bin/env python\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
+
+                for viewer in viewers:
+                    with open(os.path.join(tempdir, viewer), 'w') as fh:
+                        fh.write(vw)
+
+                    # make the file executable
+                    os.chmod(os.path.join(tempdir, viewer),
+                             stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
 
         # Return a DocTest for this object.
         if module is None:

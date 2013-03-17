@@ -13,7 +13,8 @@ from latex import latex
 
 from sympy.utilities import depends_on
 
-@depends_on(exe=('latex', 'dvipng'))
+@depends_on(exe=('latex', 'dvipng'), disable_viewers=('evince',
+                                                      'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
             outputTexFile=None, **latex_settings):
@@ -48,13 +49,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     are slightly different. As an example we will take 'dvi' output format. If
     you would run
 
-    >>> preview(x + y, output='dvi') # doctest: +SKIP
+    >>> preview(x + y, output='dvi')
 
     then 'view' will look for available 'dvi' viewers on your system
     (predefined in the function, so it will try evince, first, then kdvi and
     xdvi). If nothing is found you will need to set the viewer explicitly.
 
-    >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer') # doctest: +SKIP
+    >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
 
     This will skip auto-detection and will run user specified
     'superior-dvi-viewer'. If 'view' fails to find it on your system it will
@@ -79,7 +80,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     >>> preamble = "\\documentclass[10pt]{article}\n" \
     ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
-    >>> preview(x + y, output='png', preamble=preamble) # doctest: +SKIP
+    >>> preview(x + y, output='dvi', preamble=preamble)
 
     If the value of 'output' is different from 'dvi' then command line
     options can be set ('dvioptions' argument) for the execution of the
@@ -90,7 +91,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     symbol_names flag.
 
     >>> phidd = Symbol('phidd')
-    >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'}) # doctest: +SKIP
+    >>> preview(phidd, output='dvi', symbol_names={phidd:r'\ddot{\varphi}'})
 
     For post-processing the generated TeX File can be written to a file by
     passing the desired filename to the 'outputTexFile' keyword
@@ -98,7 +99,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x+y, output='png', outputTexFile="sample.tex") # doctest: +SKIP
+    >>> preview(x+y, output='dvi', outputTexFile="sample.tex")
 
 
     """
@@ -119,8 +120,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             try:
                 for candidate in candidates[output]:
-                    if find_executable(candidate):
-                        viewer = candidate
+                    path = find_executable(candidate)
+                    if path is not None:
+                        viewer = path
                         break
                 else:
                     raise SystemError(
