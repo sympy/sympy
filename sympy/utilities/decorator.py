@@ -82,3 +82,12 @@ def conserve_mpmath_dps(func):
 
     func_wrapper = functools.update_wrapper(func_wrapper, func)
     return func_wrapper
+
+
+def depends_on(exe=None, modules=None):
+    """Adds metadata about the depenencies which need to be met for doctesting
+    the docstrings of the decorated objects."""
+    def depends_on_deco(fn):
+        fn._doctest_dependencies = (exe, modules)
+        return fn
+    return depends_on_deco

@@ -1273,6 +1273,23 @@ class SymPyDocTestFinder(DocTestFinder):
         if self._exclude_empty and not docstring:
             return None
 
+        # check if there are external dependencies which need to be met
+        if hasattr(obj, '_doctest_dependencies'):
+            exe, moduledeps = obj._doctest_dependencies
+            if exe is not None:
+                for ex in exe:
+                    found = find_executable(ex)
+                    print "EXE %s found %s" %(ex, found)
+                    if found is None:
+                        return None
+            if moduledeps is not None:
+                for extmod in moduledeps:
+                    # TODO min version support
+                    found = import_module(extmod)
+                    print "EXTMODULE %s found %s" %(extmod, found)
+                    if found is None:
+                        return None
+
         # Return a DocTest for this object.
         if module is None:
             filename = None
