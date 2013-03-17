@@ -85,6 +85,7 @@ class TheanoPrinter(Printer):
         op = mapping[type(expr)]
         children = [self._print(arg, dtypes) for arg in expr.args]
         return op(*children)
+    _print_MatrixExpr = _print_Expr
 
     def _print_Number(self, n, dtypes={}):
         return eval(str(n))
@@ -99,11 +100,6 @@ class TheanoPrinter(Printer):
             value = tt.Tensor(dtype, (False, False))(X.name)
             self.cache[key] = value
             return value
-
-    def _print_MatrixExpr(self, expr, dtypes={}):
-        op = mapping[type(expr)]
-        children = [self._print(arg, dtypes) for arg in expr.args]
-        return op(*children)
 
     def _print_MatMul(self, expr, dtypes):
         children = [self._print(arg, dtypes) for arg in expr.args]
