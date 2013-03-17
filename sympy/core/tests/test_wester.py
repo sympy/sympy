@@ -10,8 +10,8 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     binomial, rf, pi, gamma, igcd, factorint, nsimplify, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
-    bernoulli, hyper, hyperexpand, asin, assoc_legendre, Function, re, im, 
-    DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
+    bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
+    im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
     Poly, expand_func)
 
@@ -603,9 +603,8 @@ def test_J8():
     raise NotImplementedError("jv(R(3,2), z) == sqrt(2/(pi*z))*(sin(z)/z - cos(z))")
 
 
-@XFAIL
 def test_J9():
-    raise NotImplementedError("diff(j0(z), z) == -j1(z)")
+    assert besselj(0, z).diff(z) == - besselj(1, z)
 
 
 def test_J10():
