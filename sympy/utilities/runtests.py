@@ -562,6 +562,10 @@ def _doctest(*paths, **kwargs):
                 "examples/intermediate/mplot3d.py"
             ])
 
+        # can be removed once a fix for Issue 3696 is merged
+        blacklist.extend(["sympy/galgebra/latex_ex.py"])
+
+
     # pytest = import_module('pytest')
     # py = import_module('py')
     # if py is None or pytest is None:
