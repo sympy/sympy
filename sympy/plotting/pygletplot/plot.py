@@ -37,7 +37,8 @@ class PygletPlot(object):
     >>> from sympy import Plot
     >>> from sympy.abc import x, y, z
 
-    >>> Plot(x*y**3-y*x**3) # doctest: +SKIP
+    >>> Plot(x*y**3-y*x**3)
+    [0]: -x**3*y + x*y**3, 'mode=cartesian'
 
     >>> p = Plot()
     >>> p[1] = x*y
@@ -55,14 +56,21 @@ class PygletPlot(object):
     syntax is flexible and arguments left out are taken
     from the defaults for the current coordinate mode:
 
-    >>> Plot(x**2) # implies [x,-5,5,100] # doctest: +SKIP
-    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40] # doctest: +SKIP
-    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100] # doctest: +SKIP
-    >>> Plot(x**2, [x,-13,13,100]) # doctest: +SKIP
-    >>> Plot(x**2, [-13,13]) # [x,-13,13,100] # doctest: +SKIP
-    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,100] # doctest: +SKIP
-    >>> Plot(1*x, [], [x], mode='cylindrical') # doctest: +SKIP
+    >>> Plot(x**2) # implies [x,-5,5,100]
+    [0]: x**2, 'mode=cartesian'
+    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40]
+    [0]: x**2, 'mode=cartesian'
+    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100]
+    [0]: x**2 - y**2, 'mode=cartesian'
+    >>> Plot(x**2, [x,-13,13,100])
+    [0]: x**2, 'mode=cartesian'
+    >>> Plot(x**2, [-13,13]) # [x,-13,13,100]
+    [0]: x**2, 'mode=cartesian'
+    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,10]
+    [0]: x**2, 'mode=cartesian'
+    >>> Plot(1*x, [], [x], mode='cylindrical')
     ... # [unbound_theta,0,2*Pi,40], [x,-1,1,20]
+    [0]: x, 'mode=cartesian'
 
 
     Coordinate Modes
@@ -104,7 +112,7 @@ class PygletPlot(object):
     [3]: 2, 'mode=cartesian'
     >>> p.show()
     >>> p.clear()
-    >>> p # doctest: +SKIP
+    >>> p
     <blank plot>
     >>> p[1] =  x**2+y**2
     >>> p[1].style = 'solid'
