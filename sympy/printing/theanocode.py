@@ -81,11 +81,10 @@ class TheanoPrinter(Printer):
             self.cache[key] = value
             return value
 
-    def _print_Expr(self, expr, dtypes={}):
+    def _print_Basic(self, expr, dtypes={}):
         op = mapping[type(expr)]
         children = [self._print(arg, dtypes) for arg in expr.args]
         return op(*children)
-    _print_MatrixExpr = _print_Expr
 
     def _print_Number(self, n, dtypes={}):
         return eval(str(n))
