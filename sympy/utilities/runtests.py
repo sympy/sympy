@@ -540,8 +540,6 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        # "sympy/plotting", # generates live plots
-        "sympy/plotting/pygletplot",  # generates live plots
         "sympy/statistics",                # prints a deprecation
         "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
         "sympy/utilities/compilef.py"  # needs tcc
@@ -1317,8 +1315,16 @@ class SymPyDocTestFinder(DocTestFinder):
                 class DummyWindow(object):
                     def __init__(self, *args, **kwargs):
                         self.has_exit=True
+                        self.width = 600
+                        self.height = 400
 
                     def set_vsync(self, x):
+                        pass
+
+                    def switch_to(self):
+                        pass
+
+                    def push_handlers(self, x):
                         pass
 
                     def close(self):

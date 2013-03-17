@@ -23,6 +23,9 @@ from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 
 
+from sympy.utilities import depends_on
+
+@depends_on(modules=('pyglet',))
 class PygletPlot(object):
     """
     Plot Examples
@@ -34,7 +37,7 @@ class PygletPlot(object):
     >>> from sympy import Plot
     >>> from sympy.abc import x, y, z
 
-    >>> Plot(x*y**3-y*x**3)
+    >>> Plot(x*y**3-y*x**3) # doctest: +SKIP
 
     >>> p = Plot()
     >>> p[1] = x*y
@@ -52,13 +55,13 @@ class PygletPlot(object):
     syntax is flexible and arguments left out are taken
     from the defaults for the current coordinate mode:
 
-    >>> Plot(x**2) # implies [x,-5,5,100]
-    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40]
-    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100]
-    >>> Plot(x**2, [x,-13,13,100])
-    >>> Plot(x**2, [-13,13]) # [x,-13,13,100]
-    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,100]
-    >>> Plot(1*x, [], [x], mode='cylindrical')
+    >>> Plot(x**2) # implies [x,-5,5,100] # doctest: +SKIP
+    >>> Plot(x**2, [], []) # [x,-1,1,40], [y,-1,1,40] # doctest: +SKIP
+    >>> Plot(x**2-y**2, [100], [100]) # [x,-1,1,100], [y,-1,1,100] # doctest: +SKIP
+    >>> Plot(x**2, [x,-13,13,100]) # doctest: +SKIP
+    >>> Plot(x**2, [-13,13]) # [x,-13,13,100] # doctest: +SKIP
+    >>> Plot(x**2, [x,-13,13]) # [x,-13,13,100] # doctest: +SKIP
+    >>> Plot(1*x, [], [x], mode='cylindrical') # doctest: +SKIP
     ... # [unbound_theta,0,2*Pi,40], [x,-1,1,20]
 
 
@@ -84,7 +87,7 @@ class PygletPlot(object):
     1: parametric, cartesian, polar
     2: parametric, cartesian, cylindrical = polar, spherical
 
-    >>> Plot(1, mode='spherical')
+    >>> Plot(1, mode='spherical') # doctest: +SKIP
 
 
     Calculator-like Interface
@@ -94,14 +97,14 @@ class PygletPlot(object):
     >>> f = x**2
     >>> p[1] = f
     >>> p[2] = f.diff(x)
-    >>> p[3] = f.diff(x).diff(x)
-    >>> p
+    >>> p[3] = f.diff(x).diff(x) # doctest: +SKIP
+    >>> p # doctest: +SKIP
     [1]: x**2, 'mode=cartesian'
     [2]: 2*x, 'mode=cartesian'
     [3]: 2, 'mode=cartesian'
     >>> p.show()
     >>> p.clear()
-    >>> p
+    >>> p # doctest: +SKIP
     <blank plot>
     >>> p[1] =  x**2+y**2
     >>> p[1].style = 'solid'
@@ -145,6 +148,7 @@ class PygletPlot(object):
 
     """
 
+    @depends_on(modules=('pyglet',))
     def __init__(self, *fargs, **win_args):
         """
         Positional Arguments
@@ -154,6 +158,7 @@ class PygletPlot(object):
         initialize a plot function at index 1. In
         other words...
 
+        >>> from sympy import Plot
         >>> from sympy.core import Symbol
         >>> from sympy.abc import x
         >>> p = Plot(x**2, visible=False)
@@ -242,6 +247,10 @@ class PygletPlot(object):
         else:
             self._win_args['visible'] = True
             self.axes.reset_resources()
+
+            if hasattr(self, '_doctest_depends_on'):
+                self._win_args['runfromdoctester'] = True
+
             self._window = PlotWindow(self, **self._win_args)
 
     def close(self):

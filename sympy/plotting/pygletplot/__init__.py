@@ -1,6 +1,10 @@
 """Plotting module that can plot 2D and 3D functions
 """
+
+from sympy.utilities import depends_on
+
 try:
+    @depends_on(modules=('pyglet',))
     def PygletPlot(*args, **kwargs):
         """
         Plot Examples
