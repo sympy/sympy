@@ -6,6 +6,7 @@ import sympy
 
 Scalar = theano.scalar.Scalar
 s = theano.scalar
+tt = theano.tensor
 
 
 mapping = {sympy.Add: s.add,
@@ -75,6 +76,23 @@ class TheanoPrinter(Printer):
 
     def _print_Number(self, n, dtypes={}):
         return eval(str(n))
+
+    def _print_MatrixSymbol(self, X, dtypes={}):
+        dtype = dtypes.get(s, 'floatX')
+        shape = [self._print(d, dtypes) for d in X.shape]
+        return tt.Tensor(dtype, (False, False))(X.name)
+
+    def _print_MatrixExpr(self, expr, dtypes={}):
+        op = mapping[type(expr)]
+        children = [self._print(arg, dtypes) for arg in expr.args]
+        return op(*children)
+
+    def _print_MatMul(self, expr, dtypes):
+        children = [self._print(arg, dtypes) for arg in expr.args]
+        result = children[0]
+        for child in children[1:]:
+            result = tt.dot(result, child)
+        return result
 
     def doprint(self, expr, dtypes={}):
         """Returns printer's representation for expr (as a string)"""
