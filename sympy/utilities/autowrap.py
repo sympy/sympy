@@ -12,8 +12,8 @@ performance with a one-button user interface, i.e.
 
     >>> from sympy.abc import x,y
     >>> expr = ((x - y)**(25)).expand()
-    >>> binary_callable = autowrap(expr)           # doctest: +SKIP
-    >>> binary_callable(1, 2)                      # doctest: +SKIP
+    >>> binary_callable = autowrap(expr)
+    >>> binary_callable(1, 2)
     -1.0
 
 The callable returned from autowrap() is a binary python function, not a
@@ -24,10 +24,10 @@ invoked when a numerical evaluation is requested with evalf(), or with
 lambdify().
 
     >>> from sympy.utilities.autowrap import binary_function
-    >>> f = binary_function('f', expr)             # doctest: +SKIP
-    >>> 2*f(x, y) + y                              # doctest: +SKIP
+    >>> f = binary_function('f', expr)
+    >>> 2*f(x, y) + y
     y + 2*f(x, y)
-    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2}) # doctest: +SKIP
+    >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})
     0.0
 
 The idea is that a SymPy user will primarily be interested in working with
@@ -65,6 +65,8 @@ When is this module NOT the best approach?
 
 """
 from __future__ import with_statement
+
+_doctest_depends_on = { 'exe': ('f2py', 'gfortran')}
 
 import sys
 import os

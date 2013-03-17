@@ -1274,10 +1274,14 @@ class SymPyDocTestFinder(DocTestFinder):
             return None
 
         # check if there are external dependencies which need to be met
-        if hasattr(obj, '_doctest_dependencies'):
-            exe, moduledeps, viewers, pyglet = obj._doctest_dependencies
-            if exe is not None:
-                for ex in exe:
+        if hasattr(obj, '_doctest_depends_on'):
+            executables = obj._doctest_depends_on.get('exe', None)
+            moduledeps = obj._doctest_depends_on.get('modules', None)
+            viewers = obj._doctest_depends_on.get('disable_viewers', None)
+            pyglet = obj._doctest_depends_on.get('pyglet', None)
+
+            if executables is not None:
+                for ex in executables:
                     found = find_executable(ex)
                     print "EXE %s found %s" %(ex, found)
                     if found is None:

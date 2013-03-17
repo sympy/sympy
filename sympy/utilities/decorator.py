@@ -92,6 +92,8 @@ def depends_on(exe=None, modules=None, disable_viewers=None):
         pyglet = True
 
     def depends_on_deco(fn):
-        fn._doctest_dependencies = (exe, modules, disable_viewers, pyglet)
+        fn._doctest_depends_on = dict(exe=exe, modules=modules,
+                                      disable_viewers=disable_viewers,
+                                      pyglet=pyglet)
         return fn
     return depends_on_deco
