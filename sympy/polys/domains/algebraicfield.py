@@ -35,15 +35,14 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         self.zero = self.dtype.zero(self.mod.rep, dom)
         self.one = self.dtype.one(self.mod.rep, dom)
 
+    def new(self, element):
+        return self.dtype(element, self.mod.rep, self.dom)
+
     def __str__(self):
         return str(self.dom) + '<' + str(self.ext) + '>'
 
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.dom, self.ext))
-
-    def __call__(self, a):
-        """Construct an element of ``self`` domain from ``a``. """
-        return ANP(a, self.mod.rep, self.dom)
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """

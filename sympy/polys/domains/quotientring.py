@@ -129,7 +129,7 @@ class QuotientRing(Ring):
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.ring, self.base_ideal))
 
-    def __call__(self, a):
+    def new(self, a):
         """Construct an element of `self` domain from `a`. """
         if not isinstance(a, self.ring.dtype):
             a = self.ring(a)

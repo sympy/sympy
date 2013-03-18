@@ -48,6 +48,9 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
         # NOTE 'order' may not be set if inject was called through CompositeDomain
         self.order = opts.get('order', monomial_key(self.default_order))
 
+    def new(self, element):
+        return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
+
     def __str__(self):
         s_order = str(self.order)
         orderstr = (
@@ -57,10 +60,6 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.dom,
                      self.gens, self.order))
-
-    def __call__(self, a):
-        """Construct an element of `self` domain from `a`. """
-        return self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
@@ -285,7 +284,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
     dtype = DMF
 
-    def __call__(self, a):
+    def new(self, a):
         """Construct an element of `self` domain from `a`. """
         res = self.dtype(a, self.dom, len(self.gens) - 1, ring=self)
 

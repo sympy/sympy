@@ -30,15 +30,14 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
         self.dom = dom
         self.gens = gens
 
+    def new(self, element):
+        return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)
+
     def __str__(self):
         return str(self.dom) + '(' + ','.join(map(str, self.gens)) + ')'
 
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.dom, self.gens))
-
-    def __call__(self, a):
-        """Construct an element of ``self`` domain from ``a``. """
-        return DMF(a, self.dom, len(self.gens) - 1, ring=self)
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """

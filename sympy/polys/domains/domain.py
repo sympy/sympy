@@ -59,9 +59,12 @@ class Domain(object):
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype))
 
+    def new(self, *args):
+        return self.dtype(*args)
+
     def __call__(self, *args):
         """Construct an element of ``self`` domain from ``args``. """
-        return self.dtype(*args)
+        return self.new(*args)
 
     def normal(self, *args):
         return self.dtype(*args)
@@ -85,19 +88,25 @@ class Domain(object):
             raise CoercionFailed(
                 "can't convert %s of type %s to %s" % (a, K0, K1))
         else:
+            if K1.of_type(a):
+                return a
+
+            if isinstance(a, SYMPY_INTS):
+                return K1.new(a)
+
+            from sympy.polys.rings import PolyElement
+            from sympy.polys.fields import FracElement
+
+            if isinstance(a, PolyElement):
+                return K1.convert(a, a.ring.to_domain())
+            if isinstance(a, FracElement):
+                return K1.convert(a, a.field.to_domain())
+
+            # TODO: implement this in from_ methods
+            if K1.is_Numerical and getattr(a, 'is_ground', False):
+                return K1.convert(a.LC())
+
             try:
-                if K1.of_type(a):
-                    return a
-
-                if isinstance(a, SYMPY_INTS):
-                    return K1(a)
-
-                #if type(a) is long:
-                #    return K1(a)
-
-                if K1.is_Numerical and getattr(a, 'is_ground', False):
-                    return K1.convert(a.LC())
-
                 if not is_sequence(a):
                     a = sympify(a)
 
@@ -161,10 +170,10 @@ class Domain(object):
         """Convert a ``ANP`` object to ``dtype``. """
         return None
 
-    def from_GlobalPolynomialRing(K1, a, K0):
+    def from_PolynomialRing(K1, a, K0):
         """Convert a ``DMP`` object to ``dtype``. """
-        if a.degree() <= 0:
-            return K1.convert(a.LC(), K0.dom)
+        if a.is_ground:
+            return K1.convert(a.LC, K0.dom)
 
     def from_FractionField(K1, a, K0):
         """Convert a ``DMF`` object to ``dtype``. """
@@ -173,6 +182,11 @@ class Domain(object):
     def from_ExpressionDomain(K1, a, K0):
         """Convert a ``EX`` object to ``dtype``. """
         return K1.from_sympy(a.ex)
+
+    def from_GlobalPolynomialRing(K1, a, K0):
+        """Convert a ``DMP`` object to ``dtype``. """
+        if a.degree() <= 0:
+            return K1.convert(a.LC(), K0.dom)
 
     def from_GeneralizedPolynomialRing(K1, a, K0):
         return K1.from_FractionField(a, K0)

@@ -12,16 +12,18 @@ class FractionField(Field, CompositeDomain):
     has_assoc_Field        = True
 
     def __init__(self, field):
-        from sympy.polys.fields import FracElement
-
-        self.dtype = FracElement
+        self.dtype = field.dtype
         self.field = field
+
+        self.dom  = field.domain
+        self.gens = field.symbols
 
         self.zero = field.zero
         self.one  = field.one
 
-        self.dom  = field.domain
-        self.gens = field.gens
+
+    def new(self, element):
+        return self.field.field_new(element)
 
     def __str__(self):
         return str(self.dom) + '(' + ','.join(map(str, self.gens)) + ')'
@@ -43,10 +45,6 @@ class FractionField(Field, CompositeDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        return self.field.field_new(a)
-
-    def __call__(self, a):
-        """Construct an element of `self` domain from `a`. """
         return self.field.field_new(a)
 
     def from_ZZ_python(K1, a, K0):

@@ -15,11 +15,15 @@ class PolynomialRing(Ring, CompositeDomain):
         self.dtype = ring.dtype
         self.ring  = ring
 
+        self.dom  = ring.domain
+        self.gens = ring.symbols
+
         self.zero = ring.zero
         self.one  = ring.one
 
-        self.dom  = ring.domain
-        self.gens = ring.gens
+
+    def new(self, element):
+        return self.ring.ring_new(element)
 
     def __str__(self):
         return str(self.dom) + '[' + ','.join(map(str, self.gens)) + ']'
@@ -41,10 +45,6 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        return self.ring.ring_new(a)
-
-    def __call__(self, a):
-        """Construct an element of `self` domain from `a`. """
         return self.ring.ring_new(a)
 
     def from_ZZ_python(K1, a, K0):
