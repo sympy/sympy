@@ -27,7 +27,7 @@ from itertools import chain
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
-from sympy.utilities import depends_on
+from sympy.utilities.decorator import depends_on
 import warnings
 from experimental_lambdify import (vectorized_lambdify, lambdify)
 

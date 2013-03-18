@@ -23,7 +23,7 @@ from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 
 
-from sympy.utilities import depends_on
+from sympy.utilities.decorator import depends_on
 
 class PygletPlot(object):
     """

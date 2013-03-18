@@ -33,7 +33,7 @@ from sympy import Eq, Tuple, sympify, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
-from sympy.utilities import depends_on
+from sympy.utilities.decorator import depends_on
 import warnings
 
 np = import_module('numpy')
