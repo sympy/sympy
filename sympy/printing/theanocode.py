@@ -65,6 +65,7 @@ mapping = {sympy.Add: ts.add,
            sympy.HadamardProduct: tt.Elemwise(ts.mul),
            sympy.Trace: tlinalg.trace,
            sympy.Inverse: tlinalg.matrix_inverse,
+           sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
 }
 
 class TheanoPrinter(Printer):
