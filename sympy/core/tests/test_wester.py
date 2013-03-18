@@ -864,3 +864,7 @@ def test_M19():
 
 def test_M20():
     assert solve(sqrt(x**2 + 1) - x + 2, x) == []
+
+
+def test_M21():
+    assert solve(x + sqrt(x) -2) == [1]
