@@ -543,7 +543,6 @@ def _doctest(*paths, **kwargs):
         "sympy/statistics",                # prints a deprecation
         "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
         "sympy/utilities/compilef.py"  # needs tcc
-
     ])
 
     if import_module('numpy') is None:
@@ -562,6 +561,10 @@ def _doctest(*paths, **kwargs):
                 "examples/intermediate/mplot2d.py",
                 "examples/intermediate/mplot3d.py"
             ])
+        else:
+            # don't display matplotlib windows
+            from sympy.plotting.plot import unset_show
+            unset_show()
 
         # can be removed once a fix for Issue 3696 is merged
         blacklist.extend(["sympy/galgebra/latex_ex.py"])

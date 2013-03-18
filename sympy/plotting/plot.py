@@ -1139,19 +1139,31 @@ def plot(*args, **kwargs):
 
     Single Plot
 
-    >>> plot(x**2, (x, -5, 5))# doctest: +SKIP
+    >>> plot(x**2, (x, -5, 5))
+    Plot object containing:
+    [0]: cartesian line: x**2 for x over (-5.0, 5.0)
 
     Multiple plots with single range.
 
-    >>> plot(x, x**2, x**3, (x, -5, 5))# doctest: +SKIP
+    >>> plot(x, x**2, x**3, (x, -5, 5))
+    Plot object containing:
+    [0]: cartesian line: x for x over (-5.0, 5.0)
+    [1]: cartesian line: x**2 for x over (-5.0, 5.0)
+    [2]: cartesian line: x**3 for x over (-5.0, 5.0)
+
 
     Multiple plots with different ranges.
 
-    >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))# doctest: +SKIP
+    >>> plot((x**2, (x, -6, 6)), (x, (x, -5, 5)))
+    Plot object containing:
+    [0]: cartesian line: x**2 for x over (-6.0, 6.0)
+    [1]: cartesian line: x for x over (-5.0, 5.0)
 
     No adaptive sampling.
 
-    >>> plot(x**2, adaptive=False, nb_of_points=400)# doctest: +SKIP
+    >>> plot(x**2, adaptive=False, nb_of_points=400)
+    Plot object containing:
+    [0]: cartesian line: x**2 for x over (-10.0, 10.0)
 
     See Also
     ========
@@ -1265,16 +1277,26 @@ def plot_parametric(*args, **kwargs):
 
     Single Parametric plot
 
-    >>> plot_parametric(cos(u), sin(u), (u, -5, 5))# doctest: +SKIP
+    >>> plot_parametric(cos(u), sin(u), (u, -5, 5))
+    Plot object containing:
+    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
+
 
     Multiple parametric plot with single range.
 
-    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))  # doctest: +SKIP
+    >>> plot_parametric((cos(u), sin(u)), (u, cos(u)))
+    Plot object containing:
+    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-10.0, 10.0)
+    [1]: parametric cartesian line: (u, cos(u)) for u over (-10.0, 10.0)
 
     Multiple parametric plots.
 
     >>> plot_parametric((cos(u), sin(u), (u, -5, 5)),
-    ...     (cos(u), u, (u, -5, 5)))  # doctest: +SKIP
+    ...     (cos(u), u, (u, -5, 5)))
+    Plot object containing:
+    [0]: parametric cartesian line: (cos(u), sin(u)) for u over (-5.0, 5.0)
+    [1]: parametric cartesian line: (cos(u), u) for u over (-5.0, 5.0)
+
 
     See Also
     ========
@@ -1357,12 +1379,19 @@ def plot3d_parametric_line(*args, **kwargs):
 
     Single plot.
 
-    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))  # doctest: +SKIP
+    >>> plot3d_parametric_line(cos(u), sin(u), u, (u, -5, 5))
+    Plot object containing:
+    [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
+
 
     Multiple plots.
 
     >>> plot3d_parametric_line((cos(u), sin(u), u, (u, -5, 5)),
-    ...     (sin(u), u**2, u, (u, -5, 5)))  # doctest: +SKIP
+    ...     (sin(u), u**2, u, (u, -5, 5)))
+    Plot object containing:
+    [0]: 3D parametric cartesian line: (cos(u), sin(u), u) for u over (-5.0, 5.0)
+    [1]: 3D parametric cartesian line: (sin(u), u**2, u) for u over (-5.0, 5.0)
+
 
     See Also
     ========
@@ -1454,16 +1483,27 @@ def plot3d(*args, **kwargs):
 
     Single plot
 
-    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))  # doctest: +SKIP
+    >>> plot3d(x*y, (x, -5, 5), (y, -5, 5))
+    Plot object containing:
+    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
 
     Multiple plots with same range
 
-    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))  # doctest: +SKIP
+    >>> plot3d(x*y, -x*y, (x, -5, 5), (y, -5, 5))
+    Plot object containing:
+    [0]: cartesian surface: x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+    [1]: cartesian surface: -x*y for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+
 
     Multiple plots with different ranges.
 
     >>> plot3d((x**2 + y**2, (x, -5, 5), (y, -5, 5)),
-    ...     (x*y, (x, -3, 3), (y, -3, 3)))  # doctest: +SKIP
+    ...     (x*y, (x, -3, 3), (y, -3, 3)))
+    Plot object containing:
+    [0]: cartesian surface: x**2 + y**2 for x over (-5.0, 5.0) and y over (-5.0, 5.0)
+    [1]: cartesian surface: x*y for x over (-3.0, 3.0) and y over (-3.0, 3.0)
+
 
     See Also
     ========
@@ -1555,7 +1595,10 @@ def plot3d_parametric_surface(*args, **kwargs):
     Single plot.
 
     >>> plot3d_parametric_surface(cos(u + v), sin(u - v), u - v,
-    ...     (u, -5, 5), (v, -5, 5))  # doctest: +SKIP
+    ...     (u, -5, 5), (v, -5, 5))
+    Plot object containing:
+    [0]: parametric cartesian surface: (cos(u + v), sin(u - v), u - v) for u over (-5.0, 5.0) and v over (-5.0, 5.0)
+
 
     See Also
     ========

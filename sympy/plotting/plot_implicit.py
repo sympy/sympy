@@ -29,7 +29,7 @@ from experimental_lambdify import experimental_lambdify, vectorized_lambdify
 from intervalmath import interval
 from sympy.core.relational import (Equality, GreaterThan, LessThan,
                 Relational, StrictLessThan, StrictGreaterThan)
-from sympy import Eq, Tuple, sympify, Expr, Dummy
+from sympy import Eq, Tuple, sympify, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
@@ -235,41 +235,41 @@ def plot_implicit(expr, *args, **kwargs):
 
     Plot expressions:
 
-    >>> from sympy import plot_implicit, cos, sin, symbols, Eq
+    >>> from sympy import plot_implicit, cos, sin, symbols, Eq, And
     >>> x, y = symbols('x y')
 
     Without any ranges for the symbols in the expression
 
-    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))  # doctest: +SKIP
+    >>> p1 = plot_implicit(Eq(x**2 + y**2, 5))
 
     With the range for the symbols
 
     >>> p2 = plot_implicit(Eq(x**2 + y**2, 3),
-    ...         (x, -3, 3), (y, -3, 3))  # doctest: +SKIP
+    ...         (x, -3, 3), (y, -3, 3))
 
     With depth of recursion as argument.
 
     >>> p3 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -4, 4), (y, -4, 4), depth = 2)  # doctest: +SKIP
+    ...         (x, -4, 4), (y, -4, 4), depth = 2)
 
     Using mesh grid and not using adaptive meshing.
 
     >>> p4 = plot_implicit(Eq(x**2 + y**2, 5),
-    ...         (x, -5, 5), (y, -2, 2), adaptive=False)  # doctest: +SKIP
+    ...         (x, -5, 5), (y, -2, 2), adaptive=False)
 
     Using mesh grid with number of points as input.
 
     >>> p5 = plot_implicit(Eq(x**2 + y**2, 5),
     ...         (x, -5, 5), (y, -2, 2),
-    ...         adaptive=False, points=400)  # doctest: +SKIP
+    ...         adaptive=False, points=400)
 
     Plotting regions.
 
-    >>> p6 = plot_implicit(y > x**2)  # doctest: +SKIP
+    >>> p6 = plot_implicit(y > x**2)
 
     Plotting Using boolean conjunctions.
 
-    >>> p7 = plot_implicit(And(y > x, y > -x))  # doctest: +SKIP
+    >>> p7 = plot_implicit(And(y > x, y > -x))
     """
     has_equality = False  # Represents whether the expression contains an Equality,
                      #GreaterThan or LessThan
