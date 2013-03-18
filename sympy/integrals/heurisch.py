@@ -257,21 +257,20 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
         def _sort_key(arg):
             return default_sort_key(arg[0].as_independent(x)[1])
         mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
-    #optimizing the number of permutations 
-    for i in mapping:
-        if(i[0]==x):
-            adding_tuple=(x,i[1])
-            mapping.remove(i)
-            mappings = permutations(mapping)
+        
+        #optimizing the number of permutations of mappping
+        store_tuple=mapping[-1]
+        del mapping[-1]
+        mappings = permutations(mapping)
 
     def _substitute(expr):
         return expr.subs(mapping)
 
     for mapping in mappings:
+    
         mapping = list(mapping)
-        mapping.append(adding_tuple)
-        mapping = list(mapping)
-
+        mapping.append(store_tuple)
+        
         diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
 
