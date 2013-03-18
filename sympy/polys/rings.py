@@ -11,7 +11,7 @@ from sympy.polys.monomialtools import (monomial_mul, monomial_div,
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict
-from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded
 from sympy.polys.domains.polynomialring import PolynomialRingNG
 from sympy.printing.defaults import DefaultPrinting
 
@@ -41,17 +41,20 @@ def vring(symbols, domain, order=lex):
     return _ring
 
 def _parse_symbols(symbols):
+    if not symbols:
+        raise GeneratorsNeeded("generators weren't specified")
+
     if isinstance(symbols, basestring):
         return _symbols(symbols, seq=True)
     elif isinstance(symbols, Expr):
         return (symbols,)
-    elif is_sequence(symbols) and symbols:
+    elif is_sequence(symbols):
         if all(isinstance(s, basestring) for s in symbols):
             return _symbols(symbols)
         elif all(isinstance(s, Expr) for s in symbols):
             return symbols
 
-    raise ValueError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
+    raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
 class PolyRing(DefaultPrinting, IPolys):
 

@@ -4,6 +4,7 @@ from sympy.polys.rings import ring, xring, PolyRing, PolyElement
 from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.monomialtools import lex, grlex
+from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
@@ -17,7 +18,8 @@ def test_PolyRing___init__():
     assert len(PolyRing(("x", "y", "z"), ZZ, lex).gens) == 3
     assert len(PolyRing((x, y, z), ZZ, lex).gens) == 3
 
-    raises(ValueError, lambda: PolyRing([], ZZ, lex))
+    raises(GeneratorsNeeded, lambda: PolyRing([], ZZ, lex))
+    raises(GeneratorsError, lambda: PolyRing(0, ZZ, lex))
 
 def test_PolyRing___hash__():
     R, x, y, z = ring("x,y,z", QQ)
