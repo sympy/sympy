@@ -550,6 +550,8 @@ def _doctest(*paths, **kwargs):
         blacklist.extend([
             "sympy/galgebra/GA.py",
             "sympy/galgebra/latex_ex.py",
+            "sympy/plotting/experimental_lambdify.py",
+            "sympy/plotting/plot_implicit.py",
             "examples/advanced/autowrap_integrators.py",
             "examples/advanced/autowrap_ufuncify.py"
             "examples/intermediate/sample.py"

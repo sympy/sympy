@@ -27,6 +27,7 @@ from itertools import chain
 from sympy import sympify, Expr, Tuple, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
+from sympy.utilities import depends_on
 import warnings
 from experimental_lambdify import (vectorized_lambdify, lambdify)
 
@@ -1045,6 +1046,7 @@ def _matplotlib_list(interval_list):
 # TODO: Add more plotting options for 3d plots.
 # TODO: Adaptive sampling for 3D plots.
 
+@depends_on(modules=('numpy', 'matplotlib',))
 def plot(*args, **kwargs):
     """
     Plots a function of a single variable.
@@ -1169,6 +1171,7 @@ def plot(*args, **kwargs):
     return plots
 
 
+@depends_on(modules=('numpy', 'matplotlib',))
 def plot_parametric(*args, **kwargs):
     """
     Plots a 2D parametric plot.
@@ -1289,6 +1292,7 @@ def plot_parametric(*args, **kwargs):
     return plots
 
 
+@depends_on(modules=('numpy', 'matplotlib',))
 def plot3d_parametric_line(*args, **kwargs):
     """
     Plots a 3D parametric line plot.
@@ -1377,6 +1381,7 @@ def plot3d_parametric_line(*args, **kwargs):
     return plots
 
 
+@depends_on(modules=('numpy', 'matplotlib',))
 def plot3d(*args, **kwargs):
     """
     Plots a 3D surface plot.
@@ -1477,6 +1482,7 @@ def plot3d(*args, **kwargs):
     return plots
 
 
+@depends_on(modules=('numpy', 'matplotlib',))
 def plot3d_parametric_surface(*args, **kwargs):
     """
     Plots a 3D parametric surface plot.
