@@ -85,6 +85,7 @@ def test_dim_handling():
     assert dim_handling([x, y], dims={x: 1, y: 2}) == {x: (False, True),
                                                        y: (False, False)}
     assert dim_handling([x], broadcastable={x: (False,)}) == {x: (False,)}
+    assert dim_handling([x], dims={'x': 1}, keys=['x']) == {x: (False,)}
 
 def test_tensor_wrap():
     [Xt], Xtp1 = tensor_wrap([xt], [xt+1], dim=2)

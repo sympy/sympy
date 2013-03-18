@@ -132,13 +132,17 @@ def unpack(coll):
     else:
         return coll
 
-def dim_handling(inputs, dim=None, dims={}, broadcastable={}):
+def dim_handling(inputs, dim=None, dims={}, broadcastable={}, keys=()):
     """ Handle various input types for dimensions in tensor_wrap
 
     See Also:
         tensor_wrap
         theano_funciton
     """
+    if keys:
+        dims = {i: dims[oi] for i, oi in zip(inputs, keys) if oi in dims}
+        broadcastable = {i: broadcastable[oi]
+                for i, oi in zip(inputs, keys) if oi in broadcastable}
     if dim:
         dims = dict(zip(inputs, [dim]*len(inputs)))
     if dims:
@@ -165,5 +169,5 @@ def theano_function(inputs, outputs, dtypes={}, **kwargs):
         toutputs = unpack(toutputs)
         return theano.function(tinputs, toutputs)
     else:
-        Tinputs, Toutputs = tensor_wrap(tinputs, toutputs, **kwargs)
+        Tinputs, Toutputs = tensor_wrap(tinputs, toutputs, keys=inputs, **kwargs)
         return theano.function(Tinputs, Toutputs)
