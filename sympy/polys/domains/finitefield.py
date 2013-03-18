@@ -13,6 +13,7 @@ class FiniteField(Field, SimpleDomain):
 
     rep = 'FF'
 
+    is_FiniteField = is_FF = True
     is_Numerical = True
 
     has_assoc_Ring = False

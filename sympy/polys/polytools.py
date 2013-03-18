@@ -470,7 +470,7 @@ class Poly(Expr):
         """
         domain = f.get_domain()
 
-        if not domain.has_CharacteristicZero:
+        if domain.is_FiniteField:
             return Integer(domain.characteristic())
         else:
             raise PolynomialError("not a polynomial over a Galois field")

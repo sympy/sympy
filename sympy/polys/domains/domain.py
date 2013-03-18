@@ -26,7 +26,7 @@ class Domain(object):
     is_ZZ = False
     is_QQ = False
 
-    is_FF = False
+    is_FiniteField = is_FF = False
     is_CC = False
 
     is_Poly = False
@@ -186,8 +186,8 @@ class Domain(object):
         if K0 == K1:
             return K0
 
-        if not K0.has_CharacteristicZero:
-            if not K1.has_CharacteristicZero:
+        if K0.is_FiniteField:
+            if K1.is_FiniteField:
                 if K0.mod == K1.mod and K0.dom == K1.dom:
                     return K0
             elif K1.is_ZZ:
@@ -195,7 +195,7 @@ class Domain(object):
 
             raise UnificationFailed("can't unify %s with %s" % (K0, K1))
 
-        if not K1.has_CharacteristicZero:
+        if K1.is_FiniteField:
             if K0.is_ZZ:
                 return K1
             else:

@@ -205,7 +205,7 @@ def dup_sqf_part(f, K):
     x**2 - x - 2
 
     """
-    if not K.has_CharacteristicZero:
+    if K.is_FiniteField:
         return dup_gf_sqf_part(f, K)
 
     if not f:
@@ -241,7 +241,7 @@ def dmp_sqf_part(f, u, K):
     if not u:
         return dup_sqf_part(f, K)
 
-    if not K.has_CharacteristicZero:
+    if K.is_FiniteField:
         return dmp_gf_sqf_part(f, u, K)
 
     if dmp_zero_p(f, u):
@@ -296,7 +296,7 @@ def dup_sqf_list(f, K, all=False):
     (2, [(1, 1), (x + 1, 2), (x + 2, 3)])
 
     """
-    if not K.has_CharacteristicZero:
+    if K.is_FiniteField:
         return dup_gf_sqf_list(f, K, all=all)
 
     if K.has_Field or not K.is_Exact:
@@ -385,7 +385,7 @@ def dmp_sqf_list(f, u, K, all=False):
     if not u:
         return dup_sqf_list(f, K, all=all)
 
-    if not K.has_CharacteristicZero:
+    if K.is_FiniteField:
         return dmp_gf_sqf_list(f, u, K, all=all)
 
     if K.has_Field or not K.is_Exact:
