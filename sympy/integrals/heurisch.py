@@ -263,7 +263,6 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
             if i[0] is x:
       	        store_tuple=i
                 mapping.remove(i)
-		            break
         mappings = permutations(mapping)
 
     def _substitute(expr):
