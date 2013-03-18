@@ -5,7 +5,7 @@ from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.rings import PolyElement
 from sympy.polys.monomialtools import lex
 from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
-from sympy.polys.domains.fractionfield import FractionFieldNG
+from sympy.polys.domains.fractionfield import FractionField
 from sympy.printing.defaults import DefaultPrinting
 
 def field(symbols, domain, order=lex):
@@ -140,8 +140,8 @@ class FracField(DefaultPrinting):
         return self.new(self.ring.one)
 
     def to_domain(self):
-        from sympy.polys.domains.fractionfield import FractionFieldNG
-        return FractionFieldNG(self)
+        from sympy.polys.domains.fractionfield import FractionField
+        return FractionField(self)
 
     def to_ring(self):
         from sympy.polys.rings import PolyRing
@@ -233,9 +233,9 @@ class FracElement(CantSympify, DefaultPrinting):
         if isinstance(g, FracElement):
             if f.field == g.field:
                 return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
-            elif isinstance(field.domain, FractionFieldNG) and field.domain.field == g.field:
+            elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
                 pass
-            elif isinstance(g.field.domain, FractionFieldNG) and g.field.domain.field == field:
+            elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
                 return g.__radd__(f)
             else:
                 return NotImplemented
@@ -261,9 +261,9 @@ class FracElement(CantSympify, DefaultPrinting):
         if isinstance(g, FracElement):
             if f.field == g.field:
                 return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
-            elif isinstance(field.domain, FractionFieldNG) and field.domain.field == g.field:
+            elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
                 pass
-            elif isinstance(g.field.domain, FractionFieldNG) and g.field.domain.field == field:
+            elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
                 return g.__rsub__(f)
             else:
                 return NotImplemented
@@ -296,9 +296,9 @@ class FracElement(CantSympify, DefaultPrinting):
         if isinstance(g, FracElement):
             if field == g.field:
                 return f.new(f.numer*g.numer, f.denom*g.denom)
-            elif isinstance(field.domain, FractionFieldNG) and field.domain.field == g.field:
+            elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
                 pass
-            elif isinstance(g.field.domain, FractionFieldNG) and g.field.domain.field == field:
+            elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
                 return g.__rmul__(f)
             else:
                 return NotImplemented
@@ -324,9 +324,9 @@ class FracElement(CantSympify, DefaultPrinting):
         if isinstance(g, FracElement):
             if field == g.field:
                 return f.new(f.numer*g.denom, f.denom*g.numer)
-            elif isinstance(field.domain, FractionFieldNG) and field.domain.field == g.field:
+            elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
                 pass
-            elif isinstance(g.field.domain, FractionFieldNG) and g.field.domain.field == field:
+            elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
                 return g.__rtruediv__(f)
             else:
                 return NotImplemented

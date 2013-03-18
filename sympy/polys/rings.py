@@ -12,7 +12,7 @@ from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded
-from sympy.polys.domains.polynomialring import PolynomialRingNG
+from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.printing.defaults import DefaultPrinting
 
 def ring(symbols, domain, order=lex):
@@ -223,7 +223,7 @@ class PolyRing(DefaultPrinting, IPolys):
             raise ValueError("%s is not a composite domain" % self.domain)
 
     def to_domain(self):
-        return PolynomialRingNG(self)
+        return PolynomialRing(self)
 
     def to_field(self):
         from sympy.polys.fields import FracField
@@ -454,9 +454,9 @@ class PolyElement(DefaultPrinting, CantSympify, dict):
                         if k not in p1:
                             p[k] = v
                     return p
-            elif isinstance(ring.domain, PolynomialRingNG) and ring.domain.ring == p2.ring:
+            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
-            elif isinstance(p2.ring.domain, PolynomialRingNG) and p2.ring.domain.ring == ring:
+            elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__radd__(p1)
             else:
                 return NotImplemented
@@ -536,9 +536,9 @@ class PolyElement(DefaultPrinting, CantSympify, dict):
                         if k not in p1:
                             p[k] = -v
                     return p
-            elif isinstance(ring.domain, PolynomialRingNG) and ring.domain.ring == p2.ring:
+            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
-            elif isinstance(p2.ring.domain, PolynomialRingNG) and p2.ring.domain.ring == ring:
+            elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__rsub__(p1)
             else:
                 return NotImplemented
@@ -608,9 +608,9 @@ class PolyElement(DefaultPrinting, CantSympify, dict):
                         p[exp] = get(exp, 0) + v1*v2
                 p.strip_zero()
                 return p
-            elif isinstance(ring.domain, PolynomialRingNG) and ring.domain.ring == p2.ring:
+            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
-            elif isinstance(p2.ring.domain, PolynomialRingNG) and p2.ring.domain.ring == ring:
+            elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__rmul__(p1)
             else:
                 return NotImplemented

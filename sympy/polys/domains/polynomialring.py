@@ -3,7 +3,7 @@
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
 
-class PolynomialRingNG(Ring, CompositeDomain):
+class PolynomialRing(Ring, CompositeDomain):
     """A class for representing multivariate polynomial rings. """
 
     is_Poly      = True
@@ -29,7 +29,7 @@ class PolynomialRingNG(Ring, CompositeDomain):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        return isinstance(other, PolynomialRingNG) and self.dtype == other.dtype and self.ring == other.ring
+        return isinstance(other, PolynomialRing) and self.dtype == other.dtype and self.ring == other.ring
 
     def __ne__(self, other):
         """Returns `False` if two domains are equivalent. """
@@ -67,14 +67,14 @@ class PolynomialRingNG(Ring, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_PolynomialRingNG(K1, a, K0):
+    def from_PolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         if K1 == K0:
             return a
         else:
             return # TODO
 
-    def from_FractionFieldNG(K1, a, K0):
+    def from_FractionField(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
         if K1.ring == K0.field.ring and K0.denom(a) == 1:
             return K1.ring.ring_new(K0.numer(a))

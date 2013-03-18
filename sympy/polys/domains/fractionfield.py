@@ -3,7 +3,7 @@
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
 
-class FractionFieldNG(Field, CompositeDomain):
+class FractionField(Field, CompositeDomain):
     """A class for representing multivariate rational function fields. """
 
     is_Frac      = True
@@ -31,7 +31,7 @@ class FractionFieldNG(Field, CompositeDomain):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        return isinstance(other, FractionFieldNG) and self.dtype == other.dtype and self.field == other.field
+        return isinstance(other, FractionField) and self.dtype == other.dtype and self.field == other.field
 
     def __ne__(self, other):
         """Returns `False` if two domains are equivalent. """
@@ -69,14 +69,14 @@ class FractionFieldNG(Field, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_PolynomialRingNG(K1, a, K0):
+    def from_PolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
         if K1.field.ring == K0.ring:
             return K1.field.field_new(a)
         else:
             return # TODO
 
-    def from_FractionFieldNG(K1, a, K0):
+    def from_FractionField(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
         if K1 == K0:
             return a
