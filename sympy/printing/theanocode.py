@@ -10,7 +10,6 @@ tt = theano.tensor
 from theano import sandbox
 from theano.sandbox import linalg as tlinalg
 
-
 mapping = {sympy.Add: ts.add,
            sympy.Mul: ts.mul,
 #           sympy.Sub: ts.sub,
@@ -116,3 +115,45 @@ class TheanoPrinter(Printer):
 
 def theano_code(expr, dtypes={}, **settings):
     return TheanoPrinter(settings).doprint(expr, dtypes)
+
+def unpack(coll):
+    if len(coll) == 1:
+        return coll[0]
+    else:
+        return coll
+
+def dim_handling(inputs, dim=None, dims={}, broadcastable={}):
+    """ Handle various input types for dimensions in tensor_wrap
+
+    See Also:
+        tensor_wrap
+        theano_funciton
+    """
+    if dim:
+        dims = dict(zip(inputs, [dim]*len(inputs)))
+    if dims:
+        maxdim = max(dims.values())
+        broadcastable = {i: (False,)*dims[i] + (True,)*(maxdim-dims[i])
+                         for i in inputs}
+    return broadcastable
+
+
+def tensor_wrap(inputs, outputs, **kwargs):
+    """ Convert scalar io-graph to tensor io-graph """
+    broadcastable = dim_handling(inputs, **kwargs)
+
+    Tinputs = [tt.Tensor(i.type.dtype, broadcastable[i])(i.name)
+                            for i in inputs]
+    Toutputs = tt.Elemwise(ts.Composite(inputs, outputs))(*Tinputs)
+    return Tinputs, Toutputs
+
+def theano_function(inputs, outputs, dtypes={}, **kwargs):
+    """ Create Theano function from SymPy expressions """
+    tinputs  = [theano_code(i, dtypes) for i in inputs]
+    toutputs = [theano_code(o, dtypes) for o in outputs]
+    if not kwargs:
+        toutputs = unpack(toutputs)
+        return theano.function(tinputs, toutputs)
+    else:
+        Tinputs, Toutputs = tensor_wrap(tinputs, toutputs, **kwargs)
+        return theano.function(Tinputs, Toutputs)

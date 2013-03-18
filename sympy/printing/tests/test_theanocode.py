@@ -11,7 +11,7 @@ else:
 import sympy
 sy = sympy
 from sympy.abc import x, y, z, a, b, c
-from sympy.printing.theanocode import theano_code
+from sympy.printing.theanocode import theano_code, dim_handling, tensor_wrap
 
 xt, yt, zt = map(ts.Scalar('floatX'), 'xyz')
 
@@ -78,3 +78,15 @@ def test_symbols_are_created_once():
     comp = theano_code(expr)
 
     assert theq(comp, xt**xt)
+
+def test_dim_handling():
+    assert dim_handling([x], dim=2) == {x: (False, False)}
+    assert dim_handling([x, y], dims={x: 1, y: 2}) == {x: (False, True),
+                                                       y: (False, False)}
+    assert dim_handling([x], broadcastable={x: (False,)}) == {x: (False,)}
+
+def test_tensor_wrap():
+    [Xt], Xtp1 = tensor_wrap([xt], [xt+1], dim=2)
+    assert isinstance(Xt,   tt.TensorVariable)
+    assert isinstance(Xtp1, tt.TensorVariable)
+    assert Xtp1.type.broadcastable == (False, False)
