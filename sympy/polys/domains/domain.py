@@ -85,8 +85,7 @@ class Domain(object):
                 if result is not None:
                     return result
 
-            raise CoercionFailed(
-                "can't convert %s of type %s to %s" % (a, K0, K1))
+            raise CoercionFailed("can't convert %s of type %s from %s to %s" % (a, type(a), K0, K1))
         else:
             if K1.of_type(a):
                 return a
@@ -115,7 +114,7 @@ class Domain(object):
             except (TypeError, ValueError):
                 pass
 
-            raise CoercionFailed("can't convert %s to type %s" % (a, K1))
+            raise CoercionFailed("can't convert %s of type %s to %s" % (a, type(a), K1))
 
     def of_type(self, a):
         """Check if ``a`` is of type ``dtype``. """
