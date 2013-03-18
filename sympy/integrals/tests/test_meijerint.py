@@ -436,10 +436,10 @@ def test_probability():
     # XXX conditions are a mess
     arg = x*dagum
     assert simplify(integrate(arg, (x, 0, oo), meijerg=True, conds='none')
-                    ) == -b*gamma(-1/a)*gamma(p + 1 + 1/a)/(
+                    ) == a*b*gamma(1 - 1/a)*gamma(p + 1 + 1/a)/(
                     (a*p + 1)*gamma(p))
     assert simplify(integrate(x*arg, (x, 0, oo), meijerg=True, conds='none')
-                    ) == -2*b**2*gamma(-2/a)*gamma(p + 1 + 2/a)/(
+                    ) == a*b**2*gamma(1 - 2/a)*gamma(p + 1 + 2/a)/(
                     (a*p + 2)*gamma(p))
 
     # F-distribution

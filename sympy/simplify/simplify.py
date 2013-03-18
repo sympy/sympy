@@ -2951,26 +2951,31 @@ def combsimp(expr):
         denom_gammas = []
         numer_others = []
         denom_others = []
+        def explicate(p):
+            if p is S.One:
+                return None, []
+            b, e = p.as_base_exp()
+            if e.is_Integer:
+                if b.func is gamma:
+                    return True, [b.args[0]]*e
+                else:
+                    return False, [b]*e
+            else:
+                return False, [p]
 
         newargs = list(ordered(expr.args))
         while newargs:
-            arg = newargs.pop()
-            b, e = arg.as_base_exp()
-            if e.is_Integer:
-                n = abs(e)
-                if isinstance(b, gamma):
-                    barg = b.args[0]
-                    if e > 0:
-                        numer_gammas.extend([barg]*n)
-                    elif e < 0:
-                        denom_gammas.extend([barg]*n)
-                else:
-                    if e > 0:
-                        numer_others.extend([b]*n)
-                    elif e < 0:
-                        denom_others.extend([b]*n)
-            else:
-                numer_others.append(arg)
+            n, d = newargs.pop().as_numer_denom()
+            isg, l = explicate(n)
+            if isg:
+                numer_gammas.extend(l)
+            elif isg is False:
+                numer_others.extend(l)
+            isg, l = explicate(d)
+            if isg:
+                denom_gammas.extend(l)
+            elif isg is False:
+                denom_others.extend(l)
 
         # =========== level 2 work: pure gamma manipulation =========
 
@@ -3136,7 +3141,7 @@ def combsimp(expr):
                                 (denom_gammas, denom_others, numer_others)]:
             _mult_thm(l, numer, denom)
 
-        # =========== level 3 work: factor absorbtion =========
+        # =========== level >= 2 work: factor absorbtion =========
 
         if level >= 2:
             # Try to absorb factors into the gammas: x*gamma(x) -> gamma(x + 1)
@@ -3196,22 +3201,6 @@ def combsimp(expr):
                             if y != g:
                                 numer.append(y/g)
                                 update_ST(y/g)
-                            g += 1
-                            cont = True
-                        y = find_fuzzy(numer, 1/(g - 1))
-                        if y is not None:
-                            numer.remove(y)
-                            if y != 1/(g - 1):
-                                numer.append((g - 1)*y)
-                                update_ST((g - 1)*y)
-                            g -= 1
-                            cont = True
-                        y = find_fuzzy(denom, 1/g)
-                        if y is not None:
-                            denom.remove(y)
-                            if y != 1/g:
-                                denom.append(y*g)
-                                update_ST(y*g)
                             g += 1
                             cont = True
                         y = find_fuzzy(denom, g - 1)
