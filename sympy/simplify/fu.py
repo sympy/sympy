@@ -204,8 +204,8 @@ from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.rules import Transform
 from sympy.core.basic import S
 from sympy.core.numbers import Integer, pi, I
-from sympy.strategies import minimize, chain, debug
-from sympy.strategies.core import identity
+from sympy.strategies.tree import greedy
+from sympy.strategies.core import identity, debug
 from sympy.polys.polytools import factor
 from sympy.ntheory.factor_ import perfect_power
 
@@ -503,8 +503,10 @@ def _TR56(rv, f, g, h, max, pow):
         return h(g(rv.base.args[0])**2)**e
 
 
-def TR5(rv):
+def TR5(rv, max=4, pow=False):
     """Replacement of sin**2 with 1 - cos(x)**2.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -519,11 +521,13 @@ def TR5(rv):
     >>> TR5(sin(x)**4)
     (-cos(x)**2 + 1)**2
     """
-    return _TR56(rv, sin, cos, lambda x: 1 - x, max=4, pow=False)
+    return _TR56(rv, sin, cos, lambda x: 1 - x, max=max, pow=pow)
 
 
-def TR6(rv):
+def TR6(rv, max=4, pow=False):
     """Replacement of cos**2 with 1 - sin(x)**2.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -538,7 +542,7 @@ def TR6(rv):
     >>> TR6(cos(x)**4)
     (-sin(x)**2 + 1)**2
     """
-    return _TR56(rv, cos, sin, lambda x: 1 - x, max=4, pow=False)
+    return _TR56(rv, cos, sin, lambda x: 1 - x, max=max, pow=pow)
 
 
 def TR7(rv):
@@ -1400,8 +1404,10 @@ def TR14(rv, first=True):
     return rv
 
 
-def TR15(rv):
-    """Convert sin(x)*-2 to 1 + cot(x)**2
+def TR15(rv, max=4, pow=False):
+    """Convert sin(x)*-2 to 1 + cot(x)**2.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -1418,13 +1424,15 @@ def TR15(rv):
         return rv
 
     ia = 1/rv
-    a = _TR56(ia, sin, cot, lambda x: 1 + x, max=4, pow=False)
+    a = _TR56(ia, sin, cot, lambda x: 1 + x, max=max, pow=pow)
     if a != ia:
         rv = a
     return rv
 
-def TR16(rv):
-    """Convert cos(x)*-2 to 1 + tan(x)**2
+def TR16(rv, max=4, pow=False):
+    """Convert cos(x)*-2 to 1 + tan(x)**2.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -1441,7 +1449,7 @@ def TR16(rv):
         return rv
 
     ia = 1/rv
-    a = _TR56(ia, cos, tan, lambda x: 1 + x, max=4, pow=False)
+    a = _TR56(ia, cos, tan, lambda x: 1 + x, max=max, pow=pow)
     if a != ia:
         rv = a
     return rv
@@ -1476,8 +1484,10 @@ def TR111(rv):
     return rv
 
 
-def TR22(rv):
-    """Convert tan(x)**2 to sec(x)**2 - 1 and cot(x)**2 to csc(x)**2 - 1
+def TR22(rv, max=4, pow=False):
+    """Convert tan(x)**2 to sec(x)**2 - 1 and cot(x)**2 to csc(x)**2 - 1.
+
+    See _TR56 docstring for advanced use of ``max`` and ``pow``.
 
     Examples
     ========
@@ -1495,8 +1505,8 @@ def TR22(rv):
     if not (isinstance(rv, Pow) and rv.base.func in (cot, tan)):
         return rv
 
-    rv = _TR56(rv, tan, sec, lambda x: x - 1, max=4, pow=False)
-    rv = _TR56(rv, cot, csc, lambda x: x - 1, max=4, pow=False)
+    rv = _TR56(rv, tan, sec, lambda x: x - 1, max=max, pow=pow)
+    rv = _TR56(rv, cot, csc, lambda x: x - 1, max=max, pow=pow)
     return rv
 
 
@@ -1524,22 +1534,19 @@ if SYMPY_DEBUG:
     (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR11, TR12, TR13,
     TR2i, TRmorrie, TR14, TR15, TR16, TR12i, TR111, TR22))
 
-_CTR1 = [TR5, TR0], [TR6, TR0], [identity]
 
-_CTR2 = [TR11, TR5, TR0], [TR11, TR6, TR0], [TR11, TR0]
+# tuples are chains  --  (f, g) -> lambda x: g(f(x))
+# lists are choices  --  [f, g] -> lambda x: min(f(x), g(x), key=objective)
 
-_CTR3 = [TRmorrie, TR8, TR0], [TRmorrie, TR8, TR10i, TR0], [identity]
+CTR1 = [(TR5, TR0), (TR6, TR0), identity]
 
-_CTR4 = [TR4, TR10i], [identity]
+CTR2 = (TR11, [(TR5, TR0), (TR6, TR0), TR0])
 
+CTR3 = [(TRmorrie, TR8, TR0), (TRmorrie, TR8, TR10i, TR0), identity]
 
-def CTRstrat(lists):
-    return minimize(*[chain(*list) for list in lists],
-        **dict(objective=lambda x: (L(x), x.count_ops())))
+CTR4 = [(TR4, TR10i), identity]
 
-CTR1, CTR2, CTR3, CTR4 = map(CTRstrat, (_CTR1, _CTR2, _CTR3, _CTR4))
-
-_RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0]
+RL1 = (TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0)
 
 
 # XXX it's a little unclear how this one is to be implemented
@@ -1547,24 +1554,21 @@ _RL1 = [TR4, TR3, TR4, TR12, TR4, TR13, TR4, TR0]
 # The diagram shows all these as one chain of transformations, but the
 # text refers to them being applied independently. Also, a break
 # if L starts to increase has not been implemented.
-_RL2 = [
-    [TR4, TR3, TR10, TR4, TR3, TR11],
-    [TR5, TR7, TR11, TR4],
-    [CTR3, CTR1, TR9, CTR2, TR4, TR9, TR9, CTR4],
-    [identity],
+RL2 = [
+    (TR4, TR3, TR10, TR4, TR3, TR11),
+    (TR5, TR7, TR11, TR4),
+    (CTR3, CTR1, TR9, CTR2, TR4, TR9, TR9, CTR4),
+    identity,
     ]
 
 
-def RLstrat(rls):
-    return chain(*rls)
-
-RL1 = RLstrat(_RL1)
-RL2 = CTRstrat(_RL2)
-
-
-def fu(rv):
+def fu(rv, measure=lambda x: (L(x), x.count_ops())):
     """Attempt to simplify expression by using transformation rules given
     in the algorithm by Fu et al.
+
+    :func:`fu` will try to minimize the objective function ``measure``.
+    By default this first minimizes the number of trig terms and then minimizes
+    the number of total operations.
 
     Examples
     ========
@@ -1616,28 +1620,34 @@ def fu(rv):
     >>> fu(tan(7*pi/18)+tan(5*pi/18)-sqrt(3)*tan(5*pi/18)*tan(7*pi/18))
     -sqrt(3)
 
+    Objective function example
+    >>> fu(sin(x)/cos(x))  # default objective function
+    tan(x)
+    >>> fu(sin(x)/cos(x), measure=lambda x: -x.count_ops()) # maximize op count
+    sin(x)/cos(x)
+
     References
     ==========
     http://rfdz.ph-noe.ac.at/fileadmin/Mathematik_Uploads/ACDCA/
     DESTIME2006/DES_contribs/Fu/simplification.pdf
     """
+    fRL1 = greedy(RL1, measure)
+    fRL2 = greedy(RL2, measure)
+
     was = rv
     rv = sympify(rv)
     rv = TR1(rv)
     if rv.has(tan, cot):
-        rv1 = RL1(rv)
-        if (_L(rv1) < _L(rv)):
+        rv1 = fRL1(rv)
+        if (measure(rv1) < measure(rv)):
             rv = rv1
         if rv.has(tan, cot):
             rv = TR2(rv)
     if rv.has(sin, cos):
-        rv1 = RL2(rv)
+        rv1 = fRL2(rv)
         rv2 = TR8(TRmorrie(rv1))
-        rv = ordered(
-            [was, rv, rv1, rv2], keys=(L, count_ops), default=False).next()
-    return min(TR2i(rv), rv, key=lambda x: (L(x), x.count_ops()))
-
-_L = lambda x: (L(x), x.count_ops())
+        rv = min([was, rv, rv1, rv2], key=measure)
+    return min(TR2i(rv), rv, key=measure)
 
 
 def bottom_up(rv, F):
@@ -1693,14 +1703,11 @@ def process_common_addends(rv, do, key2=None, key1=True):
     return rv
 
 
-FU = dict(zip('''
+fufuncs = '''
     TR0 TR1 TR2 TR3 TR4 TR5 TR6 TR7 TR8 TR9 TR10 TR10i TR11
-    TR12 TR13 CTR1 CTR2 CTR3 CTR4 RL1 RL2 L TR2i TRmorrie TR12i
-    TR14 TR15 TR16 TR111 TR22'''.split(),
-    (TR0, TR1, TR2, TR3, TR4, TR5, TR6, TR7, TR8, TR9, TR10, TR10i, TR11,
-    TR12, TR13, CTR1, CTR2, CTR3, CTR4, RL1, RL2, L, TR2i, TRmorrie, TR12i,
-    TR14, TR15, TR16, TR111, TR22)))
-
+    TR12 TR13 L TR2i TRmorrie TR12i
+    TR14 TR15 TR16 TR111 TR22'''.split()
+FU = dict(zip(fufuncs, map(locals().get, fufuncs)))
 
 def _roots():
     global _ROOT2, _ROOT3, _invROOT3
