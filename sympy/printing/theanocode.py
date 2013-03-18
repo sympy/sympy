@@ -1,72 +1,61 @@
 from sympy.utilities import default_sort_key
+from sympy.external import import_module
 
 from sympy.printing.printer import Printer
-import theano
 import sympy
 
-Scalar = theano.scalar.Scalar
-ts = theano.scalar
-tt = theano.tensor
-from theano import sandbox
-from theano.sandbox import linalg as tlinalg
+theano = import_module('theano')
+if theano:
+    ts = theano.scalar
+    tt = theano.tensor
+    from theano import sandbox
+    from theano.sandbox import linalg as tlinalg
 
-mapping = {sympy.Add: ts.add,
-           sympy.Mul: ts.mul,
-#           sympy.Sub: ts.sub,
-#           sympy.Mul(x, Pow(y, -1)): ts.true_div,  # int_div,
-           #sympy.Mod: ts.mod, # master branch
-           #clip,  # second,
-           #identity,
-           #cast,
-           sympy.Abs: ts.abs_,
-           sympy.sign: ts.sgn,
-           sympy.ceiling: ts.ceil,
-           sympy.floor: ts.floor,
-#           round_half_to_even, round_half_away_from_zero,
-           #lambda x: sympy.Mul(x, -1): ts.neg,
-           #lambda x: sympy.Pow(x, -1): ts.inv,
-           sympy.log: ts.log,
-           #lambda x: log(1 + p): ts.log1p,
-           #log2, log10,
-           sympy.exp: ts.exp,
-           #exp2,
-           #lambda x: sympy.Mul(x, x): ts.sqr,
-           sympy.sqrt: ts.sqrt,
-           sympy.cos: ts.cos,
-           sympy.acos: ts.arccos,
-           sympy.sin: ts.sin,
-           sympy.asin: ts.arcsin,
-           sympy.tan: ts.tan,
-           sympy.atan: ts.arctan,
-           sympy.atan2: ts.arctan2,
-           sympy.cosh: ts.cosh,
-           sympy.acosh: ts.arccosh,
-           sympy.sinh: ts.sinh,
-           sympy.asinh: ts.arcsinh,
-           sympy.tanh: ts.tanh,
-           sympy.atanh: ts.arctanh,
-           sympy.re: ts.real,
-           sympy.im: ts.imag,
-           sympy.arg: ts.angle,
-           sympy.erf: ts.erf,
-           sympy.gamma: ts.gamma,
-           sympy.loggamma: ts.gammaln,
-           sympy.Pow: ts.pow,
-           sympy.Eq: ts.eq,
-           sympy.Gt: ts.gt,
-           sympy.Lt: ts.lt,
-           sympy.Le: ts.le,
-           sympy.Ge: ts.ge,
-#           switch,
-           sympy.Max: ts.maximum,  # Sympy accept >2 inputs, Theano only 2
-           sympy.Min: ts.minimum,  # Sympy accept >2 inputs, Theano only 2
+    mapping = {
+            sympy.Add: ts.add,
+            sympy.Mul: ts.mul,
+            sympy.Abs: ts.abs_,
+            sympy.sign: ts.sgn,
+            sympy.ceiling: ts.ceil,
+            sympy.floor: ts.floor,
+            sympy.log: ts.log,
+            sympy.exp: ts.exp,
+            sympy.sqrt: ts.sqrt,
+            sympy.cos: ts.cos,
+            sympy.acos: ts.arccos,
+            sympy.sin: ts.sin,
+            sympy.asin: ts.arcsin,
+            sympy.tan: ts.tan,
+            sympy.atan: ts.arctan,
+            sympy.atan2: ts.arctan2,
+            sympy.cosh: ts.cosh,
+            sympy.acosh: ts.arccosh,
+            sympy.sinh: ts.sinh,
+            sympy.asinh: ts.arcsinh,
+            sympy.tanh: ts.tanh,
+            sympy.atanh: ts.arctanh,
+            sympy.re: ts.real,
+            sympy.im: ts.imag,
+            sympy.arg: ts.angle,
+            sympy.erf: ts.erf,
+            sympy.gamma: ts.gamma,
+            sympy.loggamma: ts.gammaln,
+            sympy.Pow: ts.pow,
+            sympy.Eq: ts.eq,
+            sympy.Gt: ts.gt,
+            sympy.Lt: ts.lt,
+            sympy.Le: ts.le,
+            sympy.Ge: ts.ge,
+            sympy.Max: ts.maximum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.Min: ts.minimum,  # Sympy accept >2 inputs, Theano only 2
 
-           sympy.MatAdd: tt.Elemwise(ts.add),
-           sympy.HadamardProduct: tt.Elemwise(ts.mul),
-           sympy.Trace: tlinalg.trace,
-           sympy.Inverse: tlinalg.matrix_inverse,
-           sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
-}
+            # Matrices
+            sympy.MatAdd: tt.Elemwise(ts.add),
+            sympy.HadamardProduct: tt.Elemwise(ts.mul),
+            sympy.Trace: tlinalg.trace,
+            sympy.Inverse: tlinalg.matrix_inverse,
+            sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
+    }
 
 class TheanoPrinter(Printer):
     """ Code printer for Theano computations """
@@ -80,7 +69,7 @@ class TheanoPrinter(Printer):
         if key in self.cache:
             return self.cache[key]
         else:
-            value = Scalar(dtype)(s.name)
+            value = ts.Scalar(dtype)(s.name)
             self.cache[key] = value
             return value
 
@@ -130,14 +119,10 @@ class TheanoPrinter(Printer):
         """Returns printer's representation for expr (as a string)"""
         return self._print(expr, dtypes)
 
+
 def theano_code(expr, dtypes={}, **settings):
     return TheanoPrinter(settings).doprint(expr, dtypes)
 
-def unpack(coll):
-    if len(coll) == 1:
-        return coll[0]
-    else:
-        return coll
 
 def dim_handling(inputs, dim=None, dims={}, broadcastable={}, keys=()):
     """ Handle various input types for dimensions in tensor_wrap
@@ -168,12 +153,13 @@ def tensor_wrap(inputs, outputs, **kwargs):
     Toutputs = tt.Elemwise(ts.Composite(inputs, outputs))(*Tinputs)
     return Tinputs, Toutputs
 
+
 def theano_function(inputs, outputs, dtypes={}, **kwargs):
     """ Create Theano function from SymPy expressions """
     tinputs  = [theano_code(i, dtypes) for i in inputs]
     toutputs = [theano_code(o, dtypes) for o in outputs]
     if not kwargs:
-        toutputs = unpack(toutputs)
+        toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
         return theano.function(tinputs, toutputs)
     else:
         Tinputs, Toutputs = tensor_wrap(tinputs, toutputs, keys=inputs, **kwargs)
