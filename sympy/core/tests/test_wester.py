@@ -876,3 +876,24 @@ def test_M21():
 
 def test_M22():
     assert solve(2*sqrt(x) + 3*x**R(1,4) -2) == [R(1,16)]
+
+
+def test_M23():
+    #first root of the equation without simplify function write in other form
+    assert solve(x-1/sqrt(1+x**2)) == [simplify(-I*sqrt( (sqrt(5) + 1)/2 )),sqrt( (sqrt(5) - 1)/2 )]
+
+
+def test_M24():
+    solution =solve(1-binomial(m, 2)*2**k,k)
+    # solution has the form log(2/(m**2-m)), 2)
+    good= log(2/(m*(m-1)), 2)
+    assert solution[0].expand() == good.expand() 
+
+
+@XFAIL
+def test_M25():
+    raise NotImplementedError("solve(a*b**x-c*d**x) == log(c/a)/log(b/d)")
+
+
+def test_M26():
+    assert solve(sqrt(log(x))-log(sqrt(x))) == [1, exp(4)]
