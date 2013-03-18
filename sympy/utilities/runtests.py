@@ -566,6 +566,9 @@ def _doctest(*paths, **kwargs):
         # can be removed once a fix for Issue 3696 is merged
         blacklist.extend(["sympy/galgebra/latex_ex.py"])
 
+    if import_module('pyglet') is None:
+        blacklist.extend(["sympy/plotting/pygletplot"])
+
 
     # pytest = import_module('pytest')
     # py = import_module('py')
