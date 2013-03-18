@@ -1,5 +1,7 @@
 """Sparse rational function fields. """
 
+from operator import add, mul
+
 from sympy.core.expr import Expr
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.rings import PolyElement
@@ -70,7 +72,19 @@ class FracField(DefaultPrinting):
         return self.domain.convert(element)
 
     def ground_new(self, element):
-        return self.new(self.ring.ground_new(element))
+        try:
+            return self.new(self.ring.ground_new(element))
+        except CoercionFailed:
+            domain = self.domain
+
+            if domain.has_Ring and domain.has_assoc_Field:
+                ground_field = domain.get_field()
+                element = ground_field.convert(element)
+                numer = ground_field.numer(element)
+                denom = ground_field.denom(element)
+                return self.new(numer, denom)
+            else:
+                raise
 
     def field_new(self, element):
         if isinstance(element, FracElement):
@@ -95,9 +109,8 @@ class FracField(DefaultPrinting):
 
     __call__ = field_new
 
-    @staticmethod
-    def _rebuild_expr(expr, mapping, domain):
-        from operator import add, mul
+    def _rebuild_expr(self, expr, mapping):
+        domain = self.domain
 
         def _rebuild(expr):
             generator = mapping.get(expr)
@@ -125,7 +138,7 @@ class FracField(DefaultPrinting):
         mapping = dict(zip(self.symbols, self.gens))
 
         try:
-            frac = self._rebuild_expr(expr, mapping, self.domain)
+            frac = self._rebuild_expr(expr, mapping)
         except CoercionFailed:
             raise ValueError("expected an expression convertible to a rational function in %s, got %s" % (self, expr))
         else:
@@ -152,7 +165,7 @@ class FracElement(CantSympify, DefaultPrinting):
 
     def __init__(self, field, numer, denom=None):
         if denom is not None:
-            if denom == numer.ring.zero:
+            if not denom:
                 raise ZeroDivisionError
         else:
             denom = numer.ring.one

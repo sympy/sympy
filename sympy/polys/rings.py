@@ -1,5 +1,7 @@
 """Sparse polynomial rings. """
 
+from operator import add, mul
+
 from sympy.core.expr import Expr
 from sympy.core.symbol import symbols as _symbols
 from sympy.core.numbers import igcd
@@ -137,9 +139,8 @@ class PolyRing(DefaultPrinting, IPolys):
 
     __call__ = ring_new
 
-    @staticmethod
-    def _rebuild_expr(expr, mapping, domain):
-        from operator import add, mul
+    def _rebuild_expr(self, expr, mapping):
+        domain = self.domain
 
         def _rebuild(expr):
             generator = mapping.get(expr)
@@ -161,7 +162,7 @@ class PolyRing(DefaultPrinting, IPolys):
         mapping = dict(zip(self.symbols, self.gens))
 
         try:
-            poly = self._rebuild_expr(expr, mapping, self.domain)
+            poly = self._rebuild_expr(expr, mapping)
         except CoercionFailed:
             raise ValueError("expected an expression convertible to a polynomial in %s, got %s" % (self, expr))
         else:

@@ -240,3 +240,7 @@ def time_verify_sol_165x165():
     sol = sol_165x165()
     zeros = [ eq.compose(sol) for eq in eqs ]
     assert all([ zero == 0 for zero in zeros ])
+
+def time_to_expr_eqs_165x165():
+    eqs = eqs_165x165()
+    assert [ R_165.from_expr(eq.as_expr()) for eq in eqs ] == eqs
