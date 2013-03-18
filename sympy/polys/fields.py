@@ -200,6 +200,26 @@ class FracElement(CantSympify, DefaultPrinting):
         """Negate all cefficients in ``f``. """
         return f.raw_new(-f.numer, f.denom)
 
+    def _extract_ground(self, element):
+        domain = self.field.domain
+
+        try:
+            element = domain.convert(element)
+        except CoercionFailed:
+            if domain.has_Ring and domain.has_assoc_Field:
+                ground_field = domain.get_field()
+
+                try:
+                    element = ground_field.convert(element)
+                except CoercionFailed:
+                    pass
+                else:
+                    return -1, ground_field.numer(element), ground_field.denom(element)
+
+            return 0, None, None
+        else:
+            return 1, element, None
+
     def __add__(f, g):
         """Add rational functions ``f`` and ``g``. """
         field = f.field
@@ -216,12 +236,17 @@ class FracElement(CantSympify, DefaultPrinting):
         elif isinstance(g, PolyElement) and field.ring != g.ring:
             return g.__radd__(f)
 
-        return f.new(f.numer + f.denom*g, f.denom)
+        return f.__radd__(g)
 
     def __radd__(f, c):
-        numer = f.numer + f.denom*c
-        denom = f.denom
-        return f.new(numer, denom)
+        op, g_numer, g_denom = f._extract_ground(c)
+
+        if op == 1:
+            return f.new(f.numer + f.denom*g_numer, f.denom)
+        elif not op:
+            return NotImplemented
+        else:
+            return f.new(f.numer*g_denom + f.denom*g_numer, f.denom*g_denom)
 
     def __sub__(f, g):
         """Subtract rational functions ``f`` and ``g``. """
@@ -239,12 +264,24 @@ class FracElement(CantSympify, DefaultPrinting):
         elif isinstance(g, PolyElement) and field.ring != g.ring:
             return g.__rsub__(f)
 
-        return f.new(f.numer - f.denom*g, f.denom)
+        op, g_numer, g_denom = f._extract_ground(g)
+
+        if op == 1:
+            return f.new(f.numer - f.denom*g_numer, f.denom)
+        elif not op:
+            return NotImplemented
+        else:
+            return f.new(f.numer*g_denom - f.denom*g_numer, f.denom*g_denom)
 
     def __rsub__(f, c):
-        numer = -f.numer + f.denom*c
-        denom =  f.denom
-        return f.new(numer, denom)
+        op, g_numer, g_denom = f._extract_ground(c)
+
+        if op == 1:
+            return f.new(-f.numer + f.denom*g_numer, f.denom)
+        elif not op:
+            return NotImplemented
+        else:
+            return f.new(-f.numer*g_denom + f.denom*g_numer, f.denom*g_denom)
 
     def __mul__(f, g):
         """Multiply rational functions ``f`` and ``g``. """
@@ -262,10 +299,17 @@ class FracElement(CantSympify, DefaultPrinting):
         elif isinstance(g, PolyElement) and field.ring != g.ring:
             return g.__rmul__(f)
 
-        return f.new(f.numer*g, f.denom)
+        return f.__rmul__(g)
 
     def __rmul__(f, c):
-        return f.new(f.numer*c, f.denom)
+        op, g_numer, g_denom = f._extract_ground(c)
+
+        if op == 1:
+            return f.new(f.numer*g_numer, f.denom)
+        elif not op:
+            return NotImplemented
+        else:
+            return f.new(f.numer*g_numer, f.denom*g_denom)
 
     def __truediv__(f, g):
         """Computes quotient of fractions ``f`` and ``g``. """
@@ -283,12 +327,26 @@ class FracElement(CantSympify, DefaultPrinting):
         elif isinstance(g, PolyElement) and field.ring != g.ring:
             return g.__rtruediv__(f)
 
-        return f.new(f.numer, f.denom*g)
+        op, g_numer, g_denom = f._extract_ground(g)
+
+        if op == 1:
+            return f.new(f.numer, f.denom*g_numer)
+        elif not op:
+            return NotImplemented
+        else:
+            return f.new(f.numer*g_denom, f.denom*g_numer)
 
     __div__ = __truediv__
 
     def __rtruediv__(f, c):
-        return f.new(f.denom*c, f.numer)
+        op, g_numer, g_denom = f._extract_ground(c)
+
+        if op == 1:
+            return f.new(f.denom*g_numer, f.numer)
+        elif not op:
+            return NotImplemented
+        else:
+            return f.new(f.denom*g_numer, f.numer*g_denom)
 
     __rdiv__ = __rtruediv__
 

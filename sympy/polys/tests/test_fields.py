@@ -90,17 +90,29 @@ def test_FracElement___add__():
     f, g = 1/x, 1/y
     assert f + g == g + f == (x + y)/(x*y)
 
+    F, x,y = field("x,y", ZZ)
+    assert x + 3 == 3 + x
+    assert x + QQ(3,7) == QQ(3,7) + x == (7*x + 3)/7
+
 def test_FracElement___sub__():
     F, x,y = field("x,y", QQ)
 
     f, g = 1/x, 1/y
     assert f - g == (-x + y)/(x*y)
 
+    F, x,y = field("x,y", ZZ)
+    assert x - 3 == -(3 - x)
+    assert x - QQ(3,7) == -(QQ(3,7) - x) == (7*x - 3)/7
+
 def test_FracElement___mul__():
     F, x,y = field("x,y", QQ)
 
     f, g = 1/x, 1/y
     assert f*g == g*f == 1/(x*y)
+
+    F, x,y = field("x,y", ZZ)
+    assert x*3 == 3*x
+    assert x*QQ(3,7) == QQ(3,7)*x == 3*x/7
 
     Fuv, u,v = field("u,v", ZZ);
     Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
@@ -114,6 +126,10 @@ def test_FracElement___div__():
 
     f, g = 1/x, 1/y
     assert f/g == y/x
+
+    F, x,y = field("x,y", ZZ)
+    assert x*3 == 3*x
+    assert x/QQ(3,7) == (QQ(3,7)/x)**-1 == 7*x/3
 
 def test_FracElement___pow__():
     F, x,y = field("x,y", QQ)
