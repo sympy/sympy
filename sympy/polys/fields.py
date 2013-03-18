@@ -111,7 +111,13 @@ class FracField(DefaultPrinting):
             elif expr.is_Pow and expr.exp.is_Integer:
                 return _rebuild(expr.base)**int(expr.exp)
             else:
-                return domain.convert(expr)
+                try:
+                    return domain.convert(expr)
+                except CoercionFailed:
+                    if domain.has_Ring and domain.has_assoc_Field:
+                        return domain.get_field().convert(expr)
+                    else:
+                        raise
 
         return _rebuild(sympify(expr))
 
