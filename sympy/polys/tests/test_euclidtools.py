@@ -357,6 +357,9 @@ def test_dup_gcd():
 
     h = 1
 
+    cff = f
+    cfg = g
+
     assert R.dup_qq_heu_gcd(f, g) == (h, cff, cfg)
     assert R.dup_ff_prs_gcd(f, g) == (h, cff, cfg)
 
