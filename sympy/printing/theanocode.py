@@ -132,15 +132,15 @@ def dim_handling(inputs, dim=None, dims={}, broadcastable={}, keys=()):
         theano_funciton
     """
     if keys:
-        dims = {i: dims[oi] for i, oi in zip(inputs, keys) if oi in dims}
-        broadcastable = {i: broadcastable[oi]
-                for i, oi in zip(inputs, keys) if oi in broadcastable}
+        dims = dict((i, dims[oi]) for i, oi in zip(inputs, keys) if oi in dims)
+        broadcastable = dict((i, broadcastable[oi])
+                for i, oi in zip(inputs, keys) if oi in broadcastable)
     if dim:
         dims = dict(zip(inputs, [dim]*len(inputs)))
     if dims:
         maxdim = max(dims.values())
-        broadcastable = {i: (False,)*dims[i] + (True,)*(maxdim-dims[i])
-                         for i in inputs}
+        broadcastable = dict((i, (False,)*dims[i] + (True,)*(maxdim-dims[i]))
+                         for i in inputs)
     return broadcastable
 
 
