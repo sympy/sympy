@@ -116,6 +116,10 @@ class TheanoPrinter(Printer):
         return ts.true_div(self._print(expr.p, dtypes),
                            self._print(expr.q, dtypes))
 
+    def _print_Integer(self, expr, dtypes):
+        return expr.p
+
+
     def emptyPrinter(self, expr):
         return expr
 

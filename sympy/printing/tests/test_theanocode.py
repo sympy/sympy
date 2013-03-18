@@ -96,3 +96,6 @@ def test_tensor_wrap():
 def test_Rationals():
     assert theq(theano_code(sympy.Integer(2) / 3), ts.true_div(2, 3))
     assert theq(theano_code(S.Half), ts.true_div(1, 2))
+
+def test_Integers():
+    assert theano_code(sympy.Integer(3)) == 3
