@@ -844,6 +844,10 @@ def test_M15():
 
 @XFAIL
 def test_M16():
+    # work
+    #assert solve(sin(x) - sin(x)/cos(x)) == [0]
+    #fail
+    #assert solve(sin(x) - tan(x)) == [0]
     raise NotImplementedError("solve(sin(x)-tan(x),x)")
 
 
@@ -868,3 +872,7 @@ def test_M20():
 
 def test_M21():
     assert solve(x + sqrt(x) -2) == [1]
+
+
+def test_M22():
+    assert solve(2*sqrt(x) + 3*x**R(1,4) -2) == [R(1,16)]
