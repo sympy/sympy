@@ -604,9 +604,6 @@ class DifferentialExtension(object):
         self.Tfuncs = []
         self.newf = self.f
 
-    # TODO: DE.decrement_level() ... DE.increment_level() code blocks would
-    # be an excelent use of with statement context managers, I think.
-    # We would have to remove Python 2.4 support first.
     def increment_level(self):
         """
         Increment the level of self.
