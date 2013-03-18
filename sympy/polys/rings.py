@@ -91,7 +91,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
     def __eq__(self, other):
         return isinstance(other, PolyRing) and \
-               self.ngens == other.ngens and \
+               self.symbols == other.symbols and \
                self.domain == other.domain and \
                self.order == other.order
 

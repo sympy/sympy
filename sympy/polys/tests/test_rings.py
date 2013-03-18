@@ -25,6 +25,13 @@ def test_PolyRing___hash__():
     R, x, y, z = ring("x,y,z", QQ)
     assert hash(R)
 
+def test_PolyRing___eq__():
+    assert ring("x,y,z", QQ)[0] == ring("x,y,z", QQ)[0]
+    assert ring("x,y,z", QQ)[0] != ring("x,y,z", ZZ)[0]
+    assert ring("x,y,z", ZZ)[0] != ring("x,y,z", QQ)[0]
+    assert ring("x,y,z", QQ)[0] != ring("x,y", QQ)[0]
+    assert ring("x,y", QQ)[0] != ring("x,y,z", QQ)[0]
+
 def test_PolyElement___hash__():
     R, x, y, z = ring("x,y,z", QQ)
     assert hash(x*y*z)

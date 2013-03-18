@@ -98,7 +98,7 @@ def dup_sqf_norm(f, K):
 
     >>> K = QQ.algebraic_field(sqrt(3))
     >>> R, x = ring("x", K)
-    >>> _, t = ring("t", QQ)
+    >>> _, X = ring("x", QQ)
 
     >>> s, f, r = R.dup_sqf_norm(x**2 - 2)
 
@@ -106,7 +106,7 @@ def dup_sqf_norm(f, K):
     True
     >>> f == x**2 + K([QQ(-2), QQ(0)])*x + 1
     True
-    >>> r == t**4 - 10*t**2 + 1
+    >>> r == X**4 - 10*X**2 + 1
     True
 
     """
@@ -143,7 +143,7 @@ def dmp_sqf_norm(f, u, K):
 
     >>> K = QQ.algebraic_field(I)
     >>> R, x, y = ring("x,y", K)
-    >>> _, u, v = ring("u,v", QQ)
+    >>> _, X, Y = ring("x,y", QQ)
 
     >>> s, f, r = R.dmp_sqf_norm(x*y + y**2)
 
@@ -151,7 +151,7 @@ def dmp_sqf_norm(f, u, K):
     True
     >>> f == x*y + y**2 + K([QQ(-1), QQ(0)])*y
     True
-    >>> r == u**2*v**2 + 2*u*v**3 + v**4 + v**2
+    >>> r == X**2*Y**2 + 2*X*Y**3 + Y**4 + Y**2
     True
 
     """
