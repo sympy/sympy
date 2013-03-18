@@ -85,18 +85,20 @@ def encipher_shift(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     ALGORITHM:
         INPUT:
-          k - an integer from 0 to 25 (the secret key)
-          m - string of upper-case letters (the plaintext message)
-        OUTPUT:
-          c - string of upper-case letters (the ciphertext message)
+            k: an integer from 0 to 25 (the secret key)
+            m: string of upper-case letters (the plaintext message)
 
-        Step 0: Identify the alphabet A, ..., Z with the integers 0, ..., 25.
-        Step 1: Compute from the string m a list L1 of corresponding
-                integers.
-        Step 2: Compute from the list L1 a new list L2, given by
-                adding (k mod 26) to each element in L1.
-        Step 3: Compute from the list L2 a string c of corresponding
-                letters.
+        OUTPUT:
+            c: string of upper-case letters (the ciphertext message)
+
+        STEPS:
+            0. Identify the alphabet A, ..., Z with the integers 0, ..., 25.
+            1. Compute from the string m a list L1 of corresponding
+               integers.
+            2. Compute from the list L1 a new list L2, given by
+               adding (k mod 26) to each element in L1.
+            3. Compute from the list L2 a string c of corresponding
+               letters.
 
     Examples
     ========
@@ -136,18 +138,20 @@ def encipher_affine(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     ALGORITHM:
         INPUT:
-          a, b - a pair integers, where `gcd(a, 26) = 1` (the secret key)
-          m - string of upper-case letters (the plaintext message)
-        OUTPUT:
-          c - string of upper-case letters (the ciphertext message)
+            a, b: a pair integers, where `gcd(a, 26) = 1` (the secret key)
+            m: string of upper-case letters (the plaintext message)
 
-        Step 0: Identify the alphabet "A", ..., "Z" with the integers 0, ..., 25.
-        Step 1: Compute from the string m a list L1 of corresponding
-                integers.
-        Step 2: Compute from the list L1 a new list L2, given by
-                replacing `x` by  `ax+b` (mod `26`), for each element x in L1.
-        Step 3: Compute from the list L2 a string c of corresponding
-                letters.
+        OUTPUT:
+            c: string of upper-case letters (the ciphertext message)
+
+        STEPS:
+            0. Identify the alphabet "A", ..., "Z" with the integers 0, ..., 25.
+            1. Compute from the string m a list L1 of corresponding
+               integers.
+            2. Compute from the list L1 a new list L2, given by
+               replacing `x` by  `ax+b` (mod `26`), for each element x in L1.
+            3. Compute from the list L2 a string c of corresponding
+               letters.
 
 
     Examples
@@ -235,7 +239,7 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     This cipher was used in the 1700's, for example, during the American Civil War.
     The Confederacy used a brass cipher disk to implement the Vigenere cipher
-    (now on display in the NSA Museum in Fort Meade) [1].
+    (now on display in the NSA Museum in Fort Meade) [1]_.
 
     The Vigenere cipher is a generalization of the shift cipher.
     Whereas the shift cipher shifts each letter by the same amount (that amount
@@ -255,23 +259,25 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     ALGORITHM:
         INPUT:
-          key - a string of upper-case letters (the secret key)
-          m - string of upper-case letters (the plaintext message)
-        OUTPUT:
-          c - string of upper-case letters (the ciphertext message)
+            key: a string of upper-case letters (the secret key)
+            m: string of upper-case letters (the plaintext message)
 
-      Identify the alphabet A, ..., Z with the integers 0, ..., 25.
-        Step 1: Compute from the string key a list L1 of corresponding
-                integers. Let n1 = len(L1).
-        Step 2: Compute from the string m a list L2 of corresponding
-                integers. Let n2 = len(L2).
-        Step 3: Break L2 up sequencially into sublists of size n1, and one sublist
-                at the end of size <=n1.
-        Step 4: For each of these sublists L of L2, compute a new list C given by
-                C[i] = L[i]+L1[i] (mod 26) to the i-th element in the sublist,
-                for each i.
-        Step 5: Assemble these lists C by concatenation into a new list of length n2.
-        Step 6: Compute from the new list a string c of corresponding letters.
+        OUTPUT:
+            c: string of upper-case letters (the ciphertext message)
+
+        STEPS:
+            0. Identify the alphabet A, ..., Z with the integers 0, ..., 25.
+            1. Compute from the string key a list L1 of corresponding
+               integers. Let n1 = len(L1).
+            2. Compute from the string m a list L2 of corresponding
+               integers. Let n2 = len(L2).
+            3. Break L2 up sequencially into sublists of size n1, and one sublist
+               at the end of size <=n1.
+            4. For each of these sublists L of L2, compute a new list C given by
+               C[i] = L[i]+L1[i] (mod 26) to the i-th element in the sublist,
+               for each i.
+            5. Assemble these lists C by concatenation into a new list of length n2.
+            6. Compute from the new list a string c of corresponding letters.
 
     Once it is known that the key is, say, `n` characters long, frequency analysis
     can be applied to every $n-th$ letter of the ciphertext to determine the plaintext.
@@ -283,26 +289,28 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     ALGORITHM:
         INPUT:
-          key - a string of upper-case letters (the secret key)
-          m - string of upper-case letters (the plaintext message)
-        OUTPUT:
-          c - string of upper-case letters (the ciphertext message)
+          key: a string of upper-case letters (the secret key)
+          m: string of upper-case letters (the plaintext message)
 
-      Identify the alphabet A, ..., Z with the integers 0, ..., 25.
-        Step 1: Compute from the string m a list L2 of corresponding
+        OUTPUT:
+          c: string of upper-case letters (the ciphertext message)
+
+        STEPS:
+            0. Identify the alphabet A, ..., Z with the integers 0, ..., 25.
+            1. Compute from the string m a list L2 of corresponding
                 integers. Let n2 = len(L2).
-        Step 2: Let n1 be the length of the key. Concatenate the string
+            2. Let n1 be the length of the key. Concatenate the string
                 key with the first n2-n1 characters of the plaintext message.
                 Compute from this string of length n2 a list L1 of corresponding
                 integers. Note n2 = len(L1).
-        Step 3: Compute a new list C given by C[i] = L1[i]+L2[i] (mod 26), for each i.
+            3. Compute a new list C given by C[i] = L1[i]+L2[i] (mod 26), for each i.
                 Note n2 = len(C).
-        Step 5: Compute from the new list a string c of corresponding letters.
+            4. Compute from the new list a string c of corresponding letters.
 
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Vigenere_cipher
+    .. [1] http://en.wikipedia.org/wiki/Vigenere_cipher
 
     Examples
     ========
@@ -403,7 +411,7 @@ def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     Notes
     =====
 
-    The Hill cipher [1], invented by Lester S. Hill in 1920's [2],
+    The Hill cipher [1]_, invented by Lester S. Hill in 1920's [2]_,
     it was the first polygraphic cipher in which it was practical (though barely)
     to operate on more than three symbols at once. The following discussion assumes
     an elementary knowledge of matrices.
@@ -418,30 +426,32 @@ def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 
     ALGORITHM:
         INPUT:
-          key - a kxk invertible matrix K, all of whose entries are in `Z_{26}`
-          m -   string of n upper-case letters (the plaintext message)
-                (Note: Sage assumes that n is a multiple of k.)
-        OUTPUT:
-          c - string of upper-case letters (the ciphertext message)
+            key: a kxk invertible matrix K, all of whose entries are in `Z_{26}`
+            m: string of n upper-case letters (the plaintext message)
+            (Note: Sage assumes that n is a multiple of k.)
 
-      Identify the alphabet A, ..., Z with the integers 0, ..., 25.
-        Step 1: Compute from the string m a list L of corresponding
+        OUTPUT:
+            c: string of upper-case letters (the ciphertext message)
+
+        STEPS:
+            0. Identify the alphabet A, ..., Z with the integers 0, ..., 25.
+            1. Compute from the string m a list L of corresponding
                 integers. Let n = len(L).
-        Step 2: Break the list L up into t = ceiling(n/k) sublists
+            2. Break the list L up into t = ceiling(n/k) sublists
                 L_1, ..., L_t of size k (where the last list might be
                 "padded" by 0's to ensure it is size k).
-        Step 3: Compute new list C_1, ..., C_t given by C[i] = K*L_i
+            3. Compute new list C_1, ..., C_t given by C[i] = K*L_i
                 (arithmetic is done mod 26), for each i.
-        Step 4: Concatenate these into a list C = C_1 + ... + C_t.
-        Step 5: Compute from C a string c of corresponding letters.
-                This has length k*t.
+            4. Concatenate these into a list C = C_1 + ... + C_t.
+            5. Compute from C a string c of corresponding letters.
+               This has length k*t.
 
     References
     ==========
 
-        [1] en.wikipedia.org/wiki/Hill_cipher
-        [2] Lester S. Hill, Cryptography in an Algebraic Alphabet,
-            The American Mathematical Monthly Vol.36, June-July 1929, pp.306-312.
+    .. [1] en.wikipedia.org/wiki/Hill_cipher
+    .. [2] Lester S. Hill, Cryptography in an Algebraic Alphabet, The American
+       Mathematical Monthly Vol.36, June-July 1929, pp.306-312.
 
     Examples
     ========
@@ -522,16 +532,13 @@ def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
 def encipher_bifid5(pt, key, verbose=False):
     """
     INPUT:
+        pt: plaintext string (no "j"s)
 
-    * pt - plaintext string (no "j"s)
-
-    * key - short string for key (no repetitions, no "j"s)
+        key: short string for key (no repetitions, no "j"s)
 
     OUTPUT:
-
-    * ciphertext (using Bifid5 cipher in all caps, no spaces, no "J"s)
-
-    * if verbose = True then it also outputs the pairs of integers comprising the "long key"
+        ciphertext (using Bifid5 cipher in all caps, no spaces, no "J"s)
+        if verbose = True then it also outputs the pairs of integers comprising the "long key"
 
     This is the version of the Bifid cipher that uses the `5 x 5` Polybius square.
 
@@ -587,27 +594,31 @@ def bifid5_square(key):
 
     ALGORITHM: (5x5 case)
         INPUT:
-            key - a string of letters for the key (no repetitions)
-             pt - a string of letters for the plaintext (length n)
-        OUTPUT:
-             ct - ciphertext message
+            key: a string of letters for the key (no repetitions)
+            pt: a string of letters for the plaintext (length n)
 
-    Step 1: Create the 5x5 Polybius square S associated to the k as
-            follows:
-            a) starting top left, moving left-to-right, top-to-bottom,
-               place the letters of the key into a 5x5 matrix,
-            b) when finished, add the letters of the alphabet
-               not in the key until the 5x5 square is filled
-    Step 2: Create a list P of pairs of numbers which are the coordinates
-            in the Polybius square of the letters in pt.
-    Step 3: Let L1 be the list of all first coordinates of P (length of L1 = n),
-            let L2 be the list of all second coordinates of P (so the
-            length of L2 is also n)
-    Step 4: Let L be the concatenation of L1 and L2 (so length L = 2n),
-            except that consecutive numbers are paired (L[2i], L[2i+1]).
-            You can regard L as a list of pairs of length n.
-    Step 5: Let C be the list of all letters which are of the form
-            S[i,j], for all (i,j) in L. As a string, this is the ciphertext ct.
+        OUTPUT:
+            ct: ciphertext message
+
+        STEPS:
+            1. Create the 5x5 Polybius square S associated to the k as
+               follows:
+
+                a) starting top left, moving left-to-right, top-to-bottom,
+                   place the letters of the key into a 5x5 matrix,
+                b) when finished, add the letters of the alphabet
+                   not in the key until the 5x5 square is filled
+
+            2. Create a list P of pairs of numbers which are the coordinates
+               in the Polybius square of the letters in pt.
+            3. Let L1 be the list of all first coordinates of P (length of L1 = n),
+               let L2 be the list of all second coordinates of P (so the
+               length of L2 is also n)
+            4. Let L be the concatenation of L1 and L2 (so length L = 2n),
+               except that consecutive numbers are paired (L[2i], L[2i+1]).
+               You can regard L as a list of pairs of length n.
+            5. Let C be the list of all letters which are of the form
+               S[i,j], for all (i,j) in L. As a string, this is the ciphertext ct.
 
     Examples
     ========
@@ -637,9 +648,8 @@ def bifid5_square(key):
 def decipher_bifid5(ct, key):
     """
     INPUT:
-
-    * ct  - ciphertext string      (digits okay)
-    * key - short string for key (no repetitions, digits okay)
+        ct: ciphertext string      (digits okay)
+        key: short string for key (no repetitions, digits okay)
 
     OUTPUT:
         plaintext from Bifid5 cipher (all caps, no spaces, no "J"s)
@@ -712,10 +722,8 @@ def bifid7_square(key):
 def encipher_bifid7(pt, key):
     """
     INPUT:
-
-    * pt - plaintext string      (digits okay)
-
-    * key - short string for key (no repetitions, digits okay)
+        pt: plaintext string      (digits okay)
+        key: short string for key (no repetitions, digits okay)
 
     OUTPUT:
         ciphertext from Bifid7 cipher (all caps, no spaces)
@@ -755,10 +763,8 @@ def encipher_bifid6(pt, key, verbose = False):
     Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
 
     INPUT:
-
-    * pt - plaintext string      (digits okay)
-
-    * key - short string for key (no repetitions, digits okay)
+        pt: plaintext string      (digits okay)
+        key: short string for key (no repetitions, digits okay)
 
     OUTPUT:
 
@@ -804,9 +810,8 @@ def decipher_bifid6(ct, key):
     Assumes alphabet of symbols is "A", ..., "Z", "0", ..., "9".
 
     INPUT:
-
-    * ct  - ciphertext string      (digits okay)
-    * key - short string for key (no repetitions, digits okay)
+        ct: ciphertext string      (digits okay)
+        key: short string for key (no repetitions, digits okay)
 
     OUTPUT:
         plaintext from Bifid cipher (all caps, no spaces)
@@ -1069,15 +1074,16 @@ def lfsr_sequence(key, fill, n):
     This function creates an lfsr sequence.
 
     INPUT:
-    -  key - a list of finite field elements,
-       `[c_0,c_1,...,c_k].`
-    -  fill - the list of the initial terms of the lfsr
-       sequence, `[x_0,x_1,...,x_k].`
-    -  n - number of terms of the sequence that the
-       function returns.
+        key: a list of finite field elements,
+            `[c_0,c_1,...,c_k].`
+        fill: the list of the initial terms of the lfsr
+            sequence, `[x_0,x_1,...,x_k].`
+        n: number of terms of the sequence that the
+            function returns.
 
-    OUTPUT: The lfsr sequence defined by `x_{n+1} = c_kx_n+...+c_0x_{n-k}`, for
-    `n \leq k`.
+    OUTPUT:
+        The lfsr sequence defined by `x_{n+1} = c_kx_n+...+c_0x_{n-k}`, for
+        `n \leq k`.
 
     Notes
     =====
@@ -1123,7 +1129,7 @@ def lfsr_sequence(key, fill, n):
     References
     ==========
 
-    [G] Solomon Golomb, Shift register sequences, Aegean Park Press, Laguna Hills, Ca, 1967
+    .. [G] Solomon Golomb, Shift register sequences, Aegean Park Press, Laguna Hills, Ca, 1967
 
     Examples
     ========
@@ -1160,15 +1166,12 @@ def lfsr_autocorrelation(L, P, k):
     This function computes the autocorrelation function.
 
     INPUT:
+        L: is a periodic sequence of elements of `GF(2)`. L must have length ` > P`
+        P: the period of L
+        k: an integer (`0 < k < p`)
 
-    *  L - is a periodic sequence of elements of `GF(2)`. L must have length ` > P`
-
-    *  P - the period of L
-
-    *  k - an integer (`0 < k < p`)
-
-
-    OUTPUT: the kth value of the autocorrelation of the LFSR L
+    OUTPUT:
+        the kth value of the autocorrelation of the LFSR L
 
     Examples
     ========
@@ -1198,12 +1201,12 @@ def lfsr_autocorrelation(L, P, k):
 def lfsr_connection_polynomial(s):
     """
     INPUT:
-    -  `s` - a sequence of elements of even length, with entries in a finite field
+        s: a sequence of elements of even length, with entries in a finite field
 
     OUTPUT:
-    -  `C(x)` - the connection polynomial of a minimal LFSR yielding `s`.
+        C(x): the connection polynomial of a minimal LFSR yielding `s`.
 
-    This implements the algorithm in section 3 of J. L. Massey's article [M].
+    This implements the algorithm in section 3 of J. L. Massey's article [M]_.
 
     Examples
     ========
@@ -1231,8 +1234,8 @@ def lfsr_connection_polynomial(s):
     References
     ==========
 
-    [M] James L. Massey, "Shift-Register Synthesis and BCH Decoding."
-    IEEE Trans. on Information Theory, vol. 15(1), pp. 122-127, Jan 1969.
+    .. [M] James L. Massey, "Shift-Register Synthesis and BCH Decoding."
+        IEEE Trans. on Information Theory, vol. 15(1), pp. 122-127, Jan 1969.
 
     """
     from sympy import Symbol
