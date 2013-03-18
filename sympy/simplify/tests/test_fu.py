@@ -270,6 +270,13 @@ def test_fu():
     assert fu(expr) == sin(1024)/(1024*sin(1))
 
 
+def test_objective():
+    assert fu(sin(x)/cos(x), measure=lambda x: x.count_ops()) == \
+            tan(x)
+    assert fu(sin(x)/cos(x), measure=lambda x: -x.count_ops()) == \
+            sin(x)/cos(x)
+
+
 def test_process_common_addends():
     # this tests that the args are not evaluated as they are given to do
     # and that key2 works when key1 is False
