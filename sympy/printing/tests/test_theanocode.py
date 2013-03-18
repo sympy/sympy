@@ -4,6 +4,7 @@ theano = import_module('theano')
 if theano:
     ts = theano.scalar
     tt = theano.tensor
+    xt, yt, zt = map(ts.Scalar('floatX'), 'xyz')
 else:
     #bin/test will not execute any tests now
     disabled = True
@@ -13,8 +14,6 @@ from sympy import S
 sy = sympy
 from sympy.abc import x, y, z, a, b, c
 from sympy.printing.theanocode import theano_code, dim_handling, tensor_wrap
-
-xt, yt, zt = map(ts.Scalar('floatX'), 'xyz')
 
 def theq(a, b):
     """ theano equality """
