@@ -99,3 +99,7 @@ def test_Rationals():
 
 def test_Integers():
     assert theano_code(sympy.Integer(3)) == 3
+
+def test_factorial():
+    n = sympy.Symbol('n')
+    assert theano_code(sympy.factorial(n))

@@ -119,6 +119,8 @@ class TheanoPrinter(Printer):
     def _print_Integer(self, expr, dtypes):
         return expr.p
 
+    def _print_factorial(self, expr, dtypes):
+        return self._print(sympy.gamma(expr.args[0] + 1), dtypes)
 
     def emptyPrinter(self, expr):
         return expr
