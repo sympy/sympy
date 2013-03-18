@@ -248,10 +248,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     mapping = dict(zip(terms, V))
 
     rev_mapping = {}
+    store_tuple=()
 
     for k, v in mapping.iteritems():
         rev_mapping[v] = k
-
     if mappings is None:
         # Pre-sort mapping in order of largest to smallest expressions (last is always x).
         def _sort_key(arg):
@@ -259,17 +259,21 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
         mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
         
         #optimizing the number of permutations of mappping
-        store_tuple=mapping[-1]
-        del mapping[-1]
+        for i in mapping:
+            if i[0] is x:
+      	        store_tuple=i
+                mapping.remove(i)
+		            break
         mappings = permutations(mapping)
 
     def _substitute(expr):
         return expr.subs(mapping)
-
+	
     for mapping in mappings:
-    
+        
         mapping = list(mapping)
-        mapping.append(store_tuple)
+        if store_tuple is not ():
+        	mapping.append(store_tuple)
         
         diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
