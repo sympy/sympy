@@ -25,7 +25,6 @@ from sympy.geometry.entity import GeometryEntity
 
 from sympy.utilities import depends_on
 
-@depends_on(modules=('pyglet',))
 class PygletPlot(object):
     """
     Plot Examples
@@ -155,6 +154,8 @@ class PygletPlot(object):
     =============================
 
     """
+    #python 2.5 does not support class decorators so use this workaround
+    _doctest_depends_on = {'modules': ('pyglet',)}
 
     @depends_on(modules=('pyglet',))
     def __init__(self, *fargs, **win_args):
