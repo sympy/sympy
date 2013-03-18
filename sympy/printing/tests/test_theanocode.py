@@ -9,6 +9,7 @@ else:
     disabled = True
 
 import sympy
+from sympy import S
 sy = sympy
 from sympy.abc import x, y, z, a, b, c
 from sympy.printing.theanocode import theano_code, dim_handling, tensor_wrap
@@ -90,3 +91,7 @@ def test_tensor_wrap():
     assert isinstance(Xt,   tt.TensorVariable)
     assert isinstance(Xtp1, tt.TensorVariable)
     assert Xtp1.type.broadcastable == (False, False)
+
+def test_Rationals():
+    assert theq(theano_code(sympy.Integer(2) / 3), ts.true_div(2, 3))
+    assert theq(theano_code(S.Half), ts.true_div(1, 2))

@@ -109,6 +109,16 @@ class TheanoPrinter(Printer):
             result = tt.dot(result, child)
         return result
 
+    def _print_Pi(self, expr, dtypes):
+        return 3.141592653589793
+
+    def _print_Rational(self, expr, dtypes):
+        return ts.true_div(self._print(expr.p, dtypes),
+                           self._print(expr.q, dtypes))
+
+    def emptyPrinter(self, expr):
+        return expr
+
     def doprint(self, expr, dtypes={}):
         """Returns printer's representation for expr (as a string)"""
         return self._print(expr, dtypes)
