@@ -43,7 +43,7 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        return self.ring.ring_new(a)
+        return self.ring.from_expr(a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
@@ -65,15 +65,20 @@ class PolynomialRing(Ring, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
+    def from_AlgebraicField(K1, a, K0):
+        """Convert an algebraic number to ``dtype``. """
+        if K1.dom == K0:
+            return K1.new(a)
+
     def from_PolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
+        """Convert a polynomial to ``dtype``. """
         try:
             return a.set_ring(K1.ring)
         except (CoercionFailed, GeneratorsError):
             return None
 
     def from_FractionField(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
+        """Convert a rational function to ``dtype``. """
         if K0.denom(a) == 1:
             return K1.from_PolynomialRing(K0.numer(a), K0.field.ring.to_domain())
         else:

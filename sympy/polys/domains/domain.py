@@ -167,16 +167,16 @@ class Domain(object):
         return None
 
     def from_AlgebraicField(K1, a, K0):
-        """Convert a ``ANP`` object to ``dtype``. """
+        """Convert an algebraic number to ``dtype``. """
         return None
 
     def from_PolynomialRing(K1, a, K0):
-        """Convert a ``DMP`` object to ``dtype``. """
+        """Convert a polynomial to ``dtype``. """
         if a.is_ground:
             return K1.convert(a.LC, K0.dom)
 
     def from_FractionField(K1, a, K0):
-        """Convert a ``DMF`` object to ``dtype``. """
+        """Convert a rational function to ``dtype``. """
         return None
 
     def from_ExpressionDomain(K1, a, K0):
@@ -184,7 +184,7 @@ class Domain(object):
         return K1.from_sympy(a.ex)
 
     def from_GlobalPolynomialRing(K1, a, K0):
-        """Convert a ``DMP`` object to ``dtype``. """
+        """Convert a polynomial to ``dtype``. """
         if a.degree() <= 0:
             return K1.convert(a.LC(), K0.dom)
 

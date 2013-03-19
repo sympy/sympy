@@ -1,4 +1,4 @@
-"""Implementation of :class:`PolynomialRing` class. """
+"""Implementation of :class:`FractionField` class. """
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
@@ -43,7 +43,7 @@ class FractionField(Field, CompositeDomain):
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        return self.field.field_new(a)
+        return self.field.from_expr(a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
@@ -65,15 +65,20 @@ class FractionField(Field, CompositeDomain):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
+    def from_AlgebraicField(K1, a, K0):
+        """Convert an algebraic number to ``dtype``. """
+        if K1.dom == K0:
+            return K1.new(a)
+
     def from_PolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
+        """Convert a polynomial to ``dtype``. """
         try:
-            return K1.field.field_new(a.set_ring(K1.field.ring))
+            return K1.new(a.set_ring(K1.field.ring))
         except (CoercionFailed, GeneratorsError):
             return None
 
     def from_FractionField(K1, a, K0):
-        """Convert a `DMF` object to `dtype`. """
+        """Convert a rational function to ``dtype``. """
         try:
             return a.set_field(K1.field)
         except (CoercionFailed, GeneratorsError):
