@@ -748,7 +748,7 @@ class Pow(Expr):
         # exponent handling
         neg_exp = exp.is_negative
         int_exp = exp.is_integer
-        if not neg_exp and not exp.is_real:
+        if not neg_exp:
             neg_exp = _coeff_isneg(exp)
         # the denominator cannot be separated from the numerator if
         # its sign is unknown unless the exponent is an integer, e.g.

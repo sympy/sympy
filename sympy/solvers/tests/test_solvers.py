@@ -2,14 +2,18 @@ from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Wild, acos,
     asin, atan, atanh, cos, cosh, diff, exp, expand, im, log, pi, re, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh)
+    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
+    RootOf)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
     solve_undetermined_coeffs
 from sympy.solvers.solvers import _invert, unrad, checksol, posify, _ispow
 
-from sympy.utilities.pytest import XFAIL, raises, skip
+from sympy.polys.rootoftools import RootOf
+
+from sympy.utilities.pytest import slow, XFAIL, raises, skip
+from sympy.utilities.randtest import test_numerically as tn
 
 
 def NS(e, n=15, **options):
@@ -198,6 +202,34 @@ def test_solve_polynomial_cv_2():
     assert solve(x + 1/x - 1, x) in \
         [[ Rational(1, 2) + I*sqrt(3)/2, Rational(1, 2) - I*sqrt(3)/2],
          [ Rational(1, 2) - I*sqrt(3)/2, Rational(1, 2) + I*sqrt(3)/2]]
+
+
+def test_quintics_1():
+    f = x**5 - 110*x**3 - 55*x**2 + 2310*x + 979
+    s = solve(f, check=False)
+    for root in s:
+        res = f.subs(x, root.n()).n()
+        assert tn(res, 0)
+
+    f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
+    s = solve(f)
+    for root in s:
+        assert root.func == RootOf
+
+
+@XFAIL
+@slow
+def test_quintics_2():
+    f = x**5 + 15*x + 12
+    s = solve(f, check=False)
+    for root in s:
+        res = f.subs(x, root.n()).n()
+        assert tn(res, 0)
+
+    f = x**5 - 15*x**3 - 5*x**2 + 10*x + 20
+    s = solve(f)
+    for root in s:
+        assert root.func == RootOf
 
 
 def test_solve_rational():
@@ -1154,3 +1186,10 @@ def test_issue_3545():
 def test_issue_3653():
     assert solve([a**2 + a, a - b], [a, b]) == [(-1, -1), (0, 0)]
     assert solve([a**2 + a*c, a - b], [a, b]) == [(0, 0), (-c, -c)]
+
+
+def test_issue_3693():
+    assert solve(x*(x-1)**2*(x+1)*(x**6-x+1)) == [
+    -1, 0, 1, RootOf(x**6 - x + 1, 0), RootOf(x**6 - x + 1, 1),
+    RootOf(x**6 - x + 1, 2), RootOf(x**6 - x + 1, 3), RootOf(x**6 - x + 1, 4),
+    RootOf(x**6 - x + 1, 5)]

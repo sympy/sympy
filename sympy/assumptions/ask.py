@@ -52,7 +52,10 @@ def _extract_facts(expr, symbol):
     if not expr.has(symbol):
         return None
     if isinstance(expr, AppliedPredicate):
-        return expr.func
+        if expr.arg == symbol:
+            return expr.func
+        else:
+            return
     return expr.func(*filter(lambda x: x is not None,
                 [_extract_facts(arg, symbol) for arg in expr.args]))
 
