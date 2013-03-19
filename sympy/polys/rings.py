@@ -381,6 +381,9 @@ class PolyElement(DefaultPrinting, CantSympify, dict):
         from sympy.polys.densebasic import dmp_from_dict
         return dmp_from_dict(self, self.ring.ngens-1, self.ring.domain)
 
+    def to_dict(self):
+        return dict(self)
+
     @property
     def is_generator(self):
         return self in self.ring.gens
@@ -390,8 +393,12 @@ class PolyElement(DefaultPrinting, CantSympify, dict):
         return not self or (len(self) == 1 and self.ring.zero_monom in self)
 
     @property
+    def is_monomial(self):
+        return not self or (len(self) == 1 and self.LC == 1)
+
+    @property
     def is_term(self):
-        return len(self) == 1
+        return len(self) <= 1
 
     @property
     def is_negative(self):

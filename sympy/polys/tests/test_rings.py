@@ -609,3 +609,36 @@ def test_PolyElement_compose():
     r = (x**3 + 4*x**2 + 2*x*y*z + 3).compose(x, y*z**2 - 1)
     q = (y*z**2 - 1)**3 + 4*(y*z**2 - 1)**2 + 2*(y*z**2 - 1)*y*z + 3
     assert r == q and isinstance(r, PolyElement) and r.ring == R
+
+def test_PolyElement_is_():
+    R, x,y = ring("x,y", QQ)
+
+    assert (x - x).is_generator == False
+    assert (x - x).is_ground == True
+    assert (x - x).is_monomial == True
+    assert (x - x).is_term == True
+
+    assert (x - x + 1).is_generator == False
+    assert (x - x + 1).is_ground == True
+    assert (x - x + 1).is_monomial == True
+    assert (x - x + 1).is_term == True
+
+    assert x.is_generator == True
+    assert x.is_ground == False
+    assert x.is_monomial == True
+    assert x.is_term == True
+
+    assert (x*y).is_generator == False
+    assert (x*y).is_ground == False
+    assert (x*y).is_monomial == True
+    assert (x*y).is_term == True
+
+    assert (3*x).is_generator == False
+    assert (3*x).is_ground == False
+    assert (3*x).is_monomial == False
+    assert (3*x).is_term == True
+
+    assert (3*x + 1).is_generator == False
+    assert (3*x + 1).is_ground == False
+    assert (3*x + 1).is_monomial == False
+    assert (3*x + 1).is_term == False
