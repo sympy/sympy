@@ -111,6 +111,10 @@ def test_factorial():
     n = sympy.Symbol('n')
     assert theano_code(sympy.factorial(n))
 
+def test_Derivative():
+    assert theq(theano_code(sy.Derivative(sy.sin(x), x, evaluate=False)),
+                theano.grad(tt.sin(xt), xt))
+
 def test_theano_function_simple():
     f = theano_function([x, y], [x+y])
     assert f(2, 3) == 5

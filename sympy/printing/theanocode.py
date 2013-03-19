@@ -49,6 +49,7 @@ if theano:
             sympy.Ge: tt.ge,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.Derivative: tt.grad,
 
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
