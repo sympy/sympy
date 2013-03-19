@@ -114,13 +114,13 @@ class besselj(BesselBase):
     References
     ==========
 
-    - Abramowitz, Milton; Stegun, Irene A., eds. (1965), "Chapter 9",
-      Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
-      Tables
-    - Luke, Y. L. (1969), The Special Functions and Their Approximations,
-      Volume 1
-    - http://en.wikipedia.org/wiki/Bessel_function
-    - http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
+    .. [1] Abramowitz, Milton; Stegun, Irene A., eds. (1965), "Chapter 9",
+           Handbook of Mathematical Functions with Formulas, Graphs, and
+           Mathematical Tables
+    .. [2] Luke, Y. L. (1969), The Special Functions and Their
+           Approximations, Volume 1
+    .. [3] http://en.wikipedia.org/wiki/Bessel_function
+    .. [4] http://functions.wolfram.com/Bessel-TypeFunctions/BesselJ/
     """
 
     _a = S.One
@@ -222,7 +222,7 @@ class bessely(BesselBase):
     References
     ==========
 
-    - http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselY/
 
     """
 
@@ -304,7 +304,7 @@ class besseli(BesselBase):
     References
     ==========
 
-    - http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselI/
 
     """
 
@@ -400,7 +400,7 @@ class besselk(BesselBase):
     References
     ==========
 
-    - http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/BesselK/
 
     """
 
@@ -477,7 +477,7 @@ class hankel1(BesselBase):
     References
     ==========
 
-    - http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH1/
 
     """
 
@@ -521,7 +521,7 @@ class hankel2(BesselBase):
     References
     ==========
 
-    - http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
+    .. [1] http://functions.wolfram.com/Bessel-TypeFunctions/HankelH2/
 
     """
 
