@@ -23,7 +23,7 @@ from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 
 
-from sympy.utilities.decorator import depends_on
+from sympy.utilities.decorator import doctest_depends_on
 
 class PygletPlot(object):
     """
@@ -157,7 +157,7 @@ class PygletPlot(object):
     #python 2.5 does not support class decorators so use this workaround
     _doctest_depends_on = {'modules': ('pyglet',)}
 
-    @depends_on(modules=('pyglet',))
+    @doctest_depends_on(modules=('pyglet',))
     def __init__(self, *fargs, **win_args):
         """
         Positional Arguments

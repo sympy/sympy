@@ -84,7 +84,7 @@ def conserve_mpmath_dps(func):
     return func_wrapper
 
 
-def depends_on(exe=None, modules=None, disable_viewers=None):
+def doctest_depends_on(exe=None, modules=None, disable_viewers=None):
     """Adds metadata about the depenencies which need to be met for doctesting
     the docstrings of the decorated objects."""
     pyglet = False

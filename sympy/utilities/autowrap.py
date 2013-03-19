@@ -79,7 +79,7 @@ from sympy.utilities.codegen import (
     CodeGenArgumentListError, Result
 )
 from sympy.utilities.lambdify import implemented_function
-from sympy.utilities.decorator import depends_on
+from sympy.utilities.decorator import doctest_depends_on
 from sympy import C
 
 
@@ -343,7 +343,7 @@ def _get_code_wrapper_class(backend):
     return wrappers[backend.upper()]
 
 
-@depends_on(exe=('f2py', 'gfortran'))
+@doctest_depends_on(exe=('f2py', 'gfortran'))
 def autowrap(
     expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
         verbose=False, helpers=[]):
@@ -410,7 +410,7 @@ def autowrap(
     return code_wrapper.wrap_code(routine, helpers=helps)
 
 
-@depends_on (exe=('f2py', 'gfortran'))
+@doctest_depends_on (exe=('f2py', 'gfortran'))
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
@@ -432,7 +432,7 @@ def binary_function(symfunc, expr, **kwargs):
     binary = autowrap(expr, **kwargs)
     return implemented_function(symfunc, binary)
 
-@depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
+@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
 def ufuncify(args, expr, **kwargs):
     """
     Generates a binary ufunc-like lambda function for numpy arrays

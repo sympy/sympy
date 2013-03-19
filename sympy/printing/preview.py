@@ -11,9 +11,9 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from latex import latex
 
-from sympy.utilities.decorator import depends_on
+from sympy.utilities.decorator import doctest_depends_on
 
-@depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
+@doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,

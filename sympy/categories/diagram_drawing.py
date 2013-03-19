@@ -89,7 +89,7 @@ from sympy.utilities import default_sort_key
 from itertools import chain
 from sympy.core.compatibility import iterable
 from sympy.printing import latex
-from sympy.utilities.decorator import depends_on
+from sympy.utilities.decorator import doctest_depends_on
 
 
 class _GrowableGrid(object):
@@ -2545,7 +2545,7 @@ def xypic_draw_diagram(diagram, masked=None, diagram_format="",
     return drawer.draw(diagram, grid, masked, diagram_format)
 
 
-@depends_on(exe=('latex', 'dvipng'))
+@doctest_depends_on(exe=('latex', 'dvipng'))
 def preview_diagram(diagram, masked=None, diagram_format="", groups=None,
                     output='png', viewer=None, euler=True, **hints):
     """

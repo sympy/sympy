@@ -33,7 +33,7 @@ from sympy import Eq, Tuple, sympify, Dummy
 from sympy.external import import_module
 from sympy.core.compatibility import set_union
 from sympy.logic.boolalg import BooleanFunction
-from sympy.utilities.decorator import depends_on
+from sympy.utilities.decorator import doctest_depends_on
 import warnings
 
 np = import_module('numpy')
@@ -195,7 +195,7 @@ class ImplicitSeries(BaseSeries):
             return xarray, yarray, z_grid, 'contourf'
 
 
-@depends_on(modules=('matplotlib',))
+@doctest_depends_on(modules=('matplotlib',))
 def plot_implicit(expr, *args, **kwargs):
     """A plot function to plot implicit equations / inequalities.
 
