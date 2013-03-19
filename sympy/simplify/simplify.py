@@ -3728,7 +3728,8 @@ def bottom_up(rv, F, last=False, atoms=False, nonbasic=False):
     """
     try:
         if rv.args:
-            args = tuple([F(a) for a in rv.args])
+            args = tuple([bottom_up(a, F, last, atoms, nonbasic)
+                for a in rv.args])
             if args != rv.args:
                 rv = rv.func(*args)
     except AttributeError:
