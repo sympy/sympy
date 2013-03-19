@@ -111,8 +111,16 @@ def test_factorial():
     n = sympy.Symbol('n')
     assert theano_code(sympy.factorial(n))
 
-def test_theano_function():
+def test_theano_function_simple():
+    f = theano_function([x, y], [x+y])
+    assert f(2, 3) == 5
+
+
+def test_theano_function_numpy():
     import numpy as np
+    f = theano_function([x, y], [x+y], dim=1)
+    assert np.linalg.norm(f([1, 2], [3, 4]) - np.asarray([4, 6])) < 1e-9
+
     f = theano_function([x, y], [x+y], dtypes={x: 'float64', y: 'float64'},
                                      dim=1)
     xx = np.arange(3).astype('float64')
