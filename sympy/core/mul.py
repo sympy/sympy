@@ -851,10 +851,22 @@ class Mul(Expr, AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
-    _eval_is_integer = lambda self: self._eval_template_is_attr(
-        'is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr(
         'is_commutative')
+    _eval_is_rational = lambda self: self._eval_template_is_attr('is_rational',
+        when_multiple=None)
+
+    def _eval_is_integer(self):
+        is_rational = self.is_rational
+
+        if is_rational:
+            n, d = self.as_numer_denom()
+            if d is S.One:
+                return True
+            elif d is S(2):
+                return n.is_even
+        elif is_rational is False:
+            return False
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
@@ -1061,10 +1073,15 @@ class Mul(Expr, AssocOp):
         if is_integer:
             r = True
             for t in self.args:
-                if t.is_even:
-                    return False
-                if t.is_odd is None:
-                    r = None
+                if not t.is_integer:
+                    return None
+                elif t.is_even:
+                    r = False
+                elif t.is_integer:
+                    if r is False:
+                        pass
+                    elif t.is_odd is None:
+                        r = None
             return r
 
         # !integer -> !odd
