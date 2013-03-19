@@ -186,9 +186,9 @@ class lambdify(object):
             #The result can be sympy.Float. Hence wrap it with complex type.
             result = complex(self.lambda_func(args))
             if abs(result.imag) > 1e-7 * abs(result):
-                return None
+                result = None
             else:
-                return result.real
+                result = result.real
         except Exception, e:
             # The exceptions raised by sympy, cmath are not consistent and
             # hence it is not possible to specify all the exceptions that
@@ -199,7 +199,14 @@ class lambdify(object):
             # XXX: Remove catching all exceptions once the plotting module
             # is heavily tested.
             if isinstance(e, ZeroDivisionError):
-                return None
+                result = None
+            elif isinstance(e, TypeError) and ('no ordering relation is'
+                                               ' defined for complex numbers'
+                                               in str(e)):
+                self.lambda_func = experimental_lambdify(self.args, self.expr,
+                                                         use_evalf=True,
+                                                         use_python_math=True)
+                result = self.lambda_func(args.real)
             else:
                 if self.failure:
                     raise e
@@ -213,10 +220,11 @@ class lambdify(object):
                 warnings.warn('The evaluation of the expression is'
                         ' problematic. We are trying a failback method'
                         ' that may still work. Please report this as a bug.')
-                if abs(result.imag) > 0:
-                    return None
+                if abs(result.imag) > 1e-7 * abs(result):
+                    result = None
                 else:
-                    return result.real
+                    result = result.real
+        return result
 
 
 def experimental_lambdify(*args, **kwargs):
