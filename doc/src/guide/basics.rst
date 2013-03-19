@@ -378,15 +378,15 @@ Foreign types in SymPy
 ----------------------
 
 SymPy internally expects that all objects it works with are instances of
-subclasses of :class:`Basic` class. So why ``x + 1`` works without raising
-an exception? The number ``1`` is not a SymPy's type, but::
+subclasses of :class:`Basic` class. So why does ``x + 1`` work without
+raising an exception? The number ``1`` is not a SymPy's type, but::
 
     >>> type(1) is int
     True
 
-it's a built-in type. SymPy implements :func:`sympify` function for the task
-of converting foreign types to SymPy's types (yes, Python's built-in types
-are also considered as foreign). All SymPy's classes, methods and functions
+it's a built-in type. SymPy implements the :func:`sympify` function for the
+task of converting foreign types to SymPy's types (yes, Python's built-in types
+are also considered as foreign). All of SymPy's classes, methods and functions
 use :func:`sympify` and this is the reason why you can safely write ``x + 1``
 instead of more verbose and less convenient ``x + Integer(1)``. Note that
 not all functions return instances of SymPy's types. Usually, if a function
@@ -398,7 +398,7 @@ Python's types, e.g.::
     >>> type(_) == int
     True
 
-Now see what :func:`sympify` can do. Let's start with built-ins::
+Now see what :func:`sympify` can do::
 
     >>> sympify(1)
     1
@@ -422,74 +422,9 @@ Now see what :func:`sympify` can do. Let's start with built-ins::
     >>> type(_) # doctest: +SKIP
     <class 'sympy.core.numbers.Half'>
 
-SymPy implements explicit sympification rules, heuristics based on ``__int__``,
-``__float__`` and other attributes, and in the worst case scenario it falls
-back to parsing string representation of an object. This usually works fine,
-but sometimes :func:`sympify` can be wrong::
-
-    >>> from gmpy import mpz, mpq # doctest: +SKIP
-
-    >>> sympify(mpz(117)) # doctest: +SKIP
-    117
-    >>> type(_) # doctest: +SKIP
-    <class 'sympy.core.numbers.Integer'>
-
-    >>> sympify(mpq(1, 2)) # doctest: +SKIP
-    1/2
-    >>> type(_) # doctest: +SKIP
-    <class 'sympy.core.numbers.Half'>
-
-This happens because :func:`sympify` doesn't know about either ``mpz`` or
-``mpq``, and it first looks for ``__float__`` attribute, which is implemented
-by both those types. Getting float for exact value isn't very useful so let's
-extend :func:`sympify` and add support for ``mpz``. The way to achieve this
-is to add a new entry to ``converter`` dictionary. ``converter`` takes types
-as keys and sympification functions as values. Before we extend this ``dict``,
-we have to resolve a little problem with ``mpz``::
-
-    >>> mpz # doctest: +SKIP
-    <built-in function mpz>
-
-which isn't a type but a function. We can use a little trick here and take
-the type of some ``mpz`` object::
-
-    >>> type(mpz(1)) # doctest: +SKIP
-    <type 'mpz'>
-
-Let's now add an entry to ``converter`` for ``mpz``::
-
-    >>> from sympy.core.sympify import converter # doctest: +SKIP
-
-    >>> def mpz_to_Integer(obj):
-    ...     return Integer(int(obj))
-    ...
-    ...
-
-    # >>> converter[type(mpz(1))] = mpz_to_Integer # doctest: +SKIP
-
-We could use ``lambda`` as well. Now we can sympify ``mpz``::
-
-    >>> sympify(mpz(117)) # doctest: +SKIP
-    117
-    >>> type(_) # doctest: +SKIP
-    <class 'sympy.core.numbers.Integer'>
-
-Similar things should be done for ``mpq``.
-
-Tasks
-~~~~~
-
-1. Add support for ``mpq`` to :func:`sympify`.
-
-   (:ref:`solution <solution_foreign_1>`)
-
-2. SymPy implements :class:`Tuple` class, which provides functionality of
-   Python's built-in ``tuple``, but is a subclass of :class:`Basic`. Take
-   advantage of this and make :func:`sympify` work for row NumPy arrays,
-   for which it should return instances of :class:`Tuple`. Raise
-   :exc:`SympifyError` for other classes of arrays.
-
-   (:ref:`solution <solution_foreign_2>`)
+:func:`sympify` implements explicit conversion rules, heuristics based on ``__int__``,
+``__float__`` and other attributes, and in the worst case scenario it falls back to
+parsing the string representation of an object.
 
 The role of symbols
 -------------------
@@ -497,7 +432,7 @@ The role of symbols
 Let's now talk about the most important part of expressions: symbols. Symbols
 are placeholders, abstract entities that can be filled in with whatever
 content we want (unless there are explicit restrictions given). For example
-in expression ``x + 1`` we have one symbol ``x``. Let's start fresh Python's
+in expression ``x + 1`` we have one symbol ``x``. Let's start a fresh Python
 interpreter and issue::
 
     >>> del x
@@ -513,7 +448,7 @@ may be tempted to simply write::
 
 For users that come from other symbolic mathematics systems, this behavior
 may seem odd, because in those systems, symbols are constructed implicitly
-when necessary. In general purpose programming language like Python, we
+when necessary. In a general purpose programming language like Python, we
 have to define all objects we want to use before we actually use them. So,
 the first thing we have to always do is to construct symbols and assign
 them to Python's variables::
@@ -617,7 +552,7 @@ namespace, making this function very useful in interactive sessions::
 We don't allow to use :func:`var` in SymPy's library code. There is one
 more way of constructing symbols, which is related to indexed symbols.
 Sometimes we don't know in advance how many symbols will be required to
-solve a certain problem. For this case, SymPy has :func:`numbered_symbols`
+solve a certain problem. For this case, SymPy has the :func:`numbered_symbols`
 generator::
 
     >>> X = numbered_symbols('x')
@@ -633,17 +568,17 @@ Tasks
 
 1. Implement a function that would generate an expression for `x_1^1 +
    x_2^2 + \ldots + x_n^n`. This function would take two arguments: base
-   name for indexed symbols and integer exponent `n >= 1`. What's the
-   best approach among the four presented above?
+   name for the indexed symbols and an integer exponent `n >= 1`. What's
+   the best approach among the four presented above?
 
    (:ref:`solution <solution_symbols_1>`)
 
 Obtaining parts of expressions
 ------------------------------
 
-We already know how to construct expressions, but how to get parts of complex
-expressions? The most basic and low-level way of decomposing expressions is to
-use ``args`` property::
+We already know how to construct expressions, but how do we get the parts of
+complex expressions? The most basic and low-level way of decomposing expressions
+is to use ``args`` property::
 
     >>> x + y + 1
     x + y + 1
@@ -684,10 +619,10 @@ This is very useful invariant, because we can easily decompose, modify and
 rebuild expressions of various kinds in SymPy exactly the same way. This
 invariant is being used in all functions that manipulation expressions.
 
-Let's now use ``args`` to something a little more interesting than simple
+Let's now use ``args`` to do something a little more interesting than simple
 decomposition of expressions. Working with expressions, one may be interested
 in the depth of such expressions. By viewing expressions as n-ary trees, by
-depth we understand the longest path in a tree.
+depth we mean the longest path in a tree.
 
 Trees consist of branches and leafs. In SymPy, leafs of expressions are
 instances of subclasses of :class:`Atom` class (numbers, symbols, special
@@ -709,7 +644,7 @@ either :func:`isinstance` built-in function or ``is_Atom`` property to
 recognize atoms properly. Everything else than an :class:`Atom` is a
 branch.
 
-Let's implement :func:`depth` function::
+Let's implement a :func:`depth` function::
 
     >>> def depth(expr):
     ...    if isinstance(expr, Atom):
@@ -846,7 +781,8 @@ we will get ``g``. However in SymPy::
 
 This is correct result, because SymPy implements structural understanding
 of ``==`` operator, not semantic. So, for SymPy ``f`` and ``g`` are very
-different expressions.
+different expressions. One is ``Pow(x + 1, 2)``, and the other is
+``Add(x**2, 2*x, 1)``.
 
 What to do if we have two variables and we want to know if their contents
 are equivalent, but not necessarily structurally equal? There is no simple
@@ -872,7 +808,7 @@ special functions, this approach may be insufficient. For example::
     >>> expand(u - v) == 0
     False
 
-In this case we have to use more advanced term rewriting function::
+In this case we have to use a more advanced term rewriting function::
 
     >>> simplify(u - v)
     0
@@ -979,7 +915,7 @@ To overcome this problem we have to use :func:`sympify`, which implements
 Let's now consider a more interesting problem. Suppose we define our own function::
 
     >>> class my_func(Function):
-    ...     """Returns zero for integer values. """
+    ...     """Doubles numerical values. """
     ...
     ...     @classmethod
     ...     def eval(cls, arg):

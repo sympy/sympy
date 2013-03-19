@@ -255,7 +255,7 @@ example to allow printing SymPy's expression with other symbolic mathematics
 systems' syntax.
 
 Suppose we would like to translate SymPy's expressions to Mathematica syntax.
-As of version 0.7.1, SymPy doesn't implement such a printer, so we get do it
+As of version 0.7.2, SymPy doesn't implement such a printer, so we get do it
 right now. Adding a new printer basically boils down to adding a new class,
 let's say :class:`MathematicaPrinter`, which derives from :class:`Printer`
 and implements ``_print_*`` methods for all kinds of expressions we want to

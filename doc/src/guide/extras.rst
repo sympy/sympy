@@ -156,59 +156,6 @@ Solution 1
     ⎮ (b + sin(a⋅x)) dx = C + b⋅x - ────────
     ⌡                                  a
 
-Foreign types in SymPy
-----------------------
-
-.. _solution_foreign_1:
-
-Solution 1
-~~~~~~~~~~
-
-::
-
-    >>> from sympy.core.sympify import sympify, converter # doctest: +SKIP
-    >>> from sympy import Rational # doctest: +SKIP
-    >>> from gmpy import mpq # doctest: +SKIP
-
-    >>> def mpq_to_Rational(obj):
-    ...     return Rational(obj.numer(), obj.denom())
-    ...
-
-    >>> converter[type(mpq(1))] = mpq_to_Rational # doctest: +SKIP
-
-    >>> sympify(mpq(1, 2)) # doctest: +SKIP
-    1/2
-    >>> type(_) # doctest: +SKIP
-    <class 'sympy.core.numbers.Half'>
-
-.. _solution_foreign_2:
-
-Solution 2
-~~~~~~~~~~
-
-::
-
-    >>> from sympy.core.sympify import converter, sympify, SympifyError # doctest: +SKIP
-    >>> from sympy import Tuple # doctest: +SKIP
-    >>> from numpy import array, ndarray # doctest: +SKIP
-
-    >>> def ndarray_to_Tuple(obj):
-    ...     if len(obj.shape) == 1:
-    ...         return Tuple(*obj)
-    ...     else:
-    ...         raise SympifyError("only row NumPy arrays are allowed")
-    ...
-
-    >>> converter[ndarray] = ndarray_to_Tuple # doctest: +SKIP
-
-    >>> sympify(array([1, 2, 3])) # doctest: +SKIP
-    (1, 2, 3)
-
-    >>> sympify(array([[1], [2], [3]])) # doctest: +SKIP
-    Traceback (most recent call last):
-    ...
-    SympifyError: SympifyError: 'only row NumPy arrays are allowed'
-
 The role of symbols
 -------------------
 
@@ -241,7 +188,7 @@ Solution 1
     >>> build_expression_2('y', 5)
            2     3     4     5
     y₁ + y₂  + y₃  + y₄  + y₅
-    >>> build_expression_2('z', 5)
+    >>> build_expression_3('z', 5)
            2     3     4     5
     z₁ + z₂  + z₃  + z₄  + z₅
 

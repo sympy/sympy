@@ -13,8 +13,8 @@ direct link:
 
 .. parsed-literal::
 
-    $ :input:`wget http://sympy.googlecode.com/files/sympy-0.7.1.tar.gz`
-    $ :input:`tar -xz -C sympy --strip-components 1 -f sympy-0.7.1.tar.gz`
+    $ :input:`wget http://sympy.googlecode.com/files/sympy-0.7.2.tar.gz`
+    $ :input:`tar -xz -C sympy --strip-components 1 -f sympy-0.7.2.tar.gz`
 
 You will also find an installer for Windows there. An alternative way is
 to clone SymPy's `git <http://www.git-scm.org>`_ repository from
@@ -23,6 +23,11 @@ to clone SymPy's `git <http://www.git-scm.org>`_ repository from
 .. parsed-literal::
 
     $ :input:`git clone git://github.com/sympy/sympy.git`
+
+Note that this will give you development version of SymPy, so certain features
+may not work properly, APIs are unstable and documentation may be outdated. In
+return you get the cutting edge features before SymPy is officially released and
+you can easily participate in SymPy's development process.
 
 To use it, issue:
 
@@ -48,47 +53,21 @@ versions of packages, so make sure you don't install some ancient version
 of SymPy on your system.
 
 By default, SymPy doesn't have any dependencies besides Python. The following
-version of Python are supported: 2.5, 2.6, 2.7. Version 2.4 was originally
-supported but was dropped in SymPy 0.7.1. Support for Python 3.2+ will be
-added in version 0.7.2 (use git version for now). Version 0.7.2 will also
-support PyPy 1.6+. If you use Jython, IronPython or other interpreter, you
-may find out SymPy not working properly (Jython) or not importing at all
-(IronPython).
+versions of Python are supported: 2.5, 2.6, 2.7, 3.2 and 3.3. Version 2.4 was
+originally supported but was dropped in SymPy 0.7.1. Python 3.0 and 3.1
+aren't officially supported due to their limitations, but it's likely that
+you will be able to run SymPy there and use most of its features. SymPy also
+can be run on PyPy 1.6+. If you use Jython, IronPython or other less popular
+interpreter, you may find out SymPy not working properly (Jython) or you
+won't be able to run it at all (IronPython).
 
-Certain SymPy's modules may require additional dependencies to provide more
+Certain modules may require additional dependencies to provide more
 features or improve speed of computations. For example, :mod:`sympy.polys`
 and :mod:`sympy.mpmath` can take advantage of gmpy library to radically
 improve speed of otherwise pure Python library. If gmpy is not available,
 those modules fall back automatically to pure Python implementation of
 arithmetic routines. Other optional dependencies are IPython, Matplotlib,
 NumPy, SciPy, Cython, Pyglet, LaTeX distribution and more.
-
-Translating SymPy to Python 3
------------------------------
-
-Support for Python 3.2+ was added to master branch of SymPy's repository
-and will be a part of 0.7.2 release. If you use SymPy from git, then you
-can switch to Python 3 now. However, SymPy's source is not compatible with
-Python 3 by default and you have to translate it:
-
-.. parsed-literal::
-
-    $ :input:`cd sympy`
-    $ :input:`python3.2 bin/use2to3`
-    $ :input:`cd py3k-sympy`
-    $ :input:`python3.2`
-    Python 3.2.2 (default, Sep  5 2011, 21:17:14)
-    [GCC 4.6.1] on linux2
-    Type "help", "copyright", "credits" or "license" for more information.
-    >>> import sympy
-    >>> sympy.__version__
-    '0.7.2-git'
-    >>>
-
-Make sure you run ``use2to3`` under Python 3.2, because Python 3.0 and 3.1
-will fail translating SymPy. Although you can't translate SymPy using Python
-3.1 and this version isn't officially supported, SymPy works very well in it,
-just if you run ``python3.1 bin/test``, you will get a few harmless failures
 
 SymPy in Python/IPython
 -----------------------
@@ -115,7 +94,8 @@ Interactive SymPy (``isympy``)
 ------------------------------
 
 For users' convenience, SymPy's distribution includes a simple script called
-isympy (see ``bin/isympy``). isympy uses either IPython (if available) or
+isympy. This script is installed by SymPy's installers and is also available in
+``bin/isympy`` in source distribution. isympy uses either IPython (if available) or
 standard Python's interpreter with readline support. On startup isympy sets
 up the environment to make interaction with SymPy more pleasant. It enables
 new division, imports everything from :mod:`sympy`, injects a few commonly
@@ -126,7 +106,7 @@ Here is an example session with isympy:
 .. parsed-literal::
 
     $ :input:`bin/isympy`
-    IPython console for SymPy 0.7.1 (Python 2.7.1-64-bit) (ground types: gmpy)
+    IPython console for SymPy 0.7.2 (Python 2.7.1-64-bit) (ground types: gmpy)
 
     These commands were executed:
     >>> from __future__ import division
@@ -266,13 +246,14 @@ SymPy in web browsers
 SymPy is available in the following web applications:
 
 * SymPy Live (http://live.sympy.org)
+* SymPy Gamma (http://gamma.sympy.org)
 * Sage Notebook (http://www.sagenb.org)
 
 SymPy Live was developed specifically for SymPy. It is a simple web shell
 that looks similar to isympy under standard Python's interpreter. SymPy
 Live uses Google App Engine as computational backend.
 
-Upcoming IPython Notebook (IPython 0.12+) will have native support for SymPy.
-If you use IPython from git, you can test this feature now by starting IPython
-with ``ipython notebook`` and run ``%load_ext sympy`` in an input cell. This
-will setup pretty printing among other things.
+IPython Notebook and QTConsole (IPython 0.12+) have native support for SymPy.
+Start IPython with either ``ipython notebook`` or ``ipython qtconsole`` and
+issue ``%load_ext sympy.interactive.ipythonprinting`` magic command. This
+will give you nice pretty printing via LaTeX.

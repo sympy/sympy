@@ -244,7 +244,7 @@ and in interactive sessions:
 .. parsed-literal::
 
     $ :input:`bin/isympy -q`
-    IPython console for SymPy 0.7.1 (Python 2.7.1-64-bit) (ground types: gmpy)
+    IPython console for SymPy 0.7.2 (Python 2.7.1-64-bit) (ground types: gmpy)
 
     In [1]: f = (x-tan(x)) / tan(x)**2 + tan(x)
 
@@ -257,7 +257,7 @@ and in interactive sessions:
     Wall time: 0.25 s
 
     $ :input:`bin/isympy -q -C`
-    IPython console for SymPy 0.7.1 (Python 2.7.1-64-bit) (ground types: gmpy, cache: off)
+    IPython console for SymPy 0.7.2 (Python 2.7.1-64-bit) (ground types: gmpy, cache: off)
 
     In [1]: f = (x-tan(x)) / tan(x)**2 + tan(x)
 
@@ -293,13 +293,13 @@ rather than actual computing times):
 .. sourcecode:: ipython
 
     $ bin/isympy -q
-    IPython console for SymPy 0.7.1 (Python 2.7.1-64-bit) (ground types: gmpy)
+    IPython console for SymPy 0.7.2 (Python 2.7.1-64-bit) (ground types: gmpy)
 
     In [1]: %timeit sin(2*pi);
     10000 loops, best of 3: 28.7 us per loop
 
     $ bin/isympy -q -C
-    IPython console for SymPy 0.7.1 (Python 2.7.1-64-bit) (ground types: gmpy, cache: off)
+    IPython console for SymPy 0.7.2 (Python 2.7.1-64-bit) (ground types: gmpy, cache: off)
 
     In [1]: %timeit sin(2*pi);
     100 loops, best of 3: 2.75 ms per loop
