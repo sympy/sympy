@@ -252,12 +252,18 @@ class FracElement(CantSympify, DefaultPrinting):
                 return g.__radd__(f)
             else:
                 return NotImplemented
-        elif isinstance(g, PolyElement) and field.ring != g.ring:
-            return g.__radd__(f)
+        elif isinstance(g, PolyElement):
+            if field.ring == g.ring:
+                return f.new(f.numer + f.denom*g, f.denom)
+            else:
+                return g.__radd__(f)
 
         return f.__radd__(g)
 
     def __radd__(f, c):
+        if isinstance(c, PolyElement) and f.field.ring == c.ring:
+            return f.new(f.numer + f.denom*c, f.denom)
+
         op, g_numer, g_denom = f._extract_ground(c)
 
         if op == 1:
@@ -280,8 +286,11 @@ class FracElement(CantSympify, DefaultPrinting):
                 return g.__rsub__(f)
             else:
                 return NotImplemented
-        elif isinstance(g, PolyElement) and field.ring != g.ring:
-            return g.__rsub__(f)
+        elif isinstance(g, PolyElement):
+            if field.ring == g.ring:
+                return f.new(f.numer - f.denom*g, f.denom)
+            else:
+                return g.__rsub__(f)
 
         op, g_numer, g_denom = f._extract_ground(g)
 
@@ -293,6 +302,9 @@ class FracElement(CantSympify, DefaultPrinting):
             return f.new(f.numer*g_denom - f.denom*g_numer, f.denom*g_denom)
 
     def __rsub__(f, c):
+        if isinstance(c, PolyElement) and f.field.ring == c.ring:
+            return f.new(-f.numer + f.denom*c, f.denom)
+
         op, g_numer, g_denom = f._extract_ground(c)
 
         if op == 1:
@@ -315,12 +327,18 @@ class FracElement(CantSympify, DefaultPrinting):
                 return g.__rmul__(f)
             else:
                 return NotImplemented
-        elif isinstance(g, PolyElement) and field.ring != g.ring:
-            return g.__rmul__(f)
+        elif isinstance(g, PolyElement):
+            if field.ring == g.ring:
+                return f.new(f.numer*g, f.denom)
+            else:
+                return g.__rmul__(f)
 
         return f.__rmul__(g)
 
     def __rmul__(f, c):
+        if isinstance(c, PolyElement) and f.field.ring == c.ring:
+            return f.new(f.numer*c, f.denom)
+
         op, g_numer, g_denom = f._extract_ground(c)
 
         if op == 1:
@@ -343,8 +361,11 @@ class FracElement(CantSympify, DefaultPrinting):
                 return g.__rtruediv__(f)
             else:
                 return NotImplemented
-        elif isinstance(g, PolyElement) and field.ring != g.ring:
-            return g.__rtruediv__(f)
+        elif isinstance(g, PolyElement):
+            if field.ring == g.ring:
+                return f.new(f.numer, f.denom*g)
+            else:
+                return g.__rtruediv__(f)
 
         op, g_numer, g_denom = f._extract_ground(g)
 
@@ -358,6 +379,9 @@ class FracElement(CantSympify, DefaultPrinting):
     __div__ = __truediv__
 
     def __rtruediv__(f, c):
+        if isinstance(c, PolyElement) and f.field.ring == c.ring:
+            return f.new(f.denom*c, f.numer)
+
         op, g_numer, g_denom = f._extract_ground(c)
 
         if op == 1:

@@ -793,7 +793,6 @@ class PolyElement(DefaultPrinting, CantSympify, dict):
 
         """
         ring = p1.ring
-        ground_quo = ring.domain.quo
         if isinstance(p2, PolyElement) and ring == p2.ring:
             if len(p2) == 1:
                 term = list(p2.terms())[0]
@@ -803,7 +802,12 @@ class PolyElement(DefaultPrinting, CantSympify, dict):
         elif not p2:
             raise ZeroDivisionError
         else:
-            return p1.quo_ground(p2)
+            try:
+                p2 = ring.domain.convert(p2)
+            except CoercionFailed:
+                return NotImplemented
+            else:
+                return p1.quo_ground(p2)
 
     __floordiv__ = __div__ = __truediv__
 

@@ -96,6 +96,8 @@ def test_FracElement___add__():
     f, g = 1/x, 1/y
     assert f + g == g + f == (x + y)/(x*y)
 
+    assert x + F.ring.gens[0] == F.ring.gens[0] + x == 2*x
+
     F, x,y = field("x,y", ZZ)
     assert x + 3 == 3 + x
     assert x + QQ(3,7) == QQ(3,7) + x == (7*x + 3)/7
@@ -106,6 +108,8 @@ def test_FracElement___sub__():
     f, g = 1/x, 1/y
     assert f - g == (-x + y)/(x*y)
 
+    assert x - F.ring.gens[0] == F.ring.gens[0] - x == 0
+
     F, x,y = field("x,y", ZZ)
     assert x - 3 == -(3 - x)
     assert x - QQ(3,7) == -(QQ(3,7) - x) == (7*x - 3)/7
@@ -115,6 +119,8 @@ def test_FracElement___mul__():
 
     f, g = 1/x, 1/y
     assert f*g == g*f == 1/(x*y)
+
+    assert x*F.ring.gens[0] == F.ring.gens[0]*x == x**2
 
     F, x,y = field("x,y", ZZ)
     assert x*3 == 3*x
@@ -132,6 +138,8 @@ def test_FracElement___div__():
 
     f, g = 1/x, 1/y
     assert f/g == y/x
+
+    assert x/F.ring.gens[0] == F.ring.gens[0]/x == 1
 
     F, x,y = field("x,y", ZZ)
     assert x*3 == 3*x
