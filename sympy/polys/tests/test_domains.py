@@ -35,214 +35,160 @@ def test_Domain__unify():
     assert EX.unify(ZZ) == EX
     assert EX.unify(QQ) == EX
 
-    assert ZZ.poly_ring('x').unify(EX) == EX
-    assert ZZ.frac_field('x').unify(EX) == EX
-    assert EX.unify(ZZ.poly_ring('x')) == EX
-    assert EX.unify(ZZ.frac_field('x')) == EX
+    assert ZZ.poly_ring(x).unify(EX) == EX
+    assert ZZ.frac_field(x).unify(EX) == EX
+    assert EX.unify(ZZ.poly_ring(x)) == EX
+    assert EX.unify(ZZ.frac_field(x)) == EX
 
-    assert ZZ.poly_ring('x', 'y').unify(EX) == EX
-    assert ZZ.frac_field('x', 'y').unify(EX) == EX
-    assert EX.unify(ZZ.poly_ring('x', 'y')) == EX
-    assert EX.unify(ZZ.frac_field('x', 'y')) == EX
+    assert ZZ.poly_ring(x, y).unify(EX) == EX
+    assert ZZ.frac_field(x, y).unify(EX) == EX
+    assert EX.unify(ZZ.poly_ring(x, y)) == EX
+    assert EX.unify(ZZ.frac_field(x, y)) == EX
 
-    assert QQ.poly_ring('x').unify(EX) == EX
-    assert QQ.frac_field('x').unify(EX) == EX
-    assert EX.unify(QQ.poly_ring('x')) == EX
-    assert EX.unify(QQ.frac_field('x')) == EX
+    assert QQ.poly_ring(x).unify(EX) == EX
+    assert QQ.frac_field(x).unify(EX) == EX
+    assert EX.unify(QQ.poly_ring(x)) == EX
+    assert EX.unify(QQ.frac_field(x)) == EX
 
-    assert QQ.poly_ring('x', 'y').unify(EX) == EX
-    assert QQ.frac_field('x', 'y').unify(EX) == EX
-    assert EX.unify(QQ.poly_ring('x', 'y')) == EX
-    assert EX.unify(QQ.frac_field('x', 'y')) == EX
+    assert QQ.poly_ring(x, y).unify(EX) == EX
+    assert QQ.frac_field(x, y).unify(EX) == EX
+    assert EX.unify(QQ.poly_ring(x, y)) == EX
+    assert EX.unify(QQ.frac_field(x, y)) == EX
 
-    assert ZZ.poly_ring('x').unify(ZZ) == ZZ.poly_ring('x')
-    assert ZZ.poly_ring('x').unify(QQ) == QQ.poly_ring('x')
-    assert QQ.poly_ring('x').unify(ZZ) == QQ.poly_ring('x')
-    assert QQ.poly_ring('x').unify(QQ) == QQ.poly_ring('x')
+    assert ZZ.poly_ring(x).unify(ZZ) == ZZ.poly_ring(x)
+    assert ZZ.poly_ring(x).unify(QQ) == QQ.poly_ring(x)
+    assert QQ.poly_ring(x).unify(ZZ) == QQ.poly_ring(x)
+    assert QQ.poly_ring(x).unify(QQ) == QQ.poly_ring(x)
 
-    assert ZZ.unify(ZZ.poly_ring('x')) == ZZ.poly_ring('x')
-    assert QQ.unify(ZZ.poly_ring('x')) == QQ.poly_ring('x')
-    assert ZZ.unify(QQ.poly_ring('x')) == QQ.poly_ring('x')
-    assert QQ.unify(QQ.poly_ring('x')) == QQ.poly_ring('x')
+    assert ZZ.unify(ZZ.poly_ring(x)) == ZZ.poly_ring(x)
+    assert QQ.unify(ZZ.poly_ring(x)) == QQ.poly_ring(x)
+    assert ZZ.unify(QQ.poly_ring(x)) == QQ.poly_ring(x)
+    assert QQ.unify(QQ.poly_ring(x)) == QQ.poly_ring(x)
 
-    assert ZZ.poly_ring('x', 'y').unify(ZZ) == ZZ.poly_ring('x', 'y')
-    assert ZZ.poly_ring('x', 'y').unify(QQ) == QQ.poly_ring('x', 'y')
-    assert QQ.poly_ring('x', 'y').unify(ZZ) == QQ.poly_ring('x', 'y')
-    assert QQ.poly_ring('x', 'y').unify(QQ) == QQ.poly_ring('x', 'y')
+    assert ZZ.poly_ring(x, y).unify(ZZ) == ZZ.poly_ring(x, y)
+    assert ZZ.poly_ring(x, y).unify(QQ) == QQ.poly_ring(x, y)
+    assert QQ.poly_ring(x, y).unify(ZZ) == QQ.poly_ring(x, y)
+    assert QQ.poly_ring(x, y).unify(QQ) == QQ.poly_ring(x, y)
 
-    assert ZZ.unify(ZZ.poly_ring('x', 'y')) == ZZ.poly_ring('x', 'y')
-    assert QQ.unify(ZZ.poly_ring('x', 'y')) == QQ.poly_ring('x', 'y')
-    assert ZZ.unify(QQ.poly_ring('x', 'y')) == QQ.poly_ring('x', 'y')
-    assert QQ.unify(QQ.poly_ring('x', 'y')) == QQ.poly_ring('x', 'y')
+    assert ZZ.unify(ZZ.poly_ring(x, y)) == ZZ.poly_ring(x, y)
+    assert QQ.unify(ZZ.poly_ring(x, y)) == QQ.poly_ring(x, y)
+    assert ZZ.unify(QQ.poly_ring(x, y)) == QQ.poly_ring(x, y)
+    assert QQ.unify(QQ.poly_ring(x, y)) == QQ.poly_ring(x, y)
 
-    assert ZZ.frac_field('x').unify(ZZ) == ZZ.frac_field('x')
-    assert ZZ.frac_field('x').unify(QQ) == EX  # QQ.frac_field('x')
-    assert QQ.frac_field('x').unify(ZZ) == EX  # QQ.frac_field('x')
-    assert QQ.frac_field('x').unify(QQ) == QQ.frac_field('x')
+    assert ZZ.frac_field(x).unify(ZZ) == ZZ.frac_field(x)
+    assert ZZ.frac_field(x).unify(QQ) == EX  # QQ.frac_field(x)
+    assert QQ.frac_field(x).unify(ZZ) == EX  # QQ.frac_field(x)
+    assert QQ.frac_field(x).unify(QQ) == QQ.frac_field(x)
 
-    assert ZZ.unify(ZZ.frac_field('x')) == ZZ.frac_field('x')
-    assert QQ.unify(ZZ.frac_field('x')) == EX  # QQ.frac_field('x')
-    assert ZZ.unify(QQ.frac_field('x')) == EX  # QQ.frac_field('x')
-    assert QQ.unify(QQ.frac_field('x')) == QQ.frac_field('x')
+    assert ZZ.unify(ZZ.frac_field(x)) == ZZ.frac_field(x)
+    assert QQ.unify(ZZ.frac_field(x)) == EX  # QQ.frac_field(x)
+    assert ZZ.unify(QQ.frac_field(x)) == EX  # QQ.frac_field(x)
+    assert QQ.unify(QQ.frac_field(x)) == QQ.frac_field(x)
 
-    assert ZZ.frac_field('x', 'y').unify(ZZ) == ZZ.frac_field('x', 'y')
-    assert ZZ.frac_field('x', 'y').unify(QQ) == EX  # QQ.frac_field('x','y')
-    assert QQ.frac_field('x', 'y').unify(ZZ) == EX  # QQ.frac_field('x','y')
-    assert QQ.frac_field('x', 'y').unify(QQ) == QQ.frac_field('x', 'y')
+    assert ZZ.frac_field(x, y).unify(ZZ) == ZZ.frac_field(x, y)
+    assert ZZ.frac_field(x, y).unify(QQ) == EX  # QQ.frac_field(x,y)
+    assert QQ.frac_field(x, y).unify(ZZ) == EX  # QQ.frac_field(x,y)
+    assert QQ.frac_field(x, y).unify(QQ) == QQ.frac_field(x, y)
 
-    assert ZZ.unify(ZZ.frac_field('x', 'y')) == ZZ.frac_field('x', 'y')
-    assert QQ.unify(ZZ.frac_field('x', 'y')) == EX  # QQ.frac_field('x','y')
-    assert ZZ.unify(QQ.frac_field('x', 'y')) == EX  # QQ.frac_field('x','y')
-    assert QQ.unify(QQ.frac_field('x', 'y')) == QQ.frac_field('x', 'y')
+    assert ZZ.unify(ZZ.frac_field(x, y)) == ZZ.frac_field(x, y)
+    assert QQ.unify(ZZ.frac_field(x, y)) == EX  # QQ.frac_field(x,y)
+    assert ZZ.unify(QQ.frac_field(x, y)) == EX  # QQ.frac_field(x,y)
+    assert QQ.unify(QQ.frac_field(x, y)) == QQ.frac_field(x, y)
 
-    assert ZZ.poly_ring('x').unify(ZZ.poly_ring('x')) == ZZ.poly_ring('x')
-    assert ZZ.poly_ring('x').unify(QQ.poly_ring('x')) == QQ.poly_ring('x')
-    assert QQ.poly_ring('x').unify(ZZ.poly_ring('x')) == QQ.poly_ring('x')
-    assert QQ.poly_ring('x').unify(QQ.poly_ring('x')) == QQ.poly_ring('x')
+    assert ZZ.poly_ring(x).unify(ZZ.poly_ring(x)) == ZZ.poly_ring(x)
+    assert ZZ.poly_ring(x).unify(QQ.poly_ring(x)) == QQ.poly_ring(x)
+    assert QQ.poly_ring(x).unify(ZZ.poly_ring(x)) == QQ.poly_ring(x)
+    assert QQ.poly_ring(x).unify(QQ.poly_ring(x)) == QQ.poly_ring(x)
 
-    assert ZZ.poly_ring(
-        'x', 'y').unify(ZZ.poly_ring('x')) == ZZ.poly_ring('x', 'y')
-    assert ZZ.poly_ring(
-        'x', 'y').unify(QQ.poly_ring('x')) == QQ.poly_ring('x', 'y')
-    assert QQ.poly_ring(
-        'x', 'y').unify(ZZ.poly_ring('x')) == QQ.poly_ring('x', 'y')
-    assert QQ.poly_ring(
-        'x', 'y').unify(QQ.poly_ring('x')) == QQ.poly_ring('x', 'y')
+    assert ZZ.poly_ring(x, y).unify(ZZ.poly_ring(x)) == ZZ.poly_ring(x, y)
+    assert ZZ.poly_ring(x, y).unify(QQ.poly_ring(x)) == QQ.poly_ring(x, y)
+    assert QQ.poly_ring(x, y).unify(ZZ.poly_ring(x)) == QQ.poly_ring(x, y)
+    assert QQ.poly_ring(x, y).unify(QQ.poly_ring(x)) == QQ.poly_ring(x, y)
 
-    assert ZZ.poly_ring(
-        'x').unify(ZZ.poly_ring('x', 'y')) == ZZ.poly_ring('x', 'y')
-    assert ZZ.poly_ring(
-        'x').unify(QQ.poly_ring('x', 'y')) == QQ.poly_ring('x', 'y')
-    assert QQ.poly_ring(
-        'x').unify(ZZ.poly_ring('x', 'y')) == QQ.poly_ring('x', 'y')
-    assert QQ.poly_ring(
-        'x').unify(QQ.poly_ring('x', 'y')) == QQ.poly_ring('x', 'y')
+    assert ZZ.poly_ring(x).unify(ZZ.poly_ring(x, y)) == ZZ.poly_ring(x, y)
+    assert ZZ.poly_ring(x).unify(QQ.poly_ring(x, y)) == QQ.poly_ring(x, y)
+    assert QQ.poly_ring(x).unify(ZZ.poly_ring(x, y)) == QQ.poly_ring(x, y)
+    assert QQ.poly_ring(x).unify(QQ.poly_ring(x, y)) == QQ.poly_ring(x, y)
 
-    assert ZZ.poly_ring(
-        'x', 'y').unify(ZZ.poly_ring('x', 'z')) == ZZ.poly_ring('x', 'y', 'z')
-    assert ZZ.poly_ring(
-        'x', 'y').unify(QQ.poly_ring('x', 'z')) == QQ.poly_ring('x', 'y', 'z')
-    assert QQ.poly_ring(
-        'x', 'y').unify(ZZ.poly_ring('x', 'z')) == QQ.poly_ring('x', 'y', 'z')
-    assert QQ.poly_ring(
-        'x', 'y').unify(QQ.poly_ring('x', 'z')) == QQ.poly_ring('x', 'y', 'z')
+    assert ZZ.poly_ring(x, y).unify(ZZ.poly_ring(x, z)) == ZZ.poly_ring(x, y, z)
+    assert ZZ.poly_ring(x, y).unify(QQ.poly_ring(x, z)) == QQ.poly_ring(x, y, z)
+    assert QQ.poly_ring(x, y).unify(ZZ.poly_ring(x, z)) == QQ.poly_ring(x, y, z)
+    assert QQ.poly_ring(x, y).unify(QQ.poly_ring(x, z)) == QQ.poly_ring(x, y, z)
 
-    assert ZZ.frac_field('x').unify(ZZ.frac_field('x')) == ZZ.frac_field('x')
-    assert ZZ.frac_field('x').unify(QQ.frac_field('x')) == QQ.frac_field('x')
-    assert QQ.frac_field('x').unify(ZZ.frac_field('x')) == QQ.frac_field('x')
-    assert QQ.frac_field('x').unify(QQ.frac_field('x')) == QQ.frac_field('x')
+    assert ZZ.frac_field(x).unify(ZZ.frac_field(x)) == ZZ.frac_field(x)
+    assert ZZ.frac_field(x).unify(QQ.frac_field(x)) == QQ.frac_field(x)
+    assert QQ.frac_field(x).unify(ZZ.frac_field(x)) == QQ.frac_field(x)
+    assert QQ.frac_field(x).unify(QQ.frac_field(x)) == QQ.frac_field(x)
 
-    assert ZZ.frac_field(
-        'x', 'y').unify(ZZ.frac_field('x')) == ZZ.frac_field('x', 'y')
-    assert ZZ.frac_field(
-        'x', 'y').unify(QQ.frac_field('x')) == QQ.frac_field('x', 'y')
-    assert QQ.frac_field(
-        'x', 'y').unify(ZZ.frac_field('x')) == QQ.frac_field('x', 'y')
-    assert QQ.frac_field(
-        'x', 'y').unify(QQ.frac_field('x')) == QQ.frac_field('x', 'y')
+    assert ZZ.frac_field(x, y).unify(ZZ.frac_field(x)) == ZZ.frac_field(x, y)
+    assert ZZ.frac_field(x, y).unify(QQ.frac_field(x)) == QQ.frac_field(x, y)
+    assert QQ.frac_field(x, y).unify(ZZ.frac_field(x)) == QQ.frac_field(x, y)
+    assert QQ.frac_field(x, y).unify(QQ.frac_field(x)) == QQ.frac_field(x, y)
 
-    assert ZZ.frac_field(
-        'x').unify(ZZ.frac_field('x', 'y')) == ZZ.frac_field('x', 'y')
-    assert ZZ.frac_field(
-        'x').unify(QQ.frac_field('x', 'y')) == QQ.frac_field('x', 'y')
-    assert QQ.frac_field(
-        'x').unify(ZZ.frac_field('x', 'y')) == QQ.frac_field('x', 'y')
-    assert QQ.frac_field(
-        'x').unify(QQ.frac_field('x', 'y')) == QQ.frac_field('x', 'y')
+    assert ZZ.frac_field(x).unify(ZZ.frac_field(x, y)) == ZZ.frac_field(x, y)
+    assert ZZ.frac_field(x).unify(QQ.frac_field(x, y)) == QQ.frac_field(x, y)
+    assert QQ.frac_field(x).unify(ZZ.frac_field(x, y)) == QQ.frac_field(x, y)
+    assert QQ.frac_field(x).unify(QQ.frac_field(x, y)) == QQ.frac_field(x, y)
 
-    assert ZZ.frac_field('x', 'y').unify(
-        ZZ.frac_field('x', 'z')) == ZZ.frac_field('x', 'y', 'z')
-    assert ZZ.frac_field('x', 'y').unify(
-        QQ.frac_field('x', 'z')) == QQ.frac_field('x', 'y', 'z')
-    assert QQ.frac_field('x', 'y').unify(
-        ZZ.frac_field('x', 'z')) == QQ.frac_field('x', 'y', 'z')
-    assert QQ.frac_field('x', 'y').unify(
-        QQ.frac_field('x', 'z')) == QQ.frac_field('x', 'y', 'z')
+    assert ZZ.frac_field(x, y).unify(ZZ.frac_field(x, z)) == ZZ.frac_field(x, y, z)
+    assert ZZ.frac_field(x, y).unify(QQ.frac_field(x, z)) == QQ.frac_field(x, y, z)
+    assert QQ.frac_field(x, y).unify(ZZ.frac_field(x, z)) == QQ.frac_field(x, y, z)
+    assert QQ.frac_field(x, y).unify(QQ.frac_field(x, z)) == QQ.frac_field(x, y, z)
 
-    assert ZZ.poly_ring('x').unify(ZZ.frac_field('x')) == ZZ.frac_field('x')
-    assert ZZ.poly_ring(
-        'x').unify(QQ.frac_field('x')) == EX  # QQ.frac_field('x')
-    assert QQ.poly_ring(
-        'x').unify(ZZ.frac_field('x')) == EX  # QQ.frac_field('x')
-    assert QQ.poly_ring('x').unify(QQ.frac_field('x')) == QQ.frac_field('x')
+    assert ZZ.poly_ring(x).unify(ZZ.frac_field(x)) == ZZ.frac_field(x)
+    assert ZZ.poly_ring(x).unify(QQ.frac_field(x)) == EX  # QQ.frac_field(x)
+    assert QQ.poly_ring(x).unify(ZZ.frac_field(x)) == EX  # QQ.frac_field(x)
+    assert QQ.poly_ring(x).unify(QQ.frac_field(x)) == QQ.frac_field(x)
 
-    assert ZZ.poly_ring(
-        'x', 'y').unify(ZZ.frac_field('x')) == ZZ.frac_field('x', 'y')
-    assert ZZ.poly_ring(
-        'x', 'y').unify(QQ.frac_field('x')) == EX  # QQ.frac_field('x','y')
-    assert QQ.poly_ring(
-        'x', 'y').unify(ZZ.frac_field('x')) == EX  # QQ.frac_field('x','y')
-    assert QQ.poly_ring(
-        'x', 'y').unify(QQ.frac_field('x')) == QQ.frac_field('x', 'y')
+    assert ZZ.poly_ring(x, y).unify(ZZ.frac_field(x)) == ZZ.frac_field(x, y)
+    assert ZZ.poly_ring(x, y).unify(QQ.frac_field(x)) == EX  # QQ.frac_field(x,y)
+    assert QQ.poly_ring(x, y).unify(ZZ.frac_field(x)) == EX  # QQ.frac_field(x,y)
+    assert QQ.poly_ring(x, y).unify(QQ.frac_field(x)) == QQ.frac_field(x, y)
 
-    assert ZZ.poly_ring(
-        'x').unify(ZZ.frac_field('x', 'y')) == ZZ.frac_field('x', 'y')
-    assert ZZ.poly_ring(
-        'x').unify(QQ.frac_field('x', 'y')) == EX  # QQ.frac_field('x','y')
-    assert QQ.poly_ring(
-        'x').unify(ZZ.frac_field('x', 'y')) == EX  # QQ.frac_field('x','y')
-    assert QQ.poly_ring(
-        'x').unify(QQ.frac_field('x', 'y')) == QQ.frac_field('x', 'y')
+    assert ZZ.poly_ring(x).unify(ZZ.frac_field(x, y)) == ZZ.frac_field(x, y)
+    assert ZZ.poly_ring(x).unify(QQ.frac_field(x, y)) == EX  # QQ.frac_field(x,y)
+    assert QQ.poly_ring(x).unify(ZZ.frac_field(x, y)) == EX  # QQ.frac_field(x,y)
+    assert QQ.poly_ring(x).unify(QQ.frac_field(x, y)) == QQ.frac_field(x, y)
 
-    assert ZZ.poly_ring('x', 'y').unify(
-        ZZ.frac_field('x', 'z')) == ZZ.frac_field('x', 'y', 'z')
-    assert ZZ.poly_ring('x', 'y').unify(
-        QQ.frac_field('x', 'z')) == EX  # QQ.frac_field('x','y','z')
-    assert QQ.poly_ring('x', 'y').unify(
-        ZZ.frac_field('x', 'z')) == EX  # QQ.frac_field('x','y','z')
-    assert QQ.poly_ring('x', 'y').unify(
-        QQ.frac_field('x', 'z')) == QQ.frac_field('x', 'y', 'z')
+    assert ZZ.poly_ring(x, y).unify(ZZ.frac_field(x, z)) == ZZ.frac_field(x, y, z)
+    assert ZZ.poly_ring(x, y).unify(QQ.frac_field(x, z)) == EX  # QQ.frac_field(x,y,z)
+    assert QQ.poly_ring(x, y).unify(ZZ.frac_field(x, z)) == EX  # QQ.frac_field(x,y,z)
+    assert QQ.poly_ring(x, y).unify(QQ.frac_field(x, z)) == QQ.frac_field(x, y, z)
 
-    assert ZZ.frac_field('x').unify(ZZ.poly_ring('x')) == ZZ.frac_field('x')
-    assert ZZ.frac_field(
-        'x').unify(QQ.poly_ring('x')) == EX  # QQ.frac_field('x')
-    assert QQ.frac_field(
-        'x').unify(ZZ.poly_ring('x')) == EX  # QQ.frac_field('x')
-    assert QQ.frac_field('x').unify(QQ.poly_ring('x')) == QQ.frac_field('x')
+    assert ZZ.frac_field(x).unify(ZZ.poly_ring(x)) == ZZ.frac_field(x)
+    assert ZZ.frac_field(x).unify(QQ.poly_ring(x)) == EX  # QQ.frac_field(x)
+    assert QQ.frac_field(x).unify(ZZ.poly_ring(x)) == EX  # QQ.frac_field(x)
+    assert QQ.frac_field(x).unify(QQ.poly_ring(x)) == QQ.frac_field(x)
 
-    assert ZZ.frac_field(
-        'x', 'y').unify(ZZ.poly_ring('x')) == ZZ.frac_field('x', 'y')
-    assert ZZ.frac_field(
-        'x', 'y').unify(QQ.poly_ring('x')) == EX  # QQ.frac_field('x','y')
-    assert QQ.frac_field(
-        'x', 'y').unify(ZZ.poly_ring('x')) == EX  # QQ.frac_field('x','y')
-    assert QQ.frac_field(
-        'x', 'y').unify(QQ.poly_ring('x')) == QQ.frac_field('x', 'y')
+    assert ZZ.frac_field(x, y).unify(ZZ.poly_ring(x)) == ZZ.frac_field(x, y)
+    assert ZZ.frac_field(x, y).unify(QQ.poly_ring(x)) == EX  # QQ.frac_field(x,y)
+    assert QQ.frac_field(x, y).unify(ZZ.poly_ring(x)) == EX  # QQ.frac_field(x,y)
+    assert QQ.frac_field(x, y).unify(QQ.poly_ring(x)) == QQ.frac_field(x, y)
 
-    assert ZZ.frac_field(
-        'x').unify(ZZ.poly_ring('x', 'y')) == ZZ.frac_field('x', 'y')
-    assert ZZ.frac_field(
-        'x').unify(QQ.poly_ring('x', 'y')) == EX  # QQ.frac_field('x','y')
-    assert QQ.frac_field(
-        'x').unify(ZZ.poly_ring('x', 'y')) == EX  # QQ.frac_field('x','y')
-    assert QQ.frac_field(
-        'x').unify(QQ.poly_ring('x', 'y')) == QQ.frac_field('x', 'y')
+    assert ZZ.frac_field(x).unify(ZZ.poly_ring(x, y)) == ZZ.frac_field(x, y)
+    assert ZZ.frac_field(x).unify(QQ.poly_ring(x, y)) == EX  # QQ.frac_field(x,y)
+    assert QQ.frac_field(x).unify(ZZ.poly_ring(x, y)) == EX  # QQ.frac_field(x,y)
+    assert QQ.frac_field(x).unify(QQ.poly_ring(x, y)) == QQ.frac_field(x, y)
 
-    assert ZZ.frac_field('x', 'y').unify(
-        ZZ.poly_ring('x', 'z')) == ZZ.frac_field('x', 'y', 'z')
-    assert ZZ.frac_field('x', 'y').unify(
-        QQ.poly_ring('x', 'z')) == EX  # QQ.frac_field('x','y','z')
-    assert QQ.frac_field('x', 'y').unify(
-        ZZ.poly_ring('x', 'z')) == EX  # QQ.frac_field('x','y','z')
-    assert QQ.frac_field('x', 'y').unify(
-        QQ.poly_ring('x', 'z')) == QQ.frac_field('x', 'y', 'z')
+    assert ZZ.frac_field(x, y).unify(ZZ.poly_ring(x, z)) == ZZ.frac_field(x, y, z)
+    assert ZZ.frac_field(x, y).unify(QQ.poly_ring(x, z)) == EX  # QQ.frac_field(x,y,z)
+    assert QQ.frac_field(x, y).unify(ZZ.poly_ring(x, z)) == EX  # QQ.frac_field(x,y,z)
+    assert QQ.frac_field(x, y).unify(QQ.poly_ring(x, z)) == QQ.frac_field(x, y, z)
 
     alg = QQ.algebraic_field(sqrt(5))
 
-    assert alg.unify(alg['x', 'y']) == alg['x', 'y']
-    assert alg['x', 'y'].unify(alg) == alg['x', 'y']
+    assert alg.unify(alg[x, y]) == alg[x, y]
+    assert alg[x, y].unify(alg) == alg[x, y]
 
-    assert alg.unify(alg.frac_field('x', 'y')) == alg.frac_field('x', 'y')
-    assert alg.frac_field('x', 'y').unify(alg) == alg.frac_field('x', 'y')
+    assert alg.unify(alg.frac_field(x, y)) == alg.frac_field(x, y)
+    assert alg.frac_field(x, y).unify(alg) == alg.frac_field(x, y)
 
     ext = QQ.algebraic_field(sqrt(7))
 
     raises(NotImplementedError, lambda: alg.unify(ext))
 
-    raises(UnificationFailed, lambda: ZZ.poly_ring('x', 'y').unify(ZZ,
-           gens=('y', 'z')))
-    raises(UnificationFailed, lambda: ZZ.unify(ZZ.poly_ring('x', 'y'),
-           gens=('y', 'z')))
+    raises(UnificationFailed, lambda: ZZ.poly_ring(x, y).unify(ZZ, gens=(y, z)))
+    raises(UnificationFailed, lambda: ZZ.unify(ZZ.poly_ring(x, y), gens=(y, z)))
 
 
 def test_Domain__contains__():
@@ -534,7 +480,7 @@ def test_FF_of_type():
 
 
 def test___eq__():
-    assert not QQ['x'] == ZZ['x']
+    assert not QQ[x] == ZZ[x]
     assert not QQ.frac_field(x) == ZZ.frac_field(x)
 
 
