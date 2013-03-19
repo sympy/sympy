@@ -2885,7 +2885,7 @@ def combsimp(expr):
             return x
 
         def gamma_factor(x):
-            # return True if there is a gamma factors in shallow args
+            # return True if there is a gamma factor in shallow args
             if x.func is gamma:
                 return True
             if x.is_Add or x.is_Mul:
@@ -2898,7 +2898,6 @@ def combsimp(expr):
         if level == 0:
             expr = expr.func(*[rule_gamma(x, level + 1) for x in expr.args])
             level += 1
-
 
         if not expr.is_Mul:
             return expr
@@ -3705,117 +3704,119 @@ def logcombine(expr, force=False):
     posify: replace all symbols with symbols having positive assumptions
 
     """
-    rv = bottom_up(expr, lambda x: logcombine(x, force))
 
-    if not (rv.is_Add or rv.is_Mul):
-        return rv
+    def f(rv):
+        if not (rv.is_Add or rv.is_Mul):
+            return rv
 
-    def gooda(a):
-        # bool to tell whether the leading ``a`` in ``a*log(x)``
-        # could appear as log(x**a)
-        return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
-            (a.is_real or force and a.is_real is not False))
+        def gooda(a):
+            # bool to tell whether the leading ``a`` in ``a*log(x)``
+            # could appear as log(x**a)
+            return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
+                (a.is_real or force and a.is_real is not False))
 
-    def goodlog(l):
-        # bool to tell whether log ``l``'s argument can combine with others
-        a = l.args[0]
-        return a.is_positive or force and a.is_nonpositive is not False
+        def goodlog(l):
+            # bool to tell whether log ``l``'s argument can combine with others
+            a = l.args[0]
+            return a.is_positive or force and a.is_nonpositive is not False
 
-    other = []
-    logs = []
-    log1 = defaultdict(list)
-    for a in Add.make_args(rv):
-        if a.func is log and goodlog(a):
-            log1[()].append(([], a))
-        elif not a.is_Mul:
-            other.append(a)
-        else:
-            ot = []
-            co = []
-            lo = []
-            for ai in a.args:
-                if ai.is_Rational and ai < 0:
-                    ot.append(S.NegativeOne)
-                    co.append(-ai)
-                elif ai.func is log and goodlog(ai):
-                    lo.append(ai)
-                elif gooda(ai):
-                    co.append(ai)
-                else:
-                    ot.append(ai)
-            if len(lo) > 1:
-                logs.append((ot, co, lo))
-            elif lo:
-                log1[tuple(ot)].append((co, lo[0]))
-            else:
+        other = []
+        logs = []
+        log1 = defaultdict(list)
+        for a in Add.make_args(rv):
+            if a.func is log and goodlog(a):
+                log1[()].append(([], a))
+            elif not a.is_Mul:
                 other.append(a)
+            else:
+                ot = []
+                co = []
+                lo = []
+                for ai in a.args:
+                    if ai.is_Rational and ai < 0:
+                        ot.append(S.NegativeOne)
+                        co.append(-ai)
+                    elif ai.func is log and goodlog(ai):
+                        lo.append(ai)
+                    elif gooda(ai):
+                        co.append(ai)
+                    else:
+                        ot.append(ai)
+                if len(lo) > 1:
+                    logs.append((ot, co, lo))
+                elif lo:
+                    log1[tuple(ot)].append((co, lo[0]))
+                else:
+                    other.append(a)
 
-    # if there is only one log at each coefficient and none have
-    # an exponent to place inside the log then there is nothing to do
-    if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):
-        return rv
+        # if there is only one log at each coefficient and none have
+        # an exponent to place inside the log then there is nothing to do
+        if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):
+            return rv
 
-    # collapse multi-logs as far as possible in a canonical way
-    # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
-    # -- in this case, it's unambiguous, but if it were were a log(c) in
-    # each term then it's arbitrary whether they are grouped by log(a) or
-    # by log(c). So for now, just leave this alone; it's probably better to
-    # let the user decide
-    for o, e, l in logs:
-        l = list(ordered(l))
-        e = log(l.pop(0).args[0]**Mul(*e))
-        while l:
-            li = l.pop(0)
-            e = log(li.args[0]**e)
-        c, l = Mul(*o), e
-        if l.func is log:  # it should be, but check to be sure
-            log1[(c,)].append(([], l))
-        else:
-            other.append(c*l)
+        # collapse multi-logs as far as possible in a canonical way
+        # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
+        # -- in this case, it's unambiguous, but if it were were a log(c) in
+        # each term then it's arbitrary whether they are grouped by log(a) or
+        # by log(c). So for now, just leave this alone; it's probably better to
+        # let the user decide
+        for o, e, l in logs:
+            l = list(ordered(l))
+            e = log(l.pop(0).args[0]**Mul(*e))
+            while l:
+                li = l.pop(0)
+                e = log(li.args[0]**e)
+            c, l = Mul(*o), e
+            if l.func is log:  # it should be, but check to be sure
+                log1[(c,)].append(([], l))
+            else:
+                other.append(c*l)
 
-    # logs that have the same coefficient can multiply
-    for k in log1.keys():
-        log1[Mul(*k)] = log(logcombine(Mul(*[
-            l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
-            force=force))
+        # logs that have the same coefficient can multiply
+        for k in log1.keys():
+            log1[Mul(*k)] = log(logcombine(Mul(*[
+                l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
+                force=force))
 
-    # logs that have oppositely signed coefficients can divide
-    for k in ordered(log1.keys()):
-        if not k in log1:  # already popped as -k
-            continue
-        if -k in log1:
-            # figure out which has the minus sign; the one with
-            # more op counts should be the one
-            num, den = k, -k
-            if num.count_ops() > den.count_ops():
-                num, den = den, num
-            other.append(num*log(log1.pop(num).args[0]/log1.pop(den).args[0]))
-        else:
-            other.append(k*log1.pop(k))
+        # logs that have oppositely signed coefficients can divide
+        for k in ordered(log1.keys()):
+            if not k in log1:  # already popped as -k
+                continue
+            if -k in log1:
+                # figure out which has the minus sign; the one with
+                # more op counts should be the one
+                num, den = k, -k
+                if num.count_ops() > den.count_ops():
+                    num, den = den, num
+                other.append(num*log(log1.pop(num).args[0]/log1.pop(den).args[0]))
+            else:
+                other.append(k*log1.pop(k))
 
-    return Add(*other)
+        return Add(*other)
+
+    return bottom_up(expr, f)
 
 
-def bottom_up(rv, F, last=False, atoms=False, nonbasic=False):
+def bottom_up(rv, F, atoms=False, nonbasic=False):
     """Apply ``F`` to all expressions in an expression tree from the
-    bottom up. If ``last`` is True, apply ``F`` to the rebuilt object;
-    if ``atoms`` is True, apply ``F`` even if there are no args; if
-    ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
+    bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
+    if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
     """
     try:
         if rv.args:
-            args = tuple([F(a) for a in rv.args])
+            args = tuple([bottom_up(a, F, atoms, nonbasic)
+                for a in rv.args])
             if args != rv.args:
                 rv = rv.func(*args)
+            rv = F(rv)
+        elif atoms:
+            rv = F(rv)
     except AttributeError:
         if nonbasic:
             try:
-                return F(rv)
+                rv = F(rv)
             except TypeError:
-                return rv
-
-    if last or atoms:
-        rv = F(rv)
+                pass
 
     return rv
 
@@ -3948,7 +3949,7 @@ def futrig(e, **kwargs):
         return e
 
     old = e
-    e = bottom_up(e, lambda x: _futrig(x, **kwargs), last=True)
+    e = bottom_up(e, lambda x: _futrig(x, **kwargs))
 
     if kwargs.pop('hyper', True) and e.has(C.HyperbolicFunction):
         e, f = hyper_as_trig(e)
