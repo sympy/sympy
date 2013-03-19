@@ -574,6 +574,7 @@ class Ellipse(GeometryEntity):
 
         return fuzzy_bool(test.is_positive)
 
+    @doctest_depends_on(modules=('pyglet',))
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
 
