@@ -7,6 +7,7 @@ from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.rings import PolyElement
 from sympy.polys.monomialtools import lex
 from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
+from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.printing.defaults import DefaultPrinting
 
@@ -160,7 +161,7 @@ class FracField(DefaultPrinting):
         from sympy.polys.rings import PolyRing
         return PolyRing(self.symbols, self.domain, self.order)
 
-class FracElement(CantSympify, DefaultPrinting):
+class FracElement(DomainElement, DefaultPrinting, CantSympify):
     """Sparse rational function. """
 
     def __init__(self, field, numer, denom=None):
@@ -182,6 +183,9 @@ class FracElement(CantSympify, DefaultPrinting):
     def to_poly(f):
         assert f.denom == 1
         return f.numer
+
+    def parent(self):
+        return self.field.to_domain()
 
     _hash = None
 

@@ -14,6 +14,7 @@ from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded
+from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.printing.defaults import DefaultPrinting
 
@@ -230,13 +231,16 @@ class PolyRing(DefaultPrinting, IPolys):
         from sympy.polys.fields import FracField
         return FracField(self.symbols, self.domain, self.order)
 
-class PolyElement(DefaultPrinting, CantSympify, dict):
+class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __init__(self, ring, init=[]):
         self.ring = ring
         dict.__init__(self, init)
 
     def new(self, init):
         return self.__class__(self.ring, init)
+
+    def parent(self):
+        return self.ring.to_domain()
 
     _hash = None
 

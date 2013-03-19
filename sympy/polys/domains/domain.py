@@ -1,5 +1,7 @@
 """Implementation of :class:`Domain` class. """
 
+from sympy.polys.domains.domainelement import DomainElement
+
 from sympy.core import Basic, sympify
 from sympy.core.compatibility import SYMPY_INTS, is_sequence
 
@@ -93,13 +95,8 @@ class Domain(object):
             if isinstance(a, SYMPY_INTS):
                 return K1.new(a)
 
-            from sympy.polys.rings import PolyElement
-            from sympy.polys.fields import FracElement
-
-            if isinstance(a, PolyElement):
-                return K1.convert(a, a.ring.to_domain())
-            if isinstance(a, FracElement):
-                return K1.convert(a, a.field.to_domain())
+            if isinstance(a, DomainElement):
+                return K1.convert(a, a.parent())
 
             # TODO: implement this in from_ methods
             if K1.is_Numerical and getattr(a, 'is_ground', False):
