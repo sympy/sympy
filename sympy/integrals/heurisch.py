@@ -250,7 +250,6 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     rev_mapping = {}
     if not hasattr(heurisch,"store_tuple"):
         heurisch.store_tuple=() #static initialization of the variable
-    
     for k, v in mapping.iteritems():
         rev_mapping[v] = k
     if mappings is None:
