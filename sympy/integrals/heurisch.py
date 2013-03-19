@@ -257,7 +257,6 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
         def _sort_key(arg):
             return default_sort_key(arg[0].as_independent(x)[1])
         mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
-        
         #optimizing the number of permutations of mappping
         for i in mapping:
             if i[0] is x:
@@ -265,15 +264,13 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
                 mapping.remove(i)
                 break
         mappings = permutations(mapping)
-
     def _substitute(expr):
         return expr.subs(mapping)
     for mapping in mappings:
-        
+
         mapping = list(mapping)
         if heurisch.store_tuple is not ():
               mapping.append(heurisch.store_tuple)
-        
         diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
         if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
@@ -285,7 +282,6 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
 
             if result is not None:
                 return indep*result
-
         return None
 
     numers = [ cancel(denom*g) for g in diffs ]
