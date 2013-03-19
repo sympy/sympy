@@ -46,17 +46,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        if self.dtype == other.dtype:
-            return self.ext == other.ext
-        else:
-            return False
-
-    def __ne__(self, other):
-        """Returns ``False`` if two domains are equivalent. """
-        if self.dtype == other.dtype:
-            return self.ext != other.ext
-        else:
-            return True
+        return isinstance(other, AlgebraicField) and \
+            self.dtype == other.dtype and self.ext == other.ext
 
     def algebraic_field(self, *extension):
         r"""Returns an algebraic field, i.e. `\mathbb{Q}(\alpha, \dots)`. """

@@ -138,13 +138,8 @@ class QuotientRing(Ring):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        if not isinstance(other, QuotientRing):
-            return False
-        return self.ring == other.ring and self.base_ideal == other.base_ideal
-
-    def __ne__(self, other):
-        """Returns `False` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return isinstance(other, QuotientRing) and \
+            self.ring == other.ring and self.base_ideal == other.base_ideal
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """

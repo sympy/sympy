@@ -41,13 +41,8 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        if not isinstance(other, FractionField):
-            return False
-        return self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
-
-    def __ne__(self, other):
-        """Returns ``False`` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return isinstance(other, FractionField) and \
+            self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """

@@ -33,11 +33,8 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        return isinstance(other, PolynomialRing) and self.dtype == other.dtype and self.ring == other.ring
-
-    def __ne__(self, other):
-        """Returns `False` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return isinstance(other, PolynomialRing) and \
+            self.dtype == other.dtype and self.ring == other.ring
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """

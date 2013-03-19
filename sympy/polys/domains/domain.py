@@ -316,11 +316,11 @@ class Domain(object):
 
     def __eq__(self, other):
         """Returns ``True`` if two domains are equivalent. """
-        return self.dtype == other.dtype
+        return isinstance(other, Domain) and self.dtype == other.dtype
 
     def __ne__(self, other):
         """Returns ``False`` if two domains are equivalent. """
-        return self.dtype != other.dtype
+        return not self.__eq__(other)
 
     def map(self, seq):
         """Rersively apply ``self`` to all elements of ``seq``. """

@@ -43,11 +43,6 @@ class FiniteField(Field, SimpleDomain):
         return isinstance(other, FiniteField) and \
             self.mod == other.mod and self.dom == other.dom
 
-    def __ne__(self, other):
-        """Returns ``False`` if two domains are equivalent. """
-        return not isinstance(other, FiniteField) or \
-            self.mod != other.mod or self.dom != other.dom
-
     def characteristic(self):
         """Return the characteristic of this domain. """
         return self.mod

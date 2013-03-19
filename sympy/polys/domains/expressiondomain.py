@@ -88,14 +88,8 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __eq__(f, g):
             return f.ex == f.__class__(g).ex
 
-        def __req__(f, g):
-            return f.__class__(g).ex == f.ex
-
         def __ne__(f, g):
-            return f.ex != f.__class__(g).ex
-
-        def __rne__(f, g):
-            return f.__class__(g).ex != f.ex
+            return not f.__eq__(g)
 
         def __nonzero__(f):
             return f.ex != 0

@@ -63,14 +63,9 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        if not isinstance(other, PolynomialRingBase):
-            return False
-        return self.dtype == other.dtype and self.dom == other.dom and \
+        return isinstance(other, PolynomialRingBase) and \
+            self.dtype == other.dtype and self.dom == other.dom and \
             self.gens == other.gens and self.order == other.order
-
-    def __ne__(self, other):
-        """Returns `False` if two domains are equivalent. """
-        return not self.__eq__(other)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
