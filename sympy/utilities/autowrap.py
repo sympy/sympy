@@ -28,7 +28,7 @@ lambdify().
     >>> 2*f(x, y) + y
     y + 2*f(x, y)
     >>> (2*f(x, y) + y).evalf(2, subs={x: 1, y:2})
-    0.0
+    0.e-110
 
 The idea is that a SymPy user will primarily be interested in working with
 mathematical expressions, and should not have to learn details about wrapping
