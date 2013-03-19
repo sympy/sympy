@@ -172,7 +172,7 @@ class CCodePrinter(CodePrinter):
                            (self._print(expr.args[-1].cond),
                             self._print(expr.args[-1].expr)))
         code = "%s" + last_line
-        return code % ": ".join(ecpairs) + " ) "
+        return code % ": ".join(ecpairs) + " )"
 
     def _print_And(self, expr):
         PREC = precedence(expr)
