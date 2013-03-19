@@ -297,7 +297,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             symbols = self.ring.symbols
 
-        return expr_from_dict(self, *symbols)
+        return expr_from_dict(self.as_expr_dict(), *symbols)
+
+    def as_expr_dict(self):
+        to_sympy = self.ring.domain.to_sympy
+        return dict([ (monom, to_sympy(coeff)) for monom, coeff in self.terms() ])
 
     def clear_denoms(self):
         domain = self.ring.domain
