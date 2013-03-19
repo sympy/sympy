@@ -198,6 +198,15 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def copy(self):
         return self.raw_new(self.numer.copy(), self.denom.copy())
 
+    def set_field(self, new_field):
+        if self.field == new_field:
+            return self
+        else:
+            new_ring = new_field.ring
+            numer = self.numer.set_ring(new_ring)
+            denom = self.denom.set_ring(new_ring)
+            return new_field.new(numer, denom)
+
     def as_expr(self, *symbols):
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
 

@@ -12,7 +12,7 @@ from sympy.polys.monomialtools import (monomial_mul, monomial_div,
     monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex)
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
-from sympy.polys.polyutils import expr_from_dict
+from sympy.polys.polyutils import expr_from_dict, _dict_reorder
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
@@ -283,12 +283,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return self.new(self)
 
     def set_ring(self, new_ring):
-        if self.ring.ngens != new_ring.ngens:
-            raise NotImplementedError
+        if self.ring == new_ring:
+            return self
+        elif self.ring.symbols != new_ring.symbols:
+            terms = zip(*_dict_reorder(self, self.ring.symbols, new_ring.symbols))
+            return new_ring.from_terms(terms)
         else:
-            orig_domain = self.ring.domain
-            domain_new = new_ring.domain_new
-            return self.__class__(new_ring, [ (k, domain_new(v, orig_domain)) for k, v in self.items() ])
+            return new_ring.from_dict(self)
 
     def as_expr(self, *symbols):
         if symbols and len(symbols) != self.ring.ngens:

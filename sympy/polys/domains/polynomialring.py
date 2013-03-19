@@ -2,6 +2,7 @@
 
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 
 class PolynomialRing(Ring, CompositeDomain):
     """A class for representing multivariate polynomial rings. """
@@ -66,17 +67,17 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_PolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
-        if K1 == K0:
-            return a
-        else:
-            return # TODO
+        try:
+            return a.set_ring(K1.ring)
+        except (CoercionFailed, GeneratorsError):
+            return None
 
     def from_FractionField(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
-        if K1.ring == K0.field.ring and K0.denom(a) == 1:
-            return K1.ring.ring_new(K0.numer(a))
+        if K0.denom(a) == 1:
+            return K1.from_PolynomialRing(K0.numer(a), K0.field.ring.to_domain())
         else:
-            return # TODO
+            return None
 
     def get_field(self):
         """Returns a field associated with `self`. """

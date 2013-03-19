@@ -2,6 +2,7 @@
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 
 class FractionField(Field, CompositeDomain):
     """A class for representing multivariate rational function fields. """
@@ -66,17 +67,17 @@ class FractionField(Field, CompositeDomain):
 
     def from_PolynomialRing(K1, a, K0):
         """Convert a `DMP` object to `dtype`. """
-        if K1.field.ring == K0.ring:
-            return K1.field.field_new(a)
-        else:
-            return # TODO
+        try:
+            return K1.field.field_new(a.set_ring(K1.field.ring))
+        except (CoercionFailed, GeneratorsError):
+            return None
 
     def from_FractionField(K1, a, K0):
         """Convert a `DMF` object to `dtype`. """
-        if K1 == K0:
-            return a
-        else:
-            return # TODO
+        try:
+            return a.set_field(K1.field)
+        except (CoercionFailed, GeneratorsError):
+            return None
 
     def get_ring(self):
         """Returns a field associated with `self`. """
