@@ -2,7 +2,7 @@ from __future__ import with_statement
 
 import os
 from os.path import join
-from subprocess import check_call, STDOUT
+from subprocess import check_call, check_output, STDOUT, CalledProcessError
 import tempfile
 import shutil
 from cStringIO import StringIO
@@ -176,9 +176,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
-        with open(os.devnull, 'w') as devnull:
-            check_call(['latex', '-halt-on-error', 'texput.tex'], cwd=workdir,
-                       stdout=devnull, stderr=STDOUT)
+        try:
+            check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
+                          'texput.tex'], cwd=workdir, stderr=STDOUT)
+        except CalledProcessError, e:
+            raise RuntimeError(
+                "latex exited abnormally with the following output:\n%s" %
+                e.output)
 
         if output != "dvi":
             defaultoptions = {
@@ -203,8 +207,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
 
-            with open(os.devnull, 'w') as devnull:
-                check_call(cmd, cwd=workdir, stdout=devnull, stderr=STDOUT)
+            try:
+                check_output(cmd, cwd=workdir, stderr=STDOUT)
+            except CalledProcessError, e:
+                raise RuntimeError(
+                    "%s exited abnormally with the following output:\n%s" %
+                    (cmd[0], e.output))
 
         src = "texput.%s" % (output)
 
