@@ -3,6 +3,7 @@ from sympy.external import import_module
 
 from sympy.printing.printer import Printer
 import sympy
+from functools import partial
 
 theano = import_module('theano')
 if theano:
@@ -12,42 +13,42 @@ if theano:
     from theano.sandbox import linalg as tlinalg
 
     mapping = {
-            sympy.Add: ts.add,
-            sympy.Mul: ts.mul,
-            sympy.Abs: ts.abs_,
-            sympy.sign: ts.sgn,
-            sympy.ceiling: ts.ceil,
-            sympy.floor: ts.floor,
-            sympy.log: ts.log,
-            sympy.exp: ts.exp,
-            sympy.sqrt: ts.sqrt,
-            sympy.cos: ts.cos,
-            sympy.acos: ts.arccos,
-            sympy.sin: ts.sin,
-            sympy.asin: ts.arcsin,
-            sympy.tan: ts.tan,
-            sympy.atan: ts.arctan,
-            sympy.atan2: ts.arctan2,
-            sympy.cosh: ts.cosh,
-            sympy.acosh: ts.arccosh,
-            sympy.sinh: ts.sinh,
-            sympy.asinh: ts.arcsinh,
-            sympy.tanh: ts.tanh,
-            sympy.atanh: ts.arctanh,
-            sympy.re: ts.real,
-            sympy.im: ts.imag,
-            sympy.arg: ts.angle,
-            sympy.erf: ts.erf,
-            sympy.gamma: ts.gamma,
-            sympy.loggamma: ts.gammaln,
-            sympy.Pow: ts.pow,
-            sympy.Eq: ts.eq,
-            sympy.Gt: ts.gt,
-            sympy.Lt: ts.lt,
-            sympy.Le: ts.le,
-            sympy.Ge: ts.ge,
-            sympy.Max: ts.maximum,  # Sympy accept >2 inputs, Theano only 2
-            sympy.Min: ts.minimum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.Add: tt.add,
+            sympy.Mul: tt.mul,
+            sympy.Abs: tt.abs_,
+            sympy.sign: tt.sgn,
+            sympy.ceiling: tt.ceil,
+            sympy.floor: tt.floor,
+            sympy.log: tt.log,
+            sympy.exp: tt.exp,
+            sympy.sqrt: tt.sqrt,
+            sympy.cos: tt.cos,
+            sympy.acos: tt.arccos,
+            sympy.sin: tt.sin,
+            sympy.asin: tt.arcsin,
+            sympy.tan: tt.tan,
+            sympy.atan: tt.arctan,
+            sympy.atan2: tt.arctan2,
+            sympy.cosh: tt.cosh,
+            sympy.acosh: tt.arccosh,
+            sympy.sinh: tt.sinh,
+            sympy.asinh: tt.arcsinh,
+            sympy.tanh: tt.tanh,
+            sympy.atanh: tt.arctanh,
+            sympy.re: tt.real,
+            sympy.im: tt.imag,
+            sympy.arg: tt.angle,
+            sympy.erf: tt.erf,
+            sympy.gamma: tt.gamma,
+            sympy.loggamma: tt.gammaln,
+            sympy.Pow: tt.pow,
+            sympy.Eq: tt.eq,
+            sympy.Gt: tt.gt,
+            sympy.Lt: tt.lt,
+            sympy.Le: tt.le,
+            sympy.Ge: tt.ge,
+            sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
+            sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
 
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
@@ -63,25 +64,26 @@ class TheanoPrinter(Printer):
 
     cache = dict()
 
-    def _print_Symbol(self, s, dtypes={}):
+    def _print_Symbol(self, s, dtypes={}, broadcastables={}):
         dtype = dtypes.get(s, 'floatX')
-        key = (s.name, dtype, type(s))
+        broadcastable = broadcastables.get(s, ())
+        key = (s.name, dtype, broadcastable, type(s))
         if key in self.cache:
             return self.cache[key]
         else:
-            value = ts.Scalar(dtype)(s.name)
+            value = tt.tensor(name=s.name, dtype=dtype, broadcastable=broadcastable)
             self.cache[key] = value
             return value
 
-    def _print_Basic(self, expr, dtypes={}):
+    def _print_Basic(self, expr, **kwargs):
         op = mapping[type(expr)]
-        children = [self._print(arg, dtypes) for arg in expr.args]
+        children = [self._print(arg, **kwargs) for arg in expr.args]
         return op(*children)
 
-    def _print_Number(self, n, dtypes={}):
+    def _print_Number(self, n, **kwargs):
         return eval(str(n))
 
-    def _print_MatrixSymbol(self, X, dtypes={}):
+    def _print_MatrixSymbol(self, X, dtypes={}, **kwargs):
         dtype = dtypes.get(X, 'floatX')
         # shape = [self._print(d, dtypes) for d in X.shape]
         key = (X.name, dtype, type(X))
@@ -92,75 +94,59 @@ class TheanoPrinter(Printer):
             self.cache[key] = value
             return value
 
-    def _print_MatMul(self, expr, dtypes):
-        children = [self._print(arg, dtypes) for arg in expr.args]
+    def _print_MatMul(self, expr, **kwargs):
+        children = [self._print(arg, **kwargs) for arg in expr.args]
         result = children[0]
         for child in children[1:]:
             result = tt.dot(result, child)
         return result
 
-    def _print_Pi(self, expr, dtypes):
+    def _print_Pi(self, expr, **kwargs):
         return 3.141592653589793
 
-    def _print_Rational(self, expr, dtypes):
-        return ts.true_div(self._print(expr.p, dtypes),
-                           self._print(expr.q, dtypes))
+    def _print_Rational(self, expr, **kwargs):
+        return tt.true_div(self._print(expr.p, **kwargs),
+                           self._print(expr.q, **kwargs))
 
-    def _print_Integer(self, expr, dtypes):
+    def _print_Integer(self, expr, **kwargs):
         return expr.p
 
-    def _print_factorial(self, expr, dtypes):
-        return self._print(sympy.gamma(expr.args[0] + 1), dtypes)
+    def _print_factorial(self, expr, **kwargs):
+        return self._print(sympy.gamma(expr.args[0] + 1), **kwargs)
 
     def emptyPrinter(self, expr):
         return expr
 
-    def doprint(self, expr, dtypes={}):
+    def doprint(self, expr, **kwargs):
         """Returns printer's representation for expr (as a string)"""
-        return self._print(expr, dtypes)
+        return self._print(expr, **kwargs)
 
 
-def theano_code(expr, dtypes={}, **settings):
-    return TheanoPrinter(settings).doprint(expr, dtypes)
+def theano_code(expr, **kwargs):
+    return TheanoPrinter({}).doprint(expr, **kwargs)
 
 
-def dim_handling(inputs, dim=None, dims={}, broadcastable={}, keys=()):
+def dim_handling(inputs, dim=None, dims={}, broadcastables={}, keys=()):
     """ Handle various input types for dimensions in tensor_wrap
 
     See Also:
         tensor_wrap
         theano_funciton
     """
-    if keys:
-        dims = dict((i, dims[oi]) for i, oi in zip(inputs, keys) if oi in dims)
-        broadcastable = dict((i, broadcastable[oi])
-                for i, oi in zip(inputs, keys) if oi in broadcastable)
     if dim:
         dims = dict(zip(inputs, [dim]*len(inputs)))
     if dims:
         maxdim = max(dims.values())
-        broadcastable = dict((i, (False,)*dims[i] + (True,)*(maxdim-dims[i]))
+        broadcastables = dict((i, (False,)*dims[i] + (True,)*(maxdim-dims[i]))
                          for i in inputs)
-    return broadcastable
-
-
-def tensor_wrap(inputs, outputs, **kwargs):
-    """ Convert scalar io-graph to tensor io-graph """
-    broadcastable = dim_handling(inputs, **kwargs)
-
-    Tinputs = [tt.Tensor(i.type.dtype, broadcastable[i])(i.name)
-                            for i in inputs]
-    Toutputs = tt.Elemwise(ts.Composite(inputs, outputs))(*Tinputs)
-    return Tinputs, Toutputs
+    return broadcastables
 
 
 def theano_function(inputs, outputs, dtypes={}, **kwargs):
     """ Create Theano function from SymPy expressions """
-    tinputs  = [theano_code(i, dtypes) for i in inputs]
-    toutputs = [theano_code(o, dtypes) for o in outputs]
-    if not kwargs:
-        toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
-        return theano.function(tinputs, toutputs)
-    else:
-        Tinputs, Toutputs = tensor_wrap(tinputs, toutputs, keys=inputs, **kwargs)
-        return theano.function(Tinputs, Toutputs)
+    broadcastables = dim_handling(inputs, **kwargs)
+    code = partial(theano_code, dtypes=dtypes, broadcastables=broadcastables)
+    tinputs  = map(code, inputs)
+    toutputs = map(code, outputs)
+    toutputs = toutputs[0] if len(toutputs) == 1 else toutputs
+    return theano.function(tinputs, toutputs)

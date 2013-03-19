@@ -4,7 +4,7 @@ theano = import_module('theano')
 if theano:
     ts = theano.scalar
     tt = theano.tensor
-    xt, yt, zt = map(ts.Scalar('floatX'), 'xyz')
+    xt, yt, zt = [tt.scalar(name, 'floatX') for name in 'xyz']
 else:
     #bin/test will not execute any tests now
     disabled = True
@@ -13,7 +13,8 @@ import sympy
 from sympy import S
 sy = sympy
 from sympy.abc import x, y, z, a, b, c
-from sympy.printing.theanocode import theano_code, dim_handling, tensor_wrap
+from sympy.printing.theanocode import (theano_code, dim_handling,
+        theano_function)
 
 def theq(a, b):
     """ theano equality """
@@ -29,29 +30,39 @@ def theq(a, b):
 
 def test_symbol():
     xt = theano_code(x)
-    assert isinstance(xt, ts.ScalarVariable)
+    assert isinstance(xt, (tt.TensorVariable, ts.ScalarVariable))
     assert xt.name == x.name
+
+    assert theano_code(x, broadcastables={x: (False,)}).broadcastable == (False,)
+    assert theano_code(x, broadcastables={x: (False,)}).name == x.name
 
 def test_add():
     expr = x + y
     comp = theano_code(expr)
-    assert comp.owner.op == theano.scalar.add
+    assert comp.owner.op == theano.tensor.add
+
+    comp = theano_code(expr, broadcastables={x: (False,), y: (False,)})
+    assert comp.broadcastable == (False,)
+
+    comp = theano_code(expr, broadcastables={x: (False, True), y: (False, False)})
+    assert comp.broadcastable == (False, False)
+
 
 def test_trig():
-    assert theq(theano_code(sympy.sin(x)), ts.sin(xt))
-    assert theq(theano_code(sympy.tan(x)), ts.tan(xt))
+    assert theq(theano_code(sympy.sin(x)), tt.sin(xt))
+    assert theq(theano_code(sympy.tan(x)), tt.tan(xt))
 
 def test_many():
     expr = sy.exp(x**2 + sy.cos(y)) * sy.log(2*z)
     comp = theano_code(expr)
-    expected = ts.exp(xt**2 + ts.cos(yt)) * ts.log(2*zt)
+    expected = tt.exp(xt**2 + tt.cos(yt)) * tt.log(2*zt)
     # assert theq(comp, expected)
 
 def test_dtype():
-    assert theano_code(x, {x: 'float32'}).type.dtype == 'float32'
-    assert theano_code(x, {x: 'float64'}).type.dtype == 'float64'
-    assert theano_code(x+1, {x: 'float32'}).type.dtype == 'float32'
-    assert theano_code(x+y, {x: 'float64', y: 'float32'}).type.dtype == 'float64'
+    assert theano_code(x, dtypes={x: 'float32'}).type.dtype == 'float32'
+    assert theano_code(x, dtypes={x: 'float64'}).type.dtype == 'float64'
+    assert theano_code(x+1, dtypes={x: 'float32'}).type.dtype == 'float32'
+    assert theano_code(x+y, dtypes={x: 'float64', y: 'float32'}).type.dtype == 'float64'
 
 def test_MatrixSymbol():
     X = sympy.MatrixSymbol('X', 4, 5)
@@ -87,18 +98,11 @@ def test_dim_handling():
     assert dim_handling([x], dim=2) == {x: (False, False)}
     assert dim_handling([x, y], dims={x: 1, y: 2}) == {x: (False, True),
                                                        y: (False, False)}
-    assert dim_handling([x], broadcastable={x: (False,)}) == {x: (False,)}
-    assert dim_handling([x], dims={'x': 1}, keys=['x']) == {x: (False,)}
-
-def test_tensor_wrap():
-    [Xt], Xtp1 = tensor_wrap([xt], [xt+1], dim=2)
-    assert isinstance(Xt,   tt.TensorVariable)
-    assert isinstance(Xtp1, tt.TensorVariable)
-    assert Xtp1.type.broadcastable == (False, False)
+    assert dim_handling([x], broadcastables={x: (False,)}) == {x: (False,)}
 
 def test_Rationals():
-    assert theq(theano_code(sympy.Integer(2) / 3), ts.true_div(2, 3))
-    assert theq(theano_code(S.Half), ts.true_div(1, 2))
+    assert theq(theano_code(sympy.Integer(2) / 3), tt.true_div(2, 3))
+    assert theq(theano_code(S.Half), tt.true_div(1, 2))
 
 def test_Integers():
     assert theano_code(sympy.Integer(3)) == 3
@@ -106,3 +110,12 @@ def test_Integers():
 def test_factorial():
     n = sympy.Symbol('n')
     assert theano_code(sympy.factorial(n))
+
+def test_theano_function():
+    import numpy as np
+    f = theano_function([x, y], [x+y], dtypes={x: 'float64', y: 'float64'},
+                                     dim=1)
+    xx = np.arange(3).astype('float64')
+    yy = 2*np.arange(3).astype('float64')
+    assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
+
