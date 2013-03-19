@@ -1,8 +1,15 @@
 from __future__ import with_statement
 
-import os
 from os.path import join
-from subprocess import check_call, check_output, STDOUT, CalledProcessError
+from subprocess import STDOUT, CalledProcessError
+
+# this workaround is needed because we still support python 2.5 and python
+# 2.6
+try:
+    from subprocess import check_output as run_process
+except ImportError:
+    from subprocess import check_call as run_process
+
 import tempfile
 import shutil
 from cStringIO import StringIO
@@ -177,8 +184,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
         try:
-            check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                          'texput.tex'], cwd=workdir, stderr=STDOUT)
+            run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
+                         'texput.tex'], cwd=workdir, stderr=STDOUT)
         except CalledProcessError, e:
             raise RuntimeError(
                 "latex exited abnormally with the following output:\n%s" %
@@ -208,7 +215,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise SystemError("Invalid output format: %s" % output)
 
             try:
-                check_output(cmd, cwd=workdir, stderr=STDOUT)
+                run_process(cmd, cwd=workdir, stderr=STDOUT)
             except CalledProcessError, e:
                 raise RuntimeError(
                     "%s exited abnormally with the following output:\n%s" %
@@ -282,9 +289,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             win.close()
         else:
-            with open(os.devnull, 'w') as devnull:
-                check_call([viewer, src], cwd=workdir, stdout=devnull,
-                           stderr=STDOUT)
+            run_process([viewer, src], cwd=workdir, stderr=STDOUT)
     finally:
         try:
             shutil.rmtree(workdir) # delete directory
