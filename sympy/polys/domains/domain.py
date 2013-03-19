@@ -71,47 +71,51 @@ class Domain(object):
     def normal(self, *args):
         return self.dtype(*args)
 
-    def convert(K1, a, K0=None):
-        """Convert an object `a` from `K_0` to `K_1`. """
-        if K0 is not None:
-            if K0.alias is not None:
-                method = "from_" + K0.alias
-            else:
-                method = "from_" + K0.__class__.__name__
-
-            _convert = getattr(K1, method)
-
-            if _convert is not None:
-                result = _convert(a, K0)
-
-                if result is not None:
-                    return result
-
-            raise CoercionFailed("can't convert %s of type %s from %s to %s" % (a, type(a), K0, K1))
+    def convert_from(self, element, base):
+        """Convert ``element`` to ``self.dtype`` given the base domain. """
+        if base.alias is not None:
+            method = "from_" + base.alias
         else:
-            if K1.of_type(a):
-                return a
+            method = "from_" + base.__class__.__name__
 
-            if isinstance(a, SYMPY_INTS):
-                return K1.new(a)
+        _convert = getattr(self, method)
 
-            if isinstance(a, DomainElement):
-                return K1.convert(a, a.parent())
+        if _convert is not None:
+            result = _convert(element, base)
 
-            # TODO: implement this in from_ methods
-            if K1.is_Numerical and getattr(a, 'is_ground', False):
-                return K1.convert(a.LC())
+            if result is not None:
+                return result
 
+        raise CoercionFailed("can't convert %s of type %s from %s to %s" % (element, type(element), base, self))
+
+    def convert(self, element, base=None):
+        """Convert ``element`` to ``self.dtype``. """
+        if base is not None:
+            return self.convert_from(element, base)
+
+        if self.of_type(element):
+            return element
+
+        if isinstance(element, SYMPY_INTS):
+            return self.new(element)
+
+        if isinstance(element, DomainElement):
+            return self.convert_from(element, element.parent())
+
+        # TODO: implement this in from_ methods
+        if self.is_Numerical and getattr(element, 'is_ground', False):
+            return self.convert(element.LC())
+
+        if not is_sequence(element):
             try:
-                if not is_sequence(a):
-                    a = sympify(a)
+                element = sympify(element)
 
-                    if isinstance(a, Basic):
-                        return K1.from_sympy(a)
+                if isinstance(element, Basic):
+                    return self.from_sympy(element)
             except (TypeError, ValueError):
                 pass
 
-            raise CoercionFailed("can't convert %s of type %s to %s" % (a, type(a), K1))
+        raise CoercionFailed("can't convert %s of type %s to %s" % (element, type(element), self))
 
     def of_type(self, a):
         """Check if ``a`` is of type ``dtype``. """
