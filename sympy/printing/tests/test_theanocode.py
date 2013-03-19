@@ -130,4 +130,3 @@ def test_theano_function_numpy():
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
-
