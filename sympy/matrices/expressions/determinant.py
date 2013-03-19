@@ -5,16 +5,16 @@ from .matexpr import ShapeError
 class Det(Expr):
     """Matrix Det
 
-Represents the Det of a matrix expression.
+	Represents the Det of a matrix expression.
 
->>> from sympy import MatrixSymbol, Det, eye
->>> A = MatrixSymbol('A', 3, 3)
->>> Det(A)
-Det(A)
+	>>> from sympy import MatrixSymbol, Det, eye
+	>>> A = MatrixSymbol('A', 3, 3)
+	>>> Det(A)
+	Det(A)
 
->>> Det(eye(3))
-1
-"""
+	>>> Det(eye(3))
+	1
+	"""
     is_Det = True
 
     def __new__(cls, mat):
