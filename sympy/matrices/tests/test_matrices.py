@@ -703,8 +703,8 @@ def test_eigen():
 
     R = Rational
 
-    assert eye(3).charpoly(x) == Poly((x - 1)**3, x)
-    assert eye(3).charpoly(y) == Poly((y - 1)**3, y)
+    assert eye(3).charpoly(x) == Poly((1-x)**3, x)
+    assert eye(3).charpoly(y) == Poly((1-y)**3, y)
 
     M = Matrix([[1, 0, 0],
                 [0, 1, 0],

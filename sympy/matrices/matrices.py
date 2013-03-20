@@ -1840,7 +1840,7 @@ class MatrixBase(object):
             raise NonSquareMatrixError(
                 "Nilpotency is valid only for square matrices")
         x = Dummy('x')
-        if self.charpoly(x).args[0] == x**self.rows:
+        if self.charpoly(x).args[0] == ((-1)**self.rows)*(x**self.rows):
             return True
         return False
 
@@ -2683,7 +2683,7 @@ class MatrixBase(object):
 
         berkowitz
         """
-        return PurePoly(map(simplify, self.berkowitz()[-1]), x)
+        return PurePoly(map(simplify, tuple([((-1)**self.rows)*temp_c for temp_c in self.berkowitz()[-1]])), x)
 
     charpoly = berkowitz_charpoly
 
