@@ -33,8 +33,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
 
-from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
-
+from sympy.functions import log, exp, sin, cos, tan, cot, asin, acos, atan, acot
+from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
 from sympy.integrals import Integral, integrate
 
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
@@ -156,7 +156,7 @@ class DifferentialExtension(object):
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None,rewrite_complex=None):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -206,19 +206,27 @@ class DifferentialExtension(object):
         if handle_first not in ['log', 'exp']:
             raise ValueError("handle_first must be 'log' or 'exp', not %s." %
                 str(handle_first))
-
         # f will be the original function, self.f might change if we reset
         # (e.g., we pull out a constant from an exponential)
         self.f = f
         self.x = x
-
-        # Get common cases out of the way:
-        if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
-            raise NotImplementedError("Trigonometric extensions are not "
-            "supported (yet!)")
+        if rewrite_complex is not None and rewrite_complex is not False:
+     	    rewritables = {
+                    (sin, cos, cot, tan, sinh, cosh, coth, tanh): exp,
+                    (asin, acos, acot, atan): log,
+            }
+            #rewrite the trigonometric components
+            for candidates, rule in rewritables.iteritems():
+                self.f = self.f.rewrite(candidates, rule)
+            self.reset(dummy=dummy)
+            exp_new_extension, log_new_extension = True, True
+        else:
+	    # Get common cases out of the way:
+            if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
+                raise NotImplementedError("Trigonometric extensions are not "
+                "supported (yet!)")
         self.reset(dummy=dummy)
         exp_new_extension, log_new_extension = True, True
-
         def update(seq, atoms, func):
             s = set(seq)
             new = atoms - s
@@ -232,7 +240,6 @@ class DifferentialExtension(object):
         sympows = set()
         logs = set()
         symlogs = set()
-
         while True:
             restart = False
             if self.newf.is_rational_function(*self.T):
@@ -291,7 +298,6 @@ class DifferentialExtension(object):
             sympows = update(sympows, set(pows) - set(numpows),
                 lambda i: i.base.is_rational_function(*self.T) and
                 not i.exp.is_Integer)
-
             # The easiest way to deal with non-base E powers is to convert them
             # into base E, integrate, and then convert back.
             for i in ordered(pows):
@@ -604,9 +610,6 @@ class DifferentialExtension(object):
         self.Tfuncs = []
         self.newf = self.f
 
-    # TODO: DE.decrement_level() ... DE.increment_level() code blocks would
-    # be an excelent use of with statement context managers, I think.
-    # We would have to remove Python 2.4 support first.
     def increment_level(self):
         """
         Increment the level of self.
@@ -1408,7 +1411,7 @@ class NonElementaryIntegral(Integral):
     pass
 
 
-def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False):
+def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False,rewrite_complex=False):
     r"""
     The Risch Integration Algorithm.
 
