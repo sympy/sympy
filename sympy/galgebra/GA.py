@@ -180,7 +180,7 @@ def arbitrary_metric_conformal(n):
     Return string equivalent metric tensor for arbitrary signature (n+1,1).
     """
     str1 = ','.join(n*[n*'# '+'0 0'])
-    return ','.join([str1,n*'0 '+'1 0',n*'0 '+'0 -1'])
+    return ','.join([str1, n*'0 '+'1 0', n*'0 '+'0 -1'])
 
 
 def make_scalars(symnamelst):

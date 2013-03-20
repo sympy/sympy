@@ -103,7 +103,7 @@ def test_vector_extraction():
 
 def test_metrics():
     """
-    Test the correct specific of metric with diagpq, arbitrary_metric, arbitrary_metric_conformal
+    Test specific metrics (diagpq, arbitrary_metric, arbitrary_metric_conformal)
     """
     from sympy.galgebra.GA import diagpq, arbitrary_metric, arbitrary_metric_conformal
     metric = diagpq(3)
