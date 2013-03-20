@@ -91,14 +91,14 @@ class MonomialOrder(object):
     alias = None
     is_global = None
 
-    def key(self, monomial):
-        raise NotImplementedError
+    def __repr__(self):
+        return self.__class__.__name__ + "()"
 
     def __str__(self):
         return self.alias
 
     def __call__(self, monomial):
-        return self.key(monomial)
+        raise NotImplementedError
 
     def __eq__(self, other):
         return self.__class__ == other.__class__
@@ -116,7 +116,7 @@ class LexOrder(MonomialOrder):
     alias = 'lex'
     is_global = True
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         return monomial
 
 
@@ -126,7 +126,7 @@ class GradedLexOrder(MonomialOrder):
     alias = 'grlex'
     is_global = True
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         return (sum(monomial), monomial)
 
 
@@ -136,7 +136,7 @@ class ReversedGradedLexOrder(MonomialOrder):
     alias = 'grevlex'
     is_global = True
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         return (sum(monomial), tuple(reversed([-m for m in monomial])))
 
 
@@ -187,12 +187,16 @@ class ProductOrder(MonomialOrder):
     def __init__(self, *args):
         self.args = args
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         return tuple(O(lamda(monomial)) for (O, lamda) in self.args)
+
+    def __repr__(self):
+        from sympy.core import Tuple
+        return self.__class__.__name__ + repr(Tuple(*[x[0] for x in self.args]))
 
     def __str__(self):
         from sympy.core import Tuple
-        return "ProductOrder" + str(Tuple(*[x[0] for x in self.args]))
+        return self.__class__.__name__ + str(Tuple(*[x[0] for x in self.args]))
 
     def __eq__(self, other):
         if not isinstance(other, ProductOrder):
@@ -236,14 +240,14 @@ class InverseOrder(MonomialOrder):
     def __str__(self):
         return "i" + str(self.O)
 
-    def key(self, monomial):
+    def __call__(self, monomial):
         from sympy.core.compatibility import iterable
 
         def inv(l):
             if iterable(l):
                 return tuple(inv(x) for x in l)
             return -l
-        return inv(self.O.key(monomial))
+        return inv(self.O(monomial))
 
     @property
     def is_global(self):
@@ -397,13 +401,37 @@ def monomial_div(A, B):
     `x*y**2*z**2` does not divide `x**3*y**4*z`.
 
     """
-    C = [ a - b for a, b in zip(A, B) ]
+    C = monomial_ldiv(A, B)
 
     if all(c >= 0 for c in C):
         return tuple(C)
     else:
         return None
 
+def monomial_ldiv(A, B):
+    """
+    Division of tuples representing monomials.
+
+    Lets divide `x**3*y**4*z` by `x*y**2`::
+
+        >>> from sympy.polys.monomialtools import monomial_ldiv
+
+        >>> monomial_ldiv((3, 4, 1), (1, 2, 0))
+        (2, 2, 1)
+
+    which gives `x**2*y**2*z`.
+
+        >>> monomial_ldiv((3, 4, 1), (1, 2, 2))
+        (2, 2, -1)
+
+    which gives `x**2*y**2*z**-1`.
+
+    """
+    return tuple([ a - b for a, b in zip(A, B) ])
+
+def monomial_pow(A, n):
+    """Return the n-th pow of the monomial. """
+    return tuple([ a*n for a in A ])
 
 @cythonized("a,b")
 def monomial_gcd(A, B):
@@ -516,6 +544,23 @@ def monomial_deg(M):
     """
     return sum(M)
 
+def term_div(a, b, domain):
+    """Division of two terms in over a ring/field. """
+    a_lm, a_lc = a
+    b_lm, b_lc = b
+
+    monom = monomial_div(a_lm, b_lm)
+
+    if domain.has_Field:
+        if monom is not None:
+            return monom, domain.quo(a_lc, b_lc)
+        else:
+            return None
+    else:
+        if not (monom is None or a_lc % b_lc):
+            return monom, domain.quo(a_lc, b_lc)
+        else:
+            return None
 
 class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """

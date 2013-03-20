@@ -57,10 +57,7 @@ COMMAND LINE OPTIONS
 
         $isympy -t python
 
-    TYPES must be one of 'gmpy', 'gmpy1', 'python', or 'sympy'
-
-    Note that sympy ground types are not supported, and should be used
-    only for experimental purposes.
+    TYPES must be one of 'gmpy', 'gmpy1' or 'python'
 
     Note that the ground type gmpy1 is primarily intended for testing; it
     forces the use of gmpy version 1 even if gmpy2 is available.
@@ -232,10 +229,9 @@ def main():
         dest='types',
         action='store',
         default=None,
-        choices=['gmpy', 'gmpy1', 'python', 'sympy'],
-        help='setup ground types: gmpy | gmpy1 | python | sympy; defaults to gmpy if '
-        'gmpy2 or gmpy is installed, otherwise python (note that sympy ground types are '
-        'not supported and should be used for experimental purposes only)')
+        choices=['gmpy', 'gmpy1', 'python'],
+        help='setup ground types: gmpy | gmpy1 | python; defaults to gmpy if gmpy2 '
+        'or gmpy is installed, otherwise python')
 
     parser.add_option(
         '-o', '--order',

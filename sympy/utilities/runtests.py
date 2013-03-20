@@ -863,8 +863,8 @@ class SymPyTests(object):
         if "XFAIL" in gl:
             pytestfile = inspect.getsourcefile(gl["XFAIL"])
         pytestfile2 = ""
-        if "SLOW" in gl:
-            pytestfile2 = inspect.getsourcefile(gl["SLOW"])
+        if "slow" in gl:
+            pytestfile2 = inspect.getsourcefile(gl["slow"])
         disabled = gl.get("disabled", False)
         if disabled:
             funcs = []
