@@ -2545,7 +2545,7 @@ def xypic_draw_diagram(diagram, masked=None, diagram_format="",
     return drawer.draw(diagram, grid, masked, diagram_format)
 
 
-@doctest_depends_on(exe=('latex', 'dvipng'))
+@doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',))
 def preview_diagram(diagram, masked=None, diagram_format="", groups=None,
                     output='png', viewer=None, euler=True, **hints):
     """
