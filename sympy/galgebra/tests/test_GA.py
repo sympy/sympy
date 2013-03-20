@@ -101,6 +101,41 @@ def test_vector_extraction():
     assert Ap2 == ZERO
     assert Am2 == ZERO
 
+def test_metrics():
+    """
+    Test specific metrics (diagpq, arbitrary_metric, arbitrary_metric_conformal)
+    """
+    from sympy.galgebra.GA import diagpq, arbitrary_metric, arbitrary_metric_conformal
+    metric = diagpq(3)
+    p1, p2, p3 = MV.setup('p1 p2 p3', metric, debug=0)
+    MV.set_str_format(1)
+    x1, y1, z1 = sympy.symbols('x1 y1 z1')
+    x2, y2, z2 = sympy.symbols('x2 y2 z2')
+    v1 = x1*p1 + y1*p2 + z1*p3
+    v2 = x2*p1 + y2*p2 + z2*p3
+    prod1 = v1*v2
+    prod2 = (v1|v2) + (v1^v2)
+    diff = prod1 - prod2
+    diff.compact()
+    assert diff == ZERO
+    metric = arbitrary_metric(3)
+    p1, p2, p3 = MV.setup('p1 p2 p3', metric, debug=0)
+    v1 = x1*p1 + y1*p2 + z1*p3
+    v2 = x2*p1 + y2*p2 + z2*p3
+    prod1 = v1*v2
+    prod2 = (v1|v2) + (v1^v2)
+    diff = prod1 - prod2
+    diff.compact()
+    assert diff == ZERO
+    metric = arbitrary_metric_conformal(3)
+    p1, p2, p3 = MV.setup('p1 p2 p3', metric, debug=0)
+    v1 = x1*p1 + y1*p2 + z1*p3
+    v2 = x2*p1 + y2*p2 + z2*p3
+    prod1 = v1*v2
+    prod2 = (v1|v2) + (v1^v2)
+    diff = prod1 - prod2
+    diff.compact()
+    assert diff == ZERO
 
 def test_geometry():
     """
