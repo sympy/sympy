@@ -19,7 +19,7 @@ from sympy.functions import (
     sin, cos, tan, cot, sinh, cosh, tanh, coth)
 from sympy.functions.elementary.integers import ceiling
 
-from sympy.utilities.iterables import flatten, has_variety
+from sympy.utilities.iterables import flatten, has_variety, sift
 
 from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -2792,7 +2792,6 @@ def combsimp(expr):
     as_gamma = not expr.has(factorial, binomial)
 
     class rf(Function):
-
         @classmethod
         def eval(cls, a, b):
             if b.is_Integer:
@@ -2870,44 +2869,114 @@ def combsimp(expr):
 
     expr = expr.replace(binomial, rule)
 
-    def rule_gamma(expr):
+    def rule_gamma(expr, level=0):
         """ Simplify products of gamma functions further. """
 
         if expr.is_Atom:
             return expr
 
-        expr = expr.func(*[rule_gamma(x) for x in expr.args])
+        def gamma_rat(x):
+            # helper to simplify ratios of gammas
+            was = x.count(gamma)
+            xx = x.replace(gamma, lambda n: rf(1, (n - 1).expand()
+                ).replace(rf, lambda a, b: gamma(a + b)/gamma(a)))
+            if xx.count(gamma) < was:
+                x = xx
+            return x
+
+        def gamma_factor(x):
+            # return True if there is a gamma factor in shallow args
+            if x.func is gamma:
+                return True
+            if x.is_Add or x.is_Mul:
+                return any(gamma_factor(xi) for xi in x.args)
+            if x.is_Pow and (x.exp.is_integer or x.base.is_positive):
+                return gamma_factor(x.base)
+            return False
+
+        # recursion step
+        if level == 0:
+            expr = expr.func(*[rule_gamma(x, level + 1) for x in expr.args])
+            level += 1
+
         if not expr.is_Mul:
             return expr
 
+        # non-commutative step
+        if level == 1:
+            args, nc = expr.args_cnc()
+            if not args:
+                return expr
+            if nc:
+                return rule_gamma(Mul._from_args(args), level + 1)*Mul._from_args(nc)
+            level += 1
+
+        # pure gamma handling, not factor absorbtion
+        if level == 2:
+            sifted = sift(expr.args, gamma_factor)
+            gamma_ind = Mul(*sifted.pop(False, []))
+            d = Mul(*sifted.pop(True, []))
+            assert not sifted
+
+            nd, dd = d.as_numer_denom()
+            for ipass in range(2):
+                args = list(ordered(Mul.make_args(nd)))
+                for i, ni in enumerate(args):
+                    if ni.is_Add:
+                        ni, dd = Add(*[
+                            rule_gamma(gamma_rat(a/dd), level + 1) for a in ni.args]
+                            ).as_numer_denom()
+                        args[i] = ni
+                        if not dd.has(gamma):
+                            break
+                nd = Mul(*args)
+                if ipass ==  0 and not gamma_factor(nd):
+                    break
+                nd, dd = dd, nd  # now process in reversed order
+            expr = gamma_ind*nd/dd
+            if not (expr.is_Mul and (gamma_factor(dd) or gamma_factor(nd))):
+                return expr
+            level += 1
+
+        # iteration until constant
+        if level == 3:
+            while True:
+                was = expr
+                expr = rule_gamma(expr, 4)
+                if expr == was:
+                    return expr
+
         numer_gammas = []
         denom_gammas = []
+        numer_others = []
         denom_others = []
-        newargs, numer_others = expr.args_cnc()
-
-        # order newargs canonically
-        cexpr = expr.func(*newargs)
-        newargs = list(cexpr._sorted_args) if not cexpr.is_Atom else [cexpr]
-        del cexpr
-
-        while newargs:
-            arg = newargs.pop()
-            b, e = arg.as_base_exp()
+        def explicate(p):
+            if p is S.One:
+                return None, []
+            b, e = p.as_base_exp()
             if e.is_Integer:
-                n = abs(e)
-                if isinstance(b, gamma):
-                    barg = b.args[0]
-                    if e > 0:
-                        numer_gammas.extend([barg]*n)
-                    elif e < 0:
-                        denom_gammas.extend([barg]*n)
+                if b.func is gamma:
+                    return True, [b.args[0]]*e
                 else:
-                    if e > 0:
-                        numer_others.extend([b]*n)
-                    elif e < 0:
-                        denom_others.extend([b]*n)
+                    return False, [b]*e
             else:
-                numer_others.append(arg)
+                return False, [p]
+
+        newargs = list(ordered(expr.args))
+        while newargs:
+            n, d = newargs.pop().as_numer_denom()
+            isg, l = explicate(n)
+            if isg:
+                numer_gammas.extend(l)
+            elif isg is False:
+                numer_others.extend(l)
+            isg, l = explicate(d)
+            if isg:
+                denom_gammas.extend(l)
+            elif isg is False:
+                denom_others.extend(l)
+
+        # =========== level 2 work: pure gamma manipulation =========
 
         # Try to reduce the number of gamma factors by applying the
         # reflection formula gamma(x)*gamma(1-x) = pi/sin(pi*x)
@@ -2939,9 +3008,55 @@ def combsimp(expr):
             # /!\ updating IN PLACE
             gammas[:] = new
 
-        # Try to reduce the number of gamma factors by applying the
-        # multiplication theorem.
+        # Try to reduce the number of gammas by using the duplication
+        # theorem to cancel an upper and lower: gamma(2*s)/gamma(s) =
+        # 2**(2*s + 1)/(4*sqrt(pi))*gamma(s + 1/2). Although this could
+        # be done with higher argument ratios like gamma(3*x)/gamma(x),
+        # this would not reduce the number of gammas as in this case.
+        for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
+                                denom_others),
+                               (denom_gammas, numer_gammas, denom_others,
+                                numer_others)]:
 
+            while True:
+                for x in ng:
+                    for y in dg:
+                        n = x - 2*y
+                        if n.is_Integer:
+                            break
+                    else:
+                        continue
+                    break
+                else:
+                    break
+                ng.remove(x)
+                dg.remove(y)
+                if n > 0:
+                    for k in xrange(n):
+                        no.append(2*y + k)
+                elif n < 0:
+                    for k in xrange(-n):
+                        do.append(2*y - 1 - k)
+                ng.append(y + S(1)/2)
+                no.append(2**(2*y - 1))
+                do.append(sqrt(S.Pi))
+
+        # Try to reduce the number of gamma factors by applying the
+        # multiplication theorem (used when n gammas with args differing
+        # by 1/n mod 1 are encountered).
+        #
+        # run of 2 with args differing by 1/2
+        #
+        # >>> combsimp(gamma(x)*gamma(x+S.Half))
+        # 2*sqrt(2)*2**(-2*x - 1/2)*sqrt(pi)*gamma(2*x)
+        #
+        # run of 3 args differing by 1/3 (mod 1)
+        #
+        # >>> combsimp(gamma(x)*gamma(x+S(1)/3)*gamma(x+S(2)/3))
+        # 6*3**(-3*x - 1/2)*pi*gamma(3*x)
+        # >>> combsimp(gamma(x)*gamma(x+S(1)/3)*gamma(x+S(5)/3))
+        # 2*3**(-3*x - 1/2)*pi*(3*x + 2)*gamma(3*x)
+        #
         def _run(coeffs):
             # find runs in coeffs such that the difference in terms (mod 1)
             # of t1, t2, ..., tn is 1/n
@@ -3025,133 +3140,93 @@ def combsimp(expr):
                                 (denom_gammas, denom_others, numer_others)]:
             _mult_thm(l, numer, denom)
 
-        # Try to reduce the number of gammas by using the duplication
-        # theorem to cancel an upper and lower.
-        # e.g. gamma(2*s)/gamma(s) = gamma(s)*gamma(s+1/2)*C/gamma(s)
-        # (in principle this can also be done with with factors other than two,
-        # but two is special in that we need only matching numer and denom,
-        # not several in numer).
-        for ng, dg, no, do in [(numer_gammas, denom_gammas, numer_others,
-                                denom_others),
-                               (denom_gammas, numer_gammas, denom_others,
-                                numer_others)]:
+        # =========== level >= 2 work: factor absorbtion =========
 
-            while True:
-                for x in ng:
-                    for y in dg:
-                        n = x - 2*y
-                        if n.is_Integer:
-                            break
-                    else:
+        if level >= 2:
+            # Try to absorb factors into the gammas: x*gamma(x) -> gamma(x + 1)
+            # and gamma(x)/(x - 1) -> gamma(x - 1)
+            # This code (in particular repeated calls to find_fuzzy) can be very
+            # slow.
+            def find_fuzzy(l, x):
+                if not l:
+                    return
+                S1, T1 = compute_ST(x)
+                for y in l:
+                    S2, T2 = inv[y]
+                    if T1 != T2 or (not S1.intersection(S2) and
+                                    (S1 != set() or S2 != set())):
                         continue
-                    break
-                else:
-                    break
-                ng.remove(x)
-                dg.remove(y)
-                if n > 0:
-                    for k in xrange(n):
-                        no.append(2*y + k)
-                elif n < 0:
-                    for k in xrange(-n):
-                        do.append(2*y - 1 - k)
-                ng.append(y + S(1)/2)
-                no.append(2**(2*y - 1))
-                do.append(sqrt(S.Pi))
+                    # XXX we want some simplification (e.g. cancel or
+                    # simplify) but no matter what it's slow.
+                    a = len(cancel(x/y).free_symbols)
+                    b = len(x.free_symbols)
+                    c = len(y.free_symbols)
+                    # TODO is there a better heuristic?
+                    if a == 0 and (b > 0 or c > 0):
+                        return y
 
-        # Try to absorb factors into the gammas.
-        # This code (in particular repeated calls to find_fuzzy) can be very
-        # slow.
+            # We thus try to avoid expensive calls by building the following
+            # "invariants": For every factor or gamma function argument
+            #   - the set of free symbols S
+            #   - the set of functional components T
+            # We will only try to absorb if T1==T2 and (S1 intersect S2 != emptyset
+            # or S1 == S2 == emptyset)
+            inv = {}
 
-        def find_fuzzy(l, x):
-            S1, T1 = compute_ST(x)
-            for y in l:
-                S2, T2 = inv[y]
-                if T1 != T2 or (not S1.intersection(S2) and
-                                (S1 != set() or S2 != set())):
-                    continue
-                # XXX we want some simplification (e.g. cancel or
-                # simplify) but no matter what it's slow.
-                a = len(cancel(x/y).free_symbols)
-                b = len(x.free_symbols)
-                c = len(y.free_symbols)
-                # TODO is there a better heuristic?
-                if a == 0 and (b > 0 or c > 0):
-                    return y
+            def compute_ST(expr):
+                from sympy import Function, Pow
+                if expr in inv:
+                    return inv[expr]
+                return (expr.free_symbols, expr.atoms(Function).union(
+                        set(e.exp for e in expr.atoms(Pow))))
 
-        # We thus try to avoid expensive calls by building the following
-        # "invariants": For every factor or gamma function argument
-        #   - the set of free symbols S
-        #   - the set of functional components T
-        # We will only try to absorb if T1==T2 and (S1 intersect S2 != emptyset
-        # or S1 == S2 == emptyset)
-        inv = {}
+            def update_ST(expr):
+                inv[expr] = compute_ST(expr)
+            for expr in numer_gammas + denom_gammas + numer_others + denom_others:
+                update_ST(expr)
 
-        def compute_ST(expr):
-            from sympy import Function, Pow
-            if expr in inv:
-                return inv[expr]
-            return (expr.free_symbols, expr.atoms(Function).union(
-                    set(e.exp for e in expr.atoms(Pow))))
+            for gammas, numer, denom in [(
+                numer_gammas, numer_others, denom_others),
+                    (denom_gammas, denom_others, numer_others)]:
+                new = []
+                while gammas:
+                    g = gammas.pop()
+                    cont = True
+                    while cont:
+                        cont = False
+                        y = find_fuzzy(numer, g)
+                        if y is not None:
+                            numer.remove(y)
+                            if y != g:
+                                numer.append(y/g)
+                                update_ST(y/g)
+                            g += 1
+                            cont = True
+                        y = find_fuzzy(denom, g - 1)
+                        if y is not None:
+                            denom.remove(y)
+                            if y != g - 1:
+                                numer.append((g - 1)/y)
+                                update_ST((g - 1)/y)
+                            g -= 1
+                            cont = True
+                    new.append(g)
+                # /!\ updating IN PLACE
+                gammas[:] = new
 
-        def update_ST(expr):
-            inv[expr] = compute_ST(expr)
-        for expr in numer_gammas + denom_gammas + numer_others + denom_others:
-            update_ST(expr)
-
-        for gammas, numer, denom in [(
-            numer_gammas, numer_others, denom_others),
-                (denom_gammas, denom_others, numer_others)]:
-            new = []
-            while gammas:
-                g = gammas.pop()
-                cont = True
-                while cont:
-                    cont = False
-                    y = find_fuzzy(numer, g)
-                    if y is not None:
-                        numer.remove(y)
-                        if y != g:
-                            numer.append(y/g)
-                            update_ST(y/g)
-                        g += 1
-                        cont = True
-                    y = find_fuzzy(numer, 1/(g - 1))
-                    if y is not None:
-                        numer.remove(y)
-                        if y != 1/(g - 1):
-                            numer.append((g - 1)*y)
-                            update_ST((g - 1)*y)
-                        g -= 1
-                        cont = True
-                    y = find_fuzzy(denom, 1/g)
-                    if y is not None:
-                        denom.remove(y)
-                        if y != 1/g:
-                            denom.append(y*g)
-                            update_ST(y*g)
-                        g += 1
-                        cont = True
-                    y = find_fuzzy(denom, g - 1)
-                    if y is not None:
-                        denom.remove(y)
-                        if y != g - 1:
-                            numer.append((g - 1)/y)
-                            update_ST((g - 1)/y)
-                        g -= 1
-                        cont = True
-                new.append(g)
-            # /!\ updating IN PLACE
-            gammas[:] = new
+        # =========== rebuild expr ==================================
 
         return C.Mul(*[gamma(g) for g in numer_gammas]) \
             / C.Mul(*[gamma(g) for g in denom_gammas]) \
             * C.Mul(*numer_others) / C.Mul(*denom_others)
 
     # (for some reason we cannot use Basic.replace in this case)
-    expr = rule_gamma(expr)
+    was = factor(expr)
+    expr = rule_gamma(was)
+    if expr != was:
+        expr = factor(expr)
 
-    return factor(expr)
+    return expr
 
 
 def signsimp(expr, evaluate=True):
@@ -3499,15 +3574,15 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     Examples
     ========
 
-        >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
-        >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
-        -2 + 2*GoldenRatio
-        >>> nsimplify((1/(exp(3*pi*I/5)+1)))
-        1/2 - I*sqrt(sqrt(5)/10 + 1/4)
-        >>> nsimplify(I**I, [pi])
-        exp(-pi/2)
-        >>> nsimplify(pi, tolerance=0.01)
-        22/7
+    >>> from sympy import nsimplify, sqrt, GoldenRatio, exp, I, exp, pi
+    >>> nsimplify(4/(1+sqrt(5)), [GoldenRatio])
+    -2 + 2*GoldenRatio
+    >>> nsimplify((1/(exp(3*pi*I/5)+1)))
+    1/2 - I*sqrt(sqrt(5)/10 + 1/4)
+    >>> nsimplify(I**I, [pi])
+    exp(-pi/2)
+    >>> nsimplify(pi, tolerance=0.01)
+    22/7
 
     See Also
     ========
@@ -3629,117 +3704,119 @@ def logcombine(expr, force=False):
     posify: replace all symbols with symbols having positive assumptions
 
     """
-    rv = bottom_up(expr, lambda x: logcombine(x, force))
 
-    if not (rv.is_Add or rv.is_Mul):
-        return rv
+    def f(rv):
+        if not (rv.is_Add or rv.is_Mul):
+            return rv
 
-    def gooda(a):
-        # bool to tell whether the leading ``a`` in ``a*log(x)``
-        # could appear as log(x**a)
-        return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
-            (a.is_real or force and a.is_real is not False))
+        def gooda(a):
+            # bool to tell whether the leading ``a`` in ``a*log(x)``
+            # could appear as log(x**a)
+            return (a is not S.NegativeOne and  # -1 *could* go, but we disallow
+                (a.is_real or force and a.is_real is not False))
 
-    def goodlog(l):
-        # bool to tell whether log ``l``'s argument can combine with others
-        a = l.args[0]
-        return a.is_positive or force and a.is_nonpositive is not False
+        def goodlog(l):
+            # bool to tell whether log ``l``'s argument can combine with others
+            a = l.args[0]
+            return a.is_positive or force and a.is_nonpositive is not False
 
-    other = []
-    logs = []
-    log1 = defaultdict(list)
-    for a in Add.make_args(rv):
-        if a.func is log and goodlog(a):
-            log1[()].append(([], a))
-        elif not a.is_Mul:
-            other.append(a)
-        else:
-            ot = []
-            co = []
-            lo = []
-            for ai in a.args:
-                if ai.is_Rational and ai < 0:
-                    ot.append(S.NegativeOne)
-                    co.append(-ai)
-                elif ai.func is log and goodlog(ai):
-                    lo.append(ai)
-                elif gooda(ai):
-                    co.append(ai)
-                else:
-                    ot.append(ai)
-            if len(lo) > 1:
-                logs.append((ot, co, lo))
-            elif lo:
-                log1[tuple(ot)].append((co, lo[0]))
-            else:
+        other = []
+        logs = []
+        log1 = defaultdict(list)
+        for a in Add.make_args(rv):
+            if a.func is log and goodlog(a):
+                log1[()].append(([], a))
+            elif not a.is_Mul:
                 other.append(a)
+            else:
+                ot = []
+                co = []
+                lo = []
+                for ai in a.args:
+                    if ai.is_Rational and ai < 0:
+                        ot.append(S.NegativeOne)
+                        co.append(-ai)
+                    elif ai.func is log and goodlog(ai):
+                        lo.append(ai)
+                    elif gooda(ai):
+                        co.append(ai)
+                    else:
+                        ot.append(ai)
+                if len(lo) > 1:
+                    logs.append((ot, co, lo))
+                elif lo:
+                    log1[tuple(ot)].append((co, lo[0]))
+                else:
+                    other.append(a)
 
-    # if there is only one log at each coefficient and none have
-    # an exponent to place inside the log then there is nothing to do
-    if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):
-        return rv
+        # if there is only one log at each coefficient and none have
+        # an exponent to place inside the log then there is nothing to do
+        if not logs and all(len(log1[k]) == 1 and log1[k][0] == [] for k in log1):
+            return rv
 
-    # collapse multi-logs as far as possible in a canonical way
-    # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
-    # -- in this case, it's unambiguous, but if it were were a log(c) in
-    # each term then it's arbitrary whether they are grouped by log(a) or
-    # by log(c). So for now, just leave this alone; it's probably better to
-    # let the user decide
-    for o, e, l in logs:
-        l = list(ordered(l))
-        e = log(l.pop(0).args[0]**Mul(*e))
-        while l:
-            li = l.pop(0)
-            e = log(li.args[0]**e)
-        c, l = Mul(*o), e
-        if l.func is log:  # it should be, but check to be sure
-            log1[(c,)].append(([], l))
-        else:
-            other.append(c*l)
+        # collapse multi-logs as far as possible in a canonical way
+        # TODO: see if x*log(a)+x*log(a)*log(b) -> x*log(a)*(1+log(b))?
+        # -- in this case, it's unambiguous, but if it were were a log(c) in
+        # each term then it's arbitrary whether they are grouped by log(a) or
+        # by log(c). So for now, just leave this alone; it's probably better to
+        # let the user decide
+        for o, e, l in logs:
+            l = list(ordered(l))
+            e = log(l.pop(0).args[0]**Mul(*e))
+            while l:
+                li = l.pop(0)
+                e = log(li.args[0]**e)
+            c, l = Mul(*o), e
+            if l.func is log:  # it should be, but check to be sure
+                log1[(c,)].append(([], l))
+            else:
+                other.append(c*l)
 
-    # logs that have the same coefficient can multiply
-    for k in log1.keys():
-        log1[Mul(*k)] = log(logcombine(Mul(*[
-            l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
-            force=force))
+        # logs that have the same coefficient can multiply
+        for k in log1.keys():
+            log1[Mul(*k)] = log(logcombine(Mul(*[
+                l.args[0]**Mul(*c) for c, l in log1.pop(k)]),
+                force=force))
 
-    # logs that have oppositely signed coefficients can divide
-    for k in ordered(log1.keys()):
-        if not k in log1:  # already popped as -k
-            continue
-        if -k in log1:
-            # figure out which has the minus sign; the one with
-            # more op counts should be the one
-            num, den = k, -k
-            if num.count_ops() > den.count_ops():
-                num, den = den, num
-            other.append(num*log(log1.pop(num).args[0]/log1.pop(den).args[0]))
-        else:
-            other.append(k*log1.pop(k))
+        # logs that have oppositely signed coefficients can divide
+        for k in ordered(log1.keys()):
+            if not k in log1:  # already popped as -k
+                continue
+            if -k in log1:
+                # figure out which has the minus sign; the one with
+                # more op counts should be the one
+                num, den = k, -k
+                if num.count_ops() > den.count_ops():
+                    num, den = den, num
+                other.append(num*log(log1.pop(num).args[0]/log1.pop(den).args[0]))
+            else:
+                other.append(k*log1.pop(k))
 
-    return Add(*other)
+        return Add(*other)
+
+    return bottom_up(expr, f)
 
 
-def bottom_up(rv, F, last=False, atoms=False, nonbasic=False):
+def bottom_up(rv, F, atoms=False, nonbasic=False):
     """Apply ``F`` to all expressions in an expression tree from the
-    bottom up. If ``last`` is True, apply ``F`` to the rebuilt object;
-    if ``atoms`` is True, apply ``F`` even if there are no args; if
-    ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
+    bottom up. If ``atoms`` is True, apply ``F`` even if there are no args;
+    if ``nonbasic`` is True, try to apply ``F`` to non-Basic objects.
     """
     try:
         if rv.args:
-            args = tuple([F(a) for a in rv.args])
+            args = tuple([bottom_up(a, F, atoms, nonbasic)
+                for a in rv.args])
             if args != rv.args:
                 rv = rv.func(*args)
+            rv = F(rv)
+        elif atoms:
+            rv = F(rv)
     except AttributeError:
         if nonbasic:
             try:
-                return F(rv)
+                rv = F(rv)
             except TypeError:
-                return rv
-
-    if last or atoms:
-        rv = F(rv)
+                pass
 
     return rv
 
@@ -3872,7 +3949,7 @@ def futrig(e, **kwargs):
         return e
 
     old = e
-    e = bottom_up(e, lambda x: _futrig(x, **kwargs), last=True)
+    e = bottom_up(e, lambda x: _futrig(x, **kwargs))
 
     if kwargs.pop('hyper', True) and e.has(C.HyperbolicFunction):
         e, f = hyper_as_trig(e)
