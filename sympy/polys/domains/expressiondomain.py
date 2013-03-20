@@ -88,14 +88,8 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         def __eq__(f, g):
             return f.ex == f.__class__(g).ex
 
-        def __req__(f, g):
-            return f.__class__(g).ex == f.ex
-
         def __ne__(f, g):
-            return f.ex != f.__class__(g).ex
-
-        def __rne__(f, g):
-            return f.__class__(g).ex != f.ex
+            return not f.__eq__(g)
 
         def __nonzero__(f):
             return f.ex != 0
@@ -137,24 +131,12 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a Python ``Fraction`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy ``Integer`` object to ``dtype``. """
-        return K1(K0.to_sympy(a))
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy ``Rational`` object to ``dtype``. """
-        return K1(K0.to_sympy(a))
-
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpz`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
-        return K1(K0.to_sympy(a))
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy ``Float`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
     def from_RR_mpmath(K1, a, K0):

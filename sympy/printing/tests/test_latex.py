@@ -4,7 +4,7 @@ from sympy import (
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
-    Order, Piecewise, Poly, Poly, Product, Range, Rational,
+    Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, TransformationSet, Tuple, Union, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
@@ -585,6 +585,44 @@ def test_latex_Lambda():
         r"\Lambda {\left (x, x + 1 \right )}"
     assert latex(Lambda((x, y), x + 1)) == \
         r"\Lambda {\left (\begin{pmatrix}x, & y\end{pmatrix}, x + 1 \right )}"
+
+
+def test_latex_PolyElement():
+    Ruv, u,v = ring("u,v", ZZ);
+    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+
+    assert latex(x - x) == r"0"
+    assert latex(x - 1) == r"x - 1"
+    assert latex(x + 1) == r"x + 1"
+
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + u + 1) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + u + 1"
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + \left(u + 1\right) x"
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + \left(u + 1\right) x + 1"
+    assert latex((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == r"-\left({u}^{2} - 3 u v + 1\right) {x}^{2} y - \left(u + 1\right) x - 1"
+
+
+def test_latex_FracElement():
+    Fuv, u,v = field("u,v", ZZ);
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+
+    assert latex(x - x) == r"0"
+    assert latex(x - 1) == r"x - 1"
+    assert latex(x + 1) == r"x + 1"
+
+    assert latex(x/z) == r"\frac{x}{z}"
+    assert latex(x*y/z) == r"\frac{x y}{z}"
+    assert latex(x/(z*t)) == r"\frac{x}{z t}"
+    assert latex(x*y/(z*t)) == r"\frac{x y}{z t}"
+
+    assert latex((x - 1)/y) == r"\frac{x - 1}{y}"
+    assert latex((x + 1)/y) == r"\frac{x + 1}{y}"
+    assert latex((-x - 1)/y) == r"\frac{-x - 1}{y}"
+    assert latex((x + 1)/(y*z)) == r"\frac{x + 1}{y z}"
+    assert latex(-y/(x + 1)) == r"\frac{-y}{x + 1}"
+    assert latex(y*z/(x + 1)) == r"\frac{y z}{x + 1}"
+
+    assert latex(((u + 1)*x*y + 1)/((v - 1)*z - 1)) == r"\frac{\left(u + 1\right) x y + 1}{\left(v - 1\right) z - 1}"
+    assert latex(((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)) == r"\frac{\left(u + 1\right) x y + 1}{\left(v - 1\right) z - u v t - 1}"
 
 
 def test_latex_Poly():

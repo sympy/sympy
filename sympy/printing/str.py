@@ -11,8 +11,6 @@ from sympy.printing.precedence import precedence, PRECEDENCE
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
 
-from sympy.polys.polyerrors import PolynomialError
-
 from sympy.utilities import default_sort_key
 
 
@@ -377,6 +375,68 @@ class StrPrinter(Printer):
     def _print_Pi(self, expr):
         return 'pi'
 
+    def _print_PolyRing(self, ring):
+        return "Polynomial ring in %s over %s with %s order" % \
+            (", ".join(map(self._print, ring.symbols)), ring.domain, ring.order)
+
+    def _print_FracField(self, field):
+        return "Rational function field in %s over %s with %s order" % \
+            (", ".join(map(self._print, field.symbols)), field.domain, field.order)
+
+    def _print_PolyElement(self, poly):
+        if not poly:
+            return self._print(poly.ring.domain.zero)
+        prec_add = PRECEDENCE["Add"]
+        prec_atom = PRECEDENCE["Atom"]
+        ring = poly.ring
+        symbols = ring.symbols
+        ngens = ring.ngens
+        zm = ring.zero_monom
+        sexpvs = []
+        expvs = list(poly.keys())
+        expvs.sort(key=ring.order, reverse=True)
+        for expv in expvs:
+            coeff = poly[expv]
+            if ring.domain.is_positive(coeff):
+                sexpvs.append(' + ')
+            else:
+                sexpvs.append(' - ')
+            if ring.domain.is_negative(coeff):
+                coeff = -coeff
+            if coeff != 1 or expv == zm:
+                if expv == zm:
+                    scoeff = self._print(coeff)
+                else:
+                    scoeff = self.parenthesize(coeff, prec_add)
+            else:
+                scoeff = ''
+            sexpv = []
+            for i in xrange(ngens):
+                exp = expv[i]
+                if not exp:
+                    continue
+                symbol = self.parenthesize(symbols[i], prec_atom-1)
+                if exp != 1:
+                    sexpv.append('%s**%d' % (symbol, exp))
+                else:
+                    sexpv.append('%s' % symbol)
+            if scoeff:
+                sexpv = [scoeff] + sexpv
+            sexpvs.append('*'.join(sexpv))
+        if sexpvs[0] in [" + ", " - "]:
+            head = sexpvs.pop(0)
+            if head == " - ":
+                sexpvs.insert(0, "-")
+        return "".join(sexpvs)
+
+    def _print_FracElement(self, frac):
+        if frac.denom == 1:
+            return self._print(frac.numer)
+        else:
+            numer = self.parenthesize(frac.numer, PRECEDENCE["Add"])
+            denom = self.parenthesize(frac.denom, PRECEDENCE["Atom"]-1)
+            return numer + "/" + denom
+
     def _print_Poly(self, expr):
         terms, gens = [], [ self._print(s) for s in expr.gens ]
 
@@ -426,6 +486,8 @@ class StrPrinter(Printer):
                 terms[0] = '-' + terms[0]
 
         format = expr.__class__.__name__ + "(%s, %s"
+
+        from sympy.polys.polyerrors import PolynomialError
 
         try:
             format += ", modulus=%s" % expr.get_modulus()
@@ -482,13 +544,28 @@ class StrPrinter(Printer):
         return str(expr)
 
     def _print_Rational(self, expr):
-        return '%s/%s' % (expr.p, expr.q)
+        if expr.q == 1:
+            return str(expr.p)
+        else:
+            return "%s/%s" % (expr.p, expr.q)
+
+    def _print_PythonRational(self, expr):
+        if expr.q == 1:
+            return str(expr.p)
+        else:
+            return "%d/%d" % (expr.p, expr.q)
 
     def _print_Fraction(self, expr):
-        return '%s/%s' % (expr.numerator, expr.denominator)
+        if expr.denominator == 1:
+            return str(expr.numerator)
+        else:
+            return "%s/%s" % (expr.numerator, expr.denominator)
 
     def _print_mpq(self, expr):
-        return '%s/%s' % (expr.numerator, expr.denominator)
+        if expr.denominator == 1:
+            return str(expr.numerator)
+        else:
+            return "%s/%s" % (expr.numerator, expr.denominator)
 
     def _print_Float(self, expr):
         prec = expr._prec

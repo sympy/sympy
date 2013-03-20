@@ -1,8 +1,9 @@
 """OO layer for several polynomial representations. """
 
+from sympy.core.sympify import CantSympify
+
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed, NotReversible
-
 
 class GenericPoly(PicklableWithSlots):
     """Base class for low-level polynomial representations. """
@@ -136,7 +137,7 @@ def init_normal_DMP(rep, lev, dom):
     return DMP(dmp_normal(rep, lev, dom), dom, lev)
 
 
-class DMP(PicklableWithSlots):
+class DMP(PicklableWithSlots, CantSympify):
     """Dense Multivariate Polynomials over `K`. """
 
     __slots__ = ['rep', 'lev', 'dom', 'ring']
@@ -1002,7 +1003,7 @@ def init_normal_DMF(num, den, lev, dom):
                dmp_normal(den, lev, dom), dom, lev)
 
 
-class DMF(PicklableWithSlots):
+class DMF(PicklableWithSlots, CantSympify):
     """Dense Multivariate Fractions over `K`. """
 
     __slots__ = ['num', 'den', 'lev', 'dom', 'ring']
@@ -1447,7 +1448,7 @@ def init_normal_ANP(rep, mod, dom):
                dup_normal(mod, dom), dom)
 
 
-class ANP(PicklableWithSlots):
+class ANP(PicklableWithSlots, CantSympify):
     """Dense Algebraic Number Polynomials over a field. """
 
     __slots__ = ['rep', 'mod', 'dom']
@@ -1619,7 +1620,7 @@ class ANP(PicklableWithSlots):
         else:
             try:
                 return f.add(f.per(g))
-            except TypeError:
+            except (CoercionFailed, TypeError):
                 return NotImplemented
 
     def __radd__(f, g):
@@ -1631,7 +1632,7 @@ class ANP(PicklableWithSlots):
         else:
             try:
                 return f.sub(f.per(g))
-            except TypeError:
+            except (CoercionFailed, TypeError):
                 return NotImplemented
 
     def __rsub__(f, g):
@@ -1643,7 +1644,7 @@ class ANP(PicklableWithSlots):
         else:
             try:
                 return f.mul(f.per(g))
-            except TypeError:
+            except (CoercionFailed, TypeError):
                 return NotImplemented
 
     def __rmul__(f, g):
@@ -1664,7 +1665,7 @@ class ANP(PicklableWithSlots):
         else:
             try:
                 return f.quo(f.per(g))
-            except TypeError:
+            except (CoercionFailed, TypeError):
                 return NotImplemented
 
     __truediv__ = __div__

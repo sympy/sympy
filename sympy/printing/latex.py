@@ -4,10 +4,11 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
+from sympy.core.sympify import SympifyError
+
 from printer import Printer
 from conventions import split_super_sub
-from sympy.simplify import fraction
-from sympy.core.sympify import SympifyError
+from precedence import precedence, PRECEDENCE
 
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
@@ -67,6 +68,12 @@ class LatexPrinter(Printer):
             mul_symbol_table[self._settings['mul_symbol']]
 
         self._delim_dict = {'(': ')', '[': ']'}
+
+    def parenthesize(self, item, level):
+        if precedence(item) <= level:
+            return r"\left(%s\right)" % self._print(item)
+        else:
+            return self._print(item)
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
@@ -177,6 +184,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
+        from sympy.simplify import fraction
         numer, denom = fraction(tail, exact=True)
         separator = self._settings['mul_symbol_latex']
 
@@ -1301,6 +1309,61 @@ class LatexPrinter(Printer):
             return r"\%s {\left(%s\right)}" % (cls, ", ".join(args))
         else:
             return r"\operatorname{%s} {\left(%s\right)}" % (cls, ", ".join(args))
+
+    def _print_PolyElement(self, poly):
+        if not poly:
+            return self._print(poly.ring.domain.zero)
+        mul_sym = self._settings['mul_symbol_latex']
+        prec_add = PRECEDENCE["Add"]
+        prec_atom = PRECEDENCE["Atom"]
+        ring = poly.ring
+        symbols = ring.symbols
+        ngens = ring.ngens
+        zm = ring.zero_monom
+        sexpvs = []
+        expvs = list(poly.keys())
+        expvs.sort(key=ring.order, reverse=True)
+        for expv in expvs:
+            coeff = poly[expv]
+            if ring.domain.is_positive(coeff):
+                sexpvs.append(' + ')
+            else:
+                sexpvs.append(' - ')
+            if ring.domain.is_negative(coeff):
+                coeff = -coeff
+            if coeff != 1 or expv == zm:
+                if expv == zm:
+                    scoeff = self._print(coeff)
+                else:
+                    scoeff = self.parenthesize(coeff, prec_add)
+            else:
+                scoeff = ''
+            sexpv = []
+            for i in xrange(ngens):
+                exp = expv[i]
+                if not exp:
+                    continue
+                symbol = self.parenthesize(symbols[i], prec_atom-1)
+                if exp != 1:
+                    sexpv.append('{%s}^{%d}' % (symbol, exp))
+                else:
+                    sexpv.append('%s' % symbol)
+            if scoeff:
+                sexpv = [scoeff] + sexpv
+            sexpvs.append(mul_sym.join(sexpv))
+        if sexpvs[0] in [" + ", " - "]:
+            head = sexpvs.pop(0)
+            if head == " - ":
+                sexpvs.insert(0, "-")
+        return "".join(sexpvs)
+
+    def _print_FracElement(self, frac):
+        if frac.denom == 1:
+            return self._print(frac.numer)
+        else:
+            numer = self._print(frac.numer)
+            denom = self._print(frac.denom)
+            return r"\frac{%s}{%s}" % (numer, denom)
 
     def _print_euler(self, expr):
         return r"E_{%s}" % self._print(expr.args[0])
