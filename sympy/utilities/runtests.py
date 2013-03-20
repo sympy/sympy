@@ -553,7 +553,9 @@ def _doctest(*paths, **kwargs):
             "sympy/plotting/plot_implicit.py",
             "examples/advanced/autowrap_integrators.py",
             "examples/advanced/autowrap_ufuncify.py"
-            "examples/intermediate/sample.py"
+            "examples/intermediate/sample.py",
+            "examples/intermediate/mplot2d.py",
+            "examples/intermediate/mplot3d.py"
         ])
     else:
         if import_module('matplotlib') is None:
