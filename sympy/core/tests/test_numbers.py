@@ -346,6 +346,8 @@ def test_Float():
     assert Float((0, 0L, -456, -2)) == Float('inf') == Float('+inf')
     assert Float((1, 0L, -789, -3)) == Float('-inf')
 
+    raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
+
     assert Float('+inf').is_bounded is False
     assert Float('+inf').is_finite is False
     assert Float('+inf').is_negative is False
@@ -1344,8 +1346,6 @@ def test_3541():
 
 
 def test_3250():
-    from sympy.mpmath import mpf
-    assert str(Float(mpf((1,22,2,22)), '')) == '-88.000'
     assert Float('23.e3', '')._prec == 10
     assert Float('23e3', '')._prec == 20
     assert Float('23000', '')._prec == 20

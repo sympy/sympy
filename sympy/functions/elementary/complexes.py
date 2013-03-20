@@ -229,23 +229,7 @@ class sign(Function):
 
     @classmethod
     def eval(cls, arg):
-        if arg is S.NaN:
-            return S.NaN
-        if arg.is_zero:  # it may be an Expr that is zero
-            return S.Zero
-        if arg.is_positive:
-            return S.One
-        if arg.is_negative:
-            return S.NegativeOne
-        if arg.is_Function:
-            if arg.func is sign:
-                return arg
-        if arg.is_imaginary:
-            arg2 = -S.ImaginaryUnit * arg
-            if arg2.is_positive:
-                return S.ImaginaryUnit
-            if arg2.is_negative:
-                return -S.ImaginaryUnit
+        # handle what we can
         if arg.is_Mul:
             c, args = arg.as_coeff_mul()
             unk = []
@@ -269,14 +253,23 @@ class sign(Function):
             return (S.NegativeOne if is_neg else S.One) \
                 * (S.ImaginaryUnit if is_imag else S.One) \
                 * cls(arg._new_rawargs(*unk))
-        if arg.is_number:
-            s = sign(arg, evaluate=False).n(2)
-            if s.is_Number and s._prec != 1:
-                if s < 0:
-                    return S.NegativeOne
-                elif s > 0:
-                    return S.One
-                return S.Zero
+        if arg is S.NaN:
+            return S.NaN
+        if arg.is_zero:  # it may be an Expr that is zero
+            return S.Zero
+        if arg.is_positive:
+            return S.One
+        if arg.is_negative:
+            return S.NegativeOne
+        if arg.is_Function:
+            if arg.func is sign:
+                return arg
+        if arg.is_imaginary:
+            arg2 = -S.ImaginaryUnit * arg
+            if arg2.is_positive:
+                return S.ImaginaryUnit
+            if arg2.is_negative:
+                return -S.ImaginaryUnit
 
     def _eval_Abs(self):
         if self.args[0].is_nonzero:
@@ -385,6 +378,7 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
+        # handle what we can
         if arg.is_Mul:
             known = []
             unk = []
@@ -416,14 +410,6 @@ class Abs(Function):
             base, exponent = arg.as_base_exp()
             if exponent.is_even and base.is_real:
                 return arg
-        if arg.is_number:
-            s = sign(arg)
-            if s.is_Number:
-                if s is S.NegativeOne:
-                    return -arg
-                elif s is S.One:
-                    return arg
-                return S.Zero
 
     def _eval_is_nonzero(self):
         return self._args[0].is_nonzero
