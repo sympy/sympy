@@ -50,7 +50,7 @@ class ExpBase(Function):
         # exponent handling
         exp = self.exp
         neg_exp = exp.is_negative
-        if not neg_exp and not exp.is_real:
+        if not neg_exp and not (-exp).is_negative:
             neg_exp = _coeff_isneg(exp)
         if neg_exp:
             return S.One, self.func(-exp)

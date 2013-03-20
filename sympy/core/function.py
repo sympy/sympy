@@ -12,9 +12,7 @@ There are two types of functions:
    creation:
        f = Lambda(x, exp(x)*x)
        f = Lambda(exp(x)*x) # free symbols of expr define the number of args
-       f = Lambda(exp(x)*x)  # free symbols in the expression define the number
-                             # of arguments
-       f = exp * Lambda(x,x)
+       f = exp * Lambda(x, x)
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
    works in sympy core, but needs to be ported back to SymPy.
 
