@@ -747,9 +747,9 @@ class Pow(Expr):
         # this should be the same as ExpBase.as_numer_denom wrt
         # exponent handling
         neg_exp = exp.is_negative
-        int_exp = exp.is_integer
-        if not neg_exp:
+        if not neg_exp and not (-exp).is_negative:
             neg_exp = _coeff_isneg(exp)
+        int_exp = exp.is_integer
         # the denominator cannot be separated from the numerator if
         # its sign is unknown unless the exponent is an integer, e.g.
         # sqrt(a/b) != sqrt(a)/sqrt(b) when a=1 and b=-1. But if the

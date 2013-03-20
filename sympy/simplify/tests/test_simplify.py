@@ -1434,6 +1434,8 @@ def test_fraction_expand():
 
 def test_combsimp_gamma():
     from sympy.abc import x, y
+    R = Rational
+
     assert combsimp(gamma(x)) == gamma(x)
     assert combsimp(gamma(x + 1)/x) == gamma(x)
     assert combsimp(gamma(x)/(x - 1)) == gamma(x - 1)
@@ -1443,7 +1445,7 @@ def test_combsimp_gamma():
     assert combsimp(x/gamma(x + 1)) == 1/gamma(x)
     assert combsimp((x + 1)**2/gamma(x + 2)) == (x + 1)/gamma(x + 1)
     assert combsimp(x*gamma(x) + gamma(x + 3)/(x + 2)) == \
-        gamma(x + 1) + gamma(x + 2)
+        (x + 2)*gamma(x + 1)
 
     assert combsimp(gamma(2*x)*x) == gamma(2*x + 1)/2
     assert combsimp(gamma(2*x)/(x - S(1)/2)) == 2*gamma(2*x - 1)
@@ -1464,6 +1466,33 @@ def test_combsimp_gamma():
 
     assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
         4**x*gamma(x + S(1)/2)/sqrt(pi)/2
+
+    # issue 3693
+    e = (-gamma(k)*gamma(k + 2) + gamma(k + 1)**2)/gamma(k)**2
+    assert combsimp(e) == -k
+    assert combsimp(1/e) == -1/k
+    e = (gamma(x) + gamma(x + 1))/gamma(x)
+    assert combsimp(e) == x + 1
+    assert combsimp(1/e) == 1/(x + 1)
+    e = (gamma(x) + gamma(x + 2))*(gamma(x - 1) + gamma(x))/gamma(x)
+    assert combsimp(e) == (x**2 + x + 1)*gamma(x + 1)/(x - 1)
+    e = (-gamma(k)*gamma(k + 2) + gamma(k + 1)**2)/gamma(k)**2
+    assert combsimp(e**2) == k**2
+    assert combsimp(e**2/gamma(k + 1)) == k/gamma(k)
+    a = R(1, 2) + R(1, 3)
+    b = a + R(1, 3)
+    assert combsimp(gamma(2*k)/gamma(k)*gamma(k + a)*gamma(k + b))
+    3*2**(2*k + 1)*3**(-3*k - 2)*sqrt(pi)*gamma(3*k + R(3, 2))/2
+
+    A, B = symbols('A B', commutative=False)
+    assert combsimp(e*B*A) == combsimp(e)*B*A
+
+    # check iteration
+    assert combsimp(gamma(2*k)/gamma(k)*gamma(-k - R(1, 2))) == (
+        -2**(2*k + 1)*sqrt(pi)/(2*((2*k + 1)*cos(pi*k))))
+    assert combsimp(
+        gamma(k)*gamma(k + R(1, 3))*gamma(k + R(2, 3))/gamma(3*k/2)) == (
+        3*2**(3*k + 1)*3**(-3*k - S.Half)*sqrt(pi)*gamma(3*k/2 + S.Half)/2)
 
 
 def test_polarify():

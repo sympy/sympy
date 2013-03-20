@@ -383,9 +383,9 @@ def test_nakagami():
                                 *exp(-x**2*mu/omega)/gamma(mu))
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
            *gamma(mu + S.Half)/gamma(mu + 1))
-    assert (simplify(variance(X, meijerg=True)) ==
-            (omega*(gamma(mu)*gamma(mu + 1)
-                    - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1))))
+    assert simplify(variance(X, meijerg=True)) == (
+        omega*(gamma(mu)*gamma(mu + 1) - gamma(mu + S.Half)**2)/
+        (gamma(mu)*gamma(mu + 1)))
 
 
 def test_pareto():

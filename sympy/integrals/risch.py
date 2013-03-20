@@ -1179,7 +1179,7 @@ def integrate_primitive(a, d, DE, z=None):
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
-            g1[0]*derivation(g1[0], DE)).as_expr()/(g1[1]**2).as_expr() -
+            g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
         i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
@@ -1271,7 +1271,7 @@ def integrate_hyperexponential(a, d, DE, z=None):
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
-            g1[0]*derivation(g1[0], DE)).as_expr()/(g1[1]**2).as_expr() -
+            g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
         i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
