@@ -159,25 +159,25 @@ def comb(N, P):
 
 def diagpq(p, q=0):
     """
-    Return string equivalent metric tensor for signature (p, q).
+    Returns string equivalent metric tensor for signature (p, q).
     """
     n = p + q
     D = []
     for i in xrange(p):
-        D.append(i*'0 ' +'1 '+ (n-i-1)*'0 ')
+        D.append((i*'0 ' +'1 '+ (n-i-1)*'0 ')[:-1])
     for i in xrange(p,n):
-        D.append(i*'0 ' +'-1 '+ (n-i-1)*'0 ')
+        D.append((i*'0 ' +'-1 '+ (n-i-1)*'0 ')[:-1])
     return ','.join(D)
 
 def arbitrary_metric(n):
     """
-    Return string equivalent metric tensor for arbitrary signature.
+    Returns string equivalent metric tensor for arbitrary signature.
     """
-    return ','.join(n*[n*'# '])
+    return ','.join(n*[(n*'# ')[:-1]])
 
 def arbitrary_metric_conformal(n):
     """
-    Return string equivalent metric tensor for arbitrary signature (n+1,1).
+    Returns string equivalent metric tensor for arbitrary signature (n+1,1).
     """
     str1 = ','.join(n*[n*'# '+'0 0'])
     return ','.join([str1, n*'0 '+'1 0', n*'0 '+'0 -1'])
