@@ -1419,13 +1419,13 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('QQ')
 
-    def _print_RealDomain(self, expr):
+    def _print_RealField(self, expr):
         if self._use_unicode:
             return prettyForm(u'\u211D')
         else:
             return prettyForm('RR')
 
-    def _print_ComplexDomain(self, expr):
+    def _print_ComplexField(self, expr):
         if self._use_unicode:
             return prettyForm(u'\u2102')
         else:

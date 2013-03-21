@@ -11,7 +11,7 @@ from characteristiczero import CharacteristicZero
 from finitefield import FiniteField
 from integerring import IntegerRing
 from rationalfield import RationalField
-from realdomain import RealDomain
+from realfield import RealField
 
 from pythonfinitefield import PythonFiniteField
 from gmpyfinitefield import GMPYFiniteField
@@ -22,7 +22,7 @@ from gmpyintegerring import GMPYIntegerRing
 from pythonrationalfield import PythonRationalField
 from gmpyrationalfield import GMPYRationalField
 
-from mpmathrealdomain import MPmathRealDomain
+from mpmathrealfield import MPmathRealField
 
 from algebraicfield import AlgebraicField
 
@@ -42,7 +42,7 @@ ZZ_gmpy = GMPYIntegerRing
 QQ_python = PythonRationalField
 QQ_gmpy = GMPYRationalField
 
-RR_mpmath = MPmathRealDomain
+RR_mpmath = MPmathRealField
 
 from pythonrational import PythonRational
 

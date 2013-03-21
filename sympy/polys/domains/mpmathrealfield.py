@@ -1,10 +1,10 @@
-"""Implementation of :class:`MPmathRealDomain` class. """
+"""Implementation of :class:`MPmathRealField` class. """
 
-from sympy.polys.domains.realdomain import RealDomain
+from sympy.polys.domains.realfield import RealField
 from sympy.polys.domains.groundtypes import MPmathReal
 
 
-class MPmathRealDomain(RealDomain):
+class MPmathRealField(RealField):
     """Domain for real numbers based on mpmath mpf type. """
 
     dtype = MPmathReal

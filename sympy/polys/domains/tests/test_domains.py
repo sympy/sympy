@@ -364,7 +364,7 @@ def test_Domain_get_field():
     assert EX.has_assoc_Field is True
     assert ZZ.has_assoc_Field is True
     assert QQ.has_assoc_Field is True
-    assert RR.has_assoc_Field is False
+    assert RR.has_assoc_Field is True
     assert ALG.has_assoc_Field is True
     assert ZZ[x].has_assoc_Field is True
     assert QQ[x].has_assoc_Field is True
@@ -374,7 +374,7 @@ def test_Domain_get_field():
     assert EX.get_field() == EX
     assert ZZ.get_field() == QQ
     assert QQ.get_field() == QQ
-    raises(DomainError, lambda: RR.get_field())
+    assert RR.get_field() == RR
     assert ALG.get_field() == ALG
     assert ZZ[x].get_field() == ZZ.frac_field(x)
     assert QQ[x].get_field() == QQ.frac_field(x)
@@ -484,7 +484,7 @@ def test___eq__():
     assert not QQ.frac_field(x) == ZZ.frac_field(x)
 
 
-def test_RealDomain_from_sympy():
+def test_RealField_from_sympy():
     RR = RR_mpmath()
 
     assert RR.convert(S(0)) == RR.dtype(0)
