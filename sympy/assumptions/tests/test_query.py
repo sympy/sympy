@@ -163,6 +163,7 @@ def test_infinity():
     assert ask(Q.commutative(oo)) is True
     assert ask(Q.integer(oo)) is False
     assert ask(Q.rational(oo)) is False
+    assert ask(Q.algebraic(oo)) is False
     assert ask(Q.real(oo)) is False
     assert ask(Q.extended_real(oo)) is True
     assert ask(Q.complex(oo)) is False
@@ -185,6 +186,7 @@ def test_neg_infinity():
     assert ask(Q.commutative(mm)) is True
     assert ask(Q.integer(mm)) is False
     assert ask(Q.rational(mm)) is False
+    assert ask(Q.algebraic(mm)) is False
     assert ask(Q.real(mm)) is False
     assert ask(Q.extended_real(mm)) is True
     assert ask(Q.complex(mm)) is False
@@ -207,6 +209,7 @@ def test_nan():
     assert ask(Q.commutative(nan)) is True
     assert ask(Q.integer(nan)) is False
     assert ask(Q.rational(nan)) is False
+    assert ask(Q.algebraic(nan)) is False
     assert ask(Q.real(nan)) is False
     assert ask(Q.extended_real(nan)) is False
     assert ask(Q.complex(nan)) is False
@@ -299,6 +302,7 @@ def test_pi():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is False
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is True
@@ -318,6 +322,7 @@ def test_pi():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is False
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is True
@@ -337,6 +342,7 @@ def test_pi():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is False
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is True
@@ -356,6 +362,7 @@ def test_pi():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is False
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is True
@@ -375,6 +382,7 @@ def test_pi():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is False
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is True
@@ -396,6 +404,29 @@ def test_E():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is False
+    assert ask(Q.real(z)) is True
+    assert ask(Q.complex(z)) is True
+    assert ask(Q.irrational(z)) is True
+    assert ask(Q.imaginary(z)) is False
+    assert ask(Q.positive(z)) is True
+    assert ask(Q.negative(z)) is False
+    assert ask(Q.even(z)) is False
+    assert ask(Q.odd(z)) is False
+    assert ask(Q.bounded(z)) is True
+    assert ask(Q.infinitesimal(z)) is False
+    assert ask(Q.prime(z)) is False
+    assert ask(Q.composite(z)) is False
+    assert ask(Q.hermitian(z)) is True
+    assert ask(Q.antihermitian(z)) is False
+
+
+def test_GoldenRatio():
+    z = S.GoldenRatio
+    assert ask(Q.commutative(z)) is True
+    assert ask(Q.integer(z)) is False
+    assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is True
     assert ask(Q.real(z)) is True
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is True
@@ -417,6 +448,7 @@ def test_I():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is True
     assert ask(Q.real(z)) is False
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is False
@@ -436,6 +468,7 @@ def test_I():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is True
     assert ask(Q.real(z)) is False
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is False
@@ -455,6 +488,7 @@ def test_I():
     assert ask(Q.commutative(z)) is True
     assert ask(Q.integer(z)) is False
     assert ask(Q.rational(z)) is False
+    assert ask(Q.algebraic(z)) is True
     assert ask(Q.real(z)) is False
     assert ask(Q.complex(z)) is True
     assert ask(Q.irrational(z)) is False
@@ -1061,6 +1095,7 @@ def test_complex():
     assert ask(Q.complex(x), Q.irrational(x)) is True
     assert ask(Q.complex(x), Q.positive(x)) is True
     assert ask(Q.complex(x), Q.imaginary(x)) is True
+    assert ask(Q.complex(x), Q.algebraic(x)) is True
 
     # a+b
     assert ask(Q.complex(x + 1), Q.complex(x)) is True
@@ -1182,6 +1217,7 @@ def test_rational():
     assert ask(Q.rational(x), Q.positive(x)) is None
     assert ask(Q.rational(x), Q.negative(x)) is None
     assert ask(Q.rational(x), Q.nonzero(x)) is None
+    assert ask(Q.rational(x), ~Q.algebraic(x)) is False
 
     assert ask(Q.rational(2*x), Q.rational(x)) is True
     assert ask(Q.rational(2*x), Q.integer(x)) is True
@@ -1675,9 +1711,6 @@ def test_algebraic():
 
     assert ask(Q.algebraic(sqrt(sin(7)))) is False
     assert ask(Q.algebraic(sqrt(y + I*sqrt(7)))) is None
-
-    assert ask(Q.algebraic(oo)) is False
-    assert ask(Q.algebraic(-oo)) is False
 
     assert ask(Q.algebraic(2.47)) is True
 
