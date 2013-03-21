@@ -763,6 +763,7 @@ class PrettyPrinter(Printer):
             D = prettyForm(*D.below(D_row))
 
         D = prettyForm(*D.parens('{', ''))
+        D.baseline = D.height()//2
         return D
 
     def _hprint_vec(self, v):

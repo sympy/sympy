@@ -2245,6 +2245,25 @@ u"""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = -Piecewise((x, x < 1), (x**2, True))
+    ascii_str = \
+"""\
+ /x   for x < 1\n\
+ |             \n\
+-< 2           \n\
+ |x   otherwise\n\
+ \             \
+"""
+    ucode_str = \
+u"""\
+ ⎧x   for x < 1\n\
+ ⎪             \n\
+-⎨ 2           \n\
+ ⎪x   otherwise\n\
+ ⎩             \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_seq():
     expr = ()
