@@ -66,7 +66,7 @@ When is this module NOT the best approach?
 """
 from __future__ import with_statement
 
-_doctest_depends_on = { 'exe': ('f2py', 'gfortran')}
+_doctest_depends_on = { 'exe': ('f2py', 'gfortran'), 'modules': ('numpy',)}
 
 import sys
 import os
@@ -343,7 +343,7 @@ def _get_code_wrapper_class(backend):
     return wrappers[backend.upper()]
 
 
-@doctest_depends_on(exe=('f2py', 'gfortran'))
+@doctest_depends_on(exe=('f2py', 'gfortran'), modules=('numpy',))
 def autowrap(
     expr, language='F95', backend='f2py', tempdir=None, args=None, flags=[],
         verbose=False, helpers=[]):
@@ -410,7 +410,7 @@ def autowrap(
     return code_wrapper.wrap_code(routine, helpers=helps)
 
 
-@doctest_depends_on (exe=('f2py', 'gfortran'))
+@doctest_depends_on (exe=('f2py', 'gfortran'), modules=('numpy',))
 def binary_function(symfunc, expr, **kwargs):
     """Returns a sympy function with expr as binary implementation
 
