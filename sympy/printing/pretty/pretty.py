@@ -1036,6 +1036,7 @@ class PrettyPrinter(Printer):
 
         def pretty_negative(pform, index):
             """Prepend a minus sign to a pretty form. """
+            #TODO: Move this code to prettyForm
             if index == 0:
                 if pform.height() > 1:
                     pform_neg = '- '
@@ -1044,8 +1045,14 @@ class PrettyPrinter(Printer):
             else:
                 pform_neg = ' - '
 
-            pform = stringPict.next(pform_neg, pform)
-            return prettyForm(binding=prettyForm.NEG, *pform)
+            if pform.binding > prettyForm.NEG:
+                p = stringPict(*pform.parens())
+            else:
+                p = pform
+            p = stringPict.next(pform_neg, p)
+            # Lower the binding to NEG, even if it was higher. Otherwise, it
+            # will print as a + ( - (b)), instead of a - (b).
+            return prettyForm(binding=prettyForm.NEG, *p)
 
         for i, term in enumerate(terms):
             if term.is_Mul and _coeff_isneg(term):
