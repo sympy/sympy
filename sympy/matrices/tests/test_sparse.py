@@ -395,8 +395,8 @@ def test_sparse_matrix():
     x = Symbol('x')
     y = Symbol('y')
     sparse_eye3 = sparse_eye(3)
-    assert sparse_eye3.charpoly(x) == PurePoly(((x - 1)**3))
-    assert sparse_eye3.charpoly(y) == PurePoly(((y - 1)**3))
+    assert sparse_eye3.charpoly(x) == PurePoly(((1 - x)**3))
+    assert sparse_eye3.charpoly(y) == PurePoly(((1 - y)**3))
 
     # test values
     M = Matrix([( 0, 1, -1),
