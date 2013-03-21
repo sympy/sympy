@@ -265,6 +265,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
         pform = prettyForm(*stringPict.next(pform, f))
+        pform.binding = prettyForm.MUL
 
         return pform
 
@@ -368,6 +369,7 @@ class PrettyPrinter(Printer):
                 s = prettyForm(*s.left(pform))
 
         pform = prettyForm(*arg.left(s))
+        pform.binding = prettyForm.MUL
         return pform
 
     def _print_Product(self, expr):
@@ -424,6 +426,7 @@ class PrettyPrinter(Printer):
         #pretty_func.baseline = 0
 
         pretty_func.baseline = max_upper + sign_height//2
+        pretty_func.binding = prettyForm.MUL
         return pretty_func
 
     def _print_Sum(self, expr):
@@ -524,6 +527,7 @@ class PrettyPrinter(Printer):
             prettyF = prettyForm(*prettySign.right(prettyF))
 
         prettyF.baseline = max_upper + sign_height//2
+        prettyF.binding = prettyForm.MUL
         return prettyF
 
     def _print_Limit(self, l):
@@ -1181,9 +1185,6 @@ class PrettyPrinter(Printer):
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=False))
 
-        # None of the above special forms, do a standard power
-        if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
-            return prettyForm(*self._print(b).parens())**self._print(e)
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):
