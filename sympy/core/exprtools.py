@@ -102,7 +102,7 @@ class Factors(object):
 
         Although a dictionary can be passed, no checking will be done to
         ensure that -1 is split from Rationals. This will then affect
-        gcd and normal caclulations:
+        gcd and normal calculations:
 
         >>> Factors(-2*x).factors
         {-1: 1, 2: 1, x: 1}
