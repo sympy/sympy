@@ -1,7 +1,8 @@
-"""Implementation of :class:`RealDomain` class. """
+"""Implementation of :class:`RealField` class. """
 
-from sympy.polys.domains.characteristiczero import CharacteristicZero
+from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
+from sympy.polys.domains.characteristiczero import CharacteristicZero
 from sympy.polys.domains.groundtypes import SymPyReal
 
 from sympy.polys.polyerrors import DomainError, CoercionFailed
@@ -9,13 +10,16 @@ from sympy.polys.polyerrors import DomainError, CoercionFailed
 import math
 
 
-class RealDomain(CharacteristicZero, SimpleDomain):  # XXX: should be a field
+class RealField(Field, CharacteristicZero, SimpleDomain):
     """Abstract domain for real numbers. """
 
     rep = 'RR'
 
     is_Exact = False
     is_Numerical = True
+
+    has_assoc_Ring = False
+    has_assoc_Field = True
 
     _convert_excludes = [
         SymPyReal('+inf'),
@@ -86,30 +90,10 @@ class RealDomain(CharacteristicZero, SimpleDomain):  # XXX: should be a field
         """Returns a ring associated with ``self``. """
         raise DomainError('there is no ring associated with %s' % self)
 
-    def get_field(self):
-        """Returns a field associated with ``self``. """
-        raise DomainError('there is no field associated with %s' % self)
-
     def get_exact(self):
         """Returns an exact domain associated with ``self``. """
         from sympy.polys.domains import QQ
         return QQ
-
-    def exquo(self, a, b):
-        """Exact quotient of ``a`` and ``b``.  """
-        return a / b
-
-    def quo(self, a, b):
-        """Quotient of ``a`` and ``b``. """
-        return a / b
-
-    def rem(self, a, b):
-        """Remainder of ``a`` and ``b``.  """
-        return a % b
-
-    def div(self, a, b):
-        """Division of ``a`` and ``b``. """
-        return (a / b, a % b)
 
     def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """

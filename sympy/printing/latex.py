@@ -1304,10 +1304,10 @@ class LatexPrinter(Printer):
     def _print_RationalField(self, expr):
         return r"\mathbb{Q}"
 
-    def _print_RealDomain(self, expr):
+    def _print_RealField(self, expr):
         return r"\mathbb{R}"
 
-    def _print_ComplexDomain(self, expr):
+    def _print_ComplexField(self, expr):
         return r"\mathbb{C}"
 
     def _print_PolynomialRingBase(self, expr):
