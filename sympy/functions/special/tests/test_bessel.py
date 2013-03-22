@@ -53,9 +53,10 @@ def test_rewrite():
 def test_expand():
     from sympy import besselsimp, Symbol, exp, exp_polar, I
 
-    assert expand_func(besselj(S(1)/2, z)) == sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
-    assert expand_func(
-        bessely(S(1)/2, z)) == -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
+    assert expand_func(besselj(S(1)/2, z).rewrite(jn)) == \
+        sqrt(2)*sin(z)/(sqrt(pi)*sqrt(z))
+    assert expand_func(bessely(S(1)/2, z).rewrite(yn)) == \
+        -sqrt(2)*cos(z)/(sqrt(pi)*sqrt(z))
 
     # XXX: teach sin/cos to work around arguments like
     # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
@@ -66,25 +67,35 @@ def test_expand():
     assert expand_func(besselj(2, x)) == \
         -besselj(0, x) + 2*besselj(1, x)/x
     assert expand_func(besselk(2, x)) == \
-        besselk(0, x) - 2*besselk(1, x)/x
+        besselk(0, x) + 2*besselk(1, x)/x
     assert expand_func(bessely(2, x)) == \
+        -bessely(0, x) + 2*bessely(1, x)/x
+
+    assert expand_func(besseli(-2, x)) == \
+        besseli(0, x) - 2*besseli(1, x)/x
+    assert expand_func(besselj(-2, x)) == \
+        -besselj(0, x) + 2*besselj(1, x)/x
+    assert expand_func(besselk(-2, x)) == \
+        besselk(0, x) + 2*besselk(1, x)/x
+    assert expand_func(bessely(-2, x)) == \
         -bessely(0, x) + 2*bessely(1, x)/x
 
     n = Symbol('n', integer=True, positive=True)
 
     assert expand_func(besseli(n + 2, z)) == \
-        besseli(n, z) - (2*n + 2)*(-2*n*besseli(n, z)/z + besseli(n - 1, z))/z
+        besseli(n, z) + (-2*n - 2)*(-2*n*besseli(n, z)/z + besseli(n - 1, z))/z
     assert expand_func(besselj(n + 2, z)) == \
         -besselj(n, z) + (2*n + 2)*(2*n*besselj(n, z)/z - besselj(n - 1, z))/z
     assert expand_func(besselk(n + 2, z)) == \
-        besselk(n, z) - (2*n + 2)*(-2*n*besselk(n, z)/z + besselk(n - 1, z))/z
+        besselk(n, z) + (2*n + 2)*(2*n*besselk(n, z)/z + besselk(n - 1, z))/z
     assert expand_func(bessely(n + 2, z)) == \
         -bessely(n, z) + (2*n + 2)*(2*n*bessely(n, z)/z - bessely(n - 1, z))/z
 
-    assert expand_func(besseli(n + S(1)/2, z)) == \
+    assert expand_func(besseli(n + S(1)/2, z).rewrite(jn)) == \
         sqrt(2)*sqrt(z)*exp(-I*pi*(n + S(1)/2)/2)* \
         exp_polar(I*pi/4)*jn(n, z*exp_polar(I*pi/2))/sqrt(pi)
-    assert expand_func(besselj(n + S(1)/2, z)) == sqrt(2)*sqrt(z)*jn(n, z)/sqrt(pi)
+    assert expand_func(besselj(n + S(1)/2, z).rewrite(jn)) == \
+        sqrt(2)*sqrt(z)*jn(n, z)/sqrt(pi)
 
 
 def test_fn():

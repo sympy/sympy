@@ -171,20 +171,18 @@ class besselj(BesselBase):
         if nu.is_integer is False:
             return csc(pi*nu)*bessely(-nu, z) - cot(pi*nu)*bessely(nu, z)
 
-    def _eval_rewrite_as_jn(self, nu, z, expand=False):
-        jn_part = jn(nu - S('1/2'), self.argument)
-        if expand:
-            jn_part = jn_part._eval_expand_func()
-        return sqrt(2*z/pi) * jn_part
+    def _eval_rewrite_as_jn(self, nu, z):
+        return sqrt(2*z/pi)*jn(nu - S.Half, self.argument)
 
     def _eval_expand_func(self, **hints):
-        nu = self.order
-        if (nu + S.Half).is_integer:
-            return self._eval_rewrite_as_jn(*self.args, **{'expand': True})
-        elif nu.is_integer and (nu - 1).is_positive:
-            z = self.argument
-            return (-besselj(nu - 2, z)._eval_expand_func() +
-                    2*(nu - 1)*besselj(nu - 1, z)._eval_expand_func()/z)
+        nu, z = self.order, self.argument
+        if nu.is_real:
+            if (nu - 1).is_positive:
+                return (-besselj(nu - 2, z)._eval_expand_func() +
+                        2*(nu - 1)*besselj(nu - 1, z)._eval_expand_func()/z)
+            elif (nu + 1).is_negative:
+                return (2*(nu + 1)*besselj(nu + 1, z)._eval_expand_func()/z -
+                        besselj(nu + 2, z)._eval_expand_func())
         return self
 
 
@@ -254,20 +252,18 @@ class bessely(BesselBase):
         if aj:
             return aj.rewrite(besseli)
 
-    def _eval_rewrite_as_yn(self, nu, z, expand=False):
-        yn_part = yn(nu - S('1/2'), self.argument)
-        if expand:
-            yn_part = yn_part._eval_expand_func()
-        return sqrt(2*z/pi) * yn_part
+    def _eval_rewrite_as_yn(self, nu, z):
+        return sqrt(2*z/pi) * yn(nu - S.Half, self.argument)
 
     def _eval_expand_func(self, **hints):
-        nu = self.order
-        if (nu + S.Half).is_integer:
-            return self._eval_rewrite_as_yn(*self.args, **{'expand': True})
-        elif nu.is_integer and (nu - 1).is_positive:
-            z = self.argument
-            return (-bessely(nu - 2, z)._eval_expand_func() +
-                    2*(nu - 1)*bessely(nu - 1, z)._eval_expand_func()/z)
+        nu, z = self.order, self.argument
+        if nu.is_real:
+            if (nu - 1).is_positive:
+                return (-bessely(nu - 2, z)._eval_expand_func() +
+                        2*(nu - 1)*bessely(nu - 1, z)._eval_expand_func()/z)
+            elif (nu + 1).is_negative:
+                return (2*(nu + 1)*bessely(nu + 1, z)._eval_expand_func()/z -
+                        bessely(nu + 2, z)._eval_expand_func())
         return self
 
 
@@ -358,14 +354,18 @@ class besseli(BesselBase):
         if aj:
             return aj.rewrite(bessely)
 
+    def _eval_rewrite_as_jn(self, nu, z):
+        return self._eval_rewrite_as_besselj(*self.args).rewrite(jn)
+
     def _eval_expand_func(self, **hints):
-        nu = self.order
-        if (nu + S.Half).is_integer:
-            return expand_func(self._eval_rewrite_as_besselj(*self.args))
-        if nu.is_integer and (nu - 1).is_positive:
-            z = self.argument
-            return (besseli(nu - 2, z)._eval_expand_func() -
-                    2*(nu - 1)*besseli(nu - 1, z)._eval_expand_func()/z)
+        nu, z = self.order, self.argument
+        if nu.is_real:
+            if (nu - 1).is_positive:
+                return (besseli(nu - 2, z)._eval_expand_func() -
+                        2*(nu - 1)*besseli(nu - 1, z)._eval_expand_func()/z)
+            elif (nu + 1).is_negative:
+                return (2*(nu + 1)*besseli(nu + 1, z)._eval_expand_func()/z +
+                        besseli(nu + 2, z)._eval_expand_func())
         return self
 
 
@@ -438,12 +438,20 @@ class besselk(BesselBase):
         if aj:
             return aj.rewrite(bessely)
 
+    def _eval_rewrite_as_yn(self, nu, z):
+        ay = self._eval_rewrite_as_bessely(*self.args)
+        if ay:
+            return ay.rewrite(yn)
+
     def _eval_expand_func(self, **hints):
-        nu = self.order
-        if nu.is_integer and (nu - 1).is_positive:
-            z = self.argument
-            return (besselk(nu - 2, z)._eval_expand_func() -
-                    2*(nu - 1)*besselk(nu - 1, z)._eval_expand_func()/z)
+        nu, z = self.order, self.argument
+        if nu.is_real:
+            if (nu - 1).is_positive:
+                return (besselk(nu - 2, z)._eval_expand_func() -
+                        2*(nu - 1)*besselk(nu - 1, z)._eval_expand_func()/z)
+            elif (nu + 1).is_negative:
+                return (2*(nu + 1)*besselk(nu + 1, z)._eval_expand_func()/z +
+                        besselk(nu + 2, z)._eval_expand_func())
         return self
 
 
