@@ -72,7 +72,7 @@ def dup_half_gcdex(f, g, K):
     (-1/5*x + 3/5, x + 1)
 
     """
-    if not (K.has_Field or not K.is_Exact):
+    if not K.has_Field:
         raise DomainError("can't compute half extended GCD over %s" % K)
 
     a, b = [K.one], []
@@ -1754,7 +1754,7 @@ def dup_lcm(f, g, K):
     x**3 - 2*x**2 - x + 2
 
     """
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dup_ff_lcm(f, g, K)
     else:
         return dup_rr_lcm(f, g, K)
@@ -1834,7 +1834,7 @@ def dmp_lcm(f, g, u, K):
     if not u:
         return dup_lcm(f, g, K)
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dmp_ff_lcm(f, g, u, K)
     else:
         return dmp_rr_lcm(f, g, u, K)

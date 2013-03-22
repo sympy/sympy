@@ -328,7 +328,7 @@ def dup_quo_ground(f, c, K):
     if not f:
         return f
 
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return [ K.quo(cf, c) for cf in f ]
     else:
         return [ cf // c for cf in f ]
@@ -1455,9 +1455,6 @@ def dup_ff_div(f, g, K):
 
         r = dup_sub(r, h, K)
 
-        if not K.is_Exact:
-            r = dup_normal(r, K)
-
     return q, r
 
 
@@ -1533,7 +1530,7 @@ def dup_div(f, g, K):
     (1/2*x + 1, 5)
 
     """
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dup_ff_div(f, g, K)
     else:
         return dup_rr_div(f, g, K)
@@ -1627,7 +1624,7 @@ def dmp_div(f, g, u, K):
     (1/2*x + 1/2*y - 1/2, -y + 1)
 
     """
-    if K.has_Field or not K.is_Exact:
+    if K.has_Field:
         return dmp_ff_div(f, g, u, K)
     else:
         return dmp_rr_div(f, g, u, K)

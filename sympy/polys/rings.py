@@ -854,7 +854,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         domain = self.ring.domain
         domain_quo = domain.quo
 
-        if domain.has_Field or not domain.is_Exact:
+        if domain.has_Field:
             def term_div((a_lm, a_lc), (b_lm, b_lc)):
                 if b_lm == zm: # apparently this is a very common case
                     monom = a_lm
@@ -1263,7 +1263,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not f or x == domain.one:
             return f
 
-        if domain.has_Field or not domain.is_Exact:
+        if domain.has_Field:
             quo = domain.quo
             terms = [ (monom, quo(coeff, x)) for monom, coeff in f.terms() ]
         else:
