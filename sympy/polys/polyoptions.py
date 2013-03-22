@@ -420,6 +420,8 @@ class Domain(Option):
 
     after = ['gens']
 
+    _re_realfield = re.compile("^(R|RR)(_(\d+))?$")
+    _re_complexfield = re.compile("^(C|CC)(_(\d+))?$")
     _re_finitefield = re.compile("^(FF|GF)\((\d+)\)$")
     _re_polynomial = re.compile("^(Z|ZZ|Q|QQ)\[(.+)\]$")
     _re_fraction = re.compile("^(Z|ZZ|Q|QQ)\((.+)\)$")
@@ -436,11 +438,28 @@ class Domain(Option):
             if domain in ['Q', 'QQ']:
                 return sympy.polys.domains.QQ
 
-            if domain in ['R', 'RR']:
-                return sympy.polys.domains.RR
-
             if domain == 'EX':
                 return sympy.polys.domains.EX
+
+            r = cls._re_realfield.match(domain)
+
+            if r is not None:
+                _, _, prec = r.groups()
+
+                if prec is None:
+                    return sympy.polys.domains.RR
+                else:
+                    return sympy.polys.domains.RealField(int(prec))
+
+            r = cls._re_complexfield.match(domain)
+
+            if r is not None:
+                _, _, prec = r.groups()
+
+                if prec is None:
+                    return sympy.polys.domains.CC
+                else:
+                    return sympy.polys.domains.ComplexField(int(prec))
 
             r = cls._re_finitefield.match(domain)
 

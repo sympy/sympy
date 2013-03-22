@@ -71,11 +71,6 @@ else:
     gmpy_sqrt = None
     gmpy_qdiv = None
 
-from sympy.mpmath import (
-    mpf as MPmathReal,
-    mpc as MPmathComplex,
-    mpi as MPmathInterval,
-)
 
 import sympy.mpmath.libmp as mlib
 

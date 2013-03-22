@@ -1,6 +1,6 @@
-"""Implementation of :class:`RealField` class. """
+"""Implementation of :class:`ComplexField` class. """
 
-from sympy.core.numbers import Float
+from sympy.core.numbers import Float, I
 
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
@@ -11,10 +11,10 @@ from sympy.polys.polyerrors import DomainError, CoercionFailed
 
 import math
 
-class RealField(Field, CharacteristicZero, SimpleDomain):
-    """Real numbers up to the given precision. """
+class ComplexField(Field, CharacteristicZero, SimpleDomain):
+    """Complex numbers up to the given precision. """
 
-    rep = 'RR'
+    rep = 'CC'
 
     is_Exact = False
     is_Numerical = True
@@ -45,22 +45,23 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         context._parent = self
         self._context = context
 
-        self.dtype = context.mpf
+        self.dtype = context.mpc
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """
-        return Float(element, self.dps)
+        return Float(element.real, self.dps) + I*Float(element.imag, self.dps)
 
     def from_sympy(self, expr):
         """Convert SymPy's number to ``dtype``. """
         number = expr.evalf(n=self.dps)
+        real, imag = number.as_real_imag()
 
-        if number.is_Number:
-            return self.dtype(number)
+        if real.is_Number and imag.is_Number:
+            return self.dtype(real, imag)
         else:
-            raise CoercionFailed("expected real number, got %s" % expr)
+            raise CoercionFailed("expected complex number, got %s" % expr)
 
     def from_ZZ_python(self, element, base):
         return self.dtype(element)
@@ -75,83 +76,21 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         return self.dtype(int(element.numerator)) / int(element.denominator)
 
     def from_RealField(self, element, base):
+        return self.dtype(element)
+
+    def from_ComplexField(self, element, base):
         if self == base:
             return element
         else:
             return self.dtype(element)
 
-    def from_ComplexField(self, element, base):
-        if not element.imag:
-            return self.dtype(element.real)
-
-    def as_integer_ratio(self, a, **args):
-        """Convert real number to a (numer, denom) pair. """
-        v, n = math.frexp(a)  # XXX: hack, will work only for floats
-
-        for i in xrange(300):
-            if v != math.floor(v):
-                v, n = 2*v, n - 1
-            else:
-                break
-
-        numer, denom = int(v), 1
-
-        m = 1 << abs(n)
-
-        if n > 0:
-            numer *= m
-        else:
-            denom = m
-
-        n, d = self.limit_denom(numer, denom, **args)
-
-        if a and not n:
-            return numer, denom
-        else:
-            return n, d
-
-    def limit_denom(self, n, d, **args):
-        """Find closest rational to `n/d` (up to ``max_denom``). """
-        max_denom = args.get('max_denom', 1000000)
-
-        if d <= max_denom:
-            return n, d
-
-        from sympy.polys.domains import QQ
-        self = QQ(n, d)
-
-        p0, q0, p1, q1 = 0, 1, 1, 0
-
-        while True:
-            a = n//d
-            q2 = q0 + a*q1
-
-            if q2 > max_denom:
-                break
-
-            p0, q0, p1, q1, n, d = \
-                p1, q1, p0 + a*p1, q2, d, n - a*d
-
-        k = (max_denom - q0)//q1
-
-        P1, Q1 = p0 + k*p1, q0 + k*q1
-
-        bound1 = QQ(P1, Q1)
-        bound2 = QQ(p1, q1)
-
-        if abs(bound2 - self) <= abs(bound1 - self):
-            return p1, q1
-        else:
-            return P1, Q1
-
     def get_ring(self):
         """Returns a ring associated with ``self``. """
-        raise DomainError('there is no ring associated with %s' % self)
+        raise DomainError("there is no ring associated with %s" % self)
 
     def get_exact(self):
         """Returns an exact domain associated with ``self``. """
-        from sympy.polys.domains import QQ
-        return QQ
+        raise DomainError("there is no exact domain associated with %s" % self)
 
     def gcd(self, a, b):
         """Returns GCD of ``a`` and ``b``. """

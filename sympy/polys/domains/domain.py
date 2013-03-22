@@ -162,8 +162,12 @@ class Domain(object):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return None
 
-    def from_RR_mpmath(K1, a, K0):
-        """Convert a mpmath ``mpf`` object to ``dtype``. """
+    def from_RealField(K1, a, K0):
+        """Convert a real element object to ``dtype``. """
+        return None
+
+    def from_ComplexField(K1, a, K0):
+        """Convert a complex element to ``dtype``. """
         return None
 
     def from_AlgebraicField(K1, a, K0):
@@ -345,12 +349,6 @@ class Domain(object):
     def get_exact(self):
         """Returns an exact domain associated with ``self``. """
         return self
-
-    def float_domain(self):
-        return FF
-
-    def complex_domain(self):
-        return CC
 
     def __getitem__(self, gens):
         """The mathematical way to make a polynomial ring. """
