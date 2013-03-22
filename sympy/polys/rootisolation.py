@@ -54,7 +54,7 @@ def dup_sturm(f, K):
     1. [Davenport88]_
 
     """
-    if not (K.has_Field or not K.is_Exact):
+    if not K.has_Field:
         raise DomainError("can't compute Sturm sequence over %s" % K)
 
     f = dup_sqf_part(f, K)
@@ -684,7 +684,7 @@ def dup_count_real_roots(f, K, inf=None, sup=None):
     if dup_degree(f) <= 0:
         return 0
 
-    if not K.has_Field and K.is_Exact:
+    if not K.has_Field:
         R, K = K, K.get_field()
         f = dup_convert(f, R, K)
 
