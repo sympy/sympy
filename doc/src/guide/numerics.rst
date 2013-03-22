@@ -202,14 +202,14 @@ is zero. Let's now try points of the form `x = 10^{-10^k}`::
     >>> f.subs(x, 10**-10**2).evalf()
     4.87036575966825e-48
     >>> f.subs(x, 10**-10**3).evalf()
-    Traceback (most recent call last):
-    ...
-    ZeroDivisionError
+    +inf
 
-For `x = 10^{-10^3}` we got a very peculiar value. This happened because::
+For `x = 10^{-10^3}` wet got infinity. This happened because::
 
     >>> 10**-10**3
     0.0
+    >>> S(1)/_
+    +inf
 
 and the reason for this is that we used Python's floating point values.
 Instead we can use either exact numbers or SymPy's floating point numbers::
