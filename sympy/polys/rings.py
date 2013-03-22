@@ -374,6 +374,22 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __ne__(p1, p2):
         return not p1.__eq__(p2)
 
+    def almosteq(p1, p2):
+        """Approximate equality test for polynomials. """
+        if p1.ring.domain.is_Exact:
+            return p1.__eq__(p2)
+
+        p2 = p1.ring.ring_new(p2)
+
+        if p1.keys() != p1.keys():
+            return False
+
+        for c1, c2 in zip(p1.coeffs(), p2.coeffs()):
+            if not c1.ae(c2):
+                return False
+
+        return True
+
     def drop(self, gen):
         i, ring = self.ring._drop(gen)
         poly = ring.zero
