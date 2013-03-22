@@ -41,7 +41,7 @@ from sympy.polys.densearith import (
     dup_max_norm, dmp_max_norm,
     dup_l1_norm,
     dup_mul_ground, dmp_mul_ground,
-    dmp_quo_ground)
+    dup_quo_ground, dmp_quo_ground)
 
 from sympy.polys.densetools import (
     dup_clear_denoms, dmp_clear_denoms,
@@ -1223,15 +1223,17 @@ def dup_factor_list(f, K0):
                 factors[i] = (dup_convert(f, K, K0), k)
 
             coeff = K0.convert(coeff, K)
-            denom = K0.convert(denom, K)
 
-            coeff = K0.quo(coeff, denom)
+            if K0_inexact is None:
+                coeff = coeff/denom
+            else:
+                for i, (f, k) in enumerate(factors):
+                    f = dup_quo_ground(f, denom, K0)
+                    f = dup_convert(f, K0, K0_inexact)
+                    factors[i] = (f, k)
 
-        if K0_inexact is not None:
-            for i, (f, k) in enumerate(factors):
-                factors[i] = (dup_convert(f, K0, K0_inexact), k)
-
-            coeff = K0_inexact.convert(coeff, K0)
+                coeff = K0_inexact.convert(coeff, K0)
+                K0 = K0_inexact
 
     if j:
         factors.insert(0, ([K0.one, K0.zero], j))
@@ -1300,15 +1302,17 @@ def dmp_factor_list(f, u, K0):
                 factors[i] = (dmp_convert(f, u, K, K0), k)
 
             coeff = K0.convert(coeff, K)
-            denom = K0.convert(denom, K)
 
-            coeff = K0.quo(coeff, denom)
+            if K0_inexact is None:
+                coeff = coeff/denom
+            else:
+                for i, (f, k) in enumerate(factors):
+                    f = dmp_quo_ground(f, denom, u, K0)
+                    f = dmp_convert(f, u, K0, K0_inexact)
+                    factors[i] = (f, k)
 
-        if K0_inexact is not None:
-            for i, (f, k) in enumerate(factors):
-                factors[i] = (dmp_convert(f, u, K0, K0_inexact), k)
-
-            coeff = K0_inexact.convert(coeff, K0)
+                coeff = K0_inexact.convert(coeff, K0)
+                K0 = K0_inexact
 
     for i, j in enumerate(reversed(J)):
         if not j:
