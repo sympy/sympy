@@ -1551,7 +1551,23 @@ def dup_inner_gcd(f, g, K):
     (x - 1, x + 1, x - 2)
 
     """
-    if K.has_Field or not K.is_Exact:
+    if not K.is_Exact:
+        try:
+            exact = K.get_exact()
+        except DomainError:
+            return [K.one], f, g
+
+        f = dup_convert(f, K, exact)
+        g = dup_convert(g, K, exact)
+
+        h, cff, cfg = dup_inner_gcd(f, g, exact)
+
+        h = dup_convert(h, exact, K)
+        cff = dup_convert(cff, exact, K)
+        cfg = dup_convert(cfg, exact, K)
+
+        return h, cff, cfg
+    elif K.has_Field:
         if K.is_QQ and query('USE_HEU_GCD'):
             try:
                 return dup_qq_heu_gcd(f, g, K)
@@ -1572,7 +1588,23 @@ def dup_inner_gcd(f, g, K):
 @cythonized("u")
 def _dmp_inner_gcd(f, g, u, K):
     """Helper function for `dmp_inner_gcd()`. """
-    if K.has_Field or not K.is_Exact:
+    if not K.is_Exact:
+        try:
+            exact = K.get_exact()
+        except DomainError:
+            return dmp_one(u, K), f, g
+
+        f = dmp_convert(f, u, K, exact)
+        g = dmp_convert(g, u, K, exact)
+
+        h, cff, cfg = _dmp_inner_gcd(f, g, u, exact)
+
+        h = dmp_convert(h, u, exact, K)
+        cff = dmp_convert(cff, u, exact, K)
+        cfg = dmp_convert(cfg, u, exact, K)
+
+        return h, cff, cfg
+    elif K.has_Field:
         if K.is_QQ and query('USE_HEU_GCD'):
             try:
                 return dmp_qq_heu_gcd(f, g, u, K)
