@@ -11,7 +11,9 @@ from characteristiczero import CharacteristicZero
 from finitefield import FiniteField
 from integerring import IntegerRing
 from rationalfield import RationalField
+
 from realfield import RealField
+from complexfield import ComplexField
 
 from pythonfinitefield import PythonFiniteField
 from gmpyfinitefield import GMPYFiniteField
@@ -21,8 +23,6 @@ from gmpyintegerring import GMPYIntegerRing
 
 from pythonrationalfield import PythonRationalField
 from gmpyrationalfield import GMPYRationalField
-
-from mpmathrealfield import MPmathRealField
 
 from algebraicfield import AlgebraicField
 
@@ -42,7 +42,8 @@ ZZ_gmpy = GMPYIntegerRing
 QQ_python = PythonRationalField
 QQ_gmpy = GMPYRationalField
 
-RR_mpmath = MPmathRealField
+RR = RealField()
+CC = ComplexField()
 
 from pythonrational import PythonRational
 
@@ -59,7 +60,5 @@ except KeyError:
     raise ValueError("invalid ground types: %s" % GROUND_TYPES)
 
 GF = FF
-
-RR = RR_mpmath()
 
 EX = ExpressionDomain()

@@ -90,7 +90,7 @@ class FiniteField(Field, SimpleDomain):
         if a.denominator == 1:
             return K1.from_ZZ_gmpy(a.numerator)
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert mpmath's ``mpf`` to ``dtype``. """
         p, q = K0.as_integer_ratio(a)
 

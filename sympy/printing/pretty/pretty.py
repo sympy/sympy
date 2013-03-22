@@ -1419,17 +1419,27 @@ class PrettyPrinter(Printer):
         else:
             return prettyForm('QQ')
 
-    def _print_RealField(self, expr):
+    def _print_RealField(self, domain):
         if self._use_unicode:
-            return prettyForm(u'\u211D')
+            prefix = u'\u211D'
         else:
-            return prettyForm('RR')
+            prefix = 'RR'
 
-    def _print_ComplexField(self, expr):
-        if self._use_unicode:
-            return prettyForm(u'\u2102')
+        if domain.has_default_precision:
+            return prettyForm(prefix)
         else:
-            return prettyForm('CC')
+            return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
+
+    def _print_ComplexField(self, domain):
+        if self._use_unicode:
+            prefix = u'\u2102'
+        else:
+            prefix = 'CC'
+
+        if domain.has_default_precision:
+            return prettyForm(prefix)
+        else:
+            return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
 
     def _print_PolynomialRingBase(self, expr):
         g = expr.gens

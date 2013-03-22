@@ -116,9 +116,6 @@ Implementation Domains
 .. autoclass:: PythonRationalField
 .. autoclass:: GMPYRationalField
 
-.. autoclass:: MPmathRealField
-
-
 Level One
 =========
 
