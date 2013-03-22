@@ -599,7 +599,7 @@ def test_J7():
 
 def test_J8():
     p = besselj(R(3,2), z)
-    q = (sin(z)/z - cos(z))/sqrt(pi*z/2)                                    
+    q = (sin(z)/z - cos(z))/sqrt(pi*z/2)
     assert simplify(expand_func(p) -q) == 0
 
 
@@ -887,7 +887,7 @@ def test_M24():
     solution =solve(1-binomial(m, 2)*2**k,k)
     # solution has the form log(2/(m**2-m)), 2)
     good= log(2/(m*(m-1)), 2)
-    assert solution[0].expand() == good.expand() 
+    assert solution[0].expand() == good.expand()
 
 
 @XFAIL
@@ -897,3 +897,70 @@ def test_M25():
 
 def test_M26():
     assert solve(sqrt(log(x))-log(sqrt(x))) == [1, exp(4)]
+
+
+@XFAIL
+def test_M27():
+    raise NotImplementedError("solve(log(acos(asin(x**R(2,3) - b) - 1))+2, x)")
+
+
+@XFAIL
+def test_M28():
+    raise NotImplementedError("N(solve(5*x + exp((x-5)/2)-8*x**3,x))")
+
+
+def test_M29():
+    assert solve(abs(x-1)-2) == [-1, 3]
+
+
+@XFAIL
+def test_M30():
+    raise NotImplementedError("solve(abs(2*x+5) -abs(x-2),x) == [-1, -7]")
+
+
+@XFAIL
+def test_M31():
+    raise NotImplementedError("solve(1 - abs(x) - Max(-x-2,x -2),x) == [-3/2, 3/2]")
+
+
+@XFAIL
+def test_M32():
+    raise NotImplementedError("solve(Max(2 - x**2,x)- Max(-x,(x**3)/9))")
+
+
+@XFAIL
+def test_M33():
+    raise NotImplementedError("solve(Max(2 - x**2,x) - x**3/9)")
+
+
+@XFAIL
+def test_M34():
+    raise NotImplementedError("solve((1 + I) * z + (2 - I) * conjugate(z) + 3*I, z)")
+
+
+@XFAIL
+def test_M35():
+    x = symbols('x', real=True)
+    y = symbols('y', real=True)
+    raise NotImplementedError("solve(3*x - 2*y - I*y + 3*I, x, y) == [2,3]")
+
+
+@XFAIL
+def test_M36():
+    f = Function('f')(x)
+    raise NotImplementedError("solve(f**2 + f - 2, x)")
+
+
+@XFAIL
+def test_M37():
+    raise NotImplementedError("solve a 3x3 dependent linear system")
+
+
+@XFAIL
+def test_M38():
+    raise NotImplementedError("solve a 189x49 simple linear system")
+
+
+@XFAIL
+def test_M39():
+    raise NotImplementedError("solve a 3x3 nonlinear system")
