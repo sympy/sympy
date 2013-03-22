@@ -84,65 +84,9 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         if not element.imag:
             return self.dtype(element.real)
 
-    def as_integer_ratio(self, a, **args):
-        """Convert real number to a (numer, denom) pair. """
-        v, n = math.frexp(a)  # XXX: hack, will work only for floats
-
-        for i in xrange(300):
-            if v != math.floor(v):
-                v, n = 2*v, n - 1
-            else:
-                break
-
-        numer, denom = int(v), 1
-
-        m = 1 << abs(n)
-
-        if n > 0:
-            numer *= m
-        else:
-            denom = m
-
-        n, d = self.limit_denom(numer, denom, **args)
-
-        if a and not n:
-            return numer, denom
-        else:
-            return n, d
-
-    def limit_denom(self, n, d, **args):
-        """Find closest rational to `n/d` (up to ``max_denom``). """
-        max_denom = args.get('max_denom', 1000000)
-
-        if d <= max_denom:
-            return n, d
-
-        from sympy.polys.domains import QQ
-        self = QQ(n, d)
-
-        p0, q0, p1, q1 = 0, 1, 1, 0
-
-        while True:
-            a = n//d
-            q2 = q0 + a*q1
-
-            if q2 > max_denom:
-                break
-
-            p0, q0, p1, q1, n, d = \
-                p1, q1, p0 + a*p1, q2, d, n - a*d
-
-        k = (max_denom - q0)//q1
-
-        P1, Q1 = p0 + k*p1, q0 + k*q1
-
-        bound1 = QQ(P1, Q1)
-        bound2 = QQ(p1, q1)
-
-        if abs(bound2 - self) <= abs(bound1 - self):
-            return p1, q1
-        else:
-            return P1, Q1
+    def to_rational(self, element, limit=True):
+        """Convert a real number to rational number. """
+        return self._context.to_rational(element, limit)
 
     def get_ring(self):
         """Returns a ring associated with ``self``. """
