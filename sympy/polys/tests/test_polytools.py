@@ -335,10 +335,8 @@ def test_Poly__new__():
         3.0*x**2 + 2.0*x + 1, domain='RR').all_coeffs() == [3.0, 2.0, 1.0]
 
     raises(CoercionFailed, lambda: Poly(3.1*x**2 + 2.1*x + 1, domain='ZZ'))
-    assert Poly(3.1*x**2 + 2.1*x + 1, domain='QQ').all_coeffs() == [S(
-        31)/10, S(21)/10, 1]
-    assert Poly(
-        3.1*x**2 + 2.1*x + 1, domain='RR').all_coeffs() == [3.1, 2.1, 1.0]
+    assert Poly(3.1*x**2 + 2.1*x + 1, domain='QQ').all_coeffs() == [S(31)/10, S(21)/10, 1]
+    assert Poly(3.1*x**2 + 2.1*x + 1, domain='RR').all_coeffs() == [3.1, 2.1, 1.0]
 
     assert Poly({(2, 1): 1, (1, 2): 2, (1, 1): 3}, x, y) == \
         Poly(x**2*y + 2*x*y**2 + 3*x*y, x, y)

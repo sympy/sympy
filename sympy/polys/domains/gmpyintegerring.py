@@ -63,7 +63,7 @@ class GMPYIntegerRing(IntegerRing):
 
     def from_RealField(K1, a, K0):
         """Convert mpmath's ``mpf`` to GMPY's ``mpz``. """
-        p, q = K0.as_integer_ratio(a)
+        p, q = K0.to_rational(a)
 
         if q == 1:
             return GMPYInteger(p)
