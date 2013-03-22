@@ -554,6 +554,11 @@ def test_risch_integrate():
     assert risch_integrate(log(x**y), x) == x*log(x**y) - x*y
     assert risch_integrate(log(sqrt(x)), x) == x*log(sqrt(x)) - x/2
 
+
+def test_risch_integrate_float():
+    assert risch_integrate((-60*exp(x) - 19.2*exp(4*x))*exp(4*x), x) == -2.4*exp(8*x) - 12.0*exp(5*x)
+
+
 def test_NonElementaryIntegral():
     assert isinstance(risch_integrate(exp(x**2), x), NonElementaryIntegral)
     assert isinstance(risch_integrate(x**x*log(x), x), NonElementaryIntegral)

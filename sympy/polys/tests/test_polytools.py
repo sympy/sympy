@@ -50,7 +50,7 @@ from sympy.polys.monomialtools import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
-    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
+    exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
@@ -2822,6 +2822,14 @@ def test_cancel():
     assert f.cancel(g, include=True) == (
         Poly(5*y + 1, y, domain='ZZ(x)'), Poly(2*x*y, y, domain='ZZ(x)'))
 
+    f = -(-2*x - 4*y + 0.005*(z - y)**2)/((z - y)*(-z + y + 2))
+    assert cancel(f).is_Mul == True
+
+    P = tanh(x - 3.0)
+    Q = tanh(x + 3.0)
+    f = ((-2*P**2 + 2)*(-P**2 + 1)*Q**2/2 + (-2*P**2 + 2)*(-2*Q**2 + 2)*P*Q - (-2*P**2 + 2)*P**2*Q**2 + (-2*Q**2 + 2)*(-Q**2 + 1)*P**2/2 - (-2*Q**2 + 2)*P**2*Q**2)/(2*sqrt(P**2*Q**2 + 0.0001)) \
+      + (-(-2*P**2 + 2)*P*Q**2/2 - (-2*Q**2 + 2)*P**2*Q/2)*((-2*P**2 + 2)*P*Q**2/2 + (-2*Q**2 + 2)*P**2*Q/2)/(2*(P**2*Q**2 + 0.0001)**(S(3)/2))
+    assert cancel(f).is_Mul == True
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
