@@ -1,6 +1,6 @@
 """Module for querying SymPy objects about assumptions."""
 from sympy.core import sympify
-from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent
+from sympy.logic.boolalg import to_cnf, And, Not, Or, Implies, Equivalent, BooleanFunction
 from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
@@ -93,6 +93,9 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         It is however a work in progress.
 
     """
+    if not isinstance(assumptions, (BooleanFunction, AppliedPredicate, bool)):
+        raise TypeError("assumptions must be a valid logical expression")
+
     assumptions = And(assumptions, And(*context))
     if isinstance(proposition, AppliedPredicate):
         key, expr = proposition.func, sympify(proposition.arg)
