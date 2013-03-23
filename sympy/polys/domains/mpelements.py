@@ -106,6 +106,9 @@ class MPContext(PythonMPContext):
             return from_str(tol, prec, rounding)
         raise ValueError("expected a real number, got %s" % tol)
 
+    def _convert_fallback(ctx, x, strings):
+        raise TypeError("cannot create mpf from " + repr(x))
+
     @property
     def _repr_digits(ctx):
         return repr_dps(ctx._prec)
