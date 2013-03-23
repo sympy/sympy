@@ -442,7 +442,6 @@ def dup_prs_resultant(f, g, K):
     i = dup_degree(R[-2])
 
     res = dup_LC(R[-1], K)**i
-
     res = K.quo(res*p, q)
 
     return res, R

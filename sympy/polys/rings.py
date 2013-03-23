@@ -759,6 +759,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         multinomials = multinomial_coefficients(len(self), n).items()
         zero_monom = self.ring.zero_monom
         terms = list(self.iterterms())
+        zero = self.ring.domain.zero
         poly = self.ring.zero
 
         for multinomial, multinomial_coeff in multinomials:
@@ -770,7 +771,15 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     product_monom = [ a + b*exp for a, b in zip(product_monom, monom) ]
                     product_coeff *= coeff**exp
 
-            poly[tuple(product_monom)] = product_coeff
+            monom = tuple(product_monom)
+            coeff = product_coeff
+
+            coeff = poly.get(monom, zero) + coeff
+
+            if coeff:
+                poly[monom] = coeff
+            else:
+                del poly[monom]
 
         return poly
 
