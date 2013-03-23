@@ -13,7 +13,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func)
+    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -21,6 +21,8 @@ from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
 from sympy.physics.quantum import Commutator
+from sympy.assumptions import assuming
+from sympy.solvers.inequalities import (reduce_inequalities, reduce_rational_inequalities)
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -947,7 +949,6 @@ def test_M35():
 
 @XFAIL
 def test_M36():
-    f = Function('f')(x)
     raise NotImplementedError("solve(f**2 + f - 2, x)")
 
 
@@ -964,3 +965,59 @@ def test_M38():
 @XFAIL
 def test_M39():
     raise NotImplementedError("solve a 3x3 nonlinear system")
+
+
+def test_N1():
+    assert solve(E**pi > pi**E)
+
+
+def test_N2():
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(x**4 - x + 1 > 0) is True
+        assert reduce_inequalities(x**4 - x + 1 > 1) is Or(Lt(1, x), Lt(x, 0))
+
+
+def test_N3():
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(abs(x) < 1) is And(Lt(-1, x), Lt(x, 1))
+
+@XFAIL
+def test_N4():
+    raise NotImplementedError("assume x > y > 0 is 2*x**2 > 2*y**2")
+
+
+@XFAIL
+def test_N5():
+        raise NotImplementedError("assume x > y > 0, k > 0 is k*x**2 > k*y**2")
+
+
+@XFAIL
+def test_N6():
+        raise NotImplementedError("assume x > y > 0, k > 0, n > 0 is k*x**n > k*y**n")
+
+
+@XFAIL
+def test_N7():
+        raise NotImplementedError("assume x > 1, y >= x - 1 is y > 0")
+
+
+@XFAIL
+def test_N8():
+        raise NotImplementedError("assume x >= y >= z >= x, is x = y = z")
+
+
+def test_N9():
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(abs(x-1) >2) is Or(Lt(3, x), Lt(x, -1))
+
+
+def test_N10():
+    p=(x-1)*(x-2)*(x-3)*(x-4)*(x-5)
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(expand(p) <0) == Or( And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
+
+
+def test_N11():
+    p=6/(x - 3)
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(p <= 3) == Or(Le(5, x), Lt(x,3))
