@@ -172,18 +172,18 @@ def test_PolyElement_leading_term():
 
 def test_PolyElement_terms():
     R, x,y,z = ring("x,y,z", QQ)
-    terms = list((x**2/3 + y**3/4 + z**4/5).terms())
-    assert set(terms) == set([((2,0,0), QQ(1,3)), ((0,3,0), QQ(1,4)), ((0,0,4), QQ(1,5))])
+    terms = (x**2/3 + y**3/4 + z**4/5).terms()
+    assert terms == [((2,0,0), QQ(1,3)), ((0,3,0), QQ(1,4)), ((0,0,4), QQ(1,5))]
 
 def test_PolyElement_monoms():
     R, x,y,z = ring("x,y,z", QQ)
-    monoms = list((x**2/3 + y**3/4 + z**4/5).monoms())
-    assert set(monoms) == set([(2,0,0), (0,3,0), (0,0,4)])
+    monoms = (x**2/3 + y**3/4 + z**4/5).monoms()
+    assert monoms == [(2,0,0), (0,3,0), (0,0,4)]
 
 def test_PolyElement_coeffs():
     R, x,y,z = ring("x,y,z", QQ)
-    coeffs = list((x**2/3 + y**3/4 + z**4/5).coeffs())
-    assert set(coeffs) == set([QQ(1,3), QQ(1,4), QQ(1,5)])
+    coeffs = (x**2/3 + y**3/4 + z**4/5).coeffs()
+    assert coeffs == [QQ(1,3), QQ(1,4), QQ(1,5)]
 
 def test_PolyElement___add__():
     Rt, t = ring("t", ZZ)
@@ -282,10 +282,10 @@ def test_PolyElement___div__():
     assert (x**2 - x)/(x - 1) == (x**2 - x).quo(x - 1) == x
 
     R, x,y,z = ring("x,y,z", ZZ)
-    assert len(list((x**2/3 + y**3/4 + z**4/5).terms())) == 0
+    assert len((x**2/3 + y**3/4 + z**4/5).terms()) == 0
 
     R, x,y,z = ring("x,y,z", QQ)
-    assert len(list((x**2/3 + y**3/4 + z**4/5).terms())) == 3
+    assert len((x**2/3 + y**3/4 + z**4/5).terms()) == 3
 
     Rt, t = ring("t", ZZ)
     Ruv, u,v = ring("u,v", ZZ)

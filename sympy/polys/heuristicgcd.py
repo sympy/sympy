@@ -137,7 +137,7 @@ def _gcd_interpolate(h, x, ring):
 
             # f += X**i*g
             if g:
-                for monom, coeff in g.terms():
+                for monom, coeff in g.iterterms():
                     f[(i,) + monom] = coeff
             i += 1
 
