@@ -150,17 +150,13 @@ class MappingGate(Gate):
     @property
     def nqubits(self):
         """Gives the dimension of the matrix representation"""
-        return self.args[0].args[0].args[0].nqubits
+        return self.args[0].keys()[0].nqubits
 
     def get_final_state(self, qubit):
         """Returns the final state for a given initial state, if initial state is
         not mapped to a final state the initial state is returned."""
         i = Qubit(qubit)
-        f = self.mapping.get(i, None)
-        if f is None:
-            return i
-        else:
-            return f
+        return self.mapping.get(i, i)
 
     def _apply_operator_Qubit(self, qubit):
         return self.get_final_state(qubit)
