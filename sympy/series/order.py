@@ -1,4 +1,4 @@
-from sympy.core import Basic, S, sympify, Expr, Rational, Symbol, Dummy, Wild
+from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
 from sympy.core import Add, Mul
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp_to_key
@@ -101,7 +101,7 @@ class Order(Expr):
             return S.NaN
 
         if symbols:
-            symbols = map(sympify, set(symbols))
+            symbols = map(sympify, symbols)
             if not all(isinstance(s, Symbol) for s in symbols):
                 raise NotImplementedError(
                     'Order at points other than 0 not supported.')
@@ -123,7 +123,6 @@ class Order(Expr):
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e, f) in lst])
-
             elif expr:
                 if len(symbols) > 1 or expr.is_commutative is False:
                     # TODO
@@ -133,8 +132,8 @@ class Order(Expr):
                 else:
                     expr = expr.compute_leading_term(symbols[0])
 
-                s = set(symbols)
-                margs = [t for t in Mul.make_args(expr) if s & t.free_symbols]
+                margs = [t for t in Mul.make_args(expr) \
+                                    if set(symbols) & t.free_symbols]
 
                 if len(symbols) == 1:
                     # The definition of O(f(x)) symbol explicitly stated that
@@ -145,17 +144,26 @@ class Order(Expr):
                     x = symbols[0]
 
                     for i, t in enumerate(margs):
-                        m = _omatch(t, x)
-                        if m is not None:
-                            t = x**m
-                        margs[i] = t
+                        if t.is_Pow:
+                            b, q = t.args
+                            if b in (x, -x) and q.is_real and not q.has(x):
+                                margs[i] = x**q
+                            elif b.is_Pow and not b.exp.has(x):
+                                b, r = b.args
+                                if b in (x, -x) and r.is_real:
+                                    margs[i] = x**(r*q)
+                            elif b.is_Mul and b.args[0] is S.NegativeOne:
+                                b = -b
+                                if b.is_Pow and not b.exp.has(x):
+                                    b, r = b.args
+                                    if b in (x, -x) and r.is_real:
+                                        margs[i] = x**(r*q)
 
                 expr = Mul(*margs)
 
         if expr is S.Zero:
             return expr
-
-        if not expr.has(*symbols):
+        elif not expr.has(*symbols):
             expr = S.One
 
         # create Order instance:
@@ -280,37 +288,5 @@ class Order(Expr):
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
         return Rational(0)._sage_()
-
-
-def _omatch(t, x):
-    """For t = (s1*(s2*x)**r)**q -> x**(r*q) return r*q
-    if r and q are real."""
-    from sympy.core.function import _coeff_isneg
-    r = q = S.One
-    if t in (x, -x):
-        pass
-    elif not t.is_Pow:
-        return
-    else:
-        b, q = t.args
-        if q.has(x) or not q.is_real:
-            return
-        if b in (x, -x):
-            pass
-        elif b.is_Pow:
-            b, r = b.args
-            if b != x or r.has(x) or not r.is_real:
-                return
-        elif b.is_Mul and _coeff_isneg(b):
-            b = -b
-            if not b.is_Pow:
-                return
-            b, r = b.args
-            if b not in (x, -x) or r.has(x) or not r.is_real:
-                return
-        else:
-            return
-    return r*q
-
 
 O = Order
