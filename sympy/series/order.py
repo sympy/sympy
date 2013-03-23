@@ -101,7 +101,7 @@ class Order(Expr):
             return S.NaN
 
         if symbols:
-            symbols = map(sympify, symbols)
+            symbols = map(sympify, set(symbols))
             if not all(isinstance(s, Symbol) for s in symbols):
                 raise NotImplementedError(
                     'Order at points other than 0 not supported.')
@@ -123,6 +123,7 @@ class Order(Expr):
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e, f) in lst])
+
             elif expr:
                 if len(symbols) > 1 or expr.is_commutative is False:
                     # TODO
@@ -131,9 +132,9 @@ class Order(Expr):
                     expr = expr.as_leading_term(*symbols)
                 else:
                     expr = expr.compute_leading_term(symbols[0])
-                terms = expr.as_coeff_mul(*symbols)[1]
+
                 s = set(symbols)
-                expr = Mul(*[t for t in terms if s & t.free_symbols])
+                margs = [t for t in Mul.make_args(expr) if s & t.free_symbols]
 
                 if len(symbols) == 1:
                     # The definition of O(f(x)) symbol explicitly stated that
@@ -142,27 +143,19 @@ class Order(Expr):
                     # expression tree for f(x)), e.g.:
                     # x**p * (-x)**q -> x**(p+q) for real p, q.
                     x = symbols[0]
-                    d = Dummy("x", positive=True)
-                    q, r = Wild("q", exclude=[x]), Wild("r", exclude=[x])
 
-                    terms = []
-                    for t in expr.as_coeff_mul(*symbols)[1]:
-                        for p in [x**q, (-x)**q, ((x)**r)**q,
-                                  (-(x)**r)**q, (-(-x)**r)**q]:
-                            m = t.match(p)
-                            # XXX: Wild() can't handle assumption yet -
-                            # that's why we need this ugly check for is_real.
-                            if m and all(v.xreplace(m).is_real for v in [q, r]):
-                                terms.append((d**(q*r)).xreplace(m).subs(r, S.One))
-                                break
-                        else:
-                            terms.append(t)
+                    for i, t in enumerate(margs):
+                        m = _omatch(t, x)
+                        if m is not None:
+                            t = x**m
+                        margs[i] = t
 
-                    expr = Mul(*terms).subs(d, x)
+                expr = Mul(*margs)
 
         if expr is S.Zero:
             return expr
-        elif not expr.has(*symbols):
+
+        if not expr.has(*symbols):
             expr = S.One
 
         # create Order instance:
@@ -287,5 +280,37 @@ class Order(Expr):
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.
         return Rational(0)._sage_()
+
+
+def _omatch(t, x):
+    """For t = (s1*(s2*x)**r)**q -> x**(r*q) return r*q
+    if r and q are real."""
+    from sympy.core.function import _coeff_isneg
+    r = q = S.One
+    if t in (x, -x):
+        pass
+    elif not t.is_Pow:
+        return
+    else:
+        b, q = t.args
+        if q.has(x) or not q.is_real:
+            return
+        if b in (x, -x):
+            pass
+        elif b.is_Pow:
+            b, r = b.args
+            if b != x or r.has(x) or not r.is_real:
+                return
+        elif b.is_Mul and _coeff_isneg(b):
+            b = -b
+            if not b.is_Pow:
+                return
+            b, r = b.args
+            if b not in (x, -x) or r.has(x) or not r.is_real:
+                return
+        else:
+            return
+    return r*q
+
 
 O = Order
