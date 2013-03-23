@@ -617,6 +617,15 @@ class Mul(Expr, AssocOp):
         for a in self.args:
             if a.is_real:
                 coeff *= a
+            elif a.is_commutative:
+                # search for complex conjugate pairs:
+                for i, x in enumerate(other):
+                    if x == a.conjugate():
+                        coeff *= C.Abs(x)**2
+                        del other[i]
+                        break
+                else:
+                    other.append(a)
             else:
                 other.append(a)
         m = Mul(*other)
