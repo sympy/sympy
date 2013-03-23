@@ -2989,7 +2989,9 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     original_expr = expr = sympify(expr)
 
     expr = signsimp(expr)
-
+    if type(expr) is not bool:
+        expr = expr.doit()
+    
     if not isinstance(expr, Basic):  # XXX: temporary hack
         return expr
 

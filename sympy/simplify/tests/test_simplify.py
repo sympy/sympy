@@ -130,7 +130,7 @@ def test_trigsimp_deep():
     x, y = symbols('x,y')
     assert trigsimp(
         Subs(x, x, sin(y)**2 + cos(y)**2), deep=True) == Subs(x, x, 1)
-    assert simplify(Subs(x, x, sin(y)**2 + cos(y)**2)) == Subs(x, x, 1)
+    assert simplify(Subs(x, x, sin(y)**2 + cos(y)**2)) == 1
 
 
 def test_issue1274():
