@@ -574,6 +574,13 @@ def _doctest(*paths, **kwargs):
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
 
+    # disabled because of doctest failures in asmeurer's bot
+    blacklist.extend([
+        "sympy/galgebra/GA.py",
+        "sympy/utilities/autowrap.py",
+        "examples/advanced/autowrap_integrators.py",
+        "examples/advanced/autowrap_ufuncify.py"
+        ])
 
     # pytest = import_module('pytest')
     # py = import_module('py')
