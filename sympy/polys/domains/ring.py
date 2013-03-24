@@ -69,7 +69,7 @@ class Ring(Domain):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> QQ[x].free_module(2)
+        >>> QQ.old_poly_ring(x).free_module(2)
         QQ[x]**2
         """
         raise NotImplementedError
@@ -80,7 +80,7 @@ class Ring(Domain):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> QQ[x].ideal(x**2)
+        >>> QQ.old_poly_ring(x).ideal(x**2)
         <x**2>
         """
         from sympy.polys.agca.ideals import ModuleImplementedIdeal
@@ -95,14 +95,14 @@ class Ring(Domain):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> QQ[x].quotient_ring(QQ[x].ideal(x**2))
+        >>> QQ.old_poly_ring(x).quotient_ring(QQ.old_poly_ring(x).ideal(x**2))
         QQ[x]/<x**2>
-        >>> QQ[x].quotient_ring([x**2])
+        >>> QQ.old_poly_ring(x).quotient_ring([x**2])
         QQ[x]/<x**2>
 
         The division operator has been overloaded for this:
 
-        >>> QQ[x]/[x**2]
+        >>> QQ.old_poly_ring(x)/[x**2]
         QQ[x]/<x**2>
         """
         from sympy.polys.agca.ideals import Ideal

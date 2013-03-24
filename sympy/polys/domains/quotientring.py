@@ -93,16 +93,16 @@ class QuotientRing(Ring):
 
     >>> from sympy.abc import x
     >>> from sympy import QQ
-    >>> I = QQ[x].ideal(x**3 + 1)
-    >>> QQ[x].quotient_ring(I)
+    >>> I = QQ.old_poly_ring(x).ideal(x**3 + 1)
+    >>> QQ.old_poly_ring(x).quotient_ring(I)
     QQ[x]/<x**3 + 1>
 
     Shorter versions are possible:
 
-    >>> QQ[x]/I
+    >>> QQ.old_poly_ring(x)/I
     QQ[x]/<x**3 + 1>
 
-    >>> QQ[x]/[x**3 + 1]
+    >>> QQ.old_poly_ring(x)/[x**3 + 1]
     QQ[x]/<x**3 + 1>
 
     Attributes:
@@ -189,7 +189,7 @@ class QuotientRing(Ring):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> (QQ[x]/[x**2 + 1]).free_module(2)
+        >>> (QQ.old_poly_ring(x)/[x**2 + 1]).free_module(2)
         (QQ[x]/<x**2 + 1>)**2
         """
         return FreeModuleQuotientRing(self, rank)

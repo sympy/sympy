@@ -29,6 +29,10 @@ class PolynomialRing(Ring, CompositeDomain):
     def new(self, element):
         return self.ring.ring_new(element)
 
+    @property
+    def order(self):
+        return self.ring.order
+
     def __str__(self):
         return str(self.dom) + '[' + ','.join(map(str, self.gens)) + ']'
 

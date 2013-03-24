@@ -167,7 +167,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
         >>> from sympy import QQ, ilex
         >>> from sympy.abc import x, y
-        >>> R = QQ.poly_ring(x, y, order=ilex)
+        >>> R = QQ.old_poly_ring(x, y, order=ilex)
         >>> L = [((1, 1, 1), QQ(1)), ((0, 1, 0), QQ(1)), ((0, 0, 1), QQ(2))]
         >>> R._sdm_to_vector(L, 2)
         [x + 2*y, x*y]
@@ -182,7 +182,7 @@ class PolynomialRingBase(Ring, CharacteristicZero, CompositeDomain):
 
         >>> from sympy.abc import x
         >>> from sympy import QQ
-        >>> QQ[x].free_module(2)
+        >>> QQ.old_poly_ring(x).free_module(2)
         QQ[x]**2
         """
         return FreeModulePolyRing(self, rank)
@@ -216,9 +216,9 @@ class GlobalPolynomialRing(PolynomialRingBase):
         >>> from sympy.abc import x
 
         >>> f = DMF(([ZZ(1), ZZ(1)], [ZZ(1)]), ZZ)
-        >>> K = ZZ.frac_field(x)
+        >>> K = ZZ.old_frac_field(x)
 
-        >>> F = ZZ[x].from_FractionField(f, K)
+        >>> F = ZZ.old_poly_ring(x).from_FractionField(f, K)
 
         >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
         True
@@ -265,7 +265,7 @@ class GlobalPolynomialRing(PolynomialRingBase):
         """
         >>> from sympy import lex, QQ
         >>> from sympy.abc import x, y
-        >>> R = QQ[x, y]
+        >>> R = QQ.old_poly_ring(x, y)
         >>> f = R.convert(x + 2*y)
         >>> g = R.convert(x * y)
         >>> R._vector_to_sdm([f, g], lex)
@@ -330,7 +330,7 @@ class GeneralizedPolynomialRing(PolynomialRingBase):
 
         >>> from sympy import ilex, QQ
         >>> from sympy.abc import x, y
-        >>> R = QQ.poly_ring(x, y, order=ilex)
+        >>> R = QQ.old_poly_ring(x, y, order=ilex)
         >>> f = R.convert((x + 2*y) / (1 + x))
         >>> g = R.convert(x * y)
         >>> R._vector_to_sdm([f, g], ilex)
@@ -371,20 +371,20 @@ def PolynomialRing(dom, *gens, **opts):
 
     Our first ring uses global lexicographic order.
 
-    >>> R1 = QQ.poly_ring(x, y, order=(("lex", x, y),))
+    >>> R1 = QQ.old_poly_ring(x, y, order=(("lex", x, y),))
 
     The second ring uses local lexicographic order. Note that when using a
     single (non-product) order, you can just specify the name and omit the
     variables:
 
-    >>> R2 = QQ.poly_ring(x, y, order="ilex")
+    >>> R2 = QQ.old_poly_ring(x, y, order="ilex")
 
     The third and fourth rings use a mixed orders:
 
     >>> o1 = (("ilex", x), ("lex", y))
     >>> o2 = (("lex", x), ("ilex", y))
-    >>> R3 = QQ.poly_ring(x, y, order=o1)
-    >>> R4 = QQ.poly_ring(x, y, order=o2)
+    >>> R3 = QQ.old_poly_ring(x, y, order=o1)
+    >>> R4 = QQ.old_poly_ring(x, y, order=o2)
 
     We will investigate what elements of `K(x, y)` are contained in the various
     rings.

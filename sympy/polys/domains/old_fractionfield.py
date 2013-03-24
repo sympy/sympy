@@ -112,8 +112,8 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
 
         >>> f = DMF(([ZZ(1), ZZ(2)], [ZZ(1), ZZ(1)]), ZZ)
 
-        >>> QQx = QQ.frac_field(x)
-        >>> ZZx = ZZ.frac_field(x)
+        >>> QQx = QQ.old_frac_field(x)
+        >>> ZZx = ZZ.old_frac_field(x)
 
         >>> QQx.from_FractionField(f, ZZx)
         (x + 2)/(x + 1)

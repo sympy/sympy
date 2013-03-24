@@ -791,10 +791,10 @@ def test_integral_transforms():
     assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
 
 
-def test_PolynomialRing():
+def test_PolynomialRingBase():
     from sympy.polys.domains import QQ
-    assert latex(QQ[x, y]) == r"\mathbb{Q}\left[x, y\right]"
-    assert latex(QQ.poly_ring(x, y, order="ilex")) == \
+    assert latex(QQ.old_poly_ring(x, y)) == r"\mathbb{Q}\left[x, y\right]"
+    assert latex(QQ.old_poly_ring(x, y, order="ilex")) == \
         r"S_<^{-1}\mathbb{Q}\left[x, y\right]"
 
 
@@ -858,7 +858,7 @@ def test_categories():
 def test_Modules():
     from sympy.polys.domains import QQ
     from sympy import homomorphism
-    R = QQ[x, y]
+    R = QQ.old_poly_ring(x, y)
     F = R.free_module(2)
     M = F.submodule([x, y], [1, x**2])
 
@@ -874,14 +874,14 @@ def test_Modules():
     assert latex(Q.submodule([1, x**3/2], [2, y])) == \
         r"\left< {{\left[ {1},{\frac{1}{2} x^{3}} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}},{{\left[ {2},{y} \right]} + {\left< {\left[ {x},{y} \right]},{\left[ {1},{x^{2}} \right]} \right>}} \right>"
 
-    h = homomorphism(QQ[x].free_module(2), QQ[x].free_module(2), [0, 0])
+    h = homomorphism(QQ.old_poly_ring(x).free_module(2), QQ.old_poly_ring(x).free_module(2), [0, 0])
 
     assert latex(h) == r"{\left[\begin{smallmatrix}0 & 0\\0 & 0\end{smallmatrix}\right]} : {{\mathbb{Q}\left[x\right]}^{2}} \to {{\mathbb{Q}\left[x\right]}^{2}}"
 
 
 def test_QuotientRing():
     from sympy.polys.domains import QQ
-    R = QQ[x]/[x**2 + 1]
+    R = QQ.old_poly_ring(x)/[x**2 + 1]
 
     assert latex(
         R) == r"\frac{\mathbb{Q}\left[x\right]}{\left< {x^{2} + 1} \right>}"

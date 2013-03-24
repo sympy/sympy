@@ -1310,6 +1310,16 @@ class LatexPrinter(Printer):
     def _print_ComplexField(self, expr):
         return r"\mathbb{C}"
 
+    def _print_PolynomialRing(self, expr):
+        domain = self._print(expr.dom)
+        gens = ", ".join(map(self._print, expr.gens))
+        return r"%s\left[%s\right]" % (domain, gens)
+
+    def _print_FractionField(self, expr):
+        domain = self._print(expr.dom)
+        gens = ", ".join(map(self._print, expr.gens))
+        return r"%s\left(%s\right)" % (domain, gens)
+
     def _print_PolynomialRingBase(self, expr):
         domain = self._print(expr.dom)
         gens = ", ".join(map(self._print, expr.gens))
@@ -1317,11 +1327,6 @@ class LatexPrinter(Printer):
         if not expr.is_Poly:
             inv = r"S_<^{-1}"
         return r"%s%s\left[%s\right]" % (inv, domain, gens)
-
-    def _print_FractionField(self, expr):
-        domain = self._print(expr.dom)
-        gens = ", ".join(map(self._print, expr.gens))
-        return r"%s\left(%s\right)" % (domain, gens)
 
     def _print_Poly(self, poly):
         cls = poly.__class__.__name__

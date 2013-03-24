@@ -90,6 +90,7 @@ class MonomialOrder(object):
 
     alias = None
     is_global = None
+    is_default = False
 
     def __repr__(self):
         return self.__class__.__name__ + "()"
@@ -115,6 +116,7 @@ class LexOrder(MonomialOrder):
 
     alias = 'lex'
     is_global = True
+    is_default = True
 
     def __call__(self, monomial):
         return monomial

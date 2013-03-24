@@ -9,7 +9,7 @@ from sympy import (
     binomial, catalan, ceiling, conjugate, cos, euler, exp, expint,
     factorial, factorial2, floor, gamma, groebner, homomorphism, hyper,
     log, lowergamma, meijerg, oo, pi, sin,
-    sqrt, sqrt, symbols, tan, uppergamma, subfactorial)
+    sqrt, sqrt, symbols, tan, uppergamma, subfactorial, lex, ilex, grlex)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -2798,12 +2798,12 @@ def test_pretty_Domain():
     assert pretty(expr) == "ZZ(x, y)"
     assert upretty(expr) == u"ℤ(x, y)"
 
-    expr = QQ.poly_ring(x, y, order="lex")
+    expr = QQ.poly_ring(x, y, order=grlex)
 
-    assert pretty(expr) == "QQ[x, y, order=lex]"
-    assert upretty(expr) == u"ℚ[x, y, order=lex]"
+    assert pretty(expr) == "QQ[x, y, order=grlex]"
+    assert upretty(expr) == u"ℚ[x, y, order=grlex]"
 
-    expr = QQ.poly_ring(x, y, order="ilex")
+    expr = QQ.poly_ring(x, y, order=ilex)
 
     assert pretty(expr) == "QQ[x, y, order=ilex]"
     assert upretty(expr) == u"ℚ[x, y, order=ilex]"
@@ -3817,15 +3817,15 @@ def test_RandomDomain():
 
 def test_PrettyPoly():
     F = QQ.frac_field(x, y)
-    R = QQ[x, y]
+    R = QQ.poly_ring(x, y)
 
     expr = F.convert(x/(x + y))
-    assert pretty(expr) == pretty(x/(x + y))
-    assert upretty(expr) == upretty(x/(x + y))
+    assert pretty(expr) == "x/(x + y)"
+    assert upretty(expr) == u"x/(x + y)"
 
     expr = R.convert(x + y)
-    assert pretty(expr) == pretty(x + y)
-    assert upretty(expr) == upretty(x + y)
+    assert pretty(expr) == "x + y"
+    assert upretty(expr) == u"x + y"
 
 
 def test_issue_3186():
@@ -3934,7 +3934,7 @@ def test_categories():
 
 
 def test_PrettyModules():
-    R = QQ[x, y]
+    R = QQ.old_poly_ring(x, y)
     F = R.free_module(2)
     M = F.submodule([x, y], [1, x**2])
 
@@ -4024,7 +4024,7 @@ u"""\
 
 
 def test_QuotientRing():
-    R = QQ[x]/[x**2 + 1]
+    R = QQ.old_poly_ring(x)/[x**2 + 1]
 
     ucode_str = \
 u"""\
@@ -4062,7 +4062,7 @@ u"""\
 
 
 def test_Homomorphism():
-    R = QQ[x]
+    R = QQ.old_poly_ring(x)
 
     expr = homomorphism(R.free_module(1), R.free_module(1), [0])
 

@@ -29,6 +29,10 @@ class FractionField(Field, CompositeDomain):
     def new(self, element):
         return self.field.field_new(element)
 
+    @property
+    def order(self):
+        return self.field.order
+
     def __str__(self):
         return str(self.dom) + '(' + ','.join(map(str, self.gens)) + ')'
 

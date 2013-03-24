@@ -363,6 +363,16 @@ class Domain(object):
         from sympy.polys.fields import FracField
         return FracField(symbols, self, kwargs.get("order", lex)).to_domain()
 
+    def old_poly_ring(self, *symbols, **kwargs):
+        """Returns a polynomial ring, i.e. `K[X]`. """
+        from sympy.polys.domains.old_polynomialring import PolynomialRing
+        return PolynomialRing(self, *symbols, **kwargs)
+
+    def old_frac_field(self, *symbols, **kwargs):
+        """Returns a fraction field, i.e. `K(X)`. """
+        from sympy.polys.domains.old_fractionfield import FractionField
+        return FractionField(self, *symbols, **kwargs)
+
     def algebraic_field(self, *extension):
         """Returns an algebraic field, i.e. `K(\\alpha, \dots)`. """
         raise DomainError("can't create algebraic field over %s" % self)
