@@ -269,3 +269,8 @@ def test_issue_2969():
     assert sqrt(sin(x**3)).series(x, 0, 20) == \
         sqrt(x**3) - x**6*sqrt(x**3)/12 + x**12*sqrt(x**3)/1440 - \
         x**18*sqrt(x**3)/24192 + O(x**20)
+
+@XFAIL
+def test_issue_3683():
+    assert sqrt(sin(x**3)).series(x, 0, 7) == sqrt(x**3) + O(x**7)
+    assert sqrt(sin(x**4)).series(x, 0, 3) == sqrt(x**4) + O(x**4)
