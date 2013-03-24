@@ -173,5 +173,7 @@ def test_issue_2554():
     assert sqrtdenest(
         sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))
 
-def test_sqrtdenest2():
+def test_sqrtdenest2a():
     assert sqrtdenest2(sqrt(-625 + 29*sqrt(5))*sqrt(-5 + sqrt(5))) == -55 + 7*sqrt(5)
+    b = (-5*sqrt(2) - sqrt(10))*sqrt(sqrt(5) + 5)/20 + sqrt(5)*sqrt(2*sqrt(5) + 5)/5
+    assert sqrtdenest2(b, full=True) == 0
