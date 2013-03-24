@@ -533,14 +533,15 @@ def dup_convert(f, K0, K1):
     Examples
     ========
 
+    >>> from sympy.polys.rings import ring
     >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.polyclasses import DMP
     >>> from sympy.polys.densebasic import dup_convert
 
-    >>> dup_convert([DMP([1], ZZ), DMP([2], ZZ)], ZZ['x'], ZZ)
-    [1, 2]
+    >>> R, x = ring("x", ZZ)
 
-    >>> dup_convert([ZZ(1), ZZ(2)], ZZ, ZZ['x'])
+    >>> dup_convert([R(1), R(2)], R.to_domain(), ZZ)
+    [1, 2]
+    >>> dup_convert([ZZ(1), ZZ(2)], ZZ, R.to_domain())
     [1, 2]
 
     """
@@ -558,17 +559,15 @@ def dmp_convert(f, u, K0, K1):
     Examples
     ========
 
+    >>> from sympy.polys.rings import ring
     >>> from sympy.polys.domains import ZZ
-    >>> from sympy.polys.polyclasses import DMP
     >>> from sympy.polys.densebasic import dmp_convert
 
-    >>> f = [[DMP([1], ZZ)], [DMP([2], ZZ)]]
-    >>> g = [[ZZ(1)], [ZZ(2)]]
+    >>> R, x = ring("x", ZZ)
 
-    >>> dmp_convert(f, 1, ZZ['x'], ZZ)
+    >>> dmp_convert([[R(1)], [R(2)]], 1, R.to_domain(), ZZ)
     [[1], [2]]
-
-    >>> dmp_convert(g, 1, ZZ, ZZ['x'])
+    >>> dmp_convert([[ZZ(1)], [ZZ(2)]], 1, ZZ, R.to_domain())
     [[1], [2]]
 
     """
@@ -1605,14 +1604,15 @@ def dmp_inject(f, u, K, front=False):
     Examples
     ========
 
+    >>> from sympy.polys.rings import ring
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_inject
 
-    >>> K = ZZ['x', 'y']
+    >>> R, x,y = ring("x,y", ZZ)
 
-    >>> dmp_inject([K([[1]]), K([[1], [2]])], 0, K)
+    >>> dmp_inject([R(1), x + 2], 0, R.to_domain())
     ([[[1]], [[1], [2]]], 2)
-    >>> dmp_inject([K([[1]]), K([[1], [2]])], 0, K, front=True)
+    >>> dmp_inject([R(1), x + 2], 0, R.to_domain(), front=True)
     ([[[1]], [[1, 2]]], 2)
 
     """
@@ -1645,9 +1645,7 @@ def dmp_eject(f, u, K, front=False):
     >>> from sympy.polys.domains import ZZ
     >>> from sympy.polys.densebasic import dmp_eject
 
-    >>> K = ZZ['x', 'y']
-
-    >>> dmp_eject([[[1]], [[1], [2]]], 2, K)
+    >>> dmp_eject([[[1]], [[1], [2]]], 2, ZZ['x', 'y'])
     [1, x + 2]
 
     """

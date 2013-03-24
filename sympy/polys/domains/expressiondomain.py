@@ -143,7 +143,7 @@ class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 
-    def from_GlobalPolynomialRing(K1, a, K0):
+    def from_PolynomialRing(K1, a, K0):
         """Convert a ``DMP`` object to ``dtype``. """
         return K1(K0.to_sympy(a))
 

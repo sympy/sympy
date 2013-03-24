@@ -26,8 +26,8 @@ from gmpyrationalfield import GMPYRationalField
 
 from algebraicfield import AlgebraicField
 
-from old_polynomialring import PolynomialRing
-from old_fractionfield import FractionField
+from polynomialring import PolynomialRing
+from fractionfield import FractionField
 
 from expressiondomain import ExpressionDomain
 

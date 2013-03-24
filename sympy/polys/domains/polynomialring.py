@@ -22,6 +22,9 @@ class PolynomialRing(Ring, CompositeDomain):
         self.zero = ring.zero
         self.one  = ring.one
 
+    @classmethod
+    def init(cls, domain, *gens):
+        return domain.poly_ring(*gens)
 
     def new(self, element):
         return self.ring.ring_new(element)
@@ -87,16 +90,6 @@ class PolynomialRing(Ring, CompositeDomain):
     def get_field(self):
         """Returns a field associated with `self`. """
         return self.ring.to_field().to_domain()
-
-    def poly_ring(self, *symbols): # TODO:, order=lex):
-        """Returns a polynomial ring, i.e. `K[X]`. """
-        from sympy.polys.rings import PolyRing
-        return PolyRing(symbols, self.ring, order).to_domain()
-
-    def frac_field(self, *symbols): # TODO:, order=lex):
-        """Returns a fraction field, i.e. `K(X)`. """
-        from sympy.polys.fields import FracField
-        return FracField(symbols, self.ring, order).to_domain()
 
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """

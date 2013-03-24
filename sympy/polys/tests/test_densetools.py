@@ -49,6 +49,7 @@ from sympy.polys.specialpolys import (
 )
 
 from sympy.polys.domains import FF, ZZ, QQ, EX
+from sympy.polys.rings import ring
 
 from sympy import S, I, sin
 
@@ -562,10 +563,14 @@ def test_dup_decompose():
 
     assert dup_decompose(f, ZZ) == [[1, -8, 24, -34, 29], [1, 0, 5, 0]]
 
-    f = [DMP([6, 0, -42], ZZ), DMP([48, 0, 96], ZZ), DMP([144, 648, 288], ZZ),
-         DMP([624, 864, 384], ZZ), DMP([108, 312, 432, 192], ZZ)]
+    R, t = ring("t", ZZ)
+    f = [6*t**2 - 42,
+         48*t**2 + 96,
+         144*t**2 + 648*t + 288,
+         624*t**2 + 864*t + 384,
+         108*t**3 + 312*t**2 + 432*t + 192]
 
-    assert dup_decompose(f, ZZ['a']) == [f]
+    assert dup_decompose(f, R.to_domain()) == [f]
 
 
 def test_dmp_lift():

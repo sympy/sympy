@@ -22,6 +22,9 @@ class FractionField(Field, CompositeDomain):
         self.zero = field.zero
         self.one  = field.one
 
+    @classmethod
+    def init(cls, domain, *gens):
+        return domain.frac_field(*gens)
 
     def new(self, element):
         return self.field.field_new(element)
@@ -87,16 +90,6 @@ class FractionField(Field, CompositeDomain):
     def get_ring(self):
         """Returns a field associated with `self`. """
         return self.field.to_ring().to_domain()
-
-    def poly_ring(self, *symbols): # TODO:, order=lex):
-        """Returns a polynomial ring, i.e. `K[X]`. """
-        from sympy.polys.rings import PolyRing
-        return PolyRing(symbols, self.field, order).to_domain()
-
-    def frac_field(self, *symbols): # TODO:, order=lex):
-        """Returns a fraction field, i.e. `K(X)`. """
-        from sympy.polys.fields import FracField
-        return FracField(symbols, self.field, order).to_domain()
 
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """

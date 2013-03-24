@@ -44,8 +44,9 @@ from sympy.polys.polyerrors import (
     OptionError,
     FlagError)
 
-from sympy.polys.polyclasses import DMP, DMF
+from sympy.polys.polyclasses import DMP
 
+from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 from sympy.polys.monomialtools import lex, grlex, grevlex
 
@@ -474,20 +475,15 @@ def test_Poly__unify():
     assert Poly(x + 1, y, x)._unify(Poly(
         x + 2, x, y, domain='QQ'))[2:] == (DMP([[1, 1]], QQ), DMP([[1, 2]], QQ))
 
+    F, A, B = field("a,b", ZZ)
+
     assert Poly(a*x, x, domain='ZZ[a]')._unify(Poly(a*b*x, x, domain='ZZ(a,b)'))[2:] == \
-        (
-            DMP([DMF(([[1], []], [[1]]), ZZ), DMF(([[]], [[1]]
-                ), ZZ)], ZZ.frac_field(a, b)),
-            DMP([DMF(([[1, 0], []], [[1]]), ZZ), DMF(([[]], [[1]]), ZZ)], ZZ.frac_field(a, b)))
+        (DMP([A, F(0)], F.to_domain()), DMP([A*B, F(0)], F.to_domain()))
 
     assert Poly(a*x, x, domain='ZZ(a)')._unify(Poly(a*b*x, x, domain='ZZ(a,b)'))[2:] == \
-        (
-            DMP([DMF(([[1], []], [[1]]), ZZ), DMF(([[]], [[1]]
-                ), ZZ)], ZZ.frac_field(a, b)),
-            DMP([DMF(([[1, 0], []], [[1]]), ZZ), DMF(([[]], [[1]]), ZZ)], ZZ.frac_field(a, b)))
+        (DMP([A, F(0)], F.to_domain()), DMP([A*B, F(0)], F.to_domain()))
 
-    raises(CoercionFailed, lambda: Poly(Poly(x**2 + x**2*z, y,
-           field=True), domain='ZZ(x)'))
+    raises(CoercionFailed, lambda: Poly(Poly(x**2 + x**2*z, y, field=True), domain='ZZ(x)'))
 
 
 def test_Poly_free_symbols():

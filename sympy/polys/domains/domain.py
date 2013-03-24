@@ -5,12 +5,8 @@ from sympy.polys.domains.domainelement import DomainElement
 from sympy.core import Basic, sympify
 from sympy.core.compatibility import SYMPY_INTS, is_sequence
 
-from sympy.polys.polyerrors import (
-    UnificationFailed,
-    CoercionFailed,
-    DomainError,
-)
-
+from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
+from sympy.polys.monomialtools import lex
 
 class Domain(object):
     """Represents an abstract domain. """
@@ -258,22 +254,22 @@ class Domain(object):
 
                     if K0.has_Field and K1.has_Field:
                         if K0.dom.has_Field:
-                            return K0.__class__(K0.dom, *gens)
+                            return K0.__class__.init(K0.dom, *gens)
                         else:
-                            return K1.__class__(K1.dom, *gens)
+                            return K1.__class__.init(K1.dom, *gens)
                     elif K0.has_Field:
                         if K0.dom == K1.dom:
-                            return K0.__class__(K0.dom, *gens)
+                            return K0.__class__.init(K0.dom, *gens)
                     elif K1.has_Field:
                         if K0.dom == K1.dom:
-                            return K1.__class__(K1.dom, *gens)
+                            return K1.__class__.init(K1.dom, *gens)
                     else:
                         if K0.dom.has_Field:
-                            return K0.__class__(K0.dom, *gens)
+                            return K0.__class__.init(K0.dom, *gens)
                         else:
-                            return K1.__class__(K1.dom, *gens)
+                            return K1.__class__.init(K1.dom, *gens)
             elif K1.is_Algebraic:
-                return K0.__class__(K1.unify(K0.dom), *K0.gens)
+                return K0.__class__.init(K1.unify(K0.dom), *K0.gens)
             else:
                 if K0.has_Field:
                     if K0.dom == K1:
@@ -282,10 +278,10 @@ class Domain(object):
                     if K0.dom.has_Field:
                         return K0
                     else:
-                        return K0.__class__(K1, *K0.gens)
+                        return K0.__class__.init(K1, *K0.gens)
         elif K0.is_Algebraic:
             if K1.is_Composite:
-                return K1.__class__(K0.unify(K1.dom), *K1.gens)
+                return K1.__class__.init(K0.unify(K1.dom), *K1.gens)
             elif K1.is_Algebraic:
                 raise NotImplementedError(
                     "unification of different algebraic extensions")
@@ -302,13 +298,12 @@ class Domain(object):
                     if K1.dom.has_Field:
                         return K1
                     else:
-                        return K1.__class__(K0, *K1.gens)
+                        return K1.__class__.init(K0, *K1.gens)
             elif K1.is_Algebraic:
                 if K0.is_ZZ or K0.is_QQ:
                     return K1
                 else:
-                    raise UnificationFailed(
-                        "can't unify %s with %s" % (K0, K1))
+                    raise UnificationFailed("can't unify %s with %s" % (K0, K1))
             else:
                 if K0.has_Field:
                     return K0
@@ -358,15 +353,15 @@ class Domain(object):
         else:
             return self.poly_ring(gens)
 
-    def poly_ring(self, *gens, **opts):
-        """Returns a polynomial ring, i.e. ``K[X]``. """
-        from sympy.polys.domains import PolynomialRing
-        return PolynomialRing(self, *gens, **opts)
+    def poly_ring(self, *symbols, **kwargs):
+        """Returns a polynomial ring, i.e. `K[X]`. """
+        from sympy.polys.rings import PolyRing
+        return PolyRing(symbols, self, kwargs.get("order", lex)).to_domain()
 
-    def frac_field(self, *gens):
-        """Returns a fraction field, i.e. ``K(X)``. """
-        from sympy.polys.domains import FractionField
-        return FractionField(self, *gens)
+    def frac_field(self, *symbols, **kwargs):
+        """Returns a fraction field, i.e. `K(X)`. """
+        from sympy.polys.fields import FracField
+        return FracField(symbols, self, kwargs.get("order", lex)).to_domain()
 
     def algebraic_field(self, *extension):
         """Returns an algebraic field, i.e. `K(\\alpha, \dots)`. """

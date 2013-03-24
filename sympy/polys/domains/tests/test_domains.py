@@ -6,6 +6,9 @@ from sympy.abc import x, y, z
 from sympy.polys.domains import (ZZ, QQ, RR, CC, FF,
     PolynomialRing, FractionField, EX)
 
+from sympy.polys.rings import ring
+from sympy.polys.fields import field
+
 from sympy.polys.domains.modularinteger import ModularIntegerFactory
 
 from sympy.polys.polyerrors import (
@@ -16,7 +19,6 @@ from sympy.polys.polyerrors import (
     NotInvertible,
     DomainError)
 
-from sympy.polys.polyclasses import DMP, DMF
 from sympy.utilities.pytest import raises, XFAIL
 
 ALG = QQ.algebraic_field(sqrt(2) + sqrt(3))
@@ -414,20 +416,14 @@ def test_Domain_get_exact():
 
 def test_Domain_convert():
     assert QQ.convert(10e-52) != QQ(0)
-    assert ZZ.convert(DMP([[ZZ(1)]], ZZ)) == ZZ(1)
+
+    R, x = ring("x", ZZ)
+    assert ZZ.convert(x - x) == 0
+    assert ZZ.convert(x - x, R.to_domain()) == 0
 
 
 def test_PolynomialRing__init():
     raises(GeneratorsNeeded, lambda: ZZ.poly_ring())
-
-
-def test_PolynomialRing_from_FractionField():
-    x = DMF(([1, 0, 1], [1, 1]), ZZ)
-    y = DMF(([1, 0, 1], [1]), ZZ)
-
-    assert ZZ['x'].from_FractionField(x, ZZ['x']) is None
-    assert ZZ['x'].from_FractionField(y, ZZ['x']) == DMP([ZZ(1), ZZ(0),
-                                      ZZ(1)], ZZ)
 
 
 def test_FractionField__init():
@@ -479,12 +475,15 @@ def test_Domain__algebraic_field():
     assert alg.dom == QQ
 
 
-def test_PolynomialRing__from_FractionField():
-    f = DMF(([1, 0, 1], [1, 1]), ZZ)
-    g = DMF(([1, 0, 1], [1]), ZZ)
+def test_PolynomialRing_from_FractionField():
+    F, x = field("x", ZZ)
+    R, X = ring("x", ZZ)
 
-    assert ZZ[x].from_FractionField(f, ZZ[x]) is None
-    assert ZZ[x].from_FractionField(g, ZZ[x]) == DMP([ZZ(1), ZZ(0), ZZ(1)], ZZ)
+    f = (x**2 + 1)/(x + 1)
+    g = x**2 + 1
+
+    assert R.to_domain().from_FractionField(f, F.to_domain()) is None
+    assert R.to_domain().from_FractionField(g, F.to_domain()) == X**2 + 1
 
 
 def test_FF_of_type():
