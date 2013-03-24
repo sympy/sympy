@@ -1,5 +1,5 @@
 from sympy import sqrt, root, S, Symbol, sqrtdenest, Integral, cos
-from sympy.simplify.sqrtdenest import _subsets as subsets
+from sympy.simplify.sqrtdenest import _subsets as subsets, sqrtdenest2
 
 r2, r3, r5, r6, r7, r10, r15, r29 = [sqrt(x) for x in [2, 3, 5, 6, 7, 10,
                                           15, 29]]
@@ -172,3 +172,6 @@ def test_subsets():
 def test_issue_2554():
     assert sqrtdenest(
         sqrt(2 + sqrt(2 + sqrt(2)))) == sqrt(2 + sqrt(2 + sqrt(2)))
+
+def test_sqrtdenest2():
+    assert sqrtdenest2(sqrt(-625 + 29*sqrt(5))*sqrt(-5 + sqrt(5))) == -55 + 7*sqrt(5)

@@ -606,3 +606,39 @@ def _denester(nested, av0, h, max_depth_level):
                     return sqrt(nested[-1]), [0]*len(nested)
                 FR, s = root(_mexpand(R), 4), sqrt(s2)
                 return _mexpand(s/(sqrt(2)*FR) + v[0]*FR/(sqrt(2)*s)), f
+
+
+def sqrtdenest2(a):
+    """
+    apply sqrtdenest to sqrt(expand(a**2)) inside expressions
+
+    Examples
+    ========
+    >>> from sympy.simplify.sqrtdenest import sqrtdenest2
+    >>> from sympy import sqrt
+    >>> sqrtdenest2(sqrt(625 - 29*sqrt(5))*sqrt(5 + sqrt(5)))
+    10 + 24*sqrt(5)
+    """
+    if a.is_Add:
+        a1 = Add(*[sqrtdenest2(x) for x in a.args])
+        return a1
+    if a.is_Mul:
+        c = 0
+        for x in a.args:
+            if x.is_Pow and x.exp == S.Half:
+                c += 1
+        if c > 1:
+            a1 = sqrtdenest(sqrt(_mexpand(a**2)))
+            if count_ops(a1) < count_ops(a):
+                an = a.n()
+                a1n = a1.n()
+                if sign(an) != sign(a1n):
+                    a1 = -a1
+                return a1
+            else:
+                return a
+        return Mul(*[sqrtdenest2(x) for x in a.args])
+    if a.is_Pow:
+        a1 = sqrtdenest2(a.base)**a.exp
+        return a1
+    return a
