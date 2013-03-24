@@ -5,7 +5,7 @@ from sympy.polys.domains import FF, ZZ, QQ, RR, EX
 
 from sympy.polys import polyconfig as config
 from sympy.polys.polyerrors import DomainError
-from sympy.polys.polyclasses import DMP, DMF, ANP
+from sympy.polys.polyclasses import ANP
 from sympy.polys.specialpolys import f_polys, w_polys
 
 from sympy import nextprime, sin, sqrt, I
@@ -502,7 +502,7 @@ def test_dup_factor_list():
     assert R.dup_factor_list(7) == (7, [])
 
     R, x = ring("x", QQ['t'])
-    assert R.dup_factor_list(0) == (DMP([], QQ), [])
+    assert R.dup_factor_list(0) == (0, [])
     assert R.dup_factor_list(QQ(1, 7)) == (QQ(1, 7), [])
 
     R, x = ring("x", ZZ)

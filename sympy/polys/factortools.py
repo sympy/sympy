@@ -581,7 +581,7 @@ def dup_zz_factor(f, K):
             return cont, [(g, 1)]
 
     g = dup_sqf_part(g, K)
-    H, factors = None, []
+    H = None
 
     if query('USE_CYCLOTOMIC_FACTOR'):
         H = dup_zz_cyclotomic_factor(g, K)
@@ -589,20 +589,8 @@ def dup_zz_factor(f, K):
     if H is None:
         H = dup_zz_zassenhaus(g, K)
 
-    for h in H:
-        k = 0
-
-        while True:
-            q, r = dup_div(f, h, K)
-
-            if not r:
-                f, k = q, k + 1
-            else:
-                break
-
-        factors.append((h, k))
-
-    return cont, _sort_factors(factors)
+    factors = dup_trial_division(f, H, K)
+    return cont, factors
 
 
 def dmp_zz_wang_non_divisors(E, cs, ct, K):
@@ -1079,19 +1067,7 @@ def dmp_zz_factor(f, u, K):
     if dmp_degree(g, u) > 0:
         g = dmp_sqf_part(g, u, K)
         H = dmp_zz_wang(g, u, K)
-
-        for h in H:
-            k = 0
-
-            while True:
-                q, r = dmp_div(f, h, u, K)
-
-                if dmp_zero_p(r, u):
-                    f, k = q, k + 1
-                else:
-                    break
-
-            factors.append((h, k))
+        factors = dmp_trial_division(f, H, u, K)
 
     for g, k in dmp_zz_factor(G, u - 1, K)[1]:
         factors.insert(0, ([g], k))
@@ -1127,7 +1103,6 @@ def dup_ext_factor(f, K):
         factors[i] = h
 
     factors = dup_trial_division(F, factors, K)
-
     return lc, factors
 
 
