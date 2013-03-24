@@ -355,8 +355,13 @@ class MathMLPrinter(Printer):
         return x
 
     def _print_Derivative(self, e):
+        is_partial = len(e.free_symbols) > 1
+
         x = self.dom.createElement('apply')
-        x.appendChild(self.dom.createElement(self.mathml_tag(e)))
+        diff_symbol = self.mathml_tag(e)
+        if is_partial:
+            diff_symbol = 'partialdiff'
+        x.appendChild(self.dom.createElement(diff_symbol))
 
         x_1 = self.dom.createElement('bvar')
         for sym in e.variables:
