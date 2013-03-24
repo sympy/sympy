@@ -7,7 +7,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 
 from printer import Printer
-from conventions import split_super_sub
+from conventions import split_super_sub, requires_partial
 from precedence import precedence, PRECEDENCE
 
 import sympy.mpmath.libmp as mlib
@@ -354,8 +354,7 @@ class LatexPrinter(Printer):
 
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
-        is_partial = len(expr.free_symbols) > 1
-        if is_partial:
+        if requires_partial(expr):
             diff_symbol = r'\partial'
         else:
             diff_symbol = r'd'

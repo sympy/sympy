@@ -58,3 +58,24 @@ def split_super_sub(text):
         subs.insert(0, sub)
 
     return name, supers, subs
+
+def requires_partial(expr):
+    """Return whether a partial derivative symbol is required for printing
+
+    This requires checking how many free variables there are and then
+    filtering out the ones that are Integer
+
+    Examples
+    ========
+    >>> from sympy.printing import requires_partial
+    >>> requires_partial(
+    >>> requires_partial(
+    >>> requires_partial(
+    >>> requires_partial(
+    """ 
+
+    s = expr.free_symbols
+    for sym in expr.free_symbols:
+        if sym.is_integer:
+            s.remove(sym)
+    return len(s) > 1
