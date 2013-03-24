@@ -109,20 +109,20 @@ class Order(Expr):
             symbols = list(expr.free_symbols)
 
         if expr.is_Order:
-
-            new_symbols = list(expr.variables)
-            for s in symbols:
-                if s not in new_symbols:
-                    new_symbols.append(s)
-            if len(new_symbols) == len(expr.variables):
+            v = set(expr.variables)
+            symbols = v | set(symbols)
+            if symbols == v:
                 return expr
-            symbols = new_symbols
+            symbols = list(symbols)
 
         elif symbols:
+
+            symbols = list(set(symbols))
 
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e, f) in lst])
+
             elif expr:
                 if len(symbols) > 1 or expr.is_commutative is False:
                     # TODO
@@ -132,8 +132,7 @@ class Order(Expr):
                 else:
                     expr = expr.compute_leading_term(symbols[0])
 
-                margs = [t for t in Mul.make_args(expr) \
-                                    if set(symbols) & t.free_symbols]
+                margs = list(Mul.make_args(expr.as_independent(*symbols)[1]))
 
                 if len(symbols) == 1:
                     # The definition of O(f(x)) symbol explicitly stated that
@@ -163,7 +162,8 @@ class Order(Expr):
 
         if expr is S.Zero:
             return expr
-        elif not expr.has(*symbols):
+
+        if not expr.has(*symbols):
             expr = S.One
 
         # create Order instance:

@@ -27,6 +27,7 @@ def test_simple_1():
     assert Order(x**(5*o/3)).expr == x**(5*o/3)
     assert Order(x**2 + x + y, x) == O(1, x)
     assert Order(x**2 + x + y, y) == O(1, y)
+    assert Order(exp(x), x, x) == Order(1, x)
     raises(NotImplementedError, lambda: Order(x, 2 - x))
 
 
