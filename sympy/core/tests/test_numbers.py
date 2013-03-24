@@ -59,9 +59,23 @@ def test_mod():
 
     a = Float(2.6)
 
-    assert (a % .2).round(15) == 0.2
+    assert (a % .2) == 0
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
+
+    # In these two tests, if the precision of m does
+    # not match the precision of the ans, then it is
+    # likely that the change made now gives an answer
+    # with degraded accuracy.
+    r = Rational(500, 41)
+    f = Float('.36', 3)
+    m = r % f
+    ans = Float(r % Rational(f), 3)
+    assert m == ans and m._prec == ans._prec
+    f = Float('8.36', 3)
+    m = f % r
+    ans = Float(Rational(f) % r, 3)
+    assert m == ans and m._prec == ans._prec
 
     s = S.Zero
 

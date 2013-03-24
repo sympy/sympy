@@ -867,7 +867,7 @@ class WedgeProduct(TensorProduct):
     0
 
     """
-    # TODO the caclulation of signatures is slow
+    # TODO the calculation of signatures is slow
     # TODO you do not need all these permutations (neither the prefactor)
     def __call__(self, *vector_fields):
         """Apply on a list of vector_fields.

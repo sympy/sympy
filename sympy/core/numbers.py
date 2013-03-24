@@ -1,3 +1,8 @@
+import decimal
+import math
+import re as regex
+from collections import defaultdict
+
 from core import C
 from sympify import converter, sympify, _sympify, SympifyError
 from basic import Basic
@@ -12,12 +17,8 @@ from sympy.mpmath.libmp import mpf_pow, mpf_pi, mpf_e, phi_fixed
 from sympy.mpmath.ctx_mp import mpnumeric
 from sympy.mpmath.libmp.libmpf import (
     finf as _mpf_inf, fninf as _mpf_ninf,
-    fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize)
-
-import decimal
-import math
-import re as regex
-from collections import defaultdict
+    fnan as _mpf_nan, fzero as _mpf_zero, _normalize as mpf_normalize,
+    prec_to_dps)
 
 rnd = mlib.round_nearest
 
@@ -754,6 +755,16 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __mod__(self, other):
+        if isinstance(other, Rational) and other.q != 1:
+            # calculate mod with Rationals, *then* round the result
+            return Float(Rational.__mod__(Rational(self), other),
+                prec_to_dps(self._prec))
+        if isinstance(other, Float):
+            r = self/other
+            if r == int(r):
+                prec = max([prec_to_dps(i)
+                    for i in (self._prec, other._prec)])
+                return Float(0, prec)
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(self._mpf_, rhs, prec, rnd), prec)
@@ -761,6 +772,8 @@ class Float(Number):
 
     @_sympifyit('other', NotImplemented)
     def __rmod__(self, other):
+        if isinstance(other, Float):
+            return other.__mod__(self)
         if isinstance(other, Number):
             rhs, prec = other._as_mpf_op(self._prec)
             return Float._new(mlib.mpf_mod(rhs, self._mpf_, prec, rnd), prec)
@@ -889,7 +902,7 @@ class Float(Number):
     def __hash__(self):
         return super(Float, self).__hash__()
 
-    def epsilon_eq(self, other, epsilon="10e-16"):
+    def epsilon_eq(self, other, epsilon="1e-15"):
         return abs(self - other) < Float(epsilon)
 
     def _sage_(self):
@@ -985,7 +998,7 @@ class Rational(Number):
     >>> r.q
     4
 
-    Note that p and q return integers (not sympy Integers) so some care
+    Note that p and q return integers (not SymPy Integers) so some care
     is needed when using them in expressions:
 
     >>> r.p//r.q
@@ -1195,18 +1208,15 @@ class Rational(Number):
             n = (self.p*other.q) // (other.p*self.q)
             return Rational(self.p*other.q - n*other.p*self.q, self.q*other.q)
         if isinstance(other, Float):
-            evalf = self.evalf()
-            # In case self.evalf() does not return Float.
-            if isinstance(evalf, Float):
-                return evalf % other
+            # calculate mod with Rationals, *then* round the answer
+            return Float(self.__mod__(Rational(other)),
+                prec_to_dps(other._prec))
         return Number.__mod__(self, other)
 
     @_sympifyit('other', NotImplemented)
     def __rmod__(self, other):
         if isinstance(other, Rational):
             return Rational.__mod__(other, self)
-        if isinstance(other, Float):
-            return other % self.evalf()
         return Number.__rmod__(self, other)
 
     def _eval_power(self, expt):
