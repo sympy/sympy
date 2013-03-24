@@ -237,13 +237,17 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_Derivative(self, deriv):
-        # XXX use U('PARTIAL DIFFERENTIAL') here ?
+        is_partial = len(deriv.free_symbols) > 1
+        if is_partial and self._use_unicode:
+            deriv_symbol = U('PARTIAL DIFFERENTIAL')
+        else:
+            deriv_symbol = r'd'
         syms = list(reversed(deriv.variables))
         x = None
 
         for sym, num in group(syms, multiple=False):
             s = self._print(sym)
-            ds = prettyForm(*s.left('d'))
+            ds = prettyForm(*s.left(deriv_symbol))
 
             if num > 1:
                 ds = ds**prettyForm(str(num))
@@ -257,7 +261,7 @@ class PrettyPrinter(Printer):
         f = prettyForm(
             binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 
-        pform = prettyForm('d')
+        pform = prettyForm(deriv_symbol)
 
         if len(syms) > 1:
             pform = pform**prettyForm(str(len(syms)))
