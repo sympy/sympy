@@ -3,6 +3,7 @@ from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
 
 from sympy.core.symbol import Dummy
 from sympy.core.compatibility import is_sequence
+from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint

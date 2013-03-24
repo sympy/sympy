@@ -596,6 +596,18 @@ def fallback_rule(integral):
 
 _integral_cache = {}
 def integral_steps(integrand, symbol, **options):
+    """Returns the steps needed to compute an integral.
+
+    This function attempts to mirror what a student would do by hand as
+    closely as possible.
+
+    Returns
+    =======
+    rule : namedtuple
+        The first step; most rules have substeps that must also be
+        considered. These substeps can be evaluated using `manualintegrate`
+        to obtain a result.
+    """
     cachekey = (integrand, symbol)
     if cachekey in _integral_cache:
         if _integral_cache[cachekey] is None:
@@ -723,5 +735,50 @@ def _manualintegrate(rule):
         raise TypeError("Cannot evaluate rule %s" % rule)
     return evaluator(*rule)
 
-def manualintegrate(f, x):
-    return _manualintegrate(integral_steps(f, x))
+def manualintegrate(f, var):
+    """manualintegrate(f, var)
+
+    Compute indefinite integral of a single variable using an algorithm that
+    resembles what a student would do by hand.
+
+    Unlike ``integrate``, var can only be a single symbol.
+
+    Examples
+    ========
+
+    >>> from sympy import sin, cos, tan, exp, log, integrate
+    >>> from sympy.integrals.manualintegrate import manualintegrate
+    >>> from sympy.abc import x
+    >>> manualintegrate(1 / x, x)
+    log(Abs(x))
+    >>> integrate(1/x)
+    log(x)
+    >>> manualintegrate(log(x), x)
+    x*log(x) - x
+    >>> integrate(log(x))
+    x*log(x) - x
+    >>> manualintegrate(exp(x) / (1 + exp(2 * x)), x)
+    atan(exp(x))
+    >>> integrate(exp(x) / (1 + exp(2 * x)))
+    RootSum(4*_z**2 + 1, Lambda(_i, _i*log(2*_i + exp(x))))
+    >>> manualintegrate(cos(x)**4 * sin(x), x)
+    -cos(x)**5/5
+    >>> integrate(cos(x)**4 * sin(x), x)
+    -cos(x)**5/5
+    >>> manualintegrate(cos(x)**4 * sin(x)**3, x)
+    cos(x)**7/7 - cos(x)**5/5
+    >>> integrate(cos(x)**4 * sin(x)**3, x)
+    cos(x)**7/7 - cos(x)**5/5
+    >>> manualintegrate(tan(x), x)
+    -log(Abs(cos(x)))
+    >>> integrate(tan(x), x)
+    -log(sin(x)**2 - 1)/2
+
+    See Also
+    ========
+
+    sympy.integrals.integrals.integrate
+    sympy.integrals.integrals.Integral.doit
+    sympy.integrals.integrals.Integral
+    """
+    return _manualintegrate(integral_steps(f, var))
