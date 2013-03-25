@@ -993,6 +993,14 @@ class Integral(Expr):
                 else:
                     return result
 
+        # try manual integration
+        try:
+            manual = manualintegrate(f, x)
+            if not manual.has(Integral) and manual is not None:
+                return manual
+        except ValueError:
+            pass
+
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
