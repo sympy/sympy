@@ -1523,11 +1523,11 @@ class LatexPrinter(Printer):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys._names[field._index]
-            return r'\mathbb{d}%s' % self._print(Symbol(string))
+            return r'\mathrm{d}%s' % self._print(Symbol(string))
         else:
             return 'd(%s)' % self._print(field)
             string = self._print(field)
-            return r'\mathbb{d}\left(%s\right)' % string
+            return r'\mathrm{d}\left(%s\right)' % string
 
     def _print_Tr(self, p):
         #Todo: Handle indices
