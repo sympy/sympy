@@ -1,4 +1,4 @@
-from sympy import symbols, Derivative, Integral, exp, oo
+from sympy import symbols, Derivative, Integral, exp, cos, oo
 from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
 from sympy.functions.combinatorial.numbers import bell
@@ -31,7 +31,7 @@ def test_super_sub():
     assert split_super_sub("alpha_11_11") == ("alpha", [], ["11", "11"])
 
 def test_requires_partial():
-    x, y, z, nu = symbols('x y z nu')
+    x, y, z, t, nu = symbols('x y z t nu')
     n = symbols('n', integer=True)
 
     f = x * y
@@ -66,3 +66,9 @@ def test_requires_partial():
 
     f = x ** n
     assert requires_partial(Derivative(f, x)) == False
+
+    assert requires_partial(Derivative(Integral((x*y) ** n * exp(-x * y), (x, 0, oo)), y, evaluate=False)) == False
+
+    f = (exp(t), cos(t))
+    g = sum(f)
+    assert requires_partial(Derivative(g, t)) == False
