@@ -128,7 +128,7 @@ AlternativeRule = Rule("AlternativeRule", "alternatives")
 DontKnowRule = Rule("DontKnowRule")
 RewriteRule = Rule("RewriteRule", "rewritten substep")
 
-class IntegralInfo(collections.namedtuple('IntegralInfo', 'integrand symbol')):
+class IntegralInfo(namedtuple('IntegralInfo', 'integrand symbol')):
     def __new__(cls, *args, **kwargs):
         u_var = kwargs['u_var']
         del kwargs['u_var']
