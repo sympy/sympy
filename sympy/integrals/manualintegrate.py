@@ -269,36 +269,42 @@ def _parts_rule(integrand, symbol):
         polys = [arg for arg in integrand.args if arg.is_polynomial(symbol)]
         if polys:
             u = sympy.Mul(*polys)
-            if symbol not in u.free_symbols:
-                return
             dv = integrand / u
             return u, dv
 
     def pull_out_u(*functions):
         def pull_out_u_rl(integrand):
-            if any([integrand.find(f) for f in functions]):
+            if any([integrand.has(f) for f in functions]):
                 args = [arg for arg in integrand.args if arg.func in functions]
                 if args:
                     u = reduce(lambda a,b: a*b, args)
                     dv = integrand / u
                     return u, dv
+
         return pull_out_u_rl
 
     liate_rules = [pull_out_u(sympy.log), pull_out_u(sympy.atan),
                    pull_out_polys, pull_out_u(sympy.sin, sympy.cos),
                    pull_out_u(sympy.exp)]
 
+
+    dummy = sympy.Dummy()
+    # we can integrate log(x) and atan(x) by setting dv = 1
+    if integrand.func in (sympy.log, sympy.atan):
+        integrand = dummy * integrand
+
     for index, rule in enumerate(liate_rules):
         result = rule(integrand)
 
         if result:
             u, dv = result
+            u = u.subs(dummy, 1)
+            dv = dv.subs(dummy, 1)
 
             for rule in liate_rules[index + 1:]:
                 r = rule(integrand)
-
                 # make sure dv is amenable to integration
-                if r and r[0] == dv:
+                if r and r[0].subs(dummy, 1) == dv:
                     du = u.diff(symbol)
                     v_step = integral_steps(dv, symbol)
                     v = _manualintegrate(v_step)
@@ -502,7 +508,7 @@ cotcsc_cotodd = trig_rewriter(
 def trig_powers_products_rule(integral):
     integrand, symbol = integral
 
-    if any(integrand.find(f) for f in (sympy.sin, sympy.cos)):
+    if any(integrand.has(f) for f in (sympy.sin, sympy.cos)):
         pattern, a, b, m, n = sincos_pattern(symbol)
         match = integrand.match(pattern)
 
@@ -518,7 +524,7 @@ def trig_powers_products_rule(integral):
         1 / sympy.cos(symbol): sympy.sec(symbol)
     })
 
-    if any(integrand.find(f) for f in (sympy.tan, sympy.sec)):
+    if any(integrand.has(f) for f in (sympy.tan, sympy.sec)):
         pattern, a, b, m, n = tansec_pattern(symbol)
         match = integrand.match(pattern)
 
@@ -535,7 +541,7 @@ def trig_powers_products_rule(integral):
         sympy.cos(symbol) / sympy.tan(symbol): sympy.cot(symbol)
     })
 
-    if any(integrand.find(f) for f in (sympy.cot, sympy.csc)):
+    if any(integrand.has(f) for f in (sympy.cot, sympy.csc)):
         pattern, a, b, m, n = cotcsc_pattern(symbol)
         match = integrand.match(pattern)
 
@@ -637,14 +643,14 @@ def integral_steps(integrand, symbol, **options):
             sympy.Symbol: power_rule,
             sympy.exp: exp_rule,
             sympy.Add: add_rule,
-            sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule),
-                              (null_safe(parts_rule))),
+            sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule)),
             TrigonometricFunction: trig_rule,
             'constant': constant_rule
         })),
         null_safe(
             alternatives(
                 substitution_rule,
+                parts_rule,
                 condition(lambda integral: key(integral) == sympy.Mul,
                           partial_fractions_rule),
                 condition(lambda integral: key(integral) in (sympy.Mul, sympy.Pow),
@@ -711,7 +717,7 @@ def eval_trig(func, arg, integrand, symbol):
 
 @evaluates(LogRule)
 def eval_log(func, integrand, symbol):
-    return sympy.ln(sympy.Abs(func))
+    return sympy.ln(func)
 
 @evaluates(ArctanRule)
 def eval_arctan(integrand, symbol):
@@ -727,12 +733,12 @@ def eval_rewrite(rewritten, substep, integrand, symbol):
 
 @evaluates(DontKnowRule)
 def eval_dontknowrule(integrand, symbol):
-    return sympy.integrate(integrand, symbol)
+    return sympy.Integral(integrand, symbol)
 
 def _manualintegrate(rule):
     evaluator = evaluators.get(rule.__class__)
     if not evaluator:
-        raise TypeError("Cannot evaluate rule %s" % rule)
+        raise ValueError("Cannot evaluate rule %s" % rule)
     return evaluator(*rule)
 
 def manualintegrate(f, var):

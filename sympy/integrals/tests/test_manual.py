@@ -1,4 +1,4 @@
-from sympy import (sin, cos, tan, sec, csc, cot, log, exp, Abs, atan,
+from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
                    Symbol, Mul)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, integral_steps
 
@@ -25,8 +25,8 @@ def test_manualintegrate_exponentials():
     assert manualintegrate(exp(2*x), x) == exp(2*x) / 2
     assert manualintegrate(2**x, x) == (2 ** x) / log(2)
 
-    assert manualintegrate(1 / x, x) == log(Abs(x))
-    assert manualintegrate(1 / (2*x + 3), x) == log(Abs(2*x + 3)) / 2
+    assert manualintegrate(1 / x, x) == log(x)
+    assert manualintegrate(1 / (2*x + 3), x) == log(2*x + 3) / 2
     assert manualintegrate(log(x)**2 / x, x) == log(x)**3 / 3
 
 def test_manualintegrate_parts():
@@ -37,14 +37,15 @@ def test_manualintegrate_parts():
     assert manualintegrate(log(x), x) == x * log(x) - x
     assert manualintegrate((3*x**2 + 5) * exp(x), x) == \
         -6*x*exp(x) + (3*x**2 + 5)*exp(x) + 6*exp(x)
+    assert manualintegrate(atan(x), x) == x*atan(x) - log(x**2 + 1)/2
 
 def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(x), x) == -cos(x)
-    assert manualintegrate(tan(x), x) == -log(Abs(cos(x)))
+    assert manualintegrate(tan(x), x) == -log(cos(x))
 
     # TODO: benchmark these two - they're slow
-    assert manualintegrate(sec(x), x) == log(Abs(sec(x) + tan(x)))
-    assert manualintegrate(csc(x), x) == -log(Abs(csc(x) + cot(x)))
+    assert manualintegrate(sec(x), x) == log(sec(x) + tan(x))
+    assert manualintegrate(csc(x), x) == -log(csc(x) + cot(x))
 
     assert manualintegrate(sin(x) * cos(x), x) in [sin(x) ** 2 / 2, -cos(x)**2 / 2]
     assert manualintegrate(-sec(x) * tan(x), x) == -sec(x)
