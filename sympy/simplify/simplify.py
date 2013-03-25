@@ -10,7 +10,8 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
     iterable, reduce, default_sort_key, set_union, ordered)
-from sympy.core.numbers import Float
+from sympy.core.exprtools import Factors
+from sympy.core.numbers import Float, Number
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
@@ -287,6 +288,9 @@ def collect(expr, syms, func=None, evaluate=True, exact=False, distribute_order_
     .. note:: Arguments are expected to be in expanded form, so you might have
               to call :func:`expand` prior to calling this function.
 
+    See Also
+    ========
+    collect_const, collect_sqrt, rcollect
     """
 
     def make_expression(terms):
@@ -549,6 +553,9 @@ def rcollect(expr, *vars):
     >>> rcollect(expr, y)
     (x + y*(x**2 + x + 1))/(x + y)
 
+    See Also
+    ========
+    collect, collect_const, collect_sqrt
     """
     if expr.is_Atom or not expr.has(*vars):
         return expr
@@ -1420,8 +1427,10 @@ def trigsimp(expr, **opts):
 def collect_sqrt(expr, evaluate=True):
     """Return expr with terms having common square roots collected together.
     If ``evaluate`` is False a count indicating the number of sqrt-containing
-    terms will be returned and the returned expression will be an unevaluated
-    Add with args ordered by default_sort_key.
+    terms will be returned and, if non-zero, the terms of the Add will be
+    returned, else the expression itself will be returned as a single term.
+    If ``evaluate`` is True, the expression with any collected terms will be
+    returned.
 
     Note: since I = sqrt(-1), it is collected, too.
 
@@ -1445,13 +1454,18 @@ def collect_sqrt(expr, evaluate=True):
     terms will be returned:
 
     >>> collect_sqrt(a*r2 + b*r2 + a*r3 + b*r5, evaluate=False)
-    ((sqrt(2)*(a + b), sqrt(3)*a, sqrt(5)*b), 3)
+    ((sqrt(3)*a, sqrt(5)*b, sqrt(2)*(a + b)), 3)
     >>> collect_sqrt(a*sqrt(2) + b, evaluate=False)
     ((b, sqrt(2)*a), 1)
     >>> collect_sqrt(a + b, evaluate=False)
     ((a + b,), 0)
 
+    See Also
+    ========
+    collect, collect_const, rcollect
     """
+    # this step will help to standardize any complex arguments
+    # of sqrts
     coeff, expr = expr.as_content_primitive()
     vars = set()
     for a in Add.make_args(expr):
@@ -1460,45 +1474,43 @@ def collect_sqrt(expr, evaluate=True):
                     m.is_Pow and m.exp.is_Rational and m.exp.q == 2 or
                     m is S.ImaginaryUnit):
                 vars.add(m)
-    vars = list(vars)
-    if not evaluate:
-        vars.sort(key=default_sort_key)
-        vars.reverse()  # since it will be reversed below
-    vars.sort(key=count_ops)
-    vars.reverse()
-    d = collect_const(expr, *vars, **dict(first=False))
+
+    # we only want radicals, so exclude Number handling; in this case
+    # d will be evaluated
+    d = collect_const(expr, *vars, **dict(Numbers=False))
     hit = expr != d
-    d *= coeff
 
     if not evaluate:
         nrad = 0
-        args = list(Add.make_args(d))
-        for m in args:
+        # make the evaluated args canonical
+        args = list(ordered(Add.make_args(d)))
+        for i, m in enumerate(args):
             c, nc = m.args_cnc()
             for ci in c:
+                # XXX should this be restricted to ci.is_number as above?
                 if ci.is_Pow and ci.exp.is_Rational and ci.exp.q == 2 or \
                         ci is S.ImaginaryUnit:
                     nrad += 1
                     break
-        if hit or nrad:
-            args.sort(key=default_sort_key)
-        else:
+            args[i] *= coeff
+        if not (hit or nrad):
             args = [Add(*args)]
         return tuple(args), nrad
 
-    return d
+    return coeff*d
 
 
-def collect_const(expr, *vars, **first):
+def collect_const(expr, *vars, **kwargs):
     """A non-greedy collection of terms with similar number coefficients in
     an Add expr. If ``vars`` is given then only those constants will be
-    targeted.
+    targeted. Although any Number can also be targeted, if this is not
+    desired set ``Numbers=False`` and no Float or Rational will be collected.
 
     Examples
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.abc import a, s
+    >>> from sympy.abc import a, s, x, y, z
     >>> from sympy.simplify.simplify import collect_const
     >>> collect_const(sqrt(3) + sqrt(3)*(1 + sqrt(2)))
     sqrt(3)*(sqrt(2) + 2)
@@ -1510,56 +1522,69 @@ def collect_const(expr, *vars, **first):
     >>> collect_const(sqrt(3)*s + sqrt(3) + sqrt(7)*s + sqrt(7), sqrt(3))
     sqrt(7) + sqrt(3)*(sqrt(2) + 3) + sqrt(7)*(sqrt(2) + 2)
 
-    If no constants are provided then a leading Rational might be returned:
+    The collection is sign-sensitive, giving higher precedence to the
+    unsigned values:
 
-    >>> collect_const(2*sqrt(3) + 4*a*sqrt(5))
-    2*(2*sqrt(5)*a + sqrt(3))
-    >>> collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3))
-    4*sqrt(5)*a + 2*sqrt(3)
+    >>> collect_const(x - y - z)
+    x - (y + z)
+    >>> collect_const(-y - z)
+    -(y + z)
+    >>> collect_const(2*x - 2*y - 2*z, 2)
+    2*(x - y - z)
+    >>> collect_const(2*x - 2*y - 2*z, -2)
+    2*x - 2*(y + z)
+
+    See Also
+    ========
+    collect, collect_sqrt, rcollect
     """
-
-    if first.get('first', True):
-        c, p = sympify(expr).as_content_primitive()
-    else:
-        c, p = S.One, expr
-    if c is not S.One:
-        if not vars:
-            return _keep_coeff(c, collect_const(p, *vars, **dict(first=False)))
-        # else don't leave the Rational on the outside
-        return c*collect_const(p, *vars, **dict(first=False))
-
-    if not (expr.is_Add or expr.is_Mul):
+    if not expr.is_Add:
         return expr
+
     recurse = False
+    Numbers = kwargs.get('Numbers', True)
+
     if not vars:
         recurse = True
         vars = set()
-        for a in Add.make_args(expr):
+        for a in expr.args:
             for m in Mul.make_args(a):
                 if m.is_number:
                     vars.add(m)
-        vars = sorted(vars, key=count_ops)
-    # Rationals get autodistributed on Add so don't bother with them
-    vars = [v for v in vars if not v.is_Rational]
+    else:
+        vars = sympify(vars)
+    if not Numbers:
+        vars = [v for v in vars if not v.is_Number]
 
-    if not vars:
-        return expr
-
+    vars = list(ordered(vars))
     for v in vars:
         terms = defaultdict(list)
+        Fv = Factors(v)
         for m in Add.make_args(expr):
-            i = []
-            d = []
-            for a in Mul.make_args(m):
-                if a == v:
-                    d.append(a)
-                else:
-                    i.append(a)
-            ai, ad = [Mul(*w) for w in [i, d]]
-            terms[ad].append(ai)
+            f = Factors(m)
+            q, r = f.div(Fv)
+            if r.is_zero:
+                # only accept this as a true factor if
+                # it didn't change an exponent from an Integer
+                # to a non-Integer, e.g. 2/sqrt(2) -> sqrt(2)
+                # but we aren't looking for this sort of change
+                fwas = f.factors.copy()
+                fnow = q.factors
+                if not any(fwas[k].is_Integer and not
+                        fnow[k].is_Integer for k in fnow):
+                    terms[v].append(q.as_expr())
+                    continue
+            terms[S.One].append(m)
+
         args = []
         hit = False
-        for k, v in terms.iteritems():
+        uneval = False
+        for k in ordered(terms):
+            v = terms[k]
+            if k is S.One:
+                args.extend(v)
+                continue
+
             if len(v) > 1:
                 v = Add(*v)
                 hit = True
@@ -1567,24 +1592,80 @@ def collect_const(expr, *vars, **first):
                     vars.append(v)
             else:
                 v = v[0]
-            args.append(k*v)
+
+            # be careful not to let uneval become True unless
+            # it must be because it's going to be more expensive
+            # to rebuild the expression as an unevaluated one
+            if Numbers and k.is_Number and v.is_Add:
+                args.append(_keep_coeff(k, v, sign=True))
+                uneval = True
+            else:
+                args.append(k*v)
+
         if hit:
-            expr = Add(*args)
+            if uneval:
+                expr = _unevaluated_Add(*args)
+            else:
+                expr = Add(*args)
             if not expr.is_Add:
                 break
+
     return expr
+
+
+def _unevaluated_Add(*args):
+    """Return a well-formed unevaluated Add: Number
+    is in slot 0 and args are sorted.
+
+    Examples
+    ========
+
+    >>> from sympy.simplify.simplify import _unevaluated_Add as uAdd
+    >>> from sympy import S, Add, ordered
+    >>> from sympy.abc import x, y
+    >>> a = uAdd(*[S(1), x, S(2)])
+    >>> a.args[0]
+    3
+    >>> a.args[1]
+    x
+
+    Beyond the Number being in slot 0, there is no other assurance of
+    order for the arguments since they are hash sorted. So, for testing
+    purposes, output produced by this in some other function can only
+    be tested against the output of this function or as one of several
+    options:
+
+    >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
+    >>> a = uAdd(x, y)
+    >>> assert a in opts and a == uAdd(x, y)
+
+    """
+    args = list(args)
+    args.sort(key=hash)  # same as in Add.flatten
+    c = []
+    for a in args:
+        if a.is_Number:
+            c.append(a)
+    if c:
+        for ci in c:
+            args.remove(ci)
+        c = Add(*c)
+        if c:
+            args.insert(0, c)
+    return Add(*args, **dict(evaluate=False))
 
 
 def _split_gcd(*a):
     """
-    split the list of integers `a` into a list of integers a1 having
-    g = gcd(a1) and a list a2 whose elements are not divisible by g
-    Returns g, a1, a2
+    split the list of integers ``a`` into a list of integers, ``a1`` having
+    ``g = gcd(a1)``, and a list ``a2`` whose elements are not divisible by
+    ``g``.  Returns ``g, a1, a2``
 
     Examples
     ========
+
     >>> from sympy.simplify.simplify import _split_gcd
-    >>> _split_gcd(55,35,22,14,77,10)
+    >>> _split_gcd(55, 35, 22, 14, 77, 10)
     (5, [55, 35, 10], [22, 14, 77])
     """
     g = a[0]
@@ -1608,6 +1689,7 @@ def split_surds(expr):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import split_surds
     >>> split_surds(3*sqrt(3) + sqrt(5)/7 + sqrt(6) + sqrt(10) + sqrt(15))
@@ -1647,6 +1729,7 @@ def rad_rationalize(num, den):
 
     Examples
     ========
+
     >>> from sympy import sqrt
     >>> from sympy.simplify.simplify import rad_rationalize
     >>> rad_rationalize(sqrt(3), 1 + sqrt(2)/3)

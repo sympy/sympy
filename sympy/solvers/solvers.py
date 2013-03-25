@@ -1129,9 +1129,9 @@ def _solve(f, *symbols, **flags):
             except ValueError:
                 # ...else hope for the best while letting some remain
                 try:
-                    u = unrad(eq, symbol)
+                    u = unrad(f, symbol)
                 except ValueError:
-                    pass  # hope for best with original equation
+                    u = None  # hope for best with original equation
             if u:
                 flags['unrad'] = False  # don't unrad next time
                 eq, cov, dens2 = u

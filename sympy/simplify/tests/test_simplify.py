@@ -7,9 +7,10 @@ from sympy import (
     Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
     Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
-    symbols, sympify, tan, tanh, trigsimp, Wild, Basic)
+    symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered)
 from sympy.core.mul import _keep_coeff
-from sympy.simplify.simplify import fraction_expand
+from sympy.simplify.simplify import (
+    collect_sqrt, fraction_expand, _unevaluated_Add)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, k
@@ -1401,14 +1402,6 @@ def test_radsimp():
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -11*sqrt(2) + 9*sqrt(3)
 
-    # coverage not provided by above tests
-    assert collect_const(2*sqrt(3) + 4*a*sqrt(5)) == \
-        Mul(2, (2*sqrt(5)*a + sqrt(3)), evaluate=False)
-    assert collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3)) == \
-        2*(2*sqrt(5)*a + sqrt(3))
-    assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
-        sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
-
     # issue 3433
     assert radsimp(1/sqrt(x)) == 1/sqrt(x)
     # this is sign-trickery to keep the expression from reverting
@@ -1417,6 +1410,31 @@ def test_radsimp():
     # to use an unevaluated Mul
     assert radsimp(1/sqrt(2*x + 3)) == -sqrt(2*x + 3)/(-2*x - 3)
     assert radsimp(1/sqrt(2*(x + 3))) == -sqrt(2)*sqrt(x + 3)/(-x - 3)/2
+
+
+def test_collect_const():
+    # coverage not provided by above tests
+    assert collect_const(2*sqrt(3) + 4*a*sqrt(5)) == \
+        2*(2*sqrt(5)*a + sqrt(3))  # let the primitive reabsorb
+    assert collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3)) == \
+        2*sqrt(3) + 4*a*sqrt(5)
+    assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
+        sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
+
+    # issue 2191
+    assert collect_const(2*x + 2*y + 1, 2) == \
+        collect_const(2*x + 2*y + 1) == \
+        Add(S(1), Mul(2, x + y, evaluate=False), evaluate=False)
+    assert collect_const(-y - z) == Mul(-1, y + z, evaluate=False)
+    assert collect_const(2*x - 2*y - 2*z, 2) == \
+        Mul(2, x - y - z, evaluate=False)
+    assert collect_const(2*x - 2*y - 2*z, -2) == \
+        _unevaluated_Add(2*x, Mul(-2, y + z, evaluate=False))
+
+    # this is why the content_primitive is used
+    eq = (sqrt(15 + 5*sqrt(2))*x + sqrt(3 + sqrt(2))*y)*2
+    assert collect_sqrt(eq + 2) == \
+        2*sqrt(sqrt(2) + 3)*(sqrt(5)*x + y) + 2
 
 
 def test_issue2834():

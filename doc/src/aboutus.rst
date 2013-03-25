@@ -255,6 +255,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Amit Jamadagni: qapply Rotation to spin states
 #. Björn Dahlgren: Documentation fix
 #. Christophe Saint-Jean: fixed and added metrics to galgebra
+#. Demian Wassermann: fix to ccode printer for Piecewise
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

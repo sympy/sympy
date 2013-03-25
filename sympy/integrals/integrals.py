@@ -1241,7 +1241,7 @@ class Integral(Expr):
 
     def as_sum(self, n, method="midpoint"):
         """
-        Approximates the integral by a sum.
+        Approximates the definite integral by a sum.
 
         method ... one of: left, right, midpoint, trapezoid
 
@@ -1322,6 +1322,8 @@ class Integral(Expr):
                 "Multidimensional midpoint rule not implemented yet")
         else:
             limit = limits[0]
+            if len(limit) != 3:
+                raise ValueError("Expecting a definite integral.")
         if n <= 0:
             raise ValueError("n must be > 0")
         if n == oo:
