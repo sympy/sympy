@@ -199,7 +199,7 @@ class Unit(AtomicExpr):
         if self.has_system is False and _UNIT_SYSTEM is None:
             return 1
 
-        syst = self._system or _UNIT_SYSTEM
+        syst = _UNIT_SYSTEM or self._system
 
         base_factor = 1
         powers = zip(syst._base_units, syst.dim_vector(self.dimension))
@@ -249,7 +249,7 @@ class Unit(AtomicExpr):
             return ''
 
         string = ''
-        syst = self._system or _UNIT_SYSTEM
+        syst = _UNIT_SYSTEM or self._system
 
         # sort by order of decreasing power
         l = zip(syst._base_units, syst.dim_vector(self.dimension))
@@ -263,8 +263,10 @@ class Unit(AtomicExpr):
 
         if self.ratio_factor != 1:
             string = '%s %s' % (self.ratio_factor, string)
+            string = string.strip()
+            string = '(' + string + ')'
 
-        return '(%s)' % string.strip()
+        return string
         # cache result?
 
     def __str__(self):
@@ -411,6 +413,8 @@ class UnitSystem(object):
             raise AttributeError('The base units can not well-defined a unit '
                                  'system.')
 
+        # TODO: construct a dict of dimensions
+
     def __str__(self):
         return self.name
 
@@ -523,6 +527,8 @@ class UnitSystem(object):
 
 class Quantity(AtomicExpr):
 
+    # TODO: improve the display of units
+
     is_commutative = True
 
     def __new__(cls, factor=1, unit=None, **assumptions):
@@ -538,8 +544,7 @@ class Quantity(AtomicExpr):
         #      to get the unit
         if isinstance(factor, Number):
             if isinstance(unit, Unit):
-                obj.unit = unit
-                obj.factor = factor
+                obj.factor, obj.unit = Quantity.merge_factor_unit(factor, unit)
             else:
                 raise TypeError('"unit" should be a Unit instance.')
         else:
@@ -547,8 +552,27 @@ class Quantity(AtomicExpr):
 
         return obj
 
+    @staticmethod
+    def merge_factor_unit(factor, unit):
+        if unit.ratio_factor != 1:
+            qu = unit.as_quantity
+            unit = qu.unit
+            factor = factor * qu.factor
+        
+        return factor, unit
+
+    @property
+    def in_base_units(self):
+        """Display the quantity using base units."""
+        
+        if self.unit.abbrev_base == '':
+            return '%s %s' % (self.factor, self.unit)
+        
+        return '%s %s' % (self.factor, self.unit.abbrev_base)
+    
     def __str__(self):
-        return '%s %s' % (self.factor, self.unit)
+        factor, unit = self.merge_factor_unit(self.factor, self.unit)
+        return '%s %s' % (factor, unit)
 
     __repr__ = __str__
 
