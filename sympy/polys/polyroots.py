@@ -493,6 +493,8 @@ def _integer_basis(poly):
 
     if coeffs[0] < coeffs[-1]:
         coeffs = list(reversed(coeffs))
+        n = monoms[0]
+        monoms = [n - i for i in reversed(monoms)]
     else:
         return None
 
