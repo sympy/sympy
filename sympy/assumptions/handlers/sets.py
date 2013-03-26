@@ -68,9 +68,7 @@ class AskIntegerHandler(CommonHandler):
     def int(expr, assumptions):
         return True
 
-    @staticmethod
-    def Integer(expr, assumptions):
-        return True
+    Integer=int
 
     @staticmethod
     def Rational(expr, assumptions):
@@ -78,29 +76,11 @@ class AskIntegerHandler(CommonHandler):
         # evaluated to Integers
         return False
 
+    Pi, Exp1, Infinity, NegativeInfinity, ImaginaryUnit = [Rational]*5
+
     @staticmethod
     def Float(expr, assumptions):
         return int(expr) == expr
-
-    @staticmethod
-    def Pi(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Exp1(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
 
     @staticmethod
     def Abs(expr, assumptions):
@@ -144,30 +124,13 @@ class AskRationalHandler(CommonHandler):
     def Rational(expr, assumptions):
         return True
 
-    @staticmethod
-    def Float(expr, assumptions):
-        # it's finite-precision
-        return True
+    Float = Rational # it's finite-precision
 
     @staticmethod
     def ImaginaryUnit(expr, assumptions):
         return False
 
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Pi(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Exp1(expr, assumptions):
-        return False
+    Infinity, NegativeInfinity, Pi, Exp1 = [ImaginaryUnit]*4
 
 
 class AskIrrationalHandler(CommonHandler):
@@ -265,39 +228,13 @@ class AskRealHandler(CommonHandler):
     def Rational(expr, assumptions):
         return True
 
-    @staticmethod
-    def Float(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Pi(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Exp1(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Abs(expr, assumptions):
-        return True
-
-    @staticmethod
-    def re(expr, assumptions):
-        return True
-
-    im = re
+    Float, Pi, Exp1, Abs, re, im = [Rational]*6
 
     @staticmethod
     def ImaginaryUnit(expr, assumptions):
         return False
 
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
+    Infinity, NegativeInfinity = ImaginaryUnit, ImaginaryUnit
 
     @staticmethod
     def sin(expr, assumptions):
@@ -324,9 +261,7 @@ class AskExtendedRealHandler(AskRealHandler):
     def Infinity(expr, assumptions):
         return True
 
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return True
+    NegativeInfinity = Infinity
 
 
 class AskHermitianHandler(AskRealHandler):
@@ -404,27 +339,13 @@ class AskComplexHandler(CommonHandler):
     def Number(expr, assumptions):
         return True
 
-    @staticmethod
-    def NumberSymbol(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Abs(expr, assumptions):
-        return True
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return True
+    sin, cos, exp, re, im, NumberSymbol, Abs, ImaginaryUnit = [Number]*8  # they are all complex functions or expressions
 
     @staticmethod
     def Infinity(expr, assumptions):
         return False
 
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    sin, cos, exp, re, im = [Abs]*5  # they are all complex functions
+    NegativeInfinity = Infinity
 
 
 class AskImaginaryHandler(CommonHandler):
@@ -612,9 +533,7 @@ class AskAlgebraicHandler(CommonHandler):
     def ImaginaryUnit(expr, assumptions):
         return True
 
-    @staticmethod
-    def AlgebraicNumber(expr, assumptions):
-        return True
+    AlgebraicNumber = ImaginaryUnit
 
 #### Helper methods
 
