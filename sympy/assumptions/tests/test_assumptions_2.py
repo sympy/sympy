@@ -2,7 +2,7 @@
 rename this to test_assumptions.py when the old assumptions system is deleted
 """
 from sympy.abc import x, y
-from sympy.assumptions import global_assumptions, Predicate
+from sympy.assumptions.assume import global_assumptions, Predicate
 from sympy.assumptions.ask import _extract_facts, Q
 from sympy.core import symbols
 from sympy.logic.boolalg import Or

@@ -33,13 +33,8 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_list,
 )
 
-from sympy.polys.distributedpolys import (
-    sdp_from_dict, sdp_div,
-)
-
-from sympy.polys.groebnertools import (
-    sdp_groebner, matrix_fglm,
-)
+from sympy.polys.groebnertools import groebner as _groebner
+from sympy.polys.fglmtools import matrix_fglm
 
 from sympy.polys.monomialtools import (
     Monomial, monomial_key,
@@ -475,7 +470,7 @@ class Poly(Expr):
         """
         domain = f.get_domain()
 
-        if not domain.has_CharacteristicZero:
+        if domain.is_FiniteField:
             return Integer(domain.characteristic())
         else:
             raise PolynomialError("not a polynomial over a Galois field")
@@ -756,6 +751,12 @@ class Poly(Expr):
         >>> Poly(x**3 + 2*x + 3, x).coeffs()
         [1, 2, 3]
 
+        See Also
+        ========
+        all_coeffs
+        coeff_monomial
+        nth
+
         """
         return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order) ]
 
@@ -772,6 +773,10 @@ class Poly(Expr):
         >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).monoms()
         [(2, 0), (1, 2), (1, 1), (0, 1)]
 
+        See Also
+        ========
+        all_monoms
+
         """
         return f.rep.monoms(order=order)
 
@@ -787,6 +792,10 @@ class Poly(Expr):
 
         >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).terms()
         [((2, 0), 1), ((1, 2), 2), ((1, 1), 1), ((0, 1), 3)]
+
+        See Also
+        ========
+        all_terms
 
         """
         return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order) ]
@@ -819,6 +828,10 @@ class Poly(Expr):
 
         >>> Poly(x**3 + 2*x - 1, x).all_monoms()
         [(3,), (2,), (1,), (0,)]
+
+        See Also
+        ========
+        all_terms
 
         """
         return f.rep.all_monoms()
@@ -919,7 +932,7 @@ class Poly(Expr):
 
     def as_expr(f, *gens):
         """
-        Convert a polynomial an expression.
+        Convert a Poly instance to an Expr instance.
 
         Examples
         ========
@@ -1059,9 +1072,9 @@ class Poly(Expr):
         n, k = len(f.gens), len(gens)
 
         if f.gens[:k] == gens:
-            _gens, front = f.gens[n - k:], True
+            _gens, front = f.gens[k:], True
         elif f.gens[-k:] == gens:
-            _gens, front = f.gens[:n - k], False
+            _gens, front = f.gens[:-k], False
         else:
             raise NotImplementedError(
                 "can only eject front or back generators")
@@ -1827,20 +1840,66 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'EC')
 
-    def nth(f, *N):
+    def coeff_monomial(f, monom):
         """
-        Returns the ``n``-th coefficient of ``f``.
+        Returns the coefficient of ``monom`` in ``f`` if there, else None.
 
         Examples
         ========
 
-        >>> from sympy import Poly
+        >>> from sympy import Poly, exp
+        >>> from sympy.abc import x, y
+
+        >>> p = Poly(24*x*y*exp(8) + 23*x, x, y)
+
+        >>> p.coeff_monomial(x)
+        23
+        >>> p.coeff_monomial(y)
+        0
+        >>> p.coeff_monomial(x*y)
+        24*exp(8)
+
+        Note that ``Expr.coeff()`` behaves differently, collecting terms
+        if possible; the Poly must be converted to an Expr to use that
+        method, however:
+
+        >>> p.as_expr().coeff(x)
+        24*y*exp(8) + 23
+        >>> p.as_expr().coeff(y)
+        24*x*exp(8)
+        >>> p.as_expr().coeff(x*y)
+        24*exp(8)
+
+        See Also
+        ========
+        nth: more efficient query using exponents of the monomial's generators
+
+        """
+        return f.nth(*Monomial(monom, f.gens).exponents)
+
+    def nth(f, *N):
+        """
+        Returns the ``n``-th coefficient of ``f`` where ``N`` are the
+        exponents of the generators in the term of interest.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, sqrt
         >>> from sympy.abc import x, y
 
         >>> Poly(x**3 + 2*x**2 + 3*x, x).nth(2)
         2
         >>> Poly(x**3 + 2*x*y**2 + y**2, x, y).nth(1, 2)
         2
+        >>> Poly(4*sqrt(x)*y)
+        Poly(4*y*sqrt(x), y, sqrt(x), domain='ZZ')
+        >>> _.nth(1, 1)
+        4
+
+        See Also
+        ========
+        coeff_monomial
 
         """
         if hasattr(f.rep, 'nth'):
@@ -1849,6 +1908,18 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'nth')
 
         return f.rep.dom.to_sympy(result)
+
+    def coeff(f, x, n=1, right=False):
+        # the semantics of coeff_monomial and Expr.coeff are different;
+        # if someone is working with a Poly, they should be aware of the
+        # differences and chose the method best suited for the query.
+        # Alternatively, a pure-polys method could be written here but
+        # at this time the ``right`` keyword would be ignored because Poly
+        # doesn't work with non-commutatives.
+        raise NotImplementedError(
+            'Either convert to Expr with `as_expr` method '
+            'to use Expr\'s coeff method or else use the '
+            '`coeff_monomial` method of Polys.')
 
     def LM(f, order=None):
         """
@@ -2166,11 +2237,14 @@ class Poly(Expr):
             result = f.rep.eval(a, j)
         except CoercionFailed:
             if not auto:
-                raise DomainError(
-                    "can't evaluate at %s in %s" % (a, f.rep.dom))
+                raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
             else:
-                domain, [a] = construct_domain([a])
-                f = f.set_domain(domain)
+                a_domain, [a] = construct_domain([a])
+                new_domain = f.get_domain().unify(a_domain, gens=f.gens)
+
+                f = f.set_domain(new_domain)
+                a = new_domain.convert(a, a_domain)
+
                 result = f.rep.eval(a, j)
 
         return f.per(result, remove=j)
@@ -5718,13 +5792,14 @@ def reduced(f, G, *gens, **args):
         opt = opt.clone(dict(domain=domain.get_field()))
         retract = True
 
+    from sympy.polys.rings import xring
+    _ring, _ = xring(opt.gens, opt.domain, opt.order)
+
     for i, poly in enumerate(polys):
         poly = poly.set_domain(opt.domain).rep.to_dict()
-        polys[i] = sdp_from_dict(poly, opt.order)
+        polys[i] = _ring.from_dict(poly)
 
-    level = len(opt.gens) - 1
-
-    Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
+    Q, r = polys[0].div(polys[1:])
 
     Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
     r = Poly._from_dict(dict(r), opt)
@@ -5832,18 +5907,17 @@ class GroebnerBasis(Basic):
         if domain.has_assoc_Field:
             opt.domain = domain.get_field()
         else:
-            raise DomainError(
-                "can't compute a Groebner basis over %s" % opt.domain)
+            raise DomainError("can't compute a Groebner basis over %s" % opt.domain)
+
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, opt.order)
 
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, opt.order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        G = sdp_groebner(
-            polys, level, opt.order, opt.domain, method=opt.method)
-        G = [ Poly._from_dict(dict(g), opt) for g in G ]
+        G = _groebner(polys, _ring, method=opt.method)
+        G = [ Poly._from_dict(g, opt) for g in G ]
 
         if not domain.has_Field:
             G = [ g.clear_denoms(convert=True)[1] for g in G ]
@@ -5997,13 +6071,14 @@ class GroebnerBasis(Basic):
             order=dst_order,
         ))
 
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, src_order)
+
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, src_order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        G = matrix_fglm(polys, level, src_order, dst_order, opt.domain)
+        G = matrix_fglm(polys, _ring, dst_order)
         G = [ Poly._from_dict(dict(g), opt) for g in G ]
 
         if not domain.has_Field:
@@ -6052,13 +6127,14 @@ class GroebnerBasis(Basic):
             opt = opt.clone(dict(domain=domain.get_field()))
             retract = True
 
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, opt.order)
+
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, opt.order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
+        Q, r = polys[0].div(polys[1:])
 
         Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
         r = Poly._from_dict(dict(r), opt)

@@ -1,20 +1,20 @@
 """Tools for manipulating of large commutative expressions. """
 
 from sympy.core.add import Add
-from sympy.core.compatibility import iterable, is_sequence
+from sympy.core.compatibility import iterable, is_sequence, SYMPY_INTS
 from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer
+from sympy.core.numbers import Rational, Integer, Number
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
 from sympy.core.containers import Tuple, Dict
 from sympy.utilities import default_sort_key
 from sympy.utilities.iterables import (common_prefix, common_suffix,
-        variations)
+        variations, ordered)
 
 from collections import defaultdict
 
@@ -74,32 +74,150 @@ class Factors(object):
     __slots__ = ['factors', 'gens']
 
     def __init__(self, factors=None):  # Factors
-        if factors is None:
+        """Initialize Factors from dict or expr.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x
+        >>> from sympy import I
+        >>> e = 2*x**3
+        >>> Factors(e)
+        Factors({2: 1, x: 3})
+        >>> Factors(e.as_powers_dict())
+        Factors({2: 1, x: 3})
+        >>> f = _
+        >>> f.factors  # underlying dictionary
+        {2: 1, x: 3}
+        >>> f.gens  # base of each factor
+        frozenset([2, x])
+        >>> Factors(0)
+        Factors({0: 1})
+        >>> Factors(I)
+        Factors({I: 1})
+
+        Notes
+        =====
+
+        Although a dictionary can be passed, no checking will be done to
+        ensure that -1 is split from Rationals. This will then affect
+        gcd and normal calculations:
+
+        >>> Factors(-2*x).factors
+        {-1: 1, 2: 1, x: 1}
+        >>> Factors((-2*x).as_powers_dict()).factors
+        {-2: 1, x: 1}
+
+        """
+        if factors is None or factors == 1:
             factors = {}
+        elif factors is S.Zero or factors == 0:
+            factors = {S.Zero: S.One}
+        elif isinstance(factors, Number) and factors < 0 and not factors is S.NegativeOne:
+            factors = {-factors: S.One, S.NegativeOne: S.One}
+        elif isinstance(factors, Expr):
+            c, nc = factors.args_cnc()
+            factors = dict(Mul(*c, **dict(evaluate=False)).as_powers_dict())
+            if nc:
+                factors[Mul(*nc, **dict(evaluate=False))] = S.One
+
+        # sanitizing
+        if factors.get(S.NegativeOne, S.One) is not S.One:
+            e = factors.pop(S.NegativeOne)
+            factors[S.ImaginaryUnit] = 1
+            if e == S(3)/2:
+                factors[S.NegativeOne] = S.One
+            elif e is not S.Half:
+                raise ValueError('unanticipated value for exponent of -1')
 
         self.factors = factors
-        self.gens = frozenset(factors.keys())
+        try:
+            self.gens = frozenset(factors.keys())
+        except AttributeError:
+            raise TypeError('expecting Expr or dictionary')
 
     def __hash__(self):  # Factors
-        return hash((tuple(self.factors), self.gens))
+        keys = tuple(ordered(self.factors.keys()))
+        values = [self.factors[k] for k in keys]
+        return hash((keys, values))
 
     def __repr__(self):  # Factors
-        return "Factors(%s)" % self.factors
+        return "Factors({%s})" % ', '.join(
+            ['%s: %s' % (k, v) for k, v in ordered(self.factors.items())])
+
+    @property
+    def is_zero(self):
+        """
+        >>> from sympy.core.exprtools import Factors
+        >>> Factors(1).div(Factors(1))[1].is_zero
+        True
+        """
+        f = self.factors
+        return len(f) == 1 and S.Zero in f
+
+    @property
+    def is_one(self):
+        """
+        >>> from sympy.core.exprtools import Factors
+        >>> Factors(1).is_one
+        True
+        """
+        return not self.factors
 
     def as_expr(self):  # Factors
+        """Return the underlying expression.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> Factors((x*y**2).as_powers_dict()).as_expr()
+        x*y**2
+
+        """
+
         args = []
         for factor, exp in self.factors.iteritems():
             if exp != 1:
                 b, e = factor.as_base_exp()
-                e = _keep_coeff(Integer(exp), e)
+                if isinstance(exp, int):
+                    e = _keep_coeff(Integer(exp), e)
+                elif isinstance(exp, Rational):
+                    e = _keep_coeff(exp, e)
+                else:
+                    e *= exp
                 args.append(b**e)
             else:
                 args.append(factor)
         return Mul(*args)
 
     def normal(self, other):  # Factors
+        """Return unique Factors of self and other.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors(2*x*y**2)
+        >>> b = Factors(-2*x*y/z)
+        >>> a.normal(b)
+        (Factors({y: 1}), Factors({-1: 1, z: -1}))
+        >>> a.normal(a)
+        (Factors({}), Factors({}))
+
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+        if other.is_zero:
+            return Factors(), Factors(S.Zero)
+
         self_factors = dict(self.factors)
         other_factors = dict(other.factors)
+        if self_factors == other_factors:
+            return Factors(), Factors()
 
         for factor, self_exp in self.factors.iteritems():
             try:
@@ -123,6 +241,24 @@ class Factors(object):
         return Factors(self_factors), Factors(other_factors)
 
     def mul(self, other):  # Factors
+        """Return Factors of ``self * other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.mul(b)
+        Factors({x: 2, y: 3, z: -1})
+        >>> a*b
+        Factors({x: 2, y: 3, z: -1})
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+        if any(f.is_zero for f in (self, other)):
+            return Factors(S.Zero)
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -133,15 +269,61 @@ class Factors(object):
                     del factors[factor]
                     continue
 
+                if factor is S.NegativeOne:
+                    if not exp % 2:
+                        del factors[factor]
+                        continue
+                    exp = S.One
+
             factors[factor] = exp
 
         return Factors(factors)
 
     def div(self, other):  # Factors
+        """Return the result of ``divmod(self, other)`` as two Factors,
+        ``quo`` and ``rem`` such that ``self = other*(quo + rem)``.
+
+        Notes
+        =====
+
+        If there is no remainder, the factors will not be empty, it will
+        be {0: 1}; the empty factors corresponds to {1: 1}. This is similar
+        to the result of string.find returning 0 for a hit and -1 for a
+        non-hit. (Normally {} and 0 mean "null" but with Factors and find
+        they have different semantics.)
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.div(b)
+        (Factors({y: 1}), Factors({z: -1}))
+        >>> q, r = a.div(a)
+        >>> a*q, a*r
+        (Factors({x: 1, y: 2}), Factors({0: 1}))
+
+        The ``/`` operator only gives the quotient:
+
+        >>> a/b
+        Factors({y: 1})
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if other.is_zero:
+                raise ZeroDivisionError
+            if self.is_zero:
+                return Factors(S.Zero)
         quo, rem = dict(self.factors), {}
 
         for factor, exp in other.factors.iteritems():
             if factor in quo:
+                if factor is S.NegativeOne:
+                    del quo[factor]
+                    continue
+
                 exp = quo[factor] - exp
 
                 if exp <= 0:
@@ -157,27 +339,95 @@ class Factors(object):
 
             rem[factor] = exp
 
+        rem = rem or S.Zero
+
         return Factors(quo), Factors(rem)
 
     def quo(self, other):  # Factors
+        """Return quotient Factors of ``self / other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.quo(b)  # same as a/b
+        Factors({y: 1})
+        """
         return self.div(other)[0]
 
     def rem(self, other):  # Factors
+        """Return remainder Factors of ``self / other``.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.rem(b)
+        Factors({z: -1})
+        >>> a.rem(a)
+        Factors({0: 1})
+        """
         return self.div(other)[1]
 
     def pow(self, other):  # Factors
-        if type(other) is int and other >= 0:
+        """Return self raised to a non-negative integer power.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> a**2
+        Factors({x: 2, y: 4})
+
+        """
+        if isinstance(other, Factors):
+            other = other.as_expr()
+            if other.is_Integer:
+                other = int(other)
+        if isinstance(other, SYMPY_INTS) and other >= 0:
             factors = {}
 
             if other:
                 for factor, exp in self.factors.iteritems():
                     factors[factor] = exp*other
+                    if factor is S.NegativeOne:
+                        if factors[factor] % 2 == 1:
+                            factors[factor] = S.One
+                        else:
+                            del factors[factor]
 
             return Factors(factors)
         else:
             raise ValueError("expected non-negative integer, got %s" % other)
 
     def gcd(self, other):  # Factors
+        """Return Factors of ``gcd(self, other)``. The keys are
+        the intersection of factors with the minimum exponent for
+        each factor.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.gcd(b)
+        Factors({x: 1, y: 1})
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if other.is_zero:
+                return Factors(self.factors)
+
         factors = {}
 
         for factor, exp in self.factors.iteritems():
@@ -188,6 +438,25 @@ class Factors(object):
         return Factors(factors)
 
     def lcm(self, other):  # Factors
+        """Return Factors of ``lcm(self, other)`` which are
+        the union of factors with the maximum exponent for
+        each factor.
+
+        Examples
+        ========
+
+        >>> from sympy.core.exprtools import Factors
+        >>> from sympy.abc import x, y, z
+        >>> a = Factors((x*y**2).as_powers_dict())
+        >>> b = Factors((x*y/z).as_powers_dict())
+        >>> a.lcm(b)
+        Factors({x: 1, y: 2, z: -1})
+        """
+        if not isinstance(other, Factors):
+            other = Factors(other)
+            if any(f.is_zero for f in (self, other)):
+                return Factors(S.Zero)
+
         factors = dict(self.factors)
 
         for factor, exp in other.factors.iteritems():
@@ -199,38 +468,25 @@ class Factors(object):
         return Factors(factors)
 
     def __mul__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.mul(other)
-        else:
-            return NotImplemented
+        return self.mul(other)
 
     def __divmod__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.div(other)
-        else:
-            return NotImplemented
+        return self.div(other)
 
     def __div__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.quo(other)
-        else:
-            return NotImplemented
+        return self.quo(other)
 
     __truediv__ = __div__
 
     def __mod__(self, other):  # Factors
-        if isinstance(other, Factors):
-            return self.rem(other)
-        else:
-            return NotImplemented
+        return self.rem(other)
 
     def __pow__(self, other):  # Factors
-        if type(other) is int:
-            return self.pow(other)
-        else:
-            return NotImplemented
+        return self.pow(other)
 
     def __eq__(self, other):  # Factors
+        if not isinstance(other, Factors):
+            other = Factors(other)
         return self.factors == other.factors
 
     def __ne__(self, other):  # Factors
@@ -335,7 +591,7 @@ class Term(object):
     __truediv__ = __div__
 
     def __pow__(self, other):  # Term
-        if type(other) is int:
+        if isinstance(other, SYMPY_INTS):
             return self.pow(other)
         else:
             return NotImplemented
@@ -513,7 +769,7 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     return terms.func(*[handle(i) for i in terms.args])
 
 
-def factor_terms(expr, radical=False, clear=False, fraction=False):
+def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     """Remove common factors from terms in all arguments without
     changing the underlying structure of the expr. No expansion or
     simplification (and no processing of non-commutatives) is performed.
@@ -527,6 +783,9 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
 
     If fraction=True (default is False) then a common denominator will be
     constructed for the expression.
+
+    If sign=True (default) then even if the only factor in common is a -1,
+    it will be factored out of the expression.
 
     Examples
     ========
@@ -555,6 +814,16 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
     y*(x + 2)/2
     >>> factor_terms(x*y/2 + y, clear=False) == _
     True
+
+    If a -1 is all that can be factored out, to *not* factor it out, the
+    flag ``sign`` must be False:
+
+    >>> factor_terms(-x - y)
+    -(x + y)
+    >>> factor_terms(-x - y, sign=False)
+    -x - y
+    >>> factor_terms(-2*x - 2*y, sign=False)
+    -2*(x + y)
 
     See Also
     ========
@@ -589,6 +858,10 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         isprimitive=True,
         clear=clear,
         fraction=fraction) for a in Add.make_args(p)]
+        # get a common negative (if there) which gcd_terms does not remove
+        if all(a.as_coeff_Mul()[0] < 0 for a in list_args):
+            cont = -cont
+            list_args = [-a for a in list_args]
         p = Add._from_args(list_args)  # gcd_terms will fix up ordering
     elif p.args:
         p = p.func(
@@ -597,7 +870,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False):
         isprimitive=True,
         clear=clear,
         fraction=fraction)
-    return _keep_coeff(cont, p, clear=clear)
+    return _keep_coeff(cont, p, clear=clear, sign=sign)
 
 
 def _mask_nc(eq):
@@ -733,8 +1006,13 @@ def factor_nc(expr):
     >>> factor_nc(((x + A)*(x + B)).expand())
     (x + A)*(x + B)
     """
-    from sympy.simplify.simplify import _mexpand
+    from sympy.simplify.simplify import powsimp
     from sympy.polys import gcd, factor
+
+    def _pemexpand(expr):
+        "Expand with the minimal set of hints necessary to check the result."
+        return expr.expand(deep=True, mul=True, power_exp=True,
+            power_base=False, basic=False, multinomial=True, log=False)
 
     expr = sympify(expr)
     if not isinstance(expr, Expr) or not expr.args:
@@ -854,7 +1132,7 @@ def factor_nc(expr):
         unrep1 = [(v, k) for k, v in rep1]
         unrep1.reverse()
         new_mid, r2, _ = _mask_nc(mid.subs(rep1))
-        new_mid = factor(new_mid)
+        new_mid = powsimp(factor(new_mid))
 
         new_mid = new_mid.subs(r2).subs(unrep1)
 
@@ -872,13 +1150,15 @@ def factor_nc(expr):
                     cfac.append(f)
                 else:
                     b, e = f.as_base_exp()
-                    assert e.is_Integer
-                    ncfac.extend([b]*e)
+                    if e.is_Integer:
+                        ncfac.extend([b]*e)
+                    else:
+                        ncfac.append(f)
             pre_mid = g*Mul(*cfac)*l
-            target = _mexpand(expr/c)
+            target = _pemexpand(expr/c)
             for s in variations(ncfac, len(ncfac)):
                 ok = pre_mid*Mul(*s)*r
-                if _mexpand(ok) == target:
+                if _pemexpand(ok) == target:
                     return _keep_coeff(c, ok)
 
         # mid was an Add that didn't factor successfully

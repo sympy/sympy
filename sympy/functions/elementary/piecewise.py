@@ -2,7 +2,7 @@ from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import And, Boolean, Or
+from sympy.logic.boolalg import And, Boolean, Or, Not
 from sympy.core.compatibility import default_sort_key
 
 
@@ -270,7 +270,14 @@ class Piecewise(Function):
         # Finally run through the intervals and sum the evaluation.
         ret_fun = 0
         for int_a, int_b, expr in int_expr:
-            ret_fun += expr._eval_interval(sym, Max(a, int_a), Min(b, int_b))
+            if isinstance(expr, Piecewise):
+                # If we still have a Piecewise by now, _sort_expr_cond would
+                # already have determined that its conditions are independent
+                # of the integration variable, thus we just use substitution.
+                ret_fun += piecewise_fold(
+                    expr.subs(sym, Min(b, int_b)) - expr.subs(sym, Max(a, int_a)))
+            else:
+                ret_fun += expr._eval_interval(sym, Max(a, int_a), Min(b, int_b))
         return mul * ret_fun
 
     def _sort_expr_cond(self, sym, a, b, targetcond=None):
@@ -292,6 +299,7 @@ class Piecewise(Function):
         expr_cond = []
         or_cond = False
         or_intervals = []
+        independent_expr_cond = []
         for expr, cond in self.args:
             if isinstance(cond, Or):
                 for cond2 in sorted(cond.args, key=default_sort_key):
@@ -302,8 +310,12 @@ class Piecewise(Function):
                 break
         for expr, cond in expr_cond:
             if cond is True:
-                default = expr
+                independent_expr_cond.append((expr, cond))
+                default = Piecewise(*independent_expr_cond)
                 break
+            if sym not in cond.free_symbols:
+                independent_expr_cond.append((expr, cond))
+                continue
             elif isinstance(cond, Equality):
                 continue
             elif isinstance(cond, And):
@@ -420,7 +432,6 @@ class Piecewise(Function):
         from sympy import checksol, solve
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-            e = e._subs(old, new)
 
             if isinstance(c, bool):
                 pass
@@ -442,7 +453,11 @@ class Piecewise(Function):
                     except NotImplementedError:
                         pass
 
+            if not c is False:
+                e = e._subs(old, new)
             args[i] = e, c
+            if c is True:
+                return Piecewise(*args)
 
         return Piecewise(*args)
 
@@ -518,12 +533,28 @@ def piecewise_fold(expr):
         return ExprCondPair(*new_args)
     piecewise_args = []
     for n, arg in enumerate(new_args):
-        if arg.func is Piecewise:
+        if isinstance(arg, Piecewise):
             piecewise_args.append(n)
     if len(piecewise_args) > 0:
         n = piecewise_args[0]
         new_args = [(expr.func(*(new_args[:n] + [e] + new_args[n + 1:])), c)
                     for e, c in new_args[n].args]
+        if isinstance(expr, Boolean):
+            # If expr is Boolean, we must return some kind of PiecewiseBoolean.
+            # This is constructed by means of Or, And and Not.
+            # piecewise_fold(0 < Piecewise( (sin(x), x<0), (cos(x), True)))
+            # can't return Piecewise((0 < sin(x), x < 0), (0 < cos(x), True))
+            # but instead Or(And(x < 0, 0 < sin(x)), And(0 < cos(x), Not(x<0)))
+            other = True
+            rtn = False
+            for e, c in new_args:
+                rtn = Or(rtn, And(other, c, e))
+                other = And(other, Not(c))
+            if len(piecewise_args) > 1:
+                return piecewise_fold(rtn)
+            return rtn
         if len(piecewise_args) > 1:
             return piecewise_fold(Piecewise(*new_args))
-    return Piecewise(*new_args)
+        return Piecewise(*new_args)
+    else:
+        return expr.func(*new_args)

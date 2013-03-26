@@ -25,7 +25,7 @@ The main references for this are:
     Integrals and Series: More Special Functions, Vol. 3,.
     Gordon and Breach Science Publisher
 """
-from sympy.core import oo, S, pi
+from sympy.core import oo, S, pi, Expr
 from sympy.core.compatibility import next
 from sympy.core.function import expand, expand_mul, expand_power_base
 from sympy.core.add import Add
@@ -365,7 +365,7 @@ def _find_splitting_points(expr, x):
     p, q = map(lambda n: Wild(n, exclude=[x]), 'pq')
 
     def compute_innermost(expr, res):
-        if isinstance(expr, Tuple):
+        if not isinstance(expr, Expr):
             return
         m = expr.match(p*x + q)
         if m and m[p] != 0:

@@ -2,22 +2,23 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
+import math
+
 import sympy.mpmath.libmp as libmp
 from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
 from sympy.mpmath import inf as mpmath_inf
-from sympy.mpmath.libmp import (bitcount, from_int, from_man_exp,
-        from_rational, fhalf, fnan, fnone, fone, fzero, mpf_abs, mpf_add,
+from sympy.mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
+        fnan, fnone, fone, fzero, mpf_abs, mpf_add,
         mpf_atan, mpf_atan2, mpf_cmp, mpf_cos, mpf_e, mpf_exp, mpf_log, mpf_lt,
         mpf_mul, mpf_neg, mpf_pi, mpf_pow, mpf_pow_int, mpf_shift, mpf_sin,
         mpf_sqrt, normalize, round_nearest, to_int, to_str)
+from sympy.mpmath.libmp import bitcount as mpmath_bitcount
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpc import _infs_nan
 from sympy.mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
-
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
-import math
-
+from sympy.core.compatibility import SYMPY_INTS
 from sympify import sympify
 from core import C
 from singleton import S
@@ -25,6 +26,9 @@ from containers import Tuple
 
 LG10 = math.log(10, 2)
 rnd = round_nearest
+
+def bitcount(n):
+    return mpmath_bitcount(int(n))
 
 # Used in a few places as placeholder values to denote exponents and
 # precision levels, e.g. of exact numbers. Must be careful to avoid
@@ -147,7 +151,7 @@ def scaled_zero(mag, sign=1):
     """
     if type(mag) is tuple and len(mag) == 4 and iszero(mag, scaled=True):
         return (mag[0][0],) + mag[1:]
-    elif type(mag) is int:
+    elif isinstance(mag, SYMPY_INTS):
         if sign not in [-1, 1]:
             raise ValueError('sign must be +/-1')
         rv, p = mpf_shift(fone, mag), -1
@@ -371,13 +375,28 @@ def add_terms(terms, prec, target_prec):
 
     XXX explain why this is needed and why one can't just loop using mpf_add
     """
+    from sympy.core.core import C
+
     terms = [t for t in terms if not iszero(t)]
     if not terms:
         return None, None
     elif len(terms) == 1:
         return terms[0]
+
+    # see if any argument is NaN or oo and thus warrants a special return
+    special = []
+    for t in terms:
+        arg = C.Float._new(t[0], 1)
+        if arg is S.NaN or arg.is_unbounded:
+            special.append(arg)
+    if special:
+        from sympy.core.add import Add
+        rv = evalf(Add(*special), prec + 4, {})
+        return rv[0], rv[2]
+
     working_prec = 2*prec
     sum_man, sum_exp, absolute_error = 0, 0, MINUS_INF
+
     for x, accuracy in terms:
         sign, man, exp, bc = x
         if sign:
@@ -461,6 +480,8 @@ def evalf_add(v, prec, options):
 
 
 def evalf_mul(v, prec, options):
+    from sympy.core.core import C
+
     res = pure_complex(v)
     if res:
         # the only pure complex that is a mul is h*I
@@ -468,6 +489,20 @@ def evalf_mul(v, prec, options):
         im, _, im_acc, _ = evalf(h, prec, options)
         return None, im, None, im_acc
     args = list(v.args)
+
+    # see if any argument is NaN or oo and thus warrants a special return
+    special = []
+    for arg in args:
+        arg = evalf(arg, prec, options)
+        if arg[0] is None:
+            continue
+        arg = C.Float._new(arg[0], 1)
+        if arg is S.NaN or arg.is_unbounded:
+            special.append(arg)
+    if special:
+        from sympy.core.mul import Mul
+        special = Mul(*special)
+        return evalf(special, prec + 4, {})
 
     # With guard digits, multiplication in the real case does not destroy
     # accuracy. This is also true in the complex case when considering the
@@ -489,6 +524,7 @@ def evalf_mul(v, prec, options):
     direction = 0
     args.append(S.One)
     complex_factors = []
+
     for i, arg in enumerate(args):
         if i != last and pure_complex(arg):
             args[-1] = (args[-1]*arg).expand()
@@ -666,9 +702,9 @@ def evalf_pow(v, prec, options):
 #----------------------------------------------------------------------------#
 def evalf_trig(v, prec, options):
     """
-    This function handles sin and cos of real arguments.
+    This function handles sin and cos of complex arguments.
 
-    TODO: should also handle tan and complex arguments.
+    TODO: should also handle tan of complex arguments.
     """
     if v.func is C.cos:
         func = mpf_cos
@@ -682,7 +718,9 @@ def evalf_trig(v, prec, options):
     xprec = prec + 20
     re, im, re_acc, im_acc = evalf(arg, xprec, options)
     if im:
-        raise NotImplementedError
+        if 'subs' in options:
+            v = v.subs(options['subs'])
+        return evalf(v._eval_evalf(prec), prec, options)
     if not re:
         if v.func is C.cos:
             return fone, None, prec, None

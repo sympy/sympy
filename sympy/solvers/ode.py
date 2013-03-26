@@ -206,9 +206,10 @@ anything is broken, one of those tests will surely fail.
 from collections import defaultdict
 
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import iterable, is_sequence, set_union
+from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.function import Derivative, AppliedUndef, diff, expand_mul
+from sympy.core.exprtools import factor_terms
+from sympy.core.function import Function, Derivative, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -239,13 +240,16 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 allhints = (
     "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
     "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
-    "1st_homogeneous_coeff_subs_dep_div_indep", "nth_linear_constant_coeff_homogeneous",
+    "1st_homogeneous_coeff_subs_dep_div_indep", "almost_linear",
+    "separable_reduced", "nth_linear_constant_coeff_homogeneous",
     "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
-    "Liouville", "separable_Integral", "1st_exact_Integral", "1st_linear_Integral",
-    "Bernoulli_Integral", "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
+    "Liouville", "separable_Integral", "1st_exact_Integral",
+    "1st_linear_Integral", "Bernoulli_Integral",
+    "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
     "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
+    "almost_linear_Integral", "separable_reduced_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "Liouville_Integral"
 )
@@ -355,7 +359,7 @@ def sub_func_doit(eq, func, new):
     return eq.subs(reps).subs(func, new).subs(repu)
 
 
-def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
+def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """
     Solves any (supported) kind of ordinary differential equation.
 
@@ -390,10 +394,6 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
             hint. Note that the solution may contain more arbitrary
             constants than the order of the ODE with this option
             enabled.
-
-        ``prep``, when False and when ``func`` is given, will skip the
-            preprocessing step where the equation is cleaned up so it
-            is ready for solving.
 
     **Hints**
 
@@ -484,12 +484,17 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     ...     hint='1st_exact')
     f(x) == acos(C1/cos(x))
     >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
+    ...     hint='almost_linear')
+    [f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
+    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
     ... hint='best')
     f(x) == acos(C1/cos(x))
     >>> # Note that even though separable is the default, 1st_exact produces
     >>> # a simpler result in this case.
 
     """
+    prep = kwargs.pop('prep', True)
+
     # TODO: Implement initial conditions
     # See issue 1621.  We first need a way to represent things like f'(0).
     if isinstance(eq, Equality):
@@ -529,7 +534,12 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
 
     if not hints['default']:
         # classify_ode will set hints['default'] to None if no hints match.
-        raise NotImplementedError("dsolve: Cannot solve " + str(eq))
+        if hint not in allhints and hint != 'default':
+            raise ValueError("Hint not recognized: " + hint)
+        elif hint not in hints['ordered_hints'] and hint != 'default':
+            raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
+        else:
+            raise NotImplementedError("dsolve: Cannot solve " + str(eq))
 
     if hint == 'default':
         return dsolve(eq, func, hint=hints['default'], simplify=simplify,
@@ -589,7 +599,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, prep=True, **kwargs):
     return rv
 
 
-def classify_ode(eq, func=None, dict=False, prep=True):
+def classify_ode(eq, func=None, dict=False, **kwargs):
     """
     Returns a tuple of possible dsolve() classifications for an ODE.
 
@@ -605,9 +615,6 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     hint:match expression terms. This is intended for internal use by
     dsolve().  Note that because dictionaries are ordered arbitrarily,
     this will most likely not be in the same order as the tuple.
-
-    If ``prep`` is False or ``func`` is None then the equation
-    will be preprocessed to put it in standard form for classification.
 
     You can get help on different hints by doing help(ode.ode_hintname),
     where hintname is the name of the hint without "_Integral".
@@ -704,6 +711,7 @@ def classify_ode(eq, func=None, dict=False, prep=True):
     'nth_linear_constant_coeff_variation_of_parameters_Integral')
 
     """
+    prep = kwargs.pop('prep', True)
     from sympy import expand
 
     if func and len(func.args) != 1:
@@ -811,9 +819,39 @@ def classify_ode(eq, func=None, dict=False, prep=True):
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
             try:
-                if r[d] != 0 and simplify(r[d].diff(y)) == simplify(r[e].diff(x)):
-                    matching_hints["1st_exact"] = r
-                    matching_hints["1st_exact_Integral"] = r
+                if r[d] != 0:
+                    numerator = simplify(r[d].diff(y) - r[e].diff(x))
+                    # The following few conditions try to convert a non-exact
+                    # differential equation into an exact one.
+                    # References : Differential equations with applications
+                    # and historical notes - George E. Simmons
+
+                    if numerator:
+                        # If (dP/dy - dQ/dx) / Q = f(x)
+                        # then exp(integral(f(x))*equation becomes exact
+                        factor = simplify(numerator/r[e])
+                        variables = factor.free_symbols
+                        if len(variables) == 1 and x == variables.pop():
+                            factor = exp(C.Integral(factor).doit())
+                            r[d] *= factor
+                            r[e] *= factor
+                            matching_hints["1st_exact"] = r
+                            matching_hints["1st_exact_Integral"] = r
+                        else:
+                            # If (dP/dy - dQ/dx) / -P = f(y)
+                            # then exp(integral(f(y))*equation becomes exact
+                            factor = simplify(-numerator/r[d])
+                            variables = factor.free_symbols
+                            if len(variables) == 1 and y == variables.pop():
+                                factor = exp(C.Integral(factor).doit())
+                                r[d] *= factor
+                                r[e] *= factor
+                                matching_hints["1st_exact"] = r
+                                matching_hints["1st_exact_Integral"] = r
+                    else:
+                        matching_hints["1st_exact"] = r
+                        matching_hints["1st_exact_Integral"] = r
+
             except NotImplementedError:
                 # Differentiating the coefficients might fail because of things
                 # like f(2*x).diff(x).  See issue 1525 and issue 1620.
@@ -859,6 +897,51 @@ def classify_ode(eq, func=None, dict=False, prep=True):
                 if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
                         and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                     matching_hints["1st_homogeneous_coeff_best"] = r
+
+        # Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
+        a = Wild('a')
+        b = Wild('b', exclude = [df])
+        c = Wild('c')
+        match = collect(expand(eq), [df, f(x)], evaluate=True).match(a*df + b)
+        if match:
+            match[c] = S.Zero
+            if match[b].is_Add:
+                # Separate the terms having f(x) to match[b] and
+                # remaining to match[c]
+                no_f, match[b] = match[b].as_independent(f(x))
+                match[c] += no_f
+            factor = simplify(match[b].diff(f(x))/match[a])
+            if factor and not factor.has(f(x)):
+                match[b] = factor_terms(match[b])
+                u = match[b].as_independent(f(x), as_Add=False)[1]
+                r2 = {'a': a, 'b': b, 'c': c, 'u': u}
+                r2[b] = match[b] / u
+                r2[a] = match[a] / u.diff(f(x))
+                r2[c] = match[c]
+                matching_hints["almost_linear"] = r2
+                matching_hints["almost_linear_Integral"] = r2
+
+        # Equation of the form y' + (y/x)*H(x^n*y) = 0 that can be reduced to separable form
+        match = collect(expand(reduced_eq), [df], evaluate = True).match(a*df + b)
+        if match:
+            factor = simplify(x/f(x)*match[b]/match[a])
+            # Try representing factor in terms of x^n*y where n is lowest power of x in factor
+            # Removing terms like sqrt(2)*3 from factor.atoms(Mul)
+            for mul in ordered(factor.atoms(Mul)):
+                u = None
+                if mul.has(x):
+                    _, u = mul.as_independent(x, f(x))
+                    break
+            if u and u.has(f(x)):
+                t = Dummy('t')
+                r3 = {'t': t}
+                xpart, ypart = u.as_independent(f(x))
+                test = factor.subs(((u, t), (1/u, 1/t)))
+                free = test.free_symbols
+                if len(free) == 1 and free.pop() == t:
+                    r3.update({'power': xpart.as_base_exp()[1], 'u': test})
+                    matching_hints["separable_reduced"] = r3
+                    matching_hints["separable_reduced_Integral"] = r3
 
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
@@ -980,18 +1063,20 @@ def odesimp(eq, func, order, hint):
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep_Integral',
     ... simplify=False)
     >>> pprint(eq)
-                  x
-                     ----
-                     f(x)
-                       /
-                      |
-           /f(x)\     |  /  1         1     \
-        log|----| -   |  |- -- - -----------| d(u2) = 0
-           \ C1 /     |  |  u2     2    /1 \|
-                      |  |       u2 *sin|--||
-                      |  \              \u2//
-                      |
-                     /
+                            x
+                           ----
+                           f(x)
+                             /
+                            |
+                            |   /      /1 \    \
+                            |  -|u2*sin|--| + 1|
+                            |   \      \u2/    /
+    log(f(x)) = log(C1) +   |  ----------------- d(u2)
+                            |       2    /1 \
+                            |     u2 *sin|--|
+                            |            \u2/
+                            |
+                           /
 
     >>> pprint(odesimp(eq, f(x), 1,
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'
@@ -1075,7 +1160,7 @@ def odesimp(eq, func, order, hint):
         if hint.startswith("1st_homogeneous_coeff"):
             for j, eqi in enumerate(eq):
                 newi = logcombine(eqi, force=True)
-                if newi.lhs.is_Function and newi.lhs.func is log and newi.rhs == 0:
+                if newi.lhs.func is log and newi.rhs == 0:
                     newi = Eq(newi.lhs.args[0]/C1, C1)
                 eq[j] = newi
 
@@ -1939,13 +2024,13 @@ def ode_1st_homogeneous_coeff_best(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_best', simplify=False))
-                   /    2    \
-                   | 3*x     |
-                log|----- + 1|
-                   | 2       |
-       /f(x)\      \f (x)    /
-    log|----| + -------------- = 0
-       \ C1 /         3
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
 
     References
     ==========
@@ -2006,16 +2091,16 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
          \ x  /    \ x  / dx
         >>> pprint(dsolve(genform, f(x),
         ... hint='1st_homogeneous_coeff_subs_dep_div_indep_Integral'))
-                     f(x)
-                     ----
-                      x
+                       f(x)
+                       ----
+                        x
+                         /
+                        |
+                        |       -h(u1)
+        log(x) = C1 +   |  ---------------- d(u1)
+                        |  u1*h(u1) + g(u1)
+                        |
                        /
-                      |
-                      |       -h(u1)
-        log(C1*x) -   |  ---------------- d(u1) = 0
-                      |  u1*h(u1) + g(u1)
-                      |
-                     /
 
     Where u1*h(u1) + g(u1) != 0 and x != 0.
 
@@ -2030,13 +2115,13 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_dep_div_indep', simplify=False))
-                     /          3   \
-                     |3*f(x)   f (x)|
-                  log|------ + -----|
-                     |  x         3 |
-           /x \      \           x  /
-        log|--| + ------------------- = 0
-           \C1/            3
+                          /          3   \
+                          |3*f(x)   f (x)|
+                       log|------ + -----|
+                          |  x         3 |
+                          \           x  /
+    log(x) = log(C1) - -------------------
+                                3
 
     References
     ==========
@@ -2118,12 +2203,12 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
     ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
-          ___________
-         /     2
-        /   3*x
-       /   ----- + 1 *f(x) = C1
-    3 /     2
-    \/     f (x)
+                        /      ___________\
+                        |     /     2     |
+                        |    /   3*x      |
+    log(f(x)) = C1 - log|   /   ----- + 1 |
+                        |3 /     2        |
+                        \\/     f (x)     /
 
     References
     ==========
@@ -2226,6 +2311,10 @@ def homogeneous_order(eq, *symbols):
     if not eq.free_symbols & symset:
         return None
 
+    # assuming order of a nested function can only be equal to zero
+    if isinstance(eq, Function):
+        return None if homogeneous_order(eq.args[0], *tuple(symset)) != 0 else S.Zero
+
     # make the replacement of x with x*t and see if t can be factored out
     t = Dummy('t', positive=True)  # It is sufficient that t > 0
     eqs = separatevars(eq.subs([(i, t*i) for i in symset]), [t], dict=True)[t]
@@ -2291,7 +2380,8 @@ def ode_1st_linear(eq, func, order, match):
     C1 = Symbol('C1')
     t = exp(C.Integral(r[r['b']]/r[r['a']], x))
     tt = C.Integral(t*(-r[r['c']]/r[r['a']]), x)
-    return Eq(f(x), (tt + C1)/t)
+    f = match.get('u', f(x))  # take almost-linear u if present, else f(x)
+    return Eq(f, (tt + C1)/t)
 
 
 def ode_Bernoulli(eq, func, order, match):
@@ -2434,11 +2524,11 @@ def ode_Liouville(eq, func, order, match):
         >>> genform = Eq(diff(f(x),x,x) + g(f(x))*diff(f(x),x)**2 +
         ... h(x)*diff(f(x),x), 0)
         >>> pprint(genform)
-                        2                    2
-                d                d          d
-        g(f(x))*--(f(x))  + h(x)*--(f(x)) + ---(f(x)) = 0
-                dx               dx           2
-                                            dx
+                          2                    2
+                /d       \         d          d
+        g(f(x))*|--(f(x))|  + h(x)*--(f(x)) + ---(f(x)) = 0
+                \dx      /         dx           2
+                                              dx
         >>> pprint(dsolve(genform, f(x), hint='Liouville_Integral'))
                                           f(x)
                   /                     /
@@ -2666,6 +2756,134 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
     else:
         raise ValueError('Unknown value for key "returns".')
 
+def ode_almost_linear(eq, func, order, match):
+    r"""
+    Solves an almost-linear differential equation.
+
+    The general form of an almost linear differential equation is
+    f(x)*g(y)y' + k(x)*l(y) + m(x) = 0 where l'(y) = g(y)
+
+    This can be solved by substituting l(y) = u(y). Making the given
+    substitution reduces it to a linear differential equation
+    of the form u' + P(x)*u + Q(x) = 0 (see the docstring of ode_1st_linear())
+
+    The general solution is
+
+        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy.abc import x, y, n
+        >>> f, g, k, l = map(Function, ['f', 'g', 'k', 'l'])
+        >>> genform = Eq(f(x)*(l(y).diff(y)) + k(x)*l(y) + g(x))
+        >>> pprint(genform)
+             d
+        f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
+             dy
+        >>> pprint(dsolve(genform, hint = 'almost_linear'))
+                /          y*k(x)\
+               |           ------|  -y*k(x)
+               |            f(x) |  -------
+               |     g(x)*e      |    f(x)
+        l(y) = |C1 - ------------|*e
+               \         k(x)    /
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> d = f(x).diff(x)
+    >>> eq = x*d + x*f(x) + 1
+    >>> dsolve(eq, f(x), hint='almost_linear')
+    f(x) == (C1 - Ei(x))*exp(-x)
+    >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
+                         -x
+    f(x) = (C1 - Ei(x))*e
+
+
+    References
+    ==========
+
+    - Joel Moses, "Symbolic Integration - The Stormy Decade",
+        Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    """
+
+    # Since ode_1st_linear has already been implemented, and the
+    # coefficients have been modified to the required form in
+    # classify_ode, just passing eq, func, order and match to
+    # ode_1st_linear will give the required output.
+    return ode_1st_linear(eq, func, order, match)
+
+def ode_separable_reduced(eq, func, order, match):
+    r"""
+    Solves a differential equation that can be reduced to the separable form.
+
+    The general form of this equation is y' + (y/x)*H(x^n*y) = 0
+    This can be solved by substituting u(y) = (x^n * y)
+
+    The equation then reduces to the separable form
+    u'*(1/(u*(power - H(u)))) - (1/x) = 0 (see the docstring of ode_separable())
+
+    The general solution is
+
+        >>> from sympy import Function, dsolve, Eq, pprint
+        >>> from sympy.abc import x, n
+        >>> f, g = map(Function, ['f', 'g'])
+        >>> genform = f(x).diff(x) + (f(x)/x)*g(x**n*f(x))
+        >>> pprint(genform)
+                         / n     \
+        d          f(x)*g\x *f(x)/
+        --(f(x)) + ---------------
+        dx                x
+        >>> pprint(dsolve(genform, hint='separable_reduced'))
+         n
+        x *f(x)
+          /
+         |
+         |         1
+         |    ------------ dy = C1 + log(x)
+         |    y*(n - g(y))
+         |
+         /
+
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> d = f(x).diff(x)
+    >>> eq = (x - x**2*f(x))*d - f(x)
+    >>> dsolve(eq, hint='separable_reduced')
+    [f(x) == (-sqrt(C1*x**2 + 1) + 1)/x, f(x) == (sqrt(C1*x**2 + 1) + 1)/x]
+    >>> pprint(dsolve(eq, hint='separable_reduced'))
+                 ___________                ___________
+                /     2                    /     2
+            - \/  C1*x  + 1  + 1         \/  C1*x  + 1  + 1
+    [f(x) = --------------------, f(x) = ------------------]
+                     x                           x
+
+
+    References
+    ==========
+
+    - Joel Moses, "Symbolic Integration - The Stormy Decade",
+        Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    """
+
+    # Arguments are passed in a way so that they are coherent with the ode_separable function
+    x = func.args[0]
+    f = func.func
+    y = Dummy('y')
+    u = match['u'].subs(match['t'], y)
+    ycoeff = 1/(y*(match['power'] - u))
+    m1 = {y: 1, x: -1/x, 'coeff': 1}
+    m2 = {y: ycoeff, x: 1, 'coeff': 1}
+    r = {'m1': m1, 'm2': m2, 'y': y, 'hint': x**match['power']*f(x)}
+    return ode_separable(eq, func, order, r)
 
 def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
     r"""
@@ -3287,6 +3505,7 @@ def ode_separable(eq, func, order, match):
     f = func.func
     C1 = Symbol('C1')
     r = match  # {'m1':m1, 'm2':m2, 'y':y}
+    u = r.get('hint', f(x))  # Try getting u from separable_reduced function, else get f(x)
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
-        (r['y'], None, f(x))), C.Integral(-r['m1']['coeff']*r['m1'][x]/
+        (r['y'], None, u)), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x) + C1)

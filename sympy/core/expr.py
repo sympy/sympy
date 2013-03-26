@@ -74,8 +74,21 @@ class Expr(Basic, EvalfMixin):
 
         return expr.class_key(), args, exp, coeff
 
-    def __call__(self, *args):
-        # (x+Lambda(y, 2*y))(z) -> x+2*z
+    def rcall(self, *args):
+        """Apply on the argument recursively through the expression tree.
+
+        This method is used to simulate a common abuse of notation for
+        operators. For instance in SymPy the the following will not work:
+
+        ``(x+Lambda(y, 2*y))(z) == x+2*z``,
+
+        however you can use
+
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x,y,z
+        >>> (x + Lambda(y, 2*y)).rcall(z)
+        x + 2*z
+        """
         return Expr._recursive_call(self, args)
 
     @staticmethod
@@ -235,28 +248,32 @@ class Expr(Basic, EvalfMixin):
     @_sympifyit('other', False)  # sympy >  other
     def __ge__(self, other):
         dif = self - other
-        if dif.is_nonnegative != dif.is_negative:
+        if dif.is_nonnegative is not None and \
+                dif.is_nonnegative is not dif.is_negative:
             return dif.is_nonnegative
         return C.GreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
     def __le__(self, other):
         dif = self - other
-        if dif.is_nonpositive != dif.is_positive:
+        if dif.is_nonpositive is not None and \
+                dif.is_nonpositive is not dif.is_positive:
             return dif.is_nonpositive
         return C.LessThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
     def __gt__(self, other):
         dif = self - other
-        if dif.is_positive != dif.is_nonpositive:
+        if dif.is_positive is not None and \
+                dif.is_positive is not dif.is_nonpositive:
             return dif.is_positive
         return C.StrictGreaterThan(self, other)
 
     @_sympifyit('other', False)  # sympy >  other
     def __lt__(self, other):
         dif = self - other
-        if dif.is_negative != dif.is_nonnegative:
+        if dif.is_negative is not None and \
+                dif.is_negative is not dif.is_nonnegative:
             return dif.is_negative
         return C.StrictLessThan(self, other)
 
@@ -590,9 +607,11 @@ class Expr(Basic, EvalfMixin):
             try:
                 # check to see that we can get a value
                 n2 = self._eval_evalf(2)
+                if n2 is None:
+                    raise AttributeError
+                if n2._prec == 1:  # no significance
+                    raise AttributeError
             except AttributeError:
-                n2 = None
-            if n2 is None:
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
@@ -612,9 +631,11 @@ class Expr(Basic, EvalfMixin):
             try:
                 # check to see that we can get a value
                 n2 = self._eval_evalf(2)
+                if n2 is None:
+                    raise AttributeError
+                if n2._prec == 1:  # no significance
+                    raise AttributeError
             except AttributeError:
-                n2 = None
-            if n2 is None:
                 return None
             n, i = self.evalf(2).as_real_imag()
             if not i.is_Number or not n.is_Number:
@@ -955,9 +976,8 @@ class Expr(Basic, EvalfMixin):
 
     def coeff(self, x, n=1, right=False):
         """
-        Returns the coefficient from the term containing "x**n" or None if
-        there is no such term. If ``n`` is zero then all terms independent of
-        x will be returned.
+        Returns the coefficient from the term(s) containing ``x**n`` or None. If ``n``
+        is zero then all terms independent of ``x`` will be returned.
 
         When x is noncommutative, the coeff to the left (default) or right of x
         can be returned. The keyword 'right' is ignored when x is commutative.
@@ -965,7 +985,12 @@ class Expr(Basic, EvalfMixin):
         See Also
         ========
 
-        as_coefficient
+        as_coefficient: separate the expression into a coefficient and factor
+        as_coeff_Add: separate the additive constant from an expression
+        as_coeff_Mul: separate the multiplicative constant from an expression
+        as_independent: separate x-dependent terms/factors from others
+        sympy.polys.polytools.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.nth: like coeff_monomial but powers of monomial terms are used
 
         Examples
         ========
@@ -1056,13 +1081,6 @@ class Expr(Basic, EvalfMixin):
         x
         >>> (n*m + x*m*n).coeff(m*n, right=1)
         1
-
-        See Also
-        ========
-
-        as_coeff_Add: a method to separate the additive constant from an expression
-        as_coeff_Mul: a method to separate the multiplicative constant from an expression
-        as_independent: a method to separate x dependent terms/factors from others
 
         """
         x = sympify(x)
@@ -1262,15 +1280,10 @@ class Expr(Basic, EvalfMixin):
         of 'expr' and 'expr'-free coefficient. If such separation
         is not possible it will return None.
 
-        See Also
-        ========
-
-        coeff
-
         Examples
         ========
 
-        >>> from sympy import E, pi, sin, I, symbols
+        >>> from sympy import E, pi, sin, I, symbols, Poly
         >>> from sympy.abc import x, y
 
         >>> E.as_coefficient(E)
@@ -1279,15 +1292,48 @@ class Expr(Basic, EvalfMixin):
         2
         >>> (2*sin(E)*E).as_coefficient(E)
 
+        Two terms have E in them so a sum is returned. (If one were
+        desiring the coefficient of the term exactly matching E then
+        the constant from the returned expression could be selected.
+        Or, for greater precision, a method of Poly can be used to
+        indicate the desired term from which the coefficient is
+        desired.)
+
         >>> (2*E + x*E).as_coefficient(E)
         x + 2
+        >>> _.args[0]  # just want the exact match
+        2
+        >>> p = Poly(2*E + x*E); p
+        Poly(x*E + 2*E, x, E, domain='ZZ')
+        >>> p.coeff_monomial(E)
+        2
+        >>> p.nth(0,1)
+        2
+
+        Since the following cannot be written as a product containing
+        E as a factor, None is returned. (If the coefficient ``2*x`` is
+        desired then the ``coeff`` method should be used.)
+
         >>> (2*E*x + x).as_coefficient(E)
+        >>> (2*E*x + x).coeff(E)
+        2*x
 
         >>> (E*(x + 1) + x).as_coefficient(E)
 
         >>> (2*pi*I).as_coefficient(pi*I)
         2
         >>> (2*I).as_coefficient(pi*I)
+
+        See Also
+        ========
+
+        coeff: return sum of terms have a given factor
+        as_coeff_Add: separate the additive constant from an expression
+        as_coeff_Mul: separate the multiplicative constant from an expression
+        as_independent: separate x-dependent terms/factors from others
+        sympy.polys.polytools.coeff_monomial: efficiently find the single coefficient of a monomial in Poly
+        sympy.polys.polytools.nth: like coeff_monomial but powers of monomial terms are used
+
 
         """
 
@@ -1540,26 +1586,6 @@ class Expr(Basic, EvalfMixin):
     def as_base_exp(self):
         # a -> b ** e
         return self, S.One
-
-    def as_coeff_terms(self, *deps):
-        """
-        This method is deprecated. Use .as_coeff_mul() instead.
-        """
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
-        SymPyDeprecationWarning(feature="as_coeff_terms()",
-                                useinstead="as_coeff_mul()", issue=3377,
-                                deprecated_since_version="0.7.0").warn()
-        return self.as_coeff_mul(*deps)
-
-    def as_coeff_factors(self, *deps):
-        """
-        This method is deprecated.  Use .as_coeff_add() instead.
-        """
-        from sympy.utilities.exceptions import SymPyDeprecationWarning
-        SymPyDeprecationWarning(feature="as_coeff_factors()",
-                                useinstead="as_coeff_add()", issue=3377,
-                                deprecated_since_version="0.7.0").warn()
-        return self.as_coeff_add(*deps)
 
     def as_coeff_mul(self, *deps):
         """Return the tuple (c, args) where self is written as a Mul, ``m``.
@@ -2064,7 +2090,7 @@ class Expr(Basic, EvalfMixin):
         returns False for expressions that are "polynomials" with symbolic
         exponents.  Thus, you should be able to apply polynomial algorithms to
         expressions for which this returns True, and Poly(expr, \*syms) should
-        work only if and only if expr.is_polynomial(\*syms) returns True. The
+        work if and only if expr.is_polynomial(\*syms) returns True. The
         polynomial does not have to be in expanded form.  If no symbols are
         given, all free symbols in the expression will be used.
 
@@ -2775,10 +2801,10 @@ class Expr(Basic, EvalfMixin):
         from sympy.simplify import ratsimp
         return ratsimp(self)
 
-    def trigsimp(self, deep=False, recursive=False):
+    def trigsimp(self, **args):
         """See the trigsimp function in sympy.simplify"""
         from sympy.simplify import trigsimp
-        return trigsimp(self, deep, recursive)
+        return trigsimp(self, **args)
 
     def radsimp(self):
         """See the radsimp function in sympy.simplify"""

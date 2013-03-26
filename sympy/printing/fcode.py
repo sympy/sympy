@@ -21,14 +21,6 @@ the responsibility for generating properly cased Fortran code to the user.
 from sympy.core import S, C, Add
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-from sympy.functions import sin, cos, tan, asin, acos, atan, atan2, sinh, \
-    cosh, tanh, sqrt, log, exp, Abs, sign, conjugate, Piecewise
-
-implicit_functions = set([
-    sin, cos, tan, asin, acos, atan, atan2, sinh, cosh, tanh, sqrt, log, exp,
-    Abs, sign, conjugate
-])
-
 
 class FCodePrinter(CodePrinter):
     """A printer to convert sympy expressions to strings of Fortran code"""
@@ -43,6 +35,11 @@ class FCodePrinter(CodePrinter):
         'human': True,
         'source_format': 'fixed',
     }
+
+    _implicit_functions = set([
+        "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh",
+        "cosh", "tanh", "sqrt", "log", "exp", "Abs", "sign", "conjugate",
+    ])
 
     def __init__(self, settings=None):
         CodePrinter.__init__(self, settings)
@@ -113,6 +110,7 @@ class FCodePrinter(CodePrinter):
         self._not_supported = set()
 
         lines = []
+        from sympy.functions import Piecewise
         if isinstance(expr, Piecewise):
             # support for top-level Piecewise function
             for i, (e, c) in enumerate(expr.args):
@@ -195,6 +193,7 @@ class FCodePrinter(CodePrinter):
     def _print_Function(self, expr):
         name = self._settings["user_functions"].get(expr.__class__)
         if name is None:
+            from sympy.functions import conjugate
             if expr.func == conjugate:
                 name = "conjg"
             else:
@@ -203,7 +202,7 @@ class FCodePrinter(CodePrinter):
                 # inlined function.
                 # the expression is printed with _print to avoid loops
                 return self._print(expr._imp_(*expr.args))
-            if expr.func not in implicit_functions:
+            if expr.func.__name__ not in self._implicit_functions:
                 self._not_supported.add(expr)
         return "%s(%s)" % (name, self.stringify(expr.args, ", "))
 

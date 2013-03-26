@@ -194,6 +194,33 @@ def test_evalf_bugs():
     assert NS((-x).n()) == '-x'
     assert NS((-2*x).n()) == '-2.00000000000000*x'
     assert NS((-2*x*y).n()) == '-2.00000000000000*x*y'
+    assert cos(x).n(subs={x: 1+I}) == cos(x).subs(x, 1+I).n()
+    #3561. Also NaN != mpmath.nan
+    # In this order:
+    # 0*nan, 0/nan, 0*inf, 0/inf
+    # 0+nan, 0-nan, 0+inf, 0-inf
+    # >>> n = Some Number
+    # n*nan, n/nan, n*inf, n/inf
+    # n+nan, n-nan, n+inf, n-inf
+    assert (0*sin(oo)).n() == S.Zero
+    assert (0/sin(oo)).n() == S.Zero
+    assert (0*E**(oo)).n() == S.NaN
+    assert (0/E**(oo)).n() == S.Zero
+
+    assert (0+sin(oo)).n() == S.NaN
+    assert (0-sin(oo)).n() == S.NaN
+    assert (0+E**(oo)).n() == S.Infinity
+    assert (0-E**(oo)).n() == S.NegativeInfinity
+
+    assert (5*sin(oo)).n() == S.NaN
+    assert (5/sin(oo)).n() == S.NaN
+    assert (5*E**(oo)).n() == S.Infinity
+    assert (5/E**(oo)).n() == S.Zero
+
+    assert (5+sin(oo)).n() == S.NaN
+    assert (5-sin(oo)).n() == S.NaN
+    assert (5+E**(oo)).n() == S.Infinity
+    assert (5-E**(oo)).n() == S.NegativeInfinity
 
 
 def test_evalf_integer_parts():
@@ -206,9 +233,9 @@ def test_evalf_integer_parts():
     # equals, as a fallback, can still fail but it might succeed as here
     assert ceiling(10*(sin(1)**2 + cos(1)**2)) == 10
 
-    assert int(floor(factorial(50)/E, evaluate=False).evalf()) == \
+    assert int(floor(factorial(50)/E, evaluate=False).evalf(70)) == \
         11188719610782480504630258070757734324011354208865721592720336800L
-    assert int(ceiling(factorial(50)/E, evaluate=False).evalf()) == \
+    assert int(ceiling(factorial(50)/E, evaluate=False).evalf(70)) == \
         11188719610782480504630258070757734324011354208865721592720336801L
     assert int(floor((GoldenRatio**999 / sqrt(5) + Rational(1, 2)))
                .evalf(1000)) == fibonacci(999)

@@ -4,15 +4,23 @@ python:
   - 2.6
   - 2.7
   - 3.2
+  - 3.3
+matrix:
+  include:
+    - python: 2.7
+      env: TEST_GMPY="true"
+    - python: 3.3
+      env: TEST_GMPY="true"
+before_install:
+  - if [[ "${TEST_GMPY}" == "true" ]]; then
+      sudo apt-get update -qq;
+      sudo apt-get install -qq libgmp-dev;
+      pip install "gmpy==1.16";
+    fi
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' ]]; then python bin/use2to3; cd py3k-sympy; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then python bin/use2to3; cd py3k-sympy; fi
   - python setup.py install
 script:
-  # We change directories to make sure that python won't find the copy
-  # of sympy in the source directory.
-  - mkdir empty
-  - cd empty
-  - "echo -e \"import sympy\\nif not sympy.test(): raise Exception('Tests failed')\" | python"
-  - "echo -e \"import sympy\\nif not sympy.doctest(): raise Exception('Doctests failed')\" | python"
+  - bin/test_travis.sh
 notifications:
   email: false

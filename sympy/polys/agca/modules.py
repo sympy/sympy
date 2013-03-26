@@ -442,7 +442,7 @@ class FreeModulePolyRing(FreeModule):
     """
 
     def __init__(self, ring, rank):
-        from sympy.polys.domains.polynomialring import PolynomialRingBase
+        from sympy.polys.domains.old_polynomialring import PolynomialRingBase
         FreeModule.__init__(self, ring, rank)
         if not isinstance(ring, PolynomialRingBase):
             raise NotImplementedError('This implementation only works over '

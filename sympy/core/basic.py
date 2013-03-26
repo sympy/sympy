@@ -1495,6 +1495,9 @@ class Atom(Basic):
         from sympy.core import S
         return self.class_key(), (1, (str(self),)), S.One.sort_key(), S.One
 
+    def _eval_simplify(self, ratio, measure):
+        return self
+
     @property
     def _sorted_args(self):
         # this is here as a safeguard against accidentally using _sorted_args

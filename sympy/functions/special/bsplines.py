@@ -7,21 +7,24 @@ from sympy.core.sets import Interval
 def _add_splines(c, b1, d, b2):
     """Construct c*b1 + d*b2."""
     if b1 == S.Zero or c == S.Zero:
-        return expand(piecewise_fold(d*b2))
-    if b2 == S.Zero or d == S.Zero:
-        return expand(piecewise_fold(c*b1))
-    new_args = []
-    n_intervals = len(b1.args)
-    assert(n_intervals == len(b2.args))
-    new_args.append((expand(c*b1.args[0].expr), b1.args[0].cond))
-    for i in range(1, n_intervals - 1):
-        new_args.append((
-            expand(c*b1.args[i].expr + d*b2.args[i - 1].expr),
-            b1.args[i].cond
-        ))
-    new_args.append((expand(d*b2.args[-2].expr), b2.args[-2].cond))
-    new_args.append(b2.args[-1])
-    return Piecewise(*new_args)
+        rv = piecewise_fold(d*b2)
+    elif b2 == S.Zero or d == S.Zero:
+        rv = piecewise_fold(c*b1)
+    else:
+        new_args = []
+        n_intervals = len(b1.args)
+        assert(n_intervals == len(b2.args))
+        new_args.append((c*b1.args[0].expr, b1.args[0].cond))
+        for i in range(1, n_intervals - 1):
+            new_args.append((
+                c*b1.args[i].expr + d*b2.args[i - 1].expr,
+                b1.args[i].cond
+            ))
+        new_args.append((d*b2.args[-2].expr, b2.args[-2].cond))
+        new_args.append(b2.args[-1])
+        rv = Piecewise(*new_args)
+
+    return rv.expand()
 
 
 def bspline_basis(d, knots, n, x, close=True):
@@ -87,7 +90,7 @@ def bspline_basis(d, knots, n, x, close=True):
     n_knots = len(knots)
     n_intervals = n_knots - 1
     if n + d + 1 > n_intervals:
-        raise ValueError('n+d+1 must not exceed len(knots)-1')
+        raise ValueError('n + d + 1 must not exceed len(knots) - 1')
     if d == 0:
         result = Piecewise(
             (S.One, Interval(knots[n], knots[n + 1], False,

@@ -21,7 +21,32 @@ def _free_symbols(function, limits):
 
 
 class Sum(Expr):
-    """Represents unevaluated summation."""
+    """Represents unevaluated summation.
+
+    Sum represents a finite or infinite series, with the first argument being
+    the general form of terms in the series, and the second argument being
+    (dummy_variable, start, end), with dummy_variable taking all integer values
+    from start to end.  In accordance with long-standing mathematical
+    convention, the end term is included in the summation.
+
+    >>> from sympy.abc import k, m, n, x
+    >>> from sympy import Sum, factorial, oo
+    >>> Sum(k,(k,1,m))
+    Sum(k, (k, 1, m))
+    >>> Sum(k,(k,1,m)).doit()
+    m**2/2 + m/2
+    >>> Sum(k**2,(k,1,m))
+    Sum(k**2, (k, 1, m))
+    >>> Sum(k**2,(k,1,m)).doit()
+    m**3/3 + m**2/2 + m/6
+    >>> Sum(x**k,(k,0,oo))
+    Sum(x**k, (k, 0, oo))
+    >>> Sum(x**k,(k,0,oo)).doit()
+    Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
+    >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
+    exp(x)
+
+    """
 
     __slots__ = ['is_commutative']
 
@@ -134,9 +159,13 @@ class Sum(Expr):
         return self.function.is_zero or not self.free_symbols
 
     def doit(self, **hints):
-        #if not hints.get('sums', True):
-        #    return self
-        f = self.function
+        from sympy.functions import Piecewise
+
+        if hints.get('deep', True):
+            f = self.function.doit(**hints)
+        else:
+            f = self.function
+
         for limit in self.limits:
             i, a, b = limit
             dif = b - a
@@ -148,9 +177,13 @@ class Sum(Expr):
                 return self
 
         if hints.get('deep', True):
-            return f.doit(**hints)
-        else:
-            return f
+            # eval_sum could return partially unevaluated
+            # result with Piecewise.  In this case we won't
+            # doit() recursively.
+            if not isinstance(f, Piecewise):
+                return f.doit(**hints)
+
+        return f
 
     def _eval_adjoint(self):
         return Sum(self.function.adjoint(), *self.limits)
@@ -475,23 +508,22 @@ def eval_sum_symbolic(f, limits):
                 else:
                     return C.harmonic(b, abs(n)) - C.harmonic(a - 1, abs(n))
 
-    # Geometric terms
-    c1 = C.Wild('c1', exclude=[i])
-    c2 = C.Wild('c2', exclude=[i])
-    c3 = C.Wild('c3', exclude=[i])
-
-    e = f.match(c1**(c2*i + c3))
-
-    if e is not None:
-        c1 = c1.subs(e)
-        c2 = c2.subs(e)
-        c3 = c3.subs(e)
-
-        # TODO: more general limit handling
-        return c1**c3 * (c1**(a*c2) - c1**(c2 + b*c2)) / (1 - c1**c2)
-
     if not (a.has(S.Infinity, S.NegativeInfinity) or
             b.has(S.Infinity, S.NegativeInfinity)):
+        # Geometric terms
+        c1 = C.Wild('c1', exclude=[i])
+        c2 = C.Wild('c2', exclude=[i])
+        c3 = C.Wild('c3', exclude=[i])
+
+        e = f.match(c1**(c2*i + c3))
+
+        if e is not None:
+            c1 = c1.subs(e)
+            c2 = c2.subs(e)
+            c3 = c3.subs(e)
+
+            return c1**c3 * (c1**(a*c2) - c1**(c2 + b*c2)) / (1 - c1**c2)
+
         r = gosper_sum(f, (i, a, b))
 
         if not r in (None, S.NaN):
@@ -584,4 +616,12 @@ def eval_sum_hyper(f, (i, a, b)):
     # Now b == oo, a != -oo
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
+        r, c = res
+        if c is False:
+            if r.is_number:
+                if f.is_positive or f.is_zero:
+                    return S.Infinity
+                elif f.is_negative:
+                    return S.NegativeInfinity
+            return None
         return Piecewise(res, (Sum(f, (i, a, b)), True))

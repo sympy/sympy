@@ -809,7 +809,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 class SymPyTests(object):
 
     def __init__(self, reporter, kw="", post_mortem=False,
-                 seed=random.random()):
+                 seed=None):
         self._post_mortem = post_mortem
         self._kw = kw
         self._count = 0
@@ -817,7 +817,7 @@ class SymPyTests(object):
         self._reporter = reporter
         self._reporter.root_dir(self._root_dir)
         self._testfiles = []
-        self._seed = seed
+        self._seed = seed if seed is not None else random.random()
 
     def test(self, sort=False, timeout=False, slow=False):
         """
@@ -863,8 +863,8 @@ class SymPyTests(object):
         if "XFAIL" in gl:
             pytestfile = inspect.getsourcefile(gl["XFAIL"])
         pytestfile2 = ""
-        if "SLOW" in gl:
-            pytestfile2 = inspect.getsourcefile(gl["SLOW"])
+        if "slow" in gl:
+            pytestfile2 = inspect.getsourcefile(gl["slow"])
         disabled = gl.get("disabled", False)
         if disabled:
             funcs = []
@@ -1554,13 +1554,20 @@ class PyTestReporter(Reporter):
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
         self.write("cache:              %s\n" % USE_CACHE)
-        from sympy.polys.domains import GROUND_TYPES
-        self.write("ground types:       %s\n" % GROUND_TYPES)
+        from sympy.core.compatibility import GROUND_TYPES, HAS_GMPY
+        version = ''
+        if GROUND_TYPES =='gmpy':
+            if HAS_GMPY == 1:
+                import gmpy
+            elif HAS_GMPY == 2:
+                import gmpy2 as gmpy
+            version = gmpy.version()
+        self.write("ground types:       %s %s\n" % (GROUND_TYPES, version))
         if seed is not None:
             self.write("random seed:        %d\n" % seed)
         from .misc import HASH_RANDOMIZATION
         self.write("hash randomization: ")
-        hash_seed = os.getenv("PYTHONHASHSEED")
+        hash_seed = os.getenv("PYTHONHASHSEED") or '0'
         if HASH_RANDOMIZATION and (hash_seed == "random" or int(hash_seed)):
             self.write("on (PYTHONHASHSEED=%s)\n" % hash_seed)
         else:

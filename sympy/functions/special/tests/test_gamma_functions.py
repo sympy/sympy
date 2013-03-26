@@ -1,7 +1,8 @@
 from sympy import (
     Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
-    cos, O, cancel, lowergamma, exp, erf, beta, exp_polar)
+    cos, O, cancel, lowergamma, exp, erf, beta, exp_polar, harmonic, zeta,
+    factorial)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       test_numerically as tn)
@@ -199,7 +200,17 @@ def test_polygamma():
     assert t(3, 4)
     assert t(2, 3)
 
+    assert polygamma(0, x).rewrite(zeta) == polygamma(0, x)
+    assert polygamma(1, x).rewrite(zeta) == zeta(2, x)
+    assert polygamma(2, x).rewrite(zeta) == -2*zeta(3, x)
+
     assert polygamma(3, 7*x).diff(x) == 7*polygamma(4, 7*x)
+
+    assert polygamma(0, x).rewrite(harmonic) == harmonic(x - 1) - EulerGamma
+    assert polygamma(2, x).rewrite(harmonic) == 2*harmonic(x - 1, 3) - 2*zeta(3)
+    ni = Symbol("n", integer=True)
+    assert polygamma(ni, x).rewrite(harmonic) == (-1)**(ni + 1)*(-harmonic(x - 1, ni + 1)
+                                                                 + zeta(ni + 1))*factorial(ni)
 
     # Polygamma of non-negative integer order is unbranched:
     from sympy import exp_polar

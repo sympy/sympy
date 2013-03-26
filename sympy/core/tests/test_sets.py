@@ -496,3 +496,8 @@ def test_universalset():
     x = Symbol('x')
     assert U.as_relational(x) is True
     assert U.union(Interval(2, 4)) == U
+
+
+def test_Interval_free_symbols():
+    x = Symbol('x', real=True)
+    assert set(Interval(0, x).free_symbols) == set((x,))

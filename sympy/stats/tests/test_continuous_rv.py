@@ -1,20 +1,30 @@
 from sympy.stats import (P, E, where, density, variance, covariance, skewness,
                          given, pspace, cdf, ContinuousRV, sample,
-                         Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, Dagum,
-                         Exponential, Gamma, Laplace, Logistic, LogNormal,
-                         Maxwell, Nakagami, Normal, Pareto, Rayleigh,
-                         StudentT, Triangular, Uniform, UniformSum, Weibull,
-                         WignerSemicircle)
+                         Arcsin, Benini, Beta, BetaPrime, Cauchy,
+                         Chi, ChiSquared,
+                         ChiNoncentral, Dagum, Erlang, Exponential,
+                         FDistribution, FisherZ, Frechet, Gamma, GammaInverse,
+                         Kumaraswamy, Laplace, Logistic,
+                         LogNormal, Maxwell, Nakagami, Normal, Pareto,
+                         QuadraticU, RaisedCosine, Rayleigh, StudentT,
+                         Triangular, Uniform, UniformSum, VonMises, Weibull,
+                         WignerSemicircle, correlation, moment, cmoment,
+                         smoment)
+
 from sympy import (Symbol, Dummy, Abs, exp, S, N, pi, simplify, Interval, erf,
                    Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
-                   Piecewise, Integral, sin, Lambda, factorial, binomial,
+                   Eq, log, lowergamma, Sum, symbols, sqrt, And, gamma, beta,
+                   Piecewise, Integral, sin, cos, besseli, factorial, binomial,
                    floor)
-from sympy.utilities.pytest import raises, XFAIL
+
+
+from sympy.stats.crv_types import NormalDistribution
+
+from sympy.utilities.pytest import raises, XFAIL, slow
 
 oo = S.Infinity
 
-_x = Dummy("x")
-_z = Dummy("z")
+x, y, z = map(Symbol, 'xyz')
 
 
 def test_single_normal():
@@ -68,11 +78,21 @@ def test_multiple_normal():
     assert variance(X + X) == 4
     assert covariance(X, Y) == 0
     assert covariance(2*X + Y, -X) == -2*variance(X)
-
+    assert skewness(X) == 0
+    assert skewness(X + Y) == 0
+    assert correlation(X, Y) == 0
+    assert correlation(X, X + Y) == correlation(X, X - Y)
+    assert moment(X, 2) == 1
+    assert cmoment(X, 3) == 0
+    assert moment(X + Y, 4) == 12
+    assert cmoment(X, 2) == variance(X)
+    assert smoment(X*X, 2) == 1
+    assert smoment(X + Y, 3) == skewness(X + Y)
     assert E(X, Eq(X + Y, 0)) == 0
     assert variance(X, Eq(X + Y, 0)) == S.Half
 
 
+@slow
 def test_symbolic():
     mu1, mu2 = symbols('mu1 mu2', real=True, bounded=True)
     s1, s2 = symbols('sigma1 sigma2', real=True, bounded=True, positive=True)
@@ -140,7 +160,7 @@ def test_arcsin():
     b = Symbol("b", real=True)
 
     X = Arcsin('x', a, b)
-    assert density(X) == Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
+    assert density(X)(x) == 1/(pi*sqrt((-x + b)*(x - a)))
 
 
 def test_benini():
@@ -149,8 +169,8 @@ def test_benini():
     sigma = Symbol("sigma", positive=True)
 
     X = Benini('x', alpha, b, sigma)
-    assert density(X) == (Lambda(_x, (alpha/_x + 2*b*log(_x/sigma)/_x)
-                          *exp(-alpha*log(_x/sigma) - b*log(_x/sigma)**2)))
+    assert density(X)(x) == ((alpha/x + 2*b*log(x/sigma)/x)
+                          *exp(-alpha*log(x/sigma) - b*log(x/sigma)**2))
 
 
 def test_beta():
@@ -180,8 +200,8 @@ def test_betaprime():
     beta = Symbol("beta", positive=True)
 
     X = BetaPrime('x', alpha, beta)
-    assert density(X) == (Lambda(_x, _x**(alpha - 1)*(_x + 1)**(-alpha - beta)
-                          *gamma(alpha + beta)/(gamma(alpha)*gamma(beta))))
+    assert density(X)(x) == (x**(alpha - 1)*(x + 1)**(-alpha - beta)
+                          *gamma(alpha + beta)/(gamma(alpha)*gamma(beta)))
 
 
 def test_cauchy():
@@ -189,16 +209,28 @@ def test_cauchy():
     gamma = Symbol("gamma", positive=True)
 
     X = Cauchy('x', x0, gamma)
-    assert density(X) == Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
+    assert density(X)(x) == 1/(pi*gamma*(1 + (x - x0)**2/gamma**2))
 
 
 def test_chi():
     k = Symbol("k", integer=True)
 
     X = Chi('x', k)
-    assert density(X) == (Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)
-                          *exp(-_x**2/2)/gamma(k/2)))
+    assert density(X)(x) == 2**(-k/2 + 1)*x**(k - 1)*exp(-x**2/2)/gamma(k/2)
 
+def test_chi_noncentral():
+    k = Symbol("k", integer=True)
+    l = Symbol("l")
+
+    X = ChiNoncentral("x", k, l)
+    assert density(X)(x) == (x**k*l*(x*l)**(-k/2)*
+                          exp(-x**2/2 - l**2/2)*besseli(k/2 - 1, x*l))
+
+def test_chi_squared():
+    k = Symbol("k", integer=True)
+
+    X = ChiSquared('x', k)
+    assert density(X)(x) == 2**(-k/2)*x**(k/2 - 1)*exp(-x/2)/gamma(k/2)
 
 def test_dagum():
     p = Symbol("p", positive=True)
@@ -206,9 +238,14 @@ def test_dagum():
     a = Symbol("a", positive=True)
 
     X = Dagum('x', p, a, b)
-    assert density(X) == Lambda(_x,
-                                a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
+    assert density(X)(x) == a*p*(x/b)**(a*p)*((x/b)**a + 1)**(-p - 1)/x
 
+def test_erlang():
+    k = Symbol("k", integer=True, positive=True)
+    l = Symbol("l", positive=True)
+
+    X = Erlang("x", k, l)
+    assert density(X)(x) == x**(k - 1)*l**k*exp(-x*l)/gamma(k)
 
 def test_exponential():
     rate = Symbol('lambda', positive=True, real=True, bounded=True)
@@ -217,24 +254,52 @@ def test_exponential():
     assert E(X) == 1/rate
     assert variance(X) == 1/rate**2
     assert skewness(X) == 2
+    assert skewness(X) == smoment(X, 3)
+    assert smoment(2*X, 4) == smoment(X, 4)
+    assert moment(X, 3) == 3*2*1/rate**3
     assert P(X > 0) == S(1)
     assert P(X > 1) == exp(-rate)
     assert P(X > 10) == exp(-10*rate)
 
     assert where(X <= 1).set == Interval(0, 1)
 
+def test_f_distribution():
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=True)
+
+    X = FDistribution("x", d1, d2)
+    assert density(X)(x) == (d2**(d2/2)*sqrt((x*d1)**d1 *
+        (x*d1 + d2)**(-d1 - d2))*gamma(d1/2 + d2/2)/(x*gamma(d1/2)*gamma(d2/2)))
+
+def test_fisher_z():
+    d1 = Symbol("d1", positive=True)
+    d2 = Symbol("d2", positive=True)
+
+    X = FisherZ("x", d1, d2)
+    assert density(X)(x) == (2*d1**(d1/2)*d2**(d2/2)*
+            (d1*exp(2*x) + d2)**(-d1/2 - d2/2)*
+             exp(x*d1)*gamma(d1/2 + d2/2)/(gamma(d1/2)*gamma(d2/2)))
+
+def test_frechet():
+    a = Symbol("a", positive=True)
+    s = Symbol("s", positive=True)
+    m = Symbol("m", real=True)
+
+    X = Frechet("x", a, s=s, m=m)
+    assert density(X)(x) == a*((x - m)/s)**(-a - 1)*exp(-((x - m)/s)**(-a))/s
 
 def test_gamma():
     k = Symbol("k", positive=True)
     theta = Symbol("theta", positive=True)
 
     X = Gamma('x', k, theta)
-    assert density(X) == Lambda(_x,
-                                _x**(k - 1)*theta**(-k)*exp(-_x/theta)/gamma(k))
-    assert cdf(X, meijerg=True) == Lambda(_z, Piecewise(
-                                          (-k*lowergamma(k, 0)/gamma(k + 1) + k*lowergamma(k, _z/theta)/gamma(k + 1), _z >= 0), (0, True)))
-    assert variance(X) == (-theta**2*gamma(k + 1)**2/gamma(k)**2 +
-           theta*theta**(-k)*theta**(k + 1)*gamma(k + 2)/gamma(k))
+    assert density(X)(x) == x**(k - 1)*theta**(-k)*exp(-x/theta)/gamma(k)
+    assert cdf(X, meijerg=True)(z) == Piecewise(
+            (-k*lowergamma(k, 0)/gamma(k + 1) +
+                k*lowergamma(k, z/theta)/gamma(k + 1), z >= 0),
+            (0, True))
+    # assert simplify(variance(X)) == k*theta**2  # handled numerically below
+    assert E(X) == moment(X, 1)
 
     k, theta = symbols('k theta', real=True, bounded=True, positive=True)
     X = Gamma('x', k, theta)
@@ -244,23 +309,33 @@ def test_gamma():
     # The following is too slow
     # assert simplify(skewness(X)).subs(k, 5) == (2/sqrt(k)).subs(k, 5)
 
+def test_gamma_inverse():
+    a = Symbol("a", positive=True)
+    b = Symbol("b", positive=True)
+
+    X = GammaInverse("x", a, b)
+    assert density(X)(x) == x**(-a - 1)*b**a*exp(-b/x)/gamma(a)
+
+def test_kumaraswamy():
+    a = Symbol("a", positive=True)
+    b = Symbol("b", positive=True)
+
+    X = Kumaraswamy("x", a, b)
+    assert density(X)(x) == x**(a - 1)*a*b*(-x**a + 1)**(b - 1)
 
 def test_laplace():
     mu = Symbol("mu")
     b = Symbol("b", positive=True)
 
     X = Laplace('x', mu, b)
-    assert density(X) == Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
-
+    assert density(X)(x) == exp(-Abs(x - mu)/b)/(2*b)
 
 def test_logistic():
     mu = Symbol("mu", real=True)
     s = Symbol("s", positive=True)
 
     X = Logistic('x', mu, s)
-    assert density(X) == Lambda(_x,
-                                exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
-
+    assert density(X)(x) == exp((-x + mu)/s)/(s*(exp((-x + mu)/s) + 1)**2)
 
 def test_lognormal():
     mean = Symbol('mu', real=True, bounded=True)
@@ -282,20 +357,19 @@ def test_lognormal():
     sigma = Symbol("sigma", positive=True)
 
     X = LogNormal('x', mu, sigma)
-    assert density(X) == (Lambda(_x, sqrt(2)*exp(-(-mu + log(_x))**2
-                                    /(2*sigma**2))/(2*_x*sqrt(pi)*sigma)))
+    assert density(X)(x) == (sqrt(2)*exp(-(-mu + log(x))**2
+                                    /(2*sigma**2))/(2*x*sqrt(pi)*sigma))
 
     X = LogNormal('x', 0, 1)  # Mean 0, standard deviation 1
-    assert density(X) == Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
-
+    assert density(X)(x) == sqrt(2)*exp(-log(x)**2/2)/(2*x*sqrt(pi))
 
 def test_maxwell():
     a = Symbol("a", positive=True)
 
     X = Maxwell('x', a)
 
-    assert density(X) == (Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/
-        (sqrt(pi)*a**3)))
+    assert density(X)(x) == (sqrt(2)*x**2*exp(-x**2/(2*a**2))/
+        (sqrt(pi)*a**3))
     assert E(X) == 2*sqrt(2)*a/sqrt(pi)
     assert simplify(variance(X)) == a**2*(-8 + 3*pi)/pi
 
@@ -305,13 +379,13 @@ def test_nakagami():
     omega = Symbol("omega", positive=True)
 
     X = Nakagami('x', mu, omega)
-    assert density(X) == (Lambda(_x, 2*_x**(2*mu - 1)*mu**mu*omega**(-mu)
-                                *exp(-_x**2*mu/omega)/gamma(mu)))
+    assert density(X)(x) == (2*x**(2*mu - 1)*mu**mu*omega**(-mu)
+                                *exp(-x**2*mu/omega)/gamma(mu))
     assert simplify(E(X, meijerg=True)) == (sqrt(mu)*sqrt(omega)
            *gamma(mu + S.Half)/gamma(mu + 1))
-    assert (simplify(variance(X, meijerg=True)) ==
-            (omega*(gamma(mu)*gamma(mu + 1)
-                    - gamma(mu + S.Half)**2)/(gamma(mu)*gamma(mu + 1))))
+    assert simplify(variance(X, meijerg=True)) == (
+        omega*(gamma(mu)*gamma(mu + 1) - gamma(mu + S.Half)**2)/
+        (gamma(mu)*gamma(mu + 1)))
 
 
 def test_pareto():
@@ -338,11 +412,20 @@ def test_pareto_numeric():
     # Skewness tests too slow. Try shortcutting function?
 
 
+def test_raised_cosine():
+    mu = Symbol("mu", real=True)
+    s = Symbol("s", positive=True)
+
+    X = RaisedCosine("x", mu, s)
+    assert density(X)(x) == (Piecewise(((cos(pi*(x - mu)/s) + 1)/(2*s),
+                          And(x <= mu + s, mu - s <= x)), (0, True)))
+
+
 def test_rayleigh():
     sigma = Symbol("sigma", positive=True)
 
     X = Rayleigh('x', sigma)
-    assert density(X) == Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
+    assert density(X)(x) ==  x*exp(-x**2/(2*sigma**2))/sigma**2
     assert E(X) == sqrt(2)*sqrt(pi)*sigma/2
     assert variance(X) == -pi*sigma**2/2 + 2*sigma**2
 
@@ -351,8 +434,8 @@ def test_studentt():
     nu = Symbol("nu", positive=True)
 
     X = StudentT('x', nu)
-    assert density(X) == (Lambda(_x, (_x**2/nu + 1)**(-nu/2 - S.Half)
-                        *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2))))
+    assert density(X)(x) == ((x**2/nu + 1)**(-nu/2 - S.Half)
+                        *gamma(nu/2 + S.Half)/(sqrt(pi)*sqrt(nu)*gamma(nu/2)))
 
 
 @XFAIL
@@ -362,13 +445,20 @@ def test_triangular():
     c = Symbol("c")
 
     X = Triangular('x', a, b, c)
-    assert Density(X) == Lambda(_x,
-             Piecewise(
-                 ((2*_x - 2*a)/((-a + b)*(-a + c)), And(a <= _x, _x < c)),
-                 (2/(-a + b), _x == c),
-                 ((-2*_x + 2*b)/((-a + b)*(b - c)), And(_x <= b, c < _x)),
-                 (0, True)))
+    assert density(X)(x) == Piecewise(
+                 ((2*x - 2*a)/((-a + b)*(-a + c)), And(a <= x, x < c)),
+                 (2/(-a + b), x == c),
+                 ((-2*x + 2*b)/((-a + b)*(b - c)), And(x <= b, c < x)),
+                 (0, True))
 
+
+def test_quadratic_u():
+    a = Symbol("a", real=True)
+    b = Symbol("b", real=True)
+
+    X = QuadraticU("x", a, b)
+    assert density(X)(x) == (Piecewise((12*(x - a/2 - b/2)**2/(-a + b)**3,
+                          And(x <= b, a <= x)), (0, True)))
 
 def test_uniform():
     l = Symbol('l', real=True, bounded=True)
@@ -392,8 +482,16 @@ def test_uniformsum():
     _k = Symbol("k")
 
     X = UniformSum('x', n)
-    assert density(X) == (Lambda(_x, Sum((-1)**_k*(-_k + _x)**(n - 1)
-                        *binomial(n, _k), (_k, 0, floor(_x)))/factorial(n - 1)))
+    assert density(X)(x) == (Sum((-1)**_k*(-_k + x)**(n - 1)
+                        *binomial(n, _k), (_k, 0, floor(x)))/factorial(n - 1))
+
+
+def test_von_mises():
+    mu = Symbol("mu")
+    k = Symbol("k", positive=True)
+
+    X = VonMises("x", mu, k)
+    assert density(X)(x) == exp(k*cos(x - mu))/(2*pi*besseli(0, k))
 
 
 def test_weibull():
@@ -421,7 +519,7 @@ def test_wignersemicircle():
     R = Symbol("R", positive=True)
 
     X = WignerSemicircle('x', R)
-    assert density(X) == Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
+    assert density(X)(x) == 2*sqrt(-x**2 + R**2)/(pi*R**2)
     assert E(X) == 0
 
 
@@ -478,3 +576,36 @@ def test_unevaluated():
 def test_probability_unevaluated():
     T = Normal('T', 30, 3)
     assert type(P(T > 33, evaluate=False)) == Integral
+
+def test_density_unevaluated():
+    X = Normal('X', 0, 1)
+    Y = Normal('Y', 0, 2)
+    assert isinstance(density(X+Y, evaluate=False)(z), Integral)
+
+
+def test_NormalDistribution():
+    nd = NormalDistribution(0, 1)
+    x = Symbol('x')
+    assert nd.cdf(x) == erf(sqrt(2)*x/2)/2 + S.One/2
+    assert isinstance(nd.sample(), float) or nd.sample().is_Number
+    assert nd.expectation(1, x) == 1
+    assert nd.expectation(x, x) == 0
+    assert nd.expectation(x**2, x) == 1
+
+def test_random_parameters():
+    mu = Normal('mu', 2, 3)
+    meas = Normal('T', mu, 1)
+    assert density(meas, evaluate=False)(z)
+    #assert density(meas, evaluate=False)(z) == Integral(mu.pspace.pdf *
+    #        meas.pspace.pdf, (mu.symbol, -oo, oo)).subs(meas.symbol, z)
+
+def test_random_parameters_given():
+    mu = Normal('mu', 2, 3)
+    meas = Normal('T', mu, 1)
+    assert given(meas, Eq(mu, 5)) == Normal('T', 5, 1)
+
+def test_conjugate_priors():
+    mu = Normal('mu', 2, 3)
+    x = Normal('x', mu, 1)
+    assert isinstance(simplify(density(mu, Eq(x, y), evaluate=False)(z)),
+            Integral)

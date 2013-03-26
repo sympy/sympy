@@ -549,14 +549,6 @@ def numbered_symbols(prefix='x', cls=None, start=0, *args, **assumptions):
     sym : Symbol
         The subscripted symbols.
     """
-    if 'dummy' in assumptions:
-        SymPyDeprecationWarning(
-            feature="'dummy=True' to create numbered Dummy symbols",
-            useinstead="cls=Dummy",
-            issue=3378, deprecated_since_version="0.7.0",
-        ).warn()
-        if assumptions.pop('dummy'):
-            cls = C.Dummy
 
     if cls is None:
         # We can't just make the default cls=C.Symbol because it isn't
@@ -985,6 +977,8 @@ def multiset_permutations(m, k=None, g=None):
     do = [gi for gi in g if gi[1] > 0]
     SUM = sum([gi[1] for gi in do])
     if not do or size is not None and (size > SUM or size < 1):
+        if size < 1:
+            yield []
         return
     elif size == 1:
         for k, v in do:
@@ -1192,13 +1186,15 @@ def multiset_partitions(multiset, m=None):
 
     When all the elements are the same in the multiset, the order
     of the returned partitions is determined by the ``partitions``
-    routine.
+    routine. If one is counting partitions then it is better to use
+    the ``nT`` function.
 
     See Also
     ========
     partitions
     sympy.combinatorics.partitions.Partition
     sympy.combinatorics.partitions.IntegerPartition
+    sympy.functions.combinatorial.numbers.nT
     """
 
     if type(multiset) is int:

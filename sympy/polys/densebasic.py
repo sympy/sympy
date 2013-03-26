@@ -6,8 +6,6 @@ from sympy.polys.monomialtools import (
     monomial_key, monomial_min, monomial_div
 )
 
-from sympy.polys.distributedpolys import sdp_sort
-
 from sympy.utilities import cythonized
 
 import random
@@ -1655,13 +1653,14 @@ def dmp_eject(f, u, K, front=False):
     """
     f, h = dmp_to_dict(f, u), {}
 
+    n = len(K.gens)
     v = u - len(K.gens) + 1
 
     for monom, c in f.iteritems():
         if front:
-            g_monom, f_monom = monom[:v], monom[v:]
+            g_monom, f_monom = monom[:n], monom[n:]
         else:
-            f_monom, g_monom = monom[:v], monom[v:]
+            g_monom, f_monom = monom[-n:], monom[:-n]
 
         if f_monom in h:
             h[f_monom][g_monom] = c
@@ -1778,6 +1777,9 @@ def dmp_list_terms(f, u, K, order=None):
     [((1, 1), 1), ((1, 0), 1), ((0, 1), 2), ((0, 0), 3)]
 
     """
+    def sort(terms, O):
+        return sorted(terms, key=lambda term: O(term[0]), reverse=True)
+
     terms = _rec_list_terms(f, u, ())
 
     if not terms:
@@ -1786,7 +1788,7 @@ def dmp_list_terms(f, u, K, order=None):
     if order is None:
         return terms
     else:
-        return sdp_sort(terms, monomial_key(order))
+        return sort(terms, monomial_key(order))
 
 
 @cythonized("n,m")

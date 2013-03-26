@@ -4,7 +4,7 @@ from sympy import (
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
-    Order, Piecewise, Poly, Poly, Product, Range, Rational,
+    Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, TransformationSet, Tuple, Union, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
@@ -19,6 +19,7 @@ from sympy.printing.latex import latex
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
+from sympy.logic.boolalg import And, Or
 from sympy.core.trace import Tr
 
 x, y, z, t, a, b = symbols('x y z t a b')
@@ -54,12 +55,20 @@ def test_latex_basic():
     assert latex(sqrt(x)**3, itex=True) == r"x^{\frac{3}{2}}"
     assert latex(x**Rational(3, 4)) == r"x^{\frac{3}{4}}"
     assert latex(x**Rational(3, 4), fold_frac_powers=True) == "x^{3/4}"
+    assert latex((x + 1)**Rational(3, 4)) == \
+        r"\left(x + 1\right)^{\frac{3}{4}}"
+    assert latex((x + 1)**Rational(3, 4), fold_frac_powers=True) == \
+        r"\left(x + 1\right)^{3/4}"
 
     assert latex(1.5e20*x) == r"1.5 \times 10^{20} x"
     assert latex(1.5e20*x, mul_symbol='dot') == r"1.5 \cdot 10^{20} \cdot x"
 
     assert latex(1/sin(x)) == r"\frac{1}{\sin{\left (x \right )}}"
     assert latex(sin(x)**-1) == r"\frac{1}{\sin{\left (x \right )}}"
+    assert latex(sin(x)**Rational(3, 2)) == \
+        r"\sin^{\frac{3}{2}}{\left (x \right )}"
+    assert latex(sin(x)**Rational(3, 2), fold_frac_powers=True) == \
+        r"\sin^{3/2}{\left (x \right )}"
 
     assert latex(~x) == r"\neg x"
     assert latex(x & y) == r"x \wedge y"
@@ -449,7 +458,8 @@ def test_latex_KroneckerDelta():
     assert latex(KroneckerDelta(x, y)) == r"\delta_{x y}"
     assert latex(KroneckerDelta(x, y)**2) == r"\left(\delta_{x y}\right)^{2}"
     assert latex(KroneckerDelta(x, y + 1)) == r"\delta_{x, y + 1}"
-    assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{x + 1, y}"
+    # issue 3479
+    assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{y, x + 1}"
 
 
 def test_latex_LeviCivita():
@@ -577,6 +587,44 @@ def test_latex_Lambda():
         r"\Lambda {\left (\begin{pmatrix}x, & y\end{pmatrix}, x + 1 \right )}"
 
 
+def test_latex_PolyElement():
+    Ruv, u,v = ring("u,v", ZZ);
+    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+
+    assert latex(x - x) == r"0"
+    assert latex(x - 1) == r"x - 1"
+    assert latex(x + 1) == r"x + 1"
+
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + u + 1) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + u + 1"
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + \left(u + 1\right) x"
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + \left(u + 1\right) x + 1"
+    assert latex((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == r"-\left({u}^{2} - 3 u v + 1\right) {x}^{2} y - \left(u + 1\right) x - 1"
+
+
+def test_latex_FracElement():
+    Fuv, u,v = field("u,v", ZZ);
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+
+    assert latex(x - x) == r"0"
+    assert latex(x - 1) == r"x - 1"
+    assert latex(x + 1) == r"x + 1"
+
+    assert latex(x/z) == r"\frac{x}{z}"
+    assert latex(x*y/z) == r"\frac{x y}{z}"
+    assert latex(x/(z*t)) == r"\frac{x}{z t}"
+    assert latex(x*y/(z*t)) == r"\frac{x y}{z t}"
+
+    assert latex((x - 1)/y) == r"\frac{x - 1}{y}"
+    assert latex((x + 1)/y) == r"\frac{x + 1}{y}"
+    assert latex((-x - 1)/y) == r"\frac{-x - 1}{y}"
+    assert latex((x + 1)/(y*z)) == r"\frac{x + 1}{y z}"
+    assert latex(-y/(x + 1)) == r"\frac{-y}{x + 1}"
+    assert latex(y*z/(x + 1)) == r"\frac{y z}{x + 1}"
+
+    assert latex(((u + 1)*x*y + 1)/((v - 1)*z - 1)) == r"\frac{\left(u + 1\right) x y + 1}{\left(v - 1\right) z - 1}"
+    assert latex(((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)) == r"\frac{\left(u + 1\right) x y + 1}{\left(v - 1\right) z - u v t - 1}"
+
+
 def test_latex_Poly():
     assert latex(Poly(x**2 + 2 * x, x)) == \
         r"\operatorname{Poly}{\left( x^{2} + 2 x, x, domain=\mathbb{Z} \right)}"
@@ -648,6 +696,12 @@ def test_matMul():
     assert l._print_MatMul(-2*A*(A + 2*B)) in [r'-2 A \left(A + 2 B\right)',
         r'-2 A \left(2 B + A\right)']
 
+def test_latex_MatrixSlice():
+    from sympy.matrices.expressions import MatrixSymbol
+    assert latex(MatrixSymbol('X', 10, 10)[:5, 1:9:2]) == \
+            r'X\left[:5, 1:9:2\right]'
+    assert latex(MatrixSymbol('X', 10, 10)[5, :5:2]) == \
+            r'X\left[5, :5:2\right]'
 
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
@@ -822,3 +876,12 @@ def test_Hadamard():
     Y = MatrixSymbol('Y', 2, 2)
     assert latex(HadamardProduct(X, Y*Y)) == r'X \circ \left(Y Y\right)'
     assert latex(HadamardProduct(X, Y)*Y) == r'\left(X \circ Y\right) Y'
+
+def test_boolean_args_order():
+    syms = symbols('a:f')
+
+    expr = And(*syms)
+    assert latex(expr) == 'a \\wedge b \\wedge c \\wedge d \\wedge e \\wedge f'
+
+    expr = Or(*syms)
+    assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'

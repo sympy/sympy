@@ -5,7 +5,6 @@ from sympy.core.containers import Dict
 from sympy.core.compatibility import is_sequence, as_int
 from sympy.core.singleton import S
 from sympy.functions.elementary.miscellaneous import sqrt
-from sympy.core.sympify import sympify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 from matrices import MatrixBase, ShapeError, a2idx
@@ -50,7 +49,7 @@ class SparseMatrix(MatrixBase):
                 op = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = sympify(op(i, j))
+                        value = self._sympify(op(i, j))
                         if value:
                             self._smat[(i, j)] = value
             elif isinstance(args[2], (dict, Dict)):
@@ -67,7 +66,7 @@ class SparseMatrix(MatrixBase):
                 flat_list = args[2]
                 for i in range(self.rows):
                     for j in range(self.cols):
-                        value = sympify(flat_list[i*self.cols + j])
+                        value = self._sympify(flat_list[i*self.cols + j])
                         if value:
                             self._smat[(i, j)] = value
         else:
@@ -1050,6 +1049,9 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
     def _new(cls, *args, **kwargs):
         return cls(*args)
 
+    def as_mutable(self):
+        return self.copy()
+
     def __setitem__(self, key, value):
         """Assign value to position designated by key.
 
@@ -1364,9 +1366,33 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
                 i, j = k
                 self[i + rlo, j + clo] = value[i, j]
 
+    def zip_row_op(self, i, k, f):
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], self[k, j])``.
+
+        Examples
+        ========
+
+        >>> from sympy.matrices import SparseMatrix
+        >>> M = SparseMatrix.eye(3)*2
+        >>> M[0, 1] = -1
+        >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
+        [2, -1, 0]
+        [4,  0, 0]
+        [0,  0, 2]
+
+        See Also
+        ========
+        row
+        row_op
+        col_op
+
+        """
+        self.row_op(i, lambda v, j: f(v, self[k, j]))
+
     def row_op(self, i, f):
-        """In-place operation on row i using two-arg functor whose args are
-        interpreted as (self[i, j], j) for j in range(self.cols).
+        """In-place operation on row ``i`` using two-arg functor whose args are
+        interpreted as ``(self[i, j], j)``.
 
         Examples
         ========
@@ -1378,6 +1404,13 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         [2, -1, 0]
         [4,  0, 0]
         [0,  0, 2]
+
+        See Also
+        ========
+        row
+        zip_row_op
+        col_op
+
         """
         for j in range(self.cols):
             v = self._smat.get((i, j), S.Zero)
@@ -1436,6 +1469,6 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         if not value:
             self._smat = {}
         else:
-            v = sympify(value)
+            v = self._sympify(value)
             self._smat = dict([((i, j), v)
                 for i in range(self.rows) for j in range(self.cols)])

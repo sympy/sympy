@@ -9,11 +9,13 @@ sympy.stats.frv
 """
 
 from sympy.stats.rv import (RandomDomain, SingleDomain, ConditionalDomain,
-        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace)
+        ProductDomain, PSpace, SinglePSpace, random_symbols, ProductPSpace,
+        NamedArgsMixin)
 from sympy.functions.special.delta_functions import DiracDelta
 from sympy import (S, Interval, symbols, sympify, Dummy, FiniteSet, Mul, Tuple,
-        Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda)
-from sympy.solvers.inequalities import reduce_poly_inequalities
+        Integral, And, Or, Piecewise, solve, cacheit, integrate, oo, Lambda,
+        Basic)
+from sympy.solvers.inequalities import reduce_rational_inequalities
 from sympy.polys.polyerrors import PolynomialError
 import random
 
@@ -36,11 +38,6 @@ class SingleContinuousDomain(ContinuousDomain, SingleDomain):
 
     Represented using a single symbol and interval.
     """
-    def __new__(cls, symbol, set):
-        assert symbol.is_Symbol
-        symbols = FiniteSet(symbol)
-        return RandomDomain.__new__(cls, symbols, set)
-
     def integrate(self, expr, variables=None, **kwargs):
         if variables is None:
             variables = self.symbols
@@ -115,7 +112,7 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
                     for i, limit in enumerate(limits):
                         if limit[0] == symbol:
                             # Make condition into an Interval like [0, oo]
-                            cintvl = reduce_poly_inequalities_wrap(
+                            cintvl = reduce_rational_inequalities_wrap(
                                 cond, symbol)
                             # Make limit into an Interval like [-oo, oo]
                             lintvl = Interval(limit[1], limit[2])
@@ -138,23 +135,120 @@ class ConditionalContinuousDomain(ContinuousDomain, ConditionalDomain):
     @property
     def set(self):
         if len(self.symbols) == 1:
-            return (self.fulldomain.set & reduce_poly_inequalities_wrap(
+            return (self.fulldomain.set & reduce_rational_inequalities_wrap(
                 self.condition, tuple(self.symbols)[0]))
         else:
             raise NotImplementedError(
                 "Set of Conditional Domain not Implemented")
 
 
-class ContinuousPSpace(PSpace):
+class ContinuousDistribution(Basic):
+    def __call__(self, *args):
+        return self.pdf(*args)
+
+
+class SingleContinuousDistribution(ContinuousDistribution, NamedArgsMixin):
+    """ Continuous distribution of a single variable
+
+    Serves as superclass for Normal/Exponential/UniformDistribution etc....
+
+    Represented by parameters for each of the specific classes.  E.g
+    NormalDistribution is represented by a mean and standard deviation.
+
+    Provides methods for pdf, cdf, and sampling
+
+    See Also:
+        sympy.stats.crv_types.*
     """
-    A Continuous Probability Space
+
+    set = Interval(-oo, oo)
+
+    def __new__(cls, *args):
+        args = map(sympify, args)
+        return Basic.__new__(cls, *args)
+
+    @staticmethod
+    def check(*args):
+        pass
+
+    def sample(self):
+        """ A random realization from the distribution """
+        icdf = self._inverse_cdf_expression()
+        return icdf(random.uniform(0, 1))
+
+    @cacheit
+    def _inverse_cdf_expression(self):
+        """ Inverse of the CDF
+
+        Used by sample
+        """
+        x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
+        # Invert CDF
+        try:
+            inverse_cdf = solve(self.cdf(x) - z, x)
+        except NotImplementedError:
+            inverse_cdf = None
+        if not inverse_cdf or len(inverse_cdf) != 1:
+            raise NotImplementedError("Could not invert CDF")
+
+        return Lambda(z, inverse_cdf[0])
+
+    @cacheit
+    def compute_cdf(self, **kwargs):
+        """ Compute the CDF from the PDF
+
+        Returns a Lambda
+        """
+        x, z = symbols('x, z', real=True, bounded=True, cls=Dummy)
+        left_bound = self.set.start
+
+        # CDF is integral of PDF from left bound to z
+        pdf = self.pdf(x)
+        cdf = integrate(pdf, (x, left_bound, z), **kwargs)
+        # CDF Ensure that CDF left of left_bound is zero
+        cdf = Piecewise((cdf, z >= left_bound), (0, True))
+        return Lambda(z, cdf)
+
+    def cdf(self, x, **kwargs):
+        """ Cumulative density function """
+        return self.compute_cdf(**kwargs)(x)
+
+    def expectation(self, expr, var, **kwargs):
+        """ Expectation of expression over distribution """
+        return integrate(expr * self.pdf(var), (var, self.set), **kwargs)
+
+class ContinuousDistributionHandmade(SingleContinuousDistribution):
+    _argnames = ('pdf',)
+
+    @property
+    def set(self):
+        return self.args[1]
+
+    def __new__(cls, pdf, set=Interval(-oo, oo)):
+        return Basic.__new__(cls, pdf, set)
+
+
+class ContinuousPSpace(PSpace):
+    """ Continuous Probability Space
 
     Represents the likelihood of an event space defined over a continuum.
 
-    Represented with a set of symbols and a probability density function.
+    Represented with a ContinuousDomain and a PDF (Lambda-Like)
     """
 
     is_Continuous = True
+
+    @property
+    def domain(self):
+        return self.args[0]
+
+    @property
+    def density(self):
+        return self.args[1]
+
+    @property
+    def pdf(self):
+        return self.density(*self.domain.symbols)
 
     def integrate(self, expr, rvs=None, **kwargs):
         if rvs is None:
@@ -162,20 +256,21 @@ class ContinuousPSpace(PSpace):
         else:
             rvs = frozenset(rvs)
 
-        expr = expr.subs(dict((rv, rv.symbol) for rv in rvs))
+        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
 
         domain_symbols = frozenset(rv.symbol for rv in rvs)
 
-        return self.domain.integrate(self.density * expr,
+        return self.domain.integrate(self.pdf * expr,
                 domain_symbols, **kwargs)
 
     def compute_density(self, expr, **kwargs):
         # Common case Density(X) where X in self.values
         if expr in self.values:
             # Marginalize all other random symbols out of the density
-            density = self.domain.integrate(self.density, set(rs.symbol
-                for rs in self.values - frozenset((expr,))), **kwargs)
-            return Lambda(expr.symbol, density)
+            randomsymbols = tuple(set(self.values) - frozenset([expr]))
+            symbols = tuple(rs.symbol for rs in randomsymbols)
+            pdf = self.domain.integrate(self.pdf, symbols, **kwargs)
+            return Lambda(expr.symbol, pdf)
 
         z = Dummy('z', real=True, bounded=True)
         return Lambda(z, self.integrate(DiracDelta(expr - z), **kwargs))
@@ -214,10 +309,13 @@ class ContinuousPSpace(PSpace):
         # Other cases can be turned into univariate case
         # by computing a density handled by density computation
         except NotImplementedError:
+            from sympy.stats.rv import density
             expr = condition.lhs - condition.rhs
-            density = self.compute_density(expr, **kwargs)
+            dens = density(expr, **kwargs)
+            if not isinstance(dens, ContinuousDistribution):
+                dens = ContinuousDistributionHandmade(dens)
             # Turn problem into univariate case
-            space = SingleContinuousPSpace(z, density(z))
+            space = SingleContinuousPSpace(z, dens)
             return space.probability(condition.__class__(space.value, 0))
 
     def where(self, condition):
@@ -226,56 +324,39 @@ class ContinuousPSpace(PSpace):
             raise NotImplementedError(
                 "Multiple continuous random variables not supported")
         rv = tuple(rvs)[0]
-        interval = reduce_poly_inequalities_wrap(condition, rv)
+        interval = reduce_rational_inequalities_wrap(condition, rv)
         interval = interval.intersect(self.domain.set)
         return SingleContinuousDomain(rv.symbol, interval)
 
     def conditional_space(self, condition, normalize=True, **kwargs):
 
-        condition = condition.subs(dict((rv, rv.symbol) for rv in self.values))
+        condition = condition.xreplace(dict((rv, rv.symbol) for rv in self.values))
 
         domain = ConditionalContinuousDomain(self.domain, condition)
-        density = self.density
         if normalize:
-            density = density / domain.integrate(density, **kwargs)
+            pdf = self.pdf / domain.integrate(self.pdf, **kwargs)
+            density = Lambda(domain.symbols, pdf)
 
         return ContinuousPSpace(domain, density)
 
 
 class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
     """
-    A continuous probability space over a single univariate domain
+    A continuous probability space over a single univariate variable
 
-    This class is commonly implemented by the various ContinuousRV types
-    such as Normal, Exponential, Uniform, etc....
+    These consist of a Symbol and a SingleContinuousDistribution
+
+    This class is normally accessed through the various random variable
+    functions, Normal, Exponential, Uniform, etc....
     """
-    def __new__(cls, symbol, density, set=Interval(-oo, oo)):
-        domain = SingleContinuousDomain(sympify(symbol), set)
-        obj = ContinuousPSpace.__new__(cls, domain, density)
-        obj._cdf = None
-        return obj
 
-    @cacheit
-    def _inverse_cdf_expression(self):
-        """
-        Inverse of the CDF
+    @property
+    def set(self):
+        return self.distribution.set
 
-        See Also
-        ========
-        compute_cdf
-        sample
-        """
-        d = self.compute_cdf(self.value)
-        x, z = symbols('x, z', real=True, positive=True, cls=Dummy)
-        # Invert CDF
-        try:
-            inverse_cdf = solve(d(x) - z, x)
-        except NotImplementedError:
-            inverse_cdf = None
-        if not inverse_cdf or len(inverse_cdf) != 1:
-            raise NotImplementedError("Could not invert CDF")
-
-        return Lambda(z, inverse_cdf[0])
+    @property
+    def domain(self):
+        return SingleContinuousDomain(sympify(self.symbol), self.set)
 
     def sample(self):
         """
@@ -283,27 +364,48 @@ class SingleContinuousPSpace(ContinuousPSpace, SinglePSpace):
 
         Returns dictionary mapping RandomSymbol to realization value.
         """
-        icdf = self._inverse_cdf_expression()
-        return {self.value: icdf(random.uniform(0, 1))}
+        return {self.value: self.distribution.sample()}
 
+    def integrate(self, expr, rvs=None, **kwargs):
+        rvs = rvs or (self.value,)
+        if self.value not in rvs:
+            return expr
+
+        expr = expr.xreplace(dict((rv, rv.symbol) for rv in rvs))
+
+        x = self.value.symbol
+        try:
+            return self.distribution.expectation(expr, x, **kwargs)
+        except:
+            evaluate = kwargs.pop('evaluate', True)
+            if evaluate:
+                return integrate(expr * self.pdf, (x, self.set), **kwargs)
+            else:
+                return Integral(expr * self.pdf, (x, self.set), **kwargs)
+
+    def compute_cdf(self, expr, **kwargs):
+        if expr == self.value:
+            return self.distribution.compute_cdf(**kwargs)
+        else:
+            return ContinuousPSpace.compute_cdf(self, expr, **kwargs)
 
 class ProductContinuousPSpace(ProductPSpace, ContinuousPSpace):
     """
     A collection of independent continuous probability spaces
     """
     @property
-    def density(self):
-        return Mul(*[space.density for space in self.spaces])
-
+    def pdf(self):
+        p = Mul(*[space.pdf for space in self.spaces])
+        return p.subs(dict((rv, rv.symbol) for rv in self.values))
 
 def _reduce_inequalities(conditions, var, **kwargs):
     try:
-        return reduce_poly_inequalities(conditions, var, **kwargs)
+        return reduce_rational_inequalities(conditions, var, **kwargs)
     except PolynomialError:
         raise ValueError("Reduction of condition failed %s\n" % conditions[0])
 
 
-def reduce_poly_inequalities_wrap(condition, var):
+def reduce_rational_inequalities_wrap(condition, var):
     if condition.is_Relational:
         return _reduce_inequalities([[condition]], var, relational=False)
     if condition.__class__ is Or:

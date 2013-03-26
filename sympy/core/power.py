@@ -126,7 +126,12 @@ class Pow(Expr):
         if b.is_real and not b_nneg and e.is_even:
             b = abs(b)
             b_nneg = True
-        smallarg = (abs(e) <= abs(S.Pi/log(b)))
+
+        # Special case for when b is nan. See pull req 1714 for details
+        if b is S.NaN:
+            smallarg = (abs(e) <= S.Zero)
+        else:
+            smallarg = (abs(e) <= abs(S.Pi/log(b)))
         if (other.is_Rational and other.q == 2 and
                 e.is_real is False and smallarg is False):
             return -Pow(b, e*other)
@@ -742,9 +747,9 @@ class Pow(Expr):
         # this should be the same as ExpBase.as_numer_denom wrt
         # exponent handling
         neg_exp = exp.is_negative
-        int_exp = exp.is_integer
-        if not neg_exp and not exp.is_real:
+        if not neg_exp and not (-exp).is_negative:
             neg_exp = _coeff_isneg(exp)
+        int_exp = exp.is_integer
         # the denominator cannot be separated from the numerator if
         # its sign is unknown unless the exponent is an integer, e.g.
         # sqrt(a/b) != sqrt(a)/sqrt(b) when a=1 and b=-1. But if the
@@ -929,6 +934,20 @@ class Pow(Expr):
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
                 return ((Pow(lt, e) * Pow((bs/lt).expand(), e).nseries(
                     x, n=nuse, logx=logx)).expand() + order)
+
+            if bs.is_Add:
+                from sympy import O
+                # So, bs + O() == terms
+                c = Dummy('c')
+                res = []
+                for arg in bs.args:
+                    if arg.is_Order:
+                        arg = c*arg.expr
+                    res.append(arg)
+                bs = Add(*res)
+                rv = (bs**e).series(x).subs(c, O(1))
+                rv += order
+                return rv
 
             rv = bs**e
             if terms != bs:

@@ -17,7 +17,7 @@ def test_decompose_power():
 
 
 def test_Factors():
-    assert Factors() == Factors({})
+    assert Factors() == Factors({}) == Factors(1)
 
     assert Factors().as_expr() == S.One
     assert Factors({x: 2, y: 3, sin(x): 4}).as_expr() == x**2*y**3*sin(x)**4
@@ -43,6 +43,7 @@ def test_Factors():
 
     assert a.normal(b) == (Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
 
+    assert Factors(sqrt(2)*x).as_expr() == sqrt(2)*x
 
 def test_Term():
     a = Term(4*x*y**2/z/t**3)
@@ -173,6 +174,10 @@ def test_factor_terms():
     assert factor_terms((1/(x**3 + x**2) + 2/x**2)*y) == \
         y*(2 + 1/(x + 1))/x**2
 
+    assert factor_terms(-x - y) == Mul(-1, x + y, evaluate=False)
+    # if not True, then processes for this in factor_terms is not necessary
+    assert gcd_terms(-x - y) == -x - y
+
 
 def test_xreplace():
     e = Mul(2, 1 + x, evaluate=False)
@@ -182,6 +187,7 @@ def test_xreplace():
 
 def test_factor_nc():
     x, y = symbols('x,y')
+    k = symbols('k', integer=True)
     n, m, o = symbols('n,m,o', commutative=False)
 
     # mul and multinomial expansion is needed
@@ -235,6 +241,9 @@ def test_factor_nc():
     # issue 3435
     assert (2*n + 2*m).factor() == 2*(n + m)
 
+    # issue 3602
+    assert factor_nc(n**k + n**(k + 1)) == n**k*(1 + n)
+    assert factor_nc((m*n)**k + (m*n)**(k + 1)) == (1 + m*n)*(m*n)**k
 
 def test_issue_3261():
     a, b = symbols("a b")
