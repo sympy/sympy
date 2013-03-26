@@ -1,11 +1,12 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
+from textwrap import dedent
+
 from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify
 from sympy.core.compatibility import iterable
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
 from sympy.utilities import cythonized
 from sympy.polys.polyerrors import ExactQuotientFailed
-
 
 def monomials(variables, degree):
     r"""
@@ -563,6 +564,103 @@ def term_div(a, b, domain):
             return monom, domain.quo(a_lc, b_lc)
         else:
             return None
+
+class MonomialOps(object):
+
+    def __init__(self, ngens):
+        self.ngens = ngens
+
+    def _build(self, code, name):
+        ns = {}
+        exec code in ns
+        return ns[name]
+
+    def _vars(self, name):
+        return [ "%s%s" % (name, i) for i in xrange(self.ngens) ]
+
+    def mul(self):
+        name = "monomial_mul"
+        template = dedent("""\
+        def %(name)s(A, B):
+            (%(A)s,) = A
+            (%(B)s,) = B
+            return (%(AB)s,)
+        """)
+        A = self._vars("a")
+        B = self._vars("b")
+        AB = [ "%s + %s" % (a, b) for a, b in zip(A, B) ]
+        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        return self._build(code, name)
+
+    def pow(self):
+        name = "monomial_pow"
+        template = dedent("""\
+        def %(name)s(A, k):
+            (%(A)s,) = A
+            return (%(Ak)s,)
+        """)
+        A = self._vars("a")
+        Ak = [ "%s*k" % a for a in A ]
+        code = template % dict(name=name, A=", ".join(A), Ak=", ".join(Ak))
+        return self._build(code, name)
+
+    def ldiv(self):
+        name = "monomial_ldiv"
+        template = dedent("""\
+        def %(name)s(A, B):
+            (%(A)s,) = A
+            (%(B)s,) = B
+            return (%(AB)s,)
+        """)
+        A = self._vars("a")
+        B = self._vars("b")
+        AB = [ "%s - %s" % (a, b) for a, b in zip(A, B) ]
+        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        return self._build(code, name)
+
+    def div(self):
+        name = "monomial_div"
+        template = dedent("""\
+        def %(name)s(A, B):
+            (%(A)s,) = A
+            (%(B)s,) = B
+            %(RAB)s
+            return (%(R)s,)
+        """)
+        A = self._vars("a")
+        B = self._vars("b")
+        RAB = [ "r%(i)s = a%(i)s - b%(i)s\n    if r%(i)s < 0: return None" % dict(i=i) for i in xrange(self.ngens) ]
+        R = self._vars("r")
+        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), RAB="\n    ".join(RAB), R=", ".join(R))
+        return self._build(code, name)
+
+    def lcm(self):
+        name = "monomial_lcm"
+        template = dedent("""\
+        def %(name)s(A, B):
+            (%(A)s,) = A
+            (%(B)s,) = B
+            return (%(AB)s,)
+        """)
+        A = self._vars("a")
+        B = self._vars("b")
+        AB = [ "%s if %s >= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
+        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        return self._build(code, name)
+
+    def gcd(self):
+        name = "monomial_gcd"
+        template = dedent("""\
+        def %(name)s(A, B):
+            (%(A)s,) = A
+            (%(B)s,) = B
+            return (%(AB)s,)
+        """)
+        A = self._vars("a")
+        B = self._vars("b")
+        AB = [ "%s if %s <= %s else %s" % (a, a, b, b) for a, b in zip(A, B) ]
+        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), AB=", ".join(AB))
+        return self._build(code, name)
 
 class Monomial(PicklableWithSlots):
     """Class representing a monomial, i.e. a product of powers. """

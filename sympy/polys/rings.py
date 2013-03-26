@@ -8,8 +8,7 @@ from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify, sympify
 from sympy.core.compatibility import is_sequence
 from sympy.ntheory.multinomial import multinomial_coefficients
-from sympy.polys.monomialtools import (monomial_mul, monomial_div,
-    monomial_ldiv, monomial_pow, monomial_min, monomial_gcd, lex)
+from sympy.polys.monomialtools import MonomialOps, lex
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict, _dict_reorder
@@ -70,6 +69,14 @@ class PolyRing(DefaultPrinting, IPolys):
 
         self.zero_monom = (0,)*self.ngens
         self.gens = self._gens()
+
+        codegen = MonomialOps(self.ngens)
+        self.monomial_mul = codegen.mul()
+        self.monomial_pow = codegen.pow()
+        self.monomial_ldiv = codegen.ldiv()
+        self.monomial_div = codegen.div()
+        self.monomial_lcm = codegen.lcm()
+        self.monomial_gcd = codegen.gcd()
 
     def _gens(self):
         """Return a list of polynomial generators. """
@@ -634,11 +641,13 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if isinstance(p2, PolyElement):
             if ring == p2.ring:
                 get = p.get
+                zero = ring.domain.zero
+                monomial_mul = ring.monomial_mul
                 p2it = p2.items()
                 for exp1, v1 in p1.iteritems():
                     for exp2, v2 in p2it:
                         exp = monomial_mul(exp1, exp2)
-                        p[exp] = get(exp, 0) + v1*v2
+                        p[exp] = get(exp, zero) + v1*v2
                 p.strip_zero()
                 return p
             elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
@@ -704,7 +713,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             if (len(self) == 1):
                 p = ring.zero
                 k, v = list(self.items())[0]
-                kn = monomial_pow(k, n)
+                kn = ring.monomial_pow(k, n)
                 p[kn] = v**n
                 return p
             raise ValueError('n >= 0 is required')
@@ -718,7 +727,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             k, v = list(self.items())[0]
             # treat case abs(v) = 1 separately to deal with the case
             # in which n is too large to be allowed in v**n
-            kn = monomial_pow(k, n)
+            kn = ring.monomial_pow(k, n)
             if v == 1:
                 p[kn] = v
             elif v == -1:
@@ -800,18 +809,20 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         p = ring.zero
         get = p.get
         keys = self.keys()
+        zero = ring.domain.zero
+        monomial_mul = ring.monomial_mul
         for i in range(len(keys)):
             k1 = keys[i]
             pk = self[k1]
             for j in range(i):
                 k2 = keys[j]
                 exp = monomial_mul(k1, k2)
-                p[exp] = get(exp, 0) + pk*self[k2]
+                p[exp] = get(exp, zero) + pk*self[k2]
         p = p.imul_num(2)
         get = p.get
         for k, v in self.iteritems():
             k2 = monomial_mul(k, k)
-            p[k2] = get(k2, 0) + v**2
+            p[k2] = get(k2, zero) + v**2
         p.strip_zero()
         return p
 
@@ -862,6 +873,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         zm = self.ring.zero_monom
         domain = self.ring.domain
         domain_quo = domain.quo
+        monomial_div = self.ring.monomial_div
 
         if domain.has_Field:
             def term_div((a_lm, a_lc), (b_lm, b_lc)):
@@ -968,9 +980,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def rem(f, G):
         if isinstance(G, PolyElement):
             G = [G]
-        domain = f.ring.domain
-        order = f.ring.order
-        r = f.ring.zero
+        ring = f.ring
+        domain = ring.domain
+        order = ring.order
+        zero = domain.zero
+        monomial_mul = ring.monomial_mul
+        r = ring.zero
         term_div = f._term_div()
         ltf = f.LT
         f = f.copy()
@@ -982,7 +997,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     m, c = tq
                     for mg, cg in g.iterterms():
                         m1 = monomial_mul(mg, m)
-                        c1 = get(m1, 0) - c*cg
+                        c1 = get(m1, zero) - c*cg
                         if not c1:
                             del f[m1]
                         else:
@@ -1078,6 +1093,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         (m, c) = mc
         get = p1.get
         zero = p1.ring.domain.zero
+        monomial_mul = p1.ring.monomial_mul
         for k, v in p2.iteritems():
             ka = monomial_mul(k, m)
             coeff = get(ka, zero) + v*c
@@ -1242,10 +1258,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         elif monom == f.ring.zero_monom:
             return f.mul_ground(coeff)
 
+        monomial_mul = f.ring.monomial_mul
         terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.iteritems() ]
         return f.new(terms)
 
     def mul_monom(f, monom):
+        monomial_mul = f.ring.monomial_mul
         terms = [ (monomial_mul(f_monom, monom), f_coeff) for f_monom, f_coeff in f.iteritems() ]
         return f.new(terms)
 
@@ -1439,6 +1457,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ring = f.ring
         ground_gcd = ring.domain.gcd
         ground_quo = ring.domain.quo
+        monomial_gcd = ring.monomial_gcd
+        monomial_ldiv = ring.monomial_ldiv
         mf, cf = list(f.iterterms())[0]
         _mgcd, _cgcd = mf, cf
         for mg, cg in g.iterterms():
@@ -1553,7 +1573,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         g = ring.zero
         for expv, coeff in f.iterterms():
             if expv[i]:
-                e = monomial_ldiv(expv, m)
+                e = ring.monomial_ldiv(expv, m)
                 g[e] = coeff*expv[i]
         return g
 
