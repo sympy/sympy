@@ -369,6 +369,9 @@ def test_dummification():
     assert lam(3, 9) == 2
     lam = lambdify(sin(t), 2 * sin(t)**2)
     assert lam(F(t)) == 2 * F(t)**2
+    raises(SyntaxError, lambda: lambdify(F(t) * G(t), F(t) * G(t) + 5))
+    raises(SyntaxError, lambda: lambdify(2 * F(t), 2 * F(t) + 5))
+    raises(SyntaxError, lambda: lambdify(2 * F(t), 4 * F(t) + 5))
 
 
 #================== Test special printers ==========================
