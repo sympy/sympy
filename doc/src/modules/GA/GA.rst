@@ -1582,7 +1582,7 @@ Basic Multivector Class Functions
    Return multivector in which each coefficient has been expanded using
    sympy *expand()* function.
 
-.. fuction:: factor(self)
+.. function:: factor(self)
 
    Apply the *sympy* *factor* function to each coefficient of the multivector.
 

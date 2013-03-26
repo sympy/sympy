@@ -304,22 +304,3 @@ class Vector(object):
         fct_self = Vector()
         fct_self.obj = fct(self.obj)
         return(fct_self)
-
-"""
-from sympy import *
-enhance_print()
-X = (r,th,phi) = symbols('r,th,phi')
-curv = [[r*cos(phi)*cos(th),r*sin(phi)*cos(th),r*sin(th)],[1,r,r*cos(th)]]
-(er,eth,ephi) = Vector.setup('e_r e_theta e_phi',metric='[1,1,1]',coords=X,curv=curv,debug=True)
-fr = Function('f__r')(*X)
-fth = Function('f__theta')(*X)
-fphi = Function('f__phi')(*X)
-F = fr*er+fth*eth+fphi*ephi
-print F
-print F.diff(r)
-print F.diff(th)
-print F.diff(phi)
-print F*F.diff(phi)
-F2 = F*F
-print diff(F2,phi)
-"""
