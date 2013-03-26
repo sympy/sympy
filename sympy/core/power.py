@@ -1013,7 +1013,7 @@ class Pow(Expr):
         >>> eq.as_content_primitive()
         (9, 3**(2*x))
         >>> powsimp(Mul(*_))
-        9**(x + 1)
+        3**(2*x + 2)
 
         >>> eq = (2 + 2*x)**y
         >>> s = expand_power_base(eq); s.is_Mul, s

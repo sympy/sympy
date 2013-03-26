@@ -25,6 +25,7 @@ from sympy.utilities.iterables import flatten, has_variety, sift
 from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
+from sympy.ntheory.factor_ import multiplicity
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
     ComputationFailed, lcm, gcd)
@@ -2547,14 +2548,17 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         return expr
 
     # handle the Mul
-
     if combine in ('exp', 'all'):
         # Collect base/exp data, while maintaining order in the
         # non-commutative parts of the product
         c_powers = defaultdict(list)
         nc_part = []
         newexpr = []
+        coeff = S.One
         for term in expr.args:
+            if term.is_Rational:
+                coeff *= term
+                continue
             if term.is_Pow:
                 term = _denest_pow(term)
             if term.is_commutative:
@@ -2575,8 +2579,23 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 nc_part.append(term)
 
         # add up exponents of common bases
-        for b, e in c_powers.iteritems():
+        for b, e in ordered(c_powers.iteritems()):
+            # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
+            # Numbers since autoevaluation will undo it, e.g.
+            # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
+            if (b and b.is_Number and not all(ei.is_Number for ei in e) and \
+                    coeff is not S.One and
+                    b not in (S.One, S.NegativeOne)):
+                m = multiplicity(abs(b), abs(coeff))
+                if m:
+                    e.append(m)
+                    coeff /= b**m
             c_powers[b] = Add(*e)
+        if coeff is not S.One:
+            if coeff in c_powers:
+                c_powers[coeff] += S.One
+            else:
+                c_powers[coeff] = S.One
 
         # check for base and inverted base pairs
         be = c_powers.items()

@@ -274,14 +274,15 @@ def test_expint():
         expint(aneg, x)
 
     assert mellin_transform(Si(x), x, s) == \
-        (-2**s*sqrt(pi)*gamma((s + 1)/2)/(2*s*gamma(-s/2 + 1)
-            ), (-1, 0), True)
+        (-2**(s - 1)*sqrt(pi)*gamma(s/2 + S(1)/2)/(s*gamma(-s/2 + 1)), (-1, 0),
+        True)
     assert inverse_mellin_transform(-2**s*sqrt(pi)*gamma((s + 1)/2)
                                     /(2*s*gamma(-s/2 + 1)), s, x, (-1, 0)) \
         == Si(x)
 
     assert mellin_transform(Ci(sqrt(x)), x, s) == \
-        (-4**s*sqrt(pi)*gamma(s)/(2*s*gamma(-s + S(1)/2)), (0, 1), True)
+        (-2**(2*s - 1)*sqrt(pi)*gamma(s)/(s*gamma(-s + S(1)/2)
+        ), (0, 1), True)
     assert inverse_mellin_transform(
         -4**s*sqrt(pi)*gamma(s)/(2*s*gamma(-s + S(1)/2)),
         s, u, (0, 1)).expand() == Ci(sqrt(u))
