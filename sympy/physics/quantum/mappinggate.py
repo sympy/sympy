@@ -198,4 +198,6 @@ class MappingGate(Gate):
             else:
                 matrix[col, col] = Integer(0)
                 matrix[row, col] = scalar
+        if format == 'scipy.sparse':
+            matrix = matrix.tocsr()
         return matrix
