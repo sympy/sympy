@@ -988,22 +988,22 @@ def test_N4():
 
 @XFAIL
 def test_N5():
-        raise NotImplementedError("assume x > y > 0, k > 0 is k*x**2 > k*y**2")
+    raise NotImplementedError("assume x > y > 0, k > 0 is k*x**2 > k*y**2")
 
 
 @XFAIL
 def test_N6():
-        raise NotImplementedError("assume x > y > 0, k > 0, n > 0 is k*x**n > k*y**n")
+    raise NotImplementedError("assume x > y > 0, k > 0, n > 0 is k*x**n > k*y**n")
 
 
 @XFAIL
 def test_N7():
-        raise NotImplementedError("assume x > 1, y >= x - 1 is y > 0")
+    raise NotImplementedError("assume x > 1, y >= x - 1 is y > 0")
 
 
 @XFAIL
 def test_N8():
-        raise NotImplementedError("assume x >= y >= z >= x, is x = y = z")
+    raise NotImplementedError("assume x >= y >= z >= x, is x = y = z")
 
 
 def test_N9():
