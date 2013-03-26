@@ -14,6 +14,14 @@ class CommonHandler(AskHandler):
     def NaN(expr, assumptions):
         return False
 
+    @staticmethod
+    def AlwaysTrue(expr, assumptions):
+        return True
+
+    @staticmethod
+    def AlwaysFalse(expr, assumptions):
+        return False
+
 
 class AskCommutativeHandler(CommonHandler):
     """
