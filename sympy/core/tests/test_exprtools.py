@@ -9,6 +9,8 @@ from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
 from sympy.core.mul import _keep_coeff as _keep_coeff
 from sympy.simplify.cse_opts import sub_pre
 
+from sympy.utilities.pytest import raises
+
 
 def test_decompose_power():
     assert decompose_power(x) == (x, 1)
@@ -45,6 +47,45 @@ def test_Factors():
     assert a.normal(b) == (Factors({x: 4, y: 7, t: 4}), Factors({z: 1}))
 
     assert Factors(sqrt(2)*x).as_expr() == sqrt(2)*x
+
+    assert Factors(-I)*I == Factors()
+    assert Factors({S(-1): S(3)})*Factors({S(-1): S(1), I: S(5)}) == \
+        Factors(I)
+
+    assert Factors(S(2)**x).div(S(3)**x) == \
+        (Factors({S(2): x}), Factors({S(3): x}))
+    assert Factors(2**(2*x + 2)).div(S(8)) == \
+        (Factors({S(2): 2*x}), Factors({S(2): S(1)}))
+
+    # coverage
+    # /!\ things break if this is not True
+    assert Factors({S(-1): S(3)/2}) == Factors({I: S.One, S(-1): S.One})
+
+    assert Factors(S(-2)) == Factors({S(-1): S(1), S(2): 1})
+    assert Factors(S.Half) == Factors({S(2): -S.One})
+    assert Factors(S(3)/2) == Factors({S(3): S.One, S(2): S(-1)})
+    assert Factors({I: S(1)}) == Factors(I)
+    assert Factors({S.NegativeOne: -S(3)/2}).as_expr() == I
+    A = symbols('A', commutative=False)
+    assert Factors(2*A**2) == Factors({S(2): 1, A**2: 1})
+    assert Factors(I) == Factors({I: S.One})
+    assert Factors(x).normal(S(2)) == (Factors(x), Factors(S(2)))
+    assert Factors(x).normal(S(0)) == (Factors(), Factors(S(0)))
+    assert Factors(x).mul(S(2)) == Factors(2*x)
+    assert Factors(x).mul(S(0)).is_zero
+    assert Factors(x).mul(1/x).is_one
+    assert Factors(x**sqrt(2)**3).as_expr() == x**(2*sqrt(2))
+    assert Factors(x)**Factors(S(2)) == Factors(x**2)
+    assert Factors(x).gcd(S(0)) == Factors(x)
+    assert Factors(x).lcm(S(0)).is_zero
+    assert Factors(S(0)).div(x) == (Factors(S(0)), Factors(S(0)))
+    assert Factors(x).div(x) == (Factors(), Factors(S(0)))
+    assert Factors({x: .2})/Factors({x: .2}) == Factors()
+    assert Factors(x) != Factors()
+    assert Factors(x**(2 + y)).div(x**2) == (Factors(x**y), Factors(S(0)))
+    assert Factors(x**(2 + y)).div(x**y) == (Factors(x**2), Factors(S(0)))
+    raises(ZeroDivisionError, lambda: Factors(x).div(S(0)))
+
 
 def test_Term():
     a = Term(4*x*y**2/z/t**3)

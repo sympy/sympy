@@ -6,8 +6,9 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
+from sympy.core.function import expand_power_exp
 from sympy.core.sympify import sympify
-from sympy.core.numbers import Rational, Integer, Number
+from sympy.core.numbers import Rational, Integer, Number, I
 from sympy.core.singleton import S
 from sympy.core.symbol import Dummy
 from sympy.core.coreerrors import NonCommutativeExpression
@@ -17,6 +18,10 @@ from sympy.utilities.iterables import (common_prefix, common_suffix,
         variations, ordered)
 
 from collections import defaultdict
+
+
+def _isnumber(i):
+    return isinstance(i, (SYMPY_INTS, float)) or i.is_Number
 
 
 def decompose_power(expr):
@@ -100,36 +105,67 @@ class Factors(object):
         Notes
         =====
 
-        Although a dictionary can be passed, no checking will be done to
-        ensure that -1 is split from Rationals. This will then affect
-        gcd and normal calculations:
-
-        >>> Factors(-2*x).factors
-        {-1: 1, 2: 1, x: 1}
-        >>> Factors((-2*x).as_powers_dict()).factors
-        {-2: 1, x: 1}
+        Although a dictionary can be passed, only minimal checking is
+        performed, only that the powers of -1 and I are in canonical
+        form.
 
         """
-        if factors is None or factors == 1:
+        if isinstance(factors, Factors):
+            factors = factors.factors.copy()
+        elif factors is None or factors == 1:
             factors = {}
         elif factors is S.Zero or factors == 0:
             factors = {S.Zero: S.One}
-        elif isinstance(factors, Number) and factors < 0 and not factors is S.NegativeOne:
-            factors = {-factors: S.One, S.NegativeOne: S.One}
+        elif isinstance(factors, Number):
+            n = factors
+            factors = {}
+            if n < 0:
+                factors[S.NegativeOne] = S.One
+                n = -n
+            if n is not S.One:
+                if n.is_Float or n.is_Integer:
+                    factors[n] = S.One
+                else:
+                    # since we're processing Numbers, might as well
+                    # put the Rational in properly; all other denominators
+                    # that occur in an Expr won't be handled.
+                    assert n.is_Rational
+                    if n.p != 1:
+                        factors[Integer(n.p)] = S.One
+                    factors[Integer(n.q)] = S.NegativeOne
+        elif isinstance(factors, Basic) and not factors.args:
+            factors = {factors: S.One}
         elif isinstance(factors, Expr):
             c, nc = factors.args_cnc()
-            factors = dict(Mul(*c, **dict(evaluate=False)).as_powers_dict())
+            i = c.count(I)
+            if i:
+                assert i == 1
+                c.remove(I)
+            factors = dict(Mul._from_args(c).as_powers_dict())
+            if i:
+                factors[I] = S.One
             if nc:
                 factors[Mul(*nc, **dict(evaluate=False))] = S.One
+        else:
+            factors = factors.copy()  # /!\ should be dict-like
 
-        # sanitizing
-        if factors.get(S.NegativeOne, S.One) is not S.One:
-            e = factors.pop(S.NegativeOne)
-            factors[S.ImaginaryUnit] = 1
-            if e == S(3)/2:
-                factors[S.NegativeOne] = S.One
-            elif e is not S.Half:
-                raise ValueError('unanticipated value for exponent of -1')
+            # tidy up -1 and I exponents if Rational
+            i1 = S.NegativeOne**factors.pop(S.NegativeOne, S.Zero)*\
+                 I**factors.pop(I, S.Zero)
+            for a in i1.args or [i1]:  # at worst, -I*(-1)**e
+                if a is S.One:
+                    pass
+                elif a is S.NegativeOne:
+                    assert a not in factors
+                    factors[S.NegativeOne] = S.One
+                elif a is I:
+                    assert a not in factors
+                    factors[I] = S.One
+                else:
+                    assert a.is_Pow and a.base is S.NegativeOne
+                    if S.NegativeOne not in factors:
+                        factors[S.NegativeOne] = S.Zero
+                    factors[a] += S.One
 
         self.factors = factors
         try:
@@ -147,7 +183,7 @@ class Factors(object):
             ['%s: %s' % (k, v) for k, v in ordered(self.factors.items())])
 
     @property
-    def is_zero(self):
+    def is_zero(self):  # Factors
         """
         >>> from sympy.core.exprtools import Factors
         >>> Factors(1).div(Factors(1))[1].is_zero
@@ -157,7 +193,7 @@ class Factors(object):
         return len(f) == 1 and S.Zero in f
 
     @property
-    def is_one(self):
+    def is_one(self):  # Factors
         """
         >>> from sympy.core.exprtools import Factors
         >>> Factors(1).is_one
@@ -194,7 +230,7 @@ class Factors(object):
         return Mul(*args)
 
     def normal(self, other):  # Factors
-        """Return unique Factors of self and other.
+        """Return ``self`` and ``other`` with gcd removed from each.
 
         Examples
         ========
@@ -214,31 +250,10 @@ class Factors(object):
         if other.is_zero:
             return Factors(), Factors(S.Zero)
 
-        self_factors = dict(self.factors)
-        other_factors = dict(other.factors)
-        if self_factors == other_factors:
-            return Factors(), Factors()
-
-        for factor, self_exp in self.factors.iteritems():
-            try:
-                other_exp = other.factors[factor]
-            except KeyError:
-                continue
-
-            exp = self_exp - other_exp
-
-            if not exp:
-                del self_factors[factor]
-                del other_factors[factor]
-            else:
-                if exp > 0:
-                    self_factors[factor] = exp
-                    del other_factors[factor]
-                else:
-                    del self_factors[factor]
-                    other_factors[factor] = -exp
-
-        return Factors(self_factors), Factors(other_factors)
+        g = self.gcd(other)
+        if g.is_one:
+            return Factors(self), Factors(other)
+        return self.quo(g), other.quo(g)
 
     def mul(self, other):  # Factors
         """Return Factors of ``self * other``.
@@ -268,12 +283,6 @@ class Factors(object):
                 if not exp:
                     del factors[factor]
                     continue
-
-                if factor is S.NegativeOne:
-                    if not exp % 2:
-                        del factors[factor]
-                        continue
-                    exp = S.One
 
             factors[factor] = exp
 
@@ -310,34 +319,70 @@ class Factors(object):
         >>> a/b
         Factors({y: 1})
         """
+        from sympy.simplify.simplify import powdenest, fraction
+
         if not isinstance(other, Factors):
             other = Factors(other)
             if other.is_zero:
                 raise ZeroDivisionError
             if self.is_zero:
-                return Factors(S.Zero)
-        quo, rem = dict(self.factors), {}
+                return (Factors(S.Zero), Factors(S.Zero))
 
+        quo, rem = dict(self.factors), {}
+        rat_base_factors = None
         for factor, exp in other.factors.iteritems():
             if factor in quo:
-                if factor is S.NegativeOne:
-                    del quo[factor]
+                e = quo[factor]
+                if all(_isnumber(i) for i in (e, exp)):
+                    dif = e - exp
+                    if not dif:
+                        del quo[factor]
+                    elif dif > 0:
+                        quo[factor] = dif
+                    else:
+                        del quo[factor]
+                        rem[factor] = -dif
                     continue
-
-                exp = quo[factor] - exp
-
-                if exp <= 0:
-                    del quo[factor]
-
-                if exp >= 0:
-                    if exp:
-                        quo[factor] = exp
-
-                    continue
-
-                exp = -exp
+                else:
+                    r = e.extract_additively(exp)
+                    if r is not None:
+                        if not r:
+                            del quo[factor]
+                        else:
+                            quo[factor] = r
+                        continue
+            elif factor.is_Rational and factor is not S.NegativeOne:
+                if rat_base_factors is None:
+                    rat_base_factors = S.One
+                    for b, e in quo.items():
+                        if b.is_Rational:
+                            rat_base_factors *= b**quo.pop(b)
+                rat_base_factors *= factor**-exp
+                continue
 
             rem[factor] = exp
+
+        # /!\ any factors with Rational bases which would have appeared
+        # in the denominator of self will now be moved, there e.g.
+        # Factors(8**-x).div(S(4)) -> (Factors({}), Factors({2: 3*x + 2})).
+        # This is a feature, not a bug, since Factors is a low-level
+        # routine that assumes (but does not check) that it is handling
+        # a term with all factors in the numerator
+        if rat_base_factors is not None:
+            q, r = fraction(expand_power_exp(powdenest(rat_base_factors)))
+            for m in Mul.make_args(q):
+                b, e = m.as_base_exp()
+                if b.q != 1:
+                    r *= b.q**e
+                    b = Integer(b.p)
+                if b not in quo:
+                    quo[b] = S.Zero
+                quo[b] += e
+            for m in Mul.make_args(r):
+                b, e = m.as_base_exp()
+                if b not in rem:
+                    rem[b] = S.Zero
+                rem[b] += e
 
         rem = rem or S.Zero
 
@@ -398,11 +443,6 @@ class Factors(object):
             if other:
                 for factor, exp in self.factors.iteritems():
                     factors[factor] = exp*other
-                    if factor is S.NegativeOne:
-                        if factors[factor] % 2 == 1:
-                            factors[factor] = S.One
-                        else:
-                            del factors[factor]
 
             return Factors(factors)
         else:
@@ -708,6 +748,9 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
     >>> gcd_terms(x/2/y + 1/x/y, fraction=False, clear=False)
     (x + 2/x)/(2*y)
 
+    The ``clear`` flag was ignored in this case because the returned
+    expression was a rational expression, not a simple sum.
+
     See Also
     ========
     factor_terms, sympy.polys.polytools.terms_gcd
@@ -842,7 +885,8 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
                 fraction=fraction) for i in expr])
         return expr
 
-    if expr.is_Pow or expr.is_Function or is_iterable or not hasattr(expr, 'args_cnc'):
+    if expr.is_Pow or expr.is_Function or \
+            is_iterable or not hasattr(expr, 'args_cnc'):
         args = expr.args
         newargs = tuple([factor_terms(i,
             radical=radical,

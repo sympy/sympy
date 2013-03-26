@@ -1,4 +1,7 @@
 from __future__ import with_statement
+
+from random import randrange
+
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        MeijerShiftA, MeijerShiftB, MeijerShiftC, MeijerShiftD,
                        MeijerUnShiftA, MeijerUnShiftB, MeijerUnShiftC,
@@ -13,7 +16,6 @@ from sympy.utilities.pytest import raises
 from sympy.abc import z, a, b, c
 from sympy.utilities.randtest import test_numerically as tn
 from sympy.utilities.pytest import XFAIL, skip, slow
-from random import randrange
 
 from sympy import (cos, sin, log, exp, asin, lowergamma, atanh, besseli,
                    gamma, sqrt, pi, erf, exp_polar)
@@ -45,10 +47,8 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     r = hyperexpand(hyper(ap, bq, z))
     if r.has(hyper):
         return False
-
     if not numerical:
         return True
-
     repl = {}
     for n, a in enumerate(r.free_symbols - set([z])):
         repl[a] = randcplx(n)/div
@@ -56,8 +56,9 @@ def can_do(ap, bq, numerical=True, div=1, lowerplane=False):
     if lowerplane:
         [a, b, c, d] = [2, -2, 3, -1]
     return tn(
-        hyper(ap, bq, z).subs(repl), r.replace(exp_polar, exp).subs(repl), z,
-        a=a, b=b, c=c, d=d)
+        hyper(ap, bq, z).subs(repl),
+        r.replace(exp_polar, exp).subs(repl),
+        z, a=a, b=b, c=c, d=d)
 
 
 def test_roach():
