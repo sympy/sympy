@@ -10,6 +10,12 @@ x, y = symbols('x y')
 z = symbols('z', nonzero=True)
 
 
+@XFAIL
+def test_bug_subs():
+    p = Piecewise( (0, Eq(sin(x)+y, 0)), (1, True))
+    assert(p.subs(y, 0) == Piecewise( (0, Eq(sin(x), 0)), (1, True)))
+
+
 def test_piecewise():
 
     # Test canonization
