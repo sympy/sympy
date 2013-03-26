@@ -11,7 +11,8 @@ from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
     cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, besselj, bessely, besseli, besselk,
-    exp_polar, polar_lift, unpolarify, Function, expint, expand_mul)
+    exp_polar, polar_lift, unpolarify, Function, expint, expand_mul,
+    combsimp, trigsimp)
 from sympy.utilities.pytest import XFAIL, slow, skip
 from sympy.abc import x, s, a, b, c, d
 nu, beta, rho = symbols('nu beta rho')
@@ -168,12 +169,13 @@ def test_mellin_transform_bessel():
     assert MT(besselj(a, 2*sqrt(x)), x, s) == \
         (gamma(a/2 + s)/gamma(a/2 - s + 1), (-re(a)/2, S(3)/4), True)
     assert MT(sin(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
-        (2**a*gamma(S(1)/2 - 2*s)*gamma((a + 1)/2 + s)
-         / (gamma(1 - s - a/2)*gamma(1 + a - 2*s)),
-            (-(re(a) + 1)/2, S(1)/4), True)
+        (2**a*gamma(-2*s + S(1)/2)*gamma(a/2 + s + S(1)/2)/(
+        gamma(-a/2 - s + 1)*gamma(a - 2*s + 1)), (
+        -re(a)/2 - S(1)/2, S(1)/4), True)
     assert MT(cos(sqrt(x))*besselj(a, sqrt(x)), x, s) == \
-        (2**a*gamma(a/2 + s)*gamma(-2*s + S(1)/2)/(gamma(-a/2 - s + S(1)/2)*
-            gamma(a - 2*s + 1)), (-re(a)/2, S(1)/4), True)
+        (2**a*gamma(a/2 + s)*gamma(-2*s + S(1)/2)/(
+        gamma(-a/2 - s + S(1)/2)*gamma(a - 2*s + 1)), (
+        -re(a)/2, S(1)/4), True)
     assert MT(besselj(a, sqrt(x))**2, x, s) == \
         (gamma(a + s)*gamma(S(1)/2 - s)
          / (sqrt(pi)*gamma(1 - s)*gamma(1 + a - s)),
@@ -230,25 +232,26 @@ def test_mellin_transform_bessel():
     assert MT(besselk(a, 2*sqrt(x)), x, s) == \
         (gamma(
          s - a/2)*gamma(s + a/2)/2, (Max(-re(a)/2, re(a)/2), oo), True)
-    assert MT(besselj(a, 2*sqrt(2*sqrt(x)))*besselk(a, 2*sqrt(2*sqrt(x))), x, s) == \
-        (4**(-s)*gamma(2*s)*gamma(a/2 + s)/gamma(a/2 - s + 1)/2,
-            (Max(-re(a)/2, 0), oo), True)
+    assert MT(besselj(a, 2*sqrt(2*sqrt(x)))*besselk(
+        a, 2*sqrt(2*sqrt(x))), x, s) == (2**(-2*s - 1)*gamma(2*s)*
+        gamma(a/2 + s)/gamma(a/2 - s + 1), (Max(0, -re(a)/2), oo), True)
     # TODO bessely(a, x)*besselk(a, x) is a mess
     assert MT(besseli(a, sqrt(x))*besselk(a, sqrt(x)), x, s) == \
-        (
-            gamma(s)*gamma(
-                a + s)*gamma(-s + S(1)/2)/(2*sqrt(pi)*gamma(a - s + 1)),
-            (Max(-re(a), 0), S(1)/2), True)
+        (gamma(s)*gamma(
+        a + s)*gamma(-s + S(1)/2)/(2*sqrt(pi)*gamma(a - s + 1)),
+        (Max(-re(a), 0), S(1)/2), True)
     assert MT(besseli(b, sqrt(x))*besselk(a, sqrt(x)), x, s) == \
-             (4**s*gamma(-2*s + 1)*gamma(-a/2 + b/2 + s)*gamma(a/2 + b/2 + s)/
-            (2*gamma(-a/2 + b/2 - s + 1)*gamma(a/2 + b/2 - s + 1)),
-            (Max(-re(a)/2 - re(b)/2, re(a)/2 - re(b)/2), S(1)/2), True)
+        (2**(2*s - 1)*gamma(-2*s + 1)*gamma(-a/2 + b/2 + s)* \
+        gamma(a/2 + b/2 + s)/(gamma(-a/2 + b/2 - s + 1)* \
+        gamma(a/2 + b/2 - s + 1)), (Max(-re(a)/2 - re(b)/2, \
+        re(a)/2 - re(b)/2), S(1)/2), True)
 
     # TODO products of besselk are a mess
 
-    # TODO this can be simplified considerably (although I have no idea how)
     mt = MT(exp(-x/2)*besselk(a, x/2), x, s)
-    assert not mt[0].has(meijerg, hyper)
+    mt0 = combsimp((trigsimp(combsimp(mt[0].expand(func=True)))))
+    assert mt0 == 2*pi**(S(3)/2)*cos(pi*s)*gamma(-s + S(1)/2)/(
+        (cos(2*pi*a) - cos(2*pi*s))*gamma(-a - s + 1)*gamma(a - s + 1))
     assert mt[1:] == ((Max(-re(a), re(a)), oo), True)
     # TODO exp(x/2)*besselk(a, x/2) [etc] cannot currently be done
     # TODO various strange products of special orders

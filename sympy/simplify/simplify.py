@@ -2555,6 +2555,8 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
         nc_part = []
         newexpr = []
         for term in expr.args:
+            if term.is_Pow:
+                term = _denest_pow(term)
             if term.is_commutative:
                 b, e = term.as_base_exp()
                 if deep:
