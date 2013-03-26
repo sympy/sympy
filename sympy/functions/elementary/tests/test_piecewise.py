@@ -10,12 +10,6 @@ x, y = symbols('x y')
 z = symbols('z', nonzero=True)
 
 
-@XFAIL
-def test_bug_subs():
-    p = Piecewise( (0, Eq(sin(x)+y, 0)), (1, True))
-    assert(p.subs(y, 0) == Piecewise( (0, Eq(sin(x), 0)), (1, True)))
-
-
 def test_piecewise():
 
     # Test canonization
@@ -32,6 +26,7 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
+    assert Piecewise((1, Eq(x + 1/x, (x**2 + 1)/x)), (2, True)) == 1
     raises(TypeError, lambda: Piecewise(x))
     raises(TypeError, lambda: Piecewise((x, x**2)))
 
@@ -62,13 +57,13 @@ def test_piecewise():
     assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 0) == 1
     assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 1) == 0
     assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, y) == 1
-    assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, -y) == \
-        Piecewise((1, Eq(y, 0)), (0, True))
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
-    assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, -z) == 0
     assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
         Piecewise((1, Eq(exp(z), cos(z))), (0, True))
     assert Piecewise((1, Eq(x, y*(y + 1))), (0, True)).subs(x, y**2 + y) == 1
+
+    p5 = Piecewise( (0, Eq(cos(x) + y, 0)), (1, True))
+    assert p5.subs(y, 0) == Piecewise( (0, Eq(cos(x), 0)), (1, True))
 
     # Test evalf
     assert p.evalf() == p
