@@ -316,3 +316,6 @@ def test_order_noncommutative():
     assert expand((1 + Order(x))*A*A*x) == A*A*x + Order(x**2, x)
     assert expand((A*A + Order(x))*x) == A*A*x + Order(x**2, x)
     assert expand((A + Order(x))*A*x) == A*A*x + Order(x**2, x)
+
+def test_issue_3654():
+    assert (1 + x**2)**10000*O(x) == O(x)
