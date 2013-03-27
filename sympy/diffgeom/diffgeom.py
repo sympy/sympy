@@ -30,7 +30,7 @@ class Manifold(Basic):
         # other Patch instance on the same manifold.
 
     def _latex(self, printer, *args):
-        return r'\mathbb{%s}' % self.name
+        return r'\mathrm{%s}' % self.name
 
 
 class Patch(Basic):
