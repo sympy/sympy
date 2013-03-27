@@ -41,8 +41,16 @@ def test_dot_different_frames():
     assert dot(N.z, A.y) == 0
     assert dot(N.z, A.z) == 1
 
+    print "1"
+    assert dot(N.x, A.x + A.y) - (cos(q1) - sin(q1)) == 0
+    print "2"
+    assert dot(A.x + A.y, N.x) - (cos(q1) - sin(q1)) == 0
+
+    print "3"
     assert dot(N.x, A.x + A.y) == cos(q1) - sin(q1)
+    print "4"
     assert dot(A.x + A.y, N.x) == cos(q1) - sin(q1)
+    print "5"
 
     assert dot(A.x, C.x) == cos(q3)
     assert dot(A.x, C.y) == 0
