@@ -4,6 +4,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
+from sympy.functions.elementary.trigonometric import atan, atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -476,6 +477,9 @@ class arg(Function):
         return (x * Derivative(y, t, **{'evaluate': True}) - y *
                 Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
 
+    def _eval_rewrite_as_atan2(self, arg):
+        x, y = re(self.args[0]), im(self.args[0])
+        return atan2(y, x)
 
 class conjugate(Function):
     """
