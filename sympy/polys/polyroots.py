@@ -485,7 +485,27 @@ def _quintic_simplify(expr):
 
 
 def _integer_basis(poly):
-    """Compute coefficient basis for a polynomial over integers. """
+    """Compute coefficient basis for a polynomial over integers.
+
+    Returns the integer ``div`` such that substituting ``x = div*y``
+    ``p(x) = m*q(y)`` where the coefficients of ``q`` are smaller
+    than those of ``p``.
+
+    For example ``x**5 + 512*x + 1024 = 0``
+    with ``div = 4`` becomes ``y**5 + 2*y + 1 = 0``
+
+    Returns the integer ``div`` or ``None`` if there is no possible scaling.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import Poly
+    >>> from sympy.abc import x
+    >>> from sympy.polys.polyroots import _integer_basis
+    >>> p = Poly(x**5 + 512*x + 1024, x, domain='ZZ')
+    >>> _integer_basis(p)
+    4
+    """
     monoms, coeffs = zip(*poly.terms())
 
     monoms, = zip(*monoms)
@@ -493,6 +513,8 @@ def _integer_basis(poly):
 
     if coeffs[0] < coeffs[-1]:
         coeffs = list(reversed(coeffs))
+        n = monoms[0]
+        monoms = [n - i for i in reversed(monoms)]
     else:
         return None
 
