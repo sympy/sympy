@@ -487,9 +487,9 @@ def _quintic_simplify(expr):
 def _integer_basis(poly):
     """Compute coefficient basis for a polynomial over integers.
 
-    Returns the integer ``div`` such that substituting ``y = div*x``
-    the algebraic equation ``p(x) = 0`` becomes an algebraic equation
-    in ``y`` with smaller integer coefficients.
+    Returns the integer ``div`` such that substituting ``x = div*y``
+    ``p(x) = m*q(y)`` where the coefficients of ``q`` are smaller
+    than those of ``p``.
 
     For example ``x**5 + 512*x + 1024 = 0``
     with ``div = 4`` becomes ``y**5 + 2*y + 1 = 0``
