@@ -1545,3 +1545,33 @@ def test_homogeneous_function():
     assert homogeneous_order(eq5, x, f(x)) == 0
     assert homogeneous_order(eq6, x, f(x)) == 0
     assert homogeneous_order(eq7, x, f(x)) == None
+
+
+def test_linear_coefficients():
+    f = Function('f')
+    df = f(x).diff(x)
+    eq = (1 + x + 3*f(x)) + (4 + 3*x + 6*f(x))*df
+    assert classify_ode(eq) == ('1st_exact', 'linear_coefficients', '1st_exact_Integral', 'linear_coefficients_Integral')
+    sol = dsolve(eq, hint = 'linear_coefficients')
+    assert sol.lhs == log(f(x) - S(1)/3)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = x + (x + f(x) + 4)*Derivative(f(x), x) + 2*f(x) + 3
+    sol = dsolve(eq, hint = 'linear_coefficients')
+    assert classify_ode(eq) == ('linear_coefficients', 'linear_coefficients_Integral')
+    assert sol.lhs == log(x + 5)
+    assert sol.rhs == C1 + log((-sqrt(5)/S(2) + S(3)/2 + (f(x) - 1)/(x + 5))**(-S(1)/2 + sqrt(5)/S(10))*(sqrt(5)/S(2) + S(3)/2 + (f(x) - 1)/(x + 5))**(-S(1)/2 - S(sqrt(5))/10))
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = df + (-25*f(x) -8*x + 62)/(4*f(x) + 11*x -11)
+    assert classify_ode(eq) == ('linear_coefficients', 'linear_coefficients_Integral')
+
+    eq = df + (-f(x) -8*x + 12)/(2*f(x) + x -10)
+    assert classify_ode(eq) == ('linear_coefficients', 'linear_coefficients_Integral')
+    sol = dsolve(eq)
+    assert sol.lhs == log(x - S(14)/15)
+    assert sol.rhs == C1 - log((-2 + (f(x) - S(68)/15)/(x - S(14)/15))**(S(5)/8)*(2 + (f(x) - S(68)/15)/(x - S(14)/15))**(S(3)/8))
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = (3*x + 1)*df + (-4*f(x) -6*x + 5)
+    assert classify_ode(eq) == ('1st_exact', '1st_linear', 'almost_linear', 'linear_coefficients',     '1st_exact_Integral', '1st_linear_Integral', 'almost_linear_Integral', 'linear_coefficients_Integral')

@@ -208,9 +208,10 @@ from collections import defaultdict
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
 from sympy.utilities.exceptions import SymPyDeprecationWarning
-from sympy.core.exprtools import factor_terms
+from sympy.core.exprtools import factor_terms, gcd_terms
 from sympy.core.function import Function, Derivative, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
+from sympy.core.numbers import Rational
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.sympify import sympify
@@ -241,15 +242,16 @@ allhints = (
     "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
     "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
     "1st_homogeneous_coeff_subs_dep_div_indep", "almost_linear",
-    "separable_reduced", "nth_linear_constant_coeff_homogeneous",
-    "nth_linear_euler_eq_homogeneous",
+    "linear_coefficients", "separable_reduced",
+    "nth_linear_constant_coeff_homogeneous", "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
     "Liouville", "separable_Integral", "1st_exact_Integral",
     "1st_linear_Integral", "Bernoulli_Integral",
     "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
     "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
-    "almost_linear_Integral", "separable_reduced_Integral",
+    "almost_linear_Integral", "linear_coefficients_Integral",
+    "separable_reduced_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
     "Liouville_Integral"
 )
@@ -920,6 +922,47 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 r2[c] = match[c]
                 matching_hints["almost_linear"] = r2
                 matching_hints["almost_linear_Integral"] = r2
+
+        # Linear coefficients of the form y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
+        match = collect(reduced_eq, [df, f(x)]).match(a*df + b)
+        if match:
+            # Representing match[b]/match[a] as a single term
+            fargs = gcd_terms(match[b]/match[a])
+            a1 = Wild('a1', exclude = [x])
+            a2 = Wild('a2', exclude = [x])
+            b1 = Wild('b1', exclude = [f(x)])
+            b2 = Wild('b2', exclude = [f(x)])
+            c1 = Wild('c1')
+            c2 = Wild('c2')
+            coeff_dict = fargs.match((a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
+            if coeff_dict:
+            # Checking if all the matches are numbers
+                argvals = filter(lambda x: isinstance(x, Rational), coeff_dict.values())
+                if argvals and coeff_dict[c1] and coeff_dict[c2] and len(argvals) == 6:
+                    u = Dummy('u')
+                    t = Dummy('t')
+                    # Dummy substitution for df and f(x)
+                    dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
+                    # Substituting x as x + (b2*c1 - b1*c2)/(a2*b1 - a1*b2)
+                    # Substituting y as y + (a1*c2 - a2*c1)/(a2*b1 - a1*b2)
+                    denom = coeff_dict[a2]*coeff_dict[b1] - coeff_dict[a1]*coeff_dict[b2]
+                    if denom:
+                        xarg = (coeff_dict[b2]*coeff_dict[c1] - coeff_dict[b1]*coeff_dict[c2])/denom
+                        yarg = (coeff_dict[a1]*coeff_dict[c2] - coeff_dict[a2]*coeff_dict[c1])/denom
+                        dummy_eq = simplify(dummy_eq.subs(((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))))
+                        # Re-checking if dummy_eq is indeed homogeneous
+                        match_homo = collect(expand(dummy_eq), [df, f(x)]).match(e*df + d)
+                        if match_homo:
+                            orderd = homogeneous_order(match_homo[d], x, f(x))
+                            ordere = homogeneous_order(match_homo[e], x, f(x))
+                            if orderd == ordere and orderd is not None:
+                                # Match arguments are passed in such a way that it is coherent
+                                # With the already existing homogeneous functions.
+                                match_homo[d] = match_homo[d].subs(f(x), y)
+                                match_homo[e] = match_homo[e].subs(f(x), y)
+                                match_homo.update({'xarg': xarg, 'yarg': yarg, 'd': d, 'e': e, 'y': y})
+                                matching_hints["linear_coefficients"] = match_homo
+                                matching_hints["linear_coefficients_Integral"] = match_homo
 
         # Equation of the form y' + (y/x)*H(x^n*y) = 0 that can be reduced to separable form
         match = collect(expand(reduced_eq), [df], evaluate = True).match(a*df + b)
@@ -2135,13 +2178,17 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
+    u = Dummy('u')
     u1 = Dummy('u1')  # u1 == f(x)/x
     r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
+    xarg = match.get('xarg', 0)  # If xarg present take xarg, else zero
+    yarg = match.get('yarg', 0)  # It yarg present take yarg, else zero
     int = C.Integral(
         (-r[r['e']]/(r[r['d']] + u1*r[r['e']])).subs({x: 1, r['y']: u1}),
         (u1, None, f(x)/x))
     sol = logcombine(Eq(log(x), int + log(C1)), force=True)
+    sol = sol.subs(f(x), u).subs(((u, u - yarg), (x, x - xarg), (u, f(x))))
     return sol
 
 
@@ -2222,14 +2269,18 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     """
     x = func.args[0]
     f = func.func
+    u = Dummy('u')
     u2 = Dummy('u2')  # u2 == x/f(x)
     r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
+    xarg = match.get('xarg', 0)  # If xarg present take xarg, else zero
+    yarg = match.get('yarg', 0)  # If yarg present take yarg, else zero
     int = C.Integral(
         simplify(
             (-r[r['d']]/(r[r['e']] + u2*r[r['d']])).subs({x: u2, r['y']: 1})),
         (u2, None, x/f(x)))
     sol = logcombine(Eq(log(f(x)), int + log(C1)), force=True)
+    sol = sol.subs(f(x), u).subs(((u, u - yarg), (x, x - xarg), (u, f(x))))
     return sol
 
 # XXX: Should this function maybe go somewhere else?
@@ -2814,6 +2865,63 @@ def ode_almost_linear(eq, func, order, match):
     # classify_ode, just passing eq, func, order and match to
     # ode_1st_linear will give the required output.
     return ode_1st_linear(eq, func, order, match)
+
+def ode_linear_coefficients(eq, func, order, match):
+    r"""
+    Solves a differential equation with linear-coefficients.
+
+    The general form of a differential equation with linear-coefficients is
+    y' + F((a1*x + b1*y + c1)/(a2*x + b2*y + c2)) = 0,
+    where a1, b1, c1, a2, b2, c2 are constants and (a1*b2 - a2*b1) != 0
+
+    This can be solved by substituting x = x' + ((b2*c1 - b1*c2)/(a2*b1 - a1*b2))
+    and y = y' + ((a1*c2 - a2*c1)/(a2*b1 - a1*b2)). Making the given
+    substitution reduces it to a homogeneous differential equation
+    (see the docstring of ode_1st_homogeneous_coeff_best(), ode_1st_homogeneous_coeff_subs_indep_div_dep()
+    and 1st_homogeneous_coeff_subs_dep_div_indep())
+
+    Examples
+    ========
+
+    >>> from sympy import Function, Derivative, pprint
+    >>> from sympy.solvers.ode import dsolve, classify_ode
+    >>> from sympy.abc import x
+    >>> f = Function('f')
+    >>> df = f(x).diff(x)
+    >>> eq = (x + f(x) + 1)*df + (f(x) -6*x + 1)
+    >>> dsolve(eq, hint = 'linear_coefficients')
+    [f(x) == -x - sqrt(C1 + 7*x**2) - 1, f(x) == -x + sqrt(C1 + 7*x**2) - 1]
+    >>> pprint(dsolve(eq, hint = 'linear_coefficients'))
+                      ___________                     ___________
+                   /         2                     /         2
+    [f(x) = -x - \/  C1 + 7*x   - 1, f(x) = -x + \/  C1 + 7*x   - 1]
+
+
+    References
+    ==========
+
+    - Joel Moses, "Symbolic Integration - The Stormy Decade",
+        Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    """
+
+    # This uses already formed coherent parameters in classify_ode()
+    # to form a dummy homogeneous differential equation
+    # It is then passed to ode_1st_homogeneous_coeff_best(),
+    # ode_1st_homogeneous_coeff_subs_indep_div_dep()
+    # and ode_1st_homogeneous_coeff_subs_dep_div_indep()
+    # with the extra parameters xarg and yarg
+    x = func.args[0]
+    dummy_eq = match[match['d']].subs(match['y'], func) + match[match['e']].subs(match['y'], func)*func.diff(x)
+    hints = classify_ode(dummy_eq, func)
+    if "1st_homogeneous_coeff_best" in hints:
+        return ode_1st_homogeneous_coeff_best(eq, func, order, match)
+    elif "1st_homogeneous_coeff_subs_indep_div_dep" in hints:
+        print 'indep_div_dep'
+        return ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match)
+    elif "1st_homogeneous_coeff_subs_dep_div_indep" in hints:
+        print 'dev_div_indep'
+        return ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match)
+
 
 def ode_separable_reduced(eq, func, order, match):
     r"""
