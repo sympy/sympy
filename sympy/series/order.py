@@ -109,20 +109,20 @@ class Order(Expr):
             symbols = list(expr.free_symbols)
 
         if expr.is_Order:
-
-            new_symbols = list(expr.variables)
-            for s in symbols:
-                if s not in new_symbols:
-                    new_symbols.append(s)
-            if len(new_symbols) == len(expr.variables):
+            v = set(expr.variables)
+            symbols = v | set(symbols)
+            if symbols == v:
                 return expr
-            symbols = new_symbols
+            symbols = list(symbols)
 
         elif symbols:
+
+            symbols = list(set(symbols))
 
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e, f) in lst])
+
             elif expr:
                 if len(symbols) > 1 or expr.is_commutative is False:
                     # TODO
@@ -131,13 +131,39 @@ class Order(Expr):
                     expr = expr.as_leading_term(*symbols)
                 else:
                     expr = expr.compute_leading_term(symbols[0])
-                terms = expr.as_coeff_mul(*symbols)[1]
-                s = set(symbols)
-                expr = Mul(*[t for t in terms if s & t.free_symbols])
+
+                margs = list(Mul.make_args(expr.as_independent(*symbols)[1]))
+
+                if len(symbols) == 1:
+                    # The definition of O(f(x)) symbol explicitly stated that
+                    # the argument of f(x) is irrelevant.  That's why we can
+                    # combine some power exponents (only "on top" of the
+                    # expression tree for f(x)), e.g.:
+                    # x**p * (-x)**q -> x**(p+q) for real p, q.
+                    x = symbols[0]
+
+                    for i, t in enumerate(margs):
+                        if t.is_Pow:
+                            b, q = t.args
+                            if b in (x, -x) and q.is_real and not q.has(x):
+                                margs[i] = x**q
+                            elif b.is_Pow and not b.exp.has(x):
+                                b, r = b.args
+                                if b in (x, -x) and r.is_real:
+                                    margs[i] = x**(r*q)
+                            elif b.is_Mul and b.args[0] is S.NegativeOne:
+                                b = -b
+                                if b.is_Pow and not b.exp.has(x):
+                                    b, r = b.args
+                                    if b in (x, -x) and r.is_real:
+                                        margs[i] = x**(r*q)
+
+                expr = Mul(*margs)
 
         if expr is S.Zero:
             return expr
-        elif not expr.has(*symbols):
+
+        if not expr.has(*symbols):
             expr = S.One
 
         # create Order instance:

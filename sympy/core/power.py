@@ -925,6 +925,20 @@ class Pow(Expr):
                     'expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
+
+            if e.is_real and e.is_positive:
+                lt = b.as_leading_term(x)
+
+                # Try to correct nuse (= m) guess from:
+                # (lt + rest + O(x**m))**e =
+                # lt**e*(1 + rest/lt + O(x**m)/lt)**e =
+                # lt**e + ... + O(x**m)*lt**(e - 1) = ... + O(x**n)
+                try:
+                    cf = C.Order(lt, x).getn()
+                    nuse = ceiling(n - cf*(e - 1))
+                except NotImplementedError:
+                    pass
+
             bs = b._eval_nseries(x, n=nuse, logx=logx)
             terms = bs.removeO()
             if terms.is_Add:
