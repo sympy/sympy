@@ -771,7 +771,6 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         reduced_eq = eq
 
     if order == 1:
-
         # Linear case: a(x)*y'+b(x)*y+c(x) == 0
         if eq.is_Add:
             ind, dep = reduced_eq.as_independent(f)
@@ -883,22 +882,23 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             # First order equation with homogeneous coefficients:
             # dy/dx == F(y/x) or dy/dx == F(x/y)
             ordera = homogeneous_order(r[d], x, y)
-            orderb = homogeneous_order(r[e], x, y)
-            if ordera == orderb and ordera is not None:
-                # u1=y/x and u2=x/y
-                u1 = Dummy('u1')
-                u2 = Dummy('u2')
-                if simplify((r[d] + u1*r[e]).subs({x: 1, y: u1})) != 0:
-                    matching_hints[
-                        "1st_homogeneous_coeff_subs_dep_div_indep"] = r
-                    matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
-                if simplify((r[e] + u2*r[d]).subs({x: u2, y: 1})) != 0:
-                    matching_hints[
-                        "1st_homogeneous_coeff_subs_indep_div_dep"] = r
-                    matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
-                if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
-                        and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
-                    matching_hints["1st_homogeneous_coeff_best"] = r
+            if ordera is not None:
+                orderb = homogeneous_order(r[e], x, y)
+                if ordera == orderb:
+                    # u1=y/x and u2=x/y
+                    u1 = Dummy('u1')
+                    u2 = Dummy('u2')
+                    if simplify((r[d] + u1*r[e]).subs({x: 1, y: u1})) != 0:
+                        matching_hints[
+                            "1st_homogeneous_coeff_subs_dep_div_indep"] = r
+                        matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
+                    if simplify((r[e] + u2*r[d]).subs({x: u2, y: 1})) != 0:
+                        matching_hints[
+                            "1st_homogeneous_coeff_subs_indep_div_dep"] = r
+                        matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
+                    if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
+                            and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
+                        matching_hints["1st_homogeneous_coeff_best"] = r
 
         # Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
         a = Wild('a')
@@ -926,7 +926,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         # Linear coefficients of the form y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
         match = collect(reduced_eq, [df, f(x)]).match(a*df + b)
         if match:
-            # Representing match[b]/match[a] as a single term
+            # Representing match[b]/match[a] as a single term.
             fargs = gcd_terms(match[b]/match[a])
             a1 = Wild('a1', exclude = [x])
             a2 = Wild('a2', exclude = [x])
@@ -934,35 +934,62 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             b2 = Wild('b2', exclude = [f(x)])
             c1 = Wild('c1')
             c2 = Wild('c2')
-            coeff_dict = fargs.match((a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
+            # Checking if fargs is a Function.
+            if fargs != f(x) and isinstance(fargs, Function):
+                functions = list(fargs.atoms(Function) - set([f(x)]))
+                if len(functions) == 1:
+                    function = functions.pop()
+                    coeff_dict = function.args[0].match(
+                        (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
+                else:
+                    # Try matching every function in fargs to the linear-coefficient form.
+                    functions = [function for function in functions
+                        if not isinstance(function.args[0], Function)]
+                    function = functions.pop()
+                    base_dict = function.args[0].match(
+                        (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
+                    if not functions:
+                        coeff_dict = base_dict
+                    else:
+                        for function in functions:
+                            temp_dict = function.args[0].match(
+                                (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
+                            if temp_dict != base_dict:
+                                coeff_dict = None
+                                break
+                            else:
+                                coeff_dict = base_dict
+            else:
+                coeff_dict = fargs.match((a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
             if coeff_dict:
-            # Checking if all the matches are numbers
-                argvals = filter(lambda x: isinstance(x, Rational), coeff_dict.values())
-                if argvals and coeff_dict[c1] and coeff_dict[c2] and len(argvals) == 6:
+            # Checking if all the matches are numbers.
+                if (all(coeff_dict.get(i, 0) for i in (c1, c2)) and
+                    all(isinstance(i, Rational) for i in coeff_dict.values())):
                     u = Dummy('u')
                     t = Dummy('t')
-                    # Dummy substitution for df and f(x)
+                    # Dummy substitution for df and f(x).
                     dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
-                    # Substituting x as x + (b2*c1 - b1*c2)/(a2*b1 - a1*b2)
-                    # Substituting y as y + (a1*c2 - a2*c1)/(a2*b1 - a1*b2)
-                    denom = coeff_dict[a2]*coeff_dict[b1] - coeff_dict[a1]*coeff_dict[b2]
+                    # Substituting x as x + (b2*c1 - b1*c2)/(a2*b1 - a1*b2).
+                    # Substituting y as y + (a1*c2 - a2*c1)/(a2*b1 - a1*b2).
+                    denom = (a2*b1 - a1*b2).subs(coeff_dict)
                     if denom:
-                        xarg = (coeff_dict[b2]*coeff_dict[c1] - coeff_dict[b1]*coeff_dict[c2])/denom
-                        yarg = (coeff_dict[a1]*coeff_dict[c2] - coeff_dict[a2]*coeff_dict[c1])/denom
+                        xarg = (b2*c1 - b1*c2).subs(coeff_dict)/denom
+                        yarg = (a1*c2 - a2*c1).subs(coeff_dict)/denom
                         dummy_eq = simplify(dummy_eq.subs(((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))))
-                        # Re-checking if dummy_eq is indeed homogeneous
+                        # Re-checking if dummy_eq is indeed homogeneous.
                         match_homo = collect(expand(dummy_eq), [df, f(x)]).match(e*df + d)
                         if match_homo:
                             orderd = homogeneous_order(match_homo[d], x, f(x))
-                            ordere = homogeneous_order(match_homo[e], x, f(x))
-                            if orderd == ordere and orderd is not None:
-                                # Match arguments are passed in such a way that it is coherent
-                                # With the already existing homogeneous functions.
-                                match_homo[d] = match_homo[d].subs(f(x), y)
-                                match_homo[e] = match_homo[e].subs(f(x), y)
-                                match_homo.update({'xarg': xarg, 'yarg': yarg, 'd': d, 'e': e, 'y': y})
-                                matching_hints["linear_coefficients"] = match_homo
-                                matching_hints["linear_coefficients_Integral"] = match_homo
+                            if orderd is not None:
+                                ordere = homogeneous_order(match_homo[e], x, f(x))
+                                if orderd == ordere:
+                                    # Match arguments are passed in such a way that it is coherent
+                                    # With the already existing homogeneous functions.
+                                    match_homo[d] = match_homo[d].subs(f(x), y)
+                                    match_homo[e] = match_homo[e].subs(f(x), y)
+                                    match_homo.update({'xarg': xarg, 'yarg': yarg, 'd': d, 'e': e, 'y': y})
+                                    matching_hints["linear_coefficients"] = match_homo
+                                    matching_hints["linear_coefficients_Integral"] = match_homo
 
         # Equation of the form y' + (y/x)*H(x^n*y) = 0 that can be reduced to separable form
         match = collect(expand(reduced_eq), [df], evaluate = True).match(a*df + b)
@@ -2888,10 +2915,10 @@ def ode_linear_coefficients(eq, func, order, match):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> df = f(x).diff(x)
-    >>> eq = (x + f(x) + 1)*df + (f(x) -6*x + 1)
-    >>> dsolve(eq, hint = 'linear_coefficients')
+    >>> eq = (x + f(x) + 1)*df + (f(x) - 6*x + 1)
+    >>> dsolve(eq, hint='linear_coefficients')
     [f(x) == -x - sqrt(C1 + 7*x**2) - 1, f(x) == -x + sqrt(C1 + 7*x**2) - 1]
-    >>> pprint(dsolve(eq, hint = 'linear_coefficients'))
+    >>> pprint(dsolve(eq, hint='linear_coefficients'))
                       ___________                     ___________
                    /         2                     /         2
     [f(x) = -x - \/  C1 + 7*x   - 1, f(x) = -x + \/  C1 + 7*x   - 1]
@@ -2911,15 +2938,14 @@ def ode_linear_coefficients(eq, func, order, match):
     # and ode_1st_homogeneous_coeff_subs_dep_div_indep()
     # with the extra parameters xarg and yarg
     x = func.args[0]
-    dummy_eq = match[match['d']].subs(match['y'], func) + match[match['e']].subs(match['y'], func)*func.diff(x)
+    dummy_eq = (match[match['d']].subs(match['y'], func) +
+        match[match['e']].subs(match['y'], func)*func.diff(x))
     hints = classify_ode(dummy_eq, func)
     if "1st_homogeneous_coeff_best" in hints:
         return ode_1st_homogeneous_coeff_best(eq, func, order, match)
     elif "1st_homogeneous_coeff_subs_indep_div_dep" in hints:
-        print 'indep_div_dep'
         return ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match)
     elif "1st_homogeneous_coeff_subs_dep_div_indep" in hints:
-        print 'dev_div_indep'
         return ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match)
 
 
