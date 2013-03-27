@@ -993,14 +993,6 @@ class Integral(Expr):
                 else:
                     return result
 
-        # try manual integration
-        try:
-            manual = manualintegrate(f, x)
-            if not manual.has(Integral) and manual is not None:
-                return manual
-        except ValueError:
-            pass
-
         # since Integral(f=g1+g2+...) == Integral(g1) + Integral(g2) + ...
         # we are going to handle Add terms separately,
         # if `f` is not Add -- we only have one term
@@ -1114,6 +1106,23 @@ class Integral(Expr):
                 if h is not None:
                     parts.append(coeff * h)
                     continue
+
+            try:
+                manual = manualintegrate(g, x)
+                if manual is not None and manual.func != Integral:
+                    if manual.has(Integral):
+                        # try to have other algorithms do the integrals
+                        # manualintegrate can't handle
+                        manual = manual.func(*[
+                            arg.doit() if arg.has(Integral) else arg
+                            for arg in manual.args
+                        ])
+                    if not manual.has(Integral):
+                        parts.append(coeff * manual)
+                        continue
+            except (ValueError, PolynomialError):
+                # can't handle some SymPy expressions
+                pass
 
             # if we failed maybe it was because we had
             # a product that could have been expanded,

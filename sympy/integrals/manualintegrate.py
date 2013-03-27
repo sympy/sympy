@@ -411,6 +411,7 @@ def _parts_rule(integrand, symbol):
                     du = u.diff(symbol)
                     v_step = integral_steps(dv, symbol)
                     v = _manualintegrate(v_step)
+
                     return u, dv, v, du, v_step
 
 def parts_rule(integral):
