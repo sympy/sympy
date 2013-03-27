@@ -1298,7 +1298,7 @@ class SymPyDocTestFinder(DocTestFinder):
             if executables is not None:
                 for ex in executables:
                     found = find_executable(ex)
-                    print "EXE %s found %s" %(ex, found)
+                    # print "EXE %s found %s" %(ex, found)
                     if found is None:
                         return None
             if moduledeps is not None:
@@ -1310,10 +1310,11 @@ class SymPyDocTestFinder(DocTestFinder):
                                               ['pyplot', 'cm', 'collections']},
                             min_module_version='1.0.0', catch=(RuntimeError,))
                         if matplotlib is not None:
-                            print "EXTMODULE matplotlib version %s found" % \
-                                matplotlib.__version__
+                            pass
+                            # print "EXTMODULE matplotlib version %s found" % \
+                            #     matplotlib.__version__
                         else:
-                            print "EXTMODULE matplotlib > 1.0.0 not found"
+                            # print "EXTMODULE matplotlib > 1.0.0 not found"
                             return None
                     else:
                         # TODO min version support
@@ -1322,9 +1323,9 @@ class SymPyDocTestFinder(DocTestFinder):
                             version = "unknown"
                             if hasattr(mod, '__version__'):
                                 version = mod.__version__
-                            print "EXTMODULE %s version %s found" %(extmod, version)
+                            # print "EXTMODULE %s version %s found" %(extmod, version)
                         else:
-                            print "EXTMODULE %s not found" %(extmod)
+                            # print "EXTMODULE %s not found" %(extmod)
                             return None
             if viewers is not None:
                 import tempfile
