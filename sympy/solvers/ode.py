@@ -1009,13 +1009,14 @@ def odesimp(eq, func, order, hint):
                            f(x)
                              /
                             |
-                            |   /      /1 \    \
-                            |  -|u2*sin|--| + 1|
-                            |   \      \u2/    /
-    log(f(x)) = log(C1) +   |  ----------------- d(u2)
-                            |       2    /1 \
-                            |     u2 *sin|--|
-                            |            \u2/
+                            |   /        1   \
+                            |  -|u2 + -------|
+                            |   |        /1 \|
+                            |   |     sin|--||
+                            |   \        \u2//
+    log(f(x)) = log(C1) +   |  --------------- d(u2)
+                            |          2
+                            |        u2
                             |
                            /
 
@@ -2082,9 +2083,9 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
                 f(x)
                   /
                  |
-                 |        g(u2)
-                 |  ----------------- d(u2)
-                 |  -u2*g(u2) - h(u2)
+                 |       -g(u2)
+                 |  ---------------- d(u2)
+                 |  u2*g(u2) + h(u2)
                  |
                 /
     <BLANKLINE>

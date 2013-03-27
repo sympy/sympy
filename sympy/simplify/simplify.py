@@ -5,7 +5,8 @@ from sympy import SYMPY_DEBUG
 from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
-    expand_multinomial, FunctionClass, expand_power_base, symbols, igcd)
+    expand_multinomial, FunctionClass, expand_power_base, symbols, igcd,
+    expand_power_exp)
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
@@ -3626,8 +3627,10 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     function, we get a completely different result that is still different
     from the input expression by doing this.
     """
+    from sympy.simplify.hyperexpand import hyperexpand
+    from sympy.functions.special.bessel import BesselBase
 
-    original_expr = expr = sympify(expr)
+    original_expr = expr = signsimp(expr)
 
     try:
         return expr._eval_simplify(ratio=ratio, measure=measure)
@@ -3637,9 +3640,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
 
-    expr = signsimp(expr)
-
-    if not isinstance(expr, Basic):  # XXX: temporary hack
+    if not isinstance(expr, Basic) or isinstance(expr, Atom):  # XXX: temporary hack
         return expr
 
     # TODO: Apply different strategies, considering expression pattern:
@@ -3653,28 +3654,11 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             return choices[0]
         return min(choices, key=measure)
 
-    expr0 = powsimp(expr)
-    if expr.is_commutative is False:
-        expr1 = together(expr0)
-        expr2 = factor_terms(expr1)
-    else:
-        expr1 = cancel(expr0)
-        expr2 = together(expr1.expand(), deep=True)
-
-    # sometimes factors in the denominators need to be allowed to join
-    # factors in numerators (see issue 3270)
-    n, d = expr.as_numer_denom()
-    if (n, d) != fraction(expr):
-        expr0b = powsimp(n)/powsimp(d)
-        if expr0b != expr0:
-            if expr.is_commutative is False:
-                expr1b = together(expr0b)
-                expr2b = factor_terms(expr1b)
-            else:
-                expr1b = cancel(expr0b)
-                expr2b = together(expr1b.expand(), deep=True)
-            if shorter(expr2b, expr) == expr2b:
-                expr1, expr2 = expr1b, expr2b
+    expr = bottom_up(expr, lambda w: w.normal())
+    expr = Mul(*powsimp(expr).as_content_primitive())
+    _e = cancel(expr)
+    expr1 = shorter(_e, _mexpand(_e).cancel())  # issue 3730
+    expr2 = shorter(together(expr, deep=True), together(expr1, deep=True))
 
     if ratio is S.Infinity:
         expr = expr2
@@ -3682,6 +3666,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         expr = shorter(expr2, expr1, expr)
     if not isinstance(expr, Basic):  # XXX: temporary hack
         return expr
+
+    expr = factor_terms(expr, sign=False)
 
     # hyperexpand automatically only works on hypergeometric terms
     expr = hyperexpand(expr)
@@ -3699,20 +3685,21 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(C.CombinatorialFunction, gamma):
         expr = combsimp(expr)
 
-    expr = powsimp(expr, combine='exp', deep=True)
-    short = shorter(expr, powsimp(factor_terms(expr)))
-    if short != expr:
-        # get rid of hollow 2-arg Mul factorization
-        from sympy.core.rules import Transform
-        hollow_mul = Transform(
-            lambda x: Mul(*x.args),
-            lambda x:
-            x.is_Mul and
-            len(x.args) == 2 and
-            x.args[0].is_Number and
-            x.args[1].is_Add and
-            x.is_commutative)
-        expr = shorter(short.xreplace(hollow_mul), expr)
+    short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
+    short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
+
+    # get rid of hollow 2-arg Mul factorization
+    from sympy.core.rules import Transform
+    hollow_mul = Transform(
+        lambda x: Mul(*x.args),
+        lambda x:
+        x.is_Mul and
+        len(x.args) == 2 and
+        x.args[0].is_Number and
+        x.args[1].is_Add and
+        x.is_commutative)
+    expr = short.xreplace(hollow_mul)
+
     numer, denom = expr.as_numer_denom()
     if denom.is_Add:
         n, d = fraction(radsimp(1/denom, symbolic=False, max_terms=1))
@@ -3720,12 +3707,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             expr = (numer*n).expand()/d
 
     if expr.could_extract_minus_sign():
-        n, d = expr.as_numer_denom()
+        n, d = fraction(expr)
         if d != 0:
-            expr = -n/(-d)
+            expr = signsimp(-n/(-d))
 
     if measure(expr) > ratio*measure(original_expr):
-        return original_expr
+        expr = original_expr
 
     return expr
 

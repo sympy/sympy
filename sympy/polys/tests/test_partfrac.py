@@ -109,7 +109,7 @@ def test_apart_undetermined_coeffs():
 
     p = Poly(1, x, domain='ZZ[a,b]')
     q = Poly((x + a)*(x + b), x, domain='ZZ[a,b]')
-    r = 1/((a - b)*(b + x)) + 1/((-a + b)*(a + x))
+    r = 1/((a - b)*(b + x)) - 1/((a - b)*(a + x))
 
     assert apart_undetermined_coeffs(p, q) == r
 

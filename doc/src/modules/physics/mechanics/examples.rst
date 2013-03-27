@@ -94,9 +94,9 @@ for the u dots (time derivatives of the generalized speeds). ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs)
-  [(4*g*sin(q2)/5 + 2*r*u2*u3 - r*u3**2*tan(q2))/r]
-  [                                     -2*u1*u3/3]
-  [                        (-2*u2 + u3*tan(q2))*u1]
+  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)]
+  [                                 -2*u1*u3/3]
+  [                    (-2*u2 + u3*tan(q2))*u1]
 
 This concludes the rolling disc example.
 
@@ -162,9 +162,9 @@ represent the constraint forces in those directions. ::
   >>> rhs = rhs.subs(kdd)
   >>> rhs.simplify()
   >>> mprint(rhs)
-  [(4*g*sin(q2)/5 + 2*r*u2*u3 - r*u3**2*tan(q2))/r]
-  [                                     -2*u1*u3/3]
-  [                        (-2*u2 + u3*tan(q2))*u1]
+  [4*g*sin(q2)/(5*r) + 2*u2*u3 - u3**2*tan(q2)]
+  [                                 -2*u1*u3/3]
+  [                    (-2*u2 + u3*tan(q2))*u1]
   >>> from sympy import signsimp, collect, factor_terms
   >>> mprint(KM.auxiliary_eqs.applyfunc(lambda w: signsimp(collect(factor_terms(w), m*r))))
   [                                                   m*r*(u1*u3 + u2') - f1]
@@ -570,9 +570,9 @@ accelerations(q double dots) with the ``rhs`` method. ::
   [                     m*r*(8*g*sin(q2) - 5*r*sin(2*q2)*q1'**2 - 12*r*cos(q2)*q1'*q3' + 10*r*q2'')/8]
   [                                                3*m*r**2*(sin(q2)*q1'' + cos(q2)*q1'*q2' + q3'')/2]
   >>> lrhs = l.rhs(); lrhs.simplify(); lrhs
-  [                                                                q1']
-  [                                                                q2']
-  [                                                                q3']
-  [                     -2*(2*cos(q2)*tan(q2)*q1' + 3*q3')*q2'/cos(q2)]
-  [(-8*g*sin(q2) + 5*r*sin(2*q2)*q1'**2 + 12*r*cos(q2)*q1'*q3')/(10*r)]
-  [               (-5*cos(q2)*q1' + 6*tan(q2)*q3' + 4*q1'/cos(q2))*q2']
+  [                                                          q1']
+  [                                                          q2']
+  [                                                          q3']
+  [                     -4*(tan(q2)*q1' + 3*q3'/(2*cos(q2)))*q2']
+  [-4*g*sin(q2)/(5*r) + sin(2*q2)*q1'**2/2 + 6*cos(q2)*q1'*q3'/5]
+  [         (-5*cos(q2)*q1' + 6*tan(q2)*q3' + 4*q1'/cos(q2))*q2']
