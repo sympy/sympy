@@ -438,14 +438,3 @@ def numpy_matrix(M):
                 print 'Cannot convert '+str(Mlst[irow][icol])+' to python float.'
                 sys.exit(1)
     return(matrix(Mlst))
-"""
-M = Matrix([[0,1,2,3],\
-            [1,0,4,5],\
-            [2,4,0,6],\
-            [3,5,6,0]])
-print M
-Mnp = numpy_matrix(M)
-print Mnp
-(e,v) = eig(Mnp)
-print Mnp*v[:,3]-e[3]*v[:,3]
-"""
