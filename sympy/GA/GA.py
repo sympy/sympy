@@ -2320,6 +2320,3 @@ def GAeval(s,pstr=False):
         print s
         print seval
     return(eval(seval,global_dict))
-
-
-

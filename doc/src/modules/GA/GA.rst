@@ -1912,8 +1912,8 @@ executed
 
   .. code-block:: python
 
-    from GAPrint import xdvi
-    from GA import *
+    from sympy.GA.GAPrint import xdvi
+    from sympy.GA.GA import *
     Format()
     (ex,ey,ez) = MV.setup('e*x|y|z')
     A = MV('A','mv')
@@ -1939,8 +1939,8 @@ For the cases of derivatives the code is
 
   .. code-block:: python
 
-    from GAPrint import xdvi
-    from GA import *
+    from sympy.GA.GAPrint import xdvi
+    from sympy.GA.GA import *
 
     Format()
     X = (x,y,z) = symbols('x y z')
@@ -2050,8 +2050,8 @@ As an example consider the following code
 
   .. code-block:: python
 
-    from GAPrint import xdvi,Get_Program,Print_Function
-    from GA import *
+    from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
+    from sympy.GA.GA import *
 
     Format()
 
@@ -2144,8 +2144,8 @@ the abstract vectors :math:`a`, :math:`b`, :math:`c`, and :math:`d`.
 
 .. code-block:: python
 
-    from GAPrint import xdvi
-    from GA import *
+    from sympy.GA.GAPrint import xdvi
+    from sympy.GA.GA import *
     Format()
 
     (a,b,c,d) = MV.setup('a b c d')
@@ -2193,8 +2193,8 @@ basis vectors are correctly calculated.
 
 .. code-block:: python
 
-    from GAPrint import xdvi
-    from GA import *
+    from sympy.GA.GAPrint import xdvi
+    from sympy.GA.GA import *
     Format()
 
     metric = '1 # #,'+ \
@@ -2273,8 +2273,8 @@ from a rotation of a vector in the Minkowski space using the rotor
 .. code-block:: python
 
     from sympy import symbols,sinh,cosh
-    from GAPrint import xdvi
-    from GA import *
+    from sympy.GA.GAPrint import xdvi
+    from sympy.GA.GA import *
 
     Format()
     (alpha,beta,gamma) = symbols('alpha beta gamma')
@@ -2369,8 +2369,8 @@ standard curl of a 3-dimension function the result is multiplied by
 .. code-block:: python
 
     from sympy import sin,cos
-    from GAPrint import xdvi
-    from GA import *
+    from sympy.GA.GAPrint import xdvi
+    from sympy.GA.GA import *
     Format()
 
     X = (r,th,phi) = symbols('r theta phi')
@@ -2425,8 +2425,8 @@ see [Doran]_ chapter 7.
 .. code-block:: python
 
     from sympy import symbols,sin,cos
-    from GAPrint import xdvi
-    from GA import *
+    from sympy.GA.GAPrint import xdvi
+    from sympy.GA.GA import *
 
     Format()
 
@@ -2493,8 +2493,8 @@ pseudo-vector components in the space-time geometric algebra (it consists only o
 .. code-block:: python
 
     from sympy import symbols,sin,cos
-    from GAPrint import xdvi
-    from GA import *
+    from sympy.GA.GAPrint import xdvi
+    from sympy.GA.GA import *
 
     Format()
 
