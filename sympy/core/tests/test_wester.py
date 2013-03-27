@@ -10,9 +10,10 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     binomial, rf, pi, gamma, igcd, factorint, nsimplify, radsimp, combsimp,
     npartitions, totient, primerange, factor, simplify, gcd, resultant, expand,
     I, trigsimp, tan, sin, cos, diff, nan, limit, EulerGamma, polygamma,
-    bernoulli, assoc_legendre, Function, re, im, DiracDelta, chebyshevt, atan,
-    sinh, cosh, floor, ceiling, solve, asinh, LambertW, N, apart, sqrtdenest,
-    factorial2, powdenest, Mul, S, mpmath, ZZ, Poly, expand_func)
+    bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
+    im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
+    LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
+    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -20,6 +21,8 @@ from sympy.utilities.pytest import XFAIL, slow
 from sympy.utilities.iterables import partitions
 from sympy.mpmath import mpi, mpc
 from sympy.physics.quantum import Commutator
+from sympy.assumptions import assuming
+from sympy.solvers.inequalities import (reduce_inequalities, reduce_rational_inequalities)
 
 R = Rational
 x, y, z = symbols('x y z')
@@ -592,19 +595,18 @@ def test_J6():
     assert mpmath.besselj(2, 1 + 1j).ae(mpc('0.04157988694396212', '0.24739764151330632'))
 
 
-@XFAIL
 def test_J7():
-    raise NotImplementedError("jv(R(-5,2), pi/2) == 12/(pi**2)")
+    assert expand_func(besselj(R(-5,2), pi/2)) == 12/(pi**2)
 
 
-@XFAIL
 def test_J8():
-    raise NotImplementedError("jv(R(3,2), z) == sqrt(2/(pi*z))*(sin(z)/z - cos(z))")
+    p = besselj(R(3,2), z)
+    q = (sin(z)/z - cos(z))/sqrt(pi*z/2)
+    assert simplify(expand_func(p) -q) == 0
 
 
-@XFAIL
 def test_J9():
-    raise NotImplementedError("diff(j0(z), z) == -j1(z)")
+    assert besselj(0, z).diff(z) == - besselj(1, z)
 
 
 def test_J10():
@@ -626,9 +628,9 @@ def test_J13():
     assert chebyshevt(a, -1) == (-1)**a
 
 
-@XFAIL
 def test_J14():
-    raise NotImplementedError("F(R(1,2),R(1,2),R(3,2),z**2) == asin(z)/z; F(.) is hypergeometric function")
+    p = hyper([S(1)/2, S(1)/2], [S(3)/2], z**2)
+    assert hyperexpand(p) == asin(z)/z
 
 
 @XFAIL
@@ -844,6 +846,10 @@ def test_M15():
 
 @XFAIL
 def test_M16():
+    # work
+    #assert solve(sin(x) - sin(x)/cos(x)) == [0]
+    #fail
+    #assert solve(sin(x) - tan(x)) == [0]
     raise NotImplementedError("solve(sin(x)-tan(x),x)")
 
 
@@ -864,3 +870,154 @@ def test_M19():
 
 def test_M20():
     assert solve(sqrt(x**2 + 1) - x + 2, x) == []
+
+
+def test_M21():
+    assert solve(x + sqrt(x) -2) == [1]
+
+
+def test_M22():
+    assert solve(2*sqrt(x) + 3*x**R(1,4) -2) == [R(1,16)]
+
+
+def test_M23():
+    #first root of the equation without simplify function write in other form
+    assert solve(x-1/sqrt(1+x**2)) == [simplify(-I*sqrt( (sqrt(5) + 1)/2 )),sqrt( (sqrt(5) - 1)/2 )]
+
+
+def test_M24():
+    solution =solve(1-binomial(m, 2)*2**k,k)
+    # solution has the form log(2/(m**2-m)), 2)
+    good= log(2/(m*(m-1)), 2)
+    assert solution[0].expand() == good.expand()
+
+
+@XFAIL
+def test_M25():
+    raise NotImplementedError("solve(a*b**x-c*d**x) == log(c/a)/log(b/d)")
+
+
+def test_M26():
+    assert solve(sqrt(log(x))-log(sqrt(x))) == [1, exp(4)]
+
+
+@XFAIL
+def test_M27():
+    raise NotImplementedError("solve(log(acos(asin(x**R(2,3) - b) - 1))+2, x)")
+
+
+@XFAIL
+def test_M28():
+    raise NotImplementedError("N(solve(5*x + exp((x-5)/2)-8*x**3,x))")
+
+
+def test_M29():
+    assert solve(abs(x-1)-2) == [-1, 3]
+
+
+@XFAIL
+def test_M30():
+    raise NotImplementedError("solve(abs(2*x+5) -abs(x-2),x) == [-1, -7]")
+
+
+@XFAIL
+def test_M31():
+    raise NotImplementedError("solve(1 - abs(x) - Max(-x-2,x -2),x) == [-3/2, 3/2]")
+
+
+@XFAIL
+def test_M32():
+    raise NotImplementedError("solve(Max(2 - x**2,x)- Max(-x,(x**3)/9))")
+
+
+@XFAIL
+def test_M33():
+    raise NotImplementedError("solve(Max(2 - x**2,x) - x**3/9)")
+
+
+@XFAIL
+def test_M34():
+    raise NotImplementedError("solve((1 + I) * z + (2 - I) * conjugate(z) + 3*I, z)")
+
+
+@XFAIL
+def test_M35():
+    x = symbols('x', real=True)
+    y = symbols('y', real=True)
+    raise NotImplementedError("solve(3*x - 2*y - I*y + 3*I, x, y) == [2,3]")
+
+
+@XFAIL
+def test_M36():
+    raise NotImplementedError("solve(f**2 + f - 2, x)")
+
+
+@XFAIL
+def test_M37():
+    raise NotImplementedError("solve a 3x3 dependent linear system")
+
+
+@XFAIL
+def test_M38():
+    raise NotImplementedError("solve a 189x49 simple linear system")
+
+
+@XFAIL
+def test_M39():
+    raise NotImplementedError("solve a 3x3 nonlinear system")
+
+
+def test_N1():
+    assert solve(E**pi > pi**E)
+
+
+def test_N2():
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(x**4 - x + 1 > 0) is True
+        assert reduce_inequalities(x**4 - x + 1 > 1) is Or(Lt(1, x), Lt(x, 0))
+
+
+def test_N3():
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(abs(x) < 1) is And(Lt(-1, x), Lt(x, 1))
+
+@XFAIL
+def test_N4():
+    raise NotImplementedError("assume x > y > 0 is 2*x**2 > 2*y**2")
+
+
+@XFAIL
+def test_N5():
+    raise NotImplementedError("assume x > y > 0, k > 0 is k*x**2 > k*y**2")
+
+
+@XFAIL
+def test_N6():
+    raise NotImplementedError("assume x > y > 0, k > 0, n > 0 is k*x**n > k*y**n")
+
+
+@XFAIL
+def test_N7():
+    raise NotImplementedError("assume x > 1, y >= x - 1 is y > 0")
+
+
+@XFAIL
+def test_N8():
+    raise NotImplementedError("assume x >= y >= z >= x, is x = y = z")
+
+
+def test_N9():
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(abs(x-1) >2) is Or(Lt(3, x), Lt(x, -1))
+
+
+def test_N10():
+    p=(x-1)*(x-2)*(x-3)*(x-4)*(x-5)
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(expand(p) <0) == Or( And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
+
+
+def test_N11():
+    p=6/(x - 3)
+    with assuming(Q.real(x)):
+        assert reduce_inequalities(p <= 3) == Or(Le(5, x), Lt(x,3))
