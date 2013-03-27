@@ -1,10 +1,8 @@
 #!/usr/bin/python
 import sys
 
-from sympy import symbols,sin,cos
-from sympy.GA.GA import *
-from sympy.GA.GAPrint import *
-
+from sympy import symbols,sin,cos,Rational,expand,collect,Symbol
+from sympy.GA.GA import MV,Nga,simplify,Com,ONE,ZERO
 
 def test_basic_multivector_operations():
     (ex,ey,ez) = MV.setup('e*x|y|z')
@@ -404,5 +402,3 @@ def test_reciprocal_frame_test():
     assert str(simplify(w/Esq)) == '1'
     return
 
-def test_dummy():
-    return
