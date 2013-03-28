@@ -30,7 +30,11 @@ class Manifold(Basic):
         # other Patch instance on the same manifold.
 
     def _latex(self, printer, *args):
-        return r'\mathrm{%s}' % self.name
+        if len(self.name) == 1:
+            l = self.name[0].upper()
+            return r'\mathbb{%s}^{%s}' % (l, self.dim)
+        else:
+            return r'\mathrm{%s}' % self.name
 
 
 class Patch(Basic):
