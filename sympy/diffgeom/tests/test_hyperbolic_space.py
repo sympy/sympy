@@ -1,7 +1,18 @@
 '''
-unit test describing the hyperbolic half-plane with the Poincare metric
+unit test describing the hyperbolic half-plane with the Poincare metric. This
+is a basic model of hyperbolic geometry on the (positive) half-space
+
+{(x,y) \in R^2 | y > 0}
+
+with the Riemannian metric
+
+ds^2 = (dx^2 + dy^2)/y^2
+
+It has constant negative scalar curvature = -2
+
+https://en.wikipedia.org/wiki/Poincare_half-plane_model
 '''
-from sympy import Matrix
+from sympy import diag
 from sympy.diffgeom import (twoform_to_matrix,
                             metric_to_Christoffel_1st, metric_to_Christoffel_2nd,
                             metric_to_Riemann_components, metric_to_Ricci_components)
@@ -15,7 +26,7 @@ def test_H2():
     dx = R2.dx
     g = (TP(dx, dx) + TP(dy, dy))*y**(-2)
     automat = twoform_to_matrix(g)
-    mat = Matrix( ((y**(-2), 0), (0, y**(-2) )) )
+    mat = diag(y**(-2), y**(-2))
     assert mat == automat
 
     gamma1 = metric_to_Christoffel_1st(g)
