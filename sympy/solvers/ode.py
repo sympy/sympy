@@ -204,7 +204,6 @@ anything is broken, one of those tests will surely fail.
 
 """
 from collections import defaultdict
-_dict = dict  # because this is used as a keyword below
 
 from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
@@ -926,75 +925,32 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 matching_hints["almost_linear_Integral"] = r2
 
         # Linear coefficients of the form y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
-
         match = collect(reduced_eq, [df, f(x)]).match(a*df + b)
-
         if match:
-
-            def abc(eq):
-                eq = _mexpand(eq)
-                c = eq.as_independent(x, f(x), as_Add=True)[0]
-                if not c.is_Rational:
-                    return
-                a = eq.coeff(x)
-                if not a.is_Rational:
-                    return
-                b = eq.coeff(f(x))
-                if not b.is_Rational:
-                    return
-                if eq == a*x + b*f(x) + c:
-                    return a, b, c
-
-            def rmatch(arg):
-                n, d = arg.together().as_numer_denom()
-                m = abc(n)
-                if m is not None:
-                    a1, b1, c1 = m
-                    m = abc(d)
-                    if m is not None:
-                        a2, b2, c2 = m
-                        if (c1 or c2) and a2*b1 - a1*b2:
-                            return a1, b1, c1, a2, b2, c2
-
             F = match[b]/match[a]
-            m = [fi.args[0] for fi in F.atoms(Function) if fi.func != f and
-                fi.nargs == 1 and not fi.args[0].is_Function] or set([F])
-
-            if m:
-                m1 = rmatch(m.pop())
-                if m1 and all(rmatch(mi) == m1 for mi in m):
-                    abcsyms = a1, b1, c1, a2, b2, c2 = symbols(':c1 :c2')
-                    coeff_dict = _dict(zip(abcsyms, m1))
-                    u = Dummy('u')
-                    t = Dummy('t')
-                    # Dummy substitution for df and f(x).
-                    dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
-                    # Substituting x as x + (b2*c1 - b1*c2)/(a2*b1 - a1*b2).
-                    # Substituting y as y + (a1*c2 - a2*c1)/(a2*b1 - a1*b2).
-                    denom = (a2*b1 - a1*b2).subs(coeff_dict)
-                    xarg = (b2*c1 - b1*c2).subs(coeff_dict)/denom
-                    yarg = (a1*c2 - a2*c1).subs(coeff_dict)/denom
-                    reps = ((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))
-                    dummy_eq = simplify(dummy_eq.subs(reps))
-                    # Re-checking if dummy_eq is indeed homogeneous.
-                    match_homo = collect(
-                        expand(dummy_eq), [df, f(x)]).match(e*df + d)
-                    if match_homo:
-                        orderd = homogeneous_order(match_homo[d], x, f(x))
-                        if orderd is not None:
-                            ordere = homogeneous_order(match_homo[e], x, f(x))
-                            if orderd == ordere:
-                                # Match arguments are passed in such a way
-                                # that it is coherent with the already
-                                # existing homogeneous functions.
-                                match_homo[d] = match_homo[d].subs(f(x), y)
-                                match_homo[e] = match_homo[e].subs(f(x), y)
-                                match_homo.update({'xarg': xarg, 'yarg': yarg,
-                                    'd': d, 'e': e, 'y': y})
-                                matching_hints[
-                                    "linear_coefficients"] = match_homo
-                                matching_hints[
-                                    "linear_coefficients_Integral"] = match_homo
+            params = _linear_coeff_helper(F, func)
+            if params:
+                xarg, yarg = params
+                u = Dummy('u')
+                t = Dummy('t')
+                # Dummy substitution for df and f(x).
+                dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
+                dummy_eq = simplify(
+                    dummy_eq.subs(((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))))
+                # Re-checking if dummy_eq is indeed homogeneous.
+                match_homo = collect(expand(dummy_eq), [df, f(x)]).match(e*df + d)
+                if match_homo:
+                    orderd = homogeneous_order(match_homo[d], x, f(x))
+                    if orderd is not None:
+                        ordere = homogeneous_order(match_homo[e], x, f(x))
+                        if orderd == ordere:
+                            # Match arguments are passed in such a way that it is coherent
+                            # With the already existing homogeneous functions.
+                            match_homo[d] = match_homo[d].subs(f(x), y)
+                            match_homo[e] = match_homo[e].subs(f(x), y)
+                            match_homo.update({'xarg': xarg, 'yarg': yarg, 'd': d, 'e': e, 'y': y})
+                            matching_hints["linear_coefficients"] = match_homo
+                            matching_hints["linear_coefficients_Integral"] = match_homo
 
         # Equation of the form y' + (y/x)*H(x^n*y) = 0 that can be reduced to separable form
         match = collect(expand(reduced_eq), [df], evaluate = True).match(a*df + b)
@@ -2902,6 +2858,83 @@ def ode_almost_linear(eq, func, order, match):
     # ode_1st_linear will give the required output.
     return ode_1st_linear(eq, func, order, match)
 
+def _linear_coeff_helper(expr, func):
+    r"""
+    Helper function to match hint linear-coefficients.
+    Matches the expression to the form
+    expr = (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2)
+    where the following conditions hold good
+
+    1. a1, b1, c1, a2, b2, c2 are Rationals
+    2. Either one of c1 and c2 are not equal to zero
+    3. a2*b1 - a1*b2 is not equal to zero
+
+    and returns xarg, yarg where
+
+    1. xarg = (b2*c1 - b1*c2)/(a2*b1 - a1*b2)
+    2. yarg = (a1*c2 - a2*c1)/(a2*b1 - a1*b2)
+
+
+    Examples
+    ========
+    >>> from sympy import Function
+    >>> from sympy.abc import x
+    >>> from sympy.solvers.ode import _linear_coeff_helper
+    >>> from sympy.functions.elementary.trigonometric import sin
+    >>> f = Function('f')
+    >>> _linear_coeff_helper((
+    ... (-25*f(x) -8*x + 62)/(4*f(x) + 11*x -11)), f(x))
+    (1/9, 22/9)
+    >>> _linear_coeff_helper(
+    ... sin((-5*f(x) -8*x + 6)/(4*f(x) + x -1)), f(x))
+    (19/27, 2/27)
+    >>> _linear_coeff_helper(sin(f(x)/x), f(x))
+
+    """
+    f = func.func
+    x = func.args[0]
+    def abc(eq):
+        # Internal function of _linear_coeff_match
+        # that returns a, b, c of the expression
+        # a*x + b*f(x) + c if a, b and c are rationals.
+        eq = _mexpand(eq)
+        c = eq.as_independent(x, f(x), as_Add = True)[0]
+        if not c.is_Rational:
+            return
+        a = eq.coeff(x)
+        if not a.is_Rational:
+            return
+        b = eq.coeff(f(x))
+        if not b.is_Rational:
+            return
+        if eq == a*x + b*f(x) + c:
+            return a, b, c
+
+    def rmatch(arg):
+        # Internal function of _linear_coeff_match
+        # that returns a1, b1, c1, a2, b2, c2 of the expression
+        # (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2)
+        # if a1, b1, c1, a2, b2 and c2 are rationals
+        # one of c1 or c2 is non-zero and a2*b1 - a1*b2 is non-zero
+        n, d = arg.together().as_numer_denom()
+        m = abc(n)
+        if m is not None:
+            a1, b1, c1 = m
+            m = abc(d)
+            if m is not None:
+                a2, b2, c2 = m
+                if (c1 or c2) and a2*b1 - a1*b2:
+                    return a1, b1, c1, a2, b2, c2, a2*b1 - a1*b2
+
+    m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
+         fi.nargs == 1 and not fi.args[0].is_Function] or set([expr])
+    if m:
+        m1 = rmatch(m.pop())
+        if m1 and all(rmatch(mi) == m1 for mi in m):
+            a1, b1, c1, a2, b2, c2, denom = m1
+            return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
+    return None
+
 def ode_linear_coefficients(eq, func, order, match):
     r"""
     Solves a differential equation with linear-coefficients.
@@ -2912,7 +2945,7 @@ def ode_linear_coefficients(eq, func, order, match):
 
     This can be solved by substituting x = x' + ((b2*c1 - b1*c2)/(a2*b1 - a1*b2))
     and y = y' + ((a1*c2 - a2*c1)/(a2*b1 - a1*b2)). Making the given
-    substitution reduces it to a homogeneous differential equation.
+    substitution reduces it to a homogeneous differential equation
 
     See Also
     ========
@@ -3000,10 +3033,6 @@ def ode_separable_reduced(eq, func, order, match):
          |    y*(n - g(y))
          |
          /
-
-    See Also
-    ========
-    ode_separable
 
 
     Examples
