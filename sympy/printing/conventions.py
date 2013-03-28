@@ -62,12 +62,7 @@ def split_super_sub(text):
 def requires_partial(expr):
     """Return whether a partial derivative symbol is required for printing
 
-    This requires checking how many free variables there are and then
+    This requires checking how many free variables there are,
     filtering out the ones that are integers
     """
-
-    s = expr.free_symbols
-    for sym in expr.free_symbols:
-        if sym.is_integer:
-            s.remove(sym)
-    return len(s) > 1
+    return sum(not s.is_integer for s in expr.free_symbols) > 1

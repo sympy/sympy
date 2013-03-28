@@ -378,11 +378,11 @@ class LatexPrinter(Printer):
 
             for x, i in multiplicity:
                 if i == 1:
-                    tex += diff_symbol + (r" %s" % self._print(x))
+                    tex += r"%s %s" % (diff_symbol, self._print(x))
                 else:
-                    tex += diff_symbol + (r" %s^{%s}" % (self._print(x), i))
+                    tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), i)
 
-            tex = r"\frac{" + diff_symbol + (r"^{%s}}{%s} " % (dim, tex))
+            tex = r"\frac{%s^{%s}}{%s} " % (diff_symbol, dim, tex)
 
         if isinstance(expr.expr, C.AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
