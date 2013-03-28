@@ -1,4 +1,4 @@
-from sympy import symbols, sin, cos
+from sympy import symbols, sin, cos, sqrt, pi
 from sympy.physics.mechanics import (cross, dot, dynamicsymbols, express,
                                      ReferenceFrame, inertia, Point,
                                      kinematic_equations, Vector,
@@ -41,16 +41,7 @@ def test_dot_different_frames():
     assert dot(N.z, A.y) == 0
     assert dot(N.z, A.z) == 1
 
-    print dot(N.x, A.x + A.y)
-    print cos(q1) - sin(q1)
-    
-    assert dot(N.x, A.x + A.y) - (cos(q1) - sin(q1)) == 0
-    assert dot(A.x + A.y, N.x) - (cos(q1) - sin(q1)) == 0
-
-    
-    assert dot(N.x, A.x + A.y) == cos(q1) - sin(q1)
-    assert dot(A.x + A.y, N.x) == cos(q1) - sin(q1)
-    
+    assert dot(N.x, A.x + A.y) == sqrt(2)*cos(q1 + pi/4) == dot(A.x + A.y, N.x)
 
     assert dot(A.x, C.x) == cos(q3)
     assert dot(A.x, C.y) == 0
