@@ -1,5 +1,5 @@
 from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
-from sympy.GA.GA import *
+from sympy.GA.GA import MV,Format
 
 Format()
 
@@ -56,5 +56,5 @@ Get_Program()
 basic_multivector_operations_3D()
 basic_multivector_operations_2D()
 
-xdvi('simple_test_latex_2.tex')
+xdvi('simple_test_latex.tex')
 

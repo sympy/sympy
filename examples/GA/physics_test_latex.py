@@ -2,7 +2,7 @@
 import sys
 from sympy import symbols,sin,cos
 from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
-from sympy.GA.GA import *
+from sympy.GA.GA import MV,Format
 
 Format()
 
@@ -57,7 +57,6 @@ def Dirac_Equation_in_Geometric_Calculus():
     dirac_eq.simplify()
 
     dirac_eq.Fmt(3,r'%\text{Dirac Equation\;\;}\nabla \bm{\psi} I \sigma_{z}-e\bm{A}\bm{\psi}-m\bm{\psi}\gamma_{t} = 0')
-
 
     return
 

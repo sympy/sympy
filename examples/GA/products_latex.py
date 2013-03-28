@@ -1,8 +1,7 @@
-from sympy import *
-from sympy.GA.GA import *
-from sympy.GA.GAPrint import *
+from sympy import symbols
+from sympy.GA.GA import MV,Format
+from sympy.GA.GAPrint import xdvi
 
-#enhance_print()
 Format()
 
 coords = (x,y,z) = symbols('x y z')

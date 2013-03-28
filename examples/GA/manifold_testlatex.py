@@ -1,9 +1,10 @@
 from sympy import *
+
 from sympy.GA.GA import MV,ReciprocalFrame,Format
-from sympy.GA.Manifold import *
-from sympy.GA.GAPrint import enhance_print,xdvi
-from sympy.GA.GAdebug import oprint
-from sympy.GA.GAPrint import Print_Function,Get_Program
+from sympy.GA.GA import oprint
+from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
+from sympy import symbols,log,simplify,diff,cos,sin
+from sympy.GA.Manifold import Manifold
 
 Format()
 

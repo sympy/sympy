@@ -1,6 +1,7 @@
 
-from sympy import symbols,sin,cos,factor_terms
-from sympy.GA.GA import *
+from sympy import symbols,sin,cos,factor_terms,simplify
+from sympy.GA.GAPrint import enhance_print
+from sympy.GA.GA import MV
 
 enhance_print()
 

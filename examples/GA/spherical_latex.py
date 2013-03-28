@@ -1,9 +1,9 @@
 import sys
 
 from sympy import symbols,sin,cos
-from sympy.GA.GA import *
+from sympy.GA.GA import MV,Format
 from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
-#enhance_print()
+
 Format()
 
 def derivatives_in_spherical_coordinates():

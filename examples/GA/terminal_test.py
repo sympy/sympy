@@ -1,9 +1,10 @@
 #!/usr/bin/python
 import sys
 
-from sympy import symbols,sin,cos,Rational
-from sympy.GA.GA import *
-from sympy.GA.GAPrint import *
+import sys
+from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
+from sympy.GA.GAPrint import enhance_print,Get_Program,Print_Function
+from sympy.GA.GA import MV,Format,Com,Nga,ONE,ZERO
 
 enhance_print()
 

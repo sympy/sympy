@@ -1,10 +1,11 @@
 
 from sympy.GA.GA import MV,ReciprocalFrame
+from sympy.GA.GA import oprint
 from sympy.GA.GAPrint import enhance_print,Get_Program,Print_Function
-from sympy import *
-from sympy.GA.Manifold import *
+from sympy import symbols,log,simplify,diff,cos,sin
+from sympy.GA.Manifold import Manifold
 
-#enhance_print()
+enhance_print()
 Get_Program(off=True)
 
 def Test_Reciprocal_Frame():
