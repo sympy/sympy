@@ -401,4 +401,3 @@ def test_reciprocal_frame_test():
     w = (w.expand()).scalar()
     assert str(simplify(w/Esq)) == '1'
     return
-
