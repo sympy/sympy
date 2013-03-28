@@ -132,14 +132,7 @@ class Order(Expr):
                 expr = Add(*[f.expr for (e, f) in lst])
 
             elif expr:
-                if len(symbols) > 1 or expr.is_commutative is False:
-                    # TODO
-                    # We cannot use compute_leading_term because that only
-                    # works in one symbol.
-                    expr = expr.as_leading_term(*symbols)
-                else:
-                    expr = expr.as_leading_term(symbols[0])
-
+                expr = expr.as_leading_term(*symbols)
                 expr = expr.as_independent(*symbols, **dict(as_Add=False))[1]
 
                 expr = expand_power_base(expr)
