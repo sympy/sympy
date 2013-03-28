@@ -772,7 +772,7 @@ if GROUND_TYPES != 'python':
     # primarily intended for testing.
 
     if GROUND_TYPES != 'gmpy1':
-        gmpy = import_module('gmpy2', min_module_version='2.0.0b4',
+        gmpy = import_module('gmpy2', min_module_version='2.0.0',
             module_version_attr='version', module_version_attr_call_args=())
         if gmpy:
             HAS_GMPY = 2
