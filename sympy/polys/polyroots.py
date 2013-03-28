@@ -121,7 +121,7 @@ def roots_cubic(f):
 
     return soln
 
-def roots_quartic_euler(a, b, c, d, full=False):
+def roots_quartic_euler(a, b, c, d):
     """
     Descartes-Euler solution of the quartic equation
 
@@ -129,7 +129,6 @@ def roots_quartic_euler(a, b, c, d, full=False):
     ==========
 
     a,b,c,d: coefficients of the quartic equation
-    full: if True return the solution even if it is complicated
 
     Notes
     =====
@@ -139,7 +138,7 @@ def roots_quartic_euler(a, b, c, d, full=False):
     ``x1 = sqrt(R) - sqrt(A + B*sqrt(R))``
     ``x2 = -sqrt(R) - sqrt(A - B*sqrt(R))``
     ``x3 = -sqrt(R) + sqrt(A - B*sqrt(R))``
-    ``x4 = sqrt(R) + sqrt(A + B*sqrt(C))``
+    ``x4 = sqrt(R) + sqrt(A + B*sqrt(R))``
 
     To satisfy the quartic equation one must have
     ``p = -2*(R + A); q = -4*B*R; r = (R - A)**2 - B**2*R``
@@ -168,13 +167,12 @@ def roots_quartic_euler(a, b, c, d, full=False):
     # solve the resolvent equation
     x = Symbol('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
-    xsols = solve(eq)
-    if not full:
-        xsols = [sol for sol in xsols if sol.is_rational]
+    xsols = roots(eq, cubics=False).keys()
+    xsols = [sol for sol in xsols if sol.is_rational]
     if not xsols:
         return None
     R = xsols[0]
-    if not full and (not R or not R.is_rational):
+    if not R:
         return None
     B = -q/(4*R)
     A = -R - p/2
@@ -253,7 +251,7 @@ def roots_quartic(f):
         sols = roots_quartic_euler(a, b, c, d)
         if sols:
             return sols
-        # Ferrari metod, see [2]
+        # Ferrari method, see [2]
         a2 = a**2
         e = b - 3*a2/8
         f = c + a*(a2/8 - b/2)
