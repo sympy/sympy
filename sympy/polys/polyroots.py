@@ -154,7 +154,7 @@ def roots_quartic_euler(a, b, c, d):
 
     >>> from sympy import S
     >>> from sympy.polys.polyroots import roots_quartic_euler
-    >>> a, b, c, d = 0, -S(64)/5, -S(512)/125, -S(1024)/3125
+    >>> a, b, c, d = S(0), -S(64)/5, -S(512)/125, -S(1024)/3125
     >>> roots_quartic_euler(a, b, c, d)[0]
     -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
     """
