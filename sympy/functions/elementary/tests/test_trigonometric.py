@@ -620,6 +620,9 @@ def test_atan2():
     assert atan2(-1, 1) == -pi/4
     assert atan2(0, -1) == pi
 
+def test_atan2_rewrite():
+    assert atan2(y, x).rewrite(atan) == 2 * atan(y/(sqrt(x**2 + y**2) + x))
+
 
 def test_acot():
     assert acot(nan) == nan
