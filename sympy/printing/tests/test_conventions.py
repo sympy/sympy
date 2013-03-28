@@ -49,12 +49,16 @@ def test_requires_partial():
     ## bessel function with integer parameter
     f = besselj(n, x)
     assert requires_partial(Derivative(f, x)) == False
-    ## assert requires_partial(Derivative(f, n)) == False ## what to do here?
+    # this is not really valid (differentiating with respect to an integer)
+    # but there's no reason to use the partial derivative symbol there. make
+    # sure we don't throw an exception here, though
+    assert not requires_partial(Derivative(f, n))
 
     ## bell polynomial
     f = bell(n, x)
     assert requires_partial(Derivative(f, x)) == False
-    ## assert requires_partial(Derivative(f, n)) == False ## what to do here?
+    # again, invalid
+    assert requires_partial(Derivative(f, n)) == False
 
     ## legendre polynomial
     f = legendre(0, x)
@@ -62,13 +66,15 @@ def test_requires_partial():
 
     f = legendre(n, x)
     assert requires_partial(Derivative(f, x)) == False
-    ## assert requires_partial(Derivative(f, n)) == False ## what to do here?
+    # again, invalid
+    assert requires_partial(Derivative(f, n)) == False
 
     f = x ** n
     assert requires_partial(Derivative(f, x)) == False
 
     assert requires_partial(Derivative(Integral((x*y) ** n * exp(-x * y), (x, 0, oo)), y, evaluate=False)) == False
 
+    # parametric equation
     f = (exp(t), cos(t))
     g = sum(f)
     assert requires_partial(Derivative(g, t)) == False
