@@ -1573,7 +1573,9 @@ def test_linear_coefficients():
     assert classify_ode(eq) == ('linear_coefficients', 'linear_coefficients_Integral')
     sol = dsolve(eq)
     assert sol.lhs == log(x - S(14)/15)
-    assert sol.rhs == C1 - log((-2 + (f(x) - S(68)/15)/(x - S(14)/15))**(S(5)/8)*(2 + (f(x) - S(68)/15)/(x - S(14)/15))**(S(3)/8))
+    assert sol.rhs == C1 - log((-2 + (f(x) - S(68)/15)/\
+        (x - S(14)/15))**(S(5)/8)*(2 + (f(x) - S(68)/15)/\
+        (x - S(14)/15))**(S(3)/8))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = (3*x + 1)*df + (-4*f(x) -6*x + 5)
