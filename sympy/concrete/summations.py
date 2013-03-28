@@ -1,6 +1,6 @@
-from sympy.core import Add, C, Derivative, Dummy, Expr, S, sympify, Wild
+from sympy.core import Add, C, Derivative, Dummy, Expr, S, sympify, Wild, Eq
 from sympy.concrete.gosper import gosper_sum
-from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 
@@ -159,8 +159,6 @@ class Sum(Expr):
         return self.function.is_zero or not self.free_symbols
 
     def doit(self, **hints):
-        from sympy.functions import Piecewise
-
         if hints.get('deep', True):
             f = self.function.doit(**hints)
         else:
@@ -518,11 +516,13 @@ def eval_sum_symbolic(f, limits):
         e = f.match(c1**(c2*i + c3))
 
         if e is not None:
-            c1 = c1.subs(e)
-            c2 = c2.subs(e)
-            c3 = c3.subs(e)
+            p = (c1**c3).subs(e)
+            q = (c1**c2).subs(e)
 
-            return c1**c3 * (c1**(a*c2) - c1**(c2 + b*c2)) / (1 - c1**c2)
+            r = p*(q**a - q**(b + 1))/(1 - q)
+            l = p*(b - a + 1)
+
+            return Piecewise((l, Eq(q, S.One)), (r, True))
 
         r = gosper_sum(f, (i, a, b))
 
@@ -582,7 +582,6 @@ def _eval_sum_hyper(f, i, a):
 
 
 def eval_sum_hyper(f, (i, a, b)):
-    from sympy.functions import Piecewise
     from sympy import oo, And
 
     if b != oo:
