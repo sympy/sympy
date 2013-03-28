@@ -1,6 +1,6 @@
 
 from sympy.GA.GA import MV,ReciprocalFrame
-from sympy.GA.GA import oprint
+from sympy.GA.GAdebug import oprint
 from sympy.GA.GAPrint import enhance_print,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
 from sympy.GA.Manifold import Manifold

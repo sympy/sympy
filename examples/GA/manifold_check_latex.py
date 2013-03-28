@@ -1,5 +1,5 @@
-from sympy import *
 
+from sympy import symbols,log,simplify,diff,cos,sin
 from sympy.GA.GA import MV,ReciprocalFrame,Format
 from sympy.GA.GA import oprint
 from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
