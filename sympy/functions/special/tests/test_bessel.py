@@ -11,14 +11,8 @@ from sympy.abc import z, n, k, x
 
 
 def test_bessel_rand():
-    assert td(besselj(randcplx(), z), z)
-    assert td(bessely(randcplx(), z), z)
-    assert td(besseli(randcplx(), z), z)
-    assert td(besselk(randcplx(), z), z)
-    assert td(hankel1(randcplx(), z), z)
-    assert td(hankel2(randcplx(), z), z)
-    assert td(jn(randcplx(), z), z)
-    assert td(yn(randcplx(), z), z)
+    for f in [besselj, bessely, besseli, besselk, hankel1, hankel2, jn, yn]:
+        assert td(f(randcplx(), z), z)
 
 
 def test_diff():
@@ -32,19 +26,25 @@ def test_diff():
 
 def test_rewrite():
     from sympy import polar_lift, exp, I
+
     assert besselj(n, z).rewrite(jn) == sqrt(2*z/pi)*jn(n - S(1)/2, z)
     assert bessely(n, z).rewrite(yn) == sqrt(2*z/pi)*yn(n - S(1)/2, z)
     assert besseli(n, z).rewrite(besselj) == \
         exp(-I*n*pi/2)*besselj(n, polar_lift(I)*z)
     assert besselj(n, z).rewrite(besseli) == \
         exp(I*n*pi/2)*besseli(n, polar_lift(-I)*z)
+
     nu = randcplx()
+
     assert tn(besselj(nu, z), besselj(nu, z).rewrite(besseli), z)
     assert tn(besselj(nu, z), besselj(nu, z).rewrite(bessely), z)
+
     assert tn(besseli(nu, z), besseli(nu, z).rewrite(besselj), z)
     assert tn(besseli(nu, z), besseli(nu, z).rewrite(bessely), z)
+
     assert tn(bessely(nu, z), bessely(nu, z).rewrite(besselj), z)
     assert tn(bessely(nu, z), bessely(nu, z).rewrite(besseli), z)
+
     assert tn(besselk(nu, z), besselk(nu, z).rewrite(besselj), z)
     assert tn(besselk(nu, z), besselk(nu, z).rewrite(besseli), z)
     assert tn(besselk(nu, z), besselk(nu, z).rewrite(bessely), z)
@@ -62,23 +62,35 @@ def test_expand():
     # x*exp_polar(I*pi*n/2).  Then change besselsimp -> expand_func
     assert besselsimp(besseli(S(1)/2, z)) == sqrt(2)*sinh(z)/(sqrt(pi)*sqrt(z))
 
-    assert expand_func(besseli(2, x)) == \
-        besseli(0, x) - 2*besseli(1, x)/x
-    assert expand_func(besselj(2, x)) == \
-        -besselj(0, x) + 2*besselj(1, x)/x
-    assert expand_func(besselk(2, x)) == \
-        besselk(0, x) + 2*besselk(1, x)/x
-    assert expand_func(bessely(2, x)) == \
-        -bessely(0, x) + 2*bessely(1, x)/x
+    rn, rx = randcplx(a=1.01, b=0, d=0), randcplx()
 
-    assert expand_func(besseli(-2, x)) == \
-        besseli(0, x) - 2*besseli(1, x)/x
-    assert expand_func(besselj(-2, x)) == \
-        -besselj(0, x) + 2*besselj(1, x)/x
-    assert expand_func(besselk(-2, x)) == \
-        besselk(0, x) + 2*besselk(1, x)/x
-    assert expand_func(bessely(-2, x)) == \
-        -bessely(0, x) + 2*bessely(1, x)/x
+    assert expand_func(besseli(2, x)) == besseli(0, x) - 2*besseli(1, x)/x
+    assert expand_func(besseli(-2, x)) == besseli(0, x) - 2*besseli(1, x)/x
+    assert tn(expand_func(besseli(rn, rx)), \
+        besseli(rn - 2, rx) - 2*(rn - 1)*besseli(rn - 1, rx)/rx)
+    assert tn(expand_func(besseli(-rn, rx)), \
+        besseli(-rn + 2, rx) + 2*(-rn + 1)*besseli(-rn + 1, rx)/rx)
+
+    assert expand_func(besselj(2, x)) == -besselj(0, x) + 2*besselj(1, x)/x
+    assert expand_func(besselj(-2, x)) == -besselj(0, x) + 2*besselj(1, x)/x
+    assert tn(expand_func(besselj(rn, rx)), \
+        -besselj(rn - 2, rx) + 2*(rn - 1)*besselj(rn - 1, rx)/rx)
+    assert tn(expand_func(besselj(-rn, rx)), \
+        -besselj(-rn + 2, rx) + 2*(-rn + 1)*besselj(-rn + 1, rx)/rx)
+
+    assert expand_func(besselk(2, x)) == besselk(0, x) + 2*besselk(1, x)/x
+    assert expand_func(besselk(-2, x)) == besselk(0, x) + 2*besselk(1, x)/x
+    assert tn(expand_func(besselk(rn, rx)), \
+        besselk(rn - 2, rx) + 2*(rn - 1)*besselk(rn - 1, rx)/rx)
+    assert tn(expand_func(besselk(-rn, rx)), \
+        besselk(-rn + 2, rx) - 2*(-rn + 1)*besselk(-rn + 1, rx)/rx)
+
+    assert expand_func(bessely(2, x)) == -bessely(0, x) + 2*bessely(1, x)/x
+    assert expand_func(bessely(-2, x)) == -bessely(0, x) + 2*bessely(1, x)/x
+    assert tn(expand_func(bessely(rn, rx)), \
+        -bessely(rn - 2, rx) + 2*(rn - 1)*bessely(rn - 1, rx)/rx)
+    assert tn(expand_func(bessely(-rn, rx)), \
+        -bessely(-rn + 2, rx) + 2*(-rn + 1)*bessely(-rn + 1, rx)/rx)
 
     n = Symbol('n', integer=True, positive=True)
 
@@ -224,24 +236,29 @@ def test_conjugate():
         assert f(n, x).conjugate() != f(conjugate(n), x)
         assert f(n, t).conjugate() != f(conjugate(n), t)
 
+    rn, rz = randcplx(), randcplx(b=0.5)
+
     for f in [besseli, besselj, besselk, bessely, jn, yn]:
         assert f(n, 1 + I).conjugate() == f(conjugate(n), 1 - I)
         assert f(n, 0).conjugate() == f(conjugate(n), 0)
         assert f(n, 1).conjugate() == f(conjugate(n), 1)
         assert f(n, z).conjugate() == f(conjugate(n), conjugate(z))
         assert f(n, y).conjugate() == f(conjugate(n), y)
+        assert tn(f(rn, rz).conjugate(), f(conjugate(rn), conjugate(rz)))
 
     assert hankel1(n, 1 + I).conjugate() == hankel2(conjugate(n), 1 - I)
     assert hankel1(n, 0).conjugate() == hankel2(conjugate(n), 0)
     assert hankel1(n, 1).conjugate() == hankel2(conjugate(n), 1)
     assert hankel1(n, y).conjugate() == hankel2(conjugate(n), y)
     assert hankel1(n, z).conjugate() == hankel2(conjugate(n), conjugate(z))
+    assert tn(hankel1(rn, rz).conjugate(), hankel2(conjugate(rn), conjugate(rz)))
 
     assert hankel2(n, 1 + I).conjugate() == hankel1(conjugate(n), 1 - I)
     assert hankel2(n, 0).conjugate() == hankel1(conjugate(n), 0)
     assert hankel2(n, 1).conjugate() == hankel1(conjugate(n), 1)
     assert hankel2(n, y).conjugate() == hankel1(conjugate(n), y)
     assert hankel2(n, z).conjugate() == hankel1(conjugate(n), conjugate(z))
+    assert tn(hankel2(rn, rz).conjugate(), hankel1(conjugate(rn), conjugate(rz)))
 
 
 def test_branching():
