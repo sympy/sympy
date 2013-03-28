@@ -1,4 +1,4 @@
-from sympy import symbols, Derivative, Integral, exp, cos, oo
+from sympy import symbols, Derivative, Integral, exp, cos, oo, Function
 from sympy.functions.special.bessel import besselj
 from sympy.functions.special.polynomials import legendre
 from sympy.functions.combinatorial.numbers import bell
