@@ -49,7 +49,6 @@ if theano:
             sympy.Ge: tt.ge,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
-            sympy.Derivative: tt.grad,
 
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
@@ -114,6 +113,13 @@ class TheanoPrinter(Printer):
 
     def _print_factorial(self, expr, **kwargs):
         return self._print(sympy.gamma(expr.args[0] + 1), **kwargs)
+
+    def _print_Derivative(self, deriv, **kwargs):
+        rv = self._print(deriv.expr, **kwargs)
+        for var in deriv.variables:
+            var = self._print(var, **kwargs)
+            rv = tt.Rop(rv, var, tt.ones_like(var))
+        return rv
 
     def emptyPrinter(self, expr):
         return expr
