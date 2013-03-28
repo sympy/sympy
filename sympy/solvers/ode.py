@@ -928,37 +928,30 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         if match:
             # Representing match[b]/match[a] as a single term.
             fargs = gcd_terms(match[b]/match[a])
-            a1 = Wild('a1', exclude = [x])
-            a2 = Wild('a2', exclude = [x])
-            b1 = Wild('b1', exclude = [f(x)])
-            b2 = Wild('b2', exclude = [f(x)])
-            c1 = Wild('c1')
-            c2 = Wild('c2')
+            a1 = Wild('a1', exclude = [x, f(x)])
+            a2 = Wild('a2', exclude = [x, f(x)])
+            b1 = Wild('b1', exclude = [x, f(x)])
+            b2 = Wild('b2', exclude = [x, f(x)])
+            c1 = Wild('c1', exclude = [x, f(x)])
+            c2 = Wild('c2', exclude = [x, f(x)])
             # Checking if fargs is a Function.
             if fargs != f(x) and isinstance(fargs, Function):
-                functions = list(fargs.atoms(Function) - set([f(x)]))
-                if len(functions) == 1:
-                    function = functions.pop()
-                    coeff_dict = function.args[0].match(
-                        (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
+                argsset = fargs.find((a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
+                # If (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2) is present in fargs
+                # It should match two cases
+                # 1. (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2)
+                # 2. 1/(a2*x + b2*f(x) + c2)
+                if len(argsset) != 2:
+                    coeff_dict = None
                 else:
-                    # Try matching every function in fargs to the linear-coefficient form.
-                    functions = [function for function in functions
-                        if not isinstance(function.args[0], Function)]
-                    function = functions.pop()
-                    base_dict = function.args[0].match(
-                        (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
-                    if not functions:
-                        coeff_dict = base_dict
+                    fargs = argsset.pop()
+                    tempdict = fargs.match(1/(a2*x + b2*f(x) + c2))
+                    if tempdict:
+                        coeff_dict = argsset.pop().match(
+                            (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
                     else:
-                        for function in functions:
-                            temp_dict = function.args[0].match(
-                                (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
-                            if temp_dict != base_dict:
-                                coeff_dict = None
-                                break
-                            else:
-                                coeff_dict = base_dict
+                        coeff_dict = fargs.match((a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
+
             else:
                 coeff_dict = fargs.match((a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2))
             if coeff_dict:
@@ -975,7 +968,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                     if denom:
                         xarg = (b2*c1 - b1*c2).subs(coeff_dict)/denom
                         yarg = (a1*c2 - a2*c1).subs(coeff_dict)/denom
-                        dummy_eq = simplify(dummy_eq.subs(((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))))
+                        dummy_eq = simplify(
+                            dummy_eq.subs(((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))))
                         # Re-checking if dummy_eq is indeed homogeneous.
                         match_homo = collect(expand(dummy_eq), [df, f(x)]).match(e*df + d)
                         if match_homo:
@@ -2843,7 +2837,11 @@ def ode_almost_linear(eq, func, order, match):
 
     This can be solved by substituting l(y) = u(y). Making the given
     substitution reduces it to a linear differential equation
-    of the form u' + P(x)*u + Q(x) = 0 (see the docstring of ode_1st_linear())
+    of the form u' + P(x)*u + Q(x) = 0.
+
+    See Also
+    ========
+    ode_1st_linear
 
     The general solution is
 
@@ -2904,8 +2902,12 @@ def ode_linear_coefficients(eq, func, order, match):
     This can be solved by substituting x = x' + ((b2*c1 - b1*c2)/(a2*b1 - a1*b2))
     and y = y' + ((a1*c2 - a2*c1)/(a2*b1 - a1*b2)). Making the given
     substitution reduces it to a homogeneous differential equation
-    (see the docstring of ode_1st_homogeneous_coeff_best(), ode_1st_homogeneous_coeff_subs_indep_div_dep()
-    and 1st_homogeneous_coeff_subs_dep_div_indep())
+
+    See Also
+    ========
+    ode_1st_homogeneous_coeff_best
+    ode_1st_homogeneous_coeff_subs_indep_div_dep
+    ode_1st_homogeneous_coeff_subs_dep_div_indep
 
     Examples
     ========
@@ -2942,11 +2944,14 @@ def ode_linear_coefficients(eq, func, order, match):
         match[match['e']].subs(match['y'], func)*func.diff(x))
     hints = classify_ode(dummy_eq, func)
     if "1st_homogeneous_coeff_best" in hints:
-        return ode_1st_homogeneous_coeff_best(eq, func, order, match)
+        return ode_1st_homogeneous_coeff_best(
+            eq, func, order, match)
     elif "1st_homogeneous_coeff_subs_indep_div_dep" in hints:
-        return ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match)
+        return ode_1st_homogeneous_coeff_subs_indep_div_dep(
+            eq, func, order, match)
     elif "1st_homogeneous_coeff_subs_dep_div_indep" in hints:
-        return ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match)
+        return ode_1st_homogeneous_coeff_subs_dep_div_indep(
+            eq, func, order, match)
 
 
 def ode_separable_reduced(eq, func, order, match):
@@ -2957,7 +2962,11 @@ def ode_separable_reduced(eq, func, order, match):
     This can be solved by substituting u(y) = (x^n * y)
 
     The equation then reduces to the separable form
-    u'*(1/(u*(power - H(u)))) - (1/x) = 0 (see the docstring of ode_separable())
+    u'*(1/(u*(power - H(u)))) - (1/x) = 0
+
+    See Also
+    ========
+    ode_separable
 
     The general solution is
 
@@ -3019,7 +3028,8 @@ def ode_separable_reduced(eq, func, order, match):
     r = {'m1': m1, 'm2': m2, 'y': y, 'hint': x**match['power']*f(x)}
     return ode_separable(eq, func, order, r)
 
-def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match, returns='sol'):
+def ode_nth_linear_constant_coeff_homogeneous(eq, func, order, match,
+        returns='sol'):
     r"""
     Solves an nth order linear homogeneous differential equation with
     constant coefficients.
