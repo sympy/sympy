@@ -97,4 +97,3 @@ Dirac_Equation_in_Geometric_Calculus()
 Lorentz_Tranformation_in_Geometric_Algebra()
 
 xdvi()
-

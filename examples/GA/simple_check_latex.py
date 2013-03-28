@@ -57,4 +57,3 @@ basic_multivector_operations_3D()
 basic_multivector_operations_2D()
 
 xdvi('simple_test_latex.tex')
-

@@ -445,4 +445,3 @@ extracting_vectors_from_conformal_2_blade()
 reciprocal_frame_test()
 
 xdvi()
-

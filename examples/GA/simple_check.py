@@ -22,5 +22,3 @@ print uvw
 print uvw.is_blade()
 
 print simplify((uv*uv).scalar())
-
-

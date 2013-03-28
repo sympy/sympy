@@ -24,5 +24,3 @@ def exp_operation():
     return
 
 exp_operation()
-
-

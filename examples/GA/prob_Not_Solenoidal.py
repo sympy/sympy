@@ -31,4 +31,3 @@ def Symplify(A):
     return(factor_terms(simplify(A)))
 
 print Curl_B.func(Symplify)
-

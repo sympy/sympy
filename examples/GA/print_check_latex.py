@@ -158,4 +158,3 @@ dirac_eq.simplify()
 dirac_eq.Fmt(3,r'\nabla \bm{\psi} I \sigma_{z}-e\bm{A}\bm{\psi}-m\bm{\psi}\gamma_{t} = 0')
 
 xdvi()
-

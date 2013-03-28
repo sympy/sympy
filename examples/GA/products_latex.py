@@ -89,4 +89,3 @@ for xi in X:
             print xi[1]+'>'+yi[1]+' =',xi[0]>yi[0]
 
 xdvi(paper='letter')
-
