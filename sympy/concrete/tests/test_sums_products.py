@@ -1,7 +1,7 @@
 from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
                    factorial, Function, harmonic, Integral, log, nan, oo, pi,
                    Product, product, Rational, S, sqrt, Sum, summation, Symbol,
-                   symbols, sympify, zeta, oo)
+                   symbols, sympify, zeta, oo, I, Abs, Piecewise, Eq)
 from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -58,6 +58,23 @@ def test_geometric_sums():
     assert summation(3**(-n), (n, 4, oo)) == Rational(1, 54)
     assert summation(2**(-4*n + 3), (n, 1, oo)) == Rational(8, 15)
     assert summation(2**(n + 1), (n, 1, b)).expand() == 4*(2**b - 1)
+
+    # issue 3565:
+    assert summation(x**n, (n, 0, oo)) == \
+        Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**n, (n, 0, oo)), True))
+
+    assert summation(-2**n, (n, 0, oo)) == -oo
+    assert summation(I**n, (n, 0, oo)) == Sum(I**n, (n, 0, oo))
+
+    # issue 3703:
+    assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1
+    assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - S(4)/3
+    assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S(1)/2
+    assert summation(y**x, (x, a, b)) == \
+        Piecewise((-a + b + 1, Eq(y, 1)), ((y**a - y**(b + 1))/(-y + 1), True))
+    assert summation((-2)**(y*x + 2), (x, 0, n)) == \
+        4*Piecewise((n + 1, Eq((-2)**y, 1)),
+                    ((-(-2)**(y*(n + 1)) + 1)/(-(-2)**y + 1), True))
 
 
 def test_harmonic_sums():

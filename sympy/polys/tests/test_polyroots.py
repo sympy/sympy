@@ -343,6 +343,10 @@ def test_roots():
         -I: 1, I: 1,
     }
 
+    r = roots(x**3 + 40*x + 64)
+    real_root = [rx for rx in r if rx.is_real][0]
+    cr = 4 + 2*sqrt(1074)/9
+    assert real_root == -2*cr**(S(1)/3) + 20/(3*cr**(S(1)/3))
 
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """

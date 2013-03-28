@@ -78,7 +78,9 @@ def test_Zlm():
     assert Zlm(1, 0, th, ph) == sqrt(3/(4*pi))*cos(th)
     assert Zlm(1, 1, th, ph) == sqrt(3/(4*pi))*sin(th)*cos(ph)
 
-    assert Zlm(2, -1, th, ph) == sqrt(15/(4*pi))*sin(th)*cos(th)*sin(ph)
+    assert Zlm(2, -1, th, ph) == sqrt(15)*(
+        cos(ph - 2*th) - cos(ph + 2*th))/(8*sqrt(pi))
     assert Zlm(2, 0, th, ph).expand() == (S(1)/4*sqrt(5/pi) *
-            (3*cos(th)**2 - 1)).expand()
-    assert Zlm(2, 1, th, ph) == sqrt(15/(4*pi))*sin(th)*cos(th)*cos(ph)
+        (3*cos(th)**2 - 1)).expand()
+    assert Zlm(2, 1, th, ph) == sqrt(15)*(
+        -sin(ph - 2*th) + sin(ph + 2*th))/(8*sqrt(pi))

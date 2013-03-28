@@ -3,7 +3,7 @@
 from sympy.polys.domains.integerring import IntegerRing
 
 from sympy.polys.domains.groundtypes import (
-    PythonIntegerType, SymPyIntegerType, python_sqrt,
+    PythonInteger, SymPyInteger, python_sqrt,
     python_factorial, python_gcdex, python_gcd, python_lcm,
 )
 
@@ -13,7 +13,7 @@ from sympy.polys.polyerrors import CoercionFailed
 class PythonIntegerRing(IntegerRing):
     """Integer ring based on Python's ``int`` type. """
 
-    dtype = PythonIntegerType
+    dtype = PythonInteger
     zero = dtype(0)
     one = dtype(1)
     alias = 'ZZ_python'
@@ -23,14 +23,14 @@ class PythonIntegerRing(IntegerRing):
 
     def to_sympy(self, a):
         """Convert ``a`` to a SymPy object. """
-        return SymPyIntegerType(a)
+        return SymPyInteger(a)
 
     def from_sympy(self, a):
         """Convert SymPy's Integer to ``dtype``. """
         if a.is_Integer:
-            return PythonIntegerType(a.p)
+            return PythonInteger(a.p)
         elif a.is_Float and int(a) == a:
-            return PythonIntegerType(int(a))
+            return PythonInteger(int(a))
         else:
             raise CoercionFailed("expected an integer, got %s" % a)
 
@@ -47,45 +47,25 @@ class PythonIntegerRing(IntegerRing):
         if a.denominator == 1:
             return a.numerator
 
-    def from_FF_sympy(K1, a, K0):
-        """Convert ``ModularInteger(Integer)`` to Python's ``int``. """
-        return a.to_int().p
-
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert SymPy's ``Integer`` to Python's ``int``. """
-        return a.p
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert SymPy's ``Rational`` to Python's ``int``. """
-        if a.q == 1:
-            return a.p
-
     def from_FF_gmpy(K1, a, K0):
         """Convert ``ModularInteger(mpz)`` to Python's ``int``. """
-        return PythonIntegerType(a.to_int())
+        return PythonInteger(a.to_int())
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert GMPY's ``mpz`` to Python's ``int``. """
-        return PythonIntegerType(a)
+        return PythonInteger(a)
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert GMPY's ``mpq`` to Python's ``int``. """
         if a.denom() == 1:
-            return PythonIntegerType(a.numer())
-
-    def from_RR_sympy(K1, a, K0):
-        """Convert SymPy's ``Float`` to Python's ``int``. """
-        p, q = K0.as_integer_ratio(a)
-
-        if q == 1:
-            return PythonIntegerType(p)
+            return PythonInteger(a.numer())
 
     def from_RR_mpmath(K1, a, K0):
         """Convert mpmath's ``mpf`` to Python's ``int``. """
         p, q = K0.as_integer_ratio(a)
 
         if q == 1:
-            return PythonIntegerType(p)
+            return PythonInteger(p)
 
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """

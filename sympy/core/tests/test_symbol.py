@@ -376,3 +376,10 @@ def test_call():
     f = Symbol('f')
     assert f(2)
     raises(TypeError, lambda: Wild('x')(1))
+
+def test_unicode():
+    xu = Symbol(u'x')
+    x = Symbol('x')
+    assert x == xu
+
+    raises(TypeError, lambda: Symbol(1))

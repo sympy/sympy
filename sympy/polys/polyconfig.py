@@ -1,5 +1,7 @@
 """Configuration utilities for polynomial manipulation algorithms. """
 
+from contextlib import contextmanager
+
 _default_config = {
     'USE_COLLINS_RESULTANT':      False,
     'USE_SIMPLIFY_GCD':           True,
@@ -16,14 +18,25 @@ _default_config = {
     'GF_IRRED_METHOD':            'rabin',
     'GF_FACTOR_METHOD':           'zassenhaus',
 
-    'GB_METHOD':                  'buchberger',
+    'GROEBNER':                   'buchberger',
 }
 
 _current_config = {}
 
+@contextmanager
+def using(**kwargs):
+    for k, v in kwargs.items():
+        setup(k, v)
+
+    yield
+
+    for k in kwargs.keys():
+        setup(k)
 
 def setup(key, value=None):
     """Assign a value to (or reset) a configuration item. """
+    key = key.upper()
+
     if value is not None:
         _current_config[key] = value
     else:
@@ -32,7 +45,7 @@ def setup(key, value=None):
 
 def query(key):
     """Ask for a value of the given configuration item. """
-    return _current_config.get(key, None)
+    return _current_config.get(key.upper(), None)
 
 
 def configure():

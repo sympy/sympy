@@ -408,7 +408,7 @@ class Mul(Expr, AssocOp):
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
-                g = _rgcd(bi, bj)
+                g = bi.gcd(bj)
                 if g is not S.One:
                     # 4**r1*6**r2 -> 2**(r1+r2)  *  2**r1 *  3**r2
                     # this might have a gcd with something else
@@ -617,6 +617,15 @@ class Mul(Expr, AssocOp):
         for a in self.args:
             if a.is_real:
                 coeff *= a
+            elif a.is_commutative:
+                # search for complex conjugate pairs:
+                for i, x in enumerate(other):
+                    if x == a.conjugate():
+                        coeff *= C.Abs(x)**2
+                        del other[i]
+                        break
+                else:
+                    other.append(a)
             else:
                 other.append(a)
         m = Mul(*other)
@@ -816,16 +825,10 @@ class Mul(Expr, AssocOp):
         return lhs/rhs
 
     def as_powers_dict(self):
-        d = defaultdict(list)
+        d = defaultdict(int)
         for term in self.args:
             b, e = term.as_base_exp()
-            d[b].append(e)
-        for b, e in d.iteritems():
-            if len(e) == 1:
-                e = e[0]
-            else:
-                e = Add(*e)
-            d[b] = e
+            d[b] += e
         return d
 
     def as_numer_denom(self):
@@ -857,10 +860,22 @@ class Mul(Expr, AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
-    _eval_is_integer = lambda self: self._eval_template_is_attr(
-        'is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr(
         'is_commutative')
+    _eval_is_rational = lambda self: self._eval_template_is_attr('is_rational',
+        when_multiple=None)
+
+    def _eval_is_integer(self):
+        is_rational = self.is_rational
+
+        if is_rational:
+            n, d = self.as_numer_denom()
+            if d is S.One:
+                return True
+            elif d is S(2):
+                return n.is_even
+        elif is_rational is False:
+            return False
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
@@ -1067,10 +1082,15 @@ class Mul(Expr, AssocOp):
         if is_integer:
             r = True
             for t in self.args:
-                if t.is_even:
-                    return False
-                if t.is_odd is None:
-                    r = None
+                if not t.is_integer:
+                    return None
+                elif t.is_even:
+                    r = False
+                elif t.is_integer:
+                    if r is False:
+                        pass
+                    elif t.is_odd is None:
+                        r = None
             return r
 
         # !integer -> !odd
@@ -1444,12 +1464,14 @@ def prod(a, start=1):
     return reduce(operator.mul, a, start)
 
 
-def _keep_coeff(coeff, factors, clear=True):
+def _keep_coeff(coeff, factors, clear=True, sign=False):
     """Return ``coeff*factors`` unevaluated if necessary.
 
-    If clear is False, do not keep the coefficient as a factor
+    If ``clear`` is False, do not keep the coefficient as a factor
     if it can be distributed on a single factor such that one or
     more terms will still have integer coefficients.
+
+    If ``sign`` is True, allow a coefficient of -1 to remain factored out.
 
     Examples
     ========
@@ -1464,6 +1486,10 @@ def _keep_coeff(coeff, factors, clear=True):
     x/2 + 1
     >>> _keep_coeff(S.Half, (x + 2)*y, clear=False)
     y*(x + 2)/2
+    >>> _keep_coeff(S(-1), x + y)
+    -x - y
+    >>> _keep_coeff(S(-1), x + y, sign=True)
+    -(x + y)
     """
 
     if not coeff.is_Number:
@@ -1473,7 +1499,7 @@ def _keep_coeff(coeff, factors, clear=True):
             return coeff*factors
     if coeff is S.One:
         return factors
-    elif coeff is S.NegativeOne:  # don't keep sign?
+    elif coeff is S.NegativeOne and not sign:
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
@@ -1496,9 +1522,7 @@ def _keep_coeff(coeff, factors, clear=True):
     else:
         return coeff*factors
 
-from numbers import Rational, igcd, ilcm, Integer
-def _rgcd(a, b):
-    return Rational(Integer(igcd(a.p, b.p)), Integer(ilcm(a.q, b.q)))
 
+from numbers import Rational
 from power import Pow
 from add import Add

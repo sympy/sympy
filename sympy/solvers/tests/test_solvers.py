@@ -855,6 +855,13 @@ def test_unrad():
     assert solve(z + 6*I) == [-S(1)/11]
     assert solve(p + 6*I) == []
 
+    eq = S('''
+        -x + (1/2 - sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3
+        + x*(3*x**2 - 34) + 90)**2/4 - 39304/27) - 45)**(1/3) + 34/(3*(1/2 -
+        sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3 + x*(3*x**2
+        - 34) + 90)**2/4 - 39304/27) - 45)**(1/3))''')
+    raises(NotImplementedError, lambda: solve(eq)) # not other code errors
+
 
 @XFAIL
 def test_multivariate():

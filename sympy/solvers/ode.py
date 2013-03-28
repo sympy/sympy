@@ -209,7 +209,7 @@ from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import Derivative, AppliedUndef, diff, expand_mul
+from sympy.core.function import Function, Derivative, AppliedUndef, diff, expand_mul
 from sympy.core.multidimensional import vectorize
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy
@@ -2310,6 +2310,10 @@ def homogeneous_order(eq, *symbols):
 
     if not eq.free_symbols & symset:
         return None
+
+    # assuming order of a nested function can only be equal to zero
+    if isinstance(eq, Function):
+        return None if homogeneous_order(eq.args[0], *tuple(symset)) != 0 else S.Zero
 
     # make the replacement of x with x*t and see if t can be factored out
     t = Dummy('t', positive=True)  # It is sufficient that t > 0

@@ -8,7 +8,7 @@ from sympy import (Abs, Catalan, cos, Derivative, E, EulerGamma, exp,
     MatrixSymbol, subfactorial)
 from sympy.core import Expr
 from sympy.physics.units import second, joule
-from sympy.polys import Poly, RootOf, RootSum, groebner
+from sympy.polys import Poly, RootOf, RootSum, groebner, ring, field, ZZ, QQ, lex, grlex
 from sympy.statistics.distributions import Normal, Sample, Uniform
 from sympy.geometry import Point, Circle
 
@@ -324,8 +324,57 @@ def test_Poly():
         "Poly(-w*x**21*y**7*z - 2*x*z + (w + 1)*z**3 + 1, x, y, z, domain='ZZ[w]')"
 
     assert str(Poly(x**2 + 1, x, modulus=2)) == "Poly(x**2 + 1, x, modulus=2)"
-    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)
-               ) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
+    assert str(Poly(2*x**2 + 3*x + 4, x, modulus=17)) == "Poly(2*x**2 + 3*x + 4, x, modulus=17)"
+
+
+def test_PolyRing():
+    assert str(ring("x", ZZ, lex)[0]) == "Polynomial ring in x over ZZ with lex order"
+    assert str(ring("x,y", QQ, grlex)[0]) == "Polynomial ring in x, y over QQ with grlex order"
+    assert str(ring("x,y,z", ZZ["t"], lex)[0]) == "Polynomial ring in x, y, z over ZZ[t] with lex order"
+
+
+def test_FracField():
+    assert str(field("x", ZZ, lex)[0]) == "Rational function field in x over ZZ with lex order"
+    assert str(field("x,y", QQ, grlex)[0]) == "Rational function field in x, y over QQ with grlex order"
+    assert str(field("x,y,z", ZZ["t"], lex)[0]) == "Rational function field in x, y, z over ZZ[t] with lex order"
+
+
+def test_PolyElement():
+    Ruv, u,v = ring("u,v", ZZ);
+    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+
+    assert str(x - x) == "0"
+    assert str(x - 1) == "x - 1"
+    assert str(x + 1) == "x + 1"
+
+    assert str((u**2 + 3*u*v + 1)*x**2*y + u + 1) == "(u**2 + 3*u*v + 1)*x**2*y + u + 1"
+    assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x"
+    assert str((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == "(u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1"
+    assert str((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == "-(u**2 - 3*u*v + 1)*x**2*y - (u + 1)*x - 1"
+
+
+def test_FracElement():
+    Fuv, u,v = field("u,v", ZZ);
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+
+    assert str(x - x) == "0"
+    assert str(x - 1) == "x - 1"
+    assert str(x + 1) == "x + 1"
+
+    assert str(x/z) == "x/z"
+    assert str(x*y/z) == "x*y/z"
+    assert str(x/(z*t)) == "x/(z*t)"
+    assert str(x*y/(z*t)) == "x*y/(z*t)"
+
+    assert str((x - 1)/y) == "(x - 1)/y"
+    assert str((x + 1)/y) == "(x + 1)/y"
+    assert str((-x - 1)/y) == "(-x - 1)/y"
+    assert str((x + 1)/(y*z)) == "(x + 1)/(y*z)"
+    assert str(-y/(x + 1)) == "-y/(x + 1)"
+    assert str(y*z/(x + 1)) == "y*z/(x + 1)"
+
+    assert str(((u + 1)*x*y + 1)/((v - 1)*z - 1)) == "((u + 1)*x*y + 1)/((v - 1)*z - 1)"
+    assert str(((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)) == "((u + 1)*x*y + 1)/((v - 1)*z - u*v*t - 1)"
 
 
 def test_Pow():

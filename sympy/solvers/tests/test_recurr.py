@@ -162,7 +162,7 @@ def test_rsolve():
 
     assert rsolve(f, y(n), {y(3): 6, y(4): 24}) == n*(n - 1)*(n - 2)
     assert rsolve(
-        f, y(n), {y(3): 6, y(4): -24}) == n*(n - 1)*(n - 2)*(-1)**(3 - n)
+        f, y(n), {y(3): 6, y(4): -24}) == -n*(n - 1)*(n - 2)*(-1)**(-n)
 
     assert f.subs(y, Lambda(k, rsolve(f, y(n)).subs(n, k))).simplify() == 0
 
@@ -177,6 +177,10 @@ def test_rsolve():
     assert expand_func(rsolve(f, y(n), \
         {y(1): binomial(2*n + 1, 3)}).rewrite(gamma)).simplify() == \
         4**n*n*(8*n**3 - 4*n**2 - 2*n + 1)/12
+
+    assert (rsolve(y(n) + a*(y(n + 1) + y(n - 1))/2, y(n)) -
+            (C0*((sqrt(-a**2 + 1) - 1)/a)**n +
+             C1*((-sqrt(-a**2 + 1) - 1)/a)**n)).simplify() == 0
 
 
 def test_rsolve_raises():
