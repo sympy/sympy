@@ -171,7 +171,7 @@ def roots_quartic_euler(a, b, c, d):
     xsols = [sol for sol in xsols if sol.is_rational]
     if not xsols:
         return None
-    R = xsols[0]
+    R = max(xsols)
     if not R:
         return None
     B = -q/(4*R)
