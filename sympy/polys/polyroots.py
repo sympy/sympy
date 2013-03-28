@@ -121,6 +121,68 @@ def roots_cubic(f):
 
     return soln
 
+def roots_quartic_euler(a, b, c, d, full=False):
+    """
+    Descartes-Euler solution of the quartic equation
+
+    Parameters
+    ==========
+
+    a,b,c,d: coefficients of the quartic equation
+    full: if True return the solution even if it is complicated
+
+    Notes
+    =====
+
+    Starting with the depressed form ``x**4 + p*x**2 + q*x + r = 0``
+    look for solutions of the form
+    ``x1 = sqrt(R) - sqrt(A + B*sqrt(R))``
+    ``x2 = -sqrt(R) - sqrt(A - B*sqrt(R))``
+    ``x3 = -sqrt(R) + sqrt(A - B*sqrt(R))``
+    ``x4 = sqrt(R) + sqrt(A + B*sqrt(C))``
+
+    To satisfy the quartic equation one must have
+    ``p = -2*(R + A); q = -4*B*R; r = (R - A)**2 - B**2*R``
+    so that ``R`` must satisfy the Descartes-Euler resolvent equation
+    ``64*R**3 + 32*p*R**2 + (4*p**2 - 16*r)*R - q**2 = 0``
+
+    If the Descartes-Euler resolvent has not a rational solution, return None;
+    in that case it is likely that the Ferrari method give a simpler
+    solution.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> from sympy.polys.polyroots import roots_quartic_euler
+    >>> a, b, c, d = 0, -S(64)/5, -S(512)/125, -S(1024)/3125
+    >>> roots_quartic_euler(a, b, c, d)[0]
+    -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
+    """
+    from sympy.solvers import solve
+    from sympy.core import count_ops
+    # reduce to the form x**4 + p*x**2 + q*x + r
+    p = -3*a**2/8 + b
+    q = a**3/8 - a*b/2 + c
+    r = -3*a**4/256 + a**2*b/16 - a*c/4 + d
+    # solve the resolvent equation
+    x = Symbol('x')
+    eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
+    xsols = solve(eq)
+    if not full:
+        xsols = [sol for sol in xsols if sol.is_rational]
+    if not xsols:
+        return None
+    R = xsols[0]
+    if not full and (not R or not R.is_rational):
+        return None
+    B = -q/(4*R)
+    A = -R - p/2
+    c1 = sqrt(R)
+    c2 = sqrt(A + B*c1)
+    c3 = sqrt(A - B*c1)
+    return [c1 - c2 - a/4, -c1 - c3 - a/4 , -c1 + c3 -a/4, c1 + c2 - a/4]
+
 
 def roots_quartic(f):
     r"""
@@ -166,7 +228,7 @@ def roots_quartic(f):
     4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
     5. http://www.albmath.org/files/Math_5713.pdf
     6. http://www.statemaster.com/encyclopedia/Quartic-equation
-
+    7. eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
     """
     _, a, b, c, d = f.monic().all_coeffs()
 
@@ -187,6 +249,11 @@ def roots_quartic(f):
 
         return r1 + r2
     else:
+        # Descartes-Euler method, see [7]
+        sols = roots_quartic_euler(a, b, c, d)
+        if sols:
+            return sols
+        # Ferrari metod, see [2]
         a2 = a**2
         e = b - 3*a2/8
         f = c + a*(a2/8 - b/2)
