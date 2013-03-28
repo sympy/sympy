@@ -933,11 +933,16 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
 
             def abc(eq):
                 eq = _mexpand(eq)
-                a = eq.coeff(x)
-                b = eq.coeff(f(x))
                 c = eq.as_independent(x, f(x), as_Add=True)[0]
-                if eq == a*x + b*f(x) + c and all(
-                        i.is_Rational for i in (a, b, c)):
+                if not c.is_Rational:
+                    return
+                a = eq.coeff(x)
+                if not a.is_Rational:
+                    return
+                b = eq.coeff(f(x))
+                if not b.is_Rational:
+                    return
+                if eq == a*x + b*f(x) + c:
                     return a, b, c
 
             def rmatch(arg):
@@ -948,28 +953,25 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                     m = abc(d)
                     if m is not None:
                         a2, b2, c2 = m
-                        return a1, b1, c1, a2, b2, c2
+                        if (c1 or c2) and a2*b1 - a1*b2:
+                            return a1, b1, c1, a2, b2, c2
 
             F = match[b]/match[a]
             m = [fi.args[0] for fi in F.atoms(Function) if fi.func != f and
                 fi.nargs == 1 and not fi.args[0].is_Function] or set([F])
 
-            coeff_dict = None
             if m:
                 m1 = rmatch(m.pop())
                 if m1 and all(rmatch(mi) == m1 for mi in m):
                     abcsyms = a1, b1, c1, a2, b2, c2 = symbols(':c1 :c2')
                     coeff_dict = _dict(zip(abcsyms, m1))
-
-            if coeff_dict:
-                u = Dummy('u')
-                t = Dummy('t')
-                # Dummy substitution for df and f(x).
-                dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
-                # Substituting x as x + (b2*c1 - b1*c2)/(a2*b1 - a1*b2).
-                # Substituting y as y + (a1*c2 - a2*c1)/(a2*b1 - a1*b2).
-                denom = (a2*b1 - a1*b2).subs(coeff_dict)
-                if denom:
+                    u = Dummy('u')
+                    t = Dummy('t')
+                    # Dummy substitution for df and f(x).
+                    dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
+                    # Substituting x as x + (b2*c1 - b1*c2)/(a2*b1 - a1*b2).
+                    # Substituting y as y + (a1*c2 - a2*c1)/(a2*b1 - a1*b2).
+                    denom = (a2*b1 - a1*b2).subs(coeff_dict)
                     xarg = (b2*c1 - b1*c2).subs(coeff_dict)/denom
                     yarg = (a1*c2 - a2*c1).subs(coeff_dict)/denom
                     reps = ((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))
