@@ -40,7 +40,7 @@ else:
             yield tuple(pool[i] for i in indices)
 
 if GAdir.GA == 'GA':
-    from GAPrint import GA_Printer,GA_LatexPrinter,enhance_print,xdvi,latex
+    from GAPrint import GA_Printer,GA_LatexPrinter,enhance_print,latex
     from Vector import Vector
     from GAdebug import ostr,oprint
     from GAStringArrays import fct_sym_array,str_array,str_combinations,symbol_array
@@ -48,7 +48,7 @@ if GAdir.GA == 'GA':
                         non_scalar_projection,nc_substitue,coef_function,\
                         half_angle_reduce,get_commutative_coef
 else:
-    from sympy.GA.GAPrint import GA_Printer,GA_LatexPrinter,enhance_print,xdvi,latex
+    from sympy.GA.GAPrint import GA_Printer,GA_LatexPrinter,enhance_print,latex
     from sympy.GA.Vector import Vector
     from sympy.GA.GAdebug import ostr,oprint
     from sympy.GA.GAStringArrays import fct_sym_array,str_array,str_combinations,symbol_array
