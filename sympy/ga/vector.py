@@ -1,18 +1,12 @@
 #Vector.py
 
-import sys,itertools,ga_dir
+import sys,itertools
 from sympy import Symbol,S,Matrix,trigsimp,diff,expand
 
-if ga_dir.GA == 'GA':
-    from ga_print import GA_Printer,enhance_print
-    from ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
-    from ga_sympy import linear_expand,bilinear_product,linear_derivation
-    from ga_debug import oprint
-else:
-    from sympy.ga.ga_print import GA_Printer,enhance_print
-    from sympy.ga.ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
-    from sympy.ga.ga_sympy import linear_expand,bilinear_product,linear_derivation
-    from sympy.ga.ga_debug import oprint
+from sympy.ga.ga_print import GA_Printer,enhance_print
+from sympy.ga.ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
+from sympy.ga.ga_sympy import linear_expand,bilinear_product,linear_derivation
+from sympy.ga.ga_debug import oprint
 
 ZERO = S(0)
 

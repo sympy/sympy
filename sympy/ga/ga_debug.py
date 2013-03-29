@@ -1,12 +1,8 @@
 #GAdebug.py
 
-import ga_dir
 from itertools import izip,islice,combinations,imap,product,ifilter
 
-if ga_dir.GA == 'GA':
-    from ga_print import enhance_print,GA_Printer
-else:
-    from sympy.ga.ga_print import enhance_print,GA_Printer
+from sympy.ga.ga_print import enhance_print,GA_Printer
 
 def flatten(lst):
     return(list(itertools.chain.from_iterable(lst)))

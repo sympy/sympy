@@ -1,16 +1,13 @@
 #GA_Print.py
 
-import os,sys,StringIO,re,ga_dir
+import os,sys,StringIO,re
 from sympy import C,S,Basic,Expr,Symbol,Matrix
 from sympy.printing.printer import Printer
 from sympy.printing.str import StrPrinter
 from sympy.printing.latex import LatexPrinter,accepted_latex_functions
 from sympy.printing.conventions import split_super_sub
 
-if ga_dir.GA == 'GA':
-    from ga_sympy import linear_expand
-else:
-    from sympy.ga.ga_sympy import linear_expand
+from sympy.ga.ga_sympy import linear_expand
 
 ZERO      = S(0)
 

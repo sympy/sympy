@@ -1,19 +1,13 @@
 #Manifold.py
 
-import ga_dir
 from os import system
 import copy
 from itertools import izip,islice,combinations,imap,product,ifilter
 from sympy import trigsimp,simplify
 
-if ga_dir.GA =='GA':
-    from ga import MV
-    from ga_sympy import linear_expand
-    from ga_debug import oprint
-else:
-    from sympy.ga.ga import MV
-    from sympy.ga.ga_sympy import linear_expand
-    from sympy.ga.ga_debug import oprint
+from sympy.ga.ga import MV
+from sympy.ga.ga_sympy import linear_expand
+from sympy.ga.ga_debug import oprint
 
 def fct_to_str(fct_names):
     import sys
@@ -208,7 +202,68 @@ class Manifold:
     def Plot2DSurface(self,u_range,v_range,surf=True,grid=True,tan=1.0,scalar_field=None,skip=[1,1],fct_def=None):
 
         plot_template = \
+"""
+from numpy import mgrid,shape,swapaxes,zeros,log,exp,sin,cos,tan
+$fct_def$
+eps = 1.0e-6
+u_r = $u_range$
+v_r = $v_range$
+$coords$ = mgrid[u_r[0]:u_r[1]+eps:(u_r[1]-u_r[0])/float(u_r[2]-1),\\
+                 v_r[0]:v_r[1]+eps:(v_r[1]-v_r[0])/float(v_r[2]-1)]
+X = $surface$
+scal_tan = $tan$
+x = X['ex']
+y = X['ey']
+z = X['ez']
+du = $basis_str[0]$
+dv = $basis_str[1]$
+Zero = zeros(shape(x))
+if scal_tan > 0.0:
+    du_x = Zero+du['ex']
+    du_y = Zero+du['ey']
+    du_z = Zero+du['ez']
+    dv_x = Zero+dv['ex']
+    dv_y = Zero+dv['ey']
+    dv_z = Zero+dv['ez']
 
+f = $scalar_field$
+n = $n$
+skip = $skip$
+su = skip[0]
+sv = skip[1]
+if f[0] != None:
+    dn_x = f[0]*n[0]
+    dn_y = f[0]*n[1]
+    dn_z = f[0]*n[2]
+
+from mayavi.mlab import *
+figure(bgcolor=(1.0,1.0,1.0))
+if $surf$:
+    mesh(x,y,z,colormap="gist_earth")
+if $grid$:
+    for i in range(shape(u)[0]):
+        plot3d(x[i,],y[i,],z[i,],line_width=1.0,color=(0.0,0.0,0.0),tube_radius=None)
+
+    xr = swapaxes(x,0,1)
+    yr = swapaxes(y,0,1)
+    zr = swapaxes(z,0,1)
+
+    for i in range(shape(u)[1]):
+        plot3d(xr[i,],yr[i,],zr[i,],line_width=1.0,color=(0.0,0.0,0.0),tube_radius=None)
+if scal_tan > 0.0:
+    quiver3d(x[::su,::sv],y[::su,::sv],z[::su,::sv],\\
+             du_x[::su,::sv],du_y[::su,::sv],du_z[::su,::sv],scale_factor=scal_tan,\\
+             line_width=1.0,color=(0.0,0.0,0.0),scale_mode='vector',mode='arrow',resolution=16)
+    quiver3d(x[::su,::sv],y[::su,::sv],z[::su,::sv],\\
+             dv_x[::su,::sv],dv_y[::su,::sv],dv_z[::su,::sv],scale_factor=scal_tan,\\
+             line_width=1.0,color=(0.0,0.0,0.0),scale_mode='vector',mode='arrow',resolution=16)
+if f[0] != None:
+    quiver3d(x[::su,::sv],y[::su,::sv],z[::su,::sv],\\
+             dn_x[::su,::sv],dn_y[::su,::sv],dn_z[::su,::sv],\\
+             line_width=1.0,color=(0.0,0.0,0.0),scale_mode='none',mode='cone',\\
+             resolution=16,opacity=0.5)
+
+"""
         if len(self.coords) != 2:
             return
 

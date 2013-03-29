@@ -6,7 +6,6 @@ from sympy import expand,Mul,Add,Symbol,S,Expr,Wild,Pow,diff,trigsimp,\
 
 try:
     from numpy import matrix
-    #from numpy.linalg import det,eig
     numpy_loaded = True
 except ImportError:
     numpy_loaded = False
