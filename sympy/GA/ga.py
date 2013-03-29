@@ -1,6 +1,6 @@
 #GA.py
 
-import sys,GAdir
+import sys,ga_dir
 
 from sympy import Symbol,Expr,expand,Mul,Add,Matrix,\
                   symbols,S,collect,Rational,Expr,\
@@ -39,20 +39,20 @@ else:
                 indices[j] = indices[j-1] + 1
             yield tuple(pool[i] for i in indices)
 
-if GAdir.GA == 'GA':
-    from GAPrint import GA_Printer,GA_LatexPrinter,enhance_print,latex
+if ga_dir.GA == 'GA':
+    from ga_print import GA_Printer,GA_LatexPrinter,enhance_print,latex
     from Vector import Vector
-    from GAdebug import ostr,oprint
-    from GAStringArrays import fct_sym_array,str_array,str_combinations,symbol_array
-    from GAsympy import linear_expand,bilinear_product,linear_projection,\
+    from ga_debug import ostr,oprint
+    from ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
+    from ga_sympy import linear_expand,bilinear_product,linear_projection,\
                         non_scalar_projection,nc_substitue,coef_function,\
                         half_angle_reduce,get_commutative_coef
 else:
-    from sympy.GA.GAPrint import GA_Printer,GA_LatexPrinter,enhance_print,latex
-    from sympy.GA.Vector import Vector
-    from sympy.GA.GAdebug import ostr,oprint
-    from sympy.GA.GAStringArrays import fct_sym_array,str_array,str_combinations,symbol_array
-    from sympy.GA.GAsympy import linear_expand,bilinear_product,linear_projection,\
+    from sympy.GA.ga_print import GA_Printer,GA_LatexPrinter,enhance_print,latex
+    from sympy.GA.vector import Vector
+    from sympy.GA.ga_debug import ostr,oprint
+    from sympy.GA.ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
+    from sympy.GA.ga_sympy import linear_expand,bilinear_product,linear_projection,\
                                         non_scalar_projection,nc_substitue,coef_function,\
                                         half_angle_reduce,get_commutative_coef
 

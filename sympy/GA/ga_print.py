@@ -1,16 +1,16 @@
 #GA_Print.py
 
-import os,sys,StringIO,re,GAdir
+import os,sys,StringIO,re,ga_dir
 from sympy import C,S,Basic,Expr,Symbol,Matrix
 from sympy.printing.printer import Printer
 from sympy.printing.str import StrPrinter
 from sympy.printing.latex import LatexPrinter,accepted_latex_functions
 from sympy.printing.conventions import split_super_sub
 
-if GAdir.GA == 'GA':
-    from GAsympy import linear_expand
+if ga_dir.GA == 'GA':
+    from ga_sympy import linear_expand
 else:
-    from sympy.GA.GAsympy import linear_expand
+    from sympy.GA.ga_sympy import linear_expand
 
 ZERO      = S(0)
 
@@ -305,18 +305,6 @@ class GA_LatexPrinter(LatexPrinter):
             sys.stdout = StringIO.StringIO()
         return
 
-    """
-    @staticmethod
-    def redirect():
-        LatexPrinter.Basic__str__ = Basic.__str__
-        LatexPrinter.MV__str__ = sympy.galgebra.GA.MV.__str__
-        LatexPrinter.stdout = sys.stdout
-        sys.stdout = StringIO.StringIO()
-        Basic.__str__ = LaTeX
-        sympy.galgebra.GA.MV.__str__ = LaTeX
-        return
-    """
-
     @staticmethod
     def restore():
         GA_LatexPrinter.latex_flg = False
@@ -324,22 +312,6 @@ class GA_LatexPrinter(LatexPrinter):
         Basic.__str__  = GA_LatexPrinter.Basic__str__
         Matrix.__str__ = GA_LatexPrinter.Matrix__str__
         return
-    """
-    @staticmethod
-    def restore():
-        LatexPrinter_stdout = sys.stdout
-        LatexPrinter_Basic__str__ = Basic.__str__
-        LatexPrinter_MV__str__ = sympy.galgebra.GA.MV.__str__
-
-        sys.stdout = LatexPrinter.stdout
-        Basic.__str__ = LatexPrinter.Basic__str__
-        sympy.galgebra.GA.MV.__str__ = LatexPrinter.MV__str__
-
-        LatexPrinter.stdout = LatexPrinter_stdout
-        LatexPrinter.Basic__str__ = LatexPrinter_Basic__str__
-        LatexPrinter.MV__str__ = LatexPrinter_MV__str__
-        return
-    """
 
     def _print_Pow(self, expr):
         base = self._print(expr.base)

@@ -1,19 +1,19 @@
 #Manifold.py
 
-import GAdir
+import ga_dir
 from os import system
 import copy
 from itertools import izip,islice,combinations,imap,product,ifilter
 from sympy import trigsimp,simplify
 
-if GAdir.GA =='GA':
-    from GA import MV
-    from GAsympy import linear_expand
-    from GAdebug import oprint
+if ga_dir.GA =='GA':
+    from ga import MV
+    from ga_sympy import linear_expand
+    from ga_debug import oprint
 else:
-    from sympy.GA.GA import MV
-    from sympy.GA.GAsympy import linear_expand
-    from sympy.GA.GAdebug import oprint
+    from sympy.GA.ga import MV
+    from sympy.GA.ga_sympy import linear_expand
+    from sympy.GA.ga_debug import oprint
 
 def fct_to_str(fct_names):
     import sys
