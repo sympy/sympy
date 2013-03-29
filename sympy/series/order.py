@@ -1,5 +1,5 @@
 from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
-from sympy.core import Add, Mul
+from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp_to_key
 
@@ -96,7 +96,7 @@ class Order(Expr):
     @cacheit
     def __new__(cls, expr, *symbols, **assumptions):
 
-        expr = sympify(expr).expand()
+        expr = sympify(expr)
         if expr is S.NaN:
             return S.NaN
 
@@ -119,20 +119,24 @@ class Order(Expr):
 
             symbols = list(set(symbols))
 
+            if len(symbols) > 1:
+                # XXX: better way?  We need this expand() to
+                # workaround e.g: expr = x*(x + y).
+                # (x*(x + y)).as_leading_term(x, y) currently returns
+                # x*y (wrong order term!).  That's why we want to deal with
+                # expand()'ed expr (handled in "if expr.is_Add" branch below).
+                expr = expr.expand()
+
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
                 expr = Add(*[f.expr for (e, f) in lst])
 
             elif expr:
-                if len(symbols) > 1 or expr.is_commutative is False:
-                    # TODO
-                    # We cannot use compute_leading_term because that only
-                    # works in one symbol.
-                    expr = expr.as_leading_term(*symbols)
-                else:
-                    expr = expr.compute_leading_term(symbols[0])
+                expr = expr.as_leading_term(*symbols)
+                expr = expr.as_independent(*symbols, **dict(as_Add=False))[1]
 
-                margs = list(Mul.make_args(expr.as_independent(*symbols)[1]))
+                expr = expand_power_base(expr)
+                expr = expand_log(expr)
 
                 if len(symbols) == 1:
                     # The definition of O(f(x)) symbol explicitly stated that
@@ -141,6 +145,8 @@ class Order(Expr):
                     # expression tree for f(x)), e.g.:
                     # x**p * (-x)**q -> x**(p+q) for real p, q.
                     x = symbols[0]
+                    margs = list(Mul.make_args(
+                        expr.as_independent(x, **dict(as_Add=False))[1]))
 
                     for i, t in enumerate(margs):
                         if t.is_Pow:
@@ -158,7 +164,7 @@ class Order(Expr):
                                     if b in (x, -x) and r.is_real:
                                         margs[i] = x**(r*q)
 
-                expr = Mul(*margs)
+                    expr = Mul(*margs)
 
         if expr is S.Zero:
             return expr
