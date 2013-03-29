@@ -1116,7 +1116,10 @@ class Integral(Expr):
                         manual = manual.func(*[
                             arg.doit() if arg.has(Integral) else arg
                             for arg in manual.args
-                        ])
+                        ]).expand(multinomial=False,
+                                  log=False,
+                                  power_exp=False,
+                                  power_base=False)
                     if not manual.has(Integral):
                         parts.append(coeff * manual)
                         continue
