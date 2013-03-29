@@ -844,14 +844,8 @@ def test_M15():
     assert solve(sin(x) - 1/2) == [pi/6, 5*pi/6]
 
 
-@XFAIL
 def test_M16():
-    # work
-    #assert solve(sin(x) - sin(x)/cos(x)) == [0]
-    #fail
-    #assert solve(sin(x) - tan(x)) == [0]
-    raise NotImplementedError("solve(sin(x)-tan(x),x)")
-
+    assert solve(sin(x) - tan(x)) == [0, 2*pi]
 
 @XFAIL
 def test_M17():
@@ -873,22 +867,22 @@ def test_M20():
 
 
 def test_M21():
-    assert solve(x + sqrt(x) -2) == [1]
+    assert solve(x + sqrt(x) - 2) == [1]
 
 
 def test_M22():
-    assert solve(2*sqrt(x) + 3*x**R(1,4) -2) == [R(1,16)]
+    assert solve(2*sqrt(x) + 3*x**R(1, 4) - 2) == [R(1, 16)]
 
 
 def test_M23():
     #first root of the equation without simplify function write in other form
-    assert solve(x-1/sqrt(1+x**2)) == [simplify(-I*sqrt( (sqrt(5) + 1)/2 )),sqrt( (sqrt(5) - 1)/2 )]
+    assert solve(x - 1/sqrt(1 + x**2)) == [simplify(-I*sqrt( (sqrt(5) + 1)/2 )),sqrt( (sqrt(5) - 1)/2 )]
 
 
 def test_M24():
-    solution =solve(1-binomial(m, 2)*2**k,k)
+    solution = solve(1 - binomial(m, 2)*2**k,k)
     # solution has the form log(2/(m**2-m)), 2)
-    good= log(2/(m*(m-1)), 2)
+    good= log(2/(m*(m - 1)), 2)
     assert solution[0].expand() == good.expand()
 
 
@@ -898,7 +892,7 @@ def test_M25():
 
 
 def test_M26():
-    assert solve(sqrt(log(x))-log(sqrt(x))) == [1, exp(4)]
+    assert solve(sqrt(log(x)) - log(sqrt(x))) == [1, exp(4)]
 
 
 @XFAIL
@@ -912,7 +906,7 @@ def test_M28():
 
 
 def test_M29():
-    assert solve(abs(x-1)-2) == [-1, 3]
+    assert solve(abs(x - 1) - 2) == [-1, 3]
 
 
 @XFAIL
@@ -952,19 +946,24 @@ def test_M36():
     raise NotImplementedError("solve(f**2 + f - 2, x)")
 
 
-@XFAIL
 def test_M37():
-    raise NotImplementedError("solve a 3x3 dependent linear system")
+    assert solve([x + y + z - 6, 2*x + y + 2*z - 10, x + 3*y + z - 10 ]) == {x: -z + 4, y: 2}
 
 
 @XFAIL
 def test_M38():
     raise NotImplementedError("solve a 189x49 simple linear system")
 
-
-@XFAIL
 def test_M39():
-    raise NotImplementedError("solve a 3x3 nonlinear system")
+    x = symbols('x', complex=True)
+    y = symbols('y', complex=True)
+    z = symbols('z', complex=True)
+    assert solve([x**2*y + 3*y*z - 4, -3*x**2*z + 2*y**2 + 1, 2*y*z**2 - z**2 - 1 ]) == \
+            [{y: 1, z: 1, x: -1}, {y: 1, z: 1, x: 1}, \
+             {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: -sqrt(-1 - sqrt(2)*I)}, \
+             {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: sqrt(-1 - sqrt(2)*I)}, \
+             {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: -sqrt(-1 + sqrt(2)*I)}, \
+             {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: sqrt(-1 + sqrt(2)*I)}]
 
 
 def test_N1():
@@ -1008,16 +1007,18 @@ def test_N8():
 
 def test_N9():
     with assuming(Q.real(x)):
-        assert reduce_inequalities(abs(x-1) >2) is Or(Lt(3, x), Lt(x, -1))
+        assert reduce_inequalities(abs(x-1) > 2) is Or(Lt(3, x), Lt(x, -1))
 
 
 def test_N10():
-    p=(x-1)*(x-2)*(x-3)*(x-4)*(x-5)
+    p=(x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
     with assuming(Q.real(x)):
-        assert reduce_inequalities(expand(p) <0) == Or( And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
+        assert reduce_inequalities(expand(p) < 0) == Or( And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
 
 
 def test_N11():
     p=6/(x - 3)
     with assuming(Q.real(x)):
-        assert reduce_inequalities(p <= 3) == Or(Le(5, x), Lt(x,3))
+        assert reduce_inequalities(p <= 3) == Or(Le(5, x), Lt(x, 3))
+
+
