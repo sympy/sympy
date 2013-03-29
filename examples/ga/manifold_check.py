@@ -1,9 +1,9 @@
 
-from sympy.GA.GA import MV,ReciprocalFrame
-from sympy.GA.GAdebug import oprint
-from sympy.GA.GAPrint import enhance_print,Get_Program,Print_Function
+from sympy.ga.ga import MV,ReciprocalFrame
+from sympy.ga.ga_debug import oprint
+from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
-from sympy.GA.Manifold import Manifold
+from sympy.ga.manifold import Manifold
 
 enhance_print()
 Get_Program(off=True)

@@ -1,6 +1,6 @@
 from sympy import symbols
-from sympy.GA.GA import MV,Format
-from sympy.GA.GAPrint import xdvi
+from sympy.ga.ga import MV,Format
+from sympy.ga.ga_print import xdvi
 
 Format()
 

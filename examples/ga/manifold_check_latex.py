@@ -1,10 +1,10 @@
 
 from sympy import symbols,log,simplify,diff,cos,sin
-from sympy.GA.GA import MV,ReciprocalFrame,Format
-from sympy.GA.GA import oprint
-from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
+from sympy.ga.ga import MV,ReciprocalFrame,Format
+from sympy.ga.ga_debug import oprint
+from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
-from sympy.GA.Manifold import Manifold
+from sympy.ga.manifold import Manifold
 
 Format()
 

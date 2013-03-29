@@ -3,8 +3,8 @@ import sys
 
 import sys
 from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
-from sympy.GA.GAPrint import enhance_print,Get_Program,Print_Function,GA_Printer
-from sympy.GA.GA import MV,Format,Com,Nga,ONE,ZERO
+from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function,GA_Printer
+from sympy.ga.ga import MV,Format,Com,Nga,ONE,ZERO
 
 GA_Printer.on()
 enhance_print()

@@ -1,6 +1,6 @@
 from sympy import sin,cos,sinh,cosh,symbols,expand,simplify
-from sympy.GA.GAPrint import xdvi
-from sympy.GA.GA import MV,Format,Com
+from sympy.ga.ga_print import xdvi
+from sympy.ga.ga import MV,Format,Com
 
 Format()
 

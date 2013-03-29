@@ -1,6 +1,6 @@
 from sympy import symbols
-from GA import MV
-from GAPrint import enhance_print,Get_Program,Print_Function
+from sympy.ga.ga import MV
+from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function
 
 enhance_print()
 

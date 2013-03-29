@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix
-from sympy.GA.GAPrint import LatexFormat,xdvi
-from sympy.GA.GA import Format
+from sympy.ga.ga_print import LatexFormat,xdvi
+from sympy.ga.ga import Format
 
 Format()
 a = Matrix ( 2, 2, ( 1, 2, 3, 4 ) )
