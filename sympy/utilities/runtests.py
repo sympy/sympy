@@ -1055,6 +1055,7 @@ class SymPyDocTests(object):
             module = file[:-3]  # remove ".py"
         setup_pprint()
         try:
+            print 'module =',str(module)
             module = pdoctest._normalize_module(module)
             tests = SymPyDocTestFinder().find(module)
         except (SystemExit, KeyboardInterrupt):
