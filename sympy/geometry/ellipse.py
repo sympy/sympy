@@ -20,6 +20,8 @@ from util import _symbol, idiff
 
 import random
 
+from sympy.utilities.decorator import doctest_depends_on
+
 
 class Ellipse(GeometryEntity):
     """An elliptical GeometryEntity.
@@ -93,7 +95,7 @@ class Ellipse(GeometryEntity):
     [0]: cos(t), sin(t), 'mode=parametric'
     >>> p = Plot()                              # doctest: +SKIP
     >>> p[0] = c1                               # doctest: +SKIP
-    >>> radius = Segment(c1.center, c1.random_point())  # doctest: +SKIP
+    >>> radius = Segment(c1.center, c1.random_point())
     >>> p[1] = radius                           # doctest: +SKIP
     >>> p                                       # doctest: +SKIP
     [0]: cos(t), sin(t), 'mode=parametric'
@@ -101,6 +103,7 @@ class Ellipse(GeometryEntity):
     t*sin(1.546086215036205357975518382), 'mode=parametric'
 
     """
+    _doctest_depends_on = {'modules': ('numpy', 'matplotlib')}
 
     def __new__(
         cls, center=None, hradius=None, vradius=None, eccentricity=None,
@@ -571,6 +574,7 @@ class Ellipse(GeometryEntity):
 
         return fuzzy_bool(test.is_positive)
 
+    @doctest_depends_on(modules=('pyglet',))
     def tangent_lines(self, p):
         """Tangent lines between `p` and the ellipse.
 
@@ -610,8 +614,8 @@ class Ellipse(GeometryEntity):
         >>> # This will plot an ellipse together with a tangent line.
         >>> from sympy import Point, Ellipse, Plot
         >>> e = Ellipse(Point(0,0), 3, 2)
-        >>> t = e.tangent_lines(e.random_point()) # doctest: +SKIP
-        >>> p = Plot() # doctest: +SKIP
+        >>> t = e.tangent_lines(e.random_point())
+        >>> p = Plot()
         >>> p[0] = e # doctest: +SKIP
         >>> p[1] = t # doctest: +SKIP
 

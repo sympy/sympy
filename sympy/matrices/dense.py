@@ -12,6 +12,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.simplify import simplify as _simplify
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import filldedent
+from sympy.utilities.decorator import doctest_depends_on
 
 from sympy.matrices.matrices import (MatrixBase,
     ShapeError, a2idx, classof)
@@ -954,7 +955,7 @@ def matrix2numpy(m):  # pragma: no cover
             a[i, j] = m[i, j]
     return a
 
-
+@doctest_depends_on(modules=('numpy',))
 def symarray(prefix, shape):  # pragma: no cover
     """Create a numpy ndarray of symbols (as an object array).
 
@@ -977,39 +978,39 @@ def symarray(prefix, shape):  # pragma: no cover
     These doctests require numpy.
 
     >>> from sympy import symarray
-    >>> symarray('', 3) #doctest: +SKIP
-    [_0, _1, _2]
+    >>> symarray('', 3)
+    [_0 _1 _2]
 
     If you want multiple symarrays to contain distinct symbols, you *must*
     provide unique prefixes:
 
-    >>> a = symarray('', 3) #doctest: +SKIP
-    >>> b = symarray('', 3) #doctest: +SKIP
-    >>> a[0] is b[0] #doctest: +SKIP
+    >>> a = symarray('', 3)
+    >>> b = symarray('', 3)
+    >>> a[0] is b[0]
     True
-    >>> a = symarray('a', 3) #doctest: +SKIP
-    >>> b = symarray('b', 3) #doctest: +SKIP
-    >>> a[0] is b[0] #doctest: +SKIP
+    >>> a = symarray('a', 3)
+    >>> b = symarray('b', 3)
+    >>> a[0] is b[0]
     False
 
     Creating symarrays with a prefix:
 
-    >>> symarray('a', 3) #doctest: +SKIP
-    [a_0, a_1, a_2]
+    >>> symarray('a', 3)
+    [a_0 a_1 a_2]
 
     For more than one dimension, the shape must be given as a tuple:
 
-    >>> symarray('a', (2, 3)) #doctest: +SKIP
-    [[a_0_0, a_0_1, a_0_2],
-     [a_1_0, a_1_1, a_1_2]]
-    >>> symarray('a', (2, 3, 2)) #doctest: +SKIP
-    [[[a_0_0_0, a_0_0_1],
-      [a_0_1_0, a_0_1_1],
-      [a_0_2_0, a_0_2_1]],
+    >>> symarray('a', (2, 3))
+    [[a_0_0 a_0_1 a_0_2]
+     [a_1_0 a_1_1 a_1_2]]
+    >>> symarray('a', (2, 3, 2))
+    [[[a_0_0_0 a_0_0_1]
+      [a_0_1_0 a_0_1_1]
+      [a_0_2_0 a_0_2_1]]
     <BLANKLINE>
-     [[a_1_0_0, a_1_0_1],
-      [a_1_1_0, a_1_1_1],
-      [a_1_2_0, a_1_2_1]]]
+     [[a_1_0_0 a_1_0_1]
+      [a_1_1_0 a_1_1_1]
+      [a_1_2_0 a_1_2_1]]]
 
     """
     from numpy import empty, ndindex
@@ -1624,5 +1625,5 @@ def randMatrix(r, c=None, min=0, max=99, seed=None, symmetric=False, percent=100
     else:
         z = int(r*c*percent // 100)
         m._mat[:z] = [S.Zero]*z
-        random.shuffle(m._mat)
+        prng.shuffle(m._mat)
     return m
