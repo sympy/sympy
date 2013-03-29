@@ -1504,11 +1504,11 @@ def test_separable_reduced():
     df = f(x).diff(x)
     eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
-    '1st_linear_Integral', 'separable_reduced_Integral')
+        '1st_linear_Integral', 'separable_reduced_Integral')
 
     eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
-    '1st_linear_Integral', 'separable_reduced_Integral')
+        '1st_linear_Integral', 'separable_reduced_Integral')
     sol = dsolve(eq, hint = 'separable_reduced')
     assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
     assert sol.rhs == C1 + log(x)
@@ -1516,7 +1516,7 @@ def test_separable_reduced():
 
     eq = df + (f(x) / (x**4*f(x) - x))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
-    '1st_linear_Integral', 'separable_reduced_Integral')
+        '1st_linear_Integral', 'separable_reduced_Integral')
     sol = dsolve(eq, hint = 'separable_reduced')
     assert sol.lhs == log(x**3*f(x))/4 + log(x**3*f(x) - S(4)/3)/12
     assert sol.rhs == C1 + log(x)
@@ -1545,3 +1545,59 @@ def test_homogeneous_function():
     assert homogeneous_order(eq5, x, f(x)) == 0
     assert homogeneous_order(eq6, x, f(x)) == 0
     assert homogeneous_order(eq7, x, f(x)) == None
+
+
+def test_linear_coeff_match():
+    from sympy.solvers.ode import _linear_coeff_match
+    eq1 = (sin((2*x + 6*f(x) + 4)/(2*x + 6)) +
+              cos(2*x/(2*x + 6) + 6*f(x)/(2*x + 6) + 4/(2*x + 6)))
+    eq2 = (2*x + 6*f(x) + 4)/(2*x + 6)
+    eq3 = log(sin((2*x + 6*f(x) + 4)/(2*x + 6)))
+    eq4 = sin((3*x)/f(x))
+    eq5 = (x + 3*f(x) + 4)/(x + 6*f(x) + 1)
+    eq6 = x /(x + 6*f(x) + 1) + 2 /(x + 6*f(x) + 1)
+    eq7 = sin((56*x + 32*f(x) + 45)/(76*x + 6*f(x) + 19))
+    assert _linear_coeff_match(eq1, f(x)) == (-3, S(1)/3)
+    assert _linear_coeff_match(eq2, f(x)) == (-3, S(1)/3)
+    assert _linear_coeff_match(eq3, f(x)) == (-3, S(1)/3)
+    assert _linear_coeff_match(eq4, f(x)) == None
+    assert _linear_coeff_match(eq5, f(x)) == (-7, 1)
+    assert _linear_coeff_match(eq6, f(x)) == (-2, S(1)/6)
+    assert _linear_coeff_match(eq7, f(x)) ==  (-S(169)/1048, -S(589)/524)
+
+def test_linear_coefficients():
+    f = Function('f')
+    df = f(x).diff(x)
+    eq = (1 + x + 3*f(x)) + (4 + 3*x + 6*f(x))*df
+    assert classify_ode(eq) == ('1st_exact', 'linear_coefficients',
+        '1st_exact_Integral', 'linear_coefficients_Integral')
+    sol = dsolve(eq, hint = 'linear_coefficients')
+    assert sol.lhs == log(f(x) - S(1)/3)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = df + (x + 2*f(x) + 1)/(2*x + f(x) + 3)
+    assert classify_ode(eq) == (
+        'linear_coefficients', 'linear_coefficients_Integral')
+    sol = dsolve(eq)
+    assert sol.lhs == log(f(x) - S(1)/3)
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+    eq = x + (x + f(x) + 4)*Derivative(f(x), x) + 2*f(x) + 3
+    assert classify_ode(eq) == (
+        'linear_coefficients', 'linear_coefficients_Integral')
+    eq = df + (-25*f(x) -8*x + 62)/(4*f(x) + 11*x -11)
+    assert classify_ode(eq) == (
+        'linear_coefficients', 'linear_coefficients_Integral')
+    eq = df + (-f(x) -8*x + 12)/(2*f(x) + x -10)
+    assert classify_ode(eq) == (
+        'linear_coefficients', 'linear_coefficients_Integral')
+    eq = (3*x + 1)*df + (-4*f(x) -6*x + 5)
+    assert classify_ode(eq) == ('1st_exact', '1st_linear', 'almost_linear',
+        'linear_coefficients', '1st_exact_Integral', '1st_linear_Integral',
+        'almost_linear_Integral', 'linear_coefficients_Integral')
+    eq = df + log(sin((3*x + 4*f(x) + 1) / (5*x + 6*f(x) + 2)))
+    assert classify_ode(eq) == ('linear_coefficients', 'linear_coefficients_Integral')
+    eq = df + cos((2*x + 5*f(x) + 1) / (x + 6*f(x) + 3))
+    assert classify_ode(eq) == ('linear_coefficients', 'linear_coefficients_Integral')
+    eq = df + cos(2*x/(2*x + 6) + 6*f(x)/(2*x + 6) + 4/(2*x + 6))
+    assert classify_ode(eq) == ('linear_coefficients', 'linear_coefficients_Integral')
