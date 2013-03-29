@@ -121,20 +121,22 @@ def roots_cubic(f):
 
     return soln
 
-def roots_quartic_euler(a, b, c, d):
+def _roots_quartic_euler(p, q, r, a):
     """
     Descartes-Euler solution of the quartic equation
 
     Parameters
     ==========
 
-    a,b,c,d: coefficients of the quartic equation
+    p, q, r: coefficients of ``x**4 + p*x**2 + q*x + r``
+    a: shift of the roots
 
     Notes
     =====
 
-    Starting with the depressed form ``x**4 + p*x**2 + q*x + r = 0``
-    look for solutions of the form
+    This is a helper function for ``roots_quartic``
+
+    Look for solutions of the form
     ``x1 = sqrt(R) - sqrt(A + B*sqrt(R))``
     ``x2 = -sqrt(R) - sqrt(A - B*sqrt(R))``
     ``x3 = -sqrt(R) + sqrt(A - B*sqrt(R))``
@@ -145,25 +147,20 @@ def roots_quartic_euler(a, b, c, d):
     so that ``R`` must satisfy the Descartes-Euler resolvent equation
     ``64*R**3 + 32*p*R**2 + (4*p**2 - 16*r)*R - q**2 = 0``
 
-    If the Descartes-Euler resolvent has not a rational solution, return None;
-    in that case it is likely that the Ferrari method give a simpler
+    If the resolvent does not have a rational solution, return None;
+    in that case it is likely that the Ferrari method gives a simpler
     solution.
 
     Examples
     ========
 
     >>> from sympy import S
-    >>> from sympy.polys.polyroots import roots_quartic_euler
-    >>> a, b, c, d = S(0), -S(64)/5, -S(512)/125, -S(1024)/3125
-    >>> roots_quartic_euler(a, b, c, d)[0]
+    >>> from sympy.polys.polyroots import _roots_quartic_euler
+    >>> p, q, r = -S(64)/5, -S(512)/125, -S(1024)/3125
+    >>> _roots_quartic_euler(p, q, r, S(0))[0]
     -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
     """
     from sympy.solvers import solve
-    from sympy.core import count_ops
-    # reduce to the form x**4 + p*x**2 + q*x + r
-    p = -3*a**2/8 + b
-    q = a**3/8 - a*b/2 + c
-    r = -3*a**4/256 + a**2*b/16 - a*c/4 + d
     # solve the resolvent equation
     x = Symbol('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
@@ -172,14 +169,12 @@ def roots_quartic_euler(a, b, c, d):
     if not xsols:
         return None
     R = max(xsols)
-    if not R:
-        return None
-    B = -q/(4*R)
-    A = -R - p/2
     c1 = sqrt(R)
-    c2 = sqrt(A + B*c1)
-    c3 = sqrt(A - B*c1)
-    return [c1 - c2 - a/4, -c1 - c3 - a/4 , -c1 + c3 -a/4, c1 + c2 - a/4]
+    B = -q*c1/(4*R)
+    A = -R - p/2
+    c2 = sqrt(A + B)
+    c3 = sqrt(A - B)
+    return [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
 
 
 def roots_quartic(f):
@@ -247,17 +242,11 @@ def roots_quartic(f):
 
         return r1 + r2
     else:
-        # Descartes-Euler method, see [7]
-        sols = roots_quartic_euler(a, b, c, d)
-        if sols:
-            return sols
-        # Ferrari method, see [2]
         a2 = a**2
         e = b - 3*a2/8
         f = c + a*(a2/8 - b/2)
         g = d - a*(a*(3*a2/256 - b/16) + c/4)
         aon4 = a/4
-        ans = []
 
         if f is S.Zero:
             y1, y2 = [sqrt(tmp) for tmp in
@@ -267,6 +256,11 @@ def roots_quartic(f):
             y = [S.Zero] + roots([1, 0, e, f], multiple=True)
             return [tmp - aon4 for tmp in y]
         else:
+            # Descartes-Euler method, see [7]
+            sols = _roots_quartic_euler(e, f, g, aon4)
+            if sols:
+                return sols
+            # Ferrari method, see [2]
             p = -e**2/12 - g
             q = -e**3/108 + e*g/3 - f**2/8
             TH = Rational(1, 3)
@@ -281,12 +275,13 @@ def roots_quartic(f):
             w = sqrt(e + 2*y)
             arg1 = 3*e + 2*y
             arg2 = 2*f/w
+            ans = []
             for s in [-1, 1]:
                 root = sqrt(-(arg1 + s*arg2))
                 for t in [-1, 1]:
                     ans.append((s*w - t*root)/2 - aon4)
 
-    return ans
+            return ans
 
 
 def roots_binomial(f):
