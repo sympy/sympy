@@ -1547,8 +1547,8 @@ def test_homogeneous_function():
     assert homogeneous_order(eq7, x, f(x)) == None
 
 
-def test_linear_coeff_helper():
-    from sympy.solvers.ode import _linear_coeff_helper
+def test_linear_coeff_match():
+    from sympy.solvers.ode import _linear_coeff_match
     eq1 = (sin((2*x + 6*f(x) + 4)/(2*x + 6)) +
               cos(2*x/(2*x + 6) + 6*f(x)/(2*x + 6) + 4/(2*x + 6)))
     eq2 = (2*x + 6*f(x) + 4)/(2*x + 6)
@@ -1557,13 +1557,13 @@ def test_linear_coeff_helper():
     eq5 = (x + 3*f(x) + 4)/(x + 6*f(x) + 1)
     eq6 = x /(x + 6*f(x) + 1) + 2 /(x + 6*f(x) + 1)
     eq7 = sin((56*x + 32*f(x) + 45)/(76*x + 6*f(x) + 19))
-    assert _linear_coeff_helper(eq1, f(x)) == (-3, S(1)/3)
-    assert _linear_coeff_helper(eq2, f(x)) == (-3, S(1)/3)
-    assert _linear_coeff_helper(eq3, f(x)) == (-3, S(1)/3)
-    assert _linear_coeff_helper(eq4, f(x)) == None
-    assert _linear_coeff_helper(eq5, f(x)) == (-7, 1)
-    assert _linear_coeff_helper(eq6, f(x)) == (-2, S(1)/6)
-    assert _linear_coeff_helper(eq7, f(x)) ==  (-S(169)/1048, -S(589)/524)
+    assert _linear_coeff_match(eq1, f(x)) == (-3, S(1)/3)
+    assert _linear_coeff_match(eq2, f(x)) == (-3, S(1)/3)
+    assert _linear_coeff_match(eq3, f(x)) == (-3, S(1)/3)
+    assert _linear_coeff_match(eq4, f(x)) == None
+    assert _linear_coeff_match(eq5, f(x)) == (-7, 1)
+    assert _linear_coeff_match(eq6, f(x)) == (-2, S(1)/6)
+    assert _linear_coeff_match(eq7, f(x)) ==  (-S(169)/1048, -S(589)/524)
 
 def test_linear_coefficients():
     f = Function('f')
@@ -1585,11 +1585,9 @@ def test_linear_coefficients():
     eq = x + (x + f(x) + 4)*Derivative(f(x), x) + 2*f(x) + 3
     assert classify_ode(eq) == (
         'linear_coefficients', 'linear_coefficients_Integral')
-
     eq = df + (-25*f(x) -8*x + 62)/(4*f(x) + 11*x -11)
     assert classify_ode(eq) == (
         'linear_coefficients', 'linear_coefficients_Integral')
-
     eq = df + (-f(x) -8*x + 12)/(2*f(x) + x -10)
     assert classify_ode(eq) == (
         'linear_coefficients', 'linear_coefficients_Integral')

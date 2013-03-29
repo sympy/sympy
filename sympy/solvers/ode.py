@@ -863,6 +863,9 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         # f(x) so the matching works.
         r = collect(reduced_eq, df, exact=True).match(d + e*df)
         if r:
+            # Using r[d] and r[e] without any modification for hints
+            # linear-coefficients and separable-reduced.
+            num, denom = r[d], r[e]
             r['d'] = d
             r['e'] = e
             r['y'] = y
@@ -901,34 +904,10 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                             and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
                         matching_hints["1st_homogeneous_coeff_best"] = r
 
-        # Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
-        a = Wild('a')
-        b = Wild('b', exclude = [df])
-        c = Wild('c')
-        match = collect(expand(eq), [df, f(x)], evaluate=True).match(a*df + b)
-        if match:
-            match[c] = S.Zero
-            if match[b].is_Add:
-                # Separate the terms having f(x) to match[b] and
-                # remaining to match[c]
-                no_f, match[b] = match[b].as_independent(f(x))
-                match[c] += no_f
-            factor = simplify(match[b].diff(f(x))/match[a])
-            if factor and not factor.has(f(x)):
-                match[b] = factor_terms(match[b])
-                u = match[b].as_independent(f(x), as_Add=False)[1]
-                r2 = {'a': a, 'b': b, 'c': c, 'u': u}
-                r2[b] = match[b] / u
-                r2[a] = match[a] / u.diff(f(x))
-                r2[c] = match[c]
-                matching_hints["almost_linear"] = r2
-                matching_hints["almost_linear_Integral"] = r2
-
-        # Linear coefficients of the form y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
-        match = collect(reduced_eq, [df, f(x)]).match(a*df + b)
-        if match:
-            F = match[b]/match[a]
-            params = _linear_coeff_helper(F, func)
+            # Linear coefficients of the form y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
+            # that can be reduced to homogeneous form.
+            F = num/denom
+            params = _linear_coeff_match(F, func)
             if params:
                 xarg, yarg = params
                 u = Dummy('u')
@@ -952,14 +931,14 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                             matching_hints["linear_coefficients"] = match_homo
                             matching_hints["linear_coefficients_Integral"] = match_homo
 
-        # Equation of the form y' + (y/x)*H(x^n*y) = 0 that can be reduced to separable form
-        match = collect(expand(reduced_eq), [df], evaluate = True).match(a*df + b)
-        if match:
-            factor = simplify(x/f(x)*match[b]/match[a])
-            # Try representing factor in terms of x^n*y where n is lowest power of x in factor
+            # Equation of the form y' + (y/x)*H(x^n*y) = 0
+            # that can be reduced to separable form
+            factor = simplify(x/f(x)*num/denom)
+            # Try representing factor in terms of x^n*y
+            # where n is lowest power of x in factor
             # Removing terms like sqrt(2)*3 from factor.atoms(Mul)
+            u = None
             for mul in ordered(factor.atoms(Mul)):
-                u = None
                 if mul.has(x):
                     _, u = mul.as_independent(x, f(x))
                     break
@@ -973,6 +952,29 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                     r3.update({'power': xpart.as_base_exp()[1], 'u': test})
                     matching_hints["separable_reduced"] = r3
                     matching_hints["separable_reduced_Integral"] = r3
+
+        # Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
+        a = Wild('a')
+        b = Wild('b', exclude = [df])
+        c = Wild('c')
+        match = collect(expand(eq), [df, f(x)], evaluate=True).match(a*df + b)
+        if match:
+            match[c] = S.Zero
+            if match[b].is_Add:
+                # Separate the terms having f(x) to match[b] and
+                # remaining to match[c]
+                no_f, match[b] = match[b].as_independent(f(x))
+                match[c] += no_f
+            factor = simplify(match[b].diff(f(x))/match[a])
+            if factor and not factor.has(f(x)):
+                match[b] = factor_terms(match[b])
+                u = match[b].as_independent(f(x), as_Add=False)[1]
+                r2 = {'a': a, 'b': b, 'c': c, 'u': u}
+                r2[b] = match[b] / u
+                r2[a] = match[a] / u.diff(f(x))
+                r2[c] = match[c]
+                matching_hints["almost_linear"] = r2
+                matching_hints["almost_linear_Integral"] = r2
 
     if order == 2:
         # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
@@ -2858,12 +2860,12 @@ def ode_almost_linear(eq, func, order, match):
     # ode_1st_linear will give the required output.
     return ode_1st_linear(eq, func, order, match)
 
-def _linear_coeff_helper(expr, func):
+def _linear_coeff_match(expr, func):
     r"""
     Helper function to match hint linear-coefficients.
     Matches the expression to the form
     expr = (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2)
-    where the following conditions hold good
+    where the following conditions hold good:
 
     1. a1, b1, c1, a2, b2, c2 are Rationals
     2. Either one of c1 and c2 are not equal to zero
@@ -2877,26 +2879,29 @@ def _linear_coeff_helper(expr, func):
 
     Examples
     ========
+
     >>> from sympy import Function
     >>> from sympy.abc import x
-    >>> from sympy.solvers.ode import _linear_coeff_helper
+    >>> from sympy.solvers.ode import _linear_coeff_match
     >>> from sympy.functions.elementary.trigonometric import sin
     >>> f = Function('f')
-    >>> _linear_coeff_helper((
+    >>> _linear_coeff_match((
     ... (-25*f(x) -8*x + 62)/(4*f(x) + 11*x -11)), f(x))
     (1/9, 22/9)
-    >>> _linear_coeff_helper(
+    >>> _linear_coeff_match(
     ... sin((-5*f(x) -8*x + 6)/(4*f(x) + x -1)), f(x))
     (19/27, 2/27)
-    >>> _linear_coeff_helper(sin(f(x)/x), f(x))
+    >>> _linear_coeff_match(sin(f(x)/x), f(x))
 
     """
     f = func.func
     x = func.args[0]
     def abc(eq):
-        # Internal function of _linear_coeff_match
-        # that returns a, b, c of the expression
-        # a*x + b*f(x) + c if a, b and c are rationals.
+        r'''
+        Internal function of _linear_coeff_match
+        that returns Rationals a, b, c
+        if eq is a*x + b*f(x) + c, else None.
+        '''
         eq = _mexpand(eq)
         c = eq.as_independent(x, f(x), as_Add = True)[0]
         if not c.is_Rational:
@@ -2910,12 +2915,13 @@ def _linear_coeff_helper(expr, func):
         if eq == a*x + b*f(x) + c:
             return a, b, c
 
-    def rmatch(arg):
-        # Internal function of _linear_coeff_match
-        # that returns a1, b1, c1, a2, b2, c2 of the expression
-        # (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2)
-        # if a1, b1, c1, a2, b2 and c2 are rationals
-        # one of c1 or c2 is non-zero and a2*b1 - a1*b2 is non-zero
+    def match(arg):
+        r'''
+        Internal function of _linear_coeff_match
+        that returns Rationals a1, b1, c1, a2, b2, c2 and a2*b1 - a1*b2
+        of the expression (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2)
+        if one of c1 or c2 and a2*b1 - a1*b2 is non-zero, else None.
+        '''
         n, d = arg.together().as_numer_denom()
         m = abc(n)
         if m is not None:
@@ -2923,17 +2929,16 @@ def _linear_coeff_helper(expr, func):
             m = abc(d)
             if m is not None:
                 a2, b2, c2 = m
-                if (c1 or c2) and a2*b1 - a1*b2:
-                    return a1, b1, c1, a2, b2, c2, a2*b1 - a1*b2
+                d = a2*b1 - a1*b2
+                if (c1 or c2) and d:
+                    return a1, b1, c1, a2, b2, c2, d
 
     m = [fi.args[0] for fi in expr.atoms(Function) if fi.func != f and
          fi.nargs == 1 and not fi.args[0].is_Function] or set([expr])
-    if m:
-        m1 = rmatch(m.pop())
-        if m1 and all(rmatch(mi) == m1 for mi in m):
-            a1, b1, c1, a2, b2, c2, denom = m1
-            return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
-    return None
+    m1 = match(m.pop())
+    if m1 and all(match(mi) == m1 for mi in m):
+        a1, b1, c1, a2, b2, c2, denom = m1
+        return (b2*c1 - b1*c2)/denom, (a1*c2 - a2*c1)/denom
 
 def ode_linear_coefficients(eq, func, order, match):
     r"""
@@ -2944,8 +2949,8 @@ def ode_linear_coefficients(eq, func, order, match):
     where a1, b1, c1, a2, b2, c2 are constants and (a1*b2 - a2*b1) != 0
 
     This can be solved by substituting x = x' + ((b2*c1 - b1*c2)/(a2*b1 - a1*b2))
-    and y = y' + ((a1*c2 - a2*c1)/(a2*b1 - a1*b2)). Making the given
-    substitution reduces it to a homogeneous differential equation
+    and y = y' + ((a1*c2 - a2*c1)/(a2*b1 - a1*b2)) which reduces it
+    to a homogeneous differential equation.
 
     See Also
     ========
