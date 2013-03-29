@@ -4,7 +4,6 @@ A few practical conventions common to all printers.
 
 
 import re
-import collections
 
 
 def split_super_sub(text):
@@ -69,7 +68,9 @@ def requires_partial(expr):
     get the context of the expression.
     """
 
-    if not isinstance(expr.free_symbols, collections.Iterable):
+    ## checking for the attribute '__iter__' is Python 2.5 friendly.
+    ## For 2.6+, say isinstance(expr.free_symbols, collections.Iterable)
+    if not hasattr(expr.free_symbols, '__iter__'):
         return len(set(expr.variables)) > 1
 
     return sum(not s.is_integer for s in expr.free_symbols) > 1
