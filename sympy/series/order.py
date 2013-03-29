@@ -386,9 +386,7 @@ class Order(Expr):
         return Order(self.expr._subs(old, new), *self.args[1:])
 
     def _eval_conjugate(self):
-        expr = self.expr._eval_conjugate()
-        if expr is not None:
-            return self.func(expr, *self.args[1:])
+        return self
 
     def _eval_derivative(self, x):
         return self.func(self.expr.diff(x), *self.args[1:]) or self
