@@ -31,10 +31,10 @@ class Manifold(Basic):
 
     def _latex(self, printer, *args):
         if len(self.name) == 1:
-            l = self.name[0].upper()
-            return r'\mathbb{%s}^{%s}' % (l, self.dim)
-        else:
-            return r'\mathrm{%s}' % self.name
+            if self.name.isupper():
+                return r'\mathbb{%s}^{%s}' % (self.name, self.dim)
+
+        return r'\mathrm{%s}' % self.name
 
 
 class Patch(Basic):
