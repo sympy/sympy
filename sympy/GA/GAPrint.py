@@ -177,8 +177,16 @@ class GA_Printer(StrPrinter):
             ostr = ostr.replace(' ','')
             return(ostr)
 
-#GA_Printer.Basic__str__  = Basic.__str__
-#Basic.__str__  = lambda self: GA_Printer().doprint(self)
+    @staticmethod
+    def on():
+        GA_Printer.Basic__str__  = Basic.__str__
+        Basic.__str__  = lambda self: GA_Printer().doprint(self)
+        return
+
+    @staticmethod
+    def off():
+        Basic.__str__  = GA_Printer.Basic__str__
+        return
 
 class GA_LatexPrinter(LatexPrinter):
     """
@@ -297,6 +305,18 @@ class GA_LatexPrinter(LatexPrinter):
             sys.stdout = StringIO.StringIO()
         return
 
+    """
+    @staticmethod
+    def redirect():
+        LatexPrinter.Basic__str__ = Basic.__str__
+        LatexPrinter.MV__str__ = sympy.galgebra.GA.MV.__str__
+        LatexPrinter.stdout = sys.stdout
+        sys.stdout = StringIO.StringIO()
+        Basic.__str__ = LaTeX
+        sympy.galgebra.GA.MV.__str__ = LaTeX
+        return
+    """
+
     @staticmethod
     def restore():
         GA_LatexPrinter.latex_flg = False
@@ -304,6 +324,22 @@ class GA_LatexPrinter(LatexPrinter):
         Basic.__str__  = GA_LatexPrinter.Basic__str__
         Matrix.__str__ = GA_LatexPrinter.Matrix__str__
         return
+    """
+    @staticmethod
+    def restore():
+        LatexPrinter_stdout = sys.stdout
+        LatexPrinter_Basic__str__ = Basic.__str__
+        LatexPrinter_MV__str__ = sympy.galgebra.GA.MV.__str__
+
+        sys.stdout = LatexPrinter.stdout
+        Basic.__str__ = LatexPrinter.Basic__str__
+        sympy.galgebra.GA.MV.__str__ = LatexPrinter.MV__str__
+
+        LatexPrinter.stdout = LatexPrinter_stdout
+        LatexPrinter.Basic__str__ = LatexPrinter_Basic__str__
+        LatexPrinter.MV__str__ = LatexPrinter_MV__str__
+        return
+    """
 
     def _print_Pow(self, expr):
         base = self._print(expr.base)

@@ -3,8 +3,10 @@ import sys
 
 from sympy import symbols,sin,cos,Rational,expand,collect,Symbol
 from sympy.GA.GA import MV,Nga,simplify,Com,ONE,ZERO
+from sympy.GA.GAPrint import GA_Printer
 
 def test_basic_multivector_operations():
+
     (ex,ey,ez) = MV.setup('e*x|y|z')
 
     A = MV('A','mv')
@@ -76,7 +78,7 @@ def test_check_generalized_BAC_CAB_formulas():
     return
 
 def test_derivatives_in_rectangular_coordinates():
-
+    GA_Printer.on()
     X = (x,y,z) = symbols('x y z')
     (ex,ey,ez,grad) = MV.setup('e_x e_y e_z',metric='[1,1,1]',coords=X)
 
@@ -84,6 +86,7 @@ def test_derivatives_in_rectangular_coordinates():
     A = MV('A','vector',fct=True)
     B = MV('B','grade2',fct=True)
     C = MV('C','mv',fct=True)
+    print str(f)
     assert str(f) == 'f'
     assert str(A) == 'A__x*e_x + A__y*e_y + A__z*e_z'
     assert str(B) == 'B__xy*e_x^e_y + B__xz*e_x^e_z + B__yz*e_y^e_z'
@@ -104,11 +107,11 @@ def test_derivatives_in_rectangular_coordinates():
     assert str(grad>B) == '0'
     assert str(grad<C) == 'D{x}C__x + D{y}C__y + D{z}C__z + (-(D{y}C__xy + D{z}C__xz))*e_x + (D{x}C__xy - D{z}C__yz)*e_y + (D{x}C__xz + D{y}C__yz)*e_z + D{z}C__xyz*e_x^e_y - D{y}C__xyz*e_x^e_z + D{x}C__xyz*e_y^e_z'
     assert str(grad>C) == 'D{x}C__x + D{y}C__y + D{z}C__z + D{x}C*e_x + D{y}C*e_y + D{z}C*e_z'
-
+    GA_Printer.off()
     return
 
 def test_derivatives_in_spherical_coordinates():
-
+    GA_Printer.on()
     X = (r,th,phi) = symbols('r theta phi')
     curv = [[r*cos(phi)*sin(th),r*sin(phi)*sin(th),r*cos(th)],[1,r,r*sin(th)]]
     (er,eth,ephi,grad) = MV.setup('e_r e_theta e_phi',metric='[1,1,1]',coords=X,curv=curv)
@@ -117,6 +120,7 @@ def test_derivatives_in_spherical_coordinates():
     A = MV('A','vector',fct=True)
     B = MV('B','grade2',fct=True)
 
+    print str(f)
     assert str(f) == 'f'
     assert str(A) == 'A__r*e_r + A__theta*e_theta + A__phi*e_phi'
     assert str(B) == 'B__rtheta*e_r^e_theta + B__rphi*e_r^e_phi + B__thetaphi*e_theta^e_phi'
@@ -125,6 +129,7 @@ def test_derivatives_in_spherical_coordinates():
     assert str(grad|A) == 'D{r}A__r + 2*A__r/r + A__theta*cos(theta)/(r*sin(theta)) + D{theta}A__theta/r + D{phi}A__phi/(r*sin(theta))'
     assert str(-MV.I*(grad^A)) == '((A__phi*cos(theta)/sin(theta) + D{theta}A__phi - D{phi}A__theta/sin(theta))/r)*e_r + (-D{r}A__phi - A__phi/r + D{phi}A__r/(r*sin(theta)))*e_theta + (D{r}A__theta + A__theta/r - D{theta}A__r/r)*e_phi'
     assert str(grad^B) == '(D{r}B__thetaphi - B__rphi*cos(theta)/(r*sin(theta)) + 2*B__thetaphi/r - D{theta}B__rphi/r + D{phi}B__rtheta/(r*sin(theta)))*e_r^e_theta^e_phi'
+    GA_Printer.off()
     return
 
 def test_rounding_numerical_components():
@@ -401,3 +406,5 @@ def test_reciprocal_frame_test():
     w = (w.expand()).scalar()
     assert str(simplify(w/Esq)) == '1'
     return
+
+

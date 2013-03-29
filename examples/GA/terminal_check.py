@@ -3,9 +3,10 @@ import sys
 
 import sys
 from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
-from sympy.GA.GAPrint import enhance_print,Get_Program,Print_Function
+from sympy.GA.GAPrint import enhance_print,Get_Program,Print_Function,GA_Printer
 from sympy.GA.GA import MV,Format,Com,Nga,ONE,ZERO
 
+GA_Printer.on()
 enhance_print()
 
 def basic_multivector_operations():
@@ -453,3 +454,5 @@ conformal_representations_of_circles_lines_spheres_and_planes()
 properties_of_geometric_objects()
 extracting_vectors_from_conformal_2_blade()
 reciprocal_frame_test()
+
+GA_Printer.off()
