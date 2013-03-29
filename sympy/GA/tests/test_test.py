@@ -6,7 +6,7 @@ from sympy.GA.GA import MV,Nga,simplify,Com,ONE,ZERO
 from sympy.GA.GAPrint import GA_Printer
 
 def test_basic_multivector_operations():
-
+    GA_Printer.on()
     (ex,ey,ez) = MV.setup('e*x|y|z')
 
     A = MV('A','mv')
@@ -57,12 +57,12 @@ def test_basic_multivector_operations():
     assert str((A|X)) == 'A__xy*X__y*e_x - A__xy*X__x*e_y'
     assert str((A<X)) == 'A*X__x*e_x + A*X__y*e_y'
     assert str((A>X)) == 'A__xy*X__y*e_x - A__xy*X__x*e_y'
+    GA_Printer.off()
     return
 
 def test_check_generalized_BAC_CAB_formulas():
-
+    GA_Printer.on()
     (a,b,c,d,e) = MV.setup('a b c d e')
-
 
     assert str(a|(b*c)) == '-(a.c)*b + (a.b)*c'
     assert str(a|(b^c)) == '-(a.c)*b + (a.b)*c'
@@ -74,7 +74,7 @@ def test_check_generalized_BAC_CAB_formulas():
     assert str(((a^b)|c)|d) == '-(a.c)*(b.d) + (a.d)*(b.c)'
     assert str(Com(a^b,c^d)) == '-(b.d)*a^c + (b.c)*a^d + (a.d)*b^c - (a.c)*b^d'
     assert str((a|(b^c))|(d^e)) == '(-(a.b)*(c.e) + (a.c)*(b.e))*d + ((a.b)*(c.d) - (a.c)*(b.d))*e'
-
+    GA_Printer.off()
     return
 
 def test_derivatives_in_rectangular_coordinates():
@@ -133,7 +133,7 @@ def test_derivatives_in_spherical_coordinates():
     return
 
 def test_rounding_numerical_components():
-
+    GA_Printer.on()
     (ex,ey,ez) = MV.setup('e_x e_y e_z',metric='[1,1,1]')
 
     X = 1.2*ex+2.34*ey+0.555*ez
@@ -143,14 +143,14 @@ def test_rounding_numerical_components():
     assert str(Nga(X,2)) == '1.2*e_x + 2.3*e_y + 0.55*e_z'
     assert str(X*Y) == '12.7011000000000 + 4.02078000000000*e_x^e_y + 6.17518500000000*e_x^e_z + 10.1820000000000*e_y^e_z'
     assert str(Nga(X*Y,2)) == '13. + 4.0*e_x^e_y + 6.2*e_x^e_z + 10.*e_y^e_z'
+    GA_Printer.off()
     return
 
 def test_noneuclidian_distance_calculation():
     from sympy import solve,sqrt
-
+    GA_Printer.on()
     metric = '0 # #,# 0 #,# # 1'
     (X,Y,e) = MV.setup('X Y e',metric)
-
 
     assert str((X^Y)*(X^Y)) == '(X.Y)**2'
 
@@ -239,6 +239,7 @@ def test_noneuclidian_distance_calculation():
     x = Symbol('x')
     C =  solve(a*x**2+b*x+c,x)[0]
     assert str(expand(simplify(expand(C)))) == '-(X.Y)/((X.e)*(Y.e)) + 1'
+    GA_Printer.off()
     return
 
 HALF = Rational(1,2)
@@ -261,11 +262,11 @@ def make_vector(a,n = 3):
 
 def test_conformal_representations_of_circles_lines_spheres_and_planes():
     global n,nbar
+    GA_Printer.on()
 
     metric = '1 0 0 0 0,0 1 0 0 0,0 0 1 0 0,0 0 0 0 2,0 0 0 2 0'
 
     (e1,e2,e3,n,nbar) = MV.setup('e_1 e_2 e_3 n nbar',metric)
-
 
     e = n+nbar
     #conformal representation of points
@@ -290,10 +291,11 @@ def test_conformal_representations_of_circles_lines_spheres_and_planes():
     L = (A^B^e)^X
 
     assert str(L) == '-x3*e_1^e_2^e_3^n - x3*e_1^e_2^e_3^nbar + (-x1**2/2 + x1 - x2**2/2 + x2 - x3**2/2 - 1/2)*e_1^e_2^n^nbar + x3*e_1^e_3^n^nbar - x3*e_2^e_3^n^nbar'
+    GA_Printer.off()
     return
 
 def test_properties_of_geometric_objects():
-
+    GA_Printer.on()
     metric = '# # # 0 0,'+ \
              '# # # 0 0,'+ \
              '# # # 0 0,'+ \
@@ -302,30 +304,28 @@ def test_properties_of_geometric_objects():
 
     (p1,p2,p3,n,nbar) = MV.setup('p1 p2 p3 n nbar',metric)
 
-
     P1 = F(p1)
     P2 = F(p2)
     P3 = F(p3)
-
 
     L = P1^P2^n
     delta = (L|n)|nbar
     assert str(delta) == '2*p1 - 2*p2'
 
-
     C = P1^P2^P3
     delta = ((C^n)|n)|nbar
     assert str(delta) == '2*p1^p2 - 2*p1^p3 + 2*p2^p3'
     assert str((p2-p1)^(p3-p1)) == 'p1^p2 - p1^p3 + p2^p3'
+    GA_Printer.off()
+    return
 
 def test_extracting_vectors_from_conformal_2_blade():
-
+    GA_Printer.on()
     metric = ' 0 -1 #,'+ \
              '-1  0 #,'+ \
              ' #  # #,'
 
     (P1,P2,a) = MV.setup('P1 P2 a',metric)
-
 
     B = P1^P2
     Bsq = B*B
@@ -344,16 +344,16 @@ def test_extracting_vectors_from_conformal_2_blade():
 
     aB = a|B
     assert str(aB) == '-(P2.a)*P1 + (P1.a)*P2'
+    GA_Printer.off()
     return
 
 def test_reciprocal_frame_test():
-
+    GA_Printer.on()
     metric = '1 # #,'+ \
              '# 1 #,'+ \
              '# # 1,'
 
     (e1,e2,e3) = MV.setup('e1 e2 e3',metric)
-
 
     E = e1^e2^e3
     Esq = (E*E).scalar()
@@ -405,6 +405,5 @@ def test_reciprocal_frame_test():
     w = (E3|e3)
     w = (w.expand()).scalar()
     assert str(simplify(w/Esq)) == '1'
+    GA_Printer.off()
     return
-
-
