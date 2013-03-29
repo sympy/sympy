@@ -134,13 +134,14 @@ def _roots_quartic_euler(p, q, r, a):
     Notes
     =====
 
-    This is a helper function for ``roots_quartic``
+    This is a helper function for ``roots_quartic``.
 
-    Look for solutions of the form
-    ``x1 = sqrt(R) - sqrt(A + B*sqrt(R))``
-    ``x2 = -sqrt(R) - sqrt(A - B*sqrt(R))``
-    ``x3 = -sqrt(R) + sqrt(A - B*sqrt(R))``
-    ``x4 = sqrt(R) + sqrt(A + B*sqrt(R))``
+    Look for solutions of the form ::
+
+      ``x1 = sqrt(R) - sqrt(A + B*sqrt(R))``
+      ``x2 = -sqrt(R) - sqrt(A - B*sqrt(R))``
+      ``x3 = -sqrt(R) + sqrt(A - B*sqrt(R))``
+      ``x4 = sqrt(R) + sqrt(A + B*sqrt(R))``
 
     To satisfy the quartic equation one must have
     ``p = -2*(R + A); q = -4*B*R; r = (R - A)**2 - B**2*R``
@@ -260,7 +261,7 @@ def roots_quartic(f):
             sols = _roots_quartic_euler(e, f, g, aon4)
             if sols:
                 return sols
-            # Ferrari method, see [2]
+            # Ferrari method, see [1, 2]
             p = -e**2/12 - g
             q = -e**3/108 + e*g/3 - f**2/8
             TH = Rational(1, 3)
