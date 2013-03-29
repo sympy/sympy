@@ -2,7 +2,7 @@
 
 import sys
 from sympy import expand,Mul,Add,Symbol,S,Expr,Wild,Pow,diff,trigsimp,\
-                  simplify,Matrix
+                   simplify,Matrix
 
 try:
     from numpy import matrix

@@ -580,101 +580,6 @@ class GA_LatexPrinter(LatexPrinter):
         return out_str
 
 def latex(expr, **settings):
-    r"""
-    Convert the given expression to LaTeX representation.
-
-    >>> from sympy import latex, sin, asin, Rational
-    >>> from sympy.abc import x, y, mu, tau
-
-    >>> latex((2*tau)**Rational(7,2))
-    '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
-
-    order: Any of the supported monomial orderings (currently "lex", "grlex", or
-    "grevlex"), "old", and "none". This parameter does nothing for Mul objects.
-    Setting order to "old" uses the compatibility ordering for Add defined in
-    Printer. For very large expressions, set the 'order' keyword to 'none' if
-    speed is a concern.
-
-    mode: Specifies how the generated code will be delimited. 'mode' can be one
-    of 'plain', 'inline', 'equation' or 'equation*'.  If 'mode' is set to
-    'plain', then the resulting code will not be delimited at all (this is the
-    default). If 'mode' is set to 'inline' then inline LaTeX $ $ will be used.
-    If 'mode' is set to 'equation' or 'equation*', the resulting code will be
-    enclosed in the 'equation' or 'equation*' environment (remember to import
-    'amsmath' for 'equation*'), unless the 'itex' option is set. In the latter
-    case, the ``$$ $$`` syntax is used.
-
-    >>> latex((2*mu)**Rational(7,2), mode='plain')
-    '8 \\sqrt{2} \\mu^{\\frac{7}{2}}'
-
-    >>> latex((2*tau)**Rational(7,2), mode='inline')
-    '$8 \\sqrt{2} \\tau^{\\frac{7}{2}}$'
-
-    >>> latex((2*mu)**Rational(7,2), mode='equation*')
-    '\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}'
-
-    >>> latex((2*mu)**Rational(7,2), mode='equation')
-    '\\begin{equation}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation}'
-
-    itex: Specifies if itex-specific syntax is used, including emitting ``$$ $$``.
-
-    >>> latex((2*mu)**Rational(7,2), mode='equation', itex=True)
-    '$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$'
-
-    fold_frac_powers: Emit "^{p/q}" instead of "^{\frac{p}{q}}" for fractional
-    powers.
-
-    >>> latex((2*tau)**Rational(7,2), fold_frac_powers=True)
-    '8 \\sqrt{2} \\tau^{7/2}'
-
-    fold_func_brackets: Fold function brackets where applicable.
-
-    >>> latex((2*tau)**sin(Rational(7,2)))
-    '\\left(2 \\tau\\right)^{\\sin{\\left (\\frac{7}{2} \\right )}}'
-    >>> latex((2*tau)**sin(Rational(7,2)), fold_func_brackets = True)
-    '\\left(2 \\tau\\right)^{\\sin {\\frac{7}{2}}}'
-
-    mul_symbol: The symbol to use for multiplication. Can be one of None,
-    "ldot", "dot", or "times".
-
-    >>> latex((2*tau)**sin(Rational(7,2)), mul_symbol="times")
-    '\\left(2 \\times \\tau\\right)^{\\sin{\\left (\\frac{7}{2} \\right )}}'
-
-    inv_trig_style: How inverse trig functions should be displayed. Can be one
-    of "abbreviated", "full", or "power". Defaults to "abbreviated".
-
-    >>> latex(asin(Rational(7,2)))
-    '\\operatorname{asin}{\\left (\\frac{7}{2} \\right )}'
-    >>> latex(asin(Rational(7,2)), inv_trig_style="full")
-    '\\arcsin{\\left (\\frac{7}{2} \\right )}'
-    >>> latex(asin(Rational(7,2)), inv_trig_style="power")
-    '\\sin^{-1}{\\left (\\frac{7}{2} \\right )}'
-
-    mat_str: Which matrix environment string to emit. "smallmatrix", "bmatrix",
-    etc. This paramater currently doesn't work. Defaults to "bmatrix".
-
-    >>> latex([[1]], mat_str = "bmatrix")
-    '\\begin{bmatrix}\\begin{bmatrix}1\\end{bmatrix}\\end{bmatrix}'
-
-    mat_delim: The delimiter to wrap around matrices. Can be one of "[", "(".
-    This parameter currently doesn't work.
-
-    >>> latex([[1]], mat_delim="(")
-    '\\begin{bmatrix}\\begin{bmatrix}1\\end{bmatrix}\\end{bmatrix}'
-
-    symbol_names: Dictionary of symbols and the custom strings they should be emitted as.
-
-    >>> latex(x**2, symbol_names={x:'x_i'})
-    'x_i^{2}'
-
-    Besides all Basic based expressions, you can recursively
-    convert Python containers (lists, tuples and dicts) and
-    also SymPy matrices:
-
-    >>> latex([2/x, y], mode='inline')
-    '$\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}$'
-
-    """
 
     return GA_LatexPrinter(settings).doprint(expr)
 
@@ -831,8 +736,6 @@ def Print_Function():
     ifct = prog_str.find('def '+fct_name)
     iend = prog_str.find('def ',ifct+4)
     tmp_str = prog_str[ifct:iend-1]
-    #tmp_str = tmp_str.replace('print_function()','')
-    #tmp_str = tmp_str.replace('def '+fct_name+'():\n','')
     fct_name = fct_name.replace('_',' ')
     if GA_LatexPrinter.latex_flg:
         #print '#Code for '+fct_name

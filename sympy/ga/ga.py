@@ -16,9 +16,9 @@ import itertools,copy,operator
 import sys,copy
 from itertools import izip,islice,imap,product,ifilter
 
-if sys.version_info > 2.5:
+try:
     from itertools import combinations
-else:
+except ImportError:
     def combinations(iterable, r):
         # combinations('ABCD', 2) --> AB AC AD BC BD CD
         # combinations(range(4), 3) --> 012 013 023 123

@@ -287,6 +287,5 @@ if f[0] != None:
         plot_template = FillTemplate(self,plot_template)
         msurf.write(plot_template)
         msurf.close()
-        #system('geany manifold_surf.py &')
         system('mayavi2 manifold_surf.py &')
         return
