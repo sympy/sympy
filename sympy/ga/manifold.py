@@ -236,7 +236,7 @@ if f[0] != None:
     dn_y = f[0]*n[1]
     dn_z = f[0]*n[2]
 
-from mayavi.mlab import *
+from mayavi.mlab import plot3d,swapaxes,quiver3d,mesh,figure
 figure(bgcolor=(1.0,1.0,1.0))
 if $surf$:
     mesh(x,y,z,colormap="gist_earth")
