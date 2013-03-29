@@ -1052,6 +1052,7 @@ class SymPyDocTests(object):
             # Examples files do not have __init__.py files,
             # So we have to temporarily extend sys.path to import them
             sys.path.insert(0, dirname)
+            print 'dirname =',dirname
             module = file[:-3]  # remove ".py"
         setup_pprint()
         try:
@@ -1062,6 +1063,7 @@ class SymPyDocTests(object):
             raise
         except ImportError:
             self._reporter.import_error(filename, sys.exc_info())
+            print 'filename =',filename
             return
         finally:
             if rel_name.startswith("examples"):
