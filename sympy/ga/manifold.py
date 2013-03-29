@@ -11,9 +11,9 @@ if ga_dir.GA =='GA':
     from ga_sympy import linear_expand
     from ga_debug import oprint
 else:
-    from sympy.GA.ga import MV
-    from sympy.GA.ga_sympy import linear_expand
-    from sympy.GA.ga_debug import oprint
+    from sympy.ga.ga import MV
+    from sympy.ga.ga_sympy import linear_expand
+    from sympy.ga.ga_debug import oprint
 
 def fct_to_str(fct_names):
     import sys

@@ -1,4 +1,4 @@
-#GA.py
+#ga.py
 
 import sys,ga_dir
 
@@ -48,11 +48,11 @@ if ga_dir.GA == 'GA':
                         non_scalar_projection,nc_substitue,coef_function,\
                         half_angle_reduce,get_commutative_coef
 else:
-    from sympy.GA.ga_print import GA_Printer,GA_LatexPrinter,enhance_print,latex
-    from sympy.GA.vector import Vector
-    from sympy.GA.ga_debug import ostr,oprint
-    from sympy.GA.ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
-    from sympy.GA.ga_sympy import linear_expand,bilinear_product,linear_projection,\
+    from sympy.ga.ga_print import GA_Printer,GA_LatexPrinter,enhance_print,latex
+    from sympy.ga.vector import Vector
+    from sympy.ga.ga_debug import ostr,oprint
+    from sympy.ga.ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
+    from sympy.ga.ga_sympy import linear_expand,bilinear_product,linear_projection,\
                                         non_scalar_projection,nc_substitue,coef_function,\
                                         half_angle_reduce,get_commutative_coef
 

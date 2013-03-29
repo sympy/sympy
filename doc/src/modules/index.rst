@@ -26,8 +26,8 @@ access any SymPy module, or use this contens:
    galgebra/index.rst
    galgebra/GA/GAsympy.rst
    galgebra/latex_ex/latex_ex.rst
-   GA/GA.rst
-   GA/index.rst
+   ga/GA.rst
+   ga/index.rst
    integrals/integrals.rst
    logic.rst
    matrices/index.rst

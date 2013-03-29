@@ -9,10 +9,10 @@ if ga_dir.GA == 'GA':
     from ga_sympy import linear_expand,bilinear_product,linear_derivation
     from ga_debug import oprint
 else:
-    from sympy.GA.ga_print import GA_Printer,enhance_print
-    from sympy.GA.ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
-    from sympy.GA.ga_sympy import linear_expand,bilinear_product,linear_derivation
-    from sympy.GA.ga_debug import oprint
+    from sympy.ga.ga_print import GA_Printer,enhance_print
+    from sympy.ga.ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
+    from sympy.ga.ga_sympy import linear_expand,bilinear_product,linear_derivation
+    from sympy.ga.ga_debug import oprint
 
 ZERO = S(0)
 

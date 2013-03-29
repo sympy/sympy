@@ -2,8 +2,8 @@
 import sys
 
 from sympy import symbols,sin,cos,Rational,expand,collect,Symbol
-from sympy.GA.ga import MV,Nga,simplify,Com,ONE,ZERO
-from sympy.GA.ga_print import GA_Printer
+from sympy.ga.ga import MV,Nga,simplify,Com,ONE,ZERO
+from sympy.ga.ga_print import GA_Printer
 
 def test_basic_multivector_operations():
     GA_Printer.on()

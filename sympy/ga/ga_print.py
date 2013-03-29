@@ -10,7 +10,7 @@ from sympy.printing.conventions import split_super_sub
 if ga_dir.GA == 'GA':
     from ga_sympy import linear_expand
 else:
-    from sympy.GA.ga_sympy import linear_expand
+    from sympy.ga.ga_sympy import linear_expand
 
 ZERO      = S(0)
 
@@ -190,7 +190,7 @@ class GA_Printer(StrPrinter):
 
 class GA_LatexPrinter(LatexPrinter):
     """
-    The latex printer is turned on with the function (in GA.py) -
+    The latex printer is turned on with the function (in ga.py) -
 
         Format(Fmode=True,Dmode=True,ipy=False)
 
