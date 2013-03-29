@@ -224,9 +224,7 @@ class GA_LatexPrinter(LatexPrinter):
         '^'    -> '\W '
         '|'    -> '\cdot '
         '>'    -> '\lfloor '
-        '>>'   -> '\lfloor '
         '<'    -> '\rfloor '
-        '<<'   -> '\rfloor '
 
     In the case of a print statement of the form -
 
@@ -722,6 +720,7 @@ off_mode = False
 
 def Get_Program(off=False):
     global prog_str,off_mode
+    sys.stderr.write('opening file = '+sys.argv[0]+'\n')
     prog_file = open(sys.argv[0],'r')
     prog_str = prog_file.read()
     prog_file.close()
