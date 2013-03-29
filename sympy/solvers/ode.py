@@ -209,7 +209,8 @@ from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import ordered, iterable, is_sequence, set_union
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.exprtools import factor_terms
-from sympy.core.function import Function, Derivative, AppliedUndef, diff, expand_mul
+from sympy.core.function import (Function, Derivative, AppliedUndef, diff,
+    expand_mul)
 from sympy.core.multidimensional import vectorize
 from sympy.core.numbers import Rational
 from sympy.core.relational import Equality, Eq
@@ -231,31 +232,43 @@ from sympy.utilities import numbered_symbols, default_sort_key, sift
 # that, in general, hints earlier in the list should produce simpler results
 # than those later for ODEs that fit both.  This is just based on my own
 # empirical observations, so if you find that *in general*, a hint later in
-# the list is better than one before it, fell free to modify the list.  Note
-# however that you can easily override the hint used in dsolve() for a specific ODE
-# (see the docstring).  In general, "_Integral" hints should be grouped
+# the list is better than one before it, feel free to modify the list.  Note
+# however that you can easily override the hint used in dsolve() for a specific
+# ODE (see the docstring).  In general, "_Integral" hints should be grouped
 # at the end of the list, unless there is a method that returns an unevaluable
 # integral most of the time (which should surely go near the end of the list
 # anyway).
 # "default", "all", "best", and "all_Integral" meta-hints should not be
 # included in this list, but "_best" and "_Integral" hints should be included.
 allhints = (
-    "separable", "1st_exact", "1st_linear", "Bernoulli", "Riccati_special_minus2",
-    "1st_homogeneous_coeff_best", "1st_homogeneous_coeff_subs_indep_div_dep",
-    "1st_homogeneous_coeff_subs_dep_div_indep", "almost_linear",
-    "linear_coefficients", "separable_reduced",
-    "nth_linear_constant_coeff_homogeneous", "nth_linear_euler_eq_homogeneous",
+    "separable",
+    "1st_exact",
+    "1st_linear",
+    "Bernoulli",
+    "Riccati_special_minus2",
+    "1st_homogeneous_coeff_best",
+    "1st_homogeneous_coeff_subs_indep_div_dep",
+    "1st_homogeneous_coeff_subs_dep_div_indep",
+    "almost_linear",
+    "linear_coefficients",
+    "separable_reduced",
+    "nth_linear_constant_coeff_homogeneous",
+    "nth_linear_euler_eq_homogeneous",
     "nth_linear_constant_coeff_undetermined_coefficients",
     "nth_linear_constant_coeff_variation_of_parameters",
-    "Liouville", "separable_Integral", "1st_exact_Integral",
-    "1st_linear_Integral", "Bernoulli_Integral",
+    "Liouville",
+    "separable_Integral",
+    "1st_exact_Integral",
+    "1st_linear_Integral",
+    "Bernoulli_Integral",
     "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
     "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
-    "almost_linear_Integral", "linear_coefficients_Integral",
+    "almost_linear_Integral",
+    "linear_coefficients_Integral",
     "separable_reduced_Integral",
     "nth_linear_constant_coeff_variation_of_parameters_Integral",
-    "Liouville_Integral"
-)
+    "Liouville_Integral",
+    )
 
 
 def preprocess(expr, func=None, hint='_Integral'):
@@ -298,7 +311,8 @@ def preprocess(expr, func=None, hint='_Integral'):
 
     Don't do any derivatives if hint is None:
 
-    >>> preprocess(Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x), hint=None)
+    >>> eq = Derivative(f(x) + 1, x) + Derivative(f(x), y)
+    >>> preprocess(eq, f(x), hint=None)
     (Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x))
 
     If it's not clear what the function of interest is, it must be given:
@@ -316,7 +330,8 @@ def preprocess(expr, func=None, hint='_Integral'):
     if not func:
         funcs = set_union(*[d.atoms(AppliedUndef) for d in derivs])
         if len(funcs) != 1:
-            raise ValueError('The function cannot be automatically detected for %s.' % expr)
+            raise ValueError('The function cannot be '
+                'automatically detected for %s.' % expr)
         func = funcs.pop()
     fvars = set(func.args)
     if hint is None:
@@ -517,11 +532,11 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         # Here is what all this means:
         #
         # hint:    The hint method given to dsolve() by the user.
-        # hints:   The dictionary of hints that match the ODE, along with
-        #          other information (including the internal pass-through magic).
+        # hints:   The dictionary of hints that match the ODE, along with other
+        #          information (including the internal pass-through magic).
         # default: The default hint to return, the first hint from allhints
-        #          that matches the hint.  This is obtained from classify_ode().
-        # match:   The hints dictionary contains a match dictionary for each hint
+        #          that matches the hint; obtained from classify_ode().
+        # match:   Dictionary containing the match dictionary for each hint
         #          (the parts of the ODE for solving).  When going through the
         #          hints in "all", this holds the match string for the current
         #          hint.
@@ -589,12 +604,13 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
         # convert the string into a function
         solvefunc = globals()['ode_' + hint]
     # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
-    # attempt to solve for func, and apply any other hint specific simplifications
+    # attempt to solve for func, and apply any other hint specific
+    # simplifications
     if simplify:
         rv = odesimp(solvefunc(eq, func, order=hints['order'],
             match=hints[hint]), func, hints['order'], hint)
     else:
-        # We still want to integrate (you can disable it separately with the hint)
+        # We still want to integrate (can be disabled separately with the hint)
         r = hints[hint]
         r['simplify'] = False  # Some hints can take advantage of this option
         rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
@@ -718,8 +734,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
     from sympy import expand
 
     if func and len(func.args) != 1:
-        raise ValueError("dsolve() and classify_ode() only work with functions " +
-            "of one variable")
+        raise ValueError("dsolve() and classify_ode() only "
+        "work with functions of one variable, not %s" % func)
     if prep or func is None:
         eq, func_ = preprocess(eq, func)
         if func is None:
@@ -772,7 +788,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         reduced_eq = eq
 
     if order == 1:
-        # Linear case: a(x)*y'+b(x)*y+c(x) == 0
+
+        ## Linear case: a(x)*y'+b(x)*y+c(x) == 0
         if eq.is_Add:
             ind, dep = reduced_eq.as_independent(f)
         else:
@@ -783,14 +800,15 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
              b: dep.coeff(f(x)),
              c: ind}
         # double check f[a] since the preconditioning may have failed
-        if not r[a].has(f) and (r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
+        if not r[a].has(f) and (
+                r[a]*df + r[b]*f(x) + r[c]).expand() - reduced_eq == 0:
             r['a'] = a
             r['b'] = b
             r['c'] = c
             matching_hints["1st_linear"] = r
             matching_hints["1st_linear_Integral"] = r
 
-        # Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
+        ## Bernoulli case: a(x)*y'+b(x)*y+c(x)*y**n == 0
         r = collect(
             reduced_eq, f(x), exact=True).match(a*df + b*f(x) + c*f(x)**n)
         if r and r[c] != 0 and r[n] != 1:  # See issue 1577
@@ -801,9 +819,9 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             matching_hints["Bernoulli"] = r
             matching_hints["Bernoulli_Integral"] = r
 
-        # Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
-        r = collect(reduced_eq, f(
-            x), exact=True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
+        ## Riccati special n == -2 case: a2*y'+b2*y**2+c2*y/x+d2/x**2 == 0
+        r = collect(reduced_eq,
+            f(x), exact=True).match(a2*df + b2*f(x)**2 + c2*f(x)/x + d2/x**2)
         if r and r[b2] != 0 and (r[c2] != 0 or r[d2] != 0):
             r['a2'] = a2
             r['b2'] = b2
@@ -811,8 +829,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             r['d2'] = d2
             matching_hints["Riccati_special_minus2"] = r
 
-        # Exact Differential Equation: P(x,y)+Q(x,y)*y'=0 where dP/dy == dQ/dx
-        # WITH NON-REDUCED FORM OF EQUATION
+        # NON-REDUCED FORM OF EQUATION matches
         r = collect(eq, df, exact=True).match(d + e * df)
         if r:
             r['d'] = d
@@ -820,6 +837,9 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             r['y'] = y
             r[d] = r[d].subs(f(x), y)
             r[e] = r[e].subs(f(x), y)
+
+            ## Exact Differential Equation: P(x, y) + Q(x, y)*y' = 0 where
+            # dP/dy == dQ/dx
             try:
                 if r[d] != 0:
                     numerator = simplify(r[d].diff(y) - r[e].diff(x))
@@ -865,14 +885,14 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         if r:
             # Using r[d] and r[e] without any modification for hints
             # linear-coefficients and separable-reduced.
-            num, denom = r[d], r[e]
+            num, den = r[d], r[e]  # ode = d/e + df
             r['d'] = d
             r['e'] = e
             r['y'] = y
-            r[d] = r[d].subs(f(x), y)
-            r[e] = r[e].subs(f(x), y)
+            r[d] = num.subs(f(x), y)
+            r[e] = den.subs(f(x), y)
 
-            # Separable Case: y' == P(y)*Q(x)
+            ## Separable Case: y' == P(y)*Q(x)
             r[d] = separatevars(r[d])
             r[e] = separatevars(r[e])
             # m1[coeff]*m1[x]*m1[y] + m2[coeff]*m2[x]*m2[y]*y'
@@ -883,7 +903,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 matching_hints["separable"] = r1
                 matching_hints["separable_Integral"] = r1
 
-            # First order equation with homogeneous coefficients:
+            ## First order equation with homogeneous coefficients:
             # dy/dx == F(y/x) or dy/dx == F(x/y)
             ordera = homogeneous_order(r[d], x, y)
             if ordera is not None:
@@ -892,21 +912,22 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                     # u1=y/x and u2=x/y
                     u1 = Dummy('u1')
                     u2 = Dummy('u2')
+                    s = "1st_homogeneous_coeff_subs"
+                    s1 = s + "_dep_div_indep"
+                    s2 = s + "_indep_div_dep"
                     if simplify((r[d] + u1*r[e]).subs({x: 1, y: u1})) != 0:
-                        matching_hints[
-                            "1st_homogeneous_coeff_subs_dep_div_indep"] = r
-                        matching_hints["1st_homogeneous_coeff_subs_dep_div_indep_Integral"] = r
+                        matching_hints[s1] = r
+                        matching_hints[s1 + "_Integral"] = r
                     if simplify((r[e] + u2*r[d]).subs({x: u2, y: 1})) != 0:
-                        matching_hints[
-                            "1st_homogeneous_coeff_subs_indep_div_dep"] = r
-                        matching_hints["1st_homogeneous_coeff_subs_indep_div_dep_Integral"] = r
-                    if "1st_homogeneous_coeff_subs_dep_div_indep" in matching_hints \
-                            and "1st_homogeneous_coeff_subs_indep_div_dep" in matching_hints:
+                        matching_hints[s2] = r
+                        matching_hints[s2 + "_Integral"] = r
+                    if s1 in matching_hints and s2 in matching_hints:
                         matching_hints["1st_homogeneous_coeff_best"] = r
 
-            # Linear coefficients of the form y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
+            ## Linear coefficients of the form
+            # y'+ F((a*x + b*y + c)/(a'*x + b'y + c')) = 0
             # that can be reduced to homogeneous form.
-            F = num/denom
+            F = num/den
             params = _linear_coeff_match(F, func)
             if params:
                 xarg, yarg = params
@@ -914,29 +935,33 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 t = Dummy('t')
                 # Dummy substitution for df and f(x).
                 dummy_eq = reduced_eq.subs(((df, t), (f(x), u)))
-                dummy_eq = simplify(
-                    dummy_eq.subs(((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))))
-                # Re-checking if dummy_eq is indeed homogeneous.
-                match_homo = collect(expand(dummy_eq), [df, f(x)]).match(e*df + d)
-                if match_homo:
-                    orderd = homogeneous_order(match_homo[d], x, f(x))
+                reps = ((x, x + xarg), (u, u + yarg), (t, df), (u, f(x)))
+                dummy_eq = simplify(dummy_eq.subs(reps))
+                # get the re-cast values for e and d
+                r2 = collect(expand(dummy_eq), [df, f(x)]).match(e*df + d)
+                if r2:
+                    orderd = homogeneous_order(r2[d], x, f(x))
                     if orderd is not None:
-                        ordere = homogeneous_order(match_homo[e], x, f(x))
+                        ordere = homogeneous_order(r2[e], x, f(x))
                         if orderd == ordere:
-                            # Match arguments are passed in such a way that it is coherent
-                            # With the already existing homogeneous functions.
-                            match_homo[d] = match_homo[d].subs(f(x), y)
-                            match_homo[e] = match_homo[e].subs(f(x), y)
-                            match_homo.update({'xarg': xarg, 'yarg': yarg, 'd': d, 'e': e, 'y': y})
-                            matching_hints["linear_coefficients"] = match_homo
-                            matching_hints["linear_coefficients_Integral"] = match_homo
+                            # Match arguments are passed in such a way that it
+                            # is coherent with the already existing homogeneous
+                            # functions.
+                            r2[d] = r2[d].subs(f(x), y)
+                            r2[e] = r2[e].subs(f(x), y)
+                            r2.update({'xarg': xarg, 'yarg': yarg,
+                                'd': d, 'e': e, 'y': y})
+                            matching_hints["linear_coefficients"] = r2
+                            matching_hints["linear_coefficients_Integral"] = r2
 
-            # Equation of the form y' + (y/x)*H(x^n*y) = 0
+            ## Equation of the form y' + (y/x)*H(x^n*y) = 0
             # that can be reduced to separable form
-            factor = simplify(x/f(x)*num/denom)
+
+            factor = simplify(x/f(x)*num/den)
+
             # Try representing factor in terms of x^n*y
-            # where n is lowest power of x in factor
-            # Removing terms like sqrt(2)*3 from factor.atoms(Mul)
+            # where n is lowest power of x in factor;
+            # first remove terms like sqrt(2)*3 from factor.atoms(Mul)
             u = None
             for mul in ordered(factor.atoms(Mul)):
                 if mul.has(x):
@@ -944,40 +969,38 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                     break
             if u and u.has(f(x)):
                 t = Dummy('t')
-                r3 = {'t': t}
+                r2 = {'t': t}
                 xpart, ypart = u.as_independent(f(x))
                 test = factor.subs(((u, t), (1/u, 1/t)))
                 free = test.free_symbols
                 if len(free) == 1 and free.pop() == t:
-                    r3.update({'power': xpart.as_base_exp()[1], 'u': test})
-                    matching_hints["separable_reduced"] = r3
-                    matching_hints["separable_reduced_Integral"] = r3
+                    r2.update({'power': xpart.as_base_exp()[1], 'u': test})
+                    matching_hints["separable_reduced"] = r2
+                    matching_hints["separable_reduced_Integral"] = r2
 
-        # Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
-        a = Wild('a')
-        b = Wild('b', exclude = [df])
-        c = Wild('c')
-        match = collect(expand(eq), [df, f(x)], evaluate=True).match(a*df + b)
-        if match:
-            match[c] = S.Zero
-            if match[b].is_Add:
-                # Separate the terms having f(x) to match[b] and
-                # remaining to match[c]
-                no_f, match[b] = match[b].as_independent(f(x))
-                match[c] += no_f
-            factor = simplify(match[b].diff(f(x))/match[a])
+        ## Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
+        r = collect(eq, [df, f(x)]).match(e*df + d)
+        r2 = {}
+        if r:
+            r2[c] = S.Zero
+            if r[d].is_Add:
+                # Separate the terms having f(x) to r[b] and
+                # remaining to r[c]
+                no_f, r[d] = r[d].as_independent(f(x))
+                r2[c] += no_f
+            factor = simplify(r[d].diff(f(x))/r[e])
             if factor and not factor.has(f(x)):
-                match[b] = factor_terms(match[b])
-                u = match[b].as_independent(f(x), as_Add=False)[1]
-                r2 = {'a': a, 'b': b, 'c': c, 'u': u}
-                r2[b] = match[b] / u
-                r2[a] = match[a] / u.diff(f(x))
-                r2[c] = match[c]
+                r[d] = factor_terms(r[d])
+                u = r[d].as_independent(f(x), as_Add=False)[1]
+                r2.update({'a': e, 'b': d, 'c': c, 'u': u})
+                r2[d] = r[d] / u
+                r2[e] = r[e] / u.diff(f(x))
                 matching_hints["almost_linear"] = r2
                 matching_hints["almost_linear_Integral"] = r2
 
     if order == 2:
-        # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
+        # Liouville ODE in the form
+        # f(x).diff(x, 2) + g(f(x))*(f(x).diff(x))**2 + h(x)*f(x).diff(x)
         # See Goldstein and Braun, "Advanced Methods for the Solution of
         # Differential Equations", pg. 98
 
@@ -1005,13 +1028,12 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             # Inhomogeneous case: F(x) is not identically 0
             if r[-1]:
                 undetcoeff = _undetermined_coefficients_match(r[-1], x)
-                matching_hints[
-                    "nth_linear_constant_coeff_variation_of_parameters"] = r
-                matching_hints["nth_linear_constant_coeff_variation_of_parameters" +
-                    "_Integral"] = r
+                s = "nth_linear_constant_coeff_variation_of_parameters"
+                matching_hints[s] = r
+                matching_hints[s + "_Integral"] = r
                 if undetcoeff['test']:
                     r['trialset'] = undetcoeff['trialset']
-                    matching_hints["nth_linear_constant_coeff_undetermined_" +
+                    matching_hints["nth_linear_constant_coeff_undetermined_"
                         "coefficients"] = r
             # Homogeneous case: F(x) is identically 0
             else:
@@ -1053,9 +1075,8 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
             retlist.append(i)
 
     if dict:
-        # Dictionaries are ordered arbitrarily, so we need to make note of which
-        # hint would come first for dsolve().  In Python 3, this should be replaced
-        # with an ordered dictionary.
+        # Dictionaries are ordered arbitrarily, so make note of which
+        # hint would come first for dsolve().  Use an ordered dict in Py 3.
         matching_hints["default"] = None
         matching_hints["ordered_hints"] = tuple(retlist)
         for i in allhints:
@@ -1152,8 +1173,8 @@ def odesimp(eq, func, order, hint):
         # special simplification of the rhs
         if hint.startswith("nth_linear_constant_coeff"):
             # Collect terms to make the solution look nice.
-            # This is also necessary for constantsimp to remove unnecessary terms
-            # from the particular solution from variation of parameters
+            # This is also necessary for constantsimp to remove unnecessary
+            # terms from the particular solution from variation of parameters
             global collectterms
             assert len(eq) == 1 and eq[0].lhs == f(x)
             sol = eq[0].rhs
@@ -1223,8 +1244,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     explicitly identify the function, but if the function cannot be inferred
     from the original equation it can be supplied through the 'func' argument.
 
-    If a sequence of solutions is passed, the same sort of container will be used
-    to return the result for each solution.
+    If a sequence of solutions is passed, the same sort of container will be
+    used to return the result for each solution.
 
     It tries the following methods, in order, until it finds zero
     equivalence:
@@ -1286,9 +1307,10 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     # After the deprecation period this handling section becomes:
     # ----------
     # if not is_unfunc(func) or len(func.args) != 1:
-    #     raise ValueError("func must be a function of one variable, not %s" % func)
+    #     raise ValueError(
+    #         "func must be a function of one variable, not %s" % func)
     # ----------
-    # assume, during deprecation that sol and func are reversed
+    # assume, during deprecation, that sol and func are reversed
     if isinstance(sol, AppliedUndef) and len(sol.args) == 1:
         if isinstance(func, AppliedUndef) and len(func.args) == 1:
             msg = "If you really do want sol to be just %s, use Eq(%s, 0) " % \
@@ -1317,8 +1339,9 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     testnum = 0
     if order == 'auto':
         order = ode_order(ode, func)
-    if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
-            (sol.rhs == func and not sol.lhs.has(func)):
+    if solve_for_func and not (
+            sol.lhs == func and not sol.rhs.has(func)) and not (
+            sol.rhs == func and not sol.lhs.has(func)):
         try:
             solved = solve(sol, func)
             if not solved:
@@ -1337,8 +1360,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
 
     while s:
         if testnum == 0:
-            # First pass, try substituting a solved solution directly into the ode
-            # This has the highest chance of succeeding.
+            # First pass, try substituting a solved solution directly into the
+            # ODE. This has the highest chance of succeeding.
             ode_diff = ode.lhs - ode.rhs
 
             if sol.lhs == func:
@@ -1360,15 +1383,17 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             # Second pass. If we cannot substitute f, try seeing if the nth
             # derivative is equal, this will only work for odes that are exact,
             # by definition.
-            s = simplify(trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) -
+            s = simplify(
+                trigsimp(diff(sol.lhs, x, order) - diff(sol.rhs, x, order)) -
                 trigsimp(ode.lhs) + trigsimp(ode.rhs))
-#            s2 = simplify(diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
-#                ode.lhs + ode.rhs)
+            # s2 = simplify(
+            #     diff(sol.lhs, x, order) - diff(sol.rhs, x, order) - \
+            #     ode.lhs + ode.rhs)
             testnum += 1
         elif testnum == 2:
-            # Third pass. Try solving for df/dx and substituting that into the ode.
-            # Thanks to Chris Smith for suggesting this method.  Many of the
-            # comments below are his too.
+            # Third pass. Try solving for df/dx and substituting that into the
+            # ODE. Thanks to Chris Smith for suggesting this method.  Many of
+            # the comments below are his too.
             # The method:
             # - Take each of 1..n derivatives of the solution.
             # - Solve each nth derivative for d^(n)f/dx^(n)
@@ -1386,7 +1411,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             for i in range(1, order + 1):
                 # Differentiation is a linear operator, so there should always
                 # be 1 solution. Nonetheless, we test just to make sure.
-                # We only need to solve once.  After that, we will automatically
+                # We only need to solve once.  After that, we automatically
                 # have the solution to the differential in the order we want.
                 if i == 1:
                     ds = sol.diff(x)
@@ -1425,7 +1450,8 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                     else:
                         lhs = ode_or_bool.lhs
                         rhs = ode_or_bool.rhs
-                # No sense in overworking simplify--just prove the numerator goes to zero
+                # No sense in overworking simplify -- just prove that the
+                # numerator goes to zero
                 s = simplify(trigsimp((lhs - rhs).as_numer_denom()[0]))
                 testnum += 1
         else:
@@ -1523,8 +1549,8 @@ def ode_sol_simplicity(sol, func, trysolving=True):
         return oo
 
     # Next, try to solve for func.  This code will change slightly when RootOf
-    # is implemented in solve().  Probably a RootOf solution should fall somewhere
-    # between a normal solution and an unsolvable expression.
+    # is implemented in solve().  Probably a RootOf solution should fall
+    # somewhere between a normal solution and an unsolvable expression.
 
     # First, see if they are already solved
     if sol.lhs == func and not sol.rhs.has(func) or \
@@ -1667,7 +1693,8 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 if m.func is exp:
                     asfac = True
                 elif m.is_Add:
-                    infac = any(fi.func is exp for t in m.args for fi in Mul.make_args(t))
+                    infac = any(fi.func is exp for t in m.args
+                        for fi in Mul.make_args(t))
                 if asfac and infac:
                     new_expr = expr
                     break
@@ -1850,11 +1877,12 @@ def constant_renumber(expr, symbolname, startnumber, endnumber):
             return Eq(
                 _constant_renumber(
                     expr.lhs, symbolname, startnumber, endnumber),
-                _constant_renumber(expr.rhs, symbolname, startnumber, endnumber))
+                _constant_renumber(
+                    expr.rhs, symbolname, startnumber, endnumber))
 
         if type(expr) not in (Mul, Add, Pow) and not expr.is_Function and \
                 not expr.has(*constantsymbols):
-            # Base case, as above.  We better hope there aren't constants inside
+            # Base case, as above.  Hope there aren't constants inside
             # of some other class, because they won't be renumbered.
             return expr
         elif expr in constantsymbols:
@@ -1909,11 +1937,12 @@ def _handle_Integral(expr, func, order, hint):
         # FIXME: We still need to back substitute y
         # y = exactvars['y']
         # sol = expr.subs(y, f(x))
-        # For now, we are going to have to return an expression with f(x) replaced
-        # with y.  Substituting results in the y's in the second integral
-        # becoming f(x), which prevents the integral from being evaluatable.
-        # For example, Integral(cos(f(x)), (x, x0, x)).  If there were a way to
-        # do inert substitution, that could maybe be used here instead.
+        # For now, we are going to have to return an expression with f(x)
+        # replaced with y.  Substituting results in the y's in the second
+        # integral becoming f(x), which prevents the integral from being
+        # evaluatable. For example, Integral(cos(f(x)), (x, x0, x)).  If
+        # there were a way to do inert substitution, that could maybe be
+        # used here instead.
         del exactvars
         sol = expr
     elif hint == "nth_linear_constant_coeff_homogeneous":
@@ -2172,8 +2201,8 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     u1 = Dummy('u1')  # u1 == f(x)/x
     r = match  # d+e*diff(f(x),x)
     C1 = Symbol('C1')
-    xarg = match.get('xarg', 0)  # If xarg present take xarg, else zero
-    yarg = match.get('yarg', 0)  # It yarg present take yarg, else zero
+    xarg = match.get('xarg', 0)
+    yarg = match.get('yarg', 0)
     int = C.Integral(
         (-r[r['e']]/(r[r['d']] + u1*r[r['e']])).subs({x: 1, r['y']: u1}),
         (u1, None, f(x)/x))
@@ -2354,7 +2383,8 @@ def homogeneous_order(eq, *symbols):
 
     # assuming order of a nested function can only be equal to zero
     if isinstance(eq, Function):
-        return None if homogeneous_order(eq.args[0], *tuple(symset)) != 0 else S.Zero
+        return None if homogeneous_order(
+            eq.args[0], *tuple(symset)) != 0 else S.Zero
 
     # make the replacement of x with x*t and see if t can be factored out
     t = Dummy('t', positive=True)  # It is sufficient that t > 0
@@ -2604,7 +2634,8 @@ def ode_Liouville(eq, func, order, match):
     # indirect doctest
 
     """
-    # Liouville ODE f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
+    # Liouville ODE:
+    #  f(x).diff(x, 2) + g(f(x))*(f(x).diff(x, 2))**2 + h(x)*f(x).diff(x)
     # See Goldstein and Braun, "Advanced Methods for the Solution of
     # Differential Equations", pg. 98, as well as
     # http://www.maplesoft.com/support/help/view.aspx?path=odeadvisor/Liouville
@@ -2656,8 +2687,8 @@ def _nth_linear_match(eq, func, order):
             terms[-1] += i
         else:
             c, f = i.as_independent(func)
-            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) or
-                    f == func):
+            if not ((isinstance(f, Derivative) and set(f.variables) == one_x) \
+                    or f == func):
                 return None
             else:
                 terms[len(f.args[1:])] += c
@@ -2767,7 +2798,8 @@ def ode_nth_linear_euler_eq_homogeneous(eq, func, order, match, returns='sol'):
             else:
                 reroot = re(root)
                 imroot = im(root)
-                gsol += ln(x)**i*(x**reroot)*(constants.next()*sin(abs(imroot)*ln(x))
+                gsol += ln(x)**i*(x**reroot)*(
+                    constants.next()*sin(abs(imroot)*ln(x))
                     + constants.next()*cos(imroot*ln(x)))
                 # Preserve ordering (multiplicity, real part, imaginary part)
                 # It will be assumed implicitly when constructing
@@ -2948,9 +2980,13 @@ def ode_linear_coefficients(eq, func, order, match):
     y' + F((a1*x + b1*y + c1)/(a2*x + b2*y + c2)) = 0,
     where a1, b1, c1, a2, b2, c2 are constants and (a1*b2 - a2*b1) != 0
 
-    This can be solved by substituting x = x' + ((b2*c1 - b1*c2)/(a2*b1 - a1*b2))
-    and y = y' + ((a1*c2 - a2*c1)/(a2*b1 - a1*b2)) which reduces it
-    to a homogeneous differential equation.
+    This can be solved by substituting::
+
+        x = x' + ((b2*c1 - b1*c2)/(a2*b1 - a1*b2))
+        y = y' + ((a1*c2 - a2*c1)/(a2*b1 - a1*b2)).
+
+    This substitution reduces the equation to a homogeneous
+    differential equation
 
     See Also
     ========
@@ -3066,7 +3102,8 @@ def ode_separable_reduced(eq, func, order, match):
         Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
     """
 
-    # Arguments are passed in a way so that they are coherent with the ode_separable function
+    # Arguments are passed in a way so that they are coherent with the
+    # ode_separable function
     x = func.args[0]
     f = func.func
     y = Dummy('y')
@@ -3306,8 +3343,9 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     global collectterms
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
-        " solutions to the homogeneous equation nessesary to apply " +
-        "undetermined coefficients to " + str(eq) + " (number of terms != order)")
+        " solutions to the homogeneous equation nessesary to apply" +
+        " undetermined coefficients to " + str(eq) +
+        " (number of terms != order)")
     usedsin = set([])
     mult = 0  # The multiplicity of the root
     getmult = True
@@ -3328,10 +3366,11 @@ def _solve_undetermined_coefficients(eq, func, order, match):
             check = x**i*exp(reroot*x)
 
         if check in trialset:
-            # If an element of the trial function is already part of the homogeneous
-            # solution, we need to multiply by sufficient x to make it linearly
-            # independent.  We also don't need to bother checking for the coefficients
-            # on those elements, since we already know it will be 0.
+            # If an element of the trial function is already part of the
+            # homogeneous solution, we need to multiply by sufficient x to
+            # make it linearly independent.  We also don't need to bother
+            # checking for the coefficients on those elements, since we
+            # already know it will be 0.
             while True:
                 if check*x**mult in trialset:
                     mult += 1
@@ -3361,8 +3400,10 @@ def _solve_undetermined_coefficients(eq, func, order, match):
     coeffvals = solve(coeffsdict.values(), coefflist)
 
     if not coeffvals:
-        raise NotImplementedError("Could not solve " + str(eq) + " using the " +
-            " method of undetermined coefficients (unable to solve for coefficients).")
+        raise NotImplementedError(
+            "Could not solve `%s` using the "
+            "method of undetermined coefficients "
+            "(unable to solve for coefficients)." % eq)
 
     psol = trialfunc.subs(coeffvals)
 
@@ -3496,7 +3537,8 @@ def _undetermined_coefficients_match(expr, x):
             tmpset = exprs.union(set([term]))
             oldset = set([])
             while tmpset != oldset:
-                # If you get stuck in this loop, then _test_term is probably broken
+                # If you get stuck in this loop, then _test_term is probably
+                # broken
                 oldset = tmpset.copy()
                 expr = expr.diff(x)
                 term = _remove_coefficient(expr, x)
@@ -3509,11 +3551,12 @@ def _undetermined_coefficients_match(expr, x):
 
     retdict['test'] = _test_term(expr, x)
     if retdict['test']:
-        # Try to generate a list of trial solutions that will have the undetermined
-        # coefficients.  Note that if any of these are not linearly independent
-        # with any of the solutions to the homogeneous equation, then they will
-        # need to be multiplied by sufficient x to make them so.  This function
-        # DOES NOT do that (it doesn't even look at the homogeneous equation).
+        # Try to generate a list of trial solutions that will have the
+        # undetermined coefficients. Note that if any of these are not linearly
+        # independent with any of the solutions to the homogeneous equation,
+        # then they will need to be multiplied by sufficient x to make them so.
+        # This function DOES NOT do that (it doesn't even look at the
+        # homogeneous equation).
         retdict['trialset'] = _get_trial_set(expr, x)
 
     return retdict
@@ -3619,14 +3662,16 @@ def _solve_variation_of_parameters(eq, func, order, match):
         # To reduce commonly occuring sin(x)**2 + cos(x)**2 to 1
         wr = trigsimp(wr, deep=True, recursive=True)
     if not wr:
-        # The wronskian will be 0 iff the solutions are not linearly independent.
+        # The wronskian will be 0 iff the solutions are not linearly
+        # independent.
         raise NotImplementedError("Cannot find " + str(order) +
         " solutions to the homogeneous equation nessesary to apply " +
         "variation of parameters to " + str(eq) + " (Wronskian == 0)")
     if len(gensols) != order:
         raise NotImplementedError("Cannot find " + str(order) +
         " solutions to the homogeneous equation nessesary to apply " +
-        "variation of parameters to " + str(eq) + " (number of terms != order)")
+        "variation of parameters to " +
+        str(eq) + " (number of terms != order)")
     negoneterm = (-1)**(order)
     for i in gensols:
         psol += negoneterm*C.Integral(wronskian(filter(lambda x: x != i,
@@ -3698,7 +3743,7 @@ def ode_separable(eq, func, order, match):
     f = func.func
     C1 = Symbol('C1')
     r = match  # {'m1':m1, 'm2':m2, 'y':y}
-    u = r.get('hint', f(x))  # Try getting u from separable_reduced function, else get f(x)
+    u = r.get('hint', f(x))  # get u from separable_reduced else get f(x)
     return Eq(C.Integral(r['m2']['coeff']*r['m2'][r['y']]/r['m1'][r['y']],
         (r['y'], None, u)), C.Integral(-r['m1']['coeff']*r['m1'][x]/
         r['m2'][x], x) + C1)
