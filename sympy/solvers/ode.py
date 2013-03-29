@@ -980,21 +980,21 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
 
         ## Almost-linear equation of the form f(x)*g(y)*y' + k(x)*l(y) + m(x) = 0
         r = collect(eq, [df, f(x)]).match(e*df + d)
-        r2 = {}
         if r:
+            r2 = r.copy()
             r2[c] = S.Zero
-            if r[d].is_Add:
-                # Separate the terms having f(x) to r[b] and
+            if r2[d].is_Add:
+                # Separate the terms having f(x) to r[d] and
                 # remaining to r[c]
-                no_f, r[d] = r[d].as_independent(f(x))
+                no_f, r2[d] = r2[d].as_independent(f(x))
                 r2[c] += no_f
-            factor = simplify(r[d].diff(f(x))/r[e])
+            factor = simplify(r2[d].diff(f(x))/r[e])
             if factor and not factor.has(f(x)):
-                r[d] = factor_terms(r[d])
-                u = r[d].as_independent(f(x), as_Add=False)[1]
+                r2[d] = factor_terms(r2[d])
+                u = r2[d].as_independent(f(x), as_Add=False)[1]
                 r2.update({'a': e, 'b': d, 'c': c, 'u': u})
-                r2[d] = r[d] / u
-                r2[e] = r[e] / u.diff(f(x))
+                r2[d] /= u
+                r2[e] /= u.diff(f(x))
                 matching_hints["almost_linear"] = r2
                 matching_hints["almost_linear_Integral"] = r2
 
@@ -2897,13 +2897,13 @@ def _linear_coeff_match(expr, func):
     Helper function to match hint linear-coefficients.
     Matches the expression to the form
     expr = (a1*x + b1*f(x) + c1)/(a2*x + b2*f(x) + c2)
-    where the following conditions hold good:
+    where the following conditions hold:
 
     1. a1, b1, c1, a2, b2, c2 are Rationals
-    2. Either one of c1 and c2 are not equal to zero
+    2. c1 or c2 are not equal to zero
     3. a2*b1 - a1*b2 is not equal to zero
 
-    and returns xarg, yarg where
+    Return xarg, yarg where
 
     1. xarg = (b2*c1 - b1*c2)/(a2*b1 - a1*b2)
     2. yarg = (a1*c2 - a2*c1)/(a2*b1 - a1*b2)
@@ -2918,10 +2918,10 @@ def _linear_coeff_match(expr, func):
     >>> from sympy.functions.elementary.trigonometric import sin
     >>> f = Function('f')
     >>> _linear_coeff_match((
-    ... (-25*f(x) -8*x + 62)/(4*f(x) + 11*x -11)), f(x))
+    ... (-25*f(x) - 8*x + 62)/(4*f(x) + 11*x - 11)), f(x))
     (1/9, 22/9)
     >>> _linear_coeff_match(
-    ... sin((-5*f(x) -8*x + 6)/(4*f(x) + x -1)), f(x))
+    ... sin((-5*f(x) - 8*x + 6)/(4*f(x) + x - 1)), f(x))
     (19/27, 2/27)
     >>> _linear_coeff_match(sin(f(x)/x), f(x))
 
@@ -3018,25 +3018,7 @@ def ode_linear_coefficients(eq, func, order, match):
         Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
     """
 
-    # This uses already formed coherent parameters in classify_ode()
-    # to form a dummy homogeneous differential equation
-    # It is then passed to ode_1st_homogeneous_coeff_best(),
-    # ode_1st_homogeneous_coeff_subs_indep_div_dep()
-    # and ode_1st_homogeneous_coeff_subs_dep_div_indep()
-    # with the extra parameters xarg and yarg
-    x = func.args[0]
-    dummy_eq = (match[match['d']].subs(match['y'], func) +
-        match[match['e']].subs(match['y'], func)*func.diff(x))
-    hints = classify_ode(dummy_eq, func)
-    if "1st_homogeneous_coeff_best" in hints:
-        return ode_1st_homogeneous_coeff_best(
-            eq, func, order, match)
-    elif "1st_homogeneous_coeff_subs_indep_div_dep" in hints:
-        return ode_1st_homogeneous_coeff_subs_indep_div_dep(
-            eq, func, order, match)
-    elif "1st_homogeneous_coeff_subs_dep_div_indep" in hints:
-        return ode_1st_homogeneous_coeff_subs_dep_div_indep(
-            eq, func, order, match)
+    return ode_1st_homogeneous_coeff_best(eq, func, order, match)
 
 
 def ode_separable_reduced(eq, func, order, match):
