@@ -937,6 +937,10 @@ class MatrixBase(object):
         submatrix
         """
         cols = self.cols
+        if type(rowsList) is slice:
+           rowsList = range(self.rows).__getitem__(rowsList)
+        if type(colsList) is slice:
+           colsList = range(self.cols).__getitem__(colsList)
         flat_list = self._mat
         rowsList = [a2idx(k, self.rows) for k in rowsList]
         colsList = [a2idx(k, self.cols) for k in colsList]

@@ -67,7 +67,10 @@ class DenseMatrix(MatrixBase):
         if type(key) is tuple:
             i, j = key
             if type(i) is slice or type(j) is slice:
-                return self.submatrix(key)
+                if type(i) is list  or type(j) is list:
+                    return self.extract(i,j)
+                else:
+                    return self.submatrix(key)
             else:
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
