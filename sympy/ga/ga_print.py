@@ -719,12 +719,14 @@ prog_str = ''
 off_mode = False
 
 def Get_Program(off=False):
+    off_mode = off
+    if off_mode:
+        return
     global prog_str,off_mode
     sys.stderr.write('opening file = '+sys.argv[0]+'\n')
     prog_file = open(sys.argv[0],'r')
     prog_str = prog_file.read()
     prog_file.close()
-    off_mode = off
     return
 
 def Print_Function():
