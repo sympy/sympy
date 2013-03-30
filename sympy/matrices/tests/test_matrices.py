@@ -62,6 +62,22 @@ def test_addition():
     assert a + b == a.add(b) == Matrix([[2, 4], [6, 1]])
 
 
+def test_fancy_index_matrix():
+    a = Matrix(3, 3, range(9))
+    assert a == a[:, :]
+    assert a[1, :] == Matrix(1, 3, [3, 4, 5])
+    assert a[:, 1] == Matrix([1, 4, 7])
+    assert a[[0, 1], :] == Matrix([[0, 1, 2], [3, 4, 5]])
+    assert a[[0, 1], 2] == a[[0, 1], [2]]
+    assert a[2, [0, 1]] == a[[2], [0, 1]]
+    assert a[:, [0, 1]] == Matrix([[0, 1], [3, 4], [6, 7]])
+    assert a[0, 0] == 0
+    assert a[0:2, :] == Matrix([[0, 1, 2], [3, 4, 5]])
+    assert a[:, 0:2] == Matrix([[0, 1], [3, 4], [6, 7]])
+    assert a[::2, 1] == a[[0, 2], 1]
+    assert a[1, ::2] == a[1, [0, 2]]
+
+
 def test_multiplication():
     a = Matrix((
         (1, 2),

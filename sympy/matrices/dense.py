@@ -70,11 +70,23 @@ class DenseMatrix(MatrixBase):
         """
         if type(key) is tuple:
             i, j = key
-            if type(i) is slice or type(j) is slice:
-                return self.submatrix(key)
-            else:
+            try:
                 i, j = self.key2ij(key)
                 return self._mat[i*self.cols + j]
+            except (TypeError, IndexError):
+                if type(i) is slice:
+                    i = range(self.rows)[i]
+                elif is_sequence(i):
+                    pass
+                else:
+                    i = [i]
+                if type(j) is slice:
+                    j = range(self.cols)[j]
+                elif is_sequence(j):
+                    pass
+                else:
+                    j = [j]
+                return self.extract(i, j)
         else:
             # row-wise decomposition of matrix
             if type(key) is slice:
