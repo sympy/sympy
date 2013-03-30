@@ -2280,7 +2280,7 @@ class Expr(Basic, EvalfMixin):
             >>> e.series(x, n=2)
             cos(exp(y)) - x*sin(exp(y)) + O(x**2)
 
-            If ``n=None`` then a generator of the series terms will be returned.
+            If ``n=None`` then an iterator of the series terms will be returned.
 
             >>> term=cos(x).series(n=None)
             >>> [term.next() for i in range(2)]
