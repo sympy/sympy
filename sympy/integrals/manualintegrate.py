@@ -17,7 +17,9 @@ except ImportError:
     from keyword import iskeyword as _iskeyword
     import sys as _sys
 
-    def namedtuple(typename, field_names, verbose=False, rename=False):
+    # For some reason, doctest will test namedtuple's docstring if we simply
+    # have a def namedtuple() here
+    def _namedtuple(typename, field_names, verbose=False, rename=False):
         # Parse and validate the field names.  Validation serves two purposes,
         # generating informative error messages and preventing template injection attacks.
         if isinstance(field_names, basestring):
@@ -102,6 +104,8 @@ except ImportError:
             pass
 
         return result
+
+    namedtuple = _namedtuple
 
 def Rule(name, props=""):
     # GOTCHA: namedtuple class name not considered!
