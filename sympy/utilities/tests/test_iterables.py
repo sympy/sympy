@@ -6,14 +6,17 @@ from sympy import (
 from sympy.combinatorics import RGS_enum, RGS_unrank, Permutation
 from sympy.utilities.iterables import (
     _partition, _set_partitions, binary_partitions, bracelets, capture,
-    cartes, common_prefix, common_suffix, dict_merge, factoring_visitor,
+    cartes, common_prefix, common_suffix, dict_merge,
     flatten, generate_bell, generate_derangements, generate_involutions,
     generate_oriented_forest, group, has_dups, kbins, minlex, multiset,
-    multiset_combinations, multiset_partitions,  _multiset_partitions_taocp,
+    multiset_combinations, multiset_partitions,
     multiset_permutations, necklaces, numbered_symbols, ordered, partitions,
     permutations, postfixes, postorder_traversal, prefixes, reshape,
     rotate_left, rotate_right, runs, sift, subsets, take, topological_sort,
     unflatten, uniq, variations)
+from sympy.utilities.enumerative import (
+    factoring_visitor, multiset_partitions_taocp )
+
 from sympy.core.singleton import S
 from sympy.functions.elementary.piecewise import Piecewise, ExprCondPair
 from sympy.utilities.pytest import raises
@@ -303,7 +306,7 @@ def test_multiset_partitions():
     factorings = [[24], [8, 3], [12, 2], [4, 6], [4, 2, 3],
                   [6, 2, 2], [2, 2, 2, 3]]
     assert list(factoring_visitor(p, [2,3]) for
-                p in _multiset_partitions_taocp([3, 1])) == factorings
+                p in multiset_partitions_taocp([3, 1])) == factorings
 
 def test_multiset_combinations():
     ans = ['iii', 'iim', 'iip', 'iis', 'imp', 'ims', 'ipp', 'ips',
