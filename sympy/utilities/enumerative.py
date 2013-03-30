@@ -309,36 +309,14 @@ class MultisetPartitionTraverser():
         return False
 
     # Version to allow number of parts to be bounded from above.
-    # Corresponds to (a modified) step M5 Tries to implement answer to
-    # problem 69.  It gives correct results but results in a fair
-    # number of loop iterations which don't yield a partition.
-    def decrement_part_small_old(self, part, ub):
-        """Decrements part (a subrange of pstack), if possible.
-
-        returns True iff the part was successfully decremented."""
-        plen = len(part)
-        for j in xrange(plen-1, -1, -1):
-            # Knuth's mod, (answer to prob 69)
-            if (j==0) and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
-                return False
-            if (j == 0 and part[j].v > 1) or (j > 0 and part[j].v > 0):
-                # found val to decrement
-                part[j].v -= 1
-                # Reset trailing parts back to maximum
-                for k in xrange(j + 1, plen):
-                    part[k].v = part[k].u
-                return True
-        return False
-
-    # Version to allow number of parts to be bounded from above.
-    # Corresponds to (a modified) step M5.  Modified from (my probably
-    # imperfect understanding of) the answer to problem 69.
+    # Corresponds to (a modified) step M5.  This expands on (my
+    # probably imperfect understanding of) the answer to problem 69.
     def decrement_part_small(self, part, ub):
         """Decrements part (a subrange of pstack), if possible.
 
         returns True iff the part was successfully decremented.
 
-        The purpose of this modification of the ordinary decrement
+        The goal of this modification of the ordinary decrement
         method is to fail when it can be proved that this part can
         only have child partitions which are larger than allowed by
         lb.  If a decision is made to fail, it must be accurate,
@@ -349,8 +327,9 @@ class MultisetPartitionTraverser():
         usual in constrained enumerations, it is advantageous to fail
         as early as possible.
 
-        The tests used by this method catch the most common cases
-        which will fail, and include:
+        The tests used by this method catch the most common cases,
+        although this implementation is by no means the last word on
+        this problem.  The tests include:
 
         1) lpart must be less than ub by at least 2.  This is because
            once a a part which has been decremented, the partition
@@ -409,7 +388,8 @@ class MultisetPartitionTraverser():
         Algorithm - a part can have no children which are of
         sufficient size unless that part has sufficient unallocated
         multiplicity.  This method finds the next lower decrement of
-        part (if possible) which has sufficient multiplicity.
+        part (if possible) which has sufficient unallocated
+        multiplicity.
 
         returns True iff the part was successfully decremented."""
         if amt == 1:
