@@ -860,7 +860,7 @@ def manualintegrate(f, var):
     >>> from sympy.integrals.manualintegrate import manualintegrate
     >>> from sympy.abc import x
     >>> manualintegrate(1 / x, x)
-    log(Abs(x))
+    log(x)
     >>> integrate(1/x)
     log(x)
     >>> manualintegrate(log(x), x)
@@ -880,7 +880,7 @@ def manualintegrate(f, var):
     >>> integrate(cos(x)**4 * sin(x)**3, x)
     cos(x)**7/7 - cos(x)**5/5
     >>> manualintegrate(tan(x), x)
-    -log(Abs(cos(x)))
+    -log(cos(x))
     >>> integrate(tan(x), x)
     -log(sin(x)**2 - 1)/2
 
