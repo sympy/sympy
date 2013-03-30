@@ -179,8 +179,8 @@ def factoring_visitor(state, primes):
 
     To enumerate the factorings of 24
 
-    >>> from sympy.utilities.iterables import factoring_visitor, _multiset_partitions_taocp
-    >>> list(factoring_visitor(p, [2,3]) for p in _multiset_partitions_taocp([3, 1]))
+    >>> from sympy.utilities.enumerative import factoring_visitor, multiset_partitions_taocp
+    >>> list(factoring_visitor(p, [2,3]) for p in multiset_partitions_taocp([3, 1]))
     [[24], [8, 3], [12, 2], [4, 6], [4, 2, 3], [6, 2, 2], [2, 2, 2, 3]]
     """
     f, lpart, pstack = state
