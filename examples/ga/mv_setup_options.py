@@ -29,5 +29,5 @@ def MV_setup_options():
 def dummy():
     return
 
-Get_Program()
+Get_Program(True)
 MV_setup_options()

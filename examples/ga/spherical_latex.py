@@ -1,8 +1,8 @@
 import sys
 
 from sympy import symbols,sin,cos
-from sympy.GA.GA import MV,Format
-from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
+from sympy.ga.ga import MV,Format
+from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
 
 Format()
 
@@ -29,6 +29,6 @@ def dummy():
     return
 
 
-Get_Program()
+Get_Program(True)
 derivatives_in_spherical_coordinates()
 xdvi()

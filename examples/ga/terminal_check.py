@@ -442,7 +442,7 @@ def reciprocal_frame_test():
 def dummy():
     return
 
-Get_Program()
+Get_Program(True)
 
 basic_multivector_operations()
 check_generalized_BAC_CAB_formulas()

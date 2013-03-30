@@ -6,7 +6,6 @@ from sympy import symbols,log,simplify,diff,cos,sin
 from sympy.ga.manifold import Manifold
 
 enhance_print()
-Get_Program(off=True)
 
 def Test_Reciprocal_Frame():
     Print_Function()
@@ -102,6 +101,8 @@ def Simple_manifold_with_scalar_function_derivative():
 
 def dummy():
     return
+
+Get_Program(True)
 
 Test_Reciprocal_Frame()
 Distorted_manifold_with_scalar_function()

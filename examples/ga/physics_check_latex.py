@@ -90,7 +90,7 @@ def Lorentz_Tranformation_in_Geometric_Algebra():
 def dummy():
     return
 
-Get_Program()
+Get_Program(True)
 
 Maxwells_Equations_in_Geometric_Calculus()
 Dirac_Equation_in_Geometric_Calculus()

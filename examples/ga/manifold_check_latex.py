@@ -136,7 +136,7 @@ def Simple_manifold_with_vector_function_derivative():
 def dummy():
     return
 
-Get_Program()
+Get_Program(True)
 
 Test_Reciprocal_Frame()
 Distorted_manifold_with_scalar_function()
