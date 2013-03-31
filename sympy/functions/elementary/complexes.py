@@ -456,8 +456,6 @@ class Abs(Function):
         # for complex arguments).
         if arg.is_real:
             return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
-        else:
-            return self
 
     def _eval_rewrite_as_Piecewise(self, arg):
         if arg.is_real:
