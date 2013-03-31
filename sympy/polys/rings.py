@@ -58,25 +58,43 @@ def _parse_symbols(symbols):
 
     raise GeneratorsError("expected a string, Symbol or expression or a non-empty sequence of strings, Symbols or expressions")
 
+_ring_cache = {}
+
 class PolyRing(DefaultPrinting, IPolys):
 
-    def __init__(self, symbols, domain, order):
-        self.dtype = PolyElement
-        self.symbols = tuple(_parse_symbols(symbols))
-        self.ngens = len(self.symbols)
-        self.domain = domain
-        self.order = order
+    def __new__(cls, symbols, domain, order):
+        dtype = PolyElement
+        symbols = tuple(_parse_symbols(symbols))
+        ngens = len(symbols)
+        domain = domain
+        order = order
 
-        self.zero_monom = (0,)*self.ngens
-        self.gens = self._gens()
+        _hash = hash((cls.__name__, dtype, symbols, ngens, domain, order))
+        obj = _ring_cache.get(_hash)
 
-        codegen = MonomialOps(self.ngens)
-        self.monomial_mul = codegen.mul()
-        self.monomial_pow = codegen.pow()
-        self.monomial_ldiv = codegen.ldiv()
-        self.monomial_div = codegen.div()
-        self.monomial_lcm = codegen.lcm()
-        self.monomial_gcd = codegen.gcd()
+        if obj is None:
+            obj = object.__new__(cls)
+            obj._hash = _hash
+            obj.dtype = dtype
+            obj.symbols = symbols
+            obj.ngens = ngens
+            obj.domain = domain
+            obj.order = order
+
+            obj.zero_monom = (0,)*ngens
+            obj.gens = obj._gens()
+
+            codegen = MonomialOps(ngens)
+            obj.monomial_mul = codegen.mul()
+            obj.monomial_pow = codegen.pow()
+            obj.monomial_ldiv = codegen.ldiv()
+            obj.monomial_div = codegen.div()
+            obj.monomial_lcm = codegen.lcm()
+            obj.monomial_gcd = codegen.gcd()
+
+            _ring_cache[_hash] = obj
+
+        return obj
 
     def _gens(self):
         """Return a list of polynomial generators. """
@@ -89,22 +107,14 @@ class PolyRing(DefaultPrinting, IPolys):
             _gens.append(poly)
         return tuple(_gens)
 
-    _hash = None
-
     def __hash__(self):
-        _hash = self._hash
-        if _hash is None:
-            self._hash = _hash = hash((self.symbols, self.domain, self.order))
-        return _hash
+        return self._hash
 
     def __eq__(self, other):
-        return isinstance(other, PolyRing) and \
-               self.symbols == other.symbols and \
-               self.domain == other.domain and \
-               self.order == other.order
+        return self is other
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return self is not other
 
     def clone(self, symbols=None, domain=None, order=None):
         return self.__class__(symbols or self.symbols, domain or self.domain, order or self.order)

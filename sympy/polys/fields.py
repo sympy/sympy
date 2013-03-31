@@ -36,35 +36,50 @@ def vfield(symbols, domain, order=lex):
 
     return _field
 
+_field_cache = {}
+
 class FracField(DefaultPrinting):
 
-    def __init__(self, symbols, domain, order):
+    def __new__(cls, symbols, domain, order):
         from sympy.polys.rings import PolyRing
-        self.ring = PolyRing(symbols, domain, order)
-        self.dtype = FracElement
-        self.symbols = self.ring.symbols
-        self.ngens = len(self.symbols)
-        self.domain = self.ring.domain
-        self.order = self.ring.order
-        self.gens = self._gens()
+        ring = PolyRing(symbols, domain, order)
+        dtype = FracElement
+        symbols = ring.symbols
+        ngens = ring.ngens
+        domain = ring.domain
+        order = ring.order
+
+        _hash = hash((cls.__name__, ring, dtype, symbols, ngens, domain, order))
+        obj = _field_cache.get(_hash)
+
+        if obj is None:
+            obj = object.__new__(cls)
+            obj._hash = _hash
+            obj.ring = ring
+            obj.dtype = dtype
+            obj.symbols = symbols
+            obj.ngens = ngens
+            obj.domain = domain
+            obj.order = order
+
+            obj.gens = obj._gens()
+
+            _field_cache[_hash] = obj
+
+        return obj
 
     def _gens(self):
         """Return a list of polynomial generators. """
         return tuple([ self.dtype(self, gen) for gen in self.ring.gens ])
 
-    _hash = None
-
     def __hash__(self):
-        _hash = self._hash
-        if _hash is None:
-            self._hash = _hash = hash((self.symbols, self.domain, self.order))
-        return _hash
+        return self._hash
 
     def __eq__(self, other):
-        return isinstance(other, FracField) and self.ring == other.ring
+        return self is other
 
     def __ne__(self, other):
-        return not self.__eq__(other)
+        return self is not other
 
     def new(self, numer, denom=None):
         return self.dtype(self, numer, denom)
