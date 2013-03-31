@@ -169,7 +169,7 @@ def test_latex_functions():
     assert latex(Min(x, y)**2) == r"\min\left(x, y\right)^{2}"
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Max(x, y)**2) == r"\max\left(x, y\right)^{2}"
-    assert latex(Abs(x)) == r"\lvert{x}\rvert"
+    assert latex(Abs(x)) == r"\left\lvert{x}\right\rvert"
     assert latex(re(x)) == r"\Re{x}"
     assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
     assert latex(im(x)) == r"\Im{x}"
@@ -885,3 +885,7 @@ def test_boolean_args_order():
 
     expr = Or(*syms)
     assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'
+
+def test_imaginary():
+    i = sqrt(-1)
+    assert latex(i) == r'i'
