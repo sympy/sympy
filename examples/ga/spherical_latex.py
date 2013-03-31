@@ -28,7 +28,11 @@ def derivatives_in_spherical_coordinates():
 def dummy():
     return
 
+def main():
+    Get_Program(True)
+    derivatives_in_spherical_coordinates()
+    xdvi()
+    return
 
-Get_Program(True)
-derivatives_in_spherical_coordinates()
-xdvi()
+if __name__ == "__main__":
+    main()

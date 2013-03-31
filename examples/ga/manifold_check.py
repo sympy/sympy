@@ -102,9 +102,15 @@ def Simple_manifold_with_scalar_function_derivative():
 def dummy():
     return
 
-Get_Program(True)
+def main():
 
-Test_Reciprocal_Frame()
-Distorted_manifold_with_scalar_function()
-Simple_manifold_with_scalar_function_derivative()
-#Plot_Mobius_Strip_Manifold()
+    Get_Program(True)
+
+    Test_Reciprocal_Frame()
+    Distorted_manifold_with_scalar_function()
+    Simple_manifold_with_scalar_function_derivative()
+    #Plot_Mobius_Strip_Manifold()
+    return
+
+if __name__ == "__main__":
+    main()

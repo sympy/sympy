@@ -136,12 +136,16 @@ def Simple_manifold_with_vector_function_derivative():
 def dummy():
     return
 
-Get_Program(True)
+def main():
+    Get_Program(True)
 
-Test_Reciprocal_Frame()
-Distorted_manifold_with_scalar_function()
-Simple_manifold_with_scalar_function_derivative()
-Simple_manifold_with_vector_function_derivative()
-#Plot_Mobius_Strip_Manifold()
+    Test_Reciprocal_Frame()
+    Distorted_manifold_with_scalar_function()
+    Simple_manifold_with_scalar_function_derivative()
+    Simple_manifold_with_vector_function_derivative()
+    #Plot_Mobius_Strip_Manifold()
+    xdvi()
+    return
 
-xdvi()
+if __name__ == "__main__":
+    main()

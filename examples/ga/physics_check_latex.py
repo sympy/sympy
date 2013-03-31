@@ -90,10 +90,15 @@ def Lorentz_Tranformation_in_Geometric_Algebra():
 def dummy():
     return
 
-Get_Program(True)
+def main():
+    Get_Program(True)
 
-Maxwells_Equations_in_Geometric_Calculus()
-Dirac_Equation_in_Geometric_Calculus()
-Lorentz_Tranformation_in_Geometric_Algebra()
+    Maxwells_Equations_in_Geometric_Calculus()
+    Dirac_Equation_in_Geometric_Calculus()
+    Lorentz_Tranformation_in_Geometric_Algebra()
 
-xdvi()
+    xdvi()
+    return
+
+if __name__ == "__main__":
+    main()

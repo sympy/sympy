@@ -29,5 +29,10 @@ def MV_setup_options():
 def dummy():
     return
 
-Get_Program(True)
-MV_setup_options()
+def main():
+    Get_Program(True)
+    MV_setup_options()
+    return
+
+if __name__ == "__main__":
+    main()

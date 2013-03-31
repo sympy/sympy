@@ -442,17 +442,22 @@ def reciprocal_frame_test():
 def dummy():
     return
 
-Get_Program(True)
+def main():
+    Get_Program(True)
 
-basic_multivector_operations()
-check_generalized_BAC_CAB_formulas()
-derivatives_in_rectangular_coordinates()
-derivatives_in_spherical_coordinates()
-rounding_numerical_components()
-noneuclidian_distance_calculation()
-conformal_representations_of_circles_lines_spheres_and_planes()
-properties_of_geometric_objects()
-extracting_vectors_from_conformal_2_blade()
-reciprocal_frame_test()
+    basic_multivector_operations()
+    check_generalized_BAC_CAB_formulas()
+    derivatives_in_rectangular_coordinates()
+    derivatives_in_spherical_coordinates()
+    rounding_numerical_components()
+    noneuclidian_distance_calculation()
+    conformal_representations_of_circles_lines_spheres_and_planes()
+    properties_of_geometric_objects()
+    extracting_vectors_from_conformal_2_blade()
+    reciprocal_frame_test()
 
-GA_Printer.off()
+    GA_Printer.off()
+    return
+
+if __name__ == "__main__":
+    main()

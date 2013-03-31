@@ -5,7 +5,7 @@ from sympy.ga.ga import MV
 from sympy.ga.ga_print import enhance_print
 enhance_print()
 
-def exp_operation():
+def main():
     (ex,ey,ez) = MV.setup('e*x|y|z',metric='[1,1,1]')
 
     u = MV('u','vector')
@@ -23,4 +23,5 @@ def exp_operation():
 
     return
 
-exp_operation()
+if __name__ == "__main__":
+    main()

@@ -3,22 +3,28 @@ import sys
 from sympy import symbols,sin,cos,simplify
 from sympy.ga.ga import MV
 from sympy.ga.ga_print import enhance_print
-enhance_print()
 
-(ex,ey,ez) = MV.setup('e*x|y|z',metric='[1,1,1]')
+def main():
+    enhance_print()
 
-u = MV('u','vector')
-v = MV('v','vector')
-w = MV('w','vector')
-print u
-print v
-print w
+    (ex,ey,ez) = MV.setup('e*x|y|z',metric='[1,1,1]')
 
-uv = u^v
-print uv
-print uv.is_blade()
-uvw = u^v^w
-print uvw
-print uvw.is_blade()
+    u = MV('u','vector')
+    v = MV('v','vector')
+    w = MV('w','vector')
+    print u
+    print v
+    print w
 
-print simplify((uv*uv).scalar())
+    uv = u^v
+    print uv
+    print uv.is_blade()
+    uvw = u^v^w
+    print uvw
+    print uvw.is_blade()
+
+    print simplify((uv*uv).scalar())
+    return
+
+if __name__ == "__main__":
+    main()
