@@ -1,4 +1,6 @@
-from itertools import izip_longest
+from itertools import izip
+# Todo - use izip_longest when we deprecate 2.5
+
 from sympy.utilities.iterables import  multiset_partitions
 from sympy.utilities.enumerative import (
     factoring_visitor,
@@ -55,7 +57,7 @@ def test_multiset_versions():
     """Compares Knuth-based versions of multiset_partitions"""
     multiplicities = [5,2,2,1]
     m = MultisetPartitionTraverser()
-    for s1, s2 in izip_longest(m.enum_all(multiplicities),
+    for s1, s2 in izip(m.enum_all(multiplicities),
                                multiset_partitions_taocp(multiplicities)):
         assert compare_multiset_states(s1, s2)
 
@@ -80,7 +82,7 @@ def test_subrange():
     c_it = part_range_filter(mc.enum_small(multiplicities, 2), 1, 10)
     d_it = part_range_filter(md.enum_large(multiplicities, 1), 0, 2)
 
-    for sa, sb, sc, sd in izip_longest(a_it, b_it, c_it, d_it):
+    for sa, sb, sc, sd in izip(a_it, b_it, c_it, d_it):
         assert compare_multiset_states(sa, sb)
         assert compare_multiset_states(sa, sc)
         assert compare_multiset_states(sa, sd)
