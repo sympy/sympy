@@ -640,6 +640,45 @@ class LatexPrinter(Printer):
         tex = r"e^{%s}" % self._print(expr.args[0])
         return self._do_exponent(tex, exp)
 
+    def _print_elliptic_k(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"K^{%s}%s" % (exp, tex)
+        else:
+            return r"K%s" % tex
+
+    def _print_elliptic_f(self, expr, exp=None):
+        tex = r"\left(%s\middle| %s\right)" % \
+            (self._print(expr.args[0]), self._print(expr.args[1]))
+        if exp is not None:
+            return r"F^{%s}%s" % (exp, tex)
+        else:
+            return r"F%s" % tex
+
+    def _print_elliptic_e(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"\left(%s\middle| %s\right)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]))
+        else:
+            tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"E^{%s}%s" % (exp, tex)
+        else:
+            return r"E%s" % tex
+
+    def _print_elliptic_pi(self, expr, exp=None):
+        if len(expr.args) == 3:
+            tex = r"\left(%s; %s\middle| %s\right)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]), \
+                 self._print(expr.args[2]))
+        else:
+            tex = r"\left(%s\middle| %s\right)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]))
+        if exp is not None:
+            return r"\Pi^{%s}%s" % (exp, tex)
+        else:
+            return r"\Pi%s" % tex
+
     def _print_gamma(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
 
