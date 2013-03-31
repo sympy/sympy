@@ -2,7 +2,7 @@ from sympy import sin,cos,sinh,cosh,symbols,expand,simplify
 from sympy.ga.ga_print import xdvi
 from sympy.ga.ga import MV,Format,Com
 
-Format()
+Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
 
 (ex,ey,ez) = MV.setup('e*x|y|z')
 A = MV('A','mv')

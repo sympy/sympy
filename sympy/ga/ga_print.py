@@ -301,9 +301,10 @@ class GA_LatexPrinter(LatexPrinter):
         return
 
     @staticmethod
-    def restore():
+    def restore(ipy=False):
         GA_LatexPrinter.latex_flg = False
-        sys.stdout = GA_LatexPrinter.stdout
+        if not ipy:
+            sys.stdout = GA_LatexPrinter.stdout
         Basic.__str__  = GA_LatexPrinter.Basic__str__
         Matrix.__str__ = GA_LatexPrinter.Matrix__str__
         return
@@ -592,6 +593,10 @@ def xdvi(filename=None,debug=False,paper=(14,11)):
     postscript, generates tex file, inputs file to latex, displays resulting
     pdf file.
     """
+    if GA_LatexPrinter.ipy:
+        GA_LatexPrinter.restore(GA_LatexPrinter.ipy)
+        return
+
     sys_cmd = SYS_CMD[sys.platform]
 
     latex_str = sys.stdout.getvalue()

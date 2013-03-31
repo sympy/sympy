@@ -4,7 +4,7 @@ from sympy import symbols,sin,cos
 from sympy.ga.ga import MV,Format
 from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
 
-Format()
+Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
 
 def derivatives_in_spherical_coordinates():
     Print_Function()

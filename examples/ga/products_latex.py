@@ -2,7 +2,7 @@ from sympy import symbols
 from sympy.ga.ga import MV,Format
 from sympy.ga.ga_print import xdvi
 
-Format()
+Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
 
 coords = (x,y,z) = symbols('x y z')
 

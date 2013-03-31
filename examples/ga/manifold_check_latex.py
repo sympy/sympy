@@ -6,7 +6,7 @@ from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
 from sympy.ga.manifold import Manifold
 
-Format()
+Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
 
 def Test_Reciprocal_Frame():
     Print_Function()
