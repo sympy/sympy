@@ -1920,31 +1920,18 @@ def _handle_Integral(expr, func, order, hint):
     x = func.args[0]
     f = func.func
     if hint == "1st_exact":
-        global exactvars
-        x0 = exactvars['x0']
-        y0 = exactvars['y0']
-        y = exactvars['y']
-        tmpsol = expr.lhs.doit()
-        sol = 0
-        assert tmpsol.is_Add
-        for i in tmpsol.args:
-            if not i.has(x0) and not i.has(y0):
-                sol += i
-        assert sol != 0
-        sol = Eq(sol.subs(y, f(x)), expr.rhs)  # expr.rhs == C1
-        del exactvars
+        global y
+        sol = (expr.doit()).subs(y, f(x))
+        del y
     elif hint == "1st_exact_Integral":
         # FIXME: We still need to back substitute y
-        # y = exactvars['y']
         # sol = expr.subs(y, f(x))
         # For now, we are going to have to return an expression with f(x)
-        # replaced with y.  Substituting results in the y's in the second
-        # integral becoming f(x), which prevents the integral from being
-        # evaluatable. For example, Integral(cos(f(x)), (x, x0, x)).  If
-        # there were a way to do inert substitution, that could maybe be
-        # used here instead.
-        del exactvars
-        sol = expr
+        # replaced with y when Integrals are done with respect to f(x).
+        # For example, Integral(cos(f(x)), _y).  If there were a way
+        # to do inert substitution, that could maybe be used here instead.
+        sol = expr.subs(y, f(x))
+        del y
     elif hint == "nth_linear_constant_coeff_homogeneous":
         sol = expr
     elif not hint.endswith("_Integral"):
@@ -2053,15 +2040,15 @@ def ode_1st_exact(eq, func, order, match):
     x = func.args[0]
     f = func.func
     r = match  # d+e*diff(f(x),x)
+    e = r[r['e']]
+    d = r[r['d']]
+    global y  # This is the only way to pass dummy y to _handle_Integral
+    y = r['y']
     C1 = Symbol('C1')
-    x0 = Dummy('x0')
-    y0 = Dummy('y0')
-    global exactvars  # This is the only way to pass these dummy variables to
-    # _handle_Integral
-    exactvars = {'y0': y0, 'x0': x0, 'y': r['y']}
-    # If we ever get a Constant class, x0 and y0 should be constants, I think
-    sol = C.Integral(r[r['e']].subs(
-        x, x0), (r['y'], y0, f(x))) + C.Integral(r[r['d']], (x, x0, x))
+    # Refer Joel Moses, "Symbolic Integration - The Stormy Decade",
+    # Communications of the ACM, Volume 14, Number 8, August 1971, pp. 558
+    # which gives the method to solve an exact differential equation.
+    sol = C.Integral(d, x) + C.Integral((e - (C.Integral(d, x).diff(y))), y)
     return Eq(sol, C1)
 
 
