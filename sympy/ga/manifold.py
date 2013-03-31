@@ -8,6 +8,7 @@ from sympy import trigsimp,simplify
 from sympy.ga.ga import MV
 from sympy.ga.ga_sympy import linear_expand
 from sympy.ga.ga_debug import oprint
+from sympy.ga.ga_print import find_executable
 
 def fct_to_str(fct_names):
     import sys

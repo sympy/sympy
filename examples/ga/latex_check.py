@@ -21,7 +21,7 @@ def make_vector(a,n = 3):
         a = MV(sym_lst,'vector')
     return(F(a))
 
-Format() #For sympy-bot testing default for pdf is ipy=False
+Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
 
 def basic_multivector_operations_3D():
     Print_Function()
