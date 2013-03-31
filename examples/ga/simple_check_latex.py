@@ -51,7 +51,7 @@ def basic_multivector_operations_2D():
 def dummy():
     return
 
-Get_Program()
+Get_Program(True)
 
 basic_multivector_operations_3D()
 basic_multivector_operations_2D()
