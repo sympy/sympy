@@ -1527,10 +1527,18 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         ring = f.ring
-        new_ring = None
+
+        if not f:
+            return f, ring.one
+
         domain = ring.domain
 
-        if domain.has_Field and domain.has_assoc_Ring:
+        if not (domain.has_Field and domain.has_assoc_Ring):
+            _, p, q = f.cofactors(g)
+
+            if q.is_negative:
+                p, q = -p, -q
+        else:
             new_ring = ring.clone(domain=domain.get_ring())
 
             cq, f = f.clear_denoms()
@@ -1538,27 +1546,24 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             f = f.set_ring(new_ring)
             g = g.set_ring(new_ring)
-        else:
-            cp = cq = domain.one
 
-        _, p, q = f.cofactors(g)
+            _, p, q = f.cofactors(g)
 
-        if new_ring is not None:
             p = p.set_ring(ring)
             q = q.set_ring(ring)
 
-        p_neg = p.is_negative
-        q_neg = q.is_negative
+            p_neg = p.is_negative
+            q_neg = q.is_negative
 
-        if p_neg and q_neg:
-            p, q = -p, -q
-        elif p_neg:
-            cp, p = -cp, -p
-        elif q_neg:
-            cp, q = -cp, -q
+            if p_neg and q_neg:
+                p, q = -p, -q
+            elif p_neg:
+                cp, p = -cp, -p
+            elif q_neg:
+                cp, q = -cp, -q
 
-        p = p.mul_ground(cp)
-        q = q.mul_ground(cq)
+            p = p.mul_ground(cp)
+            q = q.mul_ground(cq)
 
         return p, q
 
