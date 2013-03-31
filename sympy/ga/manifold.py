@@ -287,5 +287,9 @@ if f[0] != None:
         plot_template = FillTemplate(self,plot_template)
         msurf.write(plot_template)
         msurf.close()
-        system('mayavi2 manifold_surf.py &')
+        mayavi2 = find_executable('mayavi2')
+        if mayavi2 is None:
+            return
+
+        system(mayavi2+' manifold_surf.py &')
         return

@@ -689,6 +689,8 @@ def xdvi(filename=None,debug=False,paper=(14,11)):
 
     if pdflatex is not None:
         latex_str = 'pdflatex'
+    else:
+        return
 
     if latex_str is not None:
         if debug: #Display latex excution output for debugging purposes
