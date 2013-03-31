@@ -546,7 +546,16 @@ def _doctest(*paths, **kwargs):
         "sympy/utilities/compilef.py",  # needs tcc
         "sympy/utilities/autowrap.py",  # needs installed compiler
         "sympy/conftest.py",  # needs py.test
-        "sympy/utilities/benchmarking.py"  # needs py.test
+        "sympy/utilities/benchmarking.py",  # needs py.test
+        #Following examples are not docstrings and require pdflatex
+        "examples/ga/latex_check.py",
+        "examples/ga/manifold_check_latex.py",
+        "examples/ga/matrix_latex.py",
+        "examples/ga/physics_check_latex.py",
+        "examples/ga/print_check_latex.py",
+        "examples/ga/products_latex.py",
+        "examples/ga/simple_check_latex.py",
+        "examples/ga/spherical_latex.py"
     ])
 
     if import_module('numpy') is None:

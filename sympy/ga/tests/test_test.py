@@ -5,6 +5,24 @@ from sympy import symbols,sin,cos,Rational,expand,collect,Symbol
 from sympy.ga.ga import MV,Nga,simplify,Com,ONE,ZERO
 from sympy.ga.ga_print import GA_Printer
 
+HALF = Rational(1,2)
+
+def F(x):
+    global n,nbar
+    Fx = HALF*((x*x)*n+2*x-nbar)
+    return(Fx)
+
+def make_vector(a,n = 3):
+    if isinstance(a,str):
+        sym_str = ''
+        for i in range(n):
+            sym_str += a+str(i+1)+' '
+        sym_lst = list(symbols(sym_str))
+        sym_lst.append(ZERO)
+        sym_lst.append(ZERO)
+        a = MV(sym_lst,'vector')
+    return(F(a))
+
 def test_basic_multivector_operations():
     GA_Printer.on()
     (ex,ey,ez) = MV.setup('e*x|y|z')
@@ -241,24 +259,6 @@ def test_noneuclidian_distance_calculation():
     assert str(expand(simplify(expand(C)))) == '-(X.Y)/((X.e)*(Y.e)) + 1'
     GA_Printer.off()
     return
-
-HALF = Rational(1,2)
-
-def F(x):
-    global n,nbar
-    Fx = HALF*((x*x)*n+2*x-nbar)
-    return(Fx)
-
-def make_vector(a,n = 3):
-    if isinstance(a,str):
-        sym_str = ''
-        for i in range(n):
-            sym_str += a+str(i+1)+' '
-        sym_lst = list(symbols(sym_str))
-        sym_lst.append(ZERO)
-        sym_lst.append(ZERO)
-        a = MV(sym_lst,'vector')
-    return(F(a))
 
 def test_conformal_representations_of_circles_lines_spheres_and_planes():
     global n,nbar
