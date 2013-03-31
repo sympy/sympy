@@ -161,6 +161,10 @@ def test_FracElement___div__():
     assert x*3 == 3*x
     assert x/QQ(3,7) == (QQ(3,7)/x)**-1 == 7*x/3
 
+    raises(ZeroDivisionError, lambda: x/0)
+    raises(ZeroDivisionError, lambda: 1/(x - x))
+    raises(ZeroDivisionError, lambda: x/(x - x))
+
 def test_FracElement___pow__():
     F, x,y = field("x,y", QQ)
 
@@ -171,3 +175,5 @@ def test_FracElement___pow__():
 
     assert (f*g)**3 == 1/(x**3*y**3)
     assert (f*g)**-3 == (x*y)**3
+
+    raises(ZeroDivisionError, lambda: (x - x)**-3)

@@ -180,15 +180,12 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     """Sparse rational function. """
 
     def __init__(self, field, numer, denom=None):
-        if denom is not None:
-            if not denom:
-                raise ZeroDivisionError
-        else:
-            denom = numer.ring.one
+        if denom is None:
+            denom = field.ring.one
 
         self.field = field
-        self.numer = field.ring(numer)
-        self.denom = field.ring(denom)
+        self.numer = numer
+        self.denom = denom
 
     def raw_new(f, numer, denom):
         return f.__class__(f.field, numer, denom)
@@ -380,7 +377,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         """Computes quotient of fractions ``f`` and ``g``. """
         field = f.field
 
-        if isinstance(g, FracElement):
+        if not g:
+            raise ZeroDivisionError
+        elif isinstance(g, FracElement):
             if field == g.field:
                 return f.new(f.numer*g.denom, f.denom*g.numer)
             elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
@@ -407,7 +406,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     __div__ = __truediv__
 
     def __rtruediv__(f, c):
-        if isinstance(c, PolyElement) and f.field.ring == c.ring:
+        if not f:
+            raise ZeroDivisionError
+        elif isinstance(c, PolyElement) and f.field.ring == c.ring:
             return f.new(f.denom*c, f.numer)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -423,13 +424,12 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
     def __pow__(f, n):
         """Raise ``f`` to a non-negative power ``n``. """
-        if isinstance(n, int):
-            if n >= 0:
-                return f.raw_new(f.numer**n, f.denom**n)
-            else:
-                return f.raw_new(f.denom**-n, f.numer**-n)
+        if n >= 0:
+            return f.raw_new(f.numer**n, f.denom**n)
+        elif not f:
+            raise ZeroDivisionError
         else:
-            return NotImplemented
+            return f.raw_new(f.denom**-n, f.numer**-n)
 
     def diff(f, x):
         if isinstance(x, list) and a is None:
