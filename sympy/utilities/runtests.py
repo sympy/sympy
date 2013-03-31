@@ -545,17 +545,8 @@ def _doctest(*paths, **kwargs):
         "sympy/utilities/compilef.py"  # needs tcc
         "sympy/utilities/compilef.py",  # needs tcc
         "sympy/utilities/autowrap.py",  # needs installed compiler
-        "sympy/galgebra/GA.py",  # needs numpy
-        "sympy/galgebra/latex_ex.py",  # needs numpy
         "sympy/conftest.py",  # needs py.test
-        "sympy/utilities/benchmarking.py",  # needs py.test
-        "examples/advanced/autowrap_integrators.py",  # needs numpy
-        "examples/advanced/autowrap_ufuncify.py",  # needs numpy
-        "examples/intermediate/mplot2d.py",
-        # needs numpy and matplotlib
-        "examples/intermediate/mplot3d.py",
-        # needs numpy and matplotlib
-        "examples/intermediate/sample.py",  # needs numpy
+        "sympy/utilities/benchmarking.py"  # needs py.test
     ])
 
     if import_module('numpy') is None:
@@ -568,7 +559,8 @@ def _doctest(*paths, **kwargs):
             "examples/advanced/autowrap_ufuncify.py",
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
-            "examples/intermediate/mplot3d.py"
+            "examples/intermediate/mplot3d.py",
+            "examples/ga/manifold_check.py"
         ])
     else:
         if import_module('matplotlib') is None:
