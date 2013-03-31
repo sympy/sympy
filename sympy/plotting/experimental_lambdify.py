@@ -189,20 +189,21 @@ class lambdify(object):
             #The result can be sympy.Float. Hence wrap it with complex type.
             result = complex(self.lambda_func(args))
             if abs(result.imag) > 1e-7 * abs(result):
-                result = None
+                return None
             else:
-                result = result.real
+                return result.real
         except Exception, e:
             # The exceptions raised by sympy, cmath are not consistent and
             # hence it is not possible to specify all the exceptions that
             # are to be caught. Presently there are no cases for which the code
-            # reaches this block other than ZeroDivisionError. Also the
-            # exception is caught only once. If the exception repeats itself,
+            # reaches this block other than ZeroDivisionError and complex
+            # comparision. Also the exception is caught only once. If the
+            # exception repeats itself,
             # then it is not caught and the corresponding error is raised.
             # XXX: Remove catching all exceptions once the plotting module
             # is heavily tested.
             if isinstance(e, ZeroDivisionError):
-                result = None
+                return None
             elif isinstance(e, TypeError) and ('no ordering relation is'
                                                ' defined for complex numbers'
                                                in str(e)):
@@ -210,6 +211,7 @@ class lambdify(object):
                                                          use_evalf=True,
                                                          use_python_math=True)
                 result = self.lambda_func(args.real)
+                return result
             else:
                 if self.failure:
                     raise e
@@ -224,10 +226,9 @@ class lambdify(object):
                         ' problematic. We are trying a failback method'
                         ' that may still work. Please report this as a bug.')
                 if abs(result.imag) > 1e-7 * abs(result):
-                    result = None
+                    return None
                 else:
-                    result = result.real
-        return result
+                    return result.real
 
 
 def experimental_lambdify(*args, **kwargs):
