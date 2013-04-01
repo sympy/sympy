@@ -1619,21 +1619,6 @@ def test_sympy__logic__boolalg__Nand():
     assert _test_args(Nand(x, y, 2))
 
 
-def test_sympy__logic__boolalg__Nor():
-    from sympy.logic.boolalg import Nor
-    assert _test_args(Nor(x, y, 2))
-
-
-def test_sympy__logic__boolalg__Not():
-    from sympy.logic.boolalg import Not
-    assert _test_args(Not(2))
-
-
-def test_sympy__logic__boolalg__Or():
-    from sympy.logic.boolalg import Or
-    assert _test_args(Or(x, y, 2))
-
-
 def test_sympy__logic__boolalg__Xor():
     from sympy.logic.boolalg import Xor
     assert _test_args(Xor(x, y, 2))

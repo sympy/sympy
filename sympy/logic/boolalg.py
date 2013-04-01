@@ -2,6 +2,7 @@
 from collections import defaultdict
 
 from sympy.core.basic import Basic
+from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
@@ -68,6 +69,16 @@ class And(LatticeOp, BooleanFunction):
     zero = False
     identity = True
 
+    @classmethod
+    def _new_args_filter(cls, args):
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True is x else False)
+            else:
+                newargs.append(x)
+        return LatticeOp._new_args_filter(newargs, And)
+
 
 class Or(LatticeOp, BooleanFunction):
     """
@@ -78,6 +89,16 @@ class Or(LatticeOp, BooleanFunction):
     """
     zero = True
     identity = False
+
+    @classmethod
+    def _new_args_filter(cls, args):
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True is x else False)
+            else:
+                newargs.append(x)
+        return LatticeOp._new_args_filter(newargs, Or)
 
 
 class Xor(BooleanFunction):
@@ -151,8 +172,8 @@ class Not(BooleanFunction):
         >>> Not(And(And(True, x), Or(x, False)))
         Not(x)
         """
-        if arg in (0, 1):  # includes True and False, too
-            return not bool(arg)
+        if isinstance(arg, Number) or arg in (0, 1):
+            return False is arg else True
         # apply De Morgan Rules
         if arg.func is And:
             return Or(*[Not(a) for a in arg.args])
