@@ -6,7 +6,7 @@ from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
 from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function,GA_Printer
 from sympy.ga.ga import MV,Format,Com,Nga,ONE,ZERO
 
-GA_Printer.on()
+#GA_Printer.on()
 enhance_print()
 
 def basic_multivector_operations():
@@ -456,7 +456,7 @@ def main():
     extracting_vectors_from_conformal_2_blade()
     reciprocal_frame_test()
 
-    GA_Printer.off()
+    #GA_Printer.off()
     return
 
 if __name__ == "__main__":

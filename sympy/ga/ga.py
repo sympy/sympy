@@ -2046,6 +2046,10 @@ def Format(Fmode=True,Dmode=True,ipy=False):
     GA_LatexPrinter.redirect(ipy)
     return
 
+def Print_off():
+    GA_Printer.off()
+    return
+
 def DD(v,f):
     if isinstance(f,MV):
         return(f.dd(v))
