@@ -542,7 +542,6 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/statistics",                # prints a deprecation
         "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py"  # needs tcc
         "sympy/utilities/compilef.py",  # needs tcc
         "sympy/utilities/autowrap.py",  # needs installed compiler
         "sympy/conftest.py",  # needs py.test
