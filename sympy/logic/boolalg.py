@@ -74,7 +74,7 @@ class And(LatticeOp, BooleanFunction):
         newargs = []
         for x in args:
             if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True is x else False)
+                newargs.append(True if x else False)
             else:
                 newargs.append(x)
         return LatticeOp._new_args_filter(newargs, And)
@@ -95,7 +95,7 @@ class Or(LatticeOp, BooleanFunction):
         newargs = []
         for x in args:
             if isinstance(x, Number) or x in (0, 1):
-                newargs.append(True is x else False)
+                newargs.append(True if x else False)
             else:
                 newargs.append(x)
         return LatticeOp._new_args_filter(newargs, Or)
