@@ -80,7 +80,7 @@ def test_all_classes_are_tested():
 
 
 def _test_args(obj):
-    return all(isinstance(arg, Basic) for arg in obj.args)
+    return all(isinstance(arg, Basic) for arg in obj.args or [obj])
 
 
 @XFAIL
