@@ -185,8 +185,6 @@ class GA_Printer(StrPrinter):
         Basic.__str__  = GA_Printer.Basic__str__
         return
 
-GA_Printer.on()
-
 class GA_LatexPrinter(LatexPrinter):
     """
     The latex printer is turned on with the function (in ga.py) -

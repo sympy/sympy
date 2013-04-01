@@ -2046,7 +2046,11 @@ def Format(Fmode=True,Dmode=True,ipy=False):
     GA_LatexPrinter.redirect(ipy)
     return
 
-def Print_off():
+def ga_print_on():
+    GA_Printer.on()
+    return
+
+def ga_print_off():
     GA_Printer.off()
     return
 

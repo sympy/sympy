@@ -1,10 +1,11 @@
 
-from sympy.ga.ga import MV,ReciprocalFrame
+from sympy.ga.ga import MV,ReciprocalFrame,Print_on,Print_off
 from sympy.ga.ga_debug import oprint
 from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
 from sympy.ga.manifold import Manifold
 
+ga_print_on()
 enhance_print()
 
 def Test_Reciprocal_Frame():
@@ -110,6 +111,7 @@ def main():
     Distorted_manifold_with_scalar_function()
     Simple_manifold_with_scalar_function_derivative()
     #Plot_Mobius_Strip_Manifold()
+    ga_print_off()
     return
 
 if __name__ == "__main__":

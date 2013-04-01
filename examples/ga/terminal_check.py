@@ -3,10 +3,10 @@ import sys
 
 import sys
 from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
-from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function,GA_Printer
-from sympy.ga.ga import MV,Format,Com,Nga,ONE,ZERO
+from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function
+from sympy.ga.ga import MV,Format,Com,Nga,ONE,ZERO,ga_print_on,ga_print_off
 
-#GA_Printer.on()
+ga_print_on()
 enhance_print()
 
 def basic_multivector_operations():
@@ -456,7 +456,7 @@ def main():
     extracting_vectors_from_conformal_2_blade()
     reciprocal_frame_test()
 
-    #GA_Printer.off()
+    ga_print_off()
     return
 
 if __name__ == "__main__":
