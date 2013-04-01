@@ -426,7 +426,9 @@ class LatticeOp(AssocOp):
         elif len(_args) == 1:
             return set(_args).pop()
         else:
-            obj = super(AssocOp, cls).__new__(cls, *_args)
+            # XXX in almost every other case for __new__, *_args is
+            # passed along, but the expectation here is for _args
+            obj = super(AssocOp, cls).__new__(cls, _args)
             obj._argset = _args
             return obj
 
