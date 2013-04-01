@@ -2,7 +2,12 @@
 
 from sympy import S,Symbol,Function
 import operator
-from itertools import izip,islice,combinations,imap,product,ifilter
+from itertools import imap,ifilter
+
+try:
+    from itertools import combinations
+except ImportError:
+    from combinations import combinations
 
 def str_array(base,n=None):
     """

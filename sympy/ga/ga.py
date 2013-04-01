@@ -14,30 +14,12 @@ from sympy import N as Nsympy
 from sympy.combinatorics.permutations import Permutation
 import itertools,copy,operator
 import sys,copy
-from itertools import izip,islice,imap,product,ifilter
+from itertools import imap
 
 try:
     from itertools import combinations
 except ImportError:
-    def combinations(iterable, r):
-        # combinations('ABCD', 2) --> AB AC AD BC BD CD
-        # combinations(range(4), 3) --> 012 013 023 123
-        pool = tuple(iterable)
-        n = len(pool)
-        if r > n:
-            return
-        indices = range(r)
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != i + n - r:
-                    break
-            else:
-                return
-            indices[i] += 1
-            for j in range(i+1, r):
-                indices[j] = indices[j-1] + 1
-            yield tuple(pool[i] for i in indices)
+    from combinations import combinations
 
 from sympy.ga.ga_print import GA_Printer,GA_LatexPrinter,enhance_print,latex
 from sympy.ga.vector import Vector

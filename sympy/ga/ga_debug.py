@@ -1,6 +1,7 @@
 #GAdebug.py
 
-from itertools import izip,islice,combinations,imap,product,ifilter
+import itertools
+from itertools import islice
 
 from sympy.ga.ga_print import enhance_print,GA_Printer
 

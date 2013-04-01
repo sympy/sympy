@@ -726,6 +726,7 @@ prog_str = ''
 off_mode = False
 
 def Get_Program(off=False):
+    global prog_str,off_mode
     off_mode = off
     if off_mode:
         return

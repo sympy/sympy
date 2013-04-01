@@ -2,7 +2,12 @@
 
 from os import system
 import copy
-from itertools import izip,islice,combinations,imap,product,ifilter
+
+try:
+    from itertools import combinations
+except ImportError:
+    from combinations import combinations
+
 from sympy import trigsimp,simplify
 
 from sympy.ga.ga import MV
