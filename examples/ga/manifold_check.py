@@ -1,5 +1,5 @@
 
-from sympy.ga.ga import MV,ReciprocalFrame,Print_on,Print_off
+from sympy.ga.ga import MV,ReciprocalFrame,ga_print_on,ga_print_off
 from sympy.ga.ga_debug import oprint
 from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
