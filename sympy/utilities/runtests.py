@@ -547,6 +547,7 @@ def _doctest(*paths, **kwargs):
         "sympy/utilities/autowrap.py",  # needs installed compiler
         "sympy/conftest.py",  # needs py.test
         "sympy/utilities/benchmarking.py",  # needs py.test
+        "examples/advanced/fem.py", #needs tcc
         #Following examples are not docstrings and require pdflatex
         "examples/ga/latex_check.py",
         "examples/ga/manifold_check_latex.py",

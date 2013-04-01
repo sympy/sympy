@@ -3,7 +3,7 @@ from sympy.ga.ga_print import xdvi
 from sympy.ga.ga import MV,Format,Com
 
 def main():
-    Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
+    Format()
 
     (ex,ey,ez) = MV.setup('e*x|y|z')
     A = MV('A','mv')

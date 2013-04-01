@@ -4,7 +4,7 @@ from sympy import symbols,sin,cos
 from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
 from sympy.ga.ga import MV,Format
 
-Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
+Format()
 
 def Maxwells_Equations_in_Geometric_Calculus():
     Print_Function()
@@ -91,7 +91,7 @@ def dummy():
     return
 
 def main():
-    Get_Program(True)
+    Get_Program()
 
     Maxwells_Equations_in_Geometric_Calculus()
     Dirac_Equation_in_Geometric_Calculus()

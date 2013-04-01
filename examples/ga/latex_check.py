@@ -21,7 +21,7 @@ def make_vector(a,n = 3):
         a = MV(sym_lst,'vector')
     return(F(a))
 
-Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
+Format()
 
 def basic_multivector_operations_3D():
     Print_Function()
@@ -429,19 +429,24 @@ def reciprocal_frame_test():
 def dummy():
     return
 
-Get_Program(True)
+def main():
+    Get_Program()
 
-basic_multivector_operations_3D()
-basic_multivector_operations_2D()
-basic_multivector_operations_2D_orthogonal()
-check_generalized_BAC_CAB_formulas()
-rounding_numerical_components()
-derivatives_in_rectangular_coordinates()
-derivatives_in_spherical_coordinates()
-noneuclidian_distance_calculation()
-conformal_representations_of_circles_lines_spheres_and_planes()
-properties_of_geometric_objects()
-extracting_vectors_from_conformal_2_blade()
-reciprocal_frame_test()
+    basic_multivector_operations_3D()
+    basic_multivector_operations_2D()
+    basic_multivector_operations_2D_orthogonal()
+    check_generalized_BAC_CAB_formulas()
+    rounding_numerical_components()
+    derivatives_in_rectangular_coordinates()
+    derivatives_in_spherical_coordinates()
+    noneuclidian_distance_calculation()
+    conformal_representations_of_circles_lines_spheres_and_planes()
+    properties_of_geometric_objects()
+    extracting_vectors_from_conformal_2_blade()
+    reciprocal_frame_test()
 
-xdvi()
+    xdvi()
+    return
+
+if __name__ == "__main__":
+    main()

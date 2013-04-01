@@ -6,7 +6,7 @@ from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
 from sympy.ga.manifold import Manifold
 
-Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
+Format()
 
 def Test_Reciprocal_Frame():
     Print_Function()
@@ -137,7 +137,7 @@ def dummy():
     return
 
 def main():
-    Get_Program(True)
+    Get_Program()
 
     Test_Reciprocal_Frame()
     Distorted_manifold_with_scalar_function()

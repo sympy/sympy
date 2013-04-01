@@ -3,7 +3,7 @@ from sympy.ga.ga_print import LatexFormat,xdvi
 from sympy.ga.ga import Format
 
 def main():
-    Format(ipy=True) #For sympy-bot testing default for pdf is ipy=False
+    Format()
     a = Matrix ( 2, 2, ( 1, 2, 3, 4 ) )
     b = Matrix ( 2, 1, ( 5, 6 ) )
     c = a * b
