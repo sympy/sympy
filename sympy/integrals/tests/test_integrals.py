@@ -916,3 +916,8 @@ def test_risch_option():
     assert integrate(log(1/x)*y, x, y, risch=True) == y**2*(x*log(1/x)/2 + x/2)
     assert integrate(erf(x), x, risch=True) == Integral(erf(x), x)
     # TODO: How to test risch=False?
+
+def test_issue_3729():
+    f = 1/(1.08*x**2 - 4.3)
+    g = 300.0/(324.0*x**2 - 1290.0)
+    assert integrate(f, x).diff(x).simplify() in [f, g]

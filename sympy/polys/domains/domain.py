@@ -220,11 +220,6 @@ class Domain(object):
         if K1.is_EX:
             return K1
 
-        if not K0.is_Exact:
-            return K0
-        if not K1.is_Exact:
-            return K1
-
         if K0.is_Composite:
             if K1.is_Composite:
                 if K0.gens == K1.gens:
