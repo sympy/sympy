@@ -173,7 +173,7 @@ class Not(BooleanFunction):
         Not(x)
         """
         if isinstance(arg, Number) or arg in (0, 1):
-            return False is arg else True
+            return False if arg else True
         # apply De Morgan Rules
         if arg.func is And:
             return Or(*[Not(a) for a in arg.args])
