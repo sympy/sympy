@@ -12,7 +12,7 @@ from sympy.polys.polyerrors import DomainError
 class ExpressionDomain(Field, CharacteristicZero, SimpleDomain):
     """A class for arbitrary expressions. """
 
-    is_EX = True
+    is_SymbolicDomain = is_EX = True
 
     class Expression(PicklableWithSlots):
         """An arbitrary expression. """

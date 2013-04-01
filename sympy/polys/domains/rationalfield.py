@@ -8,9 +8,9 @@ from sympy.polys.domains.characteristiczero import CharacteristicZero
 class RationalField(Field, CharacteristicZero, SimpleDomain):
     """General class for rational fields. """
 
-    is_QQ = True
     rep = 'QQ'
 
+    is_RationalField = is_QQ = True
     is_Numerical = True
 
     has_assoc_Ring = True

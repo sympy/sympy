@@ -7,10 +7,10 @@ from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 class PolynomialRing(Ring, CompositeDomain):
     """A class for representing multivariate polynomial rings. """
 
-    is_Poly      = True
+    is_PolynomialRing = is_Poly = True
 
-    has_assoc_Ring         = True
-    has_assoc_Field        = True
+    has_assoc_Ring  = True
+    has_assoc_Field = True
 
     def __init__(self, ring):
         self.dtype = ring.dtype

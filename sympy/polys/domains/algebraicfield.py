@@ -13,8 +13,8 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
     dtype = ANP
 
+    is_AlgebraicField = is_Algebraic = True
     is_Numerical = True
-    is_Algebraic = True
 
     has_assoc_Ring = False
     has_assoc_Field = True
@@ -25,6 +25,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
 
         from sympy.polys.numberfields import to_number_field
 
+        self.orig_ext = ext
         self.ext = to_number_field(ext)
         self.mod = self.ext.minpoly.rep
         self.dom = dom

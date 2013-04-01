@@ -16,6 +16,8 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
 
     rep = 'RR'
 
+    is_RealField = is_RR = True
+
     is_Exact = False
     is_Numerical = True
 
@@ -48,6 +50,11 @@ class RealField(Field, CharacteristicZero, SimpleDomain):
         self.dtype = context.mpf
         self.zero = self.dtype(0)
         self.one = self.dtype(1)
+
+    def __eq__(self, other):
+        return (isinstance(other, RealField)
+           and self.precision == other.precision
+           and self.tolerance == other.tolerance)
 
     def to_sympy(self, element):
         """Convert ``element`` to SymPy number. """

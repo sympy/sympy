@@ -10,9 +10,9 @@ import math
 class IntegerRing(Ring, CharacteristicZero, SimpleDomain):
     """General class for integer rings. """
 
-    is_ZZ = True
     rep = 'ZZ'
 
+    is_IntegerRing = is_ZZ = True
     is_Numerical = True
 
     has_assoc_Ring = True

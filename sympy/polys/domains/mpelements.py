@@ -101,6 +101,8 @@ class MPContext(PythonMPContext):
             return from_int(tol)
         if isinstance(tol, float):
             return from_float(tol)
+        if hasattr(tol, "_mpf_"):
+            return tol._mpf_
         prec, rounding = ctx._prec_rounding
         if isinstance(tol, basestring):
             return from_str(tol, prec, rounding)

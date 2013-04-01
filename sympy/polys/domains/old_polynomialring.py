@@ -201,7 +201,7 @@ def _vector_to_sdm_helper(v, order):
 class GlobalPolynomialRing(PolynomialRingBase):
     """A true polynomial ring, with objects DMP. """
 
-    is_Poly = True
+    is_PolynomialRing = is_Poly = True
     dtype = DMP
 
     def from_FractionField(K1, a, K0):

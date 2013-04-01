@@ -7,6 +7,7 @@ from sympy.core.compatibility import SYMPY_INTS, is_sequence
 
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.monomialtools import lex
+from sympy.polys.polyutils import _unify_gens
 
 class Domain(object):
     """Represents an abstract domain. """
@@ -21,26 +22,23 @@ class Domain(object):
     has_assoc_Ring = False
     has_assoc_Field = False
 
-    is_ZZ = False
-    is_QQ = False
-
     is_FiniteField = is_FF = False
-    is_CC = False
-
-    is_Poly = False
-    is_Frac = False
+    is_IntegerRing = is_ZZ = False
+    is_RationalField = is_QQ = False
+    is_RealField = is_RR = False
+    is_ComplexField = is_CC = False
+    is_AlgebraicField = is_Algebraic = False
+    is_PolynomialRing = is_Poly = False
+    is_FractionField = is_Frac = False
+    is_SymbolicDomain = is_EX = False
 
     is_Exact = True
-
     is_Numerical = False
-    is_Algebraic = False
 
     is_Simple = False
     is_Composite = False
 
     has_CharacteristicZero = False
-
-    is_EX = False
 
     rep = None
     alias = None
@@ -191,119 +189,94 @@ class Domain(object):
     def from_GeneralizedPolynomialRing(K1, a, K0):
         return K1.from_FractionField(a, K0)
 
+    def unify_with_gens(K0, K1, gens):
+        if (K0.is_Composite and (set(K0.gens) & set(gens))) or (K1.is_Composite and (set(K1.gens) & set(gens))):
+            raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(gens)))
+
+        return K0.unify(K1)
+
     def unify(K0, K1, gens=None):
-        """Returns a maximal domain containing `K_0` and `K_1`. """
+        """
+        Construct a minimal domain that contains elements of ``K0`` and ``K1``.
+
+        Known domains (from smallest to largest):
+
+        - ``GF(p)``
+        - ``ZZ``
+        - ``QQ``
+        - ``RR(prec, tol)``
+        - ``CC(prec, tol)``
+        - ``ALG(a, b, c)``
+        - ``K[x, y, z]``
+        - ``K(x, y, z)``
+        - ``EX``
+
+        """
         if gens is not None:
-            if (K0.is_Composite and (set(K0.gens) & set(gens))) or (K1.is_Composite and (set(K1.gens) & set(gens))):
-                raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(gens)))
+            return K0.unify_with_gens(K1, gens)
 
         if K0 == K1:
             return K0
-
-        if K0.is_FiniteField:
-            if K1.is_FiniteField:
-                if K0.mod == K1.mod and K0.dom == K1.dom:
-                    return K0
-            elif K1.is_ZZ:
-                return K0
-
-            raise UnificationFailed("can't unify %s with %s" % (K0, K1))
-
-        if K1.is_FiniteField:
-            if K0.is_ZZ:
-                return K1
-            else:
-                raise UnificationFailed("can't unify %s with %s" % (K0, K1))
 
         if K0.is_EX:
             return K0
         if K1.is_EX:
             return K1
 
-        if K0.is_Composite:
-            if K1.is_Composite:
-                if K0.gens == K1.gens:
-                    if K0.has_Field and K1.has_Field:
-                        if K0.dom.has_Field:
-                            return K0
-                        else:
-                            return K1
-                    elif K0.has_Field:
-                        if K0.dom == K1.dom:
-                            return K0
-                    elif K1.has_Field:
-                        if K0.dom == K1.dom:
-                            return K1
-                    else:
-                        if K0.dom.has_Field:
-                            return K0
-                        else:
-                            return K1
-                else:
-                    gens = set(K0.gens + K1.gens)
+        if K0.is_Composite or K1.is_Composite:
+            K0_ground = K0.dom if K0.is_Composite else K0
+            K1_ground = K1.dom if K1.is_Composite else K1
 
-                    try:
-                        gens = sorted(gens)
-                    except TypeError:
-                        gens = list(gens)
+            K0_gens = K0.gens if K0.is_Composite else ()
+            K1_gens = K1.gens if K1.is_Composite else ()
 
-                    if K0.has_Field and K1.has_Field:
-                        if K0.dom.has_Field:
-                            return K0.__class__.init(K0.dom, *gens)
-                        else:
-                            return K1.__class__.init(K1.dom, *gens)
-                    elif K0.has_Field:
-                        if K0.dom == K1.dom:
-                            return K0.__class__.init(K0.dom, *gens)
-                    elif K1.has_Field:
-                        if K0.dom == K1.dom:
-                            return K1.__class__.init(K1.dom, *gens)
-                    else:
-                        if K0.dom.has_Field:
-                            return K0.__class__.init(K0.dom, *gens)
-                        else:
-                            return K1.__class__.init(K1.dom, *gens)
-            elif K1.is_Algebraic:
-                return K0.__class__.init(K1.unify(K0.dom), *K0.gens)
+            domain = K0_ground.unify(K1_ground)
+            gens = _unify_gens(K0_gens, K1_gens)
+
+            if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
+                cls = K0.__class__
             else:
-                if K0.has_Field:
-                    if K0.dom == K1:
-                        return K0
-                else:
-                    if K0.dom.has_Field:
-                        return K0
-                    else:
-                        return K0.__class__.init(K1, *K0.gens)
-        elif K0.is_Algebraic:
-            if K1.is_Composite:
-                return K1.__class__.init(K0.unify(K1.dom), *K1.gens)
-            elif K1.is_Algebraic:
-                raise NotImplementedError(
-                    "unification of different algebraic extensions")
-            elif K1.is_ZZ or K1.is_QQ:
-                return K0
-            else:
-                raise UnificationFailed("can't unify %s with %s" % (K0, K1))
-        else:
-            if K1.is_Composite:
-                if K1.has_Field:
-                    if K0 == K1.dom:
-                        return K1
-                else:
-                    if K1.dom.has_Field:
-                        return K1
-                    else:
-                        return K1.__class__.init(K0, *K1.gens)
-            elif K1.is_Algebraic:
-                if K0.is_ZZ or K0.is_QQ:
-                    return K1
-                else:
-                    raise UnificationFailed("can't unify %s with %s" % (K0, K1))
-            else:
-                if K0.has_Field:
-                    return K0
-                else:
-                    return K1
+                cls = K1.__class__
+
+            return cls.init(domain, *gens)
+
+        def mkinexact(cls, K0, K1):
+            prec = max(K0.precision, K1.precision)
+            tol = max(K0.tolerance, K1.tolerance)
+            return cls(prec=prec, tol=tol)
+
+        if K0.is_ComplexField and K1.is_ComplexField:
+            return mkinexact(K0.__class__, K0, K1)
+        if K0.is_ComplexField and K1.is_RealField:
+            return mkinexact(K0.__class__, K0, K1)
+        if K0.is_RealField and K1.is_ComplexField:
+            return mkinexact(K1.__class__, K1, K0)
+        if K0.is_RealField and K1.is_RealField:
+            return mkinexact(K0.__class__, K0, K1)
+        if K0.is_ComplexField or K0.is_RealField:
+            return K0
+        if K1.is_ComplexField or K1.is_RealField:
+            return K1
+
+        if K0.is_AlgebraicField and K1.is_AlgebraicField:
+            return K0.__class__(K0.dom.unify(K1.dom), *_unify_gens(K0.orig_ext, K1.orig_ext))
+        elif K0.is_AlgebraicField:
+            return K0
+        elif K1.is_AlgebraicField:
+            return K1
+
+        if K0.is_RationalField:
+            return K0
+        if K1.is_RationalField:
+            return K1
+
+        if K0.is_IntegerRing:
+            return K0
+        if K1.is_IntegerRing:
+            return K1
+
+        if K0.is_FiniteField and K1.is_FiniteField:
+            return K0.__class__(max(K0.mod, K1.mod))
 
         from sympy.polys.domains import EX
         return EX

@@ -13,7 +13,7 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
     """A class for representing rational function fields. """
 
     dtype = DMF
-    is_Frac = True
+    is_FractionField = is_Frac = True
 
     has_assoc_Ring = True
     has_assoc_Field = True
