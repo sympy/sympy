@@ -1689,13 +1689,8 @@ def test_composite_proposition():
     assert ask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
 
 
-@XFAIL
-def test_Or_assomption():
+def test_composite_assomption():
     assert ask(Q.positive(x), Q.positive(x) | Q.positive(y)) is None
-
-
-@XFAIL
-def test_Imply_assomption():
     assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
 
 
