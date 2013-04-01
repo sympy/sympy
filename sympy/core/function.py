@@ -123,7 +123,7 @@ class Application(Basic):
             raise ValueError("Unknown options: %s" % options)
 
         if evaluate:
-            evaluated = cls.eval(*list(args))
+            evaluated = cls.eval(*args)
             if evaluated is not None:
                 return evaluated
         return super(Application, cls).__new__(cls, *args)
