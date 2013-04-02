@@ -435,8 +435,7 @@ class LatticeOp(AssocOp):
     @classmethod
     def _new_args_filter(cls, arg_sequence, call_cls=None):
         """Generator filtering args"""
-        if call_cls:
-            cls = call_cls
+        cls = call_cls or cls
         for arg in arg_sequence:
             if arg == cls.zero:
                 raise ShortCircuit(arg)

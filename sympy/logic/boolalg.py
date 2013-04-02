@@ -97,8 +97,8 @@ class Or(LatticeOp, BooleanFunction):
     """
     Logical OR function
 
-    It evaluates its arguments in order, giving 1 immediately
-    if any of them are True, and 0 if they are all False.
+    It evaluates its arguments in order, giving True immediately
+    if any of them are True, and False if they are all False.
 
     Examples
     ========
