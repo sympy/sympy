@@ -1,3 +1,18 @@
+"""Integration method that emulates by-hand techniques.
+
+This module also provides functionality to get the steps used to evaluate a
+particular integral, in the ``integral_steps`` function. This will return
+nested namedtuples representing the integration rules used.
+
+The integrator can be extended with new heuristics and evaluation
+techniques. To do so, write a function that accepts an ``IntegralInfo``
+object and returns either a namedtuple representing a rule or
+``None``. Then, write another function that accepts the namedtuple's fields
+and returns the antiderivative, and decorate it with
+``@evaluates(namedtuple_type)``.
+
+"""
+
 import sympy
 import collections
 
