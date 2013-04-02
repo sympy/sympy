@@ -2853,7 +2853,7 @@ def signsimp(expr, evaluate=True):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops):
+def simplify(expr, ratio=1.7, measure=count_ops, doit_f=True):
     """
     Simplifies the given expression.
 
@@ -2989,9 +2989,7 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     original_expr = expr = sympify(expr)
 
     expr = signsimp(expr)
-    if type(expr) is not bool:
-        expr = expr.doit()
-    
+
     if not isinstance(expr, Basic):  # XXX: temporary hack
         return expr
 
@@ -3001,6 +2999,8 @@ def simplify(expr, ratio=1.7, measure=count_ops):
     if isinstance(expr, C.Relational):
         return expr.__class__(simplify(expr.lhs, ratio=ratio),
                               simplify(expr.rhs, ratio=ratio))
+    if doit_f:
+        expr = expr.doit()
 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...

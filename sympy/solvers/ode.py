@@ -3223,7 +3223,7 @@ def _solve_variation_of_parameters(eq, func, order, match):
         negoneterm *= -1
 
     if r.get('simplify', True):
-        psol = simplify(psol)
+        psol = simplify(psol, doit_f=False)
         psol = trigsimp(psol, deep=True)
     return Eq(f(x), gsol.rhs + psol)
 
