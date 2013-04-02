@@ -3,7 +3,7 @@
 set -e
 
 if [[ "${TEST_PYTEST}" == "true" ]]; then
-    py.test sympy/
+    py.test sympy/ --cov=sympy
 else
 
     # We change directories to make sure that we test the installed version of
