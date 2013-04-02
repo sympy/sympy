@@ -56,8 +56,11 @@ def _extract_facts(expr, symbol):
             return expr.func
         else:
             return
-    return expr.func(*filter(lambda x: x is not None,
-                [_extract_facts(arg, symbol) for arg in expr.args]))
+    args = [_extract_facts(arg, symbol) for arg in expr.args]
+    if isinstance(expr, And):
+        return expr.func(*filter(lambda x: x is not None, args))
+    if all(arg != None for arg in args):
+        return expr.func(*args)
 
 
 def ask(proposition, assumptions=True, context=global_assumptions):
