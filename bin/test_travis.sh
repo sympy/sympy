@@ -2,7 +2,7 @@
 
 set -e
 
-if [[ "${TEST_PYTEST}" == "true" ]]
+if [[ "${TEST_PYTEST}" == "true" ]]; then
     py.test sympy/
 else
 
