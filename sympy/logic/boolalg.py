@@ -71,7 +71,7 @@ class And(LatticeOp, BooleanFunction):
     =====
 
     The operator operator ``&`` will perform bitwise operations
-    on integers and for conveniencec will construct an Add when
+    on integers and for convenience will construct an Add when
     the arguments are symbolic, but the And function does not
     perform bitwise operations and when any argument is True it
     is simply removed from the arguments:
@@ -113,7 +113,7 @@ class Or(LatticeOp, BooleanFunction):
     =====
 
     The operator operator ``|`` will perform bitwise operations
-    on integers and for conveniencec will construct an Or when
+    on integers and for convenience will construct an Or when
     the arguments are symbolic, but the Or function does not
     perform bitwise operations and when any argument is False it
     is simply removed from the arguments:
