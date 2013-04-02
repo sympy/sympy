@@ -7,7 +7,7 @@ from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
 from sympy.assumptions.handlers import AskHandler
 from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
 from sympy.functions import Abs, cos, exp, im, log, re, sign, sin, sqrt
-from sympy.logic import Equivalent, Implies, Xor, And, to_cnf
+from sympy.logic import Equivalent, Implies, Xor, And, to_cnf, Not
 from sympy.utilities.pytest import raises, XFAIL, slow
 from sympy.assumptions.assume import assuming
 
@@ -1686,6 +1686,12 @@ def test_composite_proposition():
     assert ask(Equivalent(Q.integer(x), Q.even(x)), Q.even(x)) is True
     assert ask(Equivalent(Q.integer(x), Q.even(x))) is None
     assert ask(Equivalent(Q.positive(x), Q.integer(x)), Q.integer(x)) is None
+    assert ask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
+
+
+def test_composite_assomption():
+    assert ask(Q.positive(x), Q.positive(x) | Q.positive(y)) is None
+    assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
 
 
 def test_incompatible_resolutors():
