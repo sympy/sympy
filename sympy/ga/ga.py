@@ -707,6 +707,11 @@ class MV(object):
             self_div_b = MV(self)
             self_div_b.obj = self.obj/b
             return(self_div_b)
+        else:
+            sys.stderr.write('No multivector division for divisor = '+str(b)+'\n')
+            sys.exit(1)
+
+    __truediv__ = __div__
 
     def __or__(self,b): # self | b
         if isinstance(b,MV):
