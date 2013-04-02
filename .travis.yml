@@ -11,6 +11,8 @@ matrix:
       env: TEST_GMPY="true"
     - python: 3.3
       env: TEST_GMPY="true"
+    - python: 2.7
+      env: TEST_PYTEST="true"
   allow_failures:
     - python: 2.7
       env: TEST_PYTEST="true"
