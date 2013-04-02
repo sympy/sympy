@@ -13,7 +13,7 @@ from sympy import (Rational, symbols, factorial, sqrt, log, exp, oo, product,
     bernoulli, hyper, hyperexpand, besselj, asin, assoc_legendre, Function, re,
     im, DiracDelta, chebyshevt, atan, sinh, cosh, floor, ceiling, solve, asinh,
     LambertW, N, apart, sqrtdenest, factorial2, powdenest, Mul, S, mpmath, ZZ,
-    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ)
+    Poly, expand_func, E, Q, And, Or, Le, Lt, Ge, Gt, QQ, ask)
 
 from sympy.functions.combinatorial.numbers import stirling
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -827,14 +827,16 @@ def test_M11():
     assert solve(x**x - x, x) == [-1, 1]
 
 
-@XFAIL
 def test_M12():
-    raise NotImplementedError("solve((x+1)*(sin(x)**2+1)**2*cos(3*x)**3,x)")
+    answer = [-1, pi/6, -I*asinh(1), I*asinh(1)]
+    assert solve((x + 1)*(sin(x)**2 + 1)**2*cos(3*x)**3, x, assume=Q.complex(x)) == answer
 
 
 @XFAIL
 def test_M13():
-    raise NotImplementedError("solve(sin(x)-cos(x),x)")
+    # >>> solve(sin(x)-cos(x),x)
+    # [-3*pi/4, pi/4]
+    assert solve(sin(x)-cos(x),x) == [pi/4]
 
 
 def test_M14():
@@ -851,13 +853,12 @@ def test_M16():
 
 @XFAIL
 def test_M17():
-    raise NotImplementedError("solve(asin(x) - atan(x),x)")
+    assert solve(asin(x) - atan(x),x) == [0]
 
 
 @XFAIL
 def test_M18():
-    raise NotImplementedError("solve(acos(x) - atan(x),x)")
-    #assert solve(acos(x) - atan(x), x) == [sqrt((sqrt(5) - 1)/2)]
+    assert solve(acos(x) - atan(x), x) == [sqrt((sqrt(5) - 1)/2)]
 
 
 def test_M19():
@@ -877,20 +878,22 @@ def test_M22():
 
 
 def test_M23():
+    x = symbols('x', complex=True)
     #first root of the equation without simplify function write in other form
     assert solve(x - 1/sqrt(1 + x**2)) == [simplify(-I*sqrt( (sqrt(5) + 1)/2 )),sqrt( (sqrt(5) - 1)/2 )]
 
 
 def test_M24():
-    solution = solve(1 - binomial(m, 2)*2**k,k)
-    # solution has the form log(2/(m**2-m)), 2)
-    good = log(2/(m*(m - 1)), 2)
-    assert solution[0].expand() == good.expand()
+    solution = solve(1 - binomial(m, 2)*2**k, k)
+    answer = log(2/(m*(m - 1)), 2)
+    assert solution[0].expand() == answer.expand()
 
 
 @XFAIL
 def test_M25():
-    raise NotImplementedError("solve(a*b**x - c*d**x) == log(c/a)/log(b/d)")
+    a, b, c, d = symbols(':d', positive=True)
+    x = symbols('x')
+    assert solve(a*b**x - c*d**x, x)[0].expand() == (log(c/a)/log(b/d)).expand()
 
 
 def test_M26():
@@ -899,12 +902,15 @@ def test_M26():
 
 @XFAIL
 def test_M27():
-    raise NotImplementedError("solve(log(acos(asin(x**R(2,3) - b) - 1))+2, x)")
+    x = symbols('x', real=True)
+    b = symbols('b', real=True)
+    raise NotImplementedError("With assuming sin(cos(1/E**2) + 1) + b > 0\
+                              solve(log(acos(asin(x**R(2,3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2)))**R(3/2), b + sin(1 + cos(1/e**2)))**R(3/2)]")
 
 
 @XFAIL
 def test_M28():
-    raise NotImplementedError("N(solve(5*x + exp((x-5)/2)-8*x**3,x))")
+    assert solve(5*x + exp((x - 5)/2) - 8*x**3, x, assume=Q.real(x)) == [-0.784966, -0.016291, 0.802557]
 
 
 def test_M29():
@@ -913,38 +919,39 @@ def test_M29():
 
 @XFAIL
 def test_M30():
-    raise NotImplementedError("solve(abs(2*x+5) -abs(x-2),x) == [-1, -7]")
+    assert solve(abs(2*x + 5) - abs(x - 2),x, assume=Q.real(x)) == [-1, -7]
 
 
 @XFAIL
 def test_M31():
-    raise NotImplementedError("solve(1 - abs(x) - Max(-x-2,x -2),x) == [-3/2, 3/2]")
+    assert solve(1 - abs(x) - max(-x - 2, x - 2),x, assume=Q.real(x)) == [-3/2, 3/2]
 
 
 @XFAIL
 def test_M32():
-    raise NotImplementedError("solve(Max(2 - x**2,x)- Max(-x,(x**3)/9))")
+    assert solve(max(2 - x**2, x)- max(-x, (x**3)/9), assume=Q.real(x)) == [-1, 3]
 
 
 @XFAIL
 def test_M33():
-    raise NotImplementedError("solve(Max(2 - x**2,x) - x**3/9)")
+    # Second answer can be written in another form. The second answer is the root of x**3 + 9*x**2 - 18 = 0 in the interval (-2, -1).
+    assert solve(max(2 - x**2, x) - x**3/9, assume=Q.real(x)) == [-3, -1.554894, 3]
 
 
 @XFAIL
 def test_M34():
-    raise NotImplementedError("solve((1 + I) * z + (2 - I) * conjugate(z) + 3*I, z)")
+    z = symbols('z', complex=True)
+    assert solve((1 + I) * z + (2 - I) * conjugate(z) + 3*I, z) == [2 + 3*I]
 
 
 def test_M35():
-    x = symbols('x', real=True)
-    y = symbols('y', real=True)
-    assert solve(3*x - 2*y - I*y + 3*I) == [{x: 2*y/3 + I*y/3 - I}]
+    x, y = symbols('x y', real=True)
+    assert solve((3*x - 2*y - I*y + 3*I).as_real_imag()) == {y: 3, x: 2}
 
 
 @XFAIL
 def test_M36():
-    raise NotImplementedError("solve(f**2 + f - 2, x) == [Eq(f(x), 1), Eq(f(x), -2)]")
+    assert solve(f**2 + f - 2, x) == [Eq(f(x), 1), Eq(f(x), -2)]
 
 
 def test_M37():
@@ -1007,54 +1014,59 @@ def test_M38():
     assert solve_lin_sys(system, variabes) == solution
 
 def test_M39():
-    x = symbols('x', complex=True)
-    y = symbols('y', complex=True)
-    z = symbols('z', complex=True)
-    assert solve([x**2*y + 3*y*z - 4, -3*x**2*z + 2*y**2 + 1, 2*y*z**2 - z**2 - 1 ]) == \
-            [{y: 1, z: 1, x: -1}, {y: 1, z: 1, x: 1}, \
-             {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: -sqrt(-1 - sqrt(2)*I)}, \
-             {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: sqrt(-1 - sqrt(2)*I)}, \
-             {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: -sqrt(-1 + sqrt(2)*I)}, \
+    x, y, z = symbols('x y z', complex=True)
+    assert solve([x**2*y + 3*y*z - 4, -3*x**2*z + 2*y**2 + 1, 2*y*z**2 - z**2 - 1 ]) ==\
+            [{y: 1, z: 1, x: -1}, {y: 1, z: 1, x: 1},\
+             {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: -sqrt(-1 - sqrt(2)*I)},\
+             {y: sqrt(2)*I, z: R(1,3) - sqrt(2)*I/3, x: sqrt(-1 - sqrt(2)*I)},\
+             {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: -sqrt(-1 + sqrt(2)*I)},\
              {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: sqrt(-1 + sqrt(2)*I)}]
 
 
 def test_N1():
-    assert solve(E**pi > pi**E)
+    assert ask(Q.is_true(E**pi > pi**E))
 
 
+@XFAIL
 def test_N2():
-    with assuming(Q.real(x)):
-        assert solve(x**4 - x + 1 > 0) == True
-        assert solve(x**4 - x + 1 > 1) == Or(Lt(1, x), Lt(x, 0))
+    x = symbols('x', real=True)
+    assert ask(Q.is_true(x**4 - x + 1 > 0))
+    assert ask(Q.is_true(x**4 - x + 1 > 1)) == False
 
 
+@XFAIL
 def test_N3():
-    with assuming(Q.real(x)):
-        assert solve(abs(x) < 1) == And(Lt(-1, x), Lt(x, 1))
+    x = symbols('x', real=True)
+    assert ask(Q.is_true(And(Lt(-1, x), Lt(x, 1))), Q.is_true(abs(x) < 1 ))
 
 @XFAIL
 def test_N4():
-    raise NotImplementedError("assume x > y > 0 is 2*x**2 > 2*y**2")
+    x, y = symbols('x y', real=True)
+    assert ask(Q.is_true(2*x**2 > 2*y**2), Q.is_true((x > y) & (y > 0)))
 
 
 @XFAIL
 def test_N5():
-    raise NotImplementedError("assume x > y > 0, k > 0 is k*x**2 > k*y**2")
+    x, y, k = symbols('x y k', real=True)
+    assert ask(Q.is_true(k*x**2 > k*y**2), Q.is_true((x > y) & (y > 0) & (k > 0)))
 
 
 @XFAIL
 def test_N6():
-    raise NotImplementedError("assume x > y > 0, k > 0, n > 0 is k*x**n > k*y**n")
+    x, y, k, n = symbols('x y k n', real=True)
+    assert ask(Q.is_true(k*x**n > k*y**n), Q.is_true((x > y) & (y > 0) & (k > 0) & (n > 0)))
 
 
 @XFAIL
 def test_N7():
-    raise NotImplementedError("assume x > 1, y >= x - 1 is y > 0")
+    x, y = symbols('x y', real=True)
+    assert ask(Q.is_true(y > 0), Q.is_true((x > 1) & (y >= x - 1)))
 
 
 @XFAIL
 def test_N8():
-    raise NotImplementedError("assume x >= y >= z >= x, is x = y = z")
+    x, y, z = symbols('x y z', real=True)
+    assert ask(Q.is_true((x == y) & (y == z)), Q.is_true((x >= y) & (y >= z) & (z >= x)))
 
 
 def test_N9():
@@ -1063,13 +1075,11 @@ def test_N9():
 
 
 def test_N10():
-    x = symbols('x', real=True)
     p=(x - 1)*(x - 2)*(x - 3)*(x - 4)*(x - 5)
-    assert solve(expand(p) < 0) == Or( And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
+    assert solve(expand(p) < 0, assume=Q.real(x)) == Or( And(Lt(2, x), Lt(x, 3)), And(Lt(4, x), Lt(x, 5)), Lt(x, 1))
 
 
 def test_N11():
-    x = symbols('x', real=True)
-    assert solve(6/(x - 3) <= 3) == Or(Le(5, x), Lt(x, 3))
+    assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(Le(5, x), Lt(x, 3))
 
 
