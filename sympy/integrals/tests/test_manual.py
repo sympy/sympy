@@ -43,7 +43,6 @@ def test_manualintegrate_trigonometry():
     assert manualintegrate(sin(x), x) == -cos(x)
     assert manualintegrate(tan(x), x) == -log(cos(x))
 
-    # TODO: benchmark these two - they're slow
     assert manualintegrate(sec(x), x) == log(sec(x) + tan(x))
     assert manualintegrate(csc(x), x) == -log(csc(x) + cot(x))
 

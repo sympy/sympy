@@ -57,7 +57,7 @@ class IntegralInfo(namedtuple('IntegralInfo', 'integrand symbol')):
     def new_u_var(var):
         if len(var.name) == 3:
             num = int(var.name[2]) + 1
-            name = var.name[0] + str(num)
+            name = var.name[0] + '_' + str(num)
         else:
             name = 'u_1'
         return sympy.Symbol(name)
@@ -256,7 +256,8 @@ def arctan_rule(integral):
 def add_rule(integral):
     integrand, symbol = integral
     return AddRule(
-        [integral_steps(g, symbol) for g in integrand.as_ordered_terms()],
+        [integral_steps(g, symbol, u_var=integral.u_var)
+         for g in integrand.as_ordered_terms()],
         integrand, symbol)
 
 def mul_rule(integral):
@@ -264,22 +265,13 @@ def mul_rule(integral):
     args = integrand.args
 
     # Constant times function case
-    if len(args) == 2:
-        integrand_t = integrand.rewrite('sincos')
+    coeff, f = integrand.as_independent(symbol)
 
-        # simplification can raise TypeError based on what the expr is
-        # (e.g. DiracDelta)
-        try:
-            if integrand_t.args[0].is_constant(symbol):
-                return ConstantTimesRule(args[0], args[1],
-                                         integral_steps(args[1], symbol),
-                                         integrand, symbol)
-            elif integrand_t.args[1].is_constant(symbol):
-                return ConstantTimesRule(args[1], args[0],
-                                         integral_steps(args[0], symbol),
-                                         integrand, symbol)
-        except TypeError:
-            pass
+    if coeff != 1:
+        return ConstantTimesRule(
+            coeff, f,
+            integral_steps(f, symbol, u_var=integral.u_var),
+            integrand, symbol)
 
 def _parts_rule(integrand, symbol):
     # LIATE rule:
@@ -646,6 +638,21 @@ def integral_steps(integrand, symbol, **options):
         _integral_cache[cachekey] = None
 
     u_var = options.get('u_var', sympy.Symbol('u'))
+
+    if 'u_var' not in options:
+        if integrand.has(u_var):
+            u_var = IntegralInfo.new_u_var(u_var)
+
+        max_sub = 0
+        for s in integrand.free_symbols:
+            s = s.name
+            if len(s) >= 3 and s[0] == u_var.name[0] and s[1] == '_' and s[1:].isdigit():
+                new_sub = int(s[1:])
+                if new_sub > max_sub:
+                    max_sub = new_sub
+        if max_sub > 0:
+            u_var = sympy.Symbol(u_var.name[0] + '_' + max_sub)
+
     integral = IntegralInfo(integrand, symbol, u_var=u_var)
 
     def key(integral):
