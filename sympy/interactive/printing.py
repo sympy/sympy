@@ -43,9 +43,8 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
     imagesize = 'tight'
     offset = "0cm,0cm"
     resolution = 150
-    dvi = r"-T {0} -D {1:d} -bg {2} -fg {3} -O {4}"
-    dvi = dvi.format(imagesize, resolution, backcolor,
-                     forecolor, offset)
+    dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
+        imagesize, resolution, backcolor, forecolor, offset)
     dvioptions = dvi.split()
     # print "DVIOPTIONS", dvioptions
     # print "PREAMBLE", preamble

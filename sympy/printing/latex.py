@@ -553,7 +553,7 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_Abs(self, expr, exp=None):
-        tex = r"\lvert{%s}\rvert" % self._print(expr.args[0])
+        tex = r"\left\lvert{%s}\right\rvert" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
@@ -928,7 +928,7 @@ class LatexPrinter(Printer):
         return r"\tilde{\infty}"
 
     def _print_ImaginaryUnit(self, expr):
-        return r"\mathbf{\imath}"
+        return r"i"
 
     def _print_NaN(self, expr):
         return r"\bot"

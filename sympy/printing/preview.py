@@ -1,8 +1,15 @@
 from __future__ import with_statement
 
-import os
-from os.path import isabs, join
-from subprocess import Popen, check_call, PIPE, STDOUT
+from os.path import join
+from subprocess import STDOUT, CalledProcessError
+
+# this workaround is needed because we still support python 2.5 and python
+# 2.6
+try:
+    from subprocess import check_output as run_process
+except ImportError:
+    from subprocess import check_call as run_process
+
 import tempfile
 import shutil
 from cStringIO import StringIO
@@ -11,7 +18,10 @@ from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from latex import latex
 
+from sympy.utilities.decorator import doctest_depends_on
 
+@doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
+            disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
             outputTexFile=None, **latex_settings):
@@ -36,23 +46,23 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> from sympy import symbols, preview, Symbol
     >>> x, y = symbols("x,y")
 
-    >>> preview(x + y, output='png') # doctest: +SKIP
+    >>> preview(x + y, output='png')
 
     This will choose 'pyglet' by default. To select a different one, do
 
-    >>> preview(x + y, output='png', viewer='gimp') # doctest: +SKIP
+    >>> preview(x + y, output='png', viewer='gimp')
 
     The 'png' format is considered special. For all other formats the rules
     are slightly different. As an example we will take 'dvi' output format. If
     you would run
 
-    >>> preview(x + y, output='dvi') # doctest: +SKIP
+    >>> preview(x + y, output='dvi')
 
     then 'view' will look for available 'dvi' viewers on your system
     (predefined in the function, so it will try evince, first, then kdvi and
     xdvi). If nothing is found you will need to set the viewer explicitly.
 
-    >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer') # doctest: +SKIP
+    >>> preview(x + y, output='dvi', viewer='superior-dvi-viewer')
 
     This will skip auto-detection and will run user specified
     'superior-dvi-viewer'. If 'view' fails to find it on your system it will
@@ -69,7 +79,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> from StringIO import StringIO
     >>> obj = StringIO()
     >>> preview(x + y, output='png', viewer='StringIO',
-    ...         outputbuffer=obj) # doctest: +SKIP
+    ...         outputbuffer=obj)
 
     The LaTeX preamble can be customized by setting the 'preamble' keyword
     argument. This can be used, e.g., to set a different font size, use a
@@ -77,7 +87,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     >>> preamble = "\\documentclass[10pt]{article}\n" \
     ...            "\\usepackage{amsmath,amsfonts}\\begin{document}"
-    >>> preview(x + y, output='png', preamble=preamble) # doctest: +SKIP
+    >>> preview(x + y, output='png', preamble=preamble)
 
     If the value of 'output' is different from 'dvi' then command line
     options can be set ('dvioptions' argument) for the execution of the
@@ -88,7 +98,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     symbol_names flag.
 
     >>> phidd = Symbol('phidd')
-    >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'}) # doctest: +SKIP
+    >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
 
     For post-processing the generated TeX File can be written to a file by
     passing the desired filename to the 'outputTexFile' keyword
@@ -96,7 +106,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x+y, output='png', outputTexFile="sample.tex") # doctest: +SKIP
+    >>> preview(x+y, outputTexFile="sample.tex")
 
 
     """
@@ -117,8 +127,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             try:
                 for candidate in candidates[output]:
-                    if find_executable(candidate):
-                        viewer = candidate
+                    path = find_executable(candidate)
+                    if path is not None:
+                        viewer = path
                         break
                 else:
                     raise SystemError(
@@ -172,9 +183,13 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
-        with open(os.devnull, 'w') as devnull:
-            check_call(['latex', '-halt-on-error', 'texput.tex'], cwd=workdir,
-                       stdout=devnull, stderr=STDOUT)
+        try:
+            run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
+                         'texput.tex'], cwd=workdir, stderr=STDOUT)
+        except CalledProcessError, e:
+            raise RuntimeError(
+                "latex exited abnormally with the following output:\n%s" %
+                e.output)
 
         if output != "dvi":
             defaultoptions = {
@@ -199,8 +214,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             except KeyError:
                 raise SystemError("Invalid output format: %s" % output)
 
-            with open(os.devnull, 'w') as devnull:
-                check_call(cmd, cwd=workdir, stdout=devnull, stderr=STDOUT)
+            try:
+                run_process(cmd, cwd=workdir, stderr=STDOUT)
+            except CalledProcessError, e:
+                raise RuntimeError(
+                    "%s exited abnormally with the following output:\n%s" %
+                    (cmd[0], e.output))
 
         src = "texput.%s" % (output)
 
@@ -270,9 +289,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             win.close()
         else:
-            with open(os.devnull, 'w') as devnull:
-                check_call([viewer, src], cwd=workdir, stdout=devnull,
-                           stderr=STDOUT)
+            run_process([viewer, src], cwd=workdir, stderr=STDOUT)
     finally:
         try:
             shutil.rmtree(workdir) # delete directory
