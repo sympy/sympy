@@ -6,7 +6,7 @@ from itertools import imap,ifilter
 
 try:
     from itertools import combinations
-except ImportError:
+except:
     from combinations import combinations
 
 def str_array(base,n=None):

@@ -5,11 +5,10 @@ import copy
 
 try:
     from itertools import combinations
-except ImportError:
+except:
     from combinations import combinations
 
 from sympy import trigsimp,simplify
-
 from sympy.ga.ga import MV
 from sympy.ga.ga_sympy import linear_expand
 from sympy.ga.ga_debug import oprint

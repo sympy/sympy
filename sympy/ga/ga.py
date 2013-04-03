@@ -18,7 +18,7 @@ from itertools import imap
 
 try:
     from itertools import combinations
-except ImportError:
+except:
     from combinations import combinations
 
 from sympy.ga.ga_print import GA_Printer,GA_LatexPrinter,enhance_print,latex
@@ -877,8 +877,9 @@ class MV(object):
         else:
             base = MV.bases[igrade][ibase]
         (coefs,bases) = linear_expand(self.obj)
+        bases_lst = lst(bases) #python 2.5
         if base in bases:
-            self.obj += (value-coefs[bases.index(base)])*base
+            self.obj += (value-coefs[bases_lst.index(base)])*base
         else:
             self.obj += value*base
         return
@@ -942,9 +943,9 @@ class MV(object):
             self.obj = self.obj.collect(MV.bases_flat1)
         terms = zip(*linear_expand(self.obj))
         if self.blade_rep:
-            terms = sorted(terms,key=lambda x: MV.blades_flat1.index(x[1]))
+            terms = sorted(terms,key=lambda x: MV.blades_flat1_lst.index(x[1])) #Python 2.5
         else:
-            terms = sorted(terms,key=lambda x: MV.bases_flat1.index(x[1]))
+            terms = sorted(terms,key=lambda x: MV.bases_flat1_lst.index(x[1])) #Python 2.5
         ostr = ''
         first = True
         if self.fmt == 2:
@@ -1016,10 +1017,10 @@ class MV(object):
         terms = zip(*linear_expand(self.obj))
         if self.blade_rep:
             bgrades = MV.blade_grades
-            terms = sorted(terms,key=lambda x: MV.blades_flat1.index(x[1]))
+            terms = sorted(terms,key=lambda x: MV.blades_flat1_lst.index(x[1])) #Python 2.5
         else:
             bgrades = MV.base_grades
-            terms = sorted(terms,key=lambda x: MV.bases_flat1.index(x[1]))
+            terms = sorted(terms,key=lambda x: MV.bases_flat1_lst.index(x[1])) #Python 2.5
         grades = []
         bases  = []
         old_grade = -1
@@ -1084,6 +1085,7 @@ class MV(object):
             pass
         return(ostr)
 
+    """
     def get_bases(self):
         self.blade_to_base()
         (coefs,bases) = linear_expand(self.obj)
@@ -1096,6 +1098,7 @@ class MV(object):
             else:
                 pgrades[igrade] = coef*base
         return(pgrades)
+    """
 
     @staticmethod
     def characterize_expression(self,expr):
@@ -1669,10 +1672,14 @@ class MV(object):
             MV.bases_flat1 = (MV.ONE,)+MV.bases_flat
             MV.bases_set   = set(MV.bases_flat[MV.dim:])
 
+            MV.bases_flat1_lst = list(MV.bases_flat1) #Python 2.5
+
         MV.blades       = tuple(MV.blades)
         MV.blades_flat  = tuple(MV.blades_flat)
         MV.blades_flat1 = (MV.ONE,)+MV.blades_flat
         MV.blades_set   = set(MV.blades_flat[MV.dim:])
+
+        MV.blades_flat1_lst = list(MV.blades_flat1) #Python 2.5
 
         #MV.I = MV.blade_vector_MV[-1]
 

@@ -60,7 +60,7 @@ def linear_expand(expr):
             coef = Mul(*term[0])
             base = term[1][0]
             if base in bases: #increment coefficient of base
-                ibase = bases.index(base)
+                ibase = list(bases).index(base) #Python 2.5
                 coefs[ibase] += coef
             else: #add base to list
                 coefs.append(coef)

@@ -11,7 +11,7 @@ from sympy.ga.ga_debug import oprint
 ZERO = S(0)
 
 def flatten(lst):
-    return(list(itertools.chain.from_iterable(lst)))
+    return(list(itertools.chain(*lst)))
 
 def TrigSimp(x):
     return(trigsimp(x,recursive=True))
@@ -218,8 +218,8 @@ class Vector(object):
         """
         Dot product of two basis vectors returns a Symbol
         """
-        i1 = Vector.basis.index(v1)
-        i2 = Vector.basis.index(v2)
+        i1 = list(Vector.basis).index(v1) #Python 2.5
+        i2 = list(Vector.basis).index(v2) #Python 2.5
         if i1 < i2:
             dot_str = '('+str(Vector.basis[i1])+'.'+str(Vector.basis[i2])+')'
         else:

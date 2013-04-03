@@ -75,7 +75,7 @@ class enhance_print:
     deriv = ''
     bold = ''
 
-    def __init__(self,base=None,fct=None,deriv=None,on=True):
+    def __init__(self,base=None,fct=None,deriv=None,on=True,keys=False):
         if on:
             if 'win' in sys.platform:
 
@@ -108,10 +108,12 @@ class enhance_print:
                 else:
                     enhance_print.deriv = ColorCode[deriv]
                 enhance_print.normal = '\033[0m'
-            print 'Enhanced Printing is on:'
-            print 'Base/Blade color is '+InvColorCode[enhance_print.base]
-            print 'Function color is '+InvColorCode[enhance_print.fct]
-            print 'Derivative color is '+InvColorCode[enhance_print.deriv]+'\n'
+
+            if keys:
+                print 'Enhanced Printing is on:'
+                print 'Base/Blade color is '+InvColorCode[enhance_print.base]
+                print 'Function color is '+InvColorCode[enhance_print.fct]
+                print 'Derivative color is '+InvColorCode[enhance_print.deriv]+'\n'
 
             enhance_print.base  = '\033['+enhance_print.base+'m'
             enhance_print.fct   = '\033['+enhance_print.fct+'m'
@@ -730,7 +732,6 @@ def Get_Program(off=False):
     off_mode = off
     if off_mode:
         return
-    global prog_str,off_mode
     sys.stderr.write('opening file = '+sys.argv[0]+'\n')
     prog_file = open(sys.argv[0],'r')
     prog_str = prog_file.read()
