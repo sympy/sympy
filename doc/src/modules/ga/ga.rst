@@ -34,9 +34,9 @@
     \newcommand{\T}[1]{\texttt{#1}}
 
 
-**********************************
-Geometric Algebra Module for Sympy
-**********************************
+*****************
+Geometric Algebra
+*****************
 
 :Author: Alan Bromborsky
 
@@ -79,7 +79,7 @@ Geometric Algebra Module for Sympy
    This document describes the implementation, installation and use of a
    geometric algebra module written in
    python that utilizes the :mod:`sympy` symbolic algebra library.  The python
-   module :mod:`GA` has been developed for coordinate free calculations using
+   module *ga* has been developed for coordinate free calculations using
    the operations (geometric, outer, and inner products etc.) of geometric algebra.
    The operations can be defined using a completely arbitrary metric defined
    by the inner products of a set of arbitrary vectors or the metric can be
@@ -341,7 +341,7 @@ available from Doran-Lasenby group and the Dorst group. Symbolic packages for
 Clifford algebra using orthongonal bases such as
 :math:`e_{i}e_{j}+e_{j}e_{i} = 2\eta_{ij}`, where :math:`\eta_{ij}` is a numeric
 array are available in Maple and Mathematica. The symbolic algebra module,
-:mod:`GA`, developed for python does not depend on an orthogonal basis
+*ga*, developed for python does not depend on an orthogonal basis
 representation, but rather is generated from a set of :math:`n` arbitrary
 symbolic vectors,  :math:`e_{1},e_{2},\dots,e_{n}` and a symbolic metric
 tensor :math:`g_{ij} = e_{i}\cdot e_{j}`.
@@ -370,7 +370,7 @@ a multivector class, MV, and overloading the python operators in Table
     " *A<B* ", " left contraction of multivectors "
     " *A>B* ", " right contraction of multivectors "
 
-Table :ref:`1 <table1>`. Multivector operations for GA
+Table :ref:`1 <table1>`. Multivector operations for *ga*
 
 Since *<* and *>* have no r-forms (in python for the *<* and *>* operators there are no *__rlt__()* and *__rlt__()* member functions to overload)
 we can only have mixed modes (scalars and multivectors) if the first operand is a multivector.
@@ -396,7 +396,7 @@ we can only have mixed modes (scalars and multivectors) if the first operand is 
     *+* and *-*.
 
 For those users who wish to define a default operator precedence the functions
-*define_precedence()* and *GAeval()* are available in the module *GAprecedence*.
+*define_precedence()* and *GAeval()* are available in the module *ga_precedence*.
 
 .. function:: define_precedence(gd,op_ord='<>|,^,\*')
 
@@ -468,7 +468,7 @@ products of the basis vectors. Note that the symbols are named so that
 :math:`(a0.a1) \ne (a1.a0)`.
 
 Note that the strings shown in equation :eq:`eq3` are only used when the values
-of :math:`g_{ij}` are output (printed).   In the :mod:`GA` module (library)
+of :math:`g_{ij}` are output (printed).   In the *ga* module (library)
 the :math:`g_{ij}` symbols are stored in a static member of the multivector
 class :class:`MV` as the sympy matrix *MV.metric* (:math:`g_{ij}` = *MV.metric[i,j]*).
 
@@ -1286,7 +1286,7 @@ Installation
 
 To install the geometric algebra module on windows,linux, or OSX perform the following operations
 
-    #. Install sympy.  GA is included in sympy.
+    #. Install sympy.  *ga* is included in sympy.
 
     #. To install texlive in linux or windows
 
@@ -1307,17 +1307,17 @@ To install the geometric algebra module on windows,linux, or OSX perform the fol
         #. Go to <https://github.com/adoxa/ansicon/downloads> and download "ansicon"
         #. In the Edit -> Preferences -> Tools menu of "geany" enter into the Terminal input the full path of "ansicon.exe"
 
-After installation if you are doing you code development in the GA directory you need only include
+After installation if you are doing you code development in the *ga* directory you need only include
 
 .. code-block:: python
 
-    from sympy.GA.GAPrint import xdvi,enhance_print
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi,enhance_print
+    from sympy.ga.ga import *
 
-to use the GA module.
+to use the *ga* module.
 
 In addition to the code shown in the examples section of this document there are more examples in the Examples directory under the
-GA directory.
+*ga* directory.
 
 Module Components
 =================
@@ -1775,7 +1775,7 @@ and the expression it is operating on are the only objects in the expression.
 Vector Manifolds
 ----------------
 
-In addtition to the *GA* module there is a *Manifold* module that allows
+In addtition to the *ga* module there is a *manifold* module that allows
 for the definition of a geometric algebra and calculus on a vector manifold.
 The vector mainfold is defined by a vector function of some coordinates
 in an embedding vector space ([Doran]_,p202,[Hestenes]_,p139).  For example the unit 2-sphere would be the
@@ -1791,7 +1791,7 @@ would be given by
         \f{X}{\theta,\phi} = \f{\cos}{\theta}\bm{e_{z}}+\f{\cos}{\theta}\paren{\f{\cos}{\phi}\bm{e_{x}}+\f{\sin}{\phi}\bm{e_{y}}}
      \end{equation*}
 
-The module *Manifold.py* is transitionary in that all calculation are performed in the embedding vector space (geometric algebra).
+The module *manifold.py* is transitionary in that all calculation are performed in the embedding vector space (geometric algebra).
 Thus due to the limitations on *sympy*'s *simplify()* and  *trigsimp()*, simple expressions may appear to be very complicated since they are expressed
 in terms of the basis vectors (bases/blades) of the embedding space and not in terms of the vector space (geometric algebra) formed
 from the manifold's basis vectors.  A future implementation of *Manifold.py* will correct this difficiency. The member functions of
@@ -1830,9 +1830,9 @@ of vector and scalar functions on the manifold and the calculation of the geomet
 Standard Printing
 -----------------
 
-Printing of multivectors is handled by the module *GAPrint* which contains
-a string printer class derived from the sympy string printer class and a latex
-printer class derived from the sympy latex printer class.  Additionally, there
+Printing of multivectors is handled by the module *ga_print* which contains
+a string printer class, *GA_Printer* derived from the sympy string printer class and a latex
+printer class, *GA_Latex_Printer*, derived from the sympy latex printer class.  Additionally, there
 is an *enhanced_print* class that enhances the console output of sympy to make
 the printed output multivectors, functions, and derivatives more readable.
 *enhanced_print* requires an ansi console such as is supplied in linux or the
@@ -1857,16 +1857,27 @@ each component (base) of the multivector is printed on one line.  If a
 *title* is given then *title = multivector* is printed.  If the usual print
 command is used the entire multivector is printed on one line.
 
+.. function:: ga_print_on()
+
+Redirects printer output from standard *sympy* print handler.  Needed if
+one wishes to use compact forms of *function* and *derivative* output
+strings.
+
+.. function:: ga_print_off()
+
+Restores standard *sympy* print handler.
+
+
 Latex Printing
 --------------
 
-For latex printing one uses one functions from the *GA* module and one
-function from the *GAPrint* module.  The
+For latex printing one uses one functions from the *ga* module and one
+function from the *ga_print* module.  The
 functions are
 
 .. function:: Format(Fmode=True,Dmode=True,ipy=False)
 
-   This function from the *GA* module turns on latex printing with the
+   This function from the *ga* module turns on latex printing with the
    following options
 
     .. csv-table::
@@ -1883,7 +1894,7 @@ functions are
 
 .. function:: xdvi(filename=None,pdf='',debug=False,paper=(14,11))
 
-   This function from the *GAPrint* module post-processes the output captured from
+   This function from the *ga_print* module post-processes the output captured from
    print statements.  Write the resulting latex strings to the file *filename*,
    processes the file with pdflatex, and displays the resulting pdf file. *pdf* is the name of the
    pdf viewer on your computer.  If you are running *ubuntu* the *evince* viewer is automatically
@@ -1912,8 +1923,8 @@ executed
 
   .. code-block:: python
 
-    from sympy.GA.GAPrint import xdvi
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi
+    from sympy.ga.ga import *
     Format()
     (ex,ey,ez) = MV.setup('e*x|y|z')
     A = MV('A','mv')
@@ -1939,8 +1950,8 @@ For the cases of derivatives the code is
 
   .. code-block:: python
 
-    from sympy.GA.GAPrint import xdvi
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi
+    from sympy.ga.ga import *
 
     Format()
     X = (x,y,z) = symbols('x y z')
@@ -2016,6 +2027,32 @@ printer strings are assumed to be in a math environment (*equation\ ** or
   sympy latex printer is that matrices are printed full size (equation
   displaystyle).
 
+
+Printer Redirection
+-------------------
+
+In order to print transparently, that is to simply use the *print* statement
+with both text and LaTeX printing the printer output is redirected.  In
+the case of text printing the reason for redirecting the printer output
+is because the *sympy* printing functions *_print_Derivative* and
+*_print_Function* are redefined to make the output more compact.  If one
+does not wish to use the compact notation redirection is not required for
+the text printer.  If one wishes to use the redefined *_print_Derivative*
+and *_print_Function* the printer should be redirected with the function
+*ga_print_on()* and restored with the function *ga_print_off()*.  Both
+functions can be imported from *sympy.ga.ga*
+(see *examples/ga/terminal_check.py* for usage).
+
+For LaTeX printing the *Format()* (import from *ga*) redirects the printer output to a
+string.  After all printing requests one must call the function *xdvi()*
+(import from *ga_print*) tp process the string to a LaTeX format, compile with
+pdflatex, and displayed the resulting pdf file.  The function *xdvi()*
+also restores the printer output to normal for standard *sympy* printing.
+If *Format(ipy=True)* is used there is no printer redirection and the
+LaTeX output is simply sent to *sys.stdout* for use in *Ipython*
+(*Ipython* LaTeX interface for *ga* not yet implemented).
+
+
 Other Printing Functions
 ------------------------
 
@@ -2050,8 +2087,8 @@ As an example consider the following code
 
   .. code-block:: python
 
-    from sympy.GA.GAPrint import xdvi,Get_Program,Print_Function
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
+    from sympy.ga.ga import *
 
     Format()
 
@@ -2139,13 +2176,13 @@ This example demonstrates the most general metric tensor
   \end{array}\right ]
   \end{equation*}
 
-and how the *GA* module can be used to verify and expand geometric algebra identities consisting of relations between
+and how the *ga* module can be used to verify and expand geometric algebra identities consisting of relations between
 the abstract vectors :math:`a`, :math:`b`, :math:`c`, and :math:`d`.
 
 .. code-block:: python
 
-    from sympy.GA.GAPrint import xdvi
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi
+    from sympy.ga.ga import *
     Format()
 
     (a,b,c,d) = MV.setup('a b c d')
@@ -2193,8 +2230,8 @@ basis vectors are correctly calculated.
 
 .. code-block:: python
 
-    from sympy.GA.GAPrint import xdvi
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi
+    from sympy.ga.ga import *
     Format()
 
     metric = '1 # #,'+ \
@@ -2273,8 +2310,8 @@ from a rotation of a vector in the Minkowski space using the rotor
 .. code-block:: python
 
     from sympy import symbols,sinh,cosh
-    from sympy.GA.GAPrint import xdvi
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi
+    from sympy.ga.ga import *
 
     Format()
     (alpha,beta,gamma) = symbols('alpha beta gamma')
@@ -2332,7 +2369,7 @@ Calculus
 Derivatives in Spherical Coordinates
 ++++++++++++++++++++++++++++++++++++
 
-The following code shows how to use *GA* to use spherical coordinates.
+The following code shows how to use *ga* to use spherical coordinates.
 The gradient of a scalar function, :math:`f`, the divergence and curl
 of a vector function, :math:`A`, and the exterior derivative (curl) of
 a bivector function, :math:`B` are calculated.  Note that to get the
@@ -2369,8 +2406,8 @@ standard curl of a 3-dimension function the result is multiplied by
 .. code-block:: python
 
     from sympy import sin,cos
-    from sympy.GA.GAPrint import xdvi
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi
+    from sympy.ga.ga import *
     Format()
 
     X = (r,th,phi) = symbols('r theta phi')
@@ -2425,8 +2462,8 @@ see [Doran]_ chapter 7.
 .. code-block:: python
 
     from sympy import symbols,sin,cos
-    from sympy.GA.GAPrint import xdvi
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi
+    from sympy.ga.ga import *
 
     Format()
 
@@ -2493,8 +2530,8 @@ pseudo-vector components in the space-time geometric algebra (it consists only o
 .. code-block:: python
 
     from sympy import symbols,sin,cos
-    from sympy.GA.GAPrint import xdvi
-    from sympy.GA.GA import *
+    from sympy.ga.ga_print import xdvi
+    from sympy.ga.ga import *
 
     Format()
 
