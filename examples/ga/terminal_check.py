@@ -6,9 +6,6 @@ from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
 from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function
 from sympy.ga.ga import MV,Format,Com,Nga,ONE,ZERO,ga_print_on,ga_print_off
 
-ga_print_on()
-enhance_print()
-
 def basic_multivector_operations():
     Print_Function()
     (ex,ey,ez) = MV.setup('e*x|y|z')
@@ -444,7 +441,8 @@ def dummy():
 
 def main():
     Get_Program(True)
-
+    ga_print_on()
+    enhance_print()
     basic_multivector_operations()
     check_generalized_BAC_CAB_formulas()
     derivatives_in_rectangular_coordinates()

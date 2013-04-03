@@ -5,9 +5,6 @@ from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
 from sympy.ga.manifold import Manifold
 
-ga_print_on()
-enhance_print()
-
 def Test_Reciprocal_Frame():
     Print_Function()
     coords = symbols('x y z')
@@ -104,9 +101,9 @@ def dummy():
     return
 
 def main():
-
     Get_Program(True)
-
+    ga_print_on()
+    enhance_print()
     Test_Reciprocal_Frame()
     Distorted_manifold_with_scalar_function()
     Simple_manifold_with_scalar_function_derivative()

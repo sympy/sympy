@@ -3,9 +3,9 @@ import sys
 from sympy import symbols,sin,cos
 from sympy.ga.ga import MV
 from sympy.ga.ga_print import enhance_print
-enhance_print()
 
 def main():
+    enhance_print()
     (ex,ey,ez) = MV.setup('e*x|y|z',metric='[1,1,1]')
 
     u = MV('u','vector')

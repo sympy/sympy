@@ -548,14 +548,14 @@ def _doctest(*paths, **kwargs):
         "sympy/utilities/benchmarking.py",  # needs py.test
         "examples/advanced/fem.py" #needs tcc
         #Following examples require pdflatex and interaction to exit example
-        "examples/ga/latex_check.py",
-        "examples/ga/manifold_check_latex.py",
-        "examples/ga/matrix_latex.py",
-        "examples/ga/physics_check_latex.py",
-        "examples/ga/print_check_latex.py",
-        "examples/ga/products_latex.py",
-        "examples/ga/simple_check_latex.py",
-        "examples/ga/spherical_latex.py"
+        #"examples/ga/latex_check.py",
+        #"examples/ga/manifold_check_latex.py",
+        #"examples/ga/matrix_latex.py",
+        #"examples/ga/physics_check_latex.py",
+        #"examples/ga/print_check_latex.py",
+        #"examples/ga/products_latex.py",
+        #"examples/ga/simple_check_latex.py",
+        #"examples/ga/spherical_latex.py"
     ])
 
     if import_module('numpy') is None:

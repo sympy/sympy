@@ -4,8 +4,6 @@ from sympy import symbols,sin,cos
 from sympy.ga.ga import MV,Format
 from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
 
-Format()
-
 def derivatives_in_spherical_coordinates():
     Print_Function()
     X = (r,th,phi) = symbols('r theta phi')
@@ -30,6 +28,7 @@ def dummy():
 
 def main():
     Get_Program()
+    Format()
     derivatives_in_spherical_coordinates()
     xdvi()
     return
