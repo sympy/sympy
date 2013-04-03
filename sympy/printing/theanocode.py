@@ -107,6 +107,14 @@ class TheanoPrinter(Printer):
         colslice = self._print(slice(*expr.colslice), **kwargs)
         return parent[rowslice, colslice]
 
+    def _print_BlockMatrix(self, expr, **kwargs):
+        nrows, ncols = expr.blocks.shape
+        blocks = [[self._print(expr.blocks[r, c], **kwargs)
+                        for c in range(ncols)]
+                        for r in range(nrows)]
+        return tt.join(0, *[tt.join(1, *row) for row in blocks])
+
+
     def _print_slice(self, expr, **kwargs):
         return slice(*[self._print(i, **kwargs)
                         if isinstance(i, sympy.Basic) else i

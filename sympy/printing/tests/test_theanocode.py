@@ -167,3 +167,16 @@ def test_MatrixSlice():
     Y = X[start:stop:step]
     Yt = theano_code(Y, dtypes={n: 'int32', k: 'int32'})
     # assert Yt.owner.op.idx_list[0].stop == kt
+
+def test_BlockMatrix():
+    n = sympy.Symbol('n', integer=True)
+    A = sympy.MatrixSymbol('A', n, n)
+    B = sympy.MatrixSymbol('B', n, n)
+    C = sympy.MatrixSymbol('C', n, n)
+    D = sympy.MatrixSymbol('D', n, n)
+    At, Bt, Ct, Dt = map(theano_code, (A, B, C, D))
+    Block = sympy.BlockMatrix([[A, B], [C, D]])
+    Blockt = theano_code(Block)
+    solutions = [tt.join(0, tt.join(1, At, Bt), tt.join(1, Ct, Dt)),
+                 tt.join(1, tt.join(0, At, Ct), tt.join(0, Bt, Dt))]
+    assert any(theq(Blockt, solution) for solution in solutions)
