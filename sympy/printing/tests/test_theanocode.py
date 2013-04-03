@@ -180,3 +180,29 @@ def test_BlockMatrix():
     solutions = [tt.join(0, tt.join(1, At, Bt), tt.join(1, Ct, Dt)),
                  tt.join(1, tt.join(0, At, Ct), tt.join(0, Bt, Dt))]
     assert any(theq(Blockt, solution) for solution in solutions)
+
+def test_BlockMatrix_Inverse_execution():
+    k, n = 2, 4
+    dtype = 'float32'
+    A = sympy.MatrixSymbol('A', n, k)
+    B = sympy.MatrixSymbol('B', n, n)
+    inputs = A, B
+    output = B.I*A
+
+    cutsizes = {A: [(n/2, n/2), (k/2, k/2)],
+                B: [(n/2, n/2), (n/2, n/2)]}
+    cutinputs = [sympy.blockcut(i, *cutsizes[i]) for i in inputs]
+    cutoutput = output.subs(dict(zip(inputs, cutinputs)))
+
+    dtypes = dict(zip(inputs, [dtype]*len(inputs)))
+    f = theano_function(inputs, [output], dtypes=dtypes)
+    fblocked = theano_function(inputs, [sympy.block_collapse(cutoutput)],
+                               dtypes=dtypes)
+
+    import numpy
+    ninputs = [numpy.random.rand(*x.shape).astype(dtype) for x in inputs]
+    ninputs = [numpy.arange(n*k).reshape(A.shape).astype(dtype),
+               numpy.eye(n).astype(dtype)]
+    ninputs[1] += numpy.ones(B.shape)*1e-5
+
+    assert numpy.allclose(f(*ninputs), fblocked(*ninputs), rtol=1e-5)
