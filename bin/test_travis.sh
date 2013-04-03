@@ -5,7 +5,7 @@ set -e
 if [[ "${TEST_PYTEST}" == "true" ]]; then
     py.test sympy/ --cov=sympy
 elif [[ "${TEST_COVERAGE}" == "true" ]]; then
-    python bin/coverage_test.py
+    python bin/coverage_report.py
 else
 
     # We change directories to make sure that we test the installed version of
