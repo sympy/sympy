@@ -2,7 +2,7 @@
 
 from os import system
 import copy
-from sympy.core.compatability import combinations
+from sympy.core.compatibility import combinations
 
 from sympy import trigsimp,simplify
 from sympy.ga.ga import MV
