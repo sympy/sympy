@@ -37,6 +37,8 @@ def test_And():
     assert And(True, True, True) is True
     assert And(True, True, A) == A
     assert And(True, False, A) is False
+    assert And(2, A) == A
+    assert And(2, 3) is True
 
 
 def test_Or():
@@ -53,6 +55,7 @@ def test_Or():
     assert Or(True, False, False) is True
     assert Or(True, False, A) is True
     assert Or(False, False, A) == A
+    assert Or(2, A) is True
 
 
 def test_Xor():
@@ -78,7 +81,7 @@ def test_Not():
     assert Not(False) is True
     assert Not(0) is True
     assert Not(1) is False
-    assert Not(2).func is Not
+    assert Not(2) is False
 
 
 def test_Nand():
