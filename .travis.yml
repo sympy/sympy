@@ -28,7 +28,7 @@ before_install:
       pip install pytest --use-mirrors;
     fi
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
-      pip install coverage python-coveralls --use-mirrors;
+      pip install coverage coveralls --use-mirrors;
     fi
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then
