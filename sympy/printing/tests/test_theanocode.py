@@ -130,3 +130,24 @@ def test_theano_function_numpy():
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
+
+def test_slice():
+    assert theano_code(slice(1, 2, 3)) == slice(1, 2, 3)
+    assert str(theano_code(slice(1, x, 3), dtypes={x: 'int32'})) ==\
+           str(slice(1, xt, 3))
+
+def test_MatrixSlice():
+    n = sympy.Symbol('n', integer=True)
+    X = sympy.MatrixSymbol('X', n, n)
+
+    Y = X[1:2:3, 4:5:6]
+    Yt = theano_code(Y)
+    assert tuple(Yt.owner.op.idx_list) == (slice(1,2,3), slice(4,5,6))
+    assert Yt.owner.inputs[0] == theano_code(X)
+
+    k = sympy.Symbol('k')
+    kt = theano_code(k, dtypes={k: 'int32'})
+    start, stop, step = 4, k, 2
+    Y = X[start:stop:step]
+    Yt = theano_code(Y, dtypes={n: 'int32', k: 'int32'})
+    # assert Yt.owner.op.idx_list[0].stop == kt

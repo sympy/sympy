@@ -101,6 +101,17 @@ class TheanoPrinter(Printer):
             result = tt.dot(result, child)
         return result
 
+    def _print_MatrixSlice(self, expr, **kwargs):
+        parent = self._print(expr.parent, **kwargs)
+        rowslice = self._print(slice(*expr.rowslice), **kwargs)
+        colslice = self._print(slice(*expr.colslice), **kwargs)
+        return parent[rowslice, colslice]
+
+    def _print_slice(self, expr, **kwargs):
+        return slice(*[self._print(i, **kwargs)
+                        if isinstance(i, sympy.Basic) else i
+                        for i in (expr.start, expr.stop, expr.step)])
+
     def _print_Pi(self, expr, **kwargs):
         return 3.141592653589793
 
