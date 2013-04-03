@@ -16,6 +16,21 @@ from sympy.abc import x, y, z, a, b, c
 from sympy.printing.theanocode import (theano_code, dim_handling,
         theano_function)
 
+def fgraph_of(*exprs):
+    """ Transform SymPy expressions into Theano Computation """
+    outs = map(theano_code, exprs)
+    ins = theano.gof.graph.inputs(outs)
+    ins, outs = theano.gof.graph.clone(ins, outs)
+    return theano.gof.FunctionGraph(ins, outs)
+
+def theano_simplify(fgraph):
+    """ Simplify a Theano Computation """
+    mode = theano.compile.get_default_mode().excluding("fusion")
+    fgraph = fgraph.clone()
+    mode.optimizer.optimize(fgraph)
+    return fgraph
+
+
 def theq(a, b):
     """ theano equality """
     astr = theano.printing.debugprint(a, file='str')
@@ -112,8 +127,9 @@ def test_factorial():
     assert theano_code(sympy.factorial(n))
 
 def test_Derivative():
-    assert theq(theano_code(sy.Derivative(sy.sin(x), x, evaluate=False)),
-                theano.grad(tt.sin(xt), xt))
+    simp = lambda expr: theano_simplify(fgraph_of(expr))
+    assert theq(simp(theano_code(sy.Derivative(sy.sin(x), x, evaluate=False))),
+                simp(theano.grad(tt.sin(xt), xt)))
 
 def test_theano_function_simple():
     f = theano_function([x, y], [x+y])
