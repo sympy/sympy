@@ -269,7 +269,7 @@ class Uniform(ContinuousProbability):
         """
         x = sympify(x)
         if not x.is_Number:
-            raise NotImplementedError("SymPy does not yet support"
+            raise NotImplementedError("SymPy does not yet support "
                 "piecewise functions")
         if x < s.a or x > s.b:
             return Rational(0)
@@ -291,7 +291,7 @@ class Uniform(ContinuousProbability):
         """
         x = sympify(x)
         if not x.is_Number:
-            raise NotImplementedError("SymPy does not yet support"
+            raise NotImplementedError("SymPy does not yet support "
                 "piecewise functions")
         if x <= s.a:
             return Rational(0)

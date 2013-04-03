@@ -179,7 +179,7 @@ class ImplicitSeries(BaseSeries):
         elif isinstance(self.expr, (LessThan, StrictLessThan)):
             expr = self.expr.rhs - self.expr.lhs
         else:
-            raise NotImplementedError("The expression is not supported for"
+            raise NotImplementedError("The expression is not supported for "
                                     "plotting in uniform meshed plot.")
         xarray = np.linspace(self.start_x, self.end_x, self.nb_of_points)
         yarray = np.linspace(self.start_y, self.end_y, self.nb_of_points)
