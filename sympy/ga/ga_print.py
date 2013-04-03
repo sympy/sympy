@@ -292,6 +292,7 @@ class GA_LatexPrinter(LatexPrinter):
 
     @staticmethod
     def redirect(ipy=False):
+        GA_LatexPrinter.ipy = ipy
         GA_LatexPrinter.latex_flg = True
         GA_LatexPrinter.Basic__str__  = Basic.__str__
         GA_LatexPrinter.Matrix__str__ = Matrix.__str__
@@ -303,9 +304,9 @@ class GA_LatexPrinter(LatexPrinter):
         return
 
     @staticmethod
-    def restore(ipy=False):
+    def restore():
         GA_LatexPrinter.latex_flg = False
-        if not ipy:
+        if not GA_LatexPrinter.ipy:
             sys.stdout = GA_LatexPrinter.stdout
         Basic.__str__  = GA_LatexPrinter.Basic__str__
         Matrix.__str__ = GA_LatexPrinter.Matrix__str__
