@@ -43,8 +43,11 @@ def test_dot_different_frames():
     assert dot(N.z, A.y) == 0
     assert dot(N.z, A.z) == 1
 
-    assert dot(N.x, A.x + A.y) == (cos(q1) - sin(q1))
-    assert dot(N.x, A.x + A.y + A.z) == (cos(q1) - sin(q1))
+    Vector.simp=False   #trigsimp seems to be doing some bad business here
+    assert dot(N.x, A.x + A.y) == -sin(q1) + cos(q1)
+    assert dot(N.x, A.x + A.y + A.z) == -sin(q1) + cos(q1)
+
+    Vector.simp=True
 
     assert dot(A.x, C.x) == cos(q3)
     assert dot(A.x, C.y) == 0
