@@ -37,35 +37,20 @@ class AskNegativeHandler(CommonHandler):
             return AskNegativeHandler._number(expr, assumptions)
 
     @staticmethod
+    def Expr(expr, assumptions):
+        return AskPositiveHandler.Expr(-expr, assumptions)
+
+    @staticmethod
     def Add(expr, assumptions):
         """
         Positive + Positive -> Positive,
         Negative + Negative -> Negative
         """
-        if expr.is_number:
-            return AskNegativeHandler._number(expr, assumptions)
-        for arg in expr.args:
-            if not ask(Q.negative(arg), assumptions):
-                break
-        else:
-            # if all argument's are negative
-            return True
+        return AskPositiveHandler.Add(-expr, assumptions)
 
     @staticmethod
     def Mul(expr, assumptions):
-        if expr.is_number:
-            return AskNegativeHandler._number(expr, assumptions)
-        result = None
-        for arg in expr.args:
-            if result is None:
-                result = False
-            if ask(Q.negative(arg), assumptions):
-                result = not result
-            elif ask(Q.positive(arg), assumptions):
-                pass
-            else:
-                return
-        return result
+        return ask(Q.positive(-expr), assumptions)
 
     @staticmethod
     def Pow(expr, assumptions):
@@ -202,11 +187,8 @@ class AskPositiveHandler(CommonHandler):
             return AskPositiveHandler._number(expr, assumptions)
         result = True
         for arg in expr.args:
-            positive = ask(Q.positive(arg), assumptions)
-            if positive:
+            if ask(Q.positive(arg), assumptions):
                 continue
-            elif positive == False:
-                result = result ^ True
             elif ask(Q.negative(arg), assumptions):
                 result = result ^ True
             else:
@@ -215,6 +197,10 @@ class AskPositiveHandler(CommonHandler):
 
     @staticmethod
     def Add(expr, assumptions):
+        """
+        Positive + Positive -> Positive,
+        Negative + Negative -> Negative
+        """
         if expr.is_number:
             return AskPositiveHandler._number(expr, assumptions)
         for arg in expr.args:
@@ -223,6 +209,12 @@ class AskPositiveHandler(CommonHandler):
         else:
             # if all argument's are positive
             return True
+        for arg in expr.args:
+            if ask(Q.negative(arg), assumptions) is not True:
+                break
+        else:
+            # if all argument's are negative
+            return False
         return AskPositiveHandler.Expr(expr, assumptions)
 
     @staticmethod
