@@ -3,7 +3,7 @@
 set -e
 
 if [[ "${TEST_PYTEST}" == "true" ]]; then
-    py.test sympy/ --cov=sympy
+    py.test sympy/
 elif [[ "${TEST_COVERAGE}" == "true" ]]; then
     python bin/coverage_report.py
 else
