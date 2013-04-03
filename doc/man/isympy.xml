@@ -66,7 +66,7 @@ this will generate isympy.1 in the current directory. -->
 			</author>
 		</authorgroup>
 		<copyright>
-			<year>2012</year>
+			<year>2013</year>
 			<holder>SymPy Development Team</holder>
 		</copyright>
 		<legalnotice>
@@ -193,7 +193,7 @@ this will generate isympy.1 in the current directory. -->
                           'ipython' or 'python'</para>
 				</listitem>
 			</varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-p <replaceable class="parameter">ENCODING</replaceable></option></term>
 				<term><option>--pretty=<replaceable class="parameter">ENCODING</replaceable></option></term>
 				<listitem>
@@ -205,17 +205,20 @@ this will generate isympy.1 in the current directory. -->
                     'ascii' or 'no'.</para>
 				</listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-t <replaceable class="parameter">TYPE</replaceable></option></term>
 				<term><option>--types=<replaceable class="parameter">TYPE</replaceable></option></term>
 				<listitem>
 					<para>Setup the ground types for the polys.  By default, gmpy ground types
-                    are used if gmpy is installed, otherwise it falls back to python
+                    are used if gmpy2 or gmpy is installed, otherwise it falls back to python
                     ground types, which are a little bit slower.  You can manually
                     choose python ground types even if gmpy is installed (e.g., for testing purposes).</para>
 
                     <para>Note that sympy ground types are not supported, and should be used
                     only for experimental purposes.</para>
+
+                    <para>Note that the gmpy1 ground type is primarily intended for testing; it the
+                    use of gmpy even if gmpy2 is available.</para>
 
                     <para>This is the same as setting the environment variable
                     SYMPY_GROUND_TYPES to the given ground type (e.g.,
@@ -227,10 +230,10 @@ this will generate isympy.1 in the current directory. -->
 					<para>Example: isympy -t python</para>
 
                     <para><replaceable class="parameter">TYPE</replaceable> must be one of 'gmpy',
-                    'python' or 'sympy'.</para>
+                    'gmpy1' or 'python'.</para>
 				</listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-o <replaceable class="parameter">ORDER</replaceable></option></term>
 				<term><option>--order=<replaceable class="parameter">ORDER</replaceable></option></term>
 				<listitem>
@@ -249,7 +252,7 @@ this will generate isympy.1 in the current directory. -->
                     'rev-grlex', 'grevlex', 'rev-grevlex', 'old', or 'none'.</para>
 				</listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-q</option></term>
 				<term><option>--quiet</option></term>
 				<listitem>
@@ -258,7 +261,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-d</option></term>
 				<term><option>--doctest</option></term>
 				<listitem>
@@ -268,7 +271,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-C</option></term>
 				<term><option>--no-cache</option></term>
 				<listitem>
@@ -284,7 +287,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-a</option></term>
 				<term><option>--auto</option></term>
 				<listitem>
@@ -319,7 +322,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-D</option></term>
 				<term><option>--debug</option></term>
 				<listitem>
@@ -330,7 +333,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term>-- <replaceable class="parameter">PYTHONOPTIONS</replaceable></term>
 				<listitem>
                     <para>
@@ -349,7 +352,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-h</option></term>
 				<term><option>--help</option></term>
 				<listitem>
@@ -358,7 +361,7 @@ this will generate isympy.1 in the current directory. -->
                     </para>
                 </listitem>
             </varlistentry>
-            <varlistentry> 
+            <varlistentry>
 				<term><option>-v</option></term>
 				<term><option>--version</option></term>
 				<listitem>
@@ -402,4 +405,3 @@ this will generate isympy.1 in the current directory. -->
 			</citerefentry></para>
 	</refsect1>
 </refentry>
-

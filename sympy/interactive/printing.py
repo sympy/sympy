@@ -1,6 +1,9 @@
 """Tools for setting up printing in interactive sessions. """
 
+from cStringIO import StringIO
+
 from sympy import latex
+from sympy import preview
 
 
 def _init_python_printing(stringify_func):
@@ -24,40 +27,57 @@ def _init_python_printing(stringify_func):
     sys.displayhook = _displayhook
 
 
-def _init_ipython_printing(ip, stringify_func, render_latex):
+def _init_ipython_printing(ip, stringify_func, render_latex, euler,
+                           forecolor, backcolor, fontsize, mode):
     """Setup printing in IPython interactive session. """
-    # For IPython >= 0.11, will use latex_to_png to render LaTeX
-    try:
-        from IPython.lib.latextools import latex_to_png
-    except ImportError:
-        pass
 
-    def _print_pretty(arg, p, cycle):
+    preamble = "\\documentclass[%s]{article}\n" \
+               "\\pagestyle{empty}\n" \
+               "\\usepackage{amsmath,amsfonts}%s\\begin{document}"
+    if euler:
+        addpackages = '\\usepackage{euler}'
+    else:
+        addpackages = ''
+    preamble = preamble % (fontsize, addpackages)
+
+    imagesize = 'tight'
+    offset = "0cm,0cm"
+    resolution = 150
+    dvi = r"-T %s -D %d -bg %s -fg %s -O %s" % (
+        imagesize, resolution, backcolor, forecolor, offset)
+    dvioptions = dvi.split()
+    # print "DVIOPTIONS", dvioptions
+    # print "PREAMBLE", preamble
+
+    def _print_plain(arg, p, cycle):
         """caller for pretty, for use in IPython 0.11"""
         p.text(stringify_func(arg))
 
-    def _print_png(o):
+    def _preview_wrapper(o):
+        exprbuffer = StringIO()
+        preview(o, output='png', viewer='StringIO', outputbuffer=exprbuffer,
+                preamble=preamble, dvioptions=dvioptions)
+        return exprbuffer.getvalue()
+
+    def _print_latex_png(o):
+        s = latex(o, mode=mode)
+        return _preview_wrapper(s)
+
+    #not used
+    def _print_latex_inline_png(o):
         """
         A function to display sympy expressions using inline style LaTeX in PNG.
         """
         s = latex(o, mode='inline')
-        # mathtext does not understand centain latex flags, so we try to
-        # replace them with suitable subs
-        s = s.replace(r'\operatorname', '')
-        s = s.replace(r'\overline', r'\bar')
-        png = latex_to_png(s)
-        return png
+        return _preview_wrapper(s)
 
-    def _print_display_png(o):
+    #not used
+    def _print_latex_display_png(o):
         """
         A function to display sympy expression using display style LaTeX in PNG.
         """
         s = latex(o, mode='plain')
-        s = s.strip('$')
-        # As matplotlib does not support display style, dvipng backend is used
-        # here
-        png = latex_to_png(s, backend='dvipng', wrap=True)
-        return png
+        return _preview_wrapper('$' + s + '$')
 
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
@@ -74,7 +94,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
             return True
         return False
 
-    def _print_latex(o):
+    def _print_latex_text(o):
         """
         A function to generate the latex representation of sympy expressions.
         """
@@ -111,42 +131,49 @@ def _init_ipython_printing(ip, stringify_func, render_latex):
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
         for cls in [object, str, dict] + printable_containers:
-            plaintext_formatter.for_type(cls, _print_pretty)
+            plaintext_formatter.for_type(cls, _print_plain)
 
         plaintext_formatter.for_type_by_name(
-            'sympy.core.basic', 'Basic', _print_pretty
+            'sympy.core.basic', 'Basic', _print_plain
         )
         plaintext_formatter.for_type_by_name(
-            'sympy.matrices.mutable', 'Matrix', _print_pretty
+            'sympy.matrices.mutable', 'Matrix', _print_plain
         )
 
+        png_formatter = ip.display_formatter.formatters['image/png']
+        latex_formatter = ip.display_formatter.formatters['text/latex']
+        latex_formatter.enabled = False #Disabled until IPython problems are resolved
         if render_latex:
-            png_formatter = ip.display_formatter.formatters['image/png']
-
             png_formatter.for_type_by_name(
-                'sympy.core.basic', 'Basic', _print_png
+                'sympy.core.basic', 'Basic', _print_latex_png
             )
             png_formatter.for_type_by_name(
-                'sympy.matrices.matrices', 'MatrixBase', _print_display_png
+                'sympy.matrices.matrices', 'MatrixBase', _print_latex_png
             )
 
             for cls in [dict, int, long, float] + printable_containers:
-                png_formatter.for_type(cls, _print_png)
+                png_formatter.for_type(cls, _print_latex_png)
+            png_formatter.enabled = True
 
-            latex_formatter = ip.display_formatter.formatters['text/latex']
             latex_formatter.for_type_by_name(
-                'sympy.core.basic', 'Basic', _print_latex
+                'sympy.core.basic', 'Basic', _print_latex_text
             )
             latex_formatter.for_type_by_name(
-                'sympy.matrices.matrices', 'MatrixBase', _print_latex
+                'sympy.matrices.matrices', 'MatrixBase', _print_latex_text
             )
             for cls in printable_containers:
-                latex_formatter.for_type(cls, _print_latex)
+                latex_formatter.for_type(cls, _print_latex_text)
+        else:
+            png_formatter.enabled = False
     else:
         ip.set_hook('result_display', _result_display)
 
 
-def init_printing(pretty_print=True, order=None, use_unicode=None, use_latex=None, wrap_line=None, num_columns=None, no_global=False, ip=None):
+def init_printing(pretty_print=True, order=None, use_unicode=None,
+                  use_latex=None, wrap_line=None, num_columns=None,
+                  no_global=False, ip=None, euler=False, forecolor='Blue',
+                  backcolor='Transparent', fontsize='10pt',
+                  latex_mode='equation*'):
     """
     Initializes pretty-printer depending on the environment.
 
@@ -232,29 +259,28 @@ def init_printing(pretty_print=True, order=None, use_unicode=None, use_latex=Non
             pass
 
     if ip:
-        try:
-            from IPython.zmq.zmqshell import ZMQInteractiveShell
-        except ImportError:
-            pass
-        else:
-            # If in qtconsole or notebook
-            if isinstance(ip, ZMQInteractiveShell):
-                if use_unicode is None:
-                    use_unicode = True
-                if use_latex is None:
-                    use_latex = True
+        if use_unicode is None:
+            use_unicode = True
+        if use_latex is None:
+            use_latex = True
 
     if not no_global:
-        Printer.set_global_settings(order=order, use_unicode=use_unicode, wrap_line=wrap_line, num_columns=num_columns)
+        Printer.set_global_settings(order=order, use_unicode=use_unicode,
+                                    wrap_line=wrap_line, num_columns=num_columns)
     else:
         _stringify_func = stringify_func
 
         if pretty_print:
-            stringify_func = lambda expr: _stringify_func(expr, order=order, use_unicode=use_unicode, wrap_line=wrap_line, num_columns=num_columns)
+            stringify_func = lambda expr: \
+                             _stringify_func(expr, order=order,
+                                             use_unicode=use_unicode,
+                                             wrap_line=wrap_line,
+                                             num_columns=num_columns)
         else:
             stringify_func = lambda expr: _stringify_func(expr, order=order)
 
     if ip is not None and ip.__module__.startswith('IPython'):
-        _init_ipython_printing(ip, stringify_func, use_latex)
+        _init_ipython_printing(ip, stringify_func, use_latex, euler, forecolor,
+                               backcolor, fontsize, latex_mode)
     else:
         _init_python_printing(stringify_func)

@@ -42,6 +42,7 @@ import rv_interface
 from rv_interface import (
     cdf, covariance, density, dependent, E, given, independent, P, pspace,
     random_symbols, sample, sample_iter, skewness, std, variance, where,
+    correlation, moment, cmoment, smoment,
 )
 __all__.extend(rv_interface.__all__)
 
@@ -53,9 +54,16 @@ __all__.extend(frv_types.__all__)
 
 import crv_types
 from crv_types import (
-    Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ContinuousRV, Dagum,
-    Exponential, Gamma, Laplace, Logistic, LogNormal, Maxwell, Nakagami,
-    Normal, Pareto, Rayleigh, StudentT, Triangular, Uniform, UniformSum,
-    Weibull, WignerSemicircle,
+    ContinuousRV,
+    Arcsin, Benini, Beta, BetaPrime, Cauchy, Chi, ChiNoncentral, ChiSquared,
+    Dagum, Erlang, Exponential, FDistribution, FisherZ, Frechet, Gamma,
+    GammaInverse, Kumaraswamy, Laplace, Logistic, LogNormal, Maxwell,
+    Nakagami, Normal, Pareto, QuadraticU, RaisedCosine, Rayleigh,
+    StudentT, Triangular, Uniform, UniformSum, VonMises, Weibull,
+    WignerSemicircle
 )
 __all__.extend(crv_types.__all__)
+
+import drv_types
+from drv_types import (Geometric, Poisson)
+__all__.extend(drv_types.__all__)

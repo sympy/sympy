@@ -1,13 +1,15 @@
 from sympy.abc import t, w, x, y, z
-from sympy.assumptions import (ask, AssumptionsContext, global_assumptions, Q,
-                               register_handler, remove_handler)
+from sympy.assumptions import (ask, AssumptionsContext, Q, register_handler,
+        remove_handler)
+from sympy.assumptions.assume import global_assumptions
 from sympy.assumptions.ask import (compute_known_facts, known_facts_cnf,
                                    known_facts_dict, single_fact_lookup)
 from sympy.assumptions.handlers import AskHandler
 from sympy.core import I, Integer, oo, pi, Rational, S, symbols, Add
 from sympy.functions import Abs, cos, exp, im, log, re, sign, sin, sqrt
-from sympy.logic import Equivalent, Implies, Xor, And, to_cnf
+from sympy.logic import Equivalent, Implies, Xor, And, to_cnf, Not
 from sympy.utilities.pytest import raises, XFAIL, slow
+from sympy.assumptions.assume import assuming
 
 
 def test_int_1():
@@ -1684,6 +1686,12 @@ def test_composite_proposition():
     assert ask(Equivalent(Q.integer(x), Q.even(x)), Q.even(x)) is True
     assert ask(Equivalent(Q.integer(x), Q.even(x))) is None
     assert ask(Equivalent(Q.positive(x), Q.integer(x)), Q.integer(x)) is None
+    assert ask(Q.real(x) | Q.integer(x), Q.real(x) | Q.integer(x)) is True
+
+
+def test_composite_assomption():
+    assert ask(Q.positive(x), Q.positive(x) | Q.positive(y)) is None
+    assert ask(Q.positive(x), Q.real(x) >> Q.positive(y)) is None
 
 
 def test_incompatible_resolutors():
@@ -1777,3 +1785,8 @@ def test_Add_queries():
     assert ask(Q.even(Add(S(2), S(2), evaluate=0))) is True
     assert ask(Q.prime(Add(S(2), S(2), evaluate=0))) is False
     assert ask(Q.integer(Add(S(2), S(2), evaluate=0))) is True
+
+
+def test_positive():
+    with assuming(Q.positive(x + 1)):
+        assert not ask(Q.positive(x))

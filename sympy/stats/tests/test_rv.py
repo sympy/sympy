@@ -1,9 +1,10 @@
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum)
+        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+        DiracDelta)
 from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
-from sympy.stats.rv import ProductPSpace, rs_swap
+from sympy.stats.rv import ProductPSpace, rs_swap, Density, NamedArgsMixin
 from sympy.utilities.pytest import raises, XFAIL
 
 
@@ -68,6 +69,14 @@ def test_RandomSymbol():
     assert X != Y
 
     assert X.name == X.symbol.name
+
+    X = Normal('lambda', 0, 1) # make sure we can use protected terms
+    X = Normal('Lambda', 0, 1) # make sure we can use SymPy terms
+
+
+def test_RandomSymbol_diff():
+    X = Normal('x', 0, 1)
+    assert (2*X).diff(X)
 
 
 def test_overlap():
@@ -151,3 +160,28 @@ def test_normality():
     dens = density(X - Y, Eq(X + Y, z))
 
     assert integrate(dens(x), (x, -oo, oo)) == 1
+
+def test_Density():
+    X = Die('X', 6)
+    d = Density(X)
+    assert d.doit() == density(X)
+
+def test_NamedArgsMixin():
+    class Foo(Basic, NamedArgsMixin):
+        _argnames = 'foo', 'bar'
+
+    a = Foo(1, 2)
+
+    assert a.foo == 1
+    assert a.bar == 2
+
+    raises(AttributeError, lambda: a.baz)
+
+    class Bar(Basic, NamedArgsMixin):
+        pass
+
+    raises(AttributeError, lambda: Bar(1, 2).foo)
+
+def test_density_constant():
+    assert density(3)(2) == 0
+    assert density(3)(3) == DiracDelta(0)

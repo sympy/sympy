@@ -12,9 +12,7 @@ There are two types of functions:
    creation:
        f = Lambda(x, exp(x)*x)
        f = Lambda(exp(x)*x) # free symbols of expr define the number of args
-       f = Lambda(exp(x)*x)  # free symbols in the expression define the number
-                             # of arguments
-       f = exp * Lambda(x,x)
+       f = exp * Lambda(x, x)
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
    works in sympy core, but needs to be ported back to SymPy.
 
@@ -367,6 +365,26 @@ class Function(Application, Expr):
         #     we be more intelligent about it?
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
+            def bad(m):
+                from sympy.mpmath import mpf, mpc
+                # the precision of an mpf value is the last element
+                # if that is 1 (and m[1] is not 1 which would indicate a
+                # power of 2), then the eval failed; so check that none of
+                # the arguments failed to compute to a finite precision.
+                # Note: An mpc value has two parts, the re and imag tuple;
+                # check each of those parts, too. Anything else is allowed to
+                # pass
+                if isinstance(m, mpf):
+                    m = m._mpf_
+                    return m[1] !=1 and m[-1] == 1
+                elif isinstance(m, mpc):
+                    m, n = m._mpc_
+                    return m[1] !=1 and m[-1] == 1 and \
+                        n[1] !=1 and n[-1] == 1
+                else:
+                    return False
+            if any(bad(a) for a in args):
+                raise ValueError  # one or more args failed to compute with significance
         except ValueError:
             return
 
@@ -512,7 +530,12 @@ class Function(Application, Expr):
         arg = self.args[0]
         l = []
         g = None
-        for i in xrange(n + 2):
+        # try to predict a number of terms needed
+        nterms = n + 2
+        cf = C.Order(arg.as_leading_term(x), x).getn()
+        if cf != 0:
+            nterms = int(nterms / cf)
+        for i in xrange(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -1202,10 +1225,8 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         if len(args) != self.nargs:
-            from sympy.utilities.misc import filldedent
-            raise TypeError(filldedent('''
-                %s takes %d arguments (%d given)
-                ''' % (self, self.nargs, len(args))))
+            raise TypeError('%s takes %d arguments (%d given)' %
+                    (self, self.nargs, len(args)))
         return self.expr.xreplace(dict(zip(self.variables, args)))
 
     def __eq__(self, other):
@@ -1640,13 +1661,13 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
         >>> expand(log(x*(y + z)))
         log(x) + log(y + z)
 
-      Here, we see that ``log`` was applied before ``mul``.  To get the log
+      Here, we see that ``log`` was applied before ``mul``.  To get the mul
       expanded form, either of the following will work::
 
-        >>> expand_log(log(x*(y + z)))
-        log(x) + log(y + z)
-        >>> expand(log(x*(y + z)), mul=False)
-        log(x) + log(y + z)
+        >>> expand_mul(log(x*(y + z)))
+        log(x*y + x*z)
+        >>> expand(log(x*(y + z)), log=False)
+        log(x*y + x*z)
 
       A similar thing can happen with the ``power_base`` hint::
 

@@ -30,7 +30,7 @@ class Manifold(Basic):
         # other Patch instance on the same manifold.
 
     def _latex(self, printer, *args):
-        return r'\mathbb{%s}' % self.name
+        return r'\mathrm{%s}' % self.name
 
 
 class Patch(Basic):
@@ -134,15 +134,15 @@ class CoordSystem(Basic):
 
     >>> v_x = rect.base_vector(0)
     >>> x = rect.coord_function(0)
-    >>> v_x(x)(p)
+    >>> v_x(x)
     1
-    >>> v_x(v_x(x))(p)
+    >>> v_x(v_x(x))
     0
 
     Define a basis oneform field:
 
     >>> dx = rect.base_oneform(0)
-    >>> dx(v_x)(p)
+    >>> dx(v_x)
     1
 
     If you provide a list of names the fields will print nicely:
@@ -427,13 +427,13 @@ class BaseScalarField(Expr):
 
     >>> fx = BaseScalarField(rect, 0)
     >>> fy = BaseScalarField(rect, 1)
-    >>> (fx**2+fy**2)(point)
+    >>> (fx**2+fy**2).rcall(point)
     r0**2
 
     >>> g = Function('g')
     >>> ftheta = BaseScalarField(polar, 1)
     >>> fg = g(ftheta-pi)
-    >>> fg(point)
+    >>> fg.rcall(point)
     g(-pi)
 
     """
@@ -503,9 +503,9 @@ class BaseVectorField(Expr):
 
     >>> g = Function('g')
     >>> s_field = g(R2.x, R2.y)
-    >>> s_field(point_r)
+    >>> s_field.rcall(point_r)
     g(x0, y0)
-    >>> s_field(point_p)
+    >>> s_field.rcall(point_p)
     g(r0*cos(theta0), r0*sin(theta0))
 
     Vector field:
@@ -515,11 +515,11 @@ class BaseVectorField(Expr):
     /  d              \|
     |-----(g(x, xi_2))||
     \dxi_2            /|xi_2=y
-    >>> pprint(v(s_field)(point_r).doit())
+    >>> pprint(v(s_field).rcall(point_r).doit())
      d
     ---(g(x0, y0))
     dy0
-    >>> pprint(v(s_field)(point_p).doit())
+    >>> pprint(v(s_field).rcall(point_p).doit())
     /  d                           \|
     |-----(g(r0*cos(theta0), xi_2))||
     \dxi_2                         /|xi_2=r0*sin(theta0)
@@ -727,7 +727,7 @@ class Differential(Expr):
         k = len(vector_fields)
         if k == 1:
             if vector_fields[0]:
-                return vector_fields[0](self._form_field)
+                return vector_fields[0].rcall(self._form_field)
             return self
         else:
             # For higher form it is more complicated:
@@ -739,13 +739,13 @@ class Differential(Expr):
             v = vector_fields
             ret = 0
             for i in range(k):
-                t = v[i](f(*v[:i] + v[i + 1:]))
+                t = v[i].rcall(f.rcall(*v[:i] + v[i + 1:]))
                 ret += (-1)**i*t
                 for j in range(i + 1, k):
                     c = Commutator(v[i], v[j])
                     if c:  # TODO this is ugly - the Commutator can be Zero and
                           # this causes the next line to fail
-                        t = f(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
+                        t = f.rcall(*(c,) + v[:i] + v[i + 1:j] + v[j + 1:])
                         ret += (-1)**(i + j)*t
             return ret
 
@@ -786,12 +786,12 @@ class TensorProduct(Expr):
 
     >>> TP = TensorProduct
     >>> metric = TP(R2.dx, R2.dx) + 3*TP(R2.dy, R2.dy)
-    >>> metric(R2.e_y, None)
+    >>> metric.rcall(R2.e_y, None)
     3*dy
 
     Or automatically pad the args with ``None``s.
 
-    >>> metric(R2.e_y)
+    >>> metric.rcall(R2.e_y)
     3*dy
 
     """
@@ -829,7 +829,7 @@ class TensorProduct(Expr):
         orders = [covariant_order(f) for f in self._args]
         indices = [sum(orders[:i + 1]) for i in range(len(orders) - 1)]
         v_fields = [v_fields[i:j] for i, j in zip([0] + indices, indices + [None])]
-        multipliers = [t[0](*t[1]) for t in zip(self._args, v_fields)]
+        multipliers = [t[0].rcall(*t[1]) for t in zip(self._args, v_fields)]
         return TensorProduct(*multipliers)
 
     def _latex(self, printer, *args):
@@ -867,7 +867,7 @@ class WedgeProduct(TensorProduct):
     0
 
     """
-    # TODO the caclulation of signatures is slow
+    # TODO the calculation of signatures is slow
     # TODO you do not need all these permutations (neither the prefactor)
     def __call__(self, *vector_fields):
         """Apply on a list of vector_fields.
@@ -904,7 +904,7 @@ class LieDerivative(Expr):
         if expr.atoms(BaseVectorField):
             return Commutator(v_field, expr)
         else:
-            return v_field(expr)
+            return v_field.rcall(expr)
 
     def __init__(self, v_field, expr):
         super(LieDerivative, self).__init__()
@@ -1023,7 +1023,7 @@ class CovarDerivativeOp(Expr):
         vectors = list(self._wrt.atoms(BaseVectorField))
         base_ops = [BaseCovarDerivativeOp(v._coord_sys, v._index, self._christoffel)
                     for v in vectors]
-        return self._wrt.subs(zip(vectors, base_ops))(field)
+        return self._wrt.subs(zip(vectors, base_ops)).rcall(field)
 
     def _latex(self, printer, *args):
         return r'\mathbb{\nabla}_{%s}' % printer._print(self._wrt)
@@ -1118,11 +1118,11 @@ def intcurve_series(vector_field, param, start_point, n=6, coord_sys=None, coeff
 
     def iter_vfield(scalar_field, i):
         """Return `vector_field` called `i` times on `scalar_field`."""
-        return reduce(lambda s, v: v(s), [vector_field, ]*i, scalar_field)
+        return reduce(lambda s, v: v.rcall(s), [vector_field, ]*i, scalar_field)
 
     def taylor_terms_per_coord(coord_function):
         """Return the series for one of the coordinates."""
-        return [param**i*iter_vfield(coord_function, i)(start_point)/factorial(i)
+        return [param**i*iter_vfield(coord_function, i).rcall(start_point)/factorial(i)
                 for i in range(n)]
     coord_sys = coord_sys if coord_sys else start_point._coord_sys
     coord_functions = coord_sys.coord_functions()
@@ -1205,9 +1205,9 @@ def intcurve_diffequ(vector_field, param, start_point, coord_sys=None):
         start_point._coord_sys.dim)]
     arbitrary_p = Point(coord_sys, gammas)
     coord_functions = coord_sys.coord_functions()
-    equations = [simplify(diff(cf(arbitrary_p), param) - vector_field(cf)(arbitrary_p))
+    equations = [simplify(diff(cf.rcall(arbitrary_p), param) - vector_field.rcall(cf).rcall(arbitrary_p))
                  for cf in coord_functions]
-    init_cond = [simplify(cf(arbitrary_p).subs(param, 0) - cf(start_point))
+    init_cond = [simplify(cf.rcall(arbitrary_p).subs(param, 0) - cf.rcall(start_point))
                  for cf in coord_functions]
     return equations, init_cond
 
@@ -1386,7 +1386,7 @@ def twoform_to_matrix(expr):
     coord_sys = coord_sys.pop()
     vectors = coord_sys.base_vectors()
     expr = expr.expand()
-    matrix_content = [[expr(v1, v2) for v1 in vectors]
+    matrix_content = [[expr.rcall(v1, v2) for v1 in vectors]
                       for v2 in vectors]
     return Matrix(matrix_content)
 

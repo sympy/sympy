@@ -2,6 +2,7 @@
 from collections import defaultdict
 
 from sympy.core.basic import Basic
+from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
@@ -46,6 +47,9 @@ class BooleanFunction(Application, Boolean):
     def __call__(self, *args):
         return self.func(*[arg(*args) for arg in self.args])
 
+    def _eval_simplify(self, ratio, measure):
+        return simplify_logic(self)
+
 
 class And(LatticeOp, BooleanFunction):
     """
@@ -59,11 +63,34 @@ class And(LatticeOp, BooleanFunction):
 
     >>> from sympy.core import symbols
     >>> from sympy.abc import x, y
+    >>> from sympy.logic.boolalg import And
     >>> x & y
     And(x, y)
+
+    Notes
+    =====
+
+    The operator operator ``&`` will perform bitwise operations
+    on integers and for convenience will construct an Add when
+    the arguments are symbolic, but the And function does not
+    perform bitwise operations and when any argument is True it
+    is simply removed from the arguments:
+
+    >>> And(x, y).subs(x, 1)
+    y
     """
     zero = False
     identity = True
+
+    @classmethod
+    def _new_args_filter(cls, args):
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        return LatticeOp._new_args_filter(newargs, And)
 
 
 class Or(LatticeOp, BooleanFunction):
@@ -72,9 +99,87 @@ class Or(LatticeOp, BooleanFunction):
 
     It evaluates its arguments in order, giving True immediately
     if any of them are True, and False if they are all False.
+
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.abc import x, y
+    >>> from sympy.logic.boolalg import Or
+    >>> x | y
+    Or(x, y)
+
+    Notes
+    =====
+
+    The operator operator ``|`` will perform bitwise operations
+    on integers and for convenience will construct an Or when
+    the arguments are symbolic, but the Or function does not
+    perform bitwise operations and when any argument is False it
+    is simply removed from the arguments:
+
+    >>> Or(x, y).subs(x, 0)
+    y
     """
     zero = True
     identity = False
+
+    @classmethod
+    def _new_args_filter(cls, args):
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        return LatticeOp._new_args_filter(newargs, Or)
+
+
+class Not(BooleanFunction):
+    """
+    Logical Not function (negation)
+
+    Notes
+    =====
+
+    De Morgan rules are applied automatically.
+    """
+
+    is_Not = True
+
+    @classmethod
+    def eval(cls, arg):
+        """
+        Logical Not function (negation)
+
+        Returns True if the statement is False
+        Returns False if the statement is True
+
+        Examples
+        ========
+
+        >>> from sympy.logic.boolalg import Not, And, Or
+        >>> from sympy.abc import x
+        >>> Not(True)
+        False
+        >>> Not(False)
+        True
+        >>> Not(And(True, False))
+        True
+        >>> Not(Or(True, False))
+        False
+        >>> Not(And(And(True, x), Or(x, False)))
+        Not(x)
+        """
+        if isinstance(arg, Number) or arg in (0, 1):
+            return False if arg else True
+        # apply De Morgan Rules
+        if arg.func is And:
+            return Or(*[Not(a) for a in arg.args])
+        if arg.func is Or:
+            return And(*[Not(a) for a in arg.args])
+        if arg.func is Not:
+            return arg.args[0]
 
 
 class Xor(BooleanFunction):
@@ -113,61 +218,6 @@ class Xor(BooleanFunction):
             B = args.pop()
             A = Or(And(A, Not(B)), And(Not(A), B))
         return A
-
-
-class Not(BooleanFunction):
-    """
-    Logical Not function (negation)
-
-    Note: De Morgan rules applied automatically
-    """
-
-    is_Not = True
-
-    @classmethod
-    def eval(cls, *args):
-        """
-        Logical Not function (negation)
-
-        Returns True if the statement is False
-        Returns False if the statement is True
-
-        Examples
-        ========
-
-        >>> from sympy.logic.boolalg import Not, And, Or
-        >>> from sympy.abc import x
-        >>> Not(True)
-        False
-        >>> Not(False)
-        True
-        >>> Not(And(True, False))
-        True
-        >>> Not(Or(True, False))
-        False
-
-        If multiple statements are given, returns an array of each result
-
-        >>> Not(True, False)
-        [False, True]
-        >>> Not(True and False, True or False, True)
-        [True, False, False]
-
-        >>> Not(And(And(True, x), Or(x, False)))
-        Not(x)
-        """
-        if len(args) > 1:
-            return map(cls, args)
-        arg = args[0]
-        if arg in (0, 1):  # includes True and False, too
-            return not bool(arg)
-        # apply De Morgan Rules
-        if arg.func is And:
-            return Or(*[Not(a) for a in arg.args])
-        if arg.func is Or:
-            return And(*[Not(a) for a in arg.args])
-        if arg.func is Not:
-            return arg.args[0]
 
 
 class Nand(BooleanFunction):
@@ -389,23 +439,49 @@ def distribute_and_over_or(expr):
     >>> distribute_and_over_or(Or(A, And(Not(B), Not(C))))
     And(Or(A, Not(B)), Or(A, Not(C)))
     """
-    if expr.func is Or:
-        for arg in expr.args:
-            if arg.func is And:
+    return _distribute((expr, And, Or))
+
+
+def distribute_or_over_and(expr):
+    """
+    Given a sentence s consisting of conjunctions and disjunctions
+    of literals, return an equivalent sentence in DNF.
+
+    Note that the output is NOT simplified.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import distribute_or_over_and, And, Or, Not
+    >>> from sympy.abc import A, B, C
+    >>> distribute_or_over_and(And(Or(Not(A), B), C))
+    Or(And(B, C), And(C, Not(A)))
+    """
+    return _distribute((expr, Or, And))
+
+
+def _distribute(info):
+    """
+    Distributes info[1] over info[2] with respect to info[0].
+    """
+    if info[0].func is info[2]:
+        for arg in info[0].args:
+            if arg.func is info[1]:
                 conj = arg
                 break
         else:
-            return expr
-        rest = Or(*[a for a in expr.args if a is not conj])
-        return And(*map(distribute_and_over_or,
-                   [Or(c, rest) for c in conj.args]))
-    elif expr.func is And:
-        return And(*map(distribute_and_over_or, expr.args))
+            return info[0]
+        rest = info[2](*[a for a in info[0].args if a is not conj])
+        return info[1](*map(_distribute,
+                   [(info[2](c, rest), info[1], info[2]) for c in conj.args]))
+    elif info[0].func is info[1]:
+        return info[1](*map(_distribute,
+                            [(x, info[1], info[2]) for x in info[0].args]))
     else:
-        return expr
+        return info[0]
 
 
-def to_cnf(expr):
+def to_cnf(expr, simplify=False):
     """
     Convert a propositional logical sentence s to conjunctive normal form.
     That is, of the form ((A | ~B | ...) & (B | C | ...) & ...)
@@ -419,15 +495,56 @@ def to_cnf(expr):
     And(Or(D, Not(A)), Or(D, Not(B)))
 
     """
+    expr = sympify(expr)
+    if not isinstance(expr, BooleanFunction):
+        return expr
+
+    if simplify:
+        simplified_expr = distribute_and_over_or(simplify_logic(expr))
+        if len(simplified_expr.args) < len(to_cnf(expr).args):
+            return simplified_expr
+        else:
+            return to_cnf(expr)
+
     # Don't convert unless we have to
     if is_cnf(expr):
         return expr
 
+    expr = eliminate_implications(expr)
+    return distribute_and_over_or(expr)
+
+
+def to_dnf(expr, simplify=False):
+    """
+    Convert a propositional logical sentence s to disjunctive normal form.
+    That is, of the form ((A & ~B & ...) | (B & C & ...) | ...)
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import to_dnf
+    >>> from sympy.abc import A, B, C, D
+    >>> to_dnf(B & (A | C))
+    Or(And(A, B), And(B, C))
+
+    """
     expr = sympify(expr)
     if not isinstance(expr, BooleanFunction):
         return expr
+
+    if simplify:
+        simplified_expr = distribute_or_over_and(simplify_logic(expr))
+        if len(simplified_expr.args) < len(to_dnf(expr).args):
+            return simplified_expr
+        else:
+            return to_dnf(expr)
+
+    # Don't convert unless we have to
+    if is_dnf(expr):
+        return expr
+
     expr = eliminate_implications(expr)
-    return distribute_and_over_or(expr)
+    return distribute_or_over_and(expr)
 
 
 def is_cnf(expr):
@@ -447,10 +564,44 @@ def is_cnf(expr):
     False
 
     """
+    return _is_form(expr, And, Or)
+
+
+def is_dnf(expr):
+    """
+    Test whether or not an expression is in disjunctive normal form.
+
+    Examples
+    ========
+
+    >>> from sympy.logic.boolalg import is_dnf
+    >>> from sympy.abc import A, B, C
+    >>> is_dnf(A | B | C)
+    True
+    >>> is_dnf(A & B & C)
+    True
+    >>> is_dnf((A & B) | C)
+    True
+    >>> is_dnf(A & (B | C))
+    False
+
+    """
+    return _is_form(expr, Or, And)
+
+
+def _is_form(expr, function1, function2):
+    """
+    Test whether or not an expression is of the required form.
+
+    """
     expr = sympify(expr)
 
-    # Special case of a single disjunction
-    if expr.func is Or:
+    # Special case of an Atom
+    if expr.is_Atom:
+        return True
+
+    # Special case of a single expression of function2
+    if expr.func is function2:
         for lit in expr.args:
             if lit.func is Not:
                 if not lit.args[0].is_Atom:
@@ -465,7 +616,7 @@ def is_cnf(expr):
         if not expr.args[0].is_Atom:
             return False
 
-    if expr.func is not And:
+    if expr.func is not function1:
         return False
 
     for cls in expr.args:
@@ -474,7 +625,7 @@ def is_cnf(expr):
         if cls.func is Not:
             if not cls.args[0].is_Atom:
                 return False
-        elif cls.func is not Or:
+        elif cls.func is not function2:
             return False
         for lit in cls.args:
             if lit.func is Not:
@@ -519,24 +670,14 @@ def eliminate_implications(expr):
 
 
 @deprecated(
-    useinstead="sympify", issue=2947, deprecated_since_version="0.7.3")
+    useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a SymPy expression
     A rule is a string of the form "symbol1 & symbol2 | ..."
 
-    Note: this is nearly the same as sympifying the expression, but
-    this function converts all variables to Symbols -- there are no
-    special function names recognized.
+    Note: This function is deprecated.  Use sympify() instead.
 
-    Examples
-    ========
-
-    >>> from sympy.logic.boolalg import compile_rule
-    >>> compile_rule('A & B')
-    And(A, B)
-    >>> compile_rule('(~B & ~C)|A')
-    Or(A, And(Not(B), Not(C)))
     """
     import re
     return sympify(re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)', r'Symbol("\1")', s))

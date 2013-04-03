@@ -8,7 +8,7 @@ from sympy.polys import Poly, cyclotomic_poly, intervals, nroots
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
-    roots_binomial, roots_rational, preprocess_roots, roots)
+    roots_binomial, preprocess_roots, roots)
 
 a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
 
@@ -67,7 +67,8 @@ def test_roots_quartic():
                                       (1, 2, 3, 4),
                                       (1, 2, 3, 4),
                                       (-7, -3, 3, -6),
-                                      (-3, 5, -6, -4)]):
+                                      (-3, 5, -6, -4),
+                                      (6, -5, -10, -3)]):
         if i == 2:
             c = -a*(a**2/S(8) - b/S(2))
         elif i == 3:
@@ -143,17 +144,6 @@ def test_roots_binomial():
 
     assert powsimp(r0[0]) == powsimp(r1[0])
     assert powsimp(r0[1]) == powsimp(r1[1])
-
-
-def test_roots_rational():
-    assert roots_rational(Poly(x**2 - 1, x)) == [-S.One, S.One]
-    assert roots_rational(Poly(x**2 - x, x)) == [S.Zero, S.One]
-
-    assert roots_rational(Poly(x**2 - x/2, x)) == [S.Zero]
-    assert roots_rational(Poly(2*x**2 - x, x)) == [S.Zero]
-
-    assert roots_rational(Poly(t*x**2 - x, x)) == []
-
 
 def test_roots_preprocessing():
     f = a*y*x**2 + y - b
@@ -354,6 +344,10 @@ def test_roots():
         -I: 1, I: 1,
     }
 
+    r = roots(x**3 + 40*x + 64)
+    real_root = [rx for rx in r if rx.is_real][0]
+    cr = 4 + 2*sqrt(1074)/9
+    assert real_root == -2*cr**(S(1)/3) + 20/(3*cr**(S(1)/3))
 
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """

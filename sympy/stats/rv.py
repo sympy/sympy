@@ -12,8 +12,10 @@ sympy.stats.frv
 sympy.stats.rv_interface
 """
 
-from sympy import Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify
+from sympy import (Basic, S, Expr, Symbol, Tuple, And, Add, Eq, lambdify,
+        sympify, Equality, solve, Lambda, DiracDelta)
 from sympy.core.sets import FiniteSet, ProductSet
+from sympy.abc import x
 
 
 class RandomDomain(Basic):
@@ -60,12 +62,15 @@ class SingleDomain(RandomDomain):
     """
     def __new__(cls, symbol, set):
         assert symbol.is_Symbol
-        symbols = FiniteSet(symbol)
-        return RandomDomain.__new__(cls, symbols, set)
+        return Basic.__new__(cls, symbol, set)
 
     @property
     def symbol(self):
-        return tuple(self.symbols)[0]
+        return self.args[0]
+
+    @property
+    def symbols(self):
+        return FiniteSet(self.symbol)
 
     def __contains__(self, other):
         if len(other) != 1:
@@ -84,18 +89,21 @@ class ConditionalDomain(RandomDomain):
     sympy.stats.frv.ConditionalFiniteDomain
     """
     def __new__(cls, fulldomain, condition):
-        condition = condition.subs(dict((rs, rs.symbol)
+        condition = condition.xreplace(dict((rs, rs.symbol)
             for rs in random_symbols(condition)))
-        return RandomDomain.__new__(
-            cls, fulldomain.symbols, fulldomain, condition)
+        return Basic.__new__(cls, fulldomain, condition)
+
+    @property
+    def symbols(self):
+        return self.fulldomain.symbols
 
     @property
     def fulldomain(self):
-        return self.args[1]
+        return self.args[0]
 
     @property
     def condition(self):
-        return self.args[2]
+        return self.args[1]
 
     @property
     def set(self):
@@ -159,13 +167,31 @@ class SinglePSpace(PSpace):
     Represents the probabilities of a set of random events that can be
     attributed to a single variable/symbol.
     """
+    def __new__(cls, s, distribution):
+        if isinstance(s, str):
+            s = Symbol(s)
+        if not isinstance(s, Symbol):
+            raise TypeError("s should have been string or Symbol")
+        return Basic.__new__(cls, s, distribution)
 
     @property
     def value(self):
-        return tuple(self.values)[0]
+        return RandomSymbol(self, self.symbol)
+
+    @property
+    def symbol(self):
+        return self.args[0]
+
+    @property
+    def distribution(self):
+        return self.args[1]
+
+    @property
+    def pdf(self):
+        return self.distribution.pdf(self.symbol)
 
 
-class RandomSymbol(Symbol):
+class RandomSymbol(Expr):
     """
     Random Symbols represent ProbabilitySpaces in SymPy Expressions
     In principle they can take on any value that their symbol can take on
@@ -191,18 +217,21 @@ class RandomSymbol(Symbol):
     convenience functions Normal, Exponential, Coin, Die, FiniteRV, etc....
     """
 
+    def __new__(cls, pspace, symbol):
+        assert isinstance(symbol, Symbol)
+        assert isinstance(pspace, PSpace)
+        return Basic.__new__(cls, pspace, symbol)
+
     is_bounded = True
     is_finite = True
+    is_Symbol = True
+    is_Atom = True
 
-    def __new__(cls, *args):
-        obj = Basic.__new__(cls)
-        obj.pspace = args[0]
-        obj.symbol = args[1]
-        return obj
+    _diff_wrt = True
 
-    @property
-    def name(self):
-        return self.symbol.name
+    pspace = property(lambda self: self.args[0])
+    symbol = property(lambda self: self.args[1])
+    name   = property(lambda self: self.symbol.name)
 
     @property
     def is_commutative(self):
@@ -210,6 +239,10 @@ class RandomSymbol(Symbol):
 
     def _hashable_content(self):
         return self.pspace, self.symbol
+
+    @property
+    def free_symbols(self):
+        return set([self])
 
 
 class ProductPSpace(PSpace):
@@ -239,14 +272,25 @@ class ProductPSpace(PSpace):
             from sympy.stats.crv import ProductContinuousPSpace
             cls = ProductContinuousPSpace
 
-        obj = Basic.__new__(cls, symbols, FiniteSet(*spaces))
-        obj.rs_space_dict = rs_space_dict
+        obj = Basic.__new__(cls, *FiniteSet(*spaces))
 
         return obj
 
     @property
+    def rs_space_dict(self):
+        d = {}
+        for space in self.spaces:
+            for value in space.values:
+                d[value] = space
+        return d
+
+    @property
+    def symbols(self):
+        return FiniteSet(val.symbol for val in self.rs_space_dict.keys())
+
+    @property
     def spaces(self):
-        return self.args[1]
+        return FiniteSet(*self.args)
 
     @property
     def values(self):
@@ -295,11 +339,6 @@ class ProductDomain(RandomDomain):
                 domains2.extend(domain.domains)
         domains2 = FiniteSet(domains2)
 
-        sym_domain_dict = {}
-        for domain in domains2:
-            for symbol in domain.symbols:
-                sym_domain_dict[symbol] = domain
-
         if all(domain.is_Finite for domain in domains2):
             from sympy.stats.frv import ProductFiniteDomain
             cls = ProductFiniteDomain
@@ -307,13 +346,21 @@ class ProductDomain(RandomDomain):
             from sympy.stats.crv import ProductContinuousDomain
             cls = ProductContinuousDomain
 
-        obj = RandomDomain.__new__(cls, symbols, domains2)
-        obj.sym_domain_dict = sym_domain_dict
-        return obj
+        return Basic.__new__(cls, *domains2)
+
+    @property
+    def sym_domain_dict(self):
+        return dict((symbol, domain) for domain in self.domains
+                                     for symbol in domain.symbols)
+
+    @property
+    def symbols(self):
+        return FiniteSet(sym for domain in self.domains
+                             for sym    in domain.symbols)
 
     @property
     def domains(self):
-        return self.args[1]
+        return self.args
 
     @property
     def set(self):
@@ -416,6 +463,13 @@ def given(expr, condition=None, **kwargs):
     if not random_symbols(condition) or pspace_independent(expr, condition):
         return expr
 
+    condsymbols = random_symbols(condition)
+    if (isinstance(condition, Equality) and len(condsymbols) == 1 and
+        not isinstance(pspace(expr).domain, ConditionalDomain)):
+        rv = tuple(condsymbols)[0]
+        results = solve(condition, rv)
+        return sum(expr.subs(rv, res) for res in results)
+
     # Get full probability space of both the expression and the condition
     fullspace = pspace(Tuple(expr, condition))
     # Build new space given the condition
@@ -424,7 +478,7 @@ def given(expr, condition=None, **kwargs):
     # That point to the new conditional space
     swapdict = rs_swap(fullspace.values, space.values)
     # Swap random variables in the expression
-    expr = expr.subs(swapdict)
+    expr = expr.xreplace(swapdict)
     return expr
 
 
@@ -519,6 +573,26 @@ def probability(condition, given_condition=None, numsamples=None, **kwargs):
     return pspace(condition).probability(condition, **kwargs)
 
 
+class Density(Basic):
+    expr = property(lambda self: self.args[0])
+
+    @property
+    def condition(self):
+        if len(self.args) > 1:
+            return self.args[1]
+        else:
+            return None
+
+    def doit(self, **kwargs):
+        expr, condition = self.expr, self.condition
+        if condition is not None:
+            # Recompute on new conditional expr
+            expr = given(expr, condition, **kwargs)
+        if not random_symbols(expr):
+            return Lambda(x, DiracDelta(x-expr))
+        return pspace(expr).compute_density(expr, **kwargs)
+
+
 def density(expr, condition=None, **kwargs):
     """
     Probability density of a random expression
@@ -546,12 +620,7 @@ def density(expr, condition=None, **kwargs):
     >>> density(X)
     Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
     """
-    if condition is not None:  # If there is a condition
-        # Recompute on new conditional expr
-        return density(given(expr, condition, **kwargs), **kwargs)
-
-    # Otherwise pass work off to the ProbabilitySpace
-    return pspace(expr).compute_density(expr, **kwargs)
+    return Density(expr, condition).doit(**kwargs)
 
 
 def cdf(expr, condition=None, **kwargs):
@@ -734,13 +803,13 @@ def sample_iter_subs(expr, condition=None, numsamples=S.Infinity, **kwargs):
         d = ps.sample()  # a dictionary that maps RVs to values
 
         if condition is not None:  # Check that these values satisfy the condition
-            gd = condition.subs(d)
+            gd = condition.xreplace(d)
             if not isinstance(gd, bool):
                 raise ValueError("Conditions must not contain free symbols")
             if gd is False:  # If the values don't satisfy then try again
                 continue
 
-        yield expr.subs(d)
+        yield expr.xreplace(d)
 
         count += 1
 
@@ -888,5 +957,26 @@ def rv_subs(expr, symbols=None):
     """
     if symbols is None:
         symbols = random_symbols(expr)
+    if not symbols:
+        return expr
     swapdict = dict([(rv, rv.symbol) for rv in symbols])
-    return expr.subs(swapdict)
+    return expr.xreplace(swapdict)
+
+class NamedArgsMixin(object):
+    _argnames = ()
+
+    def __getattr__(self, attr):
+        try:
+            return self.args[list(self._argnames).index(attr)]
+        except ValueError:
+            raise AttributeError("'%s' object has not attribute '%s'" % (
+                type(self).__name__, attr))
+
+def _value_check(condition, message):
+    """
+    Check a condition on input value.
+
+    Raises ValueError with message if condition is not True
+    """
+    if condition is not True:
+        raise ValueError(message)

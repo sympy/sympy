@@ -455,6 +455,9 @@ def test_sympy__sets__fancysets__Naturals():
     from sympy.sets.fancysets import Naturals
     assert _test_args(Naturals())
 
+def test_sympy__sets__fancysets__Naturals0():
+    from sympy.sets.fancysets import Naturals0
+    assert _test_args(Naturals0())
 
 def test_sympy__sets__fancysets__Integers():
     from sympy.sets.fancysets import Integers
@@ -481,10 +484,10 @@ def test_sympy__sets__fancysets__Range():
 # STATS
 
 
-def normal_pdf(x):
-    from sympy import pi, exp, sqrt
-    pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi))
-    return pdf
+from sympy.stats.crv_types import NormalDistribution
+nd = NormalDistribution(0, 1)
+from sympy.stats.frv_types import DieDistribution
+die = DieDistribution(6)
 
 
 def test_sympy__stats__crv__ContinuousDomain():
@@ -513,25 +516,33 @@ def test_sympy__stats__crv__ConditionalContinuousDomain():
 
 def test_sympy__stats__crv__ContinuousPSpace():
     from sympy.stats.crv import ContinuousPSpace, SingleContinuousDomain
-    pdf = normal_pdf(x)
     D = SingleContinuousDomain(x, Interval(-oo, oo))
-    assert _test_args(ContinuousPSpace(D, pdf))
+    assert _test_args(ContinuousPSpace(D, nd))
 
 
 def test_sympy__stats__crv__SingleContinuousPSpace():
     from sympy.stats.crv import SingleContinuousPSpace
-    pdf = normal_pdf(x)
-    assert _test_args(SingleContinuousPSpace(x, pdf, Interval(-oo, oo)))
+    assert _test_args(SingleContinuousPSpace(x, nd))
 
 
 def test_sympy__stats__crv__ProductContinuousPSpace():
     from sympy.stats.crv import ProductContinuousPSpace, SingleContinuousPSpace
-    pdf1 = normal_pdf(x)
-    A = SingleContinuousPSpace(x, pdf1, Interval(-oo, oo))
-    pdf2 = normal_pdf(y)
-    B = SingleContinuousPSpace(y, pdf2, Interval(-oo, oo))
+    A = SingleContinuousPSpace(x, nd)
+    B = SingleContinuousPSpace(y, nd)
     assert _test_args(ProductContinuousPSpace(A, B))
 
+@SKIP("abstract class")
+def test_sympy__stats__crv__SingleContinuousDistribution():
+    pass
+
+def test_sympy__stats__drv__SingleDiscretePSpace():
+    from sympy.stats.drv import SingleDiscretePSpace
+    from sympy.stats.drv_types import PoissonDistribution
+    assert _test_args(SingleDiscretePSpace(x, PoissonDistribution(1)))
+
+@SKIP("abstract class")
+def test_sympy__stats__drv__SingleDiscreteDistribution():
+    pass
 
 def test_sympy__stats__rv__RandomDomain():
     from sympy.stats.rv import RandomDomain
@@ -555,32 +566,27 @@ def test_sympy__stats__rv__ConditionalDomain():
 def test_sympy__stats__rv__PSpace():
     from sympy.stats.rv import PSpace, RandomDomain
     from sympy import Dict, FiniteSet
-    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
-    assert _test_args(PSpace(D, Dict({(x, 1): S.Half, (x, 2): S.Half})))
+    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2, 3, 4, 5, 6))
+    assert _test_args(PSpace(D, die))
 
 
+@SKIP("abstract Class")
 def test_sympy__stats__rv__SinglePSpace():
-    from sympy.stats.rv import SinglePSpace, RandomDomain
-    from sympy import Dict, FiniteSet
-    D = RandomDomain(FiniteSet(x), FiniteSet(1, 2))
-    assert _test_args(SinglePSpace(D, Dict({(x, 1): S.Half, (x, 2): S.Half})))
+    pass
 
 
 def test_sympy__stats__rv__RandomSymbol():
     from sympy.stats.rv import RandomSymbol
     from sympy.stats.crv import SingleContinuousPSpace
-    pdf = normal_pdf(x)
-    A = SingleContinuousPSpace(x, pdf, Interval(-oo, oo))
+    A = SingleContinuousPSpace(x, nd)
     assert _test_args(RandomSymbol(A, x))
 
 
 def test_sympy__stats__rv__ProductPSpace():
     from sympy.stats.rv import ProductPSpace
     from sympy.stats.crv import SingleContinuousPSpace
-    pdf1 = normal_pdf(x)
-    A = SingleContinuousPSpace(x, pdf1, Interval(-oo, oo))
-    pdf2 = normal_pdf(y)
-    B = SingleContinuousPSpace(y, pdf2, Interval(-oo, oo))
+    A = SingleContinuousPSpace(x, nd)
+    B = SingleContinuousPSpace(y, nd)
     assert _test_args(ProductPSpace(A, B))
 
 
@@ -591,34 +597,30 @@ def test_sympy__stats__rv__ProductDomain():
     assert _test_args(ProductDomain(D, E))
 
 
-def test_sympy__stats__frv_types__DiscreteUniformPSpace():
-    from sympy.stats.frv_types import DiscreteUniformPSpace
-    assert _test_args(DiscreteUniformPSpace('X', range(6)))
+def test_sympy__stats__frv_types__DiscreteUniformDistribution():
+    from sympy.stats.frv_types import DiscreteUniformDistribution
+    from sympy.core.containers import Tuple
+    assert _test_args(DiscreteUniformDistribution(Tuple(range(6))))
 
 
-def test_sympy__stats__frv_types__DiePSpace():
-    from sympy.stats.frv_types import DiePSpace
-    assert _test_args(DiePSpace('X', 6))
+def test_sympy__stats__frv_types__DieDistribution():
+    from sympy.stats.frv_types import DieDistribution
+    assert _test_args(DieDistribution(6))
 
 
-def test_sympy__stats__frv_types__BernoulliPSpace():
-    from sympy.stats.frv_types import BernoulliPSpace
-    assert _test_args(BernoulliPSpace('X', S.Half, 0, 1))
+def test_sympy__stats__frv_types__BernoulliDistribution():
+    from sympy.stats.frv_types import BernoulliDistribution
+    assert _test_args(BernoulliDistribution(S.Half, 0, 1))
 
 
-def test_sympy__stats__frv_types__CoinPSpace():
-    from sympy.stats.frv_types import CoinPSpace
-    assert _test_args(CoinPSpace('X', S.Half))
+def test_sympy__stats__frv_types__BinomialDistribution():
+    from sympy.stats.frv_types import BinomialDistribution
+    assert _test_args(BinomialDistribution(5, S.Half, 1, 0))
 
 
-def test_sympy__stats__frv_types__BinomialPSpace():
-    from sympy.stats.frv_types import BinomialPSpace
-    assert _test_args(BinomialPSpace('X', 5, S.Half, 1, 0))
-
-
-def test_sympy__stats__frv_types__HypergeometricPSpace():
-    from sympy.stats.frv_types import HypergeometricPSpace
-    assert _test_args(HypergeometricPSpace('X', 10, 5, 3))
+def test_sympy__stats__frv_types__HypergeometricDistribution():
+    from sympy.stats.frv_types import HypergeometricDistribution
+    assert _test_args(HypergeometricDistribution(10, 5, 3))
 
 
 def test_sympy__stats__frv__FiniteDomain():
@@ -646,140 +648,221 @@ def test_sympy__stats__frv__ConditionalFiniteDomain():
 
 def test_sympy__stats__frv__FinitePSpace():
     from sympy.stats.frv import FinitePSpace, SingleFiniteDomain
+    xd = SingleFiniteDomain(x, set([1, 2, 3, 4, 5, 6]))
+    p = 1.0/6
     xd = SingleFiniteDomain(x, set([1, 2]))
     assert _test_args(FinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half}))
 
 
 def test_sympy__stats__frv__SingleFinitePSpace():
     from sympy.stats.frv import SingleFinitePSpace, SingleFiniteDomain
-    xd = SingleFiniteDomain(x, set([1, 2]))
-    assert _test_args(SingleFinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half}))
+    from sympy import Symbol
+
+    assert _test_args(SingleFinitePSpace(Symbol('x'), die))
 
 
 def test_sympy__stats__frv__ProductFinitePSpace():
     from sympy.stats.frv import (SingleFiniteDomain, SingleFinitePSpace,
         ProductFinitePSpace)
-    xd = SingleFiniteDomain(x, set([1, 2]))
-    xp = SingleFinitePSpace(xd, {(x, 1): S.Half, (x, 2): S.Half})
-    yd = SingleFiniteDomain(y, set([1, 2]))
-    yp = SingleFinitePSpace(yd, {(y, 1): S.Half, (y, 2): S.Half})
+    from sympy import Symbol
+    xp = SingleFinitePSpace(Symbol('x'), die)
+    yp = SingleFinitePSpace(Symbol('y'), die)
     assert _test_args(ProductFinitePSpace(xp, yp))
 
+@SKIP("abstract class")
+def test_sympy__stats__frv__SingleFiniteDistribution():
+    pass
 
-def test_sympy__stats__crv_types__ArcsinPSpace():
-    from sympy.stats.crv_types import ArcsinPSpace
-    assert _test_args(ArcsinPSpace('X', 0, 1))
-
-
-def test_sympy__stats__crv_types__BeniniPSpace():
-    from sympy.stats.crv_types import BeniniPSpace
-    assert _test_args(BeniniPSpace('X', 1, 1, 1))
+@SKIP("abstract class")
+def test_sympy__stats__crv__ContinuousDistribution():
+    pass
 
 
-def test_sympy__stats__crv_types__BetaPSpace():
-    from sympy.stats.crv_types import BetaPSpace
-    assert _test_args(BetaPSpace('X', 1, 1))
+def test_sympy__stats__frv_types__FiniteDistributionHandmade():
+    from sympy.stats.frv_types import FiniteDistributionHandmade
+    assert _test_args(FiniteDistributionHandmade({1: 1}))
 
 
-def test_sympy__stats__crv_types__BetaPrimePSpace():
-    from sympy.stats.crv_types import BetaPrimePSpace
-    assert _test_args(BetaPrimePSpace('X', 1, 1))
+def test_sympy__stats__crv__ContinuousDistributionHandmade():
+    from sympy.stats.crv import ContinuousDistributionHandmade
+    from sympy import Symbol, Interval
+    assert _test_args(ContinuousDistributionHandmade(Symbol('x'),
+                                                     Interval(0, 2)))
+
+def test_sympy__stats__rv__Density():
+    from sympy.stats.rv import Density
+    from sympy.stats.crv_types import Normal
+    assert _test_args(Density(Normal('x', 0, 1)))
 
 
-def test_sympy__stats__crv_types__CauchyPSpace():
-    from sympy.stats.crv_types import CauchyPSpace
-    assert _test_args(CauchyPSpace('X', 0, 1))
+def test_sympy__stats__crv_types__ArcsinDistribution():
+    from sympy.stats.crv_types import ArcsinDistribution
+    assert _test_args(ArcsinDistribution(0, 1))
 
 
-def test_sympy__stats__crv_types__ChiPSpace():
-    from sympy.stats.crv_types import ChiPSpace
-    assert _test_args(ChiPSpace('X', 1))
+def test_sympy__stats__crv_types__BeniniDistribution():
+    from sympy.stats.crv_types import BeniniDistribution
+    assert _test_args(BeniniDistribution(1, 1, 1))
 
 
-def test_sympy__stats__crv_types__DagumPSpace():
-    from sympy.stats.crv_types import DagumPSpace
-    assert _test_args(DagumPSpace('X', 1, 1, 1))
+def test_sympy__stats__crv_types__BetaDistribution():
+    from sympy.stats.crv_types import BetaDistribution
+    assert _test_args(BetaDistribution(1, 1))
 
 
-def test_sympy__stats__crv_types__ExponentialPSpace():
-    from sympy.stats.crv_types import ExponentialPSpace
-    assert _test_args(ExponentialPSpace('X', 1))
+def test_sympy__stats__crv_types__BetaPrimeDistribution():
+    from sympy.stats.crv_types import BetaPrimeDistribution
+    assert _test_args(BetaPrimeDistribution(1, 1))
 
 
-def test_sympy__stats__crv_types__GammaPSpace():
-    from sympy.stats.crv_types import GammaPSpace
-    assert _test_args(GammaPSpace('X', 1, 1))
+def test_sympy__stats__crv_types__CauchyDistribution():
+    from sympy.stats.crv_types import CauchyDistribution
+    assert _test_args(CauchyDistribution(0, 1))
 
 
-def test_sympy__stats__crv_types__LaplacePSpace():
-    from sympy.stats.crv_types import LaplacePSpace
-    assert _test_args(LaplacePSpace('X', 0, 1))
+def test_sympy__stats__crv_types__ChiDistribution():
+    from sympy.stats.crv_types import ChiDistribution
+    assert _test_args(ChiDistribution(1))
 
 
-def test_sympy__stats__crv_types__LogisticPSpace():
-    from sympy.stats.crv_types import LogisticPSpace
-    assert _test_args(LogisticPSpace('X', 0, 1))
+def test_sympy__stats__crv_types__ChiNoncentralDistribution():
+    from sympy.stats.crv_types import ChiNoncentralDistribution
+    assert _test_args(ChiNoncentralDistribution(1,1))
 
 
-def test_sympy__stats__crv_types__LogNormalPSpace():
-    from sympy.stats.crv_types import LogNormalPSpace
-    assert _test_args(LogNormalPSpace('X', 0, 1))
+def test_sympy__stats__crv_types__ChiSquaredDistribution():
+    from sympy.stats.crv_types import ChiSquaredDistribution
+    assert _test_args(ChiSquaredDistribution(1))
 
 
-def test_sympy__stats__crv_types__MaxwellPSpace():
-    from sympy.stats.crv_types import MaxwellPSpace
-    assert _test_args(MaxwellPSpace('X', 1))
+def test_sympy__stats__crv_types__DagumDistribution():
+    from sympy.stats.crv_types import DagumDistribution
+    assert _test_args(DagumDistribution(1, 1, 1))
 
 
-def test_sympy__stats__crv_types__NakagamiPSpace():
-    from sympy.stats.crv_types import NakagamiPSpace
-    assert _test_args(NakagamiPSpace('X', 1, 1))
+def test_sympy__stats__crv_types__ExponentialDistribution():
+    from sympy.stats.crv_types import ExponentialDistribution
+    assert _test_args(ExponentialDistribution(1))
 
 
-def test_sympy__stats__crv_types__NormalPSpace():
-    from sympy.stats.crv_types import NormalPSpace
-    assert _test_args(NormalPSpace('X', 0, 1))
+def test_sympy__stats__crv_types__FDistributionDistribution():
+    from sympy.stats.crv_types import FDistributionDistribution
+    assert _test_args(FDistributionDistribution(1, 1))
 
 
-def test_sympy__stats__crv_types__ParetoPSpace():
-    from sympy.stats.crv_types import ParetoPSpace
-    assert _test_args(ParetoPSpace('X', 1, 1))
+def test_sympy__stats__crv_types__FisherZDistribution():
+    from sympy.stats.crv_types import FisherZDistribution
+    assert _test_args(FisherZDistribution(1, 1))
 
 
-def test_sympy__stats__crv_types__RayleighPSpace():
-    from sympy.stats.crv_types import RayleighPSpace
-    assert _test_args(RayleighPSpace('X', 1))
+def test_sympy__stats__crv_types__FrechetDistribution():
+    from sympy.stats.crv_types import FrechetDistribution
+    assert _test_args(FrechetDistribution(1, 1, 1))
 
 
-def test_sympy__stats__crv_types__StudentTPSpace():
-    from sympy.stats.crv_types import StudentTPSpace
-    assert _test_args(StudentTPSpace('X', 1))
+def test_sympy__stats__crv_types__GammaInverseDistribution():
+    from sympy.stats.crv_types import GammaInverseDistribution
+    assert _test_args(GammaInverseDistribution(1, 1))
 
 
-def test_sympy__stats__crv_types__TriangularPSpace():
-    from sympy.stats.crv_types import TriangularPSpace
-    assert _test_args(TriangularPSpace('X', -1, 0, 1))
+def test_sympy__stats__crv_types__GammaDistribution():
+    from sympy.stats.crv_types import GammaDistribution
+    assert _test_args(GammaDistribution(1, 1))
 
 
-def test_sympy__stats__crv_types__UniformPSpace():
-    from sympy.stats.crv_types import UniformPSpace
-    assert _test_args(UniformPSpace('X', 0, 1))
+def test_sympy__stats__crv_types__KumaraswamyDistribution():
+    from sympy.stats.crv_types import KumaraswamyDistribution
+    assert _test_args(KumaraswamyDistribution(1, 1))
+
+def test_sympy__stats__crv_types__LaplaceDistribution():
+    from sympy.stats.crv_types import LaplaceDistribution
+    assert _test_args(LaplaceDistribution(0, 1))
 
 
-def test_sympy__stats__crv_types__UniformSumPSpace():
-    from sympy.stats.crv_types import UniformSumPSpace
-    assert _test_args(UniformSumPSpace('X', 1))
+def test_sympy__stats__crv_types__LogisticDistribution():
+    from sympy.stats.crv_types import LogisticDistribution
+    assert _test_args(LogisticDistribution(0, 1))
 
 
-def test_sympy__stats__crv_types__WeibullPSpace():
-    from sympy.stats.crv_types import WeibullPSpace
-    assert _test_args(WeibullPSpace('X', 1, 1))
+def test_sympy__stats__crv_types__LogNormalDistribution():
+    from sympy.stats.crv_types import LogNormalDistribution
+    assert _test_args(LogNormalDistribution(0, 1))
 
 
-def test_sympy__stats__crv_types__WignerSemicirclePSpace():
-    from sympy.stats.crv_types import WignerSemicirclePSpace
-    assert _test_args(WignerSemicirclePSpace('X', 1))
+def test_sympy__stats__crv_types__MaxwellDistribution():
+    from sympy.stats.crv_types import MaxwellDistribution
+    assert _test_args(MaxwellDistribution(1))
 
+
+def test_sympy__stats__crv_types__NakagamiDistribution():
+    from sympy.stats.crv_types import NakagamiDistribution
+    assert _test_args(NakagamiDistribution(1, 1))
+
+
+def test_sympy__stats__crv_types__NormalDistribution():
+    from sympy.stats.crv_types import NormalDistribution
+    assert _test_args(NormalDistribution(0, 1))
+
+
+def test_sympy__stats__crv_types__ParetoDistribution():
+    from sympy.stats.crv_types import ParetoDistribution
+    assert _test_args(ParetoDistribution(1, 1))
+
+
+def test_sympy__stats__crv_types__QuadraticUDistribution():
+    from sympy.stats.crv_types import QuadraticUDistribution
+    assert _test_args(QuadraticUDistribution(1, 2))
+
+def test_sympy__stats__crv_types__RaisedCosineDistribution():
+    from sympy.stats.crv_types import RaisedCosineDistribution
+    assert _test_args(RaisedCosineDistribution(1, 1))
+
+def test_sympy__stats__crv_types__RayleighDistribution():
+    from sympy.stats.crv_types import RayleighDistribution
+    assert _test_args(RayleighDistribution(1))
+
+
+def test_sympy__stats__crv_types__StudentTDistribution():
+    from sympy.stats.crv_types import StudentTDistribution
+    assert _test_args(StudentTDistribution(1))
+
+
+def test_sympy__stats__crv_types__TriangularDistribution():
+    from sympy.stats.crv_types import TriangularDistribution
+    assert _test_args(TriangularDistribution(-1, 0, 1))
+
+
+def test_sympy__stats__crv_types__UniformDistribution():
+    from sympy.stats.crv_types import UniformDistribution
+    assert _test_args(UniformDistribution(0, 1))
+
+
+def test_sympy__stats__crv_types__UniformSumDistribution():
+    from sympy.stats.crv_types import UniformSumDistribution
+    assert _test_args(UniformSumDistribution(1))
+
+
+def test_sympy__stats__crv_types__VonMisesDistribution():
+    from sympy.stats.crv_types import VonMisesDistribution
+    assert _test_args(VonMisesDistribution(1, 1))
+
+
+def test_sympy__stats__crv_types__WeibullDistribution():
+    from sympy.stats.crv_types import WeibullDistribution
+    assert _test_args(WeibullDistribution(1, 1))
+
+
+def test_sympy__stats__crv_types__WignerSemicircleDistribution():
+    from sympy.stats.crv_types import WignerSemicircleDistribution
+    assert _test_args(WignerSemicircleDistribution(1))
+
+def test_sympy__stats__drv_types__PoissonDistribution():
+    from sympy.stats.drv_types import PoissonDistribution
+    assert _test_args(PoissonDistribution(1))
+
+def test_sympy__stats__drv_types__GeometricDistribution():
+    from sympy.stats.drv_types import GeometricDistribution
+    assert _test_args(GeometricDistribution(.5))
 
 def test_sympy__core__symbol__Dummy():
     from sympy.core.symbol import Dummy
@@ -1538,17 +1621,17 @@ def test_sympy__logic__boolalg__Nand():
 
 def test_sympy__logic__boolalg__Nor():
     from sympy.logic.boolalg import Nor
-    assert _test_args(Nor(x, y, 2))
+    assert _test_args(Nor(x, y))
 
 
 def test_sympy__logic__boolalg__Not():
     from sympy.logic.boolalg import Not
-    assert _test_args(Not(2))
+    assert _test_args(Not(x))
 
 
 def test_sympy__logic__boolalg__Or():
     from sympy.logic.boolalg import Or
-    assert _test_args(Or(x, y, 2))
+    assert _test_args(Or(x, y))
 
 
 def test_sympy__logic__boolalg__Xor():
@@ -1574,6 +1657,13 @@ def test_sympy__matrices__immutable__ImmutableMatrix():
 def test_sympy__matrices__immutable__ImmutableSparseMatrix():
     from sympy.matrices.immutable import ImmutableSparseMatrix
     assert _test_args(ImmutableSparseMatrix([[1, 2], [3, 4]]))
+
+
+def test_sympy__matrices__expressions__slice__MatrixSlice():
+    from sympy.matrices.expressions.slice import MatrixSlice
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol('X', 4, 4)
+    assert _test_args(MatrixSlice(X, (0, 2), (0, 2)))
 
 
 def test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix():
@@ -1670,6 +1760,11 @@ def test_sympy__matrices__expressions__trace__Trace():
     from sympy.matrices.expressions.trace import Trace
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Trace(MatrixSymbol('A', 3, 3)))
+
+def test_sympy__matrices__expressions__determinant__Det():
+    from sympy.matrices.expressions.determinant import Det
+    from sympy.matrices.expressions import MatrixSymbol
+    assert _test_args(Det(MatrixSymbol('A', 3, 3)))
 
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
@@ -2434,6 +2529,14 @@ def test_sympy__simplify__cse_opts__Neg():
     from sympy.simplify.cse_opts import Neg
     assert _test_args(Neg())
 
+def test_sympy__simplify__hyperexpand__Hyper_Function():
+    from sympy.simplify.hyperexpand import Hyper_Function
+    assert _test_args(Hyper_Function([2], [1]))
+
+def test_sympy__simplify__hyperexpand__G_Function():
+    from sympy.simplify.hyperexpand import G_Function
+    assert _test_args(G_Function([2], [1], [], []))
+
 
 def test_sympy__tensor__indexed__Idx():
     from sympy.tensor.indexed import Idx
@@ -2451,6 +2554,67 @@ def test_sympy__tensor__indexed__IndexedBase():
     assert _test_args(IndexedBase('A', shape=(x, y)))
     assert _test_args(IndexedBase('A', 1))
     assert _test_args(IndexedBase('A')[0, 1])
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorIndexType():
+    from sympy.tensor.tensor import TensorIndexType
+    from sympy import Symbol
+    assert _test_args(TensorIndexType('Lorentz', metric=False))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorSymmetry():
+    from sympy.tensor.tensor import TensorIndexType, tensor_indices, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    assert _test_args(TensorSymmetry(get_symmetric_group_sgs(2)))
+
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorType():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, get_symmetric_group_sgs, TensorType
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    assert _test_args(TensorType([Lorentz], sym))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorHead():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, TensorHead
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    assert _test_args(TensorHead('p', S1, 0))
+
+@XFAIL
+def test_sympy__tensor__tensor__TensorIndex():
+    from sympy.tensor.tensor import TensorIndexType, TensorIndex, TensorSymmetry, TensorType, get_symmetric_group_sgs
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    assert _test_args(TensorIndex('i', Lorentz))
+
+@SKIP("abstract class")
+def test_sympy__tensor__tensor__TensExpr():
+    pass
+
+def test_sympy__tensor__tensor__TensAdd():
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensAdd
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    p, q = S1('p,q')
+    t1 = p(a)
+    t2 = q(a)
+    assert _test_args(TensAdd(t1, t2))
+
+
+def test_sympy__tensor__tensor__TensMul():
+    from sympy.core import S
+    from sympy.tensor.tensor import TensorIndexType, TensorSymmetry, TensorType, get_symmetric_group_sgs, tensor_indices, TensMul
+    Lorentz = TensorIndexType('Lorentz', dummy_fmt='L')
+    a, b = tensor_indices('a,b', Lorentz)
+    sym = TensorSymmetry(get_symmetric_group_sgs(1))
+    S1 = TensorType([Lorentz], sym)
+    p = S1('p')
+    free, dum =  TensMul.from_indices(a)
+    assert _test_args(TensMul(S.One, [p], free, dum))
+
 
 
 @XFAIL

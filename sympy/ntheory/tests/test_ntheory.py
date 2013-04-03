@@ -326,7 +326,8 @@ def test_factorint():
     p1 = nextprime(2**17)
     p2 = nextprime(2*p1)
     assert factorint((p1*p2**2)**3) == {p1: 3, p2: 6}
-
+    # Test for non integer input
+    raises(ValueError, lambda: factorint(4.5))
 
 def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]

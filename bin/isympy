@@ -50,17 +50,17 @@ COMMAND LINE OPTIONS
 -t TYPES, --types=TYPES
 
     Setup the ground types for the polys.  By default, gmpy ground types
-    are used if gmpy is installed, otherwise it falls back to python
+    are used if gmpy2 or gmpy is installed, otherwise it falls back to python
     ground types, which are a little bit slower.  You can manually
     choose python ground types even if gmpy is installed (e.g., for
     testing purposes):
 
         $isympy -t python
 
-    TYPES must be one of 'gmpy', 'python', or 'sympy'
+    TYPES must be one of 'gmpy', 'gmpy1' or 'python'
 
-    Note that sympy ground types are not supported, and should be used
-    only for experimental purposes.
+    Note that the ground type gmpy1 is primarily intended for testing; it
+    forces the use of gmpy version 1 even if gmpy2 is available.
 
     This is the same as setting the environment variable
     SYMPY_GROUND_TYPES to the given ground type (e.g.,
@@ -229,10 +229,9 @@ def main():
         dest='types',
         action='store',
         default=None,
-        choices=['gmpy', 'python', 'sympy'],
-        help='setup ground types: gmpy | python | sympy; defaults to gmpy if '
-        'gmpy is installed, otherwise python (note that sympy ground types are '
-        'not supported and should be used for experimental purposes only)')
+        choices=['gmpy', 'gmpy1', 'python'],
+        help='setup ground types: gmpy | gmpy1 | python; defaults to gmpy if gmpy2 '
+        'or gmpy is installed, otherwise python')
 
     parser.add_option(
         '-o', '--order',

@@ -223,8 +223,9 @@ class Add(Expr, AssocOp):
         # order args canonically
         # Currently we sort things using hashes, as it is quite fast. A better
         # solution is not to sort things at all - but this needs some more
-        # fixing. NOTE: this is used in primitive and Mul.flattten, too, so if
-        # it changes here it should be changed there.
+        # fixing. NOTE: this is used in primitive, Mul.flattten, and
+        # collect_const, too, so if it changes here it should be changed
+        # there.
         newseq.sort(key=hash)
 
         # current code expects coeff to be first

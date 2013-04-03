@@ -321,8 +321,7 @@ from sympy.polys.rootoftools import RootOf, RootSum
 
 from sympy.polys.domains import (
     PythonIntegerRing,
-    SymPyIntegerRing,
-    SymPyRationalField,
+    PythonRationalField,
     PolynomialRing,
     FractionField,
     ExpressionDomain,
@@ -333,7 +332,7 @@ def test_polys():
     x = Symbol("X")
 
     ZZ = PythonIntegerRing()
-    QQ = SymPyRationalField()
+    QQ = PythonRationalField()
 
     for c in (Poly, Poly(x, x)):
         check(c)
@@ -347,9 +346,7 @@ def test_polys():
 
     for c in (PythonIntegerRing, PythonIntegerRing()):
         check(c)
-    for c in (SymPyIntegerRing, SymPyIntegerRing()):
-        check(c)
-    for c in (SymPyRationalField, SymPyRationalField()):
+    for c in (PythonRationalField, PythonRationalField()):
         check(c)
 
     for c in (PolynomialRing, PolynomialRing(ZZ, 'x', 'y')):
@@ -360,12 +357,7 @@ def test_polys():
     for c in (ExpressionDomain, ExpressionDomain()):
         check(c)
 
-    from sympy.polys.domains import PythonRationalField
-
-    for c in (PythonRationalField, PythonRationalField()):
-        check(c)
-
-    from sympy.polys.domains import HAS_GMPY
+    from sympy.core.compatibility import HAS_GMPY
 
     if HAS_GMPY:
         from sympy.polys.domains import GMPYIntegerRing, GMPYRationalField

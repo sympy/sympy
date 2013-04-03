@@ -93,9 +93,6 @@ class ReprPrinter(Printer):
     def _print_NaN(self, expr):
         return "nan"
 
-    def _print_Rational(self, expr):
-        return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
-
     def _print_Mul(self, expr, order=None):
         terms = expr.args
         if self.order != 'old':
@@ -105,6 +102,12 @@ class ReprPrinter(Printer):
 
         args = map(self._print, args)
         return "Mul(%s)" % ", ".join(args)
+
+    def _print_Rational(self, expr):
+        return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
+
+    def _print_PythonRational(self, expr):
+        return "%s(%d, %d)" % (expr.__class__.__name__, expr.p, expr.q)
 
     def _print_Fraction(self, expr):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
@@ -143,6 +146,27 @@ class ReprPrinter(Printer):
         return "%s(%s, %s)" % (self.__class__.__name__,
             self._print(self.coeffs()), self._print(expr.root))
 
+    def _print_PolyRing(self, ring):
+        return "%s(%s, %s, %s)" % (ring.__class__.__name__,
+            self._print(ring.symbols), self._print(ring.domain), self._print(ring.order))
+
+    def _print_FracField(self, field):
+        return "%s(%s, %s, %s)" % (field.__class__.__name__,
+            self._print(field.symbols), self._print(field.domain), self._print(field.order))
+
+    def _print_PolyElement(self, poly):
+        terms = list(poly.terms())
+        terms.sort(key=poly.ring.order, reverse=True)
+        return "%s(%s, %s)" % (poly.__class__.__name__, self._print(poly.ring), self._print(terms))
+
+    def _print_FracElement(self, frac):
+        numer_terms = list(frac.numer.terms())
+        numer_terms.sort(key=frac.field.order, reverse=True)
+        denom_terms = list(frac.denom.terms())
+        denom_terms.sort(key=frac.field.order, reverse=True)
+        numer = self._print(numer_terms)
+        denom = self._print(denom_terms)
+        return "%s(%s, %s, %s)" % (frac.__class__.__name__, self._print(frac.field), numer, denom)
 
 def srepr(expr, **settings):
     """return expr in repr form"""

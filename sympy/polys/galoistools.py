@@ -3,6 +3,7 @@
 from random import uniform
 from math import ceil as _ceil, sqrt as _sqrt
 
+from sympy.core.compatibility import SYMPY_INTS
 from sympy.core.mul import prod
 from sympy.polys.polyutils import _sort_factors
 from sympy.polys.polyconfig import query
@@ -250,24 +251,6 @@ def gf_normal(f, p, K):
     return gf_trunc(map(K, f), p)
 
 
-def gf_convert(f, p, K0, K1):
-    """
-    Normalize all coefficients in ``K``.
-
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.galoistools import gf_convert
-
-    >>> gf_convert([QQ(1), QQ(4), QQ(0)], 3, QQ, ZZ)
-    [1, 1, 0]
-
-    """
-    return gf_trunc([ K1.convert(c, K0) for c in f ], p)
-
-
 @cythonized("k,n")
 def gf_from_dict(f, p, K):
     """
@@ -285,7 +268,7 @@ def gf_from_dict(f, p, K):
     """
     n, h = max(f.iterkeys()), []
 
-    if type(n) is int:
+    if isinstance(n, SYMPY_INTS):
         for k in xrange(n, -1, -1):
             h.append(f.get(k, K.zero) % p)
     else:

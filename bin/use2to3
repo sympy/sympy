@@ -46,6 +46,12 @@ skip_files = (
     'bin/use2to3',
 )
 
+try:
+    running_errors = (CalledProcessError, WindowsError)
+except NameError:
+    # WindowsError is only defined in Windows
+    running_errors = (CalledProcessError,)
+
 # generate the relevant rst files
 # most of them should be in this directory:
 for root, dirs, files in os.walk('doc/src/modules'):
@@ -104,7 +110,7 @@ try:
                 modified_rst_files.append(dst)
         elif filename in relevant_no_extension:
             modified_files.append(dst)
-except (CalledProcessError, WindowsError):
+except running_errors:
     print("git was not found: make sure it is in your PATH "
     "environment or hardcode it into use2to3, changing\n"
     "  files = check_output(['git', 'ls-files'])\n"
