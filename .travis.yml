@@ -25,7 +25,7 @@ before_install:
       pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_PYTEST}" == "true" ]]; then
-      pip install pytest --use-mirrors
+      pip install pytest --use-mirrors;
     fi
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
       pip install coverage python-coveralls --use-mirrors;
