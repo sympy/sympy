@@ -13,6 +13,8 @@ matrix:
       env: TEST_GMPY="true"
     - python: 2.7
       env: TEST_PYTEST="true"
+    - python: 2.7
+      env: TEST_COVERAGE="true"
   allow_failures:
     - python: 2.7
       env: TEST_PYTEST="true"
@@ -23,7 +25,10 @@ before_install:
       pip install "gmpy==1.16";
     fi
   - if [[ "${TEST_PYTEST}" == "true" ]]; then
-      pip install coverage pytest-cov python-coveralls --use-mirrors;
+      pip install pytest --use-mirrors
+    fi
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      pip install coverage python-coveralls --use-mirrors;
     fi
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then
