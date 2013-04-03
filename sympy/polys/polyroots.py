@@ -1,5 +1,7 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
+import math
+
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
 from sympy.core.sympify import sympify
@@ -18,8 +20,6 @@ from sympy.simplify import simplify, powsimp
 from sympy.utilities import default_sort_key
 
 from sympy.core.compatibility import reduce
-
-import math
 
 
 def roots_linear(f):
@@ -165,7 +165,7 @@ def _roots_quartic_euler(p, q, r, a):
     # solve the resolvent equation
     x = Symbol('x')
     eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
-    xsols = roots(eq, cubics=False).keys()
+    xsols = roots(Poly(eq, x), cubics=False).keys()
     xsols = [sol for sol in xsols if sol.is_rational]
     if not xsols:
         return None
@@ -262,17 +262,23 @@ def roots_quartic(f):
             if sols:
                 return sols
             # Ferrari method, see [1, 2]
+            a2 = a**2
+            e = b - 3*a2/8
+            f = c + a*(a2/8 - b/2)
+            g = d - a*(a*(3*a2/256 - b/16) + c/4)
             p = -e**2/12 - g
             q = -e**3/108 + e*g/3 - f**2/8
             TH = Rational(1, 3)
-            if p is S.Zero:
+            if p.is_zero:
                 y = -5*e/6 - q**TH
-            else:
-                # with p !=0 then u below is not 0
+            elif p.is_number and p.is_comparable:
+                # with p != 0 then u below is not 0
                 root = sqrt(q**2/4 + p**3/27)
                 r = -q/2 + root  # or -q/2 - root
                 u = r**TH  # primary root of solve(x**3-r, x)
                 y = -5*e/6 + u - p/u/3
+            else:
+                raise PolynomialError('cannot return general quartic solution')
             w = sqrt(e + 2*y)
             arg1 = 3*e + 2*y
             arg2 = 2*f/w
@@ -283,7 +289,6 @@ def roots_quartic(f):
                     ans.append((s*w - t*root)/2 - aon4)
 
             return ans
-
 
 def roots_binomial(f):
     """Returns a list of roots of a binomial polynomial."""
