@@ -3,6 +3,7 @@ from sympy.combinatorics.graycode import GrayCode
 
 from sympy.core.compatibility import bin, combinations
 
+
 class Subset(Basic):
     """
     Represents a basic subset object.
@@ -10,7 +11,7 @@ class Subset(Basic):
     We generate subsets using essentially two techniques,
     binary enumeration and lexicographic enumeration.
     The Subset class takes two arguments, the first one
-    describes the intial subset to consider and the second
+    describes the initial subset to consider and the second
     describes the superset.
 
     Examples
@@ -80,13 +81,9 @@ class Subset(Basic):
         next_binary, prev_binary
         """
         bin_list = Subset.bitlist_from_subset(self.subset, self.superset)
-        next_bin_list = list(bin((int(reduce(lambda x, y:
-                                             x + y, bin_list), 2) + k)
-                                 % 2**self.superset_size))[2:]
-        next_bin_list = [0] * (self.superset_size - len(next_bin_list)) + \
-                        next_bin_list
-        return Subset.subset_from_bitlist(self.superset, next_bin_list)
-
+        n = (int(''.join(bin_list), 2) + k) % 2**self.superset_size
+        bits = bin(n)[2:].rjust(self.superset_size, '0')
+        return Subset.subset_from_bitlist(self.superset, bits)
 
     def next_binary(self):
         """
@@ -226,7 +223,7 @@ class Subset(Basic):
         ========
         iterate_binary, unrank_binary
         """
-        if self._rank_binary == None:
+        if self._rank_binary is None:
             self._rank_binary = int("".join(
                 Subset.bitlist_from_subset(self.subset,
                                            self.superset)), 2)
@@ -248,7 +245,7 @@ class Subset(Basic):
         >>> a.rank_lexicographic
         43
         """
-        if self._rank_lex == None:
+        if self._rank_lex is None:
             def _ranklex(self, subset_index, i, n):
                 if subset_index == [] or i > n:
                     return 0
@@ -280,7 +277,7 @@ class Subset(Basic):
         ========
         iterate_graycode, unrank_gray
         """
-        if self._rank_graycode == None:
+        if self._rank_graycode is None:
             bits = Subset.bitlist_from_subset(self.subset, self.superset)
             self._rank_graycode = GrayCode(len(bits), start=bits).rank
         return self._rank_graycode
@@ -443,9 +440,8 @@ class Subset(Basic):
         ========
         iterate_binary, rank_binary
         """
-        bin_list = list(bin(rank))[2:]
-        bin_list = [0] * (len(superset) - len(bin_list)) + bin_list
-        return Subset.subset_from_bitlist(superset, bin_list)
+        bits = bin(rank)[2:].rjust(len(superset), '0')
+        return Subset.subset_from_bitlist(superset, bits)
 
     @classmethod
     def unrank_gray(self, rank, superset):
@@ -497,6 +493,7 @@ class Subset(Basic):
         else:
             return list()
         return [d[bi] for bi in b]
+
 
 def ksubsets(superset, k):
     """

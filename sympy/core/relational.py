@@ -1,12 +1,15 @@
-from basic import Basic, S
+from basic import S
 from expr import Expr
 from evalf import EvalfMixin
+from symbol import Symbol
 from sympify import _sympify
 
+from sympy.logic.boolalg import Boolean
+
 __all__ = (
- 'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
- 'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
- 'StrictGreaterThan', 'GreaterThan',
+    'Rel', 'Eq', 'Ne', 'Lt', 'Le', 'Gt', 'Ge',
+    'Relational', 'Equality', 'Unequality', 'StrictLessThan', 'LessThan',
+    'StrictGreaterThan', 'GreaterThan',
 )
 
 
@@ -24,7 +27,8 @@ def Rel(a, b, op):
     y == x**2 + x
 
     """
-    return Relational(a,b,op)
+    return Relational(a, b, op)
+
 
 def Eq(a, b=0):
     """
@@ -40,7 +44,8 @@ def Eq(a, b=0):
     y == x**2 + x
 
     """
-    return Relational(a,b,'==')
+    return Relational(a, b, '==')
+
 
 def Ne(a, b):
     """
@@ -56,7 +61,8 @@ def Ne(a, b):
     y != x**2 + x
 
     """
-    return Relational(a,b,'!=')
+    return Relational(a, b, '!=')
+
 
 def Lt(a, b):
     """
@@ -72,7 +78,8 @@ def Lt(a, b):
     y < x**2 + x
 
     """
-    return Relational(a,b,'<')
+    return Relational(a, b, '<')
+
 
 def Le(a, b):
     """
@@ -88,7 +95,8 @@ def Le(a, b):
     y <= x**2 + x
 
     """
-    return Relational(a,b,'<=')
+    return Relational(a, b, '<=')
+
 
 def Gt(a, b):
     """
@@ -104,7 +112,8 @@ def Gt(a, b):
     y > x**2 + x
 
     """
-    return Relational(a,b,'>')
+    return Relational(a, b, '>')
+
 
 def Ge(a, b):
     """
@@ -120,9 +129,13 @@ def Ge(a, b):
     y >= x**2 + x
 
     """
-    return Relational(a,b,'>=')
+    return Relational(a, b, '>=')
 
-class Relational(Expr, EvalfMixin):
+# Note, see issue 1887.  Ideally, we wouldn't want to subclass both Boolean
+# and Expr.
+
+
+class Relational(Boolean, Expr, EvalfMixin):
 
     __slots__ = []
 
@@ -142,23 +155,40 @@ class Relational(Expr, EvalfMixin):
             except KeyError:
                 msg = "Invalid relational operator symbol: '%r'"
                 raise ValueError(msg % repr(rop))
-        if (lhs.is_number and rhs.is_number and
-           (rop_cls in (Equality, Unequality) or
-            lhs.is_real and rhs.is_real)):
+
+        diff = S.NaN
+        if isinstance(lhs, Expr) and isinstance(rhs, Expr):
             diff = lhs - rhs
-            know = (lhs - rhs).equals(0, failing_expression=True)
-            if know is True: # exclude failing expression case
-                Nlhs = Nrhs = S.Zero
+        if not (diff is S.NaN or diff.has(Symbol)):
+            know = diff.equals(0, failing_expression=True)
+            if know is True:  # exclude failing expression case
+                diff = S.Zero
             elif know is False:
-                from sympy import sign
-                Nlhs = sign((lhs - rhs).n(1))
-                Nrhs = S.Zero
-            else:
-                Nlhs = None
-                lhs = know
-                rhs = S.Zero
-            if Nlhs is not None:
-                return rop_cls._eval_relation(Nlhs, S.Zero)
+                diff = diff.n()
+        if rop_cls is Equality:
+            if (lhs == rhs) is True or (diff == S.Zero) is True:
+                return True
+            elif diff is S.NaN:
+                pass
+            elif diff.is_Number or diff.is_Float:
+                return False
+            elif lhs.is_real is not rhs.is_real and \
+                lhs.is_real is not None and \
+                   rhs.is_real is not None:
+                return False
+        elif rop_cls is Unequality:
+            if (lhs == rhs) is True or (diff == S.Zero) is True:
+                return False
+            elif diff is S.NaN:
+                pass
+            elif diff.is_Number or diff.is_Float:
+                return True
+            elif lhs.is_real is not rhs.is_real and \
+                lhs.is_real is not None and \
+                   rhs.is_real is not None:
+                return True
+        elif diff.is_Number and diff.is_real:
+            return rop_cls._eval_relation(diff, S.Zero)
 
         obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
         return obj
@@ -186,6 +216,11 @@ class Relational(Expr, EvalfMixin):
     def _eval_relation_doit(cls, lhs, rhs):
         return cls._eval_relation(lhs, rhs)
 
+    def _eval_simplify(self, ratio, measure):
+        return self.__class__(self.lhs.simplify(ratio=ratio),
+                              self.rhs.simplify(ratio=ratio))
+
+
 class Equality(Relational):
 
     rel_op = '=='
@@ -203,7 +238,8 @@ class Equality(Relational):
         return Eq(lhs, rhs)
 
     def __nonzero__(self):
-        return self.lhs.compare(self.rhs)==0
+        return self.lhs.compare(self.rhs) == 0
+
 
 class Unequality(Relational):
 
@@ -220,7 +256,8 @@ class Unequality(Relational):
         return Ne(lhs, rhs)
 
     def __nonzero__(self):
-        return self.lhs.compare(self.rhs)!=0
+        return self.lhs.compare(self.rhs) != 0
+
 
 class _Greater(Relational):
     """Not intended for general use
@@ -239,6 +276,7 @@ class _Greater(Relational):
     def lts(self):
         return self._args[1]
 
+
 class _Less(Relational):
     """Not intended for general use.
 
@@ -255,6 +293,7 @@ class _Less(Relational):
     @property
     def lts(self):
         return self._args[0]
+
 
 class GreaterThan(_Greater):
     """Class representations of inequalities.
@@ -350,7 +389,7 @@ class GreaterThan(_Greater):
     True
 
     However, it is also perfectly valid to instantiate a ``*Than`` class less
-    succinctly and less conviently:
+    succinctly and less conveniently:
 
     >>> rels = Rel(x, 1, '>='), Relational(x, 1, '>='), GreaterThan(x, 1)
     >>> print '%s\\n%s\\n%s' % rels
@@ -508,6 +547,7 @@ class GreaterThan(_Greater):
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) >= 0
 
+
 class LessThan(_Less):
     __doc__ = GreaterThan.__doc__
     __slots__ = ()
@@ -521,6 +561,7 @@ class LessThan(_Less):
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) <= 0
 
+
 class StrictGreaterThan(_Greater):
     __doc__ = GreaterThan.__doc__
     __slots__ = ()
@@ -533,6 +574,7 @@ class StrictGreaterThan(_Greater):
 
     def __nonzero__(self):
         return self.lhs.compare( self.rhs ) > 0
+
 
 class StrictLessThan(_Less):
     __doc__ = GreaterThan.__doc__
@@ -551,18 +593,18 @@ class StrictLessThan(_Less):
 # is defined here, rather than directly in the class, because the classes that
 # it references have not been defined until now (e.g. StrictLessThan).
 Relational.ValidRelationOperator = {
-  None : Equality,
-  '==' : Equality,
-  'eq' : Equality,
-  '!=' : Unequality,
-  '<>' : Unequality,
-  'ne' : Unequality,
-  '>=' : GreaterThan,
-  'ge' : GreaterThan,
-  '<=' : LessThan,
-  'le' : LessThan,
-  '>'  : StrictGreaterThan,
-  'gt' : StrictGreaterThan,
-  '<'  : StrictLessThan,
-  'lt' : StrictLessThan,
+    None: Equality,
+    '==': Equality,
+    'eq': Equality,
+    '!=': Unequality,
+    '<>': Unequality,
+    'ne': Unequality,
+    '>=': GreaterThan,
+    'ge': GreaterThan,
+    '<=': LessThan,
+    'le': LessThan,
+    '>': StrictGreaterThan,
+    'gt': StrictGreaterThan,
+    '<': StrictLessThan,
+    'lt': StrictLessThan,
 }

@@ -1,10 +1,12 @@
 from sympy.core.function import Function, C
 from sympy.core import S, Integer
 from sympy.core.mul import prod
+from sympy.utilities.iterables import (has_dups, default_sort_key)
 
 ###############################################################################
 ###################### Kronecker Delta, Levi-Civita etc. ######################
 ###############################################################################
+
 
 def Eijk(*args, **kwargs):
     """
@@ -20,6 +22,7 @@ def Eijk(*args, **kwargs):
     """
     return LeviCivita(*args, **kwargs)
 
+
 def eval_levicivita(*args):
     """Evaluate Levi-Civita symbol."""
     from sympy import factorial
@@ -28,6 +31,7 @@ def eval_levicivita(*args):
         prod(args[j] - args[i] for j in xrange(i + 1, n))
         / factorial(i) for i in xrange(n))
     # converting factorial(i) to int is slightly faster
+
 
 class LeviCivita(Function):
     """Represent the Levi-Civita symbol.
@@ -59,15 +63,19 @@ class LeviCivita(Function):
     Eijk
 
     """
+
+    is_integer = True
+
     @classmethod
     def eval(cls, *args):
         if all(isinstance(a, (int, Integer)) for a in args):
             return eval_levicivita(*args)
-        if len(set(args)) < len(args):
+        if has_dups(args):
             return S.Zero
 
     def doit(self):
         return eval_levicivita(*self.args)
+
 
 class KroneckerDelta(Function):
     """The discrete, or Kronecker, delta function.
@@ -119,7 +127,8 @@ class KroneckerDelta(Function):
     """
 
     nargs = 2
-    is_commutative=True
+
+    is_integer = True
 
     @classmethod
     def eval(cls, i, j):
@@ -144,7 +153,7 @@ class KroneckerDelta(Function):
         # indirect doctest
 
         """
-        if i > j:
+        if (i > j) is True:
             return cls(j, i)
 
         diff = C.Abs(i - j)
@@ -156,12 +165,16 @@ class KroneckerDelta(Function):
             return KroneckerDelta(0, diff.args[0])
 
         if i.assumptions0.get("below_fermi") and \
-           j.assumptions0.get("above_fermi"):
+                j.assumptions0.get("above_fermi"):
             return S.Zero
         if j.assumptions0.get("below_fermi") and \
-           i.assumptions0.get("above_fermi"):
+                i.assumptions0.get("above_fermi"):
             return S.Zero
-
+        # to make KroneckerDelta canonical
+        # following lines will check if inputs are in order
+        # if not, will return KroneckerDelta with correct order
+        if i is not min(i, j, key=default_sort_key):
+            return cls(j, i)
 
     @property
     def is_above_fermi(self):
@@ -328,7 +341,6 @@ class KroneckerDelta(Function):
         # if both indices are general we are True, else false
         return self.is_below_fermi and self.is_above_fermi
 
-
     @property
     def preferred_index(self):
         """
@@ -421,19 +433,3 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
-
-    def _dagger_(self):
-        return self
-
-    def _eval_dagger(self):
-        return self
-
-    def _sympyrepr(self, printer, *args):
-        return "%s(%s, %s)"% (self.__class__.__name__, self.args[0], \
-        self.args[1])
-
-    def _latex(self, printer, *args):
-        i = printer._print(self.args[0], *args)
-        j = printer._print(self.args[1], *args)
-        return '\\delta_{%s %s}' % (i, j)
-

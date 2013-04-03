@@ -4,6 +4,7 @@ from sympy.core.compatibility import bin
 
 import random
 
+
 class GrayCode(Basic):
     """
     A Gray code is essentially a Hamiltonian walk on
@@ -78,17 +79,20 @@ class GrayCode(Basic):
 
         """
         if n < 1 or int(n) != n:
-            raise ValueError('Gray code dimension must be a positive integer, not %i' % n)
+            raise ValueError(
+                'Gray code dimension must be a positive integer, not %i' % n)
         n = int(n)
         args = (n,) + args
-        obj = Basic.__new__(cls, *args, **kw_args)
-        if kw_args.has_key("start"):
+        obj = Basic.__new__(cls, *args)
+        if 'start' in kw_args:
             obj._current = kw_args["start"]
             if len(obj._current) > n:
-                raise ValueError('Gray code start has length %i but should not be greater than %i' % (len(obj._current), n))
-        elif kw_args.has_key("rank"):
+                raise ValueError('Gray code start has length %i but '
+                'should not be greater than %i' % (len(obj._current), n))
+        elif 'rank' in kw_args:
             if int(kw_args["rank"]) != kw_args["rank"]:
-                raise ValueError('Gray code rank must be a positive integer, not %i' % kw_args["rank"])
+                raise ValueError('Gray code rank must be a positive integer, '
+                'not %i' % kw_args["rank"])
             obj._rank = int(kw_args["rank"]) % obj.selections
             obj._current = obj.unrank(n, obj._rank)
         return obj
@@ -166,16 +170,17 @@ class GrayCode(Basic):
         """
         bits = self.n
         start = None
-        if hints.has_key("start"):
+        if "start" in hints:
             start = hints["start"]
-        elif hints.has_key("rank"):
+        elif "rank" in hints:
             start = GrayCode.unrank(self.n, hints["rank"])
-        if start != None:
+        if start is not None:
             self._current = start
         current = self.current
         graycode_bin = gray_to_bin(current)
         if len(graycode_bin) > self.n:
-            raise ValueError('Gray code start has length %i but should not be greater than %i' % (len(graycode_bin), bits))
+            raise ValueError('Gray code start has length %i but should '
+            'not be greater than %i' % (len(graycode_bin), bits))
         self._current = int(current, 2)
         graycode_int = int(''.join(graycode_bin), 2)
         for i in xrange(graycode_int, 1 << bits):
@@ -299,6 +304,7 @@ class GrayCode(Basic):
             return '1' + _unrank(m - (k % m) - 1, n - 1)
         return _unrank(rank, n)
 
+
 def random_bitstring(n):
     """
     Generates a random bitlist of length n.
@@ -311,6 +317,7 @@ def random_bitstring(n):
     100
     """
     return ''.join([random.choice('01') for i in xrange(n)])
+
 
 def gray_to_bin(bin_list):
     """
@@ -331,8 +338,9 @@ def gray_to_bin(bin_list):
     """
     b = [bin_list[0]]
     for i in xrange(1, len(bin_list)):
-        b += str(int(b[i-1] != bin_list[i]))
+        b += str(int(b[i - 1] != bin_list[i]))
     return ''.join(b)
+
 
 def bin_to_gray(bin_list):
     """
@@ -356,6 +364,7 @@ def bin_to_gray(bin_list):
         b += str(int(bin_list[i]) ^ int(b[i - 1]))
     return ''.join(b)
 
+
 def get_subset_from_bitstring(super_set, bitstring):
     """
     Gets the subset defined by the bitstring.
@@ -375,8 +384,9 @@ def get_subset_from_bitstring(super_set, bitstring):
     """
     if len(super_set) != len(bitstring):
         raise ValueError("The sizes of the lists are not equal")
-    return [super_set[i] for i, j in enumerate(bitstring) \
+    return [super_set[i] for i, j in enumerate(bitstring)
             if bitstring[i] == '1']
+
 
 def graycode_subsets(gray_code_set):
     """
@@ -398,5 +408,5 @@ def graycode_subsets(gray_code_set):
     ========
     get_subset_from_bitstring
     """
-    return [get_subset_from_bitstring(gray_code_set, bitstring) for \
-            bitstring in list(GrayCode(len(gray_code_set)).generate_gray())]
+    for bitstring in list(GrayCode(len(gray_code_set)).generate_gray()):
+        yield get_subset_from_bitstring(gray_code_set, bitstring)

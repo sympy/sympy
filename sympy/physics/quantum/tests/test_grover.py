@@ -4,11 +4,14 @@ from sympy.physics.quantum.qubit import IntQubit
 from sympy.physics.quantum.grover import (apply_grover, superposition_basis,
         OracleGate, grover_iteration, WGate)
 
+
 def return_one_on_two(qubits):
     return qubits == IntQubit(2, qubits.nqubits)
 
+
 def return_one_on_one(qubits):
     return qubits == IntQubit(1, qubits.nqubits)
+
 
 def test_superposition_basis():
     nbits = 2
@@ -23,6 +26,7 @@ def test_superposition_basis():
     fourthq = (1/sqrt(8))*IntQubit(6, nbits) + (1/sqrt(8))*IntQubit(7, nbits)
     assert firstq + secondq + thirdq + fourthq == superposition_basis(nbits)
 
+
 def test_OracleGate():
     v = OracleGate(1, lambda qubits: qubits == IntQubit(0))
     assert qapply(v*IntQubit(0)) == -IntQubit(0)
@@ -35,6 +39,7 @@ def test_OracleGate():
     assert qapply(v*IntQubit(2, nbits)) == -IntQubit(2, nbits)
     assert qapply(v*IntQubit(3, nbits)) == IntQubit(3, nbits)
 
+
 def test_WGate():
     nqubits = 2
     basis_states = superposition_basis(nqubits)
@@ -43,12 +48,14 @@ def test_WGate():
     expected = ((2/sqrt(pow(2, nqubits)))*basis_states) - IntQubit(1, nqubits)
     assert qapply(WGate(nqubits)*IntQubit(1, nqubits)) == expected
 
+
 def test_grover_iteration_1():
     numqubits = 2
     basis_states = superposition_basis(numqubits)
     v = OracleGate(numqubits, return_one_on_one)
     expected = IntQubit(1, numqubits)
     assert qapply(grover_iteration(basis_states, v)) == expected
+
 
 def test_grover_iteration_2():
     numqubits = 4
@@ -73,6 +80,7 @@ def test_grover_iteration_2():
     expected = (-13*basis_states)/64 + 264*IntQubit(2, numqubits)/256
     assert qapply(expected) == iterated
 
+
 def test_grover():
     nqubits = 2
     assert apply_grover(return_one_on_one, nqubits) == IntQubit(1, nqubits)
@@ -81,4 +89,3 @@ def test_grover():
     basis_states = superposition_basis(nqubits)
     expected = (-13*basis_states)/64 + 264*IntQubit(2, nqubits)/256
     assert apply_grover(return_one_on_two, 4) == qapply(expected)
-

@@ -14,42 +14,42 @@
 import sys
 
 # If your extensions are in another directory, add it here.
-sys.path.extend(['../sympy', 'ext'])
+sys.path = ['../sympy', 'ext'] + sys.path
 
 # General configuration
 # ---------------------
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'mathjax',
-              'numpydoc',]
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
+              'numpydoc', 'sympylive', ]
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
 
-# MathJax file, which is free to use.  See https://bitbucket.org/kevindunn/sphinx-extension-mathjax/wiki/Home
-mathjax_path = 'http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
+# MathJax file, which is free to use.  See http://www.mathjax.org/docs/2.0/start.html
+mathjax_path = 'https://c328740.ssl.cf1.rackcdn.com/mathjax/latest/MathJax.js?config=TeX-AMS_HTML-full'
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['.templates']
 
 # The suffix of source filenames.
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2008, 2009, 2010, 2011, 2012 SymPy Development Team'
+copyright = '2013 SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.7.1'
+version = '0.7.2'
 # The full version, including alpha/beta/rc tags.
-release = '0.7.1-git'
+release = '0.7.2-git'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -58,7 +58,7 @@ release = '0.7.1-git'
 today_fmt = '%B %d, %Y'
 
 # Translations:
-locale_dirs = ["i18n/"]
+locale_dirs = ["../_build/i18n/"]
 
 # List of documents that shouldn't be included in the build.
 #unused_docs = []
@@ -97,6 +97,23 @@ html_last_updated_fmt = '%b %d, %Y'
 
 html_logo = '_static/sympylogo.png'
 html_favicon = '../logo/SymPy-Favicon.ico'
+# See http://sphinx-doc.org/theming.html#builtin-themes.
+html_theme_options = {
+    'collapsiblesidebar': True,
+    'relbarbgcolor': '#2f441e',
+    'sidebarbgcolor': '#3b5526',
+    'sidebarbtncolor': '#4F663C',
+    'sidebarlinkcolor': '#81B953',
+    'linkcolor': '#4F663C',
+    'visitedlinkcolor': '#293b1b',
+    'headtextcolor': '#2f441e',
+    'footerbgcolor': '#293b1b',
+    'headlinkcolor': '#AAAAAA',
+    'sidebartextcolor': '#DDDDDD',
+    'footertextcolor': '#DDDDDD',
+    'relbartextcolor': '#DDDDDD',
+    'relbarlinkcolor': '#81B953',
+}
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -132,25 +149,54 @@ htmlhelp_basename = 'SymPydoc'
 #latex_font_size = '10pt'
 
 # Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, document class [howto/manual]).
-latex_documents = [('index', 'sympy.tex', 'SymPy Documentation',
-                        'SymPy Development Team', 'manual')]
+# (source start file, target name, title, author, document class [howto/manual], toctree_only).
+# toctree_only is set to True so that the start file document itself is not included in the
+# output, only the documents referenced by it via TOC trees.  The extra stuff in the master
+# document is intended to show up in the HTML, but doesn't really belong in the LaTeX output.
+latex_documents = [('index', 'sympy-%s.tex' % release, 'SymPy Documentation',
+                    'SymPy Development Team', 'manual', True)]
 
 # Additional stuff for the LaTeX preamble.
-#latex_preamble = ''
+# Tweaked to work with XeTeX.
+latex_elements = {
+    'babel':     '',
+    'fontenc': r'''
+\usepackage{amssymb}
+\usepackage{fontspec}
+\defaultfontfeatures{Mapping=tex-text}
+\setmainfont{DejaVu Serif}
+\setsansfont{DejaVu Sans}
+\setmonofont{DejaVu Sans Mono}
+''',
+    'fontpkg':   '',
+    'inputenc':  '',
+    'utf8extra': '',
+    'preamble':  ''
+}
+
+# SymPy logo on title page
+latex_logo = '_static/sympylogo.png'
 
 # Documents to append as an appendix to all manuals.
 #latex_appendices = []
 
-# If false, no module index is generated.
-#latex_use_modindex = True
+# Show page numbers next to internal references
+latex_show_pagerefs = True
+
+# We use False otherwise the module index gets generated twice.
+latex_use_modindex = False
 
 default_role = 'math'
-pngmath_divpng_args = ['-gamma 1.5','-D 110']
+pngmath_divpng_args = ['-gamma 1.5', '-D 110']
 # Note, this is ignored by the mathjax extension
 # Any \newcommand should be defined in the file
-pngmath_latex_preamble =  '\\usepackage{amsmath}\n'+\
-              '\\usepackage{bm}\n'+\
-              '\\usepackage{amsfonts}\n'+\
-              '\\usepackage{amssymb}\n'+\
-              '\\setlength{\\parindent}{0pt}\n'
+pngmath_latex_preamble = '\\usepackage{amsmath}\n' \
+    '\\usepackage{bm}\n' \
+    '\\usepackage{amsfonts}\n' \
+    '\\usepackage{amssymb}\n' \
+    '\\setlength{\\parindent}{0pt}\n'
+
+texinfo_documents = [
+    (master_doc, 'sympy', 'SymPy Documentation', 'SymPy Development Team',
+   'SymPy', 'Computer algebra system (CAS) in Python', 'Programming', 1),
+]

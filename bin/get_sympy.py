@@ -3,6 +3,7 @@
 import os
 import sys
 
+
 def path_hack():
     """
     Hack sys.path to import correct (local) sympy.

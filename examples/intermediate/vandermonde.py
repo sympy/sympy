@@ -8,6 +8,7 @@ Demonstrates matrix computations using the Vandermonde matrix.
 
 from sympy import Matrix, pprint, Rational, sqrt, symbols, Symbol, zeros
 
+
 def symbol_gen(sym_str):
     """Symbol generator
 
@@ -46,10 +47,12 @@ def vandermonde(order, dim=1, syms='a b c d'):
     polynomials.
     """
     syms = syms.split()
-    if len(syms) < dim:
+    n = len(syms)
+    if n < dim:
         new_syms = []
-        for i in range(dim - len(syms)):
-            new_syms.append(syms[i%len(syms)] + str(i/len(syms)))
+        for i in range(dim - n):
+            j, rem = divmod(i, n)
+            new_syms.append(syms[rem] + str(j))
         syms.extend(new_syms)
     terms = []
     for i in range(order + 1):
@@ -61,7 +64,7 @@ def vandermonde(order, dim=1, syms='a b c d'):
     for i in range(rank):
         row_syms = [g.next() for g in generators]
         all_syms.append(row_syms)
-        for j,term in enumerate(terms):
+        for j, term in enumerate(terms):
             v_entry = 1
             for k in term:
                 v_entry *= row_syms[k]
@@ -80,8 +83,8 @@ def gen_poly(points, order, syms):
     V, tmp_syms, terms = vandermonde(order, dim)
     if num_pts < V.shape[0]:
         raise ValueError(
-            "Must provide %d points for order %d, dimension "\
-            "%d polynomial, given %d points" % \
+            "Must provide %d points for order %d, dimension "
+            "%d polynomial, given %d points" %
             (V.shape[0], order, dim, num_pts))
     elif num_pts > V.shape[0]:
         print "gen_poly given %d points but only requires %d, "\
@@ -99,7 +102,7 @@ def gen_poly(points, order, syms):
     coeffs = V_inv.multiply(Matrix([points[i][-1] for i in xrange(num_pts)]))
 
     f = 0
-    for j,term in enumerate(terms):
+    for j, term in enumerate(terms):
         t = 1
         for k in term:
             t *= syms[k]
@@ -126,21 +129,21 @@ def main():
     \sum   = %(sum)s
            = %(sum_expand)s
     """ % { "det": V.det(),
-             "sum": det_sum,
-             "sum_expand": det_sum.expand(),
+            "sum": det_sum,
+            "sum_expand": det_sum.expand(),
           }
 
     print '-'*79
     print "Polynomial fitting with a Vandermonde Matrix:"
-    x,y,z = symbols('x,y,z')
+    x, y, z = symbols('x,y,z')
 
-    points = [(0,3), (1,2), (2,3)]
+    points = [(0, 3), (1, 2), (2, 3)]
     print """
     Quadratic function, represented by 3 points:
        points = %(pts)s
        f = %(f)s
     """ % { "pts" : points,
-            "f" : gen_poly(points, 2, [x]),
+            "f": gen_poly(points, 2, [x]),
           }
 
     points = [(0, 1, 1), (1, 0, 0), (1, 1, 0), (Rational(1, 2), 0, 0),
@@ -150,7 +153,7 @@ def main():
        points = %(pts)s
        f = %(f)s
     """ % { "pts" : points,
-            "f" : gen_poly(points, 2, [x, y]),
+            "f": gen_poly(points, 2, [x, y]),
           }
 
     points = [(0, 1, 1, 1), (1, 1, 0, 0), (1, 0, 1, 0), (1, 1, 1, 1)]
@@ -159,10 +162,9 @@ def main():
        points = %(pts)s
        f = %(f)s
     """ % { "pts" : points,
-            "f" : gen_poly(points, 1, [x, y, z]),
+            "f": gen_poly(points, 1, [x, y, z]),
           }
 
 
 if __name__ == "__main__":
     main()
-

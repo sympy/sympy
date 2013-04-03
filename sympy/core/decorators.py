@@ -7,19 +7,23 @@ dependencies, so that they can be easily imported anywhere in sympy/core.
 
 from functools import wraps
 from sympify import SympifyError, sympify
-from sympy.core.compatibility import SymPyDeprecationWarning
-import warnings
 
-def deprecated(func):
+
+def deprecated(**decorator_kwargs):
     """This is a decorator which can be used to mark functions
     as deprecated. It will result in a warning being emitted
     when the function is used."""
-    @wraps(func)
-    def new_func(*args, **kwargs):
-        warnings.warn("Call to deprecated function %s." % func.__name__,
-                      category=SymPyDeprecationWarning)
-        return func(*args, **kwargs)
-    return new_func
+
+    def deprecated_decorator(func):
+        @wraps(func)
+        def new_func(*args, **kwargs):
+            from sympy.utilities.exceptions import SymPyDeprecationWarning
+            decorator_kwargs.setdefault('feature', func.__name__)
+            SymPyDeprecationWarning(**decorator_kwargs).warn()
+            return func(*args, **kwargs)
+        return new_func
+    return deprecated_decorator
+
 
 def _sympifyit(arg, retval=None):
     """decorator to smartly _sympify function arguments
@@ -42,6 +46,7 @@ def _sympifyit(arg, retval=None):
 
     return deco
 
+
 def __sympifyit(func, arg, retval=None):
     """decorator to _sympify `arg` argument for function `func`
 
@@ -62,7 +67,11 @@ def __sympifyit(func, arg, retval=None):
         @wraps(func)
         def __sympifyit_wrapper(a, b):
             try:
-                return func(a, sympify(b, strict=True))
+                # If an external class has _op_priority, it knows how to deal
+                # with sympy objects. Otherwise, it must be converted.
+                if not hasattr(b, '_op_priority'):
+                    b = sympify(b, strict=True)
+                return func(a, b)
             except SympifyError:
                 return retval
 
@@ -93,6 +102,7 @@ def call_highest_priority(method_name):
         ...
     """
     def priority_decorator(func):
+        @wraps(func)
         def binary_op_wrapper(self, other):
             if hasattr(other, '_op_priority'):
                 if other._op_priority > self._op_priority:
@@ -105,4 +115,3 @@ def call_highest_priority(method_name):
             return func(self, other)
         return binary_op_wrapper
     return priority_decorator
-

@@ -24,6 +24,7 @@ __all__ = [
 # Main objects
 #-----------------------------------------------------------------------------
 
+
 class HilbertSpaceError(QuantumError):
     pass
 
@@ -31,11 +32,12 @@ class HilbertSpaceError(QuantumError):
 # Main objects
 #-----------------------------------------------------------------------------
 
+
 class HilbertSpace(Basic):
     """An abstract Hilbert space for quantum mechanics.
 
     In short, a Hilbert space is an abstract vector space that is complete
-    with inner products defined [1].
+    with inner products defined [1]_.
 
     Examples
     ========
@@ -48,7 +50,7 @@ class HilbertSpace(Basic):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hilbert_space
+    .. [1] http://en.wikipedia.org/wiki/Hilbert_space
     """
 
     def __new__(cls):
@@ -74,7 +76,7 @@ class HilbertSpace(Basic):
 
     def __pow__(self, other, mod=None):
         if mod is not None:
-            raise ValueError('The third argument to __pow__ is not supported\
+            raise ValueError('The third argument to __pow__ is not supported \
             for Hilbert spaces.')
         return TensorPowerHilbertSpace(self, other)
 
@@ -110,9 +112,9 @@ class ComplexSpace(HilbertSpace):
     of the vector on the right.
 
     A classic example of this type of Hilbert space is spin-1/2, which is
-    ComplexSpace(2). Likewise, for spin-s, the space is ComplexSpace(2*s+1).
-    Quantum computing with N qubits is done with the direct product space
-    ComplexSpace(2)**N.
+    ``ComplexSpace(2)``. Generalizing to spin-s, the space is
+    ``ComplexSpace(2*s+1)``.  Quantum computing with N qubits is done with the
+    direct product space ``ComplexSpace(2)**N``.
 
     Examples
     ========
@@ -145,16 +147,16 @@ class ComplexSpace(HilbertSpace):
     @classmethod
     def eval(cls, dimension):
         if len(dimension.atoms()) == 1:
-            if not (dimension.is_Integer and dimension > 0 or dimension is oo\
+            if not (dimension.is_Integer and dimension > 0 or dimension is oo
             or dimension.is_Symbol):
                 raise TypeError('The dimension of a ComplexSpace can only'
-                                'be a positive integer, oo, or a Symbol: %r' \
+                                'be a positive integer, oo, or a Symbol: %r'
                                 % dimension)
         else:
             for dim in dimension.atoms():
                 if not (dim.is_Integer or dim is oo or dim.is_Symbol):
                     raise TypeError('The dimension of a ComplexSpace can only'
-                                    ' contain integers, oo, or a Symbol: %r' \
+                                    ' contain integers, oo, or a Symbol: %r'
                                     % dim)
 
     @property
@@ -202,7 +204,7 @@ class L2(HilbertSpace):
 
     def __new__(cls, interval):
         if not isinstance(interval, Interval):
-            raise TypeError('L2 interval must be an Interval instance: %r'\
+            raise TypeError('L2 interval must be an Interval instance: %r'
             % interval)
         obj = Basic.__new__(cls, interval)
         return obj
@@ -235,7 +237,7 @@ class FockSpace(HilbertSpace):
     """The Hilbert space for second quantization.
 
     Technically, this Hilbert space is a infinite direct sum of direct
-    products of single particle Hilbert spaces [1]. This is a mess, so we have
+    products of single particle Hilbert spaces [1]_. This is a mess, so we have
     a class to represent it directly.
 
     Examples
@@ -251,7 +253,7 @@ class FockSpace(HilbertSpace):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Fock_space
+    .. [1] http://en.wikipedia.org/wiki/Fock_space
     """
 
     def __new__(cls):
@@ -278,15 +280,16 @@ class FockSpace(HilbertSpace):
 
 
 class TensorProductHilbertSpace(HilbertSpace):
-    """A tensor product of Hilbert spaces [1].
+    """A tensor product of Hilbert spaces [1]_.
 
     The tensor product between Hilbert spaces is represented by the
-    operator "*" Products of the same Hilbert space will be combined into
+    operator ``*`` Products of the same Hilbert space will be combined into
     tensor powers.
 
-    A TensorProductHilbertSpace object takes in an indefinite number of
-    HilbertSpace objects as its arguments. In addition, multiplication of
-    HilbertSpace objects will automatically return a Tensor product object.
+    A ``TensorProductHilbertSpace`` object takes in an arbitrary number of
+    ``HilbertSpace`` objects as its arguments. In addition, multiplication of
+    ``HilbertSpace`` objects will automatically return this tensor product
+    object.
 
     Examples
     ========
@@ -316,7 +319,7 @@ class TensorProductHilbertSpace(HilbertSpace):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
+    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
     def __new__(cls, *args):
@@ -339,29 +342,29 @@ class TensorProductHilbertSpace(HilbertSpace):
             elif isinstance(arg, (HilbertSpace, TensorPowerHilbertSpace)):
                 new_args.append(arg)
             else:
-                raise TypeError('Hilbert spaces can only be multiplied by\
+                raise TypeError('Hilbert spaces can only be multiplied by \
                 other Hilbert spaces: %r' % arg)
         #combine like arguments into direct powers
         comb_args = []
         prev_arg = None
         for new_arg in new_args:
-            if prev_arg != None:
-                if isinstance(new_arg, TensorPowerHilbertSpace) and\
-                isinstance(prev_arg, TensorPowerHilbertSpace) and\
-                new_arg.base == prev_arg.base:
-                    prev_arg = new_arg.base**(new_arg.exp+prev_arg.exp)
-                elif isinstance(new_arg, TensorPowerHilbertSpace) and\
-                new_arg.base == prev_arg:
-                    prev_arg = prev_arg**(new_arg.exp+1)
-                elif isinstance(prev_arg, TensorPowerHilbertSpace) and\
-                new_arg == prev_arg.base:
-                    prev_arg = new_arg**(prev_arg.exp+1)
+            if prev_arg is not None:
+                if isinstance(new_arg, TensorPowerHilbertSpace) and \
+                    isinstance(prev_arg, TensorPowerHilbertSpace) and \
+                        new_arg.base == prev_arg.base:
+                    prev_arg = new_arg.base**(new_arg.exp + prev_arg.exp)
+                elif isinstance(new_arg, TensorPowerHilbertSpace) and \
+                        new_arg.base == prev_arg:
+                    prev_arg = prev_arg**(new_arg.exp + 1)
+                elif isinstance(prev_arg, TensorPowerHilbertSpace) and \
+                        new_arg == prev_arg.base:
+                    prev_arg = new_arg**(prev_arg.exp + 1)
                 elif new_arg == prev_arg:
                     prev_arg = new_arg**2
                 else:
                     comb_args.append(prev_arg)
                     prev_arg = new_arg
-            elif prev_arg == None:
+            elif prev_arg is None:
                 prev_arg = new_arg
         comb_args.append(prev_arg)
         if recall:
@@ -377,7 +380,7 @@ class TensorProductHilbertSpace(HilbertSpace):
         if oo in arg_list:
             return oo
         else:
-            return reduce(lambda x,y: x*y, arg_list)
+            return reduce(lambda x, y: x*y, arg_list)
 
     @property
     def spaces(self):
@@ -412,8 +415,11 @@ class TensorProductHilbertSpace(HilbertSpace):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length-1:
-                pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
+            if i != length - 1:
+                if printer._use_unicode:
+                    pform = prettyForm(*pform.right(u' ' + u'\u2a02' + u' '))
+                else:
+                    pform = prettyForm(*pform.right(' x '))
         return pform
 
     def _latex(self, printer, *args):
@@ -425,20 +431,20 @@ class TensorProductHilbertSpace(HilbertSpace):
                  TensorProductHilbertSpace)):
                 arg_s = r'\left(%s\right)' % arg_s
             s = s + arg_s
-            if i != length-1:
+            if i != length - 1:
                 s = s + r'\otimes '
         return s
 
 
 class DirectSumHilbertSpace(HilbertSpace):
-    """A direct sum of Hilbert spaces [1].
+    """A direct sum of Hilbert spaces [1]_.
 
-    This class uses the "+" operator to represent direct sums between
+    This class uses the ``+`` operator to represent direct sums between
     different Hilbert spaces.
 
-    A DirectSumHilbertSpace object takes in an indefinite number of
-    HilbertSpace objects as its arguments. Also, addition of HilbertSpace
-    objects will automatically return a direct sum object.
+    A ``DirectSumHilbertSpace`` object takes in an arbitrary number of
+    ``HilbertSpace`` objects as its arguments. Also, addition of
+    ``HilbertSpace`` objects will automatically return a direct sum object.
 
     Examples
     ========
@@ -459,7 +465,7 @@ class DirectSumHilbertSpace(HilbertSpace):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
+    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Direct_sums
     """
     def __new__(cls, *args):
         r = cls.eval(args)
@@ -481,7 +487,7 @@ class DirectSumHilbertSpace(HilbertSpace):
             elif isinstance(arg, HilbertSpace):
                 new_args.append(arg)
             else:
-                raise TypeError('Hilbert spaces can only be summed with other\
+                raise TypeError('Hilbert spaces can only be summed with other \
                 Hilbert spaces: %r' % arg)
         if recall:
             return DirectSumHilbertSpace(*new_args)
@@ -494,7 +500,7 @@ class DirectSumHilbertSpace(HilbertSpace):
         if oo in arg_list:
             return oo
         else:
-            return reduce(lambda x,y: x+y, arg_list)
+            return reduce(lambda x, y: x + y, arg_list)
 
     @property
     def spaces(self):
@@ -520,8 +526,11 @@ class DirectSumHilbertSpace(HilbertSpace):
                     *next_pform.parens(left='(', right=')')
                 )
             pform = prettyForm(*pform.right(next_pform))
-            if i != length-1:
-                pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
+            if i != length - 1:
+                if printer._use_unicode:
+                    pform = prettyForm(*pform.right(u' ' + u'\u2295' + u' '))
+                else:
+                    pform = prettyForm(*pform.right(' + '))
         return pform
 
     def _latex(self, printer, *args):
@@ -533,20 +542,20 @@ class DirectSumHilbertSpace(HilbertSpace):
                  TensorProductHilbertSpace)):
                 arg_s = r'\left(%s\right)' % arg_s
             s = s + arg_s
-            if i != length-1:
+            if i != length - 1:
                 s = s + r'\oplus '
         return s
 
 
 class TensorPowerHilbertSpace(HilbertSpace):
-    """An exponentiated Hilbert space [1].
+    """An exponentiated Hilbert space [1]_.
 
     Tensor powers (repeated tensor products) are represented by the
-    operator "**" Identical Hilbert spaces that are multiplied together
+    operator ``**`` Identical Hilbert spaces that are multiplied together
     will be automatically combined into a single tensor power object.
 
     Any Hilbert space, product, or sum may be raised to a tensor power. The
-    TensorPowerHilbertSpace takes two arguments: the Hilbert space; and the
+    ``TensorPowerHilbertSpace`` takes two arguments: the Hilbert space; and the
     tensor power (number).
 
     Examples
@@ -573,7 +582,7 @@ class TensorPowerHilbertSpace(HilbertSpace):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
+    .. [1] http://en.wikipedia.org/wiki/Hilbert_space#Tensor_products
     """
 
     def __new__(cls, *args):
@@ -595,12 +604,12 @@ class TensorPowerHilbertSpace(HilbertSpace):
         #check (and allow) for hs**(x+42+y...) case
         if len(exp.atoms()) == 1:
             if not (exp.is_Integer and exp >= 0 or exp.is_Symbol):
-                raise ValueError('Hilbert spaces can only be raised to\
+                raise ValueError('Hilbert spaces can only be raised to \
                 positive integers or Symbols: %r' % exp)
         else:
             for power in exp.atoms():
                 if not (power.is_Integer or power.is_Symbol):
-                    raise ValueError('Tensor powers can only contain integers\
+                    raise ValueError('Tensor powers can only contain integers \
                     or Symbols: %r' % power)
         return new_args
 
@@ -620,16 +629,19 @@ class TensorPowerHilbertSpace(HilbertSpace):
             return self.base.dimension**self.exp
 
     def _sympyrepr(self, printer, *args):
-        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,\
+        return "TensorPowerHilbertSpace(%s,%s)" % (printer._print(self.base,
         *args), printer._print(self.exp, *args))
 
     def _sympystr(self, printer, *args):
-        return "%s**%s" % (printer._print(self.base, *args),\
+        return "%s**%s" % (printer._print(self.base, *args),
         printer._print(self.exp, *args))
 
     def _pretty(self, printer, *args):
         pform_exp = printer._print(self.exp, *args)
-        pform_exp = prettyForm(*pform_exp.left(prettyForm(u'\u2a02')))
+        if printer._use_unicode:
+            pform_exp = prettyForm(*pform_exp.left(prettyForm(u'\u2a02')))
+        else:
+            pform_exp = prettyForm(*pform_exp.left(prettyForm('x')))
         pform_base = printer._print(self.base, *args)
         return pform_base**pform_exp
 

@@ -2,12 +2,13 @@ from function import Function
 from sympy.core.numbers import Float
 from sympy.core.function import expand_mul
 
+
 class Mod(Function):
     """Represents a modulo operation on symbolic expressions.
 
     Receives two arguments, dividend p and divisor q.
 
-    The convention used is the same as python's: the remainder always has the
+    The convention used is the same as Python's: the remainder always has the
     same sign as the divisor.
 
     Examples

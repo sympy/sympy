@@ -9,6 +9,7 @@ from printer import Printer
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps, repr_dps
 
+
 class ReprPrinter(Printer):
     printmethod = "_sympyrepr"
 
@@ -47,11 +48,11 @@ class ReprPrinter(Printer):
 
     def _print_Function(self, expr):
         r = self._print(expr.func)
-        r+= '(%s)' % ', '.join([self._print(a) for a in expr.args])
+        r += '(%s)' % ', '.join([self._print(a) for a in expr.args])
         return r
 
     def _print_FunctionClass(self, expr):
-        return 'Function(%r)'%(expr.__name__)
+        return 'Function(%r)' % (expr.__name__)
 
     def _print_Half(self, expr):
         return 'Rational(1, 2)'
@@ -76,14 +77,21 @@ class ReprPrinter(Printer):
         for i in range(expr.rows):
             l.append([])
             for j in range(expr.cols):
-                l[-1].append(expr[i,j])
+                l[-1].append(expr[i, j])
         return '%s(%s)' % (expr.__class__.__name__, self._print(l))
+
+    _print_SparseMatrix = \
+        _print_MutableSparseMatrix = \
+        _print_ImmutableSparseMatrix = \
+        _print_Matrix = \
+        _print_DenseMatrix = \
+        _print_MutableDenseMatrix = \
+        _print_ImmutableMatrix = \
+        _print_ImmutableDenseMatrix = \
+        _print_MatrixBase
 
     def _print_NaN(self, expr):
         return "nan"
-
-    def _print_Rational(self, expr):
-        return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
 
     def _print_Mul(self, expr, order=None):
         terms = expr.args
@@ -94,6 +102,12 @@ class ReprPrinter(Printer):
 
         args = map(self._print, args)
         return "Mul(%s)" % ", ".join(args)
+
+    def _print_Rational(self, expr):
+        return 'Rational(%s, %s)' % (self._print(expr.p), self._print(expr.q))
+
+    def _print_PythonRational(self, expr):
+        return "%s(%d, %d)" % (expr.__class__.__name__, expr.p, expr.q)
 
     def _print_Fraction(self, expr):
         return 'Fraction(%s, %s)' % (self._print(expr.numerator), self._print(expr.denominator))
@@ -120,7 +134,7 @@ class ReprPrinter(Printer):
         return repr(expr)
 
     def _print_tuple(self, expr):
-        if len(expr)==1:
+        if len(expr) == 1:
             return "(%s,)" % self._print(expr[0])
         else:
             return "(%s)" % self.reprify(expr, ", ")
@@ -131,6 +145,28 @@ class ReprPrinter(Printer):
     def _print_AlgebraicNumber(self, expr):
         return "%s(%s, %s)" % (self.__class__.__name__,
             self._print(self.coeffs()), self._print(expr.root))
+
+    def _print_PolyRing(self, ring):
+        return "%s(%s, %s, %s)" % (ring.__class__.__name__,
+            self._print(ring.symbols), self._print(ring.domain), self._print(ring.order))
+
+    def _print_FracField(self, field):
+        return "%s(%s, %s, %s)" % (field.__class__.__name__,
+            self._print(field.symbols), self._print(field.domain), self._print(field.order))
+
+    def _print_PolyElement(self, poly):
+        terms = list(poly.terms())
+        terms.sort(key=poly.ring.order, reverse=True)
+        return "%s(%s, %s)" % (poly.__class__.__name__, self._print(poly.ring), self._print(terms))
+
+    def _print_FracElement(self, frac):
+        numer_terms = list(frac.numer.terms())
+        numer_terms.sort(key=frac.field.order, reverse=True)
+        denom_terms = list(frac.denom.terms())
+        denom_terms.sort(key=frac.field.order, reverse=True)
+        numer = self._print(numer_terms)
+        denom = self._print(denom_terms)
+        return "%s(%s, %s, %s)" % (frac.__class__.__name__, self._print(frac.field), numer, denom)
 
 def srepr(expr, **settings):
     """return expr in repr form"""

@@ -1,6 +1,7 @@
 from sympy import (symbols, log, Float, nan, oo, zoo, I, pi, E, exp, Symbol,
         LambertW, sqrt, Rational, expand_log, S, sign, nextprime, conjugate,
-        sin, cos, sinh, cosh, exp_polar)
+        sin, cos, sinh, cosh, exp_polar, re, Function, simplify, Eq)
+
 
 def test_exp_values():
 
@@ -24,9 +25,9 @@ def test_exp_values():
     assert exp(2*pi*I) == 1
 
     assert exp(pi*I*2*k) == 1
-    assert exp(pi*I*2*(k+Rational(1,2))) == -1
-    assert exp(pi*I*2*(k+Rational(1,4))) == I
-    assert exp(pi*I*2*(k+Rational(3,4))) == -I
+    assert exp(pi*I*2*(k + Rational(1, 2))) == -1
+    assert exp(pi*I*2*(k + Rational(1, 4))) == I
+    assert exp(pi*I*2*(k + Rational(3, 4))) == -I
 
     assert exp(log(x)) == x
     assert exp(2*log(x)) == x**2
@@ -37,8 +38,9 @@ def test_exp_values():
     assert exp(x*log(x)) != x**x
     assert exp(sin(x)*log(x)) != x
 
-    assert exp(3*log(x)+oo*x) == exp(oo*x) * x**3
-    assert exp(4*log(x)*log(y)+3*log(x)) == x**3 * exp(4*log(x)*log(y))
+    assert exp(3*log(x) + oo*x) == exp(oo*x) * x**3
+    assert exp(4*log(x)*log(y) + 3*log(x)) == x**3 * exp(4*log(x)*log(y))
+
 
 def test_exp_log():
     x = Symbol("x", real=True)
@@ -52,17 +54,19 @@ def test_exp_log():
     assert log(exp_polar(z)) == z
     assert exp(log(y)) == y
 
+
 def test_exp_expand():
     x = Symbol("x")
     y = Symbol("y")
 
-    e = exp(log(Rational(2))*(1+x)-log(Rational(2))*x)
+    e = exp(log(Rational(2))*(1 + x) - log(Rational(2))*x)
     assert e.expand() == 2
-    assert exp(x+y) != exp(x)*exp(y)
-    assert exp(x+y).expand() == exp(x)*exp(y)
+    assert exp(x + y) != exp(x)*exp(y)
+    assert exp(x + y).expand() == exp(x)*exp(y)
+
 
 def test_exp__as_base_exp():
-    x,y = symbols('x,y')
+    x, y = symbols('x,y')
 
     assert exp(x).as_base_exp() == (E, x)
     assert exp(2*x).as_base_exp() == (E, 2*x)
@@ -70,12 +74,13 @@ def test_exp__as_base_exp():
     assert exp(-x).as_base_exp() == (E, -x)
 
     # Pow( *expr.as_base_exp() ) == expr    invariant should hold
-    assert E**x     == exp(x)
+    assert E**x == exp(x)
     assert E**(2*x) == exp(2*x)
     assert E**(x*y) == exp(x*y)
 
     assert exp(x).base is S.Exp1
     assert exp(x).exp == x
+
 
 def test_exp_infinity():
     y = Symbol('y')
@@ -84,33 +89,38 @@ def test_exp_infinity():
     assert exp(-I*oo) == nan
     assert exp(y*I*oo) != nan
 
+
 def test_exp_subs():
     x, y = symbols('x,y')
     e = (exp(3*log(x), evaluate=False))
     assert e.subs(x**3, y**3) == e
     assert e.subs(x**2, 5) == e
     assert exp(3*log(x)).subs(x**2, y) == x**3
-    assert exp(5*x).subs(exp(7*x),y) == y**Rational(5,7)
-    assert exp(2*x + 7).subs(exp(3*x),y) == y**Rational(2,3) * exp(7)
+    assert exp(5*x).subs(exp(7*x), y) == y**Rational(5, 7)
+    assert exp(2*x + 7).subs(exp(3*x), y) == y**Rational(2, 3) * exp(7)
     assert exp(exp(x) + exp(x**2)).subs(exp(exp(x)), y) == y * exp(exp(x**2))
-    assert exp(x).subs(E,y) == y**x
+    assert exp(x).subs(E, y) == y**x
     x = symbols('x', positive=True)
-    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3,2)
+    assert exp(3*log(x)).subs(x**2, y) == y**Rational(3, 2)
+
 
 def test_exp_conjugate():
     x = Symbol('x')
     assert conjugate(exp(x)) == exp(conjugate(x))
+
 
 def test_exp_rewrite():
     x = symbols('x')
     assert exp(x).rewrite(sin) == sinh(x) + cosh(x)
     assert exp(x*I).rewrite(cos) == cos(x) + I*sin(x)
 
+
 def test_exp_leading_term():
     x = symbols('x')
     assert exp(x).as_leading_term(x) == 1
     assert exp(1/x).as_leading_term(x) == exp(1/x)
-    assert exp(2+x).as_leading_term(x) == exp(2)
+    assert exp(2 + x).as_leading_term(x) == exp(2)
+
 
 def test_log_values():
     assert log(nan) == nan
@@ -150,6 +160,7 @@ def test_log_values():
     assert log(2*3).func is log
     assert log(2*3**2).func is log
 
+
 def test_log_base():
     assert log(1, 2) == 0
     assert log(2, 2) == 1
@@ -158,6 +169,8 @@ def test_log_base():
     assert log(6, 3) == 1 + log(2)/log(3)
     assert log(2**3, 2) == 3
     assert log(3**3, 3) == 3
+    assert log(5, 1) == zoo
+    assert log(1, 1) == nan
 
 
 def test_log_symbolic():
@@ -175,7 +188,6 @@ def test_log_symbolic():
 
     assert log(x, 2) == log(x)/log(2)
     assert log(E, 2) == 1/log(2)
-
 
     p, q = symbols('p,q', positive=True)
     r = Symbol('r', real=True)
@@ -199,15 +211,32 @@ def test_log_symbolic():
     assert log(-x).func is log and log(-x).args[0] == -x
     assert log(-p).func is log and log(-p).args[0] == -p
 
+
+def test_exp_assumptions():
+    x = Symbol('x')
+    r = Symbol('r', real=True)
+    i = Symbol('i', imaginary=True)
+    for e in exp, exp_polar:
+        assert e(x).is_real is None
+        assert e(x).is_imaginary is None
+        assert e(i).is_real is None
+        assert e(i).is_imaginary is None
+        assert e(r).is_real is True
+        assert e(r).is_imaginary is False
+        assert e(re(x)).is_real is True
+        assert e(re(x)).is_imaginary is False
+
+
 def test_log_assumptions():
     p = symbols('p', positive=True)
     n = symbols('n', negative=True)
     assert log(2) > 0
     assert log(1).is_zero
-    assert log(2-pi-pi*(1/pi-1)).is_zero
+    assert log(2 - pi - pi*(1/pi - 1)).is_zero
     assert log(p).is_zero is None
     assert log(n).is_zero is False
-    assert log(0.5).is_negative == True
+    assert log(0.5).is_negative is True
+
 
 def test_log_hashing():
     x = Symbol("y")
@@ -215,9 +244,9 @@ def test_log_hashing():
     assert hash(x) != hash(log(log(x)))
     assert log(x) != log(log(log(x)))
 
-    e = 1/log(log(x)+log(log(x)))
+    e = 1/log(log(x) + log(log(x)))
     assert e.base.func is log
-    e = 1/log(log(x)+log(log(log(x))))
+    e = 1/log(log(x) + log(log(log(x))))
     assert e.base.func is log
 
     x = Symbol("x")
@@ -227,27 +256,34 @@ def test_log_hashing():
     assert hash(log(log(x))) != hash(x)
     assert e != x
 
+
 def test_log_sign():
     assert sign(log(2)) == 1
 
+
 def test_log_expand_complex():
-    assert log(1+I).expand(complex=True) == log(2)/2 + I*pi/4
-    assert log(1 - sqrt(2)).expand(complex=True) == log(sqrt(2)-1) + I*pi
+    assert log(1 + I).expand(complex=True) == log(2)/2 + I*pi/4
+    assert log(1 - sqrt(2)).expand(complex=True) == log(sqrt(2) - 1) + I*pi
+
 
 def test_log_apply_evalf():
-    value = (log(3)/log(2)-1).evalf()
+    value = (log(3)/log(2) - 1).evalf()
     assert value.epsilon_eq(Float("0.58496250072115618145373"))
+
 
 def test_log_expand():
     w = Symbol("w", positive=True)
     e = log(w**(log(5)/log(3)))
     assert e.expand() == log(5)/log(3) * log(w)
     x, y, z = symbols('x,y,z', positive=True)
-    assert log(x*(y+z)).expand(mul=False) == log(x)+log(y+z)
-    assert log(log(x**2)*log(y*z)).expand() == log(2*log(x)*log(y) + 2*log(x)*log(z))
+    assert log(x*(y + z)).expand(mul=False) == log(x) + log(y + z)
+    assert log(log(x**2)*log(y*z)).expand() in [log(2*log(x)*log(y) +
+        2*log(x)*log(z)), log(log(x)*log(z) + log(y)*log(x)) + log(2),
+        log((log(y) + log(z))*log(x)) + log(2)]
     assert log(x**log(x**2)).expand(deep=False) == log(x)*log(x**2)
     assert log(x**log(x**2)).expand() == 2*log(x)**2
-    assert (log(x*(y+z))*(x+y)),expand(mul=True, log=True) == y*log(x) + y*log(y + z) + z*log(x) + z*log(y + z)
+    assert (log(x*(y + z))*(x + y)), expand(mul=True, log=True) == y*log(
+        x) + y*log(y + z) + z*log(x) + z*log(y + z)
     x, y = symbols('x,y')
     assert log(x*y).expand(force=True) == log(x) + log(y)
     assert log(x**y).expand(force=True) == y*log(x)
@@ -257,10 +293,12 @@ def test_log_expand():
     # logs together than it is to take them apart.
     assert log(2*3**2).expand() != 2*log(3) + log(2)
 
+
 def test_log_simplify():
     x = Symbol("x", positive=True)
     assert log(x**2).expand() == 2*log(x)
-    assert expand_log(log(x**(2+log(2)))) == (2+log(2))*log(x)
+    assert expand_log(log(x**(2 + log(2)))) == (2 + log(2))*log(x)
+
 
 def test_lambertw():
     x = Symbol('x')
@@ -270,18 +308,20 @@ def test_lambertw():
     assert LambertW(-1/E) == -1
     assert LambertW(-log(2)/2) == -log(2)
     assert LambertW(oo) == oo
-    assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1+LambertW(x**2))
+    assert LambertW(x**2).diff(x) == 2*LambertW(x**2)/x/(1 + LambertW(x**2))
     assert LambertW(sqrt(2)).evalf(30).epsilon_eq(
-        Float("0.701338383413663009202120278965",30),1e-29)
+        Float("0.701338383413663009202120278965", 30), 1e-29)
+
 
 def test_exp_expand():
-    A,B,C = symbols('A,B,C', commutative=False)
-    x,y,z = symbols('x,y,z')
+    A, B, C = symbols('A,B,C', commutative=False)
+    x, y, z = symbols('x,y,z')
 
-    assert exp(A+B).expand() == exp(A+B)
-    assert exp(A+B+C).expand() == exp(A+B+C)
-    assert exp(x+y).expand() == exp(x)*exp(y)
-    assert exp(x+y+z).expand() == exp(x)*exp(y)*exp(z)
+    assert exp(A + B).expand() == exp(A + B)
+    assert exp(A + B + C).expand() == exp(A + B + C)
+    assert exp(x + y).expand() == exp(x)*exp(y)
+    assert exp(x + y + z).expand() == exp(x)*exp(y)*exp(z)
+
 
 def test_as_numer_denom():
     from sympy.abc import x
@@ -309,3 +349,19 @@ def test_polar():
     assert log(x**z).expand() == z*log(x)
 
     assert exp_polar(3).exp == 3
+
+    # Compare exp(1.0*pi*I).
+    assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
+
+def test_log_product():
+    from sympy.abc import i, j, n, m
+    i, j = symbols('i,j', positive=True, integer=True)
+    x, y = symbols('x,y', positive=True)
+    from sympy.concrete import Product, Sum
+    f, g = Function('f'), Function('g')
+    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
+    assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
+            Sum(log(x**i*y**j), (i, 1, n), (j, 1, m))
+
+    expr = log(Product(-2, (n, 0, 4)))
+    assert Eq(simplify(expr), expr)

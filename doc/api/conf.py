@@ -27,22 +27,22 @@ extensions = ['sphinx.ext.autodoc']
 templates_path = ['.templates']
 
 # The suffix of source filenames.
-source_suffix = '.txt'
+source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
 
 # General substitutions.
 project = 'SymPy'
-copyright = '2012, SymPy Development Team'
+copyright = '2013, SymPy Development Team'
 
 # The default replacements for |version| and |release|, also used in various
 # other places throughout the built documents.
 #
 # The short X.Y version.
-version = '0.7.1'
+version = '0.7.2'
 # The full version, including alpha/beta/rc tags.
-release = '0.7.1-git'
+release = '0.7.2-git'
 
 # There are two options for replacing |today|: either, you set today to some
 # non-false value, then it is used:
@@ -121,7 +121,7 @@ htmlhelp_basename = 'SymPydoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, document class [howto/manual]).
 latex_documents = [('index', 'sympy.tex', 'SymPy Documentation',
-                        'SymPy Development Team', 'manual')]
+                    'SymPy Development Team', 'manual')]
 
 # Additional stuff for the LaTeX preamble.
 #latex_preamble = ''

@@ -5,14 +5,17 @@ from sympy.logic.inference import satisfiable
 from sympy.assumptions.assume import (global_assumptions, Predicate,
         AppliedPredicate)
 
+
 class Q:
     """Supported ask keys."""
+    antihermitian = Predicate('antihermitian')
     bounded = Predicate('bounded')
     commutative = Predicate('commutative')
     complex = Predicate('complex')
     composite = Predicate('composite')
     even = Predicate('even')
     extended_real = Predicate('extended_real')
+    hermitian = Predicate('hermitian')
     imaginary = Predicate('imaginary')
     infinitesimal = Predicate('infinitesimal')
     infinity = Predicate('infinity')
@@ -26,7 +29,17 @@ class Q:
     real = Predicate('real')
     odd = Predicate('odd')
     is_true = Predicate('is_true')
-
+    symmetric = Predicate('symmetric')
+    invertible = Predicate('invertible')
+    orthogonal = Predicate('orthogonal')
+    positive_definite = Predicate('positive_definite')
+    upper_triangular = Predicate('upper_triangular')
+    lower_triangular = Predicate('lower_triangular')
+    diagonal = Predicate('diagonal')
+    triangular = Predicate('triangular')
+    unit_triangular = Predicate('unit_triangular')
+    fullrank = Predicate('fullrank')
+    square = Predicate('square')
 
 
 def _extract_facts(expr, symbol):
@@ -39,9 +52,16 @@ def _extract_facts(expr, symbol):
     if not expr.has(symbol):
         return None
     if isinstance(expr, AppliedPredicate):
-        return expr.func
-    return expr.func(*filter(lambda x: x is not None,
-                [_extract_facts(arg, symbol) for arg in expr.args]))
+        if expr.arg == symbol:
+            return expr.func
+        else:
+            return
+    args = [_extract_facts(arg, symbol) for arg in expr.args]
+    if isinstance(expr, And):
+        return expr.func(*filter(lambda x: x is not None, args))
+    if all(arg != None for arg in args):
+        return expr.func(*args)
+
 
 def ask(proposition, assumptions=True, context=global_assumptions):
     """
@@ -73,8 +93,7 @@ def ask(proposition, assumptions=True, context=global_assumptions):
 
         >>> ask(Q.positive(x), Q.is_true(x > 0)) # doctest: +SKIP
 
-        It is however a work in progress and should be available before
-        the official release
+        It is however a work in progress.
 
     """
     assumptions = And(assumptions, And(*context))
@@ -89,9 +108,6 @@ def ask(proposition, assumptions=True, context=global_assumptions):
         return res
 
     if assumptions is True:
-        return
-
-    if not expr.is_Atom:
         return
 
     local_facts = _extract_facts(assumptions, expr)
@@ -122,10 +138,10 @@ def ask(proposition, assumptions=True, context=global_assumptions):
             return False
 
     # Failing all else, we do a full logical inference
-    return ask_full_inference(key, local_facts)
+    return ask_full_inference(key, local_facts, known_facts_cnf)
 
 
-def ask_full_inference(proposition, assumptions):
+def ask_full_inference(proposition, assumptions, known_facts_cnf):
     """
     Method for inferring properties about objects.
 
@@ -135,7 +151,6 @@ def ask_full_inference(proposition, assumptions):
     if not satisfiable(And(known_facts_cnf, assumptions, Not(proposition))):
         return True
     return None
-
 
 
 def register_handler(key, handler):
@@ -163,133 +178,142 @@ def register_handler(key, handler):
     except AttributeError:
         setattr(Q, key, Predicate(key, handlers=[handler]))
 
+
 def remove_handler(key, handler):
     """Removes a handler from the ask system. Same syntax as register_handler"""
     if type(key) is Predicate:
         key = key.name
     getattr(Q, key).remove_handler(handler)
 
-def compute_known_facts():
-    """Compute the various forms of knowledge compilation used by the
-    assumptions system.
-    """
-    # Compute the known facts in CNF form for logical inference
-    fact_string = "# -{ Known facts in CNF }-\n"
-    cnf = to_cnf(known_facts)
-    fact_string += "known_facts_cnf = And(\n    "
-    fact_string += ",\n    ".join(map(str, cnf.args))
-    fact_string += "\n)\n"
 
+def single_fact_lookup(known_facts_keys, known_facts_cnf):
     # Compute the quick lookup for single facts
     mapping = {}
     for key in known_facts_keys:
         mapping[key] = set([key])
         for other_key in known_facts_keys:
             if other_key != key:
-                if ask_full_inference(other_key, key):
+                if ask_full_inference(other_key, key, known_facts_cnf):
                     mapping[key].add(other_key)
-    fact_string += "\n# -{ Known facts in compressed sets }-\n"
-    fact_string += "known_facts_dict = {\n    "
-    fact_string += ",\n    ".join(["%s: %s" % item for item in mapping.items()])
-    fact_string += "\n}\n"
-    return fact_string
+    return mapping
+
+
+def compute_known_facts(known_facts, known_facts_keys):
+    """Compute the various forms of knowledge compilation used by the
+    assumptions system.
+
+    This function is typically applied to the variables
+    ``known_facts`` and ``known_facts_keys`` defined at the bottom of
+    this file.
+    """
+    from textwrap import dedent, wrap
+
+    fact_string = dedent('''\
+    """
+    The contents of this file are the return value of
+    ``sympy.assumptions.ask.compute_known_facts``.  Do NOT manually
+    edit this file.
+    """
+
+    from sympy.logic.boolalg import And, Not, Or
+    from sympy.assumptions.ask import Q
+
+    # -{ Known facts in CNF }-
+    known_facts_cnf = And(
+        %s
+    )
+
+    # -{ Known facts in compressed sets }-
+    known_facts_dict = {
+        %s
+    }
+    ''')
+    # Compute the known facts in CNF form for logical inference
+    LINE = ",\n    "
+    HANG = ' '*8
+    cnf = to_cnf(known_facts)
+    c = LINE.join([str(a) for a in cnf.args])
+    mapping = single_fact_lookup(known_facts_keys, cnf)
+    m = LINE.join(['\n'.join(
+        wrap("%s: %s" % item,
+            subsequent_indent=HANG,
+            break_long_words=False))
+        for item in mapping.items()]) + ','
+    return fact_string % (c, m)
 
 # handlers_dict tells us what ask handler we should use
 # for a particular key
-_handlers_dict = {
-    'bounded'        : ['sympy.assumptions.handlers.calculus.AskBoundedHandler'],
-    'commutative'    : ['sympy.assumptions.handlers.AskCommutativeHandler'],
-    'complex'        : ['sympy.assumptions.handlers.sets.AskComplexHandler'],
-    'composite'      : ['sympy.assumptions.handlers.ntheory.AskCompositeHandler'],
-    'even'           : ['sympy.assumptions.handlers.ntheory.AskEvenHandler'],
-    'extended_real'  : ['sympy.assumptions.handlers.sets.AskExtendedRealHandler'],
-    'imaginary'      : ['sympy.assumptions.handlers.sets.AskImaginaryHandler'],
-    'infinitesimal'  : ['sympy.assumptions.handlers.calculus.AskInfinitesimalHandler'],
-    'integer'        : ['sympy.assumptions.handlers.sets.AskIntegerHandler'],
-    'irrational'     : ['sympy.assumptions.handlers.sets.AskIrrationalHandler'],
-    'rational'       : ['sympy.assumptions.handlers.sets.AskRationalHandler'],
-    'negative'       : ['sympy.assumptions.handlers.order.AskNegativeHandler'],
-    'nonzero'        : ['sympy.assumptions.handlers.order.AskNonZeroHandler'],
-    'positive'       : ['sympy.assumptions.handlers.order.AskPositiveHandler'],
-    'prime'          : ['sympy.assumptions.handlers.ntheory.AskPrimeHandler'],
-    'real'           : ['sympy.assumptions.handlers.sets.AskRealHandler'],
-    'odd'            : ['sympy.assumptions.handlers.ntheory.AskOddHandler'],
-    'algebraic'      : ['sympy.assumptions.handlers.sets.AskAlgebraicHandler'],
-    'is_true'        : ['sympy.assumptions.handlers.TautologicalHandler']
-}
-for name, value in _handlers_dict.iteritems():
-    register_handler(name, value[0])
+_val_template = 'sympy.assumptions.handlers.%s'
+_handlers = [
+    ("antihermitian",     "sets.AskAntiHermitianHandler"),
+    ("bounded",           "calculus.AskBoundedHandler"),
+    ("commutative",       "AskCommutativeHandler"),
+    ("complex",           "sets.AskComplexHandler"),
+    ("composite",         "ntheory.AskCompositeHandler"),
+    ("even",              "ntheory.AskEvenHandler"),
+    ("extended_real",     "sets.AskExtendedRealHandler"),
+    ("hermitian",         "sets.AskHermitianHandler"),
+    ("imaginary",         "sets.AskImaginaryHandler"),
+    ("infinitesimal",     "calculus.AskInfinitesimalHandler"),
+    ("integer",           "sets.AskIntegerHandler"),
+    ("irrational",        "sets.AskIrrationalHandler"),
+    ("rational",          "sets.AskRationalHandler"),
+    ("negative",          "order.AskNegativeHandler"),
+    ("nonzero",           "order.AskNonZeroHandler"),
+    ("positive",          "order.AskPositiveHandler"),
+    ("prime",             "ntheory.AskPrimeHandler"),
+    ("real",              "sets.AskRealHandler"),
+    ("odd",               "ntheory.AskOddHandler"),
+    ("algebraic",         "sets.AskAlgebraicHandler"),
+    ("is_true",           "TautologicalHandler"),
+    ("symmetric",         "matrices.AskSymmetricHandler"),
+    ("invertible",        "matrices.AskInvertibleHandler"),
+    ("orthogonal",        "matrices.AskOrthogonalHandler"),
+    ("positive_definite", "matrices.AskPositiveDefiniteHandler"),
+    ("upper_triangular",  "matrices.AskUpperTriangularHandler"),
+    ("lower_triangular",  "matrices.AskLowerTriangularHandler"),
+    ("diagonal",          "matrices.AskDiagonalHandler"),
+    ("fullrank",          "matrices.AskFullRankHandler"),
+    ("square",            "matrices.AskSquareHandler"),
+]
+for name, value in _handlers:
+    register_handler(name, _val_template % value)
 
 
-known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__ \
-                                                if not attr.startswith('__')]
+known_facts_keys = [getattr(Q, attr) for attr in Q.__dict__
+                    if not attr.startswith('__')]
 known_facts = And(
-    Implies   (Q.real, Q.complex),
+    Implies(Q.real, Q.complex),
+    Implies(Q.real, Q.hermitian),
     Equivalent(Q.even, Q.integer & ~Q.odd),
     Equivalent(Q.extended_real, Q.real | Q.infinity),
     Equivalent(Q.odd, Q.integer & ~Q.even),
     Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
-    Implies   (Q.integer, Q.rational),
-    Implies   (Q.imaginary, Q.complex & ~Q.real),
+    Implies(Q.integer, Q.rational),
+    Implies(Q.imaginary, Q.complex & ~Q.real),
+    Implies(Q.imaginary, Q.antihermitian),
+    Implies(Q.antihermitian, ~Q.hermitian),
     Equivalent(Q.negative, Q.nonzero & ~Q.positive),
     Equivalent(Q.positive, Q.nonzero & ~Q.negative),
     Equivalent(Q.rational, Q.real & ~Q.irrational),
     Equivalent(Q.real, Q.rational | Q.irrational),
-    Implies   (Q.nonzero, Q.real),
-    Equivalent(Q.nonzero, Q.positive | Q.negative)
+    Implies(Q.nonzero, Q.real),
+    Equivalent(Q.nonzero, Q.positive | Q.negative),
+
+    Implies(Q.orthogonal, Q.positive_definite),
+    Implies(Q.positive_definite, Q.invertible),
+    Implies(Q.diagonal, Q.upper_triangular),
+    Implies(Q.diagonal, Q.lower_triangular),
+    Implies(Q.lower_triangular, Q.triangular),
+    Implies(Q.upper_triangular, Q.triangular),
+    Implies(Q.triangular, Q.upper_triangular | Q.lower_triangular),
+    Implies(Q.upper_triangular & Q.lower_triangular, Q.diagonal),
+    Implies(Q.diagonal, Q.symmetric),
+    Implies(Q.unit_triangular, Q.triangular),
+    Implies(Q.invertible, Q.fullrank),
+    Implies(Q.invertible, Q.square),
+    Implies(Q.symmetric, Q.square),
+    Implies(Q.fullrank & Q.square, Q.invertible),
 )
 
-################################################################################
-# Note: The following facts are generated by the compute_known_facts function. #
-################################################################################
-# -{ Known facts in CNF }-
-known_facts_cnf = And(
-    Or(Not(Q.integer), Q.even, Q.odd),
-    Or(Not(Q.extended_real), Q.infinity, Q.real),
-    Or(Not(Q.real), Q.irrational, Q.rational),
-    Or(Not(Q.real), Q.complex),
-    Or(Not(Q.integer), Not(Q.positive), Q.composite, Q.prime),
-    Or(Not(Q.integer), Q.rational),
-    Or(Not(Q.imaginary), Q.complex),
-    Or(Not(Q.even), Q.integer),
-    Or(Not(Q.positive), Q.nonzero),
-    Or(Not(Q.nonzero), Q.negative, Q.positive),
-    Or(Not(Q.prime), Q.positive),
-    Or(Not(Q.rational), Q.real),
-    Or(Not(Q.imaginary), Not(Q.real)),
-    Or(Not(Q.odd), Q.integer),
-    Or(Not(Q.real), Q.extended_real),
-    Or(Not(Q.composite), Not(Q.prime)),
-    Or(Not(Q.negative), Q.nonzero),
-    Or(Not(Q.negative), Not(Q.positive)),
-    Or(Not(Q.prime), Q.integer),
-    Or(Not(Q.even), Not(Q.odd)),
-    Or(Not(Q.nonzero), Q.real),
-    Or(Not(Q.irrational), Q.real),
-    Or(Not(Q.irrational), Not(Q.rational)),
-    Or(Not(Q.infinity), Q.extended_real)
-)
-
-# -{ Known facts in compressed sets }-
-known_facts_dict = {
-    Q.is_true: set([Q.is_true]),
-    Q.complex: set([Q.complex]),
-    Q.odd: set([Q.complex, Q.odd, Q.real, Q.rational, Q.extended_real, Q.integer]),
-    Q.positive: set([Q.real, Q.complex, Q.extended_real, Q.positive, Q.nonzero]),
-    Q.real: set([Q.real, Q.complex, Q.extended_real]),
-    Q.composite: set([Q.composite]),
-    Q.bounded: set([Q.bounded]),
-    Q.prime: set([Q.real, Q.complex, Q.positive, Q.nonzero, Q.prime, Q.rational, Q.extended_real, Q.integer]),
-    Q.infinitesimal: set([Q.infinitesimal]),
-    Q.even: set([Q.complex, Q.real, Q.even, Q.rational, Q.extended_real, Q.integer]),
-    Q.negative: set([Q.real, Q.negative, Q.complex, Q.extended_real, Q.nonzero]),
-    Q.rational: set([Q.real, Q.rational, Q.complex, Q.extended_real]),
-    Q.extended_real: set([Q.extended_real]),
-    Q.nonzero: set([Q.nonzero, Q.complex, Q.extended_real, Q.real]),
-    Q.integer: set([Q.real, Q.rational, Q.complex, Q.extended_real, Q.integer]),
-    Q.irrational: set([Q.real, Q.irrational, Q.complex, Q.extended_real]),
-    Q.commutative: set([Q.commutative]),
-    Q.infinity: set([Q.extended_real, Q.infinity]),
-    Q.algebraic: set([Q.algebraic]),
-    Q.imaginary: set([Q.complex, Q.imaginary])
-}
+from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf

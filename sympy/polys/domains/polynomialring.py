@@ -2,32 +2,29 @@
 
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.compositedomain import CompositeDomain
-from sympy.polys.domains.characteristiczero import CharacteristicZero
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError
 
-from sympy.polys.polyclasses import DMP
-from sympy.polys.polyerrors import GeneratorsNeeded, PolynomialError, CoercionFailed
-from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
-
-class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
+class PolynomialRing(Ring, CompositeDomain):
     """A class for representing multivariate polynomial rings. """
 
-    dtype        = DMP
     is_Poly      = True
 
     has_assoc_Ring         = True
     has_assoc_Field        = True
 
-    def __init__(self, dom, *gens):
-        if not gens:
-            raise GeneratorsNeeded("generators not specified")
+    def __init__(self, ring):
+        self.dtype = ring.dtype
+        self.ring  = ring
 
-        lev = len(gens) - 1
+        self.dom  = ring.domain
+        self.gens = ring.symbols
 
-        self.zero = self.dtype.zero(lev, dom)
-        self.one  = self.dtype.one(lev, dom)
+        self.zero = ring.zero
+        self.one  = ring.one
 
-        self.dom  = dom
-        self.gens = gens
+
+    def new(self, element):
+        return self.ring.ring_new(element)
 
     def __str__(self):
         return str(self.dom) + '[' + ','.join(map(str, self.gens)) + ']'
@@ -35,33 +32,18 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
     def __hash__(self):
         return hash((self.__class__.__name__, self.dtype, self.dom, self.gens))
 
-    def __call__(self, a):
-        """Construct an element of `self` domain from `a`. """
-        return DMP(a, self.dom, len(self.gens)-1)
-
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
-        return self.dtype == other.dtype and self.dom == other.dom and self.gens == other.gens
-
-    def __ne__(self, other):
-        """Returns `False` if two domains are equivalent. """
-        return not self.__eq__(other)
+        return isinstance(other, PolynomialRing) and \
+            self.dtype == other.dtype and self.ring == other.ring
 
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
-        return basic_from_dict(a.to_sympy_dict(), *self.gens)
+        return a.as_expr()
 
     def from_sympy(self, a):
         """Convert SymPy's expression to `dtype`. """
-        try:
-            rep, _ = dict_from_basic(a, gens=self.gens)
-        except PolynomialError:
-            raise CoercionFailed("can't convert %s to type %s" % (a, self))
-
-        for k, v in rep.iteritems():
-            rep[k] = self.dom.from_sympy(v)
-
-        return self(rep)
+        return self.ring.from_expr(a)
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
@@ -69,14 +51,6 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
 
     def from_QQ_python(K1, a, K0):
         """Convert a Python `Fraction` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
-    def from_ZZ_sympy(K1, a, K0):
-        """Convert a SymPy `Integer` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
-    def from_QQ_sympy(K1, a, K0):
-        """Convert a SymPy `Rational` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
@@ -87,87 +61,58 @@ class PolynomialRing(Ring, CharacteristicZero, CompositeDomain):
         """Convert a GMPY `mpq` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_RR_sympy(K1, a, K0):
-        """Convert a SymPy `Real` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
-
     def from_RR_mpmath(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
         return K1(K1.dom.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
-        """Convert a `ANP` object to `dtype`. """
+        """Convert an algebraic number to ``dtype``. """
         if K1.dom == K0:
-            return K1(a)
+            return K1.new(a)
 
     def from_PolynomialRing(K1, a, K0):
-        """Convert a `DMP` object to `dtype`. """
-        if K1.gens == K0.gens:
-            if K1.dom == K0.dom:
-                return a
-            else:
-                return a.convert(K1.dom)
-        else:
-            monoms, coeffs = _dict_reorder(a.to_dict(), K0.gens, K1.gens)
-
-            if K1.dom != K0.dom:
-                coeffs = [ K1.dom.convert(c, K0.dom) for c in coeffs ]
-
-            return K1(dict(zip(monoms, coeffs)))
+        """Convert a polynomial to ``dtype``. """
+        try:
+            return a.set_ring(K1.ring)
+        except (CoercionFailed, GeneratorsError):
+            return None
 
     def from_FractionField(K1, a, K0):
-        """
-        Convert a ``DMF`` object to ``DMP``.
-
-        Examples
-        ========
-
-        >>> from sympy.polys.polyclasses import DMP, DMF
-        >>> from sympy.polys.domains import ZZ
-        >>> from sympy.abc import x
-
-        >>> f = DMF(([ZZ(1), ZZ(1)], [ZZ(1)]), ZZ)
-        >>> K = ZZ.frac_field(x)
-
-        >>> F = ZZ[x].from_FractionField(f, K)
-
-        >>> F == DMP([ZZ(1), ZZ(1)], ZZ)
-        True
-        >>> type(F)
-        <class 'sympy.polys.polyclasses.DMP'>
-
-        """
-        if a.denom().is_one:
-            return K1.from_PolynomialRing(a.numer(), K0)
+        """Convert a rational function to ``dtype``. """
+        if K0.denom(a) == 1:
+            return K1.from_PolynomialRing(K0.numer(a), K0.field.ring.to_domain())
+        else:
+            return None
 
     def get_field(self):
         """Returns a field associated with `self`. """
-        from sympy.polys.domains import FractionField
-        return FractionField(self.dom, *self.gens)
+        return self.ring.to_field().to_domain()
 
-    def poly_ring(self, *gens):
+    def poly_ring(self, *symbols): # TODO:, order=lex):
         """Returns a polynomial ring, i.e. `K[X]`. """
-        raise NotImplementedError('nested domains not allowed')
+        from sympy.polys.rings import PolyRing
+        return PolyRing(symbols, self.ring, order).to_domain()
 
-    def frac_field(self, *gens):
+    def frac_field(self, *symbols): # TODO:, order=lex):
         """Returns a fraction field, i.e. `K(X)`. """
-        raise NotImplementedError('nested domains not allowed')
+        from sympy.polys.fields import FracField
+        return FracField(symbols, self.ring, order).to_domain()
 
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """
-        return self.dom.is_positive(a.LC())
+        return self.dom.is_positive(a.LC)
 
     def is_negative(self, a):
         """Returns True if `LC(a)` is negative. """
-        return self.dom.is_negative(a.LC())
+        return self.dom.is_negative(a.LC)
 
     def is_nonpositive(self, a):
         """Returns True if `LC(a)` is non-positive. """
-        return self.dom.is_nonpositive(a.LC())
+        return self.dom.is_nonpositive(a.LC)
 
     def is_nonnegative(self, a):
         """Returns True if `LC(a)` is non-negative. """
-        return self.dom.is_nonnegative(a.LC())
+        return self.dom.is_nonnegative(a.LC)
 
     def gcdex(self, a, b):
         """Extended GCD of `a` and `b`. """

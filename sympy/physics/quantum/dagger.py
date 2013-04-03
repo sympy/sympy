@@ -1,22 +1,18 @@
 """Hermitian conjugation."""
 
-from sympy import Expr, sympify, Add, Mul, Matrix, Pow
-
-from sympy.physics.quantum.qexpr import QExpr
-from sympy.physics.quantum.matrixutils import (
-    numpy_ndarray, scipy_sparse_matrix, matrix_dagger
-)
+from sympy.core import Expr
+from sympy.functions.elementary.complexes import adjoint
 
 __all__ = [
     'Dagger'
 ]
 
 
-class Dagger(Expr):
+class Dagger(adjoint):
     """General Hermitian conjugate operation.
 
-    For matrices this operation is equivalent to transpose and complex
-    conjugate [1].
+    Take the Hermetian conjugate of an argument [1]_. For matrices this
+    operation is equivalent to transpose and complex conjugate [2]_.
 
     Parameters
     ==========
@@ -72,76 +68,18 @@ class Dagger(Expr):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Hermitian_transpose
+    .. [1] http://en.wikipedia.org/wiki/Hermitian_adjoint
+    .. [2] http://en.wikipedia.org/wiki/Hermitian_transpose
     """
 
-    def __new__(cls, arg, **old_assumptions):
-        # Return the dagger of a sympy Matrix immediately.
-        if isinstance(arg, (Matrix, numpy_ndarray, scipy_sparse_matrix)):
-            return matrix_dagger(arg)
-        arg = sympify(arg)
-        r = cls.eval(arg)
-        if isinstance(r, Expr):
-            return r
-        #make unevaluated dagger commutative or non-commutative depending on arg
-        if arg.is_commutative:
-            obj = Expr.__new__(cls, arg, **{'commutative':True})
-        else:
-            obj = Expr.__new__(cls, arg, **{'commutative':False})
-        if isinstance(obj, QExpr):
-            obj.hilbert_space = arg.hilbert_space
-        return obj
+    def __new__(cls, arg):
+        if hasattr(arg, 'adjoint'):
+            obj = arg.adjoint()
+        elif hasattr(arg, 'conjugate') and hasattr(arg, 'transpose'):
+            obj = arg.conjugate().transpose()
+        if obj is not None:
+            return obj
+        return Expr.__new__(cls, arg)
 
-    @classmethod
-    def eval(cls, arg):
-        """Evaluates the Dagger instance."""
-        from sympy.physics.quantum.operator import Operator
-        try:
-            d = arg._eval_dagger()
-        except (NotImplementedError, AttributeError):
-            if isinstance(arg, Expr):
-                if isinstance(arg, Operator):
-                    # Operator without _eval_dagger
-                    return None
-                if arg.is_Add:
-                    return Add(*[Dagger(i) for i in arg.args])
-                if arg.is_Mul:
-                    return Mul(*[Dagger(i) for i in reversed(arg.args)])
-                if arg.is_Pow:
-                    return Pow(Dagger(arg.args[0]),arg.args[1])
-                else:
-                    if arg.is_Number \
-                                     or arg.is_Function or arg.is_Derivative\
-                                     or arg.is_Integer or arg.is_NumberSymbol\
-                                     or arg.is_number\
-                                     or arg.is_complex or arg.is_integer\
-                                     or arg.is_real:
-                        return arg.conjugate()
-                    else:
-                        return None
-            else:
-                return None
-        else:
-            return d
-
-    def _eval_dagger(self):
-        return self.args[0]
-
-    def _sympyrepr(self, printer, *args):
-        arg0 = printer._print(self.args[0], *args)
-        return '%s(%s)' % (self.__class__.__name__, arg0)
-
-    def _sympystr(self, printer, *args):
-        arg0 = printer._print(self.args[0], *args)
-        return '%s(%s)' % (self.__class__.__name__, arg0)
-
-    def _pretty(self, printer, *args):
-        from sympy.printing.pretty.stringpict import prettyForm
-        pform = printer._print(self.args[0], *args)
-        pform = pform**prettyForm(u'\u2020')
-        return pform
-
-    def _latex(self, printer, *args):
-        arg = printer._print(self.args[0])
-        return '%s^{\\dag}' % arg
-
+adjoint.__name__ = "Dagger"
+adjoint._sympyrepr = lambda a, b: "Dagger(%s)" % b._print(a.args[0])

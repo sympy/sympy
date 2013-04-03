@@ -1,6 +1,7 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
-from sympy.functions import tan, cot
+from sympy.functions import tan, cot, factorial, gamma
 from gruntz import gruntz
+
 
 def limit(e, z, z0, dir="+"):
     """
@@ -48,6 +49,13 @@ def limit(e, z, z0, dir="+"):
     if not e.has(z):
         return e
 
+    # gruntz fails on factorials but works with the gamma function
+    # If no factorial term is present, e should remain unchanged.
+    # factorial is defined to be zero for negative inputs (which
+    # differs from gamma) so only rewrite for positive z0.
+    if z0.is_positive:
+        e = e.rewrite(factorial, gamma)
+
     if e.func is tan:
         # discontinuity at odd multiples of pi/2; 0 at even
         disc = S.Pi/2
@@ -81,7 +89,7 @@ def limit(e, z, z0, dir="+"):
 
     if e.is_Pow:
         b, ex = e.args
-        c = None # records sign of b if b is +/-z or has a bounded value
+        c = None  # records sign of b if b is +/-z or has a bounded value
         if b.is_Mul:
             c, b = b.as_two_terms()
             if c is S.NegativeOne and b == z:
@@ -92,7 +100,7 @@ def limit(e, z, z0, dir="+"):
         if ex.is_number:
             if c is None:
                 base = b.subs(z, z0)
-                if base.is_bounded and (ex.is_bounded or base is not S.One):
+                if base.is_finite and (ex.is_bounded or base is not S.One):
                     return base**ex
             else:
                 if z0 == 0 and ex < 0:
@@ -112,6 +120,24 @@ def limit(e, z, z0, dir="+"):
 
     if e.is_Mul or not z0 and e.is_Pow and b.func is log:
         if e.is_Mul:
+            if abs(z0) is S.Infinity:
+                n, d = e.as_numer_denom()
+                # XXX todo: this should probably be stated in the
+                # negative -- i.e. to exclude expressions that should
+                # not be handled this way but I'm not sure what that
+                # condition is; when ok is True it means that the leading
+                # term approach is going to succeed (hopefully)
+                ok = lambda w: (z in w.free_symbols and
+                     any(a.is_polynomial(z) or
+                     any(z in m.free_symbols and m.is_polynomial(z)
+                     for m in Mul.make_args(a))
+                     for a in Add.make_args(w)))
+                if all(ok(w) for w in (n, d)):
+                    u = C.Dummy(positive=(z0 is S.Infinity))
+                    inve = (n/d).subs(z, 1/u)
+                    return limit(inve.as_leading_term(u), u,
+                        S.Zero, "+" if z0 is S.Infinity else "-")
+
             # weed out the z-independent terms
             i, d = e.as_independent(z)
             if i is not S.One and i.is_bounded:
@@ -143,42 +169,93 @@ def limit(e, z, z0, dir="+"):
         # this is a case like limit(x*y+x*z, z, 2) == x*y+2*x
         # but we need to make sure, that the general gruntz() algorithm is
         # executed for a case like "limit(sqrt(x+1)-sqrt(x),x,oo)==0"
-        unbounded = []; unbounded_result=[]
-        finite = []; unknown = []
-        ok = True
-        for term in e.args:
-            if not term.has(z) and not term.is_unbounded:
-                finite.append(term)
-                continue
-            result = term.subs(z, z0)
-            bounded = result.is_bounded
-            if bounded is False or result is S.NaN:
-                if unknown:
-                    ok = False
-                    break
-                unbounded.append(term)
-                if result != S.NaN:
-                    # take result from direction given
-                    result = limit(term, z, z0, dir)
-                unbounded_result.append(result)
-            elif bounded:
-                finite.append(result)
+
+        unbounded = []
+        unbounded_result = []
+        unbounded_const = []
+        unknown = []
+        unknown_result = []
+        finite = []
+        zero = []
+
+        def _sift(term):
+            if z not in term.free_symbols:
+                if term.is_unbounded:
+                    unbounded_const.append(term)
+                else:
+                    finite.append(term)
             else:
-                if unbounded:
-                    ok = False
-                    break
-                unknown.append(result)
-        if not ok:
+                result = term.subs(z, z0)
+                bounded = result.is_bounded
+                if bounded is False or result is S.NaN:
+                    unbounded.append(term)
+                    if result != S.NaN:
+                        # take result from direction given
+                        result = limit(term, z, z0, dir)
+                    unbounded_result.append(result)
+                elif bounded:
+                    if result:
+                        finite.append(result)
+                    else:
+                        zero.append(term)
+                else:
+                    unknown.append(term)
+                    unknown_result.append(result)
+
+        for term in e.args:
+            _sift(term)
+
+        bad = bool(unknown and unbounded)
+        if bad or len(unknown) > 1 or len(unbounded) > 1 and not zero:
+            uu = unknown + unbounded
             # we won't be able to resolve this with unbounded
             # terms, e.g. Sum(1/k, (k, 1, n)) - log(n) as n -> oo:
             # since the Sum is unevaluated it's boundedness is
             # unknown and the log(n) is oo so you get Sum - oo
-            # which is unsatisfactory.
-            raise NotImplementedError('unknown boundedness for %s' %
-                                      (unknown or result))
-        u = Add(*unknown)
-        if unbounded:
-            inf_limit = Add(*unbounded_result)
+            # which is unsatisfactory. BUT...if there are both
+            # unknown and unbounded terms (condition 'bad') or
+            # there are multiple terms that are unknown, or
+            # there are multiple symbolic unbounded terms they may
+            # respond better if they are made into a rational
+            # function, so give them a chance to do so before
+            # reporting failure.
+            u = Add(*uu)
+            f = u.normal()
+            if f != u:
+                unknown = []
+                unbounded = []
+                unbounded_result = []
+                unknown_result = []
+                _sift(limit(f, z, z0, dir))
+
+            # We came in with a) unknown and unbounded terms or b) had multiple
+            # unknown terms
+
+            # At this point we've done one of 3 things.
+            # (1) We did nothing with f so we now report the error
+            # showing the troublesome terms which are now in uu. OR
+
+            # (2) We did something with f but the result came back as unknown.
+            # Normally this wouldn't be a problem,
+            # but we had either multiple terms that were troublesome (unk and
+            # unbounded or multiple unknown terms) so if we
+            # weren't able to resolve the boundedness by now, that indicates a
+            # problem so we report the error showing the troublesome terms which are
+            # now in uu.
+            if unknown:
+                if bad:
+                    msg = 'unknown and unbounded terms present in %s'
+                elif unknown:
+                    msg = 'multiple terms with unknown boundedness in %s'
+                raise NotImplementedError(msg % uu)
+            # OR
+            # (3) the troublesome terms have been identified as finite or unbounded
+            # and we proceed with the non-error code since the lists have been updated.
+
+        u = Add(*unknown_result)
+        if unbounded_result or unbounded_const:
+            unbounded.extend(zero)
+            inf_limit = Add(*(unbounded_result + unbounded_const))
             if inf_limit is not S.NaN:
                 return inf_limit + u
             if finite:
@@ -194,29 +271,33 @@ def limit(e, z, z0, dir="+"):
         r = gruntz(e, z, z0, dir)
         if r is S.NaN:
             raise PoleError()
-    except PoleError:
+    except (PoleError, ValueError):
         r = heuristics(e, z, z0, dir)
     return r
 
+
 def heuristics(e, z, z0, dir):
-    if z0 == oo:
-        return limit(e.subs(z, 1/z), z, sympify(0), "+")
-    elif e.is_Mul:
+    if abs(z0) is S.Infinity:
+        return limit(e.subs(z, 1/z), z, S.Zero, "+" if z0 is S.Infinity else "-")
+
+    rv = None
+    bad = (S.Infinity, S.NegativeInfinity, S.NaN, None)
+    if e.is_Mul:
         r = []
         for a in e.args:
             if not a.is_bounded:
                 r.append(a.limit(z, z0, dir))
-        if r:
-            return Mul(*r)
-    elif e.is_Add:
-        r = []
-        for a in e.args:
-            r.append(a.limit(z, z0, dir))
-        return Add(*r)
-    elif e.is_Function:
-        return e.subs(e.args[0], limit(e.args[0], z, z0, dir))
-    msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
-    raise PoleError(msg % (e, z, z0, dir))
+                if r[-1] in bad:
+                    break
+        else:
+            if r:
+                rv = Mul(*r)
+    if rv is None and (e.is_Add or e.is_Pow or e.is_Function):
+        rv = e.func(*[limit(a, z, z0, dir) for a in e.args])
+    if rv in bad:
+        msg = "Don't know how to calculate the limit(%s, %s, %s, dir=%s), sorry."
+        raise PoleError(msg % (e, z, z0, dir))
+    return rv
 
 
 class Limit(Expr):
@@ -243,7 +324,8 @@ class Limit(Expr):
         elif not isinstance(dir, Symbol):
             raise TypeError("direction must be of type basestring or Symbol, not %s" % type(dir))
         if str(dir) not in ('+', '-'):
-            raise ValueError("direction must be either '+' or '-', not %s" % dir)
+            raise ValueError(
+                "direction must be either '+' or '-', not %s" % dir)
         obj = Expr.__new__(cls)
         obj._args = (e, z, z0, dir)
         return obj

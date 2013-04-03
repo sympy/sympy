@@ -5,6 +5,7 @@ from sympy import S, Symbol, symbols, I, log, atan, \
 
 from sympy.polys import Poly, subresultants, resultant, ZZ
 
+
 def ratint(f, x, **flags):
     """Performs indefinite integration of rational functions.
 
@@ -35,7 +36,7 @@ def ratint(f, x, **flags):
     else:
         p, q = f
 
-    p, q = Poly(p, x, composite=False), Poly(q, x, composite=False)
+    p, q = Poly(p, x, composite=False, field=True), Poly(q, x, composite=False, field=True)
 
     coeff, p, q = p.cancel(q)
     poly, p = p.div(q)
@@ -74,8 +75,7 @@ def ratint(f, x, **flags):
             else:
                 p, q = f
 
-                atoms = p.atoms() \
-                      | q.atoms()
+                atoms = p.atoms() | q.atoms()
 
             for elt in atoms - set([x]):
                 if not elt.is_real:
@@ -88,7 +88,8 @@ def ratint(f, x, **flags):
 
         if not real:
             for h, q in L:
-                eps += RootSum(q, Lambda(t, t*log(h.as_expr())), quadratic=True)
+                eps += RootSum(
+                    q, Lambda(t, t*log(h.as_expr())), quadratic=True)
         else:
             for h, q in L:
                 R = log_to_real(h, q, x, t)
@@ -96,11 +97,13 @@ def ratint(f, x, **flags):
                 if R is not None:
                     eps += R
                 else:
-                    eps += RootSum(q, Lambda(t, t*log(h.as_expr())), quadratic=True)
+                    eps += RootSum(
+                        q, Lambda(t, t*log(h.as_expr())), quadratic=True)
 
         result += eps
 
     return coeff*result
+
 
 def ratint_ratpart(f, g, x):
     """
@@ -139,8 +142,8 @@ def ratint_ratpart(f, g, x):
     n = u.degree()
     m = v.degree()
 
-    A_coeffs = [ Dummy('a' + str(n-i)) for i in xrange(0, n) ]
-    B_coeffs = [ Dummy('b' + str(m-i)) for i in xrange(0, m) ]
+    A_coeffs = [ Dummy('a' + str(n - i)) for i in xrange(0, n) ]
+    B_coeffs = [ Dummy('b' + str(m - i)) for i in xrange(0, m) ]
 
     C_coeffs = A_coeffs + B_coeffs
 
@@ -158,6 +161,7 @@ def ratint_ratpart(f, g, x):
     log_part = cancel(B/v.as_expr(), x)
 
     return rat_part, log_part
+
 
 def ratint_logpart(f, g, x, t=None):
     """
@@ -198,9 +202,9 @@ def ratint_logpart(f, g, x, t=None):
     t = t or Dummy('t')
     a, b = g, f - g.diff()*Poly(t, x)
 
-    R = subresultants(a, b)
+    res, R = resultant(a, b, includePRS=True)
 
-    res = Poly(resultant(a, b), t, composite=False)
+    res = Poly(res, t, composite=False)
 
     R_map, H = {}, []
 
@@ -242,6 +246,7 @@ def ratint_logpart(f, g, x, t=None):
 
     return H
 
+
 def log_to_atan(f, g):
     """
     Convert complex logarithms to real arctangents.
@@ -282,10 +287,11 @@ def log_to_atan(f, g):
         return 2*atan(p.as_expr())
     else:
         s, t, h = g.gcdex(-f)
-        u = (f*s+g*t).quo(h)
+        u = (f*s + g*t).quo(h)
         A = 2*atan(u.as_expr())
 
         return A + log_to_atan(s, t)
+
 
 def log_to_real(h, q, x, t):
     """
@@ -319,8 +325,8 @@ def log_to_real(h, q, x, t):
     """
     u, v = symbols('u,v', cls=Dummy)
 
-    H = h.as_expr().subs({t:u+I*v}).expand()
-    Q = q.as_expr().subs({t:u+I*v}).expand()
+    H = h.as_expr().subs({t: u + I*v}).expand()
+    Q = q.as_expr().subs({t: u + I*v}).expand()
 
     H_map = collect(H, I, evaluate=False)
     Q_map = collect(Q, I, evaluate=False)
@@ -338,7 +344,7 @@ def log_to_real(h, q, x, t):
     result = S(0)
 
     for r_u in R_u.iterkeys():
-        C = Poly(c.subs({u:r_u}), v)
+        C = Poly(c.subs({u: r_u}), v)
         R_v = roots(C, filter='R')
 
         if len(R_v) != C.count_roots():
@@ -348,13 +354,13 @@ def log_to_real(h, q, x, t):
             if not r_v.is_positive:
                 continue
 
-            D = d.subs({u:r_u, v:r_v})
+            D = d.subs({u: r_u, v: r_v})
 
             if D.evalf(chop=True) != 0:
                 continue
 
-            A = Poly(a.subs({u:r_u, v:r_v}), x)
-            B = Poly(b.subs({u:r_u, v:r_v}), x)
+            A = Poly(a.subs({u: r_u, v: r_v}), x)
+            B = Poly(b.subs({u: r_u, v: r_v}), x)
 
             AB = (A**2 + B**2).as_expr()
 
@@ -369,4 +375,3 @@ def log_to_real(h, q, x, t):
         result += r*log(h.as_expr().subs(t, r))
 
     return result
-

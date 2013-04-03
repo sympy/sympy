@@ -1,6 +1,10 @@
 import inspect
-from sympy.utilities.source import get_class
+from sympy.core.cache import cacheit
+from sympy.core.singleton import S
 from sympy.logic.boolalg import Boolean
+from sympy.utilities.source import get_class
+from contextlib import contextmanager
+
 
 class AssumptionsContext(set):
     """Set representing assumptions.
@@ -12,7 +16,8 @@ class AssumptionsContext(set):
     Examples
     ========
 
-        >>> from sympy import global_assumptions, AppliedPredicate, Q
+        >>> from sympy import AppliedPredicate, Q
+        >>> from sympy.assumptions.assume import global_assumptions
         >>> global_assumptions
         AssumptionsContext()
         >>> from sympy.abc import x
@@ -33,6 +38,7 @@ class AssumptionsContext(set):
 
 global_assumptions = AssumptionsContext()
 
+
 class AppliedPredicate(Boolean):
     """The class of expressions resulting from applying a Predicate.
 
@@ -49,7 +55,7 @@ class AppliedPredicate(Boolean):
     def __new__(cls, predicate, arg):
         return Boolean.__new__(cls, predicate, arg)
 
-    is_Atom = True # do not attempt to decompose this
+    is_Atom = True  # do not attempt to decompose this
 
     @property
     def arg(self):
@@ -76,6 +82,10 @@ class AppliedPredicate(Boolean):
     def func(self):
         return self._args[0]
 
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (2, (self.func.name, self.arg.sort_key())), S.One.sort_key(), S.One
+
     def __eq__(self, other):
         if type(other) is AppliedPredicate:
             return self._args == other._args
@@ -86,6 +96,7 @@ class AppliedPredicate(Boolean):
 
     def _eval_ask(self, assumptions):
         return self.func.eval(self.arg, assumptions)
+
 
 class Predicate(Boolean):
     """A predicate is a function that returns a boolean value.
@@ -135,6 +146,10 @@ class Predicate(Boolean):
     def remove_handler(self, handler):
         self.handlers.remove(handler)
 
+    @cacheit
+    def sort_key(self, order=None):
+        return self.class_key(), (1, (self.name,)), S.One.sort_key(), S.One
+
     def eval(self, expr, assumptions=True):
         """
         Evaluate self(expr) under the given assumptions.
@@ -162,3 +177,26 @@ class Predicate(Boolean):
                         raise ValueError('incompatible resolutors')
                 break
         return res
+
+@contextmanager
+def assuming(*assumptions):
+    """ Context manager for assumptions
+
+    >>> from __future__ import with_statement
+    >>> from sympy.assumptions import assuming, Q, ask
+    >>> from sympy.abc import x, y
+
+    >>> print ask(Q.integer(x + y))
+    None
+
+    >>> with assuming(Q.integer(x), Q.integer(y)):  #doctest: +SKIP
+    ...     print ask(Q.integer(x + y))
+    True
+    """
+    old_global_assumptions = global_assumptions.copy()
+    global_assumptions.update(assumptions)
+    try:
+        yield
+    finally:
+        global_assumptions.clear()
+        global_assumptions.update(old_global_assumptions)

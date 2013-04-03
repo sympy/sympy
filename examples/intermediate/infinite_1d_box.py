@@ -10,6 +10,7 @@ from sympy.core import pi
 from sympy import Integral, var, S
 from sympy.functions import sin, sqrt
 
+
 def X_n(n, a, x):
     """
     Returns the wavefunction X_{n} for an infinite 1D box
@@ -41,6 +42,7 @@ def E_n(n, a, mass):
     """
     return ((n * pi / a)**2) / mass
 
+
 def energy_corrections(perturbation, n, a=10, mass=0.5):
     """
     Calculating first two order corrections due to perturbation theory and
@@ -68,8 +70,9 @@ def energy_corrections(perturbation, n, a=10, mass=0.5):
 
             Vnm(n, n, a).evalf(),
 
-            (Vnm(n, n-1, a)**2/(E_n(n, a, mass) - E_n(n-1, a, mass))
-           + Vnm(n, n+1, a)**2/(E_n(n, a, mass) - E_n(n+1, a, mass))).evalf())
+            (Vnm(n, n - 1, a)**2/(E_n(n, a, mass) - E_n(n - 1, a, mass))
+           + Vnm(n, n + 1, a)**2/(E_n(n, a, mass) - E_n(n + 1, a, mass))).evalf())
+
 
 def main():
     print

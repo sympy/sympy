@@ -15,7 +15,7 @@ from inspect import getsource
 units = ["s", "ms", "us", "ns"]
 scaling = [1, 1e3, 1e6, 1e9]
 
-unitn = dict((s,i) for i,s in enumerate(units))
+unitn = dict((s, i) for i, s in enumerate(units))
 
 precision = 3
 
@@ -24,7 +24,7 @@ precision = 3
 class Directory(py.test.collect.Directory):
 
     def filefilter(self, path):
-        b   = path.purebasename
+        b = path.purebasename
         ext = path.ext
         return b.startswith('bench_') and ext == '.py'
 
@@ -43,25 +43,23 @@ class Timer(timeit.Timer):
         # copy of timeit.Timer.__init__
         # similarity index 95%
         self.timer = timer
-        stmt  = timeit.reindent(stmt, 8)
+        stmt = timeit.reindent(stmt, 8)
         setup = timeit.reindent(setup, 4)
-        src   = timeit.template % {'stmt': stmt, 'setup': setup}
-        self.src = src # Save for traceback display
+        src = timeit.template % {'stmt': stmt, 'setup': setup}
+        self.src = src  # Save for traceback display
         code = compile(src, timeit.dummy_src_name, "exec")
         ns = {}
         #exec code in globals(), ns      -- original timeit code
-        exec code in globals, ns    #   -- we use caller-provided globals instead
+        exec code in globals, ns  # -- we use caller-provided globals instead
         self.inner = ns["inner"]
-
 
 
 class Function(py.__.test.item.Function):
 
     def __init__(self, *args, **kw):
         super(Function, self).__init__(*args, **kw)
-        self.benchtime  = None
+        self.benchtime = None
         self.benchtitle = None
-
 
     def execute(self, target, *args):
         # get func source without first 'def func(...):' line
@@ -74,7 +72,6 @@ class Function(py.__.test.item.Function):
         else:
             self.benchtitle = src.splitlines()[0].strip()
 
-
         # XXX we ignore args
         timer = Timer(src, globals=target.func_globals)
 
@@ -82,12 +79,12 @@ class Function(py.__.test.item.Function):
             # from IPython.Magic.magic_timeit
             repeat = 3
             number = 1
-            for i in range(1,10):
+            for i in range(1, 10):
                 t = timer.timeit(number)
 
                 if t >= 0.2:
                     number *= (0.2 / t)
-                    number  = int(_ceil(number))
+                    number = int(_ceil(number))
                     break
 
                 if t <= 0.02:
@@ -98,9 +95,8 @@ class Function(py.__.test.item.Function):
                     # since we are very close to be > 0.2s we'd better adjust number
                     # so that timing time is not too high
                     number *= (0.2 / t)
-                    number  = int(_ceil(number))
+                    number = int(_ceil(number))
                     break
-
 
             self.benchtime = min(timer.repeat(repeat, number)) / number
 
@@ -121,7 +117,6 @@ class BenchSession(TerminalSession):
 
         self.out.write('\n')
         self.print_bench_results()
-
 
     def print_bench_results(self):
         self.out.write('==============================\n')
@@ -148,7 +143,8 @@ class BenchSession(TerminalSession):
                     else:
                         order = 3
 
-                    tstr = "%.*g %s" % (precision, best * scaling[order], units[order])
+                    tstr = "%.*g %s" % (
+                        precision, best * scaling[order], units[order])
 
                 results.append( [item.name, tstr, item.benchtitle] )
 
@@ -159,38 +155,37 @@ class BenchSession(TerminalSession):
 
         for s in results:
             tstr = s[1]
-            n,u = tstr.split()
+            n, u = tstr.split()
 
             # unit n
             un = unitn[u]
 
             try:
-                m,e = n.split('.')
+                m, e = n.split('.')
             except ValueError:
-                m,e = n,''
+                m, e = n, ''
 
             wm[un] = max(len(m), wm[un])
             we[un] = max(len(e), we[un])
 
         for s in results:
             tstr = s[1]
-            n,u = tstr.split()
+            n, u = tstr.split()
 
             un = unitn[u]
 
             try:
-                m,e = n.split('.')
+                m, e = n.split('.')
             except ValueError:
-                m,e = n,''
+                m, e = n, ''
 
             m = m.rjust(wm[un])
             e = e.ljust(we[un])
 
             if e.strip():
-                n = '.'.join((m,e))
+                n = '.'.join((m, e))
             else:
-                n = ' '.join((m,e))
-
+                n = ' '.join((m, e))
 
             # let's put the number into the right place
             txt = ''
@@ -198,10 +193,9 @@ class BenchSession(TerminalSession):
                 if i == un:
                     txt += n
                 else:
-                    txt += ' '*(wm[i]+we[i]+1)
+                    txt += ' '*(wm[i] + we[i] + 1)
 
             s[1] = '%s %s' % (txt, u)
-
 
         # align all columns besides the last one
         for i in range(2):
@@ -219,12 +213,12 @@ def main(args=None):
     # hook our Directory/Module/Function as defaults
     from py.__.test import defaultconftest
 
-    defaultconftest.Directory   = Directory
-    defaultconftest.Module      = Module
-    defaultconftest.Function    = Function
+    defaultconftest.Directory = Directory
+    defaultconftest.Module = Module
+    defaultconftest.Function = Function
 
     # hook BenchSession as py.test session
     config = py.test.config
-    config._getsessionclass = lambda : BenchSession
+    config._getsessionclass = lambda: BenchSession
 
     py.test.cmdline.main(args)

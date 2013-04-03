@@ -9,9 +9,17 @@ Beta
 BetaPrime
 Cauchy
 Chi
+ChiNoncentral
+ChiSquared
 Dagum
+Erlang
 Exponential
+FDistribution
+FisherZ
+Frechet
 Gamma
+GammaInverse
+Kumaraswamy
 Laplace
 Logistic
 LogNormal
@@ -19,19 +27,26 @@ Maxwell
 Nakagami
 Normal
 Pareto
+QuadraticU
+RaisedCosine
 Rayleigh
 StudentT
 Triangular
 Uniform
 UniformSum
+VonMises
 Weibull
 WignerSemicircle
 """
 
 from sympy import (exp, log, sqrt, pi, S, Dummy, Interval, S, sympify, gamma,
-                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs, log)
+                   Piecewise, And, Eq, binomial, factorial, Sum, floor, Abs,
+                   Symbol, log, besseli, Lambda, Basic)
 from sympy import beta as beta_fn
-from crv import SingleContinuousPSpace
+from sympy import cos, exp, besseli
+from sympy.stats.crv import (SingleContinuousPSpace, SingleContinuousDistribution,
+        ContinuousDistributionHandmade)
+from sympy.stats.rv import _value_check
 from sympy.core.decorators import _sympifyit
 import random
 
@@ -44,9 +59,17 @@ __all__ = ['ContinuousRV',
 'BetaPrime',
 'Cauchy',
 'Chi',
+'ChiNoncentral',
+'ChiSquared',
 'Dagum',
+'Erlang',
 'Exponential',
+'FDistribution',
+'FisherZ',
+'Frechet',
 'Gamma',
+'GammaInverse',
+'Kumaraswamy',
 'Laplace',
 'Logistic',
 'LogNormal',
@@ -54,26 +77,21 @@ __all__ = ['ContinuousRV',
 'Nakagami',
 'Normal',
 'Pareto',
+'QuadraticU',
+'RaisedCosine',
 'Rayleigh',
 'StudentT',
 'Triangular',
 'Uniform',
 'UniformSum',
+'VonMises',
 'Weibull',
 'WignerSemicircle'
 ]
 
-def _value_check(condition, message):
-    """
-    Check a condition on input value.
-
-    Raises ValueError with message if condition is not True
-    """
-    if condition is not True:
-        raise ValueError(message)
 
 
-def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
+def ContinuousRV(symbol, density, set=Interval(-oo, oo)):
     """
     Create a Continuous Random Variable given the following:
 
@@ -92,7 +110,8 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     >>> from sympy import Symbol, sqrt, exp, pi
     >>> from sympy.stats import ContinuousRV, P, E
 
-    >>> x = Symbol('x')
+    >>> x = Symbol("x")
+
     >>> pdf = sqrt(2)*exp(-x**2/2)/(2*sqrt(pi)) # Normal distribution
     >>> X = ContinuousRV(x, pdf)
 
@@ -101,7 +120,15 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
     >>> P(X>0)
     1/2
     """
-    return SingleContinuousPSpace(symbol, density, set).value
+    pdf = Lambda(symbol, density)
+    dist = ContinuousDistributionHandmade(pdf, set)
+    return SingleContinuousPSpace(symbol, dist).value
+
+def rv(symbol, cls, args):
+    args = map(sympify, args)
+    dist = cls(*args)
+    dist.check(*args)
+    return SingleContinuousPSpace(symbol, dist).value
 
 ########################################
 # Continuous Probability Distributions #
@@ -110,15 +137,14 @@ def ContinuousRV(symbol, density, set=Interval(-oo,oo)):
 #-------------------------------------------------------------------------------
 # Arcsin distribution ----------------------------------------------------------
 
-class ArcsinPSpace(SingleContinuousPSpace):
-    def __new__(cls, a, b, symbol=None):
-        a, b = sympify(a), sympify(b)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = 1/(pi*sqrt((x-a)*(b-x)))
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(a, b))
-        return obj
 
-def Arcsin(a=0, b=1, symbol=None):
+class ArcsinDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b')
+
+    def pdf(self, x):
+        return 1/(pi*sqrt((x - self.a)*(self.b - x)))
+
+def Arcsin(name, a=0, b=1):
     r"""
     Create a Continuous Random Variable with an arcsin distribution.
 
@@ -143,40 +169,44 @@ def Arcsin(a=0, b=1, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Arcsin, Density
+    >>> from sympy.stats import Arcsin, density
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", real=True)
     >>> b = Symbol("b", real=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Arcsin(a, b, symbol=x)
+    >>> X = Arcsin("x", a, b)
 
-    >>> Density(X)
-    Lambda(_x, 1/(pi*sqrt((-_x + b)*(_x - a))))
+    >>> density(X)(z)
+    1/(pi*sqrt((-a + z)*(b - z)))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Arcsine_distribution
+    [1] http://en.wikipedia.org/wiki/Arcsine_distribution
     """
 
-    return ArcsinPSpace(a, b, symbol).value
+    return rv(name, ArcsinDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
 # Benini distribution ----------------------------------------------------------
 
-class BeniniPSpace(SingleContinuousPSpace):
-    def __new__(cls, alpha, beta, sigma, symbol = None):
-        alpha, beta, sigma = sympify(alpha), sympify(beta), sympify(sigma)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = (exp(-alpha*log(x/sigma)-beta*log(x/sigma)**2)
-               *(alpha/x+2*beta*log(x/sigma)/x))
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf,
-                                             set = Interval(sigma, oo))
-        return obj
 
-def Benini(alpha, beta, sigma, symbol=None):
+class BeniniDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta', 'sigma')
+
+    @property
+    def set(self):
+        return Interval(self.sigma, oo)
+
+    def pdf(self, x):
+        alpha, beta, sigma = self.alpha, self.beta, self.sigma
+        return (exp(-alpha*log(x/sigma) - beta*log(x/sigma)**2)
+               *(alpha/x + 2*beta*log(x/sigma)/x))
+
+
+def Benini(name, alpha, beta, sigma):
     r"""
     Create a Continuous Random Variable with a Benini distribution.
 
@@ -202,55 +232,56 @@ def Benini(alpha, beta, sigma, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Benini, Density
+    >>> from sympy.stats import Benini, density
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
     >>> sigma = Symbol("sigma", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Benini(alpha, beta, sigma, symbol=x)
+    >>> X = Benini("x", alpha, beta, sigma)
 
-    >>> D = Density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                                                             2       \
-          |   /                  /  x  \\             /  x  \            /  x  \|
-          |   |        2*beta*log|-----||  - alpha*log|-----| - beta*log |-----||
-          |   |alpha             \sigma/|             \sigma/            \sigma/|
-    Lambda|x, |----- + -----------------|*e                                     |
-          \   \  x             x        /                                       /
+                                                              2
+    /                  /  z  \\             /  z  \            /  z  \
+    |        2*beta*log|-----||  - alpha*log|-----| - beta*log |-----|
+    |alpha             \sigma/|             \sigma/            \sigma/
+    |----- + -----------------|*e
+    \  z             z        /
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Benini_distribution
+    [1] http://en.wikipedia.org/wiki/Benini_distribution
     """
 
-    return BeniniPSpace(alpha, beta, sigma, symbol).value
+    return rv(name, BeniniDistribution, (alpha, beta, sigma))
 
 #-------------------------------------------------------------------------------
 # Beta distribution ------------------------------------------------------------
 
-class BetaPSpace(SingleContinuousPSpace):
-    def __new__(cls, alpha, beta, symbol=None):
-        alpha, beta = sympify(alpha), sympify(beta)
 
+class BetaDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta')
+
+    set = Interval(0, 1)
+
+    @staticmethod
+    def check(alpha, beta):
         _value_check(alpha > 0, "Alpha must be positive")
         _value_check(beta > 0, "Beta must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = x**(alpha-1) * (1-x)**(beta-1) / beta_fn(alpha, beta)
-
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, 1))
-        obj.alpha = alpha
-        obj.beta = beta
-        return obj
+    def pdf(self, x):
+        alpha, beta = self.alpha, self.beta
+        return x**(alpha - 1) * (1 - x)**(beta - 1) / beta_fn(alpha, beta)
 
     def sample(self):
-        return {self.value: random.betavariate(self.alpha, self.beta)}
+        return random.betavariate(self.alpha, self.beta)
 
-def Beta(alpha, beta, symbol=None):
+
+def Beta(name, alpha, beta):
     r"""
     Create a Continuous Random Variable with a Beta distribution.
 
@@ -275,49 +306,52 @@ def Beta(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Beta, Density, E, Var
+    >>> from sympy.stats import Beta, density, E, variance
     >>> from sympy import Symbol, simplify, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Beta(alpha, beta, symbol=x)
+    >>> X = Beta("x", alpha, beta)
 
-    >>> D = Density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /    alpha - 1         beta - 1                    \
-          |   x         *(-x + 1)        *gamma(alpha + beta)|
-    Lambda|x, -----------------------------------------------|
-          \               gamma(alpha)*gamma(beta)           /
+     alpha - 1         beta - 1
+    z         *(-z + 1)        *gamma(alpha + beta)
+    -----------------------------------------------
+                gamma(alpha)*gamma(beta)
 
     >>> simplify(E(X, meijerg=True))
     alpha/(alpha + beta)
 
-    >>> simplify(Var(X, meijerg=True))
+    >>> simplify(variance(X, meijerg=True))  #doctest: +SKIP
     alpha*beta/((alpha + beta)**2*(alpha + beta + 1))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_distribution
-    .. [2] http://mathworld.wolfram.com/BetaDistribution.html
+    [1] http://en.wikipedia.org/wiki/Beta_distribution
+    [2] http://mathworld.wolfram.com/BetaDistribution.html
     """
 
-    return BetaPSpace(alpha, beta, symbol).value
+    return rv(name, BetaDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Beta prime distribution ------------------------------------------------------
 
-class BetaPrimePSpace(SingleContinuousPSpace):
-    def __new__(cls, alpha, beta, symbol=None):
-        alpha, beta = sympify(alpha), sympify(beta)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = x**(alpha-1)*(1+x)**(-alpha-beta)/beta_fn(alpha, beta)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
-        return obj
 
-def BetaPrime(alpha, beta, symbol=None):
+class BetaPrimeDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta')
+
+    set = Interval(0, oo)
+
+    def pdf(self, x):
+        alpha, beta = self.alpha, self.beta
+        return x**(alpha - 1)*(1 + x)**(-alpha - beta)/beta_fn(alpha, beta)
+
+
+def BetaPrime(name, alpha, beta):
     r"""
     Create a continuous random variable with a Beta prime distribution.
 
@@ -342,43 +376,43 @@ def BetaPrime(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import BetaPrime, Density
+    >>> from sympy.stats import BetaPrime, density
     >>> from sympy import Symbol, pprint
 
     >>> alpha = Symbol("alpha", positive=True)
     >>> beta = Symbol("beta", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = BetaPrime(alpha, beta, symbol=x)
+    >>> X = BetaPrime("x", alpha, beta)
 
-    >>> D = Density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /    alpha - 1        -alpha - beta                    \
-          |   x         *(x + 1)             *gamma(alpha + beta)|
-    Lambda|x, ---------------------------------------------------|
-          \                 gamma(alpha)*gamma(beta)             /
+     alpha - 1        -alpha - beta
+    z         *(z + 1)             *gamma(alpha + beta)
+    ---------------------------------------------------
+                  gamma(alpha)*gamma(beta)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
-    .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
+    [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
+    [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
     """
 
-    return BetaPrimePSpace(alpha, beta, symbol).value
+    return rv(name, BetaPrimeDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Cauchy distribution ----------------------------------------------------------
 
-class CauchyPSpace(SingleContinuousPSpace):
-    def __new__(cls, x0, gamma, symbol = None):
-        x0, gamma = sympify(x0), sympify(gamma)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = 1/(pi*gamma*(1+((x-x0)/gamma)**2))
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
-        return obj
 
-def Cauchy(x0, gamma, symbol=None):
+class CauchyDistribution(SingleContinuousDistribution):
+    _argnames = ('x0', 'gamma')
+
+    def pdf(self, x):
+        return 1/(pi*self.gamma*(1 + ((x - self.x0)/self.gamma)**2))
+
+
+def Cauchy(name, x0, gamma):
     r"""
     Create a continuous random variable with a Cauchy distribution.
 
@@ -402,39 +436,41 @@ def Cauchy(x0, gamma, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Cauchy, Density
+    >>> from sympy.stats import Cauchy, density
     >>> from sympy import Symbol
 
     >>> x0 = Symbol("x0")
     >>> gamma = Symbol("gamma", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Cauchy(x0, gamma, symbol=x)
+    >>> X = Cauchy("x", x0, gamma)
 
-    >>> Density(X)
-    Lambda(_x, 1/(pi*gamma*(1 + (_x - x0)**2/gamma**2)))
+    >>> density(X)(z)
+    1/(pi*gamma*(1 + (-x0 + z)**2/gamma**2))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Cauchy_distribution
-    .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
+    [1] http://en.wikipedia.org/wiki/Cauchy_distribution
+    [2] http://mathworld.wolfram.com/CauchyDistribution.html
     """
 
-    return CauchyPSpace(x0, gamma, symbol).value
+    return rv(name, CauchyDistribution, (x0, gamma))
 
 #-------------------------------------------------------------------------------
 # Chi distribution -------------------------------------------------------------
 
-class ChiPSpace(SingleContinuousPSpace):
-    def __new__(cls, k, symbol = None):
-        k = sympify(k)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = 2**(1-k/2)*x**(k-1)*exp(-x**2/2)/gamma(k/2)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
-        return obj
 
-def Chi(k, symbol=None):
+class ChiDistribution(SingleContinuousDistribution):
+    _argnames = ('k',)
+
+    set = Interval(0, oo)
+
+    def pdf(self, x):
+        return 2**(1 - self.k/2)*x**(self.k - 1)*exp(-x**2/2)/gamma(self.k/2)
+
+
+def Chi(name, k):
     r"""
     Create a continuous random variable with a Chi distribution.
 
@@ -458,38 +494,164 @@ def Chi(k, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Chi, Density, E, Std
+    >>> from sympy.stats import Chi, density, E, std
     >>> from sympy import Symbol, simplify
 
     >>> k = Symbol("k", integer=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Chi(k, symbol=x)
+    >>> X = Chi("x", k)
 
-    >>> Density(X)
-    Lambda(_x, 2**(-k/2 + 1)*_x**(k - 1)*exp(-_x**2/2)/gamma(k/2))
+    >>> density(X)(z)
+    2**(-k/2 + 1)*z**(k - 1)*exp(-z**2/2)/gamma(k/2)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Chi_distribution
-    .. [2] http://mathworld.wolfram.com/ChiDistribution.html
+    [1] http://en.wikipedia.org/wiki/Chi_distribution
+    [2] http://mathworld.wolfram.com/ChiDistribution.html
     """
 
-    return ChiPSpace(k, symbol).value
+    return rv(name, ChiDistribution, (k,))
+
+#-------------------------------------------------------------------------------
+# Non-central Chi distribution -------------------------------------------------
+
+
+class ChiNoncentralDistribution(SingleContinuousDistribution):
+    _argnames = ('k', 'l')
+
+    set = Interval(0, oo)
+
+    def pdf(self, x):
+        k, l = self.k, self.l
+        return exp(-(x**2+l**2)/2)*x**k*l / (l*x)**(k/2) * besseli(k/2-1, l*x)
+
+
+def ChiNoncentral(name, k, l):
+    r"""
+    Create a continuous random variable with a non-central Chi distribution.
+
+    The density of the non-central Chi distribution is given by
+
+    .. math::
+        f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
+                {(\lambda x)^{k/2}} I_{k/2-1}(\lambda x)
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    k : `k` > 0 the number of degrees of freedom
+    l : Shift parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ChiNoncentral, density, E, std
+    >>> from sympy import Symbol, simplify
+
+    >>> k = Symbol("k", integer=True)
+    >>> l = Symbol("l")
+    >>> z = Symbol("z")
+
+    >>> X = ChiNoncentral("x", k, l)
+
+    >>> density(X)(z)
+    l*z**k*(l*z)**(-k/2)*exp(-l**2/2 - z**2/2)*besseli(k/2 - 1, l*z)
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
+    """
+
+    return rv(name, ChiNoncentralDistribution, (k, l))
+
+#-------------------------------------------------------------------------------
+# Chi squared distribution -----------------------------------------------------
+
+
+class ChiSquaredDistribution(SingleContinuousDistribution):
+    _argnames = ('k',)
+
+    set = Interval(0, oo)
+
+    def pdf(self, x):
+        k = self.k
+        return 1/(2**(k/2)*gamma(k/2))*x**(k/2 - 1)*exp(-x/2)
+
+
+def ChiSquared(name, k):
+    r"""
+    Create a continuous random variable with a Chi-squared distribution.
+
+    The density of the Chi-squared distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{2^{\frac{k}{2}}\Gamma\left(\frac{k}{2}\right)}
+                x^{\frac{k}{2}-1} e^{-\frac{x}{2}}
+
+    with :math:`x \geq 0`.
+
+    Parameters
+    ==========
+
+    k : Integer, `k` > 0 the number of degrees of freedom
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import ChiSquared, density, E, variance
+    >>> from sympy import Symbol, simplify, combsimp, expand_func
+
+    >>> k = Symbol("k", integer=True, positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = ChiSquared("x", k)
+
+    >>> density(X)(z)
+    2**(-k/2)*z**(k/2 - 1)*exp(-z/2)/gamma(k/2)
+
+    >>> combsimp(E(X))
+    k
+
+    >>> simplify(expand_func(variance(X)))
+    2*k
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Chi_squared_distribution
+    [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
+    """
+
+    return rv(name, ChiSquaredDistribution, (k, ))
 
 #-------------------------------------------------------------------------------
 # Dagum distribution -----------------------------------------------------------
 
-class DagumPSpace(SingleContinuousPSpace):
-    def __new__(cls, p, a, b, symbol = None):
-        p, a, b = sympify(p), sympify(a), sympify(b)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = a*p/x*((x/b)**(a*p)/(((x/b)**a+1)**(p+1)))
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
-        return obj
 
-def Dagum(p, a, b, symbol=None):
+class DagumDistribution(SingleContinuousDistribution):
+    _argnames = ('p', 'a', 'b')
+
+    def pdf(self, x):
+        p, a, b = self.p, self.a, self.b
+        return a*p/x*((x/b)**(a*p)/(((x/b)**a + 1)**(p + 1)))
+
+
+def Dagum(name, p, a, b):
     r"""
     Create a continuous random variable with a Dagum distribution.
 
@@ -516,47 +678,115 @@ def Dagum(p, a, b, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Dagum, Density
+    >>> from sympy.stats import Dagum, density
     >>> from sympy import Symbol, simplify
 
     >>> p = Symbol("p", positive=True)
     >>> b = Symbol("b", positive=True)
     >>> a = Symbol("a", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Dagum(p, a, b, symbol=x)
+    >>> X = Dagum("x", p, a, b)
 
-    >>> Density(X)
-    Lambda(_x, a*p*(_x/b)**(a*p)*((_x/b)**a + 1)**(-p - 1)/_x)
+    >>> density(X)(z)
+    a*p*(z/b)**(a*p)*((z/b)**a + 1)**(-p - 1)/z
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Dagum_distribution
+    [1] http://en.wikipedia.org/wiki/Dagum_distribution
     """
 
-    return DagumPSpace(p, a, b, symbol).value
+    return rv(name, DagumDistribution, (p, a, b))
+
+#-------------------------------------------------------------------------------
+# Erlang distribution ----------------------------------------------------------
+
+def Erlang(name, k, l):
+    r"""
+    Create a continuous random variable with an Erlang distribution.
+
+    The density of the Erlang distribution is given by
+
+    .. math::
+        f(x) := \frac{\lambda^k x^{k-1} e^{-\lambda x}}{(k-1)!}
+
+    with :math:`x \in [0,\infty]`.
+
+    Parameters
+    ==========
+
+    k : Integer
+    l : Real number, :math:`\lambda` > 0 the rate
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Erlang, density, cdf, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> k = Symbol("k", integer=True, positive=True)
+    >>> l = Symbol("l", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = Erlang("x", k, l)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+     k  k - 1  -l*z
+    l *z     *e
+    ---------------
+        gamma(k)
+
+    >>> C = cdf(X, meijerg=True)(z)
+    >>> pprint(C, use_unicode=False)
+    /  k*lowergamma(k, 0)   k*lowergamma(k, l*z)
+    |- ------------------ + --------------------  for z >= 0
+    <     gamma(k + 1)          gamma(k + 1)
+    |
+    \                     0                       otherwise
+
+    >>> simplify(E(X))
+    k/l
+
+    >>> simplify(variance(X))
+    k/l**2
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Erlang_distribution
+    [2] http://mathworld.wolfram.com/ErlangDistribution.html
+    """
+
+    return rv(name, GammaDistribution, (k, 1/l))
 
 #-------------------------------------------------------------------------------
 # Exponential distribution -----------------------------------------------------
 
-class ExponentialPSpace(SingleContinuousPSpace):
-    def __new__(cls, rate, symbol=None):
-        rate = sympify(rate)
 
+class ExponentialDistribution(SingleContinuousDistribution):
+    _argnames = ('rate',)
+
+    set  = Interval(0, oo)
+
+    @staticmethod
+    def check(rate):
         _value_check(rate > 0, "Rate must be positive.")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = rate * exp(-rate*x)
-
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
-        obj.rate = rate
-        return obj
+    def pdf(self, x):
+        return self.rate * exp(-self.rate*x)
 
     def sample(self):
-        return {self.value: random.expovariate(self.rate)}
+        return random.expovariate(self.rate)
 
-def Exponential(rate, symbol=None):
+
+def Exponential(name, rate):
     r"""
     Create a continuous random variable with an Exponential distribution.
 
@@ -580,71 +810,273 @@ def Exponential(rate, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Exponential, Density, CDF, E, Var, Std, Skewness
+    >>> from sympy.stats import Exponential, density, cdf, E
+    >>> from sympy.stats import variance, std, skewness
     >>> from sympy import Symbol
 
     >>> l = Symbol("lambda", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Exponential(l, symbol=x)
+    >>> X = Exponential("x", l)
 
-    >>> Density(X)
-    Lambda(_x, lambda*exp(-_x*lambda))
+    >>> density(X)(z)
+    lambda*exp(-lambda*z)
 
-    >>> CDF(X)
-    Lambda(_z, Piecewise((0, _z < 0), (1 - exp(-_z*lambda), True)))
+    >>> cdf(X)(z)
+    Piecewise((1 - exp(-lambda*z), z >= 0), (0, True))
 
     >>> E(X)
     1/lambda
 
-    >>> Var(X)
+    >>> variance(X)
     lambda**(-2)
 
-    >>> Skewness(X)
+    >>> skewness(X)
     2
 
-    >>> X = Exponential(10, symbol=x)
+    >>> X = Exponential('x', 10)
 
-    >>> Density(X)
-    Lambda(_x, 10*exp(-10*_x))
+    >>> density(X)(z)
+    10*exp(-10*z)
 
     >>> E(X)
     1/10
 
-    >>> Std(X)
+    >>> std(X)
     1/10
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Exponential_distribution
-    .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
+    [1] http://en.wikipedia.org/wiki/Exponential_distribution
+    [2] http://mathworld.wolfram.com/ExponentialDistribution.html
     """
 
-    return ExponentialPSpace(rate, symbol).value
+    return rv(name, ExponentialDistribution, (rate, ))
+
+#-------------------------------------------------------------------------------
+# F distribution ---------------------------------------------------------------
+
+class FDistributionDistribution(SingleContinuousDistribution):
+    _argnames = ('d1', 'd2')
+
+    set = Interval(0, oo)
+
+    def pdf(self, x):
+        d1, d2 = self.d1, self.d2
+        return (sqrt((d1*x)**d1*d2**d2 / (d1*x+d2)**(d1+d2))
+               / (x * beta_fn(d1/2, d2/2)))
+
+def FDistribution(name, d1, d2):
+    r"""
+    Create a continuous random variable with a F distribution.
+
+    The density of the F distribution is given by
+
+    .. math::
+        f(x) := \frac{\sqrt{\frac{(d_1 x)^{d_1} d_2^{d_2}}
+                {(d_1 x + d_2)^{d_1 + d_2}}}}
+                {x \mathrm{B} \left(\frac{d_1}{2}, \frac{d_2}{2}\right)}
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    d1 : `d1` > 0 a parameter
+    d2 : `d2` > 0 a parameter
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import FDistribution, density
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> d1 = Symbol("d1", positive=True)
+    >>> d2 = Symbol("d2", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = FDistribution("x", d1, d2)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+      d2
+      --    ______________________________
+      2    /       d1            -d1 - d2       /d1   d2\
+    d2  *\/  (d1*z)  *(d1*z + d2)         *gamma|-- + --|
+                                                \2    2 /
+    -----------------------------------------------------
+                           /d1\      /d2\
+                    z*gamma|--|*gamma|--|
+                           \2 /      \2 /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/F-distribution
+    [2] http://mathworld.wolfram.com/F-Distribution.html
+    """
+
+    return rv(name, FDistributionDistribution, (d1, d2))
+
+#-------------------------------------------------------------------------------
+# Fisher Z distribution --------------------------------------------------------
+
+class FisherZDistribution(SingleContinuousDistribution):
+    _argnames = ('d1', 'd2')
+
+    def pdf(self, x):
+        d1, d2 = self.d1, self.d2
+        return (2*d1**(d1/2)*d2**(d2/2) / beta_fn(d1/2, d2/2) *
+               exp(d1*x) / (d1*exp(2*x)+d2)**((d1+d2)/2))
+
+def FisherZ(name, d1, d2):
+    r"""
+    Create a Continuous Random Variable with an Fisher's Z distribution.
+
+    The density of the Fisher's Z distribution is given by
+
+    .. math::
+        f(x) := \frac{2d_1^{d_1/2} d_2^{d_2/2}} {\mathrm{B}(d_1/2, d_2/2)}
+                \frac{e^{d_1z}}{\left(d_1e^{2z}+d_2\right)^{\left(d_1+d_2\right)/2}}
+
+    Parameters
+    ==========
+
+    d1 : `d1` > 0, degree of freedom
+    d2 : `d2` > 0, degree of freedom
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import FisherZ, density
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> d1 = Symbol("d1", positive=True)
+    >>> d2 = Symbol("d2", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = FisherZ("x", d1, d2)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                                d1   d2
+        d1   d2               - -- - --
+        --   --                 2    2
+        2    2  /    2*z     \           d1*z      /d1   d2\
+    2*d1  *d2  *\d1*e    + d2/         *e    *gamma|-- + --|
+                                                   \2    2 /
+    --------------------------------------------------------
+                           /d1\      /d2\
+                      gamma|--|*gamma|--|
+                           \2 /      \2 /
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+    [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
+    """
+
+    return rv(name, FisherZDistribution, (d1, d2))
+
+#-------------------------------------------------------------------------------
+# Frechet distribution ---------------------------------------------------------
+
+class FrechetDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 's', 'm')
+
+    set = Interval(0, oo)
+
+    def __new__(cls, a, s=1, m=0):
+        a, s, m = map(sympify, (a, s, m))
+        return Basic.__new__(cls, a, s, m)
+
+    def pdf(self, x):
+        a, s, m = self.a, self.s, self.m
+        return a/s * ((x-m)/s)**(-1-a) * exp(-((x-m)/s)**(-a))
+
+def Frechet(name, a, s=1, m=0):
+    r"""
+    Create a continuous random variable with a Frechet distribution.
+
+    The density of the Frechet distribution is given by
+
+    .. math::
+        f(x) := \frac{\alpha}{s} \left(\frac{x-m}{s}\right)^{-1-\alpha}
+                 e^{-(\frac{x-m}{s})^{-\alpha}}
+
+    with :math:`x \geq m`.
+
+    Parameters
+    ==========
+
+    a : Real number, :math:`a \in \left(0, \infty\right)` the shape
+    s : Real number, :math:`s \in \left(0, \infty\right)` the scale
+    m : Real number, :math:`m \in \left(-\infty, \infty\right)` the minimum
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Frechet, density, E, std
+    >>> from sympy import Symbol, simplify
+
+    >>> a = Symbol("a", positive=True)
+    >>> s = Symbol("s", positive=True)
+    >>> m = Symbol("m", real=True)
+    >>> z = Symbol("z")
+
+    >>> X = Frechet("x", a, s, m)
+
+    >>> density(X)(z)
+    a*((-m + z)/s)**(-a - 1)*exp(-((-m + z)/s)**(-a))/s
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+    """
+
+    return rv(name, FrechetDistribution, (a, s, m))
 
 #-------------------------------------------------------------------------------
 # Gamma distribution -----------------------------------------------------------
 
-class GammaPSpace(SingleContinuousPSpace):
-    def __new__(cls, k, theta, symbol=None):
-        k, theta = sympify(k), sympify(theta)
 
+class GammaDistribution(SingleContinuousDistribution):
+    _argnames = ('k', 'theta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(k, theta):
         _value_check(k > 0, "k must be positive")
         _value_check(theta > 0, "Theta must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = x**(k-1) * exp(-x/theta) / (gamma(k)*theta**k)
-
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
-        obj.k = k
-        obj.theta = theta
-        return obj
+    def pdf(self, x):
+        k, theta = self.k, self.theta
+        return x**(k - 1) * exp(-x/theta) / (gamma(k)*theta**k)
 
     def sample(self):
-        return {self.value: random.gammavariate(self.k, self.theta)}
+        return random.gammavariate(self.k, self.theta)
 
-def Gamma(k, theta, symbol=None):
+
+def Gamma(name, k, theta):
     r"""
     Create a continuous random variable with a Gamma distribution.
 
@@ -669,66 +1101,201 @@ def Gamma(k, theta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Gamma, Density, CDF, E, Var
-    >>> from sympy import Symbol, pprint
+    >>> from sympy.stats import Gamma, density, cdf, E, variance
+    >>> from sympy import Symbol, pprint, simplify
 
     >>> k = Symbol("k", positive=True)
     >>> theta = Symbol("theta", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Gamma(k, theta, symbol=x)
+    >>> X = Gamma("x", k, theta)
 
-    >>> D = Density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                     -x \
-          |                   -----|
-          |    k - 1      -k  theta|
-          |   x     *theta  *e     |
-    Lambda|x, ---------------------|
-          \          gamma(k)      /
+                      -z
+                    -----
+         -k  k - 1  theta
+    theta  *z     *e
+    ---------------------
+           gamma(k)
 
-    >>> C = CDF(X, meijerg=True)
+    >>> C = cdf(X, meijerg=True)(z)
     >>> pprint(C, use_unicode=False)
-    Lambda/z, /                      0                        for z < 0\
-          |   |                                                        |
-          |   |                                   /     z  \           |
-          |   <                       k*lowergamma|k, -----|           |
-          |   |  k*lowergamma(k, 0)               \   theta/           |
-          |   |- ------------------ + ----------------------  otherwise|
-          \   \     gamma(k + 1)           gamma(k + 1)                /
+    /                                   /     z  \
+    |                       k*lowergamma|k, -----|
+    |  k*lowergamma(k, 0)               \   theta/
+    <- ------------------ + ----------------------  for z >= 0
+    |     gamma(k + 1)           gamma(k + 1)
+    |
+    \                      0                        otherwise
 
     >>> E(X)
     theta*gamma(k + 1)/gamma(k)
 
-    >>> V = Var(X)
+    >>> V = simplify(variance(X))
     >>> pprint(V, use_unicode=False)
-           2      2                     -k      k + 1
-      theta *gamma (k + 1)   theta*theta  *theta     *gamma(k + 2)
-    - -------------------- + -------------------------------------
-                2                           gamma(k)
-           gamma (k)
+           2
+    k*theta
+
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Gamma_distribution
-    .. [2] http://mathworld.wolfram.com/GammaDistribution.html
+    [1] http://en.wikipedia.org/wiki/Gamma_distribution
+    [2] http://mathworld.wolfram.com/GammaDistribution.html
     """
 
-    return GammaPSpace(k, theta, symbol).value
+    return rv(name, GammaDistribution, (k, theta))
+
+#-------------------------------------------------------------------------------
+# Inverse Gamma distribution ---------------------------------------------------
+
+class GammaInverseDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(a, b):
+        _value_check(a > 0, "alpha must be positive")
+        _value_check(b > 0, "beta must be positive")
+
+    def pdf(self, x):
+        a, b = self.a, self.b
+        return b**a/gamma(a) * x**(-a-1) * exp(-b/x)
+
+def GammaInverse(name, a, b):
+    r"""
+    Create a continuous random variable with an inverse Gamma distribution.
+
+    The density of the inverse Gamma distribution is given by
+
+    .. math::
+        f(x) := \frac{\beta^\alpha}{\Gamma(\alpha)} x^{-\alpha - 1}
+                \exp\left(\frac{-\beta}{x}\right)
+
+    with :math:`x > 0`.
+
+    Parameters
+    ==========
+
+    a : Real number, `a` > 0 a shape
+    b : Real number, `b` > 0 a scale
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import GammaInverse, density, cdf, E, variance
+    >>> from sympy import Symbol, pprint
+
+    >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = GammaInverse("x", a, b)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                -b
+                --
+     a  -a - 1  z
+    b *z      *e
+    --------------
+       gamma(a)
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
+    """
+
+    return rv(name, GammaInverseDistribution, (a, b))
+
+#-------------------------------------------------------------------------------
+# Kumaraswamy distribution -----------------------------------------------------
+
+class KumaraswamyDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(a, b):
+        _value_check(a > 0, "a must be positive")
+        _value_check(b > 0, "b must be positive")
+
+    def pdf(self, x):
+        a, b = self.a, self.b
+        return a * b * x**(a-1) * (1-x**a)**(b-1)
+
+
+def Kumaraswamy(name, a, b):
+    r"""
+    Create a Continuous Random Variable with a Kumaraswamy distribution.
+
+    The density of the Kumaraswamy distribution is given by
+
+    .. math::
+        f(x) := a b x^{a-1} (1-x^a)^{b-1}
+
+    with :math:`x \in [0,1]`.
+
+    Parameters
+    ==========
+
+    a : Real number, `a` > 0 a shape
+    b : Real number, `b` > 0 a shape
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import Kumaraswamy, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> a = Symbol("a", positive=True)
+    >>> b = Symbol("b", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = Kumaraswamy("x", a, b)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+                         b - 1
+         a - 1 /   a    \
+    a*b*z     *\- z  + 1/
+
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
+    """
+
+    return rv(name, KumaraswamyDistribution, (a, b))
 
 #-------------------------------------------------------------------------------
 # Laplace distribution ---------------------------------------------------------
 
-class LaplacePSpace(SingleContinuousPSpace):
-    def __new__(cls, mu, b, symbol=None):
-        mu, b = sympify(mu), sympify(b)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = 1/(2*b)*exp(-Abs(x-mu)/b)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
-        return obj
 
-def Laplace(mu, b, symbol=None):
+class LaplaceDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'b')
+
+    def pdf(self, x):
+        mu, b = self.mu, self.b
+        return 1/(2*b)*exp(-Abs(x - mu)/b)
+
+
+def Laplace(name, mu, b):
     r"""
     Create a continuous random variable with a Laplace distribution.
 
@@ -751,41 +1318,40 @@ def Laplace(mu, b, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Laplace, Density
+    >>> from sympy.stats import Laplace, density
     >>> from sympy import Symbol
 
     >>> mu = Symbol("mu")
     >>> b = Symbol("b", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Laplace(mu, b, symbol=x)
+    >>> X = Laplace("x", mu, b)
 
-    >>> Density(X)
-    Lambda(_x, exp(-Abs(_x - mu)/b)/(2*b))
+    >>> density(X)(z)
+    exp(-Abs(-mu + z)/b)/(2*b)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Laplace_distribution
-    .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
+    [1] http://en.wikipedia.org/wiki/Laplace_distribution
+    [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
 
-    return LaplacePSpace(mu, b, symbol).value
+    return rv(name, LaplaceDistribution, (mu, b))
 
 #-------------------------------------------------------------------------------
 # Logistic distribution --------------------------------------------------------
 
-class LogisticPSpace(SingleContinuousPSpace):
-    def __new__(cls, mu, s, symbol=None):
-        mu, s = sympify(mu), sympify(s)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = exp(-(x-mu)/s)/(s*(1+exp(-(x-mu)/s))**2)
+class LogisticDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 's')
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
-        return obj
+    def pdf(self, x):
+        mu, s = self.mu, self.s
+        return exp(-(x - mu)/s)/(s*(1 + exp(-(x - mu)/s))**2)
 
-def Logistic(mu, s, symbol=None):
+
+def Logistic(name, mu, s):
     r"""
     Create a continuous random variable with a logistic distribution.
 
@@ -808,46 +1374,45 @@ def Logistic(mu, s, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Logistic, Density
+    >>> from sympy.stats import Logistic, density
     >>> from sympy import Symbol
 
     >>> mu = Symbol("mu", real=True)
     >>> s = Symbol("s", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Logistic(mu, s, symbol=x)
+    >>> X = Logistic("x", mu, s)
 
-    >>> Density(X)
-    Lambda(_x, exp((-_x + mu)/s)/(s*(exp((-_x + mu)/s) + 1)**2))
+    >>> density(X)(z)
+    exp((mu - z)/s)/(s*(exp((mu - z)/s) + 1)**2)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Logistic_distribution
-    .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
+    [1] http://en.wikipedia.org/wiki/Logistic_distribution
+    [2] http://mathworld.wolfram.com/LogisticDistribution.html
     """
 
-    return LogisticPSpace(mu, s, symbol).value
+    return rv(name, LogisticDistribution, (mu, s))
 
 #-------------------------------------------------------------------------------
 # Log Normal distribution ------------------------------------------------------
 
-class LogNormalPSpace(SingleContinuousPSpace):
-    def __new__(cls, mean, std, symbol=None):
-        mean, std = sympify(mean), sympify(std)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = exp(-(log(x)-mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
+class LogNormalDistribution(SingleContinuousDistribution):
+    _argnames = ('mean', 'std')
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
-        obj.mean = mean
-        obj.std = std
-        return obj
+    set = Interval(0, oo)
+
+    def pdf(self, x):
+        mean, std = self.mean, self.std
+        return exp(-(log(x) - mean)**2 / (2*std**2)) / (x*sqrt(2*pi)*std)
 
     def sample(self):
-        return {self.value: random.lognormvariate(self.mean, self.std)}
+        return random.lognormvariate(self.mean, self.std)
 
-def LogNormal(mean, std, symbol=None):
+
+def LogNormal(name, mean, std):
     r"""
     Create a continuous random variable with a log-normal distribution.
 
@@ -873,55 +1438,57 @@ def LogNormal(mean, std, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import LogNormal, Density
+    >>> from sympy.stats import LogNormal, density
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu", real=True)
     >>> sigma = Symbol("sigma", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = LogNormal(mu, sigma, symbol=x)
+    >>> X = LogNormal("x", mu, sigma)
 
-    >>> D = Density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                         2\
-          |          -(-mu + log(x)) |
-          |          ----------------|
-          |                     2    |
-          |     ___      2*sigma     |
-          |   \/ 2 *e                |
-    Lambda|x, -----------------------|
-          |             ____         |
-          \       2*x*\/ pi *sigma   /
+                          2
+           -(-mu + log(z))
+           ----------------
+                      2
+      ___      2*sigma
+    \/ 2 *e
+    -----------------------
+            ____
+        2*\/ pi *sigma*z
 
-    >>> X = LogNormal(0, 1, symbol=Symbol('x')) # Mean 0, standard deviation 1
 
-    >>> Density(X)
-    Lambda(_x, sqrt(2)*exp(-log(_x)**2/2)/(2*_x*sqrt(pi)))
+    >>> X = LogNormal('x', 0, 1) # Mean 0, standard deviation 1
+
+    >>> density(X)(z)
+    sqrt(2)*exp(-log(z)**2/2)/(2*sqrt(pi)*z)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Lognormal
-    .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
+    [1] http://en.wikipedia.org/wiki/Lognormal
+    [2] http://mathworld.wolfram.com/LogNormalDistribution.html
     """
 
-    return LogNormalPSpace(mean, std, symbol).value
+    return rv(name, LogNormalDistribution, (mean, std))
 
 #-------------------------------------------------------------------------------
 # Maxwell distribution ---------------------------------------------------------
 
-class MaxwellPSpace(SingleContinuousPSpace):
-    def __new__(cls, a, symbol = None):
-        a = sympify(a)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+class MaxwellDistribution(SingleContinuousDistribution):
+    _argnames = ('a',)
 
-        pdf = sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
-        return obj
+    set = Interval(0, oo)
 
-def Maxwell(a, symbol=None):
+    def pdf(self, x):
+        a = self.a
+        return sqrt(2/pi)*x**2*exp(-x**2/(2*a**2))/a**3
+
+
+def Maxwell(name, a):
     r"""
     Create a continuous random variable with a Maxwell distribution.
 
@@ -945,44 +1512,47 @@ def Maxwell(a, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Maxwell, Density, E, Var
+    >>> from sympy.stats import Maxwell, density, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Maxwell(a, symbol=x)
+    >>> X = Maxwell("x", a)
 
-    >>> Density(X)
-    Lambda(_x, sqrt(2)*_x**2*exp(-_x**2/(2*a**2))/(sqrt(pi)*a**3))
+    >>> density(X)(z)
+    sqrt(2)*z**2*exp(-z**2/(2*a**2))/(sqrt(pi)*a**3)
 
     >>> E(X)
     2*sqrt(2)*a/sqrt(pi)
 
-    >>> simplify(Var(X))
+    >>> simplify(variance(X))
     a**2*(-8 + 3*pi)/pi
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Maxwell_distribution
-    .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
+    [1] http://en.wikipedia.org/wiki/Maxwell_distribution
+    [2] http://mathworld.wolfram.com/MaxwellDistribution.html
     """
 
-    return MaxwellPSpace(a, symbol).value
+    return rv(name, MaxwellDistribution, (a, ))
 
 #-------------------------------------------------------------------------------
 # Nakagami distribution --------------------------------------------------------
 
-class NakagamiPSpace(SingleContinuousPSpace):
-    def __new__(cls, mu, omega, symbol = None):
-        mu, omega = sympify(mu), sympify(omega)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu-1)*exp(-mu/omega*x**2)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
-        return obj
 
-def Nakagami(mu, omega, symbol=None):
+class NakagamiDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'omega')
+
+    set = Interval(0, oo)
+
+    def pdf(self, x):
+        mu, omega = self.mu, self.omega
+        return 2*mu**mu/(gamma(mu)*omega**mu)*x**(2*mu - 1)*exp(-mu/omega*x**2)
+
+
+def Nakagami(name, mu, omega):
     r"""
     Create a continuous random variable with a Nakagami distribution.
 
@@ -1008,29 +1578,29 @@ def Nakagami(mu, omega, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Nakagami, Density, E, Var
+    >>> from sympy.stats import Nakagami, density, E, variance
     >>> from sympy import Symbol, simplify, pprint
 
     >>> mu = Symbol("mu", positive=True)
     >>> omega = Symbol("omega", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Nakagami(mu, omega, symbol=x)
+    >>> X = Nakagami("x", mu, omega)
 
-    >>> D = Density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /                                2   \
-          |                              -x *mu|
-          |                              ------|
-          |      2*mu - 1   mu      -mu  omega |
-          |   2*x        *mu  *omega   *e      |
-    Lambda|x, ---------------------------------|
-          \               gamma(mu)            /
+                                    2
+                               -mu*z
+                               ------
+        mu      -mu  2*mu - 1  omega
+    2*mu  *omega   *z        *e
+    ---------------------------------
+                gamma(mu)
 
     >>> simplify(E(X, meijerg=True))
     sqrt(mu)*sqrt(omega)*gamma(mu + 1/2)/gamma(mu + 1)
 
-    >>> V = simplify(Var(X, meijerg=True))
+    >>> V = simplify(variance(X, meijerg=True))
     >>> pprint(V, use_unicode=False)
           /                               2          \
     omega*\gamma(mu)*gamma(mu + 1) - gamma (mu + 1/2)/
@@ -1040,33 +1610,30 @@ def Nakagami(mu, omega, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Nakagami_distribution
+    [1] http://en.wikipedia.org/wiki/Nakagami_distribution
     """
 
-    return NakagamiPSpace(mu, omega, symbol).value
+    return rv(name, NakagamiDistribution, (mu, omega))
 
 #-------------------------------------------------------------------------------
 # Normal distribution ----------------------------------------------------------
 
-class NormalPSpace(SingleContinuousPSpace):
-    def __new__(cls, mean, std, symbol=None):
-        mean, std = sympify(mean), sympify(std)
 
+class NormalDistribution(SingleContinuousDistribution):
+    _argnames = ('mean', 'std')
+
+    @staticmethod
+    def check(mean, std):
         _value_check(std > 0, "Standard deviation must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = exp(-(x-mean)**2 / (2*std**2)) / (sqrt(2*pi)*std)
-
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
-        obj.mean = mean
-        obj.std = std
-        obj.variance = std**2
-        return obj
+    def pdf(self, x):
+        return exp(-(x - self.mean)**2 / (2*self.std**2)) / (sqrt(2*pi)*self.std)
 
     def sample(self):
-        return {self.value: random.normalvariate(self.mean, self.std)}
+        return random.normalvariate(self.mean, self.std)
 
-def Normal(mean, std, symbol=None):
+
+def Normal(name, mean, std):
     r"""
     Create a continuous random variable with a Normal distribution.
 
@@ -1089,74 +1656,74 @@ def Normal(mean, std, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Normal, Density, E, Std, CDF, Skewness
-    >>> from sympy import Symbol, simplify, pprint
+    >>> from sympy.stats import Normal, density, E, std, cdf, skewness
+    >>> from sympy import Symbol, simplify, pprint, factor, together
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Normal(mu, sigma, symbol=x)
+    >>> X = Normal("x", mu, sigma)
 
-    >>> Density(X)
-    Lambda(_x, sqrt(2)*exp(-(_x - mu)**2/(2*sigma**2))/(2*sqrt(pi)*sigma))
+    >>> density(X)(z)
+    sqrt(2)*exp(-(-mu + z)**2/(2*sigma**2))/(2*sqrt(pi)*sigma)
 
-    >>> C = simplify(CDF(X))
+    >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-          /                                      2      2              2\
-          |                              (z - mu)    - z  + 2*z*mu - mu |
-          |                              --------- + -------------------|
-          |   /   /  ___         \    \          2                2     |
-          |   |   |\/ 2 *(z - mu)|    |   2*sigma          2*sigma      |
-          |   |erf|--------------| + 1|*e                               |
-          |   \   \   2*sigma    /    /                                 |
-    Lambda|z, ----------------------------------------------------------|
-          \                               2                             /
+            /  ___          \             /  ___          \
+            |\/ 2 *(-mu + z)|             |\/ 2 *(-mu + z)|
+    - mu*erf|---------------| - mu + z*erf|---------------| + z
+            \    2*sigma    /             \    2*sigma    /
+    -----------------------------------------------------------
+                            2*(-mu + z)
 
-    >>> simplify(Skewness(X))
+    >>> simplify(skewness(X))
     0
 
-    >>> X = Normal(0, 1, symbol=x) # Mean 0, standard deviation 1
-    >>> Density(X)
-    Lambda(_x, sqrt(2)*exp(-_x**2/2)/(2*sqrt(pi)))
+    >>> X = Normal("x", 0, 1) # Mean 0, standard deviation 1
+    >>> density(X)(z)
+    sqrt(2)*exp(-z**2/2)/(2*sqrt(pi))
 
     >>> E(2*X + 1)
     1
 
-    >>> simplify(Std(2*X + 1))
+    >>> simplify(std(2*X + 1))
     2
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Normal_distribution
-    .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
+    [1] http://en.wikipedia.org/wiki/Normal_distribution
+    [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
-    return NormalPSpace(mean, std, symbol).value
+    return rv(name, NormalDistribution, (mean, std))
 
 #-------------------------------------------------------------------------------
 # Pareto distribution ----------------------------------------------------------
 
-class ParetoPSpace(SingleContinuousPSpace):
-    def __new__(cls, xm, alpha, symbol=None):
-        xm, alpha = sympify(xm), sympify(alpha)
 
+class ParetoDistribution(SingleContinuousDistribution):
+    _argnames = ('xm', 'alpha')
+
+    @property
+    def set(self):
+        return Interval(self.xm, oo)
+
+    @staticmethod
+    def check(xm, alpha):
         _value_check(xm > 0, "Xm must be positive")
         _value_check(alpha > 0, "Alpha must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = alpha * xm**alpha / x**(alpha+1)
-
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(xm, oo))
-        obj.xm = xm
-        obj.alpha = alpha
-        return obj
+    def pdf(self, x):
+        xm, alpha = self.xm, self.alpha
+        return alpha * xm**alpha / x**(alpha + 1)
 
     def sample(self):
-        return {self.value: random.paretovariate(self.alpha)}
+        return random.paretovariate(self.alpha)
 
-def Pareto(xm, alpha, symbol=None):
+
+def Pareto(name, xm, alpha):
     r"""
     Create a continuous random variable with the Pareto distribution.
 
@@ -1181,39 +1748,186 @@ def Pareto(xm, alpha, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Pareto, Density
+    >>> from sympy.stats import Pareto, density
     >>> from sympy import Symbol
 
     >>> xm = Symbol("xm", positive=True)
     >>> beta = Symbol("beta", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Pareto(xm, beta, symbol=x)
+    >>> X = Pareto("x", xm, beta)
 
-    >>> Density(X)
-    Lambda(_x, _x**(-beta - 1)*beta*xm**beta)
+    >>> density(X)(z)
+    beta*xm**beta*z**(-beta - 1)
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Pareto_distribution
-    .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
+    [1] http://en.wikipedia.org/wiki/Pareto_distribution
+    [2] http://mathworld.wolfram.com/ParetoDistribution.html
     """
 
-    return ParetoPSpace(xm, alpha, symbol).value
+    return rv(name, ParetoDistribution, (xm, alpha))
+
+#-------------------------------------------------------------------------------
+# QuadraticU distribution ------------------------------------------------------
+
+class QuadraticUDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b')
+
+    @property
+    def set(self):
+        return Interval(self.a, self.b)
+
+    def pdf(self, x):
+        a, b = self.a, self.b
+        alpha = 12 / (b-a)**3
+        beta = (a+b) / 2
+        return Piecewise(
+                  (alpha * (x-beta)**2, And(a<=x, x<=b)),
+                  (S.Zero, True))
+
+def QuadraticU(name, a, b):
+    r"""
+    Create a Continuous Random Variable with a U-quadratic distribution.
+
+    The density of the U-quadratic distribution is given by
+
+    .. math::
+        f(x) := \alpha (x-\beta)^2
+
+    with :math:`x \in [a,b]`.
+
+    Parameters
+    ==========
+
+    a : Real number
+    b : Real number, :math:`a < b`
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import QuadraticU, density, E, variance
+    >>> from sympy import Symbol, simplify, factor, pprint
+
+    >>> a = Symbol("a", real=True)
+    >>> b = Symbol("b", real=True)
+    >>> z = Symbol("z")
+
+    >>> X = QuadraticU("x", a, b)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+    /                2
+    |   /  a   b    \
+    |12*|- - - - + z|
+    |   \  2   2    /
+    <-----------------  for And(a <= z, z <= b)
+    |            3
+    |    (-a + b)
+    |
+    \        0                 otherwise
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
+    """
+
+    return rv(name, QuadraticUDistribution, (a, b))
+
+#-------------------------------------------------------------------------------
+# RaisedCosine distribution ----------------------------------------------------
+
+class RaisedCosineDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 's')
+
+    @property
+    def set(self):
+        return Interval(self.mu - self.s, self.mu + self.s)
+
+    @staticmethod
+    def check(mu, s):
+        _value_check(s > 0, "s must be positive")
+
+    def pdf(self, x):
+        mu, s = self.mu, self.s
+        return Piecewise(
+                ((1+cos(pi*(x-mu)/s)) / (2*s), And(mu-s<=x, x<=mu+s)),
+                (S.Zero, True))
+
+def RaisedCosine(name, mu, s):
+    r"""
+    Create a Continuous Random Variable with a raised cosine distribution.
+
+    The density of the raised cosine distribution is given by
+
+    .. math::
+        f(x) := \frac{1}{2s}\left(1+\cos\left(\frac{x-\mu}{s}\pi\right)\right)
+
+    with :math:`x \in [\mu-s,\mu+s]`.
+
+    Parameters
+    ==========
+
+    mu : Real number
+    s : Real number, `s` > 0
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import RaisedCosine, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> mu = Symbol("mu", real=True)
+    >>> s = Symbol("s", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = RaisedCosine("x", mu, s)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+    /   /pi*(-mu + z)\
+    |cos|------------| + 1
+    |   \     s      /
+    <---------------------  for And(z <= mu + s, mu - s <= z)
+    |         2*s
+    |
+    \          0                        otherwise
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
+    """
+
+    return rv(name, RaisedCosineDistribution, (mu, s))
 
 #-------------------------------------------------------------------------------
 # Rayleigh distribution --------------------------------------------------------
 
-class RayleighPSpace(SingleContinuousPSpace):
-    def __new__(cls, sigma, symbol = None):
-        sigma = sympify(sigma)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = x/sigma**2*exp(-x**2/(2*sigma**2))
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(0, oo))
-        return obj
 
-def Rayleigh(sigma, symbol=None):
+class RayleighDistribution(SingleContinuousDistribution):
+    _argnames = ('sigma',)
+
+    set = Interval(0, oo)
+
+    def pdf(self, x):
+        sigma = self.sigma
+        return x/sigma**2*exp(-x**2/(2*sigma**2))
+
+
+def Rayleigh(name, sigma):
     r"""
     Create a continuous random variable with a Rayleigh distribution.
 
@@ -1237,44 +1951,45 @@ def Rayleigh(sigma, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Rayleigh, Density, E, Var
+    >>> from sympy.stats import Rayleigh, density, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> sigma = Symbol("sigma", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Rayleigh(sigma, symbol=x)
+    >>> X = Rayleigh("x", sigma)
 
-    >>> Density(X)
-    Lambda(_x, _x*exp(-_x**2/(2*sigma**2))/sigma**2)
+    >>> density(X)(z)
+    z*exp(-z**2/(2*sigma**2))/sigma**2
 
     >>> E(X)
     sqrt(2)*sqrt(pi)*sigma/2
 
-    >>> Var(X)
+    >>> variance(X)
     -pi*sigma**2/2 + 2*sigma**2
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
-    .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
+    [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
+    [2] http://mathworld.wolfram.com/RayleighDistribution.html
     """
 
-    return RayleighPSpace(sigma, symbol).value
+    return rv(name, RayleighDistribution, (sigma, ))
 
 #-------------------------------------------------------------------------------
 # StudentT distribution --------------------------------------------------------
 
-class StudentTPSpace(SingleContinuousPSpace):
-    def __new__(cls, nu, symbol = None):
-        nu = sympify(nu)
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = 1/(sqrt(nu)*beta_fn(S(1)/2,nu/2))*(1+x**2/nu)**(-(nu+1)/2)
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
-        return obj
 
-def StudentT(nu, symbol=None):
+class StudentTDistribution(SingleContinuousDistribution):
+    _argnames = ('nu',)
+
+    def pdf(self, x):
+        nu = self.nu
+        return 1/(sqrt(nu)*beta_fn(S(1)/2, nu/2))*(1 + x**2/nu)**(-(nu + 1)/2)
+
+
+def StudentT(name, nu):
     r"""
     Create a continuous random variable with a student's t distribution.
 
@@ -1298,55 +2013,54 @@ def StudentT(nu, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import StudentT, Density, E, Var
+    >>> from sympy.stats import StudentT, density, E, variance
     >>> from sympy import Symbol, simplify, pprint
 
     >>> nu = Symbol("nu", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = StudentT(nu, symbol=x)
+    >>> X = StudentT("x", nu)
 
-    >>> D = Density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /             nu   1              \
-          |           - -- - -              |
-          |             2    2              |
-          |   / 2    \                      |
-          |   |x     |              /nu   1\|
-          |   |-- + 1|        *gamma|-- + -||
-          |   \nu    /              \2    2/|
-    Lambda|x, ------------------------------|
-          |        ____   ____      /nu\    |
-          |      \/ pi *\/ nu *gamma|--|    |
-          \                         \2 /    /
+              nu   1
+            - -- - -
+              2    2
+    /     2\
+    |    z |              /nu   1\
+    |1 + --|        *gamma|-- + -|
+    \    nu/              \2    2/
+    ------------------------------
+         ____   ____      /nu\
+       \/ pi *\/ nu *gamma|--|
+                          \2 /
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Student_t-distribution
-    .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
+    [1] http://en.wikipedia.org/wiki/Student_t-distribution
+    [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
-    return StudentTPSpace(nu, symbol).value
+    return rv(name, StudentTDistribution, (nu, ))
 
 #-------------------------------------------------------------------------------
 # Triangular distribution ------------------------------------------------------
 
-class TriangularPSpace(SingleContinuousPSpace):
-    def __new__(cls, a, b, c, symbol=None):
-        a, b, c = sympify(a), sympify(b), sympify(c)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = Piecewise(
-                (2*(x-a)/((b-a)*(c-a)), And(a<=x, x<c)),
-                (2/(b-a), Eq(x,c)),
-                (2*(b-x)/((b-a)*(b-c)), And(c<x, x<=b)),
-                (S.Zero, True))
+class TriangularDistribution(SingleContinuousDistribution):
+    _argnames = ('a', 'b', 'c')
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
-        return obj
+    def pdf(self, x):
+        a, b, c = self.a, self.b, self.c
+        return Piecewise(
+            (2*(x - a)/((b - a)*(c - a)), And(a <= x, x < c)),
+            (2/(b - a), Eq(x, c)),
+            (2*(b - x)/((b - a)*(b - c)), And(c < x, x <= b)),
+            (S.Zero, True))
 
-def Triangular(a, b, c, symbol=None):
+
+def Triangular(name, a, b, c):
     r"""
     Create a continuous random variable with a triangular distribution.
 
@@ -1376,54 +2090,73 @@ def Triangular(a, b, c, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Triangular, Density, E, Var
-    >>> from sympy import Symbol
+    >>> from sympy.stats import Triangular, density, E
+    >>> from sympy import Symbol, pprint
 
     >>> a = Symbol("a")
     >>> b = Symbol("b")
     >>> c = Symbol("c")
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Triangular(a,b,c, symbol=x)
+    >>> X = Triangular("x", a,b,c)
 
-    >>> Density(X)
-    Lambda(_x, Piecewise(((2*_x - 2*a)/((-a + b)*(-a + c)),
-                         And(a <= _x, _x < c)),
-                         (2/(-a + b), _x == c),
-                         ((-2*_x + 2*b)/((-a + b)*(b - c)),
-                         And(_x <= b, c < _x)), (0, True)))
+    >>> pprint(density(X)(z), use_unicode=False)
+    /    -2*a + 2*z
+    |-----------------  for And(a <= z, z < c)
+    |(-a + b)*(-a + c)
+    |
+    |       2
+    |     ------              for z = c
+    <     -a + b
+    |
+    |   2*b - 2*z
+    |----------------   for And(z <= b, c < z)
+    |(-a + b)*(b - c)
+    |
+    \        0                otherwise
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Triangular_distribution
-    .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
+    [1] http://en.wikipedia.org/wiki/Triangular_distribution
+    [2] http://mathworld.wolfram.com/TriangularDistribution.html
     """
 
-    return TriangularPSpace(a, b, c, symbol).value
+    return rv(name, TriangularDistribution, (a, b, c))
 
 #-------------------------------------------------------------------------------
 # Uniform distribution ---------------------------------------------------------
 
-class UniformPSpace(SingleContinuousPSpace):
-    def __new__(cls, left, right, symbol=None):
-        left, right = sympify(left), sympify(right)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = Piecewise(
-                (S.Zero, x<left),
-                (S.Zero, x>right),
-                (S.One/(right-left), True))
+class UniformDistribution(SingleContinuousDistribution):
+    _argnames = ('left', 'right')
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf)
-        obj.left = left
-        obj.right = right
-        return obj
+    def pdf(self, x):
+        left, right = self.left, self.right
+        return Piecewise(
+            (S.One/(right - left), And(left <= x, x <= right)),
+            (S.Zero, True))
+
+    def compute_cdf(self, **kwargs):
+        from sympy import Lambda, Min
+        z = Dummy('z', real=True, bounded=True)
+        result = SingleContinuousDistribution.compute_cdf(self, **kwargs)
+        result = result(z).subs({Min(z, self.right): z,
+                                 Min(z, self.left, self.right): self.left})
+        return Lambda(z, result)
+
+    def expectation(self, expr, var, **kwargs):
+        from sympy import Max, Min
+        result = SingleContinuousDistribution.expectation(self, expr, var, **kwargs)
+        result = result.subs({Max(self.left, self.right): self.right,
+                              Min(self.left, self.right): self.left})
+        return result
 
     def sample(self):
-        return {self.value: random.uniform(self.left, self.right)}
+        return random.uniform(self.left, self.right)
 
-def Uniform(left, right, symbol=None):
+
+def Uniform(name, left, right):
     r"""
     Create a continuous random variable with a uniform distribution.
 
@@ -1451,54 +2184,59 @@ def Uniform(left, right, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Uniform, Density, CDF, E, Var, Skewness
+    >>> from sympy.stats import Uniform, density, cdf, E, variance, skewness
     >>> from sympy import Symbol, simplify
 
     >>> a = Symbol("a")
     >>> b = Symbol("b")
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Uniform(a, b, symbol=x)
+    >>> X = Uniform("x", a, b)
 
-    >>> Density(X)
-    Lambda(_x, Piecewise((0, _x < a), (0, _x > b), (1/(-a + b), True)))
+    >>> density(X)(z)
+    Piecewise((1/(-a + b), And(a <= z, z <= b)), (0, True))
 
-    >>> CDF(X)
-    Lambda(_z, _z/(-a + b) - a/(-a + b))
+    >>> cdf(X)(z)
+    -a/(-a + b) + z/(-a + b)
 
     >>> simplify(E(X))
     a/2 + b/2
 
-    >>> simplify(Var(X))
+    >>> simplify(variance(X))
     a**2/12 - a*b/6 + b**2/12
 
-    >>> simplify(Skewness(X))
+    >>> simplify(skewness(X))
     0
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
-    .. [2] http://mathworld.wolfram.com/UniformDistribution.html
+    [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
+    [2] http://mathworld.wolfram.com/UniformDistribution.html
     """
 
-    return UniformPSpace(left, right, symbol).value
+    return rv(name, UniformDistribution, (left, right))
 
 #-------------------------------------------------------------------------------
 # UniformSum distribution ------------------------------------------------------
 
-class UniformSumPSpace(SingleContinuousPSpace):
-    def __new__(cls, n, symbol=None):
-        n = sympify(n)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
+class UniformSumDistribution(SingleContinuousDistribution):
+    _argnames = ('n',)
+
+    @property
+    def set(self):
+        return Interval(0, self.n)
+
+    def pdf(self, x):
+        n = self.n
         k = Dummy("k")
-        pdf =1/factorial(n-1)*Sum((-1)**k*binomial(n,k)*(x-k)**(n-1), (k,0,floor(x)))
+        return 1/factorial(
+            n - 1)*Sum((-1)**k*binomial(n, k)*(x - k)**(n - 1), (k, 0, floor(x)))
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0,n))
-        return obj
 
-def UniformSum(n, symbol=None):
+
+def UniformSum(name, n):
     r"""
     Create a continuous random variable with an Irwin-Hall distribution.
 
@@ -1524,58 +2262,127 @@ def UniformSum(n, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import UniformSum, Density, E, Var
+    >>> from sympy.stats import UniformSum, density
     >>> from sympy import Symbol, pprint
 
     >>> n = Symbol("n", integer=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = UniformSum(n, symbol=x)
+    >>> X = UniformSum("x", n)
 
-    >>> D = Density(X)
+    >>> D = density(X)(z)
     >>> pprint(D, use_unicode=False)
-          /   floor(x)                        \
-          |     ___                           |
-          |     \  `                          |
-          |      \         k         n - 1 /n\|
-          |       )    (-1) *(-k + x)     *| ||
-          |      /                         \k/|
-          |     /__,                          |
-          |    k = 0                          |
-    Lambda|x, --------------------------------|
-          \               (n - 1)!            /
+    floor(z)
+      ___
+      \  `
+       \         k         n - 1 /n\
+        )    (-1) *(-k + z)     *| |
+       /                         \k/
+      /__,
+     k = 0
+    --------------------------------
+                (n - 1)!
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
-    .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
+    [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
+    [2] http://mathworld.wolfram.com/UniformSumDistribution.html
     """
 
-    return UniformSumPSpace(n, symbol).value
+    return rv(name, UniformSumDistribution, (n, ))
+
+#-------------------------------------------------------------------------------
+# VonMises distribution --------------------------------------------------------
+
+class VonMisesDistribution(SingleContinuousDistribution):
+    _argnames = ('mu', 'k')
+
+    set = Interval(0, 2*pi)
+
+    @staticmethod
+    def check(mu, k):
+        _value_check(k > 0, "k must be positive")
+
+    def pdf(self, x):
+        mu, k = self.mu, self.k
+        return exp(k*cos(x-mu)) / (2*pi*besseli(0, k))
+
+
+def VonMises(name, mu, k):
+    r"""
+    Create a Continuous Random Variable with a von Mises distribution.
+
+    The density of the von Mises distribution is given by
+
+    .. math::
+        f(x) := \frac{e^{\kappa\cos(x-\mu)}}{2\pi I_0(\kappa)}
+
+    with :math:`x \in [0,2\pi]`.
+
+    Parameters
+    ==========
+
+    mu : Real number, measure of location
+    k : Real number, measure of concentration
+
+    Returns
+    =======
+
+    A RandomSymbol.
+
+    Examples
+    ========
+
+    >>> from sympy.stats import VonMises, density, E, variance
+    >>> from sympy import Symbol, simplify, pprint
+
+    >>> mu = Symbol("mu")
+    >>> k = Symbol("k", positive=True)
+    >>> z = Symbol("z")
+
+    >>> X = VonMises("x", mu, k)
+
+    >>> D = density(X)(z)
+    >>> pprint(D, use_unicode=False)
+         k*cos(mu - z)
+        e
+    ------------------
+    2*pi*besseli(0, k)
+
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Von_Mises_distribution
+    [2] http://mathworld.wolfram.com/vonMisesDistribution.html
+    """
+
+    return rv(name, VonMisesDistribution, (mu, k))
 
 #-------------------------------------------------------------------------------
 # Weibull distribution ---------------------------------------------------------
 
-class WeibullPSpace(SingleContinuousPSpace):
-    def __new__(cls, alpha, beta, symbol=None):
-        alpha, beta = sympify(alpha), sympify(beta)
 
+class WeibullDistribution(SingleContinuousDistribution):
+    _argnames = ('alpha', 'beta')
+
+    set = Interval(0, oo)
+
+    @staticmethod
+    def check(alpha, beta):
         _value_check(alpha > 0, "Alpha must be positive")
         _value_check(beta > 0, "Beta must be positive")
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = beta * (x/alpha)**(beta-1) * exp(-(x/alpha)**beta) / alpha
-
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set=Interval(0, oo))
-        obj.alpha = alpha
-        obj.beta = beta
-        return obj
+    def pdf(self, x):
+        alpha, beta = self.alpha, self.beta
+        return beta * (x/alpha)**(beta - 1) * exp(-(x/alpha)**beta) / alpha
 
     def sample(self):
-        return {self.value: random.weibullvariate(self.alpha, self.beta)}
+        return random.weibullvariate(self.alpha, self.beta)
 
-def Weibull(alpha, beta, symbol=None):
+
+def Weibull(name, alpha, beta):
     r"""
     Create a continuous random variable with a Weibull distribution.
 
@@ -1602,47 +2409,51 @@ def Weibull(alpha, beta, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import Weibull, Density, E, Var
+    >>> from sympy.stats import Weibull, density, E, variance
     >>> from sympy import Symbol, simplify
 
     >>> l = Symbol("lambda", positive=True)
     >>> k = Symbol("k", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = Weibull(l, k, symbol=x)
+    >>> X = Weibull("x", l, k)
 
-    >>> Density(X)
-    Lambda(_x, k*(_x/lambda)**(k - 1)*exp(-(_x/lambda)**k)/lambda)
+    >>> density(X)(z)
+    k*(z/lambda)**(k - 1)*exp(-(z/lambda)**k)/lambda
 
     >>> simplify(E(X))
     lambda*gamma(1 + 1/k)
 
-    >>> simplify(Var(X))
-    -lambda**2*(gamma(1 + 1/k)**2 - gamma(1 + 2/k))
+    >>> simplify(variance(X))
+    lambda**2*(-gamma(1 + 1/k)**2 + gamma(1 + 2/k))
 
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Weibull_distribution
-    .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
+    [1] http://en.wikipedia.org/wiki/Weibull_distribution
+    [2] http://mathworld.wolfram.com/WeibullDistribution.html
 
     """
-    return WeibullPSpace(alpha, beta, symbol).value
+
+    return rv(name, WeibullDistribution, (alpha, beta))
 
 #-------------------------------------------------------------------------------
 # Wigner semicircle distribution -----------------------------------------------
 
-class WignerSemicirclePSpace(SingleContinuousPSpace):
-    def __new__(cls, R, symbol=None):
-        R = sympify(R)
 
-        x = symbol or SingleContinuousPSpace.create_symbol()
-        pdf = 2/(pi*R**2)*sqrt(R**2-x**2)
+class WignerSemicircleDistribution(SingleContinuousDistribution):
+    _argnames = ('R',)
 
-        obj = SingleContinuousPSpace.__new__(cls, x, pdf, set = Interval(-R, R))
-        return obj
+    @property
+    def set(self):
+        return Interval(-self.R, self.R)
 
-def WignerSemicircle(R, symbol=None):
+    def pdf(self, x):
+        R = self.R
+        return 2/(pi*R**2)*sqrt(R**2 - x**2)
+
+
+def WignerSemicircle(name, R):
     r"""
     Create a continuous random variable with a Wigner semicircle distribution.
 
@@ -1666,16 +2477,16 @@ def WignerSemicircle(R, symbol=None):
     Examples
     ========
 
-    >>> from sympy.stats import WignerSemicircle, Density, E, Std
+    >>> from sympy.stats import WignerSemicircle, density, E
     >>> from sympy import Symbol, simplify
 
     >>> R = Symbol("R", positive=True)
-    >>> x = Symbol("x")
+    >>> z = Symbol("z")
 
-    >>> X = WignerSemicircle(R, symbol=x)
+    >>> X = WignerSemicircle("x", R)
 
-    >>> Density(X)
-    Lambda(_x, 2*sqrt(-_x**2 + R**2)/(pi*R**2))
+    >>> density(X)(z)
+    2*sqrt(R**2 - z**2)/(pi*R**2)
 
     >>> E(X)
     0
@@ -1683,8 +2494,8 @@ def WignerSemicircle(R, symbol=None):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
-    .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
+    [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
     """
 
-    return WignerSemicirclePSpace(R, symbol).value
+    return rv(name, WignerSemicircleDistribution, (R,))

@@ -1,6 +1,7 @@
 from sympy.combinatorics.prufer import Prufer
 from sympy.utilities.pytest import raises
 
+
 def test_prufer():
     # number of nodes is optional
     assert Prufer([[0, 1], [0, 2], [0, 3], [0, 4]], 5).nodes == 5
@@ -26,13 +27,15 @@ def test_prufer():
     Prufer(tree).tree_repr == tree
     Prufer(set(tree)).tree_repr == tree
 
-    raises(ValueError, 'Prufer([[1, 2], [3, 4]])') # 0 is missing
+    raises(ValueError, lambda: Prufer([[1, 2], [3, 4]]))  # 0 is missing
     assert Prufer(*Prufer.edges([1, 2], [3, 4])).prufer_repr == [1, 3]
-    raises(ValueError, 'Prufer.edges([1, 3], [3, 4])') # a broken tree but edges doesn't care
-    raises(ValueError, 'Prufer.edges([1, 2], [5, 6])')
+    raises(ValueError, lambda: Prufer.edges(
+        [1, 3], [3, 4]))  # a broken tree but edges doesn't care
+    raises(ValueError, lambda: Prufer.edges([1, 2], [5, 6]))
+
 
 def test_round_trip():
-    def doit(t,b):
+    def doit(t, b):
         e, n = Prufer.edges(*t)
         t = Prufer(e, n)
         a = sorted(t.tree_repr)

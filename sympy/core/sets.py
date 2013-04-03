@@ -1,14 +1,17 @@
-from sympy.core.sympify import _sympify, sympify, SympifyError
+from sympy.core.sympify import _sympify, sympify
 from sympy.core.basic import Basic
 from sympy.core.singleton import Singleton, S
 from sympy.core.evalf import EvalfMixin
 from sympy.core.numbers import Float
-from sympy.core.containers import Tuple
 from sympy.core.compatibility import iterable
+from sympy.core.decorators import deprecated
 
 from sympy.mpmath import mpi, mpf
 from sympy.assumptions import ask
 from sympy.logic.boolalg import And, Or
+
+from sympy.utilities import default_sort_key
+
 
 class Set(Basic):
     """
@@ -32,6 +35,19 @@ class Set(Basic):
     is_Intersection = None
     is_EmptySet = None
     is_UniversalSet = None
+
+    def sort_key(self, order=None):
+        """
+        Give sort_key of infimum (if possible) else sort_key of the set.
+        """
+        try:
+            infimum = self.inf
+            if infimum.is_comparable:
+                return default_sort_key(infimum, order)
+        except (NotImplementedError, ValueError):
+            pass
+        args = tuple([default_sort_key(a, order) for a in self._sorted_args])
+        return self.class_key(), (len(args), args), S.One.class_key(), S.One
 
     def union(self, other):
         """
@@ -226,8 +242,8 @@ class Set(Basic):
         return ProductSet(self, other)
 
     def __pow__(self, exp):
-        if not sympify(exp).is_Integer and exp>=0:
-            raise ValueError("%s: Exponent must be a positive Integer"%exp)
+        if not sympify(exp).is_Integer and exp >= 0:
+            raise ValueError("%s: Exponent must be a positive Integer" % exp)
         return ProductSet([self]*exp)
 
     def __sub__(self, other):
@@ -249,6 +265,7 @@ class Set(Basic):
     @property
     def is_real(self):
         return None
+
 
 class ProductSet(Set):
     """
@@ -274,12 +291,9 @@ class ProductSet(Set):
         >>> Interval(0, 1) * Interval(0, 1) # The unit square
         [0, 1] x [0, 1]
 
-        >>> coin = FiniteSet('H','T')
-        >>> for pair in coin**2: print pair
-        (H, H)
-        (H, T)
-        (T, H)
-        (T, T)
+        >>> coin = FiniteSet('H', 'T')
+        >>> set(coin**2)
+        set([(H, H), (H, T), (T, H), (T, T)])
 
 
     Notes
@@ -289,8 +303,7 @@ class ProductSet(Set):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Cartesian_product
+    http://en.wikipedia.org/wiki/Cartesian_product
     """
     is_ProductSet = True
 
@@ -306,7 +319,7 @@ class ProductSet(Set):
             raise TypeError("Input must be Sets or iterables of Sets")
         sets = flatten(list(sets))
 
-        if EmptySet() in sets or len(sets)==0:
+        if EmptySet() in sets or len(sets) == 0:
             return EmptySet()
 
         return Basic.__new__(cls, *sets, **assumptions)
@@ -328,7 +341,7 @@ class ProductSet(Set):
         try:
             if len(element) != len(self.args):
                 return False
-        except TypeError: # maybe element isn't an iterable
+        except TypeError:  # maybe element isn't an iterable
             return False
         return And(*[set.contains(item) for set, item in zip(self.sets, element)])
 
@@ -382,6 +395,7 @@ class ProductSet(Set):
             measure *= set.measure
         return measure
 
+
 class Interval(Set, EvalfMixin):
     """
     Represents a real interval as a Set.
@@ -417,7 +431,7 @@ class Interval(Set, EvalfMixin):
     References
     ==========
 
-    .. [1] http://en.wikipedia.org/wiki/Interval_(mathematics)
+    <http://en.wikipedia.org/wiki/Interval_(mathematics)>
     """
     is_Interval = True
     is_real = True
@@ -558,7 +572,7 @@ class Interval(Set, EvalfMixin):
         if empty:
             return S.EmptySet
 
-        return self.__class__(start, end, left_open, right_open)
+        return Interval(start, end, left_open, right_open)
 
     def _union(self, other):
         """
@@ -569,28 +583,28 @@ class Interval(Set, EvalfMixin):
         if other.is_Interval and self._is_comparable(other):
             from sympy.functions.elementary.miscellaneous import Min, Max
             # Non-overlapping intervals
-            end   = Min(self.end, other.end)
+            end = Min(self.end, other.end)
             start = Max(self.start, other.start)
             if (end < start or
-               (end==start and (end not in self and end not in other))):
-               return None
+               (end == start and (end not in self and end not in other))):
+                return None
             else:
                 start = Min(self.start, other.start)
-                end   = Max(self.end, other.end)
+                end = Max(self.end, other.end)
 
-                left_open  = ((self.start  != start or   self.left_open)  and
-                              (other.start != start or  other.left_open))
-                right_open = ((self.end    != end   or   self.right_open) and
-                              (other.end   != end   or  other.right_open))
+                left_open = ((self.start != start or self.left_open) and
+                             (other.start != start or other.left_open))
+                right_open = ((self.end != end or self.right_open) and
+                              (other.end != end or other.right_open))
 
                 return Interval(start, end, left_open, right_open)
 
         # If I have open end points and these endpoints are contained in other
-        if ((self.left_open  and other.contains(self.start) is True) or
-            (self.right_open and other.contains(self.end)   is True)):
+        if ((self.left_open and other.contains(self.start) is True) or
+                (self.right_open and other.contains(self.end) is True)):
             # Fill in my end points and return
-            open_left  = self.left_open  and self.start not in other
-            open_right = self.right_open and self.end   not in other
+            open_left = self.left_open and self.start not in other
+            open_right = self.right_open and self.end not in other
             new_self = Interval(self.start, self.end, open_left, open_right)
             return set((new_self, other))
 
@@ -624,7 +638,7 @@ class Interval(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         return Interval(self.left.evalf(), self.right.evalf(),
-            left_open=self.left_open, right_open=self.right_open)
+          left_open=self.left_open, right_open=self.right_open)
 
     def _is_comparable(self, other):
         is_comparable = self.start.is_comparable
@@ -660,7 +674,7 @@ class Interval(Set, EvalfMixin):
             else:
                 right = Le(symbol, self.right)
         if self.is_left_unbounded and self.is_right_unbounded:
-            return True # XXX: Contained(symbol, Floats)
+            return True  # XXX: Contained(symbol, Floats)
         elif self.is_left_unbounded:
             return right
         elif self.is_right_unbounded:
@@ -668,20 +682,9 @@ class Interval(Set, EvalfMixin):
         else:
             return And(left, right)
 
-def set_sort_fn(s):
-    """
-    Sort by infimum if possible
-
-    Otherwise sort by hash. Try to put these at the end.
-    """
-    try:
-        val = s.inf
-        if val.is_comparable:
-            return val
-        else:
-            return 1e9+abs(hash(s))
-    except NotImplementedError:
-        return 1e9+abs(hash(s))
+    @property
+    def free_symbols(self):
+        return self.start.free_symbols | self.end.free_symbols
 
 class Union(Set, EvalfMixin):
     """
@@ -707,8 +710,7 @@ class Union(Set, EvalfMixin):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Union_(set_theory)
+    <http://en.wikipedia.org/wiki/Union_(set_theory)>
     """
     is_Union = True
 
@@ -717,22 +719,23 @@ class Union(Set, EvalfMixin):
 
         # flatten inputs to merge intersections and iterables
         args = list(args)
+
         def flatten(arg):
             if isinstance(arg, Set):
                 if arg.is_Union:
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
-            if iterable(arg): # and not isinstance(arg, Set) (implicit)
+            if iterable(arg):  # and not isinstance(arg, Set) (implicit)
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
 
         # Union of no sets is EmptySet
-        if len(args)==0:
+        if len(args) == 0:
             return S.EmptySet
 
-        args = sorted(args, key = set_sort_fn)
+        args = sorted(args, key=default_sort_key)
 
         # Reduce sets using known rules
         if evaluate:
@@ -779,7 +782,7 @@ class Union(Set, EvalfMixin):
                     args = new_args
                     break
 
-        if len(args)==1:
+        if len(args) == 1:
             return args.pop()
         else:
             return Union(args, evaluate=False)
@@ -879,6 +882,7 @@ class Union(Set, EvalfMixin):
     def is_real(self):
         return all(set.is_real for set in self.args)
 
+
 class Intersection(Set):
     """
     Represents an intersection of sets as a Set.
@@ -902,8 +906,7 @@ class Intersection(Set):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Intersection_(set_theory)
+    <http://en.wikipedia.org/wiki/Intersection_(set_theory)>
     """
     is_Intersection = True
 
@@ -912,22 +915,23 @@ class Intersection(Set):
 
         # flatten inputs to merge intersections and iterables
         args = list(args)
+
         def flatten(arg):
             if isinstance(arg, Set):
                 if arg.is_Intersection:
                     return sum(map(flatten, arg.args), [])
                 else:
                     return [arg]
-            if iterable(arg): # and not isinstance(arg, Set) (implicit)
+            if iterable(arg):  # and not isinstance(arg, Set) (implicit)
                 return sum(map(flatten, arg), [])
             raise TypeError("Input must be Sets or iterables of Sets")
         args = flatten(args)
 
         # Intersection of no sets is everything
-        if len(args)==0:
+        if len(args) == 0:
             return S.UniversalSet
 
-        args = sorted(args, key = set_sort_fn)
+        args = sorted(args, key=default_sort_key)
 
         # Reduce sets using known rules
         if evaluate:
@@ -1016,10 +1020,15 @@ class Intersection(Set):
                     args = new_args
                     break
 
-        if len(args)==1:
+        if len(args) == 1:
             return args.pop()
         else:
             return Intersection(args, evaluate=False)
+
+    def as_relational(self, symbol):
+        """Rewrite an Intersection in terms of equalities and logic operators"""
+        return And(*[set.as_relational(symbol) for set in self.args])
+
 
 class EmptySet(Set):
     """
@@ -1043,8 +1052,7 @@ class EmptySet(Set):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Empty_set
+    http://en.wikipedia.org/wiki/Empty_set
     """
     __metaclass__ = Singleton
     is_EmptySet = True
@@ -1075,6 +1083,7 @@ class EmptySet(Set):
     def __iter__(self):
         return iter([])
 
+
 class UniversalSet(Set):
     """
     Represents the set of all things.
@@ -1097,8 +1106,7 @@ class UniversalSet(Set):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Universal_set
+    http://en.wikipedia.org/wiki/Universal_set
     """
 
     __metaclass__ = Singleton
@@ -1124,13 +1132,6 @@ class UniversalSet(Set):
     def _union(self, other):
         return self
 
-def element_sort_fn(x):
-    try:
-        if x.is_comparable is True:
-            return x
-    except:
-        pass
-    return 1e9+abs(hash(x))
 
 class FiniteSet(Set, EvalfMixin):
     """
@@ -1148,23 +1149,24 @@ class FiniteSet(Set, EvalfMixin):
 
     References
     ==========
-
-    .. [1] http://en.wikipedia.org/wiki/Finite_set
+    http://en.wikipedia.org/wiki/Finite_set
     """
     is_FiniteSet = True
     is_iterable = True
 
-    def __new__(cls, *args):
-        if len(args)==1 and iterable(args[0]):
-            args = args[0]
+    def __new__(cls, *args, **kwargs):
+        evaluate = kwargs.get('evaluate', True)
+        if evaluate:
+            if len(args) == 1 and iterable(args[0]):
+                args = args[0]
 
-        args = map(sympify, args)
+            args = map(sympify, args)
 
-        if len(args) == 0:
-            return EmptySet()
+            if len(args) == 0:
+                return EmptySet()
 
-        args = frozenset(args) # remove duplicates
-        args = sorted(args, key = element_sort_fn)
+
+        args = frozenset(args)  # remove duplicates
         obj = Basic.__new__(cls, *args)
         obj._elements = args
         return obj
@@ -1230,14 +1232,17 @@ class FiniteSet(Set, EvalfMixin):
         """
         if not all(elem.is_number for elem in self):
             raise ValueError("%s: Complement not defined for symbolic inputs"
-                    %self)
-        sorted_elements = self.args
+                    % self)
 
-        intervals = [] # Build up a list of intervals between the elements
-        intervals += [Interval(S.NegativeInfinity, self.args[0],True,True)]
-        for a, b in zip(self.args[:-1], self.args[1:]):
-            intervals.append(Interval(a, b, True, True)) # open intervals
-        intervals.append(Interval(self.args[-1], S.Infinity, True, True))
+        # as there are only numbers involved, a straight sort is sufficient;
+        # default_sort_key is not needed
+        args = sorted(self.args)
+
+        intervals = []  # Build up a list of intervals between the elements
+        intervals += [Interval(S.NegativeInfinity, args[0], True, True)]
+        for a, b in zip(args[:-1], args[1:]):
+            intervals.append(Interval(a, b, True, True))  # open intervals
+        intervals.append(Interval(args[-1], S.Infinity, True, True))
         return Union(intervals, evaluate=False)
 
     @property
@@ -1274,3 +1279,11 @@ class FiniteSet(Set, EvalfMixin):
 
     def _eval_evalf(self, prec):
         return FiniteSet(elem.evalf(prec) for elem in self)
+
+    def _hashable_content(self):
+        return (self._elements,)
+
+    @property
+    def _sorted_args(self):
+        from sympy.utilities import default_sort_key
+        return sorted(self.args, key=default_sort_key)

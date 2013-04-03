@@ -16,8 +16,10 @@ from sympy.core import C
 
 from sympy.core.compatibility import reduce
 
+
 class IndexConformanceException(Exception):
     pass
+
 
 def _remove_repeated(inds):
     """Removes repeated objects from sequences
@@ -39,6 +41,7 @@ def _remove_repeated(inds):
             sum_index[i] = 0
     inds = filter(lambda x: not sum_index[x], inds)
     return set(inds), tuple([ i for i in sum_index if sum_index[i] ])
+
 
 def _get_indices_Mul(expr, return_dummies=False):
     """Determine the outer indices of a Mul object.
@@ -74,6 +77,7 @@ def _get_indices_Mul(expr, return_dummies=False):
         return inds, symmetry, dummies
     else:
         return inds, symmetry
+
 
 def _get_indices_Pow(expr):
     """Determine outer indices of a power or an exponential.
@@ -123,6 +127,7 @@ def _get_indices_Pow(expr):
 
     return inds, symmetries
 
+
 def _get_indices_Add(expr):
     """Determine outer indices of an Add object.
 
@@ -156,14 +161,15 @@ def _get_indices_Add(expr):
         return set(), {}
 
     if not all(map(lambda x: x == non_scalars[0], non_scalars[1:])):
-        raise IndexConformanceException("Indices are not consistent: %s"%expr)
-    if not reduce(lambda x, y: x!=y or y, syms):
+        raise IndexConformanceException("Indices are not consistent: %s" % expr)
+    if not reduce(lambda x, y: x != y or y, syms):
         symmetries = syms[0]
     else:
         # FIXME: search for symmetries
         symmetries = {}
 
     return non_scalars[0], symmetries
+
 
 def get_indices(expr):
     """Determine the outer indices of expression ``expr``
@@ -257,10 +263,11 @@ def get_indices(expr):
         elif not expr.has(Indexed):
             return set(), {}
         raise NotImplementedError(
-                "FIXME: No specialized handling of type %s"%type(expr))
+            "FIXME: No specialized handling of type %s" % type(expr))
+
 
 def get_contraction_structure(expr):
-    """Determine dummy indices of ``expr`` and describe it's structure
+    """Determine dummy indices of ``expr`` and describe its structure
 
     By *dummy* we mean indices that are summation indices.
 
@@ -274,7 +281,7 @@ def get_contraction_structure(expr):
     2) For all nodes in the SymPy expression tree that are *not* of type Add, the
        following applies:
 
-       If a node discovers contractions in one of it's arguments, the node
+       If a node discovers contractions in one of its arguments, the node
        itself will be stored as a key in the dict.  For that key, the
        corresponding value is a list of dicts, each of which is the result of a
        recursive call to get_contraction_structure().  The list contains only
@@ -307,9 +314,15 @@ def get_contraction_structure(expr):
     >>> d = get_contraction_structure(x[i, i]*y[j, j])
     >>> sorted(d.keys(), key=default_sort_key)
     [None, x[i, i]*y[j, j]]
-    >>> d[None]  # Note that the product has no contractions
+
+    In this case, the product has no contractions:
+
+    >>> d[None]
     set([x[i, i]*y[j, j]])
-    >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)  # factors are contracted ''first''
+
+    Factors are contracted "first":
+
+    >>> sorted(d[x[i, i]*y[j, j]], key=default_sort_key)
     [{(i,): set([x[i, i]])}, {(j,): set([y[j, j]])}]
 
     A parenthesized Add object is also returned as a nested dictionary.  The
@@ -424,4 +437,4 @@ def get_contraction_structure(expr):
     elif not expr.has(Indexed):
         return {None: set([expr])}
     raise NotImplementedError(
-            "FIXME: No specialized handling of type %s"%type(expr))
+        "FIXME: No specialized handling of type %s" % type(expr))

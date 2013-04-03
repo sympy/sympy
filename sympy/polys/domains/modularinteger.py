@@ -2,8 +2,9 @@
 
 import operator
 
-from sympy.core.basic import PicklableWithSlots
+from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed
+
 
 class ModularInteger(PicklableWithSlots):
     """A class representing a modular integer. """
@@ -166,6 +167,7 @@ class ModularInteger(PicklableWithSlots):
         return self.__class__(self._invert(self.val))
 
 _modular_integer_cache = {}
+
 
 def ModularIntegerFactory(_mod, _dom=None, _sym=True):
     """Create custom class for specific integer modulus."""

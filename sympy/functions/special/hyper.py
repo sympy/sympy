@@ -1,14 +1,16 @@
 """Hypergeometric and Meijer G-functions"""
 
-from sympy import S
-from sympy.core.compatibility import iterable
-from sympy.core.function import Function, ArgumentIndexError
+from sympy.core import S, I, pi, oo, ilcm, Mod
+from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
-from sympy.core.sympify import sympify
 from sympy.core.mul import Mul
+
+from sympy.functions import (sqrt, exp, log, sin, cos, asin, atan,
+        sinh, cosh, asinh, acosh, atanh, acoth)
 
 # TODO should __new__ accept **options?
 # TODO should constructors should check if parameters are sensible?
+
 
 def _prep_tuple(v):
     """
@@ -27,11 +29,14 @@ def _prep_tuple(v):
     from sympy.simplify.simplify import unpolarify
     return Tuple(*[unpolarify(x) for x in v])
 
+
 class TupleParametersBase(Function):
     """ Base class that takes care of differentiation, when some of
         the arguments are actually tuples. """
+    # This is not deduced automatically since there are Tuples as arguments.
+    is_commutative = True
+
     def _eval_derivative(self, s):
-        from sympy import Derivative
         try:
             res = 0
             if self.args[0].has(s) or self.args[1].has(s):
@@ -43,8 +48,6 @@ class TupleParametersBase(Function):
         except (ArgumentIndexError, NotImplementedError):
             return Derivative(self, s)
 
-    # This is not deduced automatically since there are Tuples as arguments.
-    is_commutative = True
 
 class hyper(TupleParametersBase):
     r"""
@@ -58,8 +61,8 @@ class hyper(TupleParametersBase):
     :math:`b_q`. It also has an argument :math:`z`. The series definition is
 
     .. math ::
-        {}_pF_q\left.\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
-                     \right| z \right)
+        {}_pF_q\left(\begin{matrix} a_1, \dots, a_p \\ b_1, \dots, b_q \end{matrix}
+                     \middle| z \right)
         = \sum_{n=0}^\infty \frac{(a_1)_n \dots (a_p)_n}{(b_1)_n \dots (b_q)_n}
                             \frac{z^n}{n!},
 
@@ -181,7 +184,7 @@ class hyper(TupleParametersBase):
         fac = Mul(*self.ap)/Mul(*self.bq)
         return fac*hyper(nap, nbq, self.argument)
 
-    def _eval_expand_func(self, deep=True, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import gamma, hyperexpand
         if len(self.ap) == 2 and len(self.bq) == 1 and self.argument == 1:
             a, b = self.ap
@@ -231,7 +234,6 @@ class hyper(TupleParametersBase):
         >>> hyper((1, 2), (3, 4), z).radius_of_convergence
         oo
         """
-        from sympy import oo
         if any(a.is_integer and a <= 0 for a in self.ap + self.bq):
             aints = [a for a in self.ap if a.is_Integer and a <= 0]
             bints = [a for a in self.bq if a.is_Integer and a <= 0]
@@ -276,6 +278,7 @@ class hyper(TupleParametersBase):
         c3 = And(re(e) >= 1, abs(z) < 1)
         return Or(c1, c2, c3)
 
+
 class meijerg(TupleParametersBase):
     r"""
     The Meijer G-function is defined by a Mellin-Barnes type integral that
@@ -292,9 +295,9 @@ class meijerg(TupleParametersBase):
     parameter vectors):
 
     .. math ::
-        G_{p,q}^{m,n} \left.\left(\begin{matrix}a_1, \dots, a_n & a_{n+1}, \dots, a_p \\
+        G_{p,q}^{m,n} \left(\begin{matrix}a_1, \dots, a_n & a_{n+1}, \dots, a_p \\
                                         b_1, \dots, b_m & b_{m+1}, \dots, b_q
-                          \end{matrix} \right| z \right).
+                          \end{matrix} \middle| z \right).
 
     However, in sympy the four parameter vectors are always available
     separately (see examples), so that there is no need to keep track of the
@@ -376,7 +379,8 @@ class meijerg(TupleParametersBase):
     >>> from sympy import hyperexpand
     >>> from sympy.abc import a, b, c
     >>> hyperexpand(meijerg([a], [], [c], [b], x), allow_hyper=True)
-    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,), (-b + c + 1,), -x)/gamma(-b + c + 1)
+    x**c*gamma(-a + c + 1)*hyper((-a + c + 1,),
+                                 (-b + c + 1,), -x)/gamma(-b + c + 1)
 
     Thus the Meijer G-function also subsumes many named functions as special
     cases. You can use expand_func or hyperexpand to (try to) rewrite a
@@ -409,8 +413,9 @@ class meijerg(TupleParametersBase):
         if len(args) == 5:
             args = [(args[0], args[1]), (args[2], args[3]), args[4]]
         if len(args) != 3:
-            raise TypeError("args must eiter be as, as', bs, bs', z or " \
+            raise TypeError("args must eiter be as, as', bs, bs', z or "
                             "as, bs, z")
+
         def tr(p):
             if len(p) != 2:
                 raise TypeError("wrong argument")
@@ -426,7 +431,7 @@ class meijerg(TupleParametersBase):
             a = list(self.an)
             a[0] -= 1
             G = meijerg(a, self.aother, self.bm, self.bother, self.argument)
-            return 1/self.argument * ((self.an[0]-1)*self + G)
+            return 1/self.argument * ((self.an[0] - 1)*self + G)
         elif len(self.bm) >= 1:
             b = list(self.bm)
             b[0] += 1
@@ -457,7 +462,6 @@ class meijerg(TupleParametersBase):
         # (There is a similar equation for -n instead of +n).
 
         # We first figure out how to pair the parameters.
-        from sympy import log, Mod
         an = list(self.an)
         ap = list(self.aother)
         bm = list(self.bm)
@@ -485,7 +489,7 @@ class meijerg(TupleParametersBase):
                         found = i
                         break
                 if found is None:
-                    raise NotImplementedError('Derivative not expressible ' \
+                    raise NotImplementedError('Derivative not expressible '
                                               'as G-function?')
                 y = l2[i]
                 l2.pop(i)
@@ -540,7 +544,6 @@ class meijerg(TupleParametersBase):
         12*pi
         """
         # This follows from slater's theorem.
-        from sympy import oo, ilcm, pi, Min, Mod
         def compute(l):
             # first check that no two differ by an integer
             for i, b in enumerate(l):
@@ -562,18 +565,60 @@ class meijerg(TupleParametersBase):
         else:
             return 2*pi*alpha
 
-    def _eval_expand_func(self, deep=True, **hints):
+    def _eval_expand_func(self, **hints):
         from sympy import hyperexpand
         return hyperexpand(self)
+
+    def _eval_evalf(self, prec):
+        # The default code is insufficient for polar arguments.
+        # mpmath provides an optional argument "r", which evaluates
+        # G(z**(1/r)). I am not sure what its intended use is, but we hijack it
+        # here in the following way: to evaluate at a number z of |argument|
+        # less than (say) n*pi, we put r=1/n, compute z' = root(z, n)
+        # (carefully so as not to loose the branch information), and evaluate
+        # G(z'**(1/r)) = G(z'**n) = G(z).
+        from sympy.functions import exp_polar, ceiling
+        from sympy import mpmath, Expr
+        z = self.argument
+        znum = self.argument._eval_evalf(prec)
+        if znum.has(exp_polar):
+            znum, branch = znum.as_coeff_mul(exp_polar)
+            if len(branch) != 1:
+                return
+            branch = branch[0].args[0]/I
+        else:
+            branch = S(0)
+        n = ceiling(abs(branch/S.Pi)) + 1
+        znum = znum**(S(1)/n)*exp(I*branch / n)
+        #print znum, branch, n
+
+        # Convert all args to mpf or mpc
+        try:
+            [z, r, ap, bq] = [arg._to_mpmath(prec)
+                    for arg in [znum, 1/n, self.args[0], self.args[1]]]
+        except ValueError:
+            return
+
+        # Set mpmath precision and apply. Make sure precision is restored
+        # afterwards
+        orig = mpmath.mp.prec
+        try:
+            mpmath.mp.prec = prec
+            v = mpmath.meijerg(ap, bq, z, r)
+            #print ap, bq, z, r, v
+        finally:
+            mpmath.mp.prec = orig
+
+        return Expr._from_mpmath(v, prec)
 
     def integrand(self, s):
         """ Get the defining integrand D(s). """
         from sympy import gamma
         return self.argument**s \
-               * Mul(*(gamma(b - s) for b in self.bm)) \
-               * Mul(*(gamma(1 - a + s) for a in self.an)) \
-               / Mul(*(gamma(1 - b + s) for b in self.bother)) \
-               / Mul(*(gamma(a - s) for a in self.aother))
+            * Mul(*(gamma(b - s) for b in self.bm)) \
+            * Mul(*(gamma(1 - a + s) for a in self.an)) \
+            / Mul(*(gamma(1 - b + s) for b in self.bother)) \
+            / Mul(*(gamma(a - s) for a in self.aother))
 
     @property
     def argument(self):
@@ -625,6 +670,7 @@ class meijerg(TupleParametersBase):
         """ A quantity related to the convergence region of the integral,
             c.f. references. """
         return len(self.bm) + len(self.an) - S(len(self.ap) + len(self.bq))/2
+
 
 class HyperRep(Function):
     """
@@ -697,115 +743,120 @@ class HyperRep(Function):
             return self._expr_small_minus(*args)
         return self._expr_small(*args)
 
+
 class HyperRep_power1(HyperRep):
     """ Return a representative for hyper([-a], [], z) == (1 - z)**a. """
     nargs = 2
+
     @classmethod
     def _expr_small(cls, a, x):
         return (1 - x)**a
+
     @classmethod
     def _expr_small_minus(cls, a, x):
         return (1 + x)**a
+
     @classmethod
     def _expr_big(cls, a, x, n):
-        from sympy import exp, pi, I
         if a.is_integer:
             return cls._expr_small(a, x)
         return (x - 1)**a*exp((2*n - 1)*pi*I*a)
+
     @classmethod
     def _expr_big_minus(cls, a, x, n):
-        from sympy import exp, pi, I
         if a.is_integer:
             return cls._expr_small_minus(a, x)
         return (1 + x)**a*exp(2*n*pi*I*a)
 
+
 class HyperRep_power2(HyperRep):
     """ Return a representative for hyper([a, a - 1/2], [2*a], z). """
     nargs = 2
+
     @classmethod
     def _expr_small(cls, a, x):
-        from sympy import sqrt, pi, I, exp
         return 2**(2*a - 1)*(1 + sqrt(1 - x))**(1 - 2*a)
+
     @classmethod
     def _expr_small_minus(cls, a, x):
-        from sympy import sqrt, pi, I, exp
         return 2**(2*a - 1)*(1 + sqrt(1 + x))**(1 - 2*a)
+
     @classmethod
     def _expr_big(cls, a, x, n):
-        from sympy import sqrt, pi, I, exp
         sgn = -1
         if n.is_odd:
             sgn = 1
             n -= 1
         return 2**(2*a - 1)*(1 + sgn*I*sqrt(x - 1))**(1 - 2*a) \
-               *exp(-2*n*pi*I*a)
+            *exp(-2*n*pi*I*a)
+
     @classmethod
     def _expr_big_minus(cls, a, x, n):
-        from sympy import sqrt, pi, I, exp
         sgn = 1
         if n.is_odd:
             sgn = -1
         return sgn*2**(2*a - 1)*(sqrt(1 + x) + sgn)**(1 - 2*a)*exp(-2*pi*I*a*n)
 
+
 class HyperRep_log1(HyperRep):
     """ Represent -z*hyper([1, 1], [2], z) == log(1 - z). """
     @classmethod
     def _expr_small(cls, x):
-        from sympy import log
         return log(1 - x)
+
     @classmethod
     def _expr_small_minus(cls, x):
-        from sympy import log
         return log(1 + x)
+
     @classmethod
     def _expr_big(cls, x, n):
-        from sympy import log, pi, I
-        return log(x - 1) + (2*n-1)*pi*I
+        return log(x - 1) + (2*n - 1)*pi*I
+
     @classmethod
     def _expr_big_minus(cls, x, n):
-        from sympy import log, pi, I
         return log(1 + x) + 2*n*pi*I
+
 
 class HyperRep_atanh(HyperRep):
     """ Represent hyper([1/2, 1], [3/2], z) == atanh(sqrt(z))/sqrt(z). """
     @classmethod
     def _expr_small(cls, x):
-        from sympy import atanh, sqrt
         return atanh(sqrt(x))/sqrt(x)
+
     def _expr_small_minus(cls, x):
-        from sympy import atan, sqrt
         return atan(sqrt(x))/sqrt(x)
+
     def _expr_big(cls, x, n):
-        from sympy import acoth, sqrt, pi, I
         if n.is_even:
             return (acoth(sqrt(x)) + I*pi/2)/sqrt(x)
         else:
             return (acoth(sqrt(x)) - I*pi/2)/sqrt(x)
+
     def _expr_big_minus(cls, x, n):
-        from sympy import atan, sqrt, pi
         if n.is_even:
             return atan(sqrt(x))/sqrt(x)
         else:
             return (atan(sqrt(x)) - pi)/sqrt(x)
 
+
 class HyperRep_asin1(HyperRep):
     """ Represent hyper([1/2, 1/2], [3/2], z) == asin(sqrt(z))/sqrt(z). """
     @classmethod
     def _expr_small(cls, z):
-        from sympy import asin, sqrt
         return asin(sqrt(z))/sqrt(z)
+
     @classmethod
     def _expr_small_minus(cls, z):
-        from sympy import asinh, sqrt
         return asinh(sqrt(z))/sqrt(z)
+
     @classmethod
     def _expr_big(cls, z, n):
-        from sympy import sqrt, pi, I, acosh
         return S(-1)**n*((S(1)/2 - n)*pi/sqrt(z) + I*acosh(sqrt(z))/sqrt(z))
+
     @classmethod
     def _expr_big_minus(cls, z, n):
-        from sympy import sqrt, pi, I, asinh
-        return S(-1)**n*(asinh(sqrt(z))/sqrt(z)+n*pi*I/sqrt(z))
+        return S(-1)**n*(asinh(sqrt(z))/sqrt(z) + n*pi*I/sqrt(z))
+
 
 class HyperRep_asin2(HyperRep):
     """ Represent hyper([1, 1], [3/2], z) == asin(sqrt(z))/sqrt(z)/sqrt(1-z). """
@@ -813,34 +864,38 @@ class HyperRep_asin2(HyperRep):
     @classmethod
     def _expr_small(cls, z):
         return HyperRep_asin1._expr_small(z) \
-               /HyperRep_power1._expr_small(S(1)/2, z)
+            /HyperRep_power1._expr_small(S(1)/2, z)
+
     @classmethod
     def _expr_small_minus(cls, z):
         return HyperRep_asin1._expr_small_minus(z) \
-               /HyperRep_power1._expr_small_minus(S(1)/2, z)
+            /HyperRep_power1._expr_small_minus(S(1)/2, z)
+
     @classmethod
     def _expr_big(cls, z, n):
         return HyperRep_asin1._expr_big(z, n) \
-               /HyperRep_power1._expr_big(S(1)/2, z, n)
+            /HyperRep_power1._expr_big(S(1)/2, z, n)
+
     @classmethod
     def _expr_big_minus(cls, z, n):
         return HyperRep_asin1._expr_big_minus(z, n) \
-               /HyperRep_power1._expr_big_minus(S(1)/2, z, n)
+            /HyperRep_power1._expr_big_minus(S(1)/2, z, n)
+
 
 class HyperRep_sqrts1(HyperRep):
     """ Return a representative for hyper([-a, 1/2 - a], [1/2], z). """
     nargs = 2
+
     @classmethod
     def _expr_small(cls, a, z):
-        from sympy import I, pi, exp, sqrt, atan, cos
         return ((1 - sqrt(z))**(2*a) + (1 + sqrt(z))**(2*a))/2
+
     @classmethod
     def _expr_small_minus(cls, a, z):
-        from sympy import I, pi, exp, sqrt, atan, cos
         return (1 + z)**a*cos(2*a*atan(sqrt(z)))
+
     @classmethod
     def _expr_big(cls, a, z, n):
-        from sympy import I, pi, exp, sqrt, atan, cos
         if n.is_even:
             return ((sqrt(z) + 1)**(2*a)*exp(2*pi*I*n*a) +
                     (sqrt(z) - 1)**(2*a)*exp(2*pi*I*(n - 1)*a))/2
@@ -848,30 +903,31 @@ class HyperRep_sqrts1(HyperRep):
             n -= 1
             return ((sqrt(z) - 1)**(2*a)*exp(2*pi*I*a*(n + 1)) +
                     (sqrt(z) + 1)**(2*a)*exp(2*pi*I*a*n))/2
+
     @classmethod
     def _expr_big_minus(cls, a, z, n):
-        from sympy import I, pi, exp, sqrt, atan, cos
         if n.is_even:
             return (1 + z)**a*exp(2*pi*I*n*a)*cos(2*a*atan(sqrt(z)))
         else:
             return (1 + z)**a*exp(2*pi*I*n*a)*cos(2*a*atan(sqrt(z)) - 2*pi*a)
+
 
 class HyperRep_sqrts2(HyperRep):
     """ Return a representative for
           sqrt(z)/2*[(1-sqrt(z))**2a - (1 + sqrt(z))**2a]
           == -2*z/(2*a+1) d/dz hyper([-a - 1/2, -a], [1/2], z)"""
     nargs = 2
+
     @classmethod
     def _expr_small(cls, a, z):
-        from sympy import I, pi, exp, sqrt, atan, sin
         return sqrt(z)*((1 - sqrt(z))**(2*a) - (1 + sqrt(z))**(2*a))/2
+
     @classmethod
     def _expr_small_minus(cls, a, z):
-        from sympy import I, pi, exp, sqrt, atan, sin
         return sqrt(z)*(1 + z)**a*sin(2*a*atan(sqrt(z)))
+
     @classmethod
     def _expr_big(cls, a, z, n):
-        from sympy import I, pi, exp, sqrt, atan, sin
         if n.is_even:
             return sqrt(z)/2*((sqrt(z) - 1)**(2*a)*exp(2*pi*I*a*(n - 1)) -
                               (sqrt(z) + 1)**(2*a)*exp(2*pi*I*a*n))
@@ -879,77 +935,80 @@ class HyperRep_sqrts2(HyperRep):
             n -= 1
             return sqrt(z)/2*((sqrt(z) - 1)**(2*a)*exp(2*pi*I*a*(n + 1)) -
                               (sqrt(z) + 1)**(2*a)*exp(2*pi*I*a*n))
+
     def _expr_big_minus(cls, a, z, n):
-        from sympy import I, pi, exp, sqrt, atan, sin
         if n.is_even:
             return (1 + z)**a*exp(2*pi*I*n*a)*sqrt(z)*sin(2*a*atan(sqrt(z)))
         else:
             return (1 + z)**a*exp(2*pi*I*n*a)*sqrt(z) \
-                   *sin(2*a*atan(sqrt(z)) - 2*pi*a)
+                *sin(2*a*atan(sqrt(z)) - 2*pi*a)
+
 
 class HyperRep_log2(HyperRep):
     """ Represent log(1/2 + sqrt(1 - z)/2) == -z/4*hyper([3/2, 1, 1], [2, 2], z) """
+
     @classmethod
     def _expr_small(cls, z):
-        from sympy import log, sqrt
         return log(S(1)/2 + sqrt(1 - z)/2)
+
     @classmethod
     def _expr_small_minus(cls, z):
-        from sympy import log, sqrt
         return log(S(1)/2 + sqrt(1 + z)/2)
+
     @classmethod
     def _expr_big(cls, z, n):
-        from sympy import log, I, pi, asin, sqrt
         if n.is_even:
             return (n - S(1)/2)*pi*I + log(sqrt(z)/2) + I*asin(1/sqrt(z))
         else:
             return (n - S(1)/2)*pi*I + log(sqrt(z)/2) - I*asin(1/sqrt(z))
+
     def _expr_big_minus(cls, z, n):
-        from sympy import log, I, pi, sqrt
         if n.is_even:
             return pi*I*n + log(S(1)/2 + sqrt(1 + z)/2)
         else:
             return pi*I*n + log(sqrt(1 + z)/2 - S(1)/2)
+
 
 class HyperRep_cosasin(HyperRep):
     """ Represent hyper([a, -a], [1/2], z) == cos(2*a*asin(sqrt(z))). """
     # Note there are many alternative expressions, e.g. as powers of a sum of
     # square roots.
     nargs = 2
+
     @classmethod
     def _expr_small(cls, a, z):
-        from sympy import cos, cosh, sqrt, asinh, acosh, pi, I, asin
         return cos(2*a*asin(sqrt(z)))
+
     @classmethod
     def _expr_small_minus(cls, a, z):
-        from sympy import cos, cosh, sqrt, asinh, acosh, pi, I, asin
         return cosh(2*a*asinh(sqrt(z)))
+
     @classmethod
     def _expr_big(cls, a, z, n):
-        from sympy import cos, cosh, sqrt, asinh, acosh, pi, I, asin
         return cosh(2*a*acosh(sqrt(z)) + a*pi*I*(2*n - 1))
+
     @classmethod
     def _expr_big_minus(cls, a, z, n):
-        from sympy import cos, cosh, sqrt, asinh, acosh, pi, I, asin
         return cosh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)
+
 
 class HyperRep_sinasin(HyperRep):
     """ Represent 2*a*z*hyper([1 - a, 1 + a], [3/2], z)
         == sqrt(z)/sqrt(1-z)*sin(2*a*asin(sqrt(z))) """
     nargs = 2
+
     @classmethod
     def _expr_small(cls, a, z):
-        from sympy import sin, asin, asinh, acosh, sinh, sqrt, pi, I
         return sqrt(z)/sqrt(1 - z)*sin(2*a*asin(sqrt(z)))
+
     @classmethod
     def _expr_small_minus(cls, a, z):
-        from sympy import sin, asin, asinh, acosh, sinh, sqrt, pi, I
         return -sqrt(z)/sqrt(1 + z)*sinh(2*a*asinh(sqrt(z)))
+
     @classmethod
     def _expr_big(cls, a, z, n):
-        from sympy import sin, asin, asinh, acosh, sinh, sqrt, pi, I
         return -1/sqrt(1 - 1/z)*sinh(2*a*acosh(sqrt(z)) + a*pi*I*(2*n - 1))
+
     @classmethod
     def _expr_big_minus(cls, a, z, n):
-        from sympy import sin, asin, asinh, acosh, sinh, sqrt, pi, I
         return -1/sqrt(1 + 1/z)*sinh(2*a*asinh(sqrt(z)) + 2*a*pi*I*n)

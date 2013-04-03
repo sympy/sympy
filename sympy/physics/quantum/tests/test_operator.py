@@ -8,19 +8,24 @@ from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
                                             DifferentialOperator)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
+from sympy.core.trace import Tr
+from sympy.physics.quantum.spin import JzKet, JzBra
 
-class TestKet(Ket):
+
+class CustomKet(Ket):
     @classmethod
     def default_args(self):
         return ("t",)
 
-class TestOp(HermitianOperator):
+
+class CustomOp(HermitianOperator):
     @classmethod
     def default_args(self):
         return ("T",)
 
-t_ket = TestKet()
-t_op = TestOp()
+t_ket = CustomKet()
+t_op = CustomOp()
+
 
 def test_operator():
     A = Operator('A')
@@ -31,13 +36,13 @@ def test_operator():
     assert isinstance(A, QExpr)
 
     assert A.label == (Symbol('A'),)
-    assert A.is_commutative == False
+    assert A.is_commutative is False
     assert A.hilbert_space == HilbertSpace()
 
     assert A*B != B*A
 
-    assert (A*(B+C)).expand() == A*B + A*C
-    assert ((A+B)**2).expand() == A**2 + A*B + B*A + B**2
+    assert (A*(B + C)).expand() == A*B + A*C
+    assert ((A + B)**2).expand() == A**2 + A*B + B*A + B**2
 
     assert t_op.label[0] == Symbol(t_op.default_args()[0])
 
@@ -58,8 +63,9 @@ def test_hermitian():
 
     assert Dagger(H) == H
     assert H.inv() != H
-    assert H.is_commutative == False
-    assert Dagger(H).is_commutative == False
+    assert H.is_commutative is False
+    assert Dagger(H).is_commutative is False
+
 
 def test_unitary():
     U = UnitaryOperator('U')
@@ -70,8 +76,8 @@ def test_unitary():
     assert U.inv() == Dagger(U)
     assert U*Dagger(U) == 1
     assert Dagger(U)*U == 1
-    assert U.is_commutative == False
-    assert Dagger(U).is_commutative == False
+    assert U.is_commutative is False
+    assert Dagger(U).is_commutative is False
 
 
 def test_outer_product():
@@ -85,7 +91,7 @@ def test_outer_product():
     assert op.ket == k
     assert op.bra == b
     assert op.label == (k, b)
-    assert op.is_commutative == False
+    assert op.is_commutative is False
 
     op = k*b
 
@@ -95,7 +101,7 @@ def test_outer_product():
     assert op.ket == k
     assert op.bra == b
     assert op.label == (k, b)
-    assert op.is_commutative == False
+    assert op.is_commutative is False
 
     op = 2*k*b
 
@@ -105,16 +111,20 @@ def test_outer_product():
 
     assert op == Mul(Integer(2), OuterProduct(k, b))
 
-    assert Dagger(k*b) == OuterProduct(Dagger(b),Dagger(k))
-    assert Dagger(k*b).is_commutative == False
+    assert Dagger(k*b) == OuterProduct(Dagger(b), Dagger(k))
+    assert Dagger(k*b).is_commutative is False
+
+    #test the _eval_trace
+    assert Tr(OuterProduct(JzKet(1, 1), JzBra(1, 1))).doit() == 1
 
 
 def test_operator_dagger():
     A = Operator('A')
     B = Operator('B')
     assert Dagger(A*B) == Dagger(B)*Dagger(A)
-    assert Dagger(A+B) == Dagger(A) + Dagger(B)
+    assert Dagger(A + B) == Dagger(A) + Dagger(B)
     assert Dagger(A**2) == Dagger(A)**2
+
 
 def test_differential_operator():
     x = Symbol('x')
@@ -140,36 +150,36 @@ def test_differential_operator():
     assert d.function == f(x)
     assert d.variables == (x,)
     assert diff(d, x) == \
-           DifferentialOperator(Derivative(1/x*Derivative(f(x), x), x), f(x))
+        DifferentialOperator(Derivative(1/x*Derivative(f(x), x), x), f(x))
     assert qapply(d*g) == Wavefunction(3*x, x)
 
     # 2D cartesian Laplacian
     y = Symbol('y')
-    d = DifferentialOperator(Derivative(f(x, y), x, 2) + \
+    d = DifferentialOperator(Derivative(f(x, y), x, 2) +
                              Derivative(f(x, y), y, 2), f(x, y))
     w = Wavefunction(x**3*y**2 + y**3*x**2, x, y)
     assert d.expr == Derivative(f(x, y), x, 2) + Derivative(f(x, y), y, 2)
     assert d.function == f(x, y)
     assert d.variables == (x, y)
     assert diff(d, x) == \
-           DifferentialOperator(Derivative(d.expr, x), f(x, y))
+        DifferentialOperator(Derivative(d.expr, x), f(x, y))
     assert diff(d, y) == \
-           DifferentialOperator(Derivative(d.expr, y), f(x, y))
-    assert qapply(d*w) == Wavefunction(2*x**3 + 6*x*y**2 + 6*x**2*y + 2*y**3, \
+        DifferentialOperator(Derivative(d.expr, y), f(x, y))
+    assert qapply(d*w) == Wavefunction(2*x**3 + 6*x*y**2 + 6*x**2*y + 2*y**3,
                                        x, y)
 
     # 2D polar Laplacian (th = theta)
     r, th = symbols('r th')
-    d = DifferentialOperator(1/r*Derivative(r*Derivative(f(r, th), r) , r) + \
+    d = DifferentialOperator(1/r*Derivative(r*Derivative(f(r, th), r), r) +
                              1/(r**2)*Derivative(f(r, th), th, 2), f(r, th))
     w = Wavefunction(r**2*sin(th), r, (th, 0, pi))
     assert d.expr == \
-           1/r*Derivative(r*Derivative(f(r, th), r), r) + \
-           1/(r**2)*Derivative(f(r, th), th, 2)
+        1/r*Derivative(r*Derivative(f(r, th), r), r) + \
+        1/(r**2)*Derivative(f(r, th), th, 2)
     assert d.function == f(r, th)
     assert d.variables == (r, th)
     assert diff(d, r) == \
-           DifferentialOperator(Derivative(d.expr, r), f(r, th))
+        DifferentialOperator(Derivative(d.expr, r), f(r, th))
     assert diff(d, th) == \
-           DifferentialOperator(Derivative(d.expr, th), f(r, th))
+        DifferentialOperator(Derivative(d.expr, th), f(r, th))
     assert qapply(d*w) == Wavefunction(3*sin(th), r, (th, 0, pi))

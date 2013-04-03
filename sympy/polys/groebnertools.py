@@ -1,23 +1,11 @@
 """Groebner bases algorithms. """
 
-from sympy.polys.monomialtools import (
-    monomial_mul, monomial_div, monomial_lcm,
-)
-
-from sympy.polys.distributedpolys import (
-    sdp_LC, sdp_LM, sdp_LT, sdp_mul_term,
-    sdp_sub, sdp_mul_term, sdp_monic,
-    sdp_rem, sdp_strip, sdp_sort,
-    _term_ff_div, _term_rr_div,
-)
-
-from sympy.polys.polyerrors import (
-    DomainError,
-)
-
+from sympy.polys.monomialtools import monomial_mul, monomial_div, monomial_lcm, monomial_divides, term_div, lex
+from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
+from sympy.core.symbol import Dummy
 
-def sdp_groebner(f, u, O, K, gens='', verbose=False, method=None):
+def groebner(seq, ring, method=None):
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
 
@@ -28,23 +16,36 @@ def sdp_groebner(f, u, O, K, gens='', verbose=False, method=None):
 
     """
     if method is None:
-        method = query('GB_METHOD')
+        method = query('groebner')
 
     _groebner_methods = {
-        'buchberger': buchberger,
-        'f5b': f5b,
+        'buchberger': _buchberger,
+        'f5b': _f5b,
     }
 
     try:
-        func = _groebner_methods[method]
+        _groebner = _groebner_methods[method]
     except KeyError:
         raise ValueError("'%s' is not a valid Groebner bases algorithm (valid are 'buchberger' and 'f5b')" % method)
-    else:
-        return func(f, u, O, K, gens, verbose)
 
-# Buchberger algorithm
+    domain, orig = ring.domain, None
 
-def buchberger(f, u, O, K, gens='', verbose=False):
+    if not domain.has_Field or not domain.has_assoc_Field:
+        try:
+            orig, ring = ring, ring.clone(domain=domain.get_field())
+        except DomainError:
+            raise DomainError("can't compute a Groebner basis over %s" % domain)
+        else:
+            seq = [ s.set_ring(ring) for s in seq ]
+
+    G = _groebner(seq, ring)
+
+    if orig is not None:
+        G = [ g.clear_denoms()[1].set_ring(orig) for g in G ]
+
+    return G
+
+def _buchberger(f, ring):
     """
     Computes Groebner basis for a set of polynomials in `K[X]`.
 
@@ -81,39 +82,35 @@ def buchberger(f, u, O, K, gens='', verbose=False):
     Computational Approach to Commutative Algebra, Springer, 1993,
     page 232.
 
-    Added optional ``gens`` argument to apply :func:`sdp_str` for
-    the purpose of debugging the algorithm.
-
     """
-    if not K.has_Field:
-        raise DomainError("can't compute a Groebner basis over %s" % K)
+    order = ring.order
+    domain = ring.domain
 
     def select(P):
         # normal selection strategy
         # select the pair with minimum LCM(LM(f), LM(g))
-        pr = min(P, key=lambda pair: O(monomial_lcm(sdp_LM(f[pair[0]], u), sdp_LM(f[pair[1]], u))))
+        pr = min(P, key=lambda pair: order(monomial_lcm(f[pair[0]].LM, f[pair[1]].LM)))
         return pr
 
     def normal(g, J):
-        h = sdp_rem(g, [ f[j] for j in J ], u, O, K)
+        h = g.rem([ f[j] for j in J ])
 
         if not h:
             return None
         else:
-            h = sdp_monic(h, K)
-            h = tuple(h)
+            h = h.monic()
 
             if not h in I:
                 I[h] = len(f)
                 f.append(h)
 
-            return sdp_LM(h, u), I[h]
+            return h.LM, I[h]
 
     def update(G, B, ih):
         # update G using the set of critical pairs B and h
         # [BW] page 230
         h = f[ih]
-        mh = sdp_LM(h, u)
+        mh = h.LM
 
         # filter new pairs (h, g), g in G
         C = G.copy()
@@ -123,26 +120,26 @@ def buchberger(f, u, O, K, gens='', verbose=False):
             # select a pair (h, g) by popping an element from C
             ig = C.pop()
             g = f[ig]
-            mg = sdp_LM(g, u)
+            mg = g.LM
             LCMhg = monomial_lcm(mh, mg)
 
             def lcm_divides(ip):
                 # LCM(LM(h), LM(p)) divides LCM(LM(h), LM(g))
-                m = monomial_lcm(mh, sdp_LM(f[ip], u))
+                m = monomial_lcm(mh, f[ip].LM)
                 return monomial_div(LCMhg, m)
 
             # HT(h) and HT(g) disjoint: mh*mg == LCMhg
             if monomial_mul(mh, mg) == LCMhg or (
                 not any(lcm_divides(ipx) for ipx in C) and
-                not any(lcm_divides(pr[1]) for pr in D)):
-                    D.add((ih, ig))
+                    not any(lcm_divides(pr[1]) for pr in D)):
+                D.add((ih, ig))
 
         E = set()
 
         while D:
             # select h, g from D (h the same as above)
             ih, ig = D.pop()
-            mg = sdp_LM(f[ig], u)
+            mg = f[ig].LM
             LCMhg = monomial_lcm(mh, mg)
 
             if not monomial_mul(mh, mg) == LCMhg:
@@ -154,14 +151,14 @@ def buchberger(f, u, O, K, gens='', verbose=False):
         while B:
             # select g1, g2 from B (-> CP)
             ig1, ig2 = B.pop()
-            mg1 = sdp_LM(f[ig1], u)
-            mg2 = sdp_LM(f[ig2], u)
+            mg1 = f[ig1].LM
+            mg2 = f[ig2].LM
             LCM12 = monomial_lcm(mg1, mg2)
 
             # if HT(h) does not divide lcm(HT(g1), HT(g2))
             if not monomial_div(LCM12, mh) or \
                 monomial_lcm(mg1, mh) == LCM12 or \
-                monomial_lcm(mg2, mh) == LCM12:
+                    monomial_lcm(mg2, mh) == LCM12:
                 B_new.add((ig1, ig2))
 
         B_new |= E
@@ -171,7 +168,7 @@ def buchberger(f, u, O, K, gens='', verbose=False):
 
         while G:
             ig = G.pop()
-            mg = sdp_LM(f[ig], u)
+            mg = f[ig].LM
 
             if not monomial_div(mg, mh):
                 G_new.add(ig)
@@ -193,15 +190,14 @@ def buchberger(f, u, O, K, gens='', verbose=False):
 
         for i in range(len(f)):
             p = f[i]
-            r = sdp_rem(p, f[:i], u, O, K)
+            r = p.rem(f[:i])
 
             if r:
-                f1.append(sdp_monic(r, K))
+                f1.append(r.monic())
 
         if f == f1:
             break
 
-    f = [tuple(p) for p in f]
     I = {}            # ip = I[p]; p = f[ip]
     F = set()         # set of indices of polynomials
     G = set()         # set of indices of intermediate would-be Groebner basis
@@ -213,9 +209,10 @@ def buchberger(f, u, O, K, gens='', verbose=False):
 
     #####################################
     # algorithm GROEBNERNEWS2 in [BW] page 232
+
     while F:
-        # select p with minimum monomial according to the monomial ordering O
-        h = min([f[x] for x in F], key=lambda f: O(sdp_LM(f, u)))
+        # select p with minimum monomial according to the monomial ordering
+        h = min([f[x] for x in F], key=lambda f: order(f.LM))
         ih = I[h]
         F.remove(ih)
         G, CP = update(G, CP, ih)
@@ -227,9 +224,9 @@ def buchberger(f, u, O, K, gens='', verbose=False):
         ig1, ig2 = select(CP)
         CP.remove((ig1, ig2))
 
-        h = sdp_spoly(f[ig1], f[ig2], u, O, K)
+        h = spoly(f[ig1], f[ig2])
         # ordering divisors is on average more efficient [Cox] page 111
-        G1 = sorted(G, key=lambda g: O(sdp_LM(f[g], u)))
+        G1 = sorted(G, key=lambda g: order(f[g].LM))
         ht = normal(h, G1)
 
         if ht:
@@ -247,59 +244,27 @@ def buchberger(f, u, O, K, gens='', verbose=False):
         if ht:
             Gr.add(ht[1])
 
-    Gr = [list(f[ig]) for ig in Gr]
+    Gr = [f[ig] for ig in Gr]
 
     # order according to the monomial ordering
-    Gr = sorted(Gr, key=lambda f: O(sdp_LM(f, u)), reverse=True)
-
-    if verbose:
-        print 'reductions_to_zero = %d' % reductions_to_zero
+    Gr = sorted(Gr, key=lambda f: order(f.LM), reverse=True)
 
     return Gr
 
 
-def sdp_str(f, gens):
-    if isinstance(gens, basestring):
-        gens = gens.split(',')
-    ngens = len(gens)
-    s = ''
-    for expv, c in f:
-        if c > 0:
-            s += ' +'
-        else:
-            s += ' -'
-        if c < 0:
-            c = -c
-        if c != 1:  # and expv != z:
-            cnt1 = str(c)
-        else:
-            cnt1 = ''
-        sa = []
-        for i in range(ngens):
-            exp = expv[i]
-            if exp > 1:
-                sa.append('%s^%d' % (gens[i], exp))
-            if exp == 1:
-                sa.append('%s' % gens[i])
-        if cnt1:
-            sa = [cnt1] + sa
-        s += '*'.join(sa)
-    return s
-
-
-def sdp_spoly(p1, p2, u, O, K):
+def spoly(p1, p2):
     """
     Compute LCM(LM(p1), LM(p2))/LM(p1)*p1 - LCM(LM(p1), LM(p2))/LM(p2)*p2
     This is the S-poly provided p1 and p2 are monic
     """
-    LM1 = sdp_LM(p1, u)
-    LM2 = sdp_LM(p2, u)
+    LM1 = p1.LM
+    LM2 = p2.LM
     LCM12 = monomial_lcm(LM1, LM2)
     m1 = monomial_div(LCM12, LM1)
     m2 = monomial_div(LCM12, LM2)
-    s1 = sdp_mul_term(p1, (m1, K.one), u, O, K)
-    s2 = sdp_mul_term(p2, (m2, K.one), u, O, K)
-    s = sdp_sub(s1, s2, u, O, K)
+    s1 = p1.mul_monom(m1)
+    s2 = p2.mul_monom(m2)
+    s = s1 - s2
     return s
 
 # F5B
@@ -329,14 +294,14 @@ def lbp(signature, polynomial, number):
 # signature functions
 
 
-def sig_cmp(u, v, O):
+def sig_cmp(u, v, order):
     """
     Compare two signatures by extending the term order to K[X]^n.
 
     u < v iff
         - the index of v is greater than the index of u
     or
-        - the index of v is equal to the index of u and u[0] < v[0] w.r.t. O
+        - the index of v is equal to the index of u and u[0] < v[0] w.r.t. order
 
     u > v otherwise
     """
@@ -345,12 +310,12 @@ def sig_cmp(u, v, O):
     if u[1] == v[1]:
         #if u[0] == v[0]:
         #    return 0
-        if O(u[0]) < O(v[0]):
+        if order(u[0]) < order(v[0]):
             return -1
     return 1
 
 
-def sig_key(s, O):
+def sig_key(s, order):
     """
     Key for comparing two signatures.
 
@@ -359,7 +324,7 @@ def sig_key(s, O):
     s < t iff [k > l] or [k == l and m < n]
     s > t otherwise
     """
-    return (-s[1], O(s[0]))
+    return (-s[1], order(s[0]))
 
 
 def sig_mult(s, m):
@@ -374,34 +339,34 @@ def sig_mult(s, m):
 # labeled polynomial functions
 
 
-def lbp_sub(f, g, u, O, K):
+def lbp_sub(f, g):
     """
     Subtract labeled polynomial g from f.
 
     The signature and number of the difference of f and g are signature
     and number of the maximum of f and g, w.r.t. lbp_cmp.
     """
-    if sig_cmp(Sign(f), Sign(g), O) < 0:
+    if sig_cmp(Sign(f), Sign(g), Polyn(f).ring.order) < 0:
         max_poly = g
     else:
         max_poly = f
 
-    ret = sdp_sub(Polyn(f), Polyn(g), u, O, K)
+    ret = Polyn(f) - Polyn(g)
 
     return lbp(Sign(max_poly), ret, Num(max_poly))
 
 
-def lbp_mul_term(f, cx, u, O, K):
+def lbp_mul_term(f, cx):
     """
     Multiply a labeled polynomial with a term.
 
     The product of a labeled polynomial (s, p, k) by a monomial is
     defined as (m * s, m * p, k).
     """
-    return lbp(sig_mult(Sign(f), cx[0]), sdp_mul_term(Polyn(f), cx, u, O, K), Num(f))
+    return lbp(sig_mult(Sign(f), cx[0]), Polyn(f).mul_term(cx), Num(f))
 
 
-def lbp_cmp(f, g, O):
+def lbp_cmp(f, g):
     """
     Compare two labeled polynomials.
 
@@ -412,7 +377,7 @@ def lbp_cmp(f, g, O):
 
     f > g otherwise
     """
-    if sig_cmp(Sign(f), Sign(g), O) == -1:
+    if sig_cmp(Sign(f), Sign(g), Polyn(f).ring.order) == -1:
         return -1
     if Sign(f) == Sign(g):
         if Num(f) > Num(g):
@@ -422,16 +387,16 @@ def lbp_cmp(f, g, O):
     return 1
 
 
-def lbp_key(f, O):
+def lbp_key(f):
     """
     Key for comparing two labeled polynomials.
     """
-    return (sig_key(Sign(f), O), -Num(f))
+    return (sig_key(Sign(f), Polyn(f).ring.order), -Num(f))
 
 # algorithm and helper functions
 
 
-def critical_pair(f, g, u, O, K):
+def critical_pair(f, g, ring):
     """
     Compute the critical pair corresponding to two labeled polynomials.
 
@@ -444,32 +409,29 @@ def critical_pair(f, g, u, O, K):
     f) and um are lightweight and f (in the tuple) is a reference to
     an already existing object in memory.
     """
-    ltf = sdp_LT(Polyn(f), u, K)
-    ltg = sdp_LT(Polyn(g), u, K)
-    lt = (monomial_lcm(ltf[0], ltg[0]), K.one)
+    domain = ring.domain
 
-    if K.has_Field:
-        term_div = _term_ff_div
-    else:
-        term_div = _term_rr_div
+    ltf = Polyn(f).LT
+    ltg = Polyn(g).LT
+    lt = (monomial_lcm(ltf[0], ltg[0]), domain.one)
 
-    um = term_div(lt, ltf, K)
-    vm = term_div(lt, ltg, K)
+    um = term_div(lt, ltf, domain)
+    vm = term_div(lt, ltg, domain)
 
     # The full information is not needed (now), so only the product
     # with the leading term is considered:
-    fr = lbp_mul_term(lbp(Sign(f), [sdp_LT(Polyn(f), u, K)], Num(f)), um, u, O, K)
-    gr = lbp_mul_term(lbp(Sign(g), [sdp_LT(Polyn(g), u, K)], Num(g)), vm, u, O, K)
+    fr = lbp_mul_term(lbp(Sign(f), Polyn(f).leading_term, Num(f)), um)
+    gr = lbp_mul_term(lbp(Sign(g), Polyn(g).leading_term, Num(g)), vm)
 
     # return in proper order, such that the S-polynomial is just
     # u_first * f_first - u_second * f_second:
-    if lbp_cmp(fr, gr, O) == -1:
+    if lbp_cmp(fr, gr) == -1:
         return (Sign(gr), vm, g, Sign(fr), um, f)
     else:
         return (Sign(fr), um, f, Sign(gr), vm, g)
 
 
-def cp_cmp(c, d, O):
+def cp_cmp(c, d):
     """
     Compare two critical pairs c and d.
 
@@ -483,18 +445,20 @@ def cp_cmp(c, d, O):
 
     c > d otherwise
     """
-    c0 = lbp(c[0], [], Num(c[2]))
-    d0 = lbp(d[0], [], Num(d[2]))
+    zero = Polyn(c[2]).ring.zero
 
-    r = lbp_cmp(c0, d0, O)
+    c0 = lbp(c[0], zero, Num(c[2]))
+    d0 = lbp(d[0], zero, Num(d[2]))
+
+    r = lbp_cmp(c0, d0)
 
     if r == -1:
         return -1
     if r == 0:
-        c1 = lbp(c[3], [], Num(c[5]))
-        d1 = lbp(d[3], [], Num(d[5]))
+        c1 = lbp(c[3], zero, Num(c[5]))
+        d1 = lbp(d[3], zero, Num(d[5]))
 
-        r = lbp_cmp(c1, d1, O)
+        r = lbp_cmp(c1, d1)
 
         if r == -1:
             return -1
@@ -503,23 +467,23 @@ def cp_cmp(c, d, O):
     return 1
 
 
-def cp_key(c, O):
+def cp_key(c, ring):
     """
     Key for comparing critical pairs.
     """
-    return (lbp_key(lbp(c[0], [], Num(c[2])), O), lbp_key(lbp(c[3], [], Num(c[5])), O))
+    return (lbp_key(lbp(c[0], ring.zero, Num(c[2]))), lbp_key(lbp(c[3], ring.zero, Num(c[5]))))
 
 
-def s_poly(cp, u, O, K):
+def s_poly(cp):
     """
     Compute the S-polynomial of a critical pair.
 
     The S-polynomial of a critical pair cp is cp[1] * cp[2] - cp[4] * cp[5].
     """
-    return lbp_sub(lbp_mul_term(cp[2], cp[1], u, O, K), lbp_mul_term(cp[5], cp[4], u, O, K), u, O, K)
+    return lbp_sub(lbp_mul_term(cp[2], cp[1]), lbp_mul_term(cp[5], cp[4]))
 
 
-def is_rewritable_or_comparable(sign, num, B, u, K):
+def is_rewritable_or_comparable(sign, num, B):
     """
     Check if a labeled polynomial is redundant by checking if its
     signature and number imply rewritability or comparability.
@@ -535,18 +499,18 @@ def is_rewritable_or_comparable(sign, num, B, u, K):
     for h in B:
         # comparable
         if sign[1] < Sign(h)[1]:
-            if monomial_divides(sign[0], sdp_LM(Polyn(h), u)):
+            if monomial_divides(Polyn(h).LM, sign[0]):
                 return True
 
         # rewritable
         if sign[1] == Sign(h)[1]:
             if num < Num(h):
-                if monomial_divides(sign[0], Sign(h)[0]):
+                if monomial_divides(Sign(h)[0], sign[0]):
                     return True
     return False
 
 
-def f5_reduce(f, B, u, O, K):
+def f5_reduce(f, B):
     """
     F5-reduce a labeled polynomial f by B.
 
@@ -556,50 +520,49 @@ def f5_reduce(f, B, u, O, K):
     found, f gets replaced by f - lt_f / lt_h * h. If no such h can be
     found or f is 0, f is no further F5-reducible and f gets returned.
 
-    A polynomial that is reducible in the usual sense (sdp_rem)
-    need not be F5-reducible, e.g.:
+    A polynomial that is reducible in the usual sense need not be
+    F5-reducible, e.g.:
 
     >>> from sympy.polys.groebnertools import lbp, sig, f5_reduce, Polyn
-    >>> from sympy.polys.distributedpolys import sdp_rem
     >>> from sympy.polys.monomialtools import lex
-    >>> from sympy import QQ
+    >>> from sympy.polys import ring, QQ
 
-    >>> f = lbp(sig((1, 1, 1), 4), [((1, 0, 0), QQ(1))], 3)
-    >>> g = lbp(sig((0, 0, 0), 2), [((1, 0, 0), QQ(1))], 2)
+    >>> R, x,y,z = ring("x,y,z", QQ)
 
-    >>> sdp_rem(Polyn(f), [Polyn(g)], 2, lex, QQ)
-    []
-    >>> f5_reduce(f, [g], 2, lex, QQ)
-    (((1, 1, 1), 4), [((1, 0, 0), 1/1)], 3)
+    >>> f = lbp(sig((1, 1, 1), 4), x, 3)
+    >>> g = lbp(sig((0, 0, 0), 2), x, 2)
+
+    >>> Polyn(f).rem([Polyn(g)])
+    0
+    >>> f5_reduce(f, [g])
+    (((1, 1, 1), 4), x, 3)
 
     """
-    if Polyn(f) == []:
-        return f
+    order = Polyn(f).ring.order
+    domain = Polyn(f).ring.domain
 
-    if K.has_Field:
-        term_div = _term_ff_div
-    else:
-        term_div = _term_rr_div
+    if not Polyn(f):
+        return f
 
     while True:
         g = f
 
         for h in B:
-            if Polyn(h) != []:
-                if monomial_divides(sdp_LM(Polyn(f), u), sdp_LM(Polyn(h), u)):
-                    t = term_div(sdp_LT(Polyn(f), u, K), sdp_LT(Polyn(h), u, K), K)
-                    if sig_cmp(sig_mult(Sign(h), t[0]), Sign(f), O) < 0:
+            if Polyn(h):
+                if monomial_divides(Polyn(h).LM, Polyn(f).LM):
+                    t = term_div(Polyn(f).LT, Polyn(h).LT, domain)
+                    if sig_cmp(sig_mult(Sign(h), t[0]), Sign(f), order) < 0:
                         # The following check need not be done and is in general slower than without.
-                        #if not is_rewritable_or_comparable(Sign(gp), Num(gp), B, u, K):
-                        hp = lbp_mul_term(h, t, u, O, K)
-                        f = lbp_sub(f, hp, u, O, K)
+                        #if not is_rewritable_or_comparable(Sign(gp), Num(gp), B):
+                        hp = lbp_mul_term(h, t)
+                        f = lbp_sub(f, hp)
                         break
 
-        if g == f or Polyn(f) == []:
+        if g == f or not Polyn(f):
             return f
 
 
-def f5b(F, u, O, K, gens='', verbose=False):
+def _f5b(F, ring):
     """
     Computes a reduced Groebner basis for the ideal generated by F.
 
@@ -631,8 +594,8 @@ def f5b(F, u, O, K, gens='', verbose=False):
     Thomas Becker, Volker Weispfenning, Groebner bases: A computational
     approach to commutative algebra, 1993, p. 203, 216
     """
-    if not K.has_Field:
-        raise DomainError("can't compute a Groebner basis over %s" % K)
+    order = ring.order
+    domain = ring.domain
 
     # reduce polynomials (like in Mario Pernici's implementation) (Becker, Weispfenning, p. 203)
     B = F
@@ -642,21 +605,21 @@ def f5b(F, u, O, K, gens='', verbose=False):
 
         for i in xrange(len(F)):
             p = F[i]
-            r = sdp_rem(p, F[:i], u, O, K)
+            r = p.rem(F[:i])
 
-            if r != []:
+            if r:
                 B.append(r)
 
         if F == B:
             break
 
     # basis
-    B = [lbp(sig((0,) * (u + 1), i + 1), F[i], i + 1) for i in xrange(len(F))]
-    B.sort(key=lambda f: O(sdp_LM(Polyn(f), u)), reverse=True)
+    B = [lbp(sig(ring.zero_monom, i + 1), F[i], i + 1) for i in xrange(len(F))]
+    B.sort(key=lambda f: order(Polyn(f).LM), reverse=True)
 
     # critical pairs
-    CP = [critical_pair(B[i], B[j], u, O, K) for i in xrange(len(B)) for j in xrange(i + 1, len(B))]
-    CP.sort(key=lambda cp: cp_key(cp, O), reverse=True)
+    CP = [critical_pair(B[i], B[j], ring) for i in xrange(len(B)) for j in xrange(i + 1, len(B))]
+    CP.sort(key=lambda cp: cp_key(cp, ring), reverse=True)
 
     k = len(B)
 
@@ -666,24 +629,24 @@ def f5b(F, u, O, K, gens='', verbose=False):
         cp = CP.pop()
 
         # discard redundant critical pairs:
-        if is_rewritable_or_comparable(cp[0], Num(cp[2]), B, u, K):
+        if is_rewritable_or_comparable(cp[0], Num(cp[2]), B):
             continue
-        if is_rewritable_or_comparable(cp[3], Num(cp[5]), B, u, K):
+        if is_rewritable_or_comparable(cp[3], Num(cp[5]), B):
             continue
 
-        s = s_poly(cp, u, O, K)
+        s = s_poly(cp)
 
-        p = f5_reduce(s, B, u, O, K)
+        p = f5_reduce(s, B)
 
-        p = lbp(Sign(p), sdp_monic(Polyn(p), K), k + 1)
+        p = lbp(Sign(p), Polyn(p).monic(), k + 1)
 
-        if Polyn(p) != []:
+        if Polyn(p):
             # remove old critical pairs, that become redundant when adding p:
             indices = []
             for i, cp in enumerate(CP):
-                if is_rewritable_or_comparable(cp[0], Num(cp[2]), [p], u, K):
+                if is_rewritable_or_comparable(cp[0], Num(cp[2]), [p]):
                     indices.append(i)
-                elif is_rewritable_or_comparable(cp[3], Num(cp[5]), [p], u, K):
+                elif is_rewritable_or_comparable(cp[3], Num(cp[5]), [p]):
                     indices.append(i)
 
             for i in reversed(indices):
@@ -691,25 +654,25 @@ def f5b(F, u, O, K, gens='', verbose=False):
 
             # only add new critical pairs that are not made redundant by p:
             for g in B:
-                if Polyn(g) != []:
-                    cp = critical_pair(p, g, u, O, K)
-                    if is_rewritable_or_comparable(cp[0], Num(cp[2]), [p], u, K):
+                if Polyn(g):
+                    cp = critical_pair(p, g, ring)
+                    if is_rewritable_or_comparable(cp[0], Num(cp[2]), [p]):
                         continue
-                    elif is_rewritable_or_comparable(cp[3], Num(cp[5]), [p], u, K):
+                    elif is_rewritable_or_comparable(cp[3], Num(cp[5]), [p]):
                         continue
 
                     CP.append(cp)
 
             # sort (other sorting methods/selection strategies were not as successful)
-            CP.sort(key=lambda cp: cp_key(cp, O), reverse=True)
+            CP.sort(key=lambda cp: cp_key(cp, ring), reverse=True)
 
             # insert p into B:
-            m = sdp_LM(Polyn(p), u)
-            if O(m) <= O(sdp_LM(Polyn(B[-1]), u)):
+            m = Polyn(p).LM
+            if order(m) <= order(Polyn(B[-1]).LM):
                 B.append(p)
             else:
                 for i, q in enumerate(B):
-                    if O(m) > O(sdp_LM(Polyn(q), u)):
+                    if order(m) > order(Polyn(q).LM):
                         B.insert(i, p)
                         break
 
@@ -719,34 +682,31 @@ def f5b(F, u, O, K, gens='', verbose=False):
         else:
             reductions_to_zero += 1
 
-    if verbose:
-        print("%d reductions to zero" % reductions_to_zero)
-
     # reduce Groebner basis:
-    H = [sdp_monic(Polyn(g), K) for g in B]
-    H = red_groebner(H, u, O, K)
+    H = [Polyn(g).monic() for g in B]
+    H = red_groebner(H, ring)
 
-    return sorted(H, key=lambda f: O(sdp_LM(f, u)), reverse=True)
+    return sorted(H, key=lambda f: order(f.LM), reverse=True)
 
 
-def red_groebner(G, u, O, K):
+def red_groebner(G, ring):
     """
     Compute reduced Groebner basis, from BeckerWeispfenning93, p. 216
 
     Selects a subset of generators, that already generate the ideal
     and computes a reduced Groebner basis for them.
     """
-    def reduction(P, u, O, K):
+    def reduction(P):
         """
         The actual reduction algorithm.
         """
         Q = []
         for i, p in enumerate(P):
-            h = sdp_rem(p, P[:i] + P[i + 1:], u, O, K)
-            if h != []:
+            h = p.rem(P[:i] + P[i + 1:])
+            if h:
                 Q.append(h)
 
-        return [sdp_monic(p, K) for p in Q]
+        return [p.monic() for p in Q]
 
     F = G
     H = []
@@ -754,215 +714,139 @@ def red_groebner(G, u, O, K):
     while F:
         f0 = F.pop()
 
-        if not any(monomial_divides(sdp_LM(f0, u), sdp_LM(f, u)) for f in F + H):
+        if not any(monomial_divides(f.LM, f0.LM) for f in F + H):
             H.append(f0)
 
     # Becker, Weispfenning, p. 217: H is Groebner basis of the ideal generated by G.
-    return reduction(H, u, O, K)
+    return reduction(H)
 
 
-def is_groebner(G, u, O, K):
+def is_groebner(G, ring):
     """
     Check if G is a Groebner basis.
     """
     for i in xrange(len(G)):
         for j in xrange(i + 1, len(G)):
-            s = sdp_spoly(G[i], G[j], u, O, K)
-            s = sdp_rem(s, G, u, O, K)
-            if s != []:
+            s = spoly(G[i], G[j])
+            s = s.rem(G)
+            if s:
                 return False
 
     return True
 
 
-def is_minimal(G, u, O, K):
+def is_minimal(G, ring):
     """
     Checks if G is a minimal Groebner basis.
     """
-    G.sort(key=lambda g: O(sdp_LM(g, u)))
+    order = ring.order
+    domain = ring.domain
+
+    G.sort(key=lambda g: order(g.LM))
+
     for i, g in enumerate(G):
-        if sdp_LC(g, K) != K.one:
+        if g.LC != domain.one:
             return False
 
         for h in G[:i] + G[i + 1:]:
-            if monomial_divides(sdp_LM(g, u), sdp_LM(h, u)):
+            if monomial_divides(h.LM, g.LM):
                 return False
 
     return True
 
 
-def is_reduced(G, u, O, K):
+def is_reduced(G, ring):
     """
     Checks if G is a reduced Groebner basis.
     """
-    G.sort(key=lambda g: O(sdp_LM(g, u)))
+    order = ring.order
+    domain = ring.domain
+
+    G.sort(key=lambda g: order(g.LM))
+
     for i, g in enumerate(G):
-        if sdp_LC(g, K) != K.one:
+        if g.LC != domain.one:
             return False
 
         for term in g:
             for h in G[:i] + G[i + 1:]:
-                if monomial_divides(term[0], sdp_LM(h, u)):
+                if monomial_divides(h.LM, term[0]):
                     return False
 
     return True
 
-
-def monomial_divides(m1, m2):
+def groebner_lcm(f, g):
     """
-    Returns True if m2 divides m1, False otherwise. Does not create
-    the quotient. Does not check if both are have the same length.
-    """
-    for i in xrange(len(m1)):
-        if m1[i] < m2[i]:
-            return False
+    Computes LCM of two polynomials using Groebner bases.
 
-    return True
-
-# FGLM
-
-def matrix_fglm(F, u, O_from, O_to, K):
-    """
-    Converts the reduced Groebner basis ``F`` of a zero-dimensional
-    ideal w.r.t. ``O_from`` to a reduced Groebner basis
-    w.r.t. ``O_to``.
+    The LCM is computed as the unique generater of the intersection
+    of the two ideals generated by `f` and `g`. The approach is to
+    compute a Groebner basis with respect to lexicographic ordering
+    of `t*f` and `(1 - t)*g`, where `t` is an unrelated variable and
+    then filtering out the solution that doesn't contain `t`.
 
     References
     ==========
 
-    J.C. Faugere, P. Gianni, D. Lazard, T. Mora (1994). Efficient
-    Computation of Zero-dimensional Groebner Bases by Change of
-    Ordering
+    1. [Cox97]_
 
-    J.C. Faugere's lecture notes:
-    http://www-salsa.lip6.fr/~jcf/Papers/2010_MPRI5e.pdf
     """
-    old_basis = _basis(F, u, O_from, K)
-    M = _representing_matrices(old_basis, F, u, O_from, K)
+    assert f.ring == g.ring
 
-    # V contains the normalforms (wrt O_from) of S
-    S = [(0,) * (u + 1)]
-    V = [[K.one] + [K.zero] * (len(old_basis) - 1)]
-    G = []
+    ring = f.ring
+    domain = ring.domain
 
-    L = [(i, 0) for i in xrange(u + 1)]  # (i, j) corresponds to x_i * S[j]
-    L.sort(key=lambda (k, l): O_to(_incr_k(S[l], k)), reverse=True)
-    t = L.pop()
+    if not f or not g:
+        return ring.zero
 
-    P = _identity_matrix(len(old_basis), K)
+    if len(f) <= 1 and len(g) <= 1:
+        monom = monomial_lcm(f.LM, g.LM)
+        coeff = domain.lcm(f.LC, g.LC)
+        return ring.term_new(monom, coeff)
 
-    while True:
-        s = len(S)
-        v = _matrix_mul(M[t[0]], V[t[1]], K)
-        _lambda = _matrix_mul(P, v, K)
+    fc, f = f.primitive()
+    gc, g = g.primitive()
 
-        if all(_lambda[i] == K.zero for i in xrange(s, len(old_basis))):
-            # there is a linear combination of v by V
+    lcm = domain.lcm(fc, gc)
 
-            lt = [(_incr_k(S[t[1]], t[0]), K.one)]
-            rest = sdp_strip(sdp_sort([(S[i], _lambda[i]) for i in xrange(s)], O_to))
-            g = sdp_sub(lt, rest, u, O_to, K)
+    f_terms = [ ((1,) + monom, coeff) for monom, coeff in f.terms() ]
+    g_terms = [ ((0,) + monom, coeff) for monom, coeff in g.terms() ] \
+            + [ ((1,) + monom,-coeff) for monom, coeff in g.terms() ]
 
-            if g != []:
-                G.append(g)
+    t = Dummy("t")
+    t_ring = ring.clone(symbols=(t,) + ring.symbols, order=lex)
 
-        else:
-            # v is linearly independant from V
-            P = _update(s, _lambda, P, K)
-            S.append(_incr_k(S[t[1]], t[0]))
-            V.append(v)
+    F = t_ring.from_terms(f_terms)
+    G = t_ring.from_terms(g_terms)
 
-            L.extend([(i, s) for i in xrange(u + 1)])
-            L = list(set(L))
-            L.sort(key=lambda (k, l): O_to(_incr_k(S[l], k)), reverse=True)
+    basis = groebner([F, G], t_ring)
 
-        L = [(k, l) for (k, l) in L if \
-            all(monomial_div(_incr_k(S[l], k), sdp_LM(g, u)) is None for g in G)]
+    def is_independent(h, j):
+        return all(not monom[j] for monom in h.monoms())
 
-        if not L:
-            G = [ sdp_monic(g, K) for g in G ]
-            return sorted(G, key=lambda g: O_to(sdp_LM(g, u)), reverse=True)
+    H = [ h for h in basis if is_independent(h, 0) ]
 
-        t = L.pop()
+    h_terms = [ (monom[1:], coeff*lcm) for monom, coeff in H[0].terms() ]
+    h = ring.from_terms(h_terms)
 
+    return h
 
-def _incr_k(m, k):
-    return tuple(list(m[:k]) + [m[k] + 1] + list(m[k + 1:]))
+def groebner_gcd(f, g):
+    """Computes GCD of two polynomials using Groebner bases. """
+    assert f.ring == g.ring
+    domain = f.ring.domain
 
+    if not domain.has_Field:
+        fc, f = f.primitive()
+        gc, g = g.primitive()
+        gcd = domain.gcd(fc, gc)
 
-def _identity_matrix(n, K):
-    M = [[K.zero] * n for _ in xrange(n)]
+    H = (f*g).quo([groebner_lcm(f, g)])
 
-    for i in xrange(n):
-        M[i][i] = K.one
+    assert len(H) == 1
+    h = H[0]
 
-    return M
-
-
-def _matrix_mul(M, v, K):
-    return [sum([row[i] * v[i] for i in xrange(len(v))]) for row in M]
-
-
-def _update(s, _lambda, P, K):
-    """
-    Update ``P`` such that for the updated `P'` `P' v = e_{s}`.
-    """
-    k = min([j for j in xrange(s, len(_lambda)) if _lambda[j] != 0])
-
-    for r in xrange(len(_lambda)):
-        if r != k:
-            P[r] = [P[r][j] - (P[k][j] * _lambda[r]) / _lambda[k] for j in xrange(len(P[r]))]
-
-    P[k] = [P[k][j] / _lambda[k] for j in xrange(len(P[k]))]
-
-    P[k], P[s] = P[s], P[k]
-
-    return P
-
-
-def _representing_matrices(basis, G, u, O, K):
-    """
-    Compute the matrices corresponding to the linear maps `m \mapsto
-    x_i m` for all variables `x_i`.
-    """
-    def var(i):
-        return tuple([0] * i + [1] + [0] * (u - i))
-
-    def representing_matrix(m):
-        M = [[K.zero] * len(basis) for _ in xrange(len(basis))]
-
-        for i, v in enumerate(basis):
-            r = sdp_rem([(monomial_mul(m, v), K.one)], G, u, O, K)
-
-            for term in r:
-                j = basis.index(term[0])
-                M[j][i] = term[1]
-
-        return M
-
-    return [representing_matrix(var(i)) for i in xrange(u + 1)]
-
-
-def _basis(G, u, O, K):
-    """
-    Computes a list of monomials which are not divisible by the leading
-    monomials wrt to ``O`` of ``G``. These monomials are a basis of
-    `K[X_1, \ldots, X_n]/(G)`.
-    """
-    leading_monomials = [sdp_LM(g, u) for g in G]
-    candidates = [(0,) * (u + 1)]
-    basis = []
-
-    while candidates:
-        t = candidates.pop()
-        basis.append(t)
-
-        new_candidates = [_incr_k(t, k) for k in xrange(u + 1) \
-            if all(monomial_div(_incr_k(t, k), lmg) is None \
-            for lmg in leading_monomials)]
-        candidates.extend(new_candidates)
-        candidates.sort(key=lambda m: O(m), reverse=True)
-
-    basis = list(set(basis))
-
-    return sorted(basis, key=lambda m: O(m))
+    if not domain.has_Field:
+        return gcd*h
+    else:
+        return h.monic()

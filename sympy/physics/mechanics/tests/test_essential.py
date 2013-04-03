@@ -1,9 +1,10 @@
-from sympy import cos, Matrix, sin
+from sympy import cos, Matrix, sin, symbols, pi
 from sympy.abc import x, y, z
 from sympy.physics.mechanics import Vector, ReferenceFrame, dot, dynamicsymbols
 
 Vector.simp = True
 A = ReferenceFrame('A')
+
 
 def test_dyadic():
     d1 = A.x | A.x
@@ -13,7 +14,7 @@ def test_dyadic():
     assert d1 != 0
     assert d1 * 2 == 2 * A.x | A.x
     assert d1 / 2. == 0.5 * d1
-    assert d1 & 0 == 0
+    assert d1 & (0 * d1) == 0
     assert d1 & d2 == 0
     assert d1 & A.x == A.x
     assert d1 ^ A.x == 0
@@ -39,6 +40,7 @@ def test_dyadic():
     assert d1.express(B, A) == (cos(q)) * (B.x | A.x) + (-sin(q)) * (B.y | A.x)
     assert d1.express(A, B) == (cos(q)) * (A.x | B.x) + (-sin(q)) * (A.x | B.y)
     assert d1.dt(B) == (-qd) * (A.y | A.x) + (-qd) * (A.x | A.y)
+
 
 def test_ang_vel():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
@@ -105,6 +107,7 @@ def test_ang_vel():
     assert G.ang_vel_in(N) == q1d * (N.x + N.y).normalize()
     assert N.ang_vel_in(G) == -q1d * (N.x + N.y).normalize()
 
+
 def test_dcm():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
     N = ReferenceFrame('N')
@@ -117,25 +120,26 @@ def test_dcm():
         [- sin(q1) * sin(q2) * sin(q3) + cos(q1) * cos(q3), - sin(q1) *
         cos(q2), sin(q1) * sin(q2) * cos(q3) + sin(q3) * cos(q1)], [sin(q1) *
         cos(q3) + sin(q2) * sin(q3) * cos(q1), cos(q1) * cos(q2), sin(q1) *
-        sin(q3) - sin(q2) * cos(q1) * cos(q3)], [- sin(q3) * cos(q2), sin(q2),
+            sin(q3) - sin(q2) * cos(q1) * cos(q3)], [- sin(q3) * cos(q2), sin(q2),
         cos(q2) * cos(q3)]])
     # This is a little touchy.  Is it ok to use simplify in assert?
     assert D.dcm(C) == Matrix(
         [[cos(q1) * cos(q3) * cos(q4) - sin(q3) * (- sin(q4) * cos(q2) +
         sin(q1) * sin(q2) * cos(q4)), - sin(q2) * sin(q4) - sin(q1) *
-        cos(q2) * cos(q4), sin(q3) * cos(q1) * cos(q4) + cos(q3) * (- sin(q4) *
+            cos(q2) * cos(q4), sin(q3) * cos(q1) * cos(q4) + cos(q3) * (- sin(q4) *
         cos(q2) + sin(q1) * sin(q2) * cos(q4))], [sin(q1) * cos(q3) +
         sin(q2) * sin(q3) * cos(q1), cos(q1) * cos(q2), sin(q1) * sin(q3) -
-        sin(q2) * cos(q1) * cos(q3)], [sin(q4) * cos(q1) * cos(q3) -
+            sin(q2) * cos(q1) * cos(q3)], [sin(q4) * cos(q1) * cos(q3) -
         sin(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4)), sin(q2) *
-        cos(q4) - sin(q1) * sin(q4) * cos(q2), sin(q3) * sin(q4) * cos(q1) +
-        cos(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4))]])
+                cos(q4) - sin(q1) * sin(q4) * cos(q2), sin(q3) * sin(q4) * cos(q1) +
+                cos(q3) * (cos(q2) * cos(q4) + sin(q1) * sin(q2) * sin(q4))]])
     assert E.dcm(N) == Matrix(
         [[cos(q2)*cos(q3), sin(q3)*cos(q2), -sin(q2)],
         [sin(q1)*sin(q2)*cos(q3) - sin(q3)*cos(q1), sin(q1)*sin(q2)*sin(q3) +
         cos(q1)*cos(q3), sin(q1)*cos(q2)], [sin(q1)*sin(q3) +
         sin(q2)*cos(q1)*cos(q3), - sin(q1)*cos(q3) + sin(q2)*sin(q3)*cos(q1),
-        cos(q1)*cos(q2)]])
+         cos(q1)*cos(q2)]])
+
 
 def test_Vector():
     assert A.x != A.y
@@ -159,15 +163,16 @@ def test_Vector():
 
     assert isinstance(v3, Vector)
     # We probably shouldn't be using simplify in dot...
-    assert dot(v3, A.x) == x + x**2
-    assert dot(v3, A.y) == y + y**2
-    assert dot(v3, A.z) == z + z**2
+    assert dot(v3, A.x) == x**2 + x
+    assert dot(v3, A.y) == y**2 + y
+    assert dot(v3, A.z) == z**2 + z
 
     assert isinstance(v4, Vector)
     # We probably shouldn't be using simplify in dot...
     assert dot(v4, A.x) == x - x**2
     assert dot(v4, A.y) == y - y**2
     assert dot(v4, A.z) == z - z**2
+
 
 def test_Vector_diffs():
     q1, q2, q3, q4 = dynamicsymbols('q1 q2 q3 q4')
@@ -231,3 +236,47 @@ def test_Vector_diffs():
     assert v4.diff(q2d, B) == A.x - q3 * cos(q3) * N.z
     assert v4.diff(q3d, B) == B.x + q3 * N.x + N.y
 
+
+def test_vector_simplify():
+    x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
+    N = ReferenceFrame('N')
+
+    test1 = (1 / x + 1 / y) * N.x
+    assert (test1 & N.x) != (x + y) / (x * y)
+    test1.simplify()
+    assert (test1 & N.x) == (x + y) / (x * y)
+
+    test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * N.x
+    test2.simplify()
+    assert (test2 & N.x) == (A**2 * s**4 / (4 * pi * k * m**3))
+
+    test3 = ((4 + 4 * x - 2 * (2 + 2 * x)) / (2 + 2 * x)) * N.x
+    test3.simplify()
+    assert (test3 & N.x) == 0
+
+    test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * N.x
+    test4.simplify()
+    assert (test4 & N.x) == -2 * y
+
+
+def test_dyadic_simplify():
+    x, y, z, k, n, m, w, f, s, A = symbols('x, y, z, k, n, m, w, f, s, A')
+    N = ReferenceFrame('N')
+
+    dy = N.x | N.x
+    test1 = (1 / x + 1 / y) * dy
+    assert (N.x & test1 & N.x) != (x + y) / (x * y)
+    test1.simplify()
+    assert (N.x & test1 & N.x) == (x + y) / (x * y)
+
+    test2 = (A**2 * s**4 / (4 * pi * k * m**3)) * dy
+    test2.simplify()
+    assert (N.x & test2 & N.x) == (A**2 * s**4 / (4 * pi * k * m**3))
+
+    test3 = ((4 + 4 * x - 2 * (2 + 2 * x)) / (2 + 2 * x)) * dy
+    test3.simplify()
+    assert (N.x & test3 & N.x) == 0
+
+    test4 = ((-4 * x * y**2 - 2 * y**3 - 2 * x**2 * y) / (x + y)**2) * dy
+    test4.simplify()
+    assert (N.x & test4 & N.x) == -2 * y

@@ -1,8 +1,9 @@
 """Singleton mechanism"""
 
 from core import Registry
-from assumptions import WithAssumptions
+from assumptions import ManagedProperties
 from sympify import sympify
+
 
 class SingletonRegistry(Registry):
     """
@@ -19,7 +20,7 @@ class SingletonRegistry(Registry):
 S = SingletonRegistry()
 
 
-class Singleton(WithAssumptions):
+class Singleton(ManagedProperties):
     """
     Metaclass for singleton classes.
 

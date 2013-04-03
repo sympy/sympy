@@ -1,15 +1,18 @@
 from sympy import Symbol, Rational, cos, sin, tan, cot, exp, log, Function, \
-                  Derivative, Expr, symbols, pi, I, S
+    Derivative, Expr, symbols, pi, I, S
 from sympy.utilities.pytest import raises
 
+
 def test_diff():
-    x = Symbol('x')
+    x, y = symbols('x, y')
     assert Rational(1, 3).diff(x) is S.Zero
     assert I.diff(x) is S.Zero
     assert pi.diff(x) is S.Zero
     assert x.diff(x, 0) == x
     assert (x**2).diff(x, 2, x) == 0
-    raises(ValueError, 'x.diff(1, x)')
+    assert (x**2).diff(x, y, 0) == 2*x
+    assert (x**2).diff(x, y) == 0
+    raises(ValueError, lambda: x.diff(1, x))
 
     a = Symbol("a")
     b = Symbol("b")
@@ -31,11 +34,12 @@ def test_diff():
     e = a*b*c
     assert e.diff(c) == a*b
 
+
 def test_diff2():
     n3 = Rational(3)
     n2 = Rational(2)
     n6 = Rational(6)
-    x,c = map(Symbol, 'xc')
+    x, c = map(Symbol, 'xc')
 
     e = n3*(-n2 + x**n2)*cos(x) + x*(-n6 + x**n2)*sin(x)
     assert e == 3*(-2 + x**2)*cos(x) + x*(-6 + x**2)*sin(x)
@@ -48,18 +52,19 @@ def test_diff2():
     e = 2*exp(x*x)*x
     assert e.diff(x) == 2*exp(x**2) + 4*x**2*exp(x**2)
 
+
 def test_diff3():
-    a,b,c = map(Symbol, 'abc')
+    a, b, c = map(Symbol, 'abc')
     p = Rational(5)
     e = a*b + sin(b**p)
     assert e == a*b + sin(b**5)
     assert e.diff(a) == b
-    assert e.diff(b) == a+5*b**4*cos(b**5)
+    assert e.diff(b) == a + 5*b**4*cos(b**5)
     e = tan(c)
     assert e == tan(c)
     assert e.diff(c) in [cos(c)**(-2), 1 + sin(c)**2/cos(c)**2, 1 + tan(c)**2]
-    e = c*log(c)-c
-    assert e == -c+c*log(c)
+    e = c*log(c) - c
+    assert e == -c + c*log(c)
     assert e.diff(c) == log(c)
     e = log(sin(c))
     assert e == log(sin(c))
@@ -67,6 +72,7 @@ def test_diff3():
     e = (Rational(2)**a/log(Rational(2)))
     assert e == 2**a*log(Rational(2))**(-1)
     assert e.diff(a) == 2**a
+
 
 def test_diff_no_eval_derivative():
     class My(Expr):
@@ -79,10 +85,12 @@ def test_diff_no_eval_derivative():
     # it doesn't have y so it shouldn't need a method for this case
     assert My(x).diff(y) == 0
 
+
 def test_speed():
     # this should return in 0.0s. If it takes forever, it's wrong.
     x = Symbol("x")
     assert x.diff(x, 10**8) == 0
+
 
 def test_deriv_noncommutative():
     A = Symbol("A", commutative=False)

@@ -1,19 +1,21 @@
-"""Simple tools for timing functions execution, when IPython is not
-   available. """
+"""Simple tools for timing functions' execution, when IPython is not available. """
 
-import timeit, math
+import timeit
+import math
 
 _scales = [1e0, 1e3, 1e6, 1e9]
-_units  = [u's', u'ms', u'\u03bcs', u'ns']
+_units = [u's', u'ms', u'\u03bcs', u'ns']
 
-def timed(func):
+
+def timed(func, setup="pass", limit=None):
     """Adaptively measure execution time of a function. """
-    timer = timeit.Timer(func)
-
+    timer = timeit.Timer(func, setup=setup)
     repeat, number = 3, 1
 
     for i in range(1, 10):
         if timer.timeit(number) >= 0.2:
+            break
+        elif limit is not None and number >= limit:
             break
         else:
             number *= 10
@@ -32,7 +34,6 @@ def timed(func):
 
 def __do_timings():
     import os
-    from sympy.utilities.iterables import iterable
     res = os.getenv('SYMPY_TIMINGS', '')
     res = [x.strip() for x in res.split(',')]
     return set(res)
@@ -40,16 +41,19 @@ def __do_timings():
 _do_timings = __do_timings()
 _timestack = None
 
+
 def _print_timestack(stack, level=1):
     print '-'*level, '%.2f %s%s' % (stack[2], stack[0], stack[3])
     for s in stack[1]:
-        _print_timestack(s, level+1)
+        _print_timestack(s, level + 1)
+
 
 def timethis(name):
     def decorator(func):
         global _do_timings
         if not name in _do_timings:
             return func
+
         def wrapper(*args, **kwargs):
             from time import time
             global _timestack

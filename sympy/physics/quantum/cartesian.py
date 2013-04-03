@@ -1,7 +1,8 @@
 """Operators and states for 1D cartesian position and momentum.
 
 TODO:
-1) Add 3D classes to mappings in operatorset.py
+
+* Add 3D classes to mappings in operatorset.py
 
 """
 
@@ -34,6 +35,7 @@ __all__ = [
 # Position operators
 #-------------------------------------------------------------------------
 
+
 class XOp(HermitianOperator):
     """1D cartesian position operator."""
 
@@ -57,13 +59,14 @@ class XOp(HermitianOperator):
     def _represent_PxKet(self, basis, **options):
         index = options.pop("index", 1)
 
-        states = basis._enumerate_state(2, start_index = index)
+        states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].momentum
         coord2 = states[1].momentum
         d = DifferentialOperator(coord1)
         delta = DiracDelta(coord1 - coord2)
 
         return I*hbar*(d*delta)
+
 
 class YOp(HermitianOperator):
     """ Y cartesian coordinate operator (for 2D or 3D systems) """
@@ -78,6 +81,7 @@ class YOp(HermitianOperator):
 
     def _apply_operator_PositionKet3D(self, ket):
         return ket.position_y*ket
+
 
 class ZOp(HermitianOperator):
     """ Z cartesian coordinate operator (for 3D systems) """
@@ -97,6 +101,7 @@ class ZOp(HermitianOperator):
 # Momentum operators
 #-------------------------------------------------------------------------
 
+
 class PxOp(HermitianOperator):
     """1D cartesian momentum operator."""
 
@@ -114,7 +119,7 @@ class PxOp(HermitianOperator):
     def _represent_XKet(self, basis, **options):
         index = options.pop("index", 1)
 
-        states = basis._enumerate_state(2, start_index = index)
+        states = basis._enumerate_state(2, start_index=index)
         coord1 = states[0].position
         coord2 = states[1].position
         d = DifferentialOperator(coord1)
@@ -131,6 +136,7 @@ Px = PxOp('Px')
 # Position eigenstates
 #-------------------------------------------------------------------------
 
+
 class XKet(Ket):
     """1D cartesian position eigenket."""
 
@@ -139,7 +145,7 @@ class XKet(Ket):
         return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, \
+        return op_class.__new__(op_class,
                                 *_uppercase_labels(self), **options)
 
     @classmethod
@@ -159,10 +165,11 @@ class XKet(Ket):
         return _enumerate_continuous_1D(self, num_states, **options)
 
     def _eval_innerproduct_XBra(self, bra, **hints):
-        return DiracDelta(self.position-bra.position)
+        return DiracDelta(self.position - bra.position)
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
         return exp(-I*self.position*bra.momentum/hbar)/sqrt(2*pi*hbar)
+
 
 class XBra(Bra):
     """1D cartesian position eigenbra."""
@@ -180,6 +187,7 @@ class XBra(Bra):
         """The position of the state."""
         return self.label[0]
 
+
 class PositionState3D(State):
     """ Base class for 3D cartesian position eigenstates """
 
@@ -188,7 +196,7 @@ class PositionState3D(State):
         return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, \
+        return op_class.__new__(op_class,
                                 *_uppercase_labels(self), **options)
 
     @classmethod
@@ -210,6 +218,7 @@ class PositionState3D(State):
         """ The z coordinate of the state """
         return self.label[2]
 
+
 class PositionKet3D(Ket, PositionState3D):
     """ 3D cartesian position eigenket """
 
@@ -224,6 +233,7 @@ class PositionKet3D(Ket, PositionState3D):
     def dual_class(self):
         return PositionBra3D
 
+
 class PositionBra3D(Bra, PositionState3D):
     """ 3D cartesian position eigenbra """
 
@@ -235,6 +245,7 @@ class PositionBra3D(Bra, PositionState3D):
 # Momentum eigenstates
 #-------------------------------------------------------------------------
 
+
 class PxKet(Ket):
     """1D cartesian momentum eigenket."""
 
@@ -243,7 +254,7 @@ class PxKet(Ket):
         return self.__new__(self, *_lowercase_labels(op), **options)
 
     def _state_to_operators(self, op_class, **options):
-        return op_class.__new__(op_class, \
+        return op_class.__new__(op_class,
                                 *_uppercase_labels(self), **options)
 
     @classmethod
@@ -266,7 +277,8 @@ class PxKet(Ket):
         return exp(I*self.momentum*bra.position/hbar)/sqrt(2*pi*hbar)
 
     def _eval_innerproduct_PxBra(self, bra, **hints):
-        return DiracDelta(self.momentum-bra.momentum)
+        return DiracDelta(self.momentum - bra.momentum)
+
 
 class PxBra(Bra):
     """1D cartesian momentum eigenbra."""
@@ -288,6 +300,7 @@ class PxBra(Bra):
 # Global helper functions
 #-------------------------------------------------------------------------
 
+
 def _enumerate_continuous_1D(*args, **options):
     state = args[0]
     num_states = args[1]
@@ -306,17 +319,19 @@ def _enumerate_continuous_1D(*args, **options):
 
     return enum_states
 
+
 def _lowercase_labels(ops):
     if not isinstance(ops, set):
         ops = [ops]
 
     return [str(arg.label[0]).lower() for arg in ops]
 
+
 def _uppercase_labels(ops):
     if not isinstance(ops, set):
         ops = [ops]
 
-    new_args = [str(arg.label[0])[0].upper() + \
+    new_args = [str(arg.label[0])[0].upper() +
                 str(arg.label[0])[1:] for arg in ops]
 
     return new_args

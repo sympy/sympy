@@ -1,7 +1,8 @@
 from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
-from sympy.core import Add, Mul
+from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp_to_key
+
 
 class Order(Expr):
     """ Represents the limiting behavior of some function
@@ -95,47 +96,80 @@ class Order(Expr):
     @cacheit
     def __new__(cls, expr, *symbols, **assumptions):
 
-        expr = sympify(expr).expand()
+        expr = sympify(expr)
         if expr is S.NaN:
             return S.NaN
 
         if symbols:
             symbols = map(sympify, symbols)
             if not all(isinstance(s, Symbol) for s in symbols):
-                raise NotImplementedError('Order at points other than 0 not supported.')
+                raise NotImplementedError(
+                    'Order at points other than 0 not supported.')
         else:
             symbols = list(expr.free_symbols)
 
         if expr.is_Order:
-
-            new_symbols = list(expr.variables)
-            for s in symbols:
-                if s not in new_symbols:
-                    new_symbols.append(s)
-            if len(new_symbols) == len(expr.variables):
+            v = set(expr.variables)
+            symbols = v | set(symbols)
+            if symbols == v:
                 return expr
-            symbols = new_symbols
+            symbols = list(symbols)
 
         elif symbols:
 
+            symbols = list(set(symbols))
+
+            if len(symbols) > 1:
+                # XXX: better way?  We need this expand() to
+                # workaround e.g: expr = x*(x + y).
+                # (x*(x + y)).as_leading_term(x, y) currently returns
+                # x*y (wrong order term!).  That's why we want to deal with
+                # expand()'ed expr (handled in "if expr.is_Add" branch below).
+                expr = expr.expand()
+
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
-                expr = Add(*[f.expr for (e,f) in lst])
+                expr = Add(*[f.expr for (e, f) in lst])
+
             elif expr:
-                if len(symbols) > 1:
-                    # TODO
-                    # We cannot use compute_leading_term because that only
-                    # works in one symbol.
-                    expr = expr.as_leading_term(*symbols)
-                else:
-                    expr = expr.compute_leading_term(symbols[0])
-                terms = expr.as_coeff_mul(*symbols)[1]
-                s = set(symbols)
-                expr = Mul(*[t for t in terms if s & t.free_symbols])
+                expr = expr.as_leading_term(*symbols)
+                expr = expr.as_independent(*symbols, **dict(as_Add=False))[1]
+
+                expr = expand_power_base(expr)
+                expr = expand_log(expr)
+
+                if len(symbols) == 1:
+                    # The definition of O(f(x)) symbol explicitly stated that
+                    # the argument of f(x) is irrelevant.  That's why we can
+                    # combine some power exponents (only "on top" of the
+                    # expression tree for f(x)), e.g.:
+                    # x**p * (-x)**q -> x**(p+q) for real p, q.
+                    x = symbols[0]
+                    margs = list(Mul.make_args(
+                        expr.as_independent(x, **dict(as_Add=False))[1]))
+
+                    for i, t in enumerate(margs):
+                        if t.is_Pow:
+                            b, q = t.args
+                            if b in (x, -x) and q.is_real and not q.has(x):
+                                margs[i] = x**q
+                            elif b.is_Pow and not b.exp.has(x):
+                                b, r = b.args
+                                if b in (x, -x) and r.is_real:
+                                    margs[i] = x**(r*q)
+                            elif b.is_Mul and b.args[0] is S.NegativeOne:
+                                b = -b
+                                if b.is_Pow and not b.exp.has(x):
+                                    b, r = b.args
+                                    if b in (x, -x) and r.is_real:
+                                        margs[i] = x**(r*q)
+
+                    expr = Mul(*margs)
 
         if expr is S.Zero:
             return expr
-        elif not expr.has(*symbols):
+
+        if not expr.has(*symbols):
             expr = S.One
 
         # create Order instance:
@@ -185,7 +219,6 @@ class Order(Expr):
     def getO(self):
         return self
 
-
     @cacheit
     def contains(self, expr):
         """
@@ -214,18 +247,19 @@ class Order(Expr):
             return False
         if expr.is_Order:
             if self.variables and expr.variables:
-                common_symbols = tuple([s for s in self.variables if s in expr.variables])
+                common_symbols = tuple(
+                    [s for s in self.variables if s in expr.variables])
             elif self.variables:
                 common_symbols = self.variables
             else:
                 common_symbols = expr.variables
             if not common_symbols:
-                if not (self.variables or expr.variables): # O(1),O(1)
+                if not (self.variables or expr.variables):  # O(1),O(1)
                     return True
                 return None
             r = None
             for s in common_symbols:
-                l = limit(powsimp(self.expr/expr.expr, deep=True,\
+                l = limit(powsimp(self.expr/expr.expr, deep=True,
                 combine='exp'), s, 0) != 0
                 if r is None:
                     r = l
@@ -240,12 +274,22 @@ class Order(Expr):
         if old.is_Symbol and old in self.variables:
             i = list(self.variables).index(old)
             if isinstance(new, Symbol):
-                return Order(self.expr._subs(old, new), *(self.variables[:i]+(new,)+self.variables[i+1:]))
-            return Order(self.expr._subs(old, new), *(self.variables[:i]+self.variables[i+1:]))
+                return Order(self.expr._subs(old, new), *(self.variables[:i] + (new,) + self.variables[i + 1:]))
+            return Order(self.expr._subs(old, new), *(self.variables[:i] + self.variables[i + 1:]))
         return Order(self.expr._subs(old, new), *self.variables)
+
+    def _eval_conjugate(self):
+        expr = self.expr._eval_conjugate()
+        if expr is not None:
+            return self.func(expr, *self.variables)
 
     def _eval_derivative(self, x):
         return self.func(self.expr.diff(x), *self.variables) or self
+
+    def _eval_transpose(self):
+        expr = self.expr._eval_transpose()
+        if expr is not None:
+            return self.func(expr, *self.variables)
 
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.

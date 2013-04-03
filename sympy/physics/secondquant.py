@@ -14,6 +14,8 @@ from sympy.printing.str import StrPrinter
 
 from sympy.physics.quantum.qexpr import split_commutative_parts
 from sympy.core.compatibility import reduce
+from sympy.utilities.iterables import has_dups
+from sympy.utilities import default_sort_key
 
 __all__ = [
     'Dagger',
@@ -53,23 +55,30 @@ __all__ = [
     'simplify_index_permutations',
 ]
 
+
 class SecondQuantizationError(Exception):
     pass
+
 
 class AppliesOnlyToSymbolicIndex(SecondQuantizationError):
     pass
 
+
 class ContractionAppliesOnlyToFermions(SecondQuantizationError):
     pass
+
 
 class ViolationOfPauliPrinciple(SecondQuantizationError):
     pass
 
+
 class SubstitutionOfAmbigousOperatorFailed(SecondQuantizationError):
     pass
 
+
 class WicksTheoremDoesNotApply(SecondQuantizationError):
     pass
+
 
 class Dagger(Expr):
     """
@@ -128,7 +137,7 @@ class Dagger(Expr):
                 if arg.is_Number:
                     return arg
                 if arg.is_Pow:
-                    return Pow(Dagger(arg.args[0]),arg.args[1])
+                    return Pow(Dagger(arg.args[0]), arg.args[1])
                 if arg == I:
                     return -arg
             else:
@@ -171,8 +180,10 @@ class AntiSymmetricTensor(TensorSymbol):
     def __new__(cls, symbol, upper, lower):
 
         try:
-            upper, signu = _sort_anticommuting_fermions(upper, key=cls._sortkey)
-            lower, signl = _sort_anticommuting_fermions(lower, key=cls._sortkey)
+            upper, signu = _sort_anticommuting_fermions(
+                upper, key=cls._sortkey)
+            lower, signl = _sort_anticommuting_fermions(
+                lower, key=cls._sortkey)
 
         except ViolationOfPauliPrinciple:
             return S.Zero
@@ -184,7 +195,8 @@ class AntiSymmetricTensor(TensorSymbol):
         if (signu + signl) % 2:
             return -TensorSymbol.__new__(cls, symbol, upper, lower)
         else:
-            return  TensorSymbol.__new__(cls, symbol, upper, lower)
+
+            return TensorSymbol.__new__(cls, symbol, upper, lower)
 
     @classmethod
     def _sortkey(cls, index):
@@ -210,13 +222,12 @@ class AntiSymmetricTensor(TensorSymbol):
         else:
             return (12, h)
 
-
-    def _latex(self,printer):
-        return "%s^{%s}_{%s}" %(
-                self.symbol,
-                "".join([ i.name for i in self.args[1]]),
-                "".join([ i.name for i in self.args[2]])
-                )
+    def _latex(self, printer):
+        return "%s^{%s}_{%s}" % (
+            self.symbol,
+            "".join([ i.name for i in self.args[1]]),
+            "".join([ i.name for i in self.args[2]])
+        )
 
     @property
     def symbol(self):
@@ -280,7 +291,7 @@ class AntiSymmetricTensor(TensorSymbol):
         return self.args[2]
 
     def __str__(self):
-        return "%s(%s,%s)" %self.args
+        return "%s(%s,%s)" % self.args
 
     def doit(self, **kw_args):
         """
@@ -298,6 +309,7 @@ class AntiSymmetricTensor(TensorSymbol):
         """
         return self
 
+
 class SqOperator(Expr):
     """
     Base class for Second Quantization operators.
@@ -305,8 +317,10 @@ class SqOperator(Expr):
 
     op_symbol = 'sq'
 
+    is_commutative = False
+
     def __new__(cls, k):
-        obj = Basic.__new__(cls, sympify(k), commutative=False)
+        obj = Basic.__new__(cls, sympify(k))
         return obj
 
     @property
@@ -348,7 +362,7 @@ class SqOperator(Expr):
         else:
             return True
 
-    def doit(self,**kw_args):
+    def doit(self, **kw_args):
         """
         FIXME: hack to prevent crash further up...
         """
@@ -366,11 +380,14 @@ class SqOperator(Expr):
         """
         raise NotImplementedError('implement apply_operator in a subclass')
 
+
 class BosonicOperator(SqOperator):
     pass
 
+
 class Annihilator(SqOperator):
     pass
+
 
 class Creator(SqOperator):
     pass
@@ -415,10 +432,11 @@ class AnnihilateBoson(BosonicOperator, Annihilator):
             amp = sqrt(state[element])
             return amp*state.down(element)
         else:
-            return Mul(self,state)
+            return Mul(self, state)
 
     def __repr__(self):
-        return "AnnihilateBoson(%s)"%self.state
+        return "AnnihilateBoson(%s)" % self.state
+
 
 class CreateBoson(BosonicOperator, Creator):
     """
@@ -450,10 +468,10 @@ class CreateBoson(BosonicOperator, Creator):
             amp = sqrt(state[element] + 1)
             return amp*state.up(element)
         else:
-            return Mul(self,state)
+            return Mul(self, state)
 
     def __repr__(self):
-        return "CreateBoson(%s)"%self.state
+        return "CreateBoson(%s)" % self.state
 
 B = AnnihilateBoson
 Bd = CreateBoson
@@ -492,10 +510,11 @@ class FermionicOperator(SqOperator):
 
         """
         ass = self.args[0].assumptions0
-        if ass.get("below_fermi"): return -1
-        if ass.get("above_fermi"): return  1
+        if ass.get("below_fermi"):
+            return -1
+        if ass.get("above_fermi"):
+            return 1
         return 0
-
 
     @property
     def is_above_fermi(self):
@@ -635,12 +654,12 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
             c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
                 element = self.state
-                return Mul(*(c_part+[nc_part[0].down(element)]+nc_part[1:]))
+                return Mul(*(c_part + [nc_part[0].down(element)] + nc_part[1:]))
             else:
-                return Mul(self,state)
+                return Mul(self, state)
 
         else:
-            return Mul(self,state)
+            return Mul(self, state)
 
     @property
     def is_q_creator(self):
@@ -662,7 +681,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         -1
 
         """
-        if self.is_below_fermi: return -1
+        if self.is_below_fermi:
+            return -1
         return 0
 
     @property
@@ -685,7 +705,8 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         1
 
         """
-        if self.is_above_fermi: return 1
+        if self.is_above_fermi:
+            return 1
         return 0
 
     @property
@@ -732,10 +753,11 @@ class AnnihilateFermion(FermionicOperator, Annihilator):
         return self.is_only_above_fermi
 
     def __repr__(self):
-        return "AnnihilateFermion(%s)"%self.state
+        return "AnnihilateFermion(%s)" % self.state
 
-    def _latex(self,printer):
-        return "a_{%s}"%self.state.name
+    def _latex(self, printer):
+        return "a_{%s}" % self.state.name
+
 
 class CreateFermion(FermionicOperator, Creator):
     """
@@ -766,7 +788,6 @@ class CreateFermion(FermionicOperator, Creator):
             element = self.state
             return state.up(element)
 
-
         elif isinstance(state, Mul):
             c_part, nc_part = state.args_cnc()
             if isinstance(nc_part[0], FockStateFermionKet):
@@ -795,7 +816,8 @@ class CreateFermion(FermionicOperator, Creator):
         1
 
         """
-        if self.is_above_fermi: return 1
+        if self.is_above_fermi:
+            return 1
         return 0
 
     @property
@@ -818,7 +840,8 @@ class CreateFermion(FermionicOperator, Creator):
         -1
 
         """
-        if self.is_below_fermi: return -1
+        if self.is_below_fermi:
+            return -1
         return 0
 
     @property
@@ -864,14 +887,13 @@ class CreateFermion(FermionicOperator, Creator):
         return self.is_only_below_fermi
 
     def __repr__(self):
-        return "CreateFermion(%s)"%self.state
+        return "CreateFermion(%s)" % self.state
 
-    def _latex(self,printer):
-        return "a^\\dagger_{%s}"%self.state.name
+    def _latex(self, printer):
+        return "a^\\dagger_{%s}" % self.state.name
 
 Fd = CreateFermion
 F = AnnihilateFermion
-
 
 
 class FockState(Expr):
@@ -883,6 +905,7 @@ class FockState(Expr):
 
     Base class to represent FockStates.
     """
+    is_commutative = False
 
     def __new__(cls, occupations):
         """
@@ -896,7 +919,7 @@ class FockState(Expr):
           is the i'th occupied state.
         """
         occupations = map(sympify, occupations)
-        obj = Basic.__new__(cls, Tuple(*occupations), commutative=False)
+        obj = Basic.__new__(cls, Tuple(*occupations))
         return obj
 
     def __getitem__(self, i):
@@ -907,13 +930,14 @@ class FockState(Expr):
         return ("FockState(%r)") % (self.args)
 
     def __str__(self):
-        return "%s%r%s" % (self.lbracket,self._labels(),self.rbracket)
+        return "%s%r%s" % (self.lbracket, self._labels(), self.rbracket)
 
     def _labels(self):
         return self.args[0]
 
     def __len__(self):
         return len(self.args[0])
+
 
 class BosonState(FockState):
     """
@@ -936,7 +960,7 @@ class BosonState(FockState):
         """
         i = int(i)
         new_occs = list(self.args[0])
-        new_occs[i] = new_occs[i]+S.One
+        new_occs[i] = new_occs[i] + S.One
         return self.__class__(new_occs)
 
     def down(self, i):
@@ -955,10 +979,10 @@ class BosonState(FockState):
         """
         i = int(i)
         new_occs = list(self.args[0])
-        if new_occs[i]==S.Zero:
+        if new_occs[i] == S.Zero:
             return S.Zero
         else:
-            new_occs[i] = new_occs[i]-S.One
+            new_occs[i] = new_occs[i] - S.One
             return self.__class__(new_occs)
 
 
@@ -967,13 +991,14 @@ class FermionState(FockState):
     Base class for FockStateFermion(Ket/Bra).
     """
 
-    fermi_level=0
+    fermi_level = 0
 
     def __new__(cls, occupations, fermi_level=0):
-        occupations = map(sympify,occupations)
-        if len(occupations) >1:
+        occupations = map(sympify, occupations)
+        if len(occupations) > 1:
             try:
-                (occupations,sign) = _sort_anticommuting_fermions(occupations, key=hash)
+                (occupations, sign) = _sort_anticommuting_fermions(
+                    occupations, key=hash)
             except ViolationOfPauliPrinciple:
                 return S.Zero
         else:
@@ -984,11 +1009,10 @@ class FermionState(FockState):
         if cls._count_holes(occupations) > fermi_level:
             return S.Zero
 
-
-        if sign%2:
-            return S.NegativeOne*FockState.__new__(cls,occupations)
+        if sign % 2:
+            return S.NegativeOne*FockState.__new__(cls, occupations)
         else:
-            return FockState.__new__(cls,occupations)
+            return FockState.__new__(cls, occupations)
 
     def up(self, i):
         """
@@ -1029,11 +1053,11 @@ class FermionState(FockState):
                 return S.Zero
         else:
             if present:
-                hole = Dummy("i",below_fermi=True)
-                return KroneckerDelta(i,hole)*self._remove_orbit(i)
+                hole = Dummy("i", below_fermi=True)
+                return KroneckerDelta(i, hole)*self._remove_orbit(i)
             else:
-                particle = Dummy("a",above_fermi=True)
-                return KroneckerDelta(i,particle)*self._add_orbit(i)
+                particle = Dummy("a", above_fermi=True)
+                return KroneckerDelta(i, particle)*self._add_orbit(i)
 
     def down(self, i):
         """
@@ -1077,30 +1101,27 @@ class FermionState(FockState):
                 return self._add_orbit(i)
         else:
             if present:
-                hole = Dummy("i",below_fermi=True)
-                return KroneckerDelta(i,hole)*self._add_orbit(i)
+                hole = Dummy("i", below_fermi=True)
+                return KroneckerDelta(i, hole)*self._add_orbit(i)
             else:
-                particle = Dummy("a",above_fermi=True)
-                return KroneckerDelta(i,particle)*self._remove_orbit(i)
-
-
+                particle = Dummy("a", above_fermi=True)
+                return KroneckerDelta(i, particle)*self._remove_orbit(i)
 
     @classmethod
-    def _only_below_fermi(cls,i):
+    def _only_below_fermi(cls, i):
         """
         Tests if given orbit is only below fermi surface.
 
         If nothing can be concluded we return a conservative False.
         """
         if i.is_number:
-            return i<= cls.fermi_level
+            return i <= cls.fermi_level
         if i.assumptions0.get('below_fermi'):
             return True
         return False
 
-
     @classmethod
-    def _only_above_fermi(cls,i):
+    def _only_above_fermi(cls, i):
         """
         Tests if given orbit is only above fermi surface.
 
@@ -1108,49 +1129,47 @@ class FermionState(FockState):
         If nothing can be concluded we return a conservative False.
         """
         if i.is_number:
-            return i> cls.fermi_level
+            return i > cls.fermi_level
         if i.assumptions0.get('above_fermi'):
             return True
         return not cls.fermi_level
 
-
-    def _remove_orbit(self,i):
+    def _remove_orbit(self, i):
         """
         Removes particle/fills hole in orbit i. No input tests performed here.
         """
         new_occs = list(self.args[0])
         pos = new_occs.index(i)
         del new_occs[pos]
-        if (pos)%2:
-            return S.NegativeOne*self.__class__(new_occs,self.fermi_level)
+        if (pos) % 2:
+            return S.NegativeOne*self.__class__(new_occs, self.fermi_level)
         else:
             return self.__class__(new_occs, self.fermi_level)
 
-    def _add_orbit(self,i):
+    def _add_orbit(self, i):
         """
         Adds particle/creates hole in orbit i. No input tests performed here.
         """
-        return self.__class__((i,)+self.args[0], self.fermi_level)
+        return self.__class__((i,) + self.args[0], self.fermi_level)
 
     @classmethod
-    def _count_holes(cls,list):
+    def _count_holes(cls, list):
         """
         returns number of identified hole states in list.
         """
         return len([i for i in list if cls._only_below_fermi(i)])
 
-    def _negate_holes(self,list):
-        return tuple([-i if i<=self.fermi_level else i for i in list])
+    def _negate_holes(self, list):
+        return tuple([-i if i <= self.fermi_level else i for i in list])
 
     def __repr__(self):
         if self.fermi_level:
-            return "FockStateKet(%r, fermi_level=%s)"%(self.args[0],self.fermi_level)
+            return "FockStateKet(%r, fermi_level=%s)" % (self.args[0], self.fermi_level)
         else:
-            return "FockStateKet(%r)"%(self.args[0],)
+            return "FockStateKet(%r)" % (self.args[0],)
 
     def _labels(self):
         return self._negate_holes(self.args[0])
-
 
 
 class FockStateKet(FockState):
@@ -1168,14 +1187,14 @@ class FockStateBra(FockState):
     lbracket = '<'
     rbracket = '|'
 
-
     def __mul__(self, other):
         if isinstance(other, FockStateKet):
             return InnerProduct(self, other)
         else:
             return Expr.__mul__(self, other)
 
-class FockStateBosonKet(BosonState,FockStateKet):
+
+class FockStateBosonKet(BosonState, FockStateKet):
     """
     Many particle Fock state with a sequence of occupation numbers.
 
@@ -1191,7 +1210,8 @@ class FockStateBosonKet(BosonState,FockStateKet):
     def _dagger_(self):
         return FockStateBosonBra(*self.args)
 
-class FockStateBosonBra(BosonState,FockStateBra):
+
+class FockStateBosonBra(BosonState, FockStateBra):
     """
     Describes a collection of BosonBra particles.
 
@@ -1205,7 +1225,8 @@ class FockStateBosonBra(BosonState,FockStateBra):
     def _dagger_(self):
         return FockStateBosonKet(*self.args)
 
-class FockStateFermionKet(FermionState,FockStateKet):
+
+class FockStateFermionKet(FermionState, FockStateKet):
     """
     Many-particle Fock state with a sequence of occupied orbits.
 
@@ -1228,7 +1249,8 @@ class FockStateFermionKet(FermionState,FockStateKet):
     def _dagger_(self):
         return FockStateFermionBra(*self.args)
 
-class FockStateFermionBra(FermionState,FockStateBra):
+
+class FockStateFermionBra(FermionState, FockStateBra):
     """
     See Also
     ========
@@ -1249,6 +1271,7 @@ BBra = FockStateBosonBra
 BKet = FockStateBosonKet
 FBra = FockStateFermionBra
 FKet = FockStateFermionKet
+
 
 def _apply_Mul(m):
     """
@@ -1285,18 +1308,19 @@ def _apply_Mul(m):
                         return _apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
             elif isinstance(next_to_last, Pow):
                 if isinstance(next_to_last.base, SqOperator) and \
-                    next_to_last.exp.is_Integer:
+                        next_to_last.exp.is_Integer:
                     if next_to_last.base.is_symbolic:
                         return m
                     else:
                         result = last
                         for i in range(next_to_last.exp):
                             result = next_to_last.base.apply_operator(result)
-                            if result == 0: break
+                            if result == 0:
+                                break
                         if result == 0:
                             return S.Zero
                         else:
-                            return _apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+                            return _apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
                 else:
                     return m
             elif isinstance(next_to_last, FockStateBra):
@@ -1304,7 +1328,7 @@ def _apply_Mul(m):
                 if result == 0:
                     return S.Zero
                 else:
-                    return _apply_Mul(Mul(*(c_part+nc_part[:-2]+[result])))
+                    return _apply_Mul(Mul(*(c_part + nc_part[:-2] + [result])))
             else:
                 return m
         else:
@@ -1325,7 +1349,7 @@ def apply_operators(e):
     """
     e = e.expand()
     muls = e.atoms(Mul)
-    subs_list = [(m,_apply_Mul(m)) for m in iter(muls)]
+    subs_list = [(m, _apply_Mul(m)) for m in iter(muls)]
     return e.subs(subs_list)
 
 
@@ -1339,21 +1363,20 @@ class InnerProduct(Basic):
     ``<a|b>``.
 
     """
+    is_commutative = True
+
     def __new__(cls, bra, ket):
         assert isinstance(bra, FockStateBra), 'must be a bra'
         assert isinstance(ket, FockStateKet), 'must be a key'
-        r = cls.eval(bra, ket)
-        if isinstance(r, Basic):
-            return r
-        obj = Basic.__new__(cls, *(bra, ket), **dict(commutative=True))
-        return obj
+        return cls.eval(bra, ket)
 
     @classmethod
     def eval(cls, bra, ket):
         result = S.One
-        for i,j in zip(bra.args[0], ket.args[0]):
-            result *= KroneckerDelta(i,j)
-            if result == 0: break
+        for i, j in zip(bra.args[0], ket.args[0]):
+            result *= KroneckerDelta(i, j)
+            if result == 0:
+                break
         return result
 
     @property
@@ -1395,7 +1418,7 @@ def matrix_rep(op, basis):
     a = zeros(len(basis))
     for i in range(len(basis)):
         for j in range(len(basis)):
-            a[i,j] = apply_operators(Dagger(basis[i])*op*basis[j])
+            a[i, j] = apply_operators(Dagger(basis[i])*op*basis[j])
     return a
 
 
@@ -1416,7 +1439,8 @@ class VarBosonicBasis(object):
     >>> from sympy.physics.secondquant import VarBosonicBasis
     >>> b = VarBosonicBasis(5)
     >>> b
-    [FockState((0,)), FockState((1,)), FockState((2,)), FockState((3,)), FockState((4,))]
+    [FockState((0,)), FockState((1,)), FockState((2,)),
+     FockState((3,)), FockState((4,))]
     """
 
     def __init__(self, n_max):
@@ -1642,7 +1666,8 @@ class Commutator(Function):
     >>> comm = Commutator(Fd(p)*Fd(q),F(i)); comm
     Commutator(CreateFermion(p)*CreateFermion(q), AnnihilateFermion(i))
     >>> comm.doit(wicks=True)
-    -KroneckerDelta(i, p)*CreateFermion(q) + KroneckerDelta(i, q)*CreateFermion(p)
+    -KroneckerDelta(i, p)*CreateFermion(q) +
+     KroneckerDelta(i, q)*CreateFermion(p)
 
     """
 
@@ -1650,7 +1675,7 @@ class Commutator(Function):
     nargs = 2
 
     @classmethod
-    def eval(cls, a,b):
+    def eval(cls, a, b):
         """
         The Commutator [A,B] is on canonical form if A < B.
 
@@ -1664,8 +1689,10 @@ class Commutator(Function):
         >>> Commutator.eval(c1, c2)
         0
         """
-        if not (a and b): return S.Zero
-        if a == b: return S.Zero
+        if not (a and b):
+            return S.Zero
+        if a == b:
+            return S.Zero
         if a.is_commutative or b.is_commutative:
             return S.Zero
 
@@ -1673,11 +1700,11 @@ class Commutator(Function):
         # [A+B,C]  ->  [A,C] + [B,C]
         #
         a = a.expand()
-        if isinstance(a,Add):
-            return Add(*[cls(term,b) for term in a.args])
+        if isinstance(a, Add):
+            return Add(*[cls(term, b) for term in a.args])
         b = b.expand()
-        if isinstance(b,Add):
-            return Add(*[cls(a,term) for term in b.args])
+        if isinstance(b, Add):
+            return Add(*[cls(a, term) for term in b.args])
 
         #
         # [xA,yB]  ->  xy*[A,B]
@@ -1688,28 +1715,26 @@ class Commutator(Function):
         if c_part:
             return Mul(Mul(*c_part), cls(Mul._from_args(nca), Mul._from_args(ncb)))
 
-
         #
         # single second quantization operators
         #
         if isinstance(a, BosonicOperator) and isinstance(b, BosonicOperator):
-            if isinstance(b,CreateBoson) and isinstance(a,AnnihilateBoson):
-                return KroneckerDelta(a.state,b.state)
-            if isinstance(a,CreateBoson) and isinstance(b,AnnihilateBoson):
-                return S.NegativeOne*KroneckerDelta(a.state,b.state)
+            if isinstance(b, CreateBoson) and isinstance(a, AnnihilateBoson):
+                return KroneckerDelta(a.state, b.state)
+            if isinstance(a, CreateBoson) and isinstance(b, AnnihilateBoson):
+                return S.NegativeOne*KroneckerDelta(a.state, b.state)
             else:
                 return S.Zero
         if isinstance(a, FermionicOperator) and isinstance(b, FermionicOperator):
-            return wicks(a*b)- wicks(b*a)
+            return wicks(a*b) - wicks(b*a)
 
         #
         # Canonical ordering of arguments
         #
-        if a > b:
+        if a.sort_key() > b.sort_key():
             return S.NegativeOne*cls(b, a)
 
-
-    def doit(self,**hints):
+    def doit(self, **hints):
         """
         Enables the computation of complex expressions.
 
@@ -1739,17 +1764,15 @@ class Commutator(Function):
 
         return (a*b - b*a).doit(**hints)
 
-
     def __repr__(self):
-        return "Commutator(%s,%s)" %(self.args[0],self.args[1])
+        return "Commutator(%s,%s)" % (self.args[0], self.args[1])
 
     def __str__(self):
-        return "[%s,%s]" %(self.args[0],self.args[1])
+        return "[%s,%s]" % (self.args[0], self.args[1])
 
-    def _latex(self,printer):
-        return "\\left[%s,%s\\right]"%tuple([
+    def _latex(self, printer):
+        return "\\left[%s,%s\\right]" % tuple([
             printer._print(arg) for arg in self.args])
-
 
 
 class NO(Expr):
@@ -1782,8 +1805,7 @@ class NO(Expr):
     nargs = 1
     is_commutative = False
 
-
-    def __new__(cls,arg):
+    def __new__(cls, arg):
         """
         Use anticommutation to get canonical form of operators.
 
@@ -1813,7 +1835,6 @@ class NO(Expr):
             else:
                 coeff = S.One
 
-
             # {ab{cd}} = {abcd}
             newseq = []
             foundit = False
@@ -1831,16 +1852,16 @@ class NO(Expr):
                 raise NotImplementedError
 
             try:
-                newseq,sign = _sort_anticommuting_fermions(seq)
+                newseq, sign = _sort_anticommuting_fermions(seq)
             except ViolationOfPauliPrinciple:
                 return S.Zero
 
-            if sign%2:
+            if sign % 2:
                 return (S.NegativeOne*coeff)*cls(Mul(*newseq))
             elif sign:
                 return coeff*cls(Mul(*newseq))
             else:
-                pass #since sign==0, no permutations was necessary
+                pass  # since sign==0, no permutations was necessary
 
             # if we couldn't do anything with Mul object, we just
             # mark it as normal ordered
@@ -1848,7 +1869,7 @@ class NO(Expr):
                 return coeff*cls(Mul(*newseq))
             return Expr.__new__(cls, Mul(*newseq))
 
-        if isinstance(arg,NO):
+        if isinstance(arg, NO):
             return arg
 
         # if object was not Mul or Add, normal ordering does not apply
@@ -1925,7 +1946,7 @@ class NO(Expr):
         if kw_args.get("remove_brackets", True):
             return self._remove_brackets()
         else:
-            return self.__new__(type(self),self.args[0].doit(**kw_args))
+            return self.__new__(type(self), self.args[0].doit(**kw_args))
 
     def _remove_brackets(self):
         """
@@ -1936,7 +1957,7 @@ class NO(Expr):
         """
 
         # check if any creator is also an annihilator
-        subslist=[]
+        subslist = []
         for i in self.iter_q_creators():
             if self[i].is_q_annihilator:
                 assume = self[i].state.assumptions0
@@ -1946,20 +1967,20 @@ class NO(Expr):
 
                     # create indices with fermi restriction
                     assume.pop("above_fermi", None)
-                    assume["below_fermi"]=True
+                    assume["below_fermi"] = True
                     below = Dummy('i', **assume)
                     assume.pop("below_fermi", None)
-                    assume["above_fermi"]=True
+                    assume["above_fermi"] = True
                     above = Dummy('a', **assume)
 
                     cls = type(self[i])
                     split = (
-                            self[i].__new__(cls,below)
-                            * KroneckerDelta(below,self[i].state)
-                            + self[i].__new__(cls,above)
-                            * KroneckerDelta(above,self[i].state)
-                            )
-                    subslist.append((self[i],split))
+                        self[i].__new__(cls, below)
+                        * KroneckerDelta(below, self[i].state)
+                        + self[i].__new__(cls, above)
+                        * KroneckerDelta(above, self[i].state)
+                    )
+                    subslist.append((self[i], split))
                 else:
                     raise SubstitutionOfAmbigousOperatorFailed(self[i])
         if subslist:
@@ -1984,8 +2005,8 @@ class NO(Expr):
         """
         return NO(self._remove_brackets)
 
-    def __getitem__(self,i):
-        if isinstance(i,slice):
+    def __getitem__(self, i):
+        if isinstance(i, slice):
             indices = i.indices(len(self))
             return [self.args[0].args[i] for i in range(*indices)]
         else:
@@ -2016,7 +2037,7 @@ class NO(Expr):
 
         """
         ops = self.args[0].args
-        iter = xrange(len(ops)-1, -1, -1)
+        iter = xrange(len(ops) - 1, -1, -1)
         for i in iter:
             if ops[i].is_q_annihilator:
                 yield i
@@ -2068,22 +2089,22 @@ class NO(Expr):
         NO(AnnihilateFermion(p)*AnnihilateFermion(r))
 
         """
-        arg0 = self.args[0] # it's a Mul by definition of how it's created
+        arg0 = self.args[0]  # it's a Mul by definition of how it's created
         mul = arg0._new_rawargs(arg0.args[:i] + arg0.args[i + 1:])
         return NO(mul)
 
-    def _latex(self,printer):
-        return "\\left\\{%s\\right\\}"%printer._print(self.args[0])
+    def _latex(self, printer):
+        return "\\left\\{%s\\right\\}" % printer._print(self.args[0])
 
     def __repr__(self):
-        return "NO(%s)"%self.args[0]
+        return "NO(%s)" % self.args[0]
 
     def __str__(self):
         return ":%s:" % self.args[0]
 
 
 # @cacheit
-def contraction(a,b):
+def contraction(a, b):
     """
     Calculates contraction of Fermionic operators a and b.
 
@@ -2108,9 +2129,9 @@ def contraction(a,b):
     the fermi surface:
 
     >>> contraction(Fd(p),F(q))
-    KroneckerDelta(p, q)*KroneckerDelta(q, _i)
+    KroneckerDelta(_i, q)*KroneckerDelta(p, q)
     >>> contraction(F(p),Fd(q))
-    KroneckerDelta(p, q)*KroneckerDelta(q, _a)
+    KroneckerDelta(_a, q)*KroneckerDelta(p, q)
 
     Two creators or two annihilators always vanishes:
 
@@ -2120,43 +2141,45 @@ def contraction(a,b):
     0
 
     """
-    if isinstance(b,FermionicOperator) and isinstance(a,FermionicOperator):
-        if isinstance(a,AnnihilateFermion) and isinstance(b,CreateFermion):
+    if isinstance(b, FermionicOperator) and isinstance(a, FermionicOperator):
+        if isinstance(a, AnnihilateFermion) and isinstance(b, CreateFermion):
             if b.state.assumptions0.get("below_fermi"):
                 return S.Zero
             if a.state.assumptions0.get("below_fermi"):
                 return S.Zero
             if b.state.assumptions0.get("above_fermi"):
-                return KroneckerDelta(a.state,b.state)
+                return KroneckerDelta(a.state, b.state)
             if a.state.assumptions0.get("above_fermi"):
-                return KroneckerDelta(a.state,b.state)
+                return KroneckerDelta(a.state, b.state)
 
-            return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Dummy('a', above_fermi=True)))
-        if isinstance(b,AnnihilateFermion) and isinstance(a,CreateFermion):
+            return (KroneckerDelta(a.state, b.state)*
+                    KroneckerDelta(b.state, Dummy('a', above_fermi=True)))
+        if isinstance(b, AnnihilateFermion) and isinstance(a, CreateFermion):
             if b.state.assumptions0.get("above_fermi"):
                 return S.Zero
             if a.state.assumptions0.get("above_fermi"):
                 return S.Zero
             if b.state.assumptions0.get("below_fermi"):
-                return KroneckerDelta(a.state,b.state)
+                return KroneckerDelta(a.state, b.state)
             if a.state.assumptions0.get("below_fermi"):
-                return KroneckerDelta(a.state,b.state)
+                return KroneckerDelta(a.state, b.state)
 
-            return (KroneckerDelta(a.state,b.state)*
-                    KroneckerDelta(b.state,Dummy('i', below_fermi=True)))
+            return (KroneckerDelta(a.state, b.state)*
+                    KroneckerDelta(b.state, Dummy('i', below_fermi=True)))
 
         # vanish if 2xAnnihilator or 2xCreator
         return S.Zero
 
     else:
         #not fermion operators
-        t = ( isinstance(i,FermionicOperator) for i in (a,b) )
+        t = ( isinstance(i, FermionicOperator) for i in (a, b) )
         raise ContractionAppliesOnlyToFermions(*t)
+
 
 def _sqkey(sq_operator):
     """Generates key for canonical sorting of SQ operators."""
     return sq_operator._sortkey()
+
 
 def _sort_anticommuting_fermions(string1, key=_sqkey):
     """Sort fermionic operators to canonical order, assuming all pairs anticommute.
@@ -2179,8 +2202,8 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
 
     verified = False
     sign = 0
-    rng = range(len(string1)-1)
-    rev = range(len(string1)-3,-1,-1)
+    rng = range(len(string1) - 1)
+    rev = range(len(string1) - 3, -1, -1)
 
     keys = list(map(key, string1))
     key_val = dict(zip(keys, string1))
@@ -2189,26 +2212,27 @@ def _sort_anticommuting_fermions(string1, key=_sqkey):
         verified = True
         for i in rng:
             left = keys[i]
-            right = keys[i+1]
+            right = keys[i + 1]
             if left == right:
-                raise ViolationOfPauliPrinciple([left,right])
+                raise ViolationOfPauliPrinciple([left, right])
             if left > right:
                 verified = False
-                keys[i:i+2] = [right, left]
-                sign = sign+1
+                keys[i:i + 2] = [right, left]
+                sign = sign + 1
         if verified:
             break
         for i in rev:
             left = keys[i]
-            right = keys[i+1]
+            right = keys[i + 1]
             if left == right:
-                raise ViolationOfPauliPrinciple([left,right])
+                raise ViolationOfPauliPrinciple([left, right])
             if left > right:
                 verified = False
-                keys[i:i+2] = [right, left]
-                sign = sign+1
+                keys[i:i + 2] = [right, left]
+                sign = sign + 1
     string1 = [ key_val[k] for k in keys ]
-    return (string1,sign)
+    return (string1, sign)
+
 
 def evaluate_deltas(e):
     """
@@ -2274,18 +2298,16 @@ def evaluate_deltas(e):
     f(_i)*KroneckerDelta(_i, _p)
     """
 
-
     # We treat Deltas only in mul objects
-
     # for general function objects we don't evaluate KroneckerDeltas in arguments,
     # but here we hard code exceptions to this rule
     accepted_functions = (
-            Add,
-            )
+        Add,
+    )
     if isinstance(e, accepted_functions):
         return e.func(*[evaluate_deltas(arg) for arg in e.args])
 
-    elif isinstance(e,Mul):
+    elif isinstance(e, Mul):
         # find all occurences of delta function and count each index present in
         # expression.
         deltas = []
@@ -2296,17 +2318,20 @@ def evaluate_deltas(e):
                     indices[s] += 1
                 else:
                     indices[s] = 0  # geek counting simplifies logic below
-            if isinstance(i, KroneckerDelta): deltas.append(i)
+            if isinstance(i, KroneckerDelta):
+                deltas.append(i)
 
         for d in deltas:
             # If we do something, and there are more deltas, we should recurse
             # to treat the resulting expression properly
             if indices[d.killable_index]:
-                e = e.subs(d.killable_index,d.preferred_index)
-                if len(deltas)>1: return evaluate_deltas(e)
+                e = e.subs(d.killable_index, d.preferred_index)
+                if len(deltas) > 1:
+                    return evaluate_deltas(e)
             elif indices[d.preferred_index] and d.indices_contain_equal_information:
-                e = e.subs(d.preferred_index,d.killable_index)
-                if len(deltas)>1: return evaluate_deltas(e)
+                e = e.subs(d.preferred_index, d.killable_index)
+                if len(deltas) > 1:
+                    return evaluate_deltas(e)
             else:
                 pass
 
@@ -2381,30 +2406,30 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
 
     # setup the replacing dummies
     if new_indices:
-        letters_above  = pretty_indices.get('above', "")
-        letters_below  = pretty_indices.get('below', "")
-        letters_general= pretty_indices.get('general', "")
-        len_above  = len(letters_above)
-        len_below  = len(letters_below)
-        len_general= len(letters_general)
+        letters_above = pretty_indices.get('above', "")
+        letters_below = pretty_indices.get('below', "")
+        letters_general = pretty_indices.get('general', "")
+        len_above = len(letters_above)
+        len_below = len(letters_below)
+        len_general = len(letters_general)
 
         def _i(number):
             try:
                 return letters_below[number]
             except IndexError:
-                return 'i_'+str(number-len_below)
+                return 'i_' + str(number - len_below)
 
         def _a(number):
             try:
                 return letters_above[number]
             except IndexError:
-                return 'a_'+str(number-len_above)
+                return 'a_' + str(number - len_above)
 
         def _p(number):
             try:
                 return letters_general[number]
             except IndexError:
-                return 'p_'+str(number-len_general)
+                return 'p_' + str(number - len_general)
 
     aboves = []
     belows = []
@@ -2412,7 +2437,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
 
     dummies = expr.atoms(Dummy)
     if not new_indices:
-        dummies = sorted(dummies)
+        dummies = sorted(dummies, key=default_sort_key)
 
     # generate lists with the dummies we will insert
     a = i = p = 0
@@ -2420,20 +2445,25 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         assum = d.assumptions0
 
         if assum.get("above_fermi"):
-            if new_indices: sym = _a(a); a +=1
+            if new_indices:
+                sym = _a(a)
+                a += 1
             l1 = aboves
         elif assum.get("below_fermi"):
-            if new_indices: sym = _i(i); i +=1
+            if new_indices:
+                sym = _i(i)
+                i += 1
             l1 = belows
         else:
-            if new_indices: sym = _p(p); p +=1
+            if new_indices:
+                sym = _p(p)
+                p += 1
             l1 = generals
 
         if new_indices:
             l1.append(Dummy(sym, **assum))
         else:
             l1.append(d)
-
 
     expr = expr.expand()
     terms = Add.make_args(expr)
@@ -2442,7 +2472,7 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         i = iter(belows)
         a = iter(aboves)
         p = iter(generals)
-        ordered  = _get_ordered_dummies(term)
+        ordered = _get_ordered_dummies(term)
         subsdict = {}
         for d in ordered:
             if d.assumptions0.get('below_fermi'):
@@ -2475,16 +2505,19 @@ def substitute_dummies(expr, new_indices=False, pretty_indices={}):
         new_terms.append(term.subs(subslist))
     return Add(*new_terms)
 
+
 class KeyPrinter(StrPrinter):
     """Printer for which only equal objects are equal in print"""
     def _print_Dummy(self, expr):
         return "(%s_%i)" % (expr.name, expr.dummy_index)
 
+
 def __kprint(expr):
     p = KeyPrinter()
     return p.doprint(expr)
 
-def _get_ordered_dummies(mul, verbose = False):
+
+def _get_ordered_dummies(mul, verbose=False):
     """Returns all dummies in the mul sorted in canonical order
 
     The purpose of the canonical ordering is that dummies can be substituted
@@ -2563,7 +2596,8 @@ def _get_ordered_dummies(mul, verbose = False):
 
     def _key(d):
         dumstruct = [ fac for fac in fac_dum if d in fac_dum[fac] ]
-        other_dums = reduce(set.union, [ fac_dum[fac] for fac in dumstruct ], set())
+        other_dums = reduce(
+            set.union, [ fac_dum[fac] for fac in dumstruct ], set())
         fac = dumstruct[-1]
         if other_dums is fac_dum[fac]:
             other_dums = fac_dum[fac].copy()
@@ -2572,13 +2606,14 @@ def _get_ordered_dummies(mul, verbose = False):
         for d2 in other_dums:
             masked_facs = [ fac.replace(dum_repr[d2], mask[d2])
                     for fac in masked_facs ]
-        all_masked = [ fac.replace(dum_repr[d], mask[d]) for fac in masked_facs ]
+        all_masked = [ fac.replace(dum_repr[d], mask[d])
+                       for fac in masked_facs ]
         masked_facs = dict(zip(dumstruct, masked_facs))
 
         # dummies for which the ordering cannot be determined
-        if len(set(all_masked)) < len(all_masked):
+        if has_dups(all_masked):
             all_masked.sort()
-            return mask[d], tuple(all_masked) # positions are ambiguous
+            return mask[d], tuple(all_masked)  # positions are ambiguous
 
         # sort factors according to fully masked strings
         keydict = dict(zip(dumstruct, all_masked))
@@ -2587,7 +2622,7 @@ def _get_ordered_dummies(mul, verbose = False):
 
         pos_val = []
         for fac in dumstruct:
-            if isinstance(fac,AntiSymmetricTensor):
+            if isinstance(fac, AntiSymmetricTensor):
                 if d in fac.upper:
                     pos_val.append('u')
                 if d in fac.lower:
@@ -2607,14 +2642,14 @@ def _get_ordered_dummies(mul, verbose = False):
                 # fallback to position in string representation
                 facpos = -1
                 while 1:
-                    facpos = masked_facs[fac].find(dum_repr[d], facpos+1)
+                    facpos = masked_facs[fac].find(dum_repr[d], facpos + 1)
                     if facpos == -1:
                         break
                     pos_val.append(facpos)
         return (mask[d], tuple(all_masked), pos_val[0], pos_val[-1])
     dumkey = dict(zip(all_dums, map(_key, all_dums)))
     result = sorted(all_dums, key=lambda x: dumkey[x])
-    if len(set(dumkey.itervalues())) < len(dumkey):
+    if has_dups(dumkey.itervalues()):
         # We have ambiguities
         unordered = defaultdict(set)
         for d, k in dumkey.iteritems():
@@ -2625,6 +2660,7 @@ def _get_ordered_dummies(mul, verbose = False):
         unordered = [ unordered[k] for k in sorted(unordered) ]
         result = _determine_ambiguous(mul, result, unordered)
     return result
+
 
 def _determine_ambiguous(term, ordered, ambiguous_groups):
     # We encountered a term for which the dummy substitution is ambiguous.
@@ -2682,6 +2718,7 @@ def _determine_ambiguous(term, ordered, ambiguous_groups):
         ordered = result
     return ordered
 
+
 class _SymbolFactory(object):
     def __init__(self, label):
         self._counterVar = 0
@@ -2707,7 +2744,7 @@ class _SymbolFactory(object):
         s = Symbol("%s%i" % (self._label, self._counterVar))
         self._counterVar += 1
         return s
-_symbol_factory = _SymbolFactory('_]"]_') # most certainly a unique label
+_symbol_factory = _SymbolFactory('_]"]_')  # most certainly a unique label
 
 
 @cacheit
@@ -2728,15 +2765,15 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
     else:
         result = [NO(Mul(*string1))]
 
-    for i in range(len(string1)-1):
-        for j in range(i+1,len(string1)):
+    for i in range(len(string1) - 1):
+        for j in range(i + 1, len(string1)):
 
-            c = contraction(string1[i],string1[j])
+            c = contraction(string1[i], string1[j])
 
             if c:
                 # print "found contraction",c
 
-                sign = (j-i+1) %2
+                sign = (j - i + 1) % 2
                 if sign:
                     coeff = S.NegativeOne*c
                 else:
@@ -2756,7 +2793,7 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
                 # and   string1[:i] <---> string1[j+1:].
                 #
                 # This leaves the case:
-                oplist = string1[i+1:j] + string1[j+1:]
+                oplist = string1[i + 1:j] + string1[j + 1:]
 
                 if oplist:
 
@@ -2766,7 +2803,6 @@ def _get_contractions(string1, keep_only_fully_contracted=False):
 
                 else:
                     result.append(coeff*NO( Mul(*string1[:i])))
-
 
         if keep_only_fully_contracted:
             break   # next iteration over i leaves leftmost operator string1[0] uncontracted
@@ -2792,7 +2828,8 @@ def wicks(e, **kw_args):
     By default, the expression is expanded:
 
     >>> wicks(F(p)*(F(q)+F(r))) # doctest: +SKIP
-    NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(AnnihilateFermion(p)*AnnihilateFermion(r))
+    NO(AnnihilateFermion(p)*AnnihilateFermion(q)) + NO(
+        AnnihilateFermion(p)*AnnihilateFermion(r))
 
     With the keyword 'keep_only_fully_contracted=True', only fully contracted
     terms are returned.
@@ -2803,30 +2840,29 @@ def wicks(e, **kw_args):
 
     >>> p, q, r = symbols('p q r', cls=Dummy)
     >>> wicks(Fd(p)*(F(q)+F(r)), keep_only_fully_contracted=True) # doctest: +SKIP
-    KroneckerDelta(_i, _q)*KroneckerDelta(_p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
+    KroneckerDelta(_i, _q)*KroneckerDelta(
+        _p, _q) + KroneckerDelta(_i, _r)*KroneckerDelta(_p, _r)
 
     """
-
 
     if not e:
         return S.Zero
 
-    opts={
-            'simplify_kronecker_deltas':False,
-            'expand':True,
-            'simplify_dummies':False,
-            'keep_only_fully_contracted':False
-            }
+    opts = {
+        'simplify_kronecker_deltas': False,
+        'expand': True,
+        'simplify_dummies': False,
+        'keep_only_fully_contracted': False
+    }
     opts.update(kw_args)
 
-
     # check if we are already normally ordered
-    if isinstance(e,NO):
+    if isinstance(e, NO):
         if opts['keep_only_fully_contracted']:
             return S.Zero
         else:
             return e
-    elif isinstance(e,FermionicOperator):
+    elif isinstance(e, FermionicOperator):
         if opts['keep_only_fully_contracted']:
             return S.Zero
         else:
@@ -2843,7 +2879,6 @@ def wicks(e, **kw_args):
         else:
             return Add(*[ wicks(term, **kw_args) for term in e.args])
 
-
     # For Mul-objects we can actually do something
     if isinstance(e, Mul):
 
@@ -2858,17 +2893,16 @@ def wicks(e, **kw_args):
                 string1.append(factor)
         n = len(string1)
 
-
         # catch trivial cases
         if n == 0:
-            result= e
-        elif n==1:
+            result = e
+        elif n == 1:
             if opts['keep_only_fully_contracted']:
                 return S.Zero
             else:
                 result = e
 
-        else: # non-trivial
+        else:  # non-trivial
 
             if isinstance(string1[0], BosonicOperator):
                 raise NotImplementedError
@@ -2878,7 +2912,7 @@ def wicks(e, **kw_args):
             # recursion over higher order contractions
             result = _get_contractions(string1,
                 keep_only_fully_contracted=opts['keep_only_fully_contracted'] )
-            result =  Mul(*c_part)*result
+            result = Mul(*c_part)*result
 
         if opts['expand']:
             result = result.expand()
@@ -2890,6 +2924,7 @@ def wicks(e, **kw_args):
     # there was nothing to do
     return e
 
+
 class PermutationOperator(Expr):
     """
     Represents the index permutation operator P(ij).
@@ -2897,17 +2932,16 @@ class PermutationOperator(Expr):
     P(ij)*f(i)*g(j) = f(i)*g(j) - f(j)*g(i)
     """
     is_commutative = True
-    def __new__(cls, i,j):
-        i,j = map(sympify,(i,j))
-        if (i>j):
-            obj =  Basic.__new__(cls,j,i)
+
+    def __new__(cls, i, j):
+        i, j = map(sympify, (i, j))
+        if (i > j):
+            obj = Basic.__new__(cls, j, i)
         else:
-            obj =  Basic.__new__(cls,i,j)
+            obj = Basic.__new__(cls, i, j)
         return obj
 
-
-
-    def get_permuted(self,expr):
+    def get_permuted(self, expr):
         """
         Returns -expr with permuted indices.
 
@@ -2923,16 +2957,15 @@ class PermutationOperator(Expr):
         j = self.args[1]
         if expr.has(i) and expr.has(j):
             tmp = Dummy()
-            expr = expr.subs(i,tmp)
-            expr = expr.subs(j,i)
-            expr = expr.subs(tmp,j)
+            expr = expr.subs(i, tmp)
+            expr = expr.subs(j, i)
+            expr = expr.subs(tmp, j)
             return S.NegativeOne*expr
         else:
             return expr
 
     def _latex(self, printer):
-        return "P(%s%s)"%self.args
-
+        return "P(%s%s)" % self.args
 
 
 def simplify_index_permutations(expr, permutation_operators):
@@ -2977,19 +3010,18 @@ def simplify_index_permutations(expr, permutation_operators):
                 result.append(arg)
             else:
                 if arg.args:
-                    result.extend(_get_indices(arg,ind))
+                    result.extend(_get_indices(arg, ind))
         return result
 
-    def _choose_one_to_keep(a,b,ind):
+    def _choose_one_to_keep(a, b, ind):
         # we keep the one where indices in ind are in order ind[0] < ind[1]
-        if _get_indices(a,ind) < _get_indices(b,ind):
+        if _get_indices(a, ind) < _get_indices(b, ind):
             return a
         else:
             return b
 
-
     expr = expr.expand()
-    if isinstance(expr,Add):
+    if isinstance(expr, Add):
         terms = set(expr.args)
 
         for P in permutation_operators:

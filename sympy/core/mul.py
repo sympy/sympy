@@ -1,26 +1,29 @@
 from collections import defaultdict
-
-from basic import Basic, C
-from singleton import S
-from operations import AssocOp
-from cache import cacheit
-from logic import fuzzy_not
-from compatibility import cmp_to_key
-
 import operator
+
+from sympy.core.sympify import sympify
+from sympy.core.basic import Basic, C
+from sympy.core.singleton import S
+from sympy.core.operations import AssocOp
+from sympy.core.cache import cacheit
+from sympy.core.logic import fuzzy_not
+from sympy.core.compatibility import cmp_to_key
+from sympy.core.expr import Expr
 
 # internal marker to indicate:
 #   "there are still non-commutative objects -- don't forget to process them"
+
+
 class NC_Marker:
-    is_Order    = False
-    is_Mul      = False
-    is_Number   = False
-    is_Poly     = False
+    is_Order = False
+    is_Mul = False
+    is_Number = False
+    is_Poly = False
 
     is_commutative = False
 
 
-class Mul(AssocOp):
+class Mul(Expr, AssocOp):
 
     __slots__ = []
 
@@ -37,7 +40,8 @@ class Mul(AssocOp):
         """Return commutative, noncommutative and order arguments by
         combining related terms.
 
-        ** Note **
+        Notes
+        =====
             * In an expression like ``a*b*c``, python process this through sympy
               as ``Mul(Mul(a, b), c)``. This can have undesirable consequences.
 
@@ -101,11 +105,13 @@ class Mul(AssocOp):
               This consideration is moot if the cache is turned off.
 
             NB
+            --
               The validity of the above notes depends on the implementation
               details of Mul and flatten which may change at any time. Therefore,
               you should only consider them when your code is highly performance
               sensitive.
 
+              Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
         rv = None
         if len(seq) == 2:
@@ -161,8 +167,6 @@ class Mul(AssocOp):
 
         order_symbols = None
 
-
-
         # --- PART 1 ---
         #
         # "collect powers and coeff":
@@ -174,7 +178,6 @@ class Mul(AssocOp):
         # o pnum_rat
         #
         # NOTE: this is optimized for all-objects-are-commutative case
-
         for o in seq:
             # O(x)
             if o.is_Order:
@@ -204,7 +207,7 @@ class Mul(AssocOp):
                 if o is S.NaN or coeff is S.ComplexInfinity and o is S.Zero:
                     # we know for sure the result will be nan
                     return [S.NaN], [], None
-                elif coeff.is_Number: # it could be zoo
+                elif coeff.is_Number:  # it could be zoo
                     coeff *= o
                     if coeff is S.NaN:
                         # we know for sure the result will be nan
@@ -239,7 +242,7 @@ class Mul(AssocOp):
                     # the exponent is an integer
                     if e.is_Rational:
                         if e.is_Integer:
-                            coeff *= Pow(b, e) # it is an unevaluated power
+                            coeff *= Pow(b, e)  # it is an unevaluated power
                             continue
                         elif e.is_negative:    # also a sign of an unevaluated power
                             seq.append(Pow(b, e))
@@ -271,14 +274,14 @@ class Mul(AssocOp):
                     #                             b    c       b+c
                     # try to combine last terms: a  * a   ->  a
                     o1 = nc_part.pop()
-                    b1,e1 = o1.as_base_exp()
-                    b2,e2 = o.as_base_exp()
+                    b1, e1 = o1.as_base_exp()
+                    b2, e2 = o.as_base_exp()
                     new_exp = e1 + e2
                     # Only allow powers to combine if the new exponent is
                     # not an Add. This allow things like a**2*b**3 == a**5
                     # if a.is_commutative == False, but prohibits
                     # a**x*a**y and x**a*x**b from combining (x,y commute).
-                    if b1==b2 and (not new_exp.is_Add):
+                    if b1 == b2 and (not new_exp.is_Add):
                         o12 = b1 ** new_exp
 
                         # now o12 could be a commutative object
@@ -322,7 +325,7 @@ class Mul(AssocOp):
         # gather exponents of common bases...
         def _gather(c_powers):
             new_c_powers = []
-            common_b = {} # b:e
+            common_b = {}  # b:e
             for b, e in c_powers:
                 co = e.as_coeff_Mul()
                 common_b.setdefault(b, {}).setdefault(co[1], []).append(co[0])
@@ -398,15 +401,15 @@ class Mul(AssocOp):
 
         # extract gcd of bases in num_rat
         # 2**(1/3)*6**(1/4) -> 2**(1/3+1/4)*3**(1/4)
-        pnew = {}
-        i = 0 # steps through num_rat which may grow
+        pnew = defaultdict(list)
+        i = 0  # steps through num_rat which may grow
         while i < len(num_rat):
             bi, ei = num_rat[i]
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
-                g = igcd(bi, bj)
-                if g != 1:
+                g = bi.gcd(bj)
+                if g is not S.One:
                     # 4**r1*6**r2 -> 2**(r1+r2)  *  2**r1 *  3**r2
                     # this might have a gcd with something else
                     e = ei + ej
@@ -414,14 +417,14 @@ class Mul(AssocOp):
                         coeff *= Pow(g, e)
                     else:
                         if e.p > e.q:
-                            e_i, ep = divmod(e.p, e.q) # change e in place
+                            e_i, ep = divmod(e.p, e.q)  # change e in place
                             coeff *= Pow(g, e_i)
                             e = Rational(ep, e.q)
                         grow.append((g, e))
                     # update the jth item
-                    num_rat[j] = (bj//g, ej)
+                    num_rat[j] = (bj/g, ej)
                     # update bi that we are checking with
-                    bi = bi//g
+                    bi = bi/g
                     if bi is S.One:
                         break
             if bi is not S.One:
@@ -429,12 +432,14 @@ class Mul(AssocOp):
                 if obj.is_Number:
                     coeff *= obj
                 else:
-                    if obj.is_Mul: # sqrt(12) -> 2*sqrt(3)
-                        c, obj = obj.args # expecting only 2 args
-                        coeff *= c
-                        assert obj.is_Pow
-                        bi, ei = obj.args
-                    pnew.setdefault(ei, []).append(bi)
+                    # changes like sqrt(12) -> 2*sqrt(3)
+                    for obj in Mul.make_args(obj):
+                        if obj.is_Number:
+                            coeff *= obj
+                        else:
+                            assert obj.is_Pow
+                            bi, ei = obj.args
+                            pnew[ei].append(bi)
 
             num_rat.extend(grow)
             i += 1
@@ -504,103 +509,33 @@ class Mul(AssocOp):
         if coeff is not S.One:
             c_part.insert(0, coeff)
 
-
         # we are done
-        if len(c_part)==2 and c_part[0].is_Number and c_part[1].is_Add:
+        if len(c_part) == 2 and c_part[0].is_Number and c_part[1].is_Add:
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
 
         return c_part, nc_part, order_symbols
 
-
     def _eval_power(b, e):
 
         # don't break up NC terms: (A*B)**3 != A**3*B**3, it is A*B*A*B*A*B
-        coeff, b = b.as_coeff_Mul()
-        bc, bnc = b.args_cnc()
+        cargs, nc = b.args_cnc(split_1=False)
 
-        done = [Pow(Mul._from_args(bnc), e, evaluate=False) if bnc else S.One]
+        if e.is_Integer:
+            return Mul(*[Pow(b, e, evaluate=False) for b in cargs]) * \
+                Pow(Mul._from_args(nc), e, evaluate=False)
 
-        if e.is_Number:
-            if e.is_Integer:
-                # (a*b)**2 -> a**2 * b**2
-                return Mul(*([s**e for s in [coeff] + bc] + done))
+        p = Pow(b, e, evaluate=False)
 
-            if e.is_Rational or e.is_Float:
-                unk = []
-                nonneg = []
-                neg = []
-                iu = []
-                for bi in bc:
-                    if bi.is_polar:
-                        nonneg.append(bi)
-                    elif bi.is_negative is not None:
-                        if bi.is_negative:
-                            neg.append(bi)
-                        elif bi.is_nonnegative:
-                            nonneg.append(bi)
-                        elif bi is S.ImaginaryUnit:
-                            iu.append(bi)
-                        else:
-                            unk.append(bi)
-                    else:
-                        unk.append(bi)
+        if e.is_Rational or e.is_Float:
+            return p._eval_expand_power_base()
 
-                if iu:
-                    niu = len(iu) % 4
-                    i = S.ImaginaryUnit if niu % 2 else S.One
-                    if niu in (2, 3):
-                        coeff = -coeff
-                    if i is S.ImaginaryUnit:
-                        if unk or e.is_Float:
-                            unk.append(i)
-                        else:
-                            if coeff.is_negative and e.is_Rational:
-                                coeff = -coeff
-                                ie = Rational(4*e.q - e.p, 2*e.q)
-                                done.append(Pow(-1, ie))
-                            else:
-                                done.append(i**e)
-
-                if len(unk) == len(bc) or len(neg) == len(bc) == 1:
-                    # if all terms were unknown there is nothing to pull
-                    # out except maybe the coeff; if there is a single
-                    # negative term, this is the base case which cannot
-                    # be processed further
-                    if coeff.is_negative:
-                        coeff *= -1
-                        bc[0] = -bc[0]
-                    if coeff is S.One:
-                        return None
-                    return Mul(*([Pow(coeff, e), Pow(Mul(*bc), e)] + done))
-
-                # otherwise return the new expression expanding out the
-                # known terms; those that are not known can be expanded
-                # out with separate() but this will introduce a lot of
-                # "garbage" that is needed to keep one on the same branch
-                # as the unexpanded expression. The negatives are brought
-                # out with a negative sign added and a negative left behind
-                # in the unexpanded terms if there were an odd number of
-                # negatives.
-                if coeff.is_negative:
-                    coeff = -coeff
-                    neg.append(S.NegativeOne)
-                if neg:
-                    neg = [-w for w in neg]
-                    if len(neg) % 2:
-                        unk.append(S.NegativeOne)
-
-                done.extend([Pow(s, e) for s in nonneg + neg + [coeff, Mul(*unk)]])
-                return Mul(*done)
-
-        if e.is_even and coeff.is_negative:
-            return Pow(-coeff, e)*Pow(b, e)
+        return p
 
     @classmethod
     def class_key(cls):
         return 3, 0, cls.__name__
-
 
     def _eval_evalf(self, prec):
         c, m = self.as_coeff_Mul()
@@ -676,16 +611,28 @@ class Mul(AssocOp):
         else:
             return S.One, self
 
-    def as_real_imag(self, deep=True):
+    def as_real_imag(self, deep=True, **hints):
         other = []
         coeff = S(1)
         for a in self.args:
             if a.is_real:
                 coeff *= a
+            elif a.is_commutative:
+                # search for complex conjugate pairs:
+                for i, x in enumerate(other):
+                    if x == a.conjugate():
+                        coeff *= C.Abs(x)**2
+                        del other[i]
+                        break
+                else:
+                    other.append(a)
             else:
                 other.append(a)
         m = Mul(*other)
-        return (coeff*C.re(m), coeff*C.im(m))
+        if hints.get('ignore') == m:
+            return None
+        else:
+            return (coeff*C.re(m), coeff*C.im(m))
 
     @staticmethod
     def _expandsums(sums):
@@ -704,55 +651,22 @@ class Mul(AssocOp):
 
         terms = [Mul(a, b) for a in left for b in right]
         added = Add(*terms)
-        return Add.make_args(added) #it may have collapsed down to one term
+        return Add.make_args(added)  # it may have collapsed down to one term
 
-    def _eval_expand_basic(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_basic'):
-                newterm = term._eval_expand_basic(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
+    def _eval_expand_mul(self, **hints):
+        from sympy import fraction, expand_mul
 
-    def _eval_expand_power_exp(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_exp'):
-                newterm = term._eval_expand_power_exp(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_power_base(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_power_base'):
-                newterm = term._eval_expand_power_base(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_mul(self, deep=True, **hints):
-        from sympy import fraction
+        # Handle things like 1/(x*(x + 1)), which are automatically converted
+        # to 1/x*1/(x + 1)
         expr = self
         n, d = fraction(expr)
-        if d is not S.One:
-            expr = n/d._eval_expand_mul(deep=deep, **hints)
+        if d.is_Mul:
+            expr = n/d._eval_expand_mul(**hints)
             if not expr.is_Mul:
-                return expr._eval_expand_mul(deep=deep, **hints)
+                return expand_mul(expr, deep=False)
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:
-            if deep:
-                term = factor.expand(deep=deep, **hints)
-                if term != factor:
-                    factor = term
-                    rewrite = True
-
             if factor.is_Add:
                 sums.append(factor)
                 rewrite = True
@@ -760,8 +674,7 @@ class Mul(AssocOp):
                 if factor.is_commutative:
                     plain.append(factor)
                 else:
-                    Wrapper = Basic
-                    sums.append(Wrapper(factor))
+                    sums.append(Basic(factor))  # Wrapper
 
         if not rewrite:
             return expr
@@ -773,61 +686,11 @@ class Mul(AssocOp):
                 for term in terms:
                     t = Mul(plain, term)
                     if t.is_Mul and any(a.is_Add for a in t.args):
-                        t = t._eval_expand_mul(deep=deep)
+                        t = t._eval_expand_mul()
                     args.append(t)
                 return Add(*args)
             else:
                 return plain
-
-    def _eval_expand_multinomial(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_multinomial'):
-                newterm = term._eval_expand_multinomial(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_log(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_log'):
-                newterm = term._eval_expand_log(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_complex(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_complex'):
-                newterm = term._eval_expand_complex(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_trig(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_trig'):
-                newterm = term._eval_expand_trig(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
-
-    def _eval_expand_func(self, deep=True, **hints):
-        sargs, terms = self.args, []
-        for term in sargs:
-            if hasattr(term, '_eval_expand_func'):
-                newterm = term._eval_expand_func(deep=deep, **hints)
-            else:
-                newterm = term
-            terms.append(newterm)
-        return self.func(*terms)
 
     def _eval_derivative(self, s):
         terms = list(self.args)
@@ -836,7 +699,7 @@ class Mul(AssocOp):
             t = terms[i].diff(s)
             if t is S.Zero:
                 continue
-            factors.append(Mul(*(terms[:i]+[t]+terms[i+1:])))
+            factors.append(Mul(*(terms[:i] + [t] + terms[i + 1:])))
         return Add(*factors)
 
     def _matches_simple(self, expr, repl_dict):
@@ -848,12 +711,30 @@ class Mul(AssocOp):
             return terms[0].matches(newexpr, repl_dict)
         return
 
-    def matches(self, expr, repl_dict={}):
+    def matches(self, expr, repl_dict={}, old=False):
         expr = sympify(expr)
         if self.is_commutative and expr.is_commutative:
-            return AssocOp._matches_commutative(self, expr, repl_dict)
-        # todo for commutative parts, until then use the default matches method for non-commutative products
-        return self._matches(expr, repl_dict)
+            return AssocOp._matches_commutative(self, expr, repl_dict, old)
+        elif self.is_commutative is not expr.is_commutative:
+            return None
+        c1, nc1 = self.args_cnc()
+        c2, nc2 = expr.args_cnc()
+        repl_dict = repl_dict.copy()
+        if c1:
+            if not c2:
+                c2 = [1]
+            a = Mul(*c1)
+            if isinstance(a, AssocOp):
+                repl_dict = a._matches_commutative(Mul(*c2), repl_dict, old)
+            else:
+                repl_dict = a.matches(Mul(*c2), repl_dict)
+        if repl_dict:
+            a = Mul(*nc1)
+            if isinstance(a, Mul):
+                repl_dict = a._matches(Mul(*nc2), repl_dict)
+            else:
+                repl_dict = a.matches(Mul(*nc2), repl_dict)
+        return repl_dict or None
 
     def _matches(self, expr, repl_dict={}):
         # weed out negative one prefixes
@@ -867,7 +748,8 @@ class Mul(AssocOp):
                 return b.matches(-expr, repl_dict)
         expr = sympify(expr)
         if expr.is_Mul and expr.args[0] is S.NegativeOne:
-            expr = -expr; sign = -sign
+            expr = -expr
+            sign = -sign
 
         if not expr.is_Mul:
             # expr can only match if it matches b and a matches +/- 1
@@ -877,7 +759,7 @@ class Mul(AssocOp):
                     return a.matches(Rational(sign), repl_dict)
                 # do more expensive match
                 dd = b.matches(expr, repl_dict)
-                if dd == None:
+                if dd is None:
                     return None
                 dd = a.matches(Rational(sign), dd)
                 return dd
@@ -910,7 +792,6 @@ class Mul(AssocOp):
                 return None
         return d
 
-
     @staticmethod
     def _combine_inverse(lhs, rhs):
         """
@@ -919,6 +800,7 @@ class Mul(AssocOp):
         """
         if lhs == rhs:
             return S.One
+
         def check(l, r):
             if l.is_Float and r.is_comparable:
                 # if both objects are added to 0 they will share the same "normalization"
@@ -934,22 +816,19 @@ class Mul(AssocOp):
             for x in rhs.args:
                 if x in a:
                     a.remove(x)
+                elif -x in a:
+                    a.remove(-x)
+                    b.append(-1)
                 else:
                     b.append(x)
             return Mul(*a)/Mul(*b)
         return lhs/rhs
 
     def as_powers_dict(self):
-        d = defaultdict(list)
+        d = defaultdict(int)
         for term in self.args:
             b, e = term.as_base_exp()
-            d[b].append(e)
-        for b, e in d.iteritems():
-            if len(e) == 1:
-                e = e[0]
-            else:
-                e = Add(*e)
-            d[b] = e
+            d[b] += e
         return d
 
     def as_numer_denom(self):
@@ -981,13 +860,27 @@ class Mul(AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
-    _eval_is_integer = lambda self: self._eval_template_is_attr('is_integer', when_multiple=None)
-    _eval_is_commutative = lambda self: self._eval_template_is_attr('is_commutative')
+    _eval_is_commutative = lambda self: self._eval_template_is_attr(
+        'is_commutative')
+    _eval_is_rational = lambda self: self._eval_template_is_attr('is_rational',
+        when_multiple=None)
+
+    def _eval_is_integer(self):
+        is_rational = self.is_rational
+
+        if is_rational:
+            n, d = self.as_numer_denom()
+            if d is S.One:
+                return True
+            elif d is S(2):
+                return n.is_even
+        elif is_rational is False:
+            return False
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
         return has_polar and \
-               all(arg.is_polar or arg.is_positive for arg in self.args)
+            all(arg.is_polar or arg.is_positive for arg in self.args)
 
     # I*I -> R,  I*I*I -> -I
     def _eval_is_real(self):
@@ -1034,6 +927,59 @@ class Mul(AssocOp):
 
         return (im_count % 2 == 1)
 
+    def _eval_is_hermitian(self):
+        nc_count = 0
+        im_count = 0
+        is_neither = False
+        for t in self.args:
+            if not t.is_commutative:
+                nc_count += 1
+                if nc_count > 1:
+                    return None
+            if t.is_antihermitian:
+                im_count += 1
+                continue
+            t_real = t.is_hermitian
+            if t_real:
+                continue
+            elif t_real is False:
+                if is_neither:
+                    return None
+                else:
+                    is_neither = True
+            else:
+                return None
+        if is_neither:
+            return False
+
+        return (im_count % 2 == 0)
+
+    def _eval_is_antihermitian(self):
+        nc_count = 0
+        im_count = 0
+        is_neither = False
+        for t in self.args:
+            if not t.is_commutative:
+                nc_count += 1
+                if nc_count > 1:
+                    return None
+            if t.is_antihermitian:
+                im_count += 1
+                continue
+            t_real = t.is_hermitian
+            if t_real:
+                continue
+            elif t_real is False:
+                if is_neither:
+                    return None
+                else:
+                    is_neither = True
+            else:
+                return None
+        if is_neither:
+            return False
+
+        return (im_count % 2 == 1)
 
     def _eval_is_irrational(self):
         for t in self.args:
@@ -1136,14 +1082,19 @@ class Mul(AssocOp):
         if is_integer:
             r = True
             for t in self.args:
-                if t.is_even:
-                    return False
-                if t.is_odd is None:
-                    r = None
+                if not t.is_integer:
+                    return None
+                elif t.is_even:
+                    r = False
+                elif t.is_integer:
+                    if r is False:
+                        pass
+                    elif t.is_odd is None:
+                        r = None
             return r
 
         # !integer -> !odd
-        elif is_integer == False:
+        elif is_integer is False:
             return False
 
     def _eval_is_even(self):
@@ -1152,36 +1103,44 @@ class Mul(AssocOp):
         if is_integer:
             return fuzzy_not(self._eval_is_odd())
 
-        elif is_integer == False:
+        elif is_integer is False:
             return False
 
     def _eval_subs(self, old, new):
+        from sympy import sign, multiplicity
+        from sympy.simplify.simplify import powdenest, fraction
+
         if not old.is_Mul:
             return None
 
-        from sympy import sign
-        from sympy.simplify.simplify import powdenest
+        if old.args[0] == -1:
+            return self._subs(-old, -new)
+
+        def base_exp(a):
+            # if I and -1 are in a Mul, they get both end up with
+            # a -1 base (see issue 3322); all we want here are the
+            # true Pow or exp separated into base and exponent
+            if a.is_Pow or a.func is C.exp:
+                return a.as_base_exp()
+            return a, S.One
 
         def breakup(eq):
-            """break up powers assuming (not checking) that eq is a Mul:
+            """break up powers of eq when treated as a Mul:
                    b**(Rational*e) -> b**e, Rational
                 commutatives come back as a dictionary {b**e: Rational}
                 noncommutatives come back as a list [(b**e, Rational)]
             """
 
-            (c, nc) = (dict(), list())
-            for (i, a) in enumerate(Mul.make_args(eq)):
+            (c, nc) = (defaultdict(int), list())
+            for a in Mul.make_args(eq):
                 a = powdenest(a)
-                (b, e) = a.as_base_exp()
+                (b, e) = base_exp(a)
                 if e is not S.One:
                     (co, _) = e.as_coeff_mul()
                     b = Pow(b, e/co)
                     e = co
                 if a.is_commutative:
-                    if b in c: # handle I and -1 like things where b, e for I is -1, 1/2
-                        c[b] += e
-                    else:
-                        c[b] = e
+                    c[b] += e
                 else:
                     nc.append([b, e])
             return (c, nc)
@@ -1193,7 +1152,7 @@ class Mul(AssocOp):
             it back.
             """
 
-            (b, e) = b.as_base_exp()
+            (b, e) = base_exp(b)
             return Pow(b, e*co)
 
         def ndiv(a, b):
@@ -1201,7 +1160,6 @@ class Mul(AssocOp):
             but not vice versa, and 2/5 does not divide 1/3) then return
             the integer number of times it divides, else return 0.
             """
-
             if not b.q % a.q or not a.q % b.q:
                 return int(a/b)
             return 0
@@ -1209,7 +1167,7 @@ class Mul(AssocOp):
         # give Muls in the denominator a chance to be changed (see issue 2552)
         # rv will be the default return value
         rv = None
-        n, d = self.as_numer_denom()
+        n, d = fraction(self)
         if d is not S.One:
             self2 = n._subs(old, new)/d._subs(old, new)
             if not self2.is_Mul:
@@ -1225,48 +1183,59 @@ class Mul(AssocOp):
 
         co_self = self.args[0]
         co_old = old.args[0]
+        co_xmul = None
         if co_old.is_Rational and co_self.is_Rational:
-            co_xmul = co_self.extract_multiplicatively(co_old)
+            # if coeffs are the same there will be no updating to do
+            # below after breakup() step; so skip (and keep co_xmul=None)
+            if co_old != co_self:
+                co_xmul = co_self.extract_multiplicatively(co_old)
         elif co_old.is_Rational:
-            co_xmul = None
-        else:
-            co_xmul = True
-
-        if not co_xmul:
             return rv
+
+        # break self and old into factors
 
         (c, nc) = breakup(self)
         (old_c, old_nc) = breakup(old)
 
         # update the coefficients if we had an extraction
+        # e.g. if co_self were 2*(3/35*x)**2 and co_old = 3/5
+        # then co_self in c is replaced by (3/5)**2 and co_residual
+        # is 2*(1/7)**2
 
-        if getattr(co_xmul, 'is_Rational', False):
+        if co_xmul and co_xmul.is_Rational:
+            n_old, d_old = co_old.as_numer_denom()
+            n_self, d_self = co_self.as_numer_denom()
+
+            def _multiplicity(p, n):
+                p = abs(p)
+                if p is S.One:
+                    return S.Infinity
+                return multiplicity(p, abs(n))
+            mult = S(min(_multiplicity(n_old, n_self),
+                         _multiplicity(d_old, d_self)))
             c.pop(co_self)
-            c[co_xmul] = S.One
-            old_c.pop(co_old)
+            c[co_old] = mult
+            co_residual = co_self/co_old**mult
+        else:
+            co_residual = 1
 
         # do quick tests to see if we can't succeed
 
         ok = True
-        if (
+        if len(old_nc) > len(nc):
             # more non-commutative terms
-            len(old_nc) > len(nc)):
             ok = False
-        elif (
+        elif len(old_c) > len(c):
             # more commutative terms
-            len(old_c) > len(c)):
             ok = False
-        elif (
+        elif set(i[0] for i in old_nc).difference(set(i[0] for i in nc)):
             # unmatched non-commutative bases
-            set(_[0] for _ in  old_nc).difference(set(_[0] for _ in nc))):
             ok = False
-        elif (
+        elif set(old_c).difference(set(c)):
             # unmatched commutative terms
-            set(old_c).difference(set(c))):
             ok = False
-        elif (
+        elif any(sign(c[b]) != sign(old_c[b]) for b in old_c):
             # differences in sign
-            any(sign(c[b]) != sign(old_c[b]) for b in old_c)):
             ok = False
         if not ok:
             return rv
@@ -1289,7 +1258,7 @@ class Mul(AssocOp):
         else:
             ncdid = 0  # number of nc replacements we did
             take = len(old_nc)  # how much to look at each time
-            limit = cdid or S.Infinity # max number that we can take
+            limit = cdid or S.Infinity  # max number that we can take
             failed = []  # failed terms will need subs if other terms pass
             i = 0
             while limit and i + take <= len(nc):
@@ -1397,19 +1366,24 @@ class Mul(AssocOp):
             # rest of this routine
 
             margs = [Pow(new, cdid)] + margs
-        return Mul(*margs)*Mul(*nc)
+        return co_residual*Mul(*margs)*Mul(*nc)
 
     def _eval_nseries(self, x, n, logx):
         from sympy import powsimp
         terms = [t.nseries(x, n=n, logx=logx) for t in self.args]
         return powsimp(Mul(*terms).expand(), combine='exp', deep=True)
 
-
     def _eval_as_leading_term(self, x):
         return Mul(*[t.as_leading_term(x) for t in self.args])
 
     def _eval_conjugate(self):
         return Mul(*[t.conjugate() for t in self.args])
+
+    def _eval_transpose(self):
+        return Mul(*[t.transpose() for t in self.args[::-1]])
+
+    def _eval_adjoint(self):
+        return Mul(*[t.adjoint() for t in self.args[::-1]])
 
     def _sage_(self):
         s = 1
@@ -1443,6 +1417,28 @@ class Mul(AssocOp):
         # e.g. (2+2*x)*(3+3*x) should be (6, (1 + x)**2) not (6, (1+x)*(1+x))
         return coef, Mul(*args)
 
+    def as_ordered_factors(self, order=None):
+        """Transform an expression into an ordered list of factors.
+
+        Examples
+        ========
+
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y
+
+        >>> (2*x*y*sin(x)*cos(x)).as_ordered_factors()
+        [2, x, y, sin(x), cos(x)]
+
+        """
+        cpart, ncpart = self.args_cnc()
+        cpart.sort(key=lambda expr: expr.sort_key(order=order))
+        return cpart + ncpart
+
+    @property
+    def _sorted_args(self):
+        return self.as_ordered_factors()
+
+
 def prod(a, start=1):
     """Return product of elements of a. Start with int 1 so if only
        ints are included then an int result is returned.
@@ -1467,12 +1463,15 @@ def prod(a, start=1):
     """
     return reduce(operator.mul, a, start)
 
-def _keep_coeff(coeff, factors, clear=True):
+
+def _keep_coeff(coeff, factors, clear=True, sign=False):
     """Return ``coeff*factors`` unevaluated if necessary.
 
-    If clear is False, do not keep the coefficient as a factor
+    If ``clear`` is False, do not keep the coefficient as a factor
     if it can be distributed on a single factor such that one or
     more terms will still have integer coefficients.
+
+    If ``sign`` is True, allow a coefficient of -1 to remain factored out.
 
     Examples
     ========
@@ -1487,6 +1486,10 @@ def _keep_coeff(coeff, factors, clear=True):
     x/2 + 1
     >>> _keep_coeff(S.Half, (x + 2)*y, clear=False)
     y*(x + 2)/2
+    >>> _keep_coeff(S(-1), x + y)
+    -x - y
+    >>> _keep_coeff(S(-1), x + y, sign=True)
+    -(x + y)
     """
 
     if not coeff.is_Number:
@@ -1494,9 +1497,9 @@ def _keep_coeff(coeff, factors, clear=True):
             factors, coeff = coeff, factors
         else:
             return coeff*factors
-    if coeff == 1:
+    if coeff is S.One:
         return factors
-    elif coeff == -1: # don't keep sign?
+    elif coeff is S.NegativeOne and not sign:
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
@@ -1519,8 +1522,7 @@ def _keep_coeff(coeff, factors, clear=True):
     else:
         return coeff*factors
 
-from numbers import Rational, igcd
+
+from numbers import Rational
 from power import Pow
-from sympify import sympify
 from add import Add
-from sympy.core.function import _coeff_isneg

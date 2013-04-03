@@ -1,10 +1,12 @@
 from sympy.logic.utilities import load_file
 from sympy.logic import satisfiable
-import time, os, sys
+import time
+import os
+import sys
 
 input_path = os.getcwd() + '/' + '/'.join(sys.argv[0].split('/')[:-1])
 
-INPUT = [5 * i for i in range(2,16)]
+INPUT = [5 * i for i in range(2, 16)]
 ALGORITHMS = ['dpll', 'dpll2']
 results = {}
 
@@ -19,7 +21,8 @@ for test in INPUT:
         assert satisfiable(theory, algorithm=alg)
         end = time.time()
         results[test][alg] = end - start
-        print "Test %d in time %.2f seconds for algorithm %s." % (test, end - start, alg)
+        print "Test %d in time %.2f seconds for algorithm %s." % (
+            test, end - start, alg)
 
 print "problem," + ','.join(ALGORITHMS)
 
@@ -28,4 +31,3 @@ for test in INPUT:
     for alg in ALGORITHMS:
         line += ",%f" % results[test][alg]
     print line
-

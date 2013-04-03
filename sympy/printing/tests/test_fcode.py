@@ -11,10 +11,12 @@ from sympy.utilities.pytest import raises
 
 def test_printmethod():
     x = symbols('x')
+
     class nint(Function):
         def _fcode(self, printer):
             return "nint(%s)" % printer._print(self.args[0])
     assert fcode(nint(x)) == "      nint(x)"
+
 
 def test_fcode_Pow():
     x, y = symbols('x,y')
@@ -30,24 +32,37 @@ def test_fcode_Pow():
     assert fcode(sqrt(x)) == '      sqrt(x)'
     assert fcode(sqrt(10)) == '      sqrt(10.0d0)'
     assert fcode(x**-1.0) == '      1.0/x'
+    assert fcode(x**-2.0,
+                 assign_to='y',
+                 source_format='free',
+                 human=True) == 'y = x**(-2.0d0)'  # 2823
+    assert fcode(x**Rational(3, 7)) == '      x**(3.0d0/7.0d0)'
+
 
 def test_fcode_Rational():
-    assert fcode(Rational(3,7)) == "      3.0d0/7.0d0"
-    assert fcode(Rational(18,9)) == "      2"
-    assert fcode(Rational(3,-7)) == "      -3.0d0/7.0d0"
-    assert fcode(Rational(-3,-7)) == "      3.0d0/7.0d0"
+    x = symbols('x')
+    assert fcode(Rational(3, 7)) == "      3.0d0/7.0d0"
+    assert fcode(Rational(18, 9)) == "      2"
+    assert fcode(Rational(3, -7)) == "      -3.0d0/7.0d0"
+    assert fcode(Rational(-3, -7)) == "      3.0d0/7.0d0"
+    assert fcode(x + Rational(3, 7)) == "      x + 3.0d0/7.0d0"
+    assert fcode(Rational(3, 7)*x) == "      (3.0d0/7.0d0)*x"
+
 
 def test_fcode_Integer():
     assert fcode(Integer(67)) == "      67"
     assert fcode(Integer(-1)) == "      -1"
 
+
 def test_fcode_Float():
     assert fcode(Float(42.0)) == "      42.0000000000000d0"
     assert fcode(Float(-1e20)) == "      -1.00000000000000d+20"
 
+
 def test_fcode_functions():
     x, y = symbols('x,y')
     assert fcode(sin(x) ** cos(y)) == "      sin(x)**cos(y)"
+
 
 def test_fcode_NumberSymbol():
     p = FCodePrinter()
@@ -56,49 +71,64 @@ def test_fcode_NumberSymbol():
     assert fcode(E) == '      parameter (E = 2.71828182845905d0)\n      E'
     assert fcode(GoldenRatio) == '      parameter (GoldenRatio = 1.61803398874989d0)\n      GoldenRatio'
     assert fcode(pi) == '      parameter (pi = 3.14159265358979d0)\n      pi'
-    assert fcode(pi,precision=5) == '      parameter (pi = 3.1416d0)\n      pi'
-    assert fcode(Catalan,human=False) == (set([(Catalan, p._print(Catalan.evalf(15)))]), set([]), '      Catalan')
-    assert fcode(EulerGamma,human=False) == (set([(EulerGamma, p._print(EulerGamma.evalf(15)))]), set([]), '      EulerGamma')
-    assert fcode(E,human=False) == (set([(E, p._print(E.evalf(15)))]), set([]), '      E')
-    assert fcode(GoldenRatio,human=False) == (set([(GoldenRatio, p._print(GoldenRatio.evalf(15)))]), set([]), '      GoldenRatio')
-    assert fcode(pi,human=False) == (set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
-    assert fcode(pi,precision=5,human=False) == (set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
+    assert fcode(
+        pi, precision=5) == '      parameter (pi = 3.1416d0)\n      pi'
+    assert fcode(Catalan, human=False) == (set(
+        [(Catalan, p._print(Catalan.evalf(15)))]), set([]), '      Catalan')
+    assert fcode(EulerGamma, human=False) == (set([(EulerGamma, p._print(
+        EulerGamma.evalf(15)))]), set([]), '      EulerGamma')
+    assert fcode(E, human=False) == (
+        set([(E, p._print(E.evalf(15)))]), set([]), '      E')
+    assert fcode(GoldenRatio, human=False) == (set([(GoldenRatio, p._print(
+        GoldenRatio.evalf(15)))]), set([]), '      GoldenRatio')
+    assert fcode(pi, human=False) == (
+        set([(pi, p._print(pi.evalf(15)))]), set([]), '      pi')
+    assert fcode(pi, precision=5, human=False) == (
+        set([(pi, p._print(pi.evalf(5)))]), set([]), '      pi')
+
 
 def test_fcode_complex():
     assert fcode(I) == "      cmplx(0,1)"
     x = symbols('x')
     assert fcode(4*I) == "      cmplx(0,4)"
-    assert fcode(3+4*I) == "      cmplx(3,4)"
-    assert fcode(3+4*I+x) == "      cmplx(3,4) + x"
+    assert fcode(3 + 4*I) == "      cmplx(3,4)"
+    assert fcode(3 + 4*I + x) == "      cmplx(3,4) + x"
     assert fcode(I*x) == "      cmplx(0,1)*x"
-    assert fcode(3+4*I-x) == "      cmplx(3,4) - x"
+    assert fcode(3 + 4*I - x) == "      cmplx(3,4) - x"
     x = symbols('x', imaginary=True)
     assert fcode(5*x) == "      5*x"
     assert fcode(I*x) == "      cmplx(0,1)*x"
-    assert fcode(3+x) == "      x + 3"
+    assert fcode(3 + x) == "      x + 3"
+
 
 def test_implicit():
     x, y = symbols('x,y')
     assert fcode(sin(x)) == "      sin(x)"
-    assert fcode(atan2(x,y)) == "      atan2(x, y)"
+    assert fcode(atan2(x, y)) == "      atan2(x, y)"
     assert fcode(conjugate(x)) == "      conjg(x)"
+
 
 def test_not_fortran():
     x = symbols('x')
     g = Function('g')
-    assert fcode(gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
+    assert fcode(
+        gamma(x)) == "C     Not Fortran:\nC     gamma(x)\n      gamma(x)"
     assert fcode(Integral(sin(x))) == "C     Not Fortran:\nC     Integral(sin(x), x)\n      Integral(sin(x), x)"
     assert fcode(g(x)) == "C     Not Fortran:\nC     g(x)\n      g(x)"
+
 
 def test_user_functions():
     x = symbols('x')
     assert fcode(sin(x), user_functions={sin: "zsin"}) == "      zsin(x)"
     x = symbols('x')
-    assert fcode(gamma(x), user_functions={gamma: "mygamma"}) == "      mygamma(x)"
+    assert fcode(
+        gamma(x), user_functions={gamma: "mygamma"}) == "      mygamma(x)"
     g = Function('g')
     assert fcode(g(x), user_functions={g: "great"}) == "      great(x)"
     n = symbols('n', integer=True)
-    assert fcode(factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+    assert fcode(
+        factorial(n), user_functions={factorial: "fct"}) == "      fct(n)"
+
 
 def test_inline_function():
     x = symbols('x')
@@ -106,25 +136,27 @@ def test_inline_function():
     assert fcode(g(x)) == "      2*x"
     g = implemented_function('g', Lambda(x, 2*pi/x))
     assert fcode(g(x)) == (
-            "      parameter (pi = 3.14159265358979d0)\n"
-            "      2*pi/x"
-            )
+        "      parameter (pi = 3.14159265358979d0)\n"
+        "      2*pi/x"
+    )
     A = IndexedBase('A')
     i = Idx('i', symbols('n', integer=True))
     g = implemented_function('g', Lambda(x, x*(1 + x)*(2 + x)))
     assert fcode(g(A[i]), assign_to=A[i]) == (
-            "      do i = 1, n\n"
-            "         A(i) = (1 + A(i))*(2 + A(i))*A(i)\n"
-            "      end do"
-            )
+        "      do i = 1, n\n"
+        "         A(i) = (1 + A(i))*(2 + A(i))*A(i)\n"
+        "      end do"
+    )
+
 
 def test_assign_to():
     x = symbols('x')
     assert fcode(sin(x), assign_to="s") == "      s = sin(x)"
 
+
 def test_line_wrapping():
     x, y = symbols('x,y')
-    assert fcode(((x+y)**10).expand(), assign_to="var") == (
+    assert fcode(((x + y)**10).expand(), assign_to="var") == (
         "      var = x**10 + 10*x**9*y + 45*x**8*y**2 + 120*x**7*y**3 + 210*x**6*\n"
         "     @ y**4 + 252*x**5*y**5 + 210*x**4*y**6 + 120*x**3*y**7 + 45*x**2*y\n"
         "     @ **8 + 10*x*y**9 + y**10"
@@ -135,9 +167,10 @@ def test_line_wrapping():
         "     @ + 1"
     )
 
+
 def test_fcode_Piecewise():
     x = symbols('x')
-    code = fcode(Piecewise((x,x<1),(x**2,True)))
+    code = fcode(Piecewise((x, x < 1), (x**2, True)))
     expected = (
         "      if (x < 1) then\n"
         "         x\n"
@@ -146,7 +179,7 @@ def test_fcode_Piecewise():
         "      end if"
     )
     assert code == expected
-    assert fcode(Piecewise((x,x<1),(x**2,True)), assign_to="var") == (
+    assert fcode(Piecewise((x, x < 1), (x**2, True)), assign_to="var") == (
         "      if (x < 1) then\n"
         "         var = x\n"
         "      else\n"
@@ -171,9 +204,9 @@ def test_fcode_Piecewise():
         "     @ )/x**10 + 3628800*sin(x)/x**11\n"
         "      end if"
     )
-    code = fcode(Piecewise((a,x<0),(b,True)), assign_to="weird_name")
+    code = fcode(Piecewise((a, x < 0), (b, True)), assign_to="weird_name")
     assert code == expected
-    assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),True))) == (
+    assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), True))) == (
         "      if (x < 1) then\n"
         "         x\n"
         "      else if (x > 1) then\n"
@@ -182,7 +215,7 @@ def test_fcode_Piecewise():
         "         sin(x)\n"
         "      end if"
     )
-    assert fcode(Piecewise((x,x<1),(x**2,x>1),(sin(x),x>0))) == (
+    assert fcode(Piecewise((x, x < 1), (x**2, x > 1), (sin(x), x > 0))) == (
         "      if (x < 1) then\n"
         "         x\n"
         "      else if (x > 1) then\n"
@@ -191,6 +224,7 @@ def test_fcode_Piecewise():
         "         sin(x)\n"
         "      end if"
     )
+
 
 def test_wrap_fortran():
     #   "########################################################################"
@@ -251,6 +285,7 @@ def test_wrap_fortran():
         assert w == e
     assert len(wrapped_lines) == len(expected_lines)
 
+
 def test_wrap_fortran_keep_d0():
     printer = FCodePrinter()
     lines = [
@@ -260,7 +295,7 @@ def test_wrap_fortran_keep_d0():
         '      this_variable_is_very_long_because_we_try_to_test_line_break   = 1.0d0',
         '      this_variable_is_very_long_because_we_try_to_test_line_break    = 1.0d0',
         '      this_variable_is_very_long_because_we_try_to_test_line_break = 10.0d0'
-        ]
+    ]
     expected = [
         '      this_variable_is_very_long_because_we_try_to_test_line_break=1.0d0',
         '      this_variable_is_very_long_because_we_try_to_test_line_break =',
@@ -273,15 +308,18 @@ def test_wrap_fortran_keep_d0():
         '     @ 1.0d0',
         '      this_variable_is_very_long_because_we_try_to_test_line_break =',
         '     @ 10.0d0'
-        ]
+    ]
     assert printer._wrap_fortran(lines) == expected
 
+
 def test_settings():
-    raises(TypeError, 'fcode(S(4), method="garbage")')
+    raises(TypeError, lambda: fcode(S(4), method="garbage"))
+
 
 def test_free_form_code_line():
     x, y = symbols('x,y')
     assert fcode(cos(x) + sin(y), source_format='free') == "sin(y) + cos(x)"
+
 
 def test_free_form_continuation_line():
     x, y = symbols('x,y')
@@ -293,6 +331,7 @@ def test_free_form_continuation_line():
     )
     assert result == expected
 
+
 def test_free_form_comment_line():
     printer = FCodePrinter({ 'source_format': 'free'})
     lines = [ "! This is a long comment on a single line that must be wrapped properly to produce nice output"]
@@ -300,6 +339,7 @@ def test_free_form_comment_line():
         '! This is a long comment on a single line that must be wrapped properly',
         '! to produce nice output']
     assert printer._wrap_fortran(lines) == expected
+
 
 def test_loops():
     n, m = symbols('n,m', integer=True)
@@ -310,19 +350,20 @@ def test_loops():
     j = Idx('j', n)
 
     expected = (
-            'do i = 1, m\n'
-            '   y(i) = 0\n'
-            'end do\n'
-            'do i = 1, m\n'
-            '   do j = 1, n\n'
-            '      y(i) = %(rhs)s\n'
-            '   end do\n'
-            'end do'
-            )
+        'do i = 1, m\n'
+        '   y(i) = 0\n'
+        'end do\n'
+        'do i = 1, m\n'
+        '   do j = 1, n\n'
+        '      y(i) = %(rhs)s\n'
+        '   end do\n'
+        'end do'
+    )
 
     code = fcode(A[i, j]*x[j], assign_to=y[i], source_format='free')
     assert (code == expected % {'rhs': 'y(i) + A(i, j)*x(j)'} or
             code == expected % {'rhs': 'y(i) + x(j)*A(i, j)'})
+
 
 def test_dummy_loops():
     # the following line could also be
@@ -334,12 +375,13 @@ def test_dummy_loops():
     i = Idx(i, m)
 
     expected = (
-            'do i_%(icount)i = 1, m_%(mcount)i\n'
-            '   y(i_%(icount)i) = x(i_%(icount)i)\n'
-            'end do'
-            ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
+        'do i_%(icount)i = 1, m_%(mcount)i\n'
+        '   y(i_%(icount)i) = x(i_%(icount)i)\n'
+        'end do'
+    ) % {'icount': i.label.dummy_index, 'mcount': m.dummy_index}
     code = fcode(x[i], assign_to=y[i], source_format='free')
     assert code == expected
+
 
 def test_derived_classes():
     class MyFancyFCodePrinter(FCodePrinter):
@@ -350,65 +392,66 @@ def test_derived_classes():
     x = symbols('x')
     assert printer.doprint(sin(x)) == "      bork = sin(x)"
 
+
 def test_indent():
     codelines = (
-            'subroutine test(a)\n'
-            'integer :: a, i, j\n'
-            '\n'
-            'do\n'
-            'do \n'
-            'do j = 1, 5\n'
-            'if (a>b) then\n'
-            'if(b>0) then\n'
-            'a = 3\n'
-            'donot_indent_me = 2\n'
-            'do_not_indent_me_either = 2\n'
-            'ifIam_indented_something_went_wrong = 2\n'
-            'if_I_am_indented_something_went_wrong = 2\n'
-            'end should not be unindented here\n'
-            'end if\n'
-            'endif\n'
-            'end do\n'
-            'end do\n'
-            'enddo\n'
-            'end subroutine\n'
-            '\n'
-            'subroutine test2(a)\n'
-            'integer :: a\n'
-            'do\n'
-            'a = a + 1\n'
-            'end do \n'
-            'end subroutine\n'
-            )
+        'subroutine test(a)\n'
+        'integer :: a, i, j\n'
+        '\n'
+        'do\n'
+        'do \n'
+        'do j = 1, 5\n'
+        'if (a>b) then\n'
+        'if(b>0) then\n'
+        'a = 3\n'
+        'donot_indent_me = 2\n'
+        'do_not_indent_me_either = 2\n'
+        'ifIam_indented_something_went_wrong = 2\n'
+        'if_I_am_indented_something_went_wrong = 2\n'
+        'end should not be unindented here\n'
+        'end if\n'
+        'endif\n'
+        'end do\n'
+        'end do\n'
+        'enddo\n'
+        'end subroutine\n'
+        '\n'
+        'subroutine test2(a)\n'
+        'integer :: a\n'
+        'do\n'
+        'a = a + 1\n'
+        'end do \n'
+        'end subroutine\n'
+    )
     expected = (
-            'subroutine test(a)\n'
-            'integer :: a, i, j\n'
-            '\n'
-            'do\n'
-            '   do \n'
-            '      do j = 1, 5\n'
-            '         if (a>b) then\n'
-            '            if(b>0) then\n'
-            '               a = 3\n'
-            '               donot_indent_me = 2\n'
-            '               do_not_indent_me_either = 2\n'
-            '               ifIam_indented_something_went_wrong = 2\n'
-            '               if_I_am_indented_something_went_wrong = 2\n'
-            '               end should not be unindented here\n'
-            '            end if\n'
-            '         endif\n'
-            '      end do\n'
-            '   end do\n'
-            'enddo\n'
-            'end subroutine\n'
-            '\n'
-            'subroutine test2(a)\n'
-            'integer :: a\n'
-            'do\n'
-            '   a = a + 1\n'
-            'end do \n'
-            'end subroutine\n'
-            )
-    p = FCodePrinter({'source_format':'free'})
+        'subroutine test(a)\n'
+        'integer :: a, i, j\n'
+        '\n'
+        'do\n'
+        '   do \n'
+        '      do j = 1, 5\n'
+        '         if (a>b) then\n'
+        '            if(b>0) then\n'
+        '               a = 3\n'
+        '               donot_indent_me = 2\n'
+        '               do_not_indent_me_either = 2\n'
+        '               ifIam_indented_something_went_wrong = 2\n'
+        '               if_I_am_indented_something_went_wrong = 2\n'
+        '               end should not be unindented here\n'
+        '            end if\n'
+        '         endif\n'
+        '      end do\n'
+        '   end do\n'
+        'enddo\n'
+        'end subroutine\n'
+        '\n'
+        'subroutine test2(a)\n'
+        'integer :: a\n'
+        'do\n'
+        '   a = a + 1\n'
+        'end do \n'
+        'end subroutine\n'
+    )
+    p = FCodePrinter({'source_format': 'free'})
     result = p.indent_code(codelines)
     assert result == expected
