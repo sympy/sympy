@@ -15,11 +15,7 @@ from sympy.combinatorics.permutations import Permutation
 import itertools,copy,operator
 import sys,copy
 from itertools import imap
-
-try:
-    from itertools import combinations
-except:
-    from combinations import combinations
+from sympy.core.compatability import combinations
 
 from sympy.ga.ga_print import GA_Printer,GA_LatexPrinter,enhance_print,latex
 from sympy.ga.vector import Vector

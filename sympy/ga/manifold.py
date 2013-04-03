@@ -2,11 +2,7 @@
 
 from os import system
 import copy
-
-try:
-    from itertools import combinations
-except:
-    from combinations import combinations
+from sympy.core.compatability import combinations
 
 from sympy import trigsimp,simplify
 from sympy.ga.ga import MV

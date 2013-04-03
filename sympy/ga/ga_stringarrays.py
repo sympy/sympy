@@ -3,11 +3,7 @@
 from sympy import S,Symbol,Function
 import operator
 from itertools import imap,ifilter
-
-try:
-    from itertools import combinations
-except:
-    from combinations import combinations
+from sympy.core.compatability import combinations
 
 def str_array(base,n=None):
     """
