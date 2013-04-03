@@ -300,8 +300,6 @@ def block_collapse(expr):
     >>> print block_collapse(C*B)
     [X, Z + Z*Y]
     """
-    if not expr.has(BlockMatrix):
-        return expr
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
         bottom_up(condition(hasbm, typed(
