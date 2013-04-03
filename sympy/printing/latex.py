@@ -442,6 +442,9 @@ class LatexPrinter(Printer):
             return r"%s %s" % (tex, self._print(e))
 
     def _print_Function(self, expr, exp=None):
+        '''expr is the expression involving the function
+            exp is an exponent
+        '''
         func = expr.func.__name__
 
         if hasattr(self, '_print_' + func):
@@ -482,6 +485,8 @@ class LatexPrinter(Printer):
             elif exp is not None:
                 if func in accepted_latex_functions:
                     name = r"\%s^{%s}" % (func, exp)
+                elif len(func) == 1:
+                    name = r"%s^{%s}" % (func, exp)
                 else:
                     # If the generic function name contains an underscore, handle it
                     name = r"\operatorname{%s}^{%s}" % (
@@ -489,6 +494,8 @@ class LatexPrinter(Printer):
             else:
                 if func in accepted_latex_functions:
                     name = r"\%s" % func
+                elif len(func) == 1:
+                    name = func
                 else:
                     # If the generic function name contains an underscore, handle it
                     name = r"\operatorname{%s}" % func.replace("_", r"\_")
@@ -507,6 +514,9 @@ class LatexPrinter(Printer):
                 name += r"^{%s}" % exp
 
             return name % ",".join(args)
+
+    def _print_UndefinedFunction(self, expr):
+        return r'\operatorname{%s}' % expr
 
     def _print_Lambda(self, expr):
         symbols, expr = expr.args
