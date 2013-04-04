@@ -999,19 +999,20 @@ def LaTeX(expr, inline=True):
     'equation*' environment (remember to import 'amsmath').
 
     >>> from sympy import Rational
-    >>> from sympy.abc import tau, mu
+    >>> from sympy.abc import tau, mu, x, y
+    >>> from sympy.galgebra.latex_ex import LaTeX
 
-    >>> latex((2*tau)**Rational(7,2))
+    >>> LaTeX((2*tau)**Rational(7,2))
     '$8 \\\\sqrt{2} \\\\sqrt[7]{\\\\tau}$'
 
-    >>> latex((2*mu)**Rational(7,2), inline=False)
+    >>> LaTeX((2*mu)**Rational(7,2), inline=False)
     '\\\\begin{equation*}8 \\\\sqrt{2} \\\\sqrt[7]{\\\\mu}\\\\end{equation*}'
 
     Besides all Basic based expressions, you can recursively
     convert Python containers (lists, tuples and dicts) and
     also SymPy matrices:
 
-    >>> latex([2/x, y])
+    >>> LaTeX([2/x, y])
     '$\\\\begin{bmatrix}\\\\frac{2}{x}, & y\\\\end{bmatrix}$'
 
     The extended latex printer will also append the output to a
