@@ -1790,3 +1790,6 @@ def test_Add_queries():
 def test_positive():
     with assuming(Q.positive(x + 1)):
         assert not ask(Q.positive(x))
+
+def test_issue_2322():
+    raises(TypeError, lambda: ask(pi/log(x), Q.real))
