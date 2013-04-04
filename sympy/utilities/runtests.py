@@ -1186,6 +1186,9 @@ class SymPyDocTestFinder(DocTestFinder):
             for rawname, val in obj.__dict__.items():
                 # Recurse to functions & classes.
                 if inspect.isfunction(val) or inspect.isclass(val):
+                    if val.__module__.split('.')[0] != 'sympy':
+                        continue
+
                     in_module = self._from_module(module, val)
                     if not in_module:
                         # double check in case this function is decorated
