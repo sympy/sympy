@@ -20,8 +20,7 @@ from sympy.functions import (
     sin, cos, tan, cot, sinh, cosh, tanh, coth)
 from sympy.functions.elementary.integers import ceiling
 
-from sympy.functions import gamma, exp, sqrt, log, root, exp_polar
-from sympy.utilities.iterables import flatten, has_variety
+from sympy.utilities.iterables import flatten, has_variety, sift
 
 from sympy.simplify.cse_main import cse
 from sympy.simplify.cse_opts import sub_pre, sub_post
@@ -3365,7 +3364,7 @@ def signsimp(expr, evaluate=True):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, fu=False, doit=True):
     """
     Simplifies the given expression.
 
@@ -3504,6 +3503,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if not isinstance(expr, Basic):  # XXX: temporary hack
         return expr
 
+    if doit:
+        expr = expr.doit()
+    
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.

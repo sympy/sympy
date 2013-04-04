@@ -3648,8 +3648,8 @@ def _solve_variation_of_parameters(eq, func, order, match):
         negoneterm *= -1
 
     if r.get('simplify', True):
-        psol = simplify(psol, doit_f=False)
-        psol = trigsimp(psol, deep=True)
+        psol = simplify(psol, doit=False) # set doit=False to prevent simplify from hanging
+        psol = trigsimp(psol, deep=True)  # see issue 3300 for more
     return Eq(f(x), gsol.rhs + psol)
 
 
