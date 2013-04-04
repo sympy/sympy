@@ -53,9 +53,9 @@ class PrettyPrinter(Printer):
         return prettyForm(e)
 
     def _print_atan2(self, e):
-        pform = prettyForm(*self._print_seq(e.args).parens())
-        pform = prettyForm(*pform.left('atan2'))
-        return pform
+        from sympy.functions.elementary.trigonometric import atan
+        denominator, numerator = e.args
+        return self._print_Function(atan(numerator / denominator))
 
     def _print_Symbol(self, e):
         symb = pretty_symbol(e.name)
