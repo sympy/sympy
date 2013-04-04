@@ -2,15 +2,19 @@
 
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
     powsimp, Lambda, sin, cos, pi, I, Interval, re, im)
-from sympy.utilities.pytest import raises
 
-from sympy.polys import Poly, cyclotomic_poly, intervals, nroots
+from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
+    PolynomialError)
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
     roots_binomial, preprocess_roots, roots)
 
-a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
+from sympy.utilities.pytest import raises
+from sympy.utilities.randtest import test_numerically
+
+
+a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
 
 
 def test_roots_linear():
@@ -76,6 +80,13 @@ def test_roots_quartic():
         eq = x**4 + a*x**3 + b*x**2 + c*x + d
         ans = roots_quartic(Poly(eq, x))
         assert all(eq.subs(x, ai).n(chop=True) == 0 for ai in ans)
+
+    # not all symbolic quartics are unresolvable
+    eq = Poly(q*x + q/4 + x**4 + x**3 + 2*x**2 - Rational(1, 3), x)
+    sol = roots_quartic(eq)
+    assert all(test_numerically(eq.subs(x, i), 0) for i in sol)
+    # but some are (see also iss 1890)
+    raises(PolynomialError, lambda: roots_quartic(Poly(y*x**4 + x + z, x)))
 
 
 def test_roots_cyclotomic():
