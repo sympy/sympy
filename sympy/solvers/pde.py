@@ -35,12 +35,11 @@ more information on each (run help(pde)):
 
 """
 from copy import deepcopy
-from itertools import combinations_with_replacement
 
 from sympy import Eq, Equality
 from sympy.simplify import simplify
 from sympy.core import Add, C, S, Mul, Pow, oo
-from sympy.core.compatibility import reduce
+from sympy.core.compatibility import reduce, combinations_with_replacement
 from sympy.core.function import Function, Derivative, expand, diff
 from sympy.core.numbers import Rational
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
