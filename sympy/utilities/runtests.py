@@ -1186,7 +1186,10 @@ class SymPyDocTestFinder(DocTestFinder):
             for rawname, val in obj.__dict__.items():
                 # Recurse to functions & classes.
                 if inspect.isfunction(val) or inspect.isclass(val):
-                    if val.__module__.split('.')[0] != 'sympy':
+                    # Make sure we don't run doctests functions or classes
+                    # from different modules
+                    if val.__module__.split('.')[0] != 'sympy' or \
+                       val.__module__ != module.__name__:
                         continue
 
                     in_module = self._from_module(module, val)
@@ -1240,6 +1243,11 @@ class SymPyDocTestFinder(DocTestFinder):
                 if (inspect.isfunction(val) or
                     inspect.isclass(val) or
                         isinstance(val, property)):
+                    # Make sure we don't run doctests functions or classes
+                    # from different modules
+                    if val.__module__.split('.')[0] != 'sympy' or \
+                       val.__module__ != module.__name__:
+                        continue
                     in_module = self._from_module(module, val)
                     if not in_module:
                         # "double check" again
