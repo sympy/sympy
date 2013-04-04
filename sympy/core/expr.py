@@ -2726,6 +2726,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
+        func = expr.func
         # XXX: Hack to support non-Basic args
         #              |
         #              V
@@ -2737,10 +2738,15 @@ class Expr(Basic, EvalfMixin):
                 sargs.append(arg)
 
             if hit:
-                expr = expr.func(*sargs)
+                expr = func(*sargs)
+                # try to return it as it was given
+                if expr.func != func:
+                    u = func(*sargs, evaluate=False)
+                    if u.func == func:
+                        expr = u
 
-        if hasattr(expr, '_eval_expand_' + hint):
-            newexpr = getattr(expr, '_eval_expand_' + hint)(**hints)
+        if hasattr(expr, hint):
+            newexpr = getattr(expr, hint)(**hints)
             if newexpr != expr:
                 return (newexpr, True)
         return (expr, hit)
@@ -2796,6 +2802,7 @@ class Expr(Basic, EvalfMixin):
         for hint in sorted(hints.keys(), key=_expand_hint_key):
             use_hint = hints[hint]
             if use_hint:
+                hint = '_eval_expand_' + hint
                 expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
 
         if modulus is not None:
