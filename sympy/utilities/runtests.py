@@ -1181,8 +1181,11 @@ class SymPyDocTestFinder(DocTestFinder):
         if test is not None:
             tests.append(test)
 
+        if not self._recurse:
+            return
+
         # Look for tests in a module's contained objects.
-        if inspect.ismodule(obj) and self._recurse:
+        if inspect.ismodule(obj):
             for rawname, val in obj.__dict__.items():
                 # Recurse to functions & classes.
                 if inspect.isfunction(val) or inspect.isclass(val):
@@ -1212,8 +1215,7 @@ class SymPyDocTestFinder(DocTestFinder):
                         except Exception:
                             pass
 
-        # Look for tests in a module's __test__ dictionary.
-        if inspect.ismodule(obj) and self._recurse:
+            # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
                 if not isinstance(valname, basestring):
                     raise ValueError("SymPyDocTestFinder.find: __test__ keys "
@@ -1231,7 +1233,7 @@ class SymPyDocTestFinder(DocTestFinder):
                            globs, seen)
 
         # Look for tests in a class's contained objects.
-        if inspect.isclass(obj) and self._recurse:
+        if inspect.isclass(obj):
             for valname, val in obj.__dict__.items():
                 # Special handling for staticmethod/classmethod.
                 if isinstance(val, staticmethod):
