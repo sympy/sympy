@@ -1191,8 +1191,9 @@ class SymPyDocTestFinder(DocTestFinder):
                 if inspect.isfunction(val) or inspect.isclass(val):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
-                    if val.__module__ != module.__name__:
-                        continue
+                    if not isinstance(val, property): # properties don't have a __module__ attr
+                        if val.__module__ != module.__name__:
+                            continue
 
                     in_module = self._from_module(module, val)
                     if not in_module:
@@ -1246,7 +1247,8 @@ class SymPyDocTestFinder(DocTestFinder):
                         isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
-                    if val.__module__ != module.__name__:
+                    if not isinstance(val, property) and \
+                       val.__module__ != module.__name__:
                         continue
                     in_module = self._from_module(module, val)
                     if not in_module:
