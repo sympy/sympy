@@ -2726,7 +2726,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
-        func = expr.func
+        cls = expr.__class__
         # XXX: Hack to support non-Basic args
         #              |
         #              V
@@ -2738,17 +2738,25 @@ class Expr(Basic, EvalfMixin):
                 sargs.append(arg)
 
             if hit:
-                expr = func(*sargs)
-                # try to return it as it was given
-                if expr.func != func:
-                    u = func(*sargs, evaluate=False)
-                    if u.func == func:
-                        expr = u
+                expr = cls(*sargs)
 
         if hasattr(expr, hint):
             newexpr = getattr(expr, hint)(**hints)
             if newexpr != expr:
                 return (newexpr, True)
+        else:
+            # see if an unevaluated form is changed
+            if expr.__class__ != cls:
+                u = cls(*sargs, **dict(evaluate=False))
+                if u.__class__ == cls and hasattr(u, hint):
+                    newexpr = getattr(u, hint)(**hints)
+                    if newexpr != u:
+                        return (newexpr, True)
+                    # return it with the same type as was passed only
+                    # if it's not longer than the evaluated form
+                    if u.count_ops() <= expr.count_ops():
+                        expr = u
+
         return (expr, hit)
 
     @cacheit
