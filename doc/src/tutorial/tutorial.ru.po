@@ -87,14 +87,13 @@ msgstr ""
 "пакет ``python-sympy`` с помощью системы установки программ:"
 
 #: tutorial.en.rst:78
-#, fuzzy
 msgid ""
 "For other means how to install SymPy, consult the wiki page `Download and "
 "Installation <https://github.com/sympy/sympy/wiki/Download-Installation>`_."
 msgstr ""
-"Другие способы установки SymPy описаны в разделе Downloads_ на домашней "
-"странице SymPy."
-
+"Другие способы установки SymPy описаны в разделе `Download and "
+"Installation <https://github.com/sympy/sympy/wiki/Download-Installation>`_ "
+"нашего Вики."
 #: tutorial.en.rst:83
 msgid "isympy Console"
 msgstr "Консоль isympy"
