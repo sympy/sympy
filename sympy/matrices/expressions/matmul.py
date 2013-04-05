@@ -162,3 +162,14 @@ rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, MatMul),
                                  do_one(*rules)))
+
+def only_squares(*matrices):
+    """ factor matrices only if they are square """
+    assert matrices[0].rows == matrices[-1].cols
+    out = []
+    start = 0
+    for i, M in enumerate(matrices):
+        if M.cols == matrices[start].rows:
+            out.append(MatMul(*matrices[start:i+1]).doit())
+            start = i+1
+    return out

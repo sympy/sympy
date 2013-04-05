@@ -105,7 +105,6 @@ def test_BlockMatrix_Determinant():
     X = BlockMatrix([[A, B], [C, D]])
     from sympy import assuming, Q
     with assuming(Q.invertible(A)):
-        print det(X)
         assert det(X) == det(A) * det(D - C*A.I*B)
 
 def test_squareBlockMatrix():

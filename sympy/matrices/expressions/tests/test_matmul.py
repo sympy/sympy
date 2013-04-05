@@ -3,7 +3,7 @@ from sympy.functions import adjoint, transpose
 from sympy.matrices import Identity, Inverse, Matrix, MatrixSymbol, ZeroMatrix
 from sympy.matrices.expressions import Adjoint, Transpose
 from sympy.matrices.expressions.matmul import (factor_in_front, remove_ids,
-        MatMul, xxinv, any_zeros, unpack)
+        MatMul, xxinv, any_zeros, unpack, only_squares)
 from sympy.strategies import null_safe
 
 n, m, l, k = symbols('n m l k', integer=True)
@@ -60,3 +60,12 @@ def test_unpack():
     assert unpack(MatMul(A, evaluate=False)) == A
     x = MatMul(A, B)
     assert unpack(x) == x
+
+def test_only_squares():
+    A = MatrixSymbol('A', n, m)
+    C = MatrixSymbol('C', n, n)
+    D = MatrixSymbol('D', n, n)
+
+    assert only_squares(C) == [C]
+    assert only_squares(C, D) == [C, D]
+    assert only_squares(C, A, A.T, D) == [C, A*A.T, D]
