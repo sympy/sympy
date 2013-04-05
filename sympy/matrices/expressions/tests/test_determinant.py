@@ -3,7 +3,7 @@ from sympy.functions import adjoint, conjugate, transpose
 from sympy.matrices import eye, Matrix, ShapeError
 from sympy.matrices.expressions import (
     Adjoint, Identity, FunctionMatrix, MatrixExpr, MatrixSymbol, Determinant,
-    ZeroMatrix
+    det, ZeroMatrix
 )
 from sympy.utilities.pytest import raises
 
@@ -17,9 +17,10 @@ def test_det():
     assert isinstance(Determinant(A), Determinant)
     assert not isinstance(Determinant(A), MatrixExpr)
     raises(ShapeError, lambda: Determinant(C))
-    assert Determinant(eye(3)) == 1
-    assert Determinant(Matrix(3, 3, [1, 3, 2, 4, 1, 3, 2, 5, 2])) == 17
-    A / Determinant(A)  # Make sure this is possible
+    print det(eye(3))
+    assert det(eye(3)) == 1
+    assert det(Matrix(3, 3, [1, 3, 2, 4, 1, 3, 2, 5, 2])) == 17
+    A / det(A)  # Make sure this is possible
 
     raises(TypeError, lambda: Determinant(S.One))
 

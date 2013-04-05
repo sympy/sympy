@@ -1,4 +1,4 @@
-from sympy import Basic, Expr
+from sympy import Basic, Expr, S, Q, ask
 from matexpr import ShapeError
 
 
@@ -23,11 +23,19 @@ class Determinant(Expr):
         if not mat.is_square:
             raise ShapeError("Det of a non-square matrix")
 
-        try:
-            return mat.det()
-        except (AttributeError, NotImplementedError):
-            return Basic.__new__(cls, mat)
+        return Basic.__new__(cls, mat)
 
     @property
     def arg(self):
         return self.args[0]
+
+    def doit(self, expand=False):
+        if ask(Q.singular(self)):
+            return S.Zero
+        try:
+            return self.arg._eval_determinant()
+        except (AttributeError, NotImplementedError):
+            return self
+
+def det(matexpr):
+    return Determinant(matexpr).doit()
