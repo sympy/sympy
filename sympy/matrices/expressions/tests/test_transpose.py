@@ -33,7 +33,3 @@ def test_transpose():
     assert Transpose(Sq)[0, 1] == Sq[1, 0]
 
     assert Transpose(A*B).doit() == Transpose(B) * Transpose(A)
-
-    with assuming(Q.symmetric(C)):
-        assert (C+C).T == (C+C)
-        assert C.T == C

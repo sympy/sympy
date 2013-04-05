@@ -35,8 +35,6 @@ class Transpose(MatrixExpr):
         arg = self.arg
         if hints.get('deep', True) and isinstance(arg, Basic):
             arg = arg.doit(**hints)
-        if ask(Q.symmetric(arg)):
-            return arg
         if arg._eval_transpose.im_func == MatrixExpr._eval_transpose.im_func:
             return Transpose(arg)
         try:
