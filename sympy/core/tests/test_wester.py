@@ -904,8 +904,8 @@ def test_M26():
 def test_M27():
     x = symbols('x', real=True)
     b = symbols('b', real=True)
-    raise NotImplementedError("With assuming sin(cos(1/E**2) + 1) + b > 0\
-                              solve(log(acos(asin(x**R(2,3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2)))**R(3/2), b + sin(1 + cos(1/e**2)))**R(3/2)]")
+    with assuming(Q.is_true(sin(cos(1/E**2) + 1) + b > 0)):
+        solve(log(acos(asin(x**R(2,3) - b) - 1)) + 2, x) == [-b - sin(1 + cos(1/e**2)))**R(3/2), b + sin(1 + cos(1/e**2)))**R(3/2)]")
 
 
 @XFAIL
