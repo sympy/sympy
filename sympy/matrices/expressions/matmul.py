@@ -83,6 +83,12 @@ class MatMul(MatrixExpr):
         else:
             raise NotImplementedError("Can't simplify any further")
 
+    def _eval_determinant(self):
+        from sympy.matrices.expressions.determinant import Determinant
+        factor, matrices = self.as_coeff_matrices()
+        square_matrices = only_squares(*matrices)
+        return factor**self.rows * Mul(*map(Determinant, square_matrices))
+
     def _eval_inverse(self):
         try:
             return MatMul(*[
