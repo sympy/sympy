@@ -11,7 +11,7 @@ from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.trace import Trace
-from sympy.matrices.expressions.determinant import det
+from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.functions.elementary.complexes import transpose
@@ -121,7 +121,7 @@ class BlockMatrix(MatrixExpr):
                 return det(A)*det(D - C*A.I*B)
             elif ask(Q.invertible(D)):
                 return det(D)*det(A - B*D.I*C)
-        return self
+        return Determinant(self)
 
     def transpose(self):
         """Return transpose of matrix.

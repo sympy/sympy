@@ -4,7 +4,7 @@ from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
 from sympy.matrices.expressions import (MatrixSymbol, Identity, MatMul,
         Inverse, Trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
-from sympy.core import Tuple, symbols
+from sympy.core import Tuple, symbols, Expr
 from sympy.functions import transpose
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
@@ -106,6 +106,8 @@ def test_BlockMatrix_Determinant():
     from sympy import assuming, Q
     with assuming(Q.invertible(A)):
         assert det(X) == det(A) * det(D - C*A.I*B)
+
+    assert isinstance(det(X), Expr)
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
