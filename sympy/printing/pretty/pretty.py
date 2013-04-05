@@ -219,6 +219,7 @@ class PrettyPrinter(Printer):
         pform = self._print(e.args[0])
         pform = prettyForm(*pform.parens('|', '|'))
         return pform
+    _print_Determinant = _print_Abs
 
     def _print_floor(self, e):
         if self._use_unicode:
