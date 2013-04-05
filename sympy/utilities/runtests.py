@@ -1079,6 +1079,13 @@ class SymPyDocTests(object):
         self._reporter.entering_filename(filename, len(tests))
         for test in tests:
             assert len(test.examples) != 0
+
+            # check if there are external dependencies which need to be met
+            if '_doctest_depends_on' in test.globs:
+                if not self._process_dependencies(test.globs['_doctest_depends_on']):
+                    self._reporter.test_skip()
+                    continue
+
             runner = SymPyDocTestRunner(optionflags=pdoctest.ELLIPSIS |
                     pdoctest.NORMALIZE_WHITESPACE |
                     pdoctest.IGNORE_EXCEPTION_DETAIL)
@@ -1141,6 +1148,92 @@ class SymPyDocTests(object):
 
         return [sys_normcase(gi) for gi in g]
 
+    def _process_dependencies(self, deps):
+        """
+        Returns ``False`` if some dependencies are not met and the test should be
+        skipped otherwise returns ``True``.
+        """
+        executables = deps.get('exe', None)
+        moduledeps = deps.get('modules', None)
+        viewers = deps.get('disable_viewers', None)
+        pyglet = deps.get('pyglet', None)
+
+        # print deps
+
+        if executables is not None:
+            for ex in executables:
+                found = find_executable(ex)
+                # print "EXE %s found %s" %(ex, found)
+                if found is None:
+                    return False
+        if moduledeps is not None:
+            for extmod in moduledeps:
+                if extmod == 'matplotlib':
+                    matplotlib = import_module(
+                        'matplotlib',
+                        __import__kwargs={'fromlist':
+                                          ['pyplot', 'cm', 'collections']},
+                        min_module_version='1.0.0', catch=(RuntimeError,))
+                    if matplotlib is not None:
+                        pass
+                        # print "EXTMODULE matplotlib version %s found" % \
+                        #     matplotlib.__version__
+                    else:
+                        # print "EXTMODULE matplotlib > 1.0.0 not found"
+                        return False
+                else:
+                    # TODO min version support
+                    mod = import_module(extmod)
+                    if mod is not None:
+                        version = "unknown"
+                        if hasattr(mod, '__version__'):
+                            version = mod.__version__
+                        # print "EXTMODULE %s version %s found" %(extmod, version)
+                    else:
+                        # print "EXTMODULE %s not found" %(extmod)
+                        return False
+        if viewers is not None:
+            import tempfile
+            tempdir = tempfile.mkdtemp()
+            os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
+
+            vw = '#!/usr/bin/env python\n' \
+                 'import sys\n' \
+                 'if len(sys.argv) <= 1:\n' \
+                 '    exit("wrong number of args")\n'
+
+            for viewer in viewers:
+                with open(os.path.join(tempdir, viewer), 'w') as fh:
+                    fh.write(vw)
+
+                # make the file executable
+                os.chmod(os.path.join(tempdir, viewer),
+                         stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
+        if pyglet:
+            # monkey-patch pyglet s.t. it does not open a window during
+            # doctesting
+            import pyglet
+            class DummyWindow(object):
+                def __init__(self, *args, **kwargs):
+                    self.has_exit=True
+                    self.width = 600
+                    self.height = 400
+
+                def set_vsync(self, x):
+                    pass
+
+                def switch_to(self):
+                    pass
+
+                def push_handlers(self, x):
+                    pass
+
+                def close(self):
+                    pass
+
+            pyglet.window.Window = DummyWindow
+
+        return True
 
 class SymPyDocTestFinder(DocTestFinder):
     """
@@ -1301,86 +1394,6 @@ class SymPyDocTestFinder(DocTestFinder):
         if self._exclude_empty and not docstring:
             return None
 
-        # check if there are external dependencies which need to be met
-        if hasattr(obj, '_doctest_depends_on'):
-            executables = obj._doctest_depends_on.get('exe', None)
-            moduledeps = obj._doctest_depends_on.get('modules', None)
-            viewers = obj._doctest_depends_on.get('disable_viewers', None)
-            pyglet = obj._doctest_depends_on.get('pyglet', None)
-
-            if executables is not None:
-                for ex in executables:
-                    found = find_executable(ex)
-                    # print "EXE %s found %s" %(ex, found)
-                    if found is None:
-                        return None
-            if moduledeps is not None:
-                for extmod in moduledeps:
-                    if extmod == 'matplotlib':
-                        matplotlib = import_module(
-                            'matplotlib',
-                            __import__kwargs={'fromlist':
-                                              ['pyplot', 'cm', 'collections']},
-                            min_module_version='1.1.0', catch=(RuntimeError,))
-                        if matplotlib is not None:
-                            pass
-                            # print "EXTMODULE matplotlib version %s found" % \
-                            #     matplotlib.__version__
-                        else:
-                            # print "EXTMODULE matplotlib > 1.0.0 not found"
-                            return None
-                    else:
-                        # TODO min version support
-                        mod = import_module(extmod)
-                        if mod is not None:
-                            version = "unknown"
-                            if hasattr(mod, '__version__'):
-                                version = mod.__version__
-                            # print "EXTMODULE %s version %s found" %(extmod, version)
-                        else:
-                            # print "EXTMODULE %s not found" %(extmod)
-                            return None
-            if viewers is not None:
-                import tempfile
-                tempdir = tempfile.mkdtemp()
-                os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
-
-                vw = '#!/usr/bin/env python\n' \
-                     'import sys\n' \
-                     'if len(sys.argv) <= 1:\n' \
-                     '    exit("wrong number of args")\n'
-
-                for viewer in viewers:
-                    with open(os.path.join(tempdir, viewer), 'w') as fh:
-                        fh.write(vw)
-
-                    # make the file executable
-                    os.chmod(os.path.join(tempdir, viewer),
-                             stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
-            if pyglet:
-                # monkey-patch pyglet s.t. it does not open a window during
-                # doctesting
-                import pyglet
-                class DummyWindow(object):
-                    def __init__(self, *args, **kwargs):
-                        self.has_exit=True
-                        self.width = 600
-                        self.height = 400
-
-                    def set_vsync(self, x):
-                        pass
-
-                    def switch_to(self):
-                        pass
-
-                    def push_handlers(self, x):
-                        pass
-
-                    def close(self):
-                        pass
-
-                pyglet.window.Window = DummyWindow
-
         # Return a DocTest for this object.
         if module is None:
             filename = None
@@ -1388,6 +1401,10 @@ class SymPyDocTestFinder(DocTestFinder):
             filename = getattr(module, '__file__', module.__name__)
             if filename[-4:] in (".pyc", ".pyo"):
                 filename = filename[:-1]
+
+        if hasattr(obj, '_doctest_depends_on'):
+            globs['_doctest_depends_on'] = obj._doctest_depends_on
+
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
 
@@ -1836,23 +1853,25 @@ class PyTestReporter(Reporter):
         else:
             self.write(char, "Green")
 
-    def test_skip(self, v):
-        if sys.version_info[:2] < (2, 6):
-            message = getattr(v, 'message', '')
-        else:
-            message = str(v)
-        self._skipped += 1
+    def test_skip(self, v=None):
         char = "s"
-        if message == "KeyboardInterrupt":
-            char = "K"
-        elif message == "Timeout":
-            char = "T"
-        elif message == "Slow":
-            char = "w"
+        self._skipped += 1
+        if v is not None:
+            if sys.version_info[:2] < (2, 6):
+                message = getattr(v, 'message', '')
+            else:
+                message = str(v)
+            if message == "KeyboardInterrupt":
+                char = "K"
+            elif message == "Timeout":
+                char = "T"
+            elif message == "Slow":
+                char = "w"
         self.write(char, "Blue")
         if self._verbose:
             self.write(" - ", "Blue")
-            self.write(message, "Blue")
+            if v is not None:
+                self.write(message, "Blue")
 
     def test_exception(self, exc_info):
         self._exceptions.append((self._active_file, self._active_f, exc_info))
