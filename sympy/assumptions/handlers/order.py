@@ -197,3 +197,9 @@ class AskPositiveHandler(CommonHandler):
     def Determinant(expr, assumptions):
         if ask(Q.positive_definite(expr.arg), assumptions):
             return True
+
+    @staticmethod
+    def MatrixElement(expr, assumptions):
+        if (expr.i == expr.j
+                and ask(Q.positive_definite(expr.parent), assumptions)):
+            return True

@@ -87,7 +87,7 @@ def test_positive_definite():
     assert ask(Q.positive_definite(X + Z), Q.positive_definite(X) &
             Q.positive_definite(Z)) is True
     assert not ask(Q.positive_definite(-X), Q.positive_definite(X))
-
+    assert ask(Q.positive(X[1, 1]), Q.positive_definite(X))
 
 def test_triangular():
     assert ask(Q.upper_triangular(X + Z.T + Identity(2)), Q.upper_triangular(X) &
