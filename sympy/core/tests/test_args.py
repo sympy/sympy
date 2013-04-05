@@ -1708,6 +1708,9 @@ def test_sympy__matrices__expressions__matexpr__Identity():
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
 
+def test_sympy__matrices__expressions__matexpr__MatrixElement():
+    from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+    assert MatrixElement(MatrixSymbol('A', 3, 5), 2, 3)
 
 @XFAIL
 def test_sympy__matrices__expressions__matexpr__MatrixSymbol():

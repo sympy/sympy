@@ -280,6 +280,13 @@ class MatrixExpr(Basic):
         return 1, MatMul(self)
 
 
+class MatrixElement(Expr):
+    is_commutative=True
+    parent = property(lambda self: self.args[0])
+    i = property(lambda self: self.args[1])
+    j = property(lambda self: self.args[2])
+
+
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
 
@@ -321,14 +328,7 @@ class MatrixSymbol(MatrixExpr):
         raise TypeError( "%s object is not callable" % self.__class__ )
 
     def _entry(self, i, j):
-        # MatMul _entry will pass us a Dummy and ask that we remember it
-        # so that it can be summed over later. We'll use the function syntax
-        if i.is_Dummy or j.is_Dummy:
-            return Symbol(self.name)(i, j)
-        # If that isn't the case we'd really rather just make a symbol
-        # They are simpler and look much nicer
-        else:
-            return Symbol('%s_%s%s' % (self.name, str(i), str(j)))
+        return MatrixElement(self, i, j)
 
     @property
     def free_symbols(self):
