@@ -1022,6 +1022,8 @@ def test_M39():
              {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: -sqrt(-1 + sqrt(2)*I)},\
              {y: -sqrt(2)*I, z: R(1,3) + sqrt(2)*I/3, x: sqrt(-1 + sqrt(2)*I)}]
 
+# N. Inequalities
+
 
 def test_N1():
     assert ask(Q.is_true(E**pi > pi**E))
