@@ -1,25 +1,24 @@
 from sympy import Basic, Expr
-from .matexpr import ShapeError
+from matexpr import ShapeError
 
 
-class Det(Expr):
-    """Matrix Det
+class Determinant(Expr):
+    """Matrix Determinant
 
-    Represents the Det of a matrix expression.
+    Represents the determinant of a matrix expression.
 
-    >>> from sympy import MatrixSymbol, Det, eye
+    >>> from sympy import MatrixSymbol, Determinant, eye
     >>> A = MatrixSymbol('A', 3, 3)
-    >>> Det(A)
-    Det(A)
+    >>> Deteterminant(A)
+    Determinant(A)
 
-    >>> Det(eye(3))
+    >>> Determinant(eye(3))
     1
     """
-    is_Det = True
 
     def __new__(cls, mat):
         if not mat.is_Matrix:
-            raise TypeError("input to Det, %s, is not a matrix" % str(mat))
+            raise TypeError("Input to Determinant, %s, not a matrix" % str(mat))
 
         if not mat.is_square:
             raise ShapeError("Det of a non-square matrix")

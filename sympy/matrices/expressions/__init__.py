@@ -10,7 +10,7 @@ from matexpr import (Identity, MatrixExpr, MatrixSymbol, ZeroMatrix,
 from matmul import MatMul
 from matpow import MatPow
 from trace import Trace
-from determinant import Det
+from determinant import Determinant
 from transpose import Transpose
 from adjoint import Adjoint
 from hadamard import hadamard_product, HadamardProduct
