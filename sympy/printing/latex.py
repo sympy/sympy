@@ -559,6 +559,7 @@ class LatexPrinter(Printer):
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
+    _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
         if self._needs_brackets(expr.args[0]):
