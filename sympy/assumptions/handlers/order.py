@@ -187,3 +187,13 @@ class AskPositiveHandler(CommonHandler):
     @staticmethod
     def Abs(expr, assumptions):
         return ask(Q.nonzero(expr), assumptions)
+
+    @staticmethod
+    def Trace(expr, assumptions):
+        if ask(Q.positive_definite(expr.arg), assumptions):
+            return True
+
+    @staticmethod
+    def Determinant(expr, assumptions):
+        if ask(Q.positive_definite(expr.arg), assumptions):
+            return True
