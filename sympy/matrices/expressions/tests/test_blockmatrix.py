@@ -2,7 +2,7 @@ from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
         bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
         bc_transpose, blockcut)
 from sympy.matrices.expressions import (MatrixSymbol, Identity, MatMul,
-        Inverse, Trace, Transpose)
+        Inverse, Trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
 from sympy.core import Tuple, symbols
 from sympy.functions import transpose
@@ -100,6 +100,13 @@ def test_BlockMatrix_Trace():
     X = BlockMatrix([[A, B], [C, D]])
     assert Trace(X) == Trace(A) + Trace(D)
 
+def test_BlockMatrix_Determinant():
+    A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
+    X = BlockMatrix([[A, B], [C, D]])
+    from sympy import assuming, Q
+    with assuming(Q.invertible(A)):
+        print det(X)
+        assert det(X) == det(A) * det(D - C*A.I*B)
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)

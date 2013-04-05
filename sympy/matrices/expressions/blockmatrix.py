@@ -1,3 +1,4 @@
+from sympy import ask, Q
 from sympy.core import Tuple, Basic, Add
 from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack
 from sympy.strategies.traverse import bottom_up
@@ -10,6 +11,7 @@ from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.determinant import det
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
 from sympy.functions.elementary.complexes import transpose
@@ -110,6 +112,16 @@ class BlockMatrix(MatrixExpr):
                         for i in range(self.blockshape[0])])
         raise NotImplementedError(
             "Can't perform trace of irregular blockshape")
+
+    def _eval_determinant(self):
+        if self.blockshape == (2, 2):
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
+            if ask(Q.invertible(A)):
+                return det(A)*det(D - C*A.I*B)
+            elif ask(Q.invertible(D)):
+                return det(D)*det(A - B*D.I*C)
+        return self
 
     def transpose(self):
         """Return transpose of matrix.
