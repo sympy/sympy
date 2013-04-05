@@ -1395,7 +1395,8 @@ class Basic(object):
 
         """
         if hints.get('deep', True):
-            terms = [ term.doit(**hints) for term in self.args ]
+            terms = [ term.doit(**hints) if isinstance(term, Basic) else term
+                                         for term in self.args ]
             return self.func(*terms)
         else:
             return self
@@ -1404,7 +1405,9 @@ class Basic(object):
         if self.is_Atom:
             return self
         sargs = self.args
-        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs ]
+        terms = [ t._eval_rewrite(pattern, rule, **hints)
+                    if isinstance(t, Basic) else t
+                    for t in sargs ]
         return self.func(*terms)
 
     def rewrite(self, *args, **hints):
