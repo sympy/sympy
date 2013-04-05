@@ -1249,7 +1249,7 @@ def multiset_partitions(multiset, m=None):
             yield [multiset[:]]
             return
 
-        # Split the information into in the multiset into two lists -
+        # Split the information of the multiset into two lists -
         # one of the elements themselves, and one (of the same length)
         # giving the number of repeats for the corresponding element.
         multiplicities = []
