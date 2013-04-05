@@ -498,6 +498,12 @@ def test_Poly__eq__():
     assert f.eq(g, strict=True) is False
     assert f.ne(g, strict=True) is True
 
+    t0 = Symbol('t0')
+
+    f =  Poly((t0/2 + x**2)*t**2 - x**2*t, t, domain='QQ[x,t0]')
+    g =  Poly((t0/2 + x**2)*t**2 - x**2*t, t, domain='ZZ(x,t0)')
+
+    assert (f == g) is True
 
 def test_PurePoly__eq__():
     assert (PurePoly(x, x) == PurePoly(x, x)) is True

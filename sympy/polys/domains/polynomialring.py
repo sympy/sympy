@@ -86,8 +86,10 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_FractionField(K1, a, K0):
         """Convert a rational function to ``dtype``. """
-        if K0.denom(a) == 1:
-            return K1.from_PolynomialRing(K0.numer(a), K0.field.ring.to_domain())
+        denom = K0.denom(a)
+
+        if denom.is_ground:
+            return K1.from_PolynomialRing(K0.numer(a)/denom, K0.field.ring.to_domain())
         else:
             return None
 

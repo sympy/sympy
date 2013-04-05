@@ -81,8 +81,12 @@ class FracField(DefaultPrinting):
     def __ne__(self, other):
         return self is not other
 
-    def new(self, numer, denom=None):
+    def raw_new(self, numer, denom=None):
         return self.dtype(self, numer, denom)
+    def new(self, numer, denom=None):
+        if denom is None: denom = self.ring.one
+        numer, denom = numer.cancel(denom)
+        return self.raw_new(numer, denom)
 
     def domain_new(self, element):
         return self.domain.convert(element)
@@ -94,11 +98,12 @@ class FracField(DefaultPrinting):
             domain = self.domain
 
             if domain.has_Ring and domain.has_assoc_Field:
+                ring = self.ring
                 ground_field = domain.get_field()
                 element = ground_field.convert(element)
-                numer = ground_field.numer(element)
-                denom = ground_field.denom(element)
-                return self.new(numer, denom)
+                numer = ring.ground_new(ground_field.numer(element))
+                denom = ring.ground_new(ground_field.denom(element))
+                return self.raw_new(numer, denom)
             else:
                 raise
 
@@ -162,11 +167,11 @@ class FracField(DefaultPrinting):
 
     @property
     def zero(self):
-        return self.new(self.ring.zero)
+        return self.raw_new(self.ring.zero)
 
     @property
     def one(self):
-        return self.new(self.ring.one)
+        return self.raw_new(self.ring.one)
 
     def to_domain(self):
         from sympy.polys.domains.fractionfield import FractionField
