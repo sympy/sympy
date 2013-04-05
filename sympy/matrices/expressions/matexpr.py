@@ -3,7 +3,7 @@ from functools import wraps
 from sympy.core import S, Symbol, sympify, Tuple, Integer, Basic, Expr
 from sympy.core.decorators import call_highest_priority
 from sympy.core.sympify import SympifyError
-from sympy.functions import transpose, conjugate, adjoint
+from sympy.functions import conjugate, adjoint
 from sympy.matrices import ShapeError
 from sympy.simplify import simplify
 
@@ -132,10 +132,6 @@ class MatrixExpr(Basic):
     def is_square(self):
         return self.rows == self.cols
 
-    def _eval_transpose(self):
-        from sympy.matrices.expressions.transpose import Transpose
-        return Transpose(self)
-
     def _eval_conjugate(self):
         from sympy.matrices.expressions.adjoint import Adjoint
         from sympy.matrices.expressions.transpose import Transpose
@@ -144,6 +140,9 @@ class MatrixExpr(Basic):
     def _eval_inverse(self):
         from sympy.matrices.expressions.inverse import Inverse
         return Inverse(self)
+
+    def _eval_transpose(self):
+        return Transpose(self).doit()
 
     def _eval_power(self, exp):
         return MatPow(self, exp)
@@ -169,6 +168,7 @@ class MatrixExpr(Basic):
         return conjugate(self)
 
     def transpose(self):
+        from sympy.matrices.expressions.transpose import transpose
         return transpose(self)
 
     T = property(transpose, None, None, 'Matrix transposition.')
@@ -405,14 +405,6 @@ class ZeroMatrix(MatrixExpr):
 
     def __new__(cls, m, n):
         return super(ZeroMatrix, cls).__new__(cls, m, n)
-
-    @property
-    def rows(self):
-        return self.args[0]
-
-    @property
-    def cols(self):
-        return self.args[1]
 
     @property
     def shape(self):

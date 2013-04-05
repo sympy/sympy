@@ -2,19 +2,17 @@ from sympy import ask, Q
 from sympy.core import Tuple, Basic, Add
 from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack
 from sympy.strategies.traverse import bottom_up
-from sympy.functions import transpose
 from sympy.utilities import sift
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ZeroMatrix, Identity
 from sympy.matrices.expressions.matmul import MatMul
 from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
-from sympy.matrices.expressions.transpose import Transpose
+from sympy.matrices.expressions.transpose import Transpose, transpose
 from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.functions.elementary.complexes import transpose
 from sympy.matrices import Matrix, eye
 
 

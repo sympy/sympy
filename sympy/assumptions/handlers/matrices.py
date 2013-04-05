@@ -41,7 +41,13 @@ class AskSymmetricHandler(CommonHandler):
         if Q.symmetric(expr) in conjuncts(assumptions):
             return True
 
-    ZeroMatrix, Identity = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+
+    @staticmethod
+    def ZeroMatrix(expr, assumptions):
+        return ask(Q.square(expr), assumptions)
 
     @staticmethod
     def Transpose(expr, assumptions):

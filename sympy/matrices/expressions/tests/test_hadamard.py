@@ -24,7 +24,7 @@ def test_HadamardProduct():
     mix = HadamardProduct(Z*A, B)*C
     assert mix.shape == (n, k)
 
-    assert HadamardProduct(A, B, A).T == HadamardProduct(A.T, B.T, A.T)
+    assert HadamardProduct(A, B, A).T == HadamardProduct(A.T, A.T, B.T)
 
 def test_mixed_indexing():
     X = MatrixSymbol('X', 2, 2)

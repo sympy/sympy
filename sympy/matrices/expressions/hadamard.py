@@ -59,8 +59,8 @@ class HadamardProduct(MatrixExpr):
         return Mul(*[arg._entry(i, j) for arg in self.args])
 
     def _eval_transpose(self):
-        from transpose import Transpose
-        return HadamardProduct(*[Transpose(arg) for arg in self.args])
+        from sympy.matrices.expressions.transpose import transpose
+        return HadamardProduct(*map(transpose, self.args))
 
     def doit(self, **ignored):
         return canonicalize(self)
