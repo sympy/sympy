@@ -65,15 +65,15 @@ def manual_diff(f, symbol):
     """
     if f.args:
         arg = f.args[0]
-        if f.func == sympy.tan:
+        if isinstance(f, sympy.tan):
             return arg.diff(symbol) * sympy.sec(arg)**2
-        elif f.func == sympy.cot:
+        elif isinstance(f, sympy.cot):
             return -arg.diff(symbol) * sympy.csc(arg)**2
-        elif f.func == sympy.sec:
+        elif isinstance(f, sympy.sec):
             return arg.diff(symbol) * sympy.sec(arg) * sympy.tan(arg)
-        elif f.func == sympy.csc:
+        elif isinstance(f, sympy.csc):
             return -arg.diff(symbol) * sympy.csc(arg) * sympy.cot(arg)
-        elif f.func == sympy.Add:
+        elif isinstance(f, sympy.Add):
             return sum([manual_diff(arg, symbol) for arg in f.args])
     return f.diff(symbol)
 
@@ -95,11 +95,12 @@ def find_substitutions(integrand, symbol, u_var):
         return False
 
     def possible_subterms(term):
-        if term.func in (sympy.sin, sympy.cos, sympy.tan,
-                         sympy.asin, sympy.acos, sympy.atan,
-                         sympy.exp, sympy.log):
+        if any(isinstance(term, cls)
+               for cls in (sympy.sin, sympy.cos, sympy.tan,
+                           sympy.asin, sympy.acos, sympy.atan,
+                           sympy.exp, sympy.log)):
             return [term.args[0]]
-        elif term.func == sympy.Mul:
+        elif isinstance(term, sympy.Mul):
             r = []
             for u in term.args:
                 numer, denom = fraction(u)
@@ -109,7 +110,7 @@ def find_substitutions(integrand, symbol, u_var):
                     r.append(u)
                 r.extend(possible_subterms(u))
             return r
-        elif term.func == sympy.Pow:
+        elif isinstance(term, sympy.Pow):
             if term.args[1].is_constant(symbol):
                 return [term.args[0]]
             elif term.args[0].is_constant(symbol):
@@ -186,16 +187,16 @@ def power_rule(integral):
     integrand, symbol = integral
     base, exp = integrand.as_base_exp()
 
-    if symbol not in exp.free_symbols and base.func in (sympy.Symbol, sympy.Dummy):
+    if symbol not in exp.free_symbols and isinstance(base, sympy.Symbol):
         if sympy.simplify(exp + 1) == 0:
             return LogRule(base, integrand, symbol)
         return PowerRule(base, exp, integrand, symbol)
-    elif symbol not in base.free_symbols and exp.func in (sympy.Symbol, sympy.Dummy):
+    elif symbol not in base.free_symbols and isinstance(exp, sympy.Symbol):
         return ExpRule(base, exp, integrand, symbol)
 
 def exp_rule(integral):
     integrand, symbol = integral
-    if integrand.args[0].func in (sympy.Symbol, sympy.Dummy):
+    if isinstance(integrand.args[0], sympy.Symbol):
         return ExpRule(sympy.E, integrand.args[0], integrand, symbol)
 
 def arctan_rule(integral):
@@ -272,7 +273,8 @@ def _parts_rule(integrand, symbol):
     def pull_out_u(*functions):
         def pull_out_u_rl(integrand):
             if any([integrand.has(f) for f in functions]):
-                args = [arg for arg in integrand.args if arg.func in functions]
+                args = [arg for arg in integrand.args
+                        if any(isinstance(arg, cls) for cls in functions)]
                 if args:
                     u = reduce(lambda a,b: a*b, args)
                     dv = integrand / u
@@ -287,7 +289,7 @@ def _parts_rule(integrand, symbol):
 
     dummy = sympy.Dummy()
     # we can integrate log(x) and atan(x) by setting dv = 1
-    if integrand.func in (sympy.log, sympy.atan):
+    if isinstance(integrand, sympy.log) or isinstance(integrand, sympy.atan):
         integrand = dummy * integrand
 
     for index, rule in enumerate(liate_rules):
@@ -363,24 +365,28 @@ def parts_rule(integral):
 
 def trig_rule(integral):
     integrand, symbol = integral
-    func = integrand.func
-    if func in (sympy.sin, sympy.cos):
+    if isinstance(integrand, sympy.sin) or isinstance(integrand, sympy.cos):
         arg = integrand.args[0]
 
-        if arg.func not in (sympy.Symbol, sympy.Dummy):
+        if not isinstance(arg, sympy.Symbol):
             return  # perhaps a substitution can deal with it
+
+        if isinstance(integrand, sympy.sin):
+            func = 'sin'
+        else:
+            func = 'cos'
 
         return TrigRule(func, arg, integrand, symbol)
 
-    if func == sympy.tan:
+    if isinstance(integrand, sympy.tan):
         rewritten = sympy.sin(*integrand.args) / sympy.cos(*integrand.args)
-    elif func == sympy.cot:
+    elif isinstance(integrand, sympy.cot):
         rewritten = sympy.cos(*integrand.args) / sympy.sin(*integrand.args)
-    elif func == sympy.sec:
+    elif isinstance(integrand, sympy.sec):
         arg = integrand.args[0]
         rewritten = ((sympy.sec(arg)**2 + sympy.tan(arg) * sympy.sec(arg)) /
                      (sympy.sec(arg) + sympy.tan(arg)))
-    elif func == sympy.csc:
+    elif isinstance(integrand, sympy.csc):
         arg = integrand.args[0]
         rewritten = ((sympy.csc(arg)**2 + sympy.cot(arg) * sympy.csc(arg)) /
                      (sympy.csc(arg) + sympy.cot(arg)))
@@ -590,7 +596,8 @@ partial_fractions_rule = rewriter(
 distribute_expand_rule = rewriter(
     lambda integrand, symbol: (
         all(arg.is_Pow or arg.is_polynomial(symbol) for arg in integrand.args)
-        or integrand.func in (sympy.Pow, sympy.Mul)),
+        or isinstance(integrand, sympy.Pow)
+        or isinstance(integrand, sympy.Mul)),
     lambda integrand, symbol: integrand.expand())
 
 def fallback_rule(integral):
@@ -630,13 +637,15 @@ def integral_steps(integrand, symbol, **options):
         elif symbol not in integrand.free_symbols:
             return 'constant'
         else:
-            return integrand.func
+            for cls in (sympy.Pow, sympy.Symbol, sympy.exp,
+                        sympy.Add, sympy.Mul):
+                if isinstance(integrand, cls):
+                    return cls
 
     result = do_one(
         null_safe(switch(key, {
             sympy.Pow: do_one(null_safe(power_rule), null_safe(arctan_rule)),
             sympy.Symbol: power_rule,
-            sympy.Dummy: power_rule,
             sympy.exp: exp_rule,
             sympy.Add: add_rule,
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule)),
@@ -702,9 +711,9 @@ def eval_cyclicparts(parts_rules, coefficient, integrand, symbol):
 
 @evaluates(TrigRule)
 def eval_trig(func, arg, integrand, symbol):
-    if func == sympy.sin:
+    if func == 'sin':
         return -sympy.cos(arg)
-    elif func == sympy.cos:
+    elif func == 'cos':
         return sympy.sin(arg)
     elif func == 'sec*tan':
         return sympy.sec(arg)
