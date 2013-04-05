@@ -1124,6 +1124,8 @@ class Circle(Ellipse):
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point(1/2, 1/2))
 
     """
+    _doctest_depends_on = {}
+
     def __new__(cls, *args, **kwargs):
         c, r = None, None
         if len(args) == 3:
