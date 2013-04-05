@@ -16,6 +16,21 @@ from sympy.abc import x, y, z, a, b, c
 from sympy.printing.theanocode import (theano_code, dim_handling,
         theano_function)
 
+def fgraph_of(*exprs):
+    """ Transform SymPy expressions into Theano Computation """
+    outs = map(theano_code, exprs)
+    ins = theano.gof.graph.inputs(outs)
+    ins, outs = theano.gof.graph.clone(ins, outs)
+    return theano.gof.FunctionGraph(ins, outs)
+
+def theano_simplify(fgraph):
+    """ Simplify a Theano Computation """
+    mode = theano.compile.get_default_mode().excluding("fusion")
+    fgraph = fgraph.clone()
+    mode.optimizer.optimize(fgraph)
+    return fgraph
+
+
 def theq(a, b):
     """ theano equality """
     astr = theano.printing.debugprint(a, file='str')
@@ -112,8 +127,9 @@ def test_factorial():
     assert theano_code(sympy.factorial(n))
 
 def test_Derivative():
-    assert theq(theano_code(sy.Derivative(sy.sin(x), x, evaluate=False)),
-                theano.grad(tt.sin(xt), xt))
+    simp = lambda expr: theano_simplify(fgraph_of(expr))
+    assert theq(simp(theano_code(sy.Derivative(sy.sin(x), x, evaluate=False))),
+                simp(theano.grad(tt.sin(xt), xt)))
 
 def test_theano_function_simple():
     f = theano_function([x, y], [x+y])
@@ -130,3 +146,63 @@ def test_theano_function_numpy():
     xx = np.arange(3).astype('float64')
     yy = 2*np.arange(3).astype('float64')
     assert np.linalg.norm(f(xx, yy) - 3*np.arange(3)) < 1e-9
+
+def test_slice():
+    assert theano_code(slice(1, 2, 3)) == slice(1, 2, 3)
+    assert str(theano_code(slice(1, x, 3), dtypes={x: 'int32'})) ==\
+           str(slice(1, xt, 3))
+
+def test_MatrixSlice():
+    n = sympy.Symbol('n', integer=True)
+    X = sympy.MatrixSymbol('X', n, n)
+
+    Y = X[1:2:3, 4:5:6]
+    Yt = theano_code(Y)
+    assert tuple(Yt.owner.op.idx_list) == (slice(1,2,3), slice(4,5,6))
+    assert Yt.owner.inputs[0] == theano_code(X)
+
+    k = sympy.Symbol('k')
+    kt = theano_code(k, dtypes={k: 'int32'})
+    start, stop, step = 4, k, 2
+    Y = X[start:stop:step]
+    Yt = theano_code(Y, dtypes={n: 'int32', k: 'int32'})
+    # assert Yt.owner.op.idx_list[0].stop == kt
+
+def test_BlockMatrix():
+    n = sympy.Symbol('n', integer=True)
+    A = sympy.MatrixSymbol('A', n, n)
+    B = sympy.MatrixSymbol('B', n, n)
+    C = sympy.MatrixSymbol('C', n, n)
+    D = sympy.MatrixSymbol('D', n, n)
+    At, Bt, Ct, Dt = map(theano_code, (A, B, C, D))
+    Block = sympy.BlockMatrix([[A, B], [C, D]])
+    Blockt = theano_code(Block)
+    solutions = [tt.join(0, tt.join(1, At, Bt), tt.join(1, Ct, Dt)),
+                 tt.join(1, tt.join(0, At, Ct), tt.join(0, Bt, Dt))]
+    assert any(theq(Blockt, solution) for solution in solutions)
+
+def test_BlockMatrix_Inverse_execution():
+    k, n = 2, 4
+    dtype = 'float32'
+    A = sympy.MatrixSymbol('A', n, k)
+    B = sympy.MatrixSymbol('B', n, n)
+    inputs = A, B
+    output = B.I*A
+
+    cutsizes = {A: [(n/2, n/2), (k/2, k/2)],
+                B: [(n/2, n/2), (n/2, n/2)]}
+    cutinputs = [sympy.blockcut(i, *cutsizes[i]) for i in inputs]
+    cutoutput = output.subs(dict(zip(inputs, cutinputs)))
+
+    dtypes = dict(zip(inputs, [dtype]*len(inputs)))
+    f = theano_function(inputs, [output], dtypes=dtypes)
+    fblocked = theano_function(inputs, [sympy.block_collapse(cutoutput)],
+                               dtypes=dtypes)
+
+    import numpy
+    ninputs = [numpy.random.rand(*x.shape).astype(dtype) for x in inputs]
+    ninputs = [numpy.arange(n*k).reshape(A.shape).astype(dtype),
+               numpy.eye(n).astype(dtype)]
+    ninputs[1] += numpy.ones(B.shape)*1e-5
+
+    assert numpy.allclose(f(*ninputs), fblocked(*ninputs), rtol=1e-5)
