@@ -1404,6 +1404,8 @@ class SymPyDocTestFinder(DocTestFinder):
 
         if hasattr(obj, '_doctest_depends_on'):
             globs['_doctest_depends_on'] = obj._doctest_depends_on
+        else:
+            globs['_doctest_depends_on'] = {}
 
         return self._parser.get_doctest(docstring, globs, name,
                                         filename, lineno)
