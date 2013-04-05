@@ -984,6 +984,7 @@ class LatexPrinter(Printer):
 
         return name
     _print_RandomSymbol = _print_Symbol
+    _print_MatrixSymbol = _print_Symbol
 
     def _print_Relational(self, expr):
         if self._settings['itex']:
