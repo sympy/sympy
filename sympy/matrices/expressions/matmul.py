@@ -1,4 +1,4 @@
-from sympy.core import Mul, Add, Basic, sympify
+from sympy.core import Mul, Basic, sympify
 from sympy.functions import transpose, adjoint
 from sympy.strategies import (rm_id, unpack, condition, debug, flatten, exhaust,
         do_one, new)
@@ -37,7 +37,7 @@ class MatMul(MatrixExpr):
         matrices = [arg for arg in self.args if arg.is_Matrix]
         return (matrices[0].rows, matrices[-1].cols)
 
-    def _entry(self, i, j):
+    def _entry(self, i, j, expand=True):
         coeff, matrices = self.as_coeff_matrices()
 
         if len(matrices) == 1:  # situation like 2*X, matmul is just X
@@ -49,14 +49,10 @@ class MatMul(MatrixExpr):
         X = head
         Y = MatMul(*tail)
 
-        if X.shape[1].is_Number:
-            # Numeric shape like (3,5)
-            return coeff*Add(*[X[i, k]*Y[k, j] for k in range(X.shape[1])])
-        else:
-            # Symbolic shape like (n, m)
-            from sympy import Dummy, summation
-            k = Dummy('k', integer=True)
-            return summation(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
+        from sympy import Dummy, Sum
+        k = Dummy('k', integer=True)
+        result = Sum(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
+        return result.doit() if expand else result
 
     def as_coeff_matrices(self):
         scalars = [x for x in self.args if not x.is_Matrix]
