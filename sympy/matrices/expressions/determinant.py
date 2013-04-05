@@ -30,8 +30,6 @@ class Determinant(Expr):
         return self.args[0]
 
     def doit(self, expand=False):
-        if ask(Q.singular(self)):
-            return S.Zero
         try:
             return self.arg._eval_determinant()
         except (AttributeError, NotImplementedError):
