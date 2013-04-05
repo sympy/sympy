@@ -30,6 +30,7 @@ before_install:
   - if [[ "${TEST_COVERAGE}" == "true" ]]; then
       pip install coverage coveralls --use-mirrors;
     fi
+  - git show # debug output
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then
       python bin/use2to3; cd py3k-sympy;
