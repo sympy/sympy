@@ -41,7 +41,6 @@ script:
 notifications:
   email: false
 after_success:
-  - coveralls
-# Remove this section once py.test is passing
-after_failure:
-  - coveralls
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      coveralls;
+    fi
