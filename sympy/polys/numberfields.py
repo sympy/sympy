@@ -28,6 +28,104 @@ from sympy.utilities import (
 from sympy.ntheory import sieve
 from sympy.mpmath import pslq, mp
 
+def _separate_sq(p):
+    """
+    helper function for ``minimal_polynomial_sq``
+    """
+    from sympy.simplify.simplify import _split_gcd, _mexpand
+    def is_sqrt(expr):
+        return expr.is_Pow and expr.exp is S.Half
+    coeff_muls = [y.as_coeff_mul() for y in p.args]
+    a = []
+    for y in p.args:
+        if not y.is_Mul:
+            if is_sqrt(y):
+                a.append((S.One, y**2))
+            elif y.is_Atom:
+                a.append((y, S.One))
+            else:
+                raise NotImplementedError
+            continue
+        args = y.args
+        a1 = []
+        a2 = []
+        for z in args:
+            if is_sqrt(z):
+                a2.append(z**2)
+            else:
+                a1.append(z)
+        a.append((Mul(*a1), Mul(*a2)))
+    a.sort(key=lambda z: z[1])
+    if a[-1][1] is S.One:
+        return p
+    surds = [z for y, z in a]
+    for i in range(len(surds)):
+        if surds[i] != 1:
+            break
+    g, b1, b2 = _split_gcd(*surds[i:])
+    a1 = []
+    a2 = []
+    for y, z in a:
+        if z in b1:
+            a1.append(y*z**S.Half)
+        else:
+            a2.append(y*z**S.Half)
+    p1 = Add(*a1)
+    p2 = Add(*a2)
+    p = _mexpand(p1**2) - _mexpand(p2**2)
+    return p
+
+def minimal_polynomial_sq(p, n, x):
+    """
+    Returns the minimal polynomial for the ``nth-root`` of a sum of surds
+    or ``None`` if it fails.
+
+    Parameters
+    ==========
+
+    p : sum of surds
+    n : positive integer
+    x : variable of the returned polynomial
+
+    Examples
+    ========
+
+    >>> from sympy.polys.numberfields import minimal_polynomial_sq
+    >>> from sympy import sqrt
+    >>> from sympy.abc import x
+    >>> q = 1 + sqrt(2) + sqrt(3)
+    >>> minimal_polynomial_sq(q, 3, x)
+    x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
+
+    """
+    from sympy.solvers import solve
+    from sympy.simplify.simplify import _is_sum_surds
+    p = sympify(p)
+    n = sympify(n)
+    if not n.is_integer or not n > 0 or not _is_sum_surds(p):
+        return None
+    pn = p**Rational(1, n)
+    # eliminate the square roots
+    p -= x
+    while 1:
+        p1 = _separate_sq(p)
+        if p1 is p:
+            p = p1.subs({x:x**n})
+            break
+        else:
+            p = p1
+    # the minimal polynomial is the factor vanishing in x = pn
+    factors = factor_list(p)[1]
+    a = []
+    for f, m in factors:
+        fn = f.subs({x:pn}).n()
+        if abs(fn) < 1e-10:
+            a.append(f)
+    if len(a) == 1:
+        return a[0]
+    # TODO
+    return None
+
 
 def minimal_polynomial(ex, x=None, **args):
     """

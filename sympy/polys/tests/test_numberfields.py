@@ -4,7 +4,7 @@ from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
-    minimal_polynomial,
+    minimal_polynomial, minimal_polynomial_sq,
     primitive_element,
     is_isomorphism_possible,
     field_isomorphism_pslq,
@@ -99,6 +99,15 @@ def test_minimal_polynomial():
 
     assert minimal_polynomial(
         a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
+
+def test_minimal_polynomial_sq():
+    from sympy import expand_multinomial
+    p = expand_multinomial((1 + 5*sqrt(2) + 2*sqrt(3))**3)
+    mp = minimal_polynomial_sq(p, 3, x)
+    assert mp == x**4 - 4*x**3 - 118*x**2 + 244*x + 1321
+    p = expand_multinomial((1 + sqrt(2) - 2*sqrt(3) + sqrt(7))**3)
+    mp = minimal_polynomial_sq(p, 3, x)
+    assert mp == x**8 - 8*x**7 - 56*x**6 + 448*x**5 + 480*x**4 - 5056*x**3 + 1984*x**2 + 7424*x - 3008
 
 
 def test_primitive_element():
