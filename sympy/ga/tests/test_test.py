@@ -104,7 +104,7 @@ def test_derivatives_in_rectangular_coordinates():
     A = MV('A','vector',fct=True)
     B = MV('B','grade2',fct=True)
     C = MV('C','mv',fct=True)
-    print str(f)
+
     assert str(f) == 'f'
     assert str(A) == 'A__x*e_x + A__y*e_y + A__z*e_z'
     assert str(B) == 'B__xy*e_x^e_y + B__xz*e_x^e_z + B__yz*e_y^e_z'
@@ -138,7 +138,6 @@ def test_derivatives_in_spherical_coordinates():
     A = MV('A','vector',fct=True)
     B = MV('B','grade2',fct=True)
 
-    print str(f)
     assert str(f) == 'f'
     assert str(A) == 'A__r*e_r + A__theta*e_theta + A__phi*e_phi'
     assert str(B) == 'B__rtheta*e_r^e_theta + B__rphi*e_r^e_phi + B__thetaphi*e_theta^e_phi'
