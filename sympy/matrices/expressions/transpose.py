@@ -1,4 +1,4 @@
-from sympy import Basic, ask, Q
+from sympy import Basic, Q
 from sympy.functions import adjoint, conjugate
 
 from sympy.matrices.expressions.matexpr import MatrixExpr
