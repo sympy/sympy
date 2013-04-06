@@ -1,4 +1,4 @@
-from sympy import Basic, Expr, S, Q, ask
+from sympy import Basic, Expr, S, Q
 from matexpr import ShapeError
 
 

@@ -18,7 +18,7 @@ b1 = BlockMatrix([[G, H]])
 b2 = BlockMatrix([[G], [H]])
 
 def test_bc_matmul():
-    assert bc_matmul(H*b1*b2*G) == H*BlockMatrix([[G*G + H*H]])*G
+    assert bc_matmul(H*b1*b2*G) == BlockMatrix([[(H*G*G + H*H*H)*G]])
 
 def test_bc_matadd():
     assert bc_matadd(BlockMatrix([[G, H]]) + BlockMatrix([[H, H]])) == \
@@ -126,12 +126,11 @@ def test_squareBlockMatrix():
     assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul
 
-    assert Y.I.blocks[0, 0] == A.I
-    assert X.inverse(expand=True) == BlockMatrix([
+    assert block_collapse(Y.I) == A.I
+    assert block_collapse(X.inverse()) == BlockMatrix([
         [(-B*D.I*C + A).I, -A.I*B*(D + -C*A.I*B).I],
         [-(D - C*A.I*B).I*C*A.I, (D - C*A.I*B).I]])
 
-    assert isinstance(X.inverse(expand=False), Inverse)
     assert isinstance(X.inverse(), Inverse)
 
     assert not X.is_Identity

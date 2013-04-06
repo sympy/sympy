@@ -142,47 +142,6 @@ class BlockMatrix(MatrixExpr):
         """
         return self._eval_transpose()
 
-    def _eval_inverse(self, expand=False):
-        # Inverse of one by one block matrix is easy
-        if self.blockshape == (1, 1):
-            mat = Matrix(1, 1, (self.blocks[0].inverse(),))
-            return BlockMatrix(mat)
-        # Inverse of a two by two block matrix is known
-        elif expand and self.blockshape == (2, 2):
-            # Cite: The Matrix Cookbook Section 9.1.3
-            [[A, B],
-             [C, D]] = self.blocks.tolist()
-
-            return BlockMatrix([[ (A - B*D.I*C).I,  (-A).I*B*(D - C*A.I*B).I],
-                                [-(D - C*A.I*B).I*C*A.I,     (D - C*A.I*B).I]])
-        else:
-            return Inverse(self)
-
-    def inverse(self, expand=False):
-        """Return inverse of matrix.
-
-        Examples
-        ========
-
-        >>> from sympy import MatrixSymbol, BlockMatrix, ZeroMatrix
-        >>> from sympy.abc import l, m, n
-        >>> X = MatrixSymbol('X', n, n)
-        >>> BlockMatrix([[X]]).inverse()
-        [X^-1]
-
-        >>> Y = MatrixSymbol('Y', m ,m)
-        >>> Z = MatrixSymbol('Z', n, m)
-        >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
-        >>> B
-        [X, Z]
-        [0, Y]
-        >>> B.inverse(expand=True)
-        [X^-1, (-1)*X^-1*Z*Y^-1]
-        [   0,             Y^-1]
-
-        """
-        return self._eval_inverse(expand)
-
     def _entry(self, i, j):
         # Find row entry
         for row_block, numrows in enumerate(self.rowblocksizes):
@@ -310,12 +269,12 @@ def block_collapse(expr):
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
-        bottom_up(condition(hasbm, typed(
+        bottom_up(exhaust(condition(hasbm, typed(
             {MatAdd: do_one(bc_matadd, bc_block_plus_ident),
              MatMul: do_one(bc_matmul, bc_dist),
              Transpose: bc_transpose,
-             Inverse: bc_inverse,
-             BlockMatrix: bc_unpack}))))
+             Inverse: (do_one(blockinverse_1x1, blockinverse_2x2)),
+             BlockMatrix: bc_unpack})))))
     result = rule(expr)
     try:
         return result.doit()
@@ -375,6 +334,12 @@ def bc_matmul(expr):
         if isinstance(A, BlockMatrix) and isinstance(B, BlockMatrix):
             matrices[i] = A._blockmul(B)
             matrices.pop(i+1)
+        elif isinstance(A, BlockMatrix):
+            matrices[i] = A._blockmul(BlockMatrix([[B]]))
+            matrices.pop(i+1)
+        elif isinstance(B, BlockMatrix):
+            matrices[i] = BlockMatrix([[A]])._blockmul(B)
+            matrices.pop(i+1)
         else:
             i+=1
     return MatMul(factor, *matrices).doit()
@@ -382,8 +347,23 @@ def bc_matmul(expr):
 def bc_transpose(expr):
     return BlockMatrix(block_collapse(expr.arg).blocks.applyfunc(transpose).T)
 
-def bc_inverse(expr):
-    return expr.arg._eval_inverse(True)
+def blockinverse_1x1(expr):
+    if expr.arg.blockshape == (1, 1):
+        mat = Matrix([[expr.arg.blocks[0].inverse()]])
+        return BlockMatrix(mat)
+    return expr
+
+def blockinverse_2x2(expr):
+    if expr.arg.blockshape == (2, 2):
+        # Cite: The Matrix Cookbook Section 9.1.3
+        [[A, B],
+         [C, D]] = expr.arg.blocks.tolist()
+
+        return BlockMatrix([[ (A - B*D.I*C).I,  (-A).I*B*(D - C*A.I*B).I],
+                            [-(D - C*A.I*B).I*C*A.I,     (D - C*A.I*B).I]])
+    else:
+        return self
+
 
 def bounds(sizes):
     """ Convert sequence of numbers into pairs of low-high pairs
