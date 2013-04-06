@@ -47,17 +47,23 @@ def test_symmetric():
     assert ask(Q.symmetric(X*X*X*X*X*X*X*X*X*X), Q.symmetric(X)) is True
 
 
+def _test_orthogonal_unitary(predicate):
+    assert ask(predicate(X), predicate(X))
+    assert ask(predicate(X.T), predicate(X)) is True
+    assert ask(predicate(X.I), predicate(X)) is True
+    assert ask(predicate(Y)) is False
+    assert ask(predicate(X)) is None
+    assert ask(predicate(X*Z*X), predicate(X) & predicate(Z)) is True
+    assert ask(predicate(Identity(3))) is True
+    assert ask(predicate(ZeroMatrix(3, 3))) is False
+    assert ask(Q.invertible(X), predicate(X))
+    assert not ask(predicate(X + Z), predicate(X) & predicate(Z))
+
 def test_orthogonal():
-    assert ask(Q.orthogonal(X), Q.orthogonal(X))
-    assert ask(Q.orthogonal(X.T), Q.orthogonal(X)) is True
-    assert ask(Q.orthogonal(X.I), Q.orthogonal(X)) is True
-    assert ask(Q.orthogonal(Y)) is False
-    assert ask(Q.orthogonal(X)) is None
-    assert ask(Q.orthogonal(X*Z*X), Q.orthogonal(X) & Q.orthogonal(Z)) is True
-    assert ask(Q.orthogonal(Identity(3))) is True
-    assert ask(Q.orthogonal(ZeroMatrix(3, 3))) is False
-    assert ask(Q.invertible(X), Q.orthogonal(X))
-    assert not ask(Q.orthogonal(X + Z), Q.orthogonal(X) & Q.orthogonal(Z))
+    _test_orthogonal_unitary(Q.orthogonal)
+def test_unitary():
+    _test_orthogonal_unitary(Q.unitary)
+    assert ask(Q.unitary(X), Q.orthogonal(X))
 
 def test_fullrank():
     assert ask(Q.fullrank(X), Q.fullrank(X))
