@@ -1776,6 +1776,15 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
+def test_sympy__matrices__expressions__fft__DFT():
+    from sympy.matrices.expressions.fft import DFT
+    from sympy import S
+    assert _test_args(DFT(S(2)))
+
+def test_sympy__matrices__expressions__fft__IDFT():
+    from sympy.matrices.expressions.fft import IDFT
+    from sympy import S
+    assert _test_args(IDFT(S(2)))
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter

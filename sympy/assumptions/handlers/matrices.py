@@ -190,6 +190,10 @@ class AskUnitaryHandler(CommonHandler):
         else:
             return ask(Q.unitary(expr.parent), assumptions)
 
+    @staticmethod
+    def DFT(expr, assumptions):
+        return True
+
 
 class AskFullRankHandler(CommonHandler):
     """
