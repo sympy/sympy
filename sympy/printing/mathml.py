@@ -369,8 +369,12 @@ class MathMLPrinter(Printer):
     def _print_Function(self, e):
         x = self.dom.createElement("apply")
         x.appendChild(self.dom.createElement(self.mathml_tag(e)))
-        for arg in e.args:
-            x.appendChild(self._print(arg))
+        if e.__class__.__name__ == 'atan2' and len(e.args) == 2:
+            denominator, numerator = e.args
+            x.appendChild(self._print(numerator / denominator))
+        else:
+            for arg in e.args:
+                x.appendChild(self._print(arg))
         return x
 
     def _print_Basic(self, e):

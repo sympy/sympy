@@ -6,7 +6,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
     Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, TransformationSet, Tuple, Union, arg, asin,
+    Sum, Symbol, TransformationSet, Tuple, Union, arg, asin, atan, atan2,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -147,6 +147,24 @@ def test_latex_functions():
     assert latex(asin(x**2), inv_trig_style="power",
                  fold_func_brackets=True) == \
         r"\sin^{-1} {x^{2}}"
+
+    assert latex(atan(x)**2) == r"\operatorname{atan}^{2}{\left (x \right )}"
+    assert latex(atan(x)**2, inv_trig_style="full") == \
+        r"\arctan^{2}{\left (x \right )}"
+    assert latex(atan(x)**2, inv_trig_style="power") == \
+        r"\tan^{-1}{\left (x \right )}^{2}"
+    assert latex(atan(x**2), inv_trig_style="power",
+                 fold_func_brackets=True) == \
+        r"\tan^{-1} {x^{2}}"
+
+    assert latex(atan2(x, y)) == r"\operatorname{atan}{\left (\frac{y}{x} \right )}"
+    assert latex(atan2(x, y), inv_trig_style="full") == \
+        r"\arctan{\left (\frac{y}{x} \right )}"
+    assert latex(atan2(x, y), inv_trig_style="power") == \
+        r"\tan^{-1}{\left (\frac{y}{x} \right )}"
+    assert latex(atan2(x, y), inv_trig_style="power",
+                 fold_func_brackets=True) == \
+        r"\tan^{-1}{\left (\frac{y}{x} \right )}"
 
     assert latex(factorial(k)) == r"k!"
     assert latex(factorial(-k)) == r"\left(- k\right)!"

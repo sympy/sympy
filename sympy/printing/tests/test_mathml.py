@@ -1,5 +1,6 @@
 from sympy import diff, Integral, Limit, sin, Symbol, Integer, Rational, cos, \
     tan, asin, acos, atan, sinh, cosh, tanh, asinh, acosh, atanh, E, I, oo, \
+    atan2, \
     pi, GoldenRatio, EulerGamma, Sum, Eq, Ne, Ge, Lt, Float
 from sympy.printing.mathml import mathml, MathMLPrinter
 
@@ -179,6 +180,17 @@ def test_mathml_trig():
 
     mml = mp._print(acosh(x))
     assert mml.childNodes[0].nodeName == 'arccosh'
+
+
+def test_mathml_atan2():
+    # rendering atan2(x,y) should come out as atan(y/x)
+    mml = mp._print(atan2(x, y))
+    assert mml.childNodes[0].nodeName == 'arctan'
+    assert mml.childNodes[1].childNodes[0].nodeName == 'divide'
+    assert mml.childNodes[1].childNodes[1].nodeName == 'ci'
+    assert mml.childNodes[1].childNodes[1].childNodes[0].nodeValue == 'y'
+    assert mml.childNodes[1].childNodes[2].nodeName == 'ci'
+    assert mml.childNodes[1].childNodes[2].childNodes[0].nodeValue == 'x'
 
 
 def test_mathml_relational():

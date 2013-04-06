@@ -3728,18 +3728,19 @@ def test_pretty_special_functions():
     expr = atan2(y/sqrt(200), sqrt(x))
     ascii_str = \
 """\
-     /  ___         \\\n\
-     |\\/ 2 *y    ___|\n\
-atan2|-------, \\/ x |\n\
-     \\   20         /\
+    /     ___   ___\\\n\
+    |10*\\/ 2 *\\/ x |\n\
+atan|--------------|\n\
+    \\      y       /\
 """
     ucode_str = \
 u"""\
-     ⎛  ___         ⎞\n\
-     ⎜╲╱ 2 ⋅y    ___⎟\n\
-atan2⎜───────, ╲╱ x ⎟\n\
-     ⎝   20         ⎠\
+    ⎛     ___   ___⎞\n\
+    ⎜10⋅╲╱ 2 ⋅╲╱ x ⎟\n\
+atan⎜──────────────⎟\n\
+    ⎝      y       ⎠\
 """
+
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 

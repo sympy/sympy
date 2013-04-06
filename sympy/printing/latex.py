@@ -453,10 +453,15 @@ class LatexPrinter(Printer):
                 len(args) == 1 and \
                 not self._needs_function_brackets(expr.args[0])
 
-            inv_trig_table = ["asin", "acos", "atan", "acot"]
+            inv_trig_table = ["asin", "acos", "atan", "acot", "atan2"]
 
             # If the function is an inverse trig function, handle the style
             if func in inv_trig_table:
+                # atan2 is a computer function, not a mathematical one
+                if func == 'atan2':
+                    assert len(args) == 2
+                    func = 'atan'
+                    args = [r'\frac{%s}{%s}' % tuple(reversed(args)), ]
                 if inv_trig_style == "abbreviated":
                     func = func
                 elif inv_trig_style == "full":
