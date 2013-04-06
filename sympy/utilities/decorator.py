@@ -111,6 +111,8 @@ class no_attrs_in_subclass(object):
 
     def __get__(self, instance, owner=None):
         if owner == self.cls:
+            if hasattr(self.f, '__get__'):
+                return self.f.__get__(instance, owner)
             return self.f
         raise AttributeError
 
