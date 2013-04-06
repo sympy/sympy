@@ -150,14 +150,11 @@ class BlockMatrix(MatrixExpr):
         # Inverse of a two by two block matrix is known
         elif expand and self.blockshape == (2, 2):
             # Cite: The Matrix Cookbook Section 9.1.3
-            [[A11, A12],
-             [A21, A22]] = self.blocks.tolist()
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
 
-            C1 = A11 - A12*A22.I*A21
-            C2 = A22 - A21*A11.I*A12
-
-            return BlockMatrix([[C1.I,                (-A11).I*A12*C2.I],
-                                [-C2.I*A21*A11.I,     C2.I             ]])
+            return BlockMatrix([[ (A - B*D.I*C).I,  (-A).I*B*(D - C*A.I*B).I],
+                                [-(D - C*A.I*B).I*C*A.I,     (D - C*A.I*B).I]])
         else:
             return Inverse(self)
 
