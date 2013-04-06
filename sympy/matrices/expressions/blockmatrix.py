@@ -364,6 +364,14 @@ def blockinverse_2x2(expr):
     else:
         return self
 
+def reblock_2x2(B):
+    if not all(d > 2 for d in B.blocks.shape):
+        return B
+
+    BM = BlockMatrix  # for brevity's sake
+    return BM([[   B.blocks[0,  0],  BM(B.blocks[0,  1:])],
+               [BM(B.blocks[1:, 0]), BM(B.blocks[1:, 1:])]])
+
 
 def bounds(sizes):
     """ Convert sequence of numbers into pairs of low-high pairs
