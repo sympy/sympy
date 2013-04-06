@@ -23,6 +23,13 @@ class NC_Marker:
     is_commutative = False
 
 
+# Key for sorting commutative args in canonical order
+_args_sortkey = cmp_to_key(Basic.compare)
+def _mulsort(args):
+    # in-place sorting of args
+    args.sort(key=_args_sortkey)
+
+
 class Mul(Expr, AssocOp):
 
     __slots__ = []
@@ -31,9 +38,6 @@ class Mul(Expr, AssocOp):
 
     #identity = S.One
     # cyclic import, so defined in numbers.py
-
-    # Key for sorting commutative args in canonical order
-    _args_sortkey = cmp_to_key(Basic.compare)
 
     @classmethod
     def flatten(cls, seq):
@@ -113,6 +117,8 @@ class Mul(Expr, AssocOp):
 
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
+        from sympy.core.add import _addsort
+
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -134,7 +140,7 @@ class Mul(Expr, AssocOp):
                     else:
                         r, b = b.as_coeff_Add()
                         bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        bargs.sort(key=hash)
+                        _addsort(bargs)
                         ar = a*r
                         if ar:
                             bargs.insert(0, ar)
@@ -498,7 +504,7 @@ class Mul(Expr, AssocOp):
             return [coeff], [], order_symbols
 
         # order commutative part canonically
-        c_part.sort(key=cls._args_sortkey)
+        _mulsort(c_part)
 
         # current code expects coeff to be always in slot-0
         if coeff is not S.One:

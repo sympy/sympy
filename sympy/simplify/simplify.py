@@ -6,7 +6,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
     expand_multinomial, FunctionClass, expand_power_base, symbols, igcd)
-
+from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
     iterable, reduce, default_sort_key, set_union, ordered)
@@ -1611,48 +1611,6 @@ def collect_const(expr, *vars, **kwargs):
                 break
 
     return expr
-
-
-def _unevaluated_Add(*args):
-    """Return a well-formed unevaluated Add: Number
-    is in slot 0 and args are sorted.
-
-    Examples
-    ========
-
-    >>> from sympy.simplify.simplify import _unevaluated_Add as uAdd
-    >>> from sympy import S, Add, ordered
-    >>> from sympy.abc import x, y
-    >>> a = uAdd(*[S(1), x, S(2)])
-    >>> a.args[0]
-    3
-    >>> a.args[1]
-    x
-
-    Beyond the Number being in slot 0, there is no other assurance of
-    order for the arguments since they are hash sorted. So, for testing
-    purposes, output produced by this in some other function can only
-    be tested against the output of this function or as one of several
-    options:
-
-    >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
-    >>> a = uAdd(x, y)
-    >>> assert a in opts and a == uAdd(x, y)
-
-    """
-    args = list(args)
-    args.sort(key=hash)  # same as in Add.flatten
-    c = []
-    for a in args:
-        if a.is_Number:
-            c.append(a)
-    if c:
-        for ci in c:
-            args.remove(ci)
-        c = Add(*c)
-        if c:
-            args.insert(0, c)
-    return Add(*args, **dict(evaluate=False))
 
 
 def _split_gcd(*a):
