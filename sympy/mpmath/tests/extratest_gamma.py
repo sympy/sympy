@@ -47,7 +47,7 @@ def check(name, func, z, y):
         if raise_:
             raise SystemExit
     if not err:
-        print("%s ok;" % name, end=' ')
+        print("%s ok;" % name)
 
 def testcase(case):
     z, result = case
