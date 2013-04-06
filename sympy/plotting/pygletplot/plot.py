@@ -23,7 +23,7 @@ from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 
 
-from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.decorator import doctest_depends_on, no_attrs_in_subclass
 
 class PygletPlot(object):
     """
@@ -401,7 +401,9 @@ class PygletPlot(object):
             while a() or b():
                 sleep(0)
         self._render_lock.release()
-
+#python 2.5 does not support class decorators so use this workaround
+PygletPlot._doctest_depends_on = no_attrs_in_subclass(
+    PygletPlot, PygletPlot._doctest_depends_on)
 
 class ScreenShot:
     def __init__(self, plot):
