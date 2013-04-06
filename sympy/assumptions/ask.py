@@ -31,6 +31,7 @@ class Q:
     is_true = Predicate('is_true')
     symmetric = Predicate('symmetric')
     invertible = Predicate('invertible')
+    singular = Predicate('singular')
     orthogonal = Predicate('orthogonal')
     positive_definite = Predicate('positive_definite')
     upper_triangular = Predicate('upper_triangular')
@@ -317,6 +318,7 @@ known_facts = And(
     Implies(Q.invertible, Q.square),
     Implies(Q.symmetric, Q.square),
     Implies(Q.fullrank & Q.square, Q.invertible),
+    Equivalent(Q.invertible, ~Q.singular),
 )
 
 from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf

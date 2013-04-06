@@ -60,3 +60,7 @@ class Transpose(MatrixExpr):
     def _eval_trace(self):
         from trace import Trace
         return Trace(self.arg)  # Trace(X.T) => Trace(X)
+
+    def _eval_determinant(self):
+        from sympy.matrices.expressions.determinant import det
+        return det(self.arg)

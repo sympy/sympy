@@ -204,6 +204,9 @@ class DenseMatrix(MatrixBase):
             trace += self._mat[i*self.cols + i]
         return trace
 
+    def _eval_determinant(self):
+        return self.det()
+
     def _eval_transpose(self):
         """Matrix transposition.
 
