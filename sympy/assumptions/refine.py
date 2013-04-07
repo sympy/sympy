@@ -88,7 +88,12 @@ def refine_Pow(expr, assumptions):
 
     """
     from sympy.core import Pow, Rational
+    from sympy.functions.elementary.complexes import Abs
     from sympy.functions import sign
+    if isinstance(expr.base, Abs):
+        if ask(Q.real(expr.base.args[0]), assumptions) and \
+                ask(Q.even(expr.exp), assumptions):
+            return expr.base.args[0] ** expr.exp
     if ask(Q.real(expr.base), assumptions):
         if expr.base.is_number:
             if ask(Q.even(expr.exp), assumptions):

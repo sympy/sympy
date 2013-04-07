@@ -37,6 +37,11 @@ def test_pow():
     assert refine((-1)**(x + y + 2), Q.odd(x)) == (-1)**(y + 1)
     assert refine((-1)**(x + 3)) == (-1)**(x + 1)
 
+    # powers of Abs
+    assert refine(Abs(x)**2, Q.real(x)) == x**2
+    assert refine(Abs(x)**3, Q.real(x)) == Abs(x)**3
+    assert refine(Abs(x)**2) == Abs(x)**2
+
 
 def test_exp():
     assert refine(exp(pi*I*2*x), Q.integer(x)) == 1
