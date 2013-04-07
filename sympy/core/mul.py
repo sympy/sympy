@@ -152,15 +152,15 @@ class Mul(Expr, AssocOp):
         coeff = S.One       # standalone term
                             # e.g. 3 * ...
 
-        iu = []             # ImaginaryUnits, I
-
         c_powers = []       # (base,exp)      n
                             # e.g. (x,n) for x
 
         num_exp = []        # (num-base, exp)           y
                             # e.g.  (3, y)  for  ... * 3  * ...
 
-        neg1e = 0           # exponent on -1 extracted from Number-based Pow
+        neg1e = S.Zero      # exponent on -1 extracted from Number-based Pow and I
+
+        iu = 0              # number of ImaginaryUnits seen
 
         pnum_rat = {}       # (num-base, Rat-exp)          1/2
                             # e.g.  (3, 1/2)  for  ... * 3     * ...
@@ -225,7 +225,7 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif o is S.ImaginaryUnit:
-                iu.append(o)
+                iu += 1
                 continue
 
             elif o.is_commutative:
@@ -294,21 +294,6 @@ class Mul(Expr, AssocOp):
                     else:
                         nc_part.append(o1)
                         nc_part.append(o)
-
-        # handle the ImaginaryUnits
-        if iu:
-            if len(iu) == 1:
-                c_powers.append((iu[0], S.One))
-            else:
-                # a product of I's has one of 4 values; select that value
-                # based on the length of iu:
-                # len(iu) % 4 of (0, 1, 2, 3) has a corresponding value of
-                #                (1, I,-1,-I)
-                niu = len(iu) % 4
-                if niu % 2:
-                    c_powers.append((S.ImaginaryUnit, S.One))
-                if niu in (2, 3):
-                    coeff = -coeff
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
@@ -448,23 +433,30 @@ class Mul(Expr, AssocOp):
         for e, b in pnew.iteritems():
             pnew[e] = Mul(*b)
 
-        # see if there is a base with matching coefficient
-        # that the -1 can be joined with
-        if neg1e:
-            p = Pow(S.NegativeOne, neg1e)
-            if p.is_Number:
-                coeff *= p
-            else:
-                c, p = p.as_coeff_Mul()
-                coeff *= c
-                if p.is_Pow and p.base is S.NegativeOne:
-                    neg1e = p.exp
+        # handle -1 and I
+        # compute neg1e + iu/2
+        if neg1e or iu:
+            # treat I as (-1)**(1/2) and compute -1's total exponent
+            p, q =  (neg1e + Rational(iu, 2)).as_numer_denom()
+            # if the integer part is odd, extract -1
+            n, p = divmod(p, q)
+            if n % 2:
+                coeff = -coeff
+            # if it's a multiple of 1/2 extract I
+            if q == 2:
+                c_part.append(S.ImaginaryUnit)
+            elif p:
+                # see if there is any positive base this power of
+                # -1 can join
+                neg1e = Rational(p, q)
                 for e, b in pnew.iteritems():
                     if e == neg1e and b.is_positive:
                         pnew[e] = -b
                         break
                 else:
-                    c_part.append(p)
+                    # keep it separate; we've already evaluated it as
+                    # much as possible so evaluate=False
+                    c_part.append(Pow(S.NegativeOne, neg1e, evaluate=False))
 
         # add all the pnew powers
         c_part.extend([Pow(b, e) for e, b in pnew.iteritems()])

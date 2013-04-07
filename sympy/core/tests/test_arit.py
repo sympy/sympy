@@ -221,6 +221,7 @@ def test_pow_im():
     ans = (-6)**e
     assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
+    assert Mul(Pow(-1, Rational(3, 2), evaluate=False), I, I) == I
 
 
 def test_real_mul():
