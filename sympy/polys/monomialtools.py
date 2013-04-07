@@ -263,7 +263,7 @@ class InverseOrder(MonomialOrder):
     def __eq__(self, other):
         return isinstance(other, InverseOrder) and other.O == self.O
 
-    def __hash__(self, other):
+    def __hash__(self):
         return hash((self.__class__, self.O))
 
 lex = LexOrder()
