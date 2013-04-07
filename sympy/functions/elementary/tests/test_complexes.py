@@ -139,7 +139,7 @@ def test_sign():
     assert sign(nan) == nan
     assert sign(2 + 2*I).doit() == sqrt(2)*(2 + 2*I)/4
     assert sign(2 + 3*I).simplify() == sign(2 + 3*I)
-    assert sign(2 + 2*I).simplify() == sign(1 + I)
+    assert sign(2 + 2*I).simplify() == sqrt(2)*(1 + I)/2
 
     x = Symbol('x')
     assert sign(x).is_bounded is True

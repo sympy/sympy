@@ -3505,7 +3505,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False, doit=True):
 
     if doit:
         expr = expr.doit()
-    
+
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
     # See also https://github.com/sympy/sympy/pull/185.
