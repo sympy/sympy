@@ -1223,6 +1223,8 @@ class Basic(object):
         mapping = {}
 
         def rec_replace(expr):
+            if not isinstance(expr, Basic):
+                return expr
             args, construct = [], False
 
             for arg in expr.args:
