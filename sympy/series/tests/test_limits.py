@@ -1,6 +1,6 @@
 from sympy import (limit, exp, oo, log, sqrt, Limit, sin, floor, cos, ceiling,
                    atan, gamma, Symbol, S, pi, Integral, cot, Rational, I, zoo,
-                   tan, cot, integrate, Sum, sign)
+                   tan, cot, integrate, Sum, sign, E)
 
 from sympy.series.limits import heuristics
 from sympy.series.order import Order
@@ -51,6 +51,7 @@ def test_basic1():
     assert limit(1/tan(x**3), x, (2*pi)**(S(1)/3), dir="-") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="+") == -oo
     assert limit(1/cot(x)**3, x, (3*pi/2), dir="-") == oo
+    assert limit(2 + (1 + 1/x)**x, x, oo) == 2 + E
 
     # approaching 0
     # from dir="+"
