@@ -1287,7 +1287,8 @@ class SymPyDocTestFinder(DocTestFinder):
                     if val.__module__ != module.__name__:
                         continue
 
-                    assert self._from_module(module, val)
+                    assert self._from_module(module, val), \
+                        "%s is not in module %s (rawname %s)" % (val, module, rawname)
 
                     try:
                         valname = '%s.%s' % (name, rawname)
@@ -1339,7 +1340,8 @@ class SymPyDocTestFinder(DocTestFinder):
                         if val.__module__ != module.__name__:
                             continue
 
-                    assert self._from_module(module, val)
+                    assert self._from_module(module, val), \
+                        "%s is not in module %s (valname %s)" % (val, module, valname)
 
                     valname = '%s.%s' % (name, valname)
                     self._find(tests, val, valname, module, source_lines,
