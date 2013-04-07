@@ -1284,29 +1284,21 @@ class SymPyDocTestFinder(DocTestFinder):
                 if inspect.isfunction(val) or inspect.isclass(val):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
-                    if not isinstance(val, property): # properties don't have a __module__ attr
-                        if val.__module__ != module.__name__:
-                            continue
+                    if val.__module__ != module.__name__:
+                        continue
 
-                    in_module = self._from_module(module, val)
-                    if not in_module:
-                        # double check in case this function is decorated
-                        # and just appears to come from a different module.
-                        pat = r'\s*(def|class)\s+%s\s*\(' % rawname
-                        PAT = pre.compile(pat)
-                        in_module = any(
-                            PAT.match(line) for line in source_lines)
-                    if in_module:
-                        try:
-                            valname = '%s.%s' % (name, rawname)
-                            self._find(tests, val, valname, module,
-                                source_lines, globs, seen)
-                        except KeyboardInterrupt:
-                            raise
-                        except ValueError:
-                            raise
-                        except Exception:
-                            pass
+                    assert self._from_module(module, val)
+
+                    try:
+                        valname = '%s.%s' % (name, rawname)
+                        self._find(tests, val, valname, module,
+                                   source_lines, globs, seen)
+                    except KeyboardInterrupt:
+                        raise
+                    except ValueError:
+                        raise
+                    except Exception:
+                        pass
 
             # Look for tests in a module's __test__ dictionary.
             for valname, val in getattr(obj, '__test__', {}).items():
@@ -1337,23 +1329,21 @@ class SymPyDocTestFinder(DocTestFinder):
                 # Recurse to methods, properties, and nested classes.
                 if (inspect.isfunction(val) or
                     inspect.isclass(val) or
-                        isinstance(val, property)):
+                    isinstance(val, property)):
                     # Make sure we don't run doctests functions or classes
                     # from different modules
-                    if not isinstance(val, property) and \
-                       val.__module__ != module.__name__:
-                        continue
-                    in_module = self._from_module(module, val)
-                    if not in_module:
-                        # "double check" again
-                        pat = r'\s*(def|class)\s+%s\s*\(' % valname
-                        PAT = pre.compile(pat)
-                        in_module = any(PAT.match(line) for line in
-                            source_lines)
-                    if in_module:
-                        valname = '%s.%s' % (name, valname)
-                        self._find(tests, val, valname, module, source_lines,
-                                   globs, seen)
+                    if isinstance(val, property):
+                        if val.fget.__module__ != module.__name__:
+                            continue
+                    else:
+                        if val.__module__ != module.__name__:
+                            continue
+
+                    assert self._from_module(module, val)
+
+                    valname = '%s.%s' % (name, valname)
+                    self._find(tests, val, valname, module, source_lines,
+                               globs, seen)
 
     def _get_test(self, obj, name, module, globs, source_lines):
         """
