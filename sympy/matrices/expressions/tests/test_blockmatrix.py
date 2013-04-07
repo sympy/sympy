@@ -1,6 +1,6 @@
 from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
         bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
-        bc_transpose, blockcut, reblock_2x2)
+        bc_transpose, blockcut, reblock_2x2, deblock)
 from sympy.matrices.expressions import (MatrixSymbol, Identity, MatMul,
         Inverse, Trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
@@ -195,3 +195,10 @@ def test_reblock_2x2():
 
     assert B.shape == BB.shape
     assert B.as_explicit() == BB.as_explicit()
+
+def test_deblock():
+    B = BlockMatrix([[MatrixSymbol('A_%d%d'%(i,j), n, n)
+                    for j in range(4)]
+                    for i in range(4)])
+
+    assert deblock(reblock_2x2(B)) == B

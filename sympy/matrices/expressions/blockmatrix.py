@@ -1,6 +1,6 @@
 from sympy import ask, Q
 from sympy.core import Tuple, Basic, Add
-from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack
+from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack, chain
 from sympy.strategies.traverse import bottom_up
 from sympy.utilities import sift
 
@@ -13,7 +13,7 @@ from sympy.matrices.expressions.trace import Trace
 from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
-from sympy.matrices import Matrix, eye
+from sympy.matrices import Matrix, eye, ShapeError
 
 
 class BlockMatrix(MatrixExpr):
@@ -273,8 +273,8 @@ def block_collapse(expr):
             {MatAdd: do_one(bc_matadd, bc_block_plus_ident),
              MatMul: do_one(bc_matmul, bc_dist),
              Transpose: bc_transpose,
-             Inverse: (do_one(blockinverse_1x1, blockinverse_2x2)),
-             BlockMatrix: bc_unpack})))))
+             Inverse: bc_inverse,
+             BlockMatrix: do_one(bc_unpack, deblock)})))))
     result = rule(expr)
     try:
         return result.doit()
@@ -347,14 +347,21 @@ def bc_matmul(expr):
 def bc_transpose(expr):
     return BlockMatrix(block_collapse(expr.arg).blocks.applyfunc(transpose).T)
 
+
+def bc_inverse(expr):
+    expr2 = blockinverse_1x1(expr)
+    if expr != expr2:
+        return expr2
+    return blockinverse_2x2(Inverse(reblock_2x2(expr.arg)))
+
 def blockinverse_1x1(expr):
-    if expr.arg.blockshape == (1, 1):
+    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (1, 1):
         mat = Matrix([[expr.arg.blocks[0].inverse()]])
         return BlockMatrix(mat)
     return expr
 
 def blockinverse_2x2(expr):
-    if expr.arg.blockshape == (2, 2):
+    if isinstance(expr.arg, BlockMatrix) and expr.arg.blockshape == (2, 2):
         # Cite: The Matrix Cookbook Section 9.1.3
         [[A, B],
          [C, D]] = expr.arg.blocks.tolist()
@@ -362,10 +369,33 @@ def blockinverse_2x2(expr):
         return BlockMatrix([[ (A - B*D.I*C).I,  (-A).I*B*(D - C*A.I*B).I],
                             [-(D - C*A.I*B).I*C*A.I,     (D - C*A.I*B).I]])
     else:
-        return self
+        return expr
+
+def deblock(B):
+    """ Flatten a BlockMatrix of BlockMatrices """
+    if not isinstance(B, BlockMatrix) or not B.blocks.has(BlockMatrix):
+        return B
+    wrap = lambda x: x if isinstance(x, BlockMatrix) else BlockMatrix([[x]])
+    bb = B.blocks.applyfunc(wrap)  # everything is a block
+
+    from sympy import Matrix
+    try:
+        MM = Matrix(0, sum(bb[0, i].blocks.shape[1] for i in range(bb.shape[1])), [])
+        for row in range(0, bb.shape[0]):
+            M = Matrix(bb[row, 0].blocks)
+            for col in range(1, bb.shape[1]):
+                M = M.row_join(bb[row, col].blocks)
+            MM = MM.col_join(M)
+
+        return BlockMatrix(MM)
+    except ShapeError:
+        return B
+
+
 
 def reblock_2x2(B):
-    if not all(d > 2 for d in B.blocks.shape):
+    """ Reblock a BlockMatrix so that it has 2x2 blocks of block matrices """
+    if not isinstance(B, BlockMatrix) or not all(d > 2 for d in B.blocks.shape):
         return B
 
     BM = BlockMatrix  # for brevity's sake
