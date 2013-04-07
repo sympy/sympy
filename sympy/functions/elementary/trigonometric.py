@@ -18,6 +18,14 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
 
 def _peeloff_pi(arg):
     """
@@ -1219,6 +1227,14 @@ class asin(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1343,6 +1359,14 @@ class acos(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1456,6 +1480,14 @@ class atan(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1548,6 +1580,14 @@ class acot(Function):
             return -1 / (1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):

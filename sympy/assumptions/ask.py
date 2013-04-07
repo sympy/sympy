@@ -294,6 +294,8 @@ known_facts = And(
     Equivalent(Q.odd, Q.integer & ~Q.even),
     Equivalent(Q.prime, Q.integer & Q.positive & ~Q.composite),
     Implies(Q.integer, Q.rational),
+    Implies(Q.rational, Q.algebraic),
+    Implies(Q.algebraic, Q.complex),
     Implies(Q.imaginary, Q.complex & ~Q.real),
     Implies(Q.imaginary, Q.antihermitian),
     Implies(Q.antihermitian, ~Q.hermitian),
