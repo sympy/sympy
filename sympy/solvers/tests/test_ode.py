@@ -8,7 +8,8 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
 x, y, z = symbols('x:z', real=True)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
-                               homogeneous_order, ode_order)
+                               homogeneous_order)
+from sympy.solvers.util import _preprocess, de_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
 C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C1:11')
@@ -86,7 +87,7 @@ def test_dsolve_options():
         'nth_linear_euler_eq_homogeneous',
         'order', 'separable_Integral']
     assert sorted(a.keys()) == keys
-    assert a['order'] == ode_order(eq, f(x))
+    assert a['order'] == de_order(eq, f(x))
     assert a['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best') == Eq(f(x), C1/x)
     assert a['default'] == 'separable'
@@ -103,7 +104,7 @@ def test_dsolve_options():
     assert a['1st_homogeneous_coeff_subs_indep_div_dep_Integral'].has(Integral)
     assert a['separable_Integral'].has(Integral)
     assert sorted(b.keys()) == keys
-    assert b['order'] == ode_order(eq, f(x))
+    assert b['order'] == de_order(eq, f(x))
     assert b['best'] == Eq(f(x), C1/x)
     assert dsolve(eq, hint='best', simplify=False) == Eq(f(x), C1/x)
     assert b['default'] == 'separable'
@@ -198,34 +199,34 @@ def test_classify_ode():
                         prep=True) == ans
 
 
-def test_ode_order():
+def test_de_order():
     f = Function('f')
     g = Function('g')
     x = Symbol('x')
-    assert ode_order(3*x*exp(f(x)), f(x)) == 0
-    assert ode_order(x*diff(f(x), x) + 3*x*f(x) - sin(x)/x, f(x)) == 1
-    assert ode_order(x**2*f(x).diff(x, x) + x*diff(f(x), x) - f(x), f(x)) == 2
-    assert ode_order(diff(x*exp(f(x)), x, x), f(x)) == 2
-    assert ode_order(diff(x*diff(x*exp(f(x)), x, x), x), f(x)) == 3
-    assert ode_order(diff(f(x), x, x), g(x)) == 0
-    assert ode_order(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
-    assert ode_order(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
-    assert ode_order(diff(x*diff(x*exp(f(x)), x, x), x), g(x)) == 0
-    # issue 2736: ode_order has to also work for unevaluated derivatives
+    assert de_order(3*x*exp(f(x)), f(x)) == 0
+    assert de_order(x*diff(f(x), x) + 3*x*f(x) - sin(x)/x, f(x)) == 1
+    assert de_order(x**2*f(x).diff(x, x) + x*diff(f(x), x) - f(x), f(x)) == 2
+    assert de_order(diff(x*exp(f(x)), x, x), f(x)) == 2
+    assert de_order(diff(x*diff(x*exp(f(x)), x, x), x), f(x)) == 3
+    assert de_order(diff(f(x), x, x), g(x)) == 0
+    assert de_order(diff(f(x), x, x)*diff(g(x), x), f(x)) == 2
+    assert de_order(diff(f(x), x, x)*diff(g(x), x), g(x)) == 1
+    assert de_order(diff(x*diff(x*exp(f(x)), x, x), x), g(x)) == 0
+    # issue 2736: de_order has to also work for unevaluated derivatives
     # (ie, without using doit()).
-    assert ode_order(Derivative(x*f(x), x), f(x)) == 1
-    assert ode_order(x*sin(Derivative(x*f(x)**2, x, x)), f(x)) == 2
-    assert ode_order(Derivative(x*Derivative(x*exp(f(x)), x, x), x), g(x)) == 0
-    assert ode_order(Derivative(f(x), x, x), g(x)) == 0
-    assert ode_order(Derivative(x*exp(f(x)), x, x), f(x)) == 2
-    assert ode_order(Derivative(f(x), x, x)*Derivative(g(x), x), g(x)) == 1
-    assert ode_order(Derivative(x*Derivative(f(x), x, x), x), f(x)) == 3
-    assert ode_order(
+    assert de_order(Derivative(x*f(x), x), f(x)) == 1
+    assert de_order(x*sin(Derivative(x*f(x)**2, x, x)), f(x)) == 2
+    assert de_order(Derivative(x*Derivative(x*exp(f(x)), x, x), x), g(x)) == 0
+    assert de_order(Derivative(f(x), x, x), g(x)) == 0
+    assert de_order(Derivative(x*exp(f(x)), x, x), f(x)) == 2
+    assert de_order(Derivative(f(x), x, x)*Derivative(g(x), x), g(x)) == 1
+    assert de_order(Derivative(x*Derivative(f(x), x, x), x), f(x)) == 3
+    assert de_order(
         x*sin(Derivative(x*Derivative(f(x), x)**2, x, x)), f(x)) == 3
 
 
 # In all tests below, checkodesol has the order option set to prevent
-# superfluous calls to ode_order(), and the solve_for_func flag set to False
+# superfluous calls to de_order(), and the solve_for_func flag set to False
 # because dsolve() already tries to solve for the function, unless the
 # simplify=False option is set.
 def test_old_ode_tests():

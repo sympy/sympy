@@ -1,7 +1,7 @@
 from sympy import Derivative as D, Eq, exp, Function, Symbol, symbols
 from sympy.core import S
 from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
-    pdesolve, classify_pde)
+    pdsolve, classify_pde)
 from sympy.utilities.pytest import raises
 
 
@@ -69,15 +69,15 @@ def test_pde_1st_linear_constant_coeff_homo():
     u = f(x, y)
     eq = 2*u + u.diff(x) + u.diff(y)
     assert classify_pde(eq) == ('1st_linear_constant_coeff_homo',)
-    sol = pdesolve(eq)
+    sol = pdsolve(eq)
     assert sol.rhs == g(x - y)*exp(-x - y)
 
     eq = 4 + (3*u.diff(x)/u) + (2*u.diff(y)/u)
     assert classify_pde(eq) == ('1st_linear_constant_coeff_homo',)
-    sol = pdesolve(eq)
+    sol = pdsolve(eq)
     assert sol.rhs == g(2*x - 3*y)*exp(-S(12)*x/13 - S(8)*y/13)
 
     eq = u + (6*u.diff(x)) + (7*u.diff(y))
     assert classify_pde(eq) == ('1st_linear_constant_coeff_homo',)
-    sol = pdesolve(eq)
+    sol = pdsolve(eq)
     assert sol.rhs == g(7*x - 6*y)*exp(-6*x/S(85) - 7*y/S(85))
