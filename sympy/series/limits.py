@@ -185,7 +185,10 @@ def limit(e, z, z0, dir="+"):
                 else:
                     finite.append(term)
             else:
-                result = term.subs(z, z0)
+                try:
+                    result = limit(term, z, z0)
+                except:
+                    result = term.subs(z, z0)
                 bounded = result.is_bounded
                 if bounded is False or result is S.NaN:
                     unbounded.append(term)
