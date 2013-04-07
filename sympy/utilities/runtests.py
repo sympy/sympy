@@ -1347,6 +1347,33 @@ class SymPyDocTestFinder(DocTestFinder):
                     self._find(tests, val, valname, module, source_lines,
                                globs, seen)
 
+    def _from_module(self, module, object):
+        """
+        Return true if the given object is defined in the given
+        module.
+
+        This is a 1 to 1 copy of _from_module function from the python 2.7.3
+        doctest module. It is needed because the doctest module shipped with
+        py 2.5 is broken (see PR 1969).
+
+        This function should be removed once we drop support for python 2.5.
+
+        """
+        if module is None:
+            return True
+        elif inspect.getmodule(object) is not None:
+            return module is inspect.getmodule(object)
+        elif inspect.isfunction(object):
+            return module.__dict__ is object.func_globals
+        elif inspect.isclass(object):
+            return module.__name__ == object.__module__
+        elif hasattr(object, '__module__'):
+            return module.__name__ == object.__module__
+        elif isinstance(object, property):
+            return True # [XX] no way not be sure.
+        else:
+            raise ValueError("object must be a class or function")
+
     def _get_test(self, obj, name, module, globs, source_lines):
         """
         Return a DocTest for the given object, if it defines a docstring;
