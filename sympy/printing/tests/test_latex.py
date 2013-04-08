@@ -4,7 +4,7 @@ from sympy import (
     InverseCosineTransform, InverseFourierTransform,
     InverseLaplaceTransform, InverseMellinTransform, InverseSineTransform,
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
-    Order, Piecewise, Poly, Poly, Product, Range, Rational,
+    Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
     Sum, Symbol, TransformationSet, Tuple, Union, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
@@ -169,7 +169,7 @@ def test_latex_functions():
     assert latex(Min(x, y)**2) == r"\min\left(x, y\right)^{2}"
     assert latex(Max(x, 2, x**3)) == r"\max\left(2, x, x^{3}\right)"
     assert latex(Max(x, y)**2) == r"\max\left(x, y\right)^{2}"
-    assert latex(Abs(x)) == r"\lvert{x}\rvert"
+    assert latex(Abs(x)) == r"\left\lvert{x}\right\rvert"
     assert latex(re(x)) == r"\Re{x}"
     assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
     assert latex(im(x)) == r"\Im{x}"
@@ -285,11 +285,37 @@ def test_latex_brackets():
 
 
 def test_latex_derivatives():
+    # regular "d" for ordinary derivatives
     assert latex(diff(x**3, x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x} x^{3}"
+        r"\frac{d}{d x} x^{3}"
     assert latex(diff(sin(x) + x**2, x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
+        r"\frac{d}{d x}\left(x^{2} + \sin{\left (x \right )}\right)"
+    assert latex(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False)) == \
+        r"\frac{d^{2}}{d x^{2}} \left(x^{2} + \sin{\left (x \right )}\right)"
+    assert latex(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
+        r"\frac{d^{3}}{d x^{3}} \left(x^{2} + \sin{\left (x \right )}\right)"
 
+    # \partial for partial derivatives
+    assert latex(diff(sin(x * y), x, evaluate=False)) == \
+        r"\frac{\partial}{\partial x} \sin{\left (x y \right )}"
+    assert latex(diff(sin(x * y) + x**2, x, evaluate=False)) == \
+        r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x y \right )}\right)"
+    assert latex(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
+        r"\frac{\partial^{2}}{\partial x^{2}} \left(x^{2} + \sin{\left (x y \right )}\right)"
+    assert latex(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
+        r"\frac{\partial^{3}}{\partial x^{3}} \left(x^{2} + \sin{\left (x y \right )}\right)"
+
+    # mixed partial derivatives
+    f = Function("f")
+    assert latex(diff(diff(f(x,y), x, evaluate=False), y, evaluate=False)) == \
+        r"\frac{\partial^{2}}{\partial x\partial y}  " + latex(f(x,y))
+
+    assert latex(diff(diff(diff(f(x,y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
+        r"\frac{\partial^{3}}{\partial x^{2}\partial y}  " + latex(f(x,y))
+
+    # use ordinary d when one of the variables has been integrated out
+    assert latex(diff(Integral(exp(-x * y), (x, 0, oo)), y, evaluate=False)) == \
+        r"\frac{d}{d y} \int_{0}^{\infty} e^{- x y}\, dx"
 
 def test_latex_subs():
     assert latex(Subs(x*y, (
@@ -587,6 +613,44 @@ def test_latex_Lambda():
         r"\Lambda {\left (\begin{pmatrix}x, & y\end{pmatrix}, x + 1 \right )}"
 
 
+def test_latex_PolyElement():
+    Ruv, u,v = ring("u,v", ZZ);
+    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+
+    assert latex(x - x) == r"0"
+    assert latex(x - 1) == r"x - 1"
+    assert latex(x + 1) == r"x + 1"
+
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + u + 1) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + u + 1"
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + \left(u + 1\right) x"
+    assert latex((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + \left(u + 1\right) x + 1"
+    assert latex((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == r"-\left({u}^{2} - 3 u v + 1\right) {x}^{2} y - \left(u + 1\right) x - 1"
+
+
+def test_latex_FracElement():
+    Fuv, u,v = field("u,v", ZZ);
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+
+    assert latex(x - x) == r"0"
+    assert latex(x - 1) == r"x - 1"
+    assert latex(x + 1) == r"x + 1"
+
+    assert latex(x/z) == r"\frac{x}{z}"
+    assert latex(x*y/z) == r"\frac{x y}{z}"
+    assert latex(x/(z*t)) == r"\frac{x}{z t}"
+    assert latex(x*y/(z*t)) == r"\frac{x y}{z t}"
+
+    assert latex((x - 1)/y) == r"\frac{x - 1}{y}"
+    assert latex((x + 1)/y) == r"\frac{x + 1}{y}"
+    assert latex((-x - 1)/y) == r"\frac{-x - 1}{y}"
+    assert latex((x + 1)/(y*z)) == r"\frac{x + 1}{y z}"
+    assert latex(-y/(x + 1)) == r"\frac{-y}{x + 1}"
+    assert latex(y*z/(x + 1)) == r"\frac{y z}{x + 1}"
+
+    assert latex(((u + 1)*x*y + 1)/((v - 1)*z - 1)) == r"\frac{\left(u + 1\right) x y + 1}{\left(v - 1\right) z - 1}"
+    assert latex(((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)) == r"\frac{\left(u + 1\right) x y + 1}{\left(v - 1\right) z - u v t - 1}"
+
+
 def test_latex_Poly():
     assert latex(Poly(x**2 + 2 * x, x)) == \
         r"\operatorname{Poly}{\left( x^{2} + 2 x, x, domain=\mathbb{Z} \right)}"
@@ -847,3 +911,7 @@ def test_boolean_args_order():
 
     expr = Or(*syms)
     assert latex(expr) == 'a \\vee b \\vee c \\vee d \\vee e \\vee f'
+
+def test_imaginary():
+    i = sqrt(-1)
+    assert latex(i) == r'i'

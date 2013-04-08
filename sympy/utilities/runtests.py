@@ -27,8 +27,11 @@ import re as pre
 import random
 import subprocess
 import signal
+import stat
 
 from sympy.core.cache import clear_cache
+from sympy.utilities.misc import find_executable
+from sympy.external import import_module
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -537,24 +540,62 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/mpmath",  # needs to be fixed upstream
         "sympy/mpmath",  # needs to be fixed upstream
         "doc/src/modules/plotting.rst",  # generates live plots
-        # "sympy/plotting", # generates live plots
-        "sympy/plotting/pygletplot",  # generates live plots
         "sympy/statistics",                # prints a deprecation
         "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py",  # needs tcc
-        "sympy/utilities/autowrap.py",  # needs installed compiler
-        "sympy/galgebra/GA.py",  # needs numpy
-        "sympy/galgebra/latex_ex.py",  # needs numpy
-        "sympy/conftest.py",  # needs py.test
-        "sympy/utilities/benchmarking.py",  # needs py.test
-        "examples/advanced/autowrap_integrators.py",  # needs numpy
-        "examples/advanced/autowrap_ufuncify.py",  # needs numpy
-        "examples/intermediate/mplot2d.py",
-        # needs numpy and matplotlib
-        "examples/intermediate/mplot3d.py",
-        # needs numpy and matplotlib
-        "examples/intermediate/sample.py",  # needs numpy
+        "sympy/utilities/compilef.py"  # needs tcc
     ])
+
+    if import_module('numpy') is None:
+        blacklist.extend([
+            "sympy/galgebra/GA.py",
+            "sympy/galgebra/latex_ex.py",
+            "sympy/plotting/experimental_lambdify.py",
+            "sympy/plotting/plot_implicit.py",
+            "examples/advanced/autowrap_integrators.py",
+            "examples/advanced/autowrap_ufuncify.py",
+            "examples/intermediate/sample.py",
+            "examples/intermediate/mplot2d.py",
+            "examples/intermediate/mplot3d.py"
+        ])
+    else:
+        if import_module('matplotlib') is None:
+            blacklist.extend([
+                "examples/intermediate/mplot2d.py",
+                "examples/intermediate/mplot3d.py"
+            ])
+        else:
+            # don't display matplotlib windows
+            from sympy.plotting.plot import unset_show
+            unset_show()
+
+        # can be removed once a fix for Issue 3696 is merged
+        blacklist.extend(["sympy/galgebra/latex_ex.py"])
+
+    if import_module('pyglet') is None:
+        blacklist.extend(["sympy/plotting/pygletplot"])
+
+    # disabled because of doctest failures in asmeurer's bot
+    blacklist.extend([
+        "sympy/galgebra/GA.py",
+        "sympy/utilities/autowrap.py",
+        "examples/advanced/autowrap_integrators.py",
+        "examples/advanced/autowrap_ufuncify.py"
+        ])
+
+    # pytest = import_module('pytest')
+    # py = import_module('py')
+    # if py is None or pytest is None:
+    #     blacklist.extend([
+    #         "sympy/conftest.py",
+    #         "sympy/utilities/benchmarking.py"
+    #     ])
+
+    # blacklist these modules until issue 1741 is resolved
+    blacklist.extend([
+        "sympy/conftest.py",
+        "sympy/utilities/benchmarking.py"
+    ])
+
     blacklist = convert_to_native_paths(blacklist)
 
     # Disable warnings for external modules
@@ -863,8 +904,8 @@ class SymPyTests(object):
         if "XFAIL" in gl:
             pytestfile = inspect.getsourcefile(gl["XFAIL"])
         pytestfile2 = ""
-        if "SLOW" in gl:
-            pytestfile2 = inspect.getsourcefile(gl["SLOW"])
+        if "slow" in gl:
+            pytestfile2 = inspect.getsourcefile(gl["slow"])
         disabled = gl.get("disabled", False)
         if disabled:
             funcs = []
@@ -1246,6 +1287,86 @@ class SymPyDocTestFinder(DocTestFinder):
         # Don't bother if the docstring is empty.
         if self._exclude_empty and not docstring:
             return None
+
+        # check if there are external dependencies which need to be met
+        if hasattr(obj, '_doctest_depends_on'):
+            executables = obj._doctest_depends_on.get('exe', None)
+            moduledeps = obj._doctest_depends_on.get('modules', None)
+            viewers = obj._doctest_depends_on.get('disable_viewers', None)
+            pyglet = obj._doctest_depends_on.get('pyglet', None)
+
+            if executables is not None:
+                for ex in executables:
+                    found = find_executable(ex)
+                    # print "EXE %s found %s" %(ex, found)
+                    if found is None:
+                        return None
+            if moduledeps is not None:
+                for extmod in moduledeps:
+                    if extmod == 'matplotlib':
+                        matplotlib = import_module(
+                            'matplotlib',
+                            __import__kwargs={'fromlist':
+                                              ['pyplot', 'cm', 'collections']},
+                            min_module_version='1.0.0', catch=(RuntimeError,))
+                        if matplotlib is not None:
+                            pass
+                            # print "EXTMODULE matplotlib version %s found" % \
+                            #     matplotlib.__version__
+                        else:
+                            # print "EXTMODULE matplotlib > 1.0.0 not found"
+                            return None
+                    else:
+                        # TODO min version support
+                        mod = import_module(extmod)
+                        if mod is not None:
+                            version = "unknown"
+                            if hasattr(mod, '__version__'):
+                                version = mod.__version__
+                            # print "EXTMODULE %s version %s found" %(extmod, version)
+                        else:
+                            # print "EXTMODULE %s not found" %(extmod)
+                            return None
+            if viewers is not None:
+                import tempfile
+                tempdir = tempfile.mkdtemp()
+                os.environ['PATH'] = '%s:%s' % (tempdir, os.environ['PATH'])
+
+                vw = '#!/usr/bin/env python\n' \
+                     'import sys\n' \
+                     'if len(sys.argv) <= 1:\n' \
+                     '    exit("wrong number of args")\n'
+
+                for viewer in viewers:
+                    with open(os.path.join(tempdir, viewer), 'w') as fh:
+                        fh.write(vw)
+
+                    # make the file executable
+                    os.chmod(os.path.join(tempdir, viewer),
+                             stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR)
+            if pyglet:
+                # monkey-patch pyglet s.t. it does not open a window during
+                # doctesting
+                import pyglet
+                class DummyWindow(object):
+                    def __init__(self, *args, **kwargs):
+                        self.has_exit=True
+                        self.width = 600
+                        self.height = 400
+
+                    def set_vsync(self, x):
+                        pass
+
+                    def switch_to(self):
+                        pass
+
+                    def push_handlers(self, x):
+                        pass
+
+                    def close(self):
+                        pass
+
+                pyglet.window.Window = DummyWindow
 
         # Return a DocTest for this object.
         if module is None:

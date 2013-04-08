@@ -251,24 +251,6 @@ def gf_normal(f, p, K):
     return gf_trunc(map(K, f), p)
 
 
-def gf_convert(f, p, K0, K1):
-    """
-    Normalize all coefficients in ``K``.
-
-
-    Examples
-    ========
-
-    >>> from sympy.polys.domains import ZZ, QQ
-    >>> from sympy.polys.galoistools import gf_convert
-
-    >>> gf_convert([QQ(1), QQ(4), QQ(0)], 3, QQ, ZZ)
-    [1, 1, 0]
-
-    """
-    return gf_trunc([ K1.convert(c, K0) for c in f ], p)
-
-
 @cythonized("k,n")
 def gf_from_dict(f, p, K):
     """

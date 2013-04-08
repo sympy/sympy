@@ -253,6 +253,12 @@ want to be mentioned here, so see our repository history for a full list).
 #. Sean Ge: made KroneckerDelta arguments canonically ordered
 #. Ankit Agrawal: Statistical moments
 #. Amit Jamadagni: qapply Rotation to spin states
+#. Björn Dahlgren: Documentation fix
+#. Christophe Saint-Jean: fixed and added metrics to galgebra
+#. Demian Wassermann: fix to ccode printer for Piecewise
+#. Khagesh Patel: Addition to matrix expressions
+#. Stephen Loo: Update minimum gmpy2 version
+#. Rishabh Dixit: Improvements to assumptions
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.

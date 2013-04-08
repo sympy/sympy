@@ -1505,11 +1505,11 @@ def test_separable_reduced():
     df = f(x).diff(x)
     eq = (x / f(x))*df  + tan(x**2*f(x) / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
-    '1st_linear_Integral', 'separable_reduced_Integral')
+        '1st_linear_Integral', 'separable_reduced_Integral')
 
     eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
-    '1st_linear_Integral', 'separable_reduced_Integral')
+        '1st_linear_Integral', 'separable_reduced_Integral')
     sol = dsolve(eq, hint = 'separable_reduced')
     assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
     assert sol.rhs == C1 + log(x)
@@ -1517,7 +1517,7 @@ def test_separable_reduced():
 
     eq = df + (f(x) / (x**4*f(x) - x))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
-    '1st_linear_Integral', 'separable_reduced_Integral')
+        '1st_linear_Integral', 'separable_reduced_Integral')
     sol = dsolve(eq, hint = 'separable_reduced')
     assert sol.lhs == log(x**3*f(x))/4 + log(x**3*f(x) - S(4)/3)/12
     assert sol.rhs == C1 + log(x)
@@ -1546,3 +1546,38 @@ def test_homogeneous_function():
     assert homogeneous_order(eq5, x, f(x)) == 0
     assert homogeneous_order(eq6, x, f(x)) == 0
     assert homogeneous_order(eq7, x, f(x)) == None
+
+
+def test_linear_coeff_match():
+    from sympy.solvers.ode import _linear_coeff_match
+    n, d = z*(2*x + 3*f(x) + 5), z*(7*x + 9*f(x) + 11)
+    rat = n/d
+    eq1 = sin(rat) + cos(rat.expand())
+    eq2 = rat
+    eq3 = log(sin(rat))
+    ans = (4, -S(13)/3)
+    assert _linear_coeff_match(eq1, f(x)) == ans
+    assert _linear_coeff_match(eq2, f(x)) == ans
+    assert _linear_coeff_match(eq3, f(x)) == ans
+
+    # no c
+    eq4 = (3*x)/f(x)
+    # not x and f(x)
+    eq5 = (3*x + 2)/x
+    # denom will be zero
+    eq6 = (3*x + 2*f(x) + 1)/(3*x + 2*f(x) + 5)
+    # not rational coefficient
+    eq7 = (3*x + 2*f(x) + sqrt(2))/(3*x + 2*f(x) + 5)
+    assert _linear_coeff_match(eq4, f(x)) is None
+    assert _linear_coeff_match(eq5, f(x)) is None
+    assert _linear_coeff_match(eq6, f(x)) is None
+    assert _linear_coeff_match(eq7, f(x)) is None
+
+
+def test_linear_coefficients():
+    f = Function('f')
+    df = f(x).diff(x)
+    sol = Eq(f(x), C1/(x**2 + 6*x + 9) - S(3)/2)
+    eq = df + (3 + 2*f(x))/(x + 3)
+    assert dsolve(eq, hint='linear_coefficients') == sol
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]

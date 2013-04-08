@@ -7,10 +7,10 @@ from sympy import (
     Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
     Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
-    symbols, sympify, tan, tanh, trigsimp, Wild, Basic)
+    symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered)
 from sympy.core.mul import _keep_coeff
-from sympy.simplify.simplify import fraction_expand
-from sympy.simplify.simplify import _trigpats
+from sympy.simplify.simplify import (
+    collect_sqrt, fraction_expand, _unevaluated_Add)
 from sympy.utilities.pytest import XFAIL
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, k
@@ -91,12 +91,11 @@ def test_trigsimp1():
     assert trigsimp(1/cos(x)**2 - 1) == tan(x)**2
     assert trigsimp(1/cos(x)**2 - tan(x)**2) == 1
     assert trigsimp(1 + cot(x)**2) == 1/sin(x)**2
-    assert trigsimp(1/sin(x)**2 - 1) == cot(x)**2
+    assert trigsimp(1/sin(x)**2 - 1) == 1/tan(x)**2
     assert trigsimp(1/sin(x)**2 - cot(x)**2) == 1
 
     assert trigsimp(5*cos(x)**2 + 5*sin(x)**2) == 5
-    # TODO is 3*cos(x)/2 + 7/2 is nicer for the following?
-    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 3*cos(x/2)**2 + 2
+    assert trigsimp(5*cos(x/2)**2 + 2*sin(x/2)**2) == 3*cos(x)/2 + S(7)/2
 
     assert trigsimp(sin(x)/cos(x)) == tan(x)
     assert trigsimp(2*tan(x)*cos(x)) == 2*sin(x)
@@ -120,7 +119,7 @@ def test_trigsimp1():
 
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
     e = 2*sin(x)**2 + 2*cos(x)**2
-    assert trigsimp(log(e), deep=True) == log(2)
+    assert trigsimp(log(e)) == log(2)
 
 def test_trigsimp1a():
     assert trigsimp(sin(2)**2*cos(3)*exp(2)/cos(2)**2) == tan(2)**2*cos(3)*exp(2)
@@ -142,13 +141,8 @@ def test_trigsimp2():
             recursive=True) == 1
     assert trigsimp(sin(x)**2*sin(y)**2 + sin(x)**2*cos(y)**2 + cos(x)**2,
             recursive=True) == 1
-
-
-def test_trigsimp_deep():
-    x, y = symbols('x,y')
     assert trigsimp(
-        Subs(x, x, sin(y)**2 + cos(y)**2), deep=True) == Subs(x, x, 1)
-    assert simplify(Subs(x, x, sin(y)**2 + cos(y)**2)) == Subs(x, x, 1)
+        Subs(x, x, sin(y)**2 + cos(y)**2)) == Subs(x, x, 1)
 
 
 def test_issue1274():
@@ -188,11 +182,8 @@ def test_1395():
     assert trigsimp(eq) == 1
 
 
-@XFAIL
 def test_2849():
     a, x, y = symbols('a x y')
-    # this needs to be factored and then not be rejected because of
-    # the test at line 1680 in simplify.py (as of this commit date)
     assert trigsimp(diff(integrate(cos(x)/sin(x)**7, x), x)) == \
            cos(x)/sin(x)**7
 
@@ -210,25 +201,24 @@ def test_1181():
     assert trigsimp(a**2*cos(y)**2*sin(x)**2 + a**2*sin(y)**2*sin(x)**2) == a**2*sin(x)**2
 
 
-@XFAIL
-def test_111f():
-    assert trigsimp(sin(2)*sin(3) + cos(2)*cos(3) + cos(2)) == cos(1) + cos(2)
-
-
 def test_111():
     eqs = (sin(2)*cos(3) + sin(3)*cos(2),
         -sin(2)*sin(3) + cos(2)*cos(3),
         sin(2)*cos(3) - sin(3)*cos(2),
         sin(2)*sin(3) + cos(2)*cos(3),
+        sin(2)*sin(3) + cos(2)*cos(3) + cos(2),
         sinh(2)*cosh(3) + sinh(3)*cosh(2),
-        sinh(2)*sinh(3) + cosh(2)*cosh(3))
+        sinh(2)*sinh(3) + cosh(2)*cosh(3),
+        )
     assert [trigsimp(e) for e in eqs] == [
         sin(5),
         cos(5),
         -sin(1),
         cos(1),
+        cos(1) + cos(2),
         sinh(5),
-        cosh(5)]
+        cosh(5),
+        ]
 
 
 def test_trigsimp_issues():
@@ -251,14 +241,12 @@ def test_trigsimp_issues():
 
     # check for multiple patterns
     assert (cos(x)**2/sin(x)**2*cos(y)**2/sin(y)**2).trigsimp() == \
-        tan(x)**-2*tan(y)**-2
+        1/tan(x)**2/tan(y)**2
     assert trigsimp(cos(x)/sin(x)*cos(x+y)/sin(x+y)) == \
         1/(tan(x)*tan(x + y))
 
     eq = cos(2)*(cos(3) + 1)**2/(cos(3) - 1)**2
-    # use exclusion
-    assert trigsimp(eq) == eq
-    # but not unnecessarily
+    assert trigsimp(eq) == eq.factor()  # factor makes denom (-1 + cos(3))**2
     assert trigsimp(cos(2)*(cos(3) + 1)**2*(cos(3) - 1)**2) == \
         cos(2)*sin(3)**4
 
@@ -266,43 +254,17 @@ def test_trigsimp_issues():
     # trigsimp to hang
     assert cot(x).equals(tan(x)) is False
 
+    # nan or the unchanged expression is ok, but not sin(1)
+    z = cos(x)**2 + sin(x)**2 - 1
+    z1 = tan(x)**2 - 1/cot(x)**2
+    n = (1 + z1/z)
+    assert trigsimp(sin(n)) != sin(1)
+    eq = x*(n - 1) - x*n
+    assert trigsimp(eq) is S.NaN
+    assert trigsimp(eq, recursive=True) is S.NaN
+    assert trigsimp(1).is_Integer
 
-def test_trigsimp_assumptions():
-    from random import random, randint
-    from sympy.utilities.iterables import flatten
-    from sympy.utilities.randtest import (
-        test_numerically, random_complex_number, comp)
-
-    a, b, c, d, matchers_division, matchers_add, \
-    matchers_identity, artifacts = _trigpats()
-
-    # check that these are always valid
-    pats = [artifacts, matchers_add, matchers_identity]
-    for i, p in enumerate(flatten(pats, 1)):
-        o, n = p[:2]
-        try:
-            assert test_numerically(o, n, list(o.free_symbols))
-        except:
-            print o,n
-
-    # check that these are valid if the bases are positive or
-    # exponents are integers
-    for i, p in enumerate(matchers_division):
-        o, n = p[:2]
-        f = o.free_symbols
-        reps = dict(zip(f, [random_complex_number() for fi in f]))
-        # integer exponent
-        save = reps.pop(c)
-        reps[c] = randint(1, 10)
-        try:
-            assert comp(o.subs(reps), n.subs(reps), 1e-6)
-        except:
-            print i, o, n, reps
-
-        # real argument
-        reps[c] = save
-        reps[b] = 1  # sin and cos are both positive at b = 1
-        assert comp(o.subs(reps), n.subs(reps), 1e-6)
+    assert trigsimp(-sin(x)**4 - 2*sin(x)**2*cos(x)**2 - cos(x)**4) == -1
 
 
 def test_trigsimp_issue_2515():
@@ -322,7 +284,7 @@ def test_trigsimp_noncommutative():
     assert trigsimp(A/cos(x)**2 - A) == A*tan(x)**2
     assert trigsimp(A/cos(x)**2 - A*tan(x)**2) == A
     assert trigsimp(A + A*cot(x)**2) == A/sin(x)**2
-    assert trigsimp(A/sin(x)**2 - A) == A*cot(x)**2
+    assert trigsimp(A/sin(x)**2 - A) == A/tan(x)**2
     assert trigsimp(A/sin(x)**2 - A*cot(x)**2) == A
 
     assert trigsimp(y*A*cos(x)**2 + y*A*sin(x)**2) == y*A
@@ -356,11 +318,11 @@ def test_hyperbolic_simp():
     assert trigsimp(1 - 1/cosh(x)**2) == tanh(x)**2
     assert trigsimp(tanh(x)**2 + 1/cosh(x)**2) == 1
     assert trigsimp(coth(x)**2 - 1) == 1/sinh(x)**2
-    assert trigsimp(1/sinh(x)**2 + 1) == coth(x)**2
+    assert trigsimp(1/sinh(x)**2 + 1) == 1/tanh(x)**2
     assert trigsimp(coth(x)**2 - 1/sinh(x)**2) == 1
 
     assert trigsimp(5*cosh(x)**2 - 5*sinh(x)**2) == 5
-    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) == 3*cosh(x/2)**2 + 2
+    assert trigsimp(5*cosh(x/2)**2 - 2*sinh(x/2)**2) == 3*cosh(x)/2 + S(7)/2
 
     assert trigsimp(sinh(x)/cosh(x)) == tanh(x)
     assert trigsimp(tanh(x)) == trigsimp(sinh(x)/cosh(x))
@@ -371,7 +333,7 @@ def test_hyperbolic_simp():
     assert trigsimp(coth(x)/cosh(x)) == 1/sinh(x)
 
     e = 2*cosh(x)**2 - 2*sinh(x)**2
-    assert trigsimp(log(e), deep=True) == log(2)
+    assert trigsimp(log(e)) == log(2)
 
     assert trigsimp(cosh(x)**2*cosh(y)**2 - cosh(x)**2*sinh(y)**2 - sinh(x)**2,
             recursive=True) == 1
@@ -392,19 +354,11 @@ def test_hyperbolic_simp():
     assert trigsimp(x*cosh(x)*tanh(x)) == x*sinh(x)
     assert trigsimp(-sinh(x) + cosh(x)*tanh(x)) == 0
 
+    assert tan(x) != 1/cot(x)  # cot doesn't auto-simplify
 
-@XFAIL
-def test_tan_cot():
-    x = Symbol('x')
-    ### ???
-    assert tan(x) == 1/cot(x)
-
-
-@XFAIL
-def test_tan_cot2():
-    x = Symbol('x')
     assert trigsimp(tan(x) - 1/cot(x)) == 0
     assert trigsimp(3*tanh(x)**7 - 2/coth(x)**7) == tanh(x)**7
+
 
 def test_trigsimp_groebner():
     from sympy.simplify.simplify import trigsimp_groebner
@@ -434,16 +388,6 @@ def test_trigsimp_groebner():
     assert trigsimp_groebner((tanh(x)+tanh(y))/(1+tanh(x)*tanh(y)),
                              hints=[(tanh,x,y)]) == tanh(x + y)
 
-    # test "deep"
-    expr = sin(2*x).expand(trig=True)
-    assert trigsimp(atan(expr), method='groebner', deep=False, hints=[2]) == \
-           atan(expr)
-    assert trigsimp(atan(expr), method='groebner', deep=True, hints=[2]) == \
-           atan(sin(2*x))
-    assert trigsimp(atan(atan(expr)), method='groebner', deep=True, hints=[2]) == \
-           atan(atan(sin(2*x)))
-    assert trigsimp(2**(expr), method='groebner', deep=True, hints=[2]) == \
-           2**sin(2*x)
 
 @XFAIL
 def test_factorial_simplify():
@@ -1458,14 +1402,6 @@ def test_radsimp():
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -11*sqrt(2) + 9*sqrt(3)
 
-    # coverage not provided by above tests
-    assert collect_const(2*sqrt(3) + 4*a*sqrt(5)) == \
-        Mul(2, (2*sqrt(5)*a + sqrt(3)), evaluate=False)
-    assert collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3)) == \
-        2*(2*sqrt(5)*a + sqrt(3))
-    assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
-        sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
-
     # issue 3433
     assert radsimp(1/sqrt(x)) == 1/sqrt(x)
     # this is sign-trickery to keep the expression from reverting
@@ -1474,6 +1410,31 @@ def test_radsimp():
     # to use an unevaluated Mul
     assert radsimp(1/sqrt(2*x + 3)) == -sqrt(2*x + 3)/(-2*x - 3)
     assert radsimp(1/sqrt(2*(x + 3))) == -sqrt(2)*sqrt(x + 3)/(-x - 3)/2
+
+
+def test_collect_const():
+    # coverage not provided by above tests
+    assert collect_const(2*sqrt(3) + 4*a*sqrt(5)) == \
+        2*(2*sqrt(5)*a + sqrt(3))  # let the primitive reabsorb
+    assert collect_const(2*sqrt(3) + 4*a*sqrt(5), sqrt(3)) == \
+        2*sqrt(3) + 4*a*sqrt(5)
+    assert collect_const(sqrt(2)*(1 + sqrt(2)) + sqrt(3) + x*sqrt(2)) == \
+        sqrt(2)*(x + 1 + sqrt(2)) + sqrt(3)
+
+    # issue 2191
+    assert collect_const(2*x + 2*y + 1, 2) == \
+        collect_const(2*x + 2*y + 1) == \
+        Add(S(1), Mul(2, x + y, evaluate=False), evaluate=False)
+    assert collect_const(-y - z) == Mul(-1, y + z, evaluate=False)
+    assert collect_const(2*x - 2*y - 2*z, 2) == \
+        Mul(2, x - y - z, evaluate=False)
+    assert collect_const(2*x - 2*y - 2*z, -2) == \
+        _unevaluated_Add(2*x, Mul(-2, y + z, evaluate=False))
+
+    # this is why the content_primitive is used
+    eq = (sqrt(15 + 5*sqrt(2))*x + sqrt(3 + sqrt(2))*y)*2
+    assert collect_sqrt(eq + 2) == \
+        2*sqrt(sqrt(2) + 3)*(sqrt(5)*x + y) + 2
 
 
 def test_issue2834():
@@ -1491,6 +1452,8 @@ def test_fraction_expand():
 
 def test_combsimp_gamma():
     from sympy.abc import x, y
+    R = Rational
+
     assert combsimp(gamma(x)) == gamma(x)
     assert combsimp(gamma(x + 1)/x) == gamma(x)
     assert combsimp(gamma(x)/(x - 1)) == gamma(x - 1)
@@ -1500,7 +1463,7 @@ def test_combsimp_gamma():
     assert combsimp(x/gamma(x + 1)) == 1/gamma(x)
     assert combsimp((x + 1)**2/gamma(x + 2)) == (x + 1)/gamma(x + 1)
     assert combsimp(x*gamma(x) + gamma(x + 3)/(x + 2)) == \
-        gamma(x + 1) + gamma(x + 2)
+        (x + 2)*gamma(x + 1)
 
     assert combsimp(gamma(2*x)*x) == gamma(2*x + 1)/2
     assert combsimp(gamma(2*x)/(x - S(1)/2)) == 2*gamma(2*x - 1)
@@ -1521,6 +1484,33 @@ def test_combsimp_gamma():
 
     assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
         4**x*gamma(x + S(1)/2)/sqrt(pi)/2
+
+    # issue 3693
+    e = (-gamma(k)*gamma(k + 2) + gamma(k + 1)**2)/gamma(k)**2
+    assert combsimp(e) == -k
+    assert combsimp(1/e) == -1/k
+    e = (gamma(x) + gamma(x + 1))/gamma(x)
+    assert combsimp(e) == x + 1
+    assert combsimp(1/e) == 1/(x + 1)
+    e = (gamma(x) + gamma(x + 2))*(gamma(x - 1) + gamma(x))/gamma(x)
+    assert combsimp(e) == (x**2 + x + 1)*gamma(x + 1)/(x - 1)
+    e = (-gamma(k)*gamma(k + 2) + gamma(k + 1)**2)/gamma(k)**2
+    assert combsimp(e**2) == k**2
+    assert combsimp(e**2/gamma(k + 1)) == k/gamma(k)
+    a = R(1, 2) + R(1, 3)
+    b = a + R(1, 3)
+    assert combsimp(gamma(2*k)/gamma(k)*gamma(k + a)*gamma(k + b))
+    3*2**(2*k + 1)*3**(-3*k - 2)*sqrt(pi)*gamma(3*k + R(3, 2))/2
+
+    A, B = symbols('A B', commutative=False)
+    assert combsimp(e*B*A) == combsimp(e)*B*A
+
+    # check iteration
+    assert combsimp(gamma(2*k)/gamma(k)*gamma(-k - R(1, 2))) == (
+        -2**(2*k + 1)*sqrt(pi)/(2*((2*k + 1)*cos(pi*k))))
+    assert combsimp(
+        gamma(k)*gamma(k + R(1, 3))*gamma(k + R(2, 3))/gamma(3*k/2)) == (
+        3*2**(3*k + 1)*3**(-3*k - S.Half)*sqrt(pi)*gamma(3*k/2 + S.Half)/2)
 
 
 def test_polarify():
@@ -1638,6 +1628,10 @@ def test_Piecewise():
     s3 = simplify(e3)
     assert simplify(Piecewise((e1, x < e2), (e3, True))) == \
         Piecewise((s1, x < s2), (s3, True))
+
+    # trigsimp tries not to touch non-trig containing args
+    assert trigsimp(Piecewise((e1, e3 < e2), (e3, True))) == \
+        Piecewise((e1, e3 < s2), (e3, True))
 
 
 def test_polymorphism():

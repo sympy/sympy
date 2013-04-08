@@ -426,13 +426,16 @@ class LatticeOp(AssocOp):
         elif len(_args) == 1:
             return set(_args).pop()
         else:
+            # XXX in almost every other case for __new__, *_args is
+            # passed along, but the expectation here is for _args
             obj = super(AssocOp, cls).__new__(cls, _args)
             obj._argset = _args
             return obj
 
     @classmethod
-    def _new_args_filter(cls, arg_sequence):
+    def _new_args_filter(cls, arg_sequence, call_cls=None):
         """Generator filtering args"""
+        cls = call_cls or cls
         for arg in arg_sequence:
             if arg == cls.zero:
                 raise ShortCircuit(arg)

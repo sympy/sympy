@@ -1621,17 +1621,17 @@ def test_sympy__logic__boolalg__Nand():
 
 def test_sympy__logic__boolalg__Nor():
     from sympy.logic.boolalg import Nor
-    assert _test_args(Nor(x, y, 2))
+    assert _test_args(Nor(x, y))
 
 
 def test_sympy__logic__boolalg__Not():
     from sympy.logic.boolalg import Not
-    assert _test_args(Not(2))
+    assert _test_args(Not(x))
 
 
 def test_sympy__logic__boolalg__Or():
     from sympy.logic.boolalg import Or
-    assert _test_args(Or(x, y, 2))
+    assert _test_args(Or(x, y))
 
 
 def test_sympy__logic__boolalg__Xor():
@@ -1760,6 +1760,11 @@ def test_sympy__matrices__expressions__trace__Trace():
     from sympy.matrices.expressions.trace import Trace
     from sympy.matrices.expressions import MatrixSymbol
     assert _test_args(Trace(MatrixSymbol('A', 3, 3)))
+
+def test_sympy__matrices__expressions__determinant__Determinant():
+    from sympy.matrices.expressions.determinant import Determinant
+    from sympy.matrices.expressions import MatrixSymbol
+    assert _test_args(Determinant(MatrixSymbol('A', 3, 3)))
 
 
 def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():

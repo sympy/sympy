@@ -2,15 +2,19 @@
 
 from sympy import (S, symbols, Symbol, Wild, Integer, Rational, sqrt,
     powsimp, Lambda, sin, cos, pi, I, Interval, re, im)
-from sympy.utilities.pytest import raises
 
-from sympy.polys import Poly, cyclotomic_poly, intervals, nroots
+from sympy.polys import (Poly, cyclotomic_poly, intervals, nroots,
+    PolynomialError)
 
 from sympy.polys.polyroots import (root_factors, roots_linear,
     roots_quadratic, roots_cubic, roots_quartic, roots_cyclotomic,
     roots_binomial, preprocess_roots, roots)
 
-a, b, c, d, e, t, x, y, z = symbols('a,b,c,d,e,t,x,y,z')
+from sympy.utilities.pytest import raises
+from sympy.utilities.randtest import test_numerically
+
+
+a, b, c, d, e, q, t, x, y, z = symbols('a,b,c,d,e,q,t,x,y,z')
 
 
 def test_roots_linear():
@@ -67,7 +71,8 @@ def test_roots_quartic():
                                       (1, 2, 3, 4),
                                       (1, 2, 3, 4),
                                       (-7, -3, 3, -6),
-                                      (-3, 5, -6, -4)]):
+                                      (-3, 5, -6, -4),
+                                      (6, -5, -10, -3)]):
         if i == 2:
             c = -a*(a**2/S(8) - b/S(2))
         elif i == 3:
@@ -75,6 +80,13 @@ def test_roots_quartic():
         eq = x**4 + a*x**3 + b*x**2 + c*x + d
         ans = roots_quartic(Poly(eq, x))
         assert all(eq.subs(x, ai).n(chop=True) == 0 for ai in ans)
+
+    # not all symbolic quartics are unresolvable
+    eq = Poly(q*x + q/4 + x**4 + x**3 + 2*x**2 - Rational(1, 3), x)
+    sol = roots_quartic(eq)
+    assert all(test_numerically(eq.subs(x, i), 0) for i in sol)
+    # but some are (see also iss 1890)
+    raises(PolynomialError, lambda: roots_quartic(Poly(y*x**4 + x + z, x)))
 
 
 def test_roots_cyclotomic():
@@ -343,6 +355,10 @@ def test_roots():
         -I: 1, I: 1,
     }
 
+    r = roots(x**3 + 40*x + 64)
+    real_root = [rx for rx in r if rx.is_real][0]
+    cr = 4 + 2*sqrt(1074)/9
+    assert real_root == -2*cr**(S(1)/3) + 20/(3*cr**(S(1)/3))
 
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """

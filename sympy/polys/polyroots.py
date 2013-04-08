@@ -1,5 +1,7 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
+import math
+
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
 from sympy.core.sympify import sympify
@@ -18,8 +20,6 @@ from sympy.simplify import simplify, powsimp
 from sympy.utilities import default_sort_key
 
 from sympy.core.compatibility import reduce
-
-import math
 
 
 def roots_linear(f):
@@ -121,6 +121,62 @@ def roots_cubic(f):
 
     return soln
 
+def _roots_quartic_euler(p, q, r, a):
+    """
+    Descartes-Euler solution of the quartic equation
+
+    Parameters
+    ==========
+
+    p, q, r: coefficients of ``x**4 + p*x**2 + q*x + r``
+    a: shift of the roots
+
+    Notes
+    =====
+
+    This is a helper function for ``roots_quartic``.
+
+    Look for solutions of the form ::
+
+      ``x1 = sqrt(R) - sqrt(A + B*sqrt(R))``
+      ``x2 = -sqrt(R) - sqrt(A - B*sqrt(R))``
+      ``x3 = -sqrt(R) + sqrt(A - B*sqrt(R))``
+      ``x4 = sqrt(R) + sqrt(A + B*sqrt(R))``
+
+    To satisfy the quartic equation one must have
+    ``p = -2*(R + A); q = -4*B*R; r = (R - A)**2 - B**2*R``
+    so that ``R`` must satisfy the Descartes-Euler resolvent equation
+    ``64*R**3 + 32*p*R**2 + (4*p**2 - 16*r)*R - q**2 = 0``
+
+    If the resolvent does not have a rational solution, return None;
+    in that case it is likely that the Ferrari method gives a simpler
+    solution.
+
+    Examples
+    ========
+
+    >>> from sympy import S
+    >>> from sympy.polys.polyroots import _roots_quartic_euler
+    >>> p, q, r = -S(64)/5, -S(512)/125, -S(1024)/3125
+    >>> _roots_quartic_euler(p, q, r, S(0))[0]
+    -sqrt(32*sqrt(5)/125 + 16/5) + 4*sqrt(5)/5
+    """
+    from sympy.solvers import solve
+    # solve the resolvent equation
+    x = Symbol('x')
+    eq = 64*x**3 + 32*p*x**2 + (4*p**2 - 16*r)*x - q**2
+    xsols = roots(Poly(eq, x), cubics=False).keys()
+    xsols = [sol for sol in xsols if sol.is_rational]
+    if not xsols:
+        return None
+    R = max(xsols)
+    c1 = sqrt(R)
+    B = -q*c1/(4*R)
+    A = -R - p/2
+    c2 = sqrt(A + B)
+    c3 = sqrt(A - B)
+    return [c1 - c2 - a, -c1 - c3 - a, -c1 + c3 - a, c1 + c2 - a]
+
 
 def roots_quartic(f):
     r"""
@@ -166,7 +222,7 @@ def roots_quartic(f):
     4. http://staff.bath.ac.uk/masjhd/JHD-CA.pdf
     5. http://www.albmath.org/files/Math_5713.pdf
     6. http://www.statemaster.com/encyclopedia/Quartic-equation
-
+    7. eqworld.ipmnet.ru/en/solutions/ae/ae0108.pdf
     """
     _, a, b, c, d = f.monic().all_coeffs()
 
@@ -192,7 +248,6 @@ def roots_quartic(f):
         f = c + a*(a2/8 - b/2)
         g = d - a*(a*(3*a2/256 - b/16) + c/4)
         aon4 = a/4
-        ans = []
 
         if f is S.Zero:
             y1, y2 = [sqrt(tmp) for tmp in
@@ -202,27 +257,38 @@ def roots_quartic(f):
             y = [S.Zero] + roots([1, 0, e, f], multiple=True)
             return [tmp - aon4 for tmp in y]
         else:
+            # Descartes-Euler method, see [7]
+            sols = _roots_quartic_euler(e, f, g, aon4)
+            if sols:
+                return sols
+            # Ferrari method, see [1, 2]
+            a2 = a**2
+            e = b - 3*a2/8
+            f = c + a*(a2/8 - b/2)
+            g = d - a*(a*(3*a2/256 - b/16) + c/4)
             p = -e**2/12 - g
             q = -e**3/108 + e*g/3 - f**2/8
             TH = Rational(1, 3)
-            if p is S.Zero:
+            if p.is_zero:
                 y = -5*e/6 - q**TH
-            else:
-                # with p !=0 then u below is not 0
+            elif p.is_number and p.is_comparable:
+                # with p != 0 then u below is not 0
                 root = sqrt(q**2/4 + p**3/27)
                 r = -q/2 + root  # or -q/2 - root
                 u = r**TH  # primary root of solve(x**3-r, x)
                 y = -5*e/6 + u - p/u/3
+            else:
+                raise PolynomialError('cannot return general quartic solution')
             w = sqrt(e + 2*y)
             arg1 = 3*e + 2*y
             arg2 = 2*f/w
+            ans = []
             for s in [-1, 1]:
                 root = sqrt(-(arg1 + s*arg2))
                 for t in [-1, 1]:
                     ans.append((s*w - t*root)/2 - aon4)
 
-    return ans
-
+            return ans
 
 def roots_binomial(f):
     """Returns a list of roots of a binomial polynomial."""
@@ -485,7 +551,27 @@ def _quintic_simplify(expr):
 
 
 def _integer_basis(poly):
-    """Compute coefficient basis for a polynomial over integers. """
+    """Compute coefficient basis for a polynomial over integers.
+
+    Returns the integer ``div`` such that substituting ``x = div*y``
+    ``p(x) = m*q(y)`` where the coefficients of ``q`` are smaller
+    than those of ``p``.
+
+    For example ``x**5 + 512*x + 1024 = 0``
+    with ``div = 4`` becomes ``y**5 + 2*y + 1 = 0``
+
+    Returns the integer ``div`` or ``None`` if there is no possible scaling.
+
+    Examples
+    ========
+
+    >>> from sympy.polys import Poly
+    >>> from sympy.abc import x
+    >>> from sympy.polys.polyroots import _integer_basis
+    >>> p = Poly(x**5 + 512*x + 1024, x, domain='ZZ')
+    >>> _integer_basis(p)
+    4
+    """
     monoms, coeffs = zip(*poly.terms())
 
     monoms, = zip(*monoms)
@@ -493,6 +579,8 @@ def _integer_basis(poly):
 
     if coeffs[0] < coeffs[-1]:
         coeffs = list(reversed(coeffs))
+        n = monoms[0]
+        monoms = [n - i for i in reversed(monoms)]
     else:
         return None
 

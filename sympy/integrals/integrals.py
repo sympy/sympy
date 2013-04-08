@@ -3,6 +3,7 @@ from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
 
 from sympy.core.symbol import Dummy
 from sympy.core.compatibility import is_sequence
+from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
@@ -1113,6 +1114,27 @@ class Integral(Expr):
                     parts.append(coeff * h)
                     continue
 
+            if h is None:
+                try:
+                    manual = manualintegrate(g, x)
+                    if manual is not None and manual.func != Integral:
+                        if manual.has(Integral):
+                            # try to have other algorithms do the integrals
+                            # manualintegrate can't handle
+                            manual = manual.func(*[
+                                arg.doit() if arg.has(Integral) else arg
+                                for arg in manual.args
+                            ]).expand(multinomial=False,
+                                      log=False,
+                                      power_exp=False,
+                                      power_base=False)
+                        if not manual.has(Integral):
+                            parts.append(coeff * manual)
+                            continue
+                except (ValueError, PolynomialError):
+                    # can't handle some SymPy expressions
+                    pass
+
             # if we failed maybe it was because we had
             # a product that could have been expanded,
             # so let's try an expansion of the whole
@@ -1248,7 +1270,7 @@ class Integral(Expr):
 
     def as_sum(self, n, method="midpoint"):
         """
-        Approximates the integral by a sum.
+        Approximates the definite integral by a sum.
 
         method ... one of: left, right, midpoint, trapezoid
 
@@ -1329,6 +1351,8 @@ class Integral(Expr):
                 "Multidimensional midpoint rule not implemented yet")
         else:
             limit = limits[0]
+            if len(limit) != 3:
+                raise ValueError("Expecting a definite integral.")
         if n <= 0:
             raise ValueError("n must be > 0")
         if n == oo:

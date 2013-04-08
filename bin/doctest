@@ -29,8 +29,8 @@ parser.add_option("-v", "--verbose", action="store_true", dest="verbose",
 parser.add_option("-n", "--normal", action="store_true", dest="normal",
         help="run normal doctests; do not require explicit imports", default=False)
 parser.add_option('-t', '--types', dest='types', action='store',
-        default=None, choices=['gmpy', 'gmpy1', 'python', 'sympy'],
-        help='setup ground types: gmpy | gmpy1 | python | sympy')
+        default=None, choices=['gmpy', 'gmpy1', 'python'],
+        help='setup ground types: gmpy | gmpy1 | python')
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
 parser.add_option("--no-subprocess", action="store_false", dest="subprocess",
