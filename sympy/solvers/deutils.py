@@ -12,40 +12,8 @@ from sympy.core.compatibility import set_union
 from sympy.core.function import Function, Derivative, AppliedUndef
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Wild
-
-allhints_ode = (
-    "separable",
-    "1st_exact",
-    "1st_linear",
-    "Bernoulli",
-    "Riccati_special_minus2",
-    "1st_homogeneous_coeff_best",
-    "1st_homogeneous_coeff_subs_indep_div_dep",
-    "1st_homogeneous_coeff_subs_dep_div_indep",
-    "almost_linear",
-    "linear_coefficients",
-    "separable_reduced",
-    "nth_linear_constant_coeff_homogeneous",
-    "nth_linear_euler_eq_homogeneous",
-    "nth_linear_constant_coeff_undetermined_coefficients",
-    "nth_linear_constant_coeff_variation_of_parameters",
-    "Liouville",
-    "separable_Integral",
-    "1st_exact_Integral",
-    "1st_linear_Integral",
-    "Bernoulli_Integral",
-    "1st_homogeneous_coeff_subs_indep_div_dep_Integral",
-    "1st_homogeneous_coeff_subs_dep_div_indep_Integral",
-    "almost_linear_Integral",
-    "linear_coefficients_Integral",
-    "separable_reduced_Integral",
-    "nth_linear_constant_coeff_variation_of_parameters_Integral",
-    "Liouville_Integral",
-    )
-
-allhints_pde = (
-    "1st_linear_constant_coeff_homo",
-    )
+#from sympy.solvers.ode import allhints as allhints_ode
+#from sympy.solvers.pde import allhints as allhints_pde
 
 def _preprocess(expr, func=None, hint='_Integral'):
     """Prepare expr for solving by making sure that differentiation
@@ -198,14 +166,13 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     # changes are made in the function.
     type = kwargs.get('type', None)
     if type == 'ode':
-        from sympy.solvers.ode import classify_ode
+        from sympy.solvers.ode import classify_ode, allhints
         classifier = classify_ode
-        allhints = allhints_ode
         string = 'ODE '
         dummy = ''
 
     elif type == 'pde':
-        from sympy.solvers.pde import classify_pde
+        from sympy.solvers.pde import classify_pde, allhints
         classifier = classify_pde
         allhints = allhints_pde
         string = 'PDE '

@@ -225,7 +225,7 @@ from sympy.simplify.simplify import _mexpand
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
-from sympy.solvers.util import _preprocess, de_order, _desolve
+from sympy.solvers.deutils import _preprocess, de_order, _desolve
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -360,7 +360,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
                 dictionary will also include some special keys:
 
                 - order: The order of the ODE.  See also de_order() in
-                  utils.py
+                  deutils.py
                 - best: The simplest hint; what would be returned by
                   "best" below.
                 - best_hint: The hint that would produce the solution

@@ -1,5 +1,5 @@
 """
-This module contains pdesolve() and different helper functions that it
+This module contains pdsolve() and different helper functions that it
 uses. It is heavily inspired by the ode module and hence the basic
 infrastructure remains the same.
 
@@ -7,7 +7,7 @@ infrastructure remains the same.
 
     These are the user functions in this module:
 
-    - pdesolve()     - Solves PDE's
+    - pdsolve()     - Solves PDE's
     - classify_pde() - Classifies PDEs into possible hints for dsolve().
     - pde_separate() - Separate variables in partial differential equation either by
                        additive or multiplicative separation approach.
@@ -39,11 +39,11 @@ from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.functions import exp
 from sympy.utilities.iterables import has_dups
 
-from sympy.solvers.util import _preprocess, de_order, _desolve
+from sympy.solvers.deutils import _preprocess, de_order, _desolve
 import operator
 
 allhints = (
-    "1st_linear_constant_coeff_homo",
+    "1st_linear_constant_coeff_homogeneous",
     )
 
 def pdsolve(eq, func=None, hint='default', dict=False, **kwargs):
@@ -168,7 +168,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     >>> uy = u.diff(y)
     >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
     >>> classify_pde(eq)
-    ('1st_linear_constant_coeff_homo',)
+    ('1st_linear_constant_coeff_homogeneous',)
     """
 
     prep = kwargs.pop('prep', True)
@@ -247,7 +247,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
         r = reduced_eq.match(b*fx + c*fy + d*f(x,y))
         if r and all(isinstance(r[var], Rational) for var in r):
             r.update({'b': b, 'c': c, 'd': d})
-            matching_hints["1st_linear_constant_coeff_homo"] = r
+            matching_hints["1st_linear_constant_coeff_homogeneous"] = r
 
     # Order keys based on allhints.
     retlist = []
@@ -268,7 +268,7 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     else:
         return tuple(retlist)
 
-def pde_1st_linear_constant_coeff_homo(eq, func, order, match):
+def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match):
     r"""
     Solves a first order linear homogeneous
     partial differential equation with constant coefficients.
@@ -284,8 +284,9 @@ def pde_1st_linear_constant_coeff_homo(eq, func, order, match):
     Examples
     ========
 
-    >>> from sympy.solvers.pde import (pde_1st_linear_constant_coeff_homo,
-    ... pdsolve)
+    >>> from sympy.solvers.pde import (
+    ... pde_1st_linear_constant_coeff_homogeneous)
+    >>> from sympy import pdsolve
     >>> from sympy import Function, diff, pprint
     >>> from sympy.abc import x,y
     >>> f = Function('f')

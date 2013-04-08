@@ -63,21 +63,21 @@ def test_pde_separate_mul():
     assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2,
             -D(T(theta), theta, theta)/T(theta)]
 
-def test_pde_1st_linear_constant_coeff_homo():
+def test_pde_1st_linear_constant_coeff_homogeneous():
     x, y = symbols("x,y")
     f, g = map(Function, ['f', 'g'])
     u = f(x, y)
     eq = 2*u + u.diff(x) + u.diff(y)
-    assert classify_pde(eq) == ('1st_linear_constant_coeff_homo',)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
     sol = pdsolve(eq)
     assert sol.rhs == g(x - y)*exp(-x - y)
 
     eq = 4 + (3*u.diff(x)/u) + (2*u.diff(y)/u)
-    assert classify_pde(eq) == ('1st_linear_constant_coeff_homo',)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
     sol = pdsolve(eq)
     assert sol.rhs == g(2*x - 3*y)*exp(-S(12)*x/13 - S(8)*y/13)
 
     eq = u + (6*u.diff(x)) + (7*u.diff(y))
-    assert classify_pde(eq) == ('1st_linear_constant_coeff_homo',)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
     sol = pdsolve(eq)
     assert sol.rhs == g(7*x - 6*y)*exp(-6*x/S(85) - 7*y/S(85))
