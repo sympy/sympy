@@ -6,6 +6,7 @@ from sympy.core.sympify import SympifyError
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
+from sympy.printing.conventions import requires_partial
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
@@ -238,13 +239,16 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_Derivative(self, deriv):
-        # XXX use U('PARTIAL DIFFERENTIAL') here ?
+        if requires_partial(deriv) and self._use_unicode:
+            deriv_symbol = U('PARTIAL DIFFERENTIAL')
+        else:
+            deriv_symbol = r'd'
         syms = list(reversed(deriv.variables))
         x = None
 
         for sym, num in group(syms, multiple=False):
             s = self._print(sym)
-            ds = prettyForm(*s.left('d'))
+            ds = prettyForm(*s.left(deriv_symbol))
 
             if num > 1:
                 ds = ds**prettyForm(str(num))
@@ -258,7 +262,7 @@ class PrettyPrinter(Printer):
         f = prettyForm(
             binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 
-        pform = prettyForm('d')
+        pform = prettyForm(deriv_symbol)
 
         if len(syms) > 1:
             pform = pform**prettyForm(str(len(syms)))
