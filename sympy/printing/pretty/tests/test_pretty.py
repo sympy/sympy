@@ -1791,6 +1791,35 @@ dx            \
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
+    # basic partial derivatives
+    expr = Derivative(log(x + y) + x, x)
+    ascii_str_1 = \
+"""\
+d                 \n\
+--(log(x + y) + x)\n\
+dx                \
+"""
+    ascii_str_2 = \
+"""\
+d                 \n\
+--(x + log(x + y))\n\
+dx                \
+"""
+    ucode_str_1 = \
+u"""\
+∂                 \n\
+──(log(x + y) + x)\n\
+∂x                \
+"""
+    ucode_str_2 = \
+u"""\
+∂                 \n\
+──(x + log(x + y))\n\
+∂x                \
+"""
+    assert pretty(expr) in [ascii_str_1, ascii_str_2]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2], upretty(expr)
+
     # Multiple symbols
     expr = Derivative(log(x) + x**2, x, y)
     ascii_str_1 = \
@@ -1842,16 +1871,16 @@ x  + -----(2*x*y)\n\
     ucode_str_1 = \
 u"""\
    2             \n\
-  d             2\n\
+  ∂             2\n\
 ─────(2⋅x⋅y) + x \n\
-dx dy            \
+∂x ∂y            \
 """
     ucode_str_2 = \
 u"""\
         2        \n\
- 2     d         \n\
+ 2     ∂         \n\
 x  + ─────(2⋅x⋅y)\n\
-     dx dy       \
+     ∂x ∂y       \
 """
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -1868,10 +1897,10 @@ dx        \
     ucode_str = \
 u"""\
   2       \n\
- d        \n\
+ ∂        \n\
 ───(2⋅x⋅y)\n\
   2       \n\
-dx        \
+∂x        \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1888,10 +1917,10 @@ dx         \
     ucode_str = \
 u"""\
  17        \n\
-d          \n\
+∂          \n\
 ────(2⋅x⋅y)\n\
   17       \n\
-dx         \
+∂x         \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1908,10 +1937,10 @@ dy dx        \
     ucode_str = \
 u"""\
    3         \n\
-  d          \n\
+  ∂          \n\
 ──────(2⋅x⋅y)\n\
      2       \n\
-dy dx        \
+∂y ∂x        \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
