@@ -30,10 +30,10 @@ class PygletPlot(object):
     Plot Examples
     =============
 
-    See examples/plotting.py for many more examples.
+    See examples/advaned/pyglet_plotting.py for many more examples.
 
 
-    >>> from sympy import Plot
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> from sympy.abc import x, y, z
 
     >>> Plot(x*y**3-y*x**3)
@@ -167,7 +167,7 @@ class PygletPlot(object):
         initialize a plot function at index 1. In
         other words...
 
-        >>> from sympy import Plot
+        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
         >>> from sympy.core import Symbol
         >>> from sympy.abc import x
         >>> p = Plot(x**2, visible=False)

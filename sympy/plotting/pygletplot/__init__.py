@@ -10,10 +10,11 @@ try:
         Plot Examples
         =============
 
-        See examples/plotting.py for many more examples.
+        See examples/advanced/pyglet_plotting.py for many more examples.
 
 
-        >>> from sympy import symbols, Plot
+        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
+        >>> from sympy import symbols
         >>> from sympy.abc import x, y, z
 
         >>> Plot(x*y**3-y*x**3)
