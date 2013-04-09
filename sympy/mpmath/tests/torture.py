@@ -77,7 +77,7 @@ def test_asymp(f, maxdps=150, verbose=False, huge_range=False):
         exponents += [-1000, -100, -50, 50, 100, 1000]
     for n in exponents:
         if verbose:
-            print(".", end=' ')
+            print(".")
         mp.dps = 25
         xpos = mpf(10)**n / 1.1287
         xneg = -xpos
