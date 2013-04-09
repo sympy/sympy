@@ -2119,8 +2119,9 @@ def ode_1st_homogeneous_coeff_subs_dep_div_indep(eq, func, order, match):
     This is a differential equation `P(x, y) + Q(x, y)\frac{dy}{dx} = 0`,
     that `P` and `Q` are homogeneous of the same order. A function `F(x, y)`
     is homogeneous of order `n` if `F(xt, yt) = t^{n} F(x, y)`.
-    Equivalently, `F(x, y)` can be rewritten as `G(\frac{y}{x})` or
-    `H(\frac{x}{y})`. See also the docstring of homogeneous_order().
+    Equivalently, `F(x, y)` can be rewritten as
+    `G\left (\frac{y}{x} \right )` or `H \left (\frac{x}{y} \right )`. See
+    also the docstring of homogeneous_order().
 
     If the coefficients `P` and `Q` in the differential equation above are
     homogeneous functions of the same order, then it can be shown that the
@@ -2583,7 +2584,10 @@ def ode_Liouville(eq, func, order, match):
     Solves 2nd order Liouville differential equations.
 
     The general form of a Liouville ODE is
-    `\frac{d^2 y}{dx^2} + g(y)(\frac{dy}{dx})^2 + h(x)\frac{dy}{dx}`.
+    .. math::
+        \frac{d^2 y}{dx^2} + g(y) \left(\frac{dy}{dx} \right)^2 +
+        h(x)\frac{dy}{dx}.
+
     The general solution is:
 
         >>> from sympy import Function, dsolve, Eq, pprint, diff
@@ -2978,8 +2982,8 @@ def ode_linear_coefficients(eq, func, order, match):
     Solves a differential equation with linear-coefficients.
 
     The general form of a differential equation with linear-coefficients is
-    `y' + F(\frac{a_1 x + b_1 y + c1}{a_2 x + b_2 y + c_2}) = 0`,
-    where `a_1, b_1, c_1, a_2, b_2, c_2` are constants and
+    `y' + F \left(\frac{a_1 x + b_1 y + c1}{a_2 x + b_2 y + c_2} \right)=0`
+    , where `a_1, b_1, c_1, a_2, b_2, c_2` are constants and
     `(a_1 b_2 - a_2 b_1) != 0`
 
     This can be solved by substituting::
@@ -3033,7 +3037,7 @@ def ode_separable_reduced(eq, func, order, match):
     This can be solved by substituting `u(y) = (x^n y)`
 
     The equation then reduces to the separable form
-    `u' (\frac{1}{u*(power - H(u))}) - \frac{1}{x} = 0`
+    `u' \left (\frac{1}{u*(power - H(u))} \right ) - \frac{1}{x} = 0`
 
     See Also
     ========
