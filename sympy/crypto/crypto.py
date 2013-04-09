@@ -212,7 +212,7 @@ def encipher_substitution(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     n = len(A)
-    pt0 = [x.capitalize() for x in pt if not(x.isspace() or x=="." or x=="!" or x==",")]
+    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
     ct = [key[A.index(x)] for x in pt0]
     return "".join(ct)
 
@@ -326,10 +326,10 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
     key0 = unique(key)
-    key0 = [x.capitalize() for x in key0 if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key0 if (x.isalpha() or x.isdigit())]
     K = [A.index(x) for x in key0]
     k = len(K)
-    pt0 = [x.capitalize() for x in pt if not(x.isspace() or x=="." or x=="!" or x==",")]
+    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
     P = [A.index(x) for x in pt0]
     n = len(P)
     #m = n//k
@@ -354,10 +354,10 @@ def decipher_vigenere(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
     key0 = unique(key)
-    key0 = [x.capitalize() for x in key0 if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key0 if (x.isalpha() or x.isdigit())]
     K = [A.index(x) for x in key0]
     k = len(K)
-    ct0 = [x.capitalize() for x in ct if not(x.isspace() or x=="." or x=="!" or x==",")]
+    ct0 = [x.capitalize() for x in ct if (x.isalpha() or x.isdigit())]
     C = [A.index(x) for x in ct0]
     n = len(C)
     #m = n//k
@@ -477,7 +477,7 @@ def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
     k = key.cols
-    pt0 = [x.capitalize() for x in pt if not(x.isspace() or x=="." or x=="!" or x==",")]
+    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
     P = [A.index(x) for x in pt0]
     n = len(P)
     m = n//k
@@ -513,7 +513,7 @@ def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
     k = key.cols
-    ct0 = [x.capitalize() for x in ct if not(x.isspace() or x=="." or x=="!" or x==",")]
+    ct0 = [x.capitalize() for x in ct if (x.isalpha() or x.isdigit())]
     C = [A.index(x) for x in ct0]
     n = len(C)
     m = n//k
@@ -561,8 +561,8 @@ def encipher_bifid5(pt, key, verbose=False):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if not(x.isspace() or x=="." or x=="!" or x==",")]
-    pt0 = [x.capitalize() for x in pt if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
+    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
     n = len(pt0)
@@ -638,7 +638,7 @@ def bifid5_square(key):
     # first make sure the letters are capitalized
     # and key has no spaces or duplicates
     key = unique(key)
-    key0 = [x.capitalize() for x in key if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
     f = lambda i,j: Symbol(long_key[5*i+j])
@@ -674,8 +674,8 @@ def decipher_bifid5(ct, key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if not(x.isspace() or x=="." or x=="!" or x==",")]
-    ct0 = [x.capitalize() for x in ct if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
+    ct0 = [x.capitalize() for x in ct if (x.isalpha() or x.isdigit())]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
     n = len(ct0)
@@ -712,7 +712,7 @@ def bifid7_square(key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0))]
     f = lambda i,j: Symbol(long_key[7*i+j])
@@ -746,8 +746,8 @@ def encipher_bifid7(pt, key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if not(x.isspace() or x=="." or x=="!" or x==",")]
-    pt0 = [x.capitalize() for x in pt if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
+    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
     n = len(pt0)
@@ -792,8 +792,8 @@ def encipher_bifid6(pt, key, verbose = False):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if not(x.isspace() or x=="." or x=="!" or x==",")]
-    pt0 = [x.capitalize() for x in pt if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
+    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
     n = len(pt0)
@@ -836,8 +836,8 @@ def decipher_bifid6(ct, key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if not(x.isspace() or x=="." or x=="!" or x==",")]
-    ct0 = [x.capitalize() for x in ct if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
+    ct0 = [x.capitalize() for x in ct if (x.isalpha() or x.isdigit())]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
     n = len(ct0)
@@ -873,7 +873,7 @@ def bifid6_square(key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if not(x.isspace() or x=="." or x=="!" or x==",")]
+    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
     f = lambda i,j: Symbol(long_key[6*i+j])
@@ -1064,6 +1064,145 @@ def decipher_kid_rsa(ct, prk):
     n = prk[0]
     d = prk[1]
     return (ct*d)%n
+
+
+#################### Morse Code ######################################
+
+
+def encode_morse(pt):
+
+    """
+    Encodes a plaintext into popular Morse Code with letters separated by "|"
+    and words by "||".
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Morse_code
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encode_morse
+    >>> pt = 'ATTACK THE RIGHT FLANK'
+    >>> encode_morse(pt)
+    '.-|-|-|.-|-.-.|-.-||-|....|.||.-.|..|--.|....|-||..-.|.-..|.-|-.|-.-'
+    """
+
+    morse_encoding_map = {"A": ".-", "B": "-...",
+                     "C": "-.-.", "D": "-..",
+                     "E": ".", "F": "..-.",
+                     "G": "--.", "H": "....",
+                     "I": "..", "J": ".---",
+                     "K": "-.-", "L": ".-..",
+                     "M": "--", "N": "-.",
+                     "O": "---", "P": ".--.",
+                     "Q": "--.-", "R": ".-.",
+                     "S": "...", "T": "-",
+                     "U": "..-", "V": "...-",
+                     "W": ".--", "X": "-..-",
+                     "Y": "-.--", "Z": "--..",
+                     "0": "-----", "1": ".----",
+                     "2": "..---", "3": "...--",
+                     "4": "....-", "5": ".....",
+                     "6": "-....", "7": "--...",
+                     "8": "---..", "9": "----.",
+                     ".": ".-.-.-", ",": "--..--",
+                     ":": "---...", ";": "-.-.-.",
+                     "?": "..--..", "-": "-...-",
+                     "_": "..--.-", "(": "-.--.",
+                     ")": "-.--.-", "'": ".----.",
+                     "=": "-...-", "+": ".-.-.",
+                     "/": "-..-.", "@": ".--.-.",
+                     "$": "...-..-", "!": "-.-.--" }
+
+    unusable_chars = "\"#%&*<>[\]^`{|}~"
+    morsestring = []
+
+    for i in unusable_chars:
+        pt = pt.replace(i, "")
+    pt = pt.upper()
+
+    words = pt.split(" ")
+    for word in words:
+        letters = list(word)
+        morseword = []
+        for letter in letters:
+            morseletter = morse_encoding_map[letter]
+            morseword.append(morseletter)
+
+        word = "|".join(morseword)
+        morsestring.append(word)
+
+    return "||".join(morsestring)
+
+
+
+def decode_morse(mc):
+
+    """
+    Decodes a Morse Code with letters separated by "|"
+    and words by "||" into plaintext.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Morse_code
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decode_morse
+    >>> mc = '--|---|...-|.||.|.-|...|-'
+    >>> decode_morse(mc)
+    'MOVE EAST'
+    """
+
+    morse_decoding_map = {".-": "A", "-...": "B",
+                          "-.-.": "C", "-..": "D",
+                          ".": "E", "..-.": "F",
+                          "--.": "G", "....": "H",
+                          "..": "I", ".---": "J",
+                          "-.-": "K", ".-..": "L",
+                          "--": "M", "-.": "N",
+                          "---": "O", ".--.": "P",
+                          "--.-": "Q", ".-.": "R",
+                          "...": "S", "-": "T",
+                          "..-": "U", "...-": "V",
+                          ".--": "W", "-..-": "X",
+                          "-.--": "Y", "--..": "Z",
+                          "-----": "0", "----": "1",
+                          "..---": "2", "...--": "3",
+                          "....-": "4", ".....": "5",
+                          "-....": "6", "--...": "7",
+                          "---..": "8", "----.": "9",
+                          ".-.-.-": ".", "--..--": ",",
+                          "---...": ":", "-.-.-.": ";",
+                          "..--..": "?", "-...-": "-",
+                          "..--.-": "_", "-.--.": "(",
+                          "-.--.-": ")", ".----.": "'",
+                          "-...-": "=", ".-.-.": "+",
+                          "-..-.": "/", ".--.-.": "@",
+                          "...-..-": "$", "-.-.--": "!"}
+
+    characterstring = []
+
+    if mc[-1] == "|" and mc[-2] == "|":
+        mc = mc[:-2]
+    words = mc.split("||")
+    for word in words:
+        letters = word.split("|")
+        characterword = []
+        for letter in letters:
+            try:
+                characterletter = morse_decoding_map[letter]
+            except KeyError:
+                return "Invalid Morse Code"
+            characterword.append(characterletter)
+
+        word = "".join(characterword)
+        characterstring.append(word)
+    return " ".join(characterstring)
 
 
 #################### LFSRs  ##########################################
