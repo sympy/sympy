@@ -66,7 +66,8 @@ def test_implicit_application():
 def test_function_exponentiation():
     cases = {
         'sin**2(x)': 'sin(x)**2',
-        'exp^y(z)': 'exp(z)^y'
+        'exp^y(z)': 'exp(z)^y',
+        'sin**2(E^(x))': 'sin(E^(x))**2'
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (function_exponentiation,)
@@ -147,7 +148,8 @@ def test_all_implicit_steps():
         '(factorial)': 'factorial',
         'tan 3x': 'tan(3*x)',
         'sin^2(3*E^(x))': 'sin(3*E**(x))**2',
-        'sin**2(E^(3x))': 'sin(E**(3*x))**2'
+        'sin**2(E^(3x))': 'sin(E**(3*x))**2',
+        'sin^2 (3x*E^(x))': 'sin(3*x*E^x)**2'
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (implicit_multiplication_application,)
