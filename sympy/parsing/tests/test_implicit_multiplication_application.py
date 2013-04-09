@@ -145,7 +145,9 @@ def test_all_implicit_steps():
         'sin^2 x**2': 'sin(x**2)**2',  # function raised to a power
         'sin**3(x)': 'sin(x)**3',
         '(factorial)': 'factorial',
-        'tan 3x': 'tan(3*x)'
+        'tan 3x': 'tan(3*x)',
+        'sin^2(3*E^(x))': 'sin(3*E**(x))**2',
+        'sin**2(E^(3x))': 'sin(E**(3*x))**2'
     }
     transformations = standard_transformations + (convert_xor,)
     transformations2 = transformations + (implicit_multiplication_application,)
