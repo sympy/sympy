@@ -160,8 +160,6 @@ class Mul(Expr, AssocOp):
 
         neg1e = S.Zero      # exponent on -1 extracted from Number-based Pow and I
 
-        iu = 0              # number of ImaginaryUnits seen
-
         pnum_rat = {}       # (num-base, Rat-exp)          1/2
                             # e.g.  (3, 1/2)  for  ... * 3     * ...
 
@@ -225,7 +223,7 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif o is S.ImaginaryUnit:
-                iu += 1
+                neg1e += S.Half
                 continue
 
             elif o.is_commutative:
@@ -235,27 +233,33 @@ class Mul(Expr, AssocOp):
 
                 #  y
                 # 3
-                if o.is_Pow and b.is_Number:
+                if o.is_Pow:
+                    if b.is_Number:
 
-                    # get all the factors with numeric base so they can be
-                    # combined below, but don't combine negatives unless
-                    # the exponent is an integer
-                    if e.is_Rational:
-                        if e.is_Integer:
-                            coeff *= Pow(b, e)  # it is an unevaluated power
+                        # get all the factors with numeric base so they can be
+                        # combined below, but don't combine negatives unless
+                        # the exponent is an integer
+                        if e.is_Rational:
+                            if e.is_Integer:
+                                coeff *= Pow(b, e)  # it is an unevaluated power
+                                continue
+                            elif e.is_negative:    # also a sign of an unevaluated power
+                                seq.append(Pow(b, e))
+                                continue
+                            elif b.is_negative:
+                                neg1e += e
+                                b = -b
+                            if b is not S.One:
+                                pnum_rat.setdefault(b, []).append(e)
                             continue
-                        elif e.is_negative:    # also a sign of an unevaluated power
-                            seq.append(Pow(b, e))
+                        elif b.is_positive or e.is_integer:
+                            num_exp.append((b, e))
                             continue
-                        elif b.is_negative:
-                            neg1e += e
-                            b = -b
-                        if b is not S.One:
-                            pnum_rat.setdefault(b, []).append(e)
+
+                    elif b is S.ImaginaryUnit and e.is_Rational:  # it is unevaluated
+                        neg1e += e/2
                         continue
-                    elif b.is_positive or e.is_integer:
-                        num_exp.append((b, e))
-                        continue
+
                 c_powers.append((b, e))
 
             # NON-COMMUTATIVE
@@ -434,10 +438,9 @@ class Mul(Expr, AssocOp):
             pnew[e] = Mul(*b)
 
         # handle -1 and I
-        # compute neg1e + iu/2
-        if neg1e or iu:
+        if neg1e:
             # treat I as (-1)**(1/2) and compute -1's total exponent
-            p, q =  (neg1e + Rational(iu, 2)).as_numer_denom()
+            p, q =  neg1e.as_numer_denom()
             # if the integer part is odd, extract -1
             n, p = divmod(p, q)
             if n % 2:
