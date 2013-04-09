@@ -84,6 +84,8 @@ class PolyRing(DefaultPrinting, IPolys):
             obj.zero_monom = (0,)*ngens
             obj.gens = obj._gens()
 
+            obj._one = [(obj.zero_monom, domain.one)]
+
             codegen = MonomialOps(ngens)
             obj.monomial_mul = codegen.mul()
             obj.monomial_pow = codegen.pow()
@@ -192,9 +194,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
     @property
     def one(self):
-        poly = self.zero
-        poly[self.zero_monom] = self.domain.one
-        return poly
+        return self.dtype(self, self._one)
 
     def from_dict(self, d):
         domain_new = self.domain_new
@@ -462,7 +462,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return self.ring.domain.is_nonpositive(self.LC)
 
     def __neg__(self):
-        return self*(-1)
+        return self.new([ (monom, -coeff) for monom, coeff in self.iterterms() ])
 
     def __pos__(self):
         return self
@@ -649,9 +649,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         ring = p1.ring
         p = ring.zero
-        if not p2:
+        if not p1 or not p2:
             return p
-        if isinstance(p2, PolyElement):
+        elif isinstance(p2, PolyElement):
             if ring == p2.ring:
                 get = p.get
                 zero = ring.domain.zero
@@ -723,7 +723,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ring = self.ring
         n = int(n)
         if n < 0:
-            if (len(self) == 1):
+            if len(self) == 1:
                 p = ring.zero
                 k, v = list(self.items())[0]
                 kn = ring.monomial_pow(k, n)

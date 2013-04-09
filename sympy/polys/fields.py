@@ -62,6 +62,9 @@ class FracField(DefaultPrinting):
             obj.domain = domain
             obj.order = order
 
+            obj.zero = dtype(obj, ring.zero)
+            obj.one = dtype(obj, ring.one)
+
             obj.gens = obj._gens()
 
             _field_cache[_hash] = obj
@@ -168,14 +171,6 @@ class FracField(DefaultPrinting):
         else:
             return self.field_new(frac)
 
-    @property
-    def zero(self):
-        return self.raw_new(self.ring.zero)
-
-    @property
-    def one(self):
-        return self.raw_new(self.ring.one)
-
     def to_domain(self):
         from sympy.polys.domains.fractionfield import FractionField
         return FractionField(self)
@@ -276,9 +271,16 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         """Add rational functions ``f`` and ``g``. """
         field = f.field
 
-        if isinstance(g, FracElement):
+        if not g:
+            return f
+        elif not f:
+            return g
+        elif isinstance(g, FracElement):
             if f.field == g.field:
-                return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
+                if f.denom == g.denom:
+                    return f.new(f.numer + g.numer, f.denom)
+                else:
+                    return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
             elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
                 pass
             elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
@@ -310,9 +312,16 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         """Subtract rational functions ``f`` and ``g``. """
         field = f.field
 
-        if isinstance(g, FracElement):
+        if not g:
+            return f
+        elif not f:
+            return -g
+        elif isinstance(g, FracElement):
             if f.field == g.field:
-                return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
+                if f.denom == g.denom:
+                    return f.new(f.numer - g.numer, f.denom)
+                else:
+                    return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
             elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
                 pass
             elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
@@ -351,7 +360,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         """Multiply rational functions ``f`` and ``g``. """
         field = f.field
 
-        if isinstance(g, FracElement):
+        if not f or not g:
+            return field.zero
+        elif isinstance(g, FracElement):
             if field == g.field:
                 return f.new(f.numer*g.numer, f.denom*g.denom)
             elif isinstance(field.domain, FractionField) and field.domain.field == g.field:

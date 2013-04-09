@@ -19,15 +19,20 @@ class PolynomialRing(Ring, CompositeDomain):
         self.dom  = ring.domain
         self.gens = ring.symbols
 
-        self.zero = ring.zero
-        self.one  = ring.one
-
     @classmethod
     def init(cls, domain, *gens):
         return domain.poly_ring(*gens)
 
     def new(self, element):
         return self.ring.ring_new(element)
+
+    @property
+    def zero(self):
+        return self.ring.zero
+
+    @property
+    def one(self):
+        return self.ring.one
 
     @property
     def order(self):
