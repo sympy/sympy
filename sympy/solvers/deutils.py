@@ -4,7 +4,7 @@ ordinary and partial differential equations.
 Contains
 ========
 _preprocess
-de_order
+ode_order
 _desolve
 
 """
@@ -12,8 +12,6 @@ from sympy.core.compatibility import set_union
 from sympy.core.function import Function, Derivative, AppliedUndef
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Wild
-#from sympy.solvers.ode import allhints as allhints_ode
-#from sympy.solvers.pde import allhints as allhints_pde
 
 def _preprocess(expr, func=None, hint='_Integral'):
     """Prepare expr for solving by making sure that differentiation
@@ -26,7 +24,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     In case func is None, an attempt will be made to autodetect the
     function to be solved for.
 
-    >>> from sympy.solvers.util import _preprocess
+    >>> from sympy.solvers.deutils import _preprocess
     >>> from sympy import Derivative, Function, Integral, sin
     >>> from sympy.abc import x, y, z
     >>> f, g = map(Function, 'fg')
@@ -85,7 +83,7 @@ def _preprocess(expr, func=None, hint='_Integral'):
     eq = expr.subs(reps)
     return eq, func
 
-def de_order(expr, func):
+def ode_order(expr, func):
     """
     Returns the order of a given differential
     equation with respect to func.
@@ -96,15 +94,15 @@ def de_order(expr, func):
     ========
 
     >>> from sympy import Function
-    >>> from sympy.solvers.util import de_order
+    >>> from sympy.solvers.deutils import ode_order
     >>> from sympy.abc import x
     >>> f, g = map(Function, ['f', 'g'])
-    >>> de_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
+    >>> ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
     ... f(x).diff(x), f(x))
     2
-    >>> de_order(f(x).diff(x, 2) + g(x).diff(x, 3), f(x))
+    >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), f(x))
     2
-    >>> de_order(f(x).diff(x, 2) + g(x).diff(x, 3), g(x))
+    >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), g(x))
     3
 
     """
@@ -118,33 +116,46 @@ def de_order(expr, func):
         else:
             order = 0
             for arg in expr.args[0].args:
-                order = max(order, de_order(arg, func) + len(expr.variables))
+                order = max(order, ode_order(arg, func) + len(expr.variables))
             return order
     else:
         order = 0
         for arg in expr.args:
-            order = max(order, de_order(arg, func))
+            order = max(order, ode_order(arg, func))
         return order
 
 def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     """This is a helper function to dsolve and pdsolve in the ode
     and pde modules.
 
-    If the hint is given in ('all', 'all_Integral', 'best'), then this function
-    returns a nested dict, with the keys, being the
-    set of identified hints in classify_ode(). The value of each key is a dict
-    consisting of a 'default' key, a 'hint' key which helps in
-    identifying the hint needed to be passed to the solver functions
-    in ode and pde.py, an 'order' key that identifies the order of the
-    differential equation given by 'de_order', a 'func' key that
-    tells what function, the differential equation is to be solved for,
-    an 'all' key that tells if the hint given is in all or not,
-    and the match for the corresponding hint as returned by classify_ode
+    If the hint provided to the function is "default", then a dict with
+    the following keys are returned
 
-    If the hint given is not present in ('all', 'all_Integral', 'best')
-    then a single dict corresponding to the key value mentioned
-    above that has a 'default', 'order', 'func' and 'match' key is
-    returned.
+    'func'    - It provides the function for which the differential equation
+                has to be solved. This is useful when the function
+
+    'default' - The default key as returned by classifier functions in ode
+                and pde.py
+
+    'hint'    - The hint given by the user for which the differential equation
+                is to be solved. If the hint given by the user is 'default',
+                then the value of 'hint' and 'default' is the same.
+
+    'order'   - The order of the function as returned by ode_order
+
+    'match'   - It returns the match as given by the classifier functions, for
+                the default hint.
+
+    If the hint provided to the function is not "default" and is not in
+    ('all', 'all_Integral', 'best'), then a dict with the above mentioned keys
+    is returned along with the keys which are returned when dict in
+    classify_ode or classify_pde is set True
+
+    If the hint is given in ('all', 'all_Integral', 'best'), then this function
+    returns a nested dict, with the keys, being the set of classified hints
+    returned by classifier functions, and the values being the dict of form
+    as mentioned above.
+
 
     See Also
     ========
@@ -174,7 +185,6 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     elif type == 'pde':
         from sympy.solvers.pde import classify_pde, allhints
         classifier = classify_pde
-        allhints = allhints_pde
         string = 'PDE '
         dummy = 'p'
 
@@ -196,7 +206,7 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
         #          (the parts of the DE for solving).  When going through the
         #          hints in "all", this holds the match string for the current
         #          hint.
-        # order:   The order of the DE, as determined by de_order().
+        # order:   The order of the DE, as determined by ode_order().
         hints = kwargs.get('hint',
                            {'default': hint,
                             hint: kwargs['match'],

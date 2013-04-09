@@ -20,4 +20,4 @@ from polysys import solve_poly_system, solve_triangulated
 from pde import pde_separate, pde_separate_add, pde_separate_mul, \
     pdsolve, classify_pde
 
-from deutils import de_order
+from deutils import ode_order

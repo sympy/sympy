@@ -39,7 +39,7 @@ from sympy.core.symbol import Symbol, Wild, Dummy, symbols
 from sympy.functions import exp
 from sympy.utilities.iterables import has_dups
 
-from sympy.solvers.deutils import _preprocess, de_order, _desolve
+from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 import operator
 
 allhints = (
@@ -193,7 +193,11 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
     fx = f(x,y).diff(x)
     fy = f(x,y).diff(y)
 
-    order = de_order(eq, f(x,y))
+    # TODO : For now pde.py uses support offered by the ode_order function
+    # to find the order with respect to a multi-variable function. An
+    # improvement could be to classify the order of the PDE on the basis of
+    # individual variables.
+    order = ode_order(eq, f(x,y))
 
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.

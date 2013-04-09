@@ -225,7 +225,7 @@ from sympy.simplify.simplify import _mexpand
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
-from sympy.solvers.deutils import _preprocess, de_order, _desolve
+from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -359,7 +359,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
                 hint's key will be the exception object raised.  The
                 dictionary will also include some special keys:
 
-                - order: The order of the ODE.  See also de_order() in
+                - order: The order of the ODE.  See also ode_order() in
                   deutils.py
                 - best: The simplest hint; what would be returned by
                   "best" below.
@@ -634,7 +634,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         if eq.rhs != 0:
             return classify_ode(eq.lhs - eq.rhs, func, prep=False)
         eq = eq.lhs
-    order = de_order(eq, f(x))
+    order = ode_order(eq, f(x))
     # hint:matchdict or hint:(tuple of matchdicts)
     # Also will contain "default":<default hint> and "order":order items.
     matching_hints = {"order": order}
@@ -1225,7 +1225,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     s = True
     testnum = 0
     if order == 'auto':
-        order = de_order(ode, func)
+        order = ode_order(ode, func)
     if solve_for_func and not (
             sol.lhs == func and not sol.rhs.has(func)) and not (
             sol.rhs == func and not sol.lhs.has(func)):
