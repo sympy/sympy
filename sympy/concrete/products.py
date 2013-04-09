@@ -90,8 +90,8 @@ class Product(Expr):
         """
         Return True if the Product will result in a number, else False.
 
-        sympy considers anything that will result in a number to have
-        is_number == True.
+        Examples
+        ========
 
         >>> from sympy import log, Product
         >>> from sympy.abc import x, y, z

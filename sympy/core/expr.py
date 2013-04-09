@@ -291,21 +291,26 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if 'self' is a number.
+        """Returns True if 'self' has no free symbols.
+        It will be faster than `if not self.free_symbols`, however, since
+        `is_number` will fail as soon as it hits a free symbol.
 
-           >>> from sympy import log, Integral
-           >>> from sympy.abc import x, y
+        Examples
+        ========
 
-           >>> x.is_number
-           False
-           >>> (2*x).is_number
-           False
-           >>> (2 + log(2)).is_number
-           True
-           >>> (2 + Integral(2, x)).is_number
-           False
-           >>> (2 + Integral(2, (x, 1, 2))).is_number
-           True
+        >>> from sympy import log, Integral
+        >>> from sympy.abc import x, y
+
+        >>> x.is_number
+        False
+        >>> (2*x).is_number
+        False
+        >>> (2 + log(2)).is_number
+        True
+        >>> (2 + Integral(2, x)).is_number
+        False
+        >>> (2 + Integral(2, (x, 1, 2))).is_number
+        True
 
         """
         if not self.args:
