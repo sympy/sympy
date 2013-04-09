@@ -1,7 +1,7 @@
 from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar,
+    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -218,6 +218,12 @@ def test_sign():
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
 
+    x, y = Symbol('x', real=True), Symbol('y')
+    assert sign(x).rewrite(Piecewise) == \
+        Piecewise((1, x > 0), (-1, x < 0), (0, True))
+    assert sign(y).rewrite(Piecewise) == sign(y)
+
+
 def test_as_real_imag():
     n = pi**1000
     # the special code for working out the real
@@ -302,6 +308,10 @@ def test_Abs_rewrite():
         assert a.subs(x, i) == abs(i)
     y = Symbol('y')
     assert Abs(y).rewrite(Heaviside) == Abs(y)
+
+    x, y = Symbol('x', real=True), Symbol('y')
+    assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
+    assert Abs(y).rewrite(Piecewise) == Abs(y)
 
 
 def test_Abs_real():
