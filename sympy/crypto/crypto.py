@@ -1066,6 +1066,145 @@ def decipher_kid_rsa(ct, prk):
     return (ct*d)%n
 
 
+#################### Morse Code ######################################
+
+
+def encode_morse(pt):
+
+    """
+    Encodes a plaintext into popular Morse Code with letters separated by "|"
+    and words by "||".
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Morse_code
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import encode_morse
+    >>> pt = 'ATTACK THE RIGHT FLANK'
+    >>> encode_morse(pt)
+    '.-|-|-|.-|-.-.|-.-||-|....|.||.-.|..|--.|....|-||..-.|.-..|.-|-.|-.-'
+    """
+
+    morse_encoding_map = {"A": ".-", "B": "-...",
+                     "C": "-.-.", "D": "-..",
+                     "E": ".", "F": "..-.",
+                     "G": "--.", "H": "....",
+                     "I": "..", "J": ".---",
+                     "K": "-.-", "L": ".-..",
+                     "M": "--", "N": "-.",
+                     "O": "---", "P": ".--.",
+                     "Q": "--.-", "R": ".-.",
+                     "S": "...", "T": "-",
+                     "U": "..-", "V": "...-",
+                     "W": ".--", "X": "-..-",
+                     "Y": "-.--", "Z": "--..",
+                     "0": "-----", "1": ".----",
+                     "2": "..---", "3": "...--",
+                     "4": "....-", "5": ".....",
+                     "6": "-....", "7": "--...",
+                     "8": "---..", "9": "----.",
+                     ".": ".-.-.-", ",": "--..--",
+                     ":": "---...", ";": "-.-.-.",
+                     "?": "..--..", "-": "-...-",
+                     "_": "..--.-", "(": "-.--.",
+                     ")": "-.--.-", "'": ".----.",
+                     "=": "-...-", "+": ".-.-.",
+                     "/": "-..-.", "@": ".--.-.",
+                     "$": "...-..-", "!": "-.-.--" }
+
+    unusable_chars = "\"#%&*<>[\]^`{|}~"
+    morsestring = []
+
+    for i in unusable_chars:
+        pt = pt.replace(i, "")
+    pt = pt.upper()
+
+    words = pt.split(" ")
+    for word in words:
+        letters = list(word)
+        morseword = []
+        for letter in letters:
+            morseletter = morse_encoding_map[letter]
+            morseword.append(morseletter)
+
+        word = "|".join(morseword)
+        morsestring.append(word)
+
+    return "||".join(morsestring)
+
+
+
+def decode_morse(mc):
+
+    """
+    Decodes a Morse Code with letters separated by "|"
+    and words by "||" into plaintext.
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Morse_code
+
+    Examples
+    ========
+
+    >>> from sympy.crypto.crypto import decode_morse
+    >>> mc = '--|---|...-|.||.|.-|...|-'
+    >>> decode_morse(mc)
+    'MOVE EAST'
+    """
+
+    morse_decoding_map = {".-": "A", "-...": "B",
+                          "-.-.": "C", "-..": "D",
+                          ".": "E", "..-.": "F",
+                          "--.": "G", "....": "H",
+                          "..": "I", ".---": "J",
+                          "-.-": "K", ".-..": "L",
+                          "--": "M", "-.": "N",
+                          "---": "O", ".--.": "P",
+                          "--.-": "Q", ".-.": "R",
+                          "...": "S", "-": "T",
+                          "..-": "U", "...-": "V",
+                          ".--": "W", "-..-": "X",
+                          "-.--": "Y", "--..": "Z",
+                          "-----": "0", "----": "1",
+                          "..---": "2", "...--": "3",
+                          "....-": "4", ".....": "5",
+                          "-....": "6", "--...": "7",
+                          "---..": "8", "----.": "9",
+                          ".-.-.-": ".", "--..--": ",",
+                          "---...": ":", "-.-.-.": ";",
+                          "..--..": "?", "-...-": "-",
+                          "..--.-": "_", "-.--.": "(",
+                          "-.--.-": ")", ".----.": "'",
+                          "-...-": "=", ".-.-.": "+",
+                          "-..-.": "/", ".--.-.": "@",
+                          "...-..-": "$", "-.-.--": "!"}
+
+    characterstring = []
+
+    if mc[-1] == "|" and mc[-2] == "|":
+        mc = mc[:-2]
+    words = mc.split("||")
+    for word in words:
+        letters = word.split("|")
+        characterword = []
+        for letter in letters:
+            try:
+                characterletter = morse_decoding_map[letter]
+            except KeyError:
+                return "Invalid Morse Code"
+            characterword.append(characterletter)
+
+        word = "".join(characterword)
+        characterstring.append(word)
+    return " ".join(characterstring)
+
+
 #################### LFSRs  ##########################################
 
 
