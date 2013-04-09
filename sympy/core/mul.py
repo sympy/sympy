@@ -649,18 +649,18 @@ class Mul(Expr, AssocOp):
         return Add.make_args(added)  # it may have collapsed down to one term
 
     def _eval_expand_mul(self, **hints):
-        from sympy import fraction, expand_mul
+        from sympy import fraction, expand_mul, expand_multinomial
 
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)
         expr = self
         n, d = fraction(expr)
         if d.is_Mul:
-            d = d._eval_expand_mul(**hints)
-            if n.is_Add:
-                args = [expand_mul(a/d, deep=False) for a in n.args]
-                return Add(*args)
-            return n/d
+            n, d = [i._eval_expand_mul(**hints) if i.is_Mul else i
+                for i in (n, d)]
+            expr = n/d
+            if not expr.is_Mul:
+                return expr
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:

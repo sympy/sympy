@@ -480,17 +480,6 @@ class Pow(Expr):
     def _eval_expand_multinomial(self, **hints):
         """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
 
-        def touchup(result):
-            # expand any newly created powers
-            args = list(Add.make_args(result))
-            for i, m in enumerate(args):
-                margs = list(Mul.make_args(m))
-                for j, p in enumerate(margs):
-                    if p.is_Pow:
-                        margs[j] = p._eval_expand_multinomial(**hints)
-                args[i] = Mul(*margs)
-            return Add(*args)
-
         base, exp = self.args
         result = self
 
@@ -580,12 +569,10 @@ class Pow(Expr):
                 expansion_dict = multinomial_coefficients(len(p), n)
                 # in our example: {(3, 0): 1, (1, 2): 3, (0, 3): 1, (2, 1): 3}
                 # and now construct the expression.
-                result = basic_from_dict(expansion_dict, *p)
-                return touchup(result)
+                return basic_from_dict(expansion_dict, *p)
             else:
                 if n == 2:
-                    return touchup(
-                        Add(*[f*g for f in base.args for g in base.args]))
+                    return Add(*[f*g for f in base.args for g in base.args])
                 else:
                     multi = (base**(n - 1))._eval_expand_multinomial()
                     if multi.is_Add:

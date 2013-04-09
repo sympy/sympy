@@ -2752,10 +2752,6 @@ class Expr(Basic, EvalfMixin):
                     newexpr = getattr(u, hint)(**hints)
                     if newexpr != u:
                         return (newexpr, True)
-                    # return it with the same type as was passed only
-                    # if it's not longer than the evaluated form
-                    if u.count_ops() <= expr.count_ops():
-                        expr = u
 
         return (expr, hit)
 
@@ -2785,6 +2781,7 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
+
         # Although the hints are sorted here, an earlier hint may get applied
         # at a given node in the expression tree before another because of how
         # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
@@ -2812,6 +2809,17 @@ class Expr(Basic, EvalfMixin):
             if use_hint:
                 hint = '_eval_expand_' + hint
                 expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
+
+        while True:
+            was = expr
+            if hints.get('multinomial', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_multinomial', deep=deep, **hints)
+            if hints.get('mul', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_mul', deep=deep, **hints)
+            if expr == was:
+                break
 
         if modulus is not None:
             modulus = sympify(modulus)

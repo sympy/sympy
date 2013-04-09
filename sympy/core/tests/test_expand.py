@@ -2,7 +2,7 @@ from sympy import (log, sqrt, Rational as R, Symbol, I, exp, pi, S,
     cos, sin, Mul, Pow, cse, O)
 from sympy.simplify.simplify import expand_numer, expand
 from sympy.core.function import (
-    expand_power_base, expand_flat, expand_multinomial)
+    expand_power_base, expand_multinomial)
 
 from sympy.utilities.pytest import raises
 from sympy.core.function import expand_power_base
@@ -133,12 +133,12 @@ def test_expand_frac():
 
 def test_issue_3022():
     eq = -I*exp(-3*I*pi/4)/(4*pi**(S(3)/2)*sqrt(x))
-    assert cse((eq).expand(complex=True)) == S('''(
-    [(x0, re(x)), (x1, im(x)), (x2, sin(atan2(x1, x0)/2)), (x3,
-    cos(atan2(x1, x0)/2)), (x4, x0**2 + x1**2), (x5, sin(atan2(0, x4)/4)),
-    (x6, cos(atan2(0, x4)/4)), (x7, x2*x5), (x8, x3*x5), (x9, x2*x6),
-    (x10, x3*x6)], [sqrt(2)*(-x10 + I*x10 + x7 - I*x7 + x8 + I*x8 + x9 +
-    I*x9)/(8*pi**(3/2)*x4**(1/4))])''')
+    assert cse((eq).expand(complex=True)) == S('''
+        ([(x0, re(x)), (x1, im(x)), (x2, sin(atan2(x1, x0)/2)), (x3,
+        cos(atan2(x1, x0)/2)), (x4, x0**2 + x1**2), (x5, sin(atan2(0, x4)/4)),
+        (x6, cos(atan2(0, x4)/4)), (x7, x2*x5), (x8, x3*x5), (x9, x2*x6),
+        (x10, x3*x6)], [sqrt(2)*(-x10 + I*x10 + x7 - I*x7 + x8 + I*x8 + x9 +
+        I*x9)/(8*pi**(3/2)*x4**(1/4))])''')
 
 
 def test_expand_power_base():
@@ -273,19 +273,18 @@ def test_issues_2820_3731():
     assert expand_multinomial((1 + x*p)**2) == (
         x**2*(1 + 4*A + 6*A**2 + 4*A**3 + A**4) + 2*x*(1 + 2*A + A**2) + 1)
     assert expand_multinomial((1 + (y + x)*p)**2) == (
-        (2*x + 2*y)*(1 + 2*A + A**2) + (x**2 + 2*x*y + y**2)*
+        (x + y)*(1 + 2*A + A**2)*2 + (x**2 + 2*x*y + y**2)*
         (1 + 4*A + 6*A**2 + 4*A**3 + A**4) + 1)
     assert expand_multinomial((1 + (y + x)*p)**3) == (
-        (x + y)*(2*x + 2*y)*(1 + 2*A + A**2)**2 + (x + y)*(x**2 + 2*x*y +
-        y**2)*(1 + 2*A +      A**2)*(1 + 4*A + 6*A**2 + 4*A**3 + A**4) + (x +
-        y)*(1 + 2*A + A**2) + (2*x +     2*y)*(1 + 2*A + A**2) + (x**2 + 2*x*y
-        + y**2)*(1 + 4*A + 6*A**2 + 4*A**3 + A**4) + 1)
+        (x + y)*(1 + 2*A + A**2)*3 + (3*x**2 + 6*x*y + 3*y**2)*(1 + 4*A +
+        6*A**2 + 4*A**3 + A**4) + (x**3 + 3*x**2*y + 3*x*y**2 + y**3)*(1 + 6*A
+        + 15*A**2 + 20*A**3 + 15*A**4 + 6*A**5 + A**6) + 1)
     # unevaluate powers
     eq = (Pow((x + 1)*((A + 1)**2), 2, evaluate=False))
     # - in this case the base is not an Add so no further
     #   expansion is done
     assert expand_multinomial(eq) == \
-        Pow((x + 1)*(1 + 2*A + A**2), 2, evaluate=False)
+        (x**2 + 2*x + 1)*(1 + 4*A + 6*A**2 + 4*A**3 + A**4)
     # - but here, the expanded base *is* an Add so it gets expanded
     eq = (Pow(((A + 1)**2), 2, evaluate=False))
     assert expand_multinomial(eq) == 1 + 4*A + 6*A**2 + 4*A**3 + A**4
