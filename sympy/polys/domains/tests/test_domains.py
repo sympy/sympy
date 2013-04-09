@@ -191,43 +191,43 @@ def test_Domain_unify_composite():
     assert unify(QQ.frac_field(x, y), QQ.frac_field(x, z)) == QQ.frac_field(x, y, z)
 
     assert unify(ZZ.poly_ring(x), ZZ.frac_field(x)) == ZZ.frac_field(x)
-    assert unify(ZZ.poly_ring(x), QQ.frac_field(x)) == QQ.frac_field(x)
-    assert unify(QQ.poly_ring(x), ZZ.frac_field(x)) == QQ.frac_field(x)
+    assert unify(ZZ.poly_ring(x), QQ.frac_field(x)) == ZZ.frac_field(x)
+    assert unify(QQ.poly_ring(x), ZZ.frac_field(x)) == ZZ.frac_field(x)
     assert unify(QQ.poly_ring(x), QQ.frac_field(x)) == QQ.frac_field(x)
 
     assert unify(ZZ.poly_ring(x, y), ZZ.frac_field(x)) == ZZ.frac_field(x, y)
-    assert unify(ZZ.poly_ring(x, y), QQ.frac_field(x)) == QQ.frac_field(x, y)
-    assert unify(QQ.poly_ring(x, y), ZZ.frac_field(x)) == QQ.frac_field(x, y)
+    assert unify(ZZ.poly_ring(x, y), QQ.frac_field(x)) == ZZ.frac_field(x, y)
+    assert unify(QQ.poly_ring(x, y), ZZ.frac_field(x)) == ZZ.frac_field(x, y)
     assert unify(QQ.poly_ring(x, y), QQ.frac_field(x)) == QQ.frac_field(x, y)
 
     assert unify(ZZ.poly_ring(x), ZZ.frac_field(x, y)) == ZZ.frac_field(x, y)
-    assert unify(ZZ.poly_ring(x), QQ.frac_field(x, y)) == QQ.frac_field(x, y)
-    assert unify(QQ.poly_ring(x), ZZ.frac_field(x, y)) == QQ.frac_field(x, y)
+    assert unify(ZZ.poly_ring(x), QQ.frac_field(x, y)) == ZZ.frac_field(x, y)
+    assert unify(QQ.poly_ring(x), ZZ.frac_field(x, y)) == ZZ.frac_field(x, y)
     assert unify(QQ.poly_ring(x), QQ.frac_field(x, y)) == QQ.frac_field(x, y)
 
     assert unify(ZZ.poly_ring(x, y), ZZ.frac_field(x, z)) == ZZ.frac_field(x, y, z)
-    assert unify(ZZ.poly_ring(x, y), QQ.frac_field(x, z)) == QQ.frac_field(x, y, z)
-    assert unify(QQ.poly_ring(x, y), ZZ.frac_field(x, z)) == QQ.frac_field(x, y, z)
+    assert unify(ZZ.poly_ring(x, y), QQ.frac_field(x, z)) == ZZ.frac_field(x, y, z)
+    assert unify(QQ.poly_ring(x, y), ZZ.frac_field(x, z)) == ZZ.frac_field(x, y, z)
     assert unify(QQ.poly_ring(x, y), QQ.frac_field(x, z)) == QQ.frac_field(x, y, z)
 
     assert unify(ZZ.frac_field(x), ZZ.poly_ring(x)) == ZZ.frac_field(x)
-    assert unify(ZZ.frac_field(x), QQ.poly_ring(x)) == QQ.frac_field(x)
-    assert unify(QQ.frac_field(x), ZZ.poly_ring(x)) == QQ.frac_field(x)
+    assert unify(ZZ.frac_field(x), QQ.poly_ring(x)) == ZZ.frac_field(x)
+    assert unify(QQ.frac_field(x), ZZ.poly_ring(x)) == ZZ.frac_field(x)
     assert unify(QQ.frac_field(x), QQ.poly_ring(x)) == QQ.frac_field(x)
 
     assert unify(ZZ.frac_field(x, y), ZZ.poly_ring(x)) == ZZ.frac_field(x, y)
-    assert unify(ZZ.frac_field(x, y), QQ.poly_ring(x)) == QQ.frac_field(x, y)
-    assert unify(QQ.frac_field(x, y), ZZ.poly_ring(x)) == QQ.frac_field(x, y)
+    assert unify(ZZ.frac_field(x, y), QQ.poly_ring(x)) == ZZ.frac_field(x, y)
+    assert unify(QQ.frac_field(x, y), ZZ.poly_ring(x)) == ZZ.frac_field(x, y)
     assert unify(QQ.frac_field(x, y), QQ.poly_ring(x)) == QQ.frac_field(x, y)
 
     assert unify(ZZ.frac_field(x), ZZ.poly_ring(x, y)) == ZZ.frac_field(x, y)
-    assert unify(ZZ.frac_field(x), QQ.poly_ring(x, y)) == QQ.frac_field(x, y)
-    assert unify(QQ.frac_field(x), ZZ.poly_ring(x, y)) == QQ.frac_field(x, y)
+    assert unify(ZZ.frac_field(x), QQ.poly_ring(x, y)) == ZZ.frac_field(x, y)
+    assert unify(QQ.frac_field(x), ZZ.poly_ring(x, y)) == ZZ.frac_field(x, y)
     assert unify(QQ.frac_field(x), QQ.poly_ring(x, y)) == QQ.frac_field(x, y)
 
     assert unify(ZZ.frac_field(x, y), ZZ.poly_ring(x, z)) == ZZ.frac_field(x, y, z)
-    assert unify(ZZ.frac_field(x, y), QQ.poly_ring(x, z)) == QQ.frac_field(x, y, z)
-    assert unify(QQ.frac_field(x, y), ZZ.poly_ring(x, z)) == QQ.frac_field(x, y, z)
+    assert unify(ZZ.frac_field(x, y), QQ.poly_ring(x, z)) == ZZ.frac_field(x, y, z)
+    assert unify(QQ.frac_field(x, y), ZZ.poly_ring(x, z)) == ZZ.frac_field(x, y, z)
     assert unify(QQ.frac_field(x, y), QQ.poly_ring(x, z)) == QQ.frac_field(x, y, z)
 
 def test_Domain_unify_algebraic():
@@ -557,6 +557,16 @@ def test_PolynomialRing_from_FractionField():
     assert R.to_domain().from_FractionField(f, F.to_domain()) is None
     assert R.to_domain().from_FractionField(g, F.to_domain()) == X**2/4 + Y**2/4
     assert R.to_domain().from_FractionField(h, F.to_domain()) == X**2 + Y**2
+
+def test_FractionField_from_PolynomialRing():
+    R, x,y = ring("x,y", QQ)
+    F, X,Y = field("x,y", ZZ)
+
+    f = 3*x**2 + 5*y**2
+    g = x**2/3 + y**2/5
+
+    assert F.to_domain().from_PolynomialRing(f, R.to_domain()) == 3*X**2 + 5*Y**2
+    assert F.to_domain().from_PolynomialRing(g, R.to_domain()) == (5*X**2 + 3*Y**2)/15
 
 def test_FF_of_type():
     assert FF(3).of_type(FF(3)(1)) is True

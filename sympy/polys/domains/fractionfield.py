@@ -80,7 +80,7 @@ class FractionField(Field, CompositeDomain):
     def from_PolynomialRing(K1, a, K0):
         """Convert a polynomial to ``dtype``. """
         try:
-            return K1.new(a.set_ring(K1.field.ring))
+            return K1.new(a)
         except (CoercionFailed, GeneratorsError):
             return None
 

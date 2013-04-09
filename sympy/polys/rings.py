@@ -322,11 +322,14 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def clear_denoms(self):
         domain = self.ring.domain
-        denom = domain.denom
+
+        if not domain.has_Field or not domain.has_assoc_Ring:
+            return domain.one, self
 
         ground_ring = domain.get_ring()
         common = ground_ring.one
         lcm = ground_ring.lcm
+        denom = domain.denom
 
         for coeff in self.values():
             common = lcm(common, denom(coeff))

@@ -233,6 +233,11 @@ class Domain(object):
             domain = K0_ground.unify(K1_ground)
             gens = _unify_gens(K0_gens, K1_gens)
 
+            if ((K0.is_FractionField and K1.is_PolynomialRing or
+                 K1.is_FractionField and K0.is_PolynomialRing) and
+                 (not K0_ground.has_Field or not K1_ground.has_Field) and domain.has_Field):
+                domain = domain.get_ring()
+
             if K0.is_Composite and (not K1.is_Composite or K0.is_FractionField or K1.is_PolynomialRing):
                 cls = K0.__class__
             else:

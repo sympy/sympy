@@ -97,7 +97,7 @@ class FracField(DefaultPrinting):
         except CoercionFailed:
             domain = self.domain
 
-            if domain.has_Ring and domain.has_assoc_Field:
+            if not domain.has_Field and domain.has_assoc_Field:
                 ring = self.ring
                 ground_field = domain.get_field()
                 element = ground_field.convert(element)
@@ -115,9 +115,12 @@ class FracField(DefaultPrinting):
                 raise NotImplementedError("conversion")
         elif isinstance(element, PolyElement):
             if self.ring == element.ring:
-                return self.new(element)
+                return self.raw_new(element)
             else:
-                raise NotImplementedError("conversion")
+                denom, numer = element.clear_denoms()
+                numer = numer.set_ring(self.ring)
+                denom = self.ring.ground_new(denom)
+                return self.raw_new(numer, denom)
         elif isinstance(element, tuple) and len(element) == 2:
             numer, denom = map(self.ring.ring_new, element)
             return self.new(numer, denom)
@@ -148,7 +151,7 @@ class FracField(DefaultPrinting):
                 try:
                     return domain.convert(expr)
                 except CoercionFailed:
-                    if domain.has_Ring and domain.has_assoc_Field:
+                    if not domain.has_Field and domain.has_assoc_Field:
                         return domain.get_field().convert(expr)
                     else:
                         raise
@@ -255,7 +258,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         try:
             element = domain.convert(element)
         except CoercionFailed:
-            if domain.has_Ring and domain.has_assoc_Field:
+            if not domain.has_Field and domain.has_assoc_Field:
                 ground_field = domain.get_field()
 
                 try:
