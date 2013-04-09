@@ -255,7 +255,13 @@ def test_power_expand():
     assert (A**(a + b)).expand() != A**(a + b)
 
 
-def test_issue_3731():
+def test_issues_2820_3731():
+    # 2820
+    n = -1 + 1/x
+    z = n/x/(-n)**2 - 1/n/x
+    assert expand(z) == 1/(x**2 - 2*x + 1) - 1/(x - 2 + 1/x) - 1/(-x + 1)
+
+    # 3731
     p = (1 + x)**2
     assert expand_multinomial((1 + x*p)**2) == (
         x**2*(x**4 + 4*x**3 + 6*x**2 + 4*x + 1) + 2*x*(x**2 + 2*x + 1) + 1)

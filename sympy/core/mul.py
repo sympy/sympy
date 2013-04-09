@@ -656,9 +656,11 @@ class Mul(Expr, AssocOp):
         expr = self
         n, d = fraction(expr)
         if d.is_Mul:
-            expr = n/d._eval_expand_mul(**hints)
-            if not expr.is_Mul:
-                return expand_mul(expr, deep=False)
+            d = d._eval_expand_mul(**hints)
+            if n.is_Add:
+                args = [expand_mul(a/d, deep=False) for a in n.args]
+                return Add(*args)
+            return n/d
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:
