@@ -1683,7 +1683,7 @@ def _split_gcd(*a):
 def _is_sum_surds(p):
     args = p.args if p.is_Add else [p]
     for y in args:
-        if not (y**2).is_Rational:
+        if not ((y**2).is_Rational and y.is_real):
             return False
     return True
 

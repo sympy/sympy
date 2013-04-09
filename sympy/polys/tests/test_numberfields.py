@@ -1,6 +1,6 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple
+from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
@@ -99,6 +99,26 @@ def test_minimal_polynomial():
 
     assert minimal_polynomial(
         a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
+
+    # issue 2895
+    ex = S('-1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 + sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 + sqrt(15)*I/28800000)**(1/3)))')
+    mp = minimal_polynomial(ex, x)
+    assert mp == 8000*x**2 - 1
+
+    ex = 1 + sqrt(2) + sqrt(3)
+    mp = minimal_polynomial(ex, x)
+    assert mp == x**4 - 4*x**3 - 4*x**2 + 16*x - 8
+
+    ex = 1/(1 + sqrt(2) + sqrt(3))
+    mp = minimal_polynomial(ex, x)
+    assert mp == 8*x**4 - 16*x**3 + 4*x**2 + 4*x - 1
+
+    p = (expand((1 + sqrt(2) - 2*sqrt(3) + sqrt(7))**3))**Rational(1, 3)
+    mp = minimal_polynomial(p, x)
+    assert mp == x**8 - 8*x**7 - 56*x**6 + 448*x**5 + 480*x**4 - 5056*x**3 + 1984*x**2 + 7424*x - 3008
+    p = expand((1 + sqrt(2) - 2*sqrt(3) + sqrt(7))**3)
+    mp = minimal_polynomial(p, x)
+    assert mp == x**8 - 512*x**7 - 118208*x**6 + 31131136*x**5 + 647362560*x**4 - 56026611712*x**3 + 116994310144*x**2 + 404854931456*x - 27216576512
 
 def test_minimal_polynomial_sq():
     from sympy import expand_multinomial
