@@ -442,8 +442,16 @@ class LatexPrinter(Printer):
             return r"%s %s" % (tex, self._print(e))
 
     def _print_Function(self, expr, exp=None):
-        '''expr is the expression involving the function
-            exp is an exponent
+        '''
+        Render functions to LaTeX, handling functions that LaTeX knows about
+        e.g., sin, cos, ... by using the proper LaTeX command (\sin, \cos, ...).
+        For single-letter function names, render them as regular LaTeX math
+        symbols. For multi-letter function names that LaTeX does not know
+        about, (e.g., Li, sech) use \operatorname{} so that the function name
+        is rendered in Roman font and LaTeX handles spacing properly.
+
+        expr is the expression involving the function
+        exp is an exponent
         '''
         func = expr.func.__name__
 
