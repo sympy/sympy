@@ -1,6 +1,7 @@
 from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
+from sympy.core.numbers import oo
 from sympy.functions.elementary.miscellaneous import Max, Min
 from sympy.logic.boolalg import And, Boolean, Or, Not
 from sympy.core.compatibility import default_sort_key
@@ -195,6 +196,18 @@ class Piecewise(Function):
     def _eval_integral(self, x):
         from sympy.integrals import integrate
         return Piecewise(*[(integrate(e, x), c) for e, c in self.args])
+        """
+        offset = 0
+        list_func = []
+        sort_cond = self._sort_expr_cond(x, -oo, oo)
+        
+        for i in range(len(self.args)):
+            e,c = self.args[i]
+            piece = (integrate(e, x) + offset, c)
+            list_func.append(piece)
+            offset += piece[0].subs(x, sort_cond[i][1]) - piece[0].subs(x, sort_cond[i][0])
+        return Piecewise(*list_func)
+        """
 
     def _eval_interval(self, sym, a, b):
         """Evaluates the function along the sym in a given interval ab"""
