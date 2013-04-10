@@ -454,6 +454,11 @@ def test_Poly__unify():
 
     raises(CoercionFailed, lambda: Poly(Poly(x**2 + x**2*z, y, field=True), domain='ZZ(x)'))
 
+    f = Poly(t**2 + t/3 + x, t, domain='QQ(x)')
+    g = Poly(t**2 + t/3 + x, t, domain='QQ[x]')
+
+    assert f._unify(g)[2:] == (f.rep, f.rep)
+
 
 def test_Poly_free_symbols():
     assert Poly(x**2 + 1).free_symbols == set([x])

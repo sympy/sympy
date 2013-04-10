@@ -1551,6 +1551,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             g = g.set_ring(new_ring)
 
             _, p, q = f.cofactors(g)
+            _, cp, cq = new_ring.domain.cofactors(cp, cq)
 
             p = p.set_ring(ring)
             q = q.set_ring(ring)

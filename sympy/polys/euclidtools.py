@@ -1938,6 +1938,8 @@ def dmp_cancel(f, g, u, K, include=True):
     _, p, q = dmp_inner_gcd(f, g, u, K)
 
     if K0 is not None:
+        _, cp, cq = K.cofactors(cp, cq)
+
         p = dmp_convert(p, u, K, K0)
         q = dmp_convert(q, u, K, K0)
 

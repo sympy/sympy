@@ -582,6 +582,14 @@ def test_PolyElement_cancel():
     assert (-f).cancel(g) == (-F, G)
     assert f.cancel(-g) == (-F, G)
 
+    Fx, x = field("x", ZZ)
+    Rt, t = ring("t", Fx.to_domain())
+
+    f = (-x**2 - 4)/4*t
+    g = t**2 + (x**2 + 2)/2
+
+    assert f.cancel(g) == ((-x**2 - 4)*t, 4*t**2 + 2*x**2 + 4)
+
 def test_PolyElement_max_norm():
     R, x, y = ring("x,y", ZZ)
 
