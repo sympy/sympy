@@ -47,6 +47,14 @@ def test_latex_basic():
     assert latex(2*x*y) == "2 x y"
     assert latex(2*x*y, mul_symbol='dot') == r"2 \cdot x \cdot y"
 
+    assert latex(1/x) == r"\frac{1}{x}"
+    assert latex(1/x, fold_short_frac=True) == "1 / x"
+    assert latex(1/x**2) == r"\frac{1}{x^{2}}"
+    assert latex((x + y)/(2*x)) == r"\frac{x + y}{2 x}"
+    assert latex((x + y)/(2*x), long_frac_ratio=0) == r"\frac{1}{2 x} \left(x + y\right)"
+    assert latex((x + y)/x) == r"\frac{1}{x} \left(x + y\right)"
+    assert latex((x + y)/x, long_frac_ratio=3) == r"\frac{x + y}{x}"
+
     assert latex(sqrt(x)) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3)) == r"\sqrt[3]{x}"
     assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
