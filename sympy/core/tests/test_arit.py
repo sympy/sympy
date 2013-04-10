@@ -1277,6 +1277,7 @@ def test_issue_2820():
 
 
 def test_Mod():
+    assert Mod(x, 1).func is Mod
     assert Mod(5, 3) == 2
     assert Mod(-5, 3) == 1
     assert Mod(5, -3) == -1
@@ -1289,18 +1290,46 @@ def test_Mod():
     assert (x + 3) % 1 == Mod(x, 1)
     assert (x + 3.0) % 1 == Mod(x, 1)
     assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
-    assert (x - 3.3) % 1 == Mod(x + 0.7, 1)
-    assert Mod(-3.3, 1) == Mod(0.7, 1) == Float(0.7)
+    point7 = 1 - Float(3.3) % 1
+    assert (x - 3.3) % 1 == Mod(x, 1) + point7
+    assert Mod(-3.3, 1) == point7
+    assert Mod(0.7, 1) == Float(0.7)
     e = Mod(1.3, 1)
-    assert e == .3 and e.is_Float
+    point3 = Float._new(Float(.3)._mpf_, 51)
+    assert e == point3 and e.is_Float
     e = Mod(1.3, .7)
-    assert e == .6 and e.is_Float
+    point6 = Float._new(Float(.6)._mpf_, 51)
+    assert e == point6 and e.is_Float
     e = Mod(1.3, Rational(7, 10))
-    assert e == .6 and e.is_Float
+    assert e == point6 and e.is_Float
     e = Mod(Rational(13, 10), 0.7)
-    assert e == .6 and e.is_Float
+    assert e == point6 and e.is_Float
     e = Mod(Rational(13, 10), Rational(7, 10))
     assert e == .6 and e.is_Rational
+
+    i = Symbol('i', integer=True)
+    assert pi%pi == S.Zero
+    assert (-3*x)%(-2*y) == -Mod(3*x, 2*y)
+    assert (3*i*x)%(2*i*y) == i*Mod(3*x, 2*y)
+    assert (.6*pi)%(.3*x*pi) == 0.3*pi*Mod(2, x)
+    assert (.6*pi)%(.31*x*pi) == pi*Mod(0.6, 0.31*x)
+    assert (6*pi)%(.3*x*pi) == pi*Mod(6, 0.3*x)
+    assert (6*pi)%(.31*x*pi) == pi*Mod(6, 0.31*x)
+    assert (6*pi)%(.42*x*pi) == pi*Mod(6, 0.42*x)
+    assert (12*x)%(2*y) == 2*Mod(6*x, y)
+    assert (12*x)%(3*5*y) == 3*Mod(4*x, 5*y)
+    assert (12*x)%(15*x*y) == 3*x*Mod(4, 5*y)
+    assert sqrt(2) % sqrt(5) == sqrt(2)
+    assert -sqrt(2) % sqrt(5) == sqrt(5) - sqrt(2)
+    assert (-2*pi)%(3*pi) == pi
+    assert (2*x + 2) % (x + 1) == 0
+    assert (x + 1) % x == 1 % x
+    assert (x + y) % x == y % x
+    assert (x + y + 2) % x == (y + 2) % x
+    assert (x*(x + 1)) % (x+1) == (x + 1)*Mod(x, 1)
+    assert (a + 3*x + 1)%(2*x) == x + Mod(a + 1, 2*x)
+    assert (12*x + 18*y)%(3*x) == 3*Mod(6*y, x)
+    assert Mod(5.0*x, 0.1*y) == 0.1*Mod(50*x, y)
 
 
 def test_issue_2902():
