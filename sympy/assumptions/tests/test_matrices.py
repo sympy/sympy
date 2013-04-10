@@ -61,6 +61,7 @@ def _test_orthogonal_unitary(predicate):
 
 def test_orthogonal():
     _test_orthogonal_unitary(Q.orthogonal)
+
 def test_unitary():
     _test_orthogonal_unitary(Q.unitary)
     assert ask(Q.unitary(X), Q.orthogonal(X))

@@ -50,7 +50,8 @@ class MatMul(MatrixExpr):
         X = head
         Y = MatMul(*tail)
 
-        from sympy import Dummy, Sum
+        from sympy.core.symbol import Dummy
+        from sympy.concrete.summations import Sum
         from sympy.matrices import ImmutableMatrix, MatrixBase
         k = Dummy('k', integer=True)
         if X.has(ImmutableMatrix) or Y.has(ImmutableMatrix):
