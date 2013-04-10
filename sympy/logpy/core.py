@@ -42,7 +42,9 @@ from sympy import assuming, ask
 
 asko = goalify(ask)
 
-def refine_one(expr, assumptions, reduces, vars):
+def refine_one(expr, *assumptions, **kwargs):
+    reduces = kwargs.get('reduces')
+    vars = kwargs.get('vars')
     with assuming(*assumptions):
         with variables(*vars):
             source, target, condition = var(), var(), var()
