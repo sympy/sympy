@@ -272,7 +272,7 @@ def mlatex(expr, **settings):
     >>> mlatex(q1 * q2d)
     'q_{1} \\dot{q}_{2}'
     >>> mlatex(q1dd * q1 / q1d)
-    'q_{1} \\ddot{q}_{1} / \\dot{q}_{1}'
+    '\\frac{q_{1} \\ddot{q}_{1}}{\\dot{q}_{1}}'
 
     """
 

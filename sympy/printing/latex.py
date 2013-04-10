@@ -36,7 +36,7 @@ class LatexPrinter(Printer):
         "itex": False,
         "fold_frac_powers": False,
         "fold_func_brackets": False,
-        "fold_short_frac": True,
+        "fold_short_frac": None,
         "long_frac_ratio": 2,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
@@ -58,6 +58,10 @@ class LatexPrinter(Printer):
             if self._settings['mode'] not in valid_modes:
                 raise ValueError("'mode' must be one of 'inline', 'plain', "
                     "'equation' or 'equation*'")
+
+        if self._settings['fold_short_frac'] is None and \
+                self._settings['mode'] == 'inline':
+            self._settings['fold_short_frac'] = True
 
         mul_symbol_table = {
             None: r" ",
@@ -1644,20 +1648,20 @@ def latex(expr, **settings):
 
     fold_short_frac: Emit "p / q" instead of "\frac{p}{q}" when the
     denominator is simple enough (at most two terms and no powers).
-    The default value is `True`.
+    The default value is `True` for inline mode, False otherwise.
 
     >>> latex(3*x**2/y)
-    '3 x^{2} / y'
-    >>> latex(3*x**2/y, fold_short_frac=False)
     '\\frac{3 x^{2}}{y}'
+    >>> latex(3*x**2/y, fold_short_frac=True)
+    '3 x^{2} / y'
 
     long_frac_ratio: The allowed ratio of the width of the numerator to the
     width of the denominator before we start breaking off long fractions.
     The default value is 2.
 
-    >>> latex(Integral(r, r)/2/pi, long_frac_ratio=2, fold_short_frac=False)
+    >>> latex(Integral(r, r)/2/pi, long_frac_ratio=2)
     '\\frac{\\int r\\, dr}{2 \\pi}'
-    >>> latex(Integral(r, r)/2/pi, long_frac_ratio=0, fold_short_frac=False)
+    >>> latex(Integral(r, r)/2/pi, long_frac_ratio=0)
     '\\frac{1}{2 \\pi} \\int r\\, dr'
 
     mul_symbol: The symbol to use for multiplication. Can be one of None,

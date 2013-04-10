@@ -183,7 +183,7 @@ def test_latex_functions():
     assert latex(coth(x)) == r'\coth{\left (x \right )}'
     assert latex(re(x)) == r'\Re{x}'
     assert latex(im(x)) == r'\Im{x}'
-    assert latex(root(x, y)) == r'x^{1 / y}'
+    assert latex(root(x, y)) == r'x^{\frac{1}{y}}'
     assert latex(arg(x)) == r'\arg{\left (x \right )}'
     assert latex(zeta(x)) == r'\zeta\left(x\right)'
 
@@ -245,7 +245,7 @@ def test_hyper_printing():
 
     assert latex(meijerg(Tuple(pi, pi, x), Tuple(1),
                          (0, 1), Tuple(1, 2, 3/pi), z)) == \
-        r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, 3 / \pi \end{matrix} \middle| {z} \right)}'
+        r'{G_{4, 5}^{2, 3}\left(\begin{matrix} \pi, \pi, x & 1 \\0, 1 & 1, 2, \frac{3}{\pi} \end{matrix} \middle| {z} \right)}'
     assert latex(meijerg(Tuple(), Tuple(1), (0,), Tuple(), z)) == \
         r'{G_{1, 1}^{1, 0}\left(\begin{matrix}  & 1 \\0 &  \end{matrix} \middle| {z} \right)}'
     assert latex(hyper((x, 2), (3,), z)) == \
@@ -436,7 +436,7 @@ def test_latex():
         "\\begin{equation*}8 \\sqrt{2} \\mu^{\\frac{7}{2}}\\end{equation*}"
     assert latex((2*mu)**Rational(7, 2), mode='equation', itex=True) == \
         "$$8 \\sqrt{2} \\mu^{\\frac{7}{2}}$$"
-    assert latex([2/x, y]) == "\\begin{bmatrix}2 / x, & y\\end{bmatrix}"
+    assert latex([2/x, y]) == "\\begin{bmatrix}\\frac{2}{x}, & y\\end{bmatrix}"
 
 
 def test_latex_dict():
@@ -461,7 +461,7 @@ def test_latex_rational():
 
 def test_latex_inverse():
     #tests issue 1030
-    assert latex(1/x) == "1 / x"
+    assert latex(1/x) == "\\frac{1}{x}"
     assert latex(1/(x + y)) == "\\frac{1}{x + y}"
 
 
@@ -655,7 +655,7 @@ def test_latex_Poly():
     assert latex(Poly(x**2 + 2 * x, x)) == \
         r"\operatorname{Poly}{\left( x^{2} + 2 x, x, domain=\mathbb{Z} \right)}"
     assert latex(Poly(x/y, x)) == \
-        r"\operatorname{Poly}{\left( x / y, x, domain=\mathbb{Z}\left(y\right) \right)}"
+        r"\operatorname{Poly}{\left( \frac{x}{y}, x, domain=\mathbb{Z}\left(y\right) \right)}"
     assert latex(Poly(2.0*x + y)) == \
         r"\operatorname{Poly}{\left( 2.0 x + 1.0 y, x, y, domain=\mathbb{R} \right)}"
 
