@@ -121,6 +121,18 @@ class LatexPrinter(Printer):
             else:
                 return False
 
+    def _needs_mul_brackets(self, expr, last=False):
+        """
+        Returns True if the expression needs to be wrapped in brackets when
+        printed as part of a Mul, False otherwise. This is True for Add,
+        but also for some container objects that would not need brackets
+        when appearing last in a Mul, e.g. an Integral. ``last=True``
+        specifies that this expr is the last to appear in a Mul.
+        """
+        from sympy import Integral, Piecewise, Product, Sum
+        return expr.is_Add or (not last and
+            isinstance(expr, (Integral, Piecewise, Product, Sum)))
+
     def _mul_is_clean(self, expr):
         for arg in expr.args:
             if arg.is_Function:
@@ -200,13 +212,10 @@ class LatexPrinter(Printer):
                 else:
                     args = expr.args
 
-                from sympy import Integral, Piecewise, Product, Sum
-
                 for i, term in enumerate(args):
                     term_tex = self._print(term)
 
-                    if term.is_Add or (i != len(args) - 1 and
-                            isinstance(term, (Integral, Piecewise, Product, Sum))):
+                    if self._needs_mul_brackets(term, last=(i == len(args) - 1)):
                         term_tex = r"\left(%s\right)" % term_tex
 
                     # between two digits, \times must always be used,
@@ -223,10 +232,7 @@ class LatexPrinter(Printer):
                 return _tex
 
         if denom is S.One:
-            if numer.is_Add:
-                _tex = r"\left(%s\right)" % convert(numer)
-            else:
-                _tex = r"%s" % convert(numer)
+            _tex = r"%s" % convert(numer)
 
             if coeff is not S.One:
                 tex += str(self._print(coeff))
@@ -265,12 +271,12 @@ class LatexPrinter(Printer):
             ratio = 2
             if self._settings['fold_short_frac'] \
                     and len(sdenom.split()) <= 2 and not "^" in sdenom:
-                if numer.is_Add:
+                if self._needs_mul_brackets(numer, last=False):
                     tex += r"\left(%s\right) / %s" % (snumer, sdenom)
                 else:
                     tex += r"%s / %s" % (snumer, sdenom)
             elif len(snumer.split()) > ratio*len(sdenom.split()):
-                if numer.is_Add:
+                if self._needs_mul_brackets(numer, last=True):
                     tex += r"\frac{1}{%s} \left(%s\right)" % (sdenom, snumer)
                 elif numer.is_Mul:
                     a = S.One
@@ -281,7 +287,7 @@ class LatexPrinter(Printer):
                             b *= x
                         else:
                             a *= x
-                    if b.is_Add:
+                    if self._needs_mul_brackets(b, last=True):
                         tex += r"\frac{%s}{%s} \left(%s\right)" \
                             % (convert(a), sdenom, convert(b))
                     else:
