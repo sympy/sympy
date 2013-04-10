@@ -257,14 +257,14 @@ class LatexPrinter(Printer):
 
                     denom *= coeff.q
                 elif coeff is not S.One:
-                    tex += str(self._print(coeff)) + " "
+                    tex += str(self._print(coeff)) + separator
             else:
                 if coeff.is_Rational and coeff.p == 1:
                     denom *= coeff.q
                 elif coeff.is_Rational and coeff.q == 1:
                     numer *= coeff.p
                 elif coeff is not S.One:
-                    tex += str(self._print(coeff)) + " "
+                    tex += str(self._print(coeff)) + separator
 
             snumer = convert(numer)
             sdenom = convert(denom)
@@ -280,7 +280,8 @@ class LatexPrinter(Printer):
             elif len(snumer.split()) > ratio*ldenom:
                 # handle long fractions
                 if self._needs_mul_brackets(numer, last=True):
-                    tex += r"\frac{1}{%s} \left(%s\right)" % (sdenom, snumer)
+                    tex += r"\frac{1}{%s}%s\left(%s\right)" \
+                        % (sdenom, separator, snumer)
                 elif numer.is_Mul:
                     # split a long numerator
                     a = S.One
@@ -293,13 +294,13 @@ class LatexPrinter(Printer):
                         else:
                             a *= x
                     if self._needs_mul_brackets(b, last=True):
-                        tex += r"\frac{%s}{%s} \left(%s\right)" \
-                            % (convert(a), sdenom, convert(b))
+                        tex += r"\frac{%s}{%s}%s\left(%s\right)" \
+                            % (convert(a), sdenom, separator, convert(b))
                     else:
-                        tex += r"\frac{%s}{%s} %s" \
-                            % (convert(a), sdenom, convert(b))
+                        tex += r"\frac{%s}{%s}%s%s" \
+                            % (convert(a), sdenom, separator, convert(b))
                 else:
-                    tex += r"\frac{1}{%s} %s" % (sdenom, snumer)
+                    tex += r"\frac{1}{%s}%s%s" % (sdenom, separator, snumer)
             else:
                 tex += r"\frac{%s}{%s}" % (snumer, sdenom)
 
