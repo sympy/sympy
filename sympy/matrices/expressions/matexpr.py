@@ -142,7 +142,7 @@ class MatrixExpr(Basic):
         return Inverse(self)
 
     def _eval_transpose(self):
-        return Transpose(self).doit()
+        return Transpose(self)
 
     def _eval_power(self, exp):
         return MatPow(self, exp)
