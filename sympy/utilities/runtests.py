@@ -551,8 +551,6 @@ def _doctest(*paths, **kwargs):
 
     if import_module('numpy') is None:
         blacklist.extend([
-            "sympy/galgebra/GA.py",
-            "sympy/galgebra/latex_ex.py",
             "sympy/plotting/experimental_lambdify.py",
             "sympy/plotting/plot_implicit.py",
             "examples/advanced/autowrap_integrators.py",
@@ -581,7 +579,6 @@ def _doctest(*paths, **kwargs):
 
     # disabled because of doctest failures in asmeurer's bot
     blacklist.extend([
-        "sympy/galgebra/GA.py",
         "sympy/utilities/autowrap.py",
         "examples/advanced/autowrap_integrators.py",
         "examples/advanced/autowrap_ufuncify.py"
