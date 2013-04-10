@@ -83,11 +83,17 @@ class MPContext(PythonMPContext):
             hundred = (0, 25, 2, 5)
             eps = (0, MPZ_ONE, 1-ctx.prec, 1)
             ctx.tol = mpf_mul(hundred, eps)
+        elif tol is False:
+            ctx.tol = fzero
         else:
             ctx.tol = ctx._convert_tol(tol)
 
         ctx.tolerance = ctx.make_mpf(ctx.tol)
-        ctx.max_denom = int(1/ctx.tolerance)
+
+        if not ctx.tolerance:
+            ctx.max_denom = 1000000
+        else:
+            ctx.max_denom = int(1/ctx.tolerance)
 
         ctx.zero = ctx.make_mpf(fzero)
         ctx.one = ctx.make_mpf(fone)

@@ -475,7 +475,7 @@ def test_Domain_get_exact():
 
 
 def test_Domain_convert():
-    assert QQ.convert(10e-52) != QQ(0)
+    assert QQ.convert(10e-52) == QQ(1684996666696915, 1684996666696914987166688442938726917102321526408785780068975640576)
 
     R, x = ring("x", ZZ)
     assert ZZ.convert(x - x) == 0
