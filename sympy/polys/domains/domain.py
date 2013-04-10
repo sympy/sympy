@@ -3,7 +3,7 @@
 from sympy.polys.domains.domainelement import DomainElement
 
 from sympy.core import Basic, sympify
-from sympy.core.compatibility import SYMPY_INTS, is_sequence
+from sympy.core.compatibility import SYMPY_INTS, HAS_GMPY, is_sequence
 
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
 from sympy.polys.monomialtools import lex
@@ -58,6 +58,10 @@ class Domain(object):
     def new(self, *args):
         return self.dtype(*args)
 
+    @property
+    def tp(self):
+        return self.dtype
+
     def __call__(self, *args):
         """Construct an element of ``self`` domain from ``args``. """
         return self.new(*args)
@@ -90,8 +94,27 @@ class Domain(object):
         if self.of_type(element):
             return element
 
-        if isinstance(element, SYMPY_INTS):
-            return self.new(element)
+        from sympy.polys.domains import PythonIntegerRing, GMPYIntegerRing, GMPYRationalField, RealField, ComplexField
+
+        if isinstance(element, (int, long)):
+            return self.convert_from(element, PythonIntegerRing())
+
+        if HAS_GMPY:
+            integers = GMPYIntegerRing()
+            if isinstance(element, integers.tp):
+                return self.convert_from(element, integers)
+
+            rationals = GMPYRationalField()
+            if isinstance(element, rationals.tp):
+                return self.convert_from(element, rationals)
+
+        if isinstance(element, float):
+            parent = RealField(tol=False)
+            return self.convert_from(parent(element), parent)
+
+        if isinstance(element, complex):
+            parent = ComplexField(tol=False)
+            return self.convert_from(parent(element), parent)
 
         if isinstance(element, DomainElement):
             return self.convert_from(element, element.parent())
@@ -100,20 +123,26 @@ class Domain(object):
         if self.is_Numerical and getattr(element, 'is_ground', False):
             return self.convert(element.LC())
 
-        if not is_sequence(element):
+        if isinstance(element, Basic):
             try:
-                element = sympify(element)
-
-                if isinstance(element, Basic):
-                    return self.from_sympy(element)
+                return self.from_sympy(element)
             except (TypeError, ValueError):
                 pass
+        else: # TODO: remove this branch
+            if not is_sequence(element):
+                try:
+                    element = sympify(element)
+
+                    if isinstance(element, Basic):
+                        return self.from_sympy(element)
+                except (TypeError, ValueError):
+                    pass
 
         raise CoercionFailed("can't convert %s of type %s to %s" % (element, type(element), self))
 
-    def of_type(self, a):
+    def of_type(self, element):
         """Check if ``a`` is of type ``dtype``. """
-        return type(a) == type(self.one)
+        return isinstance(element, self.tp) # XXX: this isn't correct, e.g. PolyElement
 
     def __contains__(self, a):
         """Check if ``a`` belongs to this domain. """

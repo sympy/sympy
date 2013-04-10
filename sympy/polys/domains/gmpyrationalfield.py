@@ -16,6 +16,7 @@ class GMPYRationalField(RationalField):
     dtype = GMPYRational
     zero = dtype(0)
     one = dtype(1)
+    tp = type(one)
     alias = 'QQ_gmpy'
 
     def __init__(self):
