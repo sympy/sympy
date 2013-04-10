@@ -19,6 +19,11 @@ class PythonRationalField(RationalField):
     def __init__(self):
         pass
 
+    def get_ring(self):
+        """Returns ring associated with ``self``. """
+        from sympy.polys.domains import PythonIntegerRing
+        return PythonIntegerRing()
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return SymPyRational(a.numerator, a.denominator)
@@ -29,7 +34,8 @@ class PythonRationalField(RationalField):
             return PythonRational(a.p, a.q)
         elif a.is_Float:
             from sympy.polys.domains import RR
-            return PythonRational(*RR.to_rational(a))
+            p, q = RR.to_rational(a)
+            return PythonRational(int(p), int(q))
         else:
             raise CoercionFailed("expected `Rational` object, got %s" % a)
 
@@ -52,7 +58,8 @@ class PythonRationalField(RationalField):
 
     def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
-        return PythonRational(*K0.to_rational(a))
+        p, q = K0.to_rational(a)
+        return PythonRational(int(p), int(q))
 
     def numer(self, a):
         """Returns numerator of `a`. """

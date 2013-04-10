@@ -21,6 +21,11 @@ class GMPYRationalField(RationalField):
     def __init__(self):
         pass
 
+    def get_ring(self):
+        """Returns ring associated with ``self``. """
+        from sympy.polys.domains import GMPYIntegerRing
+        return GMPYIntegerRing()
+
     def to_sympy(self, a):
         """Convert `a` to a SymPy object. """
         return SymPyRational(int(gmpy_numer(a)),
