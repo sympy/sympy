@@ -17,7 +17,7 @@ def hadamard_product(*matrices):
     >>> hadamard_product(A, B)
     A.*B
     >>> hadamard_product(A, B)[0, 1]
-    A_01*B_01
+    A[0, 1]*B[0, 1]
     """
     if not matrices:
         raise TypeError("Empty Hadamard product is undefined")
