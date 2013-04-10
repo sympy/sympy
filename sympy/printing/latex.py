@@ -37,6 +37,7 @@ class LatexPrinter(Printer):
         "fold_frac_powers": False,
         "fold_func_brackets": False,
         "fold_short_frac": True,
+        "long_frac_ratio": 2,
         "mul_symbol": None,
         "inv_trig_style": "abbreviated",
         "mat_str": "smallmatrix",
@@ -269,7 +270,7 @@ class LatexPrinter(Printer):
             snumer = convert(numer)
             sdenom = convert(denom)
             ldenom = len(sdenom.split())
-            ratio = 2
+            ratio = self._settings['long_frac_ratio']
             if self._settings['fold_short_frac'] \
                     and ldenom <= 2 and not "^" in sdenom:
                 # handle short fractions
@@ -1590,8 +1591,8 @@ def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
 
-    >>> from sympy import latex, sin, asin, Matrix, Rational
-    >>> from sympy.abc import x, y, mu, tau
+    >>> from sympy import latex, pi, sin, asin, Integral, Matrix, Rational
+    >>> from sympy.abc import x, y, mu, r, tau
 
     >>> latex((2*tau)**Rational(7,2))
     '8 \\sqrt{2} \\tau^{\\frac{7}{2}}'
@@ -1649,6 +1650,15 @@ def latex(expr, **settings):
     '3 x^{2} / y'
     >>> latex(3*x**2/y, fold_short_frac=False)
     '\\frac{3 x^{2}}{y}'
+
+    long_frac_ratio: The allowed ratio of the width of the numerator to the
+    width of the denominator before we start breaking off long fractions.
+    The default value is 2.
+
+    >>> latex(Integral(r, r)/2/pi, long_frac_ratio=2, fold_short_frac=False)
+    '\\frac{\\int r\\, dr}{2 \\pi}'
+    >>> latex(Integral(r, r)/2/pi, long_frac_ratio=0, fold_short_frac=False)
+    '\\frac{1}{2 \\pi} \\int r\\, dr'
 
     mul_symbol: The symbol to use for multiplication. Can be one of None,
     "ldot", "dot", or "times".
