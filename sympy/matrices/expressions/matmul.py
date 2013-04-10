@@ -1,4 +1,4 @@
-from sympy.core import Mul, Basic, sympify
+from sympy.core import Mul, Basic, sympify, Add
 from sympy.functions import transpose, adjoint
 from sympy.matrices.expressions.transpose import transpose
 from sympy.strategies import (rm_id, unpack, condition, debug, flatten, exhaust,
@@ -51,7 +51,10 @@ class MatMul(MatrixExpr):
         Y = MatMul(*tail)
 
         from sympy import Dummy, Sum
+        from sympy.matrices import ImmutableMatrix, MatrixBase
         k = Dummy('k', integer=True)
+        if X.has(ImmutableMatrix) or Y.has(ImmutableMatrix):
+            return coeff*Add(*[X[i, k]*Y[k, j] for k in range(X.cols)])
         result = Sum(coeff*X[i, k]*Y[k, j], (k, 0, X.cols - 1))
         return result.doit() if expand else result
 
