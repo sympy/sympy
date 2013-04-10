@@ -6,10 +6,9 @@ from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
 from sympy import symbols,log,simplify,diff,cos,sin
 from sympy.ga.manifold import Manifold
 
-Format()
-
 def Test_Reciprocal_Frame():
     Print_Function()
+    Format()
     coords = symbols('x y z')
     (ex,ey,ez,grad) = MV.setup('e_x e_y e_z',metric='[1,1,1]',coords=coords)
 

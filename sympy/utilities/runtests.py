@@ -542,10 +542,7 @@ def _doctest(*paths, **kwargs):
         "doc/src/modules/plotting.rst",  # generates live plots
         "sympy/statistics",                # prints a deprecation
         "doc/src/modules/statistics.rst",  # warning (the module is deprecated)
-        "sympy/utilities/compilef.py",  # needs tcc
-        "sympy/utilities/autowrap.py",  # needs installed compiler
-        "sympy/conftest.py",  # needs py.test
-        "sympy/utilities/benchmarking.py"  # needs py.test
+        "sympy/utilities/compilef.py"  # needs tcc
     ])
 
     if import_module('numpy') is None:
@@ -556,8 +553,7 @@ def _doctest(*paths, **kwargs):
             "examples/advanced/autowrap_ufuncify.py",
             "examples/intermediate/sample.py",
             "examples/intermediate/mplot2d.py",
-            "examples/intermediate/mplot3d.py",
-            "examples/ga/manifold_check.py"
+            "examples/intermediate/mplot3d.py"
         ])
     else:
         if import_module('matplotlib') is None:
