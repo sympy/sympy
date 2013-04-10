@@ -1710,7 +1710,8 @@ def test_sympy__matrices__expressions__matexpr__MatrixExpr():
 
 def test_sympy__matrices__expressions__matexpr__MatrixElement():
     from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-    assert _test_args(MatrixElement(MatrixSymbol('A', 3, 5), 2, 3))
+    from sympy import S
+    assert _test_args(MatrixElement(MatrixSymbol('A', 3, 5), S(2), S(3)))
 
 @XFAIL
 def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
@@ -1776,13 +1777,13 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
-def test_sympy__matrices__expressions__fft__DFT():
-    from sympy.matrices.expressions.fft import DFT
+def test_sympy__matrices__expressions__fourier__DFT():
+    from sympy.matrices.expressions.fourier import DFT
     from sympy import S
     assert _test_args(DFT(S(2)))
 
-def test_sympy__matrices__expressions__fft__IDFT():
-    from sympy.matrices.expressions.fft import IDFT
+def test_sympy__matrices__expressions__fourier__IDFT():
+    from sympy.matrices.expressions.fourier import IDFT
     from sympy import S
     assert _test_args(IDFT(S(2)))
 
