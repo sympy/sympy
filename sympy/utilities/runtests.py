@@ -545,8 +545,7 @@ def _doctest(*paths, **kwargs):
         "sympy/utilities/compilef.py",  # needs tcc
         "sympy/utilities/autowrap.py",  # needs installed compiler
         "sympy/conftest.py",  # needs py.test
-        "sympy/utilities/benchmarking.py",  # needs py.test
-        "examples/advanced/fem.py" #needs tcc
+        "sympy/utilities/benchmarking.py"  # needs py.test
     ])
 
     if import_module('numpy') is None:
@@ -570,9 +569,6 @@ def _doctest(*paths, **kwargs):
             # don't display matplotlib windows
             from sympy.plotting.plot import unset_show
             unset_show()
-
-        # can be removed once a fix for Issue 3696 is merged
-        blacklist.extend(["sympy/galgebra/latex_ex.py"])
 
     if import_module('pyglet') is None:
         blacklist.extend(["sympy/plotting/pygletplot"])
