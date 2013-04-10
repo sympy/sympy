@@ -4,14 +4,17 @@ import operator
 
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.polyerrors import CoercionFailed
+from sympy.polys.domains.domainelement import DomainElement
 
-
-class ModularInteger(PicklableWithSlots):
+class ModularInteger(PicklableWithSlots, DomainElement):
     """A class representing a modular integer. """
 
-    mod, dom, sym = None, None, None
+    mod, dom, sym, _parent = None, None, None, None
 
     __slots__ = ['val']
+
+    def parent(self):
+        return self._parent
 
     def __init__(self, val):
         if isinstance(val, self.__class__):
@@ -168,14 +171,8 @@ class ModularInteger(PicklableWithSlots):
 
 _modular_integer_cache = {}
 
-
-def ModularIntegerFactory(_mod, _dom=None, _sym=True):
+def ModularIntegerFactory(_mod, _dom, _sym, parent):
     """Create custom class for specific integer modulus."""
-    if _dom is None:
-        from sympy.polys.domains import ZZ as _dom
-    elif not _dom.is_ZZ:
-        raise TypeError("expected an integer ring, got %s" % _dom)
-
     try:
         _mod = _dom.convert(_mod)
     except CoercionFailed:
@@ -193,6 +190,7 @@ def ModularIntegerFactory(_mod, _dom=None, _sym=True):
     except KeyError:
         class cls(ModularInteger):
             mod, dom, sym = _mod, _dom, _sym
+            _parent = parent
 
         if _sym:
             cls.__name__ = "SymmetricModularIntegerMod%s" % _mod
