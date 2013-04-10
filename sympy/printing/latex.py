@@ -268,21 +268,26 @@ class LatexPrinter(Printer):
 
             snumer = convert(numer)
             sdenom = convert(denom)
+            ldenom = len(sdenom.split())
             ratio = 2
             if self._settings['fold_short_frac'] \
-                    and len(sdenom.split()) <= 2 and not "^" in sdenom:
+                    and ldenom <= 2 and not "^" in sdenom:
+                # handle short fractions
                 if self._needs_mul_brackets(numer, last=False):
                     tex += r"\left(%s\right) / %s" % (snumer, sdenom)
                 else:
                     tex += r"%s / %s" % (snumer, sdenom)
-            elif len(snumer.split()) > ratio*len(sdenom.split()):
+            elif len(snumer.split()) > ratio*ldenom:
+                # handle long fractions
                 if self._needs_mul_brackets(numer, last=True):
                     tex += r"\frac{1}{%s} \left(%s\right)" % (sdenom, snumer)
                 elif numer.is_Mul:
+                    # split a long numerator
                     a = S.One
                     b = S.One
                     for x in numer.args:
-                        if x.is_Add or len(convert(a*x).split()) > ratio*len(sdenom.split()) or \
+                        if self._needs_mul_brackets(x, last=False) or \
+                                len(convert(a*x).split()) > ratio*ldenom or \
                                 (b.is_commutative is x.is_commutative is False):
                             b *= x
                         else:
