@@ -418,6 +418,9 @@ def telescopic(L, R, limits):
 
 
 def eval_sum(f, limits):
+    from sympy.concrete.delta import deltasummation, _has_simple_delta
+    from sympy.functions import KroneckerDelta
+
     (i, a, b) = limits
     if f is S.Zero:
         return S.Zero
@@ -425,6 +428,9 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+
+    if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
+        return deltasummation(f, limits)
 
     dif = b - a
     definite = dif.is_Integer

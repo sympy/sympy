@@ -137,7 +137,9 @@ class Product(Expr):
         return Product(self.function.conjugate(), *self.limits)
 
     def _eval_product(self, term, limits):
-        from sympy import summation
+        from sympy.concrete.delta import deltaproduct, _has_simple_delta
+        from sympy.concrete.summations import summation
+        from sympy.functions import KroneckerDelta
 
         (k, a, n) = limits
 
@@ -146,6 +148,9 @@ class Product(Expr):
 
         if a == n:
             return term.subs(k, a)
+
+        if term.has(KroneckerDelta) and _has_simple_delta(term, limits[0]):
+            return deltaproduct(term, limits)
 
         dif = n - a
         if dif.is_Integer:
