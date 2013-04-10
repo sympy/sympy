@@ -918,6 +918,9 @@ def test_risch_option():
     # TODO: How to test risch=False?
 
 def test_issue_3729():
+    # TODO: Currently `h' is the result (all three are equivalent). Improve
+    # simplify() to find the form with simplest real coefficients.
     f = 1/(1.08*x**2 - 4.3)
     g = 300.0/(324.0*x**2 - 1290.0)
-    assert integrate(f, x).diff(x).simplify() in [f, g]
+    h = 0.925925925925926/(1.0*x**2 - 3.98148148148148)
+    assert integrate(f, x).diff(x).simplify().equals(f) is True

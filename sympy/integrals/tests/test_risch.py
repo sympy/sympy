@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import with_statement
 from sympy import (Poly, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin)
+    Symbol, Lambda, sin, factor)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -101,31 +101,47 @@ def test_canonical_representation():
 
 def test_hermite_reduce():
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+
     assert hermite_reduce(Poly(x - t, t), Poly(t**2, t), DE) == \
         ((Poly(-x, t), Poly(t, t)), (Poly(0, t), Poly(1, t)), (Poly(-x, t), Poly(1, t)))
+
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(-t**2 - t/x - (1 - nu**2/x**2), t)]})
-    # TODO: Fix this domain='EX' bug
-    assert hermite_reduce(Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 -
-    (x**2 - nu**2)*t - x**5/4, t), Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 +
-    x**4 + x**6/4, t), DE) == \
-        ((Poly(-1 - x**2/4, t, domain='EX'), Poly(t**2 + 1 + x**2/2, t, domain='EX')),
-        (Poly((2*nu**2 + x**4)/-(2*x**2)*t - (1 + x**2)/x, t, domain='EX', expand=False),
-        Poly(t**2 + 1 + x**2/2, t, domain='EX')), (Poly(t + 1/x, t, domain='EX'),
-        Poly(1, t, domain='EX')))
+
+    assert hermite_reduce(
+            Poly(x**2*t**5 + x*t**4 - nu**2*t**3 - x*(x**2 + 1)*t**2 - (x**2 - nu**2)*t - x**5/4, t),
+            Poly(x**2*t**4 + x**2*(x**2 + 2)*t**2 + x**2 + x**4 + x**6/4, t), DE) == \
+        ((Poly(-x**2 - 4, t), Poly(4*t**2 + 2*x**2 + 4, t)),
+         (Poly((-2*nu**2 - x**4)*t - (2*x**3 + 2*x), t), Poly(2*x**2*t**2 + x**4 + 2*x**2, t)),
+         (Poly(x*t + 1, t), Poly(x, t)))
+
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
-    assert hermite_reduce(Poly(-t**2 + 2*t + 2, t),
-    Poly(-x*t**2 + 2*x*t - x, t), DE) == \
-        ((Poly(3, t), Poly(t - 1, t)), (Poly(0, t), Poly(1, t)), (Poly(1, t), Poly(x, t)))
-    assert hermite_reduce(Poly(-x**2*t**6 + (-1 - 2*x**3 + x**4)*t**3 +
-        (-3 - 3*x**4)*t**2 - 2*x*t - x - 3*x**2, t),
-        Poly(x**4*t**6 - 2*x**2*t**3 + 1, t), DE) == \
-        ((Poly(x**3*t + 1 + x**4, t), Poly(x**3*t**3 - x, t)), (Poly(0, t),
-        Poly(1, t)), (Poly(-1, t), Poly(x**2, t)))
-    assert hermite_reduce(Poly((-2 + 3*x)*t**3 + (-1 + x)*t**2 +
-    (-4*x + 2*x**2)*t + x**2, t), Poly(x*t**6 - 4*x**2*t**5 +
-    6*x**3*t**4 - 4*x**4*t**3 + x**5*t**2, t), DE) == \
-        ((Poly(3*t**2 + t + 3*x, t), Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 -
-        3*x**3*t, t)), (Poly(0, t), Poly(1, t)), (Poly(0, t), Poly(1, t)))
+
+    #assert hermite_reduce(Poly((-2 + 3*x)*t**3 + (-1 + x)*t**2 +
+    #(-4*x + 2*x**2)*t + x**2, t), Poly(x*t**6 - 4*x**2*t**5 +
+    #6*x**3*t**4 - 4*x**4*t**3 + x**5*t**2, t), DE) == \
+    #   ((Poly(3*t**2 + t + 3*x, t), Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 -
+    #   3*x**3*t, t)), (Poly(0, t), Poly(1, t)), (Poly(0, t), Poly(1, t)))
+
+    assert hermite_reduce(
+            Poly(-t**2 + 2*t + 2, t),
+            Poly(-x*t**2 + 2*x*t - x, t), DE) == \
+        ((Poly(3, t), Poly(t - 1, t)),
+         (Poly(0, t), Poly(1, t)),
+         (Poly(1, t), Poly(x, t)))
+
+    assert hermite_reduce(
+            Poly(-x**2*t**6 + (-1 - 2*x**3 + x**4)*t**3 + (-3 - 3*x**4)*t**2 - 2*x*t - x - 3*x**2, t),
+            Poly(x**4*t**6 - 2*x**2*t**3 + 1, t), DE) == \
+        ((Poly(x**3*t + x**4 + 1, t), Poly(x**3*t**3 - x, t)),
+         (Poly(0, t), Poly(1, t)),
+         (Poly(-1, t), Poly(x**2, t)))
+
+    assert hermite_reduce(
+            Poly((-2 + 3*x)*t**3 + (-1 + x)*t**2 + (-4*x + 2*x**2)*t + x**2, t),
+            Poly(x*t**6 - 4*x**2*t**5 + 6*x**3*t**4 - 4*x**4*t**3 + x**5*t**2, t), DE) == \
+        ((Poly(3*t**2 + t + 3*x, t), Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 - 3*x**3*t, t)),
+         (Poly(0, t), Poly(1, t)),
+         (Poly(0, t), Poly(1, t)))
 
 
 def test_polynomial_reduce():
@@ -214,23 +230,25 @@ def test_integrate_hyperexponential():
 
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t0), Poly(2*x*t1, t1)],
         'Tfuncs': [log, Lambda(i, exp(i**2))]})
-    assert integrate_hyperexponential(Poly((8*x**7 - 12*x**5 + 6*x**3 - x)*t1**4 +
-    (8*t0*x**7 - 8*t0*x**6 - 4*t0*x**5 + 2*t0*x**3 + 2*t0*x**2 - t0*x +
-    24*x**8 - 36*x**6 - 4*x**5 + 22*x**4 + 4*x**3 - 7*x**2 - x + 1)*t1**3
-    + (8*t0*x**8 - 4*t0*x**6 - 16*t0*x**5 - 2*t0*x**4 + 12*t0*x**3 +
-    t0*x**2 - 2*t0*x + 24*x**9 - 36*x**7 - 8*x**6 + 22*x**5 + 12*x**4 -
-    7*x**3 - 6*x**2 + x + 1)*t1**2 + (8*t0*x**8 - 8*t0*x**6 - 16*t0*x**5 +
-    6*t0*x**4 + 10*t0*x**3 - 2*t0*x**2 - t0*x + 8*x**10 - 12*x**8 - 4*x**7
-    + 2*x**6 + 12*x**5 + 3*x**4 - 9*x**3 - x**2 + 2*x)*t1 + 8*t0*x**7 -
-    12*t0*x**6 - 4*t0*x**5 + 8*t0*x**4 - t0*x**2 - 4*x**7 + 4*x**6 +
-    4*x**5 - 4*x**4 - x**3 + x**2, t1), Poly((8*x**7 - 12*x**5 + 6*x**3 -
-    x)*t1**4 + (24*x**8 + 8*x**7 - 36*x**6 - 12*x**5 + 18*x**4 + 6*x**3 -
-    3*x**2 - x)*t1**3 + (24*x**9 + 24*x**8 - 36*x**7 - 36*x**6 + 18*x**5 +
-    18*x**4 - 3*x**3 - 3*x**2)*t1**2 + (8*x**10 + 24*x**9 - 12*x**8 -
-    36*x**7 + 6*x**6 + 18*x**5 - x**4 - 3*x**3)*t1 + 8*x**10 - 12*x**8 +
-    6*x**6 - x**4, t1), DE) == \
-        (-(x*log(x) - log(x))/(2*x**3 - x + (2*x**2 - 1)*exp(x**2)),
-        NonElementaryIntegral(exp(x**2)/(exp(x**2) + 1), x), False)
+
+    elem, nonelem, b = integrate_hyperexponential(Poly((8*x**7 - 12*x**5 + 6*x**3 - x)*t1**4 +
+        (8*t0*x**7 - 8*t0*x**6 - 4*t0*x**5 + 2*t0*x**3 + 2*t0*x**2 - t0*x +
+        24*x**8 - 36*x**6 - 4*x**5 + 22*x**4 + 4*x**3 - 7*x**2 - x + 1)*t1**3
+        + (8*t0*x**8 - 4*t0*x**6 - 16*t0*x**5 - 2*t0*x**4 + 12*t0*x**3 +
+        t0*x**2 - 2*t0*x + 24*x**9 - 36*x**7 - 8*x**6 + 22*x**5 + 12*x**4 -
+        7*x**3 - 6*x**2 + x + 1)*t1**2 + (8*t0*x**8 - 8*t0*x**6 - 16*t0*x**5 +
+        6*t0*x**4 + 10*t0*x**3 - 2*t0*x**2 - t0*x + 8*x**10 - 12*x**8 - 4*x**7
+        + 2*x**6 + 12*x**5 + 3*x**4 - 9*x**3 - x**2 + 2*x)*t1 + 8*t0*x**7 -
+        12*t0*x**6 - 4*t0*x**5 + 8*t0*x**4 - t0*x**2 - 4*x**7 + 4*x**6 +
+        4*x**5 - 4*x**4 - x**3 + x**2, t1), Poly((8*x**7 - 12*x**5 + 6*x**3 -
+        x)*t1**4 + (24*x**8 + 8*x**7 - 36*x**6 - 12*x**5 + 18*x**4 + 6*x**3 -
+        3*x**2 - x)*t1**3 + (24*x**9 + 24*x**8 - 36*x**7 - 36*x**6 + 18*x**5 +
+        18*x**4 - 3*x**3 - 3*x**2)*t1**2 + (8*x**10 + 24*x**9 - 12*x**8 -
+        36*x**7 + 6*x**6 + 18*x**5 - x**4 - 3*x**3)*t1 + 8*x**10 - 12*x**8 +
+        6*x**6 - x**4, t1), DE)
+
+    assert factor(elem) == -((x - 1)*log(x)/((x + exp(x**2))*(2*x**2 - 1)))
+    assert (nonelem, b) == (NonElementaryIntegral(exp(x**2)/(exp(x**2) + 1), x), False)
 
 def test_integrate_hyperexponential_polynomial():
     # Without proper cancellation within integrate_hyperexponential_polynomial(),
