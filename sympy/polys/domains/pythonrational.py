@@ -1,6 +1,5 @@
 """Rational number type based on Python integers. """
 
-from sympy.core.numbers import igcd
 from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains.domainelement import DomainElement
@@ -35,20 +34,30 @@ class PythonRational(DefaultPrinting, PicklableWithSlots, DomainElement):
         from sympy.polys.domains import PythonRationalField
         return PythonRationalField()
 
-    def __init__(self, p, q=None):
-        if q is None:
-            self.p = p
+    def __init__(self, p, q=1):
+        if not q:
+            raise ZeroDivisionError('rational number')
+        elif q < 0:
+            p, q = -p, -q
+
+        if not p:
+            self.p = 0
             self.q = 1
+        elif p == 1 or q == 1:
+            self.p = p
+            self.q = q
         else:
-            if not q:
-                raise ZeroDivisionError('rational number')
-            elif q < 0:
-                p, q = -p, -q
+            x, y = p, q
 
-            g = igcd(p, q)
+            while y:
+                x, y = y, x % y
 
-            self.p = p//g
-            self.q = q//g
+            if x != 1:
+                p //= x
+                q //= x
+
+            self.p = p
+            self.q = q
 
     @classmethod
     def new(cls, p, q):
