@@ -260,7 +260,7 @@ class Poly(Expr):
         domain, symbols = self.rep.dom, set()
 
         if domain.is_Composite:
-            for gen in domain.gens:
+            for gen in domain.symbols:
                 symbols |= gen.free_symbols
         elif domain.is_EX:
             for coeff in self.coeffs():
@@ -540,7 +540,7 @@ class Poly(Expr):
         if x in f.gens and y not in f.gens:
             dom = f.get_domain()
 
-            if not dom.is_Composite or y not in dom.gens:
+            if not dom.is_Composite or y not in dom.symbols:
                 gens = list(f.gens)
                 gens[gens.index(x)] = y
                 return f.per(f.rep, gens=gens)
@@ -1042,9 +1042,9 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'inject')
 
         if front:
-            gens = dom.gens + f.gens
+            gens = dom.symbols + f.gens
         else:
-            gens = f.gens + dom.gens
+            gens = f.gens + dom.symbols
 
         return f.new(result, *gens)
 
@@ -2242,7 +2242,7 @@ class Poly(Expr):
                 raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
             else:
                 a_domain, [a] = construct_domain([a])
-                new_domain = f.get_domain().unify(a_domain, gens=f.gens)
+                new_domain = f.get_domain().unify_with_symbols(a_domain, f.gens)
 
                 f = f.set_domain(new_domain)
                 a = new_domain.convert(a, a_domain)

@@ -1469,35 +1469,35 @@ class PrettyPrinter(Printer):
             return self._print(pretty_symbol(prefix + "_" + str(domain.precision)))
 
     def _print_PolynomialRing(self, expr):
-        args = list(expr.gens)
+        args = list(expr.symbols)
 
         if not expr.order.is_default:
             order = prettyForm(*prettyForm("order=").right(self._print(expr.order)))
             args.append(order)
 
         pform = self._print_seq(args, '[', ']')
-        pform = prettyForm(*pform.left(self._print(expr.dom)))
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
 
         return pform
 
     def _print_FractionField(self, expr):
-        args = list(expr.gens)
+        args = list(expr.symbols)
 
         if not expr.order.is_default:
             order = prettyForm(*prettyForm("order=").right(self._print(expr.order)))
             args.append(order)
 
         pform = self._print_seq(args, '(', ')')
-        pform = prettyForm(*pform.left(self._print(expr.dom)))
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
 
         return pform
 
     def _print_PolynomialRingBase(self, expr):
-        g = expr.gens
+        g = expr.symbols
         if str(expr.order) != str(expr.default_order):
             g = g + ("order=" + str(expr.order),)
         pform = self._print_seq(g, '[', ']')
-        pform = prettyForm(*pform.left(self._print(expr.dom)))
+        pform = prettyForm(*pform.left(self._print(expr.domain)))
 
         return pform
 

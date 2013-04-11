@@ -218,13 +218,13 @@ class Domain(object):
     def from_GeneralizedPolynomialRing(K1, a, K0):
         return K1.from_FractionField(a, K0)
 
-    def unify_with_gens(K0, K1, gens):
-        if (K0.is_Composite and (set(K0.gens) & set(gens))) or (K1.is_Composite and (set(K1.gens) & set(gens))):
-            raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(gens)))
+    def unify_with_symbols(K0, K1, symbols):
+        if (K0.is_Composite and (set(K0.symbols) & set(symbols))) or (K1.is_Composite and (set(K1.symbols) & set(symbols))):
+            raise UnificationFailed("can't unify %s with %s, given %s generators" % (K0, K1, tuple(symbols)))
 
         return K0.unify(K1)
 
-    def unify(K0, K1, gens=None):
+    def unify(K0, K1, symbols=None):
         """
         Construct a minimal domain that contains elements of ``K0`` and ``K1``.
 
@@ -241,8 +241,8 @@ class Domain(object):
         - ``EX``
 
         """
-        if gens is not None:
-            return K0.unify_with_gens(K1, gens)
+        if symbols is not None:
+            return K0.unify_with_symbols(K1, symbols)
 
         if K0 == K1:
             return K0
@@ -256,11 +256,11 @@ class Domain(object):
             K0_ground = K0.dom if K0.is_Composite else K0
             K1_ground = K1.dom if K1.is_Composite else K1
 
-            K0_gens = K0.gens if K0.is_Composite else ()
-            K1_gens = K1.gens if K1.is_Composite else ()
+            K0_symbols = K0.symbols if K0.is_Composite else ()
+            K1_symbols = K1.symbols if K1.is_Composite else ()
 
             domain = K0_ground.unify(K1_ground)
-            gens = _unify_gens(K0_gens, K1_gens)
+            symbols = _unify_gens(K0_symbols, K1_symbols)
 
             if ((K0.is_FractionField and K1.is_PolynomialRing or
                  K1.is_FractionField and K0.is_PolynomialRing) and
@@ -272,7 +272,7 @@ class Domain(object):
             else:
                 cls = K1.__class__
 
-            return cls.init(domain, *gens)
+            return cls.init(domain, *symbols)
 
         def mkinexact(cls, K0, K1):
             prec = max(K0.precision, K1.precision)
@@ -347,13 +347,13 @@ class Domain(object):
         """Returns an exact domain associated with ``self``. """
         return self
 
-    def __getitem__(self, gens):
+    def __getitem__(self, symbols):
         """The mathematical way to make a polynomial ring. """
-        gens = sympify(gens)
-        if hasattr(gens, '__iter__'):
-            return self.poly_ring(*gens)
+        symbols = sympify(symbols)
+        if hasattr(symbols, '__iter__'):
+            return self.poly_ring(*symbols)
         else:
-            return self.poly_ring(gens)
+            return self.poly_ring(symbols)
 
     def poly_ring(self, *symbols, **kwargs):
         """Returns a polynomial ring, i.e. `K[X]`. """
@@ -379,7 +379,7 @@ class Domain(object):
         """Returns an algebraic field, i.e. `K(\\alpha, \dots)`. """
         raise DomainError("can't create algebraic field over %s" % self)
 
-    def inject(self, *gens):
+    def inject(self, *symbols):
         """Inject generators into this domain. """
         raise NotImplementedError
 

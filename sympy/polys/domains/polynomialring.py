@@ -13,15 +13,20 @@ class PolynomialRing(Ring, CompositeDomain):
     has_assoc_Field = True
 
     def __init__(self, ring):
+        self.ring = ring
         self.dtype = ring.dtype
-        self.ring  = ring
 
-        self.dom  = ring.domain
-        self.gens = ring.symbols
+        self.gens = ring.gens
+        self.ngens = ring.ngens
+        self.symbols = ring.symbols
+        self.domain = ring.domain
+
+        # TODO: remove this
+        self.dom = self.domain
 
     @classmethod
-    def init(cls, domain, *gens):
-        return domain.poly_ring(*gens)
+    def init(cls, domain, *symbols):
+        return domain.poly_ring(*symbols)
 
     def new(self, element):
         return self.ring.ring_new(element)
@@ -39,10 +44,10 @@ class PolynomialRing(Ring, CompositeDomain):
         return self.ring.order
 
     def __str__(self):
-        return str(self.dom) + '[' + ','.join(map(str, self.gens)) + ']'
+        return str(self.domain) + '[' + ','.join(map(str, self.symbols)) + ']'
 
     def __hash__(self):
-        return hash((self.__class__.__name__, self.dtype, self.dom, self.gens))
+        return hash((self.__class__.__name__, self.dtype, self.domain, self.symbols))
 
     def __eq__(self, other):
         """Returns `True` if two domains are equivalent. """
@@ -59,27 +64,27 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def from_ZZ_python(K1, a, K0):
         """Convert a Python `int` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_QQ_python(K1, a, K0):
         """Convert a Python `Fraction` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_ZZ_gmpy(K1, a, K0):
         """Convert a GMPY `mpz` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_QQ_gmpy(K1, a, K0):
         """Convert a GMPY `mpq` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
-        return K1(K1.dom.convert(a, K0))
+        return K1(K1.domain.convert(a, K0))
 
     def from_AlgebraicField(K1, a, K0):
         """Convert an algebraic number to ``dtype``. """
-        if K1.dom == K0:
+        if K1.domain == K0:
             return K1.new(a)
 
     def from_PolynomialRing(K1, a, K0):
@@ -104,19 +109,19 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def is_positive(self, a):
         """Returns True if `LC(a)` is positive. """
-        return self.dom.is_positive(a.LC)
+        return self.domain.is_positive(a.LC)
 
     def is_negative(self, a):
         """Returns True if `LC(a)` is negative. """
-        return self.dom.is_negative(a.LC)
+        return self.domain.is_negative(a.LC)
 
     def is_nonpositive(self, a):
         """Returns True if `LC(a)` is non-positive. """
-        return self.dom.is_nonpositive(a.LC)
+        return self.domain.is_nonpositive(a.LC)
 
     def is_nonnegative(self, a):
         """Returns True if `LC(a)` is non-negative. """
-        return self.dom.is_nonnegative(a.LC)
+        return self.domain.is_nonnegative(a.LC)
 
     def gcdex(self, a, b):
         """Extended GCD of `a` and `b`. """
@@ -132,4 +137,4 @@ class PolynomialRing(Ring, CompositeDomain):
 
     def factorial(self, a):
         """Returns factorial of `a`. """
-        return self.dtype(self.dom.factorial(a))
+        return self.dtype(self.domain.factorial(a))

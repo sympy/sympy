@@ -1618,7 +1618,7 @@ def dmp_inject(f, u, K, front=False):
     """
     f, h = dmp_to_dict(f, u), {}
 
-    v = len(K.gens) - 1
+    v = K.ngens - 1
 
     for f_monom, g in f.iteritems():
         g = g.to_dict()
@@ -1651,8 +1651,8 @@ def dmp_eject(f, u, K, front=False):
     """
     f, h = dmp_to_dict(f, u), {}
 
-    n = len(K.gens)
-    v = u - len(K.gens) + 1
+    n = K.ngens
+    v = u - K.ngens + 1
 
     for monom, c in f.iteritems():
         if front:

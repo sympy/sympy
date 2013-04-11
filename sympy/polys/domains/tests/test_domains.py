@@ -249,9 +249,9 @@ def test_Domain_unify_algebraic():
     assert sqrt5.unify(sqrt7.frac_field(x, y)) == sqrt57.frac_field(x, y)
     assert sqrt5.frac_field(x, y).unify(sqrt7) == sqrt57.frac_field(x, y)
 
-def test_Domain_unify_with_gens():
-    raises(UnificationFailed, lambda: ZZ[x, y].unify(ZZ, gens=(y, z)))
-    raises(UnificationFailed, lambda: ZZ.unify(ZZ[x, y], gens=(y, z)))
+def test_Domain_unify_with_symbols():
+    raises(UnificationFailed, lambda: ZZ[x, y].unify_with_symbols(ZZ, (y, z)))
+    raises(UnificationFailed, lambda: ZZ.unify_with_symbols(ZZ[x, y], (y, z)))
 
 def test_Domain__contains__():
     assert (0 in EX) is True

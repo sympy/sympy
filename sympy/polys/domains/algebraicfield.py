@@ -28,9 +28,10 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         self.orig_ext = ext
         self.ext = to_number_field(ext)
         self.mod = self.ext.minpoly.rep
-        self.dom = dom
+        self.domain = self.dom = dom
 
-        self.gens = (self.ext,)
+        self.ngens = 1
+        self.symbols = self.gens = (self.ext,)
         self.unit = self([dom(1), dom(0)])
 
         self.zero = self.dtype.zero(self.mod.rep, dom)

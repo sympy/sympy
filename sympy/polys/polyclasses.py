@@ -344,7 +344,7 @@ class DMP(PicklableWithSlots, CantSympify):
     def eject(f, dom, front=False):
         """Eject selected generators into the ground domain. """
         F = dmp_eject(f.rep, f.lev, dom, front=front)
-        return f.__class__(F, dom, f.lev - len(dom.gens))
+        return f.__class__(F, dom, f.lev - len(dom.symbols))
 
     def exclude(f):
         r"""

@@ -502,7 +502,7 @@ class Domain(Option):
     @classmethod
     def postprocess(cls, options):
         if 'gens' in options and 'domain' in options and options['domain'].is_Composite and \
-                (set(options['domain'].gens) & set(options['gens'])):
+                (set(options['domain'].symbols) & set(options['gens'])):
             raise GeneratorsError(
                 "ground domain and generators interfere together")
         elif ('gens' not in options or not options['gens']) and \

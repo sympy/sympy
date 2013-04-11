@@ -23,12 +23,13 @@ class FractionField(Field, CharacteristicZero, CompositeDomain):
             raise GeneratorsNeeded("generators not specified")
 
         lev = len(gens) - 1
+        self.ngens = len(gens)
 
         self.zero = self.dtype.zero(lev, dom, ring=self)
         self.one = self.dtype.one(lev, dom, ring=self)
 
-        self.dom = dom
-        self.gens = gens
+        self.domain = self.dom = dom
+        self.symbols = self.gens = gens
 
     def new(self, element):
         return self.dtype(element, self.dom, len(self.gens) - 1, ring=self)

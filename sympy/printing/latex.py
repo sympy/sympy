@@ -1311,22 +1311,22 @@ class LatexPrinter(Printer):
         return r"\mathbb{C}"
 
     def _print_PolynomialRing(self, expr):
-        domain = self._print(expr.dom)
-        gens = ", ".join(map(self._print, expr.gens))
-        return r"%s\left[%s\right]" % (domain, gens)
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
+        return r"%s\left[%s\right]" % (domain, symbols)
 
     def _print_FractionField(self, expr):
-        domain = self._print(expr.dom)
-        gens = ", ".join(map(self._print, expr.gens))
-        return r"%s\left(%s\right)" % (domain, gens)
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
+        return r"%s\left(%s\right)" % (domain, symbols)
 
     def _print_PolynomialRingBase(self, expr):
-        domain = self._print(expr.dom)
-        gens = ", ".join(map(self._print, expr.gens))
+        domain = self._print(expr.domain)
+        symbols = ", ".join(map(self._print, expr.symbols))
         inv = ""
         if not expr.is_Poly:
             inv = r"S_<^{-1}"
-        return r"%s%s\left[%s\right]" % (inv, domain, gens)
+        return r"%s%s\left[%s\right]" % (inv, domain, symbols)
 
     def _print_Poly(self, poly):
         cls = poly.__class__.__name__
