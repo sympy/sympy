@@ -126,11 +126,11 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
 
     import IPython
     if IPython.__version__ >= '0.11':
-        printable_containers = [tuple, list, set, frozenset]
+        printable_containers = [tuple, list, set, frozenset, dict]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
-        for cls in [object, str, dict] + printable_containers:
+        for cls in [object, str] + printable_containers:
             plaintext_formatter.for_type(cls, _print_plain)
 
         plaintext_formatter.for_type_by_name(
@@ -142,7 +142,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
 
         png_formatter = ip.display_formatter.formatters['image/png']
         latex_formatter = ip.display_formatter.formatters['text/latex']
-        latex_formatter.enabled = False #Disabled until IPython problems are resolved
+        latex_formatter.enabled = True
         if render_latex:
             png_formatter.for_type_by_name(
                 'sympy.core.basic', 'Basic', _print_latex_png
@@ -151,7 +151,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
                 'sympy.matrices.matrices', 'MatrixBase', _print_latex_png
             )
 
-            for cls in [dict, int, long, float] + printable_containers:
+            for cls in [int, long, float] + printable_containers:
                 png_formatter.for_type(cls, _print_latex_png)
             png_formatter.enabled = True
 
@@ -161,7 +161,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
             latex_formatter.for_type_by_name(
                 'sympy.matrices.matrices', 'MatrixBase', _print_latex_text
             )
-            for cls in printable_containers:
+            for cls in [int, long, float] + printable_containers:
                 latex_formatter.for_type(cls, _print_latex_text)
         else:
             png_formatter.enabled = False
