@@ -486,28 +486,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ring = p1.ring
         if isinstance(p2, PolyElement):
             if ring == p2.ring:
-                if len(p2) == 1:
-                    p = p1.copy()
-                    [(m, c)] = p2.items()
-                    nc = p.get(m, ring.domain.zero) + c
-                    if nc:
-                        p[m] = nc
+                p = p1.copy()
+                get = p.get
+                zero = ring.domain.zero
+                for k, v in p2.iteritems():
+                    v = get(k, zero) + v
+                    if v:
+                        p[k] = v
                     else:
-                        del p[m]
-                    return p
-                else:
-                    p = ring.zero
-                    for k, v in p1.iteritems():
-                        if k in p2:
-                            r = v + p2[k]
-                            if r:
-                                p[k] = r
-                        else:
-                            p[k] = v
-                    for k, v in p2.iteritems():
-                        if k not in p1:
-                            p[k] = v
-                    return p
+                        del p[k]
+                return p
             elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
@@ -568,28 +556,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ring = p1.ring
         if isinstance(p2, PolyElement):
             if ring == p2.ring:
-                if len(p2) == 1:
-                    p = p1.copy()
-                    [(m, c)] = p2.items()
-                    nc = p.get(m, ring.domain.zero) - c
-                    if nc:
-                        p[m] = nc
+                p = p1.copy()
+                get = p.get
+                zero = ring.domain.zero
+                for k, v in p2.iteritems():
+                    v = get(k, zero) - v
+                    if v:
+                        p[k] = v
                     else:
-                        del p[m]
-                    return p
-                else:
-                    p = ring.zero
-                    for k, v in p1.iteritems():
-                        if k in p2:
-                            r = v - p2[k]
-                            if r:
-                                p[k] = r
-                        else:
-                            p[k] = v
-                    for k, v in p2.iteritems():
-                        if k not in p1:
-                            p[k] = -v
-                    return p
+                        del p[k]
+                return p
             elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
