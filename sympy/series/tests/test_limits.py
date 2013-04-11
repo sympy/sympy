@@ -31,11 +31,10 @@ def test_basic1():
     assert limit(cos(x + y)/x, x, 0) == sign(cos(y))*oo
     raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) -
            log(y), y, oo))
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
+    raises(NotImplementedError, lambda: limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
-    assert limit(Sum(1/x, (x, 1, y)) - 1/y, y, oo) == Sum(1/x, (x, 1, oo))
     assert limit(gamma(1/x + 3), x, oo) == 2
     assert limit(S.NaN, x, -oo) == S.NaN
     assert limit(Order(2)*x, x, S.NaN) == S.NaN
