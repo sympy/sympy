@@ -74,6 +74,10 @@ def test_special_denom():
     assert special_denom(Poly(1, t0), Poly(I*k, t0), Poly(1, t0), Poly(t0, t0),
     Poly(1, t0), DE) == \
         (Poly(1, t0), Poly(I*k, t0), Poly(t0, t0), Poly(1, t0))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2+1, t)]})
+    assert special_denom(Poly(1, t), Poly(t**2, t), Poly(3, t), Poly(4*t**2 - 4, t),
+    Poly(t, t), DE) == \
+         (Poly(1, t), Poly(t**2/3, t), Poly(4*t, t), Poly(1, t, domain='ZZ'))
 
 
 @XFAIL
