@@ -45,8 +45,11 @@ class Mod(Function):
 
             # by ratio
             r = p/q
-            if r.is_number:
+            try:
                 d = int(r)
+            except TypeError:
+                pass
+            else:
                 if type(d) is int:
                     rv = p - d*q
                     if rv*q < 0:
