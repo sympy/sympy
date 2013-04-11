@@ -143,7 +143,7 @@ def test_FracElement___mul__():
     assert x*QQ(3,7) == QQ(3,7)*x == 3*x/7
 
     Fuv, u,v = field("u,v", ZZ);
-    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv.to_domain())
+    Fxyzt, x,y,z,t = field("x,y,z,t", Fuv)
 
     f = ((u + 1)*x*y + 1)/((v - 1)*z - t*u*v - 1)
     assert dict(f.numer) == {(1, 1, 0, 0): u + 1, (0, 0, 0, 0): 1}

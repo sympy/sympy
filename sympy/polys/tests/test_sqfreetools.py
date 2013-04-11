@@ -82,7 +82,7 @@ def test_dup_sqf():
     assert R.drop(x).dup_sqf_list(res) == (45796, [(h, 3)])
 
     Rt, t = ring("t", ZZ)
-    R, x = ring("x", Rt.to_domain())
+    R, x = ring("x", Rt)
     assert R.dup_sqf_list_include(t**3*x**2) == [(t**3, 1), (x, 2)]
 
 

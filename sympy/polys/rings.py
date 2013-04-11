@@ -15,6 +15,7 @@ from sympy.polys.polyutils import expr_from_dict, _dict_reorder
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
+from sympy.polys.polyoptions import Domain as DomainOpt
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities.magic import pollute
 
@@ -58,7 +59,7 @@ class PolyRing(DefaultPrinting, IPolys):
         dtype = PolyElement
         symbols = tuple(_parse_symbols(symbols))
         ngens = len(symbols)
-        domain = domain
+        domain = DomainOpt.preprocess(domain)
         order = order
 
         _hash = hash((cls.__name__, dtype, symbols, ngens, domain, order))

@@ -527,7 +527,7 @@ def test_dup_factor_list():
     assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f) and factors[0][1] == 1
 
     Rt, t = ring("t", ZZ)
-    R, x = ring("x", Rt.to_domain())
+    R, x = ring("x", Rt)
 
     f = 4*t*x**2 + 4*t**2*x
 
@@ -537,7 +537,7 @@ def test_dup_factor_list():
              (x + t, 1)])
 
     Rt, t = ring("t", QQ)
-    R, x = ring("x", Rt.to_domain())
+    R, x = ring("x", Rt)
 
     f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
@@ -570,12 +570,12 @@ def test_dmp_factor_list():
     assert R.dmp_factor_list(QQ(1, 7)) == (QQ(1, 7), [])
 
     Rt, t = ring("t", ZZ)
-    R, x, y = ring("x,y", Rt.to_domain())
+    R, x, y = ring("x,y", Rt)
     assert R.dmp_factor_list(0) == (0, [])
     assert R.dmp_factor_list(7) == (ZZ(7), [])
 
     Rt, t = ring("t", QQ)
-    R, x, y = ring("x,y", Rt.to_domain())
+    R, x, y = ring("x,y", Rt)
     assert R.dmp_factor_list(0) == (0, [])
     assert R.dmp_factor_list(QQ(1, 7)) == (QQ(1, 7), [])
 
@@ -634,7 +634,7 @@ def test_dmp_factor_list():
     assert coeff == RR(1.0) and len(factors) == 1 and factors[0][0].almosteq(f) and factors[0][1] == 1
 
     Rt, t = ring("t", ZZ)
-    R, x, y = ring("x,y", Rt.to_domain())
+    R, x, y = ring("x,y", Rt)
     f = 4*t*x**2 + 4*t**2*x
 
     assert R.dmp_factor_list(f) == \
@@ -643,7 +643,7 @@ def test_dmp_factor_list():
              (x + t, 1)])
 
     Rt, t = ring("t", QQ)
-    R, x, y = ring("x,y", Rt.to_domain())
+    R, x, y = ring("x,y", Rt)
     f = QQ(1, 2)*t*x**2 + QQ(1, 2)*t**2*x
 
     assert R.dmp_factor_list(f) == \

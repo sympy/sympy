@@ -11,7 +11,7 @@ from sympy.core import Symbol, symbols
 from sympy import sqrt
 
 def test_PolyRing___init__():
-    x, y, z = map(Symbol, "xyz")
+    x, y, z, t = map(Symbol, "xyzt")
 
     assert len(PolyRing("x,y,z", ZZ, lex).gens) == 3
     assert len(PolyRing(x, ZZ, lex).gens) == 1
@@ -20,6 +20,10 @@ def test_PolyRing___init__():
 
     raises(GeneratorsNeeded, lambda: PolyRing([], ZZ, lex))
     raises(GeneratorsError, lambda: PolyRing(0, ZZ, lex))
+
+    assert PolyRing("x", ZZ[t], lex).domain == ZZ[t]
+    assert PolyRing("x", 'ZZ[t]', lex).domain == ZZ[t]
+    assert PolyRing("x", PolyRing("t", ZZ, lex), lex).domain == ZZ[t]
 
 def test_PolyRing___hash__():
     R, x, y, z = ring("x,y,z", QQ)
@@ -74,7 +78,7 @@ def test_PolyElement___eq__():
     assert (1 != (x*y - x*y)) == True
 
     Rt, t = ring("t", ZZ)
-    R, x, y = ring("x,y", Rt.to_domain())
+    R, x, y = ring("x,y", Rt)
 
     assert (t**3*x/x == t**3) == True
     assert (t**3*x/x == t**4) == False
@@ -197,7 +201,7 @@ def test_PolyElement_coeffs():
 def test_PolyElement___add__():
     Rt, t = ring("t", ZZ)
     Ruv, u,v = ring("u,v", ZZ)
-    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+    Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert dict(x + 3*y) == {(1, 0, 0): 1, (0, 1, 0): 3}
 
@@ -215,14 +219,14 @@ def test_PolyElement___add__():
     raises(TypeError, lambda: u + t)
 
     Fuv, u,v = field("u,v", ZZ)
-    Rxyz, x,y,z = ring("x,y,z", Fuv.to_domain())
+    Rxyz, x,y,z = ring("x,y,z", Fuv)
 
     assert dict(u + x) == dict(x + u) == {(1, 0, 0): 1, (0, 0, 0): u}
 
 def test_PolyElement___sub__():
     Rt, t = ring("t", ZZ)
     Ruv, u,v = ring("u,v", ZZ)
-    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+    Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert dict(x - 3*y) == {(1, 0, 0): 1, (0, 1, 0): -3}
 
@@ -240,14 +244,14 @@ def test_PolyElement___sub__():
     raises(TypeError, lambda: u - t)
 
     Fuv, u,v = field("u,v", ZZ)
-    Rxyz, x,y,z = ring("x,y,z", Fuv.to_domain())
+    Rxyz, x,y,z = ring("x,y,z", Fuv)
 
     assert dict(-u + x) == dict(x - u) == {(1, 0, 0): 1, (0, 0, 0): -u}
 
 def test_PolyElement___mul__():
     Rt, t = ring("t", ZZ)
     Ruv, u,v = ring("u,v", ZZ)
-    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+    Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert dict(u*x) == dict(x*u) == {(1, 0, 0): u}
 
@@ -274,7 +278,7 @@ def test_PolyElement___mul__():
     raises(TypeError, lambda: u*t + z)
 
     Fuv, u,v = field("u,v", ZZ)
-    Rxyz, x,y,z = ring("x,y,z", Fuv.to_domain())
+    Rxyz, x,y,z = ring("x,y,z", Fuv)
 
     assert dict(u*x) == dict(x*u) == {(1, 0, 0): u}
 
@@ -298,7 +302,7 @@ def test_PolyElement___div__():
 
     Rt, t = ring("t", ZZ)
     Ruv, u,v = ring("u,v", ZZ)
-    Rxyz, x,y,z = ring("x,y,z", Ruv.to_domain())
+    Rxyz, x,y,z = ring("x,y,z", Ruv)
 
     assert dict((u**2*x + u)/u) == {(1, 0, 0): u, (0, 0, 0): 1}
     raises(TypeError, lambda: u/(u**2*x + u))
@@ -583,7 +587,7 @@ def test_PolyElement_cancel():
     assert f.cancel(-g) == (-F, G)
 
     Fx, x = field("x", ZZ)
-    Rt, t = ring("t", Fx.to_domain())
+    Rt, t = ring("t", Fx)
 
     f = (-x**2 - 4)/4*t
     g = t**2 + (x**2 + 2)/2

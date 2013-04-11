@@ -222,7 +222,7 @@ def test_dmp_subresultants():
     assert R.dmp_qq_collins_resultant(f, g) == r.drop(x)
 
     Rt, t = ring("t", ZZ)
-    Rx, x = ring("x", Rt.to_domain())
+    Rx, x = ring("x", Rt)
 
     f = x**6 - 5*x**4 + 5*x**2 + 4
     g = -6*t*x**5 + x**4 + 20*t*x**3 - 3*x**2 - 10*t*x + 6

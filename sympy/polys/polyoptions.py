@@ -3,17 +3,11 @@
 from sympy.core import S, Basic, sympify
 from sympy.utilities import numbered_symbols, topological_sort
 from sympy.utilities.iterables import has_dups
-
-from sympy.polys.polyerrors import (
-    GeneratorsError,
-    OptionError,
-    FlagError,
-)
+from sympy.polys.polyerrors import GeneratorsError, OptionError, FlagError
 
 import sympy.polys
 
 import re
-
 
 class Option(object):
     """Base class for all kinds of options. """
@@ -429,9 +423,11 @@ class Domain(Option):
 
     @classmethod
     def preprocess(cls, domain):
-        if not isinstance(domain, str):
+        if isinstance(domain, sympy.polys.domains.Domain):
             return domain
-        else:
+        elif hasattr(domain, 'to_domain'):
+            return domain.to_domain()
+        elif isinstance(domain, basestring):
             if domain in ['Z', 'ZZ']:
                 return sympy.polys.domains.ZZ
 
@@ -496,8 +492,7 @@ class Domain(Option):
                 gens = map(sympify, r.groups()[1].split(','))
                 return sympy.polys.domains.QQ.algebraic_field(*gens)
 
-            raise OptionError(
-                'expected a valid domain specification, got %s' % domain)
+        raise OptionError('expected a valid domain specification, got %s' % domain)
 
     @classmethod
     def postprocess(cls, options):

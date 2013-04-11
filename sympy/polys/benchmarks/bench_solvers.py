@@ -250,7 +250,7 @@ def time_to_expr_eqs_165x165():
 
 # Benchmark R_49: shows how fast are arithmetics in rational function fields.
 
-R_49 = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
+R_49 = vring("k1:50", vfield("a,b,c", ZZ))
 
 def eqs_189x49():
     return [
@@ -479,7 +479,7 @@ def time_to_expr_eqs_189x49():
 
 # Benchmark R_8: shows how fast polynomial GCDs are computed.
 
-R_8 = vring("x:8", vfield("a_(1:5)(1:5)", ZZ).to_domain())
+R_8 = vring("x:8", vfield("a_(1:5)(1:5)", ZZ))
 
 def eqs_10x8():
     return [
