@@ -16,6 +16,7 @@ from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNe
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.printing.defaults import DefaultPrinting
+from sympy.utilities.magic import pollute
 
 def ring(symbols, domain, order=lex):
     """Construct new polynomial ring returning (ring, x1, ..., xn). """
@@ -29,17 +30,8 @@ def xring(symbols, domain, order=lex):
 
 def vring(symbols, domain, order=lex):
     """Construct new polynomial ring and inject generators into global namespace. """
-    from inspect import currentframe
-    frame = currentframe().f_back
-
-    try:
-        _ring = PolyRing(symbols, domain, order)
-
-        for sym, gen in zip(_ring.symbols, _ring.gens):
-            frame.f_globals[sym.name] = gen
-    finally:
-        del frame  # break cyclic dependencies as stated in inspect docs
-
+    _ring = PolyRing(symbols, domain, order)
+    pollute([ sym.name for sym in _ring.symbols ], _ring.gens)
     return _ring
 
 def _parse_symbols(symbols):

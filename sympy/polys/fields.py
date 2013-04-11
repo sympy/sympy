@@ -10,6 +10,7 @@ from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.printing.defaults import DefaultPrinting
+from sympy.utilities.magic import pollute
 
 def field(symbols, domain, order=lex):
     """Construct new rational function field returning (field, x1, ..., xn). """
@@ -23,17 +24,8 @@ def xfield(symbols, domain, order=lex):
 
 def vfield(symbols, domain, order=lex):
     """Construct new rational function field and inject generators into global namespace. """
-    from inspect import currentframe
-    frame = currentframe().f_back
-
-    try:
-        _field = FracField(symbols, domain, order)
-
-        for sym, gen in zip(_field.symbols, _field.gens):
-            frame.f_globals[sym.name] = gen
-    finally:
-        del frame  # break cyclic dependencies as stated in inspect docs
-
+    _field = FracField(symbols, domain, order)
+    pollute([ sym.name for sym in _field.symbols ], _field.gens)
     return _field
 
 _field_cache = {}
