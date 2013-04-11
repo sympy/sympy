@@ -259,10 +259,21 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             pass
 
     if ip:
-        if use_unicode is None:
-            use_unicode = True
-        if use_latex is None:
-            use_latex = True
+        try:
+            import IPython
+            if IPython.__version__ >= '1.0':
+                from IPython.kernel.zmq.zmqshell import ZMQInteractiveShell
+            else:
+                from IPython.zmq.zmqshell import ZMQInteractiveShell
+        except ImportError:
+            pass
+        else:
+            # If in qtconsole or notebook
+            if isinstance(ip, ZMQInteractiveShell):
+                if use_unicode is None:
+                    use_unicode = True
+                if use_latex is None:
+                    use_latex = True
 
     if not no_global:
         Printer.set_global_settings(order=order, use_unicode=use_unicode,
