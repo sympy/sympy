@@ -3,6 +3,8 @@ from sympy.polys.fields import vfield
 from sympy.polys.domains import ZZ, QQ
 from sympy.polys.solvers import solve_lin_sys
 
+# Benchmark R_165: shows how fast are arithmetics in QQ.
+
 R_165 = vring("uk_:165", QQ)
 
 def eqs_165x165():
@@ -246,6 +248,8 @@ def time_to_expr_eqs_165x165():
     eqs = eqs_165x165()
     assert [ R_165.from_expr(eq.as_expr()) for eq in eqs ] == eqs
 
+# Benchmark R_49: shows how fast are arithmetics in rational function fields.
+
 R_49 = vring("k1:50", vfield("a,b,c", ZZ).to_domain())
 
 def eqs_189x49():
@@ -456,7 +460,7 @@ def sol_189x49():
     }
 
 def time_eqs_189x49():
-    assert len(eqs_189x49()) == 49
+    assert len(eqs_189x49()) == 189
 
 def time_solve_lin_sys_189x49():
     eqs = eqs_189x49()
@@ -472,3 +476,50 @@ def time_verify_sol_189x49():
 def time_to_expr_eqs_189x49():
     eqs = eqs_189x49()
     assert [ R_49.from_expr(eq.as_expr()) for eq in eqs ] == eqs
+
+# Benchmark R_8: shows how fast polynomial GCDs are computed.
+
+R_8 = vring("x:8", vfield("a_(1:5)(1:5)", ZZ).to_domain())
+
+def eqs_10x8():
+    return [
+        (a_33*a_34 + a_33*a_44 + a_43*a_44)*x3 + (a_33*a_34 + a_33*a_44 + a_43*a_44)*x4 + (a_12*a_34 + a_12*a_44 + a_22*a_34 + a_22*a_44)*x5 + (a_12*a_44 + a_22*a_44)*x6 + (a_12*a_33 + a_22*a_33)*x7 - a_12*a_33 - a_12*a_43 - a_22*a_33 - a_22*a_43,
+        (a_33 + a_34 + a_43 + a_44)*x3 + (a_33 + a_34 + a_43 + a_44)*x4 + (a_12 + a_22 + a_34 + a_44)*x5 + (a_12 + a_22 + a_44)*x6 + (a_12 + a_22 + a_33)*x7 - a_12 - a_22 - a_33 - a_43,
+        x3 + x4 + x5 + x6 + x7 - 1,
+        (a_12*a_33*a_34 + a_12*a_33*a_44 + a_12*a_43*a_44 + a_22*a_33*a_34 + a_22*a_33*a_44 + a_22*a_43*a_44)*x0 + (a_22*a_33*a_34 + a_22*a_33*a_44 + a_22*a_43*a_44)*x1 + (a_12*a_33*a_34 + a_12*a_33*a_44 + a_12*a_43*a_44 + a_22*a_33*a_34 + a_22*a_33*a_44 + a_22*a_43*a_44)*x2 + (a_11*a_33*a_34 + a_11*a_33*a_44 + a_11*a_43*a_44 + a_31*a_33*a_34 + a_31*a_33*a_44 + a_31*a_43*a_44)*x3 + (a_11*a_33*a_34 + a_11*a_33*a_44 + a_11*a_43*a_44 + a_21*a_33*a_34 + a_21*a_33*a_44 + a_21*a_43*a_44 + a_31*a_33*a_34 + a_31*a_33*a_44 + a_31*a_43*a_44)*x4 + (a_11*a_12*a_34 + a_11*a_12*a_44 + a_11*a_22*a_34 + a_11*a_22*a_44 + a_12*a_31*a_34 + a_12*a_31*a_44 + a_21*a_22*a_34 + a_21*a_22*a_44 + a_22*a_31*a_34 + a_22*a_31*a_44)*x5 + (a_11*a_12*a_44 + a_11*a_22*a_44 + a_12*a_31*a_44 + a_21*a_22*a_44 + a_22*a_31*a_44)*x6 + (a_11*a_12*a_33 + a_11*a_22*a_33 + a_12*a_31*a_33 + a_21*a_22*a_33 + a_22*a_31*a_33)*x7 - a_11*a_12*a_33 - a_11*a_12*a_43 - a_11*a_22*a_33 - a_11*a_22*a_43 - a_12*a_31*a_33 - a_12*a_31*a_43 - a_21*a_22*a_33 - a_21*a_22*a_43 - a_22*a_31*a_33 - a_22*a_31*a_43,
+        (a_12*a_33 + a_12*a_34 + a_12*a_43 + a_12*a_44 + a_22*a_33 + a_22*a_34 + a_22*a_43 + a_22*a_44 + a_33*a_34 + a_33*a_44 + a_43*a_44)*x0 + (a_22*a_33 + a_22*a_34 + a_22*a_43 + a_22*a_44 + a_33*a_34 + a_33*a_44 + a_43*a_44)*x1 + (a_12*a_33 + a_12*a_34 + a_12*a_43 + a_12*a_44 + a_22*a_33 + a_22*a_34 + a_22*a_43 + a_22*a_44 + a_33*a_34 + a_33*a_44 + a_43*a_44)*x2 + (a_11*a_33 + a_11*a_34 + a_11*a_43 + a_11*a_44 + a_31*a_33 + a_31*a_34 + a_31*a_43 + a_31*a_44 + a_33*a_34 + a_33*a_44 + a_43*a_44)*x3 + (a_11*a_33 + a_11*a_34 + a_11*a_43 + a_11*a_44 + a_21*a_33 + a_21*a_34 + a_21*a_43 + a_21*a_44 + a_31*a_33 + a_31*a_34 + a_31*a_43 + a_31*a_44 + a_33*a_34 + a_33*a_44 + a_43*a_44)*x4 + (a_11*a_12 + a_11*a_22 + a_11*a_34 + a_11*a_44 + a_12*a_31 + a_12*a_34 + a_12*a_44 + a_21*a_22 + a_21*a_34 + a_21*a_44 + a_22*a_31 + a_22*a_34 + a_22*a_44 + a_31*a_34 + a_31*a_44)*x5 + (a_11*a_12 + a_11*a_22 + a_11*a_44 + a_12*a_31 + a_12*a_44 + a_21*a_22 + a_21*a_44 + a_22*a_31 + a_22*a_44 + a_31*a_44)*x6 + (a_11*a_12 + a_11*a_22 + a_11*a_33 + a_12*a_31 + a_12*a_33 + a_21*a_22 + a_21*a_33 + a_22*a_31 + a_22*a_33 + a_31*a_33)*x7 - a_11*a_12 - a_11*a_22 - a_11*a_33 - a_11*a_43 - a_12*a_31 - a_12*a_33 - a_12*a_43 - a_21*a_22 - a_21*a_33 - a_21*a_43 - a_22*a_31 - a_22*a_33 - a_22*a_43 - a_31*a_33 - a_31*a_43,
+        (a_12 + a_22 + a_33 + a_34 + a_43 + a_44)*x0 + (a_22 + a_33 + a_34 + a_43 + a_44)*x1 + (a_12 + a_22 + a_33 + a_34 + a_43 + a_44)*x2 + (a_11 + a_31 + a_33 + a_34 + a_43 + a_44)*x3 + (a_11 + a_21 + a_31 + a_33 + a_34 + a_43 + a_44)*x4 + (a_11 + a_12 + a_21 + a_22 + a_31 + a_34 + a_44)*x5 + (a_11 + a_12 + a_21 + a_22 + a_31 + a_44)*x6 + (a_11 + a_12 + a_21 + a_22 + a_31 + a_33)*x7 - a_11 - a_12 - a_21 - a_22 - a_31 - a_33 - a_43,
+        x0 + x1 + x2 + x3 + x4 + x5 + x6 + x7 - 1,
+        (a_12*a_34 + a_12*a_44 + a_22*a_34 + a_22*a_44)*x2 + (a_31*a_34 + a_31*a_44)*x3 + (a_31*a_34 + a_31*a_44)*x4 + (a_12*a_31 + a_22*a_31)*x7 - a_12*a_31 - a_22*a_31,
+        (a_12 + a_22 + a_34 + a_44)*x2 + a_31*x3 + a_31*x4 + a_31*x7 - a_31,
+        x2,
+    ]
+
+def sol_10x8():
+    return {
+        x0: -a_21/a_12*x4,
+        x1: a_21/a_12*x4,
+        x2: 0,
+        x3: -x4,
+        x5: a_43/a_34,
+        x6: -a_43/a_34,
+        x7: 1,
+    }
+
+def time_eqs_10x8():
+    assert len(eqs_10x8()) == 10
+
+def time_solve_lin_sys_10x8():
+    eqs = eqs_10x8()
+    sol = solve_lin_sys(eqs, R_8)
+    assert sol == sol_10x8()
+
+def time_verify_sol_10x8():
+    eqs = eqs_10x8()
+    sol = sol_10x8()
+    zeros = [ eq.compose(sol) for eq in eqs ]
+    assert all([ zero == 0 for zero in zeros ])
+
+def time_to_expr_eqs_10x8():
+    eqs = eqs_10x8()
+    assert [ R_8.from_expr(eq.as_expr()) for eq in eqs ] == eqs
