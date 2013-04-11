@@ -244,6 +244,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     x + y +
     x**2 + y**2
     """
+    import sys
     from sympy.printing.printer import Printer
 
     if pretty_print:
@@ -269,7 +270,8 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
             pass
         else:
             # If in qtconsole or notebook
-            if isinstance(ip, ZMQInteractiveShell):
+            if isinstance(ip, ZMQInteractiveShell) \
+                    and 'ipython-console' not in ''.join(sys.argv):
                 if use_unicode is None:
                     use_unicode = True
                 if use_latex is None:
