@@ -11,11 +11,16 @@ matrix:
       env: TEST_GMPY="true"
     - python: 3.3
       env: TEST_GMPY="true"
+    - python: 2.7
+      env: TEST_SPHINX="true"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update -qq;
       sudo apt-get install -qq libgmp-dev;
       pip install "gmpy==1.16";
+    fi
+  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+      pip install sphinx;
     fi
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then python bin/use2to3; cd py3k-sympy; fi
