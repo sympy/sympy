@@ -55,9 +55,10 @@ def _separate_sq(p):
 
     """
     from sympy.simplify.simplify import _split_gcd, _mexpand
+    from sympy.utilities.iterables import sift
     def is_sqrt(expr):
         return expr.is_Pow and expr.exp is S.Half
-    coeff_muls = [y.as_coeff_mul() for y in p.args]
+    # p = c1*sqrt(q1) + ... + cn*sqrt(qn) -> a = [(c1, q1), .., (cn, qn)]
     a = []
     for y in p.args:
         if not y.is_Mul:
@@ -68,17 +69,11 @@ def _separate_sq(p):
             else:
                 raise NotImplementedError
             continue
-        args = y.args
-        a1 = []
-        a2 = []
-        for z in args:
-            if is_sqrt(z):
-                a2.append(z**2)
-            else:
-                a1.append(z)
-        a.append((Mul(*a1), Mul(*a2)))
+        sifted = sift(y.args, is_sqrt)
+        a.append((Mul(*sifted[False]), Mul(*sifted[True])**2))
     a.sort(key=lambda z: z[1])
     if a[-1][1] is S.One:
+        # there are no surds
         return p
     surds = [z for y, z in a]
     for i in range(len(surds)):
@@ -120,12 +115,11 @@ def minimal_polynomial_sq(p, n, x):
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
 
     """
-    from sympy.solvers import solve
     from sympy.simplify.simplify import _is_sum_surds
     p = sympify(p)
     n = sympify(n)
     r = _is_sum_surds(p)
-    if not n.is_integer or not n > 0 or not _is_sum_surds(p):
+    if not n.is_Integer or not n > 0 or not _is_sum_surds(p):
         return None
     pn = p**Rational(1, n)
     # eliminate the square roots
@@ -277,9 +271,9 @@ def minimal_polynomial(ex, x=None, **args):
         if inverted:
             ex = ex**-1
         res = None
-        if ex.is_Pow and (1/ex.exp).is_integer:
+        if ex.is_Pow and (1/ex.exp).is_Integer:
             n = 1/ex.exp
-            res = minimal_polynomial_sq(ex.base, 1/ex.exp, x)
+            res = minimal_polynomial_sq(ex.base, n, x)
 
         if _is_sum_surds(ex):
             res = minimal_polynomial_sq(ex, S.One, x)

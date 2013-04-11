@@ -1690,7 +1690,7 @@ def _is_sum_surds(p):
 def _nthroot_solve(p, n):
     """
      helper function for ``nthroot``
-     It denests ``p**Rational(1, n)`` using th minimal polynomial
+     It denests ``p**Rational(1, n)`` using its minimal polynomial
     """
     from sympy.polys.numberfields import minimal_polynomial_sq
     from sympy.solvers import solve
@@ -1700,7 +1700,6 @@ def _nthroot_solve(p, n):
     if n == 1:
         return p
     pn = p**Rational(1, n)
-    pnn = pn.n()
     x = Symbol('x')
     f = minimal_polynomial_sq(p, n, x)
     if f is None:
