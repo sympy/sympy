@@ -101,7 +101,13 @@ def roots_cubic(f):
         if q is S.Zero:
             return [-aon3]*3
         else:
-            u1 = q**Rational(1, 3)
+            if q.is_real:
+                if q > 0:
+                    u1 = -q**Rational(1, 3)
+                else:
+                    u1 = (-q)**Rational(1, 3)
+            else:
+                u1 = (-q)**Rational(1, 3)
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
@@ -112,6 +118,9 @@ def roots_cubic(f):
 
     u2 = u1*(-S.Half + coeff)
     u3 = u1*(-S.Half - coeff)
+
+    if p is S.Zero:
+        return [u1 - aon3, u2 - aon3, u3 - aon3]
 
     soln = [
         -u1 + pon3/u1 - aon3,
