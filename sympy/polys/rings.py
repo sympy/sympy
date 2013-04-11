@@ -83,6 +83,7 @@ class PolyRing(DefaultPrinting, IPolys):
 
             obj.zero_monom = (0,)*ngens
             obj.gens = obj._gens()
+            obj._gens_set = set(obj.gens)
 
             obj._one = [(obj.zero_monom, domain.one)]
 
@@ -216,7 +217,7 @@ class PolyRing(DefaultPrinting, IPolys):
             if not (0 <= i and i < self.ngens):
                 raise ValueError("invalid generator index")
         else:
-            if gen not in self.gens:
+            if gen not in self._gens_set:
                 raise ValueError("invalid generator")
             else:
                 i = list(self.gens).index(gen)
@@ -431,7 +432,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     @property
     def is_generator(self):
-        return self in self.ring.gens
+        return self in self.ring._gens_set
 
     @property
     def is_ground(self):
@@ -953,7 +954,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         for f in fv:
             if f.ring != ring:
                 raise ValueError('self and f must have the same ring')
-        gens = ring.gens
         s = len(fv)
         qv = [ring.zero for i in range(s)]
         p = self.copy()
@@ -1066,7 +1066,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         False
 
         """
-        if self in self.ring.gens:
+        if self in self.ring._gens_set:
             self = self.copy()
         expv, coeff = mc
         c = self.get(expv)
@@ -1101,7 +1101,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         x**4 + 3*x*y**3*z**3 + 3*x*y**2*z**4 + 2*y
 
         """
-        if p1 in p1.ring.gens:
+        if p1 in p1.ring._gens_set:
             p1 = p1.copy()
         (m, c) = mc
         get = p1.get
@@ -1254,7 +1254,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         False
 
         """
-        if p in p.ring.gens:
+        if p in p.ring._gens_set:
             return p*c
         if not c:
             p.clear()
