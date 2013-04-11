@@ -22,6 +22,11 @@ def reify_Basic(u, s):
 def reify_slot(u, s):
     return u.func(*[reify(getattr(u, a), s) for a in u.__slots__])
 
+def build(tup):
+    if isinstance(tup, tuple) and issubclass(tup[0], Basic):
+        return tup[0](*map(build, tup[1:]))
+    else:
+        return tup
 
 seq_registry.extend([(slot_classes, seq_slot),
                      (AppliedPredicate, seq_Predicate),
@@ -38,6 +43,7 @@ reify_isinstance_list.append((Basic, reify_Basic))
 import logpy
 from logpy.variables import variables
 from logpy import var, eq
+from logpy.assoccomm import eq_assoccomm as eqac
 from logpy.goals import goalify
 from sympy import assuming, ask
 
@@ -50,6 +56,16 @@ def refine_one(expr, *assumptions, **kwargs):
         with variables(*vars):
             source, target, condition = var(), var(), var()
             result = logpy.run(1, target, (reduces, source, target, condition),
-                                          (eq, source, expr),
+                                          (eqac, source, expr),
                                           (asko, condition, True))
-    return result[0] if result else expr
+    return build(result[0]) if result else expr
+
+###############
+# Commutivity #
+###############
+
+from logpy.assoccomm import commutative, associative
+from logpy import facts
+from sympy import Add, Mul, MatAdd, MatMul
+facts(commutative, [Add], [Mul], [MatAdd])
+facts(associative, [Add], [Mul], [MatAdd], [MatMul])

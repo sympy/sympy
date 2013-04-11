@@ -1,5 +1,5 @@
 from sympy.logpy import refine_one
-from logpy import Relation, facts
+from logpy import Relation, facts, fact
 from sympy import Basic, Q, Dummy, Symbol, Abs
 from functools import partial
 from sympy.assumptions import assuming
@@ -14,7 +14,6 @@ facts(reduces, *[
         (Basic(5), Basic(3), True),
         (Abs(x), x, Q.positive(x)),
         (Abs(x)**k, x**k, Q.real(x) & Q.even(k)),
-
     ])
 
 vars = [x, k]
@@ -42,3 +41,13 @@ def test_pow_of_abs_deep():
     with assuming(Q.real(y)):
         assert refine_deep(2*Abs(y)**4) == 2*y**4
         assert refine_deep(Abs(2*y)**4) == (2*y)**4
+
+def test_commutativity():
+    y = Symbol('_tmp')
+    fact(reduces, x * y, x, True)
+    assert refine(3) == 3
+    assert refine(3*y) == 3
+    print refine(z*3*y)
+    assert refine(z*3*y) == z*3
+    assert refine(z*y*3) == z*3
+    assert refine(y*z*3) == z*3
