@@ -864,6 +864,9 @@ class Derivative(Expr):
             return False
 
     def __new__(cls, expr, *variables, **assumptions):
+        from sympy.simplify.simplify import signsimp
+        from sympy.core.exprtools import factor_terms
+
         expr = sympify(expr)
 
         # There are no variables, we differentiate wrt all of the free symbols
@@ -944,7 +947,7 @@ class Derivative(Expr):
            (not isinstance(expr, Derivative))):
             variables = list(variablegen)
             # If we wanted to evaluate, we sort the variables into standard
-            # order for later comparisons. This is too agressive if evaluate
+            # order for later comparisons. This is too aggressive if evaluate
             # is False, so we don't do it in that case.
             if evaluate:
                 #TODO: check if assumption of discontinuous derivatives exist
@@ -1003,6 +1006,10 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variables(expr.args[1:])
                 )
 
+        if assumptions.get('simplify', False):
+            from sympy.core.exprtools import factor_terms
+            from sympy.simplify.simplify import signsimp
+            expr = factor_terms(signsimp(expr))
         return expr
 
     @classmethod
