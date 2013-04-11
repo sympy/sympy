@@ -11,9 +11,9 @@ from sympy import (
     gamma, exp, oo, Heaviside, symbols, Symbol, re, factorial, pi,
     cos, S, And, sin, sqrt, I, log, tan, hyperexpand, meijerg,
     EulerGamma, erf, besselj, bessely, besseli, besselk,
-    exp_polar, polar_lift, unpolarify, Function, expint)
+    exp_polar, polar_lift, unpolarify, Function, expint, expand_mul)
 from sympy.utilities.pytest import XFAIL, slow, skip
-from sympy.abc import x, s, a, b
+from sympy.abc import x, s, a, b, c, d
 nu, beta, rho = symbols('nu beta rho')
 
 
@@ -326,12 +326,9 @@ def test_inverse_mellin_transform():
         == sin(r)*Heaviside(1 - exp(-r))
 
     # test multiplicative substitution
-    a, b = symbols('a b', positive=True)
-    c, d = symbols('c d')
-    assert IMT(b**(-s/a)*factorial(s/a)/s, s, x, (0, oo)) == exp(-b*x**a)
-    assert IMT(factorial(a/b + s/b)/(a + s), s, x, (-a, oo)) == x**a*exp(-x**b)
-
-    from sympy import expand_mul
+    _a, _b = symbols('a b', positive=True)
+    assert IMT(_b**(-s/_a)*factorial(s/_a)/s, s, x, (0, oo)) == exp(-_b*x**_a)
+    assert IMT(factorial(_a/_b + s/_b)/(_a + s), s, x, (-_a, oo)) == x**_a*exp(-x**_b)
 
     def simp_pows(expr):
         return simplify(powsimp(expand_mul(expr, deep=False), force=True)).replace(exp_polar, exp)
@@ -359,11 +356,11 @@ def test_inverse_mellin_transform():
         (1 + sqrt(x + 1))**c
     assert simplify(IMT(2**(a + 2*s)*b**(a + 2*s - 1)*gamma(s)*gamma(1 - a - 2*s)
                         /gamma(1 - a - s), s, x, (0, (-re(a) + 1)/2))) == \
-        (b + sqrt(
-         b**2 + x))**(a - 1)*(b**2 + b*sqrt(b**2 + x) + x)/(b**2 + x)
+         b**(a - 1)*(sqrt(1 + x/b**2) + 1)**(a - 1)*(b**2*sqrt(1 + x/b**2) +
+        b**2 + x)/(b**2 + x)
     assert simplify(IMT(-2**(c + 2*s)*c*b**(c + 2*s)*gamma(s)*gamma(-c - 2*s)
                         / gamma(-c - s + 1), s, x, (0, -re(c)/2))) == \
-        (b + sqrt(b**2 + x))**c
+        b**c*(sqrt(1 + x/b**2) + 1)**c
 
     # Section 8.4.5
     assert IMT(24/s**5, s, x, (0, oo)) == log(x)**4*Heaviside(1 - x)
