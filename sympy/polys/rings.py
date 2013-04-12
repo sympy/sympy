@@ -700,34 +700,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         ring = self.ring
         n = int(n)
-        if n < 0:
-            if len(self) == 1:
-                p = ring.zero
-                k, v = list(self.items())[0]
-                kn = ring.monomial_pow(k, n)
-                p[kn] = v**n
-                return p
-            raise ValueError('n >= 0 is required')
-        if n == 0:
+
+        if not n:
             if self:
-                return ring(1)
+                return ring.one
             else:
-                raise ValueError
+                raise ValueError("0**0")
         elif len(self) == 1:
+            monom, coeff = list(self.items())[0]
             p = ring.zero
-            k, v = list(self.items())[0]
-            # treat case abs(v) = 1 separately to deal with the case
-            # in which n is too large to be allowed in v**n
-            kn = ring.monomial_pow(k, n)
-            if v == 1:
-                p[kn] = v
-            elif v == -1:
-                if n % 2 == 0:
-                    p[kn] = -v
-                else:
-                    p[kn] = v
-            else:
-                p[kn] = v**n
+            p[ring.monomial_pow(monom, n)] = coeff**n
             return p
         elif n == 1:
             return self.copy()
