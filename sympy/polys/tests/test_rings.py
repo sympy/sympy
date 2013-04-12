@@ -25,6 +25,11 @@ def test_PolyRing___init__():
     assert PolyRing("x", 'ZZ[t]', lex).domain == ZZ[t]
     assert PolyRing("x", PolyRing("t", ZZ, lex), lex).domain == ZZ[t]
 
+    _lex = Symbol("lex")
+    assert PolyRing("x", ZZ, lex).order == lex
+    assert PolyRing("x", ZZ, _lex).order == lex
+    assert PolyRing("x", ZZ, 'lex').order == lex
+
 def test_PolyRing___hash__():
     R, x, y, z = ring("x,y,z", QQ)
     assert hash(R)
