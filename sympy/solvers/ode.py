@@ -2311,7 +2311,7 @@ def homogeneous_order(eq, *symbols):
     `H \left (\frac{y}{x} \right)`. This fact is used to solve 1st order
     ordinary differential equations whose coefficients are homogeneous of
     the same order.
-    
+
     See the docstrings of
     ode.ode_1st_homogeneous_coeff_subs_indep_div_dep() and
     ode.ode_1st_homogeneous_coeff_subs_indep_div_dep().
