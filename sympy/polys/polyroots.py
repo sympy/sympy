@@ -828,6 +828,39 @@ def roots(f, *gens, **flags):
 
         return result
 
+    def _try_rescale(f):
+        """
+        try rescaling ``x -> alpha*x`` to convert f to a polynomial
+        with rational coefficients.
+        Returns ``alpha, f``; if the rescaling is successful,
+        ``alpha`` is the rescaling factor, and ``f`` is the rescaled
+        polynomial; else ``alpha`` is ``None``.
+        """
+        from sympy.core.add import Add
+        if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
+            return None, f
+        n = f.degree()
+        coeffs = f.monic().all_coeffs()[1:]
+        coeffs = [simplify(coeffx) for coeffx in coeffs]
+        if coeffs[-2] and not all(coeffx.is_rational for coeffx in coeffs):
+            rescale1_x = simplify(coeffs[-2]/coeffs[-1])
+            coeffs1 = []
+            for i in range(len(coeffs)):
+                coeffx = simplify(coeffs[i]*rescale1_x**(i + 1))
+                if not coeffx.is_rational:
+                    break
+                coeffs1.append(coeffx)
+            else:
+                rescale_x = simplify(1/rescale1_x)
+                x = f.gens[0]
+                v = [x**n]
+                for i in range(1, n + 1):
+                    v.append(coeffs1[i - 1]*x**(n - i))
+                f = Add(*v)
+                f = Poly(f)
+                return rescale_x, f
+        return None, f
+
     (k,), f = f.terms_gcd()
 
     if not k:
@@ -839,6 +872,8 @@ def roots(f, *gens, **flags):
 
     if auto and f.get_domain().has_Ring:
         f = f.to_field()
+
+    rescale_x = None
 
     result = {}
 
@@ -858,6 +893,8 @@ def roots(f, *gens, **flags):
             _, factors = Poly(f.as_expr()).factor_list()
 
             if len(factors) == 1 and factors[0][1] == 1:
+                if f.get_domain().is_EX:
+                    rescale_x, f = _try_rescale(f)
                 for root in _try_decompose(f):
                     _update_dict(result, root, 1)
             else:
@@ -894,6 +931,11 @@ def roots(f, *gens, **flags):
         for zero in dict(result).iterkeys():
             if not predicate(zero):
                 del result[zero]
+    if rescale_x:
+        result1 = {}
+        for k, v in result.items():
+            result1[k*rescale_x] = v
+        result = result1
 
     if not multiple:
         return result

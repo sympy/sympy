@@ -360,6 +360,9 @@ def test_roots():
     cr = 4 + 2*sqrt(1074)/9
     assert real_root == -2*cr**(S(1)/3) + 20/(3*cr**(S(1)/3))
 
+    eq = Poly((7 + 5*sqrt(2))*x**3 + (-6 - 4*sqrt(2))*x**2 + (-sqrt(2) - 1)*x + 2, x, domain='EX')
+    assert roots(eq) == {-1 + sqrt(2): 1, -2 + 2*sqrt(2): 1, -sqrt(2) + 1: 1}
+
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """
     a, b, c, d, x = symbols("a,b,c,d,x")
