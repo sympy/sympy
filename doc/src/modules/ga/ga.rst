@@ -9,30 +9,6 @@
 .. role:: red
    :class: color:red
 
-.. math::
-
-    \newcommand{\bfrac}[2]{\displaystyle\frac{#1}{#2}}
-    \newcommand{\lp}{\left (}
-    \newcommand{\rp}{\right )}
-    \newcommand{\half}{\frac{1}{2}}
-    \newcommand{\llt}{\left <}
-    \newcommand{\rgt}{\right >}
-    \newcommand{\abs}[1]{\left |{#1}\right | }
-    \newcommand{\pdiff}[2]{\bfrac{\partial {#1}}{\partial {#2}}}
-    \newcommand{\lbrc}{\left \{}
-    \newcommand{\rbrc}{\right \}}
-    \newcommand{\W}{\wedge}
-    \newcommand{\R}{\dagger}
-    \newcommand{\lbrk}{\left [}
-    \newcommand{\rbrk}{\right ]}
-    \newcommand{\proj}[2]{\llt {#1} \rgt_{#2}}
-    \newcommand{\bm}{\boldsymbol}
-    \newcommand{\braces}[1]{\left \{ {#1} \right \}}
-    \newcommand{\grade}[1]{\left < {#1} \right >}
-    \newcommand{\f}[2]{{#1}\lp {#2} \rp}
-    \newcommand{\paren}[1]{\lp {#1} \rp}
-    \newcommand{\T}[1]{\texttt{#1}}
-
 
 *****************
 Geometric Algebra
@@ -108,9 +84,9 @@ additional axioms for the geometric algebra are that for any vectors :math:`a`,
 
   \begin{equation*}
   \begin{array}{c}
-  a\lp bc \rp = \lp ab \rp c \\
-  a\lp b+c \rp = ab+ac \\
-  \lp a + b \rp c = ac+bc \\
+  a\left ( bc \right ) = \left ( ab \right ) c \\
+  a\left ( b+c \right ) = ab+ac \\
+  \left ( a + b \right ) c = ac+bc \\
   aa = a^{2} \in \Re
   \end{array}
   \end{equation*}
@@ -125,6 +101,7 @@ two vectors is defined by ([Doran]_,p86)
   \begin{equation*}
      a\cdot b \equiv (ab+ba)/2
   \end{equation*}
+
 
 Then consider
 
@@ -146,19 +123,22 @@ a complete basis for the geometric algebra is given by the scalar :math:`1`, the
 and all geometric products of vectors
 
 .. math::
+   :nowrap:
 
    \begin{equation*}
       e_{i_{1}}e_{i_{2}}\dots e_{i_{r}} \mbox{ where } 0\le r \le n\mbox{, }0 \le i_{j} \le n \mbox{ and } i_{1}<i_{2}<\dots<i_{r}
    \end{equation*}
 
+
 Each base of the complete basis is represented by a noncommutative symbol (except for the scalar 1)
-with name :math:`e_{i_{1}}\dots e_{i_{r}}` so that the general multivector :math:`\bm{A}` is represented by
+with name :math:`e_{i_{1}}\dots e_{i_{r}}` so that the general multivector :math:`\boldsymbol{A}` is represented by
 (:math:`A` is the scalar part of the multivector and the :math:`A^{i_{1},\dots,i_{r}}` are scalars)
 
 .. math::
+   :nowrap:
 
    \begin{equation*}
-      \bm{A} = A + \sum_{r=1}^{n}\sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} A^{i_{1},\dots,i_{r}}e_{i_{1}}e_{i_{2}}\dots e_{r}
+      \boldsymbol{A} = A + \sum_{r=1}^{n}\sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} A^{i_{1},\dots,i_{r}}e_{i_{1}}e_{i_{2}}\dots e_{r}
    \end{equation*}
 
 
@@ -177,11 +157,12 @@ product is associative we can use the operation (by definition for two vectors
    \end{equation}
 
 
-These processes are repeated untill every basis list in :math:`\bm{A}` is in normal
+These processes are repeated untill every basis list in :math:`\boldsymbol{A}` is in normal
 (ascending) order with no repeated elements. As an example consider the
 following
 
 .. math::
+   :nowrap:
 
    \begin{align*}
       e_{3}e_{2}e_{1} &= (2(e_{2}\cdot e_{3}) - e_{2}e_{3})e_{1} \\
@@ -191,6 +172,7 @@ following
                       &= 2((e_{2}\cdot e_{3})e_{1}-(e_{1}\cdot e_{3})e_{2}+(e_{1}\cdot e_{2})e_{3})-e_{1}e_{2}e_{3}
    \end{align*}
 
+
 which results from repeated application of equation :eq:`eq1`.  If the product of basis vectors contains repeated factors
 equation :eq:`eq1` can be used to bring the repeated factors next to one another so that if :math:`e_{i_{j}} = e_{i_{j+1}}`
 then :math:`e_{i_{j}}e_{i_{j+1}} = e_{i_{j}}\cdot e_{i_{j+1}}` which is a scalar that commutes with all the terms in the product
@@ -199,18 +181,21 @@ reduces the number of noncommutative factors in the product by :math:`r-2`. The 
 and the number containing :math:`r` factors is :math:`{n\choose r}` which is the number of combinations or :math:`n` things
 taken :math:`r` at a time (binominal coefficient).
 
-The other construction required for formulating the geometric algebra is the outer or wedge product (symbol :math:`\W`) of :math:`r`
-vectors denoted by :math:`a_{1}\W\dots\W a_{r}`.  The wedge product of :math:`r` vectors is called an :math:`r`-blade and is defined
+The other construction required for formulating the geometric algebra is the outer or wedge product (symbol :math:`\wedge`) of :math:`r`
+vectors denoted by :math:`a_{1}\wedge\dots\wedge a_{r}`.  The wedge product of :math:`r` vectors is called an :math:`r`-blade and is defined
 by ([Doran]_,p86)
 
 .. math::
+   :nowrap:
+
    \begin{equation*}
-      a_{1}\W\dots\W a_{r} \equiv \sum_{i_{j_{1}}\dots i_{j_{r}}} \epsilon^{i_{j_{1}}\dots i_{j_{r}}}a_{i_{j_{1}}}\dots a_{i_{j_{1}}}
+      a_{1}\wedge\dots\wedge a_{r} \equiv \sum_{i_{j_{1}}\dots i_{j_{r}}} \epsilon^{i_{j_{1}}\dots i_{j_{r}}}a_{i_{j_{1}}}\dots a_{i_{j_{1}}}
    \end{equation*}
+
 
 where :math:`\epsilon^{i_{j_{1}}\dots i_{j_{r}}}` is the contravariant permutation symbol which is :math:`+1` for an even permutation of the
 superscripts, :math:`0` if any superscripts are repeated, and :math:`-1` for an odd permutation of the superscripts. From the definition
-:math:`a_{1}\W\dots\W a_{r}` is antisymmetric in all its arguments and the following relation for the wedge product of a vector :math:`a` and an
+:math:`a_{1}\wedge\dots\wedge a_{r}` is antisymmetric in all its arguments and the following relation for the wedge product of a vector :math:`a` and an
 :math:`r`-blade :math:`B_{r}` can be derived
 
 .. math::
@@ -218,7 +203,7 @@ superscripts, :math:`0` if any superscripts are repeated, and :math:`-1` for an 
    :nowrap:
 
    \begin{equation}
-      a\W B_{r} = (aB_{r}+(-1)^{r}B_{r}a)/2
+      a\wedge B_{r} = (aB_{r}+(-1)^{r}B_{r}a)/2
    \end{equation}
 
 
@@ -226,101 +211,119 @@ superscripts, :math:`0` if any superscripts are repeated, and :math:`-1` for an 
 Using equation :eq:`eq2` one can represent the wedge product of all the basis vectors
 in terms of the geometric product of all the basis vectors so that one can solve (the system
 of equations is lower diagonal) for the geometric product of all the basis vectors in terms of
-the wedge product of all the basis vectors.  Thus a general multivector :math:`\bm{B}` can be
+the wedge product of all the basis vectors.  Thus a general multivector :math:`\boldsymbol{B}` can be
 represented as a linear combination of a scalar and the basis blades.
 
 .. math::
+   :nowrap:
 
    \begin{equation*}
-      \bm{B} = B + \sum_{r=1}^{n}\sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} B^{i_{1},\dots,i_{r}}e_{i_{1}}\W e_{i_{2}}\W\dots\W e_{r}
+      \boldsymbol{B} = B + \sum_{r=1}^{n}\sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} B^{i_{1},\dots,i_{r}}e_{i_{1}}\wedge e_{i_{2}}\wedge\dots\wedge e_{r}
    \end{equation*}
 
-Using the blades :math:`e_{i_{1}}\W e_{i_{2}}\W\dots\W e_{r}` creates a graded
+
+Using the blades :math:`e_{i_{1}}\wedge e_{i_{2}}\wedge\dots\wedge e_{r}` creates a graded
 algebra where :math:`r` is the grade of the basis blades.  The grade-:math:`r`
-part of :math:`\bm{B}` is the linear combination of all terms with
-grade :math:`r` basis blades. The scalar part of :math:`\bm{B}` is defined to
-be grade-:math:`0`.  Now that the blade expansion of :math:`\bm{B}` is defined
-we can also define the grade projection operator :math:`\proj{\bm{B}}{r}` by
+part of :math:`\boldsymbol{B}` is the linear combination of all terms with
+grade :math:`r` basis blades. The scalar part of :math:`\boldsymbol{B}` is defined to
+be grade-:math:`0`.  Now that the blade expansion of :math:`\boldsymbol{B}` is defined
+we can also define the grade projection operator :math:`\left < {\boldsymbol{B}} \right >_{r}` by
 
 .. math::
+   :nowrap:
 
    \begin{equation*}
-      \proj{\bm{B}}{r} = \sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} B^{i_{1},\dots,i_{r}}e_{i_{1}}\W e_{i_{2}}\W\dots\W e_{r}
+      \left < {\boldsymbol{B}} \right >_{r} = \sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} B^{i_{1},\dots,i_{r}}e_{i_{1}}\wedge e_{i_{2}}\wedge\dots\wedge e_{r}
    \end{equation*}
+
 
 and
 
 .. math::
+   :nowrap:
 
    \begin{equation*}
-      \proj{\bm{B}}{} \equiv \proj{\bm{B}}{0} = B
+      \left < {\boldsymbol{B}} \right >_{} \equiv \left < {\boldsymbol{B}} \right >_{0} = B
    \end{equation*}
 
-Then if :math:`\bm{A}_{r}` is an :math:`r`-grade multivector and :math:`\bm{B}_{s}` is an :math:`s`-grade multivector we have
+Then if :math:`\boldsymbol{A}_{r}` is an :math:`r`-grade multivector and :math:`\boldsymbol{B}_{s}` is an :math:`s`-grade multivector we have
 
 .. math::
+   :nowrap:
 
    \begin{equation*}
-      \bm{A}_{r}\bm{B}_{s} = \proj{\bm{A}_{r}\bm{B}_{s}}{\abs{r-s}}+\proj{\bm{A}_{r}\bm{B}_{s}}{\abs{r-s}+2}+\cdots
-                             \proj{\bm{A}_{r}\bm{B}_{s}}{r+s}
+      \boldsymbol{A}_{r}\boldsymbol{B}_{s} = \left < {\boldsymbol{A}_{r}\boldsymbol{B}_{s}} \right >_{\left |{{r-s}}\right |}+\left < {\boldsymbol{A}_{r}\boldsymbol{B}_{s}} \right >_{\left |{{r-s}}\right |+2}+\cdots
+                             \left < {\boldsymbol{A}_{r}\boldsymbol{B}_{s}} \right >_{r+s}
    \end{equation*}
+
 
 and define ([Hestenes]_,p6)
 
 
 .. math::
+   :nowrap:
 
    \begin{align*}
-      \bm{A}_{r}\W\bm{B}_{s} &\equiv \proj{\bm{A}_{r}\bm{B}_{s}}{r+s} \\
-      \bm{A}_{r}\cdot\bm{B}_{s} &\equiv \braces{ \begin{array}{cc}
-      r\mbox{ or }s \ne 0: & \proj{\bm{A}_{r}\bm{B}_{s}}{\abs{r-s}}  \\
-      r\mbox{ or }s = 0: & 0 \end{array}}
+      \boldsymbol{A}_{r}\wedge\boldsymbol{B}_{s} &\equiv \left < {\boldsymbol{A}_{r}\boldsymbol{B}_{s}} \right >_{r+s} \\
+      \boldsymbol{A}_{r}\cdot\boldsymbol{B}_{s} &\equiv \left \{ \begin{array}{cc}
+      r\mbox{ or }s \ne 0: & \left < {\boldsymbol{A}_{r}\boldsymbol{B}_{s}} \right >_{\left |{{r-s}}\right |}  \\
+      r\mbox{ or }s = 0: & 0 \end{array} \right \}
    \end{align*}
 
-where :math:`\bm{A}_{r}\cdot\bm{B}_{s}` is called the dot or inner product of
+
+where :math:`\boldsymbol{A}_{r}\cdot\boldsymbol{B}_{s}` is called the dot or inner product of
 two pure grade multivectors.  For the case of two non-pure grade multivectors
 
  .. math::
+   :nowrap:
 
    \begin{align*}
-      \bm{A}\W\bm{B} &= \sum_{r,s}\proj{\bm{A}}{r}\W\proj{\bm{B}}{{s}} \\
-      \bm{A}\cdot\bm{B} &= \sum_{r,s\ne 0}\proj{\bm{A}}{r}\cdot\proj{\bm{B}}{{s}}
+      \boldsymbol{A}\wedge\boldsymbol{B} &= \sum_{r,s}\left < {\boldsymbol{A}} \right >_{r}\wedge\left < {\boldsymbol{B}} \right >_{s} \\
+      \boldsymbol{A}\cdot\boldsymbol{B} &= \sum_{r,s\ne 0}\left < {\boldsymbol{A}} \right >_{r}\cdot\left < {\boldsymbol{B}} \right >_{s}
    \end{align*}
+
 
 Two other products, the right (:math:`\rfloor`) and left (:math:`\lfloor`) contractions, are defined by
 
  .. math::
+   :nowrap:
 
    \begin{align*}
-      \bm{A}\lfloor\bm{B} &\equiv \sum_{r,s}\braces{\begin{array}{cc} \proj{\bm{A}_r\bm{B}_{s}}{r-s} & r \ge s \\
-                                                  0                                               & r < s \end{array}}  \\
-      \bm{A}\rfloor\bm{B} &\equiv \sum_{r,s}\braces{\begin{array}{cc} \proj{\bm{A}_{r}\bm{B}_{s}}{s-r} & s \ge r \\
-                                                  0                                               & s < r\end{array}}
+      \boldsymbol{A}\lfloor\boldsymbol{B} &\equiv \sum_{r,s}\left \{ \begin{array}{cc} \left < {\boldsymbol{A}_r\boldsymbol{B}_{s}} \right >_{r-s} & r \ge s \\
+                                                  0                                               & r < s \end{array}\right \}  \\
+      \boldsymbol{A}\rfloor\boldsymbol{B} &\equiv \sum_{r,s}\left \{ \begin{array}{cc} \left < {\boldsymbol{A}_{r}\boldsymbol{B}_{s}} \right >_{s-r} & s \ge r \\
+                                                  0                                               & s < r\end{array}\right \}
    \end{align*}
 
-A final operation for multivectors is the reverse.  If a multivector :math:`\bm{A}` is the geometric product of :math:`r` vectors (versor)
-so that :math:`\bm{A} = a_{1}\dots a_{r}` the reverse is defined by
+
+A final operation for multivectors is the reverse.  If a multivector :math:`\boldsymbol{A}` is the geometric product of :math:`r` vectors (versor)
+so that :math:`\boldsymbol{A} = a_{1}\dots a_{r}` the reverse is defined by
 
  .. math::
+   :nowrap:
 
    \begin{align*}
-      \bm{A}^{\R} \equiv a_{r}\dots a_{1}
+      \boldsymbol{A}^{\dagger} \equiv a_{r}\dots a_{1}
    \end{align*}
+
 
 where for a general multivector we have (the the sum of the reverse of versors)
 
 .. math::
+   :nowrap:
 
    \begin{equation*}
-      \bm{A}^{\R} = A + \sum_{r=1}^{n}(-1)^{r(r-1)/2}\sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} A^{i_{1},\dots,i_{r}}e_{i_{1}}\W e_{i_{2}}\W\dots\W e_{r}
+      \boldsymbol{A}^{\dagger} = A + \sum_{r=1}^{n}(-1)^{r(r-1)/2}\sum_{i_{1},\dots,i_{r},\;\forall\; 0\le i_{j} \le n} A^{i_{1},\dots,i_{r}}e_{i_{1}}\wedge e_{i_{2}}\wedge\dots\wedge e_{r}
    \end{equation*}
 
-note that if :math:`\bm{A}` is a versor then :math:`\bm{A}\bm{A}^{\R}\in\Re` and (:math:`AA^{\R} \ne 0`)
+
+note that if :math:`\boldsymbol{A}` is a versor then :math:`\boldsymbol{A}\boldsymbol{A}^{\dagger}\in\Re` and (:math:`AA^{\dagger} \ne 0`)
 
 .. math::
+   :nowrap:
 
    \begin{equation*}
-      \bm{A}^{-1} = \bfrac{\bm{A}^{\R}}{\bm{AA}^{\R}}
+      \boldsymbol{A}^{-1} = {\displaystyle\frac{\boldsymbol{A}^{\dagger}}{\boldsymbol{AA}^{\dagger}}}
    \end{equation*}
 
 
@@ -356,21 +359,23 @@ a multivector class, MV, and overloading the python operators in Table
 *+*, *-*, *\**, *^*, and *|* the operation is also defined if *A* or
 *B* is a sympy symbol or a sympy real number).
 
-.. _table1:
 
-.. csv-table::
-    :header: " Operation ", " Result "
-    :widths: 10, 40
+    .. _table1:
 
-    " *A+B* ", " sum of multivectors "
-    " *A-B* ", " difference of multivectors "
-    " *A*B* ", " geometric product "
-    " *A^B* ", " outer product of multivectors  "
-    " *A|B* ", " inner product of multivectors "
-    " *A<B* ", " left contraction of multivectors "
-    " *A>B* ", " right contraction of multivectors "
+    .. csv-table::
+        :header: Operation,Result
+        :widths: 10, 40
 
-Table :ref:`1 <table1>`. Multivector operations for *ga*
+        ''A+B'', sum of multivectors
+        ''A-B'', difference of multivectors
+        ''A*B'', geometric product
+        ''A^B'', outer product of multivectors
+        ''A|B'', inner product of multivectors
+        ''A<B'', left contraction of multivectors
+        ''A>B'', right contraction of multivectors
+
+    Table :ref:`1 <table1>`. Multivector operations for *ga*
+
 
 Since *<* and *>* have no r-forms (in python for the *<* and *>* operators there are no *__rlt__()* and *__rlt__()* member functions to overload)
 we can only have mixed modes (scalars and multivectors) if the first operand is a multivector.
@@ -452,13 +457,13 @@ the following symbols
   :nowrap:
 
   \begin{equation}
-  g = \lbrk
+  g = \left [
   \begin{array}{ccc}
     (a0.a0)   & (a0.a1)  & (a0.a2) \\
     (a0.a1) & (a1.a1)  & (a1.a2) \\
     (a0.a2) & (a1.a2) & (a2.a2) \\
   \end{array}
-  \rbrk
+  \right ]
   \end{equation}
 
 
@@ -492,7 +497,7 @@ then calling *MV.setup(basis,metric)* would initialize the metric tensor
   :nowrap:
 
   \begin{equation*}
-  g = \lbrk
+  g = \left [
   \begin{array}{ccccc}
     (a0.a0) & (a0.a1)  & (a0.a2) & 0 & 0\\
     (a0.a1) & (a1.a1)  & (a1.a2) & 0 & 0\\
@@ -500,7 +505,7 @@ then calling *MV.setup(basis,metric)* would initialize the metric tensor
     0 & 0 & 0 & 0 & 2 \\
     0 & 0 & 0 & 2 & 0
   \end{array}
-  \rbrk
+  \right ]
   \end{equation*}
 
 
@@ -533,17 +538,17 @@ or
 
   (g1,g2,g3) = MV.setup('gamma_1 gamma_2 gamma_3',metric=metric)
 
-so that if the latex printer is used *e1* would print as :math:`\bm{e_{1}}`
-and *g1* as :math:`\bm{\gamma_{1}}`.
+so that if the latex printer is used *e1* would print as :math:`\boldsymbol{e_{1}}`
+and *g1* as :math:`\boldsymbol{\gamma_{1}}`.
 
 .. note::
 
   Additionally *MV.setup* has simpified options for naming a set of basis vectors and for
   inputing an othogonal basis.
 
-  If one wishes to name the basis vectors :math:`\bm{e}_{x}`, :math:`\bm{e}_{y}`, and
-  :math:`\bm{e}_{z}` then set *basis='e*x|y|z'* or to name :math:`\bm{\gamma}_{t}`,
-  :math:`\bm{\gamma}_{x}`, :math:`\bm{\gamma}_{y}`, and :math:`\bm{\gamma}_{z}` then set
+  If one wishes to name the basis vectors :math:`\boldsymbol{e}_{x}`, :math:`\boldsymbol{e}_{y}`, and
+  :math:`\boldsymbol{e}_{z}` then set *basis='e*x|y|z'* or to name :math:`\boldsymbol{\gamma}_{t}`,
+  :math:`\boldsymbol{\gamma}_{x}`, :math:`\boldsymbol{\gamma}_{y}`, and :math:`\boldsymbol{\gamma}_{z}` then set
   *basis='gamma*t|x|y|z'*.
 
   For the case of an othogonal basis if the signature of the
@@ -721,7 +726,7 @@ the symbolic basis vectors using the formula
   :nowrap:
 
   \begin{equation*}
-    A_{r}\W b = \half\lp A_{r}b-\lp -1 \rp^{r}bA_{r} \rp,
+    A_{r}\wedge b = \frac{1}{2}\left ( A_{r}b-\left ( -1 \right )^{r}bA_{r} \right ),
   \end{equation*}
 
 
@@ -808,11 +813,11 @@ The geometric product of two pure grade multivectors :math:`A_{r}` and
   :nowrap:
 
   \begin{equation*}
-  A_{r}B_{s} = \proj{A_{r}B_{s}}{\abs{r-s}}+\proj{A_{r}B_{s}}{\abs{r-s}+2}+\cdots+\proj{A_{r}B_{s}}{r+s}
+  A_{r}B_{s} = \left < {A_{r}B_{s}} \right >_{\left |{{r-s}}\right |}+\left < {A_{r}B_{s}} \right >_{\left |{{r-s}}\right |+2}+\cdots+\left < {A_{r}B_{s}} \right >_{r+s}
   \end{equation*}
 
 
-where :math:`\proj{}{t}` projects the :math:`t` grade components of the
+where :math:`\left < { } \right >_{t}` projects the :math:`t` grade components of the
 multivector argument.  The inner and outer products of :math:`A_{r}` and
 :math:`B_{s}` are then defined to be
 
@@ -820,17 +825,15 @@ multivector argument.  The inner and outer products of :math:`A_{r}` and
   :nowrap:
 
   \begin{equation*}
-  A_{r}\cdot B_{s} = \proj{A_{r}B_{s}}{\abs{r-s}}
+  A_{r}\cdot B_{s} = \left < {A_{r}B_{s}} \right >_{\left |{{r-s}}\right |}
   \end{equation*}
-
-
 
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  A_{r}\wedge B_{s} = \proj{A_{r}B_{s}}{r+s}
+  A_{r}\wedge B_{s} = \left < {A_{r}B_{s}} \right >_{r+s}
   \end{equation*}
 
 
@@ -861,16 +864,17 @@ Likewise the right (:math:`\lfloor`) and left (:math:`\rfloor`) contractions are
 
   \begin{equation*}
   A_{r}\lfloor B_{s} = \left \{ \begin{array}{cc}
-     \proj{A_{r}B_{s}}{r-s} &  r \ge s \\
+     \left < {A_{r}B_{s}} \right >_{r-s} &  r \ge s \\
                0            &  r < s \end{array} \right \}
   \end{equation*}
+
 
 .. math::
   :nowrap:
 
   \begin{equation*}
   A_{r}\rfloor B_{s} = \left \{ \begin{array}{cc}
-     \proj{A_{r}B_{s}}{s-r} &  s \ge r \\
+     \left < {A_{r}B_{s}} \right >_{s-r} &  s \ge r \\
                0            &  s < r \end{array} \right \}
   \end{equation*}
 
@@ -891,6 +895,9 @@ and
   \begin{equation*}
   A\rfloor B = \sum_{r,s}A_{r}\rfloor B_{s}
   \end{equation*}
+
+
+
 
 .. warning::
 
@@ -924,13 +931,13 @@ If :math:`A` is the geometric product of :math:`r` vectors
   \end{equation*}
 
 
-then the reverse of :math:`A` designated :math:`A^{\R}` is defined by
+then the reverse of :math:`A` designated :math:`A^{\dagger}` is defined by
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-    A^{\R} \equiv a_{r}\dots a_{1}.
+    A^{\dagger} \equiv a_{r}\dots a_{1}.
   \end{equation*}
 
 
@@ -942,7 +949,7 @@ multivector A we have
   :nowrap:
 
   \begin{equation*}
-    A^{\R} = \sum_{i=0}^{N} \proj{A}{i}^{\R}
+    A^{\dagger} = \sum_{i=0}^{N} {\left < {A} \right >_{i}}^{\dagger}
   \end{equation*}
 
 
@@ -953,7 +960,7 @@ but
   :nowrap:
 
   \begin{equation}
-    \proj{A}{i}^{\R} = \lp -1\rp^{\frac{i\lp i-1\rp}{2}}\proj{A}{i}
+    {\left < {A} \right >_{i}}^{\dagger} = \left ( -1\right )^{\frac{i\left ( i-1\right )}{2}}\left < {A} \right >_{i}
   \end{equation}
 
 
@@ -962,14 +969,14 @@ showing that equation :eq:`eq4` holds for the geometric product of orthogonal
 vectors.
 
 The reverse is important in the theory of rotations in :math:`n`-dimensions.  If
-:math:`R` is the product of an even number of vectors and :math:`RR^{\R} = 1`
-then :math:`RaR^{\R}` is a composition of rotations of the vector :math:`a`.
+:math:`R` is the product of an even number of vectors and :math:`RR^{\dagger} = 1`
+then :math:`RaR^{\dagger}` is a composition of rotations of the vector :math:`a`.
 If :math:`R` is the product of two vectors then the plane that :math:`R` defines
-is the plane of the rotation.  That is to say that :math:`RaR^{\R}` rotates the
+is the plane of the rotation.  That is to say that :math:`RaR^{\dagger}` rotates the
 component of :math:`a` that is projected into the plane defined by :math:`a` and
 :math:`b` where :math:`R=ab`.  :math:`R` may be written
 :math:`R = e^{\frac{\theta}{2}U}`, where :math:`\theta` is the angle of rotation
-and :math:`u` is a unit blade :math:`\lp u^{2} = \pm 1\rp` that defines the
+and :math:`u` is a unit blade :math:`\left ( u^{2} = \pm 1\right )` that defines the
 plane of rotation.
 
 
@@ -988,7 +995,7 @@ if :math:`i = j`). The reciprocal frame is constructed as follows:
   :nowrap:
 
   \begin{equation*}
-    E_{M} = a_{1}\W\dots\W a_{M}
+    E_{M} = a_{1}\wedge\dots\wedge a_{M}
   \end{equation*}
 
 
@@ -998,7 +1005,7 @@ if :math:`i = j`). The reciprocal frame is constructed as follows:
   :nowrap:
 
   \begin{equation*}
-    E_{M}^{-1} = \bfrac{E_{M}}{E_{M}^{2}}
+    E_{M}^{-1} = {\displaystyle\frac{E_{M}}{E_{M}^{2}}}
   \end{equation*}
 
 
@@ -1008,7 +1015,7 @@ Then
   :nowrap:
 
   \begin{equation*}
-    a^{i} = \lp -1\rp^{i-1}\lp a_{1}\W\dots\W \breve{a}_{i} \W\dots\W a_{M}\rp E_{M}^{-1}
+    a^{i} = \left ( -1\right )^{i-1}\left ( a_{1}\wedge\dots\wedge \breve{a}_{i} \wedge\dots\wedge a_{M}\right ) E_{M}^{-1}
   \end{equation*}
 
 
@@ -1030,7 +1037,7 @@ Geometric Derivative
 ====================
 
 If :math:`F` is a multivector field that is a function of a vector
-:math:`x = x^{i}\bm{e}_{i}` (we are using the summation convention that
+:math:`x = x^{i}\boldsymbol{e}_{i}` (we are using the summation convention that
 pairs of subscripts and superscripts are summed over the dimension of the vector
 space) then the geometric derivative :math:`\nabla F` is given by (in this
 section the summation convention is used):
@@ -1039,25 +1046,25 @@ section the summation convention is used):
   :nowrap:
 
   \begin{equation*}
-    \nabla F = \bm{e}^{i}\bfrac{\partial F}{\partial x^{i}}
+    \nabla F = \boldsymbol{e}^{i}{\displaystyle\frac{\partial F}{\partial x^{i}}}
   \end{equation*}
 
 
 If :math:`F_{R}` is a grade-:math:`R` multivector and
-:math:`F_{R} = F_{R}^{i_{1}\dots i_{R}}\bm{e}_{i_{1}}\W\dots\W \bm{e}_{i_{R}}`
+:math:`F_{R} = F_{R}^{i_{1}\dots i_{R}}\boldsymbol{e}_{i_{1}}\wedge\dots\wedge \boldsymbol{e}_{i_{R}}`
 then
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-    \nabla F_{R} = \bfrac{\partial F_{R}^{i_{1}\dots i_{R}}}{\partial x^{j}}\bm{e}^{j}\lp\bm{e}_{i_{1}}\W
-                 \dots\W \bm{e}_{i_{R}} \rp
+    \nabla F_{R} = {\displaystyle\frac{\partial F_{R}^{i_{1}\dots i_{R}}}{\partial x^{j}}}\boldsymbol{e}^{j}\left (\boldsymbol{e}_{i_{1}}\wedge
+                 \dots\wedge \boldsymbol{e}_{i_{R}} \right )
   \end{equation*}
 
 
 Note that
-:math:`\bm{e}^{j}\lp\bm{e}_{i_{1}}\W\dots\W \bm{e}_{i_{R}} \rp`
+:math:`\boldsymbol{e}^{j}\left (\boldsymbol{e}_{i_{1}}\wedge\dots\wedge \boldsymbol{e}_{i_{R}} \right )`
 can only contain grades :math:`R-1` and :math:`R+1` so that :math:`\nabla F_{R}`
 also can only contain those grades. For a grade-:math:`R` multivector
 :math:`F_{R}` the inner (div) and outer (curl) derivatives are defined as
@@ -1077,7 +1084,7 @@ and
   :nowrap:
 
   \begin{equation*}
-  \nabla\W F_{R} = \left < \nabla F_{R}\right >_{R+1}
+  \nabla\wedge F_{R} = \left < \nabla F_{R}\right >_{R+1}
   \end{equation*}
 
 
@@ -1086,29 +1093,29 @@ just the sum of the inner and outer dervatives of each grade of the multivector
 function.
 
 Curvilinear coordinates are derived from a vector function
-:math:`x(\bm{\theta})` where
-:math:`\bm{\theta} = \lp\theta_{1},\dots,\theta_{N}\rp` where the number of
+:math:`x(\boldsymbol{\theta})` where
+:math:`\boldsymbol{\theta} = \left (\theta_{1},\dots,\theta_{N}\right )` where the number of
 coordinates is equal to the dimension of the vector space.  In the case of
-3-dimensional spherical coordinates :math:`\bm{\theta} = \lp r,\theta,\phi \rp`
-and the coordinate generating function :math:`x(\bm{\theta})` is
+3-dimensional spherical coordinates :math:`\boldsymbol{\theta} = \left ( r,\theta,\phi \right )`
+and the coordinate generating function :math:`x(\boldsymbol{\theta})` is
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  x =  r \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{e}_{x}}}+ r \sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{e}_{y}}}+ r \cos\left({\theta}\right){\bm{{e}_{z}}}
+  x =  r \cos\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{e}_{x}}}+ r \sin\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{e}_{y}}}+ r \cos\left({\theta}\right){\boldsymbol{{e}_{z}}}
   \end{equation*}
 
 
 A coordinate frame is derived from :math:`x` by
-:math:`\bm{e}_{i} = \pdiff{x}{\theta^{i}}`.  The following show the frame for
+:math:`\boldsymbol{e}_{i} = {\displaystyle\frac{\partial {x}}{\partial {\theta^{i}}}}`.  The following show the frame for
 spherical coordinates.
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{r} = \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{e}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{e}_{y}}}+\cos\left({\theta}\right){\bm{{e}_{z}}}
+  \boldsymbol{e}_{r} = \cos\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{e}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{e}_{y}}}+\cos\left({\theta}\right){\boldsymbol{{e}_{z}}}
   \end{equation*}
 
 
@@ -1118,7 +1125,7 @@ spherical coordinates.
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\bm{{e}_{x}}}+r \cos\left({\theta}\right) \sin\left({\phi}\right){\bm{{e}_{y}}} - r \sin\left({\theta}\right){\bm{{e}_{z}}}
+  \boldsymbol{e}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\boldsymbol{{e}_{x}}}+r \cos\left({\theta}\right) \sin\left({\phi}\right){\boldsymbol{{e}_{y}}} - r \sin\left({\theta}\right){\boldsymbol{{e}_{z}}}
   \end{equation*}
 
 
@@ -1128,7 +1135,7 @@ spherical coordinates.
   :nowrap:
 
   \begin{equation*}
-  \bm{e}_{{\phi}} =  - r \sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{e}_{x}}}+r \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{e}_{y}}}
+  \boldsymbol{e}_{{\phi}} =  - r \sin\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{e}_{x}}}+r \cos\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{e}_{y}}}
   \end{equation*}
 
 
@@ -1139,19 +1146,19 @@ define a normalized frame by
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{i} = \bfrac{\bm{e}_{i}}{\sqrt{\abs{\bm{e}_{i}^{2}}}} = \bfrac{\bm{e}_{i}}{\abs{\bm{e}_{i}}}
+  \boldsymbol{\hat{e}}_{i} = {\displaystyle\frac{\boldsymbol{e}_{i}}{\sqrt{\left |{{\boldsymbol{e}_{i}^{2}}}\right |}}} = {\displaystyle\frac{\boldsymbol{e}_{i}}{\left |{{\boldsymbol{e}_{i}}}\right |}}
   \end{equation*}
 
 
-This works for all :math:`\bm{e}_{i}^{2} \neq 0` since we have defined
-:math:`\abs{\bm{e}_{i}} = \sqrt{\abs{\bm{e}_{i}^{2}}}`.   For spherical
+This works for all :math:`\boldsymbol{e}_{i}^{2} \neq 0` since we have defined
+:math:`\left |\boldsymbol{e}_{i}\right | = \sqrt{\left |\boldsymbol{e}_{i}^{2}\right |}`.   For spherical
 coordinates the normalized frame vectors are
 
 .. math::
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{r} =  \cos\left({\phi}\right) \sin\left({\theta}\right){\bm{{e}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\bm{{e}_{y}}}+\cos\left({\theta}\right){\bm{{e}_{z}}}
+  \boldsymbol{\hat{e}}_{r} =  \cos\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{e}_{x}}}+\sin\left({\phi}\right) \sin\left({\theta}\right){\boldsymbol{{e}_{y}}}+\cos\left({\theta}\right){\boldsymbol{{e}_{z}}}
   \end{equation*}
 
 
@@ -1161,7 +1168,7 @@ coordinates the normalized frame vectors are
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\bm{{e}_{x}}}+\cos\left({\theta}\right) \sin\left({\phi}\right){\bm{{e}_{y}}}- \sin\left({\theta}\right){\bm{{e}_{z}}}
+  \boldsymbol{\hat{e}}_{{\theta}} = \cos\left({\phi}\right) \cos\left({\theta}\right){\boldsymbol{{e}_{x}}}+\cos\left({\theta}\right) \sin\left({\phi}\right){\boldsymbol{{e}_{y}}}- \sin\left({\theta}\right){\boldsymbol{{e}_{z}}}
   \end{equation*}
 
 
@@ -1171,7 +1178,7 @@ coordinates the normalized frame vectors are
   :nowrap:
 
   \begin{equation*}
-  \bm{\hat{e}}_{{\phi}} = - \sin\left({\phi}\right){\bm{{e}_{x}}}+\cos\left({\phi}\right){\bm{{e}_{y}}}
+  \boldsymbol{\hat{e}}_{{\phi}} = - \sin\left({\phi}\right){\boldsymbol{{e}_{x}}}+\cos\left({\phi}\right){\boldsymbol{{e}_{y}}}
   \end{equation*}
 
 
@@ -1181,17 +1188,17 @@ The geometric derivative in curvilinear coordinates is given by
   :nowrap:
 
   \begin{align*}
-    \nabla F_{R} & =  \bm{e}^{i}\pdiff{}{x^{i}}\lp F_{R}^{i_{1}\dots i_{R}}
-                     \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp  \\
-                   & =  \bm{e^{j}}\pdiff{}{\theta^{j}}\lp F_{R}^{i_{1}\dots i_{R}}
-                     \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp  \\
-                   & =   \lp\pdiff{}{\theta^{j}} F_{R}^{i_{1}\dots i_{R}}\rp
-                     \bm{e^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp+
-                     F_{R}^{i_{1}\dots i_{R}}\bm{e^{j}}
-                     \pdiff{}{\theta^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp \\
-                   & =   \lp\pdiff{}{\theta^{j}} F_{R}^{i_{1}\dots i_{R}}\rp
-                     \bm{e^{j}}\lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp+
-                     F_{R}^{i_{1}\dots i_{R}}C\lbrc \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rbrc
+    \nabla F_{R} & =  \boldsymbol{e}^{i}{\displaystyle\frac{\partial {}}{\partial {x^{i}}}}\left ( F_{R}^{i_{1}\dots i_{R}}
+                     \boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right )  \\
+                   & =  \boldsymbol{e^{j}}{\displaystyle\frac{\partial {}}{\partial {\theta^{j}}}}\left ( F_{R}^{i_{1}\dots i_{R}}
+                     \boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right )  \\
+                   & =   \left ({\displaystyle\frac{\partial {}}{\partial {\theta^{j}}}} F_{R}^{i_{1}\dots i_{R}}\right )
+                     \boldsymbol{e^{j}}\left (\boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right )+
+                     F_{R}^{i_{1}\dots i_{R}}\boldsymbol{e^{j}}
+                     {\displaystyle\frac{\partial {}}{\partial {\theta^{j}}}}\left (\boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right ) \\
+                   & =   \left ({\displaystyle\frac{\partial {}}{\partial {\theta^{j}}}} F_{R}^{i_{1}\dots i_{R}}\right )
+                     \boldsymbol{e^{j}}\left (\boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right )+
+                     F_{R}^{i_{1}\dots i_{R}}C\left \{ \boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right \}
   \end{align*}
 
 
@@ -1201,8 +1208,8 @@ where
   :nowrap:
 
   \begin{equation*}
-  C\lbrc \bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rbrc  = \bm{e^{j}}\pdiff{}{\theta^{j}}
-                                                              \lp\bm{\hat{e}}_{i_{1}}\W\dots\W\bm{\hat{e}}_{i_{R}}\rp
+  C\left \{ \boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right \}  = \boldsymbol{e^{j}}{\displaystyle\frac{\partial {}}{\partial {\theta^{j}}}}
+                                                              \left (\boldsymbol{\hat{e}}_{i_{1}}\wedge\dots\wedge\boldsymbol{\hat{e}}_{i_{R}}\right )
   \end{equation*}
 
 
@@ -1213,7 +1220,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{r}\rbrc =  \frac{2}{r}
+  C\left \{\boldsymbol{\hat{e}}_{r}\right \} =  \frac{2}{r}
   \end{equation*}
 
 
@@ -1223,8 +1230,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\theta}\rbrc =  \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
-                                +\frac{1}{r}\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{\theta}
+  C\left \{\boldsymbol{\hat{e}}_{\theta}\right \} =  \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
+                                +\frac{1}{r}\boldsymbol{\hat{e}}_{r}\wedge\boldsymbol{\hat{e}}_{\theta}
   \end{equation*}
 
 
@@ -1234,7 +1241,7 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\phi}\rbrc = \frac{1}{r}{\bm{\bm{\hat{e}}_{r}}}\W\bm{\hat{e}}_{{\phi}}+ \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\bm{\hat{e}}_{{\theta}}\W\bm{\hat{e}}_{{\phi}}
+  C\left \{\boldsymbol{\hat{e}}_{\phi}\right \} = \frac{1}{r}\boldsymbol{{\hat{e}}_{r}}\wedge\boldsymbol{\hat{e}}_{{\phi}}+ \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\boldsymbol{\hat{e}}_{{\theta}}\wedge\boldsymbol{\hat{e}}_{{\phi}}
   \end{equation*}
 
 
@@ -1244,8 +1251,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\hat{e}_{r}\W\hat{e}_{\theta}\rbrc =  - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
-                                        \bm{\hat{e}}_{r}+\frac{1}{r}\bm{\hat{e}}_{{\theta}}
+  C\left \{\hat{e}_{r}\wedge\hat{e}_{\theta}\right \} =  - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}
+                                        \boldsymbol{\hat{e}}_{r}+\frac{1}{r}\boldsymbol{\hat{e}}_{{\theta}}
   \end{equation*}
 
 
@@ -1255,8 +1262,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{\phi}\rbrc = \frac{1}{r}\bm{\hat{e}}_{{\phi}}
-                      - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\bm{\hat{e}}_{r}\W\bm{\hat{e}}_{{\theta}}\W\bm{\hat{e}}_{{\phi}}
+  C\left \{\boldsymbol{\hat{e}}_{r}\wedge\boldsymbol{\hat{e}}_{\phi}\right \} = \frac{1}{r}\boldsymbol{\hat{e}}_{{\phi}}
+                      - \frac{\cos\left({\theta}\right)}{r \sin\left({\theta}\right)}\boldsymbol{\hat{e}}_{r}\wedge\boldsymbol{\hat{e}}_{{\theta}}\wedge\boldsymbol{\hat{e}}_{{\phi}}
   \end{equation*}
 
 
@@ -1266,8 +1273,8 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}\rbrc =  \frac{2}{r}\bm{\hat{e}}_{r}\W
-                                                \bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}
+  C\left \{\boldsymbol{\hat{e}}_{\theta}\wedge\boldsymbol{\hat{e}}_{\phi}\right \} =  \frac{2}{r}\boldsymbol{\hat{e}}_{r}\wedge
+                                                \boldsymbol{\hat{e}}_{\theta}\wedge\boldsymbol{\hat{e}}_{\phi}
   \end{equation*}
 
 
@@ -1277,8 +1284,10 @@ spherical coordinate system they are
   :nowrap:
 
   \begin{equation*}
-  C\lbrc\bm{\hat{e}}_r\W\bm{\hat{e}}_{\theta}\W\bm{\hat{e}}_{\phi}\rbrc = 0
+  C\left \{\boldsymbol{\hat{e}}_r\wedge\boldsymbol{\hat{e}}_{\theta}\wedge\boldsymbol{\hat{e}}_{\phi}\right \} = 0
   \end{equation*}
+
+
 
 ************
 Installation
@@ -1329,7 +1338,7 @@ Initializing Multivector Class
 The multivector class is initialized with:
 
 
-.. function:: MV.setup(basis,metric=None,coords=None,rframe=False,debug=False,curv=(None,None))
+.. function:: MV.setup(basis,metric=None,coords=None,rframe=False,debug=False, curv=(None,None))
 
    The *basis* and *metric* parameters were described in section :ref:`vbm`. If
    *rframe=True* the reciprocal frame of the symbolic bases vectors is calculated.
@@ -1459,20 +1468,44 @@ or with the multivector class constructor:
    switch that will convert the symbolic coefficients of a multivector to functions
    if coordinate variables have been defined when :func:`MV.setup` is called:
 
-    .. csv-table::
-        :header: " mvtype ", " base ", " result "
-        :widths: 10, 30, 45
 
-        " default ", " default ", " Zero multivector "
-        " 'scalar' ", " string s ", " symbolic scalar of value Symbol(s) "
-        " 'vector  ", " string s ", " symbolic vector "
-        " 'grade2' or 'bivector'", " string s ", " symbolic bivector "
-        " 'grade' ", " string s,n ", " symbolic n-grade multivector "
-        " 'pseudo' ", " string s ", " symbolic pseudoscalar "
-        " 'spinor' ", " string s ", " symbolic even multivector "
-        " 'mv' "," string s ", " symbolic general multivector "
-        " default ", " sympy scalar c ", " zero grade multivector with coefficient c "
-        " default ", " multivector ", " copy constructor for multivector "
+   .. list-table::
+     :widths: 20, 30, 65
+     :header-rows: 1
+
+     * - mvtype
+       - base
+       - result
+     * - default
+       - default
+       - Zero multivector
+     * - scalar
+       - string s
+       - symbolic scalar of value Symbol(s)
+     * - vector
+       - string s
+       - symbolic vector
+     * - grade2 or bivector
+       - string s
+       - symbolic bivector
+     * - grade
+       - string s,n
+       - symbolic n-grade multivector
+     * - pseudo
+       - string s
+       - symbolic pseudoscalar
+     * - spinor
+       - string s
+       - symbolic even multivector
+     * - mv
+       - string s
+       - symbolic general multivector
+     * - default
+       - sympy scalar c
+       - zero grade multivector with coefficient c
+     * - default
+       - multivector
+       - copy constructor for multivector
 
 
    If the *base* argument is a string s then the coefficients of the resulting
@@ -1491,8 +1524,8 @@ or with the multivector class constructor:
      coefficients for the most general multivector would be *A*, *A__x*, *A__y*, *A__z*,
      *A__xy*, *A__xz*, *A__yz*, and *A_xyz*.  If the latex printer is used and *e* is the
      base for the basis vectors then the pseudo scalar would print as
-     :math:`A^{xyz}\bm{e_{x}\W e_{y}\W e_{z}}`. If coordinates are not defined it would print
-     as :math:`A^{123}\bm{e_{1}\W e_{2}\W e_{3}}`.  For printed output all multivectors are represented
+     :math:`A^{xyz}\boldsymbol{e_{x}\wedge e_{y}\wedge e_{z}}`. If coordinates are not defined it would print
+     as :math:`A^{123}\boldsymbol{e_{1}\wedge e_{2}\wedge e_{3}}`.  For printed output all multivectors are represented
      in terms of products of the basis vectors, either as geometric products or wedge products. This
      is also true for the output of expressions containing reciprocal basis vectors.
 
@@ -1542,36 +1575,40 @@ Basic Multivector Class Functions
    where the default *mode*, *'T'*, assumes :math:`AA < 0` so that
 
    .. math::
+      :nowrap:
 
       \begin{equation*}
-            e^{\alpha A} = \f{\cos}{\alpha\sqrt{-A^{2}}}+\f{\sin}{\alpha\sqrt{-A^{2}}}\bfrac{A}{\sqrt{-A^{2}}}.
+            e^{\alpha A} = {\cos}\left ( {\alpha\sqrt{-A^{2}}} \right )+{\sin}\left ( {\alpha\sqrt{-A^{2}}} \right ){\displaystyle\frac{A}{\sqrt{-A^{2}}}}.
       \end{equation*}
 
 
    If the mode is not *'T'* then :math:`AA > 0` is assumed so that
 
    .. math::
+      :nowrap:
 
       \begin{equation*}
-            e^{\alpha A} = \f{\cosh}{\alpha\sqrt{A^{2}}}+\f{\sinh}{\alpha\sqrt{A^{2}}}\bfrac{A}{\sqrt{A^{2}}}.
+            e^{\alpha A} = {\cosh}\left ( {\alpha\sqrt{A^{2}}} \right )+{\sinh}\left ( {\alpha\sqrt{A^{2}}} \right ){\displaystyle\frac{A}{\sqrt{A^{2}}}}.
       \end{equation*}
 
 
-   If :math:`norm = N \gt 0` then
+   If :math:`norm = N  >  0` then
 
    .. math::
+       :nowrap:
 
        \begin{equation*}
-            e^{\alpha A} = \f{\cos}{\alpha N}+\f{\sin}{\alpha N}\bfrac{A}{N}
+            e^{\alpha A} = {\cos}\left ( {\alpha N} \right )+{\sin}\left ( {\alpha N} \right ){\displaystyle\frac{A}{N}}
        \end{equation*}
 
 
    or
 
    .. math::
+      :nowrap:
 
       \begin{equation*}
-            e^{\alpha A} = \f{\cosh}{\alpha N}+\f{\sinh}{\alpha N}\bfrac{A}{N}
+            e^{\alpha A} = {\cosh}\left ( {\alpha N} \right )+{\sinh}\left ( {\alpha N} \right ){\displaystyle\frac{A}{N}}
       \end{equation*}
 
 
@@ -1603,15 +1640,15 @@ Basic Multivector Class Functions
 .. function:: norm(self)
 
    Return the norm of the multvector :math:`M` (*M.norm()*) defined by
-   :math:`\sqrt{MM^{\R}}`.  If :math:`MM^{\R}` is a scalar (a sympy scalar
-   is returned). If :math:`MM^{\R}` in not a scalar the program exits
+   :math:`\sqrt{MM^{\dagger}}`.  If :math:`MM^{\dagger}` is a scalar (a sympy scalar
+   is returned). If :math:`MM^{\dagger}` in not a scalar the program exits
    with an error message.
 
 .. function:: norm(self)
 
    Return the square of norm of the multvector :math:`M` (*M.norm2()*) defined by
-   :math:`MM^{\R}`.  If :math:`MM^{\R}` is a scalar (a sympy scalar
-   is returned). If :math:`MM^{\R}` in not a scalar the program exits
+   :math:`MM^{\dagger}`.  If :math:`MM^{\dagger}` is a scalar (a sympy scalar
+   is returned). If :math:`MM^{\dagger}` in not a scalar the program exits
    with an error message.
 
 .. function:: scalar(self)
@@ -1684,7 +1721,7 @@ Basic Multivector Functions
 .. function:: cross(M1, M2)
 
    If *M1* and *M2* are 3-dimensional euclidian vectors the vector cross product is
-   returned, :math:`v_{1}\times v_{2} = -I\paren{v_{1}\W v_{2}}`.
+   returned, :math:`v_{1}\times v_{2} = -I\left ( {{v_{1}\wedge v_{2}}} \right )`.
 
 .. function:: define_precedence(gd,op_ord='<>|,^,*')
 
@@ -1701,11 +1738,11 @@ Basic Multivector Functions
 
 .. function:: inv(B)
 
-   If for the multivector :math:`B`,  :math:`BB^{\R}` is a nonzero scalar, return :math:`B^{-1} = B^{\R}/(BB^{\R})`.
+   If for the multivector :math:`B`,  :math:`BB^{\dagger}` is a nonzero scalar, return :math:`B^{-1} = B^{\dagger}/(BB^{\dagger})`.
 
 .. function:: proj(B,A)
 
-   Project blade A on blade B returning :math:`\paren{A\lfloor B}B^{-1}`.
+   Project blade A on blade B returning :math:`\left ( {{A\lfloor B}} \right )B^{-1}`.
 
 .. function:: refl(B,A)
 
@@ -1747,15 +1784,17 @@ function *F* are given by
       \begin{align*}
             \nabla F &= grad*F \\
             F \nabla &= F*grad \\
-            \nabla \W F &= grad \W F \\
-            F \W \nabla &= F \W grad \\
+            \nabla \wedge F &= grad \wedge F \\
+            F \wedge \nabla &= F \wedge grad \\
             \nabla \cdot F &= grad|F \\
             F \cdot \nabla F &= F|grad \\
-            \nabla \lfloor F &= grad \lt F \\
-            F \lfloor \nabla &= F \lt grad \\
-            \nabla \rfloor F &= grad \gt F \\
-            F \rfloor \nabla &= F \gt grad
+            \nabla \lfloor F &= grad  <  F \\
+            F \lfloor \nabla &= F  <  grad \\
+            \nabla \rfloor F &= grad  >  F \\
+            F \rfloor \nabla &= F  >  grad
       \end{align*}
+
+
 
 The preceding code block gives examples of all possible multivector
 derivatives of the multivector function *F* where \* give the left and
@@ -1781,15 +1820,18 @@ The vector mainfold is defined by a vector function of some coordinates
 in an embedding vector space ([Doran]_,p202,[Hestenes]_,p139).  For example the unit 2-sphere would be the
 collection of vectors on the unit shpere in 3-dimensions with possible
 coordinates of :math:`\theta` and :math:`\phi` the angles of elevation and
-azimuth.  A vector function :math:`\f{X}{\theta,\phi}` that defines the manifold
+azimuth.  A vector function :math:`{X}\left ( {\theta,\phi} \right )` that defines the manifold
 would be given by
 
 .. math::
   :nowrap:
 
      \begin{equation*}
-        \f{X}{\theta,\phi} = \f{\cos}{\theta}\bm{e_{z}}+\f{\cos}{\theta}\paren{\f{\cos}{\phi}\bm{e_{x}}+\f{\sin}{\phi}\bm{e_{y}}}
+        {X}\left ( {\theta,\phi} \right ) = {\cos}\left ( {\theta} \right )\boldsymbol{e_{z}}+{\cos}\left ( {\theta} \right )\left ( {{{\cos}\left ( {\phi} \right )\boldsymbol{e_{x}}
+        +{\sin}\left ( {\phi} \right )\boldsymbol{e_{y}}}} \right )
      \end{equation*}
+
+
 
 The module *manifold.py* is transitionary in that all calculation are performed in the embedding vector space (geometric algebra).
 Thus due to the limitations on *sympy*'s *simplify()* and  *trigsimp()*, simple expressions may appear to be very complicated since they are expressed
@@ -1880,16 +1922,31 @@ functions are
    This function from the *ga* module turns on latex printing with the
    following options
 
-    .. csv-table::
-        :header: " argument ", " value ", " result "
+   .. list-table::
         :widths: 15, 15, 55
+        :header-rows: 1
 
-        " *Fmode* ", " *True* ", " Print functions without argument list, :math:`f` "
-        " "      , " *False* ", " Print functions with standard sympy latex formatting, :math:`f(x,y,z)` "
-        " *Dmode* ", " *True* ", " Print partial derivatives with condensed notatation, :math:`\partial_{x}f` "
-        " "      , " *False* ", " Print partial derivatives with standard sympy latex formatting :math:`\frac{\partial f}{\partial x}` "
-        " *ipy* "  , " *False* ", " Redirect print output to file for post-processing by latex "
-        " "      , " *True* ", " Do not redirect print output.  This is used for Ipython with MathJax "
+        * - argument
+          - value
+          - result
+        * - *Fmode*
+          - *True*
+          - Print functions without argument list, :math:`f`
+        * -
+          - *False*
+          - Print functions with standard sympy latex formatting, :math:`f(x,y,z)`
+        * - *Dmode*
+          - *True*
+          - Print partial derivatives with condensed notatation, :math:`\partial_{x}f`
+        * -
+          - *False*
+          - Print partial derivatives with standard sympy latex formatting :math:`\frac{\partial f}{\partial x}`
+        * - *ipy*
+          - *False*
+          - Redirect print output to file for post-processing by latex
+        * -
+          - *True*
+          - Do not redirect print output (This is used for Ipython with MathJax)
 
 
 .. function:: xdvi(filename=None,pdf='',debug=False,paper=(14,11))
@@ -1905,12 +1962,14 @@ functions are
    standard output for debugging purposes and *filename* (the tex file) is saved.  If *filename* is not entered the default
    filename is the root name of the python program being executed with *.tex* appended.  The format for the *paper* is
 
-    .. csv-table::
+   .. list-table::
         :widths: 25, 65
+        :header-rows: 0
 
-        "*paper=(w,h)*","*w* is paper width in inches and "
-        "","*h* is paper height in inches "
-        "*paper='letter'*","paper is standard leter size :math:`8.5\mbox{ in}\times 11\mbox{ in}` "
+        * - *paper=(w,h)*
+          - *w* is paper width in inches and,*h* is paper height in inches
+        * - *paper='letter'*
+          - paper is standard leter size :math:`8.5\mbox{ in}\times 11\mbox{ in}`
 
    The default of *paper=(14,11)* was chosen so that long multivector expressions would not be truncated on
    the display.
@@ -1935,16 +1994,19 @@ executed
     xdvi()
 
 
+
 The following is displayed
 
     .. math::
       :nowrap:
 
       \begin{align*}
-      \bm{A} = & A+A^{x}\bm{e_{x}}+A^{y}\bm{e_{y}}+A^{z}\bm{e_{z}}+A^{xy}\bm{e_{x}\W e_{y}}+A^{xz}\bm{e_{x}\W e_{z}}+A^{yz}\bm{e_{y}\W e_{z}}+A^{xyz}\bm{e_{x}\W e_{y}\W e_{z}} \\
-      \bm{A} =  & A \\  & +A^{x}\bm{e_{x}}+A^{y}\bm{e_{y}}+A^{z}\bm{e_{z}} \\  & +A^{xy}\bm{e_{x}\W e_{y}}+A^{xz}\bm{e_{x}\W e_{z}}+A^{yz}\bm{e_{y}\W e_{z}} \\  & +A^{xyz}\bm{e_{x}\W e_{y}\W e_{z}} \\
-      \bm{A} =  & A \\  & +A^{x}\bm{e_{x}} \\  & +A^{y}\bm{e_{y}} \\  & +A^{z}\bm{e_{z}} \\  & +A^{xy}\bm{e_{x}\W e_{y}} \\  & +A^{xz}\bm{e_{x}\W e_{z}} \\  & +A^{yz}\bm{e_{y}\W e_{z}} \\  & +A^{xyz}\bm{e_{x}\W e_{y}\W e_{z}}
+      \boldsymbol{A} = & A+A^{x}\boldsymbol{e_{x}}+A^{y}\boldsymbol{e_{y}}+A^{z}\boldsymbol{e_{z}}+A^{xy}\boldsymbol{e_{x}\wedge e_{y}}+A^{xz}\boldsymbol{e_{x}\wedge e_{z}}+A^{yz}\boldsymbol{e_{y}\wedge e_{z}}+A^{xyz}\boldsymbol{e_{x}\wedge e_{y}\wedge e_{z}} \\
+      \boldsymbol{A} =  & A \\  & +A^{x}\boldsymbol{e_{x}}+A^{y}\boldsymbol{e_{y}}+A^{z}\boldsymbol{e_{z}} \\  & +A^{xy}\boldsymbol{e_{x}\wedge e_{y}}+A^{xz}\boldsymbol{e_{x}\wedge e_{z}}+A^{yz}\boldsymbol{e_{y}\wedge e_{z}} \\  & +A^{xyz}\boldsymbol{e_{x}\wedge e_{y}\wedge e_{z}} \\
+      \boldsymbol{A} =  & A \\  & +A^{x}\boldsymbol{e_{x}} \\  & +A^{y}\boldsymbol{e_{y}} \\  & +A^{z}\boldsymbol{e_{z}} \\  & +A^{xy}\boldsymbol{e_{x}\wedge e_{y}} \\  & +A^{xz}\boldsymbol{e_{x}\wedge e_{z}} \\  & +A^{yz}\boldsymbol{e_{y}\wedge e_{z}} \\  & +A^{xyz}\boldsymbol{e_{x}\wedge e_{y}\wedge e_{z}}
       \end{align*}
+
+
 
 For the cases of derivatives the code is
 
@@ -1978,37 +2040,46 @@ For the cases of derivatives the code is
 and the latex displayed output is (:math:`f` is a scalar function)
 
     .. math::
-      :nowrap:
+        :nowrap:
 
         \begin{align*}
-        \bm{A} =& A^{x}\bm{e_{x}}+A^{y}\bm{e_{y}}+A^{z}\bm{e_{z}} \\
-        \bm{B} =& B^{xy}\bm{e_{x}\W e_{y}}+B^{xz}\bm{e_{x}\W e_{z}}+B^{yz}\bm{e_{y}\W e_{z}} \\
-        \bm{\nabla}  f =& \partial_{x} f\bm{e_{x}}+\partial_{y} f\bm{e_{y}}+\partial_{z} f\bm{e_{z}} \\
-        \bm{\nabla} \cdot \bm{A} = &\partial_{x} A^{x} + \partial_{y} A^{y} + \partial_{z} A^{z} \\
-        \bm{\nabla}  \bm{A} = &\partial_{x} A^{x} + \partial_{y} A^{y} + \partial_{z} A^{z}+\left ( - \partial_{y} A^{x} + \partial_{x} A^{y}\right ) \bm{e_{x}\W e_{y}}+\left ( - \partial_{z} A^{x} + \partial_{x} A^{z}\right ) \bm{e_{x}\W e_{z}}+\left ( - \partial_{z} A^{y} + \partial_{y} A^{z}\right ) \bm{e_{y}\W e_{z}} \\
-        -I (\bm{\nabla} \W \bm{A}) = &\left ( - \partial_{z} A^{y} + \partial_{y} A^{z}\right ) \bm{e_{x}}+\left ( \partial_{z} A^{x} - \partial_{x} A^{z}\right ) \bm{e_{y}}+\left ( - \partial_{y} A^{x} + \partial_{x} A^{y}\right ) \bm{e_{z}} \\
-        \bm{\nabla}  \bm{B} = &\left ( - \partial_{y} B^{xy} - \partial_{z} B^{xz}\right ) \bm{e_{x}}+\left ( \partial_{x} B^{xy} - \partial_{z} B^{yz}\right ) \bm{e_{y}}+\left ( \partial_{x} B^{xz} + \partial_{y} B^{yz}\right ) \bm{e_{z}}+\left ( \partial_{z} B^{xy} - \partial_{y} B^{xz} + \partial_{x} B^{yz}\right ) \bm{e_{x}\W e_{y}\W e_{z}} \\
-        \bm{\nabla} \W \bm{B} = &\left ( \partial_{z} B^{xy} - \partial_{y} B^{xz} + \partial_{x} B^{yz}\right ) \bm{e_{x}\W e_{y}\W e_{z}} \\
-        \bm{\nabla} \cdot \bm{B} = &\left ( - \partial_{y} B^{xy} - \partial_{z} B^{xz}\right ) \bm{e_{x}}+\left ( \partial_{x} B^{xy} - \partial_{z} B^{yz}\right ) \bm{e_{y}}+\left ( \partial_{x} B^{xz} + \partial_{y} B^{yz}\right ) \bm{e_{z}}
+        \boldsymbol{A} =& A^{x}\boldsymbol{e_{x}}+A^{y}\boldsymbol{e_{y}}+A^{z}\boldsymbol{e_{z}} \\
+        \boldsymbol{B} =& B^{xy}\boldsymbol{e_{x}\wedge e_{y}}+B^{xz}\boldsymbol{e_{x}\wedge e_{z}}+B^{yz}\boldsymbol{e_{y}\wedge e_{z}} \\
+        \boldsymbol{\nabla}  f =& \partial_{x} f\boldsymbol{e_{x}}+\partial_{y} f\boldsymbol{e_{y}}+\partial_{z} f\boldsymbol{e_{z}} \\
+        \boldsymbol{\nabla} \cdot \boldsymbol{A} = &\partial_{x} A^{x} + \partial_{y} A^{y} + \partial_{z} A^{z} \\
+        \boldsymbol{\nabla}  \boldsymbol{A} = &\partial_{x} A^{x} + \partial_{y} A^{y} + \partial_{z} A^{z}
+                                              +\left ( - \partial_{y} A^{x} + \partial_{x} A^{y}\right ) \boldsymbol{e_{x}\wedge e_{y}}
+                                              +\left ( - \partial_{z} A^{x} + \partial_{x} A^{z}\right ) \boldsymbol{e_{x}\wedge e_{z}} \\
+                                              &+\left ( - \partial_{z} A^{y} + \partial_{y} A^{z}\right ) \boldsymbol{e_{y}\wedge e_{z}} \\
+        -I (\boldsymbol{\nabla} \wedge \boldsymbol{A}) = &\left ( - \partial_{z} A^{y} + \partial_{y} A^{z}\right ) \boldsymbol{e_{x}}
+                                                        +\left ( \partial_{z} A^{x} - \partial_{x} A^{z}\right ) \boldsymbol{e_{y}}
+                                                        +\left ( - \partial_{y} A^{x} + \partial_{x} A^{y}\right ) \boldsymbol{e_{z}} \\
+        \boldsymbol{\nabla}  \boldsymbol{B} = &\left ( - \partial_{y} B^{xy} - \partial_{z} B^{xz}\right ) \boldsymbol{e_{x}}
+                                             +\left ( \partial_{x} B^{xy} - \partial_{z} B^{yz}\right ) \boldsymbol{e_{y}}
+                                             +\left ( \partial_{x} B^{xz} + \partial_{y} B^{yz}\right ) \boldsymbol{e_{z}} \\
+                                             &+\left ( \partial_{z} B^{xy} - \partial_{y} B^{xz} + \partial_{x} B^{yz}\right ) \boldsymbol{e_{x}\wedge e_{y}\wedge e_{z}} \\
+        \boldsymbol{\nabla} \wedge \boldsymbol{B} = &\left ( \partial_{z} B^{xy} - \partial_{y} B^{xz} + \partial_{x} B^{yz}\right ) \boldsymbol{e_{x}\wedge e_{y}\wedge e_{z}} \\
+        \boldsymbol{\nabla} \cdot \boldsymbol{B} = &\left ( - \partial_{y} B^{xy} - \partial_{z} B^{xz}\right ) \boldsymbol{e_{x}}+\left ( \partial_{x} B^{xy} - \partial_{z} B^{yz}\right ) \boldsymbol{e_{y}}+\left ( \partial_{x} B^{xz} + \partial_{y} B^{yz}\right ) \boldsymbol{e_{z}}
         \end{align*}
 
 
+
 This example also demonstrates several other features of the latex printer.  In the
-case that strings are input into the latex printer such as ``r'grad*\bm{A}'``,
-``r'grad^\bm{A}'``, or ``r'grad*\bm{A}'``.  The text symbols *grad*, *^*, *|*, and
+case that strings are input into the latex printer such as ``r'grad*\boldsymbol{A}'``,
+``r'grad^\boldsymbol{A}'``, or ``r'grad*\boldsymbol{A}'``.  The text symbols *grad*, *^*, *|*, and
 *\ ** are mapped by the *xdvi()* post-processor as follows if the string contains
 an *=*.
 
     .. csv-table::
-        :header: " original ", " replacement ", " displayed latex "
+        :header: original , replacement , displayed latex
         :widths: 15, 15, 15
 
-        " ``grad*A`` ", " ``\bm{\nabla}A`` ", " :math:`\bm{\nabla}A` "
-        " ``A^B`` ", " ``A\wedge B`` ", " :math:`A\wedge B` "
-        " ``A|B`` ", " ``A\cdot B`` ", " :math:`A\cdot B` "
-        " ``A*B`` ", " ``AB`` ", " :math:`AB` "
-        " ``A<B`` ", " ``A\lfloor B`` ", " :math:`A\lfloor B` "
-        " ``A>B`` ", " ``A\rfloor B`` ", " :math:`A\rfloor B` "
+        ``grad*A`` , ``\boldsymbol{\nabla}A`` , :math:`\boldsymbol{\nabla}A`
+        ``A^B`` , ``A\wedge B`` , :math:`A\wedge B`
+        ``A|B`` , ``A\cdot B`` , :math:`A\cdot B`
+        ``A*B`` , ``AB`` , :math:`AB`
+        ``A<B`` , ``A\lfloor B`` , :math:`A\lfloor B`
+        ``A>B`` , ``A\rfloor B`` , :math:`A\rfloor B`
 
 If the string to be printed contains a *\%* none of the above substitutions
 are made before the latex processor is applied.  In general for the latex
@@ -2169,12 +2240,14 @@ This example demonstrates the most general metric tensor
   :nowrap:
 
   \begin{equation*}
-  g_{ij} = \left [ \begin{array}{cccc} \lp a\cdot a\rp  & \lp a\cdot b\rp  & \lp a\cdot c\rp  & \lp a\cdot d\rp  \\
-  \lp a\cdot b\rp  & \lp b\cdot b\rp  & \lp b\cdot c\rp  & \lp b\cdot d\rp  \\
-  \lp a\cdot c\rp  & \lp b\cdot c\rp  & \lp c\cdot c\rp  & \lp c\cdot d\rp  \\
-  \lp a\cdot d\rp  & \lp b\cdot d\rp  & \lp c\cdot d\rp  & \lp d\cdot d\rp
+  g_{ij} = \left [ \begin{array}{cccc} \left ( a\cdot a\right )  & \left ( a\cdot b\right )  & \left ( a\cdot c\right )  & \left ( a\cdot d\right )  \\
+  \left ( a\cdot b\right )  & \left ( b\cdot b\right )  & \left ( b\cdot c\right )  & \left ( b\cdot d\right )  \\
+  \left ( a\cdot c\right )  & \left ( b\cdot c\right )  & \left ( c\cdot c\right )  & \left ( c\cdot d\right )  \\
+  \left ( a\cdot d\right )  & \left ( b\cdot d\right )  & \left ( c\cdot d\right )  & \left ( d\cdot d\right )
   \end{array}\right ]
   \end{equation*}
+
+
 
 and how the *ga* module can be used to verify and expand geometric algebra identities consisting of relations between
 the abstract vectors :math:`a`, :math:`b`, :math:`c`, and :math:`d`.
@@ -2209,16 +2282,18 @@ symbols.
   :nowrap:
 
   \begin{align*}
-  \bm{a\cdot (b c)} =& - \lp a\cdot c\rp \bm{b}+\lp a\cdot b\rp \bm{c} \\
-  \bm{a\cdot (b\W c)} =& - \lp a\cdot c\rp \bm{b}+\lp a\cdot b\rp \bm{c} \\
-  \bm{a\cdot (b\W c\W d)} =& \lp a\cdot d\rp \bm{b\W c}- \lp a\cdot c\rp \bm{b\W d}+\lp a\cdot b\rp \bm{c\W d} \\
-  \bm{a\cdot (b\W c)+c\cdot (a\W b)+b\cdot (c\W a)} =& 0 \\
-  \bm{a (b\W c)-b (a\W c)+c (a\W b)} =& 3\bm{a\W b\W c} \\
-  \bm{a (b\W c\W d)-b (a\W c\W d)+c (a\W b\W d)-d (a\W b\W c)} =& 4\bm{a\W b\W c\W d} \\
-  \bm{(a\W b)\cdot (c\W d)} =& - \lp a\cdot c\rp  \lp b\cdot d\rp  + \lp a\cdot d\rp  \lp b\cdot c\rp \\
-  \bm{((a\W b)\cdot c)\cdot d} =& - \lp a\cdot c\rp  \lp b\cdot d\rp  + \lp a\cdot d\rp  \lp b\cdot c\rp \\
-  \bm{(a\W b)\times (c\W d)} =& - \lp b\cdot d\rp \bm{a\W c}+\lp b\cdot c\rp \bm{a\W d}+\lp a\cdot d\rp \bm{b\W c}- \lp a\cdot c\rp \bm{b\W d}
+  \boldsymbol{a\cdot (b c)} =& - \left ( a\cdot c\right ) \boldsymbol{b}+\left ( a\cdot b\right ) \boldsymbol{c} \\
+  \boldsymbol{a\cdot (b\wedge c)} =& - \left ( a\cdot c\right ) \boldsymbol{b}+\left ( a\cdot b\right ) \boldsymbol{c} \\
+  \boldsymbol{a\cdot (b\wedge c\wedge d)} =& \left ( a\cdot d\right ) \boldsymbol{b\wedge c}- \left ( a\cdot c\right ) \boldsymbol{b\wedge d}+\left ( a\cdot b\right ) \boldsymbol{c\wedge d} \\
+  \boldsymbol{a\cdot (b\wedge c)+c\cdot (a\wedge b)+b\cdot (c\wedge a)} =& 0 \\
+  \boldsymbol{a (b\wedge c)-b (a\wedge c)+c (a\wedge b)} =& 3\boldsymbol{a\wedge b\wedge c} \\
+  \boldsymbol{a (b\wedge c\wedge d)-b (a\wedge c\wedge d)+c (a\wedge b\wedge d)-d (a\wedge b\wedge c)} =& 4\boldsymbol{a\wedge b\wedge c\wedge d} \\
+  \boldsymbol{(a\wedge b)\cdot (c\wedge d)} =& - \left ( a\cdot c\right )  \left ( b\cdot d\right )  + \left ( a\cdot d\right )  \left ( b\cdot c\right ) \\
+  \boldsymbol{((a\wedge b)\cdot c)\cdot d} =& - \left ( a\cdot c\right )  \left ( b\cdot d\right )  + \left ( a\cdot d\right )  \left ( b\cdot c\right ) \\
+  \boldsymbol{(a\wedge b)\times (c\wedge d)} =& - \left ( b\cdot d\right ) \boldsymbol{a\wedge c}+\left ( b\cdot c\right ) \boldsymbol{a\wedge d}+\left ( a\cdot d\right ) \boldsymbol{b\wedge c}- \left ( a\cdot c\right ) \boldsymbol{b\wedge d}
   \end{align*}
+
+
 
 Reciprocal Frame
 ++++++++++++++++
@@ -2273,17 +2348,17 @@ basis vectors are correctly calculated.
 The preceeding code also demonstrated the use of the *\%* directive in
 printing a string so that *^* is treated literally and not translated
 to *\\wedge*. Note that ``'%E^{2} ='`` is printed as :math:`E^{2} =`
-and not as :math:`E\W {2} =`.
+and not as :math:`E\wedge {2} =`.
 
 .. math::
-  :nowrap:
+    :nowrap:
 
     \begin{align*}
-    E =& \bm{e_{1}\W e_{2}\W e_{3}} \\
-    E^{2} =& \lp e_{1}\cdot e_{2}\rp ^{2} - 2 \lp e_{1}\cdot e_{2}\rp  \lp e_{1}\cdot e_{3}\rp  \lp e_{2}\cdot e_{3}\rp  + \lp e_{1}\cdot e_{3}\rp ^{2} + \lp e_{2}\cdot e_{3}\rp ^{2} -1 \\
-    E1 =& (e2\W e3) E = \left ( \lp e_{2}\cdot e_{3}\rp ^{2} -1\right ) \bm{e_{1}}+\left ( \lp e_{1}\cdot e_{2}\rp  - \lp e_{1}\cdot e_{3}\rp  \lp e_{2}\cdot e_{3}\rp \right ) \bm{e_{2}}+\left ( - \lp e_{1}\cdot e_{2}\rp  \lp e_{2}\cdot e_{3}\rp  + \lp e_{1}\cdot e_{3}\rp \right ) \bm{e_{3}} \\
-    E2 =& -(e1\W e3) E = \left ( \lp e_{1}\cdot e_{2}\rp  - \lp e_{1}\cdot e_{3}\rp  \lp e_{2}\cdot e_{3}\rp \right ) \bm{e_{1}}+\left ( \lp e_{1}\cdot e_{3}\rp ^{2} -1\right ) \bm{e_{2}}+\left ( - \lp e_{1}\cdot e_{2}\rp  \lp e_{1}\cdot e_{3}\rp  + \lp e_{2}\cdot e_{3}\rp \right ) \bm{e_{3}} \\
-    E3 =& (e1\W e2) E = \left ( - \lp e_{1}\cdot e_{2}\rp  \lp e_{2}\cdot e_{3}\rp  + \lp e_{1}\cdot e_{3}\rp \right ) \bm{e_{1}}+\left ( - \lp e_{1}\cdot e_{2}\rp  \lp e_{1}\cdot e_{3}\rp  + \lp e_{2}\cdot e_{3}\rp \right ) \bm{e_{2}}+\left ( \lp e_{1}\cdot e_{2}\rp ^{2} -1\right ) \bm{e_{3}} \\
+    E =& \boldsymbol{e_{1}\wedge e_{2}\wedge e_{3}} \\
+    E^{2} =& \left ( e_{1}\cdot e_{2}\right ) ^{2} - 2 \left ( e_{1}\cdot e_{2}\right )  \left ( e_{1}\cdot e_{3}\right )  \left ( e_{2}\cdot e_{3}\right )  + \left ( e_{1}\cdot e_{3}\right ) ^{2} + \left ( e_{2}\cdot e_{3}\right ) ^{2} -1 \\
+    E1 =& (e2\wedge e3) E = \left ( \left ( e_{2}\cdot e_{3}\right ) ^{2} -1\right ) \boldsymbol{e_{1}}+\left ( \left ( e_{1}\cdot e_{2}\right )  - \left ( e_{1}\cdot e_{3}\right )  \left ( e_{2}\cdot e_{3}\right ) \right ) \boldsymbol{e_{2}}+\left ( - \left ( e_{1}\cdot e_{2}\right )  \left ( e_{2}\cdot e_{3}\right )  + \left ( e_{1}\cdot e_{3}\right ) \right ) \boldsymbol{e_{3}} \\
+    E2 =& -(e1\wedge e3) E = \left ( \left ( e_{1}\cdot e_{2}\right )  - \left ( e_{1}\cdot e_{3}\right )  \left ( e_{2}\cdot e_{3}\right ) \right ) \boldsymbol{e_{1}}+\left ( \left ( e_{1}\cdot e_{3}\right ) ^{2} -1\right ) \boldsymbol{e_{2}}+\left ( - \left ( e_{1}\cdot e_{2}\right )  \left ( e_{1}\cdot e_{3}\right )  + \left ( e_{2}\cdot e_{3}\right ) \right ) \boldsymbol{e_{3}} \\
+    E3 =& (e1\wedge e2) E = \left ( - \left ( e_{1}\cdot e_{2}\right )  \left ( e_{2}\cdot e_{3}\right )  + \left ( e_{1}\cdot e_{3}\right ) \right ) \boldsymbol{e_{1}}+\left ( - \left ( e_{1}\cdot e_{2}\right )  \left ( e_{1}\cdot e_{3}\right )  + \left ( e_{2}\cdot e_{3}\right ) \right ) \boldsymbol{e_{2}}+\left ( \left ( e_{1}\cdot e_{2}\right ) ^{2} -1\right ) \boldsymbol{e_{3}} \\
     E1\cdot e2 =& 0 \\
     E1\cdot e3 =& 0 \\
     E2\cdot e1 =& 0 \\
@@ -2294,6 +2369,8 @@ and not as :math:`E\W {2} =`.
     (E2\cdot e2)/E^{2} =& 1 \\
     (E3\cdot e3)/E^{2} =& 1
     \end{align*}
+
+
 
 The formulas derived for :math:`E1`, :math:`E2`, :math:`E3`, and :math:`E^{2}` could
 also be applied to the numerical calculations of crystal properties.
@@ -2323,11 +2400,13 @@ from a rotation of a vector in the Minkowski space using the rotor
     Xp = tp*g0+xp*g1
 
     print 'R =',R
-    print r"#%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} = t'\bm{\gamma'_{t}}+x'\bm{\gamma'_{x}} = R\lp t'\bm{\gamma_{t}}+x'\bm{\gamma_{x}}\rp R^{\dagger}"
+    print r"#%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} = t'\bm{\gamma'_{t}}+x'\bm{\gamma'_{x}} "+
+          r"= R\left ( t'\bm{\gamma_{t}}+x'\bm{\gamma_{x}}\right ) R^{\dagger}"
 
     Xpp = R*Xp*R.rev()
     Xpp = Xpp.collect([xp,tp])
-    Xpp = Xpp.subs({2*sinh(alpha/2)*cosh(alpha/2):sinh(alpha),sinh(alpha/2)**2+cosh(alpha/2)**2:cosh(alpha)})
+    Xpp = Xpp.subs({2*sinh(alpha/2)*cosh(alpha/2):sinh(alpha),\
+                   sinh(alpha/2)**2+cosh(alpha/2)**2:cosh(alpha)})
     print r"%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =",Xpp
     Xpp = Xpp.subs({sinh(alpha):gamma*beta,cosh(alpha):gamma})
 
@@ -2341,7 +2420,7 @@ from a rotation of a vector in the Minkowski space using the rotor
 The preceeding code also demonstrates how to use the sympy *subs* functions
 to perform the hyperbolic half angle transformation.  The code also shows
 the use of both the *#* and *\%* directives in the text string
-``r"#%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} = t'\bm{\gamma'_{t}}+x'\bm{\gamma'_{x}} = R\lp t'\bm{\gamma_{t}}+x'\bm{\gamma_{x}}\rp R^{\dagger}"``.
+``r"#%t\bm{\gamma_{t}}+x\bm{\gamma_{x}} = t'\bm{\gamma'_{t}}+x'\bm{\gamma'_{x}} = R\left ( t'\bm{\gamma_{t}}+x'\bm{\gamma_{x}}\right ) R^{\dagger}"``.
 Both the *#* and *\%* are needed in this text string for two reasons.  First, the text string contains an *=* sign.  The latex preprocessor
 uses this a key to combine the text string with a sympy expression to be printed after the text string.  The *#* is required to inform
 the preprocessor that there is no sympy expression to follow.  Second, the *\%* is requires to inform the preprocessor that the text
@@ -2349,14 +2428,14 @@ string is to be displayed in latex math mode and not in text mode (if *#* is pre
 overridden by the *\%* directive).
 
 .. math::
-  :nowrap:
+    :nowrap:
 
-    \begin{align*} R =& \cosh{\left (\frac{1}{2} \alpha \right )}+\sinh{\left (\frac{1}{2} \alpha \right )}\bm{\gamma_{t}\W \gamma_{x}} \\
-    t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =& t'\bm{\gamma'_{t}}+x'\bm{\gamma'_{x}} = R\lp t'\bm{\gamma_{t}}+x'\bm{\gamma_{x}}\rp R^{\dagger} \\
-    t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =& \left ( t' \cosh{\left (\alpha \right )} - x' \sinh{\left (\alpha \right )}\right ) \bm{\gamma_{t}}+\left ( - t' \sinh{\left (\alpha \right )} + x' \cosh{\left (\alpha \right )}\right ) \bm{\gamma_{x}} \\
-    \f{\sinh}{\alpha} =& \gamma\beta \\
-    \f{\cosh}{\alpha} =& \gamma \\
-    t\bm{\gamma_{t}}+x\bm{\gamma_{x}} =& \left ( \gamma \left(- \beta x' + t'\right)\right ) \bm{\gamma_{t}}+\left ( \gamma \left(- \beta t' + x'\right)\right ) \bm{\gamma_{x}}
+    \begin{align*} R =& \cosh{\left (\frac{1}{2} \alpha \right )}+\sinh{\left (\frac{1}{2} \alpha \right )}\boldsymbol{\gamma_{t}\wedge \gamma_{x}} \\
+    t\boldsymbol{\gamma_{t}}+x\boldsymbol{\gamma_{x}} =& t'\boldsymbol{\gamma'_{t}}+x'\boldsymbol{\gamma'_{x}} = R\left ( t'\boldsymbol{\gamma_{t}}+x'\boldsymbol{\gamma_{x}}\right ) R^{\dagger} \\
+    t\boldsymbol{\gamma_{t}}+x\boldsymbol{\gamma_{x}} =& \left ( t' \cosh{\left (\alpha \right )} - x' \sinh{\left (\alpha \right )}\right ) \boldsymbol{\gamma_{t}}+\left ( - t' \sinh{\left (\alpha \right )} + x' \cosh{\left (\alpha \right )}\right ) \boldsymbol{\gamma_{x}} \\
+    {\sinh}\left ( {\alpha} \right ) =& \gamma\beta \\
+    {\cosh}\left ( {\alpha} \right ) =& \gamma \\
+    t\boldsymbol{\gamma_{t}}+x\boldsymbol{\gamma_{x}} =& \left ( \gamma \left(- \beta x' + t'\right)\right ) \boldsymbol{\gamma_{t}}+\left ( \gamma \left(- \beta t' + x'\right)\right ) \boldsymbol{\gamma_{x}}
     \end{align*}
 
 
@@ -2388,19 +2467,21 @@ standard curl of a 3-dimension function the result is multiplied by
         :nowrap:
 
         \begin{align*}
-        \nabla A =& \nabla\W A + \nabla\cdot A \\
-        \nabla^{2} A =& \nabla\paren{\nabla\W A} + \nabla\paren{\nabla\cdot A} \\
-        \nabla^{2} A =& \nabla\W\paren{\nabla\W A} + \nabla\cdot\paren{\nabla\W A}
-        +\nabla\W\paren{\nabla\cdot A} + \nabla\cdot\paren{\nabla\cdot A} \\
-        \nabla^{2} A =& \nabla\W\paren{\nabla\W A} + \paren{\nabla\cdot\nabla} A
-        - \nabla\paren{\nabla\cdot A} + \nabla\paren{\nabla\cdot A} \\
-        \nabla^{2} A =& \nabla\W\nabla\W A + \paren{\nabla\cdot\nabla}A
+        \nabla A =& \nabla\wedge A + \nabla\cdot A \\
+        \nabla^{2} A =& \nabla\left ( {{\nabla\wedge A}} \right ) + \nabla\left ( {{\nabla\cdot A}} \right ) \\
+        \nabla^{2} A =& \nabla\wedge\left ( {{\nabla\wedge A}} \right ) + \nabla\cdot\left ( {{\nabla\wedge A}} \right )
+        +\nabla\wedge\left ( {{\nabla\cdot A}} \right ) + \nabla\cdot\left ( {{\nabla\cdot A}} \right ) \\
+        \nabla^{2} A =& \nabla\wedge\left ( {{\nabla\wedge A}} \right ) + \left ( {{\nabla\cdot\nabla}} \right ) A
+        - \nabla\left ( {{\nabla\cdot A}} \right ) + \nabla\left ( {{\nabla\cdot A}} \right ) \\
+        \nabla^{2} A =& \nabla\wedge\nabla\wedge A + \left ( {{\nabla\cdot\nabla}} \right )A
         \end{align*}
 
-    In the derivation we have used that :math:`\nabla\cdot\paren{\nabla\W A} = \paren{\nabla\cdot\nabla}A - \nabla\paren{\nabla\cdot A}`
+
+
+    In the derivation we have used that :math:`\nabla\cdot\left ( {{\nabla\wedge A}} \right ) = \left ( {{\nabla\cdot\nabla}} \right )A - \nabla\left ( {{\nabla\cdot A}} \right )`
     which is implicit in the second *BAC-CAB* formula.
     No parenthesis is needed for the geometric curl of the curl (exterior derivative of exterior derivative)
-    since the :math:`\W` operation is associative unlike the vector curl operator and :math:`\nabla\cdot\nabla` is the usual Laplacian
+    since the :math:`\wedge` operation is associative unlike the vector curl operator and :math:`\nabla\cdot\nabla` is the usual Laplacian
     operator.
 
 .. code-block:: python
@@ -2431,16 +2512,18 @@ standard curl of a 3-dimension function the result is multiplied by
 Results of code
 
 .. math::
-  :nowrap:
+    :nowrap:
 
     \begin{align*}
-    A =& A^{r}\bm{e_{r}}+A^{\theta}\bm{e_{\theta}}+A^{\phi}\bm{e_{\phi}} \\
-    B =& B^{r\theta}\bm{e_{r}\W e_{\theta}}+B^{r\phi}\bm{e_{r}\W e_{\phi}}+B^{\theta\phi}\bm{e_{\theta}\W e_{\phi}} \\
-    \bm{\nabla}  f =& \partial_{r} f\bm{e_{r}}+\frac{\partial_{\theta} f}{r}\bm{e_{\theta}}+\frac{\partial_{\phi} f}{r \sin{\left (\theta \right )}}\bm{e_{\phi}} \\
-    \bm{\nabla} \cdot A =& \partial_{r} A^{r} + \frac{A^{\theta}}{r \tan{\left (\theta \right )}} + 2 \frac{A^{r}}{r} + \frac{\partial_{\theta} A^{\theta}}{r} + \frac{\partial_{\phi} A^{\phi}}{r \sin{\left (\theta \right )}} \\
-    -I (\bm{\nabla} \W A) =& \left ( \frac{A^{\phi} \cos{\left (\theta \right )} + \sin{\left (\theta \right )} \partial_{\theta} A^{\phi} - \partial_{\phi} A^{\theta}}{r \sin{\left (\theta \right )}}\right ) \bm{e_{r}}+\left ( - \partial_{r} A^{\phi} - \frac{A^{\phi}}{r} + \frac{\partial_{\phi} A^{r}}{r \sin{\left (\theta \right )}}\right ) \bm{e_{\theta}}+\left ( \frac{r \partial_{r} A^{\theta} + A^{\theta} - \partial_{\theta} A^{r}}{r}\right ) \bm{e_{\phi}} \\
-    \bm{\nabla} \W B =& \left ( \partial_{r} B^{\theta\phi} + 2 \frac{B^{\theta\phi}}{r} - \frac{B^{r\phi}}{r \tan{\left (\theta \right )}} - \frac{\partial_{\theta} B^{r\phi}}{r} + \frac{\partial_{\phi} B^{r\theta}}{r \sin{\left (\theta \right )}}\right ) \bm{e_{r}\W e_{\theta}\W e_{\phi}}
+    A =& A^{r}\boldsymbol{e_{r}}+A^{\theta}\boldsymbol{e_{\theta}}+A^{\phi}\boldsymbol{e_{\phi}} \\
+    B =& B^{r\theta}\boldsymbol{e_{r}\wedge e_{\theta}}+B^{r\phi}\boldsymbol{e_{r}\wedge e_{\phi}}+B^{\theta\phi}\boldsymbol{e_{\theta}\wedge e_{\phi}} \\
+    \boldsymbol{\nabla}  f =& \partial_{r} f\boldsymbol{e_{r}}+\frac{\partial_{\theta} f}{r}\boldsymbol{e_{\theta}}+\frac{\partial_{\phi} f}{r \sin{\left (\theta \right )}}\boldsymbol{e_{\phi}} \\
+    \boldsymbol{\nabla} \cdot A =& \partial_{r} A^{r} + \frac{A^{\theta}}{r \tan{\left (\theta \right )}} + 2 \frac{A^{r}}{r} + \frac{\partial_{\theta} A^{\theta}}{r} + \frac{\partial_{\phi} A^{\phi}}{r \sin{\left (\theta \right )}} \\
+    -I (\boldsymbol{\nabla} \wedge A) =& \left ( \frac{A^{\phi} \cos{\left (\theta \right )} + \sin{\left (\theta \right )} \partial_{\theta} A^{\phi} - \partial_{\phi} A^{\theta}}{r \sin{\left (\theta \right )}}\right ) \boldsymbol{e_{r}}+\left ( - \partial_{r} A^{\phi} - \frac{A^{\phi}}{r} + \frac{\partial_{\phi} A^{r}}{r \sin{\left (\theta \right )}}\right ) \boldsymbol{e_{\theta}}+\left ( \frac{r \partial_{r} A^{\theta} + A^{\theta} - \partial_{\theta} A^{r}}{r}\right ) \boldsymbol{e_{\phi}} \\
+    \boldsymbol{\nabla} \wedge B =& \left ( \partial_{r} B^{\theta\phi} + 2 \frac{B^{\theta\phi}}{r} - \frac{B^{r\phi}}{r \tan{\left (\theta \right )}} - \frac{\partial_{\theta} B^{r\phi}}{r} + \frac{\partial_{\phi} B^{r\theta}}{r \sin{\left (\theta \right )}}\right ) \boldsymbol{e_{r}\wedge e_{\theta}\wedge e_{\phi}}
     \end{align*}
+
+
 
 Maxwell's Equations
 +++++++++++++++++++
@@ -2449,14 +2532,14 @@ The geometric algebra formulation of Maxwell's equations is deomonstrated
 with the formalism developed in "Geometric Algebra for Physicists" [Doran]_.
 In this formalism the signature of the metric is :math:`(1,-1,-1,-1)` and the
 basis vectors are :math:`\gamma_{t}`, :math:`\gamma_{x}`, :math:`\gamma_{y}`,
-and :math:`\gamma_{z}`.  The if :math:`\bm{E}` and :math:`\bm{B}` are the
+and :math:`\gamma_{z}`.  The if :math:`\boldsymbol{E}` and :math:`\boldsymbol{B}` are the
 normal electric and magnetic field vectors the electric and magnetic
-bivectors are given by :math:`E = \bm{E}\gamma_{t}` and :math:`B = \bm{B}\gamma_{t}`.
+bivectors are given by :math:`E = \boldsymbol{E}\gamma_{t}` and :math:`B = \boldsymbol{B}\gamma_{t}`.
 The electromagnetic bivector is then :math:`F = E+IB` where
 :math:`I = \gamma_{t}\gamma_{x}\gamma_{y}\gamma_{z}` is the pesudo-scalar
 for the Minkowski space.  Note that the electromagnetic bivector is isomorphic
 to the electromagnetic tensor.  Then if :math:`J` is the 4-current all of
-Maxwell's equations are given by :math:`\bm{\nabla}F = J`.  For more details
+Maxwell's equations are given by :math:`\boldsymbol{\nabla}F = J`.  For more details
 see [Doran]_ chapter 7.
 
 .. code-block:: python
@@ -2494,31 +2577,33 @@ see [Doran]_ chapter 7.
     xdvi()
 
 .. math::
-  :nowrap:
+    :nowrap:
 
     \begin{align*}
-    B =& \bm{B\gamma_{t}} = - B^{x}\bm{\gamma_{t}\W \gamma_{x}}- B^{y}\bm{\gamma_{t}\W \gamma_{y}}- B^{z}\bm{\gamma_{t}\W \gamma_{z}} \\
-    E =& \bm{E\gamma_{t}} = - E^{x}\bm{\gamma_{t}\W \gamma_{x}}- E^{y}\bm{\gamma_{t}\W \gamma_{y}}- E^{z}\bm{\gamma_{t}\W \gamma_{z}} \\
-    F =& E+IB = - E^{x}\bm{\gamma_{t}\W \gamma_{x}}- E^{y}\bm{\gamma_{t}\W \gamma_{y}}- E^{z}\bm{\gamma_{t}\W \gamma_{z}}- B^{z}\bm{\gamma_{x}\W \gamma_{y}}+B^{y}\bm{\gamma_{x}\W \gamma_{z}}- B^{x}\bm{\gamma_{y}\W \gamma_{z}} \\
-    J =& J^{t}\bm{\gamma_{t}}+J^{x}\bm{\gamma_{x}}+J^{y}\bm{\gamma_{y}}+J^{z}\bm{\gamma_{z}} \\
-    \bm{\nabla}  F =& \left ( \partial_{x} E^{x} + \partial_{y} E^{y} + \partial_{z} E^{z}\right ) \bm{\gamma_{t}} \\
-    & +\left ( - \partial_{z} B^{y} + \partial_{y} B^{z} - \partial_{t} E^{x}\right ) \bm{\gamma_{x}} \\
-    & +\left ( \partial_{z} B^{x} - \partial_{x} B^{z} - \partial_{t} E^{y}\right ) \bm{\gamma_{y}} \\
-    & +\left ( - \partial_{y} B^{x} + \partial_{x} B^{y} - \partial_{t} E^{z}\right ) \bm{\gamma_{z}} \\
-    & +\left ( - \partial_{t} B^{z} + \partial_{y} E^{x} - \partial_{x} E^{y}\right ) \bm{\gamma_{t}\W \gamma_{x}\W \gamma_{y}} \\
-    & +\left ( \partial_{t} B^{y} + \partial_{z} E^{x} - \partial_{x} E^{z}\right ) \bm{\gamma_{t}\W \gamma_{x}\W \gamma_{z}} \\
-    & +\left ( - \partial_{t} B^{x} + \partial_{z} E^{y} - \partial_{y} E^{z}\right ) \bm{\gamma_{t}\W \gamma_{y}\W \gamma_{z}} \\
-    & +\left ( \partial_{x} B^{x} + \partial_{y} B^{y} + \partial_{z} B^{z}\right ) \bm{\gamma_{x}\W \gamma_{y}\W \gamma_{z}} \\
-    \bm{\nabla}  F =& J \\
-    \grade{\nabla F}_{1} -J = 0 =  & \left ( - J^{t} + \partial_{x} E^{x} + \partial_{y} E^{y} + \partial_{z} E^{z}\right ) \bm{\gamma_{t}} \\
-    & +\left ( - J^{x} - \partial_{z} B^{y} + \partial_{y} B^{z} - \partial_{t} E^{x}\right ) \bm{\gamma_{x}} \\
-    & +\left ( - J^{y} + \partial_{z} B^{x} - \partial_{x} B^{z} - \partial_{t} E^{y}\right ) \bm{\gamma_{y}} \\
-    & +\left ( - J^{z} - \partial_{y} B^{x} + \partial_{x} B^{y} - \partial_{t} E^{z}\right ) \bm{\gamma_{z}} \\
-    \grade{\nabla F}_{3} = 0 =  & \left ( - \partial_{t} B^{z} + \partial_{y} E^{x} - \partial_{x} E^{y}\right ) \bm{\gamma_{t}\W \gamma_{x}\W \gamma_{y}} \\
-    & +\left ( \partial_{t} B^{y} + \partial_{z} E^{x} - \partial_{x} E^{z}\right ) \bm{\gamma_{t}\W \gamma_{x}\W \gamma_{z}} \\
-    & +\left ( - \partial_{t} B^{x} + \partial_{z} E^{y} - \partial_{y} E^{z}\right ) \bm{\gamma_{t}\W \gamma_{y}\W \gamma_{z}} \\
-    & +\left ( \partial_{x} B^{x} + \partial_{y} B^{y} + \partial_{z} B^{z}\right ) \bm{\gamma_{x}\W \gamma_{y}\W \gamma_{z}}
+    B =& \boldsymbol{B\gamma_{t}} = - B^{x}\boldsymbol{\gamma_{t}\wedge \gamma_{x}}- B^{y}\boldsymbol{\gamma_{t}\wedge \gamma_{y}}- B^{z}\boldsymbol{\gamma_{t}\wedge \gamma_{z}} \\
+    E =& \boldsymbol{E\gamma_{t}} = - E^{x}\boldsymbol{\gamma_{t}\wedge \gamma_{x}}- E^{y}\boldsymbol{\gamma_{t}\wedge \gamma_{y}}- E^{z}\boldsymbol{\gamma_{t}\wedge \gamma_{z}} \\
+    F =& E+IB = - E^{x}\boldsymbol{\gamma_{t}\wedge \gamma_{x}}- E^{y}\boldsymbol{\gamma_{t}\wedge \gamma_{y}}- E^{z}\boldsymbol{\gamma_{t}\wedge \gamma_{z}}- B^{z}\boldsymbol{\gamma_{x}\wedge \gamma_{y}}+B^{y}\boldsymbol{\gamma_{x}\wedge \gamma_{z}}- B^{x}\boldsymbol{\gamma_{y}\wedge \gamma_{z}} \\
+    J =& J^{t}\boldsymbol{\gamma_{t}}+J^{x}\boldsymbol{\gamma_{x}}+J^{y}\boldsymbol{\gamma_{y}}+J^{z}\boldsymbol{\gamma_{z}} \\
+    \boldsymbol{\nabla}  F =& \left ( \partial_{x} E^{x} + \partial_{y} E^{y} + \partial_{z} E^{z}\right ) \boldsymbol{\gamma_{t}} \\
+    & +\left ( - \partial_{z} B^{y} + \partial_{y} B^{z} - \partial_{t} E^{x}\right ) \boldsymbol{\gamma_{x}} \\
+    & +\left ( \partial_{z} B^{x} - \partial_{x} B^{z} - \partial_{t} E^{y}\right ) \boldsymbol{\gamma_{y}} \\
+    & +\left ( - \partial_{y} B^{x} + \partial_{x} B^{y} - \partial_{t} E^{z}\right ) \boldsymbol{\gamma_{z}} \\
+    & +\left ( - \partial_{t} B^{z} + \partial_{y} E^{x} - \partial_{x} E^{y}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{x}\wedge \gamma_{y}} \\
+    & +\left ( \partial_{t} B^{y} + \partial_{z} E^{x} - \partial_{x} E^{z}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{x}\wedge \gamma_{z}} \\
+    & +\left ( - \partial_{t} B^{x} + \partial_{z} E^{y} - \partial_{y} E^{z}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{y}\wedge \gamma_{z}} \\
+    & +\left ( \partial_{x} B^{x} + \partial_{y} B^{y} + \partial_{z} B^{z}\right ) \boldsymbol{\gamma_{x}\wedge \gamma_{y}\wedge \gamma_{z}} \\
+    \boldsymbol{\nabla}  F =& J \\
+    \left < {{\nabla F}} \right >_{1} -J = 0 =  & \left ( - J^{t} + \partial_{x} E^{x} + \partial_{y} E^{y} + \partial_{z} E^{z}\right ) \boldsymbol{\gamma_{t}} \\
+    & +\left ( - J^{x} - \partial_{z} B^{y} + \partial_{y} B^{z} - \partial_{t} E^{x}\right ) \boldsymbol{\gamma_{x}} \\
+    & +\left ( - J^{y} + \partial_{z} B^{x} - \partial_{x} B^{z} - \partial_{t} E^{y}\right ) \boldsymbol{\gamma_{y}} \\
+    & +\left ( - J^{z} - \partial_{y} B^{x} + \partial_{x} B^{y} - \partial_{t} E^{z}\right ) \boldsymbol{\gamma_{z}} \\
+    \left < {{\nabla F}} \right >_{3} = 0 =  & \left ( - \partial_{t} B^{z} + \partial_{y} E^{x} - \partial_{x} E^{y}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{x}\wedge \gamma_{y}} \\
+    & +\left ( \partial_{t} B^{y} + \partial_{z} E^{x} - \partial_{x} E^{z}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{x}\wedge \gamma_{z}} \\
+    & +\left ( - \partial_{t} B^{x} + \partial_{z} E^{y} - \partial_{y} E^{z}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{y}\wedge \gamma_{z}} \\
+    & +\left ( \partial_{x} B^{x} + \partial_{y} B^{y} + \partial_{z} B^{z}\right ) \boldsymbol{\gamma_{x}\wedge \gamma_{y}\wedge \gamma_{z}}
     \end{align*}
+
+
 
 Dirac Equation
 ++++++++++++++
@@ -2558,20 +2643,28 @@ in rectangular coordinates we the driver for the equations is the 4-potential :m
 of these equations is to setup a numerical solver for the Dirac equation.
 
 .. math::
-  :nowrap:
+    :nowrap:
+
 
     \begin{align*}
-    \bm{A} =& A^{t}\bm{\gamma_{t}}+A^{x}\bm{\gamma_{x}}+A^{y}\bm{\gamma_{y}}+A^{z}\bm{\gamma_{z}} \\
-    \bm{\psi} =& \psi+\psi^{tx}\bm{\gamma_{t}\W \gamma_{x}}+\psi^{ty}\bm{\gamma_{t}\W \gamma_{y}}+\psi^{tz}\bm{\gamma_{t}\W \gamma_{z}}+\psi^{xy}\bm{\gamma_{x}\W \gamma_{y}}+\psi^{xz}\bm{\gamma_{x}\W \gamma_{z}}+\psi^{yz}\bm{\gamma_{y}\W \gamma_{z}}+\psi^{txyz}\bm{\gamma_{t}\W \gamma_{x}\W \gamma_{y}\W \gamma_{z}} \\
-    \nabla \bm{\psi} I \sigma_{z}-e\bm{A}\bm{\psi}-m\bm{\psi}\gamma_{t} = 0 =  & \left ( - e A^{t} \psi - e A^{x} \psi^{tx} - e A^{y} \psi^{ty} - e A^{z} \psi^{tz} - m \psi - \partial_{y} \psi^{tx} - \partial_{z} \psi^{txyz} + \partial_{x} \psi^{ty} + \partial_{t} \psi^{xy}\right ) \bm{\gamma_{t}} \\
-    & +\left ( - e A^{t} \psi^{tx} - e A^{x} \psi - e A^{y} \psi^{xy} - e A^{z} \psi^{xz} + m \psi^{tx} + \partial_{y} \psi - \partial_{t} \psi^{ty} - \partial_{x} \psi^{xy} + \partial_{z} \psi^{yz}\right ) \bm{\gamma_{x}} \\
-    & +\left ( - e A^{t} \psi^{ty} + e A^{x} \psi^{xy} - e A^{y} \psi - e A^{z} \psi^{yz} + m \psi^{ty} - \partial_{x} \psi + \partial_{t} \psi^{tx} - \partial_{y} \psi^{xy} - \partial_{z} \psi^{xz}\right ) \bm{\gamma_{y}} \\
-    & +\left ( - e A^{t} \psi^{tz} + e A^{x} \psi^{xz} + e A^{y} \psi^{yz} - e A^{z} \psi + m \psi^{tz} + \partial_{t} \psi^{txyz} - \partial_{z} \psi^{xy} + \partial_{y} \psi^{xz} - \partial_{x} \psi^{yz}\right ) \bm{\gamma_{z}} \\
-    & +\left ( - e A^{t} \psi^{xy} + e A^{x} \psi^{ty} - e A^{y} \psi^{tx} - e A^{z} \psi^{txyz} - m \psi^{xy} - \partial_{t} \psi + \partial_{x} \psi^{tx} + \partial_{y} \psi^{ty} + \partial_{z} \psi^{tz}\right ) \bm{\gamma_{t}\W \gamma_{x}\W \gamma_{y}} \\
-    & +\left ( - e A^{t} \psi^{xz} + e A^{x} \psi^{tz} + e A^{y} \psi^{txyz} - e A^{z} \psi^{tx} - m \psi^{xz} + \partial_{x} \psi^{txyz} + \partial_{z} \psi^{ty} - \partial_{y} \psi^{tz} - \partial_{t} \psi^{yz}\right ) \bm{\gamma_{t}\W \gamma_{x}\W \gamma_{z}} \\
-    & +\left ( - e A^{t} \psi^{yz} - e A^{x} \psi^{txyz} + e A^{y} \psi^{tz} - e A^{z} \psi^{ty} - m \psi^{yz} - \partial_{z} \psi^{tx} + \partial_{y} \psi^{txyz} + \partial_{x} \psi^{tz} + \partial_{t} \psi^{xz}\right ) \bm{\gamma_{t}\W \gamma_{y}\W \gamma_{z}} \\
-    & +\left ( - e A^{t} \psi^{txyz} - e A^{x} \psi^{yz} + e A^{y} \psi^{xz} - e A^{z} \psi^{xy} + m \psi^{txyz} + \partial_{z} \psi - \partial_{t} \psi^{tz} - \partial_{x} \psi^{xz} - \partial_{y} \psi^{yz}\right ) \bm{\gamma_{x}\W \gamma_{y}\W \gamma_{z}}
+    \boldsymbol{A} =& A^{t}\boldsymbol{\gamma_{t}}+A^{x}\boldsymbol{\gamma_{x}}+A^{y}\boldsymbol{\gamma_{y}}+A^{z}\boldsymbol{\gamma_{z}} \\
+    \boldsymbol{\psi} =& \psi+\psi^{tx}\boldsymbol{\gamma_{t}\wedge \gamma_{x}}
+                        +\psi^{ty}\boldsymbol{\gamma_{t}\wedge \gamma_{y}}
+                        +\psi^{tz}\boldsymbol{\gamma_{t}\wedge \gamma_{z}}
+                        +\psi^{xy}\boldsymbol{\gamma_{x}\wedge \gamma_{y}}
+                        +\psi^{xz}\boldsymbol{\gamma_{x}\wedge \gamma_{z}}
+                        +\psi^{yz}\boldsymbol{\gamma_{y}\wedge \gamma_{z}} \\
+                        &+\psi^{txyz}\boldsymbol{\gamma_{t}\wedge \gamma_{x}\wedge \gamma_{y}\wedge \gamma_{z}} \\
+    \nabla \boldsymbol{\psi} I \sigma_{z}-e\boldsymbol{A}\boldsymbol{\psi}-m\boldsymbol{\psi}\gamma_{t} = 0 =  & \left ( - e A^{t} \psi - e A^{x} \psi^{tx} - e A^{y} \psi^{ty} - e A^{z} \psi^{tz} - m \psi - \partial_{y} \psi^{tx} - \partial_{z} \psi^{txyz} + \partial_{x} \psi^{ty} + \partial_{t} \psi^{xy}\right ) \boldsymbol{\gamma_{t}} \\
+    \hspace{-0.5in}& +\left ( - e A^{t} \psi^{tx} - e A^{x} \psi - e A^{y} \psi^{xy} - e A^{z} \psi^{xz} + m \psi^{tx} + \partial_{y} \psi - \partial_{t} \psi^{ty} - \partial_{x} \psi^{xy} + \partial_{z} \psi^{yz}\right ) \boldsymbol{\gamma_{x}} \\
+    \hspace{-0.5in}& +\left ( - e A^{t} \psi^{ty} + e A^{x} \psi^{xy} - e A^{y} \psi - e A^{z} \psi^{yz} + m \psi^{ty} - \partial_{x} \psi + \partial_{t} \psi^{tx} - \partial_{y} \psi^{xy} - \partial_{z} \psi^{xz}\right ) \boldsymbol{\gamma_{y}} \\
+    \hspace{-0.5in}& +\left ( - e A^{t} \psi^{tz} + e A^{x} \psi^{xz} + e A^{y} \psi^{yz} - e A^{z} \psi + m \psi^{tz} + \partial_{t} \psi^{txyz} - \partial_{z} \psi^{xy} + \partial_{y} \psi^{xz} - \partial_{x} \psi^{yz}\right ) \boldsymbol{\gamma_{z}} \\
+    \hspace{-0.5in}& +\left ( - e A^{t} \psi^{xy} + e A^{x} \psi^{ty} - e A^{y} \psi^{tx} - e A^{z} \psi^{txyz} - m \psi^{xy} - \partial_{t} \psi + \partial_{x} \psi^{tx} + \partial_{y} \psi^{ty} + \partial_{z} \psi^{tz}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{x}\wedge \gamma_{y}} \\
+    \hspace{-0.5in}& +\left ( - e A^{t} \psi^{xz} + e A^{x} \psi^{tz} + e A^{y} \psi^{txyz} - e A^{z} \psi^{tx} - m \psi^{xz} + \partial_{x} \psi^{txyz} + \partial_{z} \psi^{ty} - \partial_{y} \psi^{tz} - \partial_{t} \psi^{yz}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{x}\wedge \gamma_{z}} \\
+    \hspace{-0.5in}& +\left ( - e A^{t} \psi^{yz} - e A^{x} \psi^{txyz} + e A^{y} \psi^{tz} - e A^{z} \psi^{ty} - m \psi^{yz} - \partial_{z} \psi^{tx} + \partial_{y} \psi^{txyz} + \partial_{x} \psi^{tz} + \partial_{t} \psi^{xz}\right ) \boldsymbol{\gamma_{t}\wedge \gamma_{y}\wedge \gamma_{z}} \\
+    \hspace{-0.5in}& +\left ( - e A^{t} \psi^{txyz} - e A^{x} \psi^{yz} + e A^{y} \psi^{xz} - e A^{z} \psi^{xy} + m \psi^{txyz} + \partial_{z} \psi - \partial_{t} \psi^{tz} - \partial_{x} \psi^{xz} - \partial_{y} \psi^{yz}\right ) \boldsymbol{\gamma_{x}\wedge \gamma_{y}\wedge \gamma_{z}}
     \end{align*}
+
 
 
 .. [Doran]  `<http://www.mrao.cam.ac.uk/~cjld1/pages/book.htm>`_

@@ -171,7 +171,7 @@ latex_elements = {
     'fontpkg':   '',
     'inputenc':  '',
     'utf8extra': '',
-    'preamble':  ''
+    'preamble': '\\usepackage{bm}\n'
 }
 
 # SymPy logo on title page
