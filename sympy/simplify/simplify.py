@@ -1563,7 +1563,7 @@ def collect_const(expr, *vars, **kwargs):
         for m in Add.make_args(expr):
             f = Factors(m)
             q, r = f.div(Fv)
-            if r.is_zero:
+            if r.is_one:
                 # only accept this as a true factor if
                 # it didn't change an exponent from an Integer
                 # to a non-Integer, e.g. 2/sqrt(2) -> sqrt(2)

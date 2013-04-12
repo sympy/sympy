@@ -20,13 +20,13 @@ def test_decompose_power():
 
 
 def test_Factors():
-    assert Factors() == Factors({}) == Factors(1)
-
+    assert Factors() == Factors({}) == Factors(S(1))
+    raises(ValueError, lambda: Factors(S.Infinity))
     assert Factors().as_expr() == S.One
     assert Factors({x: 2, y: 3, sin(x): 4}).as_expr() == x**2*y**3*sin(x)**4
 
     a = Factors({x: 5, y: 3, z: 7})
-    b = Factors({y: 4, z: 3, t: 10})
+    b = Factors({      y: 4, z: 3, t: 10})
 
     assert a.mul(b) == a*b == Factors({x: 5, y: 7, z: 10, t: 10})
 
@@ -55,12 +55,16 @@ def test_Factors():
     assert Factors(S(2)**x).div(S(3)**x) == \
         (Factors({S(2): x}), Factors({S(3): x}))
     assert Factors(2**(2*x + 2)).div(S(8)) == \
-        (Factors({S(2): 2*x}), Factors({S(2): S(1)}))
+        (Factors({S(2): 2*x + 2}), Factors({S(8): S(1)}))
 
     # coverage
     # /!\ things break if this is not True
     assert Factors({S(-1): S(3)/2}) == Factors({I: S.One, S(-1): S.One})
+    assert Factors({I: S(1), S(-1): S(1)/3}).as_expr() == I*(-1)**(S(1)/3)
 
+    assert Factors(-1.) == Factors({S(-1): S(1), S(1.): 1})
+    assert Factors(-2.) == Factors({S(-1): S(1), S(2.): 1})
+    assert Factors((-2.)**x) == Factors({S(-2.): x})
     assert Factors(S(-2)) == Factors({S(-1): S(1), S(2): 1})
     assert Factors(S.Half) == Factors({S(2): -S.One})
     assert Factors(S(3)/2) == Factors({S(3): S.One, S(2): S(-1)})
@@ -71,6 +75,7 @@ def test_Factors():
     assert Factors(I) == Factors({I: S.One})
     assert Factors(x).normal(S(2)) == (Factors(x), Factors(S(2)))
     assert Factors(x).normal(S(0)) == (Factors(), Factors(S(0)))
+    raises(ZeroDivisionError, lambda: Factors(x).div(S(0)))
     assert Factors(x).mul(S(2)) == Factors(2*x)
     assert Factors(x).mul(S(0)).is_zero
     assert Factors(x).mul(1/x).is_one
@@ -78,13 +83,22 @@ def test_Factors():
     assert Factors(x)**Factors(S(2)) == Factors(x**2)
     assert Factors(x).gcd(S(0)) == Factors(x)
     assert Factors(x).lcm(S(0)).is_zero
-    assert Factors(S(0)).div(x) == (Factors(S(0)), Factors(S(0)))
-    assert Factors(x).div(x) == (Factors(), Factors(S(0)))
+    assert Factors(S(0)).div(x) == (Factors(S(0)), Factors())
+    assert Factors(x).div(x) == (Factors(), Factors())
     assert Factors({x: .2})/Factors({x: .2}) == Factors()
     assert Factors(x) != Factors()
-    assert Factors(x**(2 + y)).div(x**2) == (Factors(x**y), Factors(S(0)))
-    assert Factors(x**(2 + y)).div(x**y) == (Factors(x**2), Factors(S(0)))
-    raises(ZeroDivisionError, lambda: Factors(x).div(S(0)))
+    assert Factors(S(0)).normal(x) == (Factors(S(0)), Factors())
+    n, d = x**(2 + y), x**2
+    f = Factors(n)
+    assert f.div(d) == f.normal(d) == (Factors(x**y), Factors())
+    d = x**y
+    assert f.div(d) == f.normal(d) == (Factors(x**2), Factors())
+    n = d = 2**x
+    f = Factors(n)
+    assert f.div(d) == f.normal(d) == (Factors(), Factors())
+    n, d = 2**x, 2**y
+    f = Factors(n)
+    assert f.div(d) == f.normal(d) == (Factors({S(2): x}), Factors({S(2): y}))
 
 
 def test_Term():
