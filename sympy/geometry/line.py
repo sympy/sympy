@@ -11,7 +11,7 @@ Segment
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
 from sympy.core.logic import fuzzy_and
-from sympy.simplify import simplify
+from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
@@ -832,7 +832,7 @@ class LinearEntity(GeometryEntity):
 
             a, b, c = self.coefficients
             x = randint(lower, upper)
-            y = simplify((-c - a*x) / b)
+            y = (-c - a*x) / b
         return Point(x, y)
 
     def is_similar(self, other):
@@ -946,7 +946,8 @@ class Line(LinearEntity):
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point; if it was meant to be a slope it should be given with keyword "slope".')
+                raise ValueError('The 2nd argument was not a valid Point. '
+                'If it was a slope, enter it with keyword "slope".')
             if p1 == p2:
                 raise ValueError('A line requires two distinct points.')
         elif slope is not None and pt is None:
@@ -1000,7 +1001,8 @@ class Line(LinearEntity):
         """
         t = _symbol(parameter)
         if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
+            raise ValueError('Symbol %s already appears in object '
+            'and cannot be used as a parameter.' % t.name)
         x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
         y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
         return Point(x, y)
@@ -1167,7 +1169,10 @@ class Ray(LinearEntity):
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point;\nif it was meant to be an angle it should be given with keyword "angle".')
+                raise ValueError(
+                    'The 2nd argument was not a valid Point;\nif '
+                    'it was meant to be an angle it should be '
+                    'given with keyword "angle".')
             if p1 == p2:
                 raise ValueError('A Ray requires two distinct points.')
         elif angle is not None and pt is None:
