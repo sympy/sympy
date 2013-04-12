@@ -415,6 +415,18 @@ class UnitSystem(object):
 
         # TODO: construct a dict of dimensions
 
+    def __enter__(self):
+        global _UNIT_SYSTEM
+        try:
+            self.__tmp_old_unitsystem = _UNIT_SYSTEM
+        except NameError:
+            self.__tmp_old_unitsystem = None
+        _UNIT_SYSTEM = self
+
+    def __exit__(self, typ, value, traceback):
+        global _UNIT_SYSTEM
+        _UNIT_SYSTEM = self.__tmp_old_unitsystem
+
     def __str__(self):
         return self.name
 
@@ -729,3 +741,4 @@ def _compute_unit(unit, system):
             return u
         else:
             return unit
+
