@@ -373,3 +373,7 @@ class AskDiagonalHandler(CommonHandler):
             return None
         else:
             return ask(Q.diagonal(expr.parent), assumptions)
+
+    @staticmethod
+    def DiagonalMatrix(expr, assumptions):
+        return True

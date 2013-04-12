@@ -1732,6 +1732,11 @@ def test_sympy__matrices__expressions__matmul__MatMul():
     Y = MatrixSymbol('Y', y, x)
     assert _test_args(MatMul(X, Y))
 
+def test_sympy__matrices__expressions__diagonal__DiagonalMatrix():
+    from sympy.matrices.expressions.diagonal import DiagonalMatrix
+    from sympy.matrices.expressions import MatrixSymbol
+    x = MatrixSymbol('x', 10, 1)
+    assert _test_args(DiagonalMatrix(x))
 
 def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     from sympy.matrices.expressions.hadamard import HadamardProduct
