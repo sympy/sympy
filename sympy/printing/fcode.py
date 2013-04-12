@@ -18,7 +18,7 @@ the responsibility for generating properly cased Fortran code to the user.
 """
 
 
-from sympy.core import S, C, Add
+from sympy.core import S, C, Add, N
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
 
@@ -207,7 +207,7 @@ class FCodePrinter(CodePrinter):
                 self._not_supported.add(expr)
             else:
                 # convert all args to floats
-                eargs = map(lambda x: float(x), expr.args)
+                eargs = map(N, eargs)
         return "%s(%s)" % (name, self.stringify(eargs, ", "))
 
     _print_factorial = _print_Function
