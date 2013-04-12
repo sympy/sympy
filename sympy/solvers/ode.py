@@ -2313,8 +2313,8 @@ def homogeneous_order(eq, *symbols):
     the same order.
 
     See the docstrings of
-    ode.ode_1st_homogeneous_coeff_subs_indep_div_dep() and
-    ode.ode_1st_homogeneous_coeff_subs_indep_div_dep().
+    ``ode.ode_1st_homogeneous_coeff_subs_indep_div_dep()`` and
+    ``ode.ode_1st_homogeneous_coeff_subs_indep_div_dep()``.
 
     Symbols can be functions, but every argument of the function must be
     a symbol, and the arguments of the function that appear in the
