@@ -303,7 +303,7 @@ class Sum(Expr):
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
-            g = g.diff(i, 2)
+            g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
 
     def _eval_subs(self, old, new):  # XXX this should be the same as Integral's

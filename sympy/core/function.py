@@ -695,6 +695,21 @@ class Derivative(Expr):
     method internally (not _eval_derivative); Derivative should be the only
     one to call _eval_derivative.
 
+    Simplification of high-order derivatives:
+
+    Because there can be a significant amount of simplification that can be
+    done when multiple differentiations are performed, results will be
+    automatically simplified in a fairly conservative fashion unless the
+    keyword ``simplify`` is set to False.
+
+        >>> from sympy import sqrt, diff
+        >>> from sympy.abc import x
+        >>> e = sqrt((x + 1)**2 + x)
+        >>> diff(e, x, 5, simplify=False).count_ops()
+        136
+        >>> diff(e, x, 5).count_ops()
+        30
+
     Ordering of variables:
 
     If evaluate is set to True and the expression can not be evaluated, the
@@ -768,7 +783,7 @@ class Derivative(Expr):
     u = f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means
     F(t, u, v).diff(u) at u = f(t).
 
-    We do not allow to take derivative with respect to expressions where this
+    We do not allow derivatives to be taken with respect to expressions where this
     is not so well defined.  For example, we do not allow expr.diff(x*y)
     because there are multiple ways of structurally defining where x*y appears
     in an expression, some of which may surprise the reader (for example, a
@@ -864,8 +879,6 @@ class Derivative(Expr):
             return False
 
     def __new__(cls, expr, *variables, **assumptions):
-        from sympy.simplify.simplify import signsimp
-        from sympy.core.exprtools import factor_terms
 
         expr = sympify(expr)
 
@@ -969,6 +982,7 @@ class Derivative(Expr):
         # don't commute with derivatives wrt symbols and we can't safely
         # continue.
         unhandled_non_symbol = False
+        nderivs = 0  # how many derivatives were performed
         for v in variablegen:
             is_symbol = v.is_Symbol
 
@@ -981,6 +995,7 @@ class Derivative(Expr):
                     old_v = v
                     v = new_v
                 obj = expr._eval_derivative(v)
+                nderivs += 1
                 if not is_symbol:
                     if obj is not None:
                         obj = obj.subs(v, old_v)
@@ -1006,7 +1021,7 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variables(expr.args[1:])
                 )
 
-        if assumptions.get('simplify', False):
+        if nderivs > 1 and assumptions.get('simplify', True):
             from sympy.core.exprtools import factor_terms
             from sympy.simplify.simplify import signsimp
             expr = factor_terms(signsimp(expr))

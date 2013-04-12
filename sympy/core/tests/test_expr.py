@@ -1574,5 +1574,7 @@ def test_float_0_fail():
 def test_issue_3226():
     ans = (b**2 + z**2 - (b*(a + b*t) + z*(c + t*z))**2/(
         (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
-    assert diff(sqrt((a + b*t)**2 + (c + z*t)**2), t, 2, simplify=True) == ans
-    sqrt((a + b*t)**2 + (c + z*t)**2).diff(t, 2, simplify=True) == ans
+    e = sqrt((a + b*t)**2 + (c + z*t)**2)
+    assert diff(e, t, 2) == ans
+    e.diff(t, 2) == ans
+    assert diff(e, t, 2, simplify=False) != ans
