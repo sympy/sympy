@@ -72,8 +72,9 @@ import sys
 import os
 import shutil
 import tempfile
-import subprocess
+from subprocess import STDOUT, CalledProcessError
 
+from sympy.core.compatibility import run_process
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument,
     CodeGenArgumentListError, Result
@@ -149,18 +150,14 @@ class CodeWrapper:
     def _process_files(self, routine):
         command = self.command
         command.extend(self.flags)
-        null = open(os.devnull, 'w')
         try:
-            if self.quiet:
-                retcode = subprocess.call(
-                    command, stdout=null, stderr=subprocess.STDOUT)
-            else:
-                retcode = subprocess.call(command)
-        except OSError:
-            retcode = 1
-        if retcode:
+            retoutput = run_process(command, stderr=STDOUT)
+        except CalledProcessError, e:
             raise CodeWrapError(
-                "Error while executing command: %s" % " ".join(command))
+                "Error while executing command: %s. Command output is:\n%s" % (
+                    " ".join(command), e.output))
+        if not self.quiet:
+            print retoutput
 
 
 class DummyWrapper(CodeWrapper):
