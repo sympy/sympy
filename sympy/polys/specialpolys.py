@@ -1,13 +1,5 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
-__all__ = [
-    "swinnerton_dyer_poly",
-    "interpolating_poly",
-    "cyclotomic_poly",
-    "symmetric_poly",
-    "random_poly",
-]
-
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S
@@ -34,10 +26,11 @@ from sympy.polys.domains import ZZ
 
 from sympy.ntheory import nextprime
 
-from sympy.utilities import cythonized, subsets
+from sympy.utilities import cythonized, subsets, public
 
 
 @cythonized("n,i")
+@public
 def swinnerton_dyer_poly(n, x=None, **args):
     """Generates n-th Swinnerton-Dyer polynomial in `x`.  """
     if n <= 0:
@@ -75,6 +68,7 @@ def swinnerton_dyer_poly(n, x=None, **args):
         return PurePoly(Mul(*poly), x)
 
 
+@public
 def cyclotomic_poly(n, x=None, **args):
     """Generates cyclotomic polynomial of order `n` in `x`. """
     if n <= 0:
@@ -94,6 +88,7 @@ def cyclotomic_poly(n, x=None, **args):
         return poly
 
 
+@public
 def symmetric_poly(n, *gens, **args):
     """Generates symmetric polynomial of order `n`. """
     gens = _analyze_gens(gens)
@@ -111,6 +106,7 @@ def symmetric_poly(n, *gens, **args):
         return Poly(poly, *gens)
 
 
+@public
 def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
     """Return a polynomial of degree ``n`` with coefficients in ``[inf, sup]``. """
     poly = Poly(dup_random(n, inf, sup, domain), x, domain=domain)
@@ -122,6 +118,7 @@ def random_poly(x, n, inf, sup, domain=ZZ, polys=False):
 
 
 @cythonized("n,i,j")
+@public
 def interpolating_poly(n, x, X='x', Y='y'):
     """Construct Lagrange interpolating polynomial for ``n`` data points. """
     if isinstance(X, str):

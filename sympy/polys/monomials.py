@@ -1,15 +1,16 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
-__all__ = ["monomials", "Monomial"]
+__all__ = ["Monomial"]
 
 from textwrap import dedent
 
 from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify
 from sympy.core.compatibility import iterable
 from sympy.polys.polyutils import PicklableWithSlots, dict_from_expr
-from sympy.utilities import cythonized
+from sympy.utilities import cythonized, public
 from sympy.polys.polyerrors import ExactQuotientFailed
 
+@public
 def monomials(variables, degree):
     r"""
     Generate a set of monomials of the given total degree or less.

@@ -1,7 +1,5 @@
 """Sparse rational function fields. """
 
-__all__ = ["field", "xfield", "vfield"]
-
 from operator import add, mul
 
 from sympy.core.expr import Expr
@@ -12,18 +10,22 @@ from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.printing.defaults import DefaultPrinting
+from sympy.utilities import public
 from sympy.utilities.magic import pollute
 
+@public
 def field(symbols, domain, order=lex):
     """Construct new rational function field returning (field, x1, ..., xn). """
     _field = FracField(symbols, domain, order)
     return (_field,) + _field.gens
 
+@public
 def xfield(symbols, domain, order=lex):
     """Construct new rational function field returning (field, (x1, ..., xn)). """
     _field = FracField(symbols, domain, order)
     return (_field, _field.gens)
 
+@public
 def vfield(symbols, domain, order=lex):
     """Construct new rational function field and inject generators into global namespace. """
     _field = FracField(symbols, domain, order)

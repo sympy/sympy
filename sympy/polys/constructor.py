@@ -1,12 +1,11 @@
 """Tools for constructing domains for expressions. """
 
-__all__ = ["construct_domain"]
-
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask, Q
+from sympy.utilities import public
 from sympy.core import sympify
 
 
@@ -203,6 +202,7 @@ def _construct_expression(coeffs, opt):
     return domain, result
 
 
+@public
 def construct_domain(obj, **args):
     """Construct a minimal domain for the list of coefficients. """
     opt = build_options(args)

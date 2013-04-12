@@ -1,7 +1,5 @@
 """Sparse polynomial rings. """
 
-__all__ = ["ring", "xring", "vring"]
-
 from operator import add, mul
 
 from sympy.core.expr import Expr
@@ -20,18 +18,22 @@ from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt
 from sympy.printing.defaults import DefaultPrinting
+from sympy.utilities import public
 from sympy.utilities.magic import pollute
 
+@public
 def ring(symbols, domain, order=lex):
     """Construct new polynomial ring returning (ring, x1, ..., xn). """
     _ring = PolyRing(symbols, domain, order)
     return (_ring,) + _ring.gens
 
+@public
 def xring(symbols, domain, order=lex):
     """Construct new polynomial ring returning (ring, (x1, ..., xn)). """
     _ring = PolyRing(symbols, domain, order)
     return (_ring, _ring.gens)
 
+@public
 def vring(symbols, domain, order=lex):
     """Construct new polynomial ring and inject generators into global namespace. """
     _ring = PolyRing(symbols, domain, order)

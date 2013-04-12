@@ -1,7 +1,5 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
-__all__ = ["roots"]
-
 import math
 
 from sympy.core.symbol import Dummy, Symbol, symbols
@@ -19,7 +17,7 @@ from sympy.polys.polyquinticconst import PolyQuintic
 from sympy.polys.rationaltools import together
 
 from sympy.simplify import simplify, powsimp
-from sympy.utilities import default_sort_key
+from sympy.utilities import default_sort_key, public
 
 from sympy.core.compatibility import reduce
 
@@ -687,6 +685,7 @@ def preprocess_roots(poly):
     return coeff, poly
 
 
+@public
 def roots(f, *gens, **flags):
     """
     Computes symbolic roots of a univariate polynomial.

@@ -1,16 +1,8 @@
 """Efficient functions for generating orthogonal polynomials. """
 
-__all__ = [
-    "chebyshevt_poly",
-    "chebyshevu_poly",
-    "hermite_poly",
-    "legendre_poly",
-    "laguerre_poly",
-]
-
 from sympy import Dummy
 
-from sympy.utilities import cythonized
+from sympy.utilities import cythonized, public
 
 from sympy.polys.constructor import construct_domain
 from sympy.polys.polytools import Poly, PurePoly
@@ -41,6 +33,7 @@ def dup_jacobi(n, a, b, K):
     return seq[n]
 
 
+@public
 def jacobi_poly(n, a, b, x=None, **args):
     """Generates Jacobi polynomial of degree `n` in `x`. """
     if n < 0:
@@ -107,6 +100,7 @@ def dup_chebyshevt(n, K):
     return seq[n]
 
 
+@public
 def chebyshevt_poly(n, x=None, **args):
     """Generates Chebyshev polynomial of the first kind of degree `n` in `x`. """
     if n < 0:
@@ -138,6 +132,7 @@ def dup_chebyshevu(n, K):
     return seq[n]
 
 
+@public
 def chebyshevu_poly(n, x=None, **args):
     """Generates Chebyshev polynomial of the second kind of degree `n` in `x`. """
     if n < 0:
@@ -173,6 +168,7 @@ def dup_hermite(n, K):
     return seq[n]
 
 
+@public
 def hermite_poly(n, x=None, **args):
     """Generates Hermite polynomial of degree `n` in `x`. """
     if n < 0:
@@ -205,6 +201,7 @@ def dup_legendre(n, K):
     return seq[n]
 
 
+@public
 def legendre_poly(n, x=None, **args):
     """Generates Legendre polynomial of degree `n` in `x`. """
     if n < 0:
@@ -237,6 +234,7 @@ def dup_laguerre(n, alpha, K):
     return seq[-1]
 
 
+@public
 def laguerre_poly(n, x=None, alpha=None, **args):
     """Generates Laguerre polynomial of degree `n` in `x`. """
     if n < 0:

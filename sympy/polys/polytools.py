@@ -1,33 +1,6 @@
 """User-friendly public interface to polynomial functions. """
 
-__all__ = [
-    "Poly", "PurePoly", "poly",
-    "poly_from_expr",
-    "parallel_poly_from_expr",
-    "degree", "degree_list",
-    "LC", "LM", "LT",
-    "pdiv", "prem", "pquo", "pexquo",
-    "div", "rem", "quo", "exquo",
-    "half_gcdex", "gcdex", "invert",
-    "subresultants",
-    "resultant", "discriminant",
-    "terms_gcd", "cofactors",
-    "gcd", "gcd_list",
-    "lcm", "lcm_list",
-    "trunc",
-    "monic", "content", "primitive",
-    "compose", "decompose",
-    "sturm",
-    "gff_list", "gff",
-    "sqf_norm", "sqf_part", "sqf_list", "sqf",
-    "factor_list", "factor",
-    "intervals", "refine_root", "count_roots",
-    "real_roots", "nroots", "ground_roots",
-    "nth_power_roots_poly",
-    "cancel",
-    "reduced", "groebner",
-    "GroebnerBasis", "is_zero_dimensional",
-]
+__all__ = ["Poly", "PurePoly", "GroebnerBasis"]
 
 from sympy.core import (
     S, Basic, Expr, I, Integer, Add, Mul, Dummy, Tuple, Rational
@@ -81,7 +54,7 @@ from sympy.polys.polyerrors import (
     GeneratorsError,
 )
 
-from sympy.utilities import group
+from sympy.utilities import group, public
 
 import sympy.polys
 import sympy.mpmath
@@ -93,7 +66,7 @@ from sympy.polys import polyoptions as options
 
 from sympy.core.compatibility import iterable
 
-
+# @public
 class Poly(Expr):
     """Generic class for representing polynomial expressions. """
 
@@ -3792,6 +3765,7 @@ class Poly(Expr):
         return isinstance(g, f.__class__) and f.gens == g.gens and f.rep.eq(g.rep, strict=True)
 
 
+# @public
 class PurePoly(Poly):
     """Class for representing pure polynomials. """
 
@@ -3883,6 +3857,7 @@ class PurePoly(Poly):
         return dom, per, F, G
 
 
+@public
 def poly_from_expr(expr, *gens, **args):
     """Construct a polynomial from an expression. """
     opt = options.build_options(gens, args)
@@ -3934,6 +3909,7 @@ def _poly_from_expr(expr, opt):
     return poly, opt
 
 
+@public
 def parallel_poly_from_expr(exprs, *gens, **args):
     """Construct polynomials from expressions. """
     opt = options.build_options(gens, args)
@@ -4041,6 +4017,7 @@ def _update_args(args, key, value):
     return args
 
 
+@public
 def degree(f, *gens, **args):
     """
     Return the degree of ``f`` in the given variable.
@@ -4067,6 +4044,7 @@ def degree(f, *gens, **args):
     return Integer(F.degree(opt.gen))
 
 
+@public
 def degree_list(f, *gens, **args):
     """
     Return a list of degrees of ``f`` in all variables.
@@ -4093,6 +4071,7 @@ def degree_list(f, *gens, **args):
     return tuple(map(Integer, degrees))
 
 
+@public
 def LC(f, *gens, **args):
     """
     Return the leading coefficient of ``f``.
@@ -4117,6 +4096,7 @@ def LC(f, *gens, **args):
     return F.LC(order=opt.order)
 
 
+@public
 def LM(f, *gens, **args):
     """
     Return the leading monomial of ``f``.
@@ -4142,6 +4122,7 @@ def LM(f, *gens, **args):
     return monom.as_expr()
 
 
+@public
 def LT(f, *gens, **args):
     """
     Return the leading term of ``f``.
@@ -4167,6 +4148,7 @@ def LT(f, *gens, **args):
     return coeff*monom.as_expr()
 
 
+@public
 def pdiv(f, g, *gens, **args):
     """
     Compute polynomial pseudo-division of ``f`` and ``g``.
@@ -4196,6 +4178,7 @@ def pdiv(f, g, *gens, **args):
         return q, r
 
 
+@public
 def prem(f, g, *gens, **args):
     """
     Compute polynomial pseudo-remainder of ``f`` and ``g``.
@@ -4225,6 +4208,7 @@ def prem(f, g, *gens, **args):
         return r
 
 
+@public
 def pquo(f, g, *gens, **args):
     """
     Compute polynomial pseudo-quotient of ``f`` and ``g``.
@@ -4259,6 +4243,7 @@ def pquo(f, g, *gens, **args):
         return q
 
 
+@public
 def pexquo(f, g, *gens, **args):
     """
     Compute polynomial exact pseudo-quotient of ``f`` and ``g``.
@@ -4293,6 +4278,7 @@ def pexquo(f, g, *gens, **args):
         return q
 
 
+@public
 def div(f, g, *gens, **args):
     """
     Compute polynomial division of ``f`` and ``g``.
@@ -4324,6 +4310,7 @@ def div(f, g, *gens, **args):
         return q, r
 
 
+@public
 def rem(f, g, *gens, **args):
     """
     Compute polynomial remainder of ``f`` and ``g``.
@@ -4355,6 +4342,7 @@ def rem(f, g, *gens, **args):
         return r
 
 
+@public
 def quo(f, g, *gens, **args):
     """
     Compute polynomial quotient of ``f`` and ``g``.
@@ -4386,6 +4374,7 @@ def quo(f, g, *gens, **args):
         return q
 
 
+@public
 def exquo(f, g, *gens, **args):
     """
     Compute polynomial exact quotient of ``f`` and ``g``.
@@ -4420,6 +4409,7 @@ def exquo(f, g, *gens, **args):
         return q
 
 
+@public
 def half_gcdex(f, g, *gens, **args):
     """
     Half extended Euclidean algorithm of ``f`` and ``g``.
@@ -4458,6 +4448,7 @@ def half_gcdex(f, g, *gens, **args):
         return s, h
 
 
+@public
 def gcdex(f, g, *gens, **args):
     """
     Extended Euclidean algorithm of ``f`` and ``g``.
@@ -4496,6 +4487,7 @@ def gcdex(f, g, *gens, **args):
         return s, t, h
 
 
+@public
 def invert(f, g, *gens, **args):
     """
     Invert ``f`` modulo ``g`` when possible.
@@ -4535,6 +4527,7 @@ def invert(f, g, *gens, **args):
         return h
 
 
+@public
 def subresultants(f, g, *gens, **args):
     """
     Compute subresultant PRS of ``f`` and ``g``.
@@ -4564,6 +4557,7 @@ def subresultants(f, g, *gens, **args):
         return result
 
 
+@public
 def resultant(f, g, *gens, **args):
     """
     Compute resultant of ``f`` and ``g``.
@@ -4601,6 +4595,7 @@ def resultant(f, g, *gens, **args):
         return result
 
 
+@public
 def discriminant(f, *gens, **args):
     """
     Compute discriminant of ``f``.
@@ -4630,6 +4625,7 @@ def discriminant(f, *gens, **args):
         return result
 
 
+@public
 def cofactors(f, g, *gens, **args):
     """
     Compute GCD and cofactors of ``f`` and ``g``.
@@ -4670,6 +4666,7 @@ def cofactors(f, g, *gens, **args):
         return h, cff, cfg
 
 
+@public
 def gcd_list(seq, *gens, **args):
     """
     Compute GCD of a list of polynomials.
@@ -4729,6 +4726,7 @@ def gcd_list(seq, *gens, **args):
         return result
 
 
+@public
 def gcd(f, g=None, *gens, **args):
     """
     Compute GCD of ``f`` and ``g``.
@@ -4771,6 +4769,7 @@ def gcd(f, g=None, *gens, **args):
         return result
 
 
+@public
 def lcm_list(seq, *gens, **args):
     """
     Compute LCM of a list of polynomials.
@@ -4824,6 +4823,7 @@ def lcm_list(seq, *gens, **args):
         return result
 
 
+@public
 def lcm(f, g=None, *gens, **args):
     """
     Compute LCM of ``f`` and ``g``.
@@ -4866,6 +4866,7 @@ def lcm(f, g=None, *gens, **args):
         return result
 
 
+@public
 def terms_gcd(f, *gens, **args):
     """
     Remove GCD of terms from ``f``.
@@ -4971,6 +4972,7 @@ def terms_gcd(f, *gens, **args):
     return _keep_coeff(coeff, term*f, clear=False)
 
 
+@public
 def trunc(f, p, *gens, **args):
     """
     Reduce ``f`` modulo a constant ``p``.
@@ -5000,6 +5002,7 @@ def trunc(f, p, *gens, **args):
         return result
 
 
+@public
 def monic(f, *gens, **args):
     """
     Divide all coefficients of ``f`` by ``LC(f)``.
@@ -5029,6 +5032,7 @@ def monic(f, *gens, **args):
         return result
 
 
+@public
 def content(f, *gens, **args):
     """
     Compute GCD of coefficients of ``f``.
@@ -5053,6 +5057,7 @@ def content(f, *gens, **args):
     return F.content()
 
 
+@public
 def primitive(f, *gens, **args):
     """
     Compute content and the primitive form of ``f``.
@@ -5098,6 +5103,7 @@ def primitive(f, *gens, **args):
         return cont, result
 
 
+@public
 def compose(f, g, *gens, **args):
     """
     Compute functional composition ``f(g)``.
@@ -5127,6 +5133,7 @@ def compose(f, g, *gens, **args):
         return result
 
 
+@public
 def decompose(f, *gens, **args):
     """
     Compute functional decomposition of ``f``.
@@ -5156,6 +5163,7 @@ def decompose(f, *gens, **args):
         return result
 
 
+@public
 def sturm(f, *gens, **args):
     """
     Compute Sturm sequence of ``f``.
@@ -5185,6 +5193,7 @@ def sturm(f, *gens, **args):
         return result
 
 
+@public
 def gff_list(f, *gens, **args):
     """
     Compute a list of greatest factorial factors of ``f``.
@@ -5219,11 +5228,13 @@ def gff_list(f, *gens, **args):
         return factors
 
 
+@public
 def gff(f, *gens, **args):
     """Compute greatest factorial factorization of ``f``. """
     raise NotImplementedError('symbolic falling factorial')
 
 
+@public
 def sqf_norm(f, *gens, **args):
     """
     Compute square-free norm of ``f``.
@@ -5257,6 +5268,7 @@ def sqf_norm(f, *gens, **args):
         return Integer(s), g, r
 
 
+@public
 def sqf_part(f, *gens, **args):
     """
     Compute square-free part of ``f``.
@@ -5600,6 +5612,7 @@ def _torational_factor_list(p, x):
     return (c, a)
 
 
+@public
 def sqf_list(f, *gens, **args):
     """
     Compute a list of square-free factors of ``f``.
@@ -5617,6 +5630,7 @@ def sqf_list(f, *gens, **args):
     return _generic_factor_list(f, gens, args, method='sqf')
 
 
+@public
 def sqf(f, *gens, **args):
     """
     Compute square-free factorization of ``f``.
@@ -5634,6 +5648,7 @@ def sqf(f, *gens, **args):
     return _generic_factor(f, gens, args, method='sqf')
 
 
+@public
 def factor_list(f, *gens, **args):
     """
     Compute a list of irreducible factors of ``f``.
@@ -5651,6 +5666,7 @@ def factor_list(f, *gens, **args):
     return _generic_factor_list(f, gens, args, method='factor')
 
 
+@public
 def factor(f, *gens, **args):
     """
     Compute the factorization of ``f`` into irreducibles. (Use factorint to
@@ -5704,6 +5720,7 @@ def factor(f, *gens, **args):
             raise PolynomialError(msg)
 
 
+@public
 def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=False, sqf=False):
     """
     Compute isolating intervals for roots of ``f``.
@@ -5759,6 +5776,7 @@ def intervals(F, all=False, eps=None, inf=None, sup=None, strict=False, fast=Fal
         return result
 
 
+@public
 def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
     """
     Refine an isolating interval of a root to the given precision.
@@ -5782,6 +5800,7 @@ def refine_root(f, s, t, eps=None, steps=None, fast=False, check_sqf=False):
     return F.refine_root(s, t, eps=eps, steps=steps, fast=fast, check_sqf=check_sqf)
 
 
+@public
 def count_roots(f, inf=None, sup=None):
     """
     Return the number of roots of ``f`` in ``[inf, sup]`` interval.
@@ -5809,6 +5828,7 @@ def count_roots(f, inf=None, sup=None):
     return F.count_roots(inf=inf, sup=sup)
 
 
+@public
 def real_roots(f, multiple=True):
     """
     Return a list of real roots with multiplicities of ``f``.
@@ -5832,6 +5852,7 @@ def real_roots(f, multiple=True):
     return F.real_roots(multiple=multiple)
 
 
+@public
 def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
     """
     Compute numerical approximations of roots of ``f``.
@@ -5857,6 +5878,7 @@ def nroots(f, n=15, maxsteps=50, cleanup=True, error=False):
     return F.nroots(n=n, maxsteps=maxsteps, cleanup=cleanup, error=error)
 
 
+@public
 def ground_roots(f, *gens, **args):
     """
     Compute roots of ``f`` by factorization in the ground domain.
@@ -5881,6 +5903,7 @@ def ground_roots(f, *gens, **args):
     return F.ground_roots()
 
 
+@public
 def nth_power_roots_poly(f, n, *gens, **args):
     """
     Construct a polynomial with n-th powers of roots of ``f``.
@@ -5919,6 +5942,7 @@ def nth_power_roots_poly(f, n, *gens, **args):
         return result
 
 
+@public
 def cancel(f, *gens, **args):
     """
     Cancel common factors in a rational function ``f``.
@@ -6000,6 +6024,7 @@ def cancel(f, *gens, **args):
             return c, P, Q
 
 
+@public
 def reduced(f, G, *gens, **args):
     """
     Reduces a polynomial ``f`` modulo a set of polynomials ``G``.
@@ -6059,6 +6084,7 @@ def reduced(f, G, *gens, **args):
         return Q, r
 
 
+@public
 def groebner(F, *gens, **args):
     """
     Computes the reduced Groebner basis for a set of polynomials.
@@ -6112,6 +6138,7 @@ def groebner(F, *gens, **args):
     return GroebnerBasis(F, *gens, **args)
 
 
+@public
 def is_zero_dimensional(F, *gens, **args):
     """
     Checks if the ideal generated by a Groebner basis is zero-dimensional.
@@ -6128,7 +6155,7 @@ def is_zero_dimensional(F, *gens, **args):
     """
     return GroebnerBasis(F, *gens, **args).is_zero_dimensional
 
-
+# @public
 class GroebnerBasis(Basic):
     """Represents a reduced Groebner basis. """
 
@@ -6415,6 +6442,7 @@ class GroebnerBasis(Basic):
         return self.reduce(poly)[1] == 0
 
 
+@public
 def poly(expr, *gens, **args):
     """
     Efficiently transform an expression into a polynomial.

@@ -10,7 +10,7 @@ from iterables import (flatten, group, take, subsets,
 from lambdify import lambdify
 from source import source
 
-from decorator import threaded, xthreaded
+from decorator import threaded, xthreaded, public
 
 from runtests import test, doctest
 
