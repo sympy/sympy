@@ -126,7 +126,7 @@ and all geometric products of vectors
    :nowrap:
 
    \begin{equation*}
-      e_{i_{1}}e_{i_{2}}\dots e_{i_{r}} \mbox{ where } 0\le r \le n\mbox{, }0 \le i_{j} \le n \mbox{ and } i_{1}<i_{2}<\dots<i_{r}
+      e_{i_{1}} e_{i_{2}} \dots e_{i_{r}} \mbox{ where } 0 \le r \le n \mbox{, } 0 \le i_{j} \le n \mbox{ and } 0 < i_{1} < i_{2} < \dots < i_{r} \le n
    \end{equation*}
 
 
@@ -148,9 +148,12 @@ we can calculate a multiplication table for the bases.  Since the geometric
 product is associative we can use the operation (by definition for two vectors
 :math:`a\cdot b \equiv (ab+ba)/2`  which is a scalar)
 
+
+.. _eq1:
+
 .. math::
-   :label: eq1
    :nowrap:
+   :label: 5.1
 
    \begin{equation}
       e_{i_{j+1}}e_{i_{j}} = 2e_{i_{j+1}}\cdot e_{i_{j}} - e_{i_{j}}e_{i_{j+1}}
@@ -173,8 +176,8 @@ following
    \end{align*}
 
 
-which results from repeated application of equation :eq:`eq1`.  If the product of basis vectors contains repeated factors
-equation :eq:`eq1` can be used to bring the repeated factors next to one another so that if :math:`e_{i_{j}} = e_{i_{j+1}}`
+which results from repeated application of equation :ref:`5.1 <eq1>`.  If the product of basis vectors contains repeated factors
+equation :ref:`5.1 <eq1>` can be used to bring the repeated factors next to one another so that if :math:`e_{i_{j}} = e_{i_{j+1}}`
 then :math:`e_{i_{j}}e_{i_{j+1}} = e_{i_{j}}\cdot e_{i_{j+1}}` which is a scalar that commutes with all the terms in the product
 and can be brought to the front of the product.  Since every repeated pair of vectors in a geometric product of :math:`r` factors
 reduces the number of noncommutative factors in the product by :math:`r-2`. The number of bases in the multivector algebra is :math:`2^{n}`
@@ -198,8 +201,10 @@ superscripts, :math:`0` if any superscripts are repeated, and :math:`-1` for an 
 :math:`a_{1}\wedge\dots\wedge a_{r}` is antisymmetric in all its arguments and the following relation for the wedge product of a vector :math:`a` and an
 :math:`r`-blade :math:`B_{r}` can be derived
 
+.. _eq2:
+
 .. math::
-   :label: eq2
+   :label: 5.2
    :nowrap:
 
    \begin{equation}
@@ -208,7 +213,7 @@ superscripts, :math:`0` if any superscripts are repeated, and :math:`-1` for an 
 
 
 
-Using equation :eq:`eq2` one can represent the wedge product of all the basis vectors
+Using equation :ref:`5.2 <eq2>` one can represent the wedge product of all the basis vectors
 in terms of the geometric product of all the basis vectors so that one can solve (the system
 of equations is lower diagonal) for the geometric product of all the basis vectors in terms of
 the wedge product of all the basis vectors.  Thus a general multivector :math:`\boldsymbol{B}` can be
@@ -355,7 +360,7 @@ noncommuting sympy symbols.
 
 The basic geometic algebra operations will be implemented in python by defining
 a multivector class, MV, and overloading the python operators in Table
-:ref:`1 <table1>` where *A* and *B*  are any two multivectors (In the case of
+:ref:`5.1 <table1>` where *A* and *B*  are any two multivectors (In the case of
 *+*, *-*, *\**, *^*, and *|* the operation is also defined if *A* or
 *B* is a sympy symbol or a sympy real number).
 
@@ -374,7 +379,7 @@ a multivector class, MV, and overloading the python operators in Table
         ''A<B'', left contraction of multivectors
         ''A>B'', right contraction of multivectors
 
-    Table :ref:`1 <table1>`. Multivector operations for *ga*
+    Table :ref:`5.1 <table1>`. Multivector operations for *ga*
 
 
 Since *<* and *>* have no r-forms (in python for the *<* and *>* operators there are no *__rlt__()* and *__rlt__()* member functions to overload)
@@ -452,9 +457,11 @@ to define the symbolic metric for the geometric algebra of the basis we
 have defined. The default metric is the most general and is the matrix of
 the following symbols
 
+.. _eq3:
+
 .. math::
-  :label: eq3
   :nowrap:
+  :label: 3
 
   \begin{equation}
   g = \left [
@@ -472,7 +479,7 @@ products of the basis vectors. Note that the symbols are named so that
 :math:`g_{ij} = g_{ji}` since for the symbol function
 :math:`(a0.a1) \ne (a1.a0)`.
 
-Note that the strings shown in equation :eq:`eq3` are only used when the values
+Note that the strings shown in equation :ref:`5.3 <eq3>` are only used when the values
 of :math:`g_{ij}` are output (printed).   In the *ga* module (library)
 the :math:`g_{ij}` symbols are stored in a static member of the multivector
 class :class:`MV` as the sympy matrix *MV.metric* (:math:`g_{ij}` = *MV.metric[i,j]*).
@@ -731,7 +738,7 @@ the symbolic basis vectors using the formula
 
 
 where :math:`A_{r}` is a multivector of grade :math:`r` and :math:`b` is a
-vector.  For our example basis the result is shown in Table :ref:`3 <table3>`.
+vector.  For our example basis the result is shown in Table :ref:`5.3 <table3>`.
 
 .. _table3:
 
@@ -746,12 +753,12 @@ vector.  For our example basis the result is shown in Table :ref:`3 <table3>`.
    a1^a2 = {-(a1.a2)}1+a1a2
    a0^a1^a2 = {-(a1.a2)}a0+{(a0.a2)}a1+{-(a0.a1)}a2+a0a1a2
 
-Table :ref:`3 <table3>`. Bases blades in terms of bases.
+Table :ref:`5.3 <table3>`. Bases blades in terms of bases.
 
-The important thing to notice about Table :ref:`3 <table3>` is that it is a
+The important thing to notice about Table :ref:`5.3 <table3>` is that it is a
 triagonal (lower triangular) system of equations so that using a simple back
 substitution algorithm we can solve for the pseudo bases in terms of the blades
-giving Table :ref:`4 <table4>`.
+giving Table :ref:`5.4 <table4>`.
 
 .. _table4:
 
@@ -766,11 +773,11 @@ giving Table :ref:`4 <table4>`.
    a1a2 = {(a1.a2)}1+a1^a2
    a0a1a2 = {(a1.a2)}a0+{-(a0.a2)}a1+{(a0.a1)}a2+a0^a1^a2
 
-Table :ref:`4 <table4>`. Bases in terms of basis blades.
+Table :ref:`5.4 <table4>`. Bases in terms of basis blades.
 
-Using Table :ref:`4 <table4>` and simple substitution we can convert from a base
+Using Table :ref:`5.4 <table4>` and simple substitution we can convert from a base
 multivector representation to a blade representation.  Likewise, using Table
-:ref:`3 <table3>` we can convert from blades to bases.
+:ref:`5.3 <table3>` we can convert from blades to bases.
 
 Using the blade representation it becomes simple to program functions that will
 calculate the grade projection, reverse, even, and odd multivector functions.
@@ -955,8 +962,10 @@ multivector A we have
 
 but
 
+.. _eq4:
+
 .. math::
-  :label: eq4
+  :label: 5.4
   :nowrap:
 
   \begin{equation}
@@ -965,7 +974,7 @@ but
 
 
 which is proved by expanding the blade bases in terms of orthogonal vectors and
-showing that equation :eq:`eq4` holds for the geometric product of orthogonal
+showing that equation :ref:`5.4 <eq4>` holds for the geometric product of orthogonal
 vectors.
 
 The reverse is important in the theory of rotations in :math:`n`-dimensions.  If
@@ -1288,10 +1297,8 @@ spherical coordinate system they are
   \end{equation*}
 
 
-
-************
-Installation
-************
+Numpy, LaTeX, and Ansicon Installation
+======================================
 
 To install the geometric algebra module on windows,linux, or OSX perform the following operations
 
