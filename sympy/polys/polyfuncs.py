@@ -1,5 +1,7 @@
 """High-level polynomials manipulation functions. """
 
+__all__ = ["symmetrize", "horner", "interpolate", "viete"]
+
 from sympy.polys.polytools import (
     poly_from_expr, parallel_poly_from_expr, Poly)
 from sympy.polys.polyoptions import allowed_flags

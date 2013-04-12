@@ -1,5 +1,7 @@
 """Implementation of :class:`IntegerRing` class. """
 
+__all__ = ["IntegerRing"]
+
 from sympy.polys.domains.ring import Ring
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero

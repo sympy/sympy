@@ -1,5 +1,7 @@
 """Implementation of :class:`FiniteField` class. """
 
+__all__ = ["FiniteField"]
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.groundtypes import SymPyInteger

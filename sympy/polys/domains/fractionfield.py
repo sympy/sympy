@@ -1,5 +1,7 @@
 """Implementation of :class:`FractionField` class. """
 
+__all__ = ["FractionField"]
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.compositedomain import CompositeDomain
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError

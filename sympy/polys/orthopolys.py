@@ -1,5 +1,13 @@
 """Efficient functions for generating orthogonal polynomials. """
 
+__all__ = [
+    "chebyshevt_poly",
+    "chebyshevu_poly",
+    "hermite_poly",
+    "legendre_poly",
+    "laguerre_poly",
+]
+
 from sympy import Dummy
 
 from sympy.utilities import cythonized

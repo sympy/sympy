@@ -1,5 +1,7 @@
 """Sparse polynomial rings. """
 
+__all__ = ["ring", "xring", "vring"]
+
 from operator import add, mul
 
 from sympy.core.expr import Expr

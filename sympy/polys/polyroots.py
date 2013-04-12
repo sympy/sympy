@@ -1,5 +1,7 @@
 """Algorithms for computing symbolic roots of polynomials. """
 
+__all__ = ["roots"]
+
 import math
 
 from sympy.core.symbol import Dummy, Symbol, symbols

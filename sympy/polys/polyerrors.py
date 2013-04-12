@@ -1,5 +1,31 @@
 """Definitions of common exceptions for `polys` module. """
 
+__all__ = [
+    "BasePolynomialError",
+    "ExactQuotientFailed",
+    "OperationNotSupported",
+    "HeuristicGCDFailed",
+    "HomomorphismFailed",
+    "IsomorphismFailed",
+    "ExtraneousFactors",
+    "EvaluationFailed",
+    "RefinementFailed",
+    "CoercionFailed",
+    "NotInvertible",
+    "NotReversible",
+    "NotAlgebraic",
+    "DomainError",
+    "PolynomialError",
+    "UnificationFailed",
+    "GeneratorsError",
+    "GeneratorsNeeded",
+    "ComputationFailed",
+    "UnivariatePolynomialError",
+    "MultivariatePolynomialError",
+    "PolificationFailed",
+    "OptionError",
+    "FlagError",
+]
 
 class BasePolynomialError(Exception):
     """Base class for polynomial related exceptions. """

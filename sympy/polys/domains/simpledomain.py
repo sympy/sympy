@@ -1,5 +1,7 @@
 """Implementation of :class:`SimpleDomain` class. """
 
+__all__ = ["SimpleDomain"]
+
 from sympy.polys.domains.domain import Domain
 
 

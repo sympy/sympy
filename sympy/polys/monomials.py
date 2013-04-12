@@ -1,5 +1,7 @@
 """Tools and arithmetics for monomials of distributed polynomials. """
 
+__all__ = ["monomials", "Monomial"]
+
 from textwrap import dedent
 
 from sympy.core import S, C, Symbol, Mul, Tuple, Expr, sympify

@@ -1,5 +1,7 @@
 """Implementation of :class:`Ring` class. """
 
+__all__ = ["Ring"]
+
 from sympy.polys.domains.domain import Domain
 from sympy.polys.polyerrors import ExactQuotientFailed, NotInvertible, NotReversible
 
@@ -106,7 +108,7 @@ class Ring(Domain):
         QQ[x]/<x**2>
         """
         from sympy.polys.agca.ideals import Ideal
-        from sympy.polys.domains import QuotientRing
+        from sympy.polys.domains.quotientring import QuotientRing
         if not isinstance(e, Ideal):
             e = self.ideal(*e)
         return QuotientRing(self, e)

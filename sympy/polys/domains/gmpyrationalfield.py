@@ -1,5 +1,7 @@
 """Implementaton of :class:`GMPYRationalField` class. """
 
+__all__ = ["GMPYRationalField"]
+
 from sympy.polys.domains.rationalfield import RationalField
 
 from sympy.polys.domains.groundtypes import (

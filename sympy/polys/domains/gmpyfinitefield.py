@@ -1,5 +1,7 @@
 """Implementation of :class:`GMPYFiniteField` class. """
 
+__all__ = ["GMPYFiniteField"]
+
 from sympy.polys.domains.finitefield import FiniteField
 from sympy.polys.domains.gmpyintegerring import GMPYIntegerRing
 

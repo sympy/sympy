@@ -1,5 +1,7 @@
 """Options manager for :class:`Poly` and public API functions. """
 
+__all__ = ["Options"]
+
 from sympy.core import S, Basic, sympify
 from sympy.utilities import numbered_symbols, topological_sort
 from sympy.utilities.iterables import has_dups

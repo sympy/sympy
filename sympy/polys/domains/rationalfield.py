@@ -1,5 +1,7 @@
 """Implementation of :class:`RationalField` class. """
 
+__all__ = ["RationalField"]
+
 from sympy.polys.domains.field import Field
 from sympy.polys.domains.simpledomain import SimpleDomain
 from sympy.polys.domains.characteristiczero import CharacteristicZero

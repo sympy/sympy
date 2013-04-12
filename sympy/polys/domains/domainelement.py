@@ -1,5 +1,7 @@
 """Trait for implementing domain elements. """
 
+__all__ = ["DomainElement"]
+
 class DomainElement(object):
     """
     Represents an element of a domain.

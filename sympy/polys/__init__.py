@@ -1,112 +1,71 @@
 """Polynomial manipulation algorithms and algebraic objects. """
 
-from polytools import (
-    Poly, PurePoly, poly,
-    poly_from_expr,
-    parallel_poly_from_expr,
-    degree, degree_list,
-    LC, LM, LT,
-    pdiv, prem, pquo, pexquo,
-    div, rem, quo, exquo,
-    half_gcdex, gcdex, invert,
-    subresultants,
-    resultant, discriminant,
-    terms_gcd, cofactors,
-    gcd, gcd_list,
-    lcm, lcm_list,
-    trunc,
-    monic, content, primitive,
-    compose, decompose,
-    sturm,
-    gff_list, gff,
-    sqf_norm, sqf_part, sqf_list, sqf,
-    factor_list, factor,
-    intervals, refine_root, count_roots,
-    real_roots, nroots, ground_roots,
-    nth_power_roots_poly,
-    cancel,
-    reduced, groebner,
-    GroebnerBasis, is_zero_dimensional,
-)
+__all__ = []
 
-from polyfuncs import (
-    symmetrize, horner, interpolate, viete,
-)
+import polytools
+__all__.extend(polytools.__all__)
+from polytools import *
 
-from rationaltools import (
-    together,
-)
+import polyfuncs
+__all__.extend(polyfuncs.__all__)
+from polyfuncs import *
 
-from polyerrors import (
-    OperationNotSupported,
-    ExactQuotientFailed,
-    ComputationFailed,
-    UnificationFailed,
-    GeneratorsNeeded,
-    RefinementFailed,
-    PolynomialError,
-    CoercionFailed,
-    NotInvertible,
-    NotReversible,
-    NotAlgebraic,
-    DomainError,
-)
+import rationaltools
+__all__.extend(rationaltools.__all__)
+from rationaltools import *
 
-from numberfields import (
-    minimal_polynomial, minpoly,
-    primitive_element,
-    field_isomorphism,
-    to_number_field,
-    AlgebraicNumber,
-    isolate,
-)
+import polyerrors
+__all__.extend(polyerrors.__all__)
+from polyerrors import *
 
-from orderings import (
-    lex, grlex, grevlex, ilex, igrlex, igrevlex,
-)
+import numberfields
+__all__.extend(numberfields.__all__)
+from numberfields import *
 
-from rootoftools import (
-    RootOf, RootSum,
-)
+import monomials
+__all__.extend(monomials.__all__)
+from monomials import *
 
-from polyroots import (
-    roots,
-)
+import orderings
+__all__.extend(orderings.__all__)
+from orderings import *
 
-from domains import (
-    FF, GF, ZZ, QQ, RR, RealField, CC, ComplexField, EX,
-)
+import rootoftools
+__all__.extend(rootoftools.__all__)
+from rootoftools import *
 
-from constructor import (
-    construct_domain,
-)
+import polyroots
+__all__.extend(polyroots.__all__)
+from polyroots import *
 
-from specialpolys import (
-    swinnerton_dyer_poly,
-    interpolating_poly,
-    cyclotomic_poly,
-    symmetric_poly,
-    random_poly,
-)
+import domains
+__all__.extend(domains.__all__)
+from domains import *
 
-from orthopolys import (
-    chebyshevt_poly,
-    chebyshevu_poly,
-    hermite_poly,
-    legendre_poly,
-    laguerre_poly,
-)
+import constructor
+__all__.extend(constructor.__all__)
+from constructor import *
 
-from partfrac import (
-    apart, apart_list, assemble_partfrac_list
-)
+import specialpolys
+__all__.extend(specialpolys.__all__)
+from specialpolys import *
 
-from polyoptions import Options
-import polycontext as ctx
+import orthopolys
+__all__.extend(orthopolys.__all__)
+from orthopolys import *
 
-from agca import (
-    homomorphism
-)
+import partfrac
+__all__.extend(partfrac.__all__)
+from partfrac import *
 
-from rings import ring
-from fields import field
+import polyoptions
+__all__.extend(polyoptions.__all__)
+from polyoptions import *
+
+import rings
+__all__.extend(rings.__all__)
+from rings import *
+
+import fields
+__all__.extend(fields.__all__)
+from fields import *

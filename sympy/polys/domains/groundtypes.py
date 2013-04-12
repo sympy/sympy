@@ -1,9 +1,6 @@
 """Ground types for various mathematical domains in SymPy. """
 
-from sympy.external import import_module
-
-# The logic for detecting if a compatible version of gmpy/gmpy2 is present is
-# done in sympy.core.compatibility.
+__all__ = []
 
 from sympy.core.compatibility import HAS_GMPY
 

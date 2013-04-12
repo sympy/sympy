@@ -1,5 +1,7 @@
 """Rational number type based on Python integers. """
 
+__all__ = ["PythonRational"]
+
 from sympy.printing.defaults import DefaultPrinting
 from sympy.polys.polyutils import PicklableWithSlots
 from sympy.polys.domains.domainelement import DomainElement

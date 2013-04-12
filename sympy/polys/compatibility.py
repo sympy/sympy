@@ -1,5 +1,7 @@
 """Compatibility interface between dense and sparse polys. """
 
+__all__ = ["IPolys"]
+
 from sympy.polys.densearith import dup_add_term
 from sympy.polys.densearith import dmp_add_term
 from sympy.polys.densearith import dup_sub_term

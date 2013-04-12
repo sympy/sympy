@@ -1,5 +1,7 @@
 """Implementation of :class:`PythonRationalField` class. """
 
+__all__ = ["PythonRationalField"]
+
 from sympy.polys.domains.rationalfield import RationalField
 
 from sympy.polys.domains.groundtypes import PythonInteger

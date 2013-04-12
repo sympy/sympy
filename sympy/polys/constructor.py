@@ -1,5 +1,7 @@
 """Tools for constructing domains for expressions. """
 
+__all__ = ["construct_domain"]
+
 from sympy.polys.polyutils import parallel_dict_from_basic
 from sympy.polys.polyoptions import build_options
 from sympy.polys.polyerrors import GeneratorsNeeded

@@ -1,5 +1,13 @@
 """Functions for generating interesting polynomials, e.g. for benchmarking. """
 
+__all__ = [
+    "swinnerton_dyer_poly",
+    "interpolating_poly",
+    "cyclotomic_poly",
+    "symmetric_poly",
+    "random_poly",
+]
+
 from sympy.core import Add, Mul, Symbol, sympify, Dummy, symbols
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.core.singleton import S

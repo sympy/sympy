@@ -21,7 +21,7 @@ from copy import copy
 
 from sympy.polys.polyerrors import CoercionFailed
 from sympy.polys.orderings import ProductOrder, monomial_key
-from sympy.polys.domains import Field
+from sympy.polys.domains.field import Field
 from sympy.polys.agca.ideals import Ideal
 
 from sympy.core.compatibility import iterable
@@ -486,7 +486,7 @@ class FreeModuleQuotientRing(FreeModule):
     """
 
     def __init__(self, ring, rank):
-        from sympy.polys.domains import QuotientRing
+        from sympy.polys.domains.quotientring import QuotientRing
         FreeModule.__init__(self, ring, rank)
         if not isinstance(ring, QuotientRing):
             raise NotImplementedError('This implementation only works over '

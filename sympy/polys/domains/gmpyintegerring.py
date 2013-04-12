@@ -1,5 +1,7 @@
 """Implementaton of :class:`GMPYIntegerRing` class. """
 
+__all__ = ["GMPYIntegerRing"]
+
 from sympy.polys.domains.integerring import IntegerRing
 
 from sympy.polys.domains.groundtypes import (

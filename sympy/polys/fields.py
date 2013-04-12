@@ -1,5 +1,7 @@
 """Sparse rational function fields. """
 
+__all__ = ["field", "xfield", "vfield"]
+
 from operator import add, mul
 
 from sympy.core.expr import Expr

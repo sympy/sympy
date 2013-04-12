@@ -1,7 +1,8 @@
 """Tests for homomorphisms."""
 
-from sympy import homomorphism, QQ, S
+from sympy import QQ, S
 from sympy.abc import x, y
+from sympy.polys.agca import homomorphism
 from sympy.utilities.pytest import raises
 
 

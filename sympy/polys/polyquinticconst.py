@@ -8,7 +8,9 @@ Mathematica notebook:
 http://www.emba.uvm.edu/~ddummit/quintics/quintics.nb
 
 """
-from __future__ import division
+
+__all__ = ["PolyQuintic"]
+
 from sympy.core import S, Symbol
 from sympy.core.numbers import I
 from sympy.polys.polytools import Poly

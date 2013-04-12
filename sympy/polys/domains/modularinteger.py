@@ -1,5 +1,7 @@
 """Implementation of :class:`ModularInteger` class. """
 
+__all__ = ["ModularInteger"]
+
 import operator
 
 from sympy.polys.polyutils import PicklableWithSlots
