@@ -19,10 +19,14 @@ def test_ipythonprinting():
 
     # Printing without printing extension
     app.run_cell("a = format(Symbol('pi'))")
+    app.run_cell("a2 = format(Symbol('pi')**2)")
     assert app.user_ns['a']['text/plain'] == "pi"
+    assert app.user_ns['a2']['text/plain'] == "pi**2"
 
     # Load printing extension
     app.run_cell("%load_ext sympy.interactive.ipythonprinting")
     # Printing with printing extension
     app.run_cell("a = format(Symbol('pi'))")
-    assert app.user_ns['a']['text/plain'] == u'\u03c0'
+    app.run_cell("a2 = format(Symbol('pi')**2)")
+    assert app.user_ns['a']['text/plain'] in (u'\u03c0', 'pi')
+    assert app.user_ns['a2']['text/plain'] in (u' 2\n\u03c0 ', '  2\npi ')
