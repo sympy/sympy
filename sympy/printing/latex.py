@@ -136,7 +136,7 @@ class LatexPrinter(Printer):
         """
         from sympy import Integral, Piecewise, Product, Sum
         return expr.is_Add or (not last and
-            isinstance(expr, (Integral, Piecewise, Product, Sum)))
+            any([expr.has(x) for x in (Integral, Piecewise, Product, Sum)]))
 
     def _mul_is_clean(self, expr):
         for arg in expr.args:

@@ -60,6 +60,10 @@ def test_latex_basic():
     assert latex((x + y)/x) == r"\frac{1}{x} \left(x + y\right)"
     assert latex((x + y)/x, long_frac_ratio=3) == r"\frac{x + y}{x}"
 
+    assert latex(2*Integral(x, x)/3) == r"\frac{2}{3} \int x\, dx"
+    assert latex(2*Integral(x, x)/3, fold_short_frac=True) == \
+        r"\left(2 \int x\, dx\right) / 3"
+
     assert latex(sqrt(x)) == r"\sqrt{x}"
     assert latex(x**Rational(1, 3)) == r"\sqrt[3]{x}"
     assert latex(sqrt(x)**3) == r"x^{\frac{3}{2}}"
