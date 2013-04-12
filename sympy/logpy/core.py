@@ -47,6 +47,7 @@ from logpy.assoccomm import eq_assoccomm as eqac
 from logpy.goals import goalify
 from sympy import assuming, ask
 
+# TODO - make sure this doesn't happen prematurely
 asko = goalify(ask)
 
 def refine_one(expr, *assumptions, **kwargs):

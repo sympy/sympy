@@ -43,11 +43,32 @@ def test_pow_of_abs_deep():
         assert refine_deep(Abs(2*y)**4) == (2*y)**4
 
 def test_commutativity():
+    from logpy.assoccomm import op_registry
+    from logpy.assoccomm import eq_assoccomm as eqac
+    from logpy.core import goaleval
+    from logpy.variables import variables
+    op_registry.append((lambda x: isinstance(x, type) and issubclass(x, Basic),
+                        lambda x: isinstance(x, Basic),
+                        type,
+                        lambda x: tuple(x.args),
+                        lambda op, args: op.func(*args)))
+
     y = Symbol('_tmp')
+
+    with variables(x):
+        print next(goaleval(eqac(y+x, y+1))({}))
+        assert next(goaleval(eqac(y+x, y+1))({})) == {x: 1}
+
+    reduces = Relation('reduces')
     fact(reduces, x * y, x, True)
+    refine = partial(refine_one, reduces=reduces, vars=[x])
+
     assert refine(3) == 3
+    print refine(3*y)
     assert refine(3*y) == 3
     print refine(z*3*y)
     assert refine(z*3*y) == z*3
     assert refine(z*y*3) == z*3
     assert refine(y*z*3) == z*3
+
+    del op_registry[-1]
