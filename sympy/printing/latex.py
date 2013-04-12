@@ -194,16 +194,16 @@ class LatexPrinter(Printer):
             return str_real
 
     def _print_Mul(self, expr):
-        coeff, tail = expr.as_coeff_Mul()
+        coeff, _ = expr.as_coeff_Mul()
 
         if not coeff.is_negative:
             tex = ""
         else:
-            coeff = -coeff
+            expr = -expr
             tex = "- "
 
         from sympy.simplify import fraction
-        numer, denom = fraction(tail, exact=True)
+        numer, denom = fraction(expr, exact=True)
         separator = self._settings['mul_symbol_latex']
 
         def convert(expr):
@@ -237,40 +237,8 @@ class LatexPrinter(Printer):
                 return _tex
 
         if denom is S.One:
-            _tex = r"%s" % convert(numer)
-
-            if coeff is not S.One:
-                tex += str(self._print(coeff))
-
-                # between two digits, \times must always be used, to avoid
-                # confusion
-                if separator == " " and re.search("[0-9][} ]*$", tex) and \
-                        re.match("[{ ]*[-+0-9]", _tex):
-                    tex += r" \times " + _tex
-                else:
-                    tex += separator + _tex
-            else:
-                tex += _tex
-
+            tex += convert(numer)
         else:
-            if numer is S.One:
-                if coeff.is_Integer:
-                    numer *= coeff.p
-                elif coeff.is_Rational:
-                    if coeff.p != 1:
-                        numer *= coeff.p
-
-                    denom *= coeff.q
-                elif coeff is not S.One:
-                    tex += str(self._print(coeff)) + separator
-            else:
-                if coeff.is_Rational and coeff.p == 1:
-                    denom *= coeff.q
-                elif coeff.is_Rational and coeff.q == 1:
-                    numer *= coeff.p
-                elif coeff is not S.One:
-                    tex += str(self._print(coeff)) + separator
-
             snumer = convert(numer)
             sdenom = convert(denom)
             ldenom = len(sdenom.split())
