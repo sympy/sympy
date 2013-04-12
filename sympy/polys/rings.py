@@ -88,6 +88,11 @@ class PolyRing(DefaultPrinting, IPolys):
             obj.monomial_lcm = codegen.lcm()
             obj.monomial_gcd = codegen.gcd()
 
+            if order is lex:
+                obj.leading_expv = lambda f: max(f)
+            else:
+                obj.leading_expv = lambda f: max(f, key=order)
+
             _ring_cache[_hash] = obj
 
         return obj
@@ -984,11 +989,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                             del f[m1]
                         else:
                             f[m1] = c1
-                    if f:
-                        if order is lex:
-                            ltm = max(f)
-                        else:
-                            ltm = max(f, key=order)
+                    ltm = f.leading_expv()
+                    if ltm is not None:
                         ltf = ltm, f[ltm]
 
                     break
@@ -999,12 +1001,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 else:
                     r[ltm] = ltc
                 del f[ltm]
-                if f:
-                    if order is lex:
-                        ltm = max(f)
-                    else:
-                        ltm = max(f, key=order)
+                ltm = f.leading_expv()
+                if ltm is not None:
                     ltf = ltm, f[ltm]
+
         return r
 
     def _iadd_monom(self, mc):
@@ -1100,11 +1100,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         if self:
-            order = self.ring.order
-            if order is lex:
-                return max(self)
-            else:
-                return max(self, key=order)
+            return self.ring.leading_expv(self)
         else:
             return None
 
