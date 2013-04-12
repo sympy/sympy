@@ -33,6 +33,21 @@ def _token_splittable(token):
     return False
 
 
+def _token_callable(token, local_dict, global_dict, nextToken=None):
+    """
+    Predicate for whether a token name represents a callable function.
+    """
+    func = local_dict.get(token[1])
+    if not func:
+        func = global_dict.get(token[1])
+    is_Function = getattr(func, 'is_Function', False)
+    if (is_Function or
+        (callable(func) and not hasattr(func, 'is_Function')) or
+            isinstance(nextToken, AppliedFunction)):
+        return True
+    return False
+
+
 def _add_factorial_tokens(name, result):
     if result == [] or result[-1][1] == '(':
         raise TokenError()
@@ -230,19 +245,12 @@ def _implicit_application(tokens, local_dict, global_dict):
         if (tok[0] == NAME and
             nextTok[0] != OP and
             nextTok[0] != ENDMARKER):
-            func = global_dict.get(tok[1])
-            is_Function = getattr(func, 'is_Function', False)
-            if (is_Function or
-                (callable(func) and not hasattr(func, 'is_Function')) or
-                    isinstance(nextTok, AppliedFunction)):
+            if _token_callable(tok, local_dict, global_dict, nextTok):
                 result.append((OP, '('))
                 appendParen += 1
         # name followed by exponent - function exponentiation
         elif (tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**'):
-            func = global_dict.get(tok[1])
-            is_Function = getattr(func, 'is_Function', False)
-            if (is_Function or
-                (callable(func) and not hasattr(func, 'is_Function'))):
+            if _token_callable(tok, local_dict, global_dict):
                 exponentSkip = True
         elif exponentSkip:
             # if the last token added was an applied function (i.e. the
@@ -250,12 +258,14 @@ def _implicit_application(tokens, local_dict, global_dict):
             # implicit multiplication would have added an extraneous
             # multiplication)
             if (isinstance(tok, AppliedFunction)
-                or tok[0] == OP and tok[1] == '*'):
+                or (tok[0] == OP and tok[1] == '*')):
                 # don't add anything if the next token is a multiplication
-                # or if there's already a parenthesis
-                if not (nextTok[0] == OP and nextTok[1] in ('*', '(')):
-                    result.append((OP, '('))
-                    appendParen += 1
+                # or if there's already a parenthesis (if parenthesis, still
+                # stop skipping tokens)
+                if not (nextTok[0] == OP and nextTok[1] == '*'):
+                    if not(nextTok[0] == OP and nextTok[1] == '('):
+                        result.append((OP, '('))
+                        appendParen += 1
                     exponentSkip = False
         elif appendParen:
             if nextTok[0] == OP and nextTok[1] in ('^', '**', '*'):
@@ -271,7 +281,6 @@ def _implicit_application(tokens, local_dict, global_dict):
 
     if appendParen:
         result.extend([(OP, ')')] * appendParen)
-
     return result
 
 
@@ -290,10 +299,10 @@ def function_exponentiation(tokens, local_dict, global_dict):
     exponent = []
     consuming_exponent = False
     level = 0
-
     for tok, nextTok in zip(tokens, tokens[1:]):
         if tok[0] == NAME and nextTok[0] == OP and nextTok[1] == '**':
-            consuming_exponent = True
+            if _token_callable(tok, local_dict, global_dict):
+                consuming_exponent = True
         elif consuming_exponent:
             exponent.append(tok)
 

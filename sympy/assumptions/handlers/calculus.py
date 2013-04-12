@@ -266,6 +266,7 @@ class AskBoundedHandler(CommonHandler):
 
     exp = log
 
-    cos, sin, Number, Pi, Exp1, ImaginaryUnit, sign = [staticmethod(CommonHandler.AlwaysTrue)]*7
+    cos, sin, Number, Pi, Exp1, GoldenRatio, ImaginaryUnit, sign = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*8
 
     Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2

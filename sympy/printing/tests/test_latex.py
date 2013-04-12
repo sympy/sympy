@@ -285,11 +285,37 @@ def test_latex_brackets():
 
 
 def test_latex_derivatives():
+    # regular "d" for ordinary derivatives
     assert latex(diff(x**3, x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x} x^{3}"
+        r"\frac{d}{d x} x^{3}"
     assert latex(diff(sin(x) + x**2, x, evaluate=False)) == \
-        r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x \right )}\right)"
+        r"\frac{d}{d x}\left(x^{2} + \sin{\left (x \right )}\right)"
+    assert latex(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False)) == \
+        r"\frac{d^{2}}{d x^{2}} \left(x^{2} + \sin{\left (x \right )}\right)"
+    assert latex(diff(diff(diff(sin(x) + x**2, x, evaluate=False), evaluate=False), evaluate=False)) == \
+        r"\frac{d^{3}}{d x^{3}} \left(x^{2} + \sin{\left (x \right )}\right)"
 
+    # \partial for partial derivatives
+    assert latex(diff(sin(x * y), x, evaluate=False)) == \
+        r"\frac{\partial}{\partial x} \sin{\left (x y \right )}"
+    assert latex(diff(sin(x * y) + x**2, x, evaluate=False)) == \
+        r"\frac{\partial}{\partial x}\left(x^{2} + \sin{\left (x y \right )}\right)"
+    assert latex(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False)) == \
+        r"\frac{\partial^{2}}{\partial x^{2}} \left(x^{2} + \sin{\left (x y \right )}\right)"
+    assert latex(diff(diff(diff(sin(x*y) + x**2, x, evaluate=False), x, evaluate=False), x, evaluate=False)) == \
+        r"\frac{\partial^{3}}{\partial x^{3}} \left(x^{2} + \sin{\left (x y \right )}\right)"
+
+    # mixed partial derivatives
+    f = Function("f")
+    assert latex(diff(diff(f(x,y), x, evaluate=False), y, evaluate=False)) == \
+        r"\frac{\partial^{2}}{\partial x\partial y}  " + latex(f(x,y))
+
+    assert latex(diff(diff(diff(f(x,y), x, evaluate=False), x, evaluate=False), y, evaluate=False)) == \
+        r"\frac{\partial^{3}}{\partial x^{2}\partial y}  " + latex(f(x,y))
+
+    # use ordinary d when one of the variables has been integrated out
+    assert latex(diff(Integral(exp(-x * y), (x, 0, oo)), y, evaluate=False)) == \
+        r"\frac{d}{d y} \int_{0}^{\infty} e^{- x y}\, dx"
 
 def test_latex_subs():
     assert latex(Subs(x*y, (
@@ -456,7 +482,6 @@ def test_latex_Heaviside():
 
 def test_latex_KroneckerDelta():
     assert latex(KroneckerDelta(x, y)) == r"\delta_{x y}"
-    assert latex(KroneckerDelta(x, y)**2) == r"\left(\delta_{x y}\right)^{2}"
     assert latex(KroneckerDelta(x, y + 1)) == r"\delta_{x, y + 1}"
     # issue 3479
     assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{y, x + 1}"
@@ -706,7 +731,7 @@ def test_latex_MatrixSlice():
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert latex(where(X > 0)) == "Domain: 0 < x_{1}"
+    assert latex(where(X > 0)) == "Domain: x_{1} > 0"
 
     D = Die('d1', 6)
     assert latex(where(D > 4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
@@ -714,7 +739,7 @@ def test_latex_RandomDomain():
     A = Exponential('a', 1)
     B = Exponential('b', 1)
     assert latex(
-        pspace(Tuple(A, B)).domain) == "Domain: 0 \leq a \wedge 0 \leq b"
+        pspace(Tuple(A, B)).domain) == "Domain: a \geq 0 \wedge b \geq 0"
 
 
 def test_PrettyPoly():
