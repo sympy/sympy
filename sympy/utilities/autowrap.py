@@ -74,7 +74,7 @@ import shutil
 import tempfile
 from subprocess import STDOUT, CalledProcessError
 
-from sympy.core.compatibility import run_process
+from sympy.core.compatibility import check_output
 from sympy.utilities.codegen import (
     get_code_generator, Routine, OutputArgument, InOutArgument,
     CodeGenArgumentListError, Result
@@ -151,7 +151,7 @@ class CodeWrapper:
         command = self.command
         command.extend(self.flags)
         try:
-            retoutput = run_process(command, stderr=STDOUT)
+            retoutput = check_output(command, stderr=STDOUT)
         except CalledProcessError, e:
             raise CodeWrapError(
                 "Error while executing command: %s. Command output is:\n%s" % (

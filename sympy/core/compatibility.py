@@ -916,10 +916,10 @@ if GROUND_TYPES == 'gmpy':
 import os
 from subprocess import CalledProcessError
 try:
-    from subprocess import check_output as run_process
+    from subprocess import check_output
 except ImportError:
     from subprocess import check_call
-    def run_process(*args, **kwargs):
+    def check_output(*args, **kwargs):
         with open(os.devnull, 'w') as fh:
             kwargs['stdout'] = fh
             try:
