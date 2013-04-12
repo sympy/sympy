@@ -89,7 +89,7 @@ class Mod(Function):
             args = []
             for i in p.args:
                 a = cls(i, q)
-                if a.func is cls or (-a).func is cls:
+                if a.count(cls) > i.count(cls):
                     args.append(i)
                 else:
                     args.append(a)

@@ -1280,6 +1280,7 @@ def test_issue_2820():
 
 def test_Mod():
     assert Mod(x, 1).func is Mod
+    assert pi % pi == S.Zero
     assert Mod(5, 3) == 2
     assert Mod(-5, 3) == 1
     assert Mod(5, -3) == -1
@@ -1289,9 +1290,8 @@ def test_Mod():
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
     assert (x % y).subs({x: 5, y: 3}) == 2
-    assert (x + 3) % 1 == Mod(x, 1)
-    assert (x + 3.0) % 1 == Mod(1.*x, 1)
-    assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
+
+    # Float handling
     point3 = Float(3.3) % 1
     assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)
     assert Mod(-3.3, 1) == 1 - point3
@@ -1308,7 +1308,8 @@ def test_Mod():
     assert e == point6 and e.is_Float
     e = Mod(Rational(13, 10), Rational(7, 10))
     assert e == .6 and e.is_Rational
-    assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
+
+    # check that sign is right
     r2 = sqrt(2)
     r3 = sqrt(3)
     for i in [-r3, -r2, r2, r3]:
@@ -1330,6 +1331,7 @@ def test_Mod():
                 assert Mod(Mod(k, i), j) == (k % i) % j
 
     # known difference
+    assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
     p = symbols('p', positive=True)
     assert Mod(p + 1, p + 3) == p + 1
     n = symbols('n', negative=True)
@@ -1337,29 +1339,33 @@ def test_Mod():
     assert Mod(n - 2*p, n - p) == -p
     assert Mod(p - 2*n, p - n) == -n
 
-    i = Symbol('i', integer=True)
-    assert pi%pi == S.Zero
-    assert (-3*x)%(-2*y) == -Mod(3*x, 2*y)
-    assert (3*i*x)%(2*i*y) == i*Mod(3*x, 2*y)
-    assert (.6*pi)%(.3*x*pi) == 0.3*pi*Mod(2, x)
-    assert (.6*pi)%(.31*x*pi) == pi*Mod(0.6, 0.31*x)
-    assert (6*pi)%(.3*x*pi) == pi*Mod(6, 0.3*x)
-    assert (6*pi)%(.31*x*pi) == pi*Mod(6, 0.31*x)
-    assert (6*pi)%(.42*x*pi) == pi*Mod(6, 0.42*x)
-    assert (12*x)%(2*y) == 2*Mod(6*x, y)
-    assert (12*x)%(3*5*y) == 3*Mod(4*x, 5*y)
-    assert (12*x)%(15*x*y) == 3*x*Mod(4, 5*y)
-    assert sqrt(2) % sqrt(5) == sqrt(2)
-    assert -sqrt(2) % sqrt(5) == sqrt(5) - sqrt(2)
-    assert (-2*pi)%(3*pi) == pi
-    assert (2*x + 2) % (x + 1) == 0
+    # handling sums
+    assert (x + 3) % 1 == Mod(x, 1)
+    assert (x + 3.0) % 1 == Mod(1.*x, 1)
+    assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
+    assert str(Mod(.6*x + y, .3*y)) == str(Mod(0.1*y + 0.6*x, 0.3*y))
     assert (x + 1) % x == 1 % x
     assert (x + y) % x == y % x
     assert (x + y + 2) % x == (y + 2) % x
-    assert (x*(x + 1)) % (x+1) == (x + 1)*Mod(x, 1)
-    assert (a + 3*x + 1)%(2*x) == Mod(a + x + 1, 2*x)
-    assert (12*x + 18*y)%(3*x) == 3*Mod(6*y, x)
+    assert (a + 3*x + 1) % (2*x) == Mod(a + x + 1, 2*x)
+    assert (12*x + 18*y) % (3*x) == 3*Mod(6*y, x)
+
+    # gcd extraction
+    assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
+    assert (.6*pi) % (.3*x*pi) == 0.3*pi*Mod(2, x)
+    assert (.6*pi) % (.31*x*pi) == pi*Mod(0.6, 0.31*x)
+    assert (6*pi) % (.3*x*pi) == pi*Mod(6, 0.3*x)
+    assert (6*pi) % (.31*x*pi) == pi*Mod(6, 0.31*x)
+    assert (6*pi) % (.42*x*pi) == pi*Mod(6, 0.42*x)
+    assert (12*x) % (2*y) == 2*Mod(6*x, y)
+    assert (12*x) % (3*5*y) == 3*Mod(4*x, 5*y)
+    assert (12*x) % (15*x*y) == 3*x*Mod(4, 5*y)
+    assert (-2*pi) % (3*pi) == pi
+    assert (2*x + 2) % (x + 1) == 0
+    assert (x*(x + 1)) % (x + 1) == (x + 1)*Mod(x, 1)
     assert Mod(5.0*x, 0.1*y) == 0.1*Mod(50*x, y)
+    i = Symbol('i', integer=True)
+    assert (3*i*x) % (2*i*y) == i*Mod(3*x, 2*y)
 
 
 def test_issue_2902():
