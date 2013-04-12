@@ -2305,9 +2305,11 @@ def homogeneous_order(eq, *symbols):
     homogeneous of any order is equivalent to being able to rewrite
     F(x, y) as G(x/y) or H(y/x).  This fact is used to solve 1st order
     ordinary differential equations whose coefficients are homogeneous
-    of the same order (see the docstrings of
+    of the same order.
+    
+    See the docstrings of
     ode.ode_1st_homogeneous_coeff_subs_indep_div_dep() and
-    ode.ode_1st_homogeneous_coeff_subs_indep_div_dep()
+    ode.ode_1st_homogeneous_coeff_subs_indep_div_dep().
 
     Symbols can be functions, but every argument of the function must be
     a symbol, and the arguments of the function that appear in the
