@@ -2,9 +2,8 @@
 
 from sympy.core import igcd
 
-from sympy.polys.monomialtools import (
-    monomial_key, monomial_min, monomial_div
-)
+from sympy.polys.monomials import monomial_min, monomial_div
+from sympy.polys.orderings import monomial_key
 
 from sympy.utilities import cythonized
 

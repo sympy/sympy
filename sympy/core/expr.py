@@ -788,7 +788,7 @@ class Expr(Basic, EvalfMixin):
     @classmethod
     def _parse_order(cls, order):
         """Parse and configure the ordering of terms. """
-        from sympy.polys.monomialtools import monomial_key
+        from sympy.polys.orderings import monomial_key
 
         try:
             reverse = order.startswith('rev-')

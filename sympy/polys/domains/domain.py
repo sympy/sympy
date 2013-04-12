@@ -6,7 +6,7 @@ from sympy.core import Basic, sympify
 from sympy.core.compatibility import SYMPY_INTS, HAS_GMPY, is_sequence
 
 from sympy.polys.polyerrors import UnificationFailed, CoercionFailed, DomainError
-from sympy.polys.monomialtools import lex
+from sympy.polys.orderings import lex
 from sympy.polys.polyutils import _unify_gens
 
 class Domain(object):

@@ -61,8 +61,7 @@ from numberfields import (
     isolate,
 )
 
-from monomialtools import (
-    Monomial, monomials, monomial_count,
+from orderings import (
     lex, grlex, grevlex, ilex, igrlex, igrevlex,
 )
 

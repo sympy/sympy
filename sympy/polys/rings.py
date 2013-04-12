@@ -8,7 +8,8 @@ from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify, sympify
 from sympy.core.compatibility import is_sequence
 from sympy.ntheory.multinomial import multinomial_coefficients
-from sympy.polys.monomialtools import MonomialOps, lex
+from sympy.polys.monomials import MonomialOps
+from sympy.polys.orderings import lex
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict, _dict_reorder

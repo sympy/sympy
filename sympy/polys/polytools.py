@@ -38,9 +38,8 @@ from sympy.polys.rootisolation import (
 from sympy.polys.groebnertools import groebner as _groebner
 from sympy.polys.fglmtools import matrix_fglm
 
-from sympy.polys.monomialtools import (
-    Monomial, monomial_key,
-)
+from sympy.polys.monomials import Monomial
+from sympy.polys.orderings import monomial_key
 
 from sympy.polys.polyerrors import (
     OperationNotSupported, DomainError,

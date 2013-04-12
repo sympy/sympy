@@ -48,7 +48,7 @@ from sympy.polys.polyclasses import DMP
 
 from sympy.polys.fields import field
 from sympy.polys.domains import FF, ZZ, QQ, RR, EX
-from sympy.polys.monomialtools import lex, grlex, grevlex
+from sympy.polys.orderings import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,

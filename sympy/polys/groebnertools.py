@@ -1,6 +1,7 @@
 """Groebner bases algorithms. """
 
-from sympy.polys.monomialtools import monomial_mul, monomial_div, monomial_lcm, monomial_divides, term_div, lex
+from sympy.polys.monomials import monomial_mul, monomial_div, monomial_lcm, monomial_divides, term_div
+from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import DomainError
 from sympy.polys.polyconfig import query
 from sympy.core.symbol import Dummy
@@ -527,10 +528,9 @@ def f5_reduce(f, B):
     F5-reducible, e.g.:
 
     >>> from sympy.polys.groebnertools import lbp, sig, f5_reduce, Polyn
-    >>> from sympy.polys.monomialtools import lex
-    >>> from sympy.polys import ring, QQ
+    >>> from sympy.polys import ring, QQ, lex
 
-    >>> R, x,y,z = ring("x,y,z", QQ)
+    >>> R, x,y,z = ring("x,y,z", QQ, lex)
 
     >>> f = lbp(sig((1, 1, 1), 4), x, 3)
     >>> g = lbp(sig((0, 0, 0), 2), x, 2)

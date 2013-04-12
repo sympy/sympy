@@ -5,8 +5,7 @@ from sympy.polys.polyoptions import (
     Split, Gaussian, Extension, Modulus, Symmetric, Strict, Auto,
     Frac, Formal, Polys, Include, All, Gen, Symbols, Method)
 
-from sympy.polys.monomialtools import lex
-
+from sympy.polys.orderings import lex
 from sympy.polys.domains import FF, GF, ZZ, QQ, RR, EX
 
 from sympy.polys.polyerrors import OptionError, GeneratorsError

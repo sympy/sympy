@@ -16,7 +16,7 @@ compiled_modules = [
     "sympy.polys.euclidtools",
     "sympy.polys.factortools",
     "sympy.polys.galoistools",
-    "sympy.polys.monomialtools",
+    "sympy.polys.monomials",
     "sympy.polys.orthopolys",
     "sympy.polys.specialpolys",
     "sympy.polys.sqfreetools",

@@ -11,7 +11,7 @@ from sympy.polys.groebnertools import (
 )
 
 from sympy.polys.fglmtools import _representing_matrices
-from sympy.polys.monomialtools import lex, grlex, grevlex
+from sympy.polys.orderings import lex, grlex, grevlex
 from sympy.polys.polyerrors import ExactQuotientFailed, DomainError
 
 from sympy.polys.rings import ring, xring

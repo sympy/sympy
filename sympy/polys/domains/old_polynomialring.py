@@ -10,7 +10,7 @@ from sympy.polys.polyerrors import (GeneratorsNeeded, PolynomialError,
         CoercionFailed, ExactQuotientFailed, NotReversible)
 from sympy.polys.polyutils import dict_from_basic, basic_from_dict, _dict_reorder
 
-from sympy.polys.monomialtools import monomial_key, build_product_order
+from sympy.polys.orderings import monomial_key, build_product_order
 
 from sympy.polys.agca.modules import FreeModulePolyRing
 

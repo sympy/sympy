@@ -28,7 +28,7 @@ The main reference for this file is [SCA],
 
 # TODO cythonize
 
-from sympy.polys.monomialtools import (
+from sympy.polys.monomials import (
     monomial_mul, monomial_lcm, monomial_div, monomial_deg, monomial_divides
 )
 

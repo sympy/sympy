@@ -357,11 +357,11 @@ class Order(Option):
 
     @classmethod
     def default(cls):
-        return sympy.polys.monomialtools.lex
+        return sympy.polys.orderings.lex
 
     @classmethod
     def preprocess(cls, order):
-        return sympy.polys.monomialtools.monomial_key(order)
+        return sympy.polys.orderings.monomial_key(order)
 
 
 class Field(BooleanOption):

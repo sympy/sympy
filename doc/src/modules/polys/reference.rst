@@ -108,11 +108,17 @@ Algebraic number fields
 Monomials encoded as tuples
 ===========================
 
-.. currentmodule:: sympy.polys.monomialtools
+.. currentmodule:: sympy.polys.monomials
 
 .. autoclass:: Monomial
 .. autofunction:: monomials
 .. autofunction:: monomial_count
+
+Orderings of monomials
+======================
+
+.. currentmodule:: sympy.polys.monomials
+
 .. autoclass:: LexOrder
 .. autoclass:: GradedLexOrder
 .. autoclass:: ReversedGradedLexOrder

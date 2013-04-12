@@ -5,7 +5,7 @@ from operator import add, mul
 from sympy.core.expr import Expr
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.rings import PolyElement
-from sympy.polys.monomialtools import lex
+from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.fractionfield import FractionField

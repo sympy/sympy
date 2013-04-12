@@ -14,8 +14,8 @@ from sympy.functions import sqrt, erf
 
 from sympy.solvers import solve
 
-from sympy.polys import quo, gcd, lcm, \
-    monomials, factor, cancel, PolynomialError
+from sympy.polys import quo, gcd, lcm, factor, cancel, PolynomialError
+from sympy.polys.monomials import monomials
 from sympy.polys.polyroots import root_factors
 
 from sympy.core.compatibility import reduce, default_sort_key

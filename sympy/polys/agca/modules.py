@@ -20,7 +20,7 @@ convenience methods, for example if there are faster algorithms available.
 from copy import copy
 
 from sympy.polys.polyerrors import CoercionFailed
-from sympy.polys.monomialtools import ProductOrder, monomial_key
+from sympy.polys.orderings import ProductOrder, monomial_key
 from sympy.polys.domains import Field
 from sympy.polys.agca.ideals import Ideal
 

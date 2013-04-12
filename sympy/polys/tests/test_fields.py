@@ -2,7 +2,7 @@
 
 from sympy.polys.fields import field
 from sympy.polys.domains import ZZ, QQ, RR
-from sympy.polys.monomialtools import lex, grlex
+from sympy.polys.orderings import lex, grlex
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
