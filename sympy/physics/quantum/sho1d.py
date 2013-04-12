@@ -37,7 +37,7 @@ class RaisingOp(SHOOp):
 
     When a^dagger acts on a state it raises the state up by one. Taking
     the adjoint of a^dagger returns 'a', the Lowering Operator. a^dagger
-    can be rewritten in terms of postion and momentum. We can represent
+    can be rewritten in terms of position and momentum. We can represent
     a^dagger as a matrix, which will be its default basis.
 
     Parameters
@@ -50,7 +50,7 @@ class RaisingOp(SHOOp):
     Examples
     ========
 
-    Create a Raising Operator and rewrite it in terms of positon and
+    Create a Raising Operator and rewrite it in terms of position and
     momentum, and show that taking its adjoint returns 'a':
 
         >>> from sympy.physics.quantum.sho1d import RaisingOp
@@ -121,7 +121,7 @@ class RaisingOp(SHOOp):
         return self._represent_NumberOp(None, **options)
 
     def _represent_XOp(self, basis, **options):
-        # This logic is good but the underlying positon
+        # This logic is good but the underlying position
         # representation logic is broken.
         # temp = self.rewrite('xp').doit()
         # result = represent(temp, basis=X)
@@ -178,7 +178,7 @@ class LoweringOp(SHOOp):
     Examples
     ========
 
-    Create a Lowering Operator and rewrite it in terms of positon and
+    Create a Lowering Operator and rewrite it in terms of position and
     momentum, and show that taking its adjoint returns a^dagger:
 
         >>> from sympy.physics.quantum.sho1d import LoweringOp
@@ -262,7 +262,7 @@ class LoweringOp(SHOOp):
         return self._represent_NumberOp(None, **options)
 
     def _represent_XOp(self, basis, **options):
-        # This logic is good but the underlying positon
+        # This logic is good but the underlying position
         # representation logic is broken.
         # temp = self.rewrite('xp').doit()
         # result = represent(temp, basis=X)
@@ -382,7 +382,7 @@ class NumberOp(SHOOp):
         return self._represent_NumberOp(None, **options)
 
     def _represent_XOp(self, basis, **options):
-        # This logic is good but the underlying positon
+        # This logic is good but the underlying position
         # representation logic is broken.
         # temp = self.rewrite('xp').doit()
         # result = represent(temp, basis=X)
@@ -488,7 +488,7 @@ class Hamiltonian(SHOOp):
         return self._represent_NumberOp(None, **options)
 
     def _represent_XOp(self, basis, **options):
-        # This logic is good but the underlying positon
+        # This logic is good but the underlying position
         # representation logic is broken.
         # temp = self.rewrite('xp').doit()
         # result = represent(temp, basis=X)
@@ -506,7 +506,7 @@ class Hamiltonian(SHOOp):
                 value = float(value)
             matrix[i,i] = value
         if format == 'scipy.sparse':
-            matirx = matrix.tocsr()
+            matrix = matrix.tocsr()
         return hbar*omega*matrix
 
 #------------------------------------------------------------------------------
@@ -652,7 +652,7 @@ class SHOBra(SHOState, Bra):
     def _represent_NumberOp(self, basis, **options):
         ndim_info = options.get('ndim', 4)
         format = options.get('format', 'sympy')
-        opitons['spmatrix'] = 'lil'
+        options['spmatrix'] = 'lil'
         vector = matrix_zeros(1, ndim_info, **options)
         if isinstance(self.n, Integer):
             if self.n >= ndim_info:
