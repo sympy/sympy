@@ -7,7 +7,7 @@ from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
 
 from printer import Printer
-from conventions import split_super_sub
+from conventions import split_super_sub, requires_partial
 from precedence import precedence, PRECEDENCE
 
 import sympy.mpmath.libmp as mlib
@@ -354,10 +354,15 @@ class LatexPrinter(Printer):
 
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
+        if requires_partial(expr):
+            diff_symbol = r'\partial'
+        else:
+            diff_symbol = r'd'
+
 
         if dim == 1:
-            tex = r"\frac{\partial}{\partial %s}" % \
-                self._print(expr.variables[0])
+            tex = r"\frac{%s}{%s %s}" % (diff_symbol, diff_symbol,
+                self._print(expr.variables[0]))
         else:
             multiplicity, i, tex = [], 1, ""
             current = expr.variables[0]
@@ -373,11 +378,11 @@ class LatexPrinter(Printer):
 
             for x, i in multiplicity:
                 if i == 1:
-                    tex += r"\partial %s" % self._print(x)
+                    tex += r"%s %s" % (diff_symbol, self._print(x))
                 else:
-                    tex += r"\partial^{%s} %s" % (i, self._print(x))
+                    tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), i)
 
-            tex = r"\frac{\partial^{%s}}{%s} " % (dim, tex)
+            tex = r"\frac{%s^{%s}}{%s} " % (diff_symbol, dim, tex)
 
         if isinstance(expr.expr, C.AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
@@ -559,6 +564,7 @@ class LatexPrinter(Printer):
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
+    _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
         if self._needs_brackets(expr.args[0]):
@@ -984,6 +990,7 @@ class LatexPrinter(Printer):
 
         return name
     _print_RandomSymbol = _print_Symbol
+    _print_MatrixSymbol = _print_Symbol
 
     def _print_Relational(self, expr):
         if self._settings['itex']:

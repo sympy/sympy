@@ -560,21 +560,12 @@ class Basic(object):
 
     @property
     def is_number(self):
-        """Returns ``True`` if 'self' is a number.
+        """Returns ``True`` if 'self' contains no free symbols.
 
-           >>> from sympy import log, Integral
-           >>> from sympy.abc import x, y
-
-           >>> x.is_number
-           False
-           >>> (2*x).is_number
-           False
-           >>> (2 + log(2)).is_number
-           True
-           >>> (2 + Integral(2, x)).is_number
-           False
-           >>> (2 + Integral(2, (x, 1, 2))).is_number
-           True
+        See Also
+        ========
+        is_comparable
+        sympy.core.expr.is_number
 
         """
         # should be overriden by subclasses
@@ -582,6 +573,18 @@ class Basic(object):
 
     @property
     def is_comparable(self):
+        """Return True if self can be computed to a real number
+        with precision, else False.
+
+        Examples
+        ========
+
+        >>> from sympy import exp_polar, pi, I
+        >>> (I*exp_polar(I*pi/2)).is_comparable
+        True
+        >>> (I*exp_polar(I*pi*2)).is_comparable
+        False
+        """
         is_real = self.is_real
         if is_real is False:
             return False

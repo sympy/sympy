@@ -103,6 +103,8 @@ API reference
 
 .. automethod:: sympy.integrals.trigintegrate
 
+.. automethod:: sympy.integrals.manualintegrate
+
 Class Integral represents an unevaluated integral and has some methods that help in the integration of an expression.
 
 .. autoclass:: sympy.integrals.Integral

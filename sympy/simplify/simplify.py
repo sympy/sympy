@@ -3911,8 +3911,11 @@ def besselsimp(expr):
     This routine tries to simplify bessel-type functions. Currently it only
     works on the Bessel J and I functions, however. It works by looking at all
     such functions in turn, and eliminating factors of "I" and "-1" (actually
-    their polar equivalents) in front of the argument. After that, functions of
-    half-integer order are rewritten using trigonometric functions.
+    their polar equivalents) in front of the argument. Then, functions of
+    half-integer order are rewritten using trigonometric functions and
+    functions of integer order (> 1) are rewritten using functions
+    of low order.  Finally, if the expression was changed, compute
+    factorization of the result with factor().
 
     >>> from sympy import besselj, besseli, besselsimp, polar_lift, I, S
     >>> from sympy.abc import z, nu
@@ -3922,6 +3925,8 @@ def besselsimp(expr):
     exp(-I*pi*nu/2)*besselj(nu, z)
     >>> besselsimp(besseli(S(-1)/2, z))
     sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
+    >>> besselsimp(z*besseli(0, z) + z*(besseli(2, z))/2 + besseli(1, z))
+    3*z*besseli(0, z)/2
     """
     from sympy import besselj, besseli, jn, I, pi, Dummy
     # TODO
@@ -3951,6 +3956,8 @@ def besselsimp(expr):
             return exp(I*pi*nu)*fro(nu, exp_polar(-I*pi)*z)
         return tofunc
 
+    orig_expr = expr
+
     ifactors = [I, exp_polar(I*pi/2), exp_polar(-I*pi/2)]
     expr = expr.replace(
         besselj, replacer(besselj,
@@ -3969,14 +3976,19 @@ def besselsimp(expr):
 
     def expander(fro):
         def repl(nu, z):
-            if (nu % 1) != S(1)/2:
-                return fro(nu, z)
-            return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
-                func=True)).subs(z0, z)
+            if (nu % 1) == S(1)/2:
+                return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
+                    func=True)).subs(z0, z)
+            elif nu.is_Integer and nu > 1:
+                return fro(nu, z).expand(func=True)
+            return fro(nu, z)
         return repl
 
     expr = expr.replace(besselj, expander(besselj))
     expr = expr.replace(besseli, expander(besseli))
+
+    if expr != orig_expr:
+        expr = expr.factor()
 
     return expr
 

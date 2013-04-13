@@ -36,9 +36,11 @@ from experimental_lambdify import (vectorized_lambdify, lambdify)
 np = import_module('numpy')
 
 # Backend specific imports - matplotlib
+# When changing the minimum module version for matplotlib, please change
+# the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
 matplotlib = import_module('matplotlib',
     __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
-    min_module_version='1.0.0', catch=(RuntimeError,))
+    min_module_version='1.1.0', catch=(RuntimeError,))
 if matplotlib:
     plt = matplotlib.pyplot
     cm = matplotlib.cm
@@ -1678,7 +1680,7 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                                         for e in expr]))
 
         if len(free_symbols) > nb_of_free_symbols:
-            raise ValueError("The number of free_symbols in the expression"
+            raise ValueError("The number of free_symbols in the expression "
                              "is greater than %d" % nb_of_free_symbols)
         if len(args) == i + nb_of_free_symbols and isinstance(args[i], Tuple):
             ranges = Tuple(*[range_expr for range_expr in args[
@@ -1707,6 +1709,6 @@ def check_arguments(args, expr_len, nb_of_free_symbols):
                                      str(arg[i]))
             for i in range(nb_of_free_symbols):
                 if not len(arg[i + expr_len]) == 3:
-                    raise ValueError("The ranges should be a tuple of"
+                    raise ValueError("The ranges should be a tuple of "
                                      "length 3, got %s" % str(arg[i + expr_len]))
         return args

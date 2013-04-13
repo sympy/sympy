@@ -58,3 +58,19 @@ def split_super_sub(text):
         subs.insert(0, sub)
 
     return name, supers, subs
+
+def requires_partial(expr):
+    """Return whether a partial derivative symbol is required for printing
+
+    This requires checking how many free variables there are,
+    filtering out the ones that are integers. Some expressions don't have
+    free variables. In that case, check its variable list explicitly to
+    get the context of the expression.
+    """
+
+    ## checking for the attribute '__iter__' is Python 2.5 friendly.
+    ## For 2.6+, say isinstance(expr.free_symbols, collections.Iterable)
+    if not hasattr(expr.free_symbols, '__iter__'):
+        return len(set(expr.variables)) > 1
+
+    return sum(not s.is_integer for s in expr.free_symbols) > 1

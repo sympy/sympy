@@ -49,12 +49,12 @@ if theano:
             sympy.Ge: tt.ge,
             sympy.Max: tt.maximum,  # Sympy accept >2 inputs, Theano only 2
             sympy.Min: tt.minimum,  # Sympy accept >2 inputs, Theano only 2
-            sympy.Derivative: tt.grad,
 
             # Matrices
             sympy.MatAdd: tt.Elemwise(ts.add),
             sympy.HadamardProduct: tt.Elemwise(ts.mul),
             sympy.Trace: tlinalg.trace,
+            sympy.Determinant : tlinalg.det,
             sympy.Inverse: tlinalg.matrix_inverse,
             sympy.Transpose: tt.DimShuffle((False, False), [1, 0]),
     }
@@ -102,6 +102,25 @@ class TheanoPrinter(Printer):
             result = tt.dot(result, child)
         return result
 
+    def _print_MatrixSlice(self, expr, **kwargs):
+        parent = self._print(expr.parent, **kwargs)
+        rowslice = self._print(slice(*expr.rowslice), **kwargs)
+        colslice = self._print(slice(*expr.colslice), **kwargs)
+        return parent[rowslice, colslice]
+
+    def _print_BlockMatrix(self, expr, **kwargs):
+        nrows, ncols = expr.blocks.shape
+        blocks = [[self._print(expr.blocks[r, c], **kwargs)
+                        for c in range(ncols)]
+                        for r in range(nrows)]
+        return tt.join(0, *[tt.join(1, *row) for row in blocks])
+
+
+    def _print_slice(self, expr, **kwargs):
+        return slice(*[self._print(i, **kwargs)
+                        if isinstance(i, sympy.Basic) else i
+                        for i in (expr.start, expr.stop, expr.step)])
+
     def _print_Pi(self, expr, **kwargs):
         return 3.141592653589793
 
@@ -114,6 +133,13 @@ class TheanoPrinter(Printer):
 
     def _print_factorial(self, expr, **kwargs):
         return self._print(sympy.gamma(expr.args[0] + 1), **kwargs)
+
+    def _print_Derivative(self, deriv, **kwargs):
+        rv = self._print(deriv.expr, **kwargs)
+        for var in deriv.variables:
+            var = self._print(var, **kwargs)
+            rv = tt.Rop(rv, var, tt.ones_like(var))
+        return rv
 
     def emptyPrinter(self, expr):
         return expr

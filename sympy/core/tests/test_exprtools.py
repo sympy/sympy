@@ -1,7 +1,8 @@
 """Tests for tools for manipulating of large commutative expressions. """
 
-from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple,
-                   Interval, O, symbols, simplify, collect, Sum, Basic, Dict)
+from sympy import (S, Add, sin, Mul, Symbol, oo, Integral, sqrt, Tuple, I,
+                   Interval, O, symbols, simplify, collect, Sum, Basic, Dict,
+                   root)
 from sympy.abc import a, b, t, x, y, z
 from sympy.core.exprtools import (decompose_power, Factors, Term, _gcd_terms,
                                   gcd_terms, factor_terms, factor_nc)
@@ -154,9 +155,14 @@ def test_factor_terms():
         x*(a + 2*b)*(y + 1)
     i = Integral(x, (x, 0, oo))
     assert factor_terms(i) == i
+
+    # check radical extraction
     eq = sqrt(2) + sqrt(10)
     assert factor_terms(eq) == eq
     assert factor_terms(eq, radical=True) == sqrt(2)*(1 + sqrt(5))
+    eq = root(-6, 3) + root(6, 3)
+    assert factor_terms(eq, radical=True) == 6**(S(1)/3)*(1 + (-1)**(S(1)/3))
+
     eq = [x + x*y]
     ans = [x*(y + 1)]
     for c in [list, tuple, set]:
@@ -175,7 +181,7 @@ def test_factor_terms():
         y*(2 + 1/(x + 1))/x**2
 
     assert factor_terms(-x - y) == Mul(-1, x + y, evaluate=False)
-    # if not True, then processes for this in factor_terms is not necessary
+    # if not True, then processesing for this in factor_terms is not necessary
     assert gcd_terms(-x - y) == -x - y
 
 

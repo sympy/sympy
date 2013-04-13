@@ -1308,7 +1308,7 @@ class SymPyDocTestFinder(DocTestFinder):
                             'matplotlib',
                             __import__kwargs={'fromlist':
                                               ['pyplot', 'cm', 'collections']},
-                            min_module_version='1.0.0', catch=(RuntimeError,))
+                            min_module_version='1.1.0', catch=(RuntimeError,))
                         if matplotlib is not None:
                             pass
                             # print "EXTMODULE matplotlib version %s found" % \
