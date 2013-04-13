@@ -598,7 +598,7 @@ def test_J6():
 
 
 def test_J7():
-    assert expand_func(besselj(R(-5,2), pi/2)) == 12/(pi**2)
+    assert simplify(besselj(R(-5,2), pi/2)) == 12/(pi**2)
 
 
 def test_J8():
@@ -1073,7 +1073,7 @@ def test_N8():
 
 def test_N9():
     with assuming(Q.real(x)):
-        assert solve(abs(x-1) > 2) == Or(Lt(3, x), Lt(x, -1))
+        assert solve(abs(x-1) > 2) == Or(x < -1, x > 3)
 
 
 def test_N10():
@@ -1082,6 +1082,6 @@ def test_N10():
 
 
 def test_N11():
-    assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(Le(5, x), Lt(x, 3))
+    assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)
 
 
