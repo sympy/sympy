@@ -895,8 +895,11 @@ def roots(f, *gens, **flags):
             if len(factors) == 1 and factors[0][1] == 1:
                 if f.get_domain().is_EX:
                     rescale_x, f = _try_rescale(f)
-                for root in _try_decompose(f):
-                    _update_dict(result, root, 1)
+                    if rescale_x:
+                       result = roots(f)
+                else:
+                    for root in _try_decompose(f):
+                        _update_dict(result, root, 1)
             else:
                 for factor, k in factors:
                     for r in _try_heuristics(Poly(factor, f.gen, field=True)):
