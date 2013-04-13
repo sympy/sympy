@@ -805,8 +805,8 @@ class Add(Expr, AssocOp):
                 for ai in Mul.make_args(m):
                     if ai.is_Pow:
                         b, e = ai.as_base_exp()
-                        if e.is_Rational and b.is_Integer and b > 0:
-                            term_rads[e.q].append(int(b)**e.p)
+                        if e.is_Rational and b.is_Integer:
+                            term_rads[e.q].append(abs(int(b))**e.p)
                 if not term_rads:
                     break
                 if common_q is None:

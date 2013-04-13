@@ -1609,7 +1609,7 @@ def test_signsimp():
 
 
 def test_besselsimp():
-    from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh
+    from sympy import besselj, besseli, besselk, bessely, jn, yn, exp_polar, cosh, cosine_transform
     assert besselsimp(exp(-I*pi*y/2)*besseli(y, z*exp_polar(I*pi/2))) == \
         besselj(y, z)
     assert besselsimp(exp(-I*pi*a/2)*besseli(a, 2*sqrt(x)*exp_polar(I*pi/2))) == \
@@ -1622,6 +1622,8 @@ def test_besselsimp():
         sqrt(2)*cosh(z)/(sqrt(pi)*sqrt(z))
     assert besselsimp(besseli(a, z*exp_polar(-I*pi/2))) == \
         exp(-I*pi*a/2)*besselj(a, z)
+    assert cosine_transform(1/t*sin(a/t), t, y) == \
+        sqrt(2)*sqrt(pi)*besselj(0, 2*sqrt(a)*sqrt(y))/2
 
 
 def test_Piecewise():

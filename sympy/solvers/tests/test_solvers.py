@@ -794,18 +794,6 @@ def test_unrad():
         set([i.n(chop=True) for i in ans]) == \
         set([i.n(chop=True) for i in (ra, rb)])
 
-    ans = solve(sqrt(x) + sqrt(x + 1) -
-                sqrt(1 - x) - sqrt(2 + x))
-    assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
-    # the fence optimization problem
-    # http://code.google.com/p/sympy/issues/detail?id=1694#c159
-    F = Symbol('F')
-    eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
-    X = solve(eq, x, hint='minimal')[0]
-    Y = solve((x*y).subs(x, X).diff(y), y, simplify=False, minimal=True)
-    ans = 2*F/7 - sqrt(2)*F/14
-    assert any((a - ans).expand().is_zero for a in Y)
-
     raises(
         ValueError, lambda: unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))
     raises(ValueError, lambda: unrad(sqrt(x) + (x + 1)**Rational(1, 3) +
@@ -847,13 +835,28 @@ def test_unrad():
     assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
 
-    # don't posify the expession in unrad and use _mexpand
+    # don't posify the expression in unrad and use _mexpand
     z = sqrt(2*x + 1)/sqrt(x) - sqrt(2 + 1/x)
     p = posify(z)[0]
     assert solve(p) == []
     assert solve(z) == []
     assert solve(z + 6*I) == [-S(1)/11]
     assert solve(p + 6*I) == []
+
+
+@slow
+def test_unrad_slow():
+    ans = solve(sqrt(x) + sqrt(x + 1) -
+                sqrt(1 - x) - sqrt(2 + x))
+    assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
+    # the fence optimization problem
+    # http://code.google.com/p/sympy/issues/detail?id=1694#c159
+    F = Symbol('F')
+    eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
+    X = solve(eq, x, hint='minimal')[0]
+    Y = solve((x*y).subs(x, X).diff(y), y, simplify=False, minimal=True)
+    ans = 2*F/7 - sqrt(2)*F/14
+    assert any((a - ans).expand().is_zero for a in Y)
 
     eq = S('''
         -x + (1/2 - sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3
@@ -1151,6 +1154,7 @@ def test_real_roots():
     assert len(solve(x**5 + x**3 + 1)) == 1
 
 
+@slow
 def test_issue3429():
     eqs = [
         327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
