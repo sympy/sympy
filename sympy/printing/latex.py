@@ -441,6 +441,22 @@ class LatexPrinter(Printer):
         else:
             return r"%s %s" % (tex, self._print(e))
 
+    def _hprint_Function(self, func):
+        '''
+        Logic to decide how to render a function to latex
+          - if it is a recognized latex name, use the appropriate latex command
+          - if it is a single letter, just use that letter
+          - if it is a longer name, then put \operatorname{} around it and be
+            mindful of undercores in the name
+        '''
+        if func in accepted_latex_functions:
+            name = r"\%s" % func
+        elif len(func) == 1:
+            name = func
+        else:
+            name = r"\operatorname{%s}" % func.replace("_", r"\_")
+        return name
+
     def _print_Function(self, expr, exp=None):
         '''
         Render functions to LaTeX, handling functions that LaTeX knows about
@@ -491,22 +507,9 @@ class LatexPrinter(Printer):
                 else:
                     name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
-                if func in accepted_latex_functions:
-                    name = r"\%s^{%s}" % (func, exp)
-                elif len(func) == 1:
-                    name = r"%s^{%s}" % (func, exp)
-                else:
-                    # If the generic function name contains an underscore, handle it
-                    name = r"\operatorname{%s}^{%s}" % (
-                        func.replace("_", r"\_"), exp)
+                name = r'%s^{%s}' % (self._hprint_Function(func), exp)
             else:
-                if func in accepted_latex_functions:
-                    name = r"\%s" % func
-                elif len(func) == 1:
-                    name = func
-                else:
-                    # If the generic function name contains an underscore, handle it
-                    name = r"\operatorname{%s}" % func.replace("_", r"\_")
+                name = self._hprint_Function(func)
 
             if can_fold_brackets:
                 if func in accepted_latex_functions:
@@ -524,7 +527,7 @@ class LatexPrinter(Printer):
             return name % ",".join(args)
 
     def _print_UndefinedFunction(self, expr):
-        return r'\operatorname{%s}' % expr
+        return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):
         symbols, expr = expr.args
