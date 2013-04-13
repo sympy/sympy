@@ -1,6 +1,6 @@
 """Sparse polynomial rings. """
 
-from operator import add, mul
+from operator import add, mul, lt, le, gt, ge
 
 from sympy.core.expr import Expr
 from sympy.core.symbol import symbols as _symbols
@@ -413,6 +413,24 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 return False
 
         return True
+
+    def sort_key(self):
+        return (len(self), self.terms())
+
+    def _cmp(p1, p2, op):
+        if isinstance(p2, PolyElement):
+            return op(p1.sort_key(), p2.sort_key())
+        else:
+            return NotImplemented
+
+    def __lt__(p1, p2):
+        return p1._cmp(p2, lt)
+    def __le__(p1, p2):
+        return p1._cmp(p2, le)
+    def __gt__(p1, p2):
+        return p1._cmp(p2, gt)
+    def __ge__(p1, p2):
+        return p1._cmp(p2, ge)
 
     def drop(self, gen):
         i, ring = self.ring._drop(gen)
