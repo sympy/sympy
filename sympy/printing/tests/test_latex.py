@@ -129,11 +129,26 @@ def test_latex_functions():
 
     f = Function('f')
     assert latex(f(x)) == r'f{\left (x \right )}'
+    assert latex(f) == r'f'
+
+    g = Function('g')
+    assert latex(g(x, y)) == r'g{\left (x,y \right )}'
+    assert latex(g) == r'g'
+
+    h = Function('h')
+    assert latex(h(x, y, z)) == r'h{\left (x,y,z \right )}'
+    assert latex(h) == r'h'
+
+    Li = Function('Li')
+    assert latex(Li) == r'\operatorname{Li}'
+    assert latex(Li(x)) == r'\operatorname{Li}{\left (x \right )}'
 
     beta = Function('beta')
 
     # not to be confused with the beta function
     assert latex(beta(x)) == r"\beta{\left (x \right )}"
+    assert latex(beta) == r"\beta"
+
     assert latex(sin(x)) == r"\sin{\left (x \right )}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
