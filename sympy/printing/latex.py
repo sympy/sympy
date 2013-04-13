@@ -529,6 +529,9 @@ class LatexPrinter(Printer):
     def _print_UndefinedFunction(self, expr):
         return self._hprint_Function(str(expr))
 
+    def _print_FunctionClass(self, expr):
+        return self._hprint_Function(str(expr))
+
     def _print_Lambda(self, expr):
         symbols, expr = expr.args
 

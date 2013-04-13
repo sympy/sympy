@@ -13,7 +13,7 @@ from sympy import (
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi)
+    elliptic_e, elliptic_pi, cos, tan)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -959,3 +959,11 @@ def test_boolean_args_order():
 def test_imaginary():
     i = sqrt(-1)
     assert latex(i) == r'i'
+
+def test_builtins_without_args():
+    assert latex(sin) == r'\sin'
+    assert latex(cos) == r'\cos'
+    assert latex(tan) == r'\tan'
+    assert latex(log) == r'\log'
+    assert latex(Ei) == r'\operatorname{Ei}'
+    assert latex(zeta) == r'\zeta'
