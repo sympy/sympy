@@ -82,6 +82,24 @@ class Pow(Expr):
     is_Pow = True
 
     __slots__ = ['is_commutative']
+    
+    def __divmod__(self, other):
+        from sympy.core.symbol import Symbol
+        from sympy.core.numbers import Number
+        from sympy.polys import Poly
+        
+        self = Poly(self)
+        try:
+            other = Number(other)
+        except TypeError:
+            try:
+                other = Poly(other)
+            except TypeError:
+                msg = "unsupported operand type(s) for divmod(): '%s' and '%s'"
+                raise TypeError(msg % (type(self).__name__, type(other).__name__))
+        res = self.div(other)
+        
+        return (res[0].args[0], res[1].args[0])
 
     @cacheit
     def __new__(cls, b, e, evaluate=True):
