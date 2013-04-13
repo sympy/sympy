@@ -1,13 +1,17 @@
 from sympy.matrices.expressions.blockmatrix import (block_collapse, bc_matmul,
         bc_block_plus_ident, BlockDiagMatrix, BlockMatrix, bc_dist, bc_matadd,
-        blockcut)
+        bc_transpose, blockcut)
 from sympy.matrices.expressions import (MatrixSymbol, Identity, MatMul,
-        Inverse, Trace)
+        Inverse, Trace, Transpose, det)
 from sympy.matrices import Matrix, ImmutableMatrix
-from sympy.core import Tuple, symbols
+from sympy.core import Tuple, symbols, Expr
 from sympy.functions import transpose
 
 i, j, k, l, m, n, p = symbols('i:n, p', integer=True)
+A = MatrixSymbol('A', n, n)
+B = MatrixSymbol('B', n, n)
+C = MatrixSymbol('C', n, n)
+D = MatrixSymbol('D', n, n)
 G = MatrixSymbol('G', n, n)
 H = MatrixSymbol('H', n, n)
 b1 = BlockMatrix([[G, H]])
@@ -19,6 +23,10 @@ def test_bc_matmul():
 def test_bc_matadd():
     assert bc_matadd(BlockMatrix([[G, H]]) + BlockMatrix([[H, H]])) == \
             BlockMatrix([[G+H, H+H]])
+
+def test_bc_transpose():
+    assert bc_transpose(Transpose(BlockMatrix([[A, B], [C, D]]))) == \
+            BlockMatrix([[A.T, C.T], [B.T, D.T]])
 
 def test_bc_dist_diag():
     A = MatrixSymbol('A', n, n)
@@ -92,6 +100,14 @@ def test_BlockMatrix_Trace():
     X = BlockMatrix([[A, B], [C, D]])
     assert Trace(X) == Trace(A) + Trace(D)
 
+def test_BlockMatrix_Determinant():
+    A, B, C, D = map(lambda s: MatrixSymbol(s, 3, 3), 'ABCD')
+    X = BlockMatrix([[A, B], [C, D]])
+    from sympy import assuming, Q
+    with assuming(Q.invertible(A)):
+        assert det(X) == det(A) * det(D - C*A.I*B)
+
+    assert isinstance(det(X), Expr)
 
 def test_squareBlockMatrix():
     A = MatrixSymbol('A', n, n)
@@ -106,8 +122,6 @@ def test_squareBlockMatrix():
     assert (block_collapse(X + Identity(m + n)) ==
         BlockMatrix([[A + Identity(n), B], [C, D + Identity(m)]]))
     Q = X + Identity(m + n)
-
-    assert block_collapse(Q.inverse()) == Inverse(block_collapse(Q))
 
     assert (X + MatrixSymbol('Q', n + m, n + m)).is_MatAdd
     assert (X * MatrixSymbol('Q', n + m, n + m)).is_MatMul

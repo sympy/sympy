@@ -9,6 +9,7 @@ from sympy.assumptions.ask import Q
 
 # -{ Known facts in CNF }-
 known_facts_cnf = And(
+    Or(Q.invertible, Q.singular),
     Or(Not(Q.imaginary), Q.antihermitian),
     Or(Not(Q.imaginary), Q.complex),
     Or(Not(Q.real), Q.complex),
@@ -40,6 +41,7 @@ known_facts_cnf = And(
     Or(Not(Q.composite), Not(Q.prime)),
     Or(Not(Q.even), Not(Q.odd)),
     Or(Not(Q.imaginary), Not(Q.real)),
+    Or(Not(Q.invertible), Not(Q.singular)),
     Or(Not(Q.irrational), Not(Q.rational)),
     Or(Not(Q.negative), Not(Q.positive)),
     Or(Not(Q.integer), Q.even, Q.odd),
@@ -63,7 +65,7 @@ known_facts_dict = {
     Q.diagonal: set([Q.symmetric, Q.lower_triangular, Q.upper_triangular,
         Q.triangular, Q.diagonal, Q.square]),
     Q.antihermitian: set([Q.antihermitian]),
-    Q.infinitesimal: set([Q.infinitesimal]),
+    Q.singular: set([Q.singular]),
     Q.even: set([Q.complex, Q.real, Q.hermitian, Q.even, Q.rational,
         Q.extended_real, Q.integer]),
     Q.hermitian: set([Q.hermitian]),
@@ -82,6 +84,7 @@ known_facts_dict = {
     Q.extended_real: set([Q.extended_real]),
     Q.integer: set([Q.complex, Q.hermitian, Q.real, Q.rational,
         Q.extended_real, Q.integer]),
+    Q.infinitesimal: set([Q.infinitesimal]),
     Q.commutative: set([Q.commutative]),
     Q.infinity: set([Q.extended_real, Q.infinity]),
     Q.complex: set([Q.complex]),

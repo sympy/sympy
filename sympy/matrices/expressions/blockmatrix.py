@@ -1,5 +1,7 @@
+from sympy import ask, Q
 from sympy.core import Tuple, Basic, Add
-from sympy.strategies import typed, canon, debug, do_one, unpack
+from sympy.strategies import typed, exhaust, condition, debug, do_one, unpack
+from sympy.strategies.traverse import bottom_up
 from sympy.functions import transpose
 from sympy.utilities import sift
 
@@ -9,8 +11,10 @@ from sympy.matrices.expressions.matadd import MatAdd
 from sympy.matrices.expressions.matpow import MatPow
 from sympy.matrices.expressions.transpose import Transpose
 from sympy.matrices.expressions.trace import Trace
+from sympy.matrices.expressions.determinant import det, Determinant
 from sympy.matrices.expressions.slice import MatrixSlice
 from sympy.matrices.expressions.inverse import Inverse
+from sympy.functions.elementary.complexes import transpose
 from sympy.matrices import Matrix, eye
 
 
@@ -109,6 +113,16 @@ class BlockMatrix(MatrixExpr):
         raise NotImplementedError(
             "Can't perform trace of irregular blockshape")
 
+    def _eval_determinant(self):
+        if self.blockshape == (2, 2):
+            [[A, B],
+             [C, D]] = self.blocks.tolist()
+            if ask(Q.invertible(A)):
+                return det(A)*det(D - C*A.I*B)
+            elif ask(Q.invertible(D)):
+                return det(D)*det(A - B*D.I*C)
+        return Determinant(self)
+
     def transpose(self):
         """Return transpose of matrix.
 
@@ -138,13 +152,14 @@ class BlockMatrix(MatrixExpr):
         # Inverse of a two by two block matrix is known
         elif expand and self.blockshape == (2, 2):
             # Cite: The Matrix Cookbook Section 9.1.3
-            A11, A12, A21, A22 = (self.blocks[0, 0], self.blocks[0, 1],
-                    self.blocks[1, 0], self.blocks[1, 1])
+            [[A11, A12],
+             [A21, A22]] = self.blocks.tolist()
+
             C1 = A11 - A12*A22.I*A21
             C2 = A22 - A21*A11.I*A12
-            mat = Matrix([[C1.I, (-A11).I*A12*C2.I],
-                [-C2.I*A21*A11.I, C2.I]])
-            return BlockMatrix(mat)
+
+            return BlockMatrix([[C1.I,                (-A11).I*A12*C2.I],
+                                [-C2.I*A21*A11.I,     C2.I             ]])
         else:
             return Inverse(self)
 
@@ -298,9 +313,14 @@ def block_collapse(expr):
     >>> print block_collapse(C*B)
     [X, Z + Z*Y]
     """
-    rule = canon(typed({MatAdd: do_one(bc_matadd, bc_block_plus_ident),
-                        MatMul: do_one(bc_matmul, bc_dist),
-                        BlockMatrix: bc_unpack}))
+    hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
+    rule = exhaust(
+        bottom_up(condition(hasbm, typed(
+            {MatAdd: do_one(bc_matadd, bc_block_plus_ident),
+             MatMul: do_one(bc_matmul, bc_dist),
+             Transpose: bc_transpose,
+             Inverse: bc_inverse,
+             BlockMatrix: bc_unpack}))))
     result = rule(expr)
     try:
         return result.doit()
@@ -350,8 +370,10 @@ def bc_dist(expr):
                                               for i in range(B.rows)])
     return expr
 
+
 def bc_matmul(expr):
     factor, matrices = expr.as_coeff_matrices()
+
     i = 0
     while (i+1 < len(matrices)):
         A, B = matrices[i:i+2]
@@ -361,6 +383,12 @@ def bc_matmul(expr):
         else:
             i+=1
     return MatMul(factor, *matrices).doit()
+
+def bc_transpose(expr):
+    return BlockMatrix(block_collapse(expr.arg).blocks.applyfunc(transpose).T)
+
+def bc_inverse(expr):
+    return expr.arg._eval_inverse(True)
 
 def bounds(sizes):
     """ Convert sequence of numbers into pairs of low-high pairs

@@ -559,6 +559,7 @@ class LatexPrinter(Printer):
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
+    _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
         if self._needs_brackets(expr.args[0]):
@@ -984,6 +985,7 @@ class LatexPrinter(Printer):
 
         return name
     _print_RandomSymbol = _print_Symbol
+    _print_MatrixSymbol = _print_Symbol
 
     def _print_Relational(self, expr):
         if self._settings['itex']:

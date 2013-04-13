@@ -24,6 +24,11 @@ def test_invertible():
     assert ask(Q.invertible(ZeroMatrix(3, 3))) is False
     assert ask(Q.invertible(X), Q.fullrank(X) & Q.square(X))
 
+def test_singular():
+    assert ask(Q.singular(X)) is None
+    assert ask(Q.singular(X), Q.invertible(X)) is False
+    assert ask(Q.singular(X), ~Q.invertible(X)) is True
+
 @XFAIL
 def test_invertible_fullrank():
     assert ask(Q.invertible(X), Q.fullrank(X))

@@ -64,13 +64,10 @@ class AskIntegerHandler(CommonHandler):
 
     Pow = Add
 
-    @staticmethod
-    def int(expr, assumptions):
-        return True
+    int, Integer = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
-    @staticmethod
-    def Integer(expr, assumptions):
-        return True
+    Pi, Exp1, Infinity, NegativeInfinity, ImaginaryUnit = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*5
 
     @staticmethod
     def Rational(expr, assumptions):
@@ -81,26 +78,6 @@ class AskIntegerHandler(CommonHandler):
     @staticmethod
     def Float(expr, assumptions):
         return int(expr) == expr
-
-    @staticmethod
-    def Pi(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Exp1(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
 
     @staticmethod
     def Abs(expr, assumptions):
@@ -140,34 +117,11 @@ class AskRationalHandler(CommonHandler):
             if ask(Q.prime(expr.base), assumptions):
                 return False
 
-    @staticmethod
-    def Rational(expr, assumptions):
-        return True
+    Rational, Float = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*2 # Float is finite-precision
 
-    @staticmethod
-    def Float(expr, assumptions):
-        # it's finite-precision
-        return True
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Pi(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Exp1(expr, assumptions):
-        return False
+    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1 = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*5
 
 
 class AskIrrationalHandler(CommonHandler):
@@ -261,50 +215,18 @@ class AskRealHandler(CommonHandler):
                 elif ask(Q.negative(expr.base), assumptions):
                     return False
 
-    @staticmethod
-    def Rational(expr, assumptions):
-        return True
+    Rational, Float, Pi, Exp1, Abs, re, im = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*7
 
-    @staticmethod
-    def Float(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Pi(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Exp1(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Abs(expr, assumptions):
-        return True
-
-    @staticmethod
-    def re(expr, assumptions):
-        return True
-
-    im = re
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
+    ImaginaryUnit, Infinity, NegativeInfinity = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*3
 
     @staticmethod
     def sin(expr, assumptions):
         if ask(Q.real(expr.args[0]), assumptions):
             return True
 
-    cos, exp = sin, sin
+    cos, exp = [sin]*2
 
 
 class AskExtendedRealHandler(AskRealHandler):
@@ -318,15 +240,9 @@ class AskExtendedRealHandler(AskRealHandler):
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.extended_real)
 
-    Mul, Pow = Add, Add
+    Mul, Pow = [Add]*2
 
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return True
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return True
+    Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
 
 class AskHermitianHandler(AskRealHandler):
@@ -385,7 +301,7 @@ class AskHermitianHandler(AskRealHandler):
         if ask(Q.hermitian(expr.args[0]), assumptions):
             return True
 
-    cos, exp = sin, sin
+    cos, exp = [sin]*2
 
 
 class AskComplexHandler(CommonHandler):
@@ -398,33 +314,12 @@ class AskComplexHandler(CommonHandler):
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex)
 
-    Mul, Pow = Add, Add
+    Mul, Pow = [Add]*2
 
-    @staticmethod
-    def Number(expr, assumptions):
-        return True
+    Number, sin, cos, exp, re, im, NumberSymbol, Abs, ImaginaryUnit = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*9 # they are all complex functions or expressions
 
-    @staticmethod
-    def NumberSymbol(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Abs(expr, assumptions):
-        return True
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    sin, cos, exp, re, im = [Abs]*5  # they are all complex functions
+    Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2
 
 
 class AskImaginaryHandler(CommonHandler):
@@ -511,17 +406,13 @@ class AskImaginaryHandler(CommonHandler):
                 elif ask(Q.negative(expr.base), assumptions):
                     return True
 
-
-
     @staticmethod
     def Number(expr, assumptions):
         return not (expr.as_real_imag()[1] == 0)
 
     NumberSymbol = Number
 
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return True
+    ImaginaryUnit = staticmethod(CommonHandler.AlwaysTrue)
 
 
 class AskAntiHermitianHandler(AskImaginaryHandler):
@@ -601,20 +492,13 @@ class AskAlgebraicHandler(CommonHandler):
             Q.algebraic(expr.base), assumptions)
 
     @staticmethod
-    def Number(expr, assumptions):
-        return False
-
-    @staticmethod
     def Rational(expr, assumptions):
         return expr.q != 0
 
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return True
+    Number = staticmethod(CommonHandler.AlwaysFalse)
 
-    @staticmethod
-    def AlgebraicNumber(expr, assumptions):
-        return True
+    ImaginaryUnit, AlgebraicNumber = [staticmethod(CommonHandler.AlwaysTrue)]*2
+
 
 #### Helper methods
 
