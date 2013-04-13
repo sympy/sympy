@@ -861,6 +861,30 @@ def roots(f, *gens, **flags):
                 return rescale_x, f
         return None, f
 
+    def _try_translate(f):
+        """
+        try translating ``x -> x + alpha`` to convert f to a polynomial
+        with rational coefficients.
+        Returns ``alpha, f``; if the translating is successful,
+        ``alpha`` is the translating factor, and ``f`` is the shifted
+        polynomial; else ``alpha`` is ``None``.
+        """
+        from sympy.core.add import Add
+        from sympy.utilities.iterables import sift
+        if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
+            return None, f
+        n = f.degree()
+        f1 = f.monic()
+        coeffs = f1.all_coeffs()[1:]
+        c = simplify(coeffs[0])
+        if c and not c.is_rational and c.is_Add:
+            sifted = sift(c.args, lambda z: z.is_rational)
+            c1, c2 = sifted[True], sifted[False]
+            alpha = -Add(*c2)/n
+            f2 = f1.shift(alpha)
+            return alpha, f2
+        return None, f
+
     (k,), f = f.terms_gcd()
 
     if not k:
@@ -874,6 +898,7 @@ def roots(f, *gens, **flags):
         f = f.to_field()
 
     rescale_x = None
+    translate_x = None
 
     result = {}
 
@@ -897,6 +922,10 @@ def roots(f, *gens, **flags):
                     rescale_x, f = _try_rescale(f)
                     if rescale_x:
                        result = roots(f)
+                    else:
+                        translate_x, f = _try_translate(f)
+                        if translate_x:
+                            result = roots(f)
                 else:
                     for root in _try_decompose(f):
                         _update_dict(result, root, 1)
@@ -938,6 +967,11 @@ def roots(f, *gens, **flags):
         result1 = {}
         for k, v in result.items():
             result1[k*rescale_x] = v
+        result = result1
+    if translate_x:
+        result1 = {}
+        for k, v in result.items():
+            result1[k + translate_x] = v
         result = result1
 
     if not multiple:
