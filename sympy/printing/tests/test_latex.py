@@ -967,3 +967,41 @@ def test_builtins_without_args():
     assert latex(log) == r'\log'
     assert latex(Ei) == r'\operatorname{Ei}'
     assert latex(zeta) == r'\zeta'
+
+@XFAIL
+def test_latex_greeks():
+    # bug because capital greeks that have roman equivalents should not use
+    # \Alpha, \Beta, \Eta, etc.
+    s = Function('Alpha')
+    assert latex(s) == r'A'
+    s = Function('Beta')
+    assert latex(s) == r'B'
+    s = Function('Eta')
+    assert latex(s) == r'H'
+
+    s = symbols('Alpha')
+    assert latex(s) == r'A'
+    s = symbols('Beta')
+    assert latex(s) == r'B'
+    s = symbols('Eta')
+    assert latex(s) == r'H'
+
+    # bug because sympy.core.numbers.Pi is special
+    p = Function('Pi')
+    assert latex(p(x)) == r'\Pi{\left (x \right )}'
+    assert latex(p) == r'\Pi'
+
+    # bug because not all greeks are included
+    c = Function('chi')
+    assert latex(c(x)) == r'\chi{\left (x \right )}'
+    assert latex(c) == r'\chi'
+
+    # bug because the name is 'gamma' but the representation should be \Gamma
+    assert latex(gamma) == r'\Gamma'
+
+@XFAIL
+def test_builtin_without_args_mismatched_names():
+    assert latex(KroneckerDelta) == r'\delta'
+    assert latex(DiracDelta) == r'\delta'
+    assert latex(CosineTransform) == r'\mathcal{COS}'
+    assert latex(lowergamma) == r'\gamma'
