@@ -20,8 +20,10 @@ class ModuleHomomorphism(object):
 
     Instead, use the ``homomorphism`` function:
 
-    >>> from sympy import QQ, homomorphism
+    >>> from sympy import QQ
     >>> from sympy.abc import x
+    >>> from sympy.polys.agca import homomorphism
+
     >>> F = QQ.old_poly_ring(x).free_module(2)
     >>> homomorphism(F, F, [[1, 0], [0, 1]])
     [1, 0]
@@ -70,8 +72,10 @@ class ModuleHomomorphism(object):
         That is, if ``self`` is the homomorphism `\phi: M \to N`, then compute
         `ker(\phi) = \{x \in M | \phi(x) = 0\}`.  This is a submodule of `M`.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> homomorphism(F, F, [[1, 0], [x, 0]]).kernel()
         <[x, -1]>
@@ -87,8 +91,10 @@ class ModuleHomomorphism(object):
         That is, if ``self`` is the homomorphism `\phi: M \to N`, then compute
         `im(\phi) = \{\phi(x) | x \in M \}`.  This is a submodule of `N`.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> homomorphism(F, F, [[1, 0], [x, 0]]).image() == F.submodule([1, 0])
         True
@@ -127,8 +133,10 @@ class ModuleHomomorphism(object):
 
         Here ``sm`` has to be a submodule of ``self.domain``.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
@@ -159,8 +167,10 @@ class ModuleHomomorphism(object):
         Here ``sm`` has to be a submodule of ``self.codomain`` containing the
         image.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
@@ -183,8 +193,10 @@ class ModuleHomomorphism(object):
 
         Here ``sm`` must be a submodule of ``self.kernel()``.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
@@ -207,8 +219,10 @@ class ModuleHomomorphism(object):
 
         Here ``sm`` must be a submodule of ``self.codomain``.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h
@@ -301,8 +315,10 @@ class ModuleHomomorphism(object):
         That is, check if the elements of the domain are mapped to the same
         codomain element.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h.is_injective()
@@ -319,8 +335,10 @@ class ModuleHomomorphism(object):
         That is, check if every element of the codomain has at least one
         preimage.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h.is_surjective()
@@ -337,8 +355,10 @@ class ModuleHomomorphism(object):
         That is, check if every element of the codomain has precisely one
         preimage. Equivalently, ``self`` is both injective and surjective.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h = h.restrict_codomain(h.image())
@@ -356,8 +376,10 @@ class ModuleHomomorphism(object):
         That is, check if every element of the domain is mapped to zero
         under self.
 
-        >>> from sympy import homomorphism, QQ
+        >>> from sympy import QQ
         >>> from sympy.abc import x
+        >>> from sympy.polys.agca import homomorphism
+
         >>> F = QQ.old_poly_ring(x).free_module(2)
         >>> h = homomorphism(F, F, [[1, 0], [x, 0]])
         >>> h.is_zero()
@@ -480,8 +502,10 @@ class FreeModuleHomomorphism(MatrixHomomorphism):
     Do not instantiate; the constructor does not check that your data is well
     defined. Use the ``homomorphism`` function instead:
 
-    >>> from sympy import QQ, homomorphism
+    >>> from sympy import QQ
     >>> from sympy.abc import x
+    >>> from sympy.polys.agca import homomorphism
+
     >>> F = QQ.old_poly_ring(x).free_module(2)
     >>> homomorphism(F, F, [[1, 0], [0, 1]])
     [1, 0]
@@ -514,8 +538,10 @@ class SubModuleHomomorphism(MatrixHomomorphism):
     Do not instantiate; the constructor does not check that your data is well
     defined. Use the ``homomorphism`` function instead:
 
-    >>> from sympy import QQ, homomorphism
+    >>> from sympy import QQ
     >>> from sympy.abc import x
+    >>> from sympy.polys.agca import homomorphism
+
     >>> M = QQ.old_poly_ring(x).free_module(2)*x
     >>> homomorphism(M, M, [[1, 0], [0, 1]])
     [1, 0]
@@ -547,8 +573,10 @@ def homomorphism(domain, codomain, matrix):
     Examples
     ========
 
-    >>> from sympy import QQ, homomorphism
+    >>> from sympy import QQ
     >>> from sympy.abc import x
+    >>> from sympy.polys.agca import homomorphism
+
     >>> R = QQ.old_poly_ring(x)
     >>> T = R.free_module(2)
 
