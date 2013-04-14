@@ -227,10 +227,10 @@ def jacobi_normalized(n, a, b, x):
     ========
 
     >>> from sympy import jacobi_normalized
-    >>> from sympy.abc import j,a,b,x
+    >>> from sympy.abc import n,a,b,x
 
-    >>> jacobi_normalized(j, a, b, x)
-    jacobi(j, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + j + 1)*gamma(b + j + 1)/((a + b + 2*j + 1)*j!*gamma(a + b + j + 1)))
+    >>> jacobi_normalized(n, a, b, x)
+    jacobi(n, a, b, x)/sqrt(2**(a + b + 1)*gamma(a + n + 1)*gamma(b + n + 1)/((a + b + 2*n + 1)*n!*gamma(a + b + n + 1)))
 
     See Also
     ========
@@ -255,8 +255,8 @@ def jacobi_normalized(n, a, b, x):
     .. [2] http://mathworld.wolfram.com/JacobiPolynomial.html
     .. [3] http://functions.wolfram.com/Polynomials/JacobiP/
     """
-    nfactor = (S(2)**(a + b + 1) / (2*n + a + b + 1) * (gamma(n + a + 1) * gamma(n + b + 1))
-          / (factorial(n) * gamma(n + a + b + 1)))
+    nfactor = (S(2)**(a + b + 1) * (gamma(n + a + 1) * gamma(n + b + 1))
+               / (2*n + a + b + 1) / (factorial(n) * gamma(n + a + b + 1)))
 
     return jacobi(n, a, b, x) / sqrt(nfactor)
 
