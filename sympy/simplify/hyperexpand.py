@@ -154,8 +154,6 @@ def add_formulae(formulae):
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
 
     # Complete elliptic integrals K(z) and E(z), both a 2F1 function
-    #add((S.Half, S.Half), (S.One, ), 2*elliptic_k(z)/pi)
-    #add((-S.Half, S.Half), (S.One, ), 2*elliptic_e(z)/pi)
     addb([S.Half, S.Half], [S.One],
          Matrix([elliptic_k(z), elliptic_e(z)]),
          Matrix([[2/pi, 0]]),
@@ -1029,19 +1027,16 @@ class UnShiftA(Operator):
         m = Poly(z*ai, _x)
         for a in ap:
             m *= Poly(_x + a, _x)
-        #print m
 
         A = Dummy('A')
         n = D = Poly(ai*A - ai, A)
         for b in bq:
             n *= (D + b - 1)
-        #print n
 
         b0 = -n.nth(0)
         if b0 == 0:
             raise ValueError('Cannot decrement upper index: '
                              'cancels with lower')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, _x/ai + 1), _x)
 
@@ -1073,24 +1068,19 @@ class UnShiftB(Operator):
         m = Poly(_x*(bi - 1), _x)
         for b in bq:
             m *= Poly(_x + b - 1, _x)
-        #print m
 
         B = Dummy('B')
         D = Poly((bi - 1)*B - bi + 1, B)
         n = Poly(z, B)
         for a in ap:
             n *= (D + a)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment index: cancels with upper')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, _x/(bi - 1) + 1), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1167,7 +1157,6 @@ class MeijerUnShiftA(Operator):
             m *= Poly(b - _x, _x)
         for b in bq:
             m *= Poly(_x - b, _x)
-        #print m
 
         A = Dummy('A')
         D = Poly(bi - A, A)
@@ -1176,16 +1165,12 @@ class MeijerUnShiftA(Operator):
             n *= (D + 1 - a)
         for a in ap:
             n *= (-D + a - 1)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot decrement upper b index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], A).as_expr().subs(A, bi - _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1218,7 +1203,6 @@ class MeijerUnShiftB(Operator):
             m *= Poly(1 - a + _x, _x)
         for a in ap:
             m *= Poly(a - 1 - _x, _x)
-        #print m
 
         B = Dummy('B')
         D = Poly(B + ai - 1, B)
@@ -1227,17 +1211,13 @@ class MeijerUnShiftB(Operator):
             n *= (-D + b)
         for b in bq:
             n *= (D - b)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment upper a index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, 1 - ai + _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1275,7 +1255,6 @@ class MeijerUnShiftC(Operator):
             m *= Poly(b - _x, _x)
         for b in bq:
             m *= Poly(_x - b, _x)
-        #print m
 
         C = Dummy('C')
         D = Poly(bi + C, C)
@@ -1284,16 +1263,12 @@ class MeijerUnShiftC(Operator):
             n *= (D + 1 - a)
         for a in ap:
             n *= (-D + a - 1)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot decrement lower b index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], C).as_expr().subs(C, _x - bi), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 
@@ -1328,7 +1303,6 @@ class MeijerUnShiftD(Operator):
             m *= Poly(1 - a + _x, _x)
         for a in ap:
             m *= Poly(a - 1 - _x, _x)
-        #print m
 
         B = Dummy('B')  # - this is the shift operator `D_I`
         D = Poly(ai - 1 - B, B)
@@ -1337,17 +1311,13 @@ class MeijerUnShiftD(Operator):
             n *= (-D + b)
         for b in bq:
             n *= (D - b)
-        #print n
 
         b0 = n.nth(0)
-        #print b0
         if b0 == 0:
             raise ValueError('Cannot increment lower a index (cancels)')
-        #print b0
 
         n = Poly(Poly(n.all_coeffs()[:-1], B).as_expr().subs(
             B, ai - 1 - _x), _x)
-        #print n
 
         self._poly = Poly((m - n)/b0, _x)
 

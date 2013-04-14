@@ -382,10 +382,6 @@ def param_rischDE(fa, fd, G, DE):
         # it will always terminate no matter what n is.
         n = bound_degree(A, B, G, DE, parametric=True)
     except NotImplementedError:
-        # Useful for debugging:
-        # import warnings
-        # warnings.warn("param_rischDE: Proceeding with n = oo; may cause "
-        #     "non-termination.")
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
@@ -521,7 +517,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
             return None
 
         if Q.is_zero or v.is_zero:
-            # Q == 0 or v == 0.
             return None
 
         return (Q*N, Q*M, v)
@@ -559,7 +554,6 @@ def parametric_log_deriv_heu(fa, fd, wa, wd, DE, c1=None):
     Q, v = Qv
 
     if Q.is_zero or v.is_zero:
-        # Q == 0 or v == 0.
         return None
 
     return (Q*N, Q*M, v)
@@ -803,7 +797,6 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
     n, s = splitfactor(fd, DE)
     if not s.is_one:
         pass
-        #return None
 
     z = z or Dummy('z')
     H, b = residue_reduce(fa, fd, DE, z=z)
@@ -855,8 +848,6 @@ def is_log_deriv_k_t_radical_in_field(fa, fd, DE, case='auto', z=None):
             return None
         n, e, u = A
         u *= DE.t**e
-#        raise NotImplementedError("The hyperexponential case is "
-#            "not yet completely implemented for is_log_deriv_k_t_radical_in_field().")
 
     elif case == 'primitive':
         with DecrementLevel(DE):

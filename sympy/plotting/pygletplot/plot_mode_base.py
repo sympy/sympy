@@ -325,17 +325,11 @@ class PlotModeBase(PlotMode):
                     continue
                 step_max = max([step_max, int(i.v_steps)])
             v = ['both', 'solid'][step_max > 40]
-        #try:
         if v not in self.styles:
             raise ValueError("v should be there in self.styles")
         if v == self._style:
             return
         self._style = v
-        #except Exception as e:
-            #raise RuntimeError(("Style change failed. "
-            #                 "Reason: %s is not a valid "
-            #                 "style. Use one of %s.") %
-            #                 (str(v), ', '.join(self.styles.iterkeys())))
 
     def _get_color(self):
         return self._color

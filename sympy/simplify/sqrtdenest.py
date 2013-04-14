@@ -203,7 +203,6 @@ def _sqrt_match(p):
                             a1.append(x[1])
             a = Add(*a1)
             b = Add(*b1)
-            #a = Add._from_args(pargs)
             res = (a, b, r**2)
     else:
         b, r = p.as_coeff_Mul()
@@ -572,7 +571,6 @@ def _denester(nested, av0, h, max_depth_level):
             nested2 = [_mexpand(v[0]**2) -
                        _mexpand(R*v[1]**2) for v in values] + [R]
         d, f = _denester(nested2, av0, h + 1, max_depth_level)
-        #d = sqrtdenest(d)
         if not f:
             return None, None
         if not any(f[i] for i in range(len(nested))):

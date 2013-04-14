@@ -493,20 +493,6 @@ class MatrixBase(object):
         matrix_multiply_elementwise
         """
         if getattr(other, 'is_Matrix', False):
-            # The following implmentation is equivalent, but about 5% slower
-            #ma, na = A.shape
-            #mb, nb = B.shape
-            #
-            #if na != mb:
-            #    raise ShapeError()
-            #product = Matrix(ma, nb, lambda i, j: 0)
-            #for i in range(ma):
-            #    for j in range(nb):
-            #        s = 0
-            #        for k in range(na):
-            #            s += A[i, k]*B[k, j]
-            #        product[i, j] = s
-            #return product
             A = self
             B = other
             if A.cols != B.rows:
@@ -3404,9 +3390,6 @@ class MatrixBase(object):
         self._is_symbolic = self.is_symbolic()
         self._is_symmetric = self.is_symmetric()
         self._eigenvects = None
-        #if self._is_symbolic:
-        #    self._diagonalize_clear_subproducts()
-        #    raise NotImplementedError("Symbolic matrices are not implemented for diagonalization yet")
         self._eigenvects = self.eigenvects(simplify=True)
         all_iscorrect = True
         for eigenval, multiplicity, vects in self._eigenvects:

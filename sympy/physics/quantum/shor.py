@@ -39,9 +39,6 @@ class CMod(Gate):
 
     @classmethod
     def _eval_args(cls, args):
-        # t = args[0]
-        # a = args[1]
-        # N = args[2]
         raise NotImplementedError('The CMod gate has not been completed.')
 
     @property
@@ -153,16 +150,12 @@ def period_find(a, N):
     print("controlled Mod'd")
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i)
-        # circuit = measure(i)*circuit
-    # circuit = qapply(circuit)
     print("measured 1")
     #Now apply Inverse Quantum Fourier Transform on the second half of the register
     circuit = qapply(QFT(t, t*2).decompose()*circuit, floatingPoint=True)
     print("QFT'd")
     for i in range(t):
         circuit = measure_partial_oneshot(circuit, i + t)
-        # circuit = measure(i+t)*circuit
-    # circuit = qapply(circuit)
     print(circuit)
     if isinstance(circuit, Qubit):
         register = circuit

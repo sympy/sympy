@@ -2215,11 +2215,6 @@ class Triangle(Polygon):
         s = self.sides
         return Triangle(s[0].midpoint, s[1].midpoint, s[2].midpoint)
 
-    #@property
-    #def excircles(self):
-    #    """Returns a list of the three excircles for this triangle."""
-    #    pass
-
 
 def rad(d):
     """Return the radian value for the given degrees (pi = 180 degrees)."""

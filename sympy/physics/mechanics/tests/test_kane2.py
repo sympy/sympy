@@ -46,10 +46,8 @@ def test_aux_dep():
     qd = [qi.diff(t) for qi in q]
     u = dynamicsymbols('u:6')
     ud = [ui.diff(t) for ui in u]
-    #ud_zero = {udi : 0 for udi in ud}
     ud_zero = dict(zip(ud, [0.]*len(ud)))
     ua = dynamicsymbols('ua:3')
-    #ua_zero = {uai : 0 for uai in ua}
     ua_zero = dict(zip(ua, [0.]*len(ua)))
 
     # Reference frames:
@@ -129,7 +127,6 @@ def test_aux_dep():
 
     u_dep = A_rs[:, :3] * Matrix(u[:3])
     u_dep_dict = dict(zip(u[3:], u_dep))
-    #u_dep_dict = {udi : u_depi[0] for udi, u_depi in zip(u[3:], u_dep.tolist())}
 
     # Active forces: F_O acting on point O; F_P acting on point P.
     # Generalized active forces (unconstrained): Fr_u = F_point * pv_point.
@@ -240,7 +237,6 @@ def test_non_central_inertia():
     pC_hat.v2pt_theory(pC_star, F, C)
 
     # the velocities of B^, C^ are zero since B, C are assumed to roll without slip
-    #kde = [dot(p.vel(F), b) for b in A for p in [pB_hat, pC_hat]]
     kde = [q1d - u1, q2d - u4, q3d - u5]
     vc = [dot(p.vel(F), A.y) for p in [pB_hat, pC_hat]]
 

@@ -130,7 +130,6 @@ def _gcd_interpolate(h, x, ring):
             if g > x // 2: g -= x
             h = (h - g) // x
 
-            # f += X**i*g
             if g:
                 f[(i,)] = g
             i += 1
@@ -139,7 +138,6 @@ def _gcd_interpolate(h, x, ring):
             g = h.trunc_ground(x)
             h = (h - g).quo_ground(x)
 
-            # f += X**i*g
             if g:
                 for monom, coeff in g.iterterms():
                     f[(i,) + monom] = coeff

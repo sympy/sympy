@@ -244,7 +244,6 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
     # see libtcc.h for API documentation
     tccstate = libtcc.tcc_new()
     __run(libtcc.tcc_set_output_type(tccstate, 0))  # output to memory
-    ##print libtcc.tcc_add_library_path(tccstate, mathh) # could be dropped
     __run(libtcc.tcc_add_library(tccstate, 'm'))  # use math.h FIXME: Windows
     # compile string
     __run(libtcc.tcc_compile_string(tccstate, code))
@@ -512,9 +511,6 @@ def test_evalonarray_ctypes():
         if _sin(i) != j:
             raise ValueError("Values should be equal")
 # TODO: test for ctypes pointers
-##    evalonarray('lambda x: asin(x)', ctypes.byref(a), len(a))
-##    for i, j in enumerater(a):
-##        print j
 
 
 def test_evalonarray_numpy():

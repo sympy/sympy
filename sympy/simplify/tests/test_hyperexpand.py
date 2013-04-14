@@ -188,7 +188,6 @@ def test_meijerg_formulae():
             closed_form = formula.closed_form.subs(rep)
             z = formula.z
             assert tn(g, closed_form, z)
-            #print closed_form
 
             # now test the computed matrix
             cl = (formula.C * formula.B)[0].subs(rep)
