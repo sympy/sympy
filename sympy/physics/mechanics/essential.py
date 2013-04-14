@@ -742,9 +742,6 @@ class ReferenceFrame(object):
     def orient(self, parent, rot_type, amounts, rot_order=''):
         """Defines the orientation of this frame relative to a parent frame.
 
-        Supported orientation types are Body, Space, Quaternion, Axis.
-        Examples show correct usage.
-
         Parameters
         ==========
 
@@ -752,7 +749,9 @@ class ReferenceFrame(object):
             The frame that this ReferenceFrame will have its orientation matrix
             defined in relation to.
         rot_type : str
-            The type of orientation matrix that is being created.
+            The type of orientation matrix that is being created. Supported
+            types are 'Body', 'Space', 'Quaternion', and 'Axis'. See examples
+            for correct usage.
         amounts : list OR value
             The quantities that the orientation matrix will be defined by.
         rot_order : str
