@@ -1084,4 +1084,3 @@ def test_N10():
 def test_N11():
     assert solve(6/(x - 3) <= 3, assume=Q.real(x)) == Or(5 <= x, x < 3)
 
-
