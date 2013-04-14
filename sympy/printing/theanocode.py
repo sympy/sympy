@@ -95,6 +95,11 @@ class TheanoPrinter(Printer):
             self.cache[key] = value
             return value
 
+    def _print_DenseMatrix(self, X, **kwargs):
+        return tt.stacklists([[self._print(arg, **kwargs) for arg in L]
+                                     for L in X.tolist()])
+    _print_ImmutableMatrix = _print_DenseMatrix
+
     def _print_MatMul(self, expr, **kwargs):
         children = [self._print(arg, **kwargs) for arg in expr.args]
         result = children[0]
