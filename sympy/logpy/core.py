@@ -3,7 +3,7 @@
 #######################################
 from logpy.unify import (reify, unify_seq, unify_isinstance_list,
                          reify_isinstance_list, reify_dispatch, seq_registry)
-from sympy import Basic, Symbol, Integer, Rational, Dummy
+from sympy import Basic, Symbol, Integer, Rational, Dummy, Expr
 
 from sympy.assumptions import AppliedPredicate
 slot_classes = Symbol, Integer, Rational
@@ -17,7 +17,10 @@ def seq_slot(x):
     return (type(x),) + tuple(getattr(x, a) for a in x.__slots__)
 
 def reify_Basic(u, s):
-    return u.func(*[reify(arg, s) for arg in u.args])
+    try:
+        return u.func(*[reify(arg, s) for arg in u.args], evaluate=False)
+    except TypeError:
+        return u.func(*[reify(arg, s) for arg in u.args])
 
 def reify_slot(u, s):
     return u.func(*[reify(getattr(u, a), s) for a in u.__slots__])
@@ -44,6 +47,7 @@ import logpy
 from logpy.variables import variables
 from logpy import var, eq
 from logpy.assoccomm import eq_assoccomm as eqac
+from logpy.assoccomm import eq_comm as eqc
 from logpy.goals import goalify
 from sympy import assuming, ask
 
@@ -51,8 +55,8 @@ from sympy import assuming, ask
 asko = goalify(ask)
 
 def refine_one(expr, *assumptions, **kwargs):
-    reduces = kwargs.get('reduces')
-    vars = kwargs.get('vars')
+    reduces = kwargs['reduces']
+    vars = kwargs['vars']
     with assuming(*assumptions):
         with variables(*vars):
             source, target, condition = var(), var(), var()
@@ -70,3 +74,12 @@ from logpy import facts
 from sympy import Add, Mul, MatAdd, MatMul
 facts(commutative, [Add], [Mul], [MatAdd])
 facts(associative, [Add], [Mul], [MatAdd], [MatMul])
+
+
+from logpy.assoccomm import op_registry
+op_registry.insert(0, (lambda x: isinstance(x, type) and issubclass(x, Basic),
+                    lambda x: isinstance(x, Basic),
+                    type,
+                    lambda x: tuple(x.args),
+                    lambda op, args: op(*args, evaluate=False) if
+                    issubclass(op, Expr) else op(*args)))

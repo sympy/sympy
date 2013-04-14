@@ -1,6 +1,6 @@
 from sympy.logpy import refine_one
 from logpy import Relation, facts, fact
-from sympy import Basic, Q, Dummy, Symbol, Abs
+from sympy import Basic, Q, Dummy, Symbol, Abs, Mul, S
 from functools import partial
 from sympy.assumptions import assuming
 
@@ -35,6 +35,7 @@ def test_exprs_simple():
 
 def test_exprs_pow_of_abs():
     assert refine(Abs(y)**4, Q.real(y)) == y**4
+    print refine(Abs(y*z)**4, Q.real(y) & Q.real(z))
     assert refine(Abs(y*z)**4, Q.real(y) & Q.real(z)) == (y*z)**4
 
 def test_pow_of_abs_deep():
@@ -45,7 +46,9 @@ def test_pow_of_abs_deep():
 def test_commutativity():
     from logpy.assoccomm import op_registry
     from logpy.assoccomm import eq_assoccomm as eqac
+    from logpy.assoccomm import eq_assoccomm as eqc
     from logpy.core import goaleval
+    from logpy.unify import reify
     from logpy.variables import variables
     op_registry.append((lambda x: isinstance(x, type) and issubclass(x, Basic),
                         lambda x: isinstance(x, Basic),
@@ -54,21 +57,23 @@ def test_commutativity():
                         lambda op, args: op.func(*args)))
 
     y = Symbol('_tmp')
+    x = Symbol('x')
 
-    with variables(x):
-        print next(goaleval(eqac(y+x, y+1))({}))
-        assert next(goaleval(eqac(y+x, y+1))({})) == {x: 1}
 
     reduces = Relation('reduces')
-    fact(reduces, x * y, x, True)
+    fact(reduces, x * 2, x, True)
     refine = partial(refine_one, reduces=reduces, vars=[x])
+    mul = partial(Mul, evaluate=False)
 
     assert refine(3) == 3
-    print refine(3*y)
-    assert refine(3*y) == 3
-    print refine(z*3*y)
-    assert refine(z*3*y) == z*3
-    assert refine(z*y*3) == z*3
-    assert refine(y*z*3) == z*3
+    assert refine(2*y) == y
+    assert refine(mul(2, y)) == y
+    assert refine(mul(y, 2)) == y
+    assert refine(z*2*y) == z*y
+    assert refine(z*y*2) == z*y
+    assert refine(y*z*2) == z*y
+
+    with variables(x):
+        assert reify(x, next(goaleval(eqac(y+x, y+1))({}))) == 1
 
     del op_registry[-1]
