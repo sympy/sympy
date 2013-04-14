@@ -613,7 +613,6 @@ class meijerg(TupleParametersBase):
             branch = S(0)
         n = ceiling(abs(branch/S.Pi)) + 1
         znum = znum**(S(1)/n)*exp(I*branch / n)
-        #print znum, branch, n
 
         # Convert all args to mpf or mpc
         try:

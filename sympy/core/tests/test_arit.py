@@ -1501,7 +1501,6 @@ def test_Mod():
     for i in [-3, -2, 2, 3]:
         for j in [-3, -2, 2, 3]:
             for k in range(3):
-                # print i, j, k
                 assert Mod(Mod(k, i), j) == (k % i) % j
 
     # known difference

@@ -1525,7 +1525,6 @@ def metric_to_Christoffel_2nd(expr):
     indices = list(range(coord_sys.dim))
     # XXX workaround, inverting a matrix does not work if it contains non
     # symbols
-    #matrix = twoform_to_matrix(expr).inv()
     matrix = twoform_to_matrix(expr)
     s_fields = set()
     for e in matrix:

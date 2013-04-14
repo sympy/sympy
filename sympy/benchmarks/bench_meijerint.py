@@ -237,7 +237,6 @@ timings = []
 
 if __name__ == '__main__':
     for n, string in enumerate(bench):
-        #print string
         clear_cache()
         _t = time()
         exec(string)

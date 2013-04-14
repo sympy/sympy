@@ -161,7 +161,6 @@ class ConditionalFiniteDomain(ConditionalDomain, ProductFiniteDomain):
         else:
             raise NotImplementedError(
                 "Not implemented on multi-dimensional conditional domain")
-        #return FiniteSet(elem for elem in self.fulldomain if elem in self)
 
     def as_boolean(self):
         return FiniteDomain.as_boolean(self)

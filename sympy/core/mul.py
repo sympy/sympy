@@ -92,9 +92,6 @@ class Mul(Expr, AssocOp):
 
     is_Mul = True
 
-    #identity = S.One
-    # cyclic import, so defined in numbers.py
-
     @classmethod
     def flatten(cls, seq):
         """Return commutative, noncommutative and order arguments by

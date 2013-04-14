@@ -102,7 +102,6 @@ class TheanoPrinter(Printer):
 
     def _print_MatrixSymbol(self, X, dtypes={}, **kwargs):
         dtype = dtypes.get(X, 'floatX')
-        # shape = [self._print(d, dtypes) for d in X.shape]
         key = (X.name, dtype, type(X))
         if key in self.cache:
             return self.cache[key]

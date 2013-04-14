@@ -341,7 +341,6 @@ class PrettyPrinter(Printer):
 
             # Construct the pretty form with the integral sign and the argument
             pform = prettyForm(vint)
-            #pform.baseline = pform.height()//2  # vcenter
             pform.baseline = arg.baseline + (
                 H - h)//2    # covering the whole argument
 
@@ -366,11 +365,6 @@ class PrettyPrinter(Printer):
 
                 pform = prettyForm(*pform.above(prettyB))
                 pform = prettyForm(*pform.below(prettyA))
-
-                #if ascii_mode:  # XXX hack
-                #    # too much vspace beetween \int and argument
-                #    # but I left it as is
-                #    pform = prettyForm(*pform.right(' '))
 
             if not ascii_mode:  # XXX hack
                 pform = prettyForm(*pform.right(' '))
@@ -435,8 +429,6 @@ class PrettyPrinter(Printer):
             pretty_sign = prettyForm(*pretty_sign.right(padding))
 
             pretty_func = prettyForm(*pretty_sign.right(pretty_func))
-
-        #pretty_func.baseline = 0
 
         pretty_func.baseline = max_upper + sign_height//2
         pretty_func.binding = prettyForm.MUL

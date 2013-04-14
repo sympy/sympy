@@ -56,7 +56,6 @@ def transform(name, X, Y, g_correct=None, recursive=False):
     g = J.T*eye(J.shape[0])*J
 
     g = g.applyfunc(expand)
-    # g = g.applyfunc(trigsimp)
     print("metric tensor g_{ij}:")
     pprint(g)
     if g_correct is not None:
@@ -101,13 +100,6 @@ def main():
     transform("parabolic",
               Matrix([sigma*tau, (tau**2 - sigma**2) / 2]),
               [sigma, tau])
-
-    # too complex:
-    # transform("bipolar",
-    #        Matrix([a*sinh(tau)/(cosh(tau)-cos(sigma)),
-    #            a*sin(sigma)/(cosh(tau)-cos(sigma))]),
-    #        [sigma, tau]
-    #        )
 
     transform("elliptic",
               Matrix([a*cosh(mu)*cos(nu), a*sinh(mu)*sin(nu)]),

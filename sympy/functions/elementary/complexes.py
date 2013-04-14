@@ -742,7 +742,6 @@ class polar_lift(Function):
         from sympy import exp_polar, pi, I, arg as argument
         if arg.is_number:
             ar = argument(arg)
-            #if not ar.has(argument) and not ar.has(atan):
             if ar in (0, pi/2, -pi/2, pi):
                 return exp_polar(I*ar)*abs(arg)
 

@@ -315,8 +315,6 @@ def sig_cmp(u, v, order):
     if u[1] > v[1]:
         return -1
     if u[1] == v[1]:
-        #if u[0] == v[0]:
-        #    return 0
         if order(u[0]) < order(v[0]):
             return -1
     return 1
@@ -389,8 +387,6 @@ def lbp_cmp(f, g):
     if Sign(f) == Sign(g):
         if Num(f) > Num(g):
             return -1
-        #if Num(f) == Num(g):
-        #    return 0
     return 1
 
 
@@ -469,8 +465,6 @@ def cp_cmp(c, d):
 
         if r == -1:
             return -1
-        #if r == 0:
-        #    return 0
     return 1
 
 
@@ -558,8 +552,6 @@ def f5_reduce(f, B):
                 if monomial_divides(Polyn(h).LM, Polyn(f).LM):
                     t = term_div(Polyn(f).LT, Polyn(h).LT, domain)
                     if sig_cmp(sig_mult(Sign(h), t[0]), Sign(f), order) < 0:
-                        # The following check need not be done and is in general slower than without.
-                        #if not is_rewritable_or_comparable(Sign(gp), Num(gp), B):
                         hp = lbp_mul_term(h, t)
                         f = lbp_sub(f, hp)
                         break
@@ -684,7 +676,6 @@ def _f5b(F, ring):
 
             k += 1
 
-            #print(len(B), len(CP), "%d critical pairs removed" % len(indices))
         else:
             reductions_to_zero += 1
 

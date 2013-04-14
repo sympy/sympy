@@ -205,7 +205,6 @@ def special_denom(a, ba, bd, ca, cd, DE, case='auto'):
     else:
         raise ValueError("case must be one of {'exp', 'tan', 'primitive', "
             "'base'}, not %s." % case)
-    # assert a.div(p)[1]
 
     nb = order_at(ba, p, DE.t) - order_at(bd, p, DE.t)
     nc = order_at(ca, p, DE.t) - order_at(cd, p, DE.t)
@@ -545,10 +544,6 @@ def cancel_primitive(b, c, n, DE):
             if n == 1:  # b == Dz/z
                 raise NotImplementedError("is_deriv_in_field() is required to "
                     " solve this problem.")
-                # if z*c == Dp for p in k[t] and deg(p) <= n:
-                #     return p/z
-                # else:
-                #     raise NonElementaryIntegralException
 
     if c.is_zero:
         return c  # return 0
@@ -595,11 +590,6 @@ def cancel_exp(b, c, n, DE):
             if a == 1:
                 raise NotImplementedError("is_deriv_in_field() is required to "
                     "solve this problem.")
-                # if c*z*t**m == Dp for p in k<t> and q = p/(z*t**m) in k[t] and
-                # deg(q) <= n:
-                #     return q
-                # else:
-                #     raise NonElementaryIntegralException
 
     if c.is_zero:
         return c  # return 0

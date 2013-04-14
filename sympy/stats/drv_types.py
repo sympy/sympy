@@ -77,7 +77,6 @@ class GeometricDistribution(SingleDiscreteDistribution):
 
     @staticmethod
     def check(p):
-        # _value_check(0 < p <= 1, "p must be between 0 and 1")
         pass
 
     def pdf(self, k):

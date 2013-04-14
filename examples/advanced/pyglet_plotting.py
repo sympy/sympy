@@ -19,7 +19,6 @@ def main():
 
     # toggle axes visibility with F5, colors with F6
     axes_options = 'visible=false; colored=true; label_ticks=true; label_axes=true; overlay=true; stride=0.5'
-    # axes_options = 'colored=false; overlay=false; stride=(1.0, 0.5, 0.5)'
 
     p = PygletPlot(
         width=600,
@@ -113,8 +112,6 @@ def main():
     @example_wrapper
     def multistep_gradient():
         p[1] = 1, 'mode=spherical', 'style=both'
-        # p[1] = exp(-x**2-y**2+(x*y)/4), [-1.7,1.7,100], [-1.7,1.7,100], 'style=solid'
-        # p[1] = 5*x*y*exp(-x**2-y**2), [-2,2,100], [-2,2,100]
         gradient = [0.0, (0.3, 0.3, 1.0),
                     0.30, (0.3, 1.0, 0.3),
                     0.55, (0.95, 1.0, 0.2),
@@ -122,8 +119,6 @@ def main():
                     0.85, (1.0, 0.7, 0.2),
                     1.0, (1.0, 0.3, 0.2)]
         p[1].color = z, [None, None, z], gradient
-        # p[1].color = 'zfade'
-        # p[1].color = 'zfade3'
 
     @example_wrapper
     def lambda_vs_sympy_evaluation():

@@ -4910,12 +4910,6 @@ def _undetermined_coefficients_match(expr, x):
             Similar to expr.as_independent(x)[1], except it only works
             multiplicatively.
             """
-            # I was using the below match, but it doesn't always put all of the
-            # coefficient in c.  c.f. 2**x*6*exp(x)*log(2)
-            # The below code is probably cleaner anyway.
-#            c = Wild('c', exclude=[x])
-#            t = Wild('t')
-#            r = expr.match(c*t)
             term = S.One
             if expr.is_Mul:
                 for i in expr.args:
