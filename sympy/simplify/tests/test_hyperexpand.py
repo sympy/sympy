@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from sympy.simplify.hyperexpand import (ShiftA, ShiftB, UnShiftA, UnShiftB,
                        MeijerShiftA, MeijerShiftB, MeijerShiftC, MeijerShiftD,
                        MeijerUnShiftA, MeijerUnShiftB, MeijerUnShiftC,
