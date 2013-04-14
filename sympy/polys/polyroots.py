@@ -926,6 +926,9 @@ def roots(f, *gens, **flags):
                         translate_x, f = _try_translate(f)
                         if translate_x:
                             result = roots(f)
+                            if not result:
+                                for root in _try_decompose(f):
+                                    _update_dict(result, root, 1)
                 else:
                     for root in _try_decompose(f):
                         _update_dict(result, root, 1)
