@@ -21,7 +21,7 @@ from util import _symbol, idiff
 
 import random
 
-from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.decorator import doctest_depends_on, no_attrs_in_subclass
 
 
 class Ellipse(GeometryEntity):
@@ -1094,6 +1094,9 @@ class Ellipse(GeometryEntity):
         elif isinstance(o, Ellipse):
             return self == o
         return False
+# once py2.5 support gets dropped replace this with a class decorator
+Ellipse._doctest_depends_on = no_attrs_in_subclass(
+    Ellipse, Ellipse._doctest_depends_on)
 
 
 class Circle(Ellipse):
@@ -1143,6 +1146,7 @@ class Circle(Ellipse):
     (sqrt(2)/2, sqrt(2)/2, sqrt(2)/2, Point(1/2, 1/2))
 
     """
+
     def __new__(cls, *args, **kwargs):
         c, r = None, None
         if len(args) == 3:
