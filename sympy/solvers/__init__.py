@@ -18,6 +18,6 @@ from ode import checkodesol, classify_ode, dsolve, \
 from polysys import solve_poly_system, solve_triangulated
 
 from pde import pde_separate, pde_separate_add, pde_separate_mul, \
-    pdsolve, classify_pde
+    pdsolve, classify_pde, checkpdesol
 
 from deutils import ode_order

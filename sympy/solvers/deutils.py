@@ -151,7 +151,7 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     is returned along with the keys which are returned when dict in
     classify_ode or classify_pde is set True
 
-    If the hint is given in ('all', 'all_Integral', 'best'), then this function
+    If the hint given is in ('all', 'all_Integral', 'best'), then this function
     returns a nested dict, with the keys, being the set of classified hints
     returned by classifier functions, and the values being the dict of form
     as mentioned above.
