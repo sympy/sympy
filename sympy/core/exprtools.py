@@ -324,7 +324,24 @@ class Factors(object):
                         del self_factors[factor]
                         del other_factors[factor]
                 else:
-                    other_factors[factor] = other_exp
+                    sc, sa = self_exp.as_coeff_Add()
+                    if sc:
+                        oc, oa = other_exp.as_coeff_Add()
+                        diff = sc - oc
+                        if diff > 0:
+                            self_factors[factor] -= oc
+                            other_exp = oa
+                        elif diff < 0:
+                            self_factors[factor] -= sc
+                            other_factors[factor] -= sc
+                            other_exp = oa - diff
+                        else:
+                            self_factors[factor] = sa
+                            other_exp = oa
+                    if other_exp:
+                        other_factors[factor] = other_exp
+                    else:
+                        del other_factors[factor]
 
         return Factors(self_factors), Factors(other_factors)
 
@@ -406,7 +423,24 @@ class Factors(object):
                         else:  # should be handled already
                             del quo[factor]
                     else:
-                        rem[factor] = exp
+                        other_exp = exp
+                        sc, sa = quo[factor].as_coeff_Add()
+                        if sc:
+                            oc, oa = other_exp.as_coeff_Add()
+                            diff = sc - oc
+                            if diff > 0:
+                                quo[factor] -= oc
+                                other_exp = oa
+                            elif diff < 0:
+                                quo[factor] -= sc
+                                other_exp = oa - diff
+                            else:
+                                quo[factor] = sa
+                                other_exp = oa
+                        if other_exp:
+                            rem[factor] = other_exp
+                        else:
+                            assert factor not in rem
                     continue
 
             rem[factor] = exp

@@ -100,6 +100,26 @@ def test_Factors():
     f = Factors(n)
     assert f.div(d) == f.normal(d) == (Factors({S(2): x}), Factors({S(2): y}))
 
+    # extraction of constant only
+    n = x**(x + 3)
+    assert Factors(n).normal(x**-3) == (Factors({x: x + 6}), Factors({}))
+    assert Factors(n).normal(x**3) == (Factors({x: x}), Factors({}))
+    assert Factors(n).normal(x**4) == (Factors({x: x}), Factors({x: 1}))
+    assert Factors(n).normal(x**(y - 3)) == \
+        (Factors({x: x + 6}), Factors({x: y}))
+    assert Factors(n).normal(x**(y + 3)) == (Factors({x: x}), Factors({x: y}))
+    assert Factors(n).normal(x**(y + 4)) == \
+        (Factors({x: x}), Factors({x: y + 1}))
+
+    assert Factors(n).div(x**-3) == (Factors({x: x + 6}), Factors({}))
+    assert Factors(n).div(x**3) == (Factors({x: x}), Factors({}))
+    assert Factors(n).div(x**4) == (Factors({x: x}), Factors({x: 1}))
+    assert Factors(n).div(x**(y - 3)) == \
+        (Factors({x: x + 6}), Factors({x: y}))
+    assert Factors(n).div(x**(y + 3)) == (Factors({x: x}), Factors({x: y}))
+    assert Factors(n).div(x**(y + 4)) == \
+        (Factors({x: x}), Factors({x: y + 1}))
+
 
 def test_Term():
     a = Term(4*x*y**2/z/t**3)
