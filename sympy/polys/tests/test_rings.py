@@ -50,6 +50,34 @@ def test_PolyRing___eq__():
     assert ring("x,y", QQ)[0] != ring("x,y,z", QQ)[0]
     assert ring("x,y", QQ)[0] is not ring("x,y,z", QQ)[0]
 
+def test_PolyRing_drop():
+    R, x,y,z = ring("x,y,z", ZZ)
+
+    assert R.drop(x) == PolyRing("y,z", ZZ, lex)
+    assert R.drop(y) == PolyRing("x,z", ZZ, lex)
+    assert R.drop(z) == PolyRing("x,y", ZZ, lex)
+
+    assert R.drop(0) == PolyRing("y,z", ZZ, lex)
+    assert R.drop(0).drop(0) == PolyRing("z", ZZ, lex)
+    assert R.drop(0).drop(0).drop(0) == ZZ
+
+    assert R.drop(1) == PolyRing("x,z", ZZ, lex)
+
+    assert R.drop(2) == PolyRing("x,y", ZZ, lex)
+    assert R.drop(2).drop(1) == PolyRing("x", ZZ, lex)
+    assert R.drop(2).drop(1).drop(0) == ZZ
+
+    raises(ValueError, lambda: R.drop(3))
+    raises(ValueError, lambda: R.drop(x).drop(y))
+
+def test_PolyRing___getitem__():
+    R, x,y,z = ring("x,y,z", ZZ)
+
+    assert R[0:] == PolyRing("x,y,z", ZZ, lex)
+    assert R[1:] == PolyRing("y,z", ZZ, lex)
+    assert R[2:] == PolyRing("z", ZZ, lex)
+    assert R[3:] == ZZ
+
 def test_PolyElement___hash__():
     R, x, y, z = ring("x,y,z", QQ)
     assert hash(x*y*z)
@@ -685,3 +713,13 @@ def test_PolyElement_is_():
     assert (3*x + 1).is_ground == False
     assert (3*x + 1).is_monomial == False
     assert (3*x + 1).is_term == False
+
+def test_PolyElement_drop():
+    R, x,y,z = ring("x,y,z", ZZ)
+
+    assert R(1).drop(0).ring == PolyRing("y,z", ZZ, lex)
+    assert R(1).drop(0).drop(0).ring == PolyRing("z", ZZ, lex)
+    assert isinstance(R(1).drop(0).drop(0).drop(0), R.dtype) is False
+
+    raises(ValueError, lambda: z.drop(0).drop(0).drop(0))
+    raises(ValueError, lambda: x.drop(0))

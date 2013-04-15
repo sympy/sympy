@@ -226,7 +226,7 @@ class PolyRing(DefaultPrinting, IPolys):
                 i = list(self.gens).index(gen)
 
         if self.ngens == 1:
-            raise ValueError("univariate polynomial") # TODO: return ground domain
+            return i, self.domain
         else:
             symbols = list(self.symbols)
             del symbols[i]
@@ -236,7 +236,12 @@ class PolyRing(DefaultPrinting, IPolys):
         return self._drop(gen)[1]
 
     def __getitem__(self, key):
-        return self.__class__(self.symbols[key], self.domain, self.order)
+        new_symbols = self.symbols[key]
+
+        if not new_symbols:
+            return self.domain
+        else:
+            return self.__class__(new_symbols, self.domain, self.order)
 
     def to_ground(self):
         ground = getattr(self.domain, "dom", None) # TODO: use CompositeDomain
@@ -434,15 +439,24 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def drop(self, gen):
         i, ring = self.ring._drop(gen)
-        poly = ring.zero
-        for k, v in self.iteritems():
-            if k[i] == 0:
-                K = list(k)
-                del K[i]
-                poly[tuple(K)] = v
+
+        if self.ring.ngens == 1:
+            if self.is_ground:
+                return self.coeff(1)
             else:
                 raise ValueError("can't drop %s" % gen)
-        return poly
+        else:
+            poly = ring.zero
+
+            for k, v in self.iteritems():
+                if k[i] == 0:
+                    K = list(k)
+                    del K[i]
+                    poly[tuple(K)] = v
+                else:
+                    raise ValueError("can't drop %s" % gen)
+
+            return poly
 
     def to_dense(self):
         from sympy.polys.densebasic import dmp_from_dict
