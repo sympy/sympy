@@ -404,7 +404,7 @@ def _split_mul(f, x):
         elif not a.has(x):
             fac *= a
         else:
-            if a.is_Pow:
+            if a.is_Pow and x not in a.exp.free_symbols:
                 c, t = a.base.as_coeff_mul(x)
                 if t != (x,):
                     c, t = expand_mul(a.base).as_coeff_mul(x)
