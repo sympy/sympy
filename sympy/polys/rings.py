@@ -17,6 +17,7 @@ from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNe
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt
+from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
@@ -131,6 +132,14 @@ class PolyRing(DefaultPrinting, IPolys):
         basis[i] = 1
         return tuple(basis)
 
+    @property
+    def zero(self):
+        return self.dtype(self)
+
+    @property
+    def one(self):
+        return self.dtype(self, self._one)
+
     def domain_new(self, element, orig_domain=None):
         return self.domain.convert(element, orig_domain)
 
@@ -155,13 +164,33 @@ class PolyRing(DefaultPrinting, IPolys):
         elif isinstance(element, dict):
             return self.from_dict(element)
         elif isinstance(element, list):
-            return self.from_terms(element)
+            try:
+                return self.from_terms(element)
+            except ValueError:
+                return self.from_list(element)
         elif isinstance(element, Expr):
             return self.from_expr(element)
         else:
             return self.ground_new(element)
 
     __call__ = ring_new
+
+    def from_dict(self, element):
+        domain_new = self.domain_new
+        poly = self.zero
+
+        for monom, coeff in element.iteritems():
+            coeff = domain_new(coeff)
+            if coeff:
+                poly[monom] = coeff
+
+        return poly
+
+    def from_terms(self, element):
+        return self.from_dict(dict(element))
+
+    def from_list(self, element):
+        return self.from_dict(dmp_to_dict(element, self.ngens-1, self.domain))
 
     def _rebuild_expr(self, expr, mapping):
         domain = self.domain
@@ -191,28 +220,6 @@ class PolyRing(DefaultPrinting, IPolys):
             raise ValueError("expected an expression convertible to a polynomial in %s, got %s" % (self, expr))
         else:
             return self.ring_new(poly)
-
-    @property
-    def zero(self):
-        return self.dtype(self)
-
-    @property
-    def one(self):
-        return self.dtype(self, self._one)
-
-    def from_dict(self, d):
-        domain_new = self.domain_new
-        poly = self.zero
-
-        for monom, coeff in d.iteritems():
-            coeff = domain_new(coeff)
-            if coeff:
-                poly[monom] = coeff
-
-        return poly
-
-    def from_terms(self, terms):
-        return self.from_dict(dict(terms))
 
     def _drop(self, gen):
         if isinstance(gen, int):
@@ -459,7 +466,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return poly
 
     def to_dense(self):
-        from sympy.polys.densebasic import dmp_from_dict
         return dmp_from_dict(self, self.ring.ngens-1, self.ring.domain)
 
     def to_dict(self):
