@@ -570,18 +570,18 @@ class Quantity(AtomicExpr):
             qu = unit.as_quantity
             unit = qu.unit
             factor = factor * qu.factor
-        
+
         return factor, unit
 
     @property
     def in_base_units(self):
         """Display the quantity using base units."""
-        
+
         if self.unit.abbrev_base == '':
             return '%s %s' % (self.factor, self.unit)
-        
+
         return '%s %s' % (self.factor, self.unit.abbrev_base)
-    
+
     def __str__(self):
         factor, unit = self.merge_factor_unit(self.factor, self.unit)
         return '%s %s' % (factor, unit)
@@ -741,4 +741,3 @@ def _compute_unit(unit, system):
             return u
         else:
             return unit
-
