@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises, XFAIL
