@@ -109,8 +109,9 @@ class Factors(object):
         performed: powers of -1 and I are made canonical.
 
         """
-        if isinstance(factors, (int, float, long)):
+        if isinstance(factors, (SYMPY_INTS, float)):
             factors = S(factors)
+
         if isinstance(factors, Factors):
             factors = factors.factors.copy()
         elif factors is None or factors is S.One:
@@ -154,12 +155,12 @@ class Factors(object):
 
             handle = []
             for k in factors:
-                if k is S.NegativeOne or k is I or k == 1:
+                if k is I or k in (-1, 1):
                     handle.append(k)
             if handle:
                 i1 = S.One
                 for k in handle:
-                    if not isinstance(factors[k], (Rational, int, float, long)):
+                    if not _isnumber(factors[k]):
                         continue
                     i1 *= k**factors.pop(k)
                 if i1 is not S.One:

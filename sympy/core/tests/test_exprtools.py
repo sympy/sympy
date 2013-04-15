@@ -69,6 +69,7 @@ def test_Factors():
     assert Factors(S.Half) == Factors({S(2): -S.One})
     assert Factors(S(3)/2) == Factors({S(3): S.One, S(2): S(-1)})
     assert Factors({I: S(1)}) == Factors(I)
+    assert Factors({-1.0: 2, I: 1}) == Factors({S(1.0): 1, I: 1})
     assert Factors({S.NegativeOne: -S(3)/2}).as_expr() == I
     A = symbols('A', commutative=False)
     assert Factors(2*A**2) == Factors({S(2): 1, A**2: 1})
