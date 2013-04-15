@@ -732,6 +732,7 @@ def roots(f, *gens, **flags):
     {-1: 1, 1: 1}
 
     """
+    from sympy.polys.polytools import to_rational_coeffs
     flags = dict(flags)
 
     auto = flags.pop('auto', True)
@@ -828,67 +829,6 @@ def roots(f, *gens, **flags):
 
         return result
 
-    def _try_rescale(f):
-        """
-        try rescaling ``x -> alpha*x`` to convert f to a polynomial
-        with rational coefficients.
-        Returns ``alpha, f``; if the rescaling is successful,
-        ``alpha`` is the rescaling factor, and ``f`` is the rescaled
-        polynomial; else ``alpha`` is ``None``.
-        """
-        from sympy.core.add import Add
-        if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
-            return None, f
-        n = f.degree()
-        coeffs = f.monic().all_coeffs()[1:]
-        coeffs = [simplify(coeffx) for coeffx in coeffs]
-        if coeffs[-2] and not all(coeffx.is_rational for coeffx in coeffs):
-            rescale1_x = simplify(coeffs[-2]/coeffs[-1])
-            coeffs1 = []
-            for i in range(len(coeffs)):
-                coeffx = simplify(coeffs[i]*rescale1_x**(i + 1))
-                if not coeffx.is_rational:
-                    break
-                coeffs1.append(coeffx)
-            else:
-                rescale_x = simplify(1/rescale1_x)
-                x = f.gens[0]
-                v = [x**n]
-                for i in range(1, n + 1):
-                    v.append(coeffs1[i - 1]*x**(n - i))
-                f = Add(*v)
-                f = Poly(f)
-                return rescale_x, f
-        return None, f
-
-    def _try_translate(f):
-        """
-        try translating ``x -> x + alpha`` to convert f to a polynomial
-        with rational coefficients.
-        Returns ``alpha, f``; if the translating is successful,
-        ``alpha`` is the translating factor, and ``f`` is the shifted
-        polynomial; else ``alpha`` is ``None``.
-        """
-        from sympy.core.add import Add
-        from sympy.utilities.iterables import sift
-        if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
-            return None, f
-        n = f.degree()
-        f1 = f.monic()
-        coeffs = f1.all_coeffs()[1:]
-        c = simplify(coeffs[0])
-        if c and not c.is_rational:
-            if c.is_Add:
-                args = c.args
-            else:
-                args = [c]
-            sifted = sift(args, lambda z: z.is_rational)
-            c1, c2 = sifted[True], sifted[False]
-            alpha = -Add(*c2)/n
-            f2 = f1.shift(alpha)
-            return alpha, f2
-        return None, f
-
     (k,), f = f.terms_gcd()
 
     if not k:
@@ -923,13 +863,13 @@ def roots(f, *gens, **flags):
 
             if len(factors) == 1 and factors[0][1] == 1:
                 if f.get_domain().is_EX:
-                    rescale_x, f = _try_rescale(f)
-                    if rescale_x:
-                       result = roots(f)
-                    else:
-                        translate_x, f = _try_translate(f)
-                        if translate_x:
-                            result = roots(f)
+                    res = to_rational_coeffs(f)
+                    if res:
+                        if res[0] is None:
+                            translate_x, f = res[2:]
+                        else:
+                            rescale_x, f = res[1], res[-1]
+                        result = roots(f)
                         if not result:
                             for root in _try_decompose(f):
                                 _update_dict(result, root, 1)
