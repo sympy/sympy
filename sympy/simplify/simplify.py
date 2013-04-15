@@ -1692,7 +1692,7 @@ def _nthroot_solve(p, n):
      helper function for ``nthroot``
      It denests ``p**Rational(1, n)`` using its minimal polynomial
     """
-    from sympy.polys.numberfields import minimal_polynomial_sq
+    from sympy.polys.numberfields import _minimal_polynomial_sq
     from sympy.solvers import solve
     while n % 2 == 0:
         p = sqrtdenest(sqrt(p))
@@ -1701,7 +1701,7 @@ def _nthroot_solve(p, n):
         return p
     pn = p**Rational(1, n)
     x = Symbol('x')
-    f = minimal_polynomial_sq(p, n, x)
+    f = _minimal_polynomial_sq(p, n, x)
     if f is None:
         return None
     sols = solve(f, x)
@@ -1718,9 +1718,9 @@ def nthroot(expr, n, max_len=4):
     Parameters
     ==========
 
-    expr: sum of surds
-    n: integer
-    max_len: maximum number of surds passed as constants to ``nsimplify``
+    expr : sum of surds
+    n : integer
+    max_len : maximum number of surds passed as constants to ``nsimplify``
 
     Algorithm
     =========

@@ -4,7 +4,7 @@ from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
-    minimal_polynomial, minimal_polynomial_sq,
+    minimal_polynomial,
     primitive_element,
     is_isomorphism_possible,
     field_isomorphism_pslq,
@@ -121,13 +121,16 @@ def test_minimal_polynomial():
     assert mp == x**8 - 512*x**7 - 118208*x**6 + 31131136*x**5 + 647362560*x**4 - 56026611712*x**3 + 116994310144*x**2 + 404854931456*x - 27216576512
 
 def test_minimal_polynomial_sq():
-    from sympy import expand_multinomial
+    from sympy import Add, expand_multinomial
     p = expand_multinomial((1 + 5*sqrt(2) + 2*sqrt(3))**3)
-    mp = minimal_polynomial_sq(p, 3, x)
+    mp = minimal_polynomial(p**Rational(1, 3), x)
     assert mp == x**4 - 4*x**3 - 118*x**2 + 244*x + 1321
     p = expand_multinomial((1 + sqrt(2) - 2*sqrt(3) + sqrt(7))**3)
-    mp = minimal_polynomial_sq(p, 3, x)
+    mp = minimal_polynomial(p**Rational(1, 3), x)
     assert mp == x**8 - 8*x**7 - 56*x**6 + 448*x**5 + 480*x**4 - 5056*x**3 + 1984*x**2 + 7424*x - 3008
+    p = Add(*[sqrt(i) for i in range(1, 12)])
+    mp = minimal_polynomial(p, x)
+    assert mp.subs({x: 0}) == -71965773323122507776
 
 
 def test_primitive_element():
@@ -523,7 +526,6 @@ def test_to_algebraic_integer():
     assert a.rep == DMP([QQ(1), QQ(0)], QQ)
 
     a = AlgebraicNumber(2*sqrt(3), gen=x).to_algebraic_integer()
-
     assert a.minpoly == x**2 - 12
     assert a.root == 2*sqrt(3)
     assert a.rep == DMP([QQ(1), QQ(0)], QQ)

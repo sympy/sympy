@@ -30,9 +30,9 @@ from sympy.mpmath import pslq, mp
 
 def _separate_sq(p):
     """
-    helper function for ``minimal_polynomial_sq``
+    helper function for ``_minimal_polynomial_sq``
 
-    It selects an rational ``g`` such that the polynomial ``p``
+    It selects a rational ``g`` such that the polynomial ``p``
     consists of a sum of terms whose surds squared have gcd equal to ``g``
     and a sum of terms with surds squared prime with ``g``;
     then it takes the field norm to eliminate ``sqrt(g)``
@@ -92,7 +92,7 @@ def _separate_sq(p):
     p = _mexpand(p1**2) - _mexpand(p2**2)
     return p
 
-def minimal_polynomial_sq(p, n, x):
+def _minimal_polynomial_sq(p, n, x):
     """
     Returns the minimal polynomial for the ``nth-root`` of a sum of surds
     or ``None`` if it fails.
@@ -107,11 +107,11 @@ def minimal_polynomial_sq(p, n, x):
     Examples
     ========
 
-    >>> from sympy.polys.numberfields import minimal_polynomial_sq
+    >>> from sympy.polys.numberfields import _minimal_polynomial_sq
     >>> from sympy import sqrt
     >>> from sympy.abc import x
     >>> q = 1 + sqrt(2) + sqrt(3)
-    >>> minimal_polynomial_sq(q, 3, x)
+    >>> _minimal_polynomial_sq(q, 3, x)
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
 
     """
@@ -131,6 +131,16 @@ def minimal_polynomial_sq(p, n, x):
             break
         else:
             p = p1
+
+    # _separate_sq eliminates field extensions in a minimal way, so that
+    # if n = 1 then `p = constant*(minimal_polynomial(p))`
+    # if n > 1 it contains the minimal polynomial as a factor.
+    if n == 1:
+        p1 = Poly(p)
+        if p.coeff(x**p1.degree()) < 0:
+            p = -p
+        p = p.primitive()[1]
+        return p
     # the minimal polynomial is the factor vanishing in x = pn
     factors = factor_list(p)[1]
     a = []
@@ -273,10 +283,10 @@ def minimal_polynomial(ex, x=None, **args):
         res = None
         if ex.is_Pow and (1/ex.exp).is_Integer:
             n = 1/ex.exp
-            res = minimal_polynomial_sq(ex.base, n, x)
+            res = _minimal_polynomial_sq(ex.base, n, x)
 
         if _is_sum_surds(ex):
-            res = minimal_polynomial_sq(ex, S.One, x)
+            res = _minimal_polynomial_sq(ex, S.One, x)
 
         if res is not None:
             result = res
