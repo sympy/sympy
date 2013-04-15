@@ -877,8 +877,12 @@ def roots(f, *gens, **flags):
         f1 = f.monic()
         coeffs = f1.all_coeffs()[1:]
         c = simplify(coeffs[0])
-        if c and not c.is_rational and c.is_Add:
-            sifted = sift(c.args, lambda z: z.is_rational)
+        if c and not c.is_rational:
+            if c.is_Add:
+                args = c.args
+            else:
+                args = [c]
+            sifted = sift(args, lambda z: z.is_rational)
             c1, c2 = sifted[True], sifted[False]
             alpha = -Add(*c2)/n
             f2 = f1.shift(alpha)
@@ -926,9 +930,9 @@ def roots(f, *gens, **flags):
                         translate_x, f = _try_translate(f)
                         if translate_x:
                             result = roots(f)
-                            if not result:
-                                for root in _try_decompose(f):
-                                    _update_dict(result, root, 1)
+                        if not result:
+                            for root in _try_decompose(f):
+                                _update_dict(result, root, 1)
                 else:
                     for root in _try_decompose(f):
                         _update_dict(result, root, 1)

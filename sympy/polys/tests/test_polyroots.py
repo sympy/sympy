@@ -373,6 +373,11 @@ def test_roots():
             14*sqrt(2), x, domain='EX')
     assert roots(eq) == {-2*sqrt(2) + 2: 1, -2*sqrt(2) + 1: 1, -2*sqrt(2) - 1: 1}
 
+    assert roots(Poly((x + sqrt(2))**3 - 7, x, domain='EX')) == \
+        {-sqrt(2) - 7**(S(1)/3)/2 - sqrt(3)*7**(S(1)/3)*I/2: 1,
+         -sqrt(2) - 7**(S(1)/3)/2 + sqrt(3)*7**(S(1)/3)*I/2: 1,
+         -sqrt(2) + 7**(S(1)/3): 1}
+
 def test_roots_slow():
     """Just test that calculating these roots does not hang. """
     a, b, c, d, x = symbols("a,b,c,d,x")
