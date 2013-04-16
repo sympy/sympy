@@ -1563,14 +1563,14 @@ def collect_const(expr, *vars, **kwargs):
         for m in Add.make_args(expr):
             f = Factors(m)
             q, r = f.div(Fv)
-            if r.is_zero:
+            if r.is_one:
                 # only accept this as a true factor if
                 # it didn't change an exponent from an Integer
                 # to a non-Integer, e.g. 2/sqrt(2) -> sqrt(2)
-                # but we aren't looking for this sort of change
+                # -- we aren't looking for this sort of change
                 fwas = f.factors.copy()
                 fnow = q.factors
-                if not any(fwas[k].is_Integer and not
+                if not any(k in fwas and fwas[k].is_Integer and not
                         fnow[k].is_Integer for k in fnow):
                     terms[v].append(q.as_expr())
                     continue
@@ -3676,7 +3676,7 @@ def nsimplify(expr, constants=[], tolerance=None, full=False, rational=None):
     if rational or expr.free_symbols:
         return _real_to_rational(expr, tolerance)
 
-    # sympy's default tolarance for Rationals is 15; other numbers may have
+    # SymPy's default tolerance for Rationals is 15; other numbers may have
     # lower tolerances set, so use them to pick the largest tolerance if None
     # was given
     if tolerance is None:

@@ -1370,13 +1370,11 @@ def test_radsimp():
     assert radsimp(1/(r2*3)) == \
         sqrt(2)/6
     assert radsimp(1/(r2*a + r3 + r5 + r7)) == 1/(r2*a + r3 + r5 + r7)
-    assert radsimp(1/(r2*a + r2*b + r3 + r7)) == \
-        ((sqrt(42)*(a + b) +
-        sqrt(3)*(-a**2 - 2*a*b - b**2 - 2) +
-        sqrt(7)*(-a**2 - 2*a*b - b**2 + 2) +
-        sqrt(2)*(a**3 + 3*a**2*b + 3*a*b**2 - 5*a + b**3 - 5*b))/
-        ((a**4 + 4*a**3*b + 6*a**2*b**2 - 10*a**2 +
-        4*a*b**3 - 20*a*b + b**4 - 10*b**2 + 4)))/2
+    assert radsimp(1/(r2*a + r2*b + r3 + r7)) == (
+        sqrt(42)*(a + b) + sqrt(3)*(-a**2 - 2*a*b - b**2 - 2) +
+        sqrt(7)*(-a**2 - 2*a*b - b**2 + 2) + sqrt(2)*(a**3 + 3*a**2*b +
+        3*a*b**2 - 5*a + b**3 - 5*b))/(a**4 + 4*a**3*b + 6*a**2*b**2 -
+        10*a**2 + 4*a*b**3 - 20*a*b + b**4 - 10*b**2 + 4)/2
     assert radsimp(1/(r2*a + r2*b + r2*c + r2*d)) == \
         (sqrt(2)/(a + b + c + d))/2
     assert radsimp(1/(1 + r2*a + r2*b + r2*c + r2*d)) == \
