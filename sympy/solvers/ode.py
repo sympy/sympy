@@ -2674,10 +2674,6 @@ def ode_almost_linear(eq, func, order, match):
     substitution reduces it to a linear differential equation
     of the form u' + P(x)*u + Q(x) = 0.
 
-    See Also
-    ========
-    ode_1st_linear
-
     The general solution is
 
         >>> from sympy import Function, dsolve, Eq, pprint
@@ -2697,6 +2693,10 @@ def ode_almost_linear(eq, func, order, match):
                \         k(x)    /
 
 
+    See Also
+    ========
+    ode_1st_linear
+
     Examples
     ========
 
@@ -2711,7 +2711,6 @@ def ode_almost_linear(eq, func, order, match):
     >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
                          -x
     f(x) = (C1 - Ei(x))*e
-
 
     References
     ==========
@@ -2863,11 +2862,7 @@ def ode_separable_reduced(eq, func, order, match):
     This can be solved by substituting u(y) = (x^n * y)
 
     The equation then reduces to the separable form
-    u'*(1/(u*(power - H(u)))) - (1/x) = 0
-
-    See Also
-    ========
-    ode_separable
+    u'*(1/(u*(power - H(u)))) - (1/x) = 0.
 
     The general solution is
 
@@ -2891,6 +2886,9 @@ def ode_separable_reduced(eq, func, order, match):
          |
          /
 
+    See Also
+    ========
+    ode_separable
 
     Examples
     ========
@@ -2909,7 +2907,6 @@ def ode_separable_reduced(eq, func, order, match):
             - \/  C1*x  + 1  + 1         \/  C1*x  + 1  + 1
     [f(x) = --------------------, f(x) = ------------------]
                      x                           x
-
 
     References
     ==========

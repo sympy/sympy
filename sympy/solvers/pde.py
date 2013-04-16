@@ -12,7 +12,8 @@ infrastructure remains the same.
     - pde_separate() - Separate variables in partial differential equation either by
                        additive or multiplicative separation approach.
 
-    These are the helper functions in this module
+    These are the helper functions in this module:
+
     - pde_separate_add() - Helper function for searching additive separable solutions.
     - pde_separate_mul() - Helper function for searching multiplicative
                            separable solutions.
@@ -91,7 +92,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
                 pdsolve().
 
         See also the classify_pde() docstring for more info on hints,
-        and the ode docstring for a list of all supported hints.
+        and the pde docstring for a list of all supported hints.
 
     **Tips**
         - You can declare the derivative of an unknown function this way:
@@ -108,7 +109,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
         - pdsolve always returns an Equality class (except for the case
           when the hint is "all" or "all_Integral"). Note that it is not possible
           to get an explicit solution for f(x, y) as in the case of ODE's
-        - Do help(ode.ode_hintname) to get help more information on a
+        - Do help(pde.pde_hintname) to get help more information on a
           specific hint
 
 

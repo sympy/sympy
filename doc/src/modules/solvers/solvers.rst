@@ -46,17 +46,7 @@ See :ref:`ode-docs`.
 Partial Differential Equations (PDEs)
 -------------------------------------
 
-.. autofunction:: sympy.solvers.pde.pde_separate
-
-.. autofunction:: sympy.solvers.pde.pde_separate_add
-
-.. autofunction:: sympy.solvers.pde.pde_separate_mul
-
-.. autofunction:: sympy.solvers.pde.pde_separate_mul
-
-.. autofunction:: sympy.solvers.pde.pdsolve
-
-.. autofunction:: sympy.solvers.pde.classify_pde
+See :ref:`pde-docs`.
 
 Deutils (Utilities for solving ODE's and PDE's)
 -----------------------------------------------
