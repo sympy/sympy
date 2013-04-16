@@ -66,9 +66,9 @@ class Circuit:
 def solve(circuit):
     """
     Solves the circuit for unknown node Voltages and unknown Currents flowing through
-    Voltage Sources. For i independent nodes and j Voltage sources in the circuit,
-    returns the matrix with first i elements as Voltages at i nodes and next j elements
-    as Currents through j Voltage sources.
+    Voltage Sources. For i independent nodes and j Voltage sources in the circuit, it
+    changes in place the x matrix of the circuit with first i elements as Voltages at
+    i nodes and next j elements as Currents through j Voltage sources.
 
     Refer :: http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA_All.html
 
@@ -80,14 +80,16 @@ def solve(circuit):
     >>> my_cir.add_resistor('R1', '3', '0', '1000')
     >>> solve(my_cir)
     >>> my_cir.G
-    [ L1*s,           -L1*s,               0]
-    [-L1*s, L1*s + 1/(C1*s),       -1/(C1*s)]
-    [    0,       -1/(C1*s), 1/R1 + 1/(C1*s)]
+    [ 1/(L1*s),       -1/(L1*s),           0]
+    [-1/(L1*s), C1*s + 1/(L1*s),       -C1*s]
+    [        0,           -C1*s, C1*s + 1/R1]
+
     >>> my_cir.x
-    [                                        V1]
-    [L1*V1*s*(C1*s + R1)/(L1*s*(C1*s + R1) + 1)]
-    [         L1*R1*V1*s/(L1*s*(C1*s + R1) + 1)]
-    [           L1*V1*s/(-L1*s*(C1*s + R1) - 1)]
+    [                                         V1]
+    [V1*(C1*R1*s + 1)/(C1*L1*s**2 + C1*R1*s + 1)]
+    [          C1*R1*V1*s/(C1*s*(L1*s + R1) + 1)]
+    [            C1*V1*s/(-C1*s*(L1*s + R1) - 1)]
+
 
     """
     if circuit.node_count == 0:
@@ -258,9 +260,9 @@ def g_matrix(elements, node_count):
         if isinstance(e, Resistor):
             g_elem = 1/e.symbol
         if isinstance(e, Inductor):
-            g_elem = s*e.symbol
-        if isinstance(e, Capacitor):
             g_elem = 1/(s*e.symbol)
+        if isinstance(e, Capacitor):
+            g_elem = s*e.symbol
 
         if n1 !=0 and n2 != 0:
             G[n1 - 1, n2 - 1] = G[n1 - 1, n2 - 1] - g_elem
