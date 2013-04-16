@@ -245,23 +245,22 @@ class PolyRing(DefaultPrinting, IPolys):
         else:
             symbols = list(self.symbols)
             del symbols[i]
-            return i, self.__class__(symbols, self.domain, self.order)
+            return i, self.clone(symbols=symbols)
 
     def drop(self, gen):
         return self._drop(gen)[1]
 
     def __getitem__(self, key):
-        new_symbols = self.symbols[key]
+        symbols = self.symbols[key]
 
-        if not new_symbols:
+        if not symbols:
             return self.domain
         else:
-            return self.__class__(new_symbols, self.domain, self.order)
+            return self.clone(symbols=symbols)
 
     def to_ground(self):
-        ground = getattr(self.domain, "dom", None) # TODO: use CompositeDomain
-        if ground is not None:
-            return self.__class__(self.symbols, ground, self.order)
+        if self.domain.is_Composite:
+            return self.clone(domain=self.domain.domain)
         else:
             raise ValueError("%s is not a composite domain" % self.domain)
 
