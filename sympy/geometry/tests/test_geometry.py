@@ -268,7 +268,7 @@ def test_line():
     assert r3 != r1
     t = Symbol('t', real=True)
     assert Ray((1, 1), angle=pi/4).arbitrary_point() == \
-        Point(1/(1 - t), 1/(1 - t))
+        Point(t + 1, t + 1)
 
     s1 = Segment(p1, p2)
     s2 = Segment(p1, p1_1)
@@ -382,7 +382,7 @@ def test_line():
     assert Line(p1, p10) != p1
     assert Line(p1, p10).plot_interval() == [t, -5, 5]
     assert Ray((0, 0), angle=pi/4).plot_interval() == \
-        [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
+        [t, 0, 10]
 
 
 def test_ellipse():
@@ -999,10 +999,9 @@ def test_line_intersection():
     assert asa(120, 8, 52) == \
         Triangle(
             Point(0, 0),
-            Point(8, 0),
-            Point(
-                -8*tan(13*pi/45)/(-tan(13*pi/45) + sqrt(3)),
-                8*sqrt(3)*tan(13*pi/45)/(-tan(13*pi/45) + sqrt(3))))
+            Point(8, 0), Point(
+            (8 + 8*sqrt(3)*tan(19*pi/90))/(-3*tan(19*pi/90)**2 + 1),
+           -(8*sqrt(3) + 24*tan(19*pi/90))/(-3*tan(19*pi/90)**2 + 1)))
     assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == \
         [Point(1, 1)]
     assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == \
