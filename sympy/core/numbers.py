@@ -2587,6 +2587,9 @@ class GoldenRatio(NumberSymbol):
 
     __slots__ = []
 
+    def _latex(self, printer):
+        return r"\phi"
+
     def __int__(self):
         return 1
 

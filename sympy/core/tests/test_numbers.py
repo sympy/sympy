@@ -1373,6 +1373,7 @@ def test_mpf_norm():
 def test_latex():
     assert latex(pi) == r"\pi"
     assert latex(E) == r"e"
+    assert latex(GoldenRatio) == r"\phi"
     assert latex(EulerGamma) == r"\gamma"
     assert latex(oo) == r"\infty"
     assert latex(-oo) == r"-\infty"
