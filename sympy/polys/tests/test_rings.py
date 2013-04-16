@@ -1,7 +1,7 @@
 """Test sparse polynomials. """
 
-from sympy.polys.rings import ring, xring, PolyRing, PolyElement
-from sympy.polys.fields import field
+from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
+from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded
@@ -92,6 +92,27 @@ def test_PolyRing_drop():
 
     raises(ValueError, lambda: R.drop(3))
     raises(ValueError, lambda: R.drop(x).drop(y))
+
+def test_sring():
+    x, y, z, t = symbols("x,y,z,t")
+
+    R = PolyRing("x,y,z", ZZ, lex)
+    assert sring(x + 2*y + 3*z) == (R, R.x + 2*R.y + 3*R.z)
+
+    R = PolyRing("x,y,z", QQ, lex)
+    assert sring(x + y/2 + z/3) == (R, R.x + R.y/2 + R.z/3)
+
+    Rt = PolyRing("t", ZZ, lex)
+    R = PolyRing("x,y,z", Rt, lex)
+    assert sring(x + 2*t*y + 3*t**2*z, x, y, z) == (R, R.x + 2*Rt.t*R.y + 3*Rt.t**2*R.z)
+
+    Rt = PolyRing("t", QQ, lex)
+    R = PolyRing("x,y,z", Rt, lex)
+    assert sring(x + t*y/2 + t**2*z/3, x, y, z) == (R, R.x + Rt.t*R.y/2 + Rt.t**2*R.z/3)
+
+    Rt = FracField("t", ZZ, lex)
+    R = PolyRing("x,y,z", Rt, lex)
+    assert sring(x + 2*y/t + t**2*z/3, x, y, z) == (R, R.x + 2*R.y/Rt.t + Rt.t**2*R.z/3)
 
 def test_PolyRing___getitem__():
     R, x,y,z = ring("x,y,z", ZZ)

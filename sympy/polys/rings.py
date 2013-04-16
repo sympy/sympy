@@ -12,12 +12,13 @@ from sympy.polys.monomials import MonomialOps
 from sympy.polys.orderings import lex
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
-from sympy.polys.polyutils import expr_from_dict, _dict_reorder
+from sympy.polys.polyutils import expr_from_dict, _dict_reorder, _parallel_dict_from_expr
 from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
-from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt
+from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt, build_options
 from sympy.polys.densebasic import dmp_to_dict, dmp_from_dict
+from sympy.polys.constructor import construct_domain
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
 from sympy.utilities.magic import pollute
@@ -40,6 +41,26 @@ def vring(symbols, domain, order=lex):
     _ring = PolyRing(symbols, domain, order)
     pollute([ sym.name for sym in _ring.symbols ], _ring.gens)
     return _ring
+
+@public
+def sring(exprs, *symbols, **options):
+    """Construct a ring deriving generators and domain from options and input expressions. """
+    if not is_sequence(exprs):
+        exprs = [exprs]
+
+    exprs = map(sympify, exprs)
+    opt = build_options(symbols, options)
+
+    reps, opt = _parallel_dict_from_expr(exprs, opt)
+
+    if opt.domain is None:
+        # NOTE: this is inefficient because construct_domain() automatically
+        # performs conversion to the target domain. It shouldn't do this.
+        coeffs = sum([ rep.values() for rep in reps ], [])
+        opt.domain, _ = construct_domain(rep.values(), opt=opt)
+
+    _ring = PolyRing(opt.gens, opt.domain, opt.order)
+    return (_ring,) + tuple(map(_ring.from_dict, reps))
 
 def _parse_symbols(symbols):
     if not symbols:
