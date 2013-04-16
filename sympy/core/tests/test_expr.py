@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand)
+    exp_polar, Lambda, expand, diff)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -1571,3 +1571,12 @@ def test_float_0():
 def test_float_0_fail():
     assert Float(0.0)*x == Float(0.0)
     assert (x + Float(0.0)).is_Add
+
+
+def test_issue_3226():
+    ans = (b**2 + z**2 - (b*(a + b*t) + z*(c + t*z))**2/(
+        (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
+    e = sqrt((a + b*t)**2 + (c + z*t)**2)
+    assert diff(e, t, 2) == ans
+    e.diff(t, 2) == ans
+    assert diff(e, t, 2, simplify=False) != ans
