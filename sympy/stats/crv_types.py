@@ -1670,12 +1670,12 @@ def Normal(name, mean, std):
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-            /  ___          \             /  ___          \
-            |\/ 2 *(-mu + z)|             |\/ 2 *(-mu + z)|
-    - mu*erf|---------------| - mu + z*erf|---------------| + z
-            \    2*sigma    /             \    2*sigma    /
-    -----------------------------------------------------------
-                            2*(-mu + z)
+       /  ___          \
+       |\/ 2 *(-mu + z)|
+    erf|---------------|
+       \    2*sigma    /   1
+    -------------------- + -
+             2             2
 
     >>> simplify(skewness(X))
     0

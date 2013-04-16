@@ -3,8 +3,10 @@
 from sympy.polys import Poly, RootSum, cancel, factor
 from sympy.polys.polytools import parallel_poly_from_expr
 from sympy.polys.polyoptions import allowed_flags, set_defaults
+from sympy.polys.polyerrors import PolynomialError
 
-from sympy.core import S, Add, sympify, Function, Lambda, Dummy
+from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Mul, Expr
+from sympy.core.basic import preorder_traversal
 from sympy.utilities import numbered_symbols, take, threaded
 
 
@@ -50,10 +52,49 @@ def apart(f, x=None, full=False, **options):
     else:
         P, Q = f.as_numer_denom()
 
+    _options = options.copy()
     options = set_defaults(options, extension=True)
-    (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
+    try:
+        (P, Q), opt = parallel_poly_from_expr((P, Q), x, **options)
+    except PolynomialError, msg:
+        if f.is_commutative:
+            raise PolynomialError(msg)
+        # non-commutative
+        if f.is_Mul:
+            c, nc = f.args_cnc(split_1=False)
+            nc = Mul(*[apart(i, x=x, full=full, **_options) for i in nc])
+            if c:
+                c = apart(Mul._from_args(c), x=x, full=full, **_options)
+            return c*nc
+        elif f.is_Add:
+            c = []
+            nc = []
+            for i in f.args:
+                if i.is_commutative:
+                    c.append(i)
+                else:
+                    try:
+                        nc.append(apart(i, x=x, full=full, **_options))
+                    except NotImplementedError:
+                        nc.append(i)
+            return apart(Add(*c), x=x, full=full, **_options) + Add(*nc)
+        else:
+            reps = []
+            pot = preorder_traversal(f)
+            pot.next()
+            for e in pot:
+                try:
+                    reps.append((e, apart(e, x=x, full=full, **_options)))
+                    pot.skip()  # this was handled successfully
+                except NotImplementedError:
+                    pass
+            return f.xreplace(dict(reps))
 
     if P.is_multivariate:
+        fc = f.cancel()
+        if fc != f:
+            return apart(fc, x=x, full=full, **_options)
+
         raise NotImplementedError(
             "multivariate partial fraction decomposition")
 
