@@ -2,11 +2,17 @@
 
 set -e
 
-# We change directories to make sure that we test the installed version of
-# sympy.
-mkdir empty
-cd empty
-cat << EOF | python
+if [[ "${TEST_PYTEST}" == "true" ]]; then
+    py.test sympy/
+elif [[ "${TEST_COVERAGE}" == "true" ]]; then
+    python bin/coverage_report.py
+else
+
+    # We change directories to make sure that we test the installed version of
+    # sympy.
+    mkdir empty
+    cd empty
+    cat << EOF | python
 import sympy
 t1=sympy.test()
 t2=sympy.doctest()
@@ -14,5 +20,6 @@ if not (t1 and t2):
     raise Exception('Tests failed')
 EOF
 
-cd ..
-bin/doctest doc/
+    cd ..
+    bin/doctest doc/
+fi

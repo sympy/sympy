@@ -11,16 +11,36 @@ matrix:
       env: TEST_GMPY="true"
     - python: 3.3
       env: TEST_GMPY="true"
+    - python: 2.7
+      env: TEST_PYTEST="true"
+    - python: 2.7
+      env: TEST_COVERAGE="true"
+  allow_failures:
+    - python: 2.7
+      env: TEST_PYTEST="true"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update -qq;
       sudo apt-get install -qq libgmp-dev;
       pip install "gmpy==1.16";
     fi
+  - if [[ "${TEST_PYTEST}" == "true" ]]; then
+      pip install pytest --use-mirrors;
+    fi
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      pip install coverage coveralls --use-mirrors;
+    fi
+  - git --no-pager show # debug output
 install:
-  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then python bin/use2to3; cd py3k-sympy; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then
+      python bin/use2to3; cd py3k-sympy;
+    fi
   - python setup.py install
 script:
   - bin/test_travis.sh
 notifications:
   email: false
+after_success:
+  - if [[ "${TEST_COVERAGE}" == "true" ]]; then
+      coveralls;
+    fi
