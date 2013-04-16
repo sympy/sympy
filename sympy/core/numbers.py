@@ -1967,6 +1967,9 @@ class Infinity(Number):
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
+    def _latex(self, printer):
+        return r"\infty"
+
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         if isinstance(other, Number):
@@ -2120,6 +2123,9 @@ class NegativeInfinity(Number):
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
+    def _latex(self, printer):
+        return r"-\infty"
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
@@ -2312,6 +2318,9 @@ class NaN(Number):
     def __new__(cls):
         return AtomicExpr.__new__(cls)
 
+    def _latex(self, printer):
+        return r"\bot"
+
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
         return self
@@ -2373,6 +2382,9 @@ class ComplexInfinity(AtomicExpr):
 
     def __new__(cls):
         return AtomicExpr.__new__(cls)
+
+    def _latex(self, printer):
+        return r"\tilde{\infty}"
 
     @staticmethod
     def __abs__():
@@ -2494,6 +2506,9 @@ class Exp1(NumberSymbol):
 
     __slots__ = []
 
+    def _latex(self, printer):
+        return r"e"
+
     @staticmethod
     def __abs__():
         return S.Exp1
@@ -2536,6 +2551,9 @@ class Pi(NumberSymbol):
     is_irrational = True
 
     __slots__ = []
+
+    def _latex(self, printer):
+        return r"\pi"
 
     @staticmethod
     def __abs__():
@@ -2602,6 +2620,9 @@ class EulerGamma(NumberSymbol):
 
     __slots__ = []
 
+    def _latex(self, printer):
+        return r"\gamma"
+
     def __int__(self):
         return 0
 
@@ -2662,6 +2683,9 @@ class ImaginaryUnit(AtomicExpr):
     is_number = True
 
     __slots__ = []
+
+    def _latex(self, printer):
+        return r"i"
 
     @staticmethod
     def __abs__():
