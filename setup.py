@@ -34,6 +34,7 @@ import subprocess
 import os
 
 import sympy
+import bdist_wininst_amd64
 
 # Make sure I have the right Python version.
 if sys.version_info[:2] < (2, 5):
@@ -291,6 +292,7 @@ setup(
               'bench': run_benchmarks,
               'clean': clean,
               'audit': audit,
+              'bdist_wininst_amd64': bdist_wininst_amd64.bdist_wininst_amd64
                      },
     classifiers=classifiers,
 )
