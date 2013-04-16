@@ -30,6 +30,17 @@ def test_PolyRing___init__():
     assert PolyRing("x", ZZ, _lex).order == lex
     assert PolyRing("x", ZZ, 'lex').order == lex
 
+    R1 = PolyRing("x,y", ZZ, lex)
+    R2 = PolyRing("x,y", ZZ, lex)
+    R3 = PolyRing("x,y,z", ZZ, lex)
+
+    assert R1.x == R1.gens[0]
+    assert R1.y == R1.gens[1]
+    assert R1.x == R2.x
+    assert R1.y == R2.y
+    assert R1.x != R3.x
+    assert R1.y != R3.y
+
 def test_PolyRing___hash__():
     R, x, y, z = ring("x,y,z", QQ)
     assert hash(R)

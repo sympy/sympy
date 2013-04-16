@@ -3,7 +3,7 @@
 from operator import add, mul, lt, le, gt, ge
 
 from sympy.core.expr import Expr
-from sympy.core.symbol import symbols as _symbols
+from sympy.core.symbol import Symbol, symbols as _symbols
 from sympy.core.numbers import igcd
 from sympy.core.sympify import CantSympify, sympify
 from sympy.core.compatibility import is_sequence
@@ -60,6 +60,7 @@ def _parse_symbols(symbols):
 _ring_cache = {}
 
 class PolyRing(DefaultPrinting, IPolys):
+    """Multivariate distributed polynomial ring. """
 
     def __new__(cls, symbols, domain, order):
         dtype = PolyElement
@@ -98,6 +99,13 @@ class PolyRing(DefaultPrinting, IPolys):
                 obj.leading_expv = lambda f: max(f)
             else:
                 obj.leading_expv = lambda f: max(f, key=order)
+
+            for symbol, generator in zip(obj.symbols, obj.gens):
+                if isinstance(symbol, Symbol):
+                    name = symbol.name
+
+                    if not hasattr(obj, name):
+                        setattr(obj, name, generator)
 
             _ring_cache[_hash] = obj
 

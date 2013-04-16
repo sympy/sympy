@@ -3,6 +3,7 @@
 from operator import add, mul
 
 from sympy.core.expr import Expr
+from sympy.core.symbol import Symbol
 from sympy.core.sympify import CantSympify, sympify
 from sympy.polys.rings import PolyElement
 from sympy.polys.orderings import lex
@@ -62,6 +63,13 @@ class FracField(DefaultPrinting):
             obj.one = dtype(obj, ring.one)
 
             obj.gens = obj._gens()
+
+            for symbol, generator in zip(obj.symbols, obj.gens):
+                if isinstance(symbol, Symbol):
+                    name = symbol.name
+
+                    if not hasattr(obj, name):
+                        setattr(obj, name, generator)
 
             _field_cache[_hash] = obj
 

@@ -1,12 +1,24 @@
 """Test sparse rational functions. """
 
-from sympy.polys.fields import field
+from sympy.polys.fields import field, FracField
 from sympy.polys.domains import ZZ, QQ, RR
 from sympy.polys.orderings import lex, grlex
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
 from sympy import sqrt, Rational
+
+def test_FracField___init__():
+    F1 = FracField("x,y", ZZ, lex)
+    F2 = FracField("x,y", ZZ, lex)
+    F3 = FracField("x,y,z", ZZ, lex)
+
+    assert F1.x == F1.gens[0]
+    assert F1.y == F1.gens[1]
+    assert F1.x == F2.x
+    assert F1.y == F2.y
+    assert F1.x != F3.x
+    assert F1.y != F3.y
 
 def test_FracField___hash__():
     F, x, y, z = field("x,y,z", QQ)
