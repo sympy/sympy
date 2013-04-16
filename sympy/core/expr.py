@@ -1027,7 +1027,7 @@ class Expr(Basic, EvalfMixin):
         if c and split_1 and (
             c[0].is_Number and
             c[0].is_negative and
-                c[0] != S.NegativeOne):
+                c[0] is not S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
         if cset:

@@ -12,7 +12,7 @@ from sympy.core.singleton import S
 
 class Basic(object):
     """
-    Base class for all objects in sympy.
+    Base class for all objects in SymPy.
 
     Conventions:
 

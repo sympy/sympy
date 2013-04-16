@@ -1154,6 +1154,8 @@ def test_args_cnc():
     raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
+    # always split -1 from leading number
+    assert (-1.*x).args_cnc() == [[-1, 1.0, x], []]
 
 
 def test_new_rawargs():
