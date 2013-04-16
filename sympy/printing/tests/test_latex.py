@@ -991,6 +991,7 @@ def test_imaginary():
     i = sqrt(-1)
     assert latex(i) == r'i'
 
+
 def test_builtins_without_args():
     assert latex(sin) == r'\sin'
     assert latex(cos) == r'\cos'
