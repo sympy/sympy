@@ -259,7 +259,7 @@ timeit = timethis('meijerg')
 
 def _mytype(f, x):
     """ Create a hashable entity describing the type of f. """
-    if not f.has(x):
+    if x not in f.free_symbols:
         return ()
     elif f.is_Function:
         return (type(f),)
@@ -343,7 +343,7 @@ def _exponents(expr, x):
 def _functions(expr, x):
     """ Find the types of functions in expr, to estimate the complexity. """
     from sympy import Function
-    return set(e.func for e in expr.atoms(Function) if e.has(x))
+    return set(e.func for e in expr.atoms(Function) if x in e.free_symbols)
 
 
 def _find_splitting_points(expr, x):
@@ -401,10 +401,10 @@ def _split_mul(f, x):
     for a in args:
         if a == x:
             po *= x
-        elif not a.has(x):
+        elif x not in a.free_symbols:
             fac *= a
         else:
-            if a.is_Pow:
+            if a.is_Pow and x not in a.exp.free_symbols:
                 c, t = a.base.as_coeff_mul(x)
                 if t != (x,):
                     c, t = expand_mul(a.base).as_coeff_mul(x)
@@ -532,7 +532,7 @@ def _dummy(name, token, expr, **kwargs):
     This is for being cache-friendly.
     """
     d = _dummy_(name, token, **kwargs)
-    if expr.has(d):
+    if d in expr.free_symbols:
         return Dummy(name, **kwargs)
     return d
 
@@ -552,7 +552,7 @@ def _is_analytic(f, x):
     """ Check if f(x), when expressed using G functions on the positive reals,
         will in fact agree with the G functions almost everywhere """
     from sympy import Heaviside, Abs
-    return not any(expr.has(x) for expr in f.atoms(Heaviside, Abs))
+    return not any(x in expr.free_symbols for expr in f.atoms(Heaviside, Abs))
 
 
 def _condsimp(cond):
@@ -597,7 +597,7 @@ def _condsimp(cond):
             if fro.func != cond.func:
                 continue
             for n, arg in enumerate(cond.args):
-                if fro.args[0].has(r):
+                if r in fro.args[0].free_symbols:
                     m = arg.match(fro.args[1])
                     num = 1
                 else:
@@ -1502,7 +1502,7 @@ def _rewrite_single(f, x, recursive=True):
         # (also if the dummy is already in the expression, there is no point in
         #  putting in another one)
         a = _dummy_('a', 'rewrite-single')
-        if not f.has(a) and _is_analytic(f, x):
+        if a not in f.free_symbols and _is_analytic(f, x):
             try:
                 F, strip, _ = mellin_transform(f.subs(x, a*x), x, s,
                                                integrator=my_integrator,
@@ -1988,7 +1988,7 @@ def meijerint_inversion(f, x, t):
                 if arg2.is_Mul:
                     args += arg2.args
                     continue
-                if not arg.base.has(x):
+                if x not in arg.base.free_symbols:
                     try:
                         a, b = _get_coeff_exp(arg.exp, x)
                     except _CoeffExpValueError:
