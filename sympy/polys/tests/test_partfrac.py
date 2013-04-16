@@ -156,3 +156,9 @@ def test_noncommutative_pseudomultivariate():
     c = 1/(1 + y)
     assert apart(e + foo(e)) == c + foo(c)
     assert apart(e*foo(e)) == c*foo(c)
+
+
+def test_issue_2699():
+    assert apart(
+        2*x/(x**2 + 1) - (x - 1)/(2*(x**2 + 1)) + 1/(2*(x + 1)) - 2/x) == \
+        (3*x + 1)/(x**2 + 1)/2 + 1/(x + 1)/2 - 2/x

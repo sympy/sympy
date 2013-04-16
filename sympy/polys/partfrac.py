@@ -7,10 +7,10 @@ from sympy.polys.polyerrors import PolynomialError
 
 from sympy.core import S, Add, sympify, Function, Lambda, Dummy, Mul, Expr
 from sympy.core.basic import preorder_traversal
-from sympy.utilities import numbered_symbols, take, threaded
+from sympy.utilities import numbered_symbols, take, xthreaded
 
 
-@threaded
+@xthreaded
 def apart(f, x=None, full=False, **options):
     """
     Compute partial fraction decomposition of a rational function.
