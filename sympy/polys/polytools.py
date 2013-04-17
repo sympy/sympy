@@ -5409,6 +5409,10 @@ def to_rational_coeffs(f):
     ``(lc, alpha, None, g)`` in case of rescaling
     ``(None, None, beta, g)`` in case of translation
 
+    Notes
+    =====
+
+    Currently it transforms only polynomials without roots larger than 2.
 
     Examples
     ========
@@ -5490,7 +5494,26 @@ def to_rational_coeffs(f):
             return alpha, f2
         return None
 
-    if f.get_domain().is_EX:
+    def _has_square_roots(p):
+        """
+        Return True if ``f`` is a sum with square roots but no other root
+        """
+        from sympy.core.exprtools import Factors
+        coeffs = p.coeffs()
+        has_sq = False
+        for y in coeffs:
+            for x in Add.make_args(y):
+                f = Factors(x).factors
+                r = [wx.q for wx in f.values() if wx.is_Rational and wx.q >= 2]
+                if not r:
+                    continue
+                if min(r) == 2:
+                    has_sq = True
+                if max(r) > 2:
+                    return False
+        return has_sq
+
+    if f.get_domain().is_EX and _has_square_roots(f):
         rescale_x = None
         translate_x = None
         r = _try_rescale(f)

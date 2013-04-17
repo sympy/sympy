@@ -24,7 +24,8 @@ from sympy.polys.polytools import (
     real_roots, nroots, ground_roots,
     nth_power_roots_poly,
     cancel, reduced, groebner,
-    GroebnerBasis, is_zero_dimensional)
+    GroebnerBasis, is_zero_dimensional,
+    _torational_factor_list)
 
 from sympy.polys.polyerrors import (
     MultivariatePolynomialError,
@@ -2745,6 +2746,14 @@ def test_nth_power_roots_poly():
     raises(MultivariatePolynomialError, lambda: nth_power_roots_poly(
         x + y, 2, x, y))
 
+def test_torational_factor_list():
+    p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
+    assert _torational_factor_list(p, x) == (-2,
+        [(-sqrt(2)*x/2 - x/2 + 1, 1), (-sqrt(2)*x - x - 1, 1),
+         (-sqrt(2)*x - x + 1, 1)])
+
+    p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
+    assert _torational_factor_list(p, x) is None
 
 def test_cancel():
     assert cancel(0) == 0
