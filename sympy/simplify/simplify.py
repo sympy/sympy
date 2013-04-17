@@ -1827,68 +1827,81 @@ def radsimp(expr, symbolic=True, max_terms=4):
         elif d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
             d = sqrtdenest(sqrt(d.base))**d.exp.p
 
-        changed = False
+        nfirst = None  # how many terms on the first pass
+        iter = 0  # number of iterations through loop
+        d = _mexpand(d)
         while 1:
             # collect similar terms
-            d, nterms = collect_sqrt(_mexpand(d), evaluate=False)
-            d = Add._from_args(d)
-            if nterms > max_terms:
+            collected = defaultdict(list)
+            for m in Add.make_args(d):
+                p2 = []
+                other = []
+                for i in Mul.make_args(m):
+                    if i.is_Pow and (i.exp is S.Half or
+                            i.exp.is_Rational and i.exp.q != 1 and
+                            log(i.exp.q, 2).is_Integer):
+                        p2.append(i.base if i.exp is S.Half else i.base**(2*i.exp))
+                    elif i is S.ImaginaryUnit:
+                        p2.append(S.NegativeOne)
+                    else:
+                        other.append(i)
+                collected[tuple(ordered(p2))].append(Mul(*other))
+            rterms = list(ordered(collected.items()))
+            if nfirst is None:
+                nfirst = len(rterms)
+            rterms = [(Mul(*i), Add(*j)) for i, j in rterms]
+            nrad = len(rterms) - (1 if rterms[0][0] is S.One else 0)
+            if nrad < 1 or nrad > max_terms:
                 break
-
-            # check to see if we are done:
-            # - no radical terms
-            # - if there are more than 3 radical terms, or
-            #   there 3 radical terms and a constant, use rad_rationalize
-            if not nterms:
-                break
-            if nterms > 3 or nterms == 3 and len(d.args) > 4:
-                if all([(x**2).is_Integer for x in d.args]):
-                    nd, d = rad_rationalize(S.One, d)
+            if len(rterms) > 4:
+                if all([x.is_Integer and (y**2).is_Integer for x, y in rterms]):
+                    nd, d = rad_rationalize(S.One, Add._from_args([sqrt(x)*y for x, y in rterms]))
                     n = _mexpand(n*nd)
                 else:
-                    n, d = fraction(expr)
+                    pass # n, d = fraction(expr)
                 break
-            changed = True
+            num = powsimp(_num(rterms))
+            n *= num
+            d *= num
+            d = _mexpand(d)
+            iter += 1
 
-            # now match for a radical
-            if d.is_Add and len(d.args) == 4:
-                r = d.match(a + b*sqrt(c) + D*sqrt(E))
-                nmul = (a - b*sqrt(c) - D*sqrt(E)).xreplace(r)
-                d = (a**2 - c*b**2 - E*D**2 - 2*b*D*sqrt(c*E)).xreplace(r)
-                n1 = n/d
-                if denom(n1) is not S.One:
-                    n = -(-n/d)
-                else:
-                    n = n1
-                n, d = fraction(n*nmul)
-
-            else:
-                r = d.match(a + b*sqrt(c))
-                if not r or r[b] == 0:
-                    r = d.match(b*sqrt(c))
-                    if r is None:
-                        break
-                    r[a] = S.Zero
-                va, vb, vc = r[a], r[b], r[c]
-
-                dold = d
-                d = va**2 - vc*vb**2
-                nmul = va - vb*sqrt(vc)
-                n1 = n/d
-                if denom(n1) is not S.One:
-                    n1 = -(-n/d)
-                n1, d1 = fraction(n1*nmul)
-                if d1 != dold:
-                    n, d = n1, d1
-                else:
-                    n *= nmul
-
+        ok = False
+        if iter == nfirst == 1:
+            if signsimp(n/d) == expr:
+                n, d = fraction(-n/-d)
+                ok = True
+        if not ok:
+            n, d = fraction(signsimp(n/d))
         nexpr = collect_sqrt(expand_mul(n))/d
-        if changed or nexpr != expr:
+        if iter or nexpr != expr:
             expr = nexpr
         return expr
 
-    a, b, c, D, E, F, G = map(Wild, 'abcDEFG')
+    a, b, c, d, A, B, C, D = symbols("a:d A:D")
+    def _num(rterms):
+        if len(rterms) == 2:
+            reps = dict(zip([A,a,B,b], [j for i in rterms for j in i]))
+            return (
+            sqrt(A)*a - sqrt(B)*b).xreplace(reps)
+        if len(rterms) == 3:
+            reps = dict(zip([A,a,B,b,C,c], [j for i in rterms for j in i]))
+            return (
+            (sqrt(A)*a + sqrt(B)*b - sqrt(C)*c)*(2*sqrt(A)*sqrt(B)*a*b - A*a**2 -
+            B*b**2 + C*c**2)).xreplace(reps)
+        elif len(rterms) == 4:
+            reps = dict(zip([A,a,B,b,C,c,D,d], [j for i in rterms for j in i]))
+            return ((sqrt(A)*a + sqrt(B)*b - sqrt(C)*c - sqrt(D)*d)*(2*sqrt(A)*sqrt(B)*a*b
+                - A*a**2 - B*b**2 - 2*sqrt(C)*sqrt(D)*c*d + C*c**2 +
+                D*d**2)*(-8*sqrt(A)*sqrt(B)*sqrt(C)*sqrt(D)*a*b*c*d + A**2*a**4 -
+                2*A*B*a**2*b**2 - 2*A*C*a**2*c**2 - 2*A*D*a**2*d**2 + B**2*b**4 -
+                2*B*C*b**2*c**2 - 2*B*D*b**2*d**2 + C**2*c**4 - 2*C*D*c**2*d**2 +
+                D**2*d**4)).xreplace(reps)
+        elif len(rterms) == 1:
+            return sqrt(rterms[0][0])
+        else:
+            raise NotImplementedError
+
     # do this at the start in case no other change is made since
     # it is done if a change is made
     coeff, expr = expr.as_content_primitive()

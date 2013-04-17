@@ -1365,22 +1365,27 @@ def test_radsimp():
         62*sqrt(30) + 135*sqrt(7), 215)
     z = radsimp(1/(1 + r2/3 + r3/5 + r5 + r7))
     assert len((3616791619821680643598*z).args) == 16
-    assert radsimp(1/z) == 1/z
+    assert radsimp(1/z) == signsimp(1/z)
     assert radsimp(1/z, max_terms=20).expand() == 1 + r2/3 + r3/5 + r5 + r7
     assert radsimp(1/(r2*3)) == \
         sqrt(2)/6
-    assert radsimp(1/(r2*a + r3 + r5 + r7)) == 1/(r2*a + r3 + r5 + r7)
+    assert radsimp(1/(r2*a + r3 + r5 + r7)) == (
+        (2*sqrt(105)*(-12*a**4 + 60*a**2 - 59) + 2*sqrt(70)*(4*a**5 - 36*a**3
+        + 49*a) + 2*sqrt(42)*(4*a**5 - 20*a**3 + 41*a) + 2*sqrt(30)*(4*a**5 -
+        4*a**3 - 31*a) + sqrt(3)*(-8*a**6 + 84*a**4 - 462*a**2 + 531) +
+        sqrt(5)*(-8*a**6 + 100*a**4 - 254*a**2 + 295) + sqrt(7)*(-8*a**6 +
+        116*a**4 - 302*a**2 + 59) + sqrt(2)*(8*a**7 - 180*a**5 + 782*a**3 -
+        795*a))/(16*a**8 - 480*a**6 + 3128*a**4 - 6360*a**2 + 3481))
     assert radsimp(1/(r2*a + r2*b + r3 + r7)) == (
-        sqrt(42)*(a + b) + sqrt(3)*(-a**2 - 2*a*b - b**2 - 2) +
-        sqrt(7)*(-a**2 - 2*a*b - b**2 + 2) + sqrt(2)*(a**3 + 3*a**2*b +
-        3*a*b**2 - 5*a + b**3 - 5*b))/(a**4 + 4*a**3*b + 6*a**2*b**2 -
-        10*a**2 + 4*a*b**3 - 20*a*b + b**4 - 10*b**2 + 4)/2
+        (sqrt(42)*(a + b) + sqrt(3)*(-(a + b)**2 - 2) + sqrt(7)*(-(a + b)**2 +
+        2) + sqrt(2)*(a*(a + b)**2 - 5*a + b*(a + b)**2 - 5*b))/(a**4 +
+        4*a**3*b + 6*a**2*b**2 - 10*a**2 + 4*a*b**3 - 20*a*b + b**4 - 10*b**2
+        + 4)/2)
     assert radsimp(1/(r2*a + r2*b + r2*c + r2*d)) == \
         (sqrt(2)/(a + b + c + d))/2
-    assert radsimp(1/(1 + r2*a + r2*b + r2*c + r2*d)) == \
-        ((sqrt(2)*(-a - b - c - d) + 1)/
-        (-2*a**2 - 4*a*b - 4*a*c - 4*a*d - 2*b**2 -
-        4*b*c - 4*b*d - 2*c**2 - 4*c*d - 2*d**2 + 1))
+    assert radsimp(1/(1 + r2*a + r2*b + r2*c + r2*d)) == (
+        (sqrt(2)*(a + b + c + d) - 1)/(2*a**2 + 4*a*b + 4*a*c + 4*a*d + 2*b**2
+        + 4*b*c + 4*b*d + 2*c**2 + 4*c*d + 2*d**2 - 1))
     assert radsimp((y**2 - x)/(y - sqrt(x))) == \
         sqrt(x) + y
     assert radsimp(-(y**2 - x)/(y - sqrt(x))) == \
@@ -1388,7 +1393,7 @@ def test_radsimp():
     assert radsimp(1/(1 - I + a*I)) == \
         (I*(-a + 1) + 1)/(a**2 - 2*a + 2)
     assert radsimp(1/((-x + y)*(x - sqrt(y)))) == \
-        (x + sqrt(y))/((-x + y)*(x**2 - y))
+        (-x - sqrt(y))/((x - y)*(x**2 - y))
     e = (3 + 3*sqrt(2))*x*(3*x - 3*sqrt(y))
     assert radsimp(e) == 9*x*(1 + sqrt(2))*(x - sqrt(y))
     assert radsimp(1/e) == (-1 + sqrt(2))*(x + sqrt(y))/(9*x*(x**2 - y))
@@ -1408,6 +1413,11 @@ def test_radsimp():
     # to use an unevaluated Mul
     assert radsimp(1/sqrt(2*x + 3)) == -sqrt(2*x + 3)/(-2*x - 3)
     assert radsimp(1/sqrt(2*(x + 3))) == -sqrt(2)*sqrt(x + 3)/(-x - 3)/2
+
+    # issue 2895
+    e = S('-(2 + 2*sqrt(2) + 4*2**(1/4))/'
+        '(1 + 2**(3/4) + 3*2**(1/4) + 3*sqrt(2))')
+    assert radsimp(e).expand() == -2*2**(S(3)/4) - 2*2**(S(1)/4) + 2 + 2*sqrt(2)
 
 
 def test_collect_const():
