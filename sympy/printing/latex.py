@@ -1653,7 +1653,6 @@ def translate(s):
     else:
         return s
 
-
 def latex(expr, **settings):
     r"""
     Convert the given expression to LaTeX representation.
