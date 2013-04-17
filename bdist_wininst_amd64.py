@@ -81,6 +81,7 @@ class bdist_wininst_amd64 (Command):
 
     def finalize_options (self):
         self.set_undefined_options('bdist', ('skip_build', 'skip_build'))
+        self.plat_name = 'win-x86_64'
 
         if self.bdist_dir is None:
             if self.skip_build and self.plat_name:
