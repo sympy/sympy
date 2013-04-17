@@ -1005,17 +1005,12 @@ def test_latex_greek_functions():
     # \Alpha, \Beta, \Eta, etc.
     s = Function('Alpha')
     assert latex(s) == r'A'
+    assert latex(s(x)) == r'A{\left (x \right )}'
     s = Function('Beta')
     assert latex(s) == r'B'
     s = Function('Eta')
     assert latex(s) == r'H'
-
-    s = symbols('Alpha')
-    assert latex(s) == r'A'
-    s = symbols('Beta')
-    assert latex(s) == r'B'
-    s = symbols('Eta')
-    assert latex(s) == r'H'
+    assert latex(s(x)) == r'H{\left (x \right )}'
 
     # bug because sympy.core.numbers.Pi is special
     p = Function('Pi')
@@ -1098,8 +1093,8 @@ def test_builtin_without_args_mismatched_names():
     assert latex(CosineTransform) == r'\mathcal{COS}'
 
 def test_builtin_no_args():
-    assert latex(Chi) == r'\operatorname{Chi}', latex(Chi)
-    assert latex(gamma) == r'\Gamma', latex(gamma)
+    assert latex(Chi) == r'\operatorname{Chi}'
+    assert latex(gamma) == r'\Gamma'
     assert latex(KroneckerDelta) == r'\delta'
     assert latex(DiracDelta) == r'\delta'
     assert latex(lowergamma) == r'\gamma'
