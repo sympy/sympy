@@ -47,6 +47,8 @@ greek_dictionary = {'Alpha': 'A',
                     'Chi': 'X',
                     'lamda': r'\lambda',
                     'Lamda': r'\Lambda',
+                    'khi': r'\chi',
+                    'Khi': r'X',
                    }
 
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
@@ -576,6 +578,9 @@ class LatexPrinter(Printer):
         return self._hprint_Function(str(expr))
 
     def _print_FunctionClass(self, expr):
+        if hasattr(expr, '_latex_no_arg'):
+            return expr._latex_no_arg(self)
+
         return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):

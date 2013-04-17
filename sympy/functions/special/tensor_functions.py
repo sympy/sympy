@@ -439,3 +439,7 @@ class KroneckerDelta(Function):
                 return 1
         else:
             return 0
+
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\delta'

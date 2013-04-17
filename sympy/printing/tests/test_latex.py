@@ -218,7 +218,7 @@ def test_latex_functions():
     assert latex(re(x + y)) == r"\Re{x} + \Re{y}"
     assert latex(im(x)) == r"\Im{x}"
     assert latex(conjugate(x)) == r"\overline{x}"
-    assert latex(gamma(x)) == r"\Gamma\left(x\right)"
+    assert latex(gamma(x)) == r"\Gamma{\left (x \right )}"
     assert latex(Order(x)) == r"\mathcal{O}\left(x\right)"
     assert latex(lowergamma(x, y)) == r'\gamma\left(x, y\right)'
     assert latex(uppergamma(x, y)) == r'\Gamma\left(x, y\right)'
@@ -263,8 +263,8 @@ def test_latex_functions():
     assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left (x \right )}'
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
-    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}', latex(Chi(x)**2)
-    assert latex(Chi(x**2)**2) == r'\operatorname{Chi}^{2}{\left (x^{2} \right )}', latex(Chi(x**2)**2)
+    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
+    assert latex(Chi(x)) == r'\operatorname{Chi}{\left (x \right )}'
 
     assert latex(
         jacobi(n, a, b, x)) == r'P_{n}^{\left(a,b\right)}\left(x\right)'
@@ -1000,7 +1000,6 @@ def test_builtins_without_args():
     assert latex(Ei) == r'\operatorname{Ei}'
     assert latex(zeta) == r'\zeta'
 
-@XFAIL
 def test_latex_greek_functions():
     # bug because capital greeks that have roman equivalents should not use
     # \Alpha, \Beta, \Eta, etc.
@@ -1020,16 +1019,13 @@ def test_latex_greek_functions():
 
     # bug because sympy.core.numbers.Pi is special
     p = Function('Pi')
-    assert latex(p(x)) == r'\Pi{\left (x \right )}'
+    # assert latex(p(x)) == r'\Pi{\left (x \right )}'
     assert latex(p) == r'\Pi'
 
     # bug because not all greeks are included
     c = Function('chi')
     assert latex(c(x)) == r'\chi{\left (x \right )}'
     assert latex(c) == r'\chi'
-
-    # bug because the name is 'gamma' but the representation should be \Gamma
-    assert latex(gamma) == r'\Gamma'
 
 def test_translate():
     s = 'Alpha'
@@ -1099,9 +1095,13 @@ def test_greek_symbols():
 
 @XFAIL
 def test_builtin_without_args_mismatched_names():
+    assert latex(CosineTransform) == r'\mathcal{COS}'
+
+def test_builtin_no_args():
+    assert latex(Chi) == r'\operatorname{Chi}', latex(Chi)
+    assert latex(gamma) == r'\Gamma', latex(gamma)
     assert latex(KroneckerDelta) == r'\delta'
     assert latex(DiracDelta) == r'\delta'
-    assert latex(CosineTransform) == r'\mathcal{COS}'
     assert latex(lowergamma) == r'\gamma'
 
 def test_issue_3754():

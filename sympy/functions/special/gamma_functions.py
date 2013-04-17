@@ -102,6 +102,19 @@ class gamma(Function):
         t = self.args[0] - x0
         return (gamma(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
+    def _latex(self, printer, exp=None):
+        assert len(self.args) == 1
+        if exp:
+            return r'\Gamma^{%s}{\left (%s \right )}' % (exp, self.args[0])
+        else:
+            return r'\Gamma{\left (%s \right )}' % self.args[0]
+
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\Gamma'
+
+
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -230,6 +243,9 @@ class lowergamma(Function):
             return self
         return self.rewrite(uppergamma).rewrite(expint)
 
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\gamma'
 
 class uppergamma(Function):
     r"""

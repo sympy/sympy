@@ -1907,6 +1907,9 @@ class Chi(TrigonometricIntegral):
             return r'\operatorname{Chi}{\left (%s \right )}' \
                 % printer._print(self.args[0])
 
+    @staticmethod
+    def _latex_no_arg(printer):
+        return r'\operatorname{Chi}'
 
 ###############################################################################
 #################### FRESNEL INTEGRALS ########################################
