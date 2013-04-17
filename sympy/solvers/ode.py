@@ -1240,7 +1240,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
     This only works when ``func`` is one function, like `f(x)`. ``sol`` can
     be a single solution or a list of solutions.  Each solution may be an
     Equality that the solution satisfies, e.g. `f(x) = C_1`,
-    `f(x) + C_1 = 0`;or simply an Expr, e.g. `f(x) - C_1`. In most
+    `f(x) + C_1 = 0`; or simply an Expr, e.g. `f(x) - C_1`. In most
     cases it will not be necessary to explicitly identify the function, but
     if the function cannot be inferred from the original equation it can be
     supplied through the ``func`` argument.
@@ -1995,7 +1995,7 @@ def ode_1st_exact(eq, func, order, match):
     such that `P(x, y) = \frac{\partial F}{\partial x}` and
     `Q(x, y) = \frac{\partial F}{\partial y}`. It can be shown that a
     necessary and sufficient condition for a first order ODE to be exact is
-    that `\frac{\partial P}{\partial y} = \frac{\partial Q}{\parital x}`.
+    that `\frac{\partial P}{\partial y} = \frac{\partial Q}{\partial x}`.
     Then, the solution will be as given below::
 
         >>> from sympy import Function, Eq, Integral, symbols, pprint
@@ -2297,7 +2297,7 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
 
 
 def homogeneous_order(eq, *symbols):
-    """
+    r"""
     Returns the order `n` if `g` is homogeneous and None if it
     is not homogeneous.
 
@@ -2398,7 +2398,7 @@ def ode_1st_linear(eq, func, order, match):
     These are differential equations of the form
     `\frac{dy}{dx} + P(x) y = Q(x)`. These kinds of differential
     equations can be solved in a general way.  The integrating factor
-    `e^{\int P(x) \dx}` will turn the equation into a separable
+    `e^{\int P(x) dx}` will turn the equation into a separable
     equation.  The general solution is::
 
         >>> from sympy import Function, dsolve, Eq, pprint, diff, sin
@@ -2654,7 +2654,7 @@ def ode_Liouville(eq, func, order, match):
 
 
 def _nth_linear_match(eq, func, order):
-    """
+    r"""
     Matches a differential equation to the linear form:
 
     .. math::
@@ -3264,7 +3264,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
     Functions that fit this requirement are finite sums functions of the
     form `ax^i e^{bx} \sin(cx + d)` or `ax^i e^{bx} \cos(cx + d)`, where `i`
     is a non-negative integer and `a, b, c,` and `d` are constants. For
-    example any polynomial in `x`, functions like `x^2 e^{2x}, `x\sin(x)`,
+    example any polynomial in `x`, functions like `x^2 e^{2x}`, `x\sin(x)`,
     and `e^x \cos(x)` can all be used. Products of `\sin`'s and `\cos`'s
     have a finite number of derivatives, because they can be expanded into
     `\sin(ax)` and `\cos(bx)` terms. However, SymPy currently cannot do that
@@ -3312,7 +3312,7 @@ def ode_nth_linear_constant_coeff_undetermined_coefficients(eq, func, order, mat
 
 
 def _solve_undetermined_coefficients(eq, func, order, match):
-    """
+    r"""
     Helper function for the method of undetermined coefficients.
 
     See the ode_nth_linear_constant_coeff_undetermined_coefficients()
@@ -3409,7 +3409,7 @@ def _solve_undetermined_coefficients(eq, func, order, match):
 
 
 def _undetermined_coefficients_match(expr, x):
-    """
+    r"""
     Returns a trial function match if undetermined coefficients can be
     applied to expr, and None otherwise.
 
@@ -3575,7 +3575,7 @@ def ode_nth_linear_constant_coeff_variation_of_parameters(eq, func, order, match
     form `\sum_{x=1}^n c_i(x) y_i(x)`, where `y_i` is the ith
     solution to the homogeneous equation.  The solution is then solved using
     Wronskian's and Cramer's Rule.  The particular solution is given by
-    `\sum_{x=1}^n \int \frac{W_i(x)}{W(x)} \dx`, where `W(x)` is
+    `\sum_{x=1}^n \int \frac{W_i(x)}{W(x)} dx`, where `W(x)` is
     the Wronskian of the fundamental system (the system of n linearly
     independent solutions to the homogeneous equation), and `W_i(x)`
     is the Wronskian of the fundamental system with the ith column replaced
@@ -3693,7 +3693,7 @@ def ode_separable(eq, func, order, match):
     This is any differential equation that can be written as
     `P(y) \frac{dy}{dx} = Q(x)`. The solution can then just be found
     by rearranging terms and integrating:
-    `\int P(y) \dy = \int Q(x) \dx`. This hint uses separatevars()
+    `\int P(y) dy = \int Q(x) dx`. This hint uses separatevars()
     as its back end, so if a separable equation is not caught by this
     solver, it is most likely the fault of that function. separatevars()
     is smart enough to do most expansion and factoring necessary to
