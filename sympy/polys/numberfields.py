@@ -145,8 +145,7 @@ def _minimal_polynomial_sq(p, n, x):
     factors = factor_list(p)[1]
     a = []
     for f, m in factors:
-        fn = f.subs({x:pn}).n()
-        if abs(fn) < 1e-10:
+        if f.subs(x, pn).evalf(chop=True) == 0:
             a.append(f)
     if len(a) == 1:
         return a[0]
