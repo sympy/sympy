@@ -520,7 +520,7 @@ def test_erf_f_code():
         "REAL*8 function test(x)\n"
         "implicit none\n"
         "REAL*8, intent(in) :: x\n"
-        "test = erf(x) + erf(2*x)\n"
+        "test = erf(x) + erf(2.0d0*x)\n"
         "end function\n"
     )
     assert source == expected, source
