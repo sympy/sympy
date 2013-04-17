@@ -45,6 +45,7 @@ def minimal_polynomial(ex, x=None, **args):
     x**4 - 10*x**2 + 1
 
     """
+
     generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
 
@@ -54,6 +55,8 @@ def minimal_polynomial(ex, x=None, **args):
         x, cls = sympify(x), Poly
     else:
         x, cls = Dummy('x'), PurePoly
+
+    polys = args.get('polys', False)
 
     def update_mapping(ex, exp, base=None):
         a = generator.next()
@@ -117,8 +120,6 @@ def minimal_polynomial(ex, x=None, **args):
 
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
-    polys = args.get('polys', False)
-
     if ex.is_AlgebraicNumber:
         if not polys:
             return ex.minpoly.as_expr(x)
@@ -126,6 +127,18 @@ def minimal_polynomial(ex, x=None, **args):
             return ex.minpoly.replace(x)
     elif ex.is_Rational:
         result = ex.q*x - ex.p
+    elif ex.is_number:
+        from sympy.solvers.solvers import unrad
+        try:
+            result = x - ex
+            u = unrad(result, all=True)
+            if u:
+                result, _, _ = u
+            if result.has(S.Infinity, S.NegativeInfinity, S.NaN) or \
+                    len(Poly(result).gens) > 1:
+                raise ValueError
+        except ValueError:
+            raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     else:
         F = [x - bottom_up_scan(ex)] + mapping.values()
         G = groebner(F, symbols.values() + [x], order='lex')
