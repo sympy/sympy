@@ -22,9 +22,35 @@ import re
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
-                    'theta', 'beta', 'alpha', 'gamma', 'sinh', 'cosh', 'tanh', 'sqrt',
+                    'sinh', 'cosh', 'tanh', 'sqrt',
                     'ln', 'log', 'sec', 'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                    'arg', 'zeta', 'psi']
+                    'arg']
+## 'theta', 'beta', 'alpha', 'gamma', , 'zeta', 'psi']
+greeks = set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta',
+              'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron',
+              'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi',
+              'omega'])
+
+greek_dictionary = {'Alpha': 'A',
+                    'Beta': 'B',
+                    'Epsilon': 'E',
+                    'Zeta': 'Z',
+                    'Eta': 'H',
+                    'Iota': 'I',
+                    'Kappa': 'K',
+                    'Mu': 'M',
+                    'Nu': 'N',
+                    'omicron': 'o',
+                    'Omicron': 'O',
+                    'Rho': 'P',
+                    'Tau': 'T',
+                    'Chi': 'X',
+                    'lamda': r'\lambda',
+                    'Lamda': r'\Lambda',
+                   }
+
+other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
+                     'hslash', 'mho', ])
 
 
 class LatexPrinter(Printer):
@@ -449,9 +475,11 @@ class LatexPrinter(Printer):
           - if it is a longer name, then put \operatorname{} around it and be
             mindful of undercores in the name
         '''
+        func = translate(func)
+
         if func in accepted_latex_functions:
             name = r"\%s" % func
-        elif len(func) == 1:
+        elif len(func) == 1 or func.startswith('\\'):
             name = func
         else:
             name = r"\operatorname{%s}" % func.replace("_", r"\_")
@@ -1035,26 +1063,6 @@ class LatexPrinter(Printer):
 
         name, supers, subs = split_super_sub(expr.name)
 
-        # translate name, supers and subs to tex keywords
-        greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
-                      'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
-                      'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
-                      'phi', 'chi', 'psi', 'omega' ])
-
-        greek_translated = {'lamda': 'lambda', 'Lamda': 'Lambda'}
-
-        other = set( ['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth',
-                      'hbar', 'hslash', 'mho' ])
-
-        def translate(s):
-            tmp = s.lower()
-            if tmp in greek or tmp in other:
-                return "\\" + s
-            if s in greek_translated:
-                return "\\" + greek_translated[s]
-            else:
-                return s
-
         name = translate(name)
         supers = [translate(sup) for sup in supers]
         subs = [translate(sub) for sub in subs]
@@ -1622,6 +1630,23 @@ class LatexPrinter(Printer):
 
     def _print_totient(self, expr):
         return r'\phi\left( %s \right)' %  self._print(expr.args[0])
+
+
+def translate(s):
+    '''
+    Given a description of a Greek letter or other special character,
+    return the appropriate latex
+
+    let everything else pass as given
+    '''
+    tex = greek_dictionary.get(s)
+    if tex:
+        return tex
+    elif s.lower() in greeks or s in other_symbols:
+        return "\\" + s
+    else:
+        return s
+
 
 def latex(expr, **settings):
     r"""

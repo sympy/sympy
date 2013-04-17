@@ -16,7 +16,7 @@ from sympy import (
     elliptic_e, elliptic_pi, cos, tan)
 
 from sympy.abc import mu, tau
-from sympy.printing.latex import latex
+from sympy.printing.latex import latex, translate
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
@@ -112,6 +112,9 @@ def test_latex_symbols():
     assert latex(Symbol('91')) == r"91"
     assert latex(Symbol('alpha_new')) == r"\alpha_{new}"
     assert latex(Symbol('C^orig')) == r"C^{orig}"
+    assert latex(Symbol('x^alpha')) == r"x^{\alpha}"
+    assert latex(Symbol('beta^alpha')) == r"\beta^{\alpha}"
+    assert latex(Symbol('e^Alpha')) == r"e^{A}"
 
 
 @XFAIL
@@ -236,7 +239,7 @@ def test_latex_functions():
     assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left (x \right )}'
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
-    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
+    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}', latex(Chi(x)**2)
 
     assert latex(
         jacobi(n, a, b, x)) == r'P_{n}^{\left(a,b\right)}\left(x\right)'
@@ -969,7 +972,7 @@ def test_builtins_without_args():
     assert latex(zeta) == r'\zeta'
 
 @XFAIL
-def test_latex_greeks():
+def test_latex_greek_functions():
     # bug because capital greeks that have roman equivalents should not use
     # \Alpha, \Beta, \Eta, etc.
     s = Function('Alpha')
@@ -998,6 +1001,72 @@ def test_latex_greeks():
 
     # bug because the name is 'gamma' but the representation should be \Gamma
     assert latex(gamma) == r'\Gamma'
+
+def test_translate():
+    s = 'Alpha'
+    assert translate(s) == 'A'
+    s = 'Beta'
+    assert translate(s) == 'B'
+    s = 'Eta'
+    assert translate(s) == 'H'
+    s = 'omicron'
+    assert translate(s) == 'o'
+    s = 'Pi'
+    assert translate(s) == r'\Pi'
+    s = 'pi'
+    assert translate(s) == r'\pi'
+
+def test_greek_symbols():
+    assert latex(Symbol('alpha'))   == r'\alpha'
+    assert latex(Symbol('beta'))    == r'\beta'
+    assert latex(Symbol('gamma'))   == r'\gamma'
+    assert latex(Symbol('delta'))   == r'\delta'
+    assert latex(Symbol('epsilon')) == r'\epsilon'
+    assert latex(Symbol('zeta'))    == r'\zeta'
+    assert latex(Symbol('eta'))     == r'\eta'
+    assert latex(Symbol('theta'))   == r'\theta'
+    assert latex(Symbol('iota'))    == r'\iota'
+    assert latex(Symbol('kappa'))   == r'\kappa'
+    assert latex(Symbol('lambda'))  == r'\lambda'
+    assert latex(Symbol('mu'))      == r'\mu'
+    assert latex(Symbol('nu'))      == r'\nu'
+    assert latex(Symbol('xi'))      == r'\xi'
+    assert latex(Symbol('omicron')) == r'o'
+    assert latex(Symbol('pi'))      == r'\pi'
+    assert latex(Symbol('rho'))     == r'\rho'
+    assert latex(Symbol('sigma'))   == r'\sigma'
+    assert latex(Symbol('tau'))     == r'\tau'
+    assert latex(Symbol('upsilon')) == r'\upsilon'
+    assert latex(Symbol('phi'))     == r'\phi'
+    assert latex(Symbol('chi'))     == r'\chi'
+    assert latex(Symbol('psi'))     == r'\psi'
+    assert latex(Symbol('omega'))   == r'\omega'
+
+    assert latex(Symbol('Alpha'))   == r'A'
+    assert latex(Symbol('Beta'))    == r'B'
+    assert latex(Symbol('Gamma'))   == r'\Gamma'
+    assert latex(Symbol('Delta'))   == r'\Delta'
+    assert latex(Symbol('Epsilon')) == r'E'
+    assert latex(Symbol('Zeta'))    == r'Z'
+    assert latex(Symbol('Eta'))     == r'H'
+    assert latex(Symbol('Theta'))   == r'\Theta'
+    assert latex(Symbol('Iota'))    == r'I'
+    assert latex(Symbol('Kappa'))   == r'K'
+    assert latex(Symbol('Lambda'))  == r'\Lambda'
+    assert latex(Symbol('Mu'))      == r'M'
+    assert latex(Symbol('Nu'))      == r'N'
+    assert latex(Symbol('Xi'))      == r'\Xi'
+    assert latex(Symbol('Omicron')) == r'O'
+    assert latex(Symbol('Pi'))      == r'\Pi'
+    assert latex(Symbol('Rho'))     == r'P'
+    assert latex(Symbol('Sigma'))   == r'\Sigma'
+    assert latex(Symbol('Tau'))     == r'T'
+    assert latex(Symbol('Upsilon')) == r'\Upsilon'
+    assert latex(Symbol('Phi'))     == r'\Phi'
+    assert latex(Symbol('Chi'))     == r'X'
+    assert latex(Symbol('Psi'))     == r'\Psi'
+    assert latex(Symbol('Omega'))   == r'\Omega'
+
 
 @XFAIL
 def test_builtin_without_args_mismatched_names():
