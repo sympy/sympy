@@ -100,6 +100,13 @@ def test_minimal_polynomial():
     assert minimal_polynomial(
         a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
 
+    # issue 2895
+    eq = S('''
+        -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)))''')
+    assert minimal_polynomial(eq, x) == 8000*x**2 - 1
+
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])

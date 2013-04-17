@@ -130,6 +130,10 @@ def minimal_polynomial(ex, x=None, **args):
     elif ex.is_number:
         from sympy.solvers.solvers import unrad
         from sympy.polys import factor
+        from sympy.simplify.simplify import nsimplify
+        simp = nsimplify(ex)
+        if simp != ex and simp.equals(ex):
+            return minimal_polynomial(simp, x, **args)
         try:
             result = x - ex
             u = unrad(result, all=True)
