@@ -129,11 +129,15 @@ def minimal_polynomial(ex, x=None, **args):
         result = ex.q*x - ex.p
     elif ex.is_number:
         from sympy.solvers.solvers import unrad
+        from sympy.polys import factor
         try:
             result = x - ex
             u = unrad(result, all=True)
             if u:
                 result, _, _ = u
+                mul = factor(result)
+                if mul.is_Mul:
+                    result = min([(abs(m.subs(x, ex).n(2)), m) for m in mul.args])[1]
             if result.has(S.Infinity, S.NegativeInfinity, S.NaN) or \
                     len(Poly(result).gens) > 1:
                 raise ValueError
