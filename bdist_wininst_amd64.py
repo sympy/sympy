@@ -322,9 +322,7 @@ class bdist_wininst_amd64 (Command):
 
     def get_exe_bytes (self):
         directory = os.path.dirname(__file__)
-        print directory
         filename = os.path.join(directory, "tools", "wininst-9.0-amd64.exe")
-        print filename
         f = open(filename, "rb")
         try:
             return f.read()
