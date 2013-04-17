@@ -130,22 +130,24 @@ def minimal_polynomial(ex, x=None, **args):
     elif ex.is_number:
         from sympy.solvers.solvers import unrad
         from sympy.polys import factor
-        from sympy.simplify.simplify import nsimplify
-        simp = nsimplify(ex)
-        if simp != ex and simp.equals(ex):
-            return minimal_polynomial(simp, x, **args)
         try:
             result = x - ex
             u = unrad(result, all=True)
             if u:
                 result, _, _ = u
-                mul = factor(result)
-                if mul.is_Mul:
-                    result = min([(abs(m.subs(x, ex).n(2)), m) for m in mul.args])[1]
+                poly = Poly(result, x)
+                if not poly.is_irreducible:
+                    mul = factor(poly)
+                    result = min([(abs(m.subs(x, ex).n(2)), m)
+                        for m in mul.args])[1]
             if result.has(S.Infinity, S.NegativeInfinity, S.NaN) or \
                     len(Poly(result).gens) > 1:
                 raise ValueError
         except ValueError:
+            from sympy.simplify.simplify import nsimplify
+            simp = nsimplify(ex)
+            if simp != ex and simp.equals(ex):
+                return minimal_polynomial(simp, x, **args)
             raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     else:
         F = [x - bottom_up_scan(ex)] + mapping.values()
