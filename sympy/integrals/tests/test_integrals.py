@@ -151,7 +151,6 @@ def test_issue461():
     assert integrate(sqrt(x), x) == 2*sqrt(x)**3/3
     assert integrate(1/sqrt(x)**3, x) == -2/sqrt(x)
 
-
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
 
@@ -249,6 +248,16 @@ def test_issue587():  # remove this when fresnel itegrals are implemented
     assert expand_func(integrate(sin(x**2), x)) == \
         sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
 
+def test_issue_2440():
+    assert Integral(x, (x, 0, 1)) == Integral(y, (y, 0, 1))
+    assert Integral(sin(x), (x, 0, pi)) == Integral(sin(y), (y, 0, pi))
+    assert Integral(log(x), (x, 1, 10)) == Integral(log(y), (y, 1, 10)) 
+    
+def test_interval():
+    assert Integral(x**2 + 2*x + 1, (x, 1, 10)).interval() == (1, 10)
+    assert Integral(y, (y, 1, 2)).interval() == (1, 2)
+    assert Integral(cos(x), (x, 0, pi/2)).interval() == (0, pi/2)
+    assert Integral(log(x), (x, 1, 10)).interval() == (1, 10)
 
 def test_integrate_units():
     m = units.m
