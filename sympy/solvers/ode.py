@@ -2858,13 +2858,13 @@ def ode_separable_reduced(eq, func, order, match):
     r"""
     Solves a differential equation that can be reduced to the separable form.
 
-    The general form of this equation is y' + (y/x)*H(x^n*y) = 0
-    This can be solved by substituting u(y) = (x^n * y)
+    The general form of this equation is y' + (y/x)*H(x^n*y) = 0.
+    This can be solved by substituting u(y) = (x^n * y).
 
     The equation then reduces to the separable form
-    u'*(1/(u*(power - H(u)))) - (1/x) = 0.
+    ``u'*(1/(u*(power - H(u))))`` - (1/x) = 0.
 
-    The general solution is
+    The general solution is:
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, n
