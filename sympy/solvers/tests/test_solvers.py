@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Wild, acos,
     asin, atan, atanh, cos, cosh, diff, exp, expand, im, log, pi, re, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    RootOf)
+    root)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -743,7 +743,7 @@ def test_unrad():
     assert check(unrad(sqrt(x) + sqrt(1 - x)),
                 (2*x - 1, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) - 3),
-                (36*x + (2*x - 10)**2 - 36, [], []))
+                (9*x + (x - 5)**2 - 9, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x)),
                 (-5*x**2 + 2*x - 1, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - 3),
@@ -761,7 +761,8 @@ def test_unrad():
     assert set(solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x)))) == \
         set([S.Zero, S(9)/16])
 
-    '''real_root changes the value of the result if the solution is
+    '''NOTE
+    real_root changes the value of the result if the solution is
     simplified; `a` in the text below is the root that is not 4/5:
     >>> eq
     sqrt(x) + sqrt(-x + 1) + sqrt(x + 1) - 6*sqrt(5)/5
@@ -794,10 +795,12 @@ def test_unrad():
         set([i.n(chop=True) for i in ans]) == \
         set([i.n(chop=True) for i in (ra, rb)])
 
-    raises(
-        ValueError, lambda: unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))
-    raises(ValueError, lambda: unrad(sqrt(x) + (x + 1)**Rational(1, 3) +
-           2*sqrt(y)))
+    raises(ValueError, lambda:
+        unrad(-root(x,3)**2 + 2**pi*root(x,3) - x + 2**pi))
+    raises(ValueError, lambda:
+        unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))
+    raises(ValueError, lambda:
+        unrad(sqrt(x) + (x + 1)**Rational(1, 3) + 2*sqrt(y)))
     # same as last but consider only y
     assert check(unrad(sqrt(x) + (x + 1)**Rational(1, 3) + 2*sqrt(y), y),
            (4*y - (sqrt(x) + (x + 1)**(S(1)/3))**2, [], []))
@@ -842,6 +845,17 @@ def test_unrad():
     assert solve(z) == []
     assert solve(z + 6*I) == [-S(1)/11]
     assert solve(p + 6*I) == []
+
+    eq = sqrt(2 + I) + 2*I
+    assert unrad(eq - x, x, all=True) == (x**4 + 4*x**2 + 8*x + 37, [], [])
+    ans = (81*x**8 - 2268*x**6 - 4536*x**5 + 22644*x**4 + 63216*x**3 -
+        31608*x**2 - 189648*x + 141358, [], [])
+    r = sqrt(sqrt(2)/3 + 7)
+    eq = sqrt(r) + r - x
+    assert unrad(eq, all=1)
+    r2 = sqrt(sqrt(2) + 21)/sqrt(3)
+    assert r != r2 and r.equals(r2)
+    assert unrad(eq - r + r2, all=True) == ans
 
 
 @slow
