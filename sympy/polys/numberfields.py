@@ -206,8 +206,6 @@ def minimal_polynomial(ex, x=None, **args):
     else:
         x, cls = Dummy('x'), PurePoly
 
-    polys = args.get('polys', False)
-
     def update_mapping(ex, exp, base=None):
         a = generator.next()
         symbols[ex] = a
@@ -302,28 +300,6 @@ def minimal_polynomial(ex, x=None, **args):
             return ex.minpoly.replace(x)
     elif ex.is_Rational:
         result = ex.q*x - ex.p
-    elif ex.is_number:
-        from sympy.solvers.solvers import unrad
-        from sympy.polys import factor
-        try:
-            result = x - ex
-            u = unrad(result, all=True)
-            if u:
-                result, _, _ = u
-                poly = Poly(result, x)
-                if not poly.is_irreducible:
-                    mul = factor(poly)
-                    result = min([(abs(m.subs(x, ex).n(2)), m)
-                        for m in mul.args])[1]
-            if result.has(S.Infinity, S.NegativeInfinity, S.NaN) or \
-                    len(Poly(result).gens) > 1:
-                raise ValueError
-        except ValueError:
-            from sympy.simplify.simplify import nsimplify
-            simp = nsimplify(ex)
-            if simp != ex and simp.equals(ex):
-                return minimal_polynomial(simp, x, **args)
-            raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     else:
         inverted = simpler_inverse(ex)
         if inverted:
