@@ -3508,7 +3508,29 @@ class MatrixBase(object):
         newmat[:, j:] = self[:, i:]
         return newmat
 
-
+    def replace(self, F, G):
+        """Replaces Function F in Matrix entries with Function G.
+        
+        Examples
+        ========
+        
+        >>> from sympy import symbols,Function,Matrix
+        >>> F,G=symbols('F,G',cls=Function)
+        >>> M=Matrix(2,2, lambda i,j: F(i+j)) ; M
+        [F(0), F(1)]
+        [F(1), F(2)]
+        >>> N = M.replace(F,G)
+        >>> N
+        [G(0), G(1)]
+        [G(1), G(2)]
+        """
+        M = self[:, :]
+        
+        for i in range(len(M)):
+            M[i] = M[i].replace(F, G)
+            
+        return M
+        
 def classof(A, B):
     """
     Get the type of the result when combining matrices of different types.
