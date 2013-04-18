@@ -1,7 +1,11 @@
 """distutils.command.bdist_wininst_amd64
 
-Implements the Distutils 'bdist_wininst_amd64' command: create a windows installer
-exe-program."""
+This is a hacked copy of 'bdist_wininst' command to address multiple issues with 
+generating python win64 installer on linux 
+
+Should be removed when binutils can generate win64 installer.
+
+"""
 
 __revision__ = "$Id$"
 
