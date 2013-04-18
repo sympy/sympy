@@ -633,7 +633,7 @@ class Pow(Expr):
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
-            if re.func == C.re or im.func == C.im or not im:
+            if not im:
                 return self, S.Zero
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
