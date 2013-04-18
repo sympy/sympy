@@ -9,8 +9,6 @@ import sys
 import os
 import string
 
-from sysconfig import get_python_version
-
 from distutils.core import Command
 from distutils.dir_util import remove_tree
 from distutils.errors import DistutilsOptionError, DistutilsPlatformError
@@ -96,14 +94,6 @@ class bdist_wininst_amd64 (Command):
         if not self.target_version:
             self.target_version = ""
 
-        if not self.skip_build and self.distribution.has_ext_modules():
-            short_version = get_python_version()
-            if self.target_version and self.target_version != short_version:
-                raise DistutilsOptionError, \
-                      "target version can only be %s, or the '--skip-build'" \
-                      " option must be specified" % (short_version,)
-            self.target_version = short_version
-
         self.set_undefined_options('bdist',
                                    ('dist_dir', 'dist_dir'),
                                    ('plat_name', 'plat_name'),
@@ -188,10 +178,7 @@ class bdist_wininst_amd64 (Command):
                                     root_dir=self.bdist_dir)
         # create an exe containing the zip-file
         self.create_exe(arcname, fullname, self.bitmap)
-        if self.distribution.has_ext_modules():
-            pyversion = get_python_version()
-        else:
-            pyversion = 'any'
+        pyversion = 'any'
         self.distribution.dist_files.append(('bdist_wininst', pyversion,
                                              self.get_installer_filename(fullname)))
         # remove the zip-file again
