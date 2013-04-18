@@ -161,7 +161,7 @@ class bdist_wininst_amd64 (Command):
         # Use a custom scheme for the zip-file, because we have to decide
         # at installation time which scheme to use.
         for key in ('purelib', 'platlib', 'headers', 'scripts', 'data'):
-            value = string.upper(key)
+            value = str.upper(key)
             if key == 'headers':
                 value = value + '/Include/$dist_name'
             setattr(install,
@@ -218,14 +218,14 @@ class bdist_wininst_amd64 (Command):
 
         # Escape newline characters
         def escape(s):
-            return string.replace(s, "\n", "\\n")
+            return str.replace(s, "\n", "\\n")
 
         for name in ["author", "author_email", "description", "maintainer",
                      "maintainer_email", "name", "url", "version"]:
             data = getattr(metadata, name, "")
             if data:
                 info = info + ("\n    %s: %s" % \
-                               (string.capitalize(name), escape(data)))
+                               (str.capitalize(name), escape(data)))
                 lines.append("%s=%s" % (name, escape(data)))
 
         # The [setup] section contains entries controlling
@@ -248,7 +248,7 @@ class bdist_wininst_amd64 (Command):
         build_info = "Built %s with distutils-%s" % \
                      (time.ctime(time.time()), distutils.__version__)
         lines.append("build_info=%s" % build_info)
-        return string.join(lines, "\n")
+        return "\n".join(lines)
 
     # get_inidata()
 
@@ -280,16 +280,16 @@ class bdist_wininst_amd64 (Command):
             pass
         else:
             if isinstance(cfgdata, unicode):
-                cfgdata = cfgdata.encode("mbcs")
+                cfgdata = cfgdata.encode("ascii")
 
         # Append the pre-install script
-        cfgdata = cfgdata + "\0"
+        cfgdata = cfgdata + b"\0"
         if self.pre_install_script:
             script_data = open(self.pre_install_script, "r").read()
-            cfgdata = cfgdata + script_data + "\n\0"
+            cfgdata = cfgdata + script_data + b"\n\0"
         else:
             # empty pre-install script
-            cfgdata = cfgdata + "\0"
+            cfgdata = cfgdata + b"\0"
         file.write(cfgdata)
 
         # The 'magic number' 0x1234567B is used to make sure that the
