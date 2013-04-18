@@ -28,6 +28,32 @@ from sympy.utilities import (
 from sympy.ntheory import sieve
 from sympy.mpmath import pslq, mp
 
+
+def _choose_factor(factors, x, v, prec):
+    """
+    Return a factor having root ``v``
+    It is assumed that one of the factors has root ``v``.
+    """
+    if isinstance(factors[0], tuple):
+        factors = [xx[0] for xx in factors]
+    if len(factors) == 1:
+        return factors[0]
+    prec1 = 10
+    reps = {x: v}
+    eps = 1.0/10**prec
+    while 1:
+        candidates = []
+        for f in factors:
+            if abs(f.subs(reps).evalf(prec1)) < eps:
+                candidates.append(f)
+
+        if candidates:
+            factors = candidates
+        if len(factors) == 1:
+            return factors[0]
+        if prec1 > prec:
+            return None
+        prec1 *= 2
 def _separate_sq(p):
     """
     helper function for ``_minimal_polynomial_sq``
@@ -92,7 +118,7 @@ def _separate_sq(p):
     p = _mexpand(p1**2) - _mexpand(p2**2)
     return p
 
-def _minimal_polynomial_sq(p, n, x):
+def _minimal_polynomial_sq(p, n, x, prec):
     """
     Returns the minimal polynomial for the ``nth-root`` of a sum of surds
     or ``None`` if it fails.
@@ -111,11 +137,12 @@ def _minimal_polynomial_sq(p, n, x):
     >>> from sympy import sqrt
     >>> from sympy.abc import x
     >>> q = 1 + sqrt(2) + sqrt(3)
-    >>> _minimal_polynomial_sq(q, 3, x)
+    >>> _minimal_polynomial_sq(q, 3, x, 15)
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
 
     """
     from sympy.simplify.simplify import _is_sum_surds
+
     p = sympify(p)
     n = sympify(n)
     r = _is_sum_surds(p)
@@ -141,16 +168,12 @@ def _minimal_polynomial_sq(p, n, x):
             p = -p
         p = p.primitive()[1]
         return p
+    # by construction `p` has root `pn`
     # the minimal polynomial is the factor vanishing in x = pn
     factors = factor_list(p)[1]
-    a = []
-    for f, m in factors:
-        if f.subs(x, pn).evalf(chop=True) == 0:
-            a.append(f)
-    if len(a) == 1:
-        return a[0]
-    # TODO
-    return None
+
+    result = _choose_factor(factors, x, pn, prec)
+    return result
 
 
 def minimal_polynomial(ex, x=None, **args):
@@ -248,9 +271,10 @@ def minimal_polynomial(ex, x=None, **args):
         Returns True if it is more likely that the minimal polynomial
         algorithm works better with the inverse
         """
-        if ex.is_Pow and ex.exp == - 1:
-            if ex.base.is_Add:
-                return ex.base
+        if ex.is_Pow:
+            if (1/ex.exp).is_integer and ex.exp < 0:
+                if ex.base.is_Add:
+                    return True
         if ex.is_Mul:
             hit = True
             a = []
@@ -266,6 +290,7 @@ def minimal_polynomial(ex, x=None, **args):
         return False
 
     polys = args.get('polys', False)
+    prec = args.pop('prec', 10)
 
     inverted = False
     if ex.is_AlgebraicNumber:
@@ -282,10 +307,10 @@ def minimal_polynomial(ex, x=None, **args):
         res = None
         if ex.is_Pow and (1/ex.exp).is_Integer:
             n = 1/ex.exp
-            res = _minimal_polynomial_sq(ex.base, n, x)
+            res = _minimal_polynomial_sq(ex.base, n, x, prec)
 
-        if _is_sum_surds(ex):
-            res = _minimal_polynomial_sq(ex, S.One, x)
+        elif _is_sum_surds(ex):
+            res = _minimal_polynomial_sq(ex, S.One, x, prec)
 
         if res is not None:
             result = res
@@ -296,15 +321,10 @@ def minimal_polynomial(ex, x=None, **args):
             G = groebner(F, symbols.values() + [x], order='lex')
 
             _, factors = factor_list(G[-1])
-
-            if len(factors) == 1:
-                ((result, _),) = factors
-            else:
-                for result, _ in factors:
-                    if result.subs(x, ex).evalf(chop=True) == 0:
-                        break
-                else:  # pragma: no cover
-                    raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
+            # by construction G[-1] has root `ex`
+            result = _choose_factor(factors, x, ex, prec)
+            if result is None:
+                raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
     if inverted:
         result = expand_mul(x**degree(result)*result.subs(x, 1/x))
         if result.coeff(x**degree(result)) < 0:

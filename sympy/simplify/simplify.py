@@ -1687,7 +1687,7 @@ def _is_sum_surds(p):
             return False
     return True
 
-def _nthroot_solve(p, n):
+def _nthroot_solve(p, n, prec):
     """
      helper function for ``nthroot``
      It denests ``p**Rational(1, n)`` using its minimal polynomial
@@ -1701,17 +1701,17 @@ def _nthroot_solve(p, n):
         return p
     pn = p**Rational(1, n)
     x = Symbol('x')
-    f = _minimal_polynomial_sq(p, n, x)
+    f = _minimal_polynomial_sq(p, n, x, prec)
     if f is None:
         return None
     sols = solve(f, x)
     for sol in sols:
-        if abs(sol - pn).n() < 1e-10:
+        if abs(sol - pn).n() < 1./10**prec:
             sol = sqrtdenest(sol)
             if _mexpand(sol**n) == p:
                 return sol
 
-def nthroot(expr, n, max_len=4):
+def nthroot(expr, n, max_len=4, prec=15):
     """
     compute a real nth-root of a sum of surds
 
@@ -1766,7 +1766,7 @@ def nthroot(expr, n, max_len=4):
     a = nsimplify(p, constants=surds)
     if _mexpand(a) is not _mexpand(p) and _mexpand(a**n) == _mexpand(expr):
         return _mexpand(a)
-    expr = _nthroot_solve(expr, n)
+    expr = _nthroot_solve(expr, n, prec)
     if expr is None:
         return p
     return expr
