@@ -1,3 +1,5 @@
+# TODO : Store the final solution such that Voltage at node i can be accessed by V[i]
+#        and Current through element between node u and v as I[(u, v)]
 # TODO : Device implementation of mutually Coupled-Inductors, Controlled V-I sources
 #        and corresponding changes in submatrices definition.
 # TODO : Parsing netlist with 5th and 6th optional parameter for eg: ac/dc for V-I sources
@@ -11,9 +13,9 @@
 # TODO : Remove commands used for testing once done with them.
 
 __all__ = ['Circuit', 'Resistor', 'Capacitor', 'Inductor', 'VoltageSource', 'CurrentSource',
-           'OpAmp', 'solve', 'parse_netlist', 'g_matrix', 'b_matrix', 'c_matrix',
-           'd_matrix', 'e_matrix', 'j_matrix', 'v_matrix', 'i_matrix', 'A_matrix',
-           'z_matrix']
+           'OpAmp', 'solve', 'parse_netlist', '_g_matrix', '_b_matrix', '_c_matrix',
+           '_d_matrix', '_e_matrix', '_j_matrix', '_v_matrix', '_i_matrix', '_A_matrix',
+           '_z_matrix']
 
 from sympy import Symbol, pprint, Matrix
 from sympy.matrices.dense import zeros
@@ -21,18 +23,33 @@ from sympy.matrices.dense import zeros
 
 class Circuit:
     """
-    Class for making a circuit object. Circuit can be instantiated in following two ways --
+    Class for making a circuit object. Circuit can be instantiated in the
+    following two ways --
 
     1. Pass a netlist file as the input to parse_netlist function.
-    2. Initialize a Circuit instance and add the elements using add_some_element methods.
+    2. Instantiate by passing a list containing all the elements.
 
     """
-    def __init__(self, elements = [], v_sources = [], i_sources = [], opamps = [], node_count = 0):
-        self.elements = elements
-        self.v_sources = v_sources
-        self.i_sources = i_sources
-        self.opamps = opamps
-        self.node_count = node_count
+    def __init__(self, elements):
+
+        self.rlc_elements = []
+        self.v_sources = []
+        self.i_sources = []
+        self.opamps = []
+        self.node_count = 0
+        for e in elements:
+            if isinstance(e, Resistor) or isinstance(e, Inductor) or isinstance(e, Capacitor):
+                self.rlc_elements.append(e)
+
+            if isinstance(e, VoltageSource):
+                self.v_sources.append(e)
+
+            if isinstance(e, CurrentSource):
+                self.i_sources.append(e)
+
+            if isinstance(e, OpAmp):
+                self.opamps.append(e)
+
         self.G = Matrix([])
         self.B = Matrix([])
         self.C = Matrix([])
@@ -45,80 +62,62 @@ class Circuit:
         self.Z = Matrix([])
         self.x = Matrix([])
 
-    def add_resistor(self, name, node1, node2, value):
-        self.elements.append(Resistor(name, node1, node2, value))
-
-    def add_inductor(self, name, node1, node2, value):
-        self.elements.append(Inductor(name, node1, node2, value))
-
-    def add_capacitor(self, name, node1, node2, value):
-        self.elements.append(Capacitor(name, node1, node2, value))
-
-    def add_vsource(self, name, node1, node2, value):
-        self.v_sources.append(VoltageSource(name, node1, node2, value))
-
-    def add_isource(self, name, node1, node2, value):
-        self.i_sources.append(CurrentSource(name, node1, node2, value))
-
-    def add_opamp(self, name , node1, node2, node3, node4, value):
-        self.opamps.append(OpAmp(self, name , node1, node2, node3, node4, gain))
 
 def solve(circuit):
     """
     Solves the circuit for unknown node Voltages and unknown Currents flowing through
     Voltage Sources. For i independent nodes and j Voltage sources in the circuit, it
-    changes in place the x matrix of the circuit with first i elements as Voltages at
+    solved circuit with first i elements of x Matrix as Voltages at
     i nodes and next j elements as Currents through j Voltage sources.
 
     Refer :: http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA_All.html
 
-    >>> from sympy.circuit import Circuit, solve
-    >>> my_cir = Circuit()
-    >>> my_cir.add_vsource('V1', '1', '0', '10')
-    >>> my_cir.add_inductor('L1', '1', '2', '0.1')
-    >>> my_cir.add_capacitor('C1', '2', '3', '0.0001')
-    >>> my_cir.add_resistor('R1', '3', '0', '1000')
-    >>> solve(my_cir)
-    >>> my_cir.G
+    >>> from sympy.circuit import Circuit, VoltageSource, Inductor, Capacitor, Resistor, solve
+    >>> elements = []
+    >>> elements.append(VoltageSource('V1', '1', '0', '10'))
+    >>> elements.append(Inductor('L1', '1', '2', '0.1'))
+    >>> elements.append(Capacitor('C1', '2', '3', '0.0001'))
+    >>> elements.append(Resistor('R1', '3', '0', '1000'))
+    >>> my_cir = Circuit(elements)
+    >>> solution = solve(my_cir)
+    >>> solution.G
     [ 1/(L1*s),       -1/(L1*s),           0]
     [-1/(L1*s), C1*s + 1/(L1*s),       -C1*s]
     [        0,           -C1*s, C1*s + 1/R1]
 
-    >>> my_cir.x
+    >>> solution.x
     [                                         V1]
     [V1*(C1*R1*s + 1)/(C1*L1*s**2 + C1*R1*s + 1)]
     [          C1*R1*V1*s/(C1*s*(L1*s + R1) + 1)]
     [            C1*V1*s/(-C1*s*(L1*s + R1) - 1)]
 
-
     """
-    if circuit.node_count == 0:
+    for element in circuit.rlc_elements:
+        circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
+    for element in circuit.v_sources:
+        circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
+    for element in circuit.i_sources:
+        circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
+    for element in circuit.opamps:
+        circuit.node_count = max([int(element.node1), int(element.node2), int(element.node3), int(element.node4), circuit.node_count])
+    circuit.node_count = circuit.node_count + 1
 
-        for element in circuit.elements:
-            circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
-        for element in circuit.v_sources:
-            circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
-        for element in circuit.i_sources:
-            circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
-        for element in circuit.opamps:
-            circuit.node_count = max([int(element.node1), int(element.node2), int(element.node3), int(element.node4), circuit.node_count])
-        circuit.node_count = circuit.node_count + 1
+    circuit.G = _g_matrix(circuit.rlc_elements, circuit.node_count)
+    circuit.B = _b_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
+    circuit.C = _c_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
+    circuit.D = _d_matrix(circuit.v_sources, circuit.opamps)
+    circuit.E = _e_matrix(circuit.v_sources)
+    circuit.J = _j_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
+    circuit.V = _v_matrix(circuit.v_sources, circuit.node_count)
+    circuit.I = _i_matrix(circuit.i_sources, circuit.node_count)
 
-
-    circuit.G = g_matrix(circuit.elements, circuit.node_count)
-    circuit.B = b_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.C = c_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.D = d_matrix(circuit.v_sources, circuit.opamps)
-    circuit.E = e_matrix(circuit.v_sources)
-    circuit.J = j_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.V = v_matrix(circuit.v_sources, circuit.node_count)
-    circuit.I = i_matrix(circuit.i_sources, circuit.node_count)
-
-    circuit.A = A_matrix(circuit.G, circuit.B, circuit.C, circuit.D)
-    circuit.Z = z_matrix(circuit.I, circuit.E)
+    circuit.A = _A_matrix(circuit.G, circuit.B, circuit.C, circuit.D)
+    circuit.Z = _z_matrix(circuit.I, circuit.E)
 
     circuit.x = circuit.A.inv()*circuit.Z
     circuit.x.simplify()
+
+    return circuit
 
 
 
@@ -178,17 +177,15 @@ class OpAmp:
 
 def parse_netlist(netlist_file):
     """
-    Parses a netlist file that describse a circuit and returns a Circuit object.
+    Parses a netlist file that describse a circuit and returns a list
+    containing all the circuit elements.
 
-    For more info on Netlist file : http://www.allaboutcircuits.com/vol_5/chpt_7/8.html
+    For more info on Netlist file :
+    http://www.allaboutcircuits.com/vol_5/chpt_7/8.html
     """
     f = open(netlist_file)
 
     elements = []
-    v_sources = []
-    i_sources = []
-    opamps = []
-    node_count = 0
 
     for line in f:
 
@@ -209,31 +206,26 @@ def parse_netlist(netlist_file):
 
             if name[0] == 'V':
                 element = VoltageSource(name, node1, node2, value)
-                v_sources.append(element)
+                elements.append(element)
 
             if name[0] == 'I':
                 element = CurrentSource(name, node1, node2, value)
-                i_sources.append(element)
-
-            node_count = max([int(node1), int(node2), node_count])
+                elements.append(element)
 
         else:
-            name, node1, node2, node3, node4, value = line.split()
+            name, node1, node2, node3, node4, gain = line.split()
             element = OpAmp(name, node1, node2, node3, node4, gain)
-            opamps.append(element)
-
-            node_count = max([int(node1), int(node2), int(node3), int(node4), node_count])
+            elements.append(element)
 
     f.close()
-    node_count = node_count + 1
-    return Circuit(elements, v_sources, i_sources, opamps, node_count)
+    return Circuit(elements)
 
 
 # s = sigma + j*w --> The symbol used in Laplace Domain.
 s = Symbol('s')
 
 
-def g_matrix(elements, node_count):
+def _g_matrix(elements, node_count):
     """
     The Conductance matrix
 
@@ -275,7 +267,7 @@ def g_matrix(elements, node_count):
     return G
 
 
-def b_matrix(v_sources, opamps, node_count):
+def _b_matrix(v_sources, opamps, node_count):
     """
     The B matrix is an nxm matrix with only 0, 1 and -1 elements. Each
     location in the matrix corresponds to a particular voltage source
@@ -314,7 +306,7 @@ def b_matrix(v_sources, opamps, node_count):
     return B
 
 
-def c_matrix(v_sources, opamps, node_count):
+def _c_matrix(v_sources, opamps, node_count):
     """
     The C matrix is an nxm matrix with only 0, 1 and -1 elements. Each
     location in the matrix corresponds to a particular node (first dimension)
@@ -360,7 +352,7 @@ def c_matrix(v_sources, opamps, node_count):
     return C
 
 
-def d_matrix(v_sources, opamps):
+def _d_matrix(v_sources, opamps):
     """
     The D matrix is an mxm matrix that is composed entirely of zeros
     if the circuit contains only independent voltage sources.
@@ -379,7 +371,7 @@ def d_matrix(v_sources, opamps):
     return D
 
 
-def e_matrix(v_sources):
+def _e_matrix(v_sources):
     """
     The e matrix is an mx1 matrix with each element of the
     matrix equal in value to the corresponding independent voltage source.
@@ -395,7 +387,7 @@ def e_matrix(v_sources):
     return E
 
 
-def i_matrix(i_sources, node_count):
+def _i_matrix(i_sources, node_count):
     """
     The i matrix is an nx1 matrix with each element of the matrix
     corresponding to a particular node.  The value of each element
@@ -416,7 +408,7 @@ def i_matrix(i_sources, node_count):
     return I
 
 
-def v_matrix(v_sources, node_count):
+def _v_matrix(v_sources, node_count):
     """
     The v matrix is an nx1 matrix formed of the node voltages. Each element
     in v corresponds to the voltage at the equivalent node in the circuit
@@ -431,7 +423,7 @@ def v_matrix(v_sources, node_count):
     return V
 
 
-def j_matrix(v_sources, opamps, node_count):
+def _j_matrix(v_sources, opamps, node_count):
     """
     The j matrix is an mx1 matrix, with one entry for the current
     through each voltage source.
@@ -454,7 +446,7 @@ def j_matrix(v_sources, opamps, node_count):
     return J
 
 
-def A_matrix(G, B, C, D):
+def _A_matrix(G, B, C, D):
     """
     The A matrix:
     -- is (n+m)x(n+m) in size, and consists only of known quantities.
@@ -486,7 +478,7 @@ def A_matrix(G, B, C, D):
     return A
 
 
-def z_matrix(I, E):
+def _z_matrix(I, E):
     """
     The z matrix
     -- is an (n+m)x1 vector that holds only known quantities.

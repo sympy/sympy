@@ -47,6 +47,7 @@ modules = [
     'sympy.assumptions',
     'sympy.assumptions.handlers',
     'sympy.categories',
+    'sympy.circuit',
     'sympy.combinatorics',
     'sympy.concrete',
     'sympy.core',
