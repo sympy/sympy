@@ -536,13 +536,6 @@ def test_simplify_fail1():
     assert simplify(e) == 1 / (-2*y)
 
 
-def test_simplify_issue_3214():
-    c, p = symbols('c p', positive=True)
-    s = sqrt(c**2 - p**2)
-    b = (c + I*p - s)/(c + I*p + s)
-    assert radsimp(b) == (c*p - p*s + I*(-c**2 + c*s + p**2))/(c*p)
-
-
 def test_fraction():
     x, y, z = map(Symbol, 'xyz')
     A = Symbol('A', commutative=False)
@@ -1347,77 +1340,78 @@ def test_radsimp():
     assert radsimp(1/(r2 + r3)) == \
         -sqrt(2) + sqrt(3)
     assert fraction(radsimp(1/(1 + r2 + r3))) == \
-        (-sqrt(6) + sqrt(2) + 2, 4)
+        (-2*sqrt(6) + 2*sqrt(2) + 4, 8)
     assert fraction(radsimp(1/(r2 + r3 + r5))) == \
-        (-sqrt(30) + 2*sqrt(3) + 3*sqrt(2), 12)
-    assert fraction(radsimp(1/(1 + r2 + r3 + r5))) == \
-        (-34*sqrt(10) -
-        26*sqrt(15) -
-        55*sqrt(3) -
-        61*sqrt(2) +
-        14*sqrt(30) +
-        93 +
-        46*sqrt(6) +
-        53*sqrt(5), 71)
-    assert fraction(radsimp(1/(r2 + r3 + r5 + r7))) == \
-        (-50*sqrt(42) - 133*sqrt(5) - 34*sqrt(70) -
-        145*sqrt(3) + 22*sqrt(105) + 185*sqrt(2) +
-        62*sqrt(30) + 135*sqrt(7), 215)
+        (-2*sqrt(30) + 4*sqrt(3) + 6*sqrt(2), 24)
+    assert fraction(radsimp(1/(1 + r2 + r3 + r5))) == (
+        (-34*sqrt(10) - 26*sqrt(15) - 55*sqrt(3) - 61*sqrt(2) + 14*sqrt(30) +
+        93 + 46*sqrt(6) + 53*sqrt(5), 71))
+    assert fraction(radsimp(1/(r2 + r3 + r5 + r7))) == (
+        (-50*sqrt(42) - 133*sqrt(5) - 34*sqrt(70) - 145*sqrt(3) + 22*sqrt(105)
+        + 185*sqrt(2) + 62*sqrt(30) + 135*sqrt(7), 215))
     z = radsimp(1/(1 + r2/3 + r3/5 + r5 + r7))
     assert len((3616791619821680643598*z).args) == 16
-    assert radsimp(1/z) == signsimp(1/z)
+    assert radsimp(1/z) == 1/z
     assert radsimp(1/z, max_terms=20).expand() == 1 + r2/3 + r3/5 + r5 + r7
     assert radsimp(1/(r2*3)) == \
         sqrt(2)/6
     assert radsimp(1/(r2*a + r3 + r5 + r7)) == (
-        (2*sqrt(105)*(-12*a**4 + 60*a**2 - 59) + 2*sqrt(70)*(4*a**5 - 36*a**3
-        + 49*a) + 2*sqrt(42)*(4*a**5 - 20*a**3 + 41*a) + 2*sqrt(30)*(4*a**5 -
-        4*a**3 - 31*a) + sqrt(3)*(-8*a**6 + 84*a**4 - 462*a**2 + 531) +
-        sqrt(5)*(-8*a**6 + 100*a**4 - 254*a**2 + 295) + sqrt(7)*(-8*a**6 +
-        116*a**4 - 302*a**2 + 59) + sqrt(2)*(8*a**7 - 180*a**5 + 782*a**3 -
-        795*a))/(16*a**8 - 480*a**6 + 3128*a**4 - 6360*a**2 + 3481))
+        (8*sqrt(2)*a**7 - 8*sqrt(7)*a**6 - 8*sqrt(5)*a**6 - 8*sqrt(3)*a**6 -
+        180*sqrt(2)*a**5 + 8*sqrt(30)*a**5 + 8*sqrt(42)*a**5 + 8*sqrt(70)*a**5
+        - 24*sqrt(105)*a**4 + 84*sqrt(3)*a**4 + 100*sqrt(5)*a**4 +
+        116*sqrt(7)*a**4 - 72*sqrt(70)*a**3 - 40*sqrt(42)*a**3 -
+        8*sqrt(30)*a**3 + 782*sqrt(2)*a**3 - 462*sqrt(3)*a**2 -
+        302*sqrt(7)*a**2 - 254*sqrt(5)*a**2 + 120*sqrt(105)*a**2 -
+        795*sqrt(2)*a - 62*sqrt(30)*a + 82*sqrt(42)*a + 98*sqrt(70)*a -
+        118*sqrt(105) + 59*sqrt(7) + 295*sqrt(5) + 531*sqrt(3))/(16*a**8 -
+        480*a**6 + 3128*a**4 - 6360*a**2 + 3481))
     assert radsimp(1/(r2*a + r2*b + r3 + r7)) == (
-        (sqrt(42)*(a + b) + sqrt(3)*(-(a + b)**2 - 2) + sqrt(7)*(-(a + b)**2 +
-        2) + sqrt(2)*(a*(a + b)**2 - 5*a + b*(a + b)**2 - 5*b))/(a**4 +
-        4*a**3*b + 6*a**2*b**2 - 10*a**2 + 4*a*b**3 - 20*a*b + b**4 - 10*b**2
-        + 4)/2)
+        (2*sqrt(2)*a*(a + b)**2 - 10*sqrt(2)*a + 2*sqrt(42)*a + 2*sqrt(2)*b*(a
+        + b)**2 - 10*sqrt(2)*b + 2*sqrt(42)*b - 2*sqrt(7)*(a + b)**2 -
+        2*sqrt(3)*(a + b)**2 - 4*sqrt(3) + 4*sqrt(7))/(4*a**4 + 16*a**3*b +
+        24*a**2*b**2 - 40*a**2 + 16*a*b**3 - 80*a*b + 4*b**4 - 40*b**2 + 16))
     assert radsimp(1/(r2*a + r2*b + r2*c + r2*d)) == \
-        (sqrt(2)/(a + b + c + d))/2
+        sqrt(2)/(2*a + 2*b + 2*c + 2*d)
     assert radsimp(1/(1 + r2*a + r2*b + r2*c + r2*d)) == (
-        (sqrt(2)*(a + b + c + d) - 1)/(2*a**2 + 4*a*b + 4*a*c + 4*a*d + 2*b**2
-        + 4*b*c + 4*b*d + 2*c**2 + 4*c*d + 2*d**2 - 1))
+        (sqrt(2)*a + sqrt(2)*b + sqrt(2)*c + sqrt(2)*d - 1)/(2*a**2 + 4*a*b +
+        4*a*c + 4*a*d + 2*b**2 + 4*b*c + 4*b*d + 2*c**2 + 4*c*d + 2*d**2 - 1))
     assert radsimp((y**2 - x)/(y - sqrt(x))) == \
         sqrt(x) + y
     assert radsimp(-(y**2 - x)/(y - sqrt(x))) == \
         -(sqrt(x) + y)
     assert radsimp(1/(1 - I + a*I)) == \
-        (I*(-a + 1) + 1)/(a**2 - 2*a + 2)
+        (-I*a + 1 + I)/(a**2 - 2*a + 2)
     assert radsimp(1/((-x + y)*(x - sqrt(y)))) == \
         (-x - sqrt(y))/((x - y)*(x**2 - y))
     e = (3 + 3*sqrt(2))*x*(3*x - 3*sqrt(y))
-    assert radsimp(e) == 9*x*(1 + sqrt(2))*(x - sqrt(y))
-    assert radsimp(1/e) == (-1 + sqrt(2))*(x + sqrt(y))/(9*x*(x**2 - y))
+    assert radsimp(e) == x*(3 + 3*sqrt(2))*(3*x - 3*sqrt(y))
+    assert radsimp(1/e) == (
+        (-9*x + 9*sqrt(2)*x - 9*sqrt(y) + 9*sqrt(2)*sqrt(y))/(9*x*(9*x**2 -
+        9*y)))
     assert radsimp(1 + 1/(1 + sqrt(3))) == \
-        Mul(S(1)/2, 1 + sqrt(3), evaluate=False)
+        S.Half + sqrt(3)/2
     A = symbols("A", commutative=False)
     assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == \
-        x**2 + sqrt(2)*(x**2 - x*A)
+        x**2 + sqrt(2)*x**2 - sqrt(2)*x*A
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -11*sqrt(2) + 9*sqrt(3)
 
     # issue 3433
-    assert radsimp(1/sqrt(x)) == 1/sqrt(x)
-    # this is sign-trickery to keep the expression from reverting
-    # back to having a radical in the denominator; the only way
-    # to get the previous expression to return as sqrt(x)/x would be
-    # to use an unevaluated Mul
-    assert radsimp(1/sqrt(2*x + 3)) == -sqrt(2*x + 3)/(-2*x - 3)
-    assert radsimp(1/sqrt(2*(x + 3))) == -sqrt(2)*sqrt(x + 3)/(-x - 3)/2
+    assert fraction(radsimp(1/sqrt(x))) == (sqrt(x), x)
+    assert fraction(radsimp(1/sqrt(2*x + 3))) == (sqrt(2*x + 3), 2*x + 3)
+    assert fraction(radsimp(1/sqrt(2*(x + 3)))) == (sqrt(2*x + 6), 2*x + 6)
 
     # issue 2895
     e = S('-(2 + 2*sqrt(2) + 4*2**(1/4))/'
         '(1 + 2**(3/4) + 3*2**(1/4) + 3*sqrt(2))')
     assert radsimp(e).expand() == -2*2**(S(3)/4) - 2*2**(S(1)/4) + 2 + 2*sqrt(2)
+
+
+def test_simplify_issue_3214():
+    c, p = symbols('c p', positive=True)
+    s = sqrt(c**2 - p**2)
+    b = (c + I*p - s)/(c + I*p + s)
+    assert radsimp(b) == -I*(c + I*p - sqrt(c**2 - p**2))**2/(2*c*p)
 
 
 def test_collect_const():
