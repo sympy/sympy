@@ -2586,9 +2586,11 @@ def ode_Liouville(eq, func, order, match):
     Solves 2nd order Liouville differential equations.
 
     The general form of a Liouville ODE is
+
     .. math::
-        \frac{d^2 y}{dx^2} + g(y) \left(\frac{dy}{dx} \right)^2 +
-        h(x)\frac{dy}{dx}.
+
+        \frac{d^2 y}{dx^2} + g(y) \left(\frac{dy}{dx} \right)^2
+        + h(x)\frac{dy}{dx}.
 
     The general solution is:
 
