@@ -22,10 +22,10 @@ import re
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
-                    'sinh', 'cosh', 'tanh', 'sqrt',
-                    'ln', 'log', 'sec', 'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                    'arg']
-## 'theta', 'beta', 'alpha', 'gamma', , 'zeta', 'psi']
+                    'sinh', 'cosh', 'tanh', 'sqrt', 'ln', 'log', 'sec', 'csc',
+                    'cot', 'coth', 're', 'im', 'frac', 'root', 'arg',
+                    ]
+
 greeks = set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta',
               'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron',
               'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi',
