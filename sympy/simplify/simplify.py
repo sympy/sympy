@@ -2001,7 +2001,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
             if old == (n, d):
                 n, d = was
         n = expand_mul(n)
-    print n.args,d.args
     return _umul(n, 1/d)
 
 
