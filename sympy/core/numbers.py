@@ -2319,7 +2319,7 @@ class NaN(Number):
         return AtomicExpr.__new__(cls)
 
     def _latex(self, printer):
-        return r"\bot"
+        return r"\mathrm{NaN}"
 
     @_sympifyit('other', NotImplemented)
     def __add__(self, other):
