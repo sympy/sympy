@@ -7,11 +7,12 @@ from sympy import (
     Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
     Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
-    symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered)
+    symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
+    expand_multinomial)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import (
-    collect_sqrt, fraction_expand, _unevaluated_Add)
-from sympy.utilities.pytest import XFAIL
+    collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
+from sympy.utilities.pytest import XFAIL, slow
 
 from sympy.abc import x, y, z, t, a, b, c, d, e, k
 
@@ -723,6 +724,30 @@ def test_powsimp_nc():
     assert powsimp(B**x*A**x*C**x, combine='base') == (B*A*C)**x
     assert powsimp(B**x*A**x*C**x, combine='exp') == B**x*A**x*C**x
 
+def test_nthroot():
+    assert nthroot(90 + 34*sqrt(7), 3) == sqrt(7) + 3
+    q = 1 + sqrt(2) - 2*sqrt(3) + sqrt(6) + sqrt(7)
+    assert nthroot(expand_multinomial(q**3), 3) == q
+    assert nthroot(41 + 29*sqrt(2), 5) == 1 + sqrt(2)
+    assert nthroot(-41 - 29*sqrt(2), 5) == -1 - sqrt(2)
+    expr = 1320*sqrt(10) + 4216 + 2576*sqrt(6) + 1640*sqrt(15)
+    assert nthroot(expr, 5) == 1 + sqrt(6) + sqrt(15)
+    q = 1 + sqrt(2) + sqrt(3) + sqrt(5)
+    assert expand_multinomial(nthroot(expand_multinomial(q**5), 5)) == q
+    q = 1 + sqrt(2) + 7*sqrt(6) + 2*sqrt(10)
+    assert nthroot(expand_multinomial(q**5), 5, 8) == q
+    q = 1 + sqrt(2) - 2*sqrt(3) + 1171*sqrt(6)
+    assert nthroot(expand_multinomial(q**3), 3) == q
+    assert nthroot(expand_multinomial(q**6), 6) == q
+
+@slow
+def test_nthroot1():
+    q = 1 + sqrt(2) + sqrt(3) + S(1)/10**20
+    p = expand_multinomial(q**5)
+    assert nthroot(p, 5) == q
+    q = 1 + sqrt(2) + sqrt(3) + S(1)/10**30
+    p = expand_multinomial(q**5)
+    assert nthroot(p, 5) == p**Rational(1, 5)
 
 def test_collect_1():
     """Collect with respect to a Symbol"""
