@@ -44,7 +44,7 @@ def _choose_factor(factors, x, v, prec):
     while 1:
         candidates = []
         for f in factors:
-            if abs(f.subs(reps).evalf(prec1)) < eps:
+            if abs(f.evalf(prec1, subs=reps)) < eps:
                 candidates.append(f)
 
         if candidates:
