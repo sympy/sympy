@@ -3514,9 +3514,9 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import symbols,Function,Matrix
-        >>> F,G=symbols('F,G',cls=Function)
-        >>> M=Matrix(2,2, lambda i,j: F(i+j)) ; M
+        >>> from sympy import symbols, Function, Matrix
+        >>> F, G = symbols('F, G', cls=Function)
+        >>> M = Matrix(2, 2, lambda i, j: F(i+j)) ; M
         [F(0), F(1)]
         [F(1), F(2)]
         >>> N = M.replace(F,G)
@@ -3526,10 +3526,7 @@ class MatrixBase(object):
         """
         M = self[:, :]
 
-        for i in range(len(M)):
-            M[i] = M[i].replace(F, G, map)
-
-        return M
+        return M.applyfunc(lambda x: x.replace(F, G, map))
 
 def classof(A, B):
     """

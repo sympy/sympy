@@ -2150,9 +2150,18 @@ def test_rank():
     assert p.rank() == 0
 
 def test_replace():
-    from sympy import symbols,Function,Matrix
-    F,G=symbols('F,G',cls=Function)
-    M=Matrix(2,2, lambda i,j: F(i+j))
-    N = M.replace(F,G)
-    K=Matrix(2,2, lambda i,j: G(i+j))
+    from sympy import symbols, Function, Matrix
+    F, G = symbols('F, G', cls=Function)
+    K = Matrix(2, 2, lambda i, j: G(i+j))
+    M = Matrix(2, 2, lambda i, j: F(i+j))
+    N = M.replace(F, G)
+    assert N == K
+
+def test_replace_map():
+    from sympy import symbols, Function, Matrix
+    F, G = symbols('F, G', cls=Function)
+    K = Matrix(2, 2, [(G(0), {F(0): G(0)}), (G(1), {F(1): G(1)}), (G(1), {F(1)\
+    : G(1)}), (G(2), {F(2): G(2)})])
+    M = Matrix(2, 2, lambda i, j: F(i+j))
+    N = M.replace(F, G, True)
     assert N == K
