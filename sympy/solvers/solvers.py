@@ -2610,21 +2610,23 @@ def unrad(eq, *syms, **flags):
     elif len(rterms) == 2 and not args:
         eq = rterms[0]**lcm - rterms[1]**lcm
 
-    elif log(lcm, 2).is_Integer and (not args and len(rterms) == 4 or len(rterms) < 4):
+    elif log(lcm, 2).is_Integer and (not args and
+            len(rterms) == 4 or len(rterms) < 4):
+        def _norm2(a, b):
+            return a**2 + b**2 + 2*a*b
+
         if len(rterms) == 4:
             # (r0+r1)**2 - (r2+r3)**2
-            r0, r1, r2, r3 = [t**2 for t in rterms]
-            eq = r0 + r1 + 2*rterms[0]*rterms[1] - \
-                (r2 + r3 + 2*rterms[2]*rterms[3])
+            r0, r1, r2, r3 = rterms
+            eq = _norm2(r0, r1) - _norm2(r2, r3)
         elif len(rterms) == 3:
-            # (r1+r2)**2 - (r0+a)**2
-            r0, r1, r2 = [t**2 for t in rterms]
-            eq = r1 + r2 + 2*rterms[1]*rterms[2] - \
-                (r0 + args**2 + 2*args*rterms[0])
+            # (r1+r2)**2 - (r0+args)**2
+            r0, r1, r2 = rterms
+            eq = _norm2(r1, r2) - _norm2(r0, args)
         elif len(rterms) == 2:
-            # r0**2 - (r1+a)**2
-            r0, r1 = [t**2 for t in rterms]
-            eq = r0 - (r1 + args**2 + 2*args*rterms[1])
+            # r0**2 - (r1+args)**2
+            r0, r1 = rterms
+            eq = r0**2 - _norm2(r1, args)
 
     elif len(bases) == 1:  # change of variables may work
         ok = False
