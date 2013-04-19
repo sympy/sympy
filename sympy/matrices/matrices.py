@@ -3508,7 +3508,7 @@ class MatrixBase(object):
         newmat[:, j:] = self[:, i:]
         return newmat
 
-    def replace(self, F, G):
+    def replace(self, F, G, map=False):
         """Replaces Function F in Matrix entries with Function G.
 
         Examples
@@ -3527,7 +3527,7 @@ class MatrixBase(object):
         M = self[:, :]
 
         for i in range(len(M)):
-            M[i] = M[i].replace(F, G)
+            M[i] = M[i].replace(F, G, map)
 
         return M
 
