@@ -8,7 +8,7 @@ from sympy import (
     Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
     separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
     symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
-    expand_multinomial)
+    expand_multinomial, denom)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import (
     collect_sqrt, fraction_expand, _unevaluated_Add, nthroot)
@@ -1430,6 +1430,38 @@ def test_radsimp():
     e = S('-(2 + 2*sqrt(2) + 4*2**(1/4))/'
         '(1 + 2**(3/4) + 3*2**(1/4) + 3*sqrt(2))')
     assert radsimp(e).expand() == -2*2**(S(3)/4) - 2*2**(S(1)/4) + 2 + 2*sqrt(2)
+
+    # issue 2887 (modifications to radimp didn't initially recognize this so
+    # the test is included here)
+    assert radsimp(1/(-sqrt(5)/2 - S(1)/2 + (-sqrt(5)/2 - S(1)/2)**2)) == 1
+
+    # from issue 2835
+    eq = (
+        (-240*sqrt(2)*sqrt(sqrt(5) + 5)*sqrt(8*sqrt(5) + 40) -
+        360*sqrt(2)*sqrt(-8*sqrt(5) + 40)*sqrt(-sqrt(5) + 5) -
+        120*sqrt(10)*sqrt(-8*sqrt(5) + 40)*sqrt(-sqrt(5) + 5) +
+        120*sqrt(2)*sqrt(-sqrt(5) + 5)*sqrt(8*sqrt(5) + 40) +
+        120*sqrt(2)*sqrt(-8*sqrt(5) + 40)*sqrt(sqrt(5) + 5) +
+        120*sqrt(10)*sqrt(-sqrt(5) + 5)*sqrt(8*sqrt(5) + 40) +
+        120*sqrt(10)*sqrt(-8*sqrt(5) + 40)*sqrt(sqrt(5) + 5))/(-36000 -
+        7200*sqrt(5) + (12*sqrt(10)*sqrt(sqrt(5) + 5) +
+        24*sqrt(10)*sqrt(-sqrt(5) + 5))**2))
+    # assert radsimp(eq) == 0 XXX fix handling of Mul. This should be zero
+
+    # work with normal form
+    e = 1/sqrt(sqrt(7)/7 + 2*sqrt(2) + 3*sqrt(3) + 5*sqrt(5)) + 3
+    assert radsimp(e) == (
+        -1658283*sqrt(21)*sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
+        35*sqrt(5))/260084635 - 1507966*sqrt(14)*sqrt(sqrt(7) + 14*sqrt(2) +
+        21*sqrt(3) + 35*sqrt(5))/260084635 - 1141953*sqrt(sqrt(7) + 14*sqrt(2)
+        + 21*sqrt(3) + 35*sqrt(5))/260084635 - 327012*sqrt(6)*sqrt(sqrt(7) +
+        14*sqrt(2) + 21*sqrt(3) + 35*sqrt(5))/260084635 +
+        1346996*sqrt(10)*sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
+        35*sqrt(5))/1300423175 + 1278438*sqrt(15)*sqrt(sqrt(7) + 14*sqrt(2) +
+        21*sqrt(3) + 35*sqrt(5))/1300423175 + 1577436*sqrt(210)*sqrt(sqrt(7) +
+        14*sqrt(2) + 21*sqrt(3) + 35*sqrt(5))/1300423175 +
+        11654899*sqrt(35)*sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
+        35*sqrt(5))/1300423175 + 3)
 
 
 def test_simplify_issue_3214():

@@ -27,7 +27,7 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, lcm, gcd)
+    ComputationFailed, lcm, gcd, NotAlgebraic)
 
 import sympy.mpmath as mpmath
 
@@ -1884,7 +1884,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
         if d is S.One:
             nexpr = expr.func(*[handle(ai) for ai in expr.args])
             return nexpr
-        # TODO use minpoly if d is a number
         if d.is_Mul:
             nargs = []
             dargs = []
@@ -1900,6 +1899,12 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
         iter = 0  # number of iterations through loop
         d = _mexpand(d)
+        if d.is_Number:
+            return _umul(n, 1/d)
+        elif d.is_number:
+            _d = nsimplify(d)
+            if _d.is_Number and _d.equals(d):
+                return _umul(n, 1/_d)
         while True:
             # collect similar terms
             collected = defaultdict(list)
@@ -1930,10 +1935,37 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 iter = 0  # don't keep changes
                 break
             if len(rterms) > 4:
+                # in general, only 4 terms can be removed with repeated squaring
+                # but other considerations can guide selection of radical terms
+                # so that radicals are removed
                 if all([x.is_Integer and (y**2).is_Rational for x, y in rterms]):
                     nd, d = rad_rationalize(S.One, Add._from_args([sqrt(x)*y for x, y in rterms]))
                     n *= nd
                     iter += 1
+                elif all(i.is_number for r in rterms for i in r):
+                    # try minpoly as a fallback
+                    # XXX should this only be done if the order of mp doesn't
+                    # exceed some value? Will minpoly succeed where other methods
+                    # have failed?
+                    from sympy.polys.numberfields import minpoly
+                    from sympy.utilities.randtest import test_numerically
+                    from sympy.solvers.solvers import solve
+                    _eq = Add(*[sqrt(i)*j for i, j in rterms])
+                    try:
+                        # the co handling is not necessary if minpoly does this
+                        _co, _eq = _eq.as_coeff_Add()
+                        _x = Dummy()
+                        _mp = minpoly(_eq, _x).subs(_x, _x - _co)
+                        candidates = [w for w in solve(_mp, _x) if
+                            test_numerically(w, _eq)]
+                        if len(candidates) == 1:
+                            equivalent = candidates[0]
+                            if equivalent.atoms(Pow) != _eq.atoms(Pow):
+                                # it was rewritten, so try to radsimp this instead
+                                d = radsimp(equivalent)
+                                iter += 1
+                    except NotAlgebraic:
+                        pass
                 break
             num = powsimp(_num(rterms))
             n *= num
@@ -1971,6 +2003,8 @@ def radsimp(expr, symbolic=True, max_terms=4):
         else:
             raise NotImplementedError
 
+    coeff, expr = expr.as_coeff_Add()
+    expr = expr.normal()
     old = fraction(expr)
     n, d = fraction(handle(expr))
     if old != (n, d):
@@ -1984,7 +2018,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
             if old == (n, d):
                 n, d = was
         n = expand_mul(n)
-    return _umul(n, 1/d)
+    return coeff + _umul(n, 1/d)
 
 
 def posify(eq):
