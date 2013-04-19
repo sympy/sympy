@@ -1939,33 +1939,10 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 # but other considerations can guide selection of radical terms
                 # so that radicals are removed
                 if all([x.is_Integer and (y**2).is_Rational for x, y in rterms]):
-                    nd, d = rad_rationalize(S.One, Add._from_args([sqrt(x)*y for x, y in rterms]))
+                    nd, d = rad_rationalize(S.One, Add._from_args(
+                        [sqrt(x)*y for x, y in rterms]))
                     n *= nd
                     iter += 1
-                elif all(i.is_number for r in rterms for i in r):
-                    # try minpoly as a fallback
-                    # XXX should this only be done if the order of mp doesn't
-                    # exceed some value? Will minpoly succeed where other methods
-                    # have failed?
-                    from sympy.polys.numberfields import minpoly
-                    from sympy.utilities.randtest import test_numerically
-                    from sympy.solvers.solvers import solve
-                    _eq = Add(*[sqrt(i)*j for i, j in rterms])
-                    try:
-                        # the co handling is not necessary if minpoly does this
-                        _co, _eq = _eq.as_coeff_Add()
-                        _x = Dummy()
-                        _mp = minpoly(_eq, _x).subs(_x, _x - _co)
-                        candidates = [w for w in solve(_mp, _x) if
-                            test_numerically(w, _eq)]
-                        if len(candidates) == 1:
-                            equivalent = candidates[0]
-                            if equivalent.atoms(Pow) != _eq.atoms(Pow):
-                                # it was rewritten, so try to radsimp this instead
-                                d = radsimp(equivalent)
-                                iter += 1
-                    except NotAlgebraic:
-                        pass
                 break
             num = powsimp(_num(rterms))
             n *= num
