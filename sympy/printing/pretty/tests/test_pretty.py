@@ -7,9 +7,9 @@ from sympy import (
     Or, Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum,
     S, Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2,
     binomial, catalan, ceiling, conjugate, cos, euler, exp, expint,
-    factorial, factorial2, floor, gamma, groebner, homomorphism, hyper,
-    log, lowergamma, meijerg, oo, pi, sin,
-    sqrt, sqrt, symbols, tan, uppergamma, subfactorial, lex, ilex, grlex)
+    factorial, factorial2, floor, gamma, groebner, hyper, log, lowergamma,
+    meijerg, oo, pi, sin, sqrt, sqrt, symbols, tan, uppergamma, subfactorial,
+    lex, ilex, grlex)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -4062,6 +4062,8 @@ u"""\
 
 
 def test_Homomorphism():
+    from sympy.polys.agca import homomorphism
+
     R = QQ.old_poly_ring(x)
 
     expr = homomorphism(R.free_module(1), R.free_module(1), [0])

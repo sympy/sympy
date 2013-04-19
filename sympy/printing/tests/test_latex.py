@@ -857,7 +857,8 @@ def test_categories():
 
 def test_Modules():
     from sympy.polys.domains import QQ
-    from sympy import homomorphism
+    from sympy.polys.agca import homomorphism
+
     R = QQ.old_poly_ring(x, y)
     F = R.free_module(2)
     M = F.submodule([x, y], [1, x**2])
