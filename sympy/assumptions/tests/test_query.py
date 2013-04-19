@@ -1865,5 +1865,11 @@ def test_positive():
     with assuming(Q.positive(x + 1)):
         assert not ask(Q.positive(x))
 
+
 def test_issue_2322():
     raises(TypeError, lambda: ask(pi/log(x), Q.real))
+
+
+def test_issue_2734():
+    assert ask(Q.positive(log(x)**2), Q.positive(x)) is None
+    assert ask(~Q.negative(log(x)**2), Q.positive(x)) is True
