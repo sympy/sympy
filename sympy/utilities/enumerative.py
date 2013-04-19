@@ -87,13 +87,13 @@ def multiset_partitions_taocp(multiplicities):
         pstack
             is an array of PartComponent objects.
 
-        The `state` output offers a peek into the internal data
+        The ``state`` output offers a peek into the internal data
         structures of the enumeration function.  The client should treat
         this as read-only; any modification of the data structure will
         cause unpredictable (and almost certainly incorrect) results.
-        Also, the components of `state` are modified in place at each
+        Also, the components of ``state`` are modified in place at each
         iteration.  Hence, the visitor must be called once per loop
-        iteration.  Accumulating the `state` instances and processing them
+        iteration.  Accumulating the ``state`` instances and processing them
         later will not work.
 
     Examples
@@ -282,8 +282,8 @@ class MultisetPartitionTraverser():
     """
     Has methods to ``enumerate`` and ``count`` the partitions of a multiset.
 
-    This is a refactored and extended version of algorithm 7.1.2.5M
-    in Knuth's "The Art of Computer Programming."
+    This implements a refactored and extended version of Knuth's algorithm
+    7.1.2.5M [1]_."
 
     See Also
     ========
@@ -412,16 +412,16 @@ class MultisetPartitionTraverser():
         Notes
         =====
 
-        The goal of this modification of the ordinary decrement
-        method is to fail when it can be proved that this part can
-        only have child partitions which are larger than allowed by
-        ``ub``? If a decision is made to fail, it must be accurate,
-        otherwise the enumeration will miss some partitions.  But, it
-        is OK not to capture all the possible failures -- if a part is
-        passed that shouldn't be, the resulting too-large partitions
-        are filtered by the enumeration one level up.  However, as is
-        usual in constrained enumerations, it is advantageous to fail
-        as early as possible.
+        The goal of this modification of the ordinary decrement method
+        is to fail (meaning that the subtree rooted at this part is to
+        be skipped) when it can be proved that this part can only have
+        child partitions which are larger than allowed by ``ub``. If a
+        decision is made to fail, it must be accurate, otherwise the
+        enumeration will miss some partitions.  But, it is OK not to
+        capture all the possible failures -- if a part is passed that
+        shouldn't be, the resulting too-large partitions are filtered
+        by the enumeration one level up.  However, as is usual in
+        constrained enumerations, failing early is advantageous.
 
         The tests used by this method catch the most common cases,
         although this implementation is by no means the last word on
@@ -680,7 +680,7 @@ class MultisetPartitionTraverser():
                 self.lpart -= 1
 
     def enum_small(self, multiplicities, ub):
-        """Enumerate multiset partitions with no more than `ub` parts.
+        """Enumerate multiset partitions with no more than ``ub`` parts.
 
         Equivalent to enum_range(multiplicities, 0, ub)
 
@@ -713,11 +713,8 @@ class MultisetPartitionTraverser():
         [['a', 'b'], ['a', 'b']]]
 
 
-        References
-        ==========
-
-        .. [1] Knuth, The Art of Computer Programming, Volume 4a,
-               Section 7.2.1.5, exercise 69.
+        The implementation is based, in part, on the answer to
+        exercise 69 of reference 1 of this class.
 
         """
 
@@ -928,12 +925,12 @@ class MultisetPartitionTraverser():
         of the enumerators and counting the result.  Uses dynamic
         programming to cut down on the number of nodes actually
         explored.  The dictionary used in order to accelerate the
-        counting process is stored in the `MultisetPartitionTraverser`
+        counting process is stored in the ``MultisetPartitionTraverser``
         object and persists across calls.  If the the user does not
-        expect to call `count_partitions` for any additional
+        expect to call ``count_partitions`` for any additional
         multisets, the object should be cleared to save memory.  On
         the other hand, the cache built up from one count run can
-        significantly speed up subsequent calls to `count_partitions`,
+        significantly speed up subsequent calls to ``count_partitions``,
         so it may be advantageous not to clear the object.
 
         Examples
@@ -1043,10 +1040,13 @@ def part_key(part):
     affect the count for that part.  (Any irrelevant information just
     reduces the effectiveness of dynamic programming.)
 
-    Examples
-    ========
+    Notes
+    =====
 
-    XXX todo
+    This member function is a candidate for future exploration. There
+    are likely symmetries that can be exploited to coalesce some
+    ``part_key`` values, and thereby save space and improve
+    performance.
 
     """
     # The component number is irrelevant for counting partitions, so
@@ -1056,7 +1056,3 @@ def part_key(part):
         rval.append(ps.u)
         rval.append(ps.v)
     return tuple(rval)
-
-#
-#  End of multiset partitions functions/classes
-#
