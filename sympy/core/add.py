@@ -25,12 +25,12 @@ def _unevaluated_Add(*args):
     Examples
     ========
 
-    >>> from sympy.simplify.simplify import _unevaluated_Add as uAdd
-    >>> from sympy import S, Add, ordered
+    >>> from sympy.core.add import _unevaluated_Add as uAdd
+    >>> from sympy import S, Add
     >>> from sympy.abc import x, y
-    >>> a = uAdd(*[S(1), x, S(2)])
+    >>> a = uAdd(*[S(1.0), x, S(2)])
     >>> a.args[0]
-    3
+    3.00000000000000
     >>> a.args[1]
     x
 
@@ -46,18 +46,20 @@ def _unevaluated_Add(*args):
 
     """
     args = list(args)
-    _addsort(args)
-    c = []
-    for a in args:
-        if a.is_Number:
-            c.append(a)
-    if c:
-        for ci in c:
-            args.remove(ci)
-        c = Add(*c)
-        if c:
-            args.insert(0, c)
-    return Add._from_args(args)
+    newargs = []
+    co = S.Zero
+    while args:
+        a = args.pop()
+        if a.is_Add:
+            args.extend(a.args)
+        elif a.is_Number:
+            co += a
+        else:
+            newargs.append(a)
+    _addsort(newargs)
+    if co:
+        newargs.insert(0, co)
+    return Add._from_args(newargs)
 
 
 class Add(Expr, AssocOp):

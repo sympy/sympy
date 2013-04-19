@@ -1874,25 +1874,8 @@ def radsimp(expr, symbolic=True, max_terms=4):
     1/(a + b*sqrt(c))
 
     """
-    from sympy.core.mul import _mulsort
+    from sympy.core.mul import _unevaluated_Mul as _umul
     from sympy.core.exprtools import Factors
-
-    def _umul(*args):
-        args = list(args)
-        margs = []
-        co = S.One
-        while args:
-            a = args.pop()
-            if a.is_Mul:
-                args.extend(a.args)
-            elif a.is_Rational:
-                co *= a
-            else:
-                margs.append(a)
-        _mulsort(margs)
-        if co is not S.One:
-            margs.insert(0, co)
-        return Mul._from_args(margs)
 
     def handle(expr):
         if expr.is_Atom or not symbolic and expr.free_symbols:
