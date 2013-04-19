@@ -2148,7 +2148,7 @@ def test_rank():
     assert n.rank() == 2
     p = zeros(3)
     assert p.rank() == 0
-    
+
 def test_replace():
     from sympy import symbols,Function,Matrix
     F,G=symbols('F,G',cls=Function)
