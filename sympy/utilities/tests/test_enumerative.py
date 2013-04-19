@@ -69,9 +69,9 @@ def test_subrange():
     assert m.count_partitions(multiplicities) == \
         m.count_partitions_slow(multiplicities)
 
-    # Note - you can't have multiple traversals from the same
-    # MultisetPartitionTraverser object going at the same time, hence
-    # make several here.
+    # Note - multiple traversals from the same
+    # MultisetPartitionTraverser object cannot execute at the same
+    # time, hence make several instances here.
     ma = MultisetPartitionTraverser()
     mc = MultisetPartitionTraverser()
     md = MultisetPartitionTraverser()
