@@ -1358,16 +1358,15 @@ def test_radsimp():
     r3 = sqrt(3)
     r5 = sqrt(5)
     r7 = sqrt(7)
-    assert radsimp(1/r2) == \
-        sqrt(2)/2
+    assert fraction(radsimp(1/r2)) == (sqrt(2), 2)
     assert radsimp(1/(1 + r2)) == \
         -1 + sqrt(2)
     assert radsimp(1/(r2 + r3)) == \
         -sqrt(2) + sqrt(3)
     assert fraction(radsimp(1/(1 + r2 + r3))) == \
-        (-2*sqrt(6) + 2*sqrt(2) + 4, 8)
+        (-sqrt(6) + sqrt(2) + 2, 4)
     assert fraction(radsimp(1/(r2 + r3 + r5))) == \
-        (-2*sqrt(30) + 4*sqrt(3) + 6*sqrt(2), 24)
+        (-sqrt(30) + 2*sqrt(3) + 3*sqrt(2), 12)
     assert fraction(radsimp(1/(1 + r2 + r3 + r5))) == (
         (-34*sqrt(10) - 26*sqrt(15) - 55*sqrt(3) - 61*sqrt(2) + 14*sqrt(30) +
         93 + 46*sqrt(6) + 53*sqrt(5), 71))
@@ -1391,10 +1390,10 @@ def test_radsimp():
         118*sqrt(105) + 59*sqrt(7) + 295*sqrt(5) + 531*sqrt(3))/(16*a**8 -
         480*a**6 + 3128*a**4 - 6360*a**2 + 3481))
     assert radsimp(1/(r2*a + r2*b + r3 + r7)) == (
-        (2*sqrt(2)*a*(a + b)**2 - 10*sqrt(2)*a + 2*sqrt(42)*a + 2*sqrt(2)*b*(a
-        + b)**2 - 10*sqrt(2)*b + 2*sqrt(42)*b - 2*sqrt(7)*(a + b)**2 -
-        2*sqrt(3)*(a + b)**2 - 4*sqrt(3) + 4*sqrt(7))/(4*a**4 + 16*a**3*b +
-        24*a**2*b**2 - 40*a**2 + 16*a*b**3 - 80*a*b + 4*b**4 - 40*b**2 + 16))
+        (sqrt(2)*a*(a + b)**2 - 5*sqrt(2)*a + sqrt(42)*a + sqrt(2)*b*(a +
+        b)**2 - 5*sqrt(2)*b + sqrt(42)*b - sqrt(7)*(a + b)**2 - sqrt(3)*(a +
+        b)**2 - 2*sqrt(3) + 2*sqrt(7))/(2*a**4 + 8*a**3*b + 12*a**2*b**2 -
+        20*a**2 + 8*a*b**3 - 40*a*b + 2*b**4 - 20*b**2 + 8))
     assert radsimp(1/(r2*a + r2*b + r2*c + r2*d)) == \
         sqrt(2)/(2*a + 2*b + 2*c + 2*d)
     assert radsimp(1/(1 + r2*a + r2*b + r2*c + r2*d)) == (
@@ -1419,7 +1418,7 @@ def test_radsimp():
     assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == \
         x**2 + sqrt(2)*x**2 - sqrt(2)*x*A
     assert radsimp(1/sqrt(5 + 2 * sqrt(6))) == -sqrt(2) + sqrt(3)
-    assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -11*sqrt(2) + 9*sqrt(3)
+    assert radsimp(1/sqrt(5 + 2 * sqrt(6))**3) == -(-sqrt(3) + sqrt(2))**3
 
     # issue 3433
     assert fraction(radsimp(1/sqrt(x))) == (sqrt(x), x)
@@ -1446,22 +1445,30 @@ def test_radsimp():
         120*sqrt(10)*sqrt(-8*sqrt(5) + 40)*sqrt(sqrt(5) + 5))/(-36000 -
         7200*sqrt(5) + (12*sqrt(10)*sqrt(sqrt(5) + 5) +
         24*sqrt(10)*sqrt(-sqrt(5) + 5))**2))
-    # assert radsimp(eq) == 0 XXX fix handling of Mul. This should be zero
+    assert radsimp(eq) is S.NaN  # it's 0/0
 
     # work with normal form
     e = 1/sqrt(sqrt(7)/7 + 2*sqrt(2) + 3*sqrt(3) + 5*sqrt(5)) + 3
     assert radsimp(e) == (
-        -1658283*sqrt(21)*sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
-        35*sqrt(5))/260084635 - 1507966*sqrt(14)*sqrt(sqrt(7) + 14*sqrt(2) +
-        21*sqrt(3) + 35*sqrt(5))/260084635 - 1141953*sqrt(sqrt(7) + 14*sqrt(2)
-        + 21*sqrt(3) + 35*sqrt(5))/260084635 - 327012*sqrt(6)*sqrt(sqrt(7) +
-        14*sqrt(2) + 21*sqrt(3) + 35*sqrt(5))/260084635 +
-        1346996*sqrt(10)*sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
-        35*sqrt(5))/1300423175 + 1278438*sqrt(15)*sqrt(sqrt(7) + 14*sqrt(2) +
-        21*sqrt(3) + 35*sqrt(5))/1300423175 + 1577436*sqrt(210)*sqrt(sqrt(7) +
-        14*sqrt(2) + 21*sqrt(3) + 35*sqrt(5))/1300423175 +
-        11654899*sqrt(35)*sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
-        35*sqrt(5))/1300423175 + 3)
+        -sqrt(sqrt(7) + 14*sqrt(2) + 21*sqrt(3) +
+        35*sqrt(5))*(-11654899*sqrt(35) - 1577436*sqrt(210) - 1278438*sqrt(15)
+        - 1346996*sqrt(10) + 1635060*sqrt(6) + 5709765 + 7539830*sqrt(14) +
+        8291415*sqrt(21))/1300423175 + 3)
+
+    # obey power rules
+    base = sqrt(3) - sqrt(2)
+    assert radsimp(1/base**3) == (sqrt(3) + sqrt(2))**3
+    assert radsimp(1/(-base)**3) == -(sqrt(2) + sqrt(3))**3
+    assert radsimp(1/(-base)**x) == (-base)**(-x)
+    assert radsimp(1/base**x) == (sqrt(2) + sqrt(3))**x
+    assert radsimp(root(1/(-1 - sqrt(2)), -x)) == (-1)**(-1/x)*(1 + sqrt(2))**(1/x)
+
+    # recurse
+    e = cos(1/(1 + sqrt(2)))
+    assert radsimp(e) == cos(-sqrt(2) + 1)
+    assert radsimp(e/2) == cos(-sqrt(2) + 1)/2
+    assert radsimp(1/e) == 1/cos(-sqrt(2) + 1)
+    assert radsimp(2/e) == 2/cos(-sqrt(2) + 1)
 
 
 def test_simplify_issue_3214():

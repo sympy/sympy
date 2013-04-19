@@ -10,7 +10,7 @@ from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
     iterable, reduce, default_sort_key, set_union, ordered)
-from sympy.core.exprtools import Factors
+from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
@@ -27,7 +27,7 @@ from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.simplify.sqrtdenest import sqrtdenest
 
 from sympy.polys import (Poly, together, reduced, cancel, factor,
-    ComputationFailed, lcm, gcd, NotAlgebraic)
+    ComputationFailed, lcm, gcd)
 
 import sympy.mpmath as mpmath
 
@@ -1824,17 +1824,11 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> x,y = map(Symbol, 'xy')
     >>> e = ((2 + 2*sqrt(2))*x + (2 + sqrt(8))*y)/(2 + sqrt(2))
     >>> radsimp(e)
-    (2*sqrt(2)*x + 2*sqrt(2)*y)/2
-
-    No simplification beyond removal of square roots and expansion of the
-    numerator is done. One might want to polish the result a little,
-    however:
-
-    >>> collect_sqrt(_)
     sqrt(2)*(x + y)
 
-    If there is a denominator, the numerator may need to be collected
-    on its own:
+    No simplification beyond removal of the gcd is done. One might
+    want to polish the result a little, however, by collecting
+    square root terms:
 
     >>> r2 = sqrt(2)
     >>> r5 = sqrt(5)
@@ -1877,38 +1871,81 @@ def radsimp(expr, symbolic=True, max_terms=4):
     from sympy.core.mul import _unevaluated_Mul as _umul
     from sympy.core.exprtools import Factors
 
-    def handle(expr):
-        if expr.is_Atom or not symbolic and expr.free_symbols:
-            return expr
-        n, d = fraction(expr)
-        if d is S.One:
-            nexpr = expr.func(*[handle(ai) for ai in expr.args])
-            return nexpr
-        if d.is_Mul:
-            nargs = []
-            dargs = []
-            for di in d.args:
-                ni, di = fraction(handle(1/di))
-                nargs.append(ni)
-                dargs.append(di)
-            return _umul(n, Mul(*nargs), 1/Mul(*dargs))
-        elif d.is_Add:
-            d = radsimp(d)
-        elif d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
-            d = sqrtdenest(sqrt(d.base))**d.exp.p
+    syms = symbols("a:d A:D")
+    def _num(rterms):
+        # return the multiplier that will simplify the expression described
+        # by rterms [(sqrt arg, coeff), ... ]
+        a, b, c, d, A, B, C, D = syms
+        if len(rterms) == 2:
+            reps = dict(zip([A, a, B, b], [j for i in rterms for j in i]))
+            return (
+            sqrt(A)*a - sqrt(B)*b).xreplace(reps)
+        if len(rterms) == 3:
+            reps = dict(zip([A, a, B, b, C, c], [j for i in rterms for j in i]))
+            return (
+            (sqrt(A)*a + sqrt(B)*b - sqrt(C)*c)*(2*sqrt(A)*sqrt(B)*a*b - A*a**2 -
+            B*b**2 + C*c**2)).xreplace(reps)
+        elif len(rterms) == 4:
+            reps = dict(zip([A, a, B, b, C, c, D, d], [j for i in rterms for j in i]))
+            return ((sqrt(A)*a + sqrt(B)*b - sqrt(C)*c - sqrt(D)*d)*(2*sqrt(A)*sqrt(B)*a*b
+                - A*a**2 - B*b**2 - 2*sqrt(C)*sqrt(D)*c*d + C*c**2 +
+                D*d**2)*(-8*sqrt(A)*sqrt(B)*sqrt(C)*sqrt(D)*a*b*c*d + A**2*a**4 -
+                2*A*B*a**2*b**2 - 2*A*C*a**2*c**2 - 2*A*D*a**2*d**2 + B**2*b**4 -
+                2*B*C*b**2*c**2 - 2*B*D*b**2*d**2 + C**2*c**4 - 2*C*D*c**2*d**2 +
+                D**2*d**4)).xreplace(reps)
+        elif len(rterms) == 1:
+            return sqrt(rterms[0][0])
+        else:
+            raise NotImplementedError
 
-        iter = 0  # number of iterations through loop
-        d = _mexpand(d)
-        if d.is_Number:
+    def handle(expr):
+        if expr.is_Atom:
+            return expr
+
+        n, d = fraction(expr)
+
+        if d.is_Atom:
+            # n can't be an Atom since expr is not an Atom
+            n = n.func(*[handle(a) for a in n.args])
             return _umul(n, 1/d)
-        elif d.is_number:
+        elif n is not S.One:
+            return Mul(n, handle(1/d))
+        elif d.is_Mul:
+            return _umul(*[handle(1/d) for d in d.args])
+
+        if d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
+            d2 = sqrtdenest(sqrt(d.base))**d.exp.p
+            if d2 != d:
+                return handle(1/d2)
+        elif d.is_Pow and (d.exp.is_integer or d.base.is_positive):
+            # (1/d**i) = (1/d)**i
+            return handle(1/d.base)**d.exp
+
+        if not (d.is_Add or d.is_Pow and d.exp.is_Rational and d.exp.q == 2):
+            return 1/d.func(*[handle(a) for a in d.args])
+
+        # handle 1/d treating d as an Add (though it may not be)
+
+        keep = True  # keep changes that are made
+
+        # flatten it and collect radicals after checking for special
+        # conditions
+        d = _mexpand(d)
+
+        # did it change?
+        if d.is_Atom:
+            return 1/d
+
+        # is it a number that might be handled easily?
+        if d.is_number:
             _d = nsimplify(d)
             if _d.is_Number and _d.equals(d):
-                return _umul(n, 1/_d)
+                return 1/_d
+
         while True:
             # collect similar terms
             collected = defaultdict(list)
-            for m in Add.make_args(d):
+            for m in Add.make_args(d):  # d might have become non-Add
                 p2 = []
                 other = []
                 for i in Mul.make_args(m):
@@ -1932,7 +1969,7 @@ def radsimp(expr, symbolic=True, max_terms=4):
                 # in collecting terms so as not to raise the issue of 2834:
                 # r = sqrt(sqrt(5) + 5)
                 # eq = 1/(sqrt(5)*r + 2*sqrt(5)*sqrt(-sqrt(5) + 5) + 5*r)
-                iter = 0  # don't keep changes
+                keep = False
                 break
             if len(rterms) > 4:
                 # in general, only 4 terms can be removed with repeated squaring
@@ -1942,43 +1979,24 @@ def radsimp(expr, symbolic=True, max_terms=4):
                     nd, d = rad_rationalize(S.One, Add._from_args(
                         [sqrt(x)*y for x, y in rterms]))
                     n *= nd
-                    iter += 1
+                else:
+                    # is there anything else that might be attempted?
+                    keep = False
                 break
+
             num = powsimp(_num(rterms))
             n *= num
             d *= num
             d = _mexpand(d)
-            iter += 1
             if d.is_Atom:
                 break
 
-        if not iter:
+        if not keep:
             return expr
         return _umul(n, 1/d)
 
-    a, b, c, d, A, B, C, D = symbols("a:d A:D")
-    def _num(rterms):
-        if len(rterms) == 2:
-            reps = dict(zip([A,a,B,b], [j for i in rterms for j in i]))
-            return (
-            sqrt(A)*a - sqrt(B)*b).xreplace(reps)
-        if len(rterms) == 3:
-            reps = dict(zip([A,a,B,b,C,c], [j for i in rterms for j in i]))
-            return (
-            (sqrt(A)*a + sqrt(B)*b - sqrt(C)*c)*(2*sqrt(A)*sqrt(B)*a*b - A*a**2 -
-            B*b**2 + C*c**2)).xreplace(reps)
-        elif len(rterms) == 4:
-            reps = dict(zip([A,a,B,b,C,c,D,d], [j for i in rterms for j in i]))
-            return ((sqrt(A)*a + sqrt(B)*b - sqrt(C)*c - sqrt(D)*d)*(2*sqrt(A)*sqrt(B)*a*b
-                - A*a**2 - B*b**2 - 2*sqrt(C)*sqrt(D)*c*d + C*c**2 +
-                D*d**2)*(-8*sqrt(A)*sqrt(B)*sqrt(C)*sqrt(D)*a*b*c*d + A**2*a**4 -
-                2*A*B*a**2*b**2 - 2*A*C*a**2*c**2 - 2*A*D*a**2*d**2 + B**2*b**4 -
-                2*B*C*b**2*c**2 - 2*B*D*b**2*d**2 + C**2*c**4 - 2*C*D*c**2*d**2 +
-                D**2*d**4)).xreplace(reps)
-        elif len(rterms) == 1:
-            return sqrt(rterms[0][0])
-        else:
-            raise NotImplementedError
+    if not symbolic and expr.free_symbols:
+        return expr
 
     coeff, expr = expr.as_coeff_Add()
     expr = expr.normal()
@@ -1995,6 +2013,13 @@ def radsimp(expr, symbolic=True, max_terms=4):
             if old == (n, d):
                 n, d = was
         n = expand_mul(n)
+        if d.is_Number or d.is_Add:
+            n2, d2 = fraction(gcd_terms(_umul(n, 1/d)))
+            if d2.is_Number or (d2.count_ops() <= d.count_ops()):
+                n, d = [signsimp(i) for i in (n2, d2)]
+                if n.is_Mul and n.args[0].is_Number:
+                    n = Mul(*n.args)
+
     return coeff + _umul(n, 1/d)
 
 
