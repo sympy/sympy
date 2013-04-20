@@ -8,6 +8,60 @@ from sympy.core.numbers import ilcm, igcd
 from sympy.core.expr import Expr
 
 
+def _addsort(args):
+    # in-place sorting of args
+
+    # Currently we sort things using hashes, as it is quite fast. A better
+    # solution is not to sort things at all - but this needs some more
+    # fixing.
+    args.sort(key=hash)
+
+
+def _unevaluated_Add(*args):
+    """Return a well-formed unevaluated Add: Numbers are collected and
+    put in slot 0 and args are sorted. Use this when args have changed
+    but you still want to return an unevaluated Add.
+
+    Examples
+    ========
+
+    >>> from sympy.core.add import _unevaluated_Add as uAdd
+    >>> from sympy import S, Add
+    >>> from sympy.abc import x, y
+    >>> a = uAdd(*[S(1.0), x, S(2)])
+    >>> a.args[0]
+    3.00000000000000
+    >>> a.args[1]
+    x
+
+    Beyond the Number being in slot 0, there is no other assurance of
+    order for the arguments since they are hash sorted. So, for testing
+    purposes, output produced by this in some other function can only
+    be tested against the output of this function or as one of several
+    options:
+
+    >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
+    >>> a = uAdd(x, y)
+    >>> assert a in opts and a == uAdd(x, y)
+
+    """
+    args = list(args)
+    newargs = []
+    co = S.Zero
+    while args:
+        a = args.pop()
+        if a.is_Add:
+            args.extend(a.args)
+        elif a.is_Number:
+            co += a
+        else:
+            newargs.append(a)
+    _addsort(newargs)
+    if co:
+        newargs.insert(0, co)
+    return Add._from_args(newargs)
+
+
 class Add(Expr, AssocOp):
 
     __slots__ = []
@@ -47,7 +101,7 @@ class Add(Expr, AssocOp):
                     if t.is_Add:
                         h, t = t.as_coeff_Add()
                         bargs = [c*ti for ti in Add.make_args(t)]
-                        bargs.sort(key=hash)
+                        _addsort(bargs)
                         ch = c*h
                         if ch:
                             bargs.insert(0, ch)
@@ -221,12 +275,7 @@ class Add(Expr, AssocOp):
                     break
 
         # order args canonically
-        # Currently we sort things using hashes, as it is quite fast. A better
-        # solution is not to sort things at all - but this needs some more
-        # fixing. NOTE: this is used in primitive, Mul.flattten, and
-        # collect_const, too, so if it changes here it should be changed
-        # there.
-        newseq.sort(key=hash)
+        _addsort(newseq)
 
         # current code expects coeff to be first
         if coeff is not S.Zero:
@@ -768,7 +817,7 @@ class Add(Expr, AssocOp):
             c = terms.pop(0)
         else:
             c = None
-        terms.sort(key=hash)
+        _addsort(terms)
         if c:
             terms.insert(0, c)
         return Rational(ngcd, dlcm), self._new_rawargs(*terms)

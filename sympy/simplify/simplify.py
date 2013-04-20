@@ -6,11 +6,11 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
     expand_multinomial, FunctionClass, expand_power_base, symbols, igcd)
-
+from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
     iterable, reduce, default_sort_key, set_union, ordered)
-from sympy.core.exprtools import Factors
+from sympy.core.exprtools import Factors, gcd_terms
 from sympy.core.numbers import Float, Number
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
@@ -1613,48 +1613,6 @@ def collect_const(expr, *vars, **kwargs):
     return expr
 
 
-def _unevaluated_Add(*args):
-    """Return a well-formed unevaluated Add: Number
-    is in slot 0 and args are sorted.
-
-    Examples
-    ========
-
-    >>> from sympy.simplify.simplify import _unevaluated_Add as uAdd
-    >>> from sympy import S, Add, ordered
-    >>> from sympy.abc import x, y
-    >>> a = uAdd(*[S(1), x, S(2)])
-    >>> a.args[0]
-    3
-    >>> a.args[1]
-    x
-
-    Beyond the Number being in slot 0, there is no other assurance of
-    order for the arguments since they are hash sorted. So, for testing
-    purposes, output produced by this in some other function can only
-    be tested against the output of this function or as one of several
-    options:
-
-    >>> opts = (Add(x, y, evaluated=False), Add(y, x, evaluated=False))
-    >>> a = uAdd(x, y)
-    >>> assert a in opts and a == uAdd(x, y)
-
-    """
-    args = list(args)
-    args.sort(key=hash)  # same as in Add.flatten
-    c = []
-    for a in args:
-        if a.is_Number:
-            c.append(a)
-    if c:
-        for ci in c:
-            args.remove(ci)
-        c = Add(*c)
-        if c:
-            args.insert(0, c)
-    return Add(*args, **dict(evaluate=False))
-
-
 def _split_gcd(*a):
     """
     split the list of integers ``a`` into a list of integers, ``a1`` having
@@ -1848,12 +1806,15 @@ def radsimp(expr, symbolic=True, max_terms=4):
     you do not want the simplification to occur for symbolic denominators, set
     ``symbolic`` to False.
 
-    If there are more than ``max_terms`` radical terms do not simplify.
+    If there are more than ``max_terms`` radical terms then the expression is
+    returned unchanged.
 
     Examples
     ========
 
     >>> from sympy import radsimp, sqrt, Symbol, denom, pprint, I
+    >>> from sympy import factor_terms, fraction, signsimp
+    >>> from sympy.simplify.simplify import collect_sqrt
     >>> from sympy.abc import a, b, c
 
     >>> radsimp(1/(I + 1))
@@ -1865,23 +1826,32 @@ def radsimp(expr, symbolic=True, max_terms=4):
     >>> radsimp(e)
     sqrt(2)*(x + y)
 
-    Terms are collected automatically:
+    No simplification beyond removal of the gcd is done. One might
+    want to polish the result a little, however, by collecting
+    square root terms:
 
     >>> r2 = sqrt(2)
     >>> r5 = sqrt(5)
-    >>> pprint(radsimp(1/(y*r2 + x*r2 + a*r5 + b*r5)))
-             ___              ___
-           \/ 5 *(-a - b) + \/ 2 *(x + y)
-    --------------------------------------------
-         2               2      2              2
-    - 5*a  - 10*a*b - 5*b  + 2*x  + 4*x*y + 2*y
+    >>> ans = radsimp(1/(y*r2 + x*r2 + a*r5 + b*r5)); pprint(ans)
+        ___       ___       ___       ___
+      \/ 5 *a + \/ 5 *b - \/ 2 *x - \/ 2 *y
+    ------------------------------------------
+       2               2      2              2
+    5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
 
-    If radicals in the denominator cannot be removed, the original expression
-    will be returned. If the denominator was 1 then any square roots will also
-    be collected:
+    >>> n, d = fraction(ans)
+    >>> pprint(factor_terms(signsimp(collect_sqrt(n))/d, radical=True))
+            ___             ___
+          \/ 5 *(a + b) - \/ 2 *(x + y)
+    ------------------------------------------
+       2               2      2              2
+    5*a  + 10*a*b + 5*b  - 2*x  - 4*x*y - 2*y
+
+    If radicals in the denominator cannot be removed or there is no denominator,
+    the original expression will be returned.
 
     >>> radsimp(sqrt(2)*x + sqrt(2))
-    sqrt(2)*(x + 1)
+    sqrt(2)*x + sqrt(2)
 
     Results with symbols will not always be valid for all substitutions:
 
@@ -1896,104 +1866,161 @@ def radsimp(expr, symbolic=True, max_terms=4):
 
     >>> radsimp(eq, symbolic=False)
     1/(a + b*sqrt(c))
+
     """
+    from sympy.core.mul import _unevaluated_Mul as _umul
+    from sympy.core.exprtools import Factors
+
+    syms = symbols("a:d A:D")
+    def _num(rterms):
+        # return the multiplier that will simplify the expression described
+        # by rterms [(sqrt arg, coeff), ... ]
+        a, b, c, d, A, B, C, D = syms
+        if len(rterms) == 2:
+            reps = dict(zip([A, a, B, b], [j for i in rterms for j in i]))
+            return (
+            sqrt(A)*a - sqrt(B)*b).xreplace(reps)
+        if len(rterms) == 3:
+            reps = dict(zip([A, a, B, b, C, c], [j for i in rterms for j in i]))
+            return (
+            (sqrt(A)*a + sqrt(B)*b - sqrt(C)*c)*(2*sqrt(A)*sqrt(B)*a*b - A*a**2 -
+            B*b**2 + C*c**2)).xreplace(reps)
+        elif len(rterms) == 4:
+            reps = dict(zip([A, a, B, b, C, c, D, d], [j for i in rterms for j in i]))
+            return ((sqrt(A)*a + sqrt(B)*b - sqrt(C)*c - sqrt(D)*d)*(2*sqrt(A)*sqrt(B)*a*b
+                - A*a**2 - B*b**2 - 2*sqrt(C)*sqrt(D)*c*d + C*c**2 +
+                D*d**2)*(-8*sqrt(A)*sqrt(B)*sqrt(C)*sqrt(D)*a*b*c*d + A**2*a**4 -
+                2*A*B*a**2*b**2 - 2*A*C*a**2*c**2 - 2*A*D*a**2*d**2 + B**2*b**4 -
+                2*B*C*b**2*c**2 - 2*B*D*b**2*d**2 + C**2*c**4 - 2*C*D*c**2*d**2 +
+                D**2*d**4)).xreplace(reps)
+        elif len(rterms) == 1:
+            return sqrt(rterms[0][0])
+        else:
+            raise NotImplementedError
 
     def handle(expr):
-        if expr.is_Atom or not symbolic and expr.free_symbols:
+        if expr.is_Atom:
             return expr
+
         n, d = fraction(expr)
-        if d is S.One:
-            nexpr = expr.func(*[handle(ai) for ai in expr.args])
-            return nexpr
+
+        if d.is_Atom:
+            # n can't be an Atom since expr is not an Atom
+            n = n.func(*[handle(a) for a in n.args])
+            return _umul(n, 1/d)
+        elif n is not S.One:
+            return Mul(n, handle(1/d))
         elif d.is_Mul:
-            nargs = []
-            dargs = []
-            for di in d.args:
-                ni, di = fraction(handle(1/di))
-                nargs.append(ni)
-                dargs.append(di)
-            return n*Mul(*nargs)/Mul(*dargs)
-        elif d.is_Add:
-            d = radsimp(d)
-        elif d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
-            d = sqrtdenest(sqrt(d.base))**d.exp.p
+            return _umul(*[handle(1/d) for d in d.args])
 
-        changed = False
-        while 1:
+        if not symbolic and d.free_symbols:
+            return expr
+
+        if d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
+            d2 = sqrtdenest(sqrt(d.base))**d.exp.p
+            if d2 != d:
+                return handle(1/d2)
+        elif d.is_Pow and (d.exp.is_integer or d.base.is_positive):
+            # (1/d**i) = (1/d)**i
+            return handle(1/d.base)**d.exp
+
+        if not (d.is_Add or d.is_Pow and d.exp.is_Rational and d.exp.q == 2):
+            return 1/d.func(*[handle(a) for a in d.args])
+
+        # handle 1/d treating d as an Add (though it may not be)
+
+        keep = True  # keep changes that are made
+
+        # flatten it and collect radicals after checking for special
+        # conditions
+        d = _mexpand(d)
+
+        # did it change?
+        if d.is_Atom:
+            return 1/d
+
+        # is it a number that might be handled easily?
+        if d.is_number:
+            _d = nsimplify(d)
+            if _d.is_Number and _d.equals(d):
+                return 1/_d
+
+        while True:
             # collect similar terms
-            d, nterms = collect_sqrt(_mexpand(d), evaluate=False)
-            d = Add._from_args(d)
-            if nterms > max_terms:
+            collected = defaultdict(list)
+            for m in Add.make_args(d):  # d might have become non-Add
+                p2 = []
+                other = []
+                for i in Mul.make_args(m):
+                    if i.is_Pow and (i.exp is S.Half or
+                            i.exp.is_Rational and i.exp.q != 1 and
+                            log(i.exp.q, 2).is_Integer):
+                        p2.append(i.base if i.exp is S.Half else i.base**(2*i.exp))
+                    elif i is S.ImaginaryUnit:
+                        p2.append(S.NegativeOne)
+                    else:
+                        other.append(i)
+                collected[tuple(ordered(p2))].append(Mul(*other))
+            rterms = list(ordered(collected.items()))
+            rterms = [(Mul(*i), Add(*j)) for i, j in rterms]
+            nrad = len(rterms) - (1 if rterms[0][0] is S.One else 0)
+            if nrad < 1:
+                break
+            elif nrad > max_terms:
+                # there may have been invalid operations leading to this point
+                # so don't keep changes, e.g. this expression is troublesome
+                # in collecting terms so as not to raise the issue of 2834:
+                # r = sqrt(sqrt(5) + 5)
+                # eq = 1/(sqrt(5)*r + 2*sqrt(5)*sqrt(-sqrt(5) + 5) + 5*r)
+                keep = False
+                break
+            if len(rterms) > 4:
+                # in general, only 4 terms can be removed with repeated squaring
+                # but other considerations can guide selection of radical terms
+                # so that radicals are removed
+                if all([x.is_Integer and (y**2).is_Rational for x, y in rterms]):
+                    nd, d = rad_rationalize(S.One, Add._from_args(
+                        [sqrt(x)*y for x, y in rterms]))
+                    n *= nd
+                else:
+                    # is there anything else that might be attempted?
+                    keep = False
                 break
 
-            # check to see if we are done:
-            # - no radical terms
-            # - if there are more than 3 radical terms, or
-            #   there 3 radical terms and a constant, use rad_rationalize
-            if not nterms:
+            num = powsimp(_num(rterms))
+            n *= num
+            d *= num
+            d = _mexpand(d)
+            if d.is_Atom:
                 break
-            if nterms > 3 or nterms == 3 and len(d.args) > 4:
-                if all([(x**2).is_Integer for x in d.args]):
-                    nd, d = rad_rationalize(S.One, d)
-                    n = _mexpand(n*nd)
-                else:
-                    n, d = fraction(expr)
-                break
-            changed = True
 
-            # now match for a radical
-            if d.is_Add and len(d.args) == 4:
-                r = d.match(a + b*sqrt(c) + D*sqrt(E))
-                nmul = (a - b*sqrt(c) - D*sqrt(E)).xreplace(r)
-                d = (a**2 - c*b**2 - E*D**2 - 2*b*D*sqrt(c*E)).xreplace(r)
-                n1 = n/d
-                if denom(n1) is not S.One:
-                    n = -(-n/d)
-                else:
-                    n = n1
-                n, d = fraction(n*nmul)
+        if not keep:
+            return expr
+        return _umul(n, 1/d)
 
-            else:
-                r = d.match(a + b*sqrt(c))
-                if not r or r[b] == 0:
-                    r = d.match(b*sqrt(c))
-                    if r is None:
-                        break
-                    r[a] = S.Zero
-                va, vb, vc = r[a], r[b], r[c]
+    coeff, expr = expr.as_coeff_Add()
+    expr = expr.normal()
+    old = fraction(expr)
+    n, d = fraction(handle(expr))
+    if old != (n, d):
+        if not d.is_Atom:
+            was = (n, d)
+            n = signsimp(n, evaluate=False)
+            d = signsimp(d, evaluate=False)
+            u = Factors(_umul(n, 1/d))
+            u = _umul(*[k**v for k, v in u.factors.iteritems()])
+            n, d = fraction(u)
+            if old == (n, d):
+                n, d = was
+        n = expand_mul(n)
+        if d.is_Number or d.is_Add:
+            n2, d2 = fraction(gcd_terms(_umul(n, 1/d)))
+            if d2.is_Number or (d2.count_ops() <= d.count_ops()):
+                n, d = [signsimp(i) for i in (n2, d2)]
+                if n.is_Mul and n.args[0].is_Number:
+                    n = Mul(*n.args)
 
-                dold = d
-                d = va**2 - vc*vb**2
-                nmul = va - vb*sqrt(vc)
-                n1 = n/d
-                if denom(n1) is not S.One:
-                    n1 = -(-n/d)
-                n1, d1 = fraction(n1*nmul)
-                if d1 != dold:
-                    n, d = n1, d1
-                else:
-                    n *= nmul
-
-        nexpr = collect_sqrt(expand_mul(n))/d
-        if changed or nexpr != expr:
-            expr = nexpr
-        return expr
-
-    a, b, c, D, E, F, G = map(Wild, 'abcDEFG')
-    # do this at the start in case no other change is made since
-    # it is done if a change is made
-    coeff, expr = expr.as_content_primitive()
-
-    newe = handle(expr)
-    if newe != expr:
-        co, expr = newe.as_content_primitive()
-        coeff *= co
-    else:
-        nexpr, hit = collect_sqrt(expand_mul(expr), evaluate=False)
-        nexpr = Add._from_args(nexpr)
-        if hit and expr.count_ops() >= nexpr.count_ops():
-            expr = Add(*Add.make_args(nexpr))
-    return _keep_coeff(coeff, expr)
+    return coeff + _umul(n, 1/d)
 
 
 def posify(eq):

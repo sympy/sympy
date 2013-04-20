@@ -102,9 +102,11 @@ def test_minimal_polynomial():
         a**Q(3, 2), x) == 729*x**4 - 506898*x**2 + 84604519
 
     # issue 2895
-    ex = S('-1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 + sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 + sqrt(15)*I/28800000)**(1/3)))')
-    mp = minimal_polynomial(ex, x)
-    assert mp == 8000*x**2 - 1
+    eq = S('''
+        -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)))''')
+    assert minimal_polynomial(eq, x) == 8000*x**2 - 1
 
     ex = 1 + sqrt(2) + sqrt(3)
     mp = minimal_polynomial(ex, x)
@@ -121,11 +123,13 @@ def test_minimal_polynomial():
     mp = minimal_polynomial(p, x)
     assert mp == x**8 - 512*x**7 - 118208*x**6 + 31131136*x**5 + 647362560*x**4 - 56026611712*x**3 + 116994310144*x**2 + 404854931456*x - 27216576512
 
+
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
     mp = minimal_polynomial(p, x)
     # checked with Wolfram Alpha
     assert mp.coeff(x**6) == -1232000000000000000000000000001223999999999999999999999999999987999999999999999999999999999996000000000000000000000000000000
+
 
 def test_minimal_polynomial_sq():
     from sympy import Add, expand_multinomial
@@ -138,6 +142,7 @@ def test_minimal_polynomial_sq():
     p = Add(*[sqrt(i) for i in range(1, 12)])
     mp = minimal_polynomial(p, x)
     assert mp.subs({x: 0}) == -71965773323122507776
+
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])

@@ -17,7 +17,8 @@ from sympy.core.compatibility import (iterable, is_sequence, ordered,
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.core.sympify import sympify
 from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
-    Expr, Mul)
+    Expr, Mul, Pow)
+from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
                           count_ops)
@@ -28,13 +29,13 @@ from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sinh, tanh, coth, acos, asin, atan, acot, acosh,
-                             asinh, atanh, acoth, Abs, sign)
+                             asinh, atanh, acoth, Abs, sign, sqrt)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, Poly, together, factor, RootOf
+from sympy.polys import roots, cancel, Poly, together, factor, RootOf, degree
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -2448,7 +2449,7 @@ def unrad(eq, *syms, **flags):
 
     ValueError is raised if there are radicals and they cannot be removed.
 
-    Otherwise
+    Otherwise the tuple, ``(eq, cov, dens)``, is returned where::
 
         ``eq``, ``cov``
             equation without radicals, perhaps written in terms of
@@ -2469,8 +2470,15 @@ def unrad(eq, *syms, **flags):
             interest will be cleared.
 
     ``flags`` are used internally for communication during recursive calls.
+    Two options are also recognized::
 
-    Radicals can be removed from an expression if:
+        ``take``, when defined, is interpreted as a single-argument function
+        that returns True if a given Pow should be handled.
+        ``all``, when True, will signify that an attempt should be made to
+        remove all radicals. ``take``, if present, has priority over ``all``.
+
+    Radicals can be removed from an expression if::
+
         *   all bases of the radicals are the same; a change of variables is
             done in this case.
         *   if all radicals appear in one term of the expression
@@ -2483,33 +2491,70 @@ def unrad(eq, *syms, **flags):
         >>> from sympy.solvers.solvers import unrad
         >>> from sympy.abc import x
         >>> from sympy import sqrt, Rational
-        >>> unrad(sqrt(x)*x**Rational(1,3) + 2)
+        >>> unrad(sqrt(x)*x**Rational(1, 3) + 2)
         (x**5 - 64, [], [])
-        >>> unrad(sqrt(x) + (x + 1)**Rational(1,3))
+        >>> unrad(sqrt(x) + (x + 1)**Rational(1, 3))
         (x**3 - x**2 - 2*x - 1, [], [])
-        >>> unrad(sqrt(x) + x**Rational(1,3) + 2)
+        >>> unrad(sqrt(x) + x**Rational(1, 3) + 2)
         (_p**3 + _p**2 + 2, [(_p, -_p**6 + x)], [])
 
     """
+    def _canonical(eq):
+        # remove constants since these don't change the location of the root
+        # and expand the expression
+        eq = factor_terms(eq)
+        if eq.is_Mul:
+            eq = Mul(*[f for f in eq.args if not f.is_number])
+        eq = _mexpand(eq)
+
+        # make sign canonical
+        free = eq.free_symbols
+        if len(free) == 1:
+            if eq.coeff(free.pop()**degree(eq)) < 0:
+                eq = -eq
+        elif eq.could_extract_minus_sign():
+            eq = -eq
+
+        return eq
+
     if eq.is_Atom:
         return
-    cov, dens, nwas = [flags.get(k, v) for k, v in
-                       sorted(dict(dens=None, cov=None, n=None).items())]
+    cov, dens, nwas, rpt = [flags.get(k, v) for k, v in
+        sorted(dict(dens=None, cov=None, n=None, rpt=0).items())]
 
-    def _take(d):
-        # see if this is a term that has symbols of interest
-        # and merits further processing
-        free = d.free_symbols
-        if not free:
-            return False
-        return not syms or free.intersection(syms)
+    if flags.get('take', None):
+        _take = flags.pop('take')
+    elif flags.pop('all', None):
+        _rad = lambda w: w.is_Pow and w.exp.is_Rational and w.exp.q != 1
+        def _take(d):
+            return _rad(d) or any(_rad(i) for i in d.atoms(Pow))
+        if eq.has(S.ImaginaryUnit):
+            i = Dummy()
+            flags['take'] = _take
+            try:
+                rv = unrad(eq.xreplace({S.ImaginaryUnit: sqrt(i)}), *syms, **flags)
+                rep = {i: S.NegativeOne}
+                rv = (_canonical(rv[0].xreplace(rep)),
+                      [tuple([j.xreplace(rep) for j in i]) for i in rv[1]],
+                      [i.xreplace(rep) for i in rv[2]])
+                return rv
+            except ValueError, msg:
+                raise msg
+    else:
+        def _take(d):
+            # see if this is a term that has symbols of interest
+            # and merits further processing
+            free = d.free_symbols
+            if not free:
+                return False
+            return not syms or free.intersection(syms)
 
     if dens is None:
         dens = set()
     if cov is None:
         cov = []
 
-    eq = powdenest(eq)
+    eq = powdenest(factor_terms(eq, radical=True))
     eq, d = eq.as_numer_denom()
     eq = _mexpand(eq)
     if _take(d):
@@ -2555,7 +2600,7 @@ def unrad(eq, *syms, **flags):
     rterms = [Add(*rterms[k]) for k in rterms.keys()]
     # the output will depend on the order terms are processed, so
     # make it canonical quickly
-    rterms.sort(key=default_sort_key)
+    rterms = list(reversed(list(ordered(rterms))))
 
     # continue handling
     ok = True
@@ -2565,21 +2610,23 @@ def unrad(eq, *syms, **flags):
     elif len(rterms) == 2 and not args:
         eq = rterms[0]**lcm - rterms[1]**lcm
 
-    elif log(lcm, 2).is_Integer and (not args and len(rterms) == 4 or len(rterms) < 4):
+    elif log(lcm, 2).is_Integer and (not args and
+            len(rterms) == 4 or len(rterms) < 4):
+        def _norm2(a, b):
+            return a**2 + b**2 + 2*a*b
+
         if len(rterms) == 4:
             # (r0+r1)**2 - (r2+r3)**2
-            t1, t2, t3, t4 = [t**2 for t in rterms]
-            eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
-                (t3 + t4 + 2*rterms[2]*rterms[3])
+            r0, r1, r2, r3 = rterms
+            eq = _norm2(r0, r1) - _norm2(r2, r3)
         elif len(rterms) == 3:
-            # (r0+r1)**2 - (r2+a)**2
-            t1, t2, t3 = [t**2 for t in rterms]
-            eq = t1 + t2 + 2*rterms[0]*rterms[1] - \
-                (t3 + args**2 + 2*args*rterms[2])
+            # (r1+r2)**2 - (r0+args)**2
+            r0, r1, r2 = rterms
+            eq = _norm2(r1, r2) - _norm2(r0, args)
         elif len(rterms) == 2:
-            t1, t2 = [t**2 for t in rterms[:2]]
-            # r0**2 - (r1+a)**2
-            eq = t1 - (t2 + args**2 + 2*args*rterms[1])
+            # r0**2 - (r1+args)**2
+            r0, r1 = rterms
+            eq = r0**2 - _norm2(r1, args)
 
     elif len(bases) == 1:  # change of variables may work
         ok = False
@@ -2605,13 +2652,16 @@ def unrad(eq, *syms, **flags):
         ok = False
 
     new_depth = sqrt_depth(eq)
-    if not ok or (nwas is not None and len(rterms) == nwas and new_depth and new_depth == depth):
+    rpt += 1  # XXX how many repeats with others unchanging is enough?
+    if not ok or (
+                nwas is not None and len(rterms) == nwas and
+                new_depth is not None and new_depth == depth and
+                rpt > 3):
         # XXX: XFAIL tests indicate other cases that should be handled.
         raise ValueError('Cannot remove all radicals from %s' % eq)
 
-    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms)))
+    neq = unrad(eq, *syms, **dict(cov=cov, dens=dens, n=len(rterms), rpt=rpt, take=_take))
     if neq:
         eq = neq[0]
-    if eq.could_extract_minus_sign():
-        eq = -eq
-    return (_mexpand(eq), cov, list(dens))
+
+    return (_canonical(eq), cov, list(dens))

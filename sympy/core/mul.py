@@ -23,6 +23,64 @@ class NC_Marker:
     is_commutative = False
 
 
+# Key for sorting commutative args in canonical order
+_args_sortkey = cmp_to_key(Basic.compare)
+def _mulsort(args):
+    # in-place sorting of args
+    args.sort(key=_args_sortkey)
+
+
+def _unevaluated_Mul(*args):
+    """Return a well-formed unevaluated Mul: Numbers are collected and
+    put in slot 0 and args are sorted. Use this when args have changed
+    but you still want to return an unevaluated Mul.
+
+    Examples
+    ========
+
+    >>> from sympy.core.mul import _unevaluated_Mul as uMul
+    >>> from sympy import S, sqrt, Mul
+    >>> from sympy.abc import x, y
+    >>> a = uMul(*[S(3.0), x, S(2)])
+    >>> a.args[0]
+    6.00000000000000
+    >>> a.args[1]
+    x
+
+    Beyond the Number being in slot 0, there is no other flattening of
+    arguments, but two unevaluated Muls with the same arguments will
+    always compare as equal during testing:
+
+    >>> m = uMul(sqrt(2), sqrt(3))
+    >>> m == uMul(sqrt(3), sqrt(2))
+    True
+    >>> m == Mul(*m.args)
+    False
+
+    """
+    args = list(args)
+    newargs = []
+    ncargs = []
+    co = S.One
+    while args:
+        a = args.pop()
+        if a.is_Mul:
+            c, nc = a.args_cnc()
+            args.extend(c)
+            if nc:
+                ncargs.append(Mul._from_args(nc))
+        elif a.is_Number:
+            co *= a
+        else:
+            newargs.append(a)
+    _mulsort(newargs)
+    if co is not S.One:
+        newargs.insert(0, co)
+    if ncargs:
+        newargs.append(Mul._from_args(ncargs))
+    return Mul._from_args(newargs)
+
+
 class Mul(Expr, AssocOp):
 
     __slots__ = []
@@ -31,9 +89,6 @@ class Mul(Expr, AssocOp):
 
     #identity = S.One
     # cyclic import, so defined in numbers.py
-
-    # Key for sorting commutative args in canonical order
-    _args_sortkey = cmp_to_key(Basic.compare)
 
     @classmethod
     def flatten(cls, seq):
@@ -113,6 +168,7 @@ class Mul(Expr, AssocOp):
 
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
+
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -134,7 +190,7 @@ class Mul(Expr, AssocOp):
                     else:
                         r, b = b.as_coeff_Add()
                         bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        bargs.sort(key=hash)
+                        _addsort(bargs)
                         ar = a*r
                         if ar:
                             bargs.insert(0, ar)
@@ -498,7 +554,7 @@ class Mul(Expr, AssocOp):
             return [coeff], [], order_symbols
 
         # order commutative part canonically
-        c_part.sort(key=cls._args_sortkey)
+        _mulsort(c_part)
 
         # current code expects coeff to be always in slot-0
         if coeff is not S.One:
@@ -1520,4 +1576,4 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
 
 from numbers import Rational
 from power import Pow
-from add import Add
+from add import Add, _addsort
