@@ -1913,6 +1913,9 @@ def radsimp(expr, symbolic=True, max_terms=4):
         elif d.is_Mul:
             return _umul(*[handle(1/d) for d in d.args])
 
+        if not symbolic and d.free_symbols:
+            return expr
+
         if d.is_Pow and d.exp.is_Rational and d.exp.q == 2:
             d2 = sqrtdenest(sqrt(d.base))**d.exp.p
             if d2 != d:
@@ -1994,9 +1997,6 @@ def radsimp(expr, symbolic=True, max_terms=4):
         if not keep:
             return expr
         return _umul(n, 1/d)
-
-    if not symbolic and expr.free_symbols:
-        return expr
 
     coeff, expr = expr.as_coeff_Add()
     expr = expr.normal()

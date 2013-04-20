@@ -1470,8 +1470,15 @@ def test_radsimp():
     assert radsimp(1/e) == 1/cos(-sqrt(2) + 1)
     assert radsimp(2/e) == 2/cos(-sqrt(2) + 1)
 
+    # test that symbolic denominators are not processed
+    r = 1 + sqrt(2)
+    assert radsimp(x/r, symbolic=False) == -x*(-sqrt(2) + 1)
+    assert radsimp(x/(y + r), symbolic=False) == x/(y + 1 + sqrt(2))
+    assert radsimp(x/(y + r)/r, symbolic=False) == \
+        -x*(-sqrt(2) + 1)/(y + 1 + sqrt(2))
 
-def test_simplify_issue_3214():
+
+def test_radsimp_issue_3214():
     c, p = symbols('c p', positive=True)
     s = sqrt(c**2 - p**2)
     b = (c + I*p - s)/(c + I*p + s)
