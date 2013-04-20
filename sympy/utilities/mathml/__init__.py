@@ -1,8 +1,7 @@
 """Module with some functions for MathML, like transforming MathML
 content in MathML presentation.
 
-To use this module, you will need libxml2 and libxslt, with its
-respective python bindings.
+To use this module, you will need lxml.
 """
 
 from sympy.utilities.pkgdata import get_resource
@@ -21,24 +20,17 @@ def apply_xsl(mml, xsl):
     @param mml: a string with MathML code
     @param xsl: a string representing a path to a xsl (xml stylesheet)
         file. This file name is relative to the PYTHONPATH
+    
+    >>> xsl = 'mathml/data/simple_mmlctop.xsl'
+    >>> mml = '<apply> <inverse/> <sin/> </apply>'
+    >>> apply_xsl(mml,xsl)
     """
-
-    import libxml2
-    import libxslt
-
-    s = get_resource(xsl).read()
-
-    styledoc = libxml2.parseDoc(s)
-    style = libxslt.parseStylesheetDoc(styledoc)
-
-    doc = libxml2.parseDoc(mml)
-    result = style.applyStylesheet(doc, None)
-    sourceDoc = result
-    s = style.saveResultToString(result)
-
-    style.freeStylesheet()
-    sourceDoc.freeDoc()
-
+    from lxml import etree
+    s = etree.XML(get_resource(xsl).read())
+    transform = etree.XSLT(s)
+    doc = etree.XML(mml)
+    result = transform(doc)
+    s = str(result)
     return s
 
 
