@@ -57,9 +57,7 @@ attempted. For example,
     >>> from time import time
 
 >>> eq = cos(x + y)/cos(x)
->>> TR10i(eq.expand(trig=True)) == eq
-True
->>> TR10i(eq.expand(trig=True).expand())
+>>> TR10i(eq.expand(trig=True))
 -sin(x)*sin(y)/cos(x) + cos(y)
 
 If the expression is put in "normal" form (with a common denominator) then
