@@ -2726,6 +2726,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
+        cls = expr.__class__
         # XXX: Hack to support non-Basic args
         #              |
         #              V
@@ -2737,12 +2738,13 @@ class Expr(Basic, EvalfMixin):
                 sargs.append(arg)
 
             if hit:
-                expr = expr.func(*sargs)
+                expr = cls(*sargs)
 
-        if hasattr(expr, '_eval_expand_' + hint):
-            newexpr = getattr(expr, '_eval_expand_' + hint)(**hints)
+        if hasattr(expr, hint):
+            newexpr = getattr(expr, hint)(**hints)
             if newexpr != expr:
                 return (newexpr, True)
+
         return (expr, hit)
 
     @cacheit
@@ -2771,6 +2773,7 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
+
         # Although the hints are sorted here, an earlier hint may get applied
         # at a given node in the expression tree before another because of how
         # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
@@ -2796,7 +2799,19 @@ class Expr(Basic, EvalfMixin):
         for hint in sorted(hints.keys(), key=_expand_hint_key):
             use_hint = hints[hint]
             if use_hint:
+                hint = '_eval_expand_' + hint
                 expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
+
+        while True:
+            was = expr
+            if hints.get('multinomial', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_multinomial', deep=deep, **hints)
+            if hints.get('mul', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_mul', deep=deep, **hints)
+            if expr == was:
+                break
 
         if modulus is not None:
             modulus = sympify(modulus)
