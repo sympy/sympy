@@ -24,13 +24,13 @@ computations in this problem. ::
   >>> mechanics_printing()
 
 Declaration of Coordinates & Speeds:
-A Simple definitions for qdots: (qd = u) is used in this code.  Speeds are: yaw
+A simple definition for qdots, qd = u,is used in this code.  Speeds are: yaw
 frame ang. rate, roll frame ang. rate, rear wheel frame ang.  rate (spinning
 motion), frame ang. rate (pitching motion), steering frame ang. rate, and front
 wheel ang. rate (spinning motion).  Wheel positions are ignorable coordinates,
 so they are not introduced. ::
 
-  >>> q1, q2, q4, q5 = dynamicsymbols('q1 q2 q4 q5')
+  >>> q1, q2, q3, q4, q5 = dynamicsymbols('q1 q2 q3 q4 q5')
   >>> q1d, q2d, q4d, q5d = dynamicsymbols('q1 q2 q4 q5', 1)
   >>> u1, u2, u3, u4, u5, u6 = dynamicsymbols('u1 u2 u3 u4 u5 u6')
   >>> u1d, u2d, u3d, u4d, u5d, u6d = dynamicsymbols('u1 u2 u3 u4 u5 u6', 1)
