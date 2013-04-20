@@ -57,9 +57,17 @@ if not options.cache:
 if options.types:
     os.environ['SYMPY_GROUND_TYPES'] = options.types
 if options.diff:
-    p = subprocess.Popen(['git', 'diff', '--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    out, err = p.communicate()
-    args = args + out.split()
+    try:
+        p = subprocess.Popen(['git', 'diff', '--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+        print >> sys.stderr, 'git not found'
+        sys.exit(1)
+    if p.returncode == 0: ## only on successful exit
+        out, err = p.communicate()
+        args = args + out.split()
+    else:
+        print >> sys.stderr, 'error %d encountered while running git' % p.returncode
+        sys.exit(1)
 
 import sympy
 

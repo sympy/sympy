@@ -67,16 +67,30 @@ if not options.cache:
 if options.types:
     os.environ['SYMPY_GROUND_TYPES'] = options.types
 if options.diff:
-    p = subprocess.Popen(['git', 'diff', '--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        p = subprocess.Popen(['git', 'diff', '--name-only'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except:
+        print >> sys.stderr, 'git not found'
+        sys.exit(1)
     out, err = p.communicate()
-    diff_list = out.split()
-    for diff_file in diff_list:
-        head, tail = os.path.split(diff_file)
-        test_dir = os.path.join(head, 'tests')
-        if os.path.isdir(test_dir):
-            for test_file in os.listdir(test_dir):
-                if tail in test_file:
-                    args.append(os.path.join(test_dir, test_file))
+    if p.returncode == 0: ## only on successful exit
+        diff_list = out.split() ## assumes none of the names have spaces in them
+        for diff_file in diff_list:
+            head, tail = os.path.split(diff_file)
+            # look in the directory called "tests" in the directory containing
+            # the changed file
+            test_dir = os.path.join(head, 'tests')
+            if os.path.isdir(test_dir):
+                # if it is a directory, list its contents. if any file contains
+                # the name of the file that has been modified, add it to the
+                # list of tests to run
+                for test_file in os.listdir(test_dir):
+                    if tail in test_file:
+                        args.append(os.path.join(test_dir, test_file))
+    else:
+        print >> sys.stderr, 'error %d encountered while running git' % p.returncode
+        sys.exit(1)
+
 
 import sympy
 
