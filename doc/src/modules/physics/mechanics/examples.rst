@@ -1,5 +1,5 @@
 ==============================
-Examples for physics.mechanics
+Examples for Physics/Mechanics
 ==============================
 
 Here are some examples that illustrate how one typically uses this module. We
