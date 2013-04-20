@@ -2744,14 +2744,6 @@ class Expr(Basic, EvalfMixin):
             newexpr = getattr(expr, hint)(**hints)
             if newexpr != expr:
                 return (newexpr, True)
-        else:
-            # see if an unevaluated form is changed
-            if expr.__class__ != cls:
-                u = cls(*sargs, **dict(evaluate=False))
-                if u.__class__ == cls and hasattr(u, hint):
-                    newexpr = getattr(u, hint)(**hints)
-                    if newexpr != u:
-                        return (newexpr, True)
 
         return (expr, hit)
 
