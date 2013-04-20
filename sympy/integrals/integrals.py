@@ -386,10 +386,11 @@ class Integral(Expr):
     
     def interval(self):
         """
+
         Returns a tuple of lower limit and upper limit
 
         Examples
-        =======
+        ========
 
         >>> from sympy import Integral
         >>> from sympy.abc import x, y, z
@@ -400,16 +401,20 @@ class Integral(Expr):
         (0, pi/2)
 
         """
-        
-        limits = self.limits
-        limit_tuple = limits[0]
+        limit_tuple = self.limits[0]
         return limit_tuple[1:]
 
+    def _hashable_content(self):
+        return (self.function,) + (self.limits)
+
+    def __hash__(self):
+        return super(Integral, self).__hash__()
+    
     def __eq__(self, other):
         #fixes issue 2440 
         variable_1 = self.variables[0]
         variable_2 = other.variables[0]
-        if (self.interval() == other.interval() and (self.function).subs(variable_1, variable_2) == other.function):
+        if (self.interval() == other.interval() != () and (self.function).subs(variable_1, variable_2) == other.function):
             return True
         else:
             return False
