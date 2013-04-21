@@ -212,7 +212,7 @@ def encipher_substitution(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     symbols = "".join(symbols)
     A = alphabet_of_cipher(symbols)
     n = len(A)
-    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
+    pt0 = [x.capitalize() for x in pt if x.isalnum()]
     ct = [key[A.index(x)] for x in pt0]
     return "".join(ct)
 
@@ -326,10 +326,10 @@ def encipher_vigenere(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
     key0 = unique(key)
-    key0 = [x.capitalize() for x in key0 if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key0 if x.isalnum()]
     K = [A.index(x) for x in key0]
     k = len(K)
-    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
+    pt0 = [x.capitalize() for x in pt if x.isalnum()]
     P = [A.index(x) for x in pt0]
     n = len(P)
     #m = n//k
@@ -354,10 +354,10 @@ def decipher_vigenere(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
     key0 = unique(key)
-    key0 = [x.capitalize() for x in key0 if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key0 if x.isalnum()]
     K = [A.index(x) for x in key0]
     k = len(K)
-    ct0 = [x.capitalize() for x in ct if (x.isalpha() or x.isdigit())]
+    ct0 = [x.capitalize() for x in ct if x.isalnum()]
     C = [A.index(x) for x in ct0]
     n = len(C)
     #m = n//k
@@ -477,7 +477,7 @@ def encipher_hill(pt, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
     k = key.cols
-    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
+    pt0 = [x.capitalize() for x in pt if x.isalnum()]
     P = [A.index(x) for x in pt0]
     n = len(P)
     m = n//k
@@ -513,7 +513,7 @@ def decipher_hill(ct, key, symbols = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"):
     A = alphabet_of_cipher(symbols)
     N = len(A)   # normally, 26
     k = key.cols
-    ct0 = [x.capitalize() for x in ct if (x.isalpha() or x.isdigit())]
+    ct0 = [x.capitalize() for x in ct if x.isalnum()]
     C = [A.index(x) for x in ct0]
     n = len(C)
     m = n//k
@@ -561,8 +561,8 @@ def encipher_bifid5(pt, key, verbose=False):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
-    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
     n = len(pt0)
@@ -638,7 +638,7 @@ def bifid5_square(key):
     # first make sure the letters are capitalized
     # and key has no spaces or duplicates
     key = unique(key)
-    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
     f = lambda i,j: Symbol(long_key[5*i+j])
@@ -674,8 +674,8 @@ def decipher_bifid5(ct, key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
-    ct0 = [x.capitalize() for x in ct if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    ct0 = [x.capitalize() for x in ct if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0) and x!="J")]
     n = len(ct0)
@@ -712,7 +712,7 @@ def bifid7_square(key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if (not(x in key0))]
     f = lambda i,j: Symbol(long_key[7*i+j])
@@ -746,8 +746,8 @@ def encipher_bifid7(pt, key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
-    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
     n = len(pt0)
@@ -792,8 +792,8 @@ def encipher_bifid6(pt, key, verbose = False):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
-    pt0 = [x.capitalize() for x in pt if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    pt0 = [x.capitalize() for x in pt if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
     n = len(pt0)
@@ -836,8 +836,8 @@ def decipher_bifid6(ct, key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
-    ct0 = [x.capitalize() for x in ct if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key if x.isalnum()]
+    ct0 = [x.capitalize() for x in ct if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
     n = len(ct0)
@@ -873,7 +873,7 @@ def bifid6_square(key):
     # first make sure the letters are capitalized
     # and text has no spaces
     key = unique(key)
-    key0 = [x.capitalize() for x in key if (x.isalpha() or x.isdigit())]
+    key0 = [x.capitalize() for x in key if x.isalnum()]
     # create long key
     long_key = key0+[x for x in A if not(x in key0)]
     f = lambda i,j: Symbol(long_key[6*i+j])
