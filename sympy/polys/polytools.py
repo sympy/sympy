@@ -5416,6 +5416,7 @@ def to_rational_coeffs(f):
 
     Examples
     ========
+
     >>> from sympy import sqrt, Poly, simplify, expand
     >>> from sympy.polys.polytools import to_rational_coeffs
     >>> from sympy.abc import x
