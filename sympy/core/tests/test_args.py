@@ -2525,13 +2525,10 @@ def test_sympy__series__order__Order():
     assert _test_args(Order(1, x, y))
 
 
-def test_sympy__simplify__cse_opts__Neg():
-    from sympy.simplify.cse_opts import Neg
-    assert _test_args(Neg())
-
 def test_sympy__simplify__hyperexpand__Hyper_Function():
     from sympy.simplify.hyperexpand import Hyper_Function
     assert _test_args(Hyper_Function([2], [1]))
+
 
 def test_sympy__simplify__hyperexpand__G_Function():
     from sympy.simplify.hyperexpand import G_Function
