@@ -123,6 +123,9 @@ def test_minimal_polynomial():
     mp = minimal_polynomial(p, x)
     assert mp == x**8 - 512*x**7 - 118208*x**6 + 31131136*x**5 + 647362560*x**4 - 56026611712*x**3 + 116994310144*x**2 + 404854931456*x - 27216576512
 
+    assert minimal_polynomial(S("-sqrt(5)/2 - 1/2 + (-sqrt(5)/2 - 1/2)**2"), x) == x - 1
+    a = 1 + sqrt(2)
+    assert minimal_polynomial((a*sqrt(2) + a)**3, x) == x**2 - 198*x + 1
 
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
