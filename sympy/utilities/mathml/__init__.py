@@ -20,7 +20,6 @@ def apply_xsl(mml, xsl):
     @param mml: a string with MathML code
     @param xsl: a string representing a path to a xsl (xml stylesheet)
         file. This file name is relative to the PYTHONPATH
-    
     >>> xsl = 'mathml/data/simple_mmlctop.xsl'
     >>> mml = '<apply> <inverse/> <sin/> </apply>'
     >>> apply_xsl(mml,xsl)
