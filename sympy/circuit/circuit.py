@@ -28,7 +28,7 @@ class Circuit:
     following two ways --
 
     1. Pass a netlist file as the input to parse_netlist function.
-    2. Instantiate by passing a list containing all the elements.
+    2. Instantiate by passing a list containing all the circuit elements.
 
     """
     def __init__(self, elements):
@@ -51,19 +51,19 @@ class Circuit:
             if isinstance(e, OpAmp):
                 self.opamps.append(e)
 
-        self.G = Matrix([])
-        self.B = Matrix([])
-        self.C = Matrix([])
-        self.D = Matrix([])
-        self.E = Matrix([])
-        self.I = Matrix([])
-        self.V = Matrix([])
-        self.J = Matrix([])
+        self.g = Matrix([])
+        self.b = Matrix([])
+        self.c = Matrix([])
+        self.d = Matrix([])
+        self.e = Matrix([])
+        self.i = Matrix([])
+        self.v = Matrix([])
+        self.j = Matrix([])
         self.A = Matrix([])
         self.Z = Matrix([])
         self.x = Matrix([])
-        self.Voltage = []
-        self.Current = {}
+        self.V = []
+        self.I = {}
 
 
 def solve(circuit):
@@ -73,8 +73,9 @@ def solve(circuit):
     solved circuit with first i elements of x Matrix as Voltages at
     i nodes and next j elements as Currents through j Voltage sources.
 
-    Refer :: http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA_All.html
+    Ref :: http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA_All.html
 
+    >>> from sympy import Symbol
     >>> from sympy.circuit import Circuit, VoltageSource, Inductor, Capacitor, Resistor, solve
     >>> elements = []
     >>> elements.append(VoltageSource('V1', '1', '0', '10'))
@@ -83,16 +84,13 @@ def solve(circuit):
     >>> elements.append(Resistor('R1', '3', '0', '1000'))
     >>> my_cir = Circuit(elements)
     >>> solution = solve(my_cir)
-    >>> solution.G
-    [ 1/(L1*s),       -1/(L1*s),           0]
-    [-1/(L1*s), C1*s + 1/(L1*s),       -C1*s]
-    [        0,           -C1*s, C1*s + 1/R1]
-
-    >>> solution.x
-    [                                         V1]
-    [V1*(C1*R1*s + 1)/(C1*L1*s**2 + C1*R1*s + 1)]
-    [          C1*R1*V1*s/(C1*s*(L1*s + R1) + 1)]
-    [            C1*V1*s/(-C1*s*(L1*s + R1) - 1)]
+    >>> solution.V[1]
+    V1
+    >>> solution.V[2]
+    V1*(C1*R1*s + 1)/(C1*L1*s**2 + C1*R1*s + 1)
+    >>> R1 = Symbol('R1')
+    >>> solution.I[R1]
+    C1*V1*s/(C1*s*(L1*s + R1) + 1)
 
     """
     for element in circuit.rlc_elements:
@@ -105,63 +103,83 @@ def solve(circuit):
         circuit.node_count = max([int(element.node1), int(element.node2), int(element.node3), int(element.node4), circuit.node_count])
     circuit.node_count = circuit.node_count + 1
 
-    circuit.G = _g_matrix(circuit.rlc_elements, circuit.node_count)
-    circuit.B = _b_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.C = _c_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.D = _d_matrix(circuit.v_sources, circuit.opamps)
-    circuit.E = _e_matrix(circuit.v_sources)
-    circuit.J = _j_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.V = _v_matrix(circuit.v_sources, circuit.node_count)
-    circuit.I = _i_matrix(circuit.i_sources, circuit.node_count)
+    circuit.g = _g_matrix(circuit.rlc_elements, circuit.node_count)
+    circuit.b = _b_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
+    circuit.c = _c_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
+    circuit.d = _d_matrix(circuit.v_sources, circuit.opamps)
+    circuit.e = _e_matrix(circuit.v_sources)
+    circuit.j = _j_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
+    circuit.v = _v_matrix(circuit.v_sources, circuit.node_count)
+    circuit.i = _i_matrix(circuit.i_sources, circuit.node_count)
 
-    circuit.A = _A_matrix(circuit.G, circuit.B, circuit.C, circuit.D)
-    circuit.Z = _z_matrix(circuit.I, circuit.E)
+    circuit.A = _A_matrix(circuit.g, circuit.b, circuit.c, circuit.d)
+    circuit.Z = _z_matrix(circuit.i, circuit.e)
 
     circuit.x = circuit.A.inv()*circuit.Z
     circuit.x.simplify()
 
-    circuit.Voltage.append(0)
+    circuit.V.append(0)
     for i in range(circuit.node_count - 1):
-        circuit.Voltage.append(circuit.x[i, 0])
+        circuit.V.append(circuit.x[i, 0].simplify())
     for i in range(circuit.node_count, len(circuit.x)):
-        circuit.Current[circuit.Z[i]] = circuit.x[i]
+        circuit.I[circuit.Z[i]] = circuit.x[i].simplify()
     for i in circuit.rlc_elements:
-        if int(i.node1) > int(i.node2)
-            circuit.Current[i.symbol] = (circuit.Voltage[int(i.node1)] - circuit.Voltage[int(i.node2)])/i.symbol
-        if int(i.node2) > int(i.node1)
-            circuit.Current[i.symbol] = (circuit.Voltage[int(i.node2)] - circuit.Voltage[int(i.node1)])/i.symbol
+        if int(i.node1) > int(i.node2):
+            circuit.I[i.symbol] = ((circuit.V[int(i.node1)] - circuit.V[int(i.node2)])/i.impedance).simplify()
+        if int(i.node2) > int(i.node1):
+            circuit.I[i.symbol] = ((circuit.V[int(i.node2)] - circuit.V[int(i.node1)])/i.impedance).simplify()
     return circuit
 
 
-
 class Resistor:
-
+    """
+    Class for Resistor objects.
+    A resistor is a passive two-terminal electrical component that implements
+    electrical resistance as a circuit element. The behavior of an ideal
+    resistor is governed by the relationship specified by Ohm's law: V = IR.
+    """
     def __init__(self, name, node1, node2, value):
         self.symbol = Symbol(name)
         self.node1 = node1
         self.node2 = node2
         self.value = float(value)
+        self.impedance = self.symbol
 
 
 class Inductor:
-
+    """
+    Class for Inductor objects.
+    An inductor is a passive two-terminal electrical component that stores
+    energy in its magnetic field.
+    """
     def __init__(self, name, node1, node2, value):
         self.symbol = Symbol(name)
         self.node1 = node1
         self.node2 = node2
         self.value = float(value)
+        self.impedance = self.symbol * s
 
 
 class Capacitor:
-
+    """
+    Class for Capacitor objects.
+    A capacitor (originally known as condenser) is a passive two-terminal
+    electrical component used to store energy in an electric field.
+    """
     def __init__(self, name, node1, node2, value):
         self.symbol = Symbol(name)
         self.node1 = node1
         self.node2 = node2
         self.value = float(value)
+        self.impedance = 1/(self.symbol * s)
+
 
 class VoltageSource:
-
+    """
+    Class for independent Voltage Source.
+    An ideal voltage source is a circuit element where the voltage across
+    it is independent of the current through it.
+    """
     def __init__(self, name, node1, node2, value):
         self.symbol = Symbol(name)
         self.node1 = node1
@@ -170,7 +188,11 @@ class VoltageSource:
 
 
 class CurrentSource:
-
+    """
+    Class for independent Current Source.
+    An ideal current source is a circuit element where the current through
+    it is independent of the voltage across it.
+    """
     def __init__(self, name, node1, node2, value):
         self.symbol = Symbol(name)
         self.node1 = node1
@@ -179,7 +201,11 @@ class CurrentSource:
 
 
 class OpAmp:
-
+    """
+    Class for ideal Operational Amplifiers(Opamps).
+    An operational amplifier is a DC-coupled high-gain electronic voltage
+    amplifier with a differential input.
+    """
     def __init__(self, name, node1, node2, node3, node4, gain):
         self.symbol = Symbol(name)
         self.node1 = node1
@@ -238,7 +264,7 @@ def parse_netlist(netlist_file):
 s = Symbol('s')
 
 
-def _g_matrix(elements, node_count):
+def _g_matrix(rlc_elements, node_count):
     """
     The Conductance matrix
 
@@ -258,16 +284,11 @@ def _g_matrix(elements, node_count):
 
     G = zeros(node_count - 1, node_count - 1)
 
-    for e in elements:
+    for e in rlc_elements:
         n1 = int(e.node1)
         n2 = int(e.node2)
 
-        if isinstance(e, Resistor):
-            g_elem = 1/e.symbol
-        if isinstance(e, Inductor):
-            g_elem = 1/(s*e.symbol)
-        if isinstance(e, Capacitor):
-            g_elem = s*e.symbol
+        g_elem = 1/e.impedance
 
         if n1 !=0 and n2 != 0:
             G[n1 - 1, n2 - 1] = G[n1 - 1, n2 - 1] - g_elem

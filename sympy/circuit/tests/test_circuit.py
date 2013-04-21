@@ -20,12 +20,14 @@ def test_solve():
 
     circuit = Circuit(elements)
     solution = solve(circuit)
-    assert solution.G == Matrix([[ 1/R1, -1/R1],[-1/R1, C1*s + 1/R2 + 1/R1]])
-    assert solution.B == Matrix([[1], [0]])
-    assert solution.C == Matrix([[1, 0]])
-    assert solution.D == Matrix([[0]])
-    assert solution.E == Matrix([[V1]])
-    assert solution.I == Matrix([[0],[0]])
+    assert solution.g == Matrix([[ 1/R1, -1/R1],[-1/R1, C1*s + 1/R2 + 1/R1]])
+    assert solution.b == Matrix([[1], [0]])
+    assert solution.c == Matrix([[1, 0]])
+    assert solution.d == Matrix([[0]])
+    assert solution.e == Matrix([[V1]])
+    assert solution.i == Matrix([[0],[0]])
     assert solution.A == Matrix([[ 1/R1, -1/R1, 1],[-1/R1, C1*s + 1/R2 + 1/R1, 0],[1, 0, 0]])
     assert solution.Z == Matrix([[0], [0], [V1]])
     assert solution.x == Matrix([[V1],[R2*V1/(C1*R1*R2*s + R1 + R2)],[-V1*(-C1*R2*s - 1)/(-C1*R1*R2*s - R1 - R2)]])
+    assert solution.I == {C1: C1*R2*V1*s/(C1*R1*R2*s + R1 + R2), R2: V1/(C1*R1*R2*s + R1 + R2), R1: (R2*V1/(C1*R1*R2*s + R1 + R2) - V1)/R1}
+    assert solution.V == [0, V1, R2*V1/(C1*R1*R2*s + R1 + R2)]
