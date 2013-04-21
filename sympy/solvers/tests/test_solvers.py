@@ -89,18 +89,19 @@ def test_guess_transcendental():
 
 
 def test_solve_args():
-    #implicit symbol to solve for
+    # implicit symbol to solve for
     assert set(solve(x**2 - 4)) == set([S(2), -S(2)])
     assert solve([x + y - 3, x - y - 5]) == {x: 4, y: -1}
-    #no symbol to solve for
+    assert solve(x - exp(x), x, implicit=True) == [exp(x)]
+    # no symbol to solve for
     assert solve(42) == []
     assert solve([1, 2]) == []
-    #unordered symbols
-    #only 1
+    # unordered symbols
+    # only 1
     assert solve(y - 3, set([y])) == [3]
-    #more than 1
+    # more than 1
     assert solve(y - 3, set([x, y])) == [{y: 3}]
-    #multiple symbols: take the first linear solution
+    # multiple symbols: take the first linear solution
     assert solve(x + y - 3, [x, y]) == [{x: 3 - y}]
     # unless it is an undetermined coefficients system
     assert solve(a + b*x - 2, [a, b]) == {a: 2, b: 0}
@@ -123,7 +124,7 @@ def test_solve_args():
         (exp(x) - x, exp(y) - y)) == [{x: -LambertW(-1), y: -LambertW(-1)}]
     # --  when symbols given
     solve([y, exp(x) + x], x, y) == [(-LambertW(1), 0)]
-    #symbol is a number
+    # symbol is a number
     assert solve(x**2 - pi, pi) == [x**2]
     # no equations
     assert solve([], [x]) == []
@@ -1227,7 +1228,26 @@ def test_issue_3653():
 
 
 def test_issue_3693():
-    assert solve(x*(x-1)**2*(x+1)*(x**6-x+1)) == [
+    assert solve(x*(x - 1)**2*(x + 1)*(x**6 - x + 1)) == [
     -1, 0, 1, RootOf(x**6 - x + 1, 0), RootOf(x**6 - x + 1, 1),
     RootOf(x**6 - x + 1, 2), RootOf(x**6 - x + 1, 3), RootOf(x**6 - x + 1, 4),
     RootOf(x**6 - x + 1, 5)]
+
+
+def test_issues_3720_3721_3722():
+    x, y = symbols('x y')
+    assert solve(abs(x + 3) - 2*abs(x - 3)) == [1, 9]
+    w = symbols('w', integer=True)
+    assert solve(2*x**w - 4*y**w, w) == solve((x/y)**w - 2, w)
+    x, y = symbols('x y', real=True)
+    assert solve(x + y*I + 3) == {y: 0, x: -3}
+    x, y = symbols('x y', imaginary=True)
+    assert solve(x + y*I + 3 + 2*I) == {x: -2*I, y: 3*I}
+    x = symbols('x', real=True)
+    assert solve(x + y + 3 + 2*I) == {x: -3, y: -2*I}
+    # issue 3149
+    f = Function('f')
+    assert solve(f(x + 1) - f(2*x - 1)) == [2]
+    assert solve(log(x + 1) - log(2*x - 1)) == [2]
+    x = symbols('x')
+    assert solve(2**x + 4**x) == [I*pi/log(2)]

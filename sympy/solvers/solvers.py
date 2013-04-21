@@ -21,7 +21,7 @@ from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops)
+                          count_ops, Function)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -29,7 +29,8 @@ from sympy.core.basic import preorder_traversal
 
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sinh, tanh, coth, acos, asin, atan, acot, acosh,
-                             asinh, atanh, acoth, Abs, sign, sqrt)
+                             asinh, atanh, acoth, Abs, sign, re, im, arg,
+                             sqrt)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom)
@@ -459,7 +460,7 @@ def solve(f, *symbols, **flags):
 
           In this case, all free symbols will be selected as potential
           symbols to solve for. If the equation is univariate then a list
-          of solutionsis returned; otherwise -- as is the case when symbols are
+          of solutions is returned; otherwise -- as is the case when symbols are
           given as an iterable of length > 1 -- a list of mappings will be returned.
 
             >>> solve(x - 3)
@@ -679,6 +680,10 @@ def solve(f, *symbols, **flags):
         elif isinstance(fi, bool) or fi.is_Relational:
             return reduce_inequalities(f, assume=flags.get('assume'),
                                        symbols=symbols)
+
+        # remove Abs()
+        f[i] = f[i].replace(Abs, lambda w: sqrt(w**2))
+
         # Any embedded piecewise functions need to be brought out to the
         # top level so that the appropriate strategy gets selected.
         f[i] = piecewise_fold(f[i])
@@ -688,6 +693,15 @@ def solve(f, *symbols, **flags):
             bare_f = False
             f.extend(list(f[i]))
             f[i] = S.Zero
+
+        # if we can split it into real and imaginary parts then do so
+        freei = f[i].free_symbols
+        if freei and all(s.is_real or s.is_imaginary for s in freei):
+            fr, fi = f[i].as_real_imag()
+            if fr and fi and not any(i.has(re, im, arg) for i in (fr, fi)):
+                if bare_f:
+                    bare_f = False
+                f[i: i + 1] = [fr, fi]
 
     # preprocess symbol(s)
     ###########################################################################
@@ -800,12 +814,11 @@ def solve(f, *symbols, **flags):
             if isinstance(p, bool) or isinstance(p, Piecewise):
                 pass
             elif (isinstance(p, bool) or
-                not p.args or
-                p in symset or
-                p.is_Add or p.is_Mul or
-                p.is_Pow and not implicit or
-                p.is_Function and not isinstance(p, AppliedUndef) and
-                  not implicit):
+                    not p.args or
+                    p in symset or
+                    p.is_Add or p.is_Mul or
+                    p.is_Pow and not implicit or
+                    p.is_Function and not implicit):
                 continue
             elif not p in seen:
                 seen.add(p)
@@ -817,6 +830,7 @@ def solve(f, *symbols, **flags):
     del seen
     non_inverts = dict(zip(non_inverts, [Dummy() for d in non_inverts]))
     f = [fi.subs(non_inverts) for fi in f]
+
     non_inverts = [(v, k.subs(swap_sym)) for k, v in non_inverts.iteritems()]
 
     # rationalize Floats
@@ -2131,8 +2145,9 @@ def _tsolve(eq, sym, **flags):
     rhs, lhs = _invert(eq, sym)
 
     if lhs.is_Add:
-        # it's time to try factoring
-        fac = factor(lhs - rhs)
+        # it's time to try factoring; powdenest is used
+        # to try get powers in standard form for better factoring
+        fac = factor(powdenest(lhs - rhs))
         if fac.is_Mul:
             return _solve(fac, sym)
 
@@ -2388,7 +2403,7 @@ def _invert(eq, *symbols, **kwargs):
         # dependent terms together, e.g. 3*f(x) + 2*g(x) -> f(x)/g(x) = -2/3
         if lhs.is_Add and not rhs and len(lhs.args) == 2 and \
                 not lhs.is_polynomial(*symbols):
-            a, b = lhs.as_two_terms()
+            a, b = ordered(lhs.args)
             ai, ad = a.as_independent(*symbols)
             bi, bd = b.as_independent(*symbols)
             if any(_ispow(i) for i in (ad, bd)):
@@ -2399,16 +2414,23 @@ def _invert(eq, *symbols, **kwargs):
                     lhs = powsimp(powdenest(ad/bd))
                     rhs = -bi/ai
                 else:
-                    bases = (b_base, a_base)
-                    expos = (b_exp, a_exp)
-                    if (all(i.is_real for i in bases + expos) and
-                            all(i.is_positive for i in bases) and
-                            any(i.has(*symbols) for i in expos) and
-                            not any(i.has(*symbols) for i in bases) and
-                            sign(ai*bi).is_negative):
-                        # ai*a_base**a_exp = -bi*b_base**b_exp
-                        lhs = a_exp*log(a_base) - b_exp*log(b_base)
-                        rhs = -log(ai/-bi)
+                    rat = ad/bd
+                    _lhs = powsimp(ad/bd)
+                    if _lhs != rat:
+                        lhs = _lhs
+                        rhs = -bi/ai
+            if ai*bi is S.NegativeOne:
+                if all(
+                        isinstance(i, Function) for i in (ad, bd)) and \
+                        ad.func == bd.func and ad.nargs == bd.nargs:
+                    if len(ad.args) == 1:
+                        lhs = ad.args[0]
+                        rhs = bd.args[0]
+                    else:
+                        # should be able to solve
+                        # f(x, y) == f(2, 3) -> x == 2
+                        # f(x, x + y) == f(2, 3) -> x == 2 or x == 3 - y
+                        raise NotImplementedError('equal function with more than 1 argument')
 
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
