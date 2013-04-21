@@ -11,6 +11,7 @@
 # TODO : Method for printing netlist.
 # TODO : Limit line length to 80.
 # TODO : Remove commands used for testing once done with them.
+# TODO : Print method for all classes
 
 __all__ = ['Circuit', 'Resistor', 'Capacitor', 'Inductor', 'VoltageSource', 'CurrentSource',
            'OpAmp', 'solve', 'parse_netlist', '_g_matrix', '_b_matrix', '_c_matrix',
@@ -61,6 +62,8 @@ class Circuit:
         self.A = Matrix([])
         self.Z = Matrix([])
         self.x = Matrix([])
+        self.Voltage = []
+        self.Current = {}
 
 
 def solve(circuit):
@@ -117,6 +120,16 @@ def solve(circuit):
     circuit.x = circuit.A.inv()*circuit.Z
     circuit.x.simplify()
 
+    circuit.Voltage.append(0)
+    for i in range(circuit.node_count - 1):
+        circuit.Voltage.append(circuit.x[i, 0])
+    for i in range(circuit.node_count, len(circuit.x)):
+        circuit.Current[circuit.Z[i]] = circuit.x[i]
+    for i in circuit.rlc_elements:
+        if int(i.node1) > int(i.node2)
+            circuit.Current[i.symbol] = (circuit.Voltage[int(i.node1)] - circuit.Voltage[int(i.node2)])/i.symbol
+        if int(i.node2) > int(i.node1)
+            circuit.Current[i.symbol] = (circuit.Voltage[int(i.node2)] - circuit.Voltage[int(i.node1)])/i.symbol
     return circuit
 
 
