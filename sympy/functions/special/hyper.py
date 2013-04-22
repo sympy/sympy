@@ -1,6 +1,6 @@
 """Hypergeometric and Meijer G-functions"""
 
-from sympy.core import S, I, pi, oo, ilcm, Mod
+from sympy.core import S, I, pi, oo, ilcm, Mod, C
 from sympy.core.function import Function, Derivative, ArgumentIndexError
 from sympy.core.containers import Tuple
 from sympy.core.mul import Mul
@@ -191,6 +191,14 @@ class hyper(TupleParametersBase):
             c = self.bq[0]
             return gamma(c)*gamma(c - a - b)/gamma(c - a)/gamma(c - b)
         return hyperexpand(self)
+
+    def _eval_rewrite_as_Sum(self, ap, bq, z):
+        from sympy.functions.combinatorial.factorials import factorial, RisingFactorial
+        n = C.Dummy("n", integer=True)
+        rfap = Tuple(*[RisingFactorial(a,n) for a in ap])
+        rfbq = Tuple(*[RisingFactorial(b,n) for b in bq])
+        coeff = Mul(*rfap)/Mul(*rfbq)
+        return C.Sum(coeff * z**n/factorial(n), (n, 0, oo))
 
     @property
     def argument(self):
