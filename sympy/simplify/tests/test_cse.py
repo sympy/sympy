@@ -1,7 +1,8 @@
 import itertools
 
 from sympy import (Add, Pow, Symbol, exp, sqrt, symbols, sympify, cse,
-    Matrix, S, cos, sin, Eq, Function, Tuple)
+    Matrix, S, cos, sin, Eq, Function, Tuple, RootOf)
+from sympy.simplify.cse_opts import sub_pre, sub_post
 from sympy.functions.special.hyper import meijerg
 from sympy.simplify import cse_main, cse_opts
 from sympy.utilities.pytest import XFAIL
@@ -238,7 +239,8 @@ def test_issue1400():
 
 
 def test_issue_3070():
-    from sympy import RootOf
-    from sympy.abc import x
     r = RootOf(x**6 - 4*x**5 - 2, 1)
     assert cse(r) == ([], [r])
+    # and a check that the right thing is done with the new
+    # mechanism
+    assert sub_post(sub_pre((-x - y)*z - x - y)) == -z*(x + y) - x - y
