@@ -654,6 +654,7 @@ def test_latex_FracElement():
     assert latex(x - 1) == r"x - 1"
     assert latex(x + 1) == r"x + 1"
 
+    assert latex(x/3) == r"\frac{x}{3}"
     assert latex(x/z) == r"\frac{x}{z}"
     assert latex(x*y/z) == r"\frac{x y}{z}"
     assert latex(x/(z*t)) == r"\frac{x}{z t}"

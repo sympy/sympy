@@ -364,6 +364,7 @@ def test_FracElement():
     assert str(x - 1) == "x - 1"
     assert str(x + 1) == "x + 1"
 
+    assert str(x/3) == "x/3"
     assert str(x/z) == "x/z"
     assert str(x*y/z) == "x*y/z"
     assert str(x/(z*t)) == "x/(z*t)"
