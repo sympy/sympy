@@ -6,6 +6,8 @@ from sympy.core import (
 
 from sympy.core.mul import _keep_coeff
 
+from sympy.core.function import FunctionClass
+
 from sympy.core.sympify import (
     sympify, SympifyError,
 )
@@ -5337,6 +5339,13 @@ def _symbolic_factor(expr, opt, method):
     """Helper function for :func:`_factor`. """
     if isinstance(expr, Expr) and not expr.is_Relational:
         coeff, factors = _symbolic_factor_list(together(expr), opt, method)
+        if len(factors) == 1 and hasattr(expr, "func") and opt.expand:
+                f, exp = factors[0]
+                is_fc = isinstance(expr.func, FunctionClass)
+                if is_fc:
+                        ep = expr.expand()
+                        if f.as_expr() == ep and exp == 1:
+                                factors[0] = (expr, exp)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[ _symbolic_factor(arg, opt, method) for arg in expr.args ])
