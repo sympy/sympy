@@ -14,9 +14,8 @@
 # TODO : Print method for all classes
 
 __all__ = ['Circuit', 'Resistor', 'Capacitor', 'Inductor', 'VoltageSource', 'CurrentSource',
-           'OpAmp', 'solve', 'parse_netlist', '_g_matrix', '_b_matrix', '_c_matrix',
-           '_d_matrix', '_e_matrix', '_j_matrix', '_v_matrix', '_i_matrix', '_A_matrix',
-           '_z_matrix']
+           'OpAmp', 'parse_netlist', '_g_matrix', '_b_matrix', '_c_matrix','_d_matrix',
+           '_e_matrix', '_j_matrix', '_v_matrix', '_i_matrix', '_A_matrix', '_z_matrix']
 
 from sympy import Symbol, pprint, Matrix
 from sympy.matrices.dense import zeros
@@ -66,69 +65,70 @@ class Circuit:
         self.I = {}
 
 
-def solve(circuit):
-    """
-    Solves the circuit for unknown node Voltages and unknown Currents flowing through
-    Voltage Sources. For i independent nodes and j Voltage sources in the circuit, it
-    solved circuit with first i elements of x Matrix as Voltages at
-    i nodes and next j elements as Currents through j Voltage sources.
+    def solve(self):
+        """
+        Solves the circuit for unknown node Voltages and unknown Currents flowing through
+        Voltage Sources. For i independent nodes and j Voltage sources in the circuit, it
+        solved circuit with first i elements of x Matrix as Voltages at
+        i nodes and next j elements as Currents through j Voltage sources.
 
-    Ref :: http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA_All.html
+        Ref :: http://www.swarthmore.edu/NatSci/echeeve1/Ref/mna/MNA_All.html
 
-    >>> from sympy import Symbol
-    >>> from sympy.circuit import Circuit, VoltageSource, Inductor, Capacitor, Resistor, solve
-    >>> elements = []
-    >>> elements.append(VoltageSource('V1', '1', '0', '10'))
-    >>> elements.append(Inductor('L1', '1', '2', '0.1'))
-    >>> elements.append(Capacitor('C1', '2', '3', '0.0001'))
-    >>> elements.append(Resistor('R1', '3', '0', '1000'))
-    >>> my_cir = Circuit(elements)
-    >>> solution = solve(my_cir)
-    >>> solution.V[1]
-    V1
-    >>> solution.V[2]
-    V1*(C1*R1*s + 1)/(C1*L1*s**2 + C1*R1*s + 1)
-    >>> R1 = Symbol('R1')
-    >>> solution.I[R1]
-    C1*V1*s/(C1*s*(L1*s + R1) + 1)
+        >>> from sympy import Symbol
+        >>> from sympy.circuit import Circuit, VoltageSource, Inductor, Capacitor, Resistor
+        >>> elements = []
+        >>> elements.append(VoltageSource('V1', '1', '0', '10'))
+        >>> elements.append(Inductor('L1', '1', '2', '0.1'))
+        >>> elements.append(Capacitor('C1', '2', '3', '0.0001'))
+        >>> elements.append(Resistor('R1', '3', '0', '1000'))
+        >>> my_cir = Circuit(elements)
+        >>> solution = my_cir.solve()
+        >>> solution.V[1]
+        V1
+        >>> solution.V[2]
+        V1*(C1*R1*s + 1)/(C1*L1*s**2 + C1*R1*s + 1)
+        >>> R1 = Symbol('R1')
+        >>> solution.I[R1]
+        C1*V1*s/(C1*s*(L1*s + R1) + 1)
 
-    """
-    for element in circuit.rlc_elements:
-        circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
-    for element in circuit.v_sources:
-        circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
-    for element in circuit.i_sources:
-        circuit.node_count = max([int(element.node1), int(element.node2), circuit.node_count])
-    for element in circuit.opamps:
-        circuit.node_count = max([int(element.node1), int(element.node2), int(element.node3), int(element.node4), circuit.node_count])
-    circuit.node_count = circuit.node_count + 1
+        """
+        for element in self.rlc_elements:
+            self.node_count = max([int(element.node1), int(element.node2), self.node_count])
+        for element in self.v_sources:
+            self.node_count = max([int(element.node1), int(element.node2), self.node_count])
+        for element in self.i_sources:
+            self.node_count = max([int(element.node1), int(element.node2), self.node_count])
+        for element in self.opamps:
+            self.node_count = max([int(element.node1), int(element.node2), int(element.node3), int(element.node4), self.node_count])
+        self.node_count = self.node_count + 1
 
-    circuit.g = _g_matrix(circuit.rlc_elements, circuit.node_count)
-    circuit.b = _b_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.c = _c_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.d = _d_matrix(circuit.v_sources, circuit.opamps)
-    circuit.e = _e_matrix(circuit.v_sources)
-    circuit.j = _j_matrix(circuit.v_sources, circuit.opamps, circuit.node_count)
-    circuit.v = _v_matrix(circuit.v_sources, circuit.node_count)
-    circuit.i = _i_matrix(circuit.i_sources, circuit.node_count)
+        self.g = _g_matrix(self.rlc_elements, self.node_count)
+        self.b = _b_matrix(self.v_sources, self.opamps, self.node_count)
+        self.c = _c_matrix(self.v_sources, self.opamps, self.node_count)
+        self.d = _d_matrix(self.v_sources, self.opamps)
+        self.e = _e_matrix(self.v_sources)
+        self.j = _j_matrix(self.v_sources, self.opamps, self.node_count)
+        self.v = _v_matrix(self.v_sources, self.node_count)
+        self.i = _i_matrix(self.i_sources, self.node_count)
 
-    circuit.A = _A_matrix(circuit.g, circuit.b, circuit.c, circuit.d)
-    circuit.Z = _z_matrix(circuit.i, circuit.e)
+        self.A = _A_matrix(self.g, self.b, self.c, self.d)
+        self.Z = _z_matrix(self.i, self.e)
 
-    circuit.x = circuit.A.inv()*circuit.Z
-    circuit.x.simplify()
+        self.x = self.A.inv()*self.Z
+        self.x.simplify()
 
-    circuit.V.append(0)
-    for i in range(circuit.node_count - 1):
-        circuit.V.append(circuit.x[i, 0].simplify())
-    for i in range(circuit.node_count, len(circuit.x)):
-        circuit.I[circuit.Z[i]] = circuit.x[i].simplify()
-    for i in circuit.rlc_elements:
-        if int(i.node1) > int(i.node2):
-            circuit.I[i.symbol] = ((circuit.V[int(i.node1)] - circuit.V[int(i.node2)])/i.impedance).simplify()
-        if int(i.node2) > int(i.node1):
-            circuit.I[i.symbol] = ((circuit.V[int(i.node2)] - circuit.V[int(i.node1)])/i.impedance).simplify()
-    return circuit
+        self.V.append(0)
+        for i in range(self.node_count - 1):
+            self.V.append(self.x[i, 0].simplify())
+        for i in range(self.node_count, len(self.x)):
+            self.I[self.Z[i]] = self.x[i].simplify()
+        for i in self.rlc_elements:
+            if int(i.node1) > int(i.node2):
+                self.I[i.symbol] = ((self.V[int(i.node1)] - self.V[int(i.node2)])/i.impedance).simplify()
+            if int(i.node2) > int(i.node1):
+                self.I[i.symbol] = ((self.V[int(i.node2)] - self.V[int(i.node1)])/i.impedance).simplify()
+        solution = self
+        return solution
 
 
 class Resistor:

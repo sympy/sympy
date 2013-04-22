@@ -1,6 +1,6 @@
 from sympy import Symbol, Matrix
 from sympy.circuit.circuit import (Circuit, Resistor, Capacitor, Inductor,
-    VoltageSource, CurrentSource, OpAmp, solve, parse_netlist,
+    VoltageSource, CurrentSource, OpAmp, parse_netlist,
     _g_matrix, _b_matrix, _c_matrix, _d_matrix, _e_matrix, _j_matrix,
     _v_matrix, _i_matrix, _A_matrix, _z_matrix)
 
@@ -19,7 +19,7 @@ def test_solve():
     C1 = Symbol('C1')
 
     circuit = Circuit(elements)
-    solution = solve(circuit)
+    solution = circuit.solve()
     assert solution.g == Matrix([[ 1/R1, -1/R1],[-1/R1, C1*s + 1/R2 + 1/R1]])
     assert solution.b == Matrix([[1], [0]])
     assert solution.c == Matrix([[1, 0]])
