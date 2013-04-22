@@ -499,6 +499,52 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def to_dict(self):
         return dict(self)
 
+    def str(self, printer, precedence, exp_pattern, mul_symbol):
+        if not self:
+            return printer._print(self.ring.domain.zero)
+        prec_add = precedence["Add"]
+        prec_atom = precedence["Atom"]
+        ring = self.ring
+        symbols = ring.symbols
+        ngens = ring.ngens
+        zm = ring.zero_monom
+        sexpvs = []
+        expvs = self.monoms()
+        for expv in expvs:
+            coeff = self[expv]
+            positive = ring.domain.is_positive(coeff)
+            sign = " + " if positive else " - "
+            sexpvs.append(sign)
+            if expv == zm:
+                scoeff = printer._print(coeff)
+                if scoeff.startswith("-"):
+                    scoeff = scoeff[1:]
+            else:
+                if not positive:
+                    coeff = -coeff
+                if coeff != 1:
+                    scoeff = printer.parenthesize(coeff, prec_add)
+                else:
+                    scoeff = ''
+            sexpv = []
+            for i in xrange(ngens):
+                exp = expv[i]
+                if not exp:
+                    continue
+                symbol = printer.parenthesize(symbols[i], prec_atom-1)
+                if exp != 1:
+                    sexpv.append(exp_pattern % (symbol, exp))
+                else:
+                    sexpv.append('%s' % symbol)
+            if scoeff:
+                sexpv = [scoeff] + sexpv
+            sexpvs.append(mul_symbol.join(sexpv))
+        if sexpvs[0] in [" + ", " - "]:
+            head = sexpvs.pop(0)
+            if head == " - ":
+                sexpvs.insert(0, "-")
+        return "".join(sexpvs)
+
     @property
     def is_generator(self):
         return self in self.ring._gens_set

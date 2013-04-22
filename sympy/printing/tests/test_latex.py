@@ -642,6 +642,9 @@ def test_latex_PolyElement():
     assert latex((u**2 + 3*u*v + 1)*x**2*y + (u + 1)*x + 1) == r"\left({u}^{2} + 3 u v + 1\right) {x}^{2} y + \left(u + 1\right) x + 1"
     assert latex((-u**2 + 3*u*v - 1)*x**2*y - (u + 1)*x - 1) == r"-\left({u}^{2} - 3 u v + 1\right) {x}^{2} y - \left(u + 1\right) x - 1"
 
+    assert latex(-(v**2 + v + 1)*x + 3*u*v + 1) == r"-\left({v}^{2} + v + 1\right) x + 3 u v + 1"
+    assert latex(-(v**2 + v + 1)*x - 3*u*v + 1) == r"-\left({v}^{2} + v + 1\right) x - 3 u v + 1"
+
 
 def test_latex_FracElement():
     Fuv, u,v = field("u,v", ZZ);

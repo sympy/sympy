@@ -1364,51 +1364,8 @@ class LatexPrinter(Printer):
             return r"\operatorname{%s} {\left(%s\right)}" % (cls, ", ".join(args))
 
     def _print_PolyElement(self, poly):
-        if not poly:
-            return self._print(poly.ring.domain.zero)
-        mul_sym = self._settings['mul_symbol_latex']
-        prec_add = PRECEDENCE["Add"]
-        prec_atom = PRECEDENCE["Atom"]
-        ring = poly.ring
-        symbols = ring.symbols
-        ngens = ring.ngens
-        zm = ring.zero_monom
-        sexpvs = []
-        expvs = list(poly.keys())
-        expvs.sort(key=ring.order, reverse=True)
-        for expv in expvs:
-            coeff = poly[expv]
-            if ring.domain.is_positive(coeff):
-                sexpvs.append(' + ')
-            else:
-                sexpvs.append(' - ')
-            if ring.domain.is_negative(coeff):
-                coeff = -coeff
-            if coeff != 1 or expv == zm:
-                if expv == zm:
-                    scoeff = self._print(coeff)
-                else:
-                    scoeff = self.parenthesize(coeff, prec_add)
-            else:
-                scoeff = ''
-            sexpv = []
-            for i in xrange(ngens):
-                exp = expv[i]
-                if not exp:
-                    continue
-                symbol = self.parenthesize(symbols[i], prec_atom-1)
-                if exp != 1:
-                    sexpv.append('{%s}^{%d}' % (symbol, exp))
-                else:
-                    sexpv.append('%s' % symbol)
-            if scoeff:
-                sexpv = [scoeff] + sexpv
-            sexpvs.append(mul_sym.join(sexpv))
-        if sexpvs[0] in [" + ", " - "]:
-            head = sexpvs.pop(0)
-            if head == " - ":
-                sexpvs.insert(0, "-")
-        return "".join(sexpvs)
+        mul_symbol = self._settings['mul_symbol_latex']
+        return poly.str(self, PRECEDENCE, "{%s}^{%d}", mul_symbol)
 
     def _print_FracElement(self, frac):
         if frac.denom == 1:
