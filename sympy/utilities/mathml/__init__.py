@@ -20,9 +20,13 @@ def apply_xsl(mml, xsl):
     @param mml: a string with MathML code
     @param xsl: a string representing a path to a xsl (xml stylesheet)
         file. This file name is relative to the PYTHONPATH
+    >>> from sympy.utilities.mathml import apply_xsl
     >>> xsl = 'mathml/data/simple_mmlctop.xsl'
     >>> mml = '<apply> <inverse/> <sin/> </apply>'
-    >>> apply_xsl(mml,xsl)
+    >>> res = apply_xsl(mml,xsl)
+    >>> '-1' in res.splitlines()[6]
+    True
+    
     """
     from lxml import etree
     s = etree.XML(get_resource(xsl).read())
