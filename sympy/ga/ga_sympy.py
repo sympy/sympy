@@ -1,8 +1,18 @@
-#GAsympy.py
+#ga_sympy.py
+
+"""
+ga_sympy.py contains all the need functions that only depend on sympy
+required for the expansion and manipulation of linear combinations of
+non-commutative sympy symbols.
+
+also contains "half_angle_reduce" which is probably not needed any more
+due to the improvements in trigsimp.
+"""
 
 import sys
-from sympy import expand,Mul,Add,Symbol,S,Expr,Wild,Pow,diff,trigsimp,\
-                   simplify,Matrix
+
+from sympy import expand, Mul, Add, Symbol, S, Pow, diff, trigsimp, \
+    simplify, sin, cos, symbols
 
 try:
     from numpy import matrix
@@ -10,23 +20,27 @@ try:
 except ImportError:
     numpy_loaded = False
 
-ONE  = S(1)
+ONE = S(1)
 ZERO = S(0)
+ONE_NC = Symbol('ONE', commutative=False)
+
 
 def get_commutative_coef(expr):
-    if isinstance(expr,Mul):
-        (coefs,bases) = expr.args_cnc()
-        return(Mul(*coefs))
+    if isinstance(expr, Mul):
+        (coefs, bases) = expr.args_cnc()
+        return Mul(*coefs)
 
-def half_angle_reduce(expr,theta):
-    (s,c) = symbols('s,c')
-    sub_dict = {sin(theta/2):s,cos(theta/2):c}
+
+def half_angle_reduce(expr, theta):
+    (s, c) = symbols('s,c')
+    sub_dict = {sin(theta / 2): s, cos(theta / 2): c}
     new_expr = expr.subs(sub_dict)
-    sub_dict = {s*c:sin(theta)/2,s**2:(1-cos(theta))/2,c**2:(1+cos(theta))/2}
-    #print new_expr
-    new_expr = trigsimp(simplify(new_expr.subs(sub_dict)),recursive=True)
-    #print expand(new_expr)
-    return(new_expr)
+    sub_dict = {s * c: sin(theta) / 2, s**2: (1 - cos(theta)) / 2, c**2: (1 + cos(theta)) / 2}
+    # print new_expr
+    new_expr = trigsimp(simplify(new_expr.subs(sub_dict)), recursive=True)
+    # print expand(new_expr)
+    return new_expr
+
 
 def linear_expand(expr):
     """
@@ -41,40 +55,41 @@ def linear_expand(expr):
     Mul with a_j as a factor (it doen not have to be a postmultiplier).
     expr_0 is the scalar part of the expression.
     """
-    if expr.is_commutative: #commutative expr only contains expr_0
-        return((expr,),(ONE,))
+    if expr.is_commutative:  # commutative expr only contains expr_0
+        return (expr, ), (ONE, )
 
     expr = expand(expr)
-    if isinstance(expr,Mul): #expr only contains one term
-        x = (coefs,bases) = expr.args_cnc()
+    if isinstance(expr, Mul):  # expr only contains one term
+        (coefs, bases) = expr.args_cnc()
         coefs = Mul(*coefs)
         bases = bases[0]
-    elif isinstance(expr,Symbol): #term is Symbol
+    elif isinstance(expr, Symbol):  # term is Symbol
         coefs = ONE
         bases = expr
-    elif isinstance(expr,Add): #expr has multiple terms
+    elif isinstance(expr, Add):  # expr has multiple terms
         coefs = []
         bases = []
         for arg in expr.args:
             term = arg.args_cnc()
             coef = Mul(*term[0])
             base = term[1][0]
-            if base in bases: #increment coefficient of base
-                ibase = list(bases).index(base) #Python 2.5
+            if base in bases:  # increment coefficient of base
+                ibase = list(bases).index(base)  # Python 2.5
                 coefs[ibase] += coef
-            else: #add base to list
+            else:  # add base to list
                 coefs.append(coef)
                 bases.append(base)
 
-    if not isinstance(coefs,list): #convert single coef to list
+    if not isinstance(coefs, list):  # convert single coef to list
         coefs = [coefs]
-    if not isinstance(bases,list): #convert single base to list
+    if not isinstance(bases, list):  # convert single base to list
         bases = [bases]
     coefs = tuple(coefs)
     bases = tuple(bases)
-    return(coefs,bases)
+    return coefs, bases
 
-def linear_projection(expr,plist=None):
+
+def linear_projection(expr, plist=None):
     """
     If a sympy 'Expr' is of the form:
 
@@ -84,29 +99,30 @@ def linear_projection(expr,plist=None):
 
     proj(expr) returns the sum of those terms where a_j is in plist
     """
-    if expr.is_commutative and plist == None: #return scalar projection
-        return(expr)
+    if expr.is_commutative and plist is None:  # return scalar projection
+        return expr
     expr = expand(expr)
-    if isinstance(expr,Mul): #expr has single term
-        x = (coefs,bases) = expr.args_cnc()
-        if bases[0] in plist: #vector term to be projected
-            return(Mul(*coefs)*bases[0])
+    if isinstance(expr, Mul):  # expr has single term
+        (coefs, bases) = expr.args_cnc()
+        if bases[0] in plist:  # vector term to be projected
+            return Mul(*coefs) * bases[0]
         else:
-            return(ZERO)
-    elif isinstance(expr,Symbol): #base vector to be projected
+            return ZERO
+    elif isinstance(expr, Symbol):  # base vector to be projected
         if expr in plist:
-            return(expr)
+            return expr
         else:
-            return(ZERO)
-    elif isinstance(expr,Add): #expr has multiple terms
+            return ZERO
+    elif isinstance(expr, Add):  # expr has multiple terms
         result = ZERO
         for arg in expr.args:
             term = arg.args_cnc()
-            if term[1] == [] and plist == None: #scalar term to be projected
+            if term[1] == [] and plist is None:  # scalar term to be projected
                 result += Mul(*term[0])
-            elif term[1] != [] and plist != None and term[1][0] in plist: #vector term to be projected
-                    result += Mul(*term[0])*term[1][0]
-        return(result)
+            elif term[1] != [] and plist is not None and term[1][0] in plist:  # vector term to be projected
+                    result += Mul(*term[0]) * term[1][0]
+        return result
+
 
 def non_scalar_projection(expr):
     """
@@ -118,37 +134,39 @@ def non_scalar_projection(expr):
 
     proj(expr) returns the sum of those terms where a_j is in plist
     """
-    if expr.is_commutative: #return scalar projection
-        return(ZERO)
+    if expr.is_commutative:  # return scalar projection
+        return ZERO
     expr = expand(expr)
-    if isinstance(expr,Mul): #expr has single term
-        x = (coefs,bases) = expr.args_cnc()
-        if bases[0] != MV.ONE: #vector term to be projected
-            return(Mul(*coefs)*bases[0])
+    if isinstance(expr, Mul):  # expr has single term
+        (coefs, bases) = expr.args_cnc()
+        if bases[0] != ONE_NC:  # vector term to be projected
+            return Mul(*coefs) * bases[0]
         else:
-            return(ZERO)
-    elif isinstance(expr,Symbol): #base vector to be projected
-        if expr != MV.ONE:
-            return(expr)
+            return ZERO
+    elif isinstance(expr, Symbol):  # base vector to be projected
+        if expr != ONE_NC:
+            return expr
         else:
-            return(ZERO)
-    elif isinstance(expr,Add): #expr has multiple terms
+            return ZERO
+    elif isinstance(expr, Add):  # expr has multiple terms
         result = ZERO
         for arg in expr.args:
             term = arg.args_cnc()
-            if term[1] != MV.ONE: #vector term to be projected
-                    result += Mul(*term[0])*term[1][0]
-        return(result)
+            if term[1] != ONE_NC:  # vector term to be projected
+                    result += Mul(*term[0]) * term[1][0]
+        return result
 
-def nc_substitue(expr,sub_dict):
-    (coefs,bases) = linear_expand(expr)
+
+def nc_substitue(expr, sub_dict):
+    (coefs, bases) = linear_expand(expr)
     result = ZERO
-    for (coef,base) in zip(coefs,bases):
+    for (coef, base) in zip(coefs, bases):
         if base != 1:
-            result += coef*sub_dict[base]
-    return(result)
+            result += coef * sub_dict[base]
+    return result
 
-def linear_function(expr,fct):
+
+def linear_function(expr, fct):
     """
     If a sympy 'Expr' is of the form:
 
@@ -161,24 +179,25 @@ def linear_function(expr,fct):
     is returned
     """
     if expr.is_commutative:
-        return(expr)
+        return expr
     expr = expand(expr)
-    if isinstance(expr,Mul):
-        x = (coefs,bases) = expr.args_cnc()
-        return(Mul(*coefs)*fct(bases[0]))
-    elif isinstance(expr,Symbol):
-        return(fct(expr))
-    elif isinstance(expr,Add):
+    if isinstance(expr, Mul):
+        (coefs, bases) = expr.args_cnc()
+        return Mul(*coefs) * fct(bases[0])
+    elif isinstance(expr, Symbol):
+        return fct(expr)
+    elif isinstance(expr, Add):
         result = ZERO
         for arg in expr.args:
             term = arg.args_cnc()
             if term[1] == []:
                 result += Mul(*term[0])
             else:
-                result += Mul(*term[0])*fct(term[1][0])
-    return(result)
+                result += Mul(*term[0]) * fct(term[1][0])
+    return result
 
-def coef_function(expr,fct):
+
+def coef_function(expr, fct):
     """
     If a sympy 'Expr' is of the form:
 
@@ -191,25 +210,26 @@ def coef_function(expr,fct):
     is returned
     """
     expr = expand(expr)
-    if isinstance(expr,Mul):
-        x = (coefs,bases) = expr.args_cnc()
-        return(fct(Mul(*coefs))*bases[0])
-    elif isinstance(expr,Symbol):
+    if isinstance(expr, Mul):
+        (coefs, bases) = expr.args_cnc()
+        return fct(Mul(*coefs)) * bases[0]
+    elif isinstance(expr, Symbol):
         if expr.is_commutative:
-            return(fct(expr))
+            return fct(expr)
         else:
-            return(expr)
-    elif isinstance(expr,Add):
+            return expr
+    elif isinstance(expr, Add):
         result = ZERO
         for arg in expr.args:
             term = arg.args_cnc()
             if term[1] == []:
                 result += fct(Mul(*term[0]))
             else:
-                result += fct(Mul(*term[0]))*fct(term[1][0])
-    return(result)
+                result += fct(Mul(*term[0])) * fct(term[1][0])
+    return result
 
-def bilinear_product(expr,fct):
+
+def bilinear_product(expr, fct):
     """
     If a sympy 'Expr' is of the form:
 
@@ -226,40 +246,40 @@ def bilinear_product(expr,fct):
     bilinear_product(expr_i*a_i) = expr_i*a_i
     """
 
-    def bilinear_term(expr,fct):
+    def bilinear_term(expr, fct):
         if expr == ZERO:
-            return(expr)
-        if isinstance(expr,Mul): #bases in expr
-            tmp = (coefs,bases) = expr.args_cnc()
+            return expr
+        if isinstance(expr, Mul):  # bases in expr
+            (coefs, bases) = expr.args_cnc()
             coef = Mul(*tuple(coefs))
-            if isinstance(bases[0],Pow): #base is a_i**2
+            if isinstance(bases[0], Pow):  # base is a_i**2
                 args = bases[0].args
-                return(coef*fct(args[0],args[0]))
-            elif len(bases) == 1: #base is a_i
-                return(expr)
-            else: #base is a_i*a_j
-                return(coef*fct(bases[0],bases[1]))
-        elif isinstance(expr,Pow): # expr is a_i*a_i
+                return coef * fct(args[0], args[0])
+            elif len(bases) == 1:  # base is a_i
+                return expr
+            else:  # base is a_i*a_j
+                return coef * fct(bases[0], bases[1])
+        elif isinstance(expr, Pow):  # expr is a_i*a_i
             args = expr.args
-            return(fct(args[0],args[0]))
-        elif isinstance(expr,Symbol):
-            return(expr)
+            return fct(args[0], args[0])
+        elif isinstance(expr, Symbol):
+            return expr
         else:
-            sys.stderr.write('!!!!Cannot compute bilinear_product for '+str(expr)+'!!!!\n')
-            sys.exit(1)
+            raise TypeError('!!!!Cannot compute bilinear_product for ' + str(expr) + '!!!!\n')
 
     expr = expand(expand(expr))
 
-    if not isinstance(expr,Add):
-        return(bilinear_term(expr,fct))
+    if not isinstance(expr, Add):
+        return bilinear_term(expr, fct)
     else:
         result = ZERO
         for term in expr.args:
-            tmp = bilinear_term(term,fct)
+            tmp = bilinear_term(term, fct)
             result += tmp
-        return(result)
+        return result
 
-def multilinear_product(expr,fct):
+
+def multilinear_product(expr, fct):
     """
     If a sympy 'Expr' is of the form:
 
@@ -275,23 +295,24 @@ def multilinear_product(expr,fct):
 
     where fct() is defined for r <= n the total number of bases
     """
-    if expr.is_commutative: #no bases in expr
-        return(expr)
-    if isinstance(expr,Mul): #bases in expr
-        (coefs,bases) = expr.args_cnc()
-        if len(coefs) == 0: #expr_ij = 1
+    if expr.is_commutative:  # no bases in expr
+        return expr
+    if isinstance(expr, Mul):  # bases in expr
+        (coefs, bases) = expr.args_cnc()
+        if len(coefs) == 0:  # expr_ij = 1
             coefs = [ONE]
         coef = Mul(*tuple(coefs))
         new_bases = []
         for base in bases:
-            if isinstance(base,Pow):
+            if isinstance(base, Pow):
                 args = base.args
-                new_bases += args[1]*[args[0]]
+                new_bases += args[1] * [args[0]]
             else:
                 new_bases.append(base)
-        return(coef*fct(new_bases))
+        return coef * fct(new_bases)
 
-def bilinear_function(expr,fct):
+
+def bilinear_function(expr, fct):
     """
     If a sympy 'Expr' is of the form:
 
@@ -304,17 +325,18 @@ def bilinear_function(expr,fct):
                               +bilinear+product(expr_11*a_1*a_1)+...+bilinear_product(expr_nn*a_n*a_n)
     """
     if expr.is_commutative:
-        return(expr)
+        return expr
     expr = expand(expr)
-    if isinstance(expr,(Mul,Pow,Symbol)): #only one additive term
-        return(bilinear_product(expr,fct))
-    elif isinstance(expr,Add): #multiple additive terms
+    if isinstance(expr, (Mul, Pow, Symbol)):  # only one additive term
+        return bilinear_product(expr, fct)
+    elif isinstance(expr, Add):  # multiple additive terms
         result = ZERO
         for arg in expr.args:
-            result += bilinear_product(arg,fct)
-    return(result)
+            result += bilinear_product(arg, fct)
+    return result
 
-def multilinear_function(expr,fct):
+
+def multilinear_function(expr, fct):
     """
     If a sympy 'Expr' is of the form summation convention):
 
@@ -327,17 +349,18 @@ def multilinear_function(expr,fct):
         +Sum{0<r<=n}multilinear_product(expr_i1i2...ir*a_i1*a_i2*...*a_ir)
     """
     if expr.is_commutative:
-        return(expr)
+        return expr
     expr = expand(expr)
-    if isinstance(expr,(Mul,Pow,Symbol)): #only one additive term
-        return(bilinear_product(expr,fct))
-    elif isinstance(expr,Add): #multiple additive terms
+    if isinstance(expr, (Mul, Pow, Symbol)):  # only one additive term
+        return bilinear_product(expr, fct)
+    elif isinstance(expr, Add):  # multiple additive terms
         result = ZERO
         for arg in expr.args:
-            result += bilinear_product(arg,fct)
-    return(result)
+            result += bilinear_product(arg, fct)
+    return result
 
-def linear_derivation(expr,fct,x):
+
+def linear_derivation(expr, fct, x):
     """
     If a sympy 'Expr' is of the form:
 
@@ -350,26 +373,27 @@ def linear_derivation(expr,fct,x):
                             +expr_n*fct(a_n,x)
     """
     if expr.is_commutative:
-        return(diff(expr,x))
+        return diff(expr, x)
     expr = expand(expr)
-    if isinstance(expr,Mul):
-        x = (coefs,bases) = expr.args_cnc()
+    if isinstance(expr, Mul):
+        x = (coefs, bases) = expr.args_cnc()
         coef = Mul(*coefs)
-        return(diff(coef,x)*bases[0]+coef*fct(bases[0],x))
-    elif isinstance(expr,Symbol):
-        return(fct(expr,x))
-    elif isinstance(expr,Add):
+        return diff(coef, x) * bases[0] + coef * fct(bases[0], x)
+    elif isinstance(expr, Symbol):
+        return fct(expr, x)
+    elif isinstance(expr, Add):
         result = ZERO
         for arg in expr.args:
             term = arg.args_cnc()
             coef = Mul(*term[0])
             if term[1] == []:
-                result += diff(coef,x)
+                result += diff(coef, x)
             else:
-                result += diff(coef,x)*term[1][0]+coef*fct(term[1][0],x)
-    return(result)
+                result += diff(coef, x) * term[1][0] + coef * fct(term[1][0], x)
+    return result
 
-def product_derivation(F,fct,x):
+
+def product_derivation(F, fct, x):
     """
     If a sympy 'Expr' is of the form:
 
@@ -383,22 +407,23 @@ def product_derivation(F,fct,x):
                               +a_1*...*a_(n-1)*fct(a_n,x))
     """
     if F.is_commutative:
-        return(diff(F,x))
-    elif isinstance(F,Mul):
-        (coefs,bases) = F.args_cnc()
+        return diff(F, x)
+    elif isinstance(F, Mul):
+        (coefs, bases) = F.args_cnc()
         coef = Mul(*coefs)
-        dcoef = diff(coef,x)
+        dcoef = diff(coef, x)
         if len(bases) == 1:
-            return(dcoef*bases[0]+coef*fct(bases[0],x))
+            return dcoef * bases[0] + coef * fct(bases[0], x)
         else:
-            result = dcoef*Mul(*bases)
+            result = dcoef * Mul(*bases)
             for ib in range(len(bases)):
-                result += coef*Mul(*bases[:ib])*fct(bases[ib],x)*Mul(*bases[ib+1:])
-            return(result)
-    elif isinstance(F,Symbol):
-        return(fct(F,x))
+                result += coef * Mul(*bases[:ib]) * fct(bases[ib], x) * Mul(*bases[ib + 1:])
+            return result
+    elif isinstance(F, Symbol):
+        return fct(F, x)
 
-def multilinear_derivation(F,fct,x):
+
+def multilinear_derivation(F, fct, x):
     """
     If a sympy 'Expr' is of the form (summation convention):
 
@@ -411,14 +436,15 @@ def multilinear_derivation(F,fct,x):
     is returned where d() is the product derivation
     """
     if F.is_commutative:
-        return(diff(F,x))
-    elif isinstance(F,Mul) or isinstance(F,Symbol):
-        return(product_derivation(F,fct,x))
-    elif isinstance(F,Add):
+        return diff(F, x)
+    elif isinstance(F, Mul) or isinstance(F, Symbol):
+        return product_derivation(F, fct, x)
+    elif isinstance(F, Add):
         result = ZERO
         for term in F.args:
-            result += product_derivation(term,fct,x)
-        return(result)
+            result += product_derivation(term, fct, x)
+        return result
+
 
 def numpy_matrix(M):
     if not numpy_loaded:
@@ -434,6 +460,6 @@ def numpy_matrix(M):
             except ValueError:
                 print 'In Matrix:'
                 print M
-                print 'Cannot convert '+str(Mlst[irow][icol])+' to python float.'
+                print 'Cannot convert ' + str(Mlst[irow][icol]) + ' to python float.'
                 sys.exit(1)
-    return(matrix(Mlst))
+    return matrix(Mlst)

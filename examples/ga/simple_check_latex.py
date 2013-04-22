@@ -1,5 +1,5 @@
-from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
-from sympy.ga.ga import MV,Format
+from sympy.ga import xdvi,Get_Program,Print_Function
+from sympy.ga import MV,Format
 
 def basic_multivector_operations_3D():
     Print_Function()

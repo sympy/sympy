@@ -1,6 +1,6 @@
 from sympy import symbols, Matrix
-from sympy.ga.ga_print import LatexFormat,xdvi
-from sympy.ga.ga import Format
+from sympy.ga import xdvi
+from sympy.ga import Format
 
 def main():
     Format()

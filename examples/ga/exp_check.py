@@ -1,8 +1,8 @@
 import sys
 
 from sympy import symbols,sin,cos
-from sympy.ga.ga import MV
-from sympy.ga.ga_print import enhance_print
+from sympy.ga import MV
+from sympy.ga import enhance_print
 
 def main():
     enhance_print()

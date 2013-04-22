@@ -3,8 +3,8 @@ import sys
 
 import sys
 from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
-from sympy.ga.ga_print import enhance_print,Get_Program,Print_Function
-from sympy.ga.ga import MV,Format,Com,Nga,ONE,ZERO,ga_print_on,ga_print_off
+from sympy.ga import enhance_print,Get_Program,Print_Function
+from sympy.ga import MV,Format,Com,Nga,ONE,ZERO,ga_print_on,ga_print_off
 
 def basic_multivector_operations():
     Print_Function()

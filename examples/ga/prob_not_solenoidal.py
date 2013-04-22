@@ -1,7 +1,7 @@
 
 from sympy import symbols,sin,cos,factor_terms,simplify
-from sympy.ga.ga_print import enhance_print
-from sympy.ga.ga import MV
+from sympy.ga import enhance_print
+from sympy.ga import MV
 
 def main():
     enhance_print()

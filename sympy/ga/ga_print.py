@@ -1,41 +1,72 @@
-#GA_Print.py
+# ga_print.py
 
-import os,sys,StringIO,re
-from sympy import C,S,Basic,Expr,Symbol,Matrix
-from sympy.printing.printer import Printer
+"""
+ga_print.py implements GA_Printer and GA_LatexPrinter classes for
+multivectors by derivation from the sympy Printer and LatexPrinter
+classes.  Where we wish to change the behavior of printing for
+existing sympy types the required function have been rewritten
+and included in GA_Printer and GA_LatexPrinter.  For example
+we have rewritten:
+
+    _print_Derivative
+    _print_Function
+    _print_Matrix
+    _print_Pow
+    _print_Symbol
+
+for GA_LatexPrinter and
+
+    _print_Derivative
+    _print_Function
+
+for GA_Printer.
+
+The is also and enhanced_print class that allows multivectors,
+multivector functions, and multivector derivatives to printed out
+in different colors on ansi terminals.
+"""
+
+import os
+import sys
+import StringIO
+
+from sympy import C, S, Basic, Symbol, Matrix
+# from sympy.printing.printer import Printer
 from sympy.printing.str import StrPrinter
-from sympy.printing.latex import LatexPrinter,accepted_latex_functions
+from sympy.printing.latex import LatexPrinter
 from sympy.printing.conventions import split_super_sub
 
-from sympy.ga.ga_sympy import linear_expand
+# from sympy.ga.ga_sympy import linear_expand
 
-ZERO      = S(0)
+ZERO = S(0)
 
-SYS_CMD = {'linux2':{'rm':'rm','evince':'evince','null':' > /dev/null','&':'&'},\
-           'win32':{'rm':'del','evince':'','null':' > NUL','&':''},\
-           'darwin':{'rm':'rm','evince':'open','null':' > /dev/null','&':'&'}}
+SYS_CMD = {'linux2': {'rm': 'rm', 'evince': 'evince', 'null': ' > /dev/null', '&': '&'},
+           'win32': {'rm': 'del', 'evince': '', 'null': ' > NUL', '&': ''},
+           'darwin': {'rm': 'rm', 'evince': 'open', 'null': ' > /dev/null', '&': '&'}}
 
 ColorCode = {
-        'black':        '0;30',         'bright gray':  '0;37',
-        'blue':         '0;34',         'white':        '1;37',
-        'green':        '0;32',         'bright blue':  '1;34',
-        'cyan':         '0;36',         'bright green': '1;32',
-        'red':          '0;31',         'bright cyan':  '1;36',
-        'purple':       '0;35',         'bright red':   '1;31',
-        'yellow':       '0;33',         'bright purple':'1;35',
-        'dark gray':    '1;30',         'bright yellow':'1;33',
-        'normal':       '0'
+    'black':        '0;30',         'bright gray':   '0;37',
+    'blue':         '0;34',         'white':         '1;37',
+    'green':        '0;32',         'bright blue':   '1;34',
+    'cyan':         '0;36',         'bright green':  '1;32',
+    'red':          '0;31',         'bright cyan':   '1;36',
+    'purple':       '0;35',         'bright red':    '1;31',
+    'yellow':       '0;33',         'bright purple': '1;35',
+    'dark gray':    '1;30',         'bright yellow': '1;33',
+    'normal':       '0'
 }
 
-InvColorCode = dict(zip(ColorCode.values(),ColorCode.keys()))
+InvColorCode = dict(zip(ColorCode.values(), ColorCode.keys()))
 
-accepted_latex_functions = ['arcsin','arccos','arctan','sin','cos','tan',
-                    'theta','beta','alpha','gamma','sinh','cosh','tanh','sqrt',
-                    'ln','log','sec','csc','cot','coth','re','im','frac','root',
-                    'arg','zeta']
+accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
+                            'theta', 'beta', 'alpha', 'gamma', 'sinh', 'cosh', 'tanh', 'sqrt',
+                            'ln', 'log', 'sec', 'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
+                            'arg', 'zeta']
+
 
 def find_executable(executable, path=None):
-    """Try to find 'executable' in the directories listed in 'path' (a
+    """
+    Try to find 'executable' in the directories listed in 'path' (a
     string listing directories separated by 'os.pathsep'; defaults to
     os.environ['PATH']).  Returns the complete filename or None if not
     found
@@ -67,6 +98,7 @@ def find_executable(executable, path=None):
     else:
         return None
 
+
 class enhance_print:
 
     normal = ''
@@ -75,19 +107,19 @@ class enhance_print:
     deriv = ''
     bold = ''
 
-    def __init__(self,base=None,fct=None,deriv=None,on=True,keys=False):
+    def __init__(self, base=None, fct=None, deriv=None, on=True, keys=False):
         if on:
             if 'win' in sys.platform:
 
-                if base == None:
+                if base is None:
                     enhance_print.base = ColorCode['blue']
                 else:
                     enhance_print.base = ColorCode[base]
-                if fct == None:
+                if fct is None:
                     enhance_print.fct = ColorCode['red']
                 else:
                     enhance_print.fct = ColorCode[fct]
-                if deriv == None:
+                if deriv is None:
                     enhance_print.deriv = ColorCode['cyan']
                 else:
                     enhance_print.deriv = ColorCode[deriv]
@@ -95,15 +127,15 @@ class enhance_print:
 
             else:
 
-                if base == None:
+                if base is None:
                     enhance_print.base = ColorCode['dark gray']
                 else:
                     enhance_print.base = ColorCode[base]
-                if fct == None:
+                if fct is None:
                     enhance_print.fct = ColorCode['red']
                 else:
                     enhance_print.fct = ColorCode[fct]
-                if deriv == None:
+                if deriv is None:
                     enhance_print.deriv = ColorCode['cyan']
                 else:
                     enhance_print.deriv = ColorCode[deriv]
@@ -111,81 +143,81 @@ class enhance_print:
 
             if keys:
                 print 'Enhanced Printing is on:'
-                print 'Base/Blade color is '+InvColorCode[enhance_print.base]
-                print 'Function color is '+InvColorCode[enhance_print.fct]
-                print 'Derivative color is '+InvColorCode[enhance_print.deriv]+'\n'
+                print 'Base/Blade color is ' + InvColorCode[enhance_print.base]
+                print 'Function color is ' + InvColorCode[enhance_print.fct]
+                print 'Derivative color is ' + InvColorCode[enhance_print.deriv] + '\n'
 
-            enhance_print.base  = '\033['+enhance_print.base+'m'
-            enhance_print.fct   = '\033['+enhance_print.fct+'m'
-            enhance_print.deriv = '\033['+enhance_print.deriv+'m'
+            enhance_print.base = '\033[' + enhance_print.base + 'm'
+            enhance_print.fct = '\033[' + enhance_print.fct + 'm'
+            enhance_print.deriv = '\033[' + enhance_print.deriv + 'm'
 
     @staticmethod
     def enhance_base(s):
-        return(enhance_print.base+s+enhance_print.normal)
+        return enhance_print.base + s + enhance_print.normal
 
     @staticmethod
     def enhance_fct(s):
-        return(enhance_print.fct+s+enhance_print.normal)
+        return enhance_print.fct + s + enhance_print.normal
 
     @staticmethod
     def enhance_deriv(s):
-        return(enhance_print.deriv+s+enhance_print.normal)
+        return enhance_print.deriv + s + enhance_print.normal
 
     @staticmethod
     def strip_base(s):
-        new_s = s.replace(enhance_print.base,'')
-        new_s = new_s.replace(enhance_print.normal,'')
-        return(new_s)
+        new_s = s.replace(enhance_print.base, '')
+        new_s = new_s.replace(enhance_print.normal, '')
+        return new_s
+
 
 class GA_Printer(StrPrinter):
 
-    function_names = ('acos','acosh','acot','acoth','arg','asin','asinh',\
-                      'atan','atan2','atanh','ceiling','conjugate','cos',\
-                      'cosh','cot','coth','exp','floor','im','log','re',\
-                      'root','sin','sinh','sqrt','sign','tan','tanh')
-
+    function_names = ('acos', 'acosh', 'acot', 'acoth', 'arg', 'asin', 'asinh',
+                      'atan', 'atan2', 'atanh', 'ceiling', 'conjugate', 'cos',
+                      'cosh', 'cot', 'coth', 'exp', 'floor', 'im', 'log', 're',
+                      'root', 'sin', 'sinh', 'sqrt', 'sign', 'tan', 'tanh')
 
     def _print_Function(self, expr):
         name = expr.func.__name__
-        args = ", ".join([ self._print(arg) for arg in expr.args ])
 
         if expr.func.nargs is not None:
             if name in GA_Printer.function_names:
-                return(expr.func.__name__ + "(%s)"%self.stringify(expr.args, ", "))
+                return expr.func.__name__ + "(%s)" % self.stringify(expr.args, ", ")
 
-        return enhance_print.enhance_fct("%s" % (name,))
+        return enhance_print.enhance_fct("%s" % (name, ))
 
     def _print_Derivative(self, expr):
-        diff_args = map(self._print,expr.args)
-        return(enhance_print.enhance_deriv('D{%s}' % (diff_args[1],))+'%s' % (diff_args[0],))
+        diff_args = map(self._print, expr.args)
+        return enhance_print.enhance_deriv('D{%s}' % (diff_args[1], )) + '%s' % (diff_args[0], )
 
-    def _print_MV(self,expr):
+    def _print_MV(self, expr):
         if expr.obj == ZERO:
-            return('0')
+            return '0'
         else:
             if expr.print_blades:
                 expr.base_to_blade()
             ostr = expr.get_normal_order_str()
-            return(ostr)
+            return ostr
 
-    def _print_Vector(self,expr):
+    def _print_Vector(self, expr):
         if expr.obj == ZERO:
-            return('0')
+            return '0'
         else:
             ostr = GA_Printer().doprint(expr.obj)
-            ostr = ostr.replace(' ','')
-            return(ostr)
+            ostr = ostr.replace(' ', '')
+            return ostr
 
     @staticmethod
     def on():
-        GA_Printer.Basic__str__  = Basic.__str__
-        Basic.__str__  = lambda self: GA_Printer().doprint(self)
+        GA_Printer.Basic__str__ = Basic.__str__
+        Basic.__str__ = lambda self: GA_Printer().doprint(self)
         return
 
     @staticmethod
     def off():
-        Basic.__str__  = GA_Printer.Basic__str__
+        Basic.__str__ = GA_Printer.Basic__str__
         return
+
 
 class GA_LatexPrinter(LatexPrinter):
     """
@@ -286,17 +318,17 @@ class GA_LatexPrinter(LatexPrinter):
 """
     postscript = '\\end{document}\n'
 
-    Dmode  = False #True - Print derivative contracted
-    Fmode  = False #True - Print function contracted
+    Dmode = False  # True - Print derivative contracted
+    Fmode = False  # True - Print function contracted
     latex_flg = False
 
     @staticmethod
     def redirect(ipy=False):
         GA_LatexPrinter.ipy = ipy
         GA_LatexPrinter.latex_flg = True
-        GA_LatexPrinter.Basic__str__  = Basic.__str__
+        GA_LatexPrinter.Basic__str__ = Basic.__str__
         GA_LatexPrinter.Matrix__str__ = Matrix.__str__
-        Basic.__str__  = lambda self: GA_LatexPrinter().doprint(self)
+        Basic.__str__ = lambda self: GA_LatexPrinter().doprint(self)
         Matrix.__str__ = lambda self: GA_LatexPrinter().doprint(self)
         if not ipy:
             GA_LatexPrinter.stdout = sys.stdout
@@ -308,7 +340,7 @@ class GA_LatexPrinter(LatexPrinter):
         GA_LatexPrinter.latex_flg = False
         if not GA_LatexPrinter.ipy:
             sys.stdout = GA_LatexPrinter.stdout
-        Basic.__str__  = GA_LatexPrinter.Basic__str__
+        Basic.__str__ = GA_LatexPrinter.Basic__str__
         Matrix.__str__ = GA_LatexPrinter.Matrix__str__
         return
 
@@ -321,7 +353,6 @@ class GA_LatexPrinter(LatexPrinter):
 
         # Treat x**Rational(1,n) as special case
         if expr.exp.is_Rational and abs(expr.exp.p) == 1 and expr.exp.q != 1:
-            #base = self._print(expr.base)
             expq = expr.exp.q
 
             if expq == 2:
@@ -353,13 +384,15 @@ class GA_LatexPrinter(LatexPrinter):
                 return self._print(expr.base, self._print(expr.exp))
             else:
                 if expr.is_commutative and expr.exp == -1:
-                    #solves issue 1030
-                    #As Mul always simplify 1/x to x**-1
-                    #The objective is achieved with this hack
-                    #first we get the latex for -1 * expr,
-                    #which is a Mul expression
+                    """
+                    solves issue 1030
+                    As Mul always simplify 1/x to x**-1
+                    The objective is achieved with this hack
+                    first we get the latex for -1 * expr,
+                    which is a Mul expression
+                    """
                     tex = self._print(S.NegativeOne * expr).strip()
-                    #the result comes with a minus and a space, so we remove
+                    # the result comes with a minus and a space, so we remove
                     if tex[:1] == "-":
                         return tex[1:].strip()
                 if self._needs_brackets(expr.base):
@@ -376,18 +409,18 @@ class GA_LatexPrinter(LatexPrinter):
     def _print_Symbol(self, expr):
 
         def str_symbol(name_str):
-            (name,supers,subs) = split_super_sub(name_str)
+            (name, supers, subs) = split_super_sub(name_str)
 
             # translate name, supers and subs to tex keywords
-            greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
-                          'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
-                          'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
-                          'phi', 'chi', 'psi', 'omega' ])
+            greek = set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
+                         'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
+                         'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
+                         'phi', 'chi', 'psi', 'omega'])
 
             greek_translated = {'lamda': 'lambda', 'Lamda': 'Lambda'}
 
-            other = set( ['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth',
-                          'hbar', 'hslash', 'mho' ])
+            other = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth',
+                        'hbar', 'hslash', 'mho'])
 
             def translate(s):
                 tmp = s.lower()
@@ -401,10 +434,10 @@ class GA_LatexPrinter(LatexPrinter):
             name = translate(name)
 
             if supers != []:
-                supers = map(translate,supers)
+                supers = map(translate, supers)
 
             if subs != []:
-                subs = map(translate,subs)
+                subs = map(translate, subs)
 
             # glue all items together:
             if len(supers) > 0:
@@ -422,22 +455,20 @@ class GA_LatexPrinter(LatexPrinter):
         if '.' in name_str and name_str[0] == '(' and name_str[-1] == ')':
             name_str = name_str[1:-1]
             name_lst = name_str.split('.')
-            name_str = r'\lp '+str_symbol(name_lst[0])+r'\cdot '+str_symbol(name_lst[1])+r'\rp '
-            return(name_str)
+            name_str = r'\lp ' + str_symbol(name_lst[0]) + r'\cdot ' + str_symbol(name_lst[1]) + r'\rp '
+            return name_str
 
-        return(str_symbol(expr.name))
-
+        return str_symbol(expr.name)
 
     def _print_Function(self, expr, exp=None):
         func = expr.func.__name__
-        generic = False
 
         name = func
 
         if hasattr(self, '_print_' + func):
             return getattr(self, '_print_' + func)(expr, exp)
         else:
-            args = [ str(self._print(arg)) for arg in expr.args ]
+            args = [str(self._print(arg)) for arg in expr.args]
             # How inverse trig functions should be displayed, formats are:
             # abbreviated: asin, full: arcsin, power: sin^-1
             inv_trig_style = self._settings['inv_trig_style']
@@ -445,8 +476,8 @@ class GA_LatexPrinter(LatexPrinter):
             inv_trig_power_case = False
             # If it is applicable to fold the argument brackets
             can_fold_brackets = self._settings['fold_func_brackets'] and \
-                                len(args) == 1 and \
-                                not self._needs_function_brackets(expr.args[0])
+                len(args) == 1 and \
+                not self._needs_function_brackets(expr.args[0])
 
             inv_trig_table = ["asin", "acos", "atan", "acot"]
 
@@ -468,17 +499,16 @@ class GA_LatexPrinter(LatexPrinter):
                 if func in accepted_latex_functions:
                     name = r"\%s^{-1}" % func
                 else:
-                    generic = True
                     name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
                 if func in accepted_latex_functions:
-                    name = r"\%s^{%s}" % (func,exp)
+                    name = r"\%s^{%s}" % (func, exp)
                 else:
                     name = latex(Symbol(func))
                     if '_' in func or '^' in func:
-                        name = r'{\lp '+name+r'\rp }^{'+exp+'}'
+                        name = r'{\lp ' + name + r'\rp }^{' + exp + '}'
                     else:
-                        name += '^{'+exp+'}'
+                        name += '^{' + exp + '}'
             else:
                 if func in accepted_latex_functions:
                     name = r"\%s" % func
@@ -486,9 +516,9 @@ class GA_LatexPrinter(LatexPrinter):
                     name = latex(Symbol(func))
                     if exp is not None:
                         if '_' in name or '^' in name:
-                            name = r'\lp '+name+r'\rp^{'+exp+'}'
+                            name = r'\lp ' + name + r'\rp^{' + exp + '}'
                         else:
-                            name += '^{'+exp+'}'
+                            name += '^{' + exp + '}'
 
             if can_fold_brackets:
                 if func in accepted_latex_functions:
@@ -534,7 +564,7 @@ class GA_LatexPrinter(LatexPrinter):
                     current, i = symbol, 1
 
             else:
-                imax = max(imax,i)
+                imax = max(imax, i)
                 multiplicity.append((current, i))
 
             if GA_LatexPrinter.Dmode and imax == 1:
@@ -542,8 +572,8 @@ class GA_LatexPrinter(LatexPrinter):
                 dim = 0
                 for x, i in multiplicity:
                     dim += i
-                    tmp += r"%s" % (self._print(x),)
-                tex = r"\partial^{%s}_{" % (dim,)+tmp+'}'
+                    tmp += r"%s" % (self._print(x), )
+                tex = r"\partial^{%s}_{" % (dim, ) + tmp + '}'
             else:
                 for x, i in multiplicity:
                     if i == 1:
@@ -557,40 +587,42 @@ class GA_LatexPrinter(LatexPrinter):
         else:
             return r"%s %s" % (tex, self._print(expr.expr))
 
-    def _print_MV(self,expr):
+    def _print_MV(self, expr):
         if expr.obj == ZERO:
-            return('0 \n')
+            return '0 \n'
         else:
             if expr.print_blades:
                 expr.base_to_blade()
             ostr = expr.get_latex_normal_order_str()
-            return(ostr)
+            return ostr
 
     def _print_Matrix(self, expr):
         lines = []
-        for line in range(expr.rows): # horrible, should be 'rows'
-            lines.append(" & ".join([ self._print(i) for i in expr[line,:] ]))
+        for line in range(expr. rows):  # horrible, should be 'rows'
+            lines.append(" & ".join([self._print(i) for i in expr[line, :]]))
 
         ncols = 0
-        for i in expr[line,:]:
+        for i in expr[line, :]:
             ncols += 1
 
-        out_str = '\\left [ \\begin{array}{'+ncols*'c'+'} '
+        out_str = '\\left [ \\begin{array}{' + ncols * 'c' + '} '
         for line in lines[:-1]:
-            out_str += line+' \\\\ '
-        out_str += lines[-1]+' \\end{array}\\right ] '
+            out_str += line + ' \\\\ '
+        out_str += lines[-1] + ' \\end{array}\\right ] '
         return out_str
+
 
 def latex(expr, **settings):
 
     return GA_LatexPrinter(settings).doprint(expr)
 
+
 def print_latex(expr, **settings):
-    """Prints LaTeX representation of the given expression."""
+    # Prints LaTeX representation of the given expression.
     print latex(expr, **settings)
 
-def xdvi(filename=None,debug=False,paper=(14,11)):
 
+def xdvi(filename=None, debug=False, paper=(14, 11)):
     """
     Post processes LaTeX output (see comments below), adds preamble and
     postscript, generates tex file, inputs file to latex, displays resulting
@@ -607,7 +639,7 @@ def xdvi(filename=None,debug=False,paper=(14,11)):
     latex_lst = latex_str.split('\n')
     latex_str = ''
 
-    lhs      = ''
+    lhs = ''
     code_flg = False
 
     for latex_line in latex_lst:
@@ -620,43 +652,43 @@ def xdvi(filename=None,debug=False,paper=(14,11)):
                 latex_line = latex_line[2:]
         elif code_flg:
                     pass
-        elif len(latex_line) > 0 and '#' in latex_line: #Non equation mode output (comment)
-            latex_line = latex_line.replace('#','')
-            if '%' in latex_line: #Equation mode with no variables to print (comment)
-                latex_line = latex_line.replace('%','')
-                latex_line = '\\begin{equation*} '+latex_line+' \\end{equation*}\n'
+        elif len(latex_line) > 0 and '#' in latex_line:  # Non equation mode output (comment)
+            latex_line = latex_line.replace('#', '')
+            if '%' in latex_line:  # Equation mode with no variables to print (comment)
+                latex_line = latex_line.replace('%', '')
+                latex_line = '\\begin{equation*} ' + latex_line + ' \\end{equation*}\n'
 
         else:
-            latex_line = latex_line.replace('.',r' \cdot ') #For components of metric tensor
-            if '=' in latex_line: #determing lhs of equation/align
-                eq_index   = latex_line.rindex('=')+1
-                lhs        = latex_line[:eq_index]
-                latex_line = latex_line.replace(lhs,'')
-                if '%' in lhs: #Do not preprocess lhs of equation/align
-                    lhs = lhs.replace('%','')
-                else: #preprocess lhs of equation/align
-                    lhs        = lhs.replace('|',r'\cdot ')
-                    lhs        = lhs.replace('^',r'\W ')
-                    lhs        = lhs.replace('*',' ')
-                    lhs        = lhs.replace('grad',r'\bm{\nabla} ')
-                    lhs        = lhs.replace('<<',r'\rfloor ')
-                    lhs        = lhs.replace('<',r'\rfloor ')
-                    lhs        = lhs.replace('>>',r'\lfloor ')
-                    lhs        = lhs.replace('>',r'\lfloor ')
-                latex_line = lhs+latex_line
+            latex_line = latex_line.replace('.', r' \cdot ')  # For components of metric tensor
+            if '=' in latex_line:  # determing lhs of equation/align
+                eq_index = latex_line.rindex('=') + 1
+                lhs = latex_line[:eq_index]
+                latex_line = latex_line.replace(lhs, '')
+                if '%' in lhs:  # Do not preprocess lhs of equation/align
+                    lhs = lhs.replace('%', '')
+                else:  # preprocess lhs of equation/align
+                    lhs = lhs.replace('|', r'\cdot ')
+                    lhs = lhs.replace('^', r'\W ')
+                    lhs = lhs.replace('*', ' ')
+                    lhs = lhs.replace('grad', r'\bm{\nabla} ')
+                    lhs = lhs.replace('<<', r'\rfloor ')
+                    lhs = lhs.replace('<', r'\rfloor ')
+                    lhs = lhs.replace('>>', r'\lfloor ')
+                    lhs = lhs.replace('>', r'\lfloor ')
+                latex_line = lhs + latex_line
 
-            if r'\begin{align*}' in latex_line: #insert lhs of align environment
-                latex_line = latex_line = latex_line.replace(lhs,'')
-                latex_line = latex_line.replace(r'\begin{align*}',r'\begin{align*} '+lhs)
+            if r'\begin{align*}' in latex_line:  # insert lhs of align environment
+                latex_line = latex_line = latex_line.replace(lhs, '')
+                latex_line = latex_line.replace(r'\begin{align*}', r'\begin{align*} ' + lhs)
                 lhs = ''
-            else: #normal sympy equation
+            else:  # normal sympy equation
                 latex_line = latex_line.strip()
                 if len(latex_line) > 0:
-                    latex_line = '\\begin{equation*} '+latex_line+' \\end{equation*}'
+                    latex_line = '\\begin{equation*} ' + latex_line + ' \\end{equation*}'
 
-        latex_str += latex_line+'\n'
+        latex_str += latex_line + '\n'
 
-    latex_str = latex_str.replace('\n\n','\n')
+    latex_str = latex_str.replace('\n\n', '\n')
 
     if debug:
         print latex_str
@@ -672,20 +704,20 @@ def xdvi(filename=None,debug=False,paper=(14,11)):
 \\documentclass[10pt,fleqn]{report}
 \\usepackage[vcentering]{geometry}
 """
-        paper_size += '\\geometry{papersize={'+str(paper[0])+\
-                      'in,'+str(paper[1])+'in},total={'+str(paper[0]-1)+\
-                      'in,'+str(paper[1]-1)+'in}}\n'
+        paper_size += '\\geometry{papersize={' + str(paper[0]) + \
+                      'in,' + str(paper[1]) + 'in},total={' + str(paper[0] - 1) + \
+                      'in,' + str(paper[1] - 1) + 'in}}\n'
 
-    latex_str = paper_size+GA_LatexPrinter.preamble+latex_str+GA_LatexPrinter.postscript
+    latex_str = paper_size + GA_LatexPrinter.preamble + latex_str + GA_LatexPrinter.postscript
 
-    if filename == None:
+    if filename is None:
         pyfilename = sys.argv[0]
-        rootfilename = pyfilename.replace('.py','')
-        filename = rootfilename+'.tex'
+        rootfilename = pyfilename.replace('.py', '')
+        filename = rootfilename + '.tex'
 
-    print 'latex file =',filename
+    print 'latex file =', filename
 
-    latex_file = open(filename,'w')
+    latex_file = open(filename, 'w')
     latex_file.write(latex_str)
     latex_file.close()
 
@@ -693,7 +725,7 @@ def xdvi(filename=None,debug=False,paper=(14,11)):
 
     pdflatex = find_executable('pdflatex')
 
-    print 'pdflatex path =',pdflatex
+    print 'pdflatex path =', pdflatex
 
     if pdflatex is not None:
         latex_str = 'pdflatex'
@@ -701,63 +733,63 @@ def xdvi(filename=None,debug=False,paper=(14,11)):
         return
 
     if latex_str is not None:
-        if debug: #Display latex excution output for debugging purposes
-            os.system(latex_str+' '+filename[:-4])
-        else: #Works for Linux don't know about Windows
-            os.system(latex_str+' '+filename[:-4]+sys_cmd['null'])
+        if debug:  # Display latex excution output for debugging purposes
+            os.system(latex_str + ' ' + filename[:-4])
+        else:  # Works for Linux don't know about Windows
+            os.system(latex_str + ' ' + filename[:-4] + sys_cmd['null'])
 
-        print_cmd = sys_cmd['evince']+' '+filename[:-4]+'.pdf '+sys_cmd['&']
+        print_cmd = sys_cmd['evince'] + ' ' + filename[:-4] + '.pdf ' + sys_cmd['&']
         print print_cmd
 
         os.system(print_cmd)
         raw_input('!!!!Return to continue!!!!\n')
 
         if debug:
-            os.system(sys_cmd['rm']+' '+filename[:-4]+'.aux '+filename[:-4]+'.log')
+            os.system(sys_cmd['rm'] + ' ' + filename[:-4] + '.aux ' + filename[:-4] + '.log')
         else:
-            os.system(sys_cmd['rm']+' '+filename[:-4]+'.aux '+filename[:-4]+'.log '+filename[:-4]+'.tex')
+            os.system(sys_cmd['rm'] + ' ' + filename[:-4] + '.aux ' + filename[:-4] + '.log ' + filename[:-4] + '.tex')
     return
 
-def LatexFormat(Fmode=True,Dmode=True,ipy=False):
-    GA_LatexPrinter.Dmode  = Dmode
-    GA_LatexPrinter.Fmode  = Fmode
-    GA_LatexPrinter.ipy    = ipy
+
+def LatexFormat(Fmode=True, Dmode=True, ipy=False):
+    GA_LatexPrinter.Dmode = Dmode
+    GA_LatexPrinter.Fmode = Fmode
+    GA_LatexPrinter.ipy = ipy
     GA_LatexPrinter.redirect(ipy)
     return
 
 prog_str = ''
 off_mode = False
 
+
 def Get_Program(off=False):
-    global prog_str,off_mode
+    global prog_str, off_mode
     off_mode = off
     if off_mode:
         return
-    sys.stderr.write('opening file = '+sys.argv[0]+'\n')
-    prog_file = open(sys.argv[0],'r')
+    prog_file = open(sys.argv[0], 'r')
     prog_str = prog_file.read()
     prog_file.close()
     return
 
+
 def Print_Function():
-    global prog_str,off_mode
+    global prog_str, off_mode
     if off_mode:
         return
     fct_name = str(sys._getframe(1).f_code.co_name)
-    ifct = prog_str.find('def '+fct_name)
-    iend = prog_str.find('def ',ifct+4)
-    tmp_str = prog_str[ifct:iend-1]
-    fct_name = fct_name.replace('_',' ')
+    ifct = prog_str.find('def ' + fct_name)
+    iend = prog_str.find('def ', ifct + 4)
+    tmp_str = prog_str[ifct:iend - 1]
+    fct_name = fct_name.replace('_', ' ')
     if GA_LatexPrinter.latex_flg:
-        #print '#Code for '+fct_name
-        print '##\\begin{lstlisting}[language=Python,showspaces=false,'+\
+        print '##\\begin{lstlisting}[language=Python,showspaces=false,' + \
               'showstringspaces=false,backgroundcolor=\color{gray},frame=single]'
         print tmp_str
         print '##\\end{lstlisting}'
         print '#Code Output:'
     else:
-        print '\n'+80*'*'
-        #print '\nCode for '+fct_name
+        print '\n' + 80 * '*'
         print tmp_str
         print 'Code output:\n'
     return

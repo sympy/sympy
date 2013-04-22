@@ -1,20 +1,32 @@
-#Vector.py
+# vector.py
 
-import sys,itertools
-from sympy import Symbol,S,Matrix,trigsimp,diff,expand
+"""
+vector.py is a helper class for the MV class that defines the basis
+vectors and metric and calulates derivatives of the basis vectors for
+the MV class.
+"""
 
-from sympy.ga.ga_print import GA_Printer,enhance_print
-from sympy.ga.ga_stringarrays import fct_sym_array,str_array,str_combinations,symbol_array
-from sympy.ga.ga_sympy import linear_expand,bilinear_product,linear_derivation
+import sys
+import itertools
+import copy
+
+from sympy import Symbol, S, Matrix, trigsimp, diff, expand
+
+from sympy.ga.ga_print import GA_Printer
+from sympy.ga.ga_stringarrays import str_array
+from sympy.ga.ga_sympy import linear_derivation, bilinear_product
 from sympy.ga.ga_debug import oprint
 
 ZERO = S(0)
 
+
 def flatten(lst):
-    return(list(itertools.chain(*lst)))
+    return list(itertools.chain(*lst))
+
 
 def TrigSimp(x):
-    return(trigsimp(x,recursive=True))
+    return trigsimp(x, recursive=True)
+
 
 class Vector(object):
     """
@@ -29,7 +41,7 @@ class Vector(object):
     is_orthogonal = False
 
     @staticmethod
-    def setup(base,n=None,metric=None,coords=None,curv=(None,None),debug=False):
+    def setup(base, n=None, metric=None, coords=None, curv=(None, None), debug=False):
         """
         Generate basis of vector space as tuple of vectors and
         associated metric tensor as Matrix.  See str_array(base,n) for
@@ -61,7 +73,7 @@ class Vector(object):
         Vector.subscripts = []
         base_name_lst = base.split(' ')
 
-        #Define basis vectors
+        # Define basis vectors
 
         if '*' in base:
             base_lst = base.split('*')
@@ -69,20 +81,20 @@ class Vector(object):
             Vector.subscripts = base_lst[1].split('|')
             base_name_lst = []
             for subscript in Vector.subscripts:
-                base_name_lst.append(base+'_'+subscript)
+                base_name_lst.append(base + '_' + subscript)
         else:
             if len(base_name_lst) > 1:
                 Vector.subscripts = []
                 for base_name in base_name_lst:
                     tmp = base_name.split('_')
                     Vector.subscripts.append(tmp[-1])
-            elif len(base_name_lst) == 1 and Vector.coords != None:
+            elif len(base_name_lst) == 1 and Vector.coords is not None:
                 base_name_lst = []
                 for coord in Vector.coords:
                     Vector.subscripts.append(str(coord))
-                    base_name_lst.append(base+'_'+str(coord))
+                    base_name_lst.append(base + '_' + str(coord))
             else:
-                sys.stdout.write('!!!\''+base+'\' does not define basis vectors!!!\n')
+                sys.stdout.write('!!!\'' + base + '\' does not define basis vectors!!!\n')
                 sys.exit(1)
 
         basis = []
@@ -97,16 +109,16 @@ class Vector(object):
         Vector.base_to_index = base_to_index
         Vector.basis = tuple(basis)
 
-        #define metric tensor
+        # define metric tensor
 
         default_metric = []
         for bv1 in Vector.basis:
             row = []
             for bv2 in Vector.basis:
-                row.append(Vector.basic_dot(bv1,bv2))
+                row.append(Vector.basic_dot(bv1, bv2))
             default_metric.append(row)
         Vector.metric = Matrix(default_metric)
-        if metric != None:
+        if metric is not None:
             if metric[0] == '[' and metric[-1] == ']':
                 Vector.is_orthogonal = True
                 metric_str_lst = metric[1:-1].split(',')
@@ -120,7 +132,7 @@ class Vector(object):
                     if metric_str_lst[index] != '#':
                         Vector.metric[index] = S(metric_str_lst[index])
 
-        Vector.metric_dict = {} #Used to calculate dot product
+        Vector.metric_dict = {}  # Used to calculate dot product
         N = range(len(Vector.basis))
         if Vector.is_orthogonal:
             for ii in N:
@@ -128,17 +140,17 @@ class Vector(object):
         else:
             for irow in N:
                 for icol in N:
-                    Vector.metric_dict[(Vector.basis[irow].obj,Vector.basis[icol].obj)] = Vector.metric[irow,icol]
+                    Vector.metric_dict[(Vector.basis[irow].obj, Vector.basis[icol].obj)] = Vector.metric[irow, icol]
 
-        #calculate tangent vectors and metric for curvilinear basis
+        # calculate tangent vectors and metric for curvilinear basis
 
-        if curv != (None,None):
+        if curv != (None, None):
             X = ZERO
-            for (coef,base) in zip(curv[0],Vector.basis):
-                X += coef*base.obj
+            for (coef, base) in zip(curv[0], Vector.basis):
+                X += coef * base.obj
             Vector.tangents = []
-            for (coord,norm) in zip(Vector.coords,curv[1]):
-                tau = diff(X,coord)
+            for (coord, norm) in zip(Vector.coords, curv[1]):
+                tau = diff(X, coord)
                 tau = trigsimp(tau)
                 tau /= norm
                 tau = expand(tau)
@@ -149,7 +161,7 @@ class Vector(object):
             for tv1 in Vector.tangents:
                 row = []
                 for tv2 in Vector.tangents:
-                    row.append(tv1*tv2)
+                    row.append(tv1 * tv2)
                 metric.append(row)
             metric = Matrix(metric)
             metric = metric.applyfunc(TrigSimp)
@@ -158,143 +170,144 @@ class Vector(object):
                 Vector.is_orthogonal = True
                 tmp_metric = []
                 for ii in N:
-                    tmp_metric.append(metric[ii,ii])
-                    Vector.metric_dict[Vector.basis[ii].obj] = metric[ii,ii]
+                    tmp_metric.append(metric[ii, ii])
+                    Vector.metric_dict[Vector.basis[ii].obj] = metric[ii, ii]
                 Vector.metric = Matrix(tmp_metric)
             else:
                 Vector.is_orthogonal = False
                 Vector.metric = metric
                 for irow in N:
                     for icol in N:
-                        Vector.metric_dict[(Vector.basis[irow].obj,Vector.basis[icol].obj)] = Vector.metric[irow,icol]
+                        Vector.metric_dict[(Vector.basis[irow].obj, Vector.basis[icol].obj)] = Vector.metric[irow, icol]
             Vector.norm = curv[1]
 
             if debug:
-                oprint('Tangent Vectors',Vector.tangents,\
-                       'Metric',Vector.metric,\
-                       'Metric Dictionary',Vector.metric_dict,\
-                       'Normalization',Vector.norm,dict_mode=True)
+                oprint('Tangent Vectors', Vector.tangents,
+                       'Metric', Vector.metric,
+                       'Metric Dictionary', Vector.metric_dict,
+                       'Normalization', Vector.norm, dict_mode=True)
 
-
-            #calculate derivatives of tangent vectors
+            # calculate derivatives of tangent vectors
 
             Vector.dtau_dict = None
             dtau_dict = {}
 
             for x in Vector.coords:
-                for (tau,base) in zip(Vector.tangents,Vector.basis):
+                for (tau, base) in zip(Vector.tangents, Vector.basis):
                     dtau = tau.diff(x).applyfunc(TrigSimp)
                     result = ZERO
-                    for (t,b) in zip(Vector.tangents,Vector.basis):
-                        t_dtau = TrigSimp(t*dtau)
-                        result += t_dtau*b.obj
-                    dtau_dict[(base.obj,x)] = result
+                    for (t, b) in zip(Vector.tangents, Vector.basis):
+                        t_dtau = TrigSimp(t * dtau)
+                        result += t_dtau * b.obj
+                    dtau_dict[(base.obj, x)] = result
 
             Vector.dtau_dict = dtau_dict
 
             if debug:
-                oprint('Basis Derivatives',Vector.dtau_dict,dict_mode=True)
+                oprint('Basis Derivatives', Vector.dtau_dict, dict_mode=True)
 
-        return(tuple(Vector.basis))
+        return tuple(Vector.basis)
 
-    def __init__(self,basis_str=None):
-        if isinstance(basis_str,Vector):
+    def __init__(self, basis_str=None):
+        if isinstance(basis_str, Vector):
             self.obj = basis_str
         else:
-            if basis_str == None or basis_str == '0':
+            if basis_str is None or basis_str == '0':
                 self.obj = S(0)
             else:
-                self.obj = Symbol(basis_str,commutative=False)
+                self.obj = Symbol(basis_str, commutative=False)
 
-    def diff(self,x):
-        (coefs,bases) = linear_expand(self.obj)
+    """
+    def diff(self, x):
+        (coefs, bases) = linear_expand(self.obj)
         result = ZERO
-        for (coef,base) in zip(coefs,bases):
-            result += diff(coef,x)*base
-        return(result)
+        for (coef, base) in zip(coefs, bases):
+            result += diff(coef, x) * base
+        return result
+    """
+
+    def diff(self, x):
+        Dself = Vector()
+        if isinstance(Vector.dtau_dict, dict):
+            Dself.obj = linear_derivation(self.obj, Vector.Diff, x)
+        else:
+            Dself.obj = diff(self.obj, x)
+        return Dself
 
     @staticmethod
-    def basic_dot(v1,v2):
+    def basic_dot(v1, v2):
         """
         Dot product of two basis vectors returns a Symbol
         """
-        i1 = list(Vector.basis).index(v1) #Python 2.5
-        i2 = list(Vector.basis).index(v2) #Python 2.5
+        i1 = list(Vector.basis).index(v1)  # Python 2.5
+        i2 = list(Vector.basis).index(v2)  # Python 2.5
         if i1 < i2:
-            dot_str = '('+str(Vector.basis[i1])+'.'+str(Vector.basis[i2])+')'
+            dot_str = '(' + str(Vector.basis[i1]) + '.' + str(Vector.basis[i2]) + ')'
         else:
-            dot_str = '('+str(Vector.basis[i2])+'.'+str(Vector.basis[i1])+')'
-        return(Symbol(dot_str))
+            dot_str = '(' + str(Vector.basis[i2]) + '.' + str(Vector.basis[i1]) + ')'
+        return Symbol(dot_str)
 
     @staticmethod
-    def dot(b1,b2):
+    def dot(b1, b2):
         if Vector.is_orthogonal:
             if b1 != b2:
-                return(ZERO)
+                return ZERO
             else:
-                return(Vector.metric_dict[b1])
+                return Vector.metric_dict[b1]
         else:
-            return(Vector.metric_dict[(b1,b2)])
+            return Vector.metric_dict[(b1, b2)]
 
     @staticmethod
-    def Diff(b,x):
-        return(Vector.dtau_dict[(b,x)])
+    def Diff(b, x):
+        return Vector.dtau_dict[(b, x)]
 
     ######################## Operator Definitions#######################
 
     def __str__(self):
-        return(GA_Printer().doprint(self))
+        return GA_Printer().doprint(self)
 
-    def __mul__(self,v):
-        if not isinstance(v,Vector):
+    def __mul__(self, v):
+        if not isinstance(v, Vector):
             self_x_v = Vector()
-            self_x_v.obj = self.obj*v
-            return(self_x_v)
+            self_x_v.obj = self.obj * v
+            return self_x_v
         else:
-            result = expand(self.obj*v.obj)
-            result = bilinear_product(result,Vector.dot)
-            return(result)
+            result = expand(self.obj * v.obj)
+            result = bilinear_product(result, Vector.dot)
+            return result
 
-    def __rmul__(self,s):
+    def __rmul__(self, s):
         s_x_self = Vector()
-        s_x_self.obj = s*self.obj
-        return(s_x_self)
+        s_x_self.obj = s * self.obj
+        return s_x_self
 
-    def __add__(self,v):
+    def __add__(self, v):
         self_p_v = Vector()
-        self_p_v.obj = self.obj+v.obj
-        return(self_p_v)
+        self_p_v.obj = self.obj + v.obj
+        return self_p_v
 
-    def __add_ab__(self,v):
+    def __add_ab__(self, v):
         self.obj += v.obj
         return
 
-    def __sub__(self,v):
+    def __sub__(self, v):
         self_m_v = Vector()
-        self_m_v.obj = self.obj-v.obj
-        return(self_m_v)
+        self_m_v.obj = self.obj - v.obj
+        return self_m_v
 
-    def __sub_ab__(self,v):
+    def __sub_ab__(self, v):
         self.obj -= v.obj
         return
 
     def __pos__(self):
-        return(self)
+        return self
 
     def __neg__(self):
         n_self = copy.deepcopy(self)
         n_self.obj = -self.obj
-        return(n_self)
+        return n_self
 
-    def diff(self,x):
-        Dself = Vector()
-        if isinstance(Vector.dtau_dict,dict):
-            Dself.obj = linear_derivation(self.obj,Vector.Diff,x)
-        else:
-            Dself.obj = diff(self.obj,x)
-        return(Dself)
-
-    def applyfunc(self,fct):
+    def applyfunc(self, fct):
         fct_self = Vector()
         fct_self.obj = fct(self.obj)
-        return(fct_self)
+        return fct_self

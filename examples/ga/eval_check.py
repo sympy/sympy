@@ -1,10 +1,10 @@
 #test_latest.py
 
 from sympy import symbols
-from sympy.ga.ga import MV,ReciprocalFrame
-from sympy.ga.ga_print import enhance_print
-from sympy.ga.ga_debug import oprint
-from sympy.ga.ga_precedence import define_precedence,GAeval
+from sympy.ga import MV,ReciprocalFrame
+from sympy.ga import enhance_print
+from sympy.ga import oprint
+from sympy.ga import define_precedence,GAeval
 
 def main():
     enhance_print()

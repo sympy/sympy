@@ -1,11 +1,19 @@
-#GAStringArrays.py
+# ga_stringarrays.py
 
-from sympy import S,Symbol,Function
+"""
+ga_stringarrays.py are a group of helper functions to convert string
+input to vector and multivector class function to arrays of sympy
+symbols.
+"""
+
 import operator
-from itertools import imap,ifilter
+from itertools import imap, ifilter
+
+from sympy import S, Symbol, Function
 from sympy.core.compatibility import combinations
 
-def str_array(base,n=None):
+
+def str_array(base, n=None):
     """
     Generate one dimensional (list of strings) or two dimensional (list
     of list of strings) string array.
@@ -30,49 +38,51 @@ def str_array(base,n=None):
             str_array('a b,c d') = [['a','b'],['c','d']]
 
     """
-    if n == None:
+    if n is None:
         if ',' in base:
             base_array = []
             base_split = base.split(',')
             for base_arg in base_split:
-                base_array.append(list(ifilter(lambda x: x!='',base_arg.split(' '))))
-            return(base_array)
+                base_array.append(list(ifilter(lambda x: x != '', base_arg.split(' '))))
+            return base_array
         else:
-            return(base.split(' '))
+            return base.split(' ')
     result = []
-    if isinstance(n,str):
+    if isinstance(n, str):
         if n[0] == '-':
             for index in n[1:].split(' '):
-                result.append(base+'_'+index)
+                result.append(base + '_' + index)
         if n[0] == '+':
             for index in n[1:].split(' '):
-                result.append(base+'__'+index)
+                result.append(base + '__' + index)
     if n > 0:
-        for i in range(1,n+1):
-            result.append(base+'__'+str(i))
+        for i in range(1, n + 1):
+            result.append(base + '__' + str(i))
     if n < 0:
-        for i in range(1,-n+1):
-            result.append(base+'_'+str(i))
-    return(result)
+        for i in range(1, -n + 1):
+            result.append(base + '_' + str(i))
+    return result
 
-def symbol_array(base,n=None):
+
+def symbol_array(base, n=None):
     """
     Generates a string arrary with str_array and replaces each string in
     array with Symbol of same name.
     """
-    symbol_str_lst = str_array(base,n)
+    symbol_str_lst = str_array(base, n)
     result = []
     for symbol_str in symbol_str_lst:
         result.append(S(symbol_str))
-    return(tuple(result))
+    return tuple(result)
 
-def fct_sym_array(str_lst,coords=None):
+
+def fct_sym_array(str_lst, coords=None):
     """
     Construct list of symbols or functions with names in 'str_lst'.  If
     'coords' are given (tuple of symbols) function list constructed,
     otherwise a symbol list is constructed.
     """
-    if coords == None:
+    if coords is None:
         fs_lst = []
         for sym_str in str_lst:
             fs_lst.append(Symbol(sym_str))
@@ -80,15 +90,16 @@ def fct_sym_array(str_lst,coords=None):
         fs_lst = []
         for fct_str in str_lst:
             fs_lst.append(Function(fct_str)(*coords))
-    return(fs_lst)
+    return fs_lst
 
-def str_combinations(base,lst,rank=1,mode='_'):
+
+def str_combinations(base, lst, rank=1, mode='_'):
     """
     Construct a list of strings of the form 'base+mode+indexes' where the
     indexes are formed by converting 'lst' to a list of strings and then
     forming the 'indexes' by concatenating combinations of elements from
     'lst' taken 'rank' at a time.
     """
-    str_lst = list(imap(lambda x: base+mode+x,imap(lambda x: reduce(operator.add,x),\
-              combinations(imap(lambda x: str(x),lst),rank))))
-    return(str_lst)
+    str_lst = list(imap(lambda x: base + mode + x, imap(lambda x: reduce(operator.add, x),
+                        combinations(imap(lambda x: str(x), lst), rank))))
+    return str_lst

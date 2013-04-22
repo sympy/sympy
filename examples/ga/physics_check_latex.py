@@ -1,8 +1,8 @@
 
 import sys
 from sympy import symbols,sin,cos
-from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
-from sympy.ga.ga import MV,Format
+from sympy.ga import xdvi,Get_Program,Print_Function
+from sympy.ga import MV,Format
 
 def Maxwells_Equations_in_Geometric_Calculus():
     Print_Function()

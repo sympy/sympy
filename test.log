@@ -1,0 +1,5671 @@
+brombo@GA:~/Desktop/Link to sympy$ bin/test  -v
+=============================================================================== test process starts ================================================================================
+executable:         /usr/bin/python  (2.7.3-final-0)
+architecture:       64-bit
+cache:              yes
+ground types:       gmpy 1.14
+random seed:        72318808
+hash randomization: on (PYTHONHASHSEED=2570509069)
+
+sympy/assumptions/tests/test_assumptions_2.py[5]
+test_equal ok
+test_pretty ok
+test_extract_facts ok
+test_global ok
+test_composite_predicates ok                                                                                                                                                    [OK]
+
+sympy/assumptions/tests/test_context.py[4]
+test_assuming ok
+test_assuming_nested ok
+test_finally ok
+test_remove_safe ok                                                                                                                                                             [OK]
+
+sympy/assumptions/tests/test_matrices.py[12]
+test_square ok
+test_invertible ok
+test_symmetric ok
+test_orthogonal ok
+test_fullrank ok
+test_positive_definite ok
+test_triangular ok
+test_diagonal ok
+test_non_atoms ok
+test_non_trivial_implies f
+test_invertible_fullrank f
+test_MatrixSlice ok                                                                                                                                                             [OK]
+
+sympy/assumptions/tests/test_query.py[47]
+test_int_1 ok
+test_int_11 ok
+test_int_12 ok
+test_float_1 ok
+test_positive_xfail f
+test_bounded_xfail f
+test_imaginary_xfail f
+test_real_xfail f
+test_zero_0 ok
+test_negativeone ok
+test_bounded w - Slow
+test_infinity ok
+test_neg_infinity ok
+test_nan ok
+test_Rational_number ok
+test_sqrt_2 ok
+test_pi ok
+test_E ok
+test_I ok
+test_commutative ok
+test_complex ok
+test_even ok
+test_extended_real ok
+test_rational ok
+test_hermitian ok
+test_imaginary ok
+test_infinitesimal ok
+test_integer ok
+test_negative ok
+test_nonzero ok
+test_odd ok
+test_prime ok
+test_real ok
+test_algebraic ok
+test_global ok
+test_custom_context ok
+test_functions_in_assumptions ok
+test_composite_ask ok
+test_composite_proposition ok
+test_incompatible_resolutors ok
+test_key_extensibility ok
+test_type_extensibility ok
+test_single_fact_lookup ok
+test_compute_known_facts ok
+test_known_facts_consistent ok
+test_Add_queries ok
+test_positive ok                                                                                                                                                                [OK]
+
+sympy/assumptions/tests/test_refine.py[4]
+test_Abs ok
+test_pow ok
+test_exp ok
+test_func_args ok                                                                                                                                                               [OK]
+
+sympy/categories/tests/test_baseclasses.py[3]
+test_morphisms ok
+test_diagram ok
+test_category ok                                                                                                                                                                [OK]
+
+sympy/categories/tests/test_drawing.py[8]
+test_GrowableGrid ok
+test_DiagramGrid ok
+test_ArrowStringDescription ok
+test_XypicDiagramDrawer_line ok
+test_XypicDiagramDrawer_triangle ok
+test_XypicDiagramDrawer_cube ok
+test_XypicDiagramDrawer_curved_and_loops ok
+test_xypic_draw_diagram ok                                                                                                                                                      [OK]
+
+sympy/combinatorics/tests/test_generators.py[1]
+test_generators ok                                                                                                                                                              [OK]
+
+sympy/combinatorics/tests/test_graycode.py[1]
+test_graycode ok                                                                                                                                                                [OK]
+
+sympy/combinatorics/tests/test_group_constructs.py[1]
+test_direct_product_n ok                                                                                                                                                        [OK]
+
+sympy/combinatorics/tests/test_named_groups.py[5]
+test_SymmetricGroup ok
+test_CyclicGroup ok
+test_DihedralGroup ok
+test_AlternatingGroup ok
+test_AbelianGroup ok                                                                                                                                                            [OK]
+
+sympy/combinatorics/tests/test_partitions.py[3]
+test_partition ok
+test_integer_partition ok
+test_rgs ok                                                                                                                                                                     [OK]
+
+sympy/combinatorics/tests/test_perm_groups.py[38]
+test_has ok
+test_generate ok
+test_order ok
+test_stabilizer ok
+test_center ok
+test_subgroup_search2 f
+test_rubik f
+test_centralizer ok
+test_coset_rank ok
+test_coset_factor ok
+test_orbits ok
+test_is_normal ok
+test_eq ok
+test_derived_subgroup ok
+test_is_solvable ok
+test_rubik1 ok
+test_direct_product ok
+test_orbit_rep ok
+test_schreier_vector ok
+test_random_pr ok
+test_is_alt_sym ok
+test_minimal_block ok
+test_max_div ok
+test_is_primitive ok
+test_random_stab ok
+test_transitivity_degree ok
+test_schreier_sims_random ok
+test_baseswap ok
+test_schreier_sims_incremental ok
+test_subgroup_search ok
+test_normal_closure ok
+test_derived_series ok
+test_lower_central_series ok
+test_commutator ok
+test_is_nilpotent ok
+test_is_trivial ok
+test_pointwise_stabilizer ok
+test_make_perm ok                                                                                                                                                               [OK]
+
+sympy/combinatorics/tests/test_permutations.py[7]
+test_Permutation ok
+test_josephus ok
+test_ranking ok
+test_mul ok
+test_args ok
+test_Cycle ok
+test_from_sequence ok                                                                                                                                                           [OK]
+
+sympy/combinatorics/tests/test_polyhedron.py[1]
+test_polyhedron ok                                                                                                                                                              [OK]
+
+sympy/combinatorics/tests/test_prufer.py[2]
+test_prufer ok
+test_round_trip ok                                                                                                                                                              [OK]
+
+sympy/combinatorics/tests/test_subsets.py[1]
+test_subset ok                                                                                                                                                                  [OK]
+
+sympy/combinatorics/tests/test_tensor_can.py[12]
+test_perm_af_direct_product ok
+test_dummy_sgs ok
+test_get_symmetric_group_sgs ok
+test_canonicalize_no_slot_sym ok
+test_riemann_invariants1 f
+test_canonicalize_no_dummies ok
+test_no_metric_symmetry ok
+test_canonical_free ok
+test_canonicalize1 ok
+test_riemann_invariants ok
+test_riemann_products ok
+test_graph_certificate ok                                                                                                                                                       [OK]
+
+sympy/combinatorics/tests/test_testutil.py[5]
+test_cmp_perm_lists ok
+test_naive_list_centralizer ok
+test_verify_bsgs ok
+test_verify_centralizer ok
+test_verify_normal_closure ok                                                                                                                                                   [OK]
+
+sympy/combinatorics/tests/test_util.py[8]
+test_check_cycles_alt_sym ok
+test_strip ok
+test_distribute_gens_by_base ok
+test_strong_gens_from_distr ok
+test_orbits_transversals_from_bsgs ok
+test_handle_precomputed_bsgs ok
+test_base_ordering ok
+test_remove_gens ok                                                                                                                                                             [OK]
+
+sympy/concrete/tests/test_gosper.py[11]
+test_gosper_normal ok
+test_gosper_term ok
+test_gosper_sum ok
+test_gosper_sum_indefinite ok
+test_gosper_sum_parametric ok
+test_gosper_sum_algebraic ok
+test_gosper_sum_iterated ok
+test_gosper_sum_AeqB_part1 ok
+test_gosper_nan f
+test_gosper_sum_AeqB_part2 ok
+test_gosper_sum_AeqB_part3 ok                                                                                                                                                   [OK]
+
+sympy/concrete/tests/test_products.py[8]
+test_simple_products ok
+test_multiple_products ok
+test_rational_products ok
+test_special_products ok
+test__eval_product ok
+test_product_pow ok
+test_infinite_product ok
+test_conjugate_transpose ok                                                                                                                                                     [OK]
+
+sympy/concrete/tests/test_sums_products.py[33]
+test_arithmetic_sums ok
+test_polynomial_sums ok
+test_geometric_sums ok
+test_harmonic_sums ok
+test_composite_sums ok
+test_hypergeometric_sums ok
+test_other_sums ok
+test_issue_1072 f
+test_wallis_product f
+test_issue_3175 f
+test_issue_3174 f
+test_rational_products f
+test_issue2166 f
+test_evalf_fast_series ok
+test_evalf_fast_series_issue998 ok
+test_evalf_slow_series ok
+test_euler_maclaurin ok
+test_evalf_euler_maclaurin ok
+test_simple_products ok
+test_telescopic_sums ok
+test_sum_reconstruct ok
+test_Sum_limit_subs ok
+test_Sum_doit ok
+test_Product_doit ok
+test_Sum_interface ok
+test_eval_diff ok
+test_hypersum ok
+test_issue_1071 ok
+test_is_zero ok
+test_is_commutative ok
+test_is_number ok
+test_free_symbols ok
+test_conjugate_transpose ok                                                                                                                                                     [OK]
+
+sympy/core/tests/test_args.py[511]
+test_all_classes_are_tested ok
+test_sympy__assumptions__assume__Predicate ok
+test_sympy__combinatorics__subsets__Subset ok
+test_sympy__diffgeom__diffgeom__Point f
+test_sympy__tensor__tensor__TensorIndex f
+test_sympy__diffgeom__diffgeom__BaseVectorField f
+test_sympy__matrices__expressions__matexpr__MatrixSymbol f
+test_sympy__categories__baseclasses__Morphism f
+test_sympy__tensor__tensor__TensorIndexType f
+test_sympy__diffgeom__diffgeom__CoordSystem f
+test_sympy__combinatorics__perm_groups__PermutationGroup X
+test_sympy__diffgeom__diffgeom__Patch f
+test_sympy__matrices__expressions__matexpr__Identity f
+test_sympy__matrices__expressions__matexpr__ZeroMatrix f
+test_sympy__combinatorics__graycode__GrayCode f
+test_sympy__combinatorics__prufer__Prufer f
+test_sympy__assumptions__assume__AppliedPredicate f
+test_sympy__tensor__tensor__TensorType f
+test_sympy__diffgeom__diffgeom__BaseCovarDerivativeOp f
+test_sympy__core__sets__Interval f
+test_sympy__sets__fancysets__Reals f
+test_sympy__combinatorics__permutations__Permutation f
+test_sympy__combinatorics__partitions__IntegerPartition f
+test_sympy__diffgeom__diffgeom__Manifold f
+test_sympy__tensor__tensor__TensorHead f
+test_sympy__tensor__tensor__TensorSymmetry f
+test_sympy__diffgeom__diffgeom__BaseScalarField f
+test_as_coeff_add f
+test_sympy__combinatorics__polyhedron__Polyhedron ok
+test_sympy__integrals__transforms__HankelTypeTransform s - abstract class
+test_sympy__functions__special__error_functions__FresnelIntegral s - abstract class
+test_sympy__functions__special__error_functions__TrigonometricIntegral s - abstract class
+test_sympy__physics__secondquant__BosonicOperator s - abstract class
+test_sympy__stats__frv__SingleFiniteDistribution s - abstract class
+test_sympy__functions__special__hyper__TupleParametersBase s - abstract class
+test_sympy__core__operations__AssocOp s - abstract class
+test_sympy__functions__special__hyper__HyperRep s - abstract class
+test_sympy__matrices__expressions__matexpr__MatrixExpr s - abstract class
+test_sympy__integrals__transforms__FourierTypeTransform s - abstract class
+test_sympy__logic__boolalg__Boolean s - abstract class
+test_sympy__functions__special__bessel__SphericalBesselBase s - abstract class
+test_sympy__stats__rv__SinglePSpace s - abstract Class
+test_sympy__stats__crv__ContinuousDistribution s - abstract class
+test_sympy__stats__drv__SingleDiscreteDistribution s - abstract class
+test_sympy__functions__elementary__exponential__ExpBase s - abstract class
+test_sympy__tensor__tensor__TensExpr s - abstract class
+test_sympy__core__function__Function s - abstract class
+test_sympy__functions__special__bessel__BesselBase s - abstract class
+test_sympy__functions__combinatorial__factorials__CombinatorialFunction s - abstract class
+test_sympy__matrices__expressions__matexpr__MatrixBase s - abstract class
+test_sympy__core__sets__Set s - does it make sense to test this?
+test_sympy__physics__secondquant__Creator s - abstract class
+test_sympy__core__operations__LatticeOp s - abstract class
+test_sympy__core__numbers__IntegerConstant s - abstract class
+test_sympy__functions__elementary__hyperbolic__HyperbolicFunction s - abstract class
+test_sympy__functions__elementary__integers__RoundFunction s - does this work at all?
+test_sympy__functions__special__polynomials__OrthogonalPolynomial s - abstract class
+test_sympy__physics__quantum__shor__CMod s - TODO: sympy.physics.quantum.shor: Cmod Not Implemented
+test_sympy__physics__quantum__grover__OracleGate s - TODO: sympy.physics
+test_sympy__functions__elementary__trigonometric__TrigonometricFunction s - abstract class
+test_sympy__physics__secondquant__Annihilator s - abstract class
+test_sympy__functions__elementary__miscellaneous__MinMaxBase s - abstract class
+test_sympy__stats__crv__SingleContinuousDistribution s - abstract class
+test_sympy__integrals__transforms__IntegralTransform s - abstract class
+test_sympy__integrals__transforms__SineCosineTypeTransform s - abstract class
+test_sympy__core__relational__Relational s - abstract class
+test_sympy__combinatorics__partitions__Partition ok
+test_sympy__concrete__products__Product ok
+test_sympy__concrete__summations__Sum ok
+test_sympy__core__add__Add ok
+test_sympy__core__basic__Atom ok
+test_sympy__core__basic__Basic ok
+test_sympy__core__containers__Dict ok
+test_sympy__core__containers__Tuple ok
+test_sympy__core__expr__AtomicExpr ok
+test_sympy__core__expr__Expr ok
+test_sympy__core__function__Application ok
+test_sympy__core__function__AppliedUndef ok
+test_sympy__core__function__Derivative ok
+test_sympy__core__function__Lambda ok
+test_sympy__core__function__Subs ok
+test_sympy__core__function__WildFunction ok
+test_sympy__core__mod__Mod ok
+test_sympy__core__mul__Mul ok
+test_sympy__core__numbers__Catalan ok
+test_sympy__core__numbers__ComplexInfinity ok
+test_sympy__core__numbers__EulerGamma ok
+test_sympy__core__numbers__Exp1 ok
+test_sympy__core__numbers__Float ok
+test_sympy__core__numbers__GoldenRatio ok
+test_sympy__core__numbers__Half ok
+test_sympy__core__numbers__ImaginaryUnit ok
+test_sympy__core__numbers__Infinity ok
+test_sympy__core__numbers__Integer ok
+test_sympy__core__numbers__NaN ok
+test_sympy__core__numbers__NegativeInfinity ok
+test_sympy__core__numbers__NegativeOne ok
+test_sympy__core__numbers__Number ok
+test_sympy__core__numbers__NumberSymbol ok
+test_sympy__core__numbers__One ok
+test_sympy__core__numbers__Pi ok
+test_sympy__core__numbers__Rational ok
+test_sympy__core__numbers__RationalConstant ok
+test_sympy__core__numbers__Zero ok
+test_sympy__core__power__Pow ok
+test_sympy__core__relational__Equality ok
+test_sympy__core__relational__GreaterThan ok
+test_sympy__core__relational__LessThan ok
+test_sympy__core__relational__StrictGreaterThan ok
+test_sympy__core__relational__StrictLessThan ok
+test_sympy__core__relational__Unequality ok
+test_sympy__core__sets__EmptySet ok
+test_sympy__core__sets__UniversalSet ok
+test_sympy__core__sets__FiniteSet ok
+test_sympy__core__sets__ProductSet ok
+test_sympy__core__sets__Intersection ok
+test_sympy__core__sets__Union ok
+test_sympy__core__trace__Tr ok
+test_sympy__sets__fancysets__Naturals ok
+test_sympy__sets__fancysets__Naturals0 ok
+test_sympy__sets__fancysets__Integers ok
+test_sympy__sets__fancysets__TransformationSet ok
+test_sympy__sets__fancysets__Range ok
+test_sympy__stats__crv__ContinuousDomain ok
+test_sympy__stats__crv__SingleContinuousDomain ok
+test_sympy__stats__crv__ProductContinuousDomain ok
+test_sympy__stats__crv__ConditionalContinuousDomain ok
+test_sympy__stats__crv__ContinuousPSpace ok
+test_sympy__stats__crv__SingleContinuousPSpace ok
+test_sympy__stats__crv__ProductContinuousPSpace ok
+test_sympy__stats__drv__SingleDiscretePSpace ok
+test_sympy__stats__rv__RandomDomain ok
+test_sympy__stats__rv__SingleDomain ok
+test_sympy__stats__rv__ConditionalDomain ok
+test_sympy__stats__rv__PSpace ok
+test_sympy__stats__rv__RandomSymbol ok
+test_sympy__stats__rv__ProductPSpace ok
+test_sympy__stats__rv__ProductDomain ok
+test_sympy__stats__frv_types__DiscreteUniformDistribution ok
+test_sympy__stats__frv_types__DieDistribution ok
+test_sympy__stats__frv_types__BernoulliDistribution ok
+test_sympy__stats__frv_types__BinomialDistribution ok
+test_sympy__stats__frv_types__HypergeometricDistribution ok
+test_sympy__stats__frv__FiniteDomain ok
+test_sympy__stats__frv__SingleFiniteDomain ok
+test_sympy__stats__frv__ProductFiniteDomain ok
+test_sympy__stats__frv__ConditionalFiniteDomain ok
+test_sympy__stats__frv__FinitePSpace ok
+test_sympy__stats__frv__SingleFinitePSpace ok
+test_sympy__stats__frv__ProductFinitePSpace ok
+test_sympy__stats__frv_types__FiniteDistributionHandmade ok
+test_sympy__stats__crv__ContinuousDistributionHandmade ok
+test_sympy__stats__rv__Density ok
+test_sympy__stats__crv_types__ArcsinDistribution ok
+test_sympy__stats__crv_types__BeniniDistribution ok
+test_sympy__stats__crv_types__BetaDistribution ok
+test_sympy__stats__crv_types__BetaPrimeDistribution ok
+test_sympy__stats__crv_types__CauchyDistribution ok
+test_sympy__stats__crv_types__ChiDistribution ok
+test_sympy__stats__crv_types__ChiNoncentralDistribution ok
+test_sympy__stats__crv_types__ChiSquaredDistribution ok
+test_sympy__stats__crv_types__DagumDistribution ok
+test_sympy__stats__crv_types__ExponentialDistribution ok
+test_sympy__stats__crv_types__FDistributionDistribution ok
+test_sympy__stats__crv_types__FisherZDistribution ok
+test_sympy__stats__crv_types__FrechetDistribution ok
+test_sympy__stats__crv_types__GammaInverseDistribution ok
+test_sympy__stats__crv_types__GammaDistribution ok
+test_sympy__stats__crv_types__KumaraswamyDistribution ok
+test_sympy__stats__crv_types__LaplaceDistribution ok
+test_sympy__stats__crv_types__LogisticDistribution ok
+test_sympy__stats__crv_types__LogNormalDistribution ok
+test_sympy__stats__crv_types__MaxwellDistribution ok
+test_sympy__stats__crv_types__NakagamiDistribution ok
+test_sympy__stats__crv_types__NormalDistribution ok
+test_sympy__stats__crv_types__ParetoDistribution ok
+test_sympy__stats__crv_types__QuadraticUDistribution ok
+test_sympy__stats__crv_types__RaisedCosineDistribution ok
+test_sympy__stats__crv_types__RayleighDistribution ok
+test_sympy__stats__crv_types__StudentTDistribution ok
+test_sympy__stats__crv_types__TriangularDistribution ok
+test_sympy__stats__crv_types__UniformDistribution ok
+test_sympy__stats__crv_types__UniformSumDistribution ok
+test_sympy__stats__crv_types__VonMisesDistribution ok
+test_sympy__stats__crv_types__WeibullDistribution ok
+test_sympy__stats__crv_types__WignerSemicircleDistribution ok
+test_sympy__stats__drv_types__PoissonDistribution ok
+test_sympy__stats__drv_types__GeometricDistribution ok
+test_sympy__core__symbol__Dummy ok
+test_sympy__core__symbol__Symbol ok
+test_sympy__core__symbol__Wild ok
+test_sympy__functions__combinatorial__factorials__FallingFactorial ok
+test_sympy__functions__combinatorial__factorials__MultiFactorial ok
+test_sympy__functions__combinatorial__factorials__RisingFactorial ok
+test_sympy__functions__combinatorial__factorials__binomial ok
+test_sympy__functions__combinatorial__factorials__subfactorial ok
+test_sympy__functions__combinatorial__factorials__factorial ok
+test_sympy__functions__combinatorial__factorials__factorial2 ok
+test_sympy__functions__combinatorial__numbers__bell ok
+test_sympy__functions__combinatorial__numbers__bernoulli ok
+test_sympy__functions__combinatorial__numbers__catalan ok
+test_sympy__functions__combinatorial__numbers__euler ok
+test_sympy__functions__combinatorial__numbers__fibonacci ok
+test_sympy__functions__combinatorial__numbers__harmonic ok
+test_sympy__functions__combinatorial__numbers__lucas ok
+test_sympy__functions__elementary__complexes__Abs ok
+test_sympy__functions__elementary__complexes__adjoint ok
+test_sympy__functions__elementary__complexes__arg ok
+test_sympy__functions__elementary__complexes__conjugate ok
+test_sympy__functions__elementary__complexes__im ok
+test_sympy__functions__elementary__complexes__re ok
+test_sympy__functions__elementary__complexes__sign ok
+test_sympy__functions__elementary__complexes__polar_lift ok
+test_sympy__functions__elementary__complexes__periodic_argument ok
+test_sympy__functions__elementary__complexes__principal_branch ok
+test_sympy__functions__elementary__complexes__transpose ok
+test_sympy__functions__elementary__exponential__LambertW ok
+test_sympy__functions__elementary__exponential__exp ok
+test_sympy__functions__elementary__exponential__exp_polar ok
+test_sympy__functions__elementary__exponential__log ok
+test_sympy__functions__elementary__hyperbolic__acosh ok
+test_sympy__functions__elementary__hyperbolic__acoth ok
+test_sympy__functions__elementary__hyperbolic__asinh ok
+test_sympy__functions__elementary__hyperbolic__atanh ok
+test_sympy__functions__elementary__hyperbolic__cosh ok
+test_sympy__functions__elementary__hyperbolic__coth ok
+test_sympy__functions__elementary__hyperbolic__sinh ok
+test_sympy__functions__elementary__hyperbolic__tanh ok
+test_sympy__functions__elementary__integers__ceiling ok
+test_sympy__functions__elementary__integers__floor ok
+test_sympy__functions__elementary__miscellaneous__IdentityFunction ok
+test_sympy__functions__elementary__miscellaneous__Max ok
+test_sympy__functions__elementary__miscellaneous__Min ok
+test_sympy__functions__elementary__piecewise__ExprCondPair ok
+test_sympy__functions__elementary__piecewise__Piecewise ok
+test_sympy__functions__elementary__trigonometric__acos ok
+test_sympy__functions__elementary__trigonometric__acot ok
+test_sympy__functions__elementary__trigonometric__asin ok
+test_sympy__functions__elementary__trigonometric__atan ok
+test_sympy__functions__elementary__trigonometric__atan2 ok
+test_sympy__functions__elementary__trigonometric__cos ok
+test_sympy__functions__elementary__trigonometric__csc ok
+test_sympy__functions__elementary__trigonometric__cot ok
+test_sympy__functions__elementary__trigonometric__sin ok
+test_sympy__functions__elementary__trigonometric__sec ok
+test_sympy__functions__elementary__trigonometric__tan ok
+test_sympy__functions__special__bessel__besseli ok
+test_sympy__functions__special__bessel__besselj ok
+test_sympy__functions__special__bessel__besselk ok
+test_sympy__functions__special__bessel__bessely ok
+test_sympy__functions__special__bessel__hankel1 ok
+test_sympy__functions__special__bessel__hankel2 ok
+test_sympy__functions__special__bessel__jn ok
+test_sympy__functions__special__bessel__yn ok
+test_sympy__functions__special__delta_functions__DiracDelta ok
+test_sympy__functions__special__delta_functions__Heaviside ok
+test_sympy__functions__special__error_functions__erf ok
+test_sympy__functions__special__error_functions__fresnels ok
+test_sympy__functions__special__error_functions__fresnelc ok
+test_sympy__functions__special__error_functions__erfs ok
+test_sympy__functions__special__error_functions__Ei ok
+test_sympy__functions__special__error_functions__Si ok
+test_sympy__functions__special__error_functions__Ci ok
+test_sympy__functions__special__error_functions__Shi ok
+test_sympy__functions__special__error_functions__Chi ok
+test_sympy__functions__special__error_functions__expint ok
+test_sympy__functions__special__gamma_functions__gamma ok
+test_sympy__functions__special__gamma_functions__loggamma ok
+test_sympy__functions__special__gamma_functions__lowergamma ok
+test_sympy__functions__special__gamma_functions__polygamma ok
+test_sympy__functions__special__gamma_functions__uppergamma ok
+test_sympy__functions__special__hyper__hyper ok
+test_sympy__functions__special__hyper__meijerg ok
+test_sympy__functions__special__hyper__HyperRep_power1 ok
+test_sympy__functions__special__hyper__HyperRep_power2 ok
+test_sympy__functions__special__hyper__HyperRep_log1 ok
+test_sympy__functions__special__hyper__HyperRep_atanh ok
+test_sympy__functions__special__hyper__HyperRep_asin1 ok
+test_sympy__functions__special__hyper__HyperRep_asin2 ok
+test_sympy__functions__special__hyper__HyperRep_sqrts1 ok
+test_sympy__functions__special__hyper__HyperRep_sqrts2 ok
+test_sympy__functions__special__hyper__HyperRep_log2 ok
+test_sympy__functions__special__hyper__HyperRep_cosasin ok
+test_sympy__functions__special__hyper__HyperRep_sinasin ok
+test_sympy__functions__special__polynomials__jacobi ok
+test_sympy__functions__special__polynomials__gegenbauer ok
+test_sympy__functions__special__polynomials__chebyshevt ok
+test_sympy__functions__special__polynomials__chebyshevt_root ok
+test_sympy__functions__special__polynomials__chebyshevu ok
+test_sympy__functions__special__polynomials__chebyshevu_root ok
+test_sympy__functions__special__polynomials__hermite ok
+test_sympy__functions__special__polynomials__legendre ok
+test_sympy__functions__special__polynomials__assoc_legendre ok
+test_sympy__functions__special__polynomials__laguerre ok
+test_sympy__functions__special__polynomials__assoc_laguerre ok
+test_sympy__functions__special__tensor_functions__LeviCivita ok
+test_sympy__functions__special__tensor_functions__KroneckerDelta ok
+test_sympy__functions__special__zeta_functions__dirichlet_eta ok
+test_sympy__functions__special__zeta_functions__zeta ok
+test_sympy__functions__special__zeta_functions__lerchphi ok
+test_sympy__functions__special__zeta_functions__polylog ok
+test_sympy__integrals__integrals__Integral ok
+test_sympy__integrals__risch__NonElementaryIntegral ok
+test_sympy__integrals__transforms__MellinTransform ok
+test_sympy__integrals__transforms__InverseMellinTransform ok
+test_sympy__integrals__transforms__LaplaceTransform ok
+test_sympy__integrals__transforms__InverseLaplaceTransform ok
+test_sympy__integrals__transforms__InverseFourierTransform ok
+test_sympy__integrals__transforms__FourierTransform ok
+test_sympy__integrals__transforms__InverseSineTransform ok
+test_sympy__integrals__transforms__SineTransform ok
+test_sympy__integrals__transforms__InverseCosineTransform ok
+test_sympy__integrals__transforms__CosineTransform ok
+test_sympy__integrals__transforms__InverseHankelTransform ok
+test_sympy__integrals__transforms__HankelTransform ok
+test_sympy__logic__boolalg__And ok
+test_sympy__logic__boolalg__BooleanFunction ok
+test_sympy__logic__boolalg__Equivalent ok
+test_sympy__logic__boolalg__ITE ok
+test_sympy__logic__boolalg__Implies ok
+test_sympy__logic__boolalg__Nand ok
+test_sympy__logic__boolalg__Nor ok
+test_sympy__logic__boolalg__Not ok
+test_sympy__logic__boolalg__Or ok
+test_sympy__logic__boolalg__Xor ok
+test_sympy__matrices__matrices__DeferredVector ok
+test_sympy__matrices__immutable__ImmutableMatrix ok
+test_sympy__matrices__immutable__ImmutableSparseMatrix ok
+test_sympy__matrices__expressions__slice__MatrixSlice ok
+test_sympy__matrices__expressions__blockmatrix__BlockDiagMatrix ok
+test_sympy__matrices__expressions__blockmatrix__BlockMatrix ok
+test_sympy__matrices__expressions__inverse__Inverse ok
+test_sympy__matrices__expressions__matadd__MatAdd ok
+test_sympy__matrices__expressions__matmul__MatMul ok
+test_sympy__matrices__expressions__hadamard__HadamardProduct ok
+test_sympy__matrices__expressions__matpow__MatPow ok
+test_sympy__matrices__expressions__transpose__Transpose ok
+test_sympy__matrices__expressions__adjoint__Adjoint ok
+test_sympy__matrices__expressions__trace__Trace ok
+test_sympy__matrices__expressions__determinant__Det ok
+test_sympy__matrices__expressions__funcmatrix__FunctionMatrix ok
+test_sympy__physics__gaussopt__BeamParameter ok
+test_sympy__physics__paulialgebra__Pauli ok
+test_sympy__physics__quantum__anticommutator__AntiCommutator ok
+test_sympy__physics__quantum__cartesian__PositionBra3D ok
+test_sympy__physics__quantum__cartesian__PositionKet3D ok
+test_sympy__physics__quantum__cartesian__PositionState3D ok
+test_sympy__physics__quantum__cartesian__PxBra ok
+test_sympy__physics__quantum__cartesian__PxKet ok
+test_sympy__physics__quantum__cartesian__PxOp ok
+test_sympy__physics__quantum__cartesian__XBra ok
+test_sympy__physics__quantum__cartesian__XKet ok
+test_sympy__physics__quantum__cartesian__XOp ok
+test_sympy__physics__quantum__cartesian__YOp ok
+test_sympy__physics__quantum__cartesian__ZOp ok
+test_sympy__physics__quantum__cg__CG ok
+test_sympy__physics__quantum__cg__Wigner3j ok
+test_sympy__physics__quantum__cg__Wigner6j ok
+test_sympy__physics__quantum__cg__Wigner9j ok
+test_sympy__physics__quantum__commutator__Commutator ok
+test_sympy__physics__quantum__constants__HBar ok
+test_sympy__physics__quantum__dagger__Dagger ok
+test_sympy__physics__quantum__gate__CGate ok
+test_sympy__physics__quantum__gate__CNotGate ok
+test_sympy__physics__quantum__gate__Gate ok
+test_sympy__physics__quantum__gate__HadamardGate ok
+test_sympy__physics__quantum__gate__IdentityGate ok
+test_sympy__physics__quantum__gate__OneQubitGate ok
+test_sympy__physics__quantum__gate__PhaseGate ok
+test_sympy__physics__quantum__gate__SwapGate ok
+test_sympy__physics__quantum__gate__TGate ok
+test_sympy__physics__quantum__gate__TwoQubitGate ok
+test_sympy__physics__quantum__gate__UGate ok
+test_sympy__physics__quantum__gate__XGate ok
+test_sympy__physics__quantum__gate__YGate ok
+test_sympy__physics__quantum__gate__ZGate ok
+test_sympy__physics__quantum__grover__WGate ok
+test_sympy__physics__quantum__hilbert__ComplexSpace ok
+test_sympy__physics__quantum__hilbert__DirectSumHilbertSpace ok
+test_sympy__physics__quantum__hilbert__FockSpace ok
+test_sympy__physics__quantum__hilbert__HilbertSpace ok
+test_sympy__physics__quantum__hilbert__L2 ok
+test_sympy__physics__quantum__hilbert__TensorPowerHilbertSpace ok
+test_sympy__physics__quantum__hilbert__TensorProductHilbertSpace ok
+test_sympy__physics__quantum__innerproduct__InnerProduct ok
+test_sympy__physics__quantum__operator__DifferentialOperator ok
+test_sympy__physics__quantum__operator__HermitianOperator ok
+test_sympy__physics__quantum__operator__Operator ok
+test_sympy__physics__quantum__operator__OuterProduct ok
+test_sympy__physics__quantum__operator__UnitaryOperator ok
+test_sympy__physics__quantum__piab__PIABBra ok
+test_sympy__physics__quantum__piab__PIABHamiltonian ok
+test_sympy__physics__quantum__piab__PIABKet ok
+test_sympy__physics__quantum__qexpr__QExpr ok
+test_sympy__physics__quantum__qft__Fourier ok
+test_sympy__physics__quantum__qft__IQFT ok
+test_sympy__physics__quantum__qft__QFT ok
+test_sympy__physics__quantum__qft__RkGate ok
+test_sympy__physics__quantum__qubit__IntQubit ok
+test_sympy__physics__quantum__qubit__IntQubitBra ok
+test_sympy__physics__quantum__qubit__IntQubitState ok
+test_sympy__physics__quantum__qubit__Qubit ok
+test_sympy__physics__quantum__qubit__QubitBra ok
+test_sympy__physics__quantum__qubit__QubitState ok
+test_sympy__physics__quantum__density__Density ok
+test_sympy__physics__quantum__spin__CoupledSpinState ok
+test_sympy__physics__quantum__spin__J2Op ok
+test_sympy__physics__quantum__spin__JminusOp ok
+test_sympy__physics__quantum__spin__JplusOp ok
+test_sympy__physics__quantum__spin__JxBra ok
+test_sympy__physics__quantum__spin__JxBraCoupled ok
+test_sympy__physics__quantum__spin__JxKet ok
+test_sympy__physics__quantum__spin__JxKetCoupled ok
+test_sympy__physics__quantum__spin__JxOp ok
+test_sympy__physics__quantum__spin__JyBra ok
+test_sympy__physics__quantum__spin__JyBraCoupled ok
+test_sympy__physics__quantum__spin__JyKet ok
+test_sympy__physics__quantum__spin__JyKetCoupled ok
+test_sympy__physics__quantum__spin__JyOp ok
+test_sympy__physics__quantum__spin__JzBra ok
+test_sympy__physics__quantum__spin__JzBraCoupled ok
+test_sympy__physics__quantum__spin__JzKet ok
+test_sympy__physics__quantum__spin__JzKetCoupled ok
+test_sympy__physics__quantum__spin__JzOp ok
+test_sympy__physics__quantum__spin__Rotation ok
+test_sympy__physics__quantum__spin__SpinState ok
+test_sympy__physics__quantum__spin__WignerD ok
+test_sympy__physics__quantum__state__Bra ok
+test_sympy__physics__quantum__state__BraBase ok
+test_sympy__physics__quantum__state__Ket ok
+test_sympy__physics__quantum__state__KetBase ok
+test_sympy__physics__quantum__state__State ok
+test_sympy__physics__quantum__state__StateBase ok
+test_sympy__physics__quantum__state__TimeDepBra ok
+test_sympy__physics__quantum__state__TimeDepKet ok
+test_sympy__physics__quantum__state__TimeDepState ok
+test_sympy__physics__quantum__state__Wavefunction ok
+test_sympy__physics__quantum__tensorproduct__TensorProduct ok
+test_sympy__physics__quantum__identitysearch__GateIdentity ok
+test_sympy__physics__quantum__sho1d__SHOOp ok
+test_sympy__physics__quantum__sho1d__RaisingOp ok
+test_sympy__physics__quantum__sho1d__LoweringOp ok
+test_sympy__physics__quantum__sho1d__NumberOp ok
+test_sympy__physics__quantum__sho1d__Hamiltonian ok
+test_sympy__physics__quantum__sho1d__SHOState ok
+test_sympy__physics__quantum__sho1d__SHOKet ok
+test_sympy__physics__quantum__sho1d__SHOBra ok
+test_sympy__physics__secondquant__AnnihilateBoson ok
+test_sympy__physics__secondquant__AnnihilateFermion ok
+test_sympy__physics__secondquant__AntiSymmetricTensor ok
+test_sympy__physics__secondquant__BosonState ok
+test_sympy__physics__secondquant__Commutator ok
+test_sympy__physics__secondquant__CreateBoson ok
+test_sympy__physics__secondquant__CreateFermion ok
+test_sympy__physics__secondquant__Dagger ok
+test_sympy__physics__secondquant__FermionState ok
+test_sympy__physics__secondquant__FermionicOperator ok
+test_sympy__physics__secondquant__FockState ok
+test_sympy__physics__secondquant__FockStateBosonBra ok
+test_sympy__physics__secondquant__FockStateBosonKet ok
+test_sympy__physics__secondquant__FockStateBra ok
+test_sympy__physics__secondquant__FockStateFermionBra ok
+test_sympy__physics__secondquant__FockStateFermionKet ok
+test_sympy__physics__secondquant__FockStateKet ok
+test_sympy__physics__secondquant__InnerProduct ok
+test_sympy__physics__secondquant__NO ok
+test_sympy__physics__secondquant__PermutationOperator ok
+test_sympy__physics__secondquant__SqOperator ok
+test_sympy__physics__secondquant__TensorSymbol ok
+test_sympy__physics__units__Unit ok
+test_sympy__polys__numberfields__AlgebraicNumber ok
+test_sympy__polys__polytools__GroebnerBasis ok
+test_sympy__polys__polytools__Poly ok
+test_sympy__polys__polytools__PurePoly ok
+test_sympy__polys__rootoftools__RootOf ok
+test_sympy__polys__rootoftools__RootSum ok
+test_sympy__series__limits__Limit ok
+test_sympy__series__order__Order ok
+test_sympy__simplify__cse_opts__Neg ok
+test_sympy__simplify__hyperexpand__Hyper_Function ok
+test_sympy__simplify__hyperexpand__G_Function ok
+test_sympy__tensor__indexed__Idx ok
+test_sympy__tensor__indexed__Indexed ok
+test_sympy__tensor__indexed__IndexedBase ok
+test_sympy__tensor__tensor__TensAdd ok
+test_sympy__tensor__tensor__TensMul ok
+test_sympy__geometry__curve__Curve ok
+test_sympy__geometry__point__Point ok
+test_sympy__geometry__ellipse__Ellipse ok
+test_sympy__geometry__ellipse__Circle ok
+test_sympy__geometry__line__LinearEntity ok
+test_sympy__geometry__line__Line ok
+test_sympy__geometry__line__Ray ok
+test_sympy__geometry__line__Segment ok
+test_sympy__geometry__polygon__Polygon ok
+test_sympy__geometry__polygon__RegularPolygon ok
+test_sympy__geometry__polygon__Triangle ok
+test_sympy__geometry__entity__GeometryEntity ok
+test_sympy__diffgeom__diffgeom__Differential ok
+test_sympy__diffgeom__diffgeom__Commutator ok
+test_sympy__diffgeom__diffgeom__TensorProduct ok
+test_sympy__diffgeom__diffgeom__WedgeProduct ok
+test_sympy__diffgeom__diffgeom__LieDerivative ok
+test_sympy__diffgeom__diffgeom__CovarDerivativeOp ok
+test_sympy__categories__baseclasses__Class ok
+test_sympy__categories__baseclasses__Object ok
+test_sympy__categories__baseclasses__IdentityMorphism ok
+test_sympy__categories__baseclasses__NamedMorphism ok
+test_sympy__categories__baseclasses__CompositeMorphism ok
+test_sympy__categories__baseclasses__Diagram ok
+test_sympy__categories__baseclasses__Category ok                                                                                                                                [OK]
+
+sympy/core/tests/test_arit.py[63]
+test_bug1 ok
+test_Symbol ok
+test_arit0 ok
+test_div ok
+test_pow ok
+test_real_Pow f
+test_issue432 f
+test_pow2 ok
+test_pow3 ok
+test_pow_issue417 ok
+test_pow_im ok
+test_real_mul ok
+test_ncmul ok
+test_ncpow ok
+test_powerbug ok
+test_Mul_doesnt_expand_exp ok
+test_Add_Mul_is_integer ok
+test_Add_Mul_is_bounded ok
+test_Mul_is_even_odd ok
+test_Mul_is_rational ok
+test_Add_is_even_odd ok
+test_Mul_is_negative_positive ok
+test_Mul_is_negative_positive_2 ok
+test_Mul_is_nonpositive_nonnegative ok
+test_Add_is_negative_positive ok
+test_Add_is_nonpositive_nonnegative ok
+test_Pow_is_integer ok
+test_Pow_is_real ok
+test_Pow_is_bounded ok
+test_Pow_is_even_odd ok
+test_Pow_is_negative_positive ok
+test_Pow_is_nonpositive_nonnegative ok
+test_Mul_is_imaginary_real ok
+test_Add_is_comparable ok
+test_Mul_is_comparable ok
+test_Pow_is_comparable ok
+test_Add_is_positive_2 ok
+test_Add_is_irrational ok
+test_issue432b ok
+test_bug3 ok
+test_suppressed_evaluation ok
+test_Add_as_coeff_mul ok
+test_Pow_as_coeff_mul_doesnt_expand ok
+test_issue415 ok
+test_make_args ok
+test_issue2027 ok
+test_Rational_as_content_primitive ok
+test_Add_as_content_primitive ok
+test_Mul_as_content_primitive ok
+test_Pow_as_content_primitive ok
+test_issue2361 ok
+test_product_irrational ok
+test_issue_2820 ok
+test_Mod ok
+test_issue_2902 ok
+test_polar ok
+test_issue_2941 ok
+test_issue_2983 ok
+test_issue_2978 ok
+test_mul_flatten_oo ok
+test_issue_2061_2988_2990_2991 ok
+test_float_int ok
+test_issue_3512a ok                                                                                                                                                             [OK]
+
+sympy/core/tests/test_assumptions.py[43]
+test_symbol_unset ok
+test_zero ok
+test_one ok
+test_negativeone ok
+test_infinity ok
+test_neg_symbol_falsepositive f
+test_one_is_composite f
+test_issue_3176 f
+test_neg_symbol_falsenonnegative f
+test_neg_infinity ok
+test_nan ok
+test_pos_rational ok
+test_neg_rational ok
+test_pi ok
+test_E ok
+test_I ok
+test_symbol_real ok
+test_symbol_zero ok
+test_symbol_positive ok
+test_neg_symbol_positive ok
+test_symbol_nonpositive ok
+test_neg_symbol_nonpositive ok
+test_symbol_falsepositive ok
+test_symbol_falsepositive_real ok
+test_neg_symbol_falsepositive_real ok
+test_symbol_falsenonnegative ok
+test_symbol_falsenonnegative_real ok
+test_neg_symbol_falsenonnegative_real ok
+test_prime ok
+test_composite ok
+test_prime_symbol ok
+test_symbol_noncommutative ok
+test_other_symbol ok
+test_issue726 ok
+test_issue1723 ok
+test_hash_vs_typeinfo ok
+test_hash_vs_typeinfo_2 ok
+test_hash_vs_eq ok
+test_Add_is_pos_neg ok
+test_special_is_rational ok
+test_special_assumptions ok
+test_inconsistent ok
+test_issue_3532 ok                                                                                                                                                              [OK]
+
+sympy/core/tests/test_basic.py[13]
+test_structure ok
+test_equality ok
+test_matches_basic ok
+test_has ok
+test_subs ok
+test_atoms ok
+test_free_symbols_empty ok
+test_doit ok
+test_S ok
+test_xreplace ok
+test_Singleton ok
+test_preorder_traversal ok
+test_sorted_args ok                                                                                                                                                             [OK]
+
+sympy/core/tests/test_cache.py[1]
+test_cacheit_doc ok                                                                                                                                                             [OK]
+
+sympy/core/tests/test_compatibility.py[2]
+test_default_sort_key ok
+test_as_int ok                                                                                                                                                                  [OK]
+
+sympy/core/tests/test_complex.py[16]
+test_complex ok
+test_conjugate ok
+test_abs1 ok
+test_abs2 ok
+test_evalc ok
+test_pythoncomplex ok
+test_rootcomplex ok
+test_expand_inverse ok
+test_expand_complex ok
+test_expand ok
+test_re_im1652 ok
+test_issue_1985 ok
+test_issue_2137 ok
+test_real_imag ok
+test_pow_issue_1724 ok
+test_issue_2330 ok                                                                                                                                                              [OK]
+
+sympy/core/tests/test_containers.py[10]
+test_Tuple ok
+test_Tuple_contains ok
+test_Tuple_concatenation ok
+test_Tuple_equality ok
+test_Tuple_comparision ok
+test_tuple_wrapper ok
+test_iterable_is_sequence ok
+test_Dict ok
+test_issue_2689b X
+test_issue_2689 ok                                                                                                                                                              [OK]
+
+sympy/core/tests/test_count_ops.py[2]
+test_count_ops_non_visual ok
+test_count_ops_visual ok                                                                                                                                                        [OK]
+
+sympy/core/tests/test_diff.py[6]
+test_diff ok
+test_diff2 ok
+test_diff3 ok
+test_diff_no_eval_derivative ok
+test_speed ok
+test_deriv_noncommutative ok                                                                                                                                                    [OK]
+
+sympy/core/tests/test_equal.py[6]
+test_equal ok
+test_expevalbug ok
+test_cmp_bug1 ok
+test_cmp_bug2 ok
+test_cmp_bug1258 ok
+test_dummy_eq ok                                                                                                                                                                [OK]
+
+sympy/core/tests/test_eval.py[8]
+test_add_eval ok
+test_addmul_eval ok
+test_pow_eval ok
+test_mulpow_eval ok
+test_evalpow_bug ok
+test_symbol_expand ok
+test_function ok
+test_pow_eval_X1 f                                                                                                                                                              [OK]
+
+sympy/core/tests/test_eval_power.py[16]
+test_rational ok
+test_large_rational ok
+test_negative_real ok
+test_expand ok
+test_issue350 ok
+test_issue767 ok
+test_negative_one ok
+test_issue1263 ok
+test_issue_3683 f
+test_Pow_signs ok
+test_power_with_noncommutative_mul_as_base ok
+test_zero ok
+test_pow_as_base_exp ok
+test_issue_3001 ok
+test_issue_3109 ok
+test_issue_2969 ok                                                                                                                                                              [OK]
+
+sympy/core/tests/test_evalf.py[38]
+test_evalf_helpers ok
+test_evalf_basic ok
+test_cancellation ok
+test_evalf_powers ok
+test_evalf_rump ok
+test_evalf_complex ok
+test_evalf_complex_powers ok
+test_evalf_exponentiation ok
+test_evalf_complex_cancellation ok
+test_evalf_complex_powers_bug f
+test_evalf_complex_bug f
+test_evalf_logs ok
+test_evalf_trig ok
+test_evalf_near_integers ok
+test_evalf_ramanujan ok
+test_evalf_bugs ok
+test_evalf_integer_parts ok
+test_evalf_trig_zero_detection ok
+test_evalf_divergent_series ok
+test_evalf_py_methods ok
+test_evalf_power_subs_bugs ok
+test_evalf_arguments ok
+test_implemented_function_evalf ok
+test_evaluate_false ok
+test_evalf_relational ok
+test_issue_2387 ok
+test_issue_2387_bug ok
+test_bugs ok
+test_subs_bugs ok
+test_issue_1857_2105 ok
+test_old_docstring ok
+test_issue_1707 ok
+test_evalf_mul ok
+test_scaled_zero ok
+test_chop_value ok
+test_infinities ok
+test_to_mpmath ok
+test_issue_3533_evalf ok                                                                                                                                                        [OK]
+
+sympy/core/tests/test_expand.py[12]
+test_expand_no_log ok
+test_expand_no_multinomial ok
+test_expand_negative_integer_powers ok
+test_expand_non_commutative ok
+test_expand_radicals ok
+test_expand_modulus ok
+test_issue_2644 ok
+test_expand_frac ok
+test_issue_3022 ok
+test_expand_power_base ok
+test_expand_arit ok
+test_power_expand ok                                                                                                                                                            [OK]
+
+sympy/core/tests/test_expr.py[79]
+test_float_0_fail f
+test_basic ok
+test_ibasic ok
+test_relational ok
+test_relational_assumptions ok
+test_relational_noncommutative ok
+test_basic_nostr ok
+test_leadterm ok
+test_as_leading_term ok
+test_leadterm2 ok
+test_leadterm3 ok
+test_as_leading_term2 ok
+test_as_leading_term3 ok
+test_as_leading_term_stub ok
+test_atoms ok
+test_is_polynomial ok
+test_is_rational_function ok
+test_SAGE1 ok
+test_SAGE2 ok
+test_SAGE3 ok
+test_len ok
+test_doit ok
+test_attribute_error ok
+test_args ok
+test_iter_basic_args ok
+test_noncommutative_expand_issue658 ok
+test_as_numer_denom ok
+test_as_independent ok
+test_call ok
+test_replace ok
+test_find ok
+test_count ok
+test_has_basics ok
+test_has_multiple ok
+test_has_piecewise ok
+test_has_iterative ok
+test_has_integrals ok
+test_has_tuple ok
+test_has_units ok
+test_has_polys ok
+test_has_physics ok
+test_as_poly_as_expr ok
+test_nonzero ok
+test_is_number ok
+test_as_coeff_add ok
+test_as_coeff_mul ok
+test_as_coeff_exponent ok
+test_extractions ok
+test_coeff ok
+test_coeff2 ok
+test_coeff2_0 ok
+test_coeff_expand ok
+test_integrate ok
+test_as_base_exp ok
+test_issue1864 ok
+test_action_verbs ok
+test_as_powers_dict ok
+test_as_coefficients_dict ok
+test_args_cnc ok
+test_new_rawargs ok
+test_2127 ok
+test_free_symbols ok
+test_issue2201 ok
+test_as_coeff_Mul ok
+test_as_coeff_Add ok
+test_expr_sorting ok
+test_as_ordered_factors ok
+test_as_ordered_terms ok
+test_sort_key_atomic_expr ok
+test_issue_1100 ok
+test_primitive ok
+test_issue_2744 ok
+test_is_constant ok
+test_equals ok
+test_random ok
+test_round ok
+test_extract_branch_factor ok
+test_identity_removal ok
+test_float_0 ok                                                                                                                                                                 [OK]
+
+sympy/core/tests/test_exprtools.py[8]
+test_decompose_power ok
+test_Factors ok
+test_Term ok
+test_gcd_terms ok
+test_factor_terms ok
+test_xreplace ok
+test_factor_nc ok
+test_issue_3261 ok                                                                                                                                                              [OK]
+
+sympy/core/tests/test_facts.py[10]
+test_deduce_alpha_implications ok
+test_apply_beta_to_alpha_route ok
+test_FactRules_parse ok
+test_FactRules_parse2 ok
+test_FactRules_deduce ok
+test_FactRules_deduce2 ok
+test_FactRules_deduce_multiple ok
+test_FactRules_deduce_multiple2 ok
+test_FactRules_deduce_base ok
+test_FactRules_deduce_staticext ok                                                                                                                                              [OK]
+
+sympy/core/tests/test_function.py[43]
+test_f_expand_complex ok
+test_bug1 ok
+test_general_function ok
+test_derivative_subs_bug ok
+test_derivative_subs_self_bug ok
+test_derivative_linearity ok
+test_derivative_evaluate ok
+test_diff_symbols ok
+test_Lambda ok
+test_Subs2 f
+test_issue_1612 X
+test_function_comparable_infinities f
+test_IdentityFunction ok
+test_Lambda_symbols ok
+test_Lambda_arguments ok
+test_Lambda_equality ok
+test_Subs ok
+test_expand_function ok
+test_function_comparable ok
+test_deriv1 ok
+test_deriv2 ok
+test_func_deriv ok
+test_suppressed_evaluation ok
+test_function_evalf ok
+test_extensibility_eval ok
+test_function_non_commutative ok
+test_function__eval_nseries ok
+test_doit ok
+test_evalf_default ok
+test_issue2300 ok
+test_derivative_numerically ok
+test_fdiff_argument_index_error ok
+test_deriv_wrt_function ok
+test_diff_wrt_value ok
+test_diff_wrt ok
+test_diff_wrt_func_subs ok
+test_diff_wrt_not_allowed ok
+test_klein_gordon_lagrangian ok
+test_sho_lagrangian ok
+test_straight_line ok
+test_sort_variable ok
+test_unhandled ok
+test_nfloat ok                                                                                                                                                                  [OK]
+
+sympy/core/tests/test_logic.py[10]
+test_fuzzy_not ok
+test_fuzzy_and ok
+test_logic_cmp ok
+test_logic_onearg ok
+test_logic_xnotx ok
+test_logic_eval_TF ok
+test_logic_combine_args ok
+test_logic_expand ok
+test_logic_fromstring ok
+test_logic_not ok                                                                                                                                                               [OK]
+
+sympy/core/tests/test_match.py[38]
+test_symbol ok
+test_add ok
+test_power ok
+test_match_exclude ok
+test_mul ok
+test_functions_X1 f
+test_mul_noncommutative ok
+test_complex ok
+test_functions ok
+test_interface ok
+test_derivative1 ok
+test_derivative_bug1 ok
+test_derivative2 ok
+test_match_deriv_bug1 ok
+test_match_bug2 ok
+test_match_bug3 ok
+test_match_bug4 ok
+test_match_bug5 ok
+test_match_bug6 ok
+test_behavior1 ok
+test_behavior2 ok
+test_match_polynomial ok
+test_exclude ok
+test_floats ok
+test_Derivative_bug1 ok
+test_match_wild_wild ok
+test_combine_inverse ok
+test_issue_674 ok
+test_issue_1319 ok
+test_issue_1601 ok
+test_issue_2069 ok
+test_issue_1460 ok
+test_issue_1784 ok
+test_issue_1220 ok
+test_issue_679 ok
+test_issue_784 ok
+test_issue_3004 ok
+test_issue_3539 ok                                                                                                                                                              [OK]
+
+sympy/core/tests/test_noncommutative.py[15]
+test_adjoint ok
+test_combsimp ok
+test_conjugate ok
+test_expand ok
+test_factor ok
+test_posify ok
+test_radsimp ok
+test_simplify ok
+test_collect f
+test_rcollect f
+test_cancel f
+test_ratsimp f
+test_subs ok
+test_transpose ok
+test_trigsimp ok                                                                                                                                                                [OK]
+
+sympy/core/tests/test_numbers.py[62]
+test_integers_cache ok
+test_seterr ok
+test_mod ok
+test_divmod ok
+test_hashing_sympy_integers f
+test_mpmath_issues f
+test_igcd ok
+test_ilcm ok
+test_igcdex ok
+test_Integer_new ok
+test_Rational_new ok
+test_Number_new ok
+test_Rational_cmp ok
+test_Float ok
+test_Float_eval ok
+test_Float_issue_2107 ok
+test_Infinity ok
+test_Infinity_2 ok
+test_Mul_Infinity_Zero ok
+test_Div_By_Zero ok
+test_Infinity_inequations ok
+test_NaN ok
+test_special_numbers ok
+test_powers ok
+test_integer_nthroot_overflow ok
+test_powers_Integer ok
+test_powers_Rational ok
+test_powers_Float ok
+test_abs1 ok
+test_accept_int ok
+test_dont_accept_str ok
+test_int ok
+test_real_bug ok
+test_bug_sqrt ok
+test_pi_Pi ok
+test_no_len ok
+test_issue222 ok
+test_issue593 ok
+test_issue324 ok
+test_issue350 ok
+test_Integer_factors ok
+test_Rational_factors ok
+test_issue1008 ok
+test_IntegerInteger ok
+test_Rational_gcd_lcm_cofactors ok
+test_Float_gcd_lcm_cofactors ok
+test_issue1512 ok
+test_conversion_to_mpmath ok
+test_relational ok
+test_Integer_as_index ok
+test_Rational_int ok
+test_zoo ok
+test_issue_1023 ok
+test_GoldenRatio_expand ok
+test_as_content_primitive ok
+test_issue_1073 ok
+test_Catalan_EulerGamma_prec ok
+test_Float_eq ok
+test_int_NumberSymbols ok
+test_3541 ok
+test_3250 ok
+test_mpf_norm ok                                                                                                                                                                [OK]
+
+sympy/core/tests/test_operations.py[4]
+test_lattice_simple ok
+test_lattice_shortcircuit ok
+test_lattice_print ok
+test_lattice_make_args ok                                                                                                                                                       [OK]
+
+sympy/core/tests/test_priority.py[5]
+test_mul ok
+test_add ok
+test_sub ok
+test_pow ok
+test_div ok                                                                                                                                                                     [OK]
+
+sympy/core/tests/test_relational.py[11]
+test_rel_ne ok
+test_rel_subs ok
+test_wrappers ok
+test_Eq ok
+test_rel_Infinity ok
+test_bool ok
+test_relational_bool_output f
+test_rich_cmp ok
+test_doit ok
+test_new_relational ok
+test_relational_logic_symbols ok                                                                                                                                                [OK]
+
+sympy/core/tests/test_rules.py[1]
+test_Transform ok                                                                                                                                                               [OK]
+
+sympy/core/tests/test_sets.py[28]
+test_interval_arguments ok
+test_interval_symbolic_end_points ok
+test_union ok
+test_difference ok
+test_complement ok
+test_intersect ok
+test_intersection ok
+test_interval_subs ok
+test_interval_to_mpi ok
+test_measure ok
+test_subset ok
+test_contains ok
+test_interval_symbolic ok
+test_union_contains ok
+test_is_number ok
+test_Interval_is_left_unbounded ok
+test_Interval_is_right_unbounded ok
+test_Interval_as_relational ok
+test_Finite_as_relational ok
+test_Union_as_relational ok
+test_Intersection_as_relational ok
+test_EmptySet_as_relational ok
+test_finite_basic ok
+test_product_basic ok
+test_real ok
+test_supinf ok
+test_universalset ok
+test_Interval_free_symbols ok                                                                                                                                                   [OK]
+
+sympy/core/tests/test_subs.py[42]
+test_subs ok
+test_trigonometric ok
+test_powers ok
+test_logexppow ok
+test_bug ok
+test_subbug1 ok
+test_subbug2 ok
+test_dict_set ok
+test_dict_ambigous ok
+test_issue_2261 X
+test_deriv_sub_bug3 ok
+test_equality_subs1 ok
+test_equality_subs2 ok
+test_issue643 ok
+test_subs_dict1 ok
+test_mul ok
+test_subs_simple ok
+test_subs_constants ok
+test_subs_commutative ok
+test_subs_noncommutative ok
+test_subs_basic_funcs ok
+test_subs_wild ok
+test_subs_mixed ok
+test_division ok
+test_add ok
+test_subs_issue910 ok
+test_functions_subs ok
+test_derivative_subs ok
+test_issue2185 ok
+test_subs_iter ok
+test_subs_dict ok
+test_no_arith_subs_on_floats ok
+test_issue_2552 ok
+test_issue_2976 ok
+test_issue_2980 ok
+test_issue_1581 ok
+test_issue_3059 ok
+test_Function_subs ok
+test_simultaneous_subs ok
+test_issue_3320_3322 ok
+test_issue_3460 ok
+test_issue_2162 ok                                                                                                                                                              [OK]
+
+sympy/core/tests/test_symbol.py[11]
+test_Symbol ok
+test_Dummy ok
+test_as_dummy ok
+test_lt_gt ok
+test_no_len ok
+test_ineq_unequal ok
+test_symbols_each_char X
+test_Wild_properties ok
+test_symbols ok
+test_call ok
+test_unicode ok                                                                                                                                                                 [OK]
+
+sympy/core/tests/test_sympify.py[34]
+test_439 ok
+test_sympify1 ok
+test_sympify_Fraction ok
+test_sympify_gmpy ok
+test_sympify2 ok
+test_lambda f
+test_sympify3 ok
+test_sympify_keywords ok
+test_sympify_float ok
+test_sympify_bool ok
+test_sympyify_iterables ok
+test_sympify4 ok
+test_sympify_text ok
+test_sympify_function ok
+test_sympify_poly ok
+test_sympify_factorial ok
+test_sage ok
+test_bug496 ok
+test_lambda_raises ok
+test_sympify_raises ok
+test__sympify ok
+test_sympifyit ok
+test_int_float ok
+test_issue1034 ok
+test_issue883 ok
+test_S_sympify ok
+test_issue1689 ok
+test_issue1699_None ok
+test_issue3218 ok
+test_issue1889_builtins ok
+test_geometry ok
+test_kernS ok
+test_issue_3441_3453 ok
+test_issue_2497 ok                                                                                                                                                              [OK]
+
+sympy/core/tests/test_trace.py[3]
+test_trace_new ok
+test_trace_doit ok
+test_permute ok                                                                                                                                                                 [OK]
+
+sympy/core/tests/test_truediv.py[3]
+test_truediv ok
+test_basic ok
+test_ibasic ok                                                                                                                                                                  [OK]
+
+sympy/core/tests/test_var.py[5]
+test_var ok
+test_var_return ok
+test_var_accepts_comma ok
+test_var_keywords ok
+test_var_cls ok                                                                                                                                                                 [OK]
+
+sympy/core/tests/test_wester.py[148]
+test_C1 ok
+test_C2 ok
+test_C3 ok
+test_C4 ok
+test_C5 ok
+test_C6 ok
+test_C7 ok
+test_C8 ok
+test_C9 ok
+test_C10 ok
+test_C11 ok
+test_C12 ok
+test_C13 ok
+test_C14 ok
+test_C15 ok
+test_C16 ok
+test_K3 f
+test_K2 f
+test_J7 f
+test_J18 f
+test_I4 f
+test_K8 f
+test_D11 f
+test_J9 f
+test_J2 f
+test_J16 f
+test_I12 f
+test_J15 f
+test_J17 f
+test_M18 f
+test_M16 f
+test_M15 f
+test_M13 f
+test_M12 f
+test_M11 f
+test_I7 f
+test_I5 f
+test_I3 f
+test_I2 f
+test_I1 f
+test_L7 f
+test_I8 f
+test_F4 f
+test_H20 f
+test_H2 f
+test_H3 f
+test_L5 f
+test_M17 f
+test_I6 f
+test_D12 f
+test_D13 f
+test_D10 f
+test_M9 f
+test_H29 f
+test_H28 f
+test_H21 f
+test_G2 f
+test_H24 f
+test_L8 f
+test_G3 f
+test_M8 f
+test_M5 f
+test_C19 f
+test_I9 f
+test_H18 f
+test_H13 f
+test_F3 f
+test_F5 f
+test_C24 f
+test_M2 f
+test_M1 f
+test_C22 f
+test_J14 f
+test_J8 f
+test_L9 f
+test_J3 f
+test_H32 f
+test_D5 f
+test_D6 f
+test_D7 f
+test_D8 f
+test_D9 f
+test_C17 ok
+test_C18 ok
+test_C20 ok
+test_C21 ok
+test_J12 w - Slow
+test_H25 w - Slow
+test_H27 w - Slow
+test_H26 w - Slow
+test_H17 w - Slow
+test_C23 ok
+test_D1 ok
+test_D2 ok
+test_D3 ok
+test_D4 ok
+test_F1 ok
+test_F2 ok
+test_F6 ok
+test_F7 ok
+test_F8 ok
+test_F9 ok
+test_G1 ok
+test_H1 ok
+test_H4 ok
+test_H5 ok
+test_H6 ok
+test_H7 ok
+test_H8 ok
+test_H9 ok
+test_H10 ok
+test_H11 ok
+test_H12 ok
+test_H14 ok
+test_H15 ok
+test_H16 ok
+test_H19 ok
+test_H22 ok
+test_H23 ok
+test_H30 ok
+test_H31 ok
+test_H33 ok
+test_I10 ok
+test_J1 ok
+test_J4 ok
+test_J5 ok
+test_J6 ok
+test_J10 ok
+test_J11 ok
+test_J13 ok
+test_K1 ok
+test_K4 ok
+test_K5 ok
+test_K6 ok
+test_K7 ok
+test_K9 ok
+test_K10 ok
+test_L1 ok
+test_L2 ok
+test_L3 ok
+test_L4 ok
+test_L6 ok
+test_M6 ok
+test_M7 ok
+test_M10 ok
+test_M14 ok
+test_M19 ok
+test_M20 ok                                                                                                                                                                     [OK]
+
+sympy/diffgeom/tests/test_class_structure.py[3]
+test_point ok
+test_rebuild ok
+test_subs ok                                                                                                                                                                    [OK]
+
+sympy/diffgeom/tests/test_diffgeom.py[11]
+test_R2 ok
+test_R3 ok
+test_point ok
+test_commutator ok
+test_differential ok
+test_products ok
+test_lie_derivative ok
+test_covar_deriv ok
+test_intcurve_diffequ ok
+test_helpers_and_coordinate_dependent ok
+test_correct_arguments ok                                                                                                                                                       [OK]
+
+sympy/diffgeom/tests/test_function_diffgeom_book.py[4]
+test_functional_diffgeom_ch2 ok
+test_functional_diffgeom_ch3 ok
+test_functional_diffgeom_ch4 ok
+test_functional_diffgeom_ch6 ok                                                                                                                                                 [OK]
+
+sympy/external/tests/test_autowrap.py[10]
+test_wrap_twice_f95_f2py s - Couldn't run f2py.
+test_autowrap_trace_f95_f2py s - Couldn't run f2py.
+test_autowrap_trace_C_Cython f
+test_autowrap_matrix_vector_C_cython f
+test_ufuncify_C_Cython f
+test_wrap_twice_c_cython f
+test_autowrap_matrix_matrix_C_cython f
+test_autowrap_matrix_vector_f95_f2py s - Couldn't run f2py.
+test_autowrap_matrix_matrix_f95_f2py s - Couldn't run f2py.
+test_ufuncify_f95_f2py s - Couldn't run f2py.                                                                                                                                   [OK]
+
+sympy/external/tests/test_codegen.py[8]
+test_C_cc ok
+test_F95_ifort s - `ifort' command didn't work as expected
+test_F95_gfortran s - `gfortran' command didn't work as expected
+test_F95_g95 s - `g95' command didn't work as expected
+test_basic_codegen ok
+test_intrinsic_math1_codegen ok
+test_instrinsic_math2_codegen ok
+test_complicated_codegen ok                                                                                                                                                     [OK]
+
+sympy/external/tests/test_numpy.py[20]
+test_systematic_basic ok
+test_basics ok
+test_arrays ok
+test_conversion1 ok
+test_conversion2 ok
+test_list2numpy ok
+test_Matrix1 ok
+test_Matrix2 ok
+test_Matrix3 ok
+test_Matrix4 ok
+test_Matrix_sum ok
+test_Matrix_mul ok
+test_Matrix_array ok
+test_issue629 ok
+test_lambdify_matrix ok
+test_lambdify_matrix_multi_input ok
+test_lambdify_matrix_vec_input ok
+test_lambdify_transl ok
+test_symarray ok
+test_vectorize ok                                                                                                                                                               [OK]
+
+sympy/functions/combinatorial/tests/test_comb_factorials.py[12]
+test_rf_eval_apply ok
+test_ff_eval_apply ok
+test_factorial ok
+test_factorial_diff ok
+test_factorial_series ok
+test_factorial_rewrite ok
+test_factorial2 ok
+test_binomial ok
+test_factorial_simplify_fail f
+test_binomial_diff ok
+test_binomial_rewrite ok
+test_subfactorial ok                                                                                                                                                            [OK]
+
+sympy/functions/combinatorial/tests/test_comb_numbers.py[9]
+test_bernoulli ok
+test_fibonacci ok
+test_bell ok
+test_harmonic ok
+test_euler_failing f
+test_harmonic_rewrite_sum f
+test_euler ok
+test_catalan ok
+test_nC_nP_nT ok                                                                                                                                                                [OK]
+
+sympy/functions/elementary/tests/test_complexes.py[23]
+test_re ok
+test_im ok
+test_principal_branch_fail f
+test_issue_3068_3052 f
+test_sign_issue_3068 f
+test_sign ok
+test_as_real_imag ok
+test_Abs ok
+test_Abs_rewrite ok
+test_Abs_real ok
+test_Abs_properties ok
+test_abs ok
+test_arg ok
+test_adjoint ok
+test_conjugate ok
+test_conjugate_transpose ok
+test_transpose ok
+test_issue936 ok
+test_issue3206 ok
+test_issue1655_derivative_conjugate ok
+test_derivatives_issue1658 ok
+test_periodic_argument ok
+test_principal_branch ok                                                                                                                                                        [OK]
+
+sympy/functions/elementary/tests/test_exponential.py[24]
+test_exp_values ok
+test_exp_log ok
+test_exp__as_base_exp ok
+test_exp_infinity ok
+test_exp_subs ok
+test_exp_conjugate ok
+test_exp_rewrite ok
+test_exp_leading_term ok
+test_log_values ok
+test_log_base ok
+test_log_symbolic ok
+test_exp_assumptions ok
+test_log_assumptions ok
+test_log_hashing ok
+test_log_sign ok
+test_log_expand_complex ok
+test_log_apply_evalf ok
+test_log_expand ok
+test_log_simplify ok
+test_lambertw ok
+test_exp_expand ok
+test_as_numer_denom ok
+test_polar ok
+test_log_product ok                                                                                                                                                             [OK]
+
+sympy/functions/elementary/tests/test_hyperbolic.py[30]
+test_sinh ok
+test_sinh_series ok
+test_cosh ok
+test_cosh_series ok
+test_tanh ok
+test_tanh_series ok
+test_coth ok
+test_coth_series ok
+test_asinh ok
+test_asinh_series ok
+test_acosh ok
+test_acosh_infinities ok
+test_acosh_series ok
+test_atanh ok
+test_atanh_series ok
+test_atanh_infinities ok
+test_acoth ok
+test_acoth_series ok
+test_leading_term ok
+test_complex ok
+test_complex_2899 ok
+test_simplifications ok
+test_issue1037 ok
+test_sinh_rewrite ok
+test_cosh_rewrite ok
+test_tanh_rewrite ok
+test_coth_rewrite ok
+test_derivs ok
+test_sinh_expansion ok
+test_cosh_expansion ok                                                                                                                                                          [OK]
+
+sympy/functions/elementary/tests/test_integers.py[4]
+test_floor ok
+test_ceiling ok
+test_issue_1050 f
+test_series ok                                                                                                                                                                  [OK]
+
+sympy/functions/elementary/tests/test_interface.py[3]
+test_function_series1 ok
+test_function_series2 ok
+test_function_series3 ok                                                                                                                                                        [OK]
+
+sympy/functions/elementary/tests/test_miscellaneous.py[4]
+test_Min ok
+test_Max ok
+test_root ok
+test_nthroot ok                                                                                                                                                                 [OK]
+
+sympy/functions/elementary/tests/test_piecewise.py[21]
+test_piecewise ok
+test_piecewise_fold_piecewise_in_cond_2 f
+test_piecewise_solve2 f
+test_piecewise_free_symbols ok
+test_piecewise_integrate ok
+test_piecewise_integrate_symbolic_conditions ok
+test_piecewise_integrate_independent_conditions ok
+test_piecewise_solve ok
+test_piecewise_fold ok
+test_piecewise_fold_piecewise_in_cond ok
+test_piecewise_fold_expand ok
+test_piecewise_duplicate ok
+test_doit ok
+test_piecewise_interval ok
+test_piecewise_collapse ok
+test_piecewise_lambdify ok
+test_piecewise_series ok
+test_piecewise_as_leading_term ok
+test_piecewise_complex ok
+test_conjugate_transpose ok
+test_piecewise_evaluate ok                                                                                                                                                      [OK]
+
+sympy/functions/elementary/tests/test_trigonometric.py[48]
+test_sin ok
+test_sin_cos ok
+test_sin_series ok
+test_sin_rewrite ok
+test_sin_cos_with_infinity f
+test_sin_expansion ok
+test_trig_symmetry ok
+test_sincos_rewrite_sqrt w - Slow
+test_tancot_rewrite_sqrt w - Slow
+test_cos ok
+test_issue_3091 ok
+test_cos_series ok
+test_cos_rewrite ok
+test_cos_expansion ok
+test_tan ok
+test_tan_series ok
+test_tan_rewrite ok
+test_tan_subs ok
+test_tan_expansion ok
+test_cot ok
+test_cot_series ok
+test_cot_rewrite ok
+test_cot_subs ok
+test_cot_expansion ok
+test_asin ok
+test_asin_series ok
+test_asin_rewrite ok
+test_acos ok
+test_acos_series ok
+test_acos_rewrite ok
+test_atan ok
+test_atan_rewrite ok
+test_atan2 ok
+test_acot ok
+test_acot_rewrite ok
+test_attributes ok
+test_sincos_rewrite ok
+test_evenodd_rewrite ok
+test_issue1448 ok
+test_as_leading_term_issue2173 ok
+test_leading_terms ok
+test_atan2_expansion ok
+test_aseries ok
+test_issue_1321 ok
+test_inverses ok
+test_real_imag ok
+test_sec ok
+test_csc ok                                                                                                                                                                     [OK]
+
+sympy/functions/special/tests/test_bessel.py[11]
+test_bessel_rand ok
+test_diff ok
+test_rewrite ok
+test_expand ok
+test_fn ok
+test_jn ok
+test_yn ok
+test_sympify_yn ok
+test_jn_zeros ok
+test_bessel_eval ok
+test_branching ok                                                                                                                                                               [OK]
+
+sympy/functions/special/tests/test_bsplines.py[5]
+test_basic_degree_0 ok
+test_basic_degree_1 ok
+test_basic_degree_2 ok
+test_basic_degree_3 ok
+test_repeated_degree_1 ok                                                                                                                                                       [OK]
+
+sympy/functions/special/tests/test_delta_functions.py[2]
+test_DiracDelta ok
+test_heaviside ok                                                                                                                                                               [OK]
+
+sympy/functions/special/tests/test_error_functions.py[9]
+test_erf ok
+test_erf_series ok
+test_erf_evalf ok
+test__erfs ok
+test_ei ok
+test_expint ok
+test_si ok
+test_ci ok
+test_fresnel ok                                                                                                                                                                 [OK]
+
+sympy/functions/special/tests/test_gamma_functions.py[9]
+test_gamma ok
+test_gamma_series ok
+test_lowergamma ok
+test_uppergamma ok
+test_polygamma ok
+test_polygamma_expand_func ok
+test_loggamma ok
+test_polygamma_expansion ok
+test_beta_function ok                                                                                                                                                           [OK]
+
+sympy/functions/special/tests/test_hyper.py[10]
+test_TupleParametersBase ok
+test_hyper ok
+test_expand_func ok
+test_radius_of_convergence ok
+test_meijer ok
+test_meijerg_derivative ok
+test_meijerg_period ok
+test_hyper_unpolarify ok
+test_hyperrep ok
+test_meijerg_eval ok                                                                                                                                                            [OK]
+
+sympy/functions/special/tests/test_spec_polynomials.py[7]
+test_jacobi ok
+test_gegenbauer ok
+test_legendre ok
+test_assoc_legendre ok
+test_chebyshev ok
+test_hermite ok
+test_laguerre ok                                                                                                                                                                [OK]
+
+sympy/functions/special/tests/test_spherical_harmonics.py[5]
+test_Pl ok
+test_Plm ok
+test_Plmcos ok
+test_Ylm ok
+test_Zlm ok                                                                                                                                                                     [OK]
+
+sympy/functions/special/tests/test_tensor_functions.py[3]
+test_levicivita ok
+test_kronecker_delta ok
+test_kronecker_delta_secondquant ok                                                                                                                                             [OK]
+
+sympy/functions/special/tests/test_zeta_functions.py[6]
+test_zeta_eval ok
+test_dirichlet_eta_eval ok
+test_rewriting ok
+test_derivatives ok
+test_polylog_expansion ok
+test_lerchphi_expansion ok                                                                                                                                                      [OK]
+
+sympy/ga/tests/test_test.py[10]
+test_basic_multivector_operations ok
+test_check_generalized_BAC_CAB_formulas ok
+test_derivatives_in_rectangular_coordinates ok
+test_derivatives_in_spherical_coordinates ok
+test_rounding_numerical_components ok
+test_noneuclidian_distance_calculation ok
+test_conformal_representations_of_circles_lines_spheres_and_planes ok
+test_properties_of_geometric_objects ok
+test_extracting_vectors_from_conformal_2_blade ok
+test_reciprocal_frame_test ok                                                                                                                                                   [OK]
+
+sympy/geometry/tests/test_geometry.py[19]
+test_curve ok
+test_point ok
+test_polygon_to_polygon f
+test_line ok
+test_ellipse ok
+test_ellipse_random_point ok
+test_polygon ok
+test_convex_hull ok
+test_concyclic_doctest_bug ok
+test_subs ok
+test_encloses ok
+test_free_symbols ok
+test_util_centroid ok
+test_util ok
+test_repr ok
+test_transform ok
+test_line_intersection ok
+test_triangle_kwargs ok
+test_geometry_transforms ok                                                                                                                                                     [OK]
+
+sympy/integrals/tests/test_deltafunctions.py[2]
+test_change_mul ok
+test_deltaintegrate ok                                                                                                                                                          [OK]
+
+sympy/integrals/tests/test_failing_integrals.py[22]
+test_issue_1426 f
+test_issue_1412 w - Slow
+test_issue_781 w - Slow
+test_issue_1796d f
+test_issue_1638b f
+test_issue_1792 w - Slow
+test_issue_1135 f
+test_issue_1796c f
+test_issue_1638a f
+test_issue_1415 f
+test_issue_1452 f
+test_issue_1393 f
+test_issue_1392 f
+test_issue_1227 X
+test_issue_1796b f
+test_issue_1796a f
+test_issue_1869 w - Slow
+test_issue_1842 w - Slow
+test_issue_1851 w - Slow
+test_issue_1113 f
+test_issue_1893 w - Slow
+test_issue_1441 w - Slow                                                                                                                                                        [OK]
+
+sympy/integrals/tests/test_heurisch.py[20]
+test_components ok
+test_heurisch_polynomials ok
+test_heurisch_fractions ok
+test_heurisch_log ok
+test_heurisch_exp ok
+test_heurisch_trigonometric ok
+test_heurisch_hyperbolic ok
+test_heurisch_mixed ok
+test_heurisch_radicals ok
+test_pmint_trig f
+test_pmint_rat f
+test_heurisch_special ok
+test_heurisch_symbolic_coeffs ok
+test_heurisch_symbolic_coeffs_1130 ok
+test_heurisch_hacking ok
+test_pmint_erf w - Slow
+test_pmint_logexp w - Slow
+test_heurisch_function ok
+test_issue510 ok
+test_pmint_lambertw ok                                                                                                                                                          [OK]
+
+sympy/integrals/tests/test_integrals.py[91]
+test_improper_integral ok
+test_constructor ok
+test_basics ok
+test_basics_multiple ok
+test_conjugate_transpose ok
+test_failing_integrals f
+test_issue_1116 f
+test_evalf_issue_939 f
+test_issue_1304_2 f
+test_integration ok
+test_multiple_integration ok
+test_issue433 ok
+test_issue_1418 w - Slow
+test_issue461 ok
+test_integrate_poly ok
+test_integrate_poly_defined ok
+test_integrate_omit_var ok
+test_integrate_poly_accurately ok
+test_issue536 ok
+test_integrate_linearterm_pow ok
+test_issue519 ok
+test_issue524 ok
+test_issue565 ok
+test_issue580 ok
+test_issue587 ok
+test_integrate_units ok
+test_transcendental_functions ok
+test_issue641 ok
+test_issue689 ok
+test_issue853 ok
+test_issue1417 ok
+test_matrices ok
+test_integrate_functions ok
+test_integrate_derivatives ok
+test_transform ok
+test_issue953 ok
+test_evalf_integrals ok
+test_integrate_DiracDelta ok
+test_subs1 ok
+test_subs2 ok
+test_subs3 ok
+test_subs4 ok
+test_subs5 ok
+test_subs6 ok
+test_subs7 ok
+test_integration_variable ok
+test_expand_integral ok
+test_as_sum_midpoint1 ok
+test_as_sum_midpoint2 ok
+test_as_sum_left ok
+test_as_sum_right ok
+test_as_sum_raises ok
+test_nested_doit ok
+test_issue1566 ok
+test_integral_reconstruct ok
+test_doit ok
+test_issue_1785 ok
+test_is_number ok
+test_symbols ok
+test_is_zero ok
+test_series ok
+test_issue_1304 ok
+test_issue_1001 ok
+test_issue2068 ok
+test_issue_1791 ok
+test_issue_1277 ok
+test_issue_1100 ok
+test_issue_841 ok
+test_issue_2314 ok
+test_issue_1793a ok
+test_issue_1793b ok
+test_issue_2079 ok
+test_integrate_series ok
+test_atom_bug ok
+test_limit_bug ok
+test_issue_1604 ok
+test_issue_1888 ok
+test_issue459 ok
+test_issue841 ok
+test_issue1304 ok
+test_issue_1323 ok
+test_issue1394 ok
+test_issue1638 ok
+test_issue1893 ok
+test_issue1388 ok
+test_issue_1301 ok
+test_issue_3154 ok
+test_issue1054 ok
+test_issue_1227 ok
+test_powers ok
+test_risch_option ok                                                                                                                                                            [OK]
+
+sympy/integrals/tests/test_lineintegrals.py[1]
+test_lineintegral ok                                                                                                                                                            [OK]
+
+sympy/integrals/tests/test_meijerint.py[18]
+test_rewrite_single ok
+test_rewrite1 ok
+test_meijerint_indefinite_numerically ok
+test_inflate ok
+test_recursive ok
+test_meijerint ok
+test_bessel ok
+test_inversion ok
+test_lookup_table ok
+test_branch_bug ok
+test_linear_subs ok
+test_probability ok
+test_expint ok
+test_messy ok
+test_3023 ok
+test_3153 ok
+test_3249 ok
+test_fresnel ok                                                                                                                                                                 [OK]
+
+sympy/integrals/tests/test_prde.py[12]
+test_prde_normal_denom ok
+test_prde_special_denom ok
+test_prde_linear_constraints ok
+test_constant_system ok
+test_prde_spde ok
+test_prde_no_cancel ok
+test_limited_integrate_reduce ok
+test_limited_integrate ok
+test_is_log_deriv_k_t_radical ok
+test_is_deriv_k ok
+test_is_log_deriv_k_t_radical_in_field ok
+test_parametric_log_deriv ok                                                                                                                                                    [OK]
+
+sympy/integrals/tests/test_quadrature.py[14]
+test_legendre ok
+test_legendre_precise ok
+test_laguerre ok
+test_laguerre_precise ok
+test_hermite ok
+test_hermite_precise ok
+test_gen_laguerre ok
+test_gen_laguerre_precise ok
+test_chebyshev_t ok
+test_chebyshev_t_precise ok
+test_chebyshev_u ok
+test_chebyshev_u_precise ok
+test_jacobi ok
+test_jacobi_precise ok                                                                                                                                                          [OK]
+
+sympy/integrals/tests/test_rationaltools.py[7]
+test_ratint ok
+test_ratint_logpart ok
+test_issue_2315 ok
+test_issue_2150 ok
+test_issue_2718 ok
+test_issue_2882 ok
+test_log_to_atan ok                                                                                                                                                             [OK]
+
+sympy/integrals/tests/test_rde.py[10]
+test_order_at ok
+test_weak_normalizer ok
+test_normal_denom ok
+test_special_denom ok
+test_bound_degree ok
+test_spde ok
+test_bound_degree_fail f
+test_solve_poly_rde_no_cancel ok
+test_solve_poly_rde_cancel ok
+test_rischDE ok                                                                                                                                                                 [OK]
+
+sympy/integrals/tests/test_risch.py[26]
+test_gcdex_diophantine ok
+test_frac_in ok
+test_as_poly_1t ok
+test_derivation ok
+test_splitfactor ok
+test_canonical_representation ok
+test_hermite_reduce ok
+test_polynomial_reduce ok
+test_residue_reduce ok
+test_integrate_hyperexponential ok
+test_integrate_hyperexponential_polynomial ok
+test_integrate_primitive ok
+test_integrate_hypertangent_polynomial ok
+test_integrate_nonlinear_no_specials ok
+test_integer_powers ok
+test_DifferentialExtension_exp ok
+test_DifferentialExtension_log ok
+test_DifferentialExtension_symlog ok
+test_DifferentialExtension_handle_first ok
+test_DifferentialExtension_all_attrs ok
+test_DifferentialExtension_extension_flag ok
+test_DifferentialExtension_misc ok
+test_DifferentialExtension_Rothstein ok
+test_DecrementLevel ok
+test_risch_integrate ok
+test_NonElementaryIntegral ok                                                                                                                                                   [OK]
+
+sympy/integrals/tests/test_transforms.py[14]
+test_undefined_function ok
+test_free_symbols ok
+test_as_integral ok
+test_mellin_transform ok
+test_mellin_transform_fail w - Slow
+test_mellin_transform_bessel ok
+test_expint ok
+test_inverse_mellin_transform ok
+test_laplace_transform ok
+test_inverse_laplace_transform ok
+test_fourier_transform ok
+test_sine_transform ok
+test_cosine_transform ok
+test_hankel_transform ok                                                                                                                                                        [OK]
+
+sympy/integrals/tests/test_trigonometry.py[4]
+test_trigintegrate_odd ok
+test_trigintegrate_even ok
+test_trigintegrate_mixed ok
+test_trigintegrate_symbolic ok                                                                                                                                                  [OK]
+
+sympy/interactive/tests/test_interactive.py[1]
+test_int_to_Integer ok                                                                                                                                                          [OK]
+
+sympy/logic/tests/test_boolalg.py[28]
+test_overloading ok
+test_And ok
+test_Or ok
+test_Xor ok
+test_Not ok
+test_Nand ok
+test_Nor ok
+test_Implies ok
+test_Equivalent ok
+test_simplification ok
+test_bool_equal ok
+test_bool_symbol ok
+test_subs ok
+test_commutative ok
+test_and_associativity ok
+test_or_assicativity ok
+test_double_negation ok
+test_De_Morgan ok
+test_eliminate_implications ok
+test_conjuncts ok
+test_disjuncts ok
+test_distribute ok
+test_to_cnf ok
+test_to_dnf ok
+test_to_int_repr ok
+test_is_cnf ok
+test_is_dnf ok
+test_ITE ok                                                                                                                                                                     [OK]
+
+sympy/logic/tests/test_dimacs.py[5]
+test_f1 ok
+test_f2 ok
+test_f3 ok
+test_f4 ok
+test_f5 ok                                                                                                                                                                      [OK]
+
+sympy/logic/tests/test_inference.py[14]
+test_literal ok
+test_find_pure_symbol ok
+test_find_pure_symbol_int_repr ok
+test_unit_clause ok
+test_unit_clause_int_repr ok
+test_unit_propagate ok
+test_unit_propagate_int_repr ok
+test_dpll ok
+test_dpll_satisfiable ok
+test_satisfiable ok
+test_pl_true ok
+test_pl_true_wrong_input ok
+test_PropKB ok
+test_propKB_tolerant ok                                                                                                                                                         [OK]
+
+sympy/matrices/expressions/tests/test_adjoint.py[1]
+test_adjoint ok                                                                                                                                                                 [OK]
+
+sympy/matrices/expressions/tests/test_blockmatrix.py[9]
+test_bc_matmul ok
+test_bc_matadd ok
+test_bc_dist_diag ok
+test_block_plus_ident ok
+test_BlockMatrix ok
+test_BlockMatrix_Trace ok
+test_squareBlockMatrix ok
+test_BlockDiagMatrix ok
+test_blockcut ok                                                                                                                                                                [OK]
+
+sympy/matrices/expressions/tests/test_det.py[1]
+test_det ok                                                                                                                                                                     [OK]
+
+sympy/matrices/expressions/tests/test_funcmatrix.py[1]
+test_funcmatrix ok                                                                                                                                                              [OK]
+
+sympy/matrices/expressions/tests/test_hadamard.py[4]
+test_HadamardProduct ok
+test_mixed_indexing ok
+test_canonicalize ok
+test_hadamard ok                                                                                                                                                                [OK]
+
+sympy/matrices/expressions/tests/test_indexing.py[9]
+test_symbolic_indexing ok
+test_add_index ok
+test_mul_index ok
+test_pow_index ok
+test_transpose_index ok
+test_Identity_index ok
+test_block_index ok
+test_slicing ok
+test_errors ok                                                                                                                                                                  [OK]
+
+sympy/matrices/expressions/tests/test_inverse.py[1]
+test_inverse ok                                                                                                                                                                 [OK]
+
+sympy/matrices/expressions/tests/test_matmul.py[7]
+test_adjoint ok
+test_transpose ok
+test_factor_in_front ok
+test_remove_ids ok
+test_xxinv ok
+test_any_zeros ok
+test_unpack ok                                                                                                                                                                  [OK]
+
+sympy/matrices/expressions/tests/test_matrix_exprs.py[18]
+test_shape ok
+test_matexpr ok
+test_subs ok
+test_ZeroMatrix ok
+test_ZeroMatrix_doit ok
+test_Identity ok
+test_Identity_doit ok
+test_addition ok
+test_multiplication ok
+test_MatPow ok
+test_MatrixSymbol ok
+test_dense_conversion ok
+test_free_symbols ok
+test_zero_matmul ok
+test_matadd_simplify ok
+test_matmul_simplify ok
+test_invariants ok
+test_indexing ok                                                                                                                                                                [OK]
+
+sympy/matrices/expressions/tests/test_slice.py[9]
+test_shape ok
+test_entry ok
+test_on_diag ok
+test_inputs ok
+test_slicing ok
+test_exceptions ok
+test_symmetry ok
+test_slice_of_slice ok
+test_negative_index ok                                                                                                                                                          [OK]
+
+sympy/matrices/expressions/tests/test_trace.py[1]
+test_trace ok                                                                                                                                                                   [OK]
+
+sympy/matrices/expressions/tests/test_transpose.py[1]
+test_transpose ok                                                                                                                                                               [OK]
+
+sympy/matrices/tests/test_immutable.py[7]
+test_immutable_creation ok
+test_immutability ok
+test_slicing ok
+test_subs ok
+test_as_immutable ok
+test_function_return_types ok
+test_immutable_evaluation ok                                                                                                                                                    [OK]
+
+sympy/matrices/tests/test_interactions.py[6]
+test_IM_MM ok
+test_ME_MM ok
+test_equality ok
+test_matrix_symbol_MM ok
+test_indexing_interactions ok
+test_classof ok                                                                                                                                                                 [OK]
+
+sympy/matrices/tests/test_matrices.py[117]
+test_args ok
+test_division ok
+test_sum ok
+test_addition ok
+test_multiplication ok
+test_power ok
+test_eigen_vects f
+test_issue_860 f
+test_issue880 f
+test_issue_2865 f
+test_creation ok
+test_tolist ok
+test_as_mutable ok
+test_determinant ok
+test_det_LU_decomposition ok
+test_berkowitz_minors ok
+test_submatrix ok
+test_submatrix_assignment ok
+test_extract ok
+test_reshape ok
+test_applyfunc ok
+test_expand ok
+test_random ok
+test_LUdecomp ok
+test_LUsolve ok
+test_QRsolve ok
+test_inverse ok
+test_util ok
+test_jacobian_hessian ok
+test_QR ok
+test_QR_non_square ok
+test_nullspace ok
+test_wronskian ok
+test_eigen ok
+test_subs ok
+test_transpose ok
+test_conjugate ok
+test_conj_dirac ok
+test_trace ok
+test_shape ok
+test_col_row_op ok
+test_zip_row_op ok
+test_issue851 ok
+test_issue882 ok
+test_evalf ok
+test_is_symbolic ok
+test_is_upper ok
+test_is_lower ok
+test_is_nilpotent ok
+test_zeros_ones_fill ok
+test_empty_zeros ok
+test_issue650 ok
+test_inv_iszerofunc ok
+test_jacobian_metrics ok
+test_jacobian2 ok
+test_issue1465 ok
+test_nonvectorJacobian ok
+test_vec ok
+test_vech ok
+test_vech_errors ok
+test_diag ok
+test_get_diag_blocks1 ok
+test_get_diag_blocks2 ok
+test_inv_block ok
+test_creation_args ok
+test_diagonal_symmetrical ok
+test_diagonalization ok
+test_jordan_form ok
+test_Matrix_berkowitz_charpoly ok
+test_exp ok
+test_has ok
+test_errors ok
+test_len ok
+test_integrate ok
+test_limit ok
+test_diff ok
+test_getattr ok
+test_hessenberg ok
+test_cholesky ok
+test_LDLdecomposition ok
+test_cholesky_solve ok
+test_LDLsolve ok
+test_lower_triangular_solve ok
+test_upper_triangular_solve ok
+test_diagonal_solve ok
+test_matrix_norm ok
+test_singular_values ok
+test_condition_number ok
+test_equality ok
+test_col_join ok
+test_row_insert ok
+test_col_insert ok
+test_normalized ok
+test_print_nonzero ok
+test_zeros_eye ok
+test_is_zero ok
+test_rotation_matrices ok
+test_DeferredVector ok
+test_GramSchmidt ok
+test_casoratian ok
+test_zero_dimension_multiply ok
+test_slice_issue_2884 ok
+test_slice_issue_3401 ok
+test_copyin ok
+test_invertible_check ok
+test_is_Identity ok
+test_dot ok
+test_dual ok
+test_anti_symmetric ok
+test_normalize_sort_diogonalization ok
+test_issue2222 ok
+test_issue2221 ok
+test_cross ok
+test_hash ok
+test_adjoint ok
+test_simplify ok
+test_rank ok                                                                                                                                                                    [OK]
+
+sympy/matrices/tests/test_sparse.py[11]
+test_sparse_matrix ok
+test_len_different_shapes f
+test_transpose ok
+test_trace ok
+test_CL_RL ok
+test_add ok
+test_errors ok
+test_len ok
+test_sparse_zeros_sparse_eye ok
+test_copyin ok
+test_sparse_solve ok                                                                                                                                                            [OK]
+
+sympy/mpmath/tests/test_basic_ops.py[22]
+test_type_compare ok
+test_add ok
+test_sub ok
+test_mul ok
+test_div ok
+test_pow ok
+test_mixed_misc ok
+test_add_misc ok
+test_complex_misc ok
+test_complex_zeros ok
+test_hash ok
+test_add_rounding ok
+test_almost_equal ok
+test_arithmetic_functions ok
+test_exact_integer_arithmetic ok
+test_odd_int_bug ok
+test_str_1000_digits ok
+test_str_10000_digits ok
+test_monitor ok
+test_nint_distance ok
+test_floor_ceil_nint_frac ok
+test_isnan_etc ok                                                                                                                                                               [OK]
+
+sympy/mpmath/tests/test_bitwise.py[12]
+test_bitcount ok
+test_trailing ok
+test_round_down ok
+test_round_up ok
+test_round_floor ok
+test_round_ceiling ok
+test_round_nearest ok
+test_rounding_bugs ok
+test_rounding_issue160 ok
+test_perturb ok
+test_add_exact ok
+test_long_exponent_shifts ok                                                                                                                                                    [OK]
+
+sympy/mpmath/tests/test_calculus.py[7]
+test_approximation ok
+test_limits ok
+test_polyval ok
+test_polyroots ok
+test_pade ok
+test_fourier ok
+test_differint ok                                                                                                                                                               [OK]
+
+sympy/mpmath/tests/test_compatibility.py[3]
+test_double_compatibility ok
+test_sqrt ok
+test_bugs ok                                                                                                                                                                    [OK]
+
+sympy/mpmath/tests/test_convert.py[13]
+test_basic_string ok
+test_pretty ok
+test_str_whitespace ok
+test_unicode ok
+test_str_format ok
+test_tight_string_conversion ok
+test_eval_repr_invariant ok
+test_str_bugs ok
+test_str_prec0 ok
+test_convert_rational ok
+test_custom_class ok
+test_conversion_methods ok
+test_mpmathify ok                                                                                                                                                               [OK]
+
+sympy/mpmath/tests/test_diff.py[3]
+test_diff ok
+test_taylor ok
+test_diff_partial ok                                                                                                                                                            [OK]
+
+sympy/mpmath/tests/test_division.py[7]
+test_div_1_3 ok
+test_mpf_divi_1_3 ok
+test_div_300 ok
+test_tight_integer_division ok
+test_epsilon_rounding ok
+test_mod ok
+test_div_negative_rnd_bug ok                                                                                                                                                    [OK]
+
+sympy/mpmath/tests/test_elliptic.py[14]
+test_ellipfun ok
+test_calculate_nome ok
+test_jtheta ok
+test_jtheta_issue39 ok
+test_jtheta_identities ok
+test_jtheta_complex ok
+test_djtheta ok
+test_jsn ok
+test_jcn ok
+test_jdn ok
+test_sn_cn_dn_identities ok
+test_sn_cn_dn_complex ok
+test_elliptic_integrals ok
+test_issue198 ok                                                                                                                                                                [OK]
+
+sympy/mpmath/tests/test_fp.py[14]
+test_conj ok
+test_fp_number_parts ok
+test_fp_cospi_sinpi ok
+test_fp_expj ok
+test_fp_bernoulli ok
+test_fp_gamma ok
+test_fp_psi ok
+test_fp_zeta ok
+test_fp_hyp2f1 ok
+test_fp_erf ok
+test_fp_lambertw ok
+test_fp_stress_ei_e1_1 ok
+test_fp_stress_ei_e1_2 ok
+test_fp_stress_ei_e1_3 ok                                                                                                                                                       [OK]
+
+sympy/mpmath/tests/test_functions.py[45]
+test_constants ok
+test_exact_sqrts ok
+test_sqrt_rounding ok
+test_float_sqrt ok
+test_hypot ok
+test_exact_cbrt ok
+test_exp ok
+test_issue_33 ok
+test_log ok
+test_trig_hyperb_basic ok
+test_degrees ok
+test_complex_powers ok
+test_complex_sqrt_accuracy ok
+test_atan ok
+test_atan2 ok
+test_areal_inverses ok
+test_invhyperb_inaccuracy ok
+test_complex_functions ok
+test_complex_inverse_functions ok
+test_reciprocal_functions ok
+test_ldexp ok
+test_frexp ok
+test_aliases ok
+test_arg_sign ok
+test_misc_bugs ok
+test_arange ok
+test_linspace ok
+test_float_cbrt ok
+test_root ok
+test_issue_96 ok
+test_mpcfun_real_imag ok
+test_perturbation_rounding ok
+test_integer_parts ok
+test_complex_parts ok
+test_cospi_sinpi ok
+test_expj ok
+test_sinc ok
+test_fibonacci ok
+test_call_with_dps ok
+test_tanh ok
+test_atanh ok
+test_expm1 ok
+test_powm1 ok
+test_unitroots ok
+test_cyclotomic ok                                                                                                                                                              [OK]
+
+sympy/mpmath/tests/test_functions2.py[47]
+test_bessel ok
+test_bessel_zeros ok
+test_hankel ok
+test_struve ok
+test_whittaker ok
+test_orthpoly_bug f
+test_gegenbauer_unimplemented f
+test_kelvin ok
+test_hyper_misc ok
+test_elliptic_integrals ok
+test_exp_integrals ok
+test_ei ok
+test_e1 ok
+test_expint ok
+test_trig_integrals ok
+test_airy ok
+test_hyper_0f1 ok
+test_hyper_1f1 ok
+test_hyper_2f1 ok
+test_hyper_2f1_hard ok
+test_hyper_3f2_etc ok
+test_hyper_u ok
+test_hyper_2f0 ok
+test_hyper_1f2 ok
+test_hyper_2f3 ok
+test_hyper_2f2 ok
+test_orthpoly ok
+test_hermite ok
+test_gegenbauer ok
+test_legenp ok
+test_legenq ok
+test_agm ok
+test_gammainc ok
+test_gammainc_expint_n ok
+test_incomplete_beta ok
+test_erf ok
+test_pdf ok
+test_lambertw ok
+test_lambertw_hard ok
+test_meijerg ok
+test_appellf1 ok
+test_coulomb ok
+test_hyper_param_accuracy ok
+test_hypercomb_zero_pow ok
+test_spherharm ok
+test_qfunctions ok
+test_issue199 ok                                                                                                                                                                [OK]
+
+sympy/mpmath/tests/test_gammazeta.py[33]
+test_zeta_int_bug ok
+test_bernoulli ok
+test_bernpoly_eulerpoly ok
+test_gamma_huge_7_failing f
+test_gamma_failing f
+test_gamma ok
+test_fac2 ok
+test_gamma_quotients ok
+test_zeta ok
+test_altzeta ok
+test_zeta_huge ok
+test_zeta_negative ok
+test_polygamma ok
+test_polygamma_high_prec ok
+test_polygamma_identities ok
+test_foxtrot_identity ok
+test_polygamma_high_order ok
+test_harmonic ok
+test_gamma_huge_1 ok
+test_gamma_huge_2 ok
+test_gamma_huge_3 ok
+test_gamma_huge_4 ok
+test_gamma_huge_5 ok
+test_gamma_huge_6 ok
+test_gamma_huge_7 ok
+test_stieltjes ok
+test_barnesg ok
+test_polylog ok
+test_bell_polyexp ok
+test_primezeta ok
+test_rs_zeta ok
+test_siegelz ok
+test_zeta_near_1 ok                                                                                                                                                             [OK]
+
+sympy/mpmath/tests/test_hp.py[3]
+test_hp ok
+test_log_hp ok
+test_exp_hp ok                                                                                                                                                                  [OK]
+
+sympy/mpmath/tests/test_identify.py[2]
+test_pslq ok
+test_identify ok                                                                                                                                                                [OK]
+
+sympy/mpmath/tests/test_interval.py[13]
+test_interval_identity ok
+test_interval_arithmetic ok
+test_interval_mul ok
+test_interval_pow ok
+test_interval_sqrt ok
+test_interval_div ok
+test_interval_cos_sin ok
+test_interval_complex ok
+test_interval_complex_arg ok
+test_interval_ae ok
+test_interval_nstr ok
+test_mpi_from_str ok
+test_interval_gamma ok                                                                                                                                                          [OK]
+
+sympy/mpmath/tests/test_linalg.py[14]
+test_LU_decomp ok
+test_inverse ok
+test_householder ok
+test_factorization ok
+test_solve ok
+test_solve_overdet_complex ok
+test_singular ok
+test_cholesky ok
+test_det ok
+test_cond ok
+test_interval_matrix ok
+test_LU_cache ok
+test_improve_solution ok
+test_exp_pade ok                                                                                                                                                                [OK]
+
+sympy/mpmath/tests/test_matrices.py[10]
+test_matrix_basic ok
+test_matrix_slices ok
+test_matrix_power ok
+test_matrix_transform ok
+test_matrix_conjugate ok
+test_matrix_creation ok
+test_norms ok
+test_vector ok
+test_matrix_copy ok
+test_matrix_numpy ok                                                                                                                                                            [OK]
+
+sympy/mpmath/tests/test_ode.py[3]
+test_odefun_rational ok
+test_odefun_sinc_large ok
+test_odefun_harmonic ok                                                                                                                                                         [OK]
+
+sympy/mpmath/tests/test_pickle.py[1]
+test_pickle ok                                                                                                                                                                  [OK]
+
+sympy/mpmath/tests/test_power.py[3]
+test_fractional_pow ok
+test_pow_integer_direction ok
+test_pow_epsilon_rounding ok                                                                                                                                                    [OK]
+
+sympy/mpmath/tests/test_quad.py[14]
+test_basic_integrals ok
+test_quad_symmetry ok
+test_quad_infinite_mirror ok
+test_quadgl_linear ok
+test_complex_integration ok
+test_quadosc ok
+test_double_trivial ok
+test_double_1 ok
+test_double_2 ok
+test_double_3 ok
+test_double_4 ok
+test_double_5 ok
+test_double_6 ok
+test_expmath_integrals ok                                                                                                                                                       [OK]
+
+sympy/mpmath/tests/test_rootfinding.py[9]
+test_findroot ok
+test_mnewton ok
+test_anewton ok
+test_muller ok
+test_multiplicity ok
+test_multidimensional ok
+test_trivial ok
+test_findroot_bugs f
+test_trivial_bugs f                                                                                                                                                             [OK]
+
+sympy/mpmath/tests/test_special.py[5]
+test_special ok
+test_special_powers ok
+test_functions_special ok
+test_convert_special ok
+test_div_bug ok                                                                                                                                                                 [OK]
+
+sympy/mpmath/tests/test_str.py[1]
+test_nstr ok                                                                                                                                                                    [OK]
+
+sympy/mpmath/tests/test_summation.py[5]
+test_sumem ok
+test_nsum ok
+test_nprod ok
+test_fsum ok
+test_fprod ok                                                                                                                                                                   [OK]
+
+sympy/mpmath/tests/test_trig.py[3]
+test_trig_misc_hard ok
+test_trig_near_zero ok
+test_trig_near_n_pi ok                                                                                                                                                          [OK]
+
+sympy/ntheory/tests/test_ntheory.py[27]
+test_trailing ok
+test_multiplicity ok
+test_perfect_power ok
+test_isprime ok
+test_prime ok
+test_primepi ok
+test_generate ok
+test_randprime ok
+test_factorint ok
+test_divisors_and_divisor_count ok
+test_totient ok
+test_partitions ok
+test_residue ok
+test_hex_pi_nth_digits ok
+test_crt ok
+test_binomial_coefficients_list ok
+test_binomial_coefficients ok
+test_multinomial_coefficients ok
+test_issue1257 ok
+test_divisors ok
+test_divisor_count ok
+test_primorial ok
+test_smoothness_and_smoothness_p ok
+test_visual_factorint ok
+test_visual_io ok
+test_modular ok
+test_search ok                                                                                                                                                                  [OK]
+
+sympy/parsing/tests/test_implicit_multiplication_application.py[5]
+test_implicit_multiplication ok
+test_implicit_application ok
+test_function_exponentiation ok
+test_symbol_splitting ok
+test_all_implicit_steps ok                                                                                                                                                      [OK]
+
+sympy/parsing/tests/test_mathematica.py[1]
+test_mathematica ok                                                                                                                                                             [OK]
+
+sympy/parsing/tests/test_maxima.py[3]
+test_parser ok
+test_injection ok
+test_maxima_functions ok                                                                                                                                                        [OK]
+
+sympy/parsing/tests/test_sympy_parser.py[5]
+test_sympy_parser ok
+test_rationalize ok
+test_factorial_fail ok
+test_local_dict ok
+test_global_dict ok                                                                                                                                                             [OK]
+
+sympy/physics/mechanics/tests/test_essential.py[7]
+test_dyadic ok
+test_ang_vel ok
+test_dcm ok
+test_Vector ok
+test_Vector_diffs ok
+test_vector_simplify ok
+test_dyadic_simplify ok                                                                                                                                                         [OK]
+
+sympy/physics/mechanics/tests/test_functions.py[12]
+test_dot ok
+test_cross ok
+test_cross_different_frames ok
+test_express ok
+test_inertia ok
+test_kin_eqs ok
+test_inertia_of_point_mass ok
+test_partial_velocity ok
+test_linear_momentum ok
+test_angular_momentum_and_linear_momentum ok
+test_kinetic_energy ok
+test_potential_energy ok                                                                                                                                                        [OK]
+
+sympy/physics/mechanics/tests/test_kane.py[6]
+test_one_dof ok
+test_two_dof ok
+test_pend ok
+test_rolling_disc ok
+test_aux ok
+test_parallel_axis ok                                                                                                                                                           [OK]
+
+sympy/physics/mechanics/tests/test_kane2.py[2]
+test_aux_dep ok
+test_mat_inv_mul ok                                                                                                                                                             [OK]
+
+sympy/physics/mechanics/tests/test_lagrange.py[4]
+test_disc_on_an_incline_plane ok
+test_simp_pen ok
+test_dub_pen ok
+test_rolling_disc ok                                                                                                                                                            [OK]
+
+sympy/physics/mechanics/tests/test_particle.py[1]
+test_particle ok                                                                                                                                                                [OK]
+
+sympy/physics/mechanics/tests/test_point.py[6]
+test_point_v1pt_theorys ok
+test_point_a1pt_theorys ok
+test_point_v2pt_theorys ok
+test_point_a2pt_theorys ok
+test_point_funcs ok
+test_point_pos ok                                                                                                                                                               [OK]
+
+sympy/physics/mechanics/tests/test_rigidbody.py[2]
+test_rigidbody ok
+test_rigidbody2 ok                                                                                                                                                              [OK]
+
+sympy/physics/quantum/tests/test_anticommutator.py[4]
+test_anticommutator ok
+test_commutator_identities ok
+test_anticommutator_dagger ok
+test_eval_commutator ok                                                                                                                                                         [OK]
+
+sympy/physics/quantum/tests/test_cartesian.py[3]
+test_x ok
+test_p ok
+test_3dpos ok                                                                                                                                                                   [OK]
+
+sympy/physics/quantum/tests/test_cg.py[3]
+test_cg_simp_add ok
+test_cg_simp_sum ok
+test_doit ok                                                                                                                                                                    [OK]
+
+sympy/physics/quantum/tests/test_circuitutils.py[7]
+test_kmp_table ok
+test_find_subcircuit ok
+test_replace_subcircuit ok
+test_convert_to_symbolic_indices ok
+test_convert_to_real_indices ok
+test_random_reduce ok
+test_random_insert ok                                                                                                                                                           [OK]
+
+sympy/physics/quantum/tests/test_commutator.py[4]
+test_commutator ok
+test_commutator_identities ok
+test_commutator_dagger ok
+test_eval_commutator ok                                                                                                                                                         [OK]
+
+sympy/physics/quantum/tests/test_constants.py[1]
+test_hbar ok                                                                                                                                                                    [OK]
+
+sympy/physics/quantum/tests/test_dagger.py[5]
+test_scalars ok
+test_matrix ok
+test_eval_adjoint ok
+test_numpy_dagger ok
+test_scipy_sparse_dagger s - scipy not installed.                                                                                                                               [OK]
+
+sympy/physics/quantum/tests/test_density.py[11]
+test_eval_args ok
+test_doit ok
+test_apply_op ok
+test_represent ok
+test_states ok
+test_probs ok
+test_get_state ok
+test_get_prob ok
+test_entropy ok
+test_eval_trace ok
+test_fidelity ok                                                                                                                                                                [OK]
+
+sympy/physics/quantum/tests/test_gate.py[25]
+test_gate ok
+test_UGate ok
+test_cgate ok
+test_UGate_CGate_combo ok
+test_represent_hadamard ok
+test_represent_xgate ok
+test_represent_ygate ok
+test_represent_zgate ok
+test_represent_phasegate ok
+test_represent_tgate ok
+test_compound_gates ok
+test_cnot_gate ok
+test_gate_sort ok
+test_gate_simp ok
+test_swap_gate ok
+test_one_qubit_commutators ok
+test_one_qubit_anticommutators ok
+test_cnot_commutators ok
+test_random_circuit ok
+test_hermitian_XGate ok
+test_hermitian_YGate ok
+test_hermitian_ZGate ok
+test_unitary_XGate ok
+test_unitary_YGate ok
+test_unitary_ZGate ok                                                                                                                                                           [OK]
+
+sympy/physics/quantum/tests/test_grover.py[6]
+test_superposition_basis ok
+test_OracleGate ok
+test_WGate ok
+test_grover_iteration_1 ok
+test_grover_iteration_2 ok
+test_grover ok                                                                                                                                                                  [OK]
+
+sympy/physics/quantum/tests/test_hilbert.py[7]
+test_hilbert_space ok
+test_complex_space ok
+test_L2 ok
+test_fock_space ok
+test_tensor_product ok
+test_tensor_power ok
+test_direct_sum ok                                                                                                                                                              [OK]
+
+sympy/physics/quantum/tests/test_identitysearch.py[9]
+test_generate_gate_rules_1 ok
+test_generate_gate_rules_2 ok
+test_generate_equivalent_ids_1 ok
+test_generate_equivalent_ids_2 ok
+test_is_scalar_nonsparse_matrix ok
+test_is_scalar_sparse_matrix s - scipy not installed.
+test_is_degenerate ok
+test_is_reducible ok
+test_bfs_identity_search ok                                                                                                                                                     [OK]
+
+sympy/physics/quantum/tests/test_innerproduct.py[3]
+test_innerproduct ok
+test_innerproduct_dagger ok
+test_doit ok                                                                                                                                                                    [OK]
+
+sympy/physics/quantum/tests/test_matrixutils.py[8]
+test_sympy_to_sympy ok
+test_matrix_to_zero ok
+test_to_numpy ok
+test_matrix_tensor_product ok
+test_to_scipy_sparse s - scipy not installed.
+test_matrix_zeros_sympy ok
+test_matrix_zeros_numpy ok
+test_matrix_zeros_scipy s - scipy not installed.                                                                                                                                [OK]
+
+sympy/physics/quantum/tests/test_operator.py[7]
+test_operator ok
+test_operator_inv ok
+test_hermitian ok
+test_unitary ok
+test_outer_product ok
+test_operator_dagger ok
+test_differential_operator ok                                                                                                                                                   [OK]
+
+sympy/physics/quantum/tests/test_operatorset.py[3]
+test_op_to_state ok
+test_state_to_op ok
+test_spin f                                                                                                                                                                     [OK]
+
+sympy/physics/quantum/tests/test_piab.py[2]
+test_H ok
+test_states ok                                                                                                                                                                  [OK]
+
+sympy/physics/quantum/tests/test_printing.py[16]
+test_anticommutator ok
+test_cg ok
+test_gate_failing f
+test_commutator ok
+test_constants ok
+test_dagger ok
+test_gate ok
+test_hilbert ok
+test_innerproduct ok
+test_operator ok
+test_qexpr ok
+test_qubit ok
+test_spin ok
+test_state ok
+test_tensorproduct ok
+test_big_expr ok                                                                                                                                                                [OK]
+
+sympy/physics/quantum/tests/test_qapply.py[10]
+test_basic ok
+test_extra ok
+test_innerproduct ok
+test_zero ok
+test_commutator ok
+test_anticommutator ok
+test_outerproduct ok
+test_dagger ok
+test_issue2974 ok
+test_density ok                                                                                                                                                                 [OK]
+
+sympy/physics/quantum/tests/test_qexpr.py[4]
+test_qexpr_new ok
+test_qexpr_commutative ok
+test_qexpr_subs ok
+test_qsympify ok                                                                                                                                                                [OK]
+
+sympy/physics/quantum/tests/test_qft.py[3]
+test_RkGate ok
+test_quantum_fourier ok
+test_qft_represent ok                                                                                                                                                           [OK]
+
+sympy/physics/quantum/tests/test_qubit.py[11]
+test_Qubit ok
+test_QubitBra ok
+test_IntQubit ok
+test_superposition_of_states ok
+test_apply_represent_equality ok
+test_matrix_to_qubits ok
+test_measure_normalize ok
+test_measure_partial ok
+test_measure_all ok
+test_eval_trace ok
+test_matrix_to_density ok                                                                                                                                                       [OK]
+
+sympy/physics/quantum/tests/test_represent.py[9]
+test_format_sympy ok
+test_scalar_sympy ok
+test_format_numpy ok
+test_scalar_numpy ok
+test_format_scipy_sparse s - scipy not installed.
+test_scalar_scipy_sparse s - scipy not installed.
+test_innerprod_represent ok
+test_operator_represent ok
+test_enumerate_states ok                                                                                                                                                        [OK]
+
+sympy/physics/quantum/tests/test_sho1d.py[5]
+test_RaisingOp s - scipy not installed.
+test_LoweringOp ok
+test_NumberOp ok
+test_Hamiltonian ok
+test_SHOKet ok                                                                                                                                                                  [OK]
+
+sympy/physics/quantum/tests/test_shor.py[2]
+test_continued_frac ok
+test_CMod f                                                                                                                                                                     [OK]
+
+sympy/physics/quantum/tests/test_spin.py[38]
+test_represent_spin_operators ok
+test_represent_spin_states ok
+test_represent_uncoupled_states ok
+test_represent_coupled_states ok
+test_represent_rotation ok
+test_rewrite_same ok
+test_rewrite_Bra ok
+test_rewrite_Ket ok
+test_rewrite_uncoupled_state ok
+test_rewrite_coupled_state ok
+test_innerproducts_of_rewritten_states ok
+test_uncouple_2_coupled_states ok
+test_uncouple_3_coupled_states ok
+test_uncouple_4_coupled_states ok
+test_uncouple_2_coupled_states_numerical ok
+test_uncouple_3_coupled_states_numerical ok
+test_uncouple_4_coupled_states_numerical ok
+test_uncouple_symbolic ok
+test_couple_2_states ok
+test_couple_3_states ok
+test_couple_4_states ok
+test_couple_2_states_numerical ok
+test_couple_3_states_numerical ok
+test_couple_4_states_numerical ok
+test_couple_symbolic ok
+test_innerproduct ok
+test_rotation_small_d ok
+test_rotation_d ok
+test_wignerd ok
+test_jplus ok
+test_jminus ok
+test_j2 ok
+test_jx ok
+test_jy ok
+test_jz ok
+test_rotation ok
+test_jzket ok
+test_jzketcoupled ok                                                                                                                                                            [OK]
+
+sympy/physics/quantum/tests/test_state.py[7]
+test_ket ok
+test_bra ok
+test_ops ok
+test_time_dep_ket ok
+test_time_dep_bra ok
+test_bra_ket_dagger ok
+test_wavefunction ok                                                                                                                                                            [OK]
+
+sympy/physics/quantum/tests/test_tensorproduct.py[7]
+test_tensor_product_dagger ok
+test_tensor_product_abstract ok
+test_tensor_product_expand ok
+test_tensor_product_commutator ok
+test_tensor_product_simp ok
+test_issue_2824 ok
+test_eval_trace ok                                                                                                                                                              [OK]
+
+sympy/physics/tests/test_clebsch_gordan.py[5]
+test_clebsch_gordan_docs ok
+test_clebsch_gordan1 ok
+test_clebsch_gordan2 ok
+test_wigner ok
+test_gaunt ok                                                                                                                                                                   [OK]
+
+sympy/physics/tests/test_gaussopt.py[1]
+test_gauss_opt ok                                                                                                                                                               [OK]
+
+sympy/physics/tests/test_hydrogen.py[4]
+test_wavefunction ok
+test_norm ok
+test_hydrogen_energies ok
+test_hydrogen_energies_relat ok                                                                                                                                                 [OK]
+
+sympy/physics/tests/test_paulialgebra.py[2]
+test_Pauli ok
+test_Pauli_should_work f                                                                                                                                                        [OK]
+
+sympy/physics/tests/test_physics_matrices.py[3]
+test_parallel_axis_theorem ok
+test_Pauli ok
+test_Dirac ok                                                                                                                                                                   [OK]
+
+sympy/physics/tests/test_qho_1d.py[4]
+test_wavefunction ok
+test_norm ok
+test_orthogonality ok
+test_energies ok                                                                                                                                                                [OK]
+
+sympy/physics/tests/test_secondquant.py[50]
+test_PermutationOperator ok
+test_index_permutations_with_dummies ok
+test_dagger ok
+test_operator ok
+test_create ok
+test_annihilate ok
+test_basic_state ok
+test_move2 f
+test_move1 f
+test_basic_apply ok
+test_complex_apply ok
+test_number_operator ok
+test_inner_product ok
+test_symbolic_matrix_elements ok
+test_matrix_elements ok
+test_sho ok
+test_commutation ok
+test_create_f ok
+test_annihilate_f ok
+test_create_b ok
+test_annihilate_b ok
+test_wicks ok
+test_NO ok
+test_sorting ok
+test_contraction ok
+test_Tensors ok
+test_fully_contracted ok
+test_substitute_dummies_without_dummies ok
+test_substitute_dummies_NO_operator ok
+test_substitute_dummies_SQ_operator ok
+test_substitute_dummies_new_indices ok
+test_substitute_dummies_substitution_order ok
+test_dummy_order_inner_outer_lines_VT1T1T1 ok
+test_dummy_order_inner_outer_lines_VT1T1T1T1 ok
+test_equivalent_internal_lines_VT1T1 ok
+test_equivalent_internal_lines_VT2conjT2 ok
+test_equivalent_internal_lines_VT2conjT2_ambiguous_order ok
+test_equivalent_internal_lines_VT2 ok
+test_internal_external_VT2T2 ok
+test_internal_external_pqrs ok
+test_dummy_order_well_defined ok
+test_dummy_order_ambiguous ok
+test_dummy_order_inner_outer_lines_VT1T1T1_AT ok
+test_dummy_order_inner_outer_lines_VT1T1T1T1_AT ok
+test_equivalent_internal_lines_VT1T1_AT ok
+test_equivalent_internal_lines_VT2conjT2_AT ok
+test_equivalent_internal_lines_VT2conjT2_ambiguous_order_AT ok
+test_equivalent_internal_lines_VT2_AT ok
+test_internal_external_VT2T2_AT ok
+test_internal_external_pqrs_AT ok                                                                                                                                               [OK]
+
+sympy/physics/tests/test_sho.py[2]
+test_sho_R_nl ok
+test_energy ok                                                                                                                                                                  [OK]
+
+sympy/physics/tests/test_units.py[3]
+test_units ok
+test_issue_2466 ok
+test_find_unit ok                                                                                                                                                               [OK]
+
+sympy/plotting/intervalmath/tests/test_interval_functions.py[24]
+test_interval_pow ok
+test_exp ok
+test_log ok
+test_log10 ok
+test_atan ok
+test_sin ok
+test_cos ok
+test_tan ok
+test_sqrt ok
+test_imin ok
+test_imax ok
+test_sinh ok
+test_cosh ok
+test_tanh ok
+test_asin ok
+test_acos ok
+test_ceil ok
+test_floor ok
+test_asinh ok
+test_acosh ok
+test_atanh ok
+test_Abs ok
+test_And ok
+test_Or ok                                                                                                                                                                      [OK]
+
+sympy/plotting/intervalmath/tests/test_intervalmath.py[6]
+test_interval ok
+test_interval_add ok
+test_interval_sub ok
+test_interval_inequality ok
+test_interval_mul ok
+test_interval_div ok                                                                                                                                                            [OK]
+
+sympy/plotting/tests/test_plot.py[1]
+test_matplotlib s - Matplotlib not the default backend                                                                                                                          [OK]
+
+sympy/plotting/tests/test_plot_implicit.py[1]
+test_matplotlib s - Matplotlib not the default backend                                                                                                                          [OK]
+
+sympy/polys/agca/tests/test_homomorphisms.py[4]
+test_printing ok
+test_operations ok
+test_creation ok
+test_properties ok                                                                                                                                                              [OK]
+
+sympy/polys/agca/tests/test_ideals.py[7]
+test_ideal_operations ok
+test_exceptions ok
+test_nontriv_global ok
+test_nontriv_local ok
+test_intersection ok
+test_quotient ok
+test_reduction ok                                                                                                                                                               [OK]
+
+sympy/polys/agca/tests/test_modules.py[16]
+test_FreeModuleElement ok
+test_FreeModule ok
+test_ModuleOrder ok
+test_SubModulePolyRing_global ok
+test_SubModulePolyRing_local ok
+test_SubModulePolyRing_nontriv_global ok
+test_SubModulePolyRing_nontriv_local ok
+test_syzygy ok
+test_in_terms_of_generators ok
+test_QuotientModuleElement ok
+test_QuotientModule ok
+test_ModulesQuotientRing ok
+test_module_mul ok
+test_intersection ok
+test_quotient ok
+test_groebner_extendend ok                                                                                                                                                      [OK]
+
+sympy/polys/domains/tests/test_domains.py[18]
+test_Domain__unify ok
+test_Domain__contains__ ok
+test_Domain_get_ring ok
+test_Domain_get_field ok
+test_Domain_get_exact ok
+test_Domain_convert ok
+test_PolynomialRing__init ok
+test_PolynomialRing_from_FractionField ok
+test_FractionField__init ok
+test_inject ok
+test_Domain_map ok
+test_Domain___eq__ ok
+test_Domain__algebraic_field ok
+test_PolynomialRing__from_FractionField ok
+test_FF_of_type ok
+test___eq__ ok
+test_RealDomain_from_sympy ok
+test_ModularInteger ok                                                                                                                                                          [OK]
+
+sympy/polys/domains/tests/test_polynomialring.py[5]
+test_build_order ok
+test_globalring ok
+test_localring ok
+test_conversion ok
+test_units ok                                                                                                                                                                   [OK]
+
+sympy/polys/domains/tests/test_quotientring.py[2]
+test_QuotientRingElement ok
+test_QuotientRing ok                                                                                                                                                            [OK]
+
+sympy/polys/tests/test_constructor.py[2]
+test_construct_domain ok
+test_composite_option ok                                                                                                                                                        [OK]
+
+sympy/polys/tests/test_densearith.py[48]
+test_dup_add_term ok
+test_dmp_add_term ok
+test_dup_sub_term ok
+test_dmp_sub_term ok
+test_dup_mul_term ok
+test_dmp_mul_term ok
+test_dup_add_ground ok
+test_dmp_add_ground ok
+test_dup_sub_ground ok
+test_dmp_sub_ground ok
+test_dup_mul_ground ok
+test_dmp_mul_ground ok
+test_dup_quo_ground ok
+test_dup_exquo_ground ok
+test_dmp_quo_ground ok
+test_dmp_exquo_ground ok
+test_dup_lshift ok
+test_dup_rshift ok
+test_dup_abs ok
+test_dmp_abs ok
+test_dup_neg ok
+test_dmp_neg ok
+test_dup_add ok
+test_dmp_add ok
+test_dup_sub ok
+test_dmp_sub ok
+test_dup_add_mul ok
+test_dup_sub_mul ok
+test_dup_mul ok
+test_dmp_mul ok
+test_dup_sqr ok
+test_dmp_sqr ok
+test_dup_pow ok
+test_dmp_pow ok
+test_dup_pdiv ok
+test_dmp_pdiv ok
+test_dup_rr_div ok
+test_dmp_rr_div ok
+test_dup_ff_div ok
+test_dmp_ff_div ok
+test_dup_div ok
+test_dmp_div ok
+test_dup_max_norm ok
+test_dmp_max_norm ok
+test_dup_l1_norm ok
+test_dmp_l1_norm ok
+test_dup_expand ok
+test_dmp_expand ok                                                                                                                                                              [OK]
+
+sympy/polys/tests/test_densebasic.py[58]
+test_dup_LC ok
+test_dup_TC ok
+test_dmp_LC ok
+test_dmp_TC ok
+test_dmp_ground_LC ok
+test_dmp_ground_TC ok
+test_dmp_true_LT ok
+test_dup_degree ok
+test_dmp_degree ok
+test_dmp_degree_in ok
+test_dmp_degree_list ok
+test_dup_strip ok
+test_dmp_strip ok
+test_dmp_validate ok
+test_dup_reverse ok
+test_dup_copy ok
+test_dmp_copy ok
+test_dup_normal ok
+test_dmp_normal ok
+test_dup_convert ok
+test_dmp_convert ok
+test_dup_from_sympy ok
+test_dmp_from_sympy ok
+test_dup_nth ok
+test_dmp_nth ok
+test_dmp_ground_nth ok
+test_dmp_zero_p ok
+test_dmp_zero ok
+test_dmp_one_p ok
+test_dmp_one ok
+test_dmp_ground_p ok
+test_dmp_ground ok
+test_dmp_zeros ok
+test_dmp_grounds ok
+test_dmp_negative_p ok
+test_dmp_positive_p ok
+test_dup_from_to_dict ok
+test_dmp_from_to_dict ok
+test_dmp_swap ok
+test_dmp_permute ok
+test_dmp_nest ok
+test_dmp_raise ok
+test_dup_deflate ok
+test_dmp_deflate ok
+test_dup_multi_deflate ok
+test_dmp_multi_deflate ok
+test_dup_inflate ok
+test_dmp_inflate ok
+test_dmp_exclude ok
+test_dmp_include ok
+test_dmp_inject ok
+test_dmp_eject ok
+test_dup_terms_gcd ok
+test_dmp_terms_gcd ok
+test_dmp_list_terms ok
+test_dmp_apply_pairs ok
+test_dup_slice ok
+test_dup_random ok                                                                                                                                                              [OK]
+
+sympy/polys/tests/test_densetools.py[36]
+test_dup_integrate ok
+test_dmp_integrate ok
+test_dmp_integrate_in ok
+test_dup_diff ok
+test_dmp_diff ok
+test_dmp_diff_in ok
+test_dup_eval ok
+test_dmp_eval ok
+test_dmp_eval_in ok
+test_dmp_eval_tail ok
+test_dmp_diff_eval_in ok
+test_dup_revert ok
+test_dmp_revert ok
+test_dup_trunc ok
+test_dmp_trunc ok
+test_dmp_ground_trunc ok
+test_dup_monic ok
+test_dmp_ground_monic ok
+test_dup_content ok
+test_dmp_ground_content ok
+test_dup_primitive ok
+test_dmp_ground_primitive ok
+test_dup_extract ok
+test_dmp_ground_extract ok
+test_dup_real_imag ok
+test_dup_mirror ok
+test_dup_scale ok
+test_dup_shift ok
+test_dup_transform ok
+test_dup_compose ok
+test_dmp_compose ok
+test_dup_decompose ok
+test_dmp_lift ok
+test_dup_sign_variations ok
+test_dup_clear_denoms ok
+test_dmp_clear_denoms ok                                                                                                                                                        [OK]
+
+sympy/polys/tests/test_distributedmodules.py[20]
+test_sdm_monomial_mul ok
+test_sdm_monomial_deg ok
+test_sdm_monomial_lcm ok
+test_sdm_monomial_divides ok
+test_sdm_LC ok
+test_sdm_from_dict ok
+test_sdm_add ok
+test_sdm_LM ok
+test_sdm_LT ok
+test_sdm_mul_term ok
+test_sdm_zero ok
+test_sdm_deg ok
+test_sdm_spoly ok
+test_sdm_ecart ok
+test_sdm_nf_mora ok
+test_conversion ok
+test_nontrivial ok
+test_local ok
+test_uncovered_line ok
+test_chain_criterion ok                                                                                                                                                         [OK]
+
+sympy/polys/tests/test_euclidtools.py[16]
+test_dup_gcdex ok
+test_dup_invert ok
+test_dup_euclidean_prs ok
+test_dup_primitive_prs ok
+test_dup_subresultants ok
+test_dmp_subresultants ok
+test_dup_discriminant ok
+test_dmp_discriminant ok
+test_dup_gcd ok
+test_dmp_gcd ok
+test_dup_lcm ok
+test_dmp_lcm ok
+test_dmp_content ok
+test_dmp_primitive ok
+test_dup_cancel ok
+test_dmp_cancel ok                                                                                                                                                              [OK]
+
+sympy/polys/tests/test_factortools.py[20]
+test_dup_trial_division ok
+test_dmp_trial_division ok
+test_dup_zz_mignotte_bound ok
+test_dmp_zz_mignotte_bound ok
+test_dup_zz_hensel_step ok
+test_dup_zz_hensel_lift ok
+test_dup_zz_irreducible_p ok
+test_dup_cyclotomic_p ok
+test_dup_zz_cyclotomic_poly ok
+test_dup_zz_cyclotomic_factor ok
+test_dup_zz_factor ok
+test_dmp_zz_wang ok
+test_issue_3256 ok
+test_dmp_zz_factor ok
+test_dup_ext_factor ok
+test_dmp_ext_factor ok
+test_dup_factor_list ok
+test_dmp_factor_list ok
+test_dup_irreducible_p ok
+test_dmp_irreducible_p ok                                                                                                                                                       [OK]
+
+sympy/polys/tests/test_fields.py[11]
+test_FracField___hash__ ok
+test_FracElement___hash__ ok
+test_FracElement_copy ok
+test_FracElement_as_expr ok
+test_FracElement_from_expr ok
+test_FracElement___neg__ ok
+test_FracElement___add__ ok
+test_FracElement___sub__ ok
+test_FracElement___mul__ ok
+test_FracElement___div__ ok
+test_FracElement___pow__ ok                                                                                                                                                     [OK]
+
+sympy/polys/tests/test_galoistools.py[32]
+test_gf_crt ok
+test_gf_int ok
+test_gf_degree ok
+test_gf_strip ok
+test_gf_trunc ok
+test_gf_normal ok
+test_gf_from_to_dict ok
+test_gf_from_to_int_poly ok
+test_gf_LC ok
+test_gf_TC ok
+test_gf_monic ok
+test_gf_arith ok
+test_gf_division ok
+test_gf_shift ok
+test_gf_expand ok
+test_gf_powering ok
+test_gf_gcdex ok
+test_gf_gcd ok
+test_gf_lcm ok
+test_gf_cofactors ok
+test_gf_diff ok
+test_gf_eval ok
+test_gf_compose ok
+test_gf_trace_map ok
+test_gf_irreducible ok
+test_gf_irreducible_p ok
+test_gf_squarefree ok
+test_gf_berlekamp ok
+test_gf_ddf ok
+test_gf_edf ok
+test_gf_factor ok
+test_gf_csolve ok                                                                                                                                                               [OK]
+
+sympy/polys/tests/test_groebnertools.py[22]
+test_groebner_buchberger ok
+test_groebner_f5b ok
+test_benchmark_minpoly_buchberger ok
+test_benchmark_czichowski_buchberger w - Slow
+test_benchmark_minpoly_f5b ok
+test_benchmark_czichowski_f5b w - Slow
+test_benchmark_coloring w - Slow
+test_benchmark_katsura3_buchberger ok
+test_benchmark_katsura3_f5b ok
+test_benchmark_kastura_4_buchberger ok
+test_benchmark_kastura_4_f5b ok
+test_benchmark_cyclic_4_buchberger ok
+test_benchmark_cyclic_4_f5b ok
+test_sig_key ok
+test_lbp_key ok
+test_critical_pair ok
+test_cp_key ok
+test_is_rewritable_or_comparable ok
+test_f5_reduce ok
+test_representing_matrices ok
+test_groebner_lcm ok
+test_groebner_gcd ok                                                                                                                                                            [OK]
+
+sympy/polys/tests/test_heuristicgcd.py[2]
+test_heugcd_univariate_integers ok
+test_heugcd_multivariate_integers ok                                                                                                                                            [OK]
+
+sympy/polys/tests/test_injections.py[2]
+test_vring ok
+test_vfield ok                                                                                                                                                                  [OK]
+
+sympy/polys/tests/test_monomialtools.py[17]
+test_monomials ok
+test_monomial_count ok
+test_lex_order ok
+test_grlex_order ok
+test_grevlex_order ok
+test_InverseOrder ok
+test_ProductOrder ok
+test_monomial_key ok
+test_build_product_order ok
+test_monomial_mul ok
+test_monomial_div ok
+test_monomial_gcd ok
+test_monomial_lcm ok
+test_monomial_max ok
+test_monomial_min ok
+test_monomial_divides ok
+test_Monomial ok                                                                                                                                                                [OK]
+
+sympy/polys/tests/test_numberfields.py[9]
+test_minimal_polynomial ok
+test_primitive_element ok
+test_field_isomorphism_pslq ok
+test_field_isomorphism ok
+test_to_number_field ok
+test_AlgebraicNumber ok
+test_to_algebraic_integer ok
+test_IntervalPrinter ok
+test_isolate ok                                                                                                                                                                 [OK]
+
+sympy/polys/tests/test_orthopolys.py[7]
+test_jacobi_poly ok
+test_gegenbauer_poly ok
+test_chebyshevt_poly ok
+test_chebyshevu_poly ok
+test_hermite_poly ok
+test_legendre_poly ok
+test_laguerre_poly ok                                                                                                                                                           [OK]
+
+sympy/polys/tests/test_partfrac.py[8]
+test_apart ok
+test_apart_matrix ok
+test_apart_symbolic ok
+test_apart_extension ok
+test_apart_full ok
+test_apart_undetermined_coeffs ok
+test_apart_list ok
+test_assemble_partfrac_list ok                                                                                                                                                  [OK]
+
+sympy/polys/tests/test_polyclasses.py[19]
+test_DMP___init__ ok
+test_DMP___eq__ ok
+test_DMP___bool__ ok
+test_DMP_to_dict ok
+test_DMP_properties ok
+test_DMP_arithmetics ok
+test_DMP_functionality ok
+test_DMP_exclude ok
+test_DMF__init__ ok
+test_DMF__bool__ ok
+test_DMF_properties ok
+test_DMF_arithmetics ok
+test_ANP___init__ ok
+test_ANP___eq__ ok
+test_ANP___bool__ ok
+test_ANP_properties ok
+test_ANP_arithmetics ok
+test_ANP_unify ok
+test___hash__ ok                                                                                                                                                                [OK]
+
+sympy/polys/tests/test_polyfuncs.py[4]
+test_symmetrize ok
+test_horner ok
+test_interpolate ok
+test_viete ok                                                                                                                                                                   [OK]
+
+sympy/polys/tests/test_polyoptions.py[46]
+test_Options_clone ok
+test_Expand_preprocess ok
+test_Expand_postprocess ok
+test_Gens_preprocess ok
+test_Gens_postprocess ok
+test_Wrt_preprocess ok
+test_Wrt_postprocess ok
+test_Sort_preprocess ok
+test_Sort_postprocess ok
+test_Order_preprocess ok
+test_Order_postprocess ok
+test_Field_preprocess ok
+test_Field_postprocess ok
+test_Greedy_preprocess ok
+test_Greedy_postprocess ok
+test_Domain_preprocess ok
+test_Domain_postprocess ok
+test_Split_preprocess ok
+test_Split_postprocess ok
+test_Gaussian_preprocess ok
+test_Gaussian_postprocess ok
+test_Extension_preprocess ok
+test_Extension_postprocess ok
+test_Modulus_preprocess ok
+test_Modulus_postprocess ok
+test_Symmetric_preprocess ok
+test_Symmetric_postprocess ok
+test_Strict_preprocess ok
+test_Strict_postprocess ok
+test_Auto_preprocess ok
+test_Auto_postprocess ok
+test_Frac_preprocess ok
+test_Frac_postprocess ok
+test_Formal_preprocess ok
+test_Formal_postprocess ok
+test_Polys_preprocess ok
+test_Polys_postprocess ok
+test_Include_preprocess ok
+test_Include_postprocess ok
+test_All_preprocess ok
+test_All_postprocess ok
+test_Gen_postprocess ok
+test_Symbols_preprocess ok
+test_Symbols_postprocess ok
+test_Method_preprocess ok
+test_Method_postprocess ok                                                                                                                                                      [OK]
+
+sympy/polys/tests/test_polyroots.py[13]
+test_roots_linear ok
+test_roots_quadratic ok
+test_roots_cubic ok
+test_roots_quartic ok
+test_roots_cyclotomic ok
+test_roots_binomial ok
+test_roots_preprocessing ok
+test_roots ok
+test_roots_slow ok
+test_roots_inexact ok
+test_roots_preprocessed ok
+test_roots_mixed ok
+test_root_factors ok                                                                                                                                                            [OK]
+
+sympy/polys/tests/test_polytools.py[129]
+test_Poly_from_dict ok
+test_poly_matching_consistency f
+test_factor_noeval f
+test_issue_2687 f
+test_Poly_from_list ok
+test_Poly_from_poly ok
+test_Poly_from_expr ok
+test_Poly__new__ ok
+test_Poly__args ok
+test_Poly__gens ok
+test_Poly_zero ok
+test_Poly_one ok
+test_Poly__unify ok
+test_Poly_free_symbols ok
+test_PurePoly_free_symbols ok
+test_Poly__eq__ ok
+test_PurePoly__eq__ ok
+test_PurePoly_Poly ok
+test_Poly_get_domain ok
+test_Poly_set_domain ok
+test_Poly_get_modulus ok
+test_Poly_set_modulus ok
+test_Poly_add_ground ok
+test_Poly_sub_ground ok
+test_Poly_mul_ground ok
+test_Poly_quo_ground ok
+test_Poly_exquo_ground ok
+test_Poly_abs ok
+test_Poly_neg ok
+test_Poly_add ok
+test_Poly_sub ok
+test_Poly_mul ok
+test_Poly_sqr ok
+test_Poly_pow ok
+test_Poly_divmod ok
+test_Poly_eq_ne ok
+test_Poly_nonzero ok
+test_Poly_properties ok
+test_Poly_is_irreducible ok
+test_Poly_subs ok
+test_Poly_replace ok
+test_Poly_reorder ok
+test_Poly_ltrim ok
+test_Poly_has_only_gens ok
+test_Poly_to_ring ok
+test_Poly_to_field ok
+test_Poly_to_exact ok
+test_Poly_retract ok
+test_Poly_slice ok
+test_Poly_coeffs ok
+test_Poly_monoms ok
+test_Poly_terms ok
+test_Poly_all_coeffs ok
+test_Poly_all_monoms ok
+test_Poly_all_terms ok
+test_Poly_termwise ok
+test_Poly_length ok
+test_Poly_as_dict ok
+test_Poly_as_expr ok
+test_Poly_lift ok
+test_Poly_deflate ok
+test_Poly_inject ok
+test_Poly_eject ok
+test_Poly_exclude ok
+test_Poly__gen_to_level ok
+test_Poly_degree ok
+test_Poly_degree_list ok
+test_Poly_total_degree ok
+test_Poly_homogeneous_order ok
+test_Poly_LC ok
+test_Poly_TC ok
+test_Poly_EC ok
+test_Poly_coeff ok
+test_Poly_nth ok
+test_Poly_LM ok
+test_Poly_LM_custom_order ok
+test_Poly_EM ok
+test_Poly_LT ok
+test_Poly_ET ok
+test_Poly_max_norm ok
+test_Poly_l1_norm ok
+test_Poly_clear_denoms ok
+test_Poly_rat_clear_denoms ok
+test_Poly_integrate ok
+test_Poly_diff ok
+test_Poly_eval ok
+test_Poly___call__ ok
+test_parallel_poly_from_expr ok
+test_pdiv ok
+test_div ok
+test_gcdex ok
+test_revert ok
+test_subresultants ok
+test_resultant ok
+test_discriminant ok
+test_gcd_list ok
+test_lcm_list ok
+test_gcd ok
+test_gcd_numbers_vs_polys ok
+test_terms_gcd ok
+test_trunc ok
+test_monic ok
+test_content ok
+test_primitive ok
+test_compose ok
+test_shift ok
+test_sturm ok
+test_gff ok
+test_sqf_norm ok
+test_sqf ok
+test_factor ok
+test_factor_large ok
+test_intervals ok
+test_refine_root ok
+test_count_roots ok
+test_Poly_root ok
+test_real_roots ok
+test_all_roots ok
+test_nroots ok
+test_ground_roots ok
+test_nth_power_roots_poly ok
+test_cancel ok
+test_reduced ok
+test_groebner ok
+test_fglm ok
+test_is_zero_dimensional ok
+test_GroebnerBasis ok
+test_poly ok
+test_keep_coeff ok                                                                                                                                                              [OK]
+
+sympy/polys/tests/test_polyutils.py[10]
+test__sort_gens ok
+test__unify_gens ok
+test__analyze_gens ok
+test__sort_factors ok
+test__dict_from_expr_if_gens ok
+test__dict_from_expr_no_gens ok
+test__parallel_dict_from_expr_if_gens ok
+test__parallel_dict_from_expr_no_gens ok
+test_parallel_dict_from_expr ok
+test_dict_from_expr ok                                                                                                                                                          [OK]
+
+sympy/polys/tests/test_pythonrational.py[14]
+test_PythonRational__init__ ok
+test_PythonRational__hash__ ok
+test_PythonRational__int__ ok
+test_PythonRational__float__ ok
+test_PythonRational__abs__ ok
+test_PythonRational__pos__ ok
+test_PythonRational__neg__ ok
+test_PythonRational__add__ ok
+test_PythonRational__sub__ ok
+test_PythonRational__mul__ ok
+test_PythonRational__div__ ok
+test_PythonRational__pow__ ok
+test_PythonRational__eq__ ok
+test_PythonRational__lt_le_gt_ge__ ok                                                                                                                                           [OK]
+
+sympy/polys/tests/test_rationaltools.py[1]
+test_together ok                                                                                                                                                                [OK]
+
+sympy/polys/tests/test_rings.py[35]
+test_PolyRing___init__ ok
+test_PolyRing___hash__ ok
+test_PolyRing___eq__ ok
+test_PolyElement___hash__ ok
+test_PolyElement___eq__ ok
+test_PolyElement_copy ok
+test_PolyElement_as_expr ok
+test_PolyElement_from_expr ok
+test_PolyElement_coeff ok
+test_PolyElement_LC ok
+test_PolyElement_LM ok
+test_PolyElement_LT ok
+test_PolyElement_leading_monom ok
+test_PolyElement_leading_term ok
+test_PolyElement_terms ok
+test_PolyElement_monoms ok
+test_PolyElement_coeffs ok
+test_PolyElement___add__ ok
+test_PolyElement___sub__ ok
+test_PolyElement___mul__ ok
+test_PolyElement___div__ ok
+test_PolyElement_pow ok
+test_PolyElement_div ok
+test_PolyElement_rem ok
+test_PolyElement_deflate ok
+test_PolyElement_diff ok
+test_PolyElement_clear_denoms ok
+test_PolyElement_cofactors ok
+test_PolyElement_gcd ok
+test_PolyElement_cancel ok
+test_PolyElement_max_norm ok
+test_PolyElement_evaluate ok
+test_PolyElement_subs ok
+test_PolyElement_compose ok
+test_PolyElement_is_ ok                                                                                                                                                         [OK]
+
+sympy/polys/tests/test_rootisolation.py[20]
+test_dup_sturm ok
+test_dup_refine_real_root ok
+test_dup_isolate_real_roots_sqf ok
+test_dup_isolate_real_roots ok
+test_dup_isolate_real_roots_list ok
+test_dup_isolate_real_roots_list_QQ ok
+test_dup_count_real_roots ok
+test_dup_count_complex_roots_1 ok
+test_dup_count_complex_roots_2 ok
+test_dup_count_complex_roots_3 ok
+test_dup_count_complex_roots_4 ok
+test_dup_count_complex_roots_5 ok
+test_dup_count_complex_roots_6 ok
+test_dup_count_complex_roots_7 ok
+test_dup_count_complex_roots_8 ok
+test_dup_count_complex_roots_implicit ok
+test_dup_count_complex_roots_exclude ok
+test_dup_isolate_complex_roots_sqf ok
+test_dup_isolate_all_roots_sqf ok
+test_dup_isolate_all_roots ok                                                                                                                                                   [OK]
+
+sympy/polys/tests/test_rootoftools.py[21]
+test_RootOf___new__ ok
+test_RootOf_free_symbols ok
+test_RootOf___eq__ ok
+test_RootOf_is_real ok
+test_RootOf_is_complex ok
+test_RootOf_subs ok
+test_RootOf_diff ok
+test_RootOf_evalf ok
+test_RootOf_evalf_caching_bug ok
+test_RootOf_real_roots ok
+test_RootOf_all_roots ok
+test_RootOf_eval_rational ok
+test_RootSum___new__ ok
+test_RootSum_free_symbols ok
+test_RootSum___eq__ ok
+test_RootSum_doit ok
+test_RootSum_evalf ok
+test_RootSum_diff ok
+test_RootSum_subs ok
+test_RootSum_rational ok
+test_RootSum_independent ok                                                                                                                                                     [OK]
+
+sympy/polys/tests/test_solvers.py[9]
+test_solve_lin_sys_2x2_one ok
+test_solve_lin_sys_2x4_none ok
+test_solve_lin_sys_3x4_one ok
+test_solve_lin_sys_3x3_inf ok
+test_solve_lin_sys_3x4_none ok
+test_solve_lin_sys_4x7_inf ok
+test_solve_lin_sys_5x5_inf ok
+test_solve_lin_sys_6x6_1 ok
+test_solve_lin_sys_6x6_2 ok                                                                                                                                                     [OK]
+
+sympy/polys/tests/test_specialpolys.py[8]
+test_swinnerton_dyer_poly ok
+test_cyclotomic_poly ok
+test_symmetric_poly ok
+test_random_poly ok
+test_interpolating_poly ok
+test_fateman_poly_F_1 ok
+test_fateman_poly_F_2 ok
+test_fateman_poly_F_3 ok                                                                                                                                                        [OK]
+
+sympy/polys/tests/test_sqfreetools.py[3]
+test_dup_sqf ok
+test_dmp_sqf ok
+test_dup_gff_list ok                                                                                                                                                            [OK]
+
+sympy/printing/pretty/tests/test_pretty.py[57]
+test_pretty_sum X
+test_pretty_ascii_str ok
+test_pretty_unicode_str ok
+test_upretty_greek ok
+test_upretty_multiindex ok
+test_upretty_sub_super ok
+test_upretty_subs_missingin_24 ok
+test_pretty_basic ok
+test_issue_2425 ok
+test_pretty_ordering ok
+test_pretty_relational ok
+test_pretty_rational ok
+test_pretty_functions ok
+test_pretty_sqrt ok
+test_pretty_KroneckerDelta ok
+test_pretty_product ok
+test_pretty_lambda ok
+test_pretty_order ok
+test_pretty_derivatives ok
+test_pretty_integrals ok
+test_pretty_matrix ok
+test_Adjoint ok
+test_pretty_piecewise ok
+test_pretty_seq ok
+test_any_object_in_sequence ok
+test_pretty_sets ok
+test_pretty_limits ok
+test_pretty_RootOf ok
+test_pretty_RootSum ok
+test_GroebnerBasis ok
+test_pretty_Boolean ok
+test_pretty_Domain ok
+test_pretty_prec ok
+test_pprint ok
+test_pretty_class ok
+test_pretty_no_wrap_line ok
+test_settings ok
+test_units ok
+test_pretty_Subs ok
+test_gammas ok
+test_hyper ok
+test_meijerg ok
+test_noncommutative ok
+test_pretty_special_functions ok
+test_pretty_geometry ok
+test_expint ok
+test_RandomDomain ok
+test_PrettyPoly ok
+test_issue_3186 ok
+test_issue_3260 ok
+test_issue_3640 ok
+test_complicated_symbol_unchanged ok
+test_categories ok
+test_PrettyModules ok
+test_QuotientRing ok
+test_Homomorphism ok
+test_Tr ok                                                                                                                                                                      [OK]
+
+sympy/printing/tests/test_ccode.py[21]
+test_printmethod ok
+test_ccode_sqrt ok
+test_ccode_Pow ok
+test_ccode_constants_mathh ok
+test_ccode_constants_other ok
+test_ccode_Rational ok
+test_ccode_Integer ok
+test_ccode_functions ok
+test_ccode_inline_function ok
+test_ccode_exceptions ok
+test_ccode_boolean ok
+test_ccode_Piecewise ok
+test_ccode_Piecewise_deep ok
+test_ccode_settings ok
+test_ccode_Indexed ok
+test_ccode_loops_matrix_vector ok
+test_dummy_loops ok
+test_ccode_loops_add ok
+test_ccode_loops_multiple_contractions ok
+test_ccode_loops_addfactor ok
+test_ccode_loops_multiple_terms ok                                                                                                                                              [OK]
+
+sympy/printing/tests/test_codeprinter.py[2]
+test_print_Dummy ok
+test_print_Mul ok                                                                                                                                                               [OK]
+
+sympy/printing/tests/test_conventions.py[1]
+test_super_sub ok                                                                                                                                                               [OK]
+
+sympy/printing/tests/test_fcode.py[25]
+test_printmethod ok
+test_fcode_Pow ok
+test_fcode_Rational ok
+test_fcode_Integer ok
+test_fcode_Float ok
+test_fcode_functions ok
+test_fcode_NumberSymbol ok
+test_fcode_complex ok
+test_implicit ok
+test_not_fortran ok
+test_user_functions ok
+test_inline_function ok
+test_assign_to ok
+test_line_wrapping ok
+test_fcode_Piecewise ok
+test_wrap_fortran ok
+test_wrap_fortran_keep_d0 ok
+test_settings ok
+test_free_form_code_line ok
+test_free_form_continuation_line ok
+test_free_form_comment_line ok
+test_loops ok
+test_dummy_loops ok
+test_derived_classes ok
+test_indent ok                                                                                                                                                                  [OK]
+
+sympy/printing/tests/test_gtk.py[2]
+test_settings ok
+test_1 f                                                                                                                                                                        [OK]
+
+sympy/printing/tests/test_jscode.py[21]
+test_printmethod ok
+test_jscode_sqrt ok
+test_jscode_Pow ok
+test_jscode_constants_mathh ok
+test_jscode_constants_other ok
+test_jscode_Rational ok
+test_jscode_Integer ok
+test_jscode_functions ok
+test_jscode_inline_function ok
+test_jscode_exceptions ok
+test_jscode_boolean ok
+test_jscode_Piecewise ok
+test_jscode_Piecewise_deep ok
+test_jscode_settings ok
+test_jscode_Indexed ok
+test_jscode_loops_matrix_vector ok
+test_dummy_loops ok
+test_jscode_loops_add ok
+test_jscode_loops_multiple_contractions ok
+test_jscode_loops_addfactor ok
+test_jscode_loops_multiple_terms ok                                                                                                                                             [OK]
+
+sympy/printing/tests/test_lambdarepr.py[4]
+test_basic ok
+test_matrix ok
+test_piecewise ok
+test_settings ok                                                                                                                                                                [OK]
+
+sympy/printing/tests/test_latex.py[66]
+test_printmethod ok
+test_latex_basic ok
+test_latex_Float ok
+test_latex_symbols ok
+test_latex_symbols_failing f
+test_latex_functions ok
+test_hyper_printing ok
+test_latex_bessel ok
+test_latex_fresnel ok
+test_latex_brackets ok
+test_latex_derivatives ok
+test_latex_subs ok
+test_latex_integrals ok
+test_latex_sets ok
+test_latex_Range ok
+test_latex_intervals ok
+test_latex_emptyset ok
+test_latex_union ok
+test_latex_productset ok
+test_latex_Naturals ok
+test_latex_TransformationSet ok
+test_latex_sum ok
+test_latex_product ok
+test_latex_limits ok
+test_issue469 ok
+test_latex ok
+test_latex_dict ok
+test_latex_rational ok
+test_latex_inverse ok
+test_latex_DiracDelta ok
+test_latex_Heaviside ok
+test_latex_KroneckerDelta ok
+test_latex_LeviCivita ok
+test_mode ok
+test_latex_Piecewise ok
+test_latex_Matrix ok
+test_latex_mul_symbol ok
+test_latex_issue1282 ok
+test_latex_issue1477 ok
+test_latex_pow_fraction ok
+test_noncommutative ok
+test_latex_order ok
+test_latex_Lambda ok
+test_latex_PolyElement ok
+test_latex_FracElement ok
+test_latex_Poly ok
+test_latex_RootOf ok
+test_latex_RootSum ok
+test_settings ok
+test_latex_numbers ok
+test_lamda ok
+test_custom_symbol_names ok
+test_matAdd ok
+test_matMul ok
+test_latex_MatrixSlice ok
+test_latex_RandomDomain ok
+test_PrettyPoly ok
+test_integral_transforms ok
+test_PolynomialRing ok
+test_categories ok
+test_Modules ok
+test_QuotientRing ok
+test_Tr ok
+test_Adjoint ok
+test_Hadamard ok
+test_boolean_args_order ok                                                                                                                                                      [OK]
+
+sympy/printing/tests/test_mathml.py[17]
+test_printmethod ok
+test_mathml_core ok
+test_mathml_functions ok
+test_mathml_limits ok
+test_mathml_integrals ok
+test_mathml_sums ok
+test_mathml_tuples ok
+test_mathml_add ok
+test_mathml_Rational ok
+test_mathml_constants ok
+test_mathml_trig ok
+test_mathml_relational ok
+test_symbol ok
+test_mathml_greek ok
+test_mathml_order ok
+test_settings ok
+test_toprettyxml_hooking ok                                                                                                                                                     [OK]
+
+sympy/printing/tests/test_precedence.py[12]
+test_Add ok
+test_Function ok
+test_Integral ok
+test_Mul ok
+test_Number ok
+test_Order ok
+test_Pow ok
+test_Product ok
+test_Relational ok
+test_Sum ok
+test_Symbol ok
+test_And_Or ok                                                                                                                                                                  [OK]
+
+sympy/printing/tests/test_python.py[10]
+test_python_basic ok
+test_python_keyword_symbol_name_escaping ok
+test_python_keyword_function_name_escaping ok
+test_python_relational ok
+test_python_functions ok
+test_python_functions_conjugates f
+test_python_derivatives ok
+test_python_integrals ok
+test_python_limits ok
+test_settings ok                                                                                                                                                                [OK]
+
+sympy/printing/tests/test_repr.py[19]
+test_printmethod ok
+test_Add ok
+test_Function ok
+test_Geometry ok
+test_Singletons ok
+test_Integer ok
+test_list ok
+test_Matrix ok
+test_Rational ok
+test_Float ok
+test_Symbol ok
+test_tuple ok
+test_WildFunction ok
+test_settins ok
+test_Mul ok
+test_PolyRing ok
+test_FracField ok
+test_PolyElement ok
+test_FracElement ok                                                                                                                                                             [OK]
+
+sympy/printing/tests/test_str.py[71]
+test_printmethod ok
+test_Abs ok
+test_Add ok
+test_Catalan ok
+test_ComplexInfinity ok
+test_Derivative ok
+test_dict ok
+test_Dict ok
+test_Dummy ok
+test_EulerGamma ok
+test_Exp ok
+test_factorial ok
+test_Function ok
+test_Geometry ok
+test_GoldenRatio ok
+test_ImaginaryUnit ok
+test_Infinity ok
+test_Integer ok
+test_Integral ok
+test_Interval ok
+test_Lambda ok
+test_Limit ok
+test_list ok
+test_Matrix ok
+test_Mul ok
+test_NaN ok
+test_NegativeInfinity ok
+test_Normal ok
+test_Order ok
+test_Permutation_Cycle ok
+test_Pi ok
+test_Poly ok
+test_PolyRing ok
+test_FracField ok
+test_PolyElement ok
+test_FracElement ok
+test_Pow ok
+test_sqrt ok
+test_Rational ok
+test_Float ok
+test_Relational ok
+test_RootOf ok
+test_RootSum ok
+test_GroebnerBasis ok
+test_Sample ok
+test_set ok
+test_SparseMatrix ok
+test_Sum ok
+test_Symbol ok
+test_tuple ok
+test_Uniform ok
+test_Unit ok
+test_wild_str ok
+test_zeta ok
+test_bug2 ok
+test_bug4 ok
+test_issue922 ok
+test_sstrrepr ok
+test_infinity ok
+test_full_prec ok
+test_noncommutative ok
+test_empty_printer ok
+test_settings ok
+test_RandomDomain ok
+test_FiniteSet ok
+test_PrettyPoly ok
+test_categories ok
+test_Tr ok
+test_issue3288 ok
+test_MatMul_MatAdd ok
+test_MatrixSlice ok                                                                                                                                                             [OK]
+
+sympy/printing/tests/test_tableform.py[2]
+test_TableForm ok
+test_TableForm_latex ok                                                                                                                                                         [OK]
+
+sympy/series/tests/test_demidovich.py[17]
+test_leadterm ok
+test_Limits_simple_0 ok
+test_Limits_simple_1 ok
+test_Limits_simple_2 ok
+test_Limits_simple_3a ok
+test_Limits_simple_3b ok
+test_Limits_simple_4a ok
+test_limits_simple_4aa ok
+test_Limits_simple_4b ok
+test_Limits_simple_4c ok
+test_bounded ok
+test_f1a ok
+test_f1a2 ok
+test_f1b ok
+test_f2a ok
+test_f2 ok
+test_f3 ok                                                                                                                                                                      [OK]
+
+sympy/series/tests/test_gruntz.py[34]
+test_gruntz_evaluation ok
+test_gruntz_evaluation_slow s - slow
+test_gruntz_eval_special ok
+test_MrvTestCase_page47_ex3_21 f
+test_grunts_eval_special_slow_sometimes_fail f
+test_gruntz_eval_special_fail f
+test_gruntz_eval_special_slow s - slow
+test_compare1 ok
+test_compare2 ok
+test_compare3 ok
+test_sign1 ok
+test_sign2 ok
+test_mrv1 ok
+test_mrv2a ok
+test_mrv2b ok
+test_mrv2c ok
+test_mrv3 ok
+test_mrv4 ok
+test_rewrite1 ok
+test_rewrite2 ok
+test_rewrite3 ok
+test_mrv_leadterm1 ok
+test_mrv_leadterm2 ok
+test_mrv_leadterm3 ok
+test_limit1 ok
+test_limit2 ok
+test_limit3 ok
+test_limit4 ok
+test_I ok
+test_issue1715 ok
+test_intractable ok
+test_aseries_trig ok
+test_exp_log_series ok
+test_issue545 ok                                                                                                                                                                [OK]
+
+sympy/series/tests/test_kauers.py[1]
+test_finite_diff ok                                                                                                                                                             [OK]
+
+sympy/series/tests/test_limits.py[40]
+test_basic1 ok
+test_basic2 ok
+test_basic3 ok
+test_basic4 ok
+test_issue786 ok
+test_Limit ok
+test_floor ok
+test_order_oo f
+test_issue2130 f
+test_ceiling_requires_robust_assumptions f
+test_doit2 f
+test_floor_requires_robust_assumptions f
+test_exponential2 f
+test_extended_real_line_fail X
+test_ceiling ok
+test_atan ok
+test_abs ok
+test_heuristic ok
+test_issue772 ok
+test_exponential ok
+test_doit ok
+test_bug693a ok
+test_issue693 ok
+test_issue991 ok
+test_issue1448 ok
+test_issue2065 ok
+test_issue2084 ok
+test_issue2085 ok
+test_issue1447 ok
+test_issue835 ok
+test_calculate_series ok
+test_issue2856 ok
+test_newissue ok
+test_extended_real_line ok
+test_issue2337 ok
+test_Limit_dir ok
+test_polynomial ok
+test_issue_2641 ok
+test_issue_3267 ok
+test_factorial ok                                                                                                                                                               [OK]
+
+sympy/series/tests/test_lseries.py[6]
+test_sin ok
+test_cos ok
+test_exp ok
+test_exp2 ok
+test_simple ok
+test_issue_2084 ok                                                                                                                                                              [OK]
+
+sympy/series/tests/test_nseries.py[67]
+test_simple_1 ok
+test_mul_0 ok
+test_mul_1 ok
+test_pow_0 ok
+test_pow_1 ok
+test_geometric_1 ok
+test_sqrt_1 ok
+test_exp_1 ok
+test_exp_sqrt_1 ok
+test_power_x_x1 ok
+test_power_x_x2 ok
+test_log_singular1 ok
+test_log_power1 ok
+test_log_series ok
+test_log2 ok
+test_log3 ok
+test_series1 ok
+test_series1_failing f
+test_expbug5_failing f
+test_expbug4_failing f
+test_seriesbug1 ok
+test_series2x ok
+test_bug2 ok
+test_exp ok
+test_exp2 ok
+test_bug3 ok
+test_generalexponent ok
+test_genexp_x ok
+test_genexp_x2 ok
+test_seriesbug2 ok
+test_seriesbug2b ok
+test_seriesbug2d ok
+test_seriesbug2c ok
+test_expbug4 ok
+test_logbug4 ok
+test_expbug5 ok
+test_sinsinbug ok
+test_issue159 ok
+test_issue105 ok
+test_issue125 ok
+test_issue364 ok
+test_sin ok
+test_issue416 ok
+test_issue406 ok
+test_issue402 ok
+test_issue403 ok
+test_issue404 ok
+test_issue407 ok
+test_issue409 ok
+test_issue408 ok
+test_issue540 ok
+test_hyperbolic ok
+test_series2 ok
+test_series3 ok
+test_bug4 ok
+test_bug5 ok
+test_issue1016 ok
+test_pole ok
+test_expsinbug ok
+test_floor ok
+test_ceiling ok
+test_abs ok
+test_dir ok
+test_issue405 ok
+test_issue1342 ok
+test_issue1230 ok
+test_issue2084 ok                                                                                                                                                               [OK]
+
+sympy/series/tests/test_order.py[40]
+test_caching_bug ok
+test_simple_1 ok
+test_simple_2 ok
+test_simple_3 ok
+test_simple_4 ok
+test_simple_5 ok
+test_simple_6 ok
+test_simple_7 ok
+test_simple_8 ok
+test_as_expr_variables ok
+test_contains_0 ok
+test_contains_1 ok
+test_contains_2 ok
+test_issue_1756 f
+test_issue_1180 f
+test_contains_3 ok
+test_add_1 ok
+test_ln_args ok
+test_multivar_0 ok
+test_multivar_0a ok
+test_multivar_1 ok
+test_multivar_2 ok
+test_multivar_mul_1 ok
+test_multivar_3 ok
+test_issue369 ok
+test_leading_order ok
+test_leading_order2 ok
+test_order_leadterm ok
+test_order_symbols ok
+test_nan ok
+test_O1 ok
+test_getn ok
+test_diff ok
+test_getO ok
+test_leading_term ok
+test_eval ok
+test_oseries ok
+test_order_conjugate_transpose ok
+test_order_noncommutative ok
+test_issue_3654 ok                                                                                                                                                              [OK]
+
+sympy/series/tests/test_residues.py[7]
+test_basic1 ok
+test_basic2 ok
+test_functions ok
+test_expressions ok
+test_NotImplemented ok
+test_bug ok
+test_expressions_failing f                                                                                                                                                      [OK]
+
+sympy/series/tests/test_series.py[10]
+test_sin ok
+test_cos ok
+test_exp ok
+test_exp2 ok
+test_2124 ok
+test_acceleration ok
+test_1484 ok
+test_issue_3219 ok
+test_x_is_base_detection ok
+test_sin_power ok                                                                                                                                                               [OK]
+
+sympy/sets/tests/test_fancysets.py[12]
+test_naturals ok
+test_naturals0 ok
+test_integers ok
+test_TransformationSet ok
+test_transformation_iterator_not_injetive ok
+test_Range ok
+test_halfcircle f
+test_reals_fail f
+test_range_interval_intersection ok
+test_fun ok
+test_reals ok
+test_intersections ok                                                                                                                                                           [OK]
+
+sympy/simplify/tests/test_cse.py[18]
+test_numbered_symbols ok
+test_preprocess_for_cse ok
+test_postprocess_for_cse ok
+test_cse_single ok
+test_cse_single2 ok
+test_cse_not_possible ok
+test_nested_substitution ok
+test_subtraction_opt ok
+test_multiple_expressions ok
+test_powers f
+test_issues_1399 ok
+test_issue_921 ok
+test_issue_1104 ok
+test_issue_3164 ok
+test_dont_cse_tuples ok
+test_pow_invpow ok
+test_postprocess ok
+test_issue1400 ok                                                                                                                                                               [OK]
+
+sympy/simplify/tests/test_epathtools.py[3]
+test_epath_select ok
+test_epath_apply ok
+test_EPath ok                                                                                                                                                                   [OK]
+
+sympy/simplify/tests/test_fu.py[26]
+test_TR1 ok
+test_TR2 ok
+test_TR2i ok
+test_TR3 ok
+test__TR56 ok
+test_TR5 ok
+test_TR6 ok
+test_TR7 ok
+test_TR8 ok
+test_TR9 ok
+test_TR10 ok
+test_TR10i ok
+test_TR11 ok
+test_TR12 ok
+test_TR13 ok
+test_L ok
+test_fu ok
+test_objective ok
+test_process_common_addends ok
+test_trig_split ok
+test_TRmorrie ok
+test_hyper_as_trig ok
+test_TR12i ok
+test_TR14 ok
+test_TR15_16_17 ok
+test_as_f_sign_1 ok                                                                                                                                                             [OK]
+
+sympy/simplify/tests/test_function.py[6]
+test_attrs ok
+test_call ok
+test_has ok
+test_eq ok
+test_gamma ok
+test_suitable_origin ok                                                                                                                                                         [OK]
+
+sympy/simplify/tests/test_hyperexpand.py[42]
+test_branch_bug ok
+test_hyperexpand ok
+test_roach ok
+test_polynomial ok
+test_hyperexpand_bases ok
+test_meijerg_expand_fail f
+test_prudnikov_fail_3F2 f
+test_prudnikov_fail_other f
+test_prudnikov_fail_2F1 f
+test_roach_fail f
+test_hyperexpand_parametric ok
+test_shifted_sum ok
+test_formulae ok
+test_prudnikov_5 w - Slow
+test_prudnikov_10 w - Slow
+test_prudnikov_11 w - Slow
+test_prudnikov_12 w - Slow
+test_prudnikov_6 w - Slow
+test_prudnikov_7 w - Slow
+test_prudnikov_4 w - Slow
+test_prudnikov_2 w - Slow
+test_prudnikov_3 w - Slow
+test_prudnikov_1 w - Slow
+test_prudnikov_8 w - Slow
+test_prudnikov_9 w - Slow
+test_prudnikov_misc w - Slow
+test_meijerg_formulae ok
+test_plan ok
+test_plan_derivatives ok
+test_reduction_operators ok
+test_shift_operators ok
+test_ushift_operators ok
+test_meijerg_expand ok
+test_meijerg_lookup ok
+test_meijerg ok
+test_meijerg_shift_operators ok
+test_meijerg_confluence ok
+test_lerchphi ok
+test_partial_simp ok
+test_hyperexpand_special ok
+test_Mod1_behavior ok
+test_bug ok                                                                                                                                                                     [OK]
+
+sympy/simplify/tests/test_rewrite.py[2]
+test_has ok
+test_sin_exp_rewrite ok                                                                                                                                                         [OK]
+
+sympy/simplify/tests/test_simplify.py[77]
+test_ratsimp ok
+test_ratsimpmodprime ok
+test_trigsimp1 ok
+test_collect_issues f
+test_collect_func_xfail f
+test_factorial_simplify f
+test_simplify_float_vs_integer f
+test_trigsimp1a ok
+test_trigsimp2 ok
+test_issue1274 ok
+test_trigsimp3 ok
+test_1562 ok
+test_1395 ok
+test_2849 ok
+test_1676 ok
+test_1181 ok
+test_111 ok
+test_trigsimp_issues ok
+test_trigsimp_issue_2515 ok
+test_trigsimp_noncommutative ok
+test_hyperbolic_simp ok
+test_trigsimp_groebner ok
+test_simplify ok
+test_simplify_other ok
+test_simplify_complex ok
+test_simplify_ratio ok
+test_simplify_measure ok
+test_simplify_issue_1308 ok
+test_issue_2553 ok
+test_simplify_fail1 ok
+test_simplify_issue_3214 ok
+test_fraction ok
+test_powsimp ok
+test_issue_3268 ok
+test_powsimp_polar ok
+test_powsimp_nc ok
+test_collect_1 ok
+test_collect_2 ok
+test_collect_3 ok
+test_collect_4 ok
+test_collect_5 ok
+test_collect_D ok
+test_collect_D_0 ok
+test_collect_Wild ok
+test_collect_func ok
+test_collect_order ok
+test_rcollect ok
+test_separatevars ok
+test_separatevars_advanced_factor ok
+test_hypersimp ok
+test_nsimplify ok
+test_extract_minus_sign ok
+test_diff ok
+test_logcombine_1 ok
+test_logcombine_complex_coeff ok
+test_posify ok
+test_powdenest ok
+test_powdenest_polar ok
+test_issue_2706 ok
+test_issue_1095 ok
+test_combsimp ok
+test_issue_2516 ok
+test_issue_2629 ok
+test_as_content_primitive ok
+test_radsimp ok
+test_collect_const ok
+test_issue2834 ok
+test_fraction_expand ok
+test_combsimp_gamma ok
+test_polarify ok
+test_unpolarify ok
+test_issue_2998 ok
+test_signsimp ok
+test_besselsimp ok
+test_Piecewise ok
+test_polymorphism ok
+test_issue_from_PR1599 ok                                                                                                                                                       [OK]
+
+sympy/simplify/tests/test_sqrtdenest.py[10]
+test_sqrtdenest ok
+test_sqrtdenest2 ok
+test_sqrtdenest_rec ok
+test_issue3142 ok
+test_sqrtdenest3 ok
+test_sqrtdenest4 ok
+test_sqrt_symbolic_denest ok
+test_issue_2758 ok
+test_subsets ok
+test_issue_2554 ok                                                                                                                                                              [OK]
+
+sympy/simplify/tests/test_traversaltools.py[1]
+test_use ok                                                                                                                                                                     [OK]
+
+sympy/solvers/tests/test_constantsimp.py[9]
+test_constant_mul ok
+test_constant_add ok
+test_constant_power_as_base ok
+test_constant_power_as_exp ok
+test_constant_function ok
+test_constant_function_multiple f
+test_constant_multiple ok
+test_ode_solutions ok
+test_constant_Eq ok                                                                                                                                                             [OK]
+
+sympy/solvers/tests/test_inequalities.py[11]
+test_reduce_poly_inequalities_real_interval ok
+test_reduce_poly_inequalities_real_relational ok
+test_reduce_poly_inequalities_complex_relational ok
+test_reduce_rational_inequalities_real_relational ok
+test_reduce_abs_inequalities ok
+test_reduce_inequalities_boolean ok
+test_reduce_inequalities_assume ok
+test_reduce_inequalities_multivariate ok
+test_reduce_inequalities_errors ok
+test_hacky_inequalities ok
+test_issue_3244 ok                                                                                                                                                              [OK]
+
+sympy/solvers/tests/test_numeric.py[3]
+test_nsolve ok
+test_issue_3309 ok
+test_issue_3309_fail f                                                                                                                                                          [OK]
+
+sympy/solvers/tests/test_ode.py[51]
+test_checkodesol ok
+test_dsolve_options ok
+test_nth_linear_constant_coeff_undetermined_coefficients_imaginary_exp f
+test_1st_homogeneous_coeff_ode_check2 f
+test_1st_homogeneous_coeff_ode_check3 f
+test_1st_homogeneous_coeff_ode_check7 f
+test_1st_homogeneous_coeff_ode_check9 f
+test_nth_linear_constant_coeff_homogeneous_RootOf_sol f
+test_1st_homogeneous_coeff_ode3_check f
+test_1st_homogeneous_coeff_ode2 f
+test_1st_homogeneous_coeff_ode2_check3 f
+test_classify_ode ok
+test_1st_exact2 w - Slow
+test_1st_homogeneous_coeff_ode_check14568 w - Slow
+test_ode_order ok
+test_old_ode_tests ok
+test_1st_linear ok
+test_Bernoulli ok
+test_Riccati_special_minus2 ok
+test_1st_exact1 ok
+test_separable1 ok
+test_separable2 ok
+test_separable3 ok
+test_separable4 ok
+test_separable5 ok
+test_separable_1_5_checkodesol ok
+test_homogeneous_order ok
+test_1st_homogeneous_coeff_ode ok
+test_1st_homogeneous_coeff_ode3 ok
+test_1st_homogeneous_coeff_corner_case ok
+test_nth_linear_constant_coeff_homogeneous ok
+test_nth_linear_constant_coeff_homogeneous_RootOf ok
+test_undetermined_coefficients_match ok
+test_nth_linear_constant_coeff_undetermined_coefficients ok
+test_nth_linear_constant_coeff_variation_of_parameters ok
+test_nth_linear_constant_coeff_variation_of_parameters_simplify_False ok
+test_Liouville_ODE ok
+test_unexpanded_Liouville_ODE ok
+test_1686 ok
+test_1726 ok
+test_constant_renumber_order_issue2209 ok
+test_issue_2671 ok
+test_issue_2013_2331 ok
+test_nth_order_linear_euler_eq_homogeneous ok
+test_issue_1996 ok
+test_almost_linear ok
+test_exact_enhancement ok
+test_separable_reduced ok
+test_homogeneous_function ok
+test_linear_coeff_match ok
+test_linear_coefficients ok                                                                                                                                                     [OK]
+
+sympy/solvers/tests/test_pde.py[2]
+test_pde_separate_add ok
+test_pde_separate_mul ok                                                                                                                                                        [OK]
+
+sympy/solvers/tests/test_polysys.py[3]
+test_solve_poly_system ok
+test_solve_biquadratic ok
+test_solve_triangualted ok                                                                                                                                                      [OK]
+
+sympy/solvers/tests/test_recurr.py[6]
+test_rsolve_poly ok
+test_rsolve_ratio ok
+test_rsolve_hyper ok
+test_rsolve_bulk ok
+test_rsolve ok
+test_rsolve_raises ok                                                                                                                                                           [OK]
+
+sympy/solvers/tests/test_solvers.py[60]
+test_swap_back ok
+test_guess_poly ok
+test_guess_poly_cv ok
+test_guess_rational_cv ok
+test_guess_transcendental ok
+test_solve_args ok
+test_failing f
+test_quintics_2 w - Slow
+test_multivariate f
+test_solve_polynomial1 ok
+test_solve_polynomial2 ok
+test_solve_polynomial_cv_1a ok
+test_solve_polynomial_cv_1b ok
+test_solve_polynomial_cv_2 ok
+test_quintics_1 ok
+test_solve_rational ok
+test_linear_system ok
+test_linear_system_function ok
+test_linear_systemLU ok
+test_tsolve ok
+test_solve_for_functions_derivatives ok
+test_issue626 ok
+test_issue771 ok
+test_solve_linear ok
+test_solve_undetermined_coeffs ok
+test_solve_inequalities ok
+test_issue_1694 ok
+test_issue_2098 ok
+test_checking ok
+test_issue_1572_1364_1368 ok
+test_issue_2033 ok
+test_issue_2236 ok
+test_issue_2236_float s - This test hangs.
+test_issue_2668 ok
+test_polysys ok
+test_unrad ok
+test__invert ok
+test_issue_1364 ok
+test_issue_2015 ok
+test_misc ok
+test_issue_2750 ok
+test_2750_matrix ok
+test_issue_2802 ok
+test_issue_2813 ok
+test_float_handling ok
+test_check_assumptions ok
+test_solve_abs ok
+test_issue_2957 ok
+test_issue_2574 ok
+test_exclude ok
+test_high_order_roots ok
+test_minsolve_linear_system ok
+test_real_roots ok
+test_issue3429 ok
+test_overdetermined ok
+test_issue_3506 ok
+test__ispow ok
+test_issue_3545 ok
+test_issue_3653 ok
+test_issue_3693 ok                                                                                                                                                              [OK]
+
+sympy/statistics/tests/test_statistics.py[5]
+test_normal ok
+test_uniform ok
+test_fit ok
+test_sample ok
+test_PDF ok                                                                                                                                                                     [OK]
+
+sympy/stats/tests/test_continuous_rv.py[52]
+test_single_normal ok
+test_ContinuousDomain ok
+test_multiple_normal ok
+test_uniformsum f
+test_triangular f
+test_conditional_1d f
+test_unevaluated f
+test_cdf ok
+test_sample ok
+test_ContinuousRV ok
+test_symbolic w - Slow
+test_arcsin ok
+test_benini ok
+test_beta ok
+test_betaprime ok
+test_cauchy ok
+test_chi ok
+test_chi_noncentral ok
+test_chi_squared ok
+test_dagum ok
+test_erlang ok
+test_exponential ok
+test_f_distribution ok
+test_fisher_z ok
+test_frechet ok
+test_gamma ok
+test_gamma_inverse ok
+test_kumaraswamy ok
+test_laplace ok
+test_logistic ok
+test_lognormal ok
+test_maxwell ok
+test_nakagami ok
+test_pareto ok
+test_pareto_numeric ok
+test_raised_cosine ok
+test_rayleigh ok
+test_studentt ok
+test_quadratic_u ok
+test_uniform ok
+test_von_mises ok
+test_weibull ok
+test_weibull_numeric ok
+test_wignersemicircle ok
+test_prefab_sampling ok
+test_input_value_assertions ok
+test_probability_unevaluated ok
+test_density_unevaluated ok
+test_NormalDistribution ok
+test_random_parameters ok
+test_random_parameters_given ok
+test_conjugate_priors ok                                                                                                                                                        [OK]
+
+sympy/stats/tests/test_discrete_rv.py[3]
+test_PoissonDistribution ok
+test_Poisson ok
+test_GeometricDistribution ok                                                                                                                                                   [OK]
+
+sympy/stats/tests/test_finite_rv.py[13]
+test_discreteuniform ok
+test_dice ok
+test_given ok
+test_domains ok
+test_dice_bayes ok
+test_bernoulli ok
+test_cdf ok
+test_binomial_symbolic w - Slow
+test_coins ok
+test_binomial_numeric ok
+test_hypergeometric_numeric ok
+test_FiniteRV ok
+test_density_call ok                                                                                                                                                            [OK]
+
+sympy/stats/tests/test_rv.py[17]
+test_where ok
+test_random_symbols ok
+test_pspace ok
+test_rs_swap ok
+test_RandomSymbol ok
+test_RandomSymbol_diff ok
+test_overlap ok
+test_ProductPSpace ok
+test_E ok
+test_Sample ok
+test_dependent_finite f
+test_given ok
+test_dependence ok
+test_normality ok
+test_Density ok
+test_NamedArgsMixin ok
+test_density_constant ok                                                                                                                                                        [OK]
+
+sympy/strategies/branch/tests/test_core.py[10]
+test_exhaust ok
+test_debug ok
+test_multiplex ok
+test_condition ok
+test_sfilter ok
+test_notempty ok
+test_chain ok
+test_onaction ok
+test_yieldify ok
+test_do_one ok                                                                                                                                                                  [OK]
+
+sympy/strategies/branch/tests/test_tools.py[2]
+test_zero_ints ok
+test_split5 ok                                                                                                                                                                  [OK]
+
+sympy/strategies/branch/tests/test_traverse.py[4]
+test_top_down_easy ok
+test_top_down_big_tree ok
+test_top_down_harder_function ok
+test_sall ok                                                                                                                                                                    [OK]
+
+sympy/strategies/tests/test_core.py[10]
+test_null_safe ok
+test_exhaust ok
+test_memoize ok
+test_condition ok
+test_chain ok
+test_tryit ok
+test_debug ok
+test_switch ok
+test_minimize ok
+test_do_one ok                                                                                                                                                                  [OK]
+
+sympy/strategies/tests/test_rl.py[9]
+test_rm_id ok
+test_glom ok
+test_flatten ok
+test_unpack ok
+test_sort ok
+test_distribute ok
+test_distribute_add_mul ok
+test_subs ok
+test_rebuild ok                                                                                                                                                                 [OK]
+
+sympy/strategies/tests/test_tools.py[3]
+test_subs ok
+test_subs_empty ok
+test_typed ok                                                                                                                                                                   [OK]
+
+sympy/strategies/tests/test_traverse.py[6]
+test_sall ok
+test_bottom_up ok
+test_top_down ok
+test_top_down_once ok
+test_bottom_up_once ok
+test_expr_fns ok                                                                                                                                                                [OK]
+
+sympy/strategies/tests/test_tree.py[6]
+test_treeapply ok
+test_treeapply_leaf ok
+test_treeapply_strategies ok
+test_greedy ok
+test_allresults ok
+test_brute ok                                                                                                                                                                   [OK]
+
+sympy/tensor/tests/test_index_methods.py[15]
+test_trivial_indices ok
+test_get_indices_Indexed ok
+test_get_indices_Idx ok
+test_get_indices_mul ok
+test_get_indices_exceptions ok
+test_scalar_broadcast ok
+test_get_indices_add ok
+test_get_indices_Pow ok
+test_get_contraction_structure_basic ok
+test_get_contraction_structure_complex ok
+test_contraction_structure_simple_Pow ok
+test_contraction_structure_Mul_and_Pow ok
+test_contraction_structure_Add_in_Pow ok
+test_contraction_structure_Pow_in_Pow ok
+test_ufunc_support ok                                                                                                                                                           [OK]
+
+sympy/tensor/tests/test_indexed.py[15]
+test_Idx_construction ok
+test_Idx_properties ok
+test_Idx_bounds ok
+test_Idx_fixed_bounds ok
+test_Idx_func_args ok
+test_Idx_subs ok
+test_IndexedBase_sugar ok
+test_IndexedBase_subs ok
+test_IndexedBase_shape ok
+test_Indexed_constructor ok
+test_Indexed_func_args ok
+test_Indexed_subs ok
+test_Indexed_properties ok
+test_Indexed_shape_precedence ok
+test_complex_indices ok                                                                                                                                                         [OK]
+
+sympy/tensor/tests/test_tensor.py[29]
+test_canonicalize_no_slot_sym ok
+test_canonicalize_no_dummies ok
+test_no_metric_symmetry ok
+test_canonicalize1 ok
+test_riemann_invariants ok
+test_riemann_products ok
+test_canonicalize2 ok
+test_canonicalize3 ok
+test_TensorIndexType ok
+test_indices ok
+test_tensorsymmetry ok
+test_TensorType ok
+test_TensExpr ok
+test_TensorHead ok
+test_add1 ok
+test_add2 ok
+test_mul ok
+test_substitute_indices ok
+test_riemann_cyclic_replace ok
+test_riemann_cyclic ok
+test_div ok
+test_contract_metric1 ok
+test_contract_metric2 ok
+test_metric_contract3 ok
+test_epsilon ok
+test_contract_delta1 ok
+test_fun ok
+test_TensorManager ok
+test_hash ok                                                                                                                                                                    [OK]
+
+sympy/unify/tests/test_rewrite.py[8]
+test_simple ok
+test_simple_variables ok
+test_moderate ok
+test_sincos ok
+test_Exprs_ok ok
+test_condition_simple ok
+test_condition_multiple ok
+test_assumptions ok                                                                                                                                                             [OK]
+
+sympy/unify/tests/test_sympy.py[17]
+test_deconstruct ok
+test_construct ok
+test_nested ok
+test_unify ok
+test_unify_variables ok
+test_s_input ok
+test_unify_commutative ok
+test_unify_iter ok
+test_hard_match ok
+test_matrix ok
+test_non_frankenAdds ok
+test_and f
+test_FiniteSet_commutivity ok
+test_FiniteSet_complex ok
+test_Union ok
+test_is_commutative ok
+test_commutative_in_commutative ok                                                                                                                                              [OK]
+
+sympy/unify/tests/test_unify.py[8]
+test_basic ok
+test_ops ok
+test_associative ok
+test_commutative ok
+test_allcombinations ok
+test_commutativity ok
+test_CondVariable ok
+test_defaultdict ok                                                                                                                                                             [OK]
+
+sympy/utilities/tests/test_autowrap.py[8]
+test_cython_wrapper_scalar_function ok
+test_cython_wrapper_outarg ok
+test_cython_wrapper_inoutarg ok
+test_autowrap_dummy ok
+test_autowrap_args ok
+test_autowrap_store_files ok
+test_binary_function ok
+test_ufuncify ok                                                                                                                                                                [OK]
+
+sympy/utilities/tests/test_code_quality.py[4]
+test_files ok
+test_raise_statement_regular_expression ok
+test_implicit_imports_regular_expression ok
+test_test_suite_defs ok                                                                                                                                                         [OK]
+
+sympy/utilities/tests/test_codegen.py[39]
+test_Routine_argument_order ok
+test_empty_c_code ok
+test_empty_c_code_with_comment ok
+test_empty_c_header ok
+test_simple_c_code ok
+test_numbersymbol_c_code ok
+test_c_code_argument_order ok
+test_simple_c_header ok
+test_simple_c_codegen ok
+test_multiple_results_c ok
+test_no_results_c ok
+test_ansi_math1_codegen ok
+test_ansi_math2_codegen ok
+test_complicated_codegen ok
+test_loops_c ok
+test_dummy_loops_c ok
+test_partial_loops_c ok
+test_output_arg_c ok
+test_empty_f_code ok
+test_empty_f_code_with_header ok
+test_empty_f_header ok
+test_simple_f_code ok
+test_numbersymbol_f_code ok
+test_f_code_argument_order ok
+test_simple_f_header ok
+test_simple_f_codegen ok
+test_multiple_results_f ok
+test_no_results_f ok
+test_intrinsic_math_codegen ok
+test_intrinsic_math2_codegen ok
+test_complicated_codegen_f95 ok
+test_loops ok
+test_dummy_loops_f95 ok
+test_loops_InOut ok
+test_partial_loops_f ok
+test_output_arg_f ok
+test_inline_function ok
+test_check_case ok
+test_check_case_false_positive ok                                                                                                                                               [OK]
+
+sympy/utilities/tests/test_decorator.py[3]
+test_threaded ok
+test_xthreaded ok
+test_wraps ok                                                                                                                                                                   [OK]
+
+sympy/utilities/tests/test_iterables.py[34]
+test_postorder_traversal ok
+test_flatten ok
+test_group ok
+test_subsets ok
+test_variations ok
+test_cartes ok
+test_numbered_symbols ok
+test_sift ok
+test_take ok
+test_dict_merge ok
+test_prefixes ok
+test_postfixes ok
+test_topological_sort ok
+test_rotate ok
+test_multiset_partitions ok
+test_multiset_combinations ok
+test_multiset_permutations ok
+test_partitions ok
+test_binary_partitions ok
+test_bell_perm ok
+test_involutions ok
+test_derangements ok
+test_necklaces ok
+test_generate_oriented_forest ok
+test_unflatten ok
+test_common_prefix_suffix ok
+test_minlex ok
+test_ordered ok
+test_runs ok
+test_reshape ok
+test_uniq ok
+test_kbins ok
+test_has_dups ok
+test__partition ok                                                                                                                                                              [OK]
+
+sympy/utilities/tests/test_lambdify.py[32]
+test_no_args ok
+test_single_arg ok
+test_list_args ok
+test_str_args ok
+test_own_namespace ok
+test_own_module ok
+test_bad_args ok
+test_atoms ok
+test_math_transl ok
+test_mpmath_transl ok
+test_numpy_transl ok
+test_numpy_translation_abs ok
+test_exponentiation ok
+test_sqrt ok
+test_trig ok
+test_vector_simple ok
+test_vector_discontinuous ok
+test_trig_symbolic ok
+test_trig_float ok
+test_docs ok
+test_math ok
+test_sin ok
+test_matrix ok
+test_integral ok
+test_sym_single_arg ok
+test_sym_list_args ok
+test_sym_integral ok
+test_namespace_order ok
+test_imps ok
+test_imps_wrong_args ok
+test_lambdify_imps ok
+test_special_printers ok                                                                                                                                                        [OK]
+
+sympy/utilities/tests/test_pickling.py[28]
+test_core_basic ok
+test_core_symbol ok
+test_core_numbers ok
+test_core_relational ok
+test_core_add ok
+test_plotting2 f
+test_printing2 f
+test_printing1 f
+test_plotting f
+test_core_dynamicfunctions f
+test_core_mul ok
+test_core_power ok
+test_core_function ok
+test_core_interval ok
+test_core_multidimensional ok
+test_Singletons ok
+test_functions ok
+test_geometry ok
+test_integrals ok
+test_logic ok
+test_matrices ok
+test_ntheory ok
+test_physics ok
+test_polys ok
+test_printing ok
+test_series ok
+test_statistics ok
+test_concrete ok                                                                                                                                                                [OK]
+
+sympy/utilities/tests/test_pytest.py[4]
+test_expected_exception_is_silent ok
+test_lack_of_exception_triggers_AssertionError ok
+test_unexpected_exception_is_passed_through ok
+test_second_argument_should_be_callable_or_string ok                                                                                                                            [OK]
+
+sympy/utilities/tests/test_source.py[2]
+test_get_mod_func ok
+test_get_class ok                                                                                                                                                               [OK]
+
+sympy/utilities/tests/test_timeutils.py[1]
+test_timed ok                                                                                                                                                                   [OK]
+
+
+__________________________________________________________________________________ xpassed tests ___________________________________________________________________________________
+sympy/core/tests/test_args.py: test_sympy__combinatorics__perm_groups__PermutationGroup
+sympy/core/tests/test_containers.py: test_issue_2689b
+sympy/core/tests/test_function.py: test_issue_1612
+sympy/core/tests/test_subs.py: test_issue_2261
+sympy/core/tests/test_symbol.py: test_symbols_each_char
+sympy/integrals/tests/test_failing_integrals.py: test_issue_1227
+sympy/printing/pretty/tests/test_pretty.py: test_pretty_sum
+sympy/series/tests/test_limits.py: test_extended_real_line_fail
+
+================================= tests finished: 4693 passed, 98 skipped, 238 expected to fail, 8 expected to fail but passed, in 746.85 seconds ==================================
+brombo@GA:~/Desktop/Link to sympy$

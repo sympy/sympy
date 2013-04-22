@@ -1,7 +1,7 @@
 import sys
 from sympy import Symbol,symbols,sin,cos,Rational,expand,simplify,collect
-from sympy.ga.ga_print import xdvi,Get_Program,Print_Function
-from sympy.ga.ga import MV,Format,Com,Nga,ONE,ZERO
+from sympy.ga import xdvi,Get_Program,Print_Function
+from sympy.ga import MV,Format,Com,Nga,ONE,ZERO
 
 HALF = Rational(1,2)
 
