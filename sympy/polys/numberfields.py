@@ -193,7 +193,7 @@ def minimal_polynomial(ex, x=None, **args):
 
     """
     from sympy.polys.polytools import degree
-    from sympy.core.function import expand_mul
+    from sympy.core.function import (expand_mul, expand_multinomial)
     from sympy.simplify.simplify import _is_sum_surds
 
     generator = numbered_symbols('a', cls=Dummy)
@@ -293,6 +293,7 @@ def minimal_polynomial(ex, x=None, **args):
     prec = args.pop('prec', 10)
 
     inverted = False
+    ex = expand_multinomial(ex)
     if ex.is_AlgebraicNumber:
         if not polys:
             return ex.minpoly.as_expr(x)
