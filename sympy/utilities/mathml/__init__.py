@@ -15,18 +15,20 @@ def add_mathml_headers(s):
         http://www.w3.org/Math/XMLSchema/mathml2/mathml2.xsd">""" + s + "</math>"
 
 
+@doctest_depends_on(modules=('lxml',))
 def apply_xsl(mml, xsl):
     """Apply a xsl to a MathML string
     @param mml: a string with MathML code
     @param xsl: a string representing a path to a xsl (xml stylesheet)
         file. This file name is relative to the PYTHONPATH
+
     >>> from sympy.utilities.mathml import apply_xsl
     >>> xsl = 'mathml/data/simple_mmlctop.xsl'
-    >>> mml = '<apply> <inverse/> <sin/> </apply>'
+    >>> mml = '<apply> <plus/> <ci>a</ci> <ci>b</ci> </apply>'
     >>> res = apply_xsl(mml,xsl)
-    >>> '-1' in res.splitlines()[6]
-    True
-    
+    >>> ''.join(res.splitlines())
+    '<?xml version="1.0"?><mrow xmlns="http://www.w3.org/1998/Math/MathML">  <mi>a</mi>  <mo> + </mo>  <mi>b</mi></mrow>'
+
     """
     from lxml import etree
     s = etree.XML(get_resource(xsl).read())
@@ -37,10 +39,17 @@ def apply_xsl(mml, xsl):
     return s
 
 
+@doctest_depends_on(modules=('lxml',))
 def c2p(mml, simple=False):
     """Transforms a document in MathML content (like the one that sympy produces)
     in one document in MathML presentation, more suitable for printing, and more
     widely accepted
+
+    >>> from sympy.utilities.mathml import c2p
+    >>> mml = '<apply> <exp/> <cn>2</cn> </apply>'
+    >>> c2p(mml,simple=True) != c2p(mml,simple=False)
+    True
+
     """
 
     if not mml.startswith('<math'):
