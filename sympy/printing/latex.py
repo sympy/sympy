@@ -1541,6 +1541,8 @@ class LatexPrinter(Printer):
         contents = self._print(p.args[0])
         return r'\mbox{Tr}\left(%s\right)' % (contents)
 
+    def _print_totient(self, expr):
+        return r'\phi\left( %s \right)' %  self._print(expr.args[0])
 
 def latex(expr, **settings):
     r"""

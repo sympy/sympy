@@ -4,6 +4,7 @@ Integer factorization
 import random
 import math
 
+from sympy.core import sympify
 from sympy.core.evalf import bitcount
 from sympy.core.numbers import igcd
 from sympy.core.power import integer_nthroot, Pow
@@ -12,6 +13,7 @@ from sympy.core.compatibility import as_int, SYMPY_INTS
 from primetest import isprime
 from generate import sieve, primerange, nextprime
 from sympy.core.singleton import S
+from sympy.core.function import Function
 
 small_trailing = [i and max(int(not i % 2**j) and j for j in range(1, 8))
     for i in range(256)]
@@ -1267,7 +1269,7 @@ def divisor_count(n, modulus=1):
     return Mul(*[v + 1 for k, v in factorint(n).items() if k > 1])
 
 
-def totient(n):
+class totient(Function):
     """
     Calculate the Euler totient function phi(n)
 
@@ -1282,11 +1284,14 @@ def totient(n):
 
     divisor_count
     """
-    n = as_int(n)
-    if n < 1:
-        raise ValueError("n must be a positive integer")
-    factors = factorint(n)
-    t = 1
-    for p, k in factors.iteritems():
-        t *= (p - 1) * p**(k - 1)
-    return t
+    @classmethod
+    def eval(cls, n):
+        n = sympify(n)
+        if n.is_Integer:
+            if n < 1:
+                raise ValueError("n must be a positive integer")
+            factors = factorint(n)
+            t = 1
+            for p, k in factors.iteritems():
+                t *= (p - 1) * p**(k - 1)
+            return t
