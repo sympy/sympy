@@ -586,6 +586,7 @@ def test_acos_series():
 
 def test_acos_rewrite():
     assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
+    assert acos(x).rewrite(atan) == 2*atan(sqrt(1 - x**2)/(1 + x))
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)
