@@ -113,7 +113,32 @@ def test_prde_no_cancel():
                                          [0, 0,       0, 1, 0,  0,  0,  0, -1,  0],
                                          [0, 0,       0, 0, 1,  0,  0,  0,  0, -1]]))
 
-    # TODO: Add test for deg(b) <= 0 with b small
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
+
+    G = [Poly(t), Poly(t**2), Poly(t**3)]
+    assert prde_no_cancel_b_small(Poly(0, t), G, 3, DE) == \
+    ([Poly(t**2/2,t), Poly(t**3/3, t), Poly(0, t, domain='ZZ')], Matrix([[0, 0, 1,  0,  0,  0],
+                                          [0, 0, 0,  0,  0,  0],
+                                          [0, 0, 0,  0,  0,  0],
+                                          [0, 0, 0,  0,  0,  0],
+                                          [0, 0, 0,  0,  0,  0],
+                                          [1, 0, 0, -1,  0,  0],
+                                          [0, 1, 0,  0, -1,  0],
+                                          [0, 0, 1,  0,  0, -1]]))
+
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1, t)]})
+    G = [Poly(t), Poly(t**2), Poly(t**3)]
+    assert prde_no_cancel_b_small(Poly(1/x, t), G, 4, DE) == \
+       ([Poly(t**2/2, t), Poly(t**3/3, t), Poly(t**4/4, t)], Matrix([[1, 0, 0,  0,  0,  0],
+                                                 [0, 1, 0,  0,  0,  0],
+                                                 [0, 0, 1,  0,  0,  0],
+                                                 [0, 0, 0,  0,  0,  0],
+                                                 [0, 0, 0,  0,  0,  0],
+                                                 [0, 0, 0,  0,  0,  0],
+                                                 [1, 0, 0, -1,  0,  0],
+                                                 [0, 1, 0,  0, -1,  0],
+                                                 [0, 0, 1,  0,  0, -1]]))
+
 
 
 def test_limited_integrate_reduce():

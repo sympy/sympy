@@ -16,12 +16,13 @@ each function for more information.
 """
 from __future__ import with_statement
 from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
-
+from sympy import fraction
 from sympy.matrices import Matrix, zeros, eye
 
 from sympy.solvers import solve
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
+from sympy.polys import Poly, gcd, ZZ, cancel
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
@@ -296,7 +297,6 @@ def prde_no_cancel_b_small(b, Q, n, DE):
     """
     m = len(Q)
     H = [Poly(0, DE.t)]*m
-
     for N in xrange(n, 0, -1):  # [n, ..., 1]
         for i in range(m):
             si = Q[i].nth(N + DE.d.degree(DE.t) - 1)/(N*DE.d.LC())
@@ -318,23 +318,56 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         A, u = constant_system(M, zeros(dc + 1, 1), DE)
         c = eye(m)
         A = A.row_join(zeros(A.rows, m)).col_join(c.row_join(-c))
-        return (H, A)
     else:
-        # TODO: implement this (requires recursive param_rischDE() call)
-        raise NotImplementedError
+        Q0 = [q.eval(0).as_poly(DE.t) for q in Q]
+        ba, bd = fraction(b.as_expr())
+        ba, bd = ba.as_poly(DE.t), bd.as_poly(DE.t)
+        F, B = param_rischDE(ba, bd, Q0, DE)
+        if all(qi.is_zero for qi in Q):
+            dc = -1
+            for f in F:
+                Df = derivation(f, DE)
+                if Df + b*f==0:
+                    continue
+                else:
+                    dc = 0
+                    break
+        else:
+            dc = max([qi.degree(DE.t) for qi in Q])
+        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
+        j = 0
+        for f in F:
+            Df = derivation(f, DE)
+            if j + m >= M.cols:
+                M = M.row_join(zeros(M.rows, j + m - M.cols + 1))
+            M[1, j + m] = (-Df - b*f).as_expr()
+            j = j + 1
 
+        A, u = constant_system(M, zeros(dc + 1, 1), DE)
+        if A.cols <=  B.cols:
+            A = Matrix([A,zeros(1, B.cols - A.cols)])
+        else:
+            B = Matrix([B,zeros(1, A.cols - B.cols)])
+        A = Matrix([A, B])
+        c = eye(m)
+        A = A.col_join(c.row_join(-c))
+
+    return (H, A)
 
 def param_rischDE(fa, fd, G, DE):
     """
     Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
     """
     _, (fa, fd) = weak_normalizer(fa, fd, DE)
-    a, (ba, bd), G, hn = prde_normal_denom(ga, gd, G, DE)
+
+    G_tuple = [fraction(g.as_expr()) for g in G]
+    G_tuple = [(ga.as_poly(DE.t), gd.as_poly(DE.t)) for ga, gd in G_tuple]
+    a, (ba, bd), G_tuple, hn = prde_normal_denom(fa, fd, G_tuple, DE)
     A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
     g = gcd(A, B)
-    A, B, G = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
-        gia, gid in G]
-    Q, M = prde_linear_constraints(A, B, G, DE)
+    A, B, G_tuple = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
+        gia, gid in G_tuple]
+    Q, M = prde_linear_constraints(A, B, G_tuple, DE)
     M, _ = constant_system(M, zeros(M.rows, 1), DE)
     # Reduce number of constants at this point
     try:
@@ -350,6 +383,8 @@ def param_rischDE(fa, fd, G, DE):
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
+
+    return (Q, M)
 
 
 def limited_integrate_reduce(fa, fd, G, DE):
