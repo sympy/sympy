@@ -552,14 +552,6 @@ def test_issue_2098():
     assert solve(z**2*x**2 - z**2*y**2/exp(x), y, x, z) == [{y: x*exp(x/2)}]
 
 
-@XFAIL
-def test_failing():
-    # better Lambert detection is needed if the expression is expanded
-    # this case has a double generator: (7**x, x); this will pass if the
-    # x-terms are factored
-    assert solve((2*(3*x + 4)**5 - 6*7**(3*x + 9)).expand(), x)
-
-
 def test_checking():
     assert set(
         solve(x*(x - y/x), x, check=False)) == set([sqrt(y), S(0), -sqrt(y)])
@@ -875,19 +867,6 @@ def test_unrad_slow():
         sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3 + x*(3*x**2
         - 34) + 90)**2/4 - 39304/27) - 45)**(1/3))''')
     raises(NotImplementedError, lambda: solve(eq)) # not other code errors
-
-
-@XFAIL
-def test_multivariate():
-    assert solve(
-        (x**2 - 2*x + 1).subs(x, log(x) + 3*x)) == [LambertW(3*S.Exp1)/3]
-    assert solve((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1)) == \
-        [LambertW(3*exp(-sqrt(2)))/3, LambertW(3*exp(sqrt(2)))/3]
-    assert solve((x**2 - 2*x - 2).subs(x, log(x) + 3*x)) == \
-        [LambertW(3*exp(1 - sqrt(3)))/3, LambertW(3*exp(1 + sqrt(3)))/3]
-    assert solve(x*log(x) + 3*x + 1, x) == [exp(-3 + LambertW(-exp(3)))]
-    # symmetry
-    assert solve(3*sin(x) - x*sin(3), x) == [3]
 
 
 def test__invert():
@@ -1251,3 +1230,23 @@ def test_issues_3720_3721_3722():
     assert solve(log(x + 1) - log(2*x - 1)) == [2]
     x = symbols('x')
     assert solve(2**x + 4**x) == [I*pi/log(2)]
+
+
+def test_lambert_multivariate():
+    from sympy.abc import x
+    assert solve((x**2 - 2*x + 1).subs(x, log(x) + 3*x)) == [LambertW(3*S.Exp1)/3]
+    assert solve((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1)) == \
+          [LambertW(3*exp(-sqrt(2)))/3, LambertW(3*exp(sqrt(2)))/3]
+    assert solve((x**2 - 2*x - 2).subs(x, log(x) + 3*x)) == \
+          [LambertW(3*exp(1 + sqrt(3)))/3, LambertW(3*exp(-sqrt(3) + 1))/3]
+    assert solve(x*log(x) + 3*x + 1, x) == [exp(-3 + LambertW(-exp(3)))]
+    eq = (x*exp(x) - 3).subs(x, x*exp(x))
+    assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
+    assert solve((2*(3*x + 4)**5 - 6*7**(3*x + 9)).expand(), x) == \
+        [S(-5)*LambertW(-7*3**(S(1)/5)*log(7)/5)/(3*log(7)) + S(-4)/3]
+
+
+@XFAIL
+def test_by_symmetry():
+    from sympy.abc import x
+    assert solve(3*sin(x) - x*sin(3), x) == [3]

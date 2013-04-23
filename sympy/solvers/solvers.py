@@ -1,4 +1,4 @@
-"""
+﻿"""
 This module contain solvers for all kinds of equations:
 
     - algebraic or transcendental, use solve()
@@ -21,7 +21,7 @@ from sympy.core import (C, S, Add, Symbol, Wild, Equality, Dummy, Basic,
 from sympy.core.exprtools import factor_terms
 from sympy.core.function import (expand_mul, expand_multinomial, expand_log,
                           Derivative, AppliedUndef, UndefinedFunction, nfloat,
-                          count_ops, Function)
+                          count_ops, Function, expand_power_exp)
 from sympy.core.numbers import ilcm, Float
 from sympy.core.relational import Relational
 from sympy.logic.boolalg import And, Or
@@ -2132,16 +2132,41 @@ def _tsolve(eq, sym, **flags):
         [LambertW(2)/2]
 
     """
+
+    eq2 = eq.subs(sym, _x)
+
     if _patterns is None:
         _generate_patterns()
-    eq2 = eq.subs(sym, _x)
-    for p, sol in _patterns:
-        m = eq2.match(p)
-        if m:
-            soln = sol.subs(m).subs(_x, sym)
-            if sym not in soln.free_symbols:
-                return [soln]
 
+    # try pattern matching - two passes, once without simplification
+    # and once with
+    for itry in range(2):
+        for p, sol in _patterns:
+            m = eq2.match(p)
+            if m:
+                soln = sol.subs(m).subs(_x, sym)
+                if sym not in soln.free_symbols:
+                    return [soln]
+        if itry == 0:
+            # lambert forms may need some help being recognized, e.g. changing
+            # 2**(3*x) + x**3*log(2)**3 + 3*x**2*log(2)**2 + 3*x*log(2) + 1
+            # to 2**(3*x) + (x*log(2) + 1)**3
+            g = _filtered_gens(eq.as_poly(), sym)
+            up_or_log = set()
+            for gi in g:
+                if gi.func is exp or gi.func is log:
+                    up_or_log.add(gi)
+                elif gi.is_Pow:
+                    gisimp = powdenest(expand_power_exp(gi))
+                    if gisimp.is_Pow and sym in gisimp.exp.free_symbols:
+                        up_or_log.add(gi)
+            down = g.difference(up_or_log)
+            eq_down = expand_power_exp(eq).subs(
+                dict(zip(up_or_log, [0]*len(up_or_log))))
+            eq2 = expand_power_exp(factor(eq_down) + (eq - eq_down))
+            eq2 = eq2.subs(sym, _x)
+
+    # continue with heuristics
     rhs, lhs = _invert(eq, sym)
 
     if lhs.is_Add:
@@ -2179,6 +2204,29 @@ def _tsolve(eq, sym, **flags):
     rewrite = lhs.rewrite(exp)
     if rewrite != lhs:
         return _solve(rewrite - rhs, sym)
+
+
+    # maybe it was a harder lambert pattern
+    if flags.pop('bivariate', True):
+        try:
+            poly = lhs.as_poly()
+            g = _filtered_gens(poly, sym)
+            return _solve_lambert(lhs - rhs, sym, g)
+        except NotImplementedError:
+            # maybe it's a convoluted function
+            if len(g) == 2:
+                try:
+                    gpu = bivariate_type(lhs - rhs, *g)
+                    if gpu is None:
+                        raise NotImplementedError
+                    g, p, u = gpu
+                    flags['bivariate'] = False
+                    inversion = _tsolve(g - u, sym, **flags)
+                    if inversion:
+                        sol = _solve(p, u, **flags)
+                        return [i.subs(u, s) for i in inversion for s in sol]
+                except NotImplementedError:
+                    pass
 
     if flags.pop('force', True):
         flags['force'] = False
@@ -2698,3 +2746,7 @@ def unrad(eq, *syms, **flags):
         eq = neq[0]
 
     return (_canonical(eq), cov, list(dens))
+
+
+from sympy.solvers.bivariate import (
+    bivariate_type, _solve_lambert, _filtered_gens)
