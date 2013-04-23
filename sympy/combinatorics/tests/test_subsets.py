@@ -5,6 +5,8 @@ def test_subset():
     a = Subset(['c', 'd'], ['a', 'b', 'c', 'd'])
     assert a.next_binary() == Subset(['b'], ['a', 'b', 'c', 'd'])
     assert a.prev_binary() == Subset(['c'], ['a', 'b', 'c', 'd'])
+    assert a.next_lexicographic() == Subset(['d'], ['a', 'b', 'c', 'd'])
+    assert a.prev_lexicographic() == Subset(['c'], ['a', 'b', 'c', 'd'])
     assert a.next_gray() == Subset(['c'], ['a', 'b', 'c', 'd'])
     assert a.prev_gray() == Subset(['d'], ['a', 'b', 'c', 'd'])
     assert a.rank_binary == 3
@@ -15,6 +17,8 @@ def test_subset():
     a = Subset([2, 5, 7], [1, 2, 3, 4, 5, 6, 7])
     assert a.next_binary() == Subset([2, 5, 6], [1, 2, 3, 4, 5, 6, 7])
     assert a.prev_binary() == Subset([2, 5], [1, 2, 3, 4, 5, 6, 7])
+    assert a.next_lexicographic() == Subset([2, 6], [1, 2, 3, 4, 5, 6, 7])
+    assert a.prev_lexicographic() == Subset([2, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
     assert a.next_gray() == Subset([2, 5, 6, 7], [1, 2, 3, 4, 5, 6, 7])
     assert a.prev_gray() == Subset([2, 5], [1, 2, 3, 4, 5, 6, 7])
     assert a.rank_binary == 37
