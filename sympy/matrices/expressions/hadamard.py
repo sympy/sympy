@@ -74,8 +74,7 @@ def validate(*args):
             raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
 rules = (unpack,
-         flatten,
-         sort(str))
+         flatten)
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, HadamardProduct),
                                  do_one(*rules)))
