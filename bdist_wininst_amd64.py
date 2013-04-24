@@ -274,13 +274,13 @@ class bdist_wininst_amd64 (Command):
                 cfgdata = cfgdata.encode("ascii")
 
         # Append the pre-install script
-        cfgdata = cfgdata + bytes("\0")
+        cfgdata = cfgdata + "\0".encode("ascii")
         if self.pre_install_script:
             script_data = open(self.pre_install_script, "r").read()
-            cfgdata = cfgdata + script_data + bytes("\n\0")
+            cfgdata = cfgdata + script_data + "\n\0".encode("ascii")
         else:
             # empty pre-install script
-            cfgdata = cfgdata + bytes("\0")
+            cfgdata = cfgdata + "\0".encode("ascii")
         file.write(cfgdata)
 
         # The 'magic number' 0x1234567B is used to make sure that the
