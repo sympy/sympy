@@ -664,6 +664,10 @@ def test_issue_3268():
     assert powsimp(z) != 0
 
 
+def test_issue_3341():
+    assert powsimp(16*2**a*8**b) == 2**(a + 3*b + 4)
+
+
 def test_powsimp_polar():
     from sympy import polar_lift, exp_polar
     x, y, z = symbols('x y z')
@@ -1548,7 +1552,7 @@ def test_combsimp_gamma():
 
     assert simplify(combsimp(
         gamma(x)*gamma(x + S(1)/2)*gamma(y)/gamma(x + y))) == \
-        2*4**-x*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
+        2**(-2*x + 1)*sqrt(pi)*gamma(2*x)*gamma(y)/gamma(x + y)
     assert combsimp(1/gamma(x)/gamma(x - S(1)/3)/gamma(x + S(1)/3)) == \
         3**(3*x - S(3)/2)/(2*pi*gamma(3*x - 1))
     assert simplify(
@@ -1556,7 +1560,7 @@ def test_combsimp_gamma():
     assert combsimp(gamma(S(-1)/4)*gamma(S(-3)/4)) == 16*sqrt(2)*pi/3
 
     assert simplify(combsimp(gamma(2*x)/gamma(x))) == \
-        4**x*gamma(x + S(1)/2)/sqrt(pi)/2
+        2**(2*x - 1)*gamma(x + S(1)/2)/sqrt(pi)
 
     # issue 3693
     e = (-gamma(k)*gamma(k + 2) + gamma(k + 1)**2)/gamma(k)**2

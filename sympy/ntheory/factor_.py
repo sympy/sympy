@@ -5,7 +5,7 @@ import random
 import math
 
 from sympy.core.evalf import bitcount
-from sympy.core.numbers import igcd
+from sympy.core.numbers import igcd, oo, Rational
 from sympy.core.power import integer_nthroot, Pow
 from sympy.core.mul import Mul
 from sympy.core.compatibility import as_int, SYMPY_INTS
@@ -193,11 +193,31 @@ def multiplicity(p, n):
     ========
 
     >>> from sympy.ntheory import multiplicity
+    >>> from sympy.core.numbers import Rational as R
     >>> [multiplicity(5, n) for n in [8, 5, 25, 125, 250]]
     [0, 1, 2, 3, 3]
+    >>> multiplicity(3, R(1, 9))
+    -2
 
     """
-    p, n = as_int(p), as_int(n)
+    try:
+            p, n = as_int(p), as_int(n)
+    except ValueError:
+        if all(isinstance(i, (SYMPY_INTS, Rational)) for i in (p, n)):
+            try:
+                p = Rational(p)
+                n = Rational(n)
+                like_min = min(
+                    multiplicity(p.p, n.p) if p.p != 1 else oo,
+                    multiplicity(p.q, n.q) if p.q != 1 else oo)
+                cross_min = min(
+                    multiplicity(p.p, n.q) if p.p != 1 else oo,
+                    multiplicity(p.q, n.p) if p.q != 1 else oo)
+                return like_min - cross_min
+            except AttributeError:
+                pass
+        raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
+
     if p == 2:
         return trailing(n)
     if p < 2:
