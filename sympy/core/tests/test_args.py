@@ -1379,6 +1379,11 @@ def test_sympy__functions__special__hyper__TupleParametersBase():
     pass
 
 
+@SKIP("abstract class")
+def test_sympy__functions__special__hyper__TupleArg():
+    pass
+
+
 def test_sympy__functions__special__hyper__hyper():
     from sympy.functions.special.hyper import hyper
     assert _test_args(hyper([1, 2, 3], [4, 5], x))
