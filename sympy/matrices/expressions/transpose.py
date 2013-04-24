@@ -36,7 +36,8 @@ class Transpose(MatrixExpr):
         if hints.get('deep', True) and isinstance(arg, Basic):
             arg = arg.doit(**hints)
         try:
-            return arg._eval_transpose()
+            result = arg._eval_transpose()
+            return result if result is not None else Transpose(arg)
         except AttributeError:
             return Transpose(arg)
 
