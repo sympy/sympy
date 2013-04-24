@@ -63,6 +63,7 @@ class AskIntegerHandler(CommonHandler):
             return _output
 
     Pow = Add
+    MatMul = MatAdd = Determinant = Trace = Transpose = Add
 
     int, Integer = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
@@ -184,6 +185,8 @@ class AskRealHandler(CommonHandler):
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
         return test_closed_group(expr, assumptions, Q.real)
+
+    MatAdd = MatMul = Transpose = Inverse = Trace = Determinant = Add
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -335,7 +338,8 @@ class AskComplexHandler(CommonHandler):
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex)
 
-    Mul, Pow = [Add]*2
+    Mul = Pow = Add
+    MatAdd = MatMul = Determinant = Trace = Transpose = Inverse = Add
 
     Number, sin, cos, exp, re, im, NumberSymbol, Abs, ImaginaryUnit = \
         [staticmethod(CommonHandler.AlwaysTrue)]*9 # they are all complex functions or expressions

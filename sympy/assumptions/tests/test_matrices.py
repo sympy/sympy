@@ -1,5 +1,6 @@
-from sympy import (MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace,
-        MatrixSlice, Trace, Determinant)
+from sympy import Q, ask
+from sympy.matrices.expressions import (MatrixSymbol, Identity, ZeroMatrix,
+        Trace, MatrixSlice, Determinant)
 from sympy.utilities.pytest import XFAIL
 from sympy.assumptions import assuming
 
@@ -149,3 +150,19 @@ def test_det_trace_positive():
     X = MatrixSymbol('X', 4, 4)
     assert ask(Q.positive(Trace(X)), Q.positive_definite(X))
     assert ask(Q.positive(Determinant(X)), Q.positive_definite(X))
+
+def test_field_assumptions():
+    X = MatrixSymbol('X', 4, 4)
+    Y = MatrixSymbol('Y', 4, 4)
+    assert ask(Q.real(X), Q.real(X))
+    assert not ask(Q.integer(X), Q.real(X))
+    assert ask(Q.complex(X), Q.real(X))
+    assert ask(Q.real(X+Y), Q.real(X)) is None
+    assert ask(Q.real(X+Y), Q.real(X) & Q.real(Y))
+    assert ask(Q.complex(X+Y), Q.real(X) & Q.complex(Y))
+
+    assert ask(Q.real(X.T), Q.real(X))
+    assert ask(Q.real(X.I), Q.real(X) & Q.invertible(X))
+    assert ask(Q.real(Trace(X)), Q.real(X))
+    assert ask(Q.integer(Determinant(X)), Q.integer(X))
+    assert not ask(Q.integer(X.I), Q.integer(X))
