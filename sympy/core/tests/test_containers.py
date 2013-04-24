@@ -1,8 +1,9 @@
 from __future__ import with_statement
-from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
+from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet, O
 from sympy.core.containers import tuple_wrapper
 from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import is_sequence, iterable
+from sympy.functions.special.hyper import hyper
 
 
 def test_Tuple():
@@ -68,6 +69,15 @@ def test_Tuple_comparision():
     assert (Tuple(1, 3) <= Tuple(-10, 30)) is False
     assert (Tuple(1, 3) >= Tuple(1, 3)) is True
     assert (Tuple(1, 3) <= Tuple(1, 3)) is True
+
+
+def test_Tuple_limit():
+    k = symbols('k')
+    assert hyper((1,), (S(4)/3, S(5)/3), k**2).series(k) == \
+        hyper((1,), (S(4)/3, S(5)/3), 0) + \
+        9*k**2*hyper((2,), (S(7)/3, S(8)/3), 0)/20 + \
+        81*k**4*hyper((3,), (S(10)/3, S(11)/3), 0)/1120 + \
+        O(k**6) # issue 3251
 
 
 def test_tuple_wrapper():
