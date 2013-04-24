@@ -1,7 +1,6 @@
 from sympy.core import S, Symbol, Add, sympify, Expr, PoleError, Mul, oo, C
-from sympy.functions import tan, cot, sin,cos
+from sympy.functions import tan, cot, sin, cos, factorial, gamma
 from gruntz import gruntz
-
 def limit(e, z, z0, dir="+"):
     """
     Compute the limit of e(z) at the point z0.
@@ -52,6 +51,7 @@ def limit(e, z, z0, dir="+"):
     # If no factorial term is present, e should remain unchanged.
     # factorial is defined to be zero for negative inputs (which
     # differs from gamma) so only rewrite for positive z0.
+    
     if z0.is_positive:
         e = e.rewrite(factorial, gamma)
 
