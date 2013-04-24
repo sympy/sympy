@@ -1,5 +1,5 @@
 from sympy import (symbols, MatrixSymbol, Symbol, MatPow, BlockMatrix,
-        Identity, ZeroMatrix, ImmutableMatrix, eye)
+        Identity, ZeroMatrix, ImmutableMatrix, eye, Sum)
 from sympy.utilities.pytest import raises
 
 k, l, m, n = symbols('k l m n', integer=True)
@@ -32,14 +32,11 @@ def test_mul_index():
     assert (A*B).as_mutable() == (A.as_mutable() * B.as_mutable())
     X = MatrixSymbol('X', n, m)
     Y = MatrixSymbol('Y', m, k)
-    # Using str to avoid dealing with a Dummy variable
-    s = str((X*Y)[4, 2])
-    assert "Sum" in s
-    assert "m - 1" in s
-    assert X.name in s
-    assert Y.name in s
-    assert '4' in s
-    assert '2' in s
+
+    result = (X*Y)[4,2]
+    expected = Sum(X[4, i]*Y[i, 2], (i, 0, m - 1))
+    assert result.args[0].dummy_eq(expected.args[0], i)
+    assert result.args[1][1:] == expected.args[1][1:]
 
 
 def test_pow_index():
