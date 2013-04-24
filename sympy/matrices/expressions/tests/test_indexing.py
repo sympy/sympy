@@ -19,6 +19,8 @@ y = MatrixSymbol('x', 2, 1)
 def test_symbolic_indexing():
     x12 = X[1, 2]
     assert all(s in str(x12) for s in ['1', '2', X.name])
+    # We don't care about the exact form of this.  We do want to make sure
+    # that all of these features are present
 
 
 def test_add_index():
