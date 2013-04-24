@@ -1,10 +1,12 @@
 """Tests for computational algebraic number field theory. """
 
-from sympy import S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand
+from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
+    Add, Mul)
+
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
-    minimal_polynomial,
+    minimal_polynomial, minpoly_pow, minpoly_op_algebraic_number,
     primitive_element,
     is_isomorphism_possible,
     field_isomorphism_pslq,
@@ -146,6 +148,29 @@ def test_minimal_polynomial_sq():
     mp = minimal_polynomial(p, x)
     assert mp.subs({x: 0}) == -71965773323122507776
 
+def test_minpoly_pow():
+    mp = minimal_polynomial(1 + 2**Rational(1,7), x)
+    assert minpoly_pow(mp, Rational(4, 3), x) == x**21 - 7*x**18 - 35*x**15 - \
+            3339*x**12 - 14581*x**9 - 27629*x**6 + 3031*x**3 - 81
+
+    assert minpoly_pow(mp, Rational(-4, 3), x) == 81*x**21 - 3031*x**18 + \
+            27629*x**15 + 14581*x**12 + 3339*x**9 + 35*x**6 + 7*x**3 - 1
+
+def test_minpoly_op_algebraic_number():
+    p1 = sqrt(1 + 2**Rational(1, 3))
+    p2 = sqrt(2)
+    mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op=Add)
+    mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Add)
+    assert mp1 == mp2 == x**12 - 18*x**10 + 111*x**8 - 256*x**6 + 3*x**4 - 126*x**2 + 1
+    mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op='sub')
+    mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op='sub')
+    assert mp1 == mp2 == x**12 - 18*x**10 + 111*x**8 - 256*x**6 + 3*x**4 - 126*x**2 + 1
+    mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op=Mul)
+    mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Mul)
+    assert mp1 == mp2 == x**6 - 6*x**4 + 12*x**2 - 24
+    mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op='div')
+    mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op='div')
+    assert mp1 == mp2 == 8*x**6 - 12*x**4 + 6*x**2 - 3
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])

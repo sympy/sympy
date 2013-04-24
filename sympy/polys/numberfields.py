@@ -2,11 +2,11 @@
 
 from sympy import (
     S, Expr, Rational,
-    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple
+    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul
 )
 
 from sympy.polys.polytools import (
-    Poly, PurePoly, sqf_norm, invert, factor_list, groebner,
+    Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant, degree
 )
 
 from sympy.polys.polyclasses import (
@@ -54,6 +54,7 @@ def _choose_factor(factors, x, v, prec):
         if prec1 > prec:
             return None
         prec1 *= 2
+
 def _separate_sq(p):
     """
     helper function for ``_minimal_polynomial_sq``
@@ -175,6 +176,110 @@ def _minimal_polynomial_sq(p, n, x, prec):
     result = _choose_factor(factors, x, pn, prec)
     return result
 
+def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
+        method='resultant', op=Add):
+    """
+    return the minimal polinomial for ``op(ex1, ex2)``
+
+    Parameters
+    ==========
+
+    ex1, ex2 : expressions for the algebraic numbers
+    x : indeterminate of the polynomials
+    mp1, mp2 : minimal polynomials for ``ex1`` and ``ex2`` or None
+    prec : max precision used in identifying factors
+    method : use 'resultant' or 'groebner' method
+    op : operation ``Add``, ``Mul``, 'sub' or 'div'
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt, Mul
+    >>> from sympy.polys.numberfields import minpoly_op_algebraic_number
+    >>> from sympy.abc import x
+    >>> p1 = sqrt(sqrt(2) + 1)
+    >>> p2 = sqrt(sqrt(2) - 1)
+    >>> minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Mul)
+    x - 1
+
+    References
+    ==========
+
+    [1] http://en.wikipedia.org/wiki/Resultant
+    """
+    y = Dummy('y')
+    if mp1 is None:
+        mp1 = minimal_polynomial(ex1, x)
+    if mp2 is None:
+        mp2 = minimal_polynomial(ex2, y)
+    else:
+        mp2 = mp2.subs({x:y})
+
+    if method == 'resultant':
+        if op is Add:
+            mp1a = mp1.subs({x:x - y})
+        elif op is 'sub':
+            mp1a = mp1.subs({x:x + y})
+        elif op is Mul:
+            mp1a = y**degree(mp1)*mp1.subs({x:x / y})
+        elif op is 'div':
+            mp1a = mp1.subs({x:x * y})
+        r = resultant(mp1a, mp2, gens=[y])
+    elif method == 'groebner':
+        z = Dummy('z')
+        if op in [Add, Mul]:
+            g = groebner([mp1, mp2, op(x, y) - z], gens=[x, y, z], order='lex')
+        elif op is 'sub':
+            g = groebner([mp1, mp2, x - y - z], gens=[x, y, z], order='lex')
+        elif op is 'div':
+            g = groebner([mp1, mp2, x - z*y], gens=[x, y, z], order='lex')
+        r = g[-1].subs({z:x})
+    else:
+        raise NotImplementedError('option not available')
+    _, factors = factor_list(r)
+    if op in [Add, Mul]:
+        ex = op(ex1, ex2)
+    elif op is 'sub':
+        ex = ex1 - ex2
+    elif op is 'div':
+        ex = ex1 / ex2
+    res = _choose_factor(factors, x, ex, prec)
+    return res
+
+def minpoly_pow(mp, pw, x):
+    """
+    Returns ``minpoly(p**pw, x)`` where ``mp = minpoly(p, x)``
+
+    Parameters
+    ==========
+
+    mp : minimal polynomial
+    pw : rational number
+    x : indeterminate of the polynomial
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt
+    >>> from sympy.polys.numberfields import minpoly_pow, minpoly
+    >>> from sympy.abc import x
+    >>> p = sqrt(1 + sqrt(2))
+    >>> minpoly_pow(minpoly(p, x), 2, x)
+    x**2 - 2*x - 1
+    >>> minpoly(p**2, x)
+    x**2 - 2*x - 1
+    """
+    pw = sympify(pw)
+    if not pw.is_rational:
+        raise ValueError('pw must be rational')
+    if pw < 0:
+        mp = expand_mul(x**degree(mp)*mp.subs(x, 1/x))
+        pw = -pw
+    y = Dummy('y')
+    mp = mp.subs({x:y})
+    n, d = pw.as_numer_denom()
+    res = groebner([mp, x**d - y**n], gens=[y, x], order='lex')
+    return res[-1]
 
 def minimal_polynomial(ex, x=None, **args):
     """
@@ -193,7 +298,7 @@ def minimal_polynomial(ex, x=None, **args):
 
     """
     from sympy.polys.polytools import degree
-    from sympy.core.function import (expand_mul, expand_multinomial)
+    from sympy.core.function import expand_multinomial
     from sympy.simplify.simplify import _is_sum_surds
 
     generator = numbered_symbols('a', cls=Dummy)
