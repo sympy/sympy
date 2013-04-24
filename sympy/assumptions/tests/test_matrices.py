@@ -1,4 +1,5 @@
-from sympy import MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace, MatrixSlice
+from sympy import (MatrixSymbol, Q, ask, Identity, ZeroMatrix, Trace,
+        MatrixSlice, Trace, Determinant)
 from sympy.utilities.pytest import XFAIL
 from sympy.assumptions import assuming
 
@@ -46,17 +47,24 @@ def test_symmetric():
     assert ask(Q.symmetric(X*X*X*X*X*X*X*X*X*X), Q.symmetric(X)) is True
 
 
+def _test_orthogonal_unitary(predicate):
+    assert ask(predicate(X), predicate(X))
+    assert ask(predicate(X.T), predicate(X)) is True
+    assert ask(predicate(X.I), predicate(X)) is True
+    assert ask(predicate(Y)) is False
+    assert ask(predicate(X)) is None
+    assert ask(predicate(X*Z*X), predicate(X) & predicate(Z)) is True
+    assert ask(predicate(Identity(3))) is True
+    assert ask(predicate(ZeroMatrix(3, 3))) is False
+    assert ask(Q.invertible(X), predicate(X))
+    assert not ask(predicate(X + Z), predicate(X) & predicate(Z))
+
 def test_orthogonal():
-    assert ask(Q.orthogonal(X), Q.orthogonal(X))
-    assert ask(Q.orthogonal(X.T), Q.orthogonal(X)) is True
-    assert ask(Q.orthogonal(X.I), Q.orthogonal(X)) is True
-    assert ask(Q.orthogonal(Y)) is False
-    assert ask(Q.orthogonal(X)) is None
-    assert ask(Q.orthogonal(X*Z*X), Q.orthogonal(X) & Q.orthogonal(Z)) is True
-    assert ask(Q.orthogonal(Identity(3))) is True
-    assert ask(Q.orthogonal(ZeroMatrix(3, 3))) is False
-    assert ask(Q.invertible(X), Q.orthogonal(X))
-    assert not ask(Q.orthogonal(X + Z), Q.orthogonal(X) & Q.orthogonal(Z))
+    _test_orthogonal_unitary(Q.orthogonal)
+
+def test_unitary():
+    _test_orthogonal_unitary(Q.unitary)
+    assert ask(Q.unitary(X), Q.orthogonal(X))
 
 def test_fullrank():
     assert ask(Q.fullrank(X), Q.fullrank(X))
@@ -86,7 +94,7 @@ def test_positive_definite():
     assert ask(Q.positive_definite(X + Z), Q.positive_definite(X) &
             Q.positive_definite(Z)) is True
     assert not ask(Q.positive_definite(-X), Q.positive_definite(X))
-
+    assert ask(Q.positive(X[1, 1]), Q.positive_definite(X))
 
 def test_triangular():
     assert ask(Q.upper_triangular(X + Z.T + Identity(2)), Q.upper_triangular(X) &
@@ -136,3 +144,8 @@ def test_MatrixSlice():
     assert not ask(Q.diagonal(C), Q.diagonal(X))
     assert not ask(Q.orthogonal(C), Q.orthogonal(X))
     assert not ask(Q.upper_triangular(C), Q.upper_triangular(X))
+
+def test_det_trace_positive():
+    X = MatrixSymbol('X', 4, 4)
+    assert ask(Q.positive(Trace(X)), Q.positive_definite(X))
+    assert ask(Q.positive(Determinant(X)), Q.positive_definite(X))

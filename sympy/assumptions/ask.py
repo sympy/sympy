@@ -33,6 +33,8 @@ class Q:
     invertible = Predicate('invertible')
     singular = Predicate('singular')
     orthogonal = Predicate('orthogonal')
+    unitary = Predicate('unitary')
+    normal = Predicate('normal')
     positive_definite = Predicate('positive_definite')
     upper_triangular = Predicate('upper_triangular')
     lower_triangular = Predicate('lower_triangular')
@@ -273,6 +275,7 @@ _handlers = [
     ("symmetric",         "matrices.AskSymmetricHandler"),
     ("invertible",        "matrices.AskInvertibleHandler"),
     ("orthogonal",        "matrices.AskOrthogonalHandler"),
+    ("unitary",           "matrices.AskUnitaryHandler"),
     ("positive_definite", "matrices.AskPositiveDefiniteHandler"),
     ("upper_triangular",  "matrices.AskUpperTriangularHandler"),
     ("lower_triangular",  "matrices.AskLowerTriangularHandler"),
@@ -307,6 +310,12 @@ known_facts = And(
     Equivalent(Q.nonzero, Q.positive | Q.negative),
 
     Implies(Q.orthogonal, Q.positive_definite),
+    Implies(Q.orthogonal, Q.unitary),
+    Implies(Q.unitary & Q.real, Q.orthogonal),
+    Implies(Q.unitary, Q.normal),
+    Implies(Q.unitary, Q.invertible),
+    Implies(Q.normal, Q.square),
+    Implies(Q.diagonal, Q.normal),
     Implies(Q.positive_definite, Q.invertible),
     Implies(Q.diagonal, Q.upper_triangular),
     Implies(Q.diagonal, Q.lower_triangular),

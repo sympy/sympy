@@ -1708,6 +1708,10 @@ def test_sympy__matrices__expressions__matexpr__Identity():
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
 
+def test_sympy__matrices__expressions__matexpr__MatrixElement():
+    from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
+    from sympy import S
+    assert _test_args(MatrixElement(MatrixSymbol('A', 3, 5), S(2), S(3)))
 
 @XFAIL
 def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
@@ -1728,6 +1732,17 @@ def test_sympy__matrices__expressions__matmul__MatMul():
     Y = MatrixSymbol('Y', y, x)
     assert _test_args(MatMul(X, Y))
 
+def test_sympy__matrices__expressions__diagonal__DiagonalMatrix():
+    from sympy.matrices.expressions.diagonal import DiagonalMatrix
+    from sympy.matrices.expressions import MatrixSymbol
+    x = MatrixSymbol('x', 10, 1)
+    assert _test_args(DiagonalMatrix(x))
+
+def test_sympy__matrices__expressions__diagonal__DiagonalOf():
+    from sympy.matrices.expressions.diagonal import DiagonalOf
+    from sympy.matrices.expressions import MatrixSymbol
+    X = MatrixSymbol('x', 10, 10)
+    assert _test_args(DiagonalOf(X))
 
 def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -1773,6 +1788,15 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
+def test_sympy__matrices__expressions__fourier__DFT():
+    from sympy.matrices.expressions.fourier import DFT
+    from sympy import S
+    assert _test_args(DFT(S(2)))
+
+def test_sympy__matrices__expressions__fourier__IDFT():
+    from sympy.matrices.expressions.fourier import IDFT
+    from sympy import S
+    assert _test_args(IDFT(S(2)))
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
