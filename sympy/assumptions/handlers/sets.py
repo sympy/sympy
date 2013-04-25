@@ -2,7 +2,7 @@
 Handlers for predicates related to set membership: integer, rational, etc.
 """
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler
+from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy import I, S
 
 
@@ -63,7 +63,6 @@ class AskIntegerHandler(CommonHandler):
             return _output
 
     Pow = Add
-    MatMul = MatAdd = Determinant = Trace = Transpose = Add
 
     int, Integer = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
@@ -185,8 +184,6 @@ class AskRealHandler(CommonHandler):
         if expr.is_number:
             return AskRealHandler._number(expr, assumptions)
         return test_closed_group(expr, assumptions, Q.real)
-
-    MatAdd = MatMul = Transpose = Inverse = Trace = Determinant = Add
 
     @staticmethod
     def Mul(expr, assumptions):
@@ -339,7 +336,6 @@ class AskComplexHandler(CommonHandler):
         return test_closed_group(expr, assumptions, Q.complex)
 
     Mul = Pow = Add
-    MatAdd = MatMul = Determinant = Trace = Transpose = Inverse = Add
 
     Number, sin, cos, exp, re, im, NumberSymbol, Abs, ImaginaryUnit = \
         [staticmethod(CommonHandler.AlwaysTrue)]*9 # they are all complex functions or expressions
@@ -548,23 +544,3 @@ class AskAlgebraicHandler(CommonHandler):
     acos, acot = log, cot
 
 
-#### Helper methods
-
-
-def test_closed_group(expr, assumptions, key):
-    """
-    Test for membership in a group with respect
-    to the current operation
-    """
-    result = True
-    for arg in expr.args:
-        _out = ask(key(arg), assumptions)
-        if _out is None:
-            break
-        elif _out is False:
-            if result:
-                result = False
-            else:
-                break
-    else:
-        return result
