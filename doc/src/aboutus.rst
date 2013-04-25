@@ -260,6 +260,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Stephen Loo: Update minimum gmpy2 version
 #. Rishabh Dixit: Improvements to assumptions
 #. Katja Sophie Hotz: use expansion in minpoly
+#. Varun Joshi: Addition to functions
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
