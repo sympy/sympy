@@ -4,7 +4,7 @@ infinitesimal, bounded, etc.
 """
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler
+from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.matrices.expressions import MatMul
 
 class AskSquareHandler(CommonHandler):
@@ -377,3 +377,24 @@ class AskDiagonalHandler(CommonHandler):
     @staticmethod
     def DiagonalMatrix(expr, assumptions):
         return True
+
+class AskIntegerElementsHandler(CommonHandler):
+    @staticmethod
+    def MatAdd(expr, assumptions):
+        return test_closed_group(expr, assumptions, Q.integer_elements)
+
+    MatMul = Determinant = Trace = Transpose = MatAdd
+
+class AskRealElementsHandler(CommonHandler):
+    @staticmethod
+    def MatAdd(expr, assumptions):
+        return test_closed_group(expr, assumptions, Q.real_elements)
+
+    MatMul = Determinant = Trace = Transpose = Inverse = MatAdd
+
+class AskComplexElementsHandler(CommonHandler):
+    @staticmethod
+    def MatAdd(expr, assumptions):
+        return test_closed_group(expr, assumptions, Q.complex_elements)
+
+    MatMul = Determinant = Trace = Transpose = Inverse = MatAdd

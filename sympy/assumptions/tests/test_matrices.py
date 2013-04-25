@@ -154,15 +154,15 @@ def test_det_trace_positive():
 def test_field_assumptions():
     X = MatrixSymbol('X', 4, 4)
     Y = MatrixSymbol('Y', 4, 4)
-    assert ask(Q.real(X), Q.real(X))
-    assert not ask(Q.integer(X), Q.real(X))
-    assert ask(Q.complex(X), Q.real(X))
-    assert ask(Q.real(X+Y), Q.real(X)) is None
-    assert ask(Q.real(X+Y), Q.real(X) & Q.real(Y))
-    assert ask(Q.complex(X+Y), Q.real(X) & Q.complex(Y))
+    assert ask(Q.real_elements(X), Q.real_elements(X))
+    assert not ask(Q.integer_elements(X), Q.real_elements(X))
+    assert ask(Q.complex_elements(X), Q.real_elements(X))
+    assert ask(Q.real_elements(X+Y), Q.real_elements(X)) is None
+    assert ask(Q.real_elements(X+Y), Q.real_elements(X) & Q.real_elements(Y))
+    assert ask(Q.complex_elements(X+Y), Q.real_elements(X) & Q.complex_elements(Y))
 
-    assert ask(Q.real(X.T), Q.real(X))
-    assert ask(Q.real(X.I), Q.real(X) & Q.invertible(X))
-    assert ask(Q.real(Trace(X)), Q.real(X))
-    assert ask(Q.integer(Determinant(X)), Q.integer(X))
-    assert not ask(Q.integer(X.I), Q.integer(X))
+    assert ask(Q.real_elements(X.T), Q.real_elements(X))
+    assert ask(Q.real_elements(X.I), Q.real_elements(X) & Q.invertible(X))
+    assert ask(Q.real_elements(Trace(X)), Q.real_elements(X))
+    assert ask(Q.integer_elements(Determinant(X)), Q.integer_elements(X))
+    assert not ask(Q.integer_elements(X.I), Q.integer_elements(X))
