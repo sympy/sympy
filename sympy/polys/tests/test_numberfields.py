@@ -149,11 +149,13 @@ def test_minimal_polynomial_sq():
     assert mp.subs({x: 0}) == -71965773323122507776
 
 def test_minpoly_pow():
-    mp = minimal_polynomial(1 + 2**Rational(1,7), x)
-    assert minpoly_pow(mp, Rational(4, 3), x) == x**21 - 7*x**18 - 35*x**15 - \
+    p = (2*sqrt(2) + 3)
+    assert minpoly_pow(p, Rational(1, 4), x) == x**4 - 2*x**2 - 1
+    p = 1 + 2**Rational(1,7)
+    assert minpoly_pow(p, Rational(4, 3), x) == x**21 - 7*x**18 - 35*x**15 - \
             3339*x**12 - 14581*x**9 - 27629*x**6 + 3031*x**3 - 81
 
-    assert minpoly_pow(mp, Rational(-4, 3), x) == 81*x**21 - 3031*x**18 + \
+    assert minpoly_pow(p, Rational(-4, 3), x) == 81*x**21 - 3031*x**18 + \
             27629*x**15 + 14581*x**12 + 3339*x**9 + 35*x**6 + 7*x**3 - 1
 
 def test_minpoly_op_algebraic_number():
@@ -161,9 +163,6 @@ def test_minpoly_op_algebraic_number():
     p2 = sqrt(2)
     mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op=Add)
     mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Add)
-    assert mp1 == mp2 == x**12 - 18*x**10 + 111*x**8 - 256*x**6 + 3*x**4 - 126*x**2 + 1
-    mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op='sub')
-    mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op='sub')
     assert mp1 == mp2 == x**12 - 18*x**10 + 111*x**8 - 256*x**6 + 3*x**4 - 126*x**2 + 1
     mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op=Mul)
     mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Mul)

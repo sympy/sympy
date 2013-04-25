@@ -176,6 +176,25 @@ def _minimal_polynomial_sq(p, n, x, prec):
     result = _choose_factor(factors, x, pn, prec)
     return result
 
+def minpoly_neg(ex, x, mp):
+    """
+    return the minimal polynomial of ``-ex``.
+
+    Examples
+    ========
+
+    >>> from sympy import Rational
+    >>> from sympy.polys.numberfields import minpoly, minpoly_neg
+    >>> from sympy.abc import x
+    >>> p = 2**Rational(1, 3)
+    >>> mp = minpoly(p, x)
+    >>> minpoly_neg(p, x, mp=mp)
+    -x**3 - 2
+    """
+    if mp is None:
+        mp = minimal_polynomial(ex, x)
+    return mp.subs({x: -x})
+
 def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
         method='resultant', op=Add):
     """
@@ -189,7 +208,7 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     mp1, mp2 : minimal polynomials for ``ex1`` and ``ex2`` or None
     prec : max precision used in identifying factors
     method : use 'resultant' or 'groebner' method
-    op : operation ``Add``, ``Mul``, 'sub' or 'div'
+    op : operation ``Add``, ``Mul`` or 'div'
 
     Examples
     ========
@@ -218,8 +237,6 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     if method == 'resultant':
         if op is Add:
             mp1a = mp1.subs({x:x - y})
-        elif op is 'sub':
-            mp1a = mp1.subs({x:x + y})
         elif op is Mul:
             mp1a = y**degree(mp1)*mp1.subs({x:x / y})
         elif op is 'div':
@@ -229,8 +246,6 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
         z = Dummy('z')
         if op in [Add, Mul]:
             g = groebner([mp1, mp2, op(x, y) - z], gens=[x, y, z], order='lex')
-        elif op is 'sub':
-            g = groebner([mp1, mp2, x - y - z], gens=[x, y, z], order='lex')
         elif op is 'div':
             g = groebner([mp1, mp2, x - z*y], gens=[x, y, z], order='lex')
         r = g[-1].subs({z:x})
@@ -246,16 +261,21 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     res = _choose_factor(factors, x, ex, prec)
     return res
 
-def minpoly_pow(mp, pw, x):
+def minpoly_pow(ex, pw, x, mp=None, prec=200):
     """
-    Returns ``minpoly(p**pw, x)`` where ``mp = minpoly(p, x)``
+    Returns ``minpoly(ex**pw, x)``
 
     Parameters
     ==========
 
-    mp : minimal polynomial
+    p  : algebraic number
+    mp : minimal polynomial of ``p``
     pw : rational number
     x : indeterminate of the polynomial
+
+    TODO: avoid using ``groebner``, use linear algebra; this would be
+    faster; in the case of ``pw`` integer it would also not be necessary
+    to use ``factor_list``.
 
     Examples
     ========
@@ -264,12 +284,14 @@ def minpoly_pow(mp, pw, x):
     >>> from sympy.polys.numberfields import minpoly_pow, minpoly
     >>> from sympy.abc import x
     >>> p = sqrt(1 + sqrt(2))
-    >>> minpoly_pow(minpoly(p, x), 2, x)
+    >>> minpoly_pow(p, 2, x)
     x**2 - 2*x - 1
     >>> minpoly(p**2, x)
     x**2 - 2*x - 1
     """
     pw = sympify(pw)
+    if not mp:
+        mp = minimal_polynomial(ex, x)
     if not pw.is_rational:
         raise ValueError('pw must be rational')
     if pw < 0:
@@ -279,7 +301,9 @@ def minpoly_pow(mp, pw, x):
     mp = mp.subs({x:y})
     n, d = pw.as_numer_denom()
     res = groebner([mp, x**d - y**n], gens=[y, x], order='lex')
-    return res[-1]
+    _, factors = factor_list(res[-1])
+    res = _choose_factor(factors, x, ex**pw, prec)
+    return res
 
 def minimal_polynomial(ex, x=None, **args):
     """
