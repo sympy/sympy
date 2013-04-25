@@ -195,10 +195,11 @@ class hyper(TupleParametersBase):
     def _eval_rewrite_as_Sum(self, ap, bq, z):
         from sympy.functions import factorial, RisingFactorial, Piecewise
         n = C.Dummy("n", integer=True)
-        rfap = Tuple(*[RisingFactorial(a,n) for a in ap])
-        rfbq = Tuple(*[RisingFactorial(b,n) for b in bq])
-        coeff = Mul(*rfap)/Mul(*rfbq)
-        return Piecewise( (C.Sum(coeff * z**n/factorial(n), (n, 0, oo)), self.convergence_statement), (self, True) )
+        rfap = Tuple(*[RisingFactorial(a, n) for a in ap])
+        rfbq = Tuple(*[RisingFactorial(b, n) for b in bq])
+        coeff = Mul(*rfap) / Mul(*rfbq)
+        return Piecewise((C.Sum(coeff * z**n / factorial(n), (n, 0, oo)),
+                         self.convergence_statement), (self, True))
 
     @property
     def argument(self):
