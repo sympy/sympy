@@ -41,7 +41,13 @@ class AskSymmetricHandler(CommonHandler):
         if Q.symmetric(expr) in conjuncts(assumptions):
             return True
 
-    ZeroMatrix, Identity = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+
+    @staticmethod
+    def ZeroMatrix(expr, assumptions):
+        return ask(Q.square(expr), assumptions)
 
     @staticmethod
     def Transpose(expr, assumptions):
@@ -100,6 +106,7 @@ class AskOrthogonalHandler(CommonHandler):
     """
     Handler for key 'orthogonal'
     """
+    predicate = Q.orthogonal
     @staticmethod
     def MatMul(expr, assumptions):
         factor, mmul = expr.as_coeff_mmul()
@@ -138,6 +145,54 @@ class AskOrthogonalHandler(CommonHandler):
             return None
         else:
             return ask(Q.orthogonal(expr.parent), assumptions)
+
+
+class AskUnitaryHandler(CommonHandler):
+    """
+    Handler for key 'unitary'
+    """
+    predicate = Q.unitary
+
+    @staticmethod
+    def MatMul(expr, assumptions):
+        factor, mmul = expr.as_coeff_mmul()
+        if (all(ask(Q.unitary(arg), assumptions) for arg in mmul.args) and
+                abs(factor) == 1):
+            return True
+        if any(ask(Q.invertible(arg), assumptions) is False
+                for arg in mmul.args):
+            return False
+
+    @staticmethod
+    def MatrixSymbol(expr, assumptions):
+        if not expr.is_square:
+            return False
+        if Q.unitary(expr) in conjuncts(assumptions):
+            return True
+
+    @staticmethod
+    def Identity(expr, assumptions):
+        return True
+
+    @staticmethod
+    def ZeroMatrix(expr, assumptions):
+        return False
+
+    @staticmethod
+    def Transpose(expr, assumptions):
+        return ask(Q.unitary(expr.arg), assumptions)
+    Inverse = Transpose
+
+    @staticmethod
+    def MatrixSlice(expr, assumptions):
+        if not expr.on_diag:
+            return None
+        else:
+            return ask(Q.unitary(expr.parent), assumptions)
+
+    @staticmethod
+    def DFT(expr, assumptions):
+        return True
 
 
 class AskFullRankHandler(CommonHandler):
@@ -318,3 +373,7 @@ class AskDiagonalHandler(CommonHandler):
             return None
         else:
             return ask(Q.diagonal(expr.parent), assumptions)
+
+    @staticmethod
+    def DiagonalMatrix(expr, assumptions):
+        return True

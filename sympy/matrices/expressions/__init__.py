@@ -14,3 +14,4 @@ from determinant import Determinant, det
 from transpose import Transpose
 from adjoint import Adjoint
 from hadamard import hadamard_product, HadamardProduct
+from diagonal import DiagonalMatrix, DiagonalOf
