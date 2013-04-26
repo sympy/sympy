@@ -91,6 +91,18 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3, 
     denominator. For each of these poles, the integral is reevaluated, and
     the final integration result is given in terms of a Piecewise.
 
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.functions import cos
+    >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
+    >>> n, x = symbols('n x')
+    >>> heurisch(cos(n*x), x)
+    sin(n*x)/n
+    >>> heurisch_wrapper(cos(n*x), x)
+    Piecewise((x, n == 0), (sin(n*x)/n, True))
+
     See Also
     ========
 
