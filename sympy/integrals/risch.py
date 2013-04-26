@@ -33,8 +33,9 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
 
-from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
+from sympy.functions import log, exp, sin, cos, tan, cot, asin, acos, atan, acot
 
+from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
 from sympy.integrals import Integral, integrate
 
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
@@ -156,7 +157,7 @@ class DifferentialExtension(object):
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, rewrite_complex=False):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -211,13 +212,20 @@ class DifferentialExtension(object):
         # (e.g., we pull out a constant from an exponential)
         self.f = f
         self.x = x
-
-        # Get common cases out of the way:
-        if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
-            raise NotImplementedError("Trigonometric extensions are not "
-            "supported (yet!)")
         self.reset(dummy=dummy)
         exp_new_extension, log_new_extension = True, True
+        if rewrite_complex:
+            rewritables = {
+                (sin, cos, cot, tan, sinh, cosh, coth, tanh): exp,
+                (asin, acos, acot, atan): log,
+            }
+        #rewrite the trigonometric components
+            for candidates, rule in rewritables.iteritems():
+                self.newf = self.newf.rewrite(candidates, rule)
+        else:
+            if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
+                raise NotImplementedError("Trigonometric extensions are not "
+                "supported (yet!)")
 
         def update(seq, atoms, func):
             s = set(seq)
@@ -1408,7 +1416,7 @@ class NonElementaryIntegral(Integral):
     pass
 
 
-def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False):
+def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False , rewrite_complex=False):
     r"""
     The Risch Integration Algorithm.
 
@@ -1512,7 +1520,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
     """
     f = S(f)
 
-    DE = extension or DifferentialExtension(f, x, handle_first=handle_first)
+    DE = extension or DifferentialExtension(f, x, handle_first=handle_first, rewrite_complex=rewrite_complex)
     fa, fd = DE.fa, DE.fd
 
     result = S(0)
