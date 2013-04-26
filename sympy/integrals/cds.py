@@ -59,12 +59,12 @@ def cds_cancel_prim(a, b1, b2, c1, c2, DE, n):
         n1, u1 = A1
         n2, u2 = A2
         u = u1 + u2*sqrt(a)
-    if is_deriv(u1*c1 + a*z2*c2) and is_deriv(z2*c1 + z1*c2):
-         if p1.degree() <= n and p2.degree() <= n:
-             denom = (z1**2 - a*z2**2).as_expr()
-             return ((u1*p1 - a*z2*p2).as_expr()/denom, (z1*p2 - z2*p1).as_expr/denom)
-         else:
-             return None
+        if is_deriv(u1*c1 + a*z2*c2) and is_deriv(z2*c1 + z1*c2):
+            if p1.degree() <= n and p2.degree() <= n:
+                denom = (z1**2 - a*z2**2).as_expr()
+                return ((u1*p1 - a*z2*p2).as_expr()/denom, (z1*p2 - z2*p1).as_expr()/denom())
+            else:
+                return None
     if c1 == 0 and c2 == 0:
         return (0, 0)
     if n < max(c1.degree(), c2.degree()):
