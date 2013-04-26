@@ -216,12 +216,6 @@ class subfactorial(CombinatorialFunction):
             if sympify(arg).is_Number:
                 raise ValueError("argument must be a nonnegative integer")
 
-    def _sympystr(self, p):
-        if self.args[0].is_Atom:
-            return "!%s" % p.doprint(self.args[0])
-        else:
-            return "!(%s)" % p.doprint(self.args[0])
-
 
 class factorial2(CombinatorialFunction):
     """The double factorial n!!, not to be confused with (n!)!
@@ -261,11 +255,6 @@ class factorial2(CombinatorialFunction):
                 return S.One
             return factorial2(arg - 2)*arg
 
-    def _sympystr(self, p):
-        if self.args[0].is_Atom:
-            return "%s!!" % p.doprint(self.args[0])
-        else:
-            return "(%s)!!" % p.doprint(self.args[0])
 
 ###############################################################################
 ######################## RISING and FALLING FACTORIALS ########################
