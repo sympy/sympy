@@ -119,6 +119,7 @@ def _flatten(result):
             result2.append(tok)
     return result2
 
+
 def _group_parentheses(recursor):
     def _inner(tokens, local_dict, global_dict):
         """Group tokens between parentheses with ParenthesisGroup.
@@ -197,10 +198,9 @@ def _implicit_multiplication(tokens, local_dict, global_dict):
 
     - A close parenthesis next to an AppliedFunction ("(x+2)sin x")\
 
-    - A closeparenthesis next to an open parenthesis ("(x+2)(x+3)")
+    - A close parenthesis next to an open parenthesis ("(x+2)(x+3)")
 
-    - An AppliedFunction next to an implicitly applied function ("sin(x)cos
-      x")
+    - AppliedFunction next to an implicitly applied function ("sin(x)cos x")
 
     """
     result = []
@@ -436,6 +436,7 @@ def implicit_application(result, local_dict, global_dict):
     result = _flatten(result)
     return result
 
+
 def implicit_multiplication_application(result, local_dict, global_dict):
     """Allows a slightly relaxed syntax.
 
@@ -626,6 +627,7 @@ def rationalize(tokens, local_dict, global_dict):
             result.append((toknum, tokval))
 
     return result
+
 
 #: Standard transformations for :func:`parse_expr`.
 #: Inserts calls to :class:`Symbol`, :class:`Integer`, and other SymPy
