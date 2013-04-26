@@ -1050,7 +1050,13 @@ class Basic(object):
         if self in rule:
             return rule[self]
         elif rule:
-            args = tuple([arg.xreplace(rule) for arg in self.args])
+            args = []
+            for a in self.args:
+                try:
+                    args.append(a.xreplace(rule))
+                except AttributeError:
+                    args.append(a)
+            args = tuple(args)
             if not _aresame(args, self.args):
                 return self.func(*args)
         return self

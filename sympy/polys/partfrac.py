@@ -65,7 +65,9 @@ def apart(f, x=None, full=False, **options):
             nc = Mul(*[apart(i, x=x, full=full, **_options) for i in nc])
             if c:
                 c = apart(Mul._from_args(c), x=x, full=full, **_options)
-            return c*nc
+                return c*nc
+            else:
+                return nc
         elif f.is_Add:
             c = []
             nc = []
