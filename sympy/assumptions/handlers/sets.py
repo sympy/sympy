@@ -542,5 +542,3 @@ class AskAlgebraicHandler(CommonHandler):
 
     sin, cos, tan, asin, atan = [exp]*5
     acos, acot = log, cot
-
-
