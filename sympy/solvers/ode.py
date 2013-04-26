@@ -446,6 +446,7 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     hints = _desolve(eq, func=func,
         hint=hint, simplify=True, type='ode', **kwargs)
 
+    eq = hints.pop('eq', eq)
     all_ = hints.pop('all', False)
     if all_:
         retdict = {}
