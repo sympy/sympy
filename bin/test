@@ -83,10 +83,21 @@ if options.diff:
             if os.path.isdir(test_dir):
                 # if it is a directory, list its contents. if any file contains
                 # the name of the file that has been modified, add it to the
-                # list of tests to run
-                for test_file in os.listdir(test_dir):
-                    if tail in test_file:
-                        args.append(os.path.join(test_dir, test_file))
+                # list of tests to run. OR if there is only one file in the
+                # tests directory (other than __init__.py), run that one
+                L = os.listdir(test_dir)
+                try:
+                    L.remove('__init__.py')
+                except ValueError:
+                    pass
+
+                if len(L) == 1:
+                    test_file = L.pop()
+                    args.append(os.path.join(test_dir, test_file))
+                else:
+                    for test_file in L:
+                        if tail in test_file:
+                            args.append(os.path.join(test_dir, test_file))
     else:
         print >> sys.stderr, 'error %d encountered while running git' % p.returncode
         sys.exit(1)
