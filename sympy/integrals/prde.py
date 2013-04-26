@@ -19,13 +19,14 @@ from sympy.core import Dummy, ilcm, Add, Mul, Pow, S
 
 from sympy.matrices import Matrix, zeros, eye
 
+from sympy import im, sqrt, re
 from sympy.solvers import solve
 
 from sympy.polys import Poly, lcm, cancel, sqf_list
 
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
     NonElementaryIntegralException, residue_reduce, splitfactor,
-    residue_reduce_derivation, DecrementLevel)
+    residue_reduce_derivation, DecrementLevel, recognize_log_derivative)
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     bound_degree, spde, solve_poly_rde)
 
@@ -96,21 +97,37 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
 
     n = min(0, nc - min(0, nb))
     if not nb:
-        # Possible cancellation
-        #
-        # if case == 'exp':
-        #     alpha = (-b/a).rem(p) == -b(0)/a(0)
-        #     if alpha == m*Dt/t + Dz/z # parametric logarithmic derivative problem
-        #         n = min(n, m)
-        # elif case == 'tan':
-        #     alpha*sqrt(-1) + beta = (-b/a)/rem(p) == -b(sqrt(-1))/a(sqrt(-1))
-        #     eta = derivation(t, DE).quo(Poly(t**2 + 1, t)) # eta in k
-        #     if 2*beta == Db/b for some v in k* (see pg. 176) and \
-        #     alpha*sqrt(-1) + beta == 2*b*eta*sqrt(-1) + Dz/z:
-        #     # parametric logarithmic derivative problem
-        #         n = min(n, m)
-        raise NotImplementedError("The ability to solve the parametric "
-            "logarithmic derivative problem is required to solve this PRDE.")
+        # Possible cancellation.
+        if case == 'exp':
+            dcoeff = DE.d.quo(Poly(DE.t, DE.t))
+            with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                      # because case != 'base'.
+                alphaa, alphad = frac_in(-ba.eval(0)/bd.eval(0)/a.eval(0), DE.t)
+                etaa, etad = frac_in(dcoeff, DE.t)
+                A = parametric_log_deriv(alphaa, alphad, etaa, etad, DE)
+                if A is not None:
+                    a, m, z = A
+                    if a == 1:
+                        n = min(n, m)
+
+        elif case == 'tan':
+            dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
+            with DecrementLevel(DE):  # We are guaranteed to not have problems,
+                                      # because case != 'base'.
+                alphaa, alphad = frac_in(im(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                etaa, etad = frac_in(dcoeff, DE.t)
+
+                if recognize_log_derivative(2*betaa, betad, DE):
+                    A = None
+                    try:
+                        A = parametric_log_deriv(alphaa*sqrt(-1)*betad+alphad*betaa, alphad*betad, etaa, etad, DE)
+                    except NotImplementedError:
+                        pass
+                    if A is not None:
+                       a, m, z = A
+                       if a == 1:
+                           n = min(n, m)
 
     N = max(0, -nb)
     pN = p**N

@@ -43,6 +43,11 @@ def test_prde_special_denom():
     assert prde_special_denom(Poly(1, t), Poly(t**2, t), Poly(1, t), G, DE) == \
         (Poly(1, t), Poly(t**2 - 1, t), [(Poly(t**2, t), Poly(1, t)),
         (Poly(1, t), Poly(1, t))], Poly(t, t))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t**2 + 1, t)]})
+    assert prde_special_denom(Poly(5*t + 1, t), Poly(t**2, t), Poly(1, t), G, DE) == \
+    (Poly(5*t + 1, t), Poly(t**2, t),[(Poly(t, t), Poly(1, t)),(Poly(1, t), Poly(t, t))],
+     Poly(1, t))
+    DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(1/x, t)]})
 
 
 def test_prde_linear_constraints():

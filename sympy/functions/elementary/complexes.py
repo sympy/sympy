@@ -131,7 +131,6 @@ class im(Function):
 
     is_real = True
     unbranched = True  # implicitely works on the projection to C
-
     @classmethod
     def eval(cls, arg):
         if arg is S.NaN:
