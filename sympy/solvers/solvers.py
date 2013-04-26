@@ -1100,7 +1100,10 @@ def _solve(f, *symbols, **flags):
                             matches_other_piece = True
                             break
                     if not matches_other_piece:
-                        result.add(candidate)
+                        result.add(Piecewise(
+                            (candidate, cond is True or cond.doit()),
+                            (S.NaN, True)
+                        ))
         check = False
     else:
         # first see if it really depends on symbol and whether there
