@@ -1,9 +1,9 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Wild, acos,
-    asin, atan, atanh, cos, cosh, diff, exp, expand, im, log, pi, re, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root)
+    LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
+    Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
+    log, pi, re, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
+    sympify, tan, tanh, root)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -1110,6 +1110,16 @@ def test_issue_2957():
     assert set(solve((tanh(x + 3)*tanh(x - 3) + 1)**2)) == \
         set([-log(2)/2 + log(-1 - I), -log(2)/2 + log(-1 + I),
             -log(2)/2 + log(1 - I), -log(2)/2 + log(1 + I)])
+
+
+def test_issue_2961():
+    x = Symbol('x')
+    y = Symbol('y', positive=True)
+    absxm3 = Piecewise(
+        (x - 3, S(0) <= x - 3),
+        (3 - x, S(0) > x - 3)
+    )
+    assert solve(absxm3 - y, x) == [-y + 3, y + 3]
 
 
 def test_issue_2574():
