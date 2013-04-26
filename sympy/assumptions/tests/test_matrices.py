@@ -166,3 +166,9 @@ def test_field_assumptions():
     assert ask(Q.real_elements(Trace(X)), Q.real_elements(X))
     assert ask(Q.integer_elements(Determinant(X)), Q.integer_elements(X))
     assert not ask(Q.integer_elements(X.I), Q.integer_elements(X))
+
+def test_matrix_element_sets():
+    X = MatrixSymbol('X', 4, 4)
+    assert ask(Q.real(X[1, 2]), Q.real_elements(X))
+    assert ask(Q.integer(X[1, 2]), Q.integer_elements(X))
+    assert ask(Q.complex(X[1, 2]), Q.complex_elements(X))

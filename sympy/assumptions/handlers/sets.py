@@ -83,6 +83,10 @@ class AskIntegerHandler(CommonHandler):
     def Abs(expr, assumptions):
         return ask(Q.integer(expr.args[0]), assumptions)
 
+    @staticmethod
+    def MatrixElement(expr, assumptions):
+        return ask(Q.integer_elements(expr.args[0]), assumptions)
+
 
 class AskRationalHandler(CommonHandler):
     """
@@ -249,6 +253,10 @@ class AskRealHandler(CommonHandler):
 
     cos, exp = [sin]*2
 
+    @staticmethod
+    def MatrixElement(expr, assumptions):
+        return ask(Q.real_elements(expr.args[0]), assumptions)
+
 
 class AskExtendedRealHandler(AskRealHandler):
     """
@@ -341,6 +349,10 @@ class AskComplexHandler(CommonHandler):
         [staticmethod(CommonHandler.AlwaysTrue)]*9 # they are all complex functions or expressions
 
     Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2
+
+    @staticmethod
+    def MatrixElement(expr, assumptions):
+        return ask(Q.complex_elements(expr.args[0]), assumptions)
 
 
 class AskImaginaryHandler(CommonHandler):
