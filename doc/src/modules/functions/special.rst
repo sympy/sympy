@@ -107,6 +107,8 @@ Jacobi Polynomials
 .. autoclass:: sympy.functions.special.polynomials.jacobi
    :members:
 
+.. autofunction:: sympy.functions.special.polynomials.jacobi_normalized
+
 Gegenbauer Polynomials
 ++++++++++++++++++++++
 
@@ -174,4 +176,3 @@ Tensor Functions
 
 .. autoclass:: sympy.functions.special.tensor_functions.KroneckerDelta
    :members:
-
