@@ -156,6 +156,8 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     returned by classifier functions, and the values being the dict of form
     as mentioned above.
 
+    Key 'eq' is a common key to all the above mentioned hints which returns an
+    expression if eq given by user is an Equality.
 
     See Also
     ========
@@ -243,6 +245,7 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
                 classify=False, order=hints['order'], match=hints[i], type=type)
             retdict[i] = sol
         retdict['all'] = True
+        retdict['eq'] = eq
         return retdict
     elif hint not in allhints:  # and hint not in ('default', 'ordered_hints'):
         raise ValueError("Hint not recognized: " + hint)
@@ -251,5 +254,5 @@ def _desolve(eq, func=None, hint="default", simplify=True, **kwargs):
     else:
         # Key added to identify the hint needed to solve the equation
         hints['hint'] = hint
-    hints['func'] = func
+    hints.update({'func': func, 'eq': eq})
     return hints

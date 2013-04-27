@@ -136,6 +136,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
         hint=hint, simplify=True, type='pde', **kwargs)
+    eq = hints['eq']
     all_ = hints.pop('all', False)
 
     if all_:
