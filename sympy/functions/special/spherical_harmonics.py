@@ -69,25 +69,25 @@ class Ynm(Function):
     1/(2*sqrt(pi))
 
     >>> simplify(Ynm(1, -1, theta, phi).expand(func=True))
-    sqrt(6)*sqrt(sin(theta)**2)*exp(-I*phi)/(4*sqrt(pi))
+    sqrt(6)*exp(-I*phi)*sin(theta)/(4*sqrt(pi))
 
     >>> simplify(Ynm(1, 0, theta, phi).expand(func=True))
     sqrt(3)*cos(theta)/(2*sqrt(pi))
 
     >>> simplify(Ynm(1, 1, theta, phi).expand(func=True))
-    -sqrt(6)*sqrt(sin(theta)**2)*exp(I*phi)/(4*sqrt(pi))
+    -sqrt(6)*exp(I*phi)*sin(theta)/(4*sqrt(pi))
 
     >>> simplify(Ynm(2, -2, theta, phi).expand(func=True))
     sqrt(30)*exp(-2*I*phi)*sin(theta)**2/(8*sqrt(pi))
 
     >>> simplify(Ynm(2, -1, theta, phi).expand(func=True))
-    sqrt(30)*sqrt(sin(theta)**2)*exp(-I*phi)*cos(theta)/(4*sqrt(pi))
+    sqrt(30)*exp(-I*phi)*sin(2*theta)/(8*sqrt(pi))
 
     >>> simplify(Ynm(2, 0, theta, phi).expand(func=True))
-    sqrt(5)*(-3*sin(theta)**2 + 2)/(4*sqrt(pi))
+    sqrt(5)*(3*cos(theta)**2 - 1)/(4*sqrt(pi))
 
     >>> simplify(Ynm(2, 1, theta, phi).expand(func=True))
-    -sqrt(30)*sqrt(sin(theta)**2)*exp(I*phi)*cos(theta)/(4*sqrt(pi))
+    -sqrt(30)*exp(I*phi)*sin(2*theta)/(8*sqrt(pi))
 
     >>> simplify(Ynm(2, 2, theta, phi).expand(func=True))
     sqrt(30)*exp(2*I*phi)*sin(theta)**2/(8*sqrt(pi))
