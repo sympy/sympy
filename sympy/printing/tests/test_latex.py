@@ -12,7 +12,7 @@ from sympy import (
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial)
+    uppergamma, zeta, subfactorial, totient)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -237,6 +237,8 @@ def test_latex_functions():
         polar_lift(0)) == r"\operatorname{polar\_lift}{\left (0 \right )}"
     assert latex(polar_lift(
         0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
+
+    assert latex(totient(n)) == r'\phi\left( n \right)'
 
 
 def test_hyper_printing():
