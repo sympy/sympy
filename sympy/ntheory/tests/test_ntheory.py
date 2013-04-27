@@ -1,5 +1,5 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-    multinomial_coefficients, Mul, S, Pow, sieve
+    multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy
 from sympy import factorial as fac
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
@@ -356,6 +356,12 @@ def test_totient():
     assert totient(5005) == 2880
     assert totient(5006) == 2502
     assert totient(5009) == 5008
+    assert totient(2**100) == 2**99
+
+    m = Symbol("m", integer=True)
+    assert totient(m)
+    assert totient(m).subs(m, 3**10) == 3**10 - 3**9
+    assert summation(totient(m), (m, 1, 11)) == 42
 
 
 def test_partitions():
