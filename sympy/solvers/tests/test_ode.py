@@ -1581,3 +1581,11 @@ def test_linear_coefficients():
     eq = df + (3 + 2*f(x))/(x + 3)
     assert dsolve(eq, hint='linear_coefficients') == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+
+def test_issue_3780():
+    f = Function('f')
+    eq = Eq(Derivative(f(x),x,2)-2*Derivative(f(x),x)+f(x), sin(x))
+    sol = (C1 + C2*x)*exp(x) + cos(x)/S(2)
+    assert dsolve(eq).rhs == sol
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
