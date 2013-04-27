@@ -529,7 +529,12 @@ def test_issue_2553():
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
 
-
+def test_issue_3300():
+    f = symbols('f', cls=Function)
+    x0, y0, _xi_2 = symbols('x0 y0 _xi_2')
+    assert simplify(x0*Derivative(f(x0, y0), y0) -
+                    x0*Subs(Derivative(f(x0, _xi_2), _xi_2), (_xi_2,), (y0,)))\
+                    == 0
 def test_simplify_fail1():
     x = Symbol('x')
     y = Symbol('y')

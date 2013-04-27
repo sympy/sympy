@@ -3503,7 +3503,7 @@ def signsimp(expr, evaluate=True):
     return e
 
 
-def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
+def simplify(expr, ratio=1.7, measure=count_ops, fu=False, doit=True):
     """
     Simplifies the given expression.
 
@@ -3641,6 +3641,9 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if not isinstance(expr, Basic):  # XXX: temporary hack
         return expr
+
+    if doit:
+        expr = expr.doit()
 
     # TODO: Apply different strategies, considering expression pattern:
     # is it a purely rational function? Is there any trigonometric function?...
