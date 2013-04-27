@@ -1354,7 +1354,7 @@ class.
 
 .. function:: S(x)
 
-    :func:`S` instanciates a scaler multivector of value ``x``, where ``x`` can be a
+    :func:`S` instantiates a scaler multivector of value ``x``, where ``x`` can be a
     :mod:`sympy` variable or integer.  This is just a shorthand method for
     constructing scalar multivectors and can be used when there is any ambiguity
     in a multivector expression as to whether a symbol or constant should be
