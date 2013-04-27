@@ -51,7 +51,7 @@ from sympy.polys.monomialtools import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
-    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
+    exp, sin, tanh, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
 
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
@@ -335,10 +335,8 @@ def test_Poly__new__():
         3.0*x**2 + 2.0*x + 1, domain='RR').all_coeffs() == [3.0, 2.0, 1.0]
 
     raises(CoercionFailed, lambda: Poly(3.1*x**2 + 2.1*x + 1, domain='ZZ'))
-    assert Poly(3.1*x**2 + 2.1*x + 1, domain='QQ').all_coeffs() == [S(
-        31)/10, S(21)/10, 1]
-    assert Poly(
-        3.1*x**2 + 2.1*x + 1, domain='RR').all_coeffs() == [3.1, 2.1, 1.0]
+    assert Poly(3.1*x**2 + 2.1*x + 1, domain='QQ').all_coeffs() == [S(31)/10, S(21)/10, 1]
+    assert Poly(3.1*x**2 + 2.1*x + 1, domain='RR').all_coeffs() == [3.1, 2.1, 1.0]
 
     assert Poly({(2, 1): 1, (1, 2): 2, (1, 1): 3}, x, y) == \
         Poly(x**2*y + 2*x*y**2 + 3*x*y, x, y)
@@ -902,7 +900,7 @@ def test_Poly_to_field():
     assert Poly(x/2 + 1, domain='QQ').to_field() == Poly(x/2 + 1, domain='QQ')
     assert Poly(2*x + 1, modulus=3).to_field() == Poly(2*x + 1, modulus=3)
 
-    raises(DomainError, lambda: Poly(2.0*x + 1.0).to_field())
+    assert Poly(2.0*x + 1.0).to_field() == Poly(2.0*x + 1.0)
 
 
 def test_Poly_to_exact():
@@ -1978,7 +1976,7 @@ def test_terms_gcd():
     assert terms_gcd(2*x**3*y + 4*x*y**3) == 2*x*y*(x**2 + 2*y**2)
     assert terms_gcd(2*x**3*y/3 + 4*x*y**3/5) == 2*x*y/15*(5*x**2 + 6*y**2)
 
-    assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == x*y*(2.0*x**2 + 4.1*y**2)
+    assert terms_gcd(2.0*x**3*y + 4.1*x*y**3) == 1.0*x*y*(2.0*x**2 + 4.1*y**2)
 
     assert terms_gcd((3 + 3*x)*(x + x*y), expand=False) == \
         (3*x + 3)*(x*y + x)
@@ -2833,6 +2831,14 @@ def test_cancel():
     assert f.cancel(g, include=True) == (
         Poly(5*y + 1, y, domain='ZZ(x)'), Poly(2*x*y, y, domain='ZZ(x)'))
 
+    f = -(-2*x - 4*y + 0.005*(z - y)**2)/((z - y)*(-z + y + 2))
+    assert cancel(f).is_Mul == True
+
+    P = tanh(x - 3.0)
+    Q = tanh(x + 3.0)
+    f = ((-2*P**2 + 2)*(-P**2 + 1)*Q**2/2 + (-2*P**2 + 2)*(-2*Q**2 + 2)*P*Q - (-2*P**2 + 2)*P**2*Q**2 + (-2*Q**2 + 2)*(-Q**2 + 1)*P**2/2 - (-2*Q**2 + 2)*P**2*Q**2)/(2*sqrt(P**2*Q**2 + 0.0001)) \
+      + (-(-2*P**2 + 2)*P*Q**2/2 - (-2*Q**2 + 2)*P**2*Q/2)*((-2*P**2 + 2)*P*Q**2/2 + (-2*Q**2 + 2)*P**2*Q/2)/(2*(P**2*Q**2 + 0.0001)**(S(3)/2))
+    assert cancel(f).is_Mul == True
 
 def test_reduced():
     f = 2*x**4 + y**2 - x**2 + y**3
@@ -2880,16 +2886,13 @@ def test_reduced():
 def test_groebner():
     assert groebner([], x, y, z) == []
 
-    assert groebner([x**2 + 1, y**4*x + x**3],
-        x, y, order='lex') == [1 + x**2, -1 + y**4]
-    assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3],
-        x, y, z, order='grevlex') == [-1 + y**4, z**3, 1 + x**2]
+    assert groebner([x**2 + 1, y**4*x + x**3], x, y, order='lex') == [1 + x**2, -1 + y**4]
+    assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex') == [-1 + y**4, z**3, 1 + x**2]
 
     assert groebner([x**2 + 1, y**4*x + x**3], x, y, order='lex', polys=True) == \
         [Poly(1 + x**2, x, y), Poly(-1 + y**4, x, y)]
     assert groebner([x**2 + 1, y**4*x + x**3, x*y*z**3], x, y, z, order='grevlex', polys=True) == \
-        [Poly(
-            -1 + y**4, x, y, z), Poly(z**3, x, y, z), Poly(1 + x**2, x, y, z)]
+        [Poly(-1 + y**4, x, y, z), Poly(z**3, x, y, z), Poly(1 + x**2, x, y, z)]
 
     assert groebner([x**3 - 1, x**2 - 1]) == [x - 1]
     assert groebner([Eq(x**3, 1), Eq(x**2, 1)]) == [x - 1]
@@ -2919,7 +2922,7 @@ def test_groebner():
 
     assert groebner([1], x) == [1]
 
-    raises(DomainError, lambda: groebner([x**2 + 2.0*y], x, y))
+    assert groebner([x**2 + 2.0*y], x, y) == [1.0*x**2  + 2.0*y]
     raises(ComputationFailed, lambda: groebner([1]))
 
     assert groebner([x**2 - 1, x**3 + 1], method='buchberger') == [x + 1]

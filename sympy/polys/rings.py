@@ -374,6 +374,22 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __ne__(p1, p2):
         return not p1.__eq__(p2)
 
+    def almosteq(p1, p2):
+        """Approximate equality test for polynomials. """
+        if p1.ring.domain.is_Exact:
+            return p1.__eq__(p2)
+
+        p2 = p1.ring.ring_new(p2)
+
+        if p1.keys() != p1.keys():
+            return False
+
+        for c1, c2 in zip(p1.coeffs(), p2.coeffs()):
+            if not c1.ae(c2):
+                return False
+
+        return True
+
     def drop(self, gen):
         i, ring = self.ring._drop(gen)
         poly = ring.zero
@@ -838,7 +854,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         domain = self.ring.domain
         domain_quo = domain.quo
 
-        if domain.has_Field or not domain.is_Exact:
+        if domain.has_Field:
             def term_div((a_lm, a_lc), (b_lm, b_lc)):
                 if b_lm == zm: # apparently this is a very common case
                     monom = a_lm
@@ -1247,7 +1263,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not f or x == domain.one:
             return f
 
-        if domain.has_Field or not domain.is_Exact:
+        if domain.has_Field:
             quo = domain.quo
             terms = [ (monom, quo(coeff, x)) for monom, coeff in f.terms() ]
         else:

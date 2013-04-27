@@ -2061,7 +2061,7 @@ class Poly(Expr):
 
         coeff, f = dom.to_sympy(coeff), f.per(result)
 
-        if not convert:
+        if not convert or not dom.has_assoc_Ring:
             return coeff, f
         else:
             return coeff, f.to_ring()

@@ -60,9 +60,9 @@ class PythonIntegerRing(IntegerRing):
         if a.denom() == 1:
             return PythonInteger(a.numer())
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert mpmath's ``mpf`` to Python's ``int``. """
-        p, q = K0.as_integer_ratio(a)
+        p, q = K0.to_rational(a)
 
         if q == 1:
             return PythonInteger(p)

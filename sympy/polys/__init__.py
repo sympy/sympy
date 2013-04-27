@@ -75,7 +75,7 @@ from polyroots import (
 )
 
 from domains import (
-    FF, GF, ZZ, QQ, RR, EX,
+    FF, GF, ZZ, QQ, RR, RealField, CC, ComplexField, EX,
 )
 
 from constructor import (

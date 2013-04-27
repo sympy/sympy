@@ -29,7 +29,7 @@ class PythonRationalField(RationalField):
             return PythonRational(a.p, a.q)
         elif a.is_Float:
             from sympy.polys.domains import RR
-            return PythonRational(*RR.as_integer_ratio(a))
+            return PythonRational(*RR.to_rational(a))
         else:
             raise CoercionFailed("expected `Rational` object, got %s" % a)
 
@@ -50,9 +50,9 @@ class PythonRationalField(RationalField):
         return PythonRational(PythonInteger(a.numer()),
                               PythonInteger(a.denom()))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath `mpf` object to `dtype`. """
-        return PythonRational(*K0.as_integer_ratio(a))
+        return PythonRational(*K0.to_rational(a))
 
     def numer(self, a):
         """Returns numerator of `a`. """

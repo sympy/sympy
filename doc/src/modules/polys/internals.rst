@@ -98,7 +98,7 @@ Concrete Domains
 .. autoclass:: FractionField
    :members:
 
-.. autoclass:: RealDomain
+.. autoclass:: RealField
    :members:
 
 .. autoclass:: ExpressionDomain
@@ -115,9 +115,6 @@ Implementation Domains
 
 .. autoclass:: PythonRationalField
 .. autoclass:: GMPYRationalField
-
-.. autoclass:: MPmathRealDomain
-
 
 Level One
 =========

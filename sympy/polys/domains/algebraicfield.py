@@ -89,7 +89,7 @@ class AlgebraicField(Field, CharacteristicZero, SimpleDomain):
         """Convert a GMPY ``mpq`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
-    def from_RR_mpmath(K1, a, K0):
+    def from_RealField(K1, a, K0):
         """Convert a mpmath ``mpf`` object to ``dtype``. """
         return K1(K1.dom.convert(a, K0))
 
