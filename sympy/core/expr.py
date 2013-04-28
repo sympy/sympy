@@ -471,8 +471,8 @@ class Expr(Basic, EvalfMixin):
         >>> one = cos(x)**2 + sin(x)**2
         >>> one.is_constant()
         True
-        >>> ((one - 1)**(x + 1)).is_constant() # could be 0 or 1
-        False
+        >>> ((one - 1)**(x + 1)).is_constant() in (True, False) # could be 0 or 1
+        True
         """
 
         simplify = flags.get('simplify', True)
@@ -501,9 +501,6 @@ class Expr(Basic, EvalfMixin):
 
         # simplify unless this has already been done
         if simplify:
-            self = self.as_content_primitive()[1]
-            if self.is_commutative:
-                self = self.cancel()
             self = self.simplify()
 
         # is_zero should be a quick assumptions check; it can be wrong for
@@ -581,10 +578,7 @@ class Expr(Basic, EvalfMixin):
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
         # simplification steps that are done will be very fast.
-        diff = (self - other).as_content_primitive()[1]
-        if diff.is_commutative:
-            diff = diff.cancel()
-        diff = factor_terms(diff.simplify(), radical=True)
+        diff = factor_terms((self - other).simplify(), radical=True)
 
         if not diff:
             return True

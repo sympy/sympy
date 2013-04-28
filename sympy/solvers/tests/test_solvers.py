@@ -252,7 +252,7 @@ def test_linear_system():
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
-        {y: 0, z: t*(-n - 1)/n, x: t*(-n - 1)/n}
+        {x: -t - t/n, z: -t - t/n, y: 0}
 
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
@@ -289,7 +289,10 @@ def test_tsolve():
         log(y/2 + sqrt(y**2 - 4)/2),
     ]), set([
         log(y - sqrt(y**2 - 4)) - log(2),
-        log(y + sqrt(y**2 - 4)) - log(2)])]
+        log(y + sqrt(y**2 - 4)) - log(2)]),
+    set([
+        log(y/2 - sqrt((y - 2)*(y + 2))/2),
+        log(y/2 + sqrt((y - 2)*(y + 2))/2)])]
     assert solve(exp(x) - 3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x) - 3, x) == [exp(3)]
@@ -1103,13 +1106,15 @@ def test_solve_abs():
 def test_issue_2957():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
     assert set(solve(tanh(x - 1)*tanh(x + 1) + 1)) == set([
-        -log(2)/2 + log(-1 - I),
-        -log(2)/2 + log(-1 + I),
         -log(2)/2 + log(1 - I),
-        -log(2)/2 + log(1 + I)])
-    assert set(solve((tanh(x + 3)*tanh(x - 3) + 1)**2)) == \
-        set([-log(2)/2 + log(-1 - I), -log(2)/2 + log(-1 + I),
-            -log(2)/2 + log(1 - I), -log(2)/2 + log(1 + I)])
+        -log(2)/2 + log(-1 - I),
+        -log(2)/2 + log(1 + I),
+        -log(2)/2 + log(-1 + I),])
+    assert set(solve((tanh(x + 3)*tanh(x - 3) + 1)**2)) == set([
+        -log(2)/2 + log(1 - I),
+        -log(2)/2 + log(-1 - I),
+        -log(2)/2 + log(1 + I),
+        -log(2)/2 + log(-1 + I),])
 
 
 def test_issue_2574():

@@ -354,12 +354,12 @@ def test_polar():
     assert (exp_polar(1.0*pi*I).n(n=5)).as_real_imag()[1] >= 0
 
 def test_log_product():
-    from sympy.abc import i, j, n, m
+    from sympy.abc import n, m
     i, j = symbols('i,j', positive=True, integer=True)
     x, y = symbols('x,y', positive=True)
     from sympy.concrete import Product, Sum
     f, g = Function('f'), Function('g')
-    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
+    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(log(x**i), (i, 1, n))
     assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
             Sum(log(x**i*y**j), (i, 1, n), (j, 1, m))
 
