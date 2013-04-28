@@ -131,11 +131,14 @@ def test_Lambda_symbols():
     assert Lambda(x, 2*x).free_symbols == set()
     assert Lambda(x, x*y).free_symbols == set([y])
 
+def test_issue_3775():
+    hash(Lambda(x, x*y)) != hash(Lambda(z, z*y**2)) is True
+    hash(Lambda((x, y), x + y)) == hash(Lambda((z, w), z + w)) is False
 
+     
 def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
     raises(TypeError, lambda: Lambda((x, y), x + y)(x))
-
 
 def test_Lambda_equality():
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
