@@ -321,7 +321,6 @@ def test_tsolve():
     assert len(ans) == 3 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
     assert solve(2*log(3*x + 4) - 3, x) == [(exp(Rational(3, 2)) - 4)/3]
     assert solve(exp(x) + 1, x) == [pi*I]
-    assert solve(x**2 - 2**x, x) == [2]
     assert solve(x**3 - 3**x, x) == [-3*LambertW(-log(3)/3)/log(3)]
 
     A = -7*2**Rational(4, 5)*6**Rational(1, 5)*log(7)/10
@@ -1233,7 +1232,11 @@ def test_issues_3720_3721_3722():
 
 
 def test_lambert_multivariate():
-    from sympy.abc import x
+    from sympy.abc import a, x, y
+    from sympy.solvers.bivariate import _filtered_gens, _lambert, _solve_lambert
+
+    assert _filtered_gens(Poly(x + 1/x + exp(x) + y), x) == set([x, exp(x)])
+    assert _lambert(x, x) == []
     assert solve((x**2 - 2*x + 1).subs(x, log(x) + 3*x)) == [LambertW(3*S.Exp1)/3]
     assert solve((x**2 - 2*x + 1).subs(x, (log(x) + 3*x)**2 - 1)) == \
           [LambertW(3*exp(-sqrt(2)))/3, LambertW(3*exp(sqrt(2)))/3]
@@ -1244,6 +1247,31 @@ def test_lambert_multivariate():
     assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
     assert solve((2*(3*x + 4)**5 - 6*7**(3*x + 9)).expand(), x) == \
         [S(-5)*LambertW(-7*3**(S(1)/5)*log(7)/5)/(3*log(7)) + S(-4)/3]
+    assert solve(x**2 - 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
+    assert solve(-x**2 + 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
+
+    # if sign is unknown then only this one solution is obtained
+    assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
+        -((log(a**5) + LambertW(S(1)/3))/(3*log(a)))]  # tested numerically
+    p = symbols('p', positive=True)
+    assert solve(3*log(p**(3*x + 5)) + p**(3*x + 5), x) == [
+        log((-3**(S(1)/3) + 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3)))/log(p),
+        log(-((3**(S(1)/3) + 3**(S(5)/6)*I)*LambertW(S(1)/3)**(S(1)/3)/(2*p**(S(5)/3))))/log(p),
+        log((3*LambertW(S(1)/3)/p**5)**(S(1)/(3*log(p))))]  # tested numerically
+    # check collection
+    assert solve(3*log(a**(3*x + 5)) + b*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
+        -((log(a**5) + LambertW(1/(b + 3)))/(3*log(a)))]
+
+    eq = 4*2**(2*p + 3) - 2*p - 3
+    assert _solve_lambert(eq, p, _filtered_gens(Poly(eq), p)) == [
+        -S(3)/2 - LambertW(-4*log(2))/(2*log(2))]
+
+    # issue 1172
+    assert solve((a/x + exp(x/2)).diff(x, 2), x) == [
+        6*LambertW((-1)**(S(1)/3)*a**(S(1)/3)/3)]
+
+    assert solve((log(x) + x).subs(x, x**2 + 1)) == [
+        -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
 
 
 @XFAIL

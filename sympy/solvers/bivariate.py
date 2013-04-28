@@ -112,27 +112,25 @@ def _lambert(eq, x):
     """
     Given an expression assumed to be in the form
         ``F(X, a..f) = a*log(b*X + c) + d*X + f = 0``
-    return the Lambert solution if possible:
-        ``X = -c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(-f/a))``.
+    where X = g(x) and x = g^-1(X), return the Lambert solution if possible:
+        ``x = g^-1(-c/b + (a/d)*W(d/(a*b)*exp(c*d/a/b)*exp(-f/a)))``.
     """
     eq = _mexpand(expand_log(eq))
     mainlog = _mostfunc(eq, log, x)
     if not mainlog:
-        return [] # violated assumptions
+        return []  # violated assumptions
     other = eq.subs(mainlog, 0)
     if not x in other.free_symbols:
         return [] # violated assumptions
     d, f, X2 = _linab(other, x)
-    logterm = eq - other
-    a = logterm.subs(mainlog, 1)
-    if x in a.free_symbols:
-        return [] # violated assumptions
-    logarg = (logterm/a).args[0]
+    logterm = collect(eq - other, mainlog)
+    a = logterm.as_coefficient(mainlog)
+    if a is None or x in a.free_symbols:
+        return []  # violated assumptions
+    logarg = mainlog.args[0]
     b, c, X1 = _linab(logarg, x)
-    if X1*X2 == 1:
-        X1 = 1/X1
     if X1 != X2:
-        return []
+        return []  # violated assumptions
 
     u = Dummy('rhs')
     rhs = -c/b + (a/d)*LambertW(d/(a*b)*exp(c*d/a/b)*exp(-f/a))
@@ -143,10 +141,7 @@ def _lambert(eq, x):
 
     solns = solve(X1 - u, x)
     for i, tmp in enumerate(solns):
-        solns[i] = tmp.subs(u,rhs)
-    if solns == [2]:
-        # hack: how to get this as a soln for x**2 - 2**x = 0?
-        solns = [-2/log(2)*LambertW(log(2)/2)]
+        solns[i] = tmp.subs(u, rhs)
     return solns
 
 
@@ -183,7 +178,7 @@ def _solve_lambert(f, symbol, gens):
       a = -1, d = a*log(p), f = -log(d) - g*log(p)
     """
 
-    nrhs, lhs = f.as_independent(symbol)
+    nrhs, lhs = f.as_independent(symbol, as_Add=True)
     rhs = -nrhs
     lamcheck = [tmp for tmp in gens
                 if (tmp.func in [exp, log] or
@@ -210,11 +205,11 @@ def _solve_lambert(f, symbol, gens):
     #         log(B) + log(log(B)) = log(log(R))
     # 1b) d*log(a*B + b) + c*B = R
     #     lhs is Add:
-    #         expand log of both sides to give:
-    #         log(log(a*B + b)) - log(R - c*B) = -log(d)
+    #         isolate c*B and expand log of both sides:
+    #         log(c) + log(B) = log(R - d*log(a*B + b))
 
-    rv = []
-    if not rv:
+    soln = []
+    if not soln:
         mainlog = _mostfunc(lhs, log, symbol)
         if mainlog:
             was = lhs
@@ -228,18 +223,14 @@ def _solve_lambert(f, symbol, gens):
                 soln = _lambert(log(lhs) - log(rhs), symbol)
             elif lhs.is_Add:
                 other = lhs.subs(mainlog, 0)
-                if (other.is_Pow or other.is_Mul and
-                        [tmp for tmp in other.atoms(Pow)
-                        if symbol in tmp.free_symbols]):
+                if other and not other.is_Add and [
+                        tmp for tmp in other.atoms(Pow)
+                        if symbol in tmp.free_symbols]:
                     diff = log(other) - log(rhs - (lhs - other))
                     soln = _lambert(expand_log(diff), symbol)
                 else:
                     #it's ready to go
                     soln = _lambert(lhs - rhs, symbol)
-            else:
-                soln = []
-            for si in soln:
-                rv.append(si)
 
     # For the next two,
     #     collect on main exp
@@ -253,7 +244,7 @@ def _solve_lambert(f, symbol, gens):
     #             log and rearrange
     #             log(R + b*B) - d*B = log(g) + h
 
-    if not rv:
+    if not soln:
         mainexp = _mostfunc(lhs, exp, symbol)
         if mainexp:
             lhs = collect(lhs, mainexp)
@@ -270,16 +261,12 @@ def _solve_lambert(f, symbol, gens):
                     rhs *= -1
                 diff = log(mainterm) - log(rhs)
                 soln = _lambert(expand_log(diff), symbol)
-            else:
-                soln = []
-            for si in soln:
-                rv.append(si)
 
     # 3) d*p**(a*B + b) + c*B = R
     #     collect on main pow
     #     log(R - c*B) - a*B*log(p) = log(d) + b*log(p)
 
-    if not rv:
+    if not soln:
         mainpow = _mostfunc(lhs, Pow, symbol)
         if mainpow and symbol in mainpow.exp.free_symbols:
             lhs = collect(lhs, mainpow)
@@ -290,22 +277,14 @@ def _solve_lambert(f, symbol, gens):
                 other = lhs.subs(mainpow, 0)
                 mainterm = lhs - other
                 rhs = rhs - other
-                if (mainterm.could_extract_minus_sign() and
-                    rhs.could_extract_minus_sign()):
-                    mainterm *= -1
-                    rhs *= -1
                 diff = log(mainterm) - log(rhs)
                 soln = _lambert(expand_log(diff), symbol)
-            else:
-                soln=[]
-            for si in soln:
-                rv.append(si)
 
-    if not rv:
+    if not soln:
         raise NotImplementedError('%s does not appear to have a solution in '
             'terms of LambertW' % f)
 
-    return rv
+    return soln
 
 
 def bivariate_type(f, x, y, **kwargs):

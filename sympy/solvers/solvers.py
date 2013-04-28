@@ -2146,7 +2146,15 @@ def _tsolve(eq, sym, **flags):
             if m:
                 soln = sol.subs(m).subs(_x, sym)
                 if sym not in soln.free_symbols:
-                    return [soln]
+                    # hack for this special case that is caught by a pattern
+                    # that doesn't give the Lambert solution
+                    if soln == 2 and eq2.primitive()[1] in (
+                            _x**2 - 2**_x, 2**_x - _x**2):
+                        soln = [-2/log(2)*LambertW(log(2)/2), soln]
+                    else:
+                        soln = [soln]
+                    return soln
+
         if itry == 0:
             # lambert forms may need some help being recognized, e.g. changing
             # 2**(3*x) + x**3*log(2)**3 + 3*x**2*log(2)**2 + 3*x*log(2) + 1
