@@ -1539,7 +1539,25 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
     supports numerical comparison of floats occuring in the output of the
     doctest examples
     """
-    num_rgx = re.compile('([0-9]+\.[0-9]*|\.[0-9]+)')
+
+    def __init__(self):
+        # NOTE OutputChecker is an old-style class with no __init__ method,
+        # so we can't call the base class version of __init__ here
+
+        got_floats = r'(\d+\.\d*|\.\d+)'
+
+        # floats in the 'want' string may contain ellipses
+        want_floats = got_floats + r'(\.{3})?'
+
+        sep = r'\s|\*|,'
+
+        fbeg = r'^%s(?=%s|$)' % (got_floats, sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (sep, got_floats, sep)
+        self.num_got_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
+
+        fbeg = r'^%s(?=%s|$)' % (want_floats, sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (sep, want_floats, sep)
+        self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
 
     def check_output(self, want, got, optionflags):
         """
@@ -1557,21 +1575,29 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
             return True
 
         # TODO parse integers as well ?
-        # parse floats and compare them
-        numbers_got = self.num_rgx.findall(got)
-        numbers_want = self.num_rgx.findall(want)
+        # Parse floats and compare them. If some of the parsed floats contain
+        # ellipses, skip the comparison.
+        matches = self.num_got_rgx.finditer(got)
+        numbers_got = [match.group(1) for match in matches] # list of strs
+        matches = self.num_want_rgx.finditer(want)
+        numbers_want = [match.group(1) for match in matches] # list of strs
         if len(numbers_got) != len(numbers_want):
             return False
 
         if len(numbers_got) > 0:
-            numbers_got_ = map(float, numbers_got)
-            numbers_want_ = map(float, numbers_want)
-            for ng, nw in zip(numbers_got_, numbers_want_):
-                if abs(ng-nw) > 1e-5:
+            nw_  = []
+            for ng, nw in zip(numbers_got, numbers_want):
+                if '...' in nw:
+                    nw_.append(ng)
+                    continue
+                else:
+                    nw_.append(nw)
+
+                if abs(float(ng)-float(nw)) > 1e-5:
                     return False
 
-            got = self.num_rgx.sub('%s', got)
-            got = got % tuple(numbers_want)
+            got = self.num_got_rgx.sub(r'%s', got)
+            got = got % tuple(nw_)
 
         # <BLANKLINE> can be used as a special sequence to signify a
         # blank line, unless the DONT_ACCEPT_BLANKLINE flag is used.
