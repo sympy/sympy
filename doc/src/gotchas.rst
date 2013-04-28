@@ -286,7 +286,7 @@ If you type an expression that just has numbers in it, it will default
 to a Python expression.  Use the :func:`sympify` function, or just
 :func:`S`, to ensure that something is a SymPy expression.
 
-    >>> 6.2  # Python float. Notice the floating point accuracy problems. #doctest: +SKIP
+    >>> 6.2  # Python float. Notice the floating point accuracy problems.
     6.2000000000000002
     >>> type(6.2)
     <... 'float'>
