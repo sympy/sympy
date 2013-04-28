@@ -88,7 +88,7 @@ class QuotientRing(Ring):
     """
     Class representing (commutative) quotient rings.
 
-    You should not usually instatiate this by hand, instead use the constructor
+    You should not usually instantiate this by hand, instead use the constructor
     from the ring you are quotienting out by:
 
     >>> from sympy.abc import x

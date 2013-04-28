@@ -104,7 +104,7 @@ def test_Singleton():
         __metaclass__ = Singleton
 
         def __new__(cls):
-            global instatciated
+            global instantiated
             instantiated += 1
             return Basic.__new__(cls)
 

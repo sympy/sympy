@@ -288,8 +288,8 @@ to a Python expression.  Use the :func:`sympify` function, or just
 
     >>> 6.2  # Python float. Notice the floating point accuracy problems.
     6.2000000000000002
-    >>> type(6.2)
-    <type 'float'>
+    >>> type(6.2)  # <type 'float'> in Python 2.x,  <class 'float'> in Py3k
+    <... 'float'>
     >>> S(6.2)  # SymPy Float has no such problems because of arbitrary precision.
     6.20000000000000
     >>> type(S(6.2))
