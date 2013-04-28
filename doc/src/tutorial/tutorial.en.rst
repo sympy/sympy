@@ -816,6 +816,7 @@ Matrices are created as instances from the Matrix class:
     >>> from sympy import Matrix, Symbol
     >>> Matrix([[1, 0], [0, 1]])
     [1  0]
+    [    ]
     [0  1]
 
 They can also contain symbols:
@@ -827,10 +828,12 @@ They can also contain symbols:
     >>> A = Matrix([[1, x], [y, 1]])
     >>> A
     [1  x]
+    [    ]
     [y  1]
 
     >>> A**2
     [x*y + 1    2*x  ]
+    [                ]
     [  2*y    x*y + 1]
 
 For more about Matrices, see the Linear Algebra tutorial.

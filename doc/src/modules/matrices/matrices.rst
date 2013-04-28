@@ -14,16 +14,21 @@ import and declare our first ``Matrix`` object:
     >>> from sympy.matrices import Matrix, eye, zeros, ones, diag, GramSchmidt
     >>> M = Matrix([[1,0,0], [0,0,0]]); M
     [1  0  0]
+    [       ]
     [0  0  0]
     >>> Matrix([M, (0, 0, -1)])
     [1  0  0 ]
+    [        ]
     [0  0  0 ]
+    [        ]
     [0  0  -1]
     >>> Matrix([[1, 2, 3]])
     [1 2 3]
     >>> Matrix([1, 2, 3])
     [1]
+    [ ]
     [2]
+    [ ]
     [3]
 
 In addition to creating a matrix from a list of appropriately-sized lists
@@ -32,6 +37,7 @@ including a single list of values and dimension inputs:
 
     >>> Matrix(2, 3, [1, 2, 3, 4, 5, 6])
     [1  2  3]
+    [       ]
     [4  5  6]
 
 More interesting (and useful), is the ability to use a 2-variable function
@@ -46,8 +52,11 @@ is 1 on the diagonal and then use it to make the identity matrix:
     ...
     >>> Matrix(4, 4, f)
     [1  0  0  0]
+    [          ]
     [0  1  0  0]
+    [          ]
     [0  0  1  0]
+    [          ]
     [0  0  0  1]
 
 Finally let's use ``lambda`` to create a 1-line matrix with 1's in the even
@@ -55,7 +64,9 @@ permutation entries:
 
     >>> Matrix(3, 4, lambda i,j: 1 - (i+j) % 2)
     [1  0  1  0]
+    [          ]
     [0  1  0  1]
+    [          ]
     [1  0  1  0]
 
 There are also a couple of special constructors for quick matrix construction:
@@ -65,24 +76,33 @@ the diagonal:
 
     >>> eye(4)
     [1  0  0  0]
+    [          ]
     [0  1  0  0]
+    [          ]
     [0  0  1  0]
+    [          ]
     [0  0  0  1]
     >>> zeros(2)
     [0  0]
+    [    ]
     [0  0]
     >>> zeros(2, 5)
     [0  0  0  0  0]
+    [             ]
     [0  0  0  0  0]
     >>> ones(3)
     [1  1  1]
+    [       ]
     [1  1  1]
+    [       ]
     [1  1  1]
     >>> ones(1, 3)
     [1  1  1]
     >>> diag(1, Matrix([[1, 2], [3, 4]]))
     [1  0  0]
+    [       ]
     [0  1  2]
+    [       ]
     [0  3  4]
 
 
@@ -113,11 +133,13 @@ give a matrix in return, even if the dimension is 1 x 1::
 
     >>> M[0:2, 0:2]
     [1  2]
+    [    ]
     [4  5]
     >>> M[2:2, 2]
     []
     >>> M[:, 2]
     [3]
+    [ ]
     [6]
     >>> M[:1, 2]
     [3]
@@ -136,6 +158,7 @@ are in a slice:
     []
     >>> M[:, :10] # all columns up to the 10-th
     [1  2  3]
+    [       ]
     [4  5  6]
 
 Slicing an empty matrix works as long as you use a slice for the coordinate
@@ -158,14 +181,20 @@ entries:
     >>> M = Matrix(([1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]))
     >>> M
     [1   2   3   4 ]
+    [              ]
     [5   6   7   8 ]
+    [              ]
     [9   10  11  12]
+    [              ]
     [13  14  15  16]
     >>> M[2,2] = M[0,3] = 0
     >>> M
     [1   2   3   0 ]
+    [              ]
     [5   6   7   8 ]
+    [              ]
     [9   10  0   12]
+    [              ]
     [13  14  15  16]
 
 as well as assign slices:
@@ -174,8 +203,11 @@ as well as assign slices:
     >>> M[2:,2:] = Matrix(2,2,lambda i,j: 0)
     >>> M
     [1   2   3  4]
+    [            ]
     [5   6   7  8]
+    [            ]
     [9   10  0  0]
+    [            ]
     [13  14  0  0]
 
 All the standard arithmetic operations are supported:
@@ -183,24 +215,34 @@ All the standard arithmetic operations are supported:
     >>> M = Matrix(([1,2,3],[4,5,6],[7,8,9]))
     >>> M - M
     [0  0  0]
+    [       ]
     [0  0  0]
+    [       ]
     [0  0  0]
     >>> M + M
     [2   4   6 ]
+    [          ]
     [8   10  12]
+    [          ]
     [14  16  18]
     >>> M * M
     [30   36   42 ]
+    [             ]
     [66   81   96 ]
+    [             ]
     [102  126  150]
     >>> M2 = Matrix(3,1,[1,5,0])
     >>> M*M2
     [11]
+    [  ]
     [29]
+    [  ]
     [47]
     >>> M**2
     [30   36   42 ]
+    [             ]
     [66   81   96 ]
+    [             ]
     [102  126  150]
 
 As well as some useful vector operations:
@@ -208,10 +250,12 @@ As well as some useful vector operations:
     >>> M.row_del(0)
     >>> M
     [4  5  6]
+    [       ]
     [7  8  9]
     >>> M.col_del(1)
     >>> M
     [4  6]
+    [    ]
     [7  9]
     >>> v1 = Matrix([1,2,3])
     >>> v2 = Matrix([4,5,6])
@@ -231,16 +275,24 @@ appropriate size:
     >>> M2 = zeros(3, 4)
     >>> M1.row_join(M2)
     [1  0  0  0  0  0  0]
+    [                   ]
     [0  1  0  0  0  0  0]
+    [                   ]
     [0  0  1  0  0  0  0]
     >>> M3 = zeros(4, 3)
     >>> M1.col_join(M3)
     [1  0  0]
+    [       ]
     [0  1  0]
+    [       ]
     [0  0  1]
+    [       ]
     [0  0  0]
+    [       ]
     [0  0  0]
+    [       ]
     [0  0  0]
+    [       ]
     [0  0  0]
 
 
@@ -252,11 +304,15 @@ We are not restricted to having multiplication between two matrices:
     >>> M = eye(3)
     >>> 2*M
     [2  0  0]
+    [       ]
     [0  2  0]
+    [       ]
     [0  0  2]
     >>> 3*M
     [3  0  0]
+    [       ]
     [0  3  0]
+    [       ]
     [0  0  3]
 
 but we can also apply functions to our matrix entries using ``applyfunc()``. Here we'll declare a function that double any input number. Then we apply it to the 3x3 identity matrix:
@@ -264,7 +320,9 @@ but we can also apply functions to our matrix entries using ``applyfunc()``. Her
     >>> f = lambda x: 2*x
     >>> eye(3).applyfunc(f)
     [2  0  0]
+    [       ]
     [0  2  0]
+    [       ]
     [0  0  2]
 
 One more useful matrix-wide entry application function is the substitution function. Let's declare a matrix with symbolic entries then substitute a value. Remember we can substitute anything - even another symbol!:
@@ -274,16 +332,22 @@ One more useful matrix-wide entry application function is the substitution funct
     >>> M = eye(3) * x
     >>> M
     [x  0  0]
+    [       ]
     [0  x  0]
+    [       ]
     [0  0  x]
     >>> M.subs(x, 4)
     [4  0  0]
+    [       ]
     [0  4  0]
+    [       ]
     [0  0  4]
     >>> y = Symbol('y')
     >>> M.subs(x, y)
     [y  0  0]
+    [       ]
     [0  y  0]
+    [       ]
     [0  0  y]
 
 
@@ -310,19 +374,27 @@ decomposition as well:
 
     >>> M2.inv()
     [1  0  0]
+    [       ]
     [0  1  0]
+    [       ]
     [0  0  1]
     >>> M2.inv(method="LU")
     [1  0  0]
+    [       ]
     [0  1  0]
+    [       ]
     [0  0  1]
     >>> M.inv(method="LU")
     [-3/14  1/14  1/2 ]
+    [                 ]
     [-1/28  5/28  -1/4]
+    [                 ]
     [ 3/7   -1/7   0  ]
     >>> M * M.inv(method="LU")
     [1  0  0]
+    [       ]
     [0  1  0]
+    [       ]
     [0  0  1]
 
 We can perform a `QR` factorization which is handy for solving systems:
@@ -334,10 +406,12 @@ We can perform a `QR` factorization which is handy for solving systems:
     [\/ 6   -\/ 3   -\/ 2 ]
     [-----  ------  ------]
     [  6      3       2   ]
+    [                     ]
     [  ___     ___    ___ ]
     [\/ 6   -\/ 3   \/ 2  ]
     [-----  ------  ----- ]
     [  6      3       2   ]
+    [                     ]
     [  ___    ___         ]
     [\/ 6   \/ 3          ]
     [-----  -----     0   ]
@@ -347,15 +421,19 @@ We can perform a `QR` factorization which is handy for solving systems:
     [  ___  4*\/ 6       ___]
     [\/ 6   -------  2*\/ 6 ]
     [          3            ]
+    [                       ]
     [          ___          ]
     [        \/ 3           ]
     [  0     -----      0   ]
     [          3            ]
+    [                       ]
     [                   ___ ]
     [  0       0      \/ 2  ]
     >>> Q*R
     [1  1  1]
+    [       ]
     [1  1  3]
+    [       ]
     [2  3  4]
 
 
@@ -370,7 +448,9 @@ that it's correct:
     >>> soln = A.LUsolve(b)
     >>> soln
     [3]
+    [ ]
     [7]
+    [ ]
     [5]
 
 There's also a nice Gram-Schmidt orthogonalizer which will take a set of
