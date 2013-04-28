@@ -51,7 +51,7 @@ from sympy.polys.monomialtools import lex, grlex, grevlex
 
 from sympy import (
     S, Integer, Rational, Float, Mul, Symbol, symbols, sqrt,
-    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple)
+    exp, sin, expand, oo, I, pi, re, im, RootOf, Eq, Tuple, Expr)
 
 from sympy.core.compatibility import iterable
 from sympy.core.mul import _keep_coeff
@@ -2748,9 +2748,11 @@ def test_nth_power_roots_poly():
 
 def test_torational_factor_list():
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
-    assert _torational_factor_list(p, x) == (-2,
-        [(-sqrt(2)*x/2 - x/2 + 1, 1), (-sqrt(2)*x - x - 1, 1),
-         (-sqrt(2)*x - x + 1, 1)])
+    assert _torational_factor_list(p, x) == (-2, [
+        (-x*(1 + sqrt(2))/2 + 1, 1),
+        (-x*(1 + sqrt(2)) - 1, 1),
+        (-x*(1 + sqrt(2)) + 1, 1)])
+
 
     p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + 2**Rational(1, 4))}))
     assert _torational_factor_list(p, x) is None
@@ -3093,3 +3095,13 @@ def test_poly_matching_consistency():
 def test_issue_2687():
     assert expand(factor(expand(
         (x - I*y)*(z - I*t)), extension=[I])) == -I*t*x - t*y + x*z - I*y*z
+
+
+def test_noncommutative():
+    class foo(Expr):
+        is_commutative=False
+    e = x/(x + x*y)
+    c = 1/( 1 + y)
+    assert cancel(foo(e)) == foo(c)
+    assert cancel(e + foo(e)) == c + foo(c)
+    assert cancel(e*foo(c)) == c*foo(c)

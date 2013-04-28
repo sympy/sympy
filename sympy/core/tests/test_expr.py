@@ -1464,11 +1464,6 @@ def test_equals():
     S(13)/6)/2 - S(1)/4)**2 - S(1)/3)
     assert z.equals(0)
 
-    # SELF UPDATING CODE TEST
-    # If this tests fails then the cancel in line 581 of expr.py
-    # can be deleted and then below, "!= 0" -> "is S.Zero"
-    assert simplify(z) != 0
-
 
 def test_random():
     from sympy import posify, lucas

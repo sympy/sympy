@@ -6,6 +6,8 @@ from sympy.core import (
 
 from sympy.core.mul import _keep_coeff
 
+from sympy.core.basic import preorder_traversal
+
 from sympy.core.sympify import (
     sympify, SympifyError,
 )
@@ -5538,7 +5540,7 @@ def _torational_factor_list(p, x):
     >>> from sympy import sqrt, expand, Mul
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
     >>> factors = _torational_factor_list(p, x); factors
-    (-2, [(-sqrt(2)*x/2 - x/2 + 1, 1), (-sqrt(2)*x - x - 1, 1), (-sqrt(2)*x - x + 1, 1)])
+    (-2, [(-x*(1 + sqrt(2))/2 + 1, 1), (-x*(1 + sqrt(2)) - 1, 1), (-x*(1 + sqrt(2)) + 1, 1)])
     >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
     True
     >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
@@ -5896,13 +5898,16 @@ def cancel(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import cancel
+    >>> from sympy import cancel, sqrt, Symbol
     >>> from sympy.abc import x
+    >>> A = Symbol('A', commutative=False)
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
     (2*x + 2)/(x - 1)
-
+    >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
+    sqrt(6)/2
     """
+    from sympy.core.exprtools import factor_terms
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
@@ -5910,11 +5915,15 @@ def cancel(f, *gens, **args):
     if not isinstance(f, (tuple, Tuple)):
         if f.is_Number:
             return f
-        else:
-            p, q = f.as_numer_denom()
+        f = factor_terms(f, radical=True)
+        p, q = f.as_numer_denom()
 
-    else:
+    elif len(f) == 2:
         p, q = f
+    elif isinstance(f, Tuple):
+        return factor_terms(f)
+    else:
+        raise ValueError('unexpected argument: %s' % f)
 
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
@@ -5923,6 +5932,34 @@ def cancel(f, *gens, **args):
             return f
         else:
             return S.One, p, q
+    except PolynomialError, msg:
+        if f.is_commutative:
+            raise PolynomialError(msg)
+        # non-commutative
+        if f.is_Mul:
+            c, nc = f.args_cnc(split_1=False)
+            nc = [cancel(i) for i in nc]
+            return cancel(Mul._from_args(c))*Mul(*nc)
+        elif f.is_Add:
+            c = []
+            nc = []
+            for i in f.args:
+                if i.is_commutative:
+                    c.append(i)
+                else:
+                    nc.append(cancel(i))
+            return cancel(Add(*c)) + Add(*nc)
+        else:
+            reps = []
+            pot = preorder_traversal(f)
+            pot.next()
+            for e in pot:
+                try:
+                    reps.append((e, cancel(e)))
+                    pot.skip()  # this was handled successfully
+                except NotImplementedError:
+                    pass
+            return f.xreplace(dict(reps))
 
     c, P, Q = F.cancel(G)
 

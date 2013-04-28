@@ -128,7 +128,7 @@ def test_hyperexpand_parametric():
 def test_shifted_sum():
     from sympy import simplify
     assert simplify(hyperexpand(z**4*hyper([2], [3, S('3/2')], -z**2))) \
-        == -S(1)/2 + cos(2*z)/2 + z*sin(2*z) - z**2*cos(2*z)
+        == z*sin(2*z) + (-z**2 + S.Half)*cos(2*z) - S.Half
 
 
 def _randrat():
@@ -387,7 +387,7 @@ def test_meijerg_expand():
     # Testing a bug:
     assert hyperexpand(meijerg([0, 2], [], [], [-1, 1], z)) == \
         Piecewise((0, abs(z) < 1),
-                  (z*(1 - 1/z**2)/2, abs(1/z) < 1),
+                  (z/2 - 1/(2*z), abs(1/z) < 1),
                   (meijerg([0, 2], [], [], [-1, 1], z), True))
 
     # Test that the simplest possible answer is returned:
