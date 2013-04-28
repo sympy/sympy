@@ -385,6 +385,8 @@ class AskIntegerElementsHandler(CommonHandler):
 
     MatMul = Determinant = Trace = Transpose = MatAdd
 
+    ZeroMatrix = Identity = staticmethod(CommonHandler.AlwaysTrue)
+
 class AskRealElementsHandler(CommonHandler):
     @staticmethod
     def MatAdd(expr, assumptions):
@@ -398,3 +400,5 @@ class AskComplexElementsHandler(CommonHandler):
         return test_closed_group(expr, assumptions, Q.complex_elements)
 
     MatMul = Determinant = Trace = Transpose = Inverse = MatAdd
+
+    DFT = staticmethod(CommonHandler.AlwaysTrue)
