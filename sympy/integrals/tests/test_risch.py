@@ -119,13 +119,13 @@ def test_hermite_reduce():
     assert hermite_reduce(Poly(-x**2*t**6 + (-1 - 2*x**3 + x**4)*t**3 +
         (-3 - 3*x**4)*t**2 - 2*x*t - x - 3*x**2, t),
         Poly(x**4*t**6 - 2*x**2*t**3 + 1, t), DE) == \
-        ((Poly(x**5*t + x**2 + x**6, t), Poly(x**5*t**3 - x**3, t)), (Poly(0, t),
+        ((Poly(x**3*t + 1 + x**4, t), Poly(x**3*t**3 - x, t)), (Poly(0, t),
         Poly(1, t)), (Poly(-1, t), Poly(x**2, t)))
     assert hermite_reduce(Poly((-2 + 3*x)*t**3 + (-1 + x)*t**2 +
     (-4*x + 2*x**2)*t + x**2, t), Poly(x*t**6 - 4*x**2*t**5 +
     6*x**3*t**4 - 4*x**4*t**3 + x**5*t**2, t), DE) == \
-        ((Poly(t**2 + t/3 + x, t), Poly(t**4 - 3*x*t**3 + 3*x**2*t**2 -
-        x**3*t, t)), (Poly(0, t), Poly(1, t)), (Poly(0, t), Poly(1, t)))
+        ((Poly(3*t**2 + t + 3*x, t), Poly(3*t**4 - 9*x*t**3 + 9*x**2*t**2 -
+        3*x**3*t, t)), (Poly(0, t), Poly(1, t)), (Poly(0, t), Poly(1, t)))
 
 
 def test_polynomial_reduce():
@@ -192,7 +192,7 @@ def test_integrate_hyperexponential():
     a = Poly(25*t**6 - 10*t**5 + 7*t**4 - 8*t**3 + 13*t**2 + 2*t - 1, t)
     d = Poly(25*t**6 + 35*t**4 + 11*t**2 + 1, t)
     assert integrate_hyperexponential(a, d, DE) == \
-        (-(55 - 50*exp(x))/(25 + 125*exp(2*x)) + log(1 + exp(2*x)), -1, True)
+        (-(11 - 10*exp(x))/(5 + 25*exp(2*x)) + log(1 + exp(2*x)), -1, True)
         # -(55 - 50*exp(x))/(25 + 125*exp(2*x)) - x + log(1 + exp(2*x))
     DE = DifferentialExtension(extension={'D': [Poly(1, x), Poly(t0, t0), Poly(t0*t, t)],
         'Tfuncs': [exp, Lambda(i, exp(exp(i)))]})
@@ -229,7 +229,7 @@ def test_integrate_hyperexponential():
     18*x**4 - 3*x**3 - 3*x**2)*t1**2 + (8*x**10 + 24*x**9 - 12*x**8 -
     36*x**7 + 6*x**6 + 18*x**5 - x**4 - 3*x**3)*t1 + 8*x**10 - 12*x**8 +
     6*x**6 - x**4, t1), DE) == \
-        ((x*log(x) - log(x))/-((x + exp(x**2))*(2*x**2 - 1)),
+        (-(x*log(x) - log(x))/(2*x**3 - x + (2*x**2 - 1)*exp(x**2)),
         NonElementaryIntegral(exp(x**2)/(exp(x**2) + 1), x), False)
 
 def test_integrate_hyperexponential_polynomial():
