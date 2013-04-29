@@ -81,6 +81,7 @@ def int_to_Integer(s):
     Example
     =======
 
+    >>> from __future__ import division
     >>> from sympy.interactive.session import int_to_Integer
     >>> from sympy import Integer
     >>> s = '1.2 + 1/2 - 0x12 + a1'
@@ -89,7 +90,7 @@ def int_to_Integer(s):
     >>> s = 'print (1/2)'
     >>> int_to_Integer(s)
     'print (Integer (1 )/Integer (2 ))'
-    >>> exec(s) #doctest: +SKIP
+    >>> exec(s)
     0.5
     >>> exec(int_to_Integer(s))
     1/2
