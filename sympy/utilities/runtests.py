@@ -1554,14 +1554,15 @@ class SymPyOutputChecker(pdoctest.OutputChecker):
         # floats in the 'want' string may contain ellipses
         want_floats = got_floats + r'(\.{3})?'
 
-        sep = r'\s|\*|,'
+        front_sep = r'\s|\+|\-|\*|,'
+        back_sep = front_sep + r'|j|e'
 
-        fbeg = r'^%s(?=%s|$)' % (got_floats, sep)
-        fmidend = r'(?<=%s)%s(?=%s|$)' % (sep, got_floats, sep)
+        fbeg = r'^%s(?=%s|$)' % (got_floats, back_sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, got_floats, back_sep)
         self.num_got_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
 
-        fbeg = r'^%s(?=%s|$)' % (want_floats, sep)
-        fmidend = r'(?<=%s)%s(?=%s|$)' % (sep, want_floats, sep)
+        fbeg = r'^%s(?=%s|$)' % (want_floats, back_sep)
+        fmidend = r'(?<=%s)%s(?=%s|$)' % (front_sep, want_floats, back_sep)
         self.num_want_rgx = re.compile(r'(%s|%s)' %(fbeg, fmidend))
 
     def check_output(self, want, got, optionflags):
