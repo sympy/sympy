@@ -46,6 +46,10 @@ IS_WINDOWS = (os.name == 'nt')
 class Skipped(Exception):
     pass
 
+import __future__
+# add more flags ??
+future_flags = __future__.division.compiler_flag | \
+               __future__.with_statement.compiler_flag
 
 def _indent(s, indent=4):
     """
@@ -844,7 +848,7 @@ def sympytestfile(filename, module_relative=True, name=None, package=None,
 
     # Read the file, convert it to a test, and run it.
     test = parser.get_doctest(text, globs, name, filename, 0)
-    runner.run(test)
+    runner.run(test, compileflags=future_flags)
 
     if report:
         runner.summarize()
@@ -1115,7 +1119,8 @@ class SymPyDocTests(object):
                 # comes by default with a "from sympy import *"
                 #exec('from sympy import *') in test.globs
             try:
-                f, t = runner.run(test, out=new.write, clear_globs=False)
+                f, t = runner.run(test, compileflags=future_flags,
+                                  out=new.write, clear_globs=False)
             except KeyboardInterrupt:
                 raise
             finally:
