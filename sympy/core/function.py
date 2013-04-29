@@ -1244,28 +1244,25 @@ class Lambda(Expr):
     def general_function(self):
         """
         Returns a general form of function in terms of variable_1, variable_2,
-         variable_3 etc.
+        variable_3 etc.
 
-         Examples
-         ========
-         >>> from sympy import Lambda
-         >>> from sympy import sin, cos
-         >>> from sympy.abc import x, y, z
-         >>> Lambda((x, y, z), x**3 + 3*x**2 + 5).general_function()
-         variable_1**3 + 3*variable_1**2 + 5
-         >>> Lambda((x, y), x**y).general_function()
-         variable_1**variable_2
-         >>> Lambda((x, y), sin(x) + cos(y)).general_function()
-         sin(variable_1) + cos(variable_2)
+        Examples
+        =========
+        >>> from sympy import Lambda
+        >>> from sympy import sin, cos
+        >>> from sympy.abc import x, y, z
+        >>> Lambda((x, y, z), x**3 + 3*x**2 + 5).general_function()
+        variable_1**3 + 3*variable_1**2 + 5
+        >>> Lambda((x, y), x**y).general_function()
+        variable_1**variable_2
+        >>> Lambda((x, y), sin(x) + cos(y)).general_function()
+        sin(variable_1) + cos(variable_2)
 
-         """
+        """
+        from symbol import Symbol
         a = 1
         expr = self.expr
-        while a <= self.nargs:
-            current_variable = "variable_" + str(a)
-            expr = expr.subs(self.variables[a - 1], current_variable)
-            a = a + 1
-        return expr
+        return expr.subs([(var, C.Symbol('variable_%d' % (i + 1))) for i, var in enumerate(self.variables)])
 
     def __ne__(self, other):
         return not(self == other)

@@ -245,9 +245,8 @@ def test_issue580():
 
 def test_issue587():  # remove this when fresnel itegrals are implemented
     from sympy import expand_func, fresnels
-    assert expand_func(integrate(sin(x**2), x)) == \
-        sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
-     
+    assert expand_func(integrate(sin(x**2), x)) == \sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
+
 def test_integrate_units():
     m = units.m
     s = units.s
