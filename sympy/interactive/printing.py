@@ -269,15 +269,12 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     if ip:
         try:
             import IPython
-            if IPython.__version__ >= '1.0':
-                from IPython.kernel.zmq.zmqshell import ZMQInteractiveShell
-            else:
-                from IPython.zmq.zmqshell import ZMQInteractiveShell
+            from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
         except ImportError:
             pass
         else:
             # If in qtconsole or notebook
-            if isinstance(ip, ZMQInteractiveShell) \
+            if not isinstance(ip, TerminalInteractiveShell) \
                     and 'ipython-console' not in ''.join(sys.argv):
                 if use_unicode is None:
                     use_unicode = True
