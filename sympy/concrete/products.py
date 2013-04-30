@@ -1,4 +1,9 @@
-from sympy.core import C, Expr, Mul, S, sympify
+from sympy.core.containers import Tuple
+from sympy.core.core import C
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
@@ -223,6 +228,25 @@ class Product(Expr):
         if self.is_commutative:
             return Product(self.function.transpose(), *self.limits)
         return None
+
+
+    def _eval_subs(self, old, new):
+        func, limits = self.function, self.limits
+        old_atoms = old.free_symbols
+        limits = list(limits)
+
+        dummies = set()
+        for i in xrange(-1, -len(limits) - 1, -1):
+            xab = limits[i]
+            if len(xab) == 1:
+                continue
+            if not dummies.intersection(old_atoms):
+                limits[i] = Tuple(xab[0],
+                                  *[l._subs(old, new) for l in xab[1:]])
+            dummies.add(xab[0])
+        if not dummies.intersection(old_atoms):
+            func = func.subs(old, new)
+        return self.func(func, *limits)
 
 
 def product(*args, **kwargs):

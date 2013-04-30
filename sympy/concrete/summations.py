@@ -1,4 +1,12 @@
-from sympy.core import Add, C, Derivative, Dummy, Expr, S, sympify, Wild, Eq
+from sympy.core.add import Add
+from sympy.core.basic import C
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Wild)
+from sympy.core.sympify import sympify
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
@@ -306,9 +314,23 @@ class Sum(Expr):
             g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
 
-    def _eval_subs(self, old, new):  # XXX this should be the same as Integral's
-        if any(old == v for v in self.variables):
-            return self
+    def _eval_subs(self, old, new):
+        func, limits = self.function, self.limits
+        old_atoms = old.free_symbols
+        limits = list(limits)
+
+        dummies = set()
+        for i in xrange(-1, -len(limits) - 1, -1):
+            xab = limits[i]
+            if len(xab) == 1:
+                continue
+            if not dummies.intersection(old_atoms):
+                limits[i] = Tuple(xab[0],
+                                  *[l._subs(old, new) for l in xab[1:]])
+            dummies.add(xab[0])
+        if not dummies.intersection(old_atoms):
+            func = func.subs(old, new)
+        return self.func(func, *limits)
 
 
 def summation(f, *symbols, **kwargs):
