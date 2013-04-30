@@ -27,8 +27,8 @@ def _init_python_printing(stringify_func):
     sys.displayhook = _displayhook
 
 
-def _init_ipython_printing(ip, stringify_func, render_latex, euler,
-                           forecolor, backcolor, fontsize, mode):
+def _init_ipython_printing(ip, stringify_func, use_latex, euler,
+                           forecolor, backcolor, fontsize, latex_mode):
     """Setup printing in IPython interactive session. """
 
     preamble = "\\documentclass[%s]{article}\n" \
@@ -141,9 +141,7 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
         )
 
         png_formatter = ip.display_formatter.formatters['image/png']
-        latex_formatter = ip.display_formatter.formatters['text/latex']
-        latex_formatter.enabled = True
-        if render_latex:
+        if use_latex in (True, 'png'):
             png_formatter.for_type_by_name(
                 'sympy.core.basic', 'Basic', _print_latex_png
             )
@@ -154,7 +152,11 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
             for cls in [int, long, float] + printable_containers:
                 png_formatter.for_type(cls, _print_latex_png)
             png_formatter.enabled = True
+        else:
+            png_formatter.enabled = False
 
+        latex_formatter = ip.display_formatter.formatters['text/latex']
+        if use_latex in (True, 'mathjax'):
             latex_formatter.for_type_by_name(
                 'sympy.core.basic', 'Basic', _print_latex_text
             )
@@ -163,8 +165,9 @@ def _init_ipython_printing(ip, stringify_func, render_latex, euler,
             )
             for cls in [int, long, float] + printable_containers:
                 latex_formatter.for_type(cls, _print_latex_text)
+            latex_formatter.enabled = True
         else:
-            png_formatter.enabled = False
+            latex_formatter.enabled = False
     else:
         ip.set_hook('result_display', _result_display)
 
@@ -193,9 +196,11 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
     use_unicode: boolean or None
         If True, use unicode characters;
         if False, do not use unicode characters.
-    use_latex: boolean or None
+    use_latex: string, boolean or None
         If True, use latex rendering in GUI interfaces;
-        if False, do not use latex rendering
+        if False, do not use latex rendering; the string
+        'png' specifies using latex-rendered images while
+        the string 'mathjax' specifies using MathJax only.
     wrap_line: boolean
         If True, lines will wrap at the end;
         if False, they will not wrap but continue as one line.
