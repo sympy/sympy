@@ -1,8 +1,14 @@
-from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Interval)
-
-from sympy.core.symbol import Dummy
+from sympy.core.add import Add
+from sympy.core.basic import Basic, C
 from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import diff
+from sympy.core.numbers import oo
+from sympy.core.sets import Interval
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild)
+from sympy.core.sympify import sympify
 from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
@@ -1234,7 +1240,7 @@ class Integral(Expr):
         >>> i.subs(x, y - c)
         Integral(a - c + y, (a, a, 3), (b, -c + y, c))
         """
-        integrand, limits = self.function, self.limits
+        func, limits = self.function, self.limits
         old_atoms = old.free_symbols
         limits = list(limits)
 
@@ -1248,8 +1254,8 @@ class Integral(Expr):
                                   *[l._subs(old, new) for l in xab[1:]])
             dummies.add(xab[0])
         if not dummies.intersection(old_atoms):
-            integrand = integrand.subs(old, new)
-        return self.func(integrand, *limits)
+            func = func.subs(old, new)
+        return self.func(func, *limits)
 
     def _eval_transpose(self):
         if all(map(lambda x: x.is_real, flatten(self.limits))):
