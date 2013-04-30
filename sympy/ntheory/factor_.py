@@ -209,13 +209,20 @@ def multiplicity(p, n):
             try:
                 p = Rational(p)
                 n = Rational(n)
-                like_min = min(
-                    multiplicity(p.p, n.p) if p.p != 1 else oo,
-                    multiplicity(p.q, n.q) if p.q != 1 else oo)
-                cross_min = min(
-                    multiplicity(p.p, n.q) if p.p != 1 else oo,
-                    multiplicity(p.q, n.p) if p.q != 1 else oo)
-                return like_min - cross_min
+                if p.q == 1:
+                    if n.p == 1:
+                        return -multiplicity(p.p, n.q)
+                    return S.Zero
+                elif p.p == 1:
+                    return multiplicity(p.q, n.q)
+                else:
+                    like = min(
+                        multiplicity(p.p, n.p),
+                        multiplicity(p.q, n.q))
+                    cross = min(
+                        multiplicity(p.q, n.p),
+                        multiplicity(p.p, n.q))
+                    return like - cross
             except AttributeError:
                 pass
         raise ValueError('expecting ints or fractions, got %s and %s' % (p, n))
