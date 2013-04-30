@@ -149,6 +149,8 @@ def test_minimal_polynomial_sq():
     assert mp.subs({x: 0}) == -71965773323122507776
 
 def test_minpoly_pow():
+    p = sqrt(2)
+    assert minpoly_pow(p, 2, x) == x - 2
     p = (2*sqrt(2) + 3)
     assert minpoly_pow(p, Rational(1, 4), x) == x**4 - 2*x**2 - 1
     p = 1 + 2**Rational(1,7)

@@ -273,10 +273,6 @@ def minpoly_pow(ex, pw, x, mp=None, prec=200):
     pw : rational number
     x : indeterminate of the polynomial
 
-    TODO: avoid using ``groebner``, use linear algebra; this would be
-    faster; in the case of ``pw`` integer it would also not be necessary
-    to use ``factor_list``.
-
     Examples
     ========
 
@@ -300,8 +296,8 @@ def minpoly_pow(ex, pw, x, mp=None, prec=200):
     y = Dummy('y')
     mp = mp.subs({x:y})
     n, d = pw.as_numer_denom()
-    res = groebner([mp, x**d - y**n], gens=[y, x], order='lex')
-    _, factors = factor_list(res[-1])
+    res = resultant(mp, x**d - y**n, gens=[y])
+    _, factors = factor_list(res)
     res = _choose_factor(factors, x, ex**pw, prec)
     return res
 
