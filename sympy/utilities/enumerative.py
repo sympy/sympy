@@ -283,11 +283,15 @@ class MultisetPartitionTraverser():
     Has methods to ``enumerate`` and ``count`` the partitions of a multiset.
 
     This implements a refactored and extended version of Knuth's algorithm
-    7.1.2.5M [1]_."
+    7.1.2.5M [AOCP]_."
+
+    The enumeration methods of this class are generators and return
+    data structures which can be interpreted by the same visitor
+    functions used for the output of ``multiset_partitions_taocp``.
 
     See Also
     ========
-    multiset_partitions_taocp,
+    multiset_partitions_taocp
     sympy.utilities.iterables.multiset_partititions
 
     Examples
@@ -303,16 +307,16 @@ class MultisetPartitionTraverser():
     References
     ==========
 
-    .. [1] Algorithm 7.1.2.5M in Volume 4A, Combinatoral Algorithms,
+    .. [AOCP] Algorithm 7.1.2.5M in Volume 4A, Combinatoral Algorithms,
            Part 1, of The Art of Computer Programming, by Donald Knuth.
 
-    .. [2] On a Problem of Oppenheim concerning "Factorisatio Numerorum"
-           E. R. CANFIELD, Paul Erdos, Carl Pomerance,
-           JOURNAL OF NUMEER THEORY, Vol. 17, No. 1. August 1983
-           (See section 7 for a description of an algorithm similar to
-           Knuth's)
+    .. [Factorisatio] On a Problem of Oppenheim concerning
+           "Factorisatio Numerorum" E. R. Canfield, Paul Erdos, Carl
+           Pomerance, JOURNAL OF NUMEER THEORY, Vol. 17, No. 1. August
+           1983.  See section 7 for a description of an algorithm
+           similar to Knuth's.
 
-    .. [3] Generating Multiset Partitions, Brent Yorgey, The
+    .. [Yorgey] Generating Multiset Partitions, Brent Yorgey, The
            Monad.Reader, Issue 8, September 2007.
 
     """
@@ -374,10 +378,11 @@ class MultisetPartitionTraverser():
         """Decrements part (a subrange of pstack), if possible, returning
         True iff the part was successfully decremented.
 
-        Examples
-        ========
+        Parameters
+        ==========
 
-        XXX todo
+        part
+           The part (top of stack) to be decremented.
 
         """
         plen = len(part)
@@ -401,13 +406,12 @@ class MultisetPartitionTraverser():
         Parameters
         ==========
 
-        XXX define other input
+        part
+            part to be decremented (topmost part on the stack)
 
-
-        Examples
-        ========
-
-        XXX todo
+        ub
+            the maximum number of parts allowed in a partition
+            returned by the calling traversal.
 
         Notes
         =====
@@ -477,30 +481,32 @@ class MultisetPartitionTraverser():
         return False
 
     def decrement_part_large(self, part, amt, lb):
-        """Decrements part, while respecting size constraint, returning
-        True iff the part was successfully decremented.
+        """Decrements part, while respecting size constraint.
+
+        A part can have no children which are of sufficient size (as
+        indicated by ``lb``) unless that part has sufficient
+        unallocated multiplicity.  When enforcing the size constraint,
+        this method will decrement the part (if necessary) by an
+        amount needed to ensure sufficient unallocated multiplicity.
+
+        Returns True iff the part was successfully decremented.
 
         Parameters
         ==========
 
-        ``amt``: (0 or 1) is whether to always decrement.  Call with ``amt=0``
-        when enforcing size constraint.
+        part
+            part to be decremented (topmost part on the stack)
 
-        XXX define other input
+        amt
+            Can only take values 0 or 1.  A value of 1 means that the
+            part must be decremented, and then the size constraint is
+            enforced.  A value of 0 means just to enforce the ``lb``
+            size constraint.
 
+        lb
+            The partitions produced by the calling enumeration must
+            have more parts than this value.
 
-        Examples
-        ========
-
-        XXX todo
-
-        Notes
-        =====
-
-        A part can have no children which are of sufficient size unless that
-        part has sufficient unallocated multiplicity.  This method finds the
-        next lower decrement of part (if possible) which has sufficient
-        unallocated multiplicity.
         """
 
         if amt == 1:
@@ -546,13 +552,16 @@ class MultisetPartitionTraverser():
         Parameters
         ==========
 
-        XXX define other input
+         part
+            part to be decremented (topmost part on the stack)
 
+        ub
+            the maximum number of parts allowed in a partition
+            returned by the calling traversal.
 
-        Examples
-        ========
-
-        XXX todo
+        lb
+            The partitions produced by the calling enumeration must
+            have more parts than this value.
 
         Notes
         =====
@@ -574,11 +583,6 @@ class MultisetPartitionTraverser():
     def spread_part_multiplicity(self):
         """Returns True if a new part has been created, and
         adjusts pstack, f and lpart as needed.
-
-        Examples
-        ========
-
-        XXX todo
 
         Notes
         =====
@@ -624,11 +628,6 @@ class MultisetPartitionTraverser():
     def top_part(self):
         """Return current top part on the stack, as a slice of pstack.
 
-        Examples
-        ========
-
-        XXX todo
-
         """
         return self.pstack[self.f[self.lpart]:self.f[self.lpart + 1]]
 
@@ -662,7 +661,6 @@ class MultisetPartitionTraverser():
             states and visitors.
 
         """
-
         self._initialize_enumeration(multiplicities)
         while True:
             while self.spread_part_multiplicity():
@@ -697,7 +695,6 @@ class MultisetPartitionTraverser():
         ub
             Maximum number of parts
 
-
         Examples
         ========
 
@@ -712,9 +709,8 @@ class MultisetPartitionTraverser():
         [['a', 'b', 'b'], ['a']],
         [['a', 'b'], ['a', 'b']]]
 
-
-        The implementation is based, in part, on the answer to
-        exercise 69 of reference 1 of this class.
+        The implementation is based, in part, on the answer given to
+        exercise 69, in Knuth [AOCP]_.
 
         """
 
@@ -871,13 +867,14 @@ class MultisetPartitionTraverser():
         """Returns the number of partitions of a multiset whose elements
         have the multiplicities given in ``multiplicities``.
 
-        This is mostly for comparison purposes.  It follows the same path as
+        Primarily for comparison purposes.  It follows the same path as
         enumerate, and counts, rather than generates, the partitions.
 
-        Examples
+        See Also
         ========
 
-        XXX todo
+        count_partitions
+            Has the same calling interface, but is much faster.
 
         """
         # number of partitions so far in the enumeration
@@ -898,12 +895,10 @@ class MultisetPartitionTraverser():
                 self.lpart -= 1
 
     def counting_decrement(self, part):
-        """Helper for count_partitions -- XXX say what it does
-
-        Examples
-        ========
-
-        XXX todo
+        """Helper for count_partitions -- similar to the decrement
+        methods for the enumerators, but includes code to check if the
+        the resulting part is already in the cache, in which case the
+        subtree is trimmed from the traversal.
 
         """
         status = self.decrement_part(part)
@@ -947,16 +942,17 @@ class MultisetPartitionTraverser():
         Notes
         =====
 
-        One can think of an enumeration of multiset partitions as
-        operating on a binary tree of parts.  A part has (up to) two
-        children, the left child resulting from the spread operation,
-        and the right child from the decrement operation.  The
-        ordinary enumeration of multiset partitions is an in-order
-        traversal of this tree, and with the partitions corresponding
-        to paths from the root to the leaves. The mapping from paths
-        to partitions is not quite direct, since the partition would
-        contain only those parts which are leaves or the parents of a
-        spread link, not those which are parents of a decrement link.
+        If one looks at the workings of Knuth's algorithm M [AOCP]_, it
+        can be viewed as a traversal of a binary tree of parts.  A
+        part has (up to) two children, the left child resulting from
+        the spread operation, and the right child from the decrement
+        operation.  The ordinary enumeration of multiset partitions is
+        an in-order traversal of this tree, and with the partitions
+        corresponding to paths from the root to the leaves. The
+        mapping from paths to partitions is a little complicated,
+        since the partition would contain only those parts which are
+        leaves or the parents of a spread link, not those which are
+        parents of a decrement link.
 
         For counting purposes, it is sufficient to count leaves, and
         this can be done with a recursive in-order traversal.  The
@@ -970,15 +966,15 @@ class MultisetPartitionTraverser():
 
         1) This method is iterative, borrowing its structure from the
            other enumerations and maintaining an explicit stack of
-           parts which are in the process of being counted.  (It is at
-           least possible that there are some multisets for which the
-           partitions are countable by this routine, but which would
-           overflow the default Python recursion limit with a
-           recursive implementation.)
+           parts which are in the process of being counted.  (There
+           may be multisets which can be counted reasonably quickly by
+           this implementation, but which would overflow the default
+           Python recursion limit with a recursive implementation.)
 
-        2) Instead of using the part data structure directly, an
-           explicit key is constructed.  This allows some states to
-           coalesce, which would remain separate with a physical key.
+        2) Instead of using the part data structure directly, a more
+           compact key is constructed.  This saves space, but more
+           importantly coalesces some parts which would remain
+           separate with a physical key.
         """
         # number of partitions so far in the enumeration
         self.pcount = 0

@@ -10,7 +10,8 @@ counting multiset partitions.
 .. autofunction:: factoring_visitor
 .. autofunction:: list_visitor
 
-And also a class, which reimplements and extends the basic algorithm
+The approach of the function ``multiset_partitions_taocp`` is extended
+and generalized by the class ``MultisetPartitionTraverser``.
 
 .. autoclass:: MultisetPartitionTraverser
    :members: count_partitions,
@@ -18,11 +19,3 @@ And also a class, which reimplements and extends the basic algorithm
              enum_large,
              enum_range,
              enum_small
-
-And another class, which is really only useful internally
-
-.. autoclass:: PartComponent
-   :members:
-
-
-
