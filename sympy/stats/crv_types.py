@@ -1602,10 +1602,10 @@ def Nakagami(name, mu, omega):
 
     >>> V = simplify(variance(X, meijerg=True))
     >>> pprint(V, use_unicode=False)
-          /                               2          \
-    omega*\gamma(mu)*gamma(mu + 1) - gamma (mu + 1/2)/
-    --------------------------------------------------
-                 gamma(mu)*gamma(mu + 1)
+                        2
+             omega*gamma (mu + 1/2)
+    omega - -----------------------
+            gamma(mu)*gamma(mu + 1)
 
     References
     ==========
@@ -1657,7 +1657,7 @@ def Normal(name, mean, std):
     ========
 
     >>> from sympy.stats import Normal, density, E, std, cdf, skewness
-    >>> from sympy import Symbol, simplify, pprint, factor, together
+    >>> from sympy import Symbol, simplify, pprint, factor, together, factor_terms
 
     >>> mu = Symbol("mu")
     >>> sigma = Symbol("sigma", positive=True)
@@ -1670,12 +1670,12 @@ def Normal(name, mean, std):
 
     >>> C = simplify(cdf(X))(z) # it needs a little more help...
     >>> pprint(C, use_unicode=False)
-            /  ___          \             /  ___          \
-            |\/ 2 *(-mu + z)|             |\/ 2 *(-mu + z)|
-    - mu*erf|---------------| - mu + z*erf|---------------| + z
-            \    2*sigma    /             \    2*sigma    /
-    -----------------------------------------------------------
-                            2*(-mu + z)
+       /  ___          \
+       |\/ 2 *(-mu + z)|
+    erf|---------------|
+       \    2*sigma    /   1
+    -------------------- + -
+             2             2
 
     >>> simplify(skewness(X))
     0

@@ -1,4 +1,12 @@
-from sympy.core import Add, C, Derivative, Dummy, Expr, S, sympify, Wild, Eq
+from sympy.core.add import Add
+from sympy.core.basic import C
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Wild)
+from sympy.core.sympify import sympify
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
@@ -126,17 +134,13 @@ class Sum(Expr):
         """
         Return True if the Sum will result in a number, else False.
 
-        sympy considers anything that will result in a number to have
-        is_number == True.
-
-        >>> from sympy import log
-        >>> log(2).is_number
-        True
-
         Sums are a special case since they contain symbols that can
         be replaced with numbers. Whether the integral can be done or not is
         another issue. But answering whether the final result is a number is
         not difficult.
+
+        Examples
+        ========
 
         >>> from sympy import Sum
         >>> from sympy.abc import x, y
@@ -307,12 +311,26 @@ class Sum(Expr):
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
-            g = g.diff(i, 2)
+            g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
 
-    def _eval_subs(self, old, new):  # XXX this should be the same as Integral's
-        if any(old == v for v in self.variables):
-            return self
+    def _eval_subs(self, old, new):
+        func, limits = self.function, self.limits
+        old_atoms = old.free_symbols
+        limits = list(limits)
+
+        dummies = set()
+        for i in xrange(-1, -len(limits) - 1, -1):
+            xab = limits[i]
+            if len(xab) == 1:
+                continue
+            if not dummies.intersection(old_atoms):
+                limits[i] = Tuple(xab[0],
+                                  *[l._subs(old, new) for l in xab[1:]])
+            dummies.add(xab[0])
+        if not dummies.intersection(old_atoms):
+            func = func.subs(old, new)
+        return self.func(func, *limits)
 
 
 def summation(f, *symbols, **kwargs):
@@ -422,6 +440,9 @@ def telescopic(L, R, limits):
 
 
 def eval_sum(f, limits):
+    from sympy.concrete.delta import deltasummation, _has_simple_delta
+    from sympy.functions import KroneckerDelta
+
     (i, a, b) = limits
     if f is S.Zero:
         return S.Zero
@@ -429,6 +450,9 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+
+    if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
+        return deltasummation(f, limits)
 
     dif = b - a
     definite = dif.is_Integer

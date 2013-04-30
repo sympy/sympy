@@ -1434,11 +1434,7 @@ class acos(Function):
         return S.Pi/2 - asin(x)
 
     def _eval_rewrite_as_atan(self, x):
-        if x > -1 and x <= 1:
-            return 2 * atan(sqrt(1 - x**2)/(1 + x))
-        else:
-            raise ValueError(
-                "The argument must be bounded in the interval (-1,1]")
+        return atan(sqrt(1 - x**2)/x) + (S.Pi/2)*(1 - x*sqrt(1/x**2))
 
     def _sage_(self):
         import sage.all as sage

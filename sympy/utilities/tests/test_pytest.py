@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from sympy.utilities.pytest import raises
 
 # Test callables

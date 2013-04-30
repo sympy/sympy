@@ -38,7 +38,7 @@ class FCodePrinter(CodePrinter):
 
     _implicit_functions = set([
         "sin", "cos", "tan", "asin", "acos", "atan", "atan2", "sinh",
-        "cosh", "tanh", "sqrt", "log", "exp", "Abs", "sign", "conjugate",
+        "cosh", "tanh", "sqrt", "log", "exp", "erf", "Abs", "sign", "conjugate",
     ])
 
     def __init__(self, settings=None):

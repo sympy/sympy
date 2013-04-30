@@ -623,6 +623,28 @@ class PrettyPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+
+    def _print_MatrixElement(self, expr):
+        from sympy.matrices import MatrixSymbol
+        from sympy import Symbol
+        if (isinstance(expr.parent, MatrixSymbol)
+                and expr.i.is_number and expr.j.is_number):
+            return self._print(
+                    Symbol(expr.parent.name + '_%d%d'%(expr.i, expr.j)))
+        else:
+            prettyFunc = self._print(expr.parent)
+            prettyIndices = self._print_seq((expr.i, expr.j), delimiter=', '
+                    ).parens(left='[', right=']')[0]
+            pform = prettyForm(binding=prettyForm.FUNC,
+                    *stringPict.next(prettyFunc, prettyIndices))
+
+            # store pform parts so it can be reassembled e.g. when powered
+            pform.prettyFunc = prettyFunc
+            pform.prettyArgs = prettyIndices
+
+            return pform
+
+
     def _print_MatrixSlice(self, m):
         # XXX works only for applied functions
 

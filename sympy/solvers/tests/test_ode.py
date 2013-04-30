@@ -8,7 +8,8 @@ from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve, Eq,
 x, y, z = symbols('x:z', real=True)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
                                classify_ode, constant_renumber, constantsimp,
-                               homogeneous_order, ode_order)
+                               homogeneous_order)
+from sympy.solvers.deutils import ode_order
 from sympy.utilities.pytest import XFAIL, skip, raises, slow
 
 C1, C2, C3, C4, C5, C6, C7, C8, C9, C10 = symbols('C1:11')
@@ -43,8 +44,8 @@ def test_checkodesol():
     assert checkodesol(diff(sol1.lhs, x, 3), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3)*exp(f(x)), sol1) == (True, 0)
     assert checkodesol(diff(sol1.lhs, x, 3), Eq(f(x), x*log(x))) == \
-        (False, -9 + 60*x**4*log(x)**2 + 240*x**4*log(x)**3 +
-        235*x**4*log(x)**4 + 60*x**4*log(x)**5)
+        (False, 60*x**4*((log(x) + 1)**2 + log(x))*(
+        log(x) + 1)*log(x)**2 - 5*x**4*log(x)**4 - 9)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x)) == \
         (True, 0)
     assert checkodesol(diff(exp(f(x)) + x, x)*x, Eq(exp(f(x)) + x),
@@ -1328,20 +1329,20 @@ def test_1686():
     from sympy.abc import A
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
     assert classify_ode(eq, f(x)) == ('1st_linear', 'almost_linear',
-    'nth_linear_constant_coeff_undetermined_coefficients',
-    'nth_linear_constant_coeff_variation_of_parameters',
-    '1st_linear_Integral', 'almost_linear_Integral',
-    'nth_linear_constant_coeff_variation_of_parameters_Integral')
+        'nth_linear_constant_coeff_undetermined_coefficients',
+        'nth_linear_constant_coeff_variation_of_parameters',
+        '1st_linear_Integral', 'almost_linear_Integral',
+        'nth_linear_constant_coeff_variation_of_parameters_Integral')
     # 1765
     eq = (x**2 + f(x)**2)*f(x).diff(x) - 2*x*f(x)
     assert classify_ode(eq, f(x)) == ('1st_exact',
         '1st_homogeneous_coeff_best',
         '1st_homogeneous_coeff_subs_indep_div_dep',
         '1st_homogeneous_coeff_subs_dep_div_indep',
-        '1st_exact_Integral',
+        'separable_reduced', '1st_exact_Integral',
         '1st_homogeneous_coeff_subs_indep_div_dep_Integral',
-        '1st_homogeneous_coeff_subs_dep_div_indep_Integral')
-
+        '1st_homogeneous_coeff_subs_dep_div_indep_Integral',
+        'separable_reduced_Integral')
 
 def test_1726():
     raises(ValueError, lambda: dsolve(f(x, y).diff(x) - y*f(x, y), f(x)))
@@ -1471,7 +1472,7 @@ def test_almost_linear():
 
     eq = x*exp(f(x))*d + exp(f(x)) + 3*x
     sol = dsolve(eq, f(x), hint = 'almost_linear')
-    assert sol.rhs == log(C1/x - 3*x) - log(2)
+    assert sol.rhs == log(C1/x - 3*x/2)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x + A*(x + diff(f(x), x) + f(x)) + diff(f(x), x) + f(x) + 2
@@ -1496,8 +1497,9 @@ def test_exact_enhancement():
 
     eq = (x + 2)*sin(f) + d*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
-    assert rhs[0] == acos(-sqrt(C1*exp(-2*x)/x**4 + 1))
-    assert rhs[1] == acos(sqrt(C1*exp(-2*x)/x**4 + 1))
+    assert rhs == [
+        acos(-sqrt(C1*exp(-2*x) + x**4)/x**2),
+        acos(sqrt(C1*exp(-2*x) + x**4)/x**2)]
 
 
 def test_separable_reduced():
@@ -1580,4 +1582,12 @@ def test_linear_coefficients():
     sol = Eq(f(x), C1/(x**2 + 6*x + 9) - S(3)/2)
     eq = df + (3 + 2*f(x))/(x + 3)
     assert dsolve(eq, hint='linear_coefficients') == sol
+    assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+
+def test_issue_3780():
+    f = Function('f')
+    eq = Eq(Derivative(f(x),x,2)-2*Derivative(f(x),x)+f(x), sin(x))
+    sol = (C1 + C2*x)*exp(x) + cos(x)/S(2)
+    assert dsolve(eq).rhs == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]

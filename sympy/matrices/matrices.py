@@ -264,8 +264,8 @@ class MatrixBase(object):
                 return
             raise ValueError('unexpected value: %s' % value)
         else:
-            if not is_mat and \
-                    not isinstance(value, Expr) and is_sequence(value):
+            if (not is_mat and
+                not isinstance(value, Basic) and is_sequence(value)):
                 value = Matrix(value)
                 is_mat = True
             if is_mat:

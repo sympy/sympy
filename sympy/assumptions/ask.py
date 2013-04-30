@@ -33,6 +33,8 @@ class Q:
     invertible = Predicate('invertible')
     singular = Predicate('singular')
     orthogonal = Predicate('orthogonal')
+    unitary = Predicate('unitary')
+    normal = Predicate('normal')
     positive_definite = Predicate('positive_definite')
     upper_triangular = Predicate('upper_triangular')
     lower_triangular = Predicate('lower_triangular')
@@ -41,6 +43,9 @@ class Q:
     unit_triangular = Predicate('unit_triangular')
     fullrank = Predicate('fullrank')
     square = Predicate('square')
+    real_elements = Predicate('real_elements')
+    complex_elements = Predicate('complex_elements')
+    integer_elements = Predicate('integer_elements')
 
 
 def _extract_facts(expr, symbol):
@@ -273,12 +278,16 @@ _handlers = [
     ("symmetric",         "matrices.AskSymmetricHandler"),
     ("invertible",        "matrices.AskInvertibleHandler"),
     ("orthogonal",        "matrices.AskOrthogonalHandler"),
+    ("unitary",           "matrices.AskUnitaryHandler"),
     ("positive_definite", "matrices.AskPositiveDefiniteHandler"),
     ("upper_triangular",  "matrices.AskUpperTriangularHandler"),
     ("lower_triangular",  "matrices.AskLowerTriangularHandler"),
     ("diagonal",          "matrices.AskDiagonalHandler"),
     ("fullrank",          "matrices.AskFullRankHandler"),
     ("square",            "matrices.AskSquareHandler"),
+    ("integer_elements",  "matrices.AskIntegerElementsHandler"),
+    ("real_elements",     "matrices.AskRealElementsHandler"),
+    ("complex_elements",  "matrices.AskComplexElementsHandler"),
 ]
 for name, value in _handlers:
     register_handler(name, _val_template % value)
@@ -307,6 +316,12 @@ known_facts = And(
     Equivalent(Q.nonzero, Q.positive | Q.negative),
 
     Implies(Q.orthogonal, Q.positive_definite),
+    Implies(Q.orthogonal, Q.unitary),
+    Implies(Q.unitary & Q.real, Q.orthogonal),
+    Implies(Q.unitary, Q.normal),
+    Implies(Q.unitary, Q.invertible),
+    Implies(Q.normal, Q.square),
+    Implies(Q.diagonal, Q.normal),
     Implies(Q.positive_definite, Q.invertible),
     Implies(Q.diagonal, Q.upper_triangular),
     Implies(Q.diagonal, Q.lower_triangular),
@@ -321,6 +336,8 @@ known_facts = And(
     Implies(Q.symmetric, Q.square),
     Implies(Q.fullrank & Q.square, Q.invertible),
     Equivalent(Q.invertible, ~Q.singular),
+    Implies(Q.integer_elements, Q.real_elements),
+    Implies(Q.real_elements, Q.complex_elements),
 )
 
 from sympy.assumptions.ask_generated import known_facts_dict, known_facts_cnf

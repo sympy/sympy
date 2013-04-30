@@ -291,21 +291,26 @@ class Expr(Basic, EvalfMixin):
 
     @property
     def is_number(self):
-        """Returns True if 'self' is a number.
+        """Returns True if 'self' has no free symbols.
+        It will be faster than `if not self.free_symbols`, however, since
+        `is_number` will fail as soon as it hits a free symbol.
 
-           >>> from sympy import log, Integral
-           >>> from sympy.abc import x, y
+        Examples
+        ========
 
-           >>> x.is_number
-           False
-           >>> (2*x).is_number
-           False
-           >>> (2 + log(2)).is_number
-           True
-           >>> (2 + Integral(2, x)).is_number
-           False
-           >>> (2 + Integral(2, (x, 1, 2))).is_number
-           True
+        >>> from sympy import log, Integral
+        >>> from sympy.abc import x, y
+
+        >>> x.is_number
+        False
+        >>> (2*x).is_number
+        False
+        >>> (2 + log(2)).is_number
+        True
+        >>> (2 + Integral(2, x)).is_number
+        False
+        >>> (2 + Integral(2, (x, 1, 2))).is_number
+        True
 
         """
         if not self.args:
@@ -466,8 +471,8 @@ class Expr(Basic, EvalfMixin):
         >>> one = cos(x)**2 + sin(x)**2
         >>> one.is_constant()
         True
-        >>> ((one - 1)**(x + 1)).is_constant() # could be 0 or 1
-        False
+        >>> ((one - 1)**(x + 1)).is_constant() in (True, False) # could be 0 or 1
+        True
         """
 
         simplify = flags.get('simplify', True)
@@ -560,6 +565,10 @@ class Expr(Basic, EvalfMixin):
         used to return True or False.
 
         """
+        from sympy.simplify.simplify import nsimplify, simplify
+        from sympy.solvers.solvers import solve
+        from sympy.polys.polyerrors import NotAlgebraic
+        from sympy.polys.numberfields import minimal_polynomial
 
         other = sympify(other)
         if self == other:
@@ -569,26 +578,75 @@ class Expr(Basic, EvalfMixin):
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
         # simplification steps that are done will be very fast.
-        diff = (self - other).as_content_primitive()[1]
-        diff = factor_terms(diff.simplify(), radical=True)
+        diff = factor_terms((self - other).simplify(), radical=True)
 
         if not diff:
             return True
 
-        if all(f.is_Atom for m in Add.make_args(diff)
-               for f in Mul.make_args(m)):
+        if not diff.has(Add):
             # if there is no expanding to be done after simplifying
             # then this can't be a zero
             return False
 
         constant = diff.is_constant(simplify=False, failing_number=True)
-        if constant is False or \
-                not diff.free_symbols and not diff.is_number:
+
+        if constant is False:
             return False
-        elif constant is True:
+
+        if constant is None and (diff.free_symbols or not diff.is_number):
+            # e.g. unless the right simplification is done, a symbolic
+            # zero is possible (see expression of issue 3730: without
+            # simplification constant will be None).
+            return
+
+        if constant is True:
             ndiff = diff._random()
             if ndiff:
                 return False
+
+        # sometimes we can use a simplified result to give a clue as to
+        # what the expression should be; if the expression is *not* zero
+        # then we should have been able to compute that and so now
+        # we can just consider the cases where the approximation appears
+        # to be zero -- we try to prove it via minimal_polynomial.
+        if diff.is_number:
+            approx = diff.nsimplify()
+            if not approx:
+                # try to prove via self-consistency
+                surds = [s for s in diff.atoms(Pow) if s.args[0].is_Integer]
+                # it seems to work better to try big ones first
+                surds.sort(key=lambda x: -x.args[0])
+                for s in surds:
+                    try:
+                        # simplify is False here -- this expression has already
+                        # been identified as being hard to identify as zero;
+                        # we will handle the checking ourselves using nsimplify
+                        # to see if we are in the right ballpark or not and if so
+                        # *then* the simplification will be attempted.
+                        sol = solve(diff, s, check=False, simplify=False)
+                        if sol:
+                            if s in sol:
+                                return True
+                            if any(nsimplify(si, [s]) == s and simplify(si) == s
+                                    for si in sol):
+                                return True
+                    except NotImplementedError:
+                        pass
+
+                # try to prove with minimal_polynomial but know when
+                # *not* to use this or else it can take a long time.
+                # Pernici noted the following:
+                # >>> q = -73*sqrt(3) + 1 + 128*sqrt(5) + 1315*sqrt(2)
+                # >>> p = expand(q**3)**Rational(1, 3)
+                # >>> minimal_polynomial(p - q)  # hangs for at least 15 minutes
+                if False:  # change False to condition that assures non-hang
+                    try:
+                        mp = minimal_polynomial(diff)
+                        if mp.is_Symbol:
+                            return True
+                        return False
+                    except NotAlgebraic:
+                        pass
 
         # diff has not simplified to zero; constant is either None, True
         # or the number with significance (prec != 1) that was randomly
@@ -963,7 +1021,7 @@ class Expr(Basic, EvalfMixin):
         if c and split_1 and (
             c[0].is_Number and
             c[0].is_negative and
-                c[0] != S.NegativeOne):
+                c[0] is not S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
         if cset:
@@ -2662,6 +2720,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
+        cls = expr.__class__
         # XXX: Hack to support non-Basic args
         #              |
         #              V
@@ -2673,12 +2732,13 @@ class Expr(Basic, EvalfMixin):
                 sargs.append(arg)
 
             if hit:
-                expr = expr.func(*sargs)
+                expr = cls(*sargs)
 
-        if hasattr(expr, '_eval_expand_' + hint):
-            newexpr = getattr(expr, '_eval_expand_' + hint)(**hints)
+        if hasattr(expr, hint):
+            newexpr = getattr(expr, hint)(**hints)
             if newexpr != expr:
                 return (newexpr, True)
+
         return (expr, hit)
 
     @cacheit
@@ -2707,6 +2767,7 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
+
         # Although the hints are sorted here, an earlier hint may get applied
         # at a given node in the expression tree before another because of how
         # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
@@ -2732,7 +2793,19 @@ class Expr(Basic, EvalfMixin):
         for hint in sorted(hints.keys(), key=_expand_hint_key):
             use_hint = hints[hint]
             if use_hint:
+                hint = '_eval_expand_' + hint
                 expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
+
+        while True:
+            was = expr
+            if hints.get('multinomial', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_multinomial', deep=deep, **hints)
+            if hints.get('mul', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_mul', deep=deep, **hints)
+            if expr == was:
+                break
 
         if modulus is not None:
             modulus = sympify(modulus)

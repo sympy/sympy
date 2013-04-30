@@ -941,49 +941,53 @@ def canonical_representation(a, d, DE):
 
 def hermite_reduce(a, d, DE):
     """
-    Hermite Reduction - Quadratic version.
+    Hermite Reduction - Mack's Linear Version.
 
     Given a derivation D on k(t) and f = a/d in k(t), returns g, h, r in
     k(t) such that f = Dg + h + r, h is simple, and r is reduced.
+
     """
-    # TODO: Rewrite this using Mack's linear version
     # Make d monic
     l = Poly(1/d.LC(), DE.t)
     a, d = a.mul(l), d.mul(l)
 
     fp, fs, fn = canonical_representation(a, d, DE)
-
     a, d = fn
     l = Poly(1/d.LC(), DE.t)
     a, d = a.mul(l), d.mul(l)
 
-    d_sqf = d.sqf_list_include()
     ga = Poly(0, DE.t)
     gd = Poly(1, DE.t)
 
-    for v, i in d_sqf:
-        if i < 2:
-            continue
+    dd = derivation(d, DE)
+    dm = gcd(d, dd).as_poly(DE.t)
+    ds, r = d.div(dm)
 
-        u = d.exquo(v**i)
-        for j in range(i - 1, 0, -1):
-            udv = u*derivation(v, DE)
-            b, c = gcdex_diophantine(udv.as_poly(DE.t), v.as_poly(DE.t),
-                a.mul(Poly(-S(1)/j, DE.t)).as_poly(DE.t))
-            b, c = b.as_poly(DE.t), c.as_poly(DE.t)
+    while dm.degree(DE.t)>0:
 
-            vj = v**j
-            ga = ga*vj + b*gd
-            gd = gd*vj
-            a = c.mul(Poly(-j, DE.t)) - u*derivation(b, DE)
+        ddm = derivation(dm, DE)
+        dm2 = gcd(dm, ddm)
+        dms, r = dm.div(dm2)
+        ds_ddm = ds.mul(ddm)
+        ds_ddm_dm, r = ds_ddm.div(dm)
 
-        d = u*v
+        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t), dms.as_poly(DE.t), a.as_poly(DE.t))
+        b, c = b.as_poly(DE.t), c.as_poly(DE.t)
 
+        db = derivation(b, DE).as_poly(DE.t)
+        ds_dms, r = ds.div(dms)
+        a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
+
+        ga = ga*dm + b*gd
+        gd = gd*dm
+        ga, gd = ga.cancel(gd, include=True)
+        dm = dm2
+
+    d = ds
     q, r = a.div(d)
-
     ga, gd = ga.cancel(gd, include=True)
-    r, d = r.cancel(d, include=True)
 
+    r, d = r.cancel(d, include=True)
     rra = q*fs[1] + fp*fs[1] + fs[0]
     rrd = fs[1]
     rra, rrd = rra.cancel(rrd, include=True)
@@ -1304,7 +1308,6 @@ def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
             (qd**2).as_expr()
         i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
-
     return (ret, i, b)
 
 

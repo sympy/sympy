@@ -400,11 +400,11 @@ def test_tan_subs():
 
 
 def test_tan_expansion():
-    assert 0 == tan(x + y).expand(trig=True) - ((tan(x) + tan(y))/(1 - tan(x)*tan(y)))
-    assert 0 == tan(x - y).expand(trig=True) - ((tan(x) - tan(y))/(1 + tan(x)*tan(y)))
-    assert 0 == (tan(x) + tan(y) + tan(z) - tan(x)*tan(y)*tan(z)) \
-        /(1 - tan(x)*tan(y) - tan(x)*tan(z) - tan(y)*tan(z)) \
-        - tan(x + y + z).expand(trig=True)
+    assert tan(x + y).expand(trig=True) == ((tan(x) + tan(y))/(1 - tan(x)*tan(y))).expand()
+    assert tan(x - y).expand(trig=True) == ((tan(x) - tan(y))/(1 + tan(x)*tan(y))).expand()
+    assert tan(x + y + z).expand(trig=True) == (
+        (tan(x) + tan(y) + tan(z) - tan(x)*tan(y)*tan(z))/
+        (1 - tan(x)*tan(y) - tan(x)*tan(z) - tan(y)*tan(z))).expand()
     assert 0 == tan(2*x).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 7))])*24 - 7
     assert 0 == tan(3*x).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*55 - 37
     assert 0 == tan(4*x - pi/4).expand(trig=True).rewrite(tan).subs([(tan(x), Rational(1, 5))])*239 - 1
@@ -497,12 +497,12 @@ def test_cot_subs():
 
 
 def test_cot_expansion():
-    assert 0 == cot(x + y).expand(trig=True) - (cot(x)*cot(y) - 1)/(cot(x) + cot(y))
-    assert 0 == (cot(x - y).expand(trig=True) + (cot(x)*cot(y) + 1)/(cot(x) - cot(y))).factor()
-    assert 0 == (cot(x)*cot(y)*cot(z) - cot(x) - cot(y) - cot(z))\
-        /(-1 + cot(x)*cot(y) + cot(x)*cot(z) + cot(y)*cot(z)) \
-        - cot(x + y + z).expand(trig=True)
-    assert 0 == cot(3*x).expand(trig=True) - ((cot(x)**3 - 3*cot(x))/(3*cot(x)**2 - 1))
+    assert cot(x + y).expand(trig=True) == ((cot(x)*cot(y) - 1)/(cot(x) + cot(y))).expand()
+    assert cot(x - y).expand(trig=True) == (-(cot(x)*cot(y) + 1)/(cot(x) - cot(y))).expand()
+    assert cot(x + y + z).expand(trig=True) == (
+        (cot(x)*cot(y)*cot(z) - cot(x) - cot(y) - cot(z))/
+        (-1 + cot(x)*cot(y) + cot(x)*cot(z) + cot(y)*cot(z))).expand()
+    assert cot(3*x).expand(trig=True) == ((cot(x)**3 - 3*cot(x))/(3*cot(x)**2 - 1)).expand()
     assert 0 == cot(2*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 3))])*3 + 4
     assert 0 == cot(3*x).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 5))])*55 - 37
     assert 0 == cot(4*x - pi/4).expand(trig=True).rewrite(cot).subs([(cot(x), Rational(1, 7))])*863 + 191
@@ -586,6 +586,8 @@ def test_acos_series():
 
 def test_acos_rewrite():
     assert acos(x).rewrite(log) == pi/2 + I*log(I*x + sqrt(1 - x**2))
+    assert acos(x).rewrite(atan) == \
+           atan(sqrt(1 - x**2)/x) + (pi/2)*(1 - x*sqrt(1/x**2))
     assert acos(0).rewrite(atan) == S.Pi/2
     assert acos(0.5).rewrite(atan) == acos(0.5).rewrite(log)
     assert acos(x).rewrite(asin) == S.Pi/2 - asin(x)

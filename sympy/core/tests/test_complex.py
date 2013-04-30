@@ -180,6 +180,9 @@ def test_real_imag():
     assert (sin(x)*sin(x).conjugate()).as_real_imag() == \
         (Abs(sin(x))**2, 0)
 
+    # issue 3474:
+    assert (x**2).as_real_imag() == (re(x)**2 - im(x)**2, 2*re(x)*im(x))
+
 
 def test_pow_issue_1724():
     e = ((-1)**(S(1)/3))

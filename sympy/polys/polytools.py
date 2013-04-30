@@ -6,6 +6,8 @@ from sympy.core import (
 
 from sympy.core.mul import _keep_coeff
 
+from sympy.core.basic import preorder_traversal
+
 from sympy.core.sympify import (
     sympify, SympifyError,
 )
@@ -5393,6 +5395,182 @@ def _generic_factor(expr, gens, args, method):
     opt = options.build_options(gens, args)
     return _symbolic_factor(sympify(expr), opt, method)
 
+def to_rational_coeffs(f):
+    """
+    try to transform a polynomial to have rational coefficients
+
+    try to find a transformation ``x = alpha*y``
+
+    ``f(x) = lc*alpha**n * g(y)`` where ``g`` is a polynomial with
+    rational coefficients, ``lc`` the leading coefficient.
+
+    If this fails, try ``x = y + beta``
+    ``f(x) = g(y)``
+
+    Returns ``None`` if ``g`` not found;
+    ``(lc, alpha, None, g)`` in case of rescaling
+    ``(None, None, beta, g)`` in case of translation
+
+    Notes
+    =====
+
+    Currently it transforms only polynomials without roots larger than 2.
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt, Poly, simplify, expand
+    >>> from sympy.polys.polytools import to_rational_coeffs
+    >>> from sympy.abc import x
+    >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
+    >>> lc, r, _, g = to_rational_coeffs(p)
+    >>> lc, r
+    (7 + 5*sqrt(2), -2*sqrt(2) + 2)
+    >>> g
+    Poly(x**3 + x**2 - 1/4*x - 1/4, x, domain='QQ')
+    >>> r1 = simplify(1/r)
+    >>> Poly(lc*r**3*(g.as_expr()).subs({x:x*r1}), x, domain='EX') == p
+    True
+
+    """
+    from sympy.simplify.simplify import simplify
+
+    def _try_rescale(f):
+        """
+        try rescaling ``x -> alpha*x`` to convert f to a polynomial
+        with rational coefficients.
+        Returns ``alpha, f``; if the rescaling is successful,
+        ``alpha`` is the rescaling factor, and ``f`` is the rescaled
+        polynomial; else ``alpha`` is ``None``.
+        """
+        from sympy.core.add import Add
+        if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
+            return None, f
+        n = f.degree()
+        lc = f.LC()
+        coeffs = f.monic().all_coeffs()[1:]
+        coeffs = [simplify(coeffx) for coeffx in coeffs]
+        if coeffs[-2] and not all(coeffx.is_rational for coeffx in coeffs):
+            rescale1_x = simplify(coeffs[-2]/coeffs[-1])
+            coeffs1 = []
+            for i in range(len(coeffs)):
+                coeffx = simplify(coeffs[i]*rescale1_x**(i + 1))
+                if not coeffx.is_rational:
+                    break
+                coeffs1.append(coeffx)
+            else:
+                rescale_x = simplify(1/rescale1_x)
+                x = f.gens[0]
+                v = [x**n]
+                for i in range(1, n + 1):
+                    v.append(coeffs1[i - 1]*x**(n - i))
+                f = Add(*v)
+                f = Poly(f)
+                return lc, rescale_x, f
+        return None
+
+    def _try_translate(f):
+        """
+        try translating ``x -> x + alpha`` to convert f to a polynomial
+        with rational coefficients.
+        Returns ``alpha, f``; if the translating is successful,
+        ``alpha`` is the translating factor, and ``f`` is the shifted
+        polynomial; else ``alpha`` is ``None``.
+        """
+        from sympy.core.add import Add
+        from sympy.utilities.iterables import sift
+        if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
+            return None, f
+        n = f.degree()
+        f1 = f.monic()
+        coeffs = f1.all_coeffs()[1:]
+        c = simplify(coeffs[0])
+        if c and not c.is_rational:
+            if c.is_Add:
+                args = c.args
+            else:
+                args = [c]
+            sifted = sift(args, lambda z: z.is_rational)
+            c1, c2 = sifted[True], sifted[False]
+            alpha = -Add(*c2)/n
+            f2 = f1.shift(alpha)
+            return alpha, f2
+        return None
+
+    def _has_square_roots(p):
+        """
+        Return True if ``f`` is a sum with square roots but no other root
+        """
+        from sympy.core.exprtools import Factors
+        coeffs = p.coeffs()
+        has_sq = False
+        for y in coeffs:
+            for x in Add.make_args(y):
+                f = Factors(x).factors
+                r = [wx.q for wx in f.values() if wx.is_Rational and wx.q >= 2]
+                if not r:
+                    continue
+                if min(r) == 2:
+                    has_sq = True
+                if max(r) > 2:
+                    return False
+        return has_sq
+
+    if f.get_domain().is_EX and _has_square_roots(f):
+        rescale_x = None
+        translate_x = None
+        r = _try_rescale(f)
+        if r:
+            return r[0], r[1], None, r[2]
+        else:
+            r = _try_translate(f)
+            if r:
+                return None, None, r[0], r[1]
+    return None
+
+def _torational_factor_list(p, x):
+    """
+    helper function to factor polynomial using to_rational_coeffs
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polytools import _torational_factor_list
+    >>> from sympy.abc import x
+    >>> from sympy import sqrt, expand, Mul
+    >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
+    >>> factors = _torational_factor_list(p, x); factors
+    (-2, [(-x*(1 + sqrt(2))/2 + 1, 1), (-x*(1 + sqrt(2)) - 1, 1), (-x*(1 + sqrt(2)) + 1, 1)])
+    >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
+    True
+    >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
+    >>> factors = _torational_factor_list(p, x); factors
+    (1, [(x - 2 + sqrt(2), 1), (x - 1 + sqrt(2), 1), (x + 1 + sqrt(2), 1)])
+    >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
+    True
+
+    """
+    from sympy.simplify.simplify import simplify
+    p1 = Poly(p, x, domain='EX')
+    n = p1.degree()
+    res = to_rational_coeffs(p1)
+    if not res:
+        return None
+    lc, r, t, g = res
+    factors = factor_list(g.as_expr())
+    if lc:
+        c = simplify(factors[0]*lc*r**n)
+        r1 = simplify(1/r)
+        a = []
+        for z in factors[1:][0]:
+            a.append((simplify(z[0].subs({x:x*r1})), z[1]))
+    else:
+        c = factors[0]
+        a = []
+        for z in factors[1:][0]:
+            a.append((z[0].subs({x:x - t}), z[1]))
+    return (c, a)
+
 
 def sqf_list(f, *gens, **args):
     """
@@ -5720,13 +5898,16 @@ def cancel(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import cancel
+    >>> from sympy import cancel, sqrt, Symbol
     >>> from sympy.abc import x
+    >>> A = Symbol('A', commutative=False)
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
     (2*x + 2)/(x - 1)
-
+    >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
+    sqrt(6)/2
     """
+    from sympy.core.exprtools import factor_terms
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
@@ -5734,11 +5915,15 @@ def cancel(f, *gens, **args):
     if not isinstance(f, (tuple, Tuple)):
         if f.is_Number:
             return f
-        else:
-            p, q = f.as_numer_denom()
+        f = factor_terms(f, radical=True)
+        p, q = f.as_numer_denom()
 
-    else:
+    elif len(f) == 2:
         p, q = f
+    elif isinstance(f, Tuple):
+        return factor_terms(f)
+    else:
+        raise ValueError('unexpected argument: %s' % f)
 
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
@@ -5747,6 +5932,34 @@ def cancel(f, *gens, **args):
             return f
         else:
             return S.One, p, q
+    except PolynomialError, msg:
+        if f.is_commutative:
+            raise PolynomialError(msg)
+        # non-commutative
+        if f.is_Mul:
+            c, nc = f.args_cnc(split_1=False)
+            nc = [cancel(i) for i in nc]
+            return cancel(Mul._from_args(c))*Mul(*nc)
+        elif f.is_Add:
+            c = []
+            nc = []
+            for i in f.args:
+                if i.is_commutative:
+                    c.append(i)
+                else:
+                    nc.append(cancel(i))
+            return cancel(Add(*c)) + Add(*nc)
+        else:
+            reps = []
+            pot = preorder_traversal(f)
+            pot.next()
+            for e in pot:
+                try:
+                    reps.append((e, cancel(e)))
+                    pot.skip()  # this was handled successfully
+                except NotImplementedError:
+                    pass
+            return f.xreplace(dict(reps))
 
     c, P, Q = F.cancel(G)
 

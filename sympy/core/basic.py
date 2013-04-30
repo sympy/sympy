@@ -12,7 +12,7 @@ from sympy.core.singleton import S
 
 class Basic(object):
     """
-    Base class for all objects in sympy.
+    Base class for all objects in SymPy.
 
     Conventions:
 
@@ -560,21 +560,12 @@ class Basic(object):
 
     @property
     def is_number(self):
-        """Returns ``True`` if 'self' is a number.
+        """Returns ``True`` if 'self' contains no free symbols.
 
-           >>> from sympy import log, Integral
-           >>> from sympy.abc import x, y
-
-           >>> x.is_number
-           False
-           >>> (2*x).is_number
-           False
-           >>> (2 + log(2)).is_number
-           True
-           >>> (2 + Integral(2, x)).is_number
-           False
-           >>> (2 + Integral(2, (x, 1, 2))).is_number
-           True
+        See Also
+        ========
+        is_comparable
+        sympy.core.expr.is_number
 
         """
         # should be overriden by subclasses
@@ -582,6 +573,18 @@ class Basic(object):
 
     @property
     def is_comparable(self):
+        """Return True if self can be computed to a real number
+        with precision, else False.
+
+        Examples
+        ========
+
+        >>> from sympy import exp_polar, pi, I
+        >>> (I*exp_polar(I*pi/2)).is_comparable
+        True
+        >>> (I*exp_polar(I*pi*2)).is_comparable
+        False
+        """
         is_real = self.is_real
         if is_real is False:
             return False
@@ -1047,7 +1050,13 @@ class Basic(object):
         if self in rule:
             return rule[self]
         elif rule:
-            args = tuple([arg.xreplace(rule) for arg in self.args])
+            args = []
+            for a in self.args:
+                try:
+                    args.append(a.xreplace(rule))
+                except AttributeError:
+                    args.append(a)
+            args = tuple(args)
             if not _aresame(args, self.args):
                 return self.func(*args)
         return self
@@ -1220,6 +1229,8 @@ class Basic(object):
         mapping = {}
 
         def rec_replace(expr):
+            if not isinstance(expr, Basic):
+                return expr
             args, construct = [], False
 
             for arg in expr.args:
@@ -1392,7 +1403,8 @@ class Basic(object):
 
         """
         if hints.get('deep', True):
-            terms = [ term.doit(**hints) for term in self.args ]
+            terms = [ term.doit(**hints) if isinstance(term, Basic) else term
+                                         for term in self.args ]
             return self.func(*terms)
         else:
             return self
@@ -1401,7 +1413,9 @@ class Basic(object):
         if self.is_Atom:
             return self
         sargs = self.args
-        terms = [ t._eval_rewrite(pattern, rule, **hints) for t in sargs ]
+        terms = [ t._eval_rewrite(pattern, rule, **hints)
+                    if isinstance(t, Basic) else t
+                    for t in sargs ]
         return self.func(*terms)
 
     def rewrite(self, *args, **hints):

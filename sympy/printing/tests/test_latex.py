@@ -12,7 +12,8 @@ from sympy import (
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial)
+    uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
+    elliptic_e, elliptic_pi)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -199,6 +200,20 @@ def test_latex_functions():
     assert latex(lerchphi(x, y, n)) == r"\Phi\left(x, y, n\right)"
     assert latex(lerchphi(x, y, n)**2) == r"\Phi^{2}\left(x, y, n\right)"
 
+    assert latex(elliptic_k(z)) == r"K\left(z\right)"
+    assert latex(elliptic_k(z)**2) == r"K^{2}\left(z\right)"
+    assert latex(elliptic_f(x, y)) == r"F\left(x\middle| y\right)"
+    assert latex(elliptic_f(x, y)**2) == r"F^{2}\left(x\middle| y\right)"
+    assert latex(elliptic_e(x, y)) == r"E\left(x\middle| y\right)"
+    assert latex(elliptic_e(x, y)**2) == r"E^{2}\left(x\middle| y\right)"
+    assert latex(elliptic_e(z)) == r"E\left(z\right)"
+    assert latex(elliptic_e(z)**2) == r"E^{2}\left(z\right)"
+    assert latex(elliptic_pi(x, y, z)) == r"\Pi\left(x; y\middle| z\right)"
+    assert latex(elliptic_pi(x, y, z)**2) == \
+        r"\Pi^{2}\left(x; y\middle| z\right)"
+    assert latex(elliptic_pi(x, y)) == r"\Pi\left(x\middle| y\right)"
+    assert latex(elliptic_pi(x, y)**2) == r"\Pi^{2}\left(x\middle| y\right)"
+
     assert latex(Ei(x)) == r'\operatorname{Ei}{\left (x \right )}'
     assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left (x \right )}'
     assert latex(expint(x, y)**2) == r'\operatorname{E}_{x}^{2}\left(y\right)'
@@ -237,6 +252,8 @@ def test_latex_functions():
         polar_lift(0)) == r"\operatorname{polar\_lift}{\left (0 \right )}"
     assert latex(polar_lift(
         0)**3) == r"\operatorname{polar\_lift}^{3}{\left (0 \right )}"
+
+    assert latex(totient(n)) == r'\phi\left( n \right)'
 
 
 def test_hyper_printing():
@@ -482,7 +499,6 @@ def test_latex_Heaviside():
 
 def test_latex_KroneckerDelta():
     assert latex(KroneckerDelta(x, y)) == r"\delta_{x y}"
-    assert latex(KroneckerDelta(x, y)**2) == r"\left(\delta_{x y}\right)^{2}"
     assert latex(KroneckerDelta(x, y + 1)) == r"\delta_{x, y + 1}"
     # issue 3479
     assert latex(KroneckerDelta(x + 1, y)) == r"\delta_{y, x + 1}"
@@ -732,7 +748,7 @@ def test_latex_MatrixSlice():
 def test_latex_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert latex(where(X > 0)) == "Domain: 0 < x_{1}"
+    assert latex(where(X > 0)) == "Domain: x_{1} > 0"
 
     D = Die('d1', 6)
     assert latex(where(D > 4)) == r"Domain: d_{1} = 5 \vee d_{1} = 6"
@@ -740,7 +756,7 @@ def test_latex_RandomDomain():
     A = Exponential('a', 1)
     B = Exponential('b', 1)
     assert latex(
-        pspace(Tuple(A, B)).domain) == "Domain: 0 \leq a \wedge 0 \leq b"
+        pspace(Tuple(A, B)).domain) == "Domain: a \geq 0 \wedge b \geq 0"
 
 
 def test_PrettyPoly():

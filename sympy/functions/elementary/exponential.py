@@ -493,7 +493,14 @@ class log(Function):
                 if not (base.is_positive and arg.is_positive):
                     raise ValueError
                 n = multiplicity(base, arg)
-                return n + log(arg // base ** n) / log(base)
+                if n:
+                    den = base**n
+                    if den.is_Integer:
+                        return n + log(arg // den) / log(base)
+                    else:
+                        return n + log(arg / den) / log(base)
+                else:
+                    return log(arg)/log(base)
             except ValueError:
                 pass
             if base is not S.Exp1:

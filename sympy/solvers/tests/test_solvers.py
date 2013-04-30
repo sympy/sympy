@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Wild, acos,
     asin, atan, atanh, cos, cosh, diff, exp, expand, im, log, pi, re, sin,
     sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    RootOf)
+    root)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -252,7 +252,7 @@ def test_linear_system():
                 [-1, 0, 1, 0, 0]])
 
     assert solve_linear_system(M, x, y, z, t) == \
-        {y: 0, z: t*(-n - 1)/n, x: t*(-n - 1)/n}
+        {x: -t - t/n, z: -t - t/n, y: 0}
 
     assert solve([x + y + z + t, -z - t], x, y, z, t) == {x: -y, z: -t}
 
@@ -289,7 +289,10 @@ def test_tsolve():
         log(y/2 + sqrt(y**2 - 4)/2),
     ]), set([
         log(y - sqrt(y**2 - 4)) - log(2),
-        log(y + sqrt(y**2 - 4)) - log(2)])]
+        log(y + sqrt(y**2 - 4)) - log(2)]),
+    set([
+        log(y/2 - sqrt((y - 2)*(y + 2))/2),
+        log(y/2 + sqrt((y - 2)*(y + 2))/2)])]
     assert solve(exp(x) - 3, x) == [log(3)]
     assert solve(Eq(exp(x), 3), x) == [log(3)]
     assert solve(log(x) - 3, x) == [exp(3)]
@@ -743,7 +746,7 @@ def test_unrad():
     assert check(unrad(sqrt(x) + sqrt(1 - x)),
                 (2*x - 1, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) - 3),
-                (36*x + (2*x - 10)**2 - 36, [], []))
+                (9*x + (x - 5)**2 - 9, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x)),
                 (-5*x**2 + 2*x - 1, [], []))
     assert check(unrad(sqrt(x) + sqrt(1 - x) + sqrt(2 + x) - 3),
@@ -761,7 +764,8 @@ def test_unrad():
     assert set(solve(sqrt(x) - sqrt(x + 1) + sqrt(1 - sqrt(x)))) == \
         set([S.Zero, S(9)/16])
 
-    '''real_root changes the value of the result if the solution is
+    '''NOTE
+    real_root changes the value of the result if the solution is
     simplified; `a` in the text below is the root that is not 4/5:
     >>> eq
     sqrt(x) + sqrt(-x + 1) + sqrt(x + 1) - 6*sqrt(5)/5
@@ -794,22 +798,12 @@ def test_unrad():
         set([i.n(chop=True) for i in ans]) == \
         set([i.n(chop=True) for i in (ra, rb)])
 
-    ans = solve(sqrt(x) + sqrt(x + 1) -
-                sqrt(1 - x) - sqrt(2 + x))
-    assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
-    # the fence optimization problem
-    # http://code.google.com/p/sympy/issues/detail?id=1694#c159
-    F = Symbol('F')
-    eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
-    X = solve(eq, x, hint='minimal')[0]
-    Y = solve((x*y).subs(x, X).diff(y), y, simplify=False, minimal=True)
-    ans = 2*F/7 - sqrt(2)*F/14
-    assert any((a - ans).expand().is_zero for a in Y)
-
-    raises(
-        ValueError, lambda: unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))
-    raises(ValueError, lambda: unrad(sqrt(x) + (x + 1)**Rational(1, 3) +
-           2*sqrt(y)))
+    raises(ValueError, lambda:
+        unrad(-root(x,3)**2 + 2**pi*root(x,3) - x + 2**pi))
+    raises(ValueError, lambda:
+        unrad(sqrt(x) + sqrt(x + 1) + sqrt(1 - sqrt(x)) + 3))
+    raises(ValueError, lambda:
+        unrad(sqrt(x) + (x + 1)**Rational(1, 3) + 2*sqrt(y)))
     # same as last but consider only y
     assert check(unrad(sqrt(x) + (x + 1)**Rational(1, 3) + 2*sqrt(y), y),
            (4*y - (sqrt(x) + (x + 1)**(S(1)/3))**2, [], []))
@@ -847,13 +841,39 @@ def test_unrad():
     assert solve(sqrt(17*x - sqrt(x**2 - 5)) - 7) == [3]
     assert solve(sqrt(x) - sqrt(x - 1) + sqrt(sqrt(x))) == []
 
-    # don't posify the expession in unrad and use _mexpand
+    # don't posify the expression in unrad and use _mexpand
     z = sqrt(2*x + 1)/sqrt(x) - sqrt(2 + 1/x)
     p = posify(z)[0]
     assert solve(p) == []
     assert solve(z) == []
     assert solve(z + 6*I) == [-S(1)/11]
     assert solve(p + 6*I) == []
+
+    eq = sqrt(2 + I) + 2*I
+    assert unrad(eq - x, x, all=True) == (x**4 + 4*x**2 + 8*x + 37, [], [])
+    ans = (81*x**8 - 2268*x**6 - 4536*x**5 + 22644*x**4 + 63216*x**3 -
+        31608*x**2 - 189648*x + 141358, [], [])
+    r = sqrt(sqrt(2)/3 + 7)
+    eq = sqrt(r) + r - x
+    assert unrad(eq, all=1)
+    r2 = sqrt(sqrt(2) + 21)/sqrt(3)
+    assert r != r2 and r.equals(r2)
+    assert unrad(eq - r + r2, all=True) == ans
+
+
+@slow
+def test_unrad_slow():
+    ans = solve(sqrt(x) + sqrt(x + 1) -
+                sqrt(1 - x) - sqrt(2 + x))
+    assert len(ans) == 1 and NS(ans[0])[:4] == '0.73'
+    # the fence optimization problem
+    # http://code.google.com/p/sympy/issues/detail?id=1694#c159
+    F = Symbol('F')
+    eq = F - (2*x + 2*y + sqrt(x**2 + y**2))
+    X = solve(eq, x, hint='minimal')[0]
+    Y = solve((x*y).subs(x, X).diff(y), y, simplify=False, minimal=True)
+    ans = 2*F/7 - sqrt(2)*F/14
+    assert any((a - ans).expand().is_zero for a in Y)
 
     eq = S('''
         -x + (1/2 - sqrt(3)*I/2)*(3*x**3/2 - x*(3*x**2 - 34)/2 + sqrt((-3*x**3
@@ -1086,13 +1106,15 @@ def test_solve_abs():
 def test_issue_2957():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
     assert set(solve(tanh(x - 1)*tanh(x + 1) + 1)) == set([
-        -log(2)/2 + log(-1 - I),
-        -log(2)/2 + log(-1 + I),
         -log(2)/2 + log(1 - I),
-        -log(2)/2 + log(1 + I)])
-    assert set(solve((tanh(x + 3)*tanh(x - 3) + 1)**2)) == \
-        set([-log(2)/2 + log(-1 - I), -log(2)/2 + log(-1 + I),
-            -log(2)/2 + log(1 - I), -log(2)/2 + log(1 + I)])
+        -log(2)/2 + log(-1 - I),
+        -log(2)/2 + log(1 + I),
+        -log(2)/2 + log(-1 + I),])
+    assert set(solve((tanh(x + 3)*tanh(x - 3) + 1)**2)) == set([
+        -log(2)/2 + log(1 - I),
+        -log(2)/2 + log(-1 - I),
+        -log(2)/2 + log(1 + I),
+        -log(2)/2 + log(-1 + I),])
 
 
 def test_issue_2574():
@@ -1151,6 +1173,7 @@ def test_real_roots():
     assert len(solve(x**5 + x**3 + 1)) == 1
 
 
+@slow
 def test_issue3429():
     eqs = [
         327600995*x**2 - 37869137*x + 1809975124*y**2 - 9998905626,
