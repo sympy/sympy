@@ -96,6 +96,15 @@ Hypergeometric Functions
 .. autoclass:: sympy.functions.special.hyper.meijerg
    :members:
 
+Elliptic integrals
+------------------
+.. module:: sympy.functions.special.elliptic_integrals
+
+.. autoclass:: elliptic_k
+.. autoclass:: elliptic_f
+.. autoclass:: elliptic_e
+.. autoclass:: elliptic_pi
+
 Orthogonal Polynomials
 ----------------------
 

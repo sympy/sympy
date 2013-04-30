@@ -12,7 +12,8 @@ from sympy import (
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
-    uppergamma, zeta, subfactorial, totient)
+    uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
+    elliptic_e, elliptic_pi)
 
 from sympy.abc import mu, tau
 from sympy.printing.latex import latex
@@ -198,6 +199,20 @@ def test_latex_functions():
         polylog(x, y)**2) == r"\operatorname{Li}_{x}^{2}\left(y\right)"
     assert latex(lerchphi(x, y, n)) == r"\Phi\left(x, y, n\right)"
     assert latex(lerchphi(x, y, n)**2) == r"\Phi^{2}\left(x, y, n\right)"
+
+    assert latex(elliptic_k(z)) == r"K\left(z\right)"
+    assert latex(elliptic_k(z)**2) == r"K^{2}\left(z\right)"
+    assert latex(elliptic_f(x, y)) == r"F\left(x\middle| y\right)"
+    assert latex(elliptic_f(x, y)**2) == r"F^{2}\left(x\middle| y\right)"
+    assert latex(elliptic_e(x, y)) == r"E\left(x\middle| y\right)"
+    assert latex(elliptic_e(x, y)**2) == r"E^{2}\left(x\middle| y\right)"
+    assert latex(elliptic_e(z)) == r"E\left(z\right)"
+    assert latex(elliptic_e(z)**2) == r"E^{2}\left(z\right)"
+    assert latex(elliptic_pi(x, y, z)) == r"\Pi\left(x; y\middle| z\right)"
+    assert latex(elliptic_pi(x, y, z)**2) == \
+        r"\Pi^{2}\left(x; y\middle| z\right)"
+    assert latex(elliptic_pi(x, y)) == r"\Pi\left(x\middle| y\right)"
+    assert latex(elliptic_pi(x, y)**2) == r"\Pi^{2}\left(x\middle| y\right)"
 
     assert latex(Ei(x)) == r'\operatorname{Ei}{\left (x \right )}'
     assert latex(Ei(x)**2) == r'\operatorname{Ei}^{2}{\left (x \right )}'
