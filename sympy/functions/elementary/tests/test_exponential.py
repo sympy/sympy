@@ -171,6 +171,10 @@ def test_log_base():
     assert log(3**3, 3) == 3
     assert log(5, 1) == zoo
     assert log(1, 1) == nan
+    assert log(Rational(2, 3), 10) == (-log(3) + log(2))/log(10)
+    assert log(Rational(2, 3), Rational(1, 3)) == -log(2)/log(3) + 1
+    assert log(Rational(2, 3), Rational(2, 5)) == \
+        (-log(3) + log(2))/(-log(5) + log(2))
 
 
 def test_log_symbolic():
