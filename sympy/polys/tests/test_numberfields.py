@@ -1,7 +1,7 @@
 """Tests for computational algebraic number field theory. """
 
 from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
-    Add, Mul)
+    Add, Mul, pi, cos, sin, exp)
 
 from sympy.utilities.pytest import raises
 
@@ -148,18 +148,6 @@ def test_minimal_polynomial_sq():
     mp = minimal_polynomial(p, x)
     assert mp.subs({x: 0}) == -71965773323122507776
 
-def test_minpoly_pow():
-    p = sqrt(2)
-    assert minpoly_pow(p, 2, x) == x - 2
-    p = (2*sqrt(2) + 3)
-    assert minpoly_pow(p, Rational(1, 4), x) == x**4 - 2*x**2 - 1
-    p = 1 + 2**Rational(1,7)
-    assert minpoly_pow(p, Rational(4, 3), x) == x**21 - 7*x**18 - 35*x**15 - \
-            3339*x**12 - 14581*x**9 - 27629*x**6 + 3031*x**3 - 81
-
-    assert minpoly_pow(p, Rational(-4, 3), x) == 81*x**21 - 3031*x**18 + \
-            27629*x**15 + 14581*x**12 + 3339*x**9 + 35*x**6 + 7*x**3 - 1
-
 def test_minpoly_op_algebraic_number():
     p1 = sqrt(1 + 2**Rational(1, 3))
     p2 = sqrt(2)
@@ -179,7 +167,103 @@ def test_minpoly_op_algebraic_number():
         408*x**7 + 544*x**6 - 1104*x**5 + 2523*x**4 - 3756*x**3 + \
         2820*x**2 - 1032*x + 157
 
+def test_minpoly_compose():
+    # test_minimal_polynomial apart from tests with AlgebraicNumber,
+    # NotAlgebraic, Poly
+    assert minimal_polynomial(-7, x, compose=True) == x + 7
+    assert minimal_polynomial(-1, x, compose=True) == x + 1
+    assert minimal_polynomial( 0, x, compose=True) == x
+    assert minimal_polynomial( 1, x, compose=True) == x - 1
+    assert minimal_polynomial( 7, x, compose=True) == x - 7
 
+    assert minimal_polynomial(sqrt(2), x, compose=True) == x**2 - 2
+    assert minimal_polynomial(sqrt(5), x, compose=True) == x**2 - 5
+    assert minimal_polynomial(sqrt(6), x, compose=True) == x**2 - 6
+
+    assert minimal_polynomial(2*sqrt(2), x, compose=True) == x**2 - 8
+    assert minimal_polynomial(3*sqrt(5), x, compose=True) == x**2 - 45
+    assert minimal_polynomial(4*sqrt(6), x, compose=True) == x**2 - 96
+
+    assert minimal_polynomial(2*sqrt(2) + 3, x, compose=True) == x**2 - 6*x + 1
+    assert minimal_polynomial(3*sqrt(5) + 6, x, compose=True) == x**2 - 12*x - 9
+    assert minimal_polynomial(4*sqrt(6) + 7, x, compose=True) == x**2 - 14*x - 47
+
+    assert minimal_polynomial(2*sqrt(2) - 3, x, compose=True) == x**2 + 6*x + 1
+    assert minimal_polynomial(3*sqrt(5) - 6, x, compose=True) == x**2 + 12*x - 9
+    assert minimal_polynomial(4*sqrt(6) - 7, x, compose=True) == x**2 + 14*x - 47
+
+    assert minimal_polynomial(sqrt(1 + sqrt(6)), x, compose=True) == x**4 - 2*x**2 - 5
+    assert minimal_polynomial(sqrt(I + sqrt(6)), x, compose=True) == x**8 - 10*x**4 + 49
+
+    assert minimal_polynomial(2*I + sqrt(2 + I), x, compose=True) == x**4 + 4*x**2 + 8*x + 37
+
+    assert minimal_polynomial(sqrt(2) + sqrt(3), x, compose=True) == x**4 - 10*x**2 + 1
+    assert minimal_polynomial(
+        sqrt(2) + sqrt(3) + sqrt(6), x, compose=True) == x**4 - 22*x**2 - 48*x - 23
+
+    assert minimal_polynomial(sqrt(2)).dummy_eq(x**2 - 2)
+    assert minimal_polynomial(sqrt(2), x) == x**2 - 2
+
+    a = 1 - 9*sqrt(2) + 7*sqrt(3)
+    assert minimal_polynomial(
+        1/a, x, compose=True) == 392*x**4 - 1232*x**3 + 612*x**2 + 4*x - 1
+    assert minimal_polynomial(
+        1/sqrt(a), x, compose=True) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
+    a = sqrt(2)/3 + 7
+    f = 81*x**8 - 2268*x**6 - 4536*x**5 + 22644*x**4 + 63216*x**3 - \
+        31608*x**2 - 189648*x + 141358
+    assert minimal_polynomial(sqrt(a) + sqrt(sqrt(a)), x) == f
+
+    ex = (2*sqrt(2) + 3)**Rational(1, 4)
+    assert minimal_polynomial(ex, x, compose=True) == x**4 - 2*x**2 - 1
+    ex = (1 + 2**Rational(1,7))**Rational(4, 3)
+    assert minimal_polynomial(ex, x, compose=True) == \
+            x**21 - 7*x**18 - 35*x**15 - \
+            3339*x**12 - 14581*x**9 - 27629*x**6 + 3031*x**3 - 81
+
+    assert minimal_polynomial(ex**(-1), x, compose=True) == \
+            81*x**21 - 3031*x**18 + \
+            27629*x**15 + 14581*x**12 + 3339*x**9 + 35*x**6 + 7*x**3 - 1
+
+    # issue 3769
+    eq = S('''
+        -1/(800*sqrt(-1/240 + 1/(18000*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)) + 2*(-1/17280000 +
+        sqrt(15)*I/28800000)**(1/3)))''')
+    mp = minimal_polynomial(eq + 3, x, compose=True)
+    assert mp == 8000*x**2 - 48000*x + 71999
+
+    # issue 2789
+    assert minimal_polynomial(exp(I*pi/8), x, compose=True) == x**8 + 1
+
+    mp = minimal_polynomial(sin(pi/7) + sqrt(2), x, compose=True)
+    assert mp == 4096*x**12 - 63488*x**10 + 351488*x**8 - 826496*x**6 + \
+        770912*x**4 - 268432*x**2 + 28561
+    mp = minimal_polynomial(cos(pi/7) + sqrt(2), x, compose=True)
+    assert mp == 64*x**6 - 64*x**5 - 432*x**4 + 304*x**3 + 712*x**2 - \
+            232*x - 239
+    mp = minimal_polynomial(exp(I*pi/7) + sqrt(2), x, compose=True)
+    assert mp == x**12 - 2*x**11 - 9*x**10 + 16*x**9 + 43*x**8 - 70*x**7 - 97*x**6 + 126*x**5 + 211*x**4 - 212*x**3 - 37*x**2 + 142*x + 127
+
+    mp = minimal_polynomial(sin(pi/7) + sqrt(2), x, compose=True)
+    assert mp == 4096*x**12 - 63488*x**10 + 351488*x**8 - 826496*x**6 + \
+        770912*x**4 - 268432*x**2 + 28561
+    mp = minimal_polynomial(cos(pi/7) + sqrt(2), x, compose=True)
+    assert mp == 64*x**6 - 64*x**5 - 432*x**4 + 304*x**3 + 712*x**2 - \
+            232*x - 239
+    mp = minimal_polynomial(exp(I*pi/7) + sqrt(2), x, compose=True)
+    assert mp == x**12 - 2*x**11 - 9*x**10 + 16*x**9 + 43*x**8 - 70*x**7 - 97*x**6 + 126*x**5 + 211*x**4 - 212*x**3 - 37*x**2 + 142*x + 127
+
+    mp = minimal_polynomial(exp(2*I*pi/7), x, compose=True)
+    assert mp == x**6 + x**5 + x**4 + x**3 + x**2 + x + 1
+    mp = minimal_polynomial(cos(2*pi/7), x, compose=True)
+    assert mp == 8*x**3 + 4*x**2 - 4*x - 1
+    mp = minimal_polynomial(sin(2*pi/7), x, compose=True)
+    ex = (5*cos(2*pi/7) - 7)/(9*cos(pi/7) - 5*cos(3*pi/7))
+    mp = minimal_polynomial(ex, x, compose=True)
+    assert mp == x**3 + 2*x**2 - x - 1
+    assert  minimal_polynomial(-1/(2*cos(pi/7)), x, compose=True) == \
+         x**3 + 2*x**2 - x - 1
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])

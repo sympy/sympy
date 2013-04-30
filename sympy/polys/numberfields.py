@@ -1,8 +1,8 @@
 """Computational algebraic number field theory. """
 
 from sympy import (
-    S, Expr, Rational,
-    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul
+    S, C, Expr, Rational,
+    Symbol, Add, Mul, sympify, Q, ask, Dummy, Tuple, expand_mul, I, pi
 )
 
 from sympy.polys.polytools import (
@@ -25,6 +25,7 @@ from sympy.utilities import (
     numbered_symbols, variations, lambdify,
 )
 
+from sympy.simplify.simplify import _mexpand, _is_sum_surds
 from sympy.ntheory import sieve
 from sympy.mpmath import pslq, mp
 
@@ -40,13 +41,12 @@ def _choose_factor(factors, x, v, prec):
         return factors[0]
     prec1 = 10
     reps = {x: v}
-    eps = 1.0/10**prec
+    eps = 1./10**prec1
     while 1:
         candidates = []
         for f in factors:
             if abs(f.evalf(prec1, subs=reps)) < eps:
                 candidates.append(f)
-
         if candidates:
             factors = candidates
         if len(factors) == 1:
@@ -192,7 +192,7 @@ def minpoly_neg(ex, x, mp):
     -x**3 - 2
     """
     if mp is None:
-        mp = minimal_polynomial(ex, x)
+        mp = minpoly1(ex, x)
     return mp.subs({x: -x})
 
 def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
@@ -229,11 +229,11 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     "Irreducibles and the composed product over a finite field".
     """
     from sympy import gcd
-    y = Dummy('y')
+    y = Dummy(str(x))
     if mp1 is None:
-        mp1 = minimal_polynomial(ex1, x)
+        mp1 = minpoly1(ex1, x)
     if mp2 is None:
-        mp2 = minimal_polynomial(ex2, y)
+        mp2 = minpoly1(ex2, y)
     else:
         mp2 = mp2.subs({x:y})
 
@@ -244,6 +244,9 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
             mp1a = y**degree(mp1)*mp1.subs({x:x / y})
         elif op is 'div':
             mp1a = mp1.subs({x:x * y})
+        else:
+            raise NotImplementedError('option not available')
+        mp1a = _mexpand(mp1a)
         r = resultant(mp1a, mp2, gens=[y])
     elif method == 'groebner':
         z = Dummy('z')
@@ -251,6 +254,8 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
             g = groebner([mp1, mp2, op(x, y) - z], gens=[x, y, z], order='lex')
         elif op is 'div':
             g = groebner([mp1, mp2, x - z*y], gens=[x, y, z], order='lex')
+        else:
+            raise NotImplementedError('option not available')
         r = g[-1].subs({z:x})
     else:
         raise NotImplementedError('option not available')
@@ -262,8 +267,6 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     _, factors = factor_list(r)
     if op in [Add, Mul]:
         ex = op(ex1, ex2)
-    elif op is 'sub':
-        ex = ex1 - ex2
     elif op is 'div':
         ex = ex1 / ex2
     res = _choose_factor(factors, x, ex, prec)
@@ -295,18 +298,197 @@ def minpoly_pow(ex, pw, x, mp=None, prec=200):
     """
     pw = sympify(pw)
     if not mp:
-        mp = minimal_polynomial(ex, x)
+        mp = minpoly1(ex, x)
     if not pw.is_rational:
         raise ValueError('pw must be rational')
     if pw < 0:
         mp = expand_mul(x**degree(mp)*mp.subs(x, 1/x))
         pw = -pw
-    y = Dummy('y')
+        ex = 1/ex
+    y = Dummy(str(x))
     mp = mp.subs({x:y})
     n, d = pw.as_numer_denom()
     res = resultant(mp, x**d - y**n, gens=[y])
     _, factors = factor_list(res)
     res = _choose_factor(factors, x, ex**pw, prec)
+    return res
+
+def minpoly_add(x, *a):
+    if not a:
+        return S.Zero
+    if len(a) == 1:
+        return minpoly1(a[0], x)
+    mp = minpoly_op_algebraic_number(a[0], a[1], x, op=Add)
+    p = a[0] + a[1]
+    for px in a[2:]:
+        p1 = p + px
+        mp1 = minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Add)
+        p = p1
+        mp = mp1
+    return mp
+
+def minpoly_mul(x, *a):
+    if not a:
+        return S.One
+    if len(a) == 1:
+        return minpoly1(a[0], x)
+    mp = minpoly_op_algebraic_number(a[0], a[1], x, op=Mul)
+    p = a[0] + a[1]
+    for px in a[2:]:
+        p1 = p * px
+        mp1 = minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Mul)
+        p = p1
+        mp = mp1
+    return mp
+
+def _minpoly_sin(ex, x):
+    """
+    Returns the minimal polynomial of ``sin(ex)``
+    see http://mathworld.wolfram.com/TrigonometryAngles.html
+    """
+    from sympy.functions.combinatorial.factorials import binomial
+    c, a = ex.args[0].as_coeff_Mul()
+    if a is pi:
+        if c.is_rational:
+            if c.p == 1:
+                q = sympify(c.q)
+                if q == 7:
+                    return 64*x**6 - 112*x**4 + 56*x**2 - 7
+                if q == 9:
+                    return 64*x**6 - 96*x**4 + 36*x**2 - 3
+                if q.is_prime:
+                    s = 0
+                    q2 = q // 2
+                    for k in range(q2 + 1):
+                        s += (-1)**k*binomial(q, 2*k + 1)*(1 - x**2)**(q2 - k)*x**(2*k)
+                    return _mexpand(s)
+                else:
+                    raise NotImplementedError('case not covered')
+                    # too slow
+                    #ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
+                    #return minpoly1(ex1, x)
+            else:
+                ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
+                return minpoly1(ex1, x)
+        else:
+            raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+    raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+
+def _minpoly_cos(ex, x):
+    """
+    Returns the minimal polynomial of ``cos(ex)``
+    see http://mathworld.wolfram.com/TrigonometryAngles.html
+    """
+    from sympy import sqrt
+    c, a = ex.args[0].as_coeff_Mul()
+    if a is pi:
+        if c.is_rational:
+            if c.p == 1:
+                q = sympify(c.q)
+                if q.is_prime:
+                    s = _minpoly_sin(ex, x)
+                    factors = [_mexpand(s.subs({x:sqrt((1 + x)/2)})),
+                            _mexpand(s.subs({x:sqrt((1 - x)/2)}))]
+
+                    s = _choose_factor(factors, x, ex, 200)
+                    return s
+                else:
+                    raise NotImplementedError('case not covered')
+                    # too slow
+                    #ex1 = (C.exp(I*ex.args[0]) + C.exp(-I*ex.args[0]))/2
+                    #return minpoly1(ex1, x)
+            else:
+                ex1 = (C.exp(I*ex.args[0]) + C.exp(-I*ex.args[0]))/2
+                return minpoly1(ex1, x)
+        else:
+            raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+    raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+
+def _minpoly_exp(ex, x):
+    """
+    Returns the minimal polynomial of ``exp(ex)``
+    """
+    from sympy.ntheory.factor_ import smoothness
+    c, a = ex.args[0].as_coeff_Mul()
+    p = sympify(c.p)
+    q = sympify(c.q)
+    if a == I*pi:
+        if c.is_rational:
+            if c.p == 1 or c.p == -1:
+                if q == 3:
+                    return x**2 - x + 1
+                if q == 4:
+                    return x**4 + 1
+                if q == 6:
+                    return x**4 - x**2 + 1
+                if q == 8:
+                    return x**8 + 1
+                if q == 9:
+                    return x**6 - x**3 + 1
+                if q == 10:
+                    return x**8 - x**6 + x**4 - x**2 + 1
+                if q.is_prime:
+                    s = 0
+                    for i in range(q):
+                        s += (-x)**i
+                    return s
+                else:
+                    raise NotImplementedError('case not covered')
+                    # too slow
+                    #q1, q2 = smoothness(q)
+                    #mp = minpoly_pow(C.exp(I*pi/q1), S.One/q2, x)
+                    #return mp
+            else:
+                ex1 = C.exp(I*pi/q)
+                mp = minpoly_pow(ex1, p, x)
+                return mp
+        else:
+            raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+    raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+
+
+def minpoly1(ex, x):
+    """
+    Computes the minimal polynomial of an algebraic number
+    using operations on minimal polynomials
+
+    Examples
+    ========
+
+    >>> from sympy import minimal_polynomial, sqrt, Rational
+    >>> from sympy.abc import x
+    >>> minimal_polynomial(sqrt(2) + 3*Rational(1, 3), x, compose=True)
+    x**2 - 2*x - 1
+    """
+    if ex.is_Rational:
+        return ex.q*x - ex.p
+    if ex is I:
+        return x**2 + 1
+
+    if _is_sum_surds(ex):
+        # eliminate the square roots
+        ex -= x
+        while 1:
+            ex1 = _separate_sq(ex)
+            if ex1 is ex:
+                return ex
+            else:
+                ex = ex1
+
+    if ex.is_Add:
+        res = minpoly_add(x, *ex.args)
+    elif ex.is_Mul:
+        res = minpoly_mul(x, *ex.args)
+    elif ex.is_Pow:
+        res = minpoly_pow(ex.base, ex.exp, x)
+    elif ex.__class__ is C.sin:
+        res = _minpoly_sin(ex, x)
+    elif ex.__class__ is C.cos:
+        res = _minpoly_cos(ex, x)
+    elif ex.__class__ is C.exp:
+        res = _minpoly_exp(ex, x)
+    else:
+        raise NotImplementedError('case not covered')
     return res
 
 def minimal_polynomial(ex, x=None, **args):
@@ -327,12 +509,21 @@ def minimal_polynomial(ex, x=None, **args):
     """
     from sympy.polys.polytools import degree
     from sympy.core.function import expand_multinomial
-    from sympy.simplify.simplify import _is_sum_surds
 
+    ex = sympify(ex)
+    compose = args.get('compose', False)
+    if compose:
+        result = minpoly1(ex, x)
+        c = result.coeff(x**degree(result))
+        if c < 0:
+            result = expand_mul(-result)
+            c = -c
+        if c != 1:
+            result = result.primitive()[1]
+        return result
     generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
 
-    ex = sympify(ex)
 
     if x is not None:
         x, cls = sympify(x), Poly
