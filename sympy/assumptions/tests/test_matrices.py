@@ -159,6 +159,9 @@ def test_field_assumptions():
     assert ask(Q.complex_elements(X), Q.real_elements(X))
     assert ask(Q.real_elements(X+Y), Q.real_elements(X)) is None
     assert ask(Q.real_elements(X+Y), Q.real_elements(X) & Q.real_elements(Y))
+    from sympy.matrices.expressions.hadamard import HadamardProduct
+    assert ask(Q.real_elements(HadamardProduct(X, Y)), 
+                    Q.real_elements(X) & Q.real_elements(Y))
     assert ask(Q.complex_elements(X+Y), Q.real_elements(X) & Q.complex_elements(Y))
 
     assert ask(Q.real_elements(X.T), Q.real_elements(X))
