@@ -383,7 +383,7 @@ class AskIntegerElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.integer_elements)
 
-    MatMul = Determinant = Trace = Transpose = MatAdd
+    HadamardProduct = MatMul = Determinant = Trace = Transpose = MatAdd
 
     ZeroMatrix = Identity = staticmethod(CommonHandler.AlwaysTrue)
 
@@ -392,13 +392,15 @@ class AskRealElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.real_elements)
 
-    MatMul = Determinant = Trace = Transpose = Inverse = MatAdd
+    HadamardProduct = MatMul = Determinant = Trace = Transpose = Inverse =\
+            MatAdd
 
 class AskComplexElementsHandler(CommonHandler):
     @staticmethod
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex_elements)
 
-    MatMul = Determinant = Trace = Transpose = Inverse = MatAdd
+    HadamardProduct = MatMul = Determinant = Trace = Transpose = Inverse =\
+             MatAdd
 
     DFT = staticmethod(CommonHandler.AlwaysTrue)
