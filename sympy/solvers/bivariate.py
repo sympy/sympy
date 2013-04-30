@@ -120,6 +120,13 @@ def _lambert(eq, x):
     if not mainlog:
         return []  # violated assumptions
     other = eq.subs(mainlog, 0)
+    if (-other).func is log:
+        eq = (eq - other).subs(mainlog, mainlog.args[0])
+        mainlog = mainlog.args[0]
+        if mainlog.func is not log:
+            return []  # violated assumptions
+        other = -(-other).args[0]
+        eq += other
     if not x in other.free_symbols:
         return [] # violated assumptions
     d, f, X2 = _linab(other, x)
@@ -226,7 +233,10 @@ def _solve_lambert(f, symbol, gens):
                 if other and not other.is_Add and [
                         tmp for tmp in other.atoms(Pow)
                         if symbol in tmp.free_symbols]:
-                    diff = log(other) - log(rhs - (lhs - other))
+                    if not rhs:
+                        diff = log(other) - log(other - lhs)
+                    else:
+                        diff = log(lhs - other) - log(rhs - other)
                     soln = _lambert(expand_log(diff), symbol)
                 else:
                     #it's ready to go
