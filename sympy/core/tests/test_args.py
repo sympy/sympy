@@ -1234,6 +1234,28 @@ def test_sympy__functions__special__bessel__yn():
     assert _test_args(yn(0, x))
 
 
+def test_sympy__functions__special__elliptic_integrals__elliptic_k():
+    from sympy.functions.special.elliptic_integrals import elliptic_k as K
+    assert _test_args(K(x))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_f():
+    from sympy.functions.special.elliptic_integrals import elliptic_f as F
+    assert _test_args(F(x, y))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_e():
+    from sympy.functions.special.elliptic_integrals import elliptic_e as E
+    assert _test_args(E(x))
+    assert _test_args(E(x, y))
+
+
+def test_sympy__functions__special__elliptic_integrals__elliptic_pi():
+    from sympy.functions.special.elliptic_integrals import elliptic_pi as P
+    assert _test_args(P(x, y))
+    assert _test_args(P(x, y, z))
+
+
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
     assert _test_args(DiracDelta(x, 1))
