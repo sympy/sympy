@@ -60,8 +60,10 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
         return exprbuffer.getvalue()
 
     def _print_latex_png(o):
-        s = latex(o, mode=mode)
-        return _preview_wrapper(s)
+        if _can_print_latex(o):
+            s = latex(o, mode=latex_mode)
+            return _preview_wrapper(s)
+        return None
 
     #not used
     def _print_latex_inline_png(o):
