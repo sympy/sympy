@@ -225,7 +225,10 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     ==========
 
     [1] http://en.wikipedia.org/wiki/Resultant
+    [2] J.V. Brawley and L. Carlitz, Discrete Math., 65(2):115 (1987)
+    "Irreducibles and the composed product over a finite field".
     """
+    from sympy import gcd
     y = Dummy('y')
     if mp1 is None:
         mp1 = minimal_polynomial(ex1, x)
@@ -251,6 +254,11 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
         r = g[-1].subs({z:x})
     else:
         raise NotImplementedError('option not available')
+
+    gcd_deg = gcd(degree(mp1), degree(mp2))
+    if gcd_deg == 1:
+        # in this case `r` is irreducible, see [2]
+        return r
     _, factors = factor_list(r)
     if op in [Add, Mul]:
         ex = op(ex1, ex2)

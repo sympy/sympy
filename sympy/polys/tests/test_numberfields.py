@@ -172,6 +172,14 @@ def test_minpoly_op_algebraic_number():
     mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op='div')
     mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op='div')
     assert mp1 == mp2 == 8*x**6 - 12*x**4 + 6*x**2 - 3
+    p1 = 1 + 2**Rational(1, 3)
+    p2 = sqrt(1 + sqrt(3))
+    mp = minpoly_op_algebraic_number(p1, p2, x, op=Add)
+    assert mp == x**12 - 12*x**11 + 60*x**10 - 168*x**9 + 303*x**8 - \
+        408*x**7 + 544*x**6 - 1104*x**5 + 2523*x**4 - 3756*x**3 + \
+        2820*x**2 - 1032*x + 157
+
+
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])
