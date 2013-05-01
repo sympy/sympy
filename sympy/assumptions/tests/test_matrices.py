@@ -160,7 +160,7 @@ def test_field_assumptions():
     assert ask(Q.real_elements(X+Y), Q.real_elements(X)) is None
     assert ask(Q.real_elements(X+Y), Q.real_elements(X) & Q.real_elements(Y))
     from sympy.matrices.expressions.hadamard import HadamardProduct
-    assert ask(Q.real_elements(HadamardProduct(X, Y)), 
+    assert ask(Q.real_elements(HadamardProduct(X, Y)),
                     Q.real_elements(X) & Q.real_elements(Y))
     assert ask(Q.complex_elements(X+Y), Q.real_elements(X) & Q.complex_elements(Y))
 
@@ -179,3 +179,11 @@ def test_matrix_element_sets():
     assert ask(Q.integer_elements(ZeroMatrix(3, 3)))
     from sympy.matrices.expressions.fourier import DFT
     assert ask(Q.complex_elements(DFT(3)))
+
+
+def test_matrix_element_sets_slices_blocks():
+    from sympy.matrices.expressions import BlockMatrix
+    X = MatrixSymbol('X', 4, 4)
+    assert ask(Q.integer_elements(X[:, 3]), Q.integer_elements(X))
+    assert ask(Q.integer_elements(BlockMatrix([[X], [X]])),
+                        Q.integer_elements(X))

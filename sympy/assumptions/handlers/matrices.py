@@ -6,6 +6,7 @@ from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy.matrices.expressions import MatMul
+from functools import partial
 
 class AskSquareHandler(CommonHandler):
     """
@@ -378,6 +379,15 @@ class AskDiagonalHandler(CommonHandler):
     def DiagonalMatrix(expr, assumptions):
         return True
 
+
+def BM_elements(predicate, expr, assumptions):
+    """ Block Matrix elements """
+    return all(ask(predicate(b), assumptions) for b in expr.blocks)
+
+def MS_elements(predicate, expr, assumptions):
+    """ Matrix Slice elements """
+    return ask(predicate(expr.parent), assumptions)
+
 class AskIntegerElementsHandler(CommonHandler):
     @staticmethod
     def MatAdd(expr, assumptions):
@@ -387,6 +397,9 @@ class AskIntegerElementsHandler(CommonHandler):
 
     ZeroMatrix = Identity = staticmethod(CommonHandler.AlwaysTrue)
 
+    MatrixSlice = staticmethod(partial(MS_elements, Q.integer_elements))
+    BlockMatrix = staticmethod(partial(BM_elements, Q.integer_elements))
+
 class AskRealElementsHandler(CommonHandler):
     @staticmethod
     def MatAdd(expr, assumptions):
@@ -395,6 +408,10 @@ class AskRealElementsHandler(CommonHandler):
     HadamardProduct = MatMul = Determinant = Trace = Transpose = Inverse =\
             MatAdd
 
+    MatrixSlice = staticmethod(partial(MS_elements, Q.real_elements))
+    BlockMatrix = staticmethod(partial(BM_elements, Q.real_elements))
+
+
 class AskComplexElementsHandler(CommonHandler):
     @staticmethod
     def MatAdd(expr, assumptions):
@@ -402,5 +419,8 @@ class AskComplexElementsHandler(CommonHandler):
 
     HadamardProduct = MatMul = Determinant = Trace = Transpose = Inverse =\
              MatAdd
+
+    MatrixSlice = staticmethod(partial(MS_elements, Q.complex_elements))
+    BlockMatrix = staticmethod(partial(BM_elements, Q.complex_elements))
 
     DFT = staticmethod(CommonHandler.AlwaysTrue)
