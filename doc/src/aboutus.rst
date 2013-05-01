@@ -262,6 +262,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Katja Sophie Hotz: use expansion in minpoly
 #. Varun Joshi: Addition to functions
 #. Chetna Gupta: Improvements to the Risch integration algorithm
+#. Thilina Rathnayake: Fix to the matrices
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
