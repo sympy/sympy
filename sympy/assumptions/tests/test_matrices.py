@@ -187,3 +187,7 @@ def test_matrix_element_sets_slices_blocks():
     assert ask(Q.integer_elements(X[:, 3]), Q.integer_elements(X))
     assert ask(Q.integer_elements(BlockMatrix([[X], [X]])),
                         Q.integer_elements(X))
+
+def test_matrix_element_sets_determinant_trace():
+    assert ask(Q.integer(Determinant(X)), Q.integer_elements(X))
+    assert ask(Q.integer(Trace(X)), Q.integer_elements(X))
