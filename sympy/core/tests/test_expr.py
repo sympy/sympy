@@ -616,7 +616,19 @@ def test_replace():
     assert cos(x).replace(cos, sin, map=True) == (sin(x), {cos(x): sin(x)})
     assert sin(x).replace(cos, sin) == sin(x)
 
-    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y) == sin(x)
+    args = lambda x:x.is_Mul, lambda x:2*x
+    assert (x*y).replace(*args, map=True) == (2*x*y, {x*y: 2*x*y})
+    assert (x*(1 + x*y)).replace(*args, map=True) == \
+        (2*x*(2*x*y + 1), {x*(2*x*y + 1): 2*x*(2*x*y + 1), x*y: 2*x*y})
+    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y, map=True) == \
+        (sin(x), {sin(x): sin(x)/y})
+    assert (x*(x*y + 3)).replace(lambda x: x.is_Mul, lambda x: 2 + x) == \
+        x*(x*y + 5) + 2
+    e = (x*y + 1)*(2*x*y + 1) + 1
+    assert e.replace(*args, map=True) == (
+        2*((2*x*y + 1)*(4*x*y + 1)) + 1,
+        {2*x*y: 4*x*y, x*y: 2*x*y, (2*x*y + 1)*(4*x*y + 1):
+        2*((2*x*y + 1)*(4*x*y + 1))})
 
 
 def test_find():

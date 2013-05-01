@@ -1129,7 +1129,9 @@ class Basic(object):
 
         If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
-        value for it.
+        value for it. If the expression itself doesn't match the query, then
+        the returned value will be ``self.xreplace(map)`` otherwise it should be
+        ``self.subs(ordered(map.items()))``.
 
         Traverses an expression tree and performs replacement of matching
         subexpressions from the bottom to the top of the tree. The list of
@@ -1141,45 +1143,91 @@ class Basic(object):
 
         Initial setup
 
-            >>> from sympy import log, sin, cos, tan, Wild
+            >>> from sympy import log, sin, cos, tan, Wild, Mul, Add
             >>> from sympy.abc import x, y
             >>> f = log(sin(x)) + tan(sin(x**2))
 
         1.1. type -> type
-            obj.replace(sin, tan)
+            obj.replace(type, newtype)
+
+            When object of type ``type`` is found, replace it with the
+            result of passing its argument(s) to ``newtype``.
 
             >>> f.replace(sin, cos)
             log(cos(x)) + tan(cos(x**2))
             >>> sin(x).replace(sin, cos, map=True)
             (cos(x), {sin(x): cos(x)})
+            >>> (x*y).replace(Mul, Add)
+            x + y
 
         1.2. type -> func
-            obj.replace(sin, lambda arg: ...)
+            obj.replace(type, func)
+
+            When object of type ``type`` is found, apply ``func`` to its
+            argument(s). ``func`` must be written to handle the number
+            of arguments of ``type``.
 
             >>> f.replace(sin, lambda arg: sin(2*arg))
             log(sin(2*x)) + tan(sin(2*x**2))
+            >>> (x*y).replace(Mul, lambda *args: sin(2*Mul(*args)))
+            sin(2*x*y)
 
-        2.1. expr -> expr
-            obj.replace(sin(a), tan(a))
+        2.1. pattern -> expr
+            obj.replace(pattern(wild), expr(wild))
+
+            Replace subexpression matching ``pattern`` with the expression
+            writtten in terms of the wild symbols in ``pattern``.
 
             >>> a = Wild('a')
+            >>> b = Wild('b')
             >>> f.replace(sin(a), tan(a))
             log(tan(x)) + tan(tan(x**2))
+            >>> f.replace(sin(a), tan(a/2))
+            log(tan(x/2)) + tan(tan(x**2/2))
+            >>> f.replace(sin(a), a)
+            log(x) + tan(x**2)
+            >>> (x*y).replace(a*x, a)
+            y
 
-        2.2. expr -> func
-            obj.replace(sin(a), lambda a: ...)
+            /!\ It is best not to use more than one wild symbol as the results
+            may be other than one would predict.
 
-            >>> f.replace(sin(a), cos(a))
-            log(cos(x)) + tan(cos(x**2))
+            >>> (2*x + y).replace(a*x + b, a + b)
+            y + 2/x
+
+        2.2. pattern -> func
+            obj.replace(pattern(wild), lambda wild: expr(wild))
+
+            When a pattern  with wild symbols is matched, replace it
+            with the expression written in terms of the wild symbols with the
+            values that were obtained by applying the pattern to each argument
+            of the matched sub-expression.
+
             >>> f.replace(sin(a), lambda a: sin(2*a))
             log(sin(2*x)) + tan(sin(2*x**2))
 
+            /!\ It is best not to use more than one wild symbol as the results
+            may be other than one would predict.
+
+            >>> (2*x + y).replace(a*x + b, lambda a, b: a + b)
+            y + 2/x
+
         3.1. func -> func
-            obj.replace(lambda expr: ..., lambda expr: ...)
+            obj.replace(filter, func)
+
+            Replace subexpression ``e`` with ``func(e)`` if ``filter(e)``
+            is True.
 
             >>> g = 2*sin(x**3)
             >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
             4*sin(x**9)
+
+        The expression itself is also targetted by the query but is done in
+        such a fashion that changes are not made twice.
+
+            >>> e = x*(x*y + 1)
+            >>> e.replace(lambda x: x.is_Mul, lambda x: 2*x)
+            2*x*(2*x*y + 1)
 
         See Also
         ========
@@ -1189,6 +1237,9 @@ class Basic(object):
                   using matching rules
 
         """
+        from sympy.core.symbol import Dummy
+        from sympy.simplify.simplify import bottom_up
+
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
@@ -1206,6 +1257,8 @@ class Basic(object):
             if isinstance(value, Basic):
                 _value = lambda expr, result: value.subs(result)
             elif callable(value):
+                # match dictionary keys get the trailing underscore stripped
+                # from them and they are passed as keywords to the callable
                 _value = lambda expr, result: value(**dict([ (
                     str(key)[:-1], val) for key, val in result.iteritems() ]))
             else:
@@ -1226,47 +1279,36 @@ class Basic(object):
                 "first argument to replace() must be a "
                 "type, an expression or a callable")
 
-        mapping = {}
-
+        mapping = {}  # changes that took place
+        mask = []  # the dummies that were used as change placeholders
         def rec_replace(expr):
-            if not isinstance(expr, Basic):
-                return expr
-            args, construct = [], False
+            result = _query(expr)
+            if result:
+                new = _value(expr, result)
+                if new != expr:
+                    mapping[expr] = new
+                    # don't let this expression be changed during rebuilding
+                    d = Dummy()
+                    mask.append((d, new))
+                    expr = d
+            return expr
 
-            for arg in expr.args:
-                result = rec_replace(arg)
+        rv = bottom_up(self, rec_replace, atoms=True)
 
-                if result is not None:
-                    construct = True
-                else:
-                    result = arg
-
-                args.append(result)
-
-            if construct:
-                return expr.__class__(*args)
-            else:
-                result = _query(expr)
-
-                if result:
-                    value = _value(expr, result)
-
-                    if map:
-                        mapping[expr] = value
-
-                    return value
-                else:
-                    return None
-
-        result = rec_replace(self)
-
-        if result is None:
-            result = self
+        # restore original expressions for Dummy symbols
+        mask = list(reversed(mask))
+        for o, n in mask:
+            r = {o: n}
+            rv = rv.xreplace(r)
 
         if not map:
-            return result
+            return rv
         else:
-            return result, mapping
+            # restore subexpressions in mapping
+            for o, n in mask:
+                r = {o: n}
+                mapping = dict([(k.xreplace(r), v.xreplace(r)) for k, v in mapping.iteritems()])
+            return rv, mapping
 
     def find(self, query, group=False):
         """Find all subexpressions matching a query. """
