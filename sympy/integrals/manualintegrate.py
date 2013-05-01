@@ -669,12 +669,18 @@ def integral_steps(integrand, symbol, **options):
         elif isinstance(integrand, sympy.Derivative):
             return sympy.Derivative
         elif symbol not in integrand.free_symbols:
-            return 'constant'
+            return sympy.Number
         else:
-            for cls in (sympy.Pow, sympy.Symbol, sympy.exp,
-                        sympy.Add, sympy.Mul):
+            for cls in (sympy.Pow, sympy.Symbol, sympy.exp, sympy.log,
+                        sympy.Add, sympy.Mul, sympy.atan):
                 if isinstance(integrand, cls):
                     return cls
+
+    def integral_is_subclass(*klasses):
+        def _integral_is_subclass(integral):
+            k = key(integral)
+            return k and issubclass(k, klasses)
+        return _integral_is_subclass
 
     result = do_one(
         null_safe(switch(key, {
@@ -685,21 +691,19 @@ def integral_steps(integrand, symbol, **options):
             sympy.Mul: do_one(null_safe(mul_rule), null_safe(trig_product_rule)),
             sympy.Derivative: derivative_rule,
             TrigonometricFunction: trig_rule,
-            'constant': constant_rule
+            sympy.Number: constant_rule
         })),
         null_safe(
             alternatives(
                 substitution_rule,
                 condition(
-                    lambda integral: issubclass(key(integral),
-                                                (sympy.Mul, sympy.log, sympy.atan)),
+                    integral_is_subclass(sympy.Mul, sympy.log, sympy.atan),
                     parts_rule),
                 condition(
-                    lambda integral: issubclass(key(integral), sympy.Mul),
+                    integral_is_subclass(sympy.Mul),
                     partial_fractions_rule),
                 condition(
-                    lambda integral: issubclass(key(integral),
-                                                (sympy.Mul, sympy.Pow)),
+                    integral_is_subclass(sympy.Mul, sympy.Pow),
                     distribute_expand_rule),
                 trig_powers_products_rule
             )
