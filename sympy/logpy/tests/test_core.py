@@ -63,15 +63,12 @@ def test_pow_of_abs_deep():
         assert refine_deep(Abs(2*y)**4) == (2*y)**4
 
 def test_commutativity():
-    from logpy.assoccomm import op_registry
     from logpy.assoccomm import eq_assoccomm as eqac
-    from logpy.assoccomm import eq_assoccomm as eqc
     from logpy.core import goaleval
     from logpy.variables import variables
 
     y = Symbol('_tmp')
     x = Symbol('x')
-
 
     reduces = Relation('reduces')
     fact(reduces, x * 2, x, True)
@@ -88,5 +85,3 @@ def test_commutativity():
 
     with variables(x):
         assert reify(x, next(goaleval(eqac(y+x, y+1))({}))) == 1
-
-    del op_registry[-1]

@@ -1,12 +1,12 @@
 #######################################
 # Teach LogPy how to manipulate SymPy #
 #######################################
-from logpy.unify import (reify, unify_seq, unify_isinstance_list,
-                         reify_isinstance_list, reify_dispatch, seq_registry)
-from sympy import Basic, Symbol, Integer, Rational, Dummy, Expr
+from logpy.unify import reify, reify_isinstance_list, seq_registry
+from sympy import Basic, Symbol, Integer, Rational, Expr
 
 from sympy.assumptions import AppliedPredicate
 slot_classes = Symbol, Integer, Rational
+
 def seq_Basic(x):
     return (x.__class__,) + x.args
 
@@ -44,9 +44,8 @@ reify_isinstance_list.append((Basic, reify_Basic))
 
 import logpy
 from logpy.variables import variables
-from logpy import var, eq
+from logpy import var
 from logpy.assoccomm import eq_assoccomm as eqac
-from logpy.assoccomm import eq_comm as eqc
 from logpy.goals import goalify
 from sympy import assuming, ask
 
@@ -71,6 +70,7 @@ def refine_one(expr, *assumptions, **kwargs):
 from logpy.assoccomm import commutative, associative
 from logpy import facts
 from sympy import Add, Mul, MatAdd, MatMul
+
 facts(commutative, [Add], [Mul], [MatAdd])
 facts(associative, [Add], [Mul], [MatAdd], [MatMul])
 
