@@ -975,6 +975,12 @@ class MultisetPartitionTraverser():
            compact key is constructed.  This saves space, but more
            importantly coalesces some parts which would remain
            separate with a physical key.
+
+        Unlike the enumeration functions, there is currently no _range
+        version of count_partitions.  If someone wants to stretch
+        their brain, it should be possible to construct one by
+        memoizing with a histogram of counts rather than a single
+        count, and combining the histograms.
         """
         # number of partitions so far in the enumeration
         self.pcount = 0
