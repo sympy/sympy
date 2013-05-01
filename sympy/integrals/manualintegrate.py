@@ -279,7 +279,6 @@ def mul_rule(integral):
             integrand, symbol)
 
 def _parts_rule(integrand, symbol):
-    print "by parts", integrand
     # LIATE rule:
     # log, inverse trig, algebraic (polynomial), trigonometric, exponential
     def pull_out_polys(integrand):
@@ -692,13 +691,16 @@ def integral_steps(integrand, symbol, **options):
             alternatives(
                 substitution_rule,
                 condition(
-                    lambda integral: isinstance(key(integral),
+                    lambda integral: issubclass(key(integral),
                                                 (sympy.Mul, sympy.log, sympy.atan)),
-                          parts_rule),
-                condition(lambda integral: key(integral) == sympy.Mul,
-                          partial_fractions_rule),
-                condition(lambda integral: key(integral) in (sympy.Mul, sympy.Pow),
-                          distribute_expand_rule),
+                    parts_rule),
+                condition(
+                    lambda integral: issubclass(key(integral), sympy.Mul),
+                    partial_fractions_rule),
+                condition(
+                    lambda integral: issubclass(key(integral),
+                                                (sympy.Mul, sympy.Pow)),
+                    distribute_expand_rule),
                 trig_powers_products_rule
             )
         ),
