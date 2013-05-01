@@ -415,6 +415,18 @@ class UnitSystem(object):
 
         # TODO: construct a dict of dimensions
 
+    def __enter__(self):
+        global _UNIT_SYSTEM
+        try:
+            self.__tmp_old_unitsystem = _UNIT_SYSTEM
+        except NameError:
+            self.__tmp_old_unitsystem = None
+        _UNIT_SYSTEM = self
+
+    def __exit__(self, typ, value, traceback):
+        global _UNIT_SYSTEM
+        _UNIT_SYSTEM = self.__tmp_old_unitsystem
+
     def __str__(self):
         return self.name
 
@@ -558,18 +570,18 @@ class Quantity(AtomicExpr):
             qu = unit.as_quantity
             unit = qu.unit
             factor = factor * qu.factor
-        
+
         return factor, unit
 
     @property
     def in_base_units(self):
         """Display the quantity using base units."""
-        
+
         if self.unit.abbrev_base == '':
             return '%s %s' % (self.factor, self.unit)
-        
+
         return '%s %s' % (self.factor, self.unit.abbrev_base)
-    
+
     def __str__(self):
         factor, unit = self.merge_factor_unit(self.factor, self.unit)
         return '%s %s' % (factor, unit)

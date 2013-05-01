@@ -55,15 +55,22 @@ def test_unit_prop():
     assert str(G.as_quantity) == '6.67384000000000e-14 '\
                                  '(1 {length: 3, mass: -1, time: -2})'
 
-    set_system(mks)
-    assert str(m/s*kg**2) == '(kg**2 m s**-1)'
-    assert str(G.as_quantity) == '6.67384000000000e-11 (m**3 kg**-1 s**-2)'
+    def mks_asserts():
+        assert str(m/s*kg**2).strip() == 'kg**2 m s**-1'
+        assert str(G.as_quantity).strip() == '6.67384000000000e-11 m**3 kg**-1 s**-2'
 
-    assert kg.factor == 1e3
-    assert kg.base_factor == 1e3
-    assert kg.ratio_factor == 1
-    assert (2*kg).ratio_factor == 2
+        assert kg.factor == 1e3
+        assert kg.base_factor == 1e3
+        assert kg.ratio_factor == 1
+        assert (2*kg).ratio_factor == 2
+
+    set_system(mks)
+    mks_asserts()
     set_system(None)
+
+    # Repeat the same assert block, this time inside a with statement.
+    with mks:
+        mks_asserts()
 
 def test_unitsystem():
     raises(AttributeError, lambda: UnitSystem(base=(m, m)))

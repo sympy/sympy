@@ -11,7 +11,7 @@ from sympy.physics.unitsystems.units import Constant, UnitSystem
 from sympy.physics.unitsystems.mks import mks, length, time, mass
 
 # sun-earth distance
-ua = Constant(dimension=length, factor=1.495978707e14, abbrev='ua')
+ua = Constant(dimension=length, factor=1.495978707e11, abbrev='ua')
 # mean radius
 #earth_radius = Constant(dimension=length, factor=6.371e6, abbrev='earth_radius')
 #earth_mass = Constant(dimension=mass, factor=5.9736e24, abbrev='earth_mass')
