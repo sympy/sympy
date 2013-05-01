@@ -5,6 +5,7 @@ To use this module, you will need lxml.
 """
 
 from sympy.utilities.pkgdata import get_resource
+from sympy.utilities.decorator import doctest_depends_on
 import xml.dom.minidom
 
 
