@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand, diff)
+    exp_polar, Lambda, expand, diff, O)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -616,16 +616,22 @@ def test_replace():
     assert cos(x).replace(cos, sin, map=True) == (sin(x), {cos(x): sin(x)})
     assert sin(x).replace(cos, sin) == sin(x)
 
-    args = lambda x:x.is_Mul, lambda x:2*x
-    assert (x*y).replace(*args, map=True) == (2*x*y, {x*y: 2*x*y})
-    assert (x*(1 + x*y)).replace(*args, map=True) == \
+    cond, func = lambda x: x.is_Mul, lambda x: 2*x
+    assert (x*y).replace(cond, func, map=True) == (2*x*y, {x*y: 2*x*y})
+    assert (x*(1 + x*y)).replace(cond, func, map=True) == \
         (2*x*(2*x*y + 1), {x*(2*x*y + 1): 2*x*(2*x*y + 1), x*y: 2*x*y})
     assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y, map=True) == \
         (sin(x), {sin(x): sin(x)/y})
+    # if not simultaneous then y*sin(x) -> y*sin(x)/y = sin(x) -> sin(x)/y
+    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y,
+        simultaneous=False) == sin(x)/y
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e) == O(1, x)
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e,
+        simultaneous=False) == x**2/2 + O(x**3)
     assert (x*(x*y + 3)).replace(lambda x: x.is_Mul, lambda x: 2 + x) == \
         x*(x*y + 5) + 2
     e = (x*y + 1)*(2*x*y + 1) + 1
-    assert e.replace(*args, map=True) == (
+    assert e.replace(cond, func, map=True) == (
         2*((2*x*y + 1)*(4*x*y + 1)) + 1,
         {2*x*y: 4*x*y, x*y: 2*x*y, (2*x*y + 1)*(4*x*y + 1):
         2*((2*x*y + 1)*(4*x*y + 1))})

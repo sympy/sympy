@@ -1123,20 +1123,25 @@ class Basic(object):
         """Helper for .has()"""
         return self.__eq__
 
-    def replace(self, query, value, map=False):
+    def replace(self, query, value, map=False, simultaneous=True):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
         If ``map = True`` then also return the mapping {old: new} where ``old``
         was a sub-expression found with query and ``new`` is the replacement
         value for it. If the expression itself doesn't match the query, then
-        the returned value will be ``self.xreplace(map)`` otherwise it should be
-        ``self.subs(ordered(map.items()))``.
+        the returned value will be ``self.xreplace(map)`` otherwise it should
+        be ``self.subs(ordered(map.items()))``.
 
         Traverses an expression tree and performs replacement of matching
-        subexpressions from the bottom to the top of the tree. The list of
-        possible combinations of queries and replacement values is listed
-        below:
+        subexpressions from the bottom to the top of the tree. The default
+        approach is to do the replacement in a simultaneous fashion so
+        changes made are targeted only once. If this is not desired or causes
+        problems, ``simultaneous`` can be set to False.
+
+
+        The list of possible combinations of queries and replacement values
+        is listed below:
 
         Examples
         ========
@@ -1299,27 +1304,33 @@ class Basic(object):
                 new = _value(expr, result)
                 if new is not None and new != expr:
                     mapping[expr] = new
-                    # don't let this expression be changed during rebuilding
-                    d = Dummy()
-                    mask.append((d, new))
-                    expr = d
+                    if simultaneous:
+                        # don't let this expression be changed during rebuilding
+                        d = Dummy()
+                        mask.append((d, new))
+                        expr = d
+                    else:
+                        expr = new
             return expr
 
         rv = bottom_up(self, rec_replace, atoms=True)
 
         # restore original expressions for Dummy symbols
-        mask = list(reversed(mask))
-        for o, n in mask:
-            r = {o: n}
-            rv = rv.xreplace(r)
+        if simultaneous:
+            mask = list(reversed(mask))
+            for o, n in mask:
+                r = {o: n}
+                rv = rv.xreplace(r)
 
         if not map:
             return rv
         else:
-            # restore subexpressions in mapping
-            for o, n in mask:
-                r = {o: n}
-                mapping = dict([(k.xreplace(r), v.xreplace(r)) for k, v in mapping.iteritems()])
+            if simultaneous:
+                # restore subexpressions in mapping
+                for o, n in mask:
+                    r = {o: n}
+                    mapping = dict([(k.xreplace(r), v.xreplace(r))
+                        for k, v in mapping.iteritems()])
             return rv, mapping
 
     def find(self, query, group=False):
