@@ -120,15 +120,18 @@ def find_substitutions(integrand, symbol, u_var):
                 numer, denom = fraction(u)
                 if numer == 1:
                     r.append(denom)
+                    r.extend(possible_subterms(denom))
                 else:
                     r.append(u)
-                r.extend(possible_subterms(u))
+                    r.extend(possible_subterms(u))
             return r
         elif isinstance(term, sympy.Pow):
             if term.args[1].is_constant(symbol):
                 return [term.args[0]]
             elif term.args[0].is_constant(symbol):
                 return [term.args[1]]
+        elif isinstance(term, sympy.Add):
+            return term.args
         return []
 
     for u in possible_subterms(integrand):
@@ -276,6 +279,7 @@ def mul_rule(integral):
             integrand, symbol)
 
 def _parts_rule(integrand, symbol):
+    print "by parts", integrand
     # LIATE rule:
     # log, inverse trig, algebraic (polynomial), trigonometric, exponential
     def pull_out_polys(integrand):
@@ -687,7 +691,10 @@ def integral_steps(integrand, symbol, **options):
         null_safe(
             alternatives(
                 substitution_rule,
-                parts_rule,
+                condition(
+                    lambda integral: isinstance(key(integral),
+                                                (sympy.Mul, sympy.log, sympy.atan)),
+                          parts_rule),
                 condition(lambda integral: key(integral) == sympy.Mul,
                           partial_fractions_rule),
                 condition(lambda integral: key(integral) in (sympy.Mul, sympy.Pow),
