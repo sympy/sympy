@@ -165,7 +165,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if useMatplotlib == True or not latex_is_available:
             render_with_matplotlib(latex_string, output, workdir)
         else:
-            render_with_latex(latex_string, output, workdir, preamble, 
+            render_with_latex(latex_string, output, workdir, preamble,
                               packages, euler, outputTexFile, dvioptions)
 
         src = "texput.%s" % (output)
@@ -244,7 +244,6 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         except OSError, e:
             if e.errno != 2: # code 2 - no such file or directory
                 raise
-            
 
 def render_with_latex(latex_string, output, workdir, preamble, packages, euler,
                       outputTexFile, dvioptions):
