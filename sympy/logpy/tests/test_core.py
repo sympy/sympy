@@ -1,5 +1,7 @@
-from sympy.logpy import refine_one
+from sympy.logpy.core import refine_one, asko
 from logpy import Relation, facts, fact
+from logpy.unify import unify, reify
+from logpy.variables import variables
 from sympy import Basic, Q, Dummy, Symbol, Abs, Mul, S
 from functools import partial
 from sympy.assumptions import assuming
@@ -26,6 +28,21 @@ refine_deep = top_down(refine)
 y = Symbol('y')
 z = Symbol('z')
 
+def test_op_args():
+    from logpy.assoccomm import op_args
+    from sympy import Add, S
+    op, args = op_args(y+z)
+    assert op == Add
+    assert set(args) == set((y, z))
+
+    assert op_args(S.One) == op_args(y) == (None, None)
+
+
+def test_matching():
+    with variables(*vars):
+        assert unify(4, k, {})
+    assert asko(Q.even(4), True)
+
 def test_basic():
     assert refine(Basic(5)) == Basic(3)
 
@@ -33,10 +50,12 @@ def test_exprs_simple():
     assert refine(Abs(y)) == Abs(y)
     assert refine(Abs(y), Q.positive(y)) == y
 
+def rebuild(obj):
+    return obj.func(*obj.args)
+
 def test_exprs_pow_of_abs():
     assert refine(Abs(y)**4, Q.real(y)) == y**4
-    print refine(Abs(y*z)**4, Q.real(y) & Q.real(z))
-    assert refine(Abs(y*z)**4, Q.real(y) & Q.real(z)) == (y*z)**4
+    assert rebuild(refine(Abs(y*z)**4, Q.real(y) & Q.real(z))) == (y*z)**4
 
 def test_pow_of_abs_deep():
     with assuming(Q.real(y)):
@@ -48,13 +67,7 @@ def test_commutativity():
     from logpy.assoccomm import eq_assoccomm as eqac
     from logpy.assoccomm import eq_assoccomm as eqc
     from logpy.core import goaleval
-    from logpy.unify import reify
     from logpy.variables import variables
-    op_registry.append((lambda x: isinstance(x, type) and issubclass(x, Basic),
-                        lambda x: isinstance(x, Basic),
-                        type,
-                        lambda x: tuple(x.args),
-                        lambda op, args: op.func(*args)))
 
     y = Symbol('_tmp')
     x = Symbol('x')

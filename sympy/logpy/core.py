@@ -77,9 +77,10 @@ facts(associative, [Add], [Mul], [MatAdd], [MatMul])
 
 
 from logpy.assoccomm import op_registry
-op_registry.insert(0, (lambda x: isinstance(x, type) and issubclass(x, Basic),
-                    lambda x: isinstance(x, Basic),
-                    type,
-                    lambda x: tuple(x.args),
-                    lambda op, args: op(*args, evaluate=False) if
-                    issubclass(op, Expr) else op(*args)))
+op_registry.insert(0,
+        {'opvalid':  lambda x: isinstance(x, type) and issubclass(x, Basic),
+         'objvalid': lambda x: isinstance(x, Basic) and not x.is_Atom,
+         'op':       type,
+         'args':     lambda x: tuple(x.args),
+         'build':    lambda op, args: op(*args, evaluate=False) if
+                               issubclass(op, Expr) else op(*args)     })
