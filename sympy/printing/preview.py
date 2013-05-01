@@ -16,7 +16,7 @@ from cStringIO import StringIO
 
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
-from latex import latex
+from sympy.printing.latex import latex
 
 from sympy.utilities.decorator import doctest_depends_on
 
@@ -24,7 +24,7 @@ from sympy.utilities.decorator import doctest_depends_on
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
-            outputTexFile=None, **latex_settings):
+            outputTexFile=None, useMatplotlib=False, **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
@@ -108,6 +108,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
     >>> preview(x+y, outputTexFile="sample.tex")
 
+    If 'sympy' cannot find a LaTeX executable, it will try to render the
+    output using 'matplotlib's 'mathtext' module. If you explicitly want to
+    use this functionality, run with 'useMatplotlib=True'.
+
+    >>> preview(x+y, useMatplotlib=True)
 
     """
     special = [ 'pyglet' ]
@@ -139,8 +144,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     else:
         if viewer == "file":
             if filename is None:
-                SymPyDeprecationWarning(feature="Using viewer=\"file\" without a "
-                    "specified filename ", last_supported_version="0.7.3",
+                SymPyDeprecationWarning(feature="Using viewer=\"file\" without"
+                    " a specified filename ", last_supported_version="0.7.3",
                     use_instead="viewer=\"file\" and filename=\"desiredname\"")
         elif viewer == "StringIO":
             if outputbuffer is None:
@@ -149,77 +154,19 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         elif viewer not in special and not find_executable(viewer):
             raise SystemError("Unrecognized viewer: %s" % viewer)
 
-
-    if preamble is None:
-        actual_packages = packages + ("amsmath", "amsfonts")
-        if euler:
-            actual_packages += ("euler",)
-        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
-                                             for p in actual_packages])
-
-        preamble = r"""\documentclass[12pt]{article}
-\pagestyle{empty}
-%s
-
-\begin{document}
-""" % (package_includes)
-    else:
-        if len(packages) > 0:
-            raise ValueError("The \"packages\" keyword must not be set if a "
-                             "custom LaTeX preamble was specified")
-    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
-
     if isinstance(expr, str):
         latex_string = expr
     else:
         latex_string = latex(expr, mode='inline', **latex_settings)
 
+    workdir = tempfile.mkdtemp()
     try:
-        workdir = tempfile.mkdtemp()
-
-        with open(join(workdir, 'texput.tex'), 'w') as fh:
-            fh.write(latex_main % latex_string)
-
-        if outputTexFile is not None:
-            shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
-
-        try:
-            run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                         'texput.tex'], cwd=workdir, stderr=STDOUT)
-        except CalledProcessError, e:
-            raise RuntimeError(
-                "latex exited abnormally with the following output:\n%s" %
-                e.output)
-
-        if output != "dvi":
-            defaultoptions = {
-                "ps": [],
-                "pdf": [],
-                "png": ["-T", "tight", "-z", "9", "--truecolor"]
-            }
-
-            commandend = {
-                "ps": ["-o", "texput.ps", "texput.dvi"],
-                "pdf": ["texput.dvi", "texput.pdf"],
-                "png": ["-o", "texput.png", "texput.dvi"]
-            }
-
-            cmd = ["dvi" + output]
-            try:
-                if dvioptions is not None:
-                    cmd.extend(dvioptions)
-                else:
-                    cmd.extend(defaultoptions[output])
-                cmd.extend(commandend[output])
-            except KeyError:
-                raise SystemError("Invalid output format: %s" % output)
-
-            try:
-                run_process(cmd, cwd=workdir, stderr=STDOUT)
-            except CalledProcessError, e:
-                raise RuntimeError(
-                    "%s exited abnormally with the following output:\n%s" %
-                    (cmd[0], e.output))
+        latex_is_available = find_executable('latex') is not None
+        if useMatplotlib == True or not latex_is_available:
+            render_with_matplotlib(latex_string, output, workdir)
+        else:
+            render_with_latex(latex_string, output, workdir, preamble, 
+                              packages, euler, outputTexFile, dvioptions)
 
         src = "texput.%s" % (output)
 
@@ -230,7 +177,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                     buffer.write(fh.read())
                 return buffer
             else:
-                shutil.move(join(workdir,src), filename)
+                shutil.move(join(workdir, src), filename)
         elif viewer == "StringIO":
             with open(join(workdir, src), 'rb') as fh:
                 outputbuffer.write(fh.read())
@@ -239,7 +186,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 from pyglet import window, image, gl
                 from pyglet.window import key
             except ImportError:
-                raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+                raise ImportError("pyglet is required for plotting.\n "
+                                  "visit http://www.pyglet.org/")
 
             if output == "png":
                 from pyglet.image.codecs.png import PNGImageDecoder
@@ -296,3 +244,80 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         except OSError, e:
             if e.errno != 2: # code 2 - no such file or directory
                 raise
+            
+
+def render_with_latex(latex_string, output, workdir, preamble, packages, euler,
+                      outputTexFile, dvioptions):
+    """ Render the 'latex_string' to a file using an external 'latex'
+    installation """
+    if preamble is None:
+        actual_packages = packages + ("amsmath", "amsfonts")
+        if euler:
+            actual_packages += ("euler",)
+        package_includes = "\n" + "\n".join(["\\usepackage{%s}" % p
+                                             for p in actual_packages])
+
+        preamble = r"""\documentclass[12pt]{article}
+\pagestyle{empty}
+%s
+
+\begin{document}
+""" % (package_includes)
+    else:
+        if len(packages) > 0:
+            raise ValueError("The \"packages\" keyword must not be set if a "
+                             "custom LaTeX preamble was specified")
+    latex_main = preamble + '\n%s\n\n' + r"\end{document}"
+
+
+
+    with open(join(workdir, 'texput.tex'), 'w') as fh:
+        fh.write(latex_main % latex_string)
+
+    if outputTexFile is not None:
+        shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
+
+    try:
+        run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
+                     'texput.tex'], cwd=workdir, stderr=STDOUT)
+    except CalledProcessError, e:
+        raise RuntimeError(
+            "latex exited abnormally with the following output:\n%s" %
+            e.output)
+
+    if output != "dvi":
+        defaultoptions = {
+            "ps": [],
+            "pdf": [],
+            "png": ["-T", "tight", "-z", "9", "--truecolor"]
+        }
+
+        commandend = {
+            "ps": ["-o", "texput.ps", "texput.dvi"],
+            "pdf": ["texput.dvi", "texput.pdf"],
+            "png": ["-o", "texput.png", "texput.dvi"]
+        }
+
+        cmd = ["dvi" + output]
+        try:
+            if dvioptions is not None:
+                cmd.extend(dvioptions)
+            else:
+                cmd.extend(defaultoptions[output])
+            cmd.extend(commandend[output])
+        except KeyError:
+            raise SystemError("Invalid output format: %s" % output)
+
+        try:
+            run_process(cmd, cwd=workdir, stderr=STDOUT)
+        except CalledProcessError, e:
+            raise RuntimeError(
+                "%s exited abnormally with the following output:\n%s" %
+                (cmd[0], e.output))
+
+def render_with_matplotlib(latex_string, output, workdir):
+    """ Render the 'latex_string' to an image file using 'matplotlib's
+    'mathtext' module """
+    from matplotlib.mathtext import math_to_image
+    imagefile = join(workdir, 'texput.%s' % output)
+    math_to_image(latex_string, imagefile, dpi=300)
