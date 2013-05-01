@@ -35,7 +35,6 @@ seq_registry.extend([(slot_classes, seq_slot),
                      (AppliedPredicate, seq_Predicate),
                      (Basic, seq_Basic)])
 
-reify_dispatch[Dummy] = lambda u, s: u  # Dangerous
 reify_isinstance_list.append((slot_classes, reify_slot))
 reify_isinstance_list.append((Basic, reify_Basic))
 
