@@ -829,6 +829,8 @@ class MultisetPartitionTraverser():
         # Code combines the constraints of the _large and _small enumerations.
         # This is starting as a mash-up of the two
         self.discarded = 0
+        if ub <= 0:
+            return
         self._initialize_enumeration(multiplicities)
         self.decrement_part_large(self.top_part(), 0, lb)
         while True:
