@@ -1175,8 +1175,8 @@ class Basic(object):
         2.1. pattern -> expr
             obj.replace(pattern(wild), expr(wild))
 
-            Replace subexpression matching ``pattern`` with the expression
-            writtten in terms of the wild symbols in ``pattern``.
+            Replace subexpressions matching ``pattern`` with the expression
+            written in terms of the wild symbols in ``pattern``.
 
             >>> a = Wild('a')
             >>> b = Wild('b')
@@ -1189,28 +1189,37 @@ class Basic(object):
             >>> (x*y).replace(a*x, a)
             y
 
-            /!\ It is best not to use more than one wild symbol as the results
-            may be other than one would predict.
+            Matching will result in a replacement only if the match gives
+            non-zero values for all wild symbols:
 
-            >>> (2*x + y).replace(a*x + b, a + b)
-            y + 2/x
+            >>> (2*x + y).replace(a*x + b, b - a)
+            y - 2
+            >>> (2*x).replace(a*x + b, b - a)
+            2*x
+
+            If the matching were allowed to be incomplete, non-intuitive
+            results would be obtained. Here, for example, is the incomplete
+            match applied to the replacement pattern:
+
+            >>> m = (2*x).match(a*x + b)
+            >>> (b - a).subs(m)
+            -2
 
         2.2. pattern -> func
             obj.replace(pattern(wild), lambda wild: expr(wild))
 
-            When a pattern  with wild symbols is matched, replace it
-            with the expression written in terms of the wild symbols with the
-            values that were obtained by applying the pattern to each argument
-            of the matched sub-expression.
+            Replace subexpressions matching ``pattern`` with the expression
+            obtained by passing the matched values to the function written
+            in terms of those variables.
 
             >>> f.replace(sin(a), lambda a: sin(2*a))
             log(sin(2*x)) + tan(sin(2*x**2))
 
-            /!\ It is best not to use more than one wild symbol as the results
-            may be other than one would predict.
+            Matching will result in a replacement only if the match gives
+            non-zero values for all wild symbols (see 2.1 above):
 
-            >>> (2*x + y).replace(a*x + b, lambda a, b: a + b)
-            y + 2/x
+            >>> (2*x + y).replace(a*x + b, lambda a, b: b - a)
+            y - 2
 
         3.1. func -> func
             obj.replace(filter, func)
@@ -1222,7 +1231,7 @@ class Basic(object):
             >>> g.replace(lambda expr: expr.is_Number, lambda expr: expr**2)
             4*sin(x**9)
 
-        The expression itself is also targetted by the query but is done in
+        The expression itself is also targeted by the query but is done in
         such a fashion that changes are not made twice.
 
             >>> e = x*(x*y + 1)
@@ -1255,12 +1264,15 @@ class Basic(object):
             _query = lambda expr: expr.match(query)
 
             if isinstance(value, Basic):
-                _value = lambda expr, result: value.subs(result)
+                _value = lambda expr, result: (value.subs(result)
+                    if all(val for val in result.values()) else expr)
             elif callable(value):
                 # match dictionary keys get the trailing underscore stripped
                 # from them and they are passed as keywords to the callable
-                _value = lambda expr, result: value(**dict([ (
-                    str(key)[:-1], val) for key, val in result.iteritems() ]))
+                # and only accept the match if it is exact
+                _value = lambda expr, result: (value(**dict([ (
+                    str(key)[:-1], val) for key, val in result.iteritems()]))
+                    if all(val for val in result.values()) else expr)
             else:
                 raise TypeError(
                     "given an expression, replace() expects "
@@ -1285,7 +1297,7 @@ class Basic(object):
             result = _query(expr)
             if result:
                 new = _value(expr, result)
-                if new != expr:
+                if new is not None and new != expr:
                     mapping[expr] = new
                     # don't let this expression be changed during rebuilding
                     d = Dummy()
