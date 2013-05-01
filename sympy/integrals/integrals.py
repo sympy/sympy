@@ -790,6 +790,7 @@ class Integral(Expr):
         meijerg = hints.get('meijerg', None)
         conds = hints.get('conds', 'piecewise')
         risch = hints.get('risch', None)
+        manual = hints.get('manual', None)
 
         if conds not in ['separate', 'piecewise', 'none']:
             raise ValueError('conds must be one of "separate", "piecewise", '
@@ -885,7 +886,10 @@ class Integral(Expr):
             if meijerg1 is False and meijerg is True:
                 antideriv = None
             else:
-                antideriv = self._eval_integral(function, xab[0], meijerg=meijerg1, risch=risch, conds=conds)
+                antideriv = self._eval_integral(
+                    function, xab[0],
+                    meijerg=meijerg1, risch=risch, manual=manual,
+                    conds=conds)
                 if antideriv is None and meijerg1 is True:
                     ret = try_meijerg(function, xab)
                     if ret is not None:
@@ -1025,7 +1029,8 @@ class Integral(Expr):
             rv += self.func(arg, Tuple(x, a, b))
         return rv
 
-    def _eval_integral(self, f, x, meijerg=None, risch=None, conds='piecewise'):
+    def _eval_integral(self, f, x, meijerg=None, risch=None, manual=None,
+                       conds='piecewise'):
         """
         Calculate the anti-derivative to the function f(x).
 
@@ -1257,7 +1262,7 @@ class Integral(Expr):
                     parts.append(coeff * h)
                     continue
 
-            if h is None:
+            if h is None and manual is not False:
                 try:
                     result = manualintegrate(g, x)
                     if result is not None and not isinstance(result, Integral):
@@ -1583,10 +1588,12 @@ def integrate(*args, **kwargs):
     meijerg = kwargs.pop('meijerg', None)
     conds = kwargs.pop('conds', 'piecewise')
     risch = kwargs.pop('risch', None)
+    manual = kwargs.pop('manual', None)
     integral = Integral(*args, **kwargs)
 
     if isinstance(integral, Integral):
-        return integral.doit(deep=False, meijerg=meijerg, conds=conds, risch=risch)
+        return integral.doit(deep=False, meijerg=meijerg, conds=conds,
+                             risch=risch, manual=manual)
     else:
         return integral
 
