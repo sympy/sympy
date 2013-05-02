@@ -20,11 +20,11 @@ from sympy.printing.latex import latex
 
 from sympy.utilities.decorator import doctest_depends_on
 
-@doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet',),
+@doctest_depends_on(exe=('latex', 'dvipng'), modules=('pyglet', 'matplotlib'),
             disable_viewers=('evince', 'gimp', 'superior-dvi-viewer'))
 def preview(expr, output='png', viewer=None, euler=True, packages=(),
             filename=None, outputbuffer=None, preamble=None, dvioptions=None,
-            outputTexFile=None, useMatplotlib=False, **latex_settings):
+            output_tex_file=None, use_matplotlib=None, **latex_settings):
     r"""
     View expression or LaTeX markup in PNG, DVI, PostScript or PDF form.
 
@@ -101,18 +101,18 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     >>> preview(phidd, symbol_names={phidd:r'\ddot{\varphi}'})
 
     For post-processing the generated TeX File can be written to a file by
-    passing the desired filename to the 'outputTexFile' keyword
+    passing the desired filename to the 'output_tex_file' keyword
     argument. To write the TeX code to a file named
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x+y, outputTexFile="sample.tex")
+    >>> preview(x+y, output_tex_file="sample.tex")
 
     If 'sympy' cannot find a LaTeX executable, it will try to render the
     output using 'matplotlib's 'mathtext' module. If you explicitly want to
-    use this functionality, run with 'useMatplotlib=True'.
+    use this functionality, run with 'use_matplotlib=True'.
 
-    >>> preview(x+y, useMatplotlib=True)
+    >>> preview(x+y, use_matplotlib=True)
 
     """
     special = [ 'pyglet' ]
@@ -162,11 +162,17 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     workdir = tempfile.mkdtemp()
     try:
         latex_is_available = find_executable('latex') is not None
-        if useMatplotlib == True or not latex_is_available:
+        if use_matplotlib is None:
+            if latex_is_available:
+                use_matplotlib = False
+            else:
+                use_matplotlib = True
+
+        if use_matplotlib:
             render_with_matplotlib(latex_string, output, workdir)
         else:
             render_with_latex(latex_string, output, workdir, preamble,
-                              packages, euler, outputTexFile, dvioptions)
+                              packages, euler, output_tex_file, dvioptions)
 
         src = "texput.%s" % (output)
 
@@ -246,7 +252,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise
 
 def render_with_latex(latex_string, output, workdir, preamble, packages, euler,
-                      outputTexFile, dvioptions):
+                      output_tex_file, dvioptions):
     """ Render the 'latex_string' to a file using an external 'latex'
     installation """
     if preamble is None:
@@ -273,8 +279,8 @@ def render_with_latex(latex_string, output, workdir, preamble, packages, euler,
     with open(join(workdir, 'texput.tex'), 'w') as fh:
         fh.write(latex_main % latex_string)
 
-    if outputTexFile is not None:
-        shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
+    if output_tex_file is not None:
+        shutil.copyfile(join(workdir, 'texput.tex'), output_tex_file)
 
     try:
         run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
