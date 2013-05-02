@@ -340,6 +340,9 @@ def parts_rule(integral):
         u, dv, v, du, v_step = result
         steps.append(result)
 
+        if isinstance(v, sympy.Integral):
+            return
+
         while True:
             if symbol not in (integrand / (v * du)).cancel().free_symbols:
                 coefficient = ((v * du) / integrand).cancel()
