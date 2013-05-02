@@ -120,22 +120,14 @@ def test_Lambda():
     assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
 
-
 def test_IdentityFunction():
     assert Lambda(x, x) is Lambda(y, y) is S.IdentityFunction
     assert Lambda(x, 2*x) is not S.IdentityFunction
     assert Lambda((x, y), x) is not S.IdentityFunction
 
-
-def test_Lambda_symbols():
-    assert Lambda(x, 2*x).free_symbols == set()
-    assert Lambda(x, x*y).free_symbols == set([y])
-
-
 def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
     raises(TypeError, lambda: Lambda((x, y), x + y)(x))
-
 
 def test_Lambda_equality():
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
@@ -145,6 +137,15 @@ def test_Lambda_equality():
     assert Lambda(x, 2*x) != 2*x
     assert (Lambda(x, 2*x) == 2*x) is False
 
+def test_Lambda_general_function():
+    variable_0, variable_1, variable_2, variable_3 = symbols('variable_0, variable_1, variable_2, variable_3')
+    assert Lambda((x, y, z), x + y + z).general_function() == variable_1 + variable_2 + variable_3
+    assert Lambda((x, y), x**y).general_function() == variable_1**variable_2
+    assert Lambda((x, y), sin(x) + cos(y)).general_function() == sin(variable_1) + cos(variable_2)
+
+def test_issue_3775():
+    hash(Lambda(x, x*y)) != hash(Lambda(z, z*y**2)) is True
+    hash(Lambda((x, y), x + y)) == hash(Lambda((z, w), z + w)) is False
 
 def test_Subs():
     assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 1)

@@ -151,7 +151,6 @@ def test_issue461():
     assert integrate(sqrt(x), x) == 2*sqrt(x)**3/3
     assert integrate(1/sqrt(x)**3, x) == -2/sqrt(x)
 
-
 def test_integrate_poly():
     p = Poly(x + x**2*y + y**3, x, y)
 
@@ -249,12 +248,10 @@ def test_issue587():  # remove this when fresnel itegrals are implemented
     assert expand_func(integrate(sin(x**2), x)) == \
         sqrt(2)*sqrt(pi)*fresnels(sqrt(2)*x/sqrt(pi))/2
 
-
 def test_integrate_units():
     m = units.m
     s = units.s
     assert integrate(x * m/s, (x, 1*s, 5*s)) == 12*m*s
-
 
 def test_transcendental_functions():
     assert integrate(LambertW(2*x), x) == \
