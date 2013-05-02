@@ -106,6 +106,11 @@ class Sum(Expr):
         """
         return [l[0] for l in self.limits]
 
+    def _hashable_content(self):
+        r = self.canonical_variables
+        return (self.function.xreplace(r),
+            ) + tuple([l.xreplace(r) for l in self.limits])
+
     @property
     def free_symbols(self):
         """

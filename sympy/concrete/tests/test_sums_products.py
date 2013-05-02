@@ -288,8 +288,22 @@ def test_limit_subs():
         assert F(x, (x, 1, x + y)).subs(x, 1) == F(x, (x, 1, y + 1))
 
 
-@XFAIL
-def test_issue2166():
+def test_equality():
+    # if this fails remove special handling below
+    raises(ValueError, lambda: Sum(x, x))
+    r = symbols('x', real=True)
+    for F in (Sum, Product, Integral):
+        try:
+            assert F(x, x) == F(y, y)
+            assert F(x, (x, 1, 2)) != F(x, x)
+        except ValueError:
+            pass
+        assert F(a, (x, 1, 2)) == F(a, (x, 1, 2))
+        assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))
+        assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))
+        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))
+
+    # issue 2166
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 

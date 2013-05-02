@@ -1270,7 +1270,7 @@ class Lambda(Expr):
         return super(Lambda, self).__hash__()
 
     def _hashable_content(self):
-        return (self.nargs, ) + tuple(sorted(self.free_symbols))
+        return (self.expr.xreplace(self.canonical_variables),)
 
     @property
     def is_identity(self):
@@ -1416,7 +1416,7 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return (self._expr, )
+        return (self._expr.xreplace(self.canonical_variables),)
 
     def _eval_subs(self, old, new):
         if old in self.variables:

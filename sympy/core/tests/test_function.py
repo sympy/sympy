@@ -138,15 +138,16 @@ def test_Lambda_arguments():
 
 
 def test_Lambda_equality():
-    assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
-    assert (Lambda(x, 2*x) == Lambda((x, y), 2*x)) is False
+    assert Lambda(x, 2*x) == Lambda(y, 2*y)
+    # although variables are casts as Dummies, the expressions
+    # should still compare equal
     assert Lambda((x, y), 2*x) == Lambda((x, y), 2*x)
-    assert (Lambda((x, y), 2*x) != Lambda((x, y), 2*x)) is False
+    assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
     assert Lambda(x, 2*x) != 2*x
-    assert (Lambda(x, 2*x) == 2*x) is False
 
 
 def test_Subs():
+    assert Subs(x, x, 0) == Subs(y, y, 0)
     assert Subs(x, x, 0).subs(x, 1) == Subs(x, x, 1)
     assert Subs(y, x, 0).subs(y, 1) == Subs(1, x, 0)
     assert Subs(f(x), x, 0).doit() == f(0)

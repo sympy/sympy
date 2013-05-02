@@ -554,6 +554,32 @@ class Basic(object):
         union = set.union
         return reduce(union, [arg.free_symbols for arg in self.args], set())
 
+    @property
+    def canonical_variables(self):
+        """Return a dictionary mapping any variable defined in
+        ``self.variables`` as underscore-suffixed numbers
+        corresponding to their position in ``self.variables``. Enough
+        underscores are added to ensure that there will be no clash with
+        existing free symbols.
+
+        Examples
+        ========
+
+        >>> from sympy import Lambda
+        >>> from sympy.abc import x
+        >>> Lambda(x, 2*x).canonical_variables
+        {_x: 0_}
+        """
+        if not hasattr(self, 'variables'):
+            return {}
+        u = "_"
+        while any(s.name.endswith(u) for s in self.free_symbols):
+            u += "_"
+        name = '%%i%s' % u
+        V = self.variables
+        return dict(list(zip(V, [C.Symbol(name % i, **v.assumptions0)
+            for i, v in enumerate(V)])))
+
     def is_hypergeometric(self, k):
         from sympy.simplify import hypersimp
         return hypersimp(self, k) is not None
