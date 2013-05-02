@@ -1220,11 +1220,7 @@ class Lambda(Expr):
         if len(variables) == 1 and variables[0] == expr:
             return S.IdentityFunction
 
-        #use dummy variables internally, just to be sure
-        new_variables = [C.Dummy(arg.name) for arg in variables]
-        expr = sympify(expr).xreplace(dict(zip(variables, new_variables)))
-
-        obj = Expr.__new__(cls, Tuple(*new_variables), expr)
+        obj = Expr.__new__(cls, Tuple(*variables), expr)
         return obj
 
     @property

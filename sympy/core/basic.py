@@ -568,7 +568,7 @@ class Basic(object):
         >>> from sympy import Lambda
         >>> from sympy.abc import x
         >>> Lambda(x, 2*x).canonical_variables
-        {_x: 0_}
+        {x: 0_}
         """
         if not hasattr(self, 'variables'):
             return {}
