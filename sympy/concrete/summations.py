@@ -13,21 +13,6 @@ from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 
 
-def _free_symbols(function, limits):
-    """Helper function to return the symbols that appear in a sum-like object
-    once it is evaluated.
-    """
-    isyms = function.free_symbols
-    for xab in limits:
-        # take out the target symbol
-        if xab[0] in isyms:
-            isyms.remove(xab[0])
-        # add in the new symbols
-        for i in xab[1:]:
-            isyms.update(i.free_symbols)
-    return isyms
-
-
 class Sum(Expr):
     """Represents unevaluated summation.
 
@@ -107,25 +92,15 @@ class Sum(Expr):
         return [l[0] for l in self.limits]
 
     def _hashable_content(self):
-        r = self.canonical_variables
-        return (self.function.xreplace(r),
-            ) + tuple([l.xreplace(r) for l in self.limits])
+        from sympy.integrals.integrals import _hashable_content
+        return _hashable_content(self)
 
     @property
     def free_symbols(self):
-        """
-        This method returns the symbols that will exist when the
-        summation is evaluated. This is useful if one is trying to
-        determine whether a sum depends on a certain symbol or not.
-
-        >>> from sympy import Sum
-        >>> from sympy.abc import x, y
-        >>> Sum(x, (x, y, 1)).free_symbols
-        set([y])
-        """
+        from sympy.integrals.integrals import _free_symbols
         if self.function.is_zero:
             return set()
-        return _free_symbols(self.function, self.limits)
+        return _free_symbols(self)
 
     @property
     def is_zero(self):
@@ -166,6 +141,10 @@ class Sum(Expr):
         """
 
         return self.function.is_zero or not self.free_symbols
+
+    def as_dummy(self):
+        from sympy.integrals.integrals import _as_dummy
+        return _as_dummy(self)
 
     def doit(self, **hints):
         if hints.get('deep', True):
@@ -320,22 +299,8 @@ class Sum(Expr):
         return s + iterm, abs(term)
 
     def _eval_subs(self, old, new):
-        func, limits = self.function, self.limits
-        old_atoms = old.free_symbols
-        limits = list(limits)
-
-        dummies = set()
-        for i in xrange(-1, -len(limits) - 1, -1):
-            xab = limits[i]
-            if len(xab) == 1:
-                continue
-            if not dummies.intersection(old_atoms):
-                limits[i] = Tuple(xab[0],
-                                  *[l._subs(old, new) for l in xab[1:]])
-            dummies.add(xab[0])
-        if not dummies.intersection(old_atoms):
-            func = func.subs(old, new)
-        return self.func(func, *limits)
+        from sympy.integrals.integrals import _eval_subs
+        return _eval_subs(self, old, new)
 
 
 def summation(f, *symbols, **kwargs):

@@ -1214,7 +1214,7 @@ class Lambda(Expr):
 
     def __new__(cls, variables, expr):
         try:
-            for v in variables if is_sequence(variables) else [variables]:
+            for v in variables if iterable(variables) else [variables]:
                 assert v.is_Symbol
         except (AssertionError, AttributeError):
             raise ValueError('variable is not a Symbol: %s' % v)
