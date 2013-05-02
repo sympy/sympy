@@ -1,6 +1,6 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
                    Symbol, Mul, Integral, integrate, pi, Dummy,
-                   Derivative)
+                   Derivative, diff, I, sqrt, erf)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, integral_steps
 
 x = Symbol('x')
@@ -94,3 +94,7 @@ def test_issue_3700():
     assert manualintegrate(integrand, x).has(Integral)
     assert r * integrate(integrand.expand(trig=True), limits) / pi == r * cos(n * phi)
     assert not integrate(integrand, limits).has(Dummy)
+
+def test_issue_3796():
+    # assert integrate(diff(exp(x + x**2)), x, risch=False) == exp(x + x**2)
+    assert integrate(x * exp(x**4), x, risch=False) == -I*sqrt(pi)*erf(I*x**2)/4
