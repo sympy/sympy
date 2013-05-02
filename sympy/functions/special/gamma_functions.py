@@ -18,10 +18,12 @@ from sympy.functions.combinatorial.numbers import harmonic
 class gamma(Function):
     """The gamma function returns a function which passes through the integral
     values of the factorial function, i.e. though defined in the complex plane,
-    when n is an integer, `gamma(n) = (n - 1)!`
+    when n is an integer, `\Gamma(n) = (n - 1)!`
 
-    Reference:
-        http://en.wikipedia.org/wiki/Gamma_function
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Gamma_function
     """
 
     nargs = 1
@@ -142,10 +144,10 @@ class lowergamma(Function):
     References
     ==========
 
-    - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
-      Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
-      Tables
-    - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+    .. [1] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
+           Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
+           and Mathematical Tables
+    .. [2] http://en.wikipedia.org/wiki/Incomplete_gamma_function
 
     """
 
@@ -239,7 +241,8 @@ class uppergamma(Function):
         \Gamma(s, x) = \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t
                      = \Gamma(s) - \gamma(s, x).
 
-    This can be shown to be the same as
+    where `\gamma(s, x)` is the lower incomplete gamma function,
+    :class:`lowergamma`. This can be shown to be the same as
 
     .. math ::
         \Gamma(s, x) = \Gamma(s)
@@ -248,7 +251,10 @@ class uppergamma(Function):
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
     The upper incomplete gamma function is also essentially equivalent to the
-    generalized exponential integral.
+    generalized exponential integral:
+
+    .. math ::
+        \operatorname{E}_{n}(x) = \int_{1}^{\infty}{\frac{e^{-xt}}{t^n} \, dt} = x^{n-1}\Gamma(1-n,x).
 
     Examples
     ========
@@ -273,11 +279,11 @@ class uppergamma(Function):
     References
     ==========
 
-    - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
-      Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
-      Tables
-    - http://en.wikipedia.org/wiki/Incomplete_gamma_function
-
+    .. [1] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6,
+           Section 5, Handbook of Mathematical Functions with Formulas, Graphs,
+           and Mathematical Tables
+    .. [2] http://en.wikipedia.org/wiki/Incomplete_gamma_function
+    .. [3] http://en.wikipedia.org/wiki/Exponential_integral#Relation_with_other_functions
     """
 
     nargs = 2
@@ -356,7 +362,10 @@ class uppergamma(Function):
 ########################### GAMMA RELATED FUNCTIONS ###########################
 ###############################################################################
 class polygamma(Function):
-    """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
+    r"""The function ``polygamma(n, z)`` returns ``log(gamma(z)).diff(n + 1)``
+
+    .. math ::
+        \psi^{(n)}(z) = \frac{d^n}{d x^n} \log \Gamma(z)
 
     Examples
     ========
@@ -554,12 +563,12 @@ class polygamma(Function):
 
 class loggamma(Function):
     """
-    The loggamma function is `ln(gamma(x))`.
+    The loggamma function is `\log(\Gamma(x))`.
 
     References
     ==========
 
-    http://mathworld.wolfram.com/LogGammaFunction.html
+    .. [1] http://mathworld.wolfram.com/LogGammaFunction.html
 
     """
 
@@ -598,7 +607,7 @@ def digamma(x):
     The digamma function is the logarithmic derivative of the gamma function.
 
 
-    In this case, `digamma(x) = polygamma(0, x)`.
+    In this case, ``digamma(x) = polygamma(0, x)``.
 
     See Also
     ========
@@ -613,7 +622,7 @@ def trigamma(x):
     """
     The trigamma function is the second of the polygamma functions.
 
-    In this case, `trigamma(x) = polygamma(1, x)`.
+    In this case, ``trigamma(x) = polygamma(1, x)``.
 
     See Also
     ========

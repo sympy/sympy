@@ -178,7 +178,7 @@ class subfactorial(CombinatorialFunction):
 
     References
     ==========
-    * http://en.wikipedia.org/wiki/Subfactorial
+    .. [1] http://en.wikipedia.org/wiki/Subfactorial
 
     Examples
     ========

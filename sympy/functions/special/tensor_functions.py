@@ -123,7 +123,7 @@ class KroneckerDelta(Function):
     References
     ==========
 
-    http://en.wikipedia.org/wiki/Kronecker_delta
+    .. [1] http://en.wikipedia.org/wiki/Kronecker_delta
     """
 
     nargs = 2

@@ -59,10 +59,10 @@ class lerchphi(Function):
     References
     ==========
 
-    - Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
-      Vol. I, New York: McGraw-Hill. Section 1.11.
-    - http://dlmf.nist.gov/25.14
-    - http://en.wikipedia.org/wiki/Lerch_transcendent
+    .. [1] Bateman, H.; Erdelyi, A. (1953), Higher Transcendental Functions,
+           Vol. I, New York: McGraw-Hill. Section 1.11.
+    .. [2] http://dlmf.nist.gov/25.14
+    .. [3] http://en.wikipedia.org/wiki/Lerch_transcendent
 
     Examples
     ========
@@ -338,8 +338,8 @@ class zeta(Function):
     References
     ==========
 
-    - http://dlmf.nist.gov/25.11
-    - http://en.wikipedia.org/wiki/Hurwitz_zeta_function
+    .. [1] http://dlmf.nist.gov/25.11
+    .. [2] http://en.wikipedia.org/wiki/Hurwitz_zeta_function
 
     Examples
     ========
@@ -491,7 +491,7 @@ class dirichlet_eta(Function):
     References
     ==========
 
-    - http://en.wikipedia.org/wiki/Dirichlet_eta_function
+    .. [1] http://en.wikipedia.org/wiki/Dirichlet_eta_function
 
     Examples
     ========
