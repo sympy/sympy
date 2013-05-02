@@ -201,7 +201,7 @@ def _minpoly_neg(ex, x, mp):
     return mp.subs({x: -x})
 
 def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
-        method='resultant', op=Add):
+        op=Add):
     """
     return the minimal polinomial for ``op(ex1, ex2)``
 
@@ -212,7 +212,6 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     x : indeterminate of the polynomials
     mp1, mp2 : minimal polynomials for ``ex1`` and ``ex2`` or None
     prec : max precision used in identifying factors
-    method : use 'resultant' or 'groebner' method
     op : operation ``Add`` or ``Mul``
 
     Examples
@@ -223,7 +222,7 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     >>> from sympy.abc import x
     >>> p1 = sqrt(sqrt(2) + 1)
     >>> p2 = sqrt(sqrt(2) - 1)
-    >>> minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Mul)
+    >>> minpoly_op_algebraic_number(p1, p2, x, op=Mul)
     x - 1
 
     References
@@ -242,24 +241,14 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     else:
         mp2 = mp2.subs({x:y})
 
-    if method == 'resultant':
-        if op is Add:
-            mp1a = mp1.subs({x:x - y})
-        elif op is Mul:
-            mp1a = y**degree(mp1)*mp1.subs({x:x / y})
-        else:
-            raise NotImplementedError('option not available')
-        mp1a = _mexpand(mp1a)
-        r = resultant(mp1a, mp2, gens=[y])
-    elif method == 'groebner':
-        z = Dummy('z')
-        if op in [Add, Mul]:
-            g = groebner([mp1, mp2, op(x, y) - z], gens=[x, y, z], order='lex')
-        else:
-            raise NotImplementedError('option not available')
-        r = g[-1].subs({z:x})
+    if op is Add:
+        mp1a = mp1.subs({x:x - y})
+    elif op is Mul:
+        mp1a = y**degree(mp1)*mp1.subs({x:x / y})
     else:
         raise NotImplementedError('option not available')
+    mp1a = _mexpand(mp1a)
+    r = resultant(mp1a, mp2, gens=[y, x])
 
     gcd_deg = gcd(degree(mp1), degree(mp2))
     if gcd_deg == 1:

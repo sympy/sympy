@@ -152,12 +152,10 @@ def test_minimal_polynomial_sq():
 def test_minpoly_op_algebraic_number():
     p1 = sqrt(1 + 2**Rational(1, 3))
     p2 = sqrt(2)
-    mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op=Add)
-    mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Add)
-    assert mp1 == mp2 == x**12 - 18*x**10 + 111*x**8 - 256*x**6 + 3*x**4 - 126*x**2 + 1
-    mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op=Mul)
-    mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Mul)
-    assert mp1 == mp2 == x**6 - 6*x**4 + 12*x**2 - 24
+    mp = minpoly_op_algebraic_number(p1, p2, x, op=Add)
+    assert mp == x**12 - 18*x**10 + 111*x**8 - 256*x**6 + 3*x**4 - 126*x**2 + 1
+    mp = minpoly_op_algebraic_number(p1, p2, x, op=Mul)
+    assert mp == x**6 - 6*x**4 + 12*x**2 - 24
     p1 = 1 + 2**Rational(1, 3)
     p2 = sqrt(1 + sqrt(3))
     mp = minpoly_op_algebraic_number(p1, p2, x, op=Add)
