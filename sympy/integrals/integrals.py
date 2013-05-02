@@ -1106,6 +1106,15 @@ class Integral(Expr):
             except NotImplementedError:
                 return None
 
+        if manual:
+            try:
+                result = manualintegrate(g, x)
+                if result is not None and result.func != Integral:
+                    return result
+            except (ValueError, PolynomialError):
+                pass
+
+
         # if it is a poly(x) then let the polynomial integrate itself (fast)
         #
         # It is important to make this check first, otherwise the other code
@@ -1270,7 +1279,7 @@ class Integral(Expr):
                             # try to have other algorithms do the integrals
                             # manualintegrate can't handle
                             result = result.func(*[
-                                arg.doit() if arg.has(Integral) else arg
+                                arg.doit(manual=False) if arg.has(Integral) else arg
                                 for arg in result.args
                             ]).expand(multinomial=False,
                                       log=False,
