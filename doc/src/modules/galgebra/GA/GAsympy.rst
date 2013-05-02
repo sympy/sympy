@@ -1431,7 +1431,7 @@ expression.
 Calculus
 --------
 
-The calculus examples all use the extened LaTeXoutput module, ``latex_ex``, for
+The calculus examples all use the extened LaTeX output module, ``latex_ex``, for
 clarity.
 
 

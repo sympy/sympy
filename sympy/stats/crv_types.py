@@ -184,7 +184,7 @@ def Arcsin(name, a=0, b=1):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Arcsine_distribution
+    .. [1] http://en.wikipedia.org/wiki/Arcsine_distribution
     """
 
     return rv(name, ArcsinDistribution, (a, b))
@@ -214,15 +214,18 @@ def Benini(name, alpha, beta, sigma):
 
     .. math::
         f(x) := e^{-\alpha\log{\frac{x}{\sigma}}
-                -\beta\log\left[{\frac{x}{\sigma}}\right]^2}
+                -\beta\log^2\left[{\frac{x}{\sigma}}\right]}
                 \left(\frac{\alpha}{x}+\frac{2\beta\log{\frac{x}{\sigma}}}{x}\right)
+
+    This is a heavy-tailed distrubtion and is also known as the log-Rayleigh
+    distribution.
 
     Parameters
     ==========
 
-    alpha : Real number, `alpha` > 0 a shape
-    beta : Real number, `beta` > 0 a shape
-    sigma : Real number, `sigma` > 0 a scale
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
+    sigma : Real number, `\sigma > 0`, a scale
 
     Returns
     =======
@@ -254,7 +257,8 @@ def Benini(name, alpha, beta, sigma):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Benini_distribution
+    .. [1] http://en.wikipedia.org/wiki/Benini_distribution
+    .. [2] http://reference.wolfram.com/legacy/v8/ref/BeniniDistribution.html
     """
 
     return rv(name, BeniniDistribution, (alpha, beta, sigma))
@@ -295,8 +299,8 @@ def Beta(name, alpha, beta):
     Parameters
     ==========
 
-    alpha : Real number, `alpha` > 0 a shape
-    beta : Real number, `beta` > 0 a shape
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
 
     Returns
     =======
@@ -331,8 +335,8 @@ def Beta(name, alpha, beta):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Beta_distribution
-    [2] http://mathworld.wolfram.com/BetaDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Beta_distribution
+    .. [2] http://mathworld.wolfram.com/BetaDistribution.html
     """
 
     return rv(name, BetaDistribution, (alpha, beta))
@@ -365,8 +369,8 @@ def BetaPrime(name, alpha, beta):
     Parameters
     ==========
 
-    alpha : Real number, `alpha` > 0 a shape
-    beta : Real number, `beta` > 0 a shape
+    alpha : Real number, `\alpha > 0`, a shape
+    beta : Real number, `\beta > 0`, a shape
 
     Returns
     =======
@@ -395,8 +399,8 @@ def BetaPrime(name, alpha, beta):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
-    [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Beta_prime_distribution
+    .. [2] http://mathworld.wolfram.com/BetaPrimeDistribution.html
     """
 
     return rv(name, BetaPrimeDistribution, (alpha, beta))
@@ -426,7 +430,7 @@ def Cauchy(name, x0, gamma):
     ==========
 
     x0 : Real number, the location
-    gamma : Real number, `gamma` > 0 the scale
+    gamma : Real number, `\gamma > 0`, the scale
 
     Returns
     =======
@@ -451,8 +455,8 @@ def Cauchy(name, x0, gamma):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Cauchy_distribution
-    [2] http://mathworld.wolfram.com/CauchyDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Cauchy_distribution
+    .. [2] http://mathworld.wolfram.com/CauchyDistribution.html
     """
 
     return rv(name, CauchyDistribution, (x0, gamma))
@@ -484,7 +488,7 @@ def Chi(name, k):
     Parameters
     ==========
 
-    k : Integer, `k` > 0 the number of degrees of freedom
+    k : A positive Integer, `k > 0`, the number of degrees of freedom
 
     Returns
     =======
@@ -508,8 +512,8 @@ def Chi(name, k):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Chi_distribution
-    [2] http://mathworld.wolfram.com/ChiDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Chi_distribution
+    .. [2] http://mathworld.wolfram.com/ChiDistribution.html
     """
 
     return rv(name, ChiDistribution, (k,))
@@ -543,7 +547,7 @@ def ChiNoncentral(name, k, l):
     Parameters
     ==========
 
-    k : `k` > 0 the number of degrees of freedom
+    k : A positive Integer, `k > 0`, the number of degrees of freedom
     l : Shift parameter
 
     Returns
@@ -569,7 +573,7 @@ def ChiNoncentral(name, k, l):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
+    .. [1] http://en.wikipedia.org/wiki/Noncentral_chi_distribution
     """
 
     return rv(name, ChiNoncentralDistribution, (k, l))
@@ -603,7 +607,7 @@ def ChiSquared(name, k):
     Parameters
     ==========
 
-    k : Integer, `k` > 0 the number of degrees of freedom
+    k : A positive Integer, `k > 0`, the number of degrees of freedom
 
     Returns
     =======
@@ -633,8 +637,8 @@ def ChiSquared(name, k):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Chi_squared_distribution
-    [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Chi_squared_distribution
+    .. [2] http://mathworld.wolfram.com/Chi-SquaredDistribution.html
     """
 
     return rv(name, ChiSquaredDistribution, (k, ))
@@ -658,17 +662,17 @@ def Dagum(name, p, a, b):
     The density of the Dagum distribution is given by
 
     .. math::
-        f(x) := \frac{a p}{x} \left( \frac{(\tfrac{x}{b})^{a p}}
-                {\left((\tfrac{x}{b})^a + 1 \right)^{p+1}} \right)
+        f(x) := \frac{a p}{x} \left( \frac{\left(\tfrac{x}{b}\right)^{a p}}
+                {\left(\left(\tfrac{x}{b}\right)^a + 1 \right)^{p+1}} \right)
 
     with :math:`x > 0`.
 
     Parameters
     ==========
 
-    p : Real number, `p` > 0 a shape
-    a : Real number, `a` > 0 a shape
-    b : Real number, `b` > 0 a scale
+    p : Real number, `p > 0`, a shape
+    a : Real number, `a > 0`, a shape
+    b : Real number, `b > 0`, a scale
 
     Returns
     =======
@@ -694,7 +698,7 @@ def Dagum(name, p, a, b):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Dagum_distribution
+    .. [1] http://en.wikipedia.org/wiki/Dagum_distribution
     """
 
     return rv(name, DagumDistribution, (p, a, b))
@@ -717,7 +721,7 @@ def Erlang(name, k, l):
     ==========
 
     k : Integer
-    l : Real number, :math:`\lambda` > 0 the rate
+    l : Real number, `\lambda > 0`, the rate
 
     Returns
     =======
@@ -760,8 +764,8 @@ def Erlang(name, k, l):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Erlang_distribution
-    [2] http://mathworld.wolfram.com/ErlangDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Erlang_distribution
+    .. [2] http://mathworld.wolfram.com/ErlangDistribution.html
     """
 
     return rv(name, GammaDistribution, (k, 1/l))
@@ -795,12 +799,12 @@ def Exponential(name, rate):
     .. math::
         f(x) := \lambda \exp(-\lambda x)
 
-    with :math:`x > 0`.
+    with `x > 0`. Note that the expected value is `1/\lambda`.
 
     Parameters
     ==========
 
-    rate : Real number, `rate` > 0 the rate or inverse scale
+    rate : A positive Real number, `\lambda > 0`, the rate (or inverse scale/inverse mean)
 
     Returns
     =======
@@ -848,8 +852,8 @@ def Exponential(name, rate):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Exponential_distribution
-    [2] http://mathworld.wolfram.com/ExponentialDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Exponential_distribution
+    .. [2] http://mathworld.wolfram.com/ExponentialDistribution.html
     """
 
     return rv(name, ExponentialDistribution, (rate, ))
@@ -880,11 +884,13 @@ def FDistribution(name, d1, d2):
 
     with :math:`x > 0`.
 
+    .. TODO - What do these parameters mean?
+
     Parameters
     ==========
 
-    d1 : `d1` > 0 a parameter
-    d2 : `d2` > 0 a parameter
+    d1 : `d_1 > 0` a parameter
+    d2 : `d_2 > 0` a parameter
 
     Returns
     =======
@@ -918,8 +924,8 @@ def FDistribution(name, d1, d2):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/F-distribution
-    [2] http://mathworld.wolfram.com/F-Distribution.html
+    .. [1] http://en.wikipedia.org/wiki/F-distribution
+    .. [2] http://mathworld.wolfram.com/F-Distribution.html
     """
 
     return rv(name, FDistributionDistribution, (d1, d2))
@@ -945,11 +951,14 @@ def FisherZ(name, d1, d2):
         f(x) := \frac{2d_1^{d_1/2} d_2^{d_2/2}} {\mathrm{B}(d_1/2, d_2/2)}
                 \frac{e^{d_1z}}{\left(d_1e^{2z}+d_2\right)^{\left(d_1+d_2\right)/2}}
 
+
+    .. TODO - What is the difference between these degrees of freedom?
+
     Parameters
     ==========
 
-    d1 : `d1` > 0, degree of freedom
-    d2 : `d2` > 0, degree of freedom
+    d1 : `d_1 > 0`, degree of freedom
+    d2 : `d_2 > 0`, degree of freedom
 
     Returns
     =======
@@ -984,8 +993,8 @@ def FisherZ(name, d1, d2):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution
-    [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
+    .. [1] http://en.wikipedia.org/wiki/Fisher%27s_z-distribution
+    .. [2] http://mathworld.wolfram.com/Fishersz-Distribution.html
     """
 
     return rv(name, FisherZDistribution, (d1, d2))
@@ -1049,7 +1058,7 @@ def Frechet(name, a, s=1, m=0):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
+    .. [1] http://en.wikipedia.org/wiki/Fr%C3%A9chet_distribution
     """
 
     return rv(name, FrechetDistribution, (a, s, m))
@@ -1090,8 +1099,8 @@ def Gamma(name, k, theta):
     Parameters
     ==========
 
-    k : Real number, `k` > 0 a shape
-    theta : Real number, `theta` > 0 a scale
+    k : Real number, `k > 0`, a shape
+    theta : Real number, `\theta > 0`, a scale
 
     Returns
     =======
@@ -1141,8 +1150,8 @@ def Gamma(name, k, theta):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Gamma_distribution
-    [2] http://mathworld.wolfram.com/GammaDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Gamma_distribution
+    .. [2] http://mathworld.wolfram.com/GammaDistribution.html
     """
 
     return rv(name, GammaDistribution, (k, theta))
@@ -1179,8 +1188,8 @@ def GammaInverse(name, a, b):
     Parameters
     ==========
 
-    a : Real number, `a` > 0 a shape
-    b : Real number, `b` > 0 a scale
+    a : Real number, `a > 0` a shape
+    b : Real number, `b > 0` a scale
 
     Returns
     =======
@@ -1211,7 +1220,7 @@ def GammaInverse(name, a, b):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
+    .. [1] http://en.wikipedia.org/wiki/Inverse-gamma_distribution
     """
 
     return rv(name, GammaInverseDistribution, (a, b))
@@ -1248,8 +1257,8 @@ def Kumaraswamy(name, a, b):
     Parameters
     ==========
 
-    a : Real number, `a` > 0 a shape
-    b : Real number, `b` > 0 a shape
+    a : Real number, `a > 0` a shape
+    b : Real number, `b > 0` a shape
 
     Returns
     =======
@@ -1278,7 +1287,7 @@ def Kumaraswamy(name, a, b):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
+    .. [1] http://en.wikipedia.org/wiki/Kumaraswamy_distribution
     """
 
     return rv(name, KumaraswamyDistribution, (a, b))
@@ -1307,8 +1316,8 @@ def Laplace(name, mu, b):
     Parameters
     ==========
 
-    mu : Real number, the location
-    b : Real number, `b` > 0 a scale
+    mu : Real number, the location (mean)
+    b : Real number, `b > 0`, a scale
 
     Returns
     =======
@@ -1333,8 +1342,8 @@ def Laplace(name, mu, b):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Laplace_distribution
-    [2] http://mathworld.wolfram.com/LaplaceDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Laplace_distribution
+    .. [2] http://mathworld.wolfram.com/LaplaceDistribution.html
     """
 
     return rv(name, LaplaceDistribution, (mu, b))
@@ -1363,8 +1372,8 @@ def Logistic(name, mu, s):
     Parameters
     ==========
 
-    mu : Real number, the location
-    s : Real number, `s` > 0 a scale
+    mu : Real number, the location (mean)
+    s : Real number, `s > 0` a scale
 
     Returns
     =======
@@ -1389,8 +1398,8 @@ def Logistic(name, mu, s):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Logistic_distribution
-    [2] http://mathworld.wolfram.com/LogisticDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Logistic_distribution
+    .. [2] http://mathworld.wolfram.com/LogisticDistribution.html
     """
 
     return rv(name, LogisticDistribution, (mu, s))
@@ -1468,8 +1477,8 @@ def LogNormal(name, mean, std):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Lognormal
-    [2] http://mathworld.wolfram.com/LogNormalDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Lognormal
+    .. [2] http://mathworld.wolfram.com/LogNormalDistribution.html
     """
 
     return rv(name, LogNormalDistribution, (mean, std))
@@ -1499,10 +1508,12 @@ def Maxwell(name, a):
 
     with :math:`x \geq 0`.
 
+    .. TODO - what does the parameter mean?
+
     Parameters
     ==========
 
-    a : Real number, `a` > 0
+    a : Real number, `a > 0`
 
     Returns
     =======
@@ -1532,8 +1543,8 @@ def Maxwell(name, a):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Maxwell_distribution
-    [2] http://mathworld.wolfram.com/MaxwellDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Maxwell_distribution
+    .. [2] http://mathworld.wolfram.com/MaxwellDistribution.html
     """
 
     return rv(name, MaxwellDistribution, (a, ))
@@ -1567,8 +1578,8 @@ def Nakagami(name, mu, omega):
     Parameters
     ==========
 
-    mu : Real number, :math:`mu \geq \frac{1}{2}` a shape
-    omega : Real number, `omega` > 0 the spread
+    mu : Real number, `\mu \geq \frac{1}{2}` a shape
+    omega : Real number, `\omega > 0`, the spread
 
     Returns
     =======
@@ -1610,7 +1621,7 @@ def Nakagami(name, mu, omega):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Nakagami_distribution
+    .. [1] http://en.wikipedia.org/wiki/Nakagami_distribution
     """
 
     return rv(name, NakagamiDistribution, (mu, omega))
@@ -1693,8 +1704,8 @@ def Normal(name, mean, std):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Normal_distribution
-    [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
+    .. [1] http://en.wikipedia.org/wiki/Normal_distribution
+    .. [2] http://mathworld.wolfram.com/NormalDistributionFunction.html
     """
 
     return rv(name, NormalDistribution, (mean, std))
@@ -1730,15 +1741,15 @@ def Pareto(name, xm, alpha):
     The density of the Pareto distribution is given by
 
     .. math::
-        f(x) := \frac{\alpha\,x_\mathrm{m}^\alpha}{x^{\alpha+1}}
+        f(x) := \frac{\alpha\,x_m^\alpha}{x^{\alpha+1}}
 
     with :math:`x \in [x_m,\infty]`.
 
     Parameters
     ==========
 
-    xm : Real number, `xm` > 0 a scale
-    alpha : Real number, `alpha` > 0 a shape
+    xm : Real number, `x_m > 0`, a scale
+    alpha : Real number, `\alpha > 0`, a shape
 
     Returns
     =======
@@ -1763,8 +1774,8 @@ def Pareto(name, xm, alpha):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Pareto_distribution
-    [2] http://mathworld.wolfram.com/ParetoDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Pareto_distribution
+    .. [2] http://mathworld.wolfram.com/ParetoDistribution.html
     """
 
     return rv(name, ParetoDistribution, (xm, alpha))
@@ -1836,7 +1847,7 @@ def QuadraticU(name, a, b):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
+    .. [1] http://en.wikipedia.org/wiki/U-quadratic_distribution
     """
 
     return rv(name, QuadraticUDistribution, (a, b))
@@ -1876,7 +1887,7 @@ def RaisedCosine(name, mu, s):
     ==========
 
     mu : Real number
-    s : Real number, `s` > 0
+    s : Real number, `s > 0`
 
     Returns
     =======
@@ -1908,7 +1919,7 @@ def RaisedCosine(name, mu, s):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
+    .. [1] http://en.wikipedia.org/wiki/Raised_cosine_distribution
     """
 
     return rv(name, RaisedCosineDistribution, (mu, s))
@@ -1941,7 +1952,7 @@ def Rayleigh(name, sigma):
     Parameters
     ==========
 
-    sigma : Real number, `sigma` > 0
+    sigma : Real number, `\sigma > 0`
 
     Returns
     =======
@@ -1971,8 +1982,8 @@ def Rayleigh(name, sigma):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
-    [2] http://mathworld.wolfram.com/RayleighDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Rayleigh_distribution
+    .. [2] http://mathworld.wolfram.com/RayleighDistribution.html
     """
 
     return rv(name, RayleighDistribution, (sigma, ))
@@ -2003,7 +2014,7 @@ def StudentT(name, nu):
     Parameters
     ==========
 
-    nu : Real number, `nu` > 0, the degrees of freedom
+    nu : Real number, `\nu > 0`, the degrees of freedom
 
     Returns
     =======
@@ -2038,8 +2049,8 @@ def StudentT(name, nu):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Student_t-distribution
-    [2] http://mathworld.wolfram.com/Studentst-Distribution.html
+    .. [1] http://en.wikipedia.org/wiki/Student_t-distribution
+    .. [2] http://mathworld.wolfram.com/Studentst-Distribution.html
     """
 
     return rv(name, StudentTDistribution, (nu, ))
@@ -2118,8 +2129,8 @@ def Triangular(name, a, b, c):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Triangular_distribution
-    [2] http://mathworld.wolfram.com/TriangularDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Triangular_distribution
+    .. [2] http://mathworld.wolfram.com/TriangularDistribution.html
     """
 
     return rv(name, TriangularDistribution, (a, b, c))
@@ -2211,8 +2222,8 @@ def Uniform(name, left, right):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
-    [2] http://mathworld.wolfram.com/UniformDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Uniform_distribution_%28continuous%29
+    .. [2] http://mathworld.wolfram.com/UniformDistribution.html
     """
 
     return rv(name, UniformDistribution, (left, right))
@@ -2252,7 +2263,7 @@ def UniformSum(name, n):
     Parameters
     ==========
 
-    n : Integral number, `n` > 0
+    n : A positive Integer, `n > 0`
 
     Returns
     =======
@@ -2286,8 +2297,8 @@ def UniformSum(name, n):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
-    [2] http://mathworld.wolfram.com/UniformSumDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Uniform_sum_distribution
+    .. [2] http://mathworld.wolfram.com/UniformSumDistribution.html
     """
 
     return rv(name, UniformSumDistribution, (n, ))
@@ -2354,8 +2365,8 @@ def VonMises(name, mu, k):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Von_Mises_distribution
-    [2] http://mathworld.wolfram.com/vonMisesDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Von_Mises_distribution
+    .. [2] http://mathworld.wolfram.com/vonMisesDistribution.html
     """
 
     return rv(name, VonMisesDistribution, (mu, k))
@@ -2399,7 +2410,7 @@ def Weibull(name, alpha, beta):
     ==========
 
     lambda : Real number, :math:`\lambda > 0` a scale
-    k : Real number, `k` > 0 a shape
+    k : Real number, `k > 0` a shape
 
     Returns
     =======
@@ -2430,8 +2441,8 @@ def Weibull(name, alpha, beta):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Weibull_distribution
-    [2] http://mathworld.wolfram.com/WeibullDistribution.html
+    .. [1] http://en.wikipedia.org/wiki/Weibull_distribution
+    .. [2] http://mathworld.wolfram.com/WeibullDistribution.html
 
     """
 
@@ -2467,7 +2478,7 @@ def WignerSemicircle(name, R):
     Parameters
     ==========
 
-    R : Real number, `R` > 0 the radius
+    R : Real number, `R > 0`, the radius
 
     Returns
     =======
@@ -2494,8 +2505,8 @@ def WignerSemicircle(name, R):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
-    [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
+    .. [1] http://en.wikipedia.org/wiki/Wigner_semicircle_distribution
+    .. [2] http://mathworld.wolfram.com/WignersSemicircleLaw.html
     """
 
     return rv(name, WignerSemicircleDistribution, (R,))
