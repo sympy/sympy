@@ -300,7 +300,7 @@ def minpoly_pow(ex, pw, x, mp=None, prec=200):
     if not mp:
         mp = minpoly1(ex, x)
     if not pw.is_rational:
-        raise ValueError('pw must be rational')
+        raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     if pw < 0:
         mp = expand_mul(x**degree(mp)*mp.subs(x, 1/x))
         pw = -pw
@@ -408,7 +408,6 @@ def _minpoly_exp(ex, x):
     """
     Returns the minimal polynomial of ``exp(ex)``
     """
-    from sympy.ntheory.factor_ import smoothness
     c, a = ex.args[0].as_coeff_Mul()
     p = sympify(c.p)
     q = sympify(c.q)
@@ -434,10 +433,6 @@ def _minpoly_exp(ex, x):
                     return s
                 else:
                     raise NotImplementedError('case not covered')
-                    # too slow
-                    #q1, q2 = smoothness(q)
-                    #mp = minpoly_pow(C.exp(I*pi/q1), S.One/q2, x)
-                    #return mp
             else:
                 ex1 = C.exp(I*pi/q)
                 mp = minpoly_pow(ex1, p, x)
@@ -488,8 +483,34 @@ def minpoly1(ex, x):
     elif ex.__class__ is C.exp:
         res = _minpoly_exp(ex, x)
     else:
-        raise NotImplementedError('case not covered')
+        raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     return res
+
+def has_algebraic_number(p):
+    """Return True if p is comprised of only Rationals or square roots
+    of Rationals and algebraic operations.
+
+    Examples
+    ========
+    >>> from sympy.functions.elementary.miscellaneous import sqrt
+    >>> from sympy.simplify.sqrtdenest import is_algebraic
+    >>> from sympy import cos
+    >>> is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*sqrt(2))))
+    True
+    >>> is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*cos(2))))
+    False
+    """
+
+    if p.is_Rational:
+        return False
+    elif p.is_Atom:
+        return False
+    elif p.is_Pow:
+        return all(has_algebraic_number(x) for x in (p.base, p.exp))
+    elif p.is_Add or p.is_Mul:
+        return all(has_algebraic_number(x) for x in p.args)
+    else:
+        return False
 
 def minimal_polynomial(ex, x=None, **args):
     """
@@ -509,9 +530,24 @@ def minimal_polynomial(ex, x=None, **args):
     """
     from sympy.polys.polytools import degree
     from sympy.core.function import expand_multinomial
+    from sympy.core.basic import preorder_traversal
 
+    compose = args.get('compose', True)
+    polys = args.get('polys', False)
     ex = sympify(ex)
-    compose = args.get('compose', False)
+    for expr in preorder_traversal(ex):
+        if expr.is_AlgebraicNumber:
+            compose = False
+            break
+
+    if ex.is_AlgebraicNumber or polys:
+        compose = False
+
+    if x is not None:
+        x, cls = sympify(x), Poly
+    else:
+        x, cls = Dummy('x'), PurePoly
+
     if compose:
         result = minpoly1(ex, x)
         c = result.coeff(x**degree(result))
@@ -523,12 +559,6 @@ def minimal_polynomial(ex, x=None, **args):
         return result
     generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
-
-
-    if x is not None:
-        x, cls = sympify(x), Poly
-    else:
-        x, cls = Dummy('x'), PurePoly
 
     def update_mapping(ex, exp, base=None):
         a = generator.next()
@@ -613,7 +643,6 @@ def minimal_polynomial(ex, x=None, **args):
                 return True
         return False
 
-    polys = args.get('polys', False)
     prec = args.pop('prec', 10)
 
     inverted = False
