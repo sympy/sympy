@@ -119,6 +119,8 @@ def test_Lambda():
 
     assert Lambda(x, 2*x) + Lambda(y, 2*y) == 2*Lambda(x, 2*x)
     assert Lambda(x, 2*x) not in [ Lambda(x, x) ]
+    raises(ValueError, lambda: Lambda(1, x))
+    assert Lambda(x, 1)(1) is S.One
 
 
 def test_IdentityFunction():

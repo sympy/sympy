@@ -936,7 +936,7 @@ class Derivative(Expr):
             return expr
 
         # Pop evaluate because it is not really an assumption and we will need
-        # to track use it carefully below.
+        # to track it carefully below.
         evaluate = assumptions.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
@@ -1214,13 +1214,18 @@ class Lambda(Expr):
 
     def __new__(cls, variables, expr):
         try:
+            for v in variables if is_sequence(variables) else [variables]:
+                assert v.is_Symbol
+        except (AssertionError, AttributeError):
+            raise ValueError('variable is not a Symbol: %s' % v)
+        try:
             variables = Tuple(*variables)
         except TypeError:
             variables = Tuple(variables)
         if len(variables) == 1 and variables[0] == expr:
             return S.IdentityFunction
 
-        obj = Expr.__new__(cls, Tuple(*variables), expr)
+        obj = Expr.__new__(cls, Tuple(*variables), S(expr))
         return obj
 
     @property
