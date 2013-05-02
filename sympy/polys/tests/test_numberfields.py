@@ -158,9 +158,6 @@ def test_minpoly_op_algebraic_number():
     mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op=Mul)
     mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op=Mul)
     assert mp1 == mp2 == x**6 - 6*x**4 + 12*x**2 - 24
-    mp1 = minpoly_op_algebraic_number(p1, p2, x, method='resultant', op='div')
-    mp2 = minpoly_op_algebraic_number(p1, p2, x, method='groebner', op='div')
-    assert mp1 == mp2 == 8*x**6 - 12*x**4 + 6*x**2 - 3
     p1 = 1 + 2**Rational(1, 3)
     p2 = sqrt(1 + sqrt(3))
     mp = minpoly_op_algebraic_number(p1, p2, x, op=Add)
@@ -200,6 +197,8 @@ def test_minpoly_compose():
 
     mp = minimal_polynomial(exp(2*I*pi/7), x)
     assert mp == x**6 + x**5 + x**4 + x**3 + x**2 + x + 1
+    mp = minimal_polynomial(exp(2*I*pi/15), x)
+    assert mp == x**8 - x**7 + x**5 - x**4 + x**3 - x + 1
     mp = minimal_polynomial(cos(2*pi/7), x)
     assert mp == 8*x**3 + 4*x**2 - 4*x - 1
     mp = minimal_polynomial(sin(2*pi/7), x)

@@ -21,6 +21,8 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.rootoftools import RootOf
 
+from sympy.polys.specialpolys import cyclotomic_poly
+
 from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
@@ -29,6 +31,7 @@ from sympy.utilities import (
 
 from sympy.simplify.simplify import _mexpand, _is_sum_surds
 from sympy.ntheory import sieve
+from sympy.ntheory.factor_ import divisors
 from sympy.mpmath import pslq, mp
 
 
@@ -210,7 +213,7 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     mp1, mp2 : minimal polynomials for ``ex1`` and ``ex2`` or None
     prec : max precision used in identifying factors
     method : use 'resultant' or 'groebner' method
-    op : operation ``Add``, ``Mul`` or 'div'
+    op : operation ``Add`` or ``Mul``
 
     Examples
     ========
@@ -244,8 +247,6 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
             mp1a = mp1.subs({x:x - y})
         elif op is Mul:
             mp1a = y**degree(mp1)*mp1.subs({x:x / y})
-        elif op is 'div':
-            mp1a = mp1.subs({x:x * y})
         else:
             raise NotImplementedError('option not available')
         mp1a = _mexpand(mp1a)
@@ -254,8 +255,6 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
         z = Dummy('z')
         if op in [Add, Mul]:
             g = groebner([mp1, mp2, op(x, y) - z], gens=[x, y, z], order='lex')
-        elif op is 'div':
-            g = groebner([mp1, mp2, x - z*y], gens=[x, y, z], order='lex')
         else:
             raise NotImplementedError('option not available')
         r = g[-1].subs({z:x})
@@ -269,8 +268,6 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     _, factors = factor_list(r)
     if op in [Add, Mul]:
         ex = op(ex1, ex2)
-    elif op is 'div':
-        ex = ex1 / ex2
     res = _choose_factor(factors, x, ex, prec)
     return res
 
@@ -433,12 +430,11 @@ def _minpoly_exp(ex, x):
                     for i in range(q):
                         s += (-x)**i
                     return s
-                else:
-                    raise NotImplementedError('case not covered')
-            else:
-                ex1 = C.exp(I*pi/q)
-                mp = _minpoly_pow(ex1, p, x)
-                return mp
+
+            # x**(2*q) = product(factors)
+            factors = [cyclotomic_poly(i, x) for i in divisors(2*q)]
+            mp = _choose_factor(factors, x, ex)
+            return mp
         else:
             raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
