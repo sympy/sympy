@@ -6,7 +6,7 @@ from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
-    minimal_polynomial, minpoly_pow, minpoly_op_algebraic_number,
+    minimal_polynomial, minpoly_op_algebraic_number,
     primitive_element,
     is_isomorphism_possible,
     field_isomorphism_pslq,
@@ -23,6 +23,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
+from sympy.solvers import solve
 
 
 from sympy.abc import x, y
@@ -206,6 +207,13 @@ def test_minpoly_compose():
     mp = minimal_polynomial(ex, x)
     assert mp == x**3 + 2*x**2 - x - 1
     assert  minimal_polynomial(-1/(2*cos(pi/7)), x) == x**3 + 2*x**2 - x - 1
+
+    eq = expand((x**5 + 3*x + 1)*(x**3 + 4*x + 1))
+    ex = solve(eq, x)[0]
+    mp = minimal_polynomial(ex, x)
+    assert mp == x**3 + 4*x + 1
+    mp = minimal_polynomial(ex + 1, x)
+    assert mp == x**3 - 3*x**2 + 7*x - 4
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])

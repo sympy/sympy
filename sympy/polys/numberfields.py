@@ -19,6 +19,8 @@ from sympy.polys.polyerrors import (
     NotAlgebraic,
 )
 
+from sympy.polys.rootoftools import RootOf
+
 from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
@@ -30,7 +32,7 @@ from sympy.ntheory import sieve
 from sympy.mpmath import pslq, mp
 
 
-def _choose_factor(factors, x, v, prec):
+def _choose_factor(factors, x, v, prec=200):
     """
     Return a factor having root ``v``
     It is assumed that one of the factors has root ``v``.
@@ -176,7 +178,7 @@ def _minimal_polynomial_sq(p, n, x, prec):
     result = _choose_factor(factors, x, pn, prec)
     return result
 
-def minpoly_neg(ex, x, mp):
+def _minpoly_neg(ex, x, mp):
     """
     return the minimal polynomial of ``-ex``.
 
@@ -184,11 +186,11 @@ def minpoly_neg(ex, x, mp):
     ========
 
     >>> from sympy import Rational
-    >>> from sympy.polys.numberfields import minpoly, minpoly_neg
+    >>> from sympy.polys.numberfields import minpoly, _minpoly_neg
     >>> from sympy.abc import x
     >>> p = 2**Rational(1, 3)
     >>> mp = minpoly(p, x)
-    >>> minpoly_neg(p, x, mp=mp)
+    >>> _minpoly_neg(p, x, mp=mp)
     -x**3 - 2
     """
     if mp is None:
@@ -272,7 +274,7 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     res = _choose_factor(factors, x, ex, prec)
     return res
 
-def minpoly_pow(ex, pw, x, mp=None, prec=200):
+def _minpoly_pow(ex, pw, x, mp=None, prec=200):
     """
     Returns ``minpoly(ex**pw, x)``
 
@@ -288,10 +290,10 @@ def minpoly_pow(ex, pw, x, mp=None, prec=200):
     ========
 
     >>> from sympy import sqrt
-    >>> from sympy.polys.numberfields import minpoly_pow, minpoly
+    >>> from sympy.polys.numberfields import _minpoly_pow, minpoly
     >>> from sympy.abc import x
     >>> p = sqrt(1 + sqrt(2))
-    >>> minpoly_pow(p, 2, x)
+    >>> _minpoly_pow(p, 2, x)
     x**2 - 2*x - 1
     >>> minpoly(p**2, x)
     x**2 - 2*x - 1
@@ -313,7 +315,7 @@ def minpoly_pow(ex, pw, x, mp=None, prec=200):
     res = _choose_factor(factors, x, ex**pw, prec)
     return res
 
-def minpoly_add(x, *a):
+def _minpoly_add(x, *a):
     if not a:
         return S.Zero
     if len(a) == 1:
@@ -327,7 +329,7 @@ def minpoly_add(x, *a):
         mp = mp1
     return mp
 
-def minpoly_mul(x, *a):
+def _minpoly_mul(x, *a):
     if not a:
         return S.One
     if len(a) == 1:
@@ -390,7 +392,7 @@ def _minpoly_cos(ex, x):
                     factors = [_mexpand(s.subs({x:sqrt((1 + x)/2)})),
                             _mexpand(s.subs({x:sqrt((1 - x)/2)}))]
 
-                    s = _choose_factor(factors, x, ex, 200)
+                    s = _choose_factor(factors, x, ex)
                     return s
                 else:
                     raise NotImplementedError('case not covered')
@@ -435,11 +437,19 @@ def _minpoly_exp(ex, x):
                     raise NotImplementedError('case not covered')
             else:
                 ex1 = C.exp(I*pi/q)
-                mp = minpoly_pow(ex1, p, x)
+                mp = _minpoly_pow(ex1, p, x)
                 return mp
         else:
             raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+
+def _minpoly_rootof(ex, x):
+    # TODO is `ex` already irreducible?
+    p = ex.expr
+    p = p.subs({ex.poly.gens[0]:x})
+    _, factors = factor_list(p, x)
+    result = _choose_factor(factors, x, ex)
+    return result
 
 
 def minpoly1(ex, x):
@@ -471,17 +481,19 @@ def minpoly1(ex, x):
                 ex = ex1
 
     if ex.is_Add:
-        res = minpoly_add(x, *ex.args)
+        res = _minpoly_add(x, *ex.args)
     elif ex.is_Mul:
-        res = minpoly_mul(x, *ex.args)
+        res = _minpoly_mul(x, *ex.args)
     elif ex.is_Pow:
-        res = minpoly_pow(ex.base, ex.exp, x)
+        res = _minpoly_pow(ex.base, ex.exp, x)
     elif ex.__class__ is C.sin:
         res = _minpoly_sin(ex, x)
     elif ex.__class__ is C.cos:
         res = _minpoly_cos(ex, x)
     elif ex.__class__ is C.exp:
         res = _minpoly_exp(ex, x)
+    elif ex.__class__ is RootOf:
+        res = _minpoly_rootof(ex, x)
     else:
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     return res
@@ -509,6 +521,8 @@ def has_algebraic_number(p):
         return all(has_algebraic_number(x) for x in (p.base, p.exp))
     elif p.is_Add or p.is_Mul:
         return all(has_algebraic_number(x) for x in p.args)
+    elif p.__class__ is RootOf:
+        return False
     else:
         return False
 
