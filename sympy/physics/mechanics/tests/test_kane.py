@@ -95,7 +95,7 @@ def test_ladder():
     # The mass, length and moment of intertia of the ladder are given.
     q, u = dynamicsymbols('q u')
     qd, ud = dynamicsymbols('q u', 1)
-    m, l, g, I = symbols('m l g I')
+    m, l, g, Izz = symbols('m l g Izz')
 
     # We define the inertial frame and a lean frame for the ladder
     N = ReferenceFrame('N')
@@ -113,7 +113,7 @@ def test_ladder():
     A.set_vel(N, l/2*u*sin(q)*N.x + l/2*u*cos(q)*N.y)
 
     # The ladder can be defined as a rigid body
-    ladder = RigidBody('ladder', A, L, m, (inertia(L, 0, 0, I), A))
+    ladder = RigidBody('ladder', A, L, m, (inertia(L, 0, 0, Izz), A))
 
     # Now we set up all the inputs to Kanes Method
     kd = [u - qd]
@@ -129,7 +129,7 @@ def test_ladder():
     kdd = KM.kindiffdict()
     rhs = rhs.subs(kdd)
     rhs.simplify()
-    assert expand(rhs[0]) == expand(2*g*l*m*cos(q)/(-4*I - l**2*m))
+    assert expand(rhs[0]) == expand(2*g*l*m*cos(q)/(-4*Izz - l**2*m))
 
 def test_rolling_disc():
     # Rolling Disc Example
