@@ -129,7 +129,9 @@ def test_ladder():
     kdd = KM.kindiffdict()
     rhs = rhs.subs(kdd)
     rhs.simplify()
-    assert expand(rhs[0]) == expand(2*g*l*m*cos(q)/(-4*Izz - l**2*m))
+
+    eq = expand(rhs[0]) - expand(-g*l*m*cos(q)/(2*(Izz + l**2*m/4)))
+    assert eq.simplify() == 0
 
 def test_rolling_disc():
     # Rolling Disc Example
