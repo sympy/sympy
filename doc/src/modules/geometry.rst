@@ -137,6 +137,13 @@ From Wikipedia ([WikiPappus]_):
     >>> Point.is_collinear(pp1, pp2, pp3)
     True
 
+References
+~~~~~~~~~~
+
+.. [WikiPappus] "Pappus's Hexagon Theorem" Wikipedia, the Free Encyclopedia.
+        Web. 26 Apr. 2013.
+        <http://en.wikipedia.org/wiki/Pappus's_hexagon_theorem>
+
 Miscellaneous Notes
 -------------------
 
@@ -274,9 +281,3 @@ Polygons
 .. autoclass:: Triangle
    :members:
 
-References
-==========
-
-.. [WikiPappus] "Pappus's Hexagon Theorem" Wikipedia, the Free Encyclopedia.
-        Web. 26 Apr. 2013.
-        <http://en.wikipedia.org/wiki/Pappus's_hexagon_theorem>
