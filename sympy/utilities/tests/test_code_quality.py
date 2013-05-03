@@ -153,8 +153,11 @@ def test_files():
         # glob imports are allowed in top-level __init__.py:
         "%(sep)ssympy%(sep)s__init__.py" % sepd,
         # these __init__.py should be fixed:
+        # XXX: not really, they use useful import pattern (DRY)
         "%(sep)smechanics%(sep)s__init__.py" % sepd,
         "%(sep)squantum%(sep)s__init__.py" % sepd,
+        "%(sep)spolys%(sep)s__init__.py" % sepd,
+        "%(sep)spolys%(sep)sdomains%(sep)s__init__.py" % sepd,
         # interactive sympy executes ``from sympy import *``:
         "%(sep)sinteractive%(sep)ssession.py" % sepd,
         # isympy executes ``from sympy import *``:
