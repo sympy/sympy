@@ -170,7 +170,7 @@ def _minimal_polynomial_sq(p, n, x, prec):
     # if n > 1 it contains the minimal polynomial as a factor.
     if n == 1:
         p1 = Poly(p)
-        if p.coeff(x**p1.degree()) < 0:
+        if p.coeff(x**p1.degree(x)) < 0:
             p = -p
         p = p.primitive()[1]
         return p
@@ -244,13 +244,13 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     if op is Add:
         mp1a = mp1.subs({x:x - y})
     elif op is Mul:
-        mp1a = y**degree(mp1)*mp1.subs({x:x / y})
+        mp1a = y**degree(mp1, x)*mp1.subs({x:x / y})
     else:
         raise NotImplementedError('option not available')
     mp1a = _mexpand(mp1a)
     r = resultant(mp1a, mp2, gens=[y, x])
 
-    gcd_deg = gcd(degree(mp1), degree(mp2))
+    gcd_deg = gcd(degree(mp1, x), degree(mp2, y))
     if gcd_deg == 1:
         # in this case `r` is irreducible, see [2]
         return r
@@ -290,7 +290,9 @@ def _minpoly_pow(ex, pw, x, mp=None, prec=200):
     if not pw.is_rational:
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     if pw < 0:
-        mp = expand_mul(x**degree(mp)*mp.subs(x, 1/x))
+        if mp == x:
+            raise ZeroDivisionError('%s is zero' % ex)
+        mp = expand_mul(x**degree(mp, x)*mp.subs(x, 1/x))
         pw = -pw
         ex = 1/ex
     y = Dummy(str(x))
@@ -549,7 +551,7 @@ def minimal_polynomial(ex, x=None, **args):
 
     if compose:
         result = minpoly1(ex, x)
-        c = result.coeff(x**degree(result))
+        c = result.coeff(x**degree(result, x))
         if c < 0:
             result = expand_mul(-result)
             c = -c
@@ -679,8 +681,8 @@ def minimal_polynomial(ex, x=None, **args):
             if result is None:
                 raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
     if inverted:
-        result = expand_mul(x**degree(result)*result.subs(x, 1/x))
-        if result.coeff(x**degree(result)) < 0:
+        result = expand_mul(x**degree(result, x)*result.subs(x, 1/x))
+        if result.coeff(x**degree(result, x)) < 0:
             result = expand_mul(-result)
     if polys:
         return cls(result, x, field=True)
