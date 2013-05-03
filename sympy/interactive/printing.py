@@ -128,30 +128,19 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
 
     import IPython
     if IPython.__version__ >= '0.11':
-        printable_containers = [tuple, list, set, frozenset, dict]
+        from sympy.core.basic import Basic
+        from sympy.matrices.matrices import MatrixBase
+        printable_types = [Basic, MatrixBase, int, long, float,
+                          tuple, list, set, frozenset, dict]
 
         plaintext_formatter = ip.display_formatter.formatters['text/plain']
 
-        for cls in [object, str] + printable_containers:
+        for cls in printable_types:
             plaintext_formatter.for_type(cls, _print_plain)
-
-        plaintext_formatter.for_type_by_name(
-            'sympy.core.basic', 'Basic', _print_plain
-        )
-        plaintext_formatter.for_type_by_name(
-            'sympy.matrices.mutable', 'Matrix', _print_plain
-        )
 
         png_formatter = ip.display_formatter.formatters['image/png']
         if use_latex in (True, 'png'):
-            png_formatter.for_type_by_name(
-                'sympy.core.basic', 'Basic', _print_latex_png
-            )
-            png_formatter.for_type_by_name(
-                'sympy.matrices.matrices', 'MatrixBase', _print_latex_png
-            )
-
-            for cls in [int, long, float] + printable_containers:
+            for cls in printable_types:
                 png_formatter.for_type(cls, _print_latex_png)
             png_formatter.enabled = True
         else:
@@ -159,13 +148,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
 
         latex_formatter = ip.display_formatter.formatters['text/latex']
         if use_latex in (True, 'mathjax'):
-            latex_formatter.for_type_by_name(
-                'sympy.core.basic', 'Basic', _print_latex_text
-            )
-            latex_formatter.for_type_by_name(
-                'sympy.matrices.matrices', 'MatrixBase', _print_latex_text
-            )
-            for cls in [int, long, float] + printable_containers:
+            for cls in printable_types:
                 latex_formatter.for_type(cls, _print_latex_text)
             latex_formatter.enabled = True
         else:
@@ -266,7 +249,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         except NameError:
             pass
 
-    if ip:
+    if ip and pretty_print:
         try:
             import IPython
             from IPython.frontend.terminal.interactiveshell import TerminalInteractiveShell
