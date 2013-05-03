@@ -2921,7 +2921,7 @@ def test_groebner():
 
     assert groebner([1], x) == [1]
 
-    raises(DomainError, lambda: groebner([x**2 + 2.0*y], x, y))
+    raises(NotImplementedError, lambda: groebner([x**2 + 2.0*y], x, y))
     raises(ComputationFailed, lambda: groebner([1]))
 
     assert groebner([x**2 - 1, x**3 + 1], method='buchberger') == [x + 1]

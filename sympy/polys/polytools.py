@@ -6120,7 +6120,7 @@ class GroebnerBasis(Basic):
         if domain.has_assoc_Field:
             opt.domain = domain.get_field()
         else:
-            raise DomainError("can't compute a Groebner basis over %s" % opt.domain)
+            raise NotImplementedError("can't compute a Groebner basis over %s" % opt.domain)
 
         from sympy.polys.rings import xring
         _ring, _ = xring(opt.gens, opt.domain, opt.order)
