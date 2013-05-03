@@ -6170,26 +6170,14 @@ class GroebnerBasis(Basic):
         except PolificationFailed, exc:
             raise ComputationFailed('groebner', len(F), exc)
 
-        domain = opt.domain
-
-        if domain.has_assoc_Field:
-            opt.domain = domain.get_field()
-        else:
-            raise DomainError("can't compute a Groebner basis over %s" % opt.domain)
-
-        from sympy.polys.rings import xring
-        _ring, _ = xring(opt.gens, opt.domain, opt.order)
+        from sympy.polys.rings import PolyRing
+        ring = PolyRing(opt.gens, opt.domain, opt.order)
 
         for i, poly in enumerate(polys):
-            poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = _ring.from_dict(poly)
+            polys[i] = ring.from_dict(poly.rep.to_dict())
 
-        G = _groebner(polys, _ring, method=opt.method)
+        G = _groebner(polys, ring, method=opt.method)
         G = [ Poly._from_dict(g, opt) for g in G ]
-
-        if not domain.has_Field:
-            G = [ g.clear_denoms(convert=True)[1] for g in G ]
-            opt.domain = domain
 
         return cls._new(G, opt)
 
