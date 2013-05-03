@@ -2265,6 +2265,7 @@ def test_factor():
     assert factor(3*x**2) == 3*x**2
 
     assert factor((2*x**2 + 2)**7) == 128*(x**2 + 1)**7
+    assert factor(sin((2*x**2 + 2)**7)) == sin((2*x**2 + 2)**7) 
 
     assert factor(f) == u*v**2*w
     assert factor(f, x) == u*v**2*w
