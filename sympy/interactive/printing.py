@@ -68,22 +68,6 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
             return _preview_wrapper(s)
         return None
 
-    #not used
-    def _print_latex_inline_png(o):
-        """
-        A function to display sympy expressions using inline style LaTeX in PNG.
-        """
-        s = latex(o, mode='inline')
-        return _preview_wrapper(s)
-
-    #not used
-    def _print_latex_display_png(o):
-        """
-        A function to display sympy expression using display style LaTeX in PNG.
-        """
-        s = latex(o, mode='plain')
-        return _preview_wrapper('$' + s + '$')
-
     def _can_print_latex(o):
         """Return True if type o can be printed with LaTeX.
 
