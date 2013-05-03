@@ -321,7 +321,7 @@ def _minpoly_mul(x, *a):
     if len(a) == 1:
         return minpoly1(a[0], x)
     mp = minpoly_op_algebraic_number(a[0], a[1], x, op=Mul)
-    p = a[0] + a[1]
+    p = a[0] * a[1]
     for px in a[2:]:
         p1 = p * px
         mp1 = minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Mul)
