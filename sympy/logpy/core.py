@@ -4,39 +4,36 @@
 from logpy.unify import reify, reify_isinstance_list, seq_registry
 from sympy import Basic, Symbol, Integer, Rational, Expr
 
-from sympy.assumptions import AppliedPredicate
+from sympy.assumptions import AppliedPredicate, Predicate
+
+Basic._as_tuple = lambda self: (self.func, ) + tuple(self.args)
+
+Predicate._as_tuple = lambda self: (type(self), self.name, self.handlers)
+
+AppliedPredicate._as_tuple = lambda self: (type(self), self.func, self.arg)
+
 slot_classes = Symbol, Integer, Rational
+for slot in slot_classes:
+    slot._as_tuple = lambda self: (
+            type(self),) + tuple(getattr(self, a) for a in self.__slots__)
 
-def seq_Basic(x):
-    return (x.__class__,) + x.args
-
-def seq_Predicate(x):
-    return (x.__class__, x.func, x.arg)
-
-def seq_slot(x):
-    return (type(x),) + tuple(getattr(x, a) for a in x.__slots__)
-
-def reify_Basic(u, s):
+def from_tuple(tup):
     try:
-        return u.func(*[reify(arg, s) for arg in u.args], evaluate=False)
+        return tup[0](*tup[1:], evaluate=False)
     except TypeError:
-        return u.func(*[reify(arg, s) for arg in u.args])
+        return tup[0](*tup[1:])
 
-def reify_slot(u, s):
-    return u.func(*[reify(getattr(u, a), s) for a in u.__slots__])
+def from_tuple_simple(tup):
+    return tup[0](*tup[1:])
 
-def build(tup):
-    if isinstance(tup, tuple) and issubclass(tup[0], Basic):
-        return tup[0](*map(build, tup[1:]))
-    else:
-        return tup
+Basic._from_tuple = staticmethod(from_tuple)
 
-seq_registry.extend([(slot_classes, seq_slot),
-                     (AppliedPredicate, seq_Predicate),
-                     (Basic, seq_Basic)])
+Predicate._from_tuple = staticmethod(from_tuple_simple)
 
-reify_isinstance_list.append((slot_classes, reify_slot))
-reify_isinstance_list.append((Basic, reify_Basic))
+AppliedPredicate._from_tuple = staticmethod(lambda (t, pred, arg): pred(arg))
+
+for slot in slot_classes:
+    slot._from_tuple = staticmethod(from_tuple_simple)
 
 #######################
 # Simplification code #
@@ -61,7 +58,7 @@ def refine_one(expr, *assumptions, **kwargs):
             result = logpy.run(1, target, (reduces, source, target, condition),
                                           (eqac, source, expr),
                                           (asko, condition, True))
-    return build(result[0]) if result else expr
+    return result[0] if result else expr
 
 ###############
 # Commutivity #
@@ -73,13 +70,3 @@ from sympy import Add, Mul, MatAdd, MatMul
 
 facts(commutative, [Add], [Mul], [MatAdd])
 facts(associative, [Add], [Mul], [MatAdd], [MatMul])
-
-
-from logpy.assoccomm import op_registry
-op_registry.insert(0,
-        {'opvalid':  lambda x: isinstance(x, type) and issubclass(x, Basic),
-         'objvalid': lambda x: isinstance(x, Basic) and not x.is_Atom,
-         'op':       type,
-         'args':     lambda x: tuple(x.args),
-         'build':    lambda op, args: op(*args, evaluate=False) if
-                               issubclass(op, Expr) else op(*args)     })
