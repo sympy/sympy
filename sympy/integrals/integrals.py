@@ -389,6 +389,42 @@ class Integral(Expr):
             limits[i] = xab
         f = f.subs(reps)
         return self.func(f, *limits)
+    
+    def interval(self):
+        """
+
+        Returns a tuple of lower limit and upper limit
+
+        Examples
+        ========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y, z
+        >>> from sympy import pi
+        >>> Integral(x, (x, 0, 1)).interval()
+        (0, 1)
+        >>> Integral(sin(z), (z, 0, pi/2)).interval()
+        (0, pi/2)
+
+        """
+        limit_tuple = self.limits[0]
+        return limit_tuple[1:]
+
+    def _hashable_content(self):
+        return (self.function,) + (self.limits)
+
+    def __hash__(self):
+        return super(Integral, self).__hash__()
+    
+    def __eq__(self, other):
+        #fixes issue 2440 
+        variable_1 = self.variables[0]
+        variable_2 = other.variables[0]
+        if (self.interval() == other.interval() != () and (self.function).subs(variable_1, variable_2) == other.function):
+            return True
+        else:
+            return False
+
 
     def transform(self, x, u, inverse=False):
         r"""
