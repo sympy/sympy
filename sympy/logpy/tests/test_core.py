@@ -35,7 +35,7 @@ y = Symbol('y')
 z = Symbol('z')
 
 def test_as_from_tuple():
-    examples = [x, S(2), S(3.0), S.One, x+5]
+    examples = [x, S(2), S(3.0), S.One, x+5, Dummy('d')]
     assert all(e._from_tuple(e._as_tuple()) == e for e in examples)
 
 def test_op_args():

@@ -2,7 +2,7 @@
 # Teach LogPy how to manipulate SymPy #
 #######################################
 
-from sympy import Basic, Symbol, Number, Expr
+from sympy import Basic, Symbol, Number, Expr, Dummy
 from sympy.assumptions import AppliedPredicate, Predicate
 
 Basic._as_tuple = lambda self: (self.func, ) + tuple(self.args)
@@ -10,6 +10,8 @@ Basic._as_tuple = lambda self: (self.func, ) + tuple(self.args)
 Predicate._as_tuple = lambda self: (type(self), self.name, self.handlers)
 
 AppliedPredicate._as_tuple = lambda self: (type(self), self.func, self.arg)
+
+Dummy._as_tuple = lambda self: (type(self), self.name, self.dummy_index)
 
 slot_classes = Symbol, Number
 for slot in slot_classes:
@@ -30,6 +32,14 @@ Basic._from_tuple = staticmethod(from_tuple)
 Predicate._from_tuple = staticmethod(from_tuple_simple)
 
 AppliedPredicate._from_tuple = staticmethod(lambda (t, pred, arg): pred(arg))
+
+def dummy_from_tuple((t, name, idx)):
+    obj = Dummy()
+    obj.name = name
+    obj.dummy_index = idx
+    return obj
+
+Dummy._from_tuple = staticmethod(dummy_from_tuple)
 
 for slot in slot_classes:
     slot._from_tuple = staticmethod(from_tuple_simple)
