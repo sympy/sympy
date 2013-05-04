@@ -57,7 +57,7 @@ def _choose_factor(factors, x, v, prec=200):
         if len(factors) == 1:
             return factors[0]
         if prec1 > prec:
-            return None
+            raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % v)
         prec1 *= 2
 
 def _separate_sq(p):
@@ -124,7 +124,7 @@ def _separate_sq(p):
     p = _mexpand(p1**2) - _mexpand(p2**2)
     return p
 
-def _minimal_polynomial_sq(p, n, x, prec):
+def _minimal_polynomial_sq(p, n, x):
     """
     Returns the minimal polynomial for the ``nth-root`` of a sum of surds
     or ``None`` if it fails.
@@ -143,7 +143,7 @@ def _minimal_polynomial_sq(p, n, x, prec):
     >>> from sympy import sqrt
     >>> from sympy.abc import x
     >>> q = 1 + sqrt(2) + sqrt(3)
-    >>> _minimal_polynomial_sq(q, 3, x, 15)
+    >>> _minimal_polynomial_sq(q, 3, x)
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
 
     """
@@ -178,7 +178,7 @@ def _minimal_polynomial_sq(p, n, x, prec):
     # the minimal polynomial is the factor vanishing in x = pn
     factors = factor_list(p)[1]
 
-    result = _choose_factor(factors, x, pn, prec)
+    result = _choose_factor(factors, x, pn)
     return result
 
 def _minpoly_neg(ex, x, mp):
@@ -197,11 +197,10 @@ def _minpoly_neg(ex, x, mp):
     -x**3 - 2
     """
     if mp is None:
-        mp = minpoly1(ex, x)
+        mp = _minpoly1(ex, x)
     return mp.subs({x: -x})
 
-def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
-        op=Add):
+def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
     """
     return the minimal polinomial for ``op(ex1, ex2)``
 
@@ -211,18 +210,17 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     ex1, ex2 : expressions for the algebraic numbers
     x : indeterminate of the polynomials
     mp1, mp2 : minimal polynomials for ``ex1`` and ``ex2`` or None
-    prec : max precision used in identifying factors
     op : operation ``Add`` or ``Mul``
 
     Examples
     ========
 
     >>> from sympy import sqrt, Mul
-    >>> from sympy.polys.numberfields import minpoly_op_algebraic_number
+    >>> from sympy.polys.numberfields import _minpoly_op_algebraic_number
     >>> from sympy.abc import x
     >>> p1 = sqrt(sqrt(2) + 1)
     >>> p2 = sqrt(sqrt(2) - 1)
-    >>> minpoly_op_algebraic_number(p1, p2, x, op=Mul)
+    >>> _minpoly_op_algebraic_number(p1, p2, x, op=Mul)
     x - 1
 
     References
@@ -235,9 +233,9 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     from sympy import gcd
     y = Dummy(str(x))
     if mp1 is None:
-        mp1 = minpoly1(ex1, x)
+        mp1 = _minpoly1(ex1, x)
     if mp2 is None:
-        mp2 = minpoly1(ex2, y)
+        mp2 = _minpoly1(ex2, y)
     else:
         mp2 = mp2.subs({x:y})
 
@@ -257,10 +255,10 @@ def minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, prec=200,
     _, factors = factor_list(r)
     if op in [Add, Mul]:
         ex = op(ex1, ex2)
-    res = _choose_factor(factors, x, ex, prec)
+    res = _choose_factor(factors, x, ex)
     return res
 
-def _minpoly_pow(ex, pw, x, mp=None, prec=200):
+def _minpoly_pow(ex, pw, x, mp=None):
     """
     Returns ``minpoly(ex**pw, x)``
 
@@ -286,7 +284,7 @@ def _minpoly_pow(ex, pw, x, mp=None, prec=200):
     """
     pw = sympify(pw)
     if not mp:
-        mp = minpoly1(ex, x)
+        mp = _minpoly1(ex, x)
     if not pw.is_rational:
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     if pw < 0:
@@ -300,35 +298,37 @@ def _minpoly_pow(ex, pw, x, mp=None, prec=200):
     n, d = pw.as_numer_denom()
     res = resultant(mp, x**d - y**n, gens=[y])
     _, factors = factor_list(res)
-    res = _choose_factor(factors, x, ex**pw, prec)
+    res = _choose_factor(factors, x, ex**pw)
     return res
 
 def _minpoly_add(x, *a):
+    """
+    returns ``minpoly(Add(*a), x)``
+    """
     if not a:
         return S.Zero
     if len(a) == 1:
-        return minpoly1(a[0], x)
-    mp = minpoly_op_algebraic_number(a[0], a[1], x, op=Add)
+        return _minpoly1(a[0], x)
+    mp = _minpoly_op_algebraic_number(a[0], a[1], x, op=Add)
     p = a[0] + a[1]
     for px in a[2:]:
-        p1 = p + px
-        mp1 = minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Add)
-        p = p1
-        mp = mp1
+        mp = _minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Add)
+        p = p + px
     return mp
 
 def _minpoly_mul(x, *a):
+    """
+    returns ``minpoly(Mul(*a), x)``
+    """
     if not a:
         return S.One
     if len(a) == 1:
-        return minpoly1(a[0], x)
-    mp = minpoly_op_algebraic_number(a[0], a[1], x, op=Mul)
+        return _minpoly1(a[0], x)
+    mp = _minpoly_op_algebraic_number(a[0], a[1], x, op=Mul)
     p = a[0] * a[1]
     for px in a[2:]:
-        p1 = p * px
-        mp1 = minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Mul)
-        p = p1
-        mp = mp1
+        mp = _minpoly_op_algebraic_number(p, px, x, mp1=mp, op=Mul)
+        p = p * px
     return mp
 
 def _minpoly_sin(ex, x):
@@ -356,10 +356,10 @@ def _minpoly_sin(ex, x):
                     raise NotImplementedError('case not covered')
                     # too slow
                     #ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
-                    #return minpoly1(ex1, x)
+                    #return _minpoly1(ex1, x)
             else:
                 ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
-                return minpoly1(ex1, x)
+                return _minpoly1(ex1, x)
         else:
             raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
@@ -386,10 +386,10 @@ def _minpoly_cos(ex, x):
                     raise NotImplementedError('case not covered')
                     # too slow
                     #ex1 = (C.exp(I*ex.args[0]) + C.exp(-I*ex.args[0]))/2
-                    #return minpoly1(ex1, x)
+                    #return _minpoly1(ex1, x)
             else:
                 ex1 = (C.exp(I*ex.args[0]) + C.exp(-I*ex.args[0]))/2
-                return minpoly1(ex1, x)
+                return _minpoly1(ex1, x)
         else:
             raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
@@ -431,7 +431,9 @@ def _minpoly_exp(ex, x):
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
 def _minpoly_rootof(ex, x):
-    # TODO is `ex` already irreducible?
+    """
+    Returns the minimal polynomial of a ``RootOf`` object.
+    """
     p = ex.expr
     p = p.subs({ex.poly.gens[0]:x})
     _, factors = factor_list(p, x)
@@ -439,7 +441,7 @@ def _minpoly_rootof(ex, x):
     return result
 
 
-def minpoly1(ex, x):
+def _minpoly1(ex, x):
     """
     Computes the minimal polynomial of an algebraic number
     using operations on minimal polynomials
@@ -485,48 +487,46 @@ def minpoly1(ex, x):
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
     return res
 
-def has_algebraic_number(p):
-    """Return True if p is comprised of only Rationals or square roots
-    of Rationals and algebraic operations.
-
-    Examples
-    ========
-    >>> from sympy.functions.elementary.miscellaneous import sqrt
-    >>> from sympy.simplify.sqrtdenest import is_algebraic
-    >>> from sympy import cos
-    >>> is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*sqrt(2))))
-    True
-    >>> is_algebraic(sqrt(2)*(3/(sqrt(7) + sqrt(5)*cos(2))))
-    False
-    """
-
-    if p.is_Rational:
-        return False
-    elif p.is_Atom:
-        return False
-    elif p.is_Pow:
-        return all(has_algebraic_number(x) for x in (p.base, p.exp))
-    elif p.is_Add or p.is_Mul:
-        return all(has_algebraic_number(x) for x in p.args)
-    elif p.__class__ is RootOf:
-        return False
-    else:
-        return False
 
 def minimal_polynomial(ex, x=None, **args):
     """
     Computes the minimal polynomial of an algebraic number.
 
+    Parameters
+    ==========
+
+    ex : algebraic number expression
+
+    x : indipendent variable of the minimal polynomial
+
+    Options
+    =======
+
+    compose : if ``True`` _minpoly1`` is used, else the ``groebner`` algorithm
+
+    polys : if ``True`` returns a ``Poly`` object
+
+    Notes
+    =====
+
+    By default ``compose=True``, the minimal polynomial of the subexpressions of ``ex``
+    are computed, then the arithmetic operations on them are performed using the resultant
+    and factorization.
+    If ``compose=False``, a bottom-up algorithm is used with ``groebner``.
+    The default algorithm stalls less frequently.
+
     Examples
     ========
 
-    >>> from sympy import minimal_polynomial, sqrt
+    >>> from sympy import minimal_polynomial, sqrt, solve
     >>> from sympy.abc import x
 
     >>> minimal_polynomial(sqrt(2), x)
     x**2 - 2
     >>> minimal_polynomial(sqrt(2) + sqrt(3), x)
     x**4 - 10*x**2 + 1
+    >>> minimal_polynomial(solve(x**3 + x + 3)[0], x)
+    x**3 + x + 3
 
     """
     from sympy.polys.polytools import degree
@@ -541,7 +541,7 @@ def minimal_polynomial(ex, x=None, **args):
             compose = False
             break
 
-    if ex.is_AlgebraicNumber or polys:
+    if ex.is_AlgebraicNumber:
         compose = False
 
     if x is not None:
@@ -550,14 +550,14 @@ def minimal_polynomial(ex, x=None, **args):
         x, cls = Dummy('x'), PurePoly
 
     if compose:
-        result = minpoly1(ex, x)
+        result = _minpoly1(ex, x)
+        result = result.primitive()[1]
         c = result.coeff(x**degree(result, x))
         if c < 0:
             result = expand_mul(-result)
             c = -c
-        if c != 1:
-            result = result.primitive()[1]
-        return result
+        return cls(result, x, field=True) if polys else result
+
     generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
 
@@ -644,8 +644,6 @@ def minimal_polynomial(ex, x=None, **args):
                 return True
         return False
 
-    prec = args.pop('prec', 10)
-
     inverted = False
     ex = expand_multinomial(ex)
     if ex.is_AlgebraicNumber:
@@ -662,10 +660,10 @@ def minimal_polynomial(ex, x=None, **args):
         res = None
         if ex.is_Pow and (1/ex.exp).is_Integer:
             n = 1/ex.exp
-            res = _minimal_polynomial_sq(ex.base, n, x, prec)
+            res = _minimal_polynomial_sq(ex.base, n, x)
 
         elif _is_sum_surds(ex):
-            res = _minimal_polynomial_sq(ex, S.One, x, prec)
+            res = _minimal_polynomial_sq(ex, S.One, x)
 
         if res is not None:
             result = res
@@ -677,9 +675,7 @@ def minimal_polynomial(ex, x=None, **args):
 
             _, factors = factor_list(G[-1])
             # by construction G[-1] has root `ex`
-            result = _choose_factor(factors, x, ex, prec)
-            if result is None:
-                raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
+            result = _choose_factor(factors, x, ex)
     if inverted:
         result = expand_mul(x**degree(result, x)*result.subs(x, 1/x))
         if result.coeff(x**degree(result, x)) < 0:

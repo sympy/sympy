@@ -6,7 +6,7 @@ from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
 from sympy.utilities.pytest import raises
 
 from sympy.polys.numberfields import (
-    minimal_polynomial, minpoly_op_algebraic_number,
+    minimal_polynomial,
     primitive_element,
     is_isomorphism_possible,
     field_isomorphism_pslq,
@@ -149,19 +149,6 @@ def test_minimal_polynomial_sq():
     mp = minimal_polynomial(p, x)
     assert mp.subs({x: 0}) == -71965773323122507776
 
-def test_minpoly_op_algebraic_number():
-    p1 = sqrt(1 + 2**Rational(1, 3))
-    p2 = sqrt(2)
-    mp = minpoly_op_algebraic_number(p1, p2, x, op=Add)
-    assert mp == x**12 - 18*x**10 + 111*x**8 - 256*x**6 + 3*x**4 - 126*x**2 + 1
-    mp = minpoly_op_algebraic_number(p1, p2, x, op=Mul)
-    assert mp == x**6 - 6*x**4 + 12*x**2 - 24
-    p1 = 1 + 2**Rational(1, 3)
-    p2 = sqrt(1 + sqrt(3))
-    mp = minpoly_op_algebraic_number(p1, p2, x, op=Add)
-    assert mp == x**12 - 12*x**11 + 60*x**10 - 168*x**9 + 303*x**8 - \
-        408*x**7 + 544*x**6 - 1104*x**5 + 2523*x**4 - 3756*x**3 + \
-        2820*x**2 - 1032*x + 157
 
 def test_minpoly_compose():
     # issue 3769
