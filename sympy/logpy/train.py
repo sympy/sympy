@@ -2,9 +2,7 @@
 # Teach LogPy how to manipulate SymPy #
 #######################################
 
-from logpy.unification import reify, reify_isinstance_list, seq_registry
 from sympy import Basic, Symbol, Number, Expr
-
 from sympy.assumptions import AppliedPredicate, Predicate
 
 Basic._as_tuple = lambda self: (self.func, ) + tuple(self.args)
