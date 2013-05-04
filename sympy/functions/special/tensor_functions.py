@@ -12,7 +12,7 @@ def Eijk(*args, **kwargs):
     """
     Represent the Levi-Civita symbol.
 
-    This is just compatibility wrapper to LeviCivita().
+    This is just compatibility wrapper to ``LeviCivita()``.
 
     See Also
     ========
@@ -80,8 +80,8 @@ class LeviCivita(Function):
 class KroneckerDelta(Function):
     """The discrete, or Kronecker, delta function.
 
-    A function that takes in two integers i and j. It returns 0 if i and j are
-    not equal or it returns 1 if i and j are equal.
+    A function that takes in two integers `i` and `j`. It returns `0` if `i` and `j` are
+    not equal or it returns `1` if `i` and `j` are equal.
 
     Parameters
     ==========
