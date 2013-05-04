@@ -3873,11 +3873,11 @@ def _poly_from_expr(expr, opt):
     elif expr.is_Poly:
         poly = expr.__class__._from_poly(expr, opt)
 
-        opt['gens'] = poly.gens
-        opt['domain'] = poly.domain
+        opt.gens = poly.gens
+        opt.domain = poly.domain
 
         if opt.polys is None:
-            opt['polys'] = True
+            opt.polys = True
 
         return poly, opt
     elif opt.expand:
@@ -3892,19 +3892,15 @@ def _poly_from_expr(expr, opt):
     domain = opt.domain
 
     if domain is None:
-        domain, coeffs = construct_domain(coeffs, opt=opt)
+        opt.domain, coeffs = construct_domain(coeffs, opt=opt)
     else:
         coeffs = map(domain.from_sympy, coeffs)
 
-    level = len(opt.gens) - 1
-
-    poly = Poly.new(
-        DMP.from_monoms_coeffs(monoms, coeffs, level, domain), *opt.gens)
-
-    opt['domain'] = domain
+    rep = dict(zip(monoms, coeffs))
+    poly = Poly._from_dict(rep, opt)
 
     if opt.polys is None:
-        opt['polys'] = False
+        opt.polys = False
 
     return poly, opt
 
@@ -3927,11 +3923,11 @@ def _parallel_poly_from_expr(exprs, opt):
 
             f, g = f.unify(g)
 
-            opt['gens'] = f.gens
-            opt['domain'] = f.domain
+            opt.gens = f.gens
+            opt.domain = f.domain
 
             if opt.polys is None:
-                opt['polys'] = True
+                opt.polys = True
 
             return [f, g], opt
 
@@ -3985,7 +3981,7 @@ def _parallel_poly_from_expr(exprs, opt):
     domain = opt.domain
 
     if domain is None:
-        domain, coeffs_list = construct_domain(coeffs_list, opt=opt)
+        opt.domain, coeffs_list = construct_domain(coeffs_list, opt=opt)
     else:
         coeffs_list = map(domain.from_sympy, coeffs_list)
 
@@ -3993,16 +3989,15 @@ def _parallel_poly_from_expr(exprs, opt):
         all_coeffs.append(coeffs_list[:k])
         coeffs_list = coeffs_list[k:]
 
-    polys, level = [], len(opt.gens) - 1
+    polys = []
 
     for monoms, coeffs in zip(all_monoms, all_coeffs):
-        rep = DMP.from_monoms_coeffs(monoms, coeffs, level, domain)
-        polys.append(Poly.new(rep, *opt.gens))
-
-    opt['domain'] = domain
+        rep = dict(zip(monoms, coeffs))
+        poly = Poly._from_dict(rep, opt)
+        polys.append(poly)
 
     if opt.polys is None:
-        opt['polys'] = bool(_polys)
+        opt.polys = bool(_polys)
 
     return polys, opt
 
