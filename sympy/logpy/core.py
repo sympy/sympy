@@ -7,11 +7,11 @@ try:
     from logpy import variables, var, run, goalify
     from logpy.assoccomm import eq_assoccomm as eqac
     logpy_exists = True
+    # TODO - make sure this doesn't happen prematurely
+    asko = goalify(ask)
 except ImportError:
     logpy_exists = False
 
-# TODO - make sure this doesn't happen prematurely
-asko = goalify(ask)
 
 def refine_one(expr, *assumptions, **kwargs):
     if not logpy_exists:

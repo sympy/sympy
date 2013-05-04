@@ -10,25 +10,23 @@ if logpy:
     from logpy.core import goaleval, eq
     from logpy.assoccomm import op_args, build, buildo, commutative, eq_comm
     from logpy.assoccomm import eq_assoccomm as eqac
+
+
+    vars = x, k = map(Dummy, 'xk')
+    reduces = Relation('reduces')
+
+    facts(reduces, *[
+            (Basic(5), Basic(3), True),
+            (Abs(x), x, Q.positive(x)),
+            (Abs(x)**k, x**k, Q.real(x) & Q.even(k)),
+        ])
+
+    refine = partial(refine_one, vars=vars, reduces=reduces)
+    refine_deep = top_down(refine)
+
 else:
     #bin/test will not execute any tests now
     disabled = True
-
-x, k = map(Dummy, 'xk')
-
-reduces = Relation('reduces')
-
-facts(reduces, *[
-        (Basic(5), Basic(3), True),
-        (Abs(x), x, Q.positive(x)),
-        (Abs(x)**k, x**k, Q.real(x) & Q.even(k)),
-    ])
-
-vars = [x, k]
-
-refine = partial(refine_one, vars=vars, reduces=reduces)
-
-refine_deep = top_down(refine)
 
 
 x = Symbol('x')
