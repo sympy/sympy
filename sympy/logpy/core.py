@@ -3,8 +3,7 @@
 #######################
 import sympy.logpy.train
 import logpy
-from logpy.variables import variables
-from logpy import var
+from logpy import variables, var
 from logpy.assoccomm import eq_assoccomm as eqac
 from logpy.goals import goalify
 from sympy import assuming, ask

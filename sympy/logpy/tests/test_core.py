@@ -6,8 +6,7 @@ from sympy.external import import_module
 logpy = import_module('logpy')
 if logpy:
     from sympy.logpy.core import refine_one, asko
-    from logpy import Relation, facts, fact, run, unify, reify
-    from logpy.variables import variables
+    from logpy import Relation, facts, fact, run, unify, reify, variables
     from logpy.core import goaleval, eq
     from logpy.assoccomm import op_args, build, buildo, commutative
 else:
@@ -91,7 +90,6 @@ def test_commutativity():
 
 def test_commutativity_refine():
     from logpy.assoccomm import eq_assoccomm as eqac
-    from logpy.variables import variables
 
     y = Symbol('y')
     x = Symbol('x')
