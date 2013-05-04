@@ -6,8 +6,7 @@ from sympy.external import import_module
 logpy = import_module('logpy')
 if logpy:
     from sympy.logpy.core import refine_one, asko
-    from logpy import Relation, facts, fact, run
-    from logpy.unify import unify, reify
+    from logpy import Relation, facts, fact, run, unify, reify
     from logpy.variables import variables
     from logpy.core import goaleval, eq
     from logpy.assoccomm import op_args, build, buildo, commutative
