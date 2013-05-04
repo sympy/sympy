@@ -1,15 +1,21 @@
 #######################
 # Simplification code #
 #######################
-import sympy.logpy.train
-from logpy import variables, var, run, goalify
-from logpy.assoccomm import eq_assoccomm as eqac
 from sympy import assuming, ask
+try:
+    import sympy.logpy.train
+    from logpy import variables, var, run, goalify
+    from logpy.assoccomm import eq_assoccomm as eqac
+    logpy_exists = True
+except ImportError:
+    logpy_exists = False
 
 # TODO - make sure this doesn't happen prematurely
 asko = goalify(ask)
 
 def refine_one(expr, *assumptions, **kwargs):
+    if not logpy_exists:
+        raise ImportError("Please install LogPy")
     reduces = kwargs['reduces']
     vars = kwargs['vars']
     with assuming(*assumptions):

@@ -8,7 +8,8 @@ if logpy:
     from sympy.logpy.core import refine_one, asko
     from logpy import Relation, facts, fact, run, unify, reify, variables
     from logpy.core import goaleval, eq
-    from logpy.assoccomm import op_args, build, buildo, commutative
+    from logpy.assoccomm import op_args, build, buildo, commutative, eq_comm
+    from logpy.assoccomm import eq_assoccomm as eqac
 else:
     #bin/test will not execute any tests now
     disabled = True
@@ -82,15 +83,12 @@ def test_pow_of_abs_deep():
 
 add = partial(Add, evaluate=False)
 def test_commutativity():
-    from logpy.assoccomm import eq_comm
     assert (Add,) in commutative.facts
 
     with variables(x):
         assert set(run(0, x, eq_comm(x, add(y, 1)))) == {add(y, 1), add(1, y)}
 
 def test_commutativity_refine():
-    from logpy.assoccomm import eq_assoccomm as eqac
-
     y = Symbol('y')
     x = Symbol('x')
 

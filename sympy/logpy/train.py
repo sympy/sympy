@@ -48,9 +48,13 @@ for slot in slot_classes:
 # Commutivity #
 ###############
 
-from logpy.assoccomm import commutative, associative
-from logpy import facts
-from sympy import Add, Mul, MatAdd, MatMul
+try:
+    from logpy.assoccomm import commutative, associative
+    from logpy import facts
+    from sympy import Add, Mul, MatAdd, MatMul
 
-facts(commutative, [Add], [Mul], [MatAdd])
-facts(associative, [Add], [Mul], [MatAdd], [MatMul])
+    facts(commutative, [Add], [Mul], [MatAdd])
+    facts(associative, [Add], [Mul], [MatAdd], [MatMul])
+except ImportError:
+    pass
+
