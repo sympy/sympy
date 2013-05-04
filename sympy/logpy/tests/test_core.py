@@ -1,14 +1,11 @@
-from sympy.logpy.core import refine_one, asko
-from sympy import Basic, Q, Dummy, Symbol, Abs, Mul, S
-from functools import partial
-from sympy.assumptions import assuming
-
+from sympy import Basic, Q, Dummy, Symbol, Abs, Add, Mul, S, assuming
 from sympy.strategies.traverse import top_down
-from sympy import Add, S
+from functools import partial
 
 from sympy.external import import_module
 logpy = import_module('logpy')
 if logpy:
+    from sympy.logpy.core import refine_one, asko
     from logpy import Relation, facts, fact, run
     from logpy.unify import unify, reify
     from logpy.variables import variables
