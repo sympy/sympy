@@ -33,6 +33,11 @@ def vfield(symbols, domain, order=lex):
     pollute([ sym.name for sym in _field.symbols ], _field.gens)
     return _field
 
+@public
+def sfield(exprs, *symbols, **options):
+    """Construct a field deriving generators and domain from options and input expressions. """
+    raise NotImplementedError
+
 _field_cache = {}
 
 class FracField(DefaultPrinting):
