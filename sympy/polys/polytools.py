@@ -6,7 +6,7 @@ from sympy.core import (
 
 from sympy.core.mul import _keep_coeff
 
-from sympy.core.function import FunctionClass 
+from sympy.core.function import FunctionClass
 
 from sympy.core.basic import preorder_traversal
 
