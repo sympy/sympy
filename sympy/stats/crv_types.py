@@ -542,7 +542,8 @@ def ChiNoncentral(name, k, l):
         f(x) := \frac{e^{-(x^2+\lambda^2)/2} x^k\lambda}
                 {(\lambda x)^{k/2}} I_{k/2-1}(\lambda x)
 
-    with :math:`x \geq 0`.
+    with `x \geq 0`. Here, `I_\nu (x)` is the
+    :ref:`modified Bessel function of the first kind <besseli>`.
 
     Parameters
     ==========
