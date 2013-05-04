@@ -2,7 +2,7 @@
 # Teach LogPy how to manipulate SymPy #
 #######################################
 from logpy.unify import reify, reify_isinstance_list, seq_registry
-from sympy import Basic, Symbol, Integer, Rational, Expr
+from sympy import Basic, Symbol, Number, Expr
 
 from sympy.assumptions import AppliedPredicate, Predicate
 
@@ -12,7 +12,7 @@ Predicate._as_tuple = lambda self: (type(self), self.name, self.handlers)
 
 AppliedPredicate._as_tuple = lambda self: (type(self), self.func, self.arg)
 
-slot_classes = Symbol, Integer, Rational
+slot_classes = Symbol, Number
 for slot in slot_classes:
     slot._as_tuple = lambda self: (
             type(self),) + tuple(getattr(self, a) for a in self.__slots__)
