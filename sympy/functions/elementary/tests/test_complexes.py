@@ -1,7 +1,7 @@
 from sympy import (
     Abs, adjoint, arg, atan2, conjugate, cos, DiracDelta, E, exp, expand,
     Expr, Function, Heaviside, I, im, log, nan, oo, pi, Rational, re, S,
-    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar,
+    sign, sin, sqrt, Symbol, symbols, transpose, zoo, exp_polar, Piecewise
 )
 from sympy.utilities.pytest import XFAIL
 
@@ -215,8 +215,25 @@ def test_sign():
     assert sign(nz)**2 == 1
     assert (sign(nz)**3).args == (sign(nz), 3)
 
+    x, y = Symbol('x', real=True), Symbol('y')
+    assert sign(x).rewrite(Piecewise) == \
+        Piecewise((1, x > 0), (-1, x < 0), (0, True))
+    assert sign(y).rewrite(Piecewise) == sign(y)
+
     # evaluate what can be evaluated
     assert sign(exp_polar(I*pi)*pi) is S.NegativeOne
+
+    eq = -sqrt(10 + 6*sqrt(3)) + sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3))
+    # if there is a fast way to know when and when you cannot prove an
+    # expression like this is zero then the equality to zero is ok
+    assert sign(eq).func is sign or sign(eq) == 0
+    # but sometimes it's hard to do this so it's better not to load
+    # abs down with tests that will be very slow
+    q = 1 + sqrt(2) - 2*sqrt(3) + 1331*sqrt(6)
+    p = expand(q**3)**Rational(1, 3)
+    d = p - q
+    assert sign(d).func is sign or sign(d) == 0
+
 
 def test_as_real_imag():
     n = pi**1000
@@ -293,6 +310,16 @@ def test_Abs():
     x = Symbol('x', imaginary=True)
     assert Abs(x).diff(x) == -sign(x)
 
+    eq = -sqrt(10 + 6*sqrt(3)) + sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3))
+    # if there is a fast way to know when and when you cannot prove an
+    # expression like this is zero then the equality to zero is ok
+    assert abs(eq).func is Abs or abs(eq) == 0
+    # but sometimes it's hard to do this so it's better not to load
+    # abs down with tests that will be very slow
+    q = 1 + sqrt(2) - 2*sqrt(3) + 1331*sqrt(6)
+    p = expand(q**3)**Rational(1, 3)
+    d = p - q
+    assert abs(d).func is Abs or abs(d) == 0
 
 def test_Abs_rewrite():
     x = Symbol('x', real=True)
@@ -302,6 +329,10 @@ def test_Abs_rewrite():
         assert a.subs(x, i) == abs(i)
     y = Symbol('y')
     assert Abs(y).rewrite(Heaviside) == Abs(y)
+
+    x, y = Symbol('x', real=True), Symbol('y')
+    assert Abs(x).rewrite(Piecewise) == Piecewise((x, x >= 0), (-x, True))
+    assert Abs(y).rewrite(Piecewise) == Abs(y)
 
 
 def test_Abs_real():
@@ -365,6 +396,12 @@ def test_arg():
     x = Symbol('x')
     assert conjugate(arg(x)) == arg(x)
 
+def test_arg_rewrite():
+    assert arg(1 + I) == atan2(1, 1)
+
+    x = Symbol('x', real=True)
+    y = Symbol('y', real=True)
+    assert arg(x + I*y).rewrite(atan2) == atan2(y, x)
 
 def test_adjoint():
     a = Symbol('a', antihermitian=True)

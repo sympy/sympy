@@ -27,12 +27,16 @@ import re
 import sys
 from optparse import OptionParser
 
+minver = '3.4'
 try:
     import coverage
+    if coverage.__version__ < minver:
+        raise ImportError
 except ImportError:
-    print ("You need to install module coverage.\n"
-    "See http://nedbatchelder.com/code/coverage/ or \n"
-    "https://launchpad.net/ubuntu/+source/python-coverage/")
+    print(
+        "You need to install module coverage (version %s or newer required).\n"
+        "See http://nedbatchelder.com/code/coverage/ or \n"
+        "https://launchpad.net/ubuntu/+source/python-coverage/" % minver)
     sys.exit(-1)
 
 REPORT_DIR = "covhtml"

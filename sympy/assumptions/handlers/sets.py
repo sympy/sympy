@@ -3,7 +3,7 @@ Handlers for predicates related to set membership: integer, rational, etc.
 """
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
-from sympy import I
+from sympy import I, S
 
 
 class AskIntegerHandler(CommonHandler):
@@ -66,8 +66,8 @@ class AskIntegerHandler(CommonHandler):
 
     int, Integer = [staticmethod(CommonHandler.AlwaysTrue)]*2
 
-    Pi, Exp1, Infinity, NegativeInfinity, ImaginaryUnit = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*5
+    Pi, Exp1, GoldenRatio, Infinity, NegativeInfinity, ImaginaryUnit = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*6
 
     @staticmethod
     def Rational(expr, assumptions):
@@ -120,8 +120,29 @@ class AskRationalHandler(CommonHandler):
     Rational, Float = \
         [staticmethod(CommonHandler.AlwaysTrue)]*2 # Float is finite-precision
 
-    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1 = \
-        [staticmethod(CommonHandler.AlwaysFalse)]*5
+    ImaginaryUnit, Infinity, NegativeInfinity, Pi, Exp1, GoldenRatio = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*6
+
+    @staticmethod
+    def exp(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.rational(x), assumptions):
+            return ask(~Q.nonzero(x), assumptions)
+
+    @staticmethod
+    def cot(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.rational(x), assumptions):
+            return False
+
+    @staticmethod
+    def log(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.rational(x), assumptions):
+            return ask(~Q.nonzero(x - 1), assumptions)
+
+    sin, cos, tan, asin, atan = [exp]*5
+    acos, acot = log, cot
 
 
 class AskIrrationalHandler(CommonHandler):
@@ -215,8 +236,8 @@ class AskRealHandler(CommonHandler):
                 elif ask(Q.negative(expr.base), assumptions):
                     return False
 
-    Rational, Float, Pi, Exp1, Abs, re, im = \
-        [staticmethod(CommonHandler.AlwaysTrue)]*7
+    Rational, Float, Pi, Exp1, GoldenRatio, Abs, re, im = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*8
 
     ImaginaryUnit, Infinity, NegativeInfinity = \
         [staticmethod(CommonHandler.AlwaysFalse)]*3
@@ -495,9 +516,32 @@ class AskAlgebraicHandler(CommonHandler):
     def Rational(expr, assumptions):
         return expr.q != 0
 
-    Number = staticmethod(CommonHandler.AlwaysFalse)
+    Float, GoldenRatio, ImaginaryUnit, AlgebraicNumber = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*4
 
-    ImaginaryUnit, AlgebraicNumber = [staticmethod(CommonHandler.AlwaysTrue)]*2
+    Infinity, NegativeInfinity, ComplexInfinity, Pi, Exp1 = \
+        [staticmethod(CommonHandler.AlwaysFalse)]*5
+
+    @staticmethod
+    def exp(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.algebraic(x), assumptions):
+            return ask(~Q.nonzero(x), assumptions)
+
+    @staticmethod
+    def cot(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.algebraic(x), assumptions):
+            return False
+
+    @staticmethod
+    def log(expr, assumptions):
+        x = expr.args[0]
+        if ask(Q.algebraic(x), assumptions):
+            return ask(~Q.nonzero(x - 1), assumptions)
+
+    sin, cos, tan, asin, atan = [exp]*5
+    acos, acot = log, cot
 
 
 #### Helper methods

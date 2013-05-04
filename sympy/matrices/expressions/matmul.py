@@ -83,6 +83,12 @@ class MatMul(MatrixExpr):
         else:
             raise NotImplementedError("Can't simplify any further")
 
+    def _eval_determinant(self):
+        from sympy.matrices.expressions.determinant import Determinant
+        factor, matrices = self.as_coeff_matrices()
+        square_matrices = only_squares(*matrices)
+        return factor**self.rows * Mul(*map(Determinant, square_matrices))
+
     def _eval_inverse(self):
         try:
             return MatMul(*[
@@ -162,3 +168,14 @@ rules = (any_zeros, remove_ids, xxinv, unpack, rm_id(lambda x: x == 1),
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, MatMul),
                                  do_one(*rules)))
+
+def only_squares(*matrices):
+    """ factor matrices only if they are square """
+    assert matrices[0].rows == matrices[-1].cols
+    out = []
+    start = 0
+    for i, M in enumerate(matrices):
+        if M.cols == matrices[start].rows:
+            out.append(MatMul(*matrices[start:i+1]).doit())
+            start = i+1
+    return out
