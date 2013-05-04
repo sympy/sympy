@@ -2307,8 +2307,8 @@ def homogeneous_order(eq, *symbols):
 
     If the function is of two variables, `F(x, y)`, then `f`
     being homogeneous of any order is equivalent to being able to rewrite
-    `F(x, y)` as `G\left (\frac{x}{y} \right)` or
-    `H \left (\frac{y}{x} \right)`. This fact is used to solve 1st order
+    `F(x, y)` as `G\left(\frac{x}{y} \right)` or
+    `H \left(\frac{y}{x} \right)`. This fact is used to solve 1st order
     ordinary differential equations whose coefficients are homogeneous of
     the same order.
 
