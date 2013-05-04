@@ -1245,9 +1245,10 @@ def nT(n, k=None):
         sequence - converted to a multiset internally
         multiset - {element: multiplicity}
 
-    Note: the convention for ``nT`` is different than that of ``nC`` and``nP`` in that
+    Note: the convention for ``nT`` is different than that of ``nC`` and
+    ``nP`` in that
     here an integer indicates ``n`` *identical* items instead of a set of
-    length ``n``; this is in keepng with the ``partitions`` function which
+    length ``n``; this is in keeping with the ``partitions`` function which
     treats its integer-``n`` input like a list of ``n`` 1s. One can use
     ``range(n)`` for ``n`` to indicate ``n`` distinct items.
 

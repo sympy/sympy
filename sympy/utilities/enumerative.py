@@ -717,7 +717,8 @@ class MultisetPartitionTraverser():
         # Keep track of iterations which do not yield a partition.
         # Clearly, we would like to keep this number small.
         self.discarded = 0
-
+        if ub <= 0:
+            return
         self._initialize_enumeration(multiplicities)
         while True:
             good_partition = True
@@ -780,6 +781,8 @@ class MultisetPartitionTraverser():
 
         """
         self.discarded = 0
+        if lb >= sum(multiplicities):
+            return
         self._initialize_enumeration(multiplicities)
         self.decrement_part_large(self.top_part(), 0, lb)
         while True:
@@ -829,7 +832,7 @@ class MultisetPartitionTraverser():
         # Code combines the constraints of the _large and _small enumerations.
         # This is starting as a mash-up of the two
         self.discarded = 0
-        if ub <= 0:
+        if ub <= 0 or lb >= sum(multiplicities):
             return
         self._initialize_enumeration(multiplicities)
         self.decrement_part_large(self.top_part(), 0, lb)

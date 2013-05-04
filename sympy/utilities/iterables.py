@@ -1209,10 +1209,13 @@ def multiset_partitions(multiset, m=None):
             yield [multiset[:]]
             return
 
-        # XX - todo.  If m is not None, it *might* be faster to use
-        # the range enumerator for multisets.  If not selecting for
-        # partitions of a particular size (m is None) the
-        # _set_partitions code is much faster.
+        # If m is not None, it can sometimes be faster to use
+        # MultisetPartitionEnumerator.enum_range() even for inputs
+        # which are sets.  Since the _set_partitions code is quite
+        # fast, this is only advantageous when the overall set
+        # partitions outnumber those with the desired number of parts
+        # by a large factor.  (At least 60.)  Such a switch is not
+        # currently implemented.
         for nc, q in _set_partitions(n):
             if m is None or nc == m:
                 rv = [[] for i in range(nc)]
