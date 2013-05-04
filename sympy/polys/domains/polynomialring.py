@@ -14,7 +14,14 @@ class PolynomialRing(Ring, CompositeDomain):
     has_assoc_Ring  = True
     has_assoc_Field = True
 
-    def __init__(self, ring):
+    def __init__(self, domain_or_ring, symbols=None, order=None):
+        from sympy.polys.rings import PolyRing
+
+        if isinstance(domain_or_ring, PolyRing) and symbols is None and order is None:
+            ring = domain_or_ring
+        else:
+            ring = PolyRing(symbols, domain_or_ring, order)
+
         self.ring = ring
         self.dtype = ring.dtype
 
@@ -25,10 +32,6 @@ class PolynomialRing(Ring, CompositeDomain):
 
         # TODO: remove this
         self.dom = self.domain
-
-    @classmethod
-    def init(cls, domain, *symbols):
-        return domain.poly_ring(*symbols)
 
     def new(self, element):
         return self.ring.ring_new(element)

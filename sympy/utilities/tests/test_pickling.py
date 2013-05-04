@@ -349,9 +349,9 @@ def test_polys():
     for c in (PythonRationalField, PythonRationalField()):
         check(c)
 
-    for c in (PolynomialRing, PolynomialRing(ZZ, 'x', 'y')):
+    for c in (PolynomialRing, PolynomialRing(ZZ, 'x,y')):
         check(c)
-    for c in (FractionField, FractionField(ZZ, 'x', 'y')):
+    for c in (FractionField, FractionField(ZZ, 'x,y')):
         check(c)
 
     for c in (ExpressionDomain, ExpressionDomain()):

@@ -263,6 +263,7 @@ class Domain(object):
 
             domain = K0_ground.unify(K1_ground)
             symbols = _unify_gens(K0_symbols, K1_symbols)
+            order = K0.order if K0.is_Composite else K1.order
 
             if ((K0.is_FractionField and K1.is_PolynomialRing or
                  K1.is_FractionField and K0.is_PolynomialRing) and
@@ -274,7 +275,7 @@ class Domain(object):
             else:
                 cls = K1.__class__
 
-            return cls.init(domain, *symbols)
+            return cls(domain, symbols, order)
 
         def mkinexact(cls, K0, K1):
             prec = max(K0.precision, K1.precision)
@@ -351,7 +352,6 @@ class Domain(object):
 
     def __getitem__(self, symbols):
         """The mathematical way to make a polynomial ring. """
-        symbols = sympify(symbols)
         if hasattr(symbols, '__iter__'):
             return self.poly_ring(*symbols)
         else:
@@ -359,13 +359,13 @@ class Domain(object):
 
     def poly_ring(self, *symbols, **kwargs):
         """Returns a polynomial ring, i.e. `K[X]`. """
-        from sympy.polys.rings import PolyRing
-        return PolyRing(symbols, self, kwargs.get("order", lex)).to_domain()
+        from sympy.polys.domains.polynomialring import PolynomialRing
+        return PolynomialRing(self, symbols, kwargs.get("order", lex))
 
     def frac_field(self, *symbols, **kwargs):
         """Returns a fraction field, i.e. `K(X)`. """
-        from sympy.polys.fields import FracField
-        return FracField(symbols, self, kwargs.get("order", lex)).to_domain()
+        from sympy.polys.domains.fractionfield import FractionField
+        return FractionField(self, symbols, kwargs.get("order", lex))
 
     def old_poly_ring(self, *symbols, **kwargs):
         """Returns a polynomial ring, i.e. `K[X]`. """

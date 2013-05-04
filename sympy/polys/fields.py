@@ -173,7 +173,6 @@ class FracField(DefaultPrinting):
             return self.field_new(frac)
 
     def to_domain(self):
-        from sympy.polys.domains.fractionfield import FractionField
         return FractionField(self)
 
     def to_ring(self):

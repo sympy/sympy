@@ -14,7 +14,14 @@ class FractionField(Field, CompositeDomain):
     has_assoc_Ring = True
     has_assoc_Field = True
 
-    def __init__(self, field):
+    def __init__(self, domain_or_field, symbols=None, order=None):
+        from sympy.polys.fields import FracField
+
+        if isinstance(domain_or_field, FracField) and symbols is None and order is None:
+            field = domain_or_field
+        else:
+            field = FracField(symbols, domain_or_field, order)
+
         self.field = field
         self.dtype = field.dtype
 
@@ -25,10 +32,6 @@ class FractionField(Field, CompositeDomain):
 
         # TODO: remove this
         self.dom = self.domain
-
-    @classmethod
-    def init(cls, domain, *symbols):
-        return domain.frac_field(*symbols)
 
     def new(self, element):
         return self.field.field_new(element)
