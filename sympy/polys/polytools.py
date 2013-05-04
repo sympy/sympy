@@ -5345,8 +5345,10 @@ def _symbolic_factor(expr, opt, method):
             f, exp = factors[0]
             is_fc = isinstance(expr.func, FunctionClass)
             if is_fc:
-                if exp == 1 and f.as_expr() == Poly(expr).as_expr(): 
-                    factors[0] = (expr, exp) 
+                if exp == 1 and f.as_expr() == Poly(expr).as_expr():
+                    factors[0] = (expr, exp)
+            elif 0 < exp < 1 and method is 'factor' and pow(f,exp).as_expr() == Poly(expr).as_expr():
+                factors[0] = (expr, 1)
         return _keep_coeff(coeff, _factors_product(factors))
     elif hasattr(expr, 'args'):
         return expr.func(*[ _symbolic_factor(arg, opt, method) for arg in expr.args ])
