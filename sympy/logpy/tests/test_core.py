@@ -1,16 +1,22 @@
 from sympy.logpy.core import refine_one, asko
-from logpy import Relation, facts, fact, run
-from logpy.unify import unify, reify
-from logpy.variables import variables
 from sympy import Basic, Q, Dummy, Symbol, Abs, Mul, S
 from functools import partial
 from sympy.assumptions import assuming
-from logpy.core import goaleval, eq
 
 from sympy.strategies.traverse import top_down
 from sympy import Add, S
 
-from logpy.assoccomm import op_args, build, buildo, commutative
+from sympy.external import import_module
+logpy = import_module('logpy')
+if logpy:
+    from logpy import Relation, facts, fact, run
+    from logpy.unify import unify, reify
+    from logpy.variables import variables
+    from logpy.core import goaleval, eq
+    from logpy.assoccomm import op_args, build, buildo, commutative
+else:
+    #bin/test will not execute any tests now
+    disabled = True
 
 x, k = map(Dummy, 'xk')
 
