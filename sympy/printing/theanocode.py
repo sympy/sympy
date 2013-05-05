@@ -76,6 +76,19 @@ class TheanoPrinter(Printer):
             self.cache[key] = value
             return value
 
+    def _print_Function(self, s, dtypes={}, broadcastables={}):
+        dtype = dtypes.get(s, 'floatX')
+        broadcastable = broadcastables.get(s, ())
+        name = str(type(s)) + '_' + str(s.args[0])
+        key = (name, dtype, broadcastable, type(s), s.args)
+        if key in self.cache:
+            return self.cache[key]
+        else:
+            value = tt.tensor(name=name, dtype=dtype, broadcastable=broadcastable)
+            self.cache[key] = value
+            return value
+
+
     def _print_Basic(self, expr, **kwargs):
         op = mapping[type(expr)]
         children = [self._print(arg, **kwargs) for arg in expr.args]

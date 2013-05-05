@@ -214,3 +214,10 @@ def test_DenseMatrix():
         tX = theano_code(X)
         assert isinstance(tX, tt.TensorVariable)
         assert tX.owner.op == tt.join
+
+def test_Function():
+    t = sy.Symbol('t')
+    f = sy.Function('f')
+    ft = theano_code(f)
+    assert isinstance(ft, tt.TheanoVariable)
+    assert ft.name == 'f_t'
