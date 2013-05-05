@@ -316,6 +316,11 @@ def _parts_rule(integrand, symbol):
 
         if result:
             u, dv = result
+
+            # Don't pick u to be a constant if possible
+            if symbol not in u.free_symbols and not u.has(dummy):
+                return
+
             u = u.subs(dummy, 1)
             dv = dv.subs(dummy, 1)
 
