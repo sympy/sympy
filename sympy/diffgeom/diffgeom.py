@@ -48,6 +48,7 @@ class Patch(Basic):
     =========
 
     Define a Manifold and a Patch on that Manifold:
+
     >>> from sympy.diffgeom import Manifold, Patch
     >>> m = Manifold('M', 3)
     >>> p = Patch('P', m)
