@@ -5,7 +5,7 @@ Symbolic Integrals
 
 The ``integrals`` module in SymPy implements methods to calculate definite and indefinite integrals of expressions.
 
-Principal method in this module is integrate()
+Principal method in this module is :func:`integrate`
 
   - ``integrate(f, x)`` returns the indefinite integral :math:`\int f\,dx`
   - ``integrate(f, (x, a, b))`` returns the definite integral :math:`\int_{a}^{b} f\,dx`
