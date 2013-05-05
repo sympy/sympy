@@ -208,6 +208,7 @@ class Ei(Function):
 
     .. [1] http://dlmf.nist.gov/6.6
     .. [2] http://en.wikipedia.org/wiki/Exponential_integral
+    .. [3] Abramowitz & Stegun, section 5: http://www.math.sfu.ca/~cbm/aands/page_228.htm
 
     Examples
     ========
@@ -648,7 +649,7 @@ class Ci(TrigonometricIntegral):
     >>> from sympy import Ci
     >>> from sympy.abc import z
 
-    The cosine integral is a primitive of ``cos(z)/z``:
+    The cosine integral is a primitive of `\cos(z)/z`:
 
     >>> Ci(z).diff(z)
     cos(z)/z
@@ -659,7 +660,7 @@ class Ci(TrigonometricIntegral):
     >>> Ci(z*exp_polar(2*I*pi))
     Ci(z) + 2*I*pi
 
-    Cosine integral behaves somewhat like ordinary ``cos`` under multiplication by ``I``:
+    The cosine integral behaves somewhat like ordinary `\cos` under multiplication by `i`:
 
     >>> from sympy import polar_lift
     >>> Ci(polar_lift(I)*z)
@@ -721,7 +722,7 @@ class Shi(TrigonometricIntegral):
     >>> from sympy import Shi
     >>> from sympy.abc import z
 
-    The Sinh integral is a primitive of sinh(z)/z:
+    The Sinh integral is a primitive of `\sinh(z)/z`:
 
     >>> Shi(z).diff(z)
     sinh(z)/z
@@ -732,7 +733,7 @@ class Shi(TrigonometricIntegral):
     >>> Shi(z*exp_polar(2*I*pi))
     Shi(z)
 
-    Sinh integral behaves much like ordinary sinh under multiplication by I:
+    The `\sinh` integral behaves much like ordinary `\sinh` under multiplication by `i`:
 
     >>> Shi(I*z)
     I*Si(z)
@@ -807,7 +808,7 @@ class Chi(TrigonometricIntegral):
     >>> from sympy import Chi
     >>> from sympy.abc import z
 
-    The cosh integral is a primitive of cosh(z)/z:
+    The `\cosh` integral is a primitive of `\cosh(z)/z`:
 
     >>> Chi(z).diff(z)
     cosh(z)/z
@@ -818,7 +819,7 @@ class Chi(TrigonometricIntegral):
     >>> Chi(z*exp_polar(2*I*pi))
     Chi(z) + 2*I*pi
 
-    Cosh integral behaves somewhat like ordinary cosh under multiplication by I:
+    The `\cosh` integral behaves somewhat like ordinary `\cosh` under multiplication by `i`:
 
     >>> from sympy import polar_lift
     >>> Chi(polar_lift(I)*z)
@@ -971,20 +972,21 @@ class fresnels(FresnelIntegral):
     >>> fresnels(-I*oo)
     I/2
 
-    In general one can pull out factors of -1 and I from the argument:
+    In general one can pull out factors of -1 and `i` from the argument:
+
     >>> fresnels(-z)
     -fresnels(z)
-
     >>> fresnels(I*z)
     -I*fresnels(z)
 
-    The Fresnel S integral obeys the mirror symmetry:
+    The Fresnel S integral obeys the mirror symmetry
+    `\overline{S(z)} = S(\bar{z})`:
 
     >>> from sympy import conjugate
     >>> conjugate(fresnels(z))
     fresnels(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to `z` is supported:
 
     >>> from sympy import diff
     >>> diff(fresnels(z), z)
@@ -1077,20 +1079,21 @@ class fresnelc(FresnelIntegral):
     >>> fresnelc(-I*oo)
     -I/2
 
-    In general one can pull out factors of -1 and I from the argument:
+    In general one can pull out factors of -1 and `i` from the argument:
+
     >>> fresnelc(-z)
     -fresnelc(z)
-
     >>> fresnelc(I*z)
     I*fresnelc(z)
 
-    The Fresnel C integral obeys the mirror symmetry:
+    The Fresnel C integral obeys the mirror symmetry
+    `\overline{C(z)} = C(\bar{z})`:
 
     >>> from sympy import conjugate
     >>> conjugate(fresnelc(z))
     fresnelc(conjugate(z))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to `z` is supported:
 
     >>> from sympy import diff
     >>> diff(fresnelc(z), z)
