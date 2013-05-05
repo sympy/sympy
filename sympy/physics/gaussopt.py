@@ -80,7 +80,7 @@ class RayTransferMatrix(Matrix):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
+    .. [1] http://en.wikipedia.org/wiki/Ray_transfer_matrix_analysis
     """
 
     def __new__(cls, *args):
@@ -475,7 +475,7 @@ class BeamParameter(Expr):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Complex_beam_parameter
+    .. [1] http://en.wikipedia.org/wiki/Complex_beam_parameter
     """
     #TODO A class Complex may be implemented. The BeamParameter may
     # subclass it. See:
