@@ -64,15 +64,14 @@ def multiset_partitions_taocp(multiplicities):
     multiplicities
          list of integer multiplicities of the components of the multiset.
 
-    Returns
-    =======
+    Yields
+    ======
 
-    Generator
-        which in turn yields state, an internal data structure which
-        encodes a particular partition.  This output is then usually
-        processed by a vistor function which combines the information
-        from this data structure with the components themselves to
-        produce an actual partition.
+    state
+        Internal data structure which encodes a particular partition.
+        This output is then usually processed by a vistor function
+        which combines the information from this data structure with
+        the components themselves to produce an actual partition.
 
         Unless they wish to create their own visitor function, users will
         have little need to look inside this data structure.  But, for
