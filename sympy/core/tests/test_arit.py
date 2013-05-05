@@ -274,7 +274,8 @@ def test_ncmul():
 
     assert A/(1 + A) == A/(1 + A)
 
-    assert (A + B + 2*(A + B)) == 3*A + 3*B
+    assert set((A + B + 2*(A + B)).args) == \
+        set([A, B, 2*(A + B)])
 
 
 def test_ncpow():
@@ -1277,12 +1278,7 @@ def test_Pow_as_content_primitive():
 
 def test_issue2361():
     u = Mul(2, (1 + x), evaluate=False)
-    assert 2 + u == 4 + 2*x
-    # the Number is only suppose to distribute on a commutative Add
-    n = Symbol('n', commutative=False)
-    u = 2*(1 + n)
-    assert u.is_Mul
-    assert 2 + u == 4 + 2*n
+    assert (2 + u).args == (2, u)
 
 
 def test_product_irrational():
@@ -1513,3 +1509,15 @@ def test_issue_3512a():
     assert Mul.flatten([3**Rational(1, 3),
         Pow(-Rational(1, 9), Rational(2, 3), evaluate=False)]) == \
         ([Rational(1, 3), (-1)**Rational(2, 3)], [], None)
+
+
+def test_denest_add_mul():
+    # when working with evaluated expressions make sure they denest
+    eq = x + 1
+    eq = Add(eq, 2, evaluate=False)
+    eq = Add(eq, 2, evaluate=False)
+    assert Add(*eq.args) == x + 5
+    eq = x*2
+    eq = Mul(eq, 2, evaluate=False)
+    eq = Mul(eq, 2, evaluate=False)
+    assert Mul(*eq.args) == 8*x

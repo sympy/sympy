@@ -57,8 +57,8 @@ def test_expr_fns():
     from sympy.strategies.rl import rebuild
     x, y = map(Symbol, 'xy')
     expr = x + y**3
-    e = bottom_up(lambda x: x+1, expr_fns)(expr)
-    b = bottom_up(lambda x: x+1, basic_fns)(expr)
+    e = bottom_up(lambda x: x + 1, expr_fns)(expr)
+    b = bottom_up(lambda x: x + 1, basic_fns)(expr)
 
-    assert b!=e
+    assert b == e
     assert rebuild(b) == e

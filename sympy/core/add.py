@@ -51,6 +51,8 @@ def _unevaluated_Add(*args):
     while args:
         a = args.pop()
         if a.is_Add:
+            # this will keep nesting from building up
+            # so that x + (x + 1) -> x + x + 1 (3 args)
             args.extend(a.args)
         elif a.is_Number:
             co += a
@@ -96,26 +98,6 @@ class Add(Expr, AssocOp):
                 a, b = b, a
             if a.is_Rational:
                 if b.is_Mul:
-                    # if it's an unevaluated 2-arg, expand it
-                    c, t = b.as_coeff_Mul()
-                    if t.is_Add:
-                        h, t = t.as_coeff_Add()
-                        bargs = [c*ti for ti in Add.make_args(t)]
-                        _addsort(bargs)
-                        ch = c*h
-                        if ch:
-                            bargs.insert(0, ch)
-                        b = Add._from_args(bargs)
-                if b.is_Add:
-                    bargs = list(b.args)
-                    if bargs[0].is_Number:
-                        bargs[0] += a
-                        if not bargs[0]:
-                            bargs.pop(0)
-                    else:
-                        bargs.insert(0, a)
-                    rv = bargs, [], None
-                elif b.is_Mul:
                     rv = [a, b], [], None
             if rv:
                 if all(s.is_commutative for s in rv[0]):
@@ -173,14 +155,6 @@ class Add(Expr, AssocOp):
             elif o.is_Mul:
                 c, s = o.as_coeff_Mul()
 
-                # 3*...
-                # unevaluated 2-arg Mul, but we always unfold it so
-                # it can combine with other terms (just like is done
-                # with the Pow below)
-                if c.is_Number and s.is_Add:
-                    seq.extend([c*a for a in s.args])
-                    continue
-
             # check for unevaluated Pow, e.g. 2**3 or 2**(-1/2)
             elif o.is_Pow:
                 b, e = o.as_base_exp()
@@ -225,7 +199,9 @@ class Add(Expr, AssocOp):
                     # so we can simply put c in slot0 and go the fast way.
                     cs = s._new_rawargs(*((c,) + s.args))
                     newseq.append(cs)
-
+                elif s.is_Add:
+                    # we just re-create the unevaluated Mul
+                    newseq.append(Mul(c, s, evaluate=False))
                 else:
                     # alternatively we have to call all Mul's machinery (slow)
                     newseq.append(Mul(c, s))
