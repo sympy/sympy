@@ -286,7 +286,7 @@ def test_lookup_table():
                     # these Wilds match positive integers
                     subs[a] = randrange(1, 10)
                 else:
-                    subs[a] = uniform(1.5, 3.5)
+                    subs[a] = uniform(1.5, 2.0)
             if not isinstance(terms, list):
                 terms = terms(subs)
 
