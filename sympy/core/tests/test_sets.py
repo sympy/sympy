@@ -367,8 +367,8 @@ def test_Interval_as_relational():
     assert Interval(-oo, 2, right_open=False).as_relational(x) == Le(x, 2)
     assert Interval(-oo, 2, right_open=True).as_relational(x) == Lt(x, 2)
 
-    assert Interval(-2, oo, left_open=False).as_relational(x) == Le(-2, x)
-    assert Interval(-2, oo, left_open=True).as_relational(x) == Lt(-2, x)
+    assert Interval(-2, oo, left_open=False).as_relational(x) == Ge(x, -2)
+    assert Interval(-2, oo, left_open=True).as_relational(x) == Gt(x, -2)
 
     assert Interval(-oo, oo).as_relational(x) is True
 

@@ -1,8 +1,15 @@
-from sympy.core import (Basic, Expr, S, C, Symbol, Wild, Add, sympify, diff,
-                        oo, Tuple, Interval)
-
-from sympy.core.symbol import Dummy
+from sympy.core.add import Add
+from sympy.core.basic import Basic, C
 from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import diff
+from sympy.core.numbers import oo
+from sympy.core.sets import Interval
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Symbol, Wild)
+from sympy.core.sympify import sympify
+from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
@@ -286,17 +293,13 @@ class Integral(Expr):
         """
         Return True if the Integral will result in a number, else False.
 
-        sympy considers anything that will result in a number to have
-        is_number == True.
-
-        >>> from sympy import log
-        >>> log(2).is_number
-        True
-
         Integrals are a special case since they contain symbols that can
         be replaced with numbers. Whether the integral can be done or not is
         another issue. But answering whether the final result is a number is
         not difficult.
+
+        Examples
+        ========
 
         >>> from sympy import Integral
         >>> from sympy.abc import x, y
@@ -385,7 +388,7 @@ class Integral(Expr):
             reps[x] = xab[0]
             limits[i] = xab
         f = f.subs(reps)
-        return Integral(f, *limits)
+        return self.func(f, *limits)
 
     def transform(self, x, u, inverse=False):
         r"""
@@ -617,7 +620,7 @@ class Integral(Expr):
             else:
                 newlimits.append(xab)
 
-        return Integral(newfunc, *newlimits)
+        return self.func(newfunc, *newlimits)
 
     def doit(self, **hints):
         """
@@ -788,12 +791,12 @@ class Integral(Expr):
 
     def _eval_adjoint(self):
         if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return Integral(self.function.adjoint(), *self.limits)
+            return self.func(self.function.adjoint(), *self.limits)
         return None
 
     def _eval_conjugate(self):
         if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return Integral(self.function.conjugate(), *self.limits)
+            return self.func(self.function.conjugate(), *self.limits)
         return None
 
     def _eval_derivative(self, sym):
@@ -850,7 +853,7 @@ class Integral(Expr):
             x = limit[0]
 
         if limits:  # f is the argument to an integral
-            f = Integral(f, *tuple(limits))
+            f = self.func(f, *tuple(limits))
 
         # assemble the pieces
         def _do(f, ab):
@@ -860,7 +863,7 @@ class Integral(Expr):
             if isinstance(f, Integral):
                 limits = [(x, x) if (len(l) == 1 and l[0] == x) else l
                           for l in f.limits]
-                f = Integral(f.function, *limits)
+                f = self.func(f.function, *limits)
             return f.subs(x, ab)*dab_dsym
         rv = 0
         if b is not None:
@@ -878,7 +881,7 @@ class Integral(Expr):
             # while differentiating
             u = Dummy('u')
             arg = f.subs(x, u).diff(sym).subs(u, x)
-            rv += Integral(arg, Tuple(x, a, b))
+            rv += self.func(arg, Tuple(x, a, b))
         return rv
 
     def _eval_integral(self, f, x, meijerg=None, risch=None):
@@ -1106,6 +1109,26 @@ class Integral(Expr):
                     parts.append(coeff * h)
                     continue
 
+            try:
+                manual = manualintegrate(g, x)
+                if manual is not None and manual.func != Integral:
+                    if manual.has(Integral):
+                        # try to have other algorithms do the integrals
+                        # manualintegrate can't handle
+                        manual = manual.func(*[
+                            arg.doit() if arg.has(Integral) else arg
+                            for arg in manual.args
+                        ]).expand(multinomial=False,
+                                  log=False,
+                                  power_exp=False,
+                                  power_base=False)
+                    if not manual.has(Integral):
+                        parts.append(coeff * manual)
+                        continue
+            except (ValueError, PolynomialError):
+                # can't handle some SymPy expressions
+                pass
+
             # if we failed maybe it was because we had
             # a product that could have been expanded,
             # so let's try an expansion of the whole
@@ -1217,7 +1240,7 @@ class Integral(Expr):
         >>> i.subs(x, y - c)
         Integral(a - c + y, (a, a, 3), (b, -c + y, c))
         """
-        integrand, limits = self.function, self.limits
+        func, limits = self.function, self.limits
         old_atoms = old.free_symbols
         limits = list(limits)
 
@@ -1231,70 +1254,84 @@ class Integral(Expr):
                                   *[l._subs(old, new) for l in xab[1:]])
             dummies.add(xab[0])
         if not dummies.intersection(old_atoms):
-            integrand = integrand.subs(old, new)
-        return Integral(integrand, *limits)
+            func = func.subs(old, new)
+        return self.func(func, *limits)
 
     def _eval_transpose(self):
         if all(map(lambda x: x.is_real, flatten(self.limits))):
-            return Integral(self.function.transpose(), *self.limits)
+            return self.func(self.function.transpose(), *self.limits)
         return None
 
     def as_sum(self, n, method="midpoint"):
         """
-        Approximates the integral by a sum.
+        Approximates the definite integral by a sum.
 
-        method ... one of: left, right, midpoint
+        method ... one of: left, right, midpoint, trapezoid
 
-        This is basically just the rectangle method [1], the only difference is
-        where the function value is taken in each interval.
+        These are all basically the rectangle method [1], the only difference
+        is where the function value is taken in each interval to define the
+        rectangle.
 
         [1] http://en.wikipedia.org/wiki/Rectangle_method
 
-        **method = midpoint**:
-
-        Uses the n-order midpoint rule to evaluate the integral.
-
-        Midpoint rule uses rectangles approximation for the given area (e.g.
-        definite integral) of the function with heights equal to the point on
-        the curve exactly in the middle of each interval (thus midpoint
-        method). See [1] for more information.
-
         Examples
         ========
 
-        >>> from sympy import sqrt
+        >>> from sympy import sin, sqrt
         >>> from sympy.abc import x
         >>> from sympy.integrals import Integral
-        >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
+        >>> e = Integral(sin(x), (x, 3, 7))
         >>> e
-        Integral(sqrt(x**3 + 1), (x, 2, 10))
-        >>> e.as_sum(4, method="midpoint")
-        4*sqrt(7) + 6*sqrt(14) + 4*sqrt(86) + 2*sqrt(730)
-        >>> e.as_sum(4, method="midpoint").n()
-        124.164447891310
-        >>> e.n()
-        124.616199194723
+        Integral(sin(x), (x, 3, 7))
 
-        **method=left**:
+        For demonstration purposes, this interval will only be split into 2
+        regions, bounded by [3, 5] and [5, 7].
 
-        Uses the n-order rectangle rule to evaluate the integral, at each
-        interval the function value is taken at the left hand side of the
-        interval.
+        The left-hand rule uses function evaluations at the left of each
+        interval:
 
-        Examples
-        ========
+        >>> e.as_sum(2, 'left')
+        2*sin(5) + 2*sin(3)
 
-        >>> from sympy import sqrt
-        >>> from sympy.abc import x
-        >>> e = Integral(sqrt(x**3+1), (x, 2, 10))
-        >>> e
-        Integral(sqrt(x**3 + 1), (x, 2, 10))
-        >>> e.as_sum(4, method="left")
-        6 + 2*sqrt(65) + 2*sqrt(217) + 6*sqrt(57)
-        >>> e.as_sum(4, method="left").n()
-        96.8853618335341
-        >>> e.n()
-        124.616199194723
+        The midpoint rule uses evaluations at the center of each interval:
+
+        >>> e.as_sum(2, 'midpoint')
+        2*sin(4) + 2*sin(6)
+
+        The right-hand rule uses function evaluations at the right of each
+        interval:
+
+        >>> e.as_sum(2, 'right')
+        2*sin(5) + 2*sin(7)
+
+        The trapezoid rule uses function evaluations on both sides of the
+        intervals. This is equivalent to taking the average of the left and
+        right hand rule results:
+
+        >>> e.as_sum(2, 'trapezoid')
+        2*sin(5) + sin(3) + sin(7)
+        >>> (e.as_sum(2, 'left') + e.as_sum(2, 'right'))/2 == _
+        True
+
+        All but the trapexoid method may be used when dealing with a function
+        with a discontinuity. Here, the discontinuity at x = 0 can be avoided
+        by using the midpoint or right-hand method:
+
+        >>> e = Integral(1/sqrt(x), (x, 0, 1))
+        >>> e.as_sum(5).n(4)
+        1.730
+        >>> e.as_sum(10).n(4)
+        1.809
+        >>> e.doit().n(4)  # the actual value is 2
+        2.000
+
+        The left- or trapezoid method will encounter the discontinuity and
+        return oo:
+
+        >>> e.as_sum(5, 'left')
+        oo
+        >>> e.as_sum(5, 'trapezoid')
+        oo
 
         See Also
         ========
@@ -1308,12 +1345,26 @@ class Integral(Expr):
                 "Multidimensional midpoint rule not implemented yet")
         else:
             limit = limits[0]
+            if len(limit) != 3:
+                raise ValueError("Expecting a definite integral.")
         if n <= 0:
             raise ValueError("n must be > 0")
         if n == oo:
             raise NotImplementedError("Infinite summation not yet implemented")
         sym, lower_limit, upper_limit = limit
         dx = (upper_limit - lower_limit)/n
+
+        if method == 'trapezoid':
+            l = self.function.subs(sym, lower_limit)
+            r = self.function.subs(sym, upper_limit)
+            result = (l + r)/2
+            for i in range(1, n):
+                x = lower_limit + i*dx
+                result += self.function.subs(sym, x)
+            return result*dx
+        elif method not in ('left', 'right', 'midpoint'):
+            raise NotImplementedError("Unknown method %s" % method)
+
         result = 0
         for i in range(n):
             if method == "midpoint":
@@ -1322,8 +1373,6 @@ class Integral(Expr):
                 xi = lower_limit + i*dx
             elif method == "right":
                 xi = lower_limit + i*dx + dx
-            else:
-                raise NotImplementedError("Unknown method %s" % method)
             result += self.function.subs(sym, xi)
         return result*dx
 

@@ -12,9 +12,7 @@ There are two types of functions:
    creation:
        f = Lambda(x, exp(x)*x)
        f = Lambda(exp(x)*x) # free symbols of expr define the number of args
-       f = Lambda(exp(x)*x)  # free symbols in the expression define the number
-                             # of arguments
-       f = exp * Lambda(x,x)
+       f = exp * Lambda(x, x)
 4) isn't implemented yet: composition of functions, like (sin+cos)(x), this
    works in sympy core, but needs to be ported back to SymPy.
 
@@ -367,6 +365,26 @@ class Function(Application, Expr):
         #     we be more intelligent about it?
         try:
             args = [arg._to_mpmath(prec + 5) for arg in self.args]
+            def bad(m):
+                from sympy.mpmath import mpf, mpc
+                # the precision of an mpf value is the last element
+                # if that is 1 (and m[1] is not 1 which would indicate a
+                # power of 2), then the eval failed; so check that none of
+                # the arguments failed to compute to a finite precision.
+                # Note: An mpc value has two parts, the re and imag tuple;
+                # check each of those parts, too. Anything else is allowed to
+                # pass
+                if isinstance(m, mpf):
+                    m = m._mpf_
+                    return m[1] !=1 and m[-1] == 1
+                elif isinstance(m, mpc):
+                    m, n = m._mpc_
+                    return m[1] !=1 and m[-1] == 1 and \
+                        n[1] !=1 and n[-1] == 1
+                else:
+                    return False
+            if any(bad(a) for a in args):
+                raise ValueError  # one or more args failed to compute with significance
         except ValueError:
             return
 
@@ -483,7 +501,8 @@ class Function(Application, Expr):
             s = s.removeO()
             s = s.subs(v, zi).expand() + C.Order(o.expr.subs(v, zi), x)
             return s
-        if (self.func.nargs == 1 and args0[0]) or self.func.nargs > 1:
+        if (self.func.nargs == 1 and args0[0]) or \
+           isinstance(self.func.nargs, tuple) or self.func.nargs > 1:
             e = self
             e1 = e.expand()
             if e == e1:
@@ -512,7 +531,12 @@ class Function(Application, Expr):
         arg = self.args[0]
         l = []
         g = None
-        for i in xrange(n + 2):
+        # try to predict a number of terms needed
+        nterms = n + 2
+        cf = C.Order(arg.as_leading_term(x), x).getn()
+        if cf != 0:
+            nterms = int(nterms / cf)
+        for i in xrange(nterms):
             g = self.taylor_term(i, arg, g)
             g = g.nseries(x, n=n, logx=logx)
             l.append(g)
@@ -671,6 +695,21 @@ class Derivative(Expr):
     method internally (not _eval_derivative); Derivative should be the only
     one to call _eval_derivative.
 
+    Simplification of high-order derivatives:
+
+    Because there can be a significant amount of simplification that can be
+    done when multiple differentiations are performed, results will be
+    automatically simplified in a fairly conservative fashion unless the
+    keyword ``simplify`` is set to False.
+
+        >>> from sympy import sqrt, diff
+        >>> from sympy.abc import x
+        >>> e = sqrt((x + 1)**2 + x)
+        >>> diff(e, x, 5, simplify=False).count_ops()
+        136
+        >>> diff(e, x, 5).count_ops()
+        30
+
     Ordering of variables:
 
     If evaluate is set to True and the expression can not be evaluated, the
@@ -744,7 +783,7 @@ class Derivative(Expr):
     u = f(t) and v = f'(t), and F(t, f(t), f'(t)).diff(f(t)) simply means
     F(t, u, v).diff(u) at u = f(t).
 
-    We do not allow to take derivative with respect to expressions where this
+    We do not allow derivatives to be taken with respect to expressions where this
     is not so well defined.  For example, we do not allow expr.diff(x*y)
     because there are multiple ways of structurally defining where x*y appears
     in an expression, some of which may surprise the reader (for example, a
@@ -840,6 +879,7 @@ class Derivative(Expr):
             return False
 
     def __new__(cls, expr, *variables, **assumptions):
+
         expr = sympify(expr)
 
         # There are no variables, we differentiate wrt all of the free symbols
@@ -920,7 +960,7 @@ class Derivative(Expr):
            (not isinstance(expr, Derivative))):
             variables = list(variablegen)
             # If we wanted to evaluate, we sort the variables into standard
-            # order for later comparisons. This is too agressive if evaluate
+            # order for later comparisons. This is too aggressive if evaluate
             # is False, so we don't do it in that case.
             if evaluate:
                 #TODO: check if assumption of discontinuous derivatives exist
@@ -942,6 +982,7 @@ class Derivative(Expr):
         # don't commute with derivatives wrt symbols and we can't safely
         # continue.
         unhandled_non_symbol = False
+        nderivs = 0  # how many derivatives were performed
         for v in variablegen:
             is_symbol = v.is_Symbol
 
@@ -954,6 +995,7 @@ class Derivative(Expr):
                     old_v = v
                     v = new_v
                 obj = expr._eval_derivative(v)
+                nderivs += 1
                 if not is_symbol:
                     if obj is not None:
                         obj = obj.subs(v, old_v)
@@ -979,6 +1021,10 @@ class Derivative(Expr):
                     expr.args[0], *cls._sort_variables(expr.args[1:])
                 )
 
+        if nderivs > 1 and assumptions.get('simplify', True):
+            from sympy.core.exprtools import factor_terms
+            from sympy.simplify.simplify import signsimp
+            expr = factor_terms(signsimp(expr))
         return expr
 
     @classmethod
@@ -1202,10 +1248,8 @@ class Lambda(Expr):
 
     def __call__(self, *args):
         if len(args) != self.nargs:
-            from sympy.utilities.misc import filldedent
-            raise TypeError(filldedent('''
-                %s takes %d arguments (%d given)
-                ''' % (self, self.nargs, len(args))))
+            raise TypeError('%s takes %d arguments (%d given)' %
+                    (self, self.nargs, len(args)))
         return self.expr.xreplace(dict(zip(self.variables, args)))
 
     def __eq__(self, other):

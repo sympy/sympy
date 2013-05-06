@@ -100,6 +100,15 @@ Hypergeometric Functions
 .. autoclass:: sympy.functions.special.hyper.meijerg
    :members:
 
+Elliptic integrals
+------------------
+.. module:: sympy.functions.special.elliptic_integrals
+
+.. autoclass:: elliptic_k
+.. autoclass:: elliptic_f
+.. autoclass:: elliptic_e
+.. autoclass:: elliptic_pi
+
 Orthogonal Polynomials
 ----------------------
 
@@ -110,6 +119,8 @@ Jacobi Polynomials
 
 .. autoclass:: sympy.functions.special.polynomials.jacobi
    :members:
+
+.. autofunction:: sympy.functions.special.polynomials.jacobi_normalized
 
 Gegenbauer Polynomials
 ++++++++++++++++++++++
@@ -178,4 +189,3 @@ Tensor Functions
 
 .. autoclass:: sympy.functions.special.tensor_functions.KroneckerDelta
    :members:
-

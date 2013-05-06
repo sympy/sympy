@@ -91,13 +91,14 @@ def test_inflate():
 def test_recursive():
     from sympy import symbols, exp_polar, expand
     a, b, c = symbols('a b c', positive=True)
-    assert simplify(integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))) \
-        == (sqrt(2)*sqrt(pi)*(erf(sqrt(2)*(a + b)/2) + 1)*exp(
-        -a**2/2 + a*b - b**2/2))/4
-    assert simplify(integrate(
-        exp(-(x - a)**2)*exp(-(x - b)**2)*exp(c*x), (x, 0, oo))) == \
-        (sqrt(2)*sqrt(pi)*(erf(sqrt(2)*(2*a + 2*b + c)/4) + 1)*
-        exp(-a**2/2 + a*b + a*c/2 - b**2/2 + b*c/2 + c**2/8)/4)
+    e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2), (x, 0, oo))
+    assert simplify(e.expand()) == (
+        sqrt(2)*sqrt(pi)*(
+        (erf(sqrt(2)*(a + b)/2) + 1)*exp(-a**2/2 + a*b - b**2/2))/4)
+    e = integrate(exp(-(x - a)**2)*exp(-(x - b)**2)*exp(c*x), (x, 0, oo))
+    assert simplify(e) == (
+        sqrt(2)*sqrt(pi)*(erf(sqrt(2)*(2*a + 2*b + c)/4) + 1)*exp(-a**2 - b**2
+        + (2*a + 2*b + c)**2/8)/4)
     assert simplify(integrate(exp(-(x - a - b - c)**2), (x, 0, oo))) == \
         sqrt(pi)/2*(1 + erf(a + b + c))
     assert simplify(integrate(exp(-(x + a + b + c)**2), (x, 0, oo))) == \
@@ -167,7 +168,7 @@ def test_meijerint():
 
     # This used to test trigexpand... now it is done by linear substitution
     assert simplify(integrate(exp(-x)*sin(x + a), (x, 0, oo), meijerg=True)
-                    ).expand().rewrite(sin).expand() == sin(a)/2 + cos(a)/2
+                    ) == sqrt(2)*sin(a + pi/4)/2
 
     # Test the condition 14 from prudnikov.
     # (This is besselj*besselj in disguise, to stop the product from being
@@ -381,7 +382,7 @@ def test_probability():
     assert E(1) == 1
     assert E(x*y) == mu1/rate
     assert E(x*y**2) == mu1**2/rate + sigma1**2/rate
-    ans = (rate**2*sigma1**2 + 1)/rate**2
+    ans = sigma1**2 + 1/rate**2
     assert simplify(E((x + y + 1)**2) - E(x + y + 1)**2) == ans
     assert simplify(E((x + y - 1)**2) - E(x + y - 1)**2) == ans
     assert simplify(E((x + y)**2) - E(x + y)**2) == ans
@@ -436,9 +437,11 @@ def test_probability():
     # XXX conditions are a mess
     arg = x*dagum
     assert simplify(integrate(arg, (x, 0, oo), meijerg=True, conds='none')
-                    ) == b*gamma(1 - 1/a)*gamma(p + 1/a)/gamma(p)
+                    ) == a*b*gamma(1 - 1/a)*gamma(p + 1 + 1/a)/(
+                    (a*p + 1)*gamma(p))
     assert simplify(integrate(x*arg, (x, 0, oo), meijerg=True, conds='none')
-                    ) == b**2*gamma(1 - 2/a)*gamma(p + 2/a)/gamma(p)
+                    ) == a*b**2*gamma(1 - 2/a)*gamma(p + 1 + 2/a)/(
+                    (a*p + 2)*gamma(p))
 
     # F-distribution
     d1, d2 = symbols('d1 d2', positive=True)
@@ -619,3 +622,6 @@ def test_fresnel():
 
     assert expand_func(integrate(sin(pi*x**2/2), x)) == fresnels(x)
     assert expand_func(integrate(cos(pi*x**2/2), x)) == fresnelc(x)
+
+def test_3761():
+    assert meijerint_indefinite(x**x**x, x) is None

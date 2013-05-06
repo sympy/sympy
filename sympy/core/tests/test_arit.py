@@ -4,6 +4,8 @@ from sympy import (Symbol, sin, cos, exp, sqrt, Rational, Float, re, pi,
         sympify, Add, Mul, Pow, Mod, I, log, S, Max, Or, symbols, oo, Integer,
 )
 from sympy.utilities.pytest import XFAIL, raises
+from sympy.utilities.randtest import test_numerically
+
 
 x = Symbol('x')
 y = Symbol('y')
@@ -221,6 +223,8 @@ def test_pow_im():
     ans = (-6)**e
     assert Mul(*args, **dict(evaluate=False))**e == ans
     assert Mul(*args)**e == ans
+    assert Mul(Pow(-1, Rational(3, 2), evaluate=False), I, I) == I
+    assert Mul(I*Pow(I, S.Half, evaluate=False)) == (-1)**Rational(3, 4)
 
 
 def test_real_mul():
@@ -317,13 +321,13 @@ def test_Add_Mul_is_integer():
 
     assert (2*k).is_integer is True
     assert (-k).is_integer is True
-    assert (k/3).is_integer is False
+    assert (k/3).is_integer is None
     assert (x*k*n).is_integer is None
 
     assert (k + n).is_integer is True
     assert (k + x).is_integer is None
     assert (k + n*x).is_integer is None
-    assert (k + n/3).is_integer is False
+    assert (k + n/3).is_integer is None
 
     assert ((1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
     assert (1 + (1 + sqrt(3))*(-sqrt(3) + 1)).is_integer is not False
@@ -360,9 +364,9 @@ def test_Mul_is_even_odd():
     assert (3*x).is_even is None
     assert (3*x).is_odd is None
 
-    assert (k/3).is_integer is False
-    assert (k/3).is_even is False
-    assert (k/3).is_odd is False
+    assert (k/3).is_integer is None
+    assert (k/3).is_even is None
+    assert (k/3).is_odd is None
 
     assert (2*n).is_even is True
     assert (2*n).is_odd is False
@@ -384,6 +388,22 @@ def test_Mul_is_even_odd():
 
     assert (k*m*x).is_even is True
     assert (k*m*x).is_odd is False
+
+    # issue 3692:
+    assert (x/2).is_integer is None
+    assert (k/2).is_integer is False
+    assert (m/2).is_integer is True
+
+
+def test_Mul_is_rational():
+    x = Symbol('x')
+    n = Symbol('n', integer=True)
+    m = Symbol('m', integer=True)
+
+    assert (n/m).is_rational is True
+    assert (x/pi).is_rational is None
+    assert (x/n).is_rational is None
+    assert (n/pi).is_rational is False
 
 
 def test_Add_is_even_odd():
@@ -1259,6 +1279,8 @@ def test_issue_2820():
 
 
 def test_Mod():
+    assert Mod(x, 1).func is Mod
+    assert pi % pi == S.Zero
     assert Mod(5, 3) == 2
     assert Mod(-5, 3) == 1
     assert Mod(5, -3) == -1
@@ -1268,21 +1290,82 @@ def test_Mod():
     assert x % 5 == Mod(x, 5)
     assert x % y == Mod(x, y)
     assert (x % y).subs({x: 5, y: 3}) == 2
-    assert (x + 3) % 1 == Mod(x, 1)
-    assert (x + 3.0) % 1 == Mod(x, 1)
-    assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
-    assert (x - 3.3) % 1 == Mod(x + 0.7, 1)
-    assert Mod(-3.3, 1) == Mod(0.7, 1) == Float(0.7)
+
+    # Float handling
+    point3 = Float(3.3) % 1
+    assert (x - 3.3) % 1 == Mod(1.*x + 1 - point3, 1)
+    assert Mod(-3.3, 1) == 1 - point3
+    assert Mod(0.7, 1) == Float(0.7)
     e = Mod(1.3, 1)
-    assert e == .3 and e.is_Float
+    point3 = Float._new(Float(.3)._mpf_, 51)
+    assert e == point3 and e.is_Float
     e = Mod(1.3, .7)
-    assert e == .6 and e.is_Float
+    point6 = Float._new(Float(.6)._mpf_, 51)
+    assert e == point6 and e.is_Float
     e = Mod(1.3, Rational(7, 10))
-    assert e == .6 and e.is_Float
+    assert e == point6 and e.is_Float
     e = Mod(Rational(13, 10), 0.7)
-    assert e == .6 and e.is_Float
+    assert e == point6 and e.is_Float
     e = Mod(Rational(13, 10), Rational(7, 10))
     assert e == .6 and e.is_Rational
+
+    # check that sign is right
+    r2 = sqrt(2)
+    r3 = sqrt(3)
+    for i in [-r3, -r2, r2, r3]:
+        for j in [-r3, -r2, r2, r3]:
+            assert test_numerically(i % j, i.n() % j.n())
+    for _x in range(4):
+        for _y in range(9):
+            reps = [(x, _x), (y, _y)]
+            assert Mod(3*x + y, 9).subs(reps) == (3*_x + _y) % 9
+
+    # denesting
+    #   easy case
+    assert Mod(Mod(x, y), y) == Mod(x, y)
+    #   in case someone attempts more denesting
+    for i in [-3, -2, 2, 3]:
+        for j in [-3, -2, 2, 3]:
+            for k in range(3):
+                # print i, j, k
+                assert Mod(Mod(k, i), j) == (k % i) % j
+
+    # known difference
+    assert Mod(5*sqrt(2), sqrt(5)) == 5*sqrt(2) - 3*sqrt(5)
+    p = symbols('p', positive=True)
+    assert Mod(p + 1, p + 3) == p + 1
+    n = symbols('n', negative=True)
+    assert Mod(n - 3, n - 1) == -2
+    assert Mod(n - 2*p, n - p) == -p
+    assert Mod(p - 2*n, p - n) == -n
+
+    # handling sums
+    assert (x + 3) % 1 == Mod(x, 1)
+    assert (x + 3.0) % 1 == Mod(1.*x, 1)
+    assert (x - S(33)/10) % 1 == Mod(x + S(7)/10, 1)
+    assert str(Mod(.6*x + y, .3*y)) == str(Mod(0.1*y + 0.6*x, 0.3*y))
+    assert (x + 1) % x == 1 % x
+    assert (x + y) % x == y % x
+    assert (x + y + 2) % x == (y + 2) % x
+    assert (a + 3*x + 1) % (2*x) == Mod(a + x + 1, 2*x)
+    assert (12*x + 18*y) % (3*x) == 3*Mod(6*y, x)
+
+    # gcd extraction
+    assert (-3*x) % (-2*y) == -Mod(3*x, 2*y)
+    assert (.6*pi) % (.3*x*pi) == 0.3*pi*Mod(2, x)
+    assert (.6*pi) % (.31*x*pi) == pi*Mod(0.6, 0.31*x)
+    assert (6*pi) % (.3*x*pi) == pi*Mod(6, 0.3*x)
+    assert (6*pi) % (.31*x*pi) == pi*Mod(6, 0.31*x)
+    assert (6*pi) % (.42*x*pi) == pi*Mod(6, 0.42*x)
+    assert (12*x) % (2*y) == 2*Mod(6*x, y)
+    assert (12*x) % (3*5*y) == 3*Mod(4*x, 5*y)
+    assert (12*x) % (15*x*y) == 3*x*Mod(4, 5*y)
+    assert (-2*pi) % (3*pi) == pi
+    assert (2*x + 2) % (x + 1) == 0
+    assert (x*(x + 1)) % (x + 1) == (x + 1)*Mod(x, 1)
+    assert Mod(5.0*x, 0.1*y) == 0.1*Mod(50*x, y)
+    i = Symbol('i', integer=True)
+    assert (3*i*x) % (2*i*y) == i*Mod(3*x, 2*y)
 
 
 def test_issue_2902():

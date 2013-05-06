@@ -6,6 +6,7 @@ from sympy.core.sympify import SympifyError
 
 from sympy.printing.printer import Printer
 from sympy.printing.str import sstr
+from sympy.printing.conventions import requires_partial
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
@@ -219,6 +220,7 @@ class PrettyPrinter(Printer):
         pform = self._print(e.args[0])
         pform = prettyForm(*pform.parens('|', '|'))
         return pform
+    _print_Determinant = _print_Abs
 
     def _print_floor(self, e):
         if self._use_unicode:
@@ -237,13 +239,16 @@ class PrettyPrinter(Printer):
             return self._print_Function(e)
 
     def _print_Derivative(self, deriv):
-        # XXX use U('PARTIAL DIFFERENTIAL') here ?
+        if requires_partial(deriv) and self._use_unicode:
+            deriv_symbol = U('PARTIAL DIFFERENTIAL')
+        else:
+            deriv_symbol = r'd'
         syms = list(reversed(deriv.variables))
         x = None
 
         for sym, num in group(syms, multiple=False):
             s = self._print(sym)
-            ds = prettyForm(*s.left('d'))
+            ds = prettyForm(*s.left(deriv_symbol))
 
             if num > 1:
                 ds = ds**prettyForm(str(num))
@@ -257,7 +262,7 @@ class PrettyPrinter(Printer):
         f = prettyForm(
             binding=prettyForm.FUNC, *self._print(deriv.expr).parens())
 
-        pform = prettyForm('d')
+        pform = prettyForm(deriv_symbol)
 
         if len(syms) > 1:
             pform = pform**prettyForm(str(len(syms)))
@@ -617,6 +622,28 @@ class PrettyPrinter(Printer):
         return D
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
+
+
+    def _print_MatrixElement(self, expr):
+        from sympy.matrices import MatrixSymbol
+        from sympy import Symbol
+        if (isinstance(expr.parent, MatrixSymbol)
+                and expr.i.is_number and expr.j.is_number):
+            return self._print(
+                    Symbol(expr.parent.name + '_%d%d'%(expr.i, expr.j)))
+        else:
+            prettyFunc = self._print(expr.parent)
+            prettyIndices = self._print_seq((expr.i, expr.j), delimiter=', '
+                    ).parens(left='[', right=']')[0]
+            pform = prettyForm(binding=prettyForm.FUNC,
+                    *stringPict.next(prettyFunc, prettyIndices))
+
+            # store pform parts so it can be reassembled e.g. when powered
+            pform.prettyFunc = prettyFunc
+            pform.prettyArgs = prettyIndices
+
+            return pform
+
 
     def _print_MatrixSlice(self, m):
         # XXX works only for applied functions
@@ -1169,7 +1196,8 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Pow(self, power):
-        from sympy import fraction
+        from sympy.physics.quantum import Operator
+        from sympy.simplify.simplify import fraction
         b, e = power.as_base_exp()
         if power.is_commutative:
             if e is S.NegativeOne:
@@ -1178,9 +1206,11 @@ class PrettyPrinter(Printer):
             if n is S.One and d.is_Atom and not e.is_Integer:
                 return self._print_nth_root(b, e)
             if e.is_Rational and e < 0:
-                return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=0))
+                return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=False))
 
         # None of the above special forms, do a standard power
+        if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
+            return prettyForm(*self._print(b).parens())**self._print(e)
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):
@@ -1360,6 +1390,18 @@ class PrettyPrinter(Printer):
         return pretty
 
     _print_frozenset = _print_set
+
+    def _print_PolyRing(self, ring):
+        return prettyForm(sstr(ring))
+
+    def _print_FracField(self, field):
+        return prettyForm(sstr(field))
+
+    def _print_PolyElement(self, poly):
+        return prettyForm(sstr(poly))
+
+    def _print_FracElement(self, frac):
+        return prettyForm(sstr(frac))
 
     def _print_AlgebraicNumber(self, expr):
         if expr.is_aliased:

@@ -6,6 +6,8 @@ from sympy.core import (
 
 from sympy.core.mul import _keep_coeff
 
+from sympy.core.basic import preorder_traversal
+
 from sympy.core.sympify import (
     sympify, SympifyError,
 )
@@ -33,13 +35,8 @@ from sympy.polys.rootisolation import (
     dup_isolate_real_roots_list,
 )
 
-from sympy.polys.distributedpolys import (
-    sdp_from_dict, sdp_div,
-)
-
-from sympy.polys.groebnertools import (
-    sdp_groebner, matrix_fglm,
-)
+from sympy.polys.groebnertools import groebner as _groebner
+from sympy.polys.fglmtools import matrix_fglm
 
 from sympy.polys.monomialtools import (
     Monomial, monomial_key,
@@ -475,7 +472,7 @@ class Poly(Expr):
         """
         domain = f.get_domain()
 
-        if not domain.has_CharacteristicZero:
+        if domain.is_FiniteField:
             return Integer(domain.characteristic())
         else:
             raise PolynomialError("not a polynomial over a Galois field")
@@ -756,6 +753,12 @@ class Poly(Expr):
         >>> Poly(x**3 + 2*x + 3, x).coeffs()
         [1, 2, 3]
 
+        See Also
+        ========
+        all_coeffs
+        coeff_monomial
+        nth
+
         """
         return [ f.rep.dom.to_sympy(c) for c in f.rep.coeffs(order=order) ]
 
@@ -772,6 +775,10 @@ class Poly(Expr):
         >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).monoms()
         [(2, 0), (1, 2), (1, 1), (0, 1)]
 
+        See Also
+        ========
+        all_monoms
+
         """
         return f.rep.monoms(order=order)
 
@@ -787,6 +794,10 @@ class Poly(Expr):
 
         >>> Poly(x**2 + 2*x*y**2 + x*y + 3*y, x, y).terms()
         [((2, 0), 1), ((1, 2), 2), ((1, 1), 1), ((0, 1), 3)]
+
+        See Also
+        ========
+        all_terms
 
         """
         return [ (m, f.rep.dom.to_sympy(c)) for m, c in f.rep.terms(order=order) ]
@@ -819,6 +830,10 @@ class Poly(Expr):
 
         >>> Poly(x**3 + 2*x - 1, x).all_monoms()
         [(3,), (2,), (1,), (0,)]
+
+        See Also
+        ========
+        all_terms
 
         """
         return f.rep.all_monoms()
@@ -919,7 +934,7 @@ class Poly(Expr):
 
     def as_expr(f, *gens):
         """
-        Convert a polynomial an expression.
+        Convert a Poly instance to an Expr instance.
 
         Examples
         ========
@@ -1827,20 +1842,66 @@ class Poly(Expr):
         else:  # pragma: no cover
             raise OperationNotSupported(f, 'EC')
 
-    def nth(f, *N):
+    def coeff_monomial(f, monom):
         """
-        Returns the ``n``-th coefficient of ``f``.
+        Returns the coefficient of ``monom`` in ``f`` if there, else None.
 
         Examples
         ========
 
-        >>> from sympy import Poly
+        >>> from sympy import Poly, exp
+        >>> from sympy.abc import x, y
+
+        >>> p = Poly(24*x*y*exp(8) + 23*x, x, y)
+
+        >>> p.coeff_monomial(x)
+        23
+        >>> p.coeff_monomial(y)
+        0
+        >>> p.coeff_monomial(x*y)
+        24*exp(8)
+
+        Note that ``Expr.coeff()`` behaves differently, collecting terms
+        if possible; the Poly must be converted to an Expr to use that
+        method, however:
+
+        >>> p.as_expr().coeff(x)
+        24*y*exp(8) + 23
+        >>> p.as_expr().coeff(y)
+        24*x*exp(8)
+        >>> p.as_expr().coeff(x*y)
+        24*exp(8)
+
+        See Also
+        ========
+        nth: more efficient query using exponents of the monomial's generators
+
+        """
+        return f.nth(*Monomial(monom, f.gens).exponents)
+
+    def nth(f, *N):
+        """
+        Returns the ``n``-th coefficient of ``f`` where ``N`` are the
+        exponents of the generators in the term of interest.
+
+        Examples
+        ========
+
+        >>> from sympy import Poly, sqrt
         >>> from sympy.abc import x, y
 
         >>> Poly(x**3 + 2*x**2 + 3*x, x).nth(2)
         2
         >>> Poly(x**3 + 2*x*y**2 + y**2, x, y).nth(1, 2)
         2
+        >>> Poly(4*sqrt(x)*y)
+        Poly(4*y*sqrt(x), y, sqrt(x), domain='ZZ')
+        >>> _.nth(1, 1)
+        4
+
+        See Also
+        ========
+        coeff_monomial
 
         """
         if hasattr(f.rep, 'nth'):
@@ -1849,6 +1910,18 @@ class Poly(Expr):
             raise OperationNotSupported(f, 'nth')
 
         return f.rep.dom.to_sympy(result)
+
+    def coeff(f, x, n=1, right=False):
+        # the semantics of coeff_monomial and Expr.coeff are different;
+        # if someone is working with a Poly, they should be aware of the
+        # differences and chose the method best suited for the query.
+        # Alternatively, a pure-polys method could be written here but
+        # at this time the ``right`` keyword would be ignored because Poly
+        # doesn't work with non-commutatives.
+        raise NotImplementedError(
+            'Either convert to Expr with `as_expr` method '
+            'to use Expr\'s coeff method or else use the '
+            '`coeff_monomial` method of Polys.')
 
     def LM(f, order=None):
         """
@@ -2166,11 +2239,14 @@ class Poly(Expr):
             result = f.rep.eval(a, j)
         except CoercionFailed:
             if not auto:
-                raise DomainError(
-                    "can't evaluate at %s in %s" % (a, f.rep.dom))
+                raise DomainError("can't evaluate at %s in %s" % (a, f.rep.dom))
             else:
-                domain, [a] = construct_domain([a])
-                f = f.set_domain(domain)
+                a_domain, [a] = construct_domain([a])
+                new_domain = f.get_domain().unify(a_domain, gens=f.gens)
+
+                f = f.set_domain(new_domain)
+                a = new_domain.convert(a, a_domain)
+
                 result = f.rep.eval(a, j)
 
         return f.per(result, remove=j)
@@ -5319,6 +5395,182 @@ def _generic_factor(expr, gens, args, method):
     opt = options.build_options(gens, args)
     return _symbolic_factor(sympify(expr), opt, method)
 
+def to_rational_coeffs(f):
+    """
+    try to transform a polynomial to have rational coefficients
+
+    try to find a transformation ``x = alpha*y``
+
+    ``f(x) = lc*alpha**n * g(y)`` where ``g`` is a polynomial with
+    rational coefficients, ``lc`` the leading coefficient.
+
+    If this fails, try ``x = y + beta``
+    ``f(x) = g(y)``
+
+    Returns ``None`` if ``g`` not found;
+    ``(lc, alpha, None, g)`` in case of rescaling
+    ``(None, None, beta, g)`` in case of translation
+
+    Notes
+    =====
+
+    Currently it transforms only polynomials without roots larger than 2.
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt, Poly, simplify, expand
+    >>> from sympy.polys.polytools import to_rational_coeffs
+    >>> from sympy.abc import x
+    >>> p = Poly(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}), x, domain='EX')
+    >>> lc, r, _, g = to_rational_coeffs(p)
+    >>> lc, r
+    (7 + 5*sqrt(2), -2*sqrt(2) + 2)
+    >>> g
+    Poly(x**3 + x**2 - 1/4*x - 1/4, x, domain='QQ')
+    >>> r1 = simplify(1/r)
+    >>> Poly(lc*r**3*(g.as_expr()).subs({x:x*r1}), x, domain='EX') == p
+    True
+
+    """
+    from sympy.simplify.simplify import simplify
+
+    def _try_rescale(f):
+        """
+        try rescaling ``x -> alpha*x`` to convert f to a polynomial
+        with rational coefficients.
+        Returns ``alpha, f``; if the rescaling is successful,
+        ``alpha`` is the rescaling factor, and ``f`` is the rescaled
+        polynomial; else ``alpha`` is ``None``.
+        """
+        from sympy.core.add import Add
+        if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
+            return None, f
+        n = f.degree()
+        lc = f.LC()
+        coeffs = f.monic().all_coeffs()[1:]
+        coeffs = [simplify(coeffx) for coeffx in coeffs]
+        if coeffs[-2] and not all(coeffx.is_rational for coeffx in coeffs):
+            rescale1_x = simplify(coeffs[-2]/coeffs[-1])
+            coeffs1 = []
+            for i in range(len(coeffs)):
+                coeffx = simplify(coeffs[i]*rescale1_x**(i + 1))
+                if not coeffx.is_rational:
+                    break
+                coeffs1.append(coeffx)
+            else:
+                rescale_x = simplify(1/rescale1_x)
+                x = f.gens[0]
+                v = [x**n]
+                for i in range(1, n + 1):
+                    v.append(coeffs1[i - 1]*x**(n - i))
+                f = Add(*v)
+                f = Poly(f)
+                return lc, rescale_x, f
+        return None
+
+    def _try_translate(f):
+        """
+        try translating ``x -> x + alpha`` to convert f to a polynomial
+        with rational coefficients.
+        Returns ``alpha, f``; if the translating is successful,
+        ``alpha`` is the translating factor, and ``f`` is the shifted
+        polynomial; else ``alpha`` is ``None``.
+        """
+        from sympy.core.add import Add
+        from sympy.utilities.iterables import sift
+        if not len(f.gens) == 1 or not (f.gens[0]).is_Atom:
+            return None, f
+        n = f.degree()
+        f1 = f.monic()
+        coeffs = f1.all_coeffs()[1:]
+        c = simplify(coeffs[0])
+        if c and not c.is_rational:
+            if c.is_Add:
+                args = c.args
+            else:
+                args = [c]
+            sifted = sift(args, lambda z: z.is_rational)
+            c1, c2 = sifted[True], sifted[False]
+            alpha = -Add(*c2)/n
+            f2 = f1.shift(alpha)
+            return alpha, f2
+        return None
+
+    def _has_square_roots(p):
+        """
+        Return True if ``f`` is a sum with square roots but no other root
+        """
+        from sympy.core.exprtools import Factors
+        coeffs = p.coeffs()
+        has_sq = False
+        for y in coeffs:
+            for x in Add.make_args(y):
+                f = Factors(x).factors
+                r = [wx.q for wx in f.values() if wx.is_Rational and wx.q >= 2]
+                if not r:
+                    continue
+                if min(r) == 2:
+                    has_sq = True
+                if max(r) > 2:
+                    return False
+        return has_sq
+
+    if f.get_domain().is_EX and _has_square_roots(f):
+        rescale_x = None
+        translate_x = None
+        r = _try_rescale(f)
+        if r:
+            return r[0], r[1], None, r[2]
+        else:
+            r = _try_translate(f)
+            if r:
+                return None, None, r[0], r[1]
+    return None
+
+def _torational_factor_list(p, x):
+    """
+    helper function to factor polynomial using to_rational_coeffs
+
+    Examples
+    ========
+
+    >>> from sympy.polys.polytools import _torational_factor_list
+    >>> from sympy.abc import x
+    >>> from sympy import sqrt, expand, Mul
+    >>> p = expand(((x**2-1)*(x-2)).subs({x:x*(1 + sqrt(2))}))
+    >>> factors = _torational_factor_list(p, x); factors
+    (-2, [(-x*(1 + sqrt(2))/2 + 1, 1), (-x*(1 + sqrt(2)) - 1, 1), (-x*(1 + sqrt(2)) + 1, 1)])
+    >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
+    True
+    >>> p = expand(((x**2-1)*(x-2)).subs({x:x + sqrt(2)}))
+    >>> factors = _torational_factor_list(p, x); factors
+    (1, [(x - 2 + sqrt(2), 1), (x - 1 + sqrt(2), 1), (x + 1 + sqrt(2), 1)])
+    >>> expand(factors[0]*Mul(*[z[0] for z in factors[1]])) == p
+    True
+
+    """
+    from sympy.simplify.simplify import simplify
+    p1 = Poly(p, x, domain='EX')
+    n = p1.degree()
+    res = to_rational_coeffs(p1)
+    if not res:
+        return None
+    lc, r, t, g = res
+    factors = factor_list(g.as_expr())
+    if lc:
+        c = simplify(factors[0]*lc*r**n)
+        r1 = simplify(1/r)
+        a = []
+        for z in factors[1:][0]:
+            a.append((simplify(z[0].subs({x:x*r1})), z[1]))
+    else:
+        c = factors[0]
+        a = []
+        for z in factors[1:][0]:
+            a.append((z[0].subs({x:x - t}), z[1]))
+    return (c, a)
+
 
 def sqf_list(f, *gens, **args):
     """
@@ -5646,13 +5898,16 @@ def cancel(f, *gens, **args):
     Examples
     ========
 
-    >>> from sympy import cancel
+    >>> from sympy import cancel, sqrt, Symbol
     >>> from sympy.abc import x
+    >>> A = Symbol('A', commutative=False)
 
     >>> cancel((2*x**2 - 2)/(x**2 - 2*x + 1))
     (2*x + 2)/(x - 1)
-
+    >>> cancel((sqrt(3) + sqrt(15)*A)/(sqrt(2) + sqrt(10)*A))
+    sqrt(6)/2
     """
+    from sympy.core.exprtools import factor_terms
     options.allowed_flags(args, ['polys'])
 
     f = sympify(f)
@@ -5660,11 +5915,15 @@ def cancel(f, *gens, **args):
     if not isinstance(f, (tuple, Tuple)):
         if f.is_Number:
             return f
-        else:
-            p, q = f.as_numer_denom()
+        f = factor_terms(f, radical=True)
+        p, q = f.as_numer_denom()
 
-    else:
+    elif len(f) == 2:
         p, q = f
+    elif isinstance(f, Tuple):
+        return factor_terms(f)
+    else:
+        raise ValueError('unexpected argument: %s' % f)
 
     try:
         (F, G), opt = parallel_poly_from_expr((p, q), *gens, **args)
@@ -5673,6 +5932,34 @@ def cancel(f, *gens, **args):
             return f
         else:
             return S.One, p, q
+    except PolynomialError, msg:
+        if f.is_commutative:
+            raise PolynomialError(msg)
+        # non-commutative
+        if f.is_Mul:
+            c, nc = f.args_cnc(split_1=False)
+            nc = [cancel(i) for i in nc]
+            return cancel(Mul._from_args(c))*Mul(*nc)
+        elif f.is_Add:
+            c = []
+            nc = []
+            for i in f.args:
+                if i.is_commutative:
+                    c.append(i)
+                else:
+                    nc.append(cancel(i))
+            return cancel(Add(*c)) + Add(*nc)
+        else:
+            reps = []
+            pot = preorder_traversal(f)
+            pot.next()
+            for e in pot:
+                try:
+                    reps.append((e, cancel(e)))
+                    pot.skip()  # this was handled successfully
+                except NotImplementedError:
+                    pass
+            return f.xreplace(dict(reps))
 
     c, P, Q = F.cancel(G)
 
@@ -5718,13 +6005,14 @@ def reduced(f, G, *gens, **args):
         opt = opt.clone(dict(domain=domain.get_field()))
         retract = True
 
+    from sympy.polys.rings import xring
+    _ring, _ = xring(opt.gens, opt.domain, opt.order)
+
     for i, poly in enumerate(polys):
         poly = poly.set_domain(opt.domain).rep.to_dict()
-        polys[i] = sdp_from_dict(poly, opt.order)
+        polys[i] = _ring.from_dict(poly)
 
-    level = len(opt.gens) - 1
-
-    Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
+    Q, r = polys[0].div(polys[1:])
 
     Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
     r = Poly._from_dict(dict(r), opt)
@@ -5832,18 +6120,17 @@ class GroebnerBasis(Basic):
         if domain.has_assoc_Field:
             opt.domain = domain.get_field()
         else:
-            raise DomainError(
-                "can't compute a Groebner basis over %s" % opt.domain)
+            raise DomainError("can't compute a Groebner basis over %s" % opt.domain)
+
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, opt.order)
 
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, opt.order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        G = sdp_groebner(
-            polys, level, opt.order, opt.domain, method=opt.method)
-        G = [ Poly._from_dict(dict(g), opt) for g in G ]
+        G = _groebner(polys, _ring, method=opt.method)
+        G = [ Poly._from_dict(g, opt) for g in G ]
 
         if not domain.has_Field:
             G = [ g.clear_denoms(convert=True)[1] for g in G ]
@@ -5997,13 +6284,14 @@ class GroebnerBasis(Basic):
             order=dst_order,
         ))
 
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, src_order)
+
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, src_order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        G = matrix_fglm(polys, level, src_order, dst_order, opt.domain)
+        G = matrix_fglm(polys, _ring, dst_order)
         G = [ Poly._from_dict(dict(g), opt) for g in G ]
 
         if not domain.has_Field:
@@ -6052,13 +6340,14 @@ class GroebnerBasis(Basic):
             opt = opt.clone(dict(domain=domain.get_field()))
             retract = True
 
+        from sympy.polys.rings import xring
+        _ring, _ = xring(opt.gens, opt.domain, opt.order)
+
         for i, poly in enumerate(polys):
             poly = poly.set_domain(opt.domain).rep.to_dict()
-            polys[i] = sdp_from_dict(poly, opt.order)
+            polys[i] = _ring.from_dict(poly)
 
-        level = len(opt.gens) - 1
-
-        Q, r = sdp_div(polys[0], polys[1:], level, opt.order, opt.domain)
+        Q, r = polys[0].div(polys[1:])
 
         Q = [ Poly._from_dict(dict(q), opt) for q in Q ]
         r = Poly._from_dict(dict(r), opt)

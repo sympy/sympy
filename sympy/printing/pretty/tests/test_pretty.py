@@ -1791,6 +1791,35 @@ dx            \
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
+    # basic partial derivatives
+    expr = Derivative(log(x + y) + x, x)
+    ascii_str_1 = \
+"""\
+d                 \n\
+--(log(x + y) + x)\n\
+dx                \
+"""
+    ascii_str_2 = \
+"""\
+d                 \n\
+--(x + log(x + y))\n\
+dx                \
+"""
+    ucode_str_1 = \
+u"""\
+∂                 \n\
+──(log(x + y) + x)\n\
+∂x                \
+"""
+    ucode_str_2 = \
+u"""\
+∂                 \n\
+──(x + log(x + y))\n\
+∂x                \
+"""
+    assert pretty(expr) in [ascii_str_1, ascii_str_2]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2], upretty(expr)
+
     # Multiple symbols
     expr = Derivative(log(x) + x**2, x, y)
     ascii_str_1 = \
@@ -1842,16 +1871,16 @@ x  + -----(2*x*y)\n\
     ucode_str_1 = \
 u"""\
    2             \n\
-  d             2\n\
+  ∂             2\n\
 ─────(2⋅x⋅y) + x \n\
-dx dy            \
+∂x ∂y            \
 """
     ucode_str_2 = \
 u"""\
         2        \n\
- 2     d         \n\
+ 2     ∂         \n\
 x  + ─────(2⋅x⋅y)\n\
-     dx dy       \
+     ∂x ∂y       \
 """
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -1868,10 +1897,10 @@ dx        \
     ucode_str = \
 u"""\
   2       \n\
- d        \n\
+ ∂        \n\
 ───(2⋅x⋅y)\n\
   2       \n\
-dx        \
+∂x        \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1888,10 +1917,10 @@ dx         \
     ucode_str = \
 u"""\
  17        \n\
-d          \n\
+∂          \n\
 ────(2⋅x⋅y)\n\
   17       \n\
-dx         \
+∂x         \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1908,10 +1937,10 @@ dy dx        \
     ucode_str = \
 u"""\
    3         \n\
-  d          \n\
+  ∂          \n\
 ──────(2⋅x⋅y)\n\
      2       \n\
-dy dx        \
+∂y ∂x        \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -3776,14 +3805,14 @@ def test_expint():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert upretty(where(X > 0)) == u"Domain: 0 < x₁"
+    assert upretty(where(X > 0)) == u"Domain: x₁ > 0"
 
     D = Die('d1', 6)
     assert upretty(where(D > 4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert upretty(pspace(Tuple(A, B)).domain) == u'Domain: 0 ≤ a ∧ 0 ≤ b'
+    assert upretty(pspace(Tuple(A, B)).domain) == u'Domain: a ≥ 0 ∧ b ≥ 0'
 
 
 def test_PrettyPoly():
@@ -3802,6 +3831,27 @@ def test_PrettyPoly():
 def test_issue_3186():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
     assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
+
+def test_issue_3260():
+    assert pretty(Integral(x**2, x)**2) == \
+"""\
+          2
+/  /     \ \n\
+| |      | \n\
+| |  2   | \n\
+| | x  dx| \n\
+| |      | \n\
+\/       / \
+"""
+    assert upretty(Integral(x**2, x)**2) == \
+u"""\
+         2
+⎛⌠      ⎞ \n\
+⎜⎮  2   ⎟ \n\
+⎜⎮ x  dx⎟ \n\
+⎝⌡      ⎠ \
+"""
 
 
 def test_issue_3640():

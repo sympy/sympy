@@ -17,10 +17,6 @@ These are functions that are imported into the global namespace with ``from symp
 ^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.classify_ode
 
-:func:`ode_order`
-^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.ode_order
-
 :func:`checkodesol`
 ^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.checkodesol
@@ -32,10 +28,6 @@ These are functions that are imported into the global namespace with ``from symp
 Hint Methods
 ------------
 These functions are intended for internal use by :func:`dsolve` and others.  Nonetheless, they contain useful information in their docstrings on the various ODE solving methods.
-
-:obj:`preprocess`
-^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.ode.preprocess
 
 :obj:`odesimp`
 ^^^^^^^^^^^^^^
@@ -100,6 +92,18 @@ These functions are intended for internal use by :func:`dsolve` and others.  Non
 :obj:`separable`
 ^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.ode.ode_separable
+
+:obj:`almost_linear`
+^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_almost_linear
+
+:obj:`linear_coefficients`
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_linear_coefficients
+
+:obj:`separable_reduced`
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autofunction:: sympy.solvers.ode.ode_separable_reduced
 
 Information on the ode module
 -----------------------------

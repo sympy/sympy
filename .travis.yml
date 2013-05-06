@@ -11,24 +11,21 @@ matrix:
       env: TEST_GMPY="true"
     - python: 3.3
       env: TEST_GMPY="true"
-  # Below we list *exact* builds that are allowed to fail. Once they are fixed,
-  # you can remove the appropriate test from below (you still need to keep it
-  # above in order to be tested at all).
-  allow_failures:
     - python: 2.7
-      env: TEST_GMPY="true"
-    - python: 3.3
-      env: TEST_GMPY="true"
+      env: TEST_SPHINX="true"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update -qq;
       sudo apt-get install -qq libgmp-dev;
       pip install "gmpy==1.16";
     fi
+  - if [[ "${TEST_SPHINX}" == "true" ]]; then
+      pip install "sphinx==1.1.3";
+    fi
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '3.2' || $TRAVIS_PYTHON_VERSION == '3.3' ]]; then python bin/use2to3; cd py3k-sympy; fi
   - python setup.py install
 script:
-  - bin/travis_test.sh
+  - bin/test_travis.sh
 notifications:
   email: false

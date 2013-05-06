@@ -1,6 +1,6 @@
 from sympy import Sieve, binomial_coefficients, binomial_coefficients_list, \
-    multinomial_coefficients, Mul, S, Pow, sieve
-from sympy import factorial as fac
+    multinomial_coefficients, Mul, S, Pow, sieve, Symbol, summation, Dummy, \
+    factorial as fac, Rational
 
 from sympy.ntheory import isprime, n_order, is_primitive_root, \
     is_quad_residue, legendre_symbol, jacobi_symbol, npartitions, totient, \
@@ -46,6 +46,13 @@ def test_multiplicity():
     raises(ValueError, lambda: multiplicity(1, 1))
     raises(ValueError, lambda: multiplicity(1, 2))
     raises(ValueError, lambda: multiplicity(1.3, 2))
+
+    # handles Rationals
+    assert multiplicity(10, Rational(30, 7)) == 0
+    assert multiplicity(Rational(2, 7), Rational(4, 7)) == 1
+    assert multiplicity(Rational(1, 7), Rational(3, 49)) == 2
+    assert multiplicity(Rational(2, 7), Rational(7, 2)) == -1
+    assert multiplicity(3, Rational(1, 9)) == -2
 
 
 def test_perfect_power():
@@ -326,7 +333,8 @@ def test_factorint():
     p1 = nextprime(2**17)
     p2 = nextprime(2*p1)
     assert factorint((p1*p2**2)**3) == {p1: 3, p2: 6}
-
+    # Test for non integer input
+    raises(ValueError, lambda: factorint(4.5))
 
 def test_divisors_and_divisor_count():
     assert divisors(-1) == [1]
@@ -355,6 +363,12 @@ def test_totient():
     assert totient(5005) == 2880
     assert totient(5006) == 2502
     assert totient(5009) == 5008
+    assert totient(2**100) == 2**99
+
+    m = Symbol("m", integer=True)
+    assert totient(m)
+    assert totient(m).subs(m, 3**10) == 3**10 - 3**9
+    assert summation(totient(m), (m, 1, 11)) == 42
 
 
 def test_partitions():

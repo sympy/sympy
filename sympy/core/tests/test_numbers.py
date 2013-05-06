@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import decimal
 from sympy import (Rational, Symbol, Float, I, sqrt, oo, nan, pi, E, Integer,
                    S, factorial, Catalan, EulerGamma, GoldenRatio, cos, exp,
@@ -59,9 +60,23 @@ def test_mod():
 
     a = Float(2.6)
 
-    assert (a % .2).round(15) == 0.2
+    assert (a % .2) == 0
     assert (a % 2).round(15) == 0.6
     assert (a % 0.5).round(15) == 0.1
+
+    # In these two tests, if the precision of m does
+    # not match the precision of the ans, then it is
+    # likely that the change made now gives an answer
+    # with degraded accuracy.
+    r = Rational(500, 41)
+    f = Float('.36', 3)
+    m = r % f
+    ans = Float(r % Rational(f), 3)
+    assert m == ans and m._prec == ans._prec
+    f = Float('8.36', 3)
+    m = f % r
+    ans = Float(Rational(f) % r, 3)
+    assert m == ans and m._prec == ans._prec
 
     s = S.Zero
 
@@ -346,6 +361,8 @@ def test_Float():
     assert Float((0, 0L, -456, -2)) == Float('inf') == Float('+inf')
     assert Float((1, 0L, -789, -3)) == Float('-inf')
 
+    raises(ValueError, lambda: Float((0, 7, 1, 3), ''))
+
     assert Float('+inf').is_bounded is False
     assert Float('+inf').is_finite is False
     assert Float('+inf').is_negative is False
@@ -618,6 +635,36 @@ def test_Infinity_2():
     assert (-oo)**3 == -oo
     assert (-oo)**2 == oo
     assert abs(S.ComplexInfinity) == oo
+
+
+def test_Mul_Infinity_Zero():
+    assert 0*Float('inf') == nan
+    assert 0*Float('-inf') == nan
+    assert 0*Float('inf') == nan
+    assert 0*Float('-inf') == nan
+    assert Float('inf')*0 == nan
+    assert Float('-inf')*0 == nan
+    assert Float('inf')*0 == nan
+    assert Float('-inf')*0 == nan
+    assert Float(0)*Float('inf') == nan
+    assert Float(0)*Float('-inf') == nan
+    assert Float(0)*Float('inf') == nan
+    assert Float(0)*Float('-inf') == nan
+    assert Float('inf')*Float(0) == nan
+    assert Float('-inf')*Float(0) == nan
+    assert Float('inf')*Float(0) == nan
+    assert Float('-inf')*Float(0) == nan
+
+
+def test_Div_By_Zero():
+    assert 1/S(0) == oo
+    assert 1/Float(0) == Float('inf')
+    assert 0/S(0) == nan
+    assert 0/Float(0) == nan
+    assert S(0)/0 == nan
+    assert Float(0)/0 == nan
+    assert -1/S(0) == -oo
+    assert -1/Float(0) == Float('-inf')
 
 
 def test_Infinity_inequations():
@@ -1314,8 +1361,6 @@ def test_3541():
 
 
 def test_3250():
-    from sympy.mpmath import mpf
-    assert str(Float(mpf((1,22,2,22)), '')) == '-88.000'
     assert Float('23.e3', '')._prec == 10
     assert Float('23e3', '')._prec == 20
     assert Float('23000', '')._prec == 20

@@ -46,12 +46,18 @@ def test_kronecker_delta():
     assert KroneckerDelta(i, j).subs(dict(i=1, j=0)) == 0
     assert KroneckerDelta(i, j).subs(dict(i=3, j=3)) == 1
 
+    assert KroneckerDelta(i, j)**0 == 1
+    for n in range(1, 10):
+        assert KroneckerDelta(i, j)**n == KroneckerDelta(i, j)
+        assert KroneckerDelta(i, j)**-n == 1/KroneckerDelta(i, j)
+
     assert KroneckerDelta(i, j).is_integer is True
 
     assert adjoint(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
     assert conjugate(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
     assert transpose(KroneckerDelta(i, j)) == KroneckerDelta(i, j)
-
+    # to test if canonical
+    assert (KroneckerDelta(i, j) == KroneckerDelta(j, i)) == True
 
 def test_kronecker_delta_secondquant():
     """secondquant-specific methods"""
@@ -104,8 +110,8 @@ def test_kronecker_delta_secondquant():
     assert D(q, i).killable_index == q
     assert D(q, v).preferred_index == v
     assert D(q, v).killable_index == q
-    assert D(q, p).preferred_index == q
-    assert D(q, p).killable_index == p
+    assert D(q, p).preferred_index == p
+    assert D(q, p).killable_index == q
 
     EV = evaluate_deltas
     assert EV(D(a, q)*F(q)) == F(a)

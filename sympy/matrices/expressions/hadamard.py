@@ -1,5 +1,5 @@
 from sympy.core import Mul, Basic, sympify
-from sympy.rules import (unpack, flatten, sort, condition, exhaust, do_one)
+from sympy.strategies import unpack, flatten, sort, condition, exhaust, do_one
 
 from sympy.matrices.expressions.matexpr import MatrixExpr, ShapeError
 
@@ -17,7 +17,7 @@ def hadamard_product(*matrices):
     >>> hadamard_product(A, B)
     A.*B
     >>> hadamard_product(A, B)[0, 1]
-    A_01*B_01
+    A[0, 1]*B[0, 1]
     """
     if not matrices:
         raise TypeError("Empty Hadamard product is undefined")
@@ -59,8 +59,8 @@ class HadamardProduct(MatrixExpr):
         return Mul(*[arg._entry(i, j) for arg in self.args])
 
     def _eval_transpose(self):
-        from transpose import Transpose
-        return HadamardProduct(*[Transpose(arg) for arg in self.args])
+        from sympy.matrices.expressions.transpose import transpose
+        return HadamardProduct(*map(transpose, self.args))
 
     def doit(self, **ignored):
         return canonicalize(self)
@@ -74,8 +74,7 @@ def validate(*args):
             raise ShapeError("Matrices %s and %s are not aligned" % (A, B))
 
 rules = (unpack,
-         flatten,
-         sort(str))
+         flatten)
 
 canonicalize = exhaust(condition(lambda x: isinstance(x, HadamardProduct),
                                  do_one(*rules)))

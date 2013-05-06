@@ -71,12 +71,12 @@ class DeferredVector(Symbol):
 class MatrixBase(object):
 
     # Added just for numpy compatibility
-    # TODO: investigate about __array_priority__
-    __array_priority__ = 10.0
+    __array_priority__ = 11
 
     is_Matrix = True
     is_Identity = None
     _class_priority = 3
+    _sympify = staticmethod(sympify)
 
     @classmethod
     def _handle_creation_inputs(cls, *args, **kwargs):
@@ -141,7 +141,7 @@ class MatrixBase(object):
             operation = args[2]
             flat_list = []
             for i in range(rows):
-                flat_list.extend([sympify(operation(sympify(i), j))
+                flat_list.extend([cls._sympify(operation(cls._sympify(i), j))
                     for j in range(cols)])
 
         # Matrix(2, 2, [1, 2, 3, 4])
@@ -149,7 +149,7 @@ class MatrixBase(object):
             flat_list = args[2]
             if len(flat_list) != rows*cols:
                 raise ValueError('List length should be equal to rows*columns')
-            flat_list = map(lambda i: sympify(i), flat_list)
+            flat_list = map(lambda i: cls._sympify(i), flat_list)
 
         # Matrix(numpy.ones((2, 2)))
         elif len(args) == 1 and hasattr(args[0], "__array__"):  # pragma: no cover
@@ -159,13 +159,13 @@ class MatrixBase(object):
             arr = args[0].__array__()
             if len(arr.shape) == 2:
                 rows, cols = arr.shape[0], arr.shape[1]
-                flat_list = map(lambda i: sympify(i), arr.ravel())
+                flat_list = map(lambda i: cls._sympify(i), arr.ravel())
                 return rows, cols, flat_list
             elif len(arr.shape) == 1:
                 rows, cols = 1, arr.shape[0]
                 flat_list = [S.Zero]*cols
                 for i in range(len(arr)):
-                    flat_list[i] = sympify(arr[i])
+                    flat_list[i] = cls._sympify(arr[i])
                 return rows, cols, flat_list
             else:
                 raise NotImplementedError(
@@ -193,7 +193,7 @@ class MatrixBase(object):
             if rows:
                 if not is_sequence(in_mat[0]):
                     cols = 1
-                    flat_list = map(lambda i: sympify(i), in_mat)
+                    flat_list = map(lambda i: cls._sympify(i), in_mat)
                     return rows, cols, flat_list
                 cols = ncol.pop()
             else:
@@ -201,7 +201,7 @@ class MatrixBase(object):
             flat_list = []
             for j in range(rows):
                 for i in range(cols):
-                    flat_list.append(sympify(in_mat[j][i]))
+                    flat_list.append(cls._sympify(in_mat[j][i]))
 
         # Matrix()
         elif len(args) == 0:
@@ -264,8 +264,8 @@ class MatrixBase(object):
                 return
             raise ValueError('unexpected value: %s' % value)
         else:
-            if not is_mat and \
-                    not isinstance(value, Expr) and is_sequence(value):
+            if (not is_mat and
+                not isinstance(value, Basic) and is_sequence(value)):
                 value = Matrix(value)
                 is_mat = True
             if is_mat:
@@ -277,7 +277,7 @@ class MatrixBase(object):
                            slice(j, j + value.cols))
                 self.copyin_matrix(key, value)
             else:
-                return i, j, sympify(value)
+                return i, j, self._sympify(value)
             return
 
     def copy(self):
@@ -1107,21 +1107,23 @@ class MatrixBase(object):
         LUdecomposition
         """
         if rhs.rows != self.rows:
-            raise ShapeError(
-                "`self` and `rhs` must have the same number of rows.")
+            raise ShapeError("`self` and `rhs` must have the same number of rows.")
 
         A, perm = self.LUdecomposition_Simple(iszerofunc=_iszero)
         n = self.rows
         b = rhs.permuteFwd(perm).as_mutable()
         # forward substitution, all diag entries are scaled to 1
-        for i in range(n):
-            for j in range(i):
-                b.row_op(i, lambda x, k: x - b[j, k]*A[i, j])
+        for i in xrange(n):
+            for j in xrange(i):
+                scale = A[i, j]
+                b.zip_row_op(i, j, lambda x, y: x - y*scale)
         # backward substitution
-        for i in range(n - 1, -1, -1):
-            for j in range(i + 1, n):
-                b.row_op(i, lambda x, k: x - b[j, k]*A[i, j])
-            b.row_op(i, lambda x, k: x / A[i, i])
+        for i in xrange(n - 1, -1, -1):
+            for j in xrange(i + 1, n):
+                scale = A[i, j]
+                b.zip_row_op(i, j, lambda x, y: x - y*scale)
+            scale = A[i, i]
+            b.row_op(i, lambda x, _: x/scale)
         return rhs.__class__(b)
 
     def LUdecomposition(self, iszerofunc=_iszero):
@@ -1501,10 +1503,10 @@ class MatrixBase(object):
         if not is_sequence(b):
             raise TypeError("`b` must be an ordered iterable or Matrix, not %s." %
                 type(b))
-        if not (self.rows == 1 and self.cols == 3 or
+        if not ((self.rows == 1 and self.cols == 3 or
                 self.rows == 3 and self.cols == 1) and \
                 (b.rows == 1 and b.cols == 3 or
-                b.rows == 3 and b.cols == 1):
+                b.rows == 3 and b.cols == 1)):
             raise ShapeError("Dimensions incorrect for cross product.")
         else:
             return self._new(1, 3, ((self[1]*b[2] - self[2]*b[1]),
@@ -2435,13 +2437,13 @@ class MatrixBase(object):
         pivot, r = 0, self.as_mutable()
         # pivotlist: indices of pivot variables (non-free)
         pivotlist = []
-        for i in range(r.cols):
+        for i in xrange(r.cols):
             if pivot == r.rows:
                 break
             if simplify:
                 r[pivot, i] = simpfunc(r[pivot, i])
             if iszerofunc(r[pivot, i]):
-                for k in range(pivot, r.rows):
+                for k in xrange(pivot, r.rows):
                     if simplify and k > pivot:
                         r[k, i] = simpfunc(r[k, i])
                     if not iszerofunc(r[k, i]):
@@ -2451,14 +2453,32 @@ class MatrixBase(object):
                 r.row_swap(pivot, k)
             scale = r[pivot, i]
             r.row_op(pivot, lambda x, _: x / scale)
-            for j in range(r.rows):
+            for j in xrange(r.rows):
                 if j == pivot:
                     continue
                 scale = r[j, i]
-                r.row_op(j, lambda x, k: x - scale*r[pivot, k])
+                r.zip_row_op(j, pivot, lambda x, y: x - scale*y)
             pivotlist.append(i)
             pivot += 1
         return self._new(r), pivotlist
+
+    def rank(self, simplified=False, iszerofunc=_iszero,
+        simplify=False):
+        """
+        Returns the rank of a matrix
+
+        >>> from sympy import Matrix
+        >>> from sympy.abc import x
+        >>> m = Matrix([[1, 2], [x, 1 - 1/x]])
+        >>> m.rank()
+        2
+        >>> n = Matrix(3, 3, range(1, 10))
+        >>> n.rank()
+        2
+        """
+        row_reduced = self.rref(simplified=simplified, iszerofunc=iszerofunc, simplify=simplify)
+        rank = len(row_reduced[-1])
+        return rank
 
     def nullspace(self, simplified=False, simplify=False):
         """Returns list of vectors (Matrix objects) that span nullspace of self
@@ -3488,6 +3508,25 @@ class MatrixBase(object):
         newmat[:, j:] = self[:, i:]
         return newmat
 
+    def replace(self, F, G, map=False):
+        """Replaces Function F in Matrix entries with Function G.
+
+        Examples
+        ========
+
+        >>> from sympy import symbols, Function, Matrix
+        >>> F, G = symbols('F, G', cls=Function)
+        >>> M = Matrix(2, 2, lambda i, j: F(i+j)) ; M
+        [F(0), F(1)]
+        [F(1), F(2)]
+        >>> N = M.replace(F,G)
+        >>> N
+        [G(0), G(1)]
+        [G(1), G(2)]
+        """
+        M = self[:, :]
+
+        return M.applyfunc(lambda x: x.replace(F, G, map))
 
 def classof(A, B):
     """

@@ -1,6 +1,6 @@
 from sympy import (Symbol, zeta, nan, Rational, Float, pi, dirichlet_eta, log,
-                   zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I, exp_polar,
-                   polar_lift)
+                   zoo, expand_func, polylog, lerchphi, S, exp, sqrt, I,
+                   exp_polar, polar_lift, O)
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                       random_complex_number as randcplx, test_numerically as tn)
 from sympy.utilities.pytest import XFAIL
@@ -60,6 +60,11 @@ def test_zeta_eval():
 
     assert zeta(
         3).evalf(20).epsilon_eq(Float("1.2020569031595942854", 20), 1e-19)
+
+
+def test_zeta_series():
+    assert zeta(x, a).series(a, 0, 2) == \
+        zeta(x, 0) - x*a*zeta(x + 1, 0) + O(a**2)
 
 
 def test_dirichlet_eta_eval():

@@ -503,7 +503,7 @@ class DifferentialExtension(object):
                 if dummy:
                     i = Dummy("i")
                 else:
-                    i = Symbol('i', dummy=True)
+                    i = Symbol('i')
                 self.Tfuncs = self.Tfuncs + [Lambda(i, exp(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace(
                         dict((exp(exparg), self.t**p) for exparg, p in others))
@@ -554,10 +554,10 @@ class DifferentialExtension(object):
                 self.L_K.append(len(self.T) - 1)
                 self.D.append(cancel(darg.as_expr()/arg).as_poly(self.t,
                     expand=False))
-                if dummy:  # XXX aren't these both the same thing?
+                if dummy:
                     i = Dummy("i")
                 else:
-                    i = Symbol('i', dummy=True)
+                    i = Symbol('i')
                 self.Tfuncs = self.Tfuncs + [Lambda(i, log(arg.subs(self.x, i)))]
                 self.newf = self.newf.xreplace({log(arg): self.t})
                 new_extension = True
@@ -604,9 +604,6 @@ class DifferentialExtension(object):
         self.Tfuncs = []
         self.newf = self.f
 
-    # TODO: DE.decrement_level() ... DE.increment_level() code blocks would
-    # be an excelent use of with statement context managers, I think.
-    # We would have to remove Python 2.4 support first.
     def increment_level(self):
         """
         Increment the level of self.
@@ -943,49 +940,53 @@ def canonical_representation(a, d, DE):
 
 def hermite_reduce(a, d, DE):
     """
-    Hermite Reduction - Quadratic version.
+    Hermite Reduction - Mack's Linear Version.
 
     Given a derivation D on k(t) and f = a/d in k(t), returns g, h, r in
     k(t) such that f = Dg + h + r, h is simple, and r is reduced.
+
     """
-    # TODO: Rewrite this using Mack's linear version
     # Make d monic
     l = Poly(1/d.LC(), DE.t)
     a, d = a.mul(l), d.mul(l)
 
     fp, fs, fn = canonical_representation(a, d, DE)
-
     a, d = fn
     l = Poly(1/d.LC(), DE.t)
     a, d = a.mul(l), d.mul(l)
 
-    d_sqf = d.sqf_list_include()
     ga = Poly(0, DE.t)
     gd = Poly(1, DE.t)
 
-    for v, i in d_sqf:
-        if i < 2:
-            continue
+    dd = derivation(d, DE)
+    dm = gcd(d, dd).as_poly(DE.t)
+    ds, r = d.div(dm)
 
-        u = d.exquo(v**i)
-        for j in range(i - 1, 0, -1):
-            udv = u*derivation(v, DE)
-            b, c = gcdex_diophantine(udv.as_poly(DE.t), v.as_poly(DE.t),
-                a.mul(Poly(-S(1)/j, DE.t)).as_poly(DE.t))
-            b, c = b.as_poly(DE.t), c.as_poly(DE.t)
+    while dm.degree(DE.t)>0:
 
-            vj = v**j
-            ga = ga*vj + b*gd
-            gd = gd*vj
-            a = c.mul(Poly(-j, DE.t)) - u*derivation(b, DE)
+        ddm = derivation(dm, DE)
+        dm2 = gcd(dm, ddm)
+        dms, r = dm.div(dm2)
+        ds_ddm = ds.mul(ddm)
+        ds_ddm_dm, r = ds_ddm.div(dm)
 
-        d = u*v
+        b, c = gcdex_diophantine(-ds_ddm_dm.as_poly(DE.t), dms.as_poly(DE.t), a.as_poly(DE.t))
+        b, c = b.as_poly(DE.t), c.as_poly(DE.t)
 
+        db = derivation(b, DE).as_poly(DE.t)
+        ds_dms, r = ds.div(dms)
+        a = c.as_poly(DE.t) - db.mul(ds_dms).as_poly(DE.t)
+
+        ga = ga*dm + b*gd
+        gd = gd*dm
+        ga, gd = ga.cancel(gd, include=True)
+        dm = dm2
+
+    d = ds
     q, r = a.div(d)
-
     ga, gd = ga.cancel(gd, include=True)
-    r, d = r.cancel(d, include=True)
 
+    r, d = r.cancel(d, include=True)
     rra = q*fs[1] + fp*fs[1] + fs[0]
     rrd = fs[1]
     rra, rrd = rra.cancel(rrd, include=True)
@@ -1182,7 +1183,7 @@ def integrate_primitive(a, d, DE, z=None):
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
-            g1[0]*derivation(g1[0], DE)).as_expr()/(g1[1]**2).as_expr() -
+            g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
         i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
@@ -1274,7 +1275,7 @@ def integrate_hyperexponential(a, d, DE, z=None):
     g2, b = residue_reduce(h[0], h[1], DE, z=z)
     if not b:
         i = cancel(a.as_expr()/d.as_expr() - (g1[1]*derivation(g1[0], DE) -
-            g1[0]*derivation(g1[0], DE)).as_expr()/(g1[1]**2).as_expr() -
+            g1[0]*derivation(g1[1], DE)).as_expr()/(g1[1]**2).as_expr() -
             residue_reduce_derivation(g2, DE, z))
         i = NonElementaryIntegral(cancel(i.subs(s)), DE.x)
         return ((g1[0].as_expr()/g1[1].as_expr()).subs(s) +
@@ -1297,7 +1298,6 @@ def integrate_hyperexponential(a, d, DE, z=None):
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
             (qd**2).as_expr()
         i = NonElementaryIntegral(cancel(i).subs(s), DE.x)
-
     return (ret, i, b)
 
 

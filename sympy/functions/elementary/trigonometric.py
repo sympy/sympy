@@ -18,6 +18,14 @@ class TrigonometricFunction(Function):
 
     unbranched = True
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
 
 def _peeloff_pi(arg):
     """
@@ -713,6 +721,12 @@ class sec(TrigonometricFunction):  # TODO implement rest all functions for sec. 
     def _eval_rewrite_as_sincos(self, arg):
         return sin(arg)/(cos(arg)*sin(arg))
 
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return tan(self.args[0])*sec(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
+
 
 class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. see cos, sin, tan.
 
@@ -721,6 +735,12 @@ class csc(TrigonometricFunction):  # TODO implement rest all functions for csc. 
 
     def _eval_rewrite_as_sincos(self, arg):
         return cos(arg)/(sin(arg)*cos(arg))
+
+    def fdiff(self, argindex=1):
+        if argindex == 1:
+            return -cot(self.args[0])*csc(self.args[0])
+        else:
+            raise ArgumentIndexError(self, argindex)
 
 
 class tan(TrigonometricFunction):
@@ -1207,6 +1227,14 @@ class asin(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1331,6 +1359,14 @@ class acos(Function):
         else:
             raise ArgumentIndexError(self, argindex)
 
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
+
     @classmethod
     def eval(cls, arg):
         if arg.is_Number:
@@ -1398,11 +1434,7 @@ class acos(Function):
         return S.Pi/2 - asin(x)
 
     def _eval_rewrite_as_atan(self, x):
-        if x > -1 and x <= 1:
-            return 2 * atan(sqrt(1 - x**2)/(1 + x))
-        else:
-            raise ValueError(
-                "The argument must be bounded in the interval (-1,1]")
+        return atan(sqrt(1 - x**2)/x) + (S.Pi/2)*(1 - x*sqrt(1/x**2))
 
     def _sage_(self):
         import sage.all as sage
@@ -1443,6 +1475,14 @@ class atan(Function):
             return 1/(1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):
@@ -1536,6 +1576,14 @@ class acot(Function):
             return -1 / (1 + self.args[0]**2)
         else:
             raise ArgumentIndexError(self, argindex)
+
+    def _eval_is_rational(self):
+        s = self.func(*self.args)
+        if s.func == self.func:
+            if s.args[0].is_rational:
+                return False
+        else:
+            return s.is_rational
 
     @classmethod
     def eval(cls, arg):

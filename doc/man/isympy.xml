@@ -230,7 +230,7 @@ this will generate isympy.1 in the current directory. -->
 					<para>Example: isympy -t python</para>
 
                     <para><replaceable class="parameter">TYPE</replaceable> must be one of 'gmpy',
-                    'gmpy1', 'python' or 'sympy'.</para>
+                    'gmpy1' or 'python'.</para>
 				</listitem>
             </varlistentry>
             <varlistentry>

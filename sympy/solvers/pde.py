@@ -1,17 +1,459 @@
 """
-Analytical methods for solving Partial Differential Equations
-Currently implemented methods:
-    - separation of variables - pde_separate
+This module contains pdsolve() and different helper functions that it
+uses. It is heavily inspired by the ode module and hence the basic
+infrastructure remains the same.
+
+**Functions in this module**
+
+    These are the user functions in this module:
+
+    - pdsolve()     - Solves PDE's
+    - classify_pde() - Classifies PDEs into possible hints for dsolve().
+    - pde_separate() - Separate variables in partial differential equation either by
+                       additive or multiplicative separation approach.
+
+    These are the helper functions in this module:
+
+    - pde_separate_add() - Helper function for searching additive separable solutions.
+    - pde_separate_mul() - Helper function for searching multiplicative
+                           separable solutions.
+
+**Currently implemented solver methods**
+
+The following methods are implemented for solving partial differential
+equations.  See the docstrings of the various pde_hint() functions for
+more information on each (run help(pde)):
+
+  - 1st order linear homogeneous partial differential equations
+    with constant coefficients.
 
 """
+from copy import deepcopy
 
-from sympy import Eq, Equality
 from sympy.simplify import simplify
-from sympy.core.compatibility import reduce
+from sympy.core import Add, C, S, Mul, Pow, oo
+from sympy.core.compatibility import (reduce, combinations_with_replacement,
+    is_sequence)
+from sympy.core.function import (Function, Derivative,
+    expand, diff, AppliedUndef)
+from sympy.core.numbers import Rational
+from sympy.core.relational import Equality, Eq
+from sympy.core.symbol import Symbol, Wild, Dummy, symbols
+from sympy.functions import exp
 from sympy.utilities.iterables import has_dups
 
+from sympy.solvers.deutils import _preprocess, ode_order, _desolve
+from sympy.solvers.solvers import solve
 import operator
 
+allhints = (
+    "1st_linear_constant_coeff_homogeneous",
+    )
+
+def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
+    """
+    Solves any (supported) kind of partial differential equation.
+
+    **Usage**
+
+        pdsolve(eq, f(x,y), hint) -> Solve partial differential equation
+        eq for function f(x,y), using method hint.
+
+    **Details**
+
+        ``eq`` can be any supported partial differential equation (see
+            the pde docstring for supported methods).  This can either
+            be an Equality, or an expression, which is assumed to be
+            equal to 0.
+
+        ``f(x,y)`` is a function of two variables whose derivatives in that
+            variable make up the partial differential equation. In many
+            cases it is not necessary to provide this; it will be autodetected
+            (and an error raised if it couldn't be detected).
+
+        ``hint`` is the solving method that you want pdsolve to use.  Use
+            classify_pde(eq, f(x,y)) to get all of the possible hints for
+            a PDE.  The default hint, 'default', will use whatever hint
+            is returned first by classify_pde().  See Hints below for
+            more options that you can use for hint.
+
+        ``solvefun`` is the convention used for arbitrary functions returned
+            by the PDE solver. If not set by the user, it is set by default
+            to be F.
+
+    **Hints**
+
+        Aside from the various solving methods, there are also some
+        meta-hints that you can pass to pdsolve():
+
+        "default":
+                This uses whatever hint is returned first by
+                classify_pde(). This is the default argument to
+                pdsolve().
+
+        See also the classify_pde() docstring for more info on hints,
+        and the pde docstring for a list of all supported hints.
+
+    **Tips**
+        - You can declare the derivative of an unknown function this way:
+            >>> from sympy import Function, Derivative
+            >>> from sympy.abc import x, y # x and y are the independent variables
+            >>> f = Function("f")(x, y) # f is a function of x and y
+            >>> # fx will be the partial derivative of f with respect to x
+            >>> fx = Derivative(f, x)
+            >>> # fy will be the partial derivative of f with respect to y
+            >>> fy = Derivative(f, y)
+
+        - See test_pde.py for many tests, which serves also as a set of
+          examples for how to use pdsolve().
+        - pdsolve always returns an Equality class (except for the case
+          when the hint is "all" or "all_Integral"). Note that it is not possible
+          to get an explicit solution for f(x, y) as in the case of ODE's
+        - Do help(pde.pde_hintname) to get help more information on a
+          specific hint
+
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.pde import pdsolve
+    >>> from sympy import Function, diff, Eq
+    >>> from sympy.abc import x, y
+    >>> f = Function('f')
+    >>> u = f(x, y)
+    >>> ux = u.diff(x)
+    >>> uy = u.diff(y)
+    >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
+    >>> pdsolve(eq)
+    f(x, y) == F(3*x - 2*y)*exp(-2*x/13 - 3*y/13)
+    """
+
+    given_hint = hint  # hint given by the user.
+
+    if not solvefun:
+        solvefun = Function('F')
+
+    # See the docstring of _desolve for more details.
+    hints = _desolve(eq, func=func,
+        hint=hint, simplify=True, type='pde', **kwargs)
+    eq = hints['eq']
+    all_ = hints.pop('all', False)
+
+    if all_:
+        raise NotImplementedError("Only one hint has been added till now")
+    else:
+        solvefunc = globals()['pde_' + hints[hint]]
+        return solvefunc(eq, hints['func'], hints['order'], hints[hints['hint']],
+            solvefun)
+
+def classify_pde(eq, func=None, dict=False, **kwargs):
+    """
+    Returns a tuple of possible pdsolve() classifications for a PDE.
+
+    The tuple is ordered so that first item is the classification that
+    pdsolve() uses to solve the PDE by default.  In general,
+    classifications at the near the beginning of the list will produce
+    better solutions faster than those near the end, thought there are
+    always exceptions.  To make pdsolve use a different classification,
+    use pdsolve(PDE, func, hint=<classification>).  See also the pdsolve()
+    docstring for different meta-hints you can use.
+
+    If ``dict`` is true, classify_pde() will return a dictionary of
+    hint:match expression terms. This is intended for internal use by
+    pdsolve().  Note that because dictionaries are ordered arbitrarily,
+    this will most likely not be in the same order as the tuple.
+
+    You can get help on different hints by doing help(pde.pde_hintname),
+    where hintname is the name of the hint without "_Integral".
+
+    See sympy.pde.allhints or the sympy.pde docstring for a list of all
+    supported hints that can be returned from classify_pde.
+
+
+    Examples
+    ========
+    >>> from sympy.solvers.pde import classify_pde
+    >>> from sympy import Function, diff, Eq
+    >>> from sympy.abc import x, y
+    >>> f = Function('f')
+    >>> u = f(x, y)
+    >>> ux = u.diff(x)
+    >>> uy = u.diff(y)
+    >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
+    >>> classify_pde(eq)
+    ('1st_linear_constant_coeff_homogeneous',)
+    """
+
+    prep = kwargs.pop('prep', True)
+
+    if func and len(func.args) != 2:
+        raise NotImplementedError("Right now only partial"
+        "differential equations of two variables are supported")
+
+    if prep or func is None:
+        prep, func_ = _preprocess(eq, func)
+        if func is None:
+            func = func_
+
+    if isinstance(eq, Equality):
+        if eq.rhs != 0:
+            return classify_pde(eq.lhs - eq.rhs, func)
+        eq = eq.lhs
+
+    f = func.func
+    x = func.args[0]
+    y = func.args[1]
+    fx = f(x,y).diff(x)
+    fy = f(x,y).diff(y)
+
+    # TODO : For now pde.py uses support offered by the ode_order function
+    # to find the order with respect to a multi-variable function. An
+    # improvement could be to classify the order of the PDE on the basis of
+    # individual variables.
+    order = ode_order(eq, f(x,y))
+
+    # hint:matchdict or hint:(tuple of matchdicts)
+    # Also will contain "default":<default hint> and "order":order items.
+    matching_hints = {'order': order}
+
+    if not order:
+        if dict:
+            matching_hints["default"] = None
+            return matching_hints
+        else:
+            return ()
+
+    eq = expand(eq)
+
+    a = Wild('a', exclude = [f(x,y)])
+    b = Wild('b', exclude = [f(x,y), fx, fy, x, y])
+    c = Wild('c', exclude = [f(x,y), fx, fy, x, y])
+    d = Wild('d', exclude = [f(x,y), fx, fy, x, y])
+    n = Wild('n', exclude = [x, y])
+    # Try removing the smallest power of f(x,y)
+    # from the highest partial derivatives of f(x,y)
+    reduced_eq = None
+    if eq.is_Add:
+        var = set(combinations_with_replacement((x,y), order))
+        dummyvar = deepcopy(var)
+        power = None
+        for i in var:
+            coeff = eq.coeff(f(x,y).diff(*i))
+            if coeff != 1:
+                match = coeff.match(a*f(x,y)**n)
+                if match and match[a]:
+                    power = match[n]
+                    dummyvar.remove(i)
+                    break
+            dummyvar.remove(i)
+        for i in dummyvar:
+            coeff = eq.coeff(f(x,y).diff(*i))
+            if coeff != 1:
+                match = coeff.match(a*f(x,y)**n)
+                if match and match[a] and match[n] < power:
+                    power = match[n]
+        if power:
+            den = f(x,y)**power
+            reduced_eq = Add(*[arg/den for arg in eq.args])
+        if not reduced_eq:
+            reduced_eq = eq
+
+    if order == 1:
+        ## Linear first-order homogeneous partial-differential
+        ## equation with constant coefficients
+        r = reduced_eq.match(b*fx + c*fy + d*f(x,y))
+        if r:
+            r.update({'b': b, 'c': c, 'd': d})
+            matching_hints["1st_linear_constant_coeff_homogeneous"] = r
+
+    # Order keys based on allhints.
+    retlist = []
+    for i in allhints:
+        if i in matching_hints:
+            retlist.append(i)
+
+    if dict:
+        # Dictionaries are ordered arbitrarily, so make note of which
+        # hint would come first for pdsolve().  Use an ordered dict in Py 3.
+        matching_hints["default"] = None
+        matching_hints["ordered_hints"] = tuple(retlist)
+        for i in allhints:
+            if i in matching_hints:
+                matching_hints["default"] = i
+                break
+        return matching_hints
+    else:
+        return tuple(retlist)
+
+def checkpdesol(pde, sol, func=None, solve_for_func=True):
+    """
+    Checks if the given solution satisfies the partial differential
+    equation.
+
+    pde is the partial differential equation which can be given in the
+    form of an equation or an expression. sol is the solution for which
+    the pde is to be checked. This can also be given in an equation or
+    an expression form. If the function is not provided, the helper
+    function _preprocess from deutils is used to identify the function.
+
+    If a sequence of solutions is passed, the same sort of container will be
+    used to return the result for each solution.
+
+    The following methods are currently being implemented to check if the
+    solution satisfies the PDE:
+
+        1. Directly substitute the solution in the PDE and check. If the
+           solution hasn't been solved for f, then it will solve for f
+           provided solve_for_func hasn't been set to False.
+
+    If the solution satisfies the PDE, then a tuple (True, 0) is returned.
+    Otherwise a tuple (False, expr) where expr is the value obtained
+    after substituting the solution in the PDE. However if a known solution
+    returns False, it may be due to the inability of doit() to simplify it to zero.
+
+    Examples
+    ========
+    >>> from sympy import Function, symbols, diff
+    >>> from sympy.solvers.pde import checkpdesol, pdsolve
+    >>> x, y = symbols('x y')
+    >>> f = Function('f')
+    >>> eq = 2*f(x,y) + 3*f(x,y).diff(x) + 4*f(x,y).diff(y)
+    >>> sol = pdsolve(eq)
+    >>> assert checkpdesol(eq, sol)[0]
+    >>> eq = x*f(x,y) + f(x,y).diff(x)
+    >>> checkpdesol(eq, sol)
+    (False, (x*F(4*x - 3*y) - 6*F(4*x - 3*y)/25 + 4*Subs(Derivative(F(_xi_1), _xi_1), (_xi_1,), (4*x - 3*y,)))*exp(-6*x/25 - 8*y/25))
+    """
+
+    # Converting the pde into an equation
+    if not isinstance(pde, Equality):
+        pde = Eq(pde, 0)
+
+    # If no function is given, try finding the function present.
+    if func is None:
+        try:
+            _, func = _preprocess(pde.lhs)
+        except ValueError:
+            funcs = [s.atoms(AppliedUndef) for s in (
+                sol if is_sequence(sol, set) else [sol])]
+            funcs = reduce(set.union, funcs, set())
+            if len(funcs) != 1:
+                raise ValueError(
+                    'must pass func arg to checkpdesol for this case.')
+            func = funcs.pop()
+
+    # If the given solution is in the form of a list or a set
+    # then return a list or set of tuples.
+    if is_sequence(sol, set):
+        return type(sol)(map(lambda i: checkpdesol(pde, i,
+            solve_for_func=solve_for_func), sol))
+
+    # Convert solution into an equation
+    if not isinstance(sol, Equality):
+        sol = Eq(func, sol)
+
+    # Try solving for the function
+    if solve_for_func and not (sol.lhs == func and not sol.rhs.has(func)) and not \
+            (sol.rhs == func and not sol.lhs.has(func)):
+        try:
+            solved = solve(sol, func)
+            if not solved:
+                raise NotImplementedError
+        except NotImplementedError:
+            pass
+        else:
+            if len(solved) == 1:
+                result = checkpdesol(pde, Eq(func, solved[0]),
+                    order=order, solve_for_func=False)
+            else:
+                result = checkpdesol(pde, [Eq(func, t) for t in solved],
+                order=order, solve_for_func=False)
+
+    # The first method includes direct substitution of the solution in
+    # the PDE and simplifying.
+    pde = pde.lhs - pde.rhs
+    if sol.lhs == func:
+        s = pde.subs(func, sol.rhs).doit()
+    elif sol.rhs == func:
+        s = pde.subs(func, sol.lhs).doit()
+    if s:
+        ss = simplify(s)
+        if ss:
+            return False, ss
+        else:
+            return True, 0
+    else:
+        return True, 0
+
+def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
+    r"""
+    Solves a first order linear homogeneous
+    partial differential equation with constant coefficients.
+
+    The general form of this partial differential equation is
+    a*f(x,y).diff(x) + b*f(x,y).diff(y) + f(x,y) = 0
+    where a, b and c are constants.
+
+    The general solution of the differential equation, can be found
+    by the method of characteristics. It is given by
+    f(x,y) = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y))
+
+    >>> from sympy.solvers import pdsolve
+    >>> from sympy.abc import x, y, a, b, c
+    >>> from sympy import Function, pprint
+    >>> f = Function('f')
+    >>> u = f(x,y)
+    >>> ux = u.diff(x)
+    >>> uy = u.diff(y)
+    >>> genform = a*u + b*ux + c*uy
+    >>> pprint(genform)
+                   d               d
+    a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y))
+                  dx              dy
+
+    >>> pprint(pdsolve(genform))
+                              -a*(b*x + c*y)
+                             --------------
+                                 2    2
+                                b  + c
+    f(x, y) = F(-b*y + c*x)*e
+
+    Examples
+    ========
+
+    >>> from sympy.solvers.pde import (
+    ... pde_1st_linear_constant_coeff_homogeneous)
+    >>> from sympy import pdsolve
+    >>> from sympy import Function, diff, pprint
+    >>> from sympy.abc import x,y
+    >>> f = Function('f')
+    >>> pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y))
+    f(x, y) == F(x - y)*exp(-x/2 - y/2)
+    >>> pprint(pdsolve(f(x,y) + f(x,y).diff(x) + f(x,y).diff(y)))
+                          x   y
+                        - - - -
+                          2   2
+    f(x, y) = F(x - y)*e
+
+    References
+    ==========
+
+    - Viktor Grigoryan, "Partial Differential Equations"
+      Math 124A - Fall 2010, pp.7
+
+    """
+    # TODO : For now homogeneous first order linear PDE's having
+    # two variables are implemented. Once there is support for
+    # solving systems of ODE's, this can be extended to n variables.
+
+    f = func.func
+    x = func.args[0]
+    y = func.args[1]
+    g = Function('g')
+    b = match[match['b']]
+    c = match[match['c']]
+    d = match[match['d']]
+    return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
 
 def pde_separate(eq, fun, sep, strategy='mul'):
     """Separate variables in partial differential equation either by additive

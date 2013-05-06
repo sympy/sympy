@@ -50,7 +50,7 @@ class ExpBase(Function):
         # exponent handling
         exp = self.exp
         neg_exp = exp.is_negative
-        if not neg_exp and not exp.is_real:
+        if not neg_exp and not (-exp).is_negative:
             neg_exp = _coeff_isneg(exp)
         if neg_exp:
             return S.One, self.func(-exp)
@@ -493,7 +493,14 @@ class log(Function):
                 if not (base.is_positive and arg.is_positive):
                     raise ValueError
                 n = multiplicity(base, arg)
-                return n + log(arg // base ** n) / log(base)
+                if n:
+                    den = base**n
+                    if den.is_Integer:
+                        return n + log(arg // den) / log(base)
+                    else:
+                        return n + log(arg / den) / log(base)
+                else:
+                    return log(arg)/log(base)
             except ValueError:
                 pass
             if base is not S.Exp1:
@@ -570,6 +577,7 @@ class log(Function):
 
     def _eval_expand_log(self, deep=True, **hints):
         from sympy import unpolarify
+        from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         arg = self.args[0]
         if arg.is_Mul:
@@ -595,6 +603,9 @@ class log(Function):
                     return unpolarify(e) * a._eval_expand_log(**hints)
                 else:
                     return unpolarify(e) * a
+        elif isinstance(arg, Product):
+            if arg.function.is_positive:
+                return Sum(log(arg.function), *arg.limits)
 
         return self.func(arg)
 

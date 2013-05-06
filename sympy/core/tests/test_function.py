@@ -1,6 +1,6 @@
 from sympy import (Lambda, Symbol, Function, Derivative, Subs, sqrt,
         log, exp, Rational, Float, sin, cos, acos, diff, I, re, im,
-        E, expand, pi, O, Sum, S, polygamma, loggamma,
+        E, expand, pi, O, Sum, S, polygamma, loggamma, expint,
         Tuple, Dummy, Eq, Expr, symbols, nfloat)
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.abc import t, w, x, y, z
@@ -324,6 +324,12 @@ def test_function__eval_nseries():
     assert loggamma(1/x)._eval_nseries(x, 0, None) == \
         log(x)/2 - log(x)/x - 1/x + O(1, x)
     assert loggamma(log(1/x)).nseries(x, n=1, logx=y) == loggamma(-y)
+
+    # issue 3626:
+    assert expint(S(3)/2, -x)._eval_nseries(x, 5, None) == \
+        2 - 2*sqrt(pi)*sqrt(-x) - 2*x - x**2/3 - x**3/15 - x**4/84 + O(x**5)
+    assert sin(sqrt(x))._eval_nseries(x, 3, None) == \
+        sqrt(x) - x**(S(3)/2)/6 + x**(S(5)/2)/120 + O(x**3)
 
 
 def test_doit():

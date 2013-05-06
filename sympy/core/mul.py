@@ -23,6 +23,64 @@ class NC_Marker:
     is_commutative = False
 
 
+# Key for sorting commutative args in canonical order
+_args_sortkey = cmp_to_key(Basic.compare)
+def _mulsort(args):
+    # in-place sorting of args
+    args.sort(key=_args_sortkey)
+
+
+def _unevaluated_Mul(*args):
+    """Return a well-formed unevaluated Mul: Numbers are collected and
+    put in slot 0 and args are sorted. Use this when args have changed
+    but you still want to return an unevaluated Mul.
+
+    Examples
+    ========
+
+    >>> from sympy.core.mul import _unevaluated_Mul as uMul
+    >>> from sympy import S, sqrt, Mul
+    >>> from sympy.abc import x, y
+    >>> a = uMul(*[S(3.0), x, S(2)])
+    >>> a.args[0]
+    6.00000000000000
+    >>> a.args[1]
+    x
+
+    Beyond the Number being in slot 0, there is no other flattening of
+    arguments, but two unevaluated Muls with the same arguments will
+    always compare as equal during testing:
+
+    >>> m = uMul(sqrt(2), sqrt(3))
+    >>> m == uMul(sqrt(3), sqrt(2))
+    True
+    >>> m == Mul(*m.args)
+    False
+
+    """
+    args = list(args)
+    newargs = []
+    ncargs = []
+    co = S.One
+    while args:
+        a = args.pop()
+        if a.is_Mul:
+            c, nc = a.args_cnc()
+            args.extend(c)
+            if nc:
+                ncargs.append(Mul._from_args(nc))
+        elif a.is_Number:
+            co *= a
+        else:
+            newargs.append(a)
+    _mulsort(newargs)
+    if co is not S.One:
+        newargs.insert(0, co)
+    if ncargs:
+        newargs.append(Mul._from_args(ncargs))
+    return Mul._from_args(newargs)
+
+
 class Mul(Expr, AssocOp):
 
     __slots__ = []
@@ -31,9 +89,6 @@ class Mul(Expr, AssocOp):
 
     #identity = S.One
     # cyclic import, so defined in numbers.py
-
-    # Key for sorting commutative args in canonical order
-    _args_sortkey = cmp_to_key(Basic.compare)
 
     @classmethod
     def flatten(cls, seq):
@@ -113,6 +168,7 @@ class Mul(Expr, AssocOp):
 
               Removal of 1 from the sequence is already handled by AssocOp.__new__.
         """
+
         rv = None
         if len(seq) == 2:
             a, b = seq
@@ -134,7 +190,7 @@ class Mul(Expr, AssocOp):
                     else:
                         r, b = b.as_coeff_Add()
                         bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        bargs.sort(key=hash)
+                        _addsort(bargs)
                         ar = a*r
                         if ar:
                             bargs.insert(0, ar)
@@ -152,15 +208,13 @@ class Mul(Expr, AssocOp):
         coeff = S.One       # standalone term
                             # e.g. 3 * ...
 
-        iu = []             # ImaginaryUnits, I
-
         c_powers = []       # (base,exp)      n
                             # e.g. (x,n) for x
 
         num_exp = []        # (num-base, exp)           y
                             # e.g.  (3, y)  for  ... * 3  * ...
 
-        neg1e = 0           # exponent on -1 extracted from Number-based Pow
+        neg1e = S.Zero      # exponent on -1 extracted from Number-based Pow and I
 
         pnum_rat = {}       # (num-base, Rat-exp)          1/2
                             # e.g.  (3, 1/2)  for  ... * 3     * ...
@@ -225,7 +279,7 @@ class Mul(Expr, AssocOp):
                 continue
 
             elif o is S.ImaginaryUnit:
-                iu.append(o)
+                neg1e += S.Half
                 continue
 
             elif o.is_commutative:
@@ -235,27 +289,33 @@ class Mul(Expr, AssocOp):
 
                 #  y
                 # 3
-                if o.is_Pow and b.is_Number:
+                if o.is_Pow:
+                    if b.is_Number:
 
-                    # get all the factors with numeric base so they can be
-                    # combined below, but don't combine negatives unless
-                    # the exponent is an integer
-                    if e.is_Rational:
-                        if e.is_Integer:
-                            coeff *= Pow(b, e)  # it is an unevaluated power
+                        # get all the factors with numeric base so they can be
+                        # combined below, but don't combine negatives unless
+                        # the exponent is an integer
+                        if e.is_Rational:
+                            if e.is_Integer:
+                                coeff *= Pow(b, e)  # it is an unevaluated power
+                                continue
+                            elif e.is_negative:    # also a sign of an unevaluated power
+                                seq.append(Pow(b, e))
+                                continue
+                            elif b.is_negative:
+                                neg1e += e
+                                b = -b
+                            if b is not S.One:
+                                pnum_rat.setdefault(b, []).append(e)
                             continue
-                        elif e.is_negative:    # also a sign of an unevaluated power
-                            seq.append(Pow(b, e))
+                        elif b.is_positive or e.is_integer:
+                            num_exp.append((b, e))
                             continue
-                        elif b.is_negative:
-                            neg1e += e
-                            b = -b
-                        if b is not S.One:
-                            pnum_rat.setdefault(b, []).append(e)
+
+                    elif b is S.ImaginaryUnit and e.is_Rational:  # it is unevaluated
+                        neg1e += e/2
                         continue
-                    elif b.is_positive or e.is_integer:
-                        num_exp.append((b, e))
-                        continue
+
                 c_powers.append((b, e))
 
             # NON-COMMUTATIVE
@@ -294,21 +354,6 @@ class Mul(Expr, AssocOp):
                     else:
                         nc_part.append(o1)
                         nc_part.append(o)
-
-        # handle the ImaginaryUnits
-        if iu:
-            if len(iu) == 1:
-                c_powers.append((iu[0], S.One))
-            else:
-                # a product of I's has one of 4 values; select that value
-                # based on the length of iu:
-                # len(iu) % 4 of (0, 1, 2, 3) has a corresponding value of
-                #                (1, I,-1,-I)
-                niu = len(iu) % 4
-                if niu % 2:
-                    c_powers.append((S.ImaginaryUnit, S.One))
-                if niu in (2, 3):
-                    coeff = -coeff
 
         # We do want a combined exponent if it would not be an Add, such as
         #  y    2y     3y
@@ -408,7 +453,7 @@ class Mul(Expr, AssocOp):
             grow = []
             for j in range(i + 1, len(num_rat)):
                 bj, ej = num_rat[j]
-                g = _rgcd(bi, bj)
+                g = bi.gcd(bj)
                 if g is not S.One:
                     # 4**r1*6**r2 -> 2**(r1+r2)  *  2**r1 *  3**r2
                     # this might have a gcd with something else
@@ -448,23 +493,29 @@ class Mul(Expr, AssocOp):
         for e, b in pnew.iteritems():
             pnew[e] = Mul(*b)
 
-        # see if there is a base with matching coefficient
-        # that the -1 can be joined with
+        # handle -1 and I
         if neg1e:
-            p = Pow(S.NegativeOne, neg1e)
-            if p.is_Number:
-                coeff *= p
-            else:
-                c, p = p.as_coeff_Mul()
-                coeff *= c
-                if p.is_Pow and p.base is S.NegativeOne:
-                    neg1e = p.exp
+            # treat I as (-1)**(1/2) and compute -1's total exponent
+            p, q =  neg1e.as_numer_denom()
+            # if the integer part is odd, extract -1
+            n, p = divmod(p, q)
+            if n % 2:
+                coeff = -coeff
+            # if it's a multiple of 1/2 extract I
+            if q == 2:
+                c_part.append(S.ImaginaryUnit)
+            elif p:
+                # see if there is any positive base this power of
+                # -1 can join
+                neg1e = Rational(p, q)
                 for e, b in pnew.iteritems():
                     if e == neg1e and b.is_positive:
                         pnew[e] = -b
                         break
                 else:
-                    c_part.append(p)
+                    # keep it separate; we've already evaluated it as
+                    # much as possible so evaluate=False
+                    c_part.append(Pow(S.NegativeOne, neg1e, evaluate=False))
 
         # add all the pnew powers
         c_part.extend([Pow(b, e) for e, b in pnew.iteritems()])
@@ -503,7 +554,7 @@ class Mul(Expr, AssocOp):
             return [coeff], [], order_symbols
 
         # order commutative part canonically
-        c_part.sort(key=cls._args_sortkey)
+        _mulsort(c_part)
 
         # current code expects coeff to be always in slot-0
         if coeff is not S.One:
@@ -617,6 +668,15 @@ class Mul(Expr, AssocOp):
         for a in self.args:
             if a.is_real:
                 coeff *= a
+            elif a.is_commutative:
+                # search for complex conjugate pairs:
+                for i, x in enumerate(other):
+                    if x == a.conjugate():
+                        coeff *= C.Abs(x)**2
+                        del other[i]
+                        break
+                else:
+                    other.append(a)
             else:
                 other.append(a)
         m = Mul(*other)
@@ -645,16 +705,18 @@ class Mul(Expr, AssocOp):
         return Add.make_args(added)  # it may have collapsed down to one term
 
     def _eval_expand_mul(self, **hints):
-        from sympy import fraction, expand_mul
+        from sympy import fraction, expand_mul, expand_multinomial
 
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)
         expr = self
         n, d = fraction(expr)
         if d.is_Mul:
-            expr = n/d._eval_expand_mul(**hints)
+            n, d = [i._eval_expand_mul(**hints) if i.is_Mul else i
+                for i in (n, d)]
+            expr = n/d
             if not expr.is_Mul:
-                return expand_mul(expr, deep=False)
+                return expr
 
         plain, sums, rewrite = [], [], False
         for factor in expr.args:
@@ -816,16 +878,10 @@ class Mul(Expr, AssocOp):
         return lhs/rhs
 
     def as_powers_dict(self):
-        d = defaultdict(list)
+        d = defaultdict(int)
         for term in self.args:
             b, e = term.as_base_exp()
-            d[b].append(e)
-        for b, e in d.iteritems():
-            if len(e) == 1:
-                e = e[0]
-            else:
-                e = Add(*e)
-            d[b] = e
+            d[b] += e
         return d
 
     def as_numer_denom(self):
@@ -857,10 +913,22 @@ class Mul(Expr, AssocOp):
         return all(term._eval_is_rational_function(syms) for term in self.args)
 
     _eval_is_bounded = lambda self: self._eval_template_is_attr('is_bounded')
-    _eval_is_integer = lambda self: self._eval_template_is_attr(
-        'is_integer', when_multiple=None)
     _eval_is_commutative = lambda self: self._eval_template_is_attr(
         'is_commutative')
+    _eval_is_rational = lambda self: self._eval_template_is_attr('is_rational',
+        when_multiple=None)
+
+    def _eval_is_integer(self):
+        is_rational = self.is_rational
+
+        if is_rational:
+            n, d = self.as_numer_denom()
+            if d is S.One:
+                return True
+            elif d is S(2):
+                return n.is_even
+        elif is_rational is False:
+            return False
 
     def _eval_is_polar(self):
         has_polar = any(arg.is_polar for arg in self.args)
@@ -1067,10 +1135,15 @@ class Mul(Expr, AssocOp):
         if is_integer:
             r = True
             for t in self.args:
-                if t.is_even:
-                    return False
-                if t.is_odd is None:
-                    r = None
+                if not t.is_integer:
+                    return None
+                elif t.is_even:
+                    r = False
+                elif t.is_integer:
+                    if r is False:
+                        pass
+                    elif t.is_odd is None:
+                        r = None
             return r
 
         # !integer -> !odd
@@ -1444,12 +1517,14 @@ def prod(a, start=1):
     return reduce(operator.mul, a, start)
 
 
-def _keep_coeff(coeff, factors, clear=True):
+def _keep_coeff(coeff, factors, clear=True, sign=False):
     """Return ``coeff*factors`` unevaluated if necessary.
 
-    If clear is False, do not keep the coefficient as a factor
+    If ``clear`` is False, do not keep the coefficient as a factor
     if it can be distributed on a single factor such that one or
     more terms will still have integer coefficients.
+
+    If ``sign`` is True, allow a coefficient of -1 to remain factored out.
 
     Examples
     ========
@@ -1464,6 +1539,10 @@ def _keep_coeff(coeff, factors, clear=True):
     x/2 + 1
     >>> _keep_coeff(S.Half, (x + 2)*y, clear=False)
     y*(x + 2)/2
+    >>> _keep_coeff(S(-1), x + y)
+    -x - y
+    >>> _keep_coeff(S(-1), x + y, sign=True)
+    -(x + y)
     """
 
     if not coeff.is_Number:
@@ -1473,7 +1552,7 @@ def _keep_coeff(coeff, factors, clear=True):
             return coeff*factors
     if coeff is S.One:
         return factors
-    elif coeff is S.NegativeOne:  # don't keep sign?
+    elif coeff is S.NegativeOne and not sign:
         return -factors
     elif factors.is_Add:
         if not clear and coeff.is_Rational and coeff.q != 1:
@@ -1496,9 +1575,7 @@ def _keep_coeff(coeff, factors, clear=True):
     else:
         return coeff*factors
 
-from numbers import Rational, igcd, ilcm, Integer
-def _rgcd(a, b):
-    return Rational(Integer(igcd(a.p, b.p)), Integer(ilcm(a.q, b.q)))
 
+from numbers import Rational
 from power import Pow
-from add import Add
+from add import Add, _addsort

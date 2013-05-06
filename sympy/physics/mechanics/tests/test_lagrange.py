@@ -2,7 +2,8 @@ from sympy.physics.mechanics import (dynamicsymbols, ReferenceFrame, Point,
                                     RigidBody, LagrangesMethod, Particle,
                                     kinetic_energy, dynamicsymbols, inertia,
                                     potential_energy, Lagrangian)
-from sympy import symbols, pi, sin, cos, tan, simplify, expand
+from sympy import symbols, pi, sin, cos, tan, simplify, expand, Function, \
+    Derivative
 
 
 def test_disc_on_an_incline_plane():
@@ -179,12 +180,19 @@ def test_rolling_disc():
     BodyD.set_potential_energy(- m * g * r * cos(q2))
     Lag = Lagrangian(N, BodyD)
     q = [q1, q2, q3]
+    q1 = Function('q1')
+    q2 = Function('q2')
+    q3 = Function('q3')
     l = LagrangesMethod(Lag, q)
     l.form_lagranges_equations()
     RHS = l.rhs()
     RHS.simplify()
+    t = symbols('t')
 
     assert (l.mass_matrix[3:6] == [0, 5*m*r**2/4, 0])
-    assert (RHS[4].simplify() == (-4*g*sin(q2) + 5*r*sin(q2)*cos(q2)*q1d**2
-        + 6*r*cos(q2)*q1d*q3d)/(5*r))
-    assert RHS[5] == (5*sin(q2)**2*q1d + 6*sin(q2)*q3d - q1d)*q2d/cos(q2)
+    assert RHS[4].simplify() == (
+        (-8*g*sin(q2(t)) + r*(5*sin(2*q2(t))*Derivative(q1(t), t) +
+        12*cos(q2(t))*Derivative(q3(t), t))*Derivative(q1(t), t))/(10*r))
+    assert RHS[5] == (-5*cos(q2(t))*Derivative(q1(t), t) + 6*tan(q2(t)
+        )*Derivative(q3(t), t) + 4*Derivative(q1(t), t)/cos(q2(t))
+        )*Derivative(q2(t), t)

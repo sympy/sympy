@@ -349,15 +349,15 @@ def dup_cyclotomic_p(f, K, irreducible=False):
     Examples
     ========
 
-    >>> from sympy.polys.factortools import dup_cyclotomic_p
-    >>> from sympy.polys.domains import ZZ
+    >>> from sympy.polys import ring, ZZ
+    >>> R, x = ring("x", ZZ)
 
-    >>> f = [1, 0, 1, 0, 0, 0,-1, 0, 1, 0,-1, 0, 0, 0, 1, 0, 1]
-    >>> dup_cyclotomic_p(f, ZZ)
+    >>> f = x**16 + x**14 - x**10 + x**8 - x**6 + x**2 + 1
+    >>> R.dup_cyclotomic_p(f)
     False
 
-    >>> g = [1, 0, 1, 0, 0, 0,-1, 0,-1, 0,-1, 0, 0, 0, 1, 0, 1]
-    >>> dup_cyclotomic_p(g, ZZ)
+    >>> g = x**16 + x**14 - x**10 - x**8 - x**6 + x**2 + 1
+    >>> R.dup_cyclotomic_p(g)
     True
 
     """
@@ -503,11 +503,11 @@ def dup_zz_factor_sqf(f, K):
     if n <= 0:
         return cont, []
     elif n == 1:
-        return cont, [(g, 1)]
+        return cont, [g]
 
     if query('USE_IRREDUCIBLE_IN_FACTOR'):
         if dup_zz_irreducible_p(g, K):
-            return cont, [(g, 1)]
+            return cont, [g]
 
     factors = None
 
@@ -541,11 +541,11 @@ def dup_zz_factor(f, K):
 
     Consider polynomial `f = 2*x**4 - 2`::
 
-        >>> from sympy.polys.factortools import dup_zz_factor
-        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x = ring("x", ZZ)
 
-        >>> dup_zz_factor([2, 0, 0, 0, -2], ZZ)
-        (2, [([1, -1], 1), ([1, 1], 1), ([1, 0, 1], 1)])
+        >>> R.dup_zz_factor(2*x**4 - 2)
+        (2, [(x - 1, 1), (x + 1, 1), (x**2 + 1, 1)])
 
     In result we got the following factorization::
 
@@ -1042,11 +1042,11 @@ def dmp_zz_factor(f, u, K):
 
     Consider polynomial `f = 2*(x**2 - y**2)`::
 
-        >>> from sympy.polys.factortools import dmp_zz_factor
-        >>> from sympy.polys.domains import ZZ
+        >>> from sympy.polys import ring, ZZ
+        >>> R, x,y = ring("x,y", ZZ)
 
-        >>> dmp_zz_factor([[2], [], [-2, 0, 0]], 1, ZZ)
-        (2, [([[1], [-1, 0]], 1), ([[1], [1, 0]], 1)])
+        >>> R.dmp_zz_factor(2*x**2 - 2*y**2)
+        (2, [(x - y, 1), (x + y, 1)])
 
     In result we got the following factorization::
 
@@ -1177,7 +1177,7 @@ def dup_gf_factor(f, K):
 
 def dmp_gf_factor(f, u, K):
     """Factor multivariate polynomials over finite fields. """
-    raise DomainError('multivariate polynomials over %s' % K)
+    raise NotImplementedError('multivariate polynomials over finite fields')
 
 
 @cythonized("i,k,u")
@@ -1185,7 +1185,7 @@ def dup_factor_list(f, K0):
     """Factor polynomials into irreducibles in `K[x]`. """
     j, f = dup_terms_gcd(f, K0)
 
-    if not K0.has_CharacteristicZero:
+    if K0.is_FiniteField:
         coeff, factors = dup_gf_factor(f, K0)
     elif K0.is_Algebraic:
         coeff, factors = dup_ext_factor(f, K0)
@@ -1258,7 +1258,7 @@ def dmp_factor_list(f, u, K0):
 
     J, f = dmp_terms_gcd(f, u, K0)
 
-    if not K0.has_CharacteristicZero:  # pragma: no cover
+    if K0.is_FiniteField:  # pragma: no cover
         coeff, factors = dmp_gf_factor(f, u, K0)
     elif K0.is_Algebraic:
         coeff, factors = dmp_ext_factor(f, u, K0)

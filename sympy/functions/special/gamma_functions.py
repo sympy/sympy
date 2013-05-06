@@ -8,6 +8,7 @@ from sympy.functions.elementary.integers import floor
 from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
+from sympy.functions.combinatorial.numbers import harmonic
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -182,11 +183,11 @@ class lowergamma(Function):
         #    lowergamma(s, exp(2*I*pi*n)*x) = exp(2*pi*I*n*a)*lowergamma(a, x)
         from sympy import unpolarify, I, factorial, exp
         nx, n = x.extract_branch_factor()
-        if a.is_integer and a > 0:
+        if a.is_integer and a.is_positive:
             nx = unpolarify(x)
             if nx != x:
                 return lowergamma(a, nx)
-        elif a.is_integer and a <= 0:
+        elif a.is_integer and a.is_nonpositive:
             if n != 0:
                 return 2*pi*I*n*(-1)**(-a)/factorial(-a) + lowergamma(a, nx)
         elif n != 0:
@@ -357,13 +358,35 @@ class uppergamma(Function):
 class polygamma(Function):
     """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
 
-       See Also
-       ========
+    Examples
+    ========
 
-       gamma, digamma, trigamma
+    We can rewrite polygamma functions in terms of harmonic numbers:
 
-    Reference:
-        http://en.wikipedia.org/wiki/Polygamma_function
+    >>> from sympy import polygamma, harmonic, Symbol
+    >>> x = Symbol("x")
+
+    >>> polygamma(0, x).rewrite(harmonic)
+    harmonic(x - 1) - EulerGamma
+
+    >>> polygamma(2, x).rewrite(harmonic)
+    2*harmonic(x - 1, 3) - 2*zeta(3)
+
+    >>> ni = Symbol("n", integer=True)
+    >>> polygamma(ni, x).rewrite(harmonic)
+    (-1)**(n + 1)*(-harmonic(x - 1, n + 1) + zeta(n + 1))*n!
+
+    See Also
+    ========
+
+    gamma, digamma, trigamma
+
+    References
+    ==========
+
+    .. [1] http://en.wikipedia.org/wiki/Polygamma_function
+    .. [2] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
+    .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
     """
 
     nargs = 2
@@ -508,7 +531,25 @@ class polygamma(Function):
         return polygamma(n, z)
 
     def _eval_rewrite_as_zeta(self, n, z):
-        return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z - 1)
+        if n >= S.One:
+            return (-1)**(n + 1)*C.factorial(n)*zeta(n + 1, z)
+        else:
+            return self
+
+    def _eval_rewrite_as_harmonic(self, n, z):
+        if n.is_integer:
+            if n == S.Zero:
+                return harmonic(z - 1) - S.EulerGamma
+            else:
+                return S.NegativeOne**(n+1) * C.factorial(n) * (C.zeta(n+1) - harmonic(z-1, n+1))
+
+    def _eval_as_leading_term(self, x):
+        n, z = [a.as_leading_term(x) for a in self.args]
+        o = C.Order(z, x)
+        if n == 0 and o.contains(1/x):
+            return o.getn() * log(x)
+        else:
+            return self.func(n, z)
 
 
 class loggamma(Function):

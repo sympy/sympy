@@ -81,13 +81,7 @@ class AskNegativeHandler(CommonHandler):
             if ask(Q.odd(expr.exp), assumptions):
                 return ask(Q.negative(expr.base), assumptions)
 
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Abs(expr, assumptions):
-        return False
+    ImaginaryUnit, Abs = [staticmethod(CommonHandler.AlwaysFalse)]*2
 
 
 class AskNonZeroHandler(CommonHandler):
@@ -121,9 +115,7 @@ class AskNonZeroHandler(CommonHandler):
     def Pow(expr, assumptions):
         return ask(Q.nonzero(expr.base), assumptions)
 
-    @staticmethod
-    def NaN(expr, assumptions):
-        return True
+    NaN = staticmethod(CommonHandler.AlwaysTrue)
 
     @staticmethod
     def Abs(expr, assumptions):
@@ -190,10 +182,24 @@ class AskPositiveHandler(CommonHandler):
         if ask(Q.real(expr.args[0]), assumptions):
             return True
 
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
+    ImaginaryUnit = staticmethod(CommonHandler.AlwaysFalse)
 
     @staticmethod
     def Abs(expr, assumptions):
         return ask(Q.nonzero(expr), assumptions)
+
+    @staticmethod
+    def Trace(expr, assumptions):
+        if ask(Q.positive_definite(expr.arg), assumptions):
+            return True
+
+    @staticmethod
+    def Determinant(expr, assumptions):
+        if ask(Q.positive_definite(expr.arg), assumptions):
+            return True
+
+    @staticmethod
+    def MatrixElement(expr, assumptions):
+        if (expr.i == expr.j
+                and ask(Q.positive_definite(expr.parent), assumptions)):
+            return True

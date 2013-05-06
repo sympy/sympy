@@ -4,10 +4,11 @@ A Printer which converts an expression into its LaTeX equivalent.
 
 from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
-from printer import Printer
-from conventions import split_super_sub
-from sympy.simplify import fraction
 from sympy.core.sympify import SympifyError
+
+from printer import Printer
+from conventions import split_super_sub, requires_partial
+from precedence import precedence, PRECEDENCE
 
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps
@@ -67,6 +68,12 @@ class LatexPrinter(Printer):
             mul_symbol_table[self._settings['mul_symbol']]
 
         self._delim_dict = {'(': ')', '[': ']'}
+
+    def parenthesize(self, item, level):
+        if precedence(item) <= level:
+            return r"\left(%s\right)" % self._print(item)
+        else:
+            return self._print(item)
 
     def doprint(self, expr):
         tex = Printer.doprint(self, expr)
@@ -177,6 +184,7 @@ class LatexPrinter(Printer):
             coeff = -coeff
             tex = "- "
 
+        from sympy.simplify import fraction
         numer, denom = fraction(tail, exact=True)
         separator = self._settings['mul_symbol_latex']
 
@@ -275,6 +283,10 @@ class LatexPrinter(Printer):
             and expr.exp.is_Rational \
                 and expr.exp.q != 1:
             base, p, q = self._print(expr.base), expr.exp.p, expr.exp.q
+            if expr.base.is_Function:
+                return self._print(expr.base, "%s/%s" % (p, q))
+            if self._needs_brackets(expr.base):
+                return r"\left(%s\right)^{%s/%s}" % (base, p, q)
             return r"%s^{%s/%s}" % (base, p, q)
         elif expr.exp.is_Rational and expr.exp.is_negative and expr.base.is_Function:
             # Things like 1/x
@@ -342,10 +354,15 @@ class LatexPrinter(Printer):
 
     def _print_Derivative(self, expr):
         dim = len(expr.variables)
+        if requires_partial(expr):
+            diff_symbol = r'\partial'
+        else:
+            diff_symbol = r'd'
+
 
         if dim == 1:
-            tex = r"\frac{\partial}{\partial %s}" % \
-                self._print(expr.variables[0])
+            tex = r"\frac{%s}{%s %s}" % (diff_symbol, diff_symbol,
+                self._print(expr.variables[0]))
         else:
             multiplicity, i, tex = [], 1, ""
             current = expr.variables[0]
@@ -361,11 +378,11 @@ class LatexPrinter(Printer):
 
             for x, i in multiplicity:
                 if i == 1:
-                    tex += r"\partial %s" % self._print(x)
+                    tex += r"%s %s" % (diff_symbol, self._print(x))
                 else:
-                    tex += r"\partial^{%s} %s" % (i, self._print(x))
+                    tex += r"%s %s^{%s}" % (diff_symbol, self._print(x), i)
 
-            tex = r"\frac{\partial^{%s}}{%s} " % (dim, tex)
+            tex = r"\frac{%s^{%s}}{%s} " % (diff_symbol, dim, tex)
 
         if isinstance(expr.expr, C.AssocOp):
             return r"%s\left(%s\right)" % (tex, self._print(expr.expr))
@@ -541,12 +558,13 @@ class LatexPrinter(Printer):
             return tex
 
     def _print_Abs(self, expr, exp=None):
-        tex = r"\lvert{%s}\rvert" % self._print(expr.args[0])
+        tex = r"\left\lvert{%s}\right\rvert" % self._print(expr.args[0])
 
         if exp is not None:
             return r"%s^{%s}" % (tex, exp)
         else:
             return tex
+    _print_Determinant = _print_Abs
 
     def _print_re(self, expr, exp=None):
         if self._needs_brackets(expr.args[0]):
@@ -621,6 +639,45 @@ class LatexPrinter(Printer):
         #      what about exp_polar(0), exp_polar(1)?
         tex = r"e^{%s}" % self._print(expr.args[0])
         return self._do_exponent(tex, exp)
+
+    def _print_elliptic_k(self, expr, exp=None):
+        tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"K^{%s}%s" % (exp, tex)
+        else:
+            return r"K%s" % tex
+
+    def _print_elliptic_f(self, expr, exp=None):
+        tex = r"\left(%s\middle| %s\right)" % \
+            (self._print(expr.args[0]), self._print(expr.args[1]))
+        if exp is not None:
+            return r"F^{%s}%s" % (exp, tex)
+        else:
+            return r"F%s" % tex
+
+    def _print_elliptic_e(self, expr, exp=None):
+        if len(expr.args) == 2:
+            tex = r"\left(%s\middle| %s\right)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]))
+        else:
+            tex = r"\left(%s\right)" % self._print(expr.args[0])
+        if exp is not None:
+            return r"E^{%s}%s" % (exp, tex)
+        else:
+            return r"E%s" % tex
+
+    def _print_elliptic_pi(self, expr, exp=None):
+        if len(expr.args) == 3:
+            tex = r"\left(%s; %s\middle| %s\right)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]), \
+                 self._print(expr.args[2]))
+        else:
+            tex = r"\left(%s\middle| %s\right)" % \
+                (self._print(expr.args[0]), self._print(expr.args[1]))
+        if exp is not None:
+            return r"\Pi^{%s}%s" % (exp, tex)
+        else:
+            return r"\Pi%s" % tex
 
     def _print_gamma(self, expr, exp=None):
         tex = r"\left(%s\right)" % self._print(expr.args[0])
@@ -916,7 +973,7 @@ class LatexPrinter(Printer):
         return r"\tilde{\infty}"
 
     def _print_ImaginaryUnit(self, expr):
-        return r"\mathbf{\imath}"
+        return r"i"
 
     def _print_NaN(self, expr):
         return r"\bot"
@@ -972,6 +1029,7 @@ class LatexPrinter(Printer):
 
         return name
     _print_RandomSymbol = _print_Symbol
+    _print_MatrixSymbol = _print_Symbol
 
     def _print_Relational(self, expr):
         if self._settings['itex']:
@@ -1023,6 +1081,8 @@ class LatexPrinter(Printer):
     _print_ImmutableMatrix = _print_MatrixBase
     _print_Matrix = _print_MatrixBase
 
+    def _print_MatrixElement(self, expr):
+        return self._print(expr.parent) + '_{%s, %s}'%(expr.i, expr.j)
 
     def _print_MatrixSlice(self, expr):
         def latexslice(x):
@@ -1298,6 +1358,61 @@ class LatexPrinter(Printer):
         else:
             return r"\operatorname{%s} {\left(%s\right)}" % (cls, ", ".join(args))
 
+    def _print_PolyElement(self, poly):
+        if not poly:
+            return self._print(poly.ring.domain.zero)
+        mul_sym = self._settings['mul_symbol_latex']
+        prec_add = PRECEDENCE["Add"]
+        prec_atom = PRECEDENCE["Atom"]
+        ring = poly.ring
+        symbols = ring.symbols
+        ngens = ring.ngens
+        zm = ring.zero_monom
+        sexpvs = []
+        expvs = list(poly.keys())
+        expvs.sort(key=ring.order, reverse=True)
+        for expv in expvs:
+            coeff = poly[expv]
+            if ring.domain.is_positive(coeff):
+                sexpvs.append(' + ')
+            else:
+                sexpvs.append(' - ')
+            if ring.domain.is_negative(coeff):
+                coeff = -coeff
+            if coeff != 1 or expv == zm:
+                if expv == zm:
+                    scoeff = self._print(coeff)
+                else:
+                    scoeff = self.parenthesize(coeff, prec_add)
+            else:
+                scoeff = ''
+            sexpv = []
+            for i in xrange(ngens):
+                exp = expv[i]
+                if not exp:
+                    continue
+                symbol = self.parenthesize(symbols[i], prec_atom-1)
+                if exp != 1:
+                    sexpv.append('{%s}^{%d}' % (symbol, exp))
+                else:
+                    sexpv.append('%s' % symbol)
+            if scoeff:
+                sexpv = [scoeff] + sexpv
+            sexpvs.append(mul_sym.join(sexpv))
+        if sexpvs[0] in [" + ", " - "]:
+            head = sexpvs.pop(0)
+            if head == " - ":
+                sexpvs.insert(0, "-")
+        return "".join(sexpvs)
+
+    def _print_FracElement(self, frac):
+        if frac.denom == 1:
+            return self._print(frac.numer)
+        else:
+            numer = self._print(frac.numer)
+            denom = self._print(frac.denom)
+            return r"\frac{%s}{%s}" % (numer, denom)
+
     def _print_euler(self, expr):
         return r"E_{%s}" % self._print(expr.args[0])
 
@@ -1456,17 +1571,19 @@ class LatexPrinter(Printer):
         field = diff._form_field
         if hasattr(field, '_coord_sys'):
             string = field._coord_sys._names[field._index]
-            return r'\mathbb{d}%s' % self._print(Symbol(string))
+            return r'\mathrm{d}%s' % self._print(Symbol(string))
         else:
             return 'd(%s)' % self._print(field)
             string = self._print(field)
-            return r'\mathbb{d}\left(%s\right)' % string
+            return r'\mathrm{d}\left(%s\right)' % string
 
     def _print_Tr(self, p):
         #Todo: Handle indices
         contents = self._print(p.args[0])
         return r'\mbox{Tr}\left(%s\right)' % (contents)
 
+    def _print_totient(self, expr):
+        return r'\phi\left( %s \right)' %  self._print(expr.args[0])
 
 def latex(expr, **settings):
     r"""

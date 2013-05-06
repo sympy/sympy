@@ -596,7 +596,7 @@ def rsolve_hyper(coeffs, f, n, **hints):
                 poly += coeff * Z**i
 
         for z in roots(poly, Z).iterkeys():
-            if z.is_real == False or z.is_zero:
+            if z.is_zero:
                 continue
 
             C = rsolve_poly([ polys[i]*z**i for i in xrange(r + 1) ], 0, n)
@@ -621,8 +621,11 @@ def rsolve_hyper(coeffs, f, n, **hints):
     kernel.sort(key=default_sort_key)
     sk = zip(symbols, kernel)
 
-    for C, ker in sk:
-        result += C * ker
+    if sk:
+        for C, ker in sk:
+            result += C * ker
+    else:
+        return None
 
     if hints.get('symbols', False):
         return (result, [s for s, k in sk])
@@ -676,6 +679,10 @@ def rsolve(f, y, init=None):
 
     n = y.args[0]
     k = Wild('k', exclude=(n,))
+
+    # Preprocess user input to allow things like
+    # y(n) + a*(y(n + 1) + y(n - 1))/2
+    f = f.expand().collect(y.func(Wild('m', integer=True)))
 
     h_part = defaultdict(lambda: S.Zero)
     i_part = S.Zero
@@ -756,25 +763,24 @@ def rsolve(f, y, init=None):
         init = None
 
     if symbols and init is not None:
+        if type(init) is list:
+            init = dict([(i, init[i]) for i in xrange(len(init))])
+
         equations = []
 
-        if type(init) is list:
-            for i in xrange(0, len(init)):
-                eq = solution.subs(n, i) - init[i]
-                equations.append(eq)
-        else:
-            for k, v in init.iteritems():
-                try:
-                    i = int(k)
-                except TypeError:
-                    if k.is_Function and k.func == y.func:
-                        i = int(k.args[0])
-                    else:
-                        raise ValueError(
-                            "Integer or term expected, got '%s'" % k)
-
+        for k, v in init.iteritems():
+            try:
+                i = int(k)
+            except TypeError:
+                if k.is_Function and k.func == y.func:
+                    i = int(k.args[0])
+                else:
+                    raise ValueError("Integer or term expected, got '%s'" % k)
+            try:
+                eq = solution.limit(n, i) - v
+            except NotImplementedError:
                 eq = solution.subs(n, i) - v
-                equations.append(eq)
+            equations.append(eq)
 
         result = solve(equations, *symbols)
 

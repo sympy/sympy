@@ -21,6 +21,31 @@ class SympifyError(ValueError):
 
 converter = {}  # See sympify docstring.
 
+class CantSympify(object):
+    """
+    Mix in this trait to a class to disallow sympification of its instances.
+
+    Example
+    =======
+
+    >>> from sympy.core.sympify import sympify, CantSympify
+
+    >>> class Something(dict):
+    ...     pass
+    ...
+    >>> sympify(Something())
+    {}
+
+    >>> class Something(dict, CantSympify):
+    ...     pass
+    ...
+    >>> sympify(Something())
+    Traceback (most recent call last):
+    ...
+    SympifyError: SympifyError: {}
+
+    """
+    pass
 
 def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     """
@@ -32,7 +57,7 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     with SAGE.
 
     It currently accepts as arguments:
-       - any object defined in sympy (except matrices [TODO])
+       - any object defined in sympy
        - standard numeric python types: int, long, float, Decimal
        - strings (like "0.09" or "2e-19")
        - booleans, including ``None`` (will leave them unchanged)
@@ -206,6 +231,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
                 return converter[superclass](a)
             except KeyError:
                 continue
+
+    if isinstance(a, CantSympify):
+        raise SympifyError(a)
 
     try:
         return a._sympy_()

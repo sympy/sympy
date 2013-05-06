@@ -1,5 +1,7 @@
+from __future__ import with_statement
 from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
-        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic)
+        symbols, simplify, Eq, cos, And, Tuple, integrate, oo, sin, Sum, Basic,
+        DiracDelta)
 from sympy.stats import (Die, Normal, Exponential, P, E, variance, covariance,
         skewness, density, given, independent, dependent, where, pspace,
         random_symbols, sample)
@@ -68,6 +70,14 @@ def test_RandomSymbol():
     assert X != Y
 
     assert X.name == X.symbol.name
+
+    X = Normal('lambda', 0, 1) # make sure we can use protected terms
+    X = Normal('Lambda', 0, 1) # make sure we can use SymPy terms
+
+
+def test_RandomSymbol_diff():
+    X = Normal('x', 0, 1)
+    assert (2*X).diff(X)
 
 
 def test_overlap():
@@ -172,3 +182,7 @@ def test_NamedArgsMixin():
         pass
 
     raises(AttributeError, lambda: Bar(1, 2).foo)
+
+def test_density_constant():
+    assert density(3)(2) == 0
+    assert density(3)(3) == DiracDelta(0)

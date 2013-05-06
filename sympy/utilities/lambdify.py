@@ -33,6 +33,10 @@ MATH_TRANSLATIONS = {
 }
 
 MPMATH_TRANSLATIONS = {
+    "elliptic_k": "ellipk",
+    "elliptic_f": "ellipf",
+    "elliptic_e": "ellipe",
+    "elliptic_pi": "ellippi",
     "ceiling": "ceil",
     "chebyshevt": "chebyt",
     "chebyshevu": "chebyu",

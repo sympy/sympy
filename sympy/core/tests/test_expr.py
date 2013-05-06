@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda)
+    exp_polar, Lambda, expand, diff)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -579,14 +579,17 @@ def test_as_independent():
 def test_call():
     # See the long history of this in issues 1927 and 2006.
 
+    raises(TypeError, lambda: sin(x)({ x : 1, sin(x) : 2}))
+    raises(TypeError, lambda: sin(x)(1))
+
     # No effect as there are no callables
-    assert sin(x)(1) == sin(x)
-    assert (1 + sin(x))(1) == 1 + sin(x)
+    assert sin(x).rcall(1) == sin(x)
+    assert (1 + sin(x)).rcall(1) == 1 + sin(x)
 
     # Effect in the pressence of callables
     l = Lambda(x, 2*x)
-    assert (l + x)(y) == 2*y + x
-    assert (x**l)(2) == x**4
+    assert (l + x).rcall(y) == 2*y + x
+    assert (x**l).rcall(2) == x**4
     # TODO UndefinedFunction does not subclass Expr
     #f = Function('f')
     #assert (2*f)(x) == 2*f(x)
@@ -1121,6 +1124,8 @@ def test_as_powers_dict():
     assert x.as_powers_dict() == {x: 1}
     assert (x**y*z).as_powers_dict() == {x: y, z: 1}
     assert Mul(2, 2, **dict(evaluate=False)).as_powers_dict() == {S(2): S(2)}
+    assert (x*y).as_powers_dict()[z] == 0
+    assert (x + y).as_powers_dict()[z] == 0
 
 
 def test_as_coefficients_dict():
@@ -1149,6 +1154,8 @@ def test_args_cnc():
     raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
+    # always split -1 from leading number
+    assert (-1.*x).args_cnc() == [[-1, 1.0, x], []]
 
 
 def test_new_rawargs():
@@ -1409,6 +1416,10 @@ def test_equals():
     assert (sqrt(5) + pi).equals(0) is False
     assert meter.equals(0) is False
     assert (3*meter**2).equals(0) is False
+    eq = -(-1)**(S(3)/4)*6**(S(1)/4) + (-6)**(S(1)/4)*I
+    if eq != 0:  # if canonicalization makes this zero, skip the test
+        assert eq.equals(0)
+    assert sqrt(x).equals(0) is False
 
     # from integrate(x*sqrt(1+2*x), x);
     # diff is zero only when assumptions allow
@@ -1423,6 +1434,35 @@ def test_equals():
     p = Symbol('p', positive=True)
     assert diff.subs(x, p).equals(0) is True
     assert diff.subs(x, -1).equals(0) is True
+
+    # prove via minimal_polynomial or self-consistency
+    eq = sqrt(1 + sqrt(3)) + sqrt(3 + 3*sqrt(3)) - sqrt(10 + 6*sqrt(3))
+    assert eq.equals(0)
+    q = 3**Rational(1, 3) + 3
+    p = expand(q**3)**Rational(1, 3)
+    assert (p - q).equals(0)
+
+    # issue 3730
+    # eq = q*x + q/4 + x**4 + x**3 + 2*x**2 - S(1)/3
+    # z = eq.subs(x, solve(eq, x)[0])
+    q = symbols('q')
+    z = (q*(-sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/12)/2 - sqrt((2*q - S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824)**(S(1)/3) - S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824)**(S(1)/3) - S(13)/6)/2 - S(1)/4) + q/4 + (-sqrt(-2*(-(q
+    - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q
+    - S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/6)/2 - S(1)/4)**4 + (-sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q -
+    S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/6)/2 - S(1)/4)**3 + 2*(-sqrt(-2*(-(q - S(7)/8)**S(2)/8 -
+    S(2197)/13824)**(S(1)/3) - S(13)/12)/2 - sqrt((2*q -
+    S(7)/4)/sqrt(-2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/12) + 2*(-(q - S(7)/8)**S(2)/8 - S(2197)/13824)**(S(1)/3) -
+    S(13)/6)/2 - S(1)/4)**2 - S(1)/3)
+    assert z.equals(0)
 
 
 def test_random():
@@ -1526,3 +1566,12 @@ def test_float_0():
 def test_float_0_fail():
     assert Float(0.0)*x == Float(0.0)
     assert (x + Float(0.0)).is_Add
+
+
+def test_issue_3226():
+    ans = (b**2 + z**2 - (b*(a + b*t) + z*(c + t*z))**2/(
+        (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
+    e = sqrt((a + b*t)**2 + (c + z*t)**2)
+    assert diff(e, t, 2) == ans
+    e.diff(t, 2) == ans
+    assert diff(e, t, 2, simplify=False) != ans

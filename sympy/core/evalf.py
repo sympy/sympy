@@ -2,7 +2,8 @@
 Adaptive numerical evaluation of SymPy expressions, using mpmath
 for mathematical functions.
 """
-from sympy.core.compatibility import SYMPY_INTS
+import math
+
 import sympy.mpmath.libmp as libmp
 from sympy.mpmath import make_mpc, make_mpf, mp, mpc, mpf, nsum, quadts, quadosc
 from sympy.mpmath import inf as mpmath_inf
@@ -15,11 +16,9 @@ from sympy.mpmath.libmp import bitcount as mpmath_bitcount
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpc import _infs_nan
 from sympy.mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
-
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
-import math
-
+from sympy.core.compatibility import SYMPY_INTS
 from sympify import sympify
 from core import C
 from singleton import S

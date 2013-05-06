@@ -35,8 +35,8 @@ parser.add_option("--seed", dest="seed", type="int",
         help="use this seed for randomized tests",
         metavar="SEED")
 parser.add_option('-t', '--types', dest='types', action='store',
-        default=None, choices=['gmpy', 'gmpy1', 'python', 'sympy'],
-        help='setup ground types: gmpy | gmpy1 | python | sympy')
+        default=None, choices=['gmpy', 'gmpy1', 'python'],
+        help='setup ground types: gmpy | gmpy1 | python')
 parser.add_option('-C', '--no-cache', dest='cache', action='store_false',
         default=True, help='disable caching mechanism')
 parser.add_option("--timeout", action="store", dest="timeout",
