@@ -83,7 +83,7 @@ def represent(expr, **options):
         can be any object that contains the basis set information.
     options : dict
         Key/value pairs of options that are passed to the underlying method
-        that does finds the representation. These options can be used to
+        that finds the representation. These options can be used to
         control how the representation is done. For example, this is where
         the size of the basis set would be set.
 
@@ -91,7 +91,7 @@ def represent(expr, **options):
     =======
 
     e : Expr
-        The sympy expression of the represented quantum expression.
+        The SymPy expression of the represented quantum expression.
 
     Examples
     ========

@@ -490,8 +490,8 @@ class log(Function):
                 else:
                     return S.ComplexInfinity
             try:
-                if not (base.is_positive and arg.is_positive):
-                    raise ValueError
+                # handle extraction of powers of the base now
+                # or else expand_log in Mul would have to handle this
                 n = multiplicity(base, arg)
                 if n:
                     den = base**n
@@ -524,10 +524,6 @@ class log(Function):
             elif arg.is_Rational:
                 if arg.q != 1:
                     return cls(arg.p) - cls(arg.q)
-                # remove perfect powers automatically
-                p = perfect_power(int(arg))
-                if p is not False:
-                    return p[1]*cls(p[0])
         elif arg is S.ComplexInfinity:
             return S.ComplexInfinity
         elif arg is S.Exp1:
@@ -580,7 +576,12 @@ class log(Function):
         from sympy.concrete import Sum, Product
         force = hints.get('force', False)
         arg = self.args[0]
-        if arg.is_Mul:
+        if arg.is_Integer:
+            # remove perfect powers automatically
+            p = perfect_power(int(arg))
+            if p is not False:
+                return p[1]*self.func(p[0])
+        elif arg.is_Mul:
             expr = []
             nonpos = []
             for x in arg.args:

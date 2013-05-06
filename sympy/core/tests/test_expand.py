@@ -305,3 +305,8 @@ def test_issues_2820_3731():
         1 + 3*x + 3*x**2 + x**3 + O(z)
 
     assert expand_multinomial(3**(x + y + 3)) == 27*3**(x + y)
+
+def test_expand_log():
+    t = Symbol('t', positive=True)
+    # after first expansion, -2*log(2) + log(4); then 0 after second
+    assert expand(log(t**2) - log(t**2/4) - 2*log(2)) == 0
