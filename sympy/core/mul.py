@@ -664,9 +664,9 @@ class Mul(Expr, AssocOp):
 
     def as_real_imag(self, deep=True, **hints):
         other = []
-        coeff = S(1)
+        coeff = S.One
         for a in self.args:
-            if a.is_real:
+            if a.is_real or a.is_imaginary:
                 coeff *= a
             elif a.is_commutative:
                 # search for complex conjugate pairs:
@@ -683,7 +683,10 @@ class Mul(Expr, AssocOp):
         if hints.get('ignore') == m:
             return None
         else:
-            return (coeff*C.re(m), coeff*C.im(m))
+            if coeff.is_real:
+                return (coeff*C.re(m), coeff*C.im(m))
+            else:
+                return (-C.im(coeff)*C.im(m), C.im(coeff)*C.re(m))
 
     @staticmethod
     def _expandsums(sums):
