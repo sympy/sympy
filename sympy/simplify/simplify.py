@@ -1659,7 +1659,7 @@ def _nthroot_solve(p, n, prec):
         return p
     pn = p**Rational(1, n)
     x = Symbol('x')
-    f = _minimal_polynomial_sq(p, n, x, prec)
+    f = _minimal_polynomial_sq(p, n, x)
     if f is None:
         return None
     sols = solve(f, x)
