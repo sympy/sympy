@@ -6,7 +6,8 @@ from sympy import (
 )
 
 from sympy.polys.polytools import (
-    Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant, degree
+    Poly, PurePoly, sqf_norm, invert, factor_list, groebner, resultant,
+    degree, poly_from_expr, parallel_poly_from_expr
 )
 
 from sympy.polys.polyclasses import (
@@ -22,6 +23,8 @@ from sympy.polys.polyerrors import (
 from sympy.polys.rootoftools import RootOf
 
 from sympy.polys.specialpolys import cyclotomic_poly
+
+from sympy.polys.polyutils import dict_from_expr, expr_from_dict
 
 from sympy.printing.lambdarepr import LambdaPrinter
 
@@ -240,12 +243,14 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
         mp2 = mp2.subs({x:y})
 
     if op is Add:
-        mp1a = mp1.subs({x:x - y})
+        # mp1a = mp1.subs({x:x - y})
+        (p1, p2), _ = parallel_poly_from_expr((mp1, x - y), x, y)
+        r = p1.compose(p2)
+        mp1a = r.as_expr()
     elif op is Mul:
-        mp1a = y**degree(mp1, x)*mp1.subs({x:x / y})
+        mp1a = _muly(mp1, x, y)
     else:
         raise NotImplementedError('option not available')
-    mp1a = _mexpand(mp1a)
     r = resultant(mp1a, mp2, gens=[y, x])
 
     gcd_deg = gcd(degree(mp1, x), degree(mp2, y))
@@ -257,6 +262,32 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
         ex = op(ex1, ex2)
     res = _choose_factor(factors, x, ex)
     return res
+
+def _invertx(p, x):
+    """
+    Returns ``expand_mul(x**degree(p, x)*p.subs(x, 1/x))``
+    """
+    p1 = poly_from_expr(p, x)[0]
+
+    terms = p1.terms()
+    n = terms[0][0][0]
+    a = [c*x**(n - i[0]) for i, c in terms]
+    return Add(*a)
+
+def _muly(p, x, y):
+    """
+    Returns ``_mexpand(y**deg*p.subs({x:x / y}))``
+    """
+    d = dict_from_expr(p)[0]
+    n = max(d.keys())[0]
+    d1 = {}
+    for monom, coeff in d.iteritems():
+        i = monom[0]
+        expv = (i, n - i)
+        d1[expv] = coeff
+    p1 = expr_from_dict(d1, x, y)
+    return p1
+
 
 def _minpoly_pow(ex, pw, x, mp=None):
     """
@@ -290,7 +321,9 @@ def _minpoly_pow(ex, pw, x, mp=None):
     if pw < 0:
         if mp == x:
             raise ZeroDivisionError('%s is zero' % ex)
-        mp = expand_mul(x**degree(mp, x)*mp.subs(x, 1/x))
+        mp = _invertx(mp, x)
+        if pw == -1:
+            return mp
         pw = -pw
         ex = 1/ex
     y = Dummy(str(x))
@@ -677,7 +710,7 @@ def minimal_polynomial(ex, x=None, **args):
             # by construction G[-1] has root `ex`
             result = _choose_factor(factors, x, ex)
     if inverted:
-        result = expand_mul(x**degree(result, x)*result.subs(x, 1/x))
+        result = _invertx(result, x)
         if result.coeff(x**degree(result, x)) < 0:
             result = expand_mul(-result)
     if polys:

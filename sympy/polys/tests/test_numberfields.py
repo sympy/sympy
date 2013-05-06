@@ -80,6 +80,7 @@ def test_minimal_polynomial():
 
     assert minimal_polynomial(sqrt(2), polys=True) == Poly(x**2 - 2)
     assert minimal_polynomial(sqrt(2), x, polys=True) == Poly(x**2 - 2)
+    assert minimal_polynomial(sqrt(2), x, polys=True, compose=False) == Poly(x**2 - 2)
 
     a = AlgebraicNumber(sqrt(2))
     b = AlgebraicNumber(sqrt(3))
