@@ -65,7 +65,7 @@ from sympy.core.mod import Mod
 from sympy.core.compatibility import default_sort_key, permutations, product
 from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
-        besseli, gamma, uppergamma, erf, sin, besselj, Ei, Ci, Si, Shi,
+        besseli, gamma, uppergamma, expint, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
         rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
