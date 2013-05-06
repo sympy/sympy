@@ -76,7 +76,7 @@ class TheanoPrinter(Printer):
             self.cache[key] = value
             return value
 
-    def _print_Function(self, s, dtypes={}, broadcastables={}):
+    def _print_AppliedUndef(self, s, dtypes={}, broadcastables={}):
         dtype = dtypes.get(s, 'floatX')
         broadcastable = broadcastables.get(s, ())
         name = str(type(s)) + '_' + str(s.args[0])

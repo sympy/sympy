@@ -215,9 +215,9 @@ def test_DenseMatrix():
         assert isinstance(tX, tt.TensorVariable)
         assert tX.owner.op == tt.join
 
-def test_Function():
+def test_AppliedUndef():
     t = sy.Symbol('t')
     f = sy.Function('f')
-    ft = theano_code(f)
-    assert isinstance(ft, tt.TheanoVariable)
+    ft = theano_code(f(t))
+    assert isinstance(ft, tt.TensorVariable)
     assert ft.name == 'f_t'
