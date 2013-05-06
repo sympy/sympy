@@ -1,4 +1,4 @@
-from sympy.core import S, Add
+from sympy.core import S, Add, Expr
 from sympy.assumptions import Q, ask
 from sympy.core.logic import fuzzy_not
 
@@ -33,6 +33,8 @@ def refine(expr, assumptions=True):
     new_expr = handler(expr, assumptions)
     if (new_expr is None) or (expr == new_expr):
         return expr
+    if not isinstance(new_expr, Expr):
+        return new_expr
     return refine(new_expr, assumptions)
 
 
@@ -159,8 +161,27 @@ def refine_exp(expr, assumptions):
                 elif ask(Q.odd(coeff + S.Half), assumptions):
                     return S.ImaginaryUnit
 
+def refine_Relational(expr, assumptions):
+    """
+    Handler for Relational
+
+    >>> from sympy.assumptions.refine import refine_Relational
+    >>> from sympy.assumptions.ask import Q
+    >>> from sympy.abc import x
+    >>> refine_Relational(x<0, ~Q.is_true(x<0))
+    False
+    """
+    return ask(Q.is_true(expr), assumptions)
+
+
 handlers_dict = {
     'Abs': refine_abs,
     'Pow': refine_Pow,
     'exp': refine_exp,
+    'Equality' : refine_Relational,
+    'Unequality' : refine_Relational,
+    'GreaterThan' : refine_Relational,
+    'LessThan' : refine_Relational,
+    'StrictGreaterThan' : refine_Relational,
+    'StrictLessThan' : refine_Relational
 }
