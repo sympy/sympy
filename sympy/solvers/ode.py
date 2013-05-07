@@ -957,20 +957,13 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 matching_hints["nth_linear_euler_eq_homogeneous"] = r
 
     # Order keys based on allhints.
-    retlist = []
-    for i in allhints:
-        if i in matching_hints:
-            retlist.append(i)
+    retlist = [i for i in allhints if i in matching_hints]
 
     if dict:
         # Dictionaries are ordered arbitrarily, so make note of which
         # hint would come first for dsolve().  Use an ordered dict in Py 3.
-        matching_hints["default"] = None
+        matching_hints["default"] = retlist[0] if retlist else None
         matching_hints["ordered_hints"] = tuple(retlist)
-        for i in allhints:
-            if i in matching_hints:
-                matching_hints["default"] = i
-                break
         return matching_hints
     else:
         return tuple(retlist)
@@ -1806,19 +1799,13 @@ def _handle_Integral(expr, func, order, hint):
     For most hints, this simply runs expr.doit()
 
     """
+    global y
     x = func.args[0]
     f = func.func
     if hint == "1st_exact":
-        global y
         sol = (expr.doit()).subs(y, f(x))
         del y
     elif hint == "1st_exact_Integral":
-        # FIXME: We still need to back substitute y
-        # sol = expr.subs(y, f(x))
-        # For now, we are going to have to return an expression with f(x)
-        # replaced with y when Integrals are done with respect to f(x).
-        # For example, Integral(cos(f(x)), _y).  If there were a way
-        # to do inert substitution, that could maybe be used here instead.
         sol = expr.subs(y, f(x))
         del y
     elif hint == "nth_linear_constant_coeff_homogeneous":
