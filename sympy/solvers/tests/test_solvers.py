@@ -1114,11 +1114,16 @@ def test_issue_2957():
 
 def test_issue_2961():
     x = Symbol('x')
-    y = Symbol('y', positive=True)
     absxm3 = Piecewise(
         (x - 3, S(0) <= x - 3),
         (3 - x, S(0) > x - 3)
     )
+    y = Symbol('y')
+    assert solve(absxm3 - y, x) == [
+        Piecewise((-y + 3, S(0) > -y), (S.NaN, True)),
+        Piecewise((y + 3, S(0) <= y), (S.NaN, True))
+    ]
+    y = Symbol('y', positive=True)
     assert solve(absxm3 - y, x) == [-y + 3, y + 3]
 
 
