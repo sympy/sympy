@@ -42,7 +42,7 @@ def components(f, x):
     """
     result = set()
 
-    if f.has(x):
+    if x in f.free_symbols:
         if f.is_Symbol:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
@@ -111,7 +111,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3, 
     from sympy import And, Basic, Eq, Piecewise
 
     f = sympify(f)
-    if not f.has(x):
+    if x not in f.free_symbols:
         return f*x
 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset)
@@ -214,7 +214,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     components
     """
     f = sympify(f)
-    if not f.has(x):
+    if x not in f.free_symbols:
         return f*x
 
     if not f.is_Add:
