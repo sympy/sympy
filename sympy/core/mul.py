@@ -177,19 +177,22 @@ class Mul(Expr, AssocOp):
             assert not a is S.One
             if a and a.is_Rational:
                 r, b = b.as_coeff_Mul()
-                a *= r
-                if b.is_Add and b.is_commutative:
-                    if a is S.One:
-                        rv = [b], [], None
-                    else:
-                        r, b = b.as_coeff_Add()
-                        bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        _addsort(bargs)
-                        ar = a*r
-                        if ar:
-                            bargs.insert(0, ar)
-                        bargs = [Add._from_args(bargs)]
-                        rv = bargs, [], None
+                if b.is_Add:
+                    if r is not S.One:
+                        # leave the Mul as a Mul
+                        rv = [Mul(a*r, b, evaluate=False)], [], None
+                    elif b.is_commutative:
+                        if a is S.One:
+                            rv = [b], [], None
+                        else:
+                            r, b = b.as_coeff_Add()
+                            bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
+                            _addsort(bargs)
+                            ar = a*r
+                            if ar:
+                                bargs.insert(0, ar)
+                            bargs = [Add._from_args(bargs)]
+                            rv = bargs, [], None
             if rv:
                 return rv
 
