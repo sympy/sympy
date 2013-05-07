@@ -385,6 +385,9 @@ def test_evalf_integrals():
         Integral(sin(x)/x**2, (x, 1, oo)), quad='osc') == '0.504067061906928'
     assert NS(Integral(
         cos(pi*x + 1)/x, (x, -oo, -1)), quad='osc') == '0.276374705640365'
+    # indefinite integrals aren't evaluated
+    assert NS(Integral(x, x)) == 'Integral(x, x)'
+    assert NS(Integral(x, (x, y))) == 'Integral(x, (x, y))'
 
 
 @XFAIL
