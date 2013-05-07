@@ -432,3 +432,19 @@ def test_issue_3174():
 @XFAIL
 def test_issue_3175():
     assert Sum(x, (x, 1, 0)).doit() == 0
+
+
+def test_simplify():
+    y = symbols('y', integer = True)
+
+    assert Sum(x, (x, n, m)) + Sum(x**2, (x, n, m)) == \
+    Sum(x**2 + x, (x, n, m))
+    assert Sum(x*y, (x, n, m), (y, a, k)) + \
+    Sum(y, (x, n, m), (y, a, k)) == Sum(x*y + y, (x, n, m), (y, a, k))
+
+    assert Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a)) == \
+    Sum(x, (x, n, a))
+    assert Sum(x, (x, k + 1, a)) + Sum(x, (x, n, k)) == \
+    Sum(x, (x, n, a))
+    assert Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k)) != \
+    Sum(x, (x, n, a))

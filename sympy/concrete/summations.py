@@ -3,6 +3,8 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
+from sympy.simplify.simplify import simplify
+from sympy.core.add import Add
 
 
 def _free_symbols(function, limits):
@@ -309,6 +311,25 @@ class Sum(Expr):
     def _eval_subs(self, old, new):  # XXX this should be the same as Integral's
         if any(old == v for v in self.variables):
             return self
+
+    def __add__(self, other):
+        if type(self) == type(other):
+            if len(self.limits) == len(other.limits):
+                if self.limits == other.limits:
+                    return Sum(self.function + other.function, *self.limits)
+
+            if simplify(self.function - other.function) == 0:
+                if len(self.limits) == len(other.limits) == 1:
+                    i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
+                    j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
+
+                    if i == j:
+                        if x2 == y1 + 1:
+                            return Sum(self.function, (i, x1, y2))
+                        elif x1 == y2 + 1:
+                            return Sum(self.function, (i, x2, y1))
+
+        return Add(self, other)
 
 
 def summation(f, *symbols, **kwargs):

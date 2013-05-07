@@ -2,6 +2,8 @@ from sympy.core import C, Expr, Mul, S, sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
+from sympy.simplify.simplify import simplify
+from sympy.core.mul import Mul
 
 
 class Product(Expr):
@@ -219,6 +221,24 @@ class Product(Expr):
             return Product(self.function.transpose(), *self.limits)
         return None
 
+    def __mul__(self, other):
+        if type(self) == type(other):
+            if len(self.limits) == len(other.limits):
+                if self.limits == other.limits:
+                    return Product(self.function * other.function, *self.limits)
+
+            if simplify(self.function - other.function) == 0:
+                if len(self.limits) == len(other.limits) == 1:
+                    i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
+                    j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
+
+                    if i == j:
+                        if x2 == y1 + 1:
+                            return Product(self.function, (i, x1, y2))
+                        elif x1 == y2 + 1:
+                            return Product(self.function, (i, x2, y1))
+
+        return Mul(self, other)
 
 def product(*args, **kwargs):
     r"""
