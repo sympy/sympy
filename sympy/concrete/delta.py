@@ -287,7 +287,12 @@ def deltasummation(f, limit, no_piecewise=False):
     if not delta:
         return summation(f, limit)
 
-    value = solve(delta.args[0] - delta.args[1], x)[0]
+    solns = solve(delta.args[0] - delta.args[1], x)
+    if len(solns) == 0:
+        return S.Zero
+    elif len(solns) != 1:
+        return Sum(f, limit)
+    value = solns[0]
     if no_piecewise:
         return expr.subs(x, value)
     return Piecewise(
