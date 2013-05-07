@@ -4,6 +4,7 @@ from __future__ import print_function, division
 
 import os
 from textwrap import fill, dedent
+from sympy.core.compatibility import get_function_name
 
 # if you use
 # filldedent('''
@@ -104,6 +105,76 @@ else:
 
 # XXX: PyPy doesn't support hash randomization
 HASH_RANDOMIZATION = getattr(sys.flags, 'hash_randomization', False)
+
+
+def debug_decorator(func):
+    """Only for debugging purposes: prints a tree
+
+    It will print a nice execution tree with arguments and results
+    of all decorated functions.
+    """
+    from sympy import SYMPY_DEBUG
+
+    if not SYMPY_DEBUG:
+        return func
+
+    def decorated(*args, **kwargs):
+        return maketree(func, *args, **kwargs)
+
+    return decorated
+
+
+def tree(subtrees):
+    """Only debugging purposes: prints a tree"""
+    def indent(s, type=1):
+        x = s.split("\n")
+        r = "+-%s\n" % x[0]
+        for a in x[1:]:
+            if a == "":
+                continue
+            if type == 1:
+                r += "| %s\n" % a
+            else:
+                r += "  %s\n" % a
+        return r
+    if len(subtrees) == 0:
+        return ""
+    f = []
+    for a in subtrees[:-1]:
+        f.append(indent(a))
+    f.append(indent(subtrees[-1], 2))
+    return ''.join(f)
+
+tmp = []
+iter = 0
+
+
+def maketree(f, *args, **kw):
+    """Only debugging purposes: prints a tree"""
+    global tmp
+    global iter
+    oldtmp = tmp
+    tmp = []
+    iter += 1
+
+    # If there is a bug and the algorithm enters an infinite loop, enable the
+    # following lines. It will print the names and parameters of all major functions
+    # that are called, *before* they are called
+    #from sympy.core.compatibility import reduce
+    #print("%s%s %s%s" % (iter, reduce(lambda x, y: x + y,map(lambda x: '-',range(1,2+iter))), f.func_name, args))
+
+    r = f(*args, **kw)
+
+    iter -= 1
+    s = "%s%s = %s\n" % (get_function_name(f), args, r)
+    if tmp != []:
+        s += tree(tmp)
+    tmp = oldtmp
+    tmp.append(s)
+    if iter == 0:
+        print((tmp[0]))
+        tmp = []
+    return r
 
 
 def debug(*args):
