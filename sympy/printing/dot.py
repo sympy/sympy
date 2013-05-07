@@ -124,7 +124,7 @@ def dotprint(expr, **kwargs):
         if maxdepth and depth >= maxdepth:
             return
         edges.extend(dotedges(e))
-        [traverse(arg, depth+1) for arg in e.args if not atom(e)]
+        [traverse(arg, depth+1) for arg in e.args if not atom(arg)]
     traverse(expr, 0)
 
     return template%{'graphstyle': attrprint(graphstyle, delimiter='\n'),

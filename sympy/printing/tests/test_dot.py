@@ -44,3 +44,8 @@ def test_dotprint_depth():
     text = dotprint(3*x+2, depth=1)
     assert dotnode(3*x+2) in text
     assert dotnode(x) not in text
+
+def test_Matrix_and_non_basics():
+    from sympy import MatrixSymbol
+    n = Symbol('n')
+    assert dotprint(MatrixSymbol('X', n, n))
