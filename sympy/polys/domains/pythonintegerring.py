@@ -4,7 +4,7 @@ from sympy.polys.domains.integerring import IntegerRing
 
 from sympy.polys.domains.groundtypes import (
     PythonInteger, SymPyInteger, python_sqrt,
-    python_factorial, python_gcdex, python_gcd, python_lcm,
+    python_factorial, python_gcdex, python_gcd, python_lcm, python_gcdex_diophantine
 )
 
 from sympy.polys.polyerrors import CoercionFailed
@@ -70,6 +70,11 @@ class PythonIntegerRing(IntegerRing):
     def gcdex(self, a, b):
         """Compute extended GCD of ``a`` and ``b``. """
         return python_gcdex(a, b)
+
+    def gcdex_diophantine(self, a, b, c):
+        """Compute extended GCD of ``a`` and ``b``. """
+        return python_gcdex_diophantine(a, b, c)
+
 
     def gcd(self, a, b):
         """Compute GCD of ``a`` and ``b``. """

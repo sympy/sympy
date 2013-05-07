@@ -471,6 +471,9 @@ class Domain(object):
         """Extended GCD of ``a`` and ``b``. """
         raise NotImplementedError
 
+    def gcdex_diophantine(self, a, b, c):
+        raise NotImplementedError
+
     def cofactors(self, a, b):
         """Returns GCD and cofactors of ``a`` and ``b``. """
         gcd = self.gcd(a, b)

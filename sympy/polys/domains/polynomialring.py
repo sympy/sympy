@@ -118,6 +118,11 @@ class PolynomialRing(Ring, CompositeDomain):
         """Extended GCD of `a` and `b`. """
         return a.gcdex(b)
 
+    def gcdex_diophantine(self, a, b, c):
+        """Extended GCD of `a` and `b`. """
+        return a.gcdex_diophantine(b, c)
+
+
     def gcd(self, a, b):
         """Returns GCD of `a` and `b`. """
         return a.gcd(b)

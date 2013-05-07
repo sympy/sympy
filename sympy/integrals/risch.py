@@ -36,8 +36,7 @@ from sympy.core.compatibility import reduce, ordered
 from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan
 
 from sympy.integrals import Integral, integrate
-from sympy.polys.densetools import gcdex_diophantine
-from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
+from sympy.polys import gcdex_diophantine, gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
 
 from sympy.utilities.iterables import numbered_symbols
 

@@ -98,6 +98,7 @@ from sympy.polys.densetools import (
     dmp_lift)
 
 from sympy.polys.euclidtools import (
+    dup_gcdex_diophantine, dmp_gcdex_diophantine,
     dup_half_gcdex, dup_gcdex, dup_invert,
     dmp_subresultants,
     dmp_resultant,
@@ -595,6 +596,16 @@ class DMP(PicklableWithSlots, CantSympify):
             return per(s), per(t), per(h)
         else:
             raise ValueError('univariate polynomial expected')
+
+    def gcdex_diophantine(f, g, o):
+        lev, dom, per, F, G = f.unify(g)
+
+        if not lev:
+            s, t, h = dup_gcdex_diophantine(F, G, o, dom)
+            return per(s), per(t), per(h)
+        else:
+            raise ValueError('univariate polynomial expected')
+
 
     def invert(f, g):
         """Invert ``f`` modulo ``g``, if possible. """

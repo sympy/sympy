@@ -16,6 +16,7 @@ from __builtin__ import (
 from pythonrational import PythonRational
 
 from sympy.core.numbers import (
+    igcdex_diophantine as python_gcdex_diophantine,
     igcdex as python_gcdex,
     igcd as python_gcd,
     ilcm as python_lcm,
@@ -35,6 +36,7 @@ if HAS_GMPY == 1:
         numer as gmpy_numer,
         denom as gmpy_denom,
         gcdext as gmpy_gcdex,
+        gcdex_diophantinet as gmpy_gcdex_diophantine,
         gcd as gmpy_gcd,
         lcm as gmpy_lcm,
         sqrt as gmpy_sqrt,
@@ -48,6 +50,7 @@ elif HAS_GMPY == 2:
         numer as gmpy_numer,
         denom as gmpy_denom,
         gcdext as gmpy_gcdex,
+        gcdex_diophantinet as gmpy_gcdex_diophantine,
         gcd as gmpy_gcd,
         lcm as gmpy_lcm,
         isqrt as gmpy_sqrt,
@@ -66,6 +69,7 @@ else:
     gmpy_numer = None
     gmpy_denom = None
     gmpy_gcdex = None
+    gmpy_gcdex_diophantine = None
     gmpy_gcd = None
     gmpy_lcm = None
     gmpy_sqrt = None
