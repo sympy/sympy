@@ -936,7 +936,7 @@ class Derivative(Expr):
             return expr
 
         # Pop evaluate because it is not really an assumption and we will need
-        # to track use it carefully below.
+        # to track it carefully below.
         evaluate = assumptions.pop('evaluate', False)
 
         # Look for a quick exit if there are symbols that don't appear in
@@ -1214,17 +1214,18 @@ class Lambda(Expr):
 
     def __new__(cls, variables, expr):
         try:
+            for v in variables if iterable(variables) else [variables]:
+                assert v.is_Symbol
+        except (AssertionError, AttributeError):
+            raise ValueError('variable is not a Symbol: %s' % v)
+        try:
             variables = Tuple(*variables)
         except TypeError:
             variables = Tuple(variables)
         if len(variables) == 1 and variables[0] == expr:
             return S.IdentityFunction
 
-        #use dummy variables internally, just to be sure
-        new_variables = [C.Dummy(arg.name) for arg in variables]
-        expr = sympify(expr).xreplace(dict(zip(variables, new_variables)))
-
-        obj = Expr.__new__(cls, Tuple(*new_variables), expr)
+        obj = Expr.__new__(cls, Tuple(*variables), S(expr))
         return obj
 
     @property
@@ -1270,7 +1271,7 @@ class Lambda(Expr):
         return super(Lambda, self).__hash__()
 
     def _hashable_content(self):
-        return (self.nargs, ) + tuple(sorted(self.free_symbols))
+        return (self.expr.xreplace(self.canonical_variables),)
 
     @property
     def is_identity(self):
@@ -1416,7 +1417,7 @@ class Subs(Expr):
         return super(Subs, self).__hash__()
 
     def _hashable_content(self):
-        return (self._expr, )
+        return (self._expr.xreplace(self.canonical_variables),)
 
     def _eval_subs(self, old, new):
         if old in self.variables:
