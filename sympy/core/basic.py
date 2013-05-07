@@ -1123,7 +1123,7 @@ class Basic(object):
         """Helper for .has()"""
         return self.__eq__
 
-    def replace(self, query, value, map=False, simultaneous=True):
+    def replace(self, query, value, map=False, simultaneous=True, exact=False):
         """
         Replace matching subexpressions of ``self`` with ``value``.
 
@@ -1137,8 +1137,11 @@ class Basic(object):
         subexpressions from the bottom to the top of the tree. The default
         approach is to do the replacement in a simultaneous fashion so
         changes made are targeted only once. If this is not desired or causes
-        problems, ``simultaneous`` can be set to False.
-
+        problems, ``simultaneous`` can be set to False. In addition, if an
+        expression containing more than one Wild symbol is being used to match
+        subexpressions and  the ``exact`` flag is True, then the match will only
+        succeed if non-zero values are received for each Wild that appears in
+        the match pattern.
 
         The list of possible combinations of queries and replacement values
         is listed below:
@@ -1181,10 +1184,9 @@ class Basic(object):
             obj.replace(pattern(wild), expr(wild))
 
             Replace subexpressions matching ``pattern`` with the expression
-            written in terms of the wild symbols in ``pattern``.
+            written in terms of the Wild symbols in ``pattern``.
 
             >>> a = Wild('a')
-            >>> b = Wild('b')
             >>> f.replace(sin(a), tan(a))
             log(tan(x)) + tan(tan(x**2))
             >>> f.replace(sin(a), tan(a/2))
@@ -1194,37 +1196,30 @@ class Basic(object):
             >>> (x*y).replace(a*x, a)
             y
 
-            Matching will result in a replacement only if the match gives
-            non-zero values for all wild symbols:
+            When the default value of False is used with patterns that have
+            more than one Wild symbol, non-intuitive results may be obtained:
 
-            >>> (2*x + y).replace(a*x + b, b - a)
-            y - 2
+            >>> b = Wild('b')
             >>> (2*x).replace(a*x + b, b - a)
+            2/x
+
+            For this reason, the ``exact`` option can be used to make the
+            replacement only when the match gives non-zero values for all
+            Wild symbols:
+
+            >>> (2*x + y).replace(a*x + b, b - a, exact=True)
+            y - 2
+            >>> (2*x).replace(a*x + b, b - a, exact=True)
             2*x
-
-            If the matching were allowed to be incomplete, non-intuitive
-            results would be obtained. Here, for example, is the incomplete
-            match applied to the replacement pattern:
-
-            >>> m = (2*x).match(a*x + b)
-            >>> (b - a).subs(m)
-            -2
 
         2.2. pattern -> func
             obj.replace(pattern(wild), lambda wild: expr(wild))
 
-            Replace subexpressions matching ``pattern`` with the expression
-            obtained by passing the matched values to the function written
-            in terms of those variables.
+            All behavior is the same as in 2.1 but now a function in terms of
+            pattern variables is used rather than an expression:
 
             >>> f.replace(sin(a), lambda a: sin(2*a))
             log(sin(2*x)) + tan(sin(2*x**2))
-
-            Matching will result in a replacement only if the match gives
-            non-zero values for all wild symbols (see 2.1 above):
-
-            >>> (2*x + y).replace(a*x + b, lambda a, b: b - a)
-            y - 2
 
         3.1. func -> func
             obj.replace(filter, func)
@@ -1268,16 +1263,31 @@ class Basic(object):
         elif isinstance(query, Basic):
             _query = lambda expr: expr.match(query)
 
+            # XXX remove the exact flag and make multi-symbol
+            # patterns use exact=True semantics; to do this the query must
+            # be tested to find out how many Wild symbols are present.
+            # See https://groups.google.com/forum/
+            # ?fromgroups=#!topic/sympy/zPzo5FtRiqI
+            # for a method of inspecting a function to know how many
+            # parameters it has.
             if isinstance(value, Basic):
-                _value = lambda expr, result: (value.subs(result)
-                    if all(val for val in result.values()) else expr)
+                if exact:
+                    _value = lambda expr, result: (value.subs(result)
+                        if all(val for val in result.values()) else expr)
+                else:
+                    _value = lambda expr, result: value.subs(result)
             elif callable(value):
                 # match dictionary keys get the trailing underscore stripped
-                # from them and they are passed as keywords to the callable
-                # and only accept the match if it is exact
-                _value = lambda expr, result: (value(**dict([ (
-                    str(key)[:-1], val) for key, val in result.iteritems()]))
-                    if all(val for val in result.values()) else expr)
+                # from them and are then passed as keywords to the callable;
+                # if ``exact`` is True, only accept match if there are no null
+                # values amongst those matched.
+                if exact:
+                    _value = lambda expr, result: (value(**dict([ (
+                        str(key)[:-1], val) for key, val in result.iteritems()]))
+                        if all(val for val in result.values()) else expr)
+                else:
+                    _value = lambda expr, result: value(**dict([ (
+                        str(key)[:-1], val) for key, val in result.iteritems()]))
             else:
                 raise TypeError(
                     "given an expression, replace() expects "
@@ -1358,7 +1368,7 @@ class Basic(object):
 
     def matches(self, expr, repl_dict={}, old=False):
         """
-        Helper method for match() that looks for a match between wild symbols
+        Helper method for match() that looks for a match between Wild symbols
         in self and expressions in expr.
 
         Examples
