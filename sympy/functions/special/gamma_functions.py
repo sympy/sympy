@@ -16,12 +16,57 @@ from sympy.functions.combinatorial.numbers import harmonic
 
 
 class gamma(Function):
-    """The gamma function returns a function which passes through the integral
+    r"""
+    Gamma Function
+
+    :math:`\Gamma(x) = \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t`
+
+    The gamma function returns a function which passes through the integral
     values of the factorial function, i.e. though defined in the complex plane,
     when n is an integer, `gamma(n) = (n - 1)!`
 
+    Examples
+    ========
+
+    >>> from sympy import I, pi, oo, gamma
+    >>> from sympy.abc import x
+
+    Several special values are known:
+
+    >>> gamma(1)
+    1
+    >>> gamma(4)
+    6
+    >>> gamma(I*oo)
+    0
+    >>> gamma(3/2)
+    1
+
+    The Gamma function obeys the mirror symmetry:
+
+    >>> from sympy import conjugate
+    >>> conjugate(gamma(x))
+    gamma(conjugate(x))
+
+    Differentiation with respect to z is supported:
+
+    >>> from sympy import diff
+    >>> diff(gamma(x), x)
+    gamma(x)*polygamma(0, x)
+
+    We can numerically evaluate the error function to arbitrary precision
+    on the whole complex plane:
+
+    >>> gamma(pi).evalf(40)
+    2.288037795340032417959588909060233922890
+    >>> gamma(1+I).evalf(20)
+    0.49801566811835604271 - 0.15494982830181068512*I
+
     Reference:
-        http://en.wikipedia.org/wiki/Gamma_function
+    =========
+    .. [1] http://en.wikipedia.org/wiki/Gamma_function
+    .. [2] http://functions.wolfram.com/GammaBetaErf/Gamma/
+    .. [3] http://mathworld.wolfram.com/GammaFunction.html
     """
 
     nargs = 1
@@ -67,6 +112,11 @@ class gamma(Function):
                     else:
                         return 2**n*sqrt(S.Pi) / coeff
 
+        z = arg.extract_multiplicatively(S.ImaginaryUnit)
+        if z is not None:
+            if z is S.Infinity or S.NegativeInfinity:
+                return S.Zero
+
     def _eval_expand_func(self, **hints):
         arg = self.args[0]
         if arg.is_Rational:
@@ -87,12 +137,6 @@ class gamma(Function):
 
         return self.func(*self.args)
 
-    def _eval_is_real(self):
-        return self.args[0].is_real
-
-    def _eval_rewrite_as_tractable(self, z):
-        return C.exp(loggamma(z))
-
     def _eval_nseries(self, x, n, logx):
         x0 = self.args[0].limit(x, 0)
         if not (x0.is_Integer and x0 <= 0):
@@ -100,6 +144,14 @@ class gamma(Function):
         t = self.args[0] - x0
         return (gamma(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
+    def _eval_is_real(self):
+        return self.args[0].is_real
+
+    def _eval_rewrite_as_tractable(self, z):
+        return C.exp(loggamma(z))
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
