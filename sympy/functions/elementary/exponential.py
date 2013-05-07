@@ -577,7 +577,7 @@ class log(Function):
         force = hints.get('force', False)
         arg = self.args[0]
         if arg.is_Integer:
-            # remove perfect powers automatically
+            # remove perfect powers
             p = perfect_power(int(arg))
             if p is not False:
                 return p[1]*self.func(p[0])
