@@ -136,6 +136,15 @@ def test_Lambda_arguments():
     raises(TypeError, lambda: Lambda(x, 2*x)(x, y))
     raises(TypeError, lambda: Lambda((x, y), x + y)(x))
 
+def test_Lambda_general_function():
+    variable_1, variable_2, variable_3 = symbols('variable_1:4')
+    assert Lambda((x, y, z), x + y + z).general_function() == variable_1 + variable_2 + variable_3
+    assert Lambda((x, y), x**y).general_function() == variable_1**variable_2
+    assert Lambda((x, y), sin(x) + cos(y)).general_function() == sin(variable_1) + cos(variable_2)
+
+def test_issue_3775():
+    hash(Lambda(x, x*y)) != hash(Lambda(z, z*y**2))
+    hash(Lambda((x, y), x + y)) == hash(Lambda((z, w), z + w))
 
 def test_Lambda_equality():
     assert Lambda(x, 2*x) != Lambda((x, y), 2*x)
