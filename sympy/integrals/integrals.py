@@ -1108,7 +1108,7 @@ class Integral(Expr):
 
         if manual:
             try:
-                result = manualintegrate(g, x)
+                result = manualintegrate(f, x)
                 if result is not None and result.func != Integral:
                     return result
             except (ValueError, PolynomialError):
