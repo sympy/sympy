@@ -78,11 +78,10 @@ class Product(Expr):
         >>> Product(x, (x, y, 1)).free_symbols
         set([y])
         """
-        from sympy.concrete.summations import _free_symbols
-
+        from sympy.integrals.integrals import _free_symbols
         if self.function.is_zero or self.function == 1:
             return set()
-        return _free_symbols(self.function, self.limits)
+        return _free_symbols(self)
 
     @property
     def is_zero(self):
@@ -113,6 +112,10 @@ class Product(Expr):
         """
 
         return self.function.is_zero or self.function == 1 or not self.free_symbols
+
+    def as_dummy(self):
+        from sympy.integrals.integrals import _as_dummy
+        return _as_dummy(self)
 
     def doit(self, **hints):
         f = g = self.function
@@ -231,22 +234,8 @@ class Product(Expr):
 
 
     def _eval_subs(self, old, new):
-        func, limits = self.function, self.limits
-        old_atoms = old.free_symbols
-        limits = list(limits)
-
-        dummies = set()
-        for i in xrange(-1, -len(limits) - 1, -1):
-            xab = limits[i]
-            if len(xab) == 1:
-                continue
-            if not dummies.intersection(old_atoms):
-                limits[i] = Tuple(xab[0],
-                                  *[l._subs(old, new) for l in xab[1:]])
-            dummies.add(xab[0])
-        if not dummies.intersection(old_atoms):
-            func = func.subs(old, new)
-        return self.func(func, *limits)
+        from sympy.integrals.integrals import _eval_subs
+        return _eval_subs(self, old, new)
 
 
 def product(*args, **kwargs):
