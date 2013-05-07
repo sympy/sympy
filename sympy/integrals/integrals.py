@@ -152,27 +152,6 @@ def _as_dummy(expr_with_limits):
     return self.func(f, *limits)
 
 
-def _hashable_content(expr_with_limits):
-    """Return content that will allows this objext to compare with
-    another object as equal if the only difference is the bound variables.
-    """
-    # convert bound symbols to Dummy so we can replace only them
-    # in the expression and limits
-    self = expr_with_limits
-    dself = self.as_dummy()
-    r = dself.canonical_variables
-    limits = []
-    for l in dself.limits:
-        if len(l) == 1:
-            # treat special as long as printing is special for this
-            # otherwise the 1 or 2 arg forms would collapse to the
-            # same result
-            limits.append(l)
-        else:
-            limits.append(tuple(l.xreplace(r)))
-    return (dself.function.xreplace(r),) + tuple(limits)
-
-
 def _eval_subs(expr_with_limits, old, new):
         """
         Substitute old with new in the function and the limits, but don't
@@ -417,9 +396,6 @@ class Integral(Expr):
         transform : Perform mapping on the integration variable
         """
         return [l[0] for l in self.limits]
-
-    def _hashable_content(self):
-        return _hashable_content(self)
 
     @property
     def free_symbols(self):

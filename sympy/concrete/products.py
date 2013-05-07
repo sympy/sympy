@@ -66,10 +66,6 @@ class Product(Expr):
         """
         return [l[0] for l in self.limits]
 
-    def _hashable_content(self):
-        from sympy.integrals.integrals import _hashable_content
-        return _hashable_content(self)
-
     @property
     def free_symbols(self):
         """
