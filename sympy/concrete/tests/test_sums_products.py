@@ -436,18 +436,22 @@ def test_issue_3175():
 
 
 def test_simplify():
-    y = symbols('y', integer = True)
+    y = symbols('y')
 
-    assert simplify(Sum(x, (x, n, m)) + Sum(x**2, (x, n, m))) == \
-    Sum(x**2 + x, (x, n, m))
+    assert simplify(3 * Sum(x, (x, n, m)) + Sum(x, (x, n, m)) * 2) == \
+    Sum(5*x, (x, n, m))
     assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
     Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
-
     assert simplify(Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a))) == \
     Sum(x, (x, n, a))
     assert simplify(Sum(x, (x, k + 1, a)) + Sum(x, (x, n, k))) == \
     Sum(x, (x, n, a))
     assert simplify(Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))) == \
     Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))
-    assert simplify(Sum(x, (x, 0, 3)) * 3 + 3*Sum(x, (x, 4, 6)) + \
+    assert simplify(Sum(x, (x, 0, 3)) * 3 + 3 * Sum(x, (x, 4, 6)) + \
     4 * Sum(z, (z, 0, 1))) == Sum(4*z, (z, 0, 1)) + Sum(3*x, (x, 0, 6))
+    assert simplify(3*Sum(x**2, (x, a, b)) + Sum(x, (x, a, b))) == \
+    Sum(3*x**2 + x, (x, a, b))
+    assert simplify(Sum(x**3, (x, n, k)) * 3 + 3 * Sum(x, (x, n, k)) + \
+    4 * y * Sum(z, (z, n, k))) == \
+    y*Sum(4*z, (z, n, k)) + Sum(3*x**3 + 3*x, (x, n, k))

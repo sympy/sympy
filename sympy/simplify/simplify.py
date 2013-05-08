@@ -4116,7 +4116,7 @@ def _futrig(e, **kwargs):
 
 def sum_simplify(s):
 
-    from sympy import Sum
+    from sympy import Sum, Mul, Add
 
     terms = Add.make_args(s)
     s_t = [] #Sum Terms
@@ -4124,9 +4124,21 @@ def sum_simplify(s):
 
     for i in range(len(terms)):
         if type(terms[i]) == Mul:
-            if terms[i].args[0].is_number == True:
-                s_t.append(Sum(terms[i].args[0] * terms[i].args[1].function, *\
-                terms[i].args[1].limits)) #Insert the Number inside the Sum
+            constant = 1
+            other = 1
+            s = 0
+            for j in range(len(terms[i].args)):
+                if type(terms[i].args[j]) == Sum:
+                    s = terms[i].args[j]
+                elif terms[i].args[j].is_number == True:
+                    constant = constant * terms[i].args[j]
+                else:
+                    other = other * terms[i].args[j]
+            if other == 1 and s != 0:
+                #Insert the constant inside the Sum
+                s_t.append(Sum(constant * s.function, *s.limits))
+            elif other != 1 and s != 0:
+                o_t.append(other * Sum(constant * s.function, *s.limits))
             else:
                 o_t.append(terms[i])
         elif type(terms[i]) == Sum:
@@ -4163,7 +4175,7 @@ def sum_simplify(s):
 
 def sum_add(self, other):
 
-    from sympy import Sum
+    from sympy import Sum, Add, Mul
 
     if type(self) == type(other):
         if len(self.limits) == len(other.limits):
