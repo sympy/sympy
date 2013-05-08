@@ -1504,9 +1504,11 @@ def has_variety(seq):
     return False
 
 
-def uniq(seq):
+def uniq(seq, result=None):
     """
-    Yield unique elements from ``seq`` as an iterator.
+    Yield unique elements from ``seq`` as an iterator. The second
+    parameter ``result``  is used internally; it is not necessary to pass
+    anything for this.
 
     Examples
     ========
@@ -1521,34 +1523,23 @@ def uniq(seq):
     >>> list(uniq(x for x in dat))
     [1, 4, 5, 2]
     >>> list(uniq([[1], [2, 1], [1]]))
-    [[1], [2, 1], [1]]
-
+    [[1], [2, 1]]
     """
-    from sympy.core.function import Tuple
-
-    if not hasattr(seq, '__getitem__'):
-        container = list
-    else:
-        container = type(seq)
-
     try:
         seen = set()
-        result = []
-        for s in seq:
+        result = result or []
+        for i, s in enumerate(seq):
             if not (s in seen or seen.add(s)):
                 yield s
     except TypeError:
-        # something was unhashable
-        if not hasattr(seq, '__getitem__'):
+        if s not in result:
             yield s
-            result = [s]
+            result.append(s)
+        if hasattr(seq, '__getitem__'):
+            for s in uniq(seq[i + 1:], result):
+                yield s
         else:
-            result = []
-        for s in seq:
-            for r in result:
-                if s == r:
-                    break
-            else:
+            for s in uniq(seq, result):
                 yield s
 
 
