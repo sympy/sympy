@@ -131,6 +131,17 @@ def test_minimal_polynomial():
     a = 1 + sqrt(2)
     assert minimal_polynomial((a*sqrt(2) + a)**3, x) == x**2 - 198*x + 1
 
+    p = 1/(1 + sqrt(2) + sqrt(3))
+    assert minimal_polynomial(p, x, compose=False) == 8*x**4 - 16*x**3 + 4*x**2 + 4*x - 1
+
+    p = 2/(1 + sqrt(2) + sqrt(3))
+    assert minimal_polynomial(p, x, compose=False) == x**4 - 4*x**3 + 2*x**2 + 4*x - 2
+
+    assert minimal_polynomial(1 + sqrt(2)*I, x, compose=False) == x**2 - 2*x + 3
+    assert minimal_polynomial(1/(1 + sqrt(2)) + 1, x, compose=False) == x**2 - 2
+    assert minimal_polynomial(sqrt(2)*I + I*(1 + sqrt(2)), x,
+            compose=False) ==  x**4 + 18*x**2 + 49
+
 def test_minimal_polynomial_hi_prec():
     p = 1/sqrt(1 - 9*sqrt(2) + 7*sqrt(3) + S(1)/10**30)
     mp = minimal_polynomial(p, x)
@@ -199,6 +210,24 @@ def test_minpoly_compose():
     assert mp == x**3 + 4*x + 1
     mp = minimal_polynomial(ex + 1, x)
     assert mp == x**3 - 3*x**2 + 7*x - 4
+    assert minimal_polynomial(exp(I*pi/3), x) == x**2 - x + 1
+    assert minimal_polynomial(exp(I*pi/4), x) == x**4 + 1
+    assert minimal_polynomial(exp(I*pi/6), x) == x**4 - x**2 + 1
+    assert minimal_polynomial(exp(I*pi/9), x) == x**6 - x**3 + 1
+    assert minimal_polynomial(exp(I*pi/10), x) == x**8 - x**6 + x**4 - x**2 + 1
+    assert minimal_polynomial(sin(pi/9), x) == 64*x**6 - 96*x**4 + 36*x**2 - 3
+    assert minimal_polynomial(sin(pi/11), x) == 1024*x**10 - 2816*x**8 + \
+            2816*x**6 - 1232*x**4 + 220*x**2 - 11
+
+    raises(NotAlgebraic, lambda: minimal_polynomial(cos(pi*sqrt(2)), x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(sin(pi*sqrt(2)), x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(exp(I*pi*sqrt(2)), x))
+
+    # issue 2835
+    ex = 1/(-36000 - 7200*sqrt(5) + (12*sqrt(10)*sqrt(sqrt(5) + 5) +
+        24*sqrt(10)*sqrt(-sqrt(5) + 5))**2) + 1
+    raises(ZeroDivisionError, lambda: minimal_polynomial(ex, x))
+
 
 def test_primitive_element():
     assert primitive_element([sqrt(2)], x) == (x**2 - 2, [1])

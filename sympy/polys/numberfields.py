@@ -101,6 +101,8 @@ def _separate_sq(p):
                 a.append((S.One, y**2))
             elif y.is_Atom:
                 a.append((y, S.One))
+            elif y.is_Pow and y.exp.is_integer:
+                a.append((y, S.One))
             else:
                 raise NotImplementedError
             continue
@@ -183,25 +185,6 @@ def _minimal_polynomial_sq(p, n, x):
 
     result = _choose_factor(factors, x, pn)
     return result
-
-def _minpoly_neg(ex, x, mp):
-    """
-    return the minimal polynomial of ``-ex``.
-
-    Examples
-    ========
-
-    >>> from sympy import Rational
-    >>> from sympy.polys.numberfields import minpoly, _minpoly_neg
-    >>> from sympy.abc import x
-    >>> p = 2**Rational(1, 3)
-    >>> mp = minpoly(p, x)
-    >>> _minpoly_neg(p, x, mp=mp)
-    -x**3 - 2
-    """
-    if mp is None:
-        mp = _minpoly1(ex, x)
-    return mp.subs({x: -x})
 
 def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
     """
@@ -338,10 +321,6 @@ def _minpoly_add(x, *a):
     """
     returns ``minpoly(Add(*a), x)``
     """
-    if not a:
-        return S.Zero
-    if len(a) == 1:
-        return _minpoly1(a[0], x)
     mp = _minpoly_op_algebraic_number(a[0], a[1], x, op=Add)
     p = a[0] + a[1]
     for px in a[2:]:
@@ -353,10 +332,6 @@ def _minpoly_mul(x, *a):
     """
     returns ``minpoly(Mul(*a), x)``
     """
-    if not a:
-        return S.One
-    if len(a) == 1:
-        return _minpoly1(a[0], x)
     mp = _minpoly_op_algebraic_number(a[0], a[1], x, op=Mul)
     p = a[0] * a[1]
     for px in a[2:]:
@@ -393,8 +368,7 @@ def _minpoly_sin(ex, x):
             else:
                 ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
                 return _minpoly1(ex1, x)
-        else:
-            raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
 def _minpoly_cos(ex, x):
@@ -423,8 +397,7 @@ def _minpoly_cos(ex, x):
             else:
                 ex1 = (C.exp(I*ex.args[0]) + C.exp(-I*ex.args[0]))/2
                 return _minpoly1(ex1, x)
-        else:
-            raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
+
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
 def _minpoly_exp(ex, x):
