@@ -5,6 +5,7 @@ from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
 from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
+from sympy import simplify
 
 n = Symbol('n', integer=True)
 
@@ -437,14 +438,16 @@ def test_issue_3175():
 def test_simplify():
     y = symbols('y', integer = True)
 
-    assert Sum(x, (x, n, m)) + Sum(x**2, (x, n, m)) == \
+    assert simplify(Sum(x, (x, n, m)) + Sum(x**2, (x, n, m))) == \
     Sum(x**2 + x, (x, n, m))
-    assert Sum(x*y, (x, n, m), (y, a, k)) + \
-    Sum(y, (x, n, m), (y, a, k)) == Sum(x*y + y, (x, n, m), (y, a, k))
+    assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
+    Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
 
-    assert Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a)) == \
+    assert simplify(Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a))) == \
     Sum(x, (x, n, a))
-    assert Sum(x, (x, k + 1, a)) + Sum(x, (x, n, k)) == \
+    assert simplify(Sum(x, (x, k + 1, a)) + Sum(x, (x, n, k))) == \
     Sum(x, (x, n, a))
-    assert Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k)) != \
-    Sum(x, (x, n, a))
+    assert simplify(Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))) == \
+    Sum(x, (x, k + 1, a)) + Sum(x + 1, (x, n, k))
+    assert simplify(Sum(x, (x, 0, 3)) * 3 + 3*Sum(x, (x, 4, 6)) + \
+    4 * Sum(z, (z, 0, 1))) == Sum(4*z, (z, 0, 1)) + Sum(3*x, (x, 0, 6))

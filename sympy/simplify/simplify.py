@@ -3497,6 +3497,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     from sympy.simplify.hyperexpand import hyperexpand
     from sympy.functions.special.bessel import BesselBase
+    from sympy import Sum
+    from sympy import Product
 
     expr = signsimp(expr)
 
@@ -3559,6 +3561,12 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     if expr.has(C.CombinatorialFunction, gamma):
         expr = combsimp(expr)
+
+    if expr.has(Sum):
+        expr = sum_simplify(expr)
+
+    if expr.has(Product):
+        expr = product_simplify(expr)
 
     expr = powsimp(expr, combine='exp', deep=True)
     short = shorter(expr, powsimp(factor_terms(expr)))
@@ -4104,6 +4112,140 @@ def _futrig(e, **kwargs):
     e = greedy(tree, objective=Lops)(e)
 
     return coeff*e
+
+
+def sum_simplify(s):
+
+    from sympy import Sum
+
+    terms = Add.make_args(s)
+    s_t = [] #Sum Terms
+    o_t = [] #Other Terms
+
+    for i in range(len(terms)):
+        if type(terms[i]) == Mul:
+            if terms[i].args[0].is_number == True:
+                s_t.append(Sum(terms[i].args[0] * terms[i].args[1].function, *\
+                terms[i].args[1].limits)) #Insert the Number inside the Sum
+            else:
+                o_t.append(terms[i])
+        elif type(terms[i]) == Sum:
+            s_t.append(terms[i])
+        else:
+            o_t.append(terms[i])
+
+    done = False
+    used = [False] * len(s_t)
+
+    while not done:
+        done = True
+
+        for i in range(len(s_t)):
+            if not used[i]:
+                for j in range(i + 1, len(s_t)):
+                    if not used[j]:
+                        if type(sum_add(s_t[i], s_t[j])) == Sum:
+                            done = False
+                            s_t[i] = sum_add(s_t[i], s_t[j])
+                            used[j] = True
+
+    result = 0
+
+    for i in range(len(o_t)):
+        result = Add(result, o_t[i])
+
+    for i in range(len(s_t)):
+        if not used[i]:
+            result = Add(result, s_t[i])
+
+    return result
+
+
+def sum_add(self, other):
+
+    from sympy import Sum
+
+    if type(self) == type(other):
+        if len(self.limits) == len(other.limits):
+            if self.limits == other.limits:
+                return Sum(self.function + other.function, *self.limits)
+
+        if simplify(self.function - other.function) == 0:
+            if len(self.limits) == len(other.limits) == 1:
+                i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
+                j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
+
+                if i == j:
+                    if x2 == y1 + 1:
+                        return Sum(self.function, (i, x1, y2))
+                    elif x1 == y2 + 1:
+                        return Sum(self.function, (i, x2, y1))
+
+    return Add(self, other)
+
+
+def product_simplify(s):
+
+    from sympy import Product
+
+    terms = Mul.make_args(s)
+    p_t = [] #Product Terms
+    o_t = [] #Other Terms
+
+    for i in range(len(terms)):
+        if type(terms[i]) == Product:
+            p_t.append(terms[i])
+        else:
+            o_t.append(terms[i])
+
+    done = False
+    used = [False] * len(p_t)
+
+    while not done:
+        done = True
+
+        for i in range(len(p_t)):
+            if not used[i]:
+                for j in range(i + 1, len(p_t)):
+                    if not used[j]:
+                        if type(product_mul(p_t[i], p_t[j])) == Product:
+                            done = False
+                            p_t[i] = product_mul(p_t[i], p_t[j])
+                            used[j] = True
+
+    result = 1
+
+    for i in range(len(o_t)):
+        result = Mul(result, o_t[i])
+
+    for i in range(len(p_t)):
+        if not used[i]:
+            result = Mul(result, p_t[i])
+
+    return result
+
+
+def product_mul(self, other):
+
+    from sympy import Product
+
+    if type(self) == type(other):
+        if len(self.limits) == len(other.limits):
+            if self.limits == other.limits:
+                return Product(self.function * other.function, *self.limits)
+
+        if simplify(self.function - other.function) == 0:
+            if len(self.limits) == len(other.limits) == 1:
+                i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
+                j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
+
+                if i == j:
+                    if x2 == y1 + 1:
+                        return Product(self.function, (i, x1, y2))
+                    elif x1 == y2 + 1:
+                        return Product(self.function, (i, x2, y1))
+
+    return Mul(self, other)
 
 #-------------------- the old trigsimp routines ---------------------
 _trigs = (C.TrigonometricFunction, C.HyperbolicFunction)
