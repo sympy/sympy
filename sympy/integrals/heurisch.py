@@ -109,6 +109,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3, 
     heurisch
     """
     from sympy import And, Basic, Eq, Piecewise
+    from sympy.solvers.solvers import denoms
 
     f = sympify(f)
     if x not in f.free_symbols:
@@ -117,11 +118,12 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3, 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset)
     if not isinstance(res, Basic):
         return res
-    n, d = res.as_numer_denom()
-    try:
-        slns = solve(d, dict=True, exclude=(x,))
-    except NotImplementedError:
-        slns = []
+    slns = []
+    for d in denoms(res):
+        try:
+            slns += solve(d, dict=True, exclude=(x,))
+        except NotImplementedError:
+            pass
     if not slns:
         return res
     if len(slns) > 1:
