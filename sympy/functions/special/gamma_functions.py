@@ -715,6 +715,9 @@ class loggamma(Function):
     def _eval_is_real(self):
         return self.args[0].is_real
 
+    def _eval_conjugate(self):
+        return self.func(self.args[0].conjugate())
+
     def fdiff(self, argindex=1):
         if argindex == 1:
             return polygamma(0, self.args[0])

@@ -299,6 +299,7 @@ def test_loggamma():
 
     assert loggamma(x).rewrite('intractable') == log(gamma(x))
 
+    assert conjugate(loggamma(x)) == loggamma(conjugate(x))
     assert loggamma(x).is_real is None
     y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real
