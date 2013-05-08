@@ -21,9 +21,10 @@ def test_decompose_power():
 
 def test_Factors():
     assert Factors() == Factors({}) == Factors(S(1))
-    raises(ValueError, lambda: Factors(S.Infinity))
     assert Factors().as_expr() == S.One
     assert Factors({x: 2, y: 3, sin(x): 4}).as_expr() == x**2*y**3*sin(x)**4
+    assert Factors(S.Infinity) == Factors({oo: 1})
+    assert Factors(S.NegativeInfinity) == Factors({oo: 1, -1: 1})
 
     a = Factors({x: 5, y: 3, z: 7})
     b = Factors({      y: 4, z: 3, t: 10})
