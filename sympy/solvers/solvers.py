@@ -32,7 +32,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              asinh, atanh, acoth, Abs, sign, sqrt)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify)
+                            nsimplify, denom)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, Poly, together, factor, RootOf, degree
@@ -61,13 +61,14 @@ def _ispow(e):
 def denoms(eq, symbols=None):
     """Return (recursively) set of all denominators that appear in eq
     that contain any symbol in iterable ``symbols``; if ``symbols`` is
-    None (default) then all denominators with symbols will be returned.
+    None (default) then all denominators will be returned.
 
     Examples
     ========
 
     >>> from sympy.solvers.solvers import denoms
     >>> from sympy.abc import x, y, z
+    >>> from sympy import sqrt
 
     >>> denoms(x/y)
     set([y])
@@ -77,21 +78,27 @@ def denoms(eq, symbols=None):
 
     >>> denoms(3/x + y/z)
     set([x, z])
+
+    >>> denoms(x/2 + y/z)
+    set([2, z])
     """
 
-    symbols = symbols or eq.free_symbols
+    pot = preorder_traversal(eq)
     dens = set()
-    if not symbols or not eq.has(*symbols):
+    for p in pot:
+        den =  denom(p)
+        if den is S.One:
+            continue
+        for d in Mul.make_args(den):
+            dens.add(d)
+    if not symbols:
         return dens
-    pt = preorder_traversal(eq)
-    for e in pt:
-        if _ispow(e):
-            n, d = e.as_numer_denom()
-            if d in dens:
-                pt.skip()
-            elif d.has(*symbols):
-                dens.add(d.as_base_exp()[0])
-    return dens
+    rv = []
+    for d in dens:
+        free = d.free_symbols
+        if any(s in free for s in symbols):
+            rv.append(d)
+    return set(rv)
 
 
 def checksol(f, symbol, sol=None, **flags):
