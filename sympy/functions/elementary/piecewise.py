@@ -431,30 +431,12 @@ class Piecewise(Function):
         """
         Piecewise conditions may contain bool which are not of Basic type.
         """
-        from sympy import checksol, solve
         args = list(self.args)
         for i, (e, c) in enumerate(args):
-
             if isinstance(c, bool):
                 pass
             elif isinstance(c, Basic):
                 c = c._subs(old, new)
-            if isinstance(c, Equality):
-                if checksol(c, {}, minimal=True):
-                    # the equality is trivially solved
-                    c = True
-                else:
-                    # try to solve the equality
-                    try:
-                        slns = solve(c, dict=True)
-                        if not slns:
-                            c = False
-                        elif len(slns) == 1:
-                            c = And(*[Equality(key, value)
-                                      for key, value in slns[0].iteritems()])
-                    except NotImplementedError:
-                        pass
-
             if not c is False:
                 e = e._subs(old, new)
             args[i] = e, c
@@ -504,8 +486,16 @@ class Piecewise(Function):
     @classmethod
     def __eval_cond(cls, cond):
         """Return the truth value of the condition."""
+        from sympy.solvers.solvers import checksol
         if cond is True:
             return True
+        if isinstance(cond, Equality):
+            if checksol(cond, {}, minimal=True):
+                # the equality is trivially solved
+                return True
+            diff = cond.lhs - cond.rhs
+            if diff.is_commutative:
+                return diff.is_zero
         return None
 
 

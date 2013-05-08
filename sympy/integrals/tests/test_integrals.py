@@ -442,7 +442,7 @@ def test_integrate_returns_piecewise():
     assert integrate(x**y, x) == Piecewise(
         (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
     assert integrate(x**y, y) == Piecewise(
-        (y, Eq(x, 1)), (x**y/log(x), True))
+        (y, Eq(log(x), 0)), (x**y/log(x), True))
     assert integrate(exp(n*x), x) == Piecewise(
         (x, Eq(n, 0)), (exp(n*x)/n, True))
     assert integrate(x**(n*y), x) == Piecewise(
