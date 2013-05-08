@@ -9,6 +9,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.combinatorial.numbers import bernoulli
 from sympy.functions.combinatorial.factorials import rf
 from sympy.functions.combinatorial.numbers import harmonic
+from sympy.functions.elementary.trigonometric import csc
 
 ###############################################################################
 ############################ COMPLETE GAMMA FUNCTION ##########################
@@ -17,18 +18,19 @@ from sympy.functions.combinatorial.numbers import harmonic
 
 class gamma(Function):
     r"""
-    Gamma Function
+    The gamma function
 
-    :math:`\Gamma(x) = \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t`
+    .. math ::
+        \Gamma(x) = \int^{\infty}_{0} t^{x-1} e^{t} \mathrm{d}t.
 
     The gamma function returns a function which passes through the integral
     values of the factorial function, i.e. though defined in the complex plane,
-    when n is an integer, `gamma(n) = (n - 1)!`
+    when n is an integer, `\Gamma(n) = (n - 1)!`
 
     Examples
     ========
 
-    >>> from sympy import I, pi, oo, gamma
+    >>> from sympy import S, I, pi, oo, gamma
     >>> from sympy.abc import x
 
     Several special values are known:
@@ -39,8 +41,8 @@ class gamma(Function):
     6
     >>> gamma(I*oo)
     0
-    >>> gamma(3/2)
-    1
+    >>> gamma(S(3)/2)
+    sqrt(pi)/2
 
     The Gamma function obeys the mirror symmetry:
 
@@ -48,13 +50,13 @@ class gamma(Function):
     >>> conjugate(gamma(x))
     gamma(conjugate(x))
 
-    Differentiation with respect to z is supported:
+    Differentiation with respect to x is supported:
 
     >>> from sympy import diff
     >>> diff(gamma(x), x)
     gamma(x)*polygamma(0, x)
 
-    We can numerically evaluate the error function to arbitrary precision
+    We can numerically evaluate the gamma function to arbitrary precision
     on the whole complex plane:
 
     >>> gamma(pi).evalf(40)
@@ -62,11 +64,25 @@ class gamma(Function):
     >>> gamma(1+I).evalf(20)
     0.49801566811835604271 - 0.15494982830181068512*I
 
-    Reference:
-    =========
+    See Also
+    ========
+
+    lowergamma: Lower incomplete gamma function
+    uppergamma: Upper incomplete gamma function
+    polygamma: Polygamma function
+    loggamma: Log Gamma function
+    digamma: Digamma function
+    trigamma: Trigamma function
+    beta: Euler beta function
+
+    References
+    ==========
+
     .. [1] http://en.wikipedia.org/wiki/Gamma_function
     .. [2] http://functions.wolfram.com/GammaBetaErf/Gamma/
     .. [3] http://mathworld.wolfram.com/GammaFunction.html
+    .. [4] http://dlmf.nist.gov/5
+
     """
 
     nargs = 1
@@ -135,14 +151,11 @@ class gamma(Function):
             tail = arg._new_rawargs(*tail, **dict(reeval=False))
             return gamma(tail)*C.RisingFactorial(tail, coeff)
 
-        return self.func(*self.args)
+        z = arg.extract_multiplicatively(-1)
+        if z:
+            return -pi*csc(pi*z)/gamma(z+1)
 
-    def _eval_nseries(self, x, n, logx):
-        x0 = self.args[0].limit(x, 0)
-        if not (x0.is_Integer and x0 <= 0):
-            return super(gamma, self)._eval_nseries(x, n, logx)
-        t = self.args[0] - x0
-        return (gamma(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
+        return self.func(*self.args)
 
     def _eval_conjugate(self):
         return self.func(self.args[0].conjugate())
@@ -152,6 +165,14 @@ class gamma(Function):
 
     def _eval_rewrite_as_tractable(self, z):
         return C.exp(loggamma(z))
+
+    def _eval_nseries(self, x, n, logx):
+        x0 = self.args[0].limit(x, 0)
+        if not (x0.is_Integer and x0 <= 0):
+            return super(gamma, self)._eval_nseries(x, n, logx)
+        t = self.args[0] - x0
+        return (gamma(t + 1)/rf(self.args[0], -x0 + 1))._eval_nseries(x, n, logx)
+
 
 ###############################################################################
 ################## LOWER and UPPER INCOMPLETE GAMMA FUNCTIONS #################
@@ -173,12 +194,6 @@ class lowergamma(Function):
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
-    See Also
-    ========
-
-    gamma, uppergamma
-    sympy.functions.special.hyper.hyper
-
     Examples
     ========
 
@@ -191,13 +206,24 @@ class lowergamma(Function):
     >>> lowergamma(-S(1)/2, x)
     -2*sqrt(pi)*erf(sqrt(x)) - 2*exp(-x)/sqrt(x)
 
+    See Also
+    ========
+
+    gamma: Gamma function
+    uppergamma: Upper incomplete gamma function
+    polygamma: Polygamma function
+    loggamma: Log Gamma function
+    digamma: Digamma function
+    trigamma: Trigamma function
+    beta: Euler beta function
+
     References
     ==========
 
-    - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
-      Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
-      Tables
-    - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+    .. [1] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
+           Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
+           Tables
+    .. [2] http://en.wikipedia.org/wiki/Incomplete_gamma_function#Lower_Incomplete_Gamma_Function
 
     """
 
@@ -288,14 +314,12 @@ class uppergamma(Function):
     It can be defined as the meromorphic continuation of
 
     .. math ::
-        \Gamma(s, x) = \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t
-                     = \Gamma(s) - \gamma(s, x).
+        \Gamma(s, x) = \int_x^\infty t^{s-1} e^{-t} \mathrm{d}t = \Gamma(s) - \gamma(s, x).
 
     This can be shown to be the same as
 
     .. math ::
-        \Gamma(s, x) = \Gamma(s)
-                - \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
+        \Gamma(s, x) = \Gamma(s) - \frac{x^s}{s} {}_1F_1\left({s \atop s+1} \middle| -x\right),
 
     where :math:`{}_1F_1` is the (confluent) hypergeometric function.
 
@@ -319,16 +343,21 @@ class uppergamma(Function):
     See Also
     ========
 
-    gamma, lowergamma
-    sympy.functions.special.hyper.hyper
+    gamma: Gamma function
+    lowergamma: Lower incomplete gamma function
+    polygamma: Polygamma function
+    loggamma: Log Gamma function
+    digamma: Digamma function
+    trigamma: Trigamma function
+    beta: Euler beta function
 
     References
     ==========
 
-    - Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
+    .. [1] Abramowitz, Milton; Stegun, Irene A., eds. (1965), Chapter 6, Section 5,
       Handbook of Mathematical Functions with Formulas, Graphs, and Mathematical
       Tables
-    - http://en.wikipedia.org/wiki/Incomplete_gamma_function
+    .. [2] http://en.wikipedia.org/wiki/Incomplete_gamma_function#Upper_Incomplete_Gamma_Function
 
     """
 
@@ -408,7 +437,15 @@ class uppergamma(Function):
 ########################### GAMMA RELATED FUNCTIONS ###########################
 ###############################################################################
 class polygamma(Function):
-    """The function `polygamma(n, z)` returns `log(gamma(z)).diff(n + 1)`
+    r"""
+    Polygamma function
+
+    It is a meromorphic function on `\mathbb{C}` and defined as the (m+1)-th
+    derivative of the logarithm of the gamma function:
+
+    .. math ::
+        \psi^{(m)} (x) = \dfrac{\mathrm{d}^{m+1}}{\mathrm{d}x^{m+1}} \mathrm{ln}\Gamma(x).
+
 
     Examples
     ========
@@ -431,7 +468,13 @@ class polygamma(Function):
     See Also
     ========
 
-    gamma, digamma, trigamma
+    gamma: Gamma function
+    lowergamma: Lower incomplete gamma function
+    uppergamma: Upper incomplete gamma function
+    loggamma: Log Gamma function
+    digamma: Digamma function
+    trigamma: Trigamma function
+    beta: Euler beta function
 
     References
     ==========
@@ -439,6 +482,7 @@ class polygamma(Function):
     .. [1] http://en.wikipedia.org/wiki/Polygamma_function
     .. [2] http://functions.wolfram.com/GammaBetaErf/PolyGamma/
     .. [3] http://functions.wolfram.com/GammaBetaErf/PolyGamma2/
+
     """
 
     nargs = 2
@@ -606,12 +650,45 @@ class polygamma(Function):
 
 class loggamma(Function):
     """
-    The loggamma function is `ln(gamma(x))`.
+    The loggamma function is the logarithm of gamma function i.e, `\mathrm{ln}(\Gamma(x))`.
+
+    Examples
+    ========
+
+    >>> from sympy import S, I, pi, oo, loggamma
+    >>> from sympy.abc import x
+
+    The Gamma function obeys the mirror symmetry when `x \in \mathbb{C} \setminus (-\infty, 0)`:
+    #TODO
+
+    Differentiation with respect to x is supported:
+
+    >>> from sympy import diff
+    >>> diff(loggamma(x), x)
+    polygamma(0, x)
+
+    We can numerically evaluate the gamma function to arbitrary precision
+    on the whole complex plane:
+
+    >>> loggamma(5).evalf(30)
+    3.17805383034794561964694160130
+    >>> loggamma(I).evalf(20)
+    -0.65092319930185633889 - 1.8724366472624298171*I
+
+    See Also
+    ========
+
+    gamma: Gamma function
+    lowergamma: Lower incomplete gamma function
+    uppergamma: Upper incomplete gamma function
+    polygamma: Polygamma function
+    digamma: Digamma function
+    trigamma: Trigamma function
+    beta: Euler beta function
 
     References
     ==========
-
-    http://mathworld.wolfram.com/LogGammaFunction.html
+    .. [1] http://mathworld.wolfram.com/LogGammaFunction.html
 
     """
 
@@ -647,15 +724,28 @@ class loggamma(Function):
 
 def digamma(x):
     """
-    The digamma function is the logarithmic derivative of the gamma function.
+    The digamma function is the first derivative of the loggamma function i.e,
 
-
-    In this case, `digamma(x) = polygamma(0, x)`.
+    .. math ::
+        \psi(x) = \dfrac{\mathrm{d}}{\mathrm{d}x} \mathrm{ln}\Gamma(x)
+                = \dfrac{\Gamma'(x)}{\Gamma(x) }
 
     See Also
     ========
 
-    gamma, trigamma, polygamma
+    gamma: Gamma function
+    lowergamma: Lower incomplete gamma function
+    uppergamma: Upper incomplete gamma function
+    polygamma: Polygamma function
+    loggamma: Log Gamma function
+    trigamma: Trigamma function
+    beta: Euler beta function
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/DigammaFunction.html
+    .. [2] http://en.wikipedia.org/wiki/Digamma_function
 
     """
     return polygamma(0, x)
@@ -663,14 +753,27 @@ def digamma(x):
 
 def trigamma(x):
     """
-    The trigamma function is the second of the polygamma functions.
+    The trigamma function is the second derivative of the loggamma function i.e,
 
-    In this case, `trigamma(x) = polygamma(1, x)`.
+    .. math ::
+        \psi^{(1)}(x) = \dfrac{\mathrm{d}^{2}}{\mathrm{d}x^{2}} \mathrm{ln}\Gamma(x).
 
     See Also
     ========
 
-    gamma, digamma, polygamma
+    gamma: Gamma function
+    lowergamma: Lower incomplete gamma function
+    uppergamma: Upper incomplete gamma function
+    polygamma: Polygamma function
+    loggamma: Log Gamma function
+    digamma: Digamma function
+    beta: Euler beta function
+
+    References
+    ==========
+
+    .. [1] http://mathworld.wolfram.com/TrigammaFunction.html
+    .. [2] http://en.wikipedia.org/wiki/Trigamma_function
 
     """
     return polygamma(1, x)
@@ -681,6 +784,25 @@ def beta(x, y):
     Euler Beta function
 
     ``beta(x, y) == gamma(x)*gamma(y) / gamma(x+y)``
+
+    See Also
+    ========
+
+    gamma: Gamma function
+    lowergamma: Lower incomplete gamma function
+    uppergamma: Upper incomplete gamma function
+    polygamma: Polygamma function
+    loggamma: Log Gamma function
+    digamma: Digamma function
+    trigamma: Trigamma function
+
+    References
+    ==========
+
+    .. [1] http://functions.wolfram.com/GammaBetaErf/Beta/
+    .. [2] http://dlmf.nist.gov/5.12
+    .. [3] https://en.wikipedia.org/wiki/Beta_function
+    .. [4] http://mathworld.wolfram.com/BetaFunction.html
 
     """
     return gamma(x)*gamma(y) / gamma(x + y)

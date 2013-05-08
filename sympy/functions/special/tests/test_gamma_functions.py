@@ -2,7 +2,7 @@ from sympy import (
     Symbol, gamma, I, oo, nan, zoo, factorial, sqrt, Rational, log,
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
     cos, O, cancel, lowergamma, exp, erf, beta, exp_polar, harmonic, zeta,
-    factorial, conjugate)
+    factorial, conjugate, csc)
 from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
@@ -11,8 +11,8 @@ from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 y = Symbol('y')
-n = Symbol('n', integer = True)
-w = Symbol('w', real = True)
+n = Symbol('n', integer=True)
+w = Symbol('w', real=True)
 
 def test_gamma():
     assert gamma(nan) == nan
@@ -57,6 +57,7 @@ def test_gamma():
 
     assert gamma(x - 1).expand(func=True) == gamma(x)/(x - 1)
     assert gamma(x + 2).expand(func=True, mul=False) == x*(x + 1)*gamma(x)
+    assert gamma(-x).expand(func=True) == -pi*csc(pi*x)/gamma(x+1)
 
     assert conjugate(gamma(x)) == gamma(conjugate(x))
     assert gamma(w).is_real is True
