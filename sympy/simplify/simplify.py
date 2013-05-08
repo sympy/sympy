@@ -4123,12 +4123,12 @@ def sum_simplify(s):
     o_t = [] #Other Terms
 
     for i in range(len(terms)):
-        if type(terms[i]) == Mul:
+        if isinstance(terms[i], Mul):
             constant = 1
             other = 1
             s = 0
             for j in range(len(terms[i].args)):
-                if type(terms[i].args[j]) == Sum:
+                if isinstance(terms[i].args[j], Sum):
                     s = terms[i].args[j]
                 elif terms[i].args[j].is_number == True:
                     constant = constant * terms[i].args[j]
@@ -4141,7 +4141,7 @@ def sum_simplify(s):
                 o_t.append(other * Sum(constant * s.function, *s.limits))
             else:
                 o_t.append(terms[i])
-        elif type(terms[i]) == Sum:
+        elif isinstance(terms[i], Sum):
             s_t.append(terms[i])
         else:
             o_t.append(terms[i])
@@ -4156,15 +4156,12 @@ def sum_simplify(s):
             if not used[i]:
                 for j in range(i + 1, len(s_t)):
                     if not used[j]:
-                        if type(sum_add(s_t[i], s_t[j])) == Sum:
+                        if isinstance(sum_add(s_t[i], s_t[j]), Sum):
                             done = False
                             s_t[i] = sum_add(s_t[i], s_t[j])
                             used[j] = True
 
-    result = 0
-
-    for i in range(len(o_t)):
-        result = Add(result, o_t[i])
+    result = Add(*o_t)
 
     for i in range(len(s_t)):
         if not used[i]:
@@ -4205,7 +4202,7 @@ def product_simplify(s):
     o_t = [] #Other Terms
 
     for i in range(len(terms)):
-        if type(terms[i]) == Product:
+        if isinstance(terms[i], Product):
             p_t.append(terms[i])
         else:
             o_t.append(terms[i])
@@ -4220,15 +4217,12 @@ def product_simplify(s):
             if not used[i]:
                 for j in range(i + 1, len(p_t)):
                     if not used[j]:
-                        if type(product_mul(p_t[i], p_t[j])) == Product:
+                        if isinstance(product_mul(p_t[i], p_t[j]), Product):
                             done = False
                             p_t[i] = product_mul(p_t[i], p_t[j])
                             used[j] = True
 
-    result = 1
-
-    for i in range(len(o_t)):
-        result = Mul(result, o_t[i])
+    result = Mul(*o_t)
 
     for i in range(len(p_t)):
         if not used[i]:
