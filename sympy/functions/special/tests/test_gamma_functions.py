@@ -306,6 +306,7 @@ def test_loggamma():
         pi**4*x**4/360 + x**5*polygamma(4, 1)/120 + O(x**6)
     assert s1 == loggamma(x).rewrite('intractable').series(x)
 
+    assert conjugate(loggamma(x)) == loggamma(conjugate(x))
     assert loggamma(x).is_real is None
     y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
     assert loggamma(y).is_real
