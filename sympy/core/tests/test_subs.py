@@ -564,6 +564,7 @@ def test_2arg_hack():
     assert (2*x*(y + 1)).subs(x, 1, hack2=True) == ans
     assert (2*(y + 1 + N)).subs(N, 0, hack2=True) == ans
     assert (2*x*(y + 1)).xreplace({x: 1}, hack2=True) == ans
+    assert (2*x*(y+1) + 5).xreplace({x:1}, hack2=True) == ans + 5
 
 
 @XFAIL
