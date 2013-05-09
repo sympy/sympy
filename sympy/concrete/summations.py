@@ -11,8 +11,6 @@ from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
-from sympy.simplify.simplify import simplify
-from sympy.core.add import Add
 
 
 class Sum(Expr):
