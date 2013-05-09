@@ -45,8 +45,7 @@ def test_wavefunction():
 def test_norm():
     # Maximum "n" which is tested:
     n_max = 2
-    # you can test any n and it works, but it's slow, so it's commented out:
-    #n_max = 4
+    # you can test any n and it works, but it's slow for n_max > 2
     for n in range(n_max + 1):
         for l in range(n):
             assert integrate(R_nl(n, l, r)**2 * r**2, (r, 0, oo)) == 1
