@@ -6,7 +6,7 @@ from sympy.core.power import Pow
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.numbers import Integer, ilcm, Rational, Float
 from sympy.core.singleton import S
-from sympy.core.sympify import sympify, SympifyError
+from sympy.core.sympify import sympify
 from sympy.core.compatibility import is_sequence, default_sort_key
 
 from sympy.polys import PurePoly, roots, cancel
@@ -316,7 +316,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, I, eye
+        >>> from sympy import Matrix, I
         >>> m = Matrix((0, 1 + I, 2, 3))
         >>> m
         [    0]
@@ -795,7 +795,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy.matrices import Matrix, Matrix, ones
+        >>> from sympy.matrices import Matrix, ones
         >>> A = Matrix([1, 2, 3])
         >>> B = Matrix([2, 3, 4])
         >>> S = Matrix(A.row_join(B))
@@ -1380,7 +1380,7 @@ class MatrixBase(object):
 
         This is the example from wikipedia:
 
-        >>> from sympy import Matrix, eye
+        >>> from sympy import Matrix
         >>> A = Matrix([[12, -51, 4], [6, 167, -68], [-4, 24, -41]])
         >>> Q, R = A.QRdecomposition()
         >>> Q
@@ -2793,7 +2793,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, Symbol, eye
+        >>> from sympy import Matrix, Symbol
         >>> x = Symbol('x', real=True)
         >>> A = Matrix([[0, 1, 0], [0, x, 0], [-1, 0, 0]])
         >>> A.singular_values()
@@ -3004,7 +3004,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, symbols
+        >>> from sympy import Matrix
         >>> from sympy.abc import x, y, z
         >>> A = Matrix([[1, 3, 0, 0], [y, z*z, 0, 0], [0, 0, x, 0], [0, 0, 0, 0]])
         >>> a1, a2, a3 = A.get_diag_blocks()
@@ -3375,7 +3375,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, zeros, ones
+        >>> from sympy import zeros, ones
         >>> M = zeros(3)
         >>> V = ones(3, 1)
         >>> M.row_join(V)
@@ -3404,7 +3404,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, zeros, ones
+        >>> from sympy import zeros, ones
         >>> M = zeros(3)
         >>> V = ones(1, 3)
         >>> M.col_join(V)
@@ -3434,7 +3434,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, zeros, ones
+        >>> from sympy import zeros, ones
         >>> M = zeros(3)
         >>> V = ones(1, 3)
         >>> M.row_insert(1, V)
@@ -3475,7 +3475,7 @@ class MatrixBase(object):
         Examples
         ========
 
-        >>> from sympy import Matrix, zeros, ones
+        >>> from sympy import zeros, ones
         >>> M = zeros(3)
         >>> V = ones(3, 1)
         >>> M.col_insert(1, V)
