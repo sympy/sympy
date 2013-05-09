@@ -250,7 +250,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     rev_mapping = {}
 
     if unnecessary_permutations is None:
-        unnecessary_permutations = [] #static initialization of the variable
+        unnecessary_permutations = []
     for k, v in mapping.iteritems():
         rev_mapping[v] = k
 
@@ -260,20 +260,16 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
             return default_sort_key(arg[0].as_independent(x)[1])
         mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
         #optimizing the number of permutations of mappping
-        unnecessary_permutations = filter(lambda i: i[0] == x, mapping)
+        unnecessary_permutations = [(expr, v) for expr, v in mapping if expr == x]
         mapping = [necessary for necessary in mapping if necessary not in unnecessary_permutations]
-
         mappings = permutations(mapping)
 
     def _substitute(expr):
         return expr.subs(mapping)
+
     for mapping in mappings:
-
         mapping = list(mapping)
-
-        if unnecessary_permutations is not []:
-              mapping = mapping + unnecessary_permutations
-
+        mapping = mapping + unnecessary_permutations
         diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
         if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
