@@ -4284,20 +4284,15 @@ def sum_simplify(s):
         else:
             o_t.append(terms[i])
 
-    done = False
     used = [False] * len(s_t)
 
-    while not done:
-        done = True
-
-        for i in range(len(s_t)):
-            if not used[i]:
-                for j in range(i + 1, len(s_t)):
-                    if not used[j]:
-                        if isinstance(sum_add(s_t[i], s_t[j]), Sum):
-                            done = False
-                            s_t[i] = sum_add(s_t[i], s_t[j])
-                            used[j] = True
+    for i in range(len(s_t)):
+        if not used[i]:
+            for j in range(len(s_t)):
+                if not used[j] and i != j:
+                    if isinstance(sum_add(s_t[i], s_t[j]), Sum):
+                        s_t[i] = sum_add(s_t[i], s_t[j])
+                        used[j] = True
 
     result = Add(*o_t)
 
@@ -4345,20 +4340,15 @@ def product_simplify(s):
         else:
             o_t.append(terms[i])
 
-    done = False
     used = [False] * len(p_t)
 
-    while not done:
-        done = True
-
-        for i in range(len(p_t)):
-            if not used[i]:
-                for j in range(i + 1, len(p_t)):
-                    if not used[j]:
-                        if isinstance(product_mul(p_t[i], p_t[j]), Product):
-                            done = False
-                            p_t[i] = product_mul(p_t[i], p_t[j])
-                            used[j] = True
+    for i in range(len(p_t)):
+        if not used[i]:
+            for j in range(len(p_t)):
+                if not used[j] and i != j:
+                    if isinstance(product_mul(p_t[i], p_t[j]), Product):
+                        p_t[i] = product_mul(p_t[i], p_t[j])
+                        used[j] = True
 
     result = Mul(*o_t)
 
