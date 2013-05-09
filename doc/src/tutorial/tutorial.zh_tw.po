@@ -1,0 +1,606 @@
+# Chinese translation of the SymPy tutorial.
+# Copyright (C) 2008, 2009, 2010, 2011, 2012 SymPy Development Team
+# This file is distributed under the same license as the SymPy package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: SymPy 0.7.2\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2012-12-10 15:09\n"
+"PO-Revision-Date: 2012-12-10 23:48+0800\n"
+"Last-Translator: Huijun Mai <m.maihuijun@gmail.com>\n"
+"Language-Team: \n"
+"Language: Chinese\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: tutorial.en.rst:5
+msgid "Tutorial"
+msgstr "教學"
+
+#: tutorial.en.rst:10
+msgid "Introduction"
+msgstr "簡介"
+
+#: tutorial.en.rst:12
+msgid ""
+"SymPy is a Python library for symbolic mathematics. It aims to become a full-"
+"featured computer algebra system (CAS) while keeping the code as simple as "
+"possible in order to be comprehensible and easily extensible.  SymPy is "
+"written entirely in Python and does not require any external libraries."
+msgstr ""
+"SymPy是一個用來處理數學符號的Python程式庫，旨在成為一個多功能但代碼盡可能簡潔以便"
+"于理解和擴展的計算機代數系统(CAS)。同時，SymPy完全是用Python编寫的，並且不依"
+"賴于任何外部的程式庫。"
+
+#: tutorial.en.rst:17
+msgid ""
+"This tutorial gives an overview and introduction to SymPy. Read this to have "
+"an idea what SymPy can do for you (and how) and if you want to know more, "
+"read the :ref:`SymPy User's Guide <guide>`, the :ref:`SymPy Modules "
+"Reference <module-docs>`, or the `sources <https://github.com/sympy/sympy/"
+">`_ directly."
+msgstr ""
+"本教程主要講述SymPy的基礎知識，閱讀它有助于你理解能用SymPy來做什麼(和怎樣做)，"
+"如果你想要更深入地學習SymPy，請閱讀 `SymPy User's Guide <../guide.html>`_, "
+"`SymPy Modules Reference <../modules/index.html>`_, 或者直接閱讀 `源代碼 "
+"<https://github.com/sympy/sympy/>`_ 。"
+
+#: tutorial.en.rst:24
+msgid "First Steps with SymPy"
+msgstr "開始學習SymPy"
+
+#: tutorial.en.rst:26
+msgid ""
+"The easiest way to download it is to go to http://code.google.com/p/sympy/ "
+"and download the latest tarball from the Featured Downloads:"
+msgstr ""
+"下載SymPy最簡單的方法就是從 http://code.google.com/p/sympy/ 下載最新的壓缩"
+"檔："
+
+#: tutorial.en.rst:32
+msgid "Unpack it:"
+msgstr "解壓："
+
+#: tutorial.en.rst:38
+msgid "and try it from a Python interpreter:"
+msgstr "然後在Python解譯器中嘗試使用："
+
+#: tutorial.en.rst:52
+msgid ""
+"You can use SymPy as shown above and this is indeed the recommended way if "
+"you use it in your program. You can also install it using ``./setup.py "
+"install`` as any other Python module, or just install a package in your "
+"favourite Linux distribution, e.g.:"
+msgstr ""
+"我們推薦你在你的程序中按照上面的方法使用SymPy。你還可以像安裝其它Python模組一"
+"樣，通過 ``./setup.py install`` 安裝SymPy，或者就像安裝一個軟件一樣，在你喜"
+"歡的Linux發行版本中安裝它："
+
+#: tutorial.en.rst:78
+msgid ""
+"For other means how to install SymPy, consult the wiki page `Download and "
+"Installation <https://github.com/sympy/sympy/wiki/Download-Installation>`_."
+msgstr ""
+"想了解其它安裝SymPy的方法，參考wiki頁面 `Download and Installation <https://"
+"github.com/sympy/sympy/wiki/Download-Installation>`_ 。"
+
+#: tutorial.en.rst:83
+msgid "isympy Console"
+msgstr "isympy控制台"
+
+#: tutorial.en.rst:85
+msgid ""
+"For experimenting with new features, or when figuring out how to do things, "
+"you can use our special wrapper around IPython called ``isympy`` (located in "
+"``bin/isympy`` if you are running from the source directory) which is just a "
+"standard Python shell that has already imported the relevant SymPy modules "
+"and defined the symbols x, y, z and some other things:"
+msgstr ""
+"為了驗証新特性，或者想弄清楚怎樣使用這些特性，你可以使用一個對IPython封裝好的"
+" ``isympy`` (如果從源代碼目錄中執行，則為 ``bin/isympy`` )，這是一個已經"
+"引入了相關SymPy模組並且定義了符號x、y、z和一些其他東西的標準Python脚本。"
+
+#: tutorial.en.rst:115
+msgid ""
+"Commands entered by you are bold. Thus what we did in 3 lines in a regular "
+"Python interpreter can be done in 1 line in isympy."
+msgstr ""
+"你所輸入的命令是很粗糙的，所以我們在常規的Python解譯器中要用三行才能完成"
+"的事，在isympy中用一行就可以完成。"
+
+#: tutorial.en.rst:120
+msgid "Using SymPy as a calculator"
+msgstr "使用SymPy做計算機"
+
+#: tutorial.en.rst:122
+msgid "SymPy has three built-in numeric types: Float, Rational and Integer."
+msgstr "SymPy有三個内置的數值類型：浮點，分數和整數"
+
+#: tutorial.en.rst:124
+msgid ""
+"The Rational class represents a rational number as a pair of two Integers: "
+"the numerator and the denominator. So Rational(1, 2) represents 1/2, Rational"
+"(5, 2) represents 5/2, and so on."
+msgstr ""
+"分數通過一對整數來表示一個分数：分子和分母，所以Rational(1, 2)表示1/2，"
+"Rational(5, 2)表示5/2，等等。"
+
+#: tutorial.en.rst:143
+msgid ""
+"Proceed with caution while working with Python int's and floating point "
+"numbers, especially in division, since you may create a Python number, not a "
+"SymPy number. A ratio of two Python ints may create a float -- the \"true "
+"division\" standard of Python 3 and the default behavior of ``isympy`` which "
+"imports division from __future__:"
+msgstr ""
+"因為你可能建立的是一個基于Python數值類型的數據，而不是基于SymPy數值類型的，所"
+"以請小心使用Python中的整數和浮點，特别是在除法運算中。两個Python中的整數"
+"的比值可能會形成一個浮點數——這是Python 3所使用的\"真正的除法\"的標準，也是"
+"從__future__中引入除法的 ``isympy`` 的默認操作。"
+
+#: tutorial.en.rst:155
+msgid ""
+"But in earlier Python versions where division has not been imported, a "
+"truncated int will result:"
+msgstr ""
+"但是在一些早期的Python版本當中，除法還没有被引入，所以會對除法操作的结果取"
+"整數，截斷小數點後面的部分。"
+
+#: tutorial.en.rst:163
+msgid ""
+"In both cases, however, you are not dealing with a SymPy Number because "
+"Python created its own number. Most of the time you will probably be working "
+"with Rational numbers, so make sure to use Rational to get the SymPy result. "
+"One might find it convenient to equate ``R`` and Rational:"
+msgstr ""
+"然而，不管在哪種情况下，你都不是在處理一個SymPy的數據，因為是Python建立它自己"
+"的數據。在大多數情况下，你可能需要處理分數，所以這時要確保SymPy的輸出结果也是"
+"分數。當 ``R`` 等同于 ``Rational`` 時，更便于我們编寫語句："
+
+#: tutorial.en.rst:177
+msgid ""
+"We also have some special constants, like e and pi, that are treated as "
+"symbols (1 + pi won't evaluate to something numeric, rather it will remain "
+"as 1 + pi), and have arbitrary precision:"
+msgstr ""
+"SymPy中還有一些特殊的常量，例如e和pi，這些常量在SymPy中被看作是符號(1 + pi不會"
+"等于一個數值，它只是等于1 + pi)，並且擁有任意精確度："
+
+#: tutorial.en.rst:193
+msgid "as you see, evalf evaluates the expression to a floating-point number"
+msgstr "正如你所看到的，通過evalf函數對以上表達式求值，可以得到一個浮點數。"
+
+#: tutorial.en.rst:195
+msgid "The symbol ``oo`` is used for a class defining mathematical infinity:"
+msgstr "符號 ``oo`` 表示數學上所說的無窮："
+
+#: tutorial.en.rst:206
+msgid "Symbols"
+msgstr "符號"
+
+#: tutorial.en.rst:208
+msgid ""
+"In contrast to other Computer Algebra Systems, in SymPy you have to declare "
+"symbolic variables explicitly:"
+msgstr "跟其它計算機代數系统不同，在SymPy中必須明確聲明符號變量："
+
+#: tutorial.en.rst:217
+msgid ""
+"On the left is the normal Python variable which has been assigned to the "
+"SymPy Symbol class. Predefined symbols (including those for symbols with "
+"Greek names) are available for import from abc:"
+msgstr ""
+"左邊的是常規的Python變量，已經將SymPy符號類分配给這些變量。预定義符號(包括含"
+"有希臘字母的符號)可以從abc中引入："
+
+#: tutorial.en.rst:223
+msgid ""
+"Symbols can also be created with the ``symbols`` or ``var`` functions, the "
+"latter automatically adding the created symbols to the namespace, and both "
+"accepting a range notation:"
+msgstr ""
+"符號還可以通過 ``symbols`` 或者 ``var`` 函數来建立，其中，使用 ``var`` 函數會"
+"自動添加新建的符號到命名空間，這兩個函數都允許使用範圍表示作為参數："
+
+#: tutorial.en.rst:235
+msgid ""
+"Instances of the Symbol class \"play well together\" and are the building "
+"blocks of expresions:"
+msgstr "符號類的實例能够\"很好地結合\"，由多個符號可以構做成一個表達式："
+
+#: tutorial.en.rst:249
+msgid ""
+"They can be substituted with other numbers, symbols or expressions using "
+"``subs(old, new)``:"
+msgstr ""
+"使用函数 ``subs(old, new)`` 可以將给定的符號轉换成其它的數字，符號或者表達"
+"式："
+
+#: tutorial.en.rst:262
+msgid "For the remainder of the tutorial, we assume that we have run:"
+msgstr "對于此教學的餘下部分，我们假設已經執行以下語句："
+
+#: tutorial.en.rst:269
+msgid ""
+"This will make things look better when printed. See the :ref:`printing-"
+"tutorial` section below. If you have a unicode font installed, you can pass "
+"use_unicode=True for a slightly nicer output."
+msgstr ""
+"執行這些語句會讓輸出的结果更雅觀，查看以下章節 :ref:`printing-tutorial` ，如"
+"果你已經安裝了unicode字體，可以設置 use_unicode=True，使得輸出更加美觀。"
+
+#: tutorial.en.rst:274
+msgid "Algebra"
+msgstr "代數"
+
+#: tutorial.en.rst:276
+msgid "For partial fraction decomposition, use ``apart(expr, x)``:"
+msgstr "實現部分分數分解，使用函數 ``apart(expr, x)`` ："
+
+#: tutorial.en.rst:303
+msgid "To combine things back together, use ``together(expr, x)``:"
+msgstr "將分數组合在一起，使用函數 ``together(expr, x)`` ："
+
+#: tutorial.en.rst:327
+msgid "Calculus"
+msgstr "微積分"
+
+#: tutorial.en.rst:332
+msgid "Limits"
+msgstr "極限"
+
+#: tutorial.en.rst:334
+msgid ""
+"Limits are easy to use in SymPy, they follow the syntax ``limit(function, "
+"variable, point)``, so to compute the limit of f(x) as x -> 0, you would "
+"issue ``limit(f, x, 0)``:"
+msgstr ""
+"在SymPy中使用極限很簡單，使用函數 ``limit(function, variable, point)`` ，所以"
+"計算當 x -> 0 時f(x)的極限，只需要輸入 ``limit(f, x, 0)`` ："
+
+#: tutorial.en.rst:345
+msgid "you can also calculate the limit at infinity:"
+msgstr "你還可以計算在無窮遠處的極限："
+
+#: tutorial.en.rst:358
+msgid ""
+"for some non-trivial examples on limits, you can read the test file "
+"`test_demidovich.py <https://github.com/sympy/sympy/blob/master/sympy/series/"
+"tests/test_demidovich.py>`_"
+msgstr ""
+"對于一些關于極限的非平凡例子，你可以查閱測试文件 `test_demidovich.py "
+"<https://github.com/sympy/sympy/blob/master/sympy/series/tests/"
+"test_demidovich.py>`_"
+
+#: tutorial.en.rst:365
+msgid "Differentiation"
+msgstr "微分"
+
+#: tutorial.en.rst:367
+msgid ""
+"You can differentiate any SymPy expression using ``diff(func, var)``. "
+"Examples:"
+msgstr ""
+"你可以對任何SymPy的表達式進行微分，使用函數 ``diff(func, var)`` ，例如："
+
+#: tutorial.en.rst:382
+msgid "You can check, that it is correct by:"
+msgstr "你可以檢查，但這是正確的："
+
+#: tutorial.en.rst:392
+msgid ""
+"Higher derivatives can be calculated using the ``diff(func, var, n)`` method:"
+msgstr "計算更高階的微分，使用函數 ``diff(func, var, n)`` ："
+
+#: tutorial.en.rst:411
+msgid "Series expansion"
+msgstr "級數展開"
+
+#: tutorial.en.rst:413
+msgid "Use ``.series(var, point, order)``:"
+msgstr "使用 ``.series(var, point, order)`` ："
+
+#: tutorial.en.rst:430
+msgid "Another simple example:"
+msgstr "另一個簡單的例子："
+
+#: tutorial.en.rst:456
+msgid "Summation"
+msgstr "求和"
+
+#: tutorial.en.rst:458
+msgid ""
+"Compute the summation of f with respect to the given summation variable over "
+"the given limits."
+msgstr "計算求和變量在給定的範圍内函數f的和。"
+
+#: tutorial.en.rst:460
+msgid ""
+"summation(f, (i, a, b)) computes the sum of f with respect to i from a to b, "
+"i.e.,"
+msgstr "函數summation(f, (i, a, b))計算當i在[a, b]内時f的和是多少，即："
+
+#: tutorial.en.rst:473
+msgid ""
+"If it cannot compute the sum, it prints the corresponding summation formula. "
+"Repeated sums can be computed by introducing additional limits:"
+msgstr ""
+"如果不能求和，會輸出相應的求和公式。通過引入變量的額外限制，可以複合求和："
+
+#: tutorial.en.rst:509
+msgid "Integration"
+msgstr "積分"
+
+#: tutorial.en.rst:511
+msgid ""
+"SymPy has support for indefinite and definite integration of transcendental "
+"elementary and special functions via ``integrate()`` facility, which uses "
+"powerful extended Risch-Norman algorithm and some heuristics and pattern "
+"matching:"
+msgstr ""
+"SymPy支持初等超越函数和特殊函數的不定積分和定積分，通過使用函數 ``integrate()"
+"`` ，這個函數用到了强大的擴展Risch-Norman算法、一些啟發式算法和模式匹配："
+
+#: tutorial.en.rst:521
+msgid "You can integrate elementary functions:"
+msgstr "求初等函數的積分："
+
+#: tutorial.en.rst:536
+msgid "Also special functions are handled easily:"
+msgstr "求特殊函數的積分也很容易："
+
+#: tutorial.en.rst:546
+msgid "It is possible to compute definite integrals:"
+msgstr "計算定積分："
+
+#: tutorial.en.rst:557
+msgid "Also, improper integrals are supported as well:"
+msgstr "SymPy還支持廣義積分："
+
+#: tutorial.en.rst:571
+msgid "Complex numbers"
+msgstr "複數"
+
+#: tutorial.en.rst:573
+msgid ""
+"Besides the imaginary unit, I, which is imaginary, symbols can be created "
+"with attributes (e.g. real, positive, complex, etc...) and this will affect "
+"how they behave:"
+msgstr ""
+"除了虛數單位I，其它符號的建立都可以帶有屬性(例如實數、正數、複數等等)，而這些"
+"屬性會影響操作結果："
+
+#: tutorial.en.rst:592
+msgid "Functions"
+msgstr "函數"
+
+#: tutorial.en.rst:594
+msgid "**trigonometric**"
+msgstr "三角函數"
+
+#: tutorial.en.rst:645
+msgid "**spherical harmonics**"
+msgstr "球諧函數"
+
+#: tutorial.en.rst:673
+msgid "**factorials and gamma function**"
+msgstr "階乘和gamma函數"
+
+#: tutorial.en.rst:693
+msgid "**zeta function**"
+msgstr "zeta函數"
+
+#: tutorial.en.rst:720
+msgid "**polynomials**"
+msgstr "多項式"
+
+#: tutorial.en.rst:761
+msgid "Differential Equations"
+msgstr "微分方程"
+
+#: tutorial.en.rst:763 tutorial.en.rst:785
+msgid "In ``isympy``:"
+msgstr "在 ``isympy`` ："
+
+#: tutorial.en.rst:783
+msgid "Algebraic equations"
+msgstr "代數方程"
+
+#: tutorial.en.rst:800
+msgid "Linear Algebra"
+msgstr "綫性代數"
+
+#: tutorial.en.rst:805
+msgid "Matrices"
+msgstr "矩陣"
+
+#: tutorial.en.rst:807
+msgid "Matrices are created as instances from the Matrix class:"
+msgstr "新建的矩陣是矩陣類的實例："
+
+#: tutorial.en.rst:817
+msgid "They can also contain symbols:"
+msgstr "矩陣還可以包含符號："
+
+#: tutorial.en.rst:834
+msgid "For more about Matrices, see the Linear Algebra tutorial."
+msgstr "想了解更多關于矩陣的内容，請參看綫性代數教程。"
+
+#: tutorial.en.rst:839
+msgid "Pattern matching"
+msgstr "模式匹配"
+
+#: tutorial.en.rst:841
+msgid ""
+"Use the ``.match()`` method, along with the ``Wild`` class, to perform "
+"pattern matching on expressions. The method will return a dictionary with "
+"the required substitutions, as follows:"
+msgstr ""
+"使用 ``.match()`` 模式和 ``Wild`` 類，可以對表達式執行模式匹配，返回结果就是"
+"所需要的各個匹配值，以字典的形式呈现，就像："
+
+#: tutorial.en.rst:857
+msgid "If the match is unsuccessful, it returns ``None``:"
+msgstr "如果匹配不成功，則返回 ``None`` ："
+
+#: tutorial.en.rst:864
+msgid ""
+"One can also use the exclude parameter of the ``Wild`` class to ensure that "
+"certain things do not show up in the result:"
+msgstr ""
+"還可以在 ``Wild`` 類中添加排除参數，使得這些被排除的参數不會出現在结果當中："
+
+#: tutorial.en.rst:880
+msgid "Printing"
+msgstr "打印"
+
+#: tutorial.en.rst:882
+msgid "There are many ways to print expressions."
+msgstr "打印表達式有很多方式。"
+
+#: tutorial.en.rst:884
+msgid "**Standard**"
+msgstr "標準打印"
+
+#: tutorial.en.rst:886
+msgid "This is what ``str(expression)`` returns and it looks like this:"
+msgstr "就是 ``str(expression)`` 的返回值，它看起來就像："
+
+#: tutorial.en.rst:897
+msgid "**Pretty printing**"
+msgstr "Pretty打印"
+
+#: tutorial.en.rst:899
+msgid "Nice ascii-art printing is produced by the ``pprint`` function:"
+msgstr "使用 ``pprint`` 函數可以打印出好看的ASCII形式："
+
+#: tutorial.en.rst:918
+msgid ""
+"If you have a unicode font installed, the ``pprint`` function will use it by "
+"default. You can override this using the ``use_unicode`` option.:"
+msgstr ""
+"如果你安裝了unicode字體，那麼打印方式會默認使用 ``pprint`` 函數，可以使用 "
+"``use_unicode`` 選項来替换這種打印方式："
+
+#: tutorial.en.rst:927
+msgid ""
+"See also the wiki `Pretty Printing <https://github.com/sympy/sympy/wiki/"
+"Pretty-Printing>`_ for more examples of a nice unicode printing."
+msgstr ""
+"想獲得更多unicode打印方式的例子，還可以查看維基百科 `Pretty Printing "
+"<https://github.com/sympy/sympy/wiki/Pretty-Printing>`_ 。"
+
+#: tutorial.en.rst:931
+msgid ""
+"Tip: To make pretty printing the default in the Python interpreter, use:"
+msgstr "提示：通過這種方法可以在Python解譯器中默認使用pretty打印："
+
+#: tutorial.en.rst:956
+msgid "**Python printing**"
+msgstr "Python打印"
+
+#: tutorial.en.rst:974
+msgid "**LaTeX printing**"
+msgstr "LaTeX打印"
+
+#: tutorial.en.rst:993
+msgid "**MathML**"
+msgstr "MathML"
+
+#: tutorial.en.rst:1005
+msgid "**Pyglet**"
+msgstr "Pyglet"
+
+#: tutorial.en.rst:1013
+msgid ""
+"If pyglet is installed, a pyglet window will open containing the LaTeX "
+"rendered expression:"
+msgstr "如果安裝了pyglet，一個呈現LaTeX表達式的窗口會被打開："
+
+#: tutorial.en.rst:1019
+msgid "Notes"
+msgstr "注釋"
+
+#: tutorial.en.rst:1021
+msgid ""
+"``isympy`` calls ``pprint`` automatically, so that's why you see pretty "
+"printing by default."
+msgstr ""
+"``isympy`` 自動使用 ``pprint`` ，所以在默認情況下你看到的是pretty打印形式的輸"
+"出。"
+
+#: tutorial.en.rst:1024
+msgid ""
+"Note that there is also a printing module available, ``sympy.printing``.  "
+"Other printing methods available through this module are:"
+msgstr ""
+"值得注意的是，SymPy還提供一個打印模組 ``sympy.printing`` ，這個模組提供的打印"
+"方式有："
+
+#: tutorial.en.rst:1027
+msgid ""
+"``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)``: Return or print, "
+"respectively, a pretty representation of ``expr``. This is the same as the "
+"second level of representation described above."
+msgstr ""
+"``pretty(expr)``, ``pretty_print(expr)``, ``pprint(expr)`` ：這三個函數都返回"
+"或打印 ``expr`` 的pretty表示形式，這跟前面描述的第二種表示方法一樣。"
+
+#: tutorial.en.rst:1029
+msgid ""
+"``latex(expr)``, ``print_latex(expr)``: Return or print, respectively, a "
+"`LaTeX <http://www.latex-project.org/>`_  representation of ``expr``"
+msgstr ""
+"``latex(expr)``, ``print_latex(expr)`` ：這两個函數都返回或打印 ``expr`` 的 "
+"`LaTeX <http://www.latex-project.org/>`_ 表示形式。"
+
+#: tutorial.en.rst:1031
+msgid ""
+"``mathml(expr)``, ``print_mathml(expr)``: Return or print, respectively, a "
+"`MathML <http://www.w3.org/Math/>`_ representation of ``expr``."
+msgstr ""
+"``mathml(expr)``, ``print_mathml(expr)`` ：這两個函數都返回或打印 ``expr`` "
+"的 `MathML <http://www.w3.org/Math/>`_ 表示形式。"
+
+#: tutorial.en.rst:1033
+msgid ""
+"``print_gtk(expr)``: Print ``expr`` to `Gtkmathview <http://helm.cs.unibo.it/"
+"mml-widget/>`_, a GTK widget that displays MathML code. The `Gtkmathview "
+"<http://helm.cs.unibo.it/mml-widget/>`_ program is required."
+msgstr ""
+"``print_gtk(expr)`` ：打印 ``expr`` 到 `Gtkmathview <http://helm.cs.unibo.it/"
+"mml-widget/>`_ ，這是一個顯示MathML代碼的GTK控件，使用這個函數需要 "
+"`Gtkmathview <http://helm.cs.unibo.it/mml-widget/>`_ 程式。"
+
+#: tutorial.en.rst:1036
+msgid "Further documentation"
+msgstr "更詳细的文件"
+
+#: tutorial.en.rst:1038
+msgid ""
+"Now it's time to learn more about SymPy. Go through the :ref:`SymPy User's "
+"Guide <guide>` and :ref:`SymPy Modules Reference <module-docs>`."
+msgstr ""
+"看完以上的教學之後，現在是時候進一步了解SymPy，請閱讀 `SymPy User's Guide "
+"<../guide.html>`_ 和 `SymPy Modules Reference <../modules/index.html>`_。"
+
+#: tutorial.en.rst:1042
+msgid ""
+"Be sure to also browse our public `wiki.sympy.org <http://wiki.sympy.org/"
+">`_, that contains a lot of useful examples, tutorials, cookbooks that we "
+"and our users contributed, and feel free to edit it."
+msgstr ""
+"還可以瀏覽我們的公眾網頁 `wiki.sympy.org <http://wiki.sympy.org/>`_ ，上面有"
+"很多有用的例子、教學和cookbooks供大家参考，這些資料都是我們和用户編輯的，歡迎"
+"您的参與。"
+
+#: tutorial.en.rst:1049
+msgid "Translations"
+msgstr "翻譯"
+
+#: tutorial.en.rst:1051
+msgid "This tutorial is also available in other languages:"
+msgstr "此教學還有其它的語言版本："
