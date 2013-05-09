@@ -548,30 +548,47 @@ class MatrixBase(object):
         """Return self + b """
         return self + b
 
-    def _format_str(self, strfunc, rowsep='\n'):
+    def table(self, p, rowsep='\n', colsep=', ', align='right'):
+        import string
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
             return '[]'
         # Build table of string representations of the elements
         res = []
         # Track per-column max lengths for pretty alignment
-        maxlen = [0]*self.cols
+        maxlen = [0] * self.cols
         for i in range(self.rows):
             res.append([])
             for j in range(self.cols):
-                string = strfunc(self[i, j])
-                res[-1].append(string)
-                maxlen[j] = max(len(string), maxlen[j])
+                s = p._print(self[i,j])
+                res[-1].append(s)
+                maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
+        align = {
+            'left': string.ljust,
+            'right': string.rjust,
+            'center': string.center,
+            '<': string.ljust,
+            '>': string.rjust,
+            '^': string.center,
+            }[align]
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
-                # Pad each element up to maxlen so the columns line up
-                row[j] = elem.rjust(maxlen[j])
-            res[i] = "[" + ", ".join(row) + "]"
+                row[j] = align(elem, maxlen[j])
+            res[i] = "[" + colsep.join(row) + "]"
         return rowsep.join(res)
 
+    def _format_str(self, strfunc):
+        from sympy.printing.str import StrPrinter
+        # Handle zero dimensions:
+        if self.rows == 0 or self.cols == 0:
+            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+        return "Matrix([\n%s])" % self.table(StrPrinter(), rowsep=',\n')
+
     def __str__(self):
-        return sstr(self)
+        if self.rows == 0 or self.cols == 0:
+            return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+        return "Matrix(%s)" % str(self.tolist())
 
     def __repr__(self):
         return sstr(self)
