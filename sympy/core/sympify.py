@@ -169,8 +169,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     ...     def __getitem__(self, i): return list(self)[i]
     ...     def _sympy_(self): return Matrix(self)
     >>> sympify(MyList1())
-    [1]
-    [2]
+    Matrix([
+    [1],
+    [2]])
 
     If you do not have control over the class definition you could also use the
     ``converter`` global dictionary. The key is the class and the value is a
@@ -186,8 +187,9 @@ def sympify(a, locals=None, convert_xor=True, strict=False, rational=False):
     >>> from sympy.core.sympify import converter
     >>> converter[MyList2] = lambda x: Matrix(x)
     >>> sympify(MyList2())
-    [1]
-    [2]
+    Matrix([
+    [1],
+    [2]])
 
     Notes
     =====

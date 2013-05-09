@@ -93,10 +93,11 @@ class RaisingOp(SHOOp):
         >>> from sympy.physics.quantum.represent import represent
         >>> ad = RaisingOp('a')
         >>> represent(ad, basis=N, ndim=4, format='sympy')
-        [0,       0,       0, 0]
-        [1,       0,       0, 0]
-        [0, sqrt(2),       0, 0]
-        [0,       0, sqrt(3), 0]
+        Matrix([
+        [0,       0,       0, 0],
+        [1,       0,       0, 0],
+        [0, sqrt(2),       0, 0],
+        [0,       0, sqrt(3), 0]])
 
     """
 
@@ -231,10 +232,11 @@ class LoweringOp(SHOOp):
         >>> from sympy.physics.quantum.represent import represent
         >>> a = LoweringOp('a')
         >>> represent(a, basis=N, ndim=4, format='sympy')
-        [0, 1,       0,       0]
-        [0, 0, sqrt(2),       0]
-        [0, 0,       0, sqrt(3)]
-        [0, 0,       0,       0]
+        Matrix([
+        [0, 1,       0,       0],
+        [0, 0, sqrt(2),       0],
+        [0, 0,       0, sqrt(3)],
+        [0, 0,       0,       0]])
 
     """
 
@@ -349,10 +351,11 @@ class NumberOp(SHOOp):
         >>> from sympy.physics.quantum.represent import represent
         >>> N = NumberOp('N')
         >>> represent(N, basis=N, ndim=4, format='sympy')
-        [0, 0, 0, 0]
-        [0, 1, 0, 0]
-        [0, 0, 2, 0]
-        [0, 0, 0, 3]
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 2, 0],
+        [0, 0, 0, 3]])
 
     """
 
@@ -462,10 +465,11 @@ class Hamiltonian(SHOOp):
 
         >>> H = Hamiltonian('H')
         >>> represent(H, basis=N, ndim=4, format='sympy')
-        [hbar*omega/2,              0,              0,              0]
-        [           0, 3*hbar*omega/2,              0,              0]
-        [           0,              0, 5*hbar*omega/2,              0]
-        [           0,              0,              0, 7*hbar*omega/2]
+        Matrix([
+        [hbar*omega/2,              0,              0,              0],
+        [           0, 3*hbar*omega/2,              0,              0],
+        [           0,              0, 5*hbar*omega/2,              0],
+        [           0,              0,              0, 7*hbar*omega/2]])
 
     """
 
@@ -566,10 +570,11 @@ class SHOKet(SHOState, Ket):
         >>> k = SHOKet(3)
         >>> N = NumberOp('N')
         >>> represent(k, basis=N, ndim=4)
-        [0]
-        [0]
-        [0]
-        [1]
+        Matrix([
+        [0],
+        [0],
+        [0],
+        [1]])
 
     """
 
@@ -638,7 +643,8 @@ class SHOBra(SHOState, Bra):
         >>> b = SHOBra(3)
         >>> N = NumberOp('N')
         >>> represent(b, basis=N, ndim=4)
-        [0, 0, 0, 1]
+        Matrix([
+        [0, 0, 0, 1]])
 
     """
 

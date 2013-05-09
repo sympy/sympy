@@ -30,15 +30,18 @@ class BlockMatrix(MatrixExpr):
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
     >>> print B
-    [X, Z]
-    [0, Y]
+    Matrix([
+    [X, Z],
+    [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
     >>> print C
-    [I, Z]
+    Matrix([
+    [I, Z]])
 
     >>> print block_collapse(C*B)
-    [X, Z + Z*Y]
+    Matrix([
+    [X, Z + Z*Y]])
 
     """
     def __new__(cls, *args):
@@ -134,11 +137,13 @@ class BlockMatrix(MatrixExpr):
         >>> Z = MatrixSymbol('Z', n, m)
         >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m,n), Y]])
         >>> B.transpose()
-        [X',  0]
-        [Z', Y']
+        Matrix([
+        [X',  0],
+        [Z', Y']])
         >>> _.transpose()
-        [X, Z]
-        [0, Y]
+        Matrix([
+        [X, Z],
+        [0, Y]])
         """
         return self._eval_transpose()
 
@@ -188,8 +193,9 @@ class BlockDiagMatrix(BlockMatrix):
     >>> X = MatrixSymbol('X', n, n)
     >>> Y = MatrixSymbol('Y', m ,m)
     >>> BlockDiagMatrix(X, Y)
-    [X, 0]
-    [0, Y]
+    Matrix([
+    [X, 0],
+    [0, Y]])
 
     """
     def __new__(cls, *mats):
@@ -257,15 +263,18 @@ def block_collapse(expr):
     >>> Z = MatrixSymbol('Z', n, m)
     >>> B = BlockMatrix([[X, Z], [ZeroMatrix(m, n), Y]])
     >>> print B
-    [X, Z]
-    [0, Y]
+    Matrix([
+    [X, Z],
+    [0, Y]])
 
     >>> C = BlockMatrix([[Identity(n), Z]])
     >>> print C
-    [I, Z]
+    Matrix([
+    [I, Z]])
 
     >>> print block_collapse(C*B)
-    [X, Z + Z*Y]
+    Matrix([
+    [X, Z + Z*Y]])
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
@@ -426,7 +435,8 @@ def blockcut(expr, rowsizes, colsizes):
     >>> type(B).__name__
     'BlockMatrix'
     >>> ImmutableMatrix(B.blocks[0, 1])
-    [1, 2, 3]
+    Matrix([
+    [1, 2, 3]])
     """
 
     rowbounds = bounds(rowsizes)

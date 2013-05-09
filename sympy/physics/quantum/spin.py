@@ -1210,9 +1210,10 @@ class JzKet(SpinState, Ket):
         >>> from sympy.physics.quantum.represent import represent
         >>> from sympy.physics.quantum.spin import Jx, Jz
         >>> represent(JzKet(1,-1), basis=Jx)
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
+        Matrix([
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2]])
 
     Apply innerproducts between states:
 
@@ -1246,25 +1247,27 @@ class JzKet(SpinState, Ket):
     tensor product of the vector representation of the component eigenstates:
 
         >>> represent(TensorProduct(JzKet(1,0),JzKet(1,1)))
-        [0]
-        [0]
-        [0]
-        [1]
-        [0]
-        [0]
-        [0]
-        [0]
-        [0]
+        Matrix([
+        [0],
+        [0],
+        [0],
+        [1],
+        [0],
+        [0],
+        [0],
+        [0],
+        [0]])
         >>> represent(TensorProduct(JzKet(1,1),JxKet(1,1)), basis=Jz)
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
-        [        0]
+        Matrix([
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2],
+        [        0],
+        [        0],
+        [        0],
+        [        0],
+        [        0],
+        [        0]])
 
     See Also
     ========
@@ -1724,10 +1727,11 @@ class JzKetCoupled(CoupledSpinState, Ket):
         >>> from sympy.physics.quantum.spin import Jx
         >>> from sympy import S
         >>> represent(JzKetCoupled(1,-1,(S(1)/2,S(1)/2)), basis=Jx)
-        [        0]
-        [      1/2]
-        [sqrt(2)/2]
-        [      1/2]
+        Matrix([
+        [        0],
+        [      1/2],
+        [sqrt(2)/2],
+        [      1/2]])
 
     See Also
     ========

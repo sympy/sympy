@@ -89,10 +89,12 @@ class KanesMethod(object):
         >>> forcing = KM.forcing
         >>> rhs = MM.inv() * forcing
         >>> rhs
-        [(-c*u(t) - k*q(t))/m]
+        Matrix([
+        [(-c*u(t) - k*q(t))/m]])
         >>> KM.linearize()[0]
-        [ 0,  1]
-        [-k, -c]
+        Matrix([
+        [ 0,  1],
+        [-k, -c]])
 
     Please look at the documentation pages for more information on how to
     perform linearization and how to deal with dependent coordinates & speeds,

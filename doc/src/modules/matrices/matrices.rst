@@ -468,27 +468,15 @@ Let's take a look at the vectors:
     >>> for i in out1:
     ...     print i
     ...
-    [2]
-    [3]
-    [5]
-    [ 23/19]
-    [ 63/19]
-    [-47/19]
-    [ 1692/353]
-    [-1551/706]
-    [ -423/706]
+    Matrix([[2], [3], [5]])
+    Matrix([[23/19], [63/19], [-47/19]])
+    Matrix([[1692/353], [-1551/706], [-423/706]])
     >>> for i in out2:
     ...      print i
     ...
-    [  sqrt(38)/19]
-    [3*sqrt(38)/38]
-    [5*sqrt(38)/38]
-    [ 23*sqrt(6707)/6707]
-    [ 63*sqrt(6707)/6707]
-    [-47*sqrt(6707)/6707]
-    [ 12*sqrt(706)/353]
-    [-11*sqrt(706)/706]
-    [ -3*sqrt(706)/706]
+    Matrix([[sqrt(38)/19], [3*sqrt(38)/38], [5*sqrt(38)/38]])
+    Matrix([[23*sqrt(6707)/6707], [63*sqrt(6707)/6707], [-47*sqrt(6707)/6707]])
+    Matrix([[12*sqrt(706)/353], [-11*sqrt(706)/706], [-3*sqrt(706)/706]])
 
 We can spot-check their orthogonality with dot() and their normality with
 norm():

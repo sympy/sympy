@@ -55,15 +55,17 @@ class TensorProduct(Expr):
         >>> m1 = Matrix([[1,2],[3,4]])
         >>> m2 = Matrix([[1,0],[0,1]])
         >>> TensorProduct(m1, m2)
-        [1, 0, 2, 0]
-        [0, 1, 0, 2]
-        [3, 0, 4, 0]
-        [0, 3, 0, 4]
+        Matrix([
+        [1, 0, 2, 0],
+        [0, 1, 0, 2],
+        [3, 0, 4, 0],
+        [0, 3, 0, 4]])
         >>> TensorProduct(m2, m1)
-        [1, 2, 0, 0]
-        [3, 4, 0, 0]
-        [0, 0, 1, 2]
-        [0, 0, 3, 4]
+        Matrix([
+        [1, 2, 0, 0],
+        [3, 4, 0, 0],
+        [0, 0, 1, 2],
+        [0, 0, 3, 4]])
 
     We can also construct tensor products of non-commutative symbols:
 

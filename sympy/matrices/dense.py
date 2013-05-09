@@ -53,8 +53,9 @@ class DenseMatrix(MatrixBase):
         first column is selected (all rows, column 0):
 
         >>> m[:, 0]
-        [1]
-        [3]
+        Matrix([
+        [1],
+        [3]])
 
         If the slice is not a tuple then it selects from the underlying
         list of elements that are arranged in row order and a list is
@@ -107,9 +108,10 @@ class DenseMatrix(MatrixBase):
         >>> from sympy import Matrix, ones
         >>> m = Matrix(3, 3, range(9))
         >>> m
-        [0, 1, 2]
-        [3, 4, 5]
-        [6, 7, 8]
+        Matrix([
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8]])
         >>> m.tolist()
         [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
         >>> ones(3, 0).tolist()
@@ -137,7 +139,8 @@ class DenseMatrix(MatrixBase):
 
         >>> from sympy import eye
         >>> eye(2).row(0)
-        [1, 0]
+        Matrix([
+        [1, 0]])
 
         See Also
         ========
@@ -166,8 +169,9 @@ class DenseMatrix(MatrixBase):
 
         >>> from sympy import eye
         >>> eye(2).col(0)
-        [1]
-        [0]
+        Matrix([
+        [1],
+        [0]])
 
         See Also
         ========
@@ -216,11 +220,13 @@ class DenseMatrix(MatrixBase):
         >>> from sympy import Matrix, I
         >>> m=Matrix(((1, 2+I), (3, 4)))
         >>> m
-        [1, 2 + I]
-        [3,     4]
+        Matrix([
+        [1, 2 + I],
+        [3,     4]])
         >>> m.transpose()
-        [    1, 3]
-        [2 + I, 4]
+        Matrix([
+        [    1, 3],
+        [2 + I, 4]])
         >>> m.T == m.transpose()
         True
 
@@ -441,11 +447,13 @@ class DenseMatrix(MatrixBase):
         >>> from sympy import Matrix
         >>> m = Matrix(2, 2, lambda i, j: i*2+j)
         >>> m
-        [0, 1]
-        [2, 3]
+        Matrix([
+        [0, 1],
+        [2, 3]])
         >>> m.applyfunc(lambda i: 2*i)
-        [0, 2]
-        [4, 6]
+        Matrix([
+        [0, 2],
+        [4, 6]])
 
         """
         if not callable(f):
@@ -463,14 +471,17 @@ class DenseMatrix(MatrixBase):
         >>> from sympy import Matrix
         >>> m = Matrix(2, 3, lambda i, j: 1)
         >>> m
-        [1, 1, 1]
-        [1, 1, 1]
+        Matrix([
+        [1, 1, 1],
+        [1, 1, 1]])
         >>> m.reshape(1, 6)
-        [1, 1, 1, 1, 1, 1]
+        Matrix([
+        [1, 1, 1, 1, 1, 1]])
         >>> m.reshape(3, 2)
-        [1, 1]
-        [1, 1]
-        [1, 1]
+        Matrix([
+        [1, 1],
+        [1, 1],
+        [1, 1]])
 
         """
         if len(self) != rows*cols:
@@ -488,8 +499,9 @@ class DenseMatrix(MatrixBase):
         >>> Y = X.as_mutable()
         >>> Y[1, 1] = 5 # Can set values in Y
         >>> Y
-        [1, 2]
-        [3, 5]
+        Matrix([
+        [1, 2],
+        [3, 5]])
         """
         return Matrix(self)
 
@@ -609,12 +621,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy import Matrix, I, zeros, ones
         >>> m = Matrix(((1, 2+I), (3, 4)))
         >>> m
-        [1, 2 + I]
-        [3,     4]
+        Matrix([
+        [1, 2 + I],
+        [3,     4]])
         >>> m[1, 0] = 9
         >>> m
-        [1, 2 + I]
-        [9,     4]
+        Matrix([
+        [1, 2 + I],
+        [9,     4]])
         >>> m[1, 0] = [[0, 1]]
 
         To replace row r you assign to position r*m where m
@@ -623,18 +637,20 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> M = zeros(4)
         >>> m = M.cols
         >>> M[3*m] = ones(1, m)*2; M
-        [0, 0, 0, 0]
-        [0, 0, 0, 0]
-        [0, 0, 0, 0]
-        [2, 2, 2, 2]
+        Matrix([
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [2, 2, 2, 2]])
 
         And to replace column c you can assign to position c:
 
         >>> M[2] = ones(m, 1)*4; M
-        [0, 0, 4, 0]
-        [0, 0, 4, 0]
-        [0, 0, 4, 0]
-        [2, 2, 4, 2]
+        Matrix([
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [0, 0, 4, 0],
+        [2, 2, 4, 2]])
         """
         rv = self._setitem(key, value)
         if rv is not None:
@@ -660,14 +676,16 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> I = eye(3)
         >>> I[:3, :2] = M
         >>> I
-        [0, 1, 0]
-        [2, 3, 0]
-        [4, 5, 1]
+        Matrix([
+        [0, 1, 0],
+        [2, 3, 0],
+        [4, 5, 1]])
         >>> I[0, 1] = M
         >>> I
-        [0, 0, 1]
-        [2, 2, 3]
-        [4, 4, 5]
+        Matrix([
+        [0, 0, 1],
+        [2, 2, 3],
+        [4, 4, 5]])
 
         See Also
         ========
@@ -704,14 +722,16 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> I = eye(3)
         >>> I[:2, 0] = [1, 2] # col
         >>> I
-        [1, 0, 0]
-        [2, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
         >>> I[1, :2] = [[3, 4]]
         >>> I
-        [1, 0, 0]
-        [3, 4, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [3, 4, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -732,9 +752,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import eye
         >>> M = eye(3)
         >>> M.zip_row_op(1, 0, lambda v, u: v + 2*u); M
-        [1, 0, 0]
-        [2, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -761,9 +782,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import eye
         >>> M = eye(3)
         >>> M.row_op(1, lambda v, j: v + 2*M[0, j]); M
-        [1, 0, 0]
-        [2, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [2, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -786,9 +808,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import eye
         >>> M = eye(3)
         >>> M.col_op(1, lambda v, i: v + 2*M[i, 0]); M
-        [1, 2, 0]
-        [0, 1, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 2, 0],
+        [0, 1, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -807,12 +830,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import Matrix
         >>> M = Matrix([[0, 1], [1, 0]])
         >>> M
-        [0, 1]
-        [1, 0]
+        Matrix([
+        [0, 1],
+        [1, 0]])
         >>> M.row_swap(0, 1)
         >>> M
-        [1, 0]
-        [0, 1]
+        Matrix([
+        [1, 0],
+        [0, 1]])
 
         See Also
         ========
@@ -832,12 +857,14 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> from sympy.matrices import Matrix
         >>> M = Matrix([[1, 0], [1, 0]])
         >>> M
-        [1, 0]
-        [1, 0]
+        Matrix([
+        [1, 0],
+        [1, 0]])
         >>> M.col_swap(0, 1)
         >>> M
-        [0, 1]
-        [0, 1]
+        Matrix([
+        [0, 1],
+        [0, 1]])
 
         See Also
         ========
@@ -858,8 +885,9 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> M = eye(3)
         >>> M.row_del(1)
         >>> M
-        [1, 0, 0]
-        [0, 0, 1]
+        Matrix([
+        [1, 0, 0],
+        [0, 0, 1]])
 
         See Also
         ========
@@ -880,9 +908,10 @@ class MutableDenseMatrix(DenseMatrix, MatrixBase):
         >>> M = eye(3)
         >>> M.col_del(1)
         >>> M
-        [1, 0]
-        [0, 0]
-        [0, 1]
+        Matrix([
+        [1, 0],
+        [0, 0],
+        [0, 1]])
 
         See Also
         ========
@@ -1037,16 +1066,18 @@ def rot_axis3(theta):
 
     >>> theta = pi/3
     >>> rot_axis3(theta)
-    [       1/2, sqrt(3)/2, 0]
-    [-sqrt(3)/2,       1/2, 0]
-    [         0,         0, 1]
+    Matrix([
+    [       1/2, sqrt(3)/2, 0],
+    [-sqrt(3)/2,       1/2, 0],
+    [         0,         0, 1]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis3(pi/2)
-    [ 0, 1, 0]
-    [-1, 0, 0]
-    [ 0, 0, 1]
+    Matrix([
+    [ 0, 1, 0],
+    [-1, 0, 0],
+    [ 0, 0, 1]])
 
     See Also
     ========
@@ -1078,16 +1109,18 @@ def rot_axis2(theta):
 
     >>> theta = pi/3
     >>> rot_axis2(theta)
-    [      1/2, 0, -sqrt(3)/2]
-    [        0, 1,          0]
-    [sqrt(3)/2, 0,        1/2]
+    Matrix([
+    [      1/2, 0, -sqrt(3)/2],
+    [        0, 1,          0],
+    [sqrt(3)/2, 0,        1/2]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis2(pi/2)
-    [0, 0, -1]
-    [0, 1,  0]
-    [1, 0,  0]
+    Matrix([
+    [0, 0, -1],
+    [0, 1,  0],
+    [1, 0,  0]])
 
     See Also
     ========
@@ -1119,16 +1152,18 @@ def rot_axis1(theta):
 
     >>> theta = pi/3
     >>> rot_axis1(theta)
-    [1,          0,         0]
-    [0,        1/2, sqrt(3)/2]
-    [0, -sqrt(3)/2,       1/2]
+    Matrix([
+    [1,          0,         0],
+    [0,        1/2, sqrt(3)/2],
+    [0, -sqrt(3)/2,       1/2]])
 
     If we rotate by pi/2 (90 degrees):
 
     >>> rot_axis1(pi/2)
-    [1,  0, 0]
-    [0,  0, 1]
-    [0, -1, 0]
+    Matrix([
+    [1,  0, 0],
+    [0,  0, 1],
+    [0, -1, 0]])
 
     See Also
     ========
@@ -1176,8 +1211,9 @@ def matrix_multiply_elementwise(A, B):
     >>> A = Matrix([[0, 1, 2], [3, 4, 5]])
     >>> B = Matrix([[1, 10, 100], [100, 10, 1]])
     >>> matrix_multiply_elementwise(A, B)
-    [  0, 10, 200]
-    [300, 40,   5]
+    Matrix([
+    [  0, 10, 200],
+    [300, 40,   5]])
 
     See Also
     ========
@@ -1264,13 +1300,15 @@ def diag(*values, **kwargs):
 
     >>> from sympy.matrices import diag, Matrix, ones
     >>> diag(1, 2, 3)
-    [1, 0, 0]
-    [0, 2, 0]
-    [0, 0, 3]
+    Matrix([
+    [1, 0, 0],
+    [0, 2, 0],
+    [0, 0, 3]])
     >>> diag(*[1, 2, 3])
-    [1, 0, 0]
-    [0, 2, 0]
-    [0, 0, 3]
+    Matrix([
+    [1, 0, 0],
+    [0, 2, 0],
+    [0, 0, 3]])
 
     The diagonal elements can be matrices; diagonal filling will
     continue on the diagonal from the last element of the matrix:
@@ -1280,25 +1318,28 @@ def diag(*values, **kwargs):
     >>> b = Matrix([[1, 2], [3, 4]])
     >>> c = Matrix([[5, 6]])
     >>> diag(a, 7, b, c)
-    [x, 0, 0, 0, 0, 0]
-    [y, 0, 0, 0, 0, 0]
-    [z, 0, 0, 0, 0, 0]
-    [0, 7, 0, 0, 0, 0]
-    [0, 0, 1, 2, 0, 0]
-    [0, 0, 3, 4, 0, 0]
-    [0, 0, 0, 0, 5, 6]
+    Matrix([
+    [x, 0, 0, 0, 0, 0],
+    [y, 0, 0, 0, 0, 0],
+    [z, 0, 0, 0, 0, 0],
+    [0, 7, 0, 0, 0, 0],
+    [0, 0, 1, 2, 0, 0],
+    [0, 0, 3, 4, 0, 0],
+    [0, 0, 0, 0, 5, 6]])
 
     When diagonal elements are lists, they will be treated as arguments
     to Matrix:
 
     >>> diag([1, 2, 3], 4)
-    [1, 0]
-    [2, 0]
-    [3, 0]
-    [0, 4]
+    Matrix([
+    [1, 0],
+    [2, 0],
+    [3, 0],
+    [0, 4]])
     >>> diag([[1, 2, 3]], 4)
-    [1, 2, 3, 0]
-    [0, 0, 0, 4]
+    Matrix([
+    [1, 2, 3, 0],
+    [0, 0, 0, 4]])
 
     A given band off the diagonal can be made by padding with a
     vertical or horizontal "kerning" vector:
@@ -1306,11 +1347,13 @@ def diag(*values, **kwargs):
     >>> hpad = ones(0, 2)
     >>> vpad = ones(2, 0)
     >>> diag(vpad, 1, 2, 3, hpad) + diag(hpad, 4, 5, 6, vpad)
-    [0, 0, 4, 0, 0]
-    [0, 0, 0, 5, 0]
-    [1, 0, 0, 0, 6]
-    [0, 2, 0, 0, 0]
-    [0, 0, 3, 0, 0]
+    Matrix([
+    [0, 0, 4, 0, 0],
+    [0, 0, 0, 5, 0],
+    [1, 0, 0, 0, 6],
+    [0, 2, 0, 0, 0],
+    [0, 0, 3, 0, 0]])
+
 
 
     The type is mutable by default but can be made immutable by setting
@@ -1377,10 +1420,11 @@ def jordan_cell(eigenval, n):
     >>> from sympy.matrices import jordan_cell
     >>> from sympy.abc import x
     >>> jordan_cell(x, 4)
-    [x, 1, 0, 0]
-    [0, x, 1, 0]
-    [0, 0, x, 1]
-    [0, 0, 0, x]
+    Matrix([
+    [x, 1, 0, 0],
+    [0, x, 1, 0],
+    [0, 0, x, 1],
+    [0, 0, 0, x]])
     """
     n = as_int(n)
     out = zeros(n)
