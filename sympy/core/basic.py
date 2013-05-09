@@ -1043,9 +1043,11 @@ class Basic(object):
         """
         return None
 
-    def xreplace(self, rule):
+    def xreplace(self, rule, hack2=False):
         """
-        Replace occurrences of objects within the expression.
+        Replace occurrences of objects within the expression. If ``hack2`` is
+        True then don't let a Mul become and Add via autodistribution of a
+        numerical coefficient.
 
         Parameters
         ==========
@@ -1113,7 +1115,16 @@ class Basic(object):
                     args.append(a)
             args = tuple(args)
             if not _aresame(args, self.args):
-                return self.func(*args)
+                rv = self.func(*args)
+                if hack2 and isinstance(self, C.Mul) \
+                        and not rv.is_Mul:  # 2-arg hack
+                    from sympy.core.mul import _unevaluated_Mul
+                    from sympy.utilities.iterables import sift
+                    sifted = sift(args, lambda a: isinstance(a, C.Add))
+                    notadd = C.Mul(*sifted[False])
+                    add = C.Mul(*sifted[True])
+                    return _unevaluated_Mul(notadd, add)
+                return rv
         return self
 
     @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
@@ -1624,7 +1635,7 @@ class Atom(Basic):
         if self == expr:
             return repl_dict
 
-    def xreplace(self, rule):
+    def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
 
     def doit(self, **hints):

@@ -563,6 +563,7 @@ def test_2arg_hack():
     ans = Mul(2, y + 1, evaluate=False)
     assert (2*x*(y + 1)).subs(x, 1, hack2=True) == ans
     assert (2*(y + 1 + N)).subs(N, 0, hack2=True) == ans
+    assert (2*x*(y + 1)).xreplace({x: 1}, hack2=True) == ans
 
 
 @XFAIL
@@ -571,5 +572,6 @@ def test_mul2():
     1) remove special handling in the fallback of subs that
     was added in the same commit as this test
     2) remove the special handling in Mul.flatten
+    3) remove the special handling in xreplace
     """
     assert (2*(x + 1)).is_Mul
