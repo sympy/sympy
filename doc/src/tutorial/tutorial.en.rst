@@ -1060,4 +1060,4 @@ users contributed, and feel free to edit it.
         - `Polski <tutorial.pl.html>`_
         - `Русский <tutorial.ru.html>`_
         - `Српски <tutorial.sr.html>`_
-        - `中文 <tutorial.zh.html>`_
+        - `简体中文 <tutorial.zh.html>`_
