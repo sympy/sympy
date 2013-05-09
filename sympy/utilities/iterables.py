@@ -1210,7 +1210,7 @@ def multiset_partitions(multiset, m=None):
             return
 
         # If m is not None, it can sometimes be faster to use
-        # MultisetPartitionEnumerator.enum_range() even for inputs
+        # MultisetPartitionTraverser.enum_range() even for inputs
         # which are sets.  Since the _set_partitions code is quite
         # fast, this is only advantageous when the overall set
         # partitions outnumber those with the desired number of parts
@@ -1264,17 +1264,17 @@ def multiset_partitions(multiset, m=None):
         if len(elements) < len(multiset):
             # General case - multiset with more than one distinct element
             # and at least one element repeated more than once.
-            for state in multiset_partitions_taocp(multiplicities):
-                if m:
-                    # TODO - use enum_range() of object version
-                    f, lpart, pstack = state
-                    if m == lpart + 1:
-                        yield list_visitor(state, elements)
-                else:
+            if m:
+                mpt = MultisetPartitionTraverser()
+                for state in mpt.enum_range(multiplicities, m-1, m):
+                    yield list_visitor(state, elements)
+            else:
+                for state in multiset_partitions_taocp(multiplicities):
                     yield list_visitor(state, elements)
         else:
             # Set partitions case - no repeated elements. Pretty much
-            # same as int argument case above, with same TODO for
+            # same as int argument case above, with same possible, but
+            # currently unimplemented optimization for some cases when
             # m not None
             for nc, q in _set_partitions(n):
                 if m is None or nc == m:

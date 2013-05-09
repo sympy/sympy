@@ -1,7 +1,90 @@
 #
 #  Algorithms and classes to support enumerative combinatorics.
-#  Currently just multiset partitions, but more will likely be added.
+#  Currently just multiset partitions, but more could be added.
 #
+
+###################################################################
+# Terminology (following Knuth, algorithm 7.1.2.5M TAOCP)
+
+# *multiset* aaabbcccc has a *partition* aaabc | bccc
+
+# The submultisets, aaabc and bccc of the partition are called
+# *parts*, or sometimes *vectors*.  (Knuth notes that multiset
+# partitions can be thought of as partitions of vectors of integers,
+# where the ith element of the vector gives the multiplicity of
+# element i.)
+
+# The values a, b and c are *components* of the multiset.  These
+# correspond to elements of a set, but can be present with a
+# multiplicity greater than 1.
+
+# The algorithm deserves some explanation.
+
+# Think of the part aaabc from the multiset above.  If we impose an
+# ordering on the components of the multiset, we can represent a part
+# with a vector, in which the value of the first element of the vector
+# corresponds to the multiplicity of the first component in that
+# part. Thus, aaabc can be represented by the vector [3, 1, 1].  We
+# can also define an ordering on parts, based on the lexicographic
+# ordering of the vector (leftmost vector element is the most
+# significant), so that [3, 1, 1] > [3, 1, 0] and [3, 1, 1] > [2, 1,
+# 4].  The ordering on parts can be extended to an ordering on
+# partitions: First, sort the parts in each partition, left-to-right
+# in decreasing order. Then partition A is greater than partition B if
+# A's leftmost/greatest part is greater than B's leftmost part.  If
+# the leftmost parts are equal, compare the second parts, and so on.
+
+# In this ordering, the greatest partion of a given multiset has only
+# one part.  The least partition is the one in which the components
+# are spread out one per part.
+
+# The enumeration algorithms in this file yield the partitions of the
+# argument multiset in decreasing order.  The main data structure is a
+# stack of parts, corresponding to the current partition.  An
+# important invariant is that the parts on the stack are themselves in
+# decreasing order.  This data structure is continuously decremented
+# to find the next smaller partition.  Most often, decrementing the
+# partition will only involve adjustments to the smallest parts at the
+# top of the stack, much as adjacent integers *usually* differ only in
+# their last few digits.
+
+# Knuth's algorithm uses two main operations on parts:
+
+# Decrement - find the next part that lower in the (vector)
+#   lexicographic order.  For example, if the multiset has vector [5,
+#   3, 1], and the bottom/greatest part is [4, 2, 1], this part would
+#   decrement to [4, 2, 0], while [4, 0, 0] would decrement to [3, 3,
+#   1].  A singleton part is never decremented -- [1, 0, 0] is not
+#   decremented to [0, 3, 1].  Instead, the decrement operator needs
+#   to fail for this case.  In Knuth's psuedocode, the decrement
+#   operator is step m5.
+
+# Spread unallocated multiplicity - Once a part has been decremented,
+#   it can not be the rightmost part in the partition.  There is some
+#   multiplicity that has not been allocated, and new parts must be
+#   created above it in the stack to use up this multiplicity.  To
+#   maintain the invariant that the parts on the stack are in
+#   decreasing order, these new parts must be less than or equal to
+#   the decremented part.  For example, if the multiset is [5, 3, 1],
+#   and its leftmost part is [5, 3, 0], after the spread operation, the
+#   stack is [[5, 3, 0], [0, 0, 1]].  If the leftmost part (for the same
+#   multiset) is [2, 0, 0] the stack becomes [[2, 0, 0], [2, 0, 0],
+#   [1, 3, 1]].  In the psuedocode, the spread operation for one part is
+#   step m2.  The complete spread operation is a loop of steps m2 and
+#   m3.
+
+# In order to facilitate the spread operation, Knuth stores, for each
+# component of each part, not just the multiplicity of that component
+# in the part, but also the total multiplicity available for this
+# component in this part or any lesser part above it on the stack.
+
+# One added twist is that Knuth does not represent the part vectors as
+# arrays. Instead, he uses a sparse representation, in which a
+# component of a part is represented as a component number (c), plus
+# the multiplicity of the component in that part (v) as well as the
+# total multiplicity available for that component (u).  This saves
+# time that would be spent skipping over zeros.
+###########################################################################
 
 class PartComponent(object):
     """Internal class used in support of the multiset partitions
@@ -87,13 +170,13 @@ def multiset_partitions_taocp(multiplicities):
             is an array of PartComponent objects.
 
         The ``state`` output offers a peek into the internal data
-        structures of the enumeration function.  The client should treat
-        this as read-only; any modification of the data structure will
-        cause unpredictable (and almost certainly incorrect) results.
-        Also, the components of ``state`` are modified in place at each
-        iteration.  Hence, the visitor must be called once per loop
-        iteration.  Accumulating the ``state`` instances and processing them
-        later will not work.
+        structures of the enumeration function.  The client should
+        treat this as read-only; any modification of the data
+        structure will cause unpredictable (and almost certainly
+        incorrect) results.  Also, the components of ``state`` are
+        modified in place at each iteration.  Hence, the visitor must
+        be called at each loop iteration.  Accumulating the ``state``
+        instances and processing them later will not work.
 
     Examples
     ========
@@ -208,7 +291,7 @@ def multiset_partitions_taocp(multiplicities):
                 break # GOTO M2
 
 # --------------- Visitor functions for multiset partitions ---------------
-# A visitor takes a partition state generated by
+# A visitor takes the partition state generated by
 # multiset_partitions_taocp or other enumerator, and produces useful
 # output (such as the actual partition).
 
@@ -311,7 +394,7 @@ class MultisetPartitionTraverser():
 
     .. [Factorisatio] On a Problem of Oppenheim concerning
            "Factorisatio Numerorum" E. R. Canfield, Paul Erdos, Carl
-           Pomerance, JOURNAL OF NUMEER THEORY, Vol. 17, No. 1. August
+           Pomerance, JOURNAL OF NUMBER THEORY, Vol. 17, No. 1. August
            1983.  See section 7 for a description of an algorithm
            similar to Knuth's.
 
@@ -370,18 +453,25 @@ class MultisetPartitionTraverser():
         self.f[1] = num_components
         self.lpart = 0
 
-    # This is the method that gets changed if we want to return only
-    # partitions with a restricted size range.
-    # Corresponds to M5
+    # The decrement_part() method corresponds to step M5 in Knuth's
+    # algorithm.  This is the base version for enum_all().  Modified
+    # versions of this this method are needed if we want to restrict
+    # sizes of the partitions produced.
     def decrement_part(self, part):
         """Decrements part (a subrange of pstack), if possible, returning
         True iff the part was successfully decremented.
+
+        If you think of the v values in the part as a multi-digit
+        integer (least significant digit on the right) this is
+        basically decrementing that integer, but with the extra
+        constraint that the leftmost digit cannot be decremented to 0.
 
         Parameters
         ==========
 
         part
-           The part (top of stack) to be decremented.
+           The part, represented as a list of PartComponent objects,
+           which is to be decremented.
 
         """
         plen = len(part)
@@ -396,8 +486,7 @@ class MultisetPartitionTraverser():
         return False
 
     # Version to allow number of parts to be bounded from above.
-    # Corresponds to (a modified) step M5.  This expands on (my
-    # probably imperfect understanding of) the answer to problem 69.
+    # Corresponds to (a modified) step M5.
     def decrement_part_small(self, part, ub):
         """Decrements part (a subrange of pstack), if possible, returning
         True iff the part was successfully decremented.
@@ -452,7 +541,7 @@ class MultisetPartitionTraverser():
             return False
         plen = len(part)
         for j in xrange(plen - 1, -1, -1):
-            # Knuth's mod, (answer to prob 69)
+            # Knuth's mod, (answer to problem 7.2.1.5.69)
             if (j==0) and (part[0].v - 1)*(ub - self.lpart) < part[0].u:
                 self.k1 += 1
                 return False
@@ -469,9 +558,8 @@ class MultisetPartitionTraverser():
                 # that turns out to be surprisingly common - exactly
                 # enough room to expand the leading component, but no
                 # room for the second component, which has v=0.
-                if (
-                        plen > 1 and (part[1].v == 0) and
-                        (part[0].u - part[0].v) ==
+                if (plen > 1 and (part[1].v == 0) and
+                    (part[0].u - part[0].v) ==
                         ((ub - self.lpart - 1) * part[0].v)) :
                     self.k2 += 1
                     self.db_trace("Decrement fails test 3")
@@ -509,14 +597,16 @@ class MultisetPartitionTraverser():
         """
 
         if amt == 1:
-            # TODO - might be advantageous to inline this, and combine
-            # with other iterations.  For now, just do a regular
-            # decrement.
-            status = self.decrement_part(part)
-            if not status:
+            # In this case we always need to increment, *before*
+            # enforcing the "sufficient unallocated multiplicity"
+            # constraint.  Easiest for this is just to call the
+            # regular decrement method.
+            if not self.decrement_part(part):
                 return False
-        # now decrement as needed to maintain constraint on minimum
-        # unallocated multiplicity
+
+        # Next, perform any needed additional decrementing to respect
+        # "sufficient unallocated multiplicity" (or fail if this is
+        # not possible).
         min_unalloc = lb - self.lpart
         if min_unalloc <= 0:
             return True
@@ -571,13 +661,14 @@ class MultisetPartitionTraverser():
         the lb constraint.
         """
 
-        status = self.decrement_part_small(part, ub)
-        if status:
-            status = self.decrement_part_large(part, 0, lb)
-
-        # XXX Should we redo the small checks, in case the large
-        # actually did some decrementing?
-        return status
+        # Constraint in the range case is just enforcing both the
+        # constraints from _small and _large cases.  Note the 0 as the
+        # second argument to the _large call -- this is the signal to
+        # decrement only as needed to for constraint enforcement.  The
+        # short circuiting and left-to-right order of the 'and'
+        # operator is important for this to work correctly.
+        return self.decrement_part_small(part, ub) and \
+            self.decrement_part_large(part, 0, lb)
 
     def spread_part_multiplicity(self):
         """Returns True if a new part has been created, and
@@ -630,6 +721,8 @@ class MultisetPartitionTraverser():
         """
         return self.pstack[self.f[self.lpart]:self.f[self.lpart + 1]]
 
+    # Same interface and funtionality as multiset_partitions_taocp(),
+    # but some might find this refactored version easier to follow.
     def enum_all(self, multiplicities):
         """Enumerate the partitions of a multiset.
 
@@ -828,8 +921,8 @@ class MultisetPartitionTraverser():
         [['a', 'b'], ['a', 'b']]]
 
         """
-        # Code combines the constraints of the _large and _small enumerations.
-        # This is starting as a mash-up of the two
+        # combine the constraints of the _large and _small
+        # enumerations.
         self.discarded = 0
         if ub <= 0 or lb >= sum(multiplicities):
             return
@@ -978,7 +1071,7 @@ class MultisetPartitionTraverser():
         2) Instead of using the part data structure directly, a more
            compact key is constructed.  This saves space, but more
            importantly coalesces some parts which would remain
-           separate with a physical key.
+           separate with physical keys.
 
         Unlike the enumeration functions, there is currently no _range
         version of count_partitions.  If someone wants to stretch
