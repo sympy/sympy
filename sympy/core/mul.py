@@ -178,7 +178,7 @@ class Mul(Expr, AssocOp):
             if a and a.is_Rational:
                 r, b = b.as_coeff_Mul()
                 if b.is_Add:
-                    if r is not S.One:
+                    if r is not S.One:  # 2-arg hack
                         # leave the Mul as a Mul
                         rv = [Mul(a*r, b, evaluate=False)], [], None
                     elif b.is_commutative:
