@@ -33,3 +33,16 @@ def test_subset():
     superset = [1, 2, 3, 4, 5, 6, 7, 8, 9]
     assert Subset.unrank_binary(33, superset).rank_binary == 33
     assert Subset.unrank_gray(25, superset).rank_gray == 25
+
+    a = Subset([], ['a', 'b', 'c', 'd'])
+    i = 1
+    while a.subset != Subset(['d'], ['a', 'b', 'c', 'd']).subset:
+        a = a.next_lexicographic()
+        i = i + 1
+    assert i == 16
+
+    i = 1
+    while a.subset != Subset([], ['a', 'b', 'c', 'd']).subset:
+        a = a.prev_lexicographic()
+        i = i + 1
+    assert i == 16

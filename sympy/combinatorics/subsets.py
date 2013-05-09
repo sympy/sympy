@@ -146,24 +146,24 @@ class Subset(Basic):
         ========
         prev_lexicographic
         """
-        i = self.superset_size-1
+        i = self.superset_size - 1
         indices = Subset.subset_indices(self.subset, self.superset)
 
         if i in indices:
-            if i-1 in indices:
-                indices.remove(i-1)
+            if i - 1 in indices:
+                indices.remove(i - 1)
             else:
                 indices.remove(i)
-                i = i-1
+                i = i - 1
                 while not i in indices and i >= 0:
-                    i = i-1
+                    i = i - 1
                 if i >= 0:
                     indices.remove(i)
                     indices.append(i+1)
         else:
-            while not i in indices and i >= 0:
-                i = i-1
-            indices.append(i+1)
+            while i not in indices and i >= 0:
+                i = i - 1
+            indices.append(i + 1)
 
         ret_set = []
         super_set = self.superset
@@ -190,19 +190,19 @@ class Subset(Basic):
         ========
         next_lexicographic
         """
-        i = self.superset_size-1
+        i = self.superset_size - 1
         indices = Subset.subset_indices(self.subset, self.superset)
 
-        while not i in indices and i >= 0:
-            i = i-1
+        while i not in indices and i >= 0:
+            i = i - 1
 
-        if i-1 in indices or i == 0:
+        if i - 1 in indices or i == 0:
             indices.remove(i)
         else:
             if i >= 0:
                 indices.remove(i)
-                indices.append(i-1)
-            indices.append(self.superset_size-1)
+                indices.append(i - 1)
+            indices.append(self.superset_size - 1)
 
         ret_set = []
         super_set = self.superset
