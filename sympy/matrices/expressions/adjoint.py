@@ -1,5 +1,6 @@
 from sympy.core import Basic
-from sympy.functions import adjoint, conjugate, transpose
+from sympy.functions import adjoint, conjugate
+from sympy.matrices.expressions.transpose import transpose
 from sympy.matrices.expressions.matexpr import MatrixExpr
 
 

@@ -80,12 +80,6 @@ class MatrixSlice(MatrixExpr):
     def on_diag(self):
         return self.rowslice == self.colslice
 
-    def _eval_transpose(self):
-        if ask(Q.symmetric(self.parent)):
-            return MatrixSlice(self.parent, self.colslice, self.rowslice)
-        else:
-            return super(MatrixSlice, self)._eval_transpose()
-
 
 def slice_of_slice(s, t):
     start1, stop1, step1 = s

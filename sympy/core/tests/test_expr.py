@@ -6,7 +6,7 @@ from sympy import (Add, Basic, S, Symbol, Wild, Float, Integer, Rational, I,
     Piecewise, Mul, Pow, nsimplify, ratsimp, trigsimp, radsimp, powsimp,
     simplify, together, collect, factorial, apart, combsimp, factor, refine,
     cancel, Tuple, default_sort_key, DiracDelta, gamma, Dummy, Sum, E,
-    exp_polar, Lambda, expand)
+    exp_polar, Lambda, expand, diff, O)
 from sympy.core.function import AppliedUndef
 from sympy.physics.secondquant import FockState
 from sympy.physics.units import meter
@@ -603,10 +603,16 @@ def test_replace():
         sin, lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
 
     a = Wild('a')
+    b = Wild('b')
 
     assert f.replace(sin(a), cos(a)) == log(cos(x)) + tan(cos(x**2))
     assert f.replace(
         sin(a), lambda a: sin(2*a)) == log(sin(2*x)) + tan(sin(2*x**2))
+    # test exact
+    assert (2*x).replace(a*x + b, b - a, exact=True) == 2*x
+    assert (2*x).replace(a*x + b, b - a) == 2/x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a, exact=True) == 2*x
+    assert (2*x).replace(a*x + b, lambda a, b: b - a) == 2/x
 
     g = 2*sin(x**3)
 
@@ -616,7 +622,25 @@ def test_replace():
     assert cos(x).replace(cos, sin, map=True) == (sin(x), {cos(x): sin(x)})
     assert sin(x).replace(cos, sin) == sin(x)
 
-    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y) == sin(x)
+    cond, func = lambda x: x.is_Mul, lambda x: 2*x
+    assert (x*y).replace(cond, func, map=True) == (2*x*y, {x*y: 2*x*y})
+    assert (x*(1 + x*y)).replace(cond, func, map=True) == \
+        (2*x*(2*x*y + 1), {x*(2*x*y + 1): 2*x*(2*x*y + 1), x*y: 2*x*y})
+    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y, map=True) == \
+        (sin(x), {sin(x): sin(x)/y})
+    # if not simultaneous then y*sin(x) -> y*sin(x)/y = sin(x) -> sin(x)/y
+    assert (y*sin(x)).replace(sin, lambda expr: sin(expr)/y,
+        simultaneous=False) == sin(x)/y
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e) == O(1, x)
+    assert (x**2 + O(x**3)).replace(Pow, lambda b, e: b**e/e,
+        simultaneous=False) == x**2/2 + O(x**3)
+    assert (x*(x*y + 3)).replace(lambda x: x.is_Mul, lambda x: 2 + x) == \
+        x*(x*y + 5) + 2
+    e = (x*y + 1)*(2*x*y + 1) + 1
+    assert e.replace(cond, func, map=True) == (
+        2*((2*x*y + 1)*(4*x*y + 1)) + 1,
+        {2*x*y: 4*x*y, x*y: 2*x*y, (2*x*y + 1)*(4*x*y + 1):
+        2*((2*x*y + 1)*(4*x*y + 1))})
 
 
 def test_find():
@@ -1154,6 +1178,8 @@ def test_args_cnc():
     raises(ValueError, lambda: Mul(x, x, evaluate=False).args_cnc(cset=True))
     assert Mul(x, y, x, evaluate=False).args_cnc() == \
         [[x, y, x], []]
+    # always split -1 from leading number
+    assert (-1.*x).args_cnc() == [[-1, 1.0, x], []]
 
 
 def test_new_rawargs():
@@ -1462,11 +1488,6 @@ def test_equals():
     S(13)/6)/2 - S(1)/4)**2 - S(1)/3)
     assert z.equals(0)
 
-    # SELF UPDATING CODE TEST
-    # If this tests fails then the cancel in line 581 of expr.py
-    # can be deleted and then below, "!= 0" -> "is S.Zero"
-    assert simplify(z) != 0
-
 
 def test_random():
     from sympy import posify, lucas
@@ -1569,3 +1590,12 @@ def test_float_0():
 def test_float_0_fail():
     assert Float(0.0)*x == Float(0.0)
     assert (x + Float(0.0)).is_Add
+
+
+def test_issue_3226():
+    ans = (b**2 + z**2 - (b*(a + b*t) + z*(c + t*z))**2/(
+        (a + b*t)**2 + (c + t*z)**2))/sqrt((a + b*t)**2 + (c + t*z)**2)
+    e = sqrt((a + b*t)**2 + (c + z*t)**2)
+    assert diff(e, t, 2) == ans
+    e.diff(t, 2) == ans
+    assert diff(e, t, 2, simplify=False) != ans

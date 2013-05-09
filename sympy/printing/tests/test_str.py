@@ -480,7 +480,7 @@ def test_RootSum():
     assert str(
         RootSum(f, Lambda(z, z), auto=False)) == "RootSum(x**5 + 2*x - 1)"
     assert str(RootSum(f, Lambda(
-        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(_z, _z**2))"
+        z, z**2), auto=False)) == "RootSum(x**5 + 2*x - 1, Lambda(z, z**2))"
 
 
 def test_GroebnerBasis():
@@ -639,14 +639,14 @@ def test_settings():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert str(where(X > 0)) == "Domain: 0 < x1"
+    assert str(where(X > 0)) == "Domain: x1 > 0"
 
     D = Die('d1', 6)
     assert str(where(D > 4)) == "Domain: Or(d1 == 5, d1 == 6)"
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(0 <= a, 0 <= b)"
+    assert str(pspace(Tuple(A, B)).domain) == "Domain: And(a >= 0, b >= 0)"
 
 
 def test_FiniteSet():

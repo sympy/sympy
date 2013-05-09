@@ -3,9 +3,11 @@ from sympy import (
     polygamma, EulerGamma, pi, uppergamma, S, expand_func, loggamma, sin,
     cos, O, cancel, lowergamma, exp, erf, beta, exp_polar, harmonic, zeta,
     factorial)
+from sympy.core.function import ArgumentIndexError
 from sympy.utilities.randtest import (test_derivative_numerically as td,
                                       random_complex_number as randcplx,
                                       test_numerically as tn)
+from sympy.utilities.pytest import raises
 
 x = Symbol('x')
 y = Symbol('y')
@@ -277,6 +279,9 @@ def test_polygamma_expand_func():
 
 
 def test_loggamma():
+    raises(TypeError, lambda: loggamma(2, 3))
+    raises(ArgumentIndexError, lambda: loggamma(x).fdiff(2))
+    assert loggamma(x).diff(x) == polygamma(0, x)
     s1 = loggamma(1/(x + sin(x)) + cos(x)).nseries(x, n=4)
     s2 = (-log(2*x) - 1)/(2*x) - log(x/pi)/2 + (4 - log(2*x))*x/24 + O(x**2)
     assert (s1 - s2).expand(force=True).removeO() == 0
@@ -284,6 +289,13 @@ def test_loggamma():
     s2 = (1/x - S(1)/2)*log(1/x) - 1/x + log(2*pi)/2 + \
         x/12 - x**3/360 + x**5/1260 + O(x**7)
     assert ((s1 - s2).expand(force=True)).removeO() == 0
+
+    assert loggamma(x).rewrite('intractable') == log(gamma(x))
+
+    assert loggamma(x).is_real is None
+    y, z = Symbol('y', real=True), Symbol('z', imaginary=True)
+    assert loggamma(y).is_real
+    assert loggamma(z).is_real is False
 
     def tN(N, M):
         assert loggamma(1/x)._eval_nseries(x, n=N, logx=None).getn() == M

@@ -214,7 +214,6 @@ def test_si():
     assert tn_arg(Si)
     assert tn_arg(Shi)
 
-    from sympy import O
     assert Si(x).nseries(x, n=8) == \
         x - x**3/18 + x**5/600 - x**7/35280 + O(x**9)
     assert Shi(x).nseries(x, n=8) == \

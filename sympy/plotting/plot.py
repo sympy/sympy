@@ -36,9 +36,11 @@ from experimental_lambdify import (vectorized_lambdify, lambdify)
 np = import_module('numpy')
 
 # Backend specific imports - matplotlib
+# When changing the minimum module version for matplotlib, please change
+# the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
 matplotlib = import_module('matplotlib',
     __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
-    min_module_version='1.0.0', catch=(RuntimeError,))
+    min_module_version='1.1.0', catch=(RuntimeError,))
 if matplotlib:
     plt = matplotlib.pyplot
     cm = matplotlib.cm

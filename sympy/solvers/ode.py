@@ -16,7 +16,6 @@ specific hint.  See also the docstring on dsolve().
     - dsolve() - Solves ODEs.
     - classify_ode() - Classifies ODEs into possible hints for dsolve().
     - checkodesol() - Checks if an equation is the solution to an ODE.
-    - ode_order() - Returns the order (degree) of an ODE.
     - homogeneous_order() - Returns the homogeneous order of an
       expression.
 
@@ -30,7 +29,6 @@ specific hint.  See also the docstring on dsolve().
     - constantsimp() - Simplifies arbitrary constants.
     - constant_renumber() - Renumber arbitrary constants
     - _handle_Integral() - Evaluate unevaluated Integrals.
-    - preprocess - prepare the equation and detect function to solve for
 
     See also the docstrings of these functions.
 
@@ -227,6 +225,7 @@ from sympy.simplify.simplify import _mexpand
 from sympy.solvers import solve
 
 from sympy.utilities import numbered_symbols, default_sort_key, sift
+from sympy.solvers.deutils import _preprocess, ode_order, _desolve
 
 # This is a list of hints in the order that they should be applied.  That means
 # that, in general, hints earlier in the list should produce simpler results
@@ -271,77 +270,6 @@ allhints = (
     )
 
 
-def preprocess(expr, func=None, hint='_Integral'):
-    """Prepare expr for solving by making sure that differentiation
-    is done so that only func remains in unevaluated derivatives and
-    (if hint doesn't end with _Integral) that doit is applied to all
-    other derivatives. If hint is None, don't do any differentiation.
-    (Currently this may cause some simple differential equations to
-    fail.)
-
-    In case func is None, an attempt will be made to autodetect the
-    function to be solved for.
-
-    >>> from sympy.solvers.ode import preprocess
-    >>> from sympy import Derivative, Function, Integral, sin
-    >>> from sympy.abc import x, y, z
-    >>> f, g = map(Function, 'fg')
-
-    Apply doit to derivatives that contain more than the function
-    of interest:
-
-    >>> preprocess(Derivative(f(x) + x, x))
-    (Derivative(f(x), x) + 1, f(x))
-
-    Do others if the differentiation variable(s) intersect with those
-    of the function of interest or contain the function of interest:
-
-    >>> preprocess(Derivative(g(x), y, z), f(y))
-    (0, f(y))
-    >>> preprocess(Derivative(f(y), z), f(y))
-    (0, f(y))
-
-    Do others if the hint doesn't end in '_Integral' (the default
-    assumes that it does):
-
-    >>> preprocess(Derivative(g(x), y), f(x))
-    (Derivative(g(x), y), f(x))
-    >>> preprocess(Derivative(f(x), y), f(x), hint='')
-    (0, f(x))
-
-    Don't do any derivatives if hint is None:
-
-    >>> eq = Derivative(f(x) + 1, x) + Derivative(f(x), y)
-    >>> preprocess(eq, f(x), hint=None)
-    (Derivative(f(x) + 1, x) + Derivative(f(x), y), f(x))
-
-    If it's not clear what the function of interest is, it must be given:
-
-    >>> eq = Derivative(f(x) + g(x), x)
-    >>> preprocess(eq, g(x))
-    (Derivative(f(x), x) + Derivative(g(x), x), g(x))
-    >>> try: preprocess(eq)
-    ... except ValueError: print "A ValueError was raised."
-    A ValueError was raised.
-
-    """
-
-    derivs = expr.atoms(Derivative)
-    if not func:
-        funcs = set_union(*[d.atoms(AppliedUndef) for d in derivs])
-        if len(funcs) != 1:
-            raise ValueError('The function cannot be '
-                'automatically detected for %s.' % expr)
-        func = funcs.pop()
-    fvars = set(func.args)
-    if hint is None:
-        return expr, func
-    reps = [(d, d.doit()) for d in derivs if not hint.endswith('_Integral') or
-            d.has(func) or set(d.variables) & fvars]
-    eq = expr.subs(reps)
-    return eq, func
-
-
 def sub_func_doit(eq, func, new):
     """When replacing the func with something else, we usually
     want the derivative evaluated, so this function helps in
@@ -349,7 +277,7 @@ def sub_func_doit(eq, func, new):
 
     To keep subs from having to look through all derivatives, we
     mask them off with dummy variables, do the func sub, and then
-    replace masked off derivatives with their doit values.
+    replace masked-off derivatives with their doit values.
 
     Examples
     ========
@@ -431,7 +359,8 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
                 hint's key will be the exception object raised.  The
                 dictionary will also include some special keys:
 
-                - order: The order of the ODE.  See also ode_order().
+                - order: The order of the ODE.  See also ode_order() in
+                  deutils.py
                 - best: The simplest hint; what would be returned by
                   "best" below.
                 - best_hint: The hint that would produce the solution
@@ -511,112 +440,71 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     >>> # a simpler result in this case.
 
     """
-    prep = kwargs.pop('prep', True)
+    given_hint = hint  # hint given by the user
 
-    # TODO: Implement initial conditions
-    # See issue 1621.  We first need a way to represent things like f'(0).
-    if isinstance(eq, Equality):
-        eq = eq.lhs - eq.rhs
+    # See the docstring of _desolve for more details.
+    hints = _desolve(eq, func=func,
+        hint=hint, simplify=True, type='ode', **kwargs)
 
-    # preprocess the equation and find func if not given
-    if prep or func is None:
-        eq, func = preprocess(eq, func)
-        prep = False
-
-    # Magic that should only be used internally.  Prevents classify_ode from
-    # being called more than it needs to be by passing its results through
-    # recursive calls.
-    if kwargs.get('classify', True):
-        hints = classify_ode(eq, func, dict=True, prep=prep)
-    else:
-        # Here is what all this means:
-        #
-        # hint:    The hint method given to dsolve() by the user.
-        # hints:   The dictionary of hints that match the ODE, along with other
-        #          information (including the internal pass-through magic).
-        # default: The default hint to return, the first hint from allhints
-        #          that matches the hint; obtained from classify_ode().
-        # match:   Dictionary containing the match dictionary for each hint
-        #          (the parts of the ODE for solving).  When going through the
-        #          hints in "all", this holds the match string for the current
-        #          hint.
-        # order:   The order of the ODE, as determined by ode_order().
-        hints = kwargs.get('hint',
-                           {'default': hint,
-                            hint: kwargs['match'],
-                            'order': kwargs['order']})
-
-    if hints['order'] == 0:
-        raise ValueError(
-            str(eq) + " is not a differential equation in " + str(func))
-
-    if not hints['default']:
-        # classify_ode will set hints['default'] to None if no hints match.
-        if hint not in allhints and hint != 'default':
-            raise ValueError("Hint not recognized: " + hint)
-        elif hint not in hints['ordered_hints'] and hint != 'default':
-            raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
-        else:
-            raise NotImplementedError("dsolve: Cannot solve " + str(eq))
-
-    if hint == 'default':
-        return dsolve(eq, func, hint=hints['default'], simplify=simplify,
-                      prep=prep, classify=False, order=hints['order'],
-                      match=hints[hints['default']])
-    elif hint in ('all', 'all_Integral', 'best'):
+    eq = hints.pop('eq', eq)
+    all_ = hints.pop('all', False)
+    if all_:
         retdict = {}
-        failedhints = {}
-        gethints = set(hints) - set(['order', 'default', 'ordered_hints'])
-        if hint == 'all_Integral':
-            for i in hints:
-                if i.endswith('_Integral'):
-                    gethints.remove(i[:-len('_Integral')])
-            # special case
-            if "1st_homogeneous_coeff_best" in gethints:
-                gethints.remove("1st_homogeneous_coeff_best")
-        for i in gethints:
+        failed_hints = {}
+        gethints = classify_ode(eq, dict=True)
+        orderedhints = gethints['ordered_hints']
+        for hint in hints:
             try:
-                sol = dsolve(eq, func, hint=i, simplify=simplify, prep=prep,
-                   classify=False, order=hints['order'], match=hints[i])
-            except NotImplementedError, detail:  # except NotImplementedError as detail:
-                failedhints[i] = detail
+                rv = _helper_simplify(eq, hint, hints[hint], simplify)
+            except NotImplementedError, detail:
+                failed_hints[hint] = detail
             else:
-                retdict[i] = sol
+                retdict[hint] = rv
+        func = hints[hint]['func']
         retdict['best'] = min(retdict.values(), key=lambda x:
             ode_sol_simplicity(x, func, trysolving=not simplify))
-        if hint == 'best':
+        if given_hint == 'best':
             return retdict['best']
-        for i in hints['ordered_hints']:
+        for i in orderedhints:
             if retdict['best'] == retdict.get(i, None):
                 retdict['best_hint'] = i
                 break
-        retdict['default'] = hints['default']
-        retdict['order'] = sympify(hints['order'])
-        retdict.update(failedhints)
+        retdict['default'] = gethints['default']
+        retdict['order'] = gethints['order']
+        retdict.update(failed_hints)
         return retdict
-    elif hint not in allhints:  # and hint not in ('default', 'ordered_hints'):
-        raise ValueError("Hint not recognized: " + hint)
-    elif hint not in hints:
-        raise ValueError("ODE " + str(eq) + " does not match hint " + hint)
-    elif hint.endswith('_Integral'):
+
+    else:
+        # The key 'hint' stores the hint needed to be solved for.
+        hint = hints['hint']
+        return _helper_simplify(eq, hint, hints, simplify)
+
+def _helper_simplify(eq, hint, match, simplify=True):
+    """Helper function of dsolve that calls the respective
+    ode functions to solve for the ordinary differential
+    equations. This minimises the computation in
+    calling _desolve multiple times.
+    """
+    r = match
+    if hint.endswith('_Integral'):
         solvefunc = globals()['ode_' + hint[:-len('_Integral')]]
     else:
-        # convert the string into a function
         solvefunc = globals()['ode_' + hint]
-    # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
-    # attempt to solve for func, and apply any other hint specific
-    # simplifications
+    func = r['func']
+    order = r['order']
+    match = r[hint]
     if simplify:
-        rv = odesimp(solvefunc(eq, func, order=hints['order'],
-            match=hints[hint]), func, hints['order'], hint)
+        # odesimp() will attempt to integrate, if necessary, apply constantsimp(),
+        # attempt to solve for func, and apply any other hint specific
+        # simplifications
+        rv = odesimp(solvefunc(eq, func, order, match), func, order, hint)
+        return rv
     else:
-        # We still want to integrate (can be disabled separately with the hint)
-        r = hints[hint]
-        r['simplify'] = False  # Some hints can take advantage of this option
-        rv = _handle_Integral(solvefunc(eq, func, order=hints['order'],
-            match=hints[hint]), func, hints['order'], hint)
-    return rv
-
+        # We still want to integrate (you can disable it separately with the hint)
+        match['simplify'] = False  # Some hints can take advantage of this option
+        rv = _handle_Integral(solvefunc(eq, func, order, match),
+            func, order, hint)
+        return rv
 
 def classify_ode(eq, func=None, dict=False, **kwargs):
     """
@@ -737,7 +625,7 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
         raise ValueError("dsolve() and classify_ode() only "
         "work with functions of one variable, not %s" % func)
     if prep or func is None:
-        eq, func_ = preprocess(eq, func)
+        eq, func_ = _preprocess(eq, func)
         if func is None:
             func = func_
     x = func.args[0]
@@ -1069,20 +957,13 @@ def classify_ode(eq, func=None, dict=False, **kwargs):
                 matching_hints["nth_linear_euler_eq_homogeneous"] = r
 
     # Order keys based on allhints.
-    retlist = []
-    for i in allhints:
-        if i in matching_hints:
-            retlist.append(i)
+    retlist = [i for i in allhints if i in matching_hints]
 
     if dict:
         # Dictionaries are ordered arbitrarily, so make note of which
         # hint would come first for dsolve().  Use an ordered dict in Py 3.
-        matching_hints["default"] = None
+        matching_hints["default"] = retlist[0] if retlist else None
         matching_hints["ordered_hints"] = tuple(retlist)
-        for i in allhints:
-            if i in matching_hints:
-                matching_hints["default"] = i
-                break
         return matching_hints
     else:
         return tuple(retlist)
@@ -1122,13 +1003,14 @@ def odesimp(eq, func, order, hint):
                            f(x)
                              /
                             |
-                            |   /      /1 \    \
-                            |  -|u2*sin|--| + 1|
-                            |   \      \u2/    /
-    log(f(x)) = log(C1) +   |  ----------------- d(u2)
-                            |       2    /1 \
-                            |     u2 *sin|--|
-                            |            \u2/
+                            |   /        1   \
+                            |  -|u2 + -------|
+                            |   |        /1 \|
+                            |   |     sin|--||
+                            |   \        \u2//
+    log(f(x)) = log(C1) +   |  --------------- d(u2)
+                            |          2
+                            |        u2
                             |
                            /
 
@@ -1294,7 +1176,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
         ode = Eq(ode, 0)
     if func is None:
         try:
-            _, func = preprocess(ode.lhs)
+            _, func = _preprocess(ode.lhs)
         except ValueError:
             funcs = [s.atoms(AppliedUndef) for s in (
                 sol if is_sequence(sol, set) else [sol])]
@@ -1917,19 +1799,13 @@ def _handle_Integral(expr, func, order, hint):
     For most hints, this simply runs expr.doit()
 
     """
+    global y
     x = func.args[0]
     f = func.func
     if hint == "1st_exact":
-        global y
         sol = (expr.doit()).subs(y, f(x))
         del y
     elif hint == "1st_exact_Integral":
-        # FIXME: We still need to back substitute y
-        # sol = expr.subs(y, f(x))
-        # For now, we are going to have to return an expression with f(x)
-        # replaced with y when Integrals are done with respect to f(x).
-        # For example, Integral(cos(f(x)), _y).  If there were a way
-        # to do inert substitution, that could maybe be used here instead.
         sol = expr.subs(y, f(x))
         del y
     elif hint == "nth_linear_constant_coeff_homogeneous":
@@ -1939,46 +1815,6 @@ def _handle_Integral(expr, func, order, hint):
     else:
         sol = expr
     return sol
-
-
-def ode_order(expr, func):
-    """
-    Returns the order of a given ODE with respect to func.
-
-    This function is implemented recursively.
-
-    Examples
-    ========
-
-    >>> from sympy import Function, ode_order
-    >>> from sympy.abc import x
-    >>> f, g = map(Function, ['f', 'g'])
-    >>> ode_order(f(x).diff(x, 2) + f(x).diff(x)**2 +
-    ... f(x).diff(x), f(x))
-    2
-    >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), f(x))
-    2
-    >>> ode_order(f(x).diff(x, 2) + g(x).diff(x, 3), g(x))
-    3
-
-    """
-    a = Wild('a', exclude=[func])
-    if expr.match(a):
-        return 0
-
-    if isinstance(expr, Derivative):
-        if expr.args[0] == func:
-            return len(expr.variables)
-        else:
-            order = 0
-            for arg in expr.args[0].args:
-                order = max(order, ode_order(arg, func) + len(expr.variables))
-            return order
-    else:
-        order = 0
-        for arg in expr.args:
-            order = max(order, ode_order(arg, func))
-        return order
 
 
 # FIXME: replace the general solution in the docstring with
@@ -2235,9 +2071,9 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
                 f(x)
                   /
                  |
-                 |        g(u2)
-                 |  ----------------- d(u2)
-                 |  -u2*g(u2) - h(u2)
+                 |       -g(u2)
+                 |  ---------------- d(u2)
+                 |  u2*g(u2) + h(u2)
                  |
                 /
     <BLANKLINE>
@@ -2827,10 +2663,6 @@ def ode_almost_linear(eq, func, order, match):
     substitution reduces it to a linear differential equation
     of the form u' + P(x)*u + Q(x) = 0.
 
-    See Also
-    ========
-    ode_1st_linear
-
     The general solution is
 
         >>> from sympy import Function, dsolve, Eq, pprint
@@ -2850,6 +2682,10 @@ def ode_almost_linear(eq, func, order, match):
                \         k(x)    /
 
 
+    See Also
+    ========
+    ode_1st_linear
+
     Examples
     ========
 
@@ -2864,7 +2700,6 @@ def ode_almost_linear(eq, func, order, match):
     >>> pprint(dsolve(eq, f(x), hint='almost_linear'))
                          -x
     f(x) = (C1 - Ei(x))*e
-
 
     References
     ==========
@@ -3012,17 +2847,13 @@ def ode_separable_reduced(eq, func, order, match):
     r"""
     Solves a differential equation that can be reduced to the separable form.
 
-    The general form of this equation is y' + (y/x)*H(x^n*y) = 0
-    This can be solved by substituting u(y) = (x^n * y)
+    The general form of this equation is y' + (y/x)*H(x^n*y) = 0.
+    This can be solved by substituting u(y) = (x^n * y).
 
     The equation then reduces to the separable form
-    u'*(1/(u*(power - H(u)))) - (1/x) = 0
+    ``u'*(1/(u*(power - H(u))))`` - (1/x) = 0.
 
-    See Also
-    ========
-    ode_separable
-
-    The general solution is
+    The general solution is:
 
         >>> from sympy import Function, dsolve, Eq, pprint
         >>> from sympy.abc import x, n
@@ -3044,6 +2875,9 @@ def ode_separable_reduced(eq, func, order, match):
          |
          /
 
+    See Also
+    ========
+    ode_separable
 
     Examples
     ========
@@ -3062,7 +2896,6 @@ def ode_separable_reduced(eq, func, order, match):
             - \/  C1*x  + 1  + 1         \/  C1*x  + 1  + 1
     [f(x) = --------------------, f(x) = ------------------]
                      x                           x
-
 
     References
     ==========

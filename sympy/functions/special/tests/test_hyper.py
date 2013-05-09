@@ -65,6 +65,26 @@ def test_expand_func():
         meijerg([[1, 1], []], [[], []], z)
 
 
+def replace_dummy(expr, sym):
+    from sympy import Dummy
+    dum = expr.atoms(Dummy)
+    if not dum:
+        return expr
+    assert len(dum) == 1
+    return expr.xreplace({dum.pop(): sym})
+
+
+def test_hyper_rewrite_sum():
+    from sympy import RisingFactorial, factorial, Dummy, Sum
+    _k = Dummy("k")
+    assert replace_dummy(hyper((1, 2), (1, 3), x).rewrite(Sum), _k) == \
+        Sum(x**_k / factorial(_k) * RisingFactorial(2, _k) /
+            RisingFactorial(3, _k), (_k, 0, oo))
+
+    assert hyper((1, 2, 3), (-1, 3), z).rewrite(Sum) == \
+        hyper((1, 2, 3), (-1, 3), z)
+
+
 def test_radius_of_convergence():
     assert hyper((1, 2), [3], z).radius_of_convergence == 1
     assert hyper((1, 2), [3, 4], z).radius_of_convergence == oo

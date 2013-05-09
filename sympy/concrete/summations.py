@@ -1,25 +1,18 @@
-from sympy.core import Add, C, Derivative, Dummy, Expr, S, sympify, Wild, Eq
+from sympy.core.add import Add
+from sympy.core.basic import C
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Wild)
+from sympy.core.sympify import sympify
 from sympy.concrete.gosper import gosper_sum
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 from sympy.simplify.simplify import simplify
 from sympy.core.add import Add
-
-
-def _free_symbols(function, limits):
-    """Helper function to return the symbols that appear in a sum-like object
-    once it is evaluated.
-    """
-    isyms = function.free_symbols
-    for xab in limits:
-        # take out the target symbol
-        if xab[0] in isyms:
-            isyms.remove(xab[0])
-        # add in the new symbols
-        for i in xab[1:]:
-            isyms.update(i.free_symbols)
-    return isyms
 
 
 class Sum(Expr):
@@ -102,19 +95,10 @@ class Sum(Expr):
 
     @property
     def free_symbols(self):
-        """
-        This method returns the symbols that will exist when the
-        summation is evaluated. This is useful if one is trying to
-        determine whether a sum depends on a certain symbol or not.
-
-        >>> from sympy import Sum
-        >>> from sympy.abc import x, y
-        >>> Sum(x, (x, y, 1)).free_symbols
-        set([y])
-        """
+        from sympy.integrals.integrals import _free_symbols
         if self.function.is_zero:
             return set()
-        return _free_symbols(self.function, self.limits)
+        return _free_symbols(self)
 
     @property
     def is_zero(self):
@@ -155,6 +139,10 @@ class Sum(Expr):
         """
 
         return self.function.is_zero or not self.free_symbols
+
+    def as_dummy(self):
+        from sympy.integrals.integrals import _as_dummy
+        return _as_dummy(self)
 
     def doit(self, **hints):
         if hints.get('deep', True):
@@ -305,12 +293,12 @@ class Sum(Expr):
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
-            g = g.diff(i, 2)
+            g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
 
-    def _eval_subs(self, old, new):  # XXX this should be the same as Integral's
-        if any(old == v for v in self.variables):
-            return self
+    def _eval_subs(self, old, new):
+        from sympy.integrals.integrals import _eval_subs
+        return _eval_subs(self, old, new)
 
 
 def summation(f, *symbols, **kwargs):
@@ -420,6 +408,9 @@ def telescopic(L, R, limits):
 
 
 def eval_sum(f, limits):
+    from sympy.concrete.delta import deltasummation, _has_simple_delta
+    from sympy.functions import KroneckerDelta
+
     (i, a, b) = limits
     if f is S.Zero:
         return S.Zero
@@ -427,6 +418,9 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+
+    if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
+        return deltasummation(f, limits)
 
     dif = b - a
     definite = dif.is_Integer

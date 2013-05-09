@@ -1,3 +1,4 @@
+from __future__ import with_statement
 from sympy import ImmutableMatrix, Matrix, eye, zeros
 from sympy.abc import x, y
 from sympy.utilities.pytest import raises

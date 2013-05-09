@@ -29,6 +29,153 @@ from sympy.ntheory import sieve
 from sympy.mpmath import pslq, mp
 
 
+def _choose_factor(factors, x, v, prec):
+    """
+    Return a factor having root ``v``
+    It is assumed that one of the factors has root ``v``.
+    """
+    if isinstance(factors[0], tuple):
+        factors = [xx[0] for xx in factors]
+    if len(factors) == 1:
+        return factors[0]
+    prec1 = 10
+    reps = {x: v}
+    eps = 1.0/10**prec
+    while 1:
+        candidates = []
+        for f in factors:
+            if abs(f.evalf(prec1, subs=reps)) < eps:
+                candidates.append(f)
+
+        if candidates:
+            factors = candidates
+        if len(factors) == 1:
+            return factors[0]
+        if prec1 > prec:
+            return None
+        prec1 *= 2
+def _separate_sq(p):
+    """
+    helper function for ``_minimal_polynomial_sq``
+
+    It selects a rational ``g`` such that the polynomial ``p``
+    consists of a sum of terms whose surds squared have gcd equal to ``g``
+    and a sum of terms with surds squared prime with ``g``;
+    then it takes the field norm to eliminate ``sqrt(g)``
+
+    See simplify.simplify.split_surds and polytools.sqf_norm.
+
+    Examples
+    ========
+
+    >>> from sympy import sqrt
+    >>> from sympy.abc import x
+    >>> from sympy.polys.numberfields import _separate_sq
+    >>> p= -x + sqrt(2) + sqrt(3) + sqrt(7)
+    >>> p = _separate_sq(p); p
+    -x**2 + 2*sqrt(3)*x + 2*sqrt(7)*x - 2*sqrt(21) - 8
+    >>> p = _separate_sq(p); p
+    -x**4 + 4*sqrt(7)*x**3 - 32*x**2 + 8*sqrt(7)*x + 20
+    >>> p = _separate_sq(p); p
+    -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
+
+    """
+    from sympy.simplify.simplify import _split_gcd, _mexpand
+    from sympy.utilities.iterables import sift
+    def is_sqrt(expr):
+        return expr.is_Pow and expr.exp is S.Half
+    # p = c1*sqrt(q1) + ... + cn*sqrt(qn) -> a = [(c1, q1), .., (cn, qn)]
+    a = []
+    for y in p.args:
+        if not y.is_Mul:
+            if is_sqrt(y):
+                a.append((S.One, y**2))
+            elif y.is_Atom:
+                a.append((y, S.One))
+            else:
+                raise NotImplementedError
+            continue
+        sifted = sift(y.args, is_sqrt)
+        a.append((Mul(*sifted[False]), Mul(*sifted[True])**2))
+    a.sort(key=lambda z: z[1])
+    if a[-1][1] is S.One:
+        # there are no surds
+        return p
+    surds = [z for y, z in a]
+    for i in range(len(surds)):
+        if surds[i] != 1:
+            break
+    g, b1, b2 = _split_gcd(*surds[i:])
+    a1 = []
+    a2 = []
+    for y, z in a:
+        if z in b1:
+            a1.append(y*z**S.Half)
+        else:
+            a2.append(y*z**S.Half)
+    p1 = Add(*a1)
+    p2 = Add(*a2)
+    p = _mexpand(p1**2) - _mexpand(p2**2)
+    return p
+
+def _minimal_polynomial_sq(p, n, x, prec):
+    """
+    Returns the minimal polynomial for the ``nth-root`` of a sum of surds
+    or ``None`` if it fails.
+
+    Parameters
+    ==========
+
+    p : sum of surds
+    n : positive integer
+    x : variable of the returned polynomial
+
+    Examples
+    ========
+
+    >>> from sympy.polys.numberfields import _minimal_polynomial_sq
+    >>> from sympy import sqrt
+    >>> from sympy.abc import x
+    >>> q = 1 + sqrt(2) + sqrt(3)
+    >>> _minimal_polynomial_sq(q, 3, x, 15)
+    x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
+
+    """
+    from sympy.simplify.simplify import _is_sum_surds
+
+    p = sympify(p)
+    n = sympify(n)
+    r = _is_sum_surds(p)
+    if not n.is_Integer or not n > 0 or not _is_sum_surds(p):
+        return None
+    pn = p**Rational(1, n)
+    # eliminate the square roots
+    p -= x
+    while 1:
+        p1 = _separate_sq(p)
+        if p1 is p:
+            p = p1.subs({x:x**n})
+            break
+        else:
+            p = p1
+
+    # _separate_sq eliminates field extensions in a minimal way, so that
+    # if n = 1 then `p = constant*(minimal_polynomial(p))`
+    # if n > 1 it contains the minimal polynomial as a factor.
+    if n == 1:
+        p1 = Poly(p)
+        if p.coeff(x**p1.degree()) < 0:
+            p = -p
+        p = p.primitive()[1]
+        return p
+    # by construction `p` has root `pn`
+    # the minimal polynomial is the factor vanishing in x = pn
+    factors = factor_list(p)[1]
+
+    result = _choose_factor(factors, x, pn, prec)
+    return result
+
+
 def minimal_polynomial(ex, x=None, **args):
     """
     Computes the minimal polynomial of an algebraic number.
@@ -45,6 +192,10 @@ def minimal_polynomial(ex, x=None, **args):
     x**4 - 10*x**2 + 1
 
     """
+    from sympy.polys.polytools import degree
+    from sympy.core.function import (expand_mul, expand_multinomial)
+    from sympy.simplify.simplify import _is_sum_surds
+
     generator = numbered_symbols('a', cls=Dummy)
     mapping, symbols, replace = {}, {}, []
 
@@ -95,13 +246,11 @@ def minimal_polynomial(ex, x=None, **args):
                         return bottom_up_scan(base)
                     else:
                         ex = base**(-ex.exp)
-
                 if not ex.exp.is_Integer:
                     base, exp = (
                         ex.base**ex.exp.p).expand(), Rational(1, ex.exp.q)
                 else:
                     base, exp = ex.base, ex.exp
-
                 base = bottom_up_scan(base)
                 expr = base**exp
 
@@ -117,8 +266,34 @@ def minimal_polynomial(ex, x=None, **args):
 
         raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
-    polys = args.get('polys', False)
+    def simpler_inverse(ex):
+        """
+        Returns True if it is more likely that the minimal polynomial
+        algorithm works better with the inverse
+        """
+        if ex.is_Pow:
+            if (1/ex.exp).is_integer and ex.exp < 0:
+                if ex.base.is_Add:
+                    return True
+        if ex.is_Mul:
+            hit = True
+            a = []
+            for p in ex.args:
+                if p.is_Add:
+                    return False
+                if p.is_Pow:
+                    if p.base.is_Add and p.exp > 0:
+                        return False
 
+            if hit:
+                return True
+        return False
+
+    polys = args.get('polys', False)
+    prec = args.pop('prec', 10)
+
+    inverted = False
+    ex = expand_multinomial(ex)
     if ex.is_AlgebraicNumber:
         if not polys:
             return ex.minpoly.as_expr(x)
@@ -127,20 +302,34 @@ def minimal_polynomial(ex, x=None, **args):
     elif ex.is_Rational:
         result = ex.q*x - ex.p
     else:
-        F = [x - bottom_up_scan(ex)] + mapping.values()
-        G = groebner(F, symbols.values() + [x], order='lex')
+        inverted = simpler_inverse(ex)
+        if inverted:
+            ex = ex**-1
+        res = None
+        if ex.is_Pow and (1/ex.exp).is_Integer:
+            n = 1/ex.exp
+            res = _minimal_polynomial_sq(ex.base, n, x, prec)
 
-        _, factors = factor_list(G[-1])
+        elif _is_sum_surds(ex):
+            res = _minimal_polynomial_sq(ex, S.One, x, prec)
 
-        if len(factors) == 1:
-            ((result, _),) = factors
-        else:
-            for result, _ in factors:
-                if result.subs(x, ex).evalf(chop=True) == 0:
-                    break
-            else:  # pragma: no cover
+        if res is not None:
+            result = res
+
+        if res is None:
+            bus = bottom_up_scan(ex)
+            F = [x - bus] + mapping.values()
+            G = groebner(F, symbols.values() + [x], order='lex')
+
+            _, factors = factor_list(G[-1])
+            # by construction G[-1] has root `ex`
+            result = _choose_factor(factors, x, ex, prec)
+            if result is None:
                 raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % ex)
-
+    if inverted:
+        result = expand_mul(x**degree(result)*result.subs(x, 1/x))
+        if result.coeff(x**degree(result)) < 0:
+            result = expand_mul(-result)
     if polys:
         return cls(result, x, field=True)
     else:
@@ -164,7 +353,6 @@ def primitive_element(extension, x=None, **args):
         x, cls = sympify(x), Poly
     else:
         x, cls = Dummy('x'), PurePoly
-
     if not args.get('ex', False):
         extension = [ AlgebraicNumber(ext, gen=x) for ext in extension ]
 

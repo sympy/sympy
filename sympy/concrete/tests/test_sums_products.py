@@ -281,14 +281,33 @@ def test_sum_reconstruct():
     raises(ValueError, lambda: Sum(x, (x, 1)))
 
 
-def test_Sum_limit_subs():
-    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
-    assert Sum(a, (a, Sum(b, (b, 1, 2)), 4)).subs(Sum(b, (b, 1, 2)), c) == \
-        Sum(a, (a, c, 4))
+def test_limit_subs():
+    for F in (Sum, Product, Integral):
+        assert F(a*exp(a), (a, -2, 2)) == F(a*exp(a), (a, -b, b)).subs(b, 2)
+        assert F(a, (a, F(b, (b, 1, 2)), 4)).subs(F(b, (b, 1, 2)), c) == \
+            F(a, (a, c, 4))
+        assert F(x, (x, 1, x + y)).subs(x, 1) == F(x, (x, 1, y + 1))
 
 
-@XFAIL
-def test_issue2166():
+def test_equality():
+    # if this fails remove special handling below
+    raises(ValueError, lambda: Sum(x, x))
+    r = symbols('x', real=True)
+    for F in (Sum, Product, Integral):
+        try:
+            assert F(x, x) != F(y, y)
+            assert F(x, (x, 1, 2)) != F(x, x)
+            assert F(x, (x, x)) != F(x, x)  # or else they print the same
+            assert F(1, x) != F(1, y)
+        except ValueError:
+            pass
+        assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))
+        assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))
+        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))
+        assert F(1, (x, 1, x)) != F(1, (y, 1, x))
+        assert F(1, (x, 1, x)) != F(1, (y, 1, y))
+
+    # issue 2166
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 

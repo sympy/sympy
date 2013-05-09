@@ -1,6 +1,7 @@
 from StringIO import StringIO
 
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
+from sympy import erf
 from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
     CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
     InOutArgument
@@ -510,6 +511,19 @@ def test_numbersymbol_f_code():
     )
     assert source == expected
 
+def test_erf_f_code():
+    x = symbols('x')
+    routine = Routine("test", erf(x) - erf(-2 * x))
+    code_gen = FCodeGen()
+    source = get_string(code_gen.dump_f95, [routine])
+    expected = (
+        "REAL*8 function test(x)\n"
+        "implicit none\n"
+        "REAL*8, intent(in) :: x\n"
+        "test = erf(x) + erf(2*x)\n"
+        "end function\n"
+    )
+    assert source == expected, source
 
 def test_f_code_argument_order():
     x, y, z = symbols('x,y,z')
@@ -1085,7 +1099,7 @@ def test_inline_function():
         'REAL*8, intent(out), dimension(1:m) :: y\n'
         'INTEGER*4 :: i\n'
         'do i = 1, m\n'
-        '   y(i) = (1 + x(i))*x(i)\n'
+        '   y(i) = x(i)*(1 + x(i))\n'
         'end do\n'
         'end subroutine\n'
     )

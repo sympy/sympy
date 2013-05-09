@@ -4,6 +4,7 @@ import math
 
 from sympy.core.symbol import Dummy, Symbol, symbols
 from sympy.core import S, I, pi
+from sympy.core.mul import expand_2arg
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, igcd
 
@@ -80,7 +81,7 @@ def roots_quadratic(f):
             r0 = E + F
             r1 = E - F
 
-    return sorted([r0, r1], key=default_sort_key)
+    return sorted([expand_2arg(i) for i in (r0, r1)], key=default_sort_key)
 
 
 def roots_cubic(f):
@@ -101,7 +102,13 @@ def roots_cubic(f):
         if q is S.Zero:
             return [-aon3]*3
         else:
-            u1 = q**Rational(1, 3)
+            if q.is_real:
+                if q > 0:
+                    u1 = -q**Rational(1, 3)
+                else:
+                    u1 = (-q)**Rational(1, 3)
+            else:
+                u1 = (-q)**Rational(1, 3)
     elif q is S.Zero:
         y1, y2 = roots([1, 0, p], multiple=True)
         return [tmp - aon3 for tmp in [y1, S.Zero, y2]]
@@ -112,6 +119,9 @@ def roots_cubic(f):
 
     u2 = u1*(-S.Half + coeff)
     u3 = u1*(-S.Half - coeff)
+
+    if p is S.Zero:
+        return [u1 - aon3, u2 - aon3, u3 - aon3]
 
     soln = [
         -u1 + pon3/u1 - aon3,
@@ -723,6 +733,7 @@ def roots(f, *gens, **flags):
     {-1: 1, 1: 1}
 
     """
+    from sympy.polys.polytools import to_rational_coeffs
     flags = dict(flags)
 
     auto = flags.pop('auto', True)
@@ -831,6 +842,9 @@ def roots(f, *gens, **flags):
     if auto and f.get_domain().has_Ring:
         f = f.to_field()
 
+    rescale_x = None
+    translate_x = None
+
     result = {}
 
     if not f.is_ground:
@@ -849,8 +863,20 @@ def roots(f, *gens, **flags):
             _, factors = Poly(f.as_expr()).factor_list()
 
             if len(factors) == 1 and factors[0][1] == 1:
-                for root in _try_decompose(f):
-                    _update_dict(result, root, 1)
+                if f.get_domain().is_EX:
+                    res = to_rational_coeffs(f)
+                    if res:
+                        if res[0] is None:
+                            translate_x, f = res[2:]
+                        else:
+                            rescale_x, f = res[1], res[-1]
+                        result = roots(f)
+                        if not result:
+                            for root in _try_decompose(f):
+                                _update_dict(result, root, 1)
+                else:
+                    for root in _try_decompose(f):
+                        _update_dict(result, root, 1)
             else:
                 for factor, k in factors:
                     for r in _try_heuristics(Poly(factor, f.gen, field=True)):
@@ -885,6 +911,16 @@ def roots(f, *gens, **flags):
         for zero in dict(result).iterkeys():
             if not predicate(zero):
                 del result[zero]
+    if rescale_x:
+        result1 = {}
+        for k, v in result.items():
+            result1[k*rescale_x] = v
+        result = result1
+    if translate_x:
+        result1 = {}
+        for k, v in result.items():
+            result1[k + translate_x] = v
+        result = result1
 
     if not multiple:
         return result

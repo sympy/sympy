@@ -471,8 +471,8 @@ class Expr(Basic, EvalfMixin):
         >>> one = cos(x)**2 + sin(x)**2
         >>> one.is_constant()
         True
-        >>> ((one - 1)**(x + 1)).is_constant() # could be 0 or 1
-        False
+        >>> ((one - 1)**(x + 1)).is_constant() in (True, False) # could be 0 or 1
+        True
         """
 
         simplify = flags.get('simplify', True)
@@ -501,9 +501,6 @@ class Expr(Basic, EvalfMixin):
 
         # simplify unless this has already been done
         if simplify:
-            self = self.as_content_primitive()[1]
-            if self.is_commutative:
-                self = self.cancel()
             self = self.simplify()
 
         # is_zero should be a quick assumptions check; it can be wrong for
@@ -581,10 +578,7 @@ class Expr(Basic, EvalfMixin):
         # don't worry about doing simplification steps one at a time
         # because if the expression ever goes to 0 then the subsequent
         # simplification steps that are done will be very fast.
-        diff = (self - other).as_content_primitive()[1]
-        if diff.is_commutative:
-            diff = diff.cancel()
-        diff = factor_terms(diff.simplify(), radical=True)
+        diff = factor_terms((self - other).simplify(), radical=True)
 
         if not diff:
             return True
@@ -1027,7 +1021,7 @@ class Expr(Basic, EvalfMixin):
         if c and split_1 and (
             c[0].is_Number and
             c[0].is_negative and
-                c[0] != S.NegativeOne):
+                c[0] is not S.NegativeOne):
             c[:1] = [S.NegativeOne, -c[0]]
 
         if cset:
@@ -2726,6 +2720,7 @@ class Expr(Basic, EvalfMixin):
         ``False`` otherwise.
         """
         hit = False
+        cls = expr.__class__
         # XXX: Hack to support non-Basic args
         #              |
         #              V
@@ -2737,12 +2732,13 @@ class Expr(Basic, EvalfMixin):
                 sargs.append(arg)
 
             if hit:
-                expr = expr.func(*sargs)
+                expr = cls(*sargs)
 
-        if hasattr(expr, '_eval_expand_' + hint):
-            newexpr = getattr(expr, '_eval_expand_' + hint)(**hints)
+        if hasattr(expr, hint):
+            newexpr = getattr(expr, hint)(**hints)
             if newexpr != expr:
                 return (newexpr, True)
+
         return (expr, hit)
 
     @cacheit
@@ -2771,6 +2767,7 @@ class Expr(Basic, EvalfMixin):
         elif hints.pop('numer', False):
             n, d = fraction(self)
             return n.expand(deep=deep, modulus=modulus, **hints)/d
+
         # Although the hints are sorted here, an earlier hint may get applied
         # at a given node in the expression tree before another because of how
         # the hints are applied.  e.g. expand(log(x*(y + z))) -> log(x*y +
@@ -2796,7 +2793,22 @@ class Expr(Basic, EvalfMixin):
         for hint in sorted(hints.keys(), key=_expand_hint_key):
             use_hint = hints[hint]
             if use_hint:
+                hint = '_eval_expand_' + hint
                 expr, hit = Expr._expand_hint(expr, hint, deep=deep, **hints)
+
+        while True:
+            was = expr
+            if hints.get('multinomial', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_multinomial', deep=deep, **hints)
+            if hints.get('mul', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_mul', deep=deep, **hints)
+            if hints.get('log', False):
+                expr, _ = Expr._expand_hint(
+                    expr, '_eval_expand_log', deep=deep, **hints)
+            if expr == was:
+                break
 
         if modulus is not None:
             modulus = sympify(modulus)

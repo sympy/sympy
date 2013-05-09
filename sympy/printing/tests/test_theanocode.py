@@ -206,3 +206,11 @@ def test_BlockMatrix_Inverse_execution():
     ninputs[1] += numpy.ones(B.shape)*1e-5
 
     assert numpy.allclose(f(*ninputs), fblocked(*ninputs), rtol=1e-5)
+
+def test_DenseMatrix():
+    t = sy.Symbol('theta')
+    for MatrixType in [sy.Matrix, sy.ImmutableMatrix]:
+        X = MatrixType([[sy.cos(t), -sy.sin(t)], [sy.sin(t), sy.cos(t)]])
+        tX = theano_code(X)
+        assert isinstance(tX, tt.TensorVariable)
+        assert tX.owner.op == tt.join

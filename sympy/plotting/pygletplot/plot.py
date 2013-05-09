@@ -23,17 +23,17 @@ from util import parse_option_string
 from sympy.geometry.entity import GeometryEntity
 
 
-from sympy.utilities.decorator import doctest_depends_on
+from sympy.utilities.decorator import doctest_depends_on, no_attrs_in_subclass
 
 class PygletPlot(object):
     """
     Plot Examples
     =============
 
-    See examples/plotting.py for many more examples.
+    See examples/advaned/pyglet_plotting.py for many more examples.
 
 
-    >>> from sympy import Plot
+    >>> from sympy.plotting.pygletplot import PygletPlot as Plot
     >>> from sympy.abc import x, y, z
 
     >>> Plot(x*y**3-y*x**3)
@@ -167,7 +167,7 @@ class PygletPlot(object):
         initialize a plot function at index 1. In
         other words...
 
-        >>> from sympy import Plot
+        >>> from sympy.plotting.pygletplot import PygletPlot as Plot
         >>> from sympy.core import Symbol
         >>> from sympy.abc import x
         >>> p = Plot(x**2, visible=False)
@@ -401,7 +401,9 @@ class PygletPlot(object):
             while a() or b():
                 sleep(0)
         self._render_lock.release()
-
+#python 2.5 does not support class decorators so use this workaround
+PygletPlot._doctest_depends_on = no_attrs_in_subclass(
+    PygletPlot, PygletPlot._doctest_depends_on)
 
 class ScreenShot:
     def __init__(self, plot):
