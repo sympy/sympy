@@ -355,8 +355,9 @@ class stringPict(object):
 
 
 class prettyForm(stringPict):
-    """Extension of the stringPict class that knows about
-    basic math applications, optimizing double minus signs.
+    """
+    Extension of the stringPict class that knows about basic math applications,
+    optimizing double minus signs.
 
     "Binding" is interpreted as follows::
 
@@ -366,16 +367,20 @@ class prettyForm(stringPict):
         POW  this is a power: only parenthesize if exponent
         MUL  this is a multiplication: parenthesize if powered
         ADD  this is an addition: parenthesize if multiplied or powered
-        NEG  this is a negative number: optimize if added, parenthesize if multiplied or powered
-
+        NEG  this is a negative number: optimize if added, parenthesize if
+             multiplied or powered
+        OPEN this is an open object: parenthesize if added, multiplied, or
+             powered (example: Piecewise)
     """
-    ATOM, FUNC, DIV, POW, MUL, ADD, NEG = range(7)
+    ATOM, FUNC, DIV, POW, MUL, ADD, NEG, OPEN = range(8)
 
     def __init__(self, s, baseline=0, binding=0, unicode=None):
         """Initialize from stringPict and binding power."""
         stringPict.__init__(self, s, baseline)
         self.binding = binding
         self.unicode = unicode or s
+
+    # Note: code to handle subtraction is in _print_Add
 
     def __add__(self, *others):
         """Make a pretty addition.
