@@ -3693,21 +3693,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
     if expr.has(Product):
         expr = product_simplify(expr)
 
-    expr = powsimp(expr, combine='exp', deep=True)
-    short = shorter(expr, powsimp(factor_terms(expr)))
-    if short != expr:
-        # get rid of hollow 2-arg Mul factorization
-        from sympy.core.rules import Transform
-        hollow_mul = Transform(
-            lambda x: Mul(*x.args),
-            lambda x:
-            x.is_Mul and
-            len(x.args) == 2 and
-            x.args[0].is_Number and
-            x.args[1].is_Add and
-            x.is_commutative)
-        expr = shorter(short.xreplace(hollow_mul), expr)
-
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
 
