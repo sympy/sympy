@@ -1,22 +1,20 @@
 # -*- coding: utf-8 -*-
 
-from sympy import (
-    Abs, And, Basic, Chi, Ci, Derivative, Dict, Ei, Eq, Equivalent, FF,
-    FiniteSet, Function, Function, Ge, Gt, I, Implies, Integral,
-    KroneckerDelta, Lambda, Le, Limit, Lt, Matrix, Nand, Ne, Nor, Not, O,
-    Or, Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum,
-    S, Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2,
-    binomial, catalan, ceiling, conjugate, cos, euler, exp, expint,
-    factorial, factorial2, floor, gamma, groebner, homomorphism, hyper,
-    log, lowergamma, meijerg, oo, pi, sin,
-    sqrt, sqrt, symbols, tan, uppergamma, subfactorial)
+from sympy import ( Abs, And, Basic, Chi, Ci, Derivative, Dict, Ei, Eq,
+    Equivalent, FF, FiniteSet, Function, Ge, Gt, I, Implies, Integral,
+    KroneckerDelta, Lambda, Le, Limit, Lt, Matrix, Nand, Ne, Nor, Not, O, Or,
+    Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
+    Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2, binomial,
+    catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
+    factorial2, floor, groebner, homomorphism, hyper, log, lowergamma,
+    meijerg, oo, pi, sin, sqrt, symbols, tan, uppergamma, subfactorial)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
 from sympy.physics.units import joule
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 from sympy.core.trace import Tr
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
