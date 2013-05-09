@@ -1419,7 +1419,7 @@ def test_radsimp():
         (-9*x + 9*sqrt(2)*x - 9*sqrt(y) + 9*sqrt(2)*sqrt(y))/(9*x*(9*x**2 -
         9*y)))
     assert radsimp(1 + 1/(1 + sqrt(3))) == \
-        S.Half + sqrt(3)/2
+        Mul(S.Half, -1 + sqrt(3), evaluate=False) + 1
     A = symbols("A", commutative=False)
     assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == \
         x**2 + sqrt(2)*x**2 - sqrt(2)*x*A

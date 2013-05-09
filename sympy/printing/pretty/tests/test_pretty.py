@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from sympy import ( Abs, And, Basic, Chi, Ci, Derivative, Dict, Ei, Eq,
-    Equivalent, FF, FiniteSet, Function, Ge, Gt, I, Implies, Integral,
-    KroneckerDelta, Lambda, Le, Limit, Lt, Matrix, Nand, Ne, Nor, Not, O, Or,
+from sympy import (
+    Abs, And, Basic, Chi, Ci, Derivative, Dict, Ei, Eq, Equivalent, FF,
+    FiniteSet, Function, Ge, Gt, I, Implies, Integral, KroneckerDelta,
+    Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
     Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
     Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2, binomial,
     catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
-    factorial2, floor, groebner, homomorphism, hyper, log, lowergamma,
-    meijerg, oo, pi, sin, sqrt, symbols, tan, uppergamma, subfactorial)
+    factorial2, floor, gamma, groebner, homomorphism, hyper, log,
+    lowergamma, meijerg, oo, pi, sin, sqrt, subfactorial, symbols, tan,
+    uppergamma)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
@@ -4384,3 +4386,8 @@ def test_Tr():
     t = Tr(A*B)
     assert pretty(t) == r'Tr(A*B)'
     assert upretty(t) == u'Tr(A\u22c5B)'
+
+
+def test_pretty_Add():
+    eq = Mul(-2, x - 2, evaluate=False) + 5
+    assert pretty(eq) == '-2*(x - 2) + 5'

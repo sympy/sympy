@@ -828,6 +828,26 @@ class Basic(object):
         >>> expr.subs(dict([A,B,C,D,E]))
         a*c*sin(d*e) + b
 
+        Until there is no longer automatic distribution of the 2-arg Mul, if
+        a repllacement of a factor in a Mul causes the Mul to reduce to
+        two factors an Add will be returned. This can be over-ridden by
+        setting the ``hack2`` keyword to True:
+
+        >>> from sympy import Symbol
+        >>> N = Symbol('N', commutative=False)
+        >>> eq = 2*(x + 1 + N); eq
+        2*(x + 1 + N)
+        >>> eq.subs(N, 0)
+        2*x + 2
+        >>> eq.subs(N, 0, hack2=True)
+        2*(x + 1)
+        >>> eq = 2*x*(y + 1); eq
+        2*x*(y + 1)
+        >>> eq.subs(x, 1)
+        2*y + 2
+        >>> eq.subs(x, 1, hack2=True)
+        2*(y + 1)
+
         See Also
         ========
         replace: replacement capable of doing wildcard-like matching,
@@ -896,7 +916,7 @@ class Basic(object):
             rv = self
             for old, new in sequence:
                 d = C.Dummy()
-                rv = rv._subs(old, d)
+                rv = rv._subs(old, d, **kwargs)
                 reps[d] = new
                 if not isinstance(rv, Basic):
                     break
@@ -904,7 +924,7 @@ class Basic(object):
         else:
             rv = self
             for old, new in sequence:
-                rv = rv._subs(old, new)
+                rv = rv._subs(old, new, **kwargs)
                 if not isinstance(rv, Basic):
                     break
             return rv
@@ -995,7 +1015,16 @@ class Basic(object):
                     hit = True
                     args[i] = arg
             if hit:
-                return self.func(*args)
+                rv = self.func(*args)
+                if hints.get('hack2', False) and isinstance(self, C.Mul) \
+                        and not rv.is_Mul:  # 2-arg hack
+                    from sympy.core.mul import _unevaluated_Mul
+                    from sympy.utilities.iterables import sift
+                    sifted = sift(args, lambda a: a.is_Add)
+                    notadd = C.Mul(*sifted[False])
+                    add = C.Mul(*sifted[True])
+                    return _unevaluated_Mul(notadd, add)
+                return rv
             return self
 
         if _aresame(self, old):
