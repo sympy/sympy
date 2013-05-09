@@ -716,7 +716,7 @@ class catalan(Function):
     continuous real funtion in n:
 
     >>> diff(catalan(n), n)
-    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + 2*log(2))*catalan(n)
+    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
 
     As a more advanced example consider the following ratio
     between consecutive numbers:

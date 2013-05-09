@@ -1,6 +1,6 @@
 from sympy import (Symbol, Wild, sin, cos, exp, sqrt, pi, Function, Derivative,
         abc, Integer, Eq, symbols, Add, I, Float, log, Rational, Lambda, atan2,
-        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo)
+        cse, cot, tan, S, Tuple, Basic, Dict, Piecewise, oo, Mul)
 from sympy.core.basic import _aresame
 from sympy.utilities.pytest import XFAIL
 from sympy.abc import x, y
@@ -477,11 +477,6 @@ def test_no_arith_subs_on_floats():
     assert (x + y + 3.0).subs(x + 2.0, a) == x + y + 3.0
 
 
-@XFAIL
-def test_issue_2261():
-    assert (1/x).subs(x, 0) == 1/S(0)
-
-
 def test_issue_2552():
     a, b, c, K = symbols('a b c K', commutative=True)
     x, y, z = symbols('x y z')
@@ -561,3 +556,20 @@ def test_issue_2162():
     assert (2**e).subs(2**x, y) == y**I
     eq = (-2)**e
     assert eq.subs((-2)**x, y) == eq
+
+
+def test_2arg_hack():
+    N = Symbol('N', commutative=False)
+    ans = Mul(2, y + 1, evaluate=False)
+    assert (2*x*(y + 1)).subs(x, 1, hack2=True) == ans
+    assert (2*(y + 1 + N)).subs(N, 0, hack2=True) == ans
+
+
+@XFAIL
+def test_mul2():
+    """When this fails, remove things labelled "2-arg hack"
+    1) remove special handling in the fallback of subs that
+    was added in the same commit as this test
+    2) remove the special handling in Mul.flatten
+    """
+    assert (2*(x + 1)).is_Mul

@@ -277,7 +277,7 @@ def sub_func_doit(eq, func, new):
 
     To keep subs from having to look through all derivatives, we
     mask them off with dummy variables, do the func sub, and then
-    replace masked off derivatives with their doit values.
+    replace masked-off derivatives with their doit values.
 
     Examples
     ========

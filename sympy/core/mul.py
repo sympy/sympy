@@ -177,25 +177,22 @@ class Mul(Expr, AssocOp):
             assert not a is S.One
             if a and a.is_Rational:
                 r, b = b.as_coeff_Mul()
-                a *= r
-                if b.is_Mul:
-                    bargs, nc = b.args_cnc()
-                    rv = bargs, nc, None
-                    if a is not S.One:
-                        bargs.insert(0, a)
-
-                elif b.is_Add and b.is_commutative:
-                    if a is S.One:
-                        rv = [b], [], None
-                    else:
-                        r, b = b.as_coeff_Add()
-                        bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
-                        _addsort(bargs)
-                        ar = a*r
-                        if ar:
-                            bargs.insert(0, ar)
-                        bargs = [Add._from_args(bargs)]
-                        rv = bargs, [], None
+                if b.is_Add:
+                    if r is not S.One:  # 2-arg hack
+                        # leave the Mul as a Mul
+                        rv = [Mul(a*r, b, evaluate=False)], [], None
+                    elif b.is_commutative:
+                        if a is S.One:
+                            rv = [b], [], None
+                        else:
+                            r, b = b.as_coeff_Add()
+                            bargs = [_keep_coeff(a, bi) for bi in Add.make_args(b)]
+                            _addsort(bargs)
+                            ar = a*r
+                            if ar:
+                                bargs.insert(0, ar)
+                            bargs = [Add._from_args(bargs)]
+                            rv = bargs, [], None
             if rv:
                 return rv
 
@@ -312,7 +309,7 @@ class Mul(Expr, AssocOp):
                             num_exp.append((b, e))
                             continue
 
-                    elif b is S.ImaginaryUnit and e.is_Rational:  # it is unevaluated
+                    elif b is S.ImaginaryUnit and e.is_Rational:
                         neg1e += e/2
                         continue
 
@@ -561,7 +558,8 @@ class Mul(Expr, AssocOp):
             c_part.insert(0, coeff)
 
         # we are done
-        if len(c_part) == 2 and c_part[0].is_Number and c_part[1].is_Add:
+        if (not nc_part and len(c_part) == 2 and c_part[0].is_Number and
+                c_part[1].is_Add):
             # 2*(1+a) -> 2 + 2 * a
             coeff = c_part[0]
             c_part = [Add(*[coeff*f for f in c_part[1].args])]
@@ -1579,6 +1577,17 @@ def _keep_coeff(coeff, factors, clear=True, sign=False):
         return coeff*factors
 
 
+def expand_2arg(e):
+    from sympy.simplify.simplify import bottom_up
+    def do(e):
+        if e.is_Mul:
+            c, r = e.as_coeff_Mul()
+            if c.is_Number and r.is_Add:
+                return _unevaluated_Add(*[c*ri for ri in r.args])
+        return e
+    return bottom_up(e, do)
+
+
 from numbers import Rational
 from power import Pow
-from add import Add, _addsort
+from add import Add, _addsort, _unevaluated_Add

@@ -2101,7 +2101,7 @@ def _tsolve(eq, sym, **flags):
         >>> from sympy.abc import x
 
         >>> tsolve(3**(2*x+5)-4, x)
-        [(-5*log(3) + 2*log(2))/(2*log(3))]
+        [(-5*log(3) + log(4))/(2*log(3))]
 
         >>> tsolve(log(x) + 2*x, x)
         [LambertW(2)/2]
