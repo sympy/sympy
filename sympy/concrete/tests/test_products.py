@@ -95,12 +95,10 @@ def test_conjugate_transpose():
 def test_simplify():
     y = symbols('y', integer = True)
 
-    assert simplify(Product(x, (x, n, m)) * Product(x**2, (x, n, m))) == \
-        Product(x**3, (x, n, m))
     assert simplify(Product(x*y, (x, n, m), (y, a, k)) * \
         Product(y, (x, n, m), (y, a, k))) == Product(x*y**2, (x, n, m), (y, a, k))
-    assert simplify(3 * Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) == \
-        3 * Product(x, (x, n, a))
+    assert simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) == \
+        3 * y * Product(x, (x, n, a))
     assert simplify(Product(x, (x, k + 1, a)) * Product(x, (x, n, k))) == \
         Product(x, (x, n, a))
     assert simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \

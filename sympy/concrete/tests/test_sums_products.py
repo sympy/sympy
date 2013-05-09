@@ -457,8 +457,6 @@ def test_issue_3175():
 def test_simplify():
     y = symbols('y')
 
-    assert simplify(3 * Sum(x, (x, n, m)) + Sum(x, (x, n, m)) * 2) == \
-        Sum(5*x, (x, n, m))
     assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
         Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
     assert simplify(Sum(x, (x, n, m)) + Sum(x, (x, m + 1, a))) == \
