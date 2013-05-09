@@ -93,7 +93,7 @@ def test_conjugate_transpose():
 
 
 def test_simplify():
-    y = symbols('y', integer = True)
+    y, t, b, c = symbols('y, t, b, c', integer = True)
 
     assert simplify(Product(x*y, (x, n, m), (y, a, k)) * \
         Product(y, (x, n, m), (y, a, k))) == Product(x*y**2, (x, n, m), (y, a, k))
@@ -103,3 +103,7 @@ def test_simplify():
         Product(x, (x, n, a))
     assert simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \
         Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))
+    assert simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) * \
+        Product(x, (t, b+1, c))) == Product(x*y, (t, a, b)) * Product(x, (t, b+1, c))
+    assert simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
+        Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * Product(x, (t, b+1, c))

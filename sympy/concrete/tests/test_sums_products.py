@@ -455,7 +455,7 @@ def test_issue_3175():
 
 
 def test_simplify():
-    y = symbols('y')
+    y, t = symbols('y, t')
 
     assert simplify(Sum(x*y, (x, n, m), (y, a, k)) + \
         Sum(y, (x, n, m), (y, a, k))) == Sum(x*y + y, (x, n, m), (y, a, k))
@@ -474,3 +474,9 @@ def test_simplify():
             y*Sum(4*z, (z, n, k)) + Sum(3*x**3 + 3*x, (x, n, k)) + 1
     assert simplify(Sum(x, (x, a, b)) + 1 + Sum(x, (x, b + 1, c))) == \
         1 + Sum(x, (x, a, c))
+    assert simplify(Sum(x, (t, a, b)) + Sum(y, (t, a, b)) + \
+        Sum(x, (t, b+1, c))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+    assert simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + \
+        Sum(y, (t, a, b))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
+    assert simplify(Sum(x, (t, a, b)) + 2 * Sum(x, (t, b+1, c))) == \
+        simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))

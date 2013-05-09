@@ -7,8 +7,6 @@ from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
-from sympy.simplify.simplify import simplify
-from sympy.core.mul import Mul
 
 
 class Product(Expr):

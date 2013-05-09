@@ -4286,13 +4286,14 @@ def sum_simplify(s):
 
     used = [False] * len(s_t)
 
-    for i in range(len(s_t)):
-        if not used[i]:
-            for j in range(len(s_t)):
-                if not used[j] and i != j:
-                    if isinstance(sum_add(s_t[i], s_t[j]), Sum):
-                        s_t[i] = sum_add(s_t[i], s_t[j])
-                        used[j] = True
+    for method in range(2):
+        for i in range(len(s_t)):
+            if not used[i]:
+                for j in range(len(s_t)):
+                    if not used[j] and i != j:
+                        if isinstance(sum_add(s_t[i], s_t[j], method), Sum):
+                            s_t[i] = sum_add(s_t[i], s_t[j], method)
+                            used[j] = True
 
     result = Add(*o_t)
 
@@ -4303,25 +4304,26 @@ def sum_simplify(s):
     return result
 
 
-def sum_add(self, other):
+def sum_add(self, other, method=0):
 
     from sympy import Sum, Add, Mul
 
     if type(self) == type(other):
-        if len(self.limits) == len(other.limits):
-            if self.limits == other.limits:
-                return Sum(self.function + other.function, *self.limits)
+        if method == 0:
+            if len(self.limits) == len(other.limits):
+                if self.limits == other.limits:
+                    return Sum(self.function + other.function, *self.limits)
+        elif method == 1:
+            if simplify(self.function - other.function) == 0:
+                if len(self.limits) == len(other.limits) == 1:
+                    i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
+                    j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
 
-        if simplify(self.function - other.function) == 0:
-            if len(self.limits) == len(other.limits) == 1:
-                i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
-                j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
-
-                if i == j:
-                    if x2 == y1 + 1:
-                        return Sum(self.function, (i, x1, y2))
-                    elif x1 == y2 + 1:
-                        return Sum(self.function, (i, x2, y1))
+                    if i == j:
+                        if x2 == y1 + 1:
+                            return Sum(self.function, (i, x1, y2))
+                        elif x1 == y2 + 1:
+                            return Sum(self.function, (i, x2, y1))
 
     return Add(self, other)
 
@@ -4342,13 +4344,14 @@ def product_simplify(s):
 
     used = [False] * len(p_t)
 
-    for i in range(len(p_t)):
-        if not used[i]:
-            for j in range(len(p_t)):
-                if not used[j] and i != j:
-                    if isinstance(product_mul(p_t[i], p_t[j]), Product):
-                        p_t[i] = product_mul(p_t[i], p_t[j])
-                        used[j] = True
+    for method in range(2):
+        for i in range(len(p_t)):
+            if not used[i]:
+                for j in range(len(p_t)):
+                    if not used[j] and i != j:
+                        if isinstance(product_mul(p_t[i], p_t[j], method), Product):
+                            p_t[i] = product_mul(p_t[i], p_t[j], method)
+                            used[j] = True
 
     result = Mul(*o_t)
 
@@ -4359,25 +4362,26 @@ def product_simplify(s):
     return result
 
 
-def product_mul(self, other):
+def product_mul(self, other, method=0):
 
     from sympy import Product
 
     if type(self) == type(other):
-        if len(self.limits) == len(other.limits):
-            if self.limits == other.limits:
-                return Product(self.function * other.function, *self.limits)
+        if method == 0:
+            if len(self.limits) == len(other.limits):
+                if self.limits == other.limits:
+                    return Product(self.function * other.function, *self.limits)
+        elif method == 1:
+            if simplify(self.function - other.function) == 0:
+                if len(self.limits) == len(other.limits) == 1:
+                    i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
+                    j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
 
-        if simplify(self.function - other.function) == 0:
-            if len(self.limits) == len(other.limits) == 1:
-                i = self.limits[0][0]; x1 = self.limits[0][1]; y1 = self.limits[0][2]
-                j = other.limits[0][0]; x2 = other.limits[0][1]; y2 = other.limits[0][2]
-
-                if i == j:
-                    if x2 == y1 + 1:
-                        return Product(self.function, (i, x1, y2))
-                    elif x1 == y2 + 1:
-                        return Product(self.function, (i, x2, y1))
+                    if i == j:
+                        if x2 == y1 + 1:
+                            return Product(self.function, (i, x1, y2))
+                        elif x1 == y2 + 1:
+                            return Product(self.function, (i, x2, y1))
 
     return Mul(self, other)
 
