@@ -388,12 +388,12 @@ def spde(a, b, c, n, DE):
             return (b, c, n, alpha, beta)
 
         r, z = gcdex_diophantine(b, a, c)
-        b = b + derivation(a, DE)
+        b += derivation(a, DE)
         c = z - derivation(r, DE)
-        n = n - a.degree(DE.t)
-        alpha = a*alpha
-        beta = beta + (a**pow_a)*r
-        pow_a = pow_a + 1
+        n -= a.degree(DE.t)
+        alpha *= a
+        beta += (a**pow_a)*r
+        pow_a += 1
 
 def no_cancel_b_large(b, c, n, DE):
     """
