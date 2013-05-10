@@ -572,7 +572,7 @@ class Hyper_Function(Expr):
         """
         for a in self.ap:
             for b in self.bq:
-                if (a - b).is_integer and not a < b:
+                if (a - b).is_integer and (a < b) is False:
                     return False
         for a in self.ap:
             if a == 0:
@@ -1370,7 +1370,7 @@ class ReduceOrder(Operator):
         b = sympify(b)
         a = sympify(a)
         n = b - a
-        if n < 0 or not n.is_Integer:
+        if (n < 0) is True or not n.is_Integer:
             return None
 
         self = Operator.__new__(cls)

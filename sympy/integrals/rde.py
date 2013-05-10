@@ -374,7 +374,7 @@ def spde(a, b, c, n, DE):
     pow_a = 0
 
     while True:
-        if n < 0:
+        if (n < 0) is True:
             if c.is_zero:
                 return (zero, zero, 0, zero, beta)
             raise NonElementaryIntegralException

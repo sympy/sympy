@@ -599,7 +599,7 @@ class Polygon(GeometryEntity):
             pt = s.arbitrary_point(parameter).subs(
                 t, (t - perim_fraction_start)/side_perim_fraction)
             sides.append(
-                (pt, (perim_fraction_start <= t < perim_fraction_end)))
+                (pt, (And(perim_fraction_start <= t, t < perim_fraction_end))))
             perim_fraction_start = perim_fraction_end
         return Piecewise(*sides)
 
@@ -843,7 +843,7 @@ class Polygon(GeometryEntity):
             e2_angle = pi - support_line.angle_between(Line(
                 e2_current, e2_next))
 
-            if e1_angle < e2_angle:
+            if (e1_angle < e2_angle) is True:
                 support_line = Line(e1_current, e1_next)
                 e1_segment = Segment(e1_current, e1_next)
                 min_dist_current = e1_segment.distance(e2_current)
@@ -857,7 +857,7 @@ class Polygon(GeometryEntity):
                 else:
                     e1_current = e1_next
                     e1_next = e1_connections[e1_next][1]
-            elif e1_angle > e2_angle:
+            elif (e1_angle > e2_angle) is True:
                 support_line = Line(e2_next, e2_current)
                 e2_segment = Segment(e2_current, e2_next)
                 min_dist_current = e2_segment.distance(e1_current)
