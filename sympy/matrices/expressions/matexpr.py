@@ -303,6 +303,8 @@ class MatrixSymbol(MatrixExpr):
     is_commutative = False
 
     def __new__(cls, name, n, m):
+        if not isinstance(name, str):
+            raise TypeError("Name of MatrixSymbol must be String")
         n, m = sympify(n), sympify(m)
         obj = Basic.__new__(cls, name, n, m)
         return obj
