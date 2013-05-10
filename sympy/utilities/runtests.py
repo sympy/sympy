@@ -181,7 +181,7 @@ def test(*paths, **kwargs):
     # Show deprecation warnings
     import warnings
     from sympy.core.compatibility import SymPyDeprecationWarning
-    warnings.simplefilter("always", SymPyDeprecationWarning)
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
     test_files = t.get_test_files('sympy')
 
@@ -259,7 +259,7 @@ def doctest(*paths, **kwargs):
     # Show deprecation warnings
     import warnings
     from sympy.core.compatibility import SymPyDeprecationWarning
-    warnings.simplefilter("always", SymPyDeprecationWarning)
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
@@ -1342,4 +1342,3 @@ class PyTestReporter(Reporter):
         self.write("\n")
 
 sympy_dir = get_sympy_dir()
-
