@@ -258,10 +258,10 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
         # Pre-sort mapping in order of largest to smallest expressions (last is always x).
         def _sort_key(arg):
             return default_sort_key(arg[0].as_independent(x)[1])
-        mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
         #optimizing the number of permutations of mappping
-        unnecessary_permutations = [(expr, v) for expr, v in mapping if expr == x]
-        mapping = [necessary for necessary in mapping if necessary not in unnecessary_permutations]
+        unnecessary_permutations = [(x, mapping[x])]
+        del mapping[x]
+        mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
         mappings = permutations(mapping)
 
     def _substitute(expr):
