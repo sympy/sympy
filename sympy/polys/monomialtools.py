@@ -32,12 +32,13 @@ def monomials(variables, degree):
 
         >>> from sympy import monomials
         >>> from sympy.abc import x, y
+        >>> from sympy.polys.monomialtools import monomial_key
 
-        >>> sorted(monomials([x, y], 2))
-        [1, x, y, x**2, y**2, x*y]
+        >>> sorted(monomials([x, y], 2), key=monomial_key('grlex', [y, x]))
+        [1, x, y, x**2, x*y, y**2]
 
-        >>> sorted(monomials([x, y], 3))
-        [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, x**2*y]
+        >>> sorted(monomials([x, y], 3), key=monomial_key('grlex', [y, x]))
+        [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]
 
     """
     if not variables:
@@ -70,14 +71,15 @@ def monomial_count(V, N):
 
     >>> from sympy import monomials, monomial_count
     >>> from sympy.abc import x, y
+    >>> from sympy.polys.monomialtools import monomial_key
 
     >>> monomial_count(2, 2)
     6
 
     >>> M = monomials([x, y], 2)
 
-    >>> sorted(M)
-    [1, x, y, x**2, y**2, x*y]
+    >>> sorted(M, key=monomial_key('grlex', [y, x]))
+    [1, x, y, x**2, x*y, y**2]
     >>> len(M)
     6
 
@@ -280,7 +282,7 @@ _monomial_key = {
 }
 
 
-def monomial_key(order=None):
+def monomial_key(order=None, gens=None):
     """
     Return a function defining admissible order on monomials.
 
@@ -301,17 +303,21 @@ def monomial_key(order=None):
 
     """
     if order is None:
-        return lex
+        order = lex
 
     if isinstance(order, Symbol):
         order = str(order)
 
     if isinstance(order, str):
         try:
-            return _monomial_key[order]
+            order = _monomial_key[order]
         except KeyError:
             raise ValueError("supported monomial orderings are 'lex', 'grlex' and 'grevlex', got %r" % order)
-    elif hasattr(order, '__call__'):
+    if hasattr(order, '__call__'):
+        if gens is not None:
+            def _order(expr):
+                return order(expr.as_poly(*gens).degree_list())
+            return _order
         return order
     else:
         raise ValueError("monomial ordering specification must be a string or a callable, got %s" % order)
