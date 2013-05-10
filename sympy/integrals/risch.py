@@ -1142,31 +1142,34 @@ def integrate_primitive_polynomial(p, DE):
     from sympy.integrals.prde import limited_integrate
 
     Zero = Poly(0, DE.t)
+    q = Poly(0, DE.t)
 
     if not p.has(DE.t):
         return (Zero, p, True)
 
-    Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
+    while True:
+        if not p.has(DE.t):
+            return (q, p, True)
 
-    with DecrementLevel(DE):  # We had better be integrating the lowest extension (x)
-                              # with ratint().
-        a = p.LC()
-        aa, ad = frac_in(a, DE.t)
+        Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
 
-        try:
-            (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
-            assert len(c) == 1
-        except NonElementaryIntegralException:
-            return (Zero, p, False)
+        with DecrementLevel(DE):  # We had better be integrating the lowest extension (x)
+                                  # with ratint().
+            a = p.LC()
+            aa, ad = frac_in(a, DE.t)
 
-    m = p.degree(DE.t)
-    q0 = c[0].as_poly(DE.t)*Poly(DE.t**(m + 1)/(m + 1), DE.t) + \
-        (ba.as_expr()/bd.as_expr()).as_poly(DE.t)*Poly(DE.t**m, DE.t)
+            try:
+                (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
+                assert len(c) == 1
+            except NonElementaryIntegralException:
+                return (q, p, False)
 
-    # TODO: Rewrite this non-recursively
-    # c.f. risch_integrate(log(x)**1001, x)
-    q, r, b = integrate_primitive_polynomial(p - derivation(q0, DE), DE)
-    return (q + q0, r, b)
+        m = p.degree(DE.t)
+        q0 = c[0].as_poly(DE.t)*Poly(DE.t**(m + 1)/(m + 1), DE.t) + \
+            (ba.as_expr()/bd.as_expr()).as_poly(DE.t)*Poly(DE.t**m, DE.t)
+
+        p = p - derivation(q0, DE)
+        q = q + q0
 
 
 def integrate_primitive(a, d, DE, z=None):
