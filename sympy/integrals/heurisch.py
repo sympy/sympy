@@ -128,6 +128,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3, 
             pass
     if not slns:
         return res
+    slns = list(uniq(slns))
     if len(slns) > 1:
         eqs = []
         for sub_dict in slns:
