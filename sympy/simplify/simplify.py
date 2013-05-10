@@ -2535,7 +2535,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
 
     expr = sympify(expr)
 
-    if not isinstance(expr, Basic) or expr.is_Atom or expr in (
+    if not isinstance(expr, Expr) or expr.is_Atom or expr in (
             exp_polar(0), exp_polar(1)):
         return expr
 
