@@ -2337,6 +2337,21 @@ class Poly(Expr):
 
         return per(s), per(t), per(h)
 
+    def gcdex_diophantine(f, g, o, auto=True):
+
+        dom, per, F, G = f._unify(g)
+
+        if auto and dom.has_Ring:
+            F, G, o = F.to_field(), G.to_field(), o.to_field()
+
+        if hasattr(f.rep, 'gcdex_diophantine'):
+            s, t, h = F.gcdex_diophantine(G, o)
+        else:
+            raise OperationNotSupported(f, 'gcdex_diophantine')
+
+        return per(s), per(t), per(h)
+
+
     def invert(f, g, auto=True):
         """
         Invert ``f`` modulo ``g`` when possible.
@@ -4461,6 +4476,30 @@ def gcdex(f, g, *gens, **args):
             return domain.to_sympy(s), domain.to_sympy(t), domain.to_sympy(h)
 
     s, t, h = F.gcdex(G, auto=opt.auto)
+
+    if not opt.polys:
+        return s.as_expr(), t.as_expr(), h.as_expr()
+    else:
+        return s, t, h
+
+
+def gcdex_diophantine(a, b, c, *gens, **args):
+
+    options.allowed_flags(args, ['auto', 'polys'])
+
+    try:
+        (A, B, C), opt = parallel_poly_from_expr((a, b, c), *gens, **args)
+    except PolificationFailed, exc:
+        domain, (a, b, c) = construct_domain(exc.exprs)
+
+        try:
+            s, t, h = domain.gcdex_diophantine(a, b, c)
+        except NotImplementedError:
+            raise ComputationFailed('gcdex_diaphontine', 3, exc)
+        else:
+            return domain.to_sympy(s), domain.to_sympy(t), domain.to_sympy(h)
+
+    s, t, h = A.gcdex_diophantine(B, C, auto=opt.auto)
 
     if not opt.polys:
         return s.as_expr(), t.as_expr(), h.as_expr()

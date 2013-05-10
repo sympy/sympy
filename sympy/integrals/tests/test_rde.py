@@ -3,6 +3,7 @@ from __future__ import with_statement
 from sympy import Poly, S, symbols, oo, I
 from sympy.integrals.risch import (DifferentialExtension,
     NonElementaryIntegralException)
+from sympy.polys import gcdex_diophantine
 from sympy.integrals.rde import (order_at, order_at_oo, weak_normalizer,
     normal_denom, special_denom, bound_degree, spde, solve_poly_rde,
     no_cancel_equal, cancel_primitive, cancel_exp, rischDE)

@@ -8,7 +8,7 @@ from polytools import (
     LC, LM, LT,
     pdiv, prem, pquo, pexquo,
     div, rem, quo, exquo,
-    half_gcdex, gcdex, invert,
+    half_gcdex, gcdex, gcdex_diophantine, invert,
     subresultants,
     resultant, discriminant,
     terms_gcd, cofactors,

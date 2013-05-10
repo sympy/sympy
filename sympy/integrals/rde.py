@@ -27,9 +27,9 @@ from operator import mul
 from sympy.core import oo
 from sympy.core.symbol import Dummy
 
-from sympy.polys import Poly, gcd, ZZ, cancel
+from sympy.polys import Poly, gcd, ZZ, cancel, gcdex_diophantine
 
-from sympy.integrals.risch import (gcdex_diophantine, frac_in, derivation,
+from sympy.integrals.risch import (frac_in, derivation,
     splitfactor, NonElementaryIntegralException, DecrementLevel)
 
 # TODO: Add messages to NonElementaryIntegralException errors

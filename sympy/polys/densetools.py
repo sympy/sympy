@@ -40,7 +40,6 @@ from sympy.utilities import (
 
 from math import ceil as _ceil, log as _log
 
-
 @cythonized("m,n,i,j")
 def dup_integrate(f, m, K):
     """
