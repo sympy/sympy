@@ -120,6 +120,9 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3, 
     res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset)
     if not isinstance(res, Basic):
         return res
+    # We consider each denominator in the expression, and try to find
+    # cases where one or more symbolic denominator might be zero. The
+    # conditions for these cases are stored in the list slns.
     slns = []
     for d in denoms(res):
         try:
@@ -134,6 +137,7 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3, 
         for sub_dict in slns:
             eqs.extend([Eq(key, value) for key, value in sub_dict.iteritems()])
         slns = solve(eqs, dict=True, exclude=(x,)) + slns
+    # For each case listed in the list slns, we reevaluate the integral.
     pairs = []
     for sub_dict in slns:
         expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries, degree_offset)
