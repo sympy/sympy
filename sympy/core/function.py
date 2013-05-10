@@ -2108,6 +2108,8 @@ def count_ops(expr, visual=False):
         ADD = C.Symbol('ADD')
         while args:
             a = args.pop()
+            if not isinstance(a, Expr):  # Don't count below non-Exprs
+                continue
             if a.is_Rational:
                 #-1/3 = NEG + DIV
                 if a is not S.One:
