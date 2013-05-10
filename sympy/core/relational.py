@@ -465,9 +465,10 @@ class GreaterThan(_Greater):
     The other gotcha is with chained inequalities.  Occasionally, one may be
     tempted to write statements like:
 
-    >>> e = x < y < z  # silent error!  Where did ``x`` go?
-    >>> e #doctest: +SKIP
-    y < z
+    >>> e = x < y < z
+    Traceback (most recent call last):
+    ...
+    TypeError: symbolic boolean expression has no truth value.
 
     Due to an implementation detail or decision of Python [1]_, there is no way
     for SymPy to reliably create that as a chained inequality.  To create a
