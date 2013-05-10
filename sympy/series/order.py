@@ -1,45 +1,55 @@
 from sympy.core import Basic, S, sympify, Expr, Rational, Symbol
-from sympy.core import Add, Mul
+from sympy.core import Add, Mul, expand_power_base, expand_log
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import cmp_to_key
 
+
 class Order(Expr):
-    """
-    Represents O(f(x)) at the point x = 0.
+    """ Represents the limiting behavior of some function
 
-    Definition
-    ==========
+    The order of a function characterizes the function based on the limiting
+    behavior of the function as it goes to some limit. Only taking the limit
+    point to be 0 is currently supported. This is expressed in big O notation
+    [1]_.
 
-    g(x) = O(f(x)) as x->0  if and only if
-    |g(x)|<=M|f(x)| near x=0                     (1)
+    The formal definition for the order of a function `g(x)` about a point `a`
+    is such that `g(x) = O(f(x))` as `x \\rightarrow a` if and only if for any
+    `\delta > 0` there exists a `M > 0` such that `|g(x)| \leq M|f(x)|` for
+    `|x-a| < \delta`. This is equivalent to `\lim_{x \\rightarrow a}
+    |g(x)/f(x)| < \infty`.
 
-    for some positive but finite M. An equivalent way of saying (1) is:
+    Let's illustrate it on the following example by taking the expansion of
+    `\sin(x)` about 0:
 
-    lim_{x->0}  |g(x)/f(x)|  < oo
+    .. math ::
+        \sin(x) = x - x^3/3! + O(x^5)
 
-    Let's illustrate it on the following example:
+    where in this case `O(x^5) = x^5/5! - x^7/7! + \cdots`. By the definition
+    of `O`, for any `\delta > 0` there is an `M` such that:
 
-    sin x = x - x**3/3! + O(x**5)
+    .. math ::
+        |x^5/5! - x^7/7! + ....| <= M|x^5| \\text{ for } |x| < \delta
 
-    where in this case O(x**5) = x**5/5! - x**7/7! + .... and the definition
-    of O means:
+    or by the alternate definition:
 
-    |x**5/5! - x**7/7! + ....| <= M|x**5|      near x=0
-
-    or equivalently:
-
-    lim_{x->0} | (x**5/5! - x**7/7! + ....) / x**5| < oo
+    .. math ::
+        \lim_{x \\rightarrow 0} | (x^5/5! - x^7/7! + ....) / x^5| < \infty
 
     which surely is true, because
 
-    lim_{x->0} | (x**5/5! - x**7/7! + ....) / x**5| = 1/5!
+    .. math ::
+        \lim_{x \\rightarrow 0} | (x^5/5! - x^7/7! + ....) / x^5| = 1/5!
 
 
-    So intuitively O(x**3) means: all terms x**3, x**4 and
-    higher. But not x**2, x or 1.
+    As it is usually used, the order of a function can be intuitively thought
+    of representing all terms of powers greater than the one specified. For
+    example, `O(x^3)` corresponds to any terms proportional to `x^3,
+    x^4,\ldots` and any higher power. For a polynomial, this leaves terms
+    proportional to `x^2`, `x` and constants.
 
-    Examples:
-    =========
+    Examples
+    ========
+
     >>> from sympy import O
     >>> from sympy.abc import x
     >>> O(x)
@@ -49,34 +59,31 @@ class Order(Expr):
     >>> O(x)-O(x)
     O(x)
 
-       External links
-       --------------
+    References
+    ==========
 
-         U{Big O notation<http://en.wikipedia.org/wiki/Big_O_notation>}
+    .. [1] `Big O notation <http://en.wikipedia.org/wiki/Big_O_notation>`_
 
-    Properties:
-    ===========
+    Notes
+    =====
 
-      g(x) = O(f(x)) as x->0  <->  |g(x)| <= M|f(x)| near x=0
-                              <->  lim_{x->0}  |g(x)/f(x)| < oo
+    In ``O(f(x), x)`` the expression ``f(x)`` is assumed to have a leading
+    term.  ``O(f(x), x)`` is automatically transformed to
+    ``O(f(x).as_leading_term(x),x)``.
 
-      g(x,y) = O(f(x,y))  <->  lim_{x,y->0}  |g(x,y)/f(x,y)|  < oo;
-                               it is assumed that limits commute.
+        ``O(expr*f(x), x)`` is ``O(f(x), x)``
 
-    Notes:
-    ======
+        ``O(expr, x)`` is ``O(1)``
 
-    In O(f(x), x) the expression f(x) is assumed to have a leading term.
-    O(f(x), x) is automatically transformed to O(f(x).as_leading_term(x),x).
-
-        O(expr*f(x), x) is O(f(x), x)
-        O(expr, x) is O(1)
-        O(0, x) is 0.
+        ``O(0, x)`` is 0.
 
     Multivariate O is also supported:
 
-        O(f(x, y), x, y) is transformed to
-        O(f(x, y).as_leading_term(x,y).as_leading_term(y), x, y)
+        ``O(f(x, y), x, y)`` is transformed to
+        ``O(f(x, y).as_leading_term(x,y).as_leading_term(y), x, y)``
+
+    In the multivariate case, it is assumed the limits w.r.t. the various
+    symbols commute.
 
     If no symbols are passed then all symbols in the expression are used:
 
@@ -89,46 +96,80 @@ class Order(Expr):
     @cacheit
     def __new__(cls, expr, *symbols, **assumptions):
 
-        expr = sympify(expr).expand()
+        expr = sympify(expr)
         if expr is S.NaN:
             return S.NaN
 
         if symbols:
             symbols = map(sympify, symbols)
             if not all(isinstance(s, Symbol) for s in symbols):
-                raise NotImplementedError('Order at points other than 0 not supported.')
+                raise NotImplementedError(
+                    'Order at points other than 0 not supported.')
         else:
             symbols = list(expr.free_symbols)
 
         if expr.is_Order:
-
-            new_symbols = list(expr.variables)
-            for s in symbols:
-                if s not in new_symbols:
-                    new_symbols.append(s)
-            if len(new_symbols) == len(expr.variables):
+            v = set(expr.variables)
+            symbols = v | set(symbols)
+            if symbols == v:
                 return expr
-            symbols = new_symbols
+            symbols = list(symbols)
 
         elif symbols:
 
+            symbols = list(set(symbols))
+
+            if len(symbols) > 1:
+                # XXX: better way?  We need this expand() to
+                # workaround e.g: expr = x*(x + y).
+                # (x*(x + y)).as_leading_term(x, y) currently returns
+                # x*y (wrong order term!).  That's why we want to deal with
+                # expand()'ed expr (handled in "if expr.is_Add" branch below).
+                expr = expr.expand()
+
             if expr.is_Add:
                 lst = expr.extract_leading_order(*symbols)
-                expr = Add(*[f.expr for (e,f) in lst])
+                expr = Add(*[f.expr for (e, f) in lst])
+
             elif expr:
-                if len(symbols) > 1:
-                    # TODO
-                    # We cannot use compute_leading_term because that only
-                    # works in one symbol.
-                    expr = expr.as_leading_term(*symbols)
-                else:
-                    expr = expr.compute_leading_term(symbols[0])
-                coeff, terms = expr.as_coeff_mul()
-                expr = Mul(*[t for t in terms if t.has(*symbols)])
+                expr = expr.as_leading_term(*symbols)
+                expr = expr.as_independent(*symbols, **dict(as_Add=False))[1]
+
+                expr = expand_power_base(expr)
+                expr = expand_log(expr)
+
+                if len(symbols) == 1:
+                    # The definition of O(f(x)) symbol explicitly stated that
+                    # the argument of f(x) is irrelevant.  That's why we can
+                    # combine some power exponents (only "on top" of the
+                    # expression tree for f(x)), e.g.:
+                    # x**p * (-x)**q -> x**(p+q) for real p, q.
+                    x = symbols[0]
+                    margs = list(Mul.make_args(
+                        expr.as_independent(x, **dict(as_Add=False))[1]))
+
+                    for i, t in enumerate(margs):
+                        if t.is_Pow:
+                            b, q = t.args
+                            if b in (x, -x) and q.is_real and not q.has(x):
+                                margs[i] = x**q
+                            elif b.is_Pow and not b.exp.has(x):
+                                b, r = b.args
+                                if b in (x, -x) and r.is_real:
+                                    margs[i] = x**(r*q)
+                            elif b.is_Mul and b.args[0] is S.NegativeOne:
+                                b = -b
+                                if b.is_Pow and not b.exp.has(x):
+                                    b, r = b.args
+                                    if b in (x, -x) and r.is_real:
+                                        margs[i] = x**(r*q)
+
+                    expr = Mul(*margs)
 
         if expr is S.Zero:
             return expr
-        elif not expr.has(*symbols):
+
+        if not expr.has(*symbols):
             expr = S.One
 
         # create Order instance:
@@ -178,11 +219,10 @@ class Order(Expr):
     def getO(self):
         return self
 
-
     @cacheit
     def contains(self, expr):
         """
-        Return True if expr belongs to Order(self.expr, *self.variables).
+        Return True if expr belongs to Order(self.expr, \*self.variables).
         Return False if self belongs to expr.
         Return None if the inclusion relation cannot be determined
         (e.g. when self and expr have different symbols).
@@ -207,18 +247,19 @@ class Order(Expr):
             return False
         if expr.is_Order:
             if self.variables and expr.variables:
-                common_symbols = tuple([s for s in self.variables if s in expr.variables])
+                common_symbols = tuple(
+                    [s for s in self.variables if s in expr.variables])
             elif self.variables:
                 common_symbols = self.variables
             else:
                 common_symbols = expr.variables
             if not common_symbols:
-                if not (self.variables or expr.variables): # O(1),O(1)
+                if not (self.variables or expr.variables):  # O(1),O(1)
                     return True
                 return None
             r = None
             for s in common_symbols:
-                l = limit(powsimp(self.expr/expr.expr, deep=True,\
+                l = limit(powsimp(self.expr/expr.expr, deep=True,
                 combine='exp'), s, 0) != 0
                 if r is None:
                     r = l
@@ -230,17 +271,25 @@ class Order(Expr):
         return self.contains(obj)
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        if isinstance(old, Symbol) and old in self.variables:
+        if old.is_Symbol and old in self.variables:
             i = list(self.variables).index(old)
             if isinstance(new, Symbol):
-                return Order(self.expr._eval_subs(old, new), *(self.variables[:i]+(new,)+self.variables[i+1:]))
-            return Order(self.expr._eval_subs(old, new), *(self.variables[:i]+self.variables[i+1:]))
-        return Order(self.expr._eval_subs(old, new), *self.variables)
+                return Order(self.expr._subs(old, new), *(self.variables[:i] + (new,) + self.variables[i + 1:]))
+            return Order(self.expr._subs(old, new), *(self.variables[:i] + self.variables[i + 1:]))
+        return Order(self.expr._subs(old, new), *self.variables)
+
+    def _eval_conjugate(self):
+        expr = self.expr._eval_conjugate()
+        if expr is not None:
+            return self.func(expr, *self.variables)
 
     def _eval_derivative(self, x):
         return self.func(self.expr.diff(x), *self.variables) or self
+
+    def _eval_transpose(self):
+        expr = self.expr._eval_transpose()
+        if expr is not None:
+            return self.func(expr, *self.variables)
 
     def _sage_(self):
         #XXX: SAGE doesn't have Order yet. Let's return 0 instead.

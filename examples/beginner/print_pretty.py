@@ -7,12 +7,13 @@ Demonstrates pretty printing.
 
 from sympy import Symbol, pprint, sin, cos, exp, sqrt
 
+
 def main():
     x = Symbol("x")
     y = Symbol("y")
 
     pprint( x**x )
-    print '\n'# separate with two blank likes
+    print '\n'  # separate with two blank likes
 
     pprint(x**2 + y + x)
     print '\n'

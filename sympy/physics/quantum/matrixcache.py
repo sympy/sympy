@@ -7,6 +7,7 @@ from sympy.physics.quantum.matrixutils import (
     to_sympy, to_numpy, to_scipy_sparse
 )
 
+
 class MatrixCache(object):
     """A cache for small matrices in different formats.
 
@@ -43,7 +44,6 @@ class MatrixCache(object):
         except ImportError:
             pass
 
-
     def get_matrix(self, name, format):
         """Get a cached matrix by name and format.
 
@@ -58,7 +58,7 @@ class MatrixCache(object):
         if m is not None:
             return m
         raise NotImplementedError(
-            'Matrix with name %s and format %s is not available.' %\
+            'Matrix with name %s and format %s is not available.' %
             (name, format)
         )
 
@@ -79,15 +79,15 @@ class MatrixCache(object):
         self._store_matrix(name, 'scipy.sparse', m)
 
 
-sqrt2_inv = Pow(2, Rational(-1,2), evaluate=False)
+sqrt2_inv = Pow(2, Rational(-1, 2), evaluate=False)
 
 # Save the common matrices that we will need
 matrix_cache = MatrixCache()
-matrix_cache.cache_matrix('eye2', Matrix([[1,0],[0,1]]))
-matrix_cache.cache_matrix('op11', Matrix([[0,0],[0,1]])) # |1><1|
-matrix_cache.cache_matrix('op00', Matrix([[1,0],[0,0]])) # |0><0|
-matrix_cache.cache_matrix('op10', Matrix([[0,0],[1,0]])) # |1><0|
-matrix_cache.cache_matrix('op01', Matrix([[0,1],[0,0]])) # |0><1|
+matrix_cache.cache_matrix('eye2', Matrix([[1, 0], [0, 1]]))
+matrix_cache.cache_matrix('op11', Matrix([[0, 0], [0, 1]]))  # |1><1|
+matrix_cache.cache_matrix('op00', Matrix([[1, 0], [0, 0]]))  # |0><0|
+matrix_cache.cache_matrix('op10', Matrix([[0, 0], [1, 0]]))  # |1><0|
+matrix_cache.cache_matrix('op01', Matrix([[0, 1], [0, 0]]))  # |0><1|
 matrix_cache.cache_matrix('X', Matrix([[0, 1], [1, 0]]))
 matrix_cache.cache_matrix('Y', Matrix([[0, -I], [I, 0]]))
 matrix_cache.cache_matrix('Z', Matrix([[1, 0], [0, -1]]))
@@ -95,8 +95,7 @@ matrix_cache.cache_matrix('S', Matrix([[1, 0], [0, I]]))
 matrix_cache.cache_matrix('T', Matrix([[1, 0], [0, exp(I*pi/4)]]))
 matrix_cache.cache_matrix('H', sqrt2_inv*Matrix([[1, 1], [1, -1]]))
 matrix_cache.cache_matrix('Hsqrt2', Matrix([[1, 1], [1, -1]]))
-matrix_cache.cache_matrix('SWAP',Matrix([[1,0,0,0],[0,0,1,0],[0,1,0,0],[0,0,0,1]]))
-matrix_cache.cache_matrix('ZX', sqrt2_inv*Matrix([[1,1],[1,-1]]))
-matrix_cache.cache_matrix('ZY', Matrix([[I,0],[0,-I]]))
-
-
+matrix_cache.cache_matrix(
+    'SWAP', Matrix([[1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]]))
+matrix_cache.cache_matrix('ZX', sqrt2_inv*Matrix([[1, 1], [1, -1]]))
+matrix_cache.cache_matrix('ZY', Matrix([[I, 0], [0, -I]]))

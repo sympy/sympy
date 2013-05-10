@@ -24,7 +24,7 @@ def mplot3d(f, var1, var2, show=True):
     p = import_module('pylab')
     # Try newer version first
     p3 = import_module('mpl_toolkits.mplot3d',
-        __import__kwargs={'fromlist':['something']}) or import_module('matplotlib.axes3d')
+        __import__kwargs={'fromlist': ['something']}) or import_module('matplotlib.axes3d')
     if not p or not p3:
         sys.exit("Matplotlib is required to use mplot3d.")
 
@@ -34,7 +34,7 @@ def mplot3d(f, var1, var2, show=True):
     ax = p3.Axes3D(fig)
 
     #ax.plot_surface(x,y,z) #seems to be a bug in matplotlib
-    ax.plot_wireframe(x,y,z)
+    ax.plot_wireframe(x, y, z)
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
@@ -43,11 +43,12 @@ def mplot3d(f, var1, var2, show=True):
     if show:
         p.show()
 
+
 def main():
     x = Symbol('x')
     y = Symbol('y')
 
-    mplot3d(x**2-y**2, (x, -10.0, 10.0, 20), (y, -10.0, 10.0, 20))
+    mplot3d(x**2 - y**2, (x, -10.0, 10.0, 20), (y, -10.0, 10.0, 20))
     #mplot3d(x**2+y**2, (x, -10.0, 10.0, 20), (y, -10.0, 10.0, 20))
     #mplot3d(sin(x)+sin(y), (x, -3.14, 3.14, 10), (y, -3.14, 3.14, 10))
 

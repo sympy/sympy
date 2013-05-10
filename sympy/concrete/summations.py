@@ -1,25 +1,47 @@
-from sympy.core import (Expr, S, C, sympify, Wild, Dummy, Derivative, Symbol, Add)
-from sympy.functions.elementary.piecewise import piecewise_fold
+from sympy.core.add import Add
+from sympy.core.basic import C
+from sympy.core.containers import Tuple
+from sympy.core.expr import Expr
+from sympy.core.function import Derivative
+from sympy.core.relational import Eq
+from sympy.core.singleton import S
+from sympy.core.symbol import (Dummy, Wild)
+from sympy.core.sympify import sympify
 from sympy.concrete.gosper import gosper_sum
+from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 from sympy.polys import apart, PolynomialError
 from sympy.solvers import solve
 
-def _free_symbols(function, limits):
-    """Helper function to return the symbols that appear in a sum-like object
-    once it is evaluated.
-    """
-    isyms = function.free_symbols
-    for xab in limits:
-        # take out the target symbol
-        if xab[0] in isyms:
-            isyms.remove(xab[0])
-        # add in the new symbols
-        for i in xab[1:]:
-            isyms.update(i.free_symbols)
-    return isyms
 
 class Sum(Expr):
-    """Represents unevaluated summation."""
+    """Represents unevaluated summation.
+
+    Sum represents a finite or infinite series, with the first argument being
+    the general form of terms in the series, and the second argument being
+    (dummy_variable, start, end), with dummy_variable taking all integer values
+    from start to end.  In accordance with long-standing mathematical
+    convention, the end term is included in the summation.
+
+    >>> from sympy.abc import k, m, n, x
+    >>> from sympy import Sum, factorial, oo
+    >>> Sum(k,(k,1,m))
+    Sum(k, (k, 1, m))
+    >>> Sum(k,(k,1,m)).doit()
+    m**2/2 + m/2
+    >>> Sum(k**2,(k,1,m))
+    Sum(k**2, (k, 1, m))
+    >>> Sum(k**2,(k,1,m)).doit()
+    m**3/3 + m**2/2 + m/6
+    >>> Sum(x**k,(k,0,oo))
+    Sum(x**k, (k, 0, oo))
+    >>> Sum(x**k,(k,0,oo)).doit()
+    Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**k, (k, 0, oo)), True))
+    >>> Sum(x**k/factorial(k),(k,0,oo)).doit()
+    exp(x)
+
+    """
+
+    __slots__ = ['is_commutative']
 
     def __new__(cls, function, *symbols, **assumptions):
         from sympy.integrals.integrals import _process_limits
@@ -46,6 +68,7 @@ class Sum(Expr):
         arglist = [sign*function]
         arglist.extend(limits)
         obj._args = tuple(arglist)
+        obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
 
@@ -70,19 +93,10 @@ class Sum(Expr):
 
     @property
     def free_symbols(self):
-        """
-        This method returns the symbols that will exist when the
-        summation is evaluated. This is useful if one is trying to
-        determine whether a sum depends on a certain symbol or not.
-
-        >>> from sympy import Sum
-        >>> from sympy.abc import x, y
-        >>> Sum(x, (x, y, 1)).free_symbols
-        set([y])
-        """
+        from sympy.integrals.integrals import _free_symbols
         if self.function.is_zero:
             return set()
-        return _free_symbols(self.function, self.limits)
+        return _free_symbols(self)
 
     @property
     def is_zero(self):
@@ -96,17 +110,13 @@ class Sum(Expr):
         """
         Return True if the Sum will result in a number, else False.
 
-        sympy considers anything that will result in a number to have
-        is_number == True.
-
-        >>> from sympy import log
-        >>> log(2).is_number
-        True
-
         Sums are a special case since they contain symbols that can
         be replaced with numbers. Whether the integral can be done or not is
         another issue. But answering whether the final result is a number is
         not difficult.
+
+        Examples
+        ========
 
         >>> from sympy import Sum
         >>> from sympy.abc import x, y
@@ -128,10 +138,16 @@ class Sum(Expr):
 
         return self.function.is_zero or not self.free_symbols
 
+    def as_dummy(self):
+        from sympy.integrals.integrals import _as_dummy
+        return _as_dummy(self)
+
     def doit(self, **hints):
-        #if not hints.get('sums', True):
-        #    return self
-        f = self.function
+        if hints.get('deep', True):
+            f = self.function.doit(**hints)
+        else:
+            f = self.function
+
         for limit in self.limits:
             i, a, b = limit
             dif = b - a
@@ -143,12 +159,19 @@ class Sum(Expr):
                 return self
 
         if hints.get('deep', True):
-            return f.doit(**hints)
-        else:
-            return f
+            # eval_sum could return partially unevaluated
+            # result with Piecewise.  In this case we won't
+            # doit() recursively.
+            if not isinstance(f, Piecewise):
+                return f.doit(**hints)
 
-    def _eval_summation(self, f, x):
-        return
+        return f
+
+    def _eval_adjoint(self):
+        return Sum(self.function.adjoint(), *self.limits)
+
+    def _eval_conjugate(self):
+        return Sum(self.function.conjugate(), *self.limits)
 
     def _eval_derivative(self, x):
         """
@@ -158,7 +181,6 @@ class Sum(Expr):
         Sum(a*b*x, (x, 1, a)) can be differentiated wrt x or b but not `a`
         since the value of the sum is discontinuous in `a`. In a case
         involving a limit variable, the unevaluated derivative is returned.
-
         """
 
         # diff already confirmed that x is in the free symbols of self, but we
@@ -173,7 +195,7 @@ class Sum(Expr):
 
         limit = limits.pop(-1)
 
-        if limits: # f is the argument to a Sum
+        if limits:  # f is the argument to a Sum
             f = Sum(f, *limits)
 
         if len(limit) == 3:
@@ -187,6 +209,12 @@ class Sum(Expr):
             return rv
         else:
             return NotImplementedError('Lower and upper bound expected.')
+
+    def _eval_summation(self, f, x):
+        return None
+
+    def _eval_transpose(self):
+        return Sum(self.function.transpose(), *self.limits)
 
     def euler_maclaurin(self, m=0, n=0, eps=0, eval_integral=True):
         """
@@ -210,7 +238,7 @@ class Sum(Expr):
             -log(2) + 7/20 + log(5)
             >>> from sympy import sstr
             >>> print sstr((s.evalf(), e.evalf()), full_prec=True)
-            (1.26629073187416, 0.0175000000000000)
+            (1.26629073187415, 0.0175000000000000)
 
         The endpoints may be symbolic:
 
@@ -239,7 +267,7 @@ class Sum(Expr):
         s = S.Zero
         if m:
             for k in range(m):
-                term = f.subs(i, a+k)
+                term = f.subs(i, a + k)
                 if (eps and term and abs(term.evalf(3)) < eps):
                     return s, abs(term)
                 s += term
@@ -249,6 +277,7 @@ class Sum(Expr):
         if eval_integral:
             I = I.doit()
         s += I
+
         def fpoint(expr):
             if b is S.Infinity:
                 return expr.subs(i, a), 0
@@ -256,42 +285,36 @@ class Sum(Expr):
         fa, fb = fpoint(f)
         iterm = (fa + fb)/2
         g = f.diff(i)
-        for k in xrange(1, n+2):
+        for k in xrange(1, n + 2):
             ga, gb = fpoint(g)
-            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb-ga)
+            term = C.bernoulli(2*k)/C.factorial(2*k)*(gb - ga)
             if (eps and term and abs(term.evalf(3)) < eps) or (k > n):
                 break
             s += term
-            g = g.diff(i, 2)
+            g = g.diff(i, 2, simplify=False)
         return s + iterm, abs(term)
 
     def _eval_subs(self, old, new):
-        if self == old:
-            return new
-        newlimits = []
-        for lim in self.limits:
-            if lim[0] == old:
-                return self
-            newlimits.append( (lim[0],lim[1].subs(old,new),lim[2].subs(old,new)) )
-
-        return Sum(self.args[0].subs(old, new), *newlimits)
+        from sympy.integrals.integrals import _eval_subs
+        return _eval_subs(self, old, new)
 
 
 def summation(f, *symbols, **kwargs):
-    """
+    r"""
     Compute the summation of f with respect to symbols.
 
     The notation for symbols is similar to the notation used in Integral.
     summation(f, (i, a, b)) computes the sum of f with respect to i from a to b,
     i.e.,
 
-                                b
-                              ____
-                              \   `
-    summation(f, (i, a, b)) =  )    f
-                              /___,
-                              i = a
+    ::
 
+                                    b
+                                  ____
+                                  \   `
+        summation(f, (i, a, b)) =  )    f
+                                  /___,
+                                  i = a
 
     If it cannot compute the sum, it returns an unevaluated Sum object.
     Repeated sums can be computed by introducing additional symbols tuples::
@@ -316,6 +339,7 @@ def summation(f, *symbols, **kwargs):
     """
     return Sum(f, *symbols, **kwargs).doit(deep=False)
 
+
 def telescopic_direct(L, R, n, limits):
     """Returns the direct summation of the terms of a telescopic sum
 
@@ -334,8 +358,9 @@ def telescopic_direct(L, R, n, limits):
     (i, a, b) = limits
     s = 0
     for m in xrange(n):
-        s += L.subs(i,a+m) + R.subs(i,b-m)
+        s += L.subs(i, a + m) + R.subs(i, b - m)
     return s
+
 
 def telescopic(L, R, limits):
     '''Tries to perform the summation using the telescopic property
@@ -355,7 +380,7 @@ def telescopic(L, R, limits):
     s = None
     if sol and k in sol:
         s = sol[k]
-        if not (s.is_Integer and L.subs(i,i + s) == -R):
+        if not (s.is_Integer and L.subs(i, i + s) == -R):
             #sometimes match fail(f(x+2).match(-f(x+k))->{k: -2 - 2x}))
             s = None
 
@@ -369,7 +394,7 @@ def telescopic(L, R, limits):
         except NotImplementedError:
             return None
         sol = [si for si in sol if si.is_Integer and
-                                   (L.subs(i,i + si) + R).expand().is_zero]
+               (L.subs(i, i + si) + R).expand().is_zero]
         if len(sol) != 1:
             return None
         s = sol[0]
@@ -379,7 +404,11 @@ def telescopic(L, R, limits):
     elif s > 0:
         return telescopic_direct(L, R, s, (i, a, b))
 
+
 def eval_sum(f, limits):
+    from sympy.concrete.delta import deltasummation, _has_simple_delta
+    from sympy.functions import KroneckerDelta
+
     (i, a, b) = limits
     if f is S.Zero:
         return S.Zero
@@ -387,6 +416,9 @@ def eval_sum(f, limits):
         return f*(b - a + 1)
     if a == b:
         return f.subs(i, a)
+
+    if f.has(KroneckerDelta) and _has_simple_delta(f, limits[0]):
+        return deltasummation(f, limits)
 
     dif = b - a
     definite = dif.is_Integer
@@ -403,16 +435,18 @@ def eval_sum(f, limits):
     if definite:
         return eval_sum_direct(f, (i, a, b))
 
+
 def eval_sum_direct(expr, limits):
     (i, a, b) = limits
 
     dif = b - a
     return Add(*[expr.subs(i, a + j) for j in xrange(dif + 1)])
 
+
 def eval_sum_symbolic(f, limits):
     (i, a, b) = limits
     if not f.has(i):
-        return f*(b-a+1)
+        return f*(b - a + 1)
 
     # Linearity
     if f.is_Mul:
@@ -420,14 +454,16 @@ def eval_sum_symbolic(f, limits):
 
         if not L.has(i):
             sR = eval_sum_symbolic(R, (i, a, b))
-            if sR: return L*sR
+            if sR:
+                return L*sR
 
         if not R.has(i):
             sL = eval_sum_symbolic(L, (i, a, b))
-            if sL: return R*sL
+            if sL:
+                return R*sL
 
         try:
-            f = apart(f, i) # see if it becomes an Add
+            f = apart(f, i)  # see if it becomes an Add
         except PolynomialError:
             pass
 
@@ -453,44 +489,51 @@ def eval_sum_symbolic(f, limits):
 
         if n.is_Integer:
             if n >= 0:
-                return ((C.bernoulli(n+1, b+1) - C.bernoulli(n+1, a))/(n+1)).expand()
+                return ((C.bernoulli(n + 1, b + 1) - C.bernoulli(n + 1, a))/(n + 1)).expand()
             elif a.is_Integer and a >= 1:
                 if n == -1:
                     return C.harmonic(b) - C.harmonic(a - 1)
                 else:
                     return C.harmonic(b, abs(n)) - C.harmonic(a - 1, abs(n))
 
-    # Geometric terms
-    c1 = C.Wild('c1', exclude=[i])
-    c2 = C.Wild('c2', exclude=[i])
-    c3 = C.Wild('c3', exclude=[i])
+    if not (a.has(S.Infinity, S.NegativeInfinity) or
+            b.has(S.Infinity, S.NegativeInfinity)):
+        # Geometric terms
+        c1 = C.Wild('c1', exclude=[i])
+        c2 = C.Wild('c2', exclude=[i])
+        c3 = C.Wild('c3', exclude=[i])
 
-    e = f.match(c1**(c2*i+c3))
+        e = f.match(c1**(c2*i + c3))
 
-    if e is not None:
-        c1 = c1.subs(e)
-        c2 = c2.subs(e)
-        c3 = c3.subs(e)
+        if e is not None:
+            p = (c1**c3).subs(e)
+            q = (c1**c2).subs(e)
 
-        # TODO: more general limit handling
-        return c1**c3 * (c1**(a*c2) - c1**(c2+b*c2)) / (1 - c1**c2)
+            r = p*(q**a - q**(b + 1))/(1 - q)
+            l = p*(b - a + 1)
 
-    r = gosper_sum(f, (i, a, b))
-    if not r in (None, S.NaN):
-        return r
+            return Piecewise((l, Eq(q, S.One)), (r, True))
+
+        r = gosper_sum(f, (i, a, b))
+
+        if not r in (None, S.NaN):
+            return r
 
     return eval_sum_hyper(f, (i, a, b))
+
 
 def _eval_sum_hyper(f, i, a):
     """ Returns (res, cond). Sums from a to oo. """
     from sympy.functions import hyper
-    from sympy.simplify import hyperexpand, hypersimp, fraction
+    from sympy.simplify import hyperexpand, hypersimp, fraction, simplify
     from sympy.polys.polytools import Poly, factor
 
     if a != 0:
         return _eval_sum_hyper(f.subs(i, i + a), i, 0)
 
     if f.subs(i, 0) == 0:
+        if simplify(f.subs(i, Dummy('i', integer=True, positive=True))) == 0:
+            return S(0), True
         return _eval_sum_hyper(f.subs(i, i + 1), i, 0)
 
     hs = hypersimp(f, i)
@@ -522,13 +565,13 @@ def _eval_sum_hyper(f, i, a):
     # hypergeometric series.
     ap = params[0] + [1]
     bq = params[1]
-    x  = ab[0]/ab[1]
+    x = ab[0]/ab[1]
     h = hyper(ap, bq, x)
 
     return f.subs(i, 0)*hyperexpand(h), h.convergence_statement
 
+
 def eval_sum_hyper(f, (i, a, b)):
-    from sympy.functions import Piecewise
     from sympy import oo, And
 
     if b != oo:
@@ -537,7 +580,15 @@ def eval_sum_hyper(f, (i, a, b)):
             if res is not None:
                 return Piecewise(res, (Sum(f, (i, a, b)), True))
         else:
-            return None
+            res1 = _eval_sum_hyper(f, i, a)
+            res2 = _eval_sum_hyper(f, i, b + 1)
+            if res1 is None or res2 is None:
+                return None
+            (res1, cond1), (res2, cond2) = res1, res2
+            cond = And(cond1, cond2)
+            if cond is False:
+                return None
+        return Piecewise((res1 - res2, cond), (Sum(f, (i, a, b)), True))
 
     if a == -oo:
         res1 = _eval_sum_hyper(f.subs(i, -i), i, 1)
@@ -554,4 +605,12 @@ def eval_sum_hyper(f, (i, a, b)):
     # Now b == oo, a != -oo
     res = _eval_sum_hyper(f, i, a)
     if res is not None:
+        r, c = res
+        if c is False:
+            if r.is_number:
+                if f.is_positive or f.is_zero:
+                    return S.Infinity
+                elif f.is_negative:
+                    return S.NegativeInfinity
+            return None
         return Piecewise(res, (Sum(f, (i, a, b)), True))

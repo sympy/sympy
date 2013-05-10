@@ -751,7 +751,7 @@ class MatrixMethods(object):
         """
         Create square diagonal matrix using given list.
 
-        Example:
+        Examples:
         >>> from mpmath import diag, mp
         >>> mp.pretty = False
         >>> diag([1, 2, 3])
@@ -770,7 +770,7 @@ class MatrixMethods(object):
         Create matrix m x n filled with zeros.
         One given dimension will create square matrix n x n.
 
-        Example:
+        Examples:
         >>> from mpmath import zeros, mp
         >>> mp.pretty = False
         >>> zeros(2)
@@ -796,7 +796,7 @@ class MatrixMethods(object):
         Create matrix m x n filled with ones.
         One given dimension will create square matrix n x n.
 
-        Example:
+        Examples:
         >>> from mpmath import ones, mp
         >>> mp.pretty = False
         >>> ones(2)
@@ -840,7 +840,7 @@ class MatrixMethods(object):
         All values are >= min and <max.
         n defaults to m.
 
-        Example:
+        Examples:
         >>> from mpmath import randmatrix
         >>> randmatrix(2) # doctest:+SKIP
         matrix(

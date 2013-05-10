@@ -6,6 +6,7 @@ from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler
 
+
 class AskInfinitesimalHandler(CommonHandler):
     """
     Handler for key 'infinitesimal'
@@ -36,11 +37,12 @@ class AskInfinitesimalHandler(CommonHandler):
                 result = True
             elif ask(Q.bounded(arg), assumptions):
                 continue
-            else: break
+            else:
+                break
         else:
             return result
 
-    Add, Pow = Mul, Mul
+    Add, Pow = [Mul]*2
 
     @staticmethod
     def Number(expr, assumptions):
@@ -48,9 +50,7 @@ class AskInfinitesimalHandler(CommonHandler):
 
     NumberSymbol = Number
 
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
+    ImaginaryUnit = staticmethod(CommonHandler.AlwaysFalse)
 
 
 class AskBoundedHandler(CommonHandler):
@@ -59,7 +59,7 @@ class AskBoundedHandler(CommonHandler):
 
     Test that an expression is bounded respect to all its variables.
 
-    Example of usage:
+    Examples of usage:
 
     >>> from sympy import Symbol, Q
     >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
@@ -77,7 +77,7 @@ class AskBoundedHandler(CommonHandler):
         """
         Handles Symbol.
 
-        Example:
+        Examples:
 
         >>> from sympy import Symbol, Q
         >>> from sympy.assumptions.handlers.calculus import AskBoundedHandler
@@ -98,32 +98,68 @@ class AskBoundedHandler(CommonHandler):
         """
         Return True if expr is bounded, False if not and None if unknown.
 
-               TRUTH TABLE
+        Truth Table:
 
-              B    U     ?
-                 + - x + - x
-            +---+-----+-----+
-        B   | B |  U  |? ? ?|  legend:
-            +---+-----+-----+    B  = Bounded
-          +     |U ? ?|U ? ?|    U  = Unbounded
-        U -     |? U ?|? U ?|    ?  = unknown boundedness
-          x     |? ? ?|? ? ?|    +  = positive sign
-                +-----+--+--+    -  = negative sign
-        ?             |? ? ?|    x  = sign unknown
-                      +--+--+
+        +-------+-----+-----------+-----------+
+        |       |     |           |           |
+        |       |  B  |     U     |     ?     |
+        |       |     |           |           |
+        +-------+-----+---+---+---+---+---+---+
+        |       |     |   |   |   |   |   |   |
+        |       |     |'+'|'-'|'x'|'+'|'-'|'x'|
+        |       |     |   |   |   |   |   |   |
+        +-------+-----+---+---+---+---+---+---+
+        |       |     |           |           |
+        |   B   |  B  |     U     |     ?     |
+        |       |     |           |           |
+        +---+---+-----+---+---+---+---+---+---+
+        |   |   |     |   |   |   |   |   |   |
+        |   |'+'|     | U | ? | ? | U | ? | ? |
+        |   |   |     |   |   |   |   |   |   |
+        |   +---+-----+---+---+---+---+---+---+
+        |   |   |     |   |   |   |   |   |   |
+        | U |'-'|     | ? | U | ? | ? | U | ? |
+        |   |   |     |   |   |   |   |   |   |
+        |   +---+-----+---+---+---+---+---+---+
+        |   |   |     |           |           |
+        |   |'x'|     |     ?     |     ?     |
+        |   |   |     |           |           |
+        +---+---+-----+---+---+---+---+---+---+
+        |       |     |           |           |
+        |   ?   |     |           |     ?     |
+        |       |     |           |           |
+        +-------+-----+-----------+---+---+---+
 
+            * 'B' = Bounded
 
-        All Bounded -> True
-        1 Unbounded and the rest Bounded -> False
-        >1 Unbounded, all with same known sign -> False
-        Any Unknown and unknown sign -> None
-        Else -> None
+            * 'U' = Unbounded
+
+            * '?' = unknown boundedness
+
+            * '+' = positive sign
+
+            * '-' = negative sign
+
+            * 'x' = sign unknown
+
+|
+
+            * All Bounded -> True
+
+            * 1 Unbounded and the rest Bounded -> False
+
+            * >1 Unbounded, all with same known sign -> False
+
+            * Any Unknown and unknown sign -> None
+
+            * Else -> None
 
         When the signs are not the same you can have an undefined
         result as in oo - oo, hence 'bounded' is also undefined.
+
         """
 
-        sign = -1 # sign of unknown or unbounded
+        sign = -1  # sign of unknown or unbounded
         result = True
         for arg in expr.args:
             _bounded = ask(Q.bounded(arg), assumptions)
@@ -134,7 +170,7 @@ class AskBoundedHandler(CommonHandler):
             # is None and Bounded is None or there was already
             # an unknown sign, return None
             if sign != -1 and s != sign or \
-               s == None and (s == _bounded or s == sign):
+                    s is None and (s == _bounded or s == sign):
                 return None
             else:
                 sign = s
@@ -148,17 +184,39 @@ class AskBoundedHandler(CommonHandler):
         """
         Return True if expr is bounded, False if not and None if unknown.
 
-               TRUTH TABLE
+        Truth Table:
 
-              B   U     ?
-                      s   /s
-            +---+---+---+---+
-         B  | B | U |   ?   |  legend:
-            +---+---+---+---+    B  = Bounded
-         U      | U | U | ? |    U  = Unbounded
-                +---+---+---+    ?  = unknown boundedness
-         ?          |   ?   |    s  = signed (hence nonzero)
-                    +---+---+    /s = not signed
+        +---+---+---+--------+
+        |   |   |   |        |
+        |   | B | U |   ?    |
+        |   |   |   |        |
+        +---+---+---+---+----+
+        |   |   |   |   |    |
+        |   |   |   | s | /s |
+        |   |   |   |   |    |
+        +---+---+---+---+----+
+        |   |   |   |        |
+        | B | B | U |   ?    |
+        |   |   |   |        |
+        +---+---+---+---+----+
+        |   |   |   |   |    |
+        | U |   | U | U | ?  |
+        |   |   |   |   |    |
+        +---+---+---+---+----+
+        |   |   |   |        |
+        | ? |   |   |   ?    |
+        |   |   |   |        |
+        +---+---+---+---+----+
+
+            * B = Bounded
+
+            * U = Unbounded
+
+            * ? = unknown boundedness
+
+            * s = signed (hence nonzero)
+
+            * /s = not signed
 
         """
         result = True
@@ -188,17 +246,17 @@ class AskBoundedHandler(CommonHandler):
         """
         base_bounded = ask(Q.bounded(expr.base), assumptions)
         exp_bounded = ask(Q.bounded(expr.exp), assumptions)
-        if base_bounded==None and exp_bounded==None: # Common Case
+        if base_bounded is None and exp_bounded is None:  # Common Case
             return None
-        if base_bounded==False and ask(Q.nonzero(expr.exp), assumptions):
+        if base_bounded is False and ask(Q.nonzero(expr.exp), assumptions):
             return False
         if base_bounded and exp_bounded:
             return True
-        if abs(expr.base)<=1 and ask(Q.positive(expr.exp), assumptions):
+        if abs(expr.base) <= 1 and ask(Q.positive(expr.exp), assumptions):
             return True
-        if abs(expr.base)>=1 and ask(Q.negative(expr.exp), assumptions):
+        if abs(expr.base) >= 1 and ask(Q.negative(expr.exp), assumptions):
             return True
-        if abs(expr.base)>=1 and exp_bounded==False:
+        if abs(expr.base) >= 1 and exp_bounded is False:
             return False
         return None
 
@@ -208,36 +266,7 @@ class AskBoundedHandler(CommonHandler):
 
     exp = log
 
-    @staticmethod
-    def sin(expr, assumptions):
-        return True
+    cos, sin, Number, Pi, Exp1, GoldenRatio, ImaginaryUnit, sign = \
+        [staticmethod(CommonHandler.AlwaysTrue)]*8
 
-    cos = sin
-
-    @staticmethod
-    def Number(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def Pi(expr, assumptions):
-        return True
-
-    @staticmethod
-    def Exp1(expr, assumptions):
-        return True
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return True
-
-    @staticmethod
-    def sign(expr, assumptions):
-        return True
+    Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2

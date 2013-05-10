@@ -52,7 +52,7 @@ def richardson(ctx, seq):
     three elements do not differ monotonically, and in that case
     applies extrapolation only to the even-index elements.
 
-    **Example**
+    **Examples**
 
     Applying Richardson extrapolation to the Leibniz series for `\pi`::
 

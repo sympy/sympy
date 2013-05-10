@@ -12,12 +12,12 @@ Integer(1)/Integer(2)
 We use the Python ast module for that, which is in python2.6 and later. It is
 well documented at docs.python.org.
 
-Some tips to understand how this works: use dump() to get a nice representation
-of any node. Then write a string of what you want to get, e.g.
-"Integer(1)", parse it, dump it and you'll see that you need to do
-"Call(Name('Integer', Load()), [node], [], None, None)". You don't need to
-bother with lineno and col_offset, just call fix_missing_locations() before
-returning the node.
+Some tips to understand how this works: use dump() to get a nice
+representation of any node. Then write a string of what you want to get,
+e.g. "Integer(1)", parse it, dump it and you'll see that you need to do
+"Call(Name('Integer', Load()), [node], [], None, None)". You don't need
+to bother with lineno and col_offset, just call fix_missing_locations()
+before returning the node.
 
 If the ast module is not available (Python 2.5), we use the old compiler
 module.
@@ -28,7 +28,7 @@ from sympy.core.sympify import SympifyError
 
 try:
     from ast import parse, NodeTransformer, Call, Name, Load, \
-            fix_missing_locations, Str, Tuple
+        fix_missing_locations, Str, Tuple
     ast_enabled = True
 except ImportError:
     ast_enabled = False
@@ -67,8 +67,10 @@ if ast_enabled:
         def visit_Lambda(self, node):
             args = [self.visit(arg) for arg in node.args.args]
             body = self.visit(node.body)
-            n = Call(Name('Lambda', Load()), [Tuple(args, Load()), body], [], None, None)
+            n = Call(Name('Lambda', Load()),
+                [Tuple(args, Load()), body], [], None, None)
             return fix_missing_locations(n)
+
 
 def parse_expr(s, local_dict):
     """
@@ -83,7 +85,7 @@ def parse_expr(s, local_dict):
         try:
             a = parse(s.strip(), mode="eval")
         except SyntaxError:
-            raise SympifyError("Cannot parse %s." %repr(s))
+            raise SympifyError("Cannot parse %s." % repr(s))
         a = Transform(local_dict, global_dict).visit(a)
         e = compile(a, "<string>", "eval")
         return eval(e, global_dict, local_dict)
@@ -94,4 +96,4 @@ def parse_expr(s, local_dict):
         try:
             return SymPyParser(local_dict=local_dict).parse_expr(s)
         except SyntaxError:
-            raise SympifyError("Cannot parse %s." %repr(s))
+            raise SympifyError("Cannot parse %s." % repr(s))

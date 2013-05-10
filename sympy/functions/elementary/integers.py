@@ -8,7 +8,9 @@ from sympy.core.evalf import get_integer_part, PrecisionExhausted
 ######################### FLOOR and CEILING FUNCTIONS #########################
 ###############################################################################
 
+
 class RoundFunction(Function):
+    """The base class for rounding functions."""
 
     nargs = 1
 
@@ -41,11 +43,13 @@ class RoundFunction(Function):
             return ipart
 
         # Evaluate npart numerically if independent of spart
-        orthogonal = (npart.is_real and spart.is_imaginary) or \
-            (npart.is_imaginary and spart.is_real)
-        if npart and ((not spart) or orthogonal):
+        if npart and (
+            not spart or
+            npart.is_real and spart.is_imaginary or
+                npart.is_imaginary and spart.is_real):
             try:
-                re, im = get_integer_part(npart, cls._dir, {}, return_ints=True)
+                re, im = get_integer_part(
+                    npart, cls._dir, {}, return_ints=True)
                 ipart += C.Integer(re) + C.Integer(im)*S.ImaginaryUnit
                 npart = S.Zero
             except (PrecisionExhausted, NotImplementedError):
@@ -68,6 +72,7 @@ class RoundFunction(Function):
     def _eval_is_integer(self):
         return self.args[0].is_real
 
+
 class floor(RoundFunction):
     """
     Floor is a univariate function which returns the largest integer
@@ -89,6 +94,10 @@ class floor(RoundFunction):
         >>> floor(-I/2)
         -I
 
+    See Also
+    ========
+
+    ceiling
     """
     _dir = -1
 
@@ -96,11 +105,11 @@ class floor(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             if arg.is_Rational:
-                if not arg.q:
-                    return arg
                 return C.Integer(arg.p // arg.q)
             elif arg.is_Float:
                 return C.Integer(int(arg.floor()))
+            else:
+                return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[0]
 
@@ -113,9 +122,10 @@ class floor(RoundFunction):
             if direction.is_positive:
                 return r
             else:
-                return r-1
+                return r - 1
         else:
             return r
+
 
 class ceiling(RoundFunction):
     """
@@ -138,6 +148,10 @@ class ceiling(RoundFunction):
         >>> ceiling(I/2)
         I
 
+    See Also
+    ========
+
+    floor
     """
     _dir = 1
 
@@ -145,11 +159,11 @@ class ceiling(RoundFunction):
     def _eval_number(cls, arg):
         if arg.is_Number:
             if arg.is_Rational:
-                if not arg.q:
-                    return arg
                 return -C.Integer(-arg.p // arg.q)
             elif arg.is_Float:
                 return C.Integer(int(arg.ceiling()))
+            else:
+                return arg
         if arg.is_NumberSymbol:
             return arg.approximation_interval(C.Integer)[1]
 

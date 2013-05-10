@@ -2,10 +2,12 @@
 
 """Differential equations example
 
-Demonstrates solving 1st and 2nd degree linear ordinary differential equations.
+Demonstrates solving 1st and 2nd degree linear ordinary differential
+equations.
 """
 
 from sympy import dsolve, Eq, Function, sin, Symbol
+
 
 def main():
     x = Symbol("x")

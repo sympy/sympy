@@ -1,6 +1,7 @@
 """Constants (like hbar) related to quantum mechanics."""
 
 from sympy.core.numbers import NumberSymbol
+from sympy.core.singleton import Singleton
 from sympy.printing.pretty.stringpict import prettyForm
 import sympy.mpmath.libmp as mlib
 
@@ -12,8 +13,9 @@ __all__ = [
     'hbar'
 ]
 
+
 class HBar(NumberSymbol):
-    """Reduced Plank's constant in numerical and symbolic form [1].
+    """Reduced Plank's constant in numerical and symbolic form [1]_.
 
     Examples
     ========
@@ -25,7 +27,7 @@ class HBar(NumberSymbol):
     References
     ==========
 
-    [1] http://en.wikipedia.org/wiki/Planck_constant
+    .. [1] http://en.wikipedia.org/wiki/Planck_constant
     """
 
     is_real = True
@@ -33,6 +35,7 @@ class HBar(NumberSymbol):
     is_negative = False
     is_irrational = True
 
+    __metaclass__ = Singleton
     __slots__ = []
 
     def _as_mpf_val(self, prec):
@@ -45,7 +48,9 @@ class HBar(NumberSymbol):
         return 'hbar'
 
     def _pretty(self, printer, *args):
-        return prettyForm(u'\u210f')
+        if printer._use_unicode:
+            return prettyForm(u'\u210f')
+        return prettyForm('hbar')
 
     def _latex(self, printer, *args):
         return r'\hbar'

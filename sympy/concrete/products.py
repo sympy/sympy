@@ -1,38 +1,48 @@
-from sympy.core import Expr, S, C, Mul, sympify, Symbol, Tuple
-from sympy.core.compatibility import is_sequence
+from sympy.core.containers import Tuple
+from sympy.core.core import C
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
+from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
+
 
 class Product(Expr):
     """Represents unevaluated product.
 
     """
 
-    def __new__(cls, term, *symbols, **assumptions):
-        term = sympify(term)
+    __slots__ = ['is_commutative']
 
-        if term is S.NaN:
+    def __new__(cls, function, *symbols, **assumptions):
+        from sympy.integrals.integrals import _process_limits
+
+        # Any embedded piecewise functions need to be brought out to the
+        # top level so that integration can go into piecewise mode at the
+        # earliest possible moment.
+        function = piecewise_fold(sympify(function))
+
+        if function is S.NaN:
             return S.NaN
 
-        if len(symbols) == 1:
-            symbol = symbols[0]
+        if not symbols:
+            raise ValueError("Product variables must be given")
 
-            if isinstance(symbol, C.Equality):
-                k = symbol.lhs
-                a = symbol.rhs.start
-                n = symbol.rhs.end
-            elif is_sequence(symbol):
-                k, a, n = symbol
-            else:
-                raise ValueError("Invalid arguments")
+        limits, sign = _process_limits(*symbols)
 
-            k, a, n = map(sympify, (k, a, n))
-
-        else:
-            raise NotImplementedError
+        # Only limits with lower and upper bounds are supported; the indefinite
+        # Product is not supported
+        if any(len(l) != 3 or None in l for l in limits):
+            raise ValueError(
+                'Product requires values for lower and upper bounds.')
 
         obj = Expr.__new__(cls, **assumptions)
-        obj._args = (term, Tuple(k, a, n))
+        arglist = [sign*function]
+        arglist.extend(limits)
+        obj._args = tuple(arglist)
+        obj.is_commutative = function.is_commutative  # limits already checked
 
         return obj
 
@@ -42,20 +52,19 @@ class Product(Expr):
     function = term
 
     @property
-    def index(self):
-        return self._args[1][0]
-
-    @property
-    def lower(self):
-        return self._args[1][1]
-
-    @property
-    def upper(self):
-        return self._args[1][2]
-
-    @property
     def limits(self):
-        return (self._args[1],)
+        return self._args[1:]
+
+    @property
+    def variables(self):
+        """Return a list of the product variables
+
+        >>> from sympy import Product
+        >>> from sympy.abc import x, i
+        >>> Product(x**i, (i, 1, 3)).variables
+        [i]
+        """
+        return [l[0] for l in self.limits]
 
     @property
     def free_symbols(self):
@@ -69,11 +78,10 @@ class Product(Expr):
         >>> Product(x, (x, y, 1)).free_symbols
         set([y])
         """
-        from sympy.concrete.summations import _free_symbols
-
+        from sympy.integrals.integrals import _free_symbols
         if self.function.is_zero or self.function == 1:
             return set()
-        return _free_symbols(self.function, self.limits)
+        return _free_symbols(self)
 
     @property
     def is_zero(self):
@@ -86,8 +94,8 @@ class Product(Expr):
         """
         Return True if the Product will result in a number, else False.
 
-        sympy considers anything that will result in a number to have
-        is_number == True.
+        Examples
+        ========
 
         >>> from sympy import log, Product
         >>> from sympy.abc import x, y, z
@@ -105,33 +113,43 @@ class Product(Expr):
 
         return self.function.is_zero or self.function == 1 or not self.free_symbols
 
+    def as_dummy(self):
+        from sympy.integrals.integrals import _as_dummy
+        return _as_dummy(self)
+
     def doit(self, **hints):
-        term = self.term
-        if term == 0:
-            return S.Zero
-        elif term == 1:
-            return S.One
-        lower = self.lower
-        upper = self.upper
+        f = g = self.function
+        for index, limit in enumerate(self.limits):
+            i, a, b = limit
+            dif = b - a
+            if dif.is_Integer and dif < 0:
+                a, b = b, a
+
+            g = self._eval_product(f, (i, a, b))
+            if g is None:
+                return Product(powsimp(f), *self.limits[index:])
+            else:
+                f = g
+
         if hints.get('deep', True):
-            term = term.doit(**hints)
-            lower = lower.doit(**hints)
-            upper = upper.doit(**hints)
-        dif = upper - lower
-        if dif.is_Number and dif < 0:
-            upper, lower = lower, upper
-
-        prod = self._eval_product(lower, upper, term)
-
-        if prod is not None:
-            return powsimp(prod)
+            return f.doit(**hints)
         else:
-            return self
+            return powsimp(f)
 
-    def _eval_product(self, a, n, term):
-        from sympy import summation
+    def _eval_adjoint(self):
+        if self.is_commutative:
+            return Product(self.function.adjoint(), *self.limits)
+        return None
 
-        k = self.index
+    def _eval_conjugate(self):
+        return Product(self.function.conjugate(), *self.limits)
+
+    def _eval_product(self, term, limits):
+        from sympy.concrete.delta import deltaproduct, _has_simple_delta
+        from sympy.concrete.summations import summation
+        from sympy.functions import KroneckerDelta
+
+        (k, a, n) = limits
 
         if k not in term.free_symbols:
             return term**(n - a + 1)
@@ -139,9 +157,12 @@ class Product(Expr):
         if a == n:
             return term.subs(k, a)
 
+        if term.has(KroneckerDelta) and _has_simple_delta(term, limits[0]):
+            return deltaproduct(term, limits)
+
         dif = n - a
         if dif.is_Integer:
-            return Mul(*[term.subs(k, a + i) for i in xrange(dif  + 1)])
+            return Mul(*[term.subs(k, a + i) for i in xrange(dif + 1)])
 
         elif term.is_polynomial(k):
             poly = term.as_poly(k)
@@ -151,20 +172,20 @@ class Product(Expr):
             all_roots = roots(poly, multiple=True)
 
             for r in all_roots:
-                A *= C.RisingFactorial(a-r, n-a+1)
+                A *= C.RisingFactorial(a - r, n - a + 1)
                 Q *= n - r
 
             if len(all_roots) < poly.degree():
                 arg = quo(poly, Q.as_poly(k))
                 B = Product(arg, (k, a, n)).doit()
 
-            return poly.LC()**(n-a+1) * A * B
+            return poly.LC()**(n - a + 1) * A * B
 
         elif term.is_Add:
             p, q = term.as_numer_denom()
 
-            p = self._eval_product(a, n, p)
-            q = self._eval_product(a, n, q)
+            p = self._eval_product(p, (k, a, n))
+            q = self._eval_product(q, (k, a, n))
 
             return p / q
 
@@ -172,7 +193,7 @@ class Product(Expr):
             exclude, include = [], []
 
             for t in term.args:
-                p = self._eval_product(a, n, t)
+                p = self._eval_product(t, (k, a, n))
 
                 if p is not None:
                     exclude.append(p)
@@ -193,16 +214,64 @@ class Product(Expr):
 
                 return term.base**s
             elif not term.exp.has(k):
-                p = self._eval_product(a, n, term.base)
+                p = self._eval_product(term.base, (k, a, n))
 
                 if p is not None:
                     return p**term.exp
 
+        elif isinstance(term, Product):
+            evaluated = term.doit()
+            f = self._eval_product(evaluated, limits)
+            if f is None:
+                return Product(evaluated, limits)
+            else:
+                return f
+
+    def _eval_transpose(self):
+        if self.is_commutative:
+            return Product(self.function.transpose(), *self.limits)
+        return None
+
+
+    def _eval_subs(self, old, new):
+        from sympy.integrals.integrals import _eval_subs
+        return _eval_subs(self, old, new)
+
+
 def product(*args, **kwargs):
+    r"""
+    Compute the product.
+
+    The notation for symbols is similiar to the notation used in Sum or
+    Integral. product(f, (i, a, b)) computes the product of f with
+    respect to i from a to b, i.e.,
+
+    ::
+
+                                     b
+                                   _____
+        product(f(n), (i, a, b)) = |   | f(n)
+                                   |   |
+                                   i = a
+
+    If it cannot compute the product, it returns an unevaluated Product object.
+    Repeated products can be computed by introducing additional symbols tuples::
+
+    >>> from sympy import product, symbols
+    >>> i, n, m, k = symbols('i n m k', integer=True)
+
+    >>> product(i, (i, 1, k))
+    k!
+    >>> product(m, (i, 1, k))
+    m**k
+    >>> product(i, (i, 1, k), (k, 1, n))
+    Product(k!, (k, 1, n))
+
+    """
+
     prod = Product(*args, **kwargs)
 
     if isinstance(prod, Product):
         return prod.doit(deep=False)
     else:
         return prod
-

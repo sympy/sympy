@@ -1,6 +1,7 @@
 from sympy.core import S, Add
 from sympy.assumptions import Q, ask
-from sympy.logic.boolalg import fuzzy_not
+from sympy.core.logic import fuzzy_not
+
 
 def refine(expr, assumptions=True):
     """
@@ -10,7 +11,8 @@ def refine(expr, assumptions=True):
     in it were replaced by explicit numerical expressions satisfying
     the assumptions.
 
-    Examples::
+    Examples
+    ========
 
         >>> from sympy import refine, sqrt, Q
         >>> from sympy.abc import x
@@ -26,17 +28,20 @@ def refine(expr, assumptions=True):
         expr = expr.func(*args)
     name = expr.__class__.__name__
     handler = handlers_dict.get(name, None)
-    if handler is None: return expr
+    if handler is None:
+        return expr
     new_expr = handler(expr, assumptions)
     if (new_expr is None) or (expr == new_expr):
         return expr
     return refine(new_expr, assumptions)
 
+
 def refine_abs(expr, assumptions):
     """
     Handler for the absolute value.
 
-    Examples::
+    Examples
+    ========
 
     >>> from sympy import Symbol, Q, refine, Abs
     >>> from sympy.assumptions.refine import refine_abs
@@ -55,6 +60,7 @@ def refine_abs(expr, assumptions):
         return arg
     if ask(Q.negative(arg), assumptions):
         return -arg
+
 
 def refine_Pow(expr, assumptions):
     """
@@ -115,7 +121,7 @@ def refine_Pow(expr, assumptions):
                         odd_terms.add(t)
 
                 terms -= even_terms
-                if len(odd_terms)%2:
+                if len(odd_terms) % 2:
                     terms -= odd_terms
                     new_coeff = (coeff + S.One) % 2
                 else:
@@ -154,7 +160,7 @@ def refine_exp(expr, assumptions):
                     return S.ImaginaryUnit
 
 handlers_dict = {
-    'Abs'        : refine_abs,
-    'Pow'        : refine_Pow,
-    'exp'        : refine_exp,
+    'Abs': refine_abs,
+    'Pow': refine_Pow,
+    'exp': refine_exp,
 }

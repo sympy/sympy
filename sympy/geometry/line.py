@@ -1,7 +1,7 @@
 """Line-like geometrical entities.
 
 Contains
---------
+========
 LinearEntity
 Line
 Ray
@@ -10,7 +10,8 @@ Segment
 """
 from sympy.core import S, C, sympify, Dummy
 from sympy.functions.elementary.trigonometric import _pi_coeff as pi_coeff
-from sympy.simplify import simplify
+from sympy.core.logic import fuzzy_and
+from sympy.simplify.simplify import simplify
 from sympy.solvers import solve
 from sympy.geometry.exceptions import GeometryError
 from entity import GeometryEntity
@@ -18,15 +19,19 @@ from point import Point
 from util import _symbol
 
 # TODO: this should be placed elsewhere and reused in other modules
+
+
 class Undecidable(ValueError):
     pass
+
 
 class LinearEntity(GeometryEntity):
     """An abstract base class for all linear entities (line, ray and segment)
     in a 2-dimensional Euclidean space.
 
     Attributes
-    ----------
+    ==========
+
     p1
     p2
     coefficients
@@ -34,11 +39,18 @@ class LinearEntity(GeometryEntity):
     points
 
     Notes
-    -----
+    =====
+
     This is an abstract class and is not meant to be instantiated.
     Subclasses should implement the following methods:
-        __eq__
-        __contains__
+
+        * __eq__
+        * contains
+
+    See Also
+    ========
+
+    sympy.geometry.entity.GeometryEntity
 
     """
 
@@ -47,7 +59,7 @@ class LinearEntity(GeometryEntity):
         p2 = Point(p2)
         if p1 == p2:
             # Rolygon returns lower priority classes...should LinearEntity, too?
-            return p1 # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
+            return p1  # raise ValueError("%s.__new__ requires two unique Points." % cls.__name__)
 
         return GeometryEntity.__new__(cls, p1, p2, **kwargs)
 
@@ -56,11 +68,13 @@ class LinearEntity(GeometryEntity):
         """The first defining point of a linear entity.
 
         See Also
-        --------
-        Point
+        ========
+
+        sympy.geometry.point.Point
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l = Line(p1, p2)
@@ -68,18 +82,20 @@ class LinearEntity(GeometryEntity):
         Point(0, 0)
 
         """
-        return self.__getitem__(0)
+        return self.args[0]
 
     @property
     def p2(self):
         """The second defining point of a linear entity.
 
         See Also
-        --------
-        Point
+        ========
+
+        sympy.geometry.point.Point
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l = Line(p1, p2)
@@ -87,15 +103,20 @@ class LinearEntity(GeometryEntity):
         Point(5, 3)
 
         """
-        return self.__getitem__(1)
+        return self.args[1]
 
     @property
     def coefficients(self):
-        """The coefficients (a, b, c) for the linear equation
-        ax + by + c = 0.
+        """The coefficients (`a`, `b`, `c`) for the linear equation `ax + by + c = 0`.
+
+        See Also
+        ========
+
+        sympy.geometry.line.Line.equation
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> from sympy.abc import x, y
         >>> p1, p2 = Point(0, 0), Point(5, 3)
@@ -110,13 +131,14 @@ class LinearEntity(GeometryEntity):
 
         """
         p1, p2 = self.points
-        if p1[0] == p2[0]:
-            return (S.One, S.Zero, -p1[0])
-        elif p1[1] == p2[1]:
-            return (S.Zero, S.One, -p1[1])
-        return (self.p1[1]-self.p2[1],
-                self.p2[0]-self.p1[0],
-                self.p1[0]*self.p2[1] - self.p1[1]*self.p2[0])
+        if p1.x == p2.x:
+            return (S.One, S.Zero, -p1.x)
+        elif p1.y == p2.y:
+            return (S.Zero, S.One, -p1.y)
+        return tuple([simplify(i) for i in
+               (self.p1.y - self.p2.y,
+                self.p2.x - self.p1.x,
+                self.p1.x*self.p2.y - self.p1.y*self.p2.x)])
 
     def is_concurrent(*lines):
         """Is a sequence of linear entities concurrent?
@@ -125,16 +147,19 @@ class LinearEntity(GeometryEntity):
         intersect at a single point.
 
         Parameters
-        ----------
+        ==========
+
         lines : a sequence of linear entities.
 
         Returns
-        -------
-        True if the set of linear entities are concurrent, False
-        otherwise.
+        =======
+
+        True : if the set of linear entities are concurrent,
+        False : otherwise.
 
         Notes
-        -----
+        =====
+
         Simply take the first two lines and find their intersection.
         If there is no intersection, then the first two lines were
         parallel and had no intersection so concurrency is impossible
@@ -142,8 +167,14 @@ class LinearEntity(GeometryEntity):
         intersection point of the first two lines is a member on
         the rest of the lines. If so, the lines are concurrent.
 
+        See Also
+        ========
+
+        sympy.geometry.util.intersection
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> p3, p4 = Point(-2, -2), Point(0, 2)
@@ -165,7 +196,8 @@ class LinearEntity(GeometryEntity):
         try:
             # Get the intersection (if parallel)
             p = lines[0].intersection(lines[1])
-            if len(p) == 0: return False
+            if len(p) == 0:
+                return False
 
             # Make sure the intersection is on every linear entity
             for line in lines[2:]:
@@ -179,16 +211,25 @@ class LinearEntity(GeometryEntity):
         """Are two linear entities parallel?
 
         Parameters
-        ----------
+        ==========
+
         l1 : LinearEntity
         l2 : LinearEntity
 
         Returns
-        -------
-        True if l1 and l2 are parallel, False otherwise.
+        =======
+
+        True : if l1 and l2 are parallel,
+        False : otherwise.
+
+        See Also
+        ========
+
+        coefficients
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(1, 1)
         >>> p3, p4 = Point(3, 4), Point(6, 7)
@@ -210,19 +251,28 @@ class LinearEntity(GeometryEntity):
             return False
 
     def is_perpendicular(l1, l2):
-        """Are two linear entities parallel?
+        """Are two linear entities perpendicular?
 
         Parameters
-        ----------
+        ==========
+
         l1 : LinearEntity
         l2 : LinearEntity
 
         Returns
-        -------
-        True if l1 and l2 are perpendicular, False otherwise.
+        =======
+
+        True : if l1 and l2 are perpendicular,
+        False : otherwise.
+
+        See Also
+        ========
+
+        coefficients
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(-1, 1)
         >>> l1, l2 = Line(p1, p2), Line(p1, p3)
@@ -246,24 +296,35 @@ class LinearEntity(GeometryEntity):
         """The angle formed between the two linear entities.
 
         Parameters
-        ----------
+        ==========
+
         l1 : LinearEntity
         l2 : LinearEntity
 
         Returns
-        -------
+        =======
+
         angle : angle in radians
 
         Notes
-        -----
+        =====
+
         From the dot product of vectors v1 and v2 it is known that:
-            dot(v1, v2) = |v1|*|v2|*cos(A)
+
+            ``dot(v1, v2) = |v1|*|v2|*cos(A)``
+
         where A is the angle formed between the two vectors. We can
         get the directional vectors of the two lines and readily
         find the angle between the two using the above formula.
 
+        See Also
+        ========
+
+        is_perpendicular
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(0, 4), Point(2, 0)
         >>> l1, l2 = Line(p1, p2), Line(p1, p3)
@@ -273,22 +334,30 @@ class LinearEntity(GeometryEntity):
         """
         v1 = l1.p2 - l1.p1
         v2 = l2.p2 - l2.p1
-        return C.acos((v1[0]*v2[0] + v1[1]*v2[1]) / (abs(v1)*abs(v2)))
+        return C.acos(v1.dot(v2)/(abs(v1)*abs(v2)))
 
     def parallel_line(self, p):
         """Create a new Line parallel to this linear entity which passes
         through the point `p`.
 
         Parameters
-        ----------
+        ==========
+
         p : Point
 
         Returns
-        -------
+        =======
+
         line : Line
 
+        See Also
+        ========
+
+        is_parallel
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
         >>> l1 = Line(p1, p2)
@@ -307,15 +376,23 @@ class LinearEntity(GeometryEntity):
         through the point `p`.
 
         Parameters
-        ----------
+        ==========
+
         p : Point
 
         Returns
-        -------
+        =======
+
         line : Line
 
+        See Also
+        ========
+
+        is_perpendicular, perpendicular_segment
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(2, 3), Point(-2, 2)
         >>> l1 = Line(p1, p2)
@@ -326,35 +403,47 @@ class LinearEntity(GeometryEntity):
         True
 
         """
-        d1, d2 = self.p1 - self.p2
-        if d2 == 0: # If an horizontal line
-            if p[1] == self.p1[1]: # if p is on this linear entity
-                p2 = Point(p[0], p[1] + 1)
-                return Line(p, p2)
+        d1, d2 = (self.p1 - self.p2).args
+        if d2 == 0:  # If a horizontal line
+            if p.y == self.p1.y:  # if p is on this linear entity
+                return Line(p, p + Point(0, 1))
             else:
-                p2 = Point(p[0], self.p1[1])
+                p2 = Point(p.x, self.p1.y)
                 return Line(p, p2)
         else:
-            p2 = Point(p[0] - d2, p[1] + d1)
+            p2 = Point(p.x - d2, p.y + d1)
             return Line(p, p2)
 
     def perpendicular_segment(self, p):
         """Create a perpendicular line segment from `p` to this line.
 
+        The enpoints of the segment are ``p`` and the closest point in
+        the line containing self. (If self is not a line, the point might
+        not be in self.)
+
         Parameters
-        ----------
+        ==========
+
         p : Point
 
         Returns
-        -------
+        =======
+
         segment : Segment
 
         Notes
-        -----
+        =====
+
         Returns `p` itself if `p` is on this linear entity.
 
+        See Also
+        ========
+
+        perpendicular_line
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, 2)
         >>> l1 = Line(p1, p2)
@@ -363,16 +452,30 @@ class LinearEntity(GeometryEntity):
         True
         >>> p3 in s1
         True
+        >>> l1.perpendicular_segment(Point(4, 0))
+        Segment(Point(2, 2), Point(4, 0))
 
         """
         if p in self:
             return p
         pl = self.perpendicular_line(p)
-        p2 = self.intersection(pl)[0]
+        p2 = Line(self).intersection(pl)[0]
         return Segment(p, p2)
 
     @property
     def length(self):
+        """
+        The length of the line.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(0, 0), Point(3, 5)
+        >>> l1 = Line(p1, p2)
+        >>> l1.length
+        oo
+        """
         return S.Infinity
 
     @property
@@ -380,11 +483,18 @@ class LinearEntity(GeometryEntity):
         """The slope of this linear entity, or infinity if vertical.
 
         Returns
-        -------
+        =======
+
         slope : number or sympy expression
 
+        See Also
+        ========
+
+        coefficients
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(3, 5)
         >>> l1 = Line(p1, p2)
@@ -397,7 +507,7 @@ class LinearEntity(GeometryEntity):
         oo
 
         """
-        d1, d2 = self.p1 - self.p2
+        d1, d2 = (self.p1 - self.p2).args
         if d1 == 0:
             return S.Infinity
         return simplify(d2/d1)
@@ -407,15 +517,18 @@ class LinearEntity(GeometryEntity):
         """The two points used to define this linear entity.
 
         Returns
-        -------
+        =======
+
         points : tuple of Points
 
         See Also
-        --------
-        Point
+        ========
+
+        sympy.geometry.point.Point
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 11)
         >>> l1 = Line(p1, p2)
@@ -429,25 +542,25 @@ class LinearEntity(GeometryEntity):
         """Project a point, line, ray, or segment onto this linear entity.
 
         Parameters
-        ----------
+        ==========
+
         other : Point or LinearEntity (Line, Ray, Segment)
 
         Returns
-        -------
+        =======
+
         projection : Point or LinearEntity (Line, Ray, Segment)
-            The return type matches the type of the parameter `other`.
+            The return type matches the type of the parameter ``other``.
 
         Raises
-        ------
+        ======
+
         GeometryError
             When method is unable to perform projection.
 
-        See Also
-        --------
-        Point
-
         Notes
-        -----
+        =====
+
         A projection involves taking the two points that define
         the linear entity and projecting those points onto a
         Line and then reforming the linear entity using these
@@ -457,8 +570,14 @@ class LinearEntity(GeometryEntity):
         perpendicular line through P and L and finding its
         intersection with L.
 
+        See Also
+        ========
+
+        sympy.geometry.point.Point, perpendicular_line
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line, Segment, Rational
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(Rational(1, 2), 0)
         >>> l1 = Line(p1, p2)
@@ -473,7 +592,7 @@ class LinearEntity(GeometryEntity):
         """
         tline = Line(self.p1, self.p2)
 
-        def project(p):
+        def _project(p):
             """Project a point onto the line representing self."""
             if p in tline:
                 return p
@@ -482,10 +601,10 @@ class LinearEntity(GeometryEntity):
 
         projected = None
         if isinstance(o, Point):
-            return project(o)
+            return _project(o)
         elif isinstance(o, LinearEntity):
-            n_p1 = project(o.p1)
-            n_p2 = project(o.p2)
+            n_p1 = _project(o.p1)
+            n_p2 = _project(o.p2)
             if n_p1 == n_p2:
                 projected = n_p1
             else:
@@ -495,7 +614,8 @@ class LinearEntity(GeometryEntity):
         if projected is None:
             n1 = self.__class__.__name__
             n2 = o.__class__.__name__
-            raise GeometryError("Do not know how to project %s onto %s" % (n2, n1))
+            raise GeometryError(
+                "Do not know how to project %s onto %s" % (n2, n1))
 
         return self.intersection(projected)[0]
 
@@ -503,15 +623,23 @@ class LinearEntity(GeometryEntity):
         """The intersection with another geometrical entity.
 
         Parameters
-        ----------
+        ==========
+
         o : Point or LinearEntity
 
         Returns
-        -------
+        =======
+
         intersection : list of geometrical entities
 
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line, Segment
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(7, 7)
         >>> l1 = Line(p1, p2)
@@ -538,7 +666,7 @@ class LinearEntity(GeometryEntity):
             a1, b1, c1 = self.coefficients
             a2, b2, c2 = o.coefficients
             t = simplify(a1*b2 - a2*b1)
-            if t == 0: # are parallel?
+            if t.equals(0) is not False:  # assume they are parallel
                 if isinstance(self, Line):
                     if o.p1 in self:
                         return [o]
@@ -551,7 +679,7 @@ class LinearEntity(GeometryEntity):
                     if isinstance(o, Ray):
                         # case 1, rays in the same direction
                         if self.xdirection == o.xdirection:
-                            if self.source[0] < o.source[0]:
+                            if self.source.x < o.source.x:
                                 return [o]
                             return [self]
                         # case 2, rays in the opposite directions
@@ -609,25 +737,106 @@ class LinearEntity(GeometryEntity):
             px = simplify((b1*c2 - c1*b2) / t)
             py = simplify((a2*c1 - a1*c2) / t)
             inter = Point(px, py)
-            if inter in self and inter in o:
-                return [inter]
+            # we do not use a simplistic 'inter in self and inter in o'
+            # because that requires an equality test that is fragile;
+            # instead we employ some diagnostics to see if the intersection
+            # is valid
+
+            def inseg(self):
+                def _between(a, b, c):
+                    return c >= a and c <= b or c <= a and c >= b
+                if _between(self.p1.x, self.p2.x, inter.x) and \
+                        _between(self.p1.y, self.p2.y, inter.y):
+                    return True
+
+            def inray(self):
+                sray = Ray(self.p1, inter)
+                if sray.xdirection == self.xdirection and \
+                        sray.ydirection == self.ydirection:
+                    return True
+            for i in range(2):
+                if isinstance(self, Line):
+                    if isinstance(o, Line):
+                        return [inter]
+                    elif isinstance(o, Ray) and inray(o):
+                        return [inter]
+                    elif isinstance(o, Segment) and inseg(o):
+                        return [inter]
+                elif isinstance(self, Ray) and inray(self):
+                    if isinstance(o, Ray) and inray(o):
+                        return [inter]
+                    elif isinstance(o, Segment) and inseg(o):
+                        return [inter]
+                elif isinstance(self, Segment) and inseg(self):
+                    if isinstance(o, Segment) and inseg(o):
+                        return [inter]
+                self, o = o, self
             return []
 
         return o.intersection(self)
+
+    def arbitrary_point(self, parameter='t'):
+        """A parameterized point on the Line.
+
+        Parameters
+        ==========
+
+        parameter : str, optional
+            The name of the parameter which will be used for the parametric
+            point. The default value is 't'. When this parameter is 0, the
+            first point used to define the line will be returned, and when
+            it is 1 the second point will be returned.
+
+        Returns
+        =======
+
+        point : Point
+
+        Raises
+        ======
+
+        ValueError
+            When ``parameter`` already appears in the Line's definition.
+
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2 = Point(1, 0), Point(5, 3)
+        >>> l1 = Line(p1, p2)
+        >>> l1.arbitrary_point()
+        Point(4*t + 1, 3*t)
+
+        """
+        t = _symbol(parameter)
+        if t.name in (f.name for f in self.free_symbols):
+            raise ValueError('Symbol %s already appears in object '
+            'and cannot be used as a parameter.' % t.name)
+        x = simplify(self.p1.x + t*(self.p2.x - self.p1.x))
+        y = simplify(self.p1.y + t*(self.p2.y - self.p1.y))
+        return Point(x, y)
 
     def random_point(self):
         """A random point on a LinearEntity.
 
         Returns
-        -------
+        =======
+
         point : Point
 
         See Also
-        --------
-        Point
+        ========
+
+        sympy.geometry.point.Point
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
@@ -648,40 +857,70 @@ class LinearEntity(GeometryEntity):
         if self.slope is S.Infinity:
             if isinstance(self, Ray):
                 if self.ydirection is S.Infinity:
-                    lower = self.p1[1]
+                    lower = self.p1.y
                 else:
-                    upper = self.p1[1]
+                    upper = self.p1.y
             elif isinstance(self, Segment):
-                lower = self.p1[1]
-                upper = self.p2[1]
+                lower = self.p1.y
+                upper = self.p2.y
 
-            x = self.p1[0]
+            x = self.p1.x
             y = randint(lower, upper)
         else:
             if isinstance(self, Ray):
                 if self.xdirection is S.Infinity:
-                    lower = self.p1[0]
+                    lower = self.p1.x
                 else:
-                    upper = self.p1[0]
+                    upper = self.p1.x
             elif isinstance(self, Segment):
-                lower = self.p1[0]
-                upper = self.p2[0]
+                lower = self.p1.x
+                upper = self.p2.x
 
             a, b, c = self.coefficients
             x = randint(lower, upper)
-            y = simplify((-c - a*x) / b)
+            y = (-c - a*x) / b
         return Point(x, y)
 
     def is_similar(self, other):
-        """Return True if self and other are contained in the same line."""
-        def norm(a, b, c):
+        """
+        Return True if self and other are contained in the same line.
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Line
+        >>> p1, p2, p3 = Point(0, 1), Point(3, 4), Point(2, 3)
+        >>> l1 = Line(p1, p2)
+        >>> l2 = Line(p1, p3)
+        >>> l1.is_similar(l2)
+        True
+        """
+        def _norm(a, b, c):
             if a != 0:
                 return 1, b/a, c/a
             elif b != 0:
                 return a/b, 1, c/b
             else:
                 return c
-        return norm(*self.coefficients) == norm(*other.coefficients)
+        return _norm(*self.coefficients) == _norm(*other.coefficients)
+
+    def __contains__(self, other):
+        """Return a definitive answer or else raise an error if it cannot
+        be determined that other is on the boundaries of self."""
+        result = self.contains(other)
+
+        if result is not None:
+            return result
+        else:
+            raise Undecidable(
+                "can't decide whether '%s' contains '%s'" % (self, other))
+
+    def contains(self, other):
+        """Subclasses should implement this method and should return
+            True if other is on the boundaries of self;
+            False if not on the boundaries of self;
+            None if a determination cannot be made."""
+        raise NotImplementedError()
 
     def __eq__(self, other):
         """Subclasses should implement this method."""
@@ -697,27 +936,31 @@ class Line(LinearEntity):
     A line is declared with two distinct points or a point and slope
     as defined using keyword `slope`.
 
-    Note
-    ----
+    Notes
+    =====
+
     At the moment only lines in a 2D space can be declared, because
     Points can be defined only for 2D spaces.
 
     Parameters
-    ----------
+    ==========
+
     p1 : Point
     pt : Point
-    slope: sympy expression
+    slope : sympy expression
 
     See Also
-    --------
-    Point
+    ========
+
+    sympy.geometry.point.Point
 
     Examples
-    --------
+    ========
+
     >>> import sympy
     >>> from sympy import Point
     >>> from sympy.abc import L
-    >>> from sympy.geometry import Line
+    >>> from sympy.geometry import Line, Segment
     >>> L = Line(Point(2,3), Point(3,5))
     >>> L
     Line(Point(2, 3), Point(3, 5))
@@ -728,23 +971,32 @@ class Line(LinearEntity):
     >>> L.coefficients
     (-2, 1, 1)
 
-    Instantiate with keyword `slope`:
+    Instantiate with keyword ``slope``:
 
-    >>> Line(Point(0, 0), slope=2)
-    Line(Point(0, 0), Point(1, 2))
+    >>> Line(Point(0, 0), slope=0)
+    Line(Point(0, 0), Point(1, 0))
 
+    Instantiate with another linear object
+
+    >>> s = Segment((0, 0), (0, 1))
+    >>> Line(s).equation()
+    x
     """
 
     def __new__(cls, p1, pt=None, slope=None, **kwargs):
-        p1 = Point(p1)
-        if pt and slope is None:
+        if isinstance(p1, LinearEntity):
+            p1, pt = p1.args
+        else:
+            p1 = Point(p1)
+        if pt is not None and slope is None:
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point; if it was meant to be a slope it should be given with keyword "slope".')
+                raise ValueError('The 2nd argument was not a valid Point. '
+                'If it was a slope, enter it with keyword "slope".')
             if p1 == p2:
                 raise ValueError('A line requires two distinct points.')
-        elif slope and pt is None:
+        elif slope is not None and pt is None:
             slope = sympify(slope)
             if slope.is_bounded is False:
                 # when unbounded slope, don't change x
@@ -757,59 +1009,26 @@ class Line(LinearEntity):
 
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Line.
-
-        Parameters
-        ----------
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        -------
-        point : Point
-
-        Raises
-        ------
-        ValueError
-            When `parameter` already appears in the Line's definition.
-
-        See Also
-        --------
-        Point
-
-        Examples
-        --------
-        >>> from sympy import Point, Line
-        >>> p1, p2 = Point(1, 0), Point(5, 3)
-        >>> l1 = Line(p1, p2)
-        >>> l1.arbitrary_point()
-        Point(4*t + 1, 3*t)
-
-        """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
-        y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
-        return Point(x, y)
-
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of line.
+        """The plot interval for the default geometric plot of line. Gives
+        values that will produce a line that is +/- 5 units long (where a
+        unit is the distance between the two points that define the line).
 
         Parameters
-        ----------
+        ==========
+
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
+
         plot_interval : list (plot interval)
             [parameter, lower_bound, upper_bound]
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
@@ -824,18 +1043,26 @@ class Line(LinearEntity):
         """The equation of the line: ax + by + c.
 
         Parameters
-        ----------
+        ==========
+
         x : str, optional
             The name to use for the x-axis, default value is 'x'.
         y : str, optional
             The name to use for the y-axis, default value is 'y'.
 
         Returns
-        -------
+        =======
+
         equation : sympy expression
 
+        See Also
+        ========
+
+        LinearEntity.coefficients
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Line
         >>> p1, p2 = Point(1, 0), Point(5, 3)
         >>> l1 = Line(p1, p2)
@@ -845,18 +1072,24 @@ class Line(LinearEntity):
         """
         x, y = _symbol(x), _symbol(y)
         p1, p2 = self.points
-        if p1[0] == p2[0]:
-            return x - p1[0]
-        elif p1[1] == p2[1]:
-            return y - p1[1]
+        if p1.x == p2.x:
+            return x - p1.x
+        elif p1.y == p2.y:
+            return y - p1.y
 
         a, b, c = self.coefficients
         return simplify(a*x + b*y + c)
 
-    def __contains__(self, o):
+    def contains(self, o):
         """Return True if o is on this Line, or False otherwise."""
         if isinstance(o, Point):
-            return Point.is_collinear(self.p1, self.p2, o)
+            x, y = Dummy(), Dummy()
+            eq = self.equation(x, y)
+            if not eq.has(y):
+                return (solve(eq, x)[0] - o.x).equals(0)
+            if not eq.has(x):
+                return (solve(eq, y)[0] - o.y).equals(0)
+            return (solve(eq.subs(x, o.x), y)[0] - o.y).equals(0)
         elif not isinstance(o, LinearEntity):
             return False
         elif isinstance(o, Line):
@@ -864,7 +1097,7 @@ class Line(LinearEntity):
         elif not self.is_similar(o):
             return False
         else:
-            return o[0] in self and o[1] in self
+            return o.p1 in self and o.p2 in self
 
     def __eq__(self, other):
         """Return True if other is equal to this Line, or False otherwise."""
@@ -877,10 +1110,12 @@ class Line(LinearEntity):
 
 
 class Ray(LinearEntity):
-    """A Ray is a semi-line in the space with a source point and a direction.
+    """
+    A Ray is a semi-line in the space with a source point and a direction.
 
-    Paramaters
-    ----------
+    Parameters
+    ==========
+
     p1 : Point
         The source of the Ray
     p2 : Point or radian value
@@ -889,22 +1124,26 @@ class Ray(LinearEntity):
         direction being ccw.
 
     Attributes
-    ----------
+    ==========
+
     source
     xdirection
     ydirection
 
     See Also
-    --------
-    Point
+    ========
+
+    sympy.geometry.point.Point, Line
 
     Notes
-    -----
+    =====
+
     At the moment only rays in a 2D space can be declared, because
     Points can be defined only for 2D spaces.
 
     Examples
-    --------
+    ========
+
     >>> import sympy
     >>> from sympy import Point, pi
     >>> from sympy.abc import r
@@ -930,11 +1169,14 @@ class Ray(LinearEntity):
 
     def __new__(cls, p1, pt=None, angle=None, **kwargs):
         p1 = Point(p1)
-        if pt and angle is None:
+        if pt is not None and angle is None:
             try:
                 p2 = Point(pt)
             except NotImplementedError:
-                raise ValueError('The 2nd argument was not a valid Point;\nif it was meant to be an angle it should be given with keyword "angle".')
+                raise ValueError(
+                    'The 2nd argument was not a valid Point;\nif '
+                    'it was meant to be an angle it should be '
+                    'given with keyword "angle".')
             if p1 == p2:
                 raise ValueError('A Ray requires two distinct points.')
         elif angle is not None and pt is None:
@@ -968,8 +1210,14 @@ class Ray(LinearEntity):
     def source(self):
         """The point from which the ray emanates.
 
+        See Also
+        ========
+
+        sympy.geometry.point.Point
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ray
         >>> p1, p2 = Point(0, 0), Point(4, 1)
         >>> r1 = Ray(p1, p2)
@@ -987,8 +1235,14 @@ class Ray(LinearEntity):
         negative infinity if the ray points in the negative x direction,
         or 0 if the ray is vertical.
 
+        See Also
+        ========
+
+        ydirection
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ray
         >>> p1, p2, p3 = Point(0, 0), Point(1, 1), Point(0, -1)
         >>> r1, r2 = Ray(p1, p2), Ray(p1, p3)
@@ -998,9 +1252,9 @@ class Ray(LinearEntity):
         0
 
         """
-        if self.p1[0] < self.p2[0]:
+        if self.p1.x < self.p2.x:
             return S.Infinity
-        elif self.p1[0] == self.p2[0]:
+        elif self.p1.x == self.p2.x:
             return S.Zero
         else:
             return S.NegativeInfinity
@@ -1013,8 +1267,14 @@ class Ray(LinearEntity):
         negative infinity if the ray points in the negative y direction,
         or 0 if the ray is horizontal.
 
+        See Also
+        ========
+
+        xdirection
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ray
         >>> p1, p2, p3 = Point(0, 0), Point(-1, -1), Point(-1, 0)
         >>> r1, r2 = Ray(p1, p2), Ray(p1, p3)
@@ -1024,115 +1284,41 @@ class Ray(LinearEntity):
         0
 
         """
-        if self.p1[1] < self.p2[1]:
+        if self.p1.y < self.p2.y:
             return S.Infinity
-        elif self.p1[1] == self.p2[1]:
+        elif self.p1.y == self.p2.y:
             return S.Zero
         else:
             return S.NegativeInfinity
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Ray.
-
-        Parameters
-        ----------
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        -------
-        point : Point
-
-        Raises
-        ------
-        ValueError
-            When `parameter` already appears in the Ray's definition.
-
-        See Also
-        --------
-        Point
-
-        Examples
-        --------
-         >>> from sympy import Ray, Point, Segment, S, simplify, solve
-        >>> from sympy.abc import t
-        >>> r = Ray(Point(0, 0), Point(2, 3))
-
-        >>> p = r.arbitrary_point(t)
-
-        The parameter `t` used in the arbitrary point maps 0 to the
-        origin of the ray and 1 to the end of the ray at infinity
-        (which will show up as NaN).
-
-        >>> p.subs(t, 0), p.subs(t, 1)
-        (Point(0, 0), Point(oo, oo))
-
-        The unit that `t` moves you is based on the spacing of the
-        points used to define the ray.
-
-        >>> p.subs(t, 1/(S(1) + 1)) # one unit
-        Point(2, 3)
-        >>> p.subs(t, 2/(S(1) + 2)) # two units out
-        Point(4, 6)
-        >>> p.subs(t, S.Half/(S(1) + S.Half)) # half a unit out
-        Point(1, 3/2)
-
-        If you want to be located a distance of 1 from the origin of the
-        ray, what value of `t` is needed?
-
-        a) find the unit length and pick t accordingly
-        >>> u = Segment(r[0], p.subs(t, S.Half)).length # S.Half = 1/(1 + 1)
-        >>> want = 1
-        >>> t_need = want/u
-        >>> p_want = p.subs(t, t_need/(1 + t_need))
-        >>> simplify(Segment(r[0], p_want).length)
-        1
-
-        b) find the t that makes the length from origin to p equal to 1
-        >>> l = Segment(r[0], p).length
-        >>> t_need = solve(l**2 - want**2, t) # use the square to remove abs() if it is there
-        >>> t_need = [w for w in t_need if w.n() > 0][0] # take positive t
-        >>> p_want = p.subs(t, t_need)
-        >>> simplify(Segment(r[0], p_want).length)
-        1
-
-        """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1[0] + t/(1 - t)*(self.p2[0] - self.p1[0]))
-        y = simplify(self.p1[1] + t/(1 - t)*(self.p2[1] - self.p1[1]))
-        return Point(x, y)
-
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the Ray.
+        """The plot interval for the default geometric plot of the Ray. Gives
+        values that will produce a ray that is 10 units long (where a unit is
+        the distance between the two points that define the ray).
 
         Parameters
-        ----------
+        ==========
+
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
+
         plot_interval : list
             [parameter, lower_bound, upper_bound]
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Ray, pi
         >>> r = Ray((0, 0), angle=pi/4)
         >>> r.plot_interval()
-        [t, 0, 5*sqrt(2)/(1 + 5*sqrt(2))]
+        [t, 0, 10]
 
         """
         t = _symbol(parameter)
-        p = self.arbitrary_point(t)
-        # get a t corresponding to length of 10
-        want = 10
-        u = Segment(self[0], p.subs(t, S.Half)).length # gives unit length
-        t_need = want/u
-        return [t, 0, t_need/(1 + t_need)]
+        return [t, 0, 10]
 
     def __eq__(self, other):
         """Is the other GeometryEntity equal to this Ray?"""
@@ -1143,32 +1329,31 @@ class Ray(LinearEntity):
     def __hash__(self):
         return super(Ray, self).__hash__()
 
-    def __contains__(self, o):
+    def contains(self, o):
         """Is other GeometryEntity contained in this Ray?"""
         if isinstance(o, Ray):
-            return (Point.is_collinear(self.p1, self.p2, o.p1, o.p2)
-                    and (self.xdirection == o.xdirection)
-                    and (self.ydirection == o.ydirection))
+            return (Point.is_collinear(self.p1, self.p2, o.p1, o.p2) and
+                    self.xdirection == o.xdirection and
+                    self.ydirection == o.ydirection)
         elif isinstance(o, Segment):
-            return (o.p1 in self) and (o.p2 in self)
+            return o.p1 in self and o.p2 in self
         elif isinstance(o, Point):
             if Point.is_collinear(self.p1, self.p2, o):
-                if (not self.p1[0].has(C.Symbol) and not self.p1[1].has(C.Symbol)
-                        and not self.p2[0].has(C.Symbol) and not self.p2[1].has(C.Symbol)):
-                    if self.xdirection is S.Infinity:
-                        return o[0] >= self.source[0]
-                    elif self.xdirection is S.NegativeInfinity:
-                        return o[0] <= self.source[0]
-                    elif self.ydirection is S.Infinity:
-                        return o[1] >= self.source[1]
-                    return o[1] <= self.source[1]
+                if self.xdirection is S.Infinity:
+                    rv = o.x >= self.source.x
+                elif self.xdirection is S.NegativeInfinity:
+                    rv = o.x <= self.source.x
+                elif self.ydirection is S.Infinity:
+                    rv = o.y >= self.source.y
                 else:
-                    # There are symbols lying around, so assume that o
-                    # is contained in this ray (for now)
-                    return True
+                    rv = o.y <= self.source.y
+                if isinstance(rv, bool):
+                    return rv
+                raise Undecidable(
+                    'Cannot determine if %s is in %s' % (o, self))
             else:
                 # Points are not collinear, so the rays are not parallel
-                # and hence it isimpossible for self to contain o
+                # and hence it is impossible for self to contain o
                 return False
 
         # No other known entity can be contained in a Ray
@@ -1179,26 +1364,31 @@ class Segment(LinearEntity):
     """An undirected line segment in space.
 
     Parameters
-    ----------
+    ==========
+
     p1 : Point
     p2 : Point
 
     Attributes
-    ----------
+    ==========
+
     length : number or sympy expression
     midpoint : Point
 
     See Also
-    --------
-    Point
+    ========
+
+    sympy.geometry.point.Point, Line
 
     Notes
-    -----
+    =====
+
     At the moment only segments in a 2D space can be declared, because
     Points can be defined only for 2D spaces.
 
     Examples
-    --------
+    ========
+
     >>> import sympy
     >>> from sympy import Point
     >>> from sympy.abc import s
@@ -1221,82 +1411,37 @@ class Segment(LinearEntity):
 
     def __new__(cls, p1, p2, **kwargs):
         # Reorder the two points under the following ordering:
-        #   if p1[0] != p2[0] then p1[0] < p2[0]
-        #   if p1[0] == p2[0] then p1[1] < p2[1]
+        #   if p1.x != p2.x then p1.x < p2.x
+        #   if p1.x == p2.x then p1.y < p2.y
         p1 = Point(p1)
         p2 = Point(p2)
         if p1 == p2:
             return Point(p1)
-        if p1[0] > p2[0]:
+        if p1.x > p2.x:
             p1, p2 = p2, p1
-        elif p1[0] == p2[0] and p1[1] > p2[0]:
+        elif p1.x == p2.x and p1.y > p2.y:
             p1, p2 = p2, p1
         return LinearEntity.__new__(cls, p1, p2, **kwargs)
 
-    def arbitrary_point(self, parameter='t'):
-        """A parameterized point on the Segment.
-
-        Parameters
-        ----------
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        -------
-        point : Point
-
-
-        Parameters
-        ----------
-        parameter : str, optional
-            The name of the parameter which will be used for the parametric
-            point. The default value is 't'.
-
-        Returns
-        -------
-        point : Point
-
-        Raises
-        ------
-        ValueError
-            When `parameter` already appears in the Segment's definition.
-
-        See Also
-        --------
-        Point
-
-        Examples
-        --------
-        >>> from sympy import Point, Segment
-        >>> p1, p2 = Point(1, 0), Point(5, 3)
-        >>> s1 = Segment(p1, p2)
-        >>> s1.arbitrary_point()
-        Point(4*t + 1, 3*t)
-
-        """
-        t = _symbol(parameter)
-        if t.name in (f.name for f in self.free_symbols):
-            raise ValueError('Symbol %s already appears in object and cannot be used as a parameter.' % t.name)
-        x = simplify(self.p1[0] + t*(self.p2[0] - self.p1[0]))
-        y = simplify(self.p1[1] + t*(self.p2[1] - self.p1[1]))
-        return Point(x, y)
-
     def plot_interval(self, parameter='t'):
-        """The plot interval for the default geometric plot of the Segment.
+        """The plot interval for the default geometric plot of the Segment. Gives
+        values that will produce the full segment in a plot.
 
         Parameters
-        ----------
+        ==========
+
         parameter : str, optional
             Default value is 't'.
 
         Returns
-        -------
+        =======
+
         plot_interval : list
             [parameter, lower_bound, upper_bound]
 
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 0), Point(5, 3)
         >>> s1 = Segment(p1, p2)
@@ -1316,15 +1461,23 @@ class Segment(LinearEntity):
         intersection of the bisector and the segment.
 
         Parameters
-        ----------
+        ==========
+
         p : Point
 
         Returns
-        -------
+        =======
+
         bisector : Line or Segment
 
+        See Also
+        ========
+
+        LinearEntity.perpendicular_segment
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Segment
         >>> p1, p2, p3 = Point(0, 0), Point(6, 6), Point(5, 1)
         >>> s1 = Segment(p1, p2)
@@ -1345,8 +1498,14 @@ class Segment(LinearEntity):
     def length(self):
         """The length of the line segment.
 
+        See Also
+        ========
+
+        sympy.geometry.point.Point.distance
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 0), Point(4, 3)
         >>> s1 = Segment(p1, p2)
@@ -1360,8 +1519,14 @@ class Segment(LinearEntity):
     def midpoint(self):
         """The midpoint of the line segment.
 
+        See Also
+        ========
+
+        sympy.geometry.point.Point.midpoint
+
         Examples
-        --------
+        ========
+
         >>> from sympy import Point, Segment
         >>> p1, p2 = Point(0, 0), Point(4, 3)
         >>> s1 = Segment(p1, p2)
@@ -1372,22 +1537,40 @@ class Segment(LinearEntity):
         return Point.midpoint(self.p1, self.p2)
 
     def distance(self, o):
-        """Attempts to find the distance of the line segment to an object"""
+        """
+        Finds the shortest distance between a line segment and a point.
+
+        Raises
+        ======
+
+        NotImplementedError is raised if o is not a Point
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Segment
+        >>> p1, p2 = Point(0, 1), Point(3, 4)
+        >>> s = Segment(p1, p2)
+        >>> s.distance(Point(10, 15))
+        sqrt(170)
+        """
         if isinstance(o, Point):
             return self._do_point_distance(o)
         raise NotImplementedError()
 
     def _do_point_distance(self, pt):
-        """Calculates the distance between a point and a line segment"""
-        seg_vector = Point(self.p2[0] - self.p1[0], self.p2[1] - self.p1[1])
-        pt_vector = Point(pt[0] - self.p1[0], pt[1] - self.p1[1])
-        t = (seg_vector[0]*pt_vector[0] + seg_vector[1]*pt_vector[1])/self.length**2
+        """Calculates the distance between a point and a line segment."""
+
+        seg_vector = self.p2 - self.p1
+        pt_vector = pt - self.p1
+        t = seg_vector.dot(pt_vector)/self.length**2
         if t >= 1:
             distance = Point.distance(self.p2, pt)
         elif t <= 0:
             distance = Point.distance(self.p1, pt)
         else:
-            distance = Point.distance(self.p1 + Point(t*seg_vector[0], t*seg_vector[1]), pt)
+            distance = Point.distance(
+                self.p1 + Point(t*seg_vector.x, t*seg_vector.y), pt)
         return distance
 
     def __eq__(self, other):
@@ -1400,13 +1583,25 @@ class Segment(LinearEntity):
         return super(Segment, self).__hash__()
 
     def contains(self, other):
-        """Is the other GeometryEntity contained within this Ray?"""
+        """
+        Is the other GeometryEntity contained within this Segment?
+
+        Examples
+        ========
+
+        >>> from sympy import Point, Segment
+        >>> p1, p2 = Point(0, 1), Point(3, 4)
+        >>> s = Segment(p1, p2)
+        >>> s2 = Segment(p2, p1)
+        >>> s.contains(s2)
+        True
+        """
         if isinstance(other, Segment):
             return other.p1 in self and other.p2 in self
         elif isinstance(other, Point):
             if Point.is_collinear(self.p1, self.p2, other):
                 t = Dummy('t')
-                x, y = self.arbitrary_point(t)
+                x, y = self.arbitrary_point(t).args
                 if self.p1.x != self.p2.x:
                     ti = solve(x - other.x, t)[0]
                 else:
@@ -1417,11 +1612,3 @@ class Segment(LinearEntity):
 
         # No other known entity can be contained in a Ray
         return False
-
-    def __contains__(self, other):
-        result = self.contains(other)
-
-        if result is not None:
-            return result
-        else:
-            raise Undecidable("can't decide whether '%s' contains '%s'" % (self, other))

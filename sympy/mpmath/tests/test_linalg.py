@@ -194,6 +194,8 @@ def test_precision():
     assert mnorm(inverse(inverse(A)) - A, 1) < 1.e-45
 
 def test_interval_matrix():
+    mp.dps = 15
+    iv.dps = 15
     a = iv.matrix([['0.1','0.3','1.0'],['7.1','5.5','4.8'],['3.2','4.4','5.6']])
     b = iv.matrix(['4','0.6','0.5'])
     c = iv.lu_solve(a, b)

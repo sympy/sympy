@@ -1,16 +1,18 @@
-from sympy.solvers.pde import pde_separate_add, pde_separate_mul, _separate
-from sympy import Eq, exp, Function, Symbol, symbols
-from sympy import Derivative as D
+from sympy import Derivative as D, Eq, exp, Function, Symbol, symbols
+from sympy.core import S
+from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
+    pdsolve, classify_pde, checkpdesol)
 from sympy.utilities.pytest import raises
 
+a, b, c, x, y = symbols('a b c x y')
 def test_pde_separate_add():
     x, y, z, t = symbols("x,y,z,t")
-    c = Symbol("C", real=True)
     F, T, X, Y, Z, u = map(Function, 'FTXYZu')
 
     eq = Eq(D(u(x, t), x), D(u(x, t), t)*exp(u(x, t)))
     res = pde_separate_add(eq, u(x, t), [X(x), T(t)])
     assert res == [D(X(x), x)*exp(-X(x)), D(T(t), t)*exp(T(t))]
+
 
 def test_pde_separate_mul():
     x, y, z, t = symbols("x,y,z,t")
@@ -23,16 +25,18 @@ def test_pde_separate_mul():
     eq = Eq(D(F(x, y, z), x) + D(F(x, y, z), y) + D(F(x, y, z), z))
 
     # Duplicate arguments in functions
-    raises (ValueError, "pde_separate_mul(eq, F(x, y, z), [X(x), u(z, z)])")
+    raises(
+        ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(x), u(z, z)]))
     # Wrong number of arguments
-    raises (ValueError, "pde_separate_mul(eq, F(x, y, z), [X(x), Y(y)])")
+    raises(ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(x), Y(y)]))
     # Wrong variables: [x, y] -> [x, z]
-    raises (ValueError, "pde_separate_mul(eq, F(x, y, z), [X(t), Y(x, y)])")
+    raises(
+        ValueError, lambda: pde_separate_mul(eq, F(x, y, z), [X(t), Y(x, y)]))
 
     assert pde_separate_mul(eq, F(x, y, z), [Y(y), u(x, z)]) == \
-            [D(Y(y), y)/Y(y), -D(u(x, z), x)/u(x, z) - D(u(x, z), z)/u(x, z)]
+        [D(Y(y), y)/Y(y), -D(u(x, z), x)/u(x, z) - D(u(x, z), z)/u(x, z)]
     assert pde_separate_mul(eq, F(x, y, z), [X(x), Y(y), Z(z)]) == \
-            [D(X(x), x)/X(x), -D(Z(z), z)/Z(z) - D(Y(y), y)/Y(y)]
+        [D(X(x), x)/X(x), -D(Z(z), z)/Z(z) - D(Y(y), y)/Y(y)]
 
     # wave equation
     wave = Eq(D(u(x, t), t, t), c**2*D(u(x, t), x, x))
@@ -40,21 +44,84 @@ def test_pde_separate_mul():
     assert res == [D(X(x), x, x)/X(x), D(T(t), t, t)/(c**2*T(t))]
 
     # Laplace equation in cylindrical coords
-    eq = Eq(1/r * D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) + \
+    eq = Eq(1/r * D(Phi(r, theta, z), r) + D(Phi(r, theta, z), r, 2) +
             1/r**2 * D(Phi(r, theta, z), theta, 2) + D(Phi(r, theta, z), z, 2))
     # Separate z
     res = pde_separate_mul(eq, Phi(r, theta, z), [Z(z), u(theta, r)])
-    assert res == [D(Z(z), z, z)/Z(z), \
-            -D(u(theta, r), r, r)/u(theta, r) - \
-            D(u(theta, r), r)/(r*u(theta, r)) - \
-            D(u(theta, r), theta, theta)/(r**2*u(theta, r))]
+    assert res == [D(Z(z), z, z)/Z(z),
+            -D(u(theta, r), r, r)/u(theta, r) -
+        D(u(theta, r), r)/(r*u(theta, r)) -
+        D(u(theta, r), theta, theta)/(r**2*u(theta, r))]
     # Lets use the result to create a new equation...
     eq = Eq(res[1], c)
     # ...and separate theta...
     res = pde_separate_mul(eq, u(theta, r), [T(theta), R(r)])
-    assert res == [D(T(theta), theta, theta)/T(theta), \
+    assert res == [D(T(theta), theta, theta)/T(theta),
             -r*D(R(r), r)/R(r) - r**2*D(R(r), r, r)/R(r) - c*r**2]
     # ...or r...
     res = pde_separate_mul(eq, u(theta, r), [R(r), T(theta)])
-    assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2, \
+    assert res == [r*D(R(r), r)/R(r) + r**2*D(R(r), r, r)/R(r) + c*r**2,
             -D(T(theta), theta, theta)/T(theta)]
+
+def test_pde_classify():
+    # When more number of hints are added, add tests for classifying here.
+    f = Function('f')
+    eq1 = a*f(x,y) + b*f(x,y).diff(x) + c*f(x,y).diff(y)
+    eq2 = 3*f(x,y) + 2*f(x,y).diff(x) + f(x,y).diff(y)
+    eq3 = a*f(x,y) + b*f(x,y).diff(x) + 2*f(x,y).diff(y)
+    eq4 = x*f(x,y) + f(x,y).diff(x) + 3*f(x,y).diff(y)
+    eq5 = x**2*f(x,y) + x*f(x,y).diff(x) + x*y*f(x,y).diff(y)
+    eq6 = y*x**2*f(x,y) + y*f(x,y).diff(x) + f(x,y).diff(y)
+    for eq in [eq1, eq2, eq3]:
+        assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
+    for eq in [eq4, eq5, eq6]:
+        assert classify_pde(eq) == ()
+
+
+def test_checkpdesol():
+    f, F = map(Function, ['f', 'F'])
+    eq1 = a*f(x,y) + b*f(x,y).diff(x) + c*f(x,y).diff(y)
+    eq2 = 3*f(x,y) + 2*f(x,y).diff(x) + f(x,y).diff(y)
+    eq3 = a*f(x,y) + b*f(x,y).diff(x) + 2*f(x,y).diff(y)
+    for eq in [eq1, eq2, eq3]:
+        assert checkpdesol(eq, pdsolve(eq))[0]
+    eq4 = x*f(x,y) + f(x,y).diff(x) + 3*f(x,y).diff(y)
+    eq5 = 2*f(x,y) + 1*f(x,y).diff(x) + 3*f(x,y).diff(y)
+    eq6 = f(x,y) + 1*f(x,y).diff(x) + 3*f(x,y).diff(y)
+    assert checkpdesol(eq4, [pdsolve(eq5), pdsolve(eq6)]) == [
+        (False, (x - 2)*F(3*x - y)*exp(-x/S(5) - 3*y/S(5))),
+         (False, (x - 1)*F(3*x - y)*exp(-x/S(10) - 3*y/S(10)))]
+
+
+def test_solvefun():
+    f, F, G, H = map(Function, ['f', 'F', 'G', 'H'])
+    eq1 = f(x,y) + f(x,y).diff(x) + f(x,y).diff(y)
+    assert pdsolve(eq1) == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2))
+    assert pdsolve(eq1, solvefun=G) == Eq(f(x, y), G(x - y)*exp(-x/2 - y/2))
+    assert pdsolve(eq1, solvefun=H) == Eq(f(x, y), H(x - y)*exp(-x/2 - y/2))
+
+
+def test_pde_1st_linear_constant_coeff_homogeneous():
+    f, F = map(Function, ['f', 'F'])
+    u = f(x, y)
+    eq = 2*u + u.diff(x) + u.diff(y)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
+    sol = pdsolve(eq)
+    assert sol == Eq(u, F(x - y)*exp(-x - y))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = 4 + (3*u.diff(x)/u) + (2*u.diff(y)/u)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
+    sol = pdsolve(eq)
+    assert sol == Eq(u, F(2*x - 3*y)*exp(-S(12)*x/13 - S(8)*y/13))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = u + (6*u.diff(x)) + (7*u.diff(y))
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_homogeneous',)
+    sol = pdsolve(eq)
+    assert sol == Eq(u, F(7*x - 6*y)*exp(-6*x/S(85) - 7*y/S(85)))
+    assert checkpdesol(eq, sol)[0]
+
+    eq = a*u + b*u.diff(x) + c*u.diff(y)
+    sol = pdsolve(eq)
+    assert checkpdesol(eq, sol)[0]

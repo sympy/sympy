@@ -6,9 +6,10 @@
     They are supposed to work seamlessly within the SymPy framework.
 """
 
-from basic import Basic
-from sympify import sympify
+from sympy.core.basic import Basic
+from sympy.core.sympify import sympify, converter
 from sympy.utilities.iterables import iterable
+
 
 class Tuple(Basic):
     """
@@ -33,8 +34,8 @@ class Tuple(Basic):
         obj = Basic.__new__(cls, *args, **assumptions)
         return obj
 
-    def __getitem__(self,i):
-        if isinstance(i,slice):
+    def __getitem__(self, i):
+        if isinstance(i, slice):
             indices = i.indices(len(self))
             return Tuple(*[self.args[i] for i in range(*indices)])
         return self.args[i]
@@ -80,6 +81,15 @@ class Tuple(Basic):
     def _to_mpmath(self, prec):
         return tuple([a._to_mpmath(prec) for a in self.args])
 
+    def __lt__(self, other):
+        return self.args < other.args
+
+    def __le__(self, other):
+        return self.args <= other.args
+
+converter[tuple] = lambda tup: Tuple(*tup)
+
+
 def tuple_wrapper(method):
     """
     Decorator that converts any tuple in the function arguments into a Tuple.
@@ -100,7 +110,7 @@ def tuple_wrapper(method):
 
     """
     def wrap_tuples(*args, **kw_args):
-        newargs=[]
+        newargs = []
         for arg in args:
             if type(arg) is tuple:
                 newargs.append(Tuple(*arg))
@@ -108,6 +118,7 @@ def tuple_wrapper(method):
                 newargs.append(arg)
         return method(*newargs, **kw_args)
     return wrap_tuples
+
 
 class Dict(Basic):
     """
@@ -122,13 +133,15 @@ class Dict(Basic):
     >>> from sympy import S
     >>> from sympy.core.containers import Dict
 
-    >>> D = Dict({1:'one', 2:'two'})
-    >>> for key in D: print key, D[key]
+    >>> D = Dict({1: 'one', 2: 'two'})
+    >>> for key in D:
+    ...    if key == 1:
+    ...        print key, D[key]
     1 one
-    2 two
 
     The args are sympified so the 1 and 2 are Integers and the values
     are Symbols. Queries automatically sympify args so the following work:
+
     >>> 1 in D
     True
     >>> D.has('one') # searches keys and values
@@ -141,7 +154,8 @@ class Dict(Basic):
     """
 
     def __new__(cls, *args):
-        if len(args)==1 and args[0].__class__ is dict:
+        if len(args) == 1 and ((args[0].__class__ is dict) or
+                             (args[0].__class__ is Dict)):
             items = [Tuple(k, v) for k, v in args[0].items()]
         elif iterable(args) and all(len(arg) == 2 for arg in args):
             items = [Tuple(k, v) for k, v in args]
@@ -150,7 +164,7 @@ class Dict(Basic):
         elements = frozenset(items)
         obj = Basic.__new__(cls, elements)
         obj.elements = elements
-        obj._dict = dict(items) # In case Tuple decides it wants to sympify
+        obj._dict = dict(items)  # In case Tuple decides it wants to sympify
         return obj
 
     def __getitem__(self, key):
@@ -184,12 +198,6 @@ class Dict(Basic):
         '''x.__len__() <==> len(x)'''
         return self._dict.__len__()
 
-    def __str__(self):
-        return str(self._dict)
-
-    def __repr__(self):
-        return self._dict.__repr__()
-
     def get(self, key, default=None):
         '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
         return self._dict.get(sympify(key), default)
@@ -197,3 +205,11 @@ class Dict(Basic):
     def __contains__(self, key):
         '''D.__contains__(k) -> True if D has a key k, else False'''
         return sympify(key) in self._dict
+
+    def __lt__(self, other):
+        return self.args < other.args
+
+    @property
+    def _sorted_args(self):
+        from sympy.utilities import default_sort_key
+        return sorted(self.args, key=default_sort_key)

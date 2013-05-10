@@ -1,11 +1,13 @@
+from __future__ import with_statement
 from sympy import Matrix, Tuple, symbols, sympify, Basic, Dict, S, FiniteSet
 from sympy.core.containers import tuple_wrapper
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, XFAIL
 from sympy.core.compatibility import is_sequence, iterable
+
 
 def test_Tuple():
     t = (1, 2, 3, 4)
-    st =  Tuple(*t)
+    st = Tuple(*t)
     assert set(sympify(t)) == set(st)
     assert len(t) == len(st)
     assert set(sympify(t[:2])) == set(st[:2])
@@ -16,7 +18,7 @@ def test_Tuple():
     t2 = (p, q, r, s)
     st2 = Tuple(*t2)
     assert st2.atoms() == set(t2)
-    assert st == st2.subs({p:1, q:2, r:3, s:4})
+    assert st == st2.subs({p: 1, q: 2, r: 3, s: 4})
     # issue 2406
     assert all(isinstance(arg, Basic) for arg in st.args)
     assert Tuple(p, 1).subs(p, 0) == Tuple(0, 1)
@@ -27,17 +29,19 @@ def test_Tuple():
     assert Tuple.fromiter(x for x in xrange(4)) == Tuple(0, 1, 2, 3)
     assert st2.fromiter(st2.args) == st2
 
+
 def test_Tuple_contains():
     t1, t2 = Tuple(1), Tuple(2)
     assert t1 in Tuple(1, 2, 3, t1, Tuple(t2))
     assert t2 not in Tuple(1, 2, 3, t1, Tuple(t2))
 
+
 def test_Tuple_concatenation():
     assert Tuple(1, 2) + Tuple(3, 4) == Tuple(1, 2, 3, 4)
     assert (1, 2) + Tuple(3, 4) == Tuple(1, 2, 3, 4)
     assert Tuple(1, 2) + (3, 4) == Tuple(1, 2, 3, 4)
-    raises(TypeError, 'Tuple(1, 2) + 3')
-    raises(TypeError, '1 + Tuple(2, 3)')
+    raises(TypeError, lambda: Tuple(1, 2) + 3)
+    raises(TypeError, lambda: 1 + Tuple(2, 3))
 
     #the Tuple case in __radd__ is only reached when a subclass is involved
     class Tuple2(Tuple):
@@ -45,6 +49,7 @@ def test_Tuple_concatenation():
             return Tuple.__radd__(self, other + other)
     assert Tuple(1, 2) + Tuple2(3, 4) == Tuple(1, 2, 1, 2, 3, 4)
     assert Tuple2(1, 2) + Tuple(3, 4) == Tuple(1, 2, 3, 4)
+
 
 def test_Tuple_equality():
     assert Tuple(1, 2) is not (1, 2)
@@ -57,6 +62,14 @@ def test_Tuple_equality():
     assert (Tuple(1, 2) == Tuple(1, 3)) is False
     assert (Tuple(1, 2) != Tuple(1, 3)) is True
 
+
+def test_Tuple_comparision():
+    assert (Tuple(1, 3) >= Tuple(-10, 30)) is True
+    assert (Tuple(1, 3) <= Tuple(-10, 30)) is False
+    assert (Tuple(1, 3) >= Tuple(1, 3)) is True
+    assert (Tuple(1, 3) <= Tuple(1, 3)) is True
+
+
 def test_tuple_wrapper():
 
     @tuple_wrapper
@@ -68,6 +81,7 @@ def test_tuple_wrapper():
     assert wrap_tuples_and_return((p, 1)) == (Tuple(p, 1),)
     assert wrap_tuples_and_return(1, (p, 2), 3) == (1, Tuple(p, 2), 3)
 
+
 def test_iterable_is_sequence():
     ordered = [list(), tuple(), Tuple(), Matrix([[]])]
     unordered = [set()]
@@ -78,39 +92,59 @@ def test_iterable_is_sequence():
     assert all(not iterable(i) for i in not_sympy_iterable)
     assert all(iterable(i, exclude=None) for i in not_sympy_iterable)
 
+
 def test_Dict():
-    x,y,z = symbols('x y z')
-    d = Dict({x:1, y:2, z:3})
+    x, y, z = symbols('x y z')
+    d = Dict({x: 1, y: 2, z: 3})
     assert d[x] == 1
     assert d[y] == 2
-    raises(KeyError, 'd[2]')
+    raises(KeyError, lambda: d[2])
     assert len(d) == 3
-    assert set(d.keys()) == set((x,y,z))
-    assert set(d.values()) == set((S(1),S(2),S(3)))
-    assert d.get(5,'default') == 'default'
+    assert set(d.keys()) == set((x, y, z))
+    assert set(d.values()) == set((S(1), S(2), S(3)))
+    assert d.get(5, 'default') == 'default'
     assert x in d and z in d and not 5 in d
-    assert d.has(x) and d.has(1) # SymPy Basic .has method
+    assert d.has(x) and d.has(1)  # SymPy Basic .has method
 
     # Test input types
     # input - a python dict
     # input - items as args - SymPy style
-    assert (Dict({x:1, y:2, z:3}) ==
-            Dict((x,1), (y,2), (z,3)))
+    assert (Dict({x: 1, y: 2, z: 3}) ==
+            Dict((x, 1), (y, 2), (z, 3)))
 
-    raises(TypeError, "Dict(((x,1), (y,2), (z,3)))")
-    raises(NotImplementedError, "d[5] = 6") # assert immutability
+    raises(TypeError, lambda: Dict(((x, 1), (y, 2), (z, 3))))
+    with raises(NotImplementedError):
+        d[5] = 6  # assert immutability
 
-    assert set(d.items()) == set((Tuple(x,S(1)), Tuple(y,S(2)), Tuple(z,S(3))))
-    assert list(d) == [x,y,z]
+    assert set(
+        d.items()) == set((Tuple(x, S(1)), Tuple(y, S(2)), Tuple(z, S(3))))
+    assert set(d) == set([x, y, z])
     assert str(d) == '{x: 1, y: 2, z: 3}'
     assert d.__repr__() == '{x: 1, y: 2, z: 3}'
 
-def issue_2689():
-    args = [(1,2),(2,1)]
-    for o in [Dict, Tuple, FiniteSet]:
+    # Test creating a Dict from a Dict.
+    d = Dict({x: 1, y: 2, z: 3})
+    assert d == Dict(d)
+
+
+def test_issue_2689():
+    args = [(1, 2), (2, 1)]
+    for o in [Dict, Tuple]:
         # __eq__ and arg handling
         if o != Tuple:
             assert o(*args) == o(*reversed(args))
         pair = [o(*args), o(*reversed(args))]
         assert sorted(pair) == sorted(reversed(pair))
-        assert set(o(*args)) # doesn't fail
+        assert set(o(*args))  # doesn't fail
+
+
+@XFAIL
+def test_issue_2689b():
+    args = [(1, 2), (2, 1)]
+    for o in [FiniteSet]:
+        # __eq__ and arg handling
+        if o != Tuple:
+            assert o(*args) == o(*reversed(args))
+        pair = [o(*args), o(*reversed(args))]
+        assert sorted(pair) == sorted(reversed(pair))
+        assert set(o(*args))  # doesn't fail

@@ -1,9 +1,11 @@
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 
+
 class AskHandler(object):
     """Base class that all Ask Handlers must inherit"""
     pass
+
 
 class CommonHandler(AskHandler):
     """Defines some useful methods common to most Handlers """
@@ -11,6 +13,15 @@ class CommonHandler(AskHandler):
     @staticmethod
     def NaN(expr, assumptions):
         return False
+
+    @staticmethod
+    def AlwaysTrue(expr, assumptions):
+        return True
+
+    @staticmethod
+    def AlwaysFalse(expr, assumptions):
+        return False
+
 
 class AskCommutativeHandler(CommonHandler):
     """
@@ -42,6 +53,7 @@ class AskCommutativeHandler(CommonHandler):
     def NaN(expr, assumptions):
         return True
 
+
 class TautologicalHandler(AskHandler):
     """Wrapper allowing to query the truth value of a boolean expression."""
 
@@ -61,15 +73,14 @@ class TautologicalHandler(AskHandler):
         else:
             return None
 
-
     @staticmethod
     def Or(expr, assumptions):
         result = False
         for arg in expr.args:
             p = ask(arg, assumptions=assumptions)
-            if p == True:
+            if p is True:
                 return True
-            if p == None:
+            if p is None:
                 result = None
         return result
 
@@ -78,9 +89,9 @@ class TautologicalHandler(AskHandler):
         result = True
         for arg in expr.args:
             p = ask(arg, assumptions=assumptions)
-            if p == False:
+            if p is False:
                 return False
-            if p == None:
+            if p is None:
                 result = None
         return result
 
@@ -93,9 +104,29 @@ class TautologicalHandler(AskHandler):
     def Equivalent(expr, assumptions):
         p, q = expr.args
         pt = ask(p, assumptions=assumptions)
-        if pt == None:
+        if pt is None:
             return None
         qt = ask(q, assumptions=assumptions)
-        if qt == None:
+        if qt is None:
             return None
         return pt == qt
+
+
+#### Helper methods
+def test_closed_group(expr, assumptions, key):
+    """
+    Test for membership in a group with respect
+    to the current operation
+    """
+    result = True
+    for arg in expr.args:
+        _out = ask(key(arg), assumptions)
+        if _out is None:
+            break
+        elif _out is False:
+            if result:
+                result = False
+            else:
+                break
+    else:
+        return result

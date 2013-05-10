@@ -1,49 +1,48 @@
 """ Optimizations of the expression tree representation for better CSE
 opportunities.
 """
-from sympy.core import Add, Mul, Expr
-from sympy.utilities.iterables import preorder_traversal
+from sympy.core import Add, Basic, Expr, Mul
+from sympy.core.basic import preorder_traversal
+from sympy.core.exprtools import factor_terms
+from sympy.core.singleton import S
+from sympy.utilities.iterables import default_sort_key
 
-class Sub(Expr):
-    """ Stub of a Sub operator to replace Add(x, Mul(NegativeOne(-1), y)).
-    """
-    __slots__ = []
 
 def sub_pre(e):
-    """ Replace Add(x, Mul(NegativeOne(-1), y)) with Sub(x, y).
+    """ Replace y - x with -(x - y) if -1 can be extracted from y - x.
     """
-    replacements = []
-    for node in preorder_traversal(e):
-        if node.is_Add:
-            positives = []
-            negatives = []
-            for arg in node.args:
-                if arg.is_Mul:
-                    a, b = arg.as_two_terms()
-                    if (a.is_number and a.is_negative):
-                        negatives.append(Mul(-a, b))
-                        continue
-                positives.append(arg)
-            if len(negatives) > 0:
-                replacement = Sub(Add(*positives), Add(*negatives))
-                replacements.append((node, replacement))
-    for node, replacement in replacements:
-        e = e.subs(node, replacement)
+    reps = [a for a in e.atoms(Add) if a.could_extract_minus_sign()]
 
+    # make it canonical
+    reps.sort(key=default_sort_key)
+
+    e = e.subs([(a, Mul._from_args([S.NegativeOne, -a])) for a in reps])
+    # repeat again for persisting Adds but mark these with a leading 1, -1
+    # e.g. y - x -> 1*-1*(x - y)
+    if isinstance(e, Basic):
+        negs = {}
+        for a in sorted(e.atoms(Add), key=default_sort_key):
+            if a in reps or a.could_extract_minus_sign():
+                negs[a] = Mul._from_args([S.One, S.NegativeOne, -a])
+        e = e.xreplace(negs)
     return e
+
 
 def sub_post(e):
-    """ Replace Sub(x,y) with the canonical form Add(x, Mul(NegativeOne(-1), y)).
+    """ Replace 1*-1*x with -x.
     """
     replacements = []
     for node in preorder_traversal(e):
-        if isinstance(node, Sub):
-            replacements.append((node, Add(node.args[0], Mul(-1, node.args[1]))))
+        if isinstance(node, Mul) and \
+            node.args[0] is S.One and node.args[1] is S.NegativeOne:
+            replacements.append((node, -Mul._from_args(node.args[2:])))
     for node, replacement in replacements:
-        e = e.subs(node, replacement)
+        e = e.xreplace({node: replacement})
 
     return e
+
 
 default_optimizations = [
     (sub_pre, sub_post),
+    (factor_terms, None),
 ]

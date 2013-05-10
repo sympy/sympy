@@ -1,0 +1,24 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem          1.0
+PortGroup           python25 1.0
+
+name                py-sympy
+version             0.7.2
+categories          python
+platforms           darwin
+maintainers         nomaintainer
+homepage            http://sympy.org
+description         SymPy is a Python library for symbolic mathematics
+long_description    SymPy is a Python library for symbolic mathematics. \
+                    It aims to become a full-featured computer algebra \
+                    system (CAS) while keeping the code as simple as \
+                    possible in order to be comprehensible and easily \
+                    extensible.
+
+master_sites        googlecode:sympy
+distname            sympy-${version}
+checksums           md5     3847b5ed5c1531bf3c1b849dc2337253 \
+                    sha1    b8609cc7e08d2883f96526ee8a4afdc90d77b911 \
+                    rmd160  ba6f95435d72708a12e4c4285d82d5e51d38bce4

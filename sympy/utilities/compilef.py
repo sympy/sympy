@@ -15,49 +15,50 @@ Experimental module for compiling functions to machine code.
 Can also be used to generate C code from SymPy expressions.
 Depends on libtcc.
 
-This code is experimental. It may have severe bugs. Due to the use of C, it's
-able to crash your Python interpreter/debugger with obscure error messages.
+This code is experimental. It may have severe bugs. Due to the use of C,
+it's able to crash your Python interpreter/debugger with obscure error
+messages.
 
 64 bit floats (double) are used.
-
 
 Overview
 ========
 
-clambdify:   compile a function to machine code (only useful for big functions)
+clambdify:   compile a function to machine code (only useful for big
+             functions)
 frange:      evaluate a function on a range of numbers using machine code
 cexpr:       translate a Python expression to a C expression
 genfcode:    generate C code from a lambda string
 evanonarray: evaluate a function on an array using machine code
 
-
 Performance
 ===========
 
-Python functions using the math module are *quite* fast. For simple functions
-they are faster than functions compiled to machine code. So you should test
-to see whether lambdify is fast enough for you.
+Python functions using the math module are *quite* fast. For simple
+functions they are faster than functions compiled to machine code. So you
+should test to see whether lambdify is fast enough for you.
 
 Iterating is slow in Python (it's probably the biggest bottle neck).
 frange allows you to iterate using machine code. This can result in huge
 speedups. You might want to use NumPy: http://numpy.org/
-For simple functions it's faster, but for big ones frange can be several times
-more efficient.
+For simple functions it's faster, but for big ones frange can be several
+times more efficient.
 
 You should experiment to see which solution is best for your application.
 
-You can run the included benchmarks to see the real performance on your machine.
-
+You can run the included benchmarks to see the real performance on your
+machine.
 
 Configuration
 =============
 
-You will probably need to compile libtcc on your own. Get the sources of tcc:
+You will probably need to compile libtcc on your own. Get the sources of
+tcc:
 
 http://bellard.org/tcc/
 
-Currently it only works for a recent development version. So you might want to
-run the following commands (you have to use your own paths of course):
+Currently it only works for a recent development version. So you might want
+to run the following commands (you have to use your own paths of course):
 
 $ cvs -z3 -d:pserver:anonymous@cvs.savannah.nongnu.org:/sources/tinycc co tinycc
 $ cd tinycc
@@ -67,18 +68,18 @@ $ gcc -shared -Wl,-soname,libtcc.so -o libtcc.so libtcc.o
 $ cd sympy/utilities/
 $ ln -s tinycc/libtcc.so # or change libtccpath in compilef.py
 
-You might try to run libtcc_test. If something went wrong there will be bad low
-level Python errors probably crashing the interpreter. The error output will be
-printed to stdout or stderr, which might be different to your Python shell.
+You might try to run libtcc_test. If something went wrong there will be bad
+low level Python errors probably crashing the interpreter. The error output
+will be printed to stdout or stderr, which might be different to your Python
+shell.
 
 Make sure that this module knows the path to libtcc.
 
-If everything went right, all the tests will pass. Run this file to do so and
-to see the results of some benchmarks.
+If everything went right, all the tests will pass. Run this file to do so
+and to see the results of some benchmarks.
 
 """
 
-import os
 import ctypes
 from sympy import Symbol, cse, sympify
 from sympy.utilities.lambdify import lambdastr as getlambdastr
@@ -87,11 +88,15 @@ from sympy.external import import_module
 numpy = import_module('numpy')
 
 libtccpath = './libtcc.so'
-dps = 17 # decimal places of float precision
+dps = 17  # decimal places of float precision
 # load libtcc TODO: better Windows support
-libtcc = ctypes.cdll.LoadLibrary(libtccpath)
+try:
+    libtcc = ctypes.cdll.LoadLibrary(libtccpath)
+except OSError:
+    libtcc = None
 if not libtcc:
     raise ImportError('Could not load libtcc')
+
 
 def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     """
@@ -108,14 +113,14 @@ def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     left = ''
     openbraces = 0
     for char in reversed(expr[:index]):
-        if char == ' ': # skip whitespaces but keep them
+        if char == ' ':  # skip whitespaces but keep them
             left = char + left
             continue
         elif char == ')':
             openbraces += 1
             left = char + left
         elif char == '(':
-            if not openbraces: # happens when operator is in braces
+            if not openbraces:  # happens when operator is in braces
                 break
             openbraces -= 1
             left = char + left
@@ -130,15 +135,15 @@ def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
     # get right expression
     right = ''
     openbraces = 0
-    for char in expr[index+oplength:]:
-        if char == ' ': # skip whitespaces but keep them
+    for char in expr[index + oplength:]:
+        if char == ' ':  # skip whitespaces but keep them
             right += char
             continue
         elif char == '(':
             openbraces += 1
             right += char
         elif char == ')':
-            if not openbraces: # happens when operator is in braces
+            if not openbraces:  # happens when operator is in braces
                 break
             openbraces -= 1
             right += char
@@ -151,6 +156,7 @@ def __getLeftRight(expr, index, oplength=1, stopchar='+-'):
         else:
             right += char
     return (left, right)
+
 
 def cexpr(pyexpr):
     """
@@ -170,6 +176,7 @@ def cexpr(pyexpr):
     # TODO: avoid integer division
     return pyexpr
 
+
 def _gentmpvars():
     """
     Generate symbols tmp1, tmp2, ... infinitely.
@@ -178,6 +185,7 @@ def _gentmpvars():
     while True:
         i += 1
         yield Symbol('tmp' + str(i))
+
 
 def genfcode(lambdastr, use_cse=False):
     """
@@ -207,7 +215,8 @@ def genfcode(lambdastr, use_cse=False):
         cfstr = ''
         for symbol, expr in subs:
             vardec += '    double %s;\n' % symbol.name
-            cfstr += '    %s = %s;\n' % (symbol.name, cexpr(str(expr.evalf(dps))))
+            cfstr += '    %s = %s;\n' % (
+                symbol.name, cexpr(str(expr.evalf(dps))))
         cfstr = vardec + cfstr
         finalexpr = cexpr(str(finalexpr[0].evalf(dps)))
     # generate C code
@@ -220,12 +229,14 @@ inline double f(%s)
 """ % (cvarstr, cfstr, finalexpr)
     return code
 
+
 def __run(cmd):
     """
     Checks the exit code of a ran command.
     """
     if not cmd == 0:
         raise RuntimeError('could not run libtcc command')
+
 
 def _compile(code, argcount=None, fname='f', fprototype=None):
     """
@@ -240,15 +251,15 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
         fprototype = ctypes.CFUNCTYPE(*fprototype)
     else:
         assert argcount, 'need argcount if no prototype is specified'
-        fprototype = ctypes.CFUNCTYPE(*[ctypes.c_double]*(argcount+1))
+        fprototype = ctypes.CFUNCTYPE(*[ctypes.c_double]*(argcount + 1))
     # see libtcc.h for API documentation
     tccstate = libtcc.tcc_new()
-    __run(libtcc.tcc_set_output_type(tccstate, 0)) # output to memory
+    __run(libtcc.tcc_set_output_type(tccstate, 0))  # output to memory
     ##print libtcc.tcc_add_library_path(tccstate, mathh) # could be dropped
-    __run(libtcc.tcc_add_library(tccstate, 'm')) # use math.h FIXME: Windows
+    __run(libtcc.tcc_add_library(tccstate, 'm'))  # use math.h FIXME: Windows
     # compile string
     __run(libtcc.tcc_compile_string(tccstate, code))
-    __run(libtcc.tcc_relocate(tccstate)) # fails if link error
+    __run(libtcc.tcc_relocate(tccstate))  # fails if link error
     # create C variable to get result
     symbol = ctypes.c_long()
     __run(libtcc.tcc_get_symbol(tccstate, ctypes.byref(symbol), fname))
@@ -256,6 +267,8 @@ def _compile(code, argcount=None, fname='f', fprototype=None):
     return fprototype(symbol.value)
 
 # expr needs to work with lambdastr
+
+
 def clambdify(args, expr, **kwargs):
     """
     SymPy expression -> compiled function
@@ -282,6 +295,7 @@ def clambdify(args, expr, **kwargs):
 """ % genfcode(s, **kwargs)
     # compile code
     return _compile(code, len(args))
+
 
 def frange(*args, **kwargs):
     """
@@ -321,20 +335,20 @@ def frange(*args, **kwargs):
     if len(args) == 4:
         step = args[3]
     assert start + step != start, \
-           'step is too small and would cause an infinite loop'
+        'step is too small and would cause an infinite loop'
     # determine length of resulting array
     # TODO: do this better
     length = stop - start
     if length % step == 0:
-        length = length/step - 1 # exclude last one
+        length = length/step - 1  # exclude last one
     else:
         length = length//step
     if step > 0:
         if start < stop:
-            length += 1 # include first one
+            length += 1  # include first one
     else:
         if start > stop:
-            length += 1 # include first one
+            length += 1  # include first one
     if length < 0:
         length = 0
     assert length == int(length)
@@ -369,6 +383,7 @@ void evalonrange(double *result, int n)
     # return ctypes array with results
     return a
 
+
 def evalonarray(lambdastr, array, length=None, **kwargs):
     """
     Evaluates a function on an array using machine code.
@@ -379,15 +394,15 @@ def evalonarray(lambdastr, array, length=None, **kwargs):
     array will be overwritten! Make a copy before to avoid this.
     """
     # interpret arguments
-    if hasattr(array,  'ctypes'): # numpy array
+    if hasattr(array, 'ctypes'):  # numpy array
         pointer = array.ctypes.get_as_parameter()
         length = len(array)
-    elif isinstance(array,  ctypes.Array): # ctypes array
+    elif isinstance(array, ctypes.Array):  # ctypes array
         pointer = ctypes.byref(array)
         length = len(array)
-    elif isinstance(array,  ctypes.c_void_p): # ctypes pointer FIXME
+    elif isinstance(array, ctypes.c_void_p):  # ctypes pointer FIXME
         pointer = array
-        assert isinstance(length,  int) and not length < 0
+        assert isinstance(length, int) and not length < 0
     else:
         raise ValueError('array type not recognized')
     # generate code
@@ -410,7 +425,7 @@ void evalonarray(double *array, int length)
 
 """ % genfcode(lambdastr, **kwargs)
     # compile an run on array
-    run = _compile(code,  fname='evalonarray',
+    run = _compile(code, fname='evalonarray',
                    fprototype=[None, ctypes.c_void_p, ctypes.c_int])
     run(pointer, length)
 
@@ -421,10 +436,12 @@ void evalonarray(double *array, int length)
 from sympy import sqrt, pi, lambdify
 from math import exp as _exp, cos as _cos, sin as _sin
 
+
 def test_cexpr():
     expr = '1/(g(x)*3.5)**(x - a**x)/(x**2 + a)'
     assert cexpr(expr).replace(' ', '') == \
-           '1/pow((g(x)*3.5),(x-pow(a,x)))/(pow(x,2)+a)'
+        '1/pow((g(x)*3.5),(x-pow(a,x)))/(pow(x,2)+a)'
+
 
 def test_clambdify():
     x = Symbol('x')
@@ -438,8 +455,9 @@ def test_clambdify():
     f2 = (x - y) / z * pi
     pf2 = lambdify((x, y, z), f2, 'math')
     cf2 = clambdify((x, y, z), f2)
-    assert round(pf2(1, 2, 3),  14) == round(cf2(1, 2, 3),  14)
+    assert round(pf2(1, 2, 3), 14) == round(cf2(1, 2, 3), 14)
     # FIXME: slight difference in precision
+
 
 def test_frange():
     fstr = 'lambda x: _exp(x)*_cos(x)**x'
@@ -481,6 +499,7 @@ def test_frange():
     except TypeError:
         pass
 
+
 def test_evalonarray_ctypes():
     a = frange('lambda x: x', 10)
     evalonarray('lambda x: _sin(x)', a)
@@ -491,11 +510,13 @@ def test_evalonarray_ctypes():
 ##    for i, j in enumerater(a):
 ##        print j
 
+
 def test_evalonarray_numpy():
     a = numpy.arange(10, dtype=float)
-    evalonarray('lambda x: x + 1',  a)
+    evalonarray('lambda x: x + 1', a)
     for i, j in enumerate(a):
         assert float(i + 1) == j
+
 
 def test_use_cse():
     args = ('lambda x: sqrt(x + 1)**sqrt(x + 1)', 1, 10)
@@ -506,6 +527,7 @@ def test_use_cse():
     assert len(a) == len(b)
     for i in xrange(len(a)):
         assert a[i] == b[i]
+
 
 def benchmark():
     """
@@ -523,7 +545,8 @@ def benchmark():
         global cf, pf, psyf
         start = time()
         cf = clambdify(var, f)
-        print 'compile time (including sympy overhead): %f s' % (time() - start)
+        print 'compile time (including sympy overhead): %f s' % (
+            time() - start)
         pf = lambdify(var, f, 'math')
         psyf = None
         psyco = import_module('psyco')
@@ -552,14 +575,14 @@ def benchmark():
 ##        * x**12-2*x**3+2*_exp(x**2)-3*x**7+4*_exp(123+x-x**5+2*x**4) \
 ##        * ((x + pi)**5).expand()
     f1 = 2*_exp(x**2) + x**12*(-pi*_sin(x)**((-1) + pi)*_cos(x) + 2*_exp(2*x)) \
-         + 4*(10*pi**3*x**2 + 10*pi**2*x**3 + 5*pi*x**4 + 5*x*pi**4 + pi**5 \
-         + x**5)*_exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
+        + 4*(10*pi**3*x**2 + 10*pi**2*x**3 + 5*pi*x**4 + 5*x*pi**4 + pi**5
+        + x**5)*_exp(123 + x + 2*x**4 - x**5) - 2*x**3 - 3*x**7
     fbenchmark(f1)
     print
     print 'simple function:'
     y = Symbol('y')
-    f2 = sqrt(x*y)+x*5
-    fbenchmark(f2, [x,y])
+    f2 = sqrt(x*y) + x*5
+    fbenchmark(f2, [x, y])
     times = 100000
     fstr = '_exp(_sin(_exp(-x**2)) + sqrt(pi)*_cos(x**5/(x**3-x**2+pi*x)))'
     print
@@ -595,4 +618,3 @@ if __name__ == '__main__':
         print
     print 'Running benchmark...'
     benchmark()
-

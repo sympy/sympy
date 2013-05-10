@@ -1,45 +1,28 @@
 from sympy.core.numbers import igcd
+from sympy.core.compatibility import as_int
 from primetest import isprime
-from factor_ import factorint, trailing
-
-def int_tested(*j):
-    "Return all args as integers after confirming that they are integers."
-    i = tuple([int(i) for i in j])
-    if i != j:
-        raise ValueError('all arguments were not integers')
-    if len(i) == 1:
-        return i[0]
-    return i
-
-def totient_(n):
-    """returns the number of integers less than n
-    and relatively prime to n"""
-    n = int_tested(n)
-    if n < 1:
-        raise ValueError("n must be a positive integer")
-    tot = 0
-    for x in xrange(1, n):
-        if igcd(x, n) == 1:
-            tot += 1
-    return tot
+from factor_ import factorint, trailing, totient
 
 
 def n_order(a, n):
-    """ returns the order of a modulo n
-    Order of a modulo n is the smallest integer
-    k such that a^k leaves a remainder of 1 with n.
+    """Returns the order of ``a`` modulo ``n``.
 
-    **Examples**
+    The order of ``a`` modulo ``n`` is the smallest integer
+    ``k`` such that ``a**k`` leaves a remainder of 1 with ``n``.
+
+    Examples
+    ========
+
     >>> from sympy.ntheory import n_order
     >>> n_order(3, 7)
     6
     >>> n_order(4, 7)
     3
     """
-    a, n = int_tested(a, n)
+    a, n = as_int(a), as_int(n)
     if igcd(a, n) != 1:
         raise ValueError("The two numbers should be relatively prime")
-    group_order = totient_(n)
+    group_order = totient(n)
     factors = factorint(group_order)
     order = 1
     if a > n:
@@ -56,14 +39,16 @@ def n_order(a, n):
 
 def is_primitive_root(a, p):
     """
-    Returns True if ``a`` is a primitive root of ``n``
+    Returns True if ``a`` is a primitive root of ``p``
 
-    ``a`` is said to be the primitive root of ``n`` if gcd(a, n) == 1 and
-    totient(n) is the smallest positive number s.t.
+    ``a`` is said to be the primitive root of ``p`` if gcd(a, p) == 1 and
+    totient(p) is the smallest positive number s.t.
 
-        a**totient(n) cong 1 mod(n)
+        a**totient(p) cong 1 mod(p)
 
-    **Examples**
+    Examples
+    ========
+
     >>> from sympy.ntheory import is_primitive_root, n_order, totient
     >>> is_primitive_root(3, 10)
     True
@@ -73,13 +58,14 @@ def is_primitive_root(a, p):
     True
     >>> n_order(9, 10) == totient(10)
     False
+
     """
-    a, p = int_tested(a, p)
+    a, p = as_int(a), as_int(p)
     if igcd(a, p) != 1:
         raise ValueError("The two numbers should be relatively prime")
     if a > p:
         a = a % p
-    if n_order(a, p) == totient_(p):
+    if n_order(a, p) == totient(p):
         return True
     else:
         return False
@@ -89,15 +75,20 @@ def is_quad_residue(a, p):
     """
     Returns True if ``a`` (mod ``p``) is in the set of squares mod ``p``,
     i.e a % p in set([i**2 % p for i in range(p)]). If ``p`` is an odd
-    prime, an iterative method is used to make the determination.
+    prime, an iterative method is used to make the determination:
 
     >>> from sympy.ntheory import is_quad_residue
     >>> list(set([i**2 % 7 for i in range(7)]))
     [0, 1, 2, 4]
     >>> [j for j in range(7) if is_quad_residue(j, 7)]
     [0, 1, 2, 4]
+
+    See Also
+    ========
+
+    legendre_symbol, jacobi_symbol
     """
-    a, p = int_tested(a, p)
+    a, p = as_int(a), as_int(p)
     if p < 1:
         raise ValueError('p must be > 0')
     if a >= p or a < 0:
@@ -125,20 +116,31 @@ def is_quad_residue(a, p):
 
 def legendre_symbol(a, p):
     """
-    Returns 0 if a is multiple of p,
-            1 if a is a quadratic residue of p, else
-           -1
+    Returns
+    =======
+
+    1. 0 if a is multiple of p
+    2. 1 if a is a quadratic residue of p
+    3. -1 otherwise
 
     p should be an odd prime by definition
 
-    **Examples**
+    Examples
+    ========
+
     >>> from sympy.ntheory import legendre_symbol
     >>> [legendre_symbol(i, 7) for i in range(7)]
     [0, 1, 1, -1, 1, -1, -1]
     >>> list(set([i**2 % 7 for i in range(7)]))
     [0, 1, 2, 4]
+
+    See Also
+    ========
+
+    is_quad_residue, jacobi_symbol
+
     """
-    a, p = int_tested(a, p)
+    a, p = as_int(a), as_int(p)
     if not isprime(p) or p == 2:
         raise ValueError("p should be an odd prime")
     _, a = divmod(a, p)
@@ -149,16 +151,21 @@ def legendre_symbol(a, p):
     else:
         return -1
 
+
 def jacobi_symbol(m, n):
     """
-    Returns 0 if m cong 0 mod(n),
-            1 if x**2 cong m mod(n) has a solution, else
-           -1.
+    Returns the product of the legendre_symbol(m, p)
+    for all the prime factors, p, of n.
 
-    jacobi_symbol(m, n) is product of the legendre_symbol(m, p)
-    for all the prime factors p of n.
+    Returns
+    =======
 
-    **Examples**
+    1. 0 if m cong 0 mod(n)
+    2. 1 if x**2 cong m mod(n) has a solution
+    3. -1 otherwise
+
+    Examples
+    ========
 
     >>> from sympy.ntheory import jacobi_symbol, legendre_symbol
     >>> from sympy import Mul, S
@@ -169,13 +176,19 @@ def jacobi_symbol(m, n):
 
     The relationship between the jacobi_symbol and legendre_symbol can
     be demonstrated as follows:
-        >>> L = legendre_symbol
-        >>> S(45).factors()
-        {3: 2, 5: 1}
-        >>> jacobi_symbol(7, 45) == L(7, 3)**2 * L(7, 5)**1
-        True
+
+    >>> L = legendre_symbol
+    >>> S(45).factors()
+    {3: 2, 5: 1}
+    >>> jacobi_symbol(7, 45) == L(7, 3)**2 * L(7, 5)**1
+    True
+
+    See Also
+    ========
+
+    is_quad_residue, legendre_symbol
     """
-    m, n = int_tested(m, n)
+    m, n = as_int(m), as_int(n)
     if not n % 2:
         raise ValueError("n should be an odd integer")
     if m < 0 or m > n:

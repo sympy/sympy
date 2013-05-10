@@ -9,16 +9,25 @@ from sympy.external import import_module
 
 scipy = import_module('scipy')
 if not scipy:
-    #py.test will not execute any tests now
+    #bin/test will not execute any tests now
     disabled = True
+
+
+def setup_module(module):
+    """py.test support"""
+    if getattr(module, 'disabled', False):
+        import pytest
+        pytest.skip("scipy isn't available.")
 
 from sympy import jn_zeros
 
+
 def eq(a, b, tol=1e-6):
     for x, y in zip(a, b):
-        if not (abs(x-y) < tol):
+        if not (abs(x - y) < tol):
             return False
     return True
+
 
 def test_jn_zeros():
     assert eq(jn_zeros(0, 4, method="scipy"),

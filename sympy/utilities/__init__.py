@@ -1,9 +1,11 @@
-"""Some utilities that may help.
+"""This module contains some general purpose utilities that are used across
+SymPy.
 """
 from iterables import (flatten, group, take, subsets,
     variations, numbered_symbols, cartes, capture, dict_merge,
-    postorder_traversal, preorder_traversal, interactive_traversal,
-    prefixes, postfixes, sift, topological_sort)
+    postorder_traversal, interactive_traversal,
+    prefixes, postfixes, sift, topological_sort, unflatten,
+    has_dups, has_variety, reshape, default_sort_key, ordered)
 
 from lambdify import lambdify
 from source import source
@@ -14,5 +16,3 @@ from runtests import test, doctest
 
 from cythonutils import cythonized
 from timeutils import timed
-
-from misc import default_sort_key

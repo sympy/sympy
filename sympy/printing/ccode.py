@@ -12,14 +12,15 @@ source code files that are compilable without further modifications.
 from sympy.core import S, C
 from sympy.printing.codeprinter import CodePrinter
 from sympy.printing.precedence import precedence
-
+from sympy.core.compatibility import default_sort_key
 
 # dictionary mapping sympy function to (argument_conditions, C_function).
 # Used in CCodePrinter._print_Function(self)
 known_functions = {
-        "ceiling": [(lambda x: True, "ceil")],
-        "Abs": [(lambda x: not x.is_integer, "fabs")],
-        }
+    "ceiling": [(lambda x: True, "ceil")],
+    "Abs": [(lambda x: not x.is_integer, "fabs")],
+}
+
 
 class CCodePrinter(CodePrinter):
     """A printer to convert python expressions to strings of c code"""
@@ -38,7 +39,7 @@ class CCodePrinter(CodePrinter):
         CodePrinter.__init__(self, settings)
         self.known_functions = dict(known_functions)
         userfuncs = settings.get('user_functions', {})
-        for k,v in userfuncs.items():
+        for k, v in userfuncs.items():
             if not isinstance(v, tuple):
                 userfuncs[k] = (lambda *x: True, v)
         self.known_functions.update(userfuncs)
@@ -55,11 +56,14 @@ class CCodePrinter(CodePrinter):
         return "%s;" % codestring
 
     def doprint(self, expr, assign_to=None):
+        """
+        Actually format the expression as C code.
+        """
 
         if isinstance(assign_to, basestring):
             assign_to = C.Symbol(assign_to)
         elif not isinstance(assign_to, (C.Basic, type(None))):
-            raise TypeError("CCodePrinter cannot assign to object of type %s"%
+            raise TypeError("CCodePrinter cannot assign to object of type %s" %
                     type(assign_to))
 
         # keep a set of expressions that are not strictly translatable to C
@@ -73,7 +77,7 @@ class CCodePrinter(CodePrinter):
             for i, (e, c) in enumerate(expr.args):
                 if i == 0:
                     lines.append("if (%s) {" % self._print(c))
-                elif i == len(expr.args)-1 and c == True:
+                elif i == len(expr.args) - 1 and c is True:
                     lines.append("else {")
                 else:
                     lines.append("else if (%s) {" % self._print(c))
@@ -90,7 +94,7 @@ class CCodePrinter(CodePrinter):
             if len(not_c) > 0:
                 frontlines.append("// Not C:")
                 for expr in sorted(not_c, key=str):
-                    frontlines.append("// %s" % expr)
+                    frontlines.append("// %s" % repr(expr))
             for name, value in sorted(self._number_symbols, key=str):
                 frontlines.append("double const %s = %s;" % (name, value))
             lines = frontlines + lines
@@ -121,16 +125,16 @@ class CCodePrinter(CodePrinter):
     def _print_Pow(self, expr):
         PREC = precedence(expr)
         if expr.exp == -1:
-            return '1.0/%s'%(self.parenthesize(expr.base, PREC))
+            return '1.0/%s' % (self.parenthesize(expr.base, PREC))
         elif expr.exp == 0.5:
             return 'sqrt(%s)' % self._print(expr.base)
         else:
-            return 'pow(%s, %s)'%(self._print(expr.base),
+            return 'pow(%s, %s)' % (self._print(expr.base),
                                  self._print(expr.exp))
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d.0/%d.0' % (p, q)
+        return '%d.0L/%d.0L' % (p, q)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -158,29 +162,31 @@ class CCodePrinter(CodePrinter):
     def _print_Piecewise(self, expr):
         # This method is called only for inline if constructs
         # Top level piecewise is handled in doprint()
-        ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e)) \
-                       for e, c in expr.args[:-1]]
+        ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
+                   for e, c in expr.args[:-1]]
         last_line = ""
-        if expr.args[-1].cond == True:
-            last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
+        if expr.args[-1].cond is True:
+            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
         else:
-            ecpairs.append("(%s) {\n%s\n" % \
+            ecpairs.append("(%s) ? (\n%s\n" %
                            (self._print(expr.args[-1].cond),
                             self._print(expr.args[-1].expr)))
-        code = "if %s" + last_line
-        return code % "else if ".join(ecpairs)
+        code = "%s" + last_line
+        return code % ": ".join(ecpairs) + " )"
 
     def _print_And(self, expr):
         PREC = precedence(expr)
-        return '&&'.join(self.parenthesize(a, PREC) for a in expr.args)
+        return ' && '.join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Or(self, expr):
         PREC = precedence(expr)
-        return '||'.join(self.parenthesize(a, PREC) for a in expr.args)
+        return ' || '.join(self.parenthesize(a, PREC)
+                for a in sorted(expr.args, key=default_sort_key))
 
     def _print_Not(self, expr):
         PREC = precedence(expr)
-        return '!'+self.parenthesize(expr.args[0], PREC)
+        return '!' + self.parenthesize(expr.args[0], PREC)
 
     def _print_Function(self, expr):
         if expr.func.__name__ in self.known_functions:
@@ -197,8 +203,8 @@ class CCodePrinter(CodePrinter):
         """Accepts a string of code or a list of code lines"""
 
         if isinstance(code, basestring):
-           code_lines = self.indent_code(code.splitlines(True))
-           return ''.join(code_lines)
+            code_lines = self.indent_code(code.splitlines(True))
+            return ''.join(code_lines)
 
         tab = "   "
         inc_token = ('{', '(', '{\n', '(\n')
@@ -207,7 +213,8 @@ class CCodePrinter(CodePrinter):
         code = [ line.lstrip(' \t') for line in code ]
 
         increase = [ int(any(map(line.endswith, inc_token))) for line in code ]
-        decrease = [ int(any(map(line.startswith, dec_token))) for line in code ]
+        decrease = [ int(any(map(line.startswith, dec_token)))
+                     for line in code ]
 
         pretty = []
         level = 0
@@ -224,31 +231,38 @@ class CCodePrinter(CodePrinter):
 def ccode(expr, assign_to=None, **settings):
     r"""Converts an expr to a string of c code
 
-        Arguments:
-          expr  --  a sympy expression to be converted
+        Parameters
+        ==========
 
-        Optional arguments:
-          precision  --  the precision for numbers such as pi [default=15]
-          user_functions  --  A dictionary where keys are FunctionClass instances
-                              and values are there string representations.
-                              Alternatively, the dictionary value can be a list
-                              of tuples i.e. [(argument_test, cfunction_string)].
-                              See below for examples.
-          human  --  If True, the result is a single string that may contain
-                     some constant declarations for the number symbols. If
-                     False, the same information is returned in a more
-                     programmer-friendly data structure.
+        expr : sympy.core.Expr
+            a sympy expression to be converted
+        precision : optional
+            the precision for numbers such as pi [default=15]
+        user_functions : optional
+            A dictionary where keys are FunctionClass instances and values
+            are there string representations.  Alternatively, the
+            dictionary value can be a list of tuples i.e. [(argument_test,
+            cfunction_string)].  See below for examples.
+        human : optional
+            If True, the result is a single string that may contain some
+            constant declarations for the number symbols. If False, the
+            same information is returned in a more programmer-friendly
+            data structure.
+
+        Examples
+        ========
 
         >>> from sympy import ccode, symbols, Rational, sin
         >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))
-        '8*sqrt(2)*pow(tau, 7.0/2.0)'
+        '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
         >>> ccode(sin(x), assign_to="s")
         's = sin(x);'
 
 
     """
     return CCodePrinter(settings).doprint(expr, assign_to)
+
 
 def print_ccode(expr, **settings):
     """Prints C representation of the given expression."""

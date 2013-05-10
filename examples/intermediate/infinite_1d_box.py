@@ -2,13 +2,14 @@
 
 """
 Applying perturbation theory to calculate the ground state energy
-of the infinite 1D box of width $a$ with a perturbation
-which is linear in $x$, up to second order in perturbation
+of the infinite 1D box of width ``a`` with a perturbation
+which is linear in ``x``, up to second order in perturbation
 """
 
 from sympy.core import pi
 from sympy import Integral, var, S
 from sympy.functions import sin, sqrt
+
 
 def X_n(n, a, x):
     """
@@ -41,6 +42,7 @@ def E_n(n, a, mass):
     """
     return ((n * pi / a)**2) / mass
 
+
 def energy_corrections(perturbation, n, a=10, mass=0.5):
     """
     Calculating first two order corrections due to perturbation theory and
@@ -68,14 +70,15 @@ def energy_corrections(perturbation, n, a=10, mass=0.5):
 
             Vnm(n, n, a).evalf(),
 
-            (Vnm(n, n-1, a)**2/(E_n(n, a, mass) - E_n(n-1, a, mass))
-           + Vnm(n, n+1, a)**2/(E_n(n, a, mass) - E_n(n+1, a, mass))).evalf())
+            (Vnm(n, n - 1, a)**2/(E_n(n, a, mass) - E_n(n - 1, a, mass))
+           + Vnm(n, n + 1, a)**2/(E_n(n, a, mass) - E_n(n + 1, a, mass))).evalf())
+
 
 def main():
     print
     print "Applying perturbation theory to calculate the ground state energy"
-    print "of the infinite 1D box of width $a$ with a perturbation"
-    print "which is linear in $x$, up to second order in perturbation."
+    print "of the infinite 1D box of width ``a`` with a perturbation"
+    print "which is linear in ``x``, up to second order in perturbation."
     print
 
     x, _a = var("x _a")

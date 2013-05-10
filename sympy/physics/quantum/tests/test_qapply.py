@@ -1,33 +1,29 @@
-from sympy import I, symbols, Symbol, sqrt, expand, Integer, srepr
+from sympy import I, Integer, sqrt, symbols, Matrix
 
 from sympy.physics.quantum.anticommutator import AntiCommutator
 from sympy.physics.quantum.commutator import Commutator
-from sympy.physics.quantum.dagger import Dagger
-from sympy.physics.quantum.operator import Operator
-from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.constants import hbar
-from sympy.physics.quantum.spin import (
-    Jx, Jy, Jz, Jplus, Jminus, J2,
-    JzKet, JzBra, JxKet, JxBra
-)
+from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.gate import H
+from sympy.physics.quantum.operator import Operator, UnitaryOperator
+from sympy.physics.quantum.qapply import qapply
 from sympy.physics.quantum.qubit import Qubit
+from sympy.physics.quantum.spin import Jx, Jy, Jz, Jplus, Jminus, J2, JzKet
+from sympy.physics.quantum.state import Ket
+from sympy.physics.quantum.density import Density
+from sympy.physics.quantum.qubit import Qubit
+from sympy.physics.quantum.gate import UGate
 
+j, jp, m, mp = symbols("j j' m m'")
 
-j = Symbol('j')
-m = Symbol('m')
-jp = Symbol("j'")
-mp = Symbol("m'")
-
-z = JzKet(1,0)
-po = JzKet(1,1)
-mo = JzKet(1,-1)
+z = JzKet(1, 0)
+po = JzKet(1, 1)
+mo = JzKet(1, -1)
 
 A = Operator('A')
 
 
 class Foo(Operator):
-
     def _apply_operator_JzKet(self, ket, **options):
         return ket
 
@@ -47,7 +43,8 @@ def test_extra():
     extra = z.dual*A*z
     assert qapply(Jz*po*extra) == hbar*po*extra
     assert qapply(Jx*z*extra) == (hbar*po/sqrt(2) + hbar*mo/sqrt(2))*extra
-    assert qapply((Jplus + Jminus)*z/sqrt(2)*extra) == hbar*po*extra + hbar*mo*extra
+    assert qapply(
+        (Jplus + Jminus)*z/sqrt(2)*extra) == hbar*po*extra + hbar*mo*extra
     assert qapply(Jz*(po + mo)*extra) == hbar*po*extra - hbar*mo*extra
     assert qapply(Jz*po*extra + Jz*mo*extra) == hbar*po*extra - hbar*mo*extra
     assert qapply(Jminus*Jminus*po*extra) == 2*hbar**2*mo*extra
@@ -66,7 +63,7 @@ def test_zero():
 
 
 def test_commutator():
-    assert qapply(Commutator(Jx,Jy)*Jz*po) == I*hbar**3*po
+    assert qapply(Commutator(Jx, Jy)*Jz*po) == I*hbar**3*po
     assert qapply(Commutator(J2, Jz)*Jz*po) == 0
     assert qapply(Commutator(Jz, Foo('F'))*po) == 0
     assert qapply(Commutator(Foo('F'), Jz)*po) == 0
@@ -88,3 +85,16 @@ def test_dagger():
     lhs = Dagger(Qubit(0))*Dagger(H(0))
     rhs = Dagger(Qubit(1))/sqrt(2) + Dagger(Qubit(0))/sqrt(2)
     assert qapply(lhs, dagger=True) == rhs
+
+
+def test_issue2974():
+    x, y = symbols('x y', commutative=False)
+    A = Ket(x, y)
+    B = Operator('B')
+    assert qapply(A) == A
+    assert qapply(A.dual*B) == A.dual*B
+
+
+def test_density():
+    d = Density([Jz*mo, 0.5], [Jz*po, 0.5])
+    assert qapply(d) == Density([-hbar*mo, 0.5], [hbar*po, 0.5])
