@@ -195,3 +195,11 @@ def test_indexing():
 
 def test_3814_MatrixElement_as_Expr():
     str(MatrixSymbol('m', 1, 1) > 0)  # make sure this doesn't raise an error
+
+def test_matrix_element():
+    from sympy import log, expand, cancel, simplify, sympify, factor
+    e = log(MatrixSymbol('m', 1, 1)[0, 0]**2 + 1) > 0
+
+    expr_fns = [expand, cancel, simplify, sympify, factor]
+    for fn in expr_fns:
+        fn(e)
