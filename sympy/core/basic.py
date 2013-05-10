@@ -1016,14 +1016,20 @@ class Basic(object):
                     args[i] = arg
             if hit:
                 rv = self.func(*args)
-                if hints.get('hack2', False) and isinstance(self, C.Mul) \
-                        and not rv.is_Mul:  # 2-arg hack
-                    from sympy.core.mul import _unevaluated_Mul
-                    from sympy.utilities.iterables import sift
-                    sifted = sift(args, lambda a: a.is_Add)
-                    notadd = C.Mul(*sifted[False])
-                    add = C.Mul(*sifted[True])
-                    return _unevaluated_Mul(notadd, add)
+                hack2 = hints.get('hack2', False)
+                if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
+                    coeff = S.One
+                    nonnumber = []
+                    for i in args:
+                        if i.is_Number:
+                            coeff *= i
+                        else:
+                            nonnumber.append(i)
+                    nonnumber = self.func(*nonnumber)
+                    if coeff is S.One:
+                        return nonnumber
+                    else:
+                        return self.func(coeff, nonnumber, evaluate=False)
                 return rv
             return self
 
@@ -1110,20 +1116,25 @@ class Basic(object):
             args = []
             for a in self.args:
                 try:
-                    args.append(a.xreplace(rule))
+                    args.append(a.xreplace(rule, hack2=hack2))
                 except AttributeError:
                     args.append(a)
             args = tuple(args)
             if not _aresame(args, self.args):
                 rv = self.func(*args)
-                if hack2 and isinstance(self, C.Mul) \
-                        and not rv.is_Mul:  # 2-arg hack
-                    from sympy.core.mul import _unevaluated_Mul
-                    from sympy.utilities.iterables import sift
-                    sifted = sift(args, lambda a: isinstance(a, C.Add))
-                    notadd = C.Mul(*sifted[False])
-                    add = C.Mul(*sifted[True])
-                    return _unevaluated_Mul(notadd, add)
+                if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
+                    coeff = S.One
+                    nonnumber = []
+                    for i in args:
+                        if isinstance(i, C.Number):
+                            coeff *= i
+                        else:
+                            nonnumber.append(i)
+                    nonnumber = self.func(*nonnumber)
+                    if coeff is S.One:
+                        return nonnumber
+                    else:
+                        return self.func(coeff, nonnumber, evaluate=False)
                 return rv
         return self
 
