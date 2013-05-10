@@ -192,3 +192,6 @@ def test_indexing():
     A[1, 2]
     A[l, k]
     A[l+1, k+1]
+
+def test_3814_MatrixElement_as_Expr():
+    str(MatrixSymbol('m', 1, 1) > 0)  # make sure this doesn't raise an error
