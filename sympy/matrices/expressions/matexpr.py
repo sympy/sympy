@@ -285,6 +285,9 @@ class MatrixElement(Expr):
     i = property(lambda self: self.args[1])
     j = property(lambda self: self.args[2])
 
+    @property
+    def free_symbols(self):
+        return set((self.i, self.j))
 
 class MatrixSymbol(MatrixExpr):
     """Symbolic representation of a Matrix object
