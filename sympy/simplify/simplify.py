@@ -4310,9 +4310,8 @@ def sum_add(self, other, method=0):
 
     if type(self) == type(other):
         if method == 0:
-            if len(self.limits) == len(other.limits):
-                if self.limits == other.limits:
-                    return Sum(self.function + other.function, *self.limits)
+            if self.limits == other.limits:
+                return Sum(self.function + other.function, *self.limits)
         elif method == 1:
             if simplify(self.function - other.function) == 0:
                 if len(self.limits) == len(other.limits) == 1:
@@ -4368,9 +4367,8 @@ def product_mul(self, other, method=0):
 
     if type(self) == type(other):
         if method == 0:
-            if len(self.limits) == len(other.limits):
-                if self.limits == other.limits:
-                    return Product(self.function * other.function, *self.limits)
+            if self.limits == other.limits:
+                return Product(self.function * other.function, *self.limits)
         elif method == 1:
             if simplify(self.function - other.function) == 0:
                 if len(self.limits) == len(other.limits) == 1:
