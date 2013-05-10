@@ -5,6 +5,7 @@ from sympy import (Add, Mul, solve, ceiling, floor, sqrt, sympify, simplify, Sub
 
 from sympy.simplify.simplify import rad_rationalize
 from sympy.ntheory.modular import solve_congruence
+from sympy.utilities import default_sort_key
 
 
 def diop_solve(eq, param=symbols("t", Integer=True)):
@@ -75,7 +76,7 @@ def classify_diop(eq):
     """
     eq = eq.expand(force=True)
     var = list(eq.free_symbols)
-    var.sort()
+    var.sort(key=default_sort_key)
 
     coeff = {}
     diop_type = None

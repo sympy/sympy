@@ -543,7 +543,7 @@ def roots_quintic(f):
     result_n = []
     for root in result:
         result_n.append(root.n(5))
-    result_n = sorted(result_n)
+    result_n = sorted(result_n, key=default_sort_key)
 
     prev_entry = None
     for r in result_n:
