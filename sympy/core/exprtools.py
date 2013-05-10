@@ -864,7 +864,10 @@ def gcd_terms(terms, isprimitive=False, clear=True, fraction=True):
         if not isinstance(a, Expr):
             if isinstance(a, Basic):
                 return a.func(*[handle(i) for i in a.args])
-            return type(a)([handle(i) for i in a])
+            elif isinstance(a, (tuple, list, set, frozenset)):
+                return type(a)([handle(i) for i in a])
+            else:
+                return a
         return gcd_terms(a, isprimitive, clear, fraction)
 
     if isinstance(terms, Dict):
@@ -969,7 +972,9 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
         p = Add._from_args(list_args)  # gcd_terms will fix up ordering
     elif p.args:
         p = p.func(
-            *[factor_terms(a, radical, clear, fraction) for a in p.args])
+            *[factor_terms(a, radical, clear, fraction)
+                if isinstance(a, Expr) else a
+                for a in p.args])
     p = gcd_terms(p,
         isprimitive=True,
         clear=clear,
