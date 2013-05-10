@@ -72,10 +72,10 @@ _normalized = True
 
 
 def normalized(normalize):
-    """Should Hadamard gates be normalized by a 1/sqrt(2).
+    """Set flag controlling normalization of Hadamard gates by 1/sqrt(2).
 
     This is a global setting that can be used to simplify the look of various
-    expressions, by leaving of the leading 1/sqrt(2) of the Hadamard gate.
+    expressions, by leaving off the leading 1/sqrt(2) of the Hadamard gate.
 
     Parameters
     ----------

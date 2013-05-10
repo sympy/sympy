@@ -828,6 +828,26 @@ class Basic(object):
         >>> expr.subs(dict([A,B,C,D,E]))
         a*c*sin(d*e) + b
 
+        Until there is no longer automatic distribution of the 2-arg Mul, if
+        a repllacement of a factor in a Mul causes the Mul to reduce to
+        two factors an Add will be returned. This can be over-ridden by
+        setting the ``hack2`` keyword to True:
+
+        >>> from sympy import Symbol
+        >>> N = Symbol('N', commutative=False)
+        >>> eq = 2*(x + 1 + N); eq
+        2*(x + 1 + N)
+        >>> eq.subs(N, 0)
+        2*x + 2
+        >>> eq.subs(N, 0, hack2=True)
+        2*(x + 1)
+        >>> eq = 2*x*(y + 1); eq
+        2*x*(y + 1)
+        >>> eq.subs(x, 1)
+        2*y + 2
+        >>> eq.subs(x, 1, hack2=True)
+        2*(y + 1)
+
         See Also
         ========
         replace: replacement capable of doing wildcard-like matching,
@@ -896,7 +916,7 @@ class Basic(object):
             rv = self
             for old, new in sequence:
                 d = C.Dummy()
-                rv = rv._subs(old, d)
+                rv = rv._subs(old, d, **kwargs)
                 reps[d] = new
                 if not isinstance(rv, Basic):
                     break
@@ -904,7 +924,7 @@ class Basic(object):
         else:
             rv = self
             for old, new in sequence:
-                rv = rv._subs(old, new)
+                rv = rv._subs(old, new, **kwargs)
                 if not isinstance(rv, Basic):
                     break
             return rv
@@ -995,7 +1015,22 @@ class Basic(object):
                     hit = True
                     args[i] = arg
             if hit:
-                return self.func(*args)
+                rv = self.func(*args)
+                hack2 = hints.get('hack2', False)
+                if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
+                    coeff = S.One
+                    nonnumber = []
+                    for i in args:
+                        if i.is_Number:
+                            coeff *= i
+                        else:
+                            nonnumber.append(i)
+                    nonnumber = self.func(*nonnumber)
+                    if coeff is S.One:
+                        return nonnumber
+                    else:
+                        return self.func(coeff, nonnumber, evaluate=False)
+                return rv
             return self
 
         if _aresame(self, old):
@@ -1014,9 +1049,11 @@ class Basic(object):
         """
         return None
 
-    def xreplace(self, rule):
+    def xreplace(self, rule, hack2=False):
         """
-        Replace occurrences of objects within the expression.
+        Replace occurrences of objects within the expression. If ``hack2`` is
+        True then don't let a Mul become and Add via autodistribution of a
+        numerical coefficient.
 
         Parameters
         ==========
@@ -1079,12 +1116,26 @@ class Basic(object):
             args = []
             for a in self.args:
                 try:
-                    args.append(a.xreplace(rule))
+                    args.append(a.xreplace(rule, hack2=hack2))
                 except AttributeError:
                     args.append(a)
             args = tuple(args)
             if not _aresame(args, self.args):
-                return self.func(*args)
+                rv = self.func(*args)
+                if hack2 and self.is_Mul and not rv.is_Mul:  # 2-arg hack
+                    coeff = S.One
+                    nonnumber = []
+                    for i in args:
+                        if isinstance(i, C.Number):
+                            coeff *= i
+                        else:
+                            nonnumber.append(i)
+                    nonnumber = self.func(*nonnumber)
+                    if coeff is S.One:
+                        return nonnumber
+                    else:
+                        return self.func(coeff, nonnumber, evaluate=False)
+                return rv
         return self
 
     @deprecated(useinstead="has", issue=2389, deprecated_since_version="0.7.2")
@@ -1595,7 +1646,7 @@ class Atom(Basic):
         if self == expr:
             return repl_dict
 
-    def xreplace(self, rule):
+    def xreplace(self, rule, hack2=False):
         return rule.get(self, self)
 
     def doit(self, **hints):

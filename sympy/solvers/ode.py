@@ -277,7 +277,7 @@ def sub_func_doit(eq, func, new):
 
     To keep subs from having to look through all derivatives, we
     mask them off with dummy variables, do the func sub, and then
-    replace masked off derivatives with their doit values.
+    replace masked-off derivatives with their doit values.
 
     Examples
     ========
@@ -2674,18 +2674,15 @@ def ode_almost_linear(eq, func, order, match):
         f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
              dy
         >>> pprint(dsolve(genform, hint = 'almost_linear'))
-                                                    -y*k(x)
-                                                    -------
-                                                      f(x)
-        l(y) = /C1 + /      y        for k(x) = 0\*e
-               |     |                           |
-               |     |       y*k(x)              |
-               |     |       ------              |
-               |     <        f(x)               |
-               |     |-g(x)*e                    |
-               |     |-------------   otherwise  |
-               |     |     k(x)                  |
-               \     \                           /
+               /     //      y        for k(x) = 0\\
+               |     ||                           ||  -y*k(x)
+               |     ||       y*k(x)              ||  -------
+               |     ||       ------              ||    f(x)
+        l(y) = |C1 + |<        f(x)               ||*e
+               |     ||-g(x)*e                    ||
+               |     ||-------------   otherwise  ||
+               |     ||     k(x)                  ||
+               \     \\                           //
 
 
     See Also

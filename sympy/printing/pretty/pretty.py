@@ -270,6 +270,7 @@ class PrettyPrinter(Printer):
         pform = prettyForm(*pform.below(stringPict.LINE, x))
         pform.baseline = pform.baseline + 1
         pform = prettyForm(*stringPict.next(pform, f))
+        pform.binding = prettyForm.MUL
 
         return pform
 
@@ -373,6 +374,7 @@ class PrettyPrinter(Printer):
                 s = prettyForm(*s.left(pform))
 
         pform = prettyForm(*arg.left(s))
+        pform.binding = prettyForm.MUL
         return pform
 
     def _print_Product(self, expr):
@@ -429,6 +431,7 @@ class PrettyPrinter(Printer):
         #pretty_func.baseline = 0
 
         pretty_func.baseline = max_upper + sign_height//2
+        pretty_func.binding = prettyForm.MUL
         return pretty_func
 
     def _print_Sum(self, expr):
@@ -529,6 +532,7 @@ class PrettyPrinter(Printer):
             prettyF = prettyForm(*prettySign.right(prettyF))
 
         prettyF.baseline = max_upper + sign_height//2
+        prettyF.binding = prettyForm.MUL
         return prettyF
 
     def _print_Limit(self, l):
@@ -786,6 +790,8 @@ class PrettyPrinter(Printer):
             D = prettyForm(*D.below(D_row))
 
         D = prettyForm(*D.parens('{', ''))
+        D.baseline = D.height()//2
+        D.binding = prettyForm.OPEN
         return D
 
     def _hprint_vec(self, v):
@@ -1058,6 +1064,7 @@ class PrettyPrinter(Printer):
 
         def pretty_negative(pform, index):
             """Prepend a minus sign to a pretty form. """
+            #TODO: Move this code to prettyForm
             if index == 0:
                 if pform.height() > 1:
                     pform_neg = '- '
@@ -1066,8 +1073,14 @@ class PrettyPrinter(Printer):
             else:
                 pform_neg = ' - '
 
-            pform = stringPict.next(pform_neg, pform)
-            return prettyForm(binding=prettyForm.NEG, *pform)
+            if pform.binding > prettyForm.NEG:
+                p = stringPict(*pform.parens())
+            else:
+                p = pform
+            p = stringPict.next(pform_neg, p)
+            # Lower the binding to NEG, even if it was higher. Otherwise, it
+            # will print as a + ( - (b)), instead of a - (b).
+            return prettyForm(binding=prettyForm.NEG, *p)
 
         for i, term in enumerate(terms):
             if term.is_Mul and _coeff_isneg(term):
@@ -1196,7 +1209,6 @@ class PrettyPrinter(Printer):
         return s
 
     def _print_Pow(self, power):
-        from sympy.physics.quantum import Operator
         from sympy.simplify.simplify import fraction
         b, e = power.as_base_exp()
         if power.is_commutative:
@@ -1208,9 +1220,6 @@ class PrettyPrinter(Printer):
             if e.is_Rational and e < 0:
                 return prettyForm("1")/self._print(C.Pow(b, -e, evaluate=False))
 
-        # None of the above special forms, do a standard power
-        if not (b.is_Atom or b.is_Function or isinstance(b, Operator)):
-            return prettyForm(*self._print(b).parens())**self._print(e)
         return self._print(b)**self._print(e)
 
     def __print_numer_denom(self, p, q):

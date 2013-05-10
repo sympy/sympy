@@ -363,9 +363,9 @@ def test_log_product():
     x, y = symbols('x,y', positive=True)
     from sympy.concrete import Product, Sum
     f, g = Function('f'), Function('g')
-    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(log(x**i), (i, 1, n))
+    assert simplify(log(Product(x**i, (i, 1, n)))) == Sum(i*log(x), (i, 1, n))
     assert simplify(log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))) == \
-            Sum(log(x**i*y**j), (i, 1, n), (j, 1, m))
+            log(Product(x**i*y**j, (i, 1, n), (j, 1, m)))
 
     expr = log(Product(-2, (n, 0, 4)))
     assert Eq(simplify(expr), expr)
