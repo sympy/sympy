@@ -1738,7 +1738,10 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        implementation = platform.python_implementation()
+        if v[:2] == (2, 5):   # CPython2.5 doesn't have python_implementation
+            implementation = "CPython"
+        else:
+            implementation = platform.python_implementation()
         if implementation == 'PyPy':
             implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
         self.write("executable:         %s  (%s) [%s]\n" %
