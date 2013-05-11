@@ -1,12 +1,11 @@
 from __future__ import with_statement
 
-from os import walk, sep, chdir, pardir
+from os import walk, sep, pardir
 from os.path import split, join, abspath, exists, isfile
 from glob import glob
 import re
 import random
 import sys
-from sympy.utilities.pytest import raises
 
 # System path separator (usually slash or backslash) to be
 # used with excluded files, e.g.
@@ -82,7 +81,7 @@ def check_files(files, file_check, exclusions=set(), pattern=None):
             continue
         if filter(lambda ex: ex in fname, exclusions):
             continue
-        if pattern is None or re.match(patttern, fname):
+        if pattern is None or re.match(pattern, fname):
             file_check(fname)
 
 
