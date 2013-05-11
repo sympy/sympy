@@ -5,6 +5,7 @@ python:
   - 2.7
   - 3.2
   - 3.3
+  - "pypy"
 matrix:
   include:
     - python: 2.7
@@ -13,6 +14,8 @@ matrix:
       env: TEST_GMPY="true"
     - python: 2.7
       env: TEST_SPHINX="true"
+  allow_failures:
+    - python: "pypy"
 before_install:
   - if [[ "${TEST_GMPY}" == "true" ]]; then
       sudo apt-get update -qq;
