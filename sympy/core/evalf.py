@@ -948,8 +948,7 @@ def do_integral(expr, prec, options):
 
 def evalf_integral(expr, prec, options):
     limits = expr.limits
-    if len(limits) != 1 or not isinstance(limits[0], Tuple) or \
-            len(limits[0]) != 3:
+    if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
     workprec = prec
     i = 0
@@ -1070,8 +1069,7 @@ def hypsum(expr, n, start, prec):
 def evalf_sum(expr, prec, options):
     func = expr.function
     limits = expr.limits
-    if len(limits) != 1 or not isinstance(limits[0], Tuple) or \
-            len(limits[0]) != 3:
+    if len(limits) != 1 or len(limits[0]) != 3:
         raise NotImplementedError
     prec2 = prec + 10
     try:
