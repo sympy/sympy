@@ -31,6 +31,7 @@ class Prufer(Basic):
         """Returns Prufer sequence for the Prufer object.
 
         This sequence is found by removing the highest numbered vertex,
+
         recording the node it was attached to, and continuuing until only
         two verices remain. The Prufer sequence is the list of recorded nodes.
 
@@ -268,8 +269,7 @@ class Prufer(Basic):
         rv = []
         got = set()
         nmin = nmax = None
-        while e:
-            ei = e.pop()
+        for ei in e:
             for i in ei:
                 got.add(i)
             nmin = min(ei[0], nmin) if nmin is not None else ei[0]
@@ -287,7 +287,7 @@ class Prufer(Basic):
             for i, ei in enumerate(rv):
                 rv[i] = [n - nmin for n in ei]
             nmax -= nmin
-        return rv, nmax + 1
+        return sorted(rv), nmax + 1
 
     def prufer_rank(self):
         """Computes the rank of a Prufer sequence.
@@ -429,4 +429,4 @@ class Prufer(Basic):
         prufer_rank, rank, next, size
 
         """
-        return Prufer.unrank(self.rank - delta, self.nodes)
+        return Prufer.unrank(self.rank -delta, self.nodes)
