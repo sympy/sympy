@@ -125,7 +125,7 @@ class Factors(object):
                 factors[S.NegativeOne] = S.One
                 n = -n
             if n is not S.One:
-                if n.is_Float or n.is_Integer:
+                if n.is_Float or n.is_Integer or n is S.Infinity:
                     factors[n] = S.One
                 elif n.is_Rational:
                     # since we're processing Numbers, the denominator is
