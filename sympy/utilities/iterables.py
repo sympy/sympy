@@ -4,7 +4,6 @@ from operator import gt
 
 from sympy.core.decorators import deprecated
 from sympy.core import Basic, C
-from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # this is the logical location of these functions
 from sympy.core.compatibility import (
@@ -196,7 +195,7 @@ def multiset(seq):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import multiset, group
+    >>> from sympy.utilities.iterables import multiset
     >>> multiset('mississippi')
     {'i': 4, 'm': 1, 'p': 2, 's': 4}
 
@@ -377,7 +376,7 @@ def ibin(n, bits=0, str=False):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import ibin, variations
+    >>> from sympy.utilities.iterables import ibin
     >>> ibin(2)
     [1, 0]
     >>> ibin(2, 4)
@@ -456,7 +455,7 @@ def variations(seq, n, repetition=False):
     sympy.core.compatibility.permutations
     sympy.core.compatibility.product
     """
-    from sympy.core.compatibility import permutations, product
+    from sympy.core.compatibility import product
 
     if not repetition:
         seq = tuple(seq)
@@ -950,7 +949,7 @@ def multiset_combinations(m, n, g=None):
                         yield rv
 
 
-def multiset_permutations(m, k=None, g=None):
+def multiset_permutations(m, size=None, g=None):
     """
     Return the unique permutations of multiset ``m``.
 
@@ -966,7 +965,6 @@ def multiset_permutations(m, k=None, g=None):
     >>> len(list(multiset_permutations('banana')))
     60
     """
-    size = k
     if g is None:
         if type(m) is dict:
             g = [[k, m[k]] for k in ordered(m)]
@@ -1488,7 +1486,6 @@ def has_variety(seq):
     ========
 
     >>> from sympy.utilities.iterables import has_variety
-    >>> from sympy import Dict, Set
 
     >>> has_variety((1, 2, 1))
     True
@@ -1524,13 +1521,6 @@ def uniq(seq):
     [[1], [2, 1], [1]]
 
     """
-    from sympy.core.function import Tuple
-
-    if not hasattr(seq, '__getitem__'):
-        container = list
-    else:
-        container = type(seq)
-
     try:
         seen = set()
         result = []
@@ -1560,7 +1550,7 @@ def generate_bell(n):
     ========
 
     >>> from sympy.utilities.iterables import generate_bell
-    >>> from sympy import zeros, Matrix, factorial, pprint
+    >>> from sympy import zeros, Matrix
     >>> from sympy.core.compatibility import permutations
 
     This is the sort of permutation used in the ringing of physical bells,
