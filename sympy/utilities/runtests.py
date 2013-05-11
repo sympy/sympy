@@ -14,6 +14,7 @@ Goals:
 from __future__ import with_statement
 import os
 import sys
+import platform
 import inspect
 import traceback
 import pdb
@@ -1737,8 +1738,14 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:         %s  (%s)\n" %
-            (executable, python_version))
+        if v[:2] == (2, 5):   # CPython2.5 doesn't have python_implementation
+            implementation = "CPython"
+        else:
+            implementation = platform.python_implementation()
+        if implementation == 'PyPy':
+            implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
+        self.write("executable:         %s  (%s) [%s]\n" %
+            (executable, python_version, implementation))
         from .misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE
