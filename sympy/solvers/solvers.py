@@ -1093,7 +1093,8 @@ def _solve(f, *symbols, **flags):
             for candidate in candidates:
                 if candidate in result:
                     continue
-                if cond is True or cond.subs(symbol, candidate):
+                cond = cond is True or cond.subs(symbol, candidate)
+                if cond is not False:
                     # Only include solutions that do not match the condition
                     # of any previous pieces.
                     matches_other_piece = False
@@ -1102,11 +1103,14 @@ def _solve(f, *symbols, **flags):
                             break
                         if other_cond is False:
                             continue
-                        if other_cond.subs(symbol, candidate):
+                        if other_cond.subs(symbol, candidate) is True:
                             matches_other_piece = True
                             break
                     if not matches_other_piece:
-                        result.add(candidate)
+                        result.add(Piecewise(
+                            (candidate, cond is True or cond.doit()),
+                            (S.NaN, True)
+                        ))
         check = False
     else:
         # first see if it really depends on symbol and whether there

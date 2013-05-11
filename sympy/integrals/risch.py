@@ -34,8 +34,10 @@ from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
 
-from sympy.functions import log, exp, sin, cos, tan, asin, acos, atan, Piecewise
+from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
+    Piecewise, sin, tan)
 
+from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
 from sympy.integrals import Integral, integrate
 
 from sympy.polys import gcd, cancel, PolynomialError, Poly, reduced, RootSum, DomainError
@@ -157,7 +159,7 @@ class DifferentialExtension(object):
         'E_args', 'L_K', 'L_args', 'cases', 'case', 't', 'd', 'newf', 'level',
         'ts')
 
-    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None):
+    def __init__(self, f=None, x=None, handle_first='log', dummy=True, extension=None, rewrite_complex=False):
         """
         Tries to build a transcendental extension tower from f with respect to x.
 
@@ -212,13 +214,20 @@ class DifferentialExtension(object):
         # (e.g., we pull out a constant from an exponential)
         self.f = f
         self.x = x
-
-        # Get common cases out of the way:
-        if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
-            raise NotImplementedError("Trigonometric extensions are not "
-            "supported (yet!)")
         self.reset(dummy=dummy)
         exp_new_extension, log_new_extension = True, True
+        if rewrite_complex:
+            rewritables = {
+                (sin, cos, cot, tan, sinh, cosh, coth, tanh): exp,
+                (asin, acos, acot, atan): log,
+            }
+        #rewrite the trigonometric components
+            for candidates, rule in rewritables.iteritems():
+                self.newf = self.newf.rewrite(candidates, rule)
+        else:
+            if any(i.has(x) for i in self.f.atoms(sin, cos, tan, atan, asin, acos)):
+                raise NotImplementedError("Trigonometric extensions are not "
+                "supported (yet!)")
 
         def update(seq, atoms, func):
             s = set(seq)
@@ -1135,31 +1144,34 @@ def integrate_primitive_polynomial(p, DE):
     from sympy.integrals.prde import limited_integrate
 
     Zero = Poly(0, DE.t)
+    q = Poly(0, DE.t)
 
     if not p.has(DE.t):
         return (Zero, p, True)
 
-    Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
+    while True:
+        if not p.has(DE.t):
+            return (q, p, True)
 
-    with DecrementLevel(DE):  # We had better be integrating the lowest extension (x)
-                              # with ratint().
-        a = p.LC()
-        aa, ad = frac_in(a, DE.t)
+        Dta, Dtb = frac_in(DE.d, DE.T[DE.level - 1])
 
-        try:
-            (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
-            assert len(c) == 1
-        except NonElementaryIntegralException:
-            return (Zero, p, False)
+        with DecrementLevel(DE):  # We had better be integrating the lowest extension (x)
+                                  # with ratint().
+            a = p.LC()
+            aa, ad = frac_in(a, DE.t)
 
-    m = p.degree(DE.t)
-    q0 = c[0].as_poly(DE.t)*Poly(DE.t**(m + 1)/(m + 1), DE.t) + \
-        (ba.as_expr()/bd.as_expr()).as_poly(DE.t)*Poly(DE.t**m, DE.t)
+            try:
+                (ba, bd), c = limited_integrate(aa, ad, [(Dta, Dtb)], DE)
+                assert len(c) == 1
+            except NonElementaryIntegralException:
+                return (q, p, False)
 
-    # TODO: Rewrite this non-recursively
-    # c.f. risch_integrate(log(x)**1001, x)
-    q, r, b = integrate_primitive_polynomial(p - derivation(q0, DE), DE)
-    return (q + q0, r, b)
+        m = p.degree(DE.t)
+        q0 = c[0].as_poly(DE.t)*Poly(DE.t**(m + 1)/(m + 1), DE.t) + \
+            (ba.as_expr()/bd.as_expr()).as_poly(DE.t)*Poly(DE.t**m, DE.t)
+
+        p = p - derivation(q0, DE)
+        q = q + q0
 
 
 def integrate_primitive(a, d, DE, z=None):
@@ -1418,7 +1430,9 @@ class NonElementaryIntegral(Integral):
     pass
 
 
-def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False, conds='piecewise'):
+def risch_integrate(f, x, extension=None, handle_first='log',
+                    separate_integral=False, rewrite_complex=False,
+                    conds='piecewise'):
     r"""
     The Risch Integration Algorithm.
 
@@ -1522,7 +1536,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
     """
     f = S(f)
 
-    DE = extension or DifferentialExtension(f, x, handle_first=handle_first)
+    DE = extension or DifferentialExtension(f, x, handle_first=handle_first, rewrite_complex=rewrite_complex)
     fa, fd = DE.fa, DE.fd
 
     result = S(0)
