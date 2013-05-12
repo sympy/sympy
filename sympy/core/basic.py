@@ -1,5 +1,4 @@
 """Base class for all the objects in SymPy"""
-from copy import copy
 from sympy.core.assumptions import ManagedProperties
 from sympy.core.cache import cacheit
 from sympy.core.core import BasicType, C
@@ -18,7 +17,7 @@ class Basic(object):
 
     1) Always use ``.args``, when accessing parameters of some instance:
 
-        >>> from sympy import symbols, cot
+        >>> from sympy import cot
         >>> from sympy.abc import x, y
 
         >>> cot(x).args
@@ -315,8 +314,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy.core import Basic, S, I
-        >>> from sympy.abc import x
+        >>> from sympy.core import S, I
 
         >>> sorted([S(1)/2, I, -I], key=lambda x: x.sort_key())
         [1/2, -I, I]
@@ -662,7 +660,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy import symbols, cot
+        >>> from sympy import cot
         >>> from sympy.abc import x, y
 
         >>> cot(x).args
@@ -716,7 +714,7 @@ class Basic(object):
     def as_poly(self, *gens, **args):
         """Converts ``self`` to a polynomial or returns ``None``.
 
-           >>> from sympy import Poly, sin
+           >>> from sympy import sin
            >>> from sympy.abc import x, y
 
            >>> print (x**2 + x*y).as_poly()
@@ -814,7 +812,7 @@ class Basic(object):
         default_sort_key to break any ties. All other iterables are left
         unsorted.
 
-        >>> from sympy import sqrt, sin, cos, exp
+        >>> from sympy import sqrt, sin, cos
         >>> from sympy.abc import a, b, c, d, e
 
         >>> A = (sqrt(sin(2*x)), a)
@@ -939,7 +937,7 @@ class Basic(object):
         should be applied wherein a search for replacements is made
         amongst the arguments of self.
 
-        >>> from sympy import Basic, Add, Mul
+        >>> from sympy import Add
         >>> from sympy.abc import x, y, z
 
         Examples
@@ -1159,7 +1157,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy import sin, S
+        >>> from sympy import sin
         >>> from sympy.abc import x, y, z
         >>> (x**2 + sin(x*y)).has(z)
         False
@@ -1451,7 +1449,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy import symbols, Wild, Integer, Basic
+        >>> from sympy import symbols, Wild, Basic
         >>> a, b, c = symbols('a b c')
         >>> x = Wild('x')
         >>> Basic(a + x, x).matches(Basic(a + b, c)) is None
@@ -1492,7 +1490,7 @@ class Basic(object):
         Examples
         ========
 
-        >>> from sympy import symbols, Wild
+        >>> from sympy import Wild
         >>> from sympy.abc import x, y
         >>> p = Wild("p")
         >>> q = Wild("q")
@@ -1518,7 +1516,7 @@ class Basic(object):
         {p_: 2/x**2}
 
         """
-        from sympy import signsimp, count_ops
+        from sympy import signsimp
         pattern = sympify(pattern)
         s = signsimp(self)
         p = signsimp(pattern)
@@ -1542,7 +1540,7 @@ class Basic(object):
            or unless the 'deep' hint was set to 'False'.
 
            >>> from sympy import Integral
-           >>> from sympy.abc import x, y
+           >>> from sympy.abc import x
 
            >>> 2*Integral(x, x)
            2*Integral(x, x)
@@ -1588,8 +1586,8 @@ class Basic(object):
         defined called 'deep'. When 'deep' is set to False it will
         forbid functions to rewrite their contents.
 
-        >>> from sympy import sin, exp, I
-        >>> from sympy.abc import x, y
+        >>> from sympy import sin, exp
+        >>> from sympy.abc import x
 
         Unspecified pattern:
         >>> sin(x).rewrite(exp)
@@ -1682,7 +1680,7 @@ def _aresame(a, b):
 
     To SymPy, 2.0 == 2:
 
-    >>> from sympy import S, Symbol, cos, sin
+    >>> from sympy import S
     >>> 2.0 == S(2)
     True
 
@@ -1777,7 +1775,6 @@ class preorder_traversal(object):
     ========
 
     >>> from sympy import symbols
-    >>> from sympy import symbols, default_sort_key
     >>> from sympy.core.basic import preorder_traversal
     >>> x, y, z = symbols('x y z')
 

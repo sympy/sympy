@@ -443,7 +443,7 @@ class Function(Application, Expr):
         Examples
         ========
 
-        >>> from sympy import atan2, O
+        >>> from sympy import atan2
         >>> from sympy.abc import x, y
         >>> atan2(x, y).series(x, n=2)
         atan2(0, y) + x/y + O(x**2)
@@ -641,8 +641,8 @@ class WildFunction(Function, AtomicExpr):
     Examples
     ========
 
-    >>> from sympy import Wild, WildFunction, Function, cos
-    >>> from sympy.abc import x, y, z
+    >>> from sympy import WildFunction, Function, cos
+    >>> from sympy.abc import x, y
     >>> F = WildFunction('F')
     >>> f = Function('f')
     >>> x.match(F)
@@ -1591,7 +1591,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
     proper assumptions--the arguments must be positive and the exponents must
     be real--or else the ``force`` hint must be True:
 
-    >>> from sympy import log, symbols, oo
+    >>> from sympy import log, symbols
     >>> log(x**2*y).expand(log=True)
     log(x**2*y)
     >>> log(x**2*y).expand(log=True, force=True)
@@ -1679,7 +1679,7 @@ def expand(e, deep=True, modulus=None, power_base=True, power_exp=True,
       functions or to use ``hint=False`` to this function to finely control
       which hints are applied. Here are some examples::
 
-        >>> from sympy import expand_log, expand, expand_mul, expand_power_base
+        >>> from sympy import expand, expand_mul, expand_power_base
         >>> x, y, z = symbols('x,y,z', positive=True)
 
         >>> expand(log(x*(y + z)))
@@ -1911,7 +1911,7 @@ def expand_trig(expr, deep=True):
     Examples
     ========
 
-    >>> from sympy import expand_trig, sin, cos
+    >>> from sympy import expand_trig, sin
     >>> from sympy.abc import x, y
     >>> expand_trig(sin(x+y)*(x+y))
     (x + y)*(sin(x)*cos(y) + sin(y)*cos(x))
@@ -2209,7 +2209,7 @@ def nfloat(expr, n=15, exponent=False):
 
     >>> from sympy.core.function import nfloat
     >>> from sympy.abc import x, y
-    >>> from sympy import cos, pi, S, sqrt
+    >>> from sympy import cos, pi, sqrt
     >>> nfloat(x**4 + x/2 + cos(pi/3) + 1 + sqrt(y))
     x**4 + 0.5*x + sqrt(y) + 1.5
     >>> nfloat(x**4 + sqrt(y), exponent=True)
@@ -2217,7 +2217,6 @@ def nfloat(expr, n=15, exponent=False):
 
     """
     from sympy.core import Pow
-    from sympy.core.basic import _aresame
 
     if iterable(expr, exclude=basestring):
         if isinstance(expr, (dict, Dict)):

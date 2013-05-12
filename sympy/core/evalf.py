@@ -15,7 +15,7 @@ from sympy.mpmath.libmp import (from_int, from_man_exp, from_rational, fhalf,
 from sympy.mpmath.libmp import bitcount as mpmath_bitcount
 from sympy.mpmath.libmp.backend import MPZ
 from sympy.mpmath.libmp.libmpc import _infs_nan
-from sympy.mpmath.libmp.libmpf import dps_to_prec, prec_to_dps
+from sympy.mpmath.libmp.libmpf import dps_to_prec
 from sympy.mpmath.libmp.gammazeta import mpf_bernoulli
 
 from sympy.core.compatibility import SYMPY_INTS
@@ -1366,7 +1366,7 @@ def N(x, n=15, **options):
     Examples
     ========
 
-    >>> from sympy import Sum, Symbol, oo, N
+    >>> from sympy import Sum, oo, N
     >>> from sympy.abc import k
     >>> Sum(1/k**k, (k, 1, oo))
     Sum(k**(-k), (k, 1, oo))

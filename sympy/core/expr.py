@@ -299,7 +299,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import log, Integral
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
 
         >>> x.is_number
         False
@@ -834,7 +834,7 @@ class Expr(Basic, EvalfMixin):
         ========
 
         >>> from sympy import sin, cos
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
 
         >>> (sin(x)**2*cos(x) + sin(x)**2 + 1).as_ordered_terms()
         [sin(x)**2*cos(x), sin(x)**2, 1]
@@ -1341,8 +1341,8 @@ class Expr(Basic, EvalfMixin):
         Examples
         ========
 
-        >>> from sympy import E, pi, sin, I, symbols, Poly
-        >>> from sympy.abc import x, y
+        >>> from sympy import E, pi, sin, I, Poly
+        >>> from sympy.abc import x
 
         >>> E.as_coefficient(E)
         1
@@ -1924,7 +1924,6 @@ class Expr(Basic, EvalfMixin):
 
         Examples
         ========
-        >>> from sympy import S
         >>> from sympy.abc import x, y
         >>> e = 2*x + 3
         >>> e.extract_additively(x + 1)
@@ -2251,7 +2250,7 @@ class Expr(Basic, EvalfMixin):
         result in an expression that does not appear to be a rational function
         to become one.
 
-        >>> from sympy import sqrt, factor, cancel
+        >>> from sympy import sqrt, factor
         >>> y = Symbol('y', positive=True)
         >>> a = sqrt(y**2 + 2*y + 1)/y
         >>> a.is_rational_function(y)
@@ -2962,8 +2961,6 @@ class Expr(Basic, EvalfMixin):
         True
 
         """
-        from sympy.functions.elementary.exponential import log
-
         x = self
         if not x.is_number:
             raise TypeError('%s is not a number' % x)

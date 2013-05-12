@@ -592,7 +592,7 @@ def default_sort_key(item, order=None):
     Examples
     ========
 
-    >>> from sympy import Basic, S, I, default_sort_key
+    >>> from sympy import S, I, default_sort_key
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
@@ -756,7 +756,7 @@ def ordered(seq, keys=None, default=True, warn=False):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import ordered, default_sort_key
+    >>> from sympy.utilities.iterables import ordered
     >>> from sympy import count_ops
     >>> from sympy.abc import x, y
 
