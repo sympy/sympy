@@ -6154,8 +6154,6 @@ def is_zero_dimensional(F, *gens, **args):
 class GroebnerBasis(Basic):
     """Represents a reduced Groebner basis. """
 
-    __slots__ = ['_basis', '_options']
-
     def __new__(cls, F, *gens, **args):
         """Compute a reduced Groebner basis for a system of polynomials. """
         options.allowed_flags(args, ['polys', 'method'])
