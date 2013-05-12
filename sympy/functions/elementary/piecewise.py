@@ -2,7 +2,7 @@ from sympy.core import Basic, S, Function, diff, Tuple, Expr
 from sympy.core.relational import Equality, Relational
 from sympy.core.symbol import Dummy
 from sympy.functions.elementary.miscellaneous import Max, Min
-from sympy.logic.boolalg import And, Boolean, Or, Not
+from sympy.logic.boolalg import And, Boolean, distribute_and_over_or, Not, Or
 from sympy.core.compatibility import default_sort_key
 
 
@@ -152,8 +152,10 @@ class Piecewise(Function):
                 if non_false_ecpairs[-1].cond == cond:
                     continue
                 elif non_false_ecpairs[-1].expr == expr:
-                    non_false_ecpairs[-1] = ExprCondPair(
-                        expr, Or(cond, non_false_ecpairs[-1].cond))
+                    newcond = Or(cond, non_false_ecpairs[-1].cond)
+                    if isinstance(newcond, (And, Or)):
+                        newcond = distribute_and_over_or(newcond)
+                    non_false_ecpairs[-1] = ExprCondPair(expr, newcond)
                     continue
             non_false_ecpairs.append(ExprCondPair(expr, cond))
         if len(non_false_ecpairs) != len(args) or piecewise_again:
@@ -491,6 +493,9 @@ class Piecewise(Function):
             if checksol(cond, {}, minimal=True):
                 # the equality is trivially solved
                 return True
+            diff = cond.lhs - cond.rhs
+            if diff.is_commutative:
+                return diff.is_zero
         return None
 
 

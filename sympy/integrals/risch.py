@@ -29,11 +29,13 @@ from sympy.core.function import Lambda
 from sympy.core.numbers import ilcm
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
+from sympy.core.relational import Eq, Ne
 from sympy.core.singleton import S
 from sympy.core.symbol import Symbol, Dummy
 from sympy.core.compatibility import reduce, ordered
 
-from sympy.functions import log, exp, sin, cos, tan, cot, asin, acos, atan, acot
+from sympy.functions import (acos, acot, asin, atan, cos, cot, exp, log,
+    Piecewise, sin, tan)
 
 from sympy.functions import sinh, cosh, tanh, coth, asinh, acosh , atanh , acoth
 from sympy.integrals import Integral, integrate
@@ -1264,7 +1266,7 @@ def integrate_hyperexponential_polynomial(p, DE, z):
     return (qa, qd, b)
 
 
-def integrate_hyperexponential(a, d, DE, z=None):
+def integrate_hyperexponential(a, d, DE, z=None, conds='piecewise'):
     """
     Integration of hyperexponential functions.
 
@@ -1302,8 +1304,17 @@ def integrate_hyperexponential(a, d, DE, z=None):
 
     i = pp.nth(0, 0)
 
-    ret = ((g1[0].as_expr()/g1[1].as_expr() + qa.as_expr()/
-        qd.as_expr()).subs(s) + residue_reduce_to_basic(g2, DE, z))
+    ret = ((g1[0].as_expr()/g1[1].as_expr()).subs(s) \
+        + residue_reduce_to_basic(g2, DE, z))
+
+    if conds == 'piecewise' and DE.x not in qd.as_expr().subs(s).free_symbols:
+        # We have to be careful if the exponent is S.Zero!
+        ret += Piecewise(
+                (DE.x, Eq(qd.as_expr().subs(s), 0)),
+                ((qa.as_expr()/qd.as_expr()).subs(s), True)
+            )
+    else:
+        ret += (qa.as_expr()/qd.as_expr()).subs(s)
 
     if not b:
         i = p - (qd*derivation(qa, DE) - qa*derivation(qd, DE)).as_expr()/\
@@ -1419,7 +1430,9 @@ class NonElementaryIntegral(Integral):
     pass
 
 
-def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=False , rewrite_complex=False):
+def risch_integrate(f, x, extension=None, handle_first='log',
+                    separate_integral=False, rewrite_complex=False,
+                    conds='piecewise'):
     r"""
     The Risch Integration Algorithm.
 
@@ -1535,7 +1548,7 @@ def risch_integrate(f, x, extension=None, handle_first='log', separate_integral=
 
         fa, fd = fa.cancel(fd, include=True)
         if case == 'exp':
-            ans, i, b = integrate_hyperexponential(fa, fd, DE)
+            ans, i, b = integrate_hyperexponential(fa, fd, DE, conds=conds)
         elif case == 'primitive':
             ans, i, b = integrate_primitive(fa, fd, DE)
         elif case == 'base':

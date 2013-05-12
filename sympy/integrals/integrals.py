@@ -5,6 +5,7 @@ from sympy.core.containers import Tuple
 from sympy.core.expr import Expr
 from sympy.core.function import diff
 from sympy.core.numbers import oo
+from sympy.core.relational import Eq
 from sympy.core.sets import Interval
 from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Symbol, Wild)
@@ -13,7 +14,7 @@ from sympy.integrals.manualintegrate import manualintegrate
 from sympy.integrals.trigonometry import trigintegrate
 from sympy.integrals.deltafunctions import deltaintegrate
 from sympy.integrals.rationaltools import ratint
-from sympy.integrals.heurisch import heurisch
+from sympy.integrals.heurisch import heurisch, heurisch_wrapper
 from sympy.integrals.meijerint import meijerint_definite, meijerint_indefinite
 from sympy.utilities import xthreaded, flatten
 from sympy.utilities.misc import filldedent
@@ -772,7 +773,7 @@ class Integral(Expr):
         >>> from sympy import Integral
         >>> from sympy.abc import x, i
         >>> Integral(x**i, (i, 1, 3)).doit()
-        x**3/log(x) - x/log(x)
+        Piecewise((2, log(x) == 0), (x**3/log(x) - x/log(x), True))
 
         See Also
         ========
@@ -884,7 +885,7 @@ class Integral(Expr):
             if meijerg1 is False and meijerg is True:
                 antideriv = None
             else:
-                antideriv = self._eval_integral(function, xab[0], meijerg=meijerg1, risch=risch)
+                antideriv = self._eval_integral(function, xab[0], meijerg=meijerg1, risch=risch, conds=conds)
                 if antideriv is None and meijerg1 is True:
                     ret = try_meijerg(function, xab)
                     if ret is not None:
@@ -1024,7 +1025,7 @@ class Integral(Expr):
             rv += self.func(arg, Tuple(x, a, b))
         return rv
 
-    def _eval_integral(self, f, x, meijerg=None, risch=None):
+    def _eval_integral(self, f, x, meijerg=None, risch=None, conds='piecewise'):
         """
         Calculate the anti-derivative to the function f(x).
 
@@ -1096,7 +1097,7 @@ class Integral(Expr):
 
         if risch:
             try:
-                return risch_integrate(f, x)
+                return risch_integrate(f, x, conds=conds)
             except NotImplementedError:
                 return None
 
@@ -1125,7 +1126,7 @@ class Integral(Expr):
 
         if risch is not False:
             try:
-                result, i = risch_integrate(f, x, separate_integral=True)
+                result, i = risch_integrate(f, x, separate_integral=True, conds=conds)
             except NotImplementedError:
                 pass
             else:
@@ -1187,8 +1188,12 @@ class Integral(Expr):
                 if M is not None:
                     if g.exp == -1:
                         h = C.log(g.base)
-                    else:
+                    elif conds != 'piecewise':
                         h = g.base**(g.exp + 1) / (g.exp + 1)
+                    else:
+                        h1 = C.log(g.base)
+                        h2 = g.base**(g.exp + 1) / (g.exp + 1)
+                        h = Piecewise((h1, Eq(g.exp, -1)), (h2, True))
 
                     parts.append(coeff * h / M[a])
                     continue
@@ -1202,7 +1207,7 @@ class Integral(Expr):
 
             if not meijerg:
                 # g(x) = Mul(trig)
-                h = trigintegrate(g, x)
+                h = trigintegrate(g, x, conds=conds)
                 if h is not None:
                     parts.append(coeff * h)
                     continue
@@ -1216,7 +1221,7 @@ class Integral(Expr):
                 # Try risch again.
                 if risch is not False:
                     try:
-                        h, i = risch_integrate(g, x, separate_integral=True)
+                        h, i = risch_integrate(g, x, separate_integral=True, conds=conds)
                     except NotImplementedError:
                         h = None
                     else:
@@ -1228,7 +1233,10 @@ class Integral(Expr):
 
                 # fall back to heurisch
                 try:
-                    h = heurisch(g, x, hints=[])
+                    if conds == 'piecewise':
+                        h = heurisch_wrapper(g, x, hints=[])
+                    else:
+                        h = heurisch(g, x, hints=[])
                 except PolynomialError:
                     # XXX: this exception means there is a bug in the
                     # implementation of heuristic Risch integration
@@ -1249,25 +1257,26 @@ class Integral(Expr):
                     parts.append(coeff * h)
                     continue
 
-            try:
-                manual = manualintegrate(g, x)
-                if manual is not None and manual.func != Integral:
-                    if manual.has(Integral):
-                        # try to have other algorithms do the integrals
-                        # manualintegrate can't handle
-                        manual = manual.func(*[
-                            arg.doit() if arg.has(Integral) else arg
-                            for arg in manual.args
-                        ]).expand(multinomial=False,
-                                  log=False,
-                                  power_exp=False,
-                                  power_base=False)
-                    if not manual.has(Integral):
-                        parts.append(coeff * manual)
-                        continue
-            except (ValueError, PolynomialError):
-                # can't handle some SymPy expressions
-                pass
+            if h is None:
+                try:
+                    manual = manualintegrate(g, x)
+                    if manual is not None and manual.func != Integral:
+                        if manual.has(Integral):
+                            # try to have other algorithms do the integrals
+                            # manualintegrate can't handle
+                            manual = manual.func(*[
+                                arg.doit() if arg.has(Integral) else arg
+                                for arg in manual.args
+                            ]).expand(multinomial=False,
+                                      log=False,
+                                      power_exp=False,
+                                      power_base=False)
+                        if not manual.has(Integral):
+                            parts.append(coeff * manual)
+                            continue
+                except (ValueError, PolynomialError):
+                    # can't handle some SymPy expressions
+                    pass
 
             # if we failed maybe it was because we had
             # a product that could have been expanded,
@@ -1286,7 +1295,7 @@ class Integral(Expr):
                     # Note: risch will be identical on the expanded
                     # expression, but maybe it will be able to pick out parts,
                     # like x*(exp(x) + erf(x)).
-                    return self._eval_integral(f, x, meijerg=meijerg, risch=risch)
+                    return self._eval_integral(f, x, meijerg=meijerg, risch=risch, conds=conds)
 
             if h is not None:
                 parts.append(coeff * h)

@@ -1,7 +1,7 @@
 """Most of these tests come from the examples in Bronstein's book."""
 from __future__ import with_statement
 from sympy import (Poly, I, S, Function, log, symbols, exp, tan, sqrt,
-    Symbol, Lambda, sin, cos)
+    Symbol, Lambda, sin, cos, Eq, Piecewise)
 from sympy.integrals.risch import (gcdex_diophantine, frac_in, as_poly_1t,
     derivation, splitfactor, splitfactor_sqf, canonical_representation,
     hermite_reduce, polynomial_reduce, residue_reduce, residue_reduce_to_basic,
@@ -257,6 +257,19 @@ def test_integrate_hyperexponential_polynomial():
     assert integrate_hyperexponential_polynomial(p, DE, z) == (
         Poly((x - t0)*t1**2 + (-2*t0 + 2*x)*t1, t1), Poly(-2*x*t0 + x**2 +
         t0**2, t1), True)
+
+
+def test_integrate_hyperexponential_returns_piecewise():
+    a, b = symbols('a b')
+    DE = DifferentialExtension(a**x, x)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
+        (x, Eq(log(a), 0)), (exp(x*log(a))/log(a), True)), 0, True)
+    DE = DifferentialExtension(a**(b*x), x)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
+        (x, Eq(b*log(a), 0)), (exp(b*x*log(a))/(b*log(a)), True)), 0, True)
+    DE = DifferentialExtension(exp(a*x), x)
+    assert integrate_hyperexponential(DE.fa, DE.fd, DE) == (Piecewise(
+        (x, Eq(a, 0)), (exp(a*x)/a, True)), 0, True)
 
 
 def test_integrate_primitive():

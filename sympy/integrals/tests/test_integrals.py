@@ -4,7 +4,7 @@ from sympy import (
     Heaviside, I, Integral, integrate, Interval, Lambda, LambertW, log,
     Matrix, O, oo, pi, Piecewise, Poly, Rational, S, simplify, sin, sqrt,
     sstr, Sum, Symbol, symbols, sympify, terms_gcd, transpose, trigsimp,
-    Tuple, nan,
+    Tuple, nan, And, Eq, Or
 )
 from sympy.integrals.risch import NonElementaryIntegral
 from sympy.utilities.pytest import XFAIL, raises, slow
@@ -212,9 +212,10 @@ def test_issue536():
 
 def test_integrate_linearterm_pow():
     # check integrate((a*x+b)^c, x)  --  #400
-    y = Symbol('y')
-    assert integrate(x**y, x) == x**(y + 1)/(y + 1)
-    assert integrate((exp(y)*x + 1/y)**(1 + sin(y)), x) == \
+    y = Symbol('y', positive=True)
+    # TODO: Remove conds='none' below, let the assumption take care of it.
+    assert integrate(x**y, x, conds='none') == x**(y + 1)/(y + 1)
+    assert integrate((exp(y)*x + 1/y)**(1 + sin(y)), x, conds='none') == \
         exp(-y)*(exp(y)*x + 1/y)**(2 + sin(y)) / (2 + sin(y))
 
 
@@ -225,16 +226,19 @@ def test_issue519():
 
 
 def test_issue524():
-    assert integrate(cos((n + 1) * x), x) == sin(x*(n + 1)) / (n + 1)
-    assert integrate(cos((n - 1) * x), x) == sin(x*(n - 1)) / (n - 1)
-
-    assert integrate(cos((n + 1) * x) + cos((n - 1) * x), x) == \
-        sin(x*(n + 1)) / (n + 1) + sin(x*(n - 1)) / (n - 1)
+    assert integrate(cos((n + 1)*x), x) == Piecewise(
+        (x, Eq(n + 1, 0)), (sin((n + 1)*x)/(n + 1), True))
+    assert integrate(cos((n - 1)*x), x) == Piecewise(
+        (x, Eq(n - 1, 0)), (sin((n - 1)*x)/(n - 1), True))
+    assert integrate(cos((n + 1)*x) + cos((n - 1)*x), x) == \
+        Piecewise((x, Eq(n + 1, 0)), (sin((n + 1)*x)/(n + 1), True)) + \
+        Piecewise((x, Eq(n - 1, 0)), (sin((n - 1)*x)/(n - 1), True))
 
 
 def test_issue565():
-    assert integrate(
-        -1./2 * x * sin(n * pi * x/2), [x, -2, 0]) == 2*cos(pi*n)/(pi*n)
+    n = Symbol('n', integer=True, nonzero=True)
+    assert integrate(-1./2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
+        2*cos(pi*n)/(pi*n)
     assert integrate(-Rational(1)/2 * x * sin(n * pi * x/2), [x, -2, 0]) == \
         2*cos(pi*n)/(pi*n)
 
@@ -432,6 +436,31 @@ def test_integrate_DiracDelta():
     # issue 3328
     assert integrate(integrate(integrate(
         DiracDelta(x - y - z), (z, 0, oo)), (y, 0, 1)), (x, 0, 1)) == 1
+
+
+def test_integrate_returns_piecewise():
+    assert integrate(x**y, x) == Piecewise(
+        (log(x), Eq(y, -1)), (x**(y + 1)/(y + 1), True))
+    assert integrate(x**y, y) == Piecewise(
+        (y, Eq(log(x), 0)), (x**y/log(x), True))
+    assert integrate(exp(n*x), x) == Piecewise(
+        (x, Eq(n, 0)), (exp(n*x)/n, True))
+    assert integrate(x**(n*y), x) == Piecewise(
+        (log(x), Eq(n*y, -1)), (x**(n*y + 1)/(n*y + 1), True))
+    assert integrate(x**(n*y), y) == Piecewise(
+        (y, Eq(n*log(x), 0)), (x**(n*y)/(n*log(x)), True))
+    assert integrate(cos(n*x), x) == Piecewise(
+        (x, Eq(n, 0)), (sin(n*x)/n, True))
+    assert integrate(cos(n*x)**2, x) == Piecewise(
+        (x, Eq(n, 0)), ((n*x/2 + sin(n*x)*cos(n*x)/2)/n, True))
+    assert integrate(x*cos(n*x), x) == Piecewise(
+        (x**2/2, Eq(n, 0)), (x*sin(n*x)/n + cos(n*x)/n**2, True))
+    assert integrate(sin(n*x), x) == Piecewise(
+        (0, Eq(n, 0)), (-cos(n*x)/n, True))
+    assert integrate(sin(n*x)**2, x) == Piecewise(
+        (0, Eq(n, 0)), ((n*x/2 - sin(n*x)*cos(n*x)/2)/n, True))
+    assert integrate(x*sin(n*x), x) == Piecewise(
+        (0, Eq(n, 0)), (-x*cos(n*x)/n + sin(n*x)/n**2, True))
 
 
 def test_subs1():
@@ -725,6 +754,7 @@ def test_issue_1791():
 
 
 def test_issue_1277():
+    n = Symbol('n', integer=True, positive=True)
     assert simplify(integrate(n*(x**(1/n) - 1), (x, 0, S.Half)) -
                 (n**2 - 2**(1/n)*n**2 - n*2**(1/n))/(2**(1 + 1/n) + n*2**(1 + 1/n))) == 0
 
@@ -735,9 +765,24 @@ def test_issue_1418():
         6*x**Rational(7, 6)/7 - 3*x**Rational(11, 3)/11
 
 
+def test_issue_1428():
+    k, m = symbols('k m', integer=True)
+    assert integrate(sin(k*x)*sin(m*x), (x, 0, pi)) == Piecewise(
+        (0, And(Eq(k, 0), Eq(m, 0))),
+        (-pi/2, Eq(k, -m)),
+        (pi/2, Eq(k, m)),
+        (0, True))
+    assert integrate(sin(k*x)*sin(m*x), (x,)) == Piecewise(
+        (0, And(Eq(k, 0), Eq(m, 0))),
+        (-x*sin(m*x)**2/2 - x*cos(m*x)**2/2 + sin(m*x)*cos(m*x)/(2*m), Eq(k, -m)),
+        (x*sin(m*x)**2/2 + x*cos(m*x)**2/2 - sin(m*x)*cos(m*x)/(2*m), Eq(k, m)),
+        (m*sin(k*x)*cos(m*x)/(k**2 - m**2) -
+         k*sin(m*x)*cos(k*x)/(k**2 - m**2), True))
+
 def test_issue_1100():
     ypos = Symbol('y', positive=True)
-    assert integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo)) == \
+    # TODO: Remove conds='none' below, let the assumption take care of it.
+    assert integrate(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo), conds='none') == \
         Integral(exp(-I*2*pi*ypos*x)*x, (x, -oo, oo))
 
 
@@ -756,7 +801,8 @@ def test_issue_2314():
 
 
 def test_issue_1793a():
-    A, z, c = symbols('A z c')
+    A, z = symbols('A z')
+    c = Symbol('c', nonzero=True)
     P1 = -A*exp(-z)
     P2 = -A/(c*t)*(sin(x)**2 + cos(y)**2)
 
@@ -810,6 +856,7 @@ def test_atom_bug():
 
 
 def test_limit_bug():
+    z = Symbol('z', nonzero=True)
     assert integrate(sin(x*y*z), (x, 0, pi), (y, 0, pi)) == \
         -((-log(pi*z) + log(pi**2*z**2)/2 + Ci(pi**2*z))/z) + \
         log(z**2)/(2*z) + EulerGamma/z + 2*log(pi)/z
@@ -843,6 +890,8 @@ def test_issue841():
 
 
 def test_issue1304():
+    x = Symbol('x', real=True)
+    y = Symbol('y', nonzero=True, real=True)
     assert integrate(1/(x**2 + y**2)**S('3/2'), x) == \
         1/(y**2*sqrt(1 + y**2/x**2))
 
@@ -881,6 +930,7 @@ def test_issue_1116():
 
 
 def test_issue_1301():
+    n = Symbol('n', integer=True, positive=True)
     assert integrate((x**n)*log(x), x) == \
         n*x*x**n*log(x)/(n**2 + 2*n + 1) + x*x**n*log(x)/(n**2 + 2*n + 1) - \
         x*x**n/(n**2 + 2*n + 1)

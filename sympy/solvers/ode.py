@@ -2674,12 +2674,15 @@ def ode_almost_linear(eq, func, order, match):
         f(x)*--(l(y)) + g(x) + k(x)*l(y) = 0
              dy
         >>> pprint(dsolve(genform, hint = 'almost_linear'))
-                /          y*k(x)\
-               |           ------|  -y*k(x)
-               |            f(x) |  -------
-               |     g(x)*e      |    f(x)
-        l(y) = |C1 - ------------|*e
-               \         k(x)    /
+               /     //      y        for k(x) = 0\\
+               |     ||                           ||  -y*k(x)
+               |     ||       y*k(x)              ||  -------
+               |     ||       ------              ||    f(x)
+        l(y) = |C1 + |<        f(x)               ||*e
+               |     ||-g(x)*e                    ||
+               |     ||-------------   otherwise  ||
+               |     ||     k(x)                  ||
+               \     \\                           //
 
 
     See Also

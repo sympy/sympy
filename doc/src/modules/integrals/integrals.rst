@@ -101,6 +101,8 @@ API reference
 
 .. automethod:: sympy.integrals.heurisch
 
+.. automethod:: sympy.integrals.heurisch_wrapper
+
 .. automethod:: sympy.integrals.trigintegrate
 
 .. automethod:: sympy.integrals.manualintegrate
