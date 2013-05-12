@@ -480,3 +480,12 @@ def test_simplify():
         Sum(y, (t, a, b))) == Sum(x + y, (t, a, b)) + Sum(x, (t, b+1, c))
     assert simplify(Sum(x, (t, a, b)) + 2 * Sum(x, (t, b+1, c))) == \
         simplify(Sum(x, (t, a, b)) + Sum(x, (t, b+1, c)) + Sum(x, (t, b+1, c)))
+
+
+def test_change_index():
+    b = symbols('b', integer = True)
+
+    assert Sum(x, (x, a, b)).change_index(x, x + 1) == Sum(x-1, (x, a+1, b+1))
+    assert Sum(x**2, (x, a, b)).change_index(x, x-1) == Sum((x+1)**2, (x, a-1, b-1))
+    assert Sum(x**2, (x, a, b)).change_index(x, -x) == Sum((-x)**2, (x, -b, -a))
+    assert Sum(x, (x, a, b)).change_index(x, -x-1) == Sum(-x-1, (x, -b-1, -a-1))

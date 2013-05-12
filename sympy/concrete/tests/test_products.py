@@ -107,3 +107,12 @@ def test_simplify():
         Product(x, (t, b+1, c))) == Product(x*y, (t, a, b)) * Product(x, (t, b+1, c))
     assert simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
         Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * Product(x, (t, b+1, c))
+
+
+def test_change_index():
+    b = symbols('b', integer = True)
+
+    assert Product(x, (x, a, b)).change_index(x, x + 1) == Product(x-1, (x, a+1, b+1))
+    assert Product(x**2, (x, a, b)).change_index(x, x-1) == Product((x+1)**2, (x, a-1, b-1))
+    assert Product(x**2, (x, a, b)).change_index(x, -x) == Product((-x)**2, (x, -b, -a))
+    assert Product(x, (x, a, b)).change_index(x, -x-1) == Product(-x-1, (x, -b-1, -a-1))
