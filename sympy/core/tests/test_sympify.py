@@ -450,6 +450,9 @@ def test_kernS():
     # issue 3588
     assert kernS('Interval(-1,-2 - 4*(-3))') == Interval(-1, 10)
     assert kernS('_kern') == Symbol('_kern')
+    assert kernS('E**-(x)') == exp(-x)
+    e = 2*(x + y)*y
+    assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
 
 
 def test_issue_3441_3453():
