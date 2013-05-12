@@ -250,12 +250,12 @@ class Prufer(Basic):
 
         >>> from sympy.combinatorics.prufer import Prufer
         >>> Prufer.edges([1, 2, 3], [2, 4, 5]) # a T
-        ([[0, 1], [3, 4], [1, 2], [1, 3]], 5)
+        ([[0, 1], [1, 2], [1, 3], [3, 4]], 5)
 
         Duplicate edges are removed:
 
         >>> Prufer.edges([0, 1, 2, 3], [1, 4, 5], [1, 4, 6]) # a K
-        ([[0, 1], [1, 2], [4, 6], [4, 5], [1, 4], [2, 3]], 7)
+        ([[0, 1], [1, 2], [1, 4], [2, 3], [4, 5], [4, 6]], 7)
 
         """
         e = set()
