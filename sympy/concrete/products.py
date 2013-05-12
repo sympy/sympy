@@ -243,6 +243,7 @@ class Product(Expr):
         Ex:
         >>> from sympy.concrete import Product
         >>> from sympy import Subs
+        >>> x, a, b = symbols('x, a, b')
         >>> Product(x, (x, a, b)).change_index(x, x + 1)
         Product(x-1, (x, a+1, b+1))
         >>> Product(x, (x, a, b)).change_index(x, -x-1)
