@@ -1,18 +1,23 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.basic import C, sympify
 from sympy.core.numbers import Rational, I, pi
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.compatibility import permutations
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf
+from sympy.functions.elementary.piecewise import Piecewise
 
-from sympy.solvers import solve
+from sympy.logic.boolalg import And
+from sympy.solvers.solvers import solve, denoms
+from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
@@ -42,7 +47,7 @@ def components(f, x):
     """
     result = set()
 
-    if f.has(x):
+    if x in f.free_symbols:
         if f.is_Symbol:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
@@ -83,7 +88,71 @@ def _symbols(name, n):
     return lsyms[:n]
 
 
-def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_offset=0, unnecessary_permutations=None):
+def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
+                     degree_offset=0, unnecessary_permutations=None):
+    """
+    A wrapper around the heurisch integration algorithm.
+
+    This method takes the result from heurisch and checks for poles in the
+    denominator. For each of these poles, the integral is reevaluated, and
+    the final integration result is given in terms of a Piecewise.
+
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.functions import cos
+    >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
+    >>> n, x = symbols('n x')
+    >>> heurisch(cos(n*x), x)
+    sin(n*x)/n
+    >>> heurisch_wrapper(cos(n*x), x)
+    Piecewise((x, n == 0), (sin(n*x)/n, True))
+
+    See Also
+    ========
+
+    heurisch
+    """
+    f = sympify(f)
+    if x not in f.free_symbols:
+        return f*x
+
+    res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset,
+                   unnecessary_permutations)
+    if not isinstance(res, Basic):
+        return res
+    # We consider each denominator in the expression, and try to find
+    # cases where one or more symbolic denominator might be zero. The
+    # conditions for these cases are stored in the list slns.
+    slns = []
+    for d in denoms(res):
+        try:
+            slns += solve(d, dict=True, exclude=(x,))
+        except NotImplementedError:
+            pass
+    if not slns:
+        return res
+    slns = list(uniq(slns))
+    if len(slns) > 1:
+        eqs = []
+        for sub_dict in slns:
+            eqs.extend([Eq(key, value) for key, value in sub_dict.iteritems()])
+        slns = solve(eqs, dict=True, exclude=(x,)) + slns
+    # For each case listed in the list slns, we reevaluate the integral.
+    pairs = []
+    for sub_dict in slns:
+        expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries,
+                        degree_offset, unnecessary_permutations)
+        cond = And(*[Eq(key, value) for key, value in sub_dict.iteritems()])
+        pairs.append((expr, cond))
+    pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
+                           degree_offset, unnecessary_permutations), True))
+    return Piecewise(*pairs)
+
+
+def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
+             degree_offset=0, unnecessary_permutations=None):
     """
     Compute indefinite integral using heuristic Risch algorithm.
 
@@ -159,14 +228,13 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     components
     """
     f = sympify(f)
+    if x not in f.free_symbols:
+        return f*x
 
     if not f.is_Add:
         indep, f = f.as_independent(x)
     else:
         indep = S.One
-
-    if not f.has(x):
-        return indep*f*x
 
     rewritables = {
         (sin, cos, cot): tan,
