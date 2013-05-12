@@ -239,10 +239,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def __ne__(f, g):
         return not f.__eq__(g)
 
-    def __bool__(f):
+    def __nonzero__(f):
         return bool(f.numer)
-
-    __nonzero__ = __bool__
 
     def __pos__(f):
         """Negate all cefficients in ``f``. """
