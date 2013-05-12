@@ -234,6 +234,19 @@ class PolyRing(DefaultPrinting, IPolys):
             _gens.append(poly)
         return tuple(_gens)
 
+    def __getnewargs__(self):
+        return (self.symbols, self.domain, self.order)
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        del state["leading_expv"]
+
+        for key, value in state.items():
+            if key.startswith("monomial_"):
+                del state[key]
+
+        return state
+
     def __hash__(self):
         return self._hash
 
@@ -417,6 +430,9 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def parent(self):
         return self.ring.to_domain()
+
+    def __getnewargs__(self):
+        return (self.ring, list(self.iterterms()))
 
     _hash = None
 

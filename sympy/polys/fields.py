@@ -84,6 +84,9 @@ class FracField(DefaultPrinting):
         """Return a list of polynomial generators. """
         return tuple([ self.dtype(self, gen) for gen in self.ring.gens ])
 
+    def __getnewargs__(self):
+        return (self.symbols, self.domain, self.order)
+
     def __hash__(self):
         return self._hash
 
@@ -206,6 +209,9 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
     def parent(self):
         return self.field.to_domain()
+
+    def __getnewargs__(self):
+        return (self.field, self.numer, self.denom)
 
     _hash = None
 
