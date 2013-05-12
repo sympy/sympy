@@ -307,9 +307,9 @@ class Sum(Expr):
         >>> from sympy import symbols
         >>> x, a, b = symbols('x, a, b')
         >>> Sum(x, (x, a, b)).change_index(x, x + 1)
-        Sum(x-1, (x, a+1, b+1))
-        >>> Sum(x, (x, a, b)).change_index(x, -x-1)
-        Sum(-x-1, (x, -b-1, -a-1))
+        Sum(x-1, (x, a + 1, b + 1))
+        >>> Sum(x, (x, a, b)).change_index(x, -x - 1)
+        Sum(-x - 1, (x, -b - 1, -a - 1))
         """
         from sympy.concrete import Product
         from sympy import Subs
@@ -320,9 +320,11 @@ class Sum(Expr):
         for i in range(len(self.limits)):
             if self.limits[i][0] == old:
                 if not invert:
-                    limits.append((self.limits[i][0], self.limits[i][1]+ new - old, self.limits[i][2] + new - old))
+                    limits.append((self.limits[i][0], self.limits[i][1]+ new - \
+                        old, self.limits[i][2] + new - old))
                 else:
-                    limits.append((self.limits[i][0], (new + old) - self.limits[i][2], (new + old) - self.limits[i][1]))
+                    limits.append((self.limits[i][0], (new + old) - self.limits[i][2], \
+                        (new + old) - self.limits[i][1]))
             else:
                 limits.append(self.limits[i])
 
