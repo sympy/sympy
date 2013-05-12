@@ -99,7 +99,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     "sample.tex" and run the default png viewer to display the resulting
     bitmap, do
 
-    >>> preview(x+y, outputTexFile="sample.tex")
+    >>> preview(x + y, outputTexFile="sample.tex")
 
 
     """
@@ -237,7 +237,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 from pyglet import window, image, gl
                 from pyglet.window import key
             except ImportError:
-                raise ImportError("pyglet is required for plotting.\n visit http://www.pyglet.org/")
+                raise ImportError("pyglet is required for preview.\n visit http://www.pyglet.org/")
 
             if output == "png":
                 from pyglet.image.codecs.png import PNGImageDecoder
