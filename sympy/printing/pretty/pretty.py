@@ -10,7 +10,7 @@ from sympy.printing.conventions import requires_partial
 
 from stringpict import prettyForm, stringPict
 from pretty_symbology import xstr, hobj, vobj, xobj, xsym, pretty_symbol, \
-    pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek, U, \
+    pretty_atom, pretty_use_unicode, pretty_try_use_unicode, greek_unicode, U, \
     annotated
 
 from sympy.utilities import default_sort_key
@@ -1013,7 +1013,7 @@ class PrettyPrinter(Printer):
         if self._use_unicode:
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek['gamma'][1]))
+            pform = prettyForm(*pform.left(greek_unicode['gamma']))
             return pform
         else:
             return self._print_Function(e)
@@ -1023,7 +1023,7 @@ class PrettyPrinter(Printer):
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
             pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek['gamma'][1]))
+            pform = prettyForm(*pform.left(greek_unicode['Gamma']))
             return pform
         else:
             return self._print_Function(e)
@@ -1033,7 +1033,7 @@ class PrettyPrinter(Printer):
             pform = self._print(e.args[0])
             pform = prettyForm(*pform.right(', ', self._print(e.args[1])))
             pform = prettyForm(*pform.parens())
-            pform = prettyForm(*pform.left(greek['gamma'][0]))
+            pform = prettyForm(*pform.left(greek_unicode['gamma']))
             return pform
         else:
             return self._print_Function(e)

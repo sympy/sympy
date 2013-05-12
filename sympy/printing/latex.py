@@ -5,7 +5,9 @@ A Printer which converts an expression into its LaTeX equivalent.
 from sympy.core import S, C, Add, Symbol
 from sympy.core.function import _coeff_isneg
 from sympy.core.sympify import SympifyError
+from sympy.core.alphabets import greeks
 
+## sympy.printing imports
 from printer import Printer
 from conventions import split_super_sub, requires_partial
 from precedence import precedence, PRECEDENCE
@@ -26,30 +28,26 @@ accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
                     'cot', 'coth', 're', 'im', 'frac', 'root', 'arg',
                     ]
 
-greeks = set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta',
-              'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron',
-              'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi',
-              'omega'])
-
-greek_dictionary = {'Alpha': 'A',
-                    'Beta': 'B',
-                    'Epsilon': 'E',
-                    'Zeta': 'Z',
-                    'Eta': 'H',
-                    'Iota': 'I',
-                    'Kappa': 'K',
-                    'Mu': 'M',
-                    'Nu': 'N',
-                    'omicron': 'o',
-                    'Omicron': 'O',
-                    'Rho': 'P',
-                    'Tau': 'T',
-                    'Chi': 'X',
-                    'lamda': r'\lambda',
-                    'Lamda': r'\Lambda',
-                    'khi': r'\chi',
-                    'Khi': r'X',
-                   }
+tex_greek_dictionary = {
+    'Alpha': 'A',
+    'Beta': 'B',
+    'Epsilon': 'E',
+    'Zeta': 'Z',
+    'Eta': 'H',
+    'Iota': 'I',
+    'Kappa': 'K',
+    'Mu': 'M',
+    'Nu': 'N',
+    'omicron': 'o',
+    'Omicron': 'O',
+    'Rho': 'P',
+    'Tau': 'T',
+    'Chi': 'X',
+    'lamda': r'\lambda',
+    'Lamda': r'\Lambda',
+    'khi': r'\chi',
+    'Khi': r'X',
+}
 
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
                      'hslash', 'mho', ])
@@ -1650,7 +1648,7 @@ def translate(s):
 
     let everything else pass as given
     '''
-    tex = greek_dictionary.get(s)
+    tex = tex_greek_dictionary.get(s)
     if tex:
         return tex
     elif s.lower() in greeks or s in other_symbols:
