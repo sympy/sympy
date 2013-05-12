@@ -57,7 +57,7 @@ tex_greek_dictionary = {
 }
 
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
-                     'hslash', 'mho', ])
+                     'hslash', 'mho', 'wp', ])
 
 
 class LatexPrinter(Printer):
