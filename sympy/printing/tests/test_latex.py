@@ -1087,6 +1087,13 @@ def test_greek_symbols():
     assert latex(Symbol('Psi'))     == r'\Psi'
     assert latex(Symbol('Omega'))   == r'\Omega'
 
+    assert latex(Symbol('varepsilon')) == r'\varepsilon'
+    assert latex(Symbol('varkappa')) == r'\varkappa'
+    assert latex(Symbol('varphi')) == r'\varphi'
+    assert latex(Symbol('varpi')) == r'\varpi'
+    assert latex(Symbol('varrho')) == r'\varrho'
+    assert latex(Symbol('varsigma')) == r'\varsigma'
+    assert latex(Symbol('vartheta')) == r'\vartheta'
 
 @XFAIL
 def test_builtin_without_args_mismatched_names():

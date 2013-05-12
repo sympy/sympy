@@ -47,6 +47,13 @@ tex_greek_dictionary = {
     'Lamda': r'\Lambda',
     'khi': r'\chi',
     'Khi': r'X',
+    'varepsilon': r'\varepsilon',
+    'varkappa': r'\varkappa',
+    'varphi': r'\varphi',
+    'varpi': r'\varpi',
+    'varrho': r'\varrho',
+    'varsigma': r'\varsigma',
+    'vartheta': r'\vartheta',
 }
 
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
