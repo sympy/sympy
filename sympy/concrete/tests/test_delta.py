@@ -179,6 +179,9 @@ def test_deltasummation():
     assert ds(x*KD(i, j), (k, 1, 3)) == 3*x*KD(i, j)
     assert ds(x*y*KD(i, j), (k, 1, 3)) == 3*x*y*KD(i, j)
 
+    n = symbols('n', integer=True, nonzero=True)
+    assert ds(KD(n, 0), (n, 1, 3)) == 0
+
     # return unevaluated, until it gets implemented
     assert ds(KD(i**2, j**2), (j, -oo, oo)) == \
         Sum(KD(i**2, j**2), (j, -oo, oo))
