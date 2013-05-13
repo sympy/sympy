@@ -562,6 +562,47 @@ class MatrixBase(object):
         return self + b
 
     def table(self, printer, rowsep='\n', colsep=', ', align='right'):
+        r"""
+        String form of Matrix as a table.
+
+        ``printer`` is the printer to use for on the elements (generally
+        something like StrPrinter())
+
+        ``rowsep`` is the string used to separate rows (by default a newline).
+
+        ``colsep`` is the string used to separate columns (by default ', ').
+
+        ``align`` defines how the elements are aligned. Must be one of 'left',
+        'right', or 'center'.  You can also use '<', '>', and '^' to mean the
+        same thing, respectively.
+
+        This is used by the string printer for Matrix.
+
+        Examples
+        ========
+
+        >>> from sympy import Matrix
+        >>> from sympy.printing.str import StrPrinter
+        >>> M = Matrix([[1, 2], [-33, 4]])
+        >>> printer = StrPrinter()
+        >>> M.table(printer)
+        '[  1, 2]\n[-33, 4]'
+        >>> print M.table(printer)
+        [  1, 2]
+        [-33, 4]
+        >>> print M.table(printer, rowsep=',\n')
+        [  1, 2],
+        [-33, 4]
+        >>> print '[%s]' % M.table(printer, rowsep=',\n')
+        [[  1, 2],
+        [-33, 4]]
+        >>> print M.table(printer, colsep=' ')
+        [  1 2]
+        [-33 4]
+        >>> print M.table(printer, align='center')
+        [ 1 , 2]
+        [-33, 4]
+        """
         import string
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
