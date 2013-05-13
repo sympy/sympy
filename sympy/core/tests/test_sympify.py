@@ -453,6 +453,8 @@ def test_kernS():
     assert kernS('E**-(x)') == exp(-x)
     e = 2*(x + y)*y
     assert kernS(['2*(x + y)*y', ('2*(x + y)*y',)]) == [e, (e,)]
+    assert kernS('-(2*sin(x)**2 + 2*sin(x)*cos(x))*y/2') == \
+        -y*(2*sin(x)**2 + 2*sin(x)*cos(x))/2
 
 
 def test_issue_3441_3453():
