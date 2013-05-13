@@ -13,16 +13,12 @@ unevaluated variables are left in symbolic form.
 Let's take an example. Say we wanted to use the built-in Python functions to
 compute square roots. We might do something like this
 
-::
-
    >>> import math
    >>> math.sqrt(9)
    3.0
 
 9 is a perfect square, so we got the exact answer, 3. But suppose we computed
 the square root of a number that isn't a perfect square
-
-::
 
    >>> math.sqrt(8)
    2.82842712475
@@ -38,16 +34,12 @@ This is where symbolic computation comes in.  With a symbolic computation
 system like SymPy, square roots of numbers that are not perfect squares are
 left unevaluated by default
 
-::
-
    >>> import sympy
    >>> sympy.sqrt(3)
    sqrt(3)
 
 Furthermore---and this is where we start to see the real power of symbolic
 computation---symbolic results can be symbolically simplified.
-
-::
 
    >>> sympy.sqrt(8)
    2*sqrt(2)
