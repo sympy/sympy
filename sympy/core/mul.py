@@ -40,7 +40,7 @@ def _unevaluated_Mul(*args):
 
     >>> from sympy.core.mul import _unevaluated_Mul as uMul
     >>> from sympy import S, sqrt, Mul
-    >>> from sympy.abc import x, y
+    >>> from sympy.abc import x
     >>> a = uMul(*[S(3.0), x, S(2)])
     >>> a.args[0]
     6.00000000000000
@@ -706,7 +706,7 @@ class Mul(Expr, AssocOp):
         return Add.make_args(added)  # it may have collapsed down to one term
 
     def _eval_expand_mul(self, **hints):
-        from sympy import fraction, expand_mul, expand_multinomial
+        from sympy import fraction
 
         # Handle things like 1/(x*(x + 1)), which are automatically converted
         # to 1/x*1/(x + 1)

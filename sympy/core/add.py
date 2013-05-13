@@ -308,7 +308,7 @@ class Add(Expr, AssocOp):
         Examples
         ========
 
-        >>> from sympy.abc import x, y
+        >>> from sympy.abc import x
         >>> (7 + 3*x).as_coeff_add()
         (7, (3*x,))
         >>> (7*x).as_coeff_add()

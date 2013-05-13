@@ -264,10 +264,6 @@ setup(
         """
         for routine in routines:
             prototype = self.generator.get_prototype(routine)
-            origname = routine.name
-            routine.name = "%s_c" % origname
-            prototype_c = self.generator.get_prototype(routine)
-            routine.name = origname
 
             # declare
             print >> f, 'cdef extern from "%s.h":' % prefix
@@ -418,7 +414,7 @@ def binary_function(symfunc, expr, **kwargs):
     autowrap the SymPy expression and attaching it to a Function object
     with implemented_function().
 
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
     >>> from sympy.utilities.autowrap import binary_function
     >>> expr = ((x - y)**(25)).expand()
     >>> f = binary_function('f', expr)
@@ -462,7 +458,7 @@ def ufuncify(args, expr, **kwargs):
     ========
 
     >>> from sympy.utilities.autowrap import ufuncify
-    >>> from sympy.abc import x, y, z
+    >>> from sympy.abc import x, y
     >>> import numpy as np
     >>> f = ufuncify([x, y], y + x**2)
     >>> f([1, 2, 3], 2)

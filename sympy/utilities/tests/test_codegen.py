@@ -2,9 +2,9 @@ from StringIO import StringIO
 
 from sympy.core import symbols, Eq, pi, Catalan, Lambda, Dummy
 from sympy import erf
-from sympy.utilities.codegen import CCodeGen, Routine, InputArgument, Result, \
-    CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument, \
-    InOutArgument
+from sympy.utilities.codegen import (CCodeGen, Routine, InputArgument,
+    CodeGenError, FCodeGen, codegen, CodeGenArgumentListError, OutputArgument,
+    InOutArgument)
 from sympy.utilities.pytest import raises
 from sympy.utilities.lambdify import implemented_function
 
@@ -146,7 +146,7 @@ def test_simple_c_header():
 def test_simple_c_codegen():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
-    result = codegen(("test", (x + y)*z), "C", "file", header=False, empty=False)
+    result = codegen(("test", expr), "C", "file", header=False, empty=False)
     expected = [
         ("file.c",
         "#include \"file.h\"\n"
@@ -182,7 +182,7 @@ def test_no_results_c():
 def test_ansi_math1_codegen():
     # not included: log10
     from sympy import (acos, asin, atan, ceiling, cos, cosh, floor, log, ln,
-        sin, sinh, sqrt, tan, tanh, N, Abs)
+        sin, sinh, sqrt, tan, tanh, Abs)
     x = symbols('x')
     name_expr = [
         ("test_fabs", Abs(x)),
@@ -237,7 +237,7 @@ def test_ansi_math1_codegen():
 
 def test_ansi_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2, N
+    from sympy import atan2
     x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x, y)),
@@ -260,7 +260,7 @@ def test_ansi_math2_codegen():
 
 
 def test_complicated_codegen():
-    from sympy import sin, cos, tan, N
+    from sympy import sin, cos, tan
     x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
@@ -566,7 +566,7 @@ def test_simple_f_codegen():
     x, y, z = symbols('x,y,z')
     expr = (x + y)*z
     result = codegen(
-        ("test", (x + y)*z), "F95", "file", header=False, empty=False)
+        ("test", expr), "F95", "file", header=False, empty=False)
     expected = [
         ("file.f90",
         "REAL*8 function test(x, y, z)\n"
@@ -608,7 +608,7 @@ def test_no_results_f():
 def test_intrinsic_math_codegen():
     # not included: log10
     from sympy import (acos, asin, atan, ceiling, cos, cosh, floor, log, ln,
-            sin, sinh, sqrt, tan, tanh, N, Abs)
+            sin, sinh, sqrt, tan, tanh, Abs)
     x = symbols('x')
     name_expr = [
         ("test_abs", Abs(x)),
@@ -784,7 +784,7 @@ def test_intrinsic_math_codegen():
 
 def test_intrinsic_math2_codegen():
     # not included: frexp, ldexp, modf, fmod
-    from sympy import atan2, N
+    from sympy import atan2
     x, y = symbols('x,y')
     name_expr = [
         ("test_atan2", atan2(x, y)),
@@ -829,7 +829,7 @@ def test_intrinsic_math2_codegen():
 
 
 def test_complicated_codegen_f95():
-    from sympy import sin, cos, tan, N
+    from sympy import sin, cos, tan
     x, y, z = symbols('x,y,z')
     name_expr = [
         ("test1", ((sin(x) + cos(y) + tan(z))**7).expand()),
@@ -1086,7 +1086,6 @@ def test_inline_function():
     n, m = symbols('n m', integer=True)
     A, x, y = map(IndexedBase, 'Axy')
     i = Idx('i', m)
-    j = Idx('j', n)
     p = FCodeGen()
     func = implemented_function('func', Lambda(n, n*(n + 1)))
     routine = Routine('test_inline', Eq(y[i], func(x[i])))

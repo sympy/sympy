@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import (
-    symbols, lambdify, sqrt, sin, cos, pi, atan, Rational, Float,
+    symbols, lambdify, sqrt, sin, cos, pi, Rational, Float,
     Matrix, Lambda, exp, Integral, oo, I, Abs)
 from sympy.printing.lambdarepr import LambdaPrinter
 from sympy import mpmath
