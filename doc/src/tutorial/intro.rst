@@ -32,7 +32,7 @@ root of 8 (indeed, the actual square root of 8 cannot be represented by a
 finite decimal, since it is an irrational number).  If all we cared about was
 the decimal form of the square root of 8, we would be done.
 
-But suppose we want to go further. Recall that `\sqrt{8} = \sqrt{4\dot 2} =
+But suppose we want to go further. Recall that `\sqrt{8} = \sqrt{4\cdot 2} =
 2\sqrt{2}`.  We would have a hard time deducing this from the above result.
 This is where symbolic computation comes in.  With a symbolic computation
 system like SymPy, square roots of numbers that are not perfect squares are
