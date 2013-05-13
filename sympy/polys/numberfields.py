@@ -238,7 +238,19 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
 
     gcd_deg = gcd(degree(mp1, x), degree(mp2, y))
     if gcd_deg == 1:
-        # in this case `r` is irreducible, see [2]
+        # Let us give an argument for which `r` is irreducible.
+        # The argument is based on the conjecture that for any pair of
+        # irreducible polynomials `mp1 and `mp2` there is a
+        # prime `p`, larger then the maximum of the absolute values of
+        # the coefficients of `r` and of the degree of `r`,
+        # for which `mp1` and `mp2` are irreducible on GF(p).
+        # Then from [2] if follows that `r` is irreducible on GF(p),
+        # which implies that it is irreducible on the integers; in fact
+        # if `r` were reducible, `r = h1*h2` with `h1`, `h2` of degree >= 1,
+        # and with abs(leading coefficient) less than `p`, so that
+        # `h1` and `h2` are polynomials of degree >= 1 also on GF(p),
+        # which is contrary to the fact that `r` is irreducible on GF(p).
+        # TODO give a rigorous proof of irreducibility.
         return r
     _, factors = factor_list(r)
     if op in [Add, Mul]:
