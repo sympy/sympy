@@ -15,7 +15,7 @@ compute square roots. We might do something like this
 
 ::
 
-   >>> impot math
+   >>> import math
    >>> math.sqrt(9)
    3.0
 
@@ -25,12 +25,12 @@ the square root of a number that isn't a perfect square
 ::
 
    >>> math.sqrt(8)
-   2.8284271247461903
+   2.82842712475
 
-Here we got an approximate result. 2.8284271247461903 is not the exact square
-root of 8 (indeed, the actual square root of 8 cannot be represented by a
-finite decimal, since it is an irrational number).  If all we cared about was
-the decimal form of the square root of 8, we would be done.
+Here we got an approximate result. 2.82842712475 is not the exact square root
+of 8 (indeed, the actual square root of 8 cannot be represented by a finite
+decimal, since it is an irrational number).  If all we cared about was the
+decimal form of the square root of 8, we would be done.
 
 But suppose we want to go further. Recall that `\sqrt{8} = \sqrt{4\cdot 2} =
 2\sqrt{2}`.  We would have a hard time deducing this from the above result.
