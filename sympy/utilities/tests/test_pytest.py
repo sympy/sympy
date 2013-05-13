@@ -4,13 +4,13 @@ from sympy.utilities.pytest import raises
 # Test callables
 
 
-def test_expected_exception_is_silent():
+def test_expected_exception_is_silent_callable():
     def f():
         raise ValueError()
     raises(ValueError, f)
 
 
-def test_lack_of_exception_triggers_AssertionError():
+def test_lack_of_exception_triggers_AssertionError_callable():
     try:
         raises(Exception, lambda: 1 + 1)
         assert False
@@ -18,7 +18,7 @@ def test_lack_of_exception_triggers_AssertionError():
         assert str(e) == "DID NOT RAISE"
 
 
-def test_unexpected_exception_is_passed_through():
+def test_unexpected_exception_is_passed_through_callable():
     def f():
         raise ValueError("some error message")
     try:
@@ -27,37 +27,14 @@ def test_unexpected_exception_is_passed_through():
     except ValueError, e:
         assert str(e) == "some error message"
 
-# Test compilable strings
-
-
-def test_expected_exception_is_silent():
-    raises(ValueError, "raise ValueError()")
-
-
-def test_lack_of_exception_triggers_AssertionError():
-    try:
-        raises(Exception, "1+1")
-        assert False
-    except AssertionError, e:
-        assert str(e) == "DID NOT RAISE"
-
-
-def test_unexpected_exception_is_passed_through():
-    try:
-        raises(TypeError, 'raise ValueError("some error message")')
-        assert False
-    except ValueError, e:
-        assert str(e) == "some error message"
-
 # Test with statement
 
-
-def test_expected_exception_is_silent():
+def test_expected_exception_is_silent_with():
     with raises(ValueError):
         raise ValueError()
 
 
-def test_lack_of_exception_triggers_AssertionError():
+def test_lack_of_exception_triggers_AssertionError_with():
     try:
         with raises(Exception):
             1 + 1
@@ -66,7 +43,7 @@ def test_lack_of_exception_triggers_AssertionError():
         assert str(e) == "DID NOT RAISE"
 
 
-def test_unexpected_exception_is_passed_through():
+def test_unexpected_exception_is_passed_through_with():
     try:
         with raises(TypeError):
             raise ValueError("some error message")

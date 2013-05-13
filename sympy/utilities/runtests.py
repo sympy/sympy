@@ -24,7 +24,6 @@ from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
-import re as pre
 import random
 import subprocess
 import signal

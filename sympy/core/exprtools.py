@@ -6,7 +6,6 @@ from sympy.core.mul import Mul, _keep_coeff
 from sympy.core.power import Pow
 from sympy.core.basic import Basic, preorder_traversal
 from sympy.core.expr import Expr
-from sympy.core.function import expand_power_exp
 from sympy.core.sympify import sympify
 from sympy.core.numbers import Rational, Integer, Number, I
 from sympy.core.singleton import S
@@ -222,7 +221,7 @@ class Factors(object):
         ========
 
         >>> from sympy.core.exprtools import Factors
-        >>> from sympy.abc import x, y, z
+        >>> from sympy.abc import x, y
         >>> Factors((x*y**2).as_powers_dict()).as_expr()
         x*y**2
 
@@ -487,7 +486,7 @@ class Factors(object):
         ========
 
         >>> from sympy.core.exprtools import Factors
-        >>> from sympy.abc import x, y, z
+        >>> from sympy.abc import x, y
         >>> a = Factors((x*y**2).as_powers_dict())
         >>> a**2
         Factors({x: 2, y: 4})
@@ -893,7 +892,7 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     Examples
     ========
 
-    >>> from sympy import factor_terms, Symbol, Mul, primitive
+    >>> from sympy import factor_terms, Symbol
     >>> from sympy.abc import x, y
     >>> factor_terms(x + x*(2 + 4*y)**3)
     x*(8*(2*y + 1)**3 + 1)
@@ -1000,7 +999,7 @@ def _mask_nc(eq):
     Examples
     ========
     >>> from sympy.physics.secondquant import Commutator, NO, F, Fd
-    >>> from sympy import Dummy, symbols, Sum, Mul, Basic
+    >>> from sympy import Dummy, symbols, Mul
     >>> from sympy.abc import x, y
     >>> from sympy.core.exprtools import _mask_nc
     >>> A, B, C = symbols('A,B,C', commutative=False)
@@ -1044,7 +1043,7 @@ def _mask_nc(eq):
     then it will give False (or None?) for the is_commutative test. Such
     objects are also removed by this routine:
 
-    >>> from sympy import Basic, Mul
+    >>> from sympy import Basic
     >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
     >>> eq.is_commutative
     False

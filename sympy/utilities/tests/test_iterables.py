@@ -392,7 +392,6 @@ def test_partitions():
 
     for n in range(2, 6):
         i  = 0
-        num_partitions = RGS_enum(n)
         for m, q  in _set_partitions(n):
             assert  q == RGS_unrank(i, n)
             i = i+1
