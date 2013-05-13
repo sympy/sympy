@@ -1145,10 +1145,9 @@ def factor_nc(expr):
                 for i, (cc, _) in enumerate(args):
                     cc = list(Mul.make_args(Mul._from_args(list(cc))/g))
                     args[i][0] = cc
-            else:
-                for i, (cc, _) in enumerate(args):
-                    cc[0] = cc[0]/c
-                    args[i][0] = cc
+            for i, (cc, _) in enumerate(args):
+                cc[0] = cc[0]/c
+                args[i][0] = cc
         # find any noncommutative common prefix
         for i, a in enumerate(args):
             if i == 0:
