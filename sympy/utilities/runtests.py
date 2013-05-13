@@ -406,7 +406,7 @@ def test(*paths, **kwargs):
     Python using
 
     >>> import os
-    >>> os.environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
+    >>> os.environ['PYTHONHASHSEED'] = '42' # doctest: +SKIP
 
     Or from the command line using
 
