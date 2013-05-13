@@ -133,11 +133,9 @@ or ``(ReferenceFrame, Vector)`` to represent applied forces and torques. ::
   >>> KM = KanesMethod(N, [q], [u], [qd - u])
   >>> (fr, frstar) = KM.kanes_equations(FL, BL)
   >>> KM.mass_matrix
-  Matrix([
-  [5]])
+  Matrix([[5]])
   >>> KM.forcing
-  Matrix([
-  [7]])
+  Matrix([[7]])
 
 When there are motion constraints, the mass matrix is augmented by the
 :math:`k_{dnh}(q, t)` matrix, and the forcing vector by the :math:`f_{dnh}(q,

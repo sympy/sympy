@@ -153,8 +153,7 @@ class SparseMatrix(MatrixBase):
         >>> from sympy.matrices import SparseMatrix
         >>> a = SparseMatrix(((1, 2), (3, 4)))
         >>> a.row(0)
-        Matrix([
-        [1, 2]])
+        Matrix([[1, 2]])
 
         See Also
         ========
@@ -1155,8 +1154,7 @@ class MutableSparseMatrix(SparseMatrix, MatrixBase):
         [0, 1]])
         >>> M.row_del(0)
         >>> M
-        Matrix([
-        [0, 1]])
+        Matrix([[0, 1]])
 
         See Also
         ========

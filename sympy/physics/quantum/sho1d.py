@@ -643,8 +643,7 @@ class SHOBra(SHOState, Bra):
         >>> b = SHOBra(3)
         >>> N = NumberOp('N')
         >>> represent(b, basis=N, ndim=4)
-        Matrix([
-        [0, 0, 0, 1]])
+        Matrix([[0, 0, 0, 1]])
 
     """
 

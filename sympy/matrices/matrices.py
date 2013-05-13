@@ -106,8 +106,7 @@ class MatrixBase(object):
         * from un-nested iterable with dimensions
 
         >>> Matrix(1, 2, [1, 2] )
-        Matrix([
-        [1, 2]])
+        Matrix([[1, 2]])
 
         * from no arguments (a 0 x 0 matrix)
 
@@ -333,8 +332,7 @@ class MatrixBase(object):
         [    2],
         [    3]])
         >>> m.H
-        Matrix([
-        [0, 1 - I, 2, 3]])
+        Matrix([[0, 1 - I, 2, 3]])
 
         See Also
         ========
@@ -354,8 +352,7 @@ class MatrixBase(object):
         >>> from sympy import Matrix, I, eye
         >>> m = Matrix((0, 1 + I, 2, 3))
         >>> m.D
-        Matrix([
-        [0, 1 - I, -2, -3]])
+        Matrix([[0, 1 - I, -2, -3]])
         >>> m = (eye(4) + I*eye(4))
         >>> m[0, 3] = 2
         >>> m.D
@@ -639,6 +636,8 @@ class MatrixBase(object):
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
+        if self.rows == 1:
+            return "Matrix([%s])" % self.table(printer, rowsep=',\n')
         return "Matrix([\n%s])" % self.table(printer, rowsep=',\n')
 
     def __str__(self):
@@ -960,8 +959,7 @@ class MatrixBase(object):
         [2, 3, 4, 5],
         [3, 4, 5, 6]])
         >>> m[:1, 1]
-        Matrix([
-        [1]])
+        Matrix([[1]])
         >>> m[:2, :1]
         Matrix([
         [0],
@@ -1101,14 +1099,11 @@ class MatrixBase(object):
         >>> from sympy.abc import x, y
         >>> from sympy.matrices import SparseMatrix, Matrix
         >>> SparseMatrix(1, 1, [x])
-        Matrix([
-        [x]])
+        Matrix([[x]])
         >>> _.subs(x, y)
-        Matrix([
-        [y]])
+        Matrix([[y]])
         >>> Matrix(_).subs(y, x)
-        Matrix([
-        [x]])
+        Matrix([[x]])
         """
         return self.applyfunc(lambda x: x.subs(*args, **kwargs))
 
@@ -1122,11 +1117,9 @@ class MatrixBase(object):
         >>> from sympy.abc import x
         >>> from sympy.matrices import Matrix
         >>> Matrix(1, 1, [x*(x+1)])
-        Matrix([
-        [x*(x + 1)]])
+        Matrix([[x*(x + 1)]])
         >>> _.expand()
-        Matrix([
-        [x**2 + x]])
+        Matrix([[x**2 + x]])
 
         """
         return self.applyfunc(lambda x: x.expand(
@@ -1143,11 +1136,9 @@ class MatrixBase(object):
         >>> from sympy import sin, cos
         >>> from sympy.matrices import SparseMatrix
         >>> SparseMatrix(1, 1, [x*sin(y)**2 + x*cos(y)**2])
-        Matrix([
-        [x*sin(y)**2 + x*cos(y)**2]])
+        Matrix([[x*sin(y)**2 + x*cos(y)**2]])
         >>> _.simplify()
-        Matrix([
-        [x]])
+        Matrix([[x]])
         """
         return self.applyfunc(lambda x: x.simplify(ratio, measure))
     _eval_simplify = simplify
@@ -1811,11 +1802,9 @@ class MatrixBase(object):
         >>> V = Matrix([sqrt(3)/2, S.Half])
         >>> x = Matrix([[1, 0]])
         >>> V.project(x)
-        Matrix([
-        [sqrt(3)/2, 0]])
+        Matrix([[sqrt(3)/2, 0]])
         >>> V.project(-x)
-        Matrix([
-        [sqrt(3)/2, 0]])
+        Matrix([[sqrt(3)/2, 0]])
         """
         return v*(self.dot(v) / v.dot(v))
 
@@ -3099,8 +3088,7 @@ class MatrixBase(object):
         [2],
         [3]])
         >>> m.vech(diagonal=False)
-        Matrix([
-        [2]])
+        Matrix([[2]])
 
         See Also
         ========
@@ -3150,11 +3138,9 @@ class MatrixBase(object):
         [1,    3],
         [y, z**2]])
         >>> a2
-        Matrix([
-        [x]])
+        Matrix([[x]])
         >>> a3
-        Matrix([
-        [0]])
+        Matrix([[0]])
 
         """
         sub_blocks = []

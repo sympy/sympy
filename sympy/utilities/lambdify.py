@@ -216,8 +216,7 @@ def lambdify(args, expr, modules=None, printer=None, use_imps=True):
     0.0
     >>> f = lambdify((x, y), Matrix((x, x + y)).T, modules='sympy')
     >>> f(1, 2)
-    Matrix([
-    [1, 3]])
+    Matrix([[1, 3]])
 
     Functions present in `expr` can also carry their own numerical
     implementations, in a callable attached to the ``_imp_``

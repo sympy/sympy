@@ -89,8 +89,7 @@ class KanesMethod(object):
         >>> forcing = KM.forcing
         >>> rhs = MM.inv() * forcing
         >>> rhs
-        Matrix([
-        [(-c*u(t) - k*q(t))/m]])
+        Matrix([[(-c*u(t) - k*q(t))/m]])
         >>> KM.linearize()[0]
         Matrix([
         [ 0,  1],

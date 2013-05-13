@@ -139,8 +139,7 @@ class DenseMatrix(MatrixBase):
 
         >>> from sympy import eye
         >>> eye(2).row(0)
-        Matrix([
-        [1, 0]])
+        Matrix([[1, 0]])
 
         See Also
         ========
@@ -475,8 +474,7 @@ class DenseMatrix(MatrixBase):
         [1, 1, 1],
         [1, 1, 1]])
         >>> m.reshape(1, 6)
-        Matrix([
-        [1, 1, 1, 1, 1, 1]])
+        Matrix([[1, 1, 1, 1, 1, 1]])
         >>> m.reshape(3, 2)
         Matrix([
         [1, 1],

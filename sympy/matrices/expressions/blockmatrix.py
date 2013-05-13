@@ -36,12 +36,10 @@ class BlockMatrix(MatrixExpr):
 
     >>> C = BlockMatrix([[Identity(n), Z]])
     >>> print C
-    Matrix([
-    [I, Z]])
+    Matrix([[I, Z]])
 
     >>> print block_collapse(C*B)
-    Matrix([
-    [X, Z + Z*Y]])
+    Matrix([[X, Z + Z*Y]])
 
     """
     def __new__(cls, *args):
@@ -269,12 +267,10 @@ def block_collapse(expr):
 
     >>> C = BlockMatrix([[Identity(n), Z]])
     >>> print C
-    Matrix([
-    [I, Z]])
+    Matrix([[I, Z]])
 
     >>> print block_collapse(C*B)
-    Matrix([
-    [X, Z + Z*Y]])
+    Matrix([[X, Z + Z*Y]])
     """
     hasbm = lambda expr: isinstance(expr, MatrixExpr) and expr.has(BlockMatrix)
     rule = exhaust(
@@ -435,8 +431,7 @@ def blockcut(expr, rowsizes, colsizes):
     >>> type(B).__name__
     'BlockMatrix'
     >>> ImmutableMatrix(B.blocks[0, 1])
-    Matrix([
-    [1, 2, 3]])
+    Matrix([[1, 2, 3]])
     """
 
     rowbounds = bounds(rowsizes)
