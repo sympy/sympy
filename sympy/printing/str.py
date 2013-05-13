@@ -209,7 +209,7 @@ class StrPrinter(Printer):
         return "[%s]" % self.stringify(expr, ", ")
 
     def _print_MatrixBase(self, expr):
-        return expr._format_str(lambda elem: self._print(elem))
+        return expr._format_str(self)
     _print_SparseMatrix = \
         _print_MutableSparseMatrix = \
         _print_ImmutableSparseMatrix = \

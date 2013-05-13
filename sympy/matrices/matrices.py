@@ -561,7 +561,7 @@ class MatrixBase(object):
         """Return self + b """
         return self + b
 
-    def table(self, p, rowsep='\n', colsep=', ', align='right'):
+    def table(self, printer, rowsep='\n', colsep=', ', align='right'):
         import string
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
@@ -573,7 +573,7 @@ class MatrixBase(object):
         for i in range(self.rows):
             res.append([])
             for j in range(self.cols):
-                s = p._print(self[i,j])
+                s = printer._print(self[i,j])
                 res[-1].append(s)
                 maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
@@ -591,12 +591,14 @@ class MatrixBase(object):
             res[i] = "[" + colsep.join(row) + "]"
         return rowsep.join(res)
 
-    def _format_str(self, strfunc):
-        from sympy.printing.str import StrPrinter
+    def _format_str(self, printer=None):
+        if not printer:
+            from sympy.printing.str import StrPrinter
+            printer = StrPrinter()
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
             return 'Matrix(%s, %s, [])' % (self.rows, self.cols)
-        return "Matrix([\n%s])" % self.table(StrPrinter(), rowsep=',\n')
+        return "Matrix([\n%s])" % self.table(printer, rowsep=',\n')
 
     def __str__(self):
         if self.rows == 0 or self.cols == 0:
