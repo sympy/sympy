@@ -1,5 +1,6 @@
 from __future__ import with_statement
 
+import os
 from os.path import join
 from subprocess import STDOUT, CalledProcessError
 
@@ -8,7 +9,16 @@ from subprocess import STDOUT, CalledProcessError
 try:
     from subprocess import check_output as run_process
 except ImportError:
-    from subprocess import check_call as run_process
+    from subprocess import check_call
+    def run_process(*args, **kwargs):
+        with open(os.devnull, 'w') as fh:
+            kwargs['stdout'] = fh
+            try:
+                return check_call(*args, **kwargs)
+            except CalledProcessError, e:
+                e.output = ("program output is not available for "
+                            "python 2.5.x and 2.6.x")
+                raise e
 
 import tempfile
 import shutil
@@ -183,6 +193,9 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
         if outputTexFile is not None:
             shutil.copyfile(join(workdir, 'texput.tex'), outputTexFile)
 
+        if not find_executable('latex'):
+            raise RuntimeError("latex program is not installed")
+
         try:
             run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
                          'texput.tex'], cwd=workdir, stderr=STDOUT)
@@ -205,6 +218,8 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             }
 
             cmd = ["dvi" + output]
+            if not find_executable(cmd[0]):
+                raise RuntimeError("%s is not installed" % cmd[0])
             try:
                 if dvioptions is not None:
                     cmd.extend(dvioptions)
