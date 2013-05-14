@@ -27,7 +27,7 @@ class AlgebraicFunctionField(Field, CharacteristicZero, SimpleDomain):
         from sympy.polys.polytools import Poly
         from sympy.polys.functionfields import minpoly
 
-        if not (dom.dom.is_QQ and dom.is_Frac):
+        if not (dom.is_Frac and dom.dom.is_QQ):
             raise DomainError("ground domain must be a rational function field")
 
         if not ext:

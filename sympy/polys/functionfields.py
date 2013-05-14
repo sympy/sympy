@@ -112,9 +112,12 @@ def _minpoly(ex, Y, dom):
         raise NotAlgebraic("%s doesn't seem to be an algebraic function" % ex)
     return res
 
-def minpoly(ex, Y, dom=None):
+def minpoly(ex, Y, dom=None, polys=False):
     from sympy.polys.domains import FractionField
     if dom == None:
         gens = ex.atoms(Symbol)
         dom = FractionField(QQ, *gens)
-    return _minpoly(ex, Y, dom)
+    if polys:
+        return Poly(_minpoly(ex, Y, dom), Y, domain=dom)
+    else:
+        return _minpoly(ex, Y, dom).collect(Y)
