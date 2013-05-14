@@ -243,8 +243,8 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
         # Let us give an argument for which `r` is irreducible.
         # The argument is based on the conjecture that for any pair of
         # irreducible polynomials `mp1 and `mp2` there is a
-        # prime `p`, larger then the maximum of the absolute values of
-        # the coefficients of `r` and of the degree of `r`,
+        # prime `p`, larger then the maximum of the absolute value of
+        # the leading coefficient of `r` and of the degree of `r`,
         # for which `mp1` and `mp2` are irreducible on GF(p).
         # Then from [2] if follows that `r` is irreducible on GF(p),
         # which implies that it is irreducible on the integers; in fact
@@ -405,11 +405,7 @@ def _minpoly_cos(ex, x):
                 q = sympify(c.q)
                 if q.is_prime:
                     s = _minpoly_sin(ex, x)
-                    factors = [_mexpand(s.subs({x:sqrt((1 + x)/2)})),
-                            _mexpand(s.subs({x:sqrt((1 - x)/2)}))]
-
-                    s = _choose_factor(factors, x, ex)
-                    return s
+                    return _mexpand(s.subs({x:sqrt((1 - x)/2)}))
                 else:
                     raise NotImplementedError('case not covered')
                     # too slow
