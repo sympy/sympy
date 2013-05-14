@@ -32,6 +32,7 @@ import stat
 from sympy.core.cache import clear_cache
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -458,6 +459,10 @@ def _test(*paths, **kwargs):
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
 
+    # Show deprecation warnings
+    import warnings
+    warnings.simplefilter("error", SymPyDeprecationWarning)
+
     test_files = t.get_test_files('sympy')
 
     if len(paths) == 0:
@@ -602,6 +607,10 @@ def _doctest(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Show deprecation warnings
+    import warnings
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
