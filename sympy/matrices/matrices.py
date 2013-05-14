@@ -600,7 +600,6 @@ class MatrixBase(object):
         [ 1 , 2]
         [-33, 4]
         """
-        import string
         # Handle zero dimensions:
         if self.rows == 0 or self.cols == 0:
             return '[]'
@@ -616,12 +615,12 @@ class MatrixBase(object):
                 maxlen[j] = max(len(s), maxlen[j])
         # Patch strings together
         align = {
-            'left': string.ljust,
-            'right': string.rjust,
-            'center': string.center,
-            '<': string.ljust,
-            '>': string.rjust,
-            '^': string.center,
+            'left': str.ljust,
+            'right': str.rjust,
+            'center': str.center,
+            '<': str.ljust,
+            '>': str.rjust,
+            '^': str.center,
             }[align]
         for i, row in enumerate(res):
             for j, elem in enumerate(row):
