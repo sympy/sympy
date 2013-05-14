@@ -1,29 +1,12 @@
 from __future__ import with_statement
 
-import os
 from os.path import join
 from subprocess import STDOUT, CalledProcessError
-
-# this workaround is needed because we still support python 2.5 and python
-# 2.6
-try:
-    from subprocess import check_output as run_process
-except ImportError:
-    from subprocess import check_call
-    def run_process(*args, **kwargs):
-        with open(os.devnull, 'w') as fh:
-            kwargs['stdout'] = fh
-            try:
-                return check_call(*args, **kwargs)
-            except CalledProcessError, e:
-                e.output = ("program output is not available for "
-                            "python 2.5.x and 2.6.x")
-                raise e
-
 import tempfile
 import shutil
 from cStringIO import StringIO
 
+from sympy.core.compatibility import check_output
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from latex import latex
@@ -197,11 +180,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
             raise RuntimeError("latex program is not installed")
 
         try:
-            run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
-                         'texput.tex'], cwd=workdir, stderr=STDOUT)
+            check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
+                          'texput.tex'], cwd=workdir, stderr=STDOUT)
         except CalledProcessError, e:
             raise RuntimeError(
-                "latex exited abnormally with the following output:\n%s" %
+                "'latex' exited abnormally with the following output:\n%s" %
                 e.output)
 
         if output != "dvi":
@@ -230,11 +213,11 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
                 raise SystemError("Invalid output format: %s" % output)
 
             try:
-                run_process(cmd, cwd=workdir, stderr=STDOUT)
+                check_output(cmd, cwd=workdir, stderr=STDOUT)
             except CalledProcessError, e:
                 raise RuntimeError(
-                    "%s exited abnormally with the following output:\n%s" %
-                    (cmd[0], e.output))
+                    "'%s' exited abnormally with the following output:\n%s" %
+                    (' '.join(cmd), e.output))
 
         src = "texput.%s" % (output)
 
@@ -304,7 +287,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             win.close()
         else:
-            run_process([viewer, src], cwd=workdir, stderr=STDOUT)
+            try:
+                check_output([viewer, src], cwd=workdir, stderr=STDOUT)
+            except CalledProcessError, e:
+                raise RuntimeError(
+                    "'%s %s' exited abnormally with the following output:\n%s" %
+                    (viewer, src, e.output))
     finally:
         try:
             shutil.rmtree(workdir) # delete directory
