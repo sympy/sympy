@@ -26,6 +26,8 @@ from sympy.polys.specialpolys import cyclotomic_poly
 
 from sympy.polys.polyutils import dict_from_expr, expr_from_dict
 
+from sympy.polys.domains import ZZ
+
 from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
@@ -357,26 +359,26 @@ def _minpoly_sin(ex, x):
     see http://mathworld.wolfram.com/TrigonometryAngles.html
     """
     from sympy.functions.combinatorial.factorials import binomial
+    from sympy.polys.orthopolys import dup_chebyshevt
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
         if c.is_rational:
+            q = sympify(c.q)
+            if q.is_prime:
+                # for ex = pi*p/q with q odd prime, using chebyshevt
+                # write sin(q*ex) = mp(sin(ex))*sin(ex);
+                # the roots of mp(x) are sin(pi*p/q) for p = 1,..., q - 1
+                n = c.q
+                a = dup_chebyshevt(n, ZZ)
+                return Add(*[x**(n - i - 1)*a[i] for i in range(n)])
             if c.p == 1:
-                q = sympify(c.q)
-                if q == 7:
-                    return 64*x**6 - 112*x**4 + 56*x**2 - 7
                 if q == 9:
                     return 64*x**6 - 96*x**4 + 36*x**2 - 3
-                if q.is_prime:
-                    s = 0
-                    q2 = q // 2
-                    for k in range(q2 + 1):
-                        s += (-1)**k*binomial(q, 2*k + 1)*(1 - x**2)**(q2 - k)*x**(2*k)
-                    return _mexpand(s)
                 else:
-                    raise NotImplementedError('case not covered')
-                    # too slow
-                    #ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
-                    #return _minpoly1(ex1, x)
+                   raise NotImplementedError('case not covered')
+                   # too slow
+                   #ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
+                   #return _minpoly1(ex1, x)
             else:
                 ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
                 return _minpoly1(ex1, x)
@@ -393,6 +395,13 @@ def _minpoly_cos(ex, x):
     if a is pi:
         if c.is_rational:
             if c.p == 1:
+                if c.q == 7:
+                    return 8*x**3 - 4*x**2 - 4*x + 1
+                if c.q == 9:
+                    return 8*x**3 - 6*x + 1
+                else:
+                    raise NotImplementedError('case not covered')
+            elif c.p == 2:
                 q = sympify(c.q)
                 if q.is_prime:
                     s = _minpoly_sin(ex, x)
