@@ -48,26 +48,18 @@ _pseudos = set([
         9157536631454221, 9188353522314541])
 
 
-def _test(n, base):
+def _test(n, base, s, t):
     """Miller-Rabin strong pseudoprime test for one base.
     Return False if n is definitely composite, True if n is
     probably prime, with a probability greater than 3/4.
     """
-    from sympy.ntheory.factor_ import trailing
-
-    n = int(n)
-    if n < 2:
-        return False
-    # remove powers of 2 from n (= t * 2**s)
-    s = trailing(n - 1)
-    t = n >> s
     # do the Fermat test
     b = pow(base, t, n)
     if b == 1 or b == n - 1:
         return True
     else:
         for j in xrange(1, s):
-            b = (b**2) % n
+            b = pow(b, 2, n)
             if b == n - 1:
                 return True
     return False
@@ -95,9 +87,16 @@ def mr(n, bases):
     >>> mr(479001599, [31, 73])
     True
     """
+    from sympy.ntheory.factor_ import trailing
+
     n = int(n)
+    if n < 2:
+        return False
+    # remove powers of 2 from n (= t * 2**s)
+    s = trailing(n - 1)
+    t = n >> s
     for base in bases:
-        if not _test(n, base):
+        if not _test(n, base, s, t):
             return False
     return True
 
