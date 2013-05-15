@@ -237,16 +237,16 @@ class Product(Expr):
         from sympy.integrals.integrals import _eval_subs
         return _eval_subs(self, old, new)
 
-    def change_index(self, old, new):
+    def change_index(self, old, new, var=None):
         """
         Used to shift and invert indexes.
         Ex:
         >>> from sympy.concrete import Product
         >>> from sympy import Subs
         >>> from sympy import symbols
-        >>> x, a, b = symbols('x, a, b')
-        >>> Product(x, (x, a, b)).change_index(x, x + 1)
-        Product(x - 1, (x, a + 1, b + 1))
+        >>> x, y, a, b = symbols('x, y, a, b')
+        >>> Product(x, (x, a, b)).change_index(x, x + 1, y)
+        Product(y - 1, (y, a + 1, b + 1))
         >>> Product(x, (x, a, b)).change_index(x, -x - 1)
         Product(-x - 1, (x, -b - 1, -a - 1))
         """
@@ -256,21 +256,24 @@ class Product(Expr):
         limits = []
         invert = not (new - old).is_number
 
+        if var == None:
+            var = old
+
         for i in range(len(self.limits)):
             if self.limits[i][0] == old:
                 if not invert:
-                    limits.append((self.limits[i][0], self.limits[i][1]+ new - \
+                    limits.append((var, self.limits[i][1]+ new - \
                         old, self.limits[i][2] + new - old))
                 else:
-                    limits.append((self.limits[i][0], (new + old) - self.limits[i][2], \
+                    limits.append((var, (new + old) - self.limits[i][2], \
                         (new + old) - self.limits[i][1]))
             else:
                 limits.append(self.limits[i])
 
         if not invert:
-            function = Subs(self.function, old, old - (new - old)).doit()
+            function = Subs(self.function, old, var - (new - old)).doit()
         else:
-            function = Subs(self.function, old, (new + old) - old).doit()
+            function = Subs(self.function, old, (new + old) - var).doit()
 
         return Product(function, *tuple(limits))
 

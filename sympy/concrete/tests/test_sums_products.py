@@ -485,7 +485,11 @@ def test_simplify():
 def test_change_index():
     b = symbols('b', integer = True)
 
-    assert Sum(x, (x, a, b)).change_index(x, x + 1) == Sum(x-1, (x, a+1, b+1))
-    assert Sum(x**2, (x, a, b)).change_index(x, x-1) == Sum((x+1)**2, (x, a-1, b-1))
-    assert Sum(x**2, (x, a, b)).change_index(x, -x) == Sum((-x)**2, (x, -b, -a))
-    assert Sum(x, (x, a, b)).change_index(x, -x-1) == Sum(-x-1, (x, -b-1, -a-1))
+    assert Sum(x, (x, a, b)).change_index(x, x + 1, y) == \
+        Sum(y - 1, (y, a + 1, b + 1))
+    assert Sum(x**2, (x, a, b)).change_index(x, x - 1) == \
+        Sum((x+1)**2, (x, a - 1, b - 1))
+    assert Sum(x**2, (x, a, b)).change_index(x, -x, y) == \
+        Sum((-y)**2, (y, -b, -a))
+    assert Sum(x, (x, a, b)).change_index(x, -x - 1) == \
+        Sum(-x - 1, (x, -b - 1, -a - 1))

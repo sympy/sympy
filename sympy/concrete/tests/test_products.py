@@ -96,23 +96,30 @@ def test_simplify():
     y, t, b, c = symbols('y, t, b, c', integer = True)
 
     assert simplify(Product(x*y, (x, n, m), (y, a, k)) * \
-        Product(y, (x, n, m), (y, a, k))) == Product(x*y**2, (x, n, m), (y, a, k))
-    assert simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) == \
-        3 * y * Product(x, (x, n, a))
+        Product(y, (x, n, m), (y, a, k))) == \
+            Product(x*y**2, (x, n, m), (y, a, k))
+    assert simplify(3 * y* Product(x, (x, n, m)) * Product(x, (x, m + 1, a))) \
+        == 3 * y * Product(x, (x, n, a))
     assert simplify(Product(x, (x, k + 1, a)) * Product(x, (x, n, k))) == \
         Product(x, (x, n, a))
     assert simplify(Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))) == \
         Product(x, (x, k + 1, a)) * Product(x + 1, (x, n, k))
     assert simplify(Product(x, (t, a, b)) * Product(y, (t, a, b)) * \
-        Product(x, (t, b+1, c))) == Product(x*y, (t, a, b)) * Product(x, (t, b+1, c))
+        Product(x, (t, b+1, c))) == Product(x*y, (t, a, b)) * \
+            Product(x, (t, b+1, c))
     assert simplify(Product(x, (t, a, b)) * Product(x, (t, b+1, c)) * \
-        Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * Product(x, (t, b+1, c))
+        Product(y, (t, a, b))) == Product(x*y, (t, a, b)) * \
+            Product(x, (t, b+1, c))
 
 
 def test_change_index():
-    b = symbols('b', integer = True)
+    b, y = symbols('b, y', integer = True)
 
-    assert Product(x, (x, a, b)).change_index(x, x + 1) == Product(x-1, (x, a+1, b+1))
-    assert Product(x**2, (x, a, b)).change_index(x, x-1) == Product((x+1)**2, (x, a-1, b-1))
-    assert Product(x**2, (x, a, b)).change_index(x, -x) == Product((-x)**2, (x, -b, -a))
-    assert Product(x, (x, a, b)).change_index(x, -x-1) == Product(-x-1, (x, -b-1, -a-1))
+    assert Product(x, (x, a, b)).change_index(x, x + 1, y) == \
+        Product(y - 1, (y, a + 1, b + 1))
+    assert Product(x**2, (x, a, b)).change_index(x, x - 1) == \
+        Product((x + 1)**2, (x, a - 1, b - 1))
+    assert Product(x**2, (x, a, b)).change_index(x, -x, y) == \
+        Product((-y)**2, (y, -b, -a))
+    assert Product(x, (x, a, b)).change_index(x, -x - 1) == \
+        Product(-x - 1, (x, - b - 1, -a - 1))
