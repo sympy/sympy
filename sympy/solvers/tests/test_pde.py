@@ -128,11 +128,12 @@ def test_pde_1st_linear_constant_coeff_homogeneous():
     assert checkpdesol(eq, sol)[0]
 
 def test_pde_1st_linear_constant_coeff_general():
-    f,F = map(Function, ['f', 'F'])
+    f, F = map(Function, ['f', 'F'])
     u = f(x,y)
     eq = -2*u.diff(x) + 4*u.diff(y) + 5*u - exp(x + 3*y)
     sol = pdsolve(eq)
-    assert sol == Eq(f(x, y), F(4*x + 2*y)*exp(x/2 - y) + exp(x + 3*y)/S(15))
+    assert sol == Eq(f(x,y),
+    (F(4*x + 2*y) + exp(x/S(2) + 4*y)/S(15))*exp(x/S(2) - y))
     assert classify_pde(eq) == ('1st_linear_constant_coeff_general',
     '1st_linear_constant_coeff_general_Integral')
     assert checkpdesol(eq, sol)[0]
