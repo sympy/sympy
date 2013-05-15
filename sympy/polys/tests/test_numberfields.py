@@ -203,7 +203,11 @@ def test_minpoly_compose():
     ex = (5*cos(2*pi/7) - 7)/(9*cos(pi/7) - 5*cos(3*pi/7))
     mp = minimal_polynomial(ex, x)
     assert mp == x**3 + 2*x**2 - x - 1
-    assert  minimal_polynomial(-1/(2*cos(pi/7)), x) == x**3 + 2*x**2 - x - 1
+    assert minimal_polynomial(-1/(2*cos(pi/7)), x) == x**3 + 2*x**2 - x - 1
+    assert minimal_polynomial(sin(2*pi/15), x) == \
+            256*x**8 - 448*x**6 + 224*x**4 - 32*x**2 + 1
+    assert minimal_polynomial(sin(5*pi/14), x) == 8*x**3 - 4*x**2 - 4*x + 1
+    assert minimal_polynomial(cos(pi/15), x) == 16*x**4 + 8*x**3 - 16*x**2 - 8*x + 1
 
     eq = expand((x**5 + 3*x + 1)*(x**3 + 4*x + 1))
     ex = solve(eq, x)[0]

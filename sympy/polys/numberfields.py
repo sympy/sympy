@@ -28,6 +28,8 @@ from sympy.polys.polyutils import dict_from_expr, expr_from_dict
 
 from sympy.polys.domains import ZZ
 
+from sympy.polys.orthopolys import dup_chebyshevt
+
 from sympy.printing.lambdarepr import LambdaPrinter
 
 from sympy.utilities import (
@@ -352,29 +354,35 @@ def _minpoly_sin(ex, x):
     see http://mathworld.wolfram.com/TrigonometryAngles.html
     """
     from sympy.functions.combinatorial.factorials import binomial
-    from sympy.polys.orthopolys import dup_chebyshevt
     c, a = ex.args[0].as_coeff_Mul()
     if a is pi:
         if c.is_rational:
-            q = sympify(c.q)
+            n = c.q
+            q = sympify(n)
             if q.is_prime:
-                # for ex = pi*p/q with q odd prime, using chebyshevt
-                # write sin(q*ex) = mp(sin(ex))*sin(ex);
+                # for a = pi*p/q with q odd prime, using chebyshevt
+                # write sin(q*a) = mp(sin(a))*sin(a);
                 # the roots of mp(x) are sin(pi*p/q) for p = 1,..., q - 1
-                n = c.q
                 a = dup_chebyshevt(n, ZZ)
                 return Add(*[x**(n - i - 1)*a[i] for i in range(n)])
             if c.p == 1:
                 if q == 9:
                     return 64*x**6 - 96*x**4 + 36*x**2 - 3
-                else:
-                   raise NotImplementedError('case not covered')
-                   # too slow
-                   #ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
-                   #return _minpoly1(ex1, x)
-            else:
-                ex1 = (C.exp(I*ex.args[0]) - C.exp(-I*ex.args[0]))/(2*I)
-                return _minpoly1(ex1, x)
+
+            if n % 2 == 1:
+                # for a = pi*p/q with q odd, use
+                # sin(q*a) = 0 to see that the minimal polynomial must be
+                # a factor of dup_chebyshevt(n, ZZ)
+                a = dup_chebyshevt(n, ZZ)
+                a = [x**(n - i)*a[i] for i in range(n + 1)]
+                r = Add(*a)
+                _, factors = factor_list(r)
+                res = _choose_factor(factors, x, ex)
+                return res
+
+            expr = ((1 - C.cos(2*c*pi))/2)**S.Half
+            res = _minpoly1(expr, x)
+            return res
 
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
@@ -392,21 +400,20 @@ def _minpoly_cos(ex, x):
                     return 8*x**3 - 4*x**2 - 4*x + 1
                 if c.q == 9:
                     return 8*x**3 - 6*x + 1
-                else:
-                    raise NotImplementedError('case not covered')
             elif c.p == 2:
                 q = sympify(c.q)
                 if q.is_prime:
                     s = _minpoly_sin(ex, x)
                     return _mexpand(s.subs({x:sqrt((1 - x)/2)}))
-                else:
-                    raise NotImplementedError('case not covered')
-                    # too slow
-                    #ex1 = (C.exp(I*ex.args[0]) + C.exp(-I*ex.args[0]))/2
-                    #return _minpoly1(ex1, x)
-            else:
-                ex1 = (C.exp(I*ex.args[0]) + C.exp(-I*ex.args[0]))/2
-                return _minpoly1(ex1, x)
+
+            # for a = pi*p/q, cos(q*a) =T_q(cos(a)) = (-1)**p
+            n = int(c.q)
+            a = dup_chebyshevt(n, ZZ)
+            a = [x**(n - i)*a[i] for i in range(n + 1)]
+            r = Add(*a) - (-1)**c.p
+            _, factors = factor_list(r)
+            res = _choose_factor(factors, x, ex)
+            return res
 
     raise NotAlgebraic("%s doesn't seem to be an algebraic number" % ex)
 
