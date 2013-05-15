@@ -7,8 +7,8 @@ from sympy.core.singleton import S
 from sympy.core.symbol import (Dummy, Wild)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
-from sympy.polys.polytools import (factor, Poly, primitive)
-from sympy.simplify.simplify import (_mexpand, collect, separatevars, factor)
+from sympy.polys.polytools import (Poly, primitive, factor)
+from sympy.simplify.simplify import (_mexpand, collect, separatevars)
 from sympy.solvers.solvers import solve
 
 
@@ -183,13 +183,11 @@ def _solve_lambert(f, symbol, gens):
       if d*p**(a*B + g) - b*B = c then
       log(d) + (a*B + g)*log(p) - log(c + b*B) = 0
       a = -1, d = a*log(p), f = -log(d) - g*log(p)
-    4)
-      if p**x - x**p = 0 then
-       x = [p, -p*LambertW(-log(p)/p)/log(p)]
     """
 
     nrhs, lhs = f.as_independent(symbol, as_Add=True)
     rhs = -nrhs
+
     lamcheck = [tmp for tmp in gens
                 if (tmp.func in [exp, log] or
                 (tmp.is_Pow and symbol in tmp.exp.free_symbols))]
@@ -200,7 +198,7 @@ def _solve_lambert(f, symbol, gens):
         lhs = expand_log(log(lhs))
         rhs = log(rhs)
 
-    lhs = factor(lhs)
+    lhs = factor(lhs, deep=True)
 
     # For the 1st two, collect on main log
     # 1a1) B**B = R != 0 (when 0, there is only a solution if the base is 0,
@@ -280,30 +278,6 @@ def _solve_lambert(f, symbol, gens):
     #     log(R - c*B) - a*B*log(p) = log(d) + b*log(p)
 
     if not soln:
-        xlhs = expand_mul(lhs)
-        if xlhs.is_Add and len(xlhs.args) == 2:
-            a, b = lhs.args
-            ok = True
-            for a, b in [(a, b), (b, a), (-a, -b), (-b, -a)]:
-                if a.is_Pow and (-b).is_Pow:
-                    if symbol in a.base.free_symbols:
-                        a, b = -b, -a
-                    break
-            else:
-                ok = False
-            if ok and a.base == (-b).exp and a.exp == (-b).base:
-                if (symbol not in a.base.free_symbols and
-                        a.base.is_positive and
-                        symbol in a.exp.free_symbols):
-                    sol = solve(a.base - a.exp, symbol)
-                    p = a.base
-                    if p == 2:
-                        sol.extend(solve(
-                            a.exp - (-2/log(2)*LambertW(log(2)/2)), symbol))
-                    else:
-                        sol.extend(solve(
-                            a.exp + p*LambertW(-log(p)/p)/log(p), symbol))
-                return list(ordered(set(sol)))
         mainpow = _mostfunc(lhs, Pow, symbol)
         if mainpow and symbol in mainpow.exp.free_symbols:
             lhs = collect(lhs, mainpow)

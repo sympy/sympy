@@ -1265,19 +1265,25 @@ def test_lambert_multivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
 
-    # special forms (lamberts also having symmetry)
-    assert solve(x**2 - 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
-    assert solve(-x**2 + 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
-    assert solve(x**3 - 3**x, x) == [3, -3/log(3)*LambertW(-log(3)/3)]
+    # these only give one of the solutions (see XFAIL below)
+    assert solve(x**3 - 3**x, x) == [-3/log(3)*LambertW(-log(3)/3)]
+    #     replacing 3 with 2 in the above solution gives 2
+    assert solve(x**2 - 2**x, x) == [2]
+    assert solve(-x**2 + 2**x, x) == [2]
     assert solve(3**cos(x) - cos(x)**3) == [
-        acos(3), acos(-3*LambertW(-log(3)/3)/log(3))]
+        acos(-3*LambertW(-log(3)/3)/log(3))]
 
 
 @XFAIL
-def test_by_symmetry_and_lambert():
+def test_other_lambert():
     from sympy.abc import x
     assert solve(3*sin(x) - x*sin(3), x) == [3]
     assert set(solve(3*log(x) - x*log(3))) == set(
         [3, -3*LambertW(-log(3)/3)/log(3)])
     a = S(6)/5
-    assert solve(x**a - a**x) == [a, -a*LambertW(-log(a)/a)/log(a)]
+    assert set(solve(x**a - a**x)) == set(
+        [a, -a*LambertW(-log(a)/a)/log(a)])
+    assert set(solve(3**cos(x) - cos(x)**3)) == set(
+        [acos(3), acos(-3*LambertW(-log(3)/3)/log(3))])
+    assert set(solve(x**2 - 2**x)) == set(
+        [2, -2/log(2)*LambertW(log(2)/2)])

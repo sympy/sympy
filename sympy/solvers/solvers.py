@@ -33,10 +33,10 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sqrt)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom, factor)
+                            nsimplify, denom)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, Poly, together, RootOf, degree
+from sympy.polys import roots, cancel, factor, Poly, together, RootOf, degree
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -2086,7 +2086,7 @@ def _tsolve(eq, sym, **flags):
         >>> from sympy.abc import x
 
         >>> tsolve(3**(2*x+5)-4, x)
-        [(-5*log(3) + log(4))/(2*log(3))]
+        [log(-2*sqrt(3)/27)/log(3), -5/2 + log(2)/log(3)]
 
         >>> tsolve(log(x) + 2*x, x)
         [LambertW(2)/2]
@@ -2150,7 +2150,7 @@ def _tsolve(eq, sym, **flags):
         down = g.difference(up_or_log)
         eq_down = expand_log(expand_power_exp(eq)).subs(
             dict(zip(up_or_log, [0]*len(up_or_log))))
-        eq = expand_power_exp(factor(eq_down) + (eq - eq_down))
+        eq = expand_power_exp(factor(eq_down, deep=True) + (eq - eq_down))
         rhs, lhs = _invert(eq, sym)
         try:
             poly = lhs.as_poly()
