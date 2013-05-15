@@ -35,13 +35,14 @@ def monomials(variables, degree):
     Consider monomials in variables `x` and `y`::
 
         >>> from sympy.polys.monomials import monomials
+        >>> from sympy.polys.orderings import monomial_key
         >>> from sympy.abc import x, y
 
-        >>> sorted(monomials([x, y], 2))
-        [1, x, y, x**2, y**2, x*y]
+        >>> sorted(monomials([x, y], 2), key=monomial_key('grlex', [y, x]))
+        [1, x, y, x**2, x*y, y**2]
 
-        >>> sorted(monomials([x, y], 3))
-        [1, x, y, x**2, x**3, y**2, y**3, x*y, x*y**2, x**2*y]
+        >>> sorted(monomials([x, y], 3), key=monomial_key('grlex', [y, x]))
+        [1, x, y, x**2, x*y, y**2, x**3, x**2*y, x*y**2, y**3]
 
     """
     if not variables:
@@ -72,6 +73,7 @@ def monomial_count(V, N):
     ========
 
     >>> from sympy.polys.monomials import monomials, monomial_count
+    >>> from sympy.polys.orderings import monomial_key
     >>> from sympy.abc import x, y
 
     >>> monomial_count(2, 2)
@@ -79,8 +81,8 @@ def monomial_count(V, N):
 
     >>> M = monomials([x, y], 2)
 
-    >>> sorted(M)
-    [1, x, y, x**2, y**2, x*y]
+    >>> sorted(M, key=monomial_key('grlex', [y, x]))
+    [1, x, y, x**2, x*y, y**2]
     >>> len(M)
     6
 
