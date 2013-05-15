@@ -547,8 +547,10 @@ def test_issue_3460():
     # though this involves cse it generated a failure in Mul._eval_subs
     x0, x1 = symbols('x0 x1')
     e = -log(-12*sqrt(2) + 17)/24 - log(-2*sqrt(2) + 3)/12 + sqrt(2)/3
+    # XXX modify cse so x1 is eliminated and x0 = -sqrt(2)?
     assert cse(e) == (
-        [(x0, -sqrt(2))], [-x0/3 - log(2*x0 + 3)/12 - log(12*x0 + 17)/24])
+        [(x0, sqrt(2)), (x1, -x0)], [x0/3 - log(2*x1 + 3)/12 - log(12*x1 + 17)/24])
+
 
 def test_issue_2162():
     e = I*x
@@ -556,6 +558,10 @@ def test_issue_2162():
     assert (2**e).subs(2**x, y) == y**I
     eq = (-2)**e
     assert eq.subs((-2)**x, y) == eq
+
+
+def test_issue_3824():
+    assert (-2*x*sqrt(2)).subs(2*x, y) == -sqrt(2)*y
 
 
 def test_2arg_hack():

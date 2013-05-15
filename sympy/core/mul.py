@@ -1161,14 +1161,19 @@ class Mul(Expr, AssocOp):
             return False
 
     def _eval_subs(self, old, new):
-        from sympy import sign, multiplicity
+        from sympy.functions.elementary.complexes import sign
+        from sympy.ntheory.factor_ import multiplicity
         from sympy.simplify.simplify import powdenest, fraction
 
         if not old.is_Mul:
             return None
 
-        if old.args[0] == -1:
-            return self._subs(-old, -new)
+        # try keep replacement literal so -2*x doesn't replace 4*x
+        if old.args[0].is_Number and old.args[0] < 0:
+            if self.args[0].is_Number:
+                if self.args[0] < 0:
+                    return self._subs(-old, -new)
+                return None
 
         def base_exp(a):
             # if I and -1 are in a Mul, they get both end up with
@@ -1256,19 +1261,13 @@ class Mul(Expr, AssocOp):
         # then co_self in c is replaced by (3/5)**2 and co_residual
         # is 2*(1/7)**2
 
-        if co_xmul and co_xmul.is_Rational:
-            n_old, d_old = co_old.as_numer_denom()
-            n_self, d_self = co_self.as_numer_denom()
-
-            def _multiplicity(p, n):
-                p = abs(p)
-                if p is S.One:
-                    return S.Infinity
-                return multiplicity(p, abs(n))
-            mult = S(min(_multiplicity(n_old, n_self),
-                         _multiplicity(d_old, d_self)))
+        if co_xmul and co_xmul.is_Rational and abs(co_old) != 1:
+            mult = S(multiplicity(abs(co_old), co_self))
             c.pop(co_self)
-            c[co_old] = mult
+            if co_old in c:
+                c[co_old] += mult
+            else:
+                c[co_old] = mult
             co_residual = co_self/co_old**mult
         else:
             co_residual = 1
