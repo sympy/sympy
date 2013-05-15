@@ -305,7 +305,7 @@ class Sum(Expr):
         >>> from sympy.concrete import Sum
         >>> from sympy import Subs
         >>> from sympy import symbols
-        >>> x, a, b = symbols('x, a, b')
+        >>> x, y, a, b = symbols('x, y, a, b')
         >>> Sum(x, (x, a, b)).change_index(x, x + 1, y)
         Sum(y - 1, (y, a + 1, b + 1))
         >>> Sum(x, (x, a, b)).change_index(x, -x - 1)
