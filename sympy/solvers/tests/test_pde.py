@@ -1,4 +1,5 @@
-from sympy import Derivative as D, Eq, exp, Function, Symbol, symbols
+from sympy import (Derivative as D, Eq, exp, sin,
+    Function, Symbol, symbols, cos, log)
 from sympy.core import S
 from sympy.solvers.pde import (pde_separate_add, pde_separate_mul,
     pdsolve, classify_pde, checkpdesol)
@@ -125,3 +126,40 @@ def test_pde_1st_linear_constant_coeff_homogeneous():
     eq = a*u + b*u.diff(x) + c*u.diff(y)
     sol = pdsolve(eq)
     assert checkpdesol(eq, sol)[0]
+
+def test_pde_1st_linear_constant_coeff_general():
+    f,F = map(Function, ['f', 'F'])
+    u = f(x,y)
+    eq = -2*u.diff(x) + 4*u.diff(y) + 5*u - exp(x + 3*y)
+    sol = pdsolve(eq)
+    assert sol == Eq(f(x, y), F(4*x + 2*y)*exp(x/2 - y) + exp(x + 3*y)/S(15))
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_general',
+    '1st_linear_constant_coeff_general_Integral')
+    assert checkpdesol(eq, sol)[0]
+
+    eq = (u.diff(x)/u) + (u.diff(y)/u) + 1 - (exp(x + y)/u)
+    sol = pdsolve(eq)
+    assert sol == Eq(f(x, y), F(x - y)*exp(-x/2 - y/2) + exp(x + y)/S(3))
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_general',
+    '1st_linear_constant_coeff_general_Integral')
+    assert checkpdesol(eq, sol)[0]
+
+    eq = 2*u + -u.diff(x) + 3*u.diff(y) + sin(x)
+    sol = pdsolve(eq)
+    assert sol == Eq(f(x, y),
+         F(3*x + y)*exp(x/S(5) - 3*y/S(5)) - 2*sin(x)/S(5) - cos(x)/S(5))
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_general',
+    '1st_linear_constant_coeff_general_Integral')
+    assert checkpdesol(eq, sol)[0]
+
+    eq = u + u.diff(x) + u.diff(y) + x*y
+    sol = pdsolve(eq)
+    assert sol == Eq(f(x, y),
+        -x*y + x + y + F(x - y)*exp(-x/S(2) - y/S(2)) - 2)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_general',
+    '1st_linear_constant_coeff_general_Integral')
+    assert checkpdesol(eq, sol)[0]
+
+    eq = u + u.diff(x) + u.diff(y) + log(x)
+    assert classify_pde(eq) == ('1st_linear_constant_coeff_general',
+    '1st_linear_constant_coeff_general_Integral')
