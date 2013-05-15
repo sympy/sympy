@@ -1,6 +1,6 @@
 from sympy.core.add import Add
 from sympy.core.compatibility import ordered
-from sympy.core.function import Function, expand_log
+from sympy.core.function import Function, expand_log, expand_mul
 from sympy.core.mul import Mul
 from sympy.core.power import Pow
 from sympy.core.singleton import S
@@ -183,6 +183,9 @@ def _solve_lambert(f, symbol, gens):
       if d*p**(a*B + g) - b*B = c then
       log(d) + (a*B + g)*log(p) - log(c + b*B) = 0
       a = -1, d = a*log(p), f = -log(d) - g*log(p)
+    4)
+      if p**x - x**p = 0 then
+       x = [p, -p*LambertW(-log(p)/p)/log(p)]
     """
 
     nrhs, lhs = f.as_independent(symbol, as_Add=True)
@@ -277,6 +280,30 @@ def _solve_lambert(f, symbol, gens):
     #     log(R - c*B) - a*B*log(p) = log(d) + b*log(p)
 
     if not soln:
+        xlhs = expand_mul(lhs)
+        if xlhs.is_Add and len(xlhs.args) == 2:
+            a, b = lhs.args
+            ok = True
+            for a, b in [(a, b), (b, a), (-a, -b), (-b, -a)]:
+                if a.is_Pow and (-b).is_Pow:
+                    if symbol in a.base.free_symbols:
+                        a, b = -b, -a
+                    break
+            else:
+                ok = False
+            if ok and a.base == (-b).exp and a.exp == (-b).base:
+                if (symbol not in a.base.free_symbols and
+                        a.base.is_positive and
+                        symbol in a.exp.free_symbols):
+                    sol = solve(a.base - a.exp, symbol)
+                    p = a.base
+                    if p == 2:
+                        sol.extend(solve(
+                            a.exp - (-2/log(2)*LambertW(log(2)/2)), symbol))
+                    else:
+                        sol.extend(solve(
+                            a.exp + p*LambertW(-log(p)/p)/log(p), symbol))
+                return list(ordered(set(sol)))
         mainpow = _mostfunc(lhs, Pow, symbol)
         if mainpow and symbol in mainpow.exp.free_symbols:
             lhs = collect(lhs, mainpow)

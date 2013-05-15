@@ -321,7 +321,6 @@ def test_tsolve():
     assert len(ans) == 3 and all(eq.subs(x, a).n(chop=True) == 0 for a in ans)
     assert solve(2*log(3*x + 4) - 3, x) == [(exp(Rational(3, 2)) - 4)/3]
     assert solve(exp(x) + 1, x) == [pi*I]
-    assert solve(x**3 - 3**x, x) == [-3*LambertW(-log(3)/3)/log(3)]
 
     eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
     result = solve(eq, x)
@@ -1266,15 +1265,19 @@ def test_lambert_multivariate():
     assert solve((log(x) + x).subs(x, x**2 + 1)) == [
         -I*sqrt(-LambertW(1) + 1), sqrt(-1 + LambertW(1))]
 
-
-@XFAIL
-def test_by_symmetry():
-    from sympy.abc import x
-    assert solve(3*sin(x) - x*sin(3), x) == [3]
-
-
-@XFAIL
-def test_additional_lambert():
-    from sympy.abc import x
+    # special forms (lamberts also having symmetry)
     assert solve(x**2 - 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
     assert solve(-x**2 + 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
+    assert solve(x**3 - 3**x, x) == [3, -3/log(3)*LambertW(-log(3)/3)]
+    assert solve(3**cos(x) - cos(x)**3) == [
+        acos(3), acos(-3*LambertW(-log(3)/3)/log(3))]
+
+
+@XFAIL
+def test_by_symmetry_and_lambert():
+    from sympy.abc import x
+    assert solve(3*sin(x) - x*sin(3), x) == [3]
+    assert set(solve(3*log(x) - x*log(3))) == set(
+        [3, -3*LambertW(-log(3)/3)/log(3)])
+    a = S(6)/5
+    assert solve(x**a - a**x) == [a, -a*LambertW(-log(a)/a)/log(a)]
