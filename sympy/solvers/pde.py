@@ -536,6 +536,12 @@ def pde_1st_linear_constant_coeff_general(eq, func, order, match, solvefun):
     >>> pdsolve(eq)
     f(x, y) == F(4*x + 2*y)*exp(x/2 - y) + exp(x + 3*y)/15
 
+    References
+    ==========
+
+    - Viktor Grigoryan, "Partial Differential Equations"
+      Math 124A - Fall 2010, pp.7
+
     """
     epsilon, eta = symbols("E H")
     f = func.func
