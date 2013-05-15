@@ -220,6 +220,9 @@ def test_minpoly_compose():
     assert minimal_polynomial(sin(pi/11), x) == 1024*x**10 - 2816*x**8 + \
             2816*x**6 - 1232*x**4 + 220*x**2 - 11
 
+    ex = 2**Rational(1, 3)*exp(Rational(2, 3)*I*pi)
+    assert minimal_polynomial(ex, x) == x**3 - 2
+
     raises(NotAlgebraic, lambda: minimal_polynomial(cos(pi*sqrt(2)), x))
     raises(NotAlgebraic, lambda: minimal_polynomial(sin(pi*sqrt(2)), x))
     raises(NotAlgebraic, lambda: minimal_polynomial(exp(I*pi*sqrt(2)), x))

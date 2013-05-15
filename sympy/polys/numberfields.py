@@ -215,8 +215,8 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
     ==========
 
     [1] http://en.wikipedia.org/wiki/Resultant
-    [2] J.V. Brawley and L. Carlitz, Discrete Math., 65(2):115 (1987)
-    "Irreducibles and the composed product over a finite field".
+    [2] I.M. Isaacs, Proc. Amer. Math. Soc. 25 (1970), 638
+    "Degrees of sums in a separable field extension".
     """
     from sympy import gcd
     y = Dummy(str(x))
@@ -238,21 +238,14 @@ def _minpoly_op_algebraic_number(ex1, ex2, x, mp1=None, mp2=None, op=Add):
         raise NotImplementedError('option not available')
     r = resultant(mp1a, mp2, gens=[y, x])
 
-    gcd_deg = gcd(degree(mp1, x), degree(mp2, y))
-    if gcd_deg == 1:
-        # Let us give an argument for which `r` is irreducible.
-        # The argument is based on the conjecture that for any pair of
-        # irreducible polynomials `mp1 and `mp2` there is a
-        # prime `p`, larger then the maximum of the absolute value of
-        # the leading coefficient of `r` and of the degree of `r`,
-        # for which `mp1` and `mp2` are irreducible on GF(p).
-        # Then from [2] if follows that `r` is irreducible on GF(p),
-        # which implies that it is irreducible on the integers; in fact
-        # if `r` were reducible, `r = h1*h2` with `h1`, `h2` of degree >= 1,
-        # and with abs(leading coefficient) less than `p`, so that
-        # `h1` and `h2` are polynomials of degree >= 1 also on GF(p),
-        # which is contrary to the fact that `r` is irreducible on GF(p).
-        # TODO give a rigorous proof of irreducibility.
+    deg1 = degree(mp1, x)
+    deg2 = degree(mp2, y)
+    if op is Add and gcd(deg1, deg2) == 1:
+        # `r` is irreducible, see [2]
+        return r
+    if op is Mul and deg1 == 1 or deg2 == 1:
+        # if deg1 = 1, then mp1 = x - a; mp1a = x - y - a;
+        # r = mp2(x - a), so that `r` is irreducible
         return r
     _, factors = factor_list(r)
     if op in [Add, Mul]:
