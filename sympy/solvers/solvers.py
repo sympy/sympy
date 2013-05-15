@@ -33,10 +33,10 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sqrt)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom)
+                            nsimplify, denom, factor)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, Poly, together, factor, RootOf, degree
+from sympy.polys import roots, cancel, Poly, together, RootOf, degree
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -2061,46 +2061,6 @@ def solve_linear_system_LU(matrix, syms):
         solutions[syms[i]] = soln[i, 0]
     return solutions
 
-_x = Dummy('x')
-_a, _b, _c, _d, _e, _f, _g, _h = [Wild(_t, exclude=[_x]) for _t in 'abcdefgh']
-_patterns = None
-
-
-def _generate_patterns():
-    """
-    Generates patterns for transcendental equations.
-
-    This is lazily calculated (called) in the tsolve() function and stored in
-    the patterns global variable.
-    """
-
-    tmp1 = _f ** (_h - (_c*_g/_b))
-    tmp2 = (-_e*tmp1/_a)**(1/_d)
-    global _patterns
-    _patterns = [
-        (_a*_x*exp(_b*_x) - _c,
-            LambertW(_b*_c/_a)/_b),
-        (_a*_x*log(_b*_x) - _c,
-            exp(LambertW(_b*_c/_a))/_b),
-        (_a*(_b*_x + _c)**_d + _e,
-            ((-(_e/_a))**(1/_d) - _c)/_b),
-        (_b + _c*exp(_d*_x + _e),
-            (log(-_b/_c) - _e)/_d),
-        (_a*_x + _b + _c*exp(_d*_x + _e),
-            -_b/_a - LambertW(_c*_d*exp(_e - _b*_d/_a)/_a)/_d),
-        (_b + _c*_f**(_d*_x + _e),
-            (log(-_b/_c) - _e*log(_f))/_d/log(_f)),
-        (_a*_x + _b + _c*_f**(_d*_x + _e),
-            -_b/_a - LambertW(_c*_d*_f**(_e - _b*_d/_a)*log(_f)/_a)/_d/log(_f)),
-        (_b + _c*log(_d*_x + _e),
-            (exp(-_b/_c) - _e)/_d),
-        (_a*_x + _b + _c*log(_d*_x + _e),
-            -_e/_d + _c/_a*LambertW(_a/_c/_d*exp(-_b/_c + _a*_e/_c/_d))),
-        (_a*(_b*_x + _c)**_d + _e*_f**(_g*_x + _h),
-            -_c/_b - _d*LambertW(-tmp2*_g*log(_f)/_b/_d)/_g/log(_f))
-    ]
-
-
 def tsolve(eq, sym):
     SymPyDeprecationWarning(
         feature="tsolve()",
@@ -2133,89 +2093,65 @@ def _tsolve(eq, sym, **flags):
 
     """
 
-    eq2 = eq.subs(sym, _x)
-
-    if _patterns is None:
-        _generate_patterns()
-
-    # try pattern matching - two passes, once without simplification
-    # and once with
-    for itry in range(2):
-        for p, sol in _patterns:
-            m = eq2.match(p)
-            if m:
-                soln = sol.subs(m).subs(_x, sym)
-                if sym not in soln.free_symbols:
-                    # hack for this special case that is caught by a pattern
-                    # that doesn't give the Lambert solution
-                    if soln == 2 and eq2.primitive()[1] in (
-                            _x**2 - 2**_x, 2**_x - _x**2):
-                        soln = [-2/log(2)*LambertW(log(2)/2), soln]
-                    else:
-                        soln = [soln]
-                    return soln
-
-        if itry == 0:
-            # lambert forms may need some help being recognized, e.g. changing
-            # 2**(3*x) + x**3*log(2)**3 + 3*x**2*log(2)**2 + 3*x*log(2) + 1
-            # to 2**(3*x) + (x*log(2) + 1)**3
-            g = _filtered_gens(eq.as_poly(), sym)
-            up_or_log = set()
-            for gi in g:
-                if gi.func is exp or gi.func is log:
-                    up_or_log.add(gi)
-                elif gi.is_Pow:
-                    gisimp = powdenest(expand_power_exp(gi))
-                    if gisimp.is_Pow and sym in gisimp.exp.free_symbols:
-                        up_or_log.add(gi)
-            down = g.difference(up_or_log)
-            eq_down = expand_power_exp(eq).subs(
-                dict(zip(up_or_log, [0]*len(up_or_log))))
-            eq2 = expand_power_exp(factor(eq_down) + (eq - eq_down))
-            eq2 = eq2.subs(sym, _x)
-
-    # continue with heuristics
     rhs, lhs = _invert(eq, sym)
+    try:
+        if lhs.is_Add:
+            # it's time to try factoring; powdenest is used
+            # to try get powers in standard form for better factoring
+            fac = factor(powdenest(lhs - rhs))
+            if fac.is_Mul:
+                return _solve(fac, sym)
 
-    if lhs.is_Add:
-        # it's time to try factoring; powdenest is used
-        # to try get powers in standard form for better factoring
-        fac = factor(powdenest(lhs - rhs))
-        if fac.is_Mul:
-            return _solve(fac, sym)
+        elif lhs.is_Pow:
+            if lhs.exp.is_Integer:
+                if lhs - rhs != eq:
+                    return _solve(lhs - rhs, sym)
+                elif not rhs:
+                    return _solve(lhs.base, sym)
+            elif sym not in lhs.exp.free_symbols:
+                return _solve(lhs.base - rhs**(1/lhs.exp), sym)
+            elif not rhs and sym in lhs.exp.free_symbols:
+                # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
+                # the same place
+                sol_base = _solve(lhs.base, sym)
+                if not sol_base:
+                    return sol_base
+                return list(set(sol_base) - set(_solve(lhs.exp, sym)))
+            elif (rhs is not S.Zero and
+                  lhs.base.is_positive and
+                  lhs.exp.is_real):
+                return _solve(lhs.exp*log(lhs.base) - log(rhs), sym)
 
-    elif lhs.is_Pow:
-        if lhs.exp.is_Integer:
-            if lhs - rhs != eq:
-                return _solve(lhs - rhs, sym)
-            elif not rhs:
-                return _solve(lhs.base, sym)
-        elif sym not in lhs.exp.free_symbols:
-            return _solve(lhs.base - rhs**(1/lhs.exp), sym)
-        elif not rhs and sym in lhs.exp.free_symbols:
-            # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
-            # the same place
-            sol_base = _solve(lhs.base, sym)
-            if not sol_base:
-                return sol_base
-            return list(set(sol_base) - set(_solve(lhs.exp, sym)))
-        elif (rhs is not S.Zero and
-              lhs.base.is_positive and
-              lhs.exp.is_real):
-            return _solve(lhs.exp*log(lhs.base) - log(rhs), sym)
+        elif lhs.is_Mul and rhs.is_positive:
+            llhs = expand_log(log(lhs))
+            if llhs.is_Add:
+                return _solve(llhs - log(rhs), sym)
 
-    elif lhs.is_Mul and rhs.is_positive:
-        llhs = expand_log(log(lhs))
-        if llhs.is_Add:
-            return _solve(llhs - log(rhs), sym)
+        rewrite = lhs.rewrite(exp)
+        if rewrite != lhs:
+            return _solve(rewrite - rhs, sym)
+    except NotImplementedError:
+        pass
 
-    rewrite = lhs.rewrite(exp)
-    if rewrite != lhs:
-        return _solve(rewrite - rhs, sym)
-
-
-    # maybe it was a harder lambert pattern
+    # maybe it is a lambert pattern
     if flags.pop('bivariate', True):
+        # lambert forms may need some help being recognized, e.g. changing
+        # 2**(3*x) + x**3*log(2)**3 + 3*x**2*log(2)**2 + 3*x*log(2) + 1
+        # to 2**(3*x) + (x*log(2) + 1)**3
+        g = _filtered_gens(eq.as_poly(), sym)
+        up_or_log = set()
+        for gi in g:
+            if gi.func is exp or gi.func is log:
+                up_or_log.add(gi)
+            elif gi.is_Pow:
+                gisimp = powdenest(expand_power_exp(gi))
+                if gisimp.is_Pow and sym in gisimp.exp.free_symbols:
+                    up_or_log.add(gi)
+        down = g.difference(up_or_log)
+        eq_down = expand_log(expand_power_exp(eq)).subs(
+            dict(zip(up_or_log, [0]*len(up_or_log))))
+        eq = expand_power_exp(factor(eq_down) + (eq - eq_down))
+        rhs, lhs = _invert(eq, sym)
         try:
             poly = lhs.as_poly()
             g = _filtered_gens(poly, sym)

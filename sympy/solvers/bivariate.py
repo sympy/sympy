@@ -8,7 +8,7 @@ from sympy.core.symbol import (Dummy, Wild)
 from sympy.functions.elementary.exponential import (LambertW, exp, log)
 from sympy.functions.elementary.miscellaneous import root
 from sympy.polys.polytools import (factor, Poly, primitive)
-from sympy.simplify.simplify import (_mexpand, collect, separatevars)
+from sympy.simplify.simplify import (_mexpand, collect, separatevars, factor)
 from sympy.solvers.solvers import solve
 
 

@@ -1583,8 +1583,10 @@ def test_linear_coefficients():
     f = Function('f')
     df = f(x).diff(x)
     sol = Eq(f(x), C1/(x**2 + 6*x + 9) - S(3)/2)
+    sola = Eq(f(x), (C1 + C2*x - 3*x**3/2 - 27*x**2/2)/(x**3 + 9*x**2 + 27*x + 27))
     eq = df + (3 + 2*f(x))/(x + 3)
-    assert dsolve(eq, hint='linear_coefficients') == sol
+    assert simplify(eq.subs(f(x), sola.rhs).doit()).as_numer_denom()[0].has(x) is False
+    assert dsolve(eq, hint='linear_coefficients') == sola
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 

@@ -323,15 +323,12 @@ def test_tsolve():
     assert solve(exp(x) + 1, x) == [pi*I]
     assert solve(x**3 - 3**x, x) == [-3*LambertW(-log(3)/3)/log(3)]
 
-    A = -7*2**Rational(4, 5)*6**Rational(1, 5)*log(7)/10
-    B = -7*3**Rational(1, 5)*log(7)/5
-
-    result = solve(2*(3*x + 4)**5 - 6*7**(3*x + 9), x)
-
-    assert len(result) == 1 and expand(result[0]) in [
-        Rational(-4, 3) - 5/log(7)/3*LambertW(A),
-        Rational(-4, 3) - 5/log(7)/3*LambertW(B),
-    ]
+    eq = 2*(3*x + 4)**5 - 6*7**(3*x + 9)
+    result = solve(eq, x)
+    ans = [(log(2401) + 5*LambertW(-log(7**(7*3**Rational(1, 5)/5))))/(3*log(7))/-1]
+    assert result == ans
+    # it works if expanded, too
+    assert solve(eq.expand(), x) == result
 
     assert solve(z*cos(x) - y, x) == [acos(y/z)]
     assert solve(z*cos(2*x) - y, x) == [acos(y/z)/2]
@@ -1245,10 +1242,6 @@ def test_lambert_multivariate():
     assert solve(x*log(x) + 3*x + 1, x) == [exp(-3 + LambertW(-exp(3)))]
     eq = (x*exp(x) - 3).subs(x, x*exp(x))
     assert solve(eq) == [LambertW(3*exp(-LambertW(3)))]
-    assert solve((2*(3*x + 4)**5 - 6*7**(3*x + 9)).expand(), x) == \
-        [S(-5)*LambertW(-7*3**(S(1)/5)*log(7)/5)/(3*log(7)) + S(-4)/3]
-    assert solve(x**2 - 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
-    assert solve(-x**2 + 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
 
     # if sign is unknown then only this one solution is obtained
     assert solve(3*log(a**(3*x + 5)) + a**(3*x + 5), x) == [
@@ -1278,3 +1271,10 @@ def test_lambert_multivariate():
 def test_by_symmetry():
     from sympy.abc import x
     assert solve(3*sin(x) - x*sin(3), x) == [3]
+
+
+@XFAIL
+def test_additional_lambert():
+    from sympy.abc import x
+    assert solve(x**2 - 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
+    assert solve(-x**2 + 2**x, x) == [2, -2/log(2)*LambertW(log(2)/2)]
