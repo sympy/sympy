@@ -47,11 +47,11 @@ computation---symbolic results can be symbolically simplified.
 A More Interesting Example
 ==========================
 
-The above example starts to show how we can compute with exact numbers using
-SymPy.  But it is much more powerful than that.  Symbolic computation systems
-(which by the way, are also often called computer algebra systems, or just
-CASs) such as SymPy are capable of computing with symbolic expressions with
-variables.
+The above example starts to show how we can manipulate irrational numbers
+exactly using SymPy.  But it is much more powerful than that.  Symbolic
+computation systems (which by the way, are also often called computer algebra
+systems, or just CASs) such as SymPy are capable of computing symbolic
+expressions with variables.
 
 As we will see later, in SymPy, variables are defined using ``symbols``.
 Unlike many symbolic manipulation systems, variables in SymPy must be defined
@@ -71,7 +71,7 @@ Let us define a symbolic expression, representing the mathematical expression
 Note that we wrote ``x + 2*y`` just as we would if ``x`` and ``y`` were
 ordinary Python variables. But in this case, instead of evaluating to
 something, the expression remains as just ``x + 2*y``.  Now let us play around
-with it
+with it:
 
    >>> a + 1
    x + 2*y + 1
@@ -109,7 +109,7 @@ That is an introduction to what symbolic computation is, but the real power of
 a symbolic computation system such as SymPy is the ability to do all sorts of
 computations symbolically.  SymPy can compute derivatives, integrals, and
 limits, solve equations, work with matrices, and much, much more, and do it
-all symbolically.  It includes modules for plotting printing (like 2D pretty
+all symbolically.  It includes modules for plotting, printing (like 2D pretty
 printed output of math formulas, or `\LaTeX`), code generation, physics,
 statistics, combinatorics, number theory, geometry, and logic. Here is a small
 sampling of the sort of symbolic power SymPy is capable of to whet your
