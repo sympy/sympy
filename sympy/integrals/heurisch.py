@@ -134,6 +134,16 @@ def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
     if not slns:
         return res
     slns = list(uniq(slns))
+    # Remove the solutions corresponding to poles in the original expression.
+    slns0 = []
+    for d in denoms(f):
+        try:
+            slns0 += solve(d, dict=True, exclude=(x,))
+        except NotImplementedError:
+            pass
+    slns = [s for s in slns if s not in slns0]
+    if not slns:
+        return res
     if len(slns) > 1:
         eqs = []
         for sub_dict in slns:
