@@ -179,6 +179,20 @@ def test_heurisch_function():
     assert heurisch(df / f(x), x) == log(f(x))
 
 
+def test_heurisch_wrapper():
+    f = 1/(y + x)
+    assert heurisch_wrapper(f, x) == log(x + y)
+    f = 1/(y - x)
+    assert heurisch_wrapper(f, x) == -log(x - y)
+    f = 1/((y - x)*(y + x))
+    assert heurisch_wrapper(f, x) == \
+        Piecewise((1/x, Eq(y, 0)), (log(x + y)/2/y - log(x - y)/2/y, True))
+    # issue 3827
+    f = sqrt(x**2/((y - x)*(y + x)))
+    assert heurisch_wrapper(f, x) == x*sqrt(x**2)*sqrt(1/(-x**2 + y**2)) \
+        - y**2*sqrt(x**2)*sqrt(1/(-x**2 + y**2))/x
+
+
 def test_issue510():
     assert heurisch(1/(x * (1 + log(x)**2)), x) == I*log(log(x) + I)/2 - \
         I*log(log(x) - I)/2
