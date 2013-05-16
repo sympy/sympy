@@ -409,17 +409,6 @@ def test_series():
     for c in (Limit, Limit(e, x, 1), Order, Order(e)):
         check(c)
 
-#================== statistics ==================
-from sympy.statistics.distributions import ContinuousProbability, Normal, Sample, Uniform
-
-
-def test_statistics():
-    x = Symbol("x")
-    y = Symbol("y")
-    for c in (ContinuousProbability, ContinuousProbability(), Normal,
-              Normal(x, y), Sample, Sample([1, 3, 4]), Uniform, Uniform(x, y)):
-        check(c)
-
 #================== concrete ==================
 from sympy.concrete.products import Product
 from sympy.concrete.summations import Sum
