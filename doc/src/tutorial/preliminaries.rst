@@ -6,6 +6,14 @@ This tutorial assumes that the reader already knows the basics of the Python pro
 language.  If you do not, the `official Python
 tutorial <http://docs.python.org/3/tutorial/index.html>`_ is excellent.
 
+This tutorial assumes a decent mathematical background.  Most examples require
+knowledge up to calculus level, and some require knowledge at a calculus
+level.  Some of the advanced features require more than this. If you come
+across a section that uses some mathematical function you are not familiar
+with, you can probably skip over it, or replace it with a similar one that you
+are more familiar with.  Or look up the function on Wikipedia and learn
+something new.
+
 You will need to install SymPy first.  See :ref:`installation`.
 
 Alternately, you can just use the SymPy Live Sphinx extension to run the code
