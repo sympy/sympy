@@ -93,6 +93,28 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
                 classify_pde(). This is the default argument to
                 pdsolve().
 
+        "all":
+                To make pdsolve apply all relevant classification hints,
+                use pdsolve(PDE, func, hint="all").  This will return a
+                dictionary of hint:solution terms.  If a hint causes
+                pdsolve to raise the NotImplementedError, value of that
+                hint's key will be the exception object raised.  The
+                dictionary will also include some special keys:
+
+                - order: The order of the PDE.  See also ode_order() in
+                  deutils.py
+                - default: The solution that would be returned by
+                  default.  This is the one produced by the hint that
+                  appears first in the tuple returned by classify_pde().
+
+        "all_Integral":
+                This is the same as "all", except if a hint also has a
+                corresponding "_Integral" hint, it only returns the
+                "_Integral" hint.  This is useful if "all" causes
+                pdsolve() to hang because of a difficult or impossible
+                integral.  This meta-hint will also be much faster than
+                "all", because integrate() is an expensive routine.
+
         See also the classify_pde() docstring for more info on hints,
         and the pde docstring for a list of all supported hints.
 
@@ -128,6 +150,7 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     >>> eq = Eq(1 + (2*(ux/u)) + (3*(uy/u)))
     >>> pdsolve(eq)
     f(x, y) == F(3*x - 2*y)*exp(-2*x/13 - 3*y/13)
+
     """
 
     given_hint = hint  # hint given by the user.
@@ -138,20 +161,46 @@ def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
     # See the docstring of _desolve for more details.
     hints = _desolve(eq, func=func,
         hint=hint, simplify=True, type='pde', **kwargs)
-    eq = hints['eq']
+    eq = hints.pop('eq', False)
     all_ = hints.pop('all', False)
 
     if all_:
-        raise NotImplementedError("No PDE can be classifiedtill now")
+        # TODO : 'best' hint should be implemented when adequate
+        # number of hints are added.
+        pdedict = {}
+        failed_hints = {}
+        gethints = classify_pde(eq, dict=True)
+        pdedict.update({'order': gethints['order'],
+            'default': gethints['default']})
+        for hint in hints:
+            try:
+                rv = _helper_simplify(eq, hint, hints[hint]['func'],
+                    hints[hint]['order'], hints[hint][hint], solvefun)
+            except NotImplementedError, detail:
+                failed_hints[hint] = detail
+            else:
+                pdedict[hint] = rv
+        pdedict.update(failed_hints)
+        return pdedict
+
     else:
-        if hints['hint'].endswith("_Integral"):
-            solvefunc = globals()[
-                "pde_" + hints['hint'][:-len("_Integral")]]
-        else:
-            solvefunc = globals()["pde_" + hints['hint']]
-        return _handle_Integral(solvefunc(eq, hints['func'], hints['order'],
-            hints[hints['hint']], solvefun),
-            hints['func'], hints['order'], hints['hint'])
+        return _helper_simplify(eq, hints['hint'],
+            hints['func'], hints['order'], hints[hints['hint']], solvefun)
+
+def _helper_simplify(eq, hint, func, order, match, solvefun):
+    """Helper function of pdsolve that calls the respective
+    pde functions to solve for the partial differential
+    equations. This minimises the computation in
+    calling _desolve multiple times.
+    """
+
+    if hint.endswith("_Integral"):
+        solvefunc = globals()[
+            "pde_" + hint[:-len("_Integral")]]
+    else:
+        solvefunc = globals()["pde_" + hint]
+    return _handle_Integral(solvefunc(eq, func, order,
+        match, solvefun), func, order, hint)
 
 def _handle_Integral(expr, func, order, hint):
     r"""
@@ -429,12 +478,12 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     partial differential equation with constant coefficients.
 
     The general form of this partial differential equation is
-    a*f(x,y) + b*f(x,y).diff(x) + c*f(x,y).diff(y) = 0
+    a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = 0
     where a, b and c are constants.
 
     The general solution of the differential equation, can be found
     by the method of characteristics. It is given by
-    f(x,y) = F(c*x - b*y)*exp(-a/(b**2 + c**2)*(b*x + c*y))
+    f(x,y) = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y))
 
     >>> from sympy.solvers import pdsolve
     >>> from sympy.abc import x, y, a, b, c
@@ -443,18 +492,18 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     >>> u = f(x,y)
     >>> ux = u.diff(x)
     >>> uy = u.diff(y)
-    >>> genform = a*u + b*ux + c*uy
+    >>> genform = a*ux + b*uy + c*u
     >>> pprint(genform)
-                   d               d
-    a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y))
-                  dx              dy
+      d               d
+    a*--(f(x, y)) + b*--(f(x, y)) + c*f(x, y)
+      dx              dy
 
     >>> pprint(pdsolve(genform))
-                              -a*(b*x + c*y)
+                              -c*(a*x + b*y)
                              --------------
                                  2    2
-                                b  + c
-    f(x, y) = F(-b*y + c*x)*e
+                                a  + b
+    f(x, y) = F(-a*y + b*x)*e
 
     Examples
     ========
@@ -502,13 +551,14 @@ def pde_1st_linear_constant_coeff_general(eq, func, order, match, solvefun):
     where a, b and c are constants and G can be an arbitrary
     function in x and y.
 
-    The general solution of the differential equation, can be found
+    The general solution of the differential equation can be found
     by the method of characteristics. It is given by the sum of the
     homogeneous and general parts. The homogeneous part is given by
-    f(x, y)p = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y)).
+    fp(x,y) = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y))
     The general part is given by
-    f(x, y)g = ((1/a**2 + b**2)*exp(-c/(a**2 + b**2)*(a*x + b*y))*
-    Integral(G(x,y)*exp(-c/(a**2 + b**2)*(a*x + b*y)), a*x + b*y)
+    fg(x,y) = ((1/a**2 + b**2)*exp(-c/(a**2 + b**2)*(a*x + b*y))*
+    Integral(G(x,y)*exp(c/(a**2 + b**2)*(a*x + b*y)), a*x + b*y).
+    The solution would be equal to fp(x, y) + fg(x, y)
 
     >>> from sympy.solvers import pdsolve
     >>> from sympy.abc import x, y, a, b, c

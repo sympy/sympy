@@ -164,3 +164,16 @@ def test_pde_1st_linear_constant_coeff_general():
     eq = u + u.diff(x) + u.diff(y) + log(x)
     assert classify_pde(eq) == ('1st_linear_constant_coeff_general',
     '1st_linear_constant_coeff_general_Integral')
+
+def test_pdsolve_all():
+    f, F = map(Function, ['f', 'F'])
+    u = f(x,y)
+    eq = u + u.diff(x) + u.diff(y) + x**2*y
+    sol = pdsolve(eq, hint = 'all')
+    keys = ['1st_linear_constant_coeff_general',
+        '1st_linear_constant_coeff_general_Integral', 'default', 'order']
+    assert sorted(sol.keys()) == keys
+    assert sol['order'] == 1
+    assert sol['default'] == '1st_linear_constant_coeff_general'
+    assert sol['1st_linear_constant_coeff_general'] == Eq(f(x, y),
+        -x**2*y + x**2 + 2*x*y - 4*x - 2*y + F(x - y)*exp(-x/S(2) - y/S(2)) + 6)
