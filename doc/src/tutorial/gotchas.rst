@@ -4,7 +4,7 @@
 
 To begin, we should make something about SymPy clear.  SymPy is nothing more
 than a Python library, like ``NumPy``, ``Django``, or even modules in the
-Python standard lexcellentike ``sys`` or ``re``.  What this means is that SymPy
+Python standard library ``sys`` or ``re``.  What this means is that SymPy
 does not add anything to the Python language.  Limitations that are inherent
 in the Python language are also inherent in SymPy.  It also means that SymPy
 tries to use Python idioms whenever possible, making programming with SymPy
@@ -40,13 +40,13 @@ Do define variables, we must use ``symbols``.
 ``symbols`` takes a string of variable names separated by spaces or commas,
 and creates Symbols out of them.  We can then assign these to variable names.
 Later, we will investigate some convenient ways we can work around this issue.
-For now, let us just define the most common variable names, x, y, and z, for
-use through the rest of this section
+For now, let us just define the most common variable names, ``x``, ``y``, and
+``z``, for use through the rest of this section
 
     >>> x, y, z = symbols('x y z')
 
 As a final note, we note that the name of a Symbol and the name of the
-variable it is assigned need not have anything to do with one another.
+variable it is assigned to need not have anything to do with one another.
 
     >>> a, b = symbols('b a')
     >>> a
@@ -119,7 +119,7 @@ of two terms, and the other is the addition of three terms.
 It turns out that when using SymPy as a library, having ``==`` test for exact
 symbolic equality is far more useful than having it represent symbolic
 equality, or having it test for mathematical equality.  However, as a new
-user, you will probably care more about the former two.  We have already seen
+user, you will probably care more about the latter two.  We have already seen
 an alternative to representing equalities symbolically, ``Eq``.  To test if
 two things are equal, it is best to recall the basic fact that if `a = b`,
 then `a - b = 0`.  Thus, the best way to check if `a = b` is to take `a - b`
@@ -150,8 +150,12 @@ Two Final Notes: ``^`` and ``/``
 
 You may have noticed that we have been using ``**`` for exponentiation instead
 of the standard ``^``.  That's because SymPy follows Python's conventions.  In
-Python, ``^`` represents logical exclusive or:
+Python, ``^`` represents logical exclusive or.  SymPy follows this convention:
 
+     >>> True ^ False
+     True
+     >>> True ^ True
+     False
      >>> x^y
      Or(And(Not(x), y), And(Not(y), x))
 

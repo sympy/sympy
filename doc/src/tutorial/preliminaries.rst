@@ -27,7 +27,7 @@ SymPy Live" button below
     Integral(exp(x)*cos(x), x) == exp(x)*sin(x)/2 + exp(x)*cos(x)/2
 
 The SymPy Live shell in the bottom corner will pop up and evaluate the code
-block. You can also click an individual line to evaluate just it.
+block. You can also click an individual line to evaluate lines one at a time.
 
 The SymPy Live shell is a fully interactive Python shell. You can type any
 expression in the input box to evaluate it.  Feel free to use it throughout
