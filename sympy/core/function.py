@@ -631,7 +631,9 @@ class UndefinedFunction(FunctionClass):
     The (meta)class of undefined functions.
     """
     def __new__(mcl, name):
-        return BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+        ret = BasicMeta.__new__(mcl, name, (AppliedUndef,), {})
+        ret.__module__ = None
+        return ret
 
 
 class WildFunction(Function, AtomicExpr):
