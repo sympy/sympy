@@ -146,7 +146,7 @@ def _init_ipython_printing(ip, stringify_func, use_latex, euler,
 
 def init_printing(pretty_print=True, order=None, use_unicode=None,
                   use_latex=None, wrap_line=None, num_columns=None,
-                  no_global=False, ip=None, euler=False, forecolor='Blue',
+                  no_global=False, ip=None, euler=False, forecolor='Black',
                   backcolor='Transparent', fontsize='10pt',
                   latex_mode='equation*'):
     """
