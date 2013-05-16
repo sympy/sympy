@@ -194,7 +194,7 @@ _monomial_key = {
     'igrevlex': igrevlex
 }
 
-def monomial_key(order=None):
+def monomial_key(order=None, gens=None):
     """
     Return a function defining admissible order on monomials.
 
@@ -209,23 +209,30 @@ def monomial_key(order=None):
     3. grevlex   - reversed graded lexicographic order
     4. ilex, igrlex, igrevlex - the corresponding inverse orders
 
-    If the input argument is not a string but has ``__call__`` attribute,
-    then it will pass through with an assumption that the callable object
-    defines an admissible order on monomials.
+    If the ``order`` input argument is not a string but has ``__call__``
+    attribute, then it will pass through with an assumption that the
+    callable object defines an admissible order on monomials.
+
+    If the ``gens`` input argument contains a list of generators, the
+    resulting key function can be used to sort SymPy ``Expr`` objects.
 
     """
     if order is None:
-        return lex
+        order = lex
 
     if isinstance(order, Symbol):
         order = str(order)
 
     if isinstance(order, str):
         try:
-            return _monomial_key[order]
+            order = _monomial_key[order]
         except KeyError:
             raise ValueError("supported monomial orderings are 'lex', 'grlex' and 'grevlex', got %r" % order)
-    elif hasattr(order, '__call__'):
+    if hasattr(order, '__call__'):
+        if gens is not None:
+            def _order(expr):
+                return order(expr.as_poly(*gens).degree_list())
+            return _order
         return order
     else:
         raise ValueError("monomial ordering specification must be a string or a callable, got %s" % order)
