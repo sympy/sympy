@@ -208,7 +208,7 @@ around this by explicitly creating a Rational:
     >>> x + Rational(1, 2)
     x + 1/2
 
-There are several tips on avoiding this situation in the Gotchas and Pitfalls
+There are several tips on avoiding this situation in the :ref:`gotchas`
 document.
 
 Further Reading
