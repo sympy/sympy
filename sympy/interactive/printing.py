@@ -244,7 +244,7 @@ def init_printing(pretty_print=True, order=None, use_unicode=None,
         except ImportError:
             pass
         else:
-            # If in qtconsole or notebook
+            # This will be True if we are in the qtconsole or notebook
             if not isinstance(ip, (InteractiveConsole, TerminalInteractiveShell)) \
                     and 'ipython-console' not in ''.join(sys.argv):
                 if use_unicode is None:
