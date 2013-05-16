@@ -281,7 +281,8 @@ class PolyRing(DefaultPrinting, IPolys):
             return self.clone(symbols=symbols)
 
     def to_ground(self):
-        if self.domain.is_Composite:
+        # TODO: should AlgebraicField be a Composite domain?
+        if self.domain.is_Composite or hasattr(self.domain, 'domain'):
             return self.clone(domain=self.domain.domain)
         else:
             raise ValueError("%s is not a composite domain" % self.domain)
