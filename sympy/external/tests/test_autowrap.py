@@ -12,7 +12,7 @@ f2pyworks = False
 if f2py:
     try:
         autowrap(symbols('x'), 'f95', 'f2py')
-    except (CodeWrapError, ImportError):
+    except (CodeWrapError, ImportError, OSError):
         f2pyworks = False
     else:
         f2pyworks = True
