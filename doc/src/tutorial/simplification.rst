@@ -214,3 +214,216 @@ canceled form, ``cancel`` is more efficient than ``factor``.
     ────────── - ───── + ─
      2           x + 4   x
     x  + x + 1
+
+Trigonometric Simplification
+============================
+
+``trigsimp``
+------------
+
+To simplify expressions using trigonometric identities, use ``trigsimp``.
+
+    >>> trigsimp(sin(x)**2 + cos(x)**2)
+    1
+    >>> trigsimp(sin(x)**4 - 2*cos(x)**2*sin(x)**2 + cos(x)**4)
+    cos(4⋅x)   1
+    ──────── + ─
+       2       2
+    >>> trigsimp(sin(x)*tan(x)/sec(x))
+       2
+    sin (x)
+
+``trigsimp`` also works with hyperbolic trig functions.
+
+    >>> trigsimp(cosh(x)**2 + sinh(x)**2)
+    cosh(2⋅x)
+    >>> trigsimp(sinh(x)/tanh(x))
+    cosh(x)
+
+Much like ``simplify``, ``trigsimp`` applies various trigonometric identities to
+the input expression, and then uses a heuristic to return the "best" one.
+
+``expand_trig``
+---------------
+
+To expand trigonometric functions, that is, apply the sum or double angle
+identities, use ``expand_trig``.
+
+    >>> expand_trig(sin(x + y))
+    sin(x)⋅cos(y) + sin(y)⋅cos(x)
+    >>> expand_trig(tan(2*x))
+       2⋅tan(x)
+    ─────────────
+         2
+    - tan (x) + 1
+
+Because ``expand_trig`` tends to make trigonometric expressions larger, and
+``trigsimp`` tends to make them smaller, these identities can be applied in
+reverse using ``trigsimp``
+
+.. TODO: It would be much better to teach individual trig rewriting functions
+   here, but they don't exist yet.  See
+   https://code.google.com/p/sympy/issues/detail?id=357.
+
+Powers
+======
+
+There are three kinds of identities satisfied by exponents
+
+1. `x^ax^b = x^{a + b}`
+2. `x^ay^a = (xy)^a`
+3. `(x^a)^b = x^{ab}`
+
+Identity 1 is always true.
+
+Identity 2 is not always true.  For example, if `x = y = -1` and `a = \frac{1}{2}`,
+then `x^ay^a = \sqrt{-1}\sqrt{-1} = i\cdot i = -1`, whereas `(xy)^a =
+\sqrt{-1\cdot-1} = \sqrt{1} = 1`.  However, identity 2 is true at least if `x`
+and `y` are nonnegative and `a` is real (it may also be true under other
+conditions as well).  A common consequence of the failure of identity 2 is
+that `\sqrt{x}\sqrt{y} \neq \sqrt{xy}`.
+
+Identity 3 is not always true.  For example, if `x = -1`, `a = 2`, and `b =
+\frac{1}{2}`, then `(x^a)^b =  {\left ((-1)^2\right )}^{1/2} = \sqrt{1} = 1` and `x^{ab} =
+(-1)^{2\cdot1/2} = (-1)^1 = -1`.  However, identity 3 is true at least if `x`
+is positive or `b` is an integer (again, it may also hold in other cases as
+well).  Two common consequences of the failure of identity 3 are that
+`\sqrt{x^2}\neq x` and that `\sqrt{\frac{1}{x}} \neq \frac{1}{\sqrt{x}}`.
+
+This is important to remember, because by default, SymPy will not perform
+simplifications if they are not true in general.
+
+In order to make SymPy perform simplifications involving identities that are
+only true under certain assumptions, we need to put assumptions on our
+Symbols.  We will undertake a full discussion of the assumptions system later,
+but for now, all we need to know are the following
+
+- By default, SymPy Symbols are assumed to be complex.  That is,
+  simplifications will not be applied to an expression with a given Symbol
+  unless it holds for all complex numbers.
+
+- Symbols can be given different assumptions by passing the assumption to
+  ``symbols``.  For the rest of this section, we will be assuming that ``x``,
+  ``y`` are positive, and that ``a`` and ``b`` are real.  We will leave ``z``,
+  ``t``, and ``c`` as arbitrary complex Symbols to demonstrate what happens in
+  that case.
+
+    >>> x, y = symbols('x y', positive=True)
+    >>> a, b = symbols('a b', real=True)
+    >>> z, t, c = symbols('z t c')
+
+  .. TODO: Rewrite this using the new assumptions
+
+- In SymPy, ``sqrt(x)`` is just a shortcut to ``x**Rational(1, 2)``.  They are
+  exactly the same object.
+
+    >>> sqrt(x) == x**Rational(1, 2)
+    True
+
+``powsimp``
+-----------
+
+``powsimp`` applies identities 1 and 2 from above, from left to right.
+
+
+   >>> powsimp(x**a*x**b)
+     a + b
+    x
+   >>> powsimp(x**a*y**a)
+        a
+   (x⋅y)
+
+Notice that ``powsimp`` refuses to do the simplification if it is not valid.
+
+    >>> powsimp(t**c*z**c)
+     c  c
+    t ⋅z
+
+If you know that you want to apply this simplification, but you don't want to
+mess with assumptions, you can pass the ``force=True`` flag.  This will force
+the simplification to take place, regardless of assumptions.
+
+    >>> powsimp(t**c*z**c, force=True)
+         c
+    (t⋅z)
+
+Note that in some instances, in particular, when the exponents are integers or
+rational numbers, and identity 2 holds, it will be applied automatically
+
+   >>> (z*t)**2
+     2  2
+    t ⋅z
+   >>> sqrt(x*y)
+      ___   ___
+    ╲╱ x ⋅╲╱ y
+
+This means that it will be impossible to undo this identity with ``powsimp``,
+because even if ``powsimp`` were to put the bases together, they would be
+automatically split apart again.
+
+   >>> powsimp(z**2*t**2)
+     2  2
+    t ⋅z
+   >>> powsimp(sqrt(x)*sqrt(y))
+      ___   ___
+    ╲╱ x ⋅╲╱ y
+
+``expand_power_exp``/``expand_power_base``
+------------------------------------------
+
+``expand_power_exp`` and ``expand_power_base`` apply identities 1 and 2 from
+right to left, respectively.
+
+    >>> expand_power_exp(x**(a + b))
+     a  b
+    x ⋅x
+
+    >>> expand_power_base((x*y)**a)
+     a  a
+    x ⋅y
+
+As with ``powsimp``, identity 2 is not applied if it is not valid.
+
+    >>> expand_power_base((z*t)**c)
+         c
+    (t⋅z)
+
+And as with ``powsimp``, you can force the expansion to happen without
+fiddling with assumptions by using ``force=True``.
+
+   >>> expand_power_base((z*t)**c, force=True)
+     c  c
+    t ⋅z
+
+As with identity 2, identity 1 is applied automatically if the power is a
+number, and hence cannot be undone with ``expand_power_exp``.
+
+   >>> x**2*x**3
+     5
+    x
+   >>> expand_power_exp(x**5)
+     5
+    x
+
+``powdenest``
+-------------
+
+``powdenest`` applies identity 3, for left to right.
+
+    >>> powdenest((x**a)**b)
+     a⋅b
+    x
+
+As before, the identity is not applied if it is not true under the given
+assumptions.
+
+    >>> powdenest((z**a)**b)
+        b
+    ⎛ a⎞
+    ⎝z ⎠
+
+And as before, this can be manually overridden with ``force=True``.
+
+    >>> powdenest((z**a)**b, force=True)
+     a⋅b
+    z
