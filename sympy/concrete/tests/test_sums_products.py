@@ -6,6 +6,7 @@ from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
+from sympy.concrete.shift import change_index
 
 n = Symbol('n', integer=True)
 
@@ -485,11 +486,11 @@ def test_simplify():
 def test_change_index():
     b = symbols('b', integer = True)
 
-    assert Sum(x, (x, a, b)).change_index(x, x + 1, y) == \
+    assert change_index(Sum(x, (x, a, b)), x, x + 1, y) == \
         Sum(y - 1, (y, a + 1, b + 1))
-    assert Sum(x**2, (x, a, b)).change_index(x, x - 1) == \
+    assert change_index(Sum(x**2, (x, a, b)), x, x - 1) == \
         Sum((x+1)**2, (x, a - 1, b - 1))
-    assert Sum(x**2, (x, a, b)).change_index(x, -x, y) == \
+    assert change_index(Sum(x**2, (x, a, b)), x, -x, y) == \
         Sum((-y)**2, (y, -b, -a))
-    assert Sum(x, (x, a, b)).change_index(x, -x - 1) == \
+    assert change_index(Sum(x, (x, a, b)), x, -x - 1) == \
         Sum(-x - 1, (x, -b - 1, -a - 1))

@@ -298,46 +298,6 @@ class Sum(Expr):
         from sympy.integrals.integrals import _eval_subs
         return _eval_subs(self, old, new)
 
-    def change_index(self, old, new, var=None):
-        """
-        Used to shift and invert indexes.
-        Ex:
-        >>> from sympy.concrete import Sum
-        >>> from sympy import Subs
-        >>> from sympy import symbols
-        >>> x, y, a, b = symbols('x, y, a, b')
-        >>> Sum(x, (x, a, b)).change_index(x, x + 1, y)
-        Sum(y - 1, (y, a + 1, b + 1))
-        >>> Sum(x, (x, a, b)).change_index(x, -x - 1)
-        Sum(-x - 1, (x, -b - 1, -a - 1))
-        """
-        from sympy.concrete import Product
-        from sympy import Subs
-
-        limits = []
-        invert = not (new - old).is_number
-
-        if var == None:
-            var = old
-
-        for i in range(len(self.limits)):
-            if self.limits[i][0] == old:
-                if not invert:
-                    limits.append((var, self.limits[i][1]+ new - \
-                        old, self.limits[i][2] + new - old))
-                else:
-                    limits.append((var, (new + old) - self.limits[i][2], \
-                        (new + old) - self.limits[i][1]))
-            else:
-                limits.append(self.limits[i])
-
-        if not invert:
-            function = Subs(self.function, old, var - (new - old)).doit()
-        else:
-            function = Subs(self.function, old, (new + old) - var).doit()
-
-        return Sum(function, *tuple(limits))
-
 
 def summation(f, *symbols, **kwargs):
     r"""
