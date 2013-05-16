@@ -2,20 +2,25 @@
 from sympy.concrete import Product, Sum
 from sympy import Subs
 
-class SumProductShiftError(NotImplementedError):
+class ShiftError(NotImplementedError):
     """
     Exception raised when something other than Sum or Product
     is passed to the function change_index().
     """
     def __init__(self, expr, msg):
-        super(SumProductShiftError, self).__init__(
+        super(ShiftError, self).__init__(
             "%s Shift could not be computed: %s." % (expr, msg))
 
 
 def change_index(expr, old, new, var=None):
 
-    if not isinstance(expr, Sum) or not isinstance(expr, Product):
-        SumProductShiftError(expr, "Not Relevant / Implemented.")
+    if isinstance(expr, Sum) or isinstance(expr, Product):
+        return sum_prod_change_index(expr, old, new, var)
+    else:
+        ShiftError(expr, "Not Relevant / Implemented.")
+
+
+def sum_prod_change_index(expr, old, new, var=None):
 
     limits = []
     invert = not (new - old).is_number
