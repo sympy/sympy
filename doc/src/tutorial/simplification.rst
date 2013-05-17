@@ -427,3 +427,95 @@ And as before, this can be manually overridden with ``force=True``.
     >>> powdenest((z**a)**b, force=True)
      a⋅b
     z
+
+Exponentials and logarithms
+===========================
+
+In SymPy, as in Python and most programming languages, ``log`` is the natural
+logarithm, also known as ``ln``.  SymPy automatically provides an alias ``ln =
+log`` in case you forget this.
+
+    >>> ln(x)
+    log(x)
+
+Logarithms have similar issues as powers.  There are two main identities
+
+1. `\log{(xy)} = \log{(x)} + \log{(y)}`
+2. `\log{(x^n)} = n\log{(x)}`
+
+Neither identity is true for arbitrary complex `x` and `y`, due to the branch
+cut in the complex plane for the complex logarithm.  However, sufficient
+conditions for the identities to hold are if `x` and `y` are positive, and if
+`n` is real.
+
+    >>> x, y = symbols('x y', positive=True)
+    >>> n = symbols('n', real=True)
+
+As before, ``z`` and ``t`` will be Symbols with no additional assumptions.
+
+Note that the identity `\log{\left (\frac{x}{y}\right )} = \log(x) - \log(y)`
+is a special case of identities 1 and 2 by `\log{\left (\frac{x}{y}\right )}
+=` `\log{\left (x\cdot\frac{1}{y}\right )} =` `\log(x) + \log{\left(
+y^{-1}\right )} =` `\log(x) - \log(y)`, and thus it also holds if `x` and `y`
+are positive.
+
+We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left ( e^x
+\right)} = x\log(e) = x`, and thus holds when `x` is real (however, it can be
+verified that it does not hold in general for complex `x`, for example,
+`\log{\left (e^{x + 2\pi i}\right)} = \log{\left (e^x\right )} = x \neq x +
+2\pi i`).
+
+``expand_log``
+--------------
+
+To apply identities 1 and 2 from left to right, use ``expand_log``.  As
+always, the identities will not be applied unless they are valid.
+
+    >>> expand_log(log(x*y))
+    log(x) + log(y)
+    >>> expand_log(log(x/y))
+    log(x) - log(y)
+    >>> expand_log(log(x**2))
+    2⋅log(x)
+    >>> expand_log(log(x**n))
+    n⋅log(x)
+    >>> expand_log(log(z*t))
+    log(t⋅z)
+
+As with ``powsimp`` and ``powdenest``, ``expand_log`` has a ``force`` option
+that can be used to ignore assumptions.
+
+    >>> expand_log(log(z**2))
+       ⎛ 2⎞
+    log⎝z ⎠
+    >>> expand_log(log(z**2), force=True)
+    2⋅log(z)
+
+``logcombine``
+--------------
+
+To apply identities 1 and 2 from right to left, use ``logcombine``.
+
+    >>> logcombine(log(x) + log(y))
+    log(x⋅y)
+    >>> logcombine(n*log(x))
+       ⎛ n⎞
+    log⎝x ⎠
+    >>> logcombine(n*log(z))
+    n⋅log(z)
+
+``logcombine`` also has a ``force`` option that can be used to ignore
+assumptions.
+
+    >>> logcombine(n*log(z), force=True)
+       ⎛ n⎞
+    log⎝z ⎠
+
+Special Functions
+=================
+
+SymPy implements dozens of special functions, whose use ranges from
+combinatorics to mathematical physics.
+
+An extensive list of the special functions included with SymPy and their
+documentation is at the :ref:`functions` page.
