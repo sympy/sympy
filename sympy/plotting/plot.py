@@ -31,8 +31,6 @@ from sympy.utilities.decorator import doctest_depends_on
 import warnings
 from experimental_lambdify import (vectorized_lambdify, lambdify)
 
-#TODO probably all of the imports after this line can be put inside function to
-# speed up the `from sympy import *` command.
 np = import_module('numpy')
 
 # Backend specific imports - matplotlib
@@ -54,8 +52,7 @@ if matplotlib:
 from sympy.plotting.textplot import textplot
 
 # Global variable
-# Set to False when running tests / doctests so that the plots don't
-# show.
+# Set to False when running tests / doctests so that the plots don't show.
 _show = True
 
 
