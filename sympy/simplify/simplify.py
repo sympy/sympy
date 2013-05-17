@@ -4260,46 +4260,46 @@ def sum_simplify(s):
     s_t = [] #Sum Terms
     o_t = [] #Other Terms
 
-    for i in range(len(terms)):
-        if isinstance(terms[i], Mul):
+    for term in terms:
+        if isinstance(term, Mul):
             constant = 1
             other = 1
             s = 0
-            for j in range(len(terms[i].args)):
-                if isinstance(terms[i].args[j], Sum):
-                    s = terms[i].args[j]
-                elif terms[i].args[j].is_number == True:
-                    constant = constant * terms[i].args[j]
+            for j in range(len(term.args)):
+                if isinstance(term.args[j], Sum):
+                    s = term.args[j]
+                elif term.args[j].is_number == True:
+                    constant = constant * term.args[j]
                 else:
-                    other = other * terms[i].args[j]
+                    other = other * term.args[j]
             if other == 1 and s != 0:
                 #Insert the constant inside the Sum
                 s_t.append(Sum(constant * s.function, *s.limits))
             elif other != 1 and s != 0:
                 o_t.append(other * Sum(constant * s.function, *s.limits))
             else:
-                o_t.append(terms[i])
-        elif isinstance(terms[i], Sum):
-            s_t.append(terms[i])
+                o_t.append(term)
+        elif isinstance(term, Sum):
+            s_t.append(term)
         else:
-            o_t.append(terms[i])
+            o_t.append(term)
 
     used = [False] * len(s_t)
 
     for method in range(2):
-        for i in range(len(s_t)):
+        for i, s_term1 in enumerate(s_t):
             if not used[i]:
-                for j in range(len(s_t)):
+                for j, s_term2 in enumerate(s_t):
                     if not used[j] and i != j:
-                        if isinstance(sum_add(s_t[i], s_t[j], method), Sum):
-                            s_t[i] = sum_add(s_t[i], s_t[j], method)
+                        if isinstance(sum_add(s_term1, s_term2, method), Sum):
+                            s_t[i] = sum_add(s_term1, s_term2, method)
                             used[j] = True
 
     result = Add(*o_t)
 
-    for i in range(len(s_t)):
+    for i, s_term in enumerate(s_t):
         if not used[i]:
-            result = Add(result, s_t[i])
+            result = Add(result, s_term)
 
     return result
 
@@ -4335,28 +4335,28 @@ def product_simplify(s):
     p_t = [] #Product Terms
     o_t = [] #Other Terms
 
-    for i in range(len(terms)):
-        if isinstance(terms[i], Product):
-            p_t.append(terms[i])
+    for term in terms:
+        if isinstance(term, Product):
+            p_t.append(term)
         else:
-            o_t.append(terms[i])
+            o_t.append(term)
 
     used = [False] * len(p_t)
 
     for method in range(2):
-        for i in range(len(p_t)):
+        for i, p_term1 in enumerate(p_t):
             if not used[i]:
-                for j in range(len(p_t)):
+                for j, p_term2 in enumerate(p_t):
                     if not used[j] and i != j:
-                        if isinstance(product_mul(p_t[i], p_t[j], method), Product):
-                            p_t[i] = product_mul(p_t[i], p_t[j], method)
+                        if isinstance(product_mul(p_term1, p_term2, method), Product):
+                            p_t[i] = product_mul(p_term1, p_term2, method)
                             used[j] = True
 
     result = Mul(*o_t)
 
-    for i in range(len(p_t)):
+    for i, p_term in enumerate(p_t):
         if not used[i]:
-            result = Mul(result, p_t[i])
+            result = Mul(result, p_term)
 
     return result
 

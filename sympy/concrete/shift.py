@@ -12,32 +12,33 @@ class ShiftError(NotImplementedError):
             "%s Shift could not be computed: %s." % (expr, msg))
 
 
-def change_index(expr, old, new, var=None):
+def change_index(expr, new, var=None):
 
     if isinstance(expr, Sum) or isinstance(expr, Product):
-        return sum_prod_change_index(expr, old, new, var)
+        return sum_prod_change_index(expr, new, var)
     else:
         ShiftError(expr, "Not Relevant / Implemented.")
 
 
-def sum_prod_change_index(expr, old, new, var=None):
+def sum_prod_change_index(expr, new, var=None):
 
     limits = []
+    old = list(new.free_symbols)[0]
     invert = not (new - old).is_number
 
     if var == None:
         var = old
 
-    for i in range(len(expr.limits)):
-        if expr.limits[i][0] == old:
+    for limit in expr.limits:
+        if limit[0] == old:
             if not invert:
-                limits.append((var, expr.limits[i][1]+ new - \
-                    old, expr.limits[i][2] + new - old))
+                limits.append((var, limit[1]+ new - \
+                    old, limit[2] + new - old))
             else:
-                limits.append((var, (new + old) - expr.limits[i][2], \
-                    (new + old) - expr.limits[i][1]))
+                limits.append((var, (new + old) - limit[2], \
+                    (new + old) - limit[1]))
         else:
-            limits.append(expr.limits[i])
+            limits.append(limit)
 
     if not invert:
         function = Subs(expr.function, old, var - (new - old)).doit()
