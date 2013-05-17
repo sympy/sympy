@@ -41,9 +41,9 @@ These funcions are meant for internal use. However they contain useful informati
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autofunction:: sympy.solvers.pde.pde_1st_linear_constant_coeff_homogeneous
 
-:obj:`pde_1st_linear_constant_coeff_homogeneous`
+:obj:`pde_1st_linear_constant_coeff`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-.. autofunction:: sympy.solvers.pde.pde_1st_linear_constant_coeff_general
+.. autofunction:: sympy.solvers.pde.pde_1st_linear_constant_coeff
 
 Information on the pde module
 -----------------------------

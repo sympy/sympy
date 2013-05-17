@@ -35,7 +35,7 @@ from sympy.core import Add, C, S, Mul, Pow, oo
 from sympy.core.compatibility import (reduce, combinations_with_replacement,
     is_sequence)
 from sympy.core.function import (Function, Derivative,
-    expand, diff, AppliedUndef)
+    expand, diff, AppliedUndef, Subs)
 from sympy.core.numbers import Rational
 from sympy.core.relational import Equality, Eq
 from sympy.core.symbol import Symbol, Wild, Dummy, symbols
@@ -48,8 +48,8 @@ import operator
 
 allhints = (
     "1st_linear_constant_coeff_homogeneous",
-    "1st_linear_constant_coeff_general",
-    "1st_linear_constant_coeff_general_Integral"
+    "1st_linear_constant_coeff",
+    "1st_linear_constant_coeff_Integral"
     )
 
 def pdsolve(eq, func=None, hint='default', dict=False, solvefun=None, **kwargs):
@@ -211,14 +211,8 @@ def _handle_Integral(expr, func, order, hint):
     if hint.endswith("_Integral"):
         return expr
 
-    elif hint == "1st_linear_constant_coeff_general":
-        global gendict
-        exp_term = gendict['exp']
-        func_term = gendict['func']
-        gen_term = (gendict['gen'].doit()).subs(
-            {gendict['e']: gendict[gendict['e']], gendict['h']: gendict[gendict['h']]})
-        del gendict
-        return Eq(func, simplify(exp_term*(func_term + gen_term)))
+    elif hint == "1st_linear_constant_coeff":
+        return simplify(expr.doit())
 
     else:
         return expr
@@ -346,12 +340,13 @@ def classify_pde(eq, func=None, dict=False, **kwargs):
                 r.update({'b': b, 'c': c, 'd': d})
                 matching_hints["1st_linear_constant_coeff_homogeneous"] = r
             else:
-                ## Linear first-order general partial-differential
-                ## equation with constant coefficients
-                r.update({'b': b, 'c': c, 'd': d, 'e': e})
-                matching_hints["1st_linear_constant_coeff_general"] = r
-                matching_hints[
-                    "1st_linear_constant_coeff_general_Integral"] = r
+                if r[b]**2 + r[c]**2 != 0:
+                    ## Linear first-order general partial-differential
+                    ## equation with constant coefficients
+                    r.update({'b': b, 'c': c, 'd': d, 'e': e})
+                    matching_hints["1st_linear_constant_coeff"] = r
+                    matching_hints[
+                        "1st_linear_constant_coeff_Integral"] = r
 
     # Order keys based on allhints.
     retlist = []
@@ -541,24 +536,17 @@ def pde_1st_linear_constant_coeff_homogeneous(eq, func, order, match, solvefun):
     d = match[match['d']]
     return Eq(f(x,y), exp(-S(d)/(b**2 + c**2)*(b*x + c*y))*solvefun(c*x - b*y))
 
-def pde_1st_linear_constant_coeff_general(eq, func, order, match, solvefun):
+def pde_1st_linear_constant_coeff(eq, func, order, match, solvefun):
     r"""
-    Solves a first order linear general
-    partial differential equation with constant coefficients.
+    Solves a first order linear partial differential equation
+    with constant coefficients.
 
     The general form of this partial differential equation is
     a*f(x,y).diff(x) + b*f(x,y).diff(y) + c*f(x,y) = G(x,y)
     where a, b and c are constants and G can be an arbitrary
     function in x and y.
 
-    The general solution of the differential equation can be found
-    by the method of characteristics. It is given by the sum of the
-    homogeneous and general parts. The homogeneous part is given by
-    fp(x,y) = F(b*x - a*y)*exp(-c/(a**2 + b**2)*(a*x + b*y))
-    The general part is given by
-    fg(x,y) = ((1/a**2 + b**2)*exp(-c/(a**2 + b**2)*(a*x + b*y))*
-    Integral(G(x,y)*exp(c/(a**2 + b**2)*(a*x + b*y)), a*x + b*y).
-    The solution would be equal to fp(x, y) + fg(x, y)
+    The general solution of the PDE is
 
     >>> from sympy.solvers import pdsolve
     >>> from sympy.abc import x, y, a, b, c
@@ -573,6 +561,40 @@ def pde_1st_linear_constant_coeff_general(eq, func, order, match, solvefun):
                   d               d
     a*f(x, y) + b*--(f(x, y)) + c*--(f(x, y)) - G(x, y)
                   dx              dy
+    >>> pprint(pdsolve(genform, hint='1st_linear_constant_coeff_Integral'))
+              //          b*x + c*y                                             \
+              ||              /                                                 |
+              ||             |                                                  |
+              ||             |                                       a*xi       |
+              ||             |                                     -------      |
+              ||             |                                      2    2      |
+              ||             |      /b*xi + c*eta  -b*eta + c*xi\  b  + c       |
+              ||             |     G|------------, -------------|*e        d(xi)|
+              ||             |      |   2    2         2    2   |               |
+              ||             |      \  b  + c         b  + c    /               |
+              ||             |                                                  |
+              ||            /                                                   |
+              ||                                                                |
+    f(x, y) = ||F(eta) + -------------------------------------------------------|*
+              ||                                  2    2                        |
+              \\                                 b  + c                         /
+    <BLANKLINE>
+            \|
+            ||
+            ||
+            ||
+            ||
+            ||
+            ||
+            ||
+            ||
+      -a*xi ||
+     -------||
+      2    2||
+     b  + c ||
+    e       ||
+            ||
+            /|eta=-b*y + c*x, xi=b*x + c*y
 
 
     Examples
@@ -593,7 +615,12 @@ def pde_1st_linear_constant_coeff_general(eq, func, order, match, solvefun):
       Math 124A - Fall 2010, pp.7
 
     """
-    epsilon, eta = symbols("E H")
+
+    # TODO : For now homogeneous first order linear PDE's having
+    # two variables are implemented. Once there is support for
+    # solving systems of ODE's, this can be extended to n variables.
+
+    xi, eta = symbols("xi eta")
     f = func.func
     x = func.args[0]
     y = func.args[1]
@@ -601,19 +628,15 @@ def pde_1st_linear_constant_coeff_general(eq, func, order, match, solvefun):
     c = match[match['c']]
     d = match[match['d']]
     e = -match[match['e']]
-    exp_term = exp(-S(d)/(b**2 + c**2)*(b*x + c*y))
-    func_term = solvefun(c*x - b*y)
-    solve_dict = solve((b*x + c*y - epsilon, c*x - b*y - eta), x, y)
-    # Integral should remain as it is, doit() should be done in
-    # _handle_Integral
-    gen_term = (1/S(b**2 + c**2))*C.Integral(
-        ((1/exp_term)*e).subs(solve_dict), epsilon)
-    #The only way to pass these variables to _handle_Integral
-    global gendict
-    gendict = {'exp': exp_term, 'func': func_term, 'gen': gen_term,
-        'e': epsilon, 'h': eta, epsilon: b*x + c*y, eta: c*x - b*y}
-    return Eq(f(x,y), exp_term*(func_term + gen_term).subs({
-        epsilon: b*x + c*y , eta: c*x - b*y}))
+    expterm = exp(-S(d)/(b**2 + c**2)*xi)
+    functerm = solvefun(eta)
+    solvedict = solve((b*x + c*y - xi, c*x - b*y - eta), x, y)
+    # Integral should remain as it is in terms of xi,
+    # doit() should be done in _handle_Integral.
+    genterm = (1/S(b**2 + c**2))*C.Integral(
+        (1/expterm*e).subs(solvedict), (xi, b*x + c*y))
+    return Eq(f(x,y), Subs(expterm*(functerm + genterm),
+        (eta, xi), (c*x - b*y, b*x + c*y)))
 
 
 def pde_separate(eq, fun, sep, strategy='mul'):
