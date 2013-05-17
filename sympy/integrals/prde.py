@@ -318,72 +318,63 @@ def prde_no_cancel_b_small(b, Q, n, DE):
         A, u = constant_system(M, zeros(dc + 1, 1), DE)
         c = eye(m)
         A = A.row_join(zeros(A.rows, m)).col_join(c.row_join(-c))
+        return (H, A)
     else:
         Q0 = [q.eval(0).as_poly(DE.t) for q in Q]
-        ba, bd = fraction(b.as_expr())
+        Q0 = [tuple([i.as_poly(DE.t) for i in q.as_numer_denom()]) for q in Q0]
+        ba, bd = b.as_expr().as_numer_denom()
         ba, bd = ba.as_poly(DE.t), bd.as_poly(DE.t)
         F, B = param_rischDE(ba, bd, Q0, DE)
         if all(qi.is_zero for qi in Q):
-            dc = -1
-            for f in F:
-                Df = derivation(f, DE)
-                if Df + b*f==0:
-                    continue
-                else:
-                    dc = 0
-                    break
+            dc = -1 if all((derivation(f, DE) + b*f).is_zero for f in F) else 0
         else:
             dc = max([qi.degree(DE.t) for qi in Q])
-        M = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
-        j = 0
-        for f in F:
+        M = zeros(dc + 1, m + len(F) + 1)
+        M_ = Matrix(dc + 1, m, lambda i, j: Q[j].nth(i))
+        M[0, 0] = M_
+        for j, f in enumerate(F):
             Df = derivation(f, DE)
-            if j + m >= M.cols:
-                M = M.row_join(zeros(M.rows, j + m - M.cols + 1))
-            M[1, j + m] = (-Df - b*f).as_expr()
-            j = j + 1
-
+            M[1, j + 1 + m] = (-Df - b*f).as_expr()
         A, u = constant_system(M, zeros(dc + 1, 1), DE)
-        if A.cols <=  B.cols:
-            A = Matrix([A,zeros(1, B.cols - A.cols)])
-        else:
-            B = Matrix([B,zeros(1, A.cols - B.cols)])
-        A = Matrix([A, B])
-        c = eye(m)
-        A = A.col_join(c.row_join(-c))
-
-    return (H, A)
+        c = eye(m).row_join(-eye(m))
+        #vertical concatenation of A & B
+        big_cols = max([qi for qi in A.cols, B.cols, c.cols])
+        big_rows = A.rows + B.rows + c.rows
+        concat = zeros(big_rows , big_cols)
+        concat[0, 0] = A
+        if B.rows:
+            concat[A.rows, 0] = B
+        concat[A.rows + B.rows , 0] = c
+        A = concat
+        return (F, H, A)
 
 def param_rischDE(fa, fd, G, DE):
     """
     Solve a Parametric Risch Differential Equation: Dy + f*y == Sum(ci*Gi, (i, 1, m)).
     """
     _, (fa, fd) = weak_normalizer(fa, fd, DE)
-
-    G_tuple = [fraction(g.as_expr()) for g in G]
-    G_tuple = [(ga.as_poly(DE.t), gd.as_poly(DE.t)) for ga, gd in G_tuple]
-    a, (ba, bd), G_tuple, hn = prde_normal_denom(fa, fd, G_tuple, DE)
+    a, (ba, bd), G, hn = prde_normal_denom(fa, fd, G, DE)
     A, B, G, hs = prde_special_denom(a, ba, bd, G, DE)
     g = gcd(A, B)
-    A, B, G_tuple = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
-        gia, gid in G_tuple]
-    Q, M = prde_linear_constraints(A, B, G_tuple, DE)
+    A, B, G = A.quo(g), B.quo(g), [gia.cancel(gid*g, include=True) for
+    gia, gid in G]
+    Q, M = prde_linear_constraints(A, B, G, DE)
     M, _ = constant_system(M, zeros(M.rows, 1), DE)
     # Reduce number of constants at this point
     try:
         # Similar to rischDE(), we try oo, even though it might lead to
-        # non-termination when there is no solution.  At least for prde_spde,
+        # non-termination when there is no solution. At least for prde_spde,
         # it will always terminate no matter what n is.
-        n = bound_degree(A, B, G, DE, parametric=True)
+        G_expr = [(i.as_expr()/j.as_expr()).as_poly(DE.t) for (i, j) in G]
+        n = bound_degree(A, B, G_expr, DE, parametric=True)
     except NotImplementedError:
         # Useful for debugging:
         # import warnings
         # warnings.warn("param_rischDE: Proceeding with n = oo; may cause "
-        #     "non-termination.")
+        # "non-termination.")
         n = oo
 
     A, B, Q, R, n1 = prde_spde(A, B, Q, n, DE)
-
     return (Q, M)
 
 
