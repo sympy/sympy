@@ -64,8 +64,8 @@ Let us define a symbolic expression, representing the mathematical expression
 
    >>> from sympy import symbols
    >>> x, y = symbols('x y')
-   >>> a = x + 2*y
-   >>> a
+   >>> expr = x + 2*y
+   >>> expr
    x + 2*y
 
 Note that we wrote ``x + 2*y`` just as we would if ``x`` and ``y`` were
@@ -73,9 +73,9 @@ ordinary Python variables. But in this case, instead of evaluating to
 something, the expression remains as just ``x + 2*y``.  Now let us play around
 with it:
 
-   >>> a + 1
+   >>> expr + 1
    x + 2*y + 1
-   >>> a - x
+   >>> expr - x
    2*y
 
 Notice something in the above example.  When we typed ``a - x``, we did not
@@ -84,7 +84,7 @@ automatically canceled one another.  This is similar to how ``sqrt(8)``
 automatically turned into ``2*sqrt(2)`` above.  This isn't always the case in
 SymPy, however:
 
-   >>> x*a
+   >>> x*expr
    x*(x + 2*y)
 
 Here, we might have expected `x(x + 2y)` to transform into `x^2 + 2xy`, but
@@ -96,10 +96,10 @@ expanded form `x^2 + 2xy`.  Both forms are useful in different circumstances.
 In SymPy, there are functions to go from one form to the other
 
    >>> from sympy import expand, factor
-   >>> b = expand(x*a)
-   >>> b
+   >>> expanded_expr = expand(x*expr)
+   >>> expanded_expr
    x**2 + 2*x*y
-   >>> factor(b)
+   >>> factor(expanded_expr)
    x*(x + 2*y)
 
 Symbolic Power
