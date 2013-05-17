@@ -641,6 +641,7 @@ def test_replace():
         2*((2*x*y + 1)*(4*x*y + 1)) + 1,
         {2*x*y: 4*x*y, x*y: 2*x*y, (2*x*y + 1)*(4*x*y + 1):
         2*((2*x*y + 1)*(4*x*y + 1))})
+    assert x.replace(x, y) == y
 
 
 def test_find():

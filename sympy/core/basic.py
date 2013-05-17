@@ -1349,7 +1349,7 @@ class Basic(object):
         mask = []  # the dummies that were used as change placeholders
         def rec_replace(expr):
             result = _query(expr)
-            if result:
+            if result or result == {}:
                 new = _value(expr, result)
                 if new is not None and new != expr:
                     mapping[expr] = new
