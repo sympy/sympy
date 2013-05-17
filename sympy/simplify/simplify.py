@@ -4226,6 +4226,7 @@ def _futrig(e, **kwargs):
         TR12,  # expand tan of sum
         lambda x: _eapply(factor, x, trigs),
         TR2,  # tan-cot -> sin-cos
+        [identity, lambda x: _eapply(_mexpand, x, trigs)],
         TR2i,  # sin-cos ratio -> tan
         lambda x: _eapply(lambda i: factor(i.normal()), x, trigs),
         TR14,  # factored identities

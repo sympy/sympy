@@ -110,14 +110,14 @@ def test_trigsimp1():
     assert trigsimp(cos(x + y) + cos(x - y)) == 2*cos(x)*cos(y)
     assert trigsimp(cos(x + y) - cos(x - y)) == -2*sin(x)*sin(y)
     assert ratsimp(trigsimp(tan(x + y) - tan(x)/(1 - tan(x)*tan(y)))) == \
-        -tan(y)/(tan(x)*tan(y) - 1)
+        sin(y)/(-sin(y)*tan(x) + cos(y))  # -tan(y)/(tan(x)*tan(y) - 1)
 
     assert trigsimp(sinh(x + y) + sinh(x - y)) == 2*sinh(x)*cosh(y)
     assert trigsimp(sinh(x + y) - sinh(x - y)) == 2*sinh(y)*cosh(x)
     assert trigsimp(cosh(x + y) + cosh(x - y)) == 2*cosh(x)*cosh(y)
     assert trigsimp(cosh(x + y) - cosh(x - y)) == 2*sinh(x)*sinh(y)
     assert ratsimp(trigsimp(tanh(x + y) - tanh(x)/(1 + tanh(x)*tanh(y)))) == \
-        tanh(y)/(tanh(x)*tanh(y) + 1)
+        sinh(y)/(sinh(y)*tanh(x) + cosh(y))
 
     assert trigsimp(cos(0.12345)**2 + sin(0.12345)**2) == 1
     e = 2*sin(x)**2 + 2*cos(x)**2
@@ -275,6 +275,10 @@ def test_trigsimp_issue_2515():
     x = Symbol('x')
     assert trigsimp(x*cos(x)*tan(x)) == x*sin(x)
     assert trigsimp(-sin(x) + cos(x)*tan(x)) == 0
+
+
+def test_issue_3826():
+    assert trigsimp(tan(2*x).expand(trig=True)) == tan(2*x)
 
 
 def test_trigsimp_noncommutative():
