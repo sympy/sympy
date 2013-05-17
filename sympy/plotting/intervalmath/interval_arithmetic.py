@@ -399,6 +399,9 @@ class interval(object):
         else:
             return NotImplemented
 
+    def __hash__(self):
+        return hash((self.is_valid, self.start, self.end))
+
 
 def _pow_float(inter, power):
     """Evaluates an interval raised to a floating point."""
