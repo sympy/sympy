@@ -959,6 +959,89 @@ class MatplotlibBackend(BaseBackend):
         plt.close(self.fig)
 
 
+_ipython_div_counter = 0
+class IPythonD3Backend(BaseBackend):
+    def __init__(self, parent):
+        super(IPythonD3Backend, self).__init__(parent)
+        are_3D = [s.is_3D for s in self.parent._series]
+        if any(are_3D):
+            raise ValueError('The D3 backend can not do 3D.')
+
+        self.vega_specs = {
+          "width": 400,
+          "height": 400,
+          "padding": {"top":10, "left":40, "bottom":20, "right":10},
+          "data": [{"name": "table", "values": []}],
+          "scales": [
+            {"name": "x",
+             "type": "linear",
+             "range": "width",
+             "nice": True,
+             "domain": {"data": "table", "field": "data.x"}},
+            {"name": "y",
+             "type": "linear",
+             "range": "height",
+             "nice": True,
+             "domain": {"data": "table", "field": "data.y"}},
+            {"name": "color", "type": "ordinal", "range": "category10"}
+          ],
+          "axes": [{"type": "x", "scale": "x"}, {"type": "y", "scale": "y"}],
+          "marks": [{"type": "group",
+                     "from": {"data": "table",
+                              "transform": [{"type": "facet", "keys": ["data.f"]}]},
+                     "marks": [{"type": "line",
+                                "properties": {
+                                  "enter": {
+                                    "x": {"scale": "x", "field": "data.x"},
+                                    "y": {"scale": "y", "field": "data.y"},
+                                    "stroke": {"scale": "color", "field": "data.f"},
+                                    "strokeWidth": {"value": 2}},
+                                  "update": {
+                                    "strokeOpacity": {"value": 1},
+                                    "strokeWidth": {"value": 2}},
+                                  "hover": {
+                                    "strokeOpacity": {"value": 0.5},
+                                    "strokeWidth": {"value": 5}}}}
+                              ]
+                    }
+          ]
+        }
+
+    def process_series(self):
+        parent = self.parent
+
+        for i, s in enumerate(self.parent._series):
+            if s.is_2Dline:
+                self.vega_specs["data"][0]["values"].extend(
+                     {"x":_[0], "y":_[1], "f":i} for _ in zip(*s.get_points()))
+            else:
+                raise ValueError('The D3/Vega backend does not support this type of plot.')
+
+
+    def show(self):
+        global _ipython_div_counter
+        from IPython.core.display import publish_javascript, publish_html
+        import json
+        self.process_series()
+        publish_html("""
+        <div id="sympy_d3_plot_%d"></div>
+        """%_ipython_div_counter)
+        publish_javascript("""
+        var scriptd3 = document.createElement("script");
+        scriptd3.src = "http://d3js.org/d3.v3.min.js";
+        document.body.appendChild(scriptd3);
+        var scriptvega = document.createElement("script");
+        scriptvega.src = "http://trifacta.github.com/vega/vega.js";
+        document.body.appendChild(scriptvega);
+
+        function parse(spec) {
+            vg.parse.spec(spec, function(chart) { chart({renderer:"svg",el:"#sympy_d3_plot_%d"}).update(); });
+        }
+        parse(%s);
+        """ % (_ipython_div_counter, json.dumps(self.vega_specs)))
+        _ipython_div_counter += 1
+
+
 class TextBackend(BaseBackend):
     def __init__(self, parent):
         super(TextBackend, self).__init__(parent)
@@ -980,16 +1063,17 @@ class TextBackend(BaseBackend):
 
 class DefaultBackend(BaseBackend):
     def __new__(cls, parent):
-        if matplotlib:
+        if "default" in plot_backends:
+            return plot_backends["default"](parent)
+        elif matplotlib:
             return MatplotlibBackend(parent)
         else:
             return TextBackend(parent)
 
-
 plot_backends = {
     'matplotlib': MatplotlibBackend,
+    'ipythonD3': IPythonD3Backend,
     'text': TextBackend,
-    'default': DefaultBackend
 }
 
 
