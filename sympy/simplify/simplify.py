@@ -12,7 +12,7 @@ from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
     iterable, reduce, default_sort_key, set_union, ordered)
 from sympy.core.exprtools import Factors, gcd_terms
-from sympy.core.numbers import Float, Number
+from sympy.core.numbers import Float, Number, I
 from sympy.core.function import expand_log, count_ops
 from sympy.core.mul import _keep_coeff, prod
 from sympy.core.rules import Transform
@@ -3726,6 +3726,18 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         n, d = fraction(expr)
         if d != 0:
             expr = signsimp(-n/(-d))
+
+    def exp_trig(e):
+        # select the better of e, and e rewritten in terms of exp or trig
+        # functions
+        choices = [e]
+        if e.has(*_trigs):
+            choices.append(e.rewrite(exp))
+        choices.append(e.rewrite(cos))
+        return min(*choices, **dict(key=count_ops))
+    newexpr = bottom_up(expr, exp_trig)
+    if not (newexpr.has(I) and not expr.has(I)):
+        expr = newexpr
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr

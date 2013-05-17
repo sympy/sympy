@@ -1766,3 +1766,19 @@ def test_3712_fail():
     xp, y, x, z = symbols('xp, y, x, z')
     eq = 4*(-19*sin(x)*y + 5*sin(3*x)*y + 15*cos(2*x)*z - 21*z)*xp/(9*cos(x) - 5*cos(3*x))
     assert trigsimp(eq) == -2*(2*cos(x)*tan(x)*y + 3*z)*xp/cos(x)
+
+
+def test_3821():
+    e = [cos(x) + I*sin(x), cos(x) - I*sin(x),
+        cosh(x) - sinh(x), cosh(x) + sinh(x)]
+    ok = [exp(I*x), exp(-I*x), exp(-x), exp(x)]
+    # wrap in f to show that the change happens wherever ei occurs
+    f = Function('f')
+    assert [simplify(f(ei)).args[0] for ei in e] == ok
+    assert simplify(exp(x) + exp(-x)) == 2*cosh(x)
+    assert simplify(exp(x) - exp(-x)) == 2*sinh(x)
+    # TODO
+    # w = exp(x)
+    # assert simplify((w - 1/w)/(w + 1/w)) == tanh(x)
+    # w = exp(I*x)
+    # assert simplify((w - 1/w)/(w + 1/w)) == I*tan(x)
