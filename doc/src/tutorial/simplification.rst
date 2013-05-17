@@ -130,19 +130,19 @@ is no longer a polynomial over the rationals).
 
 ``collect`` collects common powers of a term in an expression.  For example
 
-    >>> a = x*y + x - 3 + 2*x**2 - z*x**2 + x**3
-    >>> a
+    >>> expr = x*y + x - 3 + 2*x**2 - z*x**2 + x**3
+    >>> expr
      3    2        2
     x  - x ⋅z + 2⋅x  + x⋅y + x - 3
-    >>> collected_a = collect(a, x)
-    >>> collected_a
+    >>> collected_expr = collect(expr, x)
+    >>> collected_expr
      3    2
     x  + x ⋅(-z + 2) + x⋅(y + 1) - 3
 
 ``collect`` is particularly useful in conjunction with the ``.coeff`` method,
 which will be discussed in more detail later.
 
-    >>> collected_a.coeff(x, 2)
+    >>> collected_expr.coeff(x, 2)
     -z + 2
 
 ``cancel``
@@ -158,28 +158,28 @@ denominators (i.e., are integers).
     ─────
       x
 
-    >>> a = 1/x + (3*x/2 - 2)/(x - 4)
-    >>> a
+    >>> expr = 1/x + (3*x/2 - 2)/(x - 4)
+    >>> expr
     3⋅x
     ─── - 2
      2        1
     ─────── + ─
      x - 4    x
-    >>> cancel(a)
+    >>> cancel(expr)
        2
     3⋅x  - 2⋅x - 8
     ──────────────
          2
       2⋅x  - 8⋅x
 
-    >>> a = (x*y**2 - 2*x*y*z + x*z**2 + y**2 - 2*y*z + z**2)/(x**2 - 1)
-    >>> a
+    >>> expr = (x*y**2 - 2*x*y*z + x*z**2 + y**2 - 2*y*z + z**2)/(x**2 - 1)
+    >>> expr
        2                2    2            2
     x⋅y  - 2⋅x⋅y⋅z + x⋅z  + y  - 2⋅y⋅z + z
     ───────────────────────────────────────
                       2
                      x  - 1
-    >>> cancel(a)
+    >>> cancel(expr)
      2            2
     y  - 2⋅y⋅z + z
     ───────────────
@@ -188,7 +188,7 @@ denominators (i.e., are integers).
 Note that since ``factor`` will completely factorize both the numerator and
 the denominator of an expression, it can also be used to do the same thing:
 
-    >>> factor(a)
+    >>> factor(expr)
            2
     (y - z)
     ────────
@@ -202,14 +202,14 @@ canceled form, ``cancel`` is more efficient than ``factor``.
 
 ``apart`` performs a partial fraction decomposition on a rational function.
 
-    >>> a = (4*x**3 + 21*x**2 + 10*x + 12)/(x**4 + 5*x**3 + 5*x**2 + 4*x)
-    >>> a
+    >>> expr = (4*x**3 + 21*x**2 + 10*x + 12)/(x**4 + 5*x**3 + 5*x**2 + 4*x)
+    >>> expr
        3       2
     4⋅x  + 21⋅x  + 10⋅x + 12
     ────────────────────────
       4      3      2
      x  + 5⋅x  + 5⋅x  + 4⋅x
-    >>> apart(a)
+    >>> apart(expr)
      2⋅x - 1       1     3
     ────────── - ───── + ─
      2           x + 4   x
@@ -217,6 +217,24 @@ canceled form, ``cancel`` is more efficient than ``factor``.
 
 Trigonometric Simplification
 ============================
+
+.. note::
+
+   SymPy follows Python's naming conventions for inverse trigonometric
+   functions, which is to append an ``a`` to the front of the function's
+   name.  For example, the inverse cosine, or arc cosine, is called ``acos``.
+
+   >>> acos(x)
+   acos(x)
+   >>> cos(acos(x))
+   x
+   >>> asin(1)
+   π
+   ─
+   2
+
+.. TODO: Can we actually do anything with inverse trig functions,
+   simplification wise?
 
 ``trigsimp``
 ------------
@@ -431,9 +449,11 @@ And as before, this can be manually overridden with ``force=True``.
 Exponentials and logarithms
 ===========================
 
-In SymPy, as in Python and most programming languages, ``log`` is the natural
-logarithm, also known as ``ln``.  SymPy automatically provides an alias ``ln =
-log`` in case you forget this.
+.. note::
+
+   In SymPy, as in Python and most programming languages, ``log`` is the
+   natural logarithm, also known as ``ln``.  SymPy automatically provides an
+   alias ``ln = log`` in case you forget this.
 
     >>> ln(x)
     log(x)
