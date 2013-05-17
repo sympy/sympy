@@ -192,3 +192,10 @@ def test_interval_div():
     assert a == (True, True)
     a = interval(-5, 5, is_valid=False) / 2
     assert a.is_valid is False
+
+def test_hashable():
+    assert hash(interval(1, 1)) is not None
+    assert hash(interval(1, 1, is_valid=True)) is not None
+    assert hash(interval(-4, -0.5)) is not None
+    assert hash(interval(-2, -0.5)) is not None
+    assert hash(interval(0.25, 8.0)) is not None
