@@ -124,6 +124,10 @@ def import_module(module, min_module_version=None, min_python_version=None,
 
     try:
         mod = __import__(module, **__import__kwargs)
+        from_list = __import__kwargs.get('fromlist', tuple())
+        for submod in from_list:
+            if submod == 'collections' and mod.__name__ == 'matplotlib':
+                __import__(module + '.' + submod)
     except ImportError:
         if warn_not_installed:
             warnings.warn("%s module is not installed" % module, UserWarning)
