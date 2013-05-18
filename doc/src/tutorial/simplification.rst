@@ -539,3 +539,119 @@ combinatorics to mathematical physics.
 
 An extensive list of the special functions included with SymPy and their
 documentation is at the :ref:`functions` page.
+
+For the purposes of this tutorial, let's introduce a few special functions in
+SymPy.
+
+Let's define ``x``, ``y``, and ``z`` as regular, complex Symbols, removing any
+assumptions we put on them in the previous section.  We will also define ``k``,
+``m``, and ``n``.
+
+    >>> x, y, z = symbols('x y z')
+    >>> k, m, n = symbols('k m n')
+
+The factorial function, ``factorial``.  ``factorial(n)`` represents `n!`.
+
+    >>> factorial(n)
+    n!
+
+The binomial function, ``binomial``.  ``binomial(n, k)`` represents
+`\binom{n}{k}`.
+
+    >>> binomial(n, k)
+    ⎛n⎞
+    ⎜ ⎟
+    ⎝k⎠
+
+The factorial function is closely related to the gamma function, ``gamma``.
+``gamma(x)`` represents `\Gamma(x)`, which for integer `x` is the same as
+`(x - 1)!`.
+
+    >>> gamma(x)
+    Γ(x)
+
+The generalized hypergeometric function, ``hyper``.  ``hyper([a_1, ..., a_p],
+[b_1, ..., b_q], z)`` represents `{}_pF_q\left(\begin{matrix} a_1, \dots, a_p
+\\ b_1, \dots, b_q \end{matrix} \middle| z \right)`.  The most common case is
+`{}_2F_1`, which is often referred to as the ordinary hypergeometric function.
+
+    >>> hyper([1, 2], [3], z)
+     ┌─  ⎛1, 2 │  ⎞
+     ├─  ⎜     │ z⎟
+    2╵ 1 ⎝ 3   │  ⎠
+
+``rewrite``
+-----------
+
+A common way to deal with special functions is to rewrite them in terms of one
+another.  This works for any function in SymPy, not just special functions.
+To rewrite an expression in terms of a function, use
+``expr.rewrite(function)``.  For example,
+
+    >>> tan(x).rewrite(sin)
+         2
+    2⋅sin (x)
+    ─────────
+     sin(2⋅x)
+    >>> factorial(x).rewrite(gamma)
+    Γ(x + 1)
+
+For some tips on applying more targeted rewriting, see the advanced expression
+manipulation section.
+
+.. TODO: Link to advanced expression manipulation section
+
+``expand_func``
+---------------
+
+To expand special functions in terms of some identities, use ``expand_func``.
+For example
+
+    >>> expand_func(gamma(x + 3))
+    x⋅(x + 1)⋅(x + 2)⋅Γ(x)
+
+``hyperexpand``
+---------------
+
+To rewrite ``hyper`` in terms of more standard functions, use
+``hyperexpand``.
+
+    >>> hyperexpand(hyper([1, 1], [2], z))
+    -log(-z + 1)
+    ────────────
+         z
+
+``hyperexpand`` also works on the more general Meijer G-function (see its
+documentation for more information).
+
+    >>> expr = meijerg([[1],[1]], [[1],[]], -z)
+    >>> expr
+    ╭─╮1, 1 ⎛1  1 │   ⎞
+    │╶┐     ⎜     │ -z⎟
+    ╰─╯2, 1 ⎝1    │   ⎠
+    >>> hyperexpand(expr)
+     1
+     ─
+     z
+    ℯ
+
+.. TODO: Link to meijerg documentation
+
+``combsimp``
+------------
+
+To simplify combinatorial expressions, use ``combsimp``.
+
+    >>> combsimp(factorial(n)/factorial(n - 3))
+    n⋅(n - 2)⋅(n - 1)
+    >>> combsimp(binomial(n+1, k+1)/binomial(n, k))
+    n + 1
+    ─────
+    k + 1
+
+``combsimp`` also simplifies expressions with ``gamma``.
+
+    >>> combsimp(gamma(x)*gamma(1 - x))
+       π
+    ────────
+    sin(π⋅x)
