@@ -100,17 +100,16 @@ def test_ladder():
     # We define the inertial frame and a lean frame for the ladder
     N = ReferenceFrame('N')
     L = N.orientnew('L', 'Axis', [q, N.z])
-    L.set_ang_vel(N, u*N.z)
-    L.set_ang_acc(N, L.ang_vel_in(N).dt(N))
+    L.set_ang_vel(N, u * N.z)
 
     # Now the origin and the center of mass of the ladder are defined
     O = Point('O')
     A = Point('A')
 
-    A.set_pos(O, -l/2*cos(q)*N.x + l/2*sin(q)*N.y)
+    A.set_pos(O, -l / 2 * cos(q) * N.x + l / 2 * sin(q) * N.y)
 
     O.set_vel(N, 0)
-    A.set_vel(N, l/2*u*sin(q)*N.x + l/2*u*cos(q)*N.y)
+    A.set_vel(N, l / 2 * u * sin(q) * N.x + l / 2 * u * cos(q) * N.y)
 
     # The ladder can be defined as a rigid body
     ladder = RigidBody('ladder', A, L, m, (inertia(L, 0, 0, Izz), A))
@@ -118,19 +117,22 @@ def test_ladder():
     # Now we set up all the inputs to Kanes Method
     kd = [u - qd]
     bodyList = [ladder]
-    forceList = [(A, -m*g*N.y)]
+    forceList = [(A, -m * g * N.y)]
 
     # Finally we solve the dynamics
     KM = KanesMethod(N, q_ind = [q], u_ind = [u], kd_eqs = kd)
     KM.kanes_equations(forceList, bodyList)
+
     MM = KM.mass_matrix
     forcing = KM.forcing
-    rhs = MM.inv()*forcing
+
+    rhs = MM.inv() * forcing
     kdd = KM.kindiffdict()
+
     rhs = rhs.subs(kdd)
     rhs.simplify()
 
-    eq = expand(rhs[0]) - expand(-g*l*m*cos(q)/(2*(Izz + l**2*m/4)))
+    eq = expand(rhs[0]) - expand(-g * l * m * cos(q)/(2 * (Izz + l**2 * m / 4)))
     assert eq.simplify() == 0
 
 def test_rolling_disc():
