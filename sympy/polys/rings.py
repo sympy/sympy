@@ -112,6 +112,7 @@ class PolyRing(DefaultPrinting, IPolys):
             codegen = MonomialOps(ngens)
             obj.monomial_mul = codegen.mul()
             obj.monomial_pow = codegen.pow()
+            obj.monomial_mulpow = codegen.mulpow()
             obj.monomial_ldiv = codegen.ldiv()
             obj.monomial_div = codegen.div()
             obj.monomial_lcm = codegen.lcm()
@@ -857,6 +858,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
     def _pow_multinomial(self, n):
         multinomials = multinomial_coefficients(len(self), n).items()
+        monomial_mulpow = self.ring.monomial_mulpow
         zero_monom = self.ring.zero_monom
         terms = list(self.iterterms())
         zero = self.ring.domain.zero
@@ -868,7 +870,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
             for exp, (monom, coeff) in zip(multinomial, terms):
                 if exp:
-                    product_monom = [ a + b*exp for a, b in zip(product_monom, monom) ]
+                    product_monom = monomial_mulpow(product_monom, monom, exp)
                     product_coeff *= coeff**exp
 
             monom = tuple(product_monom)

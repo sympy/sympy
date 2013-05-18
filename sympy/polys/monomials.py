@@ -321,6 +321,20 @@ class MonomialOps(object):
         code = template % dict(name=name, A=", ".join(A), Ak=", ".join(Ak))
         return self._build(code, name)
 
+    def mulpow(self):
+        name = "monomial_mulpow"
+        template = dedent("""\
+        def %(name)s(A, B, k):
+            (%(A)s,) = A
+            (%(B)s,) = B
+            return (%(ABk)s,)
+        """)
+        A = self._vars("a")
+        B = self._vars("b")
+        ABk = [ "%s + %s*k" % (a, b) for a, b in zip(A, B) ]
+        code = template % dict(name=name, A=", ".join(A), B=", ".join(B), ABk=", ".join(ABk))
+        return self._build(code, name)
+
     def ldiv(self):
         name = "monomial_ldiv"
         template = dedent("""\
