@@ -17,9 +17,7 @@ from sympy.functions.special.hyper import hyper, meijerg
 
 class erf(Function):
     r"""
-    The Gauss error function.
-
-    This function is defined as:
+    The Gauss error function. This function is defined as:
 
     :math:`\mathrm{erf}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{-t^2} \mathrm{d}t`
 
@@ -73,10 +71,10 @@ class erf(Function):
 
     erfc: Complementary error function.
     erfi: Imaginary error function.
-    erf2: Bivariate error function.
+    erf2: Two-argument error function.
     erfinv: Inverse error function.
     erfcinv: Inverse Complementary error function.
-    erf2inv: Inverse bivariate error function.
+    erf2inv: Inverse two-argument error function.
 
     References
     ==========
@@ -200,9 +198,7 @@ class erf(Function):
 
 class erfc(Function):
     r"""
-    Complementary Error Function:
-
-    The function is defined as
+    Complementary Error Function. The function is defined as:
 
     :math:`\mathrm{erfc}(x) = \frac{2}{\sqrt{\pi}} \int_x^\infty e^{-t^2} \mathrm{d}t`
 
@@ -225,7 +221,6 @@ class erfc(Function):
     >>> erfc(-I*oo)
     oo*I
 
-
     The error function obeys the mirror symmetry:
 
     >>> from sympy import conjugate
@@ -243,7 +238,7 @@ class erfc(Function):
     >>> erfc(-z)
     -erfc(z) + 2
 
-    We can numerically evaluate the error function to arbitrary precision
+    We can numerically evaluate the complementary error function to arbitrary precision
     on the whole complex plane:
 
     >>> erfc(4).evalf(30)
@@ -257,17 +252,18 @@ class erfc(Function):
 
     erf: Gaussian error function.
     erfi: Imaginary error function.
-    erf2: Bivariate error function.
+    erf2: Two-argument error function.
     erfinv: Inverse error function.
     erfcinv: Inverse Complementary error function.
-    erf2inv: Inverse bivariate error function.
+    erf2inv: Inverse two-argument error function.
 
     References
     ==========
 
     .. [1] http://en.wikipedia.org/wiki/Error_function
-    .. [2] http://mathworld.wolfram.com/Erfc.html
-    .. [3] http://functions.wolfram.com/GammaBetaErf/Erfc
+    .. [2] http://dlmf.nist.gov/7
+    .. [3] http://mathworld.wolfram.com/Erfc.html
+    .. [4] http://functions.wolfram.com/GammaBetaErf/Erfc
     """
 
     nargs = 1
@@ -379,9 +375,7 @@ class erfc(Function):
 
 class erfi(Function):
     r"""
-    Imaginary error function:
-
-    The function erfi is defined as
+    Imaginary error function. The function erfi is defined as:
 
     :math:`\mathrm{erfi}(x) = \frac{2}{\sqrt{\pi}} \int_0^x e^{t^2} \mathrm{d}t`
 
@@ -419,7 +413,7 @@ class erfi(Function):
     >>> diff(erfi(z), z)
     2*exp(z**2)/sqrt(pi)
 
-    We can numerically evaluate the error function to arbitrary precision
+    We can numerically evaluate the imaginary error function to arbitrary precision
     on the whole complex plane:
 
     >>> erfi(2).evalf(30)
@@ -433,10 +427,10 @@ class erfi(Function):
 
     erf: Gaussian error function.
     erfc: Complementary error function.
-    erf2: Bivariate error function.
+    erf2: Two-argument error function.
     erfinv: Inverse error function.
     erfcinv: Inverse Complementary error function.
-    erf2inv: Inverse bivariate error function.
+    erf2inv: Inverse two-argument error function.
 
     References
     ==========
@@ -444,7 +438,6 @@ class erfi(Function):
     .. [1] http://en.wikipedia.org/wiki/Error_function
     .. [2] http://mathworld.wolfram.com/Erfi.html
     .. [3] http://functions.wolfram.com/GammaBetaErf/Erfi
-
     """
 
     nargs = 1
@@ -549,9 +542,7 @@ class erfi(Function):
 
 class erf2(Function):
     r"""
-    Bivariate error function.
-
-    This function is defined as:
+    Two-argument error function. This function is defined as:
 
     :math:`\mathrm{erf2}(x, y) = \frac{2}{\sqrt{\pi}} \int_x^y e^{-t^2} \mathrm{d}t`
 
@@ -583,8 +574,8 @@ class erf2(Function):
 
     The error function obeys the mirror symmetry:
 
-    from sympy import conjugate
-    conjugate(erf2(x, y))
+    >>> from sympy import conjugate
+    >>> conjugate(erf2(x, y))
     erf2(conjugate(x), conjugate(y))
 
     Differentiation with respect to x, y is supported:
@@ -603,13 +594,12 @@ class erf2(Function):
     erfi: Imaginary error function.
     erfinv: Inverse error function.
     erfcinv: Inverse Complementary error function.
-    erf2inv: Inverse bivariate error function.
+    erf2inv: Inverse two-argument error function.
 
     References
     ==========
 
     .. [1] http://functions.wolfram.com/GammaBetaErf/Erf2/
-
     """
 
     nargs = 2
@@ -662,10 +652,6 @@ class erf2(Function):
         return I*(erfi(I*x)-erfi(I*y))
 
     def _eval_rewrite_as_fresnels(self, x, y):
-        #arg2 = (1-S.ImaginaryUnit)*y/sqrt(pi)
-        #arg1 = (1-S.ImaginaryUnit)*x/sqrt(pi)
-        #return (1+S.ImaginaryUnit)*(fresnelc(arg2)-I*fresnels(arg2)-
-            #(fresnelc(arg1)-I*fresnels(arg1)))
         return erf(y).rewrite(fresnels) - erf(x).rewrite(fresnels)
 
     def _eval_rewrite_as_fresnelc(self, x, y):
@@ -686,11 +672,9 @@ class erf2(Function):
 
 class erfinv(Function):
     r"""
-    Imaginary Error Function:
+    Inverse Error Function. The erfinv function is defined as:
 
-    The erfinv function is defined as:
-
-    :math:`\mathrm{erf}(x) = y \Rightarrow \mathrm{erfinv}(y)= x`
+    :math:`\mathrm{erf}(x) = y \quad \Rightarrow \quad \mathrm{erfinv}(y) = x`
 
     Examples
     ========
@@ -711,8 +695,8 @@ class erfinv(Function):
     >>> diff(erfinv(x), x)
     sqrt(pi)*exp(erfinv(x)**2)/2
 
-    We can numerically evaluate the error function to arbitrary precision
-    on [-1, 1]
+    We can numerically evaluate the inverse error function to arbitrary precision
+    on [-1, 1]:
 
     >>> erfinv(0.2).evalf(30)
     0.179143454621291692285822705344
@@ -723,14 +707,15 @@ class erfinv(Function):
     erf: Gaussian error function.
     erfc: Complementary error function.
     erfi: Imaginary error function.
-    erf2: Bivariate error function.
+    erf2: Two-argument error function.
     erfcinv: Inverse Complementary error function.
-    erf2inv: Inverse bivariate error function.
+    erf2inv: Inverse two-argument error function.
 
-    References:
+    References
+    ==========
 
-    .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf/
-
+    .. [1] http://en.wikipedia.org/wiki/Error_function#Inverse_functions
+    .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErf/
     """
 
     nargs = 1
@@ -745,12 +730,14 @@ class erfinv(Function):
     def eval(cls, z):
         if z is S.NaN:
             return S.NaN
+        elif z is S.NegativeOne:
+            return S.NegativeInfinity
         elif z is S.Zero:
             return S.Zero
         elif z is S.One:
             return S.Infinity
 
-        if (z.func is erf) and z.args[0].is_real :
+        if (z.func is erf) and z.args[0].is_real:
             return z.args[0]
 
         nz = z.extract_multiplicatively(-1)
@@ -760,14 +747,11 @@ class erfinv(Function):
     def _eval_rewrite_as_erfcinv(self, z):
        return erfcinv(1-z)
 
-
 class erfcinv (Function):
     r"""
-    Inverse Complementary Error Function:
+    Inverse Complementary Error Function. The erfcinv function is defined as:
 
-    The erfcinv function is defined as:
-
-    :math:`\mathrm{erfc}(x) = y \Rightarrow \mathrm{erfcinv}(y)= x`
+    :math:`\mathrm{erfc}(x) = y \quad \Rightarrow \quad \mathrm{erfcinv}(y) = x`
 
     Examples
     ========
@@ -794,14 +778,15 @@ class erfcinv (Function):
     erf: Gaussian error function.
     erfc: Complementary error function.
     erfi: Imaginary error function.
-    erf2: Bivariate error function.
+    erf2: Two-argument error function.
     erfinv: Inverse error function.
-    erf2inv: Inverse bivariate error function.
+    erf2inv: Inverse two-argument error function.
 
-    References:
+    References
+    ==========
 
-    .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
-
+    .. [1] http://en.wikipedia.org/wiki/Error_function#Inverse_functions
+    .. [2] http://functions.wolfram.com/GammaBetaErf/InverseErfc/
     """
 
     nargs = 1
@@ -820,18 +805,17 @@ class erfcinv (Function):
             return S.Infinity
         elif z is S.One:
             return S.Zero
-
+        elif z == 2:
+            return S.NegativeInfinity
 
     def _eval_rewrite_as_erfinv(self, z):
         return erfinv(1-z)
 
 class erf2inv(Function):
     r"""
-    Bivariate Inverse error function:
+    Two-argument Inverse error function. The erf2inv function is defined as:
 
-    The erf2inv function is defined as:
-
-    :math:`\mathrm{erf2}(x, w) = y \Rightarrow \mathrm{erf2inv}(x, y)= w`
+    :math:`\mathrm{erf2}(x, w) = y \quad \Rightarrow \quad \mathrm{erf2inv}(x, y) = w`
 
     Examples
     ========
@@ -852,7 +836,7 @@ class erf2inv(Function):
     >>> erf2inv(oo, y)
     erfcinv(-y)
 
-    Differentiation with respect to x, y is supported:
+    Differentiation with respect to x and y is supported:
 
     >>> from sympy import diff
     >>> diff(erf2inv(x, y), x)
@@ -866,14 +850,14 @@ class erf2inv(Function):
     erf: Gaussian error function.
     erfc: Complementary error function.
     erfi: Imaginary error function.
-    erf2: Bivariate error function.
+    erf2: Two-argument error function.
     erfinv: Inverse error function.
     erfcinv: Inverse complementary error function.
 
-    References:
+    References
+    ==========
 
     .. [1] http://functions.wolfram.com/GammaBetaErf/InverseErf2/
-
     """
 
     nargs = 2
