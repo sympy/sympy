@@ -3,15 +3,6 @@ Primality testing
 
 """
 
-# prime list to use when number must be tested as a probable prime.
-#>>> list(primerange(2, 200))
-_isprime_fallback_primes = [
-    2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
-    53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107,
-    109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167,
-    173, 179, 181, 191, 193, 197, 199]
-#>>> len(_)
-#46
 # pseudoprimes that will pass through last mr_safe test
 _pseudos = set([
             669094855201,
@@ -76,7 +67,8 @@ def mr(n, bases):
       A Computational Perspective", Springer, 2nd edition, 135-138
 
     A list of thresholds and the bases they require are here:
-    http://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
+    http://en.wikipedia.org/wiki/
+    Miller%E2%80%93Rabin_primality_test#Deterministic_variants_of_the_test
 
     Examples
     ========
@@ -88,6 +80,7 @@ def mr(n, bases):
     True
     """
     from sympy.ntheory.factor_ import trailing
+    from sympy.polys.domains import ZZ
 
     n = int(n)
     if n < 2:
@@ -96,6 +89,7 @@ def mr(n, bases):
     s = trailing(n - 1)
     t = n >> s
     for base in bases:
+        base = ZZ(base)
         if not _test(n, base, s, t):
             return False
     return True
@@ -184,9 +178,9 @@ def isprime(n):
     The function first looks for trivial factors, and if none is found,
     performs a safe Miller-Rabin strong pseudoprime test with bases
     that are known to prove a number prime. Finally, a general Miller-Rabin
-    test is done with the first k bases which, which will report a
-    pseudoprime as a prime with an error of about 4**-k. The current value
-    of k is 46 so the error is about 2 x 10**-28.
+    test is done with the first k bases which will report a pseudoprime as a
+    prime with an error of about 4**-k. The current value of k is 46 so the
+    error is about 2 x 10**-28.
 
     Examples
     ========
@@ -221,7 +215,14 @@ def isprime(n):
     try:
         return _mr_safe(n)
     except ValueError:
-        return mr(n, _isprime_fallback_primes)
+        # prime list to use when number must be tested as a probable prime;
+        # these are the 46 primes less than 200
+        bases = [
+            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47,
+            53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107,
+            109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167,
+            173, 179, 181, 191, 193, 197, 199]
+        return mr(n, bases)
 
 
 def _mr_safe_helper(_s):
