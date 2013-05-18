@@ -272,8 +272,8 @@ there is an order.
     (3, x, y**2)
 
 Mul's ``args`` are sorted, so that the same ``Mul`` will have the same
-``args``.  But the sorting is based on several criteria that has no
-mathematical significance.
+``args``.  But the sorting is based on some criteria designed to make the
+sorting unique and efficient that has no mathematical significance.
 
 Recall that our ``expr`` should be ``Mul(2, x, Pow(y, 2))``.  What if we want
 to get at the ``args`` of ``Pow(y, 2)``.  Notice that the ``y**2`` is in the
@@ -296,12 +296,12 @@ Let's see.
     ()
 
 They both have empty ``args``.  In SymPy, empty ``args`` signal that we have
-hit the bottom of the expression tree.
+hit a leaf of the expression tree.
 
 With this knowledge, let's look at how we can recurse through an expression
-tree.  The nested nature of ``args`` is a perfect fit for recursive
-functions.  The base case will be empty ``args``.  Let's write a simple
-function that goes through an expression and prints all the ``args``.
+tree.  The nested nature of ``args`` is a perfect fit for recursive functions.
+The base case will be empty ``args``.  Let's write a simple function that goes
+through an expression and prints all the ``args`` at each level.
 
     >>> def pre(expr):
     ...     print expr
