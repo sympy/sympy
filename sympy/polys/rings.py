@@ -981,48 +981,88 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         p.strip_zero()
         return p
 
-    def __truediv__(p1, p2):
-        """division by a term in the coefficient domain or
-        exact division by a polynomial
-
-        Examples
-        ========
-
-        >>> from sympy.polys.domains import QQ
-        >>> from sympy.polys.rings import ring
-        >>> _, x, y = ring('x, y', QQ)
-        >>> p1 = (x**2 + x + y)*(x**2 - y**2)
-        >>> p2 = x + y
-        >>> p3 = p1/p2
-        >>> p4 = (x**2 + x + y)*(x - y)
-        >>> p3 == p4
-        True
-
-        """
+    def __divmod__(p1, p2):
         ring = p1.ring
-        if isinstance(p2, PolyElement) and ring == p2.ring:
-            if len(p2) == 1:
-                term = list(p2.iterterms())[0]
-                return p1.quo_term(term)
+        p = ring.zero
+
+        if not p2:
+            raise ZeroDivisionError("polynomial division")
+        elif isinstance(p2, PolyElement):
+            if ring == p2.ring:
+                return p1.div(p2)
+            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+                pass
+            elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
+                return p2.__rdivmod__(p1)
             else:
-                return p1.quo(p2)
-        elif not p2:
-            raise ZeroDivisionError
-        else:
-            try:
-                p2 = ring.domain.convert(p2)
-            except CoercionFailed:
                 return NotImplemented
+
+        try:
+            p2 = ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return (p1.quo_ground(p2), p1.rem_ground(p2))
+
+    def __rdivmod__(p1, p2):
+        return NotImplemented
+
+    def __mod__(p1, p2):
+        ring = p1.ring
+        p = ring.zero
+
+        if not p2:
+            raise ZeroDivisionError("polynomial division")
+        elif isinstance(p2, PolyElement):
+            if ring == p2.ring:
+                return p1.rem(p2)
+            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+                pass
+            elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
+                return p2.__rmod__(p1)
             else:
-                return p1.quo_ground(p2)
+                return NotImplemented
+
+        try:
+            p2 = ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p1.quo_ground(p2)
+
+    def __rmod__(p1, p2):
+        return NotImplemented
+
+    def __truediv__(p1, p2):
+        ring = p1.ring
+        p = ring.zero
+
+        if not p2:
+            raise ZeroDivisionError("polynomial division")
+        elif isinstance(p2, PolyElement):
+            if ring == p2.ring:
+                return p1.quo(p2)
+            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+                pass
+            elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
+                return p2.__rtruediv__(p1)
+            else:
+                return NotImplemented
+
+        try:
+            p2 = ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            return p1.quo_ground(p2)
+
+    def __rtruediv__(p1, p2):
+        return NotImplemented
 
     __floordiv__ = __div__ = __truediv__
+    __rfloordiv__ = __rdiv__ = __rtruediv__
 
-    def __mod__(self, other):
-        return self.rem(other)
-
-    def __divmod__(self, other):
-        return self.div(other)
+    # TODO: use // (__floordiv__) for exquo()?
 
     def _term_div(self):
         zm = self.ring.zero_monom
@@ -1505,7 +1545,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         monom, coeff = term
 
         if not coeff:
-            raise ZeroDivisionError
+            raise ZeroDivisionError("polynomial division")
         elif not f:
             return f.ring.zero
         elif monom == f.ring.zero_monom:

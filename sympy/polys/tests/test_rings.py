@@ -481,7 +481,7 @@ def test_PolyElement___div__():
     raises(TypeError, lambda: u/(u**2*x + u))
 
     raises(TypeError, lambda: t/x)
-    # TODO: raises(TypeError, lambda: x/t)
+    raises(TypeError, lambda: x/t)
     raises(TypeError, lambda: t/u)
     raises(TypeError, lambda: u/t)
 
