@@ -177,6 +177,10 @@ Let's first look at the term ``-x**2``.  As we expected, we see ``Pow(x,
 subtraction class in SymPy.  ``x - y`` is represented as ``x + -y``, or, more
 completely, ``x + -1*y``, i.e., ``Add(x, Mul(-1, y))``.
 
+    >>> expr = x - y
+    >>> srepr(x - y)
+    "Add(Symbol('x'), Mul(Integer(-1), Symbol('y')))"
+
 Next, look at ``1/y``.  We might expect to see something like ``Div(1, y)``,
 but similar to subtraction, there is no class in SymPy for division.  Rather,
 division is represented by a power of -1.  Hence, we have ``Pow(y, -1)``.
