@@ -1585,12 +1585,18 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return gcd, f, g
 
-    def max_norm(f):
+    def _norm(f, norm_func):
         if not f:
             return f.ring.domain.zero
         else:
             ground_abs = f.ring.domain.abs
-            return max([ ground_abs(coeff) for coeff in f.itercoeffs() ])
+            return norm_func([ ground_abs(coeff) for coeff in f.itercoeffs() ])
+
+    def max_norm(f):
+        return f._norm(max)
+
+    def l1_norm(f):
+        return f._norm(sum)
 
     def deflate(f, *G):
         ring = f.ring
