@@ -13,7 +13,7 @@ from sympy.polys.orderings import lex
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict, _dict_reorder, _parallel_dict_from_expr
-from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded, MultivariatePolynomialError
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded, ExactQuotientFailed, MultivariatePolynomialError
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt, build_options
@@ -1079,7 +1079,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         >>> r
         y**6
 
-        TODO restrict to positive exponents
         """
         ring = self.ring
         domain = ring.domain
@@ -1087,6 +1086,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if isinstance(fv, PolyElement):
             ret_single = True
             fv = [fv]
+        if any(not f for f in fv):
+            raise ZeroDivisionError("polynomial division")
         if not self:
             if ret_single:
                 return ring.zero, ring.zero
@@ -1128,12 +1129,11 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         else:
             return qv, r
 
-    def quo(f, G):
-        return f.div(G)[0]
-
     def rem(f, G):
         if isinstance(G, PolyElement):
             G = [G]
+        if any(not g for g in G):
+            raise ZeroDivisionError("polynomial division")
         ring = f.ring
         domain = ring.domain
         order = ring.order
@@ -1173,6 +1173,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                     ltf = ltm, f[ltm]
 
         return r
+
+    def quo(f, G):
+        return f.div(G)[0]
+
+    def exquo(f, G):
+        q, r = f.div(G)
+
+        if not r:
+            return q
+        else:
+            raise ExactQuotientFailed(f, G)
 
     def _iadd_monom(self, mc):
         """add to self the monomial coeff*x0**i0*x1**i1*...
