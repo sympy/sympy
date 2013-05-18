@@ -4139,10 +4139,16 @@ def besselsimp(expr):
 
 def exptrigsimp(expr):
     """
-    Simplifies exponential / trigonometric functions
+    Simplifies exponential / trigonometric / hyperbolic functions
+
+    >>> from sympy import exptrigsimp, exp, cosh, sinh
+    >>> from sympy.abc import z
 
     >>> exptrigsimp(exp(z) + exp(-z))
     2*cosh(z)
+
+    >>> exptrigsimp(cosh(z) - sinh(z))
+    exp(-z)
     """
     def exp_trig(e):
         # select the better of e, and e rewritten in terms of exp or trig
