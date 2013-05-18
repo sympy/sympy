@@ -252,16 +252,31 @@ class PolyRing(DefaultPrinting, IPolys):
         else:
             return self.ring_new(poly)
 
-    def _drop(self, gen):
-        if isinstance(gen, int):
+    def index(self, gen):
+        """Compute index of ``gen`` in ``self.gens``. """
+        if gen is None:
+            i = 0
+        elif isinstance(gen, int):
             i = gen
-            if not (0 <= i and i < self.ngens):
+
+            if 0 <= i and i < self.ngens:
+                pass
+            elif -self.ngens <= i and i <= -1:
+                i = -i - 1
+            else:
                 raise ValueError("invalid generator index")
-        else:
+        elif isinstance(gen, self.dtype):
             if gen not in self._gens_set:
                 raise ValueError("invalid generator")
             else:
                 i = list(self.gens).index(gen)
+        else:
+            raise ValueError("expected a polynomial generator, an integer or None, got %s" % gen)
+
+        return i
+
+    def _drop(self, gen):
+        i = self.index(gen)
 
         if self.ngens == 1:
             return i, self.domain
@@ -1237,8 +1252,40 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 del p1[ka]
         return p1
 
+    def degree(f, x=None):
+        """The leading degree in ``x`` or the main variable. """
+        i = f.ring.index(x)
+
+        if not f:
+            return -1
+        else:
+            return max([ monom[i] for monom in f.itermonoms() ])
+
+    def degrees(f):
+        """A tuple containing leading degrees in all variables. """
+        if not f:
+            return (-1,)*f.ring.ngens
+        else:
+            return tuple(map(max, zip(*f.itermonoms())))
+
+    def tail_degree(f, x=None):
+        """The tail degree in ``x`` or the main variable. """
+        i = f.ring.index(x)
+
+        if not f:
+            return -1
+        else:
+            return min([ monom[i] for monom in f.itermonoms() ])
+
+    def tail_degrees(f):
+        """A tuple containing tail degrees in all variables. """
+        if not f:
+            return (-1,)*f.ring.ngens
+        else:
+            return tuple(map(min, zip(*f.itermonoms())))
+
     def leading_expv(self):
-        """leading monomial tuple according to the monomial ordering
+        """Leading monomial tuple according to the monomial ordering.
 
         Examples
         ========
@@ -1704,7 +1751,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         ring = f.ring
-        i = list(ring.gens).index(x)
+        i = ring.index(x)
         m = ring.monomial_basis(i)
         g = ring.zero
         for expv, coeff in f.iterterms():
@@ -1724,7 +1771,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
                 return f.evaluate(x)
 
         ring = f.ring
-        i = list(ring.gens).index(x)
+        i = ring.index(x)
 
         if ring.ngens == 1:
             result = ring.domain.zero
@@ -1760,7 +1807,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             return f
 
         ring = f.ring
-        i = list(ring.gens).index(x)
+        i = ring.index(x)
 
         if ring.ngens == 1:
             result = ring.domain.zero
