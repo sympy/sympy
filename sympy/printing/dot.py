@@ -1,5 +1,7 @@
 from sympy import Basic, Expr, Symbol, Integer, Rational, Float
 
+__all__ = ['dotprint']
+
 default_styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
           (Expr,  {'color': 'black'})]
 
