@@ -1478,35 +1478,6 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[exp] *= c
         return p
 
-    def mul_term(f, term):
-        monom, coeff = term
-
-        if not f or not coeff:
-            return f.ring.zero
-        elif monom == f.ring.zero_monom:
-            return f.mul_ground(coeff)
-
-        monomial_mul = f.ring.monomial_mul
-        terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.iteritems() ]
-        return f.new(terms)
-
-    def mul_monom(f, monom):
-        monomial_mul = f.ring.monomial_mul
-        terms = [ (monomial_mul(f_monom, monom), f_coeff) for f_monom, f_coeff in f.iteritems() ]
-        return f.new(terms)
-
-    def monic(f):
-        """Divides all coefficients by the leading coefficient. """
-        if not f:
-            return f
-        else:
-            return f.quo_ground(f.LC)
-
-    def primitive(f):
-        """Returns content and a primitive polynomial. """
-        cont = f.content()
-        return cont, f.quo_ground(cont)
-
     def content(f):
         """Returns GCD of polynomial's coefficients. """
         domain = f.ring.domain
@@ -1518,11 +1489,40 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         return cont
 
+    def primitive(f):
+        """Returns content and a primitive polynomial. """
+        cont = f.content()
+        return cont, f.quo_ground(cont)
+
+    def monic(f):
+        """Divides all coefficients by the leading coefficient. """
+        if not f:
+            return f
+        else:
+            return f.quo_ground(f.LC)
+
     def mul_ground(f, x):
         if not x:
             return f.ring.zero
 
         terms = [ (monom, coeff*x) for monom, coeff in f.iterterms() ]
+        return f.new(terms)
+
+    def mul_monom(f, monom):
+        monomial_mul = f.ring.monomial_mul
+        terms = [ (monomial_mul(f_monom, monom), f_coeff) for f_monom, f_coeff in f.iteritems() ]
+        return f.new(terms)
+
+    def mul_term(f, term):
+        monom, coeff = term
+
+        if not f or not coeff:
+            return f.ring.zero
+        elif monom == f.ring.zero_monom:
+            return f.mul_ground(coeff)
+
+        monomial_mul = f.ring.monomial_mul
+        terms = [ (monomial_mul(f_monom, monom), f_coeff*coeff) for f_monom, f_coeff in f.iteritems() ]
         return f.new(terms)
 
     def quo_ground(f, x):
