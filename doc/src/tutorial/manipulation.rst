@@ -66,7 +66,7 @@ Symbol.  While we have been doing
 
     >>> x = symbols('x')
 
-We could have also done
+we could have also done
 
     >>> x = Symbol('x')
 
