@@ -1,6 +1,6 @@
 from sympy import Basic, Expr, Symbol, Integer, Rational, Float
 
-styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
+default_styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
           (Expr,  {'color': 'black'})]
 
 
@@ -16,7 +16,7 @@ def purestr(x):
     return "%s(%s)"%(type(x).__name__, ', '.join(map(purestr, args)))
 
 
-def styleof(expr, styles=styles):
+def styleof(expr, styles=default_styles):
     """ Merge style dictionaries in order
 
     >>> from sympy import Symbol, Basic, Expr
@@ -46,7 +46,7 @@ def attrprint(d, delimiter=', '):
     """
     return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
 
-def dotnode(expr, styles=styles):
+def dotnode(expr, styles=default_styles):
     """ String defining a node
 
     >>> from sympy.printing.dot import dotnode
@@ -103,24 +103,60 @@ template = \
 
 graphstyle = {'rankdir': 'TD'}
 
-def dotprint(expr, **kwargs):
-    """ DOT description of a SymPy expression tree
+def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
+    Basic), maxdepth=None, **kwargs):
+    """
+    DOT description of a SymPy expression tree
+
+    Options are
+
+    ``styles``: Styles for different classes.  The default is ``[(Basic,
+          {'color': 'blue', 'shape': 'ellipse'}), (Expr, {'color':
+          'black'})]``
+
+    ``atom``: Function used to determine if an arg is an atom.  The default is
+          ``lambda x: not isinstance(x, Basic)``.  Another good choice is
+          ``lambda x: not x.args``.
+
+    ``maxdepth``: The maximum depth.  The default is None, meaning no limit.
+
+    Additional keyword arguments are included as styles for the graph.
+
+    Examples
+    ========
 
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
-    >>> dotprint(x+2) # doctest: +SKIP
-    """
+    >>> print dotprint(x+2)
+    digraph{
 
-    s = kwargs.pop('styles', styles)
-    atom = kwargs.pop('atom', lambda x: not isinstance(x, Basic))
-    maxdepth = kwargs.pop('depth', None)
+    # Graph style
+    "rankdir"="TD"
+
+    #########
+    # Nodes #
+    #########
+
+    "Symbol(x)" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Integer(2)" ["color"="black", "label"="2", "shape"="ellipse"];
+    "Add(Integer(2), Symbol(x))" ["color"="black", "label"="Add", "shape"="ellipse"];
+
+    #########
+    # Edges #
+    #########
+
+    "Add(Integer(2), Symbol(x))" -> "Symbol(x)";
+    "Add(Integer(2), Symbol(x))" -> "Integer(2)";
+    }
+
+    """
 
     graphstyle.update(kwargs)
 
     nodes = []
     edges = []
     def traverse(e, depth):
-        nodes.append(dotnode(e, s))
+        nodes.append(dotnode(e, styles))
         if maxdepth and depth >= maxdepth:
             return
         edges.extend(dotedges(e))
