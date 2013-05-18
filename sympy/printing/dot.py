@@ -85,6 +85,8 @@ def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True)
     if atom(expr):
         return []
     else:
+        # TODO: This is quadratic in complexity (purestr(expr) already
+        # contains [purestr(arg) for arg in expr.args]).
         expr_str = purestr(expr)
         arg_strs = [purestr(arg) for arg in expr.args]
         if repeat:
