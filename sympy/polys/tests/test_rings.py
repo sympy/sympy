@@ -2,9 +2,9 @@
 
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
-from sympy.polys.domains import ZZ, QQ, RR
+from sympy.polys.domains import ZZ, QQ, RR, FF
 from sympy.polys.orderings import lex, grlex
-from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded
+from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, MultivariatePolynomialError
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
@@ -93,6 +93,25 @@ def test_PolyRing_drop():
     raises(ValueError, lambda: R.drop(3))
     raises(ValueError, lambda: R.drop(x).drop(y))
 
+def test_PolyRing___getitem__():
+    R, x,y,z = ring("x,y,z", ZZ)
+
+    assert R[0:] == PolyRing("x,y,z", ZZ, lex)
+    assert R[1:] == PolyRing("y,z", ZZ, lex)
+    assert R[2:] == PolyRing("z", ZZ, lex)
+    assert R[3:] == ZZ
+
+def test_PolyRing_is_():
+    R = PolyRing("x", QQ, lex)
+
+    assert R.is_univariate is True
+    assert R.is_multivariate is False
+
+    R = PolyRing("x,y,z", QQ, lex)
+
+    assert R.is_univariate is False
+    assert R.is_multivariate is True
+
 def test_sring():
     x, y, z, t = symbols("x,y,z,t")
 
@@ -113,14 +132,6 @@ def test_sring():
     Rt = FracField("t", ZZ, lex)
     R = PolyRing("x,y,z", Rt, lex)
     assert sring(x + 2*y/t + t**2*z/3, x, y, z) == (R, R.x + 2*R.y/Rt.t + Rt.t**2*R.z/3)
-
-def test_PolyRing___getitem__():
-    R, x,y,z = ring("x,y,z", ZZ)
-
-    assert R[0:] == PolyRing("x,y,z", ZZ, lex)
-    assert R[1:] == PolyRing("y,z", ZZ, lex)
-    assert R[2:] == PolyRing("z", ZZ, lex)
-    assert R[3:] == ZZ
 
 def test_PolyElement___hash__():
     R, x, y, z = ring("x,y,z", QQ)
@@ -726,7 +737,7 @@ def test_PolyElement_compose():
     assert r == q and isinstance(r, PolyElement) and r.ring == R
 
 def test_PolyElement_is_():
-    R, x,y = ring("x,y", QQ)
+    R, x,y,z = ring("x,y,z", QQ)
 
     assert (x - x).is_generator == False
     assert (x - x).is_ground == True
@@ -757,6 +768,43 @@ def test_PolyElement_is_():
     assert (3*x + 1).is_ground == False
     assert (3*x + 1).is_monomial == False
     assert (3*x + 1).is_term == False
+
+    assert R(0).is_zero is True
+    assert R(1).is_zero is False
+
+    assert R(0).is_one is False
+    assert R(1).is_one is True
+
+    assert (x - 1).is_monic is True
+    assert (2*x - 1).is_monic is False
+
+    assert (3*x + 2).is_primitive is True
+    assert (4*x + 2).is_primitive is False
+
+    assert (x + y + z + 1).is_linear is True
+    assert (x*y*z + 1).is_linear is False
+
+    assert (x*y + z + 1).is_quadratic is True
+    assert (x*y*z + 1).is_quadratic is False
+
+    assert (x - 1).is_squarefree is True
+    assert ((x - 1)**2).is_squarefree is False
+
+    assert (x**2 + x + 1).is_irreducible is True
+    assert (x**2 + 2*x + 1).is_irreducible is False
+
+    _, t = ring("t", FF(11))
+
+    assert (7*t + 3).is_irreducible is True
+    assert (7*t**2 + 3*t + 1).is_irreducible is False
+
+    _, u = ring("u", ZZ)
+    f = u**16 + u**14 - u**10 - u**8 - u**6 + u**2
+
+    assert f.is_cyclotomic is False
+    assert (f + 1).is_cyclotomic is True
+
+    raises(MultivariatePolynomialError, lambda: x.is_cyclotomic)
 
 def test_PolyElement_drop():
     R, x,y,z = ring("x,y,z", ZZ)

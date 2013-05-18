@@ -13,7 +13,7 @@ from sympy.polys.orderings import lex
 from sympy.polys.heuristicgcd import heugcd
 from sympy.polys.compatibility import IPolys
 from sympy.polys.polyutils import expr_from_dict, _dict_reorder, _parallel_dict_from_expr
-from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded
+from sympy.polys.polyerrors import CoercionFailed, GeneratorsError, GeneratorsNeeded, MultivariatePolynomialError
 from sympy.polys.domains.domainelement import DomainElement
 from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.polyoptions import Domain as DomainOpt, Order as OrderOpt, build_options
@@ -294,6 +294,14 @@ class PolyRing(DefaultPrinting, IPolys):
     def to_field(self):
         from sympy.polys.fields import FracField
         return FracField(self.symbols, self.domain, self.order)
+
+    @property
+    def is_univariate(self):
+        return len(self.gens) == 1
+
+    @property
+    def is_multivariate(self):
+        return len(self.gens) > 1
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     def __init__(self, ring, init=[]):
@@ -579,6 +587,45 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
     @property
     def is_nonpositive(self):
         return self.ring.domain.is_nonpositive(self.LC)
+
+    @property
+    def is_zero(f):
+        return not f
+
+    @property
+    def is_one(f):
+        return f == f.ring.one
+
+    @property
+    def is_monic(f):
+        return f.ring.domain.is_one(f.LC)
+
+    @property
+    def is_primitive(f):
+        return f.ring.domain.is_one(f.content())
+
+    @property
+    def is_linear(f):
+        return all(sum(monom) <= 1 for monom in f.itermonoms())
+
+    @property
+    def is_quadratic(f):
+        return all(sum(monom) <= 2 for monom in f.itermonoms())
+
+    @property
+    def is_squarefree(f):
+        return f.ring.dmp_sqf_p(f)
+
+    @property
+    def is_irreducible(f):
+        return f.ring.dmp_irreducible_p(f)
+
+    @property
+    def is_cyclotomic(f):
+        if f.ring.is_univariate:
+            return f.ring.dup_cyclotomic_p(f)
+        else:
+            raise MultivariatePolynomialError("cyclotomic polynomial")
 
     def __neg__(self):
         return self.new([ (monom, -coeff) for monom, coeff in self.iterterms() ])
