@@ -5,6 +5,7 @@ default_styles = [(Basic, {'color': 'blue', 'shape': 'ellipse'}),
 
 
 slotClasses = (Symbol, Integer, Rational, Float)
+# XXX: Why not just use srepr()?
 def purestr(x):
     """ A string that follows obj = type(obj)(*obj.args) exactly """
     if not isinstance(x, Basic):
@@ -46,16 +47,14 @@ def attrprint(d, delimiter=', '):
     """
     return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
 
-def dotnode(expr, styles=default_styles, labelfunc=str):
+def dotnode(expr, styles=default_styles, labelfunc=str, pos=(), repeat=True):
     """ String defining a node
 
     >>> from sympy.printing.dot import dotnode
     >>> from sympy.abc import x
     >>> print dotnode(x)
-    "Symbol(x)" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Symbol(x)_()" ["color"="black", "label"="x", "shape"="ellipse"];
     """
-    if hasattr(expr, 'dotnode'):
-        return expr.dotnode(styles)
     style = styleof(expr, styles)
 
     if isinstance(expr, Basic) and not expr.is_Atom:
@@ -63,24 +62,33 @@ def dotnode(expr, styles=default_styles, labelfunc=str):
     else:
         label = labelfunc(expr)
     style['label'] = label
-    return '"%s" [%s];' % (purestr(expr), attrprint(style))
+    expr_str = purestr(expr)
+    if repeat:
+        expr_str += '_%s' % str(pos)
+    return '"%s" [%s];' % (expr_str, attrprint(style))
 
 
-def dotedges(expr):
+def dotedges(expr, atom=lambda x: not isinstance(x, Basic), pos=(), repeat=True):
     """ List of strings for all expr->expr.arg pairs
+
+    See the docstring of dotprint for explanations of the options.
 
     >>> from sympy.printing.dot import dotedges
     >>> from sympy.abc import x
-    >>> for e in dotedges(x+2): print e
-    "Add(Integer(2), Symbol(x))" -> "Integer(2)";
-    "Add(Integer(2), Symbol(x))" -> "Symbol(x)";
+    >>> for e in dotedges(x+2):
+    ...     print e
+    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
+    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
     """
-    if hasattr(expr, 'dotedges'):
-        return expr.dotedges()
-    if not isinstance(expr, Basic):
+    if atom(expr):
         return []
     else:
-        return ['"%s" -> "%s";'%(purestr(expr), purestr(arg)) for arg in expr.args]
+        expr_str = purestr(expr)
+        arg_strs = [purestr(arg) for arg in expr.args]
+        if repeat:
+            expr_str += '_%s' % str(pos)
+            arg_strs = [arg_str + '_%s' % str(pos + (i,)) for i, arg_str in enumerate(arg_strs)]
+        return ['"%s" -> "%s";'%(expr_str, arg_str) for arg_str in arg_strs]
 
 template = \
 """digraph{
@@ -104,7 +112,7 @@ template = \
 graphstyle = {'rankdir': 'TD'}
 
 def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
-    Basic), maxdepth=None, labelfunc=str, **kwargs):
+    Basic), maxdepth=None, repeat=True, labelfunc=str, **kwargs):
     """
     DOT description of a SymPy expression tree
 
@@ -120,6 +128,14 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
 
     ``maxdepth``: The maximum depth.  The default is None, meaning no limit.
 
+    ``repeat``: Whether to different nodes for separate common subexpressions.
+          The default is True.  For example, for ``x + x*y`` with
+          ``repeat=True``, it will have two nodes for ``x`` and with
+          ``repeat=False``, it will have one (warning: even if it appears
+          twice in the same object, like Pow(x, x), it will still only appear
+          only once.  Hence, with repeat=False, the number of arrows out of an
+          object might not equal the number of args it has).
+
     ``labelfunc``: How to label leaf nodes.  The default is ``str``.  Another
           good option is ``srepr``. For example with ``str``, the leaf nodes
           of ``x + 1`` are labeled, ``x`` and ``1``.  With ``srepr``, they
@@ -132,40 +148,41 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
 
     >>> from sympy.printing.dot import dotprint
     >>> from sympy.abc import x
-    >>> print dotprint(x+2)
+    >>> print dotprint(x+2) # doctest: +NORMALIZE_WHITESPACE
     digraph{
-
+    <BLANKLINE>
     # Graph style
     "rankdir"="TD"
-
+    <BLANKLINE>
     #########
     # Nodes #
     #########
-
-    "Symbol(x)" ["color"="black", "label"="x", "shape"="ellipse"];
-    "Integer(2)" ["color"="black", "label"="2", "shape"="ellipse"];
-    "Add(Integer(2), Symbol(x))" ["color"="black", "label"="Add", "shape"="ellipse"];
-
+    <BLANKLINE>
+    "Symbol(x)_(1,)" ["color"="black", "label"="x", "shape"="ellipse"];
+    "Integer(2)_(0,)" ["color"="black", "label"="2", "shape"="ellipse"];
+    "Add(Integer(2), Symbol(x))_()" ["color"="black", "label"="Add", "shape"="ellipse"];
+    <BLANKLINE>
     #########
     # Edges #
     #########
-
-    "Add(Integer(2), Symbol(x))" -> "Symbol(x)";
-    "Add(Integer(2), Symbol(x))" -> "Integer(2)";
+    <BLANKLINE>
+    "Add(Integer(2), Symbol(x))_()" -> "Symbol(x)_(1,)";
+    "Add(Integer(2), Symbol(x))_()" -> "Integer(2)_(0,)";
     }
-
     """
-
+    # repeat works by adding a signature tuple to the end of each node for its
+    # position in the graph. For example, for expr = Add(x, Pow(x, 2)), the x in the
+    # Pow will have the tuple (1, 0), meaning it is expr.args[1].args[0].
     graphstyle.update(kwargs)
 
     nodes = []
     edges = []
-    def traverse(e, depth):
-        nodes.append(dotnode(e, styles, labelfunc=labelfunc))
+    def traverse(e, depth, pos=()):
+        nodes.append(dotnode(e, styles, labelfunc=labelfunc, pos=pos, repeat=repeat))
         if maxdepth and depth >= maxdepth:
             return
-        edges.extend(dotedges(e))
-        [traverse(arg, depth+1) for arg in e.args if not atom(arg)]
+        edges.extend(dotedges(e, atom=atom, pos=pos, repeat=repeat))
+        [traverse(arg, depth+1, pos + (i,)) for i, arg in enumerate(e.args) if not atom(arg)]
     traverse(expr, 0)
 
     return template%{'graphstyle': attrprint(graphstyle, delimiter='\n'),
