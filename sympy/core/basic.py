@@ -1288,6 +1288,14 @@ class Basic(object):
         from sympy.core.symbol import Dummy
         from sympy.simplify.simplify import bottom_up
 
+        try:
+            query = sympify(query)
+        except SympifyError:
+            pass
+        try:
+            value = sympify(value)
+        except SympifyError:
+            pass
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
