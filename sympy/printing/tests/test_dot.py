@@ -1,6 +1,6 @@
 from sympy.printing.dot import (purestr, styleof, attrprint, dotnode,
         dotedges, dotprint)
-from sympy import Symbol, Integer, Basic, Expr
+from sympy import Symbol, Integer, Basic, Expr, srepr
 from sympy.abc import x
 
 def test_purestr():
@@ -49,3 +49,8 @@ def test_Matrix_and_non_basics():
     from sympy import MatrixSymbol
     n = Symbol('n')
     assert dotprint(MatrixSymbol('X', n, n))
+
+def test_labelfunc():
+    text = dotprint(x + 2, labelfunc=srepr)
+    assert "Symbol('x')" in text
+    assert "Integer(2)" in text
