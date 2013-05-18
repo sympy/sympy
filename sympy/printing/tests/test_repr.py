@@ -1,6 +1,6 @@
 from sympy.utilities.pytest import raises
 from sympy import symbols, Function, Integer, Matrix, Abs, \
-    Rational, Float, S, WildFunction, ImmutableMatrix
+    Rational, Float, S, WildFunction, ImmutableMatrix, sin
 from sympy.geometry import Point, Ellipse
 from sympy.printing import srepr
 from sympy.polys import ring, field, ZZ, QQ, lex, grlex
@@ -42,6 +42,8 @@ def test_Function():
     # test unapplied Function
     sT(Function('f'), "Function('f')")
 
+    sT(sin(x), "sin(Symbol('x'))")
+    sT(sin, "sin")
 
 def test_Geometry():
     sT(Point(0, 0), "Point(Integer(0), Integer(0))")

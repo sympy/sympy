@@ -328,6 +328,10 @@ def test_factor_nc():
     assert factor_nc(n**k + n**(k + 1)) == n**k*(1 + n)
     assert factor_nc((m*n)**k + (m*n)**(k + 1)) == (1 + m*n)*(m*n)**k
 
+    # issue 3819
+    assert factor_nc(-n*(2*x**2 + 2*x)) == -2*n*x*(x + 1)
+
+
 def test_issue_3261():
     a, b = symbols("a b")
     apb = a + b

@@ -666,6 +666,17 @@ def test_issue_3268():
     assert powsimp(z) != 0
 
 
+def test_powsimp_negated_base():
+    assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)
+    assert powsimp((-x + y)*(-z + y)/sqrt(x - y)/sqrt(z - y)) == sqrt(x - y)*sqrt(z - y)
+    p = symbols('p', positive=True)
+    assert powsimp((-p)**a/p**a) == (-1)**a
+    n = symbols('n', negative=True)
+    assert powsimp((-n)**a/n**a) == (-1)**a
+    # if x is 0 then the lhs is 0**a*oo**a which is not (-1)**a
+    assert powsimp((-x)**a/x**a) != (-1)**a
+
+
 def test_issue_3341():
     assert powsimp(16*2**a*8**b) == 2**(a + 3*b + 4)
 

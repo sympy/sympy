@@ -4,6 +4,8 @@ we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
 
+from __future__ import with_statement
+
 from collections import defaultdict
 from sympy.external import import_module
 
@@ -911,3 +913,20 @@ else:
 
 if GROUND_TYPES == 'gmpy':
     SYMPY_INTS += (type(gmpy.mpz(0)),)
+
+# check_output() is new in python 2.7
+import os
+from subprocess import CalledProcessError
+try:
+    from subprocess import check_output
+except ImportError:
+    from subprocess import check_call
+    def check_output(*args, **kwargs):
+        with open(os.devnull, 'w') as fh:
+            kwargs['stdout'] = fh
+            try:
+                return check_call(*args, **kwargs)
+            except CalledProcessError, e:
+                e.output = ("program output is not available for "
+                            "python 2.5.x and 2.6.x")
+                raise e

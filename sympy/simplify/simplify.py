@@ -1661,7 +1661,7 @@ def _nthroot_solve(p, n, prec):
         return p
     pn = p**Rational(1, n)
     x = Symbol('x')
-    f = _minimal_polynomial_sq(p, n, x, prec)
+    f = _minimal_polynomial_sq(p, n, x)
     if f is None:
         return None
     sols = solve(f, x)
@@ -2599,6 +2599,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             else:
                 c_powers[coeff] = S.One
 
+        # convert to plain dictionary
+        c_powers = dict(c_powers)
+
         # check for base and inverted base pairs
         be = c_powers.items()
         skip = set()  # skip if we already saw them
@@ -2616,6 +2619,18 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         skip.add(binv)
                         e = c_powers.pop(binv)
                         c_powers[b] -= e
+
+        # check for base and negated base pairs
+        be = c_powers.items()
+        _n = S.NegativeOne
+        for i, (b, e) in enumerate(be):
+            if ((-b).is_Symbol or b.is_Add) and -b in c_powers:
+                if (b.is_positive in (0, 1) or e.is_integer):
+                    c_powers[-b] += c_powers.pop(b)
+                    if _n in c_powers:
+                        c_powers[_n] += e
+                    else:
+                        c_powers[_n] = e
 
         # filter c_powers and convert to a list
         c_powers = [(b, e) for b, e in c_powers.iteritems() if e]
