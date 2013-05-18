@@ -46,7 +46,7 @@ def attrprint(d, delimiter=', '):
     """
     return delimiter.join('"%s"="%s"'%item for item in sorted(d.items()))
 
-def dotnode(expr, styles=default_styles):
+def dotnode(expr, styles=default_styles, labelfunc=str):
     """ String defining a node
 
     >>> from sympy.printing.dot import dotnode
@@ -61,7 +61,7 @@ def dotnode(expr, styles=default_styles):
     if isinstance(expr, Basic) and not expr.is_Atom:
         label = str(expr.__class__.__name__)
     else:
-        label = str(expr)
+        label = labelfunc(expr)
     style['label'] = label
     return '"%s" [%s];' % (purestr(expr), attrprint(style))
 
@@ -104,7 +104,7 @@ template = \
 graphstyle = {'rankdir': 'TD'}
 
 def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
-    Basic), maxdepth=None, **kwargs):
+    Basic), maxdepth=None, labelfunc=str, **kwargs):
     """
     DOT description of a SymPy expression tree
 
@@ -119,6 +119,11 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
           ``lambda x: not x.args``.
 
     ``maxdepth``: The maximum depth.  The default is None, meaning no limit.
+
+    ``labelfunc``: How to label leaf nodes.  The default is ``str``.  Another
+          good option is ``srepr``. For example with ``str``, the leaf nodes
+          of ``x + 1`` are labeled, ``x`` and ``1``.  With ``srepr``, they
+          are labeled ``Symbol('x')`` and ``Integer(1)``.
 
     Additional keyword arguments are included as styles for the graph.
 
@@ -156,7 +161,7 @@ def dotprint(expr, styles=default_styles, atom=lambda x: not isinstance(x,
     nodes = []
     edges = []
     def traverse(e, depth):
-        nodes.append(dotnode(e, styles))
+        nodes.append(dotnode(e, styles, labelfunc=labelfunc))
         if maxdepth and depth >= maxdepth:
             return
         edges.extend(dotedges(e))
