@@ -22,7 +22,7 @@ sys.path = ['../sympy', 'ext'] + sys.path
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.addons.*') or your custom ones.
 extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.mathjax',
-              'numpydoc', 'sympylive', ]
+              'numpydoc', 'sympylive', 'sphinx.ext.graphviz', ]
 
 # Use this to use pngmath instead
 #extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode', 'sphinx.ext.pngmath', ]
@@ -200,3 +200,7 @@ texinfo_documents = [
     (master_doc, 'sympy', 'SymPy Documentation', 'SymPy Development Team',
    'SymPy', 'Computer algebra system (CAS) in Python', 'Programming', 1),
 ]
+
+# Use svg for graphviz
+
+graphviz_output_format = 'svg'
