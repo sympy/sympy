@@ -172,10 +172,10 @@ Here is a diagram
 This expression reveals some interesting things about SymPy. Let's go through
 them one by one.
 
-Let's first look at the term ``-x**2``.  As we expected, we see ``Pow(x,
-2)``.  One level up, we see we have ``Mul(-1, Pow(x, 2))``.  There is no
-subtraction class in SymPy.  ``x - y`` is represented as ``x + -y``, or, more
-completely, ``x + -1*y``, i.e., ``Add(x, Mul(-1, y))``.
+Let's first look at the term ``x**2``.  As we expected, we see ``Pow(x, 2)``.
+One level up, we see we have ``Mul(-1, Pow(x, 2))``.  There is no subtraction
+class in SymPy.  ``x - y`` is represented as ``x + -y``, or, more completely,
+``x + -1*y``, i.e., ``Add(x, Mul(-1, y))``.
 
     >>> expr = x - y
     >>> srepr(x - y)
@@ -218,8 +218,8 @@ see.
    "Mul(Symbol(x), Pow(Symbol(y), NegativeOne()))" -> "Pow(Symbol(y), NegativeOne())";
    }
 
-We see that ``x/y`` is represented as ``x*(1/y)``, which ends up as ``Mul(x,
-Pow(y, -1))``.
+We see that ``x/y`` is represented as ``x*y**-1``, i.e., ``Mul(x, Pow(y,
+-1))``.
 
 Finally, let's look at the ``sin(x*y)/2`` term.  Following the patterns of
 before, we might expect to see ``Mul(sin(x*y), Pow(Integer(2), -1))``.  But
