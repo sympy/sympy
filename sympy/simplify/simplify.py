@@ -4185,24 +4185,11 @@ def exptrigsimp(expr, cancel=True):
         newexpr = newexpr.subs(1/et, 1/t)
         newexpr = newexpr.subs(et, t)
     # sin/cos and sinh/cosh ratios to tan and tanh, respectively
-    s = newexpr.atoms(sin)
-    if s:
-        newexpr = factor_terms(newexpr)
-        for si in s:
-            a = si.args[0]
-            trat = sin(a)/cos(a)
-            t = tan(a)
-            newexpr = newexpr.subs(trat, t)
-            newexpr = newexpr.subs(1/trat, 1/t)
-    sh = newexpr.atoms(sinh)
-    if not s and sh:
-        newexpr = factor_terms(newexpr)
-    for si in sh:
-        a = si.args[0]
-        trat = sinh(a)/cosh(a)
-        t = tanh(a)
-        newexpr = newexpr.subs(trat, t)
-        newexpr = newexpr.subs(1/trat, 1/t)
+    if newexpr.has(C.HyperbolicFunction):
+        e, f = hyper_as_trig(newexpr)
+        newexpr = f(TR2i(e))
+    if e.has(C.TrigonometricFunction):
+        newexpr = TR2i(e)
     # can we every generate an I where there was none previously?
     if not (newexpr.has(I) and not expr.has(I)):
         expr = newexpr
