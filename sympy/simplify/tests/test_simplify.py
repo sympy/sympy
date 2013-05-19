@@ -1793,16 +1793,13 @@ def test_exptrigsimp():
     ok = [y*tanh(1), 1/(y*tanh(1)), I*y*tan(1), -I/(y*tan(1)),
         y*tanh(x), 1/(y*tanh(x)), I*y*tan(x), -I/(y*tan(x)),
         y*tanh(1 + I), 1/(y*tanh(1 + I))]
-    from sympy.utilities.randtest import test_numerically
     for a in (1, I, x, I*x, 1 + I):
         w = exp(a)
         eq = y*(w - 1/w)/(w + 1/w)
         s = simplify(eq)
         assert s == exptrigsimp(eq)
-        assert test_numerically(eq, s)
         res.append(s)
         sinv = simplify(1/eq)
         assert sinv == exptrigsimp(1/eq)
-        assert test_numerically(1/eq, sinv)
         res.append(sinv)
     assert res == ok
