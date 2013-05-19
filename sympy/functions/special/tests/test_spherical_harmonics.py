@@ -1,4 +1,4 @@
-from sympy import Ylm, Zlm, Symbol, sqrt, pi, sin, cos, cot, exp, I, S, diff, conjugate
+from sympy import Symbol, sqrt, pi, sin, cos, cot, exp, I, S, diff, conjugate
 from sympy.functions.special.spherical_harmonics import Pl, Plm, Plmcos, Ynm, Znm, Ynm_c
 from sympy.utilities.pytest import XFAIL
 

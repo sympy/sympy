@@ -168,7 +168,7 @@ def test_Singletons():
 from sympy.functions import (Piecewise, lowergamma, acosh,
         chebyshevu, chebyshevt, ln, chebyshevt_root, binomial, legendre,
         Heaviside, factorial, bernoulli, coth, tanh, assoc_legendre, sign,
-        arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ylm,
+        arg, asin, DiracDelta, re, rf, Abs, uppergamma, binomial, sinh, Ynm,
         cos, cot, acos, acot, gamma, bell, hermite, harmonic,
         LambertW, zeta, log, factorial, asinh, acoth, Zlm,
         cosh, dirichlet_eta, Eijk, loggamma, erf, ceiling, im, fibonacci,
