@@ -265,7 +265,7 @@ Let's look at some examples
     >>> expr.args
     (3, x, y**2)
 
-From this, we can see that ``expr == Mul(2, y**2, x)``.  In fact, we can see
+From this, we can see that ``expr == Mul(3, y**2, x)``.  In fact, we can see
 that we can completely reconstruct ``expr`` from its ``func`` and its
 ``args``.  This leads us to a very important invariant that every well-formed
 SymPy expression must hold:
@@ -285,7 +285,7 @@ Let's check this invariant for our expression.
     >>> expr == expr.func(*expr.args)
     True
 
-Note that although we entered ``2*y**2*x``, the ``args`` are ``(2, x, y**2)``.
+Note that although we entered ``3*y**2*x``, the ``args`` are ``(3, x, y**2)``.
 In a ``Mul``, the Rational coefficient will come first in the ``args``, but
 other than that, the order of everything else follows no special pattern.  To
 be sure, though, there is an order.
@@ -298,7 +298,7 @@ Mul's ``args`` are sorted, so that the same ``Mul`` will have the same
 ``args``.  But the sorting is based on some criteria designed to make the
 sorting unique and efficient that has no mathematical significance.
 
-Recall that our ``expr`` should be ``Mul(2, x, Pow(y, 2))``.  What if we want
+Recall that our ``expr`` should be ``Mul(3, x, Pow(y, 2))``.  What if we want
 to get at the ``args`` of ``Pow(y, 2)``.  Notice that the ``y**2`` is in the
 third slot of ``expr.args``, i.e., ``expr.args[2]``.
 
