@@ -3728,7 +3728,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             expr = signsimp(-n/(-d))
 
     if expr.has(C.TrigonometricFunction, C.HyperbolicFunction, C.ExpBase):
-        expr = exptrigsimp(expr)
+        expr = exptrigsimp(expr, cancel=False)
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
@@ -4137,7 +4137,7 @@ def besselsimp(expr):
 
     return expr
 
-def exptrigsimp(expr):
+def exptrigsimp(expr, cancel=True):
     """
     Simplifies exponential / trigonometric / hyperbolic functions
 
@@ -4153,6 +4153,8 @@ def exptrigsimp(expr):
     >>> exptrigsimp(cosh(z) - sinh(z))
     exp(-z)
     """
+    from sympy.simplify.fu import hyper_as_trig, TR2i
+
     def exp_trig(e):
         # select the better of e, and e rewritten in terms of exp or trig
         # functions
@@ -4162,6 +4164,46 @@ def exptrigsimp(expr):
         choices.append(e.rewrite(cos))
         return min(*choices, **dict(key=count_ops))
     newexpr = bottom_up(expr, exp_trig)
+    if cancel:
+        newexpr = powsimp(factor_terms(
+            expand_power_exp(newexpr).cancel()), deep=True)
+    # exp ratios to tan and tanh
+    ex = newexpr.atoms(exp, S.Exp1)
+    ex = [ei for ei in ex if 1/ei not in ex]
+    for ei in ex:
+        a = ei.args[0]
+        if a.is_Mul or a is S.ImaginaryUnit:
+            c = a.as_coefficient(I)
+            if c:
+                t = S.ImaginaryUnit*tan(c/2)
+                et = (ei - 1)/(ei + 1)
+                newexpr = newexpr.subs(1/et, 1/t)
+                newexpr = newexpr.subs(et, t)
+                continue
+        t = tanh(a/2)
+        et = (ei - 1)/(ei + 1)
+        newexpr = newexpr.subs(1/et, 1/t)
+        newexpr = newexpr.subs(et, t)
+    # sin/cos and sinh/cosh ratios to tan and tanh, respectively
+    s = newexpr.atoms(sin)
+    if s:
+        newexpr = factor_terms(newexpr)
+        for si in s:
+            a = si.args[0]
+            trat = sin(a)/cos(a)
+            t = tan(a)
+            newexpr = newexpr.subs(trat, t)
+            newexpr = newexpr.subs(1/trat, 1/t)
+    sh = newexpr.atoms(sinh)
+    if not s and sh:
+        newexpr = factor_terms(newexpr)
+    for si in sh:
+        a = si.args[0]
+        trat = sinh(a)/cosh(a)
+        t = tanh(a)
+        newexpr = newexpr.subs(trat, t)
+        newexpr = newexpr.subs(1/trat, 1/t)
+    # can we every generate an I where there was none previously?
     if not (newexpr.has(I) and not expr.has(I)):
         expr = newexpr
     return expr
