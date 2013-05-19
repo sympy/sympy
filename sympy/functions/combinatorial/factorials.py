@@ -560,7 +560,7 @@ class binomial(CombinatorialFunction):
             return binomial(*self.args)
 
         k = self.args[1]
-        if k.is_Add and n in k:
+        if k.is_Add and n in k.args:
             k = n - k
 
         if k.is_Integer:
