@@ -1,6 +1,6 @@
 """Sparse rational function fields. """
 
-from operator import add, mul
+from operator import add, mul, lt, le, gt, ge
 
 from sympy.core.expr import Expr
 from sympy.core.symbol import Symbol
@@ -247,6 +247,24 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
     def __nonzero__(f):
         return bool(f.numer)
+
+    def sort_key(self):
+        return (self.denom.sort_key(), self.numer.sort_key())
+
+    def _cmp(f1, f2, op):
+        if isinstance(f2, FracElement): # TODO: check {f1,f2}.field?
+            return op(f1.sort_key(), f2.sort_key())
+        else:
+            return NotImplemented
+
+    def __lt__(f1, f2):
+        return f1._cmp(f2, lt)
+    def __le__(f1, f2):
+        return f1._cmp(f2, le)
+    def __gt__(f1, f2):
+        return f1._cmp(f2, gt)
+    def __ge__(f1, f2):
+        return f1._cmp(f2, ge)
 
     def __pos__(f):
         """Negate all cefficients in ``f``. """

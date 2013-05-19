@@ -567,7 +567,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return (len(self), self.terms())
 
     def _cmp(p1, p2, op):
-        if isinstance(p2, PolyElement):
+        if isinstance(p2, PolyElement): # TODO: check {p1,p2}.ring?
             return op(p1.sort_key(), p2.sort_key())
         else:
             return NotImplemented
