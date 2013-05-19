@@ -1419,20 +1419,25 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             p[expv] = self[expv]
         return p
 
-    def _sorted(self, seq):
-        if self.ring.order is lex:
+    def _sorted(self, seq, order):
+        if order is None:
+            order = self.ring.order
+        else:
+            order = OrderOpt.preprocess(order)
+
+        if order is lex:
             return sorted(seq, key=lambda (monom, _): monom, reverse=True)
         else:
-            return sorted(seq, key=lambda (monom, _): self.ring.order(monom), reverse=True)
+            return sorted(seq, key=lambda (monom, _): order(monom), reverse=True)
 
-    def coeffs(self):
-        return [ coeff for _, coeff in self.terms() ]
+    def coeffs(self, order=None):
+        return [ coeff for _, coeff in self.terms(order) ]
 
-    def monoms(self):
-        return [ monom for monom, _ in self.terms() ]
+    def monoms(self, order=None):
+        return [ monom for monom, _ in self.terms(order) ]
 
-    def terms(self):
-        return self._sorted(self.items())
+    def terms(self, order=None):
+        return self._sorted(self.items(), order)
 
     def itercoeffs(self):
         return self.itervalues()

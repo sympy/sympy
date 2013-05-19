@@ -361,15 +361,51 @@ def test_PolyElement_terms():
     terms = (x**2/3 + y**3/4 + z**4/5).terms()
     assert terms == [((2,0,0), QQ(1,3)), ((0,3,0), QQ(1,4)), ((0,0,4), QQ(1,5))]
 
+    R, x,y = ring("x,y", ZZ, lex)
+    f = x*y**7 + 2*x**2*y**3
+
+    assert f.terms() == f.terms(lex) == f.terms('lex') == [((2, 3), 2), ((1, 7), 1)]
+    assert f.terms(grlex) == f.terms('grlex') == [((1, 7), 1), ((2, 3), 2)]
+
+    R, x,y = ring("x,y", ZZ, grlex)
+    f = x*y**7 + 2*x**2*y**3
+
+    assert f.terms() == f.terms(grlex) == f.terms('grlex') == [((1, 7), 1), ((2, 3), 2)]
+    assert f.terms(lex) == f.terms('lex') == [((2, 3), 2), ((1, 7), 1)]
+
 def test_PolyElement_monoms():
     R, x,y,z = ring("x,y,z", QQ)
     monoms = (x**2/3 + y**3/4 + z**4/5).monoms()
     assert monoms == [(2,0,0), (0,3,0), (0,0,4)]
 
+    R, x,y = ring("x,y", ZZ, lex)
+    f = x*y**7 + 2*x**2*y**3
+
+    assert f.monoms() == f.monoms(lex) == f.monoms('lex') == [(2, 3), (1, 7)]
+    assert f.monoms(grlex) == f.monoms('grlex') == [(1, 7), (2, 3)]
+
+    R, x,y = ring("x,y", ZZ, grlex)
+    f = x*y**7 + 2*x**2*y**3
+
+    assert f.monoms() == f.monoms(grlex) == f.monoms('grlex') == [(1, 7), (2, 3)]
+    assert f.monoms(lex) == f.monoms('lex') == [(2, 3), (1, 7)]
+
 def test_PolyElement_coeffs():
     R, x,y,z = ring("x,y,z", QQ)
     coeffs = (x**2/3 + y**3/4 + z**4/5).coeffs()
     assert coeffs == [QQ(1,3), QQ(1,4), QQ(1,5)]
+
+    R, x,y = ring("x,y", ZZ, lex)
+    f = x*y**7 + 2*x**2*y**3
+
+    assert f.coeffs() == f.coeffs(lex) == f.coeffs('lex') == [2, 1]
+    assert f.coeffs(grlex) == f.coeffs('grlex') == [1, 2]
+
+    R, x,y = ring("x,y", ZZ, grlex)
+    f = x*y**7 + 2*x**2*y**3
+
+    assert f.coeffs() == f.coeffs(grlex) == f.coeffs('grlex') == [1, 2]
+    assert f.coeffs(lex) == f.coeffs('lex') == [2, 1]
 
 def test_PolyElement___add__():
     Rt, t = ring("t", ZZ)
