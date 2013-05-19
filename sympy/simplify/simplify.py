@@ -4141,6 +4141,9 @@ def exptrigsimp(expr):
     """
     Simplifies exponential / trigonometric / hyperbolic functions
 
+    Examples
+    ========
+
     >>> from sympy import exptrigsimp, exp, cosh, sinh
     >>> from sympy.abc import z
 

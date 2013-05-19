@@ -34,7 +34,7 @@ class Mod(Function):
             to be less than q.
             """
 
-            if p == q or p == -q:
+            if p == q or p == -q or p.is_Pow and p.exp.is_Integer and p.base == q:
                 return S.Zero
 
             if p.is_Number and q.is_Number:
