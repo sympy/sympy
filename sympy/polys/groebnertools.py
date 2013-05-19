@@ -424,8 +424,8 @@ def critical_pair(f, g, ring):
 
     # The full information is not needed (now), so only the product
     # with the leading term is considered:
-    fr = lbp_mul_term(lbp(Sign(f), Polyn(f).leading_term, Num(f)), um)
-    gr = lbp_mul_term(lbp(Sign(g), Polyn(g).leading_term, Num(g)), vm)
+    fr = lbp_mul_term(lbp(Sign(f), Polyn(f).leading_term(), Num(f)), um)
+    gr = lbp_mul_term(lbp(Sign(g), Polyn(g).leading_term(), Num(g)), vm)
 
     # return in proper order, such that the S-polynomial is just
     # u_first * f_first - u_second * f_second:

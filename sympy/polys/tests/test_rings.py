@@ -346,15 +346,15 @@ def test_PolyElement_LT():
 
 def test_PolyElement_leading_monom():
     R, x, y = ring("x,y", QQ, lex)
-    assert R(0).leading_monom == 0
-    assert (QQ(1,2)*x).leading_monom == x
-    assert (QQ(1,4)*x*y + QQ(1,2)*x).leading_monom == x*y
+    assert R(0).leading_monom() == 0
+    assert (QQ(1,2)*x).leading_monom() == x
+    assert (QQ(1,4)*x*y + QQ(1,2)*x).leading_monom() == x*y
 
 def test_PolyElement_leading_term():
     R, x, y = ring("x,y", QQ, lex)
-    assert R(0).leading_term == 0
-    assert (QQ(1,2)*x).leading_term == QQ(1,2)*x
-    assert (QQ(1,4)*x*y + QQ(1,2)*x).leading_term == QQ(1,4)*x*y
+    assert R(0).leading_term() == 0
+    assert (QQ(1,2)*x).leading_term() == QQ(1,2)*x
+    assert (QQ(1,4)*x*y + QQ(1,2)*x).leading_term() == QQ(1,4)*x*y
 
 def test_PolyElement_terms():
     R, x,y,z = ring("x,y,z", QQ)
