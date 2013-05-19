@@ -66,7 +66,7 @@ def check_cwd():
 
     logging.debug("check_cwd()")
 
-    dirs = ['doc', 'bin', 'build', 'sympy']
+    dirs = ['doc', 'bin', 'sympy']
     try:
         for d in dirs:
             os.chdir(d)
