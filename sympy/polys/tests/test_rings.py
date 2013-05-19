@@ -119,7 +119,8 @@ def test_sring():
     assert sring(x + 2*y + 3*z) == (R, R.x + 2*R.y + 3*R.z)
 
     R = PolyRing("x,y,z", QQ, lex)
-    assert sring(x + y/2 + z/3) == (R, R.x + R.y/2 + R.z/3)
+    assert sring(x + 2*y + z/3) == (R, R.x + 2*R.y + R.z/3)
+    assert sring([x, 2*y, z/3]) == (R, R.x, 2*R.y, R.z/3)
 
     Rt = PolyRing("t", ZZ, lex)
     R = PolyRing("x,y,z", Rt, lex)

@@ -147,7 +147,7 @@ def sring(exprs, *symbols, **options):
         # NOTE: this is inefficient because construct_domain() automatically
         # performs conversion to the target domain. It shouldn't do this.
         coeffs = sum([ rep.values() for rep in reps ], [])
-        opt.domain, _ = construct_domain(rep.values(), opt=opt)
+        opt.domain, _ = construct_domain(coeffs, opt=opt)
 
     _ring = PolyRing(opt.gens, opt.domain, opt.order)
     return (_ring,) + tuple(map(_ring.from_dict, reps))
