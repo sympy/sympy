@@ -74,6 +74,8 @@ modify it in-place.  For example
    1
    >>> expr
    cos(x)
+   >>> x
+   x
 
 .. sidebar:: Quick Tip
 
