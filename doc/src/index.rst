@@ -17,7 +17,7 @@ Contents:
    :maxdepth: 2
 
    install.rst
-   tutorial/tutorial.en.rst
+   tutorial/index.rst
    gotchas.rst
    guide.rst
    modules/index.rst
