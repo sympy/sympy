@@ -5,6 +5,7 @@ The most important function here is srepr that returns a string so that the
 relation eval(srepr(expr))=expr holds in an appropriate environment.
 """
 
+from sympy.core.function import AppliedUndef
 from printer import Printer
 import sympy.mpmath.libmp as mlib
 from sympy.mpmath.libmp import prec_to_dps, repr_dps
@@ -52,7 +53,10 @@ class ReprPrinter(Printer):
         return r
 
     def _print_FunctionClass(self, expr):
-        return 'Function(%r)' % (expr.__name__)
+        if issubclass(expr, AppliedUndef):
+            return 'Function(%r)' % (expr.__name__)
+        else:
+            return expr.__name__
 
     def _print_Half(self, expr):
         return 'Rational(1, 2)'

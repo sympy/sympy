@@ -14,6 +14,7 @@ Goals:
 from __future__ import with_statement
 import os
 import sys
+import platform
 import inspect
 import traceback
 import pdb
@@ -23,7 +24,6 @@ from fnmatch import fnmatch
 from timeit import default_timer as clock
 import doctest as pdoctest  # avoid clashing with our doctest() function
 from doctest import DocTestFinder, DocTestRunner
-import re as pre
 import random
 import subprocess
 import signal
@@ -32,6 +32,7 @@ import stat
 from sympy.core.cache import clear_cache
 from sympy.utilities.misc import find_executable
 from sympy.external import import_module
+from sympy.utilities.exceptions import SymPyDeprecationWarning
 
 # Use sys.stdout encoding for ouput.
 # This was only added to Python's doctest in Python 2.6, so we must duplicate
@@ -406,7 +407,7 @@ def test(*paths, **kwargs):
     Python using
 
     >>> import os
-    >>> os.environ['PYTHONHASHSEED'] = 42 # doctest: +SKIP
+    >>> os.environ['PYTHONHASHSEED'] = '42' # doctest: +SKIP
 
     Or from the command line using
 
@@ -457,6 +458,10 @@ def _test(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Show deprecation warnings
+    import warnings
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
     test_files = t.get_test_files('sympy')
 
@@ -602,6 +607,10 @@ def _doctest(*paths, **kwargs):
     import sympy.external
     sympy.external.importtools.WARN_OLD_VERSION = False
     sympy.external.importtools.WARN_NOT_INSTALLED = False
+
+    # Show deprecation warnings
+    import warnings
+    warnings.simplefilter("error", SymPyDeprecationWarning)
 
     r = PyTestReporter(verbose)
     t = SymPyDocTests(r, normal)
@@ -1737,8 +1746,14 @@ class PyTestReporter(Reporter):
         executable = sys.executable
         v = tuple(sys.version_info)
         python_version = "%s.%s.%s-%s-%s" % v
-        self.write("executable:         %s  (%s)\n" %
-            (executable, python_version))
+        if v[:2] == (2, 5):   # CPython2.5 doesn't have python_implementation
+            implementation = "CPython"
+        else:
+            implementation = platform.python_implementation()
+        if implementation == 'PyPy':
+            implementation += " %s.%s.%s-%s-%s" % sys.pypy_version_info
+        self.write("executable:         %s  (%s) [%s]\n" %
+            (executable, python_version, implementation))
         from .misc import ARCH
         self.write("architecture:       %s\n" % ARCH)
         from sympy.core.cache import USE_CACHE

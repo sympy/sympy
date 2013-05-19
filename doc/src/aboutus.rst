@@ -241,7 +241,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Matthew Hoff: Addition to quantum module
 #. Madeleine Ball: Bug fix
 #. Mary Clark: Improvements to the group theory module
-#. Rishabh Dixit: Fix in logic module
+#. Rishabh Dixit: Bug fixes
 #. Manoj Kumar: Bug fix
 #. Akshit Agarwal: improvements to range handling in symbols
 #. CJ Carey: Fix for limits of factorials
@@ -258,7 +258,6 @@ want to be mentioned here, so see our repository history for a full list).
 #. Demian Wassermann: fix to ccode printer for Piecewise
 #. Khagesh Patel: Addition to matrix expressions
 #. Stephen Loo: Update minimum gmpy2 version
-#. Rishabh Dixit: Improvements to assumptions
 #. Katja Sophie Hotz: use expansion in minpoly
 #. Varun Joshi: Addition to functions
 #. Chetna Gupta: Improvements to the Risch integration algorithm

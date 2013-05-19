@@ -87,6 +87,8 @@ class AskIntegerHandler(CommonHandler):
     def MatrixElement(expr, assumptions):
         return ask(Q.integer_elements(expr.args[0]), assumptions)
 
+    Determinant = Trace = MatrixElement
+
 
 class AskRationalHandler(CommonHandler):
     """
@@ -257,6 +259,8 @@ class AskRealHandler(CommonHandler):
     def MatrixElement(expr, assumptions):
         return ask(Q.real_elements(expr.args[0]), assumptions)
 
+    Determinant = Trace = MatrixElement
+
 
 class AskExtendedRealHandler(AskRealHandler):
     """
@@ -353,6 +357,8 @@ class AskComplexHandler(CommonHandler):
     @staticmethod
     def MatrixElement(expr, assumptions):
         return ask(Q.complex_elements(expr.args[0]), assumptions)
+
+    Determinant = Trace = MatrixElement
 
 
 class AskImaginaryHandler(CommonHandler):

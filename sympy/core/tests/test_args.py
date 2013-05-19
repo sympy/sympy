@@ -1486,6 +1486,16 @@ def test_sympy__functions__special__polynomials__assoc_laguerre():
     assert _test_args(assoc_laguerre(x, 0, y))
 
 
+def test_sympy__functions__special__spherical_harmonics__Ynm():
+    from sympy.functions.special.spherical_harmonics import Ynm
+    assert _test_args(Ynm(1, 1, x, y))
+
+
+def test_sympy__functions__special__spherical_harmonics__Znm():
+    from sympy.functions.special.spherical_harmonics import Znm
+    assert _test_args(Znm(1, 1, x, y))
+
+
 def test_sympy__functions__special__tensor_functions__LeviCivita():
     from sympy.functions.special.tensor_functions import LeviCivita
     assert _test_args(LeviCivita(x, y, 2))

@@ -364,7 +364,8 @@ def init_session(ipython=None, pretty_print=True, order=None,
     ipython: boolean or None
         If True, printing will initialize for an IPython console;
         if False, printing will initialize for a normal console;
-        The default is None, which does what False does.
+        The default is None, which automatically determines whether we are in
+        an ipython instance or not.
     argv: list of arguments for IPython
         See sympy.bin.isympy for options that can be used to initialize IPython.
 
@@ -411,23 +412,14 @@ def init_session(ipython=None, pretty_print=True, order=None,
 
     in_ipython = False
 
-    if ipython is False:
-        ip = init_python_session()
-        mainloop = ip.interact
-    else:
+    if ipython is not False:
         try:
             import IPython
         except ImportError:
-            if ipython is not True:
-                if not quiet:
-                    print no_ipython
-                ip = init_python_session()
-                mainloop = ip.interact
-            else:
+            if ipython is True:
                 raise RuntimeError("IPython is not available on this system")
+            ip = None
         else:
-            ipython = True
-
             if IPython.__version__ >= '0.11':
                 try:
                     ip = get_ipython()
@@ -437,31 +429,35 @@ def init_session(ipython=None, pretty_print=True, order=None,
                 ip = IPython.ipapi.get()
                 if ip:
                     ip = ip.IP
+        in_ipython = bool(ip)
+        if ipython is None:
+            ipython = in_ipython
 
-            if ip is not None:
-                in_ipython = True
-            else:
-                ip = init_ipython_session(argv=argv,
-                    auto_symbols=auto_symbols, auto_int_to_Integer=auto_int_to_Integer)
+    if ipython is False:
+        ip = init_python_session()
+        mainloop = ip.interact
+    else:
+        if ip is None:
+            ip = init_ipython_session(argv=argv, auto_symbols=auto_symbols,
+                auto_int_to_Integer=auto_int_to_Integer)
 
-            if IPython.__version__ >= '0.11':
-                # runsource is gone, use run_cell instead, which doesn't
-                # take a symbol arg.  The second arg is `store_history`,
-                # and False means don't add the line to IPython's history.
-                ip.runsource = lambda src, symbol='exec': ip.run_cell(
-                    src, False)
+        if IPython.__version__ >= '0.11':
+            # runsource is gone, use run_cell instead, which doesn't
+            # take a symbol arg.  The second arg is `store_history`,
+            # and False means don't add the line to IPython's history.
+            ip.runsource = lambda src, symbol='exec': ip.run_cell(src, False)
 
-                #Enable interactive plotting using pylab.
-                try:
-                    ip.enable_pylab(import_all=False)
-                except Exception:
-                    # Causes an import error if matplotlib is not installed.
-                    # Causes other errors (depending on the backend) if there
-                    # is no display, or if there is some problem in the
-                    # backend, so we have a bare "except Exception" here
-                    pass
-            if not in_ipython:
-                mainloop = ip.mainloop
+            #Enable interactive plotting using pylab.
+            try:
+                ip.enable_pylab(import_all=False)
+            except Exception:
+                # Causes an import error if matplotlib is not installed.
+                # Causes other errors (depending on the backend) if there
+                # is no display, or if there is some problem in the
+                # backend, so we have a bare "except Exception" here
+                pass
+        if not in_ipython:
+            mainloop = ip.mainloop
 
     if auto_symbols and (not ipython or IPython.__version__ < '0.11'):
         raise RuntimeError("automatic construction of symbols is possible only in IPython 0.11 or above")

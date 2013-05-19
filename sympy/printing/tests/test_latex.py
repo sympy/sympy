@@ -6,7 +6,7 @@ from sympy import (
     Lambda, LaplaceTransform, Limit, Matrix, Max, MellinTransform, Min,
     Order, Piecewise, Poly, ring, field, ZZ, Product, Range, Rational,
     RisingFactorial, RootOf, RootSum, S, Shi, Si, SineTransform, Subs,
-    Sum, Symbol, TransformationSet, Tuple, Union, arg, asin,
+    Sum, Symbol, TransformationSet, Tuple, Union, Ynm, Znm, arg, asin,
     assoc_laguerre, assoc_legendre, binomial, catalan, ceiling,
     chebyshevt, chebyshevu, conjugate, cot, coth, diff, dirichlet_eta,
     exp, expint, factorial, factorial2, floor, gamma, gegenbauer, hermite,
@@ -24,7 +24,7 @@ from sympy.logic.boolalg import And, Or
 from sympy.core.trace import Tr
 
 x, y, z, t, a, b = symbols('x y z t a b')
-k, n = symbols('k n', integer=True)
+k, m, n = symbols('k m n', integer=True)
 
 
 def test_printmethod():
@@ -246,6 +246,13 @@ def test_latex_functions():
     assert latex(assoc_laguerre(n, a, x)**2) == r'\left(L_{n}^{\left(a\right)}\left(x\right)\right)^{2}'
     assert latex(hermite(n, x)) == r'H_{n}\left(x\right)'
     assert latex(hermite(n, x)**2) == r'\left(H_{n}\left(x\right)\right)^{2}'
+
+    theta = Symbol("theta", real=True)
+    phi = Symbol("phi", real=True)
+    assert latex(Ynm(n,m,theta,phi)) == r'Y_{n}^{m}\left(\theta,\phi\right)'
+    assert latex(Ynm(n, m, theta, phi)**3) == r'\left(Y_{n}^{m}\left(\theta,\phi\right)\right)^{3}'
+    assert latex(Znm(n,m,theta,phi)) == r'Z_{n}^{m}\left(\theta,\phi\right)'
+    assert latex(Znm(n, m, theta, phi)**3) == r'\left(Z_{n}^{m}\left(\theta,\phi\right)\right)^{3}'
 
     # Test latex printing of function names with "_"
     assert latex(
