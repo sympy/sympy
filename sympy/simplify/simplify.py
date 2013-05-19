@@ -4193,7 +4193,7 @@ def exptrigsimp(expr, simplify=True):
         newexpr = f(TR2i(e))
     if e.has(C.TrigonometricFunction):
         newexpr = TR2i(e)
-    # can we every generate an I where there was none previously?
+    # can we ever generate an I where there was none previously?
     if not (newexpr.has(I) and not expr.has(I)):
         expr = newexpr
     return expr
