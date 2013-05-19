@@ -646,29 +646,34 @@ Functions
 
 ::
 
-    >>> from sympy import Ylm
+    >>> from sympy import Ynm
     >>> from sympy.abc import theta, phi
 
-    >>> Ylm(1, 0, theta, phi)
+    >>> expand_func(Ynm(1, 0, theta, phi))
       ___
     \/ 3 *cos(theta)
     ----------------
             ____
         2*\/ pi
 
-    >>> Ylm(1, 1, theta, phi)
+    >>> simplify(expand_func(Ynm(1, 1, theta, phi)))
        ___  I*phi
     -\/ 6 *e     *sin(theta)
     ------------------------
                 ____
             4*\/ pi
 
-    >>> Ylm(2, 1, theta, phi)
+    >>> simplify(expand_func(Ynm(2, 1, theta, phi)))
        ____  I*phi
-    -\/ 30 *e     *sin(theta)*cos(theta)
-    ------------------------------------
+    -\/ 30 *e     *sin(2*theta)
+    ---------------------------
                       ____
-                  4*\/ pi
+                  8*\/ pi
+
+    >>> from sympy.abc import n, m
+
+    >>> Ynm(n, m, theta, phi)
+    Ynm(n, m, theta, phi)
 
 **factorials and gamma function**
 
