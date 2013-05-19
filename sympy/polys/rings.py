@@ -602,9 +602,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         ngens = ring.ngens
         zm = ring.zero_monom
         sexpvs = []
-        expvs = self.monoms()
-        for expv in expvs:
-            coeff = self[expv]
+        for expv, coeff in self.terms():
             positive = ring.domain.is_positive(coeff)
             sign = " + " if positive else " - "
             sexpvs.append(sign)
@@ -1487,7 +1485,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         p = self.ring.zero
         expv = self.leading_expv()
         if expv:
-            p[expv] = self.ring.one
+            p[expv] = self.ring.domain.one
         return p
 
     @property
