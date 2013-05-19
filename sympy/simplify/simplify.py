@@ -3728,7 +3728,7 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
             expr = signsimp(-n/(-d))
 
     if expr.has(C.TrigonometricFunction, C.HyperbolicFunction, C.ExpBase):
-        expr = exptrigsimp(expr, cancel=False)
+        expr = exptrigsimp(expr, simplify=False)
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
@@ -4137,9 +4137,12 @@ def besselsimp(expr):
 
     return expr
 
-def exptrigsimp(expr, cancel=True):
+def exptrigsimp(expr, simplify=True):
     """
-    Simplifies exponential / trigonometric / hyperbolic functions
+    Simplifies exponential / trigonometric / hyperbolic functions.
+    When ``simplify`` is True (default) some simplification will be done
+    that would otherwise be done in ``simplify`` to get precondition the
+    expression so the transformations will be applied.
 
     Examples
     ========
