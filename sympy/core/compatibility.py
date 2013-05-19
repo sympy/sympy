@@ -4,7 +4,11 @@ we support. Also some functions that are needed SymPy-wide and are located
 here for easy import.
 """
 
+from __future__ import with_statement
+
 from collections import defaultdict
+from sympy.external import import_module
+
 
 # These are in here because telling if something is an iterable just by calling
 # hasattr(obj, "__iter__") behaves differently in Python 2 and Python 3.  In
@@ -356,6 +360,110 @@ def set_union(*sets):
         rv |= s
     return rv
 
+
+
+try:
+    from collections import namedtuple
+except ImportError:
+    # code from http://code.activestate.com/recipes/500261-named-tuples/
+    # PSF license
+    # code is Copyright 2007-2013 Raymond Hettinger
+    from operator import itemgetter as _itemgetter
+    from keyword import iskeyword as _iskeyword
+    import sys as _sys
+
+    # For some reason, doctest will test namedtuple's docstring if we simply
+    # have a def namedtuple() here
+    def _namedtuple(typename, field_names, verbose=False, rename=False):
+        if isinstance(field_names, basestring):
+            field_names = field_names.replace(',', ' ').split()
+        field_names = tuple(map(str, field_names))
+        if rename:
+            names = list(field_names)
+            seen = set()
+            for i, name in enumerate(names):
+                if (not min(c.isalnum() or c=='_' for c in name) or _iskeyword(name)
+                    or not name or name[0].isdigit() or name.startswith('_')
+                    or name in seen):
+                        names[i] = '_%d' % i
+                seen.add(name)
+            field_names = tuple(names)
+        for name in (typename,) + field_names:
+            if not min(c.isalnum() or c=='_' for c in name):
+                raise ValueError('Type names and field names can only contain'
+                                 ' alphanumeric characters and underscores: %r' % name)
+            if _iskeyword(name):
+                raise ValueError('Type names and field names cannot be a'
+                                 ' keyword: %r' % name)
+            if name[0].isdigit():
+                raise ValueError('Type names and field names cannot start'
+                                 ' with a number: %r' % name)
+        seen_names = set()
+        for name in field_names:
+            if name.startswith('_') and not rename:
+                raise ValueError('Field names cannot start with an'
+                                 ' underscore: %r' % name)
+            if name in seen_names:
+                raise ValueError('Encountered duplicate field name: %r' % name)
+            seen_names.add(name)
+
+        # Create and fill-in the class template
+        numfields = len(field_names)
+        argtxt = repr(field_names).replace("'", "")[1:-1]
+        reprtxt = ', '.join('%s=%%r' % name for name in field_names)
+        template = '''class %(typename)s(tuple):
+    '%(typename)s(%(argtxt)s)' \n
+    __slots__ = () \n
+    _fields = %(field_names)r \n
+    def __new__(_cls, %(argtxt)s):
+        return _tuple.__new__(_cls, (%(argtxt)s)) \n
+    @classmethod
+    def _make(cls, iterable, new=tuple.__new__, len=len):
+        'Make a new %(typename)s object from a sequence or iterable'
+        result = new(cls, iterable)
+        if len(result) != %(numfields)d:
+            raise TypeError('Expected %(numfields)d arguments, got %%d' %% len(result))
+        return result \n
+    def __repr__(self):
+        return '%(typename)s(%(reprtxt)s)' %% self \n
+    def _asdict(self):
+        'Return a new dict which maps field names to their values'
+        return dict(zip(self._fields, self)) \n
+    def _replace(_self, **kwds):
+        'Return a new %(typename)s object replacing specified fields with new values'
+        result = _self._make(map(kwds.pop, %(field_names)r, _self))
+        if kwds:
+            raise ValueError('Got unexpected field names: %%r' %% kwds.keys())
+        return result \n
+    def __getnewargs__(self):
+        return tuple(self) \n\n''' % locals()
+        for i, name in enumerate(field_names):
+            template += '    %s = _property(_itemgetter(%d))\n' % (name, i)
+        if verbose:
+            print template
+
+        # Execute the template string in a temporary namespace
+        namespace = dict(_itemgetter=_itemgetter, __name__='namedtuple_%s' % typename,
+                         _property=property, _tuple=tuple)
+        try:
+            exec template in namespace
+        except SyntaxError, e:
+            raise SyntaxError(e.message + ':\n' + template)
+        result = namespace[typename]
+
+        # For pickling to work, the __module__ variable needs to be set to the frame
+        # where the named tuple is created.  Bypass this step in enviroments where
+        # sys._getframe is not defined (Jython for example) or sys._getframe is not
+        # defined for arguments greater than 0 (IronPython).
+        try:
+            result.__module__ = _sys._getframe(1).f_globals.get('__name__', '__main__')
+        except (AttributeError, ValueError):
+            pass
+
+        return result
+
+    namedtuple = _namedtuple
+
 try:
     bin = bin
 except NameError:  # Python 2.5
@@ -486,7 +594,7 @@ def default_sort_key(item, order=None):
     Examples
     ========
 
-    >>> from sympy import Basic, S, I, default_sort_key
+    >>> from sympy import S, I, default_sort_key
     >>> from sympy.core.function import UndefinedFunction
     >>> from sympy.abc import x
 
@@ -650,7 +758,7 @@ def ordered(seq, keys=None, default=True, warn=False):
     Examples
     ========
 
-    >>> from sympy.utilities.iterables import ordered, default_sort_key
+    >>> from sympy.utilities.iterables import ordered
     >>> from sympy import count_ops
     >>> from sympy.abc import x, y
 
@@ -744,3 +852,81 @@ try:
 except NameError:
     def next(x):
         return x.next()
+
+# If HAS_GMPY is 0, no supported version of gmpy is available. Otherwise,
+# HAS_GMPY contains the major version number of gmpy; i.e. 1 for gmpy, and
+# 2 for gmpy2.
+
+# Versions of gmpy prior to 1.03 do not work correctly with int(largempz)
+# For example, int(gmpy.mpz(2**256)) would raise OverflowError.
+# See issue 1881.
+
+# Minimum version of gmpy changed to 1.13 to allow a single code base to also
+# work with gmpy2.
+
+def _getenv(key, default=None):
+    from os import getenv
+    return getenv(key, default)
+
+GROUND_TYPES = _getenv('SYMPY_GROUND_TYPES', 'auto').lower()
+
+HAS_GMPY = 0
+
+if GROUND_TYPES != 'python':
+
+    # Don't try to import gmpy2 if ground types is set to gmpy1. This is
+    # primarily intended for testing.
+
+    if GROUND_TYPES != 'gmpy1':
+        gmpy = import_module('gmpy2', min_module_version='2.0.0',
+            module_version_attr='version', module_version_attr_call_args=())
+        if gmpy:
+            HAS_GMPY = 2
+    else:
+        GROUND_TYPES = 'gmpy'
+
+    if not HAS_GMPY:
+        gmpy = import_module('gmpy', min_module_version='1.13',
+            module_version_attr='version', module_version_attr_call_args=())
+        if gmpy:
+            HAS_GMPY = 1
+
+if GROUND_TYPES == 'auto':
+    if HAS_GMPY:
+        GROUND_TYPES = 'gmpy'
+    else:
+        GROUND_TYPES = 'python'
+
+if GROUND_TYPES == 'gmpy' and not HAS_GMPY:
+    from warnings import warn
+    warn("gmpy library is not installed, switching to 'python' ground types")
+    GROUND_TYPES = 'python'
+
+# SYMPY_INTS is a tuple containing the base types for valid integer types.
+
+import sys
+
+if sys.version_info[0] == 2:
+    SYMPY_INTS = (int, long)
+else:
+    SYMPY_INTS = (int,)
+
+if GROUND_TYPES == 'gmpy':
+    SYMPY_INTS += (type(gmpy.mpz(0)),)
+
+# check_output() is new in python 2.7
+import os
+from subprocess import CalledProcessError
+try:
+    from subprocess import check_output
+except ImportError:
+    from subprocess import check_call
+    def check_output(*args, **kwargs):
+        with open(os.devnull, 'w') as fh:
+            kwargs['stdout'] = fh
+            try:
+                return check_call(*args, **kwargs)
+            except CalledProcessError, e:
+                e.output = ("program output is not available for "
+                            "python 2.5.x and 2.6.x")
+                raise e

@@ -2,7 +2,7 @@ from sympy import (
     adjoint, And, Basic, conjugate, diff, expand, Eq, Function, I, im,
     Integral, integrate, Interval, lambdify, log, Max, Min, oo, Or, pi,
     Piecewise, piecewise_fold, Rational, re, solve, symbols, transpose,
-    cos, exp,
+    cos, exp, Abs, Not
 )
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -26,6 +26,7 @@ def test_piecewise():
         Piecewise((x, Or(x < 1, x < 2)), (0, True))
     assert Piecewise((x, x < 1), (x, x < 2), (x, True)) == x
     assert Piecewise((x, True)) == x
+    assert Piecewise((1, Eq(x + 1/x, (x**2 + 1)/x)), (2, True)) == 1
     raises(TypeError, lambda: Piecewise(x))
     raises(TypeError, lambda: Piecewise((x, x**2)))
 
@@ -39,9 +40,14 @@ def test_piecewise():
 
     # More subs tests
     p2 = Piecewise((1, x < pi), (-1, x < 2*pi), (0, x > 2*pi))
+    p3 = Piecewise((1, Eq(x, 0)), (1/x, True))
+    p4 = Piecewise((1, Eq(x, 0)), (2, 1/x>2))
     assert p2.subs(x, 2) == 1
     assert p2.subs(x, 4) == -1
     assert p2.subs(x, 10) == 0
+    assert p3.subs(x, 0.0) == 1
+    assert p4.subs(x, 0.0) == 1
+
 
     f, g, h = symbols('f,g,h', cls=Function)
     pf = Piecewise((f(x), x < -1), (f(x) + h(x) + 2, x <= 1))
@@ -51,13 +57,13 @@ def test_piecewise():
     assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 0) == 1
     assert Piecewise((1, Eq(x, 0)), (0, True)).subs(x, 1) == 0
     assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, y) == 1
-    assert Piecewise((1, Eq(x, y)), (0, True)).subs(x, -y) == \
-        Piecewise((1, Eq(y, 0)), (0, True))
     assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, z) == 1
-    assert Piecewise((1, Eq(x, z)), (0, True)).subs(x, -z) == 0
     assert Piecewise((1, Eq(exp(x), cos(z))), (0, True)).subs(x, z) == \
         Piecewise((1, Eq(exp(z), cos(z))), (0, True))
     assert Piecewise((1, Eq(x, y*(y + 1))), (0, True)).subs(x, y**2 + y) == 1
+
+    p5 = Piecewise( (0, Eq(cos(x) + y, 0)), (1, True))
+    assert p5.subs(y, 0) == Piecewise( (0, Eq(cos(x), 0)), (1, True))
 
     # Test evalf
     assert p.evalf() == p
@@ -235,6 +241,12 @@ def test_piecewise_integrate_symbolic_conditions():
     assert integrate(p5, (x, -oo, y)) == 0.5*y + 0.5*Min(b, y) - Min(a, b, y)
 
 
+def test_piecewise_integrate_independent_conditions():
+    p = Piecewise((0, Eq(y, 0)), (x*y, True))
+    assert integrate(p, (x, 1, 3)) == \
+        Piecewise((0, Eq(y, 0)), (4*y, True))
+
+
 def test_piecewise_solve():
     abs2 = Piecewise((-x, x <= 0), (x, x > 0))
     f = abs2.subs(x, x - 2)
@@ -257,6 +269,10 @@ def test_piecewise_solve():
     assert solve(g, x) == [5]
 
     g = Piecewise(((x - 5)**5, x >= 2), (f, True), (10, False))
+    assert solve(g, x) == [5]
+
+    g = Piecewise(((x - 5)**5, x >= 2),
+                  (-x + 2, x - 2 <= 0), (x - 2, x - 2 > 0))
     assert solve(g, x) == [5]
 
 # See issue 1253 (enhance the solver to handle inequalities).
@@ -284,6 +300,35 @@ def test_piecewise_fold():
     p = 4*p1 + 2*p2
     assert integrate(
         piecewise_fold(p), (x, -oo, oo)) == integrate(2*x + 2, (x, 0, 1))
+
+
+def test_piecewise_fold_piecewise_in_cond():
+    p1 = Piecewise((cos(x), x < 0), (0, True))
+    p2 = Piecewise((0, Eq(p1, 0)), (p1 / Abs(p1), True))
+    p3 = piecewise_fold(p2)
+    assert(p2.subs(x, -pi/2) == 0.0)
+    assert(p2.subs(x, 1) == 0.0)
+    assert(p2.subs(x, -pi/4) == 1.0)
+    p4 = Piecewise((0, Eq(p1, 0)), (1,True))
+    assert(piecewise_fold(p4) == Piecewise(
+        (0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))), (1, True)))
+
+    r1 = 1 < Piecewise((1, x < 1), (3, True))
+    assert(piecewise_fold(r1) == Not(x < 1))
+
+    p5 = Piecewise((1, x < 0), (3, True))
+    p6 = Piecewise((1, x < 1), (3, True))
+    p7 = piecewise_fold(Piecewise((1, p5 < p6), (0, True)))
+    assert(Piecewise((1, And(Not(x < 1), x < 0)), (0, True)))
+
+
+@XFAIL
+def test_piecewise_fold_piecewise_in_cond_2():
+    p1 = Piecewise((cos(x), x < 0), (0, True))
+    p2 = Piecewise((0, Eq(p1, 0)), (1 / p1, True))
+    p3 = Piecewise((0, Or(And(Eq(cos(x), 0), x < 0), Not(x < 0))),
+        (1 / cos(x), True))
+    assert(piecewise_fold(p2) == p3)
 
 
 def test_piecewise_fold_expand():

@@ -4,6 +4,7 @@ from sympy.functions.elementary.miscellaneous import sqrt
 from sympy.functions.elementary.piecewise import Piecewise
 from sympy.core import Add, Mul
 from sympy.core.relational import Eq
+from sympy.functions.elementary.trigonometric import atan, atan2
 
 ###############################################################################
 ######################### REAL and IMAGINARY PARTS ############################
@@ -229,9 +230,33 @@ class sign(Function):
 
     @classmethod
     def eval(cls, arg):
+        # handle what we can
+        if arg.is_Mul:
+            c, args = arg.as_coeff_mul()
+            unk = []
+            is_imag = c.is_imaginary
+            is_neg = c.is_negative
+            for a in args:
+                if a.is_negative:
+                    is_neg = not is_neg
+                elif a.is_positive:
+                    pass
+                else:
+                    ai = im(a)
+                    if a.is_imaginary and ai.is_comparable:  # i.e. a = I*real
+                        is_imag = not is_imag
+                        if ai.is_negative:
+                            is_neg = not is_neg
+                    else:
+                        unk.append(a)
+            if c is S.One and len(unk) == len(args):
+                return None
+            return (S.NegativeOne if is_neg else S.One) \
+                * (S.ImaginaryUnit if is_imag else S.One) \
+                * cls(arg._new_rawargs(*unk))
         if arg is S.NaN:
             return S.NaN
-        if arg is S.Zero:
+        if arg.is_zero:  # it may be an Expr that is zero
             return S.Zero
         if arg.is_positive:
             return S.One
@@ -246,25 +271,6 @@ class sign(Function):
                 return S.ImaginaryUnit
             if arg2.is_negative:
                 return -S.ImaginaryUnit
-        if arg.is_Mul:
-            c, args = arg.as_coeff_mul()
-            unk = []
-            is_imag = c.is_imaginary
-            is_neg = c.is_negative
-            for ai in args:
-                ai2 = -S.ImaginaryUnit * ai
-                if ai.is_negative:
-                    is_neg = not is_neg
-                elif ai.is_imaginary and ai2.is_positive:
-                    is_imag = not is_imag
-                elif ai.is_negative is None or \
-                        (ai.is_imaginary is None or ai2.is_positive is None):
-                    unk.append(ai)
-            if c is S.One and len(unk) == len(args):
-                return None
-            return (S.NegativeOne if is_neg else S.One) \
-                * (S.ImaginaryUnit if is_imag else S.One) \
-                * cls(arg._new_rawargs(*unk))
 
     def _eval_Abs(self):
         if self.args[0].is_nonzero:
@@ -304,6 +310,10 @@ class sign(Function):
     def _sage_(self):
         import sage.all as sage
         return sage.sgn(self.args[0]._sage_())
+
+    def _eval_rewrite_as_Piecewise(self, arg):
+        if arg.is_real:
+            return Piecewise((1, arg > 0), (-1, arg < 0), (0, True))
 
 
 class Abs(Function):
@@ -373,6 +383,7 @@ class Abs(Function):
             obj = arg._eval_Abs()
             if obj is not None:
                 return obj
+        # handle what we can
         if arg.is_Mul:
             known = []
             unk = []
@@ -387,6 +398,8 @@ class Abs(Function):
             return known*unk
         if arg is S.NaN:
             return S.NaN
+        if arg.is_zero:  # it may be an Expr that is zero
+            return S.Zero
         if arg.is_nonnegative:
             return arg
         if arg.is_nonpositive:
@@ -444,8 +457,10 @@ class Abs(Function):
         # for complex arguments).
         if arg.is_real:
             return arg*(C.Heaviside(arg) - C.Heaviside(-arg))
-        else:
-            return self
+
+    def _eval_rewrite_as_Piecewise(self, arg):
+        if arg.is_real:
+            return Piecewise((arg, arg >= 0), (-arg, True))
 
 
 class arg(Function):
@@ -468,6 +483,9 @@ class arg(Function):
         return (x * Derivative(y, t, **{'evaluate': True}) - y *
                 Derivative(x, t, **{'evaluate': True})) / (x**2 + y**2)
 
+    def _eval_rewrite_as_atan2(self, arg):
+        x, y = re(self.args[0]), im(self.args[0])
+        return atan2(y, x)
 
 class conjugate(Function):
     """

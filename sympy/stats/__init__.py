@@ -42,6 +42,7 @@ import rv_interface
 from rv_interface import (
     cdf, covariance, density, dependent, E, given, independent, P, pspace,
     random_symbols, sample, sample_iter, skewness, std, variance, where,
+    correlation, moment, cmoment, smoment,
 )
 __all__.extend(rv_interface.__all__)
 
@@ -62,3 +63,7 @@ from crv_types import (
     WignerSemicircle
 )
 __all__.extend(crv_types.__all__)
+
+import drv_types
+from drv_types import (Geometric, Poisson)
+__all__.extend(drv_types.__all__)

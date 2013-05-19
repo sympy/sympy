@@ -2,6 +2,7 @@
 from collections import defaultdict
 
 from sympy.core.basic import Basic
+from sympy.core.numbers import Number
 from sympy.core.decorators import deprecated
 from sympy.core.operations import LatticeOp
 from sympy.core.function import Application, sympify
@@ -62,11 +63,34 @@ class And(LatticeOp, BooleanFunction):
 
     >>> from sympy.core import symbols
     >>> from sympy.abc import x, y
+    >>> from sympy.logic.boolalg import And
     >>> x & y
     And(x, y)
+
+    Notes
+    =====
+
+    The operator operator ``&`` will perform bitwise operations
+    on integers and for convenience will construct an Add when
+    the arguments are symbolic, but the And function does not
+    perform bitwise operations and when any argument is True it
+    is simply removed from the arguments:
+
+    >>> And(x, y).subs(x, 1)
+    y
     """
     zero = False
     identity = True
+
+    @classmethod
+    def _new_args_filter(cls, args):
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        return LatticeOp._new_args_filter(newargs, And)
 
 
 class Or(LatticeOp, BooleanFunction):
@@ -75,9 +99,87 @@ class Or(LatticeOp, BooleanFunction):
 
     It evaluates its arguments in order, giving True immediately
     if any of them are True, and False if they are all False.
+
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.abc import x, y
+    >>> from sympy.logic.boolalg import Or
+    >>> x | y
+    Or(x, y)
+
+    Notes
+    =====
+
+    The operator operator ``|`` will perform bitwise operations
+    on integers and for convenience will construct an Or when
+    the arguments are symbolic, but the Or function does not
+    perform bitwise operations and when any argument is False it
+    is simply removed from the arguments:
+
+    >>> Or(x, y).subs(x, 0)
+    y
     """
     zero = True
     identity = False
+
+    @classmethod
+    def _new_args_filter(cls, args):
+        newargs = []
+        for x in args:
+            if isinstance(x, Number) or x in (0, 1):
+                newargs.append(True if x else False)
+            else:
+                newargs.append(x)
+        return LatticeOp._new_args_filter(newargs, Or)
+
+
+class Not(BooleanFunction):
+    """
+    Logical Not function (negation)
+
+    Notes
+    =====
+
+    De Morgan rules are applied automatically.
+    """
+
+    is_Not = True
+
+    @classmethod
+    def eval(cls, arg):
+        """
+        Logical Not function (negation)
+
+        Returns True if the statement is False
+        Returns False if the statement is True
+
+        Examples
+        ========
+
+        >>> from sympy.logic.boolalg import Not, And, Or
+        >>> from sympy.abc import x
+        >>> Not(True)
+        False
+        >>> Not(False)
+        True
+        >>> Not(And(True, False))
+        True
+        >>> Not(Or(True, False))
+        False
+        >>> Not(And(And(True, x), Or(x, False)))
+        Not(x)
+        """
+        if isinstance(arg, Number) or arg in (0, 1):
+            return False if arg else True
+        # apply De Morgan Rules
+        if arg.func is And:
+            return Or(*[Not(a) for a in arg.args])
+        if arg.func is Or:
+            return And(*[Not(a) for a in arg.args])
+        if arg.func is Not:
+            return arg.args[0]
 
 
 class Xor(BooleanFunction):
@@ -116,61 +218,6 @@ class Xor(BooleanFunction):
             B = args.pop()
             A = Or(And(A, Not(B)), And(Not(A), B))
         return A
-
-
-class Not(BooleanFunction):
-    """
-    Logical Not function (negation)
-
-    Note: De Morgan rules applied automatically
-    """
-
-    is_Not = True
-
-    @classmethod
-    def eval(cls, *args):
-        """
-        Logical Not function (negation)
-
-        Returns True if the statement is False
-        Returns False if the statement is True
-
-        Examples
-        ========
-
-        >>> from sympy.logic.boolalg import Not, And, Or
-        >>> from sympy.abc import x
-        >>> Not(True)
-        False
-        >>> Not(False)
-        True
-        >>> Not(And(True, False))
-        True
-        >>> Not(Or(True, False))
-        False
-
-        If multiple statements are given, returns an array of each result
-
-        >>> Not(True, False)
-        [False, True]
-        >>> Not(True and False, True or False, True)
-        [True, False, False]
-
-        >>> Not(And(And(True, x), Or(x, False)))
-        Not(x)
-        """
-        if len(args) > 1:
-            return map(cls, args)
-        arg = args[0]
-        if arg in (0, 1):  # includes True and False, too
-            return not bool(arg)
-        # apply De Morgan Rules
-        if arg.func is And:
-            return Or(*[Not(a) for a in arg.args])
-        if arg.func is Or:
-            return And(*[Not(a) for a in arg.args])
-        if arg.func is Not:
-            return arg.args[0]
 
 
 class Nand(BooleanFunction):
@@ -623,24 +670,14 @@ def eliminate_implications(expr):
 
 
 @deprecated(
-    useinstead="sympify", issue=2947, deprecated_since_version="0.7.3")
+    useinstead="sympify", issue=3451, deprecated_since_version="0.7.3")
 def compile_rule(s):
     """
     Transforms a rule into a SymPy expression
     A rule is a string of the form "symbol1 & symbol2 | ..."
 
-    Note: this is nearly the same as sympifying the expression, but
-    this function converts all variables to Symbols -- there are no
-    special function names recognized.
+    Note: This function is deprecated.  Use sympify() instead.
 
-    Examples
-    ========
-
-    >>> from sympy.logic.boolalg import compile_rule
-    >>> compile_rule('A & B')
-    And(A, B)
-    >>> compile_rule('(~B & ~C)|A')
-    Or(A, And(Not(B), Not(C)))
     """
     import re
     return sympify(re.sub(r'([a-zA-Z_][a-zA-Z0-9_]*)', r'Symbol("\1")', s))

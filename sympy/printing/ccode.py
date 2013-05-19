@@ -134,7 +134,7 @@ class CCodePrinter(CodePrinter):
 
     def _print_Rational(self, expr):
         p, q = int(expr.p), int(expr.q)
-        return '%d.0/%d.0' % (p, q)
+        return '%d.0L/%d.0L' % (p, q)
 
     def _print_Indexed(self, expr):
         # calculate index for 1d array
@@ -162,17 +162,17 @@ class CCodePrinter(CodePrinter):
     def _print_Piecewise(self, expr):
         # This method is called only for inline if constructs
         # Top level piecewise is handled in doprint()
-        ecpairs = ["(%s) {\n%s\n}\n" % (self._print(c), self._print(e))
+        ecpairs = ["((%s) ? (\n%s\n)\n" % (self._print(c), self._print(e))
                    for e, c in expr.args[:-1]]
         last_line = ""
         if expr.args[-1].cond is True:
-            last_line = "else {\n%s\n}" % self._print(expr.args[-1].expr)
+            last_line = ": (\n%s\n)" % self._print(expr.args[-1].expr)
         else:
-            ecpairs.append("(%s) {\n%s\n" %
+            ecpairs.append("(%s) ? (\n%s\n" %
                            (self._print(expr.args[-1].cond),
                             self._print(expr.args[-1].expr)))
-        code = "if %s" + last_line
-        return code % "else if ".join(ecpairs)
+        code = "%s" + last_line
+        return code % ": ".join(ecpairs) + " )"
 
     def _print_And(self, expr):
         PREC = precedence(expr)
@@ -255,7 +255,7 @@ def ccode(expr, assign_to=None, **settings):
         >>> from sympy import ccode, symbols, Rational, sin
         >>> x, tau = symbols(["x", "tau"])
         >>> ccode((2*tau)**Rational(7,2))
-        '8*sqrt(2)*pow(tau, 7.0/2.0)'
+        '8*sqrt(2)*pow(tau, 7.0L/2.0L)'
         >>> ccode(sin(x), assign_to="s")
         's = sin(x);'
 

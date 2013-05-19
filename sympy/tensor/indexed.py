@@ -58,7 +58,7 @@
     (dim1, 2*dim1, dim2)
 
     If an IndexedBase object has no shape information, it is assumed that the
-    array is as large as the ranges of it's indices:
+    array is as large as the ranges of its indices:
 
     >>> n, m = symbols('n m', integer=True)
     >>> i = Idx('i', m)

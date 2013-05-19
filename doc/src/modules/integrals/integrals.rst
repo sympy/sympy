@@ -101,7 +101,11 @@ API reference
 
 .. automethod:: sympy.integrals.heurisch
 
+.. automethod:: sympy.integrals.heurisch_wrapper
+
 .. automethod:: sympy.integrals.trigintegrate
+
+.. automethod:: sympy.integrals.manualintegrate
 
 Class Integral represents an unevaluated integral and has some methods that help in the integration of an expression.
 
@@ -125,3 +129,13 @@ any order and any precision:
 .. autofunction:: sympy.integrals.quadrature.gauss_legendre
 
 .. autofunction:: sympy.integrals.quadrature.gauss_laguerre
+
+.. autofunction:: sympy.integrals.quadrature.gauss_hermite
+
+.. autofunction:: sympy.integrals.quadrature.gauss_gen_laguerre
+
+.. autofunction:: sympy.integrals.quadrature.gauss_chebyshev_t
+
+.. autofunction:: sympy.integrals.quadrature.gauss_chebyshev_u
+
+.. autofunction:: sympy.integrals.quadrature.gauss_jacobi

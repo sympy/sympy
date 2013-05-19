@@ -308,7 +308,7 @@ def fidelity(state1, state2):
                          (type(state1), type(state2)))
 
     if ( state1.shape != state2.shape and state1.is_square):
-        raise ValueError("The dimensions of both args should be equal and the"
+        raise ValueError("The dimensions of both args should be equal and the "
                          "matrix obtained should be a square matrix")
 
     sqrt_state1 = state1**Rational(1, 2)

@@ -61,25 +61,11 @@ class AskPrimeHandler(CommonHandler):
     def Integer(expr, assumptions):
         return isprime(expr)
 
-    @staticmethod
-    def Rational(expr, assumptions):
-        return False
+    Rational, Infinity, NegativeInfinity, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*4
 
     @staticmethod
     def Float(expr, assumptions):
         return AskPrimeHandler._number(expr, assumptions)
-
-    @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
 
     @staticmethod
     def NumberSymbol(expr, assumptions):
@@ -181,29 +167,15 @@ class AskEvenHandler(CommonHandler):
     def Integer(expr, assumptions):
         return not bool(expr.p & 1)
 
-    @staticmethod
-    def Rational(expr, assumptions):
-        return False
+    Rational, Infinity, NegativeInfinity, ImaginaryUnit = [staticmethod(CommonHandler.AlwaysFalse)]*4
 
     @staticmethod
     def Float(expr, assumptions):
         return expr % 2 == 0
 
     @staticmethod
-    def Infinity(expr, assumptions):
-        return False
-
-    @staticmethod
-    def NegativeInfinity(expr, assumptions):
-        return False
-
-    @staticmethod
     def NumberSymbol(expr, assumptions):
         return AskEvenHandler._number(expr, assumptions)
-
-    @staticmethod
-    def ImaginaryUnit(expr, assumptions):
-        return False
 
     @staticmethod
     def Abs(expr, assumptions):

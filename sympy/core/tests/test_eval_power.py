@@ -252,11 +252,25 @@ def test_issue_3109():
     assert root((6*I)**(I/3), 3).as_base_exp()[1] == I/9
     assert sqrt(exp(3*I)) == exp(3*I/2)
     assert sqrt(-sqrt(3)*(1 + 2*I)) == sqrt(sqrt(3))*sqrt(-1 - 2*I)
-
-
-@XFAIL
-def test_issue_3109_fail():
-    from sympy import root, Rational
-    I = S.ImaginaryUnit
     assert sqrt(exp(5*I)) == -exp(5*I/2)
     assert root(exp(5*I), 3).exp == Rational(1, 3)
+
+def test_issue_2969():
+    from sympy import sin, O
+    x = Symbol('x')
+    assert sqrt(sin(x)).series(x, 0, 7) == \
+        sqrt(x) - x**(S(5)/2)/12 + x**(S(9)/2)/1440 - \
+        x**(S(13)/2)/24192 + O(x**7)
+    assert sqrt(sin(x)).series(x, 0, 9) == \
+        sqrt(x) - x**(S(5)/2)/12 + x**(S(9)/2)/1440 - \
+        x**(S(13)/2)/24192 - 67*x**(S(17)/2)/29030400 + O(x**9)
+    assert sqrt(sin(x**3)).series(x, 0, 19) == \
+        sqrt(x**3) - x**6*sqrt(x**3)/12 + x**12*sqrt(x**3)/1440 + O(x**19)
+    assert sqrt(sin(x**3)).series(x, 0, 20) == \
+        sqrt(x**3) - x**6*sqrt(x**3)/12 + x**12*sqrt(x**3)/1440 - \
+        x**18*sqrt(x**3)/24192 + O(x**20)
+
+@XFAIL
+def test_issue_3683():
+    assert sqrt(sin(x**3)).series(x, 0, 7) == sqrt(x**3) + O(x**7)
+    assert sqrt(sin(x**4)).series(x, 0, 3) == sqrt(x**4) + O(x**4)

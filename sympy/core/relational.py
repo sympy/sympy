@@ -1,6 +1,7 @@
 from basic import S
 from expr import Expr
 from evalf import EvalfMixin
+from symbol import Symbol
 from sympify import _sympify
 
 from sympy.logic.boolalg import Boolean
@@ -154,22 +155,40 @@ class Relational(Boolean, Expr, EvalfMixin):
             except KeyError:
                 msg = "Invalid relational operator symbol: '%r'"
                 raise ValueError(msg % repr(rop))
-        if (lhs.is_number and rhs.is_number and
-           (rop_cls in (Equality, Unequality) or
-                lhs.is_real and rhs.is_real)):
+
+        diff = S.NaN
+        if isinstance(lhs, Expr) and isinstance(rhs, Expr):
             diff = lhs - rhs
+        if not (diff is S.NaN or diff.has(Symbol)):
             know = diff.equals(0, failing_expression=True)
             if know is True:  # exclude failing expression case
-                Nlhs = S.Zero
+                diff = S.Zero
             elif know is False:
-                from sympy import sign
-                Nlhs = sign(diff.n(2))
-            else:
-                Nlhs = None
-                lhs = know
-                rhs = S.Zero
-            if Nlhs is not None:
-                return rop_cls._eval_relation(Nlhs, S.Zero)
+                diff = diff.n()
+        if rop_cls is Equality:
+            if (lhs == rhs) is True or (diff == S.Zero) is True:
+                return True
+            elif diff is S.NaN:
+                pass
+            elif diff.is_Number or diff.is_Float:
+                return False
+            elif lhs.is_real is not rhs.is_real and \
+                lhs.is_real is not None and \
+                   rhs.is_real is not None:
+                return False
+        elif rop_cls is Unequality:
+            if (lhs == rhs) is True or (diff == S.Zero) is True:
+                return False
+            elif diff is S.NaN:
+                pass
+            elif diff.is_Number or diff.is_Float:
+                return True
+            elif lhs.is_real is not rhs.is_real and \
+                lhs.is_real is not None and \
+                   rhs.is_real is not None:
+                return True
+        elif diff.is_Number and diff.is_real:
+            return rop_cls._eval_relation(diff, S.Zero)
 
         obj = Expr.__new__(rop_cls, lhs, rhs, **assumptions)
         return obj

@@ -2,6 +2,7 @@ from sympy import sin, cos, exp, E, series, oo, S, Derivative, O, Integral, \
     Function, log, sqrt, Symbol
 from sympy.abc import x, y, n, k
 from sympy.utilities.pytest import raises
+from sympy.series.gruntz import calculate_series
 
 
 def test_sin():
@@ -106,3 +107,7 @@ def test_issue_3219():
 def test_x_is_base_detection():
     eq = (x**2)**(S(2)/3)
     assert eq.series() == eq
+
+def test_sin_power():
+    e = sin(x)**1.2
+    assert calculate_series(e, x) == x**1.2

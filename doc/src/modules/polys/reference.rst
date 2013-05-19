@@ -169,3 +169,5 @@ Partial fraction decomposition
 .. currentmodule:: sympy.polys.partfrac
 
 .. autofunction:: apart
+.. autofunction:: apart_list
+.. autofunction:: assemble_partfrac_list

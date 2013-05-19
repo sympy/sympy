@@ -64,6 +64,13 @@ def test_mathml_functions():
     assert mml_2.childNodes[1].childNodes[
         0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
 
+    mml_3 = mp._print(diff(cos(x*y), x, evaluate=False))
+    assert mml_3.nodeName == 'apply'
+    assert mml_3.childNodes[0].nodeName == 'partialdiff'
+    assert mml_3.childNodes[1].nodeName == 'bvar'
+    assert mml_3.childNodes[1].childNodes[
+        0].nodeName == 'ci'  # below bvar there's <ci>x/ci>
+
 
 def test_mathml_limits():
     # XXX No unevaluated limits

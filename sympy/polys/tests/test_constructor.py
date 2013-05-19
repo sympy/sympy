@@ -91,6 +91,7 @@ def test_construct_domain():
     assert construct_domain(2) == (ZZ, ZZ(2))
     assert construct_domain(S(2)/3) == (QQ, QQ(2, 3))
 
+    assert construct_domain({}) == (ZZ, {})
 
 def test_composite_option():
     assert construct_domain({(1,): sin(y)}, composite=False) == \

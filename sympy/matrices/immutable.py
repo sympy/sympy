@@ -35,8 +35,7 @@ class ImmutableMatrix(MatrixExpr, DenseMatrix):
     def _new(cls, *args, **kwargs):
         if len(args) == 1 and isinstance(args[0], ImmutableMatrix):
             return args[0]
-        rows, cols, flat_list = MatrixBase._handle_creation_inputs(
-            *args, **kwargs)
+        rows, cols, flat_list = cls._handle_creation_inputs(*args, **kwargs)
         rows = Integer(rows)
         cols = Integer(cols)
         mat = Tuple(*flat_list)

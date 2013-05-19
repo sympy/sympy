@@ -85,6 +85,8 @@ class Pow(Expr):
 
     @cacheit
     def __new__(cls, b, e, evaluate=True):
+        from sympy.functions.elementary.exponential import exp_polar
+
         # don't optimize "if e==0; return 1" here; it's better to handle that
         # in the calling routine so this doesn't get called
         b = _sympify(b)
@@ -99,6 +101,19 @@ class Pow(Expr):
                     return S.One
                 return S.NaN
             else:
+                # recognize base as E
+                if not e.is_Atom and b is not S.Exp1 and b.func is not exp_polar:
+                    from sympy import numer, denom, log, sign, im, factor_terms
+                    c, ex = factor_terms(e).as_coeff_Mul()
+                    den = denom(ex)
+                    if den.func is log and den.args[0] == b:
+                        return S.Exp1**(c*numer(ex))
+                    elif den.is_Add:
+                        s = sign(im(b))
+                        if s.is_Number and s and den == \
+                                log(-b) + s*S.ImaginaryUnit*S.Pi:
+                            return S.Exp1**(c*numer(ex))
+
                 obj = b._eval_power(e)
                 if obj is not None:
                     return obj
@@ -385,7 +400,8 @@ class Pow(Expr):
                     rv = Mul(*nc*e)
                 else:
                     rv = 1/Mul(*nc*-e)
-                assert not cargs
+                if cargs:
+                    rv *= Mul(*cargs)**e
                 return rv
 
             if not cargs:
@@ -478,35 +494,16 @@ class Pow(Expr):
 
     def _eval_expand_multinomial(self, **hints):
         """(a+b+..) ** n -> a**n + n*a**(n-1)*b + .., n is nonzero integer"""
-        b = self.base
-        e = self.exp
 
-        if b is None:
-            base = self.base
-        else:
-            base = b
-
-        if e is None:
-            exp = self.exp
-        else:
-            exp = e
-
-        if e is not None or b is not None:
-            result = Pow(base, exp)
-
-            if result.is_Pow:
-                base, exp = result.base, result.exp
-            else:
-                return result
-        else:
-            result = None
+        base, exp = self.args
+        result = self
 
         if exp.is_Rational and exp.p > 0 and base.is_Add:
             if not exp.is_Integer:
                 n = Integer(exp.p // exp.q)
 
                 if not n:
-                    return Pow(base, exp)
+                    return result
                 else:
                     radical, result = Pow(base, exp - n), []
 
@@ -524,23 +521,22 @@ class Pow(Expr):
             if base.is_commutative:
                 order_terms, other_terms = [], []
 
-                for order in base.args:
-                    if order.is_Order:
-                        order_terms.append(order)
+                for b in base.args:
+                    if b.is_Order:
+                        order_terms.append(b)
                     else:
-                        other_terms.append(order)
+                        other_terms.append(b)
 
                 if order_terms:
                     # (f(x) + O(x^n))^m -> f(x)^m + m*f(x)^{m-1} *O(x^n)
                     f = Add(*other_terms)
+                    o = Add(*order_terms)
 
                     if n == 2:
-                        return expand_multinomial(f**n, deep=False) + \
-                            n*f*Add(*order_terms)
+                        return expand_multinomial(f**n, deep=False) + n*f*o
                     else:
                         g = expand_multinomial(f**(n - 1), deep=False)
-                        return expand_mul(f*g, deep=False) + \
-                            n*g*Add(*order_terms)
+                        return expand_mul(f*g, deep=False) + n*g*o
 
                 if base.is_number:
                     # Efficiently expand expressions of the form (a + b*I)**n
@@ -584,20 +580,11 @@ class Pow(Expr):
                 # so now it's easy to get the correct result -- we get the
                 # coefficients first:
                 from sympy import multinomial_coefficients
+                from sympy.polys.polyutils import basic_from_dict
                 expansion_dict = multinomial_coefficients(len(p), n)
                 # in our example: {(3, 0): 1, (1, 2): 3, (0, 3): 1, (2, 1): 3}
                 # and now construct the expression.
-
-                # An elegant way would be to use Poly, but unfortunately it is
-                # slower than the direct method below, so it is commented out:
-                #b = {}
-                #for k in expansion_dict:
-                #    b[k] = Integer(expansion_dict[k])
-                #return Poly(b, *p).as_expr()
-
-                from sympy.polys.polyutils import basic_from_dict
-                result = basic_from_dict(expansion_dict, *p)
-                return result
+                return basic_from_dict(expansion_dict, *p)
             else:
                 if n == 2:
                     return Add(*[f*g for f in base.args for g in base.args])
@@ -607,6 +594,7 @@ class Pow(Expr):
                         return Add(*[f*g for f in base.args
                             for g in multi.args])
                     else:
+                        # XXX can this ever happen if base was an Add?
                         return Add(*[f*multi for f in base.args])
         elif (exp.is_Rational and exp.p < 0 and base.is_Add and
                 abs(exp.p) > exp.q):
@@ -616,7 +604,6 @@ class Pow(Expr):
             # n      --> n  n  , where n, a, b are Numbers
 
             coeff, tail = S.One, S.Zero
-
             for term in exp.args:
                 if term.is_Number:
                     coeff *= Pow(base, term)
@@ -633,7 +620,7 @@ class Pow(Expr):
         if self.exp.is_Integer:
             exp = self.exp
             re, im = self.base.as_real_imag(deep=deep)
-            if re.func == C.re or im.func == C.im or not im:
+            if not im:
                 return self, S.Zero
             a, b = symbols('a b', cls=Dummy)
             if exp >= 0:
@@ -747,9 +734,9 @@ class Pow(Expr):
         # this should be the same as ExpBase.as_numer_denom wrt
         # exponent handling
         neg_exp = exp.is_negative
-        int_exp = exp.is_integer
-        if not neg_exp and not exp.is_real:
+        if not neg_exp and not (-exp).is_negative:
             neg_exp = _coeff_isneg(exp)
+        int_exp = exp.is_integer
         # the denominator cannot be separated from the numerator if
         # its sign is unknown unless the exponent is an integer, e.g.
         # sqrt(a/b) != sqrt(a)/sqrt(b) when a=1 and b=-1. But if the
@@ -925,6 +912,20 @@ class Pow(Expr):
                     'expecting numerical exponent but got %s' % ei)
 
             nuse = n - ei
+
+            if e.is_real and e.is_positive:
+                lt = b.as_leading_term(x)
+
+                # Try to correct nuse (= m) guess from:
+                # (lt + rest + O(x**m))**e =
+                # lt**e*(1 + rest/lt + O(x**m)/lt)**e =
+                # lt**e + ... + O(x**m)*lt**(e - 1) = ... + O(x**n)
+                try:
+                    cf = C.Order(lt, x).getn()
+                    nuse = ceiling(n - cf*(e - 1))
+                except NotImplementedError:
+                    pass
+
             bs = b._eval_nseries(x, n=nuse, logx=logx)
             terms = bs.removeO()
             if terms.is_Add:
@@ -934,6 +935,20 @@ class Pow(Expr):
                 # bs -> lt + rest -> lt*(1 + (bs/lt - 1))
                 return ((Pow(lt, e) * Pow((bs/lt).expand(), e).nseries(
                     x, n=nuse, logx=logx)).expand() + order)
+
+            if bs.is_Add:
+                from sympy import O
+                # So, bs + O() == terms
+                c = Dummy('c')
+                res = []
+                for arg in bs.args:
+                    if arg.is_Order:
+                        arg = c*arg.expr
+                    res.append(arg)
+                bs = Add(*res)
+                rv = (bs**e).series(x).subs(c, O(1))
+                rv += order
+                return rv
 
             rv = bs**e
             if terms != bs:
@@ -1013,7 +1028,7 @@ class Pow(Expr):
         >>> eq.as_content_primitive()
         (9, 3**(2*x))
         >>> powsimp(Mul(*_))
-        9**(x + 1)
+        3**(2*x + 2)
 
         >>> eq = (2 + 2*x)**y
         >>> s = expand_power_base(eq); s.is_Mul, s

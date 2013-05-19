@@ -34,10 +34,12 @@ class Naturals(Set):
 
     __metaclass__ = Singleton
     is_iterable = True
+    _inf = S.One
+    _sup = oo
 
     def _intersect(self, other):
         if other.is_Interval:
-            return Intersection(S.Integers, other, Interval(1, oo))
+            return Intersection(S.Integers, other, Interval(self._inf, oo))
         return None
 
     def _contains(self, other):
@@ -46,19 +48,23 @@ class Naturals(Set):
         return False
 
     def __iter__(self):
-        i = S(1)
+        i = self._inf
         while True:
             yield i
             i = i + 1
 
-    @property
-    def _inf(self):
-        return S.One
+class Naturals0(Naturals):
+    """ The Natural Numbers starting at 0
 
-    @property
-    def _sup(self):
-        return oo
+    See also:
+        S.Naturals - starts at 1
+    """
+    _inf = S.Zero
 
+    def _contains(self, other):
+        if ask(Q.negative(other)) == False and ask(Q.integer(other)):
+            return True
+        return False
 
 class Integers(Set):
     """

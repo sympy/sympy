@@ -521,7 +521,7 @@ class TrigonometricIntegral(Function):
         baseseries = self._trigfunc(x)._eval_nseries(x, n, logx)
         if self._trigfunc(0) != 0:
             baseseries -= 1
-        baseseries = baseseries.replace(Pow, lambda t, n: t**n/n)
+        baseseries = baseseries.replace(Pow, lambda t, n: t**n/n, simultaneous=False)
         if self._trigfunc(0) != 0:
             baseseries += EulerGamma + log(x)
         return baseseries.subs(x, self.args[0])._eval_nseries(x, n, logx)

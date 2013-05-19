@@ -3,8 +3,10 @@ from sympy import (EmptySet, FiniteSet, S, Symbol, Interval, exp, erf, sqrt,
         factor)
 from sympy.stats import (DiscreteUniform, Die, Bernoulli, Coin, Binomial,
         Hypergeometric, P, E, variance, covariance, skewness, sample, density,
-        given, independent, dependent, where, FiniteRV, pspace, cdf)
+        given, independent, dependent, where, FiniteRV, pspace, cdf,
+        correlation, moment, cmoment, smoment)
 from sympy.utilities.pytest import raises, slow
+from sympy.abc import p
 
 oo = S.Infinity
 
@@ -20,7 +22,8 @@ def test_discreteuniform():
     X = DiscreteUniform('X', [a, b, c])
 
     assert E(X) == (a + b + c)/3
-    assert variance(X) == (a**2 + b**2 + c**2)/3 - (a/3 + b/3 + c/3)**2
+    assert simplify(variance(X)
+                    - ((a**2 + b**2 + c**2)/3 - (a/3 + b/3 + c/3)**2)) == 0
     assert P(Eq(X, a)) == P(Eq(X, b)) == P(Eq(X, c)) == S('1/3')
 
     Y = DiscreteUniform('Y', range(-5, 5))
@@ -28,7 +31,7 @@ def test_discreteuniform():
     # Numeric
     assert E(Y) == S('-1/2')
     assert variance(Y) == S('33/4')
-    assert skewness(Y) == 0
+
     for x in range(-5, 5):
         assert P(Eq(Y, x)) == S('1/10')
         assert P(Y <= x) == S(x + 6)/10
@@ -47,21 +50,27 @@ def test_dice():
     assert E(X + Y) == 7
     assert E(X + X) == 7
     assert E(a*X + b) == a*E(X) + b
-    assert variance(X + Y) == variance(X) + variance(Y)
-    assert variance(X + X) == 4 * variance(X)
+    assert variance(X + Y) == variance(X) + variance(Y) == cmoment(X + Y, 2)
+    assert variance(X + X) == 4 * variance(X) == cmoment(X + X, 2)
+    assert cmoment(X, 0) == 1
+    assert cmoment(4*X, 3) == 64*cmoment(X, 3)
     assert covariance(X, Y) == S.Zero
     assert covariance(X, X + Y) == variance(X)
     assert density(Eq(cos(X*S.Pi), 1))[True] == S.Half
-
+    assert correlation(X, Y) == 0
+    assert correlation(X, Y) == correlation(Y, X)
+    assert smoment(X + Y, 3) == skewness(X + Y)
+    assert smoment(X, 0) == 1
     assert P(X > 3) == S.Half
     assert P(2*X > 6) == S.Half
     assert P(X > Y) == S(5)/12
     assert P(Eq(X, Y)) == P(Eq(X, 1))
 
-    assert E(X, X > 3) == 5
-    assert E(X, Y > 3) == E(X)
+    assert E(X, X > 3) == 5 == moment(X, 1, 0, X > 3)
+    assert E(X, Y > 3) == E(X) == moment(X, 1, 0, Y > 3)
     assert E(X + Y, Eq(X, Y)) == E(2*X)
-    assert E(X + Y - Z, 2*X > Y + 1) == S(49)/12
+    assert moment(X, 0) == 1
+    assert moment(5*X, 2) == 25*moment(X, 2)
 
     assert P(X > 3, X > 3) == S.One
     assert P(X > Y, Eq(Y, 6)) == S.Zero
@@ -131,7 +140,7 @@ def test_bernoulli():
     X = Bernoulli('B', p, 1, 0)
 
     assert E(X) == p
-    assert variance(X) == -p**2 + p
+    assert simplify(variance(X)) == p*(1 - p)
     E(a*X + b) == a*E(X) + b
     variance(a*X + b) == a**2 * variance(X)
 
@@ -182,8 +191,8 @@ def test_binomial_symbolic():
     n = 10  # Because we're using for loops, can't do symbolic n
     p = symbols('p', positive=True)
     X = Binomial('X', n, p)
-    assert simplify(E(X)) == n*p
-    assert simplify(variance(X)) == n*p*(1 - p)
+    assert simplify(E(X)) == n*p == simplify(moment(X, 1))
+    assert simplify(variance(X)) == n*p*(1 - p) == simplify(cmoment(X, 2))
     assert factor(simplify(skewness(X))) == factor((1-2*p)/sqrt(n*p*(1-p)))
 
     # Test ability to change success/failure winnings
@@ -216,3 +225,8 @@ def test_FiniteRV():
 
     assert pspace(F).domain.as_boolean() == Or(
         *[Eq(F.symbol, i) for i in [1, 2, 3]])
+
+def test_density_call():
+    x = Bernoulli('x', p)
+    d = density(x)
+    assert d(0) == 1 - p

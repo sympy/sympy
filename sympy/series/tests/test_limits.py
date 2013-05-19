@@ -366,3 +366,16 @@ def test_issue_3267():
     n = Symbol('n', integer=True, positive=True)
     r = (n + 1)*x**(n + 1)/(x**(n + 1) - 1) - x/(x - 1)
     assert limit(r, x, 1) == n/2
+
+
+def test_factorial():
+    from sympy import factorial, E
+    f = factorial(x)
+    assert limit(f, x, oo) == oo
+    assert limit(x/f, x, oo) == 0
+    # see Stirling's approximation:
+    # http://en.wikipedia.org/wiki/Stirling's_approximation
+    assert limit(f/(sqrt(2*pi*x)*(x/E)**x), x, oo) == 1
+    assert limit(f, x, -oo) == factorial(-oo)
+    assert limit(f, x, x**2) == factorial(x**2)
+    assert limit(f, x, -x**2) == factorial(-x**2)

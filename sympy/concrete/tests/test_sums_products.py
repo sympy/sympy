@@ -1,7 +1,7 @@
 from sympy import (binomial, Catalan, cos, Derivative, E, exp, EulerGamma,
                    factorial, Function, harmonic, Integral, log, nan, oo, pi,
                    Product, product, Rational, S, sqrt, Sum, summation, Symbol,
-                   symbols, sympify, zeta, oo)
+                   symbols, sympify, zeta, oo, I, Abs, Piecewise, Eq)
 from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
@@ -58,6 +58,23 @@ def test_geometric_sums():
     assert summation(3**(-n), (n, 4, oo)) == Rational(1, 54)
     assert summation(2**(-4*n + 3), (n, 1, oo)) == Rational(8, 15)
     assert summation(2**(n + 1), (n, 1, b)).expand() == 4*(2**b - 1)
+
+    # issue 3565:
+    assert summation(x**n, (n, 0, oo)) == \
+        Piecewise((1/(-x + 1), Abs(x) < 1), (Sum(x**n, (n, 0, oo)), True))
+
+    assert summation(-2**n, (n, 0, oo)) == -oo
+    assert summation(I**n, (n, 0, oo)) == Sum(I**n, (n, 0, oo))
+
+    # issue 3703:
+    assert summation((-1)**(2*x + 2), (x, 0, n)) == n + 1
+    assert summation((-2)**(2*x + 2), (x, 0, n)) == 4*4**(n + 1)/S(3) - S(4)/3
+    assert summation((-1)**x, (x, 0, n)) == -(-1)**(n + 1)/S(2) + S(1)/2
+    assert summation(y**x, (x, a, b)) == \
+        Piecewise((-a + b + 1, Eq(y, 1)), ((y**a - y**(b + 1))/(-y + 1), True))
+    assert summation((-2)**(y*x + 2), (x, 0, n)) == \
+        4*Piecewise((n + 1, Eq((-2)**y, 1)),
+                    ((-(-2)**(y*(n + 1)) + 1)/(-(-2)**y + 1), True))
 
 
 def test_harmonic_sums():
@@ -263,14 +280,33 @@ def test_sum_reconstruct():
     raises(ValueError, lambda: Sum(x, (x, 1)))
 
 
-def test_Sum_limit_subs():
-    assert Sum(a*exp(a), (a, -2, 2)) == Sum(a*exp(a), (a, -b, b)).subs(b, 2)
-    assert Sum(a, (a, Sum(b, (b, 1, 2)), 4)).subs(Sum(b, (b, 1, 2)), c) == \
-        Sum(a, (a, c, 4))
+def test_limit_subs():
+    for F in (Sum, Product, Integral):
+        assert F(a*exp(a), (a, -2, 2)) == F(a*exp(a), (a, -b, b)).subs(b, 2)
+        assert F(a, (a, F(b, (b, 1, 2)), 4)).subs(F(b, (b, 1, 2)), c) == \
+            F(a, (a, c, 4))
+        assert F(x, (x, 1, x + y)).subs(x, 1) == F(x, (x, 1, y + 1))
 
 
-@XFAIL
-def test_issue2166():
+def test_equality():
+    # if this fails remove special handling below
+    raises(ValueError, lambda: Sum(x, x))
+    r = symbols('x', real=True)
+    for F in (Sum, Product, Integral):
+        try:
+            assert F(x, x) != F(y, y)
+            assert F(x, (x, 1, 2)) != F(x, x)
+            assert F(x, (x, x)) != F(x, x)  # or else they print the same
+            assert F(1, x) != F(1, y)
+        except ValueError:
+            pass
+        assert F(a, (x, 1, 2)) != F(a, (x, 1, 3))
+        assert F(a, (x, 1, 2)) != F(b, (x, 1, 2))
+        assert F(x, (x, 1, 2)) != F(r, (r, 1, 2))
+        assert F(1, (x, 1, x)) != F(1, (y, 1, x))
+        assert F(1, (x, 1, x)) != F(1, (y, 1, y))
+
+    # issue 2166
     assert Sum(x, (x, 1, x)).subs(x, a) == Sum(x, (x, 1, a))
 
 
@@ -279,6 +315,10 @@ def test_Sum_doit():
     assert Sum(n*Integral(a**2), (n, 0, 2)).doit(deep=False) == \
         3*Integral(a**2)
     assert summation(n*Integral(a**2), (n, 0, 2)) == 3*Integral(a**2)
+
+    # test nested sum evaluation
+    S = Sum( Sum( Sum(2,(z,1,n+1)), (y,x+1,n)), (x,1,n))
+    assert 0 == (S.doit() - n*(n+1)*(n-1)).factor()
 
 
 def test_Product_doit():

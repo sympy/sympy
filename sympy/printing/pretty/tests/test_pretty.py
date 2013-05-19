@@ -2,21 +2,21 @@
 
 from sympy import (
     Abs, And, Basic, Chi, Ci, Derivative, Dict, Ei, Eq, Equivalent, FF,
-    FiniteSet, Function, Function, Ge, Gt, I, Implies, Integral,
-    KroneckerDelta, Lambda, Le, Limit, Lt, Matrix, Nand, Ne, Nor, Not, O,
-    Or, Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum,
-    S, Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2,
-    binomial, catalan, ceiling, conjugate, cos, euler, exp, expint,
-    factorial, factorial2, floor, gamma, groebner, homomorphism, hyper,
-    log, lowergamma, meijerg, oo, pi, sin,
-    sqrt, sqrt, symbols, tan, uppergamma, subfactorial)
+    FiniteSet, Function, Ge, Gt, I, Implies, Integral, KroneckerDelta,
+    Lambda, Le, Limit, Lt, Matrix, Mul, Nand, Ne, Nor, Not, O, Or,
+    Piecewise, Pow, Product, QQ, RR, Rational, Ray, RootOf, RootSum, S,
+    Segment, Shi, Si, Subs, Sum, Symbol, Tuple, Xor, ZZ, atan2, binomial,
+    catalan, ceiling, conjugate, cos, euler, exp, expint, factorial,
+    factorial2, floor, gamma, groebner, homomorphism, hyper, log,
+    lowergamma, meijerg, oo, pi, sin, sqrt, subfactorial, symbols, tan,
+    uppergamma)
 
 from sympy.printing.pretty import pretty as xpretty
 from sympy.printing.pretty import pprint
 
 from sympy.physics.units import joule
 
-from sympy.utilities.pytest import raises, XFAIL
+from sympy.utilities.pytest import raises
 from sympy.core.trace import Tr
 
 a, b, x, y, z, k = symbols('a,b,x,y,z,k')
@@ -1791,6 +1791,35 @@ dx            \
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
 
+    # basic partial derivatives
+    expr = Derivative(log(x + y) + x, x)
+    ascii_str_1 = \
+"""\
+d                 \n\
+--(log(x + y) + x)\n\
+dx                \
+"""
+    ascii_str_2 = \
+"""\
+d                 \n\
+--(x + log(x + y))\n\
+dx                \
+"""
+    ucode_str_1 = \
+u"""\
+∂                 \n\
+──(log(x + y) + x)\n\
+∂x                \
+"""
+    ucode_str_2 = \
+u"""\
+∂                 \n\
+──(x + log(x + y))\n\
+∂x                \
+"""
+    assert pretty(expr) in [ascii_str_1, ascii_str_2]
+    assert upretty(expr) in [ucode_str_1, ucode_str_2], upretty(expr)
+
     # Multiple symbols
     expr = Derivative(log(x) + x**2, x, y)
     ascii_str_1 = \
@@ -1842,16 +1871,16 @@ x  + -----(2*x*y)\n\
     ucode_str_1 = \
 u"""\
    2             \n\
-  d             2\n\
+  ∂             2\n\
 ─────(2⋅x⋅y) + x \n\
-dx dy            \
+∂x ∂y            \
 """
     ucode_str_2 = \
 u"""\
         2        \n\
- 2     d         \n\
+ 2     ∂         \n\
 x  + ─────(2⋅x⋅y)\n\
-     dx dy       \
+     ∂x ∂y       \
 """
     assert pretty(expr) in [ascii_str_1, ascii_str_2]
     assert upretty(expr) in [ucode_str_1, ucode_str_2]
@@ -1868,10 +1897,10 @@ dx        \
     ucode_str = \
 u"""\
   2       \n\
- d        \n\
+ ∂        \n\
 ───(2⋅x⋅y)\n\
   2       \n\
-dx        \
+∂x        \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1888,10 +1917,10 @@ dx         \
     ucode_str = \
 u"""\
  17        \n\
-d          \n\
+∂          \n\
 ────(2⋅x⋅y)\n\
   17       \n\
-dx         \
+∂x         \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -1908,10 +1937,10 @@ dy dx        \
     ucode_str = \
 u"""\
    3         \n\
-  d          \n\
+  ∂          \n\
 ──────(2⋅x⋅y)\n\
      2       \n\
-dy dx        \
+∂y ∂x        \
 """
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
@@ -2245,6 +2274,206 @@ u"""\
     assert pretty(expr) == ascii_str
     assert upretty(expr) == ucode_str
 
+    expr = -Piecewise((x, x < 1), (x**2, True))
+    ascii_str = \
+"""\
+ //x   for x < 1\\\n\
+ ||             |\n\
+-|< 2           |\n\
+ ||x   otherwise|\n\
+ \\\\             /\
+"""
+    ucode_str = \
+u"""\
+ ⎛⎧x   for x < 1⎞\n\
+ ⎜⎪             ⎟\n\
+-⎜⎨ 2           ⎟\n\
+ ⎜⎪x   otherwise⎟\n\
+ ⎝⎩             ⎠\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = x + Piecewise((x, x > 0), (y, True)) + Piecewise((x/y, x < 2),
+    (y**2, x > 2), (1, True)) + 1
+    ascii_str = \
+"""\
+                      //x            \    \n\
+                      ||-   for x < 2|    \n\
+                      ||y            |    \n\
+    //x  for x > 0\   ||             |    \n\
+x + |<            | + |< 2           | + 1\n\
+    \\\\y  otherwise/   ||y   for x > 2|    \n\
+                      ||             |    \n\
+                      ||1   otherwise|    \n\
+                      \\\\             /    \
+"""
+    ucode_str = \
+u"""\
+                      ⎛⎧x            ⎞    \n\
+                      ⎜⎪─   for x < 2⎟    \n\
+                      ⎜⎪y            ⎟    \n\
+    ⎛⎧x  for x > 0⎞   ⎜⎪             ⎟    \n\
+x + ⎜⎨            ⎟ + ⎜⎨ 2           ⎟ + 1\n\
+    ⎝⎩y  otherwise⎠   ⎜⎪y   for x > 2⎟    \n\
+                      ⎜⎪             ⎟    \n\
+                      ⎜⎪1   otherwise⎟    \n\
+                      ⎝⎩             ⎠    \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = x - Piecewise((x, x > 0), (y, True)) + Piecewise((x/y, x < 2),
+    (y**2, x > 2), (1, True)) + 1
+    ascii_str = \
+"""\
+                      //x            \    \n\
+                      ||-   for x < 2|    \n\
+                      ||y            |    \n\
+    //x  for x > 0\   ||             |    \n\
+x - |<            | + |< 2           | + 1\n\
+    \\\\y  otherwise/   ||y   for x > 2|    \n\
+                      ||             |    \n\
+                      ||1   otherwise|    \n\
+                      \\\\             /    \
+"""
+    ucode_str = \
+u"""\
+                      ⎛⎧x            ⎞    \n\
+                      ⎜⎪─   for x < 2⎟    \n\
+                      ⎜⎪y            ⎟    \n\
+    ⎛⎧x  for x > 0⎞   ⎜⎪             ⎟    \n\
+x - ⎜⎨            ⎟ + ⎜⎨ 2           ⎟ + 1\n\
+    ⎝⎩y  otherwise⎠   ⎜⎪y   for x > 2⎟    \n\
+                      ⎜⎪             ⎟    \n\
+                      ⎜⎪1   otherwise⎟    \n\
+                      ⎝⎩             ⎠    \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = x*Piecewise((x, x > 0), (y, True))
+    ascii_str = \
+"""\
+  //x  for x > 0\\\n\
+x*|<            |\n\
+  \\\\y  otherwise/\
+"""
+    ucode_str = \
+u"""\
+  ⎛⎧x  for x > 0⎞\n\
+x⋅⎜⎨            ⎟\n\
+  ⎝⎩y  otherwise⎠\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Piecewise((x, x > 0), (y, True))*Piecewise((x/y, x < 2), (y**2, x >
+    2), (1, True))
+    ascii_str = \
+"""\
+                //x            \\\n\
+                ||-   for x < 2|\n\
+                ||y            |\n\
+//x  for x > 0\ ||             |\n\
+|<            |*|< 2           |\n\
+\\\\y  otherwise/ ||y   for x > 2|\n\
+                ||             |\n\
+                ||1   otherwise|\n\
+                \\\\             /\
+"""
+    ucode_str = \
+u"""\
+                ⎛⎧x            ⎞\n\
+                ⎜⎪─   for x < 2⎟\n\
+                ⎜⎪y            ⎟\n\
+⎛⎧x  for x > 0⎞ ⎜⎪             ⎟\n\
+⎜⎨            ⎟⋅⎜⎨ 2           ⎟\n\
+⎝⎩y  otherwise⎠ ⎜⎪y   for x > 2⎟\n\
+                ⎜⎪             ⎟\n\
+                ⎜⎪1   otherwise⎟\n\
+                ⎝⎩             ⎠\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = -Piecewise((x, x > 0), (y, True))*Piecewise((x/y, x < 2), (y**2, x
+        > 2), (1, True))
+    ascii_str = \
+"""\
+                 //x            \\\n\
+                 ||-   for x < 2|\n\
+                 ||y            |\n\
+ //x  for x > 0\ ||             |\n\
+-|<            |*|< 2           |\n\
+ \\\\y  otherwise/ ||y   for x > 2|\n\
+                 ||             |\n\
+                 ||1   otherwise|\n\
+                 \\\\             /\
+"""
+    ucode_str = \
+u"""\
+                 ⎛⎧x            ⎞\n\
+                 ⎜⎪─   for x < 2⎟\n\
+                 ⎜⎪y            ⎟\n\
+ ⎛⎧x  for x > 0⎞ ⎜⎪             ⎟\n\
+-⎜⎨            ⎟⋅⎜⎨ 2           ⎟\n\
+ ⎝⎩y  otherwise⎠ ⎜⎪y   for x > 2⎟\n\
+                 ⎜⎪             ⎟\n\
+                 ⎜⎪1   otherwise⎟\n\
+                 ⎝⎩             ⎠\
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    expr = Piecewise((0, Abs(1/y) < 1), (1, Abs(y) < 1), (y*meijerg(((2, 1),
+        ()), ((), (1, 0)), 1/y), True))
+    ascii_str = \
+"""\
+/                                |1|    \n\
+|            0               for |-| < 1\n\
+|                                |y|    \n\
+|                                       \n\
+<            1               for |y| < 1\n\
+|                                       \n\
+|   __0, 2 /2, 1       | 1\             \n\
+|y*/__     |           | -|   otherwise \n\
+\  \\_|2, 2 \      1, 0 | y/             \
+"""
+    ucode_str = \
+u"""\
+⎧                                │1│    \n\
+⎪            0               for │─│ < 1\n\
+⎪                                │y│    \n\
+⎪                                       \n\
+⎨            1               for │y│ < 1\n\
+⎪                                       \n\
+⎪  ╭─╮0, 2 ⎛2, 1       │ 1⎞             \n\
+⎪y⋅│╶┐     ⎜           │ ─⎟   otherwise \n\
+⎩  ╰─╯2, 2 ⎝      1, 0 │ y⎠             \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
+
+    # XXX: We have to use evaluate=False here because Piecewise._eval_power
+    # denests the power.
+    expr = Pow(Piecewise((x, x > 0), (y, True)), 2, evaluate=False)
+    ascii_str = \
+"""\
+               2\n\
+//x  for x > 0\ \n\
+|<            | \n\
+\\\\y  otherwise/ \
+"""
+    ucode_str = \
+u"""\
+               2\n\
+⎛⎧x  for x > 0⎞ \n\
+⎜⎨            ⎟ \n\
+⎝⎩y  otherwise⎠ \
+"""
+    assert pretty(expr) == ascii_str
+    assert upretty(expr) == ucode_str
 
 def test_pretty_seq():
     expr = ()
@@ -2835,7 +3064,6 @@ def test_settings():
     raises(TypeError, lambda: pretty(S(4), method="garbage"))
 
 
-@XFAIL
 def test_pretty_sum():
     from sympy.abc import x, a, b, k, m, n
 
@@ -3776,14 +4004,14 @@ def test_expint():
 def test_RandomDomain():
     from sympy.stats import Normal, Die, Exponential, pspace, where
     X = Normal('x1', 0, 1)
-    assert upretty(where(X > 0)) == u"Domain: 0 < x₁"
+    assert upretty(where(X > 0)) == u"Domain: x₁ > 0"
 
     D = Die('d1', 6)
     assert upretty(where(D > 4)) == u'Domain: d₁ = 5 ∨ d₁ = 6'
 
     A = Exponential('a', 1)
     B = Exponential('b', 1)
-    assert upretty(pspace(Tuple(A, B)).domain) == u'Domain: 0 ≤ a ∧ 0 ≤ b'
+    assert upretty(pspace(Tuple(A, B)).domain) == u'Domain: a ≥ 0 ∧ b ≥ 0'
 
 
 def test_PrettyPoly():
@@ -3802,6 +4030,106 @@ def test_PrettyPoly():
 def test_issue_3186():
     assert pretty(Pow(2, -5, evaluate=False)) == '1 \n--\n 5\n2 '
     assert pretty(Pow(x, (1/pi))) == 'pi___\n\\/ x '
+
+
+def test_issue_3260():
+    assert pretty(Integral(x**2, x)**2) == \
+"""\
+          2
+/  /     \ \n\
+| |      | \n\
+| |  2   | \n\
+| | x  dx| \n\
+| |      | \n\
+\/       / \
+"""
+    assert upretty(Integral(x**2, x)**2) == \
+u"""\
+         2
+⎛⌠      ⎞ \n\
+⎜⎮  2   ⎟ \n\
+⎜⎮ x  dx⎟ \n\
+⎝⌡      ⎠ \
+"""
+
+    assert pretty(Sum(x**2, (x, 0, 1))**2) == \
+"""\
+          2
+/  1     \\ \n\
+| ___    | \n\
+| \\  `   | \n\
+|  \\    2| \n\
+|  /   x | \n\
+| /__,   | \n\
+\\x = 0   / \
+"""
+    assert upretty(Sum(x**2, (x, 0, 1))**2) == \
+u"""\
+          2
+⎛  1     ⎞ \n\
+⎜ ___    ⎟ \n\
+⎜ ╲      ⎟ \n\
+⎜  ╲    2⎟ \n\
+⎜  ╱   x ⎟ \n\
+⎜ ╱      ⎟ \n\
+⎜ ‾‾‾    ⎟ \n\
+⎝x = 0   ⎠ \
+"""
+
+    assert pretty(Product(x**2, (x, 1, 2))**2) == \
+"""\
+           2
+/  2      \\ \n\
+|______   | \n\
+||    |  2| \n\
+||    | x | \n\
+||    |   | \n\
+\\x = 1    / \
+"""
+    assert upretty(Product(x**2, (x, 1, 2))**2) == \
+u"""\
+           2
+⎛  2      ⎞ \n\
+⎜┬────┬   ⎟ \n\
+⎜│    │  2⎟ \n\
+⎜│    │ x ⎟ \n\
+⎜│    │   ⎟ \n\
+⎝x = 1    ⎠ \
+"""
+
+    f = Function('f')
+    assert pretty(Derivative(f(x), x)**2) == \
+"""\
+          2
+/d       \\ \n\
+|--(f(x))| \n\
+\\dx      / \
+"""
+    assert upretty(Derivative(f(x), x)**2) == \
+u"""\
+          2
+⎛d       ⎞ \n\
+⎜──(f(x))⎟ \n\
+⎝dx      ⎠ \
+"""
+
+def test_issue_3640():
+    ascii_str = \
+"""\
+  1  \n\
+-----\n\
+  ___\n\
+\/ x \
+"""
+    ucode_str = \
+u"""\
+  1  \n\
+─────\n\
+  ___\n\
+╲╱ x \
+"""
+    assert pretty(1/sqrt(x)) == ascii_str
+    assert upretty(1/sqrt(x)) == ucode_str
 
 
 def test_complicated_symbol_unchanged():
@@ -4058,3 +4386,8 @@ def test_Tr():
     t = Tr(A*B)
     assert pretty(t) == r'Tr(A*B)'
     assert upretty(t) == u'Tr(A\u22c5B)'
+
+
+def test_pretty_Add():
+    eq = Mul(-2, x - 2, evaluate=False) + 5
+    assert pretty(eq) == '-2*(x - 2) + 5'

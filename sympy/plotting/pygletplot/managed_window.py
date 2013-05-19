@@ -25,6 +25,11 @@ class ManagedWindow(Window):
         class, unless you need to take additional arguments.
         Do any OpenGL initialization calls in setup().
         """
+
+        # check if this is run from the doctester
+        if win_args.get('runfromdoctester', False):
+            return
+
         self.win_args = dict(self.default_win_args, **win_args)
         self.Thread = Thread(target=self.__event_loop__)
         self.Thread.start()

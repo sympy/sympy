@@ -1,4 +1,9 @@
-from sympy.core import C, Expr, Mul, S, sympify
+from sympy.core.containers import Tuple
+from sympy.core.core import C
+from sympy.core.expr import Expr
+from sympy.core.mul import Mul
+from sympy.core.singleton import S
+from sympy.core.sympify import sympify
 from sympy.functions.elementary.piecewise import piecewise_fold
 from sympy.polys import quo, roots
 from sympy.simplify import powsimp
@@ -73,11 +78,10 @@ class Product(Expr):
         >>> Product(x, (x, y, 1)).free_symbols
         set([y])
         """
-        from sympy.concrete.summations import _free_symbols
-
+        from sympy.integrals.integrals import _free_symbols
         if self.function.is_zero or self.function == 1:
             return set()
-        return _free_symbols(self.function, self.limits)
+        return _free_symbols(self)
 
     @property
     def is_zero(self):
@@ -90,8 +94,8 @@ class Product(Expr):
         """
         Return True if the Product will result in a number, else False.
 
-        sympy considers anything that will result in a number to have
-        is_number == True.
+        Examples
+        ========
 
         >>> from sympy import log, Product
         >>> from sympy.abc import x, y, z
@@ -108,6 +112,10 @@ class Product(Expr):
         """
 
         return self.function.is_zero or self.function == 1 or not self.free_symbols
+
+    def as_dummy(self):
+        from sympy.integrals.integrals import _as_dummy
+        return _as_dummy(self)
 
     def doit(self, **hints):
         f = g = self.function
@@ -137,7 +145,9 @@ class Product(Expr):
         return Product(self.function.conjugate(), *self.limits)
 
     def _eval_product(self, term, limits):
-        from sympy import summation
+        from sympy.concrete.delta import deltaproduct, _has_simple_delta
+        from sympy.concrete.summations import summation
+        from sympy.functions import KroneckerDelta
 
         (k, a, n) = limits
 
@@ -146,6 +156,9 @@ class Product(Expr):
 
         if a == n:
             return term.subs(k, a)
+
+        if term.has(KroneckerDelta) and _has_simple_delta(term, limits[0]):
+            return deltaproduct(term, limits)
 
         dif = n - a
         if dif.is_Integer:
@@ -218,6 +231,11 @@ class Product(Expr):
         if self.is_commutative:
             return Product(self.function.transpose(), *self.limits)
         return None
+
+
+    def _eval_subs(self, old, new):
+        from sympy.integrals.integrals import _eval_subs
+        return _eval_subs(self, old, new)
 
 
 def product(*args, **kwargs):

@@ -1,7 +1,7 @@
-from sympy import bernoulli, Symbol, symbols, Sum, harmonic, Rational, oo, \
-    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, \
-    binomial, gamma, sqrt, hyper, log, polygamma, diff, \
-    Expr, sympify
+from sympy import (bernoulli, Symbol, symbols, Dummy, Sum, harmonic, Rational, oo,
+    zoo, pi, I, bell, fibonacci, lucas, euler, catalan, binomial, gamma, sqrt,
+    hyper, log, digamma, trigamma, polygamma, diff, Expr, sympify, expand_func,
+    EulerGamma, factorial)
 
 from sympy.utilities.pytest import XFAIL, raises
 
@@ -86,6 +86,45 @@ def test_harmonic():
     assert harmonic(oo, 2) == (pi**2)/6
 
 
+def replace_dummy(expr, sym):
+    dum = expr.atoms(Dummy)
+    if not dum:
+        return expr
+    assert len(dum) == 1
+    return expr.xreplace({dum.pop(): sym})
+
+
+def test_harmonic_rewrite_sum():
+    n = Symbol("n")
+    m = Symbol("m")
+
+    _k = Dummy("k")
+    assert replace_dummy(harmonic(n).rewrite(Sum), _k) == Sum(1/_k, (_k, 1, n))
+    assert replace_dummy(harmonic(n, m).rewrite(Sum), _k) == Sum(_k**(-m), (_k, 1, n))
+
+
+@XFAIL
+def test_harmonic_rewrite_sum():
+    n = Symbol("n")
+    m = Symbol("m")
+
+    assert harmonic(n).rewrite(digamma) == polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(trigamma) ==  polygamma(0, n + 1) + EulerGamma
+    assert harmonic(n).rewrite(polygamma) ==  polygamma(0, n + 1) + EulerGamma
+
+    assert harmonic(n,3).rewrite(polygamma) == polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+    assert harmonic(n,m).rewrite(polygamma) == (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/factorial(m - 1)
+
+    assert expand_func(harmonic(n+4)) == harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
+    assert expand_func(harmonic(n-4)) == harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
+
+    assert harmonic(n, m).rewrite("tractable") == harmonic(n, m).rewrite(polygamma)
+
+    _k = Dummy("k")
+    assert harmonic(n).rewrite(Sum) == Sum(1/_k, (_k, 1, n))
+    assert harmonic(n, m).rewrite(Sum) == Sum(_k**(-m), (_k, 1, n))
+
+
 def test_euler():
     assert euler(0) == 1
     assert euler(1) == 0
@@ -129,7 +168,7 @@ def test_catalan():
     assert catalan(x).rewrite(hyper) == hyper((-x + 1, -x), (2,), 1)
 
     assert diff(catalan(x), x) == (polygamma(
-        0, x + Rational(1, 2)) - polygamma(0, x + 2) + 2*log(2))*catalan(x)
+        0, x + Rational(1, 2)) - polygamma(0, x + 2) + log(4))*catalan(x)
 
     c = catalan(0.5).evalf()
     assert str(c) == '0.848826363156775'

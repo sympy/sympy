@@ -154,9 +154,8 @@ def test_MatrixSymbol():
 
 def test_dense_conversion():
     X = MatrixSymbol('X', 2, 2)
-    x00, x01, x10, x11 = symbols('X_00 X_01 X_10 X_11')
-    assert ImmutableMatrix(X) == ImmutableMatrix([[x00, x01], [x10, x11]])
-    assert Matrix(X) == Matrix([[x00, x01], [x10, x11]])
+    assert ImmutableMatrix(X) == ImmutableMatrix(2, 2, lambda i, j: X[i, j])
+    assert Matrix(X) == Matrix(2, 2, lambda i, j: X[i, j])
 
 
 def test_free_symbols():

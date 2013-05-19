@@ -9,7 +9,7 @@ the separate 'factorials' module.
 
 from sympy.core.function import Function, expand_mul
 from sympy.core import S, Symbol, Rational, oo, Integer, C, Add, Dummy
-from sympy.core.compatibility import as_int
+from sympy.core.compatibility import as_int, SYMPY_INTS
 from sympy.core.cache import cacheit
 from sympy.functions.combinatorial.factorials import factorial
 
@@ -65,13 +65,13 @@ class fibonacci(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Fibonacci_number
-    * http://mathworld.wolfram.com/FibonacciNumber.html
+    .. [1] http://en.wikipedia.org/wiki/Fibonacci_number
+    .. [2] http://mathworld.wolfram.com/FibonacciNumber.html
 
     See Also
     ========
 
-    lucas
+    bell, bernoulli, catalan, euler, harmonic, lucas
     """
 
     @staticmethod
@@ -120,12 +120,13 @@ class lucas(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Lucas_number
+    .. [1] http://en.wikipedia.org/wiki/Lucas_number
+    .. [2] http://mathworld.wolfram.com/LucasNumber.html
 
     See Also
     ========
 
-    fibonacci
+    bell, bernoulli, catalan, euler, fibonacci, harmonic
     """
 
     @classmethod
@@ -206,13 +207,15 @@ class bernoulli(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Bernoulli_number
-    * http://en.wikipedia.org/wiki/Bernoulli_polynomial
+    .. [1] http://en.wikipedia.org/wiki/Bernoulli_number
+    .. [2] http://en.wikipedia.org/wiki/Bernoulli_polynomial
+    .. [3] http://mathworld.wolfram.com/BernoulliNumber.html
+    .. [4] http://mathworld.wolfram.com/BernoulliPolynomial.html
 
     See Also
     ========
 
-    euler, bell
+    bell, catalan, euler, fibonacci, harmonic, lucas
     """
 
     # Calculates B_n for positive even n
@@ -339,14 +342,14 @@ class bell(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Bell_number
-    * http://mathworld.wolfram.com/BellNumber.html
-    * http://mathworld.wolfram.com/BellPolynomial.html
+    .. [1] http://en.wikipedia.org/wiki/Bell_number
+    .. [2] http://mathworld.wolfram.com/BellNumber.html
+    .. [3] http://mathworld.wolfram.com/BellPolynomial.html
 
     See Also
     ========
 
-    euler, bernoulli
+    bernoulli, catalan, euler, fibonacci, harmonic, lucas
     """
 
     @staticmethod
@@ -420,23 +423,21 @@ class harmonic(Function):
     r"""
     Harmonic numbers
 
-    The nth harmonic number is given by 1 + 1/2 + 1/3 + ... + 1/n.
+    The nth harmonic number is given by `\operatorname{H}_{n} =
+    1 + \frac{1}{2} + \frac{1}{3} + \ldots + \frac{1}{n}`.
 
-    More generally::
+    More generally:
 
-                   n
-                  ___
-                 \       -m
-          H    =  )     k   .
-           n,m   /___
-                 k = 1
+    .. math:: \operatorname{H}_{n,m} = \sum_{k=1}^{n} \frac{1}{k^m}
 
-    As n -> oo, H_{n,m} -> zeta(m) (the Riemann zeta function)
+    As `n \rightarrow \infty`, `\operatorname{H}_{n,m} \rightarrow \zeta(m)`,
+    the Riemann zeta function.
 
-    * harmonic(n) gives the nth harmonic number, H_n
+    * ``harmonic(n)`` gives the nth harmonic number, `\operatorname{H}_n`
 
-    * harmonic(n, m) gives the nth generalized harmonic number
-      of order m, H_{n,m}, where harmonic(n) == harmonic(n, 1)
+    * ``harmonic(n, m)`` gives the nth generalized harmonic number
+      of order `m`, `\operatorname{H}_{n,m}`, where
+      ``harmonic(n) == harmonic(n, 1)``
 
     Examples
     ========
@@ -450,11 +451,66 @@ class harmonic(Function):
     >>> harmonic(oo, 2)
     pi**2/6
 
+    >>> from sympy import Symbol, Sum
+    >>> n = Symbol("n")
+
+    >>> harmonic(n).rewrite(Sum)
+    Sum(1/_k, (_k, 1, n))
+
+    We can rewrite harmonic numbers in terms of polygamma functions:
+
+    >>> from sympy import digamma, polygamma
+    >>> m = Symbol("m")
+
+    >>> harmonic(n).rewrite(digamma)
+    polygamma(0, n + 1) + EulerGamma
+
+    >>> harmonic(n).rewrite(polygamma)
+    polygamma(0, n + 1) + EulerGamma
+
+    >>> harmonic(n,3).rewrite(polygamma)
+    polygamma(2, n + 1)/2 - polygamma(2, 1)/2
+
+    >>> harmonic(n,m).rewrite(polygamma)
+    (-1)**m*(polygamma(m - 1, 1) - polygamma(m - 1, n + 1))/(m - 1)!
+
+    Integer offsets in the argument can be pulled out:
+
+    >>> from sympy import expand_func
+
+    >>> expand_func(harmonic(n+4))
+    harmonic(n) + 1/(n + 4) + 1/(n + 3) + 1/(n + 2) + 1/(n + 1)
+
+    >>> expand_func(harmonic(n-4))
+    harmonic(n) - 1/(n - 1) - 1/(n - 2) - 1/(n - 3) - 1/n
+
+    Some limits can be computed as well:
+
+    >>> from sympy import limit, oo
+
+    >>> limit(harmonic(n), n, oo)
+    oo
+
+    >>> limit(harmonic(n, 2), n, oo)
+    pi**2/6
+
+    >>> limit(harmonic(n, 3), n, oo)
+    -polygamma(2, 1)/2
+
+    >>> limit(harmonic(m, n), m, oo)
+    zeta(n)
+
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Harmonic_number
+    .. [1] http://en.wikipedia.org/wiki/Harmonic_number
+    .. [2] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber/
+    .. [3] http://functions.wolfram.com/GammaBetaErf/HarmonicNumber2/
 
+    See Also
+    ========
+
+    bell, bernoulli, catalan, euler, fibonacci, lucas
     """
 
     # Generate one memoized Harmonic number-generating function for each
@@ -478,6 +534,46 @@ class harmonic(Function):
                     return prev[-1] + S.One / n**m
                 cls._functions[m] = f
             return cls._functions[m](int(n))
+
+    def _eval_rewrite_as_polygamma(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return S.NegativeOne**m/factorial(m - 1) * (polygamma(m - 1, 1) - polygamma(m - 1, n + 1))
+
+    def _eval_rewrite_as_digamma(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return self.rewrite(polygamma)
+
+    def _eval_rewrite_as_trigamma(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return self.rewrite(polygamma)
+
+    def _eval_rewrite_as_Sum(self, n, m=None):
+        k = C.Dummy("k", integer=True)
+        if m is None:
+            m = S.One
+        return C.Sum(k**(-m), (k, 1, n))
+
+    def _eval_expand_func(self, **hints):
+        n = self.args[0]
+        m = self.args[1] if len(self.args) == 2 else 1
+
+        if m == S.One:
+            if n.is_Add:
+                off = n.args[0]
+                nnew = n - off
+                if off.is_Integer and off.is_positive:
+                    result = [S.One/(nnew + i) for i in xrange(off, 0, -1)] + [harmonic(nnew)]
+                    return Add(*result)
+                elif off.is_Integer and off.is_negative:
+                    result = [-S.One/(nnew + i) for i in xrange(0, off, -1)] + [harmonic(nnew)]
+                    return Add(*result)
+
+        return self
+
+    def _eval_rewrite_as_tractable(self, n, m=1):
+        from sympy.functions.special.gamma_functions import polygamma
+        return self.rewrite(polygamma).rewrite("tractable", deep=True)
+
 
 #----------------------------------------------------------------------------#
 #                                                                            #
@@ -517,15 +613,15 @@ class euler(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Euler_numbers
-    * http://mathworld.wolfram.com/EulerNumber.html
-    * http://en.wikipedia.org/wiki/Alternating_permutation
-    * http://mathworld.wolfram.com/AlternatingPermutation.html
+    .. [1] http://en.wikipedia.org/wiki/Euler_numbers
+    .. [2] http://mathworld.wolfram.com/EulerNumber.html
+    .. [3] http://en.wikipedia.org/wiki/Alternating_permutation
+    .. [4] http://mathworld.wolfram.com/AlternatingPermutation.html
 
     See Also
     ========
 
-    bernoulli, bell
+    bell, bernoulli, catalan, fibonacci, harmonic, lucas
     """
 
     nargs = 1
@@ -620,7 +716,7 @@ class catalan(Function):
     continuous real funtion in n:
 
     >>> diff(catalan(n), n)
-    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + 2*log(2))*catalan(n)
+    (polygamma(0, n + 1/2) - polygamma(0, n + 2) + log(4))*catalan(n)
 
     As a more advanced example consider the following ratio
     between consecutive numbers:
@@ -641,13 +737,15 @@ class catalan(Function):
     References
     ==========
 
-    * http://en.wikipedia.org/wiki/Catalan_number
-    * http://mathworld.wolfram.com/CatalanNumber.html
-    * http://geometer.org/mathcircles/catalan.pdf
+    .. [1] http://en.wikipedia.org/wiki/Catalan_number
+    .. [2] http://mathworld.wolfram.com/CatalanNumber.html
+    .. [3] http://functions.wolfram.com/GammaBetaErf/CatalanNumber/
+    .. [4] http://geometer.org/mathcircles/catalan.pdf
 
     See Also
     ========
 
+    bell, bernoulli, euler, fibonacci, harmonic, lucas
     sympy.functions.combinatorial.factorials.binomial
     """
 
@@ -787,7 +885,7 @@ def _nP(n, k=None, replacement=False):
 
     if k == 0:
         return 1
-    if type(n) is int:  # n different items
+    if isinstance(n, SYMPY_INTS):  # n different items
         # assert n >= 0
         if k is None:
             return sum(_nP(n, i, replacement) for i in range(n + 1))
@@ -951,7 +1049,7 @@ def nC(n, k=None, replacement=False):
     from sympy.functions.combinatorial.factorials import binomial
     from sympy.core.mul import prod
 
-    if type(n) is int:
+    if isinstance(n, SYMPY_INTS):
         if k is None:
             if not replacement:
                 return 2**n
@@ -1198,7 +1296,7 @@ def nT(n, k=None):
     """
     from sympy.utilities.iterables import multiset_partitions
 
-    if type(n) is int:
+    if isinstance(n, SYMPY_INTS):
         # assert n >= 0
         # all the same
         if k is None:
