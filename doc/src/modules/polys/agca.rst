@@ -113,15 +113,14 @@ AGCA module and the rest of the polys module. All domains are documented
 in detail in the polys reference, so we show here only an abridged version,
 with the methods most pertinent to the AGCA module.
 
-.. currentmodule:: sympy.polys.domains
-.. autoclass:: Ring
+.. autoclass:: sympy.polys.domains.ring.Ring
    :members: free_module, ideal, quotient_ring
    :noindex:
 
-.. autofunction:: PolynomialRing
+.. autofunction:: sympy.polys.domains.polynomialring.PolynomialRing
    :noindex:
 
-.. autoclass:: QuotientRing
+.. autoclass:: sympy.polys.domains.quotientring.QuotientRing
    :noindex:
 
 Modules, Ideals and their Elementary Properties

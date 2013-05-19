@@ -117,7 +117,7 @@ Monomials encoded as tuples
 Orderings of monomials
 ======================
 
-.. currentmodule:: sympy.polys.monomials
+.. currentmodule:: sympy.polys.orderings
 
 .. autoclass:: LexOrder
 .. autoclass:: GradedLexOrder
