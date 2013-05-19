@@ -20,7 +20,7 @@ def os_chdir(path):
 
 
 def subprocess_call(args):
-    print(*args)
+    print(' '.join(args))
     logging.debug("subprocess_call({0})".format(repr(args)))
 
     def filter_split_decode(s):
@@ -50,7 +50,7 @@ def open_default(filename):
     logging.debug("open_default({0})".format(repr(filename)))
 
     if sys.platform.startswith('darwin'):
-        subprocess_call(('open', filename))     # UNTESTED!
+        subprocess_call(('open', filename))
     elif os.name == 'posix':
         subprocess_call(('xdg-open', filename))
     else:
@@ -84,7 +84,6 @@ def check_docs():
     $ cd doc
     $ make clean
     $ make html
-    $ make htmli18n
     $ # open _build/html/index.html in default web browser
 
     $ make clean
@@ -102,8 +101,7 @@ def check_docs():
 
     # Check Sphinx stuff
     subprocess_call(["make", "clean"])
-    subprocess_call(["make", "html"])
-    subprocess_call(["make", "htmli18n"])
+    subprocess_call(["make", "html-errors"])
 
     open_default(os.path.join(docdir, '_build', 'html', 'index.html'))
 
