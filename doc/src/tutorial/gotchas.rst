@@ -76,6 +76,65 @@ To avoid confusion, throughout this tutorial, Symbol names and Python variable
 names will always coincide.  Furthermore, the word "Symbol" will refer to a
 SymPy Symbol and the word "variable" will refer to a Python variable.
 
+Finally, let us be sure we understand the difference between SymPy Symbols and
+Python variables.  Consider the following::
+
+  x = symbols('x')
+  expr = x + 1
+  x = 2
+  print expr
+
+What do you think the output of this code will be?  If you thought ``3``,
+you're wrong.  Let's see what really happens
+
+    >>> x = symbols('x')
+    >>> expr = x + 1
+    >>> x = 2
+    >>> print expr
+    x + 1
+
+Changing ``x`` to ``2`` had no effect on ``expr``.  This is because ``x = 2``
+changes the Python variable ``x`` to ``2``, but has no effect on the SymPy
+Symbol ``x``, which was what we used in creating ``expr``.  When we created
+``expr``, the Python variable ``x`` was a Symbol.  After we created, it, we
+changed the Python variable ``x`` to 2.  But ``expr`` remains the same.  This
+behavior is not unique to SymPy.  All Python programs work this way: if a
+variable is changed, expressions that were already created with that variable
+do not change automatically.  For example
+
+    >>> x = 5
+    >>> expr = x + 1
+    >>> expr
+    6
+    >>> x = 7
+    >>> expr
+    6
+
+
+.. sidebar:: Quick Tip
+
+   To change the value of a Symbol in an expression, use ``subs``
+
+     >>> x = symbols('x')
+     >>> expr = x + 1
+     >>> expr.subs(x, 2)
+     3
+
+In this example, if we want to know what ``expr`` is with the new value of
+``x``, we need to reevaluate the code that created ``expr``, namely, ``expr =
+x + 1``.  This can be complicated if several lines created ``expr``.  One
+advantage of using a symbolic computation system like SymPy is that we can
+build a symbolic representation for ``expr``, and then substitute ``x`` with
+values.  The correct way to do this in SymPy is to use ``subs``, which will be
+discussed in more detail later.
+
+    >>> x = symbols('x')
+    >>> expr = x + 1
+    >>> expr.subs(x, 2)
+    3
+
+.. TODO: Add link to basic operations section
+
 Equals signs
 ============
 

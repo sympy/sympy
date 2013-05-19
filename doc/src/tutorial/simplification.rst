@@ -314,17 +314,17 @@ simplifications if they are not true in general.
 In order to make SymPy perform simplifications involving identities that are
 only true under certain assumptions, we need to put assumptions on our
 Symbols.  We will undertake a full discussion of the assumptions system later,
-but for now, all we need to know are the following
+but for now, all we need to know are the following.
 
-- By default, SymPy Symbols are assumed to be complex.  That is,
-  simplifications will not be applied to an expression with a given Symbol
-  unless it holds for all complex numbers.
+- By default, SymPy Symbols are assumed to be complex (elements of
+  `\mathbb{C}`).  That is, a simplification will not be applied to an
+  expression with a given Symbol unless it holds for all complex numbers.
 
 - Symbols can be given different assumptions by passing the assumption to
-  ``symbols``.  For the rest of this section, we will be assuming that ``x``,
-  ``y`` are positive, and that ``a`` and ``b`` are real.  We will leave ``z``,
-  ``t``, and ``c`` as arbitrary complex Symbols to demonstrate what happens in
-  that case.
+  ``symbols``.  For the rest of this section, we will be assuming that ``x``
+  and ``y`` are positive, and that ``a`` and ``b`` are real.  We will leave
+  ``z``, ``t``, and ``c`` as arbitrary complex Symbols to demonstrate what
+  happens in that case.
 
     >>> x, y = symbols('x y', positive=True)
     >>> a, b = symbols('a b', real=True)
@@ -332,11 +332,13 @@ but for now, all we need to know are the following
 
   .. TODO: Rewrite this using the new assumptions
 
-- In SymPy, ``sqrt(x)`` is just a shortcut to ``x**Rational(1, 2)``.  They are
-  exactly the same object.
+.. note::
 
-    >>> sqrt(x) == x**Rational(1, 2)
-    True
+   In SymPy, ``sqrt(x)`` is just a shortcut to ``x**Rational(1, 2)``.  They
+   are exactly the same object.
+
+     >>> sqrt(x) == x**Rational(1, 2)
+     True
 
 ``powsimp``
 -----------
@@ -481,9 +483,9 @@ are positive.
 
 We also see that `\log{\left( e^x \right)} = x` comes from `\log{\left ( e^x
 \right)} = x\log(e) = x`, and thus holds when `x` is real (however, it can be
-verified that it does not hold in general for complex `x`, for example,
-`\log{\left (e^{x + 2\pi i}\right)} = \log{\left (e^x\right )} = x \neq x +
-2\pi i`).
+verified that it does not hold in general for arbitrary complex `x`, for
+example, `\log{\left (e^{x + 2\pi i}\right)} = \log{\left (e^x\right )} = x
+\neq x + 2\pi i`).
 
 ``expand_log``
 --------------

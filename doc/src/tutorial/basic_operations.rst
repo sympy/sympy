@@ -67,7 +67,7 @@ Substitution is usually done for one of two reasons:
 
 There are two important things to note about ``subs``.  First, it returns a
 new expression.  SymPy objects are immutable.  That means that ``subs`` does
-modify it in place.  For example
+modify it in-place.  For example
 
    >>> expr = cos(x)
    >>> expr.subs(x, 0)
@@ -75,9 +75,13 @@ modify it in place.  For example
    >>> expr
    cos(x)
 
+.. sidebar:: Quick Tip
+
+   SymPy expressions are immutable.  No function will change them in-place.
+
 Here, we see that performing ``expr.subs(x, 0)`` leaves ``expr`` unchanged.
-In fact, **since SymPy expressions are immutable, no function will change them
-in place.  All functions will return new expressions.**
+In fact, since SymPy expressions are immutable, no function will change them
+in-place.  All functions will return new expressions.
 
 To perform multiple substitutions at once, pass a list of ``(old, new)`` pairs
 to ``subs``.

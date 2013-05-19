@@ -14,6 +14,12 @@ with, you can probably skip over it, or replace it with a similar one that you
 are more familiar with.  Or look up the function on Wikipedia and learn
 something new.
 
+.. sidebar:: Quick Tip
+
+   You do not need to install SymPy to try it.  You can use the online shell
+   at http://live.sympy.org, or the shell at the bottom right of this
+   documentation page.
+
 You will need to install SymPy first.  See :ref:`installation`.
 
 Alternately, you can just use the SymPy Live Sphinx extension to run the code
@@ -35,6 +41,10 @@ the tutorial to experiment.
 
 To show or hide the SymPy Live shell at any time, just click the green button
 on the bottom right of the screen.
+
+By default, the SymPy Live shell uses `\LaTeX` for output.  If you want the
+output to look more like the output in the documentation, change the
+output format to ``Str`` or ``Unicode``.
 
 If you wish to modify an example before evaluating it, change the evaluation
 mode to "copy".  This will cause clicking on an example to copy the example to

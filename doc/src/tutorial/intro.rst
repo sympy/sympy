@@ -102,8 +102,8 @@ In SymPy, there are functions to go from one form to the other
    >>> factor(expanded_expr)
    x*(x + 2*y)
 
-Symbolic Power
-==============
+The Power of Symbolic Computation
+=================================
 
 That is an introduction to what symbolic computation is, but the real power of
 a symbolic computation system such as SymPy is the ability to do all sorts of

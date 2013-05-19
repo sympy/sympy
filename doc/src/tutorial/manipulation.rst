@@ -8,6 +8,11 @@ manipulation of expressions.
 Understanding Expression Trees
 ==============================
 
+.. sidebar :: Quick Tip
+
+   To play with the ``srepr`` form of expressions in the SymPy Live shell,
+   change the output format to ``Repr`` in the settings.
+
 Before we can do this, we need to understand how expressions are represented
 in SymPy.  A mathematical expression is represented as a tree.  Let us take
 the expression `x^2 + xy`, i.e., ``x**2 + x*y``.  We can see what this
@@ -260,11 +265,30 @@ Let's look at some examples
     >>> expr.args
     (3, x, y**2)
 
-From this, we can see that ``expr == Mul(2, y**2, x)``.  Note that although we
-entered ``2*y**2*x``, the ``args`` are ``(2, x, y**2)``.  In a ``Mul``, the
-Rational coefficient will come first in the ``args``, but other than that, the
-order of everything else follows no special pattern.  To be sure, though,
-there is an order.
+From this, we can see that ``expr == Mul(2, y**2, x)``.  In fact, we can see
+that we can completely reconstruct ``expr`` from its ``func`` and its
+``args``.  This leads us to a very important invariant that every well-formed
+SymPy expression must hold:
+
+.. topic:: Key Invariant
+
+   Every well-formed SymPy expression must satisfy ``expr == expr.func(*expr.args)``.
+
+(Recall that in Python if ``a`` is a tuple, then ``f(*a)`` means to call ``f``
+with arguments from the elements of ``a``, e.g., ``f(*(1, 2, 3))`` is the same
+as ``f(1, 2, 3)``.)
+
+Let's check this invariant for our expression.
+
+    >>> expr.func(*expr.args)
+    3*x*y**2
+    >>> expr == expr.func(*expr.args)
+    True
+
+Note that although we entered ``2*y**2*x``, the ``args`` are ``(2, x, y**2)``.
+In a ``Mul``, the Rational coefficient will come first in the ``args``, but
+other than that, the order of everything else follows no special pattern.  To
+be sure, though, there is an order.
 
     >>> expr = y**2*3*x
     >>> expr.args
