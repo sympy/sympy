@@ -1288,6 +1288,14 @@ class Basic(object):
         from sympy.core.symbol import Dummy
         from sympy.simplify.simplify import bottom_up
 
+        try:
+            query = sympify(query)
+        except SympifyError:
+            pass
+        try:
+            value = sympify(value)
+        except SympifyError:
+            pass
         if isinstance(query, type):
             _query = lambda expr: isinstance(expr, query)
 
@@ -1349,7 +1357,7 @@ class Basic(object):
         mask = []  # the dummies that were used as change placeholders
         def rec_replace(expr):
             result = _query(expr)
-            if result:
+            if result or result == {}:
                 new = _value(expr, result)
                 if new is not None and new != expr:
                     mapping[expr] = new
