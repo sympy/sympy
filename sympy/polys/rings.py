@@ -2116,3 +2116,66 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
             poly += subpoly
 
         return poly
+
+    # TODO: following methods should point to polynomial
+    # representation independent algorithm implementations.
+
+    def pdiv(f, g):
+        return f.ring.dmp_pdiv(f, g)
+
+    def prem(f, g):
+        return f.ring.dmp_prem(f, g)
+
+    def pquo(f, g):
+        return f.ring.dmp_quo(f, g)
+
+    def pexquo(f, g):
+        return f.ring.dmp_exquo(f, g)
+
+    def half_gcdex(f, g):
+        return f.ring.dmp_half_gcdex(f, g)
+
+    def gcdex(f, g):
+        return f.ring.dmp_gcdex(f, g)
+
+    def subresultants(f, g):
+        return f.ring.dmp_subresultants(f, g)
+
+    def resultant(f, g):
+        return f.ring.dmp_resultant(f, g)
+
+    def discriminant(f):
+        return f.ring.dmp_discriminant(f)
+
+    def decompose(f):
+        if f.ring.is_univariate:
+            return f.ring.dup_decompose(f)
+        else:
+            raise MultivariatePolynomialError("polynomial decomposition")
+
+    def shift(f, a):
+        if f.ring.is_univariate:
+            return f.ring.dup_shift(f, a)
+        else:
+            raise MultivariatePolynomialError("polynomial shift")
+
+    def sturm(f):
+        if f.ring.is_univariate:
+            return f.ring.dup_sturm(f)
+        else:
+            raise MultivariatePolynomialError("sturm sequence")
+
+    def gff_list(f):
+        return f.ring.dmp_gff_list(f)
+
+    def sqf_norm(f):
+        return f.ring.dmp_sqf_norm(f)
+
+    def sqf_part(f):
+        return f.ring.dmp_sqf_part(f)
+
+    def sqf_list(f, all=False):
+        return f.ring.dmp_sqf_list(f, all=all)
+
+    def factor_list(f):
+        return f.ring.dmp_factor_list(f)

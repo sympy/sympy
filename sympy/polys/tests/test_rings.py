@@ -1078,3 +1078,117 @@ def test_PolyElement_drop():
 
     raises(ValueError, lambda: z.drop(0).drop(0).drop(0))
     raises(ValueError, lambda: x.drop(0))
+
+def test_PolyElement_pdiv():
+    _, x, y = ring("x,y", ZZ)
+
+    f, g = x**2 - y**2, x - y
+    q, r = x + y, 0
+
+    assert f.pdiv(g) == (q, r)
+    assert f.prem(g) == r
+    assert f.pquo(g) == q
+    assert f.pexquo(g) == q
+
+def test_PolyElement_gcdex():
+    _, x = ring("x", QQ)
+
+    f, g = 2*x, x**2 - 16
+    s, t, h = x/32, -QQ(1, 16), 1
+
+    assert f.half_gcdex(g) == (s, h)
+    assert f.gcdex(g) == (s, t, h)
+
+def test_PolyElement_subresultants():
+    _, x = ring("x", ZZ)
+    f, g, h = x**2 - 2*x + 1, x**2 - 1, 2*x - 2
+
+    assert f.subresultants(g) == [f, g, h]
+
+def test_PolyElement_resultant():
+    _, x = ring("x", ZZ)
+    f, g, h = x**2 - 2*x + 1, x**2 - 1, 0
+
+    assert f.resultant(g) == h
+
+def test_PolyElement_discriminant():
+    _, x = ring("x", ZZ)
+    f, g = x**3 + 3*x**2 + 9*x - 13, -11664
+
+    assert f.discriminant() == g
+
+    F, a, b, c = ring("a,b,c", ZZ)
+    _, x = ring("x", F)
+
+    f, g = a*x**2 + b*x + c, b**2 - 4*a*c
+
+    assert f.discriminant() == g
+
+def test_PolyElement_decompose():
+    _, x = ring("x", ZZ)
+
+    f = x**12 + 20*x**10 + 150*x**8 + 500*x**6 + 625*x**4 - 2*x**3 - 10*x + 9
+    g = x**4 - 2*x + 9
+    h = x**3 + 5*x
+
+    assert g.compose(x, h) == f
+    assert f.decompose() == [g, h]
+
+def test_PolyElement_shift():
+    _, x = ring("x", ZZ)
+    assert (x**2 - 2*x + 1).shift(2) == x**2 + 2*x + 1
+
+def test_PolyElement_sturm():
+    F, t = field("t", ZZ)
+    _, x = ring("x", F)
+
+    f = 1024/(15625*t**8)*x**5 - 4096/(625*t**8)*x**4 + 32/(15625*t**4)*x**3 - 128/(625*t**4)*x**2 + F(1)/62500*x - F(1)/625
+
+    assert f.sturm() == [
+        x**3 - 100*x**2 + t**4/64*x - 25*t**4/16,
+        3*x**2 - 200*x + t**4/64,
+        (-t**4/96 + F(20000)/9)*x + 25*t**4/18,
+        (-9*t**12 - 11520000*t**8 - 3686400000000*t**4)/(576*t**8 - 245760000*t**4 + 26214400000000),
+    ]
+
+def test_PolyElement_gff_list():
+    _, x = ring("x", ZZ)
+
+    f = x**5 + 2*x**4 - x**3 - 2*x**2
+    assert f.gff_list() == [(x, 1), (x + 2, 4)]
+
+    f = x*(x - 1)**3*(x - 2)**2*(x - 4)**2*(x - 5)
+    assert f.gff_list() == [(x**2 - 5*x + 4, 1), (x**2 - 5*x + 4, 2), (x, 3)]
+
+def test_PolyElement_sqf_norm():
+    R, x = ring("x", QQ.algebraic_field(sqrt(3)))
+    X = R.to_ground().x
+
+    assert (x**2 - 2).sqf_norm() == (1, x**2 - 2*sqrt(3)*x + 1, X**4 - 10*X**2 + 1)
+
+    R, x = ring("x", QQ.algebraic_field(sqrt(2)))
+    X = R.to_ground().x
+
+    assert (x**2 - 3).sqf_norm() == (1, x**2 - 2*sqrt(2)*x - 1, X**4 - 10*X**2 + 1)
+
+def test_PolyElement_sqf_list():
+    _, x = ring("x", ZZ)
+
+    f = x**5 - x**3 - x**2 + 1
+    g = x**3 + 2*x**2 + 2*x + 1
+    h = x - 1
+    p = x**4 + x**3 - x - 1
+
+    assert f.sqf_part() == p
+    assert f.sqf_list() == (1, [(g, 1), (h, 2)])
+
+def test_PolyElement_factor_list():
+    _, x = ring("x", ZZ)
+
+    f = x**5 - x**3 - x**2 + 1
+
+    u = x + 1
+    v = x - 1
+    w = x**2 + x + 1
+
+    assert f.factor_list() == (1, [(u, 1), (v, 2), (w, 1)])
