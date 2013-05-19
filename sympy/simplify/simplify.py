@@ -3727,17 +3727,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         if d != 0:
             expr = signsimp(-n/(-d))
 
-    def exp_trig(e):
-        # select the better of e, and e rewritten in terms of exp or trig
-        # functions
-        choices = [e]
-        if e.has(*_trigs):
-            choices.append(e.rewrite(exp))
-        choices.append(e.rewrite(cos))
-        return min(*choices, **dict(key=count_ops))
-    newexpr = bottom_up(expr, exp_trig)
-    if not (newexpr.has(I) and not expr.has(I)):
-        expr = newexpr
+    if expr.has(C.TrigonometricFunction, C.HyperbolicFunction, C.ExpBase):
+        expr = exptrigsimp(expr)
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
@@ -4144,6 +4135,32 @@ def besselsimp(expr):
     if expr != orig_expr:
         expr = expr.factor()
 
+    return expr
+
+def exptrigsimp(expr):
+    """
+    Simplifies exponential / trigonometric / hyperbolic functions
+
+    >>> from sympy import exptrigsimp, exp, cosh, sinh
+    >>> from sympy.abc import z
+
+    >>> exptrigsimp(exp(z) + exp(-z))
+    2*cosh(z)
+
+    >>> exptrigsimp(cosh(z) - sinh(z))
+    exp(-z)
+    """
+    def exp_trig(e):
+        # select the better of e, and e rewritten in terms of exp or trig
+        # functions
+        choices = [e]
+        if e.has(*_trigs):
+            choices.append(e.rewrite(exp))
+        choices.append(e.rewrite(cos))
+        return min(*choices, **dict(key=count_ops))
+    newexpr = bottom_up(expr, exp_trig)
+    if not (newexpr.has(I) and not expr.has(I)):
+        expr = newexpr
     return expr
 
 

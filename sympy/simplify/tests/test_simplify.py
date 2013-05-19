@@ -1,13 +1,13 @@
 from sympy import (
     acos, Add, atan, besselsimp, binomial, collect, collect_const, combsimp,
     cos, cosh, cot, coth, count_ops, Derivative, diff, Dummy, E, Eq, erf, exp,
-    exp_polar, expand, factor, factorial, FallingFactorial, Float, fraction,
-    Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I, Integer,
-    Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O, oo, pi,
-    Piecewise, polar_lift, polarify, posify, powdenest, powsimp, radsimp,
-    Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial, root, S,
-    separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs, Symbol,
-    symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
+    exp_polar, expand, exptrigsimp, factor, factorial, FallingFactorial, Float,
+    fraction, Function, gamma, GoldenRatio, hyper, hyper, hypersimp, I,
+    Integer, Integral, integrate, log, logcombine, Matrix, Mul, nsimplify, O,
+    oo, pi, Piecewise, polar_lift, polarify, posify, powdenest, powsimp,
+    radsimp, Rational, ratsimp, ratsimpmodprime, rcollect, RisingFactorial,
+    root, S, separatevars, signsimp, simplify, sin, sinh, solve, sqrt, Subs,
+    Symbol, symbols, sympify, tan, tanh, trigsimp, Wild, Basic, ordered,
     expand_multinomial, denom)
 from sympy.core.mul import _keep_coeff
 from sympy.simplify.simplify import (
@@ -1775,8 +1775,20 @@ def test_3821():
     # wrap in f to show that the change happens wherever ei occurs
     f = Function('f')
     assert [simplify(f(ei)).args[0] for ei in e] == ok
-    assert simplify(exp(x) + exp(-x)) == 2*cosh(x)
-    assert simplify(exp(x) - exp(-x)) == 2*sinh(x)
+
+
+def test_exptrigsimp():
+    assert exptrigsimp(exp(x) + exp(-x)) == 2*cosh(x)
+    assert exptrigsimp(exp(x) - exp(-x)) == 2*sinh(x)
+    e = [cos(x) + I*sin(x), cos(x) - I*sin(x),
+         cosh(x) - sinh(x), cosh(x) + sinh(x)]
+    ok = [exp(I*x), exp(-I*x), exp(-x), exp(x)]
+    assert [exptrigsimp(ei) for ei in e] == ok
+
+    ue = [cos(x) + sin(x), cos(x) - sin(x),
+          cosh(x) + I*sinh(x), cosh(x) - I*sinh(x)]
+    assert [exptrigsimp(ei) for ei in ue] == ue
+
     # TODO
     # w = exp(x)
     # assert simplify((w - 1/w)/(w + 1/w)) == tanh(x)
