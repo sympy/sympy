@@ -1533,6 +1533,8 @@ class Basic(object):
 
     def _eval_rewrite(self, pattern, rule, **hints):
         if self.is_Atom:
+            if hasattr(self, rule):
+                return getattr(self, rule)()
             return self
         sargs = self.args
         terms = [ t._eval_rewrite(pattern, rule, **hints)
@@ -1558,6 +1560,9 @@ class Basic(object):
         defined called 'deep'. When 'deep' is set to False it will
         forbid functions to rewrite their contents.
 
+        Examples
+        ========
+
         >>> from sympy import sin, exp
         >>> from sympy.abc import x
 
@@ -1574,7 +1579,7 @@ class Basic(object):
         -I*(exp(I*x) - exp(-I*x))/2
 
         """
-        if self.is_Atom or not args:
+        if not args:
             return self
         else:
             pattern = args[:-1]
