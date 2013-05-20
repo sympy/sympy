@@ -167,6 +167,26 @@ def test_trigsimp3():
 
     assert trigsimp(tan(x)) == trigsimp(sin(x)/cos(x))
 
+def test_3821():
+    z = Symbol("z")
+
+    assert trigsimp(cos(z) + sin(z)) == cos(z) + sin(z)
+    assert trigsimp(cos(z) - sin(z)) == cos(z) - sin(z)
+    assert trigsimp(cos(z) + I*sin(z)) == exp(I*z)
+    assert trigsimp(cos(z) - I*sin(z)) == exp(-I*z)
+    assert trigsimp(cos(I*z) + sin(I*z)) == cosh(z) + I*sinh[z]
+    assert trigsimp(cos(I*z) - sin(I*z)) == cosh(z) - I*sinh[z]
+    assert trigsimp(cos(I*z) + I*sin(I*z)) == exp(-z)
+    assert trigsimp(cos(I*z) - I*sin(I*z)) == exp(z)
+
+    assert trigsimp(cosh(z) + sinh(z)) == exp(z)
+    assert trigsimp(cosh(z) - sinh(z)) == exp(-z)
+    assert trigsimp(cosh(z) + I*sinh(z)) == cosh(z) + I*sinh(z)
+    assert trigsimp(cosh(z) - I*sinh(z)) == cosh(z) - I*sinh(z)
+    assert trigsimp(cosh(I*z) + sinh(I*z)) == cos(z) + I*sin(z)
+    assert trigsimp(cosh(I*z) - sinh(I*z)) == cos(z) - I*sin(z)
+    assert trigsimp(cosh(I*z) + I*sinh(I*z)) == cos(z) - sin(z)
+    assert trigsimp(cosh(I*z) - I*sinh(I*z)) == cos(z) - sin(z)
 
 def test_1562():
     a, x, y = symbols('a x y')
