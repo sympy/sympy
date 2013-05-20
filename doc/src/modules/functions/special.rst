@@ -165,13 +165,11 @@ Laguerre Polynomials
 Spherical Harmonics
 -------------------
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Plmcos
+.. autoclass:: sympy.functions.special.spherical_harmonics.Ynm
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm
+.. autofunction:: sympy.functions.special.spherical_harmonics.Ynm_c
 
-.. autofunction:: sympy.functions.special.spherical_harmonics.Ylm_c
-
-.. autofunction:: sympy.functions.special.spherical_harmonics.Zlm
+.. autoclass:: sympy.functions.special.spherical_harmonics.Znm
 
 Tensor Functions
 ----------------
