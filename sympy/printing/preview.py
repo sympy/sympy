@@ -156,10 +156,7 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     try:
         latex_is_available = find_executable('latex') is not None
         if use_matplotlib is None:
-            if latex_is_available:
-                use_matplotlib = False
-            else:
-                use_matplotlib = True
+            use_matplotlib = not latex_is_available
 
         if use_matplotlib:
             render_with_matplotlib(latex_string, output, workdir)
@@ -271,8 +268,6 @@ def render_with_latex(latex_string, output, workdir, preamble, packages, euler,
             raise ValueError("The \"packages\" keyword must not be set if a "
                              "custom LaTeX preamble was specified")
     latex_main = preamble + '\n%s\n\n' + r"\end{document}"
-
-
 
     with open(join(workdir, 'texput.tex'), 'w') as fh:
         fh.write(latex_main % latex_string)
