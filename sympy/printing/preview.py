@@ -163,7 +163,10 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
     try:
         latex_is_available = find_executable('latex') is not None
         if use_matplotlib is None:
-                use_matplotlib = not latex_is_available
+            if latex_is_available:
+                use_matplotlib = False
+            else:
+                use_matplotlib = True
 
         if use_matplotlib:
             render_with_matplotlib(latex_string, output, workdir)
