@@ -23,6 +23,7 @@ from sympy.polys.polyerrors import (
 
 from sympy.polys.polyclasses import DMP
 from sympy.polys.domains import QQ
+from sympy.polys.rootoftools import RootOf
 from sympy.solvers import solve
 
 from sympy.utilities.pytest import skip
@@ -71,7 +72,7 @@ def test_minimal_polynomial():
     assert minimal_polynomial(
         1/sqrt(a), x) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
 
-    raises(NotAlgebraic, lambda: minimal_polynomial(y, x))
+    raises(NotAlgebraic, lambda: minimal_polynomial(y, x, domain=QQ))
     raises(NotAlgebraic, lambda: minimal_polynomial(oo, x))
     raises(NotAlgebraic, lambda: minimal_polynomial(2**y, x))
     raises(NotAlgebraic, lambda: minimal_polynomial(sin(1), x))
@@ -209,8 +210,7 @@ def test_minpoly_compose():
     assert minimal_polynomial(sin(5*pi/14), x) == 8*x**3 - 4*x**2 - 4*x + 1
     assert minimal_polynomial(cos(pi/15), x) == 16*x**4 + 8*x**3 - 16*x**2 - 8*x + 1
 
-    eq = expand((x**5 + 3*x + 1)*(x**3 + 4*x + 1))
-    ex = solve(eq, x)[0]
+    ex = RootOf(x**3 +x*4 + 1, 0)
     mp = minimal_polynomial(ex, x)
     assert mp == x**3 + 4*x + 1
     mp = minimal_polynomial(ex + 1, x)
