@@ -666,6 +666,17 @@ def test_issue_3268():
     assert powsimp(z) != 0
 
 
+def test_powsimp_negated_base():
+    assert powsimp((-x + y)/sqrt(x - y)) == -sqrt(x - y)
+    assert powsimp((-x + y)*(-z + y)/sqrt(x - y)/sqrt(z - y)) == sqrt(x - y)*sqrt(z - y)
+    p = symbols('p', positive=True)
+    assert powsimp((-p)**a/p**a) == (-1)**a
+    n = symbols('n', negative=True)
+    assert powsimp((-n)**a/n**a) == (-1)**a
+    # if x is 0 then the lhs is 0**a*oo**a which is not (-1)**a
+    assert powsimp((-x)**a/x**a) != (-1)**a
+
+
 def test_issue_3341():
     assert powsimp(16*2**a*8**b) == 2**(a + 3*b + 4)
 
@@ -1419,7 +1430,7 @@ def test_radsimp():
         (-9*x + 9*sqrt(2)*x - 9*sqrt(y) + 9*sqrt(2)*sqrt(y))/(9*x*(9*x**2 -
         9*y)))
     assert radsimp(1 + 1/(1 + sqrt(3))) == \
-        S.Half + sqrt(3)/2
+        Mul(S.Half, -1 + sqrt(3), evaluate=False) + 1
     A = symbols("A", commutative=False)
     assert radsimp(x**2 + sqrt(2)*x**2 - sqrt(2)*x*A) == \
         x**2 + sqrt(2)*x**2 - sqrt(2)*x*A

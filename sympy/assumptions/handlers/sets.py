@@ -2,7 +2,7 @@
 Handlers for predicates related to set membership: integer, rational, etc.
 """
 from sympy.assumptions import Q, ask
-from sympy.assumptions.handlers import CommonHandler
+from sympy.assumptions.handlers import CommonHandler, test_closed_group
 from sympy import I, S
 
 
@@ -82,6 +82,12 @@ class AskIntegerHandler(CommonHandler):
     @staticmethod
     def Abs(expr, assumptions):
         return ask(Q.integer(expr.args[0]), assumptions)
+
+    @staticmethod
+    def MatrixElement(expr, assumptions):
+        return ask(Q.integer_elements(expr.args[0]), assumptions)
+
+    Determinant = Trace = MatrixElement
 
 
 class AskRationalHandler(CommonHandler):
@@ -249,6 +255,12 @@ class AskRealHandler(CommonHandler):
 
     cos, exp = [sin]*2
 
+    @staticmethod
+    def MatrixElement(expr, assumptions):
+        return ask(Q.real_elements(expr.args[0]), assumptions)
+
+    Determinant = Trace = MatrixElement
+
 
 class AskExtendedRealHandler(AskRealHandler):
     """
@@ -335,12 +347,18 @@ class AskComplexHandler(CommonHandler):
     def Add(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex)
 
-    Mul, Pow = [Add]*2
+    Mul = Pow = Add
 
     Number, sin, cos, exp, re, im, NumberSymbol, Abs, ImaginaryUnit = \
         [staticmethod(CommonHandler.AlwaysTrue)]*9 # they are all complex functions or expressions
 
     Infinity, NegativeInfinity = [staticmethod(CommonHandler.AlwaysFalse)]*2
+
+    @staticmethod
+    def MatrixElement(expr, assumptions):
+        return ask(Q.complex_elements(expr.args[0]), assumptions)
+
+    Determinant = Trace = MatrixElement
 
 
 class AskImaginaryHandler(CommonHandler):
@@ -542,25 +560,3 @@ class AskAlgebraicHandler(CommonHandler):
 
     sin, cos, tan, asin, atan = [exp]*5
     acos, acot = log, cot
-
-
-#### Helper methods
-
-
-def test_closed_group(expr, assumptions, key):
-    """
-    Test for membership in a group with respect
-    to the current operation
-    """
-    result = True
-    for arg in expr.args:
-        _out = ask(key(arg), assumptions)
-        if _out is None:
-            break
-        elif _out is False:
-            if result:
-                result = False
-            else:
-                break
-    else:
-        return result

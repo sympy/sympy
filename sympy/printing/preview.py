@@ -2,18 +2,11 @@ from __future__ import with_statement
 
 from os.path import join
 from subprocess import STDOUT, CalledProcessError
-
-# this workaround is needed because we still support python 2.5 and python
-# 2.6
-try:
-    from subprocess import check_output as run_process
-except ImportError:
-    from subprocess import check_call as run_process
-
 import tempfile
 import shutil
 from cStringIO import StringIO
 
+from sympy.core.compatibility import check_output
 from sympy.utilities.exceptions import SymPyDeprecationWarning
 from sympy.utilities.misc import find_executable
 from sympy.printing.latex import latex
@@ -243,7 +236,12 @@ def preview(expr, output='png', viewer=None, euler=True, packages=(),
 
             win.close()
         else:
-            run_process([viewer, src], cwd=workdir, stderr=STDOUT)
+            try:
+                check_output([viewer, src], cwd=workdir, stderr=STDOUT)
+            except CalledProcessError, e:
+                raise RuntimeError(
+                    "'%s %s' exited abnormally with the following output:\n%s" %
+                    (viewer, src, e.output))
     finally:
         try:
             shutil.rmtree(workdir) # delete directory
@@ -283,7 +281,7 @@ def render_with_latex(latex_string, output, workdir, preamble, packages, euler,
         shutil.copyfile(join(workdir, 'texput.tex'), output_tex_file)
 
     try:
-        run_process(['latex', '-halt-on-error', '-interaction=nonstopmode',
+        check_output(['latex', '-halt-on-error', '-interaction=nonstopmode',
                      'texput.tex'], cwd=workdir, stderr=STDOUT)
     except CalledProcessError, e:
         raise RuntimeError(
@@ -314,7 +312,7 @@ def render_with_latex(latex_string, output, workdir, preamble, packages, euler,
             raise SystemError("Invalid output format: %s" % output)
 
         try:
-            run_process(cmd, cwd=workdir, stderr=STDOUT)
+            check_output(cmd, cwd=workdir, stderr=STDOUT)
         except CalledProcessError, e:
             raise RuntimeError(
                 "%s exited abnormally with the following output:\n%s" %

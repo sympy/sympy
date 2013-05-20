@@ -1,18 +1,23 @@
 from collections import defaultdict
 
 from sympy.core.add import Add
+from sympy.core.basic import Basic
 from sympy.core.mul import Mul
 from sympy.core.symbol import Symbol, Wild, Dummy
 from sympy.core.basic import C, sympify
 from sympy.core.numbers import Rational, I, pi
+from sympy.core.relational import Eq
 from sympy.core.singleton import S
 from sympy.core.compatibility import permutations
 
 from sympy.functions import exp, sin, cos, tan, cot, asin, atan
 from sympy.functions import log, sinh, cosh, tanh, coth, asinh, acosh
 from sympy.functions import sqrt, erf
+from sympy.functions.elementary.piecewise import Piecewise
 
-from sympy.solvers import solve
+from sympy.logic.boolalg import And
+from sympy.solvers.solvers import solve, denoms
+from sympy.utilities.iterables import uniq
 
 from sympy.polys import quo, gcd, lcm, \
     monomials, factor, cancel, PolynomialError
@@ -42,7 +47,7 @@ def components(f, x):
     """
     result = set()
 
-    if f.has(x):
+    if x in f.free_symbols:
         if f.is_Symbol:
             result.add(f)
         elif f.is_Function or f.is_Derivative:
@@ -83,7 +88,81 @@ def _symbols(name, n):
     return lsyms[:n]
 
 
-def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_offset=0):
+def heurisch_wrapper(f, x, rewrite=False, hints=None, mappings=None, retries=3,
+                     degree_offset=0, unnecessary_permutations=None):
+    """
+    A wrapper around the heurisch integration algorithm.
+
+    This method takes the result from heurisch and checks for poles in the
+    denominator. For each of these poles, the integral is reevaluated, and
+    the final integration result is given in terms of a Piecewise.
+
+    Examples
+    ========
+
+    >>> from sympy.core import symbols
+    >>> from sympy.functions import cos
+    >>> from sympy.integrals.heurisch import heurisch, heurisch_wrapper
+    >>> n, x = symbols('n x')
+    >>> heurisch(cos(n*x), x)
+    sin(n*x)/n
+    >>> heurisch_wrapper(cos(n*x), x)
+    Piecewise((x, n == 0), (sin(n*x)/n, True))
+
+    See Also
+    ========
+
+    heurisch
+    """
+    f = sympify(f)
+    if x not in f.free_symbols:
+        return f*x
+
+    res = heurisch(f, x, rewrite, hints, mappings, retries, degree_offset,
+                   unnecessary_permutations)
+    if not isinstance(res, Basic):
+        return res
+    # We consider each denominator in the expression, and try to find
+    # cases where one or more symbolic denominator might be zero. The
+    # conditions for these cases are stored in the list slns.
+    slns = []
+    for d in denoms(res):
+        try:
+            slns += solve(d, dict=True, exclude=(x,))
+        except NotImplementedError:
+            pass
+    if not slns:
+        return res
+    slns = list(uniq(slns))
+    # Remove the solutions corresponding to poles in the original expression.
+    slns0 = []
+    for d in denoms(f):
+        try:
+            slns0 += solve(d, dict=True, exclude=(x,))
+        except NotImplementedError:
+            pass
+    slns = [s for s in slns if s not in slns0]
+    if not slns:
+        return res
+    if len(slns) > 1:
+        eqs = []
+        for sub_dict in slns:
+            eqs.extend([Eq(key, value) for key, value in sub_dict.iteritems()])
+        slns = solve(eqs, dict=True, exclude=(x,)) + slns
+    # For each case listed in the list slns, we reevaluate the integral.
+    pairs = []
+    for sub_dict in slns:
+        expr = heurisch(f.subs(sub_dict), x, rewrite, hints, mappings, retries,
+                        degree_offset, unnecessary_permutations)
+        cond = And(*[Eq(key, value) for key, value in sub_dict.iteritems()])
+        pairs.append((expr, cond))
+    pairs.append((heurisch(f, x, rewrite, hints, mappings, retries,
+                           degree_offset, unnecessary_permutations), True))
+    return Piecewise(*pairs)
+
+
+def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3,
+             degree_offset=0, unnecessary_permutations=None):
     """
     Compute indefinite integral using heuristic Risch algorithm.
 
@@ -159,14 +238,13 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
     components
     """
     f = sympify(f)
+    if x not in f.free_symbols:
+        return f*x
 
     if not f.is_Add:
         indep, f = f.as_independent(x)
     else:
         indep = S.One
-
-    if not f.has(x):
-        return indep * f * x
 
     rewritables = {
         (sin, cos, cot): tan,
@@ -249,6 +327,8 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
 
     rev_mapping = {}
 
+    if unnecessary_permutations is None:
+        unnecessary_permutations = []
     for k, v in mapping.iteritems():
         rev_mapping[v] = k
 
@@ -256,6 +336,9 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
         # Pre-sort mapping in order of largest to smallest expressions (last is always x).
         def _sort_key(arg):
             return default_sort_key(arg[0].as_independent(x)[1])
+        #optimizing the number of permutations of mappping
+        unnecessary_permutations = [(x, mapping[x])]
+        del mapping[x]
         mapping = sorted(mapping.items(), key=_sort_key, reverse=True)
         mappings = permutations(mapping)
 
@@ -263,29 +346,22 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
         return expr.subs(mapping)
 
     for mapping in mappings:
-        # TODO: optimize this by not generating permutations where mapping[-1] != x.
-        if mapping[-1][0] != x:
-            continue
-
         mapping = list(mapping)
-
+        mapping = mapping + unnecessary_permutations
         diffs = [ _substitute(cancel(g.diff(x))) for g in terms ]
         denoms = [ g.as_numer_denom()[1] for g in diffs ]
-
         if all(h.is_polynomial(*V) for h in denoms) and _substitute(f).is_rational_function(*V):
             denom = reduce(lambda p, q: lcm(p, q, *V), denoms)
             break
     else:
         if not rewrite:
-            result = heurisch(f, x, rewrite=True, hints=hints)
+            result = heurisch(f, x, rewrite=True, hints=hints, unnecessary_permutations=unnecessary_permutations)
 
             if result is not None:
                 return indep*result
-
         return None
 
     numers = [ cancel(denom*g) for g in diffs ]
-
     def _derivation(h):
         return Add(*[ d * h.diff(v) for d, v in zip(numers, V) ])
 
@@ -460,7 +536,7 @@ def heurisch(f, x, rewrite=False, hints=None, mappings=None, retries=3, degree_o
         return indep * antideriv
     else:
         if retries >= 0:
-            result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries - 1)
+            result = heurisch(f, x, mappings=mappings, rewrite=rewrite, hints=hints, retries=retries - 1, unnecessary_permutations=unnecessary_permutations)
 
             if result is not None:
                 return indep*result

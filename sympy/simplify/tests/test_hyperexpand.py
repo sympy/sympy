@@ -70,11 +70,11 @@ def test_roach():
     assert can_do([S(1)/3], [-S(2)/3, -S(1)/2, S(1)/2, 1])
     assert can_do([-S(3)/2, -S(1)/2], [-S(5)/2, 1])
     assert can_do([-S(3)/2, ], [-S(1)/2, S(1)/2])  # shine-integral
+    assert can_do([-S(3)/2, -S(1)/2], [2])  # elliptic integrals
 
 
 @XFAIL
 def test_roach_fail():
-    assert can_do([-S(3)/2, -S(1)/2], [2])  # elliptic integrals
     assert can_do([-S(1)/2, 1], [S(1)/4, S(1)/2, S(3)/4])  # PFDD
     assert can_do([S(3)/2], [S(5)/2, 5])  # struve function
     assert can_do([-S(1)/2, S(1)/2, 1], [S(3)/2, S(5)/2])  # polylog, pfdd
@@ -890,6 +890,15 @@ def test_prudnikov_12():
     assert can_do([], [2, S(3)/2, S(3)/2])
 
 
+def test_prudnikov_2F1():
+    h = S.Half
+    # Elliptic integrals
+    for p in [-h, h]:
+        for m in [h, 3*h, 5*h, 7*h]:
+            for n in [1, 2, 3, 4]:
+                assert can_do([p, m], [n])
+
+
 @XFAIL
 def test_prudnikov_fail_2F1():
     assert can_do([a, b], [b + 1])  # incomplete beta function
@@ -914,13 +923,6 @@ def test_prudnikov_fail_2F1():
     assert can_do([a, a + S(1)/2], [c])
     assert can_do([1, b], [c])
     assert can_do([1, b], [S(3)/2])
-
-    h = S.Half
-    # Elliptic integrals
-    for p in [-h, h]:
-        for m in [h, 3*h, 5*h, 7*h]:
-            for n in [1, 2, 3, 4]:
-                assert can_do([p, m], [n])
 
     assert can_do([S(1)/4, S(3)/4], [1])
 

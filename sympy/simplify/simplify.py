@@ -6,7 +6,7 @@ from sympy.core import (Basic, S, C, Add, Mul, Pow, Rational, Integer,
     Derivative, Wild, Symbol, sympify, expand, expand_mul, expand_func,
     Function, Equality, Dummy, Atom, count_ops, Expr, factor_terms,
     expand_multinomial, FunctionClass, expand_power_base, symbols, igcd,
-    expand_power_exp)
+    expand_power_exp, expand_log)
 from sympy.core.add import _unevaluated_Add
 from sympy.core.cache import cacheit
 from sympy.core.compatibility import (
@@ -1661,7 +1661,7 @@ def _nthroot_solve(p, n, prec):
         return p
     pn = p**Rational(1, n)
     x = Symbol('x')
-    f = _minimal_polynomial_sq(p, n, x, prec)
+    f = _minimal_polynomial_sq(p, n, x)
     if f is None:
         return None
     sols = solve(f, x)
@@ -2279,7 +2279,7 @@ def _denest_pow(eq):
         else:
             if kernel.is_Integer:
                 # use log to see if there is a power here
-                logkernel = log(kernel)
+                logkernel = expand_log(log(kernel))
                 if logkernel.is_Mul:
                     c, logk = logkernel.args
                     e *= c
@@ -2584,6 +2584,7 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
             # allow 2**x/4 -> 2**(x - 2); don't do this when b and e are
             # Numbers since autoevaluation will undo it, e.g.
             # 2**(1/3)/4 -> 2**(1/3 - 2) -> 2**(1/3)/4
+            assert 2**(S(1)/3 - 2) == 2**(S(1)/3)/4
             if (b and b.is_Number and not all(ei.is_Number for ei in e) and \
                     coeff is not S.One and
                     b not in (S.One, S.NegativeOne)):
@@ -2597,6 +2598,9 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                 c_powers[coeff] += S.One
             else:
                 c_powers[coeff] = S.One
+
+        # convert to plain dictionary
+        c_powers = dict(c_powers)
 
         # check for base and inverted base pairs
         be = c_powers.items()
@@ -2615,6 +2619,18 @@ def powsimp(expr, deep=False, combine='all', force=False, measure=count_ops):
                         skip.add(binv)
                         e = c_powers.pop(binv)
                         c_powers[b] -= e
+
+        # check for base and negated base pairs
+        be = c_powers.items()
+        _n = S.NegativeOne
+        for i, (b, e) in enumerate(be):
+            if ((-b).is_Symbol or b.is_Add) and -b in c_powers:
+                if (b.is_positive in (0, 1) or e.is_integer):
+                    c_powers[-b] += c_powers.pop(b)
+                    if _n in c_powers:
+                        c_powers[_n] += e
+                    else:
+                        c_powers[_n] = e
 
         # filter c_powers and convert to a list
         c_powers = [(b, e) for b, e in c_powers.iteritems() if e]

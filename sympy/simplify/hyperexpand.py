@@ -67,7 +67,7 @@ from sympy.utilities.iterables import sift
 from sympy.functions import (exp, sqrt, root, log, lowergamma, cos,
         besseli, gamma, uppergamma, erf, sin, besselj, Ei, Ci, Si, Shi,
         sinh, cosh, Chi, fresnels, fresnelc, polar_lift, exp_polar, ceiling,
-        rf, factorial, lerchphi, Piecewise, re)
+        rf, factorial, lerchphi, Piecewise, re, elliptic_k, elliptic_e)
 from sympy.functions.special.hyper import (hyper, HyperRep_atanh,
         HyperRep_power1, HyperRep_power2, HyperRep_log1, HyperRep_asin1,
         HyperRep_asin2, HyperRep_sqrts1, HyperRep_sqrts2, HyperRep_log2,
@@ -134,6 +134,9 @@ def add_formulae(formulae):
     addb([1, 1], [3*S.Half],
          Matrix([HyperRep_asin2(z), 1]), Matrix([[1, 0]]),
          Matrix([[(z - S.Half)/(1 - z), 1/(1 - z)/2], [0, 0]]))
+
+    add((S.Half, S.Half), (S.One, ), 2*elliptic_k(z)/pi)
+    add((-S.Half, S.Half), (S.One, ), 2*elliptic_e(z)/pi)
 
     # 3F2
     addb([-S.Half, 1, 1], [S.Half, 2],

@@ -1,9 +1,9 @@
 from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
-    LambertW, Lt, Matrix, Or, Poly, Q, Rational, S, Symbol, Wild, acos,
-    asin, atan, atanh, cos, cosh, diff, exp, expand, im, log, pi, re, sin,
-    sinh, solve, solve_linear, sqrt, sstr, symbols, sympify, tan, tanh,
-    root)
+    LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
+    Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
+    log, pi, re, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
+    sympify, tan, tanh, root)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -300,22 +300,9 @@ def test_tsolve():
     assert solve(3**(x + 2), x) == []
     assert solve(3**(2 - x), x) == []
     assert solve(x + 2**x, x) == [-LambertW(log(2))/log(2)]
-    assert solve(3*x + 5 + 2**(-5*x + 3), x) in [
-        [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(
-            2)/3))/(15*log(2)))],
-        [-Rational(5, 3) + LambertW(
-            log(2**(-10240*2**(Rational(1, 3))/3)))/(5*log(2))],
-        [-Rational(
-            5, 3) + LambertW(-10240*2**Rational(1, 3)*log(2)/3)/(5*log(2))],
-        [(-25*log(2) + 3*LambertW(-10240*2**(Rational(1, 3))*log(2)
-          /3))/(15*log(2))],
-        [-((25*log(2) - 3*LambertW(-10240*2**(Rational(1, 3))*log(
-            2)/3)))/(15*log(2))],
-        [-(25*log(2) - 3*LambertW(log(2**(-10240*2**Rational(1, 3)/
-           3))))/(15*log(2))],
-        [(25*log(2) - 3*LambertW(log(2**(-10240*2**Rational(1, 3)/
-          3))))/(-15*log(2))]
-    ]
+    ans = solve(3*x + 5 + 2**(-5*x + 3), x)
+    assert len(ans) == 1 and ans[0].expand() == \
+        -Rational(5, 3) + LambertW(-10240*2**(S(1)/3)*log(2)/3)/(5*log(2))
     assert solve(5*x - 1 + 3*exp(2 - 7*x), x) == \
         [Rational(1, 5) + LambertW(-21*exp(Rational(3, 5))/5)/7]
     assert solve(2*x + 5 + log(3*x - 2), x) == \
@@ -1115,6 +1102,21 @@ def test_issue_2957():
         -log(2)/2 + log(-1 - I),
         -log(2)/2 + log(1 + I),
         -log(2)/2 + log(-1 + I),])
+
+
+def test_issue_2961():
+    x = Symbol('x')
+    absxm3 = Piecewise(
+        (x - 3, S(0) <= x - 3),
+        (3 - x, S(0) > x - 3)
+    )
+    y = Symbol('y')
+    assert solve(absxm3 - y, x) == [
+        Piecewise((-y + 3, S(0) > -y), (S.NaN, True)),
+        Piecewise((y + 3, S(0) <= y), (S.NaN, True))
+    ]
+    y = Symbol('y', positive=True)
+    assert solve(absxm3 - y, x) == [-y + 3, y + 3]
 
 
 def test_issue_2574():

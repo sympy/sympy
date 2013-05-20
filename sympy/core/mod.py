@@ -25,12 +25,9 @@ class Mod(Function):
     def eval(cls, p, q):
         from sympy.core.add import Add
         from sympy.core.mul import Mul
-        from sympy.core.numbers import Integer
         from sympy.core.singleton import S
         from sympy.core.exprtools import gcd_terms
-        from sympy.functions.elementary.complexes import sign
         from sympy.polys.polytools import gcd
-        from sympy.utilities.iterables import sift
 
         def doit(p, q):
             """Try to return p % q if both are numbers or +/-p is known
