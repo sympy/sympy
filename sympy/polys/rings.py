@@ -134,8 +134,10 @@ def sring(exprs, *symbols, **options):
     <class 'sympy.polys.rings.PolyElement'>
 
     """
+    single = False
+
     if not is_sequence(exprs):
-        exprs = [exprs]
+        exprs, single = [exprs], True
 
     exprs = map(sympify, exprs)
     opt = build_options(symbols, options)
@@ -150,7 +152,12 @@ def sring(exprs, *symbols, **options):
         opt.domain, _ = construct_domain(coeffs, opt=opt)
 
     _ring = PolyRing(opt.gens, opt.domain, opt.order)
-    return (_ring,) + tuple(map(_ring.from_dict, reps))
+    polys = map(_ring.from_dict, reps)
+
+    if single:
+        return (_ring, polys[0])
+    else:
+        return (_ring, polys)
 
 def _parse_symbols(symbols):
     if not symbols:
