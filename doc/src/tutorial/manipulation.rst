@@ -66,8 +66,8 @@ tree:
    The above diagram was made using `Graphviz <http://www.graphviz.org/>`_ and
    the ``dotprint`` function, in ``sympy.printing.dot``.
 
-First, let's look at the leaves of this tree.  Symbols are instances of class
-Symbol.  While we have been doing
+First, let's look at the leaves of this tree.  Symbols are instances of the
+class Symbol.  While we have been doing
 
     >>> x = symbols('x')
 
