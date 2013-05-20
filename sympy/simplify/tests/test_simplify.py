@@ -531,7 +531,7 @@ def test_simplify_issue_1308():
 
 
 def test_issue_2553():
-    assert simplify(E + exp(-E)) == E + exp(-E)
+    assert simplify(E + exp(-E)) == 2*cosh(x)
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
 
@@ -1778,16 +1778,23 @@ def test_3821():
 
 
 def test_exptrigsimp():
+    def valid(a, b):
+        from sympy.utilities.randtest import test_numerically as tn
+        if not (tn(a, b) and a == b):
+            return False
+        return True
+
     assert exptrigsimp(exp(x) + exp(-x)) == 2*cosh(x)
     assert exptrigsimp(exp(x) - exp(-x)) == 2*sinh(x)
     e = [cos(x) + I*sin(x), cos(x) - I*sin(x),
          cosh(x) - sinh(x), cosh(x) + sinh(x)]
     ok = [exp(I*x), exp(-I*x), exp(-x), exp(x)]
-    assert [exptrigsimp(ei) for ei in e] == ok
+    assert all(valid(i, j) for i, j in zip(
+        [exptrigsimp(ei) for ei in e], ok))
 
     ue = [cos(x) + sin(x), cos(x) - sin(x),
           cosh(x) + I*sinh(x), cosh(x) - I*sinh(x)]
-    assert [exptrigsimp(ei) for ei in ue] == ue
+    assert [exptrigsimp(ei) == ei for ei in ue]
 
     res = []
     ok = [y*tanh(1), 1/(y*tanh(1)), I*y*tan(1), -I/(y*tan(1)),
@@ -1802,4 +1809,15 @@ def test_exptrigsimp():
         sinv = simplify(1/eq)
         assert sinv == exptrigsimp(1/eq)
         res.append(sinv)
-    assert res == ok
+    assert all(valid(i, j) for i, j in zip(res, ok))
+
+    for a in range(1, 3):
+        w = exp(a)
+        e = w + 1/w
+        s = simplify(e)
+        assert s == exptrigsimp(e)
+        assert valid(s, 2*cosh(a))
+        e = w - 1/w
+        s = simplify(e)
+        assert s == exptrigsimp(e)
+        assert valid(s, 2*sinh(a))

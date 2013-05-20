@@ -4170,11 +4170,19 @@ def exptrigsimp(expr, simplify=True):
     if cancel:
         newexpr = powsimp(factor_terms(
             expand_power_exp(newexpr).cancel()), deep=True)
-    # exp ratios to tan and tanh
+    # conversion from exp to hyperbolic
     ex = newexpr.atoms(exp, S.Exp1)
     ex = [ei for ei in ex if 1/ei not in ex]
+    # sinh and cosh
     for ei in ex:
-        a = ei.args[0]
+        e2 = ei**-2
+        if e2 in ex:
+            a = e2.args[0]/2
+            newexpr = newexpr.subs((e2 + 1)*ei, 2*cosh(a))
+            newexpr = newexpr.subs((e2 - 1)*ei, 2*sinh(a))
+    # exp ratios to tan and tanh
+    for ei in ex:
+        a = ei.args[0] if ei.func is exp else S.One
         if a.is_Mul or a is S.ImaginaryUnit:
             c = a.as_coefficient(I)
             if c:
@@ -4191,11 +4199,11 @@ def exptrigsimp(expr, simplify=True):
     if newexpr.has(C.HyperbolicFunction):
         e, f = hyper_as_trig(newexpr)
         newexpr = f(TR2i(e))
-    if e.has(C.TrigonometricFunction):
-        newexpr = TR2i(e)
+    if newexpr.has(C.TrigonometricFunction):
+        newexpr = TR2i(newexpr)
     # can we ever generate an I where there was none previously?
     if not (newexpr.has(I) and not expr.has(I)):
-        expr = newexpr
+        expr = factor_terms(newexpr)
     return expr
 
 
