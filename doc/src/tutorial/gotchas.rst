@@ -135,6 +135,8 @@ discussed in more detail later.
 
 .. TODO: Add link to basic operations section
 
+.. _tutorial_gotchas_equals:
+
 Equals signs
 ============
 
