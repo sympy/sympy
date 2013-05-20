@@ -276,7 +276,8 @@ SymPy expression must hold:
 
 .. topic:: Key Invariant
 
-   Every well-formed SymPy expression must satisfy ``expr == expr.func(*expr.args)``.
+   Every well-formed SymPy expression must either have empty ``args`` or
+   satisfy ``expr == expr.func(*expr.args)``.
 
 (Recall that in Python if ``a`` is a tuple, then ``f(*a)`` means to call ``f``
 with arguments from the elements of ``a``, e.g., ``f(*(1, 2, 3))`` is the same
@@ -288,6 +289,11 @@ Let's check this invariant for our expression.
     3*x*y**2
     >>> expr == expr.func(*expr.args)
     True
+
+Leaf nodes like ``Symbol`` or ``Integer`` that have empty ``args`` are not
+rebuildable from their ``args`` in this way.  We will see how to use this key
+invariant to write simple algorithms that walk expression trees, change them,
+and rebuild them into new expressions.
 
 Note that although we entered ``3*y**2*x``, the ``args`` are ``(3, x, y**2)``.
 In a ``Mul``, the Rational coefficient will come first in the ``args``, but
