@@ -443,10 +443,10 @@ def solve(f, *symbols, **flags):
         [3]
         >>> solve(Poly(x - 3), x)
         [3]
-        >>> set(solve(x**2 - y**2, x))
-        set([-y, y])
-        >>> set(solve(x**4 - 1, x))
-        set([-1, 1, -I, I])
+        >>> solve(x**2 - y**2, x, set=True)
+        ([x], set([(-y,), (y,)]))
+        >>> solve(x**4 - 1, x, set=True)
+        ([x], set([(-1,), (1,), (-I,), (I,)]))
 
     * single expression with no symbol that is in the expression
 
@@ -484,8 +484,8 @@ def solve(f, *symbols, **flags):
           [x + f(x)]
           >>> solve(f(x).diff(x) - f(x) - x, f(x))
           [-x + Derivative(f(x), x)]
-          >>> set(solve(x + exp(x)**2, exp(x)))
-          set([-sqrt(-x), sqrt(-x)])
+          >>> solve(x + exp(x)**2, exp(x), set=True)
+          ([exp(x)], set([(-sqrt(-x),), (sqrt(-x),)]))
 
           >>> from sympy import Indexed, IndexedBase, Tuple, sqrt
           >>> A = IndexedBase('A')
@@ -548,8 +548,8 @@ def solve(f, *symbols, **flags):
 
             * that are nonlinear
 
-                >>> set(solve((a + b)*x - b**2 + 2, a, b))
-                set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))])
+                >>> solve((a + b)*x - b**2 + 2, a, b, set=True)
+                ([a, b], set([(-sqrt(2), sqrt(2)), (sqrt(2), -sqrt(2))]))
 
         * if there is no linear solution then the first successful
           attempt for a nonlinear solution will be returned
@@ -590,8 +590,8 @@ def solve(f, *symbols, **flags):
 
         * when the system is not linear
 
-            >>> set(solve([x**2 + y -2, y**2 - 4], x, y))
-            set([(-2, -2), (0, 2), (2, -2)])
+            >>> solve([x**2 + y -2, y**2 - 4], x, y, set=True)
+            ([x, y], set([(-2, -2), (0, 2), (2, -2)]))
 
         * if no symbols are given, all free symbols will be selected and a list
           of mappings returned
