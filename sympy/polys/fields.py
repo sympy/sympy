@@ -9,6 +9,7 @@ from sympy.polys.rings import PolyElement
 from sympy.polys.orderings import lex
 from sympy.polys.polyerrors import ExactQuotientFailed, CoercionFailed
 from sympy.polys.domains.domainelement import DomainElement
+from sympy.polys.domains.polynomialring import PolynomialRing
 from sympy.polys.domains.fractionfield import FractionField
 from sympy.printing.defaults import DefaultPrinting
 from sympy.utilities import public
@@ -317,6 +318,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         elif isinstance(g, PolyElement):
             if field.ring == g.ring:
                 return f.new(f.numer + f.denom*g, f.denom)
+            elif isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
+                pass
             else:
                 return g.__radd__(f)
 
@@ -358,6 +361,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         elif isinstance(g, PolyElement):
             if field.ring == g.ring:
                 return f.new(f.numer - f.denom*g, f.denom)
+            elif isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
+                pass
             else:
                 return g.__rsub__(f)
 
@@ -401,6 +406,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         elif isinstance(g, PolyElement):
             if field.ring == g.ring:
                 return f.new(f.numer*g, f.denom)
+            elif isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
+                pass
             else:
                 return g.__rmul__(f)
 
@@ -437,6 +444,8 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         elif isinstance(g, PolyElement):
             if field.ring == g.ring:
                 return f.new(f.numer, f.denom*g)
+            elif isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
+                pass
             else:
                 return g.__rtruediv__(f)
 
