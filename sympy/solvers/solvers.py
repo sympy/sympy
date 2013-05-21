@@ -1278,7 +1278,7 @@ def _solve(f, *symbols, **flags):
                     if len(soln) < deg:
                         try:
                             # get all_roots if possible
-                            soln = list(uniq(poly.all_roots()))
+                            soln = list(ordered(uniq(poly.all_roots())))
                         except NotImplementedError:
                             pass
 
@@ -1335,15 +1335,15 @@ def _solve(f, *symbols, **flags):
                         if len(soln) < deg:
                             try:
                                 # get all_roots if possible
-                                soln = list(uniq(poly.all_roots()))
+                                soln = list(ordered(uniq(poly.all_roots())))
                             except NotImplementedError:
                                 pass
                         gen = poly.gen
                         if gen != symbol:
                             u = Dummy()
                             inversion = _solve(gen - u, symbol, **flags)
-                            soln = list(set([i.subs(u, s) for i in
-                                        inversion for s in soln]))
+                            soln = list(ordered(set([i.subs(u, s) for i in
+                                        inversion for s in soln])))
                         result = soln
 
     # fallback if above fails
@@ -2077,19 +2077,21 @@ def _tsolve(eq, sym, **flags):
     to the given symbol. Various equations containing powers and logarithms,
     can be solved.
 
-    Only a single solution is returned. This solution is generally
-    not unique. In some cases, a complex solution may be returned
-    even though a real solution exists.
+    There is currently no guarantee that all solutions will be returned or
+    that a real solution will be favored over a complex one.
 
-        >>> from sympy import log
-        >>> from sympy.solvers.solvers import _tsolve as tsolve
-        >>> from sympy.abc import x
+    Examples
+    ========
 
-        >>> tsolve(3**(2*x+5)-4, x)
-        [log(-2*sqrt(3)/27)/log(3), -5/2 + log(2)/log(3)]
+    >>> from sympy import log
+    >>> from sympy.solvers.solvers import _tsolve as tsolve
+    >>> from sympy.abc import x
 
-        >>> tsolve(log(x) + 2*x, x)
-        [LambertW(2)/2]
+    >>> tsolve(3**(2*x + 5) - 4, x)
+    [log(-2*sqrt(3)/27)/log(3), -5/2 + log(2)/log(3)]
+
+    >>> tsolve(log(x) + 2*x, x)
+    [LambertW(2)/2]
 
     """
 

@@ -295,7 +295,7 @@ def _solve_lambert(f, symbol, gens):
         raise NotImplementedError('%s does not appear to have a solution in '
             'terms of LambertW' % f)
 
-    return soln
+    return list(ordered(soln))
 
 
 def bivariate_type(f, x, y, **kwargs):
