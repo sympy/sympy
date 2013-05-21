@@ -303,6 +303,7 @@ def test_integrate_functions():
     assert integrate(diff(f(x), x) / f(x), x) == log(f(x))
 
 
+@XFAIL
 def test_integrate_derivatives():
     assert integrate(Derivative(f(x), x), x) == f(x)
     assert integrate(Derivative(f(y), y), x) == x*Derivative(f(y), y)
