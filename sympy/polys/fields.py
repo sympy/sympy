@@ -42,7 +42,7 @@ _field_cache = {}
 
 class FracField(DefaultPrinting):
 
-    def __new__(cls, symbols, domain, order):
+    def __new__(cls, symbols, domain, order=lex):
         from sympy.polys.rings import PolyRing
         ring = PolyRing(symbols, domain, order)
         dtype = FracElement

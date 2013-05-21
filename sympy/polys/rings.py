@@ -180,7 +180,7 @@ _ring_cache = {}
 class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
 
-    def __new__(cls, symbols, domain, order):
+    def __new__(cls, symbols, domain, order=lex):
         dtype = PolyElement
         symbols = tuple(_parse_symbols(symbols))
         ngens = len(symbols)
