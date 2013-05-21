@@ -2,13 +2,13 @@
 
 from sympy.polys.rings import ring, xring, sring, PolyRing, PolyElement
 from sympy.polys.fields import field, FracField
-from sympy.polys.domains import ZZ, QQ, RR, FF
+from sympy.polys.domains import ZZ, QQ, RR, FF, EX
 from sympy.polys.orderings import lex, grlex
 from sympy.polys.polyerrors import GeneratorsError, GeneratorsNeeded, ExactQuotientFailed, MultivariatePolynomialError
 
 from sympy.utilities.pytest import raises
 from sympy.core import Symbol, symbols
-from sympy import sqrt
+from sympy import sqrt, pi
 
 def test_PolyRing___init__():
     x, y, z, t = map(Symbol, "xyzt")
@@ -433,6 +433,10 @@ def test_PolyElement___add__():
 
     assert dict(u + x) == dict(x + u) == {(1, 0, 0): 1, (0, 0, 0): u}
 
+    Rxyz, x,y,z = ring("x,y,z", EX)
+
+    assert dict(EX(pi) + x*y*z) == dict(x*y*z + EX(pi)) == {(1, 1, 1): EX(1), (0, 0, 0): EX(pi)}
+
 def test_PolyElement___sub__():
     Rt, t = ring("t", ZZ)
     Ruv, u,v = ring("u,v", ZZ)
@@ -457,6 +461,10 @@ def test_PolyElement___sub__():
     Rxyz, x,y,z = ring("x,y,z", Fuv)
 
     assert dict(-u + x) == dict(x - u) == {(1, 0, 0): 1, (0, 0, 0): -u}
+
+    Rxyz, x,y,z = ring("x,y,z", EX)
+
+    assert dict(-EX(pi) + x*y*z) == dict(x*y*z - EX(pi)) == {(1, 1, 1): EX(1), (0, 0, 0): -EX(pi)}
 
 def test_PolyElement___mul__():
     Rt, t = ring("t", ZZ)
@@ -491,6 +499,10 @@ def test_PolyElement___mul__():
     Rxyz, x,y,z = ring("x,y,z", Fuv)
 
     assert dict(u*x) == dict(x*u) == {(1, 0, 0): u}
+
+    Rxyz, x,y,z = ring("x,y,z", EX)
+
+    assert dict(EX(pi)*x*y*z) == dict(x*y*z*EX(pi)) == {(1, 1, 1): EX(pi)}
 
 def test_PolyElement___div__():
     R, x,y,z = ring("x,y,z", ZZ)
