@@ -3703,6 +3703,8 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
 
     short = shorter(powsimp(expr, combine='exp', deep=True), powsimp(expr), expr)
     short = shorter(short, factor_terms(short), expand_power_exp(expand_mul(short)))
+    if short.has(C.TrigonometricFunction, C.HyperbolicFunction, C.ExpBase):
+        short = exptrigsimp(short, simplify=False)
 
     # get rid of hollow 2-arg Mul factorization
     from sympy.core.rules import Transform
@@ -3726,9 +3728,6 @@ def simplify(expr, ratio=1.7, measure=count_ops, fu=False):
         n, d = fraction(expr)
         if d != 0:
             expr = signsimp(-n/(-d))
-
-    if expr.has(C.TrigonometricFunction, C.HyperbolicFunction, C.ExpBase):
-        expr = exptrigsimp(expr, simplify=False)
 
     if measure(expr) > ratio*measure(original_expr):
         expr = original_expr
@@ -4140,9 +4139,9 @@ def besselsimp(expr):
 def exptrigsimp(expr, simplify=True):
     """
     Simplifies exponential / trigonometric / hyperbolic functions.
-    When ``simplify`` is True (default) some simplification will be done
-    that would otherwise be done in ``simplify`` to get precondition the
-    expression so the transformations will be applied.
+    When ``simplify`` is True (default) the expression obtained after the
+    simplification step will be then be passed through simplify to
+    precondition it so the final transformations will be applied.
 
     Examples
     ========
@@ -4152,7 +4151,6 @@ def exptrigsimp(expr, simplify=True):
 
     >>> exptrigsimp(exp(z) + exp(-z))
     2*cosh(z)
-
     >>> exptrigsimp(cosh(z) - sinh(z))
     exp(-z)
     """
@@ -4167,43 +4165,47 @@ def exptrigsimp(expr, simplify=True):
         choices.append(e.rewrite(cos))
         return min(*choices, **dict(key=count_ops))
     newexpr = bottom_up(expr, exp_trig)
-    if cancel:
-        newexpr = powsimp(factor_terms(
-            expand_power_exp(newexpr).cancel()), deep=True)
+
+    if simplify:
+        newexpr = newexpr.simplify()
+
     # conversion from exp to hyperbolic
     ex = newexpr.atoms(exp, S.Exp1)
     ex = [ei for ei in ex if 1/ei not in ex]
-    # sinh and cosh
+    ## sinh and cosh
     for ei in ex:
         e2 = ei**-2
         if e2 in ex:
             a = e2.args[0]/2
             newexpr = newexpr.subs((e2 + 1)*ei, 2*cosh(a))
             newexpr = newexpr.subs((e2 - 1)*ei, 2*sinh(a))
-    # exp ratios to tan and tanh
+    ## exp ratios to tan and tanh
     for ei in ex:
+        n, d = ei - 1, ei + 1
+        et = n/d
+        etinv = d/n  # not 1/et or else recursion errors arise
         a = ei.args[0] if ei.func is exp else S.One
         if a.is_Mul or a is S.ImaginaryUnit:
             c = a.as_coefficient(I)
             if c:
                 t = S.ImaginaryUnit*tan(c/2)
-                et = (ei - 1)/(ei + 1)
-                newexpr = newexpr.subs(1/et, 1/t)
+                newexpr = newexpr.subs(etinv, 1/t)
                 newexpr = newexpr.subs(et, t)
                 continue
         t = tanh(a/2)
-        et = (ei - 1)/(ei + 1)
-        newexpr = newexpr.subs(1/et, 1/t)
+        newexpr = newexpr.subs(etinv, 1/t)
         newexpr = newexpr.subs(et, t)
+
     # sin/cos and sinh/cosh ratios to tan and tanh, respectively
     if newexpr.has(C.HyperbolicFunction):
         e, f = hyper_as_trig(newexpr)
         newexpr = f(TR2i(e))
     if newexpr.has(C.TrigonometricFunction):
         newexpr = TR2i(newexpr)
+
     # can we ever generate an I where there was none previously?
     if not (newexpr.has(I) and not expr.has(I)):
-        expr = factor_terms(newexpr)
+        expr = newexpr
     return expr
 
 

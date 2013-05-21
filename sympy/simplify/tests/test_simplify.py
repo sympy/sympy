@@ -531,7 +531,7 @@ def test_simplify_issue_1308():
 
 
 def test_issue_2553():
-    assert simplify(E + exp(-E)) == 2*cosh(x)
+    assert simplify(E + exp(-E)) == exp(-E) + E
     n = symbols('n', commutative=False)
     assert simplify(n + n**(-n)) == n + n**(-n)
 
