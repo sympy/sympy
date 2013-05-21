@@ -6,7 +6,7 @@ from sympy.polys.polyerrors import GeneratorsNeeded
 from sympy.polys.domains import ZZ, QQ, RR, EX
 from sympy.assumptions import ask, Q
 from sympy.utilities import public
-from sympy.core import sympify
+from sympy.core import sympify, Symbol
 
 
 def _construct_simple(coeffs, opt):
@@ -117,7 +117,9 @@ def _construct_composite(coeffs, opt):
         return None
 
     if any(gen.is_number for gen in gens):
-        return None  # generators are number-like so lets better use EX
+        return None # generators are number-like so lets better use EX
+    elif len(gens) > 1 and set.intersection(*[ gen.atoms(Symbol) for gen in gens ]):
+        return None # there could be algebraic relations between generators
 
     n = len(gens)
     k = len(polys)//2
