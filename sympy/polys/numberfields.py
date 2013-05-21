@@ -18,6 +18,7 @@ from sympy.polys.polyerrors import (
     IsomorphismFailed,
     CoercionFailed,
     NotAlgebraic,
+    GeneratorsError,
 )
 
 from sympy.polys.rootoftools import RootOf
@@ -597,6 +598,8 @@ def minimal_polynomial(ex, x=None, **args):
 
     if not dom:
         dom = FractionField(QQ, *ex.atoms(Symbol)) if ex.atoms(Symbol) else QQ
+    if dom.gens and x in dom.gens:
+        raise GeneratorsError("the variable %s is an element of the ground domain %s" % (x, dom))
 
     if compose:
         result = _minpoly_compose(ex, x, dom)
