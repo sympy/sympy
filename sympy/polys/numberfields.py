@@ -597,8 +597,8 @@ def minimal_polynomial(ex, x=None, **args):
         x, cls = Dummy('x'), PurePoly
 
     if not dom:
-        dom = FractionField(QQ, *ex.atoms(Symbol)) if ex.atoms(Symbol) else QQ
-    if dom.gens and x in dom.gens:
+        dom = FractionField(QQ, *ex.free_symbols) if ex.free_symbols else QQ
+    if hasattr(dom, 'gens') and x in dom.gens:
         raise GeneratorsError("the variable %s is an element of the ground domain %s" % (x, dom))
 
     if compose:

@@ -702,4 +702,4 @@ def test_minpoly_fraction_field():
 
     raises(NotAlgebraic, lambda: minimal_polynomial(exp(x), y))
     raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x), x))
-    raises(NotImplementedError, lambda: minimal_polynomial(sqrt(x), x, compose=False))
+    raises(NotImplementedError, lambda: minimal_polynomial(sqrt(x), y, compose=False))
