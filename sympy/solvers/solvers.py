@@ -990,7 +990,7 @@ def solve(f, *symbols, **flags):
     if not as_dict and not as_set:
         return solution or []
 
-    # make return a list of mappings or []
+    # return a list of mappings or []
     if not solution:
         solution = []
     else:
@@ -1264,7 +1264,7 @@ def _solve(f, *symbols, **flags):
                     if len(soln) < deg:
                         try:
                             # get all_roots if possible
-                            soln = uniq(poly.all_roots())
+                            soln = list(uniq(poly.all_roots()))
                         except NotImplementedError:
                             pass
 
@@ -1321,7 +1321,7 @@ def _solve(f, *symbols, **flags):
                         if len(soln) < deg:
                             try:
                                 # get all_roots if possible
-                                soln = uniq(poly.all_roots())
+                                soln = list(uniq(poly.all_roots()))
                             except NotImplementedError:
                                 pass
                         gen = poly.gen
