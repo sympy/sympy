@@ -1,4 +1,4 @@
-"""Computational algebraic number field theory. """
+"""Computational algebraic number field and algebraic function field theory. """
 
 from sympy import (
     S, C, Expr, Rational,
@@ -57,14 +57,14 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
 
     for n in range(bound**len(gens)):
         prec1 = 10
-        eps = 1.0/10**prec1
         n_temp = n
-        for x in gens:
-            points[x] = n_temp % bound
+        for gen in gens:
+            points[gen] = n_temp % bound
             n_temp = int(n_temp/bound)
 
-        while 1:
+        while True:
             candidates = []
+            eps = 1.0/10.0**(prec1 / 2)
             for f in factors:
                 if abs(f.as_expr().subs({x: v}).evalf(prec1, subs=points)) < eps:
                     candidates.append(f)
@@ -75,7 +75,6 @@ def _choose_factor(factors, x, v, dom=QQ, prec=200, bound=5):
             if prec1 > prec:
                 break
             prec1 *= 2
-            eps = 1.0/10**prec1
 
     raise NotImplementedError("multiple candidates for the minimal polynomial of %s" % v)
 
