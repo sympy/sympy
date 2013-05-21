@@ -6,7 +6,7 @@ from sympy.abc import a, b, c, d, k, m, n, x, y, z
 from sympy.concrete.summations import telescopic
 from sympy.utilities.pytest import XFAIL, raises
 from sympy import simplify
-from sympy.concrete.shift import change_index
+from sympy.concrete.simplification import change_index, reorder
 
 n = Symbol('n', integer=True)
 
@@ -494,3 +494,16 @@ def test_change_index():
         Sum((-y)**2, (y, -b, -a))
     assert change_index(Sum(x, (x, a, b)), -x - 1) == \
         Sum(-x - 1, (x, -b - 1, -a - 1))
+    assert change_index(Sum(x*y, (x, a, b), (y, c, d)), x - 1, z) == \
+        Sum((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
+
+
+def test_reorder():
+    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
+
+    assert reorder(Sum(x*y, (x, a, b), (y, c, d)), x, y) == \
+        Sum(x*y, (y, c, d), (x, a, b))
+    assert reorder(Sum(x, (x, a, b), (x, c, d)), x, x) == \
+        Sum(x, (x, a, b), (x, c, d))
+    assert reorder(Sum(x*y + z, (x, a, b), (z, m, n), (y, c, d)), y, x) == \
+        Sum(x*y + z, (y, c, d), (z, m, n), (x, a, b))

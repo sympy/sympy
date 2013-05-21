@@ -2,7 +2,7 @@ from sympy import (symbols, product, factorial, rf, sqrt, cos,
                    Function, Product, Rational, Sum, oo)
 from sympy.utilities.pytest import raises
 from sympy import simplify
-from sympy.concrete.shift import change_index
+from sympy.concrete.simplification import change_index, reorder
 
 a, k, n, m, x = symbols('a,k,n,m,x', integer=True)
 f = Function('f')
@@ -114,7 +114,7 @@ def test_simplify():
 
 
 def test_change_index():
-    b, y = symbols('b, y', integer = True)
+    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
 
     assert change_index(Product(x, (x, a, b)), x + 1, y) == \
         Product(y - 1, (y, a + 1, b + 1))
@@ -124,3 +124,16 @@ def test_change_index():
         Product((-y)**2, (y, -b, -a))
     assert change_index(Product(x, (x, a, b)), -x - 1) == \
         Product(-x - 1, (x, - b - 1, -a - 1))
+    assert change_index(Product(x*y, (x, a, b), (y, c, d)), x - 1, z) == \
+        Product((z + 1)*y, (z, a - 1, b - 1), (y, c, d))
+
+
+def test_reorder():
+    b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
+
+    assert reorder(Product(x*y, (x, a, b), (y, c, d)), x, y) == \
+        Product(x*y, (y, c, d), (x, a, b))
+    assert reorder(Product(x, (x, a, b), (x, c, d)), x, x) == \
+        Product(x, (x, a, b), (x, c, d))
+    assert reorder(Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)), y, x) == \
+        Product(x*y + z, (y, c, d), (z, m, n), (x, a, b))
