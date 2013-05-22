@@ -317,17 +317,23 @@ def test_1st_exact1():
     sol1 = Eq(f(x), acos((C1)/cos(x)))
     sol2 = Eq(f(x), C1*exp(-x**2 + LambertW(C2*x*exp(x**2))))
     sol2b = Eq(log(f(x)) + x/f(x) + x**2, C1)
+    sol2c = Eq(f(x), exp(C1 - x**2 + LambertW(C2*x*exp(x**2))))
     sol3 = Eq(f(x)*sin(x) + cos(f(x)) + x**2 + f(x)**2, C1)
     sol4 = Eq(x*cos(f(x)) + f(x)**3/3, C1)
     sol5 = Eq(x**2*f(x) + f(x)**3/3, C1)
     assert dsolve(eq1, f(x), hint='1st_exact') == sol1
-    assert dsolve(eq2, f(x), hint='1st_exact') == sol2
+    # XXX why is there more than one form coming back from this?
+    # sol2 comes back with PYTHONHASHSEED=3016992991
+    # sol2c comes back with PYTHONHASHSEED=7938055
+    assert dsolve(eq2, f(x), hint='1st_exact') in [sol2, sol2b, sol2c]
     assert dsolve(eq3, f(x), hint='1st_exact') == sol3
     assert dsolve(eq4, hint='1st_exact') == sol4
     assert dsolve(eq5, hint='1st_exact', simplify=False) == sol5
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
-    # simplification doesn't handle LambertW well enough to verify
     assert checkodesol(eq2, sol2b, order=1, solve_for_func=False)[0]
+    # issue 1981 needs to be addressed to test these
+    # assert checkodesol(eq2, sol2, order=1, solve_for_func=False)
+    # assert checkodesol(eq2, sol2c, order=1, solve_for_func=False)
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
     assert checkodesol(eq4, sol4, order=1, solve_for_func=False)[0]
     assert checkodesol(eq5, sol5, order=1, solve_for_func=False)[0]

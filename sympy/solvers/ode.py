@@ -2159,13 +2159,15 @@ def ode_1st_homogeneous_coeff_subs_indep_div_dep(eq, func, order, match):
     >>> from sympy.abc import x
     >>> f = Function('f')
     >>> pprint(dsolve(2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x), f(x),
-    ... hint='1st_homogeneous_coeff_subs_indep_div_dep'))
-                        /      ___________\
-                        |     /     2     |
-                        |    /   3*x      |
-    log(f(x)) = C1 - log|   /   ----- + 1 |
-                        |3 /     2        |
-                        \\/     f (x)     /
+    ... hint='1st_homogeneous_coeff_subs_indep_div_dep',
+    ... simplify=False))
+                             /    2    \
+                             | 3*x     |
+                          log|----- + 1|
+                             | 2       |
+                             \f (x)    /
+    log(f(x)) = log(C1) - --------------
+                                3
 
     References
     ==========
