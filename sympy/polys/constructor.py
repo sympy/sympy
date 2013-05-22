@@ -118,8 +118,16 @@ def _construct_composite(coeffs, opt):
 
     if any(gen.is_number for gen in gens):
         return None # generators are number-like so lets better use EX
-    elif len(gens) > 1 and set.intersection(*[ gen.atoms(Symbol) for gen in gens ]):
-        return None # there could be algebraic relations between generators
+
+    all_symbols = set([])
+
+    for gen in gens:
+        symbols = gen.atoms(Symbol)
+
+        if all_symbols & symbols:
+            return None # there could be algebraic relations between generators
+        else:
+            all_symbols |= symbols
 
     n = len(gens)
     k = len(polys)//2
