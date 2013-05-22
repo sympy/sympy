@@ -262,6 +262,7 @@ want to be mentioned here, so see our repository history for a full list).
 #. Varun Joshi: Addition to functions
 #. Chetna Gupta: Improvements to the Risch integration algorithm
 #. Thilina Rathnayake: Fix to the matrices
+#. Matthew Tadd: fix definition in units module
 
 Up-to-date list in the order of the first contribution is given in the `AUTHORS
 <https://github.com/sympy/sympy/blob/master/AUTHORS>`_ file.
