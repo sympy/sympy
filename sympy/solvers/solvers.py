@@ -35,6 +35,7 @@ from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
+from sympy.simplify.fu import TR1, hyper_as_trig
 from sympy.matrices import Matrix, zeros
 from sympy.polys import roots, cancel, factor, Poly, together, RootOf, degree
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
@@ -1219,26 +1220,32 @@ def _solve(f, *symbols, **flags):
                 bases = set(bases)
 
                 if len(bases) > 1:
-                    funcs = set(b.func for b in bases if b.is_Function)
+                    funcs = set(b for b in bases if b.is_Function)
 
-                    trig = set([cos, sin, tan, cot])
+                    trig = set([_ for _ in funcs if
+                        isinstance(_, C.TrigonometricFunction)])
                     other = funcs - trig
                     if not other and len(funcs.intersection(trig)) > 1:
-                        return _solve(f_num.rewrite(tan), symbol, **flags)
+                        newf = TR1(f_num).rewrite(tan)
+                        if newf != f_num:
+                            return _solve(newf, symbol, **flags)
 
-                    trigh = set([cosh, sinh, tanh, coth])
+                    trigh = set([_ for _ in funcs if
+                        isinstance(_, C.HyperbolicFunction)])
                     other = funcs - trigh
                     if not other and len(funcs.intersection(trigh)) > 1:
-                        return _solve(f_num.rewrite(tanh), symbol, **flags)
+                        newf, _undo = hyper_as_trig(f_num)
+                        newf = _undo(TR1(newf)).rewrite(tanh)
+                        if newf != f_num:
+                            return _solve(newf, symbol, **flags)
 
                     # just a simple case - see if replacement of single function
                     # clears all symbol-dependent functions, e.g.
                     # log(x) - log(log(x) - 1) - 3 can be solved even though it has
                     # two generators.
 
-                    funcs = [f for f in bases if f.is_Function]
                     if funcs:
-                        funcs.sort(key=count_ops)  # put shallowest function first
+                        funcs = list(ordered(funcs))  # put shallowest function first
                         f1 = funcs[0]
                         t = Dummy()
                         # perform the substitution

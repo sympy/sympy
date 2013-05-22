@@ -2,7 +2,7 @@ from sympy import (
     Abs, And, Derivative, Dummy, Eq, Float, Function, Gt, I, Integral,
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
-    log, pi, re, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
+    log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
     sympify, tan, tanh, root)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
@@ -1287,6 +1287,27 @@ def test_other_lambert():
         [acos(3), acos(-3*LambertW(-log(3)/3)/log(3))])
     assert set(solve(x**2 - 2**x)) == set(
         [2, -2/log(2)*LambertW(log(2)/2)])
+
+
+def test_rewrite_trig():
+    assert solve(sin(x) + tan(x)) == [0, 2*pi]
+    assert solve(sin(x) + sec(x)) == [
+        -2*atan(-S.Half + sqrt(2 - 2*sqrt(3)*I)/2 + sqrt(3)*I/2),
+        2*atan(S.Half - sqrt(3)*I/2 + sqrt(2 - 2*sqrt(3)*I)/2),
+        2*atan(S.Half - sqrt(2 + 2*sqrt(3)*I)/2 + sqrt(3)*I/2),
+        2*atan(S.Half + sqrt(2 + 2*sqrt(3)*I)/2 + sqrt(3)*I/2)]
+    assert solve(sinh(x) + tanh(x)) == [0, 2*I*pi]
+
+
+@XFAIL
+def test_rewrite_trigh():
+    # if this import passes then the test below should also pass
+    from sympy import sech
+    assert solve(sinh(x) + sech(x)) == [
+        2*atanh(-S.Half + sqrt(5)/2 - sqrt(-2*sqrt(5) + 2)/2),
+        2*atanh(-S.Half + sqrt(5)/2 + sqrt(-2*sqrt(5) + 2)/2),
+        2*atanh(-sqrt(5)/2 - S.Half + sqrt(2 + 2*sqrt(5))/2),
+        2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half)]
 
 
 @XFAIL
