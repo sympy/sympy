@@ -1,5 +1,5 @@
 from sympy import (Abs, C, Dummy, Rational, Float, S, Symbol, cos, oo, pi,
-                   simplify, sqrt, symbols, tan)
+                   simplify, sin, sqrt, symbols, tan)
 from sympy.geometry import (Circle, Curve, Ellipse, GeometryError, Line, Point,
                             Polygon, Ray, RegularPolygon, Segment, Triangle,
                             are_similar, convex_hull, intersection, centroid)
@@ -999,9 +999,9 @@ def test_line_intersection():
     assert asa(120, 8, 52) == \
         Triangle(
             Point(0, 0),
-            Point(8, 0), Point(
-            (8 + 8*sqrt(3)*tan(19*pi/90))/(-3*tan(19*pi/90)**2 + 1),
-           -(8*sqrt(3) + 24*tan(19*pi/90))/(-3*tan(19*pi/90)**2 + 1)))
+            Point(8, 0),
+            Point(-4*cos(19*pi/90)/sin(2*pi/45),
+            4*sqrt(3)*cos(19*pi/90)/sin(2*pi/45)))
     assert Line((0, 0), (1, 1)).intersection(Ray((1, 0), (1, 2))) == \
         [Point(1, 1)]
     assert Line((0, 0), (1, 1)).intersection(Segment((1, 0), (1, 2))) == \
