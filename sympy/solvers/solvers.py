@@ -2114,9 +2114,10 @@ def _tsolve(eq, sym, **flags):
                 return _solve(f, sym)
             if rhs:
                 f = logcombine(lhs, force=flags.get('force', False))
-                if f != lhs:
+                if f.count(log) != lhs.count(log):
                     # use expand_mul so we don't end up with a Mul
-                    # for a case like log(x) + log(x + 1) - 3
+                    # for a case like log(x) + log(x + 1) - 3 and
+                    # get into a recursive loop
                     fex = expand_mul(f)
                     if fex != f:
                         return _tsolve(fex - rhs, sym)
