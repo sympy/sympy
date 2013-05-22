@@ -619,17 +619,7 @@ def test_1st_homogeneous_coeff_ode_check3():
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 
-@XFAIL
 def test_1st_homogeneous_coeff_ode_check7():
-    skip('This is a known issue.')
-    # checker cannot solve for the function and cannot determine that
-    # the result is zero:
-    '''
-    >>> checkodesol(eq7, sol7, order=1, solve_for_func=True)
-    (False, (x + sqrt(-x*f(x) + f(x)**2))*(x*f(x) -
-    sqrt(-x/f(x) + 1)*f(x)**2)*f(x) -
-    (x**2*f(x) - (-x + f(x))*f(x)**2)*f(x))
-    '''
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     sol7 = Eq(log(C1*f(x)) + 2*sqrt(1 - x/f(x)), 0)
     assert checkodesol(eq7, sol7, order=1, solve_for_func=False)[0]
@@ -651,35 +641,19 @@ def test_1st_homogeneous_coeff_ode2():
     # test for eq3 is in test_1st_homogeneous_coeff_ode2_check3 below
 
 
-@XFAIL
 def test_1st_homogeneous_coeff_ode2_check3():
-    skip('This is a known issue.')
-    # simplify() will need to get way better before it can do this one
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol3 = Eq(f(x), log(log(C1/x)**(-x)))
     assert checkodesol(eq3, sol3, order=1, solve_for_func=False)[0]
 
 
-@XFAIL
 def test_1st_homogeneous_coeff_ode_check9():
-    skip('This is a known issue.')
-    # checker cannot solve for the function and cannot determine that
-    # the result is zero:
-    '''
-    >>> checkodesol(eq9, sol9, order=1, solve_for_func=True)
-    (False, (x*sqrt(-x**2 + f(x)**2) - x*f(x))*
-            (x*sqrt(-x**2/f(x)**2 + 1)*f(x) + x*f(x))*f(x)**2 +
-            (-x**2*(-x**2 + f(x)**2) + x**2*f(x)**2)*f(x)**2)
-    '''
     _u2 = Dummy('u2')
     __a = Dummy('a')
     eq9 = f(x)**2 + (x*sqrt(f(x)**2 - x**2) - x*f(x))*f(x).diff(x)
     sol9 = Eq(-Integral(-1/(-(1 - sqrt(1 - _u2**2))*_u2 + _u2), (_u2, __a,
         x/f(x))) + log(C1*f(x)), 0)
-    # XXX if f(x) is known to be positive then the expression below could be
-    # simplified to zero
-    assert checkodesol(eq9, sol9, order=1, solve_for_func=False) == (
-        False, (-sqrt(-x**2 + f(x)**2) + sqrt(-x**2/f(x)**2 + 1)*f(x))*f(x))
+    assert checkodesol(eq9, sol9, order=1, solve_for_func=False)[0]
 
 
 def test_1st_homogeneous_coeff_ode3():

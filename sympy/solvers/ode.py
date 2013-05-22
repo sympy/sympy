@@ -238,7 +238,7 @@ from sympy.matrices import wronskian
 from sympy.polys import Poly, RootOf, terms_gcd
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
-    simplify, trigsimp, denom, fraction
+    simplify, trigsimp, denom, fraction, posify
 from sympy.simplify.simplify import _mexpand
 from sympy.solvers import solve
 
@@ -1295,7 +1295,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             if ss:
                 # with the new numer_denom in power.py, if we do a simple
                 # expansion then testnum == 0 verifies all solutions.
-                s = ss.expand()
+                s = ss.expand(force=True)
             else:
                 s = 0
             testnum += 1
@@ -1372,7 +1372,15 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
                         rhs = ode_or_bool.rhs
                 # No sense in overworking simplify -- just prove that the
                 # numerator goes to zero
-                s = simplify(trigsimp((lhs - rhs).as_numer_denom()[0]))
+                num = trigsimp((lhs - rhs).as_numer_denom()[0])
+                # since solutions are obtained using force=True we test
+                # using the same level of assumptions
+                ## replace function with dummy so assumptions will work
+                _func = Dummy('func')
+                num = num.subs(func, _func)
+                ## posify the expression
+                num, reps = posify(num)
+                s = simplify(num).xreplace(reps).xreplace({_func: func})
                 testnum += 1
         else:
             break
