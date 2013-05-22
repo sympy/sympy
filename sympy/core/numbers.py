@@ -2513,6 +2513,14 @@ class Exp1(NumberSymbol):
     def _eval_power(self, expt):
         return C.exp(expt)
 
+    def _eval_rewrite_as_sin(self):
+        I = S.ImaginaryUnit
+        return C.sin(I + S.Pi/2) - I*C.sin(I)
+
+    def _eval_rewrite_as_cos(self):
+        I = S.ImaginaryUnit
+        return C.cos(I) + I*C.cos(I + S.Pi/2)
+
     def _sage_(self):
         import sage.all as sage
         return sage.e
