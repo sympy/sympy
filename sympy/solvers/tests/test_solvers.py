@@ -1287,3 +1287,9 @@ def test_other_lambert():
         [acos(3), acos(-3*LambertW(-log(3)/3)/log(3))])
     assert set(solve(x**2 - 2**x)) == set(
         [2, -2/log(2)*LambertW(log(2)/2)])
+
+
+@XFAIL
+def test_uselogcombine():
+    eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
+    assert solve(eq, x, force=True) == [-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z)))]
