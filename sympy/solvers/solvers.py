@@ -33,7 +33,7 @@ from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sqrt)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
-                            nsimplify, denom)
+                            nsimplify, denom, logcombine)
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.simplify.fu import TR1, hyper_as_trig
 from sympy.matrices import Matrix, zeros
@@ -1355,8 +1355,10 @@ def _solve(f, *symbols, **flags):
 
     # fallback if above fails
     if result is False:
+
         # allow tsolve to be used on next pass if needed
         flags.pop('tsolve', None)
+
         result = _tsolve(f_num, symbol, **flags)
         if result is None:
             result = False
@@ -2101,15 +2103,23 @@ def _tsolve(eq, sym, **flags):
     [LambertW(2)/2]
 
     """
-
     rhs, lhs = _invert(eq, sym)
+
     try:
         if lhs.is_Add:
             # it's time to try factoring; powdenest is used
             # to try get powers in standard form for better factoring
-            fac = factor(powdenest(lhs - rhs))
-            if fac.is_Mul:
-                return _solve(fac, sym)
+            f = factor(powdenest(lhs - rhs))
+            if f.is_Mul:
+                return _solve(f, sym)
+            if rhs:
+                f = logcombine(lhs, force=flags.get('force', False))
+                if f != lhs:
+                    # use expand_mul so we don't end up with a Mul
+                    # for a case like log(x) + log(x + 1) - 3
+                    fex = expand_mul(f)
+                    if fex != f:
+                        return _tsolve(fex - rhs, sym)
 
         elif lhs.is_Pow:
             if lhs.exp.is_Integer:

@@ -1310,7 +1310,9 @@ def test_rewrite_trigh():
         2*atanh(-sqrt(2 + 2*sqrt(5))/2 - sqrt(5)/2 - S.Half)]
 
 
-@XFAIL
 def test_uselogcombine():
     eq = z - log(x) + log(y/(x*(-1 + y**2/x**2)))
     assert solve(eq, x, force=True) == [-sqrt(y*(y - exp(z))), sqrt(y*(y - exp(z)))]
+    assert solve(log(x + 3) + log(1 + 3/x) - 3) == [
+        -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
+        -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2]
