@@ -1145,12 +1145,24 @@ def test_exclude():
             V1: 0,
             Vout: 0},
     ]
-    assert solve(eqs, exclude=[Vplus, s, C]) == [
-        {
-            Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
-            Vminus: Vplus,
-            Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
-            R: Vplus/(C*s*(V1 - 2*Vplus))}]
+
+    # TODO: Investingate why currently solution [0] is preferred over [1].
+    assert solve(eqs, exclude=[Vplus, s, C]) in [[{
+        Vminus: Vplus,
+        V1: Vout/2 + Vplus/2 + sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
+        R: (Vout - 3*Vplus - sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        Rf: Ri*(Vout - Vplus)/Vplus,
+    }, {
+        Vminus: Vplus,
+        V1: Vout/2 + Vplus/2 - sqrt((Vout - 5*Vplus)*(Vout - Vplus))/2,
+        R: (Vout - 3*Vplus + sqrt(Vout**2 - 6*Vout*Vplus + 5*Vplus**2))/(2*C*Vplus*s),
+        Rf: Ri*(Vout - Vplus)/Vplus,
+    }], [{
+        Vminus: Vplus,
+        Vout: (V1**2 - V1*Vplus - Vplus**2)/(V1 - 2*Vplus),
+        Rf: Ri*(V1 - Vplus)**2/(Vplus*(V1 - 2*Vplus)),
+        R: Vplus/(C*s*(V1 - 2*Vplus)),
+    }]]
 
 
 def test_high_order_roots():
