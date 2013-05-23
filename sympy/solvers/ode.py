@@ -1142,14 +1142,13 @@ def odesimp(eq, func, order, hint):
     # a simpler expression, but the solved expression could have introduced
     # things like -C1, so rerun constantsimp() one last time before returning.
     for i, eqi in enumerate(eq):
-        eq[i] = constant_renumber(
-            constantsimp(eqi, x, 2*order), 'C', 1, 2*order)
+        eqi = constantsimp(eqi, x, 2*order)
+        eq[i] = constant_renumber(eqi, 'C', 1, 2*order)
 
     # If there is only 1 solution, return it;
     # otherwise return the list of solutions.
     if len(eq) == 1:
         eq = eq[0]
-
     return eq
 
 def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
@@ -1263,7 +1262,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             sol.lhs == func and not sol.rhs.has(func)) and not (
             sol.rhs == func and not sol.lhs.has(func)):
         try:
-            solved = solve(sol, func)
+            solved = solve(sol, func)  # XXX could use force=True here
             if not solved:
                 raise NotImplementedError
         except NotImplementedError:
@@ -1587,44 +1586,49 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
     # simplifying up.  Otherwise, we can skip that part of the
     # expression.
 
-    constant_iter = numbered_symbols('C', start=startnumber)
-    constantsymbols = [constant_iter.next() for t in range(startnumber,
-                                          endnumber + 1)]
-    constantsymbols_set = set(constantsymbols)
-    x = independentsymbol
+    if type(symbolname) is tuple:
+        x, endnumber, startnumber, constantsymbols = symbolname
+    else:
+        constantsymbols = symbols(
+            symbolname + '%i:%i' % (startnumber, endnumber + 1))
+        x = independentsymbol
+    con_set = set(constantsymbols)
+    ARGS = None, None, None, (
+        x, endnumber, startnumber, constantsymbols)
+
     if isinstance(expr, Equality):
         # For now, only treat the special case where one side of the equation
         # is a constant
-        if expr.lhs in constantsymbols_set:
-            return Eq(expr.lhs, constantsimp(expr.rhs + expr.lhs, x, endnumber,
-            startnumber, symbolname) - expr.lhs)
+        if expr.lhs in con_set:
+            return Eq(expr.lhs, constantsimp(expr.rhs + expr.lhs, *ARGS) - expr.lhs)
             # this could break if expr.lhs is absorbed into another constant,
             # but for now, the only solutions that return Eq's with a constant
             # on one side are first order.  At any rate, it will still be
             # technically correct.  The expression will just have too many
             # constants in it
-        elif expr.rhs in constantsymbols_set:
-            return Eq(constantsimp(expr.lhs + expr.rhs, x, endnumber,
-            startnumber, symbolname) - expr.rhs, expr.rhs)
+        elif expr.rhs in con_set:
+            return Eq(constantsimp(expr.lhs + expr.rhs, *ARGS) - expr.rhs, expr.rhs)
         else:
-            return Eq(constantsimp(expr.lhs, x, endnumber, startnumber,
-                symbolname), constantsimp(expr.rhs, x, endnumber,
-                startnumber, symbolname))
+            return Eq(constantsimp(expr.lhs, *ARGS), constantsimp(expr.rhs, *ARGS))
 
     if not expr.has(*constantsymbols):
         return expr
     else:
         # ================ pre-processing ================
-        # collect terms to get constants together
         def _take(i):
-            t = sorted([s for s in i.atoms(Symbol) if s in constantsymbols])
-            if not t:
-                return i
-            return t[0]
+            # return the lowest numbered constant symbol that appears in ``i``
+            # else return ``i``
+            c = i.free_symbols & con_set
+            if c:
+                return min(c)
+            return i
 
         if not (expr.has(x) and x in expr.free_symbols):
             return constantsymbols[0]
-        new_expr = terms_gcd(expr, clear=False, deep=True)
+
+        # collect terms to get constants together
+        new_expr = terms_gcd(expr, clear=False, deep=True, expand=False)
+
         if new_expr.is_Mul:
             # don't let C1*exp(x) + C2*exp(2*x) become exp(x)*(C1 + C2*exp(x))
             infac = False
@@ -1657,13 +1661,12 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 d = sift(expr.args, lambda m: m.is_number is True)
                 num = d[True]
                 other = d[False]
-                con_set = set(constantsymbols)
                 if num:
                     for o in other:
                         b, e = o.as_base_exp()
                         if b.is_Add and \
-                            all(a.args_cnc(cset=True, warn=False)[0] &
-                        con_set for a in b.args):
+                                all(a.args_cnc(cset=True, warn=False)[0] &
+                                con_set for a in b.args):
                             expr = sign(Mul(*num))*Mul._from_args(other)
                             break
         if expr.is_Mul:  # check again that it's still a Mul
@@ -1693,7 +1696,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                 e = _take(ei)
                 if e != ei or e in constantsymbols:
                     reps.append((p, e*b**ed))
-            expr = expr.subs(reps)
+            expr = expr.xreplace(dict(reps))
             # a C1*C2 may have been introduced and the code below won't
             # handle that so handle it now: once to handle the C1*C2
             # and once to handle any C0*f(x) + C0*f(x)
@@ -1705,7 +1708,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                     newi = _take(i)
                     if newi != i:
                         reps.append((m, _take(i)*d))
-                expr = expr.subs(reps)
+                expr = expr.xreplace(dict(reps))
         # ================ end of pre-processing ================
         newargs = []
         hasconst = False
@@ -1721,8 +1724,7 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
                     isPowExp = True
 
         for i in range(len(newargs)):
-            isimp = constantsimp(newargs[i], x, endnumber, startnumber,
-            symbolname)
+            isimp = constantsimp(newargs[i], *ARGS)
             if isimp in constantsymbols:
                 reeval = True
                 hasconst = True
@@ -1742,14 +1744,12 @@ def constantsimp(expr, independentsymbol, endnumber, startnumber=1,
             if (len(newargs) == 0 or hasconst and len(newargs) == 1):
                 return newconst
             else:
-                newfuncargs = [constantsimp(t, x, endnumber, startnumber,
-                symbolname) for t in expr.args]
+                newfuncargs = [constantsimp(t, *ARGS) for t in expr.args]
                 return expr.func(*newfuncargs)
         else:
             newexpr = expr.func(*newargs)
             if reeval:
-                return constantsimp(newexpr, x, endnumber, startnumber,
-                symbolname)
+                return constantsimp(newexpr, *ARGS)
             else:
                 return newexpr
 
