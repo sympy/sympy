@@ -4,7 +4,7 @@ from sympy import Sum
 
 def finite_diff(expression, variable, increment=1):
     """
-    Takes as input a polynomial expression and the variable used to construct it and returns the difference between function's value when the input is incremented to 1 and the original function value. The input expression can also be a polynomial summation. In that case it will return the difference between the summation with variable incremented by given increment value(1 if none is given) and the original function. More specifically, it takes as input a function or summation f(x) and x used in function expression as variable and returns f(x + increment) - f(x).If you want an increment other than 1, supply it as a third argument.
+    Takes as input a polynomial expression and the variable used to construct it and returns the difference between function's value when the input is incremented to 1 and the original function value. If you want an increment other than one supply it as a third argument.
 
     Examples
     =========
@@ -19,20 +19,33 @@ def finite_diff(expression, variable, increment=1):
     4*x + 10
     >>> finite_diff(z**3 + 8*z, z, 3)
     9*z**2 + 27*z + 51
-    >>> finite_diff(Sum(1/k, (k, 1, n)), k)
-    1/(n + 1)
-    >>> finite_diff(Sum(k, (k, 1, n)), k)
-    n + 1
-
     """
-    if isinstance(expression, Sum):
-        function = expression.function
-        limit = expression.limits
-        limit_tuple = limit[0]
-        var = limit_tuple[-1]
-        return function.subs(variable, var + increment)
-    else:
-        expression = expression.expand()
-        expression2 = expression.subs(variable, variable + increment)
-        expression2 = expression2.expand()
-        return expression2 - expression
+    expression = expression.expand()
+    expression2 = expression.subs(variable, variable + increment)
+    expression2 = expression2.expand()
+    return expression2 - expression
+
+def finite_diff_kauers(sum):
+    """
+    Takes as input a Sum instance and returns the difference between the sum with the upper index incremented by 1 and the original sum. For example, if S(n) is a sum, then finite_diff_kauers will return S(n + 1) - S(n).
+
+    Examples
+    ========
+    >>> from sympy.series.kauers import finite_diff_kauers
+    >>> from sympy import Sum
+    >>> from sympy.abc import x, y, m, n, k
+    >>> finite_diff_kauers(Sum(k, (k, 1, n)))
+    n + 1
+    >>> finite_diff_kauers(Sum(1/k, (k, 1, n)))
+    1/(n + 1)
+    >>> finite_diff_kauers(Sum((x*y**2), (x, 1, n), (y, 1, m)))
+    (m + 1)**2*(n + 1)
+    >>> finite_diff_kauers(Sum((x*y), (x, 1, m), (y, 1, n)))
+    (m + 1)*(n + 1)
+    """
+    function = sum.function
+    for v in sum.variables:
+        for l in sum.limits:
+            if v == l[0]:
+                function = function.subs(v, l[-1] + 1)
+    return function

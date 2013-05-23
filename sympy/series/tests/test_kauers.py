@@ -1,5 +1,6 @@
 from sympy.series.kauers import finite_diff
-from sympy.abc import x, y, z, w, n, k
+from sympy.series.kauers import finite_diff_kauers
+from sympy.abc import x, y, z, m, n, k, w
 from sympy import sin, cos
 from sympy import pi
 from sympy import Sum
@@ -14,6 +15,9 @@ def test_finite_diff():
     assert finite_diff(cos(y), y, pi/3) == -cos(y) + cos(y + pi/3)
     assert finite_diff(x**2 - 2*x + 3, x, 2) == 4*x
     assert finite_diff(n**2 - 2*n + 3, n, 3) == 6*n + 3
-    assert finite_diff(Sum(k, (k, 1, n)), k) == n + 1
-    assert finite_diff(Sum(1/k, (k, 1, n)), k) == 1/(n + 1)
-    assert finite_diff(Sum((1/k)**2, (k, 1, n)), k, 2) == 1/(n + 2)**2
+
+def test_finite_diff_kauers():
+    assert finite_diff_kauers(Sum(x**2, (x, 1, n))) == (n + 1)**2
+    assert finite_diff_kauers(Sum(y, (y, 1, m))) == (m + 1)
+    assert finite_diff_kauers(Sum((x*y), (x, 1, m), (y, 1, n))) == (m + 1)*(n + 1)
+    assert finite_diff_kauers(Sum((x*y**2), (x, 1, m), (y, 1, n))) == (n + 1)**2*(m + 1)
