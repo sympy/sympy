@@ -4072,11 +4072,8 @@ def besselsimp(expr):
     >>> besselsimp(z*besseli(0, z) + z*(besseli(2, z))/2 + besseli(1, z))
     3*z*besseli(0, z)/2
     """
-    from sympy import besselj, besseli, jn, I, pi, Dummy
+    from sympy import besselj, bessely, besseli, besselk, jn, I, pi, Dummy
     # TODO
-    # - extension to more types of functions
-    #   (at least rewriting functions of half integer order should be straight
-    #    forward also for Y and K)
     # - better algorithm?
     # - simplify (cos(pi*b)*besselj(b,z) - besselj(-b,z))/sin(pi*b) ...
     # - use contiguity relations?
@@ -4121,15 +4118,18 @@ def besselsimp(expr):
     def expander(fro):
         def repl(nu, z):
             if (nu % 1) == S(1)/2:
-                return unpolarify(fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
-                    func=True)).subs(z0, z)
+                return exptrigsimp(trigsimp(unpolarify(
+                        fro(nu, z0).rewrite(besselj).rewrite(jn).expand(
+                            func=True)).subs(z0, z)))
             elif nu.is_Integer and nu > 1:
                 return fro(nu, z).expand(func=True)
             return fro(nu, z)
         return repl
 
     expr = expr.replace(besselj, expander(besselj))
+    expr = expr.replace(bessely, expander(bessely))
     expr = expr.replace(besseli, expander(besseli))
+    expr = expr.replace(besselk, expander(besselk))
 
     if expr != orig_expr:
         expr = expr.factor()
