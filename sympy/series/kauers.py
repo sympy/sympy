@@ -4,7 +4,10 @@ from sympy import Sum
 
 def finite_diff(expression, variable, increment=1):
     """
-    Takes as input a polynomial expression and the variable used to construct it and returns the difference between function's value when the input is incremented to 1 and the original function value. If you want an increment other than one supply it as a third argument.
+    Takes as input a polynomial expression and the variable used to construct
+    it and returns the difference between function's value when the input is
+    incremented to 1 and the original function value. If you want an increment
+    other than one supply it as a third argument.
 
     Examples
     =========
@@ -27,7 +30,9 @@ def finite_diff(expression, variable, increment=1):
 
 def finite_diff_kauers(sum):
     """
-    Takes as input a Sum instance and returns the difference between the sum with the upper index incremented by 1 and the original sum. For example, if S(n) is a sum, then finite_diff_kauers will return S(n + 1) - S(n).
+    Takes as input a Sum instance and returns the difference between the sum
+    with the upper index incremented by 1 and the original sum. For example,
+    if S(n) is a sum, then finite_diff_kauers will return S(n + 1) - S(n).
 
     Examples
     ========
