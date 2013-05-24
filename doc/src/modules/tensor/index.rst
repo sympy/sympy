@@ -15,3 +15,4 @@ Contents
     indexed.rst
     index_methods.rst
     tensor.rst
+    dgamma_matr.rst

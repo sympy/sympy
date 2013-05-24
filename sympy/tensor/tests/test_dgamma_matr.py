@@ -172,7 +172,7 @@ def test_gamma_trace():
     t1 = t1.expand_coeff()
     assert t1.coeff == -4*D**6 + 120*D**5 - 1040*D**4 + 3360*D**3 - 4480*D**2 + 2048*D
 
-
+    # checked with Mathematica
     # In[1]:= <<Tracer.m
     # In[2]:= Spur[l];
     # In[3]:= GammaTrace[l, {m0},{m1},{n1},{m2},{n2},{m3},{m4},{n3},{n4},{m0},{m1},{m2},{m3},{m4}]

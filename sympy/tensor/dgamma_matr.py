@@ -8,15 +8,15 @@ from sympy.tensor.tensor import (TensExpr, TensorIndexType, tensor_indices,
 class GammaMatrices(object):
     """
     Gamma matrices in dimensional regularization
-    with G5 naively anticommuting with all gamma matrices (NDR)
+    with ``G5`` naively anticommuting with all gamma matrices (NDR)
 
     NDR is inconsistent but widely used.
     Notice in particular that the cyclic property of the
     trace in presence of G5 does not hold.
 
     The original dimensional regularization scheme by 't Hooft and Veltman
-    has `G5` anticommuting only with `G(m)` for `m` in 0,1,2,3,
-    and commuting for `m > 3`. It is consistent, and it is used to
+    has ``G5`` anticommuting only with ``G(m)`` for ``m`` in ``0,1,2,3``,
+    and commuting for ``m > 3``. It is consistent, and it is used to
     compute the chiral anomaly; however it breaks gauge invariance
     involving G5 even when there are no anomalies, which complicates
     a lot maintaining the Ward (or Slavnov-Taylor) identities.
@@ -78,7 +78,6 @@ class GammaMatrices(object):
         G = self.G
         Gamma5 = self.Gamma5
         G5 = self.G5
-        # [g5,g,g,g5,g,g]
         numG = 0
         vposG5 = []
         for i in range(ncomps):
@@ -104,6 +103,9 @@ class GammaMatrices(object):
         return t1
 
     def match1_gamma(self, t, n):
+        """
+        match for ``G(m)*G(m_1)...*G(m_n)*G(-m)``
+        """
         #t = t.sorted_components()
         components = t._components
         ncomps = len(components)
@@ -119,10 +121,10 @@ class GammaMatrices(object):
 
     def rule1_gamma(self, t, n, r=None):
         """
-        simplify products of gamma matrices `G(m)*G(m_1)...*G(m_n)*G(-m)`
+        simplify products of gamma matrices ``G(m)*G(m_1)...*G(m_n)*G(-m)``
 
         t   Gamma matrix monomial
-        n   apply rule for `G(m)*G(m_1)...*G(m_n)*G(-m)`
+        n   apply rule for ``G(m)*G(m_1)...*G(m_n)*G(-m)``
 
         Examples
         ========
@@ -198,13 +200,16 @@ class GammaMatrices(object):
 
     def do_rule1_gamma(self, t, nmax=4, doall=False):
         """
-        simplify products of gamma matrices `G(m)*G(m_1)...*G(m_n)*G(-m)`
+        simplify products of gamma matrices ``G(m)*G(m_1)...*G(m_n)*G(-m)``
 
-        `t` Gamma matrix expression
+        Parameters
+        ==========
 
-        nmax  maximum number for which `rule1\_gamma(t, n)` is applied
+        t : Gamma matrix expression
 
-        doall  if true apply `rule1\_gamma` till the expression does not change
+        nmax :  maximum number for which ``rule1\_gamma(t, n)`` is applied
+
+        doall : if true apply ``rule1_gamma`` till the expression does not change
 
         Examples
         ========
@@ -244,10 +249,12 @@ class GammaMatrices(object):
             return t1.contract_metric(self.g, contract_all=True)
 
     def match2_gamma(self, t, n):
+        """
+        match ``G(m0)*p(-m0)*G(i_1)...*G(i_n)*G(m1)*p(-m1)``
+        """
         components = t._components
         ncomps = len(components)
         G = self.G
-        # G(a)*G(b)*...*p(-a)*p(-b)
         for i in range(ncomps - 1 - n):
             if not components[i] == G:
                 continue
@@ -267,10 +274,13 @@ class GammaMatrices(object):
 
     def rule2_gamma(self, t, n):
         """
-        simplify `G(m0)*p(-m0)*G(i_1)...*G(i_n)*G(m1)*p(-m1)`
+        simplify ``G(m0)*p(-m0)*G(i_1)...*G(i_n)*G(m1)*p(-m1)``
 
-        `t`    Gamma matrix monomial
-        `n` as in  `G(m0)*p(-m0)*G(i_1)...*G(i_n)*G(m1)*p(-m1)`
+        Parameters
+        ==========
+
+        t :    Gamma matrix monomial
+        n : as in  ``G(m0)*p(-m0)*G(i_1)...*G(i_n)*G(m1)*p(-m1)``
 
         Examples
         ========
@@ -334,9 +344,12 @@ class GammaMatrices(object):
 
     def do_rule2_gamma(self, t, nmax=1):
         """
-        simplify `G(m0)*p(-m0)*G(m1)*p(-m1)` to `p(m)*p(-m)`
+        simplify ``G(m0)*p(-m0)*G(m1)*p(-m1)` to `p(m)*p(-m)``
 
-        `t`    Gamma matrix expression
+        Parameters
+        ==========
+
+        t :    Gamma matrix expression
 
         Examples
         ========
