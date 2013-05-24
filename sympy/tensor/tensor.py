@@ -1194,6 +1194,10 @@ class TensAdd(TensExpr):
             args1.append(y)
         return TensAdd(*args1)
 
+    def expand_coeff(self):
+        args = [_tensor_expand_coeff(x) for x in self.args]
+        return TensAdd(*args)
+
     def substitute_indices(self, *index_tuples):
         """
         Return a tensor with free indices substituted according to ``index_tuples``
@@ -1829,7 +1833,6 @@ class TensMul(TensExpr):
         """
         return self._contract(g, g.index_types[0].metric_antisym, contract_all)
 
-
     def substitute_indices(self, *index_tuples):
         """
         Return a tensor with free indices substituted according to ``index_tuples``
@@ -1920,6 +1923,20 @@ class TensMul(TensExpr):
         t = self.fun_eval(*zip(free_args, indices))
         return t
 
+    def _as_coeff_mul(self):
+        a = self.split()
+        coeff = a[0]._coeff
+        t0 = TensMul(S.One, a[0]._components, a[0]._free, a[0]._dum)
+        a[0] = t0
+        t1 = tensor_mul(*a)
+        return coeff, t1
+
+    def expand_coeff(self):
+        from sympy.simplify.simplify import _mexpand
+        coeff, t = self._as_coeff_mul()
+        coeff = _mexpand(coeff)
+        coeff = _mexpand(coeff) # why expand twice?
+        return coeff*t
 
     def _pretty(self):
         if self._components == []:
@@ -1964,7 +1981,10 @@ def tensor_mul(*a):
         t = t*tx
     return t
 
-
+def _tensor_expand_coeff(p):
+    if not isinstance(p, TensExpr):
+        return p
+    return p.expand_coeff()
 
 def riemann_cyclic_replace(t_r):
     """
