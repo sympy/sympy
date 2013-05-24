@@ -78,7 +78,7 @@ with it:
    >>> expr - x
    2*y
 
-Notice something in the above example.  When we typed ``a - x``, we did not
+Notice something in the above example.  When we typed ``expr - x``, we did not
 get ``x + 2*y - x``, but rather just ``2*y``.  The ``x`` and the ``-x``
 automatically canceled one another.  This is similar to how ``sqrt(8)``
 automatically turned into ``2*sqrt(2)`` above.  This isn't always the case in
@@ -115,11 +115,8 @@ statistics, combinatorics, number theory, geometry, and logic. Here is a small
 sampling of the sort of symbolic power SymPy is capable of to whet your
 appetite.
 
-
    >>> from sympy import *
    >>> x, t, z, nu = symbols('x t z nu')
-
-   .. TODO this causes doctests in other files to fail.
 
 Make all further example pretty print with unicode characters.
 

@@ -388,8 +388,8 @@ automatically split apart again.
       ___   ___
     ╲╱ x ⋅╲╱ y
 
-``expand_power_exp``/``expand_power_base``
-------------------------------------------
+``expand_power_exp`` / ``expand_power_base``
+--------------------------------------------
 
 ``expand_power_exp`` and ``expand_power_base`` apply identities 1 and 2 from
 right to left, respectively.
