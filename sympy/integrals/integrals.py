@@ -439,6 +439,24 @@ class Integral(Expr):
                 isyms.update(i.free_symbols)
         return isyms
 
+    def interval(self):
+        """
+        Returns a list of limits in the order of integration variables
+        Examples
+        =========
+
+        >>> from sympy import Integral
+        >>> from sympy.abc import x, y
+        >>> Integral(x*y, (x, 0, 1), (y, 0, 10)).interval()
+        [(0, 1), (0, 10)]
+        >>> Integral(x + y, (x, 0, 1)).interval()
+        [(0, 1)]
+
+        """
+        limits = self.limits
+        interval_list = [l[1:] for l in limits]
+        return interval_list
+
     @property
     def is_zero(self):
         """Since Integral doesn't autosimplify it it useful to see if
