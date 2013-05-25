@@ -5,7 +5,7 @@ from sympy.physics.quantum.dagger import Dagger
 from sympy.physics.quantum.hilbert import HilbertSpace
 from sympy.physics.quantum.operator import (Operator, UnitaryOperator,
                                             HermitianOperator, OuterProduct,
-                                            DifferentialOperator)
+                                            DifferentialOperator, diff_op_exp)
 from sympy.physics.quantum.state import Ket, Bra, Wavefunction
 from sympy.physics.quantum.qapply import qapply
 from sympy.core.trace import Tr
@@ -183,3 +183,16 @@ def test_differential_operator():
     assert diff(d, th) == \
         DifferentialOperator(Derivative(d.expr, th), f(r, th))
     assert qapply(d*w) == Wavefunction(3*sin(th), r, (th, 0, pi))
+
+
+def test_diff_op_exp():
+    f = Function('f')
+    x, a = symbols('x, a')
+    unit_translation_generator = DifferentialOperator(1*f(x).diff(x), f(x))
+
+    unit_translation = diff_op_exp(unit_translation_generator)
+    assert qapply(unit_translation * Wavefunction(f(x), f(x))) == Wavefunction(f(x + 1), f(x))
+
+    translation_generator = DifferentialOperator(a * f(x).diff(x), f(x))
+    translation = diff_op_exp(translation_generator)
+    assert qapply(translation * Wavefunction(f(x), f(x))) == Wavefunction(f(x + a), f(x))
