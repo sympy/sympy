@@ -136,10 +136,12 @@ def rewriter(condition, rewrite):
         if condition(*integral):
             rewritten = rewrite(*integral)
             if rewritten != integrand:
-                return RewriteRule(
-                    rewritten,
-                    integral_steps(rewritten, symbol),
-                    integrand, symbol)
+                substep = integral_steps(rewritten, symbol)
+                if not isinstance(substep, DontKnowRule):
+                    return RewriteRule(
+                        rewritten,
+                        substep,
+                        integrand, symbol)
     return _rewriter
 
 def proxy_rewriter(condition, rewrite):
@@ -564,11 +566,16 @@ def substitution_rule(integral):
     if substitutions:
         ways = []
         for u_func, c, substituted in substitutions:
-            subrule = ConstantTimesRule(
-                c, substituted / c,
-                integral_steps(substituted / c, u_var),
-                substituted, symbol
-            )
+            subrule = integral_steps(substituted / c, u_var)
+            if isinstance(subrule, DontKnowRule):
+                continue
+
+            if sympy.simplify(c - 1) != 0:
+                subrule = ConstantTimesRule(
+                    c, substituted / c, subrule,
+                    substituted, symbol
+                )
+
             ways.append(URule(u_var, u_func, c,
                               subrule,
                               integrand, symbol))

@@ -1259,9 +1259,9 @@ class Integral(Expr):
 
             if h is None:
                 try:
-                    manual = manualintegrate(g, x)
-                    if manual is not None and manual.func != Integral:
-                        if manual.has(Integral):
+                    result = manualintegrate(g, x)
+                    if result is not None and not isinstance(result, Integral):
+                        if result.has(Integral):
                             # try to have other algorithms do the integrals
                             # manualintegrate can't handle
                             manual = manual.func(*[
