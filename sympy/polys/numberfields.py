@@ -503,10 +503,12 @@ def _minpoly_compose(ex, x, dom):
         return ex.q*x - ex.p
     if ex is I:
         return x**2 + 1
-    if hasattr(dom, 'gens') and ex in dom.gens:
-        return x - ex
+    if hasattr(dom, 'gens'):
+        gens = [gen.as_expr() for gen in dom.gens]
+        if ex in gens:
+            return x - ex
 
-    if _is_sum_surds(ex):
+    if dom.is_QQ and _is_sum_surds(ex):
         # eliminate the square roots
         ex -= x
         while 1:
