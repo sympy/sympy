@@ -144,9 +144,8 @@ class Dummy(Symbol):
     used. This is useful when a temporary variable is needed and the name
     of the variable used in the expression is not important.
 
-    >>> Dummy._count = 0 # /!\ this should generally not be changed; it is being
-    >>> Dummy()          # used here to make sure that the doctest passes.
-    _0
+    >>> Dummy() #doctest: +SKIP
+    _10
 
     """
 

@@ -976,13 +976,16 @@ def factor_terms(expr, radical=False, clear=False, fraction=False, sign=True):
     return _keep_coeff(cont, p, clear=clear, sign=sign)
 
 
-def _mask_nc(eq):
+def _mask_nc(eq, name=None):
     """Return ``eq`` with non-commutative objects replaced with dummy
     symbols. A dictionary that can be used to restore the original
     values is returned: if it is None, the expression is
     noncommutative and cannot be made commutative. The third value
     returned is a list of any non-commutative symbols that appear
     in the returned equation.
+
+    ``name`` is the name of the Dummy.  If it is ``None``, an unnamed
+    ``Dummy`` is used.
 
     Notes
     =====
@@ -1003,36 +1006,35 @@ def _mask_nc(eq):
     >>> from sympy.abc import x, y
     >>> from sympy.core.exprtools import _mask_nc
     >>> A, B, C = symbols('A,B,C', commutative=False)
-    >>> Dummy._count = 0 # reset for doctest purposes
 
     One nc-symbol:
 
-    >>> _mask_nc(A**2 - x**2)
-    (_0**2 - x**2, {_0: A}, [])
+    >>> _mask_nc(A**2 - x**2, name='d')
+    (_d**2 - x**2, {_d: A}, [])
 
     Multiple nc-symbols:
 
-    >>> _mask_nc(A**2 - B**2)
+    >>> _mask_nc(A**2 - B**2, name='d')
     (A**2 - B**2, None, [A, B])
 
     An nc-object with nc-symbols but no others outside of it:
 
-    >>> _mask_nc(1 + x*Commutator(A, B))
-    (_1*x + 1, {_1: Commutator(A, B)}, [])
-    >>> _mask_nc(NO(Fd(x)*F(y)))
-    (_2, {_2: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
+    >>> _mask_nc(1 + x*Commutator(A, B), name='d')
+    (_d*x + 1, {_d: Commutator(A, B)}, [])
+    >>> _mask_nc(NO(Fd(x)*F(y)), name='d')
+    (_d, {_d: NO(CreateFermion(x)*AnnihilateFermion(y))}, [])
 
     Multiple nc-objects:
 
     >>> eq = x*Commutator(A, B) + x*Commutator(A, C)*Commutator(A, B)
-    >>> _mask_nc(eq)
-    (x*_3 + x*_4*_3, {_3: Commutator(A, B), _4: Commutator(A, C)}, [_3, _4])
+    >>> _mask_nc(eq, name='d')
+    (x*_d + x*_d*_d, {_d: Commutator(A, C), _d: Commutator(A, B)}, [_d, _d])
 
     Multiple nc-objects and nc-symbols:
 
     >>> eq = A*Commutator(A, B) + B*Commutator(A, C)
-    >>> _mask_nc(eq)
-    (A*_5 + B*_6, {_5: Commutator(A, B), _6: Commutator(A, C)}, [_5, _6, A, B])
+    >>> _mask_nc(eq, name='d')
+    (A*_d + B*_d, {_d: Commutator(A, C), _d: Commutator(A, B)}, [_d, _d, A, B])
 
     If there is an object that:
 
@@ -1047,10 +1049,18 @@ def _mask_nc(eq):
     >>> eq = (1 + Mul(Basic(), Basic(), evaluate=False))
     >>> eq.is_commutative
     False
-    >>> _mask_nc(eq)
-    (_7**2 + 1, {_7: Basic()}, [])
+    >>> _mask_nc(eq, name='d')
+    (_d**2 + 1, {_d: Basic()}, [])
 
     """
+    if name is not None:
+        # Make Dummy() do the right thing
+        def Dummy(*args, **kwargs):
+            from sympy import Dummy
+            return Dummy(name, *args, **kwargs)
+    else:
+        from sympy import Dummy
+
     expr = eq
     if expr.is_commutative:
         return eq, {}, []
