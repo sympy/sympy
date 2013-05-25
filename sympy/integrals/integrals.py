@@ -1259,20 +1259,20 @@ class Integral(Expr):
 
             if h is None:
                 try:
-                    manual = manualintegrate(g, x)
-                    if manual is not None and manual.func != Integral:
-                        if manual.has(Integral):
+                    result = manualintegrate(g, x)
+                    if result is not None and not isinstance(result, Integral):
+                        if result.has(Integral):
                             # try to have other algorithms do the integrals
                             # manualintegrate can't handle
-                            manual = manual.func(*[
+                            result = result.func(*[
                                 arg.doit() if arg.has(Integral) else arg
-                                for arg in manual.args
+                                for arg in result.args
                             ]).expand(multinomial=False,
                                       log=False,
                                       power_exp=False,
                                       power_base=False)
-                        if not manual.has(Integral):
-                            parts.append(coeff * manual)
+                        if not result.has(Integral):
+                            parts.append(coeff * result)
                             continue
                 except (ValueError, PolynomialError):
                     # can't handle some SymPy expressions
