@@ -3,7 +3,7 @@
 from sympy import (S, Rational, Symbol, Poly, sin, sqrt, I, oo, Tuple, expand,
     Add, Mul, pi, cos, sin, exp)
 
-from sympy.utilities.pytest import raises
+from sympy.utilities.pytest import raises, slow
 
 from sympy.polys.numberfields import (
     minimal_polynomial,
@@ -73,7 +73,6 @@ def test_minimal_polynomial():
     assert minimal_polynomial(
         1/sqrt(a), x) == 392*x**8 - 1232*x**6 + 612*x**4 + 4*x**2 - 1
 
-    raises(NotAlgebraic, lambda: minimal_polynomial(y, x, domain=QQ))
     raises(NotAlgebraic, lambda: minimal_polynomial(oo, x))
     raises(NotAlgebraic, lambda: minimal_polynomial(2**y, x))
     raises(NotAlgebraic, lambda: minimal_polynomial(sin(1), x))
@@ -702,4 +701,20 @@ def test_minpoly_fraction_field():
 
     raises(NotAlgebraic, lambda: minimal_polynomial(exp(x), y))
     raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x), x))
+    raises(GeneratorsError, lambda: minimal_polynomial(sqrt(x) - y, x))
     raises(NotImplementedError, lambda: minimal_polynomial(sqrt(x), y, compose=False))
+
+@slow
+def test_minpoly_fraction_field_slow():
+    assert minimal_polynomial(minimal_polynomial(sqrt(x**Rational(1,5) - 1),
+        y).subs(y, sqrt(x**Rational(1,5) - 1)), z) == z
+
+def test_minpoly_domain():
+    assert minimal_polynomial(sqrt(2), x, domain=QQ.algebraic_field(sqrt(2))) == \
+        x - sqrt(2)
+    assert minimal_polynomial(sqrt(8), x, domain=QQ.algebraic_field(sqrt(2))) == \
+        x - 2*sqrt(2)
+    assert minimal_polynomial(sqrt(Rational(3,2)), x,
+        domain=QQ.algebraic_field(sqrt(2))) == 2*x**2 - 3
+
+    raises(NotAlgebraic, lambda: minimal_polynomial(y, x, domain=QQ))
