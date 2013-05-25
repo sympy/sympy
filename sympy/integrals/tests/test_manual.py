@@ -1,5 +1,5 @@
 from sympy import (sin, cos, tan, sec, csc, cot, log, exp, atan,
-                   Symbol, Mul, Integral, integrate, pi)
+                   Symbol, Mul, Integral, integrate, pi, Dummy)
 from sympy.integrals.manualintegrate import manualintegrate, find_substitutions, integral_steps
 
 x = Symbol('x')
@@ -80,7 +80,8 @@ def test_issue_3700():
     r, x, phi = map(Symbol, 'r x phi'.split())
     n = Symbol('n', integer=True, positive=True)
 
-    assert manualintegrate(cos(n*(x-phi))*cos(n*x), x).has(Integral)
-    integrand = (cos(n*(x-phi))*cos(n*x)).expand(trig=True)
+    integrand = (cos(n*(x-phi))*cos(n*x))
     limits = (x, -pi, pi)
-    assert r * integrate(integrand, limits) / pi == r * cos(n * phi)
+    assert manualintegrate(integrand, x).has(Integral)
+    assert r * integrate(integrand.expand(trig=True), limits) / pi == r * cos(n * phi)
+    assert not integrate(integrand, limits).has(Dummy)
