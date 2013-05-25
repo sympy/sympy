@@ -235,7 +235,7 @@ from sympy.core.sympify import sympify
 
 from sympy.functions import cos, exp, im, log, re, sin, tan, sqrt, sign
 from sympy.matrices import wronskian
-from sympy.polys import Poly, RootOf, terms_gcd
+from sympy.polys import Poly, RootOf, terms_gcd, PolynomialError
 from sympy.series import Order
 from sympy.simplify import collect, logcombine, powsimp, separatevars, \
     simplify, trigsimp, denom, fraction, posify
@@ -1110,10 +1110,10 @@ def odesimp(eq, func, order, hint):
     else:
         # The solution is not solved, so try to solve it
         try:
-            eqsol = solve(eq, func)
+            eqsol = solve(eq, func, force=True)
             if not eqsol:
                 raise NotImplementedError
-        except NotImplementedError:
+        except (NotImplementedError, PolynomialError):
             eq = [eq]
         else:
             def _expand(expr):
@@ -1262,7 +1262,7 @@ def checkodesol(ode, sol, func=None, order='auto', solve_for_func=True):
             sol.lhs == func and not sol.rhs.has(func)) and not (
             sol.rhs == func and not sol.lhs.has(func)):
         try:
-            solved = solve(sol, func)  # XXX could use force=True here
+            solved = solve(sol, func)
             if not solved:
                 raise NotImplementedError
         except NotImplementedError:

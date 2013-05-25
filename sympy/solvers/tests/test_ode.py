@@ -4,7 +4,7 @@ from __future__ import division
 from sympy import (acos, acosh, asinh, atan, cos, Derivative, diff, dsolve,
     Dummy, Eq, erf, erfi, exp, Function, I, Integral, LambertW, log, O, pi,
     Rational, RootOf, S, simplify, sin, sqrt, Symbol, tan, asin,
-    Piecewise, symbols)
+    Piecewise, symbols, Poly)
 from sympy.solvers.ode import (_undetermined_coefficients_match, checkodesol,
     classify_ode, constant_renumber, constantsimp,
     homogeneous_order, infinitesimals, checkinfsol)
@@ -518,7 +518,7 @@ def test_1st_homogeneous_coeff_ode():
     eq7 = (x + sqrt(f(x)**2 - x*f(x)))*f(x).diff(x) - f(x)
     eq8 = x + f(x) - (x - f(x))*f(x).diff(x)
     sol1 = Eq(log(x), C1 - log(f(x)*sin(f(x)/x)/x))
-    sol2 = Eq(log(x), C1 + log(sqrt(cos(f(x)/x) - 1)/sqrt(cos(f(x)/x) + 1)))
+    sol2 = Eq(log(x), log(C1) + log(cos(f(x)/x) - 1)/2 - log(cos(f(x)/x) + 1)/2)
     sol3 = Eq(f(x), C1*LambertW(C2*x))  # Eq(f(x), x*exp(-LambertW(C1*x) + 1))
     sol4 = Eq(log(f(x)), C1 - 2*exp(x/f(x)))
     sol5 = Eq(f(x), C1*exp(LambertW(C2*x**4)/2)/x)
@@ -530,8 +530,8 @@ def test_1st_homogeneous_coeff_ode():
         sol1
     # indep_div_dep actually has a simpler solution for eq2,
     # but it runs too slow
-    assert dsolve(eq2, hint='1st_homogeneous_coeff_subs_dep_div_indep') == \
-        sol2
+    assert dsolve(eq2, hint='1st_homogeneous_coeff_subs_dep_div_indep',
+            simplify=False) == sol2
     assert dsolve(eq3, hint='1st_homogeneous_coeff_best') == sol3
     assert dsolve(eq4, hint='1st_homogeneous_coeff_best') == sol4
     assert dsolve(eq5, hint='1st_homogeneous_coeff_best') == sol5
@@ -603,11 +603,11 @@ def test_1st_homogeneous_coeff_ode2():
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
     sol1 = Eq(f(x), x*acos(C1 + log(x)))
-    sol2 = Eq(log(f(x)), C1 + log(x/((x**2/f(x)**2 - 1)*f(x))))
+    sol2 = Eq(log(f(x)), log(C1) + log(x/f(x)) - log(x**2/f(x)**2 - 1))
     sol3 = Eq(f(x), log((1/(C1 - log(x)))**x))
     # specific hints are applied for speed reasons
     assert dsolve(eq1, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol1
-    assert dsolve(eq2, hint='1st_homogeneous_coeff_best', solve_for_func=False) == sol2
+    assert dsolve(eq2, hint='1st_homogeneous_coeff_best', simplify=False) == sol2
     assert dsolve(eq3, hint='1st_homogeneous_coeff_subs_dep_div_indep') == sol3
     assert checkodesol(eq1, sol1, order=1, solve_for_func=False)[0]
     assert checkodesol(eq2, sol2, order=1, solve_for_func=False)[0]
@@ -1454,7 +1454,7 @@ def test_separable_reduced():
     eq = x* df  + f(x)* (1 / (x**2*f(x) - 1))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
         '1st_linear_Integral', 'separable_reduced_Integral')
-    sol = dsolve(eq, hint = 'separable_reduced')
+    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
     assert sol.lhs ==  log(x**2*f(x))/3 + log(x**2*f(x) - S(3)/2)/6
     assert sol.rhs == C1 + log(x)
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
@@ -1462,6 +1462,7 @@ def test_separable_reduced():
     eq = df + (f(x) / (x**4*f(x) - x))
     assert classify_ode(eq) == ('1st_linear', 'separable_reduced',
         '1st_linear_Integral', 'separable_reduced_Integral')
+    # generates PolynomialError in solve attempt
     sol = dsolve(eq, hint = 'separable_reduced')
     assert sol.lhs == log(x**3*f(x))/4 + log(x**3*f(x) - S(4)/3)/12
     assert sol.rhs == C1 + log(x)
@@ -1522,11 +1523,22 @@ def test_linear_coefficients():
     f = Function('f')
     df = f(x).diff(x)
     sol = Eq(f(x), C1/(x**2 + 6*x + 9) - S(3)/2)
-    sola = Eq(f(x), (C1 + C2*x - 3*x**3/2 - 27*x**2/2)/(x**3 + 9*x**2 + 27*x + 27))
+    # XXX if force is not used in solve, the following is returned which,
+    # for C1 = -81/2, will satisfy the original equation. Should there be
+    # another free symbol so a family of solutions can be obtained, e.g.
+    # (C2 + C1*x + ... etc)/(...):
+    # Eq(f(x), (C1 + C1*x - 3*x**3/2 - 27*x**2/2)/(x**3 + 9*x**2 + 27*x + 27))
     eq = df + (3 + 2*f(x))/(x + 3)
-    assert simplify(eq.subs(f(x), sola.rhs).doit()).as_numer_denom()[0].has(x) is False
-    assert dsolve(eq, hint='linear_coefficients') == sola
+    assert dsolve(eq, hint='linear_coefficients') == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
+
+
+@XFAIL
+def test_constantsimp_take_problem():
+    # should this have C1 and C2 or C1 and exp(C1) in addition to x?
+    # see note in test_linear_coefficients above
+    c = exp(C1) + 2
+    assert len(Poly(constantsimp(exp(C1) + c + c*x, x, 2)).gens) > 2
 
 
 def test_issue_3780():
