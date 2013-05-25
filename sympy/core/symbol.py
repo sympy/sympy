@@ -158,7 +158,7 @@ class Dummy(Symbol):
 
     def __new__(cls, name=None, **assumptions):
         if name is None:
-            name = str(Dummy._count)
+            name = "Dummy_" + str(Dummy._count)
 
         is_commutative = fuzzy_bool(assumptions.get('commutative', True))
         if is_commutative is None:
