@@ -1271,7 +1271,7 @@ class Integral(Expr):
                                       log=False,
                                       power_exp=False,
                                       power_base=False)
-                        if not result.has(Integral) and not result.has(Dummy):
+                        if not result.has(Integral):
                             parts.append(coeff * result)
                             continue
                 except (ValueError, PolynomialError):

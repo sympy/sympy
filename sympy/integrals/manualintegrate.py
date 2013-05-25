@@ -55,6 +55,19 @@ def evaluates(rule):
         return func
     return _evaluates
 
+def contains_dont_know(rule):
+    if isinstance(rule, DontKnowRule):
+        return True
+    else:
+        for val in rule:
+            if isinstance(val, tuple):
+                if contains_dont_know(val):
+                    return True
+            elif isinstance(val, list):
+                if any(contains_dont_know(i) for i in val):
+                    return True
+    return False
+
 def manual_diff(f, symbol):
     """Derivative of f in form expected by find_substitutions
 
@@ -567,7 +580,7 @@ def substitution_rule(integral):
         ways = []
         for u_func, c, substituted in substitutions:
             subrule = integral_steps(substituted / c, u_var)
-            if isinstance(subrule, DontKnowRule):
+            if contains_dont_know(subrule):
                 continue
 
             if sympy.simplify(c - 1) != 0:
