@@ -49,8 +49,6 @@ def finite_diff_kauers(sum):
     (m + 1)*(n + 1)
     """
     function = sum.function
-    for v in sum.variables:
-        for l in sum.limits:
-            if v == l[0]:
-                function = function.subs(v, l[-1] + 1)
+    for l in sum.limits:
+        function = function.subs(l[0], l[- 1] + 1)
     return function
