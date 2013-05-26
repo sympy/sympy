@@ -1535,8 +1535,9 @@ def integrate(*args, **kwargs):
 
     The option manual=True can be used to use only an algorithm that tries
     to mimic integration by hand. This algorithm does not handle as many
-    integrands as the other algorithms implemented but may return results
-    in a more familiar form.
+    integrands as the other algorithms implemented but may return results in
+    a more familiar form. The ``manualintegrate`` module has functions that
+    return the steps used (see the module docstring for more information).
 
     In general, the algebraic methods work best for computing
     antiderivatives of (possibly complicated) combinations of elementary
