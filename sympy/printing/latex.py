@@ -59,6 +59,7 @@ tex_greek_dictionary = {
 other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
                      'hslash', 'mho', 'wp', ])
 
+greek_letters_set = frozenset(greeks)
 
 class LatexPrinter(Printer):
     printmethod = "_latex"
@@ -1658,7 +1659,7 @@ def translate(s):
     tex = tex_greek_dictionary.get(s)
     if tex:
         return tex
-    elif s.lower() in greeks or s in other_symbols:
+    elif s.lower() in greek_letters_set or s in other_symbols:
         return "\\" + s
     else:
         return s

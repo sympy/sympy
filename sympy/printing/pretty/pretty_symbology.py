@@ -102,10 +102,9 @@ def xstr(*args):
 g = lambda l: U('GREEK SMALL LETTER %s' % l.upper())
 G = lambda l: U('GREEK CAPITAL LETTER %s' % l.upper())
 
-greek_letters = set(greeks) # make a copy
+greek_letters = list(greeks) # make a copy
 # deal with Unicode's funny spelling of lambda
-greek_letters.remove('lambda')
-greek_letters.add('lamda')
+greek_letters[greek_letters.index('lambda')] = 'lamda'
 
 # {}  greek letter -> (g,G)
 greek_unicode = dict([(l, (g(l), G(l))) for l in greek_letters])
