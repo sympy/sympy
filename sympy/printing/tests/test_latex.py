@@ -13,10 +13,10 @@ from sympy import (
     hyper, im, im, jacobi, laguerre, legendre, lerchphi, log, lowergamma,
     meijerg, oo, polar_lift, polylog, re, re, root, sin, sqrt, symbols,
     uppergamma, zeta, subfactorial, totient, elliptic_k, elliptic_f,
-    elliptic_e, elliptic_pi)
+    elliptic_e, elliptic_pi, cos, tan)
 
 from sympy.abc import mu, tau
-from sympy.printing.latex import latex
+from sympy.printing.latex import latex, translate
 from sympy.utilities.pytest import XFAIL, raises
 from sympy.functions import DiracDelta, Heaviside, KroneckerDelta, LeviCivita
 from sympy.logic import Implies
@@ -112,6 +112,9 @@ def test_latex_symbols():
     assert latex(Symbol('91')) == r"91"
     assert latex(Symbol('alpha_new')) == r"\alpha_{new}"
     assert latex(Symbol('C^orig')) == r"C^{orig}"
+    assert latex(Symbol('x^alpha')) == r"x^{\alpha}"
+    assert latex(Symbol('beta^alpha')) == r"\beta^{\alpha}"
+    assert latex(Symbol('e^Alpha')) == r"e^{A}"
 
 
 @XFAIL
@@ -128,11 +131,27 @@ def test_latex_functions():
     assert latex(exp(1) + exp(2)) == "e + e^{2}"
 
     f = Function('f')
-    assert latex(f(x)) == '\\operatorname{f}{\\left (x \\right )}'
+    assert latex(f(x)) == r'f{\left (x \right )}'
+    assert latex(f) == r'f'
+
+    g = Function('g')
+    assert latex(g(x, y)) == r'g{\left (x,y \right )}'
+    assert latex(g) == r'g'
+
+    h = Function('h')
+    assert latex(h(x, y, z)) == r'h{\left (x,y,z \right )}'
+    assert latex(h) == r'h'
+
+    Li = Function('Li')
+    assert latex(Li) == r'\operatorname{Li}'
+    assert latex(Li(x)) == r'\operatorname{Li}{\left (x \right )}'
 
     beta = Function('beta')
 
+    # not to be confused with the beta function
     assert latex(beta(x)) == r"\beta{\left (x \right )}"
+    assert latex(beta) == r"\beta"
+
     assert latex(sin(x)) == r"\sin{\left (x \right )}"
     assert latex(sin(x), fold_func_brackets=True) == r"\sin {x}"
     assert latex(sin(2*x**2), fold_func_brackets=True) == \
@@ -220,7 +239,7 @@ def test_latex_functions():
     assert latex(Shi(x)**2) == r'\operatorname{Shi}^{2}{\left (x \right )}'
     assert latex(Si(x)**2) == r'\operatorname{Si}^{2}{\left (x \right )}'
     assert latex(Ci(x)**2) == r'\operatorname{Ci}^{2}{\left (x \right )}'
-    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}'
+    assert latex(Chi(x)**2) == r'\operatorname{Chi}^{2}{\left (x \right )}', latex(Chi(x)**2)
 
     assert latex(
         jacobi(n, a, b, x)) == r'P_{n}^{\left(a,b\right)}\left(x\right)'
@@ -262,6 +281,11 @@ def test_latex_functions():
 
     assert latex(totient(n)) == r'\phi\left( n \right)'
 
+    # some unknown function name should get rendered with \operatorname
+    fjlkd = Function('fjlkd')
+    assert latex(fjlkd(x)) == r'\operatorname{fjlkd}{\left (x \right )}'
+    # even when it is referred to without an argument
+    assert latex(fjlkd) == r'\operatorname{fjlkd}'
 
 def test_hyper_printing():
     from sympy import pi
@@ -782,20 +806,20 @@ def test_integral_transforms():
     a = Symbol("a")
     b = Symbol("b")
 
-    assert latex(MellinTransform(f(x), x, k)) == r"\mathcal{M}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseMellinTransform(f(k), k, x, a, b)) == r"\mathcal{M}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+    assert latex(MellinTransform(f(x), x, k)) == r"\mathcal{M}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseMellinTransform(f(k), k, x, a, b)) == r"\mathcal{M}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
 
-    assert latex(LaplaceTransform(f(x), x, k)) == r"\mathcal{L}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseLaplaceTransform(f(k), k, x, (a, b))) == r"\mathcal{L}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+    assert latex(LaplaceTransform(f(x), x, k)) == r"\mathcal{L}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseLaplaceTransform(f(k), k, x, (a, b))) == r"\mathcal{L}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
 
-    assert latex(FourierTransform(f(x), x, k)) == r"\mathcal{F}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseFourierTransform(f(k), k, x)) == r"\mathcal{F}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+    assert latex(FourierTransform(f(x), x, k)) == r"\mathcal{F}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseFourierTransform(f(k), k, x)) == r"\mathcal{F}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
 
-    assert latex(CosineTransform(f(x), x, k)) == r"\mathcal{COS}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseCosineTransform(f(k), k, x)) == r"\mathcal{COS}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+    assert latex(CosineTransform(f(x), x, k)) == r"\mathcal{COS}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseCosineTransform(f(k), k, x)) == r"\mathcal{COS}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
 
-    assert latex(SineTransform(f(x), x, k)) == r"\mathcal{SIN}_{x}\left[\operatorname{f}{\left (x \right )}\right]\left(k\right)"
-    assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[\operatorname{f}{\left (k \right )}\right]\left(x\right)"
+    assert latex(SineTransform(f(x), x, k)) == r"\mathcal{SIN}_{x}\left[f{\left (x \right )}\right]\left(k\right)"
+    assert latex(InverseSineTransform(f(k), k, x)) == r"\mathcal{SIN}^{-1}_{k}\left[f{\left (k \right )}\right]\left(x\right)"
 
 
 def test_PolynomialRing():
@@ -938,3 +962,115 @@ def test_boolean_args_order():
 def test_imaginary():
     i = sqrt(-1)
     assert latex(i) == r'i'
+
+def test_builtins_without_args():
+    assert latex(sin) == r'\sin'
+    assert latex(cos) == r'\cos'
+    assert latex(tan) == r'\tan'
+    assert latex(log) == r'\log'
+    assert latex(Ei) == r'\operatorname{Ei}'
+    assert latex(zeta) == r'\zeta'
+
+@XFAIL
+def test_latex_greek_functions():
+    # bug because capital greeks that have roman equivalents should not use
+    # \Alpha, \Beta, \Eta, etc.
+    s = Function('Alpha')
+    assert latex(s) == r'A'
+    s = Function('Beta')
+    assert latex(s) == r'B'
+    s = Function('Eta')
+    assert latex(s) == r'H'
+
+    s = symbols('Alpha')
+    assert latex(s) == r'A'
+    s = symbols('Beta')
+    assert latex(s) == r'B'
+    s = symbols('Eta')
+    assert latex(s) == r'H'
+
+    # bug because sympy.core.numbers.Pi is special
+    p = Function('Pi')
+    assert latex(p(x)) == r'\Pi{\left (x \right )}'
+    assert latex(p) == r'\Pi'
+
+    # bug because not all greeks are included
+    c = Function('chi')
+    assert latex(c(x)) == r'\chi{\left (x \right )}'
+    assert latex(c) == r'\chi'
+
+    # bug because the name is 'gamma' but the representation should be \Gamma
+    assert latex(gamma) == r'\Gamma'
+
+def test_translate():
+    s = 'Alpha'
+    assert translate(s) == 'A'
+    s = 'Beta'
+    assert translate(s) == 'B'
+    s = 'Eta'
+    assert translate(s) == 'H'
+    s = 'omicron'
+    assert translate(s) == 'o'
+    s = 'Pi'
+    assert translate(s) == r'\Pi'
+    s = 'pi'
+    assert translate(s) == r'\pi'
+
+def test_greek_symbols():
+    assert latex(Symbol('alpha'))   == r'\alpha'
+    assert latex(Symbol('beta'))    == r'\beta'
+    assert latex(Symbol('gamma'))   == r'\gamma'
+    assert latex(Symbol('delta'))   == r'\delta'
+    assert latex(Symbol('epsilon')) == r'\epsilon'
+    assert latex(Symbol('zeta'))    == r'\zeta'
+    assert latex(Symbol('eta'))     == r'\eta'
+    assert latex(Symbol('theta'))   == r'\theta'
+    assert latex(Symbol('iota'))    == r'\iota'
+    assert latex(Symbol('kappa'))   == r'\kappa'
+    assert latex(Symbol('lambda'))  == r'\lambda'
+    assert latex(Symbol('mu'))      == r'\mu'
+    assert latex(Symbol('nu'))      == r'\nu'
+    assert latex(Symbol('xi'))      == r'\xi'
+    assert latex(Symbol('omicron')) == r'o'
+    assert latex(Symbol('pi'))      == r'\pi'
+    assert latex(Symbol('rho'))     == r'\rho'
+    assert latex(Symbol('sigma'))   == r'\sigma'
+    assert latex(Symbol('tau'))     == r'\tau'
+    assert latex(Symbol('upsilon')) == r'\upsilon'
+    assert latex(Symbol('phi'))     == r'\phi'
+    assert latex(Symbol('chi'))     == r'\chi'
+    assert latex(Symbol('psi'))     == r'\psi'
+    assert latex(Symbol('omega'))   == r'\omega'
+
+    assert latex(Symbol('Alpha'))   == r'A'
+    assert latex(Symbol('Beta'))    == r'B'
+    assert latex(Symbol('Gamma'))   == r'\Gamma'
+    assert latex(Symbol('Delta'))   == r'\Delta'
+    assert latex(Symbol('Epsilon')) == r'E'
+    assert latex(Symbol('Zeta'))    == r'Z'
+    assert latex(Symbol('Eta'))     == r'H'
+    assert latex(Symbol('Theta'))   == r'\Theta'
+    assert latex(Symbol('Iota'))    == r'I'
+    assert latex(Symbol('Kappa'))   == r'K'
+    assert latex(Symbol('Lambda'))  == r'\Lambda'
+    assert latex(Symbol('Mu'))      == r'M'
+    assert latex(Symbol('Nu'))      == r'N'
+    assert latex(Symbol('Xi'))      == r'\Xi'
+    assert latex(Symbol('Omicron')) == r'O'
+    assert latex(Symbol('Pi'))      == r'\Pi'
+    assert latex(Symbol('Rho'))     == r'P'
+    assert latex(Symbol('Sigma'))   == r'\Sigma'
+    assert latex(Symbol('Tau'))     == r'T'
+    assert latex(Symbol('Upsilon')) == r'\Upsilon'
+    assert latex(Symbol('Phi'))     == r'\Phi'
+    assert latex(Symbol('Chi'))     == r'X'
+    assert latex(Symbol('Psi'))     == r'\Psi'
+    assert latex(Symbol('Omega'))   == r'\Omega'
+
+
+@XFAIL
+def test_builtin_without_args_mismatched_names():
+    assert latex(KroneckerDelta) == r'\delta'
+    assert latex(DiracDelta) == r'\delta'
+    assert latex(CosineTransform) == r'\mathcal{COS}'
+    assert latex(lowergamma) == r'\gamma'

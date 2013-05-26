@@ -22,9 +22,35 @@ import re
 # Complete list at http://www.mathjax.org/docs/1.1/tex.html#supported-latex-commands
 # This variable only contains those functions which sympy uses.
 accepted_latex_functions = ['arcsin', 'arccos', 'arctan', 'sin', 'cos', 'tan',
-                    'theta', 'beta', 'alpha', 'gamma', 'sinh', 'cosh', 'tanh', 'sqrt',
+                    'sinh', 'cosh', 'tanh', 'sqrt',
                     'ln', 'log', 'sec', 'csc', 'cot', 'coth', 're', 'im', 'frac', 'root',
-                    'arg', 'zeta', 'psi']
+                    'arg']
+## 'theta', 'beta', 'alpha', 'gamma', , 'zeta', 'psi']
+greeks = set(['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta',
+              'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu', 'xi', 'omicron',
+              'pi', 'rho', 'sigma', 'tau', 'upsilon', 'phi', 'chi', 'psi',
+              'omega'])
+
+greek_dictionary = {'Alpha': 'A',
+                    'Beta': 'B',
+                    'Epsilon': 'E',
+                    'Zeta': 'Z',
+                    'Eta': 'H',
+                    'Iota': 'I',
+                    'Kappa': 'K',
+                    'Mu': 'M',
+                    'Nu': 'N',
+                    'omicron': 'o',
+                    'Omicron': 'O',
+                    'Rho': 'P',
+                    'Tau': 'T',
+                    'Chi': 'X',
+                    'lamda': r'\lambda',
+                    'Lamda': r'\Lambda',
+                   }
+
+other_symbols = set(['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth', 'hbar',
+                     'hslash', 'mho', ])
 
 
 class LatexPrinter(Printer):
@@ -441,7 +467,36 @@ class LatexPrinter(Printer):
         else:
             return r"%s %s" % (tex, self._print(e))
 
+    def _hprint_Function(self, func):
+        '''
+        Logic to decide how to render a function to latex
+          - if it is a recognized latex name, use the appropriate latex command
+          - if it is a single letter, just use that letter
+          - if it is a longer name, then put \operatorname{} around it and be
+            mindful of undercores in the name
+        '''
+        func = translate(func)
+
+        if func in accepted_latex_functions:
+            name = r"\%s" % func
+        elif len(func) == 1 or func.startswith('\\'):
+            name = func
+        else:
+            name = r"\operatorname{%s}" % func.replace("_", r"\_")
+        return name
+
     def _print_Function(self, expr, exp=None):
+        '''
+        Render functions to LaTeX, handling functions that LaTeX knows about
+        e.g., sin, cos, ... by using the proper LaTeX command (\sin, \cos, ...).
+        For single-letter function names, render them as regular LaTeX math
+        symbols. For multi-letter function names that LaTeX does not know
+        about, (e.g., Li, sech) use \operatorname{} so that the function name
+        is rendered in Roman font and LaTeX handles spacing properly.
+
+        expr is the expression involving the function
+        exp is an exponent
+        '''
         func = expr.func.__name__
 
         if hasattr(self, '_print_' + func):
@@ -480,18 +535,9 @@ class LatexPrinter(Printer):
                 else:
                     name = r"\operatorname{%s}^{-1}" % func
             elif exp is not None:
-                if func in accepted_latex_functions:
-                    name = r"\%s^{%s}" % (func, exp)
-                else:
-                    # If the generic function name contains an underscore, handle it
-                    name = r"\operatorname{%s}^{%s}" % (
-                        func.replace("_", r"\_"), exp)
+                name = r'%s^{%s}' % (self._hprint_Function(func), exp)
             else:
-                if func in accepted_latex_functions:
-                    name = r"\%s" % func
-                else:
-                    # If the generic function name contains an underscore, handle it
-                    name = r"\operatorname{%s}" % func.replace("_", r"\_")
+                name = self._hprint_Function(func)
 
             if can_fold_brackets:
                 if func in accepted_latex_functions:
@@ -507,6 +553,12 @@ class LatexPrinter(Printer):
                 name += r"^{%s}" % exp
 
             return name % ",".join(args)
+
+    def _print_UndefinedFunction(self, expr):
+        return self._hprint_Function(str(expr))
+
+    def _print_FunctionClass(self, expr):
+        return self._hprint_Function(str(expr))
 
     def _print_Lambda(self, expr):
         symbols, expr = expr.args
@@ -1010,26 +1062,6 @@ class LatexPrinter(Printer):
             return self._settings['symbol_names'][expr]
 
         name, supers, subs = split_super_sub(expr.name)
-
-        # translate name, supers and subs to tex keywords
-        greek = set([ 'alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta',
-                      'eta', 'theta', 'iota', 'kappa', 'lambda', 'mu', 'nu',
-                      'xi', 'omicron', 'pi', 'rho', 'sigma', 'tau', 'upsilon',
-                      'phi', 'chi', 'psi', 'omega' ])
-
-        greek_translated = {'lamda': 'lambda', 'Lamda': 'Lambda'}
-
-        other = set( ['aleph', 'beth', 'daleth', 'gimel', 'ell', 'eth',
-                      'hbar', 'hslash', 'mho' ])
-
-        def translate(s):
-            tmp = s.lower()
-            if tmp in greek or tmp in other:
-                return "\\" + s
-            if s in greek_translated:
-                return "\\" + greek_translated[s]
-            else:
-                return s
 
         name = translate(name)
         supers = [translate(sup) for sup in supers]
@@ -1598,6 +1630,23 @@ class LatexPrinter(Printer):
 
     def _print_totient(self, expr):
         return r'\phi\left( %s \right)' %  self._print(expr.args[0])
+
+
+def translate(s):
+    '''
+    Given a description of a Greek letter or other special character,
+    return the appropriate latex
+
+    let everything else pass as given
+    '''
+    tex = greek_dictionary.get(s)
+    if tex:
+        return tex
+    elif s.lower() in greeks or s in other_symbols:
+        return "\\" + s
+    else:
+        return s
+
 
 def latex(expr, **settings):
     r"""
