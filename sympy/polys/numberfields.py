@@ -104,6 +104,7 @@ def _separate_sq(p):
     -x**4 + 4*sqrt(7)*x**3 - 32*x**2 + 8*sqrt(7)*x + 20
     >>> p = _separate_sq(p); p
     -x**8 + 48*x**6 - 536*x**4 + 1728*x**2 - 400
+
     """
     from sympy.simplify.simplify import _split_gcd, _mexpand
     from sympy.utilities.iterables import sift
@@ -166,6 +167,7 @@ def _minimal_polynomial_sq(p, n, x):
     >>> q = 1 + sqrt(2) + sqrt(3)
     >>> _minimal_polynomial_sq(q, 3, x)
     x**12 - 4*x**9 - 4*x**6 + 16*x**3 - 8
+
     """
     from sympy.simplify.simplify import _is_sum_surds
 
@@ -325,6 +327,7 @@ def _minpoly_pow(ex, pw, x, dom, mp=None):
     x**3 - y
     >>> minpoly(y**Rational(1, 3), x)
     x**3 - y
+
     """
     pw = sympify(pw)
     if not mp:
@@ -506,6 +509,7 @@ def _minpoly_compose(ex, x, dom):
     x**2 - 2*x - 1
     >>> minimal_polynomial(sqrt(y) + 1/y, x, compose=True)
     x**2*y**2 - 2*x*y - y**3 + 1
+
     """
     if ex.is_Rational:
         return ex.q*x - ex.p
@@ -587,8 +591,9 @@ def minimal_polynomial(ex, x=None, **args):
     x**4 - 10*x**2 + 1
     >>> minimal_polynomial(solve(x**3 + x + 3)[0], x)
     x**3 + x + 3
-    >>> minpoly(sqrt(y), x)
+    >>> minimal_polynomial(sqrt(y), x)
     x**2 - y
+
     """
     from sympy.polys.polytools import degree
     from sympy.polys.domains import FractionField
@@ -642,6 +647,7 @@ def _minpoly_groebner(ex, x, cls):
     >>> from sympy.abc import x
     >>> minimal_polynomial(sqrt(2) + 3*Rational(1, 3), x, compose=False)
     x**2 - 2*x - 1
+
     """
     from sympy.polys.polytools import degree
     from sympy.core.function import expand_multinomial
