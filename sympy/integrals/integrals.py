@@ -1087,7 +1087,22 @@ class Integral(Expr):
            - Setting meijerg=True will cause integrate() to use only this
              method.
 
-        5. The Heuristic Risch algorithm:
+        5. The "manual integration" algorithm:
+
+           - This algorithm tries to mimic how a person would find an
+             antiderivative by hand, for example by looking for a
+             substitution or applying integration by parts. This algorithm
+             does not handle as many integrands but can return results in a
+             more familiar form.
+
+           - Sometimes this algorithm can evaluate parts of an integral; in
+             this case integrate() will try to evaluate the rest of the
+             integrand using the other methods here.
+
+           - Setting manual=True will cause integrate() to use only this
+             method.
+
+        6. The Heuristic Risch algorithm:
 
            - This is a heuristic version of the Risch algorithm, meaning that
              it is not deterministic.  This is tried as a last resort because
@@ -1517,6 +1532,11 @@ def integrate(*args, **kwargs):
     infinity. Various strategies are implemented to rewrite integrands
     as G-functions, and use this information to compute integrals (see
     the ``meijerint`` module).
+
+    The option manual=True can be used to use only an algorithm that tries
+    to mimic integration by hand. This algorithm does not handle as many
+    integrands as the other algorithms implemented but may return results
+    in a more familiar form.
 
     In general, the algebraic methods work best for computing
     antiderivatives of (possibly complicated) combinations of elementary
