@@ -450,22 +450,19 @@ def dsolve(eq, func=None, hint="default", simplify=True, **kwargs):
     >>> from sympy import Function, dsolve, Eq, Derivative, sin, cos
     >>> from sympy.abc import x
     >>> f = Function('f')
-    >>> dsolve(Derivative(f(x),x,x)+9*f(x), f(x))
+    >>> dsolve(Derivative(f(x), x, x) + 9*f(x), f(x))
     f(x) == C1*sin(3*x) + C2*cos(3*x)
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ...     hint='separable', simplify=False)
-    -log(sin(f(x))**2 - 1)/2 == C1 + log(sin(x)**2 - 1)/2
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ...     hint='1st_exact')
-    f(x) == acos(C1/cos(x))
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ...     hint='almost_linear')
-    [f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
-    >>> dsolve(sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x), f(x),
-    ... hint='best')
-    f(x) == acos(C1/cos(x))
-    >>> # Note that even though separable is the default, 1st_exact produces
-    >>> # a simpler result in this case.
+
+    >>> eq = sin(x)*cos(f(x)) + cos(x)*sin(f(x))*f(x).diff(x)
+    >>> dsolve(eq, hint='separable_reduced')
+    f(x) == C1/(C2*x - 1)
+    >>> dsolve(eq, hint='1st_exact')
+    [f(x) == -acos(C1/cos(x)) + 2*pi, f(x) == acos(C1/cos(x))]
+    >>> dsolve(eq, hint='almost_linear')
+    [f(x) == -acos(-sqrt(C1/cos(x)**2)) + 2*pi, f(x) == -acos(sqrt(C1/cos(x)**2)) + 2*pi,
+    f(x) == acos(-sqrt(C1/cos(x)**2)), f(x) == acos(sqrt(C1/cos(x)**2))]
+    >>> dsolve(eq, hint='best')
+    f(x) == C1/(C2*x - 1)
 
     """
     given_hint = hint  # hint given by the user

@@ -314,7 +314,7 @@ def test_1st_exact1():
     eq3 = 2*x + f(x)*cos(x) + (2*f(x) + sin(x) - sin(f(x)))*f(x).diff(x)
     eq4 = cos(f(x)) - (x*sin(f(x)) - f(x)**2)*f(x).diff(x)
     eq5 = 2*x*f(x) + (x**2 + f(x)**2)*f(x).diff(x)
-    sol1 = Eq(f(x), acos((C1)/cos(x)))
+    sol1 = [Eq(f(x), -acos(C1/cos(x)) + 2*pi), Eq(f(x), acos(C1/cos(x)))]
     sol2 = Eq(f(x), C1*exp(-x**2 + LambertW(C2*x*exp(x**2))))
     sol2b = Eq(log(f(x)) + x/f(x) + x**2, C1)
     sol3 = Eq(f(x)*sin(x) + cos(f(x)) + x**2 + f(x)**2, C1)
@@ -602,7 +602,7 @@ def test_1st_homogeneous_coeff_ode2():
     eq1 = f(x).diff(x) - f(x)/x + 1/sin(f(x)/x)
     eq2 = x**2 + f(x)**2 - 2*x*f(x)*f(x).diff(x)
     eq3 = x*exp(f(x)/x) + f(x) - x*f(x).diff(x)
-    sol1 = Eq(f(x), x*acos(C1 + log(x)))
+    sol1 = [Eq(f(x), x*(-acos(C1 + log(x)) + 2*pi)), Eq(f(x), x*acos(C1 + log(x)))]
     sol2 = Eq(log(f(x)), log(C1) + log(x/f(x)) - log(x**2/f(x)**2 - 1))
     sol3 = Eq(f(x), log((1/(C1 - log(x)))**x))
     # specific hints are applied for speed reasons
@@ -1440,8 +1440,10 @@ def test_exact_enhancement():
     eq = (x + 2)*sin(f) + d*x*cos(f)
     rhs = [sol.rhs for sol in dsolve(eq, f)]
     assert rhs == [
-        acos(-sqrt(C1*exp(-2*x) + x**4)/x**2),
-        acos(sqrt(C1*exp(-2*x) + x**4)/x**2)]
+        -acos(-sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        -acos(sqrt(C1*exp(-2*x)/x**4 + 1)) + 2*pi,
+        acos(-sqrt(C1*exp(-2*x)/x**4 + 1)),
+        acos(sqrt(C1*exp(-2*x)/x**4 + 1))]
 
 
 def test_separable_reduced():
@@ -1469,9 +1471,8 @@ def test_separable_reduced():
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
     eq = x*df + f(x)*(x**2*f(x))
-    sol = dsolve(eq, hint = 'separable_reduced')
-    assert sol.lhs == log(x**2*f(x))/2 - log(x**2*f(x) - 2)/2
-    assert sol.rhs == C1 + log(x)
+    sol = dsolve(eq, hint = 'separable_reduced', simplify=False)
+    assert sol == Eq(log(x**2*f(x))/2 - log(x**2*f(x) - 2)/2, C1 + log(x))
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
 
 
@@ -1543,7 +1544,7 @@ def test_constantsimp_take_problem():
 
 def test_issue_3780():
     f = Function('f')
-    eq = Eq(Derivative(f(x),x,2)-2*Derivative(f(x),x)+f(x), sin(x))
+    eq = Eq(Derivative(f(x), x, 2) - 2*Derivative(f(x), x) + f(x), sin(x))
     sol = (C1 + C2*x)*exp(x) + cos(x)/S(2)
     assert dsolve(eq).rhs == sol
     assert checkodesol(eq, sol, order=1, solve_for_func=False)[0]
@@ -1593,3 +1594,10 @@ def test_heuristic1():
         check = checkinfsol(eq, i)
         for sol in check:
             assert sol[0]
+
+
+@XFAIL
+def test_issue_3148():
+    eq = x**2*f(x)**2 + x*Derivative(f(x), x)
+    sol = dsolve(eq, hint = 'separable_reduced')
+    assert checkodesol(eq, sol, order=1)[0]

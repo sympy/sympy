@@ -287,9 +287,9 @@ def test_linear_systemLU():
 def test_tsolve():
     assert solve(exp(x) - 3, x) == [log(3)]
     assert set(solve((a*x + b)*(exp(x) - 3), x)) == set([-b/a, log(3)])
-    assert solve(cos(x) - y, x) == [acos(y)]
-    assert solve(2*cos(x) - y, x) == [acos(y/2)]
-    assert set(solve(Eq(cos(x), sin(x)), x)) == set([-3*pi/4, pi/4])
+    assert solve(cos(x) - y, x) == [-acos(y) + 2*pi, acos(y)]
+    assert solve(2*cos(x) - y, x) == [-acos(y/2) + 2*pi, acos(y/2)]
+    assert solve(Eq(cos(x), sin(x)), x) == [-3*pi/4, pi/4]
 
     assert set(solve(exp(x) + exp(-x) - y, x)) in [set([
         log(y/2 - sqrt(y**2 - 4)/2),
@@ -329,11 +329,11 @@ def test_tsolve():
     # it works if expanded, too
     assert solve(eq.expand(), x) == result
 
-    assert solve(z*cos(x) - y, x) == [acos(y/z)]
-    assert solve(z*cos(2*x) - y, x) == [acos(y/z)/2]
-    assert solve(z*cos(sin(x)) - y, x) == [asin(acos(y/z))]
+    assert solve(z*cos(x) - y, x) == [-acos(y/z) + 2*pi, acos(y/z)]
+    assert solve(z*cos(2*x) - y, x) == [-acos(y/z)/2 + pi, acos(y/z)/2]
+    assert solve(z*cos(sin(x)) - y, x) == [-asin(acos(y/z) - 2*pi), asin(acos(y/z))]
 
-    assert solve(z*cos(x), x) == [acos(0)]
+    assert solve(z*cos(x), x) == [pi/2, 3*pi/2]
 
     # issue #1409
     assert solve(y - b*x/(a + x), x) in [[-a*y/(y - b)], [a*y/(b - y)]]

@@ -621,15 +621,15 @@ def solve(f, *symbols, **flags):
     then use the check=False option:
 
         >>> from sympy import sin, limit
-        >>> solve(sin(x)/x)
-        []
+        >>> solve(sin(x)/x)  # 0 is excluded
+        [pi]
 
     If check=False then a solution to the numerator being zero is found: x = 0.
     In this case, this is a spurious solution since sin(x)/x has the well known
     limit (without dicontinuity) of 1 at x = 0:
 
         >>> solve(sin(x)/x, check=False)
-        [0]
+        [0, pi]
 
     In the following case, however, the limit exists and is equal to the the
     value of x = 0 that is excluded when check=True:
@@ -1347,11 +1347,40 @@ def _solve(f, *symbols, **flags):
                                 pass
                         gen = poly.gen
                         if gen != symbol:
+                            #                    -1
+                            # f(x) = g  ->  x = f  (g)
+                            inverses = {
+                                asin: sin,
+                                acos: cos,
+                                atan: tan,
+                                acot: cot,
+                                asinh: sinh,
+                                acosh: cosh,
+                                atanh: tanh,
+                                acoth: coth,
+                            }
+                            multiinverses = {
+                                sin: lambda x: (x, S.Pi - x),
+                                cos: lambda x: (x, 2*S.Pi - x),
+                            }
                             u = Dummy()
+                            if gen.func in inverses:
+                                soln = [inverses[gen.func](s) for s in soln]
+                                gen = gen.args[0]
+                            elif gen.func in inverses.values():
+                                if gen.func in multiinverses:
+                                    soln = [i for s in soln for i in
+                                    multiinverses[gen.func](
+                                    gen.inverse()(s))]
+                                    gen = gen.args[0]
+                                else:
+                                    soln = [gen.inverse()(s) for s in soln]
+                                    gen = gen.args[0]
                             inversion = _solve(gen - u, symbol, **flags)
                             soln = list(ordered(set([i.subs(u, s) for i in
                                         inversion for s in soln])))
                         result = soln
+
 
     # fallback if above fails
     if result is False:
@@ -2115,12 +2144,9 @@ def _tsolve(eq, sym, **flags):
             if rhs:
                 f = logcombine(lhs, force=flags.get('force', False))
                 if f.count(log) != lhs.count(log):
-                    # use expand_mul so we don't end up with a Mul
-                    # for a case like log(x) + log(x + 1) - 3 and
-                    # get into a recursive loop
-                    fex = expand_mul(f)
-                    if fex != f:
-                        return _tsolve(fex - rhs, sym)
+                    if f.func is log:
+                        return _solve(f.args[0] - exp(rhs), sym)
+                    return _tsolve(f - rhs, sym)
 
         elif lhs.is_Pow:
             if lhs.exp.is_Integer:
@@ -2146,6 +2172,9 @@ def _tsolve(eq, sym, **flags):
             llhs = expand_log(log(lhs))
             if llhs.is_Add:
                 return _solve(llhs - log(rhs), sym)
+
+        elif hasattr(lhs, 'inverse') and lhs.nargs == 1:
+            return _solve(lhs.args[0] - lhs.inverse()(rhs), sym)
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
@@ -2311,8 +2340,8 @@ def _invert(eq, *symbols, **kwargs):
     contains symbols. ``i`` and ``d`` are obtained after recursively using
     algebraic inversion until an uninvertible ``d`` remains. If there are no
     free symbols then ``d`` will be zero. Some (but not necessarily all)
-    solutions to the expression ``i - d`` will be related the solutions of the
-    original expression.
+    solutions to the expression ``i - d`` will be related to the solutions of
+    the original expression.
 
     Examples
     ========
@@ -2359,17 +2388,6 @@ def _invert(eq, *symbols, **kwargs):
         return eq, S.Zero
 
     dointpow = bool(kwargs.get('integer_power', False))
-
-    inverses = {
-        asin: sin,
-        acos: cos,
-        atan: tan,
-        acot: cot,
-        asinh: sinh,
-        acosh: cosh,
-        atanh: tanh,
-        acoth: coth,
-    }
 
     lhs = eq
     rhs = S.Zero
@@ -2447,15 +2465,10 @@ def _invert(eq, *symbols, **kwargs):
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
-        #                    -1
-        # f(x) = g  ->  x = f  (g)
-        elif lhs.is_Function and (lhs.nargs == 1 or len(lhs.args) == 1) and \
+        if lhs.is_Function and (lhs.nargs == 1 or len(lhs.args) == 1) and \
                                  (hasattr(lhs, 'inverse') or
-                                  lhs.func in inverses or
                                   lhs.func is Abs):
-            if lhs.func in inverses:
-                inv = inverses[lhs.func]
-            elif lhs.func is Abs:
+            if lhs.func is Abs:
                 inv = lambda w: w**2
                 lhs = Basic(lhs.args[0]**2)  # get it ready to remove the args
             else:
