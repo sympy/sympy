@@ -1258,7 +1258,7 @@ def _solve(f, *symbols, **flags):
                             sols = list()
                             for sol in cv_sols:
                                 sols.append(cv_inv.subs(t, sol))
-                            return sols
+                            return list(ordered(sols))
 
                     msg = 'multiple generators %s' % gens
 
@@ -1294,7 +1294,7 @@ def _solve(f, *symbols, **flags):
                     # then x = acos(p**2)
                     #
                     inversion = _solve(cov - base, symbol, **flags)
-                    result = [i.subs(p, s) for i in inversion for s in soln]
+                    result = list(ordered([i.subs(p, s) for i in inversion for s in soln]))
 
                 else:  # len(bases) == 1 and all(q == 1 for q in qs):
                     # e.g. case where gens are exp(x), exp(-x)
@@ -1308,7 +1308,7 @@ def _solve(f, *symbols, **flags):
                         for sol in soln:
                             for i in inv:
                                 sols.append(i.subs(t, sol))
-                        return sols
+                        return list(ordered(sols))
 
             elif len(gens) == 1:
 
@@ -1347,35 +1347,7 @@ def _solve(f, *symbols, **flags):
                                 pass
                         gen = poly.gen
                         if gen != symbol:
-                            #                    -1
-                            # f(x) = g  ->  x = f  (g)
-                            inverses = {
-                                asin: sin,
-                                acos: cos,
-                                atan: tan,
-                                acot: cot,
-                                asinh: sinh,
-                                acosh: cosh,
-                                atanh: tanh,
-                                acoth: coth,
-                            }
-                            multiinverses = {
-                                sin: lambda x: (x, S.Pi - x),
-                                cos: lambda x: (x, 2*S.Pi - x),
-                            }
                             u = Dummy()
-                            if gen.func in inverses:
-                                soln = [inverses[gen.func](s) for s in soln]
-                                gen = gen.args[0]
-                            elif gen.func in inverses.values():
-                                if gen.func in multiinverses:
-                                    soln = [i for s in soln for i in
-                                    multiinverses[gen.func](
-                                    gen.inverse()(s))]
-                                    gen = gen.args[0]
-                                else:
-                                    soln = [gen.inverse()(s) for s in soln]
-                                    gen = gen.args[0]
                             inversion = _solve(gen - u, symbol, **flags)
                             soln = list(ordered(set([i.subs(u, s) for i in
                                         inversion for s in soln])))
@@ -2109,6 +2081,30 @@ def tsolve(eq, sym):
     return _tsolve(eq, sym)
 
 
+# these are functions that have multiple inverse values per period
+multi_inverses = {
+    sin: lambda x: (x, S.Pi - x),
+    cos: lambda x: (x, 2*S.Pi - x),
+}
+assert all(hasattr(k, 'inverse') for k in multi_inverses)
+
+# these are functions with a single inverse value per period that
+# don't have a predefined value for the `inverse` attribute; those
+# that have an `inverse` attribute are already handled in _invert
+# without this mapping
+inverses = {
+    asin: sin,
+    acos: cos,
+    atan: tan,
+    acot: cot,
+    asinh: sinh,
+    acosh: cosh,
+    atanh: tanh,
+    acoth: coth,
+}
+assert all(not hasattr(k, 'inverse') for k in inverses)
+
+
 def _tsolve(eq, sym, **flags):
     """
     Helper for _solve that solves a transcendental equation with respect
@@ -2126,7 +2122,7 @@ def _tsolve(eq, sym, **flags):
     >>> from sympy.abc import x
 
     >>> tsolve(3**(2*x + 5) - 4, x)
-    [log(-2*sqrt(3)/27)/log(3), -5/2 + log(2)/log(3)]
+    [-5/2 + log(2)/log(3), log(-2*sqrt(3)/27)/log(3)]
 
     >>> tsolve(log(x) + 2*x, x)
     [LambertW(2)/2]
@@ -2162,7 +2158,7 @@ def _tsolve(eq, sym, **flags):
                 sol_base = _solve(lhs.base, sym)
                 if not sol_base:
                     return sol_base
-                return list(set(sol_base) - set(_solve(lhs.exp, sym)))
+                return list(ordered(set(sol_base) - set(_solve(lhs.exp, sym))))
             elif (rhs is not S.Zero and
                   lhs.base.is_positive and
                   lhs.exp.is_real):
@@ -2173,8 +2169,12 @@ def _tsolve(eq, sym, **flags):
             if llhs.is_Add:
                 return _solve(llhs - log(rhs), sym)
 
-        elif hasattr(lhs, 'inverse') and lhs.nargs == 1:
-            return _solve(lhs.args[0] - lhs.inverse()(rhs), sym)
+        elif lhs.is_Function and lhs.nargs == 1 and lhs.func in multi_inverses:
+            # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
+            soln = []
+            for i in multi_inverses[lhs.func](lhs.inverse()(rhs)):
+                soln.extend(_solve(lhs.args[0] - i, sym))
+            return list(ordered(soln))
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
@@ -2217,7 +2217,8 @@ def _tsolve(eq, sym, **flags):
                     inversion = _tsolve(g - u, sym, **flags)
                     if inversion:
                         sol = _solve(p, u, **flags)
-                        return [i.subs(u, s) for i in inversion for s in sol]
+                        return list(ordered([i.subs(u, s)
+                            for i in inversion for s in sol]))
                 except NotImplementedError:
                     pass
 
@@ -2233,7 +2234,7 @@ def _tsolve(eq, sym, **flags):
             soln = _solve(pos, u, **flags)
         except NotImplementedError:
             return
-        return [s.subs(reps) for s in soln]
+        return list(ordered([s.subs(reps) for s in soln]))
 
 
 # TODO: option for calculating J numerically
@@ -2354,7 +2355,7 @@ def _invert(eq, *symbols, **kwargs):
     >>> invert(3)
     (3, 0)
     >>> invert(2*cos(x) - 1)
-    (pi/3, x)
+    (1/2, cos(x))
     >>> invert(sqrt(x) - 3)
     (3, sqrt(x))
     >>> invert(sqrt(x) + y, x)
@@ -2465,16 +2466,27 @@ def _invert(eq, *symbols, **kwargs):
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
-        if lhs.is_Function and (lhs.nargs == 1 or len(lhs.args) == 1) and \
-                                 (hasattr(lhs, 'inverse') or
-                                  lhs.func is Abs):
-            if lhs.func is Abs:
-                inv = lambda w: w**2
-                lhs = Basic(lhs.args[0]**2)  # get it ready to remove the args
-            else:
-                inv = lhs.inverse()
-            rhs = inv(rhs)
-            lhs = lhs.args[0]
+        if lhs.is_Function and (lhs.nargs == 1 or len(lhs.args) == 1):
+            #                    -1
+            # f(x) = g  ->  x = f  (g)
+            #
+            # /!\ but don't handle inversions that have multiple
+            # values -- handle that in _tsolve
+            #
+            if lhs.func not in multi_inverses:
+                inv = None
+                if lhs.func in inverses:
+                    inv = inverses[lhs.func]
+                elif lhs.func in inverses.values():
+                    inv = lhs.inverse()
+                elif lhs.func is Abs:
+                    inv = lambda w: w**2
+                    lhs = Basic(lhs.args[0]**2)  # get it ready to remove the args
+                elif hasattr(lhs, 'inverse'):
+                    inv = lhs.inverse()
+                if inv:
+                    rhs = inv(rhs)
+                    lhs = lhs.args[0]
 
         if rhs and lhs.is_Pow and lhs.exp.is_Integer and lhs.exp < 0:
             lhs = 1/lhs

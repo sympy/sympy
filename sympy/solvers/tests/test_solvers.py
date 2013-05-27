@@ -331,7 +331,9 @@ def test_tsolve():
 
     assert solve(z*cos(x) - y, x) == [-acos(y/z) + 2*pi, acos(y/z)]
     assert solve(z*cos(2*x) - y, x) == [-acos(y/z)/2 + pi, acos(y/z)/2]
-    assert solve(z*cos(sin(x)) - y, x) == [-asin(acos(y/z) - 2*pi), asin(acos(y/z))]
+    assert solve(z*cos(sin(x)) - y, x) == [
+        asin(acos(y/z) - 2*pi) + pi, -asin(acos(y/z)) + pi,
+        -asin(acos(y/z) - 2*pi), asin(acos(y/z))]
 
     assert solve(z*cos(x), x) == [pi/2, 3*pi/2]
 
