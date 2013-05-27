@@ -31,18 +31,15 @@ from sympy.utilities.decorator import doctest_depends_on
 import warnings
 from experimental_lambdify import (vectorized_lambdify, lambdify)
 
-#TODO probably all of the imports after this line can be put inside function to
-# speed up the `from sympy import *` command.
 np = import_module('numpy')
 
 # Backend specific imports - matplotlib
 # When changing the minimum module version for matplotlib, please change
 # the same in the `SymPyDocTestFinder`` in `sympy/utilities/runtests.py`
 matplotlib = import_module('matplotlib',
-    __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
+    __import__kwargs={'fromlist': ['cm', 'collections']},
     min_module_version='1.1.0', catch=(RuntimeError,))
 if matplotlib:
-    plt = matplotlib.pyplot
     cm = matplotlib.cm
     LineCollection = matplotlib.collections.LineCollection
     mpl_toolkits = import_module('mpl_toolkits',
@@ -55,8 +52,7 @@ if matplotlib:
 from sympy.plotting.textplot import textplot
 
 # Global variable
-# Set to False when running tests / doctests so that the plots don't
-# show.
+# Set to False when running tests / doctests so that the plots don't show.
 _show = True
 
 
@@ -813,10 +809,14 @@ class MatplotlibBackend(BaseBackend):
     def __init__(self, parent):
         super(MatplotlibBackend, self).__init__(parent)
         are_3D = [s.is_3D for s in self.parent._series]
+        matplotlib = import_module('matplotlib',
+            __import__kwargs={'fromlist': ['pyplot', 'cm', 'collections']},
+            min_module_version='1.1.0', catch=(RuntimeError,))
+        self.plt = matplotlib.pyplot
         if any(are_3D) and not all(are_3D):
             raise ValueError('The matplotlib backend can not mix 2D and 3D.')
         elif not any(are_3D):
-            self.fig = plt.figure()
+            self.fig = self.plt.figure()
             self.ax = self.fig.add_subplot(111)
             self.ax.spines['left'].set_position('zero')
             self.ax.spines['right'].set_color('none')
@@ -827,7 +827,7 @@ class MatplotlibBackend(BaseBackend):
             self.ax.xaxis.set_ticks_position('bottom')
             self.ax.yaxis.set_ticks_position('left')
         elif all(are_3D):
-            self.fig = plt.figure()
+            self.fig = self.plt.figure()
             self.ax = self.fig.add_subplot(111, projection='3d')
 
     def process_series(self):
@@ -949,14 +949,14 @@ class MatplotlibBackend(BaseBackend):
         # you can uncomment the next line and remove the pyplot.show() call
         #self.fig.show()
         if _show:
-            plt.show()
+            self.plt.show()
 
     def save(self, path):
         self.process_series()
         self.fig.savefig(path)
 
     def close(self):
-        plt.close(self.fig)
+        self.plt.close(self.fig)
 
 
 class TextBackend(BaseBackend):
