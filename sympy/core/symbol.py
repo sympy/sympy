@@ -145,7 +145,7 @@ class Dummy(Symbol):
     of the variable used in the expression is not important.
 
     >>> Dummy() #doctest: +SKIP
-    _10
+    _Dummy_10
 
     """
 
