@@ -1234,28 +1234,6 @@ def test_sympy__functions__special__bessel__yn():
     assert _test_args(yn(0, x))
 
 
-def test_sympy__functions__special__elliptic_integrals__elliptic_k():
-    from sympy.functions.special.elliptic_integrals import elliptic_k as K
-    assert _test_args(K(x))
-
-
-def test_sympy__functions__special__elliptic_integrals__elliptic_f():
-    from sympy.functions.special.elliptic_integrals import elliptic_f as F
-    assert _test_args(F(x, y))
-
-
-def test_sympy__functions__special__elliptic_integrals__elliptic_e():
-    from sympy.functions.special.elliptic_integrals import elliptic_e as E
-    assert _test_args(E(x))
-    assert _test_args(E(x, y))
-
-
-def test_sympy__functions__special__elliptic_integrals__elliptic_pi():
-    from sympy.functions.special.elliptic_integrals import elliptic_pi as P
-    assert _test_args(P(x, y))
-    assert _test_args(P(x, y, z))
-
-
 def test_sympy__functions__special__delta_functions__DiracDelta():
     from sympy.functions.special.delta_functions import DiracDelta
     assert _test_args(DiracDelta(x, 1))
@@ -1484,16 +1462,6 @@ def test_sympy__functions__special__polynomials__laguerre():
 def test_sympy__functions__special__polynomials__assoc_laguerre():
     from sympy.functions.special.polynomials import assoc_laguerre
     assert _test_args(assoc_laguerre(x, 0, y))
-
-
-def test_sympy__functions__special__spherical_harmonics__Ynm():
-    from sympy.functions.special.spherical_harmonics import Ynm
-    assert _test_args(Ynm(1, 1, x, y))
-
-
-def test_sympy__functions__special__spherical_harmonics__Znm():
-    from sympy.functions.special.spherical_harmonics import Znm
-    assert _test_args(Znm(1, 1, x, y))
 
 
 def test_sympy__functions__special__tensor_functions__LeviCivita():
@@ -1740,10 +1708,6 @@ def test_sympy__matrices__expressions__matexpr__Identity():
 def test_sympy__matrices__expressions__matexpr__MatrixExpr():
     pass
 
-def test_sympy__matrices__expressions__matexpr__MatrixElement():
-    from sympy.matrices.expressions.matexpr import MatrixSymbol, MatrixElement
-    from sympy import S
-    assert _test_args(MatrixElement(MatrixSymbol('A', 3, 5), S(2), S(3)))
 
 @XFAIL
 def test_sympy__matrices__expressions__matexpr__MatrixSymbol():
@@ -1764,17 +1728,6 @@ def test_sympy__matrices__expressions__matmul__MatMul():
     Y = MatrixSymbol('Y', y, x)
     assert _test_args(MatMul(X, Y))
 
-def test_sympy__matrices__expressions__diagonal__DiagonalMatrix():
-    from sympy.matrices.expressions.diagonal import DiagonalMatrix
-    from sympy.matrices.expressions import MatrixSymbol
-    x = MatrixSymbol('x', 10, 1)
-    assert _test_args(DiagonalMatrix(x))
-
-def test_sympy__matrices__expressions__diagonal__DiagonalOf():
-    from sympy.matrices.expressions.diagonal import DiagonalOf
-    from sympy.matrices.expressions import MatrixSymbol
-    X = MatrixSymbol('x', 10, 10)
-    assert _test_args(DiagonalOf(X))
 
 def test_sympy__matrices__expressions__hadamard__HadamardProduct():
     from sympy.matrices.expressions.hadamard import HadamardProduct
@@ -1820,15 +1773,6 @@ def test_sympy__matrices__expressions__funcmatrix__FunctionMatrix():
     i, j = symbols('i,j')
     assert _test_args(FunctionMatrix(3, 3, Lambda((i, j), i - j) ))
 
-def test_sympy__matrices__expressions__fourier__DFT():
-    from sympy.matrices.expressions.fourier import DFT
-    from sympy import S
-    assert _test_args(DFT(S(2)))
-
-def test_sympy__matrices__expressions__fourier__IDFT():
-    from sympy.matrices.expressions.fourier import IDFT
-    from sympy import S
-    assert _test_args(IDFT(S(2)))
 
 def test_sympy__physics__gaussopt__BeamParameter():
     from sympy.physics.gaussopt import BeamParameter
@@ -2669,6 +2613,54 @@ def test_sympy__tensor__tensor__TensMul():
     assert _test_args(TensMul(S.One, [p], free, dum))
 
 
+def test_sympy__tensor__multiarray__MultiArray():
+    from sympy.tensor.multiarray import MultiArray
+    m = MultiArray.create([[2 , 3], [4, -1]])
+    assert _test_args(MultiArray(*m.args))
+
+
+def test_sympy__tensor__vtensor__VTensorHead():
+    from sympy.tensor.vtensor import VTensorHead, VTensorIndexType, vtensorhead
+    from sympy.tensor.tensor import tensor_indices
+    from sympy import ones
+    Lorentz = VTensorIndexType('Lorentz', metric=[1, -1, -1, -1], dummy_fmt='L')
+    i0, i1 = tensor_indices('i0:2', Lorentz)
+    A = vtensorhead('A', [Lorentz] * 2, [[1], [1]], values=ones(4, 4))
+    assert _test_args(VTensorHead(*A.args))
+
+
+@SKIP("abstract_class")
+def test_sympy__tensor__vtensor__VTensExpr():
+    pass
+
+
+def test_sympy__tensor__vtensor__VTensAdd():
+    from sympy.tensor.vtensor import VTensorIndexType, vtensorhead, VTensAdd
+    from sympy.tensor.tensor import tensor_indices
+    from sympy import eye
+    Lorentz = VTensorIndexType('Lorentz', [1, -1, -1, -1], dummy_fmt='L')
+    a, b = tensor_indices('a, b', Lorentz)
+    p, q = vtensorhead('p, q', [Lorentz], [[1]], [3, 4, 0, -2])
+    t = p(a) + q(a)
+    assert _test_args(VTensAdd(*t.args))
+
+
+def test_sympy__tensor__vtensor__VTensMul():
+    from sympy.tensor.vtensor import VTensorHead, VTensorIndexType, vtensorhead, VTensMul
+    from sympy.tensor.tensor import tensor_indices
+    from sympy import ones
+    Lorentz = VTensorIndexType('Lorentz', metric=[1, -1, -1, -1], dummy_fmt='L')
+    i0, i1 = tensor_indices('i0:2', Lorentz)
+    A = vtensorhead('A', [Lorentz] * 2, [[1], [1]], values=ones(4, 4))
+    Ai = A(i0, i1)
+    assert _test_args(VTensMul(*Ai.args))
+
+
+def test_sympy__tensor__vtensor__VTensorIndexType():
+    from sympy.tensor.vtensor import VTensorIndexType
+    Lorentz = VTensorIndexType('Lorentz', [1, -1, -1, -1], dummy_fmt='L')
+    assert _test_args(VTensorIndexType(*Lorentz.args))
+
 
 @XFAIL
 def test_as_coeff_add():
@@ -2885,9 +2877,3 @@ def test_sympy__categories__baseclasses__Category():
     d2 = Diagram([f])
     K = Category("K", commutative_diagrams=[d1, d2])
     assert _test_args(K)
-
-def test_sympy__ntheory__factor___totient():
-    from sympy.ntheory.factor_ import totient
-    k = symbols('k', integer=True)
-    t = totient(k)
-    assert _test_args(t)
