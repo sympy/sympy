@@ -58,14 +58,14 @@ class FracField(DefaultPrinting):
             obj = object.__new__(cls)
             obj._hash = _hash
             obj.ring = ring
-            obj.dtype = FracElement
+            obj.dtype = type("_FracElement", (FracElement,), {"field": obj})
             obj.symbols = symbols
             obj.ngens = ngens
             obj.domain = domain
             obj.order = order
 
-            obj.zero = obj.dtype(obj, ring.zero)
-            obj.one = obj.dtype(obj, ring.one)
+            obj.zero = obj.dtype(ring.zero)
+            obj.one = obj.dtype(ring.one)
 
             obj.gens = obj._gens()
 
@@ -82,7 +82,7 @@ class FracField(DefaultPrinting):
 
     def _gens(self):
         """Return a list of polynomial generators. """
-        return tuple([ self.dtype(self, gen) for gen in self.ring.gens ])
+        return tuple([ self.dtype(gen) for gen in self.ring.gens ])
 
     def __getnewargs__(self):
         return (self.symbols, self.domain, self.order)
@@ -97,7 +97,7 @@ class FracField(DefaultPrinting):
         return self is not other
 
     def raw_new(self, numer, denom=None):
-        return self.dtype(self, numer, denom)
+        return self.dtype(numer, denom)
     def new(self, numer, denom=None):
         if denom is None: denom = self.ring.one
         numer, denom = numer.cancel(denom)
@@ -190,16 +190,15 @@ class FracField(DefaultPrinting):
 class FracElement(DomainElement, DefaultPrinting, CantSympify):
     """Sparse rational function. """
 
-    def __init__(self, field, numer, denom=None):
+    def __init__(self, numer, denom=None):
         if denom is None:
-            denom = field.ring.one
+            denom = self.field.ring.one
 
-        self.field = field
         self.numer = numer
         self.denom = denom
 
     def raw_new(f, numer, denom):
-        return f.__class__(f.field, numer, denom)
+        return f.__class__(numer, denom)
     def new(f, numer, denom):
         return f.raw_new(*numer.cancel(denom))
 

@@ -192,7 +192,7 @@ class PolyRing(DefaultPrinting, IPolys):
         if obj is None:
             obj = object.__new__(cls)
             obj._hash = _hash
-            obj.dtype = PolyElement
+            obj.dtype = type("_PolyElement", (PolyElement,), {"ring": obj})
             obj.symbols = symbols
             obj.ngens = ngens
             obj.domain = domain
@@ -273,11 +273,11 @@ class PolyRing(DefaultPrinting, IPolys):
 
     @property
     def zero(self):
-        return self.dtype(self)
+        return self.dtype()
 
     @property
     def one(self):
-        return self.dtype(self, self._one)
+        return self.dtype(self._one)
 
     def domain_new(self, element, orig_domain=None):
         return self.domain.convert(element, orig_domain)
@@ -427,12 +427,9 @@ class PolyRing(DefaultPrinting, IPolys):
         return len(self.gens) > 1
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
-    def __init__(self, ring, init=[]):
-        self.ring = ring
-        dict.__init__(self, init)
 
     def new(self, init):
-        return self.__class__(self.ring, init)
+        return self.__class__(init)
 
     def parent(self):
         return self.ring.to_domain()
