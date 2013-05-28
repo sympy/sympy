@@ -46,27 +46,26 @@ class FracField(DefaultPrinting):
     def __new__(cls, symbols, domain, order=lex):
         from sympy.polys.rings import PolyRing
         ring = PolyRing(symbols, domain, order)
-        dtype = FracElement
         symbols = ring.symbols
         ngens = ring.ngens
         domain = ring.domain
         order = ring.order
 
-        _hash = hash((cls.__name__, ring, dtype, symbols, ngens, domain, order))
+        _hash = hash((cls.__name__, symbols, ngens, domain, order))
         obj = _field_cache.get(_hash)
 
         if obj is None:
             obj = object.__new__(cls)
             obj._hash = _hash
             obj.ring = ring
-            obj.dtype = dtype
+            obj.dtype = FracElement
             obj.symbols = symbols
             obj.ngens = ngens
             obj.domain = domain
             obj.order = order
 
-            obj.zero = dtype(obj, ring.zero)
-            obj.one = dtype(obj, ring.one)
+            obj.zero = obj.dtype(obj, ring.zero)
+            obj.one = obj.dtype(obj, ring.one)
 
             obj.gens = obj._gens()
 

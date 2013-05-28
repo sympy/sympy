@@ -181,19 +181,18 @@ class PolyRing(DefaultPrinting, IPolys):
     """Multivariate distributed polynomial ring. """
 
     def __new__(cls, symbols, domain, order=lex):
-        dtype = PolyElement
         symbols = tuple(_parse_symbols(symbols))
         ngens = len(symbols)
         domain = DomainOpt.preprocess(domain)
         order = OrderOpt.preprocess(order)
 
-        _hash = hash((cls.__name__, dtype, symbols, ngens, domain, order))
+        _hash = hash((cls.__name__, symbols, ngens, domain, order))
         obj = _ring_cache.get(_hash)
 
         if obj is None:
             obj = object.__new__(cls)
             obj._hash = _hash
-            obj.dtype = dtype
+            obj.dtype = PolyElement
             obj.symbols = symbols
             obj.ngens = ngens
             obj.domain = domain
@@ -794,15 +793,20 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not n:
             return p
         ring = p1.ring
-        zm = ring.zero_monom
-        if zm not in list(p1.keys()):
-            p[zm] = ring.domain_new(n)
+        try:
+            n = ring.domain_new(n)
+        except CoercionFailed:
+            return NotImplemented
         else:
-            if n == -p[zm]:
-                del p[zm]
+            zm = ring.zero_monom
+            if zm not in list(p1.keys()):
+                p[zm] = n
             else:
-                p[zm] += n
-        return p
+                if n == -p[zm]:
+                    del p[zm]
+                else:
+                    p[zm] += n
+            return p
 
     def __sub__(p1, p2):
         """Subtract polynomial p2 from p1.
@@ -871,11 +875,17 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         -x - y + 4
 
         """
-        p = p1.ring.zero
-        for expv in p1:
-            p[expv] = -p1[expv]
-        p += n
-        return p
+        ring = p1.ring
+        try:
+            n = ring.domain_new(n)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            p = ring.zero
+            for expv in p1:
+                p[expv] = -p1[expv]
+            p += n
+            return p
 
     def __mul__(p1, p2):
         """Multiply two polynomials.
@@ -944,12 +954,16 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not isinstance(p2, PolyElement):
             if not p2:
                 return p
-        p2 = p.ring.domain_new(p2)
-        for exp1, v1 in p1.iteritems():
-            v = p2*v1
-            if v:
-                p[exp1] = v
-        return p
+        try:
+            p2 = p.ring.domain_new(p2)
+        except CoercionFailed:
+            return NotImplemented
+        else:
+            for exp1, v1 in p1.iteritems():
+                v = p2*v1
+                if v:
+                    p[exp1] = v
+            return p
 
     def __pow__(self, n):
         """raise polynomial to power `n`
@@ -1117,7 +1131,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         except CoercionFailed:
             return NotImplemented
         else:
-            return p1.quo_ground(p2)
+            return p1.rem_ground(p2)
 
     def __rmod__(p1, p2):
         return NotImplemented
@@ -1774,6 +1788,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         poly = f.new(terms)
         poly.strip_zero()
         return poly
+
+    rem_ground = trunc_ground
 
     def extract_ground(f, g):
         fc = f.content()
