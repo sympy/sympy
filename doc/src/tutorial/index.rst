@@ -12,4 +12,5 @@
    gotchas.rst
    basic_operations.rst
    simplification.rst
+   calculus.rst
    manipulation.rst
