@@ -192,7 +192,7 @@ class PolyRing(DefaultPrinting, IPolys):
         if obj is None:
             obj = object.__new__(cls)
             obj._hash = _hash
-            obj.dtype = type("_PolyElement", (PolyElement,), {"ring": obj})
+            obj.dtype = type("PolyElement", (PolyElement,), {"ring": obj})
             obj.symbols = symbols
             obj.ngens = ngens
             obj.domain = domain
@@ -427,6 +427,7 @@ class PolyRing(DefaultPrinting, IPolys):
         return len(self.gens) > 1
 
 class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
+    """Element of multivariate distributed polynomial ring. """
 
     def new(self, init):
         return self.__class__(init)
@@ -539,13 +540,12 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         if not p2:
             return not p1
-        elif isinstance(p2, PolyElement) and p1.ring == p2.ring:
+        elif isinstance(p2, p1.ring.dtype):
             return dict.__eq__(p1, p2)
+        elif len(p1) > 1:
+            return False
         else:
-            if len(p1) > 1:
-                return False
-            else:
-                return p1.get(p1.ring.zero_monom) == p2
+            return p1.get(p1.ring.zero_monom) == p2
 
     def __ne__(p1, p2):
         return not p1.__eq__(p2)
@@ -570,7 +570,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         return (len(self), self.terms())
 
     def _cmp(p1, p2, op):
-        if isinstance(p2, PolyElement): # TODO: check {p1,p2}.ring?
+        if isinstance(p2, p1.ring.dtype):
             return op(p1.sort_key(), p2.sort_key())
         else:
             return NotImplemented
@@ -748,19 +748,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not p2:
             return p1.copy()
         ring = p1.ring
-        if isinstance(p2, PolyElement):
-            if ring == p2.ring:
-                p = p1.copy()
-                get = p.get
-                zero = ring.domain.zero
-                for k, v in p2.iteritems():
-                    v = get(k, zero) + v
-                    if v:
-                        p[k] = v
-                    else:
-                        del p[k]
-                return p
-            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+        if isinstance(p2, ring.dtype):
+            p = p1.copy()
+            get = p.get
+            zero = ring.domain.zero
+            for k, v in p2.iteritems():
+                v = get(k, zero) + v
+                if v:
+                    p[k] = v
+                else:
+                    del p[k]
+            return p
+        elif isinstance(p2, PolyElement):
+            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__radd__(p1)
@@ -823,19 +823,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         if not p2:
             return p1.copy()
         ring = p1.ring
-        if isinstance(p2, PolyElement):
-            if ring == p2.ring:
-                p = p1.copy()
-                get = p.get
-                zero = ring.domain.zero
-                for k, v in p2.iteritems():
-                    v = get(k, zero) - v
-                    if v:
-                        p[k] = v
-                    else:
-                        del p[k]
-                return p
-            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+        if isinstance(p2, ring.dtype):
+            p = p1.copy()
+            get = p.get
+            zero = ring.domain.zero
+            for k, v in p2.iteritems():
+                v = get(k, zero) - v
+                if v:
+                    p[k] = v
+                else:
+                    del p[k]
+            return p
+        elif isinstance(p2, PolyElement):
+            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__rsub__(p1)
@@ -903,19 +903,19 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         p = ring.zero
         if not p1 or not p2:
             return p
+        elif isinstance(p2, ring.dtype):
+            get = p.get
+            zero = ring.domain.zero
+            monomial_mul = ring.monomial_mul
+            p2it = p2.items()
+            for exp1, v1 in p1.iteritems():
+                for exp2, v2 in p2it:
+                    exp = monomial_mul(exp1, exp2)
+                    p[exp] = get(exp, zero) + v1*v2
+            p.strip_zero()
+            return p
         elif isinstance(p2, PolyElement):
-            if ring == p2.ring:
-                get = p.get
-                zero = ring.domain.zero
-                monomial_mul = ring.monomial_mul
-                p2it = p2.items()
-                for exp1, v1 in p1.iteritems():
-                    for exp2, v2 in p2it:
-                        exp = monomial_mul(exp1, exp2)
-                        p[exp] = get(exp, zero) + v1*v2
-                p.strip_zero()
-                return p
-            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__rmul__(p1)
@@ -948,9 +948,8 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         """
         p = p1.ring.zero
-        if not isinstance(p2, PolyElement):
-            if not p2:
-                return p
+        if not p2:
+            return p
         try:
             p2 = p.ring.domain_new(p2)
         except CoercionFailed:
@@ -1087,10 +1086,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
+        elif isinstance(p2, ring.dtype):
+            return p1.div(p2)
         elif isinstance(p2, PolyElement):
-            if ring == p2.ring:
-                return p1.div(p2)
-            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__rdivmod__(p1)
@@ -1113,10 +1112,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
+        elif isinstance(p2, ring.dtype):
+            return p1.rem(p2)
         elif isinstance(p2, PolyElement):
-            if ring == p2.ring:
-                return p1.rem(p2)
-            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__rmod__(p1)
@@ -1139,10 +1138,10 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
 
         if not p2:
             raise ZeroDivisionError("polynomial division")
+        elif isinstance(p2, ring.dtype):
+            return p1.quo(p2)
         elif isinstance(p2, PolyElement):
-            if ring == p2.ring:
-                return p1.quo(p2)
-            elif isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
+            if isinstance(ring.domain, PolynomialRing) and ring.domain.ring == p2.ring:
                 pass
             elif isinstance(p2.ring.domain, PolynomialRing) and p2.ring.domain.ring == ring:
                 return p2.__rtruediv__(p1)
@@ -1481,7 +1480,7 @@ class PolyElement(DomainElement, DefaultPrinting, CantSympify, dict):
         """
         if element == 1:
             return self._get_coeff(self.ring.zero_monom)
-        elif isinstance(element, PolyElement):
+        elif isinstance(element, self.ring.dtype):
             terms = list(element.iterterms())
             if len(terms) == 1:
                 monom, coeff = terms[0]

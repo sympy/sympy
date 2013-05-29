@@ -344,6 +344,7 @@ def test_pickling_polys_polyclasses():
     for c in (ANP, ANP([QQ(1), QQ(2)], [QQ(1), QQ(2), QQ(3)], QQ)):
         check(c)
 
+@XFAIL
 def test_pickling_polys_rings():
     # NOTE: can't use protocols < 2 because we have to execute __new__ to
     # make sure caching of rings works properly.

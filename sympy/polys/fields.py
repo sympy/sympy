@@ -42,6 +42,7 @@ def sfield(exprs, *symbols, **options):
 _field_cache = {}
 
 class FracField(DefaultPrinting):
+    """Multivariate distributed rational function field. """
 
     def __new__(cls, symbols, domain, order=lex):
         from sympy.polys.rings import PolyRing
@@ -58,7 +59,7 @@ class FracField(DefaultPrinting):
             obj = object.__new__(cls)
             obj._hash = _hash
             obj.ring = ring
-            obj.dtype = type("_FracElement", (FracElement,), {"field": obj})
+            obj.dtype = type("FracElement", (FracElement,), {"field": obj})
             obj.symbols = symbols
             obj.ngens = ngens
             obj.domain = domain
@@ -188,7 +189,7 @@ class FracField(DefaultPrinting):
         return PolyRing(self.symbols, self.domain, self.order)
 
 class FracElement(DomainElement, DefaultPrinting, CantSympify):
-    """Sparse rational function. """
+    """Element of multivariate distributed rational function field. """
 
     def __init__(self, numer, denom=None):
         if denom is None:
@@ -236,10 +237,10 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return self.numer.as_expr(*symbols)/self.denom.as_expr(*symbols)
 
     def __eq__(f, g):
-        if isinstance(g, FracElement):
+        if isinstance(g, f.field.dtype):
             return f.numer == g.numer and f.denom == g.denom
         else:
-            return f.numer == g and f.denom == 1
+            return f.numer == g and f.denom == f.field.ring.one
 
     def __ne__(f, g):
         return not f.__eq__(g)
@@ -251,7 +252,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
         return (self.denom.sort_key(), self.numer.sort_key())
 
     def _cmp(f1, f2, op):
-        if isinstance(f2, FracElement): # TODO: check {f1,f2}.field?
+        if isinstance(f2, f1.field.dtype):
             return op(f1.sort_key(), f2.sort_key())
         else:
             return NotImplemented
@@ -301,30 +302,31 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f
         elif not f:
             return g
-        elif isinstance(g, FracElement):
-            if f.field == g.field:
-                if f.denom == g.denom:
-                    return f.new(f.numer + g.numer, f.denom)
+        elif isinstance(g, field.dtype):
+            if f.denom == g.denom:
+                return f.new(f.numer + g.numer, f.denom)
+            else:
+                return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
+        elif isinstance(g, field.ring.dtype):
+            return f.new(f.numer + f.denom*g, f.denom)
+        else:
+            if isinstance(g, FracElement):
+                if isinstance(field.domain, FractionField) and field.domain.field == g.field:
+                    pass
+                elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
+                    return g.__radd__(f)
                 else:
-                    return f.new(f.numer*g.denom + f.denom*g.numer, f.denom*g.denom)
-            elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
-                pass
-            elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
-                return g.__radd__(f)
-            else:
-                return NotImplemented
-        elif isinstance(g, PolyElement):
-            if field.ring == g.ring:
-                return f.new(f.numer + f.denom*g, f.denom)
-            elif isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
-                pass
-            else:
-                return g.__radd__(f)
+                    return NotImplemented
+            elif isinstance(g, PolyElement):
+                if isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
+                    pass
+                else:
+                    return g.__radd__(f)
 
         return f.__radd__(g)
 
     def __radd__(f, c):
-        if isinstance(c, PolyElement) and f.field.ring == c.ring:
+        if isinstance(c, f.field.ring.dtype):
             return f.new(f.numer + f.denom*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -344,25 +346,26 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f
         elif not f:
             return -g
-        elif isinstance(g, FracElement):
-            if f.field == g.field:
-                if f.denom == g.denom:
-                    return f.new(f.numer - g.numer, f.denom)
+        elif isinstance(g, field.dtype):
+            if f.denom == g.denom:
+                return f.new(f.numer - g.numer, f.denom)
+            else:
+                return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
+        elif isinstance(g, field.ring.dtype):
+            return f.new(f.numer - f.denom*g, f.denom)
+        else:
+            if isinstance(g, FracElement):
+                if isinstance(field.domain, FractionField) and field.domain.field == g.field:
+                    pass
+                elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
+                    return g.__rsub__(f)
                 else:
-                    return f.new(f.numer*g.denom - f.denom*g.numer, f.denom*g.denom)
-            elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
-                pass
-            elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
-                return g.__rsub__(f)
-            else:
-                return NotImplemented
-        elif isinstance(g, PolyElement):
-            if field.ring == g.ring:
-                return f.new(f.numer - f.denom*g, f.denom)
-            elif isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
-                pass
-            else:
-                return g.__rsub__(f)
+                    return NotImplemented
+            elif isinstance(g, PolyElement):
+                if isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
+                    pass
+                else:
+                    return g.__rsub__(f)
 
         op, g_numer, g_denom = f._extract_ground(g)
 
@@ -374,7 +377,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
             return f.new(f.numer*g_denom - f.denom*g_numer, f.denom*g_denom)
 
     def __rsub__(f, c):
-        if isinstance(c, PolyElement) and f.field.ring == c.ring:
+        if isinstance(c, f.field.ring.dtype):
             return f.new(-f.numer + f.denom*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -392,27 +395,28 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         if not f or not g:
             return field.zero
-        elif isinstance(g, FracElement):
-            if field == g.field:
-                return f.new(f.numer*g.numer, f.denom*g.denom)
-            elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
-                pass
-            elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
-                return g.__rmul__(f)
-            else:
-                return NotImplemented
-        elif isinstance(g, PolyElement):
-            if field.ring == g.ring:
-                return f.new(f.numer*g, f.denom)
-            elif isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
-                pass
-            else:
-                return g.__rmul__(f)
+        elif isinstance(g, field.dtype):
+            return f.new(f.numer*g.numer, f.denom*g.denom)
+        elif isinstance(g, field.ring.dtype):
+            return f.new(f.numer*g, f.denom)
+        else:
+            if isinstance(g, FracElement):
+                if isinstance(field.domain, FractionField) and field.domain.field == g.field:
+                    pass
+                elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
+                    return g.__rmul__(f)
+                else:
+                    return NotImplemented
+            elif isinstance(g, PolyElement):
+                if isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
+                    pass
+                else:
+                    return g.__rmul__(f)
 
         return f.__rmul__(g)
 
     def __rmul__(f, c):
-        if isinstance(c, PolyElement) and f.field.ring == c.ring:
+        if isinstance(c, f.field.ring.dtype):
             return f.new(f.numer*c, f.denom)
 
         op, g_numer, g_denom = f._extract_ground(c)
@@ -430,22 +434,23 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
 
         if not g:
             raise ZeroDivisionError
-        elif isinstance(g, FracElement):
-            if field == g.field:
-                return f.new(f.numer*g.denom, f.denom*g.numer)
-            elif isinstance(field.domain, FractionField) and field.domain.field == g.field:
-                pass
-            elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
-                return g.__rtruediv__(f)
-            else:
-                return NotImplemented
-        elif isinstance(g, PolyElement):
-            if field.ring == g.ring:
-                return f.new(f.numer, f.denom*g)
-            elif isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
-                pass
-            else:
-                return g.__rtruediv__(f)
+        elif isinstance(g, field.dtype):
+            return f.new(f.numer*g.denom, f.denom*g.numer)
+        elif isinstance(g, field.ring.dtype):
+            return f.new(f.numer, f.denom*g)
+        else:
+            if isinstance(g, FracElement):
+                if isinstance(field.domain, FractionField) and field.domain.field == g.field:
+                    pass
+                elif isinstance(g.field.domain, FractionField) and g.field.domain.field == field:
+                    return g.__rtruediv__(f)
+                else:
+                    return NotImplemented
+            elif isinstance(g, PolyElement):
+                if isinstance(field.domain, PolynomialRing) and field.domain.ring == g.ring:
+                    pass
+                else:
+                    return g.__rtruediv__(f)
 
         op, g_numer, g_denom = f._extract_ground(g)
 
@@ -461,7 +466,7 @@ class FracElement(DomainElement, DefaultPrinting, CantSympify):
     def __rtruediv__(f, c):
         if not f:
             raise ZeroDivisionError
-        elif isinstance(c, PolyElement) and f.field.ring == c.ring:
+        elif isinstance(c, f.field.ring.dtype):
             return f.new(f.denom*c, f.numer)
 
         op, g_numer, g_denom = f._extract_ground(c)
