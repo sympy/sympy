@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root)
+    sympify, tan, tanh, root, simplify)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -583,14 +583,10 @@ def test_issue_1572_1364_1368():
         [sqrt(-a + E)/2, -sqrt(-a + E)/2],)
     assert set(solve((
         a**2 + 1) * (sin(a*x) + cos(a*x)), x)) == set([-pi/(4*a), 3*pi/(4*a)])
-    assert solve(3 - (sinh(a*x) + cosh(a*x)), x) == [2*atanh(S.Half)/a]
+    assert solve(3 - (sinh(a*x) + cosh(a*x)), x) == [log(3)/a]
     assert set(solve(3 - (sinh(a*x) + cosh(a*x)**2), x)) == \
-        set([
-            2*atanh(-1 + sqrt(2))/a,
-            2*atanh(S(1)/2 + sqrt(5)/2)/a,
-            2*atanh(-sqrt(2) - 1)/a,
-            2*atanh(-sqrt(5)/2 + S(1)/2)/a
-             ])
+        set([log(-2 + sqrt(5))/a, log(-sqrt(2) + 1)/a,
+        log(-sqrt(5) - 2)/a, log(1 + sqrt(2))/a])
     assert solve(atan(x) - 1) == [tan(1)]
 
 
@@ -1075,12 +1071,12 @@ def test_solve_abs():
 
 def test_issue_2957():
     assert solve(tanh(x + 3)*tanh(x - 3) - 1) == []
-    assert set(solve(tanh(x - 1)*tanh(x + 1) + 1)) == set([
+    assert set([simplify(w) for w in solve(tanh(x - 1)*tanh(x + 1) + 1)]) == set([
         -log(2)/2 + log(1 - I),
         -log(2)/2 + log(-1 - I),
         -log(2)/2 + log(1 + I),
         -log(2)/2 + log(-1 + I),])
-    assert set(solve((tanh(x + 3)*tanh(x - 3) + 1)**2)) == set([
+    assert set([simplify(w) for w in solve((tanh(x + 3)*tanh(x - 3) + 1)**2)]) == set([
         -log(2)/2 + log(1 - I),
         -log(2)/2 + log(-1 - I),
         -log(2)/2 + log(1 + I),
@@ -1298,7 +1294,7 @@ def test_rewrite_trig():
         2*atan(S.Half - sqrt(3)*I/2 + sqrt(2 - 2*sqrt(3)*I)/2),
         2*atan(S.Half - sqrt(2 + 2*sqrt(3)*I)/2 + sqrt(3)*I/2),
         2*atan(S.Half + sqrt(2 + 2*sqrt(3)*I)/2 + sqrt(3)*I/2)]
-    assert solve(sinh(x) + tanh(x)) == [0, 2*I*pi]
+    assert solve(sinh(x) + tanh(x)) == [0, I*pi]
 
 
 @XFAIL

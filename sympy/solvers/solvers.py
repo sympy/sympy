@@ -1187,6 +1187,10 @@ def _solve(f, *symbols, **flags):
                     result = _solve(eq, symbol, **flags)
 
         if result is False:
+            # rewrite hyperbolics in terms of exp
+            f_num = f_num.replace(lambda w: isinstance(w, C.HyperbolicFunction),
+                lambda w: w.rewrite(exp))
+
             poly = Poly(f_num)
             if poly is None:
                 raise ValueError('could not convert %s to Poly' % f_num)
@@ -1227,15 +1231,6 @@ def _solve(f, *symbols, **flags):
                     other = funcs - trig
                     if not other and len(funcs.intersection(trig)) > 1:
                         newf = TR1(f_num).rewrite(tan)
-                        if newf != f_num:
-                            return _solve(newf, symbol, **flags)
-
-                    trigh = set([_ for _ in funcs if
-                        isinstance(_, C.HyperbolicFunction)])
-                    other = funcs - trigh
-                    if not other and len(funcs.intersection(trigh)) > 1:
-                        newf, _undo = hyper_as_trig(f_num)
-                        newf = _undo(TR1(newf)).rewrite(tanh)
                         if newf != f_num:
                             return _solve(newf, symbol, **flags)
 
@@ -1359,7 +1354,6 @@ def _solve(f, *symbols, **flags):
 
         # allow tsolve to be used on next pass if needed
         flags.pop('tsolve', None)
-
         result = _tsolve(f_num, symbol, **flags)
         if result is None:
             result = False
@@ -2083,26 +2077,9 @@ def tsolve(eq, sym):
 
 # these are functions that have multiple inverse values per period
 multi_inverses = {
-    sin: lambda x: (x, S.Pi - x),
-    cos: lambda x: (x, 2*S.Pi - x),
+    sin: lambda x: (asin(x), S.Pi - asin(x)),
+    cos: lambda x: (acos(x), 2*S.Pi - acos(x)),
 }
-assert all(hasattr(k, 'inverse') for k in multi_inverses)
-
-# these are functions with a single inverse value per period that
-# don't have a predefined value for the `inverse` attribute; those
-# that have an `inverse` attribute are already handled in _invert
-# without this mapping
-inverses = {
-    asin: sin,
-    acos: cos,
-    atan: tan,
-    acot: cot,
-    asinh: sinh,
-    acosh: cosh,
-    atanh: tanh,
-    acoth: coth,
-}
-assert all(not hasattr(k, 'inverse') for k in inverses)
 
 
 def _tsolve(eq, sym, **flags):
@@ -2172,7 +2149,7 @@ def _tsolve(eq, sym, **flags):
         elif lhs.is_Function and lhs.nargs == 1 and lhs.func in multi_inverses:
             # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
             soln = []
-            for i in multi_inverses[lhs.func](lhs.inverse()(rhs)):
+            for i in multi_inverses[lhs.func](rhs):
                 soln.extend(_solve(lhs.args[0] - i, sym))
             return list(ordered(soln))
 
@@ -2466,27 +2443,15 @@ def _invert(eq, *symbols, **kwargs):
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
-        if lhs.is_Function and (lhs.nargs == 1 or len(lhs.args) == 1):
+        if lhs.is_Function and hasattr(lhs, 'inverse') and len(lhs.args) == 1:
             #                    -1
             # f(x) = g  ->  x = f  (g)
             #
-            # /!\ but don't handle inversions that have multiple
-            # values -- handle that in _tsolve
+            # /!\ inverse should not be defined if there are multiple values
+            # for the function -- these, then are handled in _tsolve
             #
-            if lhs.func not in multi_inverses:
-                inv = None
-                if lhs.func in inverses:
-                    inv = inverses[lhs.func]
-                elif lhs.func in inverses.values():
-                    inv = lhs.inverse()
-                elif lhs.func is Abs:
-                    inv = lambda w: w**2
-                    lhs = Basic(lhs.args[0]**2)  # get it ready to remove the args
-                elif hasattr(lhs, 'inverse'):
-                    inv = lhs.inverse()
-                if inv:
-                    rhs = inv(rhs)
-                    lhs = lhs.args[0]
+            rhs = lhs.inverse()(rhs)
+            lhs = lhs.args[0]
 
         if rhs and lhs.is_Pow and lhs.exp.is_Integer and lhs.exp < 0:
             lhs = 1/lhs
