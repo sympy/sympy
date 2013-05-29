@@ -830,6 +830,10 @@ class MatplotlibBackend(BaseBackend):
             self.ax.xaxis.set_ticks_position('bottom')
             self.ax.yaxis.set_ticks_position('left')
         elif all(are_3D):
+            ## mpl_toolkits.mplot3d is necessary for
+            ##      projection='3d'
+            mpl_toolkits = import_module('mpl_toolkits',
+                                     __import__kwargs={'fromlist': ['mplot3d']})
             self.fig = self.plt.figure()
             self.ax = self.fig.add_subplot(111, projection='3d')
 
