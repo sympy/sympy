@@ -114,10 +114,11 @@ def prde_special_denom(a, ba, bd, G, DE, case='auto'):
             dcoeff = DE.d.quo(Poly(DE.t**2+1, DE.t))
             with DecrementLevel(DE):  # We are guaranteed to not have problems,
                                       # because case != 'base'.
-                alphaa, alphad = frac_in(im(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
-                betaa, betad = frac_in(re(-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))), DE.t)
+                b_a = (-ba.eval(sqrt(-1))/bd.eval(sqrt(-1))/a.eval(sqrt(-1))).as_expr()
+                b_a = b_a.radsimp().as_real_imag()
+                alphaa, alphad = frac_in(b_a[1], DE.t)
+                betaa, betad = frac_in(b_a[0], DE.t)
                 etaa, etad = frac_in(dcoeff, DE.t)
-
                 if recognize_log_derivative(2*betaa, betad, DE):
                     A = None
                     try:

@@ -1047,8 +1047,8 @@ def laurent_series(a, d, F, n, DE):
 
     DE_new = DifferentialExtension(extension = {'D': DE_D_list}) #a differential indeterminate
     for j in range(0, n):
-        zEh = pow(z.as_poly(),n + j) * pow(E,j + 1) * h
-        P = cancel(zEh.as_expr())
+        zEh = z**(n + j)*E.as_expr()**(j + 1)*h.as_expr()
+        P = cancel(zEh)
         Q = P
 
         for i in range(0, j + 1):
@@ -1118,24 +1118,15 @@ def recognize_log_derivative(a, d, DE, z=None):
     any of the Rothstein-Trager, Lazard-Rioboo-Trager or Czichowski algorithm
     produces u in K(x) such that du/dx = uf.
     """
-    flag = True
 
     z = z or Dummy('z')
     a, d = a.cancel(d, include=True)
     if a.is_zero:
         return ([], True)
-    p, a = a.div(d)
-    pz = Poly(z, DE.t)
     Dd = derivation(d, DE, basic = True)
-    try:
-       q = (a.as_expr() - pz.as_expr()*Dd.as_expr()).as_poly()
-    except:
-       q = (a.as_expr() - pz.as_expr()*Dd.as_expr()).as_poly(DE.t)
+    q = (a - z*Dd).as_poly()
     r, R = d.resultant(q, includePRS=True)
-    try:
-       Np, Sp = splitfactor_sqf(r, DE, coefficientD=True, z=z,basic=True)
-    except:
-       Np, Sp = splitfactor_sqf(r.as_poly(DE.t), DE, coefficientD=True, z=z,basic=True)
+    Np, Sp = splitfactor_sqf(r.as_poly(), DE, coefficientD=True, z=z,basic=True)
 
     for s, i in Sp:
         # TODO also consider the complex roots
@@ -1144,9 +1135,9 @@ def recognize_log_derivative(a, d, DE, z=None):
 
         for j in a:
             if not j.is_integer:
-                flag = False
+                return False
 
-    return flag
+    return True
 
 def residue_reduce(a, d, DE, z=None, invert=True):
     """
