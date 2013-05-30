@@ -1103,7 +1103,7 @@ def _solve(f, *symbols, **flags):
     elif f.is_Piecewise:
         result = set()
         for n, (expr, cond) in enumerate(f.args):
-            candidates = _solve(expr, *symbols)
+            candidates = _solve(expr, *symbols, **flags)
 
             for candidate in candidates:
                 if candidate in result:
@@ -1248,8 +1248,8 @@ def _solve(f, *symbols, **flags):
 
                         # if no Functions left, we can proceed with usual solve
                         if not ftry.has(symbol):
-                            cv_sols = _solve(ftry, t)
-                            cv_inv = _solve(t - f1, symbol)[0]
+                            cv_sols = _solve(ftry, t, **flags)
+                            cv_inv = _solve(t - f1, symbol, **flags)[0]
                             sols = list()
                             for sol in cv_sols:
                                 sols.append(cv_inv.subs(t, sol))
@@ -1295,10 +1295,10 @@ def _solve(f, *symbols, **flags):
                     # e.g. case where gens are exp(x), exp(-x)
                     u = bases.pop()
                     t = Dummy('t')
-                    inv = _solve(u - t, symbol)
+                    inv = _solve(u - t, symbol, **flags)
                     ftry = f_num.subs(u, t)
                     if not ftry.has(symbol):
-                        soln = _solve(ftry, t)
+                        soln = _solve(ftry, t, **flags)
                         sols = list()
                         for sol in soln:
                             for i in inv:
@@ -2114,49 +2114,50 @@ def _tsolve(eq, sym, **flags):
             # to try get powers in standard form for better factoring
             f = factor(powdenest(lhs - rhs))
             if f.is_Mul:
-                return _solve(f, sym)
+                return _solve(f, sym, **flags)
             if rhs:
                 f = logcombine(lhs, force=flags.get('force', False))
                 if f.count(log) != lhs.count(log):
                     if f.func is log:
-                        return _solve(f.args[0] - exp(rhs), sym)
+                        return _solve(f.args[0] - exp(rhs), sym, **flags)
                     return _tsolve(f - rhs, sym)
 
         elif lhs.is_Pow:
             if lhs.exp.is_Integer:
                 if lhs - rhs != eq:
-                    return _solve(lhs - rhs, sym)
+                    return _solve(lhs - rhs, sym, **flags)
                 elif not rhs:
-                    return _solve(lhs.base, sym)
+                    return _solve(lhs.base, sym, **flags)
             elif sym not in lhs.exp.free_symbols:
-                return _solve(lhs.base - rhs**(1/lhs.exp), sym)
+                return _solve(lhs.base - rhs**(1/lhs.exp), sym, **flags)
             elif not rhs and sym in lhs.exp.free_symbols:
                 # f(x)**g(x) only has solutions where f(x) == 0 and g(x) != 0 at
                 # the same place
-                sol_base = _solve(lhs.base, sym)
+                sol_base = _solve(lhs.base, sym, **flags)
                 if not sol_base:
                     return sol_base
-                return list(ordered(set(sol_base) - set(_solve(lhs.exp, sym))))
+                return list(ordered(set(sol_base) - set(
+                    _solve(lhs.exp, sym, **flags))))
             elif (rhs is not S.Zero and
                   lhs.base.is_positive and
                   lhs.exp.is_real):
-                return _solve(lhs.exp*log(lhs.base) - log(rhs), sym)
+                return _solve(lhs.exp*log(lhs.base) - log(rhs), sym, **flags)
 
         elif lhs.is_Mul and rhs.is_positive:
             llhs = expand_log(log(lhs))
             if llhs.is_Add:
-                return _solve(llhs - log(rhs), sym)
+                return _solve(llhs - log(rhs), sym, **flags)
 
         elif lhs.is_Function and lhs.nargs == 1 and lhs.func in multi_inverses:
             # sin(x) = 1/3 -> x - asin(1/3) & x - (pi - asin(1/3))
             soln = []
             for i in multi_inverses[lhs.func](rhs):
-                soln.extend(_solve(lhs.args[0] - i, sym))
+                soln.extend(_solve(lhs.args[0] - i, sym, **flags))
             return list(ordered(soln))
 
         rewrite = lhs.rewrite(exp)
         if rewrite != lhs:
-            return _solve(rewrite - rhs, sym)
+            return _solve(rewrite - rhs, sym, **flags)
     except NotImplementedError:
         pass
 
