@@ -30,7 +30,7 @@ from sympy.core.basic import preorder_traversal
 from sympy.functions import (log, exp, LambertW, cos, sin, tan, cot, cosh,
                              sinh, tanh, coth, acos, asin, atan, acot, acosh,
                              asinh, atanh, acoth, Abs, sign, re, im, arg,
-                             sqrt)
+                             sqrt, atan2)
 from sympy.functions.elementary.miscellaneous import real_root
 from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
                             nsimplify, denom, logcombine)
@@ -2106,7 +2106,8 @@ def _tsolve(eq, sym, **flags):
 
     """
     rhs, lhs = _invert(eq, sym)
-
+    if lhs == sym:
+        return [rhs]
     try:
         if lhs.is_Add:
             # it's time to try factoring; powdenest is used
@@ -2443,16 +2444,19 @@ def _invert(eq, *symbols, **kwargs):
         elif lhs.is_Mul and any(_ispow(a) for a in lhs.args):
             lhs = powsimp(powdenest(lhs))
 
-        if lhs.is_Function and hasattr(lhs, 'inverse') and len(lhs.args) == 1:
-            #                    -1
-            # f(x) = g  ->  x = f  (g)
-            #
-            # /!\ inverse should not be defined if there are multiple values
-            # for the function -- these, then are handled in _tsolve
-            #
-            rhs = lhs.inverse()(rhs)
-            lhs = lhs.args[0]
-
+        if lhs.is_Function:
+            if hasattr(lhs, 'inverse') and len(lhs.args) == 1:
+                #                    -1
+                # f(x) = g  ->  x = f  (g)
+                #
+                # /!\ inverse should not be defined if there are multiple values
+                # for the function -- these, then are handled in _tsolve
+                #
+                rhs = lhs.inverse()(rhs)
+                lhs = lhs.args[0]
+            elif lhs.func is atan2:
+                y, x = lhs.args
+                lhs = 2*atan(y/(sqrt(x**2 + y**2) + x))
         if rhs and lhs.is_Pow and lhs.exp.is_Integer and lhs.exp < 0:
             lhs = 1/lhs
             rhs = 1/rhs

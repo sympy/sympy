@@ -3,7 +3,7 @@ from sympy import (
     LambertW, Lt, Matrix, Or, Piecewise, Poly, Q, Rational, S, Symbol,
     Wild, acos, asin, atan, atanh, cos, cosh, diff, exp, expand, im,
     log, pi, re, sec, sin, sinh, solve, solve_linear, sqrt, sstr, symbols,
-    sympify, tan, tanh, root, simplify)
+    sympify, tan, tanh, root, simplify, atan2)
 from sympy.abc import a, b, c, d, k, h, p, x, y, z, t, q, m
 from sympy.core.function import nfloat
 from sympy.solvers import solve_linear_system, solve_linear_system_LU, \
@@ -1314,3 +1314,7 @@ def test_uselogcombine():
     assert solve(log(x + 3) + log(1 + 3/x) - 3) == [
         -3 + sqrt(-12 + exp(3))*exp(S(3)/2)/2 + exp(3)/2,
         -sqrt(-12 + exp(3))*exp(S(3)/2)/2 - 3 + exp(3)/2]
+
+
+def test_atan2():
+        assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
