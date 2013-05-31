@@ -2,7 +2,7 @@
 from sympy.concrete import Product, Sum
 from sympy import Subs
 
-class ShiftError(NotImplementedError):
+class ChangeIndexError(NotImplementedError):
     """
     Exception raised when something other than Sum or Product
     is passed to the function change_index().
@@ -17,14 +17,6 @@ def change_index(expr, new, var=None):
     Change index of a Sum or Product. Changes of the form x --> ax + b
     are allowed. Here a is 1 or -1.
     """
-    if isinstance(expr, Sum) or isinstance(expr, Product):
-        return sum_prod_change_index(expr, new, var)
-    else:
-        ShiftError(expr, "Not Relevant / Implemented.")
-
-
-def sum_prod_change_index(expr, new, var=None):
-
     limits = []
     old = list(new.free_symbols)[0]
     invert = not (new - old).is_number
@@ -52,6 +44,8 @@ def sum_prod_change_index(expr, new, var=None):
         return Sum(function, *tuple(limits))
     elif isinstance(expr, Product):
         return Product(function, *tuple(limits))
+    else:
+        ChangeIndexError(expr, "Not Relevant / Implemented.")
 
 
 class ReorderError(NotImplementedError):
@@ -62,9 +56,10 @@ class ReorderError(NotImplementedError):
         super(ReorderError, self).__init__(
             "%s could not be reordered: %s." % (expr, msg))
 
+
 def reorder(expr, *arg):
     """
-    Reorder limits in a Sum or a Product.
+    Reorder limits in a expression lik a Sum or a Product.
     """
     temp = expr
 
@@ -72,12 +67,11 @@ def reorder(expr, *arg):
         if len(r) != 2:
             ReorderError(r, "Invalid number of arguments.")
 
-        temp = reorder_limits(temp, r[0], r[1])
+        temp = reorder_limit(temp, r[0], r[1])
 
     return temp
 
-
-def reorder_limits(expr, x , y):
+def reorder_limit(expr, x , y):
 
     var = [limit[0] for limit in expr.limits]
     limits = []
@@ -107,5 +101,6 @@ def reorder_limits(expr, x , y):
                 return Product(expr.function, *limits)
             else:
                 ReorderError(expr, "Not relevant / Not implemented.")
+
     else:
         ReorderError(expr, "Not relevant / Not implemented.")
