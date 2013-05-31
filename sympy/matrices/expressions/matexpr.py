@@ -431,6 +431,9 @@ class ZeroMatrix(MatrixExpr):
     def _entry(self, i, j):
         return S.Zero
 
+    def __nonzero__(self):
+        return False
+
 
 def matrix_symbols(expr):
     return [sym for sym in expr.free_symbols if sym.is_Matrix]
