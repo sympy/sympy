@@ -13,7 +13,10 @@ class ShiftError(NotImplementedError):
 
 
 def change_index(expr, new, var=None):
-
+    """
+    Change index of a Sum or Product. Changes of the form x --> ax + b
+    are allowed. Here a is 1 or -1.
+    """
     if isinstance(expr, Sum) or isinstance(expr, Product):
         return sum_prod_change_index(expr, new, var)
     else:
@@ -59,8 +62,20 @@ class ReorderError(NotImplementedError):
         super(ReorderError, self).__init__(
             "%s could not be reordered: %s." % (expr, msg))
 
+def reorder(expr, *arg):
 
-def reorder(expr, x , y):
+    temp = expr
+
+    for r in arg:
+        if len(r) != 2:
+            ReorderError(r, "Invalid number of arguments.")
+
+        temp = reorder_limits(temp, r[0], r[1])
+
+    return temp
+
+
+def reorder_limits(expr, x , y):
 
     var = [limit[0] for limit in expr.limits]
     limits = []
