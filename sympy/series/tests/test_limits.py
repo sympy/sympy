@@ -357,6 +357,10 @@ def test_polynomial():
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, oo) == 1
     assert limit((x + 1)**1000/((x + 1)**1000 + 1), x, -oo) == 1
 
+def test_rational():
+    assert limit(1/y - ( 1/(y+x) + x/(y+x)/y )/z,x,oo) ==  1/y - 1/(y*z)
+    assert limit(1/y - ( 1/(y+x) + x/(y+x)/y )/z,x,-oo) ==  1/y - 1/(y*z)
+
 
 def test_issue_2641():
     assert limit(log(x)/z - log(2*x)/z, x, 0) == -log(2)/z
