@@ -131,9 +131,11 @@ def test_change_index():
 def test_reorder():
     b, y, c, d, z = symbols('b, y, c, d, z', integer = True)
 
-    assert reorder(Product(x*y, (x, a, b), (y, c, d)), x, y) == \
+    assert reorder(Product(x*y, (x, a, b), (y, c, d)), (x, y)) == \
         Product(x*y, (y, c, d), (x, a, b))
-    assert reorder(Product(x, (x, a, b), (x, c, d)), x, x) == \
+    assert reorder(Product(x, (x, a, b), (x, c, d)), (x, x)) == \
         Product(x, (x, a, b), (x, c, d))
-    assert reorder(Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)), y, x) == \
-        Product(x*y + z, (y, c, d), (z, m, n), (x, a, b))
+    assert reorder(Product(x*y + z, (x, a, b), (z, m, n), (y, c, d)), \
+        (y, x), (x, z)) == Product(x*y + z, (y, c, d), (x, a, b), (z, m, n))
+    assert reorder(Product(x*y*z, (x, a, b), (y, c, d), (z, m, n)), \
+        (x, y), (y, z), (x, z)) == Product(x*y*z, (x, a, b), (z, m, n), (y, c, d))

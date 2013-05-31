@@ -63,7 +63,9 @@ class ReorderError(NotImplementedError):
             "%s could not be reordered: %s." % (expr, msg))
 
 def reorder(expr, *arg):
-
+    """
+    Reorder limits in a Sum or a Product.
+    """
     temp = expr
 
     for r in arg:
