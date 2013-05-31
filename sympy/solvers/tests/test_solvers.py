@@ -1319,3 +1319,8 @@ def test_uselogcombine():
 
 def test_atan2():
         assert solve(atan2(x, 2) - pi/3, x) == [2*sqrt(3)]
+
+def test_misc():
+    # shouldn't generate a GeneratorsNeeded error in _tsolve when the NaN is generated
+    # for eq_down. Actual answers, as determined numerically are approx. +/- 0.83
+    assert solve(sinh(x)*sinh(sinh(x)) + cosh(x)*cosh(sinh(x)) - 3) is not None

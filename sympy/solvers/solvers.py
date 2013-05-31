@@ -2202,26 +2202,27 @@ def _tsolve(eq, sym, **flags):
             dict(zip(up_or_log, [0]*len(up_or_log))))
         eq = expand_power_exp(factor(eq_down, deep=True) + (eq - eq_down))
         rhs, lhs = _invert(eq, sym)
-        try:
-            poly = lhs.as_poly()
-            g = _filtered_gens(poly, sym)
-            return _solve_lambert(lhs - rhs, sym, g)
-        except NotImplementedError:
-            # maybe it's a convoluted function
-            if len(g) == 2:
-                try:
-                    gpu = bivariate_type(lhs - rhs, *g)
-                    if gpu is None:
-                        raise NotImplementedError
-                    g, p, u = gpu
-                    flags['bivariate'] = False
-                    inversion = _tsolve(g - u, sym, **flags)
-                    if inversion:
-                        sol = _solve(p, u, **flags)
-                        return list(ordered([i.subs(u, s)
-                            for i in inversion for s in sol]))
-                except NotImplementedError:
-                    pass
+        if lhs.has(sym):
+            try:
+                poly = lhs.as_poly()
+                g = _filtered_gens(poly, sym)
+                return _solve_lambert(lhs - rhs, sym, g)
+            except NotImplementedError:
+                # maybe it's a convoluted function
+                if len(g) == 2:
+                    try:
+                        gpu = bivariate_type(lhs - rhs, *g)
+                        if gpu is None:
+                            raise NotImplementedError
+                        g, p, u = gpu
+                        flags['bivariate'] = False
+                        inversion = _tsolve(g - u, sym, **flags)
+                        if inversion:
+                            sol = _solve(p, u, **flags)
+                            return list(ordered([i.subs(u, s)
+                                for i in inversion for s in sol]))
+                    except NotImplementedError:
+                        pass
 
     if flags.pop('force', True):
         flags['force'] = False
