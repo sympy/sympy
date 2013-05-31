@@ -5,7 +5,10 @@ infinitesimal, bounded, etc.
 from sympy.logic.boolalg import conjuncts
 from sympy.assumptions import Q, ask
 from sympy.assumptions.handlers import CommonHandler, test_closed_group
-from sympy.matrices.expressions import MatMul
+from sympy.matrices.expressions import MatMul, MatrixExpr
+from sympy.core.logic import fuzzy_and
+from sympy.utilities.iterables import sift
+from sympy.core import Basic
 from functools import partial
 
 class AskSquareHandler(CommonHandler):
@@ -388,15 +391,24 @@ def MS_elements(predicate, expr, assumptions):
     """ Matrix Slice elements """
     return ask(predicate(expr.parent), assumptions)
 
+def MatMul_elements(matrix_predicate, scalar_predicate, expr, assumptions):
+    d = sift(expr.args, lambda x: isinstance(x, MatrixExpr))
+    factors, matrices = d[False], d[True]
+    return fuzzy_and(
+        test_closed_group(Basic(*factors), assumptions, scalar_predicate),
+        test_closed_group(Basic(*matrices), assumptions, matrix_predicate))
+
 class AskIntegerElementsHandler(CommonHandler):
     @staticmethod
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.integer_elements)
 
-    HadamardProduct = MatMul = Determinant = Trace = Transpose = MatAdd
+    HadamardProduct = Determinant = Trace = Transpose = MatAdd
 
     ZeroMatrix = Identity = staticmethod(CommonHandler.AlwaysTrue)
 
+    MatMul = staticmethod(partial(MatMul_elements, Q.integer_elements,
+                                                   Q.integer))
     MatrixSlice = staticmethod(partial(MS_elements, Q.integer_elements))
     BlockMatrix = staticmethod(partial(BM_elements, Q.integer_elements))
 
@@ -405,9 +417,9 @@ class AskRealElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.real_elements)
 
-    HadamardProduct = MatMul = Determinant = Trace = Transpose = Inverse =\
-            MatAdd
+    HadamardProduct = Determinant = Trace = Transpose = Inverse = MatAdd
 
+    MatMul = staticmethod(partial(MatMul_elements, Q.real_elements, Q.real))
     MatrixSlice = staticmethod(partial(MS_elements, Q.real_elements))
     BlockMatrix = staticmethod(partial(BM_elements, Q.real_elements))
 
@@ -417,9 +429,10 @@ class AskComplexElementsHandler(CommonHandler):
     def MatAdd(expr, assumptions):
         return test_closed_group(expr, assumptions, Q.complex_elements)
 
-    HadamardProduct = MatMul = Determinant = Trace = Transpose = Inverse =\
-             MatAdd
+    HadamardProduct = Determinant = Trace = Transpose = Inverse = MatAdd
 
+    MatMul = staticmethod(partial(MatMul_elements, Q.complex_elements,
+                                                   Q.complex))
     MatrixSlice = staticmethod(partial(MS_elements, Q.complex_elements))
     BlockMatrix = staticmethod(partial(BM_elements, Q.complex_elements))
 
