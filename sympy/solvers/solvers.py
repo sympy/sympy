@@ -1296,7 +1296,25 @@ def _solve(f, *symbols, **flags):
                     u = bases.pop()
                     t = Dummy('t')
                     inv = _solve(u - t, symbol, **flags)
-                    ftry = f_num.subs(u, t)
+                    if isinstance(u, (Pow, exp)):
+                        # this will be resolved by factor in _tsolve but we might
+                        # as well try a simple expansion here to get things in
+                        # order so something like the following will work now without
+                        # having to factor:
+                        # >>> eq = (exp(I*(-x-2))+exp(I*(x+2)))
+                        # >>> eq.subs(exp(x),y)  # fails
+                        # exp(I*(-x - 2)) + exp(I*(x + 2))
+                        # >>> eq.expand().subs(exp(x),y)  # works
+                        # y**I*exp(2*I) + y**(-I)*exp(-2*I)
+                        def _expand(p):
+                            b, e = p.as_base_exp()
+                            e = expand_mul(e)
+                            return expand_power_exp(b**e)
+                        ftry = f_num.replace(
+                            lambda w: w.is_Pow or isinstance(w, exp),
+                            _expand).subs(u, t)
+                    else:
+                        ftry = f_num.subs(u, t)
                     if not ftry.has(symbol):
                         soln = _solve(ftry, t, **flags)
                         sols = list()
