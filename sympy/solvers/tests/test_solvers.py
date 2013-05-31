@@ -492,6 +492,7 @@ def test_issue_1694():
     assert solve((x - 1)/(1 + 1/(x - 1))) == []
     assert solve(x**(y*z) - x, x) == [1]
     raises(NotImplementedError, lambda: solve(log(x) - exp(x), x))
+    raises(NotImplementedError, lambda: solve(2**x - exp(x) - 3))
 
     # 2072
     assert solve(sqrt(x)) == solve(sqrt(x**3)) == [0]

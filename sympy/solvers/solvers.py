@@ -37,7 +37,8 @@ from sympy.simplify import (simplify, collect, powsimp, posify, powdenest,
 from sympy.simplify.sqrtdenest import sqrt_depth, _mexpand
 from sympy.simplify.fu import TR1, hyper_as_trig
 from sympy.matrices import Matrix, zeros
-from sympy.polys import roots, cancel, factor, Poly, together, RootOf, degree
+from sympy.polys import (roots, cancel, factor, Poly, together, RootOf,
+    degree, PolynomialError)
 from sympy.functions.elementary.piecewise import piecewise_fold, Piecewise
 
 from sympy.utilities.lambdify import lambdify
@@ -1372,7 +1373,10 @@ def _solve(f, *symbols, **flags):
 
         # allow tsolve to be used on next pass if needed
         flags.pop('tsolve', None)
-        result = _tsolve(f_num, symbol, **flags)
+        try:
+            result = _tsolve(f_num, symbol, **flags)
+        except PolynomialError:
+            result = None
         if result is None:
             result = False
 
